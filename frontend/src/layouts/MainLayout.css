@@ -1,11 +1,11 @@
 .main-layout {
-  display: flex;
   min-height: 100vh;
   background-color: var(--bg);
 }
 
 .main-content-wrapper {
-  flex: 1;
+  min-height: 100vh;
+  margin-left: 260px;
   display: flex;
   flex-direction: column;
   min-width: 0;
@@ -13,11 +13,16 @@
 
 .main-content {
   flex: 1;
+  min-width: 0;
   padding: 24px;
-  overflow: auto;
+  overflow-x: hidden;
 }
 
 @media (max-width: 768px) {
+  .main-content-wrapper {
+    margin-left: 72px;
+  }
+
   .main-content {
     padding: 16px;
   }
