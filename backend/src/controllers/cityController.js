@@ -87,10 +87,30 @@ async function deactivateCity(req, res) {
   }
 }
 
+async function syncCities(req, res) {
+  try {
+    const { stateId } = req.params;
+    const result = await cityService.syncCitiesForState(stateId);
+
+    if (!result) {
+      return res.status(404).json({ error: 'State not found' });
+    }
+
+    return res.json({
+      message: `Cities synced for ${result.state.name}`,
+      ...result,
+    });
+  } catch (error) {
+    console.error('Sync cities failed:', error.message);
+    return res.status(502).json({ error: error.message || 'Failed to sync cities' });
+  }
+}
+
 module.exports = {
   createCity,
   getCities,
   getCityById,
   updateCity,
   deactivateCity,
+  syncCities,
 };
