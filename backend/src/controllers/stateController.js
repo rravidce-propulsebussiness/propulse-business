@@ -1,4 +1,5 @@
 const stateService = require('../services/stateService');
+const cityService = require('../services/cityService');
 
 async function createState(req, res) {
   try {
@@ -11,7 +12,25 @@ async function createState(req, res) {
     }
 
     const state = await stateService.createState({ name, code });
-    return res.status(201).json(state);
+
+    let citySync = null;
+    try {
+      citySync = await cityService.syncCitiesForState(state.id);
+    } catch (syncError) {
+      console.error('Auto city sync failed:', syncError.message);
+    }
+
+    return res.status(201).json({
+      ...state,
+      city_sync: citySync
+        ? {
+            added: citySync.added,
+            restored: citySync.restored,
+            skipped: citySync.skipped,
+            total: citySync.totalFromProvider,
+          }
+        : null,
+    });
   } catch (error) {
     console.error('Create state failed:', error.message);
     return res.status(500).json({ error: 'Failed to create state' });
