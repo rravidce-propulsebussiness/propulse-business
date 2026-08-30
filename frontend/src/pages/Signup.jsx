@@ -38,9 +38,9 @@ function Signup() {
         <div className="auth-visual-content">
           <img className="auth-logo" src="/brand/propulse-logo.png" alt="Pro Pulse Business Technologies Private Limited" />
           <div className="auth-visual-copy">
-            <span>YOUR BUSINESS. ONE PLACE.</span>
-            <h1>Build the<br />next stage.</h1>
-            <p>Create your secure workspace and manage your business structure with clarity.</p>
+            <span>QUALIFIED LEADS. BETTER OPPORTUNITIES.</span>
+            <h1>Get High-Value<br /><em>Clients.</em></h1>
+            <p>Join Pro Pulse to discover qualified customers actively looking for your services and grow your business with better opportunities.</p>
           </div>
           <div className="auth-visual-footer">
             <span>CONNECT</span><i /> <span>GROW</span><i /> <span>BUILD</span><i /> <span>SUCCEED</span>
@@ -56,7 +56,7 @@ function Signup() {
           <div className="auth-heading">
             <p className="auth-kicker">GET STARTED</p>
             <h2>Create account</h2>
-            <p>Set up your business workspace in minutes.</p>
+            <p>Start finding better business opportunities.</p>
           </div>
 
           {error && <div className="auth-error" role="alert">{error}</div>}
