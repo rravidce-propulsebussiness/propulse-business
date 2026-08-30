@@ -6,14 +6,30 @@ function validatePassword(password) {
 
 async function signup(req, res) {
   try {
-    const { name, email, password } = req.body;
-    if (!name?.trim() || !email?.trim() || !validatePassword(password)) {
-      return res.status(400).json({ error: 'Name, email and a password of at least 8 characters are required' });
+    const {
+      name, email, password, phone, businessName, businessDetails,
+      industryId, serviceId, subserviceId, stateId, cityId,
+    } = req.body;
+
+    const required = [name, email, password, phone, businessName, businessDetails, industryId, serviceId, stateId, cityId];
+    if (required.some((value) => value === undefined || value === null || String(value).trim() === '') || !validatePassword(password)) {
+      return res.status(400).json({ error: 'Please complete all required account, business and lead preference fields' });
     }
-    const result = await authService.signup({ name, email, password });
+
+    const ids = [industryId, serviceId, stateId, cityId].map(Number);
+    if (ids.some((id) => !Number.isInteger(id) || id < 1) || (subserviceId && (!Number.isInteger(Number(subserviceId)) || Number(subserviceId) < 1))) {
+      return res.status(400).json({ error: 'Please select valid business and location options' });
+    }
+
+    const result = await authService.signup({
+      name, email, password, phone, businessName, businessDetails,
+      industryId: ids[0], serviceId: ids[1], subserviceId: subserviceId ? Number(subserviceId) : null,
+      stateId: ids[2], cityId: ids[3],
+    });
     return res.status(201).json(result);
   } catch (error) {
     if (error.code === 'EMAIL_EXISTS') return res.status(409).json({ error: error.message });
+    if (error.code === 'INVALID_BUSINESS_SELECTION') return res.status(400).json({ error: error.message });
     console.error('Signup failed:', error.message);
     return res.status(500).json({ error: 'Failed to create account' });
   }
