@@ -1,26 +1,25 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const pool = require('./config/database');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-console.log('Express app created');
-
 app.use(cors());
 app.use(express.json());
 
-console.log('Middleware registered');
-
-app.get('/health', (req, res) => {
-  console.log('Health endpoint hit');
-  res.json({ status: 'ok' });
+app.get('/health', async (req, res) => {
+  try {
+    await pool.query('SELECT 1');
+    res.json({ status: 'ok', database: 'connected' });
+  } catch (error) {
+    console.error('Database connection failed:', error.message);
+    res.status(500).json({ status: 'error', database: 'disconnected' });
+  }
 });
 
-console.log('Health route registered');
-
 app.use((req, res) => {
-  console.log('404:', req.method, req.path);
   res.status(404).json({ error: 'Not found' });
 });
 
