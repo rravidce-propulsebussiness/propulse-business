@@ -86,20 +86,82 @@ CREATE INDEX IF NOT EXISTS idx_users_email ON users (LOWER(email));
 
 CREATE TABLE IF NOT EXISTS business_profiles (
     id SERIAL PRIMARY KEY,
-    user_id INTEGER NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     phone VARCHAR(30) NOT NULL,
     business_name VARCHAR(160) NOT NULL,
     business_details TEXT NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (user_id)
+);
+
+CREATE TABLE IF NOT EXISTS business_profile_services (
+    id SERIAL PRIMARY KEY,
+    business_profile_id INTEGER NOT NULL REFERENCES business_profiles(id) ON DELETE CASCADE,
     industry_id INTEGER NOT NULL REFERENCES industries(id) ON DELETE RESTRICT,
     service_id INTEGER NOT NULL REFERENCES services(id) ON DELETE RESTRICT,
     subservice_id INTEGER REFERENCES subservices(id) ON DELETE RESTRICT,
-    state_id INTEGER NOT NULL REFERENCES states(id) ON DELETE RESTRICT,
-    city_id INTEGER NOT NULL REFERENCES cities(id) ON DELETE RESTRICT,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (business_profile_id, industry_id, service_id, subservice_id)
 );
 
-CREATE INDEX IF NOT EXISTS idx_business_profiles_industry ON business_profiles (industry_id);
-CREATE INDEX IF NOT EXISTS idx_business_profiles_service ON business_profiles (service_id);
-CREATE INDEX IF NOT EXISTS idx_business_profiles_subservice ON business_profiles (subservice_id);
-CREATE INDEX IF NOT EXISTS idx_business_profiles_location ON business_profiles (state_id, city_id);
+CREATE TABLE IF NOT EXISTS business_profile_locations (
+    id SERIAL PRIMARY KEY,
+    business_profile_id INTEGER NOT NULL REFERENCES business_profiles(id) ON DELETE CASCADE,
+    state_id INTEGER NOT NULL REFERENCES states(id) ON DELETE RESTRICT,
+    city_id INTEGER NOT NULL REFERENCES cities(id) ON DELETE RESTRICT,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (business_profile_id, state_id, city_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_business_profile_services_profile ON business_profile_services (business_profile_id);
+CREATE INDEX IF NOT EXISTS idx_business_profile_services_industry ON business_profile_services (industry_id);
+CREATE INDEX IF NOT EXISTS idx_business_profile_services_service ON business_profile_services (service_id);
+CREATE INDEX IF NOT EXISTS idx_business_profile_services_subservice ON business_profile_services (subservice_id);
+CREATE INDEX IF NOT EXISTS idx_business_profile_locations_profile ON business_profile_locations (business_profile_id);
+CREATE INDEX IF NOT EXISTS idx_business_profile_locations_state_city ON business_profile_locations (state_id, city_id);
+
+-- Migrate an older single-service/single-location profile layout when present.
+DO $$
+BEGIN
+    IF EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name = 'business_profiles' AND column_name = 'industry_id'
+    ) THEN
+        INSERT INTO business_profile_services (business_profile_id, industry_id, service_id, subservice_id)
+        SELECT id, industry_id, service_id, subservice_id
+        FROM business_profiles
+        WHERE industry_id IS NOT NULL AND service_id IS NOT NULL
+        ON CONFLICT DO NOTHING;
+
+        INSERT INTO business_profile_locations (business_profile_id, state_id, city_id)
+        SELECT id, state_id, city_id
+        FROM business_profiles
+        WHERE state_id IS NOT NULL AND city_id IS NOT NULL
+        ON CONFLICT DO NOTHING;
+    END IF;
+END $$;
+
+-- Automatically remove legacy columns only after migration if they exist.
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='business_profiles' AND column_name='industry_id') THEN
+        ALTER TABLE business_profiles DROP COLUMN industry_id;
+    END IF;
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='business_profiles' AND column_name='service_id') THEN
+        ALTER TABLE business_profiles DROP COLUMN service_id;
+    END IF;
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='business_profiles' AND column_name='subservice_id') THEN
+        ALTER TABLE business_profiles DROP COLUMN subservice_id;
+    END IF;
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='business_profiles' AND column_name='state_id') THEN
+        ALTER TABLE business_profiles DROP COLUMN state_id;
+    END IF;
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='business_profiles' AND column_name='city_id') THEN
+        ALTER TABLE business_profiles DROP COLUMN city_id;
+    END IF;
+END $$;
