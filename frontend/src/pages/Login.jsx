@@ -37,9 +37,9 @@ function Login() {
         <div className="auth-visual-content">
           <img className="auth-logo" src="/brand/propulse-logo.png" alt="Pro Pulse Business Technologies Private Limited" />
           <div className="auth-visual-copy">
-            <span>BUSINESS CONTROL CENTER</span>
-            <h1>One place to<br />run your business.</h1>
-            <p>Manage your marketplace, master data and operations from one secure workspace.</p>
+            <span>QUALIFIED LEADS. BETTER OPPORTUNITIES.</span>
+            <h1>Get High-Value<br /><em>Clients.</em></h1>
+            <p>Connect with qualified customers actively looking for your services — and turn more opportunities into paying clients.</p>
           </div>
           <div className="auth-visual-footer">
             <span>CONNECT</span><i /> <span>GROW</span><i /> <span>BUILD</span><i /> <span>SUCCEED</span>
@@ -55,7 +55,7 @@ function Login() {
           <div className="auth-heading">
             <p className="auth-kicker">WELCOME BACK</p>
             <h2>Sign in</h2>
-            <p>Access your business workspace.</p>
+            <p>Access your leads and business opportunities.</p>
           </div>
 
           {error && <div className="auth-error" role="alert">{error}</div>}
