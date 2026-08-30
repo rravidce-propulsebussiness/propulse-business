@@ -8,6 +8,9 @@ const emptyForm = {
   password: '', confirm: '',
 }
 
+const newService = () => ({ industryId: '', serviceId: '', subserviceId: '' })
+const newLocation = () => ({ stateId: '', cityId: '' })
+
 function Signup() {
   const navigate = useNavigate()
   const [form, setForm] = useState(emptyForm)
@@ -16,8 +19,8 @@ function Signup() {
   const [subservices, setSubservices] = useState([])
   const [states, setStates] = useState([])
   const [cities, setCities] = useState([])
-  const [serviceSelections, setServiceSelections] = useState([{ industryId: '', serviceId: '', subserviceId: '' }])
-  const [locationSelections, setLocationSelections] = useState([{ stateId: '', cityId: '' }])
+  const [serviceSelections, setServiceSelections] = useState([newService()])
+  const [locationSelections, setLocationSelections] = useState([newLocation()])
   const [showPassword, setShowPassword] = useState(false)
   const [agree, setAgree] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -28,11 +31,8 @@ function Signup() {
     async function loadMasterData() {
       try {
         const [industryData, serviceData, subserviceData, stateData, cityData] = await Promise.all([
-          authRequest('/industries'),
-          authRequest('/services'),
-          authRequest('/subservices'),
-          authRequest('/states'),
-          authRequest('/cities'),
+          authRequest('/industries'), authRequest('/services'), authRequest('/subservices'),
+          authRequest('/states'), authRequest('/cities'),
         ])
         setIndustries(industryData)
         setServices(serviceData)
@@ -70,7 +70,7 @@ function Signup() {
   }
 
   function addServiceSelection() {
-    setServiceSelections((current) => [...current, { industryId: '', serviceId: '', subserviceId: '' }])
+    setServiceSelections((current) => [...current, newService()])
   }
 
   function removeServiceSelection(index) {
@@ -78,24 +78,24 @@ function Signup() {
   }
 
   function addLocationSelection() {
-    setLocationSelections((current) => [...current, { stateId: '', cityId: '' }])
+    setLocationSelections((current) => [...current, newLocation()])
   }
 
   function removeLocationSelection(index) {
     setLocationSelections((current) => current.filter((_, i) => i !== index))
   }
 
-  const serviceOptions = useMemo(() => (
-    serviceSelections.map((selection) => services.filter((item) => String(item.industry_id) === String(selection.industryId)))
-  ), [services, serviceSelections])
+  const serviceOptions = useMemo(() => serviceSelections.map((selection) => (
+    services.filter((item) => String(item.industry_id) === String(selection.industryId))
+  )), [services, serviceSelections])
 
-  const subserviceOptions = useMemo(() => (
-    serviceSelections.map((selection) => subservices.filter((item) => String(item.service_id) === String(selection.serviceId)))
-  ), [subservices, serviceSelections])
+  const subserviceOptions = useMemo(() => serviceSelections.map((selection) => (
+    subservices.filter((item) => String(item.service_id) === String(selection.serviceId))
+  )), [subservices, serviceSelections])
 
-  const cityOptions = useMemo(() => (
-    locationSelections.map((selection) => cities.filter((item) => String(item.state_id) === String(selection.stateId)))
-  ), [cities, locationSelections])
+  const cityOptions = useMemo(() => locationSelections.map((selection) => (
+    cities.filter((item) => String(item.state_id) === String(selection.stateId))
+  )), [cities, locationSelections])
 
   async function submit(e) {
     e.preventDefault()
@@ -105,16 +105,13 @@ function Signup() {
     if (form.password.length < 8) return setError('Password must be at least 8 characters.')
     if (form.password !== form.confirm) return setError('Passwords do not match.')
 
-    const cleanServices = serviceSelections
-      .filter((item) => item.industryId && item.serviceId)
-      .map((item) => ({
-        industryId: Number(item.industryId),
-        serviceId: Number(item.serviceId),
-        subserviceId: item.subserviceId ? Number(item.subserviceId) : null,
-      }))
-    const cleanLocations = locationSelections
-      .filter((item) => item.stateId && item.cityId)
-      .map((item) => ({ stateId: Number(item.stateId), cityId: Number(item.cityId) }))
+    const cleanServices = serviceSelections.filter((item) => item.industryId && item.serviceId).map((item) => ({
+      industryId: Number(item.industryId), serviceId: Number(item.serviceId),
+      subserviceId: item.subserviceId ? Number(item.subserviceId) : null,
+    }))
+    const cleanLocations = locationSelections.filter((item) => item.stateId && item.cityId).map((item) => ({
+      stateId: Number(item.stateId), cityId: Number(item.cityId),
+    }))
 
     if (!cleanServices.length) return setError('Add at least one service.')
     if (!cleanLocations.length) return setError('Add at least one location.')
@@ -123,16 +120,7 @@ function Signup() {
       setLoading(true)
       const result = await authRequest('/auth/signup', {
         method: 'POST',
-        body: JSON.stringify({
-          name: form.name,
-          email: form.email,
-          password: form.password,
-          phone: form.phone,
-          businessName: form.businessName,
-          businessDetails: form.businessDetails,
-          services: cleanServices,
-          locations: cleanLocations,
-        }),
+        body: JSON.stringify({ ...form, confirm: undefined, services: cleanServices, locations: cleanLocations }),
       })
       saveSession(result)
       navigate('/dashboard', { replace: true })
@@ -153,7 +141,7 @@ function Signup() {
           <div className="auth-visual-copy">
             <span>QUALIFIED LEADS. BETTER OPPORTUNITIES.</span>
             <h1>Get High-Value<br /><em>Clients.</em></h1>
-            <p>Tell us what your business offers and where you operate. We'll use these preferences to surface relevant opportunities.</p>
+            <p>Choose all the services you provide and the locations you serve. We'll use them to surface relevant opportunities.</p>
           </div>
           <div className="auth-visual-footer"><span>CONNECT</span><i /><span>GROW</span><i /><span>BUILD</span><i /><span>SUCCEED</span></div>
         </div>
@@ -185,54 +173,37 @@ function Signup() {
               <label className="full-span">Business details<textarea value={form.businessDetails} onChange={(e) => update('businessDetails', e.target.value)} placeholder="Tell customers what your business does" rows="3" required /></label>
             </div>
 
-            <div className="signup-section-label">Services you provide</div>
+            <div className="signup-section-label section-heading-row">
+              <div><span>Services you provide</span><small>Add every service you want matching leads for.</small></div>
+              <button type="button" className="add-selection primary-add" onClick={addServiceSelection}>+ Add service</button>
+            </div>
             <div className="selection-list">
               {serviceSelections.map((selection, index) => (
-                <div className="selection-row" key={`service-${index}`}>
-                  <label>Industry
-                    <select value={selection.industryId} onChange={(e) => updateServiceSelection(index, 'industryId', e.target.value)} disabled={loadingData} required>
-                      <option value="">Select industry</option>
-                      {industries.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
-                    </select>
-                  </label>
-                  <label>Service
-                    <select value={selection.serviceId} onChange={(e) => updateServiceSelection(index, 'serviceId', e.target.value)} disabled={!selection.industryId} required>
-                      <option value="">{selection.industryId ? 'Select service' : 'Select industry first'}</option>
-                      {(serviceOptions[index] || []).map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
-                    </select>
-                  </label>
-                  <label>Subservice <span className="optional">Optional</span>
-                    <select value={selection.subserviceId} onChange={(e) => updateServiceSelection(index, 'subserviceId', e.target.value)} disabled={!selection.serviceId}>
-                      <option value="">All related subservices</option>
-                      {(subserviceOptions[index] || []).map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
-                    </select>
-                  </label>
-                  {serviceSelections.length > 1 && <button type="button" className="remove-selection" onClick={() => removeServiceSelection(index)} aria-label="Remove service">×</button>}
+                <div className="selection-card" key={`service-${index}`}>
+                  <div className="selection-card-top"><span>Service {index + 1}</span>{serviceSelections.length > 1 && <button type="button" className="remove-selection" onClick={() => removeServiceSelection(index)} aria-label="Remove service">Remove</button>}</div>
+                  <div className="selection-grid">
+                    <label>Industry<select value={selection.industryId} onChange={(e) => updateServiceSelection(index, 'industryId', e.target.value)} disabled={loadingData} required><option value="">Select industry</option>{industries.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
+                    <label>Service<select value={selection.serviceId} onChange={(e) => updateServiceSelection(index, 'serviceId', e.target.value)} disabled={!selection.industryId} required><option value="">{selection.industryId ? 'Select service' : 'Select industry first'}</option>{(serviceOptions[index] || []).map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
+                    <label>Subservice <span className="optional">Optional</span><select value={selection.subserviceId} onChange={(e) => updateServiceSelection(index, 'subserviceId', e.target.value)} disabled={!selection.serviceId}><option value="">All related subservices</option>{(subserviceOptions[index] || []).map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
+                  </div>
                 </div>
               ))}
-              <button type="button" className="add-selection" onClick={addServiceSelection}>+ Add another service</button>
             </div>
 
-            <div className="signup-section-label">Locations you serve</div>
+            <div className="signup-section-label section-heading-row">
+              <div><span>Locations you serve</span><small>Add every city where you want to receive leads.</small></div>
+              <button type="button" className="add-selection primary-add" onClick={addLocationSelection}>+ Add location</button>
+            </div>
             <div className="selection-list">
               {locationSelections.map((selection, index) => (
-                <div className="selection-row location-row" key={`location-${index}`}>
-                  <label>State / UT
-                    <select value={selection.stateId} onChange={(e) => updateLocationSelection(index, 'stateId', e.target.value)} disabled={loadingData} required>
-                      <option value="">Select state / UT</option>
-                      {states.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
-                    </select>
-                  </label>
-                  <label>City
-                    <select value={selection.cityId} onChange={(e) => updateLocationSelection(index, 'cityId', e.target.value)} disabled={!selection.stateId} required>
-                      <option value="">{selection.stateId ? 'Select city' : 'Select state first'}</option>
-                      {(cityOptions[index] || []).map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
-                    </select>
-                  </label>
-                  {locationSelections.length > 1 && <button type="button" className="remove-selection" onClick={() => removeLocationSelection(index)} aria-label="Remove location">×</button>}
+                <div className="selection-card" key={`location-${index}`}>
+                  <div className="selection-card-top"><span>Location {index + 1}</span>{locationSelections.length > 1 && <button type="button" className="remove-selection" onClick={() => removeLocationSelection(index)} aria-label="Remove location">Remove</button>}</div>
+                  <div className="selection-grid location-grid">
+                    <label>State / UT<select value={selection.stateId} onChange={(e) => updateLocationSelection(index, 'stateId', e.target.value)} disabled={loadingData} required><option value="">Select state / UT</option>{states.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
+                    <label>City<select value={selection.cityId} onChange={(e) => updateLocationSelection(index, 'cityId', e.target.value)} disabled={!selection.stateId} required><option value="">{selection.stateId ? 'Select city' : 'Select state first'}</option>{(cityOptions[index] || []).map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
+                  </div>
                 </div>
               ))}
-              <button type="button" className="add-selection" onClick={addLocationSelection}>+ Add another location</button>
             </div>
 
             <div className="signup-section-label">Secure your account</div>
@@ -244,7 +215,6 @@ function Signup() {
             <label className="check terms"><input type="checkbox" checked={agree} onChange={(e) => setAgree(e.target.checked)} /> I agree to the terms and privacy policy.</label>
             <button className="auth-submit" disabled={loading || loadingData}>{loading ? 'Creating…' : 'Create account'} <span>→</span></button>
           </form>
-
           <p className="auth-switch">Already have an account? <Link to="/login">Sign in</Link></p>
         </div>
       </main>
