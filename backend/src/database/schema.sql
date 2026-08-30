@@ -83,3 +83,23 @@ CREATE TABLE IF NOT EXISTS users (
 );
 
 CREATE INDEX IF NOT EXISTS idx_users_email ON users (LOWER(email));
+
+CREATE TABLE IF NOT EXISTS business_profiles (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
+    phone VARCHAR(30) NOT NULL,
+    business_name VARCHAR(160) NOT NULL,
+    business_details TEXT NOT NULL,
+    industry_id INTEGER NOT NULL REFERENCES industries(id) ON DELETE RESTRICT,
+    service_id INTEGER NOT NULL REFERENCES services(id) ON DELETE RESTRICT,
+    subservice_id INTEGER REFERENCES subservices(id) ON DELETE RESTRICT,
+    state_id INTEGER NOT NULL REFERENCES states(id) ON DELETE RESTRICT,
+    city_id INTEGER NOT NULL REFERENCES cities(id) ON DELETE RESTRICT,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_business_profiles_industry ON business_profiles (industry_id);
+CREATE INDEX IF NOT EXISTS idx_business_profiles_service ON business_profiles (service_id);
+CREATE INDEX IF NOT EXISTS idx_business_profiles_subservice ON business_profiles (subservice_id);
+CREATE INDEX IF NOT EXISTS idx_business_profiles_location ON business_profiles (state_id, city_id);
