@@ -6,6 +6,7 @@ const industryRoutes = require('./routes/industryRoutes');
 const serviceRoutes = require('./routes/serviceRoutes');
 const subserviceRoutes = require('./routes/subserviceRoutes');
 const stateRoutes = require('./routes/stateRoutes');
+const cityRoutes = require('./routes/cityRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -27,6 +28,7 @@ app.use('/api/industries', industryRoutes);
 app.use('/api/services', serviceRoutes);
 app.use('/api/subservices', subserviceRoutes);
 app.use('/api/states', stateRoutes);
+app.use('/api/cities', cityRoutes);
 
 app.use((req, res) => {
   res.status(404).json({ error: 'Not found' });
