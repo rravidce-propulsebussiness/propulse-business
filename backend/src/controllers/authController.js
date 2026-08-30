@@ -7,24 +7,21 @@ function validatePassword(password) {
 async function signup(req, res) {
   try {
     const {
-      name, email, password, phone, businessName, businessDetails,
-      industryId, serviceId, subserviceId, stateId, cityId,
+      name, email, password, phone, businessName, businessDetails, services, locations,
     } = req.body;
 
-    const required = [name, email, password, phone, businessName, businessDetails, industryId, serviceId, stateId, cityId];
-    if (required.some((value) => value === undefined || value === null || String(value).trim() === '') || !validatePassword(password)) {
-      return res.status(400).json({ error: 'Please complete all required account, business and lead preference fields' });
+    if (!name?.trim() || !email?.trim() || !validatePassword(password)) {
+      return res.status(400).json({ error: 'Name, email and a password of at least 8 characters are required' });
     }
-
-    const ids = [industryId, serviceId, stateId, cityId].map(Number);
-    if (ids.some((id) => !Number.isInteger(id) || id < 1) || (subserviceId && (!Number.isInteger(Number(subserviceId)) || Number(subserviceId) < 1))) {
-      return res.status(400).json({ error: 'Please select valid business and location options' });
+    if (!phone?.trim() || !businessName?.trim() || !businessDetails?.trim()) {
+      return res.status(400).json({ error: 'Phone, business name and business details are required' });
+    }
+    if (!Array.isArray(services) || !services.length || !Array.isArray(locations) || !locations.length) {
+      return res.status(400).json({ error: 'Select at least one service and one location' });
     }
 
     const result = await authService.signup({
-      name, email, password, phone, businessName, businessDetails,
-      industryId: ids[0], serviceId: ids[1], subserviceId: subserviceId ? Number(subserviceId) : null,
-      stateId: ids[2], cityId: ids[3],
+      name, email, password, phone, businessName, businessDetails, services, locations,
     });
     return res.status(201).json(result);
   } catch (error) {
