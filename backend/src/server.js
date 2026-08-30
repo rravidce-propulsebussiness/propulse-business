@@ -7,6 +7,7 @@ const serviceRoutes = require('./routes/serviceRoutes');
 const subserviceRoutes = require('./routes/subserviceRoutes');
 const stateRoutes = require('./routes/stateRoutes');
 const cityRoutes = require('./routes/cityRoutes');
+const authRoutes = require('./routes/authRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -24,6 +25,7 @@ app.get('/health', async (req, res) => {
   }
 });
 
+app.use('/api/auth', authRoutes);
 app.use('/api/industries', industryRoutes);
 app.use('/api/services', serviceRoutes);
 app.use('/api/subservices', subserviceRoutes);
