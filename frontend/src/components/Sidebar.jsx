@@ -4,6 +4,7 @@ import './Sidebar.css';
 function Sidebar() {
   const navItems = [
     { path: '/dashboard', label: 'Dashboard', icon: '📊' },
+    { path: '/industries', label: 'Industries', icon: '🏢' },
     { path: '/', label: 'Home', icon: '🏠' },
   ];
 
