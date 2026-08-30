@@ -12,7 +12,8 @@ function Signup() {
   const [error, setError] = useState('')
 
   async function submit(e) {
-    e.preventDefault(); setError('')
+    e.preventDefault()
+    setError('')
     if (!form.name || !form.email || !form.password) return setError('Complete all required fields.')
     if (form.password.length < 8) return setError('Password must be at least 8 characters.')
     if (form.password !== form.confirm) return setError('Passwords do not match.')
@@ -20,22 +21,46 @@ function Signup() {
     try {
       setLoading(true)
       const result = await authRequest('/auth/signup', { method: 'POST', body: JSON.stringify({ name: form.name, email: form.email, password: form.password }) })
-      saveSession(result); navigate('/dashboard', { replace: true })
-    } catch (err) { setError(err.message) } finally { setLoading(false) }
+      saveSession(result)
+      navigate('/dashboard', { replace: true })
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
     <div className="auth-page">
-      <div className="auth-brand-panel">
-        <div className="brand-lockup"><span className="brand-dot" /> PRO PULSE</div>
-        <div className="brand-message"><p className="auth-kicker">YOUR BUSINESS. ONE PLACE.</p><h1>Build the<br /><em>next stage.</em></h1><p>Create your secure workspace and start managing your business structure.</p></div>
-        <div className="brand-foot">© 2026 Pro Pulse Business</div>
-      </div>
+      <section className="auth-visual" aria-label="Pro Pulse Business">
+        <img className="auth-office" src="/brand/propulse-office.png" alt="Pro Pulse Business office" />
+        <div className="auth-visual-overlay" />
+        <div className="auth-visual-content">
+          <img className="auth-logo" src="/brand/propulse-logo.png" alt="Pro Pulse Business Technologies Private Limited" />
+          <div className="auth-visual-copy">
+            <span>YOUR BUSINESS. ONE PLACE.</span>
+            <h1>Build the<br />next stage.</h1>
+            <p>Create your secure workspace and manage your business structure with clarity.</p>
+          </div>
+          <div className="auth-visual-footer">
+            <span>CONNECT</span><i /> <span>GROW</span><i /> <span>BUILD</span><i /> <span>SUCCEED</span>
+          </div>
+        </div>
+      </section>
+
       <main className="auth-card-wrap">
         <div className="auth-card signup-card">
-          <div className="mobile-brand"><span className="brand-dot" /> PRO PULSE</div>
-          <div className="auth-heading"><p className="auth-kicker">GET STARTED</p><h2>Create account</h2><p>Set up your business workspace in minutes.</p></div>
-          {error && <div className="auth-error">{error}</div>}
+          <div className="mobile-brand">
+            <img src="/brand/propulse-logo.png" alt="Pro Pulse" />
+          </div>
+          <div className="auth-heading">
+            <p className="auth-kicker">GET STARTED</p>
+            <h2>Create account</h2>
+            <p>Set up your business workspace in minutes.</p>
+          </div>
+
+          {error && <div className="auth-error" role="alert">{error}</div>}
+
           <form onSubmit={submit}>
             <label>Full name<input autoComplete="name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Your name" /></label>
             <label>Work email<input type="email" autoComplete="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="you@company.com" /></label>
@@ -44,6 +69,7 @@ function Signup() {
             <label className="check terms"><input type="checkbox" checked={agree} onChange={(e) => setAgree(e.target.checked)} /> I agree to the terms and privacy policy.</label>
             <button className="auth-submit" disabled={loading}>{loading ? 'Creating…' : 'Create account'} <span>→</span></button>
           </form>
+
           <p className="auth-switch">Already have an account? <Link to="/login">Sign in</Link></p>
         </div>
       </main>
