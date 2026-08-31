@@ -12,7 +12,7 @@ import AdminUsers from './admin/pages/AdminUsers';
 import AdminPayments from './admin/pages/AdminPayments';
 import AdminLeads from './admin/pages/AdminLeads';
 import AdminLeadPricing from './admin/pages/AdminLeadPricing';
-import AdminMembershipPlansConfig from './admin/pages/AdminMembershipPlansConfigV2';
+import AdminMembershipPlansConfig from './admin/pages/AdminMembershipPlansConfig';
 import AdminRoute from './admin/components/AdminRoute';
 import AdminLayout from './admin/components/AdminLayout';
 
