@@ -5,7 +5,6 @@ import './AdminLayout.css';
 const links = [
   { to: '/admin', label: 'Overview', icon: '⌂', end: true },
   { to: '/admin/industries', label: 'Industries & Services', icon: '▦' },
-  { to: '/admin/locations', label: 'Locations', icon: '⌖' },
   { to: '/admin/businesses', label: 'Businesses', icon: '♙' },
   { to: '/admin/users', label: 'Users', icon: '◎' },
 ];
@@ -14,14 +13,15 @@ export default function AdminLayout() {
   const navigate = useNavigate();
   const location = useLocation();
   const user = getUser();
-  const initials = (user?.name || 'Admin')
-    .split(' ').filter(Boolean).slice(0, 2).map((x) => x[0]).join('').toUpperCase();
+  const initials = (user?.name || 'Admin').split(' ').filter(Boolean).slice(0, 2).map((x) => x[0]).join('').toUpperCase();
 
   function logout() {
     clearSession();
     localStorage.removeItem('propulse_session_mode');
     navigate('/login', { replace: true });
   }
+
+  const page = location.pathname === '/admin' ? 'Overview' : location.pathname.includes('industries') ? 'Industries & Services' : location.pathname.includes('businesses') ? 'Businesses' : 'Users';
 
   return (
     <div className="admin-shell">
@@ -52,9 +52,7 @@ export default function AdminLayout() {
       <div className="admin-main">
         <header className="admin-topbar">
           <button className="admin-mobile-menu" aria-label="Open navigation" onClick={() => document.body.classList.toggle('admin-nav-open')}>☰</button>
-          <div className="admin-breadcrumb">
-            <span>Admin</span><b>/</b><strong>{location.pathname === '/admin' ? 'Overview' : location.pathname.includes('industries') ? 'Industries & Services' : location.pathname.includes('locations') ? 'Locations' : location.pathname.includes('businesses') ? 'Businesses' : 'Users'}</strong>
-          </div>
+          <div className="admin-breadcrumb"><span>Admin</span><b>/</b><strong>{page}</strong></div>
           <div className="admin-top-status"><i /> System healthy</div>
         </header>
         <div className="admin-content"><Outlet /></div>
