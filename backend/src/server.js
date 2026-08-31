@@ -1,37 +1,5 @@
 require('dotenv').config();
-const express = require('express');
-const cors = require('cors');
-const pool = require('./config/database');
-const industryRoutes = require('./routes/industryRoutes');
-const serviceRoutes = require('./routes/serviceRoutes');
-const subserviceRoutes = require('./routes/subserviceRoutes');
-const stateRoutes = require('./routes/stateRoutes');
-const cityRoutes = require('./routes/cityRoutes');
-const authRoutes = require('./routes/authRoutes');
-const profileRoutes = require('./routes/profileRoutes');
-const adminRoutes = require('./routes/adminRoutes');
-const leadRoutes = require('./routes/leadRoutes');
-const paymentRoutes = require('./routes/paymentRoutes');
-const membershipPlanRoutes = require('./routes/membershipPlanRoutes');
-
-const app = express();
-const PORT = process.env.PORT || 5000;
-app.use(cors());
-app.use(express.json());
-app.get('/health', async (req, res) => {
-  try { await pool.query('SELECT 1'); res.json({ status: 'ok', database: 'connected' }); }
-  catch (error) { console.error('Database connection failed:', error.message); res.status(500).json({ status: 'error', database: 'disconnected' }); }
-});
-app.use('/api/auth', authRoutes);
-app.use('/api/profile', profileRoutes);
-app.use('/api/admin', adminRoutes);
-app.use('/api/leads', leadRoutes);
-app.use('/api/payments', paymentRoutes);
-app.use('/api/membership-plans', membershipPlanRoutes);
-app.use('/api/industries', industryRoutes);
-app.use('/api/services', serviceRoutes);
-app.use('/api/subservices', subserviceRoutes);
-app.use('/api/states', stateRoutes);
-app.use('/api/cities', cityRoutes);
-app.use((req, res) => res.status(404).json({ error: 'Not found' }));
-app.listen(PORT, '0.0.0.0', () => console.log(`Server running on port ${PORT}`));
+const express=require('express');const cors=require('cors');const pool=require('./config/database');
+const industryRoutes=require('./routes/industryRoutes');const serviceRoutes=require('./routes/serviceRoutes');const subserviceRoutes=require('./routes/subserviceRoutes');const stateRoutes=require('./routes/stateRoutes');const cityRoutes=require('./routes/cityRoutes');const authRoutes=require('./routes/authRoutes');const profileRoutes=require('./routes/profileRoutes');const adminRoutes=require('./routes/adminRoutes');const leadRoutes=require('./routes/leadRoutes');const paymentRoutes=require('./routes/paymentRoutes');const membershipPlanRoutes=require('./routes/membershipPlanRoutes');const adminCommercialRoutes=require('./routes/adminCommercialRoutes');
+const app=express();const PORT=process.env.PORT||5000;app.use(cors());app.use(express.json());app.get('/health',async(req,res)=>{try{await pool.query('SELECT 1');res.json({status:'ok',database:'connected'})}catch(e){console.error(e.message);res.status(500).json({status:'error',database:'disconnected'})}});
+app.use('/api/auth',authRoutes);app.use('/api/profile',profileRoutes);app.use('/api/admin',adminRoutes);app.use('/api/leads',leadRoutes);app.use('/api/payments',paymentRoutes);app.use('/api/membership-plans',membershipPlanRoutes);app.use('/api/admin/commercial',adminCommercialRoutes);app.use('/api/industries',industryRoutes);app.use('/api/services',serviceRoutes);app.use('/api/subservices',subserviceRoutes);app.use('/api/states',stateRoutes);app.use('/api/cities',cityRoutes);app.use((req,res)=>res.status(404).json({error:'Not found'}));app.listen(PORT,'0.0.0.0',()=>console.log(`Server running on port ${PORT}`));
