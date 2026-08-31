@@ -1,54 +1,74 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { authRequest } from '../../utils/auth';
 import './AdminUsers.css';
 
-const demoUsers = [
-  { id: 1, name: 'Admin', email: 'admin@propulsebusiness.com', role: 'Admin', membership: 'Platform Admin', status: 'Active', joined: 'Today' },
-];
-
 export default function AdminUsers() {
-  const [users, setUsers] = useState(demoUsers);
+  const [users, setUsers] = useState([]);
   const [query, setQuery] = useState('');
-  const [showCreate, setShowCreate] = useState(false);
-  const [form, setForm] = useState({ name: '', email: '', role: 'Business', membership: 'Free' });
+  const [role, setRole] = useState('all');
+  const [status, setStatus] = useState('all');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  const filtered = users.filter((u) => `${u.name} ${u.email} ${u.role}`.toLowerCase().includes(query.toLowerCase()));
-
-  function createUser(e) {
-    e.preventDefault();
-    if (!form.name || !form.email) return;
-    setUsers((current) => [...current, { id: Date.now(), ...form, status: 'Active', joined: 'Just now' }]);
-    setForm({ name: '', email: '', role: 'Business', membership: 'Free' });
-    setShowCreate(false);
+  async function loadUsers() {
+    try {
+      setLoading(true); setError('');
+      const params = new URLSearchParams({ search: query, role, status });
+      const data = await authRequest(`/admin/users?${params.toString()}`);
+      setUsers(data);
+    } catch (err) { setError(err.message); } finally { setLoading(false); }
   }
 
-  function toggleStatus(id) {
-    setUsers((current) => current.map((u) => u.id === id ? { ...u, status: u.status === 'Active' ? 'Inactive' : 'Active' } : u));
+  useEffect(() => { loadUsers(); }, [query, role, status]);
+
+  async function toggleStatus(user) {
+    try {
+      const updated = await authRequest(`/admin/users/${user.id}/status`, { method: 'PATCH', body: JSON.stringify({ isActive: !user.is_active }) });
+      setUsers((current) => current.map((u) => u.id === user.id ? { ...u, is_active: updated.is_active } : u));
+    } catch (err) { setError(err.message); }
   }
 
-  function removeUser(id) {
-    if (window.confirm('Remove this user?')) setUsers((current) => current.filter((u) => u.id !== id));
-  }
+  const total = users.length;
+  const active = users.filter((u) => u.is_active).length;
+  const businesses = users.filter((u) => u.role === 'business').length;
+  const admins = users.filter((u) => u.role === 'admin').length;
 
   return (
     <section className="admin-users-page">
       <div className="users-heading">
-        <div><span className="eyebrow">ACCOUNT MANAGEMENT</span><h1>Users</h1><p>Manage platform accounts, roles and memberships.</p></div>
-        <button className="primary-btn" onClick={() => setShowCreate(true)}>+ Create user</button>
+        <div><span className="eyebrow">ACCOUNT MANAGEMENT</span><h1>Users</h1><p>Manage business owners and administrators.</p></div>
+        <button className="primary-btn" disabled>+ Create user</button>
       </div>
 
       <div className="users-stats">
-        <div><span>Total users</span><strong>{users.length}</strong></div>
-        <div><span>Active</span><strong>{users.filter((u) => u.status === 'Active').length}</strong></div>
-        <div><span>Business</span><strong>{users.filter((u) => u.role === 'Business').length}</strong></div>
-        <div><span>Admins</span><strong>{users.filter((u) => u.role === 'Admin').length}</strong></div>
+        <div><span>Total users</span><strong>{total}</strong></div>
+        <div><span>Active</span><strong>{active}</strong></div>
+        <div><span>Business owners</span><strong>{businesses}</strong></div>
+        <div><span>Admins</span><strong>{admins}</strong></div>
       </div>
 
       <div className="users-panel">
-        <div className="users-toolbar"><input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search users..." /><select defaultValue="all"><option value="all">All roles</option><option>Business</option><option>Admin</option></select><select defaultValue="all"><option value="all">All status</option><option>Active</option><option>Inactive</option></select></div>
-        <div className="users-table-wrap"><table><thead><tr><th>USER</th><th>ROLE</th><th>MEMBERSHIP</th><th>STATUS</th><th>JOINED</th><th></th></tr></thead><tbody>{filtered.map((u) => <tr key={u.id}><td><div className="user-cell"><span>{u.name.charAt(0).toUpperCase()}</span><div><b>{u.name}</b><small>{u.email}</small></div></div></td><td><em className={`role ${u.role.toLowerCase()}`}>{u.role}</em></td><td>{u.membership}</td><td><em className={`status ${u.status.toLowerCase()}`}>{u.status}</em></td><td>{u.joined}</td><td><div className="actions"><button onClick={() => toggleStatus(u.id)}>{u.status === 'Active' ? 'Deactivate' : 'Activate'}</button><button className="danger" onClick={() => removeUser(u.id)}>Delete</button></div></td></tr>)}</tbody></table>{filtered.length === 0 && <div className="empty-users">No users found.</div>}</div>
+        <div className="users-toolbar">
+          <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search name, email or business..." />
+          <select value={role} onChange={(e) => setRole(e.target.value)}><option value="all">All roles</option><option value="business">Business owners</option><option value="admin">Admins</option></select>
+          <select value={status} onChange={(e) => setStatus(e.target.value)}><option value="all">All status</option><option value="active">Active</option><option value="inactive">Inactive</option></select>
+        </div>
+        {error && <div className="users-error">{error}</div>}
+        <div className="users-table-wrap">
+          {loading ? <div className="empty-users">Loading users...</div> : users.length === 0 ? <div className="empty-users">No users found.</div> :
+            <table><thead><tr><th>ID</th><th>USER</th><th>BUSINESS</th><th>ROLE</th><th>STATUS</th><th>JOINED</th><th></th></tr></thead><tbody>
+              {users.map((u) => <tr key={u.id}>
+                <td className="user-id">#{u.id}</td>
+                <td><div className="user-cell"><span>{u.name.charAt(0).toUpperCase()}</span><div><b>{u.name}</b><small>{u.email}</small>{u.role === 'business' && u.phone && <small>{u.phone}</small>}</div></div></td>
+                <td>{u.business_name || <span className="muted">—</span>}</td>
+                <td><em className={`role ${u.role}`}>{u.role === 'business' ? 'Business owner' : 'Admin'}</em></td>
+                <td><em className={`status ${u.is_active ? 'active' : 'inactive'}`}>{u.is_active ? 'Active' : 'Inactive'}</em></td>
+                <td>{new Date(u.created_at).toLocaleDateString()}</td>
+                <td><div className="actions"><button onClick={() => toggleStatus(u)}>{u.is_active ? 'Deactivate' : 'Activate'}</button></div></td>
+              </tr>)}
+            </tbody></table>}
+        </div>
       </div>
-
-      {showCreate && <div className="modal-backdrop" onMouseDown={(e) => e.target === e.currentTarget && setShowCreate(false)}><form className="user-modal" onSubmit={createUser}><div className="modal-head"><div><span className="eyebrow">NEW ACCOUNT</span><h2>Create user</h2></div><button type="button" onClick={() => setShowCreate(false)}>×</button></div><label>Name<input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required /></label><label>Email<input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} required /></label><div className="form-grid"><label>Role<select value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })}><option>Business</option><option>Admin</option></select></label><label>Membership<select value={form.membership} onChange={(e) => setForm({ ...form, membership: e.target.value })}><option>Free</option><option>Starter</option><option>Pro</option><option>Enterprise</option></select></label></div><button className="primary-btn full" type="submit">Create account</button></form></div>}
     </section>
   );
 }
