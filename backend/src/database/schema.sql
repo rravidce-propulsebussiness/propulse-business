@@ -177,3 +177,35 @@ BEGIN
         ALTER TABLE business_profiles DROP COLUMN city_id;
     END IF;
 END $$;
+
+-- Lead marketplace records. Leads are created/managed by administrators and
+-- matched to business owners through their profile services and locations.
+CREATE TABLE IF NOT EXISTS leads (
+    id SERIAL PRIMARY KEY,
+    industry_id INTEGER NOT NULL REFERENCES industries(id) ON DELETE RESTRICT,
+    service_id INTEGER NOT NULL REFERENCES services(id) ON DELETE RESTRICT,
+    subservice_id INTEGER REFERENCES subservices(id) ON DELETE RESTRICT,
+    state_id INTEGER NOT NULL REFERENCES states(id) ON DELETE RESTRICT,
+    city_id INTEGER NOT NULL REFERENCES cities(id) ON DELETE RESTRICT,
+    customer_name VARCHAR(160) NOT NULL,
+    customer_phone VARCHAR(30) NOT NULL,
+    customer_email VARCHAR(255),
+    requirement TEXT NOT NULL,
+    property_type VARCHAR(100),
+    budget VARCHAR(100),
+    source VARCHAR(80) NOT NULL DEFAULT 'manual',
+    status VARCHAR(30) NOT NULL DEFAULT 'available',
+    notes TEXT,
+    created_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CHECK (status IN ('available', 'paused', 'sold', 'closed', 'invalid'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_leads_industry ON leads (industry_id);
+CREATE INDEX IF NOT EXISTS idx_leads_service ON leads (service_id);
+CREATE INDEX IF NOT EXISTS idx_leads_subservice ON leads (subservice_id);
+CREATE INDEX IF NOT EXISTS idx_leads_state_city ON leads (state_id, city_id);
+CREATE INDEX IF NOT EXISTS idx_leads_status ON leads (status);
+CREATE INDEX IF NOT EXISTS idx_leads_created_at ON leads (created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_leads_created_by ON leads (created_by);
