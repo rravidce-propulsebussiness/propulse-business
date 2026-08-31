@@ -4,8 +4,39 @@ const pool = require('../config/database');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'change-this-secret-in-production';
 
-function publicUser(user, profile = null) {
-  return { id: user.id, name: user.name, email: user.email, role: user.role, profile };
+async function getMembershipSummary(userId, client = pool) {
+  try {
+    const table = await client.query(`SELECT to_regclass('public.memberships') AS name`);
+    if (!table.rows[0]?.name) return { membership_type: 'standard', is_pro_member: false, membership_expires_at: null };
+    const result = await client.query(
+      `SELECT p.plan_type, m.ends_at
+       FROM memberships m
+       JOIN membership_plans p ON p.id = m.membership_plan_id
+       WHERE m.user_id=$1 AND m.status='active' AND m.ends_at > CURRENT_TIMESTAMP
+       ORDER BY m.ends_at DESC LIMIT 1`,
+      [userId]
+    );
+    const membership = result.rows[0];
+    const isPro = String(membership?.plan_type || '').toLowerCase() === 'pro';
+    return {
+      membership_type: isPro ? 'pro' : 'standard',
+      is_pro_member: isPro,
+      membership_expires_at: membership?.ends_at || null,
+    };
+  } catch {
+    return { membership_type: 'standard', is_pro_member: false, membership_expires_at: null };
+  }
+}
+
+async function publicUser(user, profile = null) {
+  return {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    role: user.role,
+    profile,
+    ...(await getMembershipSummary(user.id)),
+  };
 }
 
 function signToken(user) {
@@ -185,7 +216,7 @@ async function signup({ name, email, password, phone, businessName, businessDeta
 
     const profile = await getBusinessProfile(user.id, client);
     await client.query('COMMIT');
-    return { user: publicUser(user, profile), token: signToken(user) };
+    return { user: await publicUser(user, profile), token: signToken(user) };
   } catch (error) {
     await client.query('ROLLBACK');
     throw error;
@@ -208,7 +239,7 @@ async function login({ email, password }) {
     throw error;
   }
   const profile = await getBusinessProfile(user.id);
-  return { user: publicUser(user, profile), token: signToken(user) };
+  return { user: await publicUser(user, profile), token: signToken(user) };
 }
 
 function verifyToken(token) { return jwt.verify(token, JWT_SECRET); }
@@ -219,7 +250,7 @@ async function getUserById(id) {
     [id]
   );
   if (!result.rows[0]) return null;
-  return publicUser(result.rows[0], await getBusinessProfile(id));
+  return await publicUser(result.rows[0], await getBusinessProfile(id));
 }
 
 module.exports = { signup, login, verifyToken, getUserById };
