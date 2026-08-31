@@ -28,7 +28,7 @@ WHERE p.plan_type = 'booster'
       AND existing.id <> p.id
   );
 
--- Any remaining duplicate one-month Booster variants stay inactive; the canonical Booster remains active.
+-- Keep only the canonical Booster record active.
 WITH canonical AS (
   SELECT MIN(id) AS id
   FROM membership_plans
@@ -39,8 +39,7 @@ UPDATE membership_plans p
 SET is_active = FALSE,
     updated_at = CURRENT_TIMESTAMP
 WHERE p.plan_type = 'booster'
-  AND p.name = 'Booster'
-  AND p.id <> (SELECT id FROM canonical);
+  AND p.id <> COALESCE((SELECT id FROM canonical), -1);
 
 UPDATE membership_plans
 SET lead_entitlements = '[]'::jsonb,
