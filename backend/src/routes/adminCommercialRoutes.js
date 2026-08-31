@@ -1,0 +1,3 @@
+const express=require('express');const c=require('../controllers/adminCommercialController');const auth=require('../middleware/authMiddleware');
+const router=express.Router();function admin(req,res,next){if(req.user?.role!=='admin')return res.status(403).json({error:'Admin access required'});next()}
+router.use(auth,admin);router.get('/investor-settings',c.investorSettings);router.put('/investor-settings',c.updateInvestor);router.get('/coupons',c.coupons);router.post('/coupons',c.createCoupon);router.put('/coupons/:id',c.updateCoupon);router.patch('/coupons/:id/status',c.couponStatus);router.delete('/coupons/:id',c.deleteCoupon);module.exports=router;
