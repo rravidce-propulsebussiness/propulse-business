@@ -20,8 +20,30 @@ async function getConfiguredPricing(industryId,cityId,leadType='basic'){
   return {shares:Array.isArray(pricing.shares)?pricing.shares:DEFAULT_PRICING.shares};
 }
 
+async function findDuplicateLead({industryId,customerPhone,customerEmail,customerName,requirement}){
+  const phone=String(customerPhone||'').replace(/\D/g,'');
+  const email=String(customerEmail||'').trim().toLowerCase();
+  const name=String(customerName||'').trim().toLowerCase();
+  const req=String(requirement||'').trim().toLowerCase();
+  if(phone.length>=7){
+    const r=await pool.query(`SELECT id,customer_name FROM leads WHERE industry_id=$1 AND regexp_replace(COALESCE(customer_phone,''),'\\D','','g')=$2 LIMIT 1`,[industryId,phone]);
+    if(r.rows[0])return r.rows[0];
+  }
+  if(email){
+    const r=await pool.query(`SELECT id,customer_name FROM leads WHERE industry_id=$1 AND LOWER(TRIM(COALESCE(customer_email,'')))=$2 LIMIT 1`,[industryId,email]);
+    if(r.rows[0])return r.rows[0];
+  }
+  if(name&&req){
+    const r=await pool.query(`SELECT id,customer_name FROM leads WHERE industry_id=$1 AND LOWER(TRIM(COALESCE(customer_name,'')))=$2 AND LOWER(TRIM(COALESCE(requirement,'')))=$3 LIMIT 1`,[industryId,name,req]);
+    if(r.rows[0])return r.rows[0];
+  }
+  return null;
+}
+
 async function createLead({industryId,serviceId,subserviceId,stateId,cityId,customerName,customerPhone,customerEmail,requirement,propertyType,budget,source,notes,customFields,pricing,pricingSource,leadType='basic',isExclusive=false,exclusiveDelayDays,createdBy}){
   if(!industryId)throw new Error('Industry is required');
+  const duplicate=await findDuplicateLead({industryId,customerPhone,customerEmail,customerName,requirement});
+  if(duplicate){const error=new Error(`Duplicate lead: this lead already exists${duplicate.customer_name?` (${duplicate.customer_name})`:''}.`);error.code='DUPLICATE_LEAD';error.leadId=duplicate.id;throw error;}
   const type=normalizeType(leadType);
   const configured=await getConfiguredPricing(industryId,cityId,type);
   const effectivePricing=pricingSource==='sheet'&&pricing?mergePricing(configured,pricing):configured;
