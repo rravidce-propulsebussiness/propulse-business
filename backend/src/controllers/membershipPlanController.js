@@ -1,10 +1,12 @@
 const s=require('../services/membershipPlanService');
+const pool=require('../config/database');
 async function getPlans(req,res){try{res.json(await s.getPlans(req.user?.role==='admin'))}catch(e){console.error('GET /membership-plans failed:',e);res.status(500).json({error:'Failed to fetch membership plans',detail:process.env.NODE_ENV==='production'?undefined:e.message})}}
 async function createPlan(req,res){try{const d=req.body;if(!d.name)return res.status(400).json({error:'Plan name is required'});
 if(d.planType==='booster'&&!d.bundle){
  const periods=[{key:'monthly',label:'Monthly',months:1,enabled:true},{key:'quarterly',label:'Quarterly',months:3,enabled:true},{key:'halfYearly',label:'Half-Yearly',months:6,enabled:true},{key:'yearly',label:'Yearly',months:12,enabled:true}];
  const base=Number(d.monthlyBasePrice||0);
  const pricing=Object.fromEntries(periods.map(p=>[p.key,{discount:0,price:base*p.months,customPrice:true}]));
+ await pool.query("DELETE FROM membership_plans WHERE plan_type='booster' AND plan_group='Booster' AND billing_period='Booster'");
  return res.status(201).json(await s.createPlanBundle({...d,bundle:true,name:'Booster',planGroup:'Booster',planType:'booster',periods,pricing}));
 }
 if(d.bundle)return res.status(201).json(await s.createPlanBundle(d));res.status(201).json(await s.createPlan(d))}catch(e){console.error('POST /membership-plans failed:',e);res.status(500).json({error:e.code==='23505'?'A plan with this name already exists':'Failed to create membership plan',detail:process.env.NODE_ENV==='production'?undefined:e.message})}}
