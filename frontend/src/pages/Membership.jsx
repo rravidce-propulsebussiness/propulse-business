@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import UserHeader from '../components/UserHeader'
-import { authRequest, getToken, getUser } from '../utils/auth'
+import { authRequest, getToken, getUser, saveSession } from '../utils/auth'
 import './Membership.css'
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
@@ -92,6 +92,8 @@ export default function Membership() {
             try {
               const verified = await authRequest('/payments/membership/verify', { method: 'POST', body: JSON.stringify(response) })
               setCurrentMembership(verified.membership || null)
+              const latestUser = await authRequest('/auth/me')
+              if (latestUser?.id) saveSession({ token, user: latestUser })
               setSuccess('Pro membership is active. Your account has been upgraded.')
               resolve()
             } catch (e) { reject(e) }
