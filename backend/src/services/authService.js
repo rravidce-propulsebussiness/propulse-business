@@ -148,7 +148,7 @@ async function signup({ name, email, password, phone, businessName, businessDeta
     const passwordHash = await bcrypt.hash(password, 12);
     const userResult = await client.query(
       `INSERT INTO users (name, email, password_hash, role)
-       VALUES ($1, $2, $3, 'admin')
+       VALUES ($1, $2, $3, 'business')
        RETURNING id, name, email, role`,
       [name.trim(), normalizedEmail, passwordHash]
     );
