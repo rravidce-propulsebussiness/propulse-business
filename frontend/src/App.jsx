@@ -5,6 +5,7 @@ import Signup from './pages/Signup';
 import Dashboard from './pages/Dashboard';
 import Profile from './pages/Profile';
 import Industries from './pages/Industries';
+import Leads from './pages/Leads';
 import AdminDashboard from './admin/pages/AdminDashboard';
 import AdminRoute from './admin/components/AdminRoute';
 
@@ -18,6 +19,7 @@ function App() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/industries" element={<Industries />} />
+        <Route path="/leads" element={<Leads />} />
 
         <Route element={<AdminRoute />}>
           <Route path="/admin" element={<AdminDashboard />} />
