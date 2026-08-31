@@ -57,13 +57,41 @@ async function updateLeadStatus(id,status) {
   const result = await pool.query('UPDATE leads SET status=$1,updated_at=CURRENT_TIMESTAMP WHERE id=$2 RETURNING *',[status,id]);
   return result.rows[0] || null;
 }
+
 async function deleteLead(id) {
   const result = await pool.query('DELETE FROM leads WHERE id=$1 RETURNING *',[id]);
   return result.rows[0] || null;
 }
+
 async function getLeadPricing() {
   const result = await pool.query('SELECT * FROM lead_pricing WHERE id=1');
   return result.rows[0] || null;
 }
 
-module.exports = { createLead,getLeadById,getLeads,updateLead,updateLeadStatus,deleteLead,getLeadPricing };
+async function updateLeadPricing(data) {
+  const values = [
+    Number(data.normal?.oneShare || 0),
+    Number(data.normal?.threeShares || 0),
+    Number(data.normal?.fiveShares || 0),
+    Number(data.pro?.oneShare || 0),
+    Number(data.pro?.threeShares || 0),
+    Number(data.pro?.fiveShares || 0),
+  ];
+  if (values.some(v => !Number.isFinite(v) || v < 0)) throw new Error('Pricing values must be non-negative numbers');
+  const result = await pool.query(`
+    INSERT INTO lead_pricing (id,normal_one_share,normal_three_shares,normal_five_shares,pro_one_share,pro_three_shares,pro_five_shares,updated_at)
+    VALUES (1,$1,$2,$3,$4,$5,$6,CURRENT_TIMESTAMP)
+    ON CONFLICT (id) DO UPDATE SET
+      normal_one_share=EXCLUDED.normal_one_share,
+      normal_three_shares=EXCLUDED.normal_three_shares,
+      normal_five_shares=EXCLUDED.normal_five_shares,
+      pro_one_share=EXCLUDED.pro_one_share,
+      pro_three_shares=EXCLUDED.pro_three_shares,
+      pro_five_shares=EXCLUDED.pro_five_shares,
+      updated_at=CURRENT_TIMESTAMP
+    RETURNING *
+  `, values);
+  return result.rows[0];
+}
+
+module.exports = { createLead,getLeadById,getLeads,updateLead,updateLeadStatus,deleteLead,getLeadPricing,updateLeadPricing };
