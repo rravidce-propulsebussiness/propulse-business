@@ -13,5 +13,7 @@ router.use(requireAuth, requireAdmin);
 router.get('/dashboard/stats', adminController.getDashboardStats);
 router.get('/businesses', adminController.getBusinesses);
 router.patch('/businesses/:id/status', adminController.setBusinessStatus);
+router.get('/users', adminController.getUsers);
+router.patch('/users/:id/status', adminController.setUserStatus);
 
 module.exports = router;
