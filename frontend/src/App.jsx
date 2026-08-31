@@ -12,7 +12,7 @@ import AdminUsers from './admin/pages/AdminUsers';
 import AdminPayments from './admin/pages/AdminPayments';
 import AdminLeads from './admin/pages/AdminLeads';
 import AdminLeadPricing from './admin/pages/AdminLeadPricing';
-import AdminMembershipPlans from './admin/pages/AdminMembershipPlans';
+import AdminMembershipPlansConfig from './admin/pages/AdminMembershipPlansConfig';
 import AdminRoute from './admin/components/AdminRoute';
 import AdminLayout from './admin/components/AdminLayout';
 
@@ -20,7 +20,7 @@ function App(){
   return <BrowserRouter><Routes>
     <Route path="/" element={<Home/>}/><Route path="/login" element={<Login/>}/><Route path="/signup" element={<Signup/>}/><Route path="/dashboard" element={<Dashboard/>}/><Route path="/profile" element={<Profile/>}/><Route path="/industries" element={<Industries/>}/><Route path="/leads" element={<Leads/>}/>
     <Route element={<AdminRoute/>}><Route element={<AdminLayout/>}>
-      <Route path="/admin" element={<AdminDashboard/>}/><Route path="/admin/industries" element={<Industries/>}/><Route path="/admin/businesses" element={<AdminBusinesses/>}/><Route path="/admin/users" element={<AdminUsers/>}/><Route path="/admin/payments" element={<AdminPayments/>}/><Route path="/admin/leads" element={<AdminLeads/>}/><Route path="/admin/lead-pricing" element={<AdminLeadPricing/>}/><Route path="/admin/membership-plans" element={<AdminMembershipPlans/>}/><Route path="/admin/memberships" element={<AdminMembershipPlans/>}/>
+      <Route path="/admin" element={<AdminDashboard/>}/><Route path="/admin/industries" element={<Industries/>}/><Route path="/admin/businesses" element={<AdminBusinesses/>}/><Route path="/admin/users" element={<AdminUsers/>}/><Route path="/admin/payments" element={<AdminPayments/>}/><Route path="/admin/leads" element={<AdminLeads/>}/><Route path="/admin/lead-pricing" element={<AdminLeadPricing/>}/><Route path="/admin/membership-plans" element={<AdminMembershipPlansConfig/>}/><Route path="/admin/memberships" element={<AdminMembershipPlansConfig/>}/>
     </Route></Route>
     <Route path="*" element={<Navigate to="/" replace/>}/>
   </Routes></BrowserRouter>
