@@ -17,16 +17,13 @@ function Leads() {
   const [error, setError] = useState('')
 
   useEffect(() => {
-    if (!loggedIn || user?.role === 'admin') return
-
     async function loadLeads() {
       setLoading(true)
       setError('')
       try {
         const query = new URLSearchParams({ status: 'available' })
-        const res = await fetch(`${API}/leads?${query.toString()}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        })
+        const headers = token ? { Authorization: `Bearer ${token}` } : {}
+        const res = await fetch(`${API}/leads?${query.toString()}`, { headers })
         const data = await res.json()
         if (!res.ok) throw new Error(data.error || 'Failed to load leads')
         setLeads(Array.isArray(data) ? data : [])
@@ -38,20 +35,7 @@ function Leads() {
     }
 
     loadLeads()
-  }, [loggedIn, token, user?.role])
-
-  if (!loggedIn) {
-    return (
-      <main className="leads-locked-page">
-        <div className="leads-locked-card">
-          <span className="section-kicker">PROPULSE LEAD MARKETPLACE</span>
-          <h1>Sign in to access leads.</h1>
-          <p>Lead opportunities are available to registered business owners. Sign in to view and manage your opportunities.</p>
-          <div><Link className="leads-primary" to="/login">Login to continue →</Link><Link className="leads-secondary" to="/signup">Create business account</Link></div>
-        </div>
-      </main>
-    )
-  }
+  }, [token, loggedIn])
 
   if (user?.role === 'admin') {
     return (
@@ -79,9 +63,13 @@ function Leads() {
         <div>
           <span className="section-kicker">LEAD MARKETPLACE</span>
           <h1>{category ? `${category.replaceAll('-', ' ')} leads` : 'Available leads'}</h1>
-          <p>Qualified opportunities matched to your business profile.</p>
+          <p>Browse relevant opportunities and find your next customer.</p>
         </div>
-        <Link to={destination} className="leads-dashboard">Back to dashboard →</Link>
+        {loggedIn ? (
+          <Link to={destination} className="leads-dashboard">Back to dashboard →</Link>
+        ) : (
+          <div><Link to="/login" className="leads-dashboard">Login to buy leads →</Link></div>
+        )}
       </header>
 
       {error && <div className="leads-error">{error}</div>}
@@ -90,19 +78,26 @@ function Leads() {
       ) : !filtered.length ? (
         <div className="leads-empty">
           <strong>{category ? 'No matching leads yet' : 'No available leads yet'}</strong>
-          <span>Complete your business profile with the services and locations you serve to improve matching.</span>
-          <Link to="/profile">Update business profile →</Link>
+          <span>New opportunities will appear here as they become available.</span>
+          {!loggedIn && <Link to="/signup">Create a business account →</Link>}
         </div>
       ) : (
         <div className="leads-grid">
           {filtered.map((lead) => (
             <article className="market-lead" key={lead.id}>
-              <span className="lead-tag">AVAILABLE</span>
-              <h2>{lead.service_name}</h2>
+              <span className="lead-tag">{String(lead.lead_type || 'basic').toUpperCase()}</span>
+              <h2>{lead.service_name || lead.industry_name || 'Business opportunity'}</h2>
               <p>{lead.requirement}</p>
-              <strong>⌖ {lead.city_name}, {lead.state_name}</strong>
-              <div className="lead-meta"><span>{lead.industry_name}</span>{lead.budget && <span>Budget: {lead.budget}</span>}</div>
-              <Link className="market-lead-action" to={`/leads/${lead.id}`}>View lead →</Link>
+              <strong>⌖ {lead.city_name || 'Location available after purchase'}, {lead.state_name || ''}</strong>
+              <div className="lead-meta">
+                <span>{lead.industry_name}</span>
+                {lead.budget && <span>Budget: {lead.budget}</span>}
+              </div>
+              {loggedIn ? (
+                <Link className="market-lead-action" to={`/leads/${lead.id}`}>View lead →</Link>
+              ) : (
+                <Link className="market-lead-action" to="/login">Login to buy →</Link>
+              )}
             </article>
           ))}
         </div>
