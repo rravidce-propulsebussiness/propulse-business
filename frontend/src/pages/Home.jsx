@@ -8,11 +8,29 @@ const leadPreviews = [
   { service: 'Home Construction', location: 'Pune', requirement: 'Independent house construction', tag: 'ACTIVE' },
 ]
 
+const categories = [
+  { name: 'Interior & Modular', query: 'interior' },
+  { name: 'Construction', query: 'construction' },
+  { name: 'Home Services', query: 'home-services' },
+  { name: 'Real Estate', query: 'real-estate' },
+  { name: 'Digital Services', query: 'digital-services' },
+  { name: 'Professional Services', query: 'professional-services' },
+]
+
+const faqs = [
+  ['What is Propulse Business?', 'Propulse Business connects business owners with qualified lead opportunities based on the services they offer and the locations they serve.'],
+  ['Can I see leads without signing in?', 'You can preview lead categories and limited lead information publicly. Sign in is required to access protected lead details.'],
+  ['How do leads get matched to my business?', 'Propulse uses your business profile, services, subservices and service locations to identify relevant opportunities.'],
+  ['Who can create a business account?', 'Business owners and service businesses can create an account and build a profile for the services they provide.'],
+  ['Can I manage my business profile?', 'Yes. After signing in as a business owner, you can manage your business profile, services and service locations from your dashboard.'],
+]
+
 function Home() {
   const token = getToken()
   const user = getUser()
   const loggedIn = Boolean(token && user)
   const dashboardPath = user?.role === 'admin' ? '/admin' : '/dashboard'
+  const protectedPath = loggedIn ? dashboardPath : '/login'
 
   return (
     <div className="home-page">
@@ -21,13 +39,14 @@ function Home() {
           <img src="/brand/propulse-logo.png" alt="Propulse Business" />
         </Link>
         <nav className="desktop-nav" aria-label="Main navigation">
-          <a href="#leads">Leads</a>
-          <a href="#industries">Industries</a>
+          <Link to={protectedPath}>Leads</Link>
+          <a href="#industries">Categories</a>
           <a href="#how-it-works">How it works</a>
+          <a href="#faq">FAQ</a>
         </nav>
         <div className="header-actions">
           {loggedIn ? (
-            <Link className="header-dashboard" to={dashboardPath}>Dashboard <span>→</span></Link>
+            <Link className="header-dashboard" to={dashboardPath}>{user?.role === 'admin' ? 'Admin Panel' : 'Dashboard'} <span>→</span></Link>
           ) : (
             <>
               <Link className="header-login" to="/login">Login</Link>
@@ -44,18 +63,16 @@ function Home() {
             <h1>Find the right leads.<br /><em>Grow your business.</em></h1>
             <p>Discover qualified business opportunities matched to the services and locations you serve.</p>
             <div className="hero-actions">
-              <Link className="hero-primary" to={loggedIn ? dashboardPath : '/login'}>{loggedIn ? 'View my dashboard' : 'Explore available leads'} <span>→</span></Link>
+              <Link className="hero-primary" to={protectedPath}>{loggedIn ? 'View my dashboard' : 'Explore available leads'} <span>→</span></Link>
               {!loggedIn && <Link className="hero-secondary" to="/signup">Create business account</Link>}
             </div>
             <div className="hero-trust"><span>✓</span> Built for service businesses <i /> <span>✓</span> Location-based matching</div>
           </div>
           <div className="hero-visual" aria-hidden="true">
-            <div className="hero-orbit orbit-one" />
-            <div className="hero-orbit orbit-two" />
+            <div className="hero-orbit orbit-one" /><div className="hero-orbit orbit-two" />
             <div className="hero-card hero-card-main">
               <div className="hero-card-top"><span className="status-dot" /> LIVE LEAD</div>
-              <strong>Interior Design</strong>
-              <span>Hyderabad · 3 BHK</span>
+              <strong>Interior Design</strong><span>Hyderabad · 3 BHK</span>
               <div className="locked-line"><span>••••••••••</span><b>LOGIN TO ACCESS</b></div>
             </div>
             <div className="hero-float hero-float-one"><b>+24</b><span>new opportunities</span></div>
@@ -72,15 +89,13 @@ function Home() {
         <section className="section-block" id="leads">
           <div className="section-heading">
             <div><span className="section-kicker">LEAD MARKETPLACE</span><h2>Opportunities are waiting.</h2><p>Preview the kind of business opportunities available on Propulse.</p></div>
-            <Link to={loggedIn ? dashboardPath : '/login'} className="section-link">{loggedIn ? 'View dashboard' : 'Login to access'} <span>→</span></Link>
+            <Link to={protectedPath} className="section-link">{loggedIn ? 'View dashboard' : 'Login to access'} <span>→</span></Link>
           </div>
           <div className="lead-grid">
             {leadPreviews.map((lead) => (
               <article className="lead-card" key={`${lead.service}-${lead.location}`}>
                 <div className="lead-card-top"><span>{lead.tag}</span><span className="lock">🔒</span></div>
-                <h3>{lead.service}</h3>
-                <p>{lead.requirement}</p>
-                <div className="lead-location">⌖ {lead.location}</div>
+                <h3>{lead.service}</h3><p>{lead.requirement}</p><div className="lead-location">⌖ {lead.location}</div>
                 <div className="lead-protected">Lead details protected <Link to="/login">Sign in to access</Link></div>
               </article>
             ))}
@@ -88,10 +103,12 @@ function Home() {
         </section>
 
         <section className="section-block industries-section" id="industries">
-          <div className="section-heading centered"><span className="section-kicker">EXPLORE DEMAND</span><h2>Popular business categories</h2><p>Build your profile around the services you sell and the locations you cover.</p></div>
+          <div className="section-heading centered"><span className="section-kicker">EXPLORE DEMAND</span><h2>Popular business categories</h2><p>Click a category to view its lead opportunities.</p></div>
           <div className="category-grid">
-            {['Interior & Modular', 'Construction', 'Home Services', 'Real Estate', 'Digital Services', 'Professional Services'].map((name, index) => (
-              <Link to="/industries" className="category-card" key={name}><span>0{index + 1}</span><strong>{name}</strong><b>→</b></Link>
+            {categories.map((category, index) => (
+              <Link to={`/leads?category=${encodeURIComponent(category.query)}`} className="category-card" key={category.name}>
+                <span>0{index + 1}</span><strong>{category.name}</strong><b>→</b>
+              </Link>
             ))}
           </div>
         </section>
@@ -105,10 +122,17 @@ function Home() {
           </div>
         </section>
 
+        <section className="faq-section" id="faq">
+          <div className="section-heading centered"><span className="section-kicker">FAQ</span><h2>Frequently asked questions.</h2><p>Everything business owners need to know before getting started.</p></div>
+          <div className="faq-list">
+            {faqs.map(([question, answer]) => <details className="faq-item" key={question}><summary>{question}<span>+</span></summary><p>{answer}</p></details>)}
+          </div>
+        </section>
+
         {!loggedIn && <section className="final-cta"><div><span className="section-kicker">READY TO GROW?</span><h2>Start getting better business opportunities.</h2><p>Create your Propulse Business account and build your profile.</p></div><Link to="/signup">Create business account <span>→</span></Link></section>}
       </main>
 
-      <footer className="public-footer"><span>© {new Date().getFullYear()} Propulse Business</span><div><Link to="/">Home</Link><Link to="/login">Login</Link><Link to="/signup">Sign up</Link></div></footer>
+      <footer className="public-footer"><span>© {new Date().getFullYear()} Propulse Business</span><div><Link to="/">Home</Link><Link to="/login">Login</Link><Link to="/signup">Sign up</Link><a href="#faq">FAQ</a></div></footer>
     </div>
   )
 }
