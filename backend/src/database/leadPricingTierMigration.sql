@@ -27,4 +27,6 @@ ALTER TABLE leads ALTER COLUMN customer_phone DROP NOT NULL;
 ALTER TABLE leads ALTER COLUMN requirement DROP NOT NULL;
 ALTER TABLE leads ALTER COLUMN source DROP NOT NULL;
 
--- Older exclusive-delay data is retained for backward compatibility; new code uses is_exclusive + exclusive_delay_days.
+-- Remove legacy Exclusive pricing from stored JSON. Exclusive has no separate price.
+UPDATE lead_pricing_rules SET pricing = pricing - 'exclusive' WHERE pricing ? 'exclusive';
+UPDATE leads SET pricing = pricing - 'exclusive' WHERE pricing ? 'exclusive';
