@@ -30,14 +30,9 @@ function Signup() {
           publicRequest('/industries'), publicRequest('/services'), publicRequest('/subservices'),
           publicRequest('/states'), publicRequest('/cities'),
         ])
-        setIndustries(industryData)
-        setServices(serviceData)
-        setSubservices(subserviceData)
-        setStates(stateData)
-        setCities(cityData)
-      } catch (err) {
-        setError(`We couldn't load the business options. ${err.message}`)
-      } finally { setLoadingData(false) }
+        setIndustries(industryData); setServices(serviceData); setSubservices(subserviceData); setStates(stateData); setCities(cityData)
+      } catch (err) { setError(`We couldn't load the business options. ${err.message}`) }
+      finally { setLoadingData(false) }
     }
     loadMasterData()
   }, [])
@@ -76,7 +71,9 @@ function Signup() {
     try {
       setLoading(true)
       const result = await authRequest('/auth/signup', { method: 'POST', body: JSON.stringify({ ...form, confirm: undefined, services: cleanServices, locations: cleanLocations }) })
-      saveSession(result); navigate('/', { replace: true })
+      saveSession(result)
+      // Public signup always creates a Business Owner. Send the new owner directly to the owner home.
+      navigate(result.user?.role === 'admin' ? '/admin' : '/dashboard', { replace: true })
     } catch (err) { setError(err.message) } finally { setLoading(false) }
   }
 
