@@ -68,7 +68,7 @@ export default function LeadsV2() {
             <div className="lv2-hero-meta"><span><i /> Live opportunities</span><span>{filtered.length} available now</span></div>
           </div>
           <div className="lv2-hero-side">
-            {logged ? <><span className="lv2-member-label">YOUR ACCESS</span><strong>{isPro ? 'PRO MEMBER' : 'STANDARD MEMBER'}</strong><Link to="/dashboard">Dashboard →</Link></> : <><span className="lv2-member-label">READY TO BUY?</span><strong>Sign in to purchase</strong><Link to="/login">Login →</Link></>}
+            {logged ? <><span className="lv2-member-label">YOUR ACCESS</span><strong>{isPro ? 'PRO MEMBER' : 'STANDARD MEMBER'}</strong><small>{isPro ? 'Priority access enabled' : 'Standard marketplace access'}</small></> : <><span className="lv2-member-label">READY TO BUY?</span><strong>Sign in to purchase</strong><Link to="/login">Login →</Link></>}
           </div>
         </section>
 
