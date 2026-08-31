@@ -5,7 +5,7 @@ import Signup from './pages/Signup';
 import Dashboard from './pages/Dashboard';
 import Profile from './pages/Profile';
 import Industries from './pages/Industries';
-import Leads from './pages/Leads';
+import Leads from './pages/LeadsV2';
 import AdminDashboard from './admin/pages/AdminDashboard';
 import AdminBusinesses from './admin/pages/AdminBusinesses';
 import AdminUsers from './admin/pages/AdminUsers';
