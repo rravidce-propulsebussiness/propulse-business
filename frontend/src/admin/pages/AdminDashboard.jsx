@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { clearSession, getToken, getUser } from '../../utils/auth';
 import './AdminDashboard.css';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
@@ -10,14 +11,14 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     let mounted = true;
+
     fetch(`${API_URL}/admin/dashboard/stats`, {
-      headers: localStorage.getItem('token')
-        ? { Authorization: `Bearer ${localStorage.getItem('token')}` }
-        : {},
+      headers: getToken() ? { Authorization: `Bearer ${getToken()}` } : {},
     })
-      .then((response) => {
-        if (!response.ok) throw new Error('Unable to load dashboard statistics');
-        return response.json();
+      .then(async (response) => {
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.error || 'Unable to load dashboard statistics');
+        return data;
       })
       .then((data) => mounted && setStats(data))
       .catch((err) => mounted && setError(err.message))
@@ -26,8 +27,9 @@ export default function AdminDashboard() {
     return () => { mounted = false; };
   }, []);
 
-  const adminName = localStorage.getItem('name') || 'Admin User';
-  const adminEmail = localStorage.getItem('email') || 'Administrator';
+  const admin = getUser();
+  const adminName = admin?.name || 'Admin User';
+  const adminEmail = admin?.email || 'Administrator';
   const initials = adminName
     .split(' ')
     .filter(Boolean)
@@ -37,15 +39,13 @@ export default function AdminDashboard() {
     .toUpperCase() || 'AU';
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('role');
-    localStorage.removeItem('name');
-    localStorage.removeItem('email');
+    clearSession();
+    localStorage.removeItem('propulse_session_mode');
     window.location.href = '/login';
   };
 
   const cards = [
-    ['Active users', stats?.activeUsers ?? stats?.users],
+    ['Active users', stats?.activeUsers],
     ['Businesses', stats?.businesses],
     ['Active businesses', stats?.activeBusinesses],
     ['Industries', stats?.industries],
@@ -111,8 +111,8 @@ export default function AdminDashboard() {
       <section className="admin-overview-panel">
         <div>
           <span className="admin-eyebrow">PROPULSE BUSINESS</span>
-          <h2>Everything you need to manage the marketplace.</h2>
-          <p>Use the administration sections to maintain your master data and keep lead matching accurate.</p>
+          <h2>Manage the platform from one place.</h2>
+          <p>Maintain your master data and keep lead matching accurate as the marketplace grows.</p>
         </div>
         <div className="admin-data-list">
           <div><b>01</b><span>Industries</span><small>Categories & structure</small></div>
