@@ -1,6 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { useEffect, useState } from 'react'
-import { clearSession, getUser, getToken } from '../utils/auth'
+import { getUser, getToken, authRequest } from '../utils/auth'
 import UserHeader from '../components/UserHeader'
 import './Dashboard.css'
 
@@ -13,6 +13,18 @@ function Dashboard() {
   const [leads, setLeads] = useState([])
   const [loadingLeads, setLoadingLeads] = useState(false)
   const [leadError, setLeadError] = useState('')
+  const [businessName, setBusinessName] = useState(user?.business_name || user?.businessName || '')
+
+  useEffect(() => {
+    if (!token || !user || user.role === 'admin') return
+    let active = true
+    authRequest('/profile')
+      .then((profile) => {
+        if (active && profile?.business_name) setBusinessName(profile.business_name)
+      })
+      .catch(() => {})
+    return () => { active = false }
+  }, [token, user?.role])
 
   useEffect(() => {
     if (!token || !user || user.role === 'admin') return
@@ -29,15 +41,14 @@ function Dashboard() {
   }, [token, user?.role])
 
   if (!token || !user || user.role === 'admin') { navigate('/login', { replace: true }); return null }
-  const name = user.name || 'Business Owner'
-  const firstName = name.split(' ')[0]
+  const displayBusinessName = businessName || 'Your Business'
   const previewLeads = leads.slice(0, 3)
 
   return (
     <div className="owner-dashboard">
       <UserHeader />
       <main className="owner-main">
-        <section className="owner-welcome"><div><span className="owner-kicker">BUSINESS OWNER HOME</span><h1>Good to see you, {firstName}.</h1><p>Find relevant leads, manage your business profile and grow with Propulse.</p></div><Link className="owner-primary" to="/leads">Explore leads <span>→</span></Link></section>
+        <section className="owner-welcome"><div><span className="owner-kicker">BUSINESS OWNER HOME</span><h1>Welcome back, {displayBusinessName}.</h1><p>Find relevant leads, manage your business profile and grow with Propulse.</p></div><Link className="owner-primary" to="/leads">Explore leads <span>→</span></Link></section>
         <section className="owner-stats"><Link to="/leads" className="owner-stat"><span className="stat-mark">◎</span><div><strong>{loadingLeads ? '…' : leads.length}</strong><small>Available leads</small></div><b>→</b></Link><Link to="/leads" className="owner-stat"><span className="stat-mark">◷</span><div><strong>—</strong><small>My leads</small></div><b>→</b></Link><Link to="/profile" className="owner-stat"><span className="stat-mark">◇</span><div><strong>Setup</strong><small>Business profile</small></div><b>→</b></Link><Link to="/leads" className="owner-stat"><span className="stat-mark">◆</span><div><strong>—</strong><small>Purchased leads</small></div><b>→</b></Link></section>
         <section className="owner-grid"><div className="owner-panel lead-panel"><div className="panel-head"><div><span className="owner-kicker">LEAD MARKETPLACE</span><h2>Find opportunities</h2></div><Link to="/leads">View all →</Link></div>{leadError&&<div className="lead-error">{leadError}</div>}<div className="owner-lead-list">{loadingLeads?<div className="owner-lead"><div><strong>Loading available leads…</strong></div></div>:previewLeads.length?previewLeads.map(lead=><Link to={`/leads/${lead.id}`} className="owner-lead" key={lead.id}><div><span>{(lead.industry_name||'LEAD').toUpperCase()}</span><strong>{lead.service_name||lead.industry_name||'Lead opportunity'}{lead.requirement?` · ${lead.requirement}`:''}</strong><small>{lead.city_name||'Location available'}</small></div><b>View →</b></Link>):<div className="owner-lead"><div><strong>No available leads yet</strong><small>Update your business profile to improve matching.</small></div><b>→</b></div>}</div></div><aside className="owner-panel profile-panel-mini"><span className="owner-kicker">YOUR BUSINESS</span><h2>Complete your profile</h2><p>Add your services and locations so Propulse can match you with better opportunities.</p><div className="progress-track"><span /></div><div className="progress-row"><small>Profile setup</small><b>Start now</b></div><Link className="outline-action" to="/profile">Complete business profile <span>→</span></Link></aside></section>
         <section className="owner-tools" id="services"><div className="section-title"><span className="owner-kicker">QUICK ACTIONS</span><h2>Manage your business</h2></div><div className="tool-grid"><Link to="/profile" className="tool-card"><span>01</span><strong>Business Profile</strong><small>Business information, services and locations</small><b>→</b></Link><Link to="/leads" className="tool-card"><span>02</span><strong>Lead Marketplace</strong><small>Explore opportunities matched to your business</small><b>→</b></Link><Link to="/profile" className="tool-card"><span>03</span><strong>Services & Locations</strong><small>Control where and what you want leads for</small><b>→</b></Link></div></section>
