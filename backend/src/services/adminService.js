@@ -47,7 +47,7 @@ async function getUsers({ search = '', role = 'all', status = 'all' } = {}) {
            bp.business_name, bp.phone, bp.business_details,
            COALESCE((SELECT COUNT(*)::int FROM business_profile_services x WHERE x.business_profile_id = bp.id AND x.is_active = TRUE), 0) AS service_count,
            COALESCE((SELECT COUNT(*)::int FROM business_profile_locations x WHERE x.business_profile_id = bp.id AND x.is_active = TRUE), 0) AS location_count,
-           m.id AS membership_id, m.status AS membership_status, m.started_at AS membership_started_at,
+           m.id AS membership_id, m.status AS membership_status, m.starts_at AS membership_started_at,
            m.expires_at AS membership_expires_at, mp.id AS membership_plan_id, mp.name AS membership_plan_name,
            mp.plan_group AS membership_plan_group, mp.plan_type AS membership_plan_type,
            mp.billing_period AS membership_billing_period, mp.billing_months AS membership_billing_months
