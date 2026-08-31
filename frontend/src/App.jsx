@@ -4,6 +4,7 @@ import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Dashboard from './pages/Dashboard';
 import Profile from './pages/Profile';
+import Membership from './pages/Membership';
 import Industries from './pages/Industries';
 import Leads from './pages/LeadsV2';
 import AdminDashboard from './admin/pages/AdminDashboard';
@@ -43,12 +44,12 @@ function App() {
       <Route path="/signup" element={<Signup />} />
     </Route>
 
-    {/* Public marketplace: browsing is open; the Leads page gates purchase actions. */}
     <Route path="/leads" element={<Leads />} />
     <Route path="/industries" element={<Industries />} />
 
     <Route element={<CustomerRoute />}>
       <Route path="/dashboard" element={<Dashboard />} />
+      <Route path="/membership" element={<Membership />} />
       <Route path="/profile" element={<Profile />} />
     </Route>
 
