@@ -15,6 +15,11 @@ function safeJson(value, fallback = []) {
   }
 }
 
+function normalizePlanType(value, fallback = 'non_pro') {
+  const type = String(value || fallback).trim().toLowerCase();
+  return ['pro', 'investor', 'booster', 'non_pro'].includes(type) ? type : fallback;
+}
+
 function normalizeEntitlements(items, months = 1) {
   return safeJson(items).map(item => {
     const monthly = Math.max(0, Number(item.monthly_quantity ?? item.monthlyLimit ?? item.quantity ?? 0));
@@ -48,8 +53,8 @@ async function createPlan(d) {
   const finalPrice = d.priceOverride !== undefined && d.priceOverride !== '' ? Number(d.priceOverride) : calculatePrice(base, months, discount);
   const days = d.durationDays || Math.round(months * 30.4375);
   const benefits = safeJson(d.benefits);
-  const isBooster = String(d.planType || '').toLowerCase() === 'booster';
-  const entitlements = isBooster ? [] : normalizeEntitlements(d.leadEntitlements, months);
+  const planType = normalizePlanType(d.planType);
+  const entitlements = planType === 'booster' ? [] : normalizeEntitlements(d.leadEntitlements, months);
   const addOns = safeJson(d.addOns);
   const period = d.billingPeriod || `${months}-month`;
   const rollover = d.leadRolloverEnabled !== false;
@@ -63,14 +68,15 @@ async function createPlan(d) {
     )
     VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)
     RETURNING *
-  `, [d.name,d.planGroup || d.name,d.planType || 'non_pro',d.description || null,finalPrice,days,period,months,base,discount,JSON.stringify(benefits),JSON.stringify(entitlements),JSON.stringify(addOns),rollover,expiryDays]);
+  `, [d.name,d.planGroup || d.name,planType,d.description || null,finalPrice,days,period,months,base,discount,JSON.stringify(benefits),JSON.stringify(entitlements),JSON.stringify(addOns),rollover,expiryDays]);
   return r.rows[0];
 }
 
 async function createPlanBundle(d) {
   const rows = [];
   const periods = Array.isArray(d.periods) ? d.periods.filter(x => x && x.enabled !== false && Number(x.months) > 0) : [];
-  const isBooster = String(d.planType || '').toLowerCase() === 'booster';
+  const planType = normalizePlanType(d.planType, 'pro');
+  const isBooster = planType === 'booster';
 
   for (const period of periods) {
     const months = Number(period.months);
@@ -82,7 +88,7 @@ async function createPlanBundle(d) {
     const payload = {
       name,
       planGroup: d.name,
-      planType: d.planType || 'pro',
+      planType,
       description: d.description,
       billingPeriod: label,
       billingMonths: months,
@@ -118,10 +124,11 @@ async function updatePlan(id, d) {
   const final = d.priceOverride !== undefined && d.priceOverride !== '' ? Number(d.priceOverride) : calculatePrice(base, months, discount);
   const days = d.durationDays || Math.round(months * 30.4375);
   const benefits = safeJson(d.benefits, safeJson(cur.rows[0].benefits));
-  const planType = d.planType || cur.rows[0].plan_type;
-  const entitlements = String(planType).toLowerCase() === 'booster'
+  const planType = normalizePlanType(d.planType, normalizePlanType(cur.rows[0].plan_type));
+  const incomingEntitlements = normalizeEntitlements(d.leadEntitlements, months);
+  const entitlements = planType === 'booster'
     ? []
-    : (normalizeEntitlements(d.leadEntitlements, months).length ? normalizeEntitlements(d.leadEntitlements, months) : normalizeEntitlements(cur.rows[0].lead_entitlements, months));
+    : (incomingEntitlements.length ? incomingEntitlements : normalizeEntitlements(cur.rows[0].lead_entitlements, months));
   const addOns = safeJson(d.addOns, safeJson(cur.rows[0].add_ons));
   const rollover = d.leadRolloverEnabled === undefined ? cur.rows[0].lead_rollover_enabled : Boolean(d.leadRolloverEnabled);
   const expiryDays = d.leadExpiryDays === undefined ? cur.rows[0].lead_expiry_days : (d.leadExpiryDays === '' ? null : Number(d.leadExpiryDays));
