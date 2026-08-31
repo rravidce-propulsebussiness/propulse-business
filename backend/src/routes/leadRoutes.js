@@ -1,15 +1,17 @@
 const express = require('express');
 const leadController = require('../controllers/leadController');
-const { requireAuth } = require('../middleware/authMiddleware');
-const { requireAdmin } = require('../middleware/adminMiddleware');
+const requireAuth = require('../middleware/authMiddleware');
+const requireAdmin = require('../middleware/adminMiddleware');
 
 const router = express.Router();
 
-// Lead administration. Admins can create and manage the marketplace inventory.
-router.post('/', requireAuth, requireAdmin, leadController.createLead);
+// Business owners can view available leads after authentication.
 router.get('/', requireAuth, leadController.getLeads);
 router.get('/:id', requireAuth, leadController.getLeadById);
-router.put('/:id', requireAuth, requireAdmin, leadController.updateLead);
-router.patch('/:id/status', requireAuth, requireAdmin, leadController.updateLeadStatus);
+
+// Only admins can create and manage marketplace leads.
+router.post('/', requireAdmin, leadController.createLead);
+router.put('/:id', requireAdmin, leadController.updateLead);
+router.patch('/:id/status', requireAdmin, leadController.updateLeadStatus);
 
 module.exports = router;
