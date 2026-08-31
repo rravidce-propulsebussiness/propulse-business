@@ -37,8 +37,10 @@ async function updateInvestorSettings(data) {
     data.requiresPro !== false,
   ]);
 
-  if (data.industryLimits) {
+  if (Array.isArray(data.industryLimits)) {
     for (const x of data.industryLimits) {
+      const industryId = Number(x.industryId ?? x.id);
+      const limit = Number(x.limit ?? x.investor_limit ?? data.defaultIndustryLimit ?? 0);
       await pool.query(`
         INSERT INTO investor_industry_limits(industry_id,investor_limit,is_active)
         VALUES($1,$2,$3)
@@ -46,7 +48,7 @@ async function updateInvestorSettings(data) {
           investor_limit=EXCLUDED.investor_limit,
           is_active=EXCLUDED.is_active,
           updated_at=CURRENT_TIMESTAMP
-      `, [Number(x.industryId), Number(x.limit), Boolean(x.isActive)]);
+      `, [industryId, limit, x.isActive === undefined ? Boolean(x.is_active !== false) : Boolean(x.isActive)]);
     }
   }
 
