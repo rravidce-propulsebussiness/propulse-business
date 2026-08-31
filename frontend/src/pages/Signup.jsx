@@ -72,8 +72,8 @@ function Signup() {
       setLoading(true)
       const result = await authRequest('/auth/signup', { method: 'POST', body: JSON.stringify({ ...form, confirm: undefined, services: cleanServices, locations: cleanLocations }) })
       saveSession(result)
-      // Public signup always creates a Business Owner. Send the new owner directly to the owner home.
-      navigate(result.user?.role === 'admin' ? '/admin' : '/dashboard', { replace: true })
+      // Public signup is Business Owner only; always enter the owner home.
+      navigate('/dashboard', { replace: true })
     } catch (err) { setError(err.message) } finally { setLoading(false) }
   }
 
