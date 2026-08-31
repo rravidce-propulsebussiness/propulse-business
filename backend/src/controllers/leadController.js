@@ -59,6 +59,8 @@ async function getLeads(req, res) {
       stateId: req.query.stateId,
       cityId: req.query.cityId,
       status: req.query.status || 'available',
+      userId: req.user?.id,
+      role: req.user?.role,
     });
 
     return res.json(leads);
