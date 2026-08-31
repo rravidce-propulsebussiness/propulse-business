@@ -32,10 +32,11 @@ function Login() {
   return (
     <div className="auth-page">
       <section className="auth-visual" aria-label="Pro Pulse Business">
-        <img className="auth-office" src="/brand/propulse-office.png" alt="Pro Pulse Business office" />
         <div className="auth-visual-overlay" />
         <div className="auth-visual-content">
-          <img className="auth-logo" src="/brand/propulse-logo.png" alt="Pro Pulse Business Technologies Private Limited" />
+          <div className="auth-logo-frame">
+            <img className="auth-logo" src="/brand/propulse-logo.png" alt="Pro Pulse Business Technologies Private Limited" />
+          </div>
           <div className="auth-visual-copy">
             <span>QUALIFIED LEADS. BETTER OPPORTUNITIES.</span>
             <h1>Get High-Value<br /><em>Clients.</em></h1>
