@@ -77,9 +77,10 @@ async function createPlanBundle(d) {
     const label = String(period.label || `${months}-month`).trim();
     const p = d.pricing?.[period.key] || {};
     const entitlements = isBooster ? [] : normalizeEntitlements(period.leadEntitlements ?? d.leadEntitlements, months);
+    const name = `${d.name} ${label}`;
 
-    rows.push(await createPlan({
-      name: `${d.name} ${label}`,
+    const payload = {
+      name,
       planGroup: d.name,
       planType: d.planType || 'pro',
       description: d.description,
@@ -93,7 +94,16 @@ async function createPlanBundle(d) {
       addOns: d.addOns,
       leadRolloverEnabled: d.leadRolloverEnabled !== false,
       leadExpiryDays: d.leadExpiryDays,
-    }));
+    };
+
+    // The admin configurator can be used repeatedly. If a cycle already exists,
+    // update that plan instead of failing on membership_plans_name_key.
+    const existing = await pool.query('SELECT id FROM membership_plans WHERE name=$1 LIMIT 1', [name]);
+    if (existing.rows[0]) {
+      rows.push(await updatePlan(existing.rows[0].id, payload));
+    } else {
+      rows.push(await createPlan(payload));
+    }
   }
   return rows;
 }
