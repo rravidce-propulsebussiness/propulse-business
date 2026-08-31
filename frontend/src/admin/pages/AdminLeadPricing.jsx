@@ -19,6 +19,7 @@ export default function AdminLeadPricing(){
  const del=async id=>{if(!confirm('Delete this pricing rule?'))return;try{await req(`/leads/pricing/rules/${id}`,{method:'DELETE'});await load()}catch(e){setError(e.message)}};
  const addTier=()=>setForm(f=>({...f,pricing:{...f.pricing,shares:[...f.pricing.shares,{shares:10,normal:0,pro:0}]}}));
  return <main className="pricing-page">
+  <style>{`\n    .pricing-hero > div:first-child{flex:1;text-align:center}\n    .create-head,.rules-head{position:relative;justify-content:center;text-align:center;min-height:70px}\n    .create-head > div,.rules-head > div{max-width:700px;margin:0 auto}\n    .create-head .outline-btn,.rules-head .outline-btn{position:absolute;right:0;top:0}\n    @media(max-width:700px){\n      .create-head,.rules-head{min-height:0}\n      .create-head .outline-btn,.rules-head .outline-btn{position:static;width:100%;margin-top:10px}\n    }\n  `}</style>
   <section className="pricing-hero"><div><span className="hero-kicker">REVENUE CONTROL</span><h1>Lead Pricing</h1><p>Set market-specific prices for Basic and Premium leads.</p></div><div className="hero-mark">₹</div></section>
   {error&&<div className="pricing-alert error">{error}</div>}{ok&&<div className="pricing-alert success">{ok}</div>}
   <section className="pricing-panel create-panel">
