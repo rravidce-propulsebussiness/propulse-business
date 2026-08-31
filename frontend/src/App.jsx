@@ -8,6 +8,7 @@ import Industries from './pages/Industries';
 import Leads from './pages/Leads';
 import AdminDashboard from './admin/pages/AdminDashboard';
 import AdminBusinesses from './admin/pages/AdminBusinesses';
+import AdminUsers from './admin/pages/AdminUsers';
 import AdminRoute from './admin/components/AdminRoute';
 import AdminLayout from './admin/components/AdminLayout';
 
@@ -27,6 +28,7 @@ function App() {
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/admin/industries" element={<Industries />} />
             <Route path="/admin/businesses" element={<AdminBusinesses />} />
+            <Route path="/admin/users" element={<AdminUsers />} />
           </Route>
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
