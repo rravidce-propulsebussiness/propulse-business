@@ -7,6 +7,7 @@
     "dev": "nodemon src/server.js",
     "start": "node src/server.js",
     "create-admin": "node src/database/createAdmin.js",
+    "migrate:lead-access": "node src/database/runLeadAccessMigrations.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
