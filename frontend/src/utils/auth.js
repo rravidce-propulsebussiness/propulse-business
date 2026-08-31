@@ -17,9 +17,13 @@ export function clearSession() {
 }
 
 export async function authRequest(path, options = {}) {
+  const token = getToken()
+  const headers = { 'Content-Type': 'application/json', ...(options.headers || {}) }
+  if (token) headers.Authorization = `Bearer ${token}`
+
   const response = await fetch(`http://localhost:5000/api${path}`, {
     ...options,
-    headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
+    headers,
   })
   const data = await response.json().catch(() => ({}))
   if (!response.ok) throw new Error(data.error || 'Request failed')
