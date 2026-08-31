@@ -4,6 +4,7 @@ import './Sidebar.css';
 function Sidebar() {
   const navItems = [
     { path: '/dashboard', label: 'Dashboard', icon: '📊' },
+    { path: '/profile', label: 'Business Profile', icon: '◉' },
     { path: '/industries', label: 'Industries', icon: '🏢' },
     { path: '/', label: 'Home', icon: '🏠' },
   ];
@@ -19,6 +20,7 @@ function Sidebar() {
             <li key={item.path}>
               <NavLink
                 to={item.path}
+                end={item.path === '/'}
                 className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
               >
                 <span className="nav-icon">{item.icon}</span>
