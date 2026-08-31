@@ -1,0 +1,9 @@
+.v9-google-modal{width:min(520px,100%);background:#fff;border-radius:17px;overflow:hidden;box-shadow:0 30px 90px rgba(0,0,0,.25)}
+.v9-google-modal header{display:flex;align-items:flex-start;justify-content:space-between;gap:15px;padding:18px 20px;border-bottom:1px solid #e5ebf2}
+.v9-google-modal header span{font-size:9px;font-weight:900;letter-spacing:.12em;color:#f15a24}
+.v9-google-modal h2{margin:5px 0 0;font-size:19px;color:#102b54}
+.v9-google-modal header p{margin:6px 0 0;color:#7f8da1;font-size:10px}
+.v9-google-modal header>button{border:0;background:none;font-size:24px;color:#66768c;cursor:pointer}
+.v9-google-body{padding:24px 20px;display:flex;flex-direction:column;align-items:flex-start;gap:10px;color:#263b5c}
+.v9-google-body p{margin:0;color:#687386;font-size:12px;line-height:1.55}
+.v9-google-icon{width:42px;height:42px;display:grid;place-items:center;border:1px solid #dce5ef;border-radius:10px;background:#fff;color:#4285f4;font-size:20px;font-weight:900}
