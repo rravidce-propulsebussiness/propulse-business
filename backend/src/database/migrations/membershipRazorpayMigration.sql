@@ -22,7 +22,3 @@ CREATE TABLE IF NOT EXISTS memberships (
 CREATE INDEX IF NOT EXISTS idx_memberships_user_id ON memberships(user_id);
 CREATE INDEX IF NOT EXISTS idx_memberships_status ON memberships(status);
 CREATE INDEX IF NOT EXISTS idx_memberships_ends_at ON memberships(ends_at);
-
--- Keep at most one active membership row for a user.
-CREATE UNIQUE INDEX IF NOT EXISTS idx_memberships_one_active_per_user
-  ON memberships(user_id) WHERE status = 'active';
