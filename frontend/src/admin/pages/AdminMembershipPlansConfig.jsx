@@ -10,20 +10,38 @@ const DEFAULT_CYCLES = [
   { key: 'quarterly', label: 'Quarterly', months: 3 },
   { key: 'yearly', label: 'Yearly', months: 12 },
 ];
+const BOOSTER_ADDON_CYCLES = [
+  { key: 'monthly', label: 'Monthly', months: 1 },
+  { key: 'quarterly', label: 'Quarterly', months: 3 },
+  { key: 'halfYearly', label: 'Half-Yearly', months: 6 },
+  { key: 'yearly', label: 'Yearly', months: 12 },
+];
 const DEFAULT_LEADS = [
   { type: 'shared', monthly_quantity: 3, period_total_quantity: 3, complimentary: true },
   { type: 'premium', monthly_quantity: 1, period_total_quantity: 1, complimentary: true },
 ];
 const DEFAULT_BOOSTER_ADDONS = [
-  { name: 'Website Building & Maintenance', cycles: { monthly: { price: 4999, enabled: true }, quarterly: { price: 12999, enabled: true }, yearly: { price: 44999, enabled: true } } },
-  { name: 'Digital Marketing', cycles: { monthly: { price: 7999, enabled: true }, quarterly: { price: 20999, enabled: true }, yearly: { price: 74999, enabled: true } } },
+  { name: 'Website Building & Maintenance', cycles: { monthly: { price: 4999, enabled: true }, quarterly: { price: 12999, enabled: true }, halfYearly: { price: 23999, enabled: true }, yearly: { price: 44999, enabled: true } } },
+  { name: 'Digital Marketing', cycles: { monthly: { price: 7999, enabled: true }, quarterly: { price: 20999, enabled: true }, halfYearly: { price: 38999, enabled: true }, yearly: { price: 74999, enabled: true } } },
 ];
 const money = value => `₹${Number(value || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}`;
 const slug = value => String(value || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
 const normalizeAddon = item => {
-  if (item?.cycles) return { name: item.name || 'Add-on', cycles: Object.fromEntries(DEFAULT_CYCLES.map(c => [c.key, { price: Number(item.cycles?.[c.key]?.price ?? 0), enabled: item.cycles?.[c.key]?.enabled !== false }])) };
+  if (item?.cycles) return {
+    name: item.name || 'Add-on',
+    cycles: Object.fromEntries(BOOSTER_ADDON_CYCLES.map(c => [c.key, {
+      price: Number(item.cycles?.[c.key]?.price ?? 0),
+      enabled: item.cycles?.[c.key]?.enabled !== false,
+    }])),
+  };
   const legacy = Number(item?.price || 0);
-  return { name: item?.name || 'Add-on', cycles: { monthly: { price: legacy, enabled: true }, quarterly: { price: legacy * 3, enabled: true }, yearly: { price: legacy * 12, enabled: true } } };
+  return {
+    name: item?.name || 'Add-on',
+    cycles: Object.fromEntries(BOOSTER_ADDON_CYCLES.map(c => [c.key, {
+      price: legacy * c.months,
+      enabled: true,
+    }])),
+  };
 };
 
 function freshForm(planType = 'pro') {
@@ -34,8 +52,16 @@ function freshForm(planType = 'pro') {
       addOns: DEFAULT_BOOSTER_ADDONS.map(normalizeAddon),
     };
   }
-  const cycles = DEFAULT_CYCLES.map(c => ({ ...c, enabled: true, leadEntitlements: DEFAULT_LEADS.map(x => ({ ...x, period_total_quantity: x.monthly_quantity * c.months })) }));
-  return { name: 'Pro', planType: 'pro', monthlyBasePrice: '', periods: cycles, pricing: Object.fromEntries(cycles.map(c => [c.key, { discount: 0, price: '', customPrice: false }])), benefits: ['Priority lead access'], addOns: [] };
+  const cycles = DEFAULT_CYCLES.map(c => ({
+    ...c,
+    enabled: true,
+    leadEntitlements: DEFAULT_LEADS.map(x => ({ ...x, period_total_quantity: x.monthly_quantity * c.months })),
+  }));
+  return {
+    name: 'Pro', planType: 'pro', monthlyBasePrice: '', periods: cycles,
+    pricing: Object.fromEntries(cycles.map(c => [c.key, { discount: 0, price: '', customPrice: false }])),
+    benefits: ['Priority lead access'], addOns: [],
+  };
 }
 
 export default function AdminMembershipPlansConfig() {
@@ -63,8 +89,18 @@ export default function AdminMembershipPlansConfig() {
     catch (e) { setError(e.message); } finally { setLoading(false); }
   }
   useEffect(() => { load(); }, []);
-  const groups = useMemo(() => { const map = {}; plans.forEach(p => { if (!['pro', 'non_pro', 'booster'].includes(p.plan_type)) return; const key = p.plan_group || p.name.replace(/\s+[^\s]+$/i, ''); (map[`${p.plan_type}:${key}`] ||= []).push(p); }); return Object.values(map); }, [plans]);
+
+  const groups = useMemo(() => {
+    const map = {};
+    plans.forEach(p => {
+      if (!['pro', 'non_pro', 'booster'].includes(p.plan_type)) return;
+      const key = p.plan_group || p.name.replace(/\s+[^\s]+$/i, '');
+      (map[`${p.plan_type}:${key}`] ||= []).push(p);
+    });
+    return Object.values(map);
+  }, [plans]);
   const visibleGroups = groups.filter(group => tab === 'booster' ? group[0]?.plan_type === 'booster' : group[0]?.plan_type === 'pro');
+
   const setField = (key, value) => setForm(current => ({ ...current, [key]: value }));
   const setPricing = (key, field, value) => setForm(current => ({ ...current, pricing: { ...current.pricing, [key]: { ...current.pricing[key], [field]: value } } }));
   const setPeriod = (key, field, value) => setForm(current => ({ ...current, periods: current.periods.map(p => p.key === key ? { ...p, [field]: value } : p) }));
@@ -73,7 +109,14 @@ export default function AdminMembershipPlansConfig() {
   const updateLeadMonthly = (periodKey, index, value) => setForm(current => ({ ...current, periods: current.periods.map(p => p.key !== periodKey ? p : { ...p, leadEntitlements: p.leadEntitlements.map((x, i) => i === index ? { ...x, monthly_quantity: value, period_total_quantity: syncLeadTotal(p, { ...x, monthly_quantity: value }) } : x) }) }));
   const addLead = periodKey => setForm(current => ({ ...current, periods: current.periods.map(p => p.key !== periodKey ? p : { ...p, leadEntitlements: [...p.leadEntitlements, { type: 'shared', monthly_quantity: 1, period_total_quantity: Number(p.months || 1), complimentary: true }] }) }));
   const removeLead = (periodKey, index) => setForm(current => ({ ...current, periods: current.periods.map(p => p.key !== periodKey ? p : { ...p, leadEntitlements: p.leadEntitlements.filter((_, i) => i !== index) }) }));
-  function addCycle() { const value = prompt('Cycle name'); if (!value?.trim()) return; const months = Number(prompt('Number of months', '6')); if (!Number.isFinite(months) || months <= 0) return; const key = `${slug(value)}-${Date.now()}`; setForm(current => ({ ...current, periods: [...current.periods, { key, label: value.trim(), months, enabled: true, leadEntitlements: DEFAULT_LEADS.map(x => ({ ...x, period_total_quantity: x.monthly_quantity * months })) }], pricing: { ...current.pricing, [key]: { discount: 0, price: '', customPrice: false } } })); }
+  function addCycle() {
+    const value = prompt('Cycle name');
+    if (!value?.trim()) return;
+    const months = Number(prompt('Number of months', '6'));
+    if (!Number.isFinite(months) || months <= 0) return;
+    const key = `${slug(value)}-${Date.now()}`;
+    setForm(current => ({ ...current, periods: [...current.periods, { key, label: value.trim(), months, enabled: true, leadEntitlements: DEFAULT_LEADS.map(x => ({ ...x, period_total_quantity: x.monthly_quantity * months })) }], pricing: { ...current.pricing, [key]: { discount: 0, price: '', customPrice: false } } }));
+  }
   function removeCycle(key) { setForm(current => ({ ...current, periods: current.periods.filter(p => p.key !== key), pricing: Object.fromEntries(Object.entries(current.pricing).filter(([k]) => k !== key)) })); }
   const priceFor = period => { const base = Number(form.monthlyBasePrice || 0) * Number(period.months || 1); const cfg = form.pricing[period.key] || {}; const discounted = base * (1 - Number(cfg.discount || 0) / 100); const final = cfg.customPrice && cfg.price !== '' ? Number(cfg.price) : discounted; return { final, saving: Math.max(0, base - final) }; };
   function switchPlanTab(next) { setTab(next); setEditing(null); setForm(freshForm(next)); setError(''); }
@@ -85,7 +128,8 @@ export default function AdminMembershipPlansConfig() {
         const price = Number(form.monthlyBasePrice || 0);
         await req('/membership-plans', { method: 'POST', body: JSON.stringify({ name: 'Booster', planGroup: 'Booster', planType: 'booster', billingPeriod: 'Booster', billingMonths: 1, monthlyBasePrice: price, priceOverride: price, benefits: form.benefits, leadEntitlements: [], addOns: form.addOns, leadRolloverEnabled: false, leadExpiryDays: null }) });
       } else {
-        const activePeriods = form.periods.filter(p => p.enabled !== false && Number(p.months) > 0); if (!activePeriods.length) { setError('Enable at least one billing cycle.'); return; }
+        const activePeriods = form.periods.filter(p => p.enabled !== false && Number(p.months) > 0);
+        if (!activePeriods.length) { setError('Enable at least one billing cycle.'); return; }
         const periods = activePeriods.map(p => ({ ...p, months: Number(p.months), leadEntitlements: p.leadEntitlements.map(x => ({ ...x, monthly_quantity: Number(x.monthly_quantity || 0), period_total_quantity: Number(x.period_total_quantity || 0), quantity: Number(x.monthly_quantity || 0) })) }));
         await req('/membership-plans', { method: 'POST', body: JSON.stringify({ name: form.name.trim(), planGroup: form.name.trim(), planType: 'pro', bundle: true, monthlyBasePrice: Number(form.monthlyBasePrice || 0), benefits: form.benefits, addOns: form.addOns, leadRolloverEnabled: true, leadExpiryDays: null, periods, pricing: Object.fromEntries(periods.map(p => [p.key, { discount: Number(form.pricing[p.key]?.discount || 0), price: form.pricing[p.key]?.price || '', customPrice: Boolean(form.pricing[p.key]?.customPrice) }])) }) });
       }
@@ -155,7 +199,7 @@ export default function AdminMembershipPlansConfig() {
               <div className="benefit-head"><b>Add-ons</b><button type="button" className="mini-action" onClick={addAddon}>＋ Add</button></div>
               <div className="booster-addons">{form.addOns.map((item, index) => <div className="booster-addon" key={index}>
                 <div className="addon-title"><input value={item.name} onChange={e => setAddon(index, 'name', e.target.value)} /><button type="button" className="remove-lead" onClick={() => removeAddon(index)}>×</button></div>
-                <div className="addon-cycles">{DEFAULT_CYCLES.map(cycle => { const cfg = item.cycles?.[cycle.key] || { price: 0, enabled: false }; return <div className="addon-cycle" key={cycle.key}>
+                <div className="addon-cycles">{BOOSTER_ADDON_CYCLES.map(cycle => { const cfg = item.cycles?.[cycle.key] || { price: 0, enabled: false }; return <div className="addon-cycle" key={cycle.key}>
                   <div className="addon-cycle-head"><label className="check-row"><input type="checkbox" checked={cfg.enabled !== false} onChange={e => setAddonCycle(index, cycle.key, 'enabled', e.target.checked)} /> {cycle.label}</label><span>{cycle.months} mo</span></div>
                   <label>Price ₹<input type="number" min="0" step="0.01" value={cfg.price ?? 0} disabled={cfg.enabled === false} onChange={e => setAddonCycle(index, cycle.key, 'price', Number(e.target.value || 0))} /></label>
                 </div>; })}</div>
@@ -168,10 +212,7 @@ export default function AdminMembershipPlansConfig() {
         </form>
       </section>
 
-      <section className="plans-list">{loading ? <div className="empty">Loading…</div> : visibleGroups.length === 0 ? <div className="empty"><strong>No {tab === 'pro' ? 'Pro' : 'Booster'} plans</strong></div> : visibleGroups.map(group => <div className={`plan-group ${tab === 'booster' ? 'plan-booster' : ''}`} key={`${group[0].plan_type}-${group[0].plan_group || group[0].id}`}>
-        <div className="group-head"><h2>{group[0].plan_group || (tab === 'pro' ? 'Pro' : 'Booster')}</h2><span className="live-count">{group.filter(p => p.is_active).length}/{group.length} active</span></div>
-        {group.slice().sort((a, b) => Number(a.billing_months || 1) - Number(b.billing_months || 1)).map(plan => <div className="option" key={plan.id}><div><b>{plan.billing_period}</b><small>{plan.billing_months} mo · {plan.discount_percent || 0}% off</small></div><strong>{money(plan.price)}</strong><div className="actions"><button onClick={() => beginEdit(plan)}>Edit</button><button onClick={() => toggle(plan)}>{plan.is_active ? 'Disable' : 'Enable'}</button><button className="danger" onClick={() => remove(plan)}>Delete</button></div></div>)}
-      </div>)}</section>
+      <section className="plans-list">{loading ? <div className="empty">Loading…</div> : visibleGroups.length === 0 ? <div className="empty"><strong>No {tab === 'pro' ? 'Pro' : 'Booster'} plans</strong></div> : visibleGroups.map(group => <div className={`plan-group ${tab === 'booster' ? 'plan-booster' : ''}`} key={`${group[0].plan_type}-${group[0].plan_group || group[0].id}`}><div className="group-head"><h2>{group[0].plan_group || (tab === 'pro' ? 'Pro' : 'Booster')}</h2><span className="live-count">{group.filter(p => p.is_active).length}/{group.length} active</span></div>{group.slice().sort((a, b) => Number(a.billing_months || 1) - Number(b.billing_months || 1)).map(plan => <div className="option" key={plan.id}><div><b>{plan.billing_period}</b><small>{plan.billing_months} mo · {plan.discount_percent || 0}% off</small></div><strong>{money(plan.price)}</strong><div className="actions"><button onClick={() => beginEdit(plan)}>Edit</button><button onClick={() => toggle(plan)}>{plan.is_active ? 'Disable' : 'Enable'}</button><button className="danger" onClick={() => remove(plan)}>Delete</button></div></div>)}</div>)}</section>
     </>}
 
     {tab === 'investor' && investor && <section className="create-card hero-card"><div className="card-heading"><h2>Investor</h2><label className="switch-label"><input type="checkbox" checked={Boolean(investor.enabled)} onChange={e => setInvestor({ ...investor, enabled: e.target.checked })} /> Enabled</label></div><form onSubmit={saveInvestor}><div className="two"><label>Global limit<input type="number" min="0" value={investor.global_limit} onChange={e => setInvestor({ ...investor, global_limit: e.target.value })} /></label><label>Default industry limit<input type="number" min="0" value={investor.default_industry_limit} onChange={e => setInvestor({ ...investor, default_industry_limit: e.target.value })} /></label><label>Customer limit / industry<input type="number" min="0" value={investor.customer_industry_limit ?? 10} onChange={e => setInvestor({ ...investor, customer_industry_limit: e.target.value })} /></label><label>Minimum investment ₹<input type="number" min="0" value={investor.min_investment} onChange={e => setInvestor({ ...investor, min_investment: e.target.value })} /></label><label>Maximum investment ₹<input type="number" min="0" value={investor.max_investment ?? ''} placeholder="No maximum" onChange={e => setInvestor({ ...investor, max_investment: e.target.value })} /></label></div><div className="editor-section"><div className="benefit-head"><b>Industry limits</b></div><div className="lead-editor">{(investor.industryLimits || []).map(item => <div className="lead-row investor-row" key={item.id}><strong>{item.name}</strong><input type="number" min="0" value={item.investor_limit} onChange={e => updateIndustryLimit(item.id, 'investor_limit', e.target.value)} /><label className="check-row"><input type="checkbox" checked={item.is_active !== false} onChange={e => updateIndustryLimit(item.id, 'is_active', e.target.checked)} /> Active</label></div>)}</div></div><div className="form-footer"><button className="primary create-btn">Save</button></div></form></section>}
