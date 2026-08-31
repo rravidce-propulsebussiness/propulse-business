@@ -1,1 +1,1 @@
-export { default } from './AdminLeadsV5';
+export { default } from './AdminLeadsV6';
