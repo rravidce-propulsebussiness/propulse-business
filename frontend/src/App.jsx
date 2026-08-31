@@ -12,6 +12,7 @@ import AdminUsers from './admin/pages/AdminUsers';
 import AdminPayments from './admin/pages/AdminPayments';
 import AdminLeads from './admin/pages/AdminLeads';
 import AdminLeadPricing from './admin/pages/AdminLeadPricing';
+import AdminMembershipPlans from './admin/pages/AdminMembershipPlans';
 import AdminRoute from './admin/components/AdminRoute';
 import AdminLayout from './admin/components/AdminLayout';
 
@@ -33,6 +34,7 @@ function App(){
         <Route path="/admin/payments" element={<AdminPayments/>}/>
         <Route path="/admin/leads" element={<AdminLeads/>}/>
         <Route path="/admin/lead-pricing" element={<AdminLeadPricing/>}/>
+        <Route path="/admin/membership-plans" element={<AdminMembershipPlans/>}/>
       </Route>
     </Route>
     <Route path="*" element={<Navigate to="/" replace/>}/>
