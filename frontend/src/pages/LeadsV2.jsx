@@ -38,8 +38,6 @@ export default function LeadsV2() {
     return () => { live = false }
   }, [token])
 
-  if (user?.role === 'admin') return <main className="lv2-page"><section className="lv2-empty"><span>ADMIN ACCOUNT</span><h1>Lead management is in the Admin Panel.</h1><Link to="/admin/leads">Open Admin Leads →</Link></section></main>
-
   const filtered = useMemo(() => {
     const categoryText = category ? category.replaceAll('-', ' ').toLowerCase() : ''
     const query = search.trim().toLowerCase()
@@ -55,6 +53,8 @@ export default function LeadsV2() {
   const isPro = Boolean(user?.is_pro_member || user?.membership_type === 'pro')
   const buy = () => { if (!logged) window.location.href = '/login'; else window.alert('Checkout/payment will complete the purchase.') }
   const title = category ? `${category.replaceAll('-', ' ')} leads` : 'Available leads'
+
+  if (user?.role === 'admin') return <main className="lv2-page"><section className="lv2-empty"><span>ADMIN ACCOUNT</span><h1>Lead management is in the Admin Panel.</h1><Link to="/admin/leads">Open Admin Leads →</Link></section></main>
 
   return (
     <div className="lv2-shell">
