@@ -1,87 +1,14 @@
-const leadService = require('../services/leadService');
-const VALID_STATUSES = ['available', 'paused', 'sold', 'closed', 'invalid'];
-
-async function createLead(req, res) {
-  try {
-    const lead = await leadService.createLead({ ...req.body, createdBy: req.user?.id });
-    return res.status(201).json(lead);
-  } catch (error) {
-    console.error('Create lead failed:', error.message);
-    return res.status(500).json({ error: 'Failed to create lead' });
-  }
-}
-
-async function getLeads(req, res) {
-  try {
-    return res.json(await leadService.getLeads({ ...req.query, status: req.query.status || 'available', userId: req.user?.id, role: req.user?.role }));
-  } catch (error) {
-    console.error('Get leads failed:', error.message);
-    return res.status(500).json({ error: 'Failed to fetch leads' });
-  }
-}
-
-async function getLeadById(req, res) {
-  try {
-    const lead = await leadService.getLeadById(req.params.id);
-    if (!lead) return res.status(404).json({ error: 'Lead not found' });
-    return res.json(lead);
-  } catch (error) {
-    console.error('Get lead failed:', error.message);
-    return res.status(500).json({ error: 'Failed to fetch lead' });
-  }
-}
-
-async function updateLead(req, res) {
-  try {
-    if (req.body.status && !VALID_STATUSES.includes(req.body.status)) return res.status(400).json({ error: 'Invalid lead status' });
-    const lead = await leadService.updateLead(req.params.id, req.body);
-    if (!lead) return res.status(404).json({ error: 'Lead not found' });
-    return res.json(lead);
-  } catch (error) {
-    console.error('Update lead failed:', error.message);
-    return res.status(500).json({ error: 'Failed to update lead' });
-  }
-}
-
-async function updateLeadStatus(req, res) {
-  try {
-    if (!VALID_STATUSES.includes(req.body.status)) return res.status(400).json({ error: 'Invalid lead status' });
-    const lead = await leadService.updateLeadStatus(req.params.id, req.body.status);
-    if (!lead) return res.status(404).json({ error: 'Lead not found' });
-    return res.json(lead);
-  } catch (error) {
-    console.error('Update lead status failed:', error.message);
-    return res.status(500).json({ error: 'Failed to update lead status' });
-  }
-}
-
-async function deleteLead(req, res) {
-  try {
-    const lead = await leadService.deleteLead(req.params.id);
-    if (!lead) return res.status(404).json({ error: 'Lead not found' });
-    return res.json({ message: 'Lead deleted successfully' });
-  } catch (error) {
-    console.error('Delete lead failed:', error.message);
-    return res.status(500).json({ error: 'Failed to delete lead' });
-  }
-}
-
-async function getLeadPricing(req, res) {
-  try {
-    return res.json(await leadService.getLeadPricing());
-  } catch (error) {
-    console.error('Get lead pricing failed:', error.message);
-    return res.status(500).json({ error: 'Failed to fetch lead pricing' });
-  }
-}
-
-async function updateLeadPricing(req, res) {
-  try {
-    return res.json(await leadService.updateLeadPricing(req.body));
-  } catch (error) {
-    console.error('Update lead pricing failed:', error.message);
-    return res.status(400).json({ error: error.message || 'Failed to update lead pricing' });
-  }
-}
-
-module.exports = { createLead, getLeads, getLeadById, updateLead, updateLeadStatus, deleteLead, getLeadPricing, updateLeadPricing };
+const leadService=require('../services/leadService');
+const VALID_STATUSES=['available','paused','sold','closed','invalid'];
+async function createLead(req,res){try{return res.status(201).json(await leadService.createLead({...req.body,createdBy:req.user?.id}))}catch(error){console.error('Create lead failed:',error.message);return res.status(500).json({error:'Failed to create lead'})}}
+async function getLeads(req,res){try{return res.json(await leadService.getLeads({...req.query,status:req.query.status||'available',userId:req.user?.id,role:req.user?.role}))}catch(error){console.error('Get leads failed:',error.message);return res.status(500).json({error:'Failed to fetch leads'})}}
+async function getLeadById(req,res){try{const lead=await leadService.getLeadById(req.params.id);if(!lead)return res.status(404).json({error:'Lead not found'});return res.json(lead)}catch(error){return res.status(500).json({error:'Failed to fetch lead'})}}
+async function updateLead(req,res){try{if(req.body.status&&!VALID_STATUSES.includes(req.body.status))return res.status(400).json({error:'Invalid lead status'});const lead=await leadService.updateLead(req.params.id,req.body);if(!lead)return res.status(404).json({error:'Lead not found'});return res.json(lead)}catch(error){return res.status(500).json({error:'Failed to update lead'})}}
+async function updateLeadStatus(req,res){try{if(!VALID_STATUSES.includes(req.body.status))return res.status(400).json({error:'Invalid lead status'});const lead=await leadService.updateLeadStatus(req.params.id,req.body.status);if(!lead)return res.status(404).json({error:'Lead not found'});return res.json(lead)}catch(error){return res.status(500).json({error:'Failed to update lead status'})}}
+async function deleteLead(req,res){try{const lead=await leadService.deleteLead(req.params.id);if(!lead)return res.status(404).json({error:'Lead not found'});return res.json({message:'Lead deleted successfully'})}catch(error){return res.status(500).json({error:'Failed to delete lead'})}}
+async function getLeadPricing(req,res){try{return res.json(await leadService.getLeadPricing())}catch(error){return res.status(500).json({error:'Failed to fetch lead pricing'})}}
+async function updateLeadPricing(req,res){try{return res.json(await leadService.updateLeadPricing(req.body))}catch(error){return res.status(400).json({error:error.message||'Failed to update lead pricing'})}}
+async function getPricingRules(req,res){try{return res.json(await leadService.getPricingRules())}catch(error){return res.status(500).json({error:'Failed to fetch pricing rules'})}}
+async function savePricingRule(req,res){try{return res.json(await leadService.savePricingRule(req.body))}catch(error){return res.status(400).json({error:error.message||'Failed to save pricing rule'})}}
+async function deletePricingRule(req,res){try{const rule=await leadService.deletePricingRule(req.params.id);if(!rule)return res.status(404).json({error:'Pricing rule not found'});return res.json({message:'Pricing rule deleted'})}catch(error){return res.status(500).json({error:'Failed to delete pricing rule'})}}
+module.exports={createLead,getLeads,getLeadById,updateLead,updateLeadStatus,deleteLead,getLeadPricing,updateLeadPricing,getPricingRules,savePricingRule,deletePricingRule};
