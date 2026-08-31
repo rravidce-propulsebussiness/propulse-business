@@ -2,24 +2,25 @@ const pool = require('../config/database');
 
 async function getPlans(includeInactive = true) {
   const result = await pool.query(
-    `SELECT id, name, description, price, duration_days, is_active, created_at, updated_at
-     FROM membership_plans ${includeInactive ? '' : 'WHERE is_active = TRUE'} ORDER BY price ASC, id ASC`
+    `SELECT id, name, plan_type, description, price, duration_days, is_active, created_at, updated_at
+     FROM membership_plans ${includeInactive ? '' : 'WHERE is_active = TRUE'}
+     ORDER BY plan_type ASC, price ASC, id ASC`
   );
   return result.rows;
 }
 
-async function createPlan({ name, description, price, durationDays = 365 }) {
+async function createPlan({ name, planType = 'non_pro', description, price, durationDays = 365 }) {
   const result = await pool.query(
-    `INSERT INTO membership_plans (name, description, price, duration_days)
-     VALUES ($1,$2,$3,$4) RETURNING *`, [name, description || null, price, durationDays]
+    `INSERT INTO membership_plans (name, plan_type, description, price, duration_days)
+     VALUES ($1,$2,$3,$4,$5) RETURNING *`, [name, planType, description || null, price, durationDays]
   );
   return result.rows[0];
 }
 
-async function updatePlan(id, { name, description, price, durationDays }) {
+async function updatePlan(id, { name, planType = 'non_pro', description, price, durationDays }) {
   const result = await pool.query(
-    `UPDATE membership_plans SET name=$1, description=$2, price=$3, duration_days=$4, updated_at=CURRENT_TIMESTAMP
-     WHERE id=$5 RETURNING *`, [name, description || null, price, durationDays, id]
+    `UPDATE membership_plans SET name=$1, plan_type=$2, description=$3, price=$4, duration_days=$5, updated_at=CURRENT_TIMESTAMP
+     WHERE id=$6 RETURNING *`, [name, planType, description || null, price, durationDays, id]
   );
   return result.rows[0] || null;
 }
