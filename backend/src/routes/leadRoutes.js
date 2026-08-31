@@ -5,6 +5,8 @@ const requireAdmin = require('../middleware/adminMiddleware');
 
 const router = express.Router();
 router.get('/', requireAuth, leadController.getLeads);
+router.get('/pricing', requireAdmin, leadController.getLeadPricing);
+router.put('/pricing', requireAdmin, leadController.updateLeadPricing);
 router.get('/:id', requireAuth, leadController.getLeadById);
 router.post('/', requireAdmin, leadController.createLead);
 router.put('/:id', requireAdmin, leadController.updateLead);
