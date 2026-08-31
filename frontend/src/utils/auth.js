@@ -16,10 +16,10 @@ export function clearSession() {
   localStorage.removeItem(USER_KEY)
 }
 
-export async function authRequest(path, options = {}) {
-  const token = getToken()
+async function request(path, options = {}, includeToken = true) {
   const headers = { 'Content-Type': 'application/json', ...(options.headers || {}) }
-  if (token) headers.Authorization = `Bearer ${token}`
+  const token = getToken()
+  if (includeToken && token) headers.Authorization = `Bearer ${token}`
 
   const response = await fetch(`http://localhost:5000/api${path}`, {
     ...options,
@@ -29,3 +29,6 @@ export async function authRequest(path, options = {}) {
   if (!response.ok) throw new Error(data.error || 'Request failed')
   return data
 }
+
+export const authRequest = (path, options = {}) => request(path, options, true)
+export const publicRequest = (path, options = {}) => request(path, options, false)
