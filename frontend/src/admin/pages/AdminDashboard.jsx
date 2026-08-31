@@ -8,21 +8,21 @@ export default function AdminDashboard() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    const loadStats = async () => {
+    let mounted = true;
+    async function loadStats() {
       try {
         const token = localStorage.getItem('token');
-        const response = await fetch(`${API_URL}/admin/dashboard/stats`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        if (!response.ok) throw new Error('Unable to load dashboard statistics');
-        setStats(await response.json());
+        const headers = token ? { Authorization: `Bearer ${token}` } : {};
+        const response = await fetch(`${API_URL}/admin/dashboard/stats`, { headers });
+        if (!response.ok) throw new Error(`Unable to load dashboard statistics (${response.status})`);
+        const data = await response.json();
+        if (mounted) setStats(data);
       } catch (err) {
-        setError(err.message);
+        if (mounted) setError(err instanceof Error ? err.message : 'Unable to load dashboard statistics');
       }
-    };
-
+    }
     loadStats();
+    return () => { mounted = false; };
   }, []);
 
   const cards = [
@@ -45,9 +45,7 @@ export default function AdminDashboard() {
           <p>Overview of your marketplace and business network.</p>
         </div>
       </header>
-
-      {error && <div className="admin-dashboard__error">{error}</div>}
-
+      {error && <div className="admin-dashboard__error" role="alert">{error}</div>}
       <section className="admin-dashboard__grid" aria-label="Platform statistics">
         {cards.map(([label, value]) => (
           <article className="admin-card" key={label}>
