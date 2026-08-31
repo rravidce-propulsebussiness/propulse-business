@@ -1,97 +1,17 @@
 const pool = require('../config/database');
-
-const DEFAULT_PRICING = {
-  normal: { oneShare: 0, threeShares: 0, fiveShares: 0 },
-  pro: { oneShare: 0, threeShares: 0, fiveShares: 0 },
-};
-
-function cleanJson(value, fallback = {}) {
-  return value && typeof value === 'object' && !Array.isArray(value) ? value : fallback;
-}
-
-async function createLead({ industryId, serviceId, subserviceId, stateId, cityId, customerName, customerPhone, customerEmail, requirement, propertyType, budget, source, notes, customFields, pricing, createdBy }) {
-  const result = await pool.query(
-    `INSERT INTO leads (industry_id,service_id,subservice_id,state_id,city_id,customer_name,customer_phone,customer_email,requirement,property_type,budget,source,notes,custom_fields,pricing,created_by)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14::jsonb,$15::jsonb,$16) RETURNING *`,
-    [industryId || null, serviceId || null, subserviceId || null, stateId || null, cityId || null, customerName || null, customerPhone || null, customerEmail || null, requirement || null, propertyType || null, budget ?? null, source || 'upload', notes || null, JSON.stringify(cleanJson(customFields)), JSON.stringify(cleanJson(pricing, DEFAULT_PRICING)), createdBy || null]
-  );
-  return result.rows[0];
-}
-
-const leadSelect = `SELECT l.*,i.name AS industry_name,s.name AS service_name,ss.name AS subservice_name,st.name AS state_name,c.name AS city_name
-  FROM leads l LEFT JOIN industries i ON i.id=l.industry_id LEFT JOIN services s ON s.id=l.service_id
-  LEFT JOIN subservices ss ON ss.id=l.subservice_id LEFT JOIN states st ON st.id=l.state_id LEFT JOIN cities c ON c.id=l.city_id`;
-
-async function getLeadById(id) {
-  const result = await pool.query(`${leadSelect} WHERE l.id=$1`, [id]);
-  return result.rows[0] || null;
-}
-
-async function getLeads({ industryId, serviceId, subserviceId, stateId, cityId, status = 'available', userId, role }) {
-  const values = [], conditions = [];
-  if (status && status !== 'all') { values.push(status); conditions.push(`l.status=$${values.length}`); }
-  if (industryId) { values.push(industryId); conditions.push(`l.industry_id=$${values.length}`); }
-  if (serviceId) { values.push(serviceId); conditions.push(`l.service_id=$${values.length}`); }
-  if (subserviceId) { values.push(subserviceId); conditions.push(`l.subservice_id=$${values.length}`); }
-  if (stateId) { values.push(stateId); conditions.push(`l.state_id=$${values.length}`); }
-  if (cityId) { values.push(cityId); conditions.push(`l.city_id=$${values.length}`); }
-  if (role !== 'admin') {
-    values.push(userId);
-    conditions.push(`EXISTS (SELECT 1 FROM business_profiles bp JOIN business_profile_services bps ON bps.business_profile_id=bp.id WHERE bp.user_id=$${values.length} AND bps.is_active=TRUE AND bps.industry_id=l.industry_id AND bps.service_id=l.service_id AND (bps.subservice_id IS NULL OR bps.subservice_id=l.subservice_id)) AND EXISTS (SELECT 1 FROM business_profiles bp JOIN business_profile_locations bpl ON bpl.business_profile_id=bp.id WHERE bp.user_id=$${values.length} AND bpl.is_active=TRUE AND bpl.state_id=l.state_id AND bpl.city_id=l.city_id)`);
-  }
-  const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
-  const result = await pool.query(`${leadSelect} ${where} ORDER BY l.created_at DESC`, values);
-  return result.rows;
-}
-
-async function updateLead(id, data) {
-  const { industryId,serviceId,subserviceId,stateId,cityId,customerName,customerPhone,customerEmail,requirement,propertyType,budget,source,status,notes,customFields,pricing } = data;
-  const result = await pool.query(
-    `UPDATE leads SET industry_id=$1,service_id=$2,subservice_id=$3,state_id=$4,city_id=$5,customer_name=$6,customer_phone=$7,customer_email=$8,requirement=$9,property_type=$10,budget=$11,source=$12,status=$13,notes=$14,custom_fields=$15::jsonb,pricing=$16::jsonb,updated_at=CURRENT_TIMESTAMP WHERE id=$17 RETURNING *`,
-    [industryId || null,serviceId || null,subserviceId || null,stateId || null,cityId || null,customerName || null,customerPhone || null,customerEmail || null,requirement || null,propertyType || null,budget ?? null,source || 'upload',status || 'available',notes || null,JSON.stringify(cleanJson(customFields)),JSON.stringify(cleanJson(pricing, DEFAULT_PRICING)),id]
-  );
-  return result.rows[0] || null;
-}
-
-async function updateLeadStatus(id,status) {
-  const result = await pool.query('UPDATE leads SET status=$1,updated_at=CURRENT_TIMESTAMP WHERE id=$2 RETURNING *',[status,id]);
-  return result.rows[0] || null;
-}
-
-async function deleteLead(id) {
-  const result = await pool.query('DELETE FROM leads WHERE id=$1 RETURNING *',[id]);
-  return result.rows[0] || null;
-}
-
-async function getLeadPricing() {
-  const result = await pool.query('SELECT * FROM lead_pricing WHERE id=1');
-  return result.rows[0] || null;
-}
-
-async function updateLeadPricing(data) {
-  const values = [
-    Number(data.normal?.oneShare || 0),
-    Number(data.normal?.threeShares || 0),
-    Number(data.normal?.fiveShares || 0),
-    Number(data.pro?.oneShare || 0),
-    Number(data.pro?.threeShares || 0),
-    Number(data.pro?.fiveShares || 0),
-  ];
-  if (values.some(v => !Number.isFinite(v) || v < 0)) throw new Error('Pricing values must be non-negative numbers');
-  const result = await pool.query(`
-    INSERT INTO lead_pricing (id,normal_one_share,normal_three_shares,normal_five_shares,pro_one_share,pro_three_shares,pro_five_shares,updated_at)
-    VALUES (1,$1,$2,$3,$4,$5,$6,CURRENT_TIMESTAMP)
-    ON CONFLICT (id) DO UPDATE SET
-      normal_one_share=EXCLUDED.normal_one_share,
-      normal_three_shares=EXCLUDED.normal_three_shares,
-      normal_five_shares=EXCLUDED.normal_five_shares,
-      pro_one_share=EXCLUDED.pro_one_share,
-      pro_three_shares=EXCLUDED.pro_three_shares,
-      pro_five_shares=EXCLUDED.pro_five_shares,
-      updated_at=CURRENT_TIMESTAMP
-    RETURNING *
-  `, values);
-  return result.rows[0];
-}
-
-module.exports = { createLead,getLeadById,getLeads,updateLead,updateLeadStatus,deleteLead,getLeadPricing,updateLeadPricing };
+const DEFAULT_PRICING={normal:{oneShare:0,threeShares:0,fiveShares:0},pro:{oneShare:0,threeShares:0,fiveShares:0},shares:[{shares:1,normal:0,pro:0},{shares:3,normal:0,pro:0},{shares:5,normal:0,pro:0}]};
+const cleanJson=(v,fallback={})=>v&&typeof v==='object'&&!Array.isArray(v)?v:fallback;
+async function getConfiguredPricing(industryId,cityId){const r=await pool.query(`SELECT pricing FROM lead_pricing_rules WHERE is_active=TRUE AND (industry_id=$1 OR industry_id IS NULL) AND (city_id=$2 OR city_id IS NULL) ORDER BY CASE WHEN industry_id IS NOT NULL AND city_id IS NOT NULL THEN 3 WHEN industry_id IS NOT NULL THEN 2 WHEN city_id IS NOT NULL THEN 1 ELSE 0 END DESC LIMIT 1`,[industryId||null,cityId||null]);return r.rows[0]?.pricing||DEFAULT_PRICING;}
+async function createLead({industryId,serviceId,subserviceId,stateId,cityId,customerName,customerPhone,customerEmail,requirement,propertyType,budget,source,notes,customFields,pricing,pricingSource,createdBy}){const effectivePricing=pricingSource==='sheet'&&pricing?pricing:await getConfiguredPricing(industryId,cityId);const result=await pool.query(`INSERT INTO leads (industry_id,service_id,subservice_id,state_id,city_id,customer_name,customer_phone,customer_email,requirement,property_type,budget,source,notes,custom_fields,pricing,created_by) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14::jsonb,$15::jsonb,$16) RETURNING *`,[industryId||null,serviceId||null,subserviceId||null,stateId||null,cityId||null,customerName||null,customerPhone||null,customerEmail||null,requirement||null,propertyType||null,budget??null,source||'upload',notes||null,JSON.stringify(cleanJson(customFields)),JSON.stringify(cleanJson(effectivePricing,DEFAULT_PRICING)),createdBy||null]);return result.rows[0];}
+const leadSelect=`SELECT l.*,i.name AS industry_name,s.name AS service_name,ss.name AS subservice_name,st.name AS state_name,c.name AS city_name FROM leads l LEFT JOIN industries i ON i.id=l.industry_id LEFT JOIN services s ON s.id=l.service_id LEFT JOIN subservices ss ON ss.id=l.subservice_id LEFT JOIN states st ON st.id=l.state_id LEFT JOIN cities c ON c.id=l.city_id`;
+async function getLeadById(id){const r=await pool.query(`${leadSelect} WHERE l.id=$1`,[id]);return r.rows[0]||null;}
+async function getLeads({industryId,serviceId,subserviceId,stateId,cityId,status='available',userId,role}){const values=[],conditions=[];if(status&&status!=='all'){values.push(status);conditions.push(`l.status=$${values.length}`)}if(industryId){values.push(industryId);conditions.push(`l.industry_id=$${values.length}`)}if(serviceId){values.push(serviceId);conditions.push(`l.service_id=$${values.length}`)}if(subserviceId){values.push(subserviceId);conditions.push(`l.subservice_id=$${values.length}`)}if(stateId){values.push(stateId);conditions.push(`l.state_id=$${values.length}`)}if(cityId){values.push(cityId);conditions.push(`l.city_id=$${values.length}`)}if(role!=='admin'){values.push(userId);conditions.push(`EXISTS (SELECT 1 FROM business_profiles bp JOIN business_profile_services bps ON bps.business_profile_id=bp.id WHERE bp.user_id=$${values.length} AND bps.is_active=TRUE AND bps.industry_id=l.industry_id AND bps.service_id=l.service_id AND (bps.subservice_id IS NULL OR bps.subservice_id=l.subservice_id)) AND EXISTS (SELECT 1 FROM business_profiles bp JOIN business_profile_locations bpl ON bpl.business_profile_id=bp.id WHERE bp.user_id=$${values.length} AND bpl.is_active=TRUE AND bpl.state_id=l.state_id AND bpl.city_id=l.city_id)`)}const where=conditions.length?`WHERE ${conditions.join(' AND ')}`:'';const r=await pool.query(`${leadSelect} ${where} ORDER BY l.created_at DESC`,values);return r.rows;}
+async function updateLead(id,data){const {industryId,serviceId,subserviceId,stateId,cityId,customerName,customerPhone,customerEmail,requirement,propertyType,budget,source,status,notes,customFields,pricing}=data;const r=await pool.query(`UPDATE leads SET industry_id=$1,service_id=$2,subservice_id=$3,state_id=$4,city_id=$5,customer_name=$6,customer_phone=$7,customer_email=$8,requirement=$9,property_type=$10,budget=$11,source=$12,status=$13,notes=$14,custom_fields=$15::jsonb,pricing=$16::jsonb,updated_at=CURRENT_TIMESTAMP WHERE id=$17 RETURNING *`,[industryId||null,serviceId||null,subserviceId||null,stateId||null,cityId||null,customerName||null,customerPhone||null,customerEmail||null,requirement||null,propertyType||null,budget??null,source||'upload',status||'available',notes||null,JSON.stringify(cleanJson(customFields)),JSON.stringify(cleanJson(pricing,DEFAULT_PRICING)),id]);return r.rows[0]||null;}
+async function updateLeadStatus(id,status){const r=await pool.query('UPDATE leads SET status=$1,updated_at=CURRENT_TIMESTAMP WHERE id=$2 RETURNING *',[status,id]);return r.rows[0]||null;}
+async function deleteLead(id){const r=await pool.query('DELETE FROM leads WHERE id=$1 RETURNING *',[id]);return r.rows[0]||null;}
+async function getLeadPricing(){const r=await pool.query('SELECT * FROM lead_pricing WHERE id=1');return r.rows[0]||null;}
+async function updateLeadPricing(data){const values=[Number(data.normal?.oneShare||0),Number(data.normal?.threeShares||0),Number(data.normal?.fiveShares||0),Number(data.pro?.oneShare||0),Number(data.pro?.threeShares||0),Number(data.pro?.fiveShares||0)];if(values.some(v=>!Number.isFinite(v)||v<0))throw new Error('Pricing values must be non-negative numbers');const r=await pool.query(`INSERT INTO lead_pricing (id,normal_one_share,normal_three_shares,normal_five_shares,pro_one_share,pro_three_shares,pro_five_shares,updated_at) VALUES (1,$1,$2,$3,$4,$5,$6,CURRENT_TIMESTAMP) ON CONFLICT (id) DO UPDATE SET normal_one_share=EXCLUDED.normal_one_share,normal_three_shares=EXCLUDED.normal_three_shares,normal_five_shares=EXCLUDED.normal_five_shares,pro_one_share=EXCLUDED.pro_one_share,pro_three_shares=EXCLUDED.pro_three_shares,pro_five_shares=EXCLUDED.pro_five_shares,updated_at=CURRENT_TIMESTAMP RETURNING *`,values);return r.rows[0];}
+async function getPricingRules(){const r=await pool.query(`SELECT r.id,r.industry_id,r.city_id,r.pricing,r.is_active,i.name AS industry_name,c.name AS city_name FROM lead_pricing_rules r LEFT JOIN industries i ON i.id=r.industry_id LEFT JOIN cities c ON c.id=r.city_id ORDER BY r.industry_id NULLS FIRST,r.city_id NULLS FIRST`);return r.rows;}
+async function savePricingRule({id,industryId,cityId,pricing,isActive=true}){const p=cleanJson(pricing,DEFAULT_PRICING);const r=await pool.query(`INSERT INTO lead_pricing_rules(id,industry_id,city_id,pricing,is_active,updated_at) VALUES ($1,$2,$3,$4::jsonb,$5,CURRENT_TIMESTAMP) ON CONFLICT (id) DO UPDATE SET industry_id=EXCLUDED.industry_id,city_id=EXCLUDED.city_id,pricing=EXCLUDED.pricing,is_active=EXCLUDED.is_active,updated_at=CURRENT_TIMESTAMP RETURNING *`,[id||null,industryId||null,cityId||null,JSON.stringify(p),isActive]);return r.rows[0];}
+async function deletePricingRule(id){const r=await pool.query('DELETE FROM lead_pricing_rules WHERE id=$1 RETURNING id',[id]);return r.rows[0]||null;}
+module.exports={createLead,getLeadById,getLeads,updateLead,updateLeadStatus,deleteLead,getLeadPricing,updateLeadPricing,getPricingRules,savePricingRule,deletePricingRule};
