@@ -46,8 +46,20 @@ async function getUsers({ search = '', role = 'all', status = 'all' } = {}) {
     SELECT u.id, u.name, u.email, u.role, u.is_active, u.created_at,
            bp.business_name, bp.phone, bp.business_details,
            COALESCE((SELECT COUNT(*)::int FROM business_profile_services x WHERE x.business_profile_id = bp.id AND x.is_active = TRUE), 0) AS service_count,
-           COALESCE((SELECT COUNT(*)::int FROM business_profile_locations x WHERE x.business_profile_id = bp.id AND x.is_active = TRUE), 0) AS location_count
-    FROM users u LEFT JOIN business_profiles bp ON bp.user_id = u.id
+           COALESCE((SELECT COUNT(*)::int FROM business_profile_locations x WHERE x.business_profile_id = bp.id AND x.is_active = TRUE), 0) AS location_count,
+           m.id AS membership_id, m.status AS membership_status, m.started_at AS membership_started_at,
+           m.expires_at AS membership_expires_at, mp.id AS membership_plan_id, mp.name AS membership_plan_name,
+           mp.plan_group AS membership_plan_group, mp.plan_type AS membership_plan_type,
+           mp.billing_period AS membership_billing_period, mp.billing_months AS membership_billing_months
+    FROM users u
+    LEFT JOIN business_profiles bp ON bp.user_id = u.id
+    LEFT JOIN LATERAL (
+      SELECT m.* FROM memberships m
+      WHERE m.user_id = u.id
+      ORDER BY CASE WHEN m.status = 'active' THEN 0 ELSE 1 END, m.created_at DESC
+      LIMIT 1
+    ) m ON TRUE
+    LEFT JOIN membership_plans mp ON mp.id = m.membership_plan_id
     ${conditions.length ? `WHERE ${conditions.join(' AND ')}` : ''}
     ORDER BY u.created_at DESC
   `, params);
