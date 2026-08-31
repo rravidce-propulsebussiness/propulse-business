@@ -21,7 +21,10 @@ function Login() {
       const result = await authRequest('/auth/login', { method: 'POST', body: JSON.stringify(form) })
       saveSession(result)
       if (!remember) localStorage.setItem('propulse_session_mode', 'session')
-      navigate(location.state?.from || '/dashboard', { replace: true })
+
+      const destination = location.state?.from?.pathname
+        || (result.user?.role === 'admin' ? '/admin' : '/dashboard')
+      navigate(destination, { replace: true })
     } catch (err) {
       setError(err.message)
     } finally {
