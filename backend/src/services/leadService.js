@@ -20,22 +20,23 @@ async function getConfiguredPricing(industryId,cityId,leadType='basic'){
   return {shares:Array.isArray(pricing.shares)?pricing.shares:DEFAULT_PRICING.shares};
 }
 
-async function createLead({industryId,serviceId,subserviceId,stateId,cityId,customerName,customerPhone,customerEmail,requirement,propertyType,budget,source,notes,customFields,pricing,pricingSource,leadType='basic',isExclusive=false,exclusiveDelayHours,createdBy}){
+async function createLead({industryId,serviceId,subserviceId,stateId,cityId,customerName,customerPhone,customerEmail,requirement,propertyType,budget,source,notes,customFields,pricing,pricingSource,leadType='basic',isExclusive=false,exclusiveDelayDays,createdBy}){
+  if(!industryId)throw new Error('Industry is required');
   const type=normalizeType(leadType);
   const configured=await getConfiguredPricing(industryId,cityId,type);
   const effectivePricing=pricingSource==='sheet'&&pricing?mergePricing(configured,pricing):configured;
   const exclusive=Boolean(isExclusive);
-  const delay=exclusive?Math.max(0,Math.min(8760,Number(exclusiveDelayHours===undefined||exclusiveDelayHours===null||exclusiveDelayHours===''?24:exclusiveDelayHours))):0;
-  const result=await pool.query(`INSERT INTO leads (industry_id,service_id,subservice_id,state_id,city_id,customer_name,customer_phone,customer_email,requirement,property_type,budget,source,notes,custom_fields,pricing,lead_type,is_exclusive,exclusive_delay_hours,created_by) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14::jsonb,$15::jsonb,$16,$17,$18,$19) RETURNING *`,[industryId||null,serviceId||null,subserviceId||null,stateId||null,cityId||null,customerName||null,customerPhone||null,customerEmail||null,requirement||null,propertyType||null,budget??null,source||'upload',notes||null,JSON.stringify(cleanJson(customFields)),JSON.stringify(effectivePricing),type,exclusive,delay,createdBy||null]);
+  const delay=exclusive?Math.max(0,Math.min(365,Number(exclusiveDelayDays===undefined||exclusiveDelayDays===null||exclusiveDelayDays===''?1:exclusiveDelayDays))):0;
+  const result=await pool.query(`INSERT INTO leads (industry_id,service_id,subservice_id,state_id,city_id,customer_name,customer_phone,customer_email,requirement,property_type,budget,source,notes,custom_fields,pricing,lead_type,is_exclusive,exclusive_delay_days,created_by) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14::jsonb,$15::jsonb,$16,$17,$18,$19) RETURNING *`,[industryId,serviceId||null,subserviceId||null,stateId||null,cityId||null,customerName||null,customerPhone||null,customerEmail||null,requirement||null,propertyType||null,budget??null,source||'upload',notes||null,JSON.stringify(cleanJson(customFields)),JSON.stringify(effectivePricing),type,exclusive,delay,createdBy||null]);
   return result.rows[0];
 }
 
-const leadSelect=`SELECT l.*,i.name AS industry_name,s.name AS service_name,ss.name AS subservice_name,st.name AS state_name,c.name AS city_name,CASE WHEN l.is_exclusive THEN (l.created_at + make_interval(hours => l.exclusive_delay_hours)) ELSE NULL END AS exclusive_available_at FROM leads l LEFT JOIN industries i ON i.id=l.industry_id LEFT JOIN services s ON s.id=l.service_id LEFT JOIN subservices ss ON ss.id=l.subservice_id LEFT JOIN states st ON st.id=l.state_id LEFT JOIN cities c ON c.id=l.city_id`;
+const leadSelect=`SELECT l.*,i.name AS industry_name,s.name AS service_name,ss.name AS subservice_name,st.name AS state_name,c.name AS city_name,CASE WHEN l.is_exclusive THEN (l.created_at + make_interval(days => l.exclusive_delay_days)) ELSE NULL END AS exclusive_available_at FROM leads l LEFT JOIN industries i ON i.id=l.industry_id LEFT JOIN services s ON s.id=l.service_id LEFT JOIN subservices ss ON ss.id=l.subservice_id LEFT JOIN states st ON st.id=l.state_id LEFT JOIN cities c ON c.id=l.city_id`;
 async function getLeadById(id){return(await pool.query(`${leadSelect} WHERE l.id=$1`,[id])).rows[0]||null}
 
 async function isProMember(userId){
   if(!userId)return false;
-  const r=await pool.query(`SELECT 1 FROM memberships m JOIN membership_plans mp ON mp.id=m.membership_plan_id WHERE m.user_id=$1 AND m.status='active' AND m.starts_at<=CURRENT_TIMESTAMP AND m.expires_at>=CURRENT_TIMESTAMP AND LOWER(COALESCE(mp.plan_type,''))='pro' AND mp.is_active=TRUE LIMIT 1`,[userId]);
+  const r=await pool.query(`SELECT 1 FROM memberships m JOIN membership_plans mp ON mp.id=m.membership_plan_id WHERE m.user_id=$1 AND m.status='active' AND m.starts_at<=CURRENT_TIMESTAMP AND m.ends_at>=CURRENT_TIMESTAMP AND LOWER(COALESCE(mp.plan_type,''))='pro' AND mp.is_active=TRUE LIMIT 1`,[userId]);
   return r.rows.length>0;
 }
 
@@ -64,9 +65,10 @@ async function getLeads({industryId,serviceId,subserviceId,stateId,cityId,status
 }
 
 async function updateLead(id,data){
-  const {industryId,serviceId,subserviceId,stateId,cityId,customerName,customerPhone,customerEmail,requirement,propertyType,budget,source,status,notes,customFields,pricing,leadType,isExclusive,exclusiveDelayHours}=data;
-  const type=normalizeType(leadType);const exclusive=Boolean(isExclusive);const delay=exclusive?Math.max(0,Math.min(8760,Number(exclusiveDelayHours===undefined||exclusiveDelayHours===null||exclusiveDelayHours===''?24:exclusiveDelayHours))):0;
-  const result=await pool.query(`UPDATE leads SET industry_id=$1,service_id=$2,subservice_id=$3,state_id=$4,city_id=$5,customer_name=$6,customer_phone=$7,customer_email=$8,requirement=$9,property_type=$10,budget=$11,source=$12,status=$13,notes=$14,custom_fields=$15::jsonb,pricing=$16::jsonb,lead_type=$17,is_exclusive=$18,exclusive_delay_hours=$19,updated_at=CURRENT_TIMESTAMP WHERE id=$20 RETURNING *`,[industryId||null,serviceId||null,subserviceId||null,stateId||null,cityId||null,customerName||null,customerPhone||null,customerEmail||null,requirement||null,propertyType||null,budget??null,source||'upload',status||'available',notes||null,JSON.stringify(cleanJson(customFields)),JSON.stringify(cleanJson(pricing,DEFAULT_PRICING)),type,exclusive,delay,id]);
+  const {industryId,serviceId,subserviceId,stateId,cityId,customerName,customerPhone,customerEmail,requirement,propertyType,budget,source,status,notes,customFields,pricing,leadType,isExclusive,exclusiveDelayDays}=data;
+  if(!industryId)throw new Error('Industry is required');
+  const type=normalizeType(leadType);const exclusive=Boolean(isExclusive);const delay=exclusive?Math.max(0,Math.min(365,Number(exclusiveDelayDays===undefined||exclusiveDelayDays===null||exclusiveDelayDays===''?1:exclusiveDelayDays))):0;
+  const result=await pool.query(`UPDATE leads SET industry_id=$1,service_id=$2,subservice_id=$3,state_id=$4,city_id=$5,customer_name=$6,customer_phone=$7,customer_email=$8,requirement=$9,property_type=$10,budget=$11,source=$12,status=$13,notes=$14,custom_fields=$15::jsonb,pricing=$16::jsonb,lead_type=$17,is_exclusive=$18,exclusive_delay_days=$19,updated_at=CURRENT_TIMESTAMP WHERE id=$20 RETURNING *`,[industryId,serviceId||null,subserviceId||null,stateId||null,cityId||null,customerName||null,customerPhone||null,customerEmail||null,requirement||null,propertyType||null,budget??null,source||'upload',status||'available',notes||null,JSON.stringify(cleanJson(customFields)),JSON.stringify(cleanJson(pricing,DEFAULT_PRICING)),type,exclusive,delay,id]);
   return result.rows[0]||null;
 }
 async function updateLeadStatus(id,status){return(await pool.query('UPDATE leads SET status=$1,updated_at=CURRENT_TIMESTAMP WHERE id=$2 RETURNING *',[status,id])).rows[0]||null}
