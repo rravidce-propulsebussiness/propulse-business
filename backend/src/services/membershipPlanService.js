@@ -15,11 +15,27 @@ function safeJson(value, fallback = []) {
   }
 }
 
+function normalizeEntitlements(items, months = 1) {
+  return safeJson(items).map(item => {
+    const monthly = Math.max(0, Number(item.monthly_quantity ?? item.monthlyLimit ?? item.quantity ?? 0));
+    const total = item.period_total_quantity ?? item.periodTotal ?? item.totalLimit;
+    return {
+      ...item,
+      quantity: monthly,
+      monthly_quantity: monthly,
+      period_total_quantity: total === undefined || total === ''
+        ? monthly * months
+        : Math.max(0, Number(total)),
+      complimentary: item.complimentary !== false,
+    };
+  });
+}
+
 async function getPlans(includeInactive = true) {
   const r = await pool.query(`
     SELECT id,name,plan_group,plan_type,description,price,duration_days,billing_period,
            billing_months,monthly_base_price,discount_percent,benefits,lead_entitlements,
-           add_ons,is_active,created_at,updated_at
+           add_ons,lead_rollover_enabled,lead_expiry_days,is_active,created_at,updated_at
     FROM membership_plans
     ${includeInactive ? '' : 'WHERE is_active=TRUE'}
     ORDER BY COALESCE(plan_group,name),plan_type,billing_months ASC,id
@@ -38,16 +54,19 @@ async function createPlan(d) {
     : calculatePrice(base, months, discount);
   const days = d.durationDays || Math.round(months * 30.4375);
   const benefits = safeJson(d.benefits);
-  const entitlements = safeJson(d.leadEntitlements);
+  const entitlements = normalizeEntitlements(d.leadEntitlements, months);
   const addOns = safeJson(d.addOns);
   const period = d.billingPeriod || `${months}-month`;
+  const rollover = d.leadRolloverEnabled !== false;
+  const expiryDays = d.leadExpiryDays === undefined || d.leadExpiryDays === '' ? null : Number(d.leadExpiryDays);
 
   const r = await pool.query(`
     INSERT INTO membership_plans(
       name,plan_group,plan_type,description,price,duration_days,billing_period,
-      billing_months,monthly_base_price,discount_percent,benefits,lead_entitlements,add_ons
+      billing_months,monthly_base_price,discount_percent,benefits,lead_entitlements,
+      add_ons,lead_rollover_enabled,lead_expiry_days
     )
-    VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
+    VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)
     RETURNING *
   `, [
     d.name,
@@ -63,6 +82,8 @@ async function createPlan(d) {
     JSON.stringify(benefits),
     JSON.stringify(entitlements),
     JSON.stringify(addOns),
+    rollover,
+    expiryDays,
   ]);
   return r.rows[0];
 }
@@ -74,25 +95,26 @@ async function createPlanBundle(d) {
     : [];
 
   for (const period of periods) {
-    const label = String(period.label || `${period.months}-month`).trim();
+    const months = Number(period.months);
+    const label = String(period.label || `${months}-month`).trim();
     const p = d.pricing?.[period.key] || {};
-    const entitlements = Array.isArray(period.leadEntitlements)
-      ? period.leadEntitlements
-      : d.leadEntitlements;
+    const entitlements = normalizeEntitlements(period.leadEntitlements ?? d.leadEntitlements, months);
 
     rows.push(await createPlan({
       name: `${d.name} ${label}`,
       planGroup: d.name,
-      planType: d.planType,
+      planType: d.planType || 'pro',
       description: d.description,
       billingPeriod: label,
-      billingMonths: Number(period.months),
+      billingMonths: months,
       monthlyBasePrice: d.monthlyBasePrice,
       discountPercent: p.discount || 0,
       priceOverride: p.customPrice === true ? p.price : '',
       benefits: d.benefits,
       leadEntitlements: entitlements,
       addOns: d.addOns,
+      leadRolloverEnabled: d.leadRolloverEnabled !== false,
+      leadExpiryDays: d.leadExpiryDays,
     }));
   }
   return rows;
@@ -112,15 +134,20 @@ async function updatePlan(id, d) {
     : calculatePrice(base, months, discount);
   const days = d.durationDays || Math.round(months * 30.4375);
   const benefits = safeJson(d.benefits, safeJson(cur.rows[0].benefits));
-  const entitlements = safeJson(d.leadEntitlements, safeJson(cur.rows[0].lead_entitlements));
+  const entitlements = normalizeEntitlements(d.leadEntitlements, months).length
+    ? normalizeEntitlements(d.leadEntitlements, months)
+    : normalizeEntitlements(cur.rows[0].lead_entitlements, months);
   const addOns = safeJson(d.addOns, safeJson(cur.rows[0].add_ons));
+  const rollover = d.leadRolloverEnabled === undefined ? cur.rows[0].lead_rollover_enabled : Boolean(d.leadRolloverEnabled);
+  const expiryDays = d.leadExpiryDays === undefined ? cur.rows[0].lead_expiry_days : (d.leadExpiryDays === '' ? null : Number(d.leadExpiryDays));
 
   const r = await pool.query(`
     UPDATE membership_plans SET
       name=$1,plan_group=$2,plan_type=$3,description=$4,price=$5,duration_days=$6,
       billing_period=$7,billing_months=$8,monthly_base_price=$9,discount_percent=$10,
-      benefits=$11,lead_entitlements=$12,add_ons=$13,updated_at=CURRENT_TIMESTAMP
-    WHERE id=$14 RETURNING *
+      benefits=$11,lead_entitlements=$12,add_ons=$13,lead_rollover_enabled=$14,
+      lead_expiry_days=$15,updated_at=CURRENT_TIMESTAMP
+    WHERE id=$16 RETURNING *
   `, [
     d.name || cur.rows[0].name,
     d.planGroup || cur.rows[0].plan_group || d.name,
@@ -135,6 +162,8 @@ async function updatePlan(id, d) {
     JSON.stringify(benefits),
     JSON.stringify(entitlements),
     JSON.stringify(addOns),
+    rollover,
+    expiryDays,
     id,
   ]);
   return r.rows[0] || null;
