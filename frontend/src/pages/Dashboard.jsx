@@ -1,22 +1,54 @@
 import { Link, useNavigate } from 'react-router-dom'
+import { useEffect, useState } from 'react'
 import { clearSession, getUser, getToken } from '../utils/auth'
 import './Dashboard.css'
+
+const API = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
 
 function Dashboard() {
   const navigate = useNavigate()
   const user = getUser()
+  const token = getToken()
+  const [leads, setLeads] = useState([])
+  const [loadingLeads, setLoadingLeads] = useState(false)
+  const [leadError, setLeadError] = useState('')
+
+  useEffect(() => {
+    if (!token || !user || user.role === 'admin') return
+
+    async function loadLeads() {
+      setLoadingLeads(true)
+      setLeadError('')
+      try {
+        const res = await fetch(`${API}/leads?status=available`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        const data = await res.json()
+        if (!res.ok) throw new Error(data.error || 'Failed to load leads')
+        setLeads(Array.isArray(data) ? data : [])
+      } catch (error) {
+        setLeadError(error.message)
+      } finally {
+        setLoadingLeads(false)
+      }
+    }
+
+    loadLeads()
+  }, [token, user?.role])
 
   function logout() {
     clearSession()
     navigate('/')
   }
 
-  if (!getToken() || !user || user.role === 'admin') {
+  if (!token || !user || user.role === 'admin') {
     navigate('/login', { replace: true })
     return null
   }
 
   const name = user.name || 'Business Owner'
+  const firstName = name.split(' ')[0]
+  const previewLeads = leads.slice(0, 3)
 
   return (
     <div className="owner-dashboard">
@@ -34,24 +66,27 @@ function Dashboard() {
 
       <main className="owner-main">
         <section className="owner-welcome">
-          <div><span className="owner-kicker">BUSINESS OWNER HOME</span><h1>Good to see you, {name.split(' ')[0]}.</h1><p>Find relevant leads, manage your business profile and grow with Propulse.</p></div>
+          <div><span className="owner-kicker">BUSINESS OWNER HOME</span><h1>Good to see you, {firstName}.</h1><p>Find relevant leads, manage your business profile and grow with Propulse.</p></div>
           <Link className="owner-primary" to="/leads">Explore leads <span>→</span></Link>
         </section>
 
         <section className="owner-stats">
-          <Link to="/leads" className="owner-stat"><span className="stat-mark">◎</span><div><strong>Available</strong><small>New leads</small></div><b>→</b></Link>
-          <Link to="/leads" className="owner-stat"><span className="stat-mark">◷</span><div><strong>0</strong><small>My leads</small></div><b>→</b></Link>
+          <Link to="/leads" className="owner-stat"><span className="stat-mark">◎</span><div><strong>{loadingLeads ? '…' : leads.length}</strong><small>Available leads</small></div><b>→</b></Link>
+          <Link to="/leads" className="owner-stat"><span className="stat-mark">◷</span><div><strong>—</strong><small>My leads</small></div><b>→</b></Link>
           <Link to="/profile" className="owner-stat"><span className="stat-mark">◇</span><div><strong>Setup</strong><small>Business profile</small></div><b>→</b></Link>
-          <Link to="/leads" className="owner-stat"><span className="stat-mark">◆</span><div><strong>0</strong><small>Purchased leads</small></div><b>→</b></Link>
+          <Link to="/leads" className="owner-stat"><span className="stat-mark">◆</span><div><strong>—</strong><small>Purchased leads</small></div><b>→</b></Link>
         </section>
 
         <section className="owner-grid">
           <div className="owner-panel lead-panel">
             <div className="panel-head"><div><span className="owner-kicker">LEAD MARKETPLACE</span><h2>Find opportunities</h2></div><Link to="/leads">View all →</Link></div>
+            {leadError && <div className="lead-error">{leadError}</div>}
             <div className="owner-lead-list">
-              <Link to="/leads?category=Interior%20%26%20Modular" className="owner-lead"><div><span>INTERIOR & MODULAR</span><strong>Interior design · 3 BHK</strong><small>Hyderabad</small></div><b>View →</b></Link>
-              <Link to="/leads?category=Construction" className="owner-lead"><div><span>CONSTRUCTION</span><strong>Independent house construction</strong><small>Pune</small></div><b>View →</b></Link>
-              <Link to="/leads?category=Home%20Services" className="owner-lead"><div><span>HOME SERVICES</span><strong>Home renovation requirement</strong><small>Bengaluru</small></div><b>View →</b></Link>
+              {loadingLeads ? <div className="owner-lead"><div><strong>Loading available leads…</strong></div></div> : previewLeads.length ? previewLeads.map((lead) => (
+                <Link to={`/leads/${lead.id}`} className="owner-lead" key={lead.id}>
+                  <div><span>{(lead.industry_name || 'LEAD').toUpperCase()}</span><strong>{lead.service_name || lead.industry_name || 'Lead opportunity'}{lead.requirement ? ` · ${lead.requirement}` : ''}</strong><small>{lead.city_name || 'Location available'}</small></div><b>View →</b>
+                </Link>
+              )) : <div className="owner-lead"><div><strong>No available leads yet</strong><small>Update your business profile to improve matching.</small></div><b>→</b></div>}
             </div>
           </div>
 
