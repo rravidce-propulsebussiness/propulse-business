@@ -24,7 +24,8 @@ async function createPlanBundle(d){
   for(const period of periods){
     const label=String(period.label||`${period.months}-month`).trim();
     const p=d.pricing?.[period.key]||{};
-    rows.push(await createPlan({name:`${d.name} ${label}`,planGroup:d.name,planType:d.planType,description:d.description,billingPeriod:label,billingMonths:Number(period.months),monthlyBasePrice:d.monthlyBasePrice,discountPercent:p.discount||0,priceOverride:p.customPrice===true?p.price:'',benefits:d.benefits,leadEntitlements:d.leadEntitlements}));
+    const entitlements=Array.isArray(period.leadEntitlements)?period.leadEntitlements:d.leadEntitlements;
+    rows.push(await createPlan({name:`${d.name} ${label}`,planGroup:d.name,planType:d.planType,description:d.description,billingPeriod:label,billingMonths:Number(period.months),monthlyBasePrice:d.monthlyBasePrice,discountPercent:p.discount||0,priceOverride:p.customPrice===true?p.price:'',benefits:d.benefits,leadEntitlements:entitlements}));
   }
   return rows;
 }
