@@ -1,15 +1,16 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
+import { getToken, getUser } from '../../utils/auth';
 
 export default function AdminRoute() {
   const location = useLocation();
-  const token = localStorage.getItem('token');
-  const role = localStorage.getItem('role');
+  const token = getToken();
+  const user = getUser();
 
   if (!token) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  if (role !== 'admin') {
+  if (user?.role !== 'admin') {
     return <Navigate to="/dashboard" replace />;
   }
 
