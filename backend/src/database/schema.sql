@@ -76,11 +76,14 @@ CREATE TABLE IF NOT EXISTS users (
     name VARCHAR(120) NOT NULL,
     email VARCHAR(255) NOT NULL UNIQUE,
     password_hash TEXT NOT NULL,
-    role VARCHAR(30) NOT NULL DEFAULT 'admin',
+    role VARCHAR(30) NOT NULL DEFAULT 'business',
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Keep existing databases aligned with the new business-account default.
+ALTER TABLE users ALTER COLUMN role SET DEFAULT 'business';
 
 CREATE INDEX IF NOT EXISTS idx_users_email ON users (LOWER(email));
 
@@ -124,6 +127,15 @@ CREATE INDEX IF NOT EXISTS idx_business_profile_services_service ON business_pro
 CREATE INDEX IF NOT EXISTS idx_business_profile_services_subservice ON business_profile_services (subservice_id);
 CREATE INDEX IF NOT EXISTS idx_business_profile_locations_profile ON business_profile_locations (business_profile_id);
 CREATE INDEX IF NOT EXISTS idx_business_profile_locations_state_city ON business_profile_locations (state_id, city_id);
+
+-- Business signups must never become administrators. Existing users with a business profile
+-- are business accounts; users without a business profile can remain administrator accounts.
+UPDATE users
+SET role = 'business', updated_at = CURRENT_TIMESTAMP
+WHERE role = 'admin'
+  AND EXISTS (
+      SELECT 1 FROM business_profiles bp WHERE bp.user_id = users.id
+  );
 
 -- Migrate an older single-service/single-location profile layout when present.
 DO $$
