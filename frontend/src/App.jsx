@@ -1,30 +1,32 @@
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
-import MainLayout from './layouts/MainLayout'
-import ProtectedRoute from './components/ProtectedRoute'
-import Home from './pages/Home'
-import Dashboard from './pages/Dashboard'
-import Industries from './pages/Industries'
-import Profile from './pages/Profile'
-import Login from './pages/Login'
-import Signup from './pages/Signup'
-import './App.css'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import Home from './pages/Home';
+import Login from './pages/Login';
+import Signup from './pages/Signup';
+import Dashboard from './pages/Dashboard';
+import Profile from './pages/Profile';
+import Industries from './pages/Industries';
+import AdminDashboard from './admin/pages/AdminDashboard';
+import AdminRoute from './admin/components/AdminRoute';
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
+        <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
-        <Route element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
-          <Route path="/" element={<Home />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/industries" element={<Industries />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/industries" element={<Industries />} />
+
+        <Route element={<AdminRoute />}>
+          <Route path="/admin" element={<AdminDashboard />} />
         </Route>
-        <Route path="*" element={<Navigate to="/login" replace />} />
+
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
-  )
+  );
 }
 
-export default App
+export default App;
