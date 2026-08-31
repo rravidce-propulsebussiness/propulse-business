@@ -26,7 +26,7 @@ async function findDuplicateLead({industryId,customerPhone,customerEmail,custome
   const name=String(customerName||'').trim().toLowerCase();
   const req=String(requirement||'').trim().toLowerCase();
   if(phone.length>=7){
-    const r=await pool.query(`SELECT id,customer_name FROM leads WHERE industry_id=$1 AND regexp_replace(COALESCE(customer_phone,''),'\\D','','g')=$2 LIMIT 1`,[industryId,phone]);
+    const r=await pool.query(`SELECT id,customer_name FROM leads WHERE industry_id=$1 AND regexp_replace(COALESCE(customer_phone,''),'[^0-9]','','g')=$2 LIMIT 1`,[industryId,phone]);
     if(r.rows[0])return r.rows[0];
   }
   if(email){
