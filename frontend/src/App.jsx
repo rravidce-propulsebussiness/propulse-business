@@ -7,6 +7,7 @@ import Profile from './pages/Profile';
 import Industries from './pages/Industries';
 import Leads from './pages/Leads';
 import AdminDashboard from './admin/pages/AdminDashboard';
+import AdminBusinesses from './admin/pages/AdminBusinesses';
 import AdminRoute from './admin/components/AdminRoute';
 import AdminLayout from './admin/components/AdminLayout';
 
@@ -21,14 +22,13 @@ function App() {
         <Route path="/profile" element={<Profile />} />
         <Route path="/industries" element={<Industries />} />
         <Route path="/leads" element={<Leads />} />
-
         <Route element={<AdminRoute />}>
           <Route element={<AdminLayout />}>
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/admin/industries" element={<Industries />} />
+            <Route path="/admin/businesses" element={<AdminBusinesses />} />
           </Route>
         </Route>
-
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
