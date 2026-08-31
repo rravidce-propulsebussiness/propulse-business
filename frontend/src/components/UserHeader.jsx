@@ -16,9 +16,7 @@ export default function UserHeader() {
     if (!loggedIn || user?.role === 'admin') return
     let active = true
     authRequest('/profile')
-      .then((profile) => {
-        if (active && profile?.business_name) setBusinessName(profile.business_name)
-      })
+      .then((profile) => { if (active && profile?.business_name) setBusinessName(profile.business_name) })
       .catch(() => {})
     return () => { active = false }
   }, [loggedIn, user?.role])
@@ -43,7 +41,7 @@ export default function UserHeader() {
       <nav className={`user-header-nav${open ? ' open' : ''}`}>
         <Link className={active('/dashboard')} to="/dashboard" onClick={() => setOpen(false)}>Dashboard</Link>
         <Link className={active('/leads')} to="/leads" onClick={() => setOpen(false)}>Leads</Link>
-        <Link className="membership-link" to="/dashboard#membership" onClick={() => setOpen(false)}>Membership</Link>
+        <Link className={`membership-link${active('/membership')}`} to="/membership" onClick={() => setOpen(false)}>Membership</Link>
         <button className="user-header-mobile-logout" onClick={logout}>Logout</button>
       </nav>
       <div className="user-header-right">
