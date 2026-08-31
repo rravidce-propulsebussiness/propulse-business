@@ -21,8 +21,8 @@ export default function AdminLeadPricing(){
  return <main className="pricing-page">
   <section className="pricing-hero"><div><span className="hero-kicker">REVENUE CONTROL</span><h1>Lead Pricing</h1><p>Set market-specific prices for Basic and Premium leads.</p></div><div className="hero-mark">₹</div></section>
   {error&&<div className="pricing-alert error">{error}</div>}{ok&&<div className="pricing-alert success">{ok}</div>}
-  <section className="pricing-panel">
-   <div className="panel-head"><div><span className="kicker">{editId?'EDIT RULE':'CREATE RULE'}</span><h2>{editId?'Update pricing':'New pricing rule'}</h2><p>Choose the market first, then set separate prices for each lead type.</p></div>{editId&&<button className="outline-btn" onClick={reset}>Cancel</button>}</div>
+  <section className="pricing-panel create-panel">
+   <div className="panel-head create-head"><div><span className="kicker">{editId?'EDIT PRICING RULE':'CREATE PRICING RULE'}</span><h2>{editId?'Update pricing rule':'Create pricing rule'}</h2><p>Choose the market first, then set separate prices for each lead type.</p></div>{editId&&<button className="outline-btn" onClick={reset}>Cancel</button>}</div>
    <div className="scope-grid">
     <label>Industry<select value={form.industryId} onChange={e=>setForm({...form,industryId:e.target.value})}><option value="">All industries</option>{industries.map(x=><option key={x.id} value={x.id}>{x.name}</option>)}</select></label>
     <label>City<select value={form.cityId} onChange={e=>setForm({...form,cityId:e.target.value})}><option value="">All cities</option>{cities.map(x=><option key={x.id} value={x.id}>{x.name}</option>)}</select></label>
@@ -35,7 +35,7 @@ export default function AdminLeadPricing(){
    </div>
    <div className="panel-foot"><span>Sheet pricing can override this configured price when a lead is uploaded.</span><button className="primary-btn" disabled={saving} onClick={save}>{saving?'Saving…':editId?'Update rule':'Save rule'}</button></div>
   </section>
-  <section className="pricing-panel rules-panel"><div className="panel-head compact"><div><span className="kicker">PRICING MATRIX</span><h2>Configured rules</h2><p>Each card represents one Industry + City + Lead Type combination.</p></div><button className="outline-btn" onClick={load}>Refresh</button></div>
+  <section className="pricing-panel rules-panel"><div className="panel-head compact rules-head"><div><span className="kicker">PRICING MATRIX</span><h2>Configured rules</h2><p>Each card represents one Industry + City + Lead Type combination.</p></div><button className="outline-btn" onClick={load}>Refresh</button></div>
    {loading?<div className="empty">Loading pricing rules…</div>:rules.length===0?<div className="empty">No pricing rules configured yet.</div>:<div className="rule-cards">{rules.map(r=><article className="rule-card" key={r.id}><div className="rule-top"><div><span className={`type-pill ${r.lead_type}`}>{r.lead_type==='premium'?'PREMIUM':'BASIC'}</span><h3>{r.industry_name||'All industries'}</h3><p>{r.city_name||'All cities'}</p></div><span className={r.is_active?'status active':'status'}>{r.is_active?'ACTIVE':'OFF'}</span></div><div className="rule-prices">{(r.pricing?.shares||[]).map(x=><div key={x.shares}><b>{x.shares}</b><span>Normal <strong>₹{x.normal}</strong></span><span>Pro <strong>₹{x.pro}</strong></span></div>)}</div><div className="card-actions"><button onClick={()=>edit(r)}>Edit</button><button onClick={()=>del(r.id)}>Delete</button></div></article>)}</div>}
   </section>
  </main>;
