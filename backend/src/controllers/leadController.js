@@ -66,4 +66,22 @@ async function deleteLead(req, res) {
   }
 }
 
-module.exports = { createLead, getLeads, getLeadById, updateLead, updateLeadStatus, deleteLead };
+async function getLeadPricing(req, res) {
+  try {
+    return res.json(await leadService.getLeadPricing());
+  } catch (error) {
+    console.error('Get lead pricing failed:', error.message);
+    return res.status(500).json({ error: 'Failed to fetch lead pricing' });
+  }
+}
+
+async function updateLeadPricing(req, res) {
+  try {
+    return res.json(await leadService.updateLeadPricing(req.body));
+  } catch (error) {
+    console.error('Update lead pricing failed:', error.message);
+    return res.status(400).json({ error: error.message || 'Failed to update lead pricing' });
+  }
+}
+
+module.exports = { createLead, getLeads, getLeadById, updateLead, updateLeadStatus, deleteLead, getLeadPricing, updateLeadPricing };
