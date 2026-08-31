@@ -2,6 +2,7 @@ import {useEffect,useMemo,useState} from 'react';
 import{getToken,clearSession}from'../../utils/auth';
 import{useNavigate}from'react-router-dom';
 import'./AdminMembershipPlans.css';
+import'./AdminMembershipPlansConfig.css';
 
 const API='http://localhost:5000/api';
 const initialPeriods=[{key:'monthly',label:'Monthly',months:1,enabled:true},{key:'quarterly',label:'Quarterly',months:3,enabled:true},{key:'yearly',label:'Yearly',months:12,enabled:true}];
@@ -30,7 +31,8 @@ export default function AdminMembershipPlansConfig(){
  async function saveEdit(e){e.preventDefault();setError('');const p=form.periods[0],cfg=form.pricing.edit||{};try{await req(`/membership-plans/${editing}`,{method:'PUT',body:JSON.stringify({name:`${form.name} ${p.label}`,planGroup:form.name,planType:'pro',billingPeriod:p.label,billingMonths:Number(p.months||1),monthlyBasePrice:Number(form.monthlyBasePrice||0),discountPercent:Number(cfg.discount)||0,priceOverride:cfg.customPrice&&cfg.price!==''?Number(cfg.price):'',benefits:form.benefits,leadEntitlements:form.leadEntitlements})});setEditing(null);setForm(blank);await load()}catch(e){setError(e.message)}}
  async function toggle(p){try{await req(`/membership-plans/${p.id}/status`,{method:'PATCH',body:JSON.stringify({isActive:!p.is_active})});load()}catch(e){setError(e.message)}}
  async function del(p){if(confirm(`Delete ${p.name}?`))try{await req(`/membership-plans/${p.id}`,{method:'DELETE'});load()}catch(e){setError(e.message)}}
- return <main className="commercial-page"><header className="commercial-head"><div><span>COMMERCIAL</span><h1>Membership Plans</h1><p>Configure billing periods, live pricing, discounts and complimentary leads.</p></div></header>{error&&<div className="error">{error}</div>}
+ return <main className="commercial-page">
+ <header className="commercial-head"><div><span>COMMERCIAL</span><h1>Membership Plans</h1><p>Configure billing periods, live pricing, discounts and complimentary leads.</p></div></header>{error&&<div className="error">{error}</div>}
  <section className="create-card hero-card"><div className="card-heading"><div><div className="eyebrow">{editing?'EDIT MEMBERSHIP':'PRO MEMBERSHIP'}</div><h2>{editing?'Update billing period':'Build a Pro plan'}</h2><p>Change the base price and the customer price recalculates instantly.</p></div><div className="pro-badge">PRO</div></div>
  <form onSubmit={editing?saveEdit:create}><div className="two"><label>Plan name<input value={form.name} onChange={e=>set('name',e.target.value)} placeholder="Pro" required/></label><label>Monthly base price ₹<input type="number" min="0" step="0.01" value={form.monthlyBasePrice} onChange={e=>set('monthlyBasePrice',e.target.value)} placeholder="999" required/></label></div>
  <div className="section-label"><div><b>Billing periods</b><small>Monthly, quarterly, yearly or any custom duration.</small></div>{!editing&&<button type="button" className="mini-action" onClick={addPeriod}>＋ Add period</button>}</div>
