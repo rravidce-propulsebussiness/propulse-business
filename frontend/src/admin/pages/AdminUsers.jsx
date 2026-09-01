@@ -4,7 +4,7 @@ import './AdminUsers.css';
 const dateOnly = value => value ? new Date(value).toLocaleDateString() : '—';
 const membershipLabel = u => u.membership_plan_name || 'No active membership';
 const billingLabel = u => { if (!u.membership_billing_period) return ''; const p = String(u.membership_billing_period).replace(/[_-]/g, ' '); const months = Number(u.membership_billing_months || 0); return months > 1 ? `${p} · ${months} months` : p; };
-const isProMembership = u => Boolean(u.membership_id && ((u.membership_plan_type || '').toLowerCase() === 'pro' || (u.membership_plan_name || '').toLowerCase().includes('pro')));
+const isProMembership = u => ((u.membership_plan_type || '').toLowerCase() === 'pro' || (u.membership_plan_name || '').toLowerCase().includes('pro'));
 export default function AdminUsers() {
  const [users,setUsers]=useState([]),[query,setQuery]=useState(''),[role,setRole]=useState('all'),[status,setStatus]=useState('all'),[loading,setLoading]=useState(true),[error,setError]=useState(''),[selected,setSelected]=useState(null),[showCreate,setShowCreate]=useState(false),[form,setForm]=useState({name:'',email:'',phone:'',businessName:'',role:'business',password:''});
  async function loadUsers(){try{setLoading(true);setError('');const p=new URLSearchParams({search:query,role,status});setUsers(await authRequest(`/admin/users?${p}`))}catch(e){setError(e.message)}finally{setLoading(false)}}
