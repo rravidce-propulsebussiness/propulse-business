@@ -7,47 +7,166 @@ async function hasActiveProMembership(userId, client = pool) {
     JOIN membership_plans mp ON mp.id=m.membership_plan_id
     WHERE m.user_id=$1
       AND m.status='active'
+      AND m.starts_at<=CURRENT_TIMESTAMP
       AND m.expires_at>CURRENT_TIMESTAMP
       AND LOWER(mp.plan_type)='pro'
+      AND mp.is_active=TRUE
     LIMIT 1
   `,[userId]);
   return Boolean(result.rows[0]);
 }
 
-async function createManualPayment({userId,amount,manualReference,proofUrl,notes,membershipPlanId}){
-  if(!manualReference||!String(manualReference).trim())throw Object.assign(new Error('Payment reference / UTR is required'),{code:'REFERENCE_REQUIRED'});
-  if(!membershipPlanId)throw Object.assign(new Error('A membership plan is required'),{code:'INVALID_PLAN'});
-  const planResult=await pool.query(`SELECT id,name,plan_type,price,duration_days,is_active FROM membership_plans WHERE id=$1`,[membershipPlanId]);
+async function createManualPayment({userId,amount,manualReference,proofUrl,notes,membershipPlanId}) {
+  if(!manualReference || !String(manualReference).trim()) {
+    throw Object.assign(new Error('Payment reference / UTR is required'),{code:'REFERENCE_REQUIRED'});
+  }
+  if(!membershipPlanId) throw Object.assign(new Error('A membership plan is required'),{code:'INVALID_PLAN'});
+
+  const planResult=await pool.query(
+    `SELECT id,name,plan_type,price,duration_days,is_active FROM membership_plans WHERE id=$1`,
+    [membershipPlanId]
+  );
   const plan=planResult.rows[0];
-  if(!plan||!plan.is_active)throw Object.assign(new Error('Membership plan is not available'),{code:'PLAN_NOT_FOUND'});
+  if(!plan || !plan.is_active) throw Object.assign(new Error('Membership plan is not available'),{code:'PLAN_NOT_FOUND'});
+
   const planType=String(plan.plan_type||'').toLowerCase();
-  if(!['pro','booster'].includes(planType)){
-    if(planType==='investor')throw Object.assign(new Error('Investor access is available only to customers with an active Pro membership and is not purchased separately'),{code:'PRO_REQUIRED'});
+  if(!['pro','booster'].includes(planType)) {
+    if(planType==='investor') throw Object.assign(new Error('Investor access is available only to customers with an active Pro membership and is not purchased separately'),{code:'PRO_REQUIRED'});
     throw Object.assign(new Error('This membership plan cannot be purchased'),{code:'INVALID_PLAN'});
   }
+
+  // Booster is a Pro-dependent product, but it must never replace the customer's Pro membership.
+  if(planType==='booster' && !(await hasActiveProMembership(userId))) {
+    throw Object.assign(new Error('An active Pro membership is required before purchasing Booster'),{code:'PRO_REQUIRED'});
+  }
+
   const expected=Number(plan.price),submitted=Number(amount);
-  if(!Number.isFinite(expected)||expected<=0||!Number.isFinite(submitted)||Math.abs(expected-submitted)>0.01)throw Object.assign(new Error('Payment amount does not match the selected membership plan'),{code:'INVALID_AMOUNT'});
-  const result=await pool.query(`INSERT INTO payments (user_id,membership_plan_id,amount,payment_method,status,manual_reference,proof_url,notes) VALUES ($1,$2,$3,'manual','pending',$4,$5,$6) RETURNING *`,[userId,plan.id,expected,String(manualReference).trim(),proofUrl||null,notes||`${plan.name} membership`]);
-  return result.rows[0]
+  if(!Number.isFinite(expected)||expected<=0||!Number.isFinite(submitted)||Math.abs(expected-submitted)>0.01) {
+    throw Object.assign(new Error('Payment amount does not match the selected membership plan'),{code:'INVALID_AMOUNT'});
+  }
+
+  // A reference/UTR should not be submitted twice for the same manual payment stream.
+  const duplicate=await pool.query(
+    `SELECT id,status FROM payments WHERE payment_method='manual' AND LOWER(TRIM(COALESCE(manual_reference,'')))=LOWER(TRIM($1)) LIMIT 1`,
+    [String(manualReference).trim()]
+  );
+  if(duplicate.rows[0]) throw Object.assign(new Error('This payment reference / UTR has already been submitted'),{code:'DUPLICATE_REFERENCE'});
+
+  const result=await pool.query(
+    `INSERT INTO payments (user_id,membership_plan_id,amount,payment_method,status,manual_reference,proof_url,notes)
+     VALUES ($1,$2,$3,'manual','pending',$4,$5,$6) RETURNING *`,
+    [userId,plan.id,expected,String(manualReference).trim(),proofUrl||null,notes||`${plan.name} membership`]
+  );
+  return result.rows[0];
 }
 
-async function getPayments({status,search}){const values=[],where=[];if(status&&status!=='all'){values.push(status);where.push(`p.status=$${values.length}`)}if(search){values.push(`%${search}%`);where.push(`(u.name ILIKE $${values.length} OR u.email ILIKE $${values.length} OR COALESCE(p.manual_reference,'') ILIKE $${values.length})`)}const result=await pool.query(`SELECT p.*,u.name AS user_name,u.email AS user_email,bp.business_name,mp.name AS membership_plan_name FROM payments p JOIN users u ON u.id=p.user_id LEFT JOIN business_profiles bp ON bp.user_id=u.id LEFT JOIN membership_plans mp ON mp.id=p.membership_plan_id ${where.length?`WHERE ${where.join(' AND ')}`:''} ORDER BY p.created_at DESC`,values);return result.rows}
+async function getPayments({status,search}) {
+  const values=[],where=[];
+  if(status&&status!=='all'){values.push(status);where.push(`p.status=$${values.length}`)}
+  if(search){values.push(`%${search}%`);where.push(`(u.name ILIKE $${values.length} OR u.email ILIKE $${values.length} OR COALESCE(p.manual_reference,'') ILIKE $${values.length})`)}
+  const result=await pool.query(
+    `SELECT p.*,u.name AS user_name,u.email AS user_email,bp.business_name,mp.name AS membership_plan_name
+     FROM payments p
+     JOIN users u ON u.id=p.user_id
+     LEFT JOIN business_profiles bp ON bp.user_id=u.id
+     LEFT JOIN membership_plans mp ON mp.id=p.membership_plan_id
+     ${where.length?`WHERE ${where.join(' AND ')}`:''}
+     ORDER BY p.created_at DESC`,values
+  );
+  return result.rows;
+}
 
-async function activateMembership(client,payment){
-  if(!payment.membership_plan_id)return null;
-  const planResult=await client.query(`SELECT id,plan_type,duration_days,is_active FROM membership_plans WHERE id=$1`,[payment.membership_plan_id]);
+async function activateMembership(client,payment) {
+  if(!payment.membership_plan_id) return null;
+  const planResult=await client.query(
+    `SELECT id,plan_type,duration_days,is_active FROM membership_plans WHERE id=$1`,
+    [payment.membership_plan_id]
+  );
   const plan=planResult.rows[0];
-  if(!plan||!plan.is_active)throw Object.assign(new Error('Membership plan is no longer available'),{code:'PLAN_NOT_FOUND'});
+  if(!plan||!plan.is_active) throw Object.assign(new Error('Membership plan is no longer available'),{code:'PLAN_NOT_FOUND'});
   const planType=String(plan.plan_type||'').toLowerCase();
-  if(!['pro','booster'].includes(planType))throw Object.assign(new Error('Only Pro or Booster membership payments can be activated'),{code:'INVALID_PLAN'});
-  const currentResult=await client.query(`SELECT id,expires_at FROM memberships WHERE user_id=$1 AND status='active' AND expires_at>CURRENT_TIMESTAMP ORDER BY expires_at DESC LIMIT 1 FOR UPDATE`,[payment.user_id]);
-  const current=currentResult.rows[0],now=new Date(),base=current&&new Date(current.expires_at)>now?new Date(current.expires_at):now,end=new Date(base);
-  end.setDate(end.getDate()+Math.max(1,Number(plan.duration_days||365)));
-  if(current)await client.query(`UPDATE memberships SET membership_plan_id=$1,payment_id=$2,expires_at=$3,status='active',updated_at=CURRENT_TIMESTAMP WHERE id=$4`,[plan.id,payment.id,end,current.id]);
-  else await client.query(`INSERT INTO memberships(user_id,membership_plan_id,payment_id,starts_at,expires_at,status) VALUES($1,$2,$3,$4,$5,'active')`,[payment.user_id,plan.id,payment.id,base,end]);
-  return{planId:plan.id,planType,expiresAt:end}
+  if(!['pro','booster'].includes(planType)) throw Object.assign(new Error('Only Pro or Booster membership payments can be activated'),{code:'INVALID_PLAN'});
+
+  if(planType==='booster') {
+    const pro=await hasActiveProMembership(payment.user_id,client);
+    if(!pro) throw Object.assign(new Error('An active Pro membership is required before Booster can be activated'),{code:'PRO_REQUIRED'});
+  }
+
+  // Pro is the primary membership. Booster is an additional entitlement represented
+  // by its own membership row and therefore never replaces or shortens Pro.
+  const currentResult=await client.query(
+    `SELECT id,starts_at,expires_at
+     FROM memberships
+     WHERE user_id=$1
+       AND membership_plan_id=$2
+       AND status='active'
+       AND expires_at>CURRENT_TIMESTAMP
+     ORDER BY expires_at DESC
+     LIMIT 1
+     FOR UPDATE`,
+    [payment.user_id,plan.id]
+  );
+  const current=currentResult.rows[0];
+  const now=new Date();
+  const base=current&&new Date(current.expires_at)>now?new Date(current.expires_at):now;
+  const end=new Date(base);
+  end.setDate(end.getDate()+Math.max(1,Number(plan.duration_days||30)));
+
+  if(current) {
+    await client.query(
+      `UPDATE memberships SET payment_id=$1,expires_at=$2,status='active',updated_at=CURRENT_TIMESTAMP WHERE id=$3`,
+      [payment.id,end,current.id]
+    );
+  } else {
+    await client.query(
+      `INSERT INTO memberships(user_id,membership_plan_id,payment_id,starts_at,expires_at,status)
+       VALUES($1,$2,$3,$4,$5,'active')`,
+      [payment.user_id,plan.id,payment.id,base,end]
+    );
+  }
+  return{planId:plan.id,planType,expiresAt:end};
 }
 
-async function updatePaymentStatus(id,status,adminId,notes){const client=await pool.connect();try{await client.query('BEGIN');const existing=await client.query(`SELECT * FROM payments WHERE id=$1 FOR UPDATE`,[id]);const payment=existing.rows[0];if(!payment){await client.query('ROLLBACK');return null}let membership=null;if(status==='paid')membership=await activateMembership(client,payment);await client.query(`UPDATE payments SET status=$1,reviewed_by=$2,reviewed_at=CURRENT_TIMESTAMP,notes=COALESCE($3,notes),updated_at=CURRENT_TIMESTAMP WHERE id=$4`,[status,adminId,notes||null,id]);const updated=(await client.query(`SELECT * FROM payments WHERE id=$1`,[id])).rows[0];await client.query('COMMIT');return{...updated,membership_activation:membership}}catch(error){await client.query('ROLLBACK');throw error}finally{client.release()}}
+async function updatePaymentStatus(id,status,adminId,notes) {
+  const client=await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const existing=await client.query(`SELECT * FROM payments WHERE id=$1 FOR UPDATE`,[id]);
+    const payment=existing.rows[0];
+    if(!payment){await client.query('ROLLBACK');return null;}
+
+    if(payment.payment_method!=='manual') {
+      throw Object.assign(new Error('Only manual payments can be reviewed from the admin payment panel'),{code:'PAYMENT_NOT_MANUAL'});
+    }
+    const currentStatus=String(payment.status||'').toLowerCase();
+    if(currentStatus==='paid') {
+      throw Object.assign(new Error('A paid payment cannot be reviewed again'),{code:'PAYMENT_ALREADY_PAID'});
+    }
+    if(['rejected','failed','refunded'].includes(currentStatus)) {
+      throw Object.assign(new Error(`Payment is already in terminal state: ${currentStatus}`),{code:'PAYMENT_TERMINAL'});
+    }
+    if(status==='refunded') {
+      throw Object.assign(new Error('A pending manual payment cannot be marked refunded'),{code:'INVALID_PAYMENT_TRANSITION'});
+    }
+
+    let membership=null;
+    if(status==='paid') membership=await activateMembership(client,payment);
+
+    await client.query(
+      `UPDATE payments
+       SET status=$1,reviewed_by=$2,reviewed_at=CURRENT_TIMESTAMP,
+           paid_at=CASE WHEN $1='paid' THEN CURRENT_TIMESTAMP ELSE paid_at END,
+           notes=COALESCE($3,notes),updated_at=CURRENT_TIMESTAMP
+       WHERE id=$4`,
+      [status,adminId,notes||null,id]
+    );
+    const updated=(await client.query(`SELECT * FROM payments WHERE id=$1`,[id])).rows[0];
+    await client.query('COMMIT');
+    return{...updated,membership_activation:membership};
+  }catch(error){
+    await client.query('ROLLBACK');
+    throw error;
+  }finally{client.release();}
+}
 
 module.exports={createManualPayment,getPayments,updatePaymentStatus};

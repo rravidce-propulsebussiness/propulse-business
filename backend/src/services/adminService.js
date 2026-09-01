@@ -50,16 +50,27 @@ async function getUsers({ search = '', role = 'all', status = 'all' } = {}) {
            m.id AS membership_id, m.status AS membership_status, m.starts_at AS membership_started_at,
            m.expires_at AS membership_expires_at, mp.id AS membership_plan_id, mp.name AS membership_plan_name,
            mp.plan_group AS membership_plan_group, mp.plan_type AS membership_plan_type,
-           mp.billing_period AS membership_billing_period, mp.billing_months AS membership_billing_months
+           mp.billing_period AS membership_billing_period, mp.billing_months AS membership_billing_months,
+           bm.id AS booster_membership_id, bm.expires_at AS booster_expires_at,
+           CASE WHEN m.id IS NOT NULL AND m.status='active' AND m.expires_at>CURRENT_TIMESTAMP THEN TRUE ELSE FALSE END AS pro_active
     FROM users u
     LEFT JOIN business_profiles bp ON bp.user_id = u.id
     LEFT JOIN LATERAL (
       SELECT m.* FROM memberships m
-      WHERE m.user_id = u.id
-      ORDER BY CASE WHEN m.status = 'active' THEN 0 ELSE 1 END, m.created_at DESC
+      JOIN membership_plans mp0 ON mp0.id=m.membership_plan_id
+      WHERE m.user_id=u.id
+        AND LOWER(COALESCE(mp0.plan_type,''))='pro'
+      ORDER BY CASE WHEN m.status='active' AND m.expires_at>CURRENT_TIMESTAMP THEN 0 ELSE 1 END, m.created_at DESC
       LIMIT 1
     ) m ON TRUE
-    LEFT JOIN membership_plans mp ON mp.id = m.membership_plan_id
+    LEFT JOIN membership_plans mp ON mp.id=m.membership_plan_id
+    LEFT JOIN LATERAL (
+      SELECT mb.id,mb.expires_at FROM memberships mb
+      JOIN membership_plans mpb ON mpb.id=mb.membership_plan_id
+      WHERE mb.user_id=u.id AND LOWER(COALESCE(mpb.plan_type,''))='booster'
+      ORDER BY CASE WHEN mb.status='active' AND mb.expires_at>CURRENT_TIMESTAMP THEN 0 ELSE 1 END, mb.created_at DESC
+      LIMIT 1
+    ) bm ON TRUE
     ${conditions.length ? `WHERE ${conditions.join(' AND ')}` : ''}
     ORDER BY u.created_at DESC
   `, params);
@@ -67,18 +78,18 @@ async function getUsers({ search = '', role = 'all', status = 'all' } = {}) {
 }
 
 async function setBusinessStatus(userId, isActive) {
-  const result = await pool.query(`UPDATE users SET is_active = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 AND role = 'business' RETURNING id, name, email, is_active`, [isActive, userId]);
-  return result.rows[0] || null;
+  const result = await pool.query(`UPDATE users SET is_active=$1,updated_at=CURRENT_TIMESTAMP WHERE id=$2 AND role='business' RETURNING id,name,email,is_active`, [isActive,userId]);
+  return result.rows[0]||null;
 }
 
-async function setUserStatus(userId, isActive) {
-  const result = await pool.query(`UPDATE users SET is_active = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING id, name, email, role, is_active`, [isActive, userId]);
-  return result.rows[0] || null;
+async function setUserStatus(userId,isActive) {
+  const result=await pool.query(`UPDATE users SET is_active=$1,updated_at=CURRENT_TIMESTAMP WHERE id=$2 RETURNING id,name,email,role,is_active`,[isActive,userId]);
+  return result.rows[0]||null;
 }
 
 async function removeMembership(userId) {
-  const result = await pool.query(`UPDATE memberships SET status = 'cancelled', updated_at = CURRENT_TIMESTAMP WHERE id = (SELECT m.id FROM memberships m WHERE m.user_id = $1 AND m.status = 'active' ORDER BY m.created_at DESC LIMIT 1) RETURNING id, user_id, status`, [userId]);
-  return result.rows[0] || null;
+  const result=await pool.query(`UPDATE memberships SET status='cancelled',updated_at=CURRENT_TIMESTAMP WHERE id=(SELECT m.id FROM memberships m JOIN membership_plans mp ON mp.id=m.membership_plan_id WHERE m.user_id=$1 AND m.status='active' AND LOWER(COALESCE(mp.plan_type,''))='pro' ORDER BY m.created_at DESC LIMIT 1) RETURNING id,user_id,status`,[userId]);
+  return result.rows[0]||null;
 }
 
-module.exports = { getDashboardStats, getBusinesses, getUsers, setBusinessStatus, setUserStatus, removeMembership };
+module.exports={getDashboardStats,getBusinesses,getUsers,setBusinessStatus,setUserStatus,removeMembership};

@@ -1,5 +1,44 @@
 require('dotenv').config();
-const express=require('express');const cors=require('cors');const pool=require('./config/database');
-const industryRoutes=require('./routes/industryRoutes');const serviceRoutes=require('./routes/serviceRoutes');const subserviceRoutes=require('./routes/subserviceRoutes');const stateRoutes=require('./routes/stateRoutes');const cityRoutes=require('./routes/cityRoutes');const authRoutes=require('./routes/authRoutes');const profileRoutes=require('./routes/profileRoutes');const adminRoutes=require('./routes/adminRoutes');const leadRoutes=require('./routes/leadRoutes');const leadEntitlementRoutes=require('./routes/leadEntitlementRoutes');const paymentRoutes=require('./routes/paymentRoutes');const membershipPlanRoutes=require('./routes/membershipPlanRoutes');const adminCommercialRoutes=require('./routes/adminCommercialRoutes');const walletRoutes=require('./routes/walletRoutes');
-const app=express();const PORT=process.env.PORT||5000;app.use(cors());app.use(express.json({limit:'10mb'}));app.get('/health',async(req,res)=>{try{await pool.query('SELECT 1');res.json({status:'ok',database:'connected'})}catch(e){console.error(e.message);res.status(500).json({status:'error',database:'disconnected'})}});
-app.use('/api/auth',authRoutes);app.use('/api/profile',profileRoutes);app.use('/api/admin',adminRoutes);app.use('/api/leads',leadRoutes);app.use('/api/leads',leadEntitlementRoutes);app.use('/api/payments',paymentRoutes);app.use('/api/membership-plans',membershipPlanRoutes);app.use('/api/admin/commercial',adminCommercialRoutes);app.use('/api/wallet',walletRoutes);app.use('/api/industries',industryRoutes);app.use('/api/services',serviceRoutes);app.use('/api/subservices',subserviceRoutes);app.use('/api/states',stateRoutes);app.use('/api/cities',cityRoutes);app.use((req,res)=>res.status(404).json({error:'Not found'}));app.listen(PORT,'0.0.0.0',()=>console.log(`Server running on port ${PORT}`));
+const express=require('express');
+const cors=require('cors');
+const pool=require('./config/database');
+const industryRoutes=require('./routes/industryRoutes');
+const serviceRoutes=require('./routes/serviceRoutes');
+const subserviceRoutes=require('./routes/subserviceRoutes');
+const stateRoutes=require('./routes/stateRoutes');
+const cityRoutes=require('./routes/cityRoutes');
+const authRoutes=require('./routes/authRoutes');
+const profileRoutes=require('./routes/profileRoutes');
+const adminRoutes=require('./routes/adminRoutes');
+const leadRoutes=require('./routes/leadRoutes');
+const leadEntitlementRoutes=require('./routes/leadEntitlementRoutes');
+const paymentRoutes=require('./routes/paymentRoutes');
+const membershipPlanRoutes=require('./routes/membershipPlanRoutes');
+const adminCommercialRoutes=require('./routes/adminCommercialRoutes');
+const walletRoutes=require('./routes/walletRoutes');
+
+const app=express();
+const PORT=process.env.PORT||5000;
+const configuredOrigins=String(process.env.CORS_ORIGIN||'http://localhost:5173').split(',').map(x=>x.trim()).filter(Boolean);
+
+app.use(cors({origin(origin,callback){if(!origin||configuredOrigins.includes(origin))return callback(null,true);return callback(new Error('CORS origin not allowed'));}}));
+app.use(express.json({limit:'10mb'}));
+
+app.get('/health',async(req,res)=>{try{await pool.query('SELECT 1');res.json({status:'ok',database:'connected'});}catch(e){console.error(e.message);res.status(500).json({status:'error',database:'disconnected'});}});
+app.use('/api/auth',authRoutes);
+app.use('/api/profile',profileRoutes);
+app.use('/api/admin',adminRoutes);
+app.use('/api/leads',leadRoutes);
+app.use('/api/leads',leadEntitlementRoutes);
+app.use('/api/payments',paymentRoutes);
+app.use('/api/membership-plans',membershipPlanRoutes);
+app.use('/api/admin/commercial',adminCommercialRoutes);
+app.use('/api/wallet',walletRoutes);
+app.use('/api/industries',industryRoutes);
+app.use('/api/services',serviceRoutes);
+app.use('/api/subservices',subserviceRoutes);
+app.use('/api/states',stateRoutes);
+app.use('/api/cities',cityRoutes);
+app.use((req,res)=>res.status(404).json({error:'Not found'}));
+app.use((err,req,res,next)=>{if(err.message==='CORS origin not allowed')return res.status(403).json({error:'Origin not allowed'});console.error('Unhandled server error:',err.message);return res.status(500).json({error:'Internal server error'});});
+app.listen(PORT,'0.0.0.0',()=>console.log(`Server running on port ${PORT}`));

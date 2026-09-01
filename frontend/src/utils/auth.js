@@ -1,3 +1,5 @@
+import { API_BASE_URL, apiRequest } from './api'
+
 const TOKEN_KEY = 'propulse_auth_token'
 const USER_KEY = 'propulse_auth_user'
 
@@ -16,19 +18,7 @@ export function clearSession() {
   localStorage.removeItem(USER_KEY)
 }
 
-async function request(path, options = {}, includeToken = true) {
-  const headers = { 'Content-Type': 'application/json', ...(options.headers || {}) }
-  const token = getToken()
-  if (includeToken && token) headers.Authorization = `Bearer ${token}`
+export const authRequest = (path, options = {}) => apiRequest(path, options, true)
+export const publicRequest = (path, options = {}) => apiRequest(path, options, false)
 
-  const response = await fetch(`http://localhost:5000/api${path}`, {
-    ...options,
-    headers,
-  })
-  const data = await response.json().catch(() => ({}))
-  if (!response.ok) throw new Error(data.error || 'Request failed')
-  return data
-}
-
-export const authRequest = (path, options = {}) => request(path, options, true)
-export const publicRequest = (path, options = {}) => request(path, options, false)
+export { API_BASE_URL }
