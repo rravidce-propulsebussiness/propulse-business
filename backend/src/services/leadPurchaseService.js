@@ -1,7 +1,16 @@
 const pool=require('../config/database');
 const allowedShares=[1,3,5];
 async function isPro(userId){
-  const r=await pool.query(`SELECT 1 FROM memberships m JOIN membership_plans mp ON mp.id=m.membership_plan_id WHERE m.user_id=$1 AND m.status='active' AND m.starts_at<=CURRENT_TIMESTAMP AND m.ends_at>=CURRENT_TIMESTAMP AND LOWER(COALESCE(mp.plan_type,''))='pro' AND mp.is_active=TRUE LIMIT 1`,[userId]);
+  const r=await pool.query(`SELECT 1
+    FROM memberships m
+    JOIN membership_plans mp ON mp.id=m.membership_plan_id
+    WHERE m.user_id=$1
+      AND m.status='active'
+      AND COALESCE((to_jsonb(m)->>'ends_at')::timestamp,(to_jsonb(m)->>'expires_at')::timestamp) >= CURRENT_TIMESTAMP
+      AND COALESCE((to_jsonb(m)->>'starts_at')::timestamp,CURRENT_TIMESTAMP) <= CURRENT_TIMESTAMP
+      AND LOWER(COALESCE(mp.plan_type,''))='pro'
+      AND mp.is_active=TRUE
+    LIMIT 1`,[userId]);
   return r.rows.length>0;
 }
 function priceFor(pricing,shares,tier){
