@@ -14,7 +14,7 @@ async function getLeadAccess(userId,leadId){
   if(lead.status!=='available')return{authenticated:true,claimed:false,canClaim:false,reason:'Lead is not available'};
   const exclusiveAt=new Date(new Date(lead.created_at).getTime()+Number(lead.exclusive_delay_days||0)*86400000);
   if(lead.is_exclusive&&exclusiveAt>new Date())return{authenticated:true,claimed:false,canClaim:false,reason:'Exclusive lead is not yet available'};
-  const membershipResult=await pool.query(`SELECT m.id,m.starts_at,m.expires_at,membership_plan_id,mp.billing_months,mp.lead_entitlements,mp.lead_rollover_enabled,mp.lead_expiry_days FROM memberships m JOIN membership_plans mp ON mp.id=m.membership_plan_id WHERE m.user_id=$1 AND m.status='active' AND m.starts_at<=CURRENT_TIMESTAMP AND m.expires_at>=CURRENT_TIMESTAMP AND mp.is_active=TRUE AND mp.plan_type IN ('pro','non_pro') ORDER BY m.expires_at DESC LIMIT 1`,[userId]);
+  const membershipResult=await pool.query(`SELECT m.id,m.starts_at,m.expires_at,m.membership_plan_id,mp.billing_months,mp.lead_entitlements,mp.lead_rollover_enabled,mp.lead_expiry_days FROM memberships m JOIN membership_plans mp ON mp.id=m.membership_plan_id WHERE m.user_id=$1 AND m.status='active' AND m.starts_at<=CURRENT_TIMESTAMP AND m.expires_at>=CURRENT_TIMESTAMP AND mp.is_active=TRUE AND LOWER(REPLACE(COALESCE(mp.plan_type,''),'-','_')) IN ('pro','non_pro') ORDER BY m.expires_at DESC LIMIT 1`,[userId]);
   const membership=membershipResult.rows[0];
   if(!membership)return{authenticated:true,claimed:false,canClaim:false,reason:'No active membership entitlement'};
   const entitlement=entitlementForLead(parseEntitlements(membership.lead_entitlements),lead);
@@ -30,7 +30,7 @@ async function getLeadAccess(userId,leadId){
   const usedResult=await pool.query(`SELECT COUNT(*)::int AS used FROM lead_entitlement_claims WHERE user_id=$1 AND membership_id=$2 AND claimed_at>= $3 AND claimed_at < $4`,[userId,membership.id,periodStart,periodEnd]);
   const used=Number(usedResult.rows[0]?.used||0);
   const allowance=membership.lead_rollover_enabled===false?Math.max(0,monthly):Math.max(0,periodTotal);
-  return{authenticated:true,claimed:false,canClaim:used<allowance,remaining:Math.max(0,allowance-used),monthlyLimit:monthly,periodTotalLimit:periodTotal,billingMonths,entitlementType:entitlement.type,membershipId:membership.id,periodStart,periodEnd};
+  return{authenticated:true,claimed:false,canClaim:used<allowance,remaining:Math.max(0,allowance-used),monthlyLimit:monthly,periodTotalLimit:periodTotal,billingMonths,entitlementType:entitlement.type,membershipId:membership.id,periodStart,periodEnd,expiryDays:Math.max(0,Number(membership.lead_expiry_days||0))};
 }
 
 async function claimLead(userId,leadId){
@@ -46,7 +46,7 @@ async function claimLead(userId,leadId){
   }
   const lead=await pool.query(`SELECT customer_name,customer_phone,customer_email,requirement,property_type,budget,source,notes,custom_fields,industry_id,service_id,subservice_id,state_id,city_id,lead_type FROM leads WHERE id=$1`,[leadId]);
   if(!lead.rows[0])fail('Lead not found','LEAD_NOT_FOUND');
-  const expiryDays=Math.max(0,Number(access.entitlementType==='premium'?0:0));
+  const expiryDays=Math.max(0,Number(access.expiryDays||0));
   try{
     const inserted=await pool.query(`INSERT INTO lead_entitlement_claims(user_id,lead_id,membership_id,entitlement_type,expires_at) VALUES($1,$2,$3,$4,$5) RETURNING *`,[userId,leadId,access.membershipId,access.entitlementType,expiryDays>0?new Date(Date.now()+expiryDays*86400000):null]);
     return{claim:inserted.rows[0],lead:lead.rows[0],remaining:Math.max(0,Number(access.remaining||1)-1)};
