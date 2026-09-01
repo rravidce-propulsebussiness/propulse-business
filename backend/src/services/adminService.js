@@ -76,4 +76,9 @@ async function setUserStatus(userId, isActive) {
   return result.rows[0] || null;
 }
 
-module.exports = { getDashboardStats, getBusinesses, getUsers, setBusinessStatus, setUserStatus };
+async function removeMembership(userId) {
+  const result = await pool.query(`UPDATE memberships SET status = 'cancelled', updated_at = CURRENT_TIMESTAMP WHERE id = (SELECT m.id FROM memberships m WHERE m.user_id = $1 AND m.status = 'active' ORDER BY m.created_at DESC LIMIT 1) RETURNING id, user_id, status`, [userId]);
+  return result.rows[0] || null;
+}
+
+module.exports = { getDashboardStats, getBusinesses, getUsers, setBusinessStatus, setUserStatus, removeMembership };
