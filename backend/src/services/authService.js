@@ -1,6 +1,7 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const pool = require('../config/database');
+const { getMembershipAccess } = require('./membershipAccessService');
 
 const JWT_SECRET = process.env.JWT_SECRET;
 if (!JWT_SECRET && process.env.NODE_ENV === 'production') {
@@ -10,29 +11,13 @@ const EFFECTIVE_JWT_SECRET = JWT_SECRET || 'change-this-secret-in-development-on
 
 async function getMembershipSummary(userId, client = pool) {
   try {
-    const result = await client.query(
-      `SELECT
-         MAX(CASE WHEN LOWER(COALESCE(p.plan_type,''))='pro' THEN m.expires_at END) AS pro_expires_at,
-         MAX(CASE WHEN LOWER(COALESCE(p.plan_type,''))='booster' THEN m.expires_at END) AS booster_expires_at
-       FROM memberships m
-       JOIN membership_plans p ON p.id = m.membership_plan_id
-       WHERE m.user_id=$1
-         AND m.status='active'
-         AND m.starts_at <= CURRENT_TIMESTAMP
-         AND m.expires_at > CURRENT_TIMESTAMP
-         AND p.is_active=TRUE`,
-      [userId]
-    );
-    const row = result.rows[0] || {};
-    const proExpiresAt = row.pro_expires_at || null;
-    const boosterExpiresAt = row.booster_expires_at || null;
-    const isPro = Boolean(proExpiresAt);
+    const access = await getMembershipAccess(userId, client);
     return {
-      membership_type: isPro ? 'pro' : 'standard',
-      is_pro_member: isPro,
-      membership_expires_at: proExpiresAt,
-      is_booster_active: Boolean(boosterExpiresAt),
-      booster_expires_at: boosterExpiresAt,
+      membership_type: access.isPro ? 'pro' : 'standard',
+      is_pro_member: access.isPro,
+      membership_expires_at: access.proExpiresAt,
+      is_booster_active: access.isBoosterActive,
+      booster_expires_at: access.boosterExpiresAt,
     };
   } catch {
     return {
