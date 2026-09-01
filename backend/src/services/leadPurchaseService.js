@@ -38,7 +38,6 @@ async function purchaseLead({leadId,userId,shares}){
     if(lead.status!=='available')throw Object.assign(new Error('Lead is no longer available'),{code:'NOT_AVAILABLE'});
     const existing=await client.query(`SELECT id,shares,amount,pricing_tier,status FROM lead_purchases WHERE lead_id=$1 AND user_id=$2 AND status='paid' FOR UPDATE`,[leadId,userId]);
     if(existing.rows[0]){await client.query('COMMIT');return existing.rows[0];}
-    await matchesBusinessProfile(client,lead,userId);
     const pro=await isPro(userId);
     const expired=!lead.is_exclusive||!lead.exclusive_available_at||new Date(lead.exclusive_available_at)<=new Date();
     if(lead.is_exclusive&&!pro&&!expired)throw Object.assign(new Error('This exclusive lead is currently reserved for Pro members'),{code:'PRO_REQUIRED'});
