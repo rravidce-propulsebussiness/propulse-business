@@ -1,0 +1,6 @@
+const walletService=require('../services/walletService');
+async function get(req,res){try{res.json(await walletService.getWallet(req.user.id))}catch(e){console.error('Wallet get failed:',e.message);res.status(500).json({error:'Failed to fetch wallet'})}}
+async function topup(req,res){try{res.status(201).json(await walletService.createTopup({userId:req.user.id,amount:req.body.amount,reference:req.body.reference,proofUrl:req.body.proof_url||req.body.proofUrl}))}catch(e){res.status(e.code==='INVALID_AMOUNT'?400:500).json({error:e.message||'Failed to create top-up',code:e.code})}}
+async function approve(req,res){try{res.json(await walletService.approveTopup({topupId:req.params.id,adminId:req.user.id}))}catch(e){res.status(e.code==='NOT_FOUND'?404:e.code==='ALREADY_REVIEWED'?409:500).json({error:e.message||'Failed to approve top-up',code:e.code})}}
+async function reject(req,res){try{res.json(await walletService.rejectTopup({topupId:req.params.id,adminId:req.user.id}))}catch(e){res.status(e.code==='NOT_FOUND'?404:500).json({error:e.message||'Failed to reject top-up',code:e.code})}}
+module.exports={get,topup,approve,reject};
