@@ -61,6 +61,7 @@ export default function Membership() {
   const selectedByGroup = useMemo(() => Object.fromEntries(planGroups.map(g => [g.key, findPlan(g)])), [planGroups, cycle])
   const currentType = String(currentMembership?.plan_type || currentMembership?.plan?.plan_type || user?.membership_type || '').toLowerCase()
   const currentName = displayType(currentType) || (currentMembership?.plan_name || 'No active membership')
+  const canAccessInvestor = currentType === 'pro'
 
   const features = (plan, fallback) => {
     const x = arr(plan?.benefits).map(String).filter(Boolean)
@@ -68,6 +69,15 @@ export default function Membership() {
   }
 
   const openPayment = plan => {
+    const planType = typeName(plan)
+    if (planType === 'investor' && !canAccessInvestor) {
+      setError('Investor access is available only to customers with an active Pro membership.')
+      return
+    }
+    if (planType === 'investor') {
+      setError('Investor access is unlocked by an active Pro membership. It is not purchased separately.')
+      return
+    }
     if (!plan?.id) { setError('The selected membership plan is unavailable.'); return }
     setSelectedPlan(plan); setManualOpen(true); setError(''); setSubmitted(false)
   }
@@ -113,13 +123,17 @@ export default function Membership() {
       {planGroups.map(group => {
         const plan = selectedByGroup[group.key]
         const isCurrent = currentType === group.type
-        return <article className={`membership-plan ${group.type}-plan`} key={group.key}>
-          <div className="membership-plan-top"><div><span className="plan-label">{group.name.toUpperCase()}</span><h2>{group.name}</h2><p>{plan?.description || `${group.name} membership for businesses using the Propulse marketplace.`}</p></div>{isCurrent ? <span className="current-badge">CURRENT PLAN</span> : group.type === 'pro' ? <span className="popular-badge">RECOMMENDED</span> : null}</div>
+        const investorLocked = group.type === 'investor' && !canAccessInvestor
+        const investorUnlocked = group.type === 'investor' && canAccessInvestor
+        return <article className={`membership-plan ${group.type}-plan ${investorLocked ? 'investor-locked' : ''}`} key={group.key}>
+          <div className="membership-plan-top"><div><span className="plan-label">{group.name.toUpperCase()}</span><h2>{group.name}</h2><p>{investorLocked ? 'Investor access is reserved for customers with an active Pro membership.' : plan?.description || `${group.name} membership for businesses using the Propulse marketplace.`}</p></div>{isCurrent ? <span className="current-badge">CURRENT PLAN</span> : group.type === 'pro' ? <span className="popular-badge">RECOMMENDED</span> : investorLocked ? <span className="current-badge">PRO REQUIRED</span> : null}</div>
           <div className="membership-price">{plan ? money(plan.price) : '—'}<small>{plan ? ` / ${periodLabel(plan).toLowerCase()}` : ''}</small></div>
-          {plan && Number(plan.discount_percent || 0) > 0 && <div className="saving-note">Save {Number(plan.discount_percent)}% on this billing cycle</div>}
+          {investorLocked && <div className="saving-note">🔒 Unlock with Pro</div>}
+          {investorUnlocked && <div className="saving-note">✓ Included with active Pro access</div>}
+          {!investorLocked && Number(plan?.discount_percent || 0) > 0 && <div className="saving-note">Save {Number(plan.discount_percent)}% on this billing cycle</div>}
           <div className="membership-divider" /><h3>Included with {group.name}</h3>
           <ul>{features(plan, fallbackBenefits[group.type]).map((x, i) => <li key={`${x}-${i}`}><b>✓</b><span>{x}</span></li>)}</ul>
-          {isCurrent ? <button className="membership-primary current" disabled>✓ Current {group.name} plan</button> : <button className="membership-primary" onClick={() => openPayment(plan)}>Choose {group.name} <span>→</span></button>}
+          {isCurrent ? <button className="membership-primary current" disabled>✓ Current {group.name} plan</button> : investorLocked ? <button className="membership-primary current" disabled>🔒 Pro membership required</button> : investorUnlocked ? <button className="membership-primary current" disabled>✓ Investor access unlocked</button> : <button className="membership-primary" onClick={() => openPayment(plan)}>Choose {group.name} <span>→</span></button>}
           {plan?.lead_entitlements?.length > 0 && <small className="membership-secure">Plan benefits and lead entitlements are configured by Propulse.</small>}
         </article>
       })}
