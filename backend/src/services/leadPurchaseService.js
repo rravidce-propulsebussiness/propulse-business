@@ -6,9 +6,9 @@ async function isPro(userId){
     JOIN membership_plans mp ON mp.id=m.membership_plan_id
     WHERE m.user_id=$1
       AND m.status='active'
-      AND COALESCE((to_jsonb(m)->>'ends_at')::timestamp,(to_jsonb(m)->>'expires_at')::timestamp) >= CURRENT_TIMESTAMP
-      AND COALESCE((to_jsonb(m)->>'starts_at')::timestamp,CURRENT_TIMESTAMP) <= CURRENT_TIMESTAMP
-      AND LOWER(COALESCE(mp.plan_type,''))='pro'
+      AND m.starts_at<=CURRENT_TIMESTAMP
+      AND m.expires_at>=CURRENT_TIMESTAMP
+      AND LOWER(REPLACE(COALESCE(mp.plan_type,''),'-','_'))='pro'
       AND mp.is_active=TRUE
     LIMIT 1`,[userId]);
   return r.rows.length>0;
