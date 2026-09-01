@@ -10,7 +10,7 @@ const arr = v => Array.isArray(v) ? v : []
 const typeName = p => String(p?.plan_type || '').toLowerCase()
 const groupName = p => String(p?.plan_group || p?.name || '').trim()
 const periodLabel = p => p?.billing_period || (Number(p?.billing_months) === 12 ? 'Yearly' : Number(p?.billing_months) === 3 ? 'Quarterly' : Number(p?.billing_months) === 6 ? 'Half-Yearly' : 'Monthly')
-const displayType = type => ({ pro: 'Pro', booster: 'Booster', investor: 'Investment' }[type] || type)
+const displayType = type => ({ pro: 'Pro', booster: 'Booster', investor: 'Investor' }[type] || type)
 const fallbackBenefits = {
   pro: ['Priority lead access', 'Pro lead pricing', 'Earlier access to selected opportunities'],
   booster: ['Boost your lead-buying capacity', 'Flexible booster access', 'Use alongside your active membership'],
@@ -51,7 +51,7 @@ export default function Membership() {
       if (!map.has(key)) map.set(key, { key, type, name: displayType(type), group: groupName(p), plans: [] })
       map.get(key).plans.push(p)
     })
-    return ['pro', 'booster', 'investor'].map(key => map.get(key)).filter(Boolean)
+    return ['pro', 'investor', 'booster'].map(key => map.get(key)).filter(Boolean)
   }, [plans])
 
   const findPlan = group => group?.plans.find(p => periodLabel(p).toLowerCase().replace(/\s+/g, '') === cycle.replace(/\s+/g, ''))
@@ -125,7 +125,7 @@ export default function Membership() {
       })}
     </section>}
 
-    <section className="membership-value"><div><span className="membership-kicker">WHY MEMBERSHIP</span><h2>More access. Less friction.</h2><p>Propulse keeps membership configurable: choose the plan and billing cycle that match your business, then use the marketplace for the opportunities that matter to you.</p></div><div className="value-grid"><div><strong>01</strong><b>Clear pricing</b><span>Membership prices come directly from the active plan configuration.</span></div><div><strong>02</strong><b>Flexible plans</b><span>Pro, Booster and Investment plans can be configured without hardcoded prices.</span></div><div><strong>03</strong><b>Lead marketplace</b><span>Browse and compare opportunities in one place.</span></div></div></section>
+    <section className="membership-value"><div><span className="membership-kicker">WHY MEMBERSHIP</span><h2>More access. Less friction.</h2><p>Propulse keeps membership configurable: choose the plan and billing cycle that match your business, then use the marketplace for the opportunities that matter to you.</p></div><div className="value-grid"><div><strong>01</strong><b>Clear pricing</b><span>Membership prices come directly from the active plan configuration.</span></div><div><strong>02</strong><b>Flexible plans</b><span>Pro, Booster and Investor plans can be configured without hardcoded prices.</span></div><div><strong>03</strong><b>Lead marketplace</b><span>Browse and compare opportunities in one place.</span></div></div></section>
   </main>
 
   {manualOpen && selectedPlan && <div className="membership-modal-backdrop" onClick={() => setManualOpen(false)}><div className="membership-payment-modal" onClick={e => e.stopPropagation()}><button className="membership-modal-close" onClick={() => setManualOpen(false)}>×</button><span className="membership-kicker">MANUAL PAYMENT</span><h2>Upgrade to {displayType(typeName(selectedPlan))}</h2><p>Make the payment using the Propulse payment details and submit the reference for admin verification.</p><div className="manual-summary"><span>Selected plan</span><strong>{selectedPlan.name} · {money(selectedPlan.price)} / {periodLabel(selectedPlan).toLowerCase()}</strong></div><div className="manual-method"><b>UPI / BANK TRANSFER</b><span>Payment details will be configured by Propulse admin.</span></div><label className="manual-input-label">Payment reference / UTR<input id="manual-utr" placeholder="Enter UTR or transaction ID" /></label><label className="manual-input-label">Payment proof<input id="manual-proof" type="file" accept="image/*,.pdf" /></label><div className="manual-next"><b>Verification</b><ol><li>Make the payment.</li><li>Enter the UTR / transaction reference.</li><li>Submit for admin verification.</li></ol></div><button className="membership-primary" onClick={submitManual} disabled={submitting}>{submitting ? 'Submitting…' : 'Submit for verification'} <span>→</span></button></div></div>}
