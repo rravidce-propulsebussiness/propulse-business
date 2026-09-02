@@ -7,7 +7,22 @@ CREATE TABLE IF NOT EXISTS investor_settings (
   is_enabled BOOLEAN NOT NULL DEFAULT TRUE,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+ALTER TABLE investor_settings ADD COLUMN IF NOT EXISTS global_limit NUMERIC(16,2) NOT NULL DEFAULT 0 CHECK (global_limit >= 0);
+ALTER TABLE investor_settings ADD COLUMN IF NOT EXISTS default_industry_limit NUMERIC(16,2) NOT NULL DEFAULT 0 CHECK (default_industry_limit >= 0);
+ALTER TABLE investor_settings ADD COLUMN IF NOT EXISTS min_investment NUMERIC(14,2) NOT NULL DEFAULT 1 CHECK (min_investment > 0);
+ALTER TABLE investor_settings ADD COLUMN IF NOT EXISTS max_investment NUMERIC(14,2);
+ALTER TABLE investor_settings ADD COLUMN IF NOT EXISTS enabled BOOLEAN NOT NULL DEFAULT TRUE;
 INSERT INTO investor_settings(id) VALUES(1) ON CONFLICT(id) DO NOTHING;
+UPDATE investor_settings SET enabled=is_enabled, is_enabled=enabled WHERE id=1;
+
+CREATE TABLE IF NOT EXISTS investor_industry_limits (
+  id SERIAL PRIMARY KEY,
+  industry_id INTEGER NOT NULL UNIQUE REFERENCES industries(id) ON DELETE CASCADE,
+  investor_limit NUMERIC(16,2) NOT NULL CHECK (investor_limit >= 0),
+  is_active BOOLEAN NOT NULL DEFAULT TRUE,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
 
 CREATE TABLE IF NOT EXISTS investment_industry_rules (
   id SERIAL PRIMARY KEY,
