@@ -16,6 +16,7 @@ const paymentRoutes=require('./routes/paymentRoutes');
 const membershipPlanRoutes=require('./routes/membershipPlanRoutes');
 const adminCommercialRoutes=require('./routes/adminCommercialRoutes');
 const walletRoutes=require('./routes/walletRoutes');
+const investmentRoutes=require('./routes/investmentRoutes');
 
 const app=express();
 const PORT=process.env.PORT||5000;
@@ -34,6 +35,7 @@ app.use('/api/payments',paymentRoutes);
 app.use('/api/membership-plans',membershipPlanRoutes);
 app.use('/api/admin/commercial',adminCommercialRoutes);
 app.use('/api/wallet',walletRoutes);
+app.use('/api/investments',investmentRoutes);
 app.use('/api/industries',industryRoutes);
 app.use('/api/services',serviceRoutes);
 app.use('/api/subservices',subserviceRoutes);
