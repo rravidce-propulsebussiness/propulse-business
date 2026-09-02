@@ -13,7 +13,7 @@ ALTER TABLE investor_settings ADD COLUMN IF NOT EXISTS min_investment NUMERIC(14
 ALTER TABLE investor_settings ADD COLUMN IF NOT EXISTS max_investment NUMERIC(14,2);
 ALTER TABLE investor_settings ADD COLUMN IF NOT EXISTS enabled BOOLEAN NOT NULL DEFAULT TRUE;
 INSERT INTO investor_settings(id) VALUES(1) ON CONFLICT(id) DO NOTHING;
-UPDATE investor_settings SET enabled=is_enabled, is_enabled=enabled WHERE id=1;
+UPDATE investor_settings SET is_enabled=enabled WHERE id=1;
 
 CREATE TABLE IF NOT EXISTS investor_industry_limits (
   id SERIAL PRIMARY KEY,
