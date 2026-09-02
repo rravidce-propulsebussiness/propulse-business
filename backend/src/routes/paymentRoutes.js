@@ -1,6 +1,5 @@
 const express = require('express');
 const paymentController = require('../controllers/paymentController');
-const razorpayMembershipController = require('../controllers/razorpayMembershipController');
 const requireAuth = require('../middleware/authMiddleware');
 const requireAdmin = require('../middleware/adminMiddleware');
 
@@ -8,11 +7,9 @@ const router = express.Router();
 
 router.use(requireAuth);
 
-// Customer payment operations.
+// Customer payment operations use the manual verification flow.
 router.post('/manual', paymentController.createManualPayment);
-router.get('/membership/current', razorpayMembershipController.getCurrentMembership);
-router.post('/membership/order', razorpayMembershipController.createOrder);
-router.post('/membership/verify', razorpayMembershipController.verifyPayment);
+router.get('/membership/current', paymentController.getCurrentMembership);
 
 // Administrative payment operations must never be accessible to normal businesses.
 router.get('/', requireAdmin, paymentController.getPayments);
