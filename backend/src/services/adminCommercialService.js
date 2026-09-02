@@ -16,42 +16,38 @@ async function getInvestorSettings() {
 }
 
 async function updateInvestorSettings(data) {
+  const globalLimit=Number(data.globalLimit||0);
+  const defaultIndustryLimit=Number(data.defaultIndustryLimit||0);
+  const customerIndustryLimit=Number(data.customerIndustryLimit ?? 10);
+  const minInvestment=Number(data.minInvestment);
+  const maxInvestment=data.maxInvestment === '' || data.maxInvestment == null ? null : Number(data.maxInvestment);
+  if(!Number.isFinite(minInvestment)||minInvestment<=0)throw Object.assign(new Error('Minimum investment must be greater than zero'),{code:'INVALID_INVESTMENT_CONFIG'});
+  if(maxInvestment!==null&&(!Number.isFinite(maxInvestment)||maxInvestment<minInvestment))throw Object.assign(new Error('Maximum investment must be greater than or equal to minimum investment'),{code:'INVALID_INVESTMENT_CONFIG'});
   await pool.query(`
     UPDATE investor_settings
-    SET global_limit=$1,
-        default_industry_limit=$2,
-        customer_industry_limit=$3,
-        min_investment=$4,
-        max_investment=$5,
-        enabled=$6,
-        requires_pro=$7,
-        updated_at=CURRENT_TIMESTAMP
-    WHERE id=1
-  `, [
-    Number(data.globalLimit),
-    Number(data.defaultIndustryLimit),
-    Number(data.customerIndustryLimit ?? 10),
-    Number(data.minInvestment),
-    data.maxInvestment === '' || data.maxInvestment == null ? null : Number(data.maxInvestment),
-    Boolean(data.enabled),
-    data.requiresPro !== false,
-  ]);
+    SET global_limit=$1,default_industry_limit=$2,customer_industry_limit=$3,
+        min_investment=$4,max_investment=$5,enabled=$6,is_enabled=$6,
+        requires_pro=$7,updated_at=CURRENT_TIMESTAMP WHERE id=1
+  `,[globalLimit,defaultIndustryLimit,customerIndustryLimit,minInvestment,maxInvestment,Boolean(data.enabled),data.requiresPro!==false]);
 
-  if (Array.isArray(data.industryLimits)) {
-    for (const x of data.industryLimits) {
-      const industryId = Number(x.industryId ?? x.id);
-      const limit = Number(x.limit ?? x.investor_limit ?? data.defaultIndustryLimit ?? 0);
-      await pool.query(`
-        INSERT INTO investor_industry_limits(industry_id,investor_limit,is_active)
+  if(Array.isArray(data.industryLimits)){
+    for(const x of data.industryLimits){
+      const industryId=Number(x.industryId??x.id);
+      const limit=Number(x.limit??x.investor_limit??defaultIndustryLimit??0);
+      const active=x.isActive===undefined?Boolean(x.is_active!==false):Boolean(x.isActive);
+      await pool.query(`INSERT INTO investor_industry_limits(industry_id,investor_limit,is_active)
         VALUES($1,$2,$3)
-        ON CONFLICT(industry_id) DO UPDATE SET
-          investor_limit=EXCLUDED.investor_limit,
-          is_active=EXCLUDED.is_active,
-          updated_at=CURRENT_TIMESTAMP
-      `, [industryId, limit, x.isActive === undefined ? Boolean(x.is_active !== false) : Boolean(x.isActive)]);
+        ON CONFLICT(industry_id) DO UPDATE SET investor_limit=EXCLUDED.investor_limit,is_active=EXCLUDED.is_active,updated_at=CURRENT_TIMESTAMP`,[industryId,limit,active]);
+      if(active){
+        const maximum=maxInvestment===null?Math.max(minInvestment,limit||globalLimit||minInvestment):maxInvestment;
+        await pool.query(`INSERT INTO investment_industry_rules(industry_id,minimum_amount,maximum_amount,total_capacity,is_active)
+          VALUES($1,$2,$3,$4,TRUE)
+          ON CONFLICT(industry_id) DO UPDATE SET minimum_amount=EXCLUDED.minimum_amount,maximum_amount=EXCLUDED.maximum_amount,total_capacity=EXCLUDED.total_capacity,is_active=TRUE,updated_at=CURRENT_TIMESTAMP`,[industryId,minInvestment,maximum,limit||null]);
+      }else{
+        await pool.query('UPDATE investment_industry_rules SET is_active=FALSE,updated_at=CURRENT_TIMESTAMP WHERE industry_id=$1',[industryId]);
+      }
     }
   }
-
   return getInvestorSettings();
 }
 
