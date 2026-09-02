@@ -26,7 +26,10 @@ export default function Membership() {
         const [r, m] = await Promise.all([fetch(`${API}/membership-plans`, { headers: { Authorization: `Bearer ${token}` } }), authRequest('/payments/membership/current').catch(() => null)])
         const d = await r.json().catch(() => [])
         if (!r.ok) throw Error(d.error || 'Unable to load membership plans')
-        if (active) { setPlans(Array.isArray(d) ? d.filter(p => p.is_active !== false) : []); setCurrentMembership(m || null) }
+        if (active) {
+          setPlans(Array.isArray(d) ? d.filter(p => p.is_active !== false) : [])
+          setCurrentMembership(m || null)
+        }
       } catch (e) { if (active) setError(e.message) } finally { if (active) setLoading(false) }
     })()
     return () => { active = false }
@@ -44,7 +47,7 @@ export default function Membership() {
   const currentTypeRaw = String(currentMembership?.plan_type || currentMembership?.plan?.plan_type || user?.membership_type || '').toLowerCase()
   const currentType = currentTypeRaw === 'investment' ? 'investor' : currentTypeRaw
   const currentName = currentType ? displayType(currentType) : (currentMembership?.plan_name || 'No active membership')
-  const isProMember = currentType === 'pro'
+  const isProMember = Boolean(currentMembership?.isPro) || currentType === 'pro'
   const features = (plan, fallback) => { const x = arr(plan?.benefits).map(String).filter(Boolean); return x.length ? x : fallback }
   const addons = plan => arr(plan?.add_ons || plan?.addons || plan?.booster_add_ons || plan?.booster_addons)
   const addonLabel = x => typeof x === 'string' ? x : String(x?.name || x?.title || x?.label || '')
