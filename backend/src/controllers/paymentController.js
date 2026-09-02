@@ -1,4 +1,5 @@
 const paymentService = require('../services/paymentService');
+const { getMembershipAccess } = require('../services/membershipAccessService');
 
 async function createManualPayment(req, res) {
   try {
@@ -9,6 +10,16 @@ async function createManualPayment(req, res) {
     console.error('Create manual payment failed:', error.message);
     const status = ['INVALID_PLAN','PLAN_NOT_FOUND','INVALID_AMOUNT','REFERENCE_REQUIRED','DUPLICATE_REFERENCE','PRO_REQUIRED'].includes(error.code) ? 400 : 500;
     res.status(status).json({ error: error.message || 'Failed to create payment', code: error.code });
+  }
+}
+
+async function getCurrentMembership(req, res) {
+  try {
+    const access = await getMembershipAccess(req.user.id);
+    res.json(access);
+  } catch (error) {
+    console.error('Get membership access failed:', error.message);
+    res.status(500).json({ error: 'Failed to fetch membership' });
   }
 }
 
@@ -46,4 +57,4 @@ async function updatePaymentStatus(req, res) {
   }
 }
 
-module.exports = { createManualPayment, getPayments, updatePaymentStatus };
+module.exports = { createManualPayment, getCurrentMembership, getPayments, updatePaymentStatus };
