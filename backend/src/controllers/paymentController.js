@@ -1,5 +1,5 @@
 const paymentService = require('../services/paymentService');
-const { getMembershipAccess } = require('../services/membershipAccessService');
+const { getMembershipAccess, getCurrentProMembership } = require('../services/membershipAccessService');
 
 async function createManualPayment(req, res) {
   try {
@@ -15,8 +15,11 @@ async function createManualPayment(req, res) {
 
 async function getCurrentMembership(req, res) {
   try {
-    const access = await getMembershipAccess(req.user.id);
-    res.json(access);
+    const [membership, access] = await Promise.all([
+      getCurrentProMembership(req.user.id),
+      getMembershipAccess(req.user.id),
+    ]);
+    res.json(membership ? { ...membership, ...access } : access);
   } catch (error) {
     console.error('Get membership access failed:', error.message);
     res.status(500).json({ error: 'Failed to fetch membership' });
