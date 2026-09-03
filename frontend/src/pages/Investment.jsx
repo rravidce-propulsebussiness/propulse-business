@@ -1,11 +1,11 @@
 import {useEffect,useState} from 'react';
 import './Investment.css';
 import {getToken} from '../utils/auth';
+import {API_BASE_URL} from '../utils/api';
 
-const API='http://localhost:5000/api';
 export default function Investment(){
   const [access,setAccess]=useState(null),[rules,setRules]=useState([]),[mine,setMine]=useState([]),[industryId,setIndustryId]=useState(''),[amount,setAmount]=useState(''),[message,setMessage]=useState(''),[busy,setBusy]=useState(false);
-  const req=async(path,opt={})=>{const r=await fetch(API+path,{...opt,headers:{Authorization:`Bearer ${getToken()}`,'Content-Type':'application/json',...(opt.headers||{})}});const d=await r.json().catch(()=>({}));if(!r.ok)throw Error(d.error||'Request failed');return d};
+  const req=async(path,opt={})=>{const r=await fetch(API_BASE_URL+path,{...opt,headers:{Authorization:`Bearer ${getToken()}`,'Content-Type':'application/json',...(opt.headers||{})}});const d=await r.json().catch(()=>({}));if(!r.ok)throw Error(d.error||'Request failed');return d};
   const load=async()=>{try{const [a,r,m]=await Promise.all([req('/investments/access'),req('/investments/rules'),req('/investments')]);setAccess(a);setRules(r);setMine(m);if(!industryId&&r[0])setIndustryId(String(r[0].industry_id))}catch(e){setMessage(e.message)}};
   useEffect(()=>{load()},[]);
   const selected=rules.find(r=>String(r.industry_id)===String(industryId));
