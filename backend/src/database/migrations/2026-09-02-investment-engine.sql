@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS investor_settings (
   is_enabled BOOLEAN NOT NULL DEFAULT TRUE,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+ALTER TABLE investor_settings ADD COLUMN IF NOT EXISTS is_enabled BOOLEAN NOT NULL DEFAULT TRUE;
 ALTER TABLE investor_settings ADD COLUMN IF NOT EXISTS global_limit NUMERIC(16,2) NOT NULL DEFAULT 0 CHECK (global_limit >= 0);
 ALTER TABLE investor_settings ADD COLUMN IF NOT EXISTS default_industry_limit NUMERIC(16,2) NOT NULL DEFAULT 0 CHECK (default_industry_limit >= 0);
 ALTER TABLE investor_settings ADD COLUMN IF NOT EXISTS min_investment NUMERIC(14,2) NOT NULL DEFAULT 1 CHECK (min_investment > 0);
