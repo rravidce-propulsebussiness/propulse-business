@@ -79,19 +79,20 @@ jobs:
           node src/server.js > /tmp/backend.log 2>&1 &
           echo $! > /tmp/backend.pid
           for i in {1..30}; do
-            if curl --silent --show-error --fail http://127.0.0.1:5000/api/does-not-exist >/tmp/backend-response.json; then
-              echo "Backend responded successfully."
-              cat /tmp/backend-response.json
-              exit 0
-            fi
             if ! kill -0 "$(cat /tmp/backend.pid)" 2>/dev/null; then
               echo "Backend process exited unexpectedly."
               cat /tmp/backend.log
               exit 1
             fi
+            status=$(curl --silent --show-error --output /tmp/backend-response.json --write-out '%{http_code}' http://127.0.0.1:5000/api/does-not-exist || true)
+            if [ "$status" = "404" ]; then
+              echo "Backend responded with expected 404."
+              cat /tmp/backend-response.json
+              exit 0
+            fi
             sleep 1
           done
-          echo "Backend did not become reachable."
+          echo "Backend did not become reachable with expected response."
           cat /tmp/backend.log
           exit 1
       - name: Stop backend
