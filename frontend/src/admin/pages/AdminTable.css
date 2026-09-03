@@ -1,0 +1,2 @@
+/* Shared admin table primitives used by payments and wallet top-ups. */
+table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:15px 17px;border-bottom:1px solid #edf1f5;font-size:13px}th{font-size:10px;color:#8a96a6;letter-spacing:.1em}td small{display:block;color:#8792a2;margin-top:3px}
