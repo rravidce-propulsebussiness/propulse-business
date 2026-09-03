@@ -1,3 +1,4 @@
+const bcrypt = require('bcryptjs');
 const pool = require('../config/database');
 
 async function getDashboardStats() {
@@ -17,36 +18,36 @@ async function getDashboardStats() {
   return { totalUsers: row.total_users, activeUsers: row.active_users, businesses: row.businesses, activeBusinesses: row.active_businesses, industries: row.industries, services: row.services, subservices: row.subservices, states: row.states, cities: row.cities };
 }
 
-async function getBusinesses({ search = '', status = 'all', industryId = '', serviceId = '', stateId = '', cityId = '' } = {}) {
-  const params = [];
-  const conditions = [`u.role = 'business'`];
-  if (search.trim()) { params.push(`%${search.trim()}%`); conditions.push(`(u.name ILIKE $${params.length} OR u.email ILIKE $${params.length} OR bp.business_name ILIKE $${params.length} OR bp.phone ILIKE $${params.length})`); }
-  if (status === 'active' || status === 'inactive') { params.push(status === 'active'); conditions.push(`u.is_active = $${params.length}`); }
-  if (industryId) { params.push(industryId); conditions.push(`EXISTS (SELECT 1 FROM business_profile_services x WHERE x.business_profile_id = bp.id AND x.industry_id = $${params.length} AND x.is_active = TRUE)`); }
-  if (serviceId) { params.push(serviceId); conditions.push(`EXISTS (SELECT 1 FROM business_profile_services x WHERE x.business_profile_id = bp.id AND x.service_id = $${params.length} AND x.is_active = TRUE)`); }
-  if (stateId) { params.push(stateId); conditions.push(`EXISTS (SELECT 1 FROM business_profile_locations x WHERE x.business_profile_id = bp.id AND x.state_id = $${params.length} AND x.is_active = TRUE)`); }
-  if (cityId) { params.push(cityId); conditions.push(`EXISTS (SELECT 1 FROM business_profile_locations x WHERE x.business_profile_id = bp.id AND x.city_id = $${params.length} AND x.is_active = TRUE)`); }
-  const result = await pool.query(`
-    SELECT u.id AS user_id, u.name, u.email, u.role, u.is_active, u.created_at,
-           bp.id AS business_profile_id, bp.phone, bp.business_name, bp.business_details,
-           COALESCE((SELECT json_agg(json_build_object('industryId', x.industry_id, 'industryName', i.name, 'serviceId', x.service_id, 'serviceName', s.name, 'subserviceId', x.subservice_id, 'subserviceName', ss.name) ORDER BY i.name, s.name, ss.name) FROM business_profile_services x JOIN industries i ON i.id=x.industry_id JOIN services s ON s.id=x.service_id LEFT JOIN subservices ss ON ss.id=x.subservice_id WHERE x.business_profile_id=bp.id AND x.is_active=TRUE), '[]'::json) AS services,
-           COALESCE((SELECT json_agg(json_build_object('stateId', x.state_id, 'stateName', st.name, 'cityId', x.city_id, 'cityName', c.name) ORDER BY st.name, c.name) FROM business_profile_locations x JOIN states st ON st.id=x.state_id JOIN cities c ON c.id=x.city_id WHERE x.business_profile_id=bp.id AND x.is_active=TRUE), '[]'::json) AS locations
-    FROM users u LEFT JOIN business_profiles bp ON bp.user_id=u.id WHERE ${conditions.join(' AND ')} ORDER BY u.created_at DESC
-  `, params);
-  return result.rows;
-}
-
-async function getUsers({ search = '', role = 'all', status = 'all' } = {}) {
+async function getUsers({ search = '', role = 'all', status = 'all', industryId = '', serviceId = '', stateId = '', cityId = '' } = {}) {
   const params = [];
   const conditions = [];
-  if (search.trim()) { params.push(`%${search.trim()}%`); conditions.push(`(u.name ILIKE $${params.length} OR u.email ILIKE $${params.length} OR bp.business_name ILIKE $${params.length})`); }
+  if (search.trim()) {
+    params.push(`%${search.trim()}%`);
+    conditions.push(`(u.name ILIKE $${params.length} OR u.email ILIKE $${params.length} OR bp.business_name ILIKE $${params.length} OR bp.phone ILIKE $${params.length})`);
+  }
   if (role === 'admin' || role === 'business') { params.push(role); conditions.push(`u.role = $${params.length}`); }
   if (status === 'active' || status === 'inactive') { params.push(status === 'active'); conditions.push(`u.is_active = $${params.length}`); }
+  if (industryId) { params.push(industryId); conditions.push(`EXISTS (SELECT 1 FROM business_profile_services x WHERE x.business_profile_id=bp.id AND x.industry_id=$${params.length} AND x.is_active=TRUE)`); }
+  if (serviceId) { params.push(serviceId); conditions.push(`EXISTS (SELECT 1 FROM business_profile_services x WHERE x.business_profile_id=bp.id AND x.service_id=$${params.length} AND x.is_active=TRUE)`); }
+  if (stateId) { params.push(stateId); conditions.push(`EXISTS (SELECT 1 FROM business_profile_locations x WHERE x.business_profile_id=bp.id AND x.state_id=$${params.length} AND x.is_active=TRUE)`); }
+  if (cityId) { params.push(cityId); conditions.push(`EXISTS (SELECT 1 FROM business_profile_locations x WHERE x.business_profile_id=bp.id AND x.city_id=$${params.length} AND x.is_active=TRUE)`); }
+
   const result = await pool.query(`
     SELECT u.id, u.name, u.email, u.role, u.is_active, u.created_at,
-           bp.business_name, bp.phone, bp.business_details,
+           bp.id AS business_profile_id, bp.business_name, bp.phone, bp.business_details,
            COALESCE((SELECT COUNT(*)::int FROM business_profile_services x WHERE x.business_profile_id = bp.id AND x.is_active = TRUE), 0) AS service_count,
            COALESCE((SELECT COUNT(*)::int FROM business_profile_locations x WHERE x.business_profile_id = bp.id AND x.is_active = TRUE), 0) AS location_count,
+           COALESCE((SELECT json_agg(json_build_object('industryId',x.industry_id,'industryName',i.name,'serviceId',x.service_id,'serviceName',s.name,'subserviceId',x.subservice_id,'subserviceName',ss.name) ORDER BY i.name,s.name,ss.name)
+             FROM business_profile_services x
+             JOIN industries i ON i.id=x.industry_id
+             JOIN services s ON s.id=x.service_id
+             LEFT JOIN subservices ss ON ss.id=x.subservice_id
+             WHERE x.business_profile_id=bp.id AND x.is_active=TRUE), '[]'::json) AS services,
+           COALESCE((SELECT json_agg(json_build_object('stateId',x.state_id,'stateName',st.name,'cityId',x.city_id,'cityName',c.name) ORDER BY st.name,c.name)
+             FROM business_profile_locations x
+             JOIN states st ON st.id=x.state_id
+             JOIN cities c ON c.id=x.city_id
+             WHERE x.business_profile_id=bp.id AND x.is_active=TRUE), '[]'::json) AS locations,
            m.id AS membership_id, m.status AS membership_status, m.starts_at AS membership_started_at,
            m.expires_at AS membership_expires_at, mp.id AS membership_plan_id, mp.name AS membership_plan_name,
            mp.plan_group AS membership_plan_group, mp.plan_type AS membership_plan_type,
@@ -58,8 +59,7 @@ async function getUsers({ search = '', role = 'all', status = 'all' } = {}) {
     LEFT JOIN LATERAL (
       SELECT m.* FROM memberships m
       JOIN membership_plans mp0 ON mp0.id=m.membership_plan_id
-      WHERE m.user_id=u.id
-        AND LOWER(COALESCE(mp0.plan_type,''))='pro'
+      WHERE m.user_id=u.id AND LOWER(COALESCE(mp0.plan_type,''))='pro'
       ORDER BY CASE WHEN m.status='active' AND m.expires_at>CURRENT_TIMESTAMP THEN 0 ELSE 1 END, m.created_at DESC
       LIMIT 1
     ) m ON TRUE
@@ -77,9 +77,26 @@ async function getUsers({ search = '', role = 'all', status = 'all' } = {}) {
   return result.rows;
 }
 
-async function setBusinessStatus(userId, isActive) {
-  const result = await pool.query(`UPDATE users SET is_active=$1,updated_at=CURRENT_TIMESTAMP WHERE id=$2 AND role='business' RETURNING id,name,email,is_active`, [isActive,userId]);
-  return result.rows[0]||null;
+async function createAdmin({ name, email, password }) {
+  const cleanName = String(name || '').trim();
+  const normalizedEmail = String(email || '').trim().toLowerCase();
+  if (!cleanName || !normalizedEmail || String(password || '').length < 8) {
+    const error = new Error('Name, valid email and password of at least 8 characters are required');
+    error.code = 'INVALID_ADMIN';
+    throw error;
+  }
+  const existing = await pool.query('SELECT id FROM users WHERE LOWER(email)=$1', [normalizedEmail]);
+  if (existing.rowCount) {
+    const error = new Error('An account with this email already exists');
+    error.code = 'EMAIL_EXISTS';
+    throw error;
+  }
+  const passwordHash = await bcrypt.hash(password, 12);
+  const result = await pool.query(
+    `INSERT INTO users (name,email,password_hash,role) VALUES ($1,$2,$3,'admin') RETURNING id,name,email,role,is_active,created_at`,
+    [cleanName, normalizedEmail, passwordHash]
+  );
+  return result.rows[0];
 }
 
 async function setUserStatus(userId,isActive) {
@@ -92,4 +109,4 @@ async function removeMembership(userId) {
   return result.rows[0]||null;
 }
 
-module.exports={getDashboardStats,getBusinesses,getUsers,setBusinessStatus,setUserStatus,removeMembership};
+module.exports={getDashboardStats,getUsers,createAdmin,setUserStatus,removeMembership};
