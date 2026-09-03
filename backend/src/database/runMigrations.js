@@ -4,10 +4,6 @@ require('dotenv').config();
 const pool = require('../config/database');
 
 const migrationsDir = path.join(__dirname, 'migrations');
-const legacyMigrations = [
-  path.join(__dirname, 'leadPurchasesMigration.sql'),
-  path.join(__dirname, 'leadEntitlementsMigration.sql')
-];
 
 async function ensureLedger(client) {
   await client.query(`CREATE TABLE IF NOT EXISTS schema_migrations (filename TEXT PRIMARY KEY, applied_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP)`);
@@ -46,12 +42,16 @@ async function runMigrations() {
   try {
     await ensureLedger(client);
     const files = fs.existsSync(migrationsDir)
-      ? fs.readdirSync(migrationsDir).filter(f => f.endsWith('.sql')).sort().map(f => path.join(migrationsDir, f))
+      ? fs.readdirSync(migrationsDir)
+          .filter(f => f.endsWith('.sql'))
+          .sort()
+          .map(f => path.join(migrationsDir, f))
       : [];
-    const all = [...legacyMigrations, ...files];
     let applied = 0;
-    for (const file of all) if (await applyFile(client, file)) applied += 1;
-    console.log(`Database migrations completed (${applied} applied, ${all.length} checked).`);
+    for (const file of files) {
+      if (await applyFile(client, file)) applied += 1;
+    }
+    console.log(`Database migrations completed (${applied} applied, ${files.length} checked).`);
   } catch (error) {
     console.error(`Database migrations failed: ${error.message}`);
     process.exitCode = 1;
