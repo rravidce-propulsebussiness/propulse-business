@@ -8,5 +8,7 @@ router.get('/dashboard/stats', adminController.getDashboardStats);
 router.get('/users', adminController.getUsers);
 router.post('/users/admin', adminController.createAdmin);
 router.patch('/users/:id/status', adminController.setUserStatus);
+router.patch('/users/:id', adminController.updateUserProfile);
+router.patch('/users/:id/membership', adminController.updateMembership);
 router.patch('/users/:id/membership/remove', adminController.removeMembership);
 module.exports = router;
