@@ -104,9 +104,67 @@ async function setUserStatus(userId,isActive) {
   return result.rows[0]||null;
 }
 
-async function removeMembership(userId) {
-  const result=await pool.query(`UPDATE memberships SET status='cancelled',updated_at=CURRENT_TIMESTAMP WHERE id=(SELECT m.id FROM memberships m JOIN membership_plans mp ON mp.id=m.membership_plan_id WHERE m.user_id=$1 AND m.status='active' AND LOWER(COALESCE(mp.plan_type,''))='pro' ORDER BY m.created_at DESC LIMIT 1) RETURNING id,user_id,status`,[userId]);
-  return result.rows[0]||null;
+async function updateUserProfile(userId, { name, email, phone, businessName, businessDetails }) {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const user = (await client.query('SELECT id,name,email,role FROM users WHERE id=$1 FOR UPDATE', [userId])).rows[0];
+    if (!user) { const e = new Error('User not found'); e.code='NOT_FOUND'; throw e; }
+    const cleanName = String(name ?? user.name).trim();
+    const normalizedEmail = String(email ?? user.email).trim().toLowerCase();
+    if (!cleanName || !normalizedEmail) { const e=new Error('Name and email are required'); e.code='INVALID_USER'; throw e; }
+    const duplicate = await client.query('SELECT id FROM users WHERE LOWER(email)=$1 AND id<>$2', [normalizedEmail,userId]);
+    if (duplicate.rowCount) { const e=new Error('An account with this email already exists'); e.code='EMAIL_EXISTS'; throw e; }
+    const updatedUser = (await client.query('UPDATE users SET name=$1,email=$2,updated_at=CURRENT_TIMESTAMP WHERE id=$3 RETURNING id,name,email,role,is_active,created_at', [cleanName,normalizedEmail,userId])).rows[0];
+    if (user.role === 'business') {
+      const profile = (await client.query('SELECT id FROM business_profiles WHERE user_id=$1 FOR UPDATE',[userId])).rows[0];
+      if (profile) {
+        await client.query('UPDATE business_profiles SET phone=$1,business_name=$2,business_details=$3,updated_at=CURRENT_TIMESTAMP WHERE id=$4', [String(phone??'').trim(),String(businessName??'').trim(),String(businessDetails??'').trim(),profile.id]);
+      } else if (String(phone??'').trim() || String(businessName??'').trim() || String(businessDetails??'').trim()) {
+        await client.query('INSERT INTO business_profiles(user_id,phone,business_name,business_details) VALUES($1,$2,$3,$4)', [userId,String(phone??'').trim(),String(businessName??'').trim(),String(businessDetails??'').trim()]);
+      }
+    }
+    await client.query('COMMIT');
+    return updatedUser;
+  } catch (error) { await client.query('ROLLBACK'); throw error; } finally { client.release(); }
 }
 
-module.exports={getDashboardStats,getUsers,createAdmin,setUserStatus,removeMembership};
+async function updateMembership(userId, { action, planId, startsAt, expiresAt, days }) {
+  const validActions = new Set(['activate','extend','reduce','terminate']);
+  if (!validActions.has(action)) { const e=new Error('Invalid membership action'); e.code='INVALID_MEMBERSHIP_ACTION'; throw e; }
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const user = (await client.query('SELECT id,role FROM users WHERE id=$1 FOR UPDATE',[userId])).rows[0];
+    if (!user) { const e=new Error('User not found'); e.code='NOT_FOUND'; throw e; }
+    const current = (await client.query(`SELECT m.*,mp.name AS plan_name FROM memberships m JOIN membership_plans mp ON mp.id=m.membership_plan_id WHERE m.user_id=$1 AND LOWER(COALESCE(mp.plan_type,''))='pro' ORDER BY CASE WHEN m.status='active' AND m.expires_at>CURRENT_TIMESTAMP THEN 0 ELSE 1 END,m.created_at DESC LIMIT 1 FOR UPDATE`,[userId])).rows[0];
+    if (action === 'terminate') {
+      if (!current || current.status !== 'active') { const e=new Error('No active Pro membership found'); e.code='NO_MEMBERSHIP'; throw e; }
+      const result=(await client.query(`UPDATE memberships SET status='cancelled',expires_at=LEAST(expires_at,CURRENT_TIMESTAMP),updated_at=CURRENT_TIMESTAMP WHERE id=$1 RETURNING *`,[current.id])).rows[0];
+      await client.query('COMMIT'); return result;
+    }
+    const cleanDays = Number(days);
+    if (action === 'extend' || action === 'reduce') {
+      if (!current || current.status !== 'active') { const e=new Error('No active Pro membership found'); e.code='NO_MEMBERSHIP'; throw e; }
+      if (!Number.isInteger(cleanDays) || cleanDays <= 0 || cleanDays > 3650) { const e=new Error('Days must be a whole number between 1 and 3650'); e.code='INVALID_DAYS'; throw e; }
+      const modifier = action === 'extend' ? `+ INTERVAL '${cleanDays} days'` : `- INTERVAL '${cleanDays} days'`;
+      const result=(await client.query(`UPDATE memberships SET expires_at=GREATEST(starts_at,expires_at ${modifier}),status=CASE WHEN expires_at ${modifier} > CURRENT_TIMESTAMP THEN 'active' ELSE 'expired' END,updated_at=CURRENT_TIMESTAMP WHERE id=$1 RETURNING *`,[current.id])).rows[0];
+      await client.query('COMMIT'); return result;
+    }
+    const selectedPlanId = Number(planId);
+    if (!Number.isInteger(selectedPlanId)) { const e=new Error('A Pro membership plan is required'); e.code='INVALID_PLAN'; throw e; }
+    const plan=(await client.query(`SELECT id,name,plan_type,duration_days,is_active FROM membership_plans WHERE id=$1`,[selectedPlanId])).rows[0];
+    if (!plan || !plan.is_active || String(plan.plan_type).toLowerCase() !== 'pro') { const e=new Error('Select an active Pro membership plan'); e.code='INVALID_PLAN'; throw e; }
+    const start = startsAt ? new Date(startsAt) : new Date();
+    const end = expiresAt ? new Date(expiresAt) : new Date(start.getTime()+Number(plan.duration_days)*86400000);
+    if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) || end <= start) { const e=new Error('Membership start and expiry dates are invalid'); e.code='INVALID_DATES'; throw e; }
+    let result;
+    if (current) result=(await client.query(`UPDATE memberships SET membership_plan_id=$1,starts_at=$2,expires_at=$3,status='active',updated_at=CURRENT_TIMESTAMP WHERE id=$4 RETURNING *`,[selectedPlanId,start,end,current.id])).rows[0];
+    else result=(await client.query(`INSERT INTO memberships(user_id,membership_plan_id,starts_at,expires_at,status) VALUES($1,$2,$3,$4,'active') RETURNING *`,[userId,selectedPlanId,start,end])).rows[0];
+    await client.query('COMMIT'); return result;
+  } catch (error) { await client.query('ROLLBACK'); throw error; } finally { client.release(); }
+}
+
+async function removeMembership(userId) { return updateMembership(userId,{action:'terminate'}); }
+
+module.exports={getDashboardStats,getUsers,createAdmin,setUserStatus,updateUserProfile,updateMembership,removeMembership};
