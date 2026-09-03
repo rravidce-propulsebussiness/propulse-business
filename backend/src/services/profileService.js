@@ -132,4 +132,4 @@ async function updateProfile(userId, { name, email, phone, businessName, busines
   }
 }
 
-module.exports = { getProfile, updateProfile };
+module.exports = { getProfile, updateProfile, validateSelections };
