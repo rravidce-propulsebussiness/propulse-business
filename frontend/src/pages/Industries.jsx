@@ -1,15 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { authRequest } from '../utils/auth'
 import './Industries.css'
 
-const API = 'http://localhost:5000/api'
 const slugify = value => String(value || '').trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
 const stateCode = value => String(value || '').trim().split(/\s+/).map(part => part[0]).join('').slice(0, 3).toUpperCase()
 
 async function request(path, options = {}) {
-  const response = await fetch(`${API}${path}`, options)
-  const data = await response.json().catch(() => ({}))
-  if (!response.ok) throw new Error(data.error || 'Something went wrong')
-  return data
+  return authRequest(path, options)
 }
 
 const jsonOptions = (method, body) => ({ method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
