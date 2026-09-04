@@ -63,10 +63,12 @@ async function getTopups(userId) {
   return r.rows.map(x => ({ ...x, amount: Number(x.amount) }));
 }
 
-async function getAdminTopups({ status = 'all', search = '' }) {
+async function getAdminTopups({ status = 'all', search = '', page = 1, limit = 50 }) {
   const params = [];
   const where = [];
   if (status && status !== 'all') {
+    const allowed = ['pending', 'approved', 'rejected'];
+    if (!allowed.includes(status)) throw Object.assign(new Error('Invalid top-up status filter'), { code: 'INVALID_STATUS' });
     params.push(status);
     where.push(`wt.status=$${params.length}`);
   }
@@ -74,14 +76,29 @@ async function getAdminTopups({ status = 'all', search = '' }) {
     params.push(`%${search.trim()}%`);
     where.push(`(u.name ILIKE $${params.length} OR u.email ILIKE $${params.length} OR COALESCE(bp.business_name,'') ILIKE $${params.length} OR COALESCE(wt.reference,'') ILIKE $${params.length})`);
   }
+  const safeLimit = Math.min(Math.max(Number(limit) || 50, 1), 100);
+  const safePage = Math.max(Number(page) || 1, 1);
+  const count = await pool.query(
+    `SELECT COUNT(*)::int AS total
+     FROM wallet_topups wt
+     JOIN users u ON u.id=wt.user_id
+     LEFT JOIN business_profiles bp ON bp.user_id=wt.user_id
+     ${where.length ? `WHERE ${where.join(' AND ')}` : ''}`,
+    params
+  );
+  const total = count.rows[0].total;
+  const offset = (safePage - 1) * safeLimit;
+  const dataParams = [...params, safeLimit, offset];
   const q = `SELECT wt.id,wt.user_id,wt.amount,wt.payment_method,wt.reference,wt.proof_url,wt.status,wt.reviewed_by,wt.reviewed_at,wt.created_at,wt.updated_at,
     u.name AS user_name,u.email AS user_email,bp.business_name,ru.name AS reviewer_name
     FROM wallet_topups wt JOIN users u ON u.id=wt.user_id
     LEFT JOIN business_profiles bp ON bp.user_id=wt.user_id
     LEFT JOIN users ru ON ru.id=wt.reviewed_by
     ${where.length ? `WHERE ${where.join(' AND ')}` : ''}
-    ORDER BY wt.created_at DESC,wt.id DESC`;
-  return (await pool.query(q, params)).rows.map(x => ({ ...x, amount: Number(x.amount) }));
+    ORDER BY wt.created_at DESC,wt.id DESC
+    LIMIT $${dataParams.length - 1} OFFSET $${dataParams.length}`;
+  const rows = (await pool.query(q, dataParams)).rows.map(x => ({ ...x, amount: Number(x.amount) }));
+  return { items: rows, total, page: safePage, limit: safeLimit, pages: Math.ceil(total / safeLimit) };
 }
 
 async function approveTopup({ topupId, adminId }) {
@@ -132,7 +149,6 @@ async function debitForLead(client, { userId, amount, leadPurchaseId }) {
     throw Object.assign(new Error('Invalid lead purchase reference'), { code: 'INVALID_REFERENCE' });
   }
 
-  // Explicit row lock serializes concurrent purchases made from the same wallet.
   const w = await ensureWallet(client, userId);
   const locked = (await client.query(`SELECT id,balance FROM wallets WHERE id=$1 FOR UPDATE`, [w.id])).rows[0];
   const balance = Number(locked.balance);
