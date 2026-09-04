@@ -129,10 +129,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
       - name: Detect exact duplicate files
         shell: bash
         run: |
@@ -144,3 +140,36 @@ jobs:
             exit 1
           fi
           echo "No exact duplicate tracked source/config files found."
+
+  production-static-scan:
+    name: Production security/static scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Block committed environment files
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git ls-files | grep -E '(^|/)(\.env|\.env\.[^.]*)$' | grep -vE '(^|/)(\.env\.example|\.env\.sample)$'; then
+            echo "A real environment file is tracked. Remove it and rotate any exposed credentials."
+            exit 1
+          fi
+      - name: Block hardcoded production localhost API URLs
+        shell: bash
+        run: |
+          set -euo pipefail
+          matches=$(git grep -nE "https?://localhost:[0-9]+/api" -- frontend/src ':!frontend/src/utils/api.js' || true)
+          if [ -n "$matches" ]; then
+            echo "Hardcoded localhost API URL found outside the shared API client:"
+            echo "$matches"
+            exit 1
+          fi
+      - name: Block common committed secrets
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git grep -nEI '(password|secret|access[_-]?token|private[_-]?key)[[:space:]]*[:=][[:space:]]*["'"'][^"'"']{12,}["'"']' -- ':!*.lock' ':!*.example' ':!*.sample' ':!backend/src/database/schema.sql'; then
+            echo "Potential hardcoded secret detected. Review the matches before merging."
+            exit 1
+          fi
