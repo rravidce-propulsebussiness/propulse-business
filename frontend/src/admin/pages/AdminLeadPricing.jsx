@@ -1,14 +1,13 @@
 import {useEffect,useState} from 'react';
-import {getToken} from '../../utils/auth';
+import {apiRequest} from '../../utils/api';
 import './AdminLeadPricing.css';
-const API='http://localhost:5000/api';
 const emptyPricing=()=>({shares:[{shares:1,normal:0,pro:0},{shares:3,normal:0,pro:0},{shares:5,normal:0,pro:0}]});
 const emptyForm=()=>({industryId:'',cityId:'',leadType:'basic',pricing:emptyPricing(),isActive:true});
 const types=['basic','premium'];
 const cap=v=>String(v||'').replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
 export default function AdminLeadPricing(){
  const [industries,setIndustries]=useState([]),[cities,setCities]=useState([]),[rules,setRules]=useState([]),[form,setForm]=useState(emptyForm()),[editId,setEditId]=useState(null),[loading,setLoading]=useState(true),[saving,setSaving]=useState(false),[error,setError]=useState(''),[ok,setOk]=useState('');
- const req=async(p,o={})=>{const r=await fetch(API+p,{...o,headers:{Authorization:`Bearer ${getToken()}`,'Content-Type':'application/json',...(o.headers||{})}});const d=await r.json().catch(()=>({}));if(!r.ok)throw Error(d.error||'Request failed');return d};
+ const req=(p,o={})=>apiRequest(p,o);
  const load=async()=>{try{setLoading(true);const [a,b,c]=await Promise.all([req('/industries'),req('/cities'),req('/leads/pricing/rules')]);setIndustries(Array.isArray(a)?a:[]);setCities(Array.isArray(b)?b:[]);setRules(Array.isArray(c)?c:[])}catch(e){setError(e.message)}finally{setLoading(false)}};
  useEffect(()=>{load()},[]);
  const setTier=(i,k,v)=>setForm(f=>({...f,pricing:{...f.pricing,shares:f.pricing.shares.map((x,n)=>n===i?{...x,[k]:v}:x)}}));
