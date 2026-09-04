@@ -2,6 +2,7 @@ const pool = require('../config/database');
 
 const PROVIDER = 'https://api.pincodeapi.in/api/v1';
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+const PROVIDER_DELAY_MS = 1800;
 
 function normalizeOfficeRows(payload) {
   const data = payload?.data;
@@ -77,7 +78,7 @@ async function syncPincodesForState(stateId) {
     totalPincodes += result.uniquePincodes;
     if (rows.length < limit) break;
     page += 1;
-    await sleep(1100);
+    await sleep(PROVIDER_DELAY_MS);
   }
   return { state, pages: page, totalOffices, totalPincodes };
 }
@@ -91,7 +92,7 @@ async function syncAllIndiaPincodes() {
     } catch (error) {
       results.push({ id: state.id, name: state.name, error: error.message });
     }
-    await sleep(1100);
+    await sleep(PROVIDER_DELAY_MS);
   }
   const count = await pool.query('SELECT COUNT(*)::int AS count FROM india_pincodes WHERE is_active=TRUE');
   return { states: results, totalPincodes: Number(count.rows[0]?.count || 0) };
