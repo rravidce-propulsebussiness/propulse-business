@@ -1,0 +1,1 @@
+const express=require('express');const controller=require('../controllers/subcityController');const router=express.Router();router.get('/',controller.get);router.post('/',controller.create);router.post('/sync/:cityId',controller.sync);router.put('/:id',controller.update);router.delete('/:id',controller.remove);module.exports=router;
