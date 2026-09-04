@@ -4,84 +4,148 @@ import { authRequest, getToken, getUser } from '../utils/auth'
 import { apiRequest } from '../utils/api'
 import './Membership.css'
 
-const money = v => `₹${Number(v || 0).toLocaleString('en-IN', { maximumFractionDigits: 0 })}`
-const arr = v => Array.isArray(v) ? v : []
-const typeName = p => String(p?.plan_type || '').toLowerCase()
-const groupName = p => String(p?.plan_group || p?.name || '').trim()
-const periodLabel = p => p?.billing_period || (Number(p?.billing_months) === 12 ? 'Yearly' : Number(p?.billing_months) === 6 ? 'Half-Yearly' : Number(p?.billing_months) === 3 ? 'Quarterly' : 'Monthly')
-const displayType = type => ({ pro: 'Pro', booster: 'Booster', investor: 'Investor', investment: 'Investor' }[type] || type)
-const fallbackBenefits = { pro: ['Priority lead access', 'Pro lead pricing', 'Earlier access to selected opportunities'], investor: ['Actual lead-sale revenue participation', 'No fixed or guaranteed return', 'Automatic reinvestment of eligible realized proceeds'], booster: ['Boost your lead-buying capacity', 'Flexible booster access', 'Use alongside your active membership'] }
+const money = (value) => `₹${Number(value || 0).toLocaleString('en-IN', { maximumFractionDigits: 0 })}`
+const asArray = (value) => (Array.isArray(value) ? value : [])
+const planType = (plan) => String(plan?.plan_type || '').toLowerCase()
+const period = (plan) => {
+  if (plan?.billing_period) return plan.billing_period
+  const months = Number(plan?.billing_months || 1)
+  return months === 12 ? 'Yearly' : months === 6 ? 'Half-Yearly' : months === 3 ? 'Quarterly' : 'Monthly'
+}
+const displayName = (type) => ({ pro: 'Pro', booster: 'Booster', investor: 'Investor', investment: 'Investor' }[type] || type)
 const cycles = ['monthly', 'quarterly', 'halfYearly', 'yearly']
-const cycleLabel = k => k === 'halfYearly' ? 'Half-Yearly' : k[0].toUpperCase() + k.slice(1)
+const cycleMonths = { monthly: 1, quarterly: 3, halfYearly: 6, yearly: 12 }
+const cycleLabel = (key) => (key === 'halfYearly' ? 'Half-Yearly' : `${key[0].toUpperCase()}${key.slice(1)}`)
+const fallbackBenefits = {
+  pro: ['Priority lead access', 'Pro lead pricing', 'Earlier access to selected opportunities'],
+  investor: ['Actual lead-sale revenue participation', 'No fixed or guaranteed return', 'Automatic reinvestment of eligible realized proceeds'],
+  booster: ['Boost your lead-buying capacity', 'Flexible booster access', 'Use alongside your active membership']
+}
 
 export default function Membership() {
-  const user = getUser(); const token = getToken()
-  const [plans, setPlans] = useState([]), [currentMembership, setCurrentMembership] = useState(null), [loading, setLoading] = useState(true), [error, setError] = useState(''), [selectedCycles, setSelectedCycles] = useState({ pro: 'monthly', investor: 'monthly', booster: 'monthly' }), [manualOpen, setManualOpen] = useState(false), [selectedPlan, setSelectedPlan] = useState(null), [submitted, setSubmitted] = useState(false), [submitting, setSubmitting] = useState(false)
+  const user = getUser()
+  const token = getToken()
+  const [plans, setPlans] = useState([])
+  const [currentMembership, setCurrentMembership] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+  const [selectedCycles, setSelectedCycles] = useState({ pro: 'monthly', investor: 'monthly', booster: 'monthly' })
+  const [manualOpen, setManualOpen] = useState(false)
+  const [selectedPlan, setSelectedPlan] = useState(null)
+  const [submitted, setSubmitted] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
 
   useEffect(() => {
     let active = true
-    ;(async () => {
+    async function load() {
       if (!token) { setLoading(false); return }
       try {
-        const [d, m] = await Promise.all([apiRequest('/membership-plans'), authRequest('/payments/membership/current').catch(() => null)])
-        if (active) {
-          setPlans(Array.isArray(d) ? d.filter(p => p.is_active !== false) : [])
-          setCurrentMembership(m || null)
-        }
-      } catch (e) { if (active) setError(e.message) } finally { if (active) setLoading(false) }
-    })()
+        const [planData, membership] = await Promise.all([apiRequest('/membership-plans'), authRequest('/payments/membership/current').catch(() => null)])
+        if (!active) return
+        setPlans(asArray(planData).filter((item) => item?.is_active !== false))
+        setCurrentMembership(membership || null)
+      } catch (err) {
+        if (active) setError(err?.message || 'Unable to load membership options.')
+      } finally {
+        if (active) setLoading(false)
+      }
+    }
+    load()
     return () => { active = false }
   }, [token])
 
-  const planGroups = useMemo(() => {
-    const map = new Map()
-    plans.forEach(p => { let type = typeName(p); if (type === 'investment') type = 'investor'; if (!['pro', 'booster', 'investor'].includes(type)) return; if (!map.has(type)) map.set(type, { key: type, type, name: displayType(type), group: groupName(p), plans: [] }); map.get(type).plans.push(p) })
-    return ['pro', 'investor', 'booster'].map(key => map.get(key) || ({ key, type: key, name: displayType(key), group: displayType(key), plans: [] }))
+  const groups = useMemo(() => {
+    const grouped = new Map()
+    plans.forEach((item) => {
+      let type = planType(item)
+      if (type === 'investment') type = 'investor'
+      if (!['pro', 'investor', 'booster'].includes(type)) return
+      if (!grouped.has(type)) grouped.set(type, { key: type, type, name: displayName(type), plans: [] })
+      grouped.get(type).plans.push(item)
+    })
+    return ['pro', 'investor', 'booster'].map((key) => grouped.get(key) || { key, type: key, name: displayName(key), plans: [] })
   }, [plans])
 
-  const billingMonths = { monthly: 1, quarterly: 3, halfYearly: 6, yearly: 12 }
-  const findPlan = (group, selectedCycle) => group?.plans.find(p => periodLabel(p).toLowerCase().replace(/\s+/g, '') === selectedCycle.replace(/\s+/g, '')) || group?.plans.find(p => Number(p.billing_months || 1) === billingMonths[selectedCycle]) || group?.plans[0]
-  const selectedByGroup = useMemo(() => Object.fromEntries(planGroups.map(g => [g.key, findPlan(g, selectedCycles[g.key] || 'monthly')])), [planGroups, selectedCycles])
-  const currentTypeRaw = String(currentMembership?.plan_type || currentMembership?.plan?.plan_type || user?.membership_type || '').toLowerCase()
-  const currentType = currentTypeRaw === 'investment' ? 'investor' : currentTypeRaw
-  const currentName = currentType ? displayType(currentType) : (currentMembership?.plan_name || 'No active membership')
+  const findPlan = (group, selectedCycle) => group.plans.find((item) => Number(item?.billing_months || 0) === cycleMonths[selectedCycle]) || group.plans[0]
+  const selectedPlans = useMemo(() => Object.fromEntries(groups.map((group) => [group.key, findPlan(group, selectedCycles[group.key] || 'monthly')])), [groups, selectedCycles])
+  const currentRaw = String(currentMembership?.plan_type || currentMembership?.plan?.plan_type || user?.membership_type || '').toLowerCase()
+  const currentType = currentRaw === 'investment' ? 'investor' : currentRaw
   const isProMember = Boolean(currentMembership?.isPro) || currentType === 'pro'
-  const features = (plan, fallback) => { const x = arr(plan?.benefits).map(String).filter(Boolean); return x.length ? x : fallback }
-  const addons = plan => arr(plan?.add_ons || plan?.addons || plan?.booster_add_ons || plan?.booster_addons)
-  const addonLabel = x => typeof x === 'string' ? x : String(x?.name || x?.title || x?.label || '')
+  const currentName = currentType ? displayName(currentType) : (currentMembership?.plan_name || 'No active membership')
+  const benefits = (plan, type) => {
+    const values = asArray(plan?.benefits).map(String).filter(Boolean)
+    return values.length ? values : fallbackBenefits[type]
+  }
+  const addOns = (plan) => asArray(plan?.add_ons || plan?.addons || plan?.booster_add_ons || plan?.booster_addons)
+  const addOnName = (item) => typeof item === 'string' ? item : String(item?.name || item?.title || item?.label || '')
 
-  const openPayment = plan => {
-    const planType = typeName(plan)
-    if (planType === 'investor' || planType === 'investment') { window.location.href = '/investment'; return }
-    if (planType === 'booster' && !isProMember) { setError('Booster access is available only after you have an active Pro membership.'); return }
+  const openPlan = (plan, type) => {
+    if (type === 'investor') { window.location.href = '/investment'; return }
+    if (type === 'booster' && !isProMember) { setError('Booster access is available only after you have an active Pro membership.'); return }
     if (!plan?.id) { setError('The selected membership plan is unavailable.'); return }
     setSelectedPlan(plan); setManualOpen(true); setError(''); setSubmitted(false)
   }
 
-  const submitManual = async () => {
-    const ref = document.getElementById('manual-utr')?.value?.trim(), file = document.getElementById('manual-proof')?.files?.[0]
-    if (!ref) { setError('Enter the payment reference / UTR first.'); return }; if (!file) { setError('Upload the payment screenshot or PDF first.'); return }; if (file.size > 5 * 1024 * 1024) { setError('Payment proof must be 5 MB or smaller.'); return }; if (!selectedPlan?.id) { setError('The selected membership plan is unavailable.'); return }
-    try { setSubmitting(true); setError(''); const proofUrl = await new Promise((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve(String(reader.result)); reader.onerror = () => reject(new Error('Unable to read payment proof')); reader.readAsDataURL(file) }); await authRequest('/payments/manual', { method: 'POST', body: JSON.stringify({ amount: Number(selectedPlan.price), membershipPlanId: selectedPlan.id, manualReference: ref, proofUrl, notes: `${selectedPlan.plan_group || displayType(typeName(selectedPlan))}: ${selectedPlan.name || periodLabel(selectedPlan)}` }) }); setSubmitted(true); setManualOpen(false); document.getElementById('manual-utr').value = ''; document.getElementById('manual-proof').value = '' } catch (e) { setError(e.message || 'Unable to submit payment') } finally { setSubmitting(false) }
+  async function submitManual() {
+    const reference = document.getElementById('manual-utr')?.value?.trim()
+    const file = document.getElementById('manual-proof')?.files?.[0]
+    if (!reference) { setError('Enter the payment reference / UTR first.'); return }
+    if (!file) { setError('Upload the payment screenshot or PDF first.'); return }
+    if (file.size > 5 * 1024 * 1024) { setError('Payment proof must be 5 MB or smaller.'); return }
+    if (!selectedPlan?.id) { setError('The selected membership plan is unavailable.'); return }
+    try {
+      setSubmitting(true); setError('')
+      const proofUrl = await new Promise((resolve, reject) => {
+        const reader = new FileReader()
+        reader.onload = () => resolve(String(reader.result))
+        reader.onerror = () => reject(new Error('Unable to read payment proof'))
+        reader.readAsDataURL(file)
+      })
+      await authRequest('/payments/manual', { method: 'POST', body: JSON.stringify({ amount: Number(selectedPlan.price), membershipPlanId: selectedPlan.id, manualReference: reference, proofUrl, notes: `${selectedPlan.plan_group || displayName(planType(selectedPlan))}: ${selectedPlan.name || period(selectedPlan)}` }) })
+      setSubmitted(true); setManualOpen(false)
+    } catch (err) { setError(err?.message || 'Unable to submit payment.') } finally { setSubmitting(false) }
   }
 
-  return <div className="membership-page-shell"><UserHeader /><main className="membership-page">
-    <section className="membership-hero"><div className="membership-hero-copy"><span className="membership-kicker">PROPULSE MEMBERSHIP</span><h1>Choose the access that fits your business.</h1><p>Compare Pro, Investor and Booster in one place. Pick a billing period directly inside the plan you want.</p><div className="membership-hero-points"><span><i /> Flexible billing</span><span><i /> Clear pricing</span><span><i /> Business-first access</span></div></div><div className="membership-current"><span>YOUR CURRENT PLAN</span><strong>{currentName}</strong><small>{currentType ? `${displayType(currentType)} access is active on your account.` : 'You do not have an active paid membership yet.'}</small>{currentMembership?.expires_at && <em>Active until {new Date(currentMembership.expires_at).toLocaleDateString('en-IN')}</em>}</div></section>
-    {submitted && <div className="membership-success">Payment submitted for verification. Access will activate after admin approval.</div>}{error && <div className="membership-error">{error}</div>}
-    {loading ? <div className="membership-state">Loading membership options…</div> : <section className="membership-plans membership-plans-three">{planGroups.map(group => { const selectedCycle = selectedCycles[group.key] || 'monthly'; const plan = selectedByGroup[group.key]; const isCurrent = currentType === group.type; const investorLocked = group.type === 'investor' && !isProMember; const investorUnlocked = group.type === 'investor' && isProMember; const boosterLocked = group.type === 'booster' && !isProMember; const boosterUnlocked = group.type === 'booster' && isProMember; const planAddons = addons(plan).map(addonLabel).filter(Boolean); return <article className={`membership-plan ${group.type}-plan ${investorLocked || boosterLocked ? 'access-locked' : ''}`} key={group.key}>
-      <div className="membership-plan-top"><div><span className="plan-label">{group.name.toUpperCase()}</span><h2>{group.name}</h2><p>{investorLocked ? 'Reserved for customers with an active Pro membership.' : boosterLocked ? 'Available only after activating an active Pro membership.' : group.type === 'investor' ? 'Invest in eligible lead generation and receive only the revenue actually realized from lead sales.' : plan?.description || `${group.name} membership for businesses using the Propulse marketplace.`}</p></div>{isCurrent ? <span className="current-badge">CURRENT PLAN</span> : group.type === 'pro' ? <span className="popular-badge">RECOMMENDED</span> : investorLocked || boosterLocked ? <span className="current-badge">PRO REQUIRED</span> : (investorUnlocked || boosterUnlocked) ? <span className="popular-badge">UNLOCKED FOR PRO</span> : null}</div>
-      {group.type === 'investor' ? <div className="investor-model"><div><b>ACTUAL SALES ONLY</b><span>No fixed or guaranteed return.</span></div><div><b>LOWER SALES = LOWER PAYOUT</b><span>Your result depends on eligible leads actually sold.</span></div><div><b>AUTO-REINVEST</b><span>At cycle end, eligible realized proceeds can fund the next cycle automatically.</span></div></div> : null}
-      <div className="card-billing"><div><span>{group.type === 'investor' ? 'INVESTMENT CYCLE' : 'CHOOSE BILLING'}</span><small>{group.type === 'investor' ? 'Cycle length' : 'This card only'}</small></div><div className="membership-cycles">{cycles.map(k => <button type="button" key={k} className={selectedCycle === k ? 'active' : ''} onClick={() => { setSelectedCycles(prev => ({ ...prev, [group.key]: k })); setError(''); setSubmitted(false) }}>{cycleLabel(k)}</button>)}</div></div>
-      {group.type === 'investor' ? <div className="investor-cycle-note">Investor cycles are not a membership subscription. The selected cycle controls the investment period; your capital participates in actual eligible lead-sale revenue.</div> : null}
-      <div className="membership-price">{group.type === 'investor' ? 'Invest' : plan ? money(plan.price) : '—'}<small>{group.type === 'investor' ? ` / ${plan ? periodLabel(plan).toLowerCase() : selectedCycle}` : plan ? ` / ${periodLabel(plan).toLowerCase()}` : ''}</small></div>
-      {investorLocked && <div className="saving-note">🔒 Unlock with Pro</div>}{investorUnlocked && <div className="saving-note">✓ Investor access unlocked with Pro</div>}{boosterLocked && <div className="saving-note">🔒 Unlock with Pro</div>}{boosterUnlocked && <div className="saving-note">✓ Booster unlocked for Pro members</div>}{!investorLocked && !boosterLocked && group.type !== 'investor' && Number(plan?.discount_percent || 0) > 0 && <div className="saving-note">Save {Number(plan.discount_percent)}% on this billing cycle</div>}
-      <div className="membership-divider" /><h3>{group.type === 'investor' ? 'How Investor works' : `Included with ${group.name}`}</h3><ul>{features(plan, fallbackBenefits[group.type]).map((x, i) => <li key={`${x}-${i}`}><b>✓</b><span>{x}</span></li>)}</ul>
-      {group.type === 'investor' && <div className="investor-flow"><span>1. Fund an eligible industry</span><span>2. Lead sales generate realized revenue</span><span>3. Your share is settled at maturity</span><span>4. Eligible proceeds are reinvested into the next cycle</span></div>}
-      {planAddons.length > 0 && <div className="membership-addons"><div><span>AVAILABLE ADD-ONS</span><small>Configured in Admin</small></div><ul>{planAddons.map((x, i) => <li key={`${x}-${i}`}><b>+</b><span>{x}</span></li>)}</ul></div>}
-      {isCurrent ? <button className="membership-primary current" disabled>✓ Current {group.name} plan</button> : investorLocked || boosterLocked ? <button className="membership-primary current" disabled>🔒 Pro membership required</button> : !plan && group.type !== 'investor' ? <button className="membership-primary current" disabled>Plan being configured</button> : <button className="membership-primary" onClick={() => openPayment(plan)}>{group.type === 'investor' ? 'Start Investing' : `Choose ${group.name}`} <span>→</span></button>}
-      {group.type === 'booster' && planAddons.length > 0 && !boosterLocked && !isCurrent && <small className="membership-secure">Booster add-ons are linked to the selected billing plan.</small>}
-      {plan?.lead_entitlements?.length > 0 && <small className="membership-secure">Plan benefits and lead entitlements are configured by Propulse.</small>}
-    </article> })}</section>}
-    <section className="membership-value"><div><span className="membership-kicker">WHY MEMBERSHIP</span><h2>Simple plans. Clear access.</h2><p>Each card has its own billing selector, so changing Pro pricing will never change Investor or Booster pricing.</p></div><div className="value-grid"><div><strong>01</strong><b>Pick Pro</b><span>Activate Pro first to unlock the advanced membership options.</span></div><div><strong>02</strong><b>Unlock access</b><span>Investor and Booster become available with an active Pro membership.</span></div><div><strong>03</strong><b>Use Booster</b><span>Pro members can access Booster and its configured add-ons.</span></div></div></section>
-  </main>
-  {manualOpen && selectedPlan && <div className="membership-modal-backdrop" onClick={() => setManualOpen(false)}><div className="membership-payment-modal" onClick={e => e.stopPropagation()}><button className="membership-modal-close" onClick={() => setManualOpen(false)}>×</button><span className="membership-kicker">MANUAL PAYMENT</span><h2>Upgrade to {displayType(typeName(selectedPlan))}</h2><p>Make the payment using the Propulse payment details and submit the reference for admin verification.</p><div className="manual-summary"><span>Selected plan</span><strong>{selectedPlan.name} · {money(selectedPlan.price)} / {periodLabel(selectedPlan).toLowerCase()}</strong></div><div className="manual-method"><b>UPI / BANK TRANSFER</b><span>Payment details will be configured by Propulse admin.</span></div><label className="manual-input-label">Payment reference / UTR<input id="manual-utr" placeholder="Enter UTR or transaction ID" /></label><label className="manual-input-label">Payment proof<input id="manual-proof" type="file" accept="image/*,.pdf" /></label><div className="manual-next"><b>Verification</b><ol><li>Make the payment.</li><li>Enter the UTR / transaction reference.</li><li>Submit for admin verification.</li></ol></div><button className="membership-primary" onClick={submitManual} disabled={submitting}>{submitting ? 'Submitting…' : 'Submit for verification'} <span>→</span></button></div></div>}
-  </div>
+  return (
+    <div className="membership-page-shell">
+      <UserHeader />
+      <main className="membership-page">
+        <section className="membership-hero">
+          <div className="membership-hero-copy"><span className="membership-kicker">PROPULSE MEMBERSHIP</span><h1>Choose the access that fits your business.</h1><p>Compare Pro, Investor and Booster in one place. Pick a billing period directly inside the plan you want.</p><div className="membership-hero-points"><span><i /> Flexible billing</span><span><i /> Clear pricing</span><span><i /> Business-first access</span></div></div>
+          <div className="membership-current"><span>YOUR CURRENT PLAN</span><strong>{currentName}</strong><small>{currentType ? `${displayName(currentType)} access is active on your account.` : 'You do not have an active paid membership yet.'}</small>{currentMembership?.expires_at && <em>Active until {new Date(currentMembership.expires_at).toLocaleDateString('en-IN')}</em>}</div>
+        </section>
+        {submitted && <div className="membership-success">Payment submitted for verification. Access will activate after admin approval.</div>}
+        {error && <div className="membership-error">{error}</div>}
+        {loading ? <div className="membership-state">Loading membership options…</div> : (
+          <section className="membership-plans membership-plans-three">
+            {groups.map((group) => {
+              const selectedCycle = selectedCycles[group.key] || 'monthly'
+              const plan = selectedPlans[group.key]
+              const isCurrent = currentType === group.type
+              const locked = (group.type === 'investor' || group.type === 'booster') && !isProMember
+              const investorUnlocked = group.type === 'investor' && isProMember
+              const boosterUnlocked = group.type === 'booster' && isProMember
+              const planAddOns = addOns(plan).map(addOnName).filter(Boolean)
+              return (
+                <article className={`membership-plan ${group.type}-plan ${locked ? 'access-locked' : ''}`} key={group.key}>
+                  <div className="membership-plan-top"><div><span className="plan-label">{group.name.toUpperCase()}</span><h2>{group.name}</h2><p>{locked ? 'Available after activating an active Pro membership.' : group.type === 'investor' ? 'Invest in eligible lead generation and receive only revenue actually realized from lead sales.' : plan?.description || `${group.name} membership for businesses using the Propulse marketplace.`}</p></div>{isCurrent ? <span className="current-badge">CURRENT PLAN</span> : group.type === 'pro' ? <span className="popular-badge">RECOMMENDED</span> : locked ? <span className="current-badge">PRO REQUIRED</span> : <span className="popular-badge">UNLOCKED FOR PRO</span>}</div>
+                  {group.type === 'investor' && <div className="investor-model"><div><b>ACTUAL SALES ONLY</b><span>No fixed or guaranteed return.</span></div><div><b>LOWER SALES = LOWER PAYOUT</b><span>Your result depends on eligible leads actually sold.</span></div><div><b>AUTO-REINVEST</b><span>Eligible realized proceeds can fund the next cycle automatically.</span></div></div>}
+                  <div className="card-billing"><div><span>{group.type === 'investor' ? 'INVESTMENT CYCLE' : 'CHOOSE BILLING'}</span><small>{group.type === 'investor' ? 'Cycle length' : 'This card only'}</small></div><div className="membership-cycles">{cycles.map((key) => <button type="button" key={key} className={selectedCycle === key ? 'active' : ''} onClick={() => setSelectedCycles((previous) => ({ ...previous, [group.key]: key }))}>{cycleLabel(key)}</button>)}</div></div>
+                  {group.type === 'investor' && <div className="investor-cycle-note">Investor cycles are not a membership subscription. The selected cycle controls the investment period; capital participates in actual eligible lead-sale revenue.</div>}
+                  <div className="membership-price">{group.type === 'investor' ? 'Invest' : plan ? money(plan.price) : '—'}<small>{plan ? ` / ${period(plan).toLowerCase()}` : ''}</small></div>
+                  {locked && <div className="saving-note">🔒 Unlock with Pro</div>}{investorUnlocked && <div className="saving-note">✓ Investor access unlocked with Pro</div>}{boosterUnlocked && <div className="saving-note">✓ Booster unlocked for Pro members</div>}
+                  <div className="membership-divider" /><h3>{group.type === 'investor' ? 'How Investor works' : `Included with ${group.name}`}</h3><ul>{benefits(plan, group.type).map((item, index) => <li key={`${item}-${index}`}><b>✓</b><span>{item}</span></li>)}</ul>
+                  {group.type === 'investor' && <div className="investor-flow"><span>1. Fund an eligible industry</span><span>2. Lead sales generate realized revenue</span><span>3. Your share is settled at maturity</span><span>4. Eligible proceeds are reinvested into the next cycle</span></div>}
+                  {planAddOns.length > 0 && <div className="membership-addons"><div><span>AVAILABLE ADD-ONS</span><small>Configured in Admin</small></div><ul>{planAddOns.map((item, index) => <li key={`${item}-${index}`}><b>+</b><span>{item}</span></li>)}</ul></div>}
+                  {isCurrent ? <button className="membership-primary current" disabled>✓ Current {group.name} plan</button> : locked ? <button className="membership-primary current" disabled>🔒 Pro membership required</button> : !plan && group.type !== 'investor' ? <button className="membership-primary current" disabled>Plan being configured</button> : <button className="membership-primary" onClick={() => openPlan(plan, group.type)}>{group.type === 'investor' ? 'Start Investing' : `Choose ${group.name}`} <span>→</span></button>}
+                </article>
+              )
+            })}
+          </section>
+        )}
+        <section className="membership-value"><div><span className="membership-kicker">WHY MEMBERSHIP</span><h2>Simple plans. Clear access.</h2><p>Each card has its own billing selector, so changing Pro pricing will never change Investor or Booster pricing.</p></div><div className="value-grid"><div><strong>01</strong><b>Pick Pro</b><span>Activate Pro first to unlock the advanced membership options.</span></div><div><strong>02</strong><b>Unlock access</b><span>Investor and Booster become available with an active Pro membership.</span></div><div><strong>03</strong><b>Use Booster</b><span>Pro members can access Booster and its configured add-ons.</span></div></div></section>
+      </main>
+      {manualOpen && selectedPlan && <div className="membership-modal-backdrop" onClick={() => setManualOpen(false)}><div className="membership-payment-modal" onClick={(event) => event.stopPropagation()}><button className="membership-modal-close" onClick={() => setManualOpen(false)}>×</button><span className="membership-kicker">MANUAL PAYMENT</span><h2>Upgrade to {displayName(planType(selectedPlan))}</h2><p>Make the payment using the Propulse payment details and submit the reference for admin verification.</p><div className="manual-summary"><span>Selected plan</span><strong>{selectedPlan.name} · {money(selectedPlan.price)} / {period(selectedPlan).toLowerCase()}</strong></div><div className="manual-method"><b>UPI / BANK TRANSFER</b><span>Payment details will be configured by Propulse admin.</span></div><label className="manual-input-label">Payment reference / UTR<input id="manual-utr" placeholder="Enter UTR or transaction ID" /></label><label className="manual-input-label">Payment proof<input id="manual-proof" type="file" accept="image/*,.pdf" /></label><div className="manual-next"><b>Verification</b><ol><li>Make the payment.</li><li>Enter the UTR / transaction reference.</li><li>Submit for admin verification.</li></ol></div><button className="membership-primary" onClick={submitManual} disabled={submitting}>{submitting ? 'Submitting…' : 'Submit for verification'} <span>→</span></button></div></div>}
+    </div>
+  )
+}
