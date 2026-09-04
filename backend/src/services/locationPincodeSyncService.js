@@ -1,6 +1,7 @@
 const pool = require('../config/database');
 
-const PROVIDER_DELAY_MS = 350;
+const PROVIDER = 'https://api.pincodeapi.in/api/v1';
+const PROVIDER_DELAY_MS = 1800;
 let nextRequestAt = 0;
 let requestQueue = Promise.resolve();
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
@@ -15,70 +16,149 @@ function waitForProviderSlot() {
   return run;
 }
 
-async function syncCityPincodes(city) {
-  const seen = new Set();
-  let updates = 0;
+function normalize(value) {
+  return String(value || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim();
+}
+
+function officePincode(row) {
+  return String(row?.pincode ?? row?.PINCode ?? row?.Pincode ?? '').trim();
+}
+
+function officeName(row) {
+  return String(row?.office_name ?? row?.officename ?? row?.Name ?? '').trim();
+}
+
+function officeState(row) {
+  return String(row?.state ?? row?.statename ?? row?.State ?? '').trim();
+}
+
+function officeDistrict(row) {
+  return String(row?.district ?? row?.District ?? '').trim();
+}
+
+function isCityOfficeMatch(office, city) {
+  const cityName = normalize(city.name);
+  const name = normalize(officeName(office));
+  if (!cityName || !name) return false;
+
+  // Postal office names commonly append S.O./H.O./B.O./Court Complex, etc.
+  // Match the actual city/locality name instead of assigning every PIN in the district.
+  return name === cityName ||
+    name.startsWith(`${cityName} `) ||
+    name.includes(` ${cityName} `) ||
+    name.endsWith(` ${cityName}`);
+}
+
+async function searchCityPostOffices(city) {
   await waitForProviderSlot();
-  const response = await fetch(`https://api.postalpincode.in/postoffice/${encodeURIComponent(city.name)}`);
-  if (response.ok) {
-    const payload = await response.json();
-    const offices = Array.isArray(payload?.[0]?.PostOffice) ? payload[0].PostOffice : [];
-    for (const office of offices) {
-      const pincode = String(office?.Pincode || office?.PINCode || '').trim();
-      if (!/^\d{6}$/.test(pincode) || seen.has(pincode)) continue;
-      seen.add(pincode);
-      const officeName = String(office?.Name || '').trim() || null;
-      const result = await pool.query(
-        `INSERT INTO city_pincodes(city_id,pincode,office_name,is_active)
-         VALUES($1,$2,$3,TRUE)
-         ON CONFLICT(city_id,pincode) DO UPDATE
- SET office_name=COALESCE(EXCLUDED.office_name,city_pincodes.office_name),
-     is_active=TRUE,
-     updated_at=CURRENT_TIMESTAMP`,
-        [city.id, pincode, officeName]
-      );
-      if (result.rowCount) updates += 1;
-    }
+  const response = await fetch(`${PROVIDER}/search?q=${encodeURIComponent(city.name)}&limit=50&offset=0`);
+  if (!response.ok) throw new Error(`Pincode provider returned ${response.status}`);
+
+  const payload = await response.json();
+  if (payload?.success === false || payload?.status === 'error') {
+    throw new Error(payload?.error?.message || 'Pincode provider returned an error');
   }
 
-  const directoryRows = await pool.query(
-    `SELECT DISTINCT pincode
-       FROM india_pincodes
-      WHERE is_active=TRUE
-        AND state_id=$1
-        AND LOWER(COALESCE(district_name,''))=LOWER($2)`,
-    [city.state_id, city.name]
-  );
-  for (const row of directoryRows.rows) {
-    const pincode = String(row.pincode || '').trim();
+  const rows = Array.isArray(payload?.data?.post_offices)
+    ? payload.data.post_offices
+    : Array.isArray(payload?.data)
+      ? payload.data
+      : [];
+
+  return rows.filter(row => {
+    const state = normalize(officeState(row));
+    const cityState = normalize(city.state_name);
+    return (!state || !cityState || state === cityState) && isCityOfficeMatch(row, city);
+  });
+}
+
+async function upsertCityPincodes(city, offices) {
+  const seen = new Set();
+  let updates = 0;
+
+  for (const office of offices) {
+    const pincode = officePincode(office);
     if (!/^\d{6}$/.test(pincode) || seen.has(pincode)) continue;
     seen.add(pincode);
+
+    const name = officeName(office) || null;
     const result = await pool.query(
       `INSERT INTO city_pincodes(city_id,pincode,office_name,is_active)
-       VALUES($1,$2,NULL,TRUE)
+       VALUES($1,$2,$3,TRUE)
        ON CONFLICT(city_id,pincode) DO UPDATE
-         SET is_active=TRUE,updated_at=CURRENT_TIMESTAMP`,
-      [city.id, pincode]
+         SET office_name=COALESCE(EXCLUDED.office_name,city_pincodes.office_name),
+             is_active=TRUE,
+             updated_at=CURRENT_TIMESTAMP`,
+      [city.id, pincode, name]
     );
     if (result.rowCount) updates += 1;
   }
 
-  await pool.query(`UPDATE cities SET location_sync_at=CURRENT_TIMESTAMP,updated_at=CURRENT_TIMESTAMP WHERE id=$1`, [city.id]);
-  return { id: city.id, name: city.name, pincodes: seen.size, updates };
+  return { pincodes: seen, updates };
+}
+
+async function syncCityPincodes(city) {
+  const offices = await searchCityPostOffices(city);
+  const result = await upsertCityPincodes(city, offices);
+
+  // Keep the existing local directory as a secondary source only when it can
+  // identify the same city by district. Never assign an entire district's PINs
+  // to a city merely because the district name differs from the city name.
+  if (!result.pincodes.size) {
+    const directoryRows = await pool.query(
+      `SELECT DISTINCT pincode
+         FROM india_pincodes
+        WHERE is_active=TRUE
+          AND state_id=$1
+          AND LOWER(COALESCE(district_name,''))=LOWER($2)`,
+      [city.state_id, city.name]
+    );
+
+    for (const row of directoryRows.rows) {
+      const pincode = String(row.pincode || '').trim();
+      if (!/^\d{6}$/.test(pincode) || result.pincodes.has(pincode)) continue;
+      result.pincodes.add(pincode);
+      const insertResult = await pool.query(
+        `INSERT INTO city_pincodes(city_id,pincode,office_name,is_active)
+         VALUES($1,$2,NULL,TRUE)
+         ON CONFLICT(city_id,pincode) DO UPDATE
+           SET is_active=TRUE,updated_at=CURRENT_TIMESTAMP`,
+        [city.id, pincode]
+      );
+      if (insertResult.rowCount) result.updates += 1;
+    }
+  }
+
+  await pool.query(
+    `UPDATE cities
+        SET location_sync_at=CURRENT_TIMESTAMP,updated_at=CURRENT_TIMESTAMP
+      WHERE id=$1`,
+    [city.id]
+  );
+
+  return { id: city.id, name: city.name, pincodes: result.pincodes.size, updates: result.updates };
 }
 
 async function syncPincodesForState(stateId) {
   const cities = (await pool.query(
-    `SELECT c.id,c.name,c.state_id
+    `SELECT c.id,c.name,c.state_id,s.name AS state_name
        FROM cities c
-      WHERE c.state_id=$1 AND c.is_active=TRUE
+       JOIN states s ON s.id=c.state_id
+      WHERE c.state_id=$1 AND c.is_active=TRUE AND s.is_active=TRUE
       ORDER BY c.name ASC`,
     [stateId]
   )).rows;
+
   const results = [];
   for (const city of cities) {
-    try { results.push(await syncCityPincodes(city)); }
-    catch (error) { results.push({ id: city.id, name: city.name, error: error.message }); }
+    try {
+      results.push(await syncCityPincodes(city));
+    } catch (error) {
+      results.push({ id: city.id, name: city.name, error: error.message });
+    }
   }
   return results;
 }
