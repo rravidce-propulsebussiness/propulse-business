@@ -1,0 +1,54 @@
+name: Investment Integrity
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  investment-integrity:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: investment_ci
+          POSTGRES_USER: investment_ci
+          POSTGRES_PASSWORD: investment_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U investment_ci -d investment_ci"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+      - run: npm ci
+      - name: Bootstrap database
+        env:
+          DB_HOST: 127.0.0.1
+          DB_PORT: 5432
+          DB_NAME: investment_ci
+          DB_USER: investment_ci
+          DB_PASSWORD: investment_ci
+        run: npm run db:bootstrap
+      - name: Verify investment integrity
+        env:
+          DB_HOST: 127.0.0.1
+          DB_PORT: 5432
+          DB_NAME: investment_ci
+          DB_USER: investment_ci
+          DB_PASSWORD: investment_ci
+        run: node scripts/check-investment-integrity.js && node scripts/check-investment-revenue-allocation.js && node scripts/check-investment-no-fixed-return.js
+      - name: Verify backend syntax
+        run: node --check src/services/investmentService.js && node --check src/services/leadPurchaseService.js && node --check src/services/adminCommercialService.js

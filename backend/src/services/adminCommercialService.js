@@ -21,16 +21,26 @@ async function updateInvestorSettings(data) {
   const customerIndustryLimit=Number(data.customerIndustryLimit ?? 10);
   const minInvestment=Number(data.minInvestment);
   const maxInvestment=data.maxInvestment === '' || data.maxInvestment == null ? null : Number(data.maxInvestment);
+  const cycleDays=data.investmentCycleDays == null ? null : Number(data.investmentCycleDays);
+  const revenueShare=data.investorRevenueSharePercent == null ? null : Number(data.investorRevenueSharePercent);
+  const autoReinvest=data.autoReinvest == null ? null : Boolean(data.autoReinvest);
   if(!Number.isFinite(minInvestment)||minInvestment<=0)throw Object.assign(new Error('Minimum investment must be greater than zero'),{code:'INVALID_INVESTMENT_CONFIG'});
   if(maxInvestment!==null&&(!Number.isFinite(maxInvestment)||maxInvestment<minInvestment))throw Object.assign(new Error('Maximum investment must be greater than or equal to minimum investment'),{code:'INVALID_INVESTMENT_CONFIG'});
+  if(cycleDays!==null&&(!Number.isInteger(cycleDays)||cycleDays<=0||cycleDays>3650))throw Object.assign(new Error('Investment cycle must be between 1 and 3650 days'),{code:'INVALID_INVESTMENT_CONFIG'});
+  if(revenueShare!==null&&(!Number.isFinite(revenueShare)||revenueShare<0||revenueShare>100))throw Object.assign(new Error('Investor revenue share must be between 0 and 100%'),{code:'INVALID_INVESTMENT_CONFIG'});
   await pool.query(`
     UPDATE investor_settings
     SET global_limit=$1,default_industry_limit=$2,customer_industry_limit=$3,
         min_investment=$4,max_investment=$5,enabled=$6,is_enabled=$6,
-        requires_pro=$7,updated_at=CURRENT_TIMESTAMP WHERE id=1
-  `,[globalLimit,defaultIndustryLimit,customerIndustryLimit,minInvestment,maxInvestment,Boolean(data.enabled),data.requiresPro!==false]);
+        requires_pro=$7,investment_cycle_days=COALESCE($8,investment_cycle_days),
+        auto_reinvest=COALESCE($9,auto_reinvest),
+        investor_revenue_share_percent=COALESCE($10,investor_revenue_share_percent),
+        updated_at=CURRENT_TIMESTAMP WHERE id=1
+  `,[globalLimit,defaultIndustryLimit,customerIndustryLimit,minInvestment,maxInvestment,Boolean(data.enabled),data.requiresPro!==false,cycleDays,autoReinvest,revenueShare]);
 
   if(Array.isArray(data.industryLimits)){
+    const settings=(await pool.query('SELECT investor_revenue_share_percent FROM investor_settings WHERE id=1')).rows[0];
+    const share=Number(settings.investor_revenue_share_percent ?? 100);
     for(const x of data.industryLimits){
       const industryId=Number(x.industryId??x.id);
       const limit=Number(x.limit??x.investor_limit??defaultIndustryLimit??0);
@@ -40,9 +50,9 @@ async function updateInvestorSettings(data) {
         ON CONFLICT(industry_id) DO UPDATE SET investor_limit=EXCLUDED.investor_limit,is_active=EXCLUDED.is_active,updated_at=CURRENT_TIMESTAMP`,[industryId,limit,active]);
       if(active){
         const maximum=maxInvestment===null?Math.max(minInvestment,limit||globalLimit||minInvestment):maxInvestment;
-        await pool.query(`INSERT INTO investment_industry_rules(industry_id,minimum_amount,maximum_amount,total_capacity,is_active)
-          VALUES($1,$2,$3,$4,TRUE)
-          ON CONFLICT(industry_id) DO UPDATE SET minimum_amount=EXCLUDED.minimum_amount,maximum_amount=EXCLUDED.maximum_amount,total_capacity=EXCLUDED.total_capacity,is_active=TRUE,updated_at=CURRENT_TIMESTAMP`,[industryId,minInvestment,maximum,limit||null]);
+        await pool.query(`INSERT INTO investment_industry_rules(industry_id,minimum_amount,maximum_amount,total_capacity,investor_revenue_share_percent,is_active)
+          VALUES($1,$2,$3,$4,$5,TRUE)
+          ON CONFLICT(industry_id) DO UPDATE SET minimum_amount=EXCLUDED.minimum_amount,maximum_amount=EXCLUDED.maximum_amount,total_capacity=EXCLUDED.total_capacity,investor_revenue_share_percent=EXCLUDED.investor_revenue_share_percent,is_active=TRUE,updated_at=CURRENT_TIMESTAMP`,[industryId,minInvestment,maximum,limit||null,share]);
       }else{
         await pool.query('UPDATE investment_industry_rules SET is_active=FALSE,updated_at=CURRENT_TIMESTAMP WHERE industry_id=$1',[industryId]);
       }
