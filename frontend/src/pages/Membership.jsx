@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import UserHeader from '../components/UserHeader'
 import { authRequest, getToken, getUser } from '../utils/auth'
+import { apiRequest } from '../utils/api'
 import './Membership.css'
 
-const API = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
 const money = v => `₹${Number(v || 0).toLocaleString('en-IN', { maximumFractionDigits: 0 })}`
 const arr = v => Array.isArray(v) ? v : []
 const typeName = p => String(p?.plan_type || '').toLowerCase()
@@ -23,9 +23,7 @@ export default function Membership() {
     ;(async () => {
       if (!token) { setLoading(false); return }
       try {
-        const [r, m] = await Promise.all([fetch(`${API}/membership-plans`, { headers: { Authorization: `Bearer ${token}` } }), authRequest('/payments/membership/current').catch(() => null)])
-        const d = await r.json().catch(() => [])
-        if (!r.ok) throw Error(d.error || 'Unable to load membership plans')
+        const [d, m] = await Promise.all([apiRequest('/membership-plans'), authRequest('/payments/membership/current').catch(() => null)])
         if (active) {
           setPlans(Array.isArray(d) ? d.filter(p => p.is_active !== false) : [])
           setCurrentMembership(m || null)
