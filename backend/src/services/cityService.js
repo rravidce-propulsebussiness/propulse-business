@@ -140,13 +140,34 @@ async function syncSubcitiesForCity(cityId) {
   const response=await fetch('https://overpass-api.de/api/interpreter',{method:'POST',headers:{'Content-Type':'text/plain','User-Agent':'Propulse-Business/1.0'},body:query});
   if(!response.ok) throw new Error(`OpenStreetMap coverage provider returned ${response.status}`);
   const payload=await response.json(); const names=new Map();
-  for(const item of (payload.elements||[])){const name=String(item.tags?.name||'').trim();if(name){const key=slugify(name);if(key&&!names.has(key))names.set(key,{name,key,externalId:`${item.type}/${item.id}`});}}
-  let added=0,restored=0;
-  for(const item of names.values()){
-    const existing=await pool.query(`SELECT id,is_active FROM subcities WHERE city_id=$1 AND slug=$2 LIMIT 1`,[city.id,item.key]);
-    if(existing.rows[0]){if(!existing.rows[0].is_active){await pool.query(`UPDATE subcities SET name=$1,is_active=TRUE,source='openstreetmap',external_id=$2,updated_at=CURRENT_TIMESTAMP WHERE id=$3`,[item.name,item.externalId,existing.rows[0].id]);restored++;}}else{await pool.query(`INSERT INTO subcities(city_id,name,slug,source,external_id) VALUES($1,$2,$3,'openstreetmap',$4)`,[city.id,item.name,item.key,item.externalId]);added++;}
+  for(const item of (payload.elements||[])){
+    const name=String(item.tags?.name||'').trim();
+    if(!name) continue;
+    const key=slugify(name);
+    if(!key||names.has(key)) continue;
+    const pincode=String(item.tags?.['addr:postcode'] || item.tags?.postcode || '').trim();
+    names.set(key,{name,key,externalId:`${item.type}/${item.id}`,pincode:/^\d{6}$/.test(pincode)?pincode:null});
   }
-  return {city,totalFromProvider:names.size,added,restored};
+  let added=0,restored=0,updatedPincodes=0;
+  for(const item of names.values()){
+    const existing=await pool.query(`SELECT id,is_active,pincode FROM subcities WHERE city_id=$1 AND slug=$2 LIMIT 1`,[city.id,item.key]);
+    if(existing.rows[0]){
+      if(!existing.rows[0].is_active){
+        await pool.query(`UPDATE subcities SET name=$1,is_active=TRUE,source='openstreetmap',external_id=$2,pincode=COALESCE($3,pincode),updated_at=CURRENT_TIMESTAMP WHERE id=$4`,[item.name,item.externalId,item.pincode,existing.rows[0].id]);
+        restored++;
+      } else if(item.pincode && existing.rows[0].pincode !== item.pincode){
+        await pool.query(`UPDATE subcities SET pincode=$1,source='openstreetmap',external_id=$2,updated_at=CURRENT_TIMESTAMP WHERE id=$3`,[item.pincode,item.externalId,existing.rows[0].id]);
+        updatedPincodes++;
+      }
+    } else {
+      await pool.query(`INSERT INTO subcities(city_id,name,slug,pincode,source,external_id) VALUES($1,$2,$3,$4,'openstreetmap',$5)`,[city.id,item.name,item.key,item.pincode,item.externalId]);
+      added++;
+    }
+    if(item.pincode){
+      await pool.query(`INSERT INTO city_pincodes(city_id,pincode,office_name,is_active) VALUES($1,$2,$3,TRUE) ON CONFLICT(city_id,pincode,office_name) DO UPDATE SET is_active=TRUE,updated_at=CURRENT_TIMESTAMP`,[city.id,item.pincode,item.name]);
+    }
+  }
+  return {city,totalFromProvider:names.size,added,restored,updatedPincodes};
 }
 async function syncPincodesBatch(limit=20) {
   const cities=(await pool.query(`SELECT id FROM cities WHERE is_active=TRUE ORDER BY location_sync_at NULLS FIRST,location_sync_at ASC,id ASC LIMIT $1`,[Math.max(1,Math.min(50,Number(limit)||20))])).rows;
