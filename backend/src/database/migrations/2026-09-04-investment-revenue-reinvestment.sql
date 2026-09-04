@@ -20,12 +20,13 @@ CREATE UNIQUE INDEX IF NOT EXISTS uq_investment_reinvestment_parent
 CREATE TABLE IF NOT EXISTS investment_revenue_allocations (
   id SERIAL PRIMARY KEY,
   investment_id INTEGER NOT NULL REFERENCES investments(id) ON DELETE RESTRICT,
-  lead_purchase_id INTEGER NOT NULL UNIQUE REFERENCES lead_purchases(id) ON DELETE RESTRICT,
+  lead_purchase_id INTEGER NOT NULL REFERENCES lead_purchases(id) ON DELETE RESTRICT,
   industry_id INTEGER NOT NULL REFERENCES industries(id) ON DELETE RESTRICT,
   gross_sale_amount NUMERIC(14,2) NOT NULL CHECK (gross_sale_amount >= 0),
   investor_share_percent NUMERIC(5,2) NOT NULL CHECK (investor_share_percent >= 0 AND investor_share_percent <= 100),
   allocated_amount NUMERIC(14,4) NOT NULL CHECK (allocated_amount >= 0),
-  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(investment_id, lead_purchase_id)
 );
 CREATE INDEX IF NOT EXISTS idx_investment_revenue_allocations_investment ON investment_revenue_allocations(investment_id);
 CREATE INDEX IF NOT EXISTS idx_investment_revenue_allocations_industry ON investment_revenue_allocations(industry_id);
