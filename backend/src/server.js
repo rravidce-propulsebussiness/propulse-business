@@ -43,4 +43,10 @@ app.use('/api/cities',cityRoutes);
 app.use('/api/subcities',subcityRoutes);
 app.use((req,res)=>res.status(404).json({error:'Not found'}));
 app.use((err,req,res,next)=>{if(err.message==='CORS origin not allowed')return res.status(403).json({error:'Origin not allowed'});console.error('Unhandled server error:',err.message);return res.status(500).json({error:'Internal server error'});});
-app.listen(PORT,'0.0.0.0',()=>{console.log(`Server running on port ${PORT}`);setTimeout(()=>cityService.syncPincodesBatch(20).catch(e=>console.error('Automatic pincode sync failed:',e.message)),10*60*1000);setInterval(()=>cityService.syncPincodesBatch(20).catch(e=>console.error('Automatic pincode sync failed:',e.message)),60*60*1000);});
+app.listen(PORT,'0.0.0.0',()=>{
+  console.log(`Server running on port ${PORT}`);
+  setTimeout(()=>cityService.syncPincodesBatch(20).catch(e=>console.error('Automatic pincode sync failed:',e.message)),10*60*1000);
+  setInterval(()=>cityService.syncPincodesBatch(20).catch(e=>console.error('Automatic pincode sync failed:',e.message)),60*60*1000);
+  setTimeout(()=>cityService.syncCoverageBatch(1).catch(e=>console.error('Automatic location coverage sync failed:',e.message)),30*60*1000);
+  setInterval(()=>cityService.syncCoverageBatch(1).catch(e=>console.error('Automatic location coverage sync failed:',e.message)),6*60*60*1000);
+});
