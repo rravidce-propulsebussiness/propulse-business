@@ -8,6 +8,7 @@ const subserviceRoutes=require('./routes/subserviceRoutes');
 const stateRoutes=require('./routes/stateRoutes');
 const cityRoutes=require('./routes/cityRoutes');
 const subcityRoutes=require('./routes/subcityRoutes');
+const pincodeRoutes=require('./routes/pincodeRoutes');
 const cityService=require('./services/cityService');
 const authRoutes=require('./routes/authRoutes');
 const profileRoutes=require('./routes/profileRoutes');
@@ -41,6 +42,7 @@ app.use('/api/subservices',subserviceRoutes);
 app.use('/api/states',stateRoutes);
 app.use('/api/cities',cityRoutes);
 app.use('/api/subcities',subcityRoutes);
+app.use('/api/pincodes',pincodeRoutes);
 app.use((req,res)=>res.status(404).json({error:'Not found'}));
 app.use((err,req,res,next)=>{if(err.message==='CORS origin not allowed')return res.status(403).json({error:'Origin not allowed'});console.error('Unhandled server error:',err.message);return res.status(500).json({error:'Internal server error'});});
 app.listen(PORT,'0.0.0.0',()=>{
