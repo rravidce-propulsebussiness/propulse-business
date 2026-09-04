@@ -1,5 +1,5 @@
-const express=require('express');const leadController=require('../controllers/leadController');const leadPurchaseController=require('../controllers/leadPurchaseController');const leadEntitlementController=require('../controllers/leadEntitlementController');const requireAuth=require('../middleware/authMiddleware');const requireAdmin=require('../middleware/adminMiddleware');const router=express.Router();
-router.get('/',leadController.getLeads);
+const express=require('express');const leadController=require('../controllers/leadController');const leadPurchaseController=require('../controllers/leadPurchaseController');const leadEntitlementController=require('../controllers/leadEntitlementController');const requireAuth=require('../middleware/authMiddleware');const optionalAuth=require('../middleware/optionalAuthMiddleware');const requireAdmin=require('../middleware/adminMiddleware');const router=express.Router();
+router.get('/',optionalAuth,leadController.getLeads);
 router.get('/pricing',requireAdmin,leadController.getLeadPricing);
 router.put('/pricing',requireAdmin,leadController.updateLeadPricing);
 router.get('/pricing/rules',requireAdmin,leadController.getPricingRules);
