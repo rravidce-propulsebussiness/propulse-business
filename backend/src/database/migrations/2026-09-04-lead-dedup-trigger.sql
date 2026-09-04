@@ -19,7 +19,7 @@ BEGIN
       AND regexp_replace(COALESCE(customer_phone,''),'[^0-9]','','g')=normalized_phone
     LIMIT 1;
     IF duplicate_id IS NOT NULL THEN
-      RAISE EXCEPTION 'Duplicate lead: this lead already exists', duplicate_id
+      RAISE EXCEPTION 'Duplicate lead: this lead already exists (id=%)', duplicate_id
         USING ERRCODE='23505', DETAIL='Duplicate phone number within the same industry';
     END IF;
   END IF;
@@ -33,7 +33,7 @@ BEGIN
       AND lower(trim(COALESCE(customer_email,'')))=normalized_email
     LIMIT 1;
     IF duplicate_id IS NOT NULL THEN
-      RAISE EXCEPTION 'Duplicate lead: this lead already exists', duplicate_id
+      RAISE EXCEPTION 'Duplicate lead: this lead already exists (id=%)', duplicate_id
         USING ERRCODE='23505', DETAIL='Duplicate email within the same industry';
     END IF;
   END IF;
@@ -48,7 +48,7 @@ BEGIN
       AND lower(trim(COALESCE(requirement,'')))=normalized_requirement
     LIMIT 1;
     IF duplicate_id IS NOT NULL THEN
-      RAISE EXCEPTION 'Duplicate lead: this lead already exists', duplicate_id
+      RAISE EXCEPTION 'Duplicate lead: this lead already exists (id=%)', duplicate_id
         USING ERRCODE='23505', DETAIL='Duplicate customer and requirement within the same industry';
     END IF;
   END IF;
