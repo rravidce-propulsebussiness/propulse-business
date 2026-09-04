@@ -49,6 +49,6 @@ jobs:
           DB_NAME: investment_ci
           DB_USER: investment_ci
           DB_PASSWORD: investment_ci
-        run: node scripts/check-investment-integrity.js && node scripts/check-investment-revenue-allocation.js && node scripts/check-investment-no-fixed-return.js && node scripts/check-investment-reinvestment-integrity.js
+        run: node scripts/check-investment-integrity.js && node scripts/check-investment-revenue-allocation.js && node scripts/check-investment-no-fixed-return.js && node scripts/check-investment-reinvestment-integrity.js && node scripts/check-investment-reinvestment-choice.js
       - name: Verify backend syntax
         run: node --check src/services/investmentService.js && node --check src/services/leadPurchaseService.js && node --check src/services/adminCommercialService.js
