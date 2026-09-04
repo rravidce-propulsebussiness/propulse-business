@@ -1,0 +1,8 @@
+const cityService=require('../services/cityService');
+const slugify=v=>String(v||'').trim().toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+async function get(req,res){try{return res.json(await cityService.getSubcities(req.query.cityId||''));}catch(e){return res.status(500).json({error:'Failed to fetch subcities'});}}
+async function create(req,res){try{const {cityId,name,slug,pincode}=req.body;if(!cityId||!name)return res.status(400).json({error:'City and subcity name are required'});return res.status(201).json(await cityService.createSubcity({cityId,name:String(name).trim(),slug:slug||slugify(name),pincode}));}catch(e){return res.status(500).json({error:'Failed to create subcity'});}}
+async function update(req,res){try{const {cityId,name,slug,pincode}=req.body;if(!cityId||!name)return res.status(400).json({error:'City and subcity name are required'});const row=await cityService.updateSubcity(req.params.id,{cityId,name:String(name).trim(),slug:slug||slugify(name),pincode});return row?res.json(row):res.status(404).json({error:'Subcity not found'});}catch(e){return res.status(500).json({error:'Failed to update subcity'});}}
+async function remove(req,res){try{const row=await cityService.deactivateSubcity(req.params.id);return row?res.json(row):res.status(404).json({error:'Subcity not found'});}catch(e){return res.status(500).json({error:'Failed to deactivate subcity'});}}
+async function sync(req,res){try{const row=await cityService.syncSubcitiesForCity(req.params.cityId);return row?res.json(row):res.status(404).json({error:'City not found'});}catch(e){return res.status(502).json({error:e.message||'Failed to sync subcities'});}}
+module.exports={get,create,update,remove,sync};
