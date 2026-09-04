@@ -96,6 +96,14 @@ jobs:
           DB_USER: ci_smoke
           DB_PASSWORD: ci_smoke
         run: node scripts/check-lead-pincode-mapping.js
+      - name: Verify lead pricing duplicate integrity
+        env:
+          DB_HOST: 127.0.0.1
+          DB_PORT: 5432
+          DB_NAME: ci_smoke
+          DB_USER: ci_smoke
+          DB_PASSWORD: ci_smoke
+        run: node scripts/check-lead-pricing-integrity.js
       - name: Start backend
         env:
           PORT: 5000

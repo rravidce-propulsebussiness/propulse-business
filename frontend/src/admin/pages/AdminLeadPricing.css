@@ -415,14 +415,19 @@
   cursor: wait;
 }
 
+/* Rule cards expand to use the available panel width. A minimum card width
+   prevents Normal/Pro price columns from collapsing into each other. */
 .rule-cards {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr));
   gap: 16px;
+  align-items: start;
 }
 
 .rule-card {
   min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
   padding: 17px;
   border: 1px solid #e1e6ed;
   border-radius: 15px;
@@ -504,12 +509,12 @@
 
 .rule-prices > div {
   display: grid;
-  grid-template-columns: 45px minmax(0, 1fr) minmax(0, 1fr);
-  gap: 8px;
+  grid-template-columns: 52px minmax(110px, 1fr) minmax(110px, 1fr);
+  gap: 10px;
   align-items: center;
-  padding: 9px 10px;
+  padding: 10px 11px;
   border-bottom: 1px solid #eef1f5;
-  font-size: 10px;
+  font-size: 11px;
 }
 
 .rule-prices > div:last-child {
@@ -521,6 +526,7 @@
 }
 
 .rule-prices span {
+  min-width: 0;
   overflow: hidden;
   color: #7a8799;
   text-overflow: ellipsis;
@@ -529,6 +535,7 @@
 
 .rule-prices strong {
   color: #172033;
+  white-space: nowrap;
 }
 
 .card-actions {
@@ -567,7 +574,7 @@
   }
 
   .rule-cards {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr));
   }
 }
 
@@ -698,6 +705,13 @@
 
   .rule-top h3 {
     white-space: normal;
+  }
+
+  .rule-prices > div {
+    grid-template-columns: 46px minmax(0, 1fr) minmax(0, 1fr);
+    gap: 7px;
+    padding-inline: 9px;
+    font-size: 10px;
   }
 
   .card-actions {
