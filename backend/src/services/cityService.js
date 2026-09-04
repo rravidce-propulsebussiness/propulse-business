@@ -77,84 +77,26 @@ async function deactivateCity(id) {
 }
 
 async function syncCitiesForState(stateId) {
-  const stateResult = await pool.query(
-    `SELECT id, name
-     FROM states
-     WHERE id = $1 AND is_active = TRUE`,
-    [stateId]
-  );
-
+  const stateResult = await pool.query(`SELECT id, name FROM states WHERE id = $1 AND is_active = TRUE`, [stateId]);
   const state = stateResult.rows[0];
   if (!state) return null;
-
-  const response = await fetch('https://countriesnow.space/api/v0.1/countries/state/cities', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ country: 'India', state: state.name }),
-  });
-
-  if (!response.ok) {
-    throw new Error(`City provider returned ${response.status}`);
-  }
-
+  const response = await fetch('https://countriesnow.space/api/v0.1/countries/state/cities', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ country: 'India', state: state.name }) });
+  if (!response.ok) throw new Error(`City provider returned ${response.status}`);
   const payload = await response.json();
-  if (payload.error || !Array.isArray(payload.data)) {
-    throw new Error(payload.msg || 'Could not fetch cities for this state');
-  }
-
-  const uniqueCities = [...new Set(payload.data.map((name) => String(name).trim()).filter(Boolean))];
-  let added = 0;
-  let restored = 0;
-  let skipped = 0;
-
+  if (payload.error || !Array.isArray(payload.data)) throw new Error(payload.msg || 'Could not fetch cities for this state');
+  const uniqueCities = [...new Set(payload.data.map(name => String(name).trim()).filter(Boolean))];
+  let added = 0, restored = 0, skipped = 0;
   for (const name of uniqueCities) {
     const slug = slugify(name);
-    if (!slug) {
-      skipped += 1;
-      continue;
-    }
-
-    const existing = await pool.query(
-      `SELECT id, is_active
-       FROM cities
-       WHERE state_id = $1 AND (LOWER(name) = LOWER($2) OR slug = $3)
-       LIMIT 1`,
-      [state.id, name, slug]
-    );
-
+    if (!slug) { skipped += 1; continue; }
+    const existing = await pool.query(`SELECT id, is_active FROM cities WHERE state_id=$1 AND (LOWER(name)=LOWER($2) OR slug=$3) LIMIT 1`, [state.id,name,slug]);
     if (existing.rows[0]) {
-      if (!existing.rows[0].is_active) {
-        await pool.query(
-          `UPDATE cities
-           SET name = $1,
-               slug = $2,
-               is_active = TRUE,
-               updated_at = CURRENT_TIMESTAMP
-           WHERE id = $3`,
-          [name, slug, existing.rows[0].id]
-        );
-        restored += 1;
-      } else {
-        skipped += 1;
-      }
+      if (!existing.rows[0].is_active) { await pool.query(`UPDATE cities SET name=$1,slug=$2,is_active=TRUE,updated_at=CURRENT_TIMESTAMP WHERE id=$3`,[name,slug,existing.rows[0].id]); restored += 1; } else skipped += 1;
       continue;
     }
-
-    await pool.query(
-      `INSERT INTO cities (state_id, name, slug)
-       VALUES ($1, $2, $3)`,
-      [state.id, name, slug]
-    );
-    added += 1;
+    await pool.query(`INSERT INTO cities(state_id,name,slug) VALUES($1,$2,$3)`,[state.id,name,slug]); added += 1;
   }
-
-  return {
-    state,
-    totalFromProvider: uniqueCities.length,
-    added,
-    restored,
-    skipped,
-  };
+  return { state, totalFromProvider: uniqueCities.length, added, restored, skipped };
 }
 
 async function syncCityPincodes(cityId) {
@@ -167,7 +109,7 @@ async function syncCityPincodes(cityId) {
   const offices = Array.isArray(payload?.[0]?.PostOffice) ? payload[0].PostOffice : [];
   const seen = new Set(); let added = 0;
   for (const office of offices) {
-    const pincode = String(office?.Pincode || '').trim();
+    const pincode = String(office?.Pincode || office?.PINCode || '').trim();
     if (!/^\d{6}$/.test(pincode) || seen.has(pincode)) continue;
     seen.add(pincode);
     const result = await pool.query(`INSERT INTO city_pincodes(city_id,pincode,office_name,is_active) VALUES($1,$2,$3,TRUE) ON CONFLICT(city_id,pincode,office_name) DO UPDATE SET is_active=TRUE,updated_at=CURRENT_TIMESTAMP`, [city.id,pincode,String(office?.Name || '').trim() || null]);
@@ -178,17 +120,14 @@ async function syncCityPincodes(cityId) {
 }
 
 async function createSubcity({ cityId, name, slug, pincode, source='admin' }) {
-  const result = await pool.query(`INSERT INTO subcities(city_id,name,slug,pincode,source) VALUES($1,$2,$3,$4,$5) RETURNING *`, [cityId,name,slug,pincode || null,source]);
-  return result.rows[0];
+  return (await pool.query(`INSERT INTO subcities(city_id,name,slug,pincode,source) VALUES($1,$2,$3,$4,$5) RETURNING *`, [cityId,name,slug,pincode || null,source])).rows[0];
 }
 async function getSubcities(cityId) {
   const params=[]; const where=['sc.is_active=TRUE'];
   if (cityId) { params.push(cityId); where.push(`sc.city_id=$${params.length}`); }
   return (await pool.query(`SELECT sc.*,c.name AS city_name,s.name AS state_name FROM subcities sc JOIN cities c ON c.id=sc.city_id JOIN states s ON s.id=c.state_id WHERE ${where.join(' AND ')} ORDER BY s.name,c.name,sc.name`,params)).rows;
 }
-async function updateSubcity(id,{cityId,name,slug,pincode,source}) {
-  return (await pool.query(`UPDATE subcities SET city_id=$1,name=$2,slug=$3,pincode=$4,source=COALESCE($5,source),updated_at=CURRENT_TIMESTAMP WHERE id=$6 AND is_active=TRUE RETURNING *`,[cityId,name,slug,pincode||null,source||null,id])).rows[0] || null;
-}
+async function updateSubcity(id,{cityId,name,slug,pincode,source}) { return (await pool.query(`UPDATE subcities SET city_id=$1,name=$2,slug=$3,pincode=$4,source=COALESCE($5,source),updated_at=CURRENT_TIMESTAMP WHERE id=$6 AND is_active=TRUE RETURNING *`,[cityId,name,slug,pincode||null,source||null,id])).rows[0] || null; }
 async function deactivateSubcity(id) { return (await pool.query(`UPDATE subcities SET is_active=FALSE,updated_at=CURRENT_TIMESTAMP WHERE id=$1 AND is_active=TRUE RETURNING *`,[id])).rows[0] || null; }
 
 async function syncSubcitiesForCity(cityId) {
@@ -197,8 +136,7 @@ async function syncSubcitiesForCity(cityId) {
   const geo=await fetch(`https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&country=India&state=${encodeURIComponent(city.state_name)}&city=${encodeURIComponent(city.name)}`,{headers:{'User-Agent':'Propulse-Business/1.0'}});
   if(!geo.ok) throw new Error(`OpenStreetMap geocoder returned ${geo.status}`);
   const points=await geo.json(); const point=points[0]; if(!point) throw new Error('City could not be geocoded');
-  const lat=Number(point.lat),lon=Number(point.lon);
-  const query=`[out:json][timeout:25];(node[place~"^(suburb|neighbourhood|quarter)$"](around:15000,${lat},${lon});way[place~"^(suburb|neighbourhood|quarter)$"](around:15000,${lat},${lon});relation[place~"^(suburb|neighbourhood|quarter)$"](around:15000,${lat},${lon}););out center tags;`;
+  const query=`[out:json][timeout:25];(node[place~"^(suburb|neighbourhood|quarter)$"](around:15000,${Number(point.lat)},${Number(point.lon)});way[place~"^(suburb|neighbourhood|quarter)$"](around:15000,${Number(point.lat)},${Number(point.lon)});relation[place~"^(suburb|neighbourhood|quarter)$"](around:15000,${Number(point.lat)},${Number(point.lon)}););out center tags;`;
   const response=await fetch('https://overpass-api.de/api/interpreter',{method:'POST',headers:{'Content-Type':'text/plain','User-Agent':'Propulse-Business/1.0'},body:query});
   if(!response.ok) throw new Error(`OpenStreetMap coverage provider returned ${response.status}`);
   const payload=await response.json(); const names=new Map();
@@ -210,27 +148,16 @@ async function syncSubcitiesForCity(cityId) {
   }
   return {city,totalFromProvider:names.size,added,restored};
 }
-
-async function syncCoverageBatch(limit=20) {
-  const cities = (await pool.query(`SELECT id FROM cities WHERE is_active=TRUE ORDER BY location_sync_at NULLS FIRST, location_sync_at ASC, id ASC LIMIT $1`, [Math.max(1,Math.min(50,Number(limit)||20))])).rows;
-  const results=[];
-  for(const city of cities){
-    try{ results.push({id:city.id, ...(await syncCityCoverage(city.id))}); }
-    catch(error){ results.push({id:city.id,error:error.message}); }
-  }
-  return results;
+async function syncPincodesBatch(limit=20) {
+  const cities=(await pool.query(`SELECT id FROM cities WHERE is_active=TRUE ORDER BY location_sync_at NULLS FIRST,location_sync_at ASC,id ASC LIMIT $1`,[Math.max(1,Math.min(50,Number(limit)||20))])).rows;
+  const results=[]; for(const city of cities){try{results.push({id:city.id,result:await syncCityPincodes(city.id)});}catch(error){results.push({id:city.id,error:error.message});}} return results;
 }
-
 async function syncCityCoverage(cityId) {
   const [pincodes,subcities]=await Promise.allSettled([syncCityPincodes(cityId),syncSubcitiesForCity(cityId)]);
-  return {pincodes:pincodes.status==='fulfilled'?pincodes.value:null, subcities:subcities.status==='fulfilled'?subcities.value:null, errors:[pincodes,subcities].filter(x=>x.status==='rejected').map(x=>x.reason.message)};
+  return {pincodes:pincodes.status==='fulfilled'?pincodes.value:null,subcities:subcities.status==='fulfilled'?subcities.value:null,errors:[pincodes,subcities].filter(x=>x.status==='rejected').map(x=>x.reason.message)};
 }
-
-module.exports = {
-  createCity,
-  getCities,
-  getCityById,
-  updateCity,
-  deactivateCity,
-  syncCitiesForState, syncCityPincodes, createSubcity, getSubcities, updateSubcity, deactivateSubcity, syncSubcitiesForCity, syncCityCoverage, syncCoverageBatch,
-};
+async function syncCoverageBatch(limit=20) {
+  const cities=(await pool.query(`SELECT id FROM cities WHERE is_active=TRUE ORDER BY location_sync_at NULLS FIRST,location_sync_at ASC,id ASC LIMIT $1`,[Math.max(1,Math.min(50,Number(limit)||20))])).rows;
+  const results=[]; for(const city of cities){try{results.push({id:city.id,...(await syncCityCoverage(city.id))});}catch(error){results.push({id:city.id,error:error.message});}} return results;
+}
+module.exports={createCity,getCities,getCityById,updateCity,deactivateCity,syncCitiesForState,syncCityPincodes,syncPincodesBatch,createSubcity,getSubcities,updateSubcity,deactivateSubcity,syncSubcitiesForCity,syncCityCoverage,syncCoverageBatch};
