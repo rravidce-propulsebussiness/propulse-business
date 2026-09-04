@@ -115,19 +115,17 @@ async function syncCityPincodes(cityId) {
       const pincode = String(office?.Pincode || office?.PINCode || '').trim();
       if (!/^\d{6}$/.test(pincode) || seen.has(pincode)) continue;
       seen.add(pincode);
+      const officeName = String(office?.Name || '').trim() || null;
       const result = await pool.query(
         `INSERT INTO city_pincodes(city_id,pincode,office_name,is_active)
          VALUES($1,$2,$3,TRUE)
-         ON CONFLICT(city_id,pincode,office_name) DO UPDATE SET is_active=TRUE,updated_at=CURRENT_TIMESTAMP`,
-        [city.id,pincode,String(office?.Name || '').trim() || null]
+         ON CONFLICT(city_id,pincode) DO UPDATE SET office_name=COALESCE(EXCLUDED.office_name,city_pincodes.office_name),is_active=TRUE,updated_at=CURRENT_TIMESTAMP`,
+        [city.id,pincode,officeName]
       );
       if (result.rowCount) added += 1;
     }
   }
 
-  // Reconcile against the canonical India-wide directory when it is available.
-  // This catches PINs that India Post returns for the district/state but the
-  // city-name lookup misses. It never invents or assigns a PIN to a sub-city.
   const directoryRows = await pool.query(
     `SELECT DISTINCT pincode
        FROM india_pincodes
@@ -143,7 +141,7 @@ async function syncCityPincodes(cityId) {
     const result = await pool.query(
       `INSERT INTO city_pincodes(city_id,pincode,office_name,is_active)
        VALUES($1,$2,NULL,TRUE)
-       ON CONFLICT(city_id,pincode,office_name) DO UPDATE SET is_active=TRUE,updated_at=CURRENT_TIMESTAMP`,
+       ON CONFLICT(city_id,pincode) DO UPDATE SET is_active=TRUE,updated_at=CURRENT_TIMESTAMP`,
       [city.id,pincode]
     );
     if (result.rowCount) added += 1;
@@ -198,7 +196,7 @@ async function syncSubcitiesForCity(cityId) {
       added++;
     }
     if(item.pincode){
-      await pool.query(`INSERT INTO city_pincodes(city_id,pincode,office_name,is_active) VALUES($1,$2,$3,TRUE) ON CONFLICT(city_id,pincode,office_name) DO UPDATE SET is_active=TRUE,updated_at=CURRENT_TIMESTAMP`,[city.id,item.pincode,item.name]);
+      await pool.query(`INSERT INTO city_pincodes(city_id,pincode,office_name,is_active) VALUES($1,$2,$3,TRUE) ON CONFLICT(city_id,pincode) DO UPDATE SET office_name=COALESCE(EXCLUDED.office_name,city_pincodes.office_name),is_active=TRUE,updated_at=CURRENT_TIMESTAMP`,[city.id,item.pincode,item.name]);
     }
   }
   return {city,totalFromProvider:names.size,added,restored,updatedPincodes};
@@ -212,7 +210,7 @@ async function syncCityCoverage(cityId) {
   return {pincodes:pincodes.status==='fulfilled'?pincodes.value:null,subcities:subcities.status==='fulfilled'?subcities.value:null,errors:[pincodes,subcities].filter(x=>x.status==='rejected').map(x=>x.reason.message)};
 }
 async function syncCoverageBatch(limit=20) {
-  const cities=(await pool.query(`SELECT id FROM cities WHERE is_active=TRUE ORDER BY location_sync_at NULLS FIRST,location_sync_at ASC,id ASC LIMIT $1`,[Math.max(1,Math.min(50,Number(limit)||20))])).rows;
+  const cities=(await pool.query(`SELECT id FROM cities WHERE is_active=TRUE ORDER BY location_sync_at NULLS FIRST,location_sync_at ASC LIMIT $1`,[Math.max(1,Math.min(50,Number(limit)||20))])).rows;
   const results=[]; for(const city of cities){try{results.push({id:city.id,...(await syncCityCoverage(city.id))});}catch(error){results.push({id:city.id,error:error.message});}} return results;
 }
 module.exports={createCity,getCities,getCityById,updateCity,deactivateCity,syncCitiesForState,syncCityPincodes,syncPincodesBatch,createSubcity,getSubcities,updateSubcity,deactivateSubcity,syncSubcitiesForCity,syncCityCoverage,syncCoverageBatch};
