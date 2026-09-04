@@ -24,13 +24,4 @@ async function updateUserProfile(req, res) {
     return res.status(500).json({ error: 'Failed to update user profile' });
   }
 }
-async function updateMembership(req, res) {
-  try { return res.json(await adminService.updateMembership(req.params.id, req.body || {})); }
-  catch (error) {
-    if (['NOT_FOUND','NO_MEMBERSHIP','INVALID_MEMBERSHIP_ACTION','INVALID_PLAN','INVALID_DAYS','INVALID_DATES'].includes(error.code)) return res.status(400).json({ error: error.message });
-    console.error('Update admin membership failed:', error.message);
-    return res.status(500).json({ error: 'Failed to update membership' });
-  }
-}
-async function removeMembership(req, res) { return updateMembership({ params: req.params, body: { action: 'terminate' } }, res); }
-module.exports = { getDashboardStats, getUsers, createAdmin, setUserStatus, updateUserProfile, updateMembership, removeMembership };
+module.exports = { getDashboardStats, getUsers, createAdmin, setUserStatus, updateUserProfile };
