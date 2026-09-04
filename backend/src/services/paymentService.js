@@ -16,15 +16,16 @@ async function createManualPayment({userId,amount,manualReference,proofUrl,notes
   const expected=Number(plan.price),submitted=Number(amount);
   if(!Number.isFinite(expected)||expected<=0||!Number.isFinite(submitted)||Math.abs(expected-submitted)>0.01) throw Object.assign(new Error('Payment amount does not match the selected membership plan'),{code:'INVALID_AMOUNT'});
   const reference=String(manualReference).trim();
-  const duplicate=await pool.query(`SELECT id FROM payments WHERE payment_method='manual' AND LOWER(BTRIM(manual_reference))=LOWER(BTRIM($1)) LIMIT 1`,[reference]);
-  if(duplicate.rows[0]) throw Object.assign(new Error('This payment reference / UTR has already been submitted'),{code:'DUPLICATE_REFERENCE'});
+  const client=await pool.connect();
   try {
-    const result=await pool.query(`INSERT INTO payments (user_id,membership_plan_id,amount,payment_method,status,manual_reference,proof_url,notes) VALUES ($1,$2,$3,'manual','pending',$4,$5,$6) RETURNING *`,[userId,plan.id,expected,reference,proofUrl||null,notes||`${plan.name} membership`]);
+    await client.query('BEGIN');
+    await client.query('SELECT pg_advisory_xact_lock(hashtext($1))',[`payment-reference:${reference.toLowerCase()}`]);
+    const duplicate=await client.query(`SELECT id FROM payments WHERE payment_method='manual' AND LOWER(BTRIM(manual_reference))=LOWER(BTRIM($1)) LIMIT 1`,[reference]);
+    if(duplicate.rows[0]) throw Object.assign(new Error('This payment reference / UTR has already been submitted'),{code:'DUPLICATE_REFERENCE'});
+    const result=await client.query(`INSERT INTO payments (user_id,membership_plan_id,amount,payment_method,status,manual_reference,proof_url,notes) VALUES ($1,$2,$3,'manual','pending',$4,$5,$6) RETURNING *`,[userId,plan.id,expected,reference,proofUrl||null,notes||`${plan.name} membership`]);
+    await client.query('COMMIT');
     return result.rows[0];
-  } catch(error) {
-    if(error.code==='23505') throw Object.assign(new Error('This payment reference / UTR has already been submitted'),{code:'DUPLICATE_REFERENCE'});
-    throw error;
-  }
+  }catch(error){await client.query('ROLLBACK');throw error;}finally{client.release();}
 }
 
 async function getPayments({status,search,page=1,limit=50}) {
