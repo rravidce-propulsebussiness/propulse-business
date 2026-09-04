@@ -44,9 +44,24 @@ function Profile() {
   function update(field, value) { setForm((x) => ({ ...x, [field]: value })); setMessage('') }
   function updateService(index, field, value) {
     setServiceSelections((items) => items.map((x, i) => i !== index ? x : field === 'industryId' ? { industryId: value, serviceId: '', subserviceId: '' } : field === 'serviceId' ? { ...x, serviceId: value, subserviceId: '' } : { ...x, [field]: value }))
+    setMessage('')
   }
   function updateLocation(index, field, value) {
     setLocationSelections((items) => items.map((x, i) => i !== index ? x : field === 'stateId' ? { stateId: value, cityId: '' } : { ...x, cityId: value }))
+    setMessage('')
+  }
+  function addAllServicesForIndustry(index) {
+    const industryId = serviceSelections[index]?.industryId
+    if (!industryId) return setError('Select an industry first.')
+    const available = services.filter((service) => String(service.industry_id) === String(industryId))
+    if (!available.length) return setError('No services are available for this industry.')
+    setServiceSelections((items) => {
+      const existing = new Set(items.map((item) => `${item.industryId}:${item.serviceId}`))
+      const additions = available.filter((service) => !existing.has(`${industryId}:${service.id}`)).map((service) => ({ industryId: String(industryId), serviceId: String(service.id), subserviceId: '' }))
+      return additions.length ? [...items, ...additions] : items
+    })
+    setMessage('All available services for this industry were added.')
+    setError('')
   }
 
   async function save(e) {
@@ -90,7 +105,7 @@ function Profile() {
         <section className="profile-panel">
           <div className="panel-title"><div><span>02</span><h2>Services you provide</h2><p>Add every service you want matching leads for.</p></div><button type="button" onClick={() => setServiceSelections((x) => [...x, emptyService()])}>+ Add service</button></div>
           <div className="profile-list">
-            {serviceSelections.map((x, i) => <div className="profile-row" key={`s-${i}`}><div className="row-number">{String(i + 1).padStart(2, '0')}</div><label>Industry<select value={x.industryId} onChange={(e) => updateService(i, 'industryId', e.target.value)} required><option value="">Select industry</option>{industries.map((v) => <option key={v.id} value={v.id}>{v.name}</option>)}</select></label><label>Service<select value={x.serviceId} onChange={(e) => updateService(i, 'serviceId', e.target.value)} disabled={!x.industryId} required><option value="">Select service</option>{(serviceOptions[i] || []).map((v) => <option key={v.id} value={v.id}>{v.name}</option>)}</select></label><label>Subservice <small>Optional</small><select value={x.subserviceId} onChange={(e) => updateService(i, 'subserviceId', e.target.value)} disabled={!x.serviceId}><option value="">All related</option>{(subserviceOptions[i] || []).map((v) => <option key={v.id} value={v.id}>{v.name}</option>)}</select></label><button type="button" className="row-remove" onClick={() => setServiceSelections((items) => items.filter((_, n) => n !== i))}>Remove</button></div>)}
+            {serviceSelections.map((x, i) => <div className="profile-row" key={`s-${i}`}><div className="row-number">{String(i + 1).padStart(2, '0')}</div><label>Industry<select value={x.industryId} onChange={(e) => updateService(i, 'industryId', e.target.value)} required><option value="">Select industry</option>{industries.map((v) => <option key={v.id} value={v.id}>{v.name}</option>)}</select></label><label>Service<select value={x.serviceId} onChange={(e) => updateService(i, 'serviceId', e.target.value)} disabled={!x.industryId} required><option value="">Select service</option>{(serviceOptions[i] || []).map((v) => <option key={v.id} value={v.id}>{v.name}</option>)}</select></label><label>Subservice <small>Optional · blank means all</small><select value={x.subserviceId} onChange={(e) => updateService(i, 'subserviceId', e.target.value)} disabled={!x.serviceId}><option value="">All related</option>{(subserviceOptions[i] || []).map((v) => <option key={v.id} value={v.id}>{v.name}</option>)}</select></label><button type="button" className="add-all-services" onClick={() => addAllServicesForIndustry(i)} disabled={!x.industryId}>Add all services</button><button type="button" className="row-remove" onClick={() => setServiceSelections((items) => items.filter((_, n) => n !== i))}>Remove</button></div>)}
           </div>
         </section>
 
