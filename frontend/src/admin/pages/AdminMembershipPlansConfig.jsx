@@ -1,10 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { clearSession, getToken } from '../../utils/auth';
+import { apiRequest } from '../../utils/api';
 import './AdminMembershipPlans.css';
 import './AdminMembershipPlansConfig.css';
 
-const API = 'http://localhost:5000/api';
 const DEFAULT_CYCLES = [
   { key: 'monthly', label: 'Monthly', months: 1 },
   { key: 'quarterly', label: 'Quarterly', months: 3 },
@@ -70,7 +68,6 @@ function freshForm(planType = 'pro') {
 }
 
 export default function AdminMembershipPlansConfig() {
-  const nav = useNavigate();
   const [tab, setTab] = useState('pro');
   const [plans, setPlans] = useState([]);
   const [form, setForm] = useState(freshForm('pro'));
@@ -80,13 +77,7 @@ export default function AdminMembershipPlansConfig() {
   const [error, setError] = useState('');
 
   async function req(path, options = {}) {
-    const token = getToken();
-    if (!token) { clearSession(); nav('/login', { replace: true }); throw new Error('Session expired'); }
-    const response = await fetch(API + path, { ...options, headers: { 'Content-Type': 'application/json', ...(options.headers || {}), Authorization: `Bearer ${token}` } });
-    const data = await response.json().catch(() => ({}));
-    if (response.status === 401) { clearSession(); nav('/login', { replace: true }); throw new Error('Session expired'); }
-    if (!response.ok) throw new Error(data.error || 'Request failed');
-    return data;
+    return apiRequest(path, options);
   }
   async function load() {
     setLoading(true);
