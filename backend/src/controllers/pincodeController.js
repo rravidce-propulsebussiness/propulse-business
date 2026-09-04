@@ -22,40 +22,4 @@ async function getOne(req, res) {
   }
 }
 
-async function syncState(req, res) {
-  try {
-    const result = await pincodeService.syncPincodesForState(req.params.stateId);
-    if (!result) return res.status(404).json({ error: 'State not found' });
-    return res.json({ message: `Pincodes synced for ${result.state.name}`, ...result });
-  } catch (error) {
-    console.error('Sync state pincodes failed:', error.message);
-    return res.status(502).json({ error: error.message || 'Failed to sync state pincodes' });
-  }
-}
-
-let allIndiaJob = { status: 'idle', startedAt: null, finishedAt: null, result: null, error: null };
-
-async function syncAll(req, res) {
-  if (allIndiaJob.status === 'running') {
-    return res.status(202).json({ ...allIndiaJob, message: 'All-India pincode synchronization is already running.' });
-  }
-  allIndiaJob = { status: 'running', startedAt: new Date().toISOString(), finishedAt: null, result: null, error: null };
-  setImmediate(async () => {
-    try {
-      allIndiaJob.result = await pincodeService.syncAllIndiaPincodes();
-      allIndiaJob.status = 'completed';
-    } catch (error) {
-      allIndiaJob.status = 'failed';
-      allIndiaJob.error = error.message;
-    } finally {
-      allIndiaJob.finishedAt = new Date().toISOString();
-    }
-  });
-  return res.status(202).json(allIndiaJob);
-}
-
-function syncStatus(req, res) {
-  return res.json(allIndiaJob);
-}
-
-module.exports = { search, getOne, syncState, syncAll, syncStatus };
+module.exports = { search, getOne };

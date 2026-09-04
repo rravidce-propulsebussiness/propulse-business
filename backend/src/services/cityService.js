@@ -8,6 +8,40 @@ function slugify(value) {
     .replace(/^-|-$/g, '');
 }
 
+function normalizePincode(value) {
+  const pincode = String(value || '').trim();
+  return /^\d{6}$/.test(pincode) ? pincode : null;
+}
+
+async function syncCityPincodeIndex(cityId, pincode, officeName) {
+  if (!pincode) return;
+  await pool.query(
+    `INSERT INTO city_pincodes(city_id,pincode,office_name,is_active)
+     VALUES($1,$2,$3,TRUE)
+     ON CONFLICT(city_id,pincode) DO UPDATE
+       SET office_name=COALESCE(EXCLUDED.office_name,city_pincodes.office_name),
+           is_active=TRUE,
+           updated_at=CURRENT_TIMESTAMP`,
+    [cityId, pincode, officeName || null]
+  );
+}
+
+async function removeUnusedCityPincode(cityId, pincode) {
+  if (!pincode) return;
+  await pool.query(
+    `DELETE FROM city_pincodes cp
+      WHERE cp.city_id=$1
+        AND cp.pincode=$2
+        AND NOT EXISTS (
+          SELECT 1 FROM subcities sc
+           WHERE sc.city_id=cp.city_id
+             AND sc.pincode=cp.pincode
+             AND sc.is_active=TRUE
+        )`,
+    [cityId, pincode]
+  );
+}
+
 async function createCity({ stateId, name, slug }) {
   const result = await pool.query(
     `INSERT INTO cities (state_id, name, slug)
@@ -99,68 +133,60 @@ async function syncCitiesForState(stateId) {
   return { state, totalFromProvider: uniqueCities.length, added, restored, skipped };
 }
 
-async function syncCityPincodes(cityId) {
-  const cityResult = await pool.query(`SELECT c.id,c.name,s.id AS state_id,s.name AS state_name FROM cities c JOIN states s ON s.id=c.state_id WHERE c.id=$1 AND c.is_active=TRUE AND s.is_active=TRUE`, [cityId]);
-  const city = cityResult.rows[0];
-  if (!city) return null;
-
-  const seen = new Set();
-  let added = 0;
-
-  const response = await fetch(`https://api.postalpincode.in/postoffice/${encodeURIComponent(city.name)}`);
-  if (response.ok) {
-    const payload = await response.json();
-    const offices = Array.isArray(payload?.[0]?.PostOffice) ? payload[0].PostOffice : [];
-    for (const office of offices) {
-      const pincode = String(office?.Pincode || office?.PINCode || '').trim();
-      if (!/^\d{6}$/.test(pincode) || seen.has(pincode)) continue;
-      seen.add(pincode);
-      const officeName = String(office?.Name || '').trim() || null;
-      const result = await pool.query(
-        `INSERT INTO city_pincodes(city_id,pincode,office_name,is_active)
-         VALUES($1,$2,$3,TRUE)
-         ON CONFLICT(city_id,pincode) DO UPDATE SET office_name=COALESCE(EXCLUDED.office_name,city_pincodes.office_name),is_active=TRUE,updated_at=CURRENT_TIMESTAMP`,
-        [city.id,pincode,officeName]
-      );
-      if (result.rowCount) added += 1;
-    }
-  }
-
-  const directoryRows = await pool.query(
-    `SELECT DISTINCT pincode
-       FROM india_pincodes
-      WHERE is_active=TRUE
-        AND state_id=$1
-        AND LOWER(COALESCE(district_name,''))=LOWER($2)`,
-    [city.state_id, city.name]
-  );
-  for (const row of directoryRows.rows) {
-    const pincode = String(row.pincode || '').trim();
-    if (!/^\d{6}$/.test(pincode) || seen.has(pincode)) continue;
-    seen.add(pincode);
-    const result = await pool.query(
-      `INSERT INTO city_pincodes(city_id,pincode,office_name,is_active)
-       VALUES($1,$2,NULL,TRUE)
-       ON CONFLICT(city_id,pincode) DO UPDATE SET is_active=TRUE,updated_at=CURRENT_TIMESTAMP`,
-      [city.id,pincode]
-    );
-    if (result.rowCount) added += 1;
-  }
-
-  await pool.query(`UPDATE cities SET location_sync_at=CURRENT_TIMESTAMP,updated_at=CURRENT_TIMESTAMP WHERE id=$1`, [city.id]);
-  return { city, totalFromProvider: seen.size, added };
-}
-
 async function createSubcity({ cityId, name, slug, pincode, source='admin' }) {
-  return (await pool.query(`INSERT INTO subcities(city_id,name,slug,pincode,source) VALUES($1,$2,$3,$4,$5) RETURNING *`, [cityId,name,slug,pincode || null,source])).rows[0];
+  const normalizedPincode = normalizePincode(pincode);
+  const result = await pool.query(
+    `INSERT INTO subcities(city_id,name,slug,pincode,source)
+     VALUES($1,$2,$3,$4,$5)
+     RETURNING *`,
+    [cityId,name,slug,normalizedPincode,source]
+  );
+  const subcity = result.rows[0];
+  if (normalizedPincode) await syncCityPincodeIndex(cityId, normalizedPincode, name);
+  return subcity;
 }
+
 async function getSubcities(cityId) {
   const params=[]; const where=['sc.is_active=TRUE'];
   if (cityId) { params.push(cityId); where.push(`sc.city_id=$${params.length}`); }
   return (await pool.query(`SELECT sc.*,c.name AS city_name,s.name AS state_name FROM subcities sc JOIN cities c ON c.id=sc.city_id JOIN states s ON s.id=c.state_id WHERE ${where.join(' AND ')} ORDER BY s.name,c.name,sc.name`,params)).rows;
 }
-async function updateSubcity(id,{cityId,name,slug,pincode,source}) { return (await pool.query(`UPDATE subcities SET city_id=$1,name=$2,slug=$3,pincode=$4,source=COALESCE($5,source),updated_at=CURRENT_TIMESTAMP WHERE id=$6 AND is_active=TRUE RETURNING *`,[cityId,name,slug,pincode||null,source||null,id])).rows[0] || null; }
-async function deactivateSubcity(id) { return (await pool.query(`UPDATE subcities SET is_active=FALSE,updated_at=CURRENT_TIMESTAMP WHERE id=$1 AND is_active=TRUE RETURNING *`,[id])).rows[0] || null; }
+
+async function updateSubcity(id,{cityId,name,slug,pincode,source}) {
+  const normalizedPincode = normalizePincode(pincode);
+  const existing = await pool.query(`SELECT city_id,pincode FROM subcities WHERE id=$1 AND is_active=TRUE`, [id]);
+  if (!existing.rows[0]) return null;
+
+  const result = await pool.query(
+    `UPDATE subcities
+        SET city_id=$1,
+            name=$2,
+            slug=$3,
+            pincode=$4,
+            source=COALESCE($5,source),
+            updated_at=CURRENT_TIMESTAMP
+      WHERE id=$6 AND is_active=TRUE
+      RETURNING *`,
+    [cityId,name,slug,normalizedPincode,source || null,id]
+  );
+  const subcity = result.rows[0] || null;
+  if (!subcity) return null;
+
+  if (normalizedPincode) {
+    await syncCityPincodeIndex(cityId, normalizedPincode, name);
+  }
+  if (existing.rows[0].pincode && (existing.rows[0].pincode !== normalizedPincode || existing.rows[0].city_id !== Number(cityId))) {
+    await removeUnusedCityPincode(existing.rows[0].city_id, existing.rows[0].pincode);
+  }
+  return subcity;
+}
+
+async function deactivateSubcity(id) {
+  const result = await pool.query(`UPDATE subcities SET is_active=FALSE,updated_at=CURRENT_TIMESTAMP WHERE id=$1 AND is_active=TRUE RETURNING *`,[id]);
+  const subcity = result.rows[0] || null;
+  if (subcity?.pincode) await removeUnusedCityPincode(subcity.city_id, subcity.pincode);
+  return subcity;
+}
 
 async function syncSubcitiesForCity(cityId) {
   const cityResult = await pool.query(`SELECT c.id,c.name,s.name AS state_name FROM cities c JOIN states s ON s.id=c.state_id WHERE c.id=$1 AND c.is_active=TRUE AND s.is_active=TRUE`,[cityId]);
@@ -177,40 +203,31 @@ async function syncSubcitiesForCity(cityId) {
     if(!name) continue;
     const key=slugify(name);
     if(!key||names.has(key)) continue;
-    const pincode=String(item.tags?.['addr:postcode'] || item.tags?.postcode || '').trim();
-    names.set(key,{name,key,externalId:`${item.type}/${item.id}`,pincode:/^\d{6}$/.test(pincode)?pincode:null});
+    names.set(key,{name,key,externalId:`${item.type}/${item.id}`});
   }
-  let added=0,restored=0,updatedPincodes=0;
+  let added=0,restored=0;
   for(const item of names.values()){
-    const existing=await pool.query(`SELECT id,is_active,pincode FROM subcities WHERE city_id=$1 AND slug=$2 LIMIT 1`,[city.id,item.key]);
+    const existing=await pool.query(`SELECT id,is_active FROM subcities WHERE city_id=$1 AND slug=$2 LIMIT 1`,[city.id,item.key]);
     if(existing.rows[0]){
       if(!existing.rows[0].is_active){
-        await pool.query(`UPDATE subcities SET name=$1,is_active=TRUE,source='openstreetmap',external_id=$2,pincode=COALESCE($3,pincode),updated_at=CURRENT_TIMESTAMP WHERE id=$4`,[item.name,item.externalId,item.pincode,existing.rows[0].id]);
+        await pool.query(`UPDATE subcities SET name=$1,is_active=TRUE,source='openstreetmap',external_id=$2,updated_at=CURRENT_TIMESTAMP WHERE id=$3`,[item.name,item.externalId,existing.rows[0].id]);
         restored++;
-      } else if(item.pincode && existing.rows[0].pincode !== item.pincode){
-        await pool.query(`UPDATE subcities SET pincode=$1,source='openstreetmap',external_id=$2,updated_at=CURRENT_TIMESTAMP WHERE id=$3`,[item.pincode,item.externalId,existing.rows[0].id]);
-        updatedPincodes++;
       }
     } else {
-      await pool.query(`INSERT INTO subcities(city_id,name,slug,pincode,source,external_id) VALUES($1,$2,$3,$4,'openstreetmap',$5)`,[city.id,item.name,item.key,item.pincode,item.externalId]);
+      await pool.query(`INSERT INTO subcities(city_id,name,slug,pincode,source,external_id) VALUES($1,$2,$3,NULL,'openstreetmap',$4)`,[city.id,item.name,item.key,item.externalId]);
       added++;
     }
-    if(item.pincode){
-      await pool.query(`INSERT INTO city_pincodes(city_id,pincode,office_name,is_active) VALUES($1,$2,$3,TRUE) ON CONFLICT(city_id,pincode) DO UPDATE SET office_name=COALESCE(EXCLUDED.office_name,city_pincodes.office_name),is_active=TRUE,updated_at=CURRENT_TIMESTAMP`,[city.id,item.pincode,item.name]);
-    }
   }
-  return {city,totalFromProvider:names.size,added,restored,updatedPincodes};
+  return {city,totalFromProvider:names.size,added,restored};
 }
-async function syncPincodesBatch(limit=20) {
-  const cities=(await pool.query(`SELECT id FROM cities WHERE is_active=TRUE ORDER BY location_sync_at NULLS FIRST,location_sync_at ASC,id ASC LIMIT $1`,[Math.max(1,Math.min(50,Number(limit)||20))])).rows;
-  const results=[]; for(const city of cities){try{results.push({id:city.id,result:await syncCityPincodes(city.id)});}catch(error){results.push({id:city.id,error:error.message});}} return results;
-}
+
 async function syncCityCoverage(cityId) {
-  const [pincodes,subcities]=await Promise.allSettled([syncCityPincodes(cityId),syncSubcitiesForCity(cityId)]);
-  return {pincodes:pincodes.status==='fulfilled'?pincodes.value:null,subcities:subcities.status==='fulfilled'?subcities.value:null,errors:[pincodes,subcities].filter(x=>x.status==='rejected').map(x=>x.reason.message)};
+  const subcities = await syncSubcitiesForCity(cityId);
+  return { subcities, errors: [] };
 }
+
 async function syncCoverageBatch(limit=20) {
   const cities=(await pool.query(`SELECT id FROM cities WHERE is_active=TRUE ORDER BY location_sync_at NULLS FIRST,location_sync_at ASC LIMIT $1`,[Math.max(1,Math.min(50,Number(limit)||20))])).rows;
   const results=[]; for(const city of cities){try{results.push({id:city.id,...(await syncCityCoverage(city.id))});}catch(error){results.push({id:city.id,error:error.message});}} return results;
 }
-module.exports={createCity,getCities,getCityById,updateCity,deactivateCity,syncCitiesForState,syncCityPincodes,syncPincodesBatch,createSubcity,getSubcities,updateSubcity,deactivateSubcity,syncSubcitiesForCity,syncCityCoverage,syncCoverageBatch};
+module.exports={createCity,getCities,getCityById,updateCity,deactivateCity,syncCitiesForState,createSubcity,getSubcities,updateSubcity,deactivateSubcity,syncSubcitiesForCity,syncCityCoverage,syncCoverageBatch};
