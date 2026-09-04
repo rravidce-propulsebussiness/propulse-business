@@ -8,7 +8,7 @@ async function createManualPayment(req, res) {
     res.status(201).json(payment);
   } catch (error) {
     console.error('Create manual payment failed:', error.message);
-    const status = ['INVALID_PLAN','PLAN_NOT_FOUND','INVALID_AMOUNT','REFERENCE_REQUIRED','DUPLICATE_REFERENCE','PRO_REQUIRED'].includes(error.code) ? 400 : 500;
+    const status = error.code === 'DUPLICATE_REFERENCE' ? 409 : ['INVALID_PLAN','PLAN_NOT_FOUND','INVALID_AMOUNT','REFERENCE_REQUIRED','PRO_REQUIRED'].includes(error.code) ? 400 : 500;
     res.status(status).json({ error: error.message || 'Failed to create payment', code: error.code });
   }
 }
@@ -28,7 +28,12 @@ async function getCurrentMembership(req, res) {
 
 async function getPayments(req, res) {
   try {
-    res.json(await paymentService.getPayments({ status: req.query.status, search: req.query.search }));
+    res.json(await paymentService.getPayments({
+      status: req.query.status,
+      search: req.query.search,
+      page: req.query.page,
+      limit: req.query.limit,
+    }));
   } catch (error) {
     console.error('Get payments failed:', error.message);
     res.status(500).json({ error: 'Failed to fetch payments' });
@@ -38,8 +43,8 @@ async function getPayments(req, res) {
 async function updatePaymentStatus(req, res) {
   try {
     const { status } = req.body;
-    if (!['paid', 'rejected', 'failed', 'refunded'].includes(status)) {
-      return res.status(400).json({ error: 'Invalid payment status' });
+    if (!['paid', 'rejected', 'failed'].includes(status)) {
+      return res.status(400).json({ error: 'Only paid, rejected, or failed are valid admin review outcomes' });
     }
     const payment = await paymentService.updatePaymentStatus(req.params.id, status, req.user.id, req.body.notes);
     if (!payment) return res.status(404).json({ error: 'Payment not found' });
