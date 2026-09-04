@@ -1,12 +1,13 @@
 const express = require('express');
 const subserviceController = require('../controllers/subserviceController');
+const requireAdmin = require('../middleware/adminMiddleware');
 
 const router = express.Router();
 
-router.post('/', subserviceController.createSubservice);
 router.get('/', subserviceController.getSubservices);
 router.get('/:id', subserviceController.getSubserviceById);
-router.put('/:id', subserviceController.updateSubservice);
-router.delete('/:id', subserviceController.deactivateSubservice);
+router.post('/', requireAdmin, subserviceController.createSubservice);
+router.put('/:id', requireAdmin, subserviceController.updateSubservice);
+router.delete('/:id', requireAdmin, subserviceController.deactivateSubservice);
 
 module.exports = router;
