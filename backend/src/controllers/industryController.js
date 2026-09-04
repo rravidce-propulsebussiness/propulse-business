@@ -19,6 +19,14 @@ async function createIndustry(req, res) {
     return res.status(201).json(industry);
   } catch (error) {
     console.error('Create industry failed:', error.message);
+    if (error.code === 'DUPLICATE_INDUSTRY' || error.code === '23505') {
+      return res.status(409).json({
+        error: error.code === 'DUPLICATE_INDUSTRY'
+          ? error.message
+          : 'An industry with this name or slug already exists',
+        code: 'DUPLICATE_INDUSTRY',
+      });
+    }
     return res.status(500).json({ error: 'Failed to create industry' });
   }
 }
@@ -73,6 +81,12 @@ async function updateIndustry(req, res) {
     return res.json(industry);
   } catch (error) {
     console.error('Update industry failed:', error.message);
+    if (error.code === '23505') {
+      return res.status(409).json({
+        error: 'An industry with this name or slug already exists',
+        code: 'DUPLICATE_INDUSTRY',
+      });
+    }
     return res.status(500).json({ error: 'Failed to update industry' });
   }
 }
