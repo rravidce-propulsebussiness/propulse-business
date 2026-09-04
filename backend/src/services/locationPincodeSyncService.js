@@ -35,17 +35,11 @@ function officeState(row) {
   return String(row?.state ?? row?.statename ?? row?.State ?? '').trim();
 }
 
-function officeDistrict(row) {
-  return String(row?.district ?? row?.District ?? '').trim();
-}
-
 function isCityOfficeMatch(office, city) {
   const cityName = normalize(city.name);
   const name = normalize(officeName(office));
   if (!cityName || !name) return false;
 
-  // Postal office names commonly append S.O./H.O./B.O./Court Complex, etc.
-  // Match the actual city/locality name instead of assigning every PIN in the district.
   return name === cityName ||
     name.startsWith(`${cityName} `) ||
     name.includes(` ${cityName} `) ||
@@ -97,6 +91,28 @@ async function upsertCityPincodes(city, offices) {
     if (result.rowCount) updates += 1;
   }
 
+  // The Admin screen also displays subcities. When a postal office name
+  // corresponds to an existing subcity (for example Kukatpally S.O.), carry
+  // the verified PIN into that subcity without another API call.
+  await pool.query(
+    `UPDATE subcities sc
+        SET pincode=cp.pincode,
+            source=COALESCE(NULLIF(cp.source,''),'india-post-open-api'),
+            updated_at=CURRENT_TIMESTAMP
+       FROM city_pincodes cp
+      WHERE cp.city_id=$1
+        AND cp.is_active=TRUE
+        AND sc.city_id=cp.city_id
+        AND sc.is_active=TRUE
+        AND (
+          LOWER(REGEXP_REPLACE(sc.name,'[^a-zA-Z0-9]+','','g')) =
+            LOWER(REGEXP_REPLACE(COALESCE(cp.office_name,''),'[^a-zA-Z0-9]+','','g'))
+          OR LOWER(REGEXP_REPLACE(COALESCE(cp.office_name,''),'[^a-zA-Z0-9]+','','g')) LIKE
+            '%' || LOWER(REGEXP_REPLACE(sc.name,'[^a-zA-Z0-9]+','','g')) || '%'
+        )`,
+    [city.id]
+  );
+
   return { pincodes: seen, updates };
 }
 
@@ -104,9 +120,6 @@ async function syncCityPincodes(city) {
   const offices = await searchCityPostOffices(city);
   const result = await upsertCityPincodes(city, offices);
 
-  // Keep the existing local directory as a secondary source only when it can
-  // identify the same city by district. Never assign an entire district's PINs
-  // to a city merely because the district name differs from the city name.
   if (!result.pincodes.size) {
     const directoryRows = await pool.query(
       `SELECT DISTINCT pincode
