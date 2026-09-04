@@ -137,7 +137,9 @@ async function reinvestInvestment({ userId, investmentId }) {
     if (!inv) throw Object.assign(new Error('Investment not found'), { code: 'NOT_FOUND' });
     if (String(inv.status).toLowerCase() !== 'paid') throw Object.assign(new Error('Only a settled investment can be reinvested'), { code: 'NOT_SETTLED' });
     if (!Boolean(inv.reinvestment_enabled)) throw Object.assign(new Error('Reinvestment is not available for this investment'), { code: 'REINVESTMENT_DISABLED' });
-    const reinvestAmount = Number(Number(inv.payout_amount || 0).toFixed(2));
+    // Reinvestment carries the full realized amount from the settled cycle.
+// It is not subject to the normal minimum investment amount.
+const reinvestAmount = Number(Number(inv.payout_amount || 0).toFixed(2));
     if (reinvestAmount <= 0) throw Object.assign(new Error('There is no realized amount available to reinvest'), { code: 'NO_REALIZED_AMOUNT' });
     const existing = (await client.query('SELECT id FROM investments WHERE parent_investment_id=$1 LIMIT 1', [inv.id])).rows[0];
     if (existing) throw Object.assign(new Error('This investment has already been reinvested'), { code: 'REINVESTMENT_EXISTS', childId: existing.id });
