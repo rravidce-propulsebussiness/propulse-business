@@ -36,7 +36,9 @@ async function syncState(req, res) {
 let allIndiaJob = { status: 'idle', startedAt: null, finishedAt: null, result: null, error: null };
 
 async function syncAll(req, res) {
-  if (allIndiaJob.status === 'running') return res.status(409).json(allIndiaJob);
+  if (allIndiaJob.status === 'running') {
+    return res.status(202).json({ ...allIndiaJob, message: 'All-India pincode synchronization is already running.' });
+  }
   allIndiaJob = { status: 'running', startedAt: new Date().toISOString(), finishedAt: null, result: null, error: null };
   setImmediate(async () => {
     try {
