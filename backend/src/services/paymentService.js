@@ -70,7 +70,7 @@ async function updatePaymentStatus(id,status,adminId,notes) {
     if(!['paid','rejected','failed'].includes(status)) throw Object.assign(new Error('Invalid payment status transition'),{code:'INVALID_PAYMENT_TRANSITION'});
     let membership=null;
     if(status==='paid') membership=await activateMembership(client,payment);
-    await client.query(`UPDATE payments SET status=$1,reviewed_by=$2,reviewed_at=CURRENT_TIMESTAMP,paid_at=CASE WHEN $1='paid' THEN CURRENT_TIMESTAMP ELSE paid_at END,notes=COALESCE($3,notes),updated_at=CURRENT_TIMESTAMP WHERE id=$4`,[status,adminId,notes||null,id]);
+    await client.query(`UPDATE payments SET status=$1::varchar,reviewed_by=$2,reviewed_at=CURRENT_TIMESTAMP,paid_at=CASE WHEN $1::varchar='paid' THEN CURRENT_TIMESTAMP ELSE paid_at END,notes=COALESCE($3::text,notes),updated_at=CURRENT_TIMESTAMP WHERE id=$4`,[status,adminId,notes||null,id]);
     const updated=(await client.query(`SELECT * FROM payments WHERE id=$1`,[id])).rows[0];
     await client.query('COMMIT');
     return{...updated,membership_activation:membership};
