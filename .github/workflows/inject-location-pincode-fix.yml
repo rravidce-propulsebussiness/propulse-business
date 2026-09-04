@@ -1,0 +1,286 @@
+name: Inject location PIN fix
+
+on:
+  push:
+    branches:
+      - fix/location-pincode-sync-search
+
+permissions:
+  contents: write
+
+jobs:
+  inject:
+    if: ${{ !contains(github.event.head_commit.message, '[location-fix-applied]') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Apply location PIN coverage and search fix
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          def read(path):
+              return Path(path).read_text()
+
+          def write(path, text):
+              Path(path).write_text(text)
+
+          service_path = Path('backend/src/services/locationPincodeSyncService.js')
+          write(service_path, r'''const pool = require('../config/database');
+
+          const PROVIDER_DELAY_MS = 350;
+          let nextRequestAt = 0;
+          let requestQueue = Promise.resolve();
+          const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+          function waitForProviderSlot() {
+            const run = requestQueue.then(async () => {
+              const wait = Math.max(0, nextRequestAt - Date.now());
+              if (wait) await sleep(wait);
+              nextRequestAt = Date.now() + PROVIDER_DELAY_MS;
+            });
+            requestQueue = run.catch(() => {});
+            return run;
+          }
+
+          async function syncCityPincodes(city) {
+            const seen = new Set();
+            let updates = 0;
+            await waitForProviderSlot();
+            const response = await fetch(`https://api.postalpincode.in/postoffice/${encodeURIComponent(city.name)}`);
+            if (response.ok) {
+              const payload = await response.json();
+              const offices = Array.isArray(payload?.[0]?.PostOffice) ? payload[0].PostOffice : [];
+              for (const office of offices) {
+                const pincode = String(office?.Pincode || office?.PINCode || '').trim();
+                if (!/^\d{6}$/.test(pincode) || seen.has(pincode)) continue;
+                seen.add(pincode);
+                const officeName = String(office?.Name || '').trim() || null;
+                const result = await pool.query(
+                  `INSERT INTO city_pincodes(city_id,pincode,office_name,is_active)
+                   VALUES($1,$2,$3,TRUE)
+                   ON CONFLICT(city_id,pincode) DO UPDATE
+                     SET office_name=COALESCE(EXCLUDED.office_name,city_pincodes.office_name),
+                         is_active=TRUE,
+                         updated_at=CURRENT_TIMESTAMP`,
+                  [city.id, pincode, officeName]
+                );
+                if (result.rowCount) updates += 1;
+              }
+            }
+
+            const directoryRows = await pool.query(
+              `SELECT DISTINCT pincode
+                 FROM india_pincodes
+                WHERE is_active=TRUE
+                  AND state_id=$1
+                  AND LOWER(COALESCE(district_name,''))=LOWER($2)`,
+              [city.state_id, city.name]
+            );
+            for (const row of directoryRows.rows) {
+              const pincode = String(row.pincode || '').trim();
+              if (!/^\d{6}$/.test(pincode) || seen.has(pincode)) continue;
+              seen.add(pincode);
+              const result = await pool.query(
+                `INSERT INTO city_pincodes(city_id,pincode,office_name,is_active)
+                 VALUES($1,$2,NULL,TRUE)
+                 ON CONFLICT(city_id,pincode) DO UPDATE
+                   SET is_active=TRUE,updated_at=CURRENT_TIMESTAMP`,
+                [city.id, pincode]
+              );
+              if (result.rowCount) updates += 1;
+            }
+
+            await pool.query(`UPDATE cities SET location_sync_at=CURRENT_TIMESTAMP,updated_at=CURRENT_TIMESTAMP WHERE id=$1`, [city.id]);
+            return { id: city.id, name: city.name, pincodes: seen.size, updates };
+          }
+
+          async function syncPincodesForState(stateId) {
+            const cities = (await pool.query(
+              `SELECT c.id,c.name,c.state_id
+                 FROM cities c
+                WHERE c.state_id=$1 AND c.is_active=TRUE
+                ORDER BY c.name ASC`,
+              [stateId]
+            )).rows;
+            const results = [];
+            for (const city of cities) {
+              try { results.push(await syncCityPincodes(city)); }
+              catch (error) { results.push({ id: city.id, name: city.name, error: error.message }); }
+            }
+            return results;
+          }
+
+          module.exports = { syncPincodesForState, syncCityPincodes };
+          '''.replace('          ', ''))
+
+          p = Path('backend/src/services/pincodeService.js')
+          s = read(p)
+          s = s.replace("const pool = require('../config/database');\n", "const pool = require('../config/database');\nconst locationPincodeSyncService = require('./locationPincodeSyncService');\n", 1)
+          old = """      try { return { id: state.id, name: state.name, result: await syncPincodesForState(state.id) }; }\n      catch (error) { return { id: state.id, name: state.name, error: error.message }; }"""
+          new = """      try {
+              const result = await syncPincodesForState(state.id);
+              const locationPincodes = await locationPincodeSyncService.syncPincodesForState(state.id);
+              const locationErrors = locationPincodes.filter(item => item.error);
+              return {
+                id: state.id,
+                name: state.name,
+                result,
+                location_pincode_sync: {
+                  cities: locationPincodes.length,
+                  succeeded: locationPincodes.length - locationErrors.length,
+                  failed: locationErrors.length,
+                  errors: locationErrors,
+                },
+              };
+            } catch (error) { return { id: state.id, name: state.name, error: error.message }; }"""
+          if old not in s:
+              raise SystemExit('pincodeService sync block not found')
+          write(p, s.replace(old, new, 1))
+
+          p = Path('backend/src/controllers/stateController.js')
+          s = read(p)
+          s = s.replace("const pincodeService = require('../services/pincodeService');\n", "const pincodeService = require('../services/pincodeService');\nconst locationPincodeSyncService = require('../services/locationPincodeSyncService');\n", 1)
+          old = """    let pincodeSync = null;
+              try { pincodeSync = await pincodeService.syncPincodesForState(req.params.id); }
+              catch (syncError) { console.error('State pincode sync failed:', syncError.message); }
+              return res.json({
+                message: `Cities and PIN codes synced for ${result.state.name}`,
+                ...result,
+                pincode_sync: pincodeSync ? {
+                  pages: pincodeSync.pages,
+                  totalOffices: pincodeSync.totalOffices,
+                  totalPincodes: pincodeSync.totalPincodes,
+                } : null,
+              });"""
+          new = """    let pincodeSync = null;
+              let locationPincodeSync = null;
+              try { pincodeSync = await pincodeService.syncPincodesForState(req.params.id); }
+              catch (syncError) { console.error('State pincode sync failed:', syncError.message); }
+              try { locationPincodeSync = await locationPincodeSyncService.syncPincodesForState(req.params.id); }
+              catch (syncError) { console.error('State city pincode sync failed:', syncError.message); }
+              const locationErrors = (locationPincodeSync || []).filter(item => item.error);
+              return res.json({
+                message: `Cities and PIN codes synced for ${result.state.name}`,
+                ...result,
+                pincode_sync: pincodeSync ? {
+                  pages: pincodeSync.pages,
+                  totalOffices: pincodeSync.totalOffices,
+                  totalPincodes: pincodeSync.totalPincodes,
+                } : null,
+                location_pincode_sync: locationPincodeSync ? {
+                  cities: locationPincodeSync.length,
+                  succeeded: locationPincodeSync.length - locationErrors.length,
+                  failed: locationErrors.length,
+                  errors: locationErrors,
+                } : null,
+              });"""
+          if old not in s:
+              raise SystemExit('stateController sync block not found')
+          write(p, s.replace(old, new, 1))
+
+          p = Path('frontend/src/pages/Industries.jsx')
+          s = read(p)
+          old = """  const filteredStates = useMemo(() => {
+              const q = search.trim().toLowerCase()
+              if (!q) return states
+              return states.filter(state => state.name.toLowerCase().includes(q) || cities.some(city => Number(city.state_id) === Number(state.id) && city.name.toLowerCase().includes(q)))
+            }, [states, cities, search])
+            const servicesFor = id => services.filter(x => Number(x.industry_id) === Number(id))
+            const subservicesFor = id => subservices.filter(x => Number(x.service_id) === Number(id))
+            const citiesFor = id => cities.filter(x => Number(x.state_id) === Number(id))
+            const subcitiesFor = id => subcities.filter(x => Number(x.city_id) === Number(id))"""
+          new = """  const servicesFor = id => services.filter(x => Number(x.industry_id) === Number(id))
+            const subservicesFor = id => subservices.filter(x => Number(x.service_id) === Number(id))
+            const citiesFor = id => cities.filter(x => Number(x.state_id) === Number(id))
+            const subcitiesFor = id => subcities.filter(x => Number(x.city_id) === Number(id))
+            const cityMatches = (city, q) => {
+              if (!q) return true
+              const areas = subcitiesFor(city.id)
+              const pins = city.pincodes || []
+              return city.name.toLowerCase().includes(q)
+                || areas.some(area => area.name.toLowerCase().includes(q) || String(area.pincode || '').includes(q))
+                || pins.some(pin => String(pin.pincode || '').includes(q) || String(pin.officeName || '').toLowerCase().includes(q))
+            }
+            const filteredStates = useMemo(() => {
+              const q = search.trim().toLowerCase()
+              if (!q) return states
+              return states.filter(state => state.name.toLowerCase().includes(q) || citiesFor(state.id).some(city => cityMatches(city, q)))
+            }, [states, cities, subcities, search])"""
+          if old not in s:
+              raise SystemExit('Industries filter block not found')
+          s = s.replace(old, new, 1)
+
+          old = """  async function syncAllPincodes() {
+              try {
+                setSyncing('all-pincodes'); setError(''); setSuccess('')
+                const result = await request('/pincodes/sync/all', { method: 'POST' })
+                setSuccess(result.status === 'running' ? 'All-India pincode synchronization started in the background.' : 'All-India pincode synchronization started.')
+              } catch (err) { setError(err.message) } finally { setSyncing('') }
+            }"""
+          new = """  async function syncAllPincodes() {
+              try {
+                setSyncing('all-pincodes'); setError(''); setSuccess('')
+                const result = await request('/pincodes/sync/all', { method: 'POST' })
+                if (result.status === 'running') {
+                  setSuccess('All-India PIN and city coverage sync is running. This can take a few minutes.')
+                  for (let attempt = 0; attempt < 180; attempt += 1) {
+                    await new Promise(resolve => setTimeout(resolve, 2000))
+                    const status = await request('/pincodes/sync/status')
+                    if (status.status === 'completed') {
+                      const total = status.result?.totalPincodes || 0
+                      setSuccess(`All-India PIN sync completed: ${total.toLocaleString()} unique PIN codes indexed across the directory and city locations.`)
+                      await loadAll()
+                      return
+                    }
+                    if (status.status === 'failed') throw new Error(status.error || 'All-India pincode synchronization failed')
+                  }
+                  throw new Error('All-India pincode synchronization is still running. Refresh later to see the completed coverage.')
+                }
+                setSuccess('All-India pincode synchronization started.')
+                await loadAll()
+              } catch (err) { setError(err.message) } finally { setSyncing('') }
+            }"""
+          if old not in s:
+              raise SystemExit('Industries sync block not found')
+          s = s.replace(old, new, 1)
+
+          old = "{filteredStates.map(state => { const open = !!expanded[`st${state.id}`]; const stateCities = citiesFor(state.id); const stateSyncing = syncing === `state:${state.id}`;"
+          new = "{filteredStates.map(state => { const q = search.trim().toLowerCase(); const stateMatches = state.name.toLowerCase().includes(q); const stateCities = citiesFor(state.id); const visibleCities = q && !stateMatches ? stateCities.filter(city => cityMatches(city, q)) : stateCities; const open = !!expanded[`st${state.id}`] || Boolean(q); const stateSyncing = syncing === `state:${state.id}`;"
+          if old not in s:
+              raise SystemExit('Industries state render block not found')
+          s = s.replace(old, new, 1)
+          old = "{stateCities.map(city => { const cityOpen = !!expanded[`ct${city.id}`];"
+          new = "{visibleCities.map(city => { const cityOpen = !!expanded[`ct${city.id}`] || Boolean(q && cityMatches(city, q));"
+          if old not in s:
+              raise SystemExit('Industries city render block not found')
+          s = s.replace(old, new, 1)
+          old = " const q = search.trim().toLowerCase(); const visible = !q || city.name.toLowerCase().includes(q) || areas.some(a => a.name.toLowerCase().includes(q) || String(a.pincode || '').includes(q)) || pins.some(p => String(p.pincode).includes(q)); const citySyncing"
+          if old not in s:
+              raise SystemExit('Industries city visibility block not found')
+          s = s.replace(old, " const citySyncing", 1)
+          old = "return visible && <div className=\"tree-item\""
+          if old not in s:
+              raise SystemExit('Industries visible return block not found')
+          s = s.replace(old, "return <div className=\"tree-item\"", 1)
+          write(p, s)
+          PY
+
+      - name: Test backend syntax
+        run: npm --prefix backend test
+
+      - name: Test frontend lint and build
+        run: |
+          npm --prefix frontend ci
+          npm --prefix frontend run lint
+          npm --prefix frontend run build
+
+      - name: Commit injected fix
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add backend/src/services/locationPincodeSyncService.js backend/src/services/pincodeService.js backend/src/controllers/stateController.js frontend/src/pages/Industries.jsx
+          git commit -m "Fix location PIN sync and PIN search [location-fix-applied]"
+          git push origin HEAD:fix/location-pincode-sync-search
