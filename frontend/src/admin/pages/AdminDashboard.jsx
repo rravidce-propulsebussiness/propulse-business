@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react';
-import { clearSession, getToken, getUser } from '../../utils/auth';
+import { clearSession, getUser } from '../../utils/auth';
+import { apiRequest } from '../../utils/api';
 import './AdminDashboard.css';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState(null);
@@ -12,14 +11,7 @@ export default function AdminDashboard() {
   useEffect(() => {
     let mounted = true;
 
-    fetch(`${API_URL}/admin/dashboard/stats`, {
-      headers: getToken() ? { Authorization: `Bearer ${getToken()}` } : {},
-    })
-      .then(async (response) => {
-        const data = await response.json().catch(() => ({}));
-        if (!response.ok) throw new Error(data.error || 'Unable to load dashboard statistics');
-        return data;
-      })
+    apiRequest('/admin/dashboard/stats')
       .then((data) => mounted && setStats(data))
       .catch((err) => mounted && setError(err.message))
       .finally(() => mounted && setLoading(false));
