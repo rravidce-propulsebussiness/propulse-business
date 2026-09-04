@@ -100,23 +100,57 @@ async function syncCitiesForState(stateId) {
 }
 
 async function syncCityPincodes(cityId) {
-  const cityResult = await pool.query(`SELECT c.id,c.name,s.name AS state_name FROM cities c JOIN states s ON s.id=c.state_id WHERE c.id=$1 AND c.is_active=TRUE AND s.is_active=TRUE`, [cityId]);
+  const cityResult = await pool.query(`SELECT c.id,c.name,s.id AS state_id,s.name AS state_name FROM cities c JOIN states s ON s.id=c.state_id WHERE c.id=$1 AND c.is_active=TRUE AND s.is_active=TRUE`, [cityId]);
   const city = cityResult.rows[0];
   if (!city) return null;
+
+  const seen = new Set();
+  let added = 0;
+
   const response = await fetch(`https://api.postalpincode.in/postoffice/${encodeURIComponent(city.name)}`);
-  if (!response.ok) throw new Error(`India Post provider returned ${response.status}`);
-  const payload = await response.json();
-  const offices = Array.isArray(payload?.[0]?.PostOffice) ? payload[0].PostOffice : [];
-  const seen = new Set(); let added = 0;
-  for (const office of offices) {
-    const pincode = String(office?.Pincode || office?.PINCode || '').trim();
+  if (response.ok) {
+    const payload = await response.json();
+    const offices = Array.isArray(payload?.[0]?.PostOffice) ? payload[0].PostOffice : [];
+    for (const office of offices) {
+      const pincode = String(office?.Pincode || office?.PINCode || '').trim();
+      if (!/^\d{6}$/.test(pincode) || seen.has(pincode)) continue;
+      seen.add(pincode);
+      const result = await pool.query(
+        `INSERT INTO city_pincodes(city_id,pincode,office_name,is_active)
+         VALUES($1,$2,$3,TRUE)
+         ON CONFLICT(city_id,pincode,office_name) DO UPDATE SET is_active=TRUE,updated_at=CURRENT_TIMESTAMP`,
+        [city.id,pincode,String(office?.Name || '').trim() || null]
+      );
+      if (result.rowCount) added += 1;
+    }
+  }
+
+  // Reconcile against the canonical India-wide directory when it is available.
+  // This catches PINs that India Post returns for the district/state but the
+  // city-name lookup misses. It never invents or assigns a PIN to a sub-city.
+  const directoryRows = await pool.query(
+    `SELECT DISTINCT pincode
+       FROM india_pincodes
+      WHERE is_active=TRUE
+        AND state_id=$1
+        AND LOWER(COALESCE(district_name,''))=LOWER($2)`,
+    [city.state_id, city.name]
+  );
+  for (const row of directoryRows.rows) {
+    const pincode = String(row.pincode || '').trim();
     if (!/^\d{6}$/.test(pincode) || seen.has(pincode)) continue;
     seen.add(pincode);
-    const result = await pool.query(`INSERT INTO city_pincodes(city_id,pincode,office_name,is_active) VALUES($1,$2,$3,TRUE) ON CONFLICT(city_id,pincode,office_name) DO UPDATE SET is_active=TRUE,updated_at=CURRENT_TIMESTAMP`, [city.id,pincode,String(office?.Name || '').trim() || null]);
+    const result = await pool.query(
+      `INSERT INTO city_pincodes(city_id,pincode,office_name,is_active)
+       VALUES($1,$2,NULL,TRUE)
+       ON CONFLICT(city_id,pincode,office_name) DO UPDATE SET is_active=TRUE,updated_at=CURRENT_TIMESTAMP`,
+      [city.id,pincode]
+    );
     if (result.rowCount) added += 1;
   }
+
   await pool.query(`UPDATE cities SET location_sync_at=CURRENT_TIMESTAMP,updated_at=CURRENT_TIMESTAMP WHERE id=$1`, [city.id]);
-  return { city, totalFromProvider: offices.length, added };
+  return { city, totalFromProvider: seen.size, added };
 }
 
 async function createSubcity({ cityId, name, slug, pincode, source='admin' }) {
@@ -136,7 +170,7 @@ async function syncSubcitiesForCity(cityId) {
   const geo=await fetch(`https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&country=India&state=${encodeURIComponent(city.state_name)}&city=${encodeURIComponent(city.name)}`,{headers:{'User-Agent':'Propulse-Business/1.0'}});
   if(!geo.ok) throw new Error(`OpenStreetMap geocoder returned ${geo.status}`);
   const points=await geo.json(); const point=points[0]; if(!point) throw new Error('City could not be geocoded');
-  const query=`[out:json][timeout:25];(node[place~"^(suburb|neighbourhood|quarter)$"](around:15000,${Number(point.lat)},${Number(point.lon)});way[place~"^(suburb|neighbourhood|quarter)$"](around:15000,${Number(point.lat)},${Number(point.lon)});relation[place~"^(suburb|neighbourhood|quarter)$"](around:15000,${Number(point.lat)},${Number(point.lon)}););out center tags;`;
+  const query=`[out:json][timeout:25];(node[place~"^(suburb|neighbourhood|quarter)$"](around:15000,${Number(point.lat)},${Number(point.lon)});way[place~"^(suburb|neighbourhood|quarter)$"](around:15000,${Number(point.lat)},${Number(point.lon)});relation[place~="^(suburb|neighbourhood|quarter)$"](around:15000,${Number(point.lat)},${Number(point.lon)}););out center tags;`;
   const response=await fetch('https://overpass-api.de/api/interpreter',{method:'POST',headers:{'Content-Type':'text/plain','User-Agent':'Propulse-Business/1.0'},body:query});
   if(!response.ok) throw new Error(`OpenStreetMap coverage provider returned ${response.status}`);
   const payload=await response.json(); const names=new Map();
