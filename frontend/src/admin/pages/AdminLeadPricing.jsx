@@ -7,7 +7,7 @@ const types=['basic','premium'];
 const cap=v=>String(v||'').replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
 const ruleKey=r=>`${r.industry_id??0}:${r.city_id??0}:${String(r.lead_type||'basic').toLowerCase()}`;
 const dedupeRules=rows=>{const seen=new Set();return (Array.isArray(rows)?rows:[]).filter(r=>{const key=ruleKey(r);if(seen.has(key))return false;seen.add(key);return true})};
-const dedupeTiers=shares=>{const seen=new Set();return (Array.isArray(shares)?shares:[]).filter(x=>{const n=Number(x?.shares);if(!Number.isInteger(n)||n<=0||seen.has(n))return false;seen.add(n);return true}).sort((a,b)=>Number(a.shares)-Number(b.shares)};
+const dedupeTiers=shares=>{const seen=new Set();return (Array.isArray(shares)?shares:[]).filter(x=>{const n=Number(x?.shares);if(!Number.isInteger(n)||n<=0||seen.has(n))return false;seen.add(n);return true}).sort((a,b)=>Number(a.shares)-Number(b.shares))};
 export default function AdminLeadPricing(){
  const [industries,setIndustries]=useState([]),[cities,setCities]=useState([]),[rules,setRules]=useState([]),[form,setForm]=useState(emptyForm()),[editId,setEditId]=useState(null),[loading,setLoading]=useState(true),[saving,setSaving]=useState(false),[error,setError]=useState(''),[ok,setOk]=useState('');
  const req=(p,o={})=>apiRequest(p,o);
