@@ -23,10 +23,11 @@ async function getProfile(userId, client = pool) {
     ),
     client.query(
       `SELECT bpl.id, bpl.state_id, st.name AS state_name,
-              bpl.city_id, c.name AS city_name
+              bpl.city_id, c.name AS city_name, bpl.subcity_id, sc.name AS subcity_name, bpl.pincode
        FROM business_profile_locations bpl
        JOIN states st ON st.id = bpl.state_id
        JOIN cities c ON c.id = bpl.city_id
+       LEFT JOIN subcities sc ON sc.id = bpl.subcity_id
        WHERE bpl.business_profile_id = $1 AND bpl.is_active = TRUE
        ORDER BY st.name, c.name`, [profile.id]
     ),
@@ -62,7 +63,7 @@ async function validateSelections(client, services, locations) {
 
   const locationKeys = new Set();
   for (const item of locations) {
-    const { stateId, cityId } = item || {};
+    const { stateId, cityId, subcityId, pincode } = item || {};
     if (!stateId || !cityId) throw new Error('Every location needs a state and city');
     const city = await client.query(
       `SELECT c.id FROM cities c JOIN states st ON st.id = c.state_id
@@ -70,7 +71,12 @@ async function validateSelections(client, services, locations) {
       [cityId, stateId]
     );
     if (!city.rows.length) throw new Error('Invalid state and city combination');
-    const key = `${stateId}:${cityId}`;
+    if (subcityId) {
+      const subcity = await client.query(`SELECT id FROM subcities WHERE id=$1 AND city_id=$2 AND is_active=TRUE`, [subcityId, cityId]);
+      if (!subcity.rows.length) throw new Error('Invalid city and subcity combination');
+    }
+    if (pincode && !/^\d{6}$/.test(String(pincode))) throw new Error('Pincode must be a valid 6-digit code');
+    const key = `${stateId}:${cityId}:${subcityId || ''}:${pincode || ''}`;
     if (locationKeys.has(key)) throw new Error('Duplicate locations are not allowed');
     locationKeys.add(key);
   }
@@ -113,11 +119,11 @@ async function updateProfile(userId, { name, email, phone, businessName, busines
     for (const item of locations) {
       await client.query(
         `INSERT INTO business_profile_locations
-         (business_profile_id, state_id, city_id, is_active)
-         VALUES ($1, $2, $3, TRUE)
+         (business_profile_id, state_id, city_id, subcity_id, pincode, is_active)
+         VALUES ($1, $2, $3, $4, $5, TRUE)
          ON CONFLICT (business_profile_id, state_id, city_id)
-         DO UPDATE SET is_active = TRUE, updated_at = CURRENT_TIMESTAMP`,
-        [profileId, item.stateId, item.cityId]
+         DO UPDATE SET subcity_id = EXCLUDED.subcity_id, pincode = EXCLUDED.pincode, is_active = TRUE, updated_at = CURRENT_TIMESTAMP`,
+        [profileId, item.stateId, item.cityId, item.subcityId || null, item.pincode || null]
       );
     }
 
