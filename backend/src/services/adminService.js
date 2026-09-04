@@ -44,10 +44,11 @@ async function getUsers({ search = '', role = 'all', status = 'all', industryId 
              JOIN services s ON s.id=x.service_id
              LEFT JOIN subservices ss ON ss.id=x.subservice_id
              WHERE x.business_profile_id=bp.id AND x.is_active=TRUE), '[]'::json) AS services,
-           COALESCE((SELECT json_agg(json_build_object('stateId',x.state_id,'stateName',st.name,'cityId',x.city_id,'cityName',c.name) ORDER BY st.name,c.name)
+           COALESCE((SELECT json_agg(json_build_object('stateId',x.state_id,'stateName',st.name,'cityId',x.city_id,'cityName',c.name,'subcityId',x.subcity_id,'subcityName',sc.name,'pincode',x.pincode) ORDER BY st.name,c.name)
              FROM business_profile_locations x
              JOIN states st ON st.id=x.state_id
              JOIN cities c ON c.id=x.city_id
+             LEFT JOIN subcities sc ON sc.id=x.subcity_id
              WHERE x.business_profile_id=bp.id AND x.is_active=TRUE), '[]'::json) AS locations,
            m.id AS membership_id, m.status AS membership_status, m.starts_at AS membership_started_at,
            m.expires_at AS membership_expires_at, mp.id AS membership_plan_id, mp.name AS membership_plan_name,
@@ -126,7 +127,7 @@ async function updateUserProfile(userId, { name, email, phone, businessName, bus
           const created = (await client.query('INSERT INTO business_profiles(user_id,phone,business_name,business_details) VALUES($1,$2,$3,$4) RETURNING id',[userId,String(phone??'').trim(),String(businessName??'').trim(),String(businessDetails??'').trim()])).rows[0];
           if (hasConfiguration) {
             for (const item of services) await client.query(`INSERT INTO business_profile_services (business_profile_id,industry_id,service_id,subservice_id,is_active) VALUES($1,$2,$3,$4,TRUE) ON CONFLICT (business_profile_id,industry_id,service_id,subservice_id) DO UPDATE SET is_active=TRUE,updated_at=CURRENT_TIMESTAMP`,[created.id,item.industryId,item.serviceId,item.subserviceId||null]);
-            for (const item of locations) await client.query(`INSERT INTO business_profile_locations (business_profile_id,state_id,city_id,is_active) VALUES($1,$2,$3,TRUE) ON CONFLICT (business_profile_id,state_id,city_id) DO UPDATE SET is_active=TRUE,updated_at=CURRENT_TIMESTAMP`,[created.id,item.stateId,item.cityId]);
+            for (const item of locations) await client.query(`INSERT INTO business_profile_locations (business_profile_id,state_id,city_id,subcity_id,pincode,is_active) VALUES($1,$2,$3,$4,$5,TRUE) ON CONFLICT (business_profile_id,state_id,city_id) DO UPDATE SET subcity_id=EXCLUDED.subcity_id,pincode=EXCLUDED.pincode,is_active=TRUE,updated_at=CURRENT_TIMESTAMP`,[created.id,item.stateId,item.cityId,item.subcityId||null,item.pincode||null]);
           }
         }
       } else {
@@ -135,7 +136,7 @@ async function updateUserProfile(userId, { name, email, phone, businessName, bus
           await client.query('UPDATE business_profile_services SET is_active=FALSE,updated_at=CURRENT_TIMESTAMP WHERE business_profile_id=$1',[profile.id]);
           for (const item of services) await client.query(`INSERT INTO business_profile_services (business_profile_id,industry_id,service_id,subservice_id,is_active) VALUES($1,$2,$3,$4,TRUE) ON CONFLICT (business_profile_id,industry_id,service_id,subservice_id) DO UPDATE SET is_active=TRUE,updated_at=CURRENT_TIMESTAMP`,[profile.id,item.industryId,item.serviceId,item.subserviceId||null]);
           await client.query('UPDATE business_profile_locations SET is_active=FALSE,updated_at=CURRENT_TIMESTAMP WHERE business_profile_id=$1',[profile.id]);
-          for (const item of locations) await client.query(`INSERT INTO business_profile_locations (business_profile_id,state_id,city_id,is_active) VALUES($1,$2,$3,TRUE) ON CONFLICT (business_profile_id,state_id,city_id) DO UPDATE SET is_active=TRUE,updated_at=CURRENT_TIMESTAMP`,[profile.id,item.stateId,item.cityId]);
+          for (const item of locations) await client.query(`INSERT INTO business_profile_locations (business_profile_id,state_id,city_id,subcity_id,pincode,is_active) VALUES($1,$2,$3,$4,$5,TRUE) ON CONFLICT (business_profile_id,state_id,city_id) DO UPDATE SET subcity_id=EXCLUDED.subcity_id,pincode=EXCLUDED.pincode,is_active=TRUE,updated_at=CURRENT_TIMESTAMP`,[profile.id,item.stateId,item.cityId,item.subcityId||null,item.pincode||null]);
         }
       }
     }
