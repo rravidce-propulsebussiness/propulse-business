@@ -1,16 +1,15 @@
 import { useEffect, useMemo, useState } from 'react';
+import { apiRequest } from '../../utils/api';
 import { getToken, clearSession } from '../../utils/auth';
 import { useNavigate } from 'react-router-dom';
 import './AdminTable.css';
 import './AdminWalletTopups.css';
 
-const API='http://localhost:5000/api';
-
 export default function AdminWalletTopups(){
  const navigate=useNavigate();
  const [topups,setTopups]=useState([]),[status,setStatus]=useState('all'),[search,setSearch]=useState(''),[loading,setLoading]=useState(true),[error,setError]=useState('');
- const request=async(path,options={})=>{const token=getToken();if(!token){clearSession();navigate('/login',{replace:true});throw new Error('Your admin session has expired. Please sign in again.')}const r=await fetch(`${API}${path}`,{...options,headers:{'Content-Type':'application/json',...(options.headers||{}),Authorization:`Bearer ${token}`}});const data=await r.json().catch(()=>({}));if(r.status===401){clearSession();navigate('/login',{replace:true});throw new Error('Your admin session has expired. Please sign in again.')}if(!r.ok)throw new Error(data.error||'Request failed');return data};
- const load=async()=>{setLoading(true);setError('');try{const q=new URLSearchParams({status,search});setTopups(await request(`/wallet/topups?${q}`))}catch(e){setError(e.message)}finally{setLoading(false)}};
+ const request=async(path,options={})=>{if(!getToken()){clearSession();navigate('/login',{replace:true});throw new Error('Your admin session has expired. Please sign in again.')}return apiRequest(path,options)};
+ const load=async()=>{setLoading(true);setError('');try{const q=new URLSearchParams({status,search});const data=await request(`/wallet/topups?${q}`);setTopups(Array.isArray(data)?data:data.items||[])}catch(e){setError(e.message)}finally{setLoading(false)}};
  useEffect(()=>{load()},[status]);
  const update=async(id,next)=>{try{await request(`/wallet/topups/${id}/status`,{method:'PATCH',body:JSON.stringify({status:next})});await load()}catch(e){setError(e.message)}};
  const money=v=>`₹${Number(v||0).toLocaleString('en-IN',{maximumFractionDigits:2})}`;
