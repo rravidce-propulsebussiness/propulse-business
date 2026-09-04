@@ -49,30 +49,9 @@ async function getUsers({ search = '', role = 'all', status = 'all', industryId 
              JOIN states st ON st.id=x.state_id
              JOIN cities c ON c.id=x.city_id
              LEFT JOIN subcities sc ON sc.id=x.subcity_id
-             WHERE x.business_profile_id=bp.id AND x.is_active=TRUE), '[]'::json) AS locations,
-           m.id AS membership_id, m.status AS membership_status, m.starts_at AS membership_started_at,
-           m.expires_at AS membership_expires_at, mp.id AS membership_plan_id, mp.name AS membership_plan_name,
-           mp.plan_group AS membership_plan_group, mp.plan_type AS membership_plan_type,
-           mp.billing_period AS membership_billing_period, mp.billing_months AS membership_billing_months,
-           bm.id AS booster_membership_id, bm.expires_at AS booster_expires_at,
-           CASE WHEN m.id IS NOT NULL AND m.status='active' AND m.expires_at>CURRENT_TIMESTAMP THEN TRUE ELSE FALSE END AS pro_active
+             WHERE x.business_profile_id=bp.id AND x.is_active=TRUE), '[]'::json) AS locations
     FROM users u
     LEFT JOIN business_profiles bp ON bp.user_id = u.id
-    LEFT JOIN LATERAL (
-      SELECT m.* FROM memberships m
-      JOIN membership_plans mp0 ON mp0.id=m.membership_plan_id
-      WHERE m.user_id=u.id AND LOWER(COALESCE(mp0.plan_type,''))='pro'
-      ORDER BY CASE WHEN m.status='active' AND m.expires_at>CURRENT_TIMESTAMP THEN 0 ELSE 1 END, m.created_at DESC
-      LIMIT 1
-    ) m ON TRUE
-    LEFT JOIN membership_plans mp ON mp.id=m.membership_plan_id
-    LEFT JOIN LATERAL (
-      SELECT mb.id,mb.expires_at FROM memberships mb
-      JOIN membership_plans mpb ON mpb.id=mb.membership_plan_id
-      WHERE mb.user_id=u.id AND LOWER(COALESCE(mpb.plan_type,''))='booster'
-      ORDER BY CASE WHEN mb.status='active' AND mb.expires_at>CURRENT_TIMESTAMP THEN 0 ELSE 1 END, mb.created_at DESC
-      LIMIT 1
-    ) bm ON TRUE
     ${conditions.length ? `WHERE ${conditions.join(' AND ')}` : ''}
     ORDER BY u.created_at DESC
   `, params);
@@ -145,42 +124,4 @@ async function updateUserProfile(userId, { name, email, phone, businessName, bus
   } catch (error) { await client.query('ROLLBACK'); throw error; } finally { client.release(); }
 }
 
-async function updateMembership(userId, { action, planId, startsAt, expiresAt, days }) {
-  const validActions = new Set(['activate','extend','reduce','terminate']);
-  if (!validActions.has(action)) { const e=new Error('Invalid membership action'); e.code='INVALID_MEMBERSHIP_ACTION'; throw e; }
-  const client = await pool.connect();
-  try {
-    await client.query('BEGIN');
-    const user = (await client.query('SELECT id,role FROM users WHERE id=$1 FOR UPDATE',[userId])).rows[0];
-    if (!user) { const e=new Error('User not found'); e.code='NOT_FOUND'; throw e; }
-    const current = (await client.query(`SELECT m.*,mp.name AS plan_name FROM memberships m JOIN membership_plans mp ON mp.id=m.membership_plan_id WHERE m.user_id=$1 AND LOWER(COALESCE(mp.plan_type,''))='pro' ORDER BY CASE WHEN m.status='active' AND m.expires_at>CURRENT_TIMESTAMP THEN 0 ELSE 1 END,m.created_at DESC LIMIT 1 FOR UPDATE`,[userId])).rows[0];
-    if (action === 'terminate') {
-      if (!current || current.status !== 'active') { const e=new Error('No active Pro membership found'); e.code='NO_MEMBERSHIP'; throw e; }
-      const result=(await client.query(`UPDATE memberships SET status='cancelled',expires_at=LEAST(expires_at,CURRENT_TIMESTAMP),updated_at=CURRENT_TIMESTAMP WHERE id=$1 RETURNING *`,[current.id])).rows[0];
-      await client.query('COMMIT'); return result;
-    }
-    const cleanDays = Number(days);
-    if (action === 'extend' || action === 'reduce') {
-      if (!current || current.status !== 'active') { const e=new Error('No active Pro membership found'); e.code='NO_MEMBERSHIP'; throw e; }
-      if (!Number.isInteger(cleanDays) || cleanDays <= 0 || cleanDays > 3650) { const e=new Error('Days must be a whole number between 1 and 3650'); e.code='INVALID_DAYS'; throw e; }
-      const modifier = action === 'extend' ? `+ INTERVAL '${cleanDays} days'` : `- INTERVAL '${cleanDays} days'`;
-      const result=(await client.query(`UPDATE memberships SET expires_at=GREATEST(starts_at,expires_at ${modifier}),status=CASE WHEN expires_at ${modifier} > CURRENT_TIMESTAMP THEN 'active' ELSE 'expired' END,updated_at=CURRENT_TIMESTAMP WHERE id=$1 RETURNING *`,[current.id])).rows[0];
-      await client.query('COMMIT'); return result;
-    }
-    const selectedPlanId = Number(planId);
-    if (!Number.isInteger(selectedPlanId)) { const e=new Error('A Pro membership plan is required'); e.code='INVALID_PLAN'; throw e; }
-    const plan=(await client.query(`SELECT id,name,plan_type,duration_days,is_active FROM membership_plans WHERE id=$1`,[selectedPlanId])).rows[0];
-    if (!plan || !plan.is_active || String(plan.plan_type).toLowerCase() !== 'pro') { const e=new Error('Select an active Pro membership plan'); e.code='INVALID_PLAN'; throw e; }
-    const start = startsAt ? new Date(startsAt) : new Date();
-    const end = expiresAt ? new Date(expiresAt) : new Date(start.getTime()+Number(plan.duration_days)*86400000);
-    if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) || end <= start) { const e=new Error('Membership start and expiry dates are invalid'); e.code='INVALID_DATES'; throw e; }
-    let result;
-    if (current) result=(await client.query(`UPDATE memberships SET membership_plan_id=$1,starts_at=$2,expires_at=$3,status='active',updated_at=CURRENT_TIMESTAMP WHERE id=$4 RETURNING *`,[selectedPlanId,start,end,current.id])).rows[0];
-    else result=(await client.query(`INSERT INTO memberships(user_id,membership_plan_id,starts_at,expires_at,status) VALUES($1,$2,$3,$4,'active') RETURNING *`,[userId,selectedPlanId,start,end])).rows[0];
-    await client.query('COMMIT'); return result;
-  } catch (error) { await client.query('ROLLBACK'); throw error; } finally { client.release(); }
-}
-
-async function removeMembership(userId) { return updateMembership(userId,{action:'terminate'}); }
-
-module.exports={getDashboardStats,getUsers,createAdmin,setUserStatus,updateUserProfile,updateMembership,removeMembership};
+module.exports={getDashboardStats,getUsers,createAdmin,setUserStatus,updateUserProfile};
