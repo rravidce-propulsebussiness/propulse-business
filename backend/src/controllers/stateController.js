@@ -1,6 +1,7 @@
 const stateService = require('../services/stateService');
 const cityService = require('../services/cityService');
 const pincodeService = require('../services/pincodeService');
+const locationPincodeSyncService = require('../services/locationPincodeSyncService');
 
 async function createState(req, res) {
   try {
@@ -42,8 +43,12 @@ async function syncCities(req, res) {
     const result = await cityService.syncCitiesForState(req.params.id);
     if (!result) return res.status(404).json({ error: 'State not found' });
     let pincodeSync = null;
+    let locationPincodeSync = null;
     try { pincodeSync = await pincodeService.syncPincodesForState(req.params.id); }
     catch (syncError) { console.error('State pincode sync failed:', syncError.message); }
+    try { locationPincodeSync = await locationPincodeSyncService.syncPincodesForState(req.params.id); }
+    catch (syncError) { console.error('State city pincode sync failed:', syncError.message); }
+    const locationErrors = (locationPincodeSync || []).filter(item => item.error);
     return res.json({
       message: `Cities and PIN codes synced for ${result.state.name}`,
       ...result,
@@ -51,6 +56,12 @@ async function syncCities(req, res) {
         pages: pincodeSync.pages,
         totalOffices: pincodeSync.totalOffices,
         totalPincodes: pincodeSync.totalPincodes,
+      } : null,
+      location_pincode_sync: locationPincodeSync ? {
+        cities: locationPincodeSync.length,
+        succeeded: locationPincodeSync.length - locationErrors.length,
+        failed: locationErrors.length,
+        errors: locationErrors,
       } : null,
     });
   } catch (error) { console.error('Sync state cities failed:', error.message); return res.status(502).json({ error: error.message || 'Failed to sync state cities' }); }

@@ -1,4 +1,5 @@
 const pool = require('../config/database');
+const locationPincodeSyncService = require('./locationPincodeSyncService');
 
 const PROVIDER = 'https://api.pincodeapi.in/api/v1';
 const PROVIDER_DELAY_MS = 1800;
@@ -88,8 +89,22 @@ async function syncAllIndiaPincodes() {
   for (let start = 0; start < states.length; start += concurrency) {
     const batch = states.slice(start, start + concurrency);
     results.push(...await Promise.all(batch.map(async state => {
-      try { return { id: state.id, name: state.name, result: await syncPincodesForState(state.id) }; }
-      catch (error) { return { id: state.id, name: state.name, error: error.message }; }
+      try {
+    const result = await syncPincodesForState(state.id);
+    const locationPincodes = await locationPincodeSyncService.syncPincodesForState(state.id);
+    const locationErrors = locationPincodes.filter(item => item.error);
+    return {
+      id: state.id,
+      name: state.name,
+      result,
+      location_pincode_sync: {
+        cities: locationPincodes.length,
+        succeeded: locationPincodes.length - locationErrors.length,
+        failed: locationErrors.length,
+        errors: locationErrors,
+      },
+    };
+  } catch (error) { return { id: state.id, name: state.name, error: error.message }; }
     })));
   }
   const count = await pool.query('SELECT COUNT(*)::int AS count FROM india_pincodes WHERE is_active=TRUE');
