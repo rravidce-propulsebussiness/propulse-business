@@ -49,7 +49,9 @@ async function createCity({ stateId, name, slug }) {
      RETURNING *`,
     [stateId, name, slug]
   );
-  return result.rows[0];
+  const city = result.rows[0];
+  if (city) await pool.query('SELECT propulse_sync_city_directory_pincodes($1)', [city.id]).catch(() => {});
+  return city;
 }
 
 async function getCities() {
@@ -90,7 +92,9 @@ async function updateCity(id, { stateId, name, slug }) {
      RETURNING *`,
     [stateId, name, slug, id]
   );
-  return result.rows[0] || null;
+  const city = result.rows[0] || null;
+  if (city) await pool.query('SELECT propulse_sync_city_directory_pincodes($1)', [city.id]).catch(() => {});
+  return city;
 }
 
 async function deactivateCity(id) {
@@ -158,4 +162,40 @@ async function deactivateSubcity(id) {
   return subcity;
 }
 
-module.exports={createCity,getCities,getCityById,updateCity,deactivateCity,createSubcity,getSubcities,updateSubcity,deactivateSubcity};
+async function syncSubcitiesForCity(cityId) {
+  const cityResult = await pool.query(
+    `SELECT c.id,c.name,c.state_id,c.is_active FROM cities c WHERE c.id=$1`,
+    [cityId]
+  );
+  const city = cityResult.rows[0];
+  if (!city) return null;
+  if (!city.is_active) return { cityId: city.id, pincodeCount: 0, subcities: [] };
+
+  const synced = await pool.query('SELECT propulse_sync_city_directory_pincodes($1) AS count', [city.id]);
+  const subcities = await pool.query(
+    `SELECT sc.*,c.name AS city_name,s.name AS state_name
+       FROM subcities sc
+       JOIN cities c ON c.id=sc.city_id
+       JOIN states s ON s.id=c.state_id
+      WHERE sc.city_id=$1 AND sc.is_active=TRUE
+      ORDER BY sc.name`,
+    [city.id]
+  );
+  const pincodes = await pool.query(
+    `SELECT id,pincode,office_name AS "officeName",source
+       FROM city_pincodes
+      WHERE city_id=$1 AND is_active=TRUE
+      ORDER BY pincode,office_name`,
+    [city.id]
+  );
+  return {
+    cityId: city.id,
+    cityName: city.name,
+    pincodeCount: pincodes.rows.length,
+    directorySyncCount: Number(synced.rows[0]?.count || 0),
+    pincodes: pincodes.rows,
+    subcities: subcities.rows
+  };
+}
+
+module.exports={createCity,getCities,getCityById,updateCity,deactivateCity,createSubcity,getSubcities,updateSubcity,deactivateSubcity,syncSubcitiesForCity};
