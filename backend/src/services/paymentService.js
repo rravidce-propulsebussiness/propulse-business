@@ -30,7 +30,25 @@ async function getPayments({status,search,page=1,limit=50}) {
   const countResult=await pool.query(`SELECT COUNT(*)::int AS total FROM ${from} ${baseWhere}`,values);
   const statsResult=await pool.query(`SELECT COUNT(*)::int AS total,COUNT(*) FILTER (WHERE p.status='pending')::int AS pending,COUNT(*) FILTER (WHERE p.status='paid')::int AS paid,COUNT(*) FILTER (WHERE p.status='rejected')::int AS rejected,COUNT(*) FILTER (WHERE p.status='failed')::int AS failed,COUNT(*) FILTER (WHERE p.status='refunded')::int AS refunded,COUNT(*) FILTER (WHERE p.payment_method='manual')::int AS manual FROM ${from} ${baseWhere}`,values);
   const dataValues=[...values,safeLimit,offset];
-  const result=await pool.query(`SELECT p.*,u.name AS user_name,u.email AS user_email,bp.business_name,mp.name AS membership_plan_name,COALESCE(w.balance,0)::numeric AS wallet_balance,CASE WHEN p.membership_plan_id IS NOT NULL THEN 'membership' ELSE 'other' END AS payment_type FROM ${from} LEFT JOIN wallets w ON w.user_id=u.id ${baseWhere} ORDER BY p.created_at DESC,p.id DESC LIMIT $${dataValues.length-1} OFFSET $${dataValues.length}`,dataValues);
+  const result=await pool.query(`
+    SELECT p.*,u.name AS user_name,u.email AS user_email,bp.business_name,
+           mp.name AS membership_plan_name,mp.plan_type AS membership_plan_type,mp.billing_period,mp.billing_months,
+           COALESCE(w.balance,0)::numeric AS wallet_balance,
+           CASE WHEN p.membership_plan_id IS NOT NULL THEN 'membership' ELSE 'other' END AS payment_type,
+           lm.id AS membership_id,lm.starts_at AS membership_starts_at,lm.expires_at AS membership_expires_at,lm.status AS membership_status,
+           CASE WHEN lm.expires_at IS NULL THEN NULL ELSE GREATEST(0,CEIL(EXTRACT(EPOCH FROM (lm.expires_at-CURRENT_TIMESTAMP))/86400.0))::int END AS membership_remaining_days
+    FROM ${from}
+    LEFT JOIN wallets w ON w.user_id=u.id
+    LEFT JOIN LATERAL (
+      SELECT m.id,m.starts_at,m.expires_at,m.status
+      FROM memberships m
+      WHERE m.user_id=p.user_id AND m.membership_plan_id=p.membership_plan_id
+      ORDER BY (m.status='active' AND m.expires_at>CURRENT_TIMESTAMP) DESC,m.expires_at DESC,m.id DESC
+      LIMIT 1
+    ) lm ON TRUE
+    ${baseWhere}
+    ORDER BY p.created_at DESC,p.id DESC
+    LIMIT $${dataValues.length-1} OFFSET $${dataValues.length}` ,dataValues);
   return {items:result.rows,total:countResult.rows[0].total,page:safePage,limit:safeLimit,pages:Math.ceil(countResult.rows[0].total/safeLimit),stats:statsResult.rows[0]};
 }
 
@@ -55,4 +73,41 @@ async function updatePaymentStatus(id,status,adminId,notes) {
     await client.query(`UPDATE payments SET status=$1::varchar,reviewed_by=$2,reviewed_at=CURRENT_TIMESTAMP,paid_at=CASE WHEN $1::varchar='paid' THEN CURRENT_TIMESTAMP ELSE paid_at END,notes=COALESCE($3::text,notes),updated_at=CURRENT_TIMESTAMP WHERE id=$4`,[status,adminId,notes||null,id]); const updated=(await client.query(`SELECT * FROM payments WHERE id=$1`,[id])).rows[0]; await client.query('COMMIT'); return{...updated,membership_activation:membership};
   }catch(error){await client.query('ROLLBACK');throw error;}finally{client.release();}
 }
-module.exports={createManualPayment,getPayments,updatePaymentStatus};
+
+async function updateMembership({membershipId,action,days,expiresAt}) {
+  const allowed=['activate','deactivate','extend','reduce','set_expiry'];
+  if(!allowed.includes(action)) throw Object.assign(new Error('Invalid membership action'),{code:'INVALID_MEMBERSHIP_ACTION'});
+  const client=await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const row=(await client.query(`SELECT m.id,m.user_id,m.membership_plan_id,m.payment_id,m.starts_at,m.expires_at,m.status,mp.name AS plan_name,mp.plan_type,mp.duration_days FROM memberships m JOIN membership_plans mp ON mp.id=m.membership_plan_id WHERE m.id=$1 FOR UPDATE OF m`,[membershipId])).rows[0];
+    if(!row) throw Object.assign(new Error('Membership not found'),{code:'MEMBERSHIP_NOT_FOUND'});
+    const now=new Date();
+    if(action==='activate') {
+      let end=new Date(row.expires_at);
+      if(!Number.isFinite(end.getTime())||end<=now){end=new Date(now);end.setDate(end.getDate()+Math.max(1,Number(row.duration_days||30)));}
+      await client.query(`UPDATE memberships SET status='active',starts_at=CASE WHEN starts_at>CURRENT_TIMESTAMP OR expires_at<=CURRENT_TIMESTAMP THEN CURRENT_TIMESTAMP ELSE starts_at END,expires_at=$1,updated_at=CURRENT_TIMESTAMP WHERE id=$2`,[end,membershipId]);
+    } else if(action==='deactivate') {
+      await client.query(`UPDATE memberships SET status='inactive',updated_at=CURRENT_TIMESTAMP WHERE id=$1`,[membershipId]);
+    } else if(action==='extend'||action==='reduce') {
+      const value=Number(days);
+      if(!Number.isInteger(value)||value<=0||value>3650) throw Object.assign(new Error('Days must be a whole number between 1 and 3650'),{code:'INVALID_MEMBERSHIP_DAYS'});
+      if(action==='extend') {
+        const base=new Date(row.expires_at)>now?new Date(row.expires_at):now; const end=new Date(base); end.setDate(end.getDate()+value);
+        await client.query(`UPDATE memberships SET expires_at=$1,updated_at=CURRENT_TIMESTAMP WHERE id=$2`,[end,membershipId]);
+      } else {
+        const end=new Date(row.expires_at); end.setDate(end.getDate()-value); const final=end<=now?now:end;
+        await client.query(`UPDATE memberships SET expires_at=$1,status=CASE WHEN $1::timestamp<=CURRENT_TIMESTAMP THEN 'inactive' ELSE status END,updated_at=CURRENT_TIMESTAMP WHERE id=$2`,[final,membershipId]);
+      }
+    } else if(action==='set_expiry') {
+      const end=new Date(expiresAt);
+      if(!expiresAt||!Number.isFinite(end.getTime())) throw Object.assign(new Error('A valid expiry date is required'),{code:'INVALID_EXPIRY'});
+      await client.query(`UPDATE memberships SET expires_at=$1,status=CASE WHEN $1::timestamp<=CURRENT_TIMESTAMP THEN 'inactive' ELSE status END,updated_at=CURRENT_TIMESTAMP WHERE id=$2`,[end,membershipId]);
+    }
+    const updated=(await client.query(`SELECT m.id,m.user_id,m.membership_plan_id,m.payment_id,m.starts_at,m.expires_at,m.status,mp.name AS plan_name,mp.plan_type,mp.billing_period,mp.billing_months FROM memberships m JOIN membership_plans mp ON mp.id=m.membership_plan_id WHERE m.id=$1`,[membershipId])).rows[0];
+    await client.query('COMMIT');
+    return updated;
+  } catch(error){await client.query('ROLLBACK');throw error;} finally{client.release();}
+}
+
+module.exports={createManualPayment,getPayments,updatePaymentStatus,updateMembership};
