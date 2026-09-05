@@ -1,14 +1,16 @@
 const assert = require('assert');
 const pool = require('../src/config/database');
+const cityService = require('../src/services/cityService');
 
 async function main() {
   const client = await pool.connect();
-  try {
-    await client.query('BEGIN');
+  let cityId;
+  let subcityId;
+  const pin = '999991';
 
+  try {
     const c = (await client.query(`
-      SELECT i.id industry_id, s.id service_id, c.id city_id, c.state_id,
-             c.name city_name
+      SELECT i.id industry_id, s.id service_id, c.id city_id, c.state_id
       FROM industries i
       JOIN services s ON s.industry_id=i.id
       JOIN cities c ON c.is_active=TRUE
@@ -17,18 +19,27 @@ async function main() {
       ORDER BY i.id,s.id,c.id LIMIT 1
     `)).rows[0];
     assert(c, 'CI catalog must contain an industry/service/city');
+    cityId = c.city_id;
 
-    const pin = '999991';
-    const sc = (await client.query(`
-      INSERT INTO subcities(city_id,name,slug,pincode,source)
-      VALUES($1,'Mapping Test Area','mapping-test-area',$2,'ci-test')
-      ON CONFLICT(city_id,slug) DO UPDATE
-        SET pincode=EXCLUDED.pincode,is_active=TRUE,source='ci-test'
-      RETURNING id,pincode
-    `, [c.city_id, pin])).rows[0];
+    // Exercise the application service so the same city_pincodes synchronization
+    // path used by the API is covered by the regression test.
+    const subcity = await cityService.createSubcity({
+      cityId,
+      name: 'Mapping Test Area',
+      slug: 'mapping-test-area',
+      pincode: pin,
+      source: 'ci-test'
+    });
+    subcityId = subcity.id;
 
-    assert(sc, 'CI mapping subcity must be created');
-    assert.strictEqual(sc.pincode, pin);
+    assert.strictEqual(subcity.pincode, pin);
+
+    const cityPins = Number((await client.query(`
+      SELECT COUNT(*)::int count
+      FROM city_pincodes
+      WHERE city_id=$1 AND pincode=$2 AND is_active=TRUE
+    `, [cityId, pin])).rows[0].count);
+    assert.strictEqual(cityPins, 1);
 
     const lead = (await client.query(`
       INSERT INTO leads(
@@ -40,21 +51,14 @@ async function main() {
         '{"Zip Code":"999991","Area":"Mapping Test Area"}'::jsonb
       )
       RETURNING id,pincode,city_id,subcity_id
-    `, [c.industry_id,c.service_id,c.state_id,c.city_id,sc.id,pin])).rows[0];
+    `, [c.industry_id,c.service_id,c.state_id,cityId,subcityId,pin])).rows[0];
 
     assert.strictEqual(lead.pincode, pin);
-    assert.strictEqual(Number(lead.city_id), Number(c.city_id));
-    assert.strictEqual(Number(lead.subcity_id), Number(sc.id));
-
-    const cityPins = Number((await client.query(`
-      SELECT COUNT(*)::int count
-      FROM city_pincodes
-      WHERE city_id=$1 AND pincode=$2 AND is_active=TRUE
-    `, [c.city_id,pin])).rows[0].count);
-    assert.strictEqual(cityPins, 1);
+    assert.strictEqual(Number(lead.city_id), Number(cityId));
+    assert.strictEqual(Number(lead.subcity_id), Number(subcityId));
 
     const subcityPin = (await client.query(
-      `SELECT pincode FROM subcities WHERE id=$1`, [sc.id]
+      `SELECT pincode FROM subcities WHERE id=$1`, [subcityId]
     )).rows[0].pincode;
     assert.strictEqual(subcityPin, pin);
 
@@ -63,27 +67,33 @@ async function main() {
         industry_id,service_id,state_id,city_id,customer_name,
         customer_phone,requirement,pincode
       ) VALUES($1,$2,$3,$4,'PIN Mapping Test 2','9999999992','Mapping regression test 2',$5)
-    `, [c.industry_id,c.service_id,c.state_id,c.city_id,pin]);
+    `, [c.industry_id,c.service_id,c.state_id,cityId,pin]);
 
     const duplicateCount = Number((await client.query(`
       SELECT COUNT(*)::int count
       FROM city_pincodes
       WHERE city_id=$1 AND pincode=$2
-    `, [c.city_id,pin])).rows[0].count);
+    `, [cityId,pin])).rows[0].count);
     assert.strictEqual(duplicateCount, 1);
 
-    await client.query('ROLLBACK');
     console.log('Lead PIN location mapping regression test passed.');
   } catch (e) {
-    await client.query('ROLLBACK').catch(() => {});
-    throw e;
+    console.error(e.stack || e.message);
+    process.exitCode = 1;
   } finally {
-    client.release();
-    await pool.end();
+    try {
+      if (subcityId) {
+        await client.query('DELETE FROM leads WHERE subcity_id=$1 OR (city_id=$2 AND pincode=$3 AND customer_name LIKE $4)', [subcityId, cityId, pin, 'PIN Mapping Test%']);
+        await client.query('DELETE FROM subcities WHERE id=$1', [subcityId]);
+      }
+      if (cityId) {
+        await client.query('DELETE FROM city_pincodes WHERE city_id=$1 AND pincode=$2 AND office_name=\'Mapping Test Area\'', [cityId, pin]);
+      }
+    } finally {
+      client.release();
+      await pool.end();
+    }
   }
 }
 
-main().catch(e => {
-  console.error(e.stack || e.message);
-  process.exit(1);
-});
+main();
