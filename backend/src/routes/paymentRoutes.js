@@ -4,15 +4,10 @@ const requireAuth = require('../middleware/authMiddleware');
 const requireAdmin = require('../middleware/adminMiddleware');
 
 const router = express.Router();
-
 router.use(requireAuth);
-
-// Customer payment operations use the manual verification flow.
 router.post('/manual', paymentController.createManualPayment);
 router.get('/membership/current', paymentController.getCurrentMembership);
-
-// Administrative payment operations must never be accessible to normal businesses.
 router.get('/', requireAdmin, paymentController.getPayments);
 router.patch('/:id/status', requireAdmin, paymentController.updatePaymentStatus);
-
+router.patch('/memberships/:id', requireAdmin, paymentController.updateMembership);
 module.exports = router;
