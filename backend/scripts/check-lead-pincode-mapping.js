@@ -32,15 +32,15 @@ async function main() {
 
     const lead = (await client.query(`
       INSERT INTO leads(
-        industry_id,service_id,state_id,city_id,customer_name,
-        customer_phone,requirement,custom_fields
+        industry_id,service_id,state_id,city_id,subcity_id,customer_name,
+        customer_phone,requirement,pincode,custom_fields
       ) VALUES(
-        $1,$2,$3,$4,'PIN Mapping Test','9999999991',
-        'Mapping regression test',
+        $1,$2,$3,$4,$5,'PIN Mapping Test','9999999991',
+        'Mapping regression test',$6,
         '{"Zip Code":"999991","Area":"Mapping Test Area"}'::jsonb
       )
       RETURNING id,pincode,city_id,subcity_id
-    `, [c.industry_id,c.service_id,c.state_id,c.city_id])).rows[0];
+    `, [c.industry_id,c.service_id,c.state_id,c.city_id,sc.id,pin])).rows[0];
 
     assert.strictEqual(lead.pincode, pin);
     assert.strictEqual(Number(lead.city_id), Number(c.city_id));
