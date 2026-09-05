@@ -9,8 +9,6 @@ const stateRoutes=require('./routes/stateRoutes');
 const cityRoutes=require('./routes/cityRoutes');
 const subcityRoutes=require('./routes/subcityRoutes');
 const pincodeRoutes=require('./routes/pincodeRoutes');
-const cityService=require('./services/cityService');
-const pincodeService=require('./services/pincodeService');
 const authRoutes=require('./routes/authRoutes');
 const profileRoutes=require('./routes/profileRoutes');
 const adminRoutes=require('./routes/adminRoutes');
@@ -24,7 +22,6 @@ const boosterOrderRoutes=require('./routes/boosterOrderRoutes');
 const app=express();
 const PORT=Number(process.env.PORT)||5000;
 const configuredOrigins=String(process.env.CORS_ORIGIN||'http://localhost:5173').split(',').map(x=>x.trim()).filter(Boolean);
-const indiaPincodeSyncInterval=Number(process.env.INDIA_PINCODE_SYNC_INTERVAL_MS)||7*24*60*60*1000;
 const MAX_JSON_BYTES=process.env.NODE_ENV==='production'?'1mb':'10mb';
 app.disable('x-powered-by');
 app.use(cors({origin(origin,callback){if(!origin||configuredOrigins.includes(origin))return callback(null,true);return callback(new Error('CORS origin not allowed'));}}));
@@ -50,15 +47,8 @@ app.use('/api/subcities',subcityRoutes);
 app.use('/api/pincodes',pincodeRoutes);
 app.use((req,res)=>res.status(404).json({error:'Not found'}));
 app.use((err,req,res,next)=>{if(err.message==='CORS origin not allowed')return res.status(403).json({error:'Origin not allowed'});console.error('Unhandled server error:',err.message);return res.status(500).json({error:'Internal server error'});});
-let server;const timers=[];
-function startJobs(){
-  timers.push(setTimeout(()=>cityService.syncPincodesBatch(20).catch(e=>console.error('Automatic pincode sync failed:',e.message)),10*60*1000));
-  timers.push(setInterval(()=>cityService.syncPincodesBatch(20).catch(e=>console.error('Automatic pincode sync failed:',e.message)),60*60*1000));
-  timers.push(setTimeout(()=>cityService.syncCoverageBatch(1).catch(e=>console.error('Automatic location coverage sync failed:',e.message)),30*60*1000));
-  timers.push(setInterval(()=>cityService.syncCoverageBatch(1).catch(e=>console.error('Automatic location coverage sync failed:',e.message)),6*60*60*1000));
-  timers.push(setTimeout(()=>pincodeService.syncAllIndiaPincodes().catch(e=>console.error('Automatic India pincode directory sync failed:',e.message)),20*60*1000));
-  timers.push(setInterval(()=>pincodeService.syncAllIndiaPincodes().catch(e=>console.error('Automatic India pincode directory sync failed:',e.message)),indiaPincodeSyncInterval));
-}
-async function shutdown(signal){console.log(`${signal} received; shutting down gracefully.`);timers.forEach(clearTimeout);timers.forEach(clearInterval);if(server)await new Promise(resolve=>server.close(resolve));await pool.end();process.exit(0);}
-server=app.listen(PORT,'0.0.0.0',()=>{console.log(`Server running on port ${PORT}`);startJobs();});
-process.once('SIGTERM',()=>shutdown('SIGTERM'));process.once('SIGINT',()=>shutdown('SIGINT'));
+let server;
+async function shutdown(signal){console.log(`${signal} received; shutting down gracefully.`);if(server)await new Promise(resolve=>server.close(resolve));await pool.end();process.exit(0);}
+server=app.listen(PORT,'0.0.0.0',()=>{console.log(`Server running on port ${PORT}`);});
+process.once('SIGTERM',()=>shutdown('SIGTERM'));
+process.once('SIGINT',()=>shutdown('SIGINT'));
