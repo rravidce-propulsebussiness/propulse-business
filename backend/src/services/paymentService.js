@@ -33,10 +33,12 @@ async function getPayments({status,search,page=1,limit=50}) {
   if(status&&status!=='all'){values.push(status);where.push(`p.status=$${values.length}`);}
   if(search){values.push(`%${String(search).trim()}%`);where.push(`(u.name ILIKE $${values.length} OR u.email ILIKE $${values.length} OR COALESCE(p.manual_reference,'') ILIKE $${values.length})`);}
   const safeLimit=Math.min(Math.max(Number(limit)||50,1),100),safePage=Math.max(Number(page)||1,1),offset=(safePage-1)*safeLimit;
-  const countResult=await pool.query(`SELECT COUNT(*)::int AS total FROM payments p JOIN users u ON u.id=p.user_id ${where.length?`WHERE ${where.join(' AND ')}`:''}`,values);
+  const baseWhere=where.length?`WHERE ${where.join(' AND ')}`:'';
+  const countResult=await pool.query(`SELECT COUNT(*)::int AS total FROM payments p JOIN users u ON u.id=p.user_id ${baseWhere}`,values);
+  const statsResult=await pool.query(`SELECT COUNT(*)::int AS total,COUNT(*) FILTER (WHERE p.status='pending')::int AS pending,COUNT(*) FILTER (WHERE p.status='paid')::int AS paid,COUNT(*) FILTER (WHERE p.status='rejected')::int AS rejected,COUNT(*) FILTER (WHERE p.status='failed')::int AS failed,COUNT(*) FILTER (WHERE p.status='refunded')::int AS refunded,COUNT(*) FILTER (WHERE p.payment_method='manual')::int AS manual FROM payments p JOIN users u ON u.id=p.user_id ${baseWhere}`,values);
   const dataValues=[...values,safeLimit,offset];
-  const result=await pool.query(`SELECT p.*,u.name AS user_name,u.email AS user_email,bp.business_name,mp.name AS membership_plan_name FROM payments p JOIN users u ON u.id=p.user_id LEFT JOIN business_profiles bp ON bp.user_id=u.id LEFT JOIN membership_plans mp ON mp.id=p.membership_plan_id ${where.length?`WHERE ${where.join(' AND ')}`:''} ORDER BY p.created_at DESC LIMIT $${dataValues.length-1} OFFSET $${dataValues.length}`,dataValues);
-  return {items:result.rows,total:countResult.rows[0].total,page:safePage,limit:safeLimit,pages:Math.ceil(countResult.rows[0].total/safeLimit)};
+  const result=await pool.query(`SELECT p.*,u.name AS user_name,u.email AS user_email,bp.business_name,mp.name AS membership_plan_name FROM payments p JOIN users u ON u.id=p.user_id LEFT JOIN business_profiles bp ON bp.user_id=u.id LEFT JOIN membership_plans mp ON mp.id=p.membership_plan_id ${baseWhere} ORDER BY p.created_at DESC,p.id DESC LIMIT $${dataValues.length-1} OFFSET $${dataValues.length}`,dataValues);
+  return {items:result.rows,total:countResult.rows[0].total,page:safePage,limit:safeLimit,pages:Math.ceil(countResult.rows[0].total/safeLimit),stats:statsResult.rows[0]};
 }
 
 async function activateMembership(client,payment) {
