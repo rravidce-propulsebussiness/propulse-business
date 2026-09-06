@@ -135,7 +135,7 @@ async function activateMembership(client,payment) {
   } else {
     const inserted=await client.query(`INSERT INTO memberships(user_id,membership_plan_id,payment_id,starts_at,expires_at,status) VALUES($1,$2,$3,$4,$5,'active') RETURNING id`,[payment.user_id,plan.id,payment.id,base,end]); membershipId=inserted.rows[0].id;
   }
-  await client.query(`INSERT INTO membership_admin_history(membership_id,user_id,action,old_status,new_status,old_expires_at,new_expires_at,payment_id,notes) VALUES($1,$2,'payment_activation','active','active',$3,$4,$5,$6)`,[membershipId,payment.user_id,current?.expires_at||null,end,payment.id,note]);
+  await client.query(`INSERT INTO membership_admin_history(membership_id,user_id,action,old_status,new_status,old_expires_at,new_expires_at,payment_id,notes) VALUES($1,$2,'payment_activation',$3,'active',$4,$5,$6,$7)`,[membershipId,payment.user_id,current?.status||null,current?.expires_at||null,end,payment.id,note]);
   return{planId:plan.id,planType,expiresAt:end,upgradedFrom:current&&current.membership_plan_id!==plan.id?current.plan_name:null};
 }
 
@@ -155,9 +155,11 @@ async function updateMembership({membershipId,action,days,expiresAt,adminId}) {
   const client=await pool.connect();
   try {
     await client.query('BEGIN');
+    const keyRow=(await client.query(`SELECT user_id FROM memberships WHERE id=$1`,[membershipId])).rows[0];
+    if(!keyRow) throw Object.assign(new Error('Membership not found'),{code:'MEMBERSHIP_NOT_FOUND'});
+    await client.query('SELECT pg_advisory_xact_lock(hashtext($1))',[`membership-user:${keyRow.user_id}`]);
     const row=(await client.query(`SELECT m.id,m.user_id,m.membership_plan_id,m.payment_id,m.starts_at,m.expires_at,m.status,mp.name AS plan_name,mp.plan_type,mp.duration_days FROM memberships m JOIN membership_plans mp ON mp.id=m.membership_plan_id WHERE m.id=$1 FOR UPDATE OF m`,[membershipId])).rows[0];
     if(!row) throw Object.assign(new Error('Membership not found'),{code:'MEMBERSHIP_NOT_FOUND'});
-    await client.query('SELECT pg_advisory_xact_lock(hashtext($1))',[`membership-user:${row.user_id}`]);
     const oldStatus=row.status,oldExpires=row.expires_at,now=new Date();
     if(action==='activate') {
       const tier=String(row.plan_type||'').toLowerCase();
