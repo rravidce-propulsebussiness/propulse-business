@@ -2,6 +2,7 @@
 // Keep the implementation in one place so routes/imports never depend on versioned filenames.
 import './AdminLeadsV9.no-refresh.css';
 import GoogleSheetAutoSync from './GoogleSheetAutoSync';
+import AdminLeadBulkClear from './AdminLeadBulkClear';
 import AdminLeadsV9 from './AdminLeadsV9';
 
 function resetSheetSyncCheck(){
@@ -13,5 +14,5 @@ function resetSheetSyncCheck(){
 resetSheetSyncCheck();
 
 export default function AdminLeads(){
-  return <><GoogleSheetAutoSync/><AdminLeadsV9/></>;
+  return <><GoogleSheetAutoSync/><AdminLeadsV9/><AdminLeadBulkClear/></>;
 }
