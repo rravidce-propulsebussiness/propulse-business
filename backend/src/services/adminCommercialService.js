@@ -12,7 +12,16 @@ async function getInvestorSettings() {
     WHERE i.is_active=TRUE
     ORDER BY i.name
   `)).rows;
-  return { ...s, industryLimits: limits };
+  const locationLimits = (await pool.query(`
+    SELECT l.id,l.state_id,l.city_id,l.investor_limit,l.is_active,
+           s.name AS state_name,c.name AS city_name
+    FROM investor_location_limits l
+    JOIN states s ON s.id=l.state_id
+    LEFT JOIN cities c ON c.id=l.city_id
+    WHERE s.is_active=TRUE AND (c.id IS NULL OR c.is_active=TRUE)
+    ORDER BY s.name,c.name NULLS FIRST,l.id
+  `)).rows;
+  return { ...s, industryLimits: limits, locationLimits };
 }
 
 async function updateInvestorSettings(data) {
@@ -56,6 +65,27 @@ async function updateInvestorSettings(data) {
       }else{
         await pool.query('UPDATE investment_industry_rules SET is_active=FALSE,updated_at=CURRENT_TIMESTAMP WHERE industry_id=$1',[industryId]);
       }
+    }
+  }
+
+  if(Array.isArray(data.locationLimits)){
+    for(const x of data.locationLimits){
+      const stateId=Number(x.stateId??x.state_id);
+      const cityId=x.cityId===null||x.cityId===''||x.cityId===undefined?(x.city_id==null?null:Number(x.city_id)):Number(x.cityId);
+      const limit=Number(x.limit??x.investor_limit??0);
+      const active=x.isActive===undefined?Boolean(x.is_active!==false):Boolean(x.isActive);
+      if(!Number.isInteger(stateId)||stateId<=0)throw Object.assign(new Error('A valid state is required for every investor location limit'),{code:'INVALID_LOCATION_CONFIG'});
+      if(!Number.isFinite(limit)||limit<0)throw Object.assign(new Error('Investor location limit must be zero or greater'),{code:'INVALID_LOCATION_CONFIG'});
+      const state=(await pool.query('SELECT id FROM states WHERE id=$1 AND is_active=TRUE',[stateId])).rows[0];
+      if(!state)throw Object.assign(new Error('Selected investor location state is invalid'),{code:'INVALID_LOCATION_CONFIG'});
+      if(cityId!==null){
+        if(!Number.isInteger(cityId)||cityId<=0)throw Object.assign(new Error('Selected investor location city is invalid'),{code:'INVALID_LOCATION_CONFIG'});
+        const city=(await pool.query('SELECT id FROM cities WHERE id=$1 AND state_id=$2 AND is_active=TRUE',[cityId,stateId])).rows[0];
+        if(!city)throw Object.assign(new Error('Selected investor location city does not belong to the selected state'),{code:'INVALID_LOCATION_CONFIG'});
+      }
+      await pool.query(`INSERT INTO investor_location_limits(state_id,city_id,investor_limit,is_active)
+        VALUES($1,$2,$3,$4)
+        ON CONFLICT (state_id,COALESCE(city_id,0)) DO UPDATE SET investor_limit=EXCLUDED.investor_limit,is_active=EXCLUDED.is_active,updated_at=CURRENT_TIMESTAMP`,[stateId,cityId,limit,active]);
     }
   }
   return getInvestorSettings();
