@@ -4,8 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "npm run db:migrate && nodemon src/server.js",
-    "start": "npm run db:migrate && node src/server.js",
+    "dev": "nodemon src/server.js",
+    "start": "node src/server.js",
     "create-admin": "node src/database/createAdmin.js",
     "db:bootstrap": "node src/database/bootstrapDatabase.js",
     "db:migrate": "node src/database/runMigrations.js",
