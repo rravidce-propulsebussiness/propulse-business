@@ -1,0 +1,13 @@
+const express=require('express');
+const controller=require('../controllers/couponController');
+const requireAuth=require('../middleware/authMiddleware');
+const requireAdmin=require('../middleware/adminMiddleware');
+const router=express.Router();
+router.use(requireAuth);
+router.post('/validate',controller.validate);
+router.get('/',requireAdmin,controller.list);
+router.get('/:id',requireAdmin,controller.details);
+router.post('/',requireAdmin,controller.create);
+router.patch('/:id',requireAdmin,controller.update);
+router.patch('/:id/status',requireAdmin,controller.toggle);
+module.exports=router;
