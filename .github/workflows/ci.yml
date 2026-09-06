@@ -112,6 +112,14 @@ jobs:
           DB_USER: ci_smoke
           DB_PASSWORD: ci_smoke
         run: node scripts/check-membership-integrity.js
+      - name: Verify payment and wallet integrity
+        env:
+          DB_HOST: 127.0.0.1
+          DB_PORT: 5432
+          DB_NAME: ci_smoke
+          DB_USER: ci_smoke
+          DB_PASSWORD: ci_smoke
+        run: node scripts/check-payment-integrity.js
       - name: Start backend
         env:
           PORT: 5000
@@ -131,7 +139,7 @@ jobs:
               exit 1
             fi
             status=$(curl --silent --show-error --output /tmp/backend-response.json --write-out '%{http_code}' http://127.0.0.1:5000/health || true)
-            if [ "$status" = "200" ] && grep -q '"database":"connected"' /tmp/backend-response.json; then
+            if [ "$status" = "200" ] && grep -q '\"database\":\"connected\"' /tmp/backend-response.json; then
               echo "Backend and PostgreSQL health check passed."
               cat /tmp/backend-response.json
               exit 0
