@@ -38,7 +38,7 @@ async function getLeadAccessMap(userId,leadIds){
   const ids=[...new Set((leadIds||[]).map(Number).filter(Number.isInteger))];if(!userId||!ids.length)return {};
   const [leadsResult,membershipResult,claimsResult]=await Promise.all([
     pool.query(`SELECT id,lead_type,is_exclusive,created_at,exclusive_delay_days,status FROM leads WHERE id=ANY($1::int[])`,[ids]),
-    pool.query(`SELECT m.id,m.starts_at,m.expires_at,m.billing_months,m.lead_entitlements,m.lead_rollover_enabled,m.lead_expiry_days FROM memberships m JOIN membership_plans mp ON mp.id=m.membership_plan_id WHERE m.user_id=$1 AND m.status='active' AND m.starts_at<=CURRENT_TIMESTAMP AND m.expires_at>=CURRENT_TIMESTAMP AND mp.is_active=TRUE AND LOWER(REPLACE(COALESCE(mp.plan_type,''),'-','_')) IN ('pro','non_pro') ORDER BY m.expires_at DESC LIMIT 1`,[userId]),
+    pool.query(`SELECT m.id,m.starts_at,m.expires_at,mp.billing_months,mp.lead_entitlements,mp.lead_rollover_enabled,mp.lead_expiry_days FROM memberships m JOIN membership_plans mp ON mp.id=m.membership_plan_id WHERE m.user_id=$1 AND m.status='active' AND m.starts_at<=CURRENT_TIMESTAMP AND m.expires_at>=CURRENT_TIMESTAMP AND mp.is_active=TRUE AND LOWER(REPLACE(COALESCE(mp.plan_type,''),'-','_')) IN ('pro','non_pro') ORDER BY m.expires_at DESC LIMIT 1`,[userId]),
     pool.query(`SELECT lead_id,id,claimed_at,expires_at,entitlement_type FROM lead_entitlement_claims WHERE user_id=$1 AND lead_id=ANY($2::int[])`,[userId,ids]),
   ]);
   const membership=membershipResult.rows[0]||null;const claims=new Map(claimsResult.rows.map(x=>[Number(x.lead_id),x]));const out={};
