@@ -4,8 +4,30 @@ import {authRequest} from '../../utils/auth';
 const STORAGE_KEY='propulse.admin.googleSheet.sources';
 const legacyKey='propulse.admin.googleSheet.url';
 const fingerprintKey=url=>`propulse.admin.googleSheet.fingerprint.${url}`;
+const clean=v=>String(v??'').trim();
+const norm=v=>clean(v).toLowerCase().replace(/&/g,'and').replace(/[^a-z0-9]/g,'');
 
-function canonicalizeCsv(csv){const aliases={post_code:'Pincode',postal_code:'Pincode',pin_code:'Pincode',full_name:'Customer Name',phone_number:'Customer Phone',email:'Customer Email',share_more_details_and_requirement:'Requirement',plot_location:'Location',lead_status:'Lead Status',created_time:'Created At'};const newline=csv.includes('\r\n')?'\r\n':'\n';const end=csv.indexOf(newline);const header=end<0?csv:csv.slice(0,end);const body=end<0?'':csv.slice(end);const cells=[];let cell='',quoted=false;for(let i=0;i<header.length;i++){const c=header[i];if(c==='"'){if(quoted&&header[i+1]==='"'){cell+='"';i++}else quoted=!quoted}else if(c===','&&!quoted){cells.push(cell);cell=''}else cell+=c}cells.push(cell);const normalized=cells.map(raw=>{const q=/^"[\s\S]*"$/.test(raw);const value=q?raw.slice(1,-1).replace(/""/g,'"'):raw;const key=value.trim().toLowerCase().replace(/\s+/g,'_');const next=aliases[key]||value;return q?`"${next.replace(/"/g,'""')}"`:next});return normalized.join(',')+body}
+function parseCsv(text){const rows=[];let row=[],cell='',quoted=false;for(let i=0;i<text.length;i++){const c=text[i];if(c==='"'){if(quoted&&text[i+1]==='"'){cell+='"';i++}else quoted=!quoted}else if(c===','&&!quoted){row.push(cell);cell=''}else if((c==='\n'||c==='\r')&&!quoted){if(c==='\r'&&text[i+1]==='\n')i++;row.push(cell);if(row.some(v=>clean(v)))rows.push(row);row=[];cell=''}else cell+=c}row.push(cell);if(row.some(v=>clean(v)))rows.push(row);return rows}
+function csvEscape(v){const s=String(v??'');return /[",\r\n]/.test(s)?`"${s.replace(/"/g,'""')}"`:s}
+function canonicalizeCsv(csv){
+ const aliases={
+  post_code:'Pincode',postal_code:'Pincode',pin_code:'Pincode',zip_code:'Pincode',zipcode:'Pincode',zip:'Pincode',
+  full_name:'Customer Name',name:'Customer Name',customer:'Customer Name',customer_name:'Customer Name',
+  phone_number:'Customer Phone',mob_no:'Customer Phone',mobile:'Customer Phone',phone:'Customer Phone',contact_number:'Customer Phone',customer_phone:'Customer Phone',
+  email:'Customer Email',email_id:'Customer Email',customer_email:'Customer Email',
+  share_more_details_and_requirement:'Requirement',requirements:'Requirement',requirement:'Requirement',
+  plot_location:'Location',location:'Location',lead_status:'Lead Status',created_time:'Created At',
+  conditional_question_1:'Question 1',conditional_question_2:'Question 2',conditional_question_3:'Question 3'
+ };
+ const rows=parseCsv(csv);if(!rows.length)return'';
+ const headers=rows[0].map(v=>aliases[norm(v)]||clean(v));
+ const seen=new Set();const finalHeaders=headers.map((h,i)=>{let x=h||`Column ${i+1}`;if(seen.has(norm(x)))x=`${x} ${i+1}`;seen.add(norm(x));return x});
+ const capacityIndex=finalHeaders.findIndex(h=>['buyercapacity','buyercapacitylimit','maxbuyers','capacity'].includes(norm(h)));
+ if(capacityIndex<0){finalHeaders.push('Buyer Capacity');}
+ const industryIndex=finalHeaders.findIndex(h=>norm(h)==='industry');
+ const data=rows.slice(1).map(source=>{const row=[...source];while(row.length<finalHeaders.length)row.push('');if(capacityIndex<0){row.push('3')}else{const n=Number(row[capacityIndex]);row[capacityIndex]=String(Number.isFinite(n)&&n>=2?Math.floor(n):3)}if(industryIndex>=0){const value=norm(row[industryIndex]);if(value==='intrior design and home interiors')row[industryIndex]='Interior Design & Home Interiors';}return row.slice(0,finalHeaders.length)});
+ return [finalHeaders,...data].map(row=>row.map(csvEscape).join(',')).join('\n');
+}
 async function fingerprint(text){if(window.crypto?.subtle){const data=new TextEncoder().encode(text);const hash=await window.crypto.subtle.digest('SHA-256',data);return Array.from(new Uint8Array(hash)).map(x=>x.toString(16).padStart(2,'0')).join('')}let h=2166136261;for(let i=0;i<text.length;i++)h=Math.imul(h^text.charCodeAt(i),16777619);return String(h>>>0)}
 async function readSheetInBrowser(value){const url=new URL(String(value||'').trim());if(url.protocol!=='https:'||url.hostname!=='docs.google.com')throw new Error('Enter a valid Google Sheets URL');const match=url.pathname.match(/\/spreadsheets\/(?:u\/\d+\/)?d\/([a-zA-Z0-9_-]+)/);if(!match)throw new Error('Google Sheets URL is not in a supported format');const gid=url.searchParams.get('gid')||(url.hash.match(/(?:^#|&)gid=(\d+)/)||[])[1]||'0';const targets=[`https://docs.google.com/spreadsheets/d/${match[1]}/gviz/tq?tqx=out:csv&gid=${encodeURIComponent(gid)}`,`https://docs.google.com/spreadsheets/d/${match[1]}/export?format=csv&gid=${encodeURIComponent(gid)}`];let last='';for(const target of targets){try{const response=await fetch(target,{headers:{Accept:'text/csv,text/plain;q=0.9'}});if(!response.ok){last=`Google Sheet could not be read (HTTP ${response.status})`;continue}const text=await response.text();if(!text.trim()){last='Google Sheet is empty';continue}if(/<html|<title>/i.test(text.slice(0,500)))throw new Error('Google Sheet access is restricted. Set General access to Anyone with the link → Viewer');return{csv:text}}catch(error){last=error.message||last}}throw new Error(last||'Unable to read Google Sheet')}
 
