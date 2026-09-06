@@ -9,5 +9,6 @@ router.get('/',requireAdmin,controller.list);
 router.get('/:id',requireAdmin,controller.details);
 router.post('/',requireAdmin,controller.create);
 router.patch('/:id',requireAdmin,controller.update);
+router.delete('/:id',requireAdmin,controller.remove);
 router.patch('/:id/status',requireAdmin,controller.toggle);
 module.exports=router;
