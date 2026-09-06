@@ -41,10 +41,7 @@ async function getLocationRules() {
     LEFT JOIN cities c ON c.id=l.city_id
     WHERE l.is_active=TRUE AND s.is_active=TRUE AND (c.id IS NULL OR c.is_active=TRUE)
     ORDER BY s.name,c.name NULLS FIRST,l.id
-  `)).rows.map((rule) => ({
-    ...rule,
-    investor_limit: Number(rule.investor_limit),
-  }));
+  `)).rows.map((rule) => ({ ...rule, investor_limit: Number(rule.investor_limit) }));
 }
 
 async function getInvestmentAccess(userId) {
@@ -85,16 +82,19 @@ async function locationRulesEnabled(client) {
   return Boolean(row);
 }
 
-async function assertLocationCapacity(client, { stateId, cityId, value, excludeInvestmentId = null }) {
+async function assertLocationCapacity(client, { stateId, cityId, value }) {
   const enabled = await locationRulesEnabled(client);
   if (!enabled) return null;
   if (!stateId) throw Object.assign(new Error('A location is required for this investment'), { code: 'LOCATION_REQUIRED' });
+  if (cityId) {
+    const city = (await client.query('SELECT id FROM cities WHERE id=$1 AND state_id=$2 AND is_active=TRUE',[cityId,stateId])).rows[0];
+    if (!city) throw Object.assign(new Error('Selected city does not belong to the selected state'), { code: 'LOCATION_UNAVAILABLE' });
+  }
   const rule = await findLocationRule(client, stateId, cityId, true);
   if (!rule) throw Object.assign(new Error('Investment is not available for this location'), { code: 'LOCATION_UNAVAILABLE' });
-  const params = [stateId, value];
+  const params = [stateId];
   let where = 'state_id=$1 AND status IN (\'active\',\'matured\')';
-  if (rule.city_id !== null) { params.splice(1, 0, Number(rule.city_id)); where += ' AND city_id=$2'; }
-  if (excludeInvestmentId) { params.push(excludeInvestmentId); where += ` AND id<>$${params.length}`; }
+  if (rule.city_id !== null) { params.push(Number(rule.city_id)); where += ' AND city_id=$2'; }
   const used = Number((await client.query(`SELECT COALESCE(SUM(amount),0) AS total FROM investments WHERE ${where}`, params)).rows[0].total);
   if (used + value > Number(rule.investor_limit)) throw Object.assign(new Error(`Investment capacity for ${rule.city_name ? `${rule.city_name}, ` : ''}${rule.state_name} has been reached`), { code: 'LOCATION_CAPACITY_REACHED' });
   return rule;
@@ -111,8 +111,7 @@ async function createInvestment({ userId, industryId, stateId, cityId, amount: r
     const rule = (await client.query(`SELECT r.*,i.name AS industry_name FROM investment_industry_rules r JOIN industries i ON i.id=r.industry_id WHERE r.industry_id=$1 AND r.is_active=TRUE AND i.is_active=TRUE FOR UPDATE`, [industryId])).rows[0];
     if (!rule) throw Object.assign(new Error('Investment is not available for this industry'), { code: 'INDUSTRY_UNAVAILABLE' });
     if (value < Number(rule.minimum_amount) || value > Number(rule.maximum_amount)) throw Object.assign(new Error(`Investment must be between ₹${rule.minimum_amount} and ₹${rule.maximum_amount}`), { code: 'AMOUNT_OUT_OF_RANGE' });
-    const locationRule = await assertLocationCapacity(client, { stateId: Number(stateId) || null, cityId: Number(cityId) || null, value });
-    if (locationRule && locationRule.city_id !== null && Number(cityId) !== Number(locationRule.city_id)) throw Object.assign(new Error('Selected city is not available for this investor location rule'), { code: 'LOCATION_UNAVAILABLE' });
+    await assertLocationCapacity(client, { stateId: Number(stateId) || null, cityId: Number(cityId) || null, value });
     const distinct = (await client.query(`SELECT COUNT(DISTINCT industry_id)::int AS count FROM investments WHERE user_id=$1 AND status IN ('active','matured')`, [userId])).rows[0];
     const already = (await client.query(`SELECT 1 FROM investments WHERE user_id=$1 AND industry_id=$2 AND status IN ('active','matured') LIMIT 1`, [userId, industryId])).rows.length > 0;
     if (!already && Number(settings.customer_industry_limit) > 0 && Number(distinct.count) >= Number(settings.customer_industry_limit)) throw Object.assign(new Error('Your investment industry limit has been reached'), { code: 'INDUSTRY_LIMIT_REACHED' });
@@ -141,18 +140,7 @@ async function getMyInvestments(userId) {
   return (await pool.query(`SELECT x.*,i.name AS industry_name,s.name AS state_name,c.name AS city_name,ri.id AS reinvested_to_id FROM investments x JOIN industries i ON i.id=x.industry_id LEFT JOIN states s ON s.id=x.state_id LEFT JOIN cities c ON c.id=x.city_id LEFT JOIN investments ri ON ri.parent_investment_id=x.id WHERE x.user_id=$1 ORDER BY x.created_at DESC,x.id DESC`, [userId])).rows.map((item) => {
     const payout = Number(item.payout_amount || 0);
     const hasChild = Boolean(item.reinvested_to_id);
-    return {
-      ...item,
-      amount: Number(item.amount),
-      expected_return: Number(item.expected_return),
-      return_percent: 0,
-      realized_revenue: Number(item.realized_revenue || 0),
-      payout_amount: payout,
-      reinvestment_enabled: Boolean(item.reinvestment_enabled),
-      parent_investment_id: item.parent_investment_id ? Number(item.parent_investment_id) : null,
-      reinvested_to_id: item.reinvested_to_id ? Number(item.reinvested_to_id) : null,
-      reinvestment_available: String(item.status).toLowerCase() === 'paid' && payout > 0 && Boolean(item.reinvestment_enabled) && !hasChild,
-    };
+    return { ...item, amount: Number(item.amount), expected_return: Number(item.expected_return), return_percent: 0, realized_revenue: Number(item.realized_revenue || 0), payout_amount: payout, reinvestment_enabled: Boolean(item.reinvestment_enabled), parent_investment_id: item.parent_investment_id ? Number(item.parent_investment_id) : null, reinvested_to_id: item.reinvested_to_id ? Number(item.reinvested_to_id) : null, reinvestment_available: String(item.status).toLowerCase() === 'paid' && payout > 0 && Boolean(item.reinvestment_enabled) && !hasChild };
   });
 }
 
