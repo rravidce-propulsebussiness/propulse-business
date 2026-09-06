@@ -41,7 +41,8 @@ export default function AdminLeadBulkClear(){
       const scope=currentScope();
       button.hidden=scope.count===0;
       button.disabled=scope.count===0||button.dataset.busy==='true';
-      button.textContent=scope.filtered?`Clear ${scope.count} matching leads`:`Clear all ${scope.count} leads`;
+      const nextText=scope.filtered?`Clear ${scope.count} matching leads`:`Clear all ${scope.count} leads`;
+      if(button.textContent!==nextText)button.textContent=nextText;
       button.title=scope.filtered?`Permanently delete the ${scope.count} leads currently matching: ${scope.description}`:'Permanently delete every lead in the inventory';
     };
 
@@ -87,12 +88,16 @@ export default function AdminLeadBulkClear(){
         bar.appendChild(button);
       }
       update();
-      if(!observer){
+      const grid=document.querySelector('.v9-grid');
+      if(!observer&&grid){
         observer=new MutationObserver(update);
-        observer.observe(document.querySelector('.v9-panel')||bar,{subtree:true,childList:true,attributes:true,attributeFilter:['class','style']});
+        observer.observe(grid,{childList:true,subtree:true});
+      }
+      if(!bar.dataset.bulkClearListeners){
         bar.addEventListener('input',update);
         bar.addEventListener('change',update);
         bar.addEventListener('click',()=>setTimeout(update,0));
+        bar.dataset.bulkClearListeners='true';
       }
       if(timer){clearInterval(timer);timer=null;}
     };
