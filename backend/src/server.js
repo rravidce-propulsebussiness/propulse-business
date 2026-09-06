@@ -2,6 +2,7 @@ require('dotenv').config();
 const express=require('express');
 const cors=require('cors');
 const pool=require('./config/database');
+const {runMigrations}=require('./database/runMigrations');
 const industryRoutes=require('./routes/industryRoutes');
 const serviceRoutes=require('./routes/serviceRoutes');
 const subserviceRoutes=require('./routes/subserviceRoutes');
@@ -32,4 +33,5 @@ app.use('/api/auth',authRoutes);app.use('/api/profile',profileRoutes);app.use('/
 app.use((req,res)=>res.status(404).json({error:'Not found'}));
 app.use((err,req,res,next)=>{if(err.message==='CORS origin not allowed')return res.status(403).json({error:'Origin not allowed'});console.error('Unhandled server error:',err.message);return res.status(500).json({error:'Internal server error'});});
 let server;async function shutdown(signal){console.log(`${signal} received; shutting down gracefully.`);if(server)await new Promise(resolve=>server.close(resolve));await pool.end();process.exit(0)}
-server=app.listen(PORT,'0.0.0.0',()=>{console.log(`Server running on port ${PORT}`)});process.once('SIGTERM',()=>shutdown('SIGTERM'));process.once('SIGINT',()=>shutdown('SIGINT'));
+async function start(){try{await runMigrations();server=app.listen(PORT,'0.0.0.0',()=>console.log(`Server running on port ${PORT}`));process.once('SIGTERM',()=>shutdown('SIGTERM'));process.once('SIGINT',()=>shutdown('SIGINT'));}catch(error){console.error(`Backend startup failed: ${error.message}`);await pool.end();process.exitCode=1;}}
+start();
