@@ -3,7 +3,7 @@ import UserHeader from '../components/UserHeader'
 import { authRequest } from '../utils/auth'
 import './Wallet.css'
 
-const money=v=>`₹${Number(v||0).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2})`
+const money=v=>`₹${Number(v||0).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2})}`
 const date=v=>new Date(v).toLocaleString('en-IN',{dateStyle:'medium',timeStyle:'short'})
 
 export default function Wallet(){
