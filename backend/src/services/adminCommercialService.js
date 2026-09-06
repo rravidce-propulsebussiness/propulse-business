@@ -75,6 +75,7 @@ async function updateInvestorSettings(data) {
 
   if(Array.isArray(data.locationLimits)){
     for(const x of data.locationLimits){
+      const id=Number(x.id);
       const stateId=Number(x.stateId??x.state_id);
       const cityId=x.cityId===null||x.cityId===''||x.cityId===undefined?(x.city_id==null?null:Number(x.city_id)):Number(x.cityId);
       const limit=Number(x.limit??x.investor_limit??0);
@@ -87,6 +88,10 @@ async function updateInvestorSettings(data) {
         if(!Number.isInteger(cityId)||cityId<=0)throw Object.assign(new Error('Selected investor location city is invalid'),{code:'INVALID_LOCATION_CONFIG'});
         const city=(await pool.query('SELECT id FROM cities WHERE id=$1 AND state_id=$2 AND is_active=TRUE',[cityId,stateId])).rows[0];
         if(!city)throw Object.assign(new Error('Selected investor location city does not belong to the selected state'),{code:'INVALID_LOCATION_CONFIG'});
+      }
+      if(Number.isInteger(id)&&id>0){
+        const updated=(await pool.query(`UPDATE investor_location_limits SET state_id=$1,city_id=$2,investor_limit=$3,is_active=$4,updated_at=CURRENT_TIMESTAMP WHERE id=$5 RETURNING id`,[stateId,cityId,limit,active,id])).rows[0];
+        if(updated) continue;
       }
       await pool.query(`INSERT INTO investor_location_limits(state_id,city_id,investor_limit,is_active)
         VALUES($1,$2,$3,$4)
