@@ -75,7 +75,6 @@ export default function AdminMembershipPlansConfig() {
   const [investor, setInvestor] = useState(null);
   const [states, setStates] = useState([]);
   const [cities, setCities] = useState([]);
-  const [locationLimitDeleteIds, setLocationLimitDeleteIds] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -95,7 +94,6 @@ export default function AdminMembershipPlansConfig() {
       setInvestor(investorSettings);
       setStates(Array.isArray(stateData) ? stateData : []);
       setCities(Array.isArray(cityData) ? cityData : []);
-      setLocationLimitDeleteIds([]);
       setError('');
     } catch (e) { setError(e.message); } finally { setLoading(false); }
   }
@@ -164,7 +162,7 @@ export default function AdminMembershipPlansConfig() {
       const rawAddons = Array.isArray(plan.add_ons) ? plan.add_ons : [];
       const addons = rawAddons.length ? rawAddons.map(normalizeAddon) : DEFAULT_BOOSTER_ADDONS.map(normalizeAddon);
       const periods = BOOSTER_CYCLES.map(c => ({ ...c, enabled: true }));
-      setForm({ name: 'Booster', planType: 'booster', monthlyBasePrice: Number(plan.monthly_base_price || 0) || '', periods, pricing: Object.fromEntries(BOOSTER_CYCLES.map(c => [c.key, { discount: Number(c.key === 'monthly' ? 0 : 0), price: '', customPrice: false }])), benefits: Array.isArray(plan.benefits) ? plan.benefits : [], addOns: addons });
+      setForm({ name: 'Booster', planType: 'booster', monthlyBasePrice: Number(plan.monthly_base_price || 0) || '', periods, pricing: Object.fromEntries(BOOSTER_CYCLES.map(c => [c.key, { discount: 0, price: '', customPrice: false }])), benefits: Array.isArray(plan.benefits) ? plan.benefits : [], addOns: addons });
     } else {
       const leads = Array.isArray(plan.lead_entitlements) ? plan.lead_entitlements : []; const key = `edit-${plan.id}`; const months = Number(plan.billing_months || 1);
       setForm({
@@ -208,11 +206,56 @@ export default function AdminMembershipPlansConfig() {
   const addAddon = () => setForm(current => ({ ...current, addOns: [...current.addOns, normalizeAddon({ name: 'New add-on', price: 0 })] }));
   const removeAddon = index => setForm(current => ({ ...current, addOns: current.addOns.filter((_, i) => i !== index) }));
 
-  async function saveInvestor(e) { e.preventDefault(); setError(''); try { await req('/admin/commercial/investor-settings', { method: 'PUT', body: JSON.stringify({ globalLimit: Number(investor.global_limit || 0), defaultIndustryLimit: Number(investor.default_industry_limit || 0), customerIndustryLimit: Number(investor.customer_industry_limit ?? 10), minInvestment: Number(investor.min_investment || 0), maxInvestment: investor.max_investment === '' ? null : investor.max_investment, enabled: Boolean(investor.enabled), requiresPro: true, industryLimits: investor.industryLimits || [], locationLimits: investor.locationLimits || [], locationLimitDeleteIds }) }); await load(); } catch (e) { setError(e.message); } }
-  const updateIndustryLimit = (id, field, value) => setInvestor(current => ({ ...current, industryLimits: current.industryLimits.map(item => item.id === id ? { ...item, [field]: value } : item) }));
-  const updateLocationLimit = (index, field, value) => setInvestor(current => ({ ...current, locationLimits: (current.locationLimits || []).map((item, i) => i === index ? { ...item, [field]: value, ...(field === 'state_id' ? { city_id: null } : {}) } : item) }));
-  const addLocationLimit = () => setInvestor(current => ({ ...current, locationLimits: [...(current.locationLimits || []), { id: `new-${Date.now()}`, state_id: states[0]?.id || '', city_id: null, investor_limit: 0, is_active: true }] }));
-  const removeLocationLimit = index => setInvestor(current => { const item = (current.locationLimits || [])[index]; if (item?.id && !String(item.id).startsWith('new-')) setLocationLimitDeleteIds(ids => [...new Set([...ids, Number(item.id)])]); return { ...current, locationLimits: (current.locationLimits || []).filter((_, i) => i !== index) }; });
+  async function saveInvestor(e) {
+    e.preventDefault(); setError('');
+    try {
+      await req('/admin/commercial/investor-settings', { method: 'PUT', body: JSON.stringify({
+        globalLimit: Number(investor.global_limit || 0),
+        defaultIndustryLimit: Number(investor.default_industry_limit || 0),
+        customerIndustryLimit: Number(investor.customer_industry_limit ?? 10),
+        minInvestment: Number(investor.min_investment || 0),
+        maxInvestment: investor.max_investment === '' ? null : investor.max_investment,
+        enabled: Boolean(investor.enabled),
+        requiresPro: true,
+        industryLimits: investor.industryLimits || [],
+      }) });
+      await load();
+    } catch (e) { setError(e.message); }
+  }
+
+  const updateIndustry = (index, field, value) => setInvestor(current => ({
+    ...current,
+    industryLimits: (current.industryLimits || []).map((item, i) => i === index ? { ...item, [field]: value } : item),
+  }));
+  const updateIndustryLocation = (industryIndex, locationIndex, field, value) => setInvestor(current => ({
+    ...current,
+    industryLimits: (current.industryLimits || []).map((industry, i) => i !== industryIndex ? industry : {
+      ...industry,
+      locations: (industry.locations || []).map((location, j) => j === locationIndex
+        ? { ...location, [field]: value, ...(field === 'state_id' ? { city_id: null } : {}) }
+        : location),
+    }),
+  }));
+  const addIndustryLocation = industryIndex => setInvestor(current => ({
+    ...current,
+    industryLimits: (current.industryLimits || []).map((industry, i) => i !== industryIndex ? industry : {
+      ...industry,
+      locations: [...(industry.locations || []), {
+        id: `new-${Date.now()}-${industryIndex}`,
+        state_id: states[0]?.id || '',
+        city_id: null,
+        investor_limit: 0,
+        is_active: true,
+      }],
+    }),
+  }));
+  const removeIndustryLocation = (industryIndex, locationIndex) => setInvestor(current => ({
+    ...current,
+    industryLimits: (current.industryLimits || []).map((industry, i) => i !== industryIndex ? industry : {
+      ...industry,
+      locations: (industry.locations || []).filter((_, j) => j !== locationIndex),
+    }),
+  }));
   const citiesForState = stateId => cities.filter(city => Number(city.state_id) === Number(stateId));
 
   return <main className="commercial-page membership-config-page">
@@ -269,6 +312,6 @@ export default function AdminMembershipPlansConfig() {
       <section className="plans-list">{loading ? <div className="empty">Loading…</div> : visibleGroups.length === 0 ? <div className="empty"><strong>No {tab === 'pro' ? 'Pro' : 'Booster'} plans</strong></div> : visibleGroups.map(group => <div className={`plan-group ${tab === 'booster' ? 'plan-booster' : ''}`} key={`${group[0].plan_type}-${group[0].plan_group || group[0].id}`}><div className="group-head"><h2>{group[0].plan_group || (tab === 'pro' ? 'Pro' : 'Booster')}</h2><span className="live-count">{group.filter(p => p.is_active).length}/{group.length} active</span></div>{group.slice().sort((a, b) => Number(a.billing_months || 1) - Number(b.billing_months || 1)).map(plan => <div className="option" key={plan.id}><div><b>{plan.billing_period}</b><small>{plan.billing_months} mo · {plan.discount_percent || 0}% off</small></div><strong>{money(plan.price)}</strong><div className="actions"><button onClick={() => beginEdit(plan)}>Edit</button><button onClick={() => toggle(plan)}>{plan.is_active ? 'Disable' : 'Enable'}</button><button className="danger" onClick={() => remove(plan)}>Delete</button></div></div>)}</div>)}</section>
     </>}
 
-    {tab === 'investor' && investor && <section className="create-card hero-card"><div className="card-heading"><h2>Investor</h2><label className="switch-label"><input type="checkbox" checked={Boolean(investor.enabled)} onChange={e => setInvestor({ ...investor, enabled: e.target.checked })} /> Enabled</label></div><form onSubmit={saveInvestor}><div className="two"><label>Global limit<input type="number" min="0" value={investor.global_limit} onChange={e => setInvestor({ ...investor, global_limit: e.target.value })} /></label><label>Default industry limit<input type="number" min="0" value={investor.default_industry_limit} onChange={e => setInvestor({ ...investor, default_industry_limit: e.target.value })} /></label><label>Customer limit / industry<input type="number" min="0" value={investor.customer_industry_limit ?? 10} onChange={e => setInvestor({ ...investor, customer_industry_limit: e.target.value })} /></label><label>Minimum investment ₹<input type="number" min="0" value={investor.min_investment} onChange={e => setInvestor({ ...investor, min_investment: e.target.value })} /></label><label>Maximum investment ₹<input type="number" min="0" value={investor.max_investment ?? ''} placeholder="No maximum" onChange={e => setInvestor({ ...investor, max_investment: e.target.value })} /></label></div><div className="editor-section"><div className="benefit-head"><b>Industry limits</b></div><div className="lead-editor">{(investor.industryLimits || []).map(item => <div className="lead-row investor-row" key={item.id}><strong>{item.name}</strong><input type="number" min="0" value={item.investor_limit} onChange={e => updateIndustryLimit(item.id, 'investor_limit', e.target.value)} /><label className="check-row"><input type="checkbox" checked={item.is_active !== false} onChange={e => updateIndustryLimit(item.id, 'is_active', e.target.checked)} /> Active</label></div>)}</div></div><div className="editor-section investor-location-section"><div className="benefit-head"><div><b>Location limits</b><small>Set an investment capacity by state or by a specific city inside that state.</small></div><button type="button" className="mini-action" onClick={addLocationLimit}>＋ Add location</button></div><div className="lead-editor investor-location-editor">{(investor.locationLimits || []).map((item,index) => <div className="lead-row investor-location-row" key={item.id || index}><label>State<select value={item.state_id || ''} onChange={e => updateLocationLimit(index, 'state_id', e.target.value)}><option value="">Select state</option>{states.map(state => <option key={state.id} value={state.id}>{state.name}</option>)}</select></label><label>City<select value={item.city_id ?? ''} disabled={!item.state_id} onChange={e => updateLocationLimit(index, 'city_id', e.target.value || null)}><option value="">All cities</option>{citiesForState(item.state_id).map(city => <option key={city.id} value={city.id}>{city.name}</option>)}</select></label><label>Limit ₹<input type="number" min="0" value={item.investor_limit ?? 0} onChange={e => updateLocationLimit(index, 'investor_limit', e.target.value)} /></label><label className="check-row"><input type="checkbox" checked={item.is_active !== false} onChange={e => updateLocationLimit(index, 'is_active', e.target.checked)} /> Active</label><button type="button" className="remove-lead" onClick={() => removeLocationLimit(index)}>×</button></div>)}</div></div><div className="form-footer"><button className="primary create-btn">Save</button></div></form></section>}
+    {tab === 'investor' && investor && <section className="create-card hero-card"><div className="card-heading"><div><h2>Investor</h2><small>Configure capacity as Industry → Location → Limit</small></div><label className="switch-label"><input type="checkbox" checked={Boolean(investor.enabled)} onChange={e => setInvestor({ ...investor, enabled: e.target.checked })} /> Enabled</label></div><form onSubmit={saveInvestor}><div className="two"><label>Customer limit / industry<input type="number" min="0" value={investor.customer_industry_limit ?? 10} onChange={e => setInvestor({ ...investor, customer_industry_limit: e.target.value })} /></label><label>Minimum investment ₹<input type="number" min="0" value={investor.min_investment} onChange={e => setInvestor({ ...investor, min_investment: e.target.value })} /></label><label>Maximum investment ₹<input type="number" min="0" value={investor.max_investment ?? ''} placeholder="No maximum" onChange={e => setInvestor({ ...investor, max_investment: e.target.value })} /></label></div><div className="editor-section investor-hierarchy-section"><div className="benefit-head"><div><b>Industry → Location → Limit</b><small>Each industry's capacity is configured only through its locations. A state row can cover all cities, or a specific city can have its own limit.</small></div></div><div className="investor-hierarchy">{(investor.industryLimits || []).map((industry, industryIndex) => <div className="investor-industry-card" key={industry.id}><div className="investor-industry-head"><div><strong>{industry.name}</strong><small>{(industry.locations || []).length} location {(industry.locations || []).length === 1 ? 'rule' : 'rules'}</small></div><label className="check-row"><input type="checkbox" checked={industry.is_active !== false} onChange={e => updateIndustry(industryIndex, 'is_active', e.target.checked)} /> Active</label></div><div className="investor-location-list">{(industry.locations || []).length === 0 && <div className="empty investor-empty">No locations configured for this industry.</div>}{(industry.locations || []).map((location, locationIndex) => <div className="investor-location-row" key={location.id || `${industry.id}-${locationIndex}`}><label>Location<select value={location.state_id || ''} onChange={e => updateIndustryLocation(industryIndex, locationIndex, 'state_id', e.target.value)}><option value="">Select state</option>{states.map(state => <option key={state.id} value={state.id}>{state.name}</option>)}</select></label><label>City<select value={location.city_id ?? ''} disabled={!location.state_id} onChange={e => updateIndustryLocation(industryIndex, locationIndex, 'city_id', e.target.value || null)}><option value="">All cities</option>{citiesForState(location.state_id).map(city => <option key={city.id} value={city.id}>{city.name}</option>)}</select></label><label>Limit ₹<input type="number" min="0" step="0.01" value={location.investor_limit ?? 0} onChange={e => updateIndustryLocation(industryIndex, locationIndex, 'investor_limit', e.target.value)} /></label><label className="check-row"><input type="checkbox" checked={location.is_active !== false} onChange={e => updateIndustryLocation(industryIndex, locationIndex, 'is_active', e.target.checked)} /> Active</label><button type="button" className="remove-lead" onClick={() => removeIndustryLocation(industryIndex, locationIndex)}>×</button></div>)}</div><button type="button" className="mini-action" onClick={() => addIndustryLocation(industryIndex)}>＋ Add location to {industry.name}</button></div>)}</div></div><div className="form-footer"><button className="primary create-btn">Save Investor limits</button></div></form></section>}
   </main>;
 }
