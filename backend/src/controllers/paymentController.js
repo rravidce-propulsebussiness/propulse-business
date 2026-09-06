@@ -61,8 +61,8 @@ async function updatePaymentStatus(req, res) {
     res.json(payment);
   } catch (error) {
     console.error('Update payment failed:', error.message);
-    const badRequestCodes=['PAYMENT_NOT_MANUAL','PAYMENT_ALREADY_PAID','PAYMENT_TERMINAL','INVALID_PAYMENT_TRANSITION','PLAN_NOT_FOUND','INVALID_PLAN','PRO_REQUIRED'];
-    res.status(badRequestCodes.includes(error.code) ? 400 : 500).json({ error: error.message || 'Failed to update payment', code:error.code });
+    const badRequestCodes=['PAYMENT_NOT_MANUAL','PAYMENT_ALREADY_PAID','PAYMENT_TERMINAL','INVALID_PAYMENT_TRANSITION','PLAN_NOT_FOUND','INVALID_PLAN','PRO_REQUIRED','ANOTHER_PRO_ACTIVE'];
+    res.status(error.code==='MEMBERSHIP_NOT_FOUND'?404:(badRequestCodes.includes(error.code)||error.code==='23514')?400:500).json({ error: error.message || 'Failed to update payment', code:error.code });
   }
 }
 
@@ -72,8 +72,8 @@ async function updateMembership(req,res){
     res.json(membership);
   }catch(error){
     console.error('Update membership from payments failed:',error.message);
-    const bad=['INVALID_MEMBERSHIP_ACTION','INVALID_MEMBERSHIP_DAYS','INVALID_EXPIRY'];
-    res.status(error.code==='MEMBERSHIP_NOT_FOUND'?404:bad.includes(error.code)?400:500).json({error:error.message||'Failed to update membership',code:error.code});
+    const bad=['INVALID_MEMBERSHIP_ACTION','INVALID_MEMBERSHIP_DAYS','INVALID_EXPIRY','PRO_REQUIRED','ANOTHER_PRO_ACTIVE'];
+    res.status(error.code==='MEMBERSHIP_NOT_FOUND'?404:(bad.includes(error.code)||error.code==='23514')?400:500).json({error:error.message||'Failed to update membership',code:error.code});
   }
 }
 

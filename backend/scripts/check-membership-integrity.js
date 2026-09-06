@@ -32,7 +32,30 @@ async function main() {
     `);
     assert.strictEqual(uniqueIndex.rowCount, 1, 'Membership semantic uniqueness index is missing');
 
-    console.log('Membership duplicate/integrity regression test passed.');
+    const activeTierDuplicates = await pool.query(`
+      SELECT m.user_id, lower(replace(coalesce(mp.plan_type,''),'-','_')) AS plan_type, COUNT(*)::int AS count
+      FROM memberships m
+      JOIN membership_plans mp ON mp.id=m.membership_plan_id
+      WHERE m.status='active' AND m.expires_at>CURRENT_TIMESTAMP
+        AND lower(replace(coalesce(mp.plan_type,''),'-','_')) IN ('pro','booster','investor')
+      GROUP BY m.user_id, lower(replace(coalesce(mp.plan_type,''),'-','_'))
+      HAVING COUNT(*) > 1
+    `);
+    assert.strictEqual(
+      activeTierDuplicates.rowCount,
+      0,
+      `Multiple active memberships exist in the same tier: ${JSON.stringify(activeTierDuplicates.rows)}`
+    );
+
+    const tierTrigger = await pool.query(`
+      SELECT 1
+      FROM pg_trigger
+      WHERE tgname='trg_membership_tier_integrity'
+        AND NOT tgisinternal
+    `);
+    assert.strictEqual(tierTrigger.rowCount, 1, 'Membership tier integrity trigger is missing');
+
+    console.log('Membership duplicate/tier integrity regression test passed.');
   } finally {
     await pool.end();
   }

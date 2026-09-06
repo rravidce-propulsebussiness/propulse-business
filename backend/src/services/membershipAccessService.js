@@ -2,15 +2,16 @@ const pool = require('../config/database');
 
 /**
  * Canonical membership access query.
- * Pro and Booster are independent entitlements: Booster never replaces Pro.
+ * Pro, Booster and Investor are independent entitlements. Booster and Investor require Pro when purchased, but remain separate active memberships afterward.
  */
 async function getMembershipAccess(userId, client = pool) {
-  if (!userId) return { isPro: false, isBoosterActive: false, proExpiresAt: null, boosterExpiresAt: null };
+  if (!userId) return { isPro: false, isBoosterActive: false, isInvestorActive: false, proExpiresAt: null, boosterExpiresAt: null, investorExpiresAt: null };
 
   const result = await client.query(`
     SELECT
       MAX(CASE WHEN LOWER(REPLACE(COALESCE(mp.plan_type,''),'-','_'))='pro' THEN m.expires_at END) AS pro_expires_at,
-      MAX(CASE WHEN LOWER(REPLACE(COALESCE(mp.plan_type,''),'-','_'))='booster' THEN m.expires_at END) AS booster_expires_at
+      MAX(CASE WHEN LOWER(REPLACE(COALESCE(mp.plan_type,''),'-','_'))='booster' THEN m.expires_at END) AS booster_expires_at,
+      MAX(CASE WHEN LOWER(REPLACE(COALESCE(mp.plan_type,''),'-','_'))='investor' THEN m.expires_at END) AS investor_expires_at
     FROM memberships m
     JOIN membership_plans mp ON mp.id=m.membership_plan_id
     WHERE m.user_id=$1
@@ -24,8 +25,10 @@ async function getMembershipAccess(userId, client = pool) {
   return {
     isPro: Boolean(row.pro_expires_at),
     isBoosterActive: Boolean(row.booster_expires_at),
+    isInvestorActive: Boolean(row.investor_expires_at),
     proExpiresAt: row.pro_expires_at || null,
     boosterExpiresAt: row.booster_expires_at || null,
+    investorExpiresAt: row.investor_expires_at || null,
   };
 }
 
