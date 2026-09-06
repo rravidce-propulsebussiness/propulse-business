@@ -4,6 +4,36 @@ import {authRequest} from '../../utils/auth';
 const STORAGE_KEY='propulse.admin.googleSheet.url';
 const FINGERPRINT_KEY='propulse.admin.googleSheet.fingerprint';
 
+function sheetIdAndGid(value){
+  const url=new URL(String(value||'').trim());
+  if(url.protocol!=='https:'||url.hostname!=='docs.google.com')throw new Error('Enter a valid Google Sheets URL');
+  const match=url.pathname.match(/\/spreadsheets\/(?:u\/\d+\/)?d\/([a-zA-Z0-9_-]+)/);
+  if(!match)throw new Error('Google Sheets URL is not in a supported format');
+  const gid=url.searchParams.get('gid')||(url.hash.match(/(?:^#|&)gid=(\d+)/)||[])[1]||'0';
+  if(!/^\d+$/.test(gid))throw new Error('Google Sheet tab id (gid) must be numeric');
+  return{spreadsheetId:match[1],gid};
+}
+
+async function readSheetInBrowser(value){
+  const {spreadsheetId,gid}=sheetIdAndGid(value);
+  const targets=[
+    `https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?tqx=out:csv&gid=${encodeURIComponent(gid)}`,
+    `https://docs.google.com/spreadsheets/d/${spreadsheetId}/export?format=csv&gid=${encodeURIComponent(gid)}`
+  ];
+  let last='';
+  for(const target of targets){
+    try{
+      const response=await fetch(target,{headers:{Accept:'text/csv,text/plain;q=0.9'}});
+      if(!response.ok){last=`Google Sheet could not be read (HTTP ${response.status})`;continue}
+      const text=await response.text();
+      if(!text.trim()){last='Google Sheet is empty';continue}
+      if(/<html|<title>/i.test(text.slice(0,500)))throw new Error('Google Sheet access is restricted. Set General access to Anyone with the link → Viewer');
+      return{csv:text};
+    }catch(error){last=error.message||last}
+  }
+  throw new Error(last||'Unable to read Google Sheet');
+}
+
 async function fingerprint(text){
   if(window.crypto?.subtle){
     const data=new TextEncoder().encode(text);
@@ -45,7 +75,10 @@ export default function GoogleSheetAutoSync(){
     if(running.current||!url.trim())return;
     running.current=true;setBusy(true);
     try{
-      const result=await authRequest('/leads/google-sheet/preview',{method:'POST',body:JSON.stringify({url:url.trim()})});
+      let result;
+      try{result=await readSheetInBrowser(url)}catch(browserError){
+        result=await authRequest('/leads/google-sheet/preview',{method:'POST',body:JSON.stringify({url:url.trim()})});
+      }
       const next=await fingerprint(result.csv||'');
       const previous=localStorage.getItem(FINGERPRINT_KEY);
       if(!force&&previous===next){setStatus('Connected · no new sheet changes');return;}
