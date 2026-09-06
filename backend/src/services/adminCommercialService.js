@@ -90,7 +90,7 @@ async function updateInvestorSettings(data) {
       }
       await pool.query(`INSERT INTO investor_location_limits(state_id,city_id,investor_limit,is_active)
         VALUES($1,$2,$3,$4)
-        ON CONFLICT (state_id,COALESCE(city_id,0)) DO UPDATE SET investor_limit=EXCLUDED.investor_limit,is_active=EXCLUDED.is_active,updated_at=CURRENT_TIMESTAMP`,[stateId,cityId,limit,active]);
+        ON CONFLICT DO UPDATE SET investor_limit=EXCLUDED.investor_limit,is_active=EXCLUDED.is_active,updated_at=CURRENT_TIMESTAMP`,[stateId,cityId,limit,active]);
     }
   }
   return getInvestorSettings();
