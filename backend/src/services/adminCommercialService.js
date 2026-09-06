@@ -57,6 +57,7 @@ async function updateInvestorSettings(data) {
         await client.query('DELETE FROM investor_industry_location_limits WHERE industry_id=$1',[industryId]);
         const locations=Array.isArray(industry.locations)?industry.locations:[];
         let aggregate=0;
+        const seenLocations=new Set();
         for(const location of locations){
           const stateId=Number(location.stateId??location.state_id);
           const cityRaw=location.cityId??location.city_id;
@@ -64,11 +65,14 @@ async function updateInvestorSettings(data) {
           const limit=Number(location.limit??location.investor_limit??0);
           const locationActive=location.isActive===undefined?Boolean(location.is_active!==false):Boolean(location.isActive);
           if(!Number.isInteger(stateId)||stateId<=0)throw Object.assign(new Error('A valid state is required for every investor location'),{code:'INVALID_INDUSTRY_LOCATION_CONFIG'});
-          if(!Number.isFinite(limit)||limit<0)throw Object.assign(new Error('Investor location limit must be zero or greater'),{code:'INVALID_INDUSTRY_LOCATION_CONFIG'});
+          if(!Number.isInteger(limit)||limit<0)throw Object.assign(new Error('Investor location limit must be a whole number of investors (0 or greater)'),{code:'INVALID_INDUSTRY_LOCATION_CONFIG'});
+          if(cityId!==null&&(!Number.isInteger(cityId)||cityId<=0))throw Object.assign(new Error('Selected investor location city is invalid'),{code:'INVALID_INDUSTRY_LOCATION_CONFIG'});
+          const locationKey=`${stateId}:${cityId===null?'all':cityId}`;
+          if(seenLocations.has(locationKey))throw Object.assign(new Error('Duplicate investor location rule for the same industry, state and city'),{code:'INVALID_INDUSTRY_LOCATION_CONFIG'});
+          seenLocations.add(locationKey);
           const state=(await client.query('SELECT id FROM states WHERE id=$1 AND is_active=TRUE',[stateId])).rows[0];
           if(!state)throw Object.assign(new Error('Selected investor location state is invalid'),{code:'INVALID_INDUSTRY_LOCATION_CONFIG'});
           if(cityId!==null){
-            if(!Number.isInteger(cityId)||cityId<=0)throw Object.assign(new Error('Selected investor location city is invalid'),{code:'INVALID_INDUSTRY_LOCATION_CONFIG'});
             const city=(await client.query('SELECT id FROM cities WHERE id=$1 AND state_id=$2 AND is_active=TRUE',[cityId,stateId])).rows[0];
             if(!city)throw Object.assign(new Error('Selected investor location city does not belong to the selected state'),{code:'INVALID_INDUSTRY_LOCATION_CONFIG'});
           }
@@ -89,8 +93,8 @@ async function updateInvestorSettings(data) {
 }
 
 async function getCoupons(){return (await pool.query('SELECT * FROM coupons ORDER BY created_at DESC')).rows;}
-async function createCoupon(d){const r=await pool.query(`INSERT INTO coupons(code,discount_type,discount_value,max_discount,min_order_amount,usage_limit,starts_at,expires_at,is_active) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *`,[String(d.code).trim().toUpperCase(),d.discountType,Number(d.discountValue),d.maxDiscount===''?null:Number(d.maxDiscount),Number(d.minOrderAmount)||0,d.usageLimit===''||d.usageLimit==null?null:Number(d.usageLimit),d.startsAt||null,d.expiresAt||null,d.isActive!==false]);return r.rows[0];}
-async function updateCoupon(id,d){const r=await pool.query(`UPDATE coupons SET code=$1,discount_type=$2,discount_value=$3,max_discount=$4,min_order_amount=$5,usage_limit=$6,starts_at=$7,expires_at=$8,is_active=$9,updated_at=CURRENT_TIMESTAMP WHERE id=$10 RETURNING *`,[String(d.code).trim().toUpperCase(),d.discountType,Number(d.discountValue),d.maxDiscount===''?null:Number(d.maxDiscount),Number(d.minOrderAmount)||0,d.usageLimit===''||d.usageLimit==null?null:Number(d.usageLimit),d.startsAt||null,d.expiresAt||null,Boolean(d.isActive),id]);return r.rows[0]||null;}
+async function createCoupon(d){return (await pool.query(`INSERT INTO coupons(code,discount_type,discount_value,max_discount,min_order_amount,usage_limit,starts_at,expires_at,is_active) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *`,[String(d.code).trim().toUpperCase(),d.discountType,Number(d.discountValue),d.maxDiscount===''?null:Number(d.maxDiscount),Number(d.minOrderAmount)||0,d.usageLimit===''||d.usageLimit==null?null:Number(d.usageLimit),d.startsAt||null,d.expiresAt||null,d.isActive!==false])).rows[0];}
+async function updateCoupon(id,d){return (await pool.query(`UPDATE coupons SET code=$1,discount_type=$2,discount_value=$3,max_discount=$4,min_order_amount=$5,usage_limit=$6,starts_at=$7,expires_at=$8,is_active=$9,updated_at=CURRENT_TIMESTAMP WHERE id=$10 RETURNING *`,[String(d.code).trim().toUpperCase(),d.discountType,Number(d.discountValue),d.maxDiscount===''?null:Number(d.maxDiscount),Number(d.minOrderAmount)||0,d.usageLimit===''||d.usageLimit==null?null:Number(d.usageLimit),d.startsAt||null,d.expiresAt||null,Boolean(d.isActive),id])).rows[0]||null;}
 async function setCouponStatus(id,isActive){return (await pool.query('UPDATE coupons SET is_active=$1,updated_at=CURRENT_TIMESTAMP WHERE id=$2 RETURNING *',[isActive,id])).rows[0]||null;}
 async function deleteCoupon(id){return (await pool.query('DELETE FROM coupons WHERE id=$1 RETURNING id',[id])).rows[0]||null;}
 module.exports={getInvestorSettings,updateInvestorSettings,getCoupons,createCoupon,updateCoupon,setCouponStatus,deleteCoupon};
