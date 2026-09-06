@@ -52,13 +52,19 @@ async function runMigrations() {
       if (await applyFile(client, file)) applied += 1;
     }
     console.log(`Database migrations completed (${applied} applied, ${files.length} checked).`);
-  } catch (error) {
-    console.error(`Database migrations failed: ${error.message}`);
-    process.exitCode = 1;
+    return { applied, checked: files.length };
   } finally {
     client.release();
-    await pool.end();
   }
 }
 
-runMigrations();
+if (require.main === module) {
+  runMigrations()
+    .catch(error => {
+      console.error(`Database migrations failed: ${error.message}`);
+      process.exitCode = 1;
+    })
+    .finally(() => pool.end());
+}
+
+module.exports = { runMigrations };
