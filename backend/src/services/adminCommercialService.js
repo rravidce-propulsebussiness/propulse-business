@@ -68,6 +68,11 @@ async function updateInvestorSettings(data) {
     }
   }
 
+  if(Array.isArray(data.locationLimitDeleteIds) && data.locationLimitDeleteIds.length){
+    const ids=data.locationLimitDeleteIds.map(Number).filter(Number.isInteger);
+    if(ids.length) await pool.query('DELETE FROM investor_location_limits WHERE id=ANY($1::int[])',[ids]);
+  }
+
   if(Array.isArray(data.locationLimits)){
     for(const x of data.locationLimits){
       const stateId=Number(x.stateId??x.state_id);
