@@ -5,6 +5,7 @@ const c = require('../controllers/investmentController');
 
 router.get('/access', auth, c.access);
 router.get('/rules', auth, c.rules);
+router.get('/location-rules', auth, c.locationRules);
 router.get('/', auth, c.mine);
 router.post('/', auth, c.create);
 router.post('/:id/reinvest', auth, c.reinvest);
