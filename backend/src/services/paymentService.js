@@ -30,25 +30,7 @@ async function getPayments({status,search,page=1,limit=50}) {
   const countResult=await pool.query(`SELECT COUNT(*)::int AS total FROM ${from} ${baseWhere}`,values);
   const statsResult=await pool.query(`SELECT COUNT(*)::int AS total,COUNT(*) FILTER (WHERE p.status='pending')::int AS pending,COUNT(*) FILTER (WHERE p.status='paid')::int AS paid,COUNT(*) FILTER (WHERE p.status='rejected')::int AS rejected,COUNT(*) FILTER (WHERE p.status='failed')::int AS failed,COUNT(*) FILTER (WHERE p.status='refunded')::int AS refunded,COUNT(*) FILTER (WHERE p.payment_method='manual')::int AS manual FROM ${from} ${baseWhere}`,values);
   const dataValues=[...values,safeLimit,offset];
-  const result=await pool.query(`
-    SELECT p.*,u.name AS user_name,u.email AS user_email,bp.business_name,
-           mp.name AS membership_plan_name,mp.plan_type AS membership_plan_type,mp.billing_period,mp.billing_months,
-           COALESCE(w.balance,0)::numeric AS wallet_balance,
-           CASE WHEN p.membership_plan_id IS NOT NULL THEN 'membership' ELSE 'other' END AS payment_type,
-           lm.id AS membership_id,lm.starts_at AS membership_starts_at,lm.expires_at AS membership_expires_at,lm.status AS membership_status,
-           CASE WHEN lm.expires_at IS NULL THEN NULL ELSE GREATEST(0,CEIL(EXTRACT(EPOCH FROM (lm.expires_at-CURRENT_TIMESTAMP))/86400.0))::int END AS membership_remaining_days
-    FROM ${from}
-    LEFT JOIN wallets w ON w.user_id=u.id
-    LEFT JOIN LATERAL (
-      SELECT m.id,m.starts_at,m.expires_at,m.status
-      FROM memberships m
-      WHERE m.user_id=p.user_id AND m.membership_plan_id=p.membership_plan_id
-      ORDER BY (m.status='active' AND m.expires_at>CURRENT_TIMESTAMP) DESC,m.expires_at DESC,m.id DESC
-      LIMIT 1
-    ) lm ON TRUE
-    ${baseWhere}
-    ORDER BY p.created_at DESC,p.id DESC
-    LIMIT $${dataValues.length-1} OFFSET $${dataValues.length}` ,dataValues);
+  const result=await pool.query(`SELECT p.*,u.name AS user_name,u.email AS user_email,bp.business_name,mp.name AS membership_plan_name,mp.plan_type AS membership_plan_type,mp.billing_period,mp.billing_months,COALESCE(w.balance,0)::numeric AS wallet_balance,CASE WHEN p.membership_plan_id IS NOT NULL THEN 'membership' ELSE 'other' END AS payment_type,lm.id AS membership_id,lm.starts_at AS membership_starts_at,lm.expires_at AS membership_expires_at,lm.status AS membership_status,CASE WHEN lm.expires_at IS NULL THEN NULL ELSE GREATEST(0,CEIL(EXTRACT(EPOCH FROM (lm.expires_at-CURRENT_TIMESTAMP))/86400.0))::int END AS membership_remaining_days FROM ${from} LEFT JOIN wallets w ON w.user_id=u.id LEFT JOIN LATERAL (SELECT m.id,m.starts_at,m.expires_at,m.status FROM memberships m WHERE m.user_id=p.user_id AND m.membership_plan_id=p.membership_plan_id ORDER BY (m.status='active' AND m.expires_at>CURRENT_TIMESTAMP) DESC,m.expires_at DESC,m.id DESC LIMIT 1) lm ON TRUE ${baseWhere} ORDER BY p.created_at DESC,p.id DESC LIMIT $${dataValues.length-1} OFFSET $${dataValues.length}`,dataValues);
   return {items:result.rows,total:countResult.rows[0].total,page:safePage,limit:safeLimit,pages:Math.ceil(countResult.rows[0].total/safeLimit),stats:statsResult.rows[0]};
 }
 
@@ -59,21 +41,7 @@ async function getMembershipCustomers({search,page=1,limit=50}) {
   const from=`users u LEFT JOIN business_profiles bp ON bp.user_id=u.id JOIN memberships m ON m.user_id=u.id LEFT JOIN membership_plans mp ON mp.id=m.membership_plan_id`;
   const count=(await pool.query(`SELECT COUNT(*)::int AS total FROM (SELECT u.id FROM ${from} ${baseWhere} GROUP BY u.id) x`,values)).rows[0].total;
   const dataValues=[...values,safeLimit,offset];
-  const result=await pool.query(`
-    SELECT u.id AS user_id,u.name AS user_name,u.email AS user_email,bp.business_name,
-           COALESCE((SELECT string_agg(x.location_label,' · ' ORDER BY x.location_label) FROM (SELECT DISTINCT c.name || ', ' || s.name AS location_label FROM business_profile_locations bpl JOIN cities c ON c.id=bpl.city_id JOIN states s ON s.id=bpl.state_id JOIN business_profiles lbp ON lbp.id=bpl.business_profile_id WHERE lbp.user_id=u.id AND bpl.is_active=TRUE) x),'—') AS location,
-           COUNT(DISTINCT m.id)::int AS membership_count,
-           COUNT(DISTINCT m.id) FILTER (WHERE m.status='active' AND m.expires_at>CURRENT_TIMESTAMP)::int AS active_membership_count,
-           COALESCE(string_agg(DISTINCT mp.name,', ' ORDER BY mp.name) FILTER (WHERE m.status='active' AND m.expires_at>CURRENT_TIMESTAMP),'—') AS plans,
-           MAX(m.expires_at) FILTER (WHERE m.status='active' AND m.expires_at>CURRENT_TIMESTAMP) AS active_expires_at,
-           MAX(p.created_at) AS last_payment_at,
-           COUNT(DISTINCT p.id) FILTER (WHERE p.status='paid')::int AS paid_payment_count
-    FROM ${from}
-    LEFT JOIN payments p ON p.id=m.payment_id
-    ${baseWhere}
-    GROUP BY u.id,u.name,u.email,bp.business_name
-    ORDER BY COALESCE(bp.business_name,u.name),u.id
-    LIMIT $${dataValues.length-1} OFFSET $${dataValues.length}` ,dataValues);
+  const result=await pool.query(`SELECT u.id AS user_id,u.name AS user_name,u.email AS user_email,bp.business_name,COALESCE((SELECT string_agg(x.location_label,' · ' ORDER BY x.location_label) FROM (SELECT DISTINCT c.name || ', ' || s.name AS location_label FROM business_profile_locations bpl JOIN cities c ON c.id=bpl.city_id JOIN states s ON s.id=bpl.state_id JOIN business_profiles lbp ON lbp.id=bpl.business_profile_id WHERE lbp.user_id=u.id AND bpl.is_active=TRUE) x),'—') AS location,COUNT(DISTINCT m.id)::int AS membership_count,COUNT(DISTINCT m.id) FILTER (WHERE m.status='active' AND m.expires_at>CURRENT_TIMESTAMP)::int AS active_membership_count,COALESCE(string_agg(DISTINCT mp.name,', ' ORDER BY mp.name) FILTER (WHERE m.status='active' AND m.expires_at>CURRENT_TIMESTAMP),'—') AS plans,MAX(m.expires_at) FILTER (WHERE m.status='active' AND m.expires_at>CURRENT_TIMESTAMP) AS active_expires_at,MAX(p.created_at) AS last_payment_at,COUNT(DISTINCT p.id) FILTER (WHERE p.status='paid')::int AS paid_payment_count FROM ${from} LEFT JOIN payments p ON p.id=m.payment_id ${baseWhere} GROUP BY u.id,u.name,u.email,bp.business_name ORDER BY COALESCE(bp.business_name,u.name),u.id LIMIT $${dataValues.length-1} OFFSET $${dataValues.length}`,dataValues);
   return {items:result.rows,total:count,page:safePage,limit:safeLimit,pages:Math.ceil(count/safeLimit)};
 }
 
@@ -99,7 +67,7 @@ async function getMembershipCustomerDetails(userId) {
       WHERE m.user_id=$1
       UNION ALL
       SELECT 'admin'::text AS event_source,h.membership_id,h.payment_id,mp.name AS plan_name,mp.plan_type,NULL::text AS payment_status,h.new_status AS membership_status,
-             NULL::timestamp AS starts_at,h.new_expires_at AS expires_at,NULL::numeric AS amount,NULL::text AS manual_reference,h.created_at AS event_at,h.action,h.notes
+             NULL::timestamptz AS starts_at,h.new_expires_at AS expires_at,NULL::numeric AS amount,NULL::text AS manual_reference,h.created_at AS event_at,h.action,h.notes
       FROM membership_admin_history h JOIN memberships hm ON hm.id=h.membership_id JOIN membership_plans mp ON mp.id=hm.membership_plan_id
       WHERE h.user_id=$1
     ) timeline
@@ -114,7 +82,6 @@ async function activateMembership(client,payment) {
   if(!plan||!plan.is_active) throw Object.assign(new Error('Membership plan is no longer available'),{code:'PLAN_NOT_FOUND'});
   const planType=String(plan.plan_type||'').toLowerCase(); if(!['pro','booster','investor'].includes(planType)) throw Object.assign(new Error('Only Pro, Booster or Investment membership payments can be activated'),{code:'INVALID_PLAN'});
   if(['booster','investor'].includes(planType) && !(await isProMember(payment.user_id,client))) throw Object.assign(new Error(`An active Pro membership is required before ${planType==='investor'?'Investment':'Booster'} can be activated`),{code:'PRO_REQUIRED'});
-
   const currentResult=await client.query(`
     SELECT m.id,m.membership_plan_id,m.starts_at,m.expires_at,m.status,mp.name AS plan_name
     FROM memberships m JOIN membership_plans mp ON mp.id=m.membership_plan_id
@@ -127,14 +94,8 @@ async function activateMembership(client,payment) {
   const end=new Date(base); end.setDate(end.getDate()+Math.max(1,Number(plan.duration_days||30)));
   let membershipId;
   let note='Membership activated from paid payment';
-  if(current){
-    membershipId=current.id;
-    if(planType==='pro' && current.membership_plan_id!==plan.id) note=`Pro membership changed from ${current.plan_name} to ${plan.name} and extended from the existing expiry`;
-    else if(current.membership_plan_id!==plan.id) note=`${planType} membership changed from ${current.plan_name} to ${plan.name} and extended from the existing expiry`;
-    await client.query(`UPDATE memberships SET membership_plan_id=$1,payment_id=$2,expires_at=$3,status='active',updated_at=CURRENT_TIMESTAMP WHERE id=$4`,[plan.id,payment.id,end,current.id]);
-  } else {
-    const inserted=await client.query(`INSERT INTO memberships(user_id,membership_plan_id,payment_id,starts_at,expires_at,status) VALUES($1,$2,$3,$4,$5,'active') RETURNING id`,[payment.user_id,plan.id,payment.id,base,end]); membershipId=inserted.rows[0].id;
-  }
+  if(current){membershipId=current.id;if(planType==='pro'&&current.membership_plan_id!==plan.id)note=`Pro membership changed from ${current.plan_name} to ${plan.name} and extended from the existing expiry`;else if(current.membership_plan_id!==plan.id)note=`${planType} membership changed from ${current.plan_name} to ${plan.name} and extended from the existing expiry`;await client.query(`UPDATE memberships SET membership_plan_id=$1,payment_id=$2,expires_at=$3,status='active',updated_at=CURRENT_TIMESTAMP WHERE id=$4`,[plan.id,payment.id,end,current.id]);}
+  else{const inserted=await client.query(`INSERT INTO memberships(user_id,membership_plan_id,payment_id,starts_at,expires_at,status) VALUES($1,$2,$3,$4,$5,'active') RETURNING id`,[payment.user_id,plan.id,payment.id,base,end]);membershipId=inserted.rows[0].id;}
   await client.query(`INSERT INTO membership_admin_history(membership_id,user_id,action,old_status,new_status,old_expires_at,new_expires_at,payment_id,notes) VALUES($1,$2,'payment_activation',$3,'active',$4,$5,$6,$7)`,[membershipId,payment.user_id,current?.status||null,current?.expires_at||null,end,payment.id,note]);
   return{planId:plan.id,planType,expiresAt:end,upgradedFrom:current&&current.membership_plan_id!==plan.id?current.plan_name:null};
 }
