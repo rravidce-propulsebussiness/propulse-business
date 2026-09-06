@@ -12,20 +12,21 @@ function csvEscape(v){const s=String(v??'');return /[",\r\n]/.test(s)?`"${s.repl
 function canonicalizeCsv(csv){
  const aliases={
   post_code:'Pincode',postal_code:'Pincode',pin_code:'Pincode',zip_code:'Pincode',zipcode:'Pincode',zip:'Pincode',
-  full_name:'Customer Name',name:'Customer Name',customer:'Customer Name',customer_name:'Customer Name',
+  full_name:'Customer Name',name:'Customer Name',customer:'Customer Name',customer_name:'Customer Name',customername:'Customer Name',
   phone_number:'Customer Phone',mob_no:'Customer Phone',mobile:'Customer Phone',phone:'Customer Phone',contact_number:'Customer Phone',customer_phone:'Customer Phone',
   email:'Customer Email',email_id:'Customer Email',customer_email:'Customer Email',
-  share_more_details_and_requirement:'Requirement',requirements:'Requirement',requirement:'Requirement',
+  share_more_details_and_requirement:'Requirement',requirements:'Requirement',requirement:'Requirement',requirement_details:'Requirement',
   plot_location:'Location',location:'Location',lead_status:'Lead Status',created_time:'Created At',
-  conditional_question_1:'Question 1',conditional_question_2:'Question 2',conditional_question_3:'Question 3'
+  conditional_question_1:'Question 1',conditional_question_2:'Question 2',conditional_question_3:'Question 3',
+  industry_name:'Industry',service_name:'Service',subservice_name:'Subservice',lead_source:'Source'
  };
  const rows=parseCsv(csv);if(!rows.length)return'';
  const headers=rows[0].map(v=>aliases[norm(v)]||clean(v));
  const seen=new Set();const finalHeaders=headers.map((h,i)=>{let x=h||`Column ${i+1}`;if(seen.has(norm(x)))x=`${x} ${i+1}`;seen.add(norm(x));return x});
  const capacityIndex=finalHeaders.findIndex(h=>['buyercapacity','buyercapacitylimit','maxbuyers','capacity'].includes(norm(h)));
- if(capacityIndex<0){finalHeaders.push('Buyer Capacity');}
+ if(capacityIndex<0)finalHeaders.push('Buyer Capacity');
  const industryIndex=finalHeaders.findIndex(h=>norm(h)==='industry');
- const data=rows.slice(1).map(source=>{const row=[...source];while(row.length<finalHeaders.length)row.push('');if(capacityIndex<0){row.push('3')}else{const n=Number(row[capacityIndex]);row[capacityIndex]=String(Number.isFinite(n)&&n>=2?Math.floor(n):3)}if(industryIndex>=0){const value=norm(row[industryIndex]);if(value==='intrior design and home interiors')row[industryIndex]='Interior Design & Home Interiors';}return row.slice(0,finalHeaders.length)});
+ const data=rows.slice(1).map(source=>{const row=[...source];while(row.length<finalHeaders.length)row.push('');if(capacityIndex<0)row.push('3');else{const n=Number(row[capacityIndex]);row[capacityIndex]=String(Number.isFinite(n)&&n>=2?Math.floor(n):3)}if(industryIndex>=0){const value=norm(row[industryIndex]);if(value==='intrior design and home interiors')row[industryIndex]='Interior Design & Home Interiors';}return row.slice(0,finalHeaders.length)});
  return [finalHeaders,...data].map(row=>row.map(csvEscape).join(',')).join('\n');
 }
 async function fingerprint(text){if(window.crypto?.subtle){const data=new TextEncoder().encode(text);const hash=await window.crypto.subtle.digest('SHA-256',data);return Array.from(new Uint8Array(hash)).map(x=>x.toString(16).padStart(2,'0')).join('')}let h=2166136261;for(let i=0;i<text.length;i++)h=Math.imul(h^text.charCodeAt(i),16777619);return String(h>>>0)}
@@ -35,7 +36,7 @@ export default function GoogleSheetAutoSync(){
  const initial=()=>{try{const saved=JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]');if(Array.isArray(saved)&&saved.length)return saved.filter(Boolean);const old=localStorage.getItem(legacyKey);return old?[old]:[]}catch{return[]}};
  const[sources,setSources]=useState(initial),[input,setInput]=useState(''),[status,setStatus]=useState(''),[busy,setBusy]=useState(false);const running=useRef(false),timer=useRef(null);
  const save=next=>{setSources(next);localStorage.setItem(STORAGE_KEY,JSON.stringify(next));};
- const triggerExistingImporter=async csv=>{const inputEl=document.querySelector('input[type="file"][accept=".csv"]');if(!inputEl)throw new Error('Lead CSV importer is not available on this page');const file=new File([csv],`google-sheet-${Date.now()}.csv`,{type:'text/csv'}),transfer=new DataTransfer();transfer.items.add(file);inputEl.files=transfer.files;inputEl.dispatchEvent(new Event('change',{bubbles:true}));const deadline=Date.now()+20000;while(Date.now()<deadline){await new Promise(r=>setTimeout(r,400));const button=[...document.querySelectorAll('button')].find(b=>b.textContent?.trim()==='Import Leads'&&!b.disabled);if(button){button.click();return true}}throw new Error('Lead import preview did not finish in time')};
+ const triggerExistingImporter=async csv=>{const inputEl=document.querySelector('input[type="file"][accept=".csv"]');if(!inputEl)throw new Error('Lead CSV importer is not available on this page');const file=new File([csv],`google-sheet-${Date.now()}.csv`,{type:'text/csv'}),transfer=new DataTransfer();transfer.items.add(file);inputEl.files=transfer.files;inputEl.dispatchEvent(new Event('change',{bubbles:true}));const deadline=Date.now()+20000;while(Date.now()<deadline){await new Promise(r=>setTimeout(r,400));const button=[...document.querySelectorAll('button')].find(b=>b.textContent?.trim()==='Import Leads'&&!b.disabled);if(button){const modal=document.querySelector('.v9-modal'),overlay=modal?.closest('.v9-overlay');if(overlay)overlay.style.visibility='hidden';button.click();return true}}throw new Error('Lead import preview did not finish in time')};
  const syncOne=async(url,force=false)=>{const result=await readSheetInBrowser(url).catch(()=>authRequest('/leads/google-sheet/preview',{method:'POST',body:JSON.stringify({url})}));const csv=canonicalizeCsv(result.csv||'');const next=await fingerprint(csv),previous=localStorage.getItem(fingerprintKey(url));if(!force&&previous===next)return false;await triggerExistingImporter(csv);localStorage.setItem(fingerprintKey(url),next);return true};
  const syncAll=async(force=false)=>{if(running.current||!sources.length)return;running.current=true;setBusy(true);let changed=0;try{for(const url of sources){try{if(await syncOne(url,force))changed++}catch(e){setStatus(`${url}: ${e.message||'Unable to sync'}`)}}setStatus(changed?`${changed} sheet(s) checked · new data imported automatically`:'All connected sheets are up to date');window.dispatchEvent(new Event('propulse:leads-refresh'))}finally{running.current=false;setBusy(false)}};
  useEffect(()=>{if(!sources.length)return undefined;syncAll();timer.current=setInterval(()=>syncAll(),30000);return()=>{if(timer.current)clearInterval(timer.current)}},[sources.length]);
