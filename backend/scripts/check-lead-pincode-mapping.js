@@ -7,10 +7,11 @@ async function main() {
   let cityId;
   let subcityId;
   const pin = '999991';
+  const directoryPin = '999992';
 
   try {
     const c = (await client.query(`
-      SELECT i.id industry_id, s.id service_id, c.id city_id, c.state_id
+      SELECT i.id industry_id, s.id service_id, c.id city_id, c.state_id, c.name city_name
       FROM industries i
       JOIN services s ON s.industry_id=i.id
       JOIN cities c ON c.is_active=TRUE
@@ -20,6 +21,26 @@ async function main() {
     `)).rows[0];
     assert(c, 'CI catalog must contain an industry/service/city');
     cityId = c.city_id;
+
+    // Verify the canonical India PIN directory automatically populates the city index.
+    await client.query(`
+      INSERT INTO india_pincodes(pincode,state_id,state_name,district_name,office_count,source,is_active)
+      VALUES($1,$2,(SELECT name FROM states WHERE id=$2),$3,1,'ci-test',TRUE)
+      ON CONFLICT(pincode) DO UPDATE
+        SET state_id=EXCLUDED.state_id,
+            state_name=EXCLUDED.state_name,
+            district_name=EXCLUDED.district_name,
+            source='ci-test',
+            is_active=TRUE,
+            synced_at=CURRENT_TIMESTAMP
+    `, [directoryPin,c.state_id,c.city_name]);
+
+    const directoryCityPins = Number((await client.query(`
+      SELECT COUNT(*)::int count
+      FROM city_pincodes
+      WHERE city_id=$1 AND pincode=$2 AND is_active=TRUE AND source='india-post-open-api'
+    `, [cityId,directoryPin])).rows[0].count);
+    assert.strictEqual(directoryCityPins, 1);
 
     // Exercise the application service so the same city_pincodes synchronization
     // path used by the API is covered by the regression test.
@@ -88,6 +109,7 @@ async function main() {
       }
       if (cityId) {
         await client.query('DELETE FROM city_pincodes WHERE city_id=$1 AND pincode=$2 AND office_name=\'Mapping Test Area\'', [cityId, pin]);
+        await client.query('DELETE FROM india_pincodes WHERE pincode=$1', [directoryPin]);
       }
     } finally {
       client.release();
