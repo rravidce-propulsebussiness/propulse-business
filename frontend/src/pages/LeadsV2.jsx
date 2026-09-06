@@ -1,8 +1,7 @@
 import { Link, useSearchParams } from 'react-router-dom'
 import { useEffect, useState } from 'react'
-import { getToken, getUser } from '../utils/auth'
+import { authRequest, getToken, getUser } from '../utils/auth'
 import { claimLead, getLead, listLeads, purchaseLead } from '../api/leads'
-import { authRequest } from '../utils/auth'
 import UserHeader from '../components/UserHeader'
 import './LeadsV2.css'
 
