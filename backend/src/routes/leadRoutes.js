@@ -7,6 +7,7 @@ router.get('/pricing/rules',requireAdmin,leadController.getPricingRules);
 router.post('/pricing/rules',requireAdmin,leadController.savePricingRule);
 router.put('/pricing/rules/:id',requireAdmin,leadController.savePricingRule);
 router.delete('/pricing/rules/:id',requireAdmin,leadController.deletePricingRule);
+router.post('/google-sheet/preview',requireAdmin,leadController.previewGoogleSheet);
 router.get('/purchased',requireAuth,leadPurchaseController.purchases);
 router.get('/:id/access',requireAuth,leadEntitlementController.getAccess);
 router.post('/:id/claim',requireAuth,leadEntitlementController.claim);
