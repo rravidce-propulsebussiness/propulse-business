@@ -20,8 +20,9 @@ function canonicalizeCsv(csv){
   conditional_question_1:'Question 1',conditional_question_2:'Question 2',conditional_question_3:'Question 3',
   industry_name:'Industry',service_name:'Service',subservice_name:'Subservice',lead_source:'Source'
  };
+ const normalizedAliases=Object.fromEntries(Object.entries(aliases).map(([key,value])=>[norm(key),value]));
  const rows=parseCsv(csv);if(!rows.length)return'';
- const headers=rows[0].map(v=>aliases[norm(v)]||clean(v));
+ const headers=rows[0].map(v=>normalizedAliases[norm(v)]||clean(v));
  const seen=new Set();const finalHeaders=headers.map((h,i)=>{let x=h||`Column ${i+1}`;if(seen.has(norm(x)))x=`${x} ${i+1}`;seen.add(norm(x));return x});
  const capacityIndex=finalHeaders.findIndex(h=>['buyercapacity','buyercapacitylimit','maxbuyers','capacity'].includes(norm(h)));
  if(capacityIndex<0)finalHeaders.push('Buyer Capacity');
