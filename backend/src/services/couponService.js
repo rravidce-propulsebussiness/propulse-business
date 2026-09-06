@@ -31,7 +31,21 @@ async function updateCoupon(id,input){const existing=await getAdminCoupon(id);if
 
 async function setCouponActive(id,isActive){const r=await pool.query('UPDATE coupons SET is_active=$1,updated_at=CURRENT_TIMESTAMP WHERE id=$2 RETURNING *',[Boolean(isActive),id]);if(!r.rows[0])fail('Coupon not found','NOT_FOUND');return r.rows[0]}
 
+async function deleteCoupon(id){
+  const client=await pool.connect();
+  try{
+    await client.query('BEGIN');
+    const exists=(await client.query('SELECT id FROM coupons WHERE id=$1 FOR UPDATE',[id])).rows[0];
+    if(!exists)fail('Coupon not found','NOT_FOUND');
+    const redemptions=(await client.query("SELECT COUNT(*)::int count FROM coupon_redemptions WHERE coupon_id=$1",[id])).rows[0].count;
+    if(Number(redemptions)>0)fail('This coupon has redemption history and cannot be deleted. Deactivate it instead.','COUPON_HAS_REDEMPTIONS');
+    await client.query('DELETE FROM coupons WHERE id=$1',[id]);
+    await client.query('COMMIT');
+    return {id:Number(id)};
+  }catch(e){await client.query('ROLLBACK');throw e}finally{client.release()}
+}
+
 async function validateForUser({userId,code,subtotal,purchaseType,industryId=null,membershipPlanId=null}){
   const normalized=normalizeCode(code);if(!normalized)return null;const amount=Number(subtotal);if(!Number.isFinite(amount)||amount<0)fail('Invalid purchase amount','INVALID_AMOUNT');const coupon=(await pool.query('SELECT * FROM coupons WHERE UPPER(code)=UPPER($1) FOR UPDATE',[normalized])).rows[0];if(!coupon)fail('Coupon code not found','COUPON_NOT_FOUND');const now=new Date();if(!coupon.is_active)fail('This coupon is inactive','COUPON_INACTIVE');if(coupon.starts_at&&new Date(coupon.starts_at)>now)fail('This coupon is not active yet','COUPON_NOT_STARTED');if(coupon.expires_at&&new Date(coupon.expires_at)<=now)fail('This coupon has expired','COUPON_EXPIRED');if(Number(coupon.min_order_amount)>amount)fail(`Minimum order amount is ₹${Number(coupon.min_order_amount).toFixed(2)}`,'MIN_ORDER');const purchaseTypes=Array.isArray(coupon.purchase_types)?coupon.purchase_types:JSON.parse(coupon.purchase_types||'[]');if(purchaseType&&!purchaseTypes.includes(purchaseType))fail('This coupon does not apply to this purchase','PURCHASE_NOT_ELIGIBLE');const planIds=Array.isArray(coupon.membership_plan_ids)?coupon.membership_plan_ids:JSON.parse(coupon.membership_plan_ids||'[]');if(membershipPlanId&&planIds.length&&!planIds.includes(Number(membershipPlanId)))fail('This coupon does not apply to this membership plan','PLAN_NOT_ELIGIBLE');const targetUser=(await pool.query('SELECT 1 FROM coupon_users WHERE coupon_id=$1 AND user_id=$2',[coupon.id,userId])).rowCount;const targetUserCount=(await pool.query('SELECT COUNT(*)::int count FROM coupon_users WHERE coupon_id=$1',[coupon.id])).rows[0].count;if(Number(targetUserCount)>0&&!targetUser)fail('This coupon is restricted to specified users','USER_NOT_ELIGIBLE');const targetIndustry=(await pool.query('SELECT 1 FROM coupon_industries WHERE coupon_id=$1 AND industry_id=$2',[coupon.id,industryId])).rowCount;const targetIndustryCount=(await pool.query('SELECT COUNT(*)::int count FROM coupon_industries WHERE coupon_id=$1',[coupon.id])).rows[0].count;if(Number(targetIndustryCount)>0&&!targetIndustry)fail('This coupon is restricted to specified industries','INDUSTRY_NOT_ELIGIBLE');if(coupon.usage_limit!=null&&Number(coupon.used_count)>=Number(coupon.usage_limit))fail('This coupon has reached its usage limit','USAGE_LIMIT');const userUses=(await pool.query(`SELECT COUNT(*)::int count FROM coupon_redemptions WHERE coupon_id=$1 AND user_id=$2 AND status IN ('reserved','redeemed')`,[coupon.id,userId])).rows[0].count;if(coupon.per_user_limit!=null&&Number(userUses)>=Number(coupon.per_user_limit))fail('You have reached this coupon usage limit','USER_USAGE_LIMIT');const discount=discountFor(coupon,amount);return{coupon,discountAmount:discount,finalAmount:Number((amount-discount).toFixed(2))}}
 
-module.exports={getAdminCoupons,getAdminCoupon,createCoupon,updateCoupon,setCouponActive,validateForUser};
+module.exports={getAdminCoupons,getAdminCoupon,createCoupon,updateCoupon,setCouponActive,deleteCoupon,validateForUser};
