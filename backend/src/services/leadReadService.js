@@ -8,9 +8,12 @@ const normalizeLeadPricing=pricing=>{
   if(counts.has(1)&&counts.has(2)&&counts.has(3)&&counts.has(5))return{...pricing,shares:shares.filter(x=>Number(x?.shares)!==5)};
   return pricing;
 };
-const normalizeBuyerCapacity=row=>{const custom= row?.custom_fields&&typeof row.custom_fields==='object'&&!Array.isArray(row.custom_fields)?row.custom_fields:{};const raw=Number(row?.buyer_capacity??custom.buyerCapacity);return Number.isFinite(raw)&&raw>=2?Math.floor(raw):3;};
+const normalizeBuyerCapacity=row=>{const custom=row?.custom_fields&&typeof row.custom_fields==='object'&&!Array.isArray(row.custom_fields)?row.custom_fields:{};const raw=Number(row?.buyer_capacity??custom.buyerCapacity);return Number.isFinite(raw)&&raw>=2?Math.floor(raw):3;};
 const customValue=(custom,names)=>{if(!custom||typeof custom!=='object'||Array.isArray(custom))return'';const normalizedNames=names.map(name=>String(name).toLowerCase().replace(/&/g,'and').replace(/[^a-z0-9]/g,''));const key=Object.keys(custom).find(k=>normalizedNames.includes(String(k).toLowerCase().replace(/&/g,'and').replace(/[^a-z0-9]/g,''))&&String(custom[k]??'').trim());return key?String(custom[key]).trim():''};
 const normalizeLeadRow=row=>{if(!row)return row;const custom=row?.custom_fields&&typeof row.custom_fields==='object'&&!Array.isArray(row.custom_fields)?row.custom_fields:{};const requirement=String(row.requirement??'').trim()||customValue(custom,['Requirement','Requirements','Requirement Details','Share More Details and Requirement']);return{...row,buyer_capacity:normalizeBuyerCapacity(row),requirement,pricing:normalizeLeadPricing(row.pricing)};};
+const dynamicLabel=k=>String(k??'').trim().replace(/[_-]+/g,' ').replace(/\s+/g,' ').replace(/\b\w/g,m=>m.toUpperCase());
+const buildDynamicDetails=row=>{const custom=row?.custom_fields&&typeof row.custom_fields==='object'&&!Array.isArray(row.custom_fields)?row.custom_fields:{};const excluded=new Set(['buyerCapacity','pricing','leadPricing','leadPrice','price','exclusivePricing','exclusivePrice']);return Object.entries(custom).filter(([key,value])=>!excluded.has(key)&&String(value??'').trim()).map(([key,value])=>({key,label:dynamicLabel(key),value:String(value).trim()}));};
+const appendAdminDynamicDetails=row=>{const normalized=normalizeLeadRow(row);const details=buildDynamicDetails(normalized);if(!details.length)return normalized;const base=String(normalized.requirement??'').trim();const dynamicText=details.map(x=>`${x.label}: ${x.value}`).join(' · ');return{...normalized,dynamic_details:details,requirement:base?`${base} · ${dynamicText}`:dynamicText};};
 const maskLead=row=>({...normalizeLeadRow(row),customer_name:null,customer_phone:null,customer_email:null,notes:null,custom_fields:{}});
 
 const normalizeLeadType=v=>['basic','premium'].includes(String(v||'').toLowerCase())?String(v).toLowerCase():null;
@@ -21,4 +24,4 @@ async function isProMember(userId){
   return r.rows.length>0;
 }
 
-module.exports={leadSelect,maskLead,normalizeLeadRow,normalizeLeadPricing,normalizeLeadType,isProMember};
+module.exports={leadSelect,maskLead,normalizeLeadRow,normalizeLeadPricing,normalizeLeadType,isProMember,appendAdminDynamicDetails,buildDynamicDetails};
