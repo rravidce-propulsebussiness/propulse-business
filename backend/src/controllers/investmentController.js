@@ -8,11 +8,17 @@ async function rules(req, res) {
   try { return res.json(await service.getRules()); }
   catch (e) { return res.status(500).json({ error: 'Failed to load investment rules' }); }
 }
+async function locationRules(req, res) {
+  try { return res.json(await service.getLocationRules()); }
+  catch (e) { return res.status(500).json({ error: 'Failed to load investment location rules' }); }
+}
 async function create(req, res) {
   try {
     return res.status(201).json(await service.createInvestment({
       userId: req.user.id,
       industryId: Number(req.body.industryId),
+      stateId: req.body.stateId == null || req.body.stateId === '' ? null : Number(req.body.stateId),
+      cityId: req.body.cityId == null || req.body.cityId === '' ? null : Number(req.body.cityId),
       amount: req.body.amount,
     }));
   } catch (e) {
@@ -23,6 +29,9 @@ async function create(req, res) {
       INDUSTRY_UNAVAILABLE: 400,
       INDUSTRY_LIMIT_REACHED: 400,
       CAPACITY_REACHED: 409,
+      LOCATION_REQUIRED: 400,
+      LOCATION_UNAVAILABLE: 400,
+      LOCATION_CAPACITY_REACHED: 409,
       INSUFFICIENT_BALANCE: 400,
     };
     return res.status(map[e.code] || 400).json({ error: e.message, code: e.code });
@@ -48,6 +57,8 @@ async function reinvest(req, res) {
       INDUSTRY_UNAVAILABLE: 400,
       REINVESTMENT_ABOVE_MAXIMUM: 400,
       CAPACITY_REACHED: 409,
+      LOCATION_UNAVAILABLE: 400,
+      LOCATION_CAPACITY_REACHED: 409,
       INSUFFICIENT_BALANCE: 400,
     };
     return res.status(map[e.code] || 400).json({ error: e.message, code: e.code });
@@ -64,4 +75,4 @@ async function payout(req, res) {
     return res.status(map[e.code] || 400).json({ error: e.message, code: e.code });
   }
 }
-module.exports = { access, rules, create, mine, reinvest, adminList, payout };
+module.exports = { access, rules, locationRules, create, mine, reinvest, adminList, payout };
