@@ -33,7 +33,6 @@ export default function AdminLeadBulkClear(){
   useEffect(()=>{
     let disposed=false;
     let button=null;
-    let observer=null;
     let timer=null;
 
     const update=()=>{
@@ -88,26 +87,19 @@ export default function AdminLeadBulkClear(){
         bar.appendChild(button);
       }
       update();
-      const grid=document.querySelector('.v9-grid');
-      if(!observer&&grid){
-        observer=new MutationObserver(update);
-        observer.observe(grid,{childList:true,subtree:true});
-      }
       if(!bar.dataset.bulkClearListeners){
         bar.addEventListener('input',update);
         bar.addEventListener('change',update);
         bar.addEventListener('click',()=>setTimeout(update,0));
         bar.dataset.bulkClearListeners='true';
       }
-      if(timer){clearInterval(timer);timer=null;}
     };
 
     setup();
-    timer=setInterval(setup,250);
+    timer=setInterval(setup,500);
     return()=>{
       disposed=true;
       if(timer)clearInterval(timer);
-      if(observer)observer.disconnect();
       if(button?.parentNode)button.parentNode.removeChild(button);
     };
   },[]);
