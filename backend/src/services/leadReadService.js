@@ -8,7 +8,8 @@ const normalizeLeadPricing=pricing=>{
   if(counts.has(1)&&counts.has(2)&&counts.has(3)&&counts.has(5))return{...pricing,shares:shares.filter(x=>Number(x?.shares)!==5)};
   return pricing;
 };
-const normalizeLeadRow=row=>row?({...row,pricing:normalizeLeadPricing(row.pricing)}):row;
+const normalizeBuyerCapacity=row=>{const custom= row?.custom_fields&&typeof row.custom_fields==='object'&&!Array.isArray(row.custom_fields)?row.custom_fields:{};const raw=Number(row?.buyer_capacity??custom.buyerCapacity);return Number.isFinite(raw)&&raw>=2?Math.floor(raw):3;};
+const normalizeLeadRow=row=>row?({...row,buyer_capacity:normalizeBuyerCapacity(row),pricing:normalizeLeadPricing(row.pricing)}):row;
 const maskLead=row=>({...normalizeLeadRow(row),customer_name:null,customer_phone:null,customer_email:null,notes:null,custom_fields:{}});
 
 const normalizeLeadType=v=>['basic','premium'].includes(String(v||'').toLowerCase())?String(v).toLowerCase():null;
