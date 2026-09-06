@@ -32,6 +32,26 @@ async function getPayments(req, res) {
   }
 }
 
+async function getMembershipCustomers(req,res){
+  try{
+    res.json(await paymentService.getMembershipCustomers({search:req.query.search,page:req.query.page,limit:req.query.limit}));
+  }catch(error){
+    console.error('Get membership customers failed:',error.message);
+    res.status(500).json({error:'Failed to fetch membership customers'});
+  }
+}
+
+async function getMembershipCustomerDetails(req,res){
+  try{
+    const result=await paymentService.getMembershipCustomerDetails(req.params.userId);
+    if(!result) return res.status(404).json({error:'User not found'});
+    res.json(result);
+  }catch(error){
+    console.error('Get membership customer details failed:',error.message);
+    res.status(500).json({error:'Failed to fetch membership details'});
+  }
+}
+
 async function updatePaymentStatus(req, res) {
   try {
     const { status } = req.body;
@@ -48,7 +68,7 @@ async function updatePaymentStatus(req, res) {
 
 async function updateMembership(req,res){
   try{
-    const membership=await paymentService.updateMembership({membershipId:req.params.id,action:req.body.action,days:req.body.days,expiresAt:req.body.expiresAt});
+    const membership=await paymentService.updateMembership({membershipId:req.params.id,action:req.body.action,days:req.body.days,expiresAt:req.body.expiresAt,adminId:req.user.id});
     res.json(membership);
   }catch(error){
     console.error('Update membership from payments failed:',error.message);
@@ -57,4 +77,4 @@ async function updateMembership(req,res){
   }
 }
 
-module.exports = { createManualPayment, getCurrentMembership, getPayments, updatePaymentStatus, updateMembership };
+module.exports = { createManualPayment, getCurrentMembership, getPayments, getMembershipCustomers, getMembershipCustomerDetails, updatePaymentStatus, updateMembership };
