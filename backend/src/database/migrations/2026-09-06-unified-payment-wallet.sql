@@ -8,11 +8,16 @@ ALTER TABLE payments ADD COLUMN IF NOT EXISTS wallet_amount NUMERIC(12,2) NOT NU
 ALTER TABLE payments ADD COLUMN IF NOT EXISTS external_amount NUMERIC(12,2) NOT NULL DEFAULT 0 CHECK (external_amount >= 0);
 ALTER TABLE payments ADD COLUMN IF NOT EXISTS wallet_transaction_id INTEGER;
 
+-- Existing payments were direct/manual payments, so preserve their full amount as external payment.
+UPDATE payments SET wallet_amount=0,external_amount=amount WHERE COALESCE(wallet_amount,0)=0 AND COALESCE(external_amount,0)=0;
+
 ALTER TABLE payments DROP CONSTRAINT IF EXISTS payments_payment_method_check;
 ALTER TABLE payments ADD CONSTRAINT payments_payment_method_check CHECK (payment_method IN ('gateway','manual','wallet','wallet_manual'));
 ALTER TABLE payments DROP CONSTRAINT IF EXISTS payments_purchase_type_check;
 ALTER TABLE payments ADD CONSTRAINT payments_purchase_type_check CHECK (purchase_type IS NULL OR purchase_type IN ('membership','lead','booster'));
+ALTER TABLE payments DROP CONSTRAINT IF EXISTS payments_split_amount_check;
 ALTER TABLE payments ADD CONSTRAINT payments_split_amount_check CHECK (ROUND(wallet_amount + external_amount,2)=ROUND(amount,2));
+ALTER TABLE payments DROP CONSTRAINT IF EXISTS payments_wallet_transaction_fk;
 ALTER TABLE payments ADD CONSTRAINT payments_wallet_transaction_fk FOREIGN KEY (wallet_transaction_id) REFERENCES wallet_transactions(id) ON DELETE SET NULL;
 CREATE INDEX IF NOT EXISTS idx_payments_purchase ON payments(purchase_type,purchase_id);
 CREATE INDEX IF NOT EXISTS idx_payments_user_purchase ON payments(user_id,purchase_type,purchase_id,created_at DESC);
