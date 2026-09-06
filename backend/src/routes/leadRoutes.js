@@ -1,5 +1,6 @@
 const express=require('express');const leadController=require('../controllers/leadController');const leadPurchaseController=require('../controllers/leadPurchaseController');const leadEntitlementController=require('../controllers/leadEntitlementController');const requireAuth=require('../middleware/authMiddleware');const optionalAuth=require('../middleware/optionalAuthMiddleware');const requireAdmin=require('../middleware/adminMiddleware');const router=express.Router();
 router.get('/',optionalAuth,leadController.getLeads);
+router.get('/investors',requireAdmin,leadController.getInvestors);
 router.get('/pricing',requireAdmin,leadController.getLeadPricing);
 router.put('/pricing',requireAdmin,leadController.updateLeadPricing);
 router.get('/pricing/rules',requireAdmin,leadController.getPricingRules);
@@ -7,7 +8,7 @@ router.post('/pricing/rules',requireAdmin,leadController.savePricingRule);
 router.put('/pricing/rules/:id',requireAdmin,leadController.savePricingRule);
 router.delete('/pricing/rules/:id',requireAdmin,leadController.deletePricingRule);
 router.get('/purchased',requireAuth,leadPurchaseController.purchases);
-router.get('/:id/access',requireAuth,leadEntitlementController.getAccess);
+router.get('/:id/access',requireAuth,leadController.getLeadById);
 router.post('/:id/claim',requireAuth,leadEntitlementController.claim);
 router.post('/:id/purchase',requireAuth,leadPurchaseController.purchase);
 router.get('/:id',requireAuth,leadController.getLeadById);
