@@ -33,10 +33,25 @@ async function getRules() {
   }));
 }
 
+async function getLocationRules() {
+  return (await pool.query(`
+    SELECT l.*,s.name AS state_name,c.name AS city_name
+    FROM investor_location_limits l
+    JOIN states s ON s.id=l.state_id
+    LEFT JOIN cities c ON c.id=l.city_id
+    WHERE l.is_active=TRUE AND s.is_active=TRUE AND (c.id IS NULL OR c.is_active=TRUE)
+    ORDER BY s.name,c.name NULLS FIRST,l.id
+  `)).rows.map((rule) => ({
+    ...rule,
+    investor_limit: Number(rule.investor_limit),
+  }));
+}
+
 async function getInvestmentAccess(userId) {
   const settings = await getSettings();
   const pro = await isProMember(userId);
   const enabled = Boolean(settings.is_enabled ?? settings.enabled);
+  const locationLimits = await getLocationRules();
   return {
     enabled,
     requiresPro: Boolean(settings.requires_pro),
@@ -47,10 +62,45 @@ async function getInvestmentAccess(userId) {
     autoReinvest: false,
     reinvestmentMode: 'investor_choice',
     revenueSharePercent: Number(settings.investor_revenue_share_percent ?? 100),
+    locationLimitsEnabled: locationLimits.length > 0,
   };
 }
 
-async function createInvestment({ userId, industryId, amount: rawAmount }) {
+async function findLocationRule(client, stateId, cityId, lock = false) {
+  if (!stateId) return null;
+  const suffix = lock ? ' FOR UPDATE' : '';
+  const exact = cityId
+    ? (await client.query(`SELECT l.*,s.name AS state_name,c.name AS city_name
+        FROM investor_location_limits l JOIN states s ON s.id=l.state_id JOIN cities c ON c.id=l.city_id
+        WHERE l.state_id=$1 AND l.city_id=$2 AND l.is_active=TRUE AND s.is_active=TRUE AND c.is_active=TRUE${suffix}`,[stateId,cityId])).rows[0]
+    : null;
+  if (exact) return exact;
+  return (await client.query(`SELECT l.*,s.name AS state_name
+      FROM investor_location_limits l JOIN states s ON s.id=l.state_id
+      WHERE l.state_id=$1 AND l.city_id IS NULL AND l.is_active=TRUE AND s.is_active=TRUE${suffix}`,[stateId])).rows[0] || null;
+}
+
+async function locationRulesEnabled(client) {
+  const row = (await client.query('SELECT 1 FROM investor_location_limits WHERE is_active=TRUE LIMIT 1')).rows[0];
+  return Boolean(row);
+}
+
+async function assertLocationCapacity(client, { stateId, cityId, value, excludeInvestmentId = null }) {
+  const enabled = await locationRulesEnabled(client);
+  if (!enabled) return null;
+  if (!stateId) throw Object.assign(new Error('A location is required for this investment'), { code: 'LOCATION_REQUIRED' });
+  const rule = await findLocationRule(client, stateId, cityId, true);
+  if (!rule) throw Object.assign(new Error('Investment is not available for this location'), { code: 'LOCATION_UNAVAILABLE' });
+  const params = [stateId, value];
+  let where = 'state_id=$1 AND status IN (\'active\',\'matured\')';
+  if (rule.city_id !== null) { params.splice(1, 0, Number(rule.city_id)); where += ' AND city_id=$2'; }
+  if (excludeInvestmentId) { params.push(excludeInvestmentId); where += ` AND id<>$${params.length}`; }
+  const used = Number((await client.query(`SELECT COALESCE(SUM(amount),0) AS total FROM investments WHERE ${where}`, params)).rows[0].total);
+  if (used + value > Number(rule.investor_limit)) throw Object.assign(new Error(`Investment capacity for ${rule.city_name ? `${rule.city_name}, ` : ''}${rule.state_name} has been reached`), { code: 'LOCATION_CAPACITY_REACHED' });
+  return rule;
+}
+
+async function createInvestment({ userId, industryId, stateId, cityId, amount: rawAmount }) {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
@@ -61,6 +111,8 @@ async function createInvestment({ userId, industryId, amount: rawAmount }) {
     const rule = (await client.query(`SELECT r.*,i.name AS industry_name FROM investment_industry_rules r JOIN industries i ON i.id=r.industry_id WHERE r.industry_id=$1 AND r.is_active=TRUE AND i.is_active=TRUE FOR UPDATE`, [industryId])).rows[0];
     if (!rule) throw Object.assign(new Error('Investment is not available for this industry'), { code: 'INDUSTRY_UNAVAILABLE' });
     if (value < Number(rule.minimum_amount) || value > Number(rule.maximum_amount)) throw Object.assign(new Error(`Investment must be between ₹${rule.minimum_amount} and ₹${rule.maximum_amount}`), { code: 'AMOUNT_OUT_OF_RANGE' });
+    const locationRule = await assertLocationCapacity(client, { stateId: Number(stateId) || null, cityId: Number(cityId) || null, value });
+    if (locationRule && locationRule.city_id !== null && Number(cityId) !== Number(locationRule.city_id)) throw Object.assign(new Error('Selected city is not available for this investor location rule'), { code: 'LOCATION_UNAVAILABLE' });
     const distinct = (await client.query(`SELECT COUNT(DISTINCT industry_id)::int AS count FROM investments WHERE user_id=$1 AND status IN ('active','matured')`, [userId])).rows[0];
     const already = (await client.query(`SELECT 1 FROM investments WHERE user_id=$1 AND industry_id=$2 AND status IN ('active','matured') LIMIT 1`, [userId, industryId])).rows.length > 0;
     if (!already && Number(settings.customer_industry_limit) > 0 && Number(distinct.count) >= Number(settings.customer_industry_limit)) throw Object.assign(new Error('Your investment industry limit has been reached'), { code: 'INDUSTRY_LIMIT_REACHED' });
@@ -69,7 +121,7 @@ async function createInvestment({ userId, industryId, amount: rawAmount }) {
       if (used + value > Number(rule.total_capacity)) throw Object.assign(new Error('Investment capacity for this industry has been reached'), { code: 'CAPACITY_REACHED' });
     }
     const maturityDays = Number(settings.investment_cycle_days || rule.maturity_days || 30);
-    const result = await client.query(`INSERT INTO investments(user_id,industry_id,amount,return_percent,expected_return,maturity_days,reinvestment_enabled,starts_at,matures_at) VALUES($1,$2,$3,0,$3,$4,TRUE,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP+make_interval(days=>$4)) RETURNING *`, [userId, industryId, value, maturityDays]);
+    const result = await client.query(`INSERT INTO investments(user_id,industry_id,state_id,city_id,amount,return_percent,expected_return,maturity_days,reinvestment_enabled,starts_at,matures_at) VALUES($1,$2,$3,$4,$5,0,$5,$6,TRUE,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP+make_interval(days=>$6)) RETURNING *`, [userId, industryId, Number(stateId) || null, Number(cityId) || null, value, maturityDays]);
     const investment = result.rows[0];
     const wallet = (await client.query(`INSERT INTO wallets(user_id) VALUES($1) ON CONFLICT(user_id) DO UPDATE SET user_id=EXCLUDED.user_id RETURNING id,balance`, [userId])).rows[0];
     const locked = (await client.query('SELECT id,balance FROM wallets WHERE id=$1 FOR UPDATE', [wallet.id])).rows[0];
@@ -77,7 +129,7 @@ async function createInvestment({ userId, industryId, amount: rawAmount }) {
     if (balance < value) throw Object.assign(new Error('Insufficient wallet balance'), { code: 'INSUFFICIENT_BALANCE' });
     const next = balance - value;
     await client.query('UPDATE wallets SET balance=$1,updated_at=CURRENT_TIMESTAMP WHERE id=$2', [next, locked.id]);
-    await client.query(`INSERT INTO wallet_transactions(wallet_id,user_id,type,amount,balance_after,reference_type,reference_id,description) VALUES($1,$2,'debit',$3,$4,'investment',$5,'Investment funding')`, [locked.id, userId, value, next, investment.id]);
+    await client.query(`INSERT INTO wallet_transactions(wallet_id,user_id,type,amount,balance_after,reference_type,reference_id,description) VALUES($1,$2,'debit',$3,$4,'investment',$5,'Investment funding')`, [locked.id, userId, value, investment.id]);
     await client.query(`INSERT INTO investment_transactions(investment_id,user_id,type,amount,reference_type,reference_id) VALUES($1,$2,'investment',$3,'wallet',$4)`, [investment.id, userId, value, investment.id]);
     await client.query('COMMIT');
     return { ...investment, amount: Number(investment.amount), expected_return: Number(investment.expected_return), return_percent: 0, realized_revenue: 0, payout_amount: 0, reinvestment_available: false };
@@ -86,7 +138,7 @@ async function createInvestment({ userId, industryId, amount: rawAmount }) {
 }
 
 async function getMyInvestments(userId) {
-  return (await pool.query(`SELECT x.*,i.name AS industry_name,ri.id AS reinvested_to_id FROM investments x JOIN industries i ON i.id=x.industry_id LEFT JOIN investments ri ON ri.parent_investment_id=x.id WHERE x.user_id=$1 ORDER BY x.created_at DESC,x.id DESC`, [userId])).rows.map((item) => {
+  return (await pool.query(`SELECT x.*,i.name AS industry_name,s.name AS state_name,c.name AS city_name,ri.id AS reinvested_to_id FROM investments x JOIN industries i ON i.id=x.industry_id LEFT JOIN states s ON s.id=x.state_id LEFT JOIN cities c ON c.id=x.city_id LEFT JOIN investments ri ON ri.parent_investment_id=x.id WHERE x.user_id=$1 ORDER BY x.created_at DESC,x.id DESC`, [userId])).rows.map((item) => {
     const payout = Number(item.payout_amount || 0);
     const hasChild = Boolean(item.reinvested_to_id);
     return {
@@ -137,9 +189,7 @@ async function reinvestInvestment({ userId, investmentId }) {
     if (!inv) throw Object.assign(new Error('Investment not found'), { code: 'NOT_FOUND' });
     if (String(inv.status).toLowerCase() !== 'paid') throw Object.assign(new Error('Only a settled investment can be reinvested'), { code: 'NOT_SETTLED' });
     if (!Boolean(inv.reinvestment_enabled)) throw Object.assign(new Error('Reinvestment is not available for this investment'), { code: 'REINVESTMENT_DISABLED' });
-    // Reinvestment carries the full realized amount from the settled cycle.
-// It is not subject to the normal minimum investment amount.
-const reinvestAmount = Number(Number(inv.payout_amount || 0).toFixed(2));
+    const reinvestAmount = Number(Number(inv.payout_amount || 0).toFixed(2));
     if (reinvestAmount <= 0) throw Object.assign(new Error('There is no realized amount available to reinvest'), { code: 'NO_REALIZED_AMOUNT' });
     const existing = (await client.query('SELECT id FROM investments WHERE parent_investment_id=$1 LIMIT 1', [inv.id])).rows[0];
     if (existing) throw Object.assign(new Error('This investment has already been reinvested'), { code: 'REINVESTMENT_EXISTS', childId: existing.id });
@@ -150,13 +200,14 @@ const reinvestAmount = Number(Number(inv.payout_amount || 0).toFixed(2));
       const used = Number((await client.query(`SELECT COALESCE(SUM(amount),0) AS total FROM investments WHERE industry_id=$1 AND status IN ('active','matured')`, [inv.industry_id])).rows[0].total);
       if (used + reinvestAmount > Number(rule.total_capacity)) throw Object.assign(new Error('Investment capacity for this industry has been reached'), { code: 'CAPACITY_REACHED' });
     }
+    if (inv.state_id) await assertLocationCapacity(client, { stateId: Number(inv.state_id), cityId: inv.city_id ? Number(inv.city_id) : null, value: reinvestAmount });
     const wallet = (await client.query(`INSERT INTO wallets(user_id) VALUES($1) ON CONFLICT(user_id) DO UPDATE SET user_id=EXCLUDED.user_id RETURNING id,balance`, [userId])).rows[0];
     const lockedWallet = (await client.query('SELECT id,balance FROM wallets WHERE id=$1 FOR UPDATE', [wallet.id])).rows[0];
     const balance = Number(lockedWallet.balance);
     if (balance < reinvestAmount) throw Object.assign(new Error('The realized payout is no longer available in your wallet. You can only reinvest funds that remain available.'), { code: 'INSUFFICIENT_BALANCE' });
     const settings = await getSettings(client);
     const maturityDays = Number(settings.investment_cycle_days || rule.maturity_days || 30);
-    const child = (await client.query(`INSERT INTO investments(user_id,industry_id,amount,return_percent,expected_return,maturity_days,reinvestment_enabled,parent_investment_id,starts_at,matures_at) VALUES($1,$2,$3,0,$3,$4,TRUE,$5,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP+make_interval(days=>$4)) RETURNING *`, [userId, inv.industry_id, reinvestAmount, maturityDays, inv.id])).rows[0];
+    const child = (await client.query(`INSERT INTO investments(user_id,industry_id,state_id,city_id,amount,return_percent,expected_return,maturity_days,reinvestment_enabled,parent_investment_id,starts_at,matures_at) VALUES($1,$2,$3,$4,$5,0,$5,$6,TRUE,$7,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP+make_interval(days=>$6)) RETURNING *`, [userId, inv.industry_id, inv.state_id || null, inv.city_id || null, reinvestAmount, maturityDays, inv.id])).rows[0];
     const next = balance - reinvestAmount;
     await client.query('UPDATE wallets SET balance=$1,updated_at=CURRENT_TIMESTAMP WHERE id=$2', [next, lockedWallet.id]);
     await client.query(`INSERT INTO wallet_transactions(wallet_id,user_id,type,amount,balance_after,reference_type,reference_id,description) VALUES($1,$2,'debit',$3,$4,'investment_reinvestment',$5,'Investor-selected reinvestment of realized proceeds')`, [lockedWallet.id, userId, reinvestAmount, next, child.id]);
@@ -171,7 +222,7 @@ const reinvestAmount = Number(Number(inv.payout_amount || 0).toFixed(2));
 }
 
 async function adminList() {
-  return (await pool.query(`SELECT x.*,u.name AS user_name,u.email,i.name AS industry_name,COALESCE(SUM(a.allocated_amount),0) AS realized_revenue FROM investments x JOIN users u ON u.id=x.user_id JOIN industries i ON i.id=x.industry_id LEFT JOIN investment_revenue_allocations a ON a.investment_id=x.id GROUP BY x.id,u.name,u.email,i.name ORDER BY x.created_at DESC,x.id DESC`)).rows.map((item) => ({ ...item, amount: Number(item.amount), realized_revenue: Number(item.realized_revenue || 0), payout_amount: Number(item.payout_amount || 0), return_percent: 0 }));
+  return (await pool.query(`SELECT x.*,u.name AS user_name,u.email,i.name AS industry_name,s.name AS state_name,c.name AS city_name,COALESCE(SUM(a.allocated_amount),0) AS realized_revenue FROM investments x JOIN users u ON u.id=x.user_id JOIN industries i ON i.id=x.industry_id LEFT JOIN states s ON s.id=x.state_id LEFT JOIN cities c ON c.id=x.city_id LEFT JOIN investment_revenue_allocations a ON a.investment_id=x.id GROUP BY x.id,u.name,u.email,i.name,s.name,c.name ORDER BY x.created_at DESC,x.id DESC`)).rows.map((item) => ({ ...item, amount: Number(item.amount), realized_revenue: Number(item.realized_revenue || 0), payout_amount: Number(item.payout_amount || 0), return_percent: 0 }));
 }
 
-module.exports = { getSettings, getRules, getInvestmentAccess, createInvestment, getMyInvestments, adminPayout, reinvestInvestment, adminList };
+module.exports = { getSettings, getRules, getLocationRules, getInvestmentAccess, createInvestment, getMyInvestments, adminPayout, reinvestInvestment, adminList };
