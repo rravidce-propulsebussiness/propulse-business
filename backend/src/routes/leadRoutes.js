@@ -8,7 +8,7 @@ router.post('/pricing/rules',requireAdmin,leadController.savePricingRule);
 router.put('/pricing/rules/:id',requireAdmin,leadController.savePricingRule);
 router.delete('/pricing/rules/:id',requireAdmin,leadController.deletePricingRule);
 router.get('/purchased',requireAuth,leadPurchaseController.purchases);
-router.get('/:id/access',requireAuth,leadController.getLeadById);
+router.get('/:id/access',requireAuth,leadEntitlementController.getAccess);
 router.post('/:id/claim',requireAuth,leadEntitlementController.claim);
 router.post('/:id/purchase',requireAuth,leadPurchaseController.purchase);
 router.get('/:id',requireAuth,leadController.getLeadById);
