@@ -67,7 +67,7 @@ async function getMembershipCustomerDetails(userId) {
       WHERE m.user_id=$1
       UNION ALL
       SELECT 'admin'::text AS event_source,h.membership_id,h.payment_id,mp.name AS plan_name,mp.plan_type,NULL::text AS payment_status,h.new_status AS membership_status,
-             NULL::timestamptz AS starts_at,h.new_expires_at AS expires_at,NULL::numeric AS amount,NULL::text AS manual_reference,h.created_at AS event_at,h.action,h.notes
+             NULL::timestamp AS starts_at,h.new_expires_at AS expires_at,NULL::numeric AS amount,NULL::text AS manual_reference,h.created_at AS event_at,h.action,h.notes
       FROM membership_admin_history h JOIN memberships hm ON hm.id=h.membership_id JOIN membership_plans mp ON mp.id=hm.membership_plan_id
       WHERE h.user_id=$1
     ) timeline
