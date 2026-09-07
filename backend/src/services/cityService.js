@@ -1,5 +1,16 @@
 const pool = require('../config/database');
 
+const DEFAULT_PAGE_SIZE = 50;
+const MAX_PAGE_SIZE = 100;
+
+function parsePagination({ page, pageSize, limit } = {}) {
+  const parsedPage = Number.parseInt(page, 10);
+  const parsedSize = Number.parseInt(pageSize ?? limit, 10);
+  const currentPage = Number.isFinite(parsedPage) && parsedPage > 0 ? Math.min(parsedPage, 1000000) : 1;
+  const size = Number.isFinite(parsedSize) && parsedSize > 0 ? Math.min(parsedSize, MAX_PAGE_SIZE) : DEFAULT_PAGE_SIZE;
+  return { page: currentPage, pageSize: size, offset: (currentPage - 1) * size };
+}
+
 function slugify(value) {
   return String(value || '')
     .trim()
@@ -54,17 +65,36 @@ async function createCity({ stateId, name, slug }) {
   return city;
 }
 
-async function getCities() {
+async function getCities({ page, pageSize, limit } = {}) {
+  const pagination = parsePagination({ page, pageSize, limit });
+  const countResult = await pool.query(
+    `SELECT COUNT(*)::int AS total
+       FROM cities c
+       INNER JOIN states s ON s.id=c.state_id
+      WHERE c.is_active=TRUE AND s.is_active=TRUE`
+  );
+  const total = countResult.rows[0]?.total || 0;
   const result = await pool.query(
     `SELECT c.*, s.name AS state_name, s.code AS state_code,
-            COALESCE((SELECT json_agg(json_build_object('id',cp.id,'pincode',cp.pincode,'officeName',cp.office_name) ORDER BY cp.pincode,cp.office_name) FROM city_pincodes cp WHERE cp.city_id=c.id AND cp.is_active=TRUE),'[]'::json) AS pincodes
-     FROM cities c
-     INNER JOIN states s ON s.id = c.state_id
-     WHERE c.is_active = TRUE
-       AND s.is_active = TRUE
-     ORDER BY s.name ASC, c.name ASC`
+            COALESCE((SELECT json_agg(json_build_object('id',cp.id,'pincode',cp.pincode,'officeName',cp.office_name) ORDER BY cp.pincode,cp.office_name)
+              FROM city_pincodes cp WHERE cp.city_id=c.id AND cp.is_active=TRUE),'[]'::json) AS pincodes
+       FROM cities c
+       INNER JOIN states s ON s.id=c.state_id
+      WHERE c.is_active=TRUE AND s.is_active=TRUE
+      ORDER BY s.name ASC, c.name ASC, c.id ASC
+      LIMIT $1 OFFSET $2`,
+    [pagination.pageSize, pagination.offset]
   );
-  return result.rows;
+  return {
+    data: result.rows,
+    pagination: {
+      ...pagination,
+      total,
+      totalPages: total === 0 ? 0 : Math.ceil(total / pagination.pageSize),
+      hasNextPage: pagination.page * pagination.pageSize < total,
+      hasPreviousPage: pagination.page > 1 && total > 0,
+    },
+  };
 }
 
 async function getCityById(id) {
@@ -132,22 +162,12 @@ async function updateSubcity(id,{cityId,name,slug,pincode,source}) {
   const normalizedPincode = normalizePincode(pincode);
   const existing = await pool.query(`SELECT city_id,pincode FROM subcities WHERE id=$1 AND is_active=TRUE`, [id]);
   if (!existing.rows[0]) return null;
-
   const result = await pool.query(
-    `UPDATE subcities
-        SET city_id=$1,
-            name=$2,
-            slug=$3,
-            pincode=$4,
-            source=COALESCE($5,source),
-            updated_at=CURRENT_TIMESTAMP
-      WHERE id=$6 AND is_active=TRUE
-      RETURNING *`,
+    `UPDATE subcities SET city_id=$1,name=$2,slug=$3,pincode=$4,source=COALESCE($5,source),updated_at=CURRENT_TIMESTAMP WHERE id=$6 AND is_active=TRUE RETURNING *`,
     [cityId,name,slug,normalizedPincode,source || null,id]
   );
   const subcity = result.rows[0] || null;
   if (!subcity) return null;
-
   if (normalizedPincode) await syncCityPincodeIndex(cityId, normalizedPincode, name);
   if (existing.rows[0].pincode && (existing.rows[0].pincode !== normalizedPincode || existing.rows[0].city_id !== Number(cityId))) {
     await removeUnusedCityPincode(existing.rows[0].city_id, existing.rows[0].pincode);
@@ -163,39 +183,14 @@ async function deactivateSubcity(id) {
 }
 
 async function syncSubcitiesForCity(cityId) {
-  const cityResult = await pool.query(
-    `SELECT c.id,c.name,c.state_id,c.is_active FROM cities c WHERE c.id=$1`,
-    [cityId]
-  );
+  const cityResult = await pool.query(`SELECT c.id,c.name,c.state_id,c.is_active FROM cities c WHERE c.id=$1`,[cityId]);
   const city = cityResult.rows[0];
   if (!city) return null;
   if (!city.is_active) return { cityId: city.id, pincodeCount: 0, subcities: [] };
-
-  const synced = await pool.query('SELECT propulse_sync_city_directory_pincodes($1) AS count', [city.id]);
-  const subcities = await pool.query(
-    `SELECT sc.*,c.name AS city_name,s.name AS state_name
-       FROM subcities sc
-       JOIN cities c ON c.id=sc.city_id
-       JOIN states s ON s.id=c.state_id
-      WHERE sc.city_id=$1 AND sc.is_active=TRUE
-      ORDER BY sc.name`,
-    [city.id]
-  );
-  const pincodes = await pool.query(
-    `SELECT id,pincode,office_name AS "officeName",source
-       FROM city_pincodes
-      WHERE city_id=$1 AND is_active=TRUE
-      ORDER BY pincode,office_name`,
-    [city.id]
-  );
-  return {
-    cityId: city.id,
-    cityName: city.name,
-    pincodeCount: pincodes.rows.length,
-    directorySyncCount: Number(synced.rows[0]?.count || 0),
-    pincodes: pincodes.rows,
-    subcities: subcities.rows
-  };
+  const synced = await pool.query('SELECT propulse_sync_city_directory_pincodes($1) AS count',[city.id]);
+  const subcities = await pool.query(`SELECT sc.*,c.name AS city_name,s.name AS state_name FROM subcities sc JOIN cities c ON c.id=sc.city_id JOIN states s ON s.id=c.state_id WHERE sc.city_id=$1 AND sc.is_active=TRUE ORDER BY sc.name`,[city.id]);
+  const pincodes = await pool.query(`SELECT id,pincode,office_name AS "officeName",source FROM city_pincodes WHERE city_id=$1 AND is_active=TRUE ORDER BY pincode,office_name`,[city.id]);
+  return { cityId: city.id, cityName: city.name, pincodeCount: pincodes.rows.length, directorySyncCount: Number(synced.rows[0]?.count || 0), pincodes: pincodes.rows, subcities: subcities.rows };
 }
 
 module.exports={createCity,getCities,getCityById,updateCity,deactivateCity,createSubcity,getSubcities,updateSubcity,deactivateSubcity,syncSubcitiesForCity};
