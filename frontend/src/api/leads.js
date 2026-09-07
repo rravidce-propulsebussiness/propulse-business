@@ -11,7 +11,7 @@ const syncProMembership = (data, token) => {
 const appendPageFilters = (query) => {
   if (typeof window === 'undefined' || window.location.pathname !== '/leads') return
   const pageParams = new URLSearchParams(window.location.search)
-  ;['industryId', 'serviceId', 'stateId', 'cityId', 'leadType'].forEach(key => {
+  ;['industryId', 'serviceId', 'stateId', 'cityId', 'leadType', 'allIndustries'].forEach(key => {
     if (query.has(key)) return
     const value = pageParams.get(key)
     if (value) query.set(key, value)
