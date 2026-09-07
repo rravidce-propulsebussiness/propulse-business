@@ -10,6 +10,21 @@ async function search(req, res) {
   }
 }
 
+async function resolve(req, res) {
+  try {
+    const row = await pincodeService.resolvePincode({
+      stateId: req.query.stateId,
+      cityId: req.query.cityId,
+      district: req.query.district,
+      location: req.query.location,
+    });
+    return res.json(row || { pincode: null, resolved: false });
+  } catch (error) {
+    console.error('Resolve pincode failed:', error.message);
+    return res.status(500).json({ error: 'Failed to resolve pincode' });
+  }
+}
+
 async function getOne(req, res) {
   try {
     const pincode = String(req.params.pincode || '').trim();
@@ -22,4 +37,4 @@ async function getOne(req, res) {
   }
 }
 
-module.exports = { search, getOne };
+module.exports = { search, resolve, getOne };
