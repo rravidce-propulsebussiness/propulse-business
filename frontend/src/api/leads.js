@@ -39,6 +39,7 @@ export function purchaseLead(id, shares, options = {}) {
   }).then(data => {
     if (!data?.requires_external_payment) return data
     const payment = data.payment || {}
+    const paymentId = data.payment_id ?? data.paymentId ?? payment.id ?? null
     const totalAmount = Number(payment.amount ?? data.amount ?? data.totalAmount ?? data.total_amount ?? data.purchase_amount ?? data.purchaseAmount ?? 0)
     const walletAmount = Number(data.walletAmount ?? data.wallet_amount ?? payment.walletAmount ?? payment.wallet_amount ?? 0)
     const externalAmount = Number(data.externalAmount ?? data.external_amount ?? payment.externalAmount ?? payment.external_amount ?? Math.max(0, totalAmount - walletAmount))
@@ -49,6 +50,7 @@ export function purchaseLead(id, shares, options = {}) {
       balanceAfter: Number(data.balanceAfter ?? data.balance_after ?? payment.balanceAfter ?? payment.balance_after ?? 0),
       payment: {
         ...payment,
+        id: paymentId,
         amount: Number.isFinite(totalAmount) ? totalAmount : 0,
         wallet_amount: walletAmount,
         external_amount: externalAmount
