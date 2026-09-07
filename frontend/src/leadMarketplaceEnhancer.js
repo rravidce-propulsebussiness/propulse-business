@@ -7,10 +7,31 @@ function formatMoney(value) {
   return Number.isFinite(amount) ? `₹${amount.toLocaleString('en-IN')}` : '₹0'
 }
 
+function enhanceProPricing(modal) {
+  const pricing = modal.querySelector('.lv2-modal-pricing.pro-only')
+  if (!pricing || pricing.dataset.proSavingsReady === 'true') return
+  pricing.dataset.proSavingsReady = 'true'
+  pricing.querySelectorAll('.lv2-modal-price-row').forEach(row => {
+    const normal = row.querySelector('.lv2-modal-price.normal')
+    const pro = row.querySelector('.lv2-modal-price.pro')
+    if (!normal || !pro) return
+    const normalValue = Number(String(normal.textContent || '').replace(/[^0-9.]/g, ''))
+    const proValue = Number(String(pro.textContent || '').replace(/[^0-9.]/g, ''))
+    const saving = normalValue - proValue
+    if (!Number.isFinite(saving) || saving <= 0 || pro.querySelector('.lv2-pro-saving')) return
+    const save = document.createElement('small')
+    save.className = 'lv2-pro-saving'
+    save.textContent = `Save ${formatMoney(saving)}`
+    pro.appendChild(save)
+  })
+}
+
 function enhanceBuyModal(modal) {
-  if (!modal || modal.dataset.walletPreferenceReady === 'true') return
+  if (!modal) return
   const pricing = modal.querySelector('.lv2-modal-pricing')
   if (!pricing) return
+  enhanceProPricing(modal)
+  if (modal.dataset.walletPreferenceReady === 'true') return
 
   modal.dataset.walletPreferenceReady = 'true'
   try { localStorage.setItem(preferenceKey, 'true') } catch {}
