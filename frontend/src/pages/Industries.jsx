@@ -5,12 +5,6 @@ import './Industries.css'
 const slugify = value => String(value || '').trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
 const stateCode = value => String(value || '').trim().split(/\s+/).map(part => part[0]).join('').slice(0, 3).toUpperCase()
 
-async function request(path, options = {}) {
-  return authRequest(path, options)
-}
-
-const jsonOptions = (method, body) => ({ method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
-
 const collection = value => {
   if (Array.isArray(value)) return value
   if (Array.isArray(value?.data)) return value.data
@@ -25,13 +19,16 @@ const collection = value => {
   return []
 }
 
+const request = (path, options = {}) => authRequest(path, options)
+const jsonOptions = (method, body) => ({ method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+
 function downloadCsv(filename, headers, row) {
-  const csv = [headers.join(','), row.map(v => `"${String(v ?? '').replaceAll('"', '""')}"`).join(',')].join('\n')
+  const csv = [headers.join(','), row.map(value => `"${String(value ?? '').replaceAll('"', '""')}"`).join(',')].join('\n')
   const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }))
-  const a = document.createElement('a')
-  a.href = url
-  a.download = filename
-  a.click()
+  const link = document.createElement('a')
+  link.href = url
+  link.download = filename
+  link.click()
   URL.revokeObjectURL(url)
 }
 
@@ -55,8 +52,8 @@ function parseCsv(text) {
   }
   if (cell || row.length) { row.push(cell.trim()); if (row.some(Boolean)) rows.push(row) }
   if (!rows.length) return []
-  const headers = rows[0].map(h => h.toLowerCase().trim())
-  return rows.slice(1).map(values => Object.fromEntries(headers.map((h, i) => [h, values[i] || ''])))
+  const headers = rows[0].map(header => header.toLowerCase().trim())
+  return rows.slice(1).map(values => Object.fromEntries(headers.map((header, index) => [header, values[index] || ''])))
 }
 
 export default function Industries() {
@@ -104,60 +101,68 @@ export default function Industries() {
   useEffect(() => { loadAll() }, [])
 
   const filteredIndustries = useMemo(() => {
-    const q = search.trim().toLowerCase()
-    return !q ? industries : industries.filter(x => String(x.name || '').toLowerCase().includes(q))
+    const query = search.trim().toLowerCase()
+    if (!query) return industries
+    return industries.filter(item => String(item.name || '').toLowerCase().includes(query))
   }, [industries, search])
 
-  const servicesFor = id => services.filter(x => Number(x.industry_id) === Number(id))
-  const subservicesFor = id => subservices.filter(x => Number(x.service_id) === Number(id))
-  const citiesFor = id => cities.filter(x => Number(x.state_id) === Number(id))
-  const subcitiesFor = id => subcities.filter(x => Number(x.city_id) === Number(id))
+  const servicesFor = id => services.filter(item => Number(item.industry_id) === Number(id))
+  const subservicesFor = id => subservices.filter(item => Number(item.service_id) === Number(id))
+  const citiesFor = id => cities.filter(item => Number(item.state_id) === Number(id))
+  const subcitiesFor = id => subcities.filter(item => Number(item.city_id) === Number(id))
 
-  const cityMatches = (city, q) => {
-    if (!q) return true
+  const cityMatches = (city, query) => {
+    if (!query) return true
     const name = String(city.name || '').toLowerCase()
     const areas = subcitiesFor(city.id)
     const pins = Array.isArray(city.pincodes) ? city.pincodes : []
-    return name.includes(q)
-      || areas.some(area => String(area.name || '').toLowerCase().includes(q) || String(area.pincode || '').includes(q))
-      || pins.some(pin => String(pin.pincode || '').includes(q) || String(pin.officeName || '').toLowerCase().includes(q))
+    return name.includes(query)
+      || areas.some(area => String(area.name || '').toLowerCase().includes(query) || String(area.pincode || '').includes(query))
+      || pins.some(pin => String(pin.pincode || '').includes(query) || String(pin.officeName || '').toLowerCase().includes(query))
   }
-  const areaMatches = (area, q) => !q || String(area.name || '').toLowerCase().includes(q) || String(area.pincode || '').includes(q)
-  const pinMatches = (pin, q) => !q || String(pin.pincode || '').includes(q) || String(pin.officeName || '').toLowerCase().includes(q)
 
   const filteredStates = useMemo(() => {
-    const q = search.trim().toLowerCase()
-    if (!q) return states
-    return states.filter(state => String(state.name || '').toLowerCase().includes(q) || citiesFor(state.id).some(city => cityMatches(city, q)))
+    const query = search.trim().toLowerCase()
+    if (!query) return states
+    return states.filter(state => String(state.name || '').toLowerCase().includes(query) || citiesFor(state.id).some(city => cityMatches(city, query)))
   }, [states, cities, subcities, search])
 
+  const areaMatches = (area, query) => !query || String(area.name || '').toLowerCase().includes(query) || String(area.pincode || '').includes(query)
+
   function openModal(type, item = null, parentId = null) {
-    const parent = type === 'service' ? item?.industry_id ?? parentId : type === 'subservice' ? item?.service_id ?? parentId : type === 'city' ? item?.state_id ?? parentId : type === 'subcity' ? item?.city_id ?? parentId : null
+    let parent = null
+    if (type === 'service') parent = item?.industry_id ?? parentId
+    if (type === 'subservice') parent = item?.service_id ?? parentId
+    if (type === 'city') parent = item?.state_id ?? parentId
+    if (type === 'subcity') parent = item?.city_id ?? parentId
     setModal({ type, item, form: { name: item?.name || '', parentId: parent, pincode: item?.pincode || '' } })
     setError('')
     setSuccess('')
   }
 
-  async function saveModal(e) {
-    e.preventDefault()
+  async function saveModal(event) {
+    event.preventDefault()
     if (!modal) return
-    if (!modal.form.name.trim()) return setError(`${modal.type} name is required.`)
+    const name = modal.form.name.trim()
+    if (!name) { setError(`${modal.type} name is required.`); return }
+
     const { type, item, form } = modal
+    let base = '/industries'
+    let payload = { name, slug: slugify(name) }
+    if (type === 'service') { base = '/services'; payload = { industryId: form.parentId, name, slug: slugify(name) } }
+    if (type === 'subservice') { base = '/subservices'; payload = { serviceId: form.parentId, name, slug: slugify(name) } }
+    if (type === 'state') { base = '/states'; payload = { name, code: stateCode(name) } }
+    if (type === 'city') { base = '/cities'; payload = { stateId: form.parentId, name, slug: slugify(name) } }
+    if (type === 'subcity') { base = '/subcities'; payload = { cityId: form.parentId, name, slug: slugify(name), pincode: form.pincode.trim() || null } }
+
+    if (type === 'city' && !item) {
+      const duplicate = cities.some(city => Number(city.state_id) === Number(form.parentId) && String(city.name || '').trim().toLowerCase() === name.toLowerCase())
+      if (duplicate) { setError('City already exists in this state.'); return }
+    }
+
     try {
       setSaving(true)
       setError('')
-      let base = '/industries'
-      let payload = { name: form.name.trim(), slug: slugify(form.name) }
-      if (type === 'service') { base = '/services'; payload = { industryId: form.parentId, name: form.name.trim(), slug: slugify(form.name) } }
-      if (type === 'subservice') { base = '/subservices'; payload = { serviceId: form.parentId, name: form.name.trim(), slug: slugify(form.name) } }
-      if (type === 'state') { base = '/states'; payload = { name: form.name.trim(), code: stateCode(form.name) } }
-      if (type === 'city') { base = '/cities'; payload = { stateId: form.parentId, name: form.name.trim(), slug: slugify(form.name) } }
-      if (type === 'subcity') { base = '/subcities'; payload = { cityId: form.parentId, name: form.name.trim(), slug: slugify(form.name), pincode: form.pincode.trim() || null } }
-      if (type === 'city' && !item) {
-        const normalizedName = form.name.trim().toLowerCase()
-        const duplicate = cities.some(city => Number(city.state_id) === Number(form.parentId) && String(city.name || '').trim().toLowerCase() === normalizedName)
-        if (duplicate) return setError('City already exists in this state.')
-      }
       await request(item ? `${base}/${item.id}` : base, jsonOptions(item ? 'PUT' : 'POST', payload))
       setModal(null)
       setSuccess(`${type[0].toUpperCase() + type.slice(1)} ${item ? 'updated' : 'added'} successfully.`)
@@ -171,68 +176,58 @@ export default function Industries() {
 
   async function remove(type, id, name) {
     if (!window.confirm(`Delete ${name}?`)) return
-    const base = type === 'industry' ? '/industries' : type === 'service' ? '/services' : type === 'subservice' ? '/subservices' : type === 'state' ? '/states' : type === 'city' ? '/cities' : '/subcities'
+    const baseMap = { industry: '/industries', service: '/services', subservice: '/subservices', state: '/states', city: '/cities', subcity: '/subcities' }
     try {
       setError('')
-      await request(`${base}/${id}`, { method: 'DELETE' })
+      await request(`${baseMap[type]}/${id}`, { method: 'DELETE' })
       setSuccess(`${type} deleted successfully.`)
       await loadAll()
-    } catch (err) {
-      setError(err.message)
-    }
+    } catch (err) { setError(err.message) }
   }
 
-  async function uploadCsv(e) {
-    const file = e.target.files?.[0]
-    e.target.value = ''
+  async function uploadCsv(event) {
+    const file = event.target.files?.[0]
+    event.target.value = ''
     setUploadOpen(false)
     if (!file) return
     try {
-      setSaving(true)
-      setError('')
-      setSuccess('')
+      setSaving(true); setError(''); setSuccess('')
       const rows = parseCsv(await file.text())
       if (tab === 'industries') {
         const headers = ['industry_name', 'service_name', 'subservice_name']
-        if (!rows.length || !headers.every(h => h in rows[0])) throw new Error('Use the Industry sample template.')
+        if (!rows.length || !headers.every(header => header in rows[0])) throw new Error('Use the Industry sample template.')
         let added = 0
-        const ci = [...industries]
-        const cs = [...services]
-        const css = [...subservices]
+        const industryCache = [...industries], serviceCache = [...services], subserviceCache = [...subservices]
         for (const row of rows) {
           if (!row.industry_name) continue
-          let industry = ci.find(x => x.name.toLowerCase() === row.industry_name.toLowerCase())
-          if (!industry) { industry = await request('/industries', jsonOptions('POST', { name: row.industry_name, slug: slugify(row.industry_name) })); ci.push(industry); added += 1 }
+          let industry = industryCache.find(item => item.name.toLowerCase() === row.industry_name.toLowerCase())
+          if (!industry) { industry = await request('/industries', jsonOptions('POST', { name: row.industry_name, slug: slugify(row.industry_name) })); industryCache.push(industry); added += 1 }
           if (!row.service_name) continue
-          let service = cs.find(x => Number(x.industry_id) === Number(industry.id) && x.name.toLowerCase() === row.service_name.toLowerCase())
-          if (!service) { service = await request('/services', jsonOptions('POST', { industryId: industry.id, name: row.service_name, slug: slugify(row.service_name) })); cs.push(service); added += 1 }
+          let service = serviceCache.find(item => Number(item.industry_id) === Number(industry.id) && item.name.toLowerCase() === row.service_name.toLowerCase())
+          if (!service) { service = await request('/services', jsonOptions('POST', { industryId: industry.id, name: row.service_name, slug: slugify(row.service_name) })); serviceCache.push(service); added += 1 }
           if (!row.subservice_name) continue
-          if (!css.find(x => Number(x.service_id) === Number(service.id) && x.name.toLowerCase() === row.subservice_name.toLowerCase())) {
-            const ss = await request('/subservices', jsonOptions('POST', { serviceId: service.id, name: row.subservice_name, slug: slugify(row.subservice_name) }))
-            css.push(ss)
-            added += 1
+          if (!subserviceCache.find(item => Number(item.service_id) === Number(service.id) && item.name.toLowerCase() === row.subservice_name.toLowerCase())) {
+            const created = await request('/subservices', jsonOptions('POST', { serviceId: service.id, name: row.subservice_name, slug: slugify(row.subservice_name) }))
+            subserviceCache.push(created); added += 1
           }
         }
         setSuccess(`${added} new master records added.`)
       } else {
         const headers = ['state_name', 'city_name', 'subcity_name', 'pincode']
-        if (!rows.length || !headers.every(h => h in rows[0])) throw new Error('Use the Location sample template.')
+        if (!rows.length || !headers.every(header => header in rows[0])) throw new Error('Use the Location sample template.')
         let added = 0
-        const st = [...states]
-        const ct = [...cities]
-        const sct = [...subcities]
+        const stateCache = [...states], cityCache = [...cities], subcityCache = [...subcities]
         for (const row of rows) {
           if (!row.state_name) continue
-          let state = st.find(x => x.name.toLowerCase() === row.state_name.toLowerCase())
-          if (!state) { state = await request('/states', jsonOptions('POST', { name: row.state_name, code: stateCode(row.state_name) })); st.push(state); added += 1 }
+          let state = stateCache.find(item => item.name.toLowerCase() === row.state_name.toLowerCase())
+          if (!state) { state = await request('/states', jsonOptions('POST', { name: row.state_name, code: stateCode(row.state_name) })); stateCache.push(state); added += 1 }
           if (!row.city_name) continue
-          let city = ct.find(x => Number(x.state_id) === Number(state.id) && x.name.toLowerCase() === row.city_name.toLowerCase())
-          if (!city) { city = await request('/cities', jsonOptions('POST', { stateId: state.id, name: row.city_name, slug: slugify(row.city_name) })); ct.push(city); added += 1 }
+          let city = cityCache.find(item => Number(item.state_id) === Number(state.id) && item.name.toLowerCase() === row.city_name.toLowerCase())
+          if (!city) { city = await request('/cities', jsonOptions('POST', { stateId: state.id, name: row.city_name, slug: slugify(row.city_name) })); cityCache.push(city); added += 1 }
           if (!row.subcity_name) continue
-          if (!sct.find(x => Number(x.city_id) === Number(city.id) && x.name.toLowerCase() === row.subcity_name.toLowerCase())) {
-            const sc = await request('/subcities', jsonOptions('POST', { cityId: city.id, name: row.subcity_name, slug: slugify(row.subcity_name), pincode: row.pincode || null }))
-            sct.push(sc)
-            added += 1
+          if (!subcityCache.find(item => Number(item.city_id) === Number(city.id) && item.name.toLowerCase() === row.subcity_name.toLowerCase())) {
+            const created = await request('/subcities', jsonOptions('POST', { cityId: city.id, name: row.subcity_name, slug: slugify(row.subcity_name), pincode: row.pincode || null }))
+            subcityCache.push(created); added += 1
           }
         }
         setSuccess(`${added} new location records added.`)
@@ -240,23 +235,174 @@ export default function Industries() {
       await loadAll()
     } catch (err) {
       setError(err.message)
-    } finally {
-      setSaving(false)
-    }
+    } finally { setSaving(false) }
+  }
+
+  function renderIndustryTree() {
+    return (
+      <div className="tree-card">
+        {filteredIndustries.map(industry => {
+          const open = Boolean(expanded[`i${industry.id}`])
+          const children = servicesFor(industry.id)
+          return (
+            <div className="tree-item" key={industry.id}>
+              <div className="tree-row level-industry">
+                <button className="chevron" onClick={() => setExpanded(value => ({ ...value, [`i${industry.id}`]: !open }))}>{open ? '⌄' : '›'}</button>
+                <div className="node-mark industry-mark">I</div>
+                <div className="node-name"><strong>{industry.name}</strong><small>{children.length} services</small></div>
+                <div className="node-actions">
+                  <button onClick={() => openModal('industry', industry)}>Edit</button>
+                  <button className="delete" onClick={() => remove('industry', industry.id, industry.name)}>Delete</button>
+                  <button className="add-link" onClick={() => { setExpanded(value => ({ ...value, [`i${industry.id}`]: true })); openModal('service', null, industry.id) }}>+ Service</button>
+                </div>
+              </div>
+              {open && <div className="nested">{children.map(service => {
+                const serviceOpen = Boolean(expanded[`s${service.id}`])
+                const subItems = subservicesFor(service.id)
+                return (
+                  <div className="tree-item" key={service.id}>
+                    <div className="tree-row level-service">
+                      <button className="chevron" onClick={() => setExpanded(value => ({ ...value, [`s${service.id}`]: !serviceOpen }))}>{serviceOpen ? '⌄' : '›'}</button>
+                      <div className="node-mark service-mark">S</div>
+                      <div className="node-name"><strong>{service.name}</strong><small>{subItems.length} subservices</small></div>
+                      <div className="node-actions">
+                        <button onClick={() => openModal('service', service)}>Edit</button>
+                        <button className="delete" onClick={() => remove('service', service.id, service.name)}>Delete</button>
+                        <button className="add-link" onClick={() => { setExpanded(value => ({ ...value, [`s${service.id}`]: true })); openModal('subservice', null, service.id) }}>+ Subservice</button>
+                      </div>
+                    </div>
+                    {serviceOpen && <div className="nested subnested">{subItems.map(subservice => (
+                      <div className="tree-row level-subservice" key={subservice.id}>
+                        <div className="node-mark subservice-mark">↳</div>
+                        <div className="node-name"><strong>{subservice.name}</strong></div>
+                        <div className="node-actions">
+                          <button onClick={() => openModal('subservice', subservice)}>Edit</button>
+                          <button className="delete" onClick={() => remove('subservice', subservice.id, subservice.name)}>Delete</button>
+                        </div>
+                      </div>
+                    ))}</div>}
+                  </div>
+                )
+              })}</div>}
+            </div>
+          )
+        })}
+      </div>
+    )
+  }
+
+  function renderLocationTree() {
+    const query = search.trim().toLowerCase()
+    return (
+      <div className="tree-card">
+        {filteredStates.map(state => {
+          const stateOpen = Boolean(expanded[`st${state.id}`]) || Boolean(query)
+          const allCities = citiesFor(state.id)
+          const visibleCities = !query || String(state.name || '').toLowerCase().includes(query) ? allCities : allCities.filter(city => cityMatches(city, query))
+          return (
+            <div className="tree-item" key={state.id}>
+              <div className="tree-row level-state">
+                <button className="chevron" onClick={() => setExpanded(value => ({ ...value, [`st${state.id}`]: !stateOpen }))}>{stateOpen ? '⌄' : '›'}</button>
+                <div className="node-mark state-mark">{state.code || stateCode(state.name)}</div>
+                <div className="node-name"><strong>{state.name}</strong><small>{allCities.length} cities</small></div>
+                <div className="node-actions">
+                  <button onClick={() => openModal('state', state)}>Edit</button>
+                  <button className="delete" onClick={() => remove('state', state.id, state.name)}>Delete</button>
+                  <button className="add-link" onClick={() => { setExpanded(value => ({ ...value, [`st${state.id}`]: true })); openModal('city', null, state.id) }}>+ City</button>
+                </div>
+              </div>
+              {stateOpen && <div className="nested">{visibleCities.map(city => {
+                const cityOpen = Boolean(expanded[`c${city.id}`]) || Boolean(query && cityMatches(city, query))
+                const areas = subcitiesFor(city.id)
+                const visibleAreas = !query || String(city.name || '').toLowerCase().includes(query) ? areas : areas.filter(area => areaMatches(area, query))
+                return (
+                  <div className="tree-item" key={city.id}>
+                    <div className="tree-row level-city">
+                      <button className="chevron" onClick={() => setExpanded(value => ({ ...value, [`c${city.id}`]: !cityOpen }))}>{cityOpen ? '⌄' : '›'}</button>
+                      <div className="node-mark city-mark">C</div>
+                      <div className="node-name"><strong>{city.name}</strong><small>{areas.length} areas</small></div>
+                      <div className="node-actions">
+                        <button onClick={() => openModal('city', city)}>Edit</button>
+                        <button className="delete" onClick={() => remove('city', city.id, city.name)}>Delete</button>
+                        <button className="add-link" onClick={() => { setExpanded(value => ({ ...value, [`c${city.id}`]: true })); openModal('subcity', null, city.id) }}>+ Area</button>
+                      </div>
+                    </div>
+                    {cityOpen && <div className="nested subnested">{visibleAreas.map(area => (
+                      <div className="tree-row level-subcity" key={area.id}>
+                        <div className="node-mark subcity-mark">•</div>
+                        <div className="node-name"><strong>{area.name}</strong><small>{area.pincode || 'No PIN'}</small></div>
+                        <div className="node-actions">
+                          <button onClick={() => openModal('subcity', area)}>Edit</button>
+                          <button className="delete" onClick={() => remove('subcity', area.id, area.name)}>Delete</button>
+                        </div>
+                      </div>
+                    ))}</div>}
+                  </div>
+                )
+              })}</div>}
+            </div>
+          )
+        })}
+      </div>
+    )
+  }
+
+  function renderModal() {
+    if (!modal) return null
+    let parentLabel = ''
+    let parentItems = []
+    if (modal.type === 'service') { parentLabel = 'Industry'; parentItems = industries }
+    if (modal.type === 'subservice') { parentLabel = 'Service'; parentItems = services }
+    if (modal.type === 'city') { parentLabel = 'State'; parentItems = states }
+    if (modal.type === 'subcity') { parentLabel = 'City'; parentItems = cities }
+
+    return (
+      <div className="modal-backdrop" onMouseDown={event => { if (event.target === event.currentTarget && !saving) setModal(null) }}>
+        <div className="modal-card" onMouseDown={event => event.stopPropagation()}>
+          <div className="modal-head">
+            <div><span className="investment-kicker">MASTER DATA</span><h3>{modal.item ? `Edit ${modal.type}` : `Add ${modal.type}`}</h3></div>
+            <button type="button" onClick={() => !saving && setModal(null)}>×</button>
+          </div>
+          <form onSubmit={saveModal}>
+            <label>Name<input autoFocus value={modal.form.name} onChange={event => setModal(value => ({ ...value, form: { ...value.form, name: event.target.value } }))} required /></label>
+            {parentLabel && <label>{parentLabel}<select value={modal.form.parentId || ''} onChange={event => setModal(value => ({ ...value, form: { ...value.form, parentId: event.target.value } }))} required><option value="">Select {parentLabel.toLowerCase()}</option>{parentItems.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>}
+            {modal.type === 'subcity' && <label>Pincode<input inputMode="numeric" maxLength={6} value={modal.form.pincode} onChange={event => setModal(value => ({ ...value, form: { ...value.form, pincode: event.target.value.replace(/\D/g, '').slice(0, 6) } }))} placeholder="Enter 6-digit PIN" /></label>}
+            <div className="modal-actions"><button type="button" onClick={() => setModal(null)}>Cancel</button><button type="submit" disabled={saving}>{saving ? 'Saving…' : modal.item ? 'Save changes' : 'Add'}</button></div>
+          </form>
+        </div>
+      </div>
+    )
   }
 
   const template = tab === 'industries'
     ? () => downloadCsv('propulse-industry-master-template.csv', ['industry_name', 'service_name', 'subservice_name'], ['Interior Design', 'Residential Interior Design', '2BHK Interior Design'])
     : () => downloadCsv('propulse-location-master-template.csv', ['state_name', 'city_name', 'subcity_name', 'pincode'], ['Telangana', 'Hyderabad', 'Gachibowli', '500032'])
 
-  return <div className="master-page">
-    <div className="master-tabs"><button className={tab === 'industries' ? 'active' : ''} onClick={() => { setTab('industries'); setSearch(''); setUploadOpen(false) }}>Industries</button><button className={tab === 'locations' ? 'active' : ''} onClick={() => { setTab('locations'); setSearch(''); setUploadOpen(false) }}>Locations</button></div>
-    {error && <div className="toast error">{error}</div>}{success && <div className="toast success">✓ {success}</div>}
-    <div className="master-toolbar"><div className="toolbar-copy"><h2>{tab === 'industries' ? 'Industry hierarchy' : 'State · City · Sub-city · Pincode'}</h2></div><div className="toolbar-actions"><div className="upload-wrap"><button className="secondary-action" onClick={() => setUploadOpen(v => !v)} disabled={saving}>↑ Upload bulk</button>{uploadOpen && <div className="upload-popover"><strong>Bulk import</strong><p>Use the current hierarchy template.</p><button onClick={template}>↓ Download sample</button><button onClick={() => fileRef.current?.click()}>Choose CSV file</button></div>}<input ref={fileRef} type="file" accept=".csv,text/csv" hidden onChange={uploadCsv} /></div><button className="primary-action" onClick={() => openModal(tab === 'industries' ? 'industry' : 'state')}>+ Add {tab === 'industries' ? 'Industry' : 'State'}</button></div></div>
-    <div className="search-row"><div className="search-box">⌕<input value={search} onChange={e => setSearch(e.target.value)} placeholder={tab === 'industries' ? 'Search industries...' : 'Search states, cities, areas or PIN codes...'} /></div><div className="counts">{tab === 'industries' ? `${industries.length} industries · ${services.length} services · ${subservices.length} subservices` : `${states.length} states · ${cities.length} cities · ${subcities.length} sub-cities`}</div></div>
-    {loading ? <div className="premium-empty">Loading master data…</div> : tab === 'industries' ? <div className="tree-card">{filteredIndustries.map(industry => { const open = !!expanded[`i${industry.id}`]; const list = servicesFor(industry.id); return <div className="tree-item" key={industry.id}><div className="tree-row level-industry"><button className="chevron" onClick={() => setExpanded(x => ({ ...x, [`i${industry.id}`]: !open }))}>{open ? '⌄' : '›'}</button><div className="node-mark industry-mark">I</div><div className="node-name"><strong>{industry.name}</strong><small>{list.length} services</small></div><div className="node-actions"><button onClick={() => openModal('industry', industry)}>Edit</button><button className="delete" onClick={() => remove('industry', industry.id, industry.name)}>Delete</button><button className="add-link" onClick={() => { setExpanded(x => ({ ...x, [`i${industry.id}`]: true })); openModal('service', null, industry.id) }}>+ Service</button></div></div>{open && <div className="nested">{list.map(service => { const sOpen = !!expanded[`s${service.id}`]; const children = subservicesFor(service.id); return <div className="tree-item" key={service.id}><div className="tree-row level-service"><button className="chevron" onClick={() => setExpanded(x => ({ ...x, [`s${service.id}`]: !sOpen }))}>{sOpen ? '⌄' : '›'}</button><div className="node-mark service-mark">S</div><div className="node-name"><strong>{service.name}</strong><small>{children.length} subservices</small></div><div className="node-actions"><button onClick={() => openModal('service', service)}>Edit</button><button className="delete" onClick={() => remove('service', service.id, service.name)}>Delete</button><button className="add-link" onClick={() => { setExpanded(x => ({ ...x, [`s${service.id}`]: true })); openModal('subservice', null, service.id) }}>+ Subservice</button></div></div>{sOpen && <div className="nested">{children.map(child => <div className="tree-row level-subservice" key={child.id}><div className="node-mark subservice-mark">•</div><div className="node-name"><strong>{child.name}</strong></div><div className="node-actions"><button onClick={() => openModal('subservice', child)}>Edit</button><button className="delete" onClick={() => remove('subservice', child.id, child.name)}>Delete</button></div></div>)}</div>}</div>)}</div>}</div>})}</div> : <div className="tree-card">{filteredStates.map(state => { const q = search.trim().toLowerCase(); const stateMatches = String(state.name || '').toLowerCase().includes(q); const stateCities = citiesFor(state.id); const visibleCities = !q || stateMatches ? stateCities : stateCities.filter(city => cityMatches(city, q)); const open = !!expanded[`st${state.id}`] || Boolean(q); return <div className="tree-item" key={state.id}><div className="tree-row level-industry"><button className="chevron" onClick={() => setExpanded(x => ({ ...x, [`st${state.id}`]: !open }))}>{open ? '⌄' : '›'}</button><div className="node-mark industry-mark">S</div><div className="node-name"><strong>{state.name}</strong><small>{stateCities.length} cities</small></div><div className="node-actions"><button onClick={() => openModal('state', state)}>Edit</button><button className="delete" onClick={() => remove('state', state.id, state.name)}>Delete</button><button className="add-link" onClick={() => { setExpanded(x => ({ ...x, [`st${state.id}`]: true })); openModal('city', null, state.id) }}>+ City</button></div></div>{open && <div className="nested">{visibleCities.map(city => { const cityOpen = !!expanded[`ct${city.id}`] || Boolean(q && cityMatches(city, q)); const areas = subcitiesFor(city.id); const pins = Array.isArray(city.pincodes) ? city.pincodes : []; const visibleAreas = !q || String(city.name || '').toLowerCase().includes(q) ? areas : areas.filter(area => areaMatches(area, q)); const visiblePins = pins.filter(pin => pinMatches(pin, q)); return <div className="tree-item" key={city.id}><div className="tree-row level-service"><button className="chevron" onClick={() => setExpanded(x => ({ ...x, [`ct${city.id}`]: !cityOpen }))}>{cityOpen ? '⌄' : '›'}</button><div className="node-mark service-mark">C</div><div className="node-name"><strong>{city.name}</strong><small>{areas.length} sub-cities · {pins.length} PIN codes</small></div><div className="node-actions"><button onClick={() => openModal('city', city)}>Edit</button><button className="delete" onClick={() => remove('city', city.id, city.name)}>Delete</button><button className="add-link" onClick={() => { setExpanded(x => ({ ...x, [`ct${city.id}`]: true })); openModal('subcity', null, city.id) }}>+ Sub-city</button></div></div>{cityOpen && <div className="nested subnested">{visibleAreas.map(area => <div className="tree-row level-subservice" key={area.id}><div className="node-mark subservice-mark">A</div><div className="node-name"><strong>{area.name}</strong><small>{area.pincode ? `PIN ${area.pincode}` : 'PIN not assigned'}</small></div><div className="node-actions"><button onClick={() => openModal('subcity', area)}>Edit</button><button className="delete" onClick={() => remove('subcity', area.id, area.name)}>Delete</button></div></div>)}{visiblePins.length > 0 && <div className="pincode-panel"><div className="pincode-title">PIN codes for {city.name}</div><div className="pincode-list">{visiblePins.map(pin => <span className="pincode-chip" key={pin.id}>{pin.pincode}{pin.officeName ? ` · ${pin.officeName}` : ''}</span>)}</div></div>}</div>}</div>})}</div>}</div>})}</div>}
-    {modal && <div className="modal-backdrop" onMouseDown={e => { if (e.target === e.currentTarget) setModal(null) }}><form className="premium-modal" onSubmit={saveModal}><div className="modal-top"><div><span>MASTER DATA</span><h3>{modal.item ? 'Edit' : 'Add'} {modal.type}</h3></div><button type="button" onClick={() => setModal(null)}>×</button></div>{['service','subservice','city','subcity'].includes(modal.type) && <label>Parent<select value={modal.form.parentId || ''} onChange={e => setModal(x => ({ ...x, form: { ...x.form, parentId: e.target.value } }))} required><option value="">Select parent</option>{(modal.type === 'service' ? industries : modal.type === 'subservice' ? services : modal.type === 'city' ? states : cities).map(x => <option value={x.id} key={x.id}>{x.name}</option>)}</select></label>}<label>Name<input value={modal.form.name} onChange={e => setModal(x => ({ ...x, form: { ...x.form, name: e.target.value } }))} autoFocus required /></label>{modal.type === 'subcity' && <><label>Pincode<input list="city-pincode-options" inputMode="numeric" maxLength={6} value={modal.form.pincode} onChange={e => setModal(x => ({ ...x, form: { ...x.form, pincode: e.target.value.replace(/\D/g, '').slice(0, 6) } }))} placeholder="Enter 6-digit PIN manually" /><datalist id="city-pincode-options">{((cities || []).find(x => String(x.id) === String(modal.form.parentId))?.pincodes || []).map(pin => <option key={pin.id} value={pin.pincode}>{pin.officeName || pin.pincode}</option>)}</datalist></label><small className="modal-help">PIN codes are managed manually. Example: Kukatpally → 500072.</small></>}
-      <div className="modal-actions"><button type="button" onClick={() => setModal(null)}>Cancel</button><button className="save" type="submit" disabled={saving}>{saving ? 'Saving…' : 'Save changes'}</button></div>
-    </form></div>}
-  </div>
+  return (
+    <div className="master-page">
+      <div className="master-tabs">
+        <button className={tab === 'industries' ? 'active' : ''} onClick={() => { setTab('industries'); setSearch(''); setUploadOpen(false) }}>Industries</button>
+        <button className={tab === 'locations' ? 'active' : ''} onClick={() => { setTab('locations'); setSearch(''); setUploadOpen(false) }}>Locations</button>
+      </div>
+      {error && <div className="toast error">{error}</div>}
+      {success && <div className="toast success">✓ {success}</div>}
+      <div className="master-toolbar">
+        <div className="toolbar-copy"><h2>{tab === 'industries' ? 'Industry hierarchy' : 'State · City · Sub-city · Pincode'}</h2></div>
+        <div className="toolbar-actions">
+          <div className="upload-wrap">
+            <button className="secondary-action" onClick={() => setUploadOpen(value => !value)} disabled={saving}>↑ Upload bulk</button>
+            {uploadOpen && <div className="upload-popover"><strong>Bulk import</strong><p>Use the current hierarchy template.</p><button onClick={template}>↓ Download sample</button><button onClick={() => fileRef.current?.click()}>Choose CSV file</button></div>}
+            <input ref={fileRef} type="file" accept=".csv,text/csv" hidden onChange={uploadCsv} />
+          </div>
+          <button className="primary-action" onClick={() => openModal(tab === 'industries' ? 'industry' : 'state')}>+ Add {tab === 'industries' ? 'Industry' : 'State'}</button>
+        </div>
+      </div>
+      <div className="search-row">
+        <div className="search-box">⌕<input value={search} onChange={event => setSearch(event.target.value)} placeholder={tab === 'industries' ? 'Search industries...' : 'Search states, cities, areas or PIN codes...'} /></div>
+        <div className="counts">{tab === 'industries' ? `${industries.length} industries · ${services.length} services · ${subservices.length} subservices` : `${states.length} states · ${cities.length} cities · ${subcities.length} sub-cities`}</div>
+      </div>
+      {loading ? <div className="premium-empty">Loading master data…</div> : tab === 'industries' ? renderIndustryTree() : renderLocationTree()}
+      {renderModal()}
+    </div>
+  )
 }
