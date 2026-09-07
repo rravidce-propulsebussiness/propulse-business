@@ -50,6 +50,7 @@ const normalizeLeadRow=row=>{
     if(budgetCustom)custom.Budget=budgetCustom;
     else if(String(row.budget??'').trim())custom.Budget=String(row.budget).trim();
   }
+  const normalizedBudget=String(row.budget??'').trim()||budgetCustom;
 
   const workNumbers=customValue(custom,['Work Numbers','Work Number','Number of Works','Number of Work','No. of Works','No of Works','Works','Quantity','Project Quantity','Number of Projects','Project Count'])||
     customValueContains(custom,['worknumbers','worknumber','numberofworks','numberofwork','noofworks','projectquantity','quantity','projectcount']);
@@ -75,6 +76,7 @@ const normalizeLeadRow=row=>{
 
   return{
     ...row,
+    budget:normalizedBudget,
     custom_fields:custom,
     buyer_capacity:normalizeBuyerCapacity({...row,custom_fields:custom}),
     purchased_buyer_count:Math.max(0,Number(row.purchased_buyer_count)||0),
