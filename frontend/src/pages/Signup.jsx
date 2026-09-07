@@ -7,8 +7,6 @@ const emptyForm = { name: '', email: '', phone: '', businessName: '', businessDe
 const newService = () => ({ industryId: '', serviceId: '', subserviceId: '' })
 const newLocation = () => ({ stateId: '', cityId: '' })
 
-// Master-data endpoints normally return arrays, but keep the signup form
-// resilient to wrapped API responses such as { data: [...] } or { cities: [...] }.
 function toList(value, key) {
   if (Array.isArray(value)) return value
   if (value && Array.isArray(value[key])) return value[key]
@@ -85,13 +83,16 @@ function Signup() {
       setLoading(true)
       const result = await authRequest('/auth/signup', { method: 'POST', body: JSON.stringify({ ...form, confirm: undefined, services: cleanServices, locations: cleanLocations }) })
       saveSession(result)
-      // Public signup is Business Owner only; always enter the owner home.
       navigate('/dashboard', { replace: true })
     } catch (err) { setError(err.message) } finally { setLoading(false) }
   }
 
   return (
     <div className="auth-page">
+      <header className="auth-topbar">
+        <Link className="auth-topbar-brand" to="/" aria-label="ProPulse Business home"><img src="/brand/propulse-logo.png" alt="ProPulse Business" /></Link>
+        <Link className="auth-home-button" to="/"><span>←</span> Homepage</Link>
+      </header>
       <section className="auth-visual" aria-label="Pro Pulse Business">
         <div className="auth-visual-overlay" /><div className="auth-visual-content">
           <div className="auth-logo-frame"><img className="auth-logo" src="/brand/propulse-logo.png" alt="Pro Pulse Business" /></div>
