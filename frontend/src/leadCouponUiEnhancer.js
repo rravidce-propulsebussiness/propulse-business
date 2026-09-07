@@ -1,12 +1,16 @@
 import { authRequest } from './utils/auth'
 
+const couponStorageKey = 'propulse_lead_coupon_code'
+
 function money(value) {
   const amount = Number(value)
   return Number.isFinite(amount) ? `₹${amount.toLocaleString('en-IN')}` : '₹0'
 }
 
 function getCouponCode() {
-  return String(document.querySelector('#lead-coupon-code')?.value || '').trim().toUpperCase()
+  const inputCode = String(document.querySelector('#lead-coupon-code')?.value || '').trim().toUpperCase()
+  if (inputCode) return inputCode
+  try { return String(localStorage.getItem(couponStorageKey) || '').trim().toUpperCase() } catch { return '' }
 }
 
 function patchLeadPurchaseRequest() {
@@ -19,10 +23,8 @@ function patchLeadPurchaseRequest() {
       if (/\/api\/leads\/\d+\/purchase(?:\?|$)/.test(url) && init?.body) {
         const couponCode = getCouponCode()
         if (couponCode) {
-          const body = JSON.parse(init.body)
-          if (body && !body.couponCode) {
-            init = { ...init, body: JSON.stringify({ ...body, couponCode }) }
-          }
+          const body = typeof init.body === 'string' ? JSON.parse(init.body) : null
+          if (body) init = { ...init, body: JSON.stringify({ ...body, couponCode }) }
         }
       }
     } catch {}
@@ -47,6 +49,7 @@ function enhanceLeadCoupon(modal) {
   button.addEventListener('click', async () => {
     const code = String(input.value || '').trim().toUpperCase()
     if (!code) {
+      try { localStorage.removeItem(couponStorageKey) } catch {}
       status.className = 'lv2-coupon-status error'
       status.textContent = 'Enter a coupon code first.'
       return
@@ -72,15 +75,23 @@ function enhanceLeadCoupon(modal) {
         body: JSON.stringify({ code, subtotal, purchaseType: 'lead' })
       })
       input.value = code
+      try { localStorage.setItem(couponStorageKey, code) } catch {}
       status.className = 'lv2-coupon-status success'
-      status.textContent = `${code} applied — discount ${money(data.discountAmount)}. You will pay ${money(data.finalAmount)} before any wallet balance is used.`
+      status.textContent = `${code} applied — discount ${money(data.discountAmount)}. Final lead amount ${money(data.finalAmount)} before wallet balance.`
     } catch (error) {
+      try { localStorage.removeItem(couponStorageKey) } catch {}
       status.className = 'lv2-coupon-status error'
       status.textContent = error?.message || 'Coupon could not be applied.'
     } finally {
       button.disabled = false
       button.textContent = 'Apply'
     }
+  })
+
+  input.addEventListener('input', () => {
+    try { localStorage.removeItem(couponStorageKey) } catch {}
+    status.textContent = ''
+    status.className = 'lv2-coupon-status'
   })
 }
 
