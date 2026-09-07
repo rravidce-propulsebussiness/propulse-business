@@ -29,10 +29,17 @@ const maskContact = (value) => {
 }
 const displayValue = (key, value) => isContactKey(key) ? maskContact(value) : maskContact(value)
 const visibleCustomFields = (fields) => Object.entries(fields || {}).filter(([k, v]) => !isPricingField(k) && hasValue(v))
-const getCustom = (fields, names) => {
+const getCustom = (fields, names, contains = []) => {
+  const entries = Object.entries(fields || {}).filter(([, value]) => hasValue(value))
   const wanted = names.map(norm)
-  const found = Object.entries(fields || {}).find(([key, value]) => wanted.includes(norm(key)) && hasValue(value))
-  return found ? displayValue(found[0], found[1]) : ''
+  const exact = entries.find(([key]) => wanted.includes(norm(key)))
+  if (exact) return displayValue(exact[0], exact[1])
+  const patterns = contains.map(norm).filter(Boolean)
+  const fuzzy = entries.find(([key]) => {
+    const n = norm(key)
+    return patterns.some(pattern => n.includes(pattern))
+  })
+  return fuzzy ? displayValue(fuzzy[0], fuzzy[1]) : ''
 }
 const timeAgo = (value) => {
   const time = new Date(value || 0).getTime()
@@ -155,23 +162,12 @@ export default function LeadsV2() {
       })
       await authRequest(`/payments/${payment.payment.id}/reference`, {
         method: 'POST',
-        body: JSON.stringify({
-          manualReference: reference,
-          proofUrl,
-          notes: `Lead #${paymentLead?.id} direct payment${Number(payment.walletAmount) > 0 ? ` after wallet payment of ${money(payment.walletAmount)}` : ''}`
-        })
+        body: JSON.stringify({ manualReference: reference, proofUrl, notes: `Lead #${paymentLead?.id} direct payment${Number(payment.walletAmount) > 0 ? ` after wallet payment of ${money(payment.walletAmount)}` : ''}` })
       })
       const submittedMessage = `${Number(payment.walletAmount) > 0 ? `Wallet payment of ${money(payment.walletAmount)} applied. ` : ''}Remaining ${money(payment.externalAmount)} submitted for verification.`
-      setPayment(null)
-      setPaymentLead(null)
-      setPaymentShares(0)
-      setPaymentError('')
-      setPaymentSuccess(submittedMessage)
-    } catch (e) {
-      setPaymentError(e.message || 'Unable to submit payment. Please try again.')
-    } finally {
-      setDirectSubmitting(false)
-    }
+      setPayment(null); setPaymentLead(null); setPaymentShares(0); setPaymentError(''); setPaymentSuccess(submittedMessage)
+    } catch (e) { setPaymentError(e.message || 'Unable to submit payment. Please try again.') }
+    finally { setDirectSubmitting(false) }
   }
 
   if (user?.role === 'admin') return <main className="lv2-page"><section className="lv2-empty"><span>ADMIN ACCOUNT</span><h1>Lead management is in the Admin Panel.</h1><Link to="/admin/leads">Open Admin Leads →</Link></section></main>
@@ -191,19 +187,30 @@ export default function LeadsV2() {
           const leadAccess = lead.access || {}
           const claimed = Boolean(leadAccess.claimed || leadAccess.purchased)
           const location = [lead.city_name, lead.state_name].filter(hasValue).join(', ')
-          const timeline = getCustom(lead.custom_fields, ['Timeline', 'Timeframe', 'Project Timeline', 'Expected Timeline', 'When'])
-          const property = hasValue(lead.property_type) ? lead.property_type : getCustom(lead.custom_fields, ['Property Type', 'Property'])
-          const workNumbers = getCustom(lead.custom_fields, ['Work Numbers', 'Work Number', 'Number of Works', 'Number of Work', 'No. of Works', 'No of Works', 'Works', 'Quantity', 'Project Quantity'])
-          const budgetRange = getCustom(lead.custom_fields, ['Budget', 'Budget Range', 'Project Budget', 'Project Budget Range', 'Budget From To', 'Expected Budget'])
+          const timeline = getCustom(lead.custom_fields, ['Timeline', 'Timeframe', 'Project Timeline', 'Expected Timeline', 'When'], ['timeline', 'timeframe'])
+          const property = hasValue(lead.property_type) ? lead.property_type : getCustom(lead.custom_fields, ['Property Type', 'Property'], ['property'])
+          const workNumbers = getCustom(lead.custom_fields, ['Work Numbers', 'Work Number', 'Number of Works', 'Number of Work', 'No. of Works', 'No of Works', 'Works', 'Quantity', 'Project Quantity'], ['worknumber', 'worknumbers', 'numberofworks', 'noofworks', 'quantity', 'projectquantity'])
+          const budgetRange = getCustom(lead.custom_fields, ['Budget', 'Budget Range', 'Project Budget', 'Project Budget Range', 'Budget From To', 'Expected Budget'], ['budget'])
           const budgetDisplay = budgetRange || (hasValue(lead.budget) ? money(lead.budget) : '')
+          const buyerCapacity = Math.max(2, Number(lead.buyer_capacity) || 3)
+          const purchasedBuyers = Math.min(buyerCapacity, Math.max(0, Number(lead.purchased_buyer_count) || 0))
           const initials = String(lead.customer_name || lead.service_name || lead.industry_name || 'L').trim().charAt(0).toUpperCase()
           return <article className={`lv2-card ${lead.lead_type || 'basic'} ${exclusive ? 'has-exclusive' : ''}`} key={lead.id}>
             <div className="lv2-card-top"><span className="lv2-new">New</span><span className="lv2-id">#L-{String(lead.id).padStart(6, '0')}</span><small>{timeAgo(lead.created_at)}</small></div>
             <div className="lv2-person"><div className="lv2-avatar">{initials}</div><div className="lv2-person-copy"><div><h2>{hasValue(lead.customer_name) ? lead.customer_name : (lead.service_name || lead.industry_name || 'Business opportunity')}</h2><span className="lv2-verified-mini">✓ Verified</span></div><p>{lead.requirement || 'Verified business requirement'}</p></div></div>
-            <div className="lv2-facts">{hasValue(lead.industry_name) && <div><span>▣</span><b>{lead.industry_name}</b></div>}{hasValue(lead.service_name) && <div><span>⌁</span><b>{lead.service_name}{hasValue(lead.subservice_name) ? `, ${lead.subservice_name}` : ''}</b></div>}{hasValue(location) && <div><span>⌖</span><b>{location}</b></div>}{hasValue(budgetDisplay) && <div><span>₹</span><b>{budgetDisplay}</b></div>}{hasValue(workNumbers) && <div><span>▦</span><b>{workNumbers} work${norm(workNumbers) === '1' ? '' : 's'}</b></div>}{hasValue(property) && <div><span>⌂</span><b>{property}</b></div>}{hasValue(timeline) && <div><span>▦</span><b>{timeline}</b></div>}</div>
+            <div className="lv2-facts">
+              {hasValue(lead.industry_name) && <div><span>▣</span><b>{lead.industry_name}</b></div>}
+              {hasValue(lead.service_name) && <div><span>⌁</span><b>{lead.service_name}{hasValue(lead.subservice_name) ? `, ${lead.subservice_name}` : ''}</b></div>}
+              {hasValue(location) && <div><span>⌖</span><b>{location}</b></div>}
+              {hasValue(budgetDisplay) && <div><span>₹</span><b>{budgetDisplay}</b></div>}
+              {hasValue(workNumbers) && <div><span>▦</span><b>{workNumbers} work${norm(workNumbers) === '1' ? '' : 's'}</b></div>}
+              {hasValue(property) && <div><span>⌂</span><b>{property}</b></div>}
+              {hasValue(timeline) && <div><span>▦</span><b>{timeline}</b></div>}
+              <div><span>◉</span><b>Purchased {purchasedBuyers}/{buyerCapacity}</b></div>
+            </div>
             <div className="lv2-contact"><span>Contact Details (Masked)</span><div>{hasValue(lead.customer_phone) && <b>⌕ &nbsp; {maskContact(lead.customer_phone)}</b>}{hasValue(lead.customer_email) && <b>✉ &nbsp; {maskContact(lead.customer_email)}</b>}{!hasValue(lead.customer_phone) && !hasValue(lead.customer_email) && <b>Contact available after purchase</b>}</div></div>
             <div className="lv2-card-actions"><button className="lv2-details-link" onClick={() => setExpanded(open ? null : lead.id)}>{open ? 'Hide Full Details' : 'View Full Details'} <b>→</b></button><button className="lv2-buy" onClick={() => openBuyModal(lead)} disabled={!shares.length}>{claimed ? 'Purchased' : '🛒  Buy Lead'}</button></div>
-            {open && <div className="lv2-details"><div className="lv2-details-head"><h3>Lead details</h3><span>{claimed ? 'Access granted' : 'Verified opportunity'}</span></div><div className="lv2-detail-grid">{[['Industry', lead.industry_name], ['Service', lead.service_name], ['Subservice', lead.subservice_name], ['Location', location], ['Property type', property], ['Budget', budgetDisplay], ['Work numbers', workNumbers], ['Source', lead.source], ['Customer', lead.customer_name], ['Phone', lead.customer_phone ? maskContact(lead.customer_phone) : ''], ['Email', lead.customer_email ? maskContact(lead.customer_email) : '']].filter(([, v]) => hasValue(v)).map(([k, v]) => <div key={k}><small>{k}</small><b>{v}</b></div>)}{dynamic.filter(([k]) => !isContactKey(k)).map(([k, v]) => <div key={k}><small>{label(k)}</small><b>{displayValue(k, typeof v === 'object' ? JSON.stringify(v) : v)}</b></div>)}</div>{hasValue(lead.notes) && <p className="lv2-notes"><b>Notes</b>{maskContact(lead.notes)}</p>}</div>}
+            {open && <div className="lv2-details"><div className="lv2-details-head"><h3>Lead details</h3><span>{claimed ? 'Access granted' : 'Verified opportunity'}</span></div><div className="lv2-detail-grid">{[['Industry', lead.industry_name], ['Service', lead.service_name], ['Subservice', lead.subservice_name], ['Location', location], ['Property type', property], ['Budget', budgetDisplay], ['Work numbers', workNumbers], ['Purchased', `${purchasedBuyers}/${buyerCapacity}`], ['Source', lead.source], ['Customer', lead.customer_name], ['Phone', lead.customer_phone ? maskContact(lead.customer_phone) : ''], ['Email', lead.customer_email ? maskContact(lead.customer_email) : '']].filter(([, v]) => hasValue(v)).map(([k, v]) => <div key={k}><small>{k}</small><b>{v}</b></div>)}{dynamic.filter(([k]) => !isContactKey(k)).map(([k, v]) => <div key={k}><small>{label(k)}</small><b>{displayValue(k, typeof v === 'object' ? JSON.stringify(v) : v)}</b></div>)}</div>{hasValue(lead.notes) && <p className="lv2-notes"><b>Notes</b>{maskContact(lead.notes)}</p>}</div>}
             {logged && !claimed && leadAccess.canClaim && <div className="lv2-exclusive"><div><b>Membership access</b><span>Included in your current plan{leadAccess.remaining !== undefined ? ` · ${leadAccess.remaining} remaining` : ''}</span></div><button disabled={claiming === lead.id} onClick={() => claim(lead)}>{claiming === lead.id ? 'Claiming…' : 'Claim free →'}</button></div>}
             {logged && !claimed && leadAccess.reason && !leadAccess.canClaim && <div className="lv2-card-cta"><div><b>Membership access</b><span>{leadAccess.reason}</span></div></div>}
             {claimed && <div className="lv2-card-cta"><div><b>Lead access granted</b><span>You can use this lead from your account.</span></div><Link to="/dashboard">Open dashboard →</Link></div>}
