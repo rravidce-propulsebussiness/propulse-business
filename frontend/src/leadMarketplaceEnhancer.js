@@ -37,6 +37,17 @@ function enhanceBuyModal(modal) {
   const pricing = modal.querySelector('.lv2-modal-pricing')
   if (!pricing) return
   enhanceProPricing(modal)
+
+  if (modal.dataset.couponReady !== 'true') {
+    modal.dataset.couponReady = 'true'
+    const coupon = document.createElement('div')
+    coupon.className = 'lv2-coupon-option'
+    coupon.innerHTML = '<label><span><strong>Coupon code</strong><small>Have a coupon? Enter it before buying this lead.</small></span><input id="lead-coupon-code" type="text" maxlength="50" autocomplete="off" placeholder="Enter coupon code"></label><small class="lv2-coupon-hint">The coupon is validated automatically when you purchase.</small>'
+    const walletOption = modal.querySelector('.lv2-wallet-option')
+    if (walletOption) walletOption.parentNode.insertBefore(coupon, walletOption)
+    else pricing.parentNode.insertBefore(coupon, pricing)
+  }
+
   if (modal.dataset.walletPreferenceReady === 'true') return
   modal.dataset.walletPreferenceReady = 'true'
   try { localStorage.setItem(preferenceKey, 'true') } catch {}
@@ -103,7 +114,13 @@ filterStyle.textContent = `
 .lv2-filter-reset{border:1px solid #d8e1ec;background:#fff;color:#526780}
 .lv2-filter-apply{border:0;background:#f15a24;color:#fff;min-width:130px}
 .lv2-filter-count{margin-left:6px;font-size:10px;opacity:.8}
-@media(max-width:600px){.lv2-filter-modal{padding:20px}.lv2-filter-grid{grid-template-columns:1fr}.lv2-filter-field.full{grid-column:auto}.lv2-filter-actions{position:sticky;bottom:0;background:#fff}}
+.lv2-coupon-option{margin:12px 0 14px;padding:12px;border:1px solid #e2e9f1;border-radius:12px;background:#fbfcfe}
+.lv2-coupon-option label{display:flex;align-items:center;gap:12px}
+.lv2-coupon-option label>span{display:flex;flex:1;flex-direction:column;gap:3px}
+.lv2-coupon-option strong{font-size:11px;color:#193b69}
+.lv2-coupon-option label small,.lv2-coupon-hint{font-size:9px;color:#7b8ba0;line-height:1.4}
+.lv2-coupon-option input{height:38px;width:180px;border:1px solid #cfdbe8;border-radius:8px;padding:0 10px;color:#173b70;font-size:11px;font-weight:800;text-transform:uppercase;outline:0}
+@media(max-width:600px){.lv2-filter-modal{padding:20px}.lv2-filter-grid{grid-template-columns:1fr}.lv2-filter-field.full{grid-column:auto}.lv2-filter-actions{position:sticky;bottom:0;background:#fff}.lv2-coupon-option label{align-items:stretch;flex-direction:column}.lv2-coupon-option input{width:100%}}
 `
 document.head.appendChild(filterStyle)
 
@@ -144,120 +161,58 @@ function syncFilterButton() {
 function renderFilterGrid(grid, data) {
   const selectedIndustry = data.industries.some(item => String(item.id) === String(filterState.industryId))
   if (!selectedIndustry) filterState.industryId = ''
-
   const services = data.services.filter(item => !filterState.industryId || String(item.industry_id) === String(filterState.industryId))
   if (!services.some(item => String(item.id) === String(filterState.serviceId))) filterState.serviceId = ''
-
   const selectedState = data.states.some(item => String(item.id) === String(filterState.stateId))
   if (!selectedState) filterState.stateId = ''
-
   const cities = data.cities.filter(item => !filterState.stateId || String(item.state_id) === String(filterState.stateId))
   if (!cities.some(item => String(item.id) === String(filterState.cityId))) filterState.cityId = ''
-
   const option = (value, label, selected = false) => `<option value="${escapeHtml(value)}"${selected ? ' selected' : ''}>${escapeHtml(label)}</option>`
   const industryOptions = option('', 'All industries', !filterState.industryId) + data.industries.map(item => option(item.id, item.name, String(item.id) === String(filterState.industryId))).join('')
   const serviceOptions = option('', filterState.industryId ? 'All services in selected industry' : 'All services', !filterState.serviceId) + services.map(item => option(item.id, item.name, String(item.id) === String(filterState.serviceId))).join('')
   const stateOptions = option('', 'All states', !filterState.stateId) + data.states.map(item => option(item.id, item.name, String(item.id) === String(filterState.stateId))).join('')
   const cityOptions = option('', filterState.stateId ? 'All cities in selected state' : 'All cities', !filterState.cityId) + cities.map(item => option(item.id, item.name, String(item.id) === String(filterState.cityId))).join('')
-
-  grid.innerHTML = `
-    <div class="lv2-filter-field"><label>Industry</label><select data-filter="industryId">${industryOptions}</select></div>
-    <div class="lv2-filter-field"><label>Service</label><select data-filter="serviceId">${serviceOptions}</select></div>
-    <div class="lv2-filter-field"><label>State</label><select data-filter="stateId">${stateOptions}</select></div>
-    <div class="lv2-filter-field"><label>City</label><select data-filter="cityId">${cityOptions}</select></div>
-    <div class="lv2-filter-field full"><label>Lead type</label><select data-filter="leadType">
-      <option value="all"${filterState.leadType === 'all' ? ' selected' : ''}>All lead types</option>
-      <option value="basic"${filterState.leadType === 'basic' ? ' selected' : ''}>Basic</option>
-      <option value="premium"${filterState.leadType === 'premium' ? ' selected' : ''}>Premium</option>
-    </select></div>`
-
-  grid.querySelectorAll('[data-filter]').forEach(select => select.addEventListener('change', event => {
-    const key = event.target.dataset.filter
-    filterState[key] = event.target.value
-    if (key === 'industryId') filterState.allIndustries = event.target.value === ''
-    renderFilterGrid(grid, data)
-  }))
+  grid.innerHTML = `<div class="lv2-filter-field"><label>Industry</label><select data-filter="industryId">${industryOptions}</select></div><div class="lv2-filter-field"><label>Service</label><select data-filter="serviceId">${serviceOptions}</select></div><div class="lv2-filter-field"><label>State</label><select data-filter="stateId">${stateOptions}</select></div><div class="lv2-filter-field"><label>City</label><select data-filter="cityId">${cityOptions}</select></div><div class="lv2-filter-field full"><label>Lead type</label><select data-filter="leadType"><option value="all"${filterState.leadType === 'all' ? ' selected' : ''}>All lead types</option><option value="basic"${filterState.leadType === 'basic' ? ' selected' : ''}>Basic</option><option value="premium"${filterState.leadType === 'premium' ? ' selected' : ''}>Premium</option></select></div>`
+  grid.querySelectorAll('[data-filter]').forEach(select => select.addEventListener('change', event => {const key=event.target.dataset.filter;filterState[key]=event.target.value;if(key==='industryId')filterState.allIndustries=event.target.value==='';renderFilterGrid(grid,data)}))
 }
 
 function navigateWithFilters({ reset = false } = {}) {
   const params = new URLSearchParams(window.location.search)
-  ;['industryId', 'serviceId', 'stateId', 'cityId', 'leadType', 'allIndustries'].forEach(key => params.delete(key))
-  if (filterState.industryId) params.set('industryId', filterState.industryId)
-  if (filterState.serviceId) params.set('serviceId', filterState.serviceId)
-  if (filterState.stateId) params.set('stateId', filterState.stateId)
-  if (filterState.cityId) params.set('cityId', filterState.cityId)
-  if (filterState.leadType !== 'all') params.set('leadType', filterState.leadType)
-  if (!reset && filterState.allIndustries && !filterState.industryId) params.set('allIndustries', '1')
+  ;['industryId','serviceId','stateId','cityId','leadType','allIndustries'].forEach(key => params.delete(key))
+  if(filterState.industryId)params.set('industryId',filterState.industryId)
+  if(filterState.serviceId)params.set('serviceId',filterState.serviceId)
+  if(filterState.stateId)params.set('stateId',filterState.stateId)
+  if(filterState.cityId)params.set('cityId',filterState.cityId)
+  if(filterState.leadType!=='all')params.set('leadType',filterState.leadType)
+  if(!reset&&filterState.allIndustries&&!filterState.industryId)params.set('allIndustries','1')
   params.delete('page')
-  const query = params.toString()
-  window.location.assign(`${window.location.pathname}${query ? `?${query}` : ''}`)
+  const query=params.toString()
+  window.location.assign(`${window.location.pathname}${query?`?${query}`:''}`)
 }
+function closeFilterModal(){document.querySelector('.lv2-filter-overlay')?.remove()}
+async function buildFilterModal(){closeFilterModal();const overlay=document.createElement('div');overlay.className='lv2-filter-overlay';overlay.innerHTML=`<div class="lv2-filter-modal" role="dialog" aria-modal="true" aria-label="Filter leads"><button class="lv2-filter-close" type="button" aria-label="Close filters">×</button><span style="color:#f15a24;font-size:9px;font-weight:900;letter-spacing:.15em">LEAD FILTERS</span><h2>Find the right leads</h2><p>These filters are applied on the marketplace query, so existing leads are filtered too — not only newly added leads.</p><div class="lv2-filter-loading">Loading industry, service and location options…</div><div class="lv2-filter-grid" data-filter-grid style="display:none"></div><div class="lv2-filter-actions"><button class="lv2-filter-reset" type="button">Reset filters</button><button class="lv2-filter-apply" type="button">Apply filters</button></div></div>`;document.body.appendChild(overlay);overlay.addEventListener('click',event=>{if(event.target===overlay)closeFilterModal()});overlay.querySelector('.lv2-filter-close').addEventListener('click',closeFilterModal);overlay.querySelector('.lv2-filter-reset').addEventListener('click',()=>{filterState.industryId='';filterState.serviceId='';filterState.stateId='';filterState.cityId='';filterState.leadType='all';filterState.allIndustries=false;navigateWithFilters({reset:true})});overlay.querySelector('.lv2-filter-apply').addEventListener('click',()=>{syncFilterButton();navigateWithFilters()});try{const data=await loadMasterData();if(!document.body.contains(overlay))return;const grid=overlay.querySelector('[data-filter-grid]');renderFilterGrid(grid,data);grid.style.display='grid';overlay.querySelector('.lv2-filter-loading').remove()}catch(error){const loading=overlay.querySelector('.lv2-filter-loading');if(loading){loading.className='lv2-filter-error';loading.textContent=error?.message||'Unable to load filter options. Please try again.'}}}
+function bindFilterButton(button){if(!button||button.dataset.filtersReady==='true')return;button.dataset.filtersReady='true';button.addEventListener('click',event=>{event.preventDefault();event.stopImmediatePropagation();buildFilterModal()},true);syncFilterButton()}
 
-function closeFilterModal() { document.querySelector('.lv2-filter-overlay')?.remove() }
-
-async function buildFilterModal() {
-  closeFilterModal()
-  const overlay = document.createElement('div')
-  overlay.className = 'lv2-filter-overlay'
-  overlay.innerHTML = `<div class="lv2-filter-modal" role="dialog" aria-modal="true" aria-label="Filter leads">
-    <button class="lv2-filter-close" type="button" aria-label="Close filters">×</button>
-    <span style="color:#f15a24;font-size:9px;font-weight:900;letter-spacing:.15em">LEAD FILTERS</span>
-    <h2>Find the right leads</h2>
-    <p>These filters are applied on the marketplace query, so existing leads are filtered too — not only newly added leads.</p>
-    <div class="lv2-filter-loading">Loading industry, service and location options…</div>
-    <div class="lv2-filter-grid" data-filter-grid style="display:none"></div>
-    <div class="lv2-filter-actions"><button class="lv2-filter-reset" type="button">Reset filters</button><button class="lv2-filter-apply" type="button">Apply filters</button></div>
-  </div>`
-  document.body.appendChild(overlay)
-  overlay.addEventListener('click', event => { if (event.target === overlay) closeFilterModal() })
-  overlay.querySelector('.lv2-filter-close').addEventListener('click', closeFilterModal)
-  overlay.querySelector('.lv2-filter-reset').addEventListener('click', () => {
-    filterState.industryId = ''
-    filterState.serviceId = ''
-    filterState.stateId = ''
-    filterState.cityId = ''
-    filterState.leadType = 'all'
-    filterState.allIndustries = false
-    navigateWithFilters({ reset: true })
-  })
-  overlay.querySelector('.lv2-filter-apply').addEventListener('click', () => {
-    syncFilterButton()
-    navigateWithFilters()
-  })
-
-  try {
-    const data = await loadMasterData()
-    if (!document.body.contains(overlay)) return
-    const grid = overlay.querySelector('[data-filter-grid]')
-    renderFilterGrid(grid, data)
-    grid.style.display = 'grid'
-    overlay.querySelector('.lv2-filter-loading').remove()
-  } catch (error) {
-    const loading = overlay.querySelector('.lv2-filter-loading')
-    if (loading) {
-      loading.className = 'lv2-filter-error'
-      loading.textContent = error?.message || 'Unable to load filter options. Please try again.'
-    }
+function patchLeadPurchaseRequests(){
+  if(window.__propulseCouponFetchPatched)return
+  window.__propulseCouponFetchPatched=true
+  const originalFetch=window.fetch.bind(window)
+  window.fetch=(input,init={})=>{
+    try{
+      const url=typeof input==='string'?input:(input?.url||'')
+      if(/\/api\/leads\/\d+\/purchase(?:\?|$)/.test(url)&&init?.body){
+        const coupon=String(document.querySelector('#lead-coupon-code')?.value||'').trim()
+        if(coupon){
+          const body=JSON.parse(init.body)
+          if(body&&!body.couponCode){body.couponCode=coupon;init={...init,body:JSON.stringify(body)}}
+        }
+      }
+    }catch{}
+    return originalFetch(input,init)
   }
 }
 
-function bindFilterButton(button) {
-  if (!button || button.dataset.filtersReady === 'true') return
-  button.dataset.filtersReady = 'true'
-  button.addEventListener('click', event => {
-    event.preventDefault()
-    event.stopImmediatePropagation()
-    buildFilterModal()
-  }, true)
-  syncFilterButton()
-}
-
-function scan() {
-  document.querySelectorAll('.lv2-buy-modal').forEach(enhanceBuyModal)
-  document.querySelectorAll('.lv2-upgrade').forEach(enhancePaymentModal)
-  bindFilterButton(document.querySelector('.lv2-filter-button'))
-}
-
-const observer = new MutationObserver(scan)
-observer.observe(document.body, { childList: true, subtree: true })
+function scan(){document.querySelectorAll('.lv2-buy-modal').forEach(enhanceBuyModal);document.querySelectorAll('.lv2-upgrade').forEach(enhancePaymentModal);bindFilterButton(document.querySelector('.lv2-filter-button'));patchLeadPurchaseRequests()}
+const observer=new MutationObserver(scan)
+observer.observe(document.body,{childList:true,subtree:true})
 scan()
