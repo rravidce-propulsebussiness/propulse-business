@@ -35,6 +35,31 @@ async function resolvePincode({ stateId, cityId, district = '', location = '' } 
   const districtText = String(district || '').trim().toLowerCase();
   const locationText = String(location || '').trim().toLowerCase();
 
+  if (locationText) {
+    const values = [locationText];
+    const conditions = [
+      'cp.is_active=TRUE',
+      '(LOWER(c.name)=LOWER($1) OR LOWER(COALESCE(cp.office_name,\'\'))=LOWER($1) OR LOWER(COALESCE(sc.name,\'\'))=LOWER($1))',
+    ];
+    if (state) {
+      values.push(state);
+      conditions.push(`c.state_id=$${values.length}`);
+    }
+    const locationRows = await pool.query(
+      `SELECT DISTINCT cp.pincode, cp.office_name, c.name AS city_name, s.name AS state_name
+         FROM city_pincodes cp
+         JOIN cities c ON c.id=cp.city_id
+         JOIN states s ON s.id=c.state_id
+         LEFT JOIN subcities sc ON sc.city_id=c.id AND sc.is_active=TRUE AND sc.pincode=cp.pincode
+        WHERE ${conditions.join(' AND ')}
+        ORDER BY cp.pincode
+        LIMIT 2`,
+      values
+    );
+    const unique = [...new Set(locationRows.rows.map(row => row.pincode).filter(Boolean))];
+    if (unique.length === 1) return { pincode: unique[0], source: 'location', ...locationRows.rows[0] };
+  }
+
   if (city && locationText) {
     const exact = await pool.query(
       `SELECT DISTINCT cp.pincode, cp.office_name, c.name AS city_name, s.name AS state_name
