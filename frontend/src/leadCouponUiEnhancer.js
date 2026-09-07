@@ -39,6 +39,16 @@ function saveCoupon(code) {
   } catch {}
 }
 
+function getSelectedSubtotal(modal) {
+  const selected = modal?.querySelector('.lv2-selected-price, .lv2-price-option.selected, [aria-pressed="true"] .lv2-modal-price')
+  const selectedValue = Number(String(selected?.textContent || '').replace(/[^0-9.]/g, ''))
+  if (Number.isFinite(selectedValue) && selectedValue > 0) return selectedValue
+  const prices = [...(modal?.querySelectorAll('.lv2-modal-price') || [])]
+    .map(node => Number(String(node.textContent || '').replace(/[^0-9.]/g, '')))
+    .filter(value => Number.isFinite(value) && value > 0)
+  return prices.length ? Math.max(...prices) : 0
+}
+
 function enhanceLeadCoupon(modal) {
   const field = modal?.querySelector('.lv2-coupon-option')
   if (!field || field.dataset.applyReady === 'true') return
@@ -62,20 +72,17 @@ function enhanceLeadCoupon(modal) {
       return
     }
 
-    const prices = [...modal.querySelectorAll('.lv2-modal-price')]
-      .map(node => Number(String(node.textContent || '').replace(/[^0-9.]/g, '')))
-      .filter(value => Number.isFinite(value) && value > 0)
-    const subtotal = prices.length ? Math.min(...prices) : 0
+    const subtotal = getSelectedSubtotal(modal)
     if (!subtotal) {
       status.className = 'lv2-coupon-status error'
-      status.textContent = 'No share price is available to validate this coupon.'
+      status.textContent = 'Select a share package first.'
       return
     }
 
     button.disabled = true
     button.textContent = 'Checking…'
     status.className = 'lv2-coupon-status'
-    status.textContent = ''
+    status.textContent = `Checking coupon for ${money(subtotal)}…`
     try {
       const data = await authRequest('/coupons/validate', {
         method: 'POST',
@@ -84,7 +91,7 @@ function enhanceLeadCoupon(modal) {
       input.value = code
       saveCoupon(code)
       status.className = 'lv2-coupon-status success'
-      status.textContent = `${code} applied — discount ${money(data.discountAmount)}. Final lead amount ${money(data.finalAmount)} before wallet balance.`
+      status.textContent = `${code} applied — ${money(subtotal)} − ${money(data.discountAmount)} = ${money(data.finalAmount)}.`
     } catch (error) {
       saveCoupon('')
       status.className = 'lv2-coupon-status error'
@@ -108,13 +115,36 @@ function enhancePaymentAmount(modal) {
   if (!detailGrid || !modal.classList.contains('lv2-payment-modal')) return
   modal.dataset.amountClarityReady = 'true'
 
+  const coupon = window.__propulseLastLeadCoupon || null
   const payment = [...detailGrid.querySelectorAll('div')]
-  const directText = payment.find(node => /Direct payment/i.test(node.textContent || ''))?.querySelector('b')?.textContent || ''
-  const totalText = payment.find(node => /^Total/i.test(node.textContent?.trim() || ''))?.querySelector('b')?.textContent || ''
+  const directNode = payment.find(node => /Direct payment/i.test(node.textContent || ''))
+  const totalNode = payment.find(node => /^Total/i.test(node.textContent?.trim() || ''))
+  const directText = directNode?.querySelector('b')?.textContent || ''
+  const totalText = totalNode?.querySelector('b')?.textContent || ''
+  if (totalNode && coupon) {
+    const label = totalNode.querySelector('small')
+    if (label) label.textContent = 'Final total'
+    const value = totalNode.querySelector('b')
+    if (value) value.textContent = money(coupon.finalAmount)
+  }
+
+  const breakdown = document.createElement('div')
+  breakdown.className = 'lv2-coupon-breakdown'
+  if (coupon) {
+    breakdown.innerHTML = `<div><span>Original amount</span><b>${money(coupon.subtotalAmount)}</b></div><div><span>Coupon (${coupon.code})</span><b>− ${money(coupon.discountAmount)}</b></div><div class="final"><span>Final lead amount</span><strong>${money(coupon.finalAmount)}</strong></div>`
+  } else {
+    breakdown.innerHTML = `<div class="final"><span>Final lead amount</span><strong>${totalText || directText || '₹0'}</strong></div>`
+  }
+  detailGrid.insertAdjacentElement('afterend', breakdown)
+
   const amount = document.createElement('div')
   amount.className = 'lv2-amount-due'
-  amount.innerHTML = `<div><small>AMOUNT TO PAY NOW</small><strong>${directText || '₹0'}</strong></div><span>${totalText ? `Final amount after coupon: ${totalText}. ` : ''}Transfer exactly this amount and submit your UTR below.</span>`
-  detailGrid.insertAdjacentElement('afterend', amount)
+  const finalAmount = coupon ? money(coupon.finalAmount) : (directText || '₹0')
+  const note = coupon
+    ? `${coupon.code} saved ${money(coupon.discountAmount)}. This is the exact amount to transfer.`
+    : 'Transfer exactly this amount and submit your UTR below.'
+  amount.innerHTML = `<div><small>AMOUNT TO PAY NOW</small><strong>${finalAmount}</strong></div><span>${note}</span>`
+  breakdown.insertAdjacentElement('afterend', amount)
 }
 
 function scan() {
@@ -125,7 +155,7 @@ function scan() {
 
 const style = document.createElement('style')
 style.textContent = `
-.lv2-coupon-apply-row{display:flex;align-items:center;gap:8px;margin-top:8px;min-height:28px}.lv2-coupon-apply{border:0;border-radius:7px;background:#173b70;color:#fff;padding:7px 14px;font-size:9px;font-weight:900;cursor:pointer}.lv2-coupon-apply:disabled{opacity:.6;cursor:not-allowed}.lv2-coupon-status{font-size:9px;font-weight:700;color:#71849e;line-height:1.4}.lv2-coupon-status.success{color:#14805a}.lv2-coupon-status.error{color:#b52e24}.lv2-amount-due{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-top:14px;padding:14px 16px;border:1px solid #ffd2c3;border-radius:12px;background:#fff7f3}.lv2-amount-due small{display:block;color:#a34b2d;font-size:8px;font-weight:900;letter-spacing:.12em}.lv2-amount-due strong{display:block;margin-top:3px;color:#f15a24;font-size:24px;line-height:1.1}.lv2-amount-due span{max-width:260px;color:#71849e;font-size:9px;line-height:1.45;text-align:right;font-weight:700}@media(max-width:600px){.lv2-amount-due{align-items:flex-start;flex-direction:column}.lv2-amount-due span{max-width:none;text-align:left}}
+.lv2-coupon-apply-row{display:flex;align-items:center;gap:8px;margin-top:8px;min-height:28px}.lv2-coupon-apply{border:0;border-radius:7px;background:#173b70;color:#fff;padding:7px 14px;font-size:9px;font-weight:900;cursor:pointer}.lv2-coupon-apply:disabled{opacity:.6;cursor:not-allowed}.lv2-coupon-status{font-size:9px;font-weight:700;color:#71849e;line-height:1.4}.lv2-coupon-status.success{color:#14805a}.lv2-coupon-status.error{color:#b52e24}.lv2-coupon-breakdown{margin-top:12px;border:1px solid #dfe7f1;border-radius:12px;background:#fff;padding:12px 14px}.lv2-coupon-breakdown>div{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:5px 0;color:#71849e;font-size:10px;font-weight:700}.lv2-coupon-breakdown>div b{color:#173b70}.lv2-coupon-breakdown>div.final{margin-top:5px;padding-top:10px;border-top:1px dashed #dfe7f1;color:#173b70;font-weight:900}.lv2-coupon-breakdown>div.final strong{font-size:16px;color:#f15a24}.lv2-amount-due{box-sizing:border-box;display:flex;align-items:center;justify-content:space-between;gap:16px;margin-top:12px;padding:14px 16px;border:1px solid #ffd2c3;border-radius:12px;background:#fff7f3}.lv2-amount-due small{display:block;color:#a34b2d;font-size:8px;font-weight:900;letter-spacing:.12em}.lv2-amount-due strong{display:block;margin-top:3px;color:#f15a24;font-size:26px;line-height:1.1}.lv2-amount-due span{max-width:300px;color:#71849e;font-size:9px;line-height:1.45;text-align:right;font-weight:700}@media(max-width:600px){.lv2-amount-due{align-items:flex-start;flex-direction:column}.lv2-amount-due span{max-width:none;text-align:left}}
 `
 document.head.appendChild(style)
 
