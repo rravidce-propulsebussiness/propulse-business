@@ -1,7 +1,5 @@
 import { authRequest } from './utils/auth'
 
-const couponStorageKey = 'propulse_lead_coupon_code'
-
 function money(value) {
   const amount = Number(value)
   return Number.isFinite(amount) ? `₹${amount.toLocaleString('en-IN')}` : '₹0'
@@ -10,7 +8,7 @@ function money(value) {
 function getCouponCode() {
   const inputCode = String(document.querySelector('#lead-coupon-code')?.value || '').trim().toUpperCase()
   if (inputCode) return inputCode
-  try { return String(localStorage.getItem(couponStorageKey) || '').trim().toUpperCase() } catch { return '' }
+  return String(window.__propulseLeadCouponCode || '').trim().toUpperCase()
 }
 
 function patchLeadPurchaseRequest() {
@@ -18,13 +16,18 @@ function patchLeadPurchaseRequest() {
   window.__propulseLeadCouponFetchPatched = true
   const originalFetch = window.fetch.bind(window)
   window.fetch = (input, init = {}) => {
+    let isLeadPurchase = false
     try {
       const url = typeof input === 'string' ? input : (input?.url || '')
-      if (/\/api\/leads\/\d+\/purchase(?:\?|$)/.test(url) && init?.body) {
+      isLeadPurchase = /\/api\/leads\/\d+\/purchase(?:\?|$)/.test(url)
+      if (isLeadPurchase && init?.body) {
         const couponCode = getCouponCode()
         if (couponCode) {
           const body = typeof init.body === 'string' ? JSON.parse(init.body) : null
-          if (body) init = { ...init, body: JSON.stringify({ ...body, couponCode }) }
+          if (body) {
+            init = { ...init, body: JSON.stringify({ ...body, couponCode }) }
+            window.__propulseLeadCouponCode = ''
+          }
         }
       }
     } catch {}
@@ -49,7 +52,7 @@ function enhanceLeadCoupon(modal) {
   button.addEventListener('click', async () => {
     const code = String(input.value || '').trim().toUpperCase()
     if (!code) {
-      try { localStorage.removeItem(couponStorageKey) } catch {}
+      window.__propulseLeadCouponCode = ''
       status.className = 'lv2-coupon-status error'
       status.textContent = 'Enter a coupon code first.'
       return
@@ -75,11 +78,11 @@ function enhanceLeadCoupon(modal) {
         body: JSON.stringify({ code, subtotal, purchaseType: 'lead' })
       })
       input.value = code
-      try { localStorage.setItem(couponStorageKey, code) } catch {}
+      window.__propulseLeadCouponCode = code
       status.className = 'lv2-coupon-status success'
       status.textContent = `${code} applied — discount ${money(data.discountAmount)}. Final lead amount ${money(data.finalAmount)} before wallet balance.`
     } catch (error) {
-      try { localStorage.removeItem(couponStorageKey) } catch {}
+      window.__propulseLeadCouponCode = ''
       status.className = 'lv2-coupon-status error'
       status.textContent = error?.message || 'Coupon could not be applied.'
     } finally {
@@ -89,7 +92,7 @@ function enhanceLeadCoupon(modal) {
   })
 
   input.addEventListener('input', () => {
-    try { localStorage.removeItem(couponStorageKey) } catch {}
+    window.__propulseLeadCouponCode = ''
     status.textContent = ''
     status.className = 'lv2-coupon-status'
   })
