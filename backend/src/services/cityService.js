@@ -67,7 +67,7 @@ async function createCity({ stateId, name, slug }) {
   const normalizedName = String(name || '').trim();
   const normalizedSlug = String(slug || slugify(normalizedName)).trim();
 
-  // A deleted city should be reusable instead of creating a second row.
+  // Reuse a soft-deleted city with the same state/name instead of creating another row.
   const inactive = await pool.query(
     `SELECT id
        FROM cities
@@ -80,6 +80,23 @@ async function createCity({ stateId, name, slug }) {
   );
 
   if (inactive.rows[0]) {
+    // Check for a conflicting active slug before restoring the inactive record.
+    const activeSlug = await pool.query(
+      `SELECT id
+         FROM cities
+        WHERE state_id=$1
+          AND slug=$2
+          AND is_active=TRUE
+        LIMIT 1`,
+      [stateId, normalizedSlug]
+    );
+
+    if (activeSlug.rows[0]) {
+      const error = new Error('City already exists in this state');
+      error.code = 'CITY_ALREADY_EXISTS';
+      throw error;
+    }
+
     const restored = await pool.query(
       `UPDATE cities
           SET name=$1,
@@ -95,15 +112,40 @@ async function createCity({ stateId, name, slug }) {
     return city;
   }
 
-  const result = await pool.query(
-    `INSERT INTO cities (state_id, name, slug)
-     VALUES ($1, $2, $3)
-     RETURNING *`,
-    [stateId, normalizedName, normalizedSlug]
+  const activeSameName = await pool.query(
+    `SELECT id
+       FROM cities
+      WHERE state_id=$1
+        AND name=$2
+        AND is_active=TRUE
+      LIMIT 1`,
+    [stateId, normalizedName]
   );
-  const city = result.rows[0];
-  if (city) await pool.query('SELECT propulse_sync_city_directory_pincodes($1)', [city.id]).catch(() => {});
-  return city;
+
+  if (activeSameName.rows[0]) {
+    const error = new Error('City already exists in this state');
+    error.code = 'CITY_ALREADY_EXISTS';
+    throw error;
+  }
+
+  try {
+    const result = await pool.query(
+      `INSERT INTO cities (state_id, name, slug)
+       VALUES ($1, $2, $3)
+       RETURNING *`,
+      [stateId, normalizedName, normalizedSlug]
+    );
+    const city = result.rows[0];
+    if (city) await pool.query('SELECT propulse_sync_city_directory_pincodes($1)', [city.id]).catch(() => {});
+    return city;
+  } catch (error) {
+    if (error.code === '23505' && ['uq_cities_active_state_name', 'cities_state_id_name_key'].includes(error.constraint)) {
+      const duplicate = new Error('City already exists in this state');
+      duplicate.code = 'CITY_ALREADY_EXISTS';
+      throw duplicate;
+    }
+    throw error;
+  }
 }
 
 async function getCities({ page, pageSize, limit } = {}) {
