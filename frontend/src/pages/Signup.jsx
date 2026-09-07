@@ -7,6 +7,15 @@ const emptyForm = { name: '', email: '', phone: '', businessName: '', businessDe
 const newService = () => ({ industryId: '', serviceId: '', subserviceId: '' })
 const newLocation = () => ({ stateId: '', cityId: '' })
 
+// Master-data endpoints normally return arrays, but keep the signup form
+// resilient to wrapped API responses such as { data: [...] } or { cities: [...] }.
+function toList(value, key) {
+  if (Array.isArray(value)) return value
+  if (value && Array.isArray(value[key])) return value[key]
+  if (value && Array.isArray(value.data)) return value.data
+  return []
+}
+
 function Signup() {
   const navigate = useNavigate()
   const [form, setForm] = useState(emptyForm)
@@ -30,7 +39,11 @@ function Signup() {
           publicRequest('/industries'), publicRequest('/services'), publicRequest('/subservices'),
           publicRequest('/states'), publicRequest('/cities'),
         ])
-        setIndustries(industryData); setServices(serviceData); setSubservices(subserviceData); setStates(stateData); setCities(cityData)
+        setIndustries(toList(industryData, 'industries'))
+        setServices(toList(serviceData, 'services'))
+        setSubservices(toList(subserviceData, 'subservices'))
+        setStates(toList(stateData, 'states'))
+        setCities(toList(cityData, 'cities'))
       } catch (err) { setError(`We couldn't load the business options. ${err.message}`) }
       finally { setLoadingData(false) }
     }
