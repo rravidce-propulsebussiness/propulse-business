@@ -17,8 +17,8 @@ export default function Investment() {
   const load=async()=>{try{const [a,r,lr,inv,s,c]=await Promise.all([req('/investments/access'),req('/investments/rules'),req('/investments/location-rules'),req('/investments'),req('/states'),req('/cities')]);const rr=list(r),ll=list(lr),ss=uniqueById(list(s)),cc=uniqueById(list(c));setAccess(a);setRules(rr);setLocationRules(ll);setMine(list(inv));setStates(ss);setCities(cc);setIndustryId(v=>v||String(rr[0]?.industry_id??''))}catch(e){setMessage(e.message)}}
   useEffect(()=>{load()},[])
   const selected=rules.find(r=>String(r.industry_id)===String(industryId))
-  const allowedStateIds=useMemo(()=>new Set(locationRules.filter(r=>Number(r.industry_id)===Number(industryId)).map(r=>String(r.state_id))),[locationRules,industryId])
-  const visibleStates=useMemo(()=>uniqueById(access?.locationLimitsEnabled?states.filter(s=>allowedStateIds.has(itemId(s))):states),[states,access?.locationLimitsEnabled,allowedStateIds])
+  // Locations are independent master data. Investment rules only determine eligibility/capacity.
+  const visibleStates=useMemo(()=>uniqueById(states),[states])
   const cityOptions=useMemo(()=>uniqueById(cities.filter(c=>cityStateId(c)===String(stateId))),[cities,stateId])
   const selectedState=states.find(s=>itemId(s)===String(stateId))
   const stateHasCityRules=useMemo(()=>locationRules.some(r=>Number(r.industry_id)===Number(industryId)&&String(r.state_id)===String(stateId)&&r.city_id!=null),[locationRules,industryId,stateId])
