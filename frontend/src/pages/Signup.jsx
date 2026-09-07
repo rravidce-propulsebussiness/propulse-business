@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { publicRequest, authRequest, saveSession } from '../utils/auth'
+import GoogleButton from '../components/GoogleButton'
 import './Auth.css'
 
 const emptyForm = { name: '', email: '', phone: '', businessName: '', businessDetails: '', password: '', confirm: '' }
@@ -27,6 +28,7 @@ function Signup() {
   const [showPassword, setShowPassword] = useState(false)
   const [agree, setAgree] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [googleLoading, setGoogleLoading] = useState(false)
   const [loadingData, setLoadingData] = useState(true)
   const [error, setError] = useState('')
 
@@ -87,6 +89,21 @@ function Signup() {
     } catch (err) { setError(err.message) } finally { setLoading(false) }
   }
 
+  const handleGoogle = useCallback(async credential => {
+    setError('')
+    if (!agree) return setError('Please accept the terms to continue with Google.')
+    try {
+      setGoogleLoading(true)
+      const result = await authRequest('/auth/google', { method: 'POST', body: JSON.stringify({ credential }) })
+      saveSession(result)
+      navigate('/dashboard', { replace: true })
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setGoogleLoading(false)
+    }
+  }, [agree, navigate])
+
   return (
     <div className="auth-page">
       <header className="auth-topbar">
@@ -104,6 +121,8 @@ function Signup() {
         <div className="mobile-brand"><img src="/brand/propulse-logo.png" alt="Pro Pulse" /></div>
         <div className="auth-heading"><p className="auth-kicker">BUSINESS PROFILE</p><h2>Create account</h2><p>Tell us what you sell and where you serve.</p></div>
         {error && <div className="auth-error" role="alert">{error}</div>}
+        <div className="google-auth-block"><GoogleButton onCredential={handleGoogle} disabled={loading || googleLoading || loadingData} /></div>
+        <div className="auth-divider"><span /><b>OR CREATE WITH EMAIL</b><span /></div>
         {loadingData && <div className="auth-loading">Loading options…</div>}
         <form onSubmit={submit}>
           <div className="signup-section-label">Personal details</div>
@@ -119,7 +138,7 @@ function Signup() {
           <div className="signup-section-label section-heading-row"><div><span>Locations you serve</span><small>Add every city where you want to receive leads.</small></div><button type="button" className="add-selection primary-add" onClick={addLocationSelection}>+ Add location</button></div>
           <div className="selection-list">{locationSelections.map((selection, index) => <div className="selection-card" key={`location-${index}`}><div className="selection-card-top"><span>Location {index + 1}</span>{locationSelections.length > 1 && <button type="button" className="remove-selection" onClick={() => removeLocationSelection(index)}>Remove</button>}</div><div className="selection-grid location-grid"><label>State / UT<select value={selection.stateId} onChange={(e) => updateLocationSelection(index, 'stateId', e.target.value)} disabled={loadingData} required><option value="">Select state / UT</option>{states.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label><label>City<select value={selection.cityId} onChange={(e) => updateLocationSelection(index, 'cityId', e.target.value)} disabled={!selection.stateId} required><option value="">{selection.stateId ? 'Select city' : 'Select state first'}</option>{(cityOptions[index] || []).map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label></div></div>)}</div>
           <div className="signup-section-label">Secure your account</div><div className="auth-form-grid"><label>Password<div className="password-field"><input type={showPassword ? 'text' : 'password'} autoComplete="new-password" value={form.password} onChange={(e) => update('password', e.target.value)} placeholder="At least 8 characters" required /><button type="button" onClick={() => setShowPassword((v) => !v)}>{showPassword ? 'Hide' : 'Show'}</button></div></label><label>Confirm password<input type={showPassword ? 'text' : 'password'} autoComplete="new-password" value={form.confirm} onChange={(e) => update('confirm', e.target.value)} placeholder="Repeat your password" required /></label></div>
-          <label className="check terms"><input type="checkbox" checked={agree} onChange={(e) => setAgree(e.target.checked)} /> I agree to the terms and privacy policy.</label><button className="auth-submit" disabled={loading || loadingData}>{loading ? 'Creating…' : 'Create account'} <span>→</span></button>
+          <label className="check terms"><input type="checkbox" checked={agree} onChange={(e) => setAgree(e.target.checked)} /> I agree to the terms and privacy policy.</label><button className="auth-submit" disabled={loading || googleLoading || loadingData}>{loading ? 'Creating…' : 'Create account'} <span>→</span></button>
         </form><p className="auth-switch">Already have an account? <Link to="/login">Sign in</Link></p>
       </div></main>
     </div>
