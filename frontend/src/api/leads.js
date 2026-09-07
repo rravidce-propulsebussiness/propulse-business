@@ -8,11 +8,22 @@ const syncProMembership = (data, token) => {
   try { localStorage.setItem('propulse_is_pro_member', String(membershipFlag)) } catch {}
 }
 
+const appendPageFilters = (query) => {
+  if (typeof window === 'undefined' || window.location.pathname !== '/leads') return
+  const pageParams = new URLSearchParams(window.location.search)
+  ;['industryId', 'serviceId', 'stateId', 'cityId', 'leadType'].forEach(key => {
+    if (query.has(key)) return
+    const value = pageParams.get(key)
+    if (value) query.set(key, value)
+  })
+}
+
 export function listLeads(params = {}, token) {
   const query = new URLSearchParams()
   Object.entries(params).forEach(([key, value]) => {
     if (value !== undefined && value !== null && value !== '') query.set(key, String(value))
   })
+  appendPageFilters(query)
   const request = token ? authRequest(`/leads?${query.toString()}`) : publicRequest(`/leads?${query.toString()}`)
   return request.then(data => {
     syncProMembership(data, token)
