@@ -15,13 +15,13 @@ function Login() {
   const [googleLoading, setGoogleLoading] = useState(false)
   const [error, setError] = useState('')
 
-  function finishLogin(result) {
+  const finishLogin = useCallback((result) => {
     saveSession(result)
     if (!remember) localStorage.setItem('propulse_session_mode', 'session')
     const destination = location.state?.from?.pathname
       || (result.user?.role === 'admin' ? '/admin' : '/dashboard')
     navigate(destination, { replace: true })
-  }
+  }, [location.state, navigate, remember])
 
   async function submit(e) {
     e.preventDefault()
@@ -49,7 +49,7 @@ function Login() {
     } finally {
       setGoogleLoading(false)
     }
-  }, [location.state, navigate, remember])
+  }, [finishLogin])
 
   return (
     <div className="auth-page">
