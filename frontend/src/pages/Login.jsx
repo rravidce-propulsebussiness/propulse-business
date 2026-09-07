@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { authRequest, saveSession } from '../utils/auth'
+import GoogleButton from '../components/GoogleButton'
 import './Auth.css'
 
 function Login() {
@@ -10,7 +11,16 @@ function Login() {
   const [showPassword, setShowPassword] = useState(false)
   const [remember, setRemember] = useState(true)
   const [loading, setLoading] = useState(false)
+  const [googleLoading, setGoogleLoading] = useState(false)
   const [error, setError] = useState('')
+
+  function finishLogin(result) {
+    saveSession(result)
+    if (!remember) localStorage.setItem('propulse_session_mode', 'session')
+    const destination = location.state?.from?.pathname
+      || (result.user?.role === 'admin' ? '/admin' : '/dashboard')
+    navigate(destination, { replace: true })
+  }
 
   async function submit(e) {
     e.preventDefault()
@@ -19,18 +29,26 @@ function Login() {
     try {
       setLoading(true)
       const result = await authRequest('/auth/login', { method: 'POST', body: JSON.stringify(form) })
-      saveSession(result)
-      if (!remember) localStorage.setItem('propulse_session_mode', 'session')
-
-      const destination = location.state?.from?.pathname
-        || (result.user?.role === 'admin' ? '/admin' : '/dashboard')
-      navigate(destination, { replace: true })
+      finishLogin(result)
     } catch (err) {
       setError(err.message)
     } finally {
       setLoading(false)
     }
   }
+
+  const handleGoogle = useCallback(async credential => {
+    setError('')
+    try {
+      setGoogleLoading(true)
+      const result = await authRequest('/auth/google', { method: 'POST', body: JSON.stringify({ credential }) })
+      finishLogin(result)
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setGoogleLoading(false)
+    }
+  }, [location.state, navigate, remember])
 
   return (
     <div className="auth-page">
@@ -64,6 +82,11 @@ function Login() {
 
           {error && <div className="auth-error" role="alert">{error}</div>}
 
+          <div className="google-auth-block">
+            <GoogleButton onCredential={handleGoogle} disabled={loading || googleLoading} />
+          </div>
+          <div className="auth-divider"><span /><b>OR CONTINUE WITH EMAIL</b><span /></div>
+
           <form onSubmit={submit}>
             <label>
               Email address
@@ -79,11 +102,11 @@ function Login() {
 
             <div className="auth-options">
               <label className="check"><input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} /> Remember me</label>
-              <button type="button" className="text-button" onClick={() => setError('Password recovery will be available after email delivery is configured.')}>Forgot password?</button>
+              <Link className="text-button" to="/forgot-password">Forgot password?</Link>
             </div>
 
-            <button className="auth-submit" disabled={loading}>
-              {loading ? 'Signing in…' : 'Sign in'} <span>→</span>
+            <button className="auth-submit" disabled={loading || googleLoading}>
+              {loading ? 'Signing in…' : googleLoading ? 'Signing in with Google…' : 'Sign in'} <span>→</span>
             </button>
           </form>
 
