@@ -15,6 +15,7 @@ const profileRoutes=require('./routes/profileRoutes');
 const adminRoutes=require('./routes/adminRoutes');
 const leadRoutes=require('./routes/leadRoutes');
 const paymentRoutes=require('./routes/paymentRoutes');
+const paymentReceivingDetailsRoutes=require('./routes/paymentReceivingDetailsRoutes');
 const couponRoutes=require('./routes/couponRoutes');
 const membershipPlanRoutes=require('./routes/membershipPlanRoutes');
 const adminCommercialRoutes=require('./routes/adminCommercialRoutes');
@@ -34,7 +35,7 @@ app.use(cors({origin(origin,callback){if(!origin||configuredOrigins.includes(ori
 app.use((req,res,next)=>{res.setHeader('X-Content-Type-Options','nosniff');res.setHeader('X-Frame-Options','DENY');res.setHeader('Referrer-Policy','strict-origin-when-cross-origin');res.setHeader('Permissions-Policy','camera=(),microphone=(),geolocation=()');if(isProduction)res.setHeader('Strict-Transport-Security','max-age=31536000; includeSubDomains');next();});
 app.use(express.json({limit:MAX_JSON_BYTES}));
 app.get('/health',async(req,res)=>{try{await pool.query('SELECT 1');res.json({status:'ok',database:'connected'});}catch(e){console.error(e.message);res.status(500).json({status:'error',database:'disconnected'});}});
-app.use('/api/auth',authRoutes);app.use('/api/profile',profileRoutes);app.use('/api/admin',adminRoutes);app.use('/api/leads',leadRoutes);app.use('/api/payments',paymentRoutes);app.use('/api/coupons',couponRoutes);app.use('/api/membership-plans',membershipPlanRoutes);app.use('/api/admin/commercial',adminCommercialRoutes);app.use('/api/wallet',walletRoutes);app.use('/api/investments',investmentRoutes);app.use('/api/industries',industryRoutes);app.use('/api/services',serviceRoutes);app.use('/api/subservices',subserviceRoutes);app.use('/api/states',stateRoutes);app.use('/api/cities',cityRoutes);app.use('/api/subcities',subcityRoutes);app.use('/api/pincodes',pincodeRoutes);
+app.use('/api/auth',authRoutes);app.use('/api/profile',profileRoutes);app.use('/api/admin',adminRoutes);app.use('/api/leads',leadRoutes);app.use('/api/payments',paymentRoutes);app.use('/api/payment-receiving-details',paymentReceivingDetailsRoutes);app.use('/api/coupons',couponRoutes);app.use('/api/membership-plans',membershipPlanRoutes);app.use('/api/admin/commercial',adminCommercialRoutes);app.use('/api/wallet',walletRoutes);app.use('/api/investments',investmentRoutes);app.use('/api/industries',industryRoutes);app.use('/api/services',serviceRoutes);app.use('/api/subservices',subserviceRoutes);app.use('/api/states',stateRoutes);app.use('/api/cities',cityRoutes);app.use('/api/subcities',subcityRoutes);app.use('/api/pincodes',pincodeRoutes);
 app.use((req,res)=>res.status(404).json({error:'Not found'}));
 app.use((err,req,res,next)=>{if(err.message==='CORS origin not allowed')return res.status(403).json({error:'Origin not allowed'});if(err.type==='entity.too.large')return res.status(413).json({error:'Request body is too large'});console.error('Unhandled server error:',err.message);return res.status(500).json({error:'Internal server error'});});
 let server;async function shutdown(signal){console.log(`${signal} received; shutting down gracefully.`);if(server)await new Promise(resolve=>server.close(resolve));await pool.end();process.exit(0)}
