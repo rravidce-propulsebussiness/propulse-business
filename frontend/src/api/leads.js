@@ -29,9 +29,13 @@ export function claimLead(id) {
 }
 
 export function purchaseLead(id, shares, options = {}) {
+  let useWallet = options.useWallet
+  if (useWallet === undefined) {
+    try { useWallet = localStorage.getItem('propulse_use_wallet') !== 'false' } catch { useWallet = true }
+  }
   return authRequest(`/leads/${id}/purchase`, {
     method: 'POST',
-    body: JSON.stringify({ shares, useWallet: options.useWallet !== false })
+    body: JSON.stringify({ shares, useWallet: useWallet !== false })
   }).then(data => {
     if (!data?.requires_external_payment) return data
     const payment = data.payment || {}
