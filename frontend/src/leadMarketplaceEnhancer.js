@@ -75,6 +75,8 @@ function enhancePaymentModal(modal) {
 }
 
 const filterState = { industry: '', service: '', location: '', type: 'all' }
+let lastCardSignature = ''
+
 const filterStyle = document.createElement('style')
 filterStyle.textContent = `
 .lv2-filter-button.filter-active{background:#edf3fb;border-color:#9eb9dd;color:#0b2d63}
@@ -126,7 +128,8 @@ function applyLeadFilters() {
   const totalNode = document.querySelector('.lv2-stat.orange b')
   if (totalNode) {
     if (!totalNode.dataset.filterTotal) totalNode.dataset.filterTotal = totalNode.textContent
-    totalNode.textContent = activeFilterCount() ? String(visible) : totalNode.dataset.filterTotal
+    const nextValue = activeFilterCount() ? String(visible) : totalNode.dataset.filterTotal
+    if (totalNode.textContent !== nextValue) totalNode.textContent = nextValue
   }
   const grid = document.querySelector('.lv2-grid')
   let empty = document.querySelector('.lv2-filter-empty')
@@ -141,7 +144,8 @@ function applyLeadFilters() {
   if (button) {
     const count = activeFilterCount()
     button.classList.toggle('filter-active', count > 0)
-    button.innerHTML = `<span>☷</span> Filters${count ? `<small class="lv2-filter-count">${count}</small>` : ''}`
+    const nextHtml = `<span>☷</span> Filters${count ? `<small class="lv2-filter-count">${count}</small>` : ''}`
+    if (button.innerHTML !== nextHtml) button.innerHTML = nextHtml
   }
 }
 
@@ -196,7 +200,12 @@ function scan() {
   document.querySelectorAll('.lv2-buy-modal').forEach(enhanceBuyModal)
   document.querySelectorAll('.lv2-upgrade').forEach(enhancePaymentModal)
   bindFilterButton(document.querySelector('.lv2-filter-button'))
-  if (activeFilterCount()) applyLeadFilters()
+  const cards = [...document.querySelectorAll('.lv2-card')]
+  const signature = cards.map(card => `${card.querySelector('.lv2-id')?.textContent || ''}|${card.className}`).join('||')
+  if (signature !== lastCardSignature) {
+    lastCardSignature = signature
+    if (activeFilterCount()) applyLeadFilters()
+  }
 }
 
 const observer = new MutationObserver(scan)
