@@ -53,6 +53,13 @@ export function purchaseLead(id, shares, options = {}) {
       ...(couponCode ? { couponCode } : {})
     })
   }).then(data => {
+    try {
+      if (data?.coupon) {
+        window.__propulseLastLeadCoupon = data.coupon
+      } else {
+        window.__propulseLastLeadCoupon = null
+      }
+    } catch {}
     if (!data?.requires_external_payment) return data
     const payment = data.payment || {}
     const paymentId = data.payment_id ?? data.paymentId ?? payment.id ?? null
