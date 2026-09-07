@@ -125,7 +125,6 @@ const isMarketplaceCanonicalField=key=>{
   return [
     'requirement','requirements','requirementdetails','sharemoredetailsandrequirement',
     'location','locationandrequirements','locationandrequirementsdetails',
-    'budget','budgetrange','projectbudget','projectbudgetrange','budgetfromto','expectedbudget','approxbudget','approximatebudget','investmentbudget','estimatedbudget',
     'property','propertytype','interiortype','typeofproperty',
     'buyercapacity'
   ].includes(n);
