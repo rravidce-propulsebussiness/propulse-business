@@ -9,8 +9,71 @@ async function ensureLedger(client) {
   await client.query(`CREATE TABLE IF NOT EXISTS schema_migrations (filename TEXT PRIMARY KEY, applied_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP)`);
 }
 
+// BEGIN/COMMIT/ROLLBACK inside PL/pgSQL functions and DO blocks are not
+// transaction-control statements for the migration runner. Strip comments,
+// quoted strings, and dollar-quoted bodies before looking for top-level control.
+function migrationControlSurface(sql) {
+  let out = '';
+  let i = 0;
+  let mode = 'code';
+  let dollarTag = '';
+  while (i < sql.length) {
+    const ch = sql[i];
+    const next = sql[i + 1];
+    if (mode === 'lineComment') {
+      out += ch === '\n' ? '\n' : ' ';
+      if (ch === '\n') mode = 'code';
+      i += 1;
+      continue;
+    }
+    if (mode === 'blockComment') {
+      if (ch === '*' && next === '/') { out += '  '; i += 2; mode = 'code'; continue; }
+      out += ch === '\n' ? '\n' : ' ';
+      i += 1;
+      continue;
+    }
+    if (mode === 'singleQuote') {
+      if (ch === "'" && next === "'") { out += '  '; i += 2; continue; }
+      out += ch === '\n' ? '\n' : ' ';
+      if (ch === "'") mode = 'code';
+      i += 1;
+      continue;
+    }
+    if (mode === 'doubleQuote') {
+      if (ch === '"' && next === '"') { out += '  '; i += 2; continue; }
+      out += ch === '\n' ? '\n' : ' ';
+      if (ch === '"') mode = 'code';
+      i += 1;
+      continue;
+    }
+    if (mode === 'dollarQuote') {
+      if (sql.startsWith(dollarTag, i)) {
+        out += ' '.repeat(dollarTag.length);
+        i += dollarTag.length;
+        mode = 'code';
+      } else {
+        out += ch === '\n' ? '\n' : ' ';
+        i += 1;
+      }
+      continue;
+    }
+    if (ch === '-' && next === '-') { out += '  '; i += 2; mode = 'lineComment'; continue; }
+    if (ch === '/' && next === '*') { out += '  '; i += 2; mode = 'blockComment'; continue; }
+    if (ch === "'") { out += ' '; i += 1; mode = 'singleQuote'; continue; }
+    if (ch === '"') { out += ' '; i += 1; mode = 'doubleQuote'; continue; }
+    if (ch === '$') {
+      const match = sql.slice(i).match(/^\$[A-Za-z_][A-Za-z0-9_]*\$|^\$\$/);
+      if (match) { dollarTag = match[0]; out += ' '.repeat(dollarTag.length); i += dollarTag.length; mode = 'dollarQuote'; continue; }
+    }
+    out += ch;
+    i += 1;
+  }
+  return out;
+}
+
 function hasTransactionControl(sql) {
-  return /(^|;)\s*(BEGIN|COMMIT|ROLLBACK)\s*;?/im.test(sql);
+  const surface = migrationControlSurface(sql);
+  return /(^|;)\s*(BEGIN|COMMIT|ROLLBACK)\s*;?/im.test(surface);
 }
 
 async function applyFile(client, filePath) {
@@ -67,4 +130,4 @@ if (require.main === module) {
     .finally(() => pool.end());
 }
 
-module.exports = { runMigrations };
+module.exports = { runMigrations, hasTransactionControl, migrationControlSurface };
