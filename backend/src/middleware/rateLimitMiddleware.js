@@ -14,7 +14,8 @@ function rateLimit({ windowMs = 15 * 60 * 1000, max = 100 } = {}) {
   const safeMax = Math.max(1, Math.floor(Number(max) || 100));
   return (req, res, next) => {
     const identity = req.user?.id ? `user:${req.user.id}` : `ip:${req.ip}`;
-    const key = `${identity}:${req.baseUrl}${req.path}`;
+    const routeKey = req.route?.path || req.path;
+    const key = `${identity}:${req.baseUrl}${routeKey}`;
     const now = Date.now();
     let bucket = buckets.get(key);
     if (!bucket || now - bucket.startedAt >= safeWindowMs) {
