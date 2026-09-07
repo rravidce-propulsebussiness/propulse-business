@@ -28,10 +28,10 @@ export function claimLead(id) {
   return authRequest(`/leads/${id}/claim`, { method: 'POST' })
 }
 
-export function purchaseLead(id, shares) {
+export function purchaseLead(id, shares, options = {}) {
   return authRequest(`/leads/${id}/purchase`, {
     method: 'POST',
-    body: JSON.stringify({ shares })
+    body: JSON.stringify({ shares, useWallet: options.useWallet !== false })
   }).then(data => {
     if (!data?.requires_external_payment) return data
     const payment = data.payment || {}
