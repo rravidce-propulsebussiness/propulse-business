@@ -1,4 +1,21 @@
+const pool = require('../config/database');
 const cityService = require('../services/cityService');
+
+async function findExistingCity({ stateId, name, slug }) {
+  const result = await pool.query(
+    `SELECT c.*, s.name AS state_name, s.code AS state_code
+       FROM cities c
+       INNER JOIN states s ON s.id = c.state_id
+      WHERE c.state_id = $1
+        AND c.is_active = TRUE
+        AND s.is_active = TRUE
+        AND (LOWER(TRIM(c.name)) = LOWER(TRIM($2)) OR LOWER(TRIM(c.slug)) = LOWER(TRIM($3)))
+      ORDER BY c.id ASC
+      LIMIT 1`,
+    [Number(stateId), String(name || ''), String(slug || '')]
+  );
+  return result.rows[0] || null;
+}
 
 async function createCity(req, res) {
   try {
@@ -8,15 +25,7 @@ async function createCity(req, res) {
   } catch (error) {
     if (error.code === 'CITY_ALREADY_EXISTS') {
       try {
-        const requestedName = String(req.body.name || '').trim().toLowerCase();
-        const requestedSlug = String(req.body.slug || '').trim().toLowerCase();
-        const requestedStateId = Number(req.body.stateId);
-        const existing = await cityService.getCities({ page: 1, pageSize: 100 });
-        const city = (existing.data || []).find(item =>
-          Number(item.state_id) === requestedStateId &&
-          (String(item.name || '').trim().toLowerCase() === requestedName ||
-            String(item.slug || '').trim().toLowerCase() === requestedSlug)
-        );
+        const city = await findExistingCity(req.body);
         if (city) return res.status(200).json({ ...city, alreadyExists: true });
       } catch (lookupError) {
         console.error('Duplicate city lookup failed:', lookupError.message);
@@ -24,6 +33,12 @@ async function createCity(req, res) {
       return res.status(409).json({ error: 'City already exists in this state', code: error.code });
     }
     if (error.code === '23505' && ['uq_cities_active_state_name', 'uq_cities_active_state_slug', 'cities_state_id_name_key', 'cities_state_id_slug_key'].includes(error.constraint)) {
+      try {
+        const city = await findExistingCity(req.body);
+        if (city) return res.status(200).json({ ...city, alreadyExists: true });
+      } catch (lookupError) {
+        console.error('Duplicate city lookup failed:', lookupError.message);
+      }
       return res.status(409).json({ error: 'City already exists in this state', code: 'CITY_ALREADY_EXISTS' });
     }
     if (error.code === '23503') {
