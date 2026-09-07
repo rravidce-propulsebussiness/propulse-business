@@ -5,6 +5,31 @@ function money(value) {
   return Number.isFinite(amount) ? `₹${amount.toLocaleString('en-IN')}` : '₹0'
 }
 
+function getCouponCode() {
+  return String(document.querySelector('#lead-coupon-code')?.value || '').trim().toUpperCase()
+}
+
+function patchLeadPurchaseRequest() {
+  if (window.__propulseLeadCouponFetchPatched) return
+  window.__propulseLeadCouponFetchPatched = true
+  const originalFetch = window.fetch.bind(window)
+  window.fetch = (input, init = {}) => {
+    try {
+      const url = typeof input === 'string' ? input : (input?.url || '')
+      if (/\/api\/leads\/\d+\/purchase(?:\?|$)/.test(url) && init?.body) {
+        const couponCode = getCouponCode()
+        if (couponCode) {
+          const body = JSON.parse(init.body)
+          if (body && !body.couponCode) {
+            init = { ...init, body: JSON.stringify({ ...body, couponCode }) }
+          }
+        }
+      }
+    } catch {}
+    return originalFetch(input, init)
+  }
+}
+
 function enhanceLeadCoupon(modal) {
   const field = modal?.querySelector('.lv2-coupon-option')
   if (!field || field.dataset.applyReady === 'true') return
@@ -48,7 +73,7 @@ function enhanceLeadCoupon(modal) {
       })
       input.value = code
       status.className = 'lv2-coupon-status success'
-      status.textContent = `${code} applied — save ${money(data.discountAmount)} on eligible purchases.`
+      status.textContent = `${code} applied — discount ${money(data.discountAmount)}. You will pay ${money(data.finalAmount)} before any wallet balance is used.`
     } catch (error) {
       status.className = 'lv2-coupon-status error'
       status.textContent = error?.message || 'Coupon could not be applied.'
@@ -62,24 +87,27 @@ function enhanceLeadCoupon(modal) {
 function enhancePaymentAmount(modal) {
   if (!modal || modal.dataset.amountClarityReady === 'true') return
   const detailGrid = modal.querySelector('.lv2-detail-grid')
-  if (!detailGrid || !modal.classList.contains('lead-payment-modal')) return
+  if (!detailGrid || !modal.classList.contains('lv2-payment-modal')) return
   modal.dataset.amountClarityReady = 'true'
 
-  const directText = [...detailGrid.querySelectorAll('div')].find(node => /Direct payment/i.test(node.textContent || ''))?.querySelector('b')?.textContent || ''
+  const payment = [...detailGrid.querySelectorAll('div')]
+  const directText = payment.find(node => /Direct payment/i.test(node.textContent || ''))?.querySelector('b')?.textContent || ''
+  const totalText = payment.find(node => /^Total/i.test(node.textContent?.trim() || ''))?.querySelector('b')?.textContent || ''
   const amount = document.createElement('div')
   amount.className = 'lv2-amount-due'
-  amount.innerHTML = `<div><small>AMOUNT TO PAY NOW</small><strong>${directText || '₹0'}</strong></div><span>Transfer exactly this amount and submit your UTR below.</span>`
+  amount.innerHTML = `<div><small>AMOUNT TO PAY NOW</small><strong>${directText || '₹0'}</strong></div><span>${totalText ? `Final amount after coupon: ${totalText}. ` : ''}Transfer exactly this amount and submit your UTR below.</span>`
   detailGrid.insertAdjacentElement('afterend', amount)
 }
 
 function scan() {
   document.querySelectorAll('.lv2-buy-modal').forEach(enhanceLeadCoupon)
-  document.querySelectorAll('.lv2-upgrade.lead-payment-modal').forEach(enhancePaymentAmount)
+  document.querySelectorAll('.lv2-upgrade.lv2-payment-modal').forEach(enhancePaymentAmount)
+  patchLeadPurchaseRequest()
 }
 
 const style = document.createElement('style')
 style.textContent = `
-.lv2-coupon-apply-row{display:flex;align-items:center;gap:8px;margin-top:8px;min-height:28px}.lv2-coupon-apply{border:0;border-radius:7px;background:#173b70;color:#fff;padding:7px 14px;font-size:9px;font-weight:900;cursor:pointer}.lv2-coupon-apply:disabled{opacity:.6;cursor:not-allowed}.lv2-coupon-status{font-size:9px;font-weight:700;color:#71849e;line-height:1.4}.lv2-coupon-status.success{color:#14805a}.lv2-coupon-status.error{color:#b52e24}.lv2-amount-due{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-top:14px;padding:14px 16px;border:1px solid #ffd2c3;border-radius:12px;background:#fff7f3}.lv2-amount-due small{display:block;color:#a34b2d;font-size:8px;font-weight:900;letter-spacing:.12em}.lv2-amount-due strong{display:block;margin-top:3px;color:#f15a24;font-size:24px;line-height:1.1}.lv2-amount-due span{max-width:210px;color:#71849e;font-size:9px;line-height:1.45;text-align:right;font-weight:700}@media(max-width:600px){.lv2-amount-due{align-items:flex-start;flex-direction:column}.lv2-amount-due span{max-width:none;text-align:left}}
+.lv2-coupon-apply-row{display:flex;align-items:center;gap:8px;margin-top:8px;min-height:28px}.lv2-coupon-apply{border:0;border-radius:7px;background:#173b70;color:#fff;padding:7px 14px;font-size:9px;font-weight:900;cursor:pointer}.lv2-coupon-apply:disabled{opacity:.6;cursor:not-allowed}.lv2-coupon-status{font-size:9px;font-weight:700;color:#71849e;line-height:1.4}.lv2-coupon-status.success{color:#14805a}.lv2-coupon-status.error{color:#b52e24}.lv2-amount-due{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-top:14px;padding:14px 16px;border:1px solid #ffd2c3;border-radius:12px;background:#fff7f3}.lv2-amount-due small{display:block;color:#a34b2d;font-size:8px;font-weight:900;letter-spacing:.12em}.lv2-amount-due strong{display:block;margin-top:3px;color:#f15a24;font-size:24px;line-height:1.1}.lv2-amount-due span{max-width:260px;color:#71849e;font-size:9px;line-height:1.45;text-align:right;font-weight:700}@media(max-width:600px){.lv2-amount-due{align-items:flex-start;flex-direction:column}.lv2-amount-due span{max-width:none;text-align:left}}
 `
 document.head.appendChild(style)
 
