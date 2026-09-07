@@ -39,16 +39,6 @@ function saveCoupon(code) {
   } catch {}
 }
 
-function getSelectedSubtotal(modal) {
-  const selected = modal?.querySelector('.lv2-selected-price, .lv2-price-option.selected, [aria-pressed="true"] .lv2-modal-price')
-  const selectedValue = Number(String(selected?.textContent || '').replace(/[^0-9.]/g, ''))
-  if (Number.isFinite(selectedValue) && selectedValue > 0) return selectedValue
-  const prices = [...(modal?.querySelectorAll('.lv2-modal-price') || [])]
-    .map(node => Number(String(node.textContent || '').replace(/[^0-9.]/g, '')))
-    .filter(value => Number.isFinite(value) && value > 0)
-  return prices.length ? Math.max(...prices) : 0
-}
-
 function enhanceLeadCoupon(modal) {
   const field = modal?.querySelector('.lv2-coupon-option')
   if (!field || field.dataset.applyReady === 'true') return
@@ -63,7 +53,7 @@ function enhanceLeadCoupon(modal) {
 
   const status = row.querySelector('.lv2-coupon-status')
   const button = row.querySelector('.lv2-coupon-apply')
-  button.addEventListener('click', async () => {
+  button.addEventListener('click', () => {
     const code = String(input.value || '').trim().toUpperCase()
     if (!code) {
       saveCoupon('')
@@ -71,35 +61,10 @@ function enhanceLeadCoupon(modal) {
       status.textContent = 'Enter a coupon code first.'
       return
     }
-
-    const subtotal = getSelectedSubtotal(modal)
-    if (!subtotal) {
-      status.className = 'lv2-coupon-status error'
-      status.textContent = 'Select a share package first.'
-      return
-    }
-
-    button.disabled = true
-    button.textContent = 'Checking…'
-    status.className = 'lv2-coupon-status'
-    status.textContent = `Checking coupon for ${money(subtotal)}…`
-    try {
-      const data = await authRequest('/coupons/validate', {
-        method: 'POST',
-        body: JSON.stringify({ code, subtotal, purchaseType: 'lead' })
-      })
-      input.value = code
-      saveCoupon(code)
-      status.className = 'lv2-coupon-status success'
-      status.textContent = `${code} applied — ${money(subtotal)} − ${money(data.discountAmount)} = ${money(data.finalAmount)}.`
-    } catch (error) {
-      saveCoupon('')
-      status.className = 'lv2-coupon-status error'
-      status.textContent = error?.message || 'Coupon could not be applied.'
-    } finally {
-      button.disabled = false
-      button.textContent = 'Apply'
-    }
+    input.value = code
+    saveCoupon(code)
+    status.className = 'lv2-coupon-status success'
+    status.textContent = `${code} applied. The discount will be calculated from the exact share package you select.`
   })
 
   input.addEventListener('input', () => {
@@ -121,6 +86,7 @@ function enhancePaymentAmount(modal) {
   const totalNode = payment.find(node => /^Total/i.test(node.textContent?.trim() || ''))
   const directText = directNode?.querySelector('b')?.textContent || ''
   const totalText = totalNode?.querySelector('b')?.textContent || ''
+
   if (totalNode && coupon) {
     const label = totalNode.querySelector('small')
     if (label) label.textContent = 'Final total'
