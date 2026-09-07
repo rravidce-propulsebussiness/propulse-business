@@ -16,8 +16,8 @@ export default function UserHeader() {
       <Link to="/">Home</Link>
       <Link to="/industries">Industries</Link>
       <Link className="leads-active" to="/leads" onClick={()=>setOpen(false)}>Explore Leads</Link>
-      <Link to="/login" onClick={()=>setOpen(false)}>Login</Link>
-      <Link to="/signup" onClick={()=>setOpen(false)}>Sign up</Link>
+      <Link className="public-nav-auth" to="/login" onClick={()=>setOpen(false)}>Login</Link>
+      <Link className="public-nav-auth" to="/signup" onClick={()=>setOpen(false)}>Sign up</Link>
     </nav>
     <div className="user-header-right public-leads-actions">
       <Link className="public-login-button" to="/login">Login</Link>
