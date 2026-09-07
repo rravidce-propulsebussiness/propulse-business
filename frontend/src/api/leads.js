@@ -44,9 +44,14 @@ export function purchaseLead(id, shares, options = {}) {
   if (useWallet === undefined) {
     try { useWallet = localStorage.getItem('propulse_use_wallet') !== 'false' } catch { useWallet = true }
   }
+  const couponCode = String(options.couponCode || '').trim()
   return authRequest(`/leads/${id}/purchase`, {
     method: 'POST',
-    body: JSON.stringify({ shares, useWallet: useWallet !== false })
+    body: JSON.stringify({
+      shares,
+      useWallet: useWallet !== false,
+      ...(couponCode ? { couponCode } : {})
+    })
   }).then(data => {
     if (!data?.requires_external_payment) return data
     const payment = data.payment || {}
