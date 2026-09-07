@@ -63,10 +63,10 @@ function Dashboard() {
       <main className="owner-main">
         <section className="owner-topbar">
           <div>
-            <span className="owner-kicker">DASHBOARD</span>
+            <span className="owner-kicker">PROPULSE BUSINESS · DASHBOARD</span>
             <h1>Hi, {displayBusinessName}</h1>
           </div>
-          <Link className="owner-primary" to="/leads">Buy Leads <span>→</span></Link>
+          <Link className="owner-primary" to="/leads">Explore Leads <span>→</span></Link>
         </section>
 
         {error && <div className="dashboard-error">{error}</div>}
@@ -74,7 +74,7 @@ function Dashboard() {
         <section className="owner-actions-grid">
           <Link to="/leads" className="dashboard-action dashboard-action-primary">
             <span className="action-icon">↗</span>
-            <div><strong>Buy Leads</strong><small>{loading ? 'Loading…' : `${leads.length} available`}</small></div>
+            <div><strong>Buy Leads</strong><small>{loading ? 'Loading…' : `${leads.length} available now`}</small></div>
             <b>→</b>
           </Link>
           <Link to="/purchased-leads" className="dashboard-action">
@@ -96,12 +96,12 @@ function Dashboard() {
 
         <section className="owner-panel lead-panel">
           <div className="panel-head">
-            <div><span className="owner-kicker">LEADS</span><h2>Latest opportunities</h2></div>
+            <div><span className="owner-kicker">LIVE MARKETPLACE</span><h2>Latest opportunities</h2></div>
             <Link to="/leads">View all →</Link>
           </div>
           <div className="owner-lead-list">
             {loading ? (
-              <div className="owner-lead"><div><strong>Loading leads…</strong></div></div>
+              <div className="owner-lead"><div><strong>Loading opportunities…</strong></div></div>
             ) : previewLeads.length ? (
               previewLeads.map(lead => (
                 <Link to="/leads" className="owner-lead" key={lead.id}>
@@ -131,7 +131,7 @@ function Dashboard() {
 
       <nav className="mobile-dashboard-nav" aria-label="Quick navigation">
         <Link to="/leads"><span>↗</span>Leads</Link>
-        <Link to="/my-leads"><span>✓</span>My Leads</Link>
+        <Link to="/purchased-leads"><span>✓</span>My Leads</Link>
         <Link to="/wallet"><span>₹</span>Wallet</Link>
         <Link to="/profile"><span>◯</span>Profile</Link>
       </nav>
