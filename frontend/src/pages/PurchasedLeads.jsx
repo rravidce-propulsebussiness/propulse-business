@@ -13,6 +13,11 @@ const flatten = (lead) => ({ ...(lead?.custom_fields && typeof lead.custom_field
 const findField = (fields, exact = [], fuzzy = []) => { const entries = Object.entries(fields).filter(([,v]) => hasValue(v)); const exactSet = exact.map(norm); const hit = entries.find(([k]) => exactSet.includes(norm(k))); if (hit) return String(hit[1]).trim(); const patterns = fuzzy.map(norm); const fuzzyHit = entries.find(([k]) => patterns.some(p => norm(k).includes(p))); return fuzzyHit ? String(fuzzyHit[1]).trim() : '' }
 const contactKey = key => /(phone|mobile|whatsapp|email|mail|contact|website|url)/i.test(String(key))
 const hiddenKey = key => /(pricing|price|buyer.?capacity|normal|pro)/i.test(String(key))
+const phoneDigits = value => {
+  const digits = String(value || '').replace(/\D/g, '')
+  if (!digits) return ''
+  return digits.length === 10 ? `91${digits}` : digits
+}
 
 export default function PurchasedLeads() {
   const [leads,setLeads]=useState([]),[loading,setLoading]=useState(true),[error,setError]=useState(''),[active,setActive]=useState(null)
@@ -26,18 +31,21 @@ export default function PurchasedLeads() {
       const membership=lead.pricing_tier==='membership'||lead.payment_method==='membership',tier=membership?'MEMBERSHIP':lead.pricing_tier==='pro'?'PRO':'NORMAL',fields=flatten(lead),location=[lead.city_name,lead.state_name].filter(hasValue).join(', '),
       budget=hasValue(lead.budget)?money(lead.budget):findField(fields,['Budget','Budget Range','Project Budget','Project Budget Range','Expected Budget','Approx Budget','Approximate Budget','Investment Budget'],['budget']),
       workNumbers=findField(fields,['Work Number','Work Numbers','Work No','Work Nos','Number Of Works','Number Of Work','No. Of Works','No Of Works','Works','Quantity','Project Quantity','Work Quantity','Number Of Projects'],['worknumber','worknumbers','numberofworks','noofworks','workquantity','projectquantity','numberofprojects','quantity']),
+      workPhone=findField(fields,['Work Phone Number','Work Phone','Office Phone Number','Office Phone','Business Phone','Business Phone Number','Alternate Work Phone','Alternate Phone'],['workphone','officephone','businessphone']),
       timeline=findField(fields,['Timeline','Timeframe','Project Timeline','Expected Timeline','How Soon Required','When Required'],['timeline','timeframe','howsoon','required']),
       property=hasValue(lead.property_type)?lead.property_type:findField(fields,['Property Type','Property'],['property']),
-      baseEntries=Object.entries(fields).filter(([k,v])=>hasValue(v)&&!contactKey(k)&&!hiddenKey(k)),
-      known=new Set(['budget','budgetrange','projectbudget','projectbudgetrange','expectedbudget','approxbudget','approximatebudget','investmentbudget','worknumber','worknumbers','workno','worknos','numberofworks','numberofwork','noofworks','works','quantity','projectquantity','workquantity','numberofprojects','timeline','timeframe','projecttimeline','expectedtimeline','howsoonrequired','whenrequired','propertytype','property']),
-      dynamic=baseEntries.filter(([k])=>!known.has(norm(k))),open=active===(lead.access_id||lead.claim_id||lead.lead_id),key=`${lead.lead_id}-${lead.access_id||lead.claim_id||index}`,initial=String(lead.customer_name||lead.service_name||lead.industry_name||'L').trim().charAt(0).toUpperCase()
+      baseEntries=Object.entries(fields).filter(([k,v])=>hasValue(v)&&!hiddenKey(k)),
+      dynamic=baseEntries.filter(([k])=>!contactKey(k)),open=active===(lead.access_id||lead.claim_id||lead.lead_id),key=`${lead.lead_id}-${lead.access_id||lead.claim_id||index}`,initial=String(lead.customer_name||lead.service_name||lead.industry_name||'L').trim().charAt(0).toUpperCase(),
+      contactPhone=hasValue(lead.customer_phone)?String(lead.customer_phone).trim():workPhone,
+      whatsappNumber=phoneDigits(contactPhone),
+      whatsappHref=whatsappNumber?`https://wa.me/${whatsappNumber}`:''
       return <article className={`purchased-card ${membership?'membership-card':''}`} key={key}><div className="purchased-card-glow"/><div className="purchased-card-top"><div className="purchased-card-id"><span>LEAD</span><strong>#{String(lead.lead_id).padStart(4,'0')}</strong></div><span className={`purchased-tier ${membership?'free':tier.toLowerCase()}`}>{membership?'✦ ':''}{tier}</span></div>
         <div className="purchased-title-row"><div className="purchased-avatar">{initial}</div><div><h2>{lead.service_name||lead.industry_name||'Business opportunity'}</h2><p>{lead.industry_name||'Verified business opportunity'}</p></div></div>
         <div className="purchased-status"><span><i/> ACCESS ACTIVE</span><small>{membership?'Included with membership':`${tier} purchase`}</small></div>
+        <div className="purchased-contact purchased-contact-top"><div className="contact-heading"><span>CONTACT DETAILS</span><small>UNLOCKED</small></div><strong>{lead.customer_name||'Customer details available'}</strong><div className="contact-lines">{contactPhone&&<a href={`tel:${contactPhone}`}>☎ {contactPhone}</a>}{workPhone&&contactPhone!==workPhone&&<a href={`tel:${workPhone}`}>⌕ Work {workPhone}</a>}{lead.customer_email&&<a href={`mailto:${lead.customer_email}`}>✉ {lead.customer_email}</a>}</div><div className="contact-actions">{contactPhone&&<a className="contact-action call" href={`tel:${contactPhone}`}>☎ Call</a>}{whatsappHref&&<a className="contact-action whatsapp" href={whatsappHref} target="_blank" rel="noreferrer">◉ WhatsApp</a>}</div></div>
         {hasValue(lead.requirement)&&<p className="purchased-requirement">{lead.requirement}</p>}
         <div className="purchased-detail-grid">{location&&<div><small>LOCATION</small><strong>⌖ {location}</strong></div>}{property&&<div><small>PROPERTY</small><strong>{property}</strong></div>}{budget&&<div><small>BUDGET</small><strong>{budget}</strong></div>}{workNumbers&&<div><small>WORK NUMBERS</small><strong>{workNumbers}</strong></div>}{timeline&&<div><small>TIMELINE</small><strong>{timeline}</strong></div>}{hasValue(lead.shares)&&<div><small>SHARES</small><strong>{lead.shares} share{Number(lead.shares)===1?'':'s'}</strong></div>}</div>
         {dynamic.length>0&&<div className="purchased-dynamic"><small>ALL LEAD DETAILS</small><div>{dynamic.map(([k,v])=><span key={k}><b>{label(k)}</b>{String(v)}</span>)}</div></div>}
-        <div className="purchased-contact"><div className="contact-heading"><span>CONTACT ACCESS</span><small>UNLOCKED</small></div><strong>{lead.customer_name||'Customer details available'}</strong><div className="contact-lines">{lead.customer_phone&&<a href={`tel:${lead.customer_phone}`}>☎ {lead.customer_phone}</a>}{lead.customer_email&&<a href={`mailto:${lead.customer_email}`}>✉ {lead.customer_email}</a>}</div></div>
         <div className="purchased-card-footer"><div><small>{membership?'CLAIMED':'PURCHASED'}</small><strong>{formatDate(lead.created_at)}</strong></div>{membership&&lead.expires_at?<div><small>ACCESS EXPIRES</small><strong>{formatDate(lead.expires_at)}</strong></div>:<div><small>ACCESS</small><strong>Full lead</strong></div>}<button onClick={()=>setActive(open?null:(lead.access_id||lead.claim_id||lead.lead_id))}>{open?'Hide access ↑':'View access →'}</button></div>
         {open&&<div className="purchased-expanded"><div><span>LEAD ID</span><strong>#{lead.lead_id}</strong></div><div><span>ACCESS TYPE</span><strong>{tier}</strong></div><div><span>STATUS</span><strong>Active</strong></div><div><span>DETAILS</span><strong>{baseEntries.length} fields available</strong></div></div>}
       </article>})}</section>}
