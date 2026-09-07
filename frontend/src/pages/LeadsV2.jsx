@@ -101,8 +101,10 @@ export default function LeadsV2() {
         const terms = [category?.replaceAll('-', ' '), search.trim()].filter(Boolean).join(' ')
         const d = await listLeads({ status: 'available', page, limit: 20, ...(tier !== 'all' ? { leadType: tier } : {}), ...(terms ? { search: terms } : {}) }, token)
         if (live) {
-          setLeads(Array.isArray(d) ? d : (d.items || []))
-          setPagination(d.pagination || { page, limit: 20, total: Array.isArray(d) ? d.length : d.items?.length || 0, hasNext: false, hasPrevious: page > 1 })
+          const items = Array.isArray(d) ? d : (d.items || [])
+          const availableItems = items.filter(l => !l.is_purchased && !l.purchased && !l.access?.claimed && !l.access?.purchased)
+          setLeads(availableItems)
+          setPagination(d.pagination ? { ...d.pagination, total: Math.max(0, Number(d.pagination.total || 0) - (items.length - availableItems.length)) } : { page, limit: 20, total: availableItems.length, hasNext: false, hasPrevious: page > 1 })
         }
       } catch (e) { if (live) setError(e.message) }
       finally { if (live) setLoading(false) }
@@ -131,8 +133,8 @@ export default function LeadsV2() {
     try {
       const d = await claimLead(lead.id)
       const privateLead = await getLead(lead.id)
-      setLeads(current => current.map(x => x.id === lead.id ? { ...x, ...privateLead, purchased: true, access: { ...(x.access || {}), claimed: true, canClaim: false, remaining: d.remaining } } : x))
-      setNotice(`Lead #${lead.id} claimed successfully.`); setExpanded(lead.id)
+      setLeads(current => current.filter(x => x.id !== lead.id))
+      setNotice(`Lead #${lead.id} claimed successfully.`); setExpanded(null)
     } catch (e) { setError(e.message) }
     finally { setClaiming(null) }
   }
@@ -147,10 +149,10 @@ export default function LeadsV2() {
         setBuyModal(null); setPaymentError(''); setPayment(d); setPaymentLead(lead); setPaymentShares(shares); return
       }
       const privateLead = await getLead(lead.id)
-      setLeads(current => current.map(x => x.id === lead.id ? { ...x, ...privateLead, purchased: true, access: { ...(x.access || {}), claimed: true, canClaim: false } } : x))
+      setLeads(current => current.filter(x => x.id !== lead.id))
       setBuyModal(null)
       setNotice(`Lead #${lead.id} purchased successfully from ${plan === 'pro' ? 'Pro' : 'Normal'} pricing.`)
-      setExpanded(lead.id)
+      setExpanded(null)
     } catch (e) {
       if (e.code === 'PRO_REQUIRED') { setBuyModal(null); setUpgrade(true) } else setError(e.message)
     } finally { setBuying(null) }
