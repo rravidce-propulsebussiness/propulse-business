@@ -17,6 +17,31 @@ async function findExistingCity({ stateId, name, slug }) {
   return result.rows[0] || null;
 }
 
+async function getAllCities() {
+  const pageSize = 100;
+  const firstPage = await cityService.getCities({ page: 1, pageSize });
+  const total = firstPage.pagination?.total ?? firstPage.data.length;
+  const allCities = [...firstPage.data];
+  const totalPages = firstPage.pagination?.totalPages ?? Math.ceil(total / pageSize);
+
+  for (let page = 2; page <= totalPages; page += 1) {
+    const nextPage = await cityService.getCities({ page, pageSize });
+    allCities.push(...nextPage.data);
+  }
+
+  return {
+    data: allCities,
+    pagination: {
+      page: 1,
+      pageSize: allCities.length || pageSize,
+      total,
+      totalPages: allCities.length ? 1 : 0,
+      hasNextPage: false,
+      hasPreviousPage: false,
+    },
+  };
+}
+
 async function createCity(req, res) {
   try {
     const { stateId, name, slug } = req.body;
@@ -50,7 +75,10 @@ async function createCity(req, res) {
 }
 
 async function getCities(req, res) {
-  try { return res.json(await cityService.getCities(req.query)); }
+  try {
+    const hasPagination = ['page', 'pageSize', 'limit'].some(key => req.query[key] !== undefined);
+    return res.json(hasPagination ? await cityService.getCities(req.query) : await getAllCities());
+  }
   catch (error) { console.error('Get cities failed:', error.message); return res.status(500).json({ error: 'Failed to fetch cities' }); }
 }
 
