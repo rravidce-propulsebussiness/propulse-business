@@ -96,9 +96,4 @@ async function updateInvestorSettings(data) {
   return getInvestorSettings();
 }
 
-async function getCoupons(){return (await pool.query('SELECT * FROM coupons ORDER BY created_at DESC')).rows;}
-async function createCoupon(d){return (await pool.query(`INSERT INTO coupons(code,discount_type,discount_value,max_discount,min_order_amount,usage_limit,starts_at,expires_at,is_active) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *`,[String(d.code).trim().toUpperCase(),d.discountType,Number(d.discountValue),d.maxDiscount===''?null:Number(d.maxDiscount),Number(d.minOrderAmount)||0,d.usageLimit===''||d.usageLimit==null?null:Number(d.usageLimit),d.startsAt||null,d.expiresAt||null,d.isActive!==false])).rows[0];}
-async function updateCoupon(id,d){return (await pool.query(`UPDATE coupons SET code=$1,discount_type=$2,discount_value=$3,max_discount=$4,min_order_amount=$5,usage_limit=$6,starts_at=$7,expires_at=$8,is_active=$9,updated_at=CURRENT_TIMESTAMP WHERE id=$10 RETURNING *`,[String(d.code).trim().toUpperCase(),d.discountType,Number(d.discountValue),d.maxDiscount===''?null:Number(d.maxDiscount),Number(d.minOrderAmount)||0,d.usageLimit===''||d.usageLimit==null?null:Number(d.usageLimit),d.startsAt||null,d.expiresAt||null,d.isActive,id])).rows[0]||null;}
-async function setCouponStatus(id,isActive){return (await pool.query('UPDATE coupons SET is_active=$1,updated_at=CURRENT_TIMESTAMP WHERE id=$2 RETURNING *',[isActive,id])).rows[0]||null;}
-async function deleteCoupon(id){return (await pool.query('DELETE FROM coupons WHERE id=$1 RETURNING id',[id])).rows[0]||null;}
-module.exports={getInvestorSettings,updateInvestorSettings,getCoupons,createCoupon,updateCoupon,setCouponStatus,deleteCoupon};
+module.exports={getInvestorSettings,updateInvestorSettings};
