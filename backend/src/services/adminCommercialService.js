@@ -41,28 +41,24 @@ async function updateInvestorSettings(data) {
   const client=await pool.connect();
   try{
     await client.query('BEGIN');
-
     await client.query(`UPDATE investor_settings SET global_limit=$1,default_industry_limit=$2,customer_industry_limit=$3,min_investment=$4,max_investment=$5,enabled=$6,is_enabled=$6,requires_pro=$7,investment_cycle_days=COALESCE($8,investment_cycle_days),auto_reinvest=COALESCE($9,auto_reinvest),investor_revenue_share_percent=COALESCE($10,investor_revenue_share_percent),updated_at=CURRENT_TIMESTAMP WHERE id=1`,[globalLimit,defaultIndustryLimit,customerIndustryLimit,minInvestment,maxInvestment,Boolean(data.enabled),data.requiresPro!==false,cycleDays,autoReinvest,revenueShare]);
 
     if(Array.isArray(data.industryLimits)){
-      const settings=(await client.query('SELECT investor_revenue_share_percent FROM investor_settings WHERE id=1 FOR UPDATE')).rows[0];
+      const settings=(await client.query('SELECT investor_revenue_share_percent FROM investor_settings WHERE id=1')).rows[0];
       const share=Number(settings.investor_revenue_share_percent ?? 100);
       const seenIndustries=new Set();
-      const industryConfigs=[];
-
       for(const industry of data.industryLimits){
         const industryId=Number(industry.industryId??industry.id);
         const active=industry.isActive===undefined?Boolean(industry.is_active!==false):Boolean(industry.isActive);
         if(!Number.isInteger(industryId)||industryId<=0)throw Object.assign(new Error('A valid industry is required for every investor limit group'),{code:'INVALID_INDUSTRY_LOCATION_CONFIG'});
-        if(seenIndustries.has(industryId))throw Object.assign(new Error('Duplicate investor industry limit group'),{code:'INVALID_INDUSTRY_LOCATION_CONFIG'});
         const industryExists=(await client.query('SELECT id FROM industries WHERE id=$1 AND is_active=TRUE',[industryId])).rows[0];
         if(!industryExists)throw Object.assign(new Error('Selected investor industry is invalid'),{code:'INVALID_INDUSTRY_LOCATION_CONFIG'});
         seenIndustries.add(industryId);
-
+        await client.query(`INSERT INTO investor_industry_limits(industry_id,investor_limit,is_active) VALUES($1,0,$2) ON CONFLICT(industry_id) DO UPDATE SET is_active=EXCLUDED.is_active,updated_at=CURRENT_TIMESTAMP`,[industryId,active]);
+        await client.query('DELETE FROM investor_industry_location_limits WHERE industry_id=$1',[industryId]);
         const locations=Array.isArray(industry.locations)?industry.locations:[];
-        const seenLocations=new Set();
-        const normalizedLocations=[];
         let aggregate=0;
+        const seenLocations=new Set();
         for(const location of locations){
           const stateId=Number(location.stateId??location.state_id);
           const cityRaw=location.cityId??location.city_id;
@@ -83,34 +79,19 @@ async function updateInvestorSettings(data) {
             if(!city)throw Object.assign(new Error('Selected investor location city does not belong to the selected state'),{code:'INVALID_INDUSTRY_LOCATION_CONFIG'});
           }
           aggregate+=limit;
-          normalizedLocations.push({stateId,cityId,limit,locationActive});
+          await client.query(`INSERT INTO investor_industry_location_limits(industry_id,state_id,city_id,investor_limit,is_active) VALUES($1,$2,$3,$4,$5)`,[industryId,stateId,cityId,limit,locationActive]);
         }
-        industryConfigs.push({industryId,active,aggregate,locations:normalizedLocations});
-      }
-
-      await client.query('DELETE FROM investor_industry_location_limits');
-      await client.query('UPDATE investor_industry_limits SET investor_limit=0,is_active=FALSE,updated_at=CURRENT_TIMESTAMP');
-      await client.query('UPDATE investment_industry_rules SET total_capacity=NULL,is_active=FALSE,updated_at=CURRENT_TIMESTAMP');
-
-      for(const industry of industryConfigs){
-        await client.query(`INSERT INTO investor_industry_limits(industry_id,investor_limit,is_active) VALUES($1,$2,$3) ON CONFLICT(industry_id) DO UPDATE SET investor_limit=EXCLUDED.investor_limit,is_active=EXCLUDED.is_active,updated_at=CURRENT_TIMESTAMP`,[industry.industryId,industry.aggregate,industry.active]);
-        for(const location of industry.locations){
-          await client.query(`INSERT INTO investor_industry_location_limits(industry_id,state_id,city_id,investor_limit,is_active) VALUES($1,$2,$3,$4,$5)`,[industry.industryId,location.stateId,location.cityId,location.limit,location.locationActive]);
-        }
-        if(industry.active){
+        await client.query('UPDATE investor_industry_limits SET investor_limit=$1 WHERE industry_id=$2',[aggregate,industryId]);
+        if(active){
           const maximum=maxInvestment===null?Math.max(minInvestment,globalLimit||minInvestment):maxInvestment;
-          await client.query(`INSERT INTO investment_industry_rules(industry_id,minimum_amount,maximum_amount,total_capacity,investor_revenue_share_percent,is_active) VALUES($1,$2,$3,NULL,$4,TRUE) ON CONFLICT(industry_id) DO UPDATE SET minimum_amount=EXCLUDED.minimum_amount,maximum_amount=EXCLUDED.maximum_amount,total_capacity=NULL,investor_revenue_share_percent=EXCLUDED.investor_revenue_share_percent,is_active=TRUE,updated_at=CURRENT_TIMESTAMP`,[industry.industryId,minInvestment,maximum,share]);
-        }
+          await client.query(`INSERT INTO investment_industry_rules(industry_id,minimum_amount,maximum_amount,total_capacity,investor_revenue_share_percent,is_active) VALUES($1,$2,$3,NULL,$4,TRUE) ON CONFLICT(industry_id) DO UPDATE SET minimum_amount=EXCLUDED.minimum_amount,maximum_amount=EXCLUDED.maximum_amount,total_capacity=NULL,investor_revenue_share_percent=EXCLUDED.investor_revenue_share_percent,is_active=TRUE,updated_at=CURRENT_TIMESTAMP`,[industryId,minInvestment,maximum,share]);
+        }else await client.query('UPDATE investment_industry_rules SET is_active=FALSE,updated_at=CURRENT_TIMESTAMP WHERE industry_id=$1',[industryId]);
       }
+      if(seenIndustries.size){const ids=Array.from(seenIndustries);await client.query('DELETE FROM investor_industry_location_limits WHERE industry_id <> ALL($1::int[])',[ids]);}
     }
 
     await client.query('COMMIT');
-  }catch(error){
-    await client.query('ROLLBACK');
-    throw error;
-  }finally{
-    client.release();
-  }
+  }catch(error){await client.query('ROLLBACK');throw error;}finally{client.release();}
   return getInvestorSettings();
 }
 
