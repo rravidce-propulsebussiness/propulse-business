@@ -4,6 +4,7 @@ import MembershipPayments from '../components/MembershipPayments'
 import { authRequest, getToken, getUser } from '../utils/auth'
 import { apiRequest } from '../utils/api'
 import './Membership.css'
+import './CouponCheckout.css'
 
 const money = (value) => `₹${Number(value || 0).toLocaleString('en-IN', { maximumFractionDigits: 0 })}`
 const asArray = (value) => (Array.isArray(value) ? value : [])
@@ -35,6 +36,11 @@ export default function Membership() {
   const [checkout, setCheckout] = useState(null)
   const [submitted, setSubmitted] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+  const [couponOpen, setCouponOpen] = useState(false)
+  const [couponCode, setCouponCode] = useState('')
+  const [couponResult, setCouponResult] = useState(null)
+  const [couponError, setCouponError] = useState('')
+  const [couponChecking, setCouponChecking] = useState(false)
 
   useEffect(() => {
     let active = true
@@ -88,7 +94,7 @@ export default function Membership() {
   const addOns = (plan) => asArray(plan?.add_ons || plan?.addons || plan?.booster_add_ons || plan?.booster_addons)
   const addOnName = (item) => typeof item === 'string' ? item : String(item?.name || item?.title || item?.label || '')
 
-  const openPlan = async (plan, type) => {
+  const openPlan = (plan, type) => {
     if (type === 'booster' && !isProMember) {
       setError('Booster access is available only after you have an active Pro membership.')
       return
@@ -97,23 +103,79 @@ export default function Membership() {
       setError(`The ${displayName(type)} membership plan is unavailable.`)
       return
     }
+    setSelectedPlan(plan)
+    setError('')
+    setSubmitted(false)
+    setCouponCode('')
+    setCouponResult(null)
+    setCouponError('')
+    setCouponOpen(true)
+  }
+
+  const closeCoupon = () => {
+    if (couponChecking || submitting) return
+    setCouponOpen(false)
+    setCouponCode('')
+    setCouponResult(null)
+    setCouponError('')
+    setSelectedPlan(null)
+  }
+
+  const validateCoupon = async () => {
+    const code = couponCode.trim().toUpperCase()
+    if (!selectedPlan?.id) return
+    if (!code) {
+      setCouponError('Enter a coupon code first.')
+      setCouponResult(null)
+      return
+    }
     try {
-      setSelectedPlan(plan)
-      setError('')
-      setSubmitted(false)
+      setCouponChecking(true)
+      setCouponError('')
+      const result = await authRequest('/coupons/validate', {
+        method: 'POST',
+        body: JSON.stringify({
+          code,
+          subtotal: Number(selectedPlan.price),
+          purchaseType: 'membership',
+          membershipPlanId: selectedPlan.id
+        })
+      })
+      setCouponCode(code)
+      setCouponResult(result)
+    } catch (err) {
+      setCouponResult(null)
+      setCouponError(err?.message || 'Unable to validate this coupon.')
+    } finally {
+      setCouponChecking(false)
+    }
+  }
+
+  const checkoutMembership = async (withCoupon) => {
+    if (!selectedPlan?.id) return
+    try {
       setSubmitting(true)
+      setCouponError('')
+      setError('')
+      const code = withCoupon && couponResult ? couponCode.trim().toUpperCase() : ''
       const result = await authRequest('/payments/checkout/membership', {
         method: 'POST',
-        body: JSON.stringify({ membershipPlanId: plan.id })
+        body: JSON.stringify({
+          membershipPlanId: selectedPlan.id,
+          ...(code ? { couponCode: code } : {})
+        })
       })
       setCheckout(result)
-      if (result.requiresExternalPayment) setManualOpen(true)
-      else {
+      setCouponOpen(false)
+      if (result.requiresExternalPayment) {
+        setManualOpen(true)
+      } else {
         setSubmitted(true)
         setCurrentMembership(await authRequest('/payments/membership/current').catch(() => currentMembership))
+        setSelectedPlan(null)
       }
     } catch (err) {
-      setError(err?.message || 'Unable to start membership payment.')
+      setCouponError(err?.message || 'Unable to start membership payment.')
     } finally {
       setSubmitting(false)
     }
@@ -140,11 +202,12 @@ export default function Membership() {
         body: JSON.stringify({
           manualReference: reference,
           proofUrl,
-          notes: `${selectedPlan?.name || 'Membership'} direct payment${Number(checkout.walletAmount) > 0 ? ` after wallet payment of ${money(checkout.walletAmount)}` : ''}`
+          notes: `${selectedPlan?.name || checkout?.plan?.name || 'Membership'} direct payment${Number(checkout.walletAmount) > 0 ? ` after wallet payment of ${money(checkout.walletAmount)}` : ''}${checkout?.coupon?.code ? ` with coupon ${checkout.coupon.code}` : ''}`
         })
       })
       setSubmitted(true)
       setManualOpen(false)
+      setSelectedPlan(null)
     } catch (err) {
       setError(err?.message || 'Unable to submit payment.')
     } finally {
@@ -249,13 +312,42 @@ export default function Membership() {
       </section>
     </main>
 
+    {couponOpen && selectedPlan && <div className="membership-modal-backdrop" onClick={closeCoupon}>
+      <div className="coupon-checkout-modal" onClick={(event) => event.stopPropagation()}>
+        <button className="membership-modal-close" onClick={closeCoupon}>×</button>
+        <span className="membership-kicker">COUPON</span>
+        <h2>Have a coupon?</h2>
+        <p>Apply your coupon before payment. The discount is checked against this membership plan and your account eligibility.</p>
+        <div className="coupon-code-row">
+          <input value={couponCode} onChange={(event) => { setCouponCode(event.target.value.toUpperCase()); setCouponResult(null); setCouponError('') }} placeholder="Enter coupon code" autoComplete="off" />
+          <button type="button" onClick={validateCoupon} disabled={couponChecking || submitting}>{couponChecking ? 'Checking…' : 'Apply'}</button>
+        </div>
+        {couponError && <div className="coupon-feedback error">{couponError}</div>}
+        {couponResult && <div className="coupon-feedback success">Coupon <strong>{couponResult.coupon?.code || couponCode}</strong> applied successfully.</div>}
+        {couponResult && <div className="coupon-discount-summary">
+          <div><span>Membership price</span><strong>{money(couponResult.subtotalAmount ?? selectedPlan.price)}</strong></div>
+          <div className="discount"><span>Coupon discount</span><strong>− {money(couponResult.discountAmount)}</strong></div>
+          <div><span>Payable amount</span><strong>{money(couponResult.finalAmount)}</strong></div>
+        </div>}
+        <div className="coupon-checkout-actions">
+          <button type="button" className="coupon-skip" onClick={() => checkoutMembership(false)} disabled={couponChecking || submitting}>Continue without coupon</button>
+          <button type="button" className="coupon-continue" onClick={() => checkoutMembership(Boolean(couponResult))} disabled={couponChecking || submitting}>{submitting ? 'Starting…' : couponResult ? 'Continue with coupon' : 'Continue to payment'}</button>
+        </div>
+      </div>
+    </div>}
+
     {manualOpen && selectedPlan && checkout && <div className="membership-modal-backdrop" onClick={() => setManualOpen(false)}>
       <div className="membership-payment-modal" onClick={(event) => event.stopPropagation()}>
         <button className="membership-modal-close" onClick={() => setManualOpen(false)}>×</button>
         <span className="membership-kicker">DIRECT PAYMENT</span>
         <h2>Complete {displayName(planType(selectedPlan))} payment</h2>
         <p>{Number(checkout.walletAmount) > 0 ? 'Your wallet balance has been applied automatically. Pay only the remaining amount directly.' : 'Your wallet has no available balance, so the full amount is due directly.'}</p>
-        <div className="manual-summary"><span>Total</span><strong>{money(checkout.payment?.amount || selectedPlan.price)} / {period(selectedPlan).toLowerCase()}</strong><span>Wallet applied</span><strong>{money(checkout.walletAmount)}</strong><span>Remaining direct payment</span><strong>{money(checkout.externalAmount)}</strong></div>
+        <div className="manual-summary">
+          {checkout?.coupon && <><span>Original price</span><strong>{money(checkout.coupon.subtotalAmount)}</strong><span>Coupon discount</span><strong>− {money(checkout.coupon.discountAmount)}</strong></>}
+          <span>Total</span><strong>{money(checkout.payment?.amount || selectedPlan.price)} / {period(selectedPlan).toLowerCase()}</strong>
+          <span>Wallet applied</span><strong>{money(checkout.walletAmount)}</strong>
+          <span>Remaining direct payment</span><strong>{money(checkout.externalAmount)}</strong>
+        </div>
         <div className="manual-method"><b>UPI / BANK TRANSFER</b><span>Payment details will be configured by Propulse admin.</span></div>
         <label className="manual-input-label">Payment reference / UTR<input id="manual-utr" placeholder="Enter UTR or transaction ID" /></label>
         <label className="manual-input-label">Payment proof<input id="manual-proof" type="file" accept="image/*,.pdf" /></label>
