@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { authRequest, saveSession } from '../utils/auth'
 import GoogleButton from '../components/GoogleButton'
 import './Auth.css'
+import './AuthExtras.css'
 
 function Login() {
   const navigate = useNavigate()
