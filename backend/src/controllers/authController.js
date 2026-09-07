@@ -1,4 +1,5 @@
 const authService = require('../services/authService');
+const { sendPasswordResetEmail } = require('../services/emailService');
 
 function validatePassword(password) {
   return typeof password === 'string' && password.length >= 8;
@@ -44,6 +45,50 @@ async function login(req, res) {
   }
 }
 
+async function googleLogin(req, res) {
+  try {
+    const { credential } = req.body;
+    return res.json(await authService.googleLogin({ idToken: credential }));
+  } catch (error) {
+    if (['GOOGLE_NOT_CONFIGURED', 'INVALID_GOOGLE_TOKEN'].includes(error.code)) return res.status(400).json({ error: error.message });
+    if (error.code === 'EMAIL_EXISTS') return res.status(409).json({ error: error.message });
+    console.error('Google login failed:', error.message);
+    return res.status(500).json({ error: 'Failed to sign in with Google' });
+  }
+}
+
+async function forgotPassword(req, res) {
+  try {
+    const email = String(req.body?.email || '').trim();
+    if (!email) return res.status(400).json({ error: 'Email address is required' });
+
+    const reset = await authService.createPasswordReset(email);
+    if (!reset) return res.json({ message: 'If an account exists for that email, a password reset link has been sent.' });
+
+    const baseUrl = String(process.env.PUBLIC_APP_URL || process.env.CORS_ORIGIN || '').split(',')[0].replace(/\/$/, '');
+    if (!baseUrl) throw new Error('PUBLIC_APP_URL is not configured');
+    const resetUrl = `${baseUrl}/reset-password?token=${encodeURIComponent(reset.token)}`;
+    await sendPasswordResetEmail({ to: reset.user.email, name: reset.user.name, resetUrl });
+    return res.json({ message: 'If an account exists for that email, a password reset link has been sent.' });
+  } catch (error) {
+    console.error('Forgot password failed:', error.message);
+    return res.status(503).json({ error: 'Password reset email could not be sent right now. Please try again later.' });
+  }
+}
+
+async function resetPassword(req, res) {
+  try {
+    const { token, password } = req.body || {};
+    if (!token || !validatePassword(password)) return res.status(400).json({ error: 'Enter a password of at least 8 characters.' });
+    await authService.resetPassword({ token, password });
+    return res.json({ message: 'Password updated successfully. You can now sign in.' });
+  } catch (error) {
+    if (['INVALID_RESET_REQUEST', 'INVALID_RESET_TOKEN'].includes(error.code)) return res.status(400).json({ error: error.message });
+    console.error('Reset password failed:', error.message);
+    return res.status(500).json({ error: 'Failed to reset password' });
+  }
+}
+
 async function me(req, res) {
   try {
     const user = await authService.getUserById(req.user.id);
@@ -55,4 +100,4 @@ async function me(req, res) {
   }
 }
 
-module.exports = { signup, login, me };
+module.exports = { signup, login, googleLogin, forgotPassword, resetPassword, me };
