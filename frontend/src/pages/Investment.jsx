@@ -4,6 +4,7 @@ import { getToken } from '../utils/auth'
 import { API_BASE_URL } from '../utils/api'
 
 const money = (value) => `₹${Number(value || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}`
+const toList = (value) => Array.isArray(value) ? value : Array.isArray(value?.data) ? value.data : []
 
 export default function Investment() {
   const [access, setAccess] = useState(null)
@@ -37,14 +38,18 @@ export default function Investment() {
         req('/states'),
         req('/cities'),
       ])
+      const normalizedRules = toList(ruleData)
+      const normalizedLocationRules = toList(locationRuleData)
+      const normalizedStates = toList(stateData)
+      const normalizedCities = toList(cityData)
       setAccess(accessData)
-      setRules(Array.isArray(ruleData) ? ruleData : [])
-      setLocationRules(Array.isArray(locationRuleData) ? locationRuleData : [])
-      setMine(Array.isArray(investmentData) ? investmentData : [])
-      setStates(Array.isArray(stateData) ? stateData : [])
-      setCities(Array.isArray(cityData) ? cityData : [])
-      if (!industryId && ruleData?.[0]) setIndustryId(String(ruleData[0].industry_id))
-      if (!stateId && locationRuleData?.[0]) setStateId(String(locationRuleData[0].state_id))
+      setRules(normalizedRules)
+      setLocationRules(normalizedLocationRules)
+      setMine(toList(investmentData))
+      setStates(normalizedStates)
+      setCities(normalizedCities)
+      if (!industryId && normalizedRules[0]) setIndustryId(String(normalizedRules[0].industry_id))
+      if (!stateId && normalizedLocationRules[0]) setStateId(String(normalizedLocationRules[0].state_id))
     } catch (error) { setMessage(error.message) }
   }
 
