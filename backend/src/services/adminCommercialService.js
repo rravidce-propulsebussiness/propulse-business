@@ -88,6 +88,7 @@ async function updateInvestorSettings(data) {
         }else await client.query('UPDATE investment_industry_rules SET is_active=FALSE,updated_at=CURRENT_TIMESTAMP WHERE industry_id=$1',[industryId]);
       }
       if(seenIndustries.size){const ids=Array.from(seenIndustries);await client.query('DELETE FROM investor_industry_location_limits WHERE industry_id <> ALL($1::int[])',[ids]);}
+      else await client.query('DELETE FROM investor_industry_location_limits');
     }
 
     await client.query('COMMIT');
