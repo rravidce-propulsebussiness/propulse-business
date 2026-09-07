@@ -67,9 +67,20 @@ function enhancePaymentModal(modal) {
   modal.classList.add('lead-payment-modal')
 }
 
-const filterState = { industry: '', service: '', location: '', type: 'all' }
+const readUrlFilters = () => {
+  if (typeof window === 'undefined') return { industryId: '', serviceId: '', stateId: '', cityId: '', leadType: 'all' }
+  const params = new URLSearchParams(window.location.search)
+  return {
+    industryId: params.get('industryId') || '',
+    serviceId: params.get('serviceId') || '',
+    stateId: params.get('stateId') || '',
+    cityId: params.get('cityId') || '',
+    leadType: params.get('leadType') || 'all',
+  }
+}
+
+const filterState = readUrlFilters()
 let masterDataPromise = null
-let lastCardSignature = ''
 
 const filterStyle = document.createElement('style')
 filterStyle.textContent = `
@@ -91,14 +102,15 @@ filterStyle.textContent = `
 .lv2-filter-reset{border:1px solid #d8e1ec;background:#fff;color:#526780}
 .lv2-filter-apply{border:0;background:#f15a24;color:#fff;min-width:130px}
 .lv2-filter-count{margin-left:6px;font-size:10px;opacity:.8}
-.lv2-filter-empty{display:none;margin:18px 0;padding:25px;text-align:center;border:1px dashed #d5dfeb;border-radius:14px;background:#fff;color:#72859e;font-size:11px;font-weight:700}
-@media(max-width:600px){.lv2-filter-modal{padding:20px}.lv2-filter-grid{grid-template-columns:1fr}.lv2-filter-field.full{grid-column:auto}}
+@media(max-width:600px){.lv2-filter-modal{padding:20px}.lv2-filter-grid{grid-template-columns:1fr}.lv2-filter-field.full{grid-column:auto}.lv2-filter-actions{position:sticky;bottom:0;background:#fff}}
 `
 document.head.appendChild(filterStyle)
 
 const clean = value => String(value ?? '').trim()
-const uniqueSorted = values => [...new Set(values.map(clean).filter(Boolean))].sort((a, b) => a.localeCompare(b))
 const unwrap = value => Array.isArray(value) ? value : (Array.isArray(value?.data) ? value.data : (Array.isArray(value?.items) ? value.items : []))
+const byName = (a, b) => clean(a.name).localeCompare(clean(b.name))
+const escapeHtml = value => String(value ?? '').replaceAll('&', '&amp;').replaceAll('"', '&quot;').replaceAll('<', '&lt;').replaceAll('>', '&gt;')
+const activeFilterCount = () => [filterState.industryId, filterState.serviceId, filterState.stateId, filterState.cityId, filterState.leadType !== 'all' ? filterState.leadType : ''].filter(Boolean).length
 
 async function loadMasterData() {
   if (masterDataPromise) return masterDataPromise
@@ -107,99 +119,87 @@ async function loadMasterData() {
     publicRequest('/services'),
     publicRequest('/states'),
     publicRequest('/cities'),
-  ]).then(([industriesResponse, servicesResponse, statesResponse, citiesResponse]) => {
-    const industries = unwrap(industriesResponse)
-    const services = unwrap(servicesResponse)
-    const states = unwrap(statesResponse)
-    const cities = unwrap(citiesResponse)
-    const stateById = new Map(states.map(item => [Number(item.id), clean(item.name)]))
-    const industryNames = uniqueSorted(industries.map(item => item.name))
-    const serviceNames = uniqueSorted(services.map(item => item.name))
-    const locations = uniqueSorted([
-      ...states.map(item => item.name),
-      ...cities.map(item => {
-        const city = clean(item.name)
-        const state = clean(item.state_name) || stateById.get(Number(item.state_id)) || ''
-        return city && state ? `${city}, ${state}` : city
-      }),
-    ])
-    return { industryNames, serviceNames, locations }
-  }).catch(error => {
+  ]).then(([industriesResponse, servicesResponse, statesResponse, citiesResponse]) => ({
+    industries: unwrap(industriesResponse).sort(byName),
+    services: unwrap(servicesResponse).sort(byName),
+    states: unwrap(statesResponse).sort(byName),
+    cities: unwrap(citiesResponse).sort(byName),
+  })).catch(error => {
     masterDataPromise = null
     throw error
   })
   return masterDataPromise
 }
 
-function readFilterCards() {
-  return [...document.querySelectorAll('.lv2-card')].map(card => {
-    const facts = [...card.querySelectorAll('.lv2-facts > div')]
-    const valueForIcon = icon => clean(facts.find(item => clean(item.querySelector('span')?.textContent) === icon)?.querySelector('b')?.textContent)
-    return {
-      card,
-      industry: valueForIcon('▣'),
-      service: valueForIcon('⌁'),
-      location: valueForIcon('⌖'),
-      type: card.classList.contains('premium') ? 'premium' : 'basic',
-    }
-  })
-}
-
-function activeFilterCount() {
-  return [filterState.industry, filterState.service, filterState.location, filterState.type !== 'all' ? filterState.type : ''].filter(Boolean).length
-}
-
-function locationMatches(cardLocation, selectedLocation) {
-  if (!selectedLocation) return true
-  const card = clean(cardLocation).toLowerCase()
-  const selected = clean(selectedLocation).toLowerCase()
-  return card === selected || card.includes(selected) || selected.includes(card)
-}
-
-function applyLeadFilters() {
-  const cards = readFilterCards()
-  let visible = 0
-  cards.forEach(item => {
-    const matches = (!filterState.industry || item.industry.toLowerCase() === filterState.industry.toLowerCase())
-      && (!filterState.service || item.service.toLowerCase() === filterState.service.toLowerCase())
-      && locationMatches(item.location, filterState.location)
-      && (filterState.type === 'all' || item.type === filterState.type)
-    item.card.style.display = matches ? '' : 'none'
-    if (matches) visible += 1
-  })
-  const totalNode = document.querySelector('.lv2-stat.orange b')
-  if (totalNode) {
-    if (!totalNode.dataset.filterTotal) totalNode.dataset.filterTotal = totalNode.textContent
-    totalNode.textContent = activeFilterCount() ? String(visible) : totalNode.dataset.filterTotal
-  }
-  const grid = document.querySelector('.lv2-grid')
-  let empty = document.querySelector('.lv2-filter-empty')
-  if (!empty && grid) {
-    empty = document.createElement('div')
-    empty.className = 'lv2-filter-empty'
-    empty.textContent = 'No leads match these filters on this page.'
-    grid.parentNode.insertBefore(empty, grid.nextSibling)
-  }
-  if (empty) empty.style.display = activeFilterCount() && visible === 0 ? 'block' : 'none'
+function syncFilterButton() {
   const button = document.querySelector('.lv2-filter-button')
-  if (button) {
-    const count = activeFilterCount()
-    button.classList.toggle('filter-active', count > 0)
-    const nextHtml = `<span>☷</span> Filters${count ? `<small class="lv2-filter-count">${count}</small>` : ''}`
-    if (button.innerHTML !== nextHtml) button.innerHTML = nextHtml
-  }
+  if (!button) return
+  const count = activeFilterCount()
+  button.classList.toggle('filter-active', count > 0)
+  const nextHtml = `<span>☷</span> Filters${count ? `<small class="lv2-filter-count">${count}</small>` : ''}`
+  if (button.innerHTML !== nextHtml) button.innerHTML = nextHtml
+}
+
+function renderFilterGrid(grid, data) {
+  const selectedIndustry = data.industries.some(item => String(item.id) === String(filterState.industryId))
+  if (!selectedIndustry) filterState.industryId = ''
+
+  const services = data.services.filter(item => !filterState.industryId || String(item.industry_id) === String(filterState.industryId))
+  if (!services.some(item => String(item.id) === String(filterState.serviceId))) filterState.serviceId = ''
+
+  const selectedState = data.states.some(item => String(item.id) === String(filterState.stateId))
+  if (!selectedState) filterState.stateId = ''
+
+  const cities = data.cities.filter(item => !filterState.stateId || String(item.state_id) === String(filterState.stateId))
+  if (!cities.some(item => String(item.id) === String(filterState.cityId))) filterState.cityId = ''
+
+  const option = (value, label, selected = false) => `<option value="${escapeHtml(value)}"${selected ? ' selected' : ''}>${escapeHtml(label)}</option>`
+  const industryOptions = option('', 'All industries', !filterState.industryId) + data.industries.map(item => option(item.id, item.name, String(item.id) === String(filterState.industryId))).join('')
+  const serviceOptions = option('', filterState.industryId ? 'All services in selected industry' : 'All services', !filterState.serviceId) + services.map(item => option(item.id, item.name, String(item.id) === String(filterState.serviceId))).join('')
+  const stateOptions = option('', 'All states', !filterState.stateId) + data.states.map(item => option(item.id, item.name, String(item.id) === String(filterState.stateId))).join('')
+  const cityOptions = option('', filterState.stateId ? 'All cities in selected state' : 'All cities', !filterState.cityId) + cities.map(item => option(item.id, item.name, String(item.id) === String(filterState.cityId))).join('')
+
+  grid.innerHTML = `
+    <div class="lv2-filter-field"><label>Industry</label><select data-filter="industryId">${industryOptions}</select></div>
+    <div class="lv2-filter-field"><label>Service</label><select data-filter="serviceId">${serviceOptions}</select></div>
+    <div class="lv2-filter-field"><label>State</label><select data-filter="stateId">${stateOptions}</select></div>
+    <div class="lv2-filter-field"><label>City</label><select data-filter="cityId">${cityOptions}</select></div>
+    <div class="lv2-filter-field full"><label>Lead type</label><select data-filter="leadType">
+      <option value="all"${filterState.leadType === 'all' ? ' selected' : ''}>All lead types</option>
+      <option value="basic"${filterState.leadType === 'basic' ? ' selected' : ''}>Basic</option>
+      <option value="premium"${filterState.leadType === 'premium' ? ' selected' : ''}>Premium</option>
+    </select></div>`
+
+  grid.querySelectorAll('[data-filter]').forEach(select => select.addEventListener('change', event => {
+    filterState[event.target.dataset.filter] = event.target.value
+    renderFilterGrid(grid, data)
+  }))
+}
+
+function navigateWithFilters() {
+  const params = new URLSearchParams(window.location.search)
+  ;['industryId', 'serviceId', 'stateId', 'cityId', 'leadType'].forEach(key => params.delete(key))
+  if (filterState.industryId) params.set('industryId', filterState.industryId)
+  if (filterState.serviceId) params.set('serviceId', filterState.serviceId)
+  if (filterState.stateId) params.set('stateId', filterState.stateId)
+  if (filterState.cityId) params.set('cityId', filterState.cityId)
+  if (filterState.leadType !== 'all') params.set('leadType', filterState.leadType)
+  params.delete('page')
+  const query = params.toString()
+  window.location.assign(`${window.location.pathname}${query ? `?${query}` : ''}`)
 }
 
 function closeFilterModal() { document.querySelector('.lv2-filter-overlay')?.remove() }
 
 async function buildFilterModal() {
+  closeFilterModal()
   const overlay = document.createElement('div')
   overlay.className = 'lv2-filter-overlay'
   overlay.innerHTML = `<div class="lv2-filter-modal" role="dialog" aria-modal="true" aria-label="Filter leads">
     <button class="lv2-filter-close" type="button" aria-label="Close filters">×</button>
     <span style="color:#f15a24;font-size:9px;font-weight:900;letter-spacing:.15em">LEAD FILTERS</span>
     <h2>Find the right leads</h2>
-    <p>Choose industry, service, location and lead type. Options come from the existing Propulse master data.</p>
+    <p>These filters are applied on the marketplace query, so existing leads are filtered too — not only newly added leads.</p>
     <div class="lv2-filter-loading">Loading industry, service and location options…</div>
     <div class="lv2-filter-grid" data-filter-grid style="display:none"></div>
     <div class="lv2-filter-actions"><button class="lv2-filter-reset" type="button">Reset filters</button><button class="lv2-filter-apply" type="button">Apply filters</button></div>
@@ -208,25 +208,25 @@ async function buildFilterModal() {
   overlay.addEventListener('click', event => { if (event.target === overlay) closeFilterModal() })
   overlay.querySelector('.lv2-filter-close').addEventListener('click', closeFilterModal)
   overlay.querySelector('.lv2-filter-reset').addEventListener('click', () => {
-    filterState.industry = ''; filterState.service = ''; filterState.location = ''; filterState.type = 'all'
-    closeFilterModal(); applyLeadFilters()
+    filterState.industryId = ''
+    filterState.serviceId = ''
+    filterState.stateId = ''
+    filterState.cityId = ''
+    filterState.leadType = 'all'
+    navigateWithFilters()
   })
-  overlay.querySelector('.lv2-filter-apply').addEventListener('click', () => { closeFilterModal(); applyLeadFilters() })
+  overlay.querySelector('.lv2-filter-apply').addEventListener('click', () => {
+    syncFilterButton()
+    navigateWithFilters()
+  })
 
   try {
     const data = await loadMasterData()
     if (!document.body.contains(overlay)) return
-    const escape = value => String(value).replaceAll('&', '&amp;').replaceAll('"', '&quot;')
-    const options = (items, selected, allLabel) => `<option value="">${allLabel}</option>${items.map(value => `<option value="${escape(value)}" ${value === selected ? 'selected' : ''}>${escape(value)}</option>`).join('')}`
     const grid = overlay.querySelector('[data-filter-grid]')
-    grid.innerHTML = `
-      <div class="lv2-filter-field"><label>Industry</label><select data-filter="industry">${options(data.industryNames, filterState.industry, 'All industries')}</select></div>
-      <div class="lv2-filter-field"><label>Service</label><select data-filter="service">${options(data.serviceNames, filterState.service, 'All services')}</select></div>
-      <div class="lv2-filter-field full"><label>Location</label><select data-filter="location">${options(data.locations, filterState.location, 'All locations')}</select></div>
-      <div class="lv2-filter-field full"><label>Lead type</label><select data-filter="type"><option value="all" ${filterState.type === 'all' ? 'selected' : ''}>All lead types</option><option value="basic" ${filterState.type === 'basic' ? 'selected' : ''}>Basic</option><option value="premium" ${filterState.type === 'premium' ? 'selected' : ''}>Premium</option></select></div>`
+    renderFilterGrid(grid, data)
     grid.style.display = 'grid'
     overlay.querySelector('.lv2-filter-loading').remove()
-    overlay.querySelectorAll('[data-filter]').forEach(select => select.addEventListener('change', event => { filterState[event.target.dataset.filter] = event.target.value }))
   } catch (error) {
     const loading = overlay.querySelector('.lv2-filter-loading')
     if (loading) {
@@ -244,18 +244,13 @@ function bindFilterButton(button) {
     event.stopImmediatePropagation()
     buildFilterModal()
   }, true)
+  syncFilterButton()
 }
 
 function scan() {
   document.querySelectorAll('.lv2-buy-modal').forEach(enhanceBuyModal)
   document.querySelectorAll('.lv2-upgrade').forEach(enhancePaymentModal)
   bindFilterButton(document.querySelector('.lv2-filter-button'))
-  const cards = [...document.querySelectorAll('.lv2-card')]
-  const signature = cards.map(card => `${card.querySelector('.lv2-id')?.textContent || ''}|${card.className}`).join('||')
-  if (signature !== lastCardSignature) {
-    lastCardSignature = signature
-    if (activeFilterCount()) applyLeadFilters()
-  }
 }
 
 const observer = new MutationObserver(scan)
