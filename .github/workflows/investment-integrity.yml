@@ -42,6 +42,8 @@ jobs:
         run: node scripts/check-admin-users-pagination.js
       - name: Verify city pagination
         run: node scripts/check-city-pagination.js
+      - name: Verify shared rate-limit bucket
+        run: node scripts/check-rate-limit-shared-bucket.js
       - name: Bootstrap database
         env:
           DB_HOST: 127.0.0.1
@@ -59,4 +61,4 @@ jobs:
           DB_PASSWORD: investment_ci
         run: node scripts/check-investment-integrity.js && node scripts/check-investment-revenue-allocation.js && node scripts/check-investment-no-fixed-return.js && node scripts/check-investment-reinvestment-integrity.js && node scripts/check-investment-reinvestment-choice.js
       - name: Verify backend syntax
-        run: node --check src/services/couponService.js && node --check src/services/paymentService.js && node --check src/controllers/paymentController.js && node --check src/services/adminService.js && node --check src/services/cityService.js && node --check src/controllers/cityController.js && node --check src/services/investmentService.js && node --check src/services/leadPurchaseService.js && node --check src/services/adminCommercialService.js && node --check scripts/check-admin-commercial-investor-atomicity.js && node --check scripts/check-coupon-checkout-integrity.js && node --check scripts/check-admin-users-pagination.js && node --check scripts/check-city-pagination.js
+        run: node --check src/services/couponService.js && node --check src/services/paymentService.js && node --check src/controllers/paymentController.js && node --check src/services/adminService.js && node --check src/services/cityService.js && node --check src/controllers/cityController.js && node --check src/middleware/rateLimitMiddleware.js && node --check src/services/investmentService.js && node --check src/services/leadPurchaseService.js && node --check src/services/adminCommercialService.js && node --check scripts/check-admin-commercial-investor-atomicity.js && node --check scripts/check-coupon-checkout-integrity.js && node --check scripts/check-admin-users-pagination.js && node --check scripts/check-city-pagination.js && node --check scripts/check-rate-limit-shared-bucket.js
