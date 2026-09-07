@@ -1,5 +1,6 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 const pool = require('../config/database');
 const { getMembershipAccess } = require('./membershipAccessService');
 
@@ -90,6 +91,72 @@ async function login({ email, password }) {
   return { user: await publicUser(user, await getBusinessProfile(user.id)), token: signToken(user) };
 }
 
+async function verifyGoogleIdToken(idToken) {
+  if (!process.env.GOOGLE_CLIENT_ID) throw Object.assign(new Error('Google sign-in is not configured'), { code: 'GOOGLE_NOT_CONFIGURED' });
+  if (!idToken || typeof idToken !== 'string') throw Object.assign(new Error('Google credential is required'), { code: 'INVALID_GOOGLE_TOKEN' });
+
+  const response = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(idToken)}`);
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok || payload.aud !== process.env.GOOGLE_CLIENT_ID || !['https://accounts.google.com', 'accounts.google.com'].includes(payload.iss) || payload.email_verified !== 'true' || !payload.email || !payload.sub) {
+    throw Object.assign(new Error('Invalid Google sign-in credential'), { code: 'INVALID_GOOGLE_TOKEN' });
+  }
+  return payload;
+}
+
+async function googleLogin({ idToken }) {
+  const googleUser = await verifyGoogleIdToken(idToken);
+  const normalizedEmail = googleUser.email.trim().toLowerCase();
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    let user = (await client.query(`SELECT id,name,email,password_hash,role FROM users WHERE LOWER(email)=$1 AND is_active=TRUE FOR UPDATE`, [normalizedEmail])).rows[0];
+
+    if (!user) {
+      const placeholderPassword = await bcrypt.hash(crypto.randomBytes(32).toString('hex'), 12);
+      user = (await client.query(`INSERT INTO users (name,email,password_hash,role) VALUES ($1,$2,$3,'business') RETURNING id,name,email,password_hash,role`, [String(googleUser.name || normalizedEmail.split('@')[0]).trim().slice(0, 120), normalizedEmail, placeholderPassword])).rows[0];
+      await client.query(`INSERT INTO business_profiles (user_id,phone,business_name,business_details) VALUES ($1,$2,$3,$4)`, [user.id, 'Not provided', String(googleUser.name || normalizedEmail.split('@')[0]).trim().slice(0, 160), 'Google account. Complete your business profile to receive better lead matches.']);
+    }
+
+    await client.query('COMMIT');
+    return { user: await publicUser(user, await getBusinessProfile(user.id)), token: signToken(user) };
+  } catch (error) {
+    await client.query('ROLLBACK');
+    if (error.code === '23505') throw Object.assign(new Error('An account with this email already exists. Sign in with your email and password.'), { code: 'EMAIL_EXISTS' });
+    throw error;
+  } finally { client.release(); }
+}
+
+async function createPasswordReset(email) {
+  const normalizedEmail = email.trim().toLowerCase();
+  const result = await pool.query(`SELECT id,name,email FROM users WHERE LOWER(email)=$1 AND is_active=TRUE`, [normalizedEmail]);
+  const user = result.rows[0];
+  if (!user) return null;
+
+  const rawToken = crypto.randomBytes(32).toString('hex');
+  const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex');
+  await pool.query(`DELETE FROM password_reset_tokens WHERE user_id=$1 OR expires_at < CURRENT_TIMESTAMP`, [user.id]);
+  await pool.query(`INSERT INTO password_reset_tokens (user_id,token_hash,expires_at) VALUES ($1,$2,CURRENT_TIMESTAMP + INTERVAL '30 minutes')`, [user.id, tokenHash]);
+  return { user, token: rawToken };
+}
+
+async function resetPassword({ token, password }) {
+  if (!token || typeof token !== 'string' || password.length < 8) throw Object.assign(new Error('A valid reset token and a password of at least 8 characters are required'), { code: 'INVALID_RESET_REQUEST' });
+  const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const result = await client.query(`SELECT pr.id,pr.user_id,u.id,u.name,u.email,u.role FROM password_reset_tokens pr INNER JOIN users u ON u.id=pr.user_id WHERE pr.token_hash=$1 AND pr.used_at IS NULL AND pr.expires_at > CURRENT_TIMESTAMP AND u.is_active=TRUE FOR UPDATE`, [tokenHash]);
+    const row = result.rows[0];
+    if (!row) throw Object.assign(new Error('This password reset link is invalid or has expired'), { code: 'INVALID_RESET_TOKEN' });
+    const passwordHash = await bcrypt.hash(password, 12);
+    await client.query(`UPDATE users SET password_hash=$1,updated_at=CURRENT_TIMESTAMP WHERE id=$2`, [passwordHash, row.user_id]);
+    await client.query(`UPDATE password_reset_tokens SET used_at=CURRENT_TIMESTAMP WHERE user_id=$1`, [row.user_id]);
+    await client.query('COMMIT');
+    return { user: await publicUser({ id: row.user_id, name: row.name, email: row.email, role: row.role }, await getBusinessProfile(row.user_id)) };
+  } catch (error) { await client.query('ROLLBACK'); throw error; }
+  finally { client.release(); }
+}
+
 function verifyToken(token) { return jwt.verify(token, EFFECTIVE_JWT_SECRET); }
 
 async function getAuthenticatedUser(id) {
@@ -103,4 +170,4 @@ async function getUserById(id) {
   return await publicUser(user, await getBusinessProfile(id));
 }
 
-module.exports = { signup, login, verifyToken, getUserById, getAuthenticatedUser };
+module.exports = { signup, login, googleLogin, createPasswordReset, resetPassword, verifyToken, getUserById, getAuthenticatedUser };
