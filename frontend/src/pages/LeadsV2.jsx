@@ -71,6 +71,8 @@ export default function LeadsV2() {
   const [paymentLead, setPaymentLead] = useState(null)
   const [paymentShares, setPaymentShares] = useState(0)
   const [directSubmitting, setDirectSubmitting] = useState(false)
+  const [paymentError, setPaymentError] = useState('')
+  const [paymentSuccess, setPaymentSuccess] = useState('')
 
   useEffect(() => { setPage(1) }, [search, tier, category])
   useEffect(() => {
@@ -102,7 +104,7 @@ export default function LeadsV2() {
   const openBuyModal = (lead) => {
     if (!logged) { window.location.href = '/login'; return }
     if (!lead.pricing?.shares?.length) { setError('Pricing is not available for this lead.'); return }
-    setError(''); setNotice(''); setUseWallet(true); setWalletBalance(0); setBuyModal(lead)
+    setError(''); setNotice(''); setPaymentError(''); setUseWallet(true); setWalletBalance(0); setBuyModal(lead)
     authRequest('/wallet').then(data => setWalletBalance(Number(data?.balance ?? data?.wallet?.balance ?? 0))).catch(() => {})
   }
   const claim = async (lead) => {
@@ -124,7 +126,7 @@ export default function LeadsV2() {
     try {
       const d = await purchaseLead(lead.id, shares, { useWallet })
       if (d.requires_external_payment) {
-        setBuyModal(null); setPayment(d); setPaymentLead(lead); setPaymentShares(shares); return
+        setBuyModal(null); setPaymentError(''); setPayment(d); setPaymentLead(lead); setPaymentShares(shares); return
       }
       const privateLead = await getLead(lead.id)
       setLeads(current => current.map(x => x.id === lead.id ? { ...x, ...privateLead, purchased: true, access: { ...(x.access || {}), claimed: true, canClaim: false } } : x))
@@ -136,19 +138,40 @@ export default function LeadsV2() {
     } finally { setBuying(null) }
   }
   const submitDirect = async () => {
+    setPaymentError('')
     const reference = document.getElementById('lead-payment-utr')?.value?.trim()
     const file = document.getElementById('lead-payment-proof')?.files?.[0]
-    if (!reference) return setError('Enter the payment reference / UTR first.')
-    if (!file) return setError('Upload the payment screenshot or PDF first.')
-    if (file.size > 5 * 1024 * 1024) return setError('Payment proof must be 5 MB or smaller.')
-    if (!payment?.payment?.id) return setError('Payment session is unavailable. Please try again.')
+    if (!reference) return setPaymentError('Enter the payment reference / UTR first.')
+    if (!file) return setPaymentError('Upload the payment screenshot or PDF first.')
+    if (file.size > 5 * 1024 * 1024) return setPaymentError('Payment proof must be 5 MB or smaller.')
+    if (!payment?.payment?.id) return setPaymentError('Payment session is unavailable. Please try again.')
     try {
-      setDirectSubmitting(true); setError('')
-      const proofUrl = await new Promise((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve(String(reader.result)); reader.onerror = () => reject(new Error('Unable to read payment proof')); reader.readAsDataURL(file) })
-      await authRequest(`/payments/${payment.payment.id}/reference`, { method: 'POST', body: JSON.stringify({ manualReference: reference, proofUrl, notes: `Lead #${paymentLead?.id} direct payment${Number(payment.walletAmount) > 0 ? ` after wallet payment of ${money(payment.walletAmount)}` : ''}` }) })
-      setNotice(`${Number(payment.walletAmount) > 0 ? `Wallet payment of ${money(payment.walletAmount)} applied. ` : ''}Remaining ${money(payment.externalAmount)} submitted for verification.`); setPayment(null); setPaymentLead(null)
-    } catch (e) { setError(e.message || 'Unable to submit payment.') }
-    finally { setDirectSubmitting(false) }
+      setDirectSubmitting(true)
+      const proofUrl = await new Promise((resolve, reject) => {
+        const reader = new FileReader()
+        reader.onload = () => resolve(String(reader.result))
+        reader.onerror = () => reject(new Error('Unable to read payment proof'))
+        reader.readAsDataURL(file)
+      })
+      await authRequest(`/payments/${payment.payment.id}/reference`, {
+        method: 'POST',
+        body: JSON.stringify({
+          manualReference: reference,
+          proofUrl,
+          notes: `Lead #${paymentLead?.id} direct payment${Number(payment.walletAmount) > 0 ? ` after wallet payment of ${money(payment.walletAmount)}` : ''}`
+        })
+      })
+      const submittedMessage = `${Number(payment.walletAmount) > 0 ? `Wallet payment of ${money(payment.walletAmount)} applied. ` : ''}Remaining ${money(payment.externalAmount)} submitted for verification.`
+      setPayment(null)
+      setPaymentLead(null)
+      setPaymentShares(0)
+      setPaymentError('')
+      setPaymentSuccess(submittedMessage)
+    } catch (e) {
+      setPaymentError(e.message || 'Unable to submit payment. Please try again.')
+    } finally {
+      setDirectSubmitting(false)
+    }
   }
 
   if (user?.role === 'admin') return <main className="lv2-page"><section className="lv2-empty"><span>ADMIN ACCOUNT</span><h1>Lead management is in the Admin Panel.</h1><Link to="/admin/leads">Open Admin Leads →</Link></section></main>
@@ -193,7 +216,8 @@ export default function LeadsV2() {
       <section className="lv2-bottom-cta"><div><span className="lv2-kicker">GROW WITH PROPULSE</span><h2>Find the right opportunity for your business.</h2><p>Browse, compare and choose leads with transparent pricing.</p></div>{logged ? <Link to="/dashboard">Go to dashboard →</Link> : <Link to="/signup">Create business account →</Link>}</section>
     </main>
     {buyModal && <div className="lv2-overlay" onClick={() => setBuyModal(null)}><div className="lv2-buy-modal" onClick={e => e.stopPropagation()}><button className="lv2-modal-close" onClick={() => setBuyModal(null)}>×</button><span className="lv2-modal-kicker">LEAD PRICING</span><h2>Choose your share pack</h2><p className="lv2-modal-subtitle">Select how many shares you want for Lead #{buyModal.id}.</p><div className="lv2-modal-lead"><div className="lv2-avatar">{String(buyModal.customer_name || buyModal.service_name || buyModal.industry_name || 'L').trim().charAt(0).toUpperCase()}</div><div><strong>{buyModal.customer_name || buyModal.service_name || buyModal.industry_name || 'Business opportunity'}</strong><small>{[buyModal.service_name, buyModal.city_name, buyModal.state_name].filter(hasValue).join(' · ')}</small></div></div><div className="lv2-wallet-choice"><label><input type="checkbox" checked={useWallet} onChange={e => setUseWallet(e.target.checked)} /> <span>Use wallet balance</span></label><strong>{walletBalance > 0 ? money(walletBalance) : '₹0'}</strong><small>{walletBalance > 0 ? 'Wallet is applied first by default. Uncheck to pay the full amount directly.' : 'No wallet balance available. You can pay the full amount directly.'}</small></div><div className={`lv2-modal-pricing ${isPro ? 'pro-only' : ''}`}><div className="lv2-modal-price-head"><span>SHARES</span><span>{isPro ? 'PRO PRICE' : 'NORMAL PRICE'}</span>{!isPro && <span>PRO PRICE</span>}</div>{(buyModal.pricing?.shares || []).map(p => { const n = Number(p.shares); const normal = Number(p.normal); const pro = Number(p.pro); const saving = Number.isFinite(normal) && Number.isFinite(pro) && normal > pro ? normal - pro : 0; const normalKey = `${buyModal.id}-${n}-normal-${useWallet ? 'wallet' : 'direct'}`; const proKey = `${buyModal.id}-${n}-pro-${useWallet ? 'wallet' : 'direct'}`; return <div className="lv2-modal-price-row" key={n}><div className="lv2-share-badge"><strong>{n}</strong><small>{n === 1 ? 'Single share' : `${n} shares`}</small></div>{!isPro && <button className="lv2-modal-price normal" disabled={buyModalClaimed || buying === normalKey} onClick={() => buy(buyModal, n, 'normal')}>{buying === normalKey ? 'Buying…' : money(normal)}</button>}{isPro && <div className="lv2-pro-member-price"><button className="lv2-modal-price pro selected-pro" disabled={buyModalClaimed || buying === proKey} onClick={() => buy(buyModal, n, 'pro')}>{buying === proKey ? 'Buying…' : money(pro)}</button>{saving > 0 && <small>Pro saved {money(saving)}</small>}</div>}{!isPro && <button className="lv2-modal-price pro" disabled={buyModalClaimed || buying === proKey} onClick={() => buy(buyModal, n, 'pro')}><span>{buying === proKey ? 'Buying…' : money(pro)}</span>{saving > 0 && <small>Save {money(saving)}</small>}</button>}</div> })}</div>{!isPro && <div className="lv2-pro-hint"><strong>Pro members save more</strong><span>Compare the Pro price above. Upgrade to Pro to unlock Pro pricing.</span><button onClick={() => { setBuyModal(null); setUpgrade(true) }}>View Pro →</button></div>}{buyModalClaimed && <div className="lv2-modal-owned">This lead is already purchased and available in your account.</div>}</div></div>}
-    {payment && paymentLead && <div className="lv2-overlay" onClick={() => setPayment(null)}><div className="lv2-upgrade lv2-payment-modal" onClick={e => e.stopPropagation()}><button onClick={() => setPayment(null)}>×</button><span>PAYMENT</span><h2>Complete Lead #{paymentLead.id}</h2><p>{Number(payment.walletAmount) > 0 ? `₹${Number(payment.walletAmount).toLocaleString('en-IN')} from your wallet was applied automatically.` : 'No wallet balance was used.'} {Number(payment.externalAmount) > 0 ? 'Pay the remaining amount directly.' : 'Your payment is complete.'}</p><div className="lv2-detail-grid"><div><small>Shares</small><b>{paymentShares}</b></div><div><small>Total</small><b>{money(payment.payment.amount)}</b></div><div><small>Wallet paid</small><b>{money(payment.walletAmount)}</b></div><div><small>Direct payment</small><b>{money(payment.externalAmount)}</b></div></div>{Number(payment.externalAmount) > 0 && <><label>Payment reference / UTR<input id="lead-payment-utr" placeholder="Enter UTR or transaction ID" /></label><label>Payment proof<input id="lead-payment-proof" type="file" accept="image/*,.pdf" /></label><div className="lv2-payment-submit"><button className="lv2-more" onClick={submitDirect} disabled={directSubmitting}>{directSubmitting ? 'Submitting…' : `Submit ${money(payment.externalAmount)} payment`}</button></div></>}</div></div>}
+    {payment && paymentLead && <div className="lv2-overlay" onClick={() => !directSubmitting && setPayment(null)}><div className="lv2-upgrade lv2-payment-modal" onClick={e => e.stopPropagation()}><button onClick={() => !directSubmitting && setPayment(null)} disabled={directSubmitting}>×</button><span>PAYMENT</span><h2>Complete Lead #{paymentLead.id}</h2><p>{Number(payment.walletAmount) > 0 ? `₹${Number(payment.walletAmount).toLocaleString('en-IN')} from your wallet was applied automatically.` : 'No wallet balance was used.'} {Number(payment.externalAmount) > 0 ? 'Pay the remaining amount directly.' : 'Your payment is complete.'}</p><div className="lv2-detail-grid"><div><small>Shares</small><b>{paymentShares}</b></div><div><small>Total</small><b>{money(payment.payment.amount)}</b></div><div><small>Wallet paid</small><b>{money(payment.walletAmount)}</b></div><div><small>Direct payment</small><b>{money(payment.externalAmount)}</b></div></div>{Number(payment.externalAmount) > 0 && <><label>Payment reference / UTR<input id="lead-payment-utr" placeholder="Enter UTR or transaction ID" autoComplete="off" /></label><label>Payment proof<input id="lead-payment-proof" type="file" accept="image/*,.pdf" /></label>{paymentError && <div className="lv2-payment-error" role="alert">{paymentError}</div>}<div className="lv2-payment-submit"><button type="button" className="lv2-more" onClick={submitDirect} disabled={directSubmitting}>{directSubmitting ? 'Submitting…' : `Submit ${money(payment.externalAmount)} payment`}</button></div></>}</div></div>}
+    {paymentSuccess && <div className="lv2-overlay" onClick={() => setPaymentSuccess('')}><div className="lv2-upgrade lv2-payment-success" role="dialog" aria-modal="true" onClick={e => e.stopPropagation()}><div className="lv2-success-icon">✓</div><span>PAYMENT SUBMITTED</span><h2>Submitted successfully</h2><p>{paymentSuccess}</p><button onClick={() => setPaymentSuccess('')}>Done</button></div></div>}
     {upgrade && <div className="lv2-overlay"><div className="lv2-upgrade"><button onClick={() => setUpgrade(false)}>×</button><span>PRO ACCESS</span><h2>Unlock Exclusive access.</h2><p>Pro members get first access during the configured Pro-first period.</p><div><Link to="/dashboard">View Pro options →</Link><button onClick={() => setUpgrade(false)}>Not now</button></div></div></div>}
   </div>
 }
