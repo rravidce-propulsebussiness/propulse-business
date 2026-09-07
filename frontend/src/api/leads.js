@@ -32,5 +32,15 @@ export function purchaseLead(id, shares) {
   return authRequest(`/leads/${id}/purchase`, {
     method: 'POST',
     body: JSON.stringify({ shares })
+  }).then(data => {
+    if (data?.requires_external_payment && !data.payment) {
+      const amount = data.amount ?? data.totalAmount ?? data.total_amount ?? data.externalAmount ?? data.external_amount ?? 0
+      return { ...data, payment: { amount } }
+    }
+    if (data?.requires_external_payment && data.payment && data.payment.amount === undefined) {
+      const amount = data.amount ?? data.totalAmount ?? data.total_amount ?? data.externalAmount ?? data.external_amount ?? 0
+      return { ...data, payment: { ...data.payment, amount } }
+    }
+    return data
   })
 }
