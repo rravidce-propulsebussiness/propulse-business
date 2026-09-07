@@ -6,8 +6,21 @@ async function createCity(req, res) {
     if (!stateId || !name || !slug) return res.status(400).json({ error: 'State ID, name and slug are required' });
     return res.status(201).json(await cityService.createCity({ stateId, name, slug }));
   } catch (error) {
-    console.error('Create city failed:', error.message);
     if (error.code === 'CITY_ALREADY_EXISTS') {
+      try {
+        const requestedName = String(req.body.name || '').trim().toLowerCase();
+        const requestedSlug = String(req.body.slug || '').trim().toLowerCase();
+        const requestedStateId = Number(req.body.stateId);
+        const existing = await cityService.getCities({ page: 1, pageSize: 100 });
+        const city = (existing.data || []).find(item =>
+          Number(item.state_id) === requestedStateId &&
+          (String(item.name || '').trim().toLowerCase() === requestedName ||
+            String(item.slug || '').trim().toLowerCase() === requestedSlug)
+        );
+        if (city) return res.status(200).json({ ...city, alreadyExists: true });
+      } catch (lookupError) {
+        console.error('Duplicate city lookup failed:', lookupError.message);
+      }
       return res.status(409).json({ error: 'City already exists in this state', code: error.code });
     }
     if (error.code === '23505' && ['uq_cities_active_state_name', 'uq_cities_active_state_slug', 'cities_state_id_name_key', 'cities_state_id_slug_key'].includes(error.constraint)) {
@@ -16,6 +29,7 @@ async function createCity(req, res) {
     if (error.code === '23503') {
       return res.status(400).json({ error: 'Selected state does not exist' });
     }
+    console.error('Create city failed:', error.message);
     return res.status(500).json({ error: 'Failed to create city' });
   }
 }
