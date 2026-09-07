@@ -19,5 +19,5 @@ async function updateCity(req, res) {
   try { const {stateId,name,slug}=req.body; if(!stateId||!name||!slug)return res.status(400).json({error:'State ID, name and slug are required'}); const city=await cityService.updateCity(req.params.id,{stateId,name,slug}); return city?res.json(city):res.status(404).json({error:'City not found'}); }
   catch(error){console.error('Update city failed:',error.message);return res.status(500).json({error:'Failed to update city'});}
 }
-async function deactivateCity(req,res){try{const city=await cityService.deactivateCity(req.params.id);return city?res.json({message:'City deactivated successfully',city}):res.status(404).json({error:'City not found'});}catch(error){console.error('Deactivate city failed:',error.message);return res.status(500).json({error:'Failed to update city'});}}
+async function deactivateCity(req,res){try{const city=await cityService.deactivateCity(req.params.id);return city?res.json({message:'City deactivated successfully',city}):res.status(404).json({error:'City not found'});}catch(error){console.error('Deactivate city failed:',error.message);return res.status(500).json({error:'Failed to fetch city'});}}
 module.exports={createCity,getCities,getCityById,updateCity,deactivateCity};
