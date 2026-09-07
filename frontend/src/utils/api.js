@@ -20,5 +20,13 @@ export async function apiRequest(path, options = {}, includeToken = true) {
     error.code = data.code
     throw error
   }
+
+  if (Array.isArray(data?.data)) {
+    const collection = data.data
+    collection.data = collection
+    if (data.pagination) collection.pagination = data.pagination
+    return collection
+  }
+
   return data
 }
