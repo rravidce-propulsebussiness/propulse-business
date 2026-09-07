@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { publicRequest, authRequest, saveSession } from '../utils/auth'
 import GoogleButton from '../components/GoogleButton'
 import './Auth.css'
+import './AuthExtras.css'
 
 const emptyForm = { name: '', email: '', phone: '', businessName: '', businessDetails: '', password: '', confirm: '' }
 const newService = () => ({ industryId: '', serviceId: '', subserviceId: '' })
