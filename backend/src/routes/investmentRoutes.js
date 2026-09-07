@@ -9,6 +9,7 @@ const adminInvestmentWriteLimit = rateLimit({ windowMs: 60 * 1000, max: 30 });
 router.get('/access', auth, c.access);
 router.get('/rules', auth, c.rules);
 router.get('/location-rules', auth, c.locationRules);
+router.post('/checkout', auth, investmentWriteLimit, c.checkout);
 router.get('/', auth, c.mine);
 router.post('/', auth, investmentWriteLimit, c.create);
 router.post('/:id/reinvest', auth, investmentWriteLimit, c.reinvest);
