@@ -12,6 +12,7 @@ function Dashboard() {
   const user = getUser()
   const token = getToken()
   const [leads, setLeads] = useState([])
+  const [availableCount, setAvailableCount] = useState(0)
   const [purchased, setPurchased] = useState([])
   const [wallet, setWallet] = useState(null)
   const [businessName, setBusinessName] = useState(user?.business_name || user?.businessName || '')
@@ -44,13 +45,18 @@ function Dashboard() {
       }
 
       if (availableResult.status === 'fulfilled') {
-        setLeads(Array.isArray(availableResult.value) ? availableResult.value : [])
+        const data = availableResult.value
+        const items = Array.isArray(data) ? data : (Array.isArray(data?.items) ? data.items : [])
+        const total = Number(data?.pagination?.total)
+        setLeads(items)
+        setAvailableCount(Number.isFinite(total) ? total : items.length)
       } else {
         failed.push(availableResult.reason)
       }
 
       if (purchasedResult.status === 'fulfilled') {
-        setPurchased(Array.isArray(purchasedResult.value) ? purchasedResult.value : [])
+        const data = purchasedResult.value
+        setPurchased(Array.isArray(data) ? data : (Array.isArray(data?.items) ? data.items : []))
       } else {
         failed.push(purchasedResult.reason)
       }
@@ -100,7 +106,7 @@ function Dashboard() {
         <section className="owner-actions-grid">
           <Link to="/leads" className="dashboard-action dashboard-action-primary">
             <span className="action-icon">↗</span>
-            <div><strong>Buy Leads</strong><small>{loading ? '—' : `${leads.length} available now`}</small></div>
+            <div><strong>Buy Leads</strong><small>{loading ? '—' : `${availableCount} available now`}</small></div>
             <b>→</b>
           </Link>
           <Link to="/purchased-leads" className="dashboard-action">
