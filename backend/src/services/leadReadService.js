@@ -40,27 +40,47 @@ const hasCustomKeyMatching=(custom,patterns)=>{
 const normalizeLeadRow=row=>{
   if(!row)return row;
   const custom={...(row?.custom_fields&&typeof row.custom_fields==='object'&&!Array.isArray(row.custom_fields)?row.custom_fields:{})};
-  const requirement=String(row.requirement??'').trim()||customValue(custom,['Requirement','Requirements','Requirement Details','Share More Details and Requirement','Location And Requirements','Location And Requirements Details'])||customValueContains(custom,['requirement','requirements']);
+
+  const requirement=String(row.requirement??'').trim()||
+    customValue(custom,['Requirement','Requirements','Requirement Details','Share More Details and Requirement','Location And Requirements','Location And Requirements Details'])||
+    customValueContains(custom,['requirement','requirements']);
+
   const budgetCustom=customValue(custom,['Budget','Budget Range','Project Budget','Project Budget Range','Budget From To','Expected Budget','Approx Budget','Approximate Budget','Investment Budget','Estimated Budget'])||customValueContains(custom,['budget']);
   if(!hasCustomKeyMatching(custom,['budget'])){
     if(budgetCustom)custom.Budget=budgetCustom;
     else if(String(row.budget??'').trim())custom.Budget=String(row.budget).trim();
   }
-  const workNumbers=customValue(custom,['Work Numbers','Work Number','Number of Works','Number of Work','No. of Works','No of Works','Works','Quantity','Project Quantity','Number of Projects','Project Count'])||customValueContains(custom,['worknumbers','worknumber','numberofworks','numberofwork','noofworks','projectquantity','quantity','projectcount']);
+
+  const workNumbers=customValue(custom,['Work Numbers','Work Number','Number of Works','Number of Work','No. of Works','No of Works','Works','Quantity','Project Quantity','Number of Projects','Project Count'])||
+    customValueContains(custom,['worknumbers','worknumber','numberofworks','numberofwork','noofworks','projectquantity','quantity','projectcount']);
   if(!hasCustomKeyMatching(custom,['worknumber','worknumbers','numberofworks','numberofwork','noofworks','projectquantity','quantity','projectcount'])){
     if(workNumbers)custom['Work Numbers']=workNumbers;
   }
-  const workPhone=customValue(custom,['Work Phone Number','Work Phone','Office Phone Number','Office Phone','Business Phone','Business Phone Number','Alternate Work Phone','Alternate Phone'])||customValueContains(custom,['workphone','officephone','businessphone']);
-  if(!hasCustomKeyMatching(custom,['workphone','officephone','businessphone'])){
+
+  const workPhone=customValue(custom,['Work Phone Number','Work Phone','Office Phone Number','Office Phone','Business Phone','Business Phone Number','Alternate Work Phone','Alternate Phone','Work Phone No','Work Phone No.','Work Contact Number','Office Contact Number','Business Contact Number','Official Phone Number'])||
+    customValueContains(custom,['workphone','officephone','businessphone','workcontact','officecontact','businesscontact']);
+  if(!hasCustomKeyMatching(custom,['workphone','officephone','businessphone','workcontact','officecontact','businesscontact'])){
     if(workPhone)custom['Work Phone Number']=workPhone;
   }
+
   const timeline=customValue(custom,['Timeline','Timeframe','Project Timeline','Expected Timeline','Planning Date','How Soon Required','How Soon Required?','When'])||customValueContains(custom,['timeline','timeframe','planningdate','howsoonrequired']);
   if(!hasCustomKeyMatching(custom,['timeline','timeframe','planningdate','howsoonrequired'])){
     if(timeline)custom.Timeline=timeline;
   }
+
   const property=customValue(custom,['Property Type','Property','Interior Type','Type of Property'])||customValueContains(custom,['propertytype','property','interiortype']);
-  if(!hasCustomKeyMatching(custom,['propertytype','interiortype'])&&property)custom['Property Type']=property;
-  return{...row,custom_fields:custom,buyer_capacity:normalizeBuyerCapacity({...row,custom_fields:custom}),purchased_buyer_count:Math.max(0,Number(row.purchased_buyer_count)||0),requirement,pricing:normalizeLeadPricing(row.pricing)};
+  if(!hasCustomKeyMatching(custom,['propertytype','interiortype'])&&property){
+    custom['Property Type']=property;
+  }
+
+  return{
+    ...row,
+    custom_fields:custom,
+    buyer_capacity:normalizeBuyerCapacity({...row,custom_fields:custom}),
+    purchased_buyer_count:Math.max(0,Number(row.purchased_buyer_count)||0),
+    requirement,
+    pricing:normalizeLeadPricing(row.pricing)
+  };
 };
 const dynamicLabel=k=>String(k??'').trim().replace(/[_-]+/g,' ').replace(/\s+/g,' ').replace(/\b\w/g,m=>m.toUpperCase());
 const buildDynamicDetails=row=>{
@@ -98,14 +118,32 @@ const maskPublicValue=(key,value)=>{
   if(contactKey(key))return maskContactText(value);
   return maskContactText(value);
 };
+const isMarketplaceCanonicalField=key=>{
+  const n=normalizeKey(key);
+  return [
+    'requirement','requirements','requirementdetails','sharemoredetailsandrequirement',
+    'location','locationandrequirements','locationandrequirementsdetails',
+    'budget','budgetrange','projectbudget','projectbudgetrange','budgetfromto','expectedbudget','approxbudget','approximatebudget','investmentbudget','estimatedbudget',
+    'property','propertytype','interiortype','typeofproperty',
+    'buyercapacity'
+  ].includes(n);
+};
 const maskLead=row=>{
   const normalized=normalizeLeadRow(row);
   const custom=normalized?.custom_fields&&typeof normalized.custom_fields==='object'&&!Array.isArray(normalized.custom_fields)?normalized.custom_fields:{};
   const publicCustom={};
   Object.entries(custom).forEach(([key,value])=>{
-    if(String(value??'').trim())publicCustom[key]=maskPublicValue(key,value);
+    if(!isMarketplaceCanonicalField(key)&&String(value??'').trim())publicCustom[key]=maskPublicValue(key,value);
   });
-  return{...normalized,customer_name:normalized.customer_name||null,customer_phone:normalized.customer_phone?maskContactText(normalized.customer_phone):null,customer_email:normalized.customer_email?maskContactText(normalized.customer_email):null,notes:normalized.notes?maskContactText(normalized.notes):null,requirement:normalized.requirement?maskContactText(normalized.requirement):normalized.requirement,custom_fields:publicCustom};
+  return{
+    ...normalized,
+    customer_name:normalized.customer_name||null,
+    customer_phone:normalized.customer_phone?maskContactText(normalized.customer_phone):null,
+    customer_email:normalized.customer_email?maskContactText(normalized.customer_email):null,
+    notes:normalized.notes?maskContactText(normalized.notes):null,
+    requirement:normalized.requirement?maskContactText(normalized.requirement):normalized.requirement,
+    custom_fields:publicCustom
+  };
 };
 
 const normalizeLeadType=v=>['basic','premium'].includes(String(v||'').toLowerCase())?String(v).toLowerCase():null;
