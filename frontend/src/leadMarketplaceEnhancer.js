@@ -7,9 +7,15 @@ function formatMoney(value) {
   return Number.isFinite(amount) ? `₹${amount.toLocaleString('en-IN')}` : '₹0'
 }
 
+function isProMember() {
+  try { return localStorage.getItem('propulse_is_pro_member') === 'true' } catch { return false }
+}
+
 function enhanceProPricing(modal) {
-  const pricing = modal.querySelector('.lv2-modal-pricing.pro-only')
-  if (!pricing || pricing.dataset.proSavingsReady === 'true') return
+  const pricing = modal.querySelector('.lv2-modal-pricing')
+  if (!pricing) return
+  if (isProMember()) pricing.classList.add('pro-only')
+  if (!pricing.classList.contains('pro-only') || pricing.dataset.proSavingsReady === 'true') return
   pricing.dataset.proSavingsReady = 'true'
   pricing.querySelectorAll('.lv2-modal-price-row').forEach(row => {
     const normal = row.querySelector('.lv2-modal-price.normal')
