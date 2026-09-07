@@ -73,8 +73,7 @@ export default function LeadsV2() {
   useEffect(() => {
     let live = true
     const timer = setTimeout(async () => {
-      setLoading(true)
-      setError('')
+      setLoading(true); setError('')
       try {
         const terms = [category?.replaceAll('-', ' '), search.trim()].filter(Boolean).join(' ')
         const d = await listLeads({ status: 'available', page, limit: 20, ...(tier !== 'all' ? { leadType: tier } : {}), ...(terms ? { search: terms } : {}) }, token)
@@ -98,15 +97,9 @@ export default function LeadsV2() {
 
   const openBuyModal = (lead) => {
     if (!logged) { window.location.href = '/login'; return }
-    if (!lead.pricing?.shares?.length) {
-      setError('Pricing is not available for this lead.')
-      return
-    }
-    setError('')
-    setNotice('')
-    setBuyModal(lead)
+    if (!lead.pricing?.shares?.length) { setError('Pricing is not available for this lead.'); return }
+    setError(''); setNotice(''); setBuyModal(lead)
   }
-
   const claim = async (lead) => {
     if (!logged) { window.location.href = '/login'; return }
     setClaiming(lead.id); setNotice(''); setError('')
@@ -118,7 +111,6 @@ export default function LeadsV2() {
     } catch (e) { setError(e.message) }
     finally { setClaiming(null) }
   }
-
   const buy = async (lead, shares, plan = 'normal') => {
     if (!logged) { window.location.href = '/login'; return }
     if (plan === 'pro' && !isPro) { setBuyModal(null); setUpgrade(true); return }
@@ -127,8 +119,7 @@ export default function LeadsV2() {
     try {
       const d = await purchaseLead(lead.id, shares)
       if (d.requires_external_payment) {
-        setBuyModal(null)
-        setPayment(d); setPaymentLead(lead); setPaymentShares(shares); return
+        setBuyModal(null); setPayment(d); setPaymentLead(lead); setPaymentShares(shares); return
       }
       const privateLead = await getLead(lead.id)
       setLeads(current => current.map(x => x.id === lead.id ? { ...x, ...privateLead, purchased: true, access: { ...(x.access || {}), claimed: true, canClaim: false } } : x))
@@ -136,11 +127,9 @@ export default function LeadsV2() {
       setNotice(`Lead #${lead.id} purchased successfully from ${plan === 'pro' ? 'Pro' : 'Normal'} pricing.`)
       setExpanded(lead.id)
     } catch (e) {
-      if (e.code === 'PRO_REQUIRED') { setBuyModal(null); setUpgrade(true) }
-      else setError(e.message)
+      if (e.code === 'PRO_REQUIRED') { setBuyModal(null); setUpgrade(true) } else setError(e.message)
     } finally { setBuying(null) }
   }
-
   const submitDirect = async () => {
     const reference = document.getElementById('lead-payment-utr')?.value?.trim()
     const file = document.getElementById('lead-payment-proof')?.files?.[0]
@@ -162,25 +151,9 @@ export default function LeadsV2() {
   return <div className="lv2-shell">
     <UserHeader />
     <main className="lv2-page">
-      <section className="lv2-market-head">
-        <div className="lv2-title-block"><span></span><div><h1>{title}</h1><p>High quality, verified leads to grow your business</p></div></div>
-        <div className="lv2-controls">
-          <div className="lv2-search"><span>⌕</span><input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by industry, service, location..." aria-label="Search leads"/><b>⌕</b></div>
-          <button className="lv2-filter-button" onClick={() => setTier(tier === 'all' ? 'premium' : tier === 'premium' ? 'basic' : 'all')}><span>☷</span> Filters</button>
-          <div className="lv2-sort"><small>Sort by</small><strong>Newest</strong><span>⌄</span></div>
-        </div>
-      </section>
-
-      <section className="lv2-stats">
-        <div className="lv2-stat orange"><span>▣</span><div><b>{pagination.total}</b><small>Total Leads</small></div></div>
-        <div className="lv2-stat blue"><span>♟</span><div><b>{topIndustry || 'Verified opportunities'}</b><small>Top Industry</small></div></div>
-        <div className="lv2-stat green"><span>●</span><div><b>{topLocation || 'India'}</b><small>Top Location</small></div></div>
-        <div className="lv2-stat purple"><span>★</span><div><b>4.8</b><small>Avg. Quality Score</small></div></div>
-        <div className="lv2-verified">✓ &nbsp; Verified Opportunities Only</div>
-      </section>
-
-      {error && <div className="lv2-error">{error}</div>}
-      {notice && <div className="lv2-error">{notice}</div>}
+      <section className="lv2-market-head"><div className="lv2-title-block"><span></span><div><h1>{title}</h1><p>High quality, verified leads to grow your business</p></div></div><div className="lv2-controls"><div className="lv2-search"><span>⌕</span><input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by industry, service, location..." aria-label="Search leads"/><b>⌕</b></div><button className="lv2-filter-button" onClick={() => setTier(tier === 'all' ? 'premium' : tier === 'premium' ? 'basic' : 'all')}><span>☷</span> Filters</button><div className="lv2-sort"><small>Sort by</small><strong>Newest</strong><span>⌄</span></div></div></section>
+      <section className="lv2-stats"><div className="lv2-stat orange"><span>▣</span><div><b>{pagination.total}</b><small>Total Leads</small></div></div><div className="lv2-stat blue"><span>♟</span><div><b>{topIndustry || 'Verified opportunities'}</b><small>Top Industry</small></div></div><div className="lv2-stat green"><span>●</span><div><b>{topLocation || 'India'}</b><small>Top Location</small></div></div><div className="lv2-stat purple"><span>★</span><div><b>4.8</b><small>Avg. Quality Score</small></div></div><div className="lv2-verified">✓ &nbsp; Verified Opportunities Only</div></section>
+      {error && <div className="lv2-error">{error}</div>}{notice && <div className="lv2-error">{notice}</div>}
       {loading ? <div className="lv2-empty"><span>PROPULSE MARKETPLACE</span><strong>Loading opportunities...</strong></div> : !leads.length ? <div className="lv2-empty"><span>PROPULSE MARKETPLACE</span><strong>No matching leads</strong><p>Try another search or filter.</p></div> : <div className="lv2-grid">
         {leads.map(lead => {
           const shares = lead.pricing?.shares || []
@@ -196,26 +169,10 @@ export default function LeadsV2() {
           return <article className={`lv2-card ${lead.lead_type || 'basic'} ${exclusive ? 'has-exclusive' : ''}`} key={lead.id}>
             <div className="lv2-card-top"><span className="lv2-new">New</span><span className="lv2-id">#L-{String(lead.id).padStart(6, '0')}</span><small>{timeAgo(lead.created_at)}</small></div>
             <div className="lv2-person"><div className="lv2-avatar">{initials}</div><div className="lv2-person-copy"><div><h2>{hasValue(lead.customer_name) ? lead.customer_name : (lead.service_name || lead.industry_name || 'Business opportunity')}</h2><span className="lv2-verified-mini">✓ Verified</span></div><p>{lead.requirement || 'Verified business requirement'}</p></div></div>
-            <div className="lv2-facts">
-              {hasValue(lead.industry_name) && <div><span>▣</span><b>{lead.industry_name}</b></div>}
-              {hasValue(lead.service_name) && <div><span>⌁</span><b>{lead.service_name}{hasValue(lead.subservice_name) ? `, ${lead.subservice_name}` : ''}</b></div>}
-              {hasValue(location) && <div><span>⌖</span><b>{location}</b></div>}
-              {hasValue(lead.budget) && money(lead.budget) && <div><span>₹</span><b>{money(lead.budget)}</b></div>}
-              {hasValue(property) && <div><span>⌂</span><b>{property}</b></div>}
-              {hasValue(timeline) && <div><span>▦</span><b>{timeline}</b></div>}
-            </div>
-            <div className="lv2-contact"><span>Contact Details (Masked)</span><div>
-              {hasValue(lead.customer_phone) && <b>⌕ &nbsp; {maskContact(lead.customer_phone)}</b>}
-              {hasValue(lead.customer_email) && <b>✉ &nbsp; {maskContact(lead.customer_email)}</b>}
-              {!hasValue(lead.customer_phone) && !hasValue(lead.customer_email) && <b>Contact available after purchase</b>}
-            </div></div>
+            <div className="lv2-facts">{hasValue(lead.industry_name) && <div><span>▣</span><b>{lead.industry_name}</b></div>}{hasValue(lead.service_name) && <div><span>⌁</span><b>{lead.service_name}{hasValue(lead.subservice_name) ? `, ${lead.subservice_name}` : ''}</b></div>}{hasValue(location) && <div><span>⌖</span><b>{location}</b></div>}{hasValue(lead.budget) && money(lead.budget) && <div><span>₹</span><b>{money(lead.budget)}</b></div>}{hasValue(property) && <div><span>⌂</span><b>{property}</b></div>}{hasValue(timeline) && <div><span>▦</span><b>{timeline}</b></div>}</div>
+            <div className="lv2-contact"><span>Contact Details (Masked)</span><div>{hasValue(lead.customer_phone) && <b>⌕ &nbsp; {maskContact(lead.customer_phone)}</b>}{hasValue(lead.customer_email) && <b>✉ &nbsp; {maskContact(lead.customer_email)}</b>}{!hasValue(lead.customer_phone) && !hasValue(lead.customer_email) && <b>Contact available after purchase</b>}</div></div>
             <div className="lv2-card-actions"><button className="lv2-details-link" onClick={() => setExpanded(open ? null : lead.id)}>{open ? 'Hide Full Details' : 'View Full Details'} <b>→</b></button><button className="lv2-buy" onClick={() => openBuyModal(lead)} disabled={!shares.length}>{claimed ? 'Purchased' : '🛒  Buy Lead'}</button></div>
-
-            {open && <div className="lv2-details"><div className="lv2-details-head"><h3>Lead details</h3><span>{claimed ? 'Access granted' : 'Verified opportunity'}</span></div><div className="lv2-detail-grid">
-              {[['Industry', lead.industry_name], ['Service', lead.service_name], ['Subservice', lead.subservice_name], ['Location', location], ['Property type', property], ['Budget', money(lead.budget)], ['Source', lead.source], ['Customer', lead.customer_name], ['Phone', lead.customer_phone ? maskContact(lead.customer_phone) : ''], ['Email', lead.customer_email ? maskContact(lead.customer_email) : '']].filter(([, v]) => hasValue(v)).map(([k, v]) => <div key={k}><small>{k}</small><b>{v}</b></div>)}
-              {dynamic.filter(([k]) => !isContactKey(k)).map(([k, v]) => <div key={k}><small>{label(k)}</small><b>{displayValue(k, typeof v === 'object' ? JSON.stringify(v) : v)}</b></div>)}
-            </div>{hasValue(lead.notes) && <p className="lv2-notes"><b>Notes</b>{maskContact(lead.notes)}</p>}</div>}
-
+            {open && <div className="lv2-details"><div className="lv2-details-head"><h3>Lead details</h3><span>{claimed ? 'Access granted' : 'Verified opportunity'}</span></div><div className="lv2-detail-grid">{[['Industry', lead.industry_name], ['Service', lead.service_name], ['Subservice', lead.subservice_name], ['Location', location], ['Property type', property], ['Budget', money(lead.budget)], ['Source', lead.source], ['Customer', lead.customer_name], ['Phone', lead.customer_phone ? maskContact(lead.customer_phone) : ''], ['Email', lead.customer_email ? maskContact(lead.customer_email) : '']].filter(([, v]) => hasValue(v)).map(([k, v]) => <div key={k}><small>{k}</small><b>{v}</b></div>)}{dynamic.filter(([k]) => !isContactKey(k)).map(([k, v]) => <div key={k}><small>{label(k)}</small><b>{displayValue(k, typeof v === 'object' ? JSON.stringify(v) : v)}</b></div>)}</div>{hasValue(lead.notes) && <p className="lv2-notes"><b>Notes</b>{maskContact(lead.notes)}</p>}</div>}
             {logged && !claimed && leadAccess.canClaim && <div className="lv2-exclusive"><div><b>Membership access</b><span>Included in your current plan{leadAccess.remaining !== undefined ? ` · ${leadAccess.remaining} remaining` : ''}</span></div><button disabled={claiming === lead.id} onClick={() => claim(lead)}>{claiming === lead.id ? 'Claiming…' : 'Claim free →'}</button></div>}
             {logged && !claimed && leadAccess.reason && !leadAccess.canClaim && <div className="lv2-card-cta"><div><b>Membership access</b><span>{leadAccess.reason}</span></div></div>}
             {claimed && <div className="lv2-card-cta"><div><b>Lead access granted</b><span>You can use this lead from your account.</span></div><Link to="/dashboard">Open dashboard →</Link></div>}
@@ -224,38 +181,11 @@ export default function LeadsV2() {
           </article>
         })}
       </div>}
-
       {!loading && (pagination.hasPrevious || pagination.hasNext) && <div className="lv2-pagination"><button disabled={!pagination.hasPrevious} onClick={() => setPage(p => Math.max(1, p - 1))}>← Previous</button><span>Page {pagination.page} · {pagination.total} leads</span><button disabled={!pagination.hasNext} onClick={() => setPage(p => p + 1)}>Next →</button></div>}
       <section className="lv2-bottom-cta"><div><span className="lv2-kicker">GROW WITH PROPULSE</span><h2>Find the right opportunity for your business.</h2><p>Browse, compare and choose leads with transparent pricing.</p></div>{logged ? <Link to="/dashboard">Go to dashboard →</Link> : <Link to="/signup">Create business account →</Link>}</section>
     </main>
 
-    {buyModal && <div className="lv2-overlay" onClick={() => setBuyModal(null)}><div className="lv2-buy-modal" onClick={e => e.stopPropagation()}>
-      <button className="lv2-modal-close" onClick={() => setBuyModal(null)}>×</button>
-      <span className="lv2-modal-kicker">LEAD PRICING</span>
-      <h2>Choose your share pack</h2>
-      <p className="lv2-modal-subtitle">Select how many shares you want for Lead #{buyModal.id}.</p>
-      <div className="lv2-modal-lead"><div className="lv2-avatar">{String(buyModal.customer_name || buyModal.service_name || buyModal.industry_name || 'L').trim().charAt(0).toUpperCase()}</div><div><strong>{buyModal.customer_name || buyModal.service_name || buyModal.industry_name || 'Business opportunity'}</strong><small>{[buyModal.service_name, buyModal.city_name, buyModal.state_name].filter(hasValue).join(' · ')}</small></div></div>
-      <div className={`lv2-modal-pricing ${isPro ? 'pro-only' : ''}`}>
-        <div className="lv2-modal-price-head"><span>SHARES</span><span>{isPro ? 'PRO PRICE' : 'NORMAL PRICE'}</span>{!isPro && <span>PRO PRICE</span>}</div>
-        {(buyModal.pricing?.shares || []).map(p => {
-          const n = Number(p.shares)
-          const normal = Number(p.normal)
-          const pro = Number(p.pro)
-          const saving = Number.isFinite(normal) && Number.isFinite(pro) && normal > pro ? normal - pro : 0
-          const normalKey = `${buyModal.id}-${n}-normal`
-          const proKey = `${buyModal.id}-${n}-pro`
-          return <div className="lv2-modal-price-row" key={n}>
-            <div className="lv2-share-badge"><strong>{n}</strong><small>{n === 1 ? 'Single share' : `${n} shares`}</small></div>
-            <button className="lv2-modal-price normal" disabled={claimed || buying === normalKey} onClick={() => buy(buyModal, n, 'normal')}>{buying === normalKey ? 'Buying…' : money(normal)}</button>
-            {!isPro && <button className="lv2-modal-price pro" disabled={claimed || buying === proKey} onClick={() => buy(buyModal, n, 'pro')}><span>{buying === proKey ? 'Buying…' : money(pro)}</span>{saving > 0 && <small>Save {money(saving)}</small>}</button>}
-            {isPro && <button className="lv2-modal-price pro selected-pro" disabled={claimed || buying === proKey} onClick={() => buy(buyModal, n, 'pro')}><span>{buying === proKey ? 'Buying…' : money(pro)}</span></button>}
-          </div>
-        })}
-      </div>
-      {!isPro && <div className="lv2-pro-hint"><strong>Pro members save more</strong><span>Compare the Pro price above. Upgrade to Pro to unlock Pro pricing.</span><button onClick={() => { setBuyModal(null); setUpgrade(true) }}>View Pro →</button></div>}
-      {claimed && <div className="lv2-modal-owned">This lead is already purchased and available in your account.</div>}
-    </div></div>}
-
+    {buyModal && <div className="lv2-overlay" onClick={() => setBuyModal(null)}><div className="lv2-buy-modal" onClick={e => e.stopPropagation()}><button className="lv2-modal-close" onClick={() => setBuyModal(null)}>×</button><span className="lv2-modal-kicker">LEAD PRICING</span><h2>Choose your share pack</h2><p className="lv2-modal-subtitle">Select how many shares you want for Lead #{buyModal.id}.</p><div className="lv2-modal-lead"><div className="lv2-avatar">{String(buyModal.customer_name || buyModal.service_name || buyModal.industry_name || 'L').trim().charAt(0).toUpperCase()}</div><div><strong>{buyModal.customer_name || buyModal.service_name || buyModal.industry_name || 'Business opportunity'}</strong><small>{[buyModal.service_name, buyModal.city_name, buyModal.state_name].filter(hasValue).join(' · ')}</small></div></div><div className={`lv2-modal-pricing ${isPro ? 'pro-only' : ''}`}><div className="lv2-modal-price-head"><span>SHARES</span><span>{isPro ? 'PRO PRICE' : 'NORMAL PRICE'}</span>{!isPro && <span>PRO PRICE</span>}</div>{(buyModal.pricing?.shares || []).map(p => { const n = Number(p.shares); const normal = Number(p.normal); const pro = Number(p.pro); const saving = Number.isFinite(normal) && Number.isFinite(pro) && normal > pro ? normal - pro : 0; const normalKey = `${buyModal.id}-${n}-normal`; const proKey = `${buyModal.id}-${n}-pro`; return <div className="lv2-modal-price-row" key={n}><div className="lv2-share-badge"><strong>{n}</strong><small>{n === 1 ? 'Single share' : `${n} shares`}</small></div>{!isPro && <button className="lv2-modal-price normal" disabled={Boolean(buyModal.access?.claimed || buyModal.access?.purchased) || buying === normalKey} onClick={() => buy(buyModal, n, 'normal')}>{buying === normalKey ? 'Buying…' : money(normal)}</button>}<button className="lv2-modal-price pro selected-pro" disabled={Boolean(buyModal.access?.claimed || buyModal.access?.purchased) || buying === proKey} onClick={() => buy(buyModal, n, 'pro')}><span>{buying === proKey ? 'Buying…' : money(pro)}</span>{!isPro && saving > 0 && <small>Save {money(saving)}</small>}</button></div> })}</div>{!isPro && <div className="lv2-pro-hint"><strong>Pro members save more</strong><span>Compare the Pro price above. Upgrade to Pro to unlock Pro pricing.</span><button onClick={() => { setBuyModal(null); setUpgrade(true) }}>View Pro →</button></div>}{Boolean(buyModal.access?.claimed || buyModal.access?.purchased) && <div className="lv2-modal-owned">This lead is already purchased and available in your account.</div>}</div></div>}
     {payment && paymentLead && <div className="lv2-overlay" onClick={() => setPayment(null)}><div className="lv2-upgrade" onClick={e => e.stopPropagation()}><button onClick={() => setPayment(null)}>×</button><span>PAYMENT</span><h2>Complete Lead #{paymentLead.id}</h2><p>{Number(payment.walletAmount) > 0 ? `₹${Number(payment.walletAmount).toLocaleString('en-IN')} from your wallet was applied automatically.` : 'No wallet balance was available.'} Pay the remaining amount directly.</p><div className="lv2-detail-grid"><div><small>Shares</small><b>{paymentShares}</b></div><div><small>Total</small><b>{money(payment.payment.amount)}</b></div><div><small>Wallet paid</small><b>{money(payment.walletAmount)}</b></div><div><small>Direct payment</small><b>{money(payment.externalAmount)}</b></div></div><label>Payment reference / UTR<input id="lead-payment-utr" placeholder="Enter UTR or transaction ID" /></label><label>Payment proof<input id="lead-payment-proof" type="file" accept="image/*,.pdf" /></label><button className="lv2-more" onClick={submitDirect} disabled={directSubmitting}>{directSubmitting ? 'Submitting…' : `Submit ${money(payment.externalAmount)} payment`}</button></div></div>}
     {upgrade && <div className="lv2-overlay"><div className="lv2-upgrade"><button onClick={() => setUpgrade(false)}>×</button><span>PRO ACCESS</span><h2>Unlock Exclusive access.</h2><p>Pro members get first access during the configured Pro-first period.</p><div><Link to="/dashboard">View Pro options →</Link><button onClick={() => setUpgrade(false)}>Not now</button></div></div></div>}
   </div>
