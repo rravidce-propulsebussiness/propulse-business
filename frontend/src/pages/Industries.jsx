@@ -97,6 +97,13 @@ export default function Industries() {
       if (type === 'state') { base = '/states'; payload = { name: form.name.trim(), code: stateCode(form.name) } }
       if (type === 'city') { base = '/cities'; payload = { stateId: form.parentId, name: form.name.trim(), slug: slugify(form.name) } }
       if (type === 'subcity') { base = '/subcities'; payload = { cityId: form.parentId, name: form.name.trim(), slug: slugify(form.name), pincode: form.pincode.trim() || null } }
+
+      if (type === 'city' && !item) {
+        const normalizedName = form.name.trim().toLowerCase()
+        const duplicate = cities.some(city => Number(city.state_id) === Number(form.parentId) && String(city.name || '').trim().toLowerCase() === normalizedName)
+        if (duplicate) return setError('City already exists in this state.')
+      }
+
       await request(item ? `${base}/${item.id}` : base, jsonOptions(item ? 'PUT' : 'POST', payload))
       setModal(null); setSuccess(`${type[0].toUpperCase() + type.slice(1)} ${item ? 'updated' : 'added'} successfully.`); await loadAll()
     } catch (err) { setError(err.message) } finally { setSaving(false) }
