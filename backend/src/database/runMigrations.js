@@ -4,6 +4,7 @@ require('dotenv').config();
 const pool = require('../config/database');
 
 const migrationsDir = path.join(__dirname, 'migrations');
+const MIGRATION_LOCK_KEY = 'propulse:schema-migrations';
 
 async function ensureLedger(client) {
   await client.query(`CREATE TABLE IF NOT EXISTS schema_migrations (filename TEXT PRIMARY KEY, applied_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP)`);
@@ -102,7 +103,10 @@ async function applyFile(client, filePath) {
 
 async function runMigrations() {
   const client = await pool.connect();
+  let lockAcquired = false;
   try {
+    await client.query('SELECT pg_advisory_lock(hashtext($1))', [MIGRATION_LOCK_KEY]);
+    lockAcquired = true;
     await ensureLedger(client);
     const files = fs.existsSync(migrationsDir)
       ? fs.readdirSync(migrationsDir)
@@ -117,6 +121,7 @@ async function runMigrations() {
     console.log(`Database migrations completed (${applied} applied, ${files.length} checked).`);
     return { applied, checked: files.length };
   } finally {
+    if (lockAcquired) await client.query('SELECT pg_advisory_unlock(hashtext($1))', [MIGRATION_LOCK_KEY]).catch(() => {});
     client.release();
   }
 }
