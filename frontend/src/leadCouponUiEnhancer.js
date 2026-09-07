@@ -16,23 +16,27 @@ function patchLeadPurchaseRequest() {
   window.__propulseLeadCouponFetchPatched = true
   const originalFetch = window.fetch.bind(window)
   window.fetch = (input, init = {}) => {
-    let isLeadPurchase = false
     try {
       const url = typeof input === 'string' ? input : (input?.url || '')
-      isLeadPurchase = /\/api\/leads\/\d+\/purchase(?:\?|$)/.test(url)
-      if (isLeadPurchase && init?.body) {
+      if (/\/api\/leads\/\d+\/purchase(?:\?|$)/.test(url) && init?.body) {
         const couponCode = getCouponCode()
         if (couponCode) {
           const body = typeof init.body === 'string' ? JSON.parse(init.body) : null
-          if (body) {
-            init = { ...init, body: JSON.stringify({ ...body, couponCode }) }
-            window.__propulseLeadCouponCode = ''
-          }
+          if (body) init = { ...init, body: JSON.stringify({ ...body, couponCode }) }
         }
       }
     } catch {}
     return originalFetch(input, init)
   }
+}
+
+function saveCoupon(code) {
+  const normalized = String(code || '').trim().toUpperCase()
+  window.__propulseLeadCouponCode = normalized
+  try {
+    if (normalized) localStorage.setItem('propulse_lead_coupon_code', normalized)
+    else localStorage.removeItem('propulse_lead_coupon_code')
+  } catch {}
 }
 
 function enhanceLeadCoupon(modal) {
@@ -52,7 +56,7 @@ function enhanceLeadCoupon(modal) {
   button.addEventListener('click', async () => {
     const code = String(input.value || '').trim().toUpperCase()
     if (!code) {
-      window.__propulseLeadCouponCode = ''
+      saveCoupon('')
       status.className = 'lv2-coupon-status error'
       status.textContent = 'Enter a coupon code first.'
       return
@@ -78,11 +82,11 @@ function enhanceLeadCoupon(modal) {
         body: JSON.stringify({ code, subtotal, purchaseType: 'lead' })
       })
       input.value = code
-      window.__propulseLeadCouponCode = code
+      saveCoupon(code)
       status.className = 'lv2-coupon-status success'
       status.textContent = `${code} applied — discount ${money(data.discountAmount)}. Final lead amount ${money(data.finalAmount)} before wallet balance.`
     } catch (error) {
-      window.__propulseLeadCouponCode = ''
+      saveCoupon('')
       status.className = 'lv2-coupon-status error'
       status.textContent = error?.message || 'Coupon could not be applied.'
     } finally {
@@ -92,7 +96,7 @@ function enhanceLeadCoupon(modal) {
   })
 
   input.addEventListener('input', () => {
-    window.__propulseLeadCouponCode = ''
+    saveCoupon('')
     status.textContent = ''
     status.className = 'lv2-coupon-status'
   })
