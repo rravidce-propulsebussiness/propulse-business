@@ -23,25 +23,51 @@ function Dashboard() {
     let active = true
 
     async function loadDashboard() {
-      setLoading(true)
       setError('')
-      try {
-        const [profile, available, bought, walletData] = await Promise.all([
-          authRequest('/profile'),
-          apiRequest('/leads?status=available'),
-          authRequest('/leads/purchased'),
-          authRequest('/wallet')
-        ])
-        if (!active) return
-        if (profile?.business_name) setBusinessName(profile.business_name)
-        setLeads(Array.isArray(available) ? available : [])
-        setPurchased(Array.isArray(bought) ? bought : [])
-        setWallet(walletData || null)
-      } catch (e) {
-        if (active) setError(e.message || 'Unable to load dashboard')
-      } finally {
-        if (active) setLoading(false)
+
+      const results = await Promise.allSettled([
+        authRequest('/profile'),
+        apiRequest('/leads?status=available'),
+        authRequest('/leads/purchased'),
+        authRequest('/wallet')
+      ])
+
+      if (!active) return
+
+      const [profileResult, availableResult, purchasedResult, walletResult] = results
+      const failed = []
+
+      if (profileResult.status === 'fulfilled') {
+        if (profileResult.value?.business_name) setBusinessName(profileResult.value.business_name)
+      } else {
+        failed.push(profileResult.reason)
       }
+
+      if (availableResult.status === 'fulfilled') {
+        setLeads(Array.isArray(availableResult.value) ? availableResult.value : [])
+      } else {
+        failed.push(availableResult.reason)
+      }
+
+      if (purchasedResult.status === 'fulfilled') {
+        setPurchased(Array.isArray(purchasedResult.value) ? purchasedResult.value : [])
+      } else {
+        failed.push(purchasedResult.reason)
+      }
+
+      if (walletResult.status === 'fulfilled') {
+        setWallet(walletResult.value || null)
+      } else {
+        failed.push(walletResult.reason)
+      }
+
+      if (failed.length === results.length) {
+        setError('Unable to load dashboard data. Please try again.')
+      } else if (failed.length) {
+        setError('Some dashboard information could not be loaded.')
+      }
+
+      setLoading(false)
     }
 
     loadDashboard()
@@ -74,17 +100,17 @@ function Dashboard() {
         <section className="owner-actions-grid">
           <Link to="/leads" className="dashboard-action dashboard-action-primary">
             <span className="action-icon">↗</span>
-            <div><strong>Buy Leads</strong><small>{loading ? 'Loading…' : `${leads.length} available now`}</small></div>
+            <div><strong>Buy Leads</strong><small>{loading ? '—' : `${leads.length} available now`}</small></div>
             <b>→</b>
           </Link>
           <Link to="/purchased-leads" className="dashboard-action">
             <span className="action-icon">✓</span>
-            <div><strong>My Leads</strong><small>{loading ? 'Loading…' : `${purchased.length} purchased`}</small></div>
+            <div><strong>My Leads</strong><small>{loading ? '—' : `${purchased.length} purchased`}</small></div>
             <b>→</b>
           </Link>
           <Link to="/wallet" className="dashboard-action">
             <span className="action-icon">₹</span>
-            <div><strong>Wallet</strong><small>{loading ? 'Loading…' : money(wallet?.balance)}</small></div>
+            <div><strong>Wallet</strong><small>{loading ? '—' : money(wallet?.balance)}</small></div>
             <b>→</b>
           </Link>
           <Link to="/profile" className="dashboard-action">
@@ -101,7 +127,9 @@ function Dashboard() {
           </div>
           <div className="owner-lead-list">
             {loading ? (
-              <div className="owner-lead"><div><strong>Loading opportunities…</strong></div></div>
+              <div className="owner-lead owner-lead-loading" aria-hidden="true">
+                <div className="lead-skeleton"><i /><i /><i /></div>
+              </div>
             ) : previewLeads.length ? (
               previewLeads.map(lead => (
                 <Link to="/leads" className="owner-lead" key={lead.id}>
