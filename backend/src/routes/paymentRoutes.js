@@ -11,6 +11,7 @@ router.use(requireAuth);
 router.post('/checkout/membership', paymentWriteLimit, paymentController.checkoutMembership);
 router.post('/:id/reference', paymentWriteLimit, paymentController.submitPaymentReference);
 router.get('/membership/current', paymentController.getCurrentMembership);
+router.get('/membership/history', paymentController.getUserMembershipPayments);
 router.get('/memberships/customers', requireAdmin, paymentController.getMembershipCustomers);
 router.get('/memberships/customers/:userId', requireAdmin, paymentController.getMembershipCustomerDetails);
 router.get('/', requireAdmin, paymentController.getPayments);
