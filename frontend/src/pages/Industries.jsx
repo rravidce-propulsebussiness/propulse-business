@@ -11,6 +11,23 @@ async function request(path, options = {}) {
 
 const jsonOptions = (method, body) => ({ method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
 
+// Master-data endpoints are not all paginated in the same way. Always turn
+// the response into the actual collection so the admin page never treats a
+// pagination envelope as the array itself.
+const collection = value => {
+  if (Array.isArray(value)) return value
+  if (Array.isArray(value?.data)) return value.data
+  if (Array.isArray(value?.rows)) return value.rows
+  if (Array.isArray(value?.items)) return value.items
+  if (Array.isArray(value?.industries)) return value.industries
+  if (Array.isArray(value?.services)) return value.services
+  if (Array.isArray(value?.subservices)) return value.subservices
+  if (Array.isArray(value?.states)) return value.states
+  if (Array.isArray(value?.cities)) return value.cities
+  if (Array.isArray(value?.subcities)) return value.subcities
+  return []
+}
+
 function downloadCsv(filename, headers, row) {
   const csv = [headers.join(','), row.map(v => `"${String(v ?? '').replaceAll('"', '""')}"`).join(',')].join('\n')
   const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }))
@@ -48,7 +65,7 @@ export default function Industries() {
       const [i, s, ss, st, c, sc] = await Promise.all([
         request('/industries'), request('/services'), request('/subservices'), request('/states'), request('/cities'), request('/subcities'),
       ])
-      setIndustries(i || []); setServices(s || []); setSubservices(ss || []); setStates(st || []); setCities(c || []); setSubcities(sc || [])
+      setIndustries(collection(i)); setServices(collection(s)); setSubservices(collection(ss)); setStates(collection(st)); setCities(collection(c)); setSubcities(collection(sc))
     } catch (err) { setError(err.message) } finally { setLoading(false) }
   }
   useEffect(() => { loadAll() }, [])
@@ -57,7 +74,7 @@ export default function Industries() {
     const q = search.trim().toLowerCase()
     return !q ? industries : industries.filter(x => String(x.name || '').toLowerCase().includes(q))
   }, [industries, search])
-  const servicesFor = id => services.filter(x => Number(x.industry_id) === Number(id))
+  const servicesFor = id => industries.length && services.filter(x => Number(x.industry_id) === Number(id))
   const subservicesFor = id => subservices.filter(x => Number(x.service_id) === Number(id))
   const citiesFor = id => cities.filter(x => Number(x.state_id) === Number(id))
   const subcitiesFor = id => subcities.filter(x => Number(x.city_id) === Number(id))
