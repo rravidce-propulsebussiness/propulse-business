@@ -60,6 +60,7 @@ async function main(){
   clientCalls.length=0;
   mode='valid';
   await updateInvestorSettings({...base,industryLimits:[]});
+  assert(clientCalls.some(x=>x.sql==='DELETE FROM investor_industry_location_limits'),'Empty industry limits must clear all existing industry-location rules');
   assert(clientCalls.some(x=>x.sql==='COMMIT'),'Successful investor settings update did not commit');
   assert(!clientCalls.some(x=>x.sql==='ROLLBACK'),'Successful investor settings update rolled back');
   assert(poolCalls.length===2,'Final investor settings read should happen only after the transaction commits');
