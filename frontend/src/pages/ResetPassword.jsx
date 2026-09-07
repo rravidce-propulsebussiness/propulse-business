@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, useSearchParams, useNavigate } from 'react-router-dom'
 import { publicRequest } from '../utils/auth'
 import './Auth.css'
+import './AuthExtras.css'
 
 function ResetPassword() {
   const [searchParams] = useSearchParams()
