@@ -85,8 +85,6 @@ CREATE TABLE IF NOT EXISTS business_profile_locations (
 CREATE INDEX IF NOT EXISTS idx_business_profile_services_profile ON business_profile_services(business_profile_id);
 CREATE INDEX IF NOT EXISTS idx_business_profile_locations_profile ON business_profile_locations(business_profile_id);
 
-UPDATE users SET role='business',updated_at=CURRENT_TIMESTAMP WHERE role='admin' AND EXISTS(SELECT 1 FROM business_profiles bp WHERE bp.user_id=users.id);
-
 CREATE TABLE IF NOT EXISTS membership_plans (
     id SERIAL PRIMARY KEY,
     name VARCHAR(120) NOT NULL UNIQUE,
