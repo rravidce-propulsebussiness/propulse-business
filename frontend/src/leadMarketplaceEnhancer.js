@@ -68,7 +68,7 @@ function enhancePaymentModal(modal) {
 }
 
 const readUrlFilters = () => {
-  if (typeof window === 'undefined') return { industryId: '', serviceId: '', stateId: '', cityId: '', leadType: 'all' }
+  if (typeof window === 'undefined') return { industryId: '', serviceId: '', stateId: '', cityId: '', leadType: 'all', allIndustries: false }
   const params = new URLSearchParams(window.location.search)
   return {
     industryId: params.get('industryId') || '',
@@ -76,6 +76,7 @@ const readUrlFilters = () => {
     stateId: params.get('stateId') || '',
     cityId: params.get('cityId') || '',
     leadType: params.get('leadType') || 'all',
+    allIndustries: params.get('allIndustries') === '1',
   }
 }
 
@@ -171,19 +172,22 @@ function renderFilterGrid(grid, data) {
     </select></div>`
 
   grid.querySelectorAll('[data-filter]').forEach(select => select.addEventListener('change', event => {
-    filterState[event.target.dataset.filter] = event.target.value
+    const key = event.target.dataset.filter
+    filterState[key] = event.target.value
+    if (key === 'industryId') filterState.allIndustries = event.target.value === ''
     renderFilterGrid(grid, data)
   }))
 }
 
-function navigateWithFilters() {
+function navigateWithFilters({ reset = false } = {}) {
   const params = new URLSearchParams(window.location.search)
-  ;['industryId', 'serviceId', 'stateId', 'cityId', 'leadType'].forEach(key => params.delete(key))
+  ;['industryId', 'serviceId', 'stateId', 'cityId', 'leadType', 'allIndustries'].forEach(key => params.delete(key))
   if (filterState.industryId) params.set('industryId', filterState.industryId)
   if (filterState.serviceId) params.set('serviceId', filterState.serviceId)
   if (filterState.stateId) params.set('stateId', filterState.stateId)
   if (filterState.cityId) params.set('cityId', filterState.cityId)
   if (filterState.leadType !== 'all') params.set('leadType', filterState.leadType)
+  if (!reset && filterState.allIndustries && !filterState.industryId) params.set('allIndustries', '1')
   params.delete('page')
   const query = params.toString()
   window.location.assign(`${window.location.pathname}${query ? `?${query}` : ''}`)
@@ -213,7 +217,8 @@ async function buildFilterModal() {
     filterState.stateId = ''
     filterState.cityId = ''
     filterState.leadType = 'all'
-    navigateWithFilters()
+    filterState.allIndustries = false
+    navigateWithFilters({ reset: true })
   })
   overlay.querySelector('.lv2-filter-apply').addEventListener('click', () => {
     syncFilterButton()
