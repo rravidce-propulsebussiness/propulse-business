@@ -11,6 +11,16 @@ function parsePagination({ page, pageSize, limit } = {}) {
   return { page: currentPage, pageSize: size, offset: (currentPage - 1) * size };
 }
 
+function paginationMeta(pagination, total) {
+  return {
+    ...pagination,
+    total,
+    totalPages: total === 0 ? 0 : Math.ceil(total / pagination.pageSize),
+    hasNextPage: pagination.page * pagination.pageSize < total,
+    hasPreviousPage: pagination.page > 1 && total > 0,
+  };
+}
+
 function slugify(value) {
   return String(value || '')
     .trim()
@@ -85,16 +95,7 @@ async function getCities({ page, pageSize, limit } = {}) {
       LIMIT $1 OFFSET $2`,
     [pagination.pageSize, pagination.offset]
   );
-  return {
-    data: result.rows,
-    pagination: {
-      ...pagination,
-      total,
-      totalPages: total === 0 ? 0 : Math.ceil(total / pagination.pageSize),
-      hasNextPage: pagination.page * pagination.pageSize < total,
-      hasPreviousPage: pagination.page > 1 && total > 0,
-    },
-  };
+  return { data: result.rows, pagination: paginationMeta(pagination, total) };
 }
 
 async function getCityById(id) {
@@ -152,10 +153,36 @@ async function createSubcity({ cityId, name, slug, pincode, source='admin' }) {
   return subcity;
 }
 
-async function getSubcities(cityId) {
-  const params=[]; const where=['sc.is_active=TRUE'];
-  if (cityId) { params.push(cityId); where.push(`sc.city_id=$${params.length}`); }
-  return (await pool.query(`SELECT sc.*,c.name AS city_name,s.name AS state_name FROM subcities sc JOIN cities c ON c.id=sc.city_id JOIN states s ON s.id=c.state_id WHERE ${where.join(' AND ')} ORDER BY s.name,c.name,sc.name`,params)).rows;
+async function getSubcities({ cityId, page, pageSize, limit } = {}) {
+  const pagination = parsePagination({ page, pageSize, limit });
+  const params = [];
+  const where = ['sc.is_active=TRUE', 'c.is_active=TRUE', 's.is_active=TRUE'];
+  if (cityId) {
+    params.push(cityId);
+    where.push(`sc.city_id=$${params.length}`);
+  }
+  const whereClause = where.join(' AND ');
+  const countResult = await pool.query(
+    `SELECT COUNT(*)::int AS total
+       FROM subcities sc
+       JOIN cities c ON c.id=sc.city_id
+       JOIN states s ON s.id=c.state_id
+      WHERE ${whereClause}`,
+    params
+  );
+  const total = countResult.rows[0]?.total || 0;
+  const dataParams = [...params, pagination.pageSize, pagination.offset];
+  const result = await pool.query(
+    `SELECT sc.*,c.name AS city_name,s.name AS state_name
+       FROM subcities sc
+       JOIN cities c ON c.id=sc.city_id
+       JOIN states s ON s.id=c.state_id
+      WHERE ${whereClause}
+      ORDER BY s.name ASC,c.name ASC,sc.name ASC,sc.id ASC
+      LIMIT $${dataParams.length - 1} OFFSET $${dataParams.length}`,
+    dataParams
+  );
+  return { data: result.rows, pagination: paginationMeta(pagination, total) };
 }
 
 async function updateSubcity(id,{cityId,name,slug,pincode,source}) {
