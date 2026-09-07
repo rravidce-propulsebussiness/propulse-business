@@ -1,3 +1,5 @@
+import { authRequest } from './utils/auth'
+
 function money(value) {
   const amount = Number(value)
   return Number.isFinite(amount) ? `₹${amount.toLocaleString('en-IN')}` : '₹0'
@@ -31,7 +33,7 @@ function enhanceLeadCoupon(modal) {
     const subtotal = prices.length ? Math.min(...prices) : 0
     if (!subtotal) {
       status.className = 'lv2-coupon-status error'
-      status.textContent = 'Choose a share pack first to validate this coupon.'
+      status.textContent = 'No share price is available to validate this coupon.'
       return
     }
 
@@ -40,13 +42,10 @@ function enhanceLeadCoupon(modal) {
     status.className = 'lv2-coupon-status'
     status.textContent = ''
     try {
-      const response = await fetch('/api/coupons/validate', {
+      const data = await authRequest('/coupons/validate', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...((() => { try { const token = localStorage.getItem('token') || localStorage.getItem('propulse_token'); return token ? { Authorization: `Bearer ${token}` } : {} } catch { return {} } })()) },
         body: JSON.stringify({ code, subtotal, purchaseType: 'lead' })
       })
-      const data = await response.json().catch(() => ({}))
-      if (!response.ok) throw new Error(data?.error || 'Coupon could not be applied.')
       input.value = code
       status.className = 'lv2-coupon-status success'
       status.textContent = `${code} applied — save ${money(data.discountAmount)} on eligible purchases.`
@@ -63,7 +62,7 @@ function enhanceLeadCoupon(modal) {
 function enhancePaymentAmount(modal) {
   if (!modal || modal.dataset.amountClarityReady === 'true') return
   const detailGrid = modal.querySelector('.lv2-detail-grid')
-  if (!detailGrid || !modal.querySelector('.lead-payment-modal')) return
+  if (!detailGrid || !modal.classList.contains('lead-payment-modal')) return
   modal.dataset.amountClarityReady = 'true'
 
   const directText = [...detailGrid.querySelectorAll('div')].find(node => /Direct payment/i.test(node.textContent || ''))?.querySelector('b')?.textContent || ''
