@@ -26,7 +26,7 @@ const PORT=Number(process.env.PORT)||5000;
 const rawOrigins=String(process.env.CORS_ORIGIN||'').split(',').map(x=>x.trim()).filter(Boolean);
 if(isProduction&&!rawOrigins.length) throw new Error('CORS_ORIGIN must be configured in production');
 const configuredOrigins=rawOrigins.length?rawOrigins:['http://localhost:5173'];
-const MAX_JSON_BYTES=isProduction?'1mb':'10mb';
+const MAX_JSON_BYTES='10mb';
 const trustProxy=String(process.env.TRUST_PROXY||'').trim();
 if(trustProxy) app.set('trust proxy',trustProxy==='true'?true:Number.isNaN(Number(trustProxy))?trustProxy:Number(trustProxy));
 app.disable('x-powered-by');
