@@ -64,11 +64,42 @@ async function removeUnusedCityPincode(cityId, pincode) {
 }
 
 async function createCity({ stateId, name, slug }) {
+  const normalizedName = String(name || '').trim();
+  const normalizedSlug = String(slug || slugify(normalizedName)).trim();
+
+  // A deleted city should be reusable instead of creating a second row.
+  const inactive = await pool.query(
+    `SELECT id
+       FROM cities
+      WHERE state_id=$1
+        AND name=$2
+        AND is_active=FALSE
+      ORDER BY id DESC
+      LIMIT 1`,
+    [stateId, normalizedName]
+  );
+
+  if (inactive.rows[0]) {
+    const restored = await pool.query(
+      `UPDATE cities
+          SET name=$1,
+              slug=$2,
+              is_active=TRUE,
+              updated_at=CURRENT_TIMESTAMP
+        WHERE id=$3
+        RETURNING *`,
+      [normalizedName, normalizedSlug, inactive.rows[0].id]
+    );
+    const city = restored.rows[0];
+    if (city) await pool.query('SELECT propulse_sync_city_directory_pincodes($1)', [city.id]).catch(() => {});
+    return city;
+  }
+
   const result = await pool.query(
     `INSERT INTO cities (state_id, name, slug)
      VALUES ($1, $2, $3)
      RETURNING *`,
-    [stateId, name, slug]
+    [stateId, normalizedName, normalizedSlug]
   );
   const city = result.rows[0];
   if (city) await pool.query('SELECT propulse_sync_city_directory_pincodes($1)', [city.id]).catch(() => {});
