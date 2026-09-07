@@ -2,6 +2,19 @@ const bcrypt = require('bcryptjs');
 const pool = require('../config/database');
 const { validateSelections } = require('./profileService');
 
+const DEFAULT_PAGE_SIZE = 25;
+const MAX_PAGE_SIZE = 100;
+
+function parsePagination(query = {}) {
+  const rawPage = Number.parseInt(query.page, 10);
+  const rawPageSize = Number.parseInt(query.pageSize ?? query.limit, 10);
+  const page = Number.isFinite(rawPage) && rawPage > 0 ? Math.min(rawPage, 1000000) : 1;
+  const pageSize = Number.isFinite(rawPageSize) && rawPageSize > 0
+    ? Math.min(rawPageSize, MAX_PAGE_SIZE)
+    : DEFAULT_PAGE_SIZE;
+  return { page, pageSize, offset: (page - 1) * pageSize };
+}
+
 async function getDashboardStats() {
   const result = await pool.query(`
     SELECT
@@ -19,11 +32,12 @@ async function getDashboardStats() {
   return { totalUsers: row.total_users, activeUsers: row.active_users, businesses: row.businesses, activeBusinesses: row.active_businesses, industries: row.industries, services: row.services, subservices: row.subservices, states: row.states, cities: row.cities };
 }
 
-async function getUsers({ search = '', role = 'all', status = 'all', industryId = '', serviceId = '', stateId = '', cityId = '' } = {}) {
+async function getUsers({ search = '', role = 'all', status = 'all', industryId = '', serviceId = '', stateId = '', cityId = '', page, pageSize, limit } = {}) {
+  const { page: currentPage, pageSize: currentPageSize, offset } = parsePagination({ page, pageSize, limit });
   const params = [];
   const conditions = [];
-  if (search.trim()) {
-    params.push(`%${search.trim()}%`);
+  if (String(search).trim()) {
+    params.push(`%${String(search).trim()}%`);
     conditions.push(`(u.name ILIKE $${params.length} OR u.email ILIKE $${params.length} OR bp.business_name ILIKE $${params.length} OR bp.phone ILIKE $${params.length})`);
   }
   if (role === 'admin' || role === 'business') { params.push(role); conditions.push(`u.role = $${params.length}`); }
@@ -33,6 +47,16 @@ async function getUsers({ search = '', role = 'all', status = 'all', industryId 
   if (stateId) { params.push(stateId); conditions.push(`EXISTS (SELECT 1 FROM business_profile_locations x WHERE x.business_profile_id=bp.id AND x.state_id=$${params.length} AND x.is_active=TRUE)`); }
   if (cityId) { params.push(cityId); conditions.push(`EXISTS (SELECT 1 FROM business_profile_locations x WHERE x.business_profile_id=bp.id AND x.city_id=$${params.length} AND x.is_active=TRUE)`); }
 
+  const whereClause = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+  const countResult = await pool.query(`
+    SELECT COUNT(*)::int AS total
+    FROM users u
+    LEFT JOIN business_profiles bp ON bp.user_id = u.id
+    ${whereClause}
+  `, params);
+
+  const total = countResult.rows[0]?.total || 0;
+  const dataParams = [...params, currentPageSize, offset];
   const result = await pool.query(`
     SELECT u.id, u.name, u.email, u.role, u.is_active, u.created_at,
            bp.id AS business_profile_id, bp.business_name, bp.phone, bp.business_details,
@@ -52,10 +76,22 @@ async function getUsers({ search = '', role = 'all', status = 'all', industryId 
              WHERE x.business_profile_id=bp.id AND x.is_active=TRUE), '[]'::json) AS locations
     FROM users u
     LEFT JOIN business_profiles bp ON bp.user_id = u.id
-    ${conditions.length ? `WHERE ${conditions.join(' AND ')}` : ''}
-    ORDER BY u.created_at DESC
-  `, params);
-  return result.rows;
+    ${whereClause}
+    ORDER BY u.created_at DESC, u.id DESC
+    LIMIT $${dataParams.length - 1} OFFSET $${dataParams.length}
+  `, dataParams);
+
+  return {
+    data: result.rows,
+    pagination: {
+      page: currentPage,
+      pageSize: currentPageSize,
+      total,
+      totalPages: total === 0 ? 0 : Math.ceil(total / currentPageSize),
+      hasNextPage: currentPage * currentPageSize < total,
+      hasPreviousPage: currentPage > 1 && total > 0,
+    },
+  };
 }
 
 async function createAdmin({ name, email, password }) {
