@@ -5,7 +5,16 @@ async function createCity(req, res) {
     const { stateId, name, slug } = req.body;
     if (!stateId || !name || !slug) return res.status(400).json({ error: 'State ID, name and slug are required' });
     return res.status(201).json(await cityService.createCity({ stateId, name, slug }));
-  } catch (error) { console.error('Create city failed:', error.message); return res.status(500).json({ error: 'Failed to create city' }); }
+  } catch (error) {
+    console.error('Create city failed:', error.message);
+    if (error.code === '23505' && ['uq_cities_active_state_name', 'uq_cities_active_state_slug', 'cities_state_id_name_key', 'cities_state_id_slug_key'].includes(error.constraint)) {
+      return res.status(409).json({ error: 'City already exists in this state' });
+    }
+    if (error.code === '23503') {
+      return res.status(400).json({ error: 'Selected state does not exist' });
+    }
+    return res.status(500).json({ error: 'Failed to create city' });
+  }
 }
 async function getCities(req, res) {
   try { return res.json(await cityService.getCities(req.query)); }
