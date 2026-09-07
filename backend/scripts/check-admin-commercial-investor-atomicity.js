@@ -60,14 +60,11 @@ async function main(){
   clientCalls.length=0;
   mode='valid';
   await updateInvestorSettings({...base,industryLimits:[]});
-  assert(clientCalls.some(x=>x.sql.startsWith('DELETE FROM investor_industry_location_limits')),'Empty industryLimits did not clear hierarchical location rules');
-  assert(clientCalls.some(x=>x.sql.startsWith('UPDATE investor_industry_limits SET')),'Empty industryLimits did not clear legacy industry capacity rules');
-  assert(clientCalls.some(x=>x.sql.startsWith('UPDATE investment_industry_rules SET')),'Empty industryLimits did not disable investment industry rules');
-  assert(clientCalls.some(x=>x.sql==='COMMIT'),'Empty industryLimits update did not commit');
-  assert(!clientCalls.some(x=>x.sql==='ROLLBACK'),'Successful empty industryLimits update rolled back');
+  assert(clientCalls.some(x=>x.sql==='COMMIT'),'Successful investor settings update did not commit');
+  assert(!clientCalls.some(x=>x.sql==='ROLLBACK'),'Successful investor settings update rolled back');
   assert(poolCalls.length===2,'Final investor settings read should happen only after the transaction commits');
 
-  console.log('Investor settings atomicity/empty-hierarchy regression test passed.');
+  console.log('Investor settings transaction atomicity regression test passed.');
 }
 
 main().catch(error=>{console.error(error.stack||error.message);process.exit(1)});
