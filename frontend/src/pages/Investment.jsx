@@ -23,10 +23,10 @@ export default function Investment() {
   const [stateId, setStateId] = useState('')
   const [cityId, setCityId] = useState('')
   const [amount, setAmount] = useState('')
+  const [reinvestmentEnabled, setReinvestmentEnabled] = useState(false)
   const [message, setMessage] = useState('')
   const [actionError, setActionError] = useState('')
   const [busy, setBusy] = useState(false)
-  const [reinvestingId, setReinvestingId] = useState(null)
   const [payment, setPayment] = useState(null)
   const [receivingDetails, setReceivingDetails] = useState([])
   const [paymentError, setPaymentError] = useState('')
@@ -95,7 +95,7 @@ export default function Investment() {
   const pending = mine.filter(item => String(item.status).toLowerCase() === 'pending')
   const totalInvested = mine.reduce((sum, item) => sum + Number(item.amount || 0), 0)
   const totalRealized = mine.reduce((sum, item) => sum + Number(item.realized_revenue || 0), 0)
-  const waiting = mine.filter(item => item.reinvestment_available)
+  const availableBalance = Math.max(0, totalRealized - mine.reduce((sum, item) => sum + Number(item.payout_amount || 0), 0))
 
   const validLocation = () => {
     if (!industryId) throw Error('Select an industry.')
@@ -110,13 +110,13 @@ export default function Investment() {
 
   const invest = async () => {
     setBusy(true); setMessage(''); setActionError('')
-    try { validLocation(); if (!walletCanPay) throw Error('Your wallet balance is not enough. Use direct payment to continue.'); await request('/investments/checkout', { method: 'POST', body: JSON.stringify({ industryId: Number(industryId), stateId: stateId ? Number(stateId) : null, cityId: cityId ? Number(cityId) : null, amount: investmentAmount, useWallet: true }) }); setAmount(''); setMessage('Investment cycle created successfully from your wallet.'); await load() }
+    try { validLocation(); if (!walletCanPay) throw Error('Your wallet balance is not enough. Use direct payment to continue.'); await request('/investments/checkout', { method: 'POST', body: JSON.stringify({ industryId: Number(industryId), stateId: stateId ? Number(stateId) : null, cityId: cityId ? Number(cityId) : null, amount: investmentAmount, useWallet: true, reinvestmentEnabled }) }); setAmount(''); setMessage('Investment cycle created successfully from your wallet.'); await load() }
     catch (error) { setActionError(error.message) } finally { setBusy(false) }
   }
 
   const openDirectPayment = async () => {
     setBusy(true); setMessage(''); setActionError(''); setPaymentError('')
-    try { validLocation(); if (walletCanPay) throw Error('Your wallet can cover this investment. Use wallet payment instead.'); const details = list(await authRequest('/payment-receiving-details')); if (!details.length) throw Error('Direct payment is not configured yet. Please contact Propulse support.'); setReceivingDetails(details); const result = await request('/investments/checkout', { method: 'POST', body: JSON.stringify({ industryId: Number(industryId), stateId: stateId ? Number(stateId) : null, cityId: cityId ? Number(cityId) : null, amount: investmentAmount, useWallet: false }) }); setPayment(result); setAmount('') }
+    try { validLocation(); if (walletCanPay) throw Error('Your wallet can cover this investment. Use wallet payment instead.'); const details = list(await authRequest('/payment-receiving-details')); if (!details.length) throw Error('Direct payment is not configured yet. Please contact Propulse support.'); setReceivingDetails(details); const result = await request('/investments/checkout', { method: 'POST', body: JSON.stringify({ industryId: Number(industryId), stateId: stateId ? Number(stateId) : null, cityId: cityId ? Number(cityId) : null, amount: investmentAmount, useWallet: false, reinvestmentEnabled }) }); setPayment(result); setAmount('') }
     catch (error) { setActionError(error.message) } finally { setBusy(false) }
   }
 
@@ -136,36 +136,29 @@ export default function Investment() {
     } catch (error) { setPaymentError(error.message || 'Unable to submit payment. Please try again.') } finally { setDirectSubmitting(false) }
   }
 
-  const reinvest = async (item) => {
-    setReinvestingId(item.id); setMessage('')
-    try { await request(`/investments/${item.id}/reinvest`, { method: 'POST' }); setMessage(`${money(item.payout_amount)} was reinvested into a new cycle.`); await load() }
-    catch (error) { setMessage(error.message) } finally { setReinvestingId(null) }
-  }
-
   if (!access) return <main className="investment-page"><div className="investment-shell"><div className="investment-card investment-loading">{loadError ? `Unable to load investor workspace: ${loadError}` : 'Loading investor workspace…'}</div></div></main>
   if (!access.canInvest) return <main className="investment-page"><div className="investment-shell"><section className="investment-hero"><span className="investment-kicker">PROPULSE INVESTOR</span><h1>Invest in growth powered by real lead demand.</h1><p>{access.requiresPro ? 'An active Pro membership is required before you can invest.' : 'Investment is currently unavailable.'}</p></section></div></main>
 
   return <main className="investment-page"><div className="investment-shell">
     <section className="investment-hero">
       <div className="investment-hero-copy"><span className="investment-kicker">PROPULSE INVESTOR · GROWTH CYCLES</span><h1>Invest. Grow business. Get leads sold. Earn from real returns.</h1><p>Fund eligible lead-generation cycles. Propulse uses the investment to generate and sell leads, and your cycle participates only in revenue actually realized from eligible paid lead sales.</p></div>
-      <div className="investment-hero-flow"><div><b>01</b><span>Invest</span></div><i>→</i><div><b>02</b><span>Leads sell</span></div><i>→</i><div><b>03</b><span>Revenue realized</span></div><i>→</i><div><b>04</b><span>Wallet payout</span></div></div>
+      <div className="investment-hero-flow"><div><b>01</b><span>Invest</span></div><i>→</i><div><b>02</b><span>Leads sell</span></div><i>→</i><div><b>03</b><span>Revenue realized</span></div><i>→</i><div><b>04</b><span>Direct owner transfer</span></div></div>
     </section>
     {message && <div className="investment-message">{message}</div>}
     <section className="investment-summary" id="available">
-      <div className="investment-summary-main"><span>AMOUNT AVAILABLE</span><strong>{money(walletBalance)}</strong><a href="/wallet">Open wallet →</a></div>
-      <div className="investment-stat"><span>INVESTED</span><strong>{money(totalInvested)}</strong></div>
+      <div className="investment-summary-main"><span>AMOUNT GENERATED</span><strong>{money(totalRealized)}</strong><small>From eligible paid lead sales</small></div>
+      <div className="investment-stat"><span>AVAILABLE BALANCE</span><strong>{money(availableBalance)}</strong></div>
       <div className="investment-stat"><span>ACTIVE CYCLES</span><strong>{active.length}</strong></div>
       <div className="investment-stat"><span>SOLD LEADS</span><strong>{soldLeads.length}</strong></div>
-      <div className="investment-stat"><span>REALIZED</span><strong>{money(totalRealized)}</strong></div>
     </section>
     {pending.length > 0 && <section className="investment-pending-note"><b>{pending.length} investment payment{pending.length > 1 ? 's' : ''} awaiting verification</b><span>Your submitted direct payment remains pending until Propulse verifies it.</span></section>}
-    {waiting.length > 0 && <section className="reinvestment-choice-card"><div className="choice-card-heading"><div><span className="investment-kicker">PAYOUT READY</span><h2>Choose what happens next</h2><p>Your realized payout is in your wallet. Keep it available or reinvest it into the next cycle.</p></div><span className="choice-count">{waiting.length} READY</span></div><div className="choice-list">{waiting.map(item => <div className="choice-row" key={item.id}><div className="choice-row-main"><div className="choice-industry"><strong>{item.industry_name}</strong><span>Cycle #{item.id} · Settled</span></div><div className="choice-amount"><span>Realized payout</span><strong>{money(item.payout_amount)}</strong></div></div><div className="choice-actions"><button type="button" className="reinvest-button" disabled={reinvestingId === item.id} onClick={() => reinvest(item)}>{reinvestingId === item.id ? 'Creating cycle…' : `↻ Reinvest ${money(item.payout_amount)}`}</button><span className="keep-wallet">Keep in wallet</span></div></div>)}</div></section>}
     <section className="investment-grid" id="invested">
       <div className="investment-card investment-form-card"><div className="card-heading"><span className="investment-kicker">INVEST</span><h2>Start a growth cycle</h2><p>Select an eligible industry and location. If your wallet covers the amount, pay instantly. Otherwise, pay directly by bank/UPI.</p></div>
         <label>Industry<select value={industryId} onChange={event => { setIndustryId(event.target.value); setStateId(''); setCityId(''); setAmount(''); setActionError('') }}><option value="">Select industry</option>{rules.map(rule => <option key={rule.id || rule.industry_id} value={rule.industry_id}>{rule.industry_name}</option>)}</select></label>
         {access.locationLimitsEnabled && <><label>State<select value={stateId} onChange={event => { setStateId(event.target.value); setCityId(''); setActionError('') }}><option value="">Select state</option>{visibleStates.map(state => <option key={idOf(state)} value={idOf(state)}>{nameOf(state)}</option>)}</select></label><label>City<select value={cityId} disabled={!stateId} onChange={event => { setCityId(event.target.value); setActionError('') }}><option value="">{stateHasCityRules ? 'Select city / state-wide rule' : 'All cities'}</option>{cityOptions.map(city => <option key={idOf(city)} value={idOf(city)}>{nameOf(city)}</option>)}</select></label>{selectedLocationRule && <div className="investment-range"><span>Investor capacity <b>{locationLimitCompleted ? 'LIMIT COMPLETED' : `${selectedLocationRule.remaining_count} of ${selectedLocationRule.investor_limit} slots remaining`}</b></span><span>{selectedLocationRule.city_name ? `${selectedLocationRule.city_name}, ${selectedLocationRule.state_name}` : `${nameOf(selectedState)} · all cities`}</span></div>}</>}
         {selected && <div className="investment-range"><span>Minimum <b>{money(selected.minimum_amount)}</b></span><span>Maximum <b>{money(selected.maximum_amount)}</b></span></div>}
         <label>Investment amount<input type="number" min={selected?.minimum_amount || 1} max={Number(selected?.maximum_amount || Number.MAX_SAFE_INTEGER)} value={amount} disabled={locationLimitCompleted} onChange={event => { setAmount(event.target.value); setActionError('') }} placeholder="Enter amount" /></label>
+        <label className="investment-reinvest-choice"><input type="checkbox" checked={reinvestmentEnabled} onChange={event => setReinvestmentEnabled(event.target.checked)} /><span><b>Reinvest returns automatically</b><small>When this cycle is settled, reinvest the realized amount into the next eligible cycle instead of transferring it to your owner account.</small></span></label>
         <div className="investment-wallet-action"><div><span>Available now</span><strong>{money(walletBalance)}</strong></div>{walletCanPay && <span className="investment-wallet-ready">✓ Wallet can cover this</span>}{insufficient && <span className="investment-wallet-short">Short by {money(investmentAmount - walletBalance)} · direct payment available</span>}</div>
         {actionError && <div className="investment-action-error" role="alert">{actionError}</div>}
         <div className="investment-action-buttons">{walletCanPay ? <button type="button" className="investment-submit" disabled={busy} onClick={invest}>{busy ? 'Processing…' : 'Invest from Wallet →'}</button> : <button type="button" className="investment-submit investment-submit-direct" disabled={busy} onClick={openDirectPayment}>{busy ? 'Preparing payment…' : 'Pay Directly →'}</button>}</div>
