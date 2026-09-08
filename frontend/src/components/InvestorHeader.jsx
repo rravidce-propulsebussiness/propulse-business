@@ -34,31 +34,20 @@ export default function InvestorHeader() {
   const avatar = businessName.trim().charAt(0).toUpperCase() || 'B'
 
   return <header className="investor-header">
-    <Link className="investor-header-brand" to="/" onClick={() => setOpen(false)}>
-      <img src="/brand/propulse-logo.png" alt="Propulse Business" />
-    </Link>
-
+    <Link className="investor-header-brand" to="/" onClick={() => setOpen(false)}><img src="/brand/propulse-logo.png" alt="Propulse Business" /></Link>
     <div className="investor-header-label">INVESTOR</div>
-
     <nav className={`investor-header-nav${open ? ' open' : ''}`}>
       <Link className={active('/')} to="/" onClick={() => setOpen(false)}>Home</Link>
       <Link className={active('/investment')} to="/investment" onClick={() => setOpen(false)}>Invest</Link>
-      <a href="/investment#invested" onClick={() => setOpen(false)}>Invested</a>
+      <a href="/investment#available" onClick={() => setOpen(false)}>Invested</a>
       <a href="/investment#sold-leads" onClick={() => setOpen(false)}>Sold Leads</a>
       <a href="/investment#history" onClick={() => setOpen(false)}>History</a>
       <a href="/investment#available" onClick={() => setOpen(false)}>Available</a>
       <button className="investor-mobile-logout" onClick={logout}>Logout</button>
     </nav>
-
     <div className="investor-header-right">
-      <a className="investor-available" href="/investment#available" aria-label="Available wallet balance">
-        <span>AVAILABLE</span>
-        <strong>{money(walletBalance)}</strong>
-      </a>
-      <Link className="investor-profile" to="/profile" aria-label="Open business profile">
-        <span className="investor-avatar">{avatar}</span>
-        <span className="investor-profile-name">{businessName}</span>
-      </Link>
+      <a className="investor-available" href="/investment#available" aria-label="Available wallet balance"><span>AVAILABLE</span><strong>{money(walletBalance)}</strong></a>
+      <Link className="investor-profile" to="/profile" aria-label="Open business profile"><span className="investor-avatar">{avatar}</span><span className="investor-profile-name">{businessName}</span></Link>
       <button className="investor-logout" onClick={logout}>Logout</button>
       <button className="investor-menu" aria-label="Open investor navigation" onClick={() => setOpen(value => !value)}>☰</button>
     </div>
