@@ -19,7 +19,7 @@ function Login() {
     saveSession(result)
     if (!remember) localStorage.setItem('propulse_session_mode', 'session')
     const destination = location.state?.from?.pathname
-      || (result.user?.role === 'admin' ? '/admin' : '/dashboard')
+      || (result.user?.role === 'admin' ? '/admin' : '/leads')
     navigate(destination, { replace: true })
   }, [location.state, navigate, remember])
 
