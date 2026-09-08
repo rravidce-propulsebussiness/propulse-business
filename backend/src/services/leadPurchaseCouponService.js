@@ -1,5 +1,6 @@
 const pool=require('../config/database')
 const couponService=require('./couponService')
+const walletService=require('./walletService')
 const base=require('./leadPurchaseService')
 
 async function clearConflictingPending({leadId,userId,shares,couponCode}) {
@@ -16,8 +17,11 @@ async function clearConflictingPending({leadId,userId,shares,couponCode}) {
     const hasSubmittedProof=Boolean(String(pending.manual_reference||'').trim()||String(pending.proof_url||'').trim())
 
     if(samePackage&&sameCoupon){await client.query('COMMIT');return}
-    if(Number(pending.wallet_amount||0)>0||hasSubmittedProof){await client.query('COMMIT');return}
+    if(hasSubmittedProof){await client.query('COMMIT');return}
 
+    if(Number(pending.wallet_amount||0)>0){
+      await walletService.refundForPayment(client,{userId,paymentId:pending.payment_id,description:`Refund wallet allocation for superseded Lead #${leadId} payment`})
+    }
     await couponService.releaseForPayment(client,pending.payment_id)
     await client.query(`DELETE FROM lead_purchases WHERE id=$1 AND status='pending_payment'`,[pending.lead_purchase_id])
     await client.query(`UPDATE payments SET status='failed',notes=CONCAT(COALESCE(notes,''),' [Superseded by a new lead purchase selection]'),updated_at=CURRENT_TIMESTAMP WHERE id=$1 AND status='pending'`,[pending.payment_id])
