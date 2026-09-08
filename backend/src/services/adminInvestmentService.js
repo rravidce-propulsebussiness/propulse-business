@@ -111,9 +111,9 @@ async function getDashboard({ search = '', status = 'all', industryId = '' } = {
     }
     const investor = investorsMap.get(row.user_id);
     investor.investment_count += 1;
-    investor.total_invested += row.amount;
+    if (!['cancelled', 'pending'].includes(String(row.status).toLowerCase())) investor.total_invested += row.amount;
     if (row.status === 'active') investor.active_invested += row.amount;
-    if (row.status !== 'paid' && new Date(row.matures_at) <= new Date()) investor.matured_unpaid += 1;
+    if (row.status !== 'paid' && row.status !== 'cancelled' && new Date(row.matures_at) <= new Date()) investor.matured_unpaid += 1;
     investor.linked_leads += row.linked_leads;
     investor.sold_linked_leads += row.sold_linked_leads;
     investor.allocated_sales += row.allocated_sales;
@@ -137,9 +137,9 @@ async function getDashboard({ search = '', status = 'all', industryId = '' } = {
   const stats = {
     investors: investors.length,
     investment_cycles: rows.length,
-    total_invested: Number(rows.reduce((sum, x) => sum + x.amount, 0).toFixed(2)),
+    total_invested: Number(rows.filter(x => !['cancelled', 'pending'].includes(String(x.status).toLowerCase())).reduce((sum, x) => sum + x.amount, 0).toFixed(2)),
     active_invested: Number(rows.filter(x => x.status === 'active').reduce((sum, x) => sum + x.amount, 0).toFixed(2)),
-    matured_unpaid: rows.filter(x => x.status !== 'paid' && new Date(x.matures_at) <= new Date()).length,
+    matured_unpaid: rows.filter(x => x.status !== 'paid' && x.status !== 'cancelled' && new Date(x.matures_at) <= new Date()).length,
     linked_leads: Number(investors.reduce((sum, x) => sum + x.linked_leads, 0)),
     sold_linked_leads: Number(investors.reduce((sum, x) => sum + x.sold_linked_leads, 0)),
     allocated_sales: Number(investors.reduce((sum, x) => sum + x.allocated_sales, 0)),
