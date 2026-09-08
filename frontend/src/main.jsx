@@ -6,6 +6,7 @@ import './leadMarketplaceEnhancer.js'
 import './leadCouponUiEnhancer.js'
 import './walletCouponEnhancer.js'
 import './admin/leadImportBulkEnhancer.js'
+import './adminPaymentCouponEnhancer.js'
 import './homeLeadHighlight.css'
 import App from './App.jsx'
 
