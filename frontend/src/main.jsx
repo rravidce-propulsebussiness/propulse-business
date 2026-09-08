@@ -5,7 +5,6 @@ import './leadPaymentFix.css'
 import './walletCouponEnhancer.js'
 import './admin/leadImportBulkEnhancer.js'
 import './adminPaymentCouponEnhancer.js'
-import './leadDirectPaymentAmountFix.js'
 import './homeLeadHighlight.css'
 import App from './App.jsx'
 
