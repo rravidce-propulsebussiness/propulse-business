@@ -2,6 +2,7 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { useEffect, useMemo, useState } from 'react'
 import { authRequest, getToken, getUser } from '../utils/auth'
 import { claimLead, getLead, listLeads, purchaseLead } from '../api/leads'
+import LeadPurchaseModal from './LeadPurchaseModal'
 import UserHeader from '../components/UserHeader'
 import './LeadsV2.css'
 import './LeadsV2Payment.css'
@@ -46,10 +47,7 @@ const getCustom = (fields, names, contains = []) => {
   const exact = entries.find(([key]) => wanted.includes(norm(key)))
   if (exact) return displayValue(exact[0], exact[1])
   const patterns = contains.map(norm).filter(Boolean)
-  const fuzzy = entries.find(([key]) => {
-    const n = norm(key)
-    return patterns.some(pattern => n.includes(pattern))
-  })
+  const fuzzy = entries.find(([key]) => patterns.some(pattern => norm(key).includes(pattern)))
   return fuzzy ? displayValue(fuzzy[0], fuzzy[1]) : ''
 }
 const timeAgo = (value) => {
@@ -76,24 +74,12 @@ export default function LeadsV2() {
   const [upgrade, setUpgrade] = useState(false)
   const [expanded, setExpanded] = useState(null)
   const [buyModal, setBuyModal] = useState(null)
-  const [walletBalance, setWalletBalance] = useState(0)
-  const [useWallet, setUseWallet] = useState(true)
   const [search, setSearch] = useState('')
   const [tier, setTier] = useState('all')
   const [page, setPage] = useState(1)
   const [pagination, setPagination] = useState({ page: 1, limit: 20, total: 0, hasNext: false, hasPrevious: false })
-  const [buying, setBuying] = useState(null)
   const [claiming, setClaiming] = useState(null)
   const [notice, setNotice] = useState('')
-  const [payment, setPayment] = useState(null)
-  const [paymentLead, setPaymentLead] = useState(null)
-  const [paymentShares, setPaymentShares] = useState(0)
-  const [directSubmitting, setDirectSubmitting] = useState(false)
-  const [paymentError, setPaymentError] = useState('')
-  const [paymentSuccess, setPaymentSuccess] = useState('')
-  const [couponCode, setCouponCode] = useState('')
-  const [couponStatus, setCouponStatus] = useState('')
-  const [couponError, setCouponError] = useState('')
 
   useEffect(() => { setPage(1) }, [search, tier, category])
   useEffect(() => {
@@ -127,19 +113,7 @@ export default function LeadsV2() {
   const openBuyModal = (lead) => {
     if (!logged) { window.location.href = '/login'; return }
     if (!lead.pricing?.shares?.length) { setError('Pricing is not available for this lead.'); return }
-    setError(''); setNotice(''); setPaymentError(''); setCouponCode(''); setCouponStatus(''); setCouponError(''); setUseWallet(true); setWalletBalance(0); setBuyModal(lead)
-    authRequest('/wallet').then(data => setWalletBalance(Number(data?.balance ?? data?.wallet?.balance ?? 0))).catch(() => {})
-  }
-  const applyCoupon = () => {
-    const normalized = String(couponCode || '').trim().toUpperCase()
-    setCouponError('')
-    if (!normalized) {
-      setCouponStatus('')
-      setCouponError('Enter a coupon code first.')
-      return
-    }
-    setCouponCode(normalized)
-    setCouponStatus(`${normalized} saved. Select a share pack below to apply the discount.`)
+    setError(''); setNotice(''); setBuyModal(lead)
   }
   const claim = async (lead) => {
     if (!logged) { window.location.href = '/login'; return }
@@ -152,56 +126,11 @@ export default function LeadsV2() {
     } catch (e) { setError(e.message) }
     finally { setClaiming(null) }
   }
-  const buy = async (lead, shares, plan = 'normal') => {
-    if (!logged) { window.location.href = '/login'; return }
-    if (plan === 'pro' && !isPro) { setBuyModal(null); setUpgrade(true); return }
-    const key = `${lead.id}-${shares}-${plan}-${useWallet ? 'wallet' : 'direct'}`
-    setBuying(key); setNotice(''); setError(''); setCouponError('')
-    try {
-      const d = await purchaseLead(lead.id, shares, { useWallet, couponCode })
-      const needsExternalPayment = Boolean(d?.requires_external_payment || d?.requiresExternalPayment || d?.payment?.status === 'pending')
-      if (needsExternalPayment) {
-        setBuying(null)
-        setBuyModal(null)
-        setPaymentError('')
-        setPayment(d)
-        setPaymentLead(lead)
-        setPaymentShares(shares)
-        return
-      }
-      await getLead(lead.id)
-      setLeads(current => current.filter(x => x.id !== lead.id))
-      setBuyModal(null)
-      setNotice(`Lead #${lead.id} purchased successfully from ${plan === 'pro' ? 'Pro' : 'Normal'} pricing.`)
-      setExpanded(null)
-    } catch (e) {
-      if (e.code === 'PRO_REQUIRED') { setBuyModal(null); setUpgrade(true) } else if (String(e.code || '').includes('COUPON') || ['MIN_ORDER', 'PURCHASE_NOT_ELIGIBLE', 'PLAN_NOT_ELIGIBLE', 'USER_NOT_ELIGIBLE', 'INDUSTRY_NOT_ELIGIBLE', 'USAGE_LIMIT', 'USER_USAGE_LIMIT'].includes(e.code)) setCouponError(e.message) else setError(e.message)
-    } finally { setBuying(current => current === key ? null : current) }
-  }
-  const submitDirect = async () => {
-    setPaymentError('')
-    const reference = document.getElementById('lead-payment-utr')?.value?.trim()
-    const file = document.getElementById('lead-payment-proof')?.files?.[0]
-    if (!reference) return setPaymentError('Enter the payment reference / UTR first.')
-    if (!file) return setPaymentError('Upload the payment screenshot or PDF first.')
-    if (file.size > 5 * 1024 * 1024) return setPaymentError('Payment proof must be 5 MB or smaller.')
-    if (!payment?.payment?.id) return setPaymentError('Payment session is unavailable. Please try again.')
-    try {
-      setDirectSubmitting(true)
-      const proofUrl = await new Promise((resolve, reject) => {
-        const reader = new FileReader()
-        reader.onload = () => resolve(String(reader.result))
-        reader.onerror = () => reject(new Error('Unable to read payment proof'))
-        reader.readAsDataURL(file)
-      })
-      await authRequest(`/payments/${payment.payment.id}/reference`, {
-        method: 'POST',
-        body: JSON.stringify({ manualReference: reference, proofUrl, notes: `Lead #${paymentLead?.id} direct payment${Number(payment.walletAmount) > 0 ? ` after wallet payment of ${money(payment.walletAmount)}` : ''}` })
-      })
-      const submittedMessage = `${Number(payment.walletAmount) > 0 ? `Wallet payment of ${money(payment.walletAmount)} applied. ` : ''}Remaining ${money(payment.externalAmount)} submitted for verification.`
-      setPayment(null); setPaymentLead(null); setPaymentShares(0); setPaymentError(''); setPaymentSuccess(submittedMessage)
-    } catch (e) { setPaymentError(e.message || 'Unable to submit payment. Please try again.') }
-    finally { setDirectSubmitting(false) }
+  const handlePurchased = async (_, leadId) => {
+    try { await getLead(leadId) } catch {}
+    setLeads(current => current.filter(x => x.id !== leadId))
+    setNotice(`Lead #${leadId} purchase submitted successfully.`)
+    setExpanded(null)
   }
 
   if (user?.role === 'admin') return <main className="lv2-page"><section className="lv2-empty"><span>ADMIN ACCOUNT</span><h1>Lead management is in the Admin Panel.</h1><Link to="/admin/leads">Open Admin Leads →</Link></section></main>
@@ -257,9 +186,7 @@ export default function LeadsV2() {
       {!loading && (pagination.hasPrevious || pagination.hasNext) && <div className="lv2-pagination"><button disabled={!pagination.hasPrevious} onClick={() => setPage(p => Math.max(1, p - 1))}>← Previous</button><span>Page {pagination.page} · {pagination.total} leads</span><button disabled={!pagination.hasNext} onClick={() => setPage(p => p + 1)}>Next →</button></div>}
       <section className="lv2-bottom-cta"><div><span className="lv2-kicker">GROW WITH PROPULSE</span><h2>Find the right opportunity for your business.</h2><p>Browse, compare and choose leads with transparent pricing.</p></div>{logged ? <Link to="/dashboard">Go to dashboard →</Link> : <Link to="/signup">Create business account →</Link>}</section>
     </main>
-    {buyModal && <div className="lv2-overlay" onClick={() => setBuyModal(null)}><div className="lv2-buy-modal" onClick={e => e.stopPropagation()}><button className="lv2-modal-close" onClick={() => setBuyModal(null)}>×</button><span className="lv2-modal-kicker">LEAD PRICING</span><h2>Choose your share pack</h2><p className="lv2-modal-subtitle">Select how many shares you want for Lead #{buyModal.id}.</p><div className="lv2-modal-lead"><div className="lv2-avatar">{String(buyModal.customer_name || buyModal.service_name || buyModal.industry_name || 'L').trim().charAt(0).toUpperCase()}</div><div><strong>{buyModal.customer_name || buyModal.service_name || buyModal.industry_name || 'Business opportunity'}</strong><small>{[buyModal.service_name, buyModal.city_name, buyModal.state_name].filter(hasValue).join(' · ')}</small></div></div><section className="lv2-coupon-box" aria-label="Coupon code"><div><strong>COUPON CODE / PROMO</strong><small>Enter your code before choosing a share pack.</small></div><div className="lv2-coupon-row"><input value={couponCode} onChange={e => { setCouponCode(e.target.value.toUpperCase()); setCouponStatus(''); setCouponError('') }} onKeyDown={e => { if (e.key === 'Enter') applyCoupon() }} maxLength={50} autoComplete="off" placeholder="ENTER COUPON CODE" aria-label="Coupon code"/><button type="button" onClick={applyCoupon}>Apply</button></div>{couponStatus && <small className="lv2-coupon-status">✓ {couponStatus}</small>}{couponError && <small className="lv2-coupon-error">{couponError}</small>}</section><div className="lv2-wallet-choice"><label><input type="checkbox" checked={useWallet} onChange={e => setUseWallet(e.target.checked)} /> <span>Use wallet balance</span></label><strong>{walletBalance > 0 ? money(walletBalance) : '₹0'}</strong><small>{walletBalance > 0 ? 'Wallet is applied after the coupon discount.' : 'No wallet balance available. You can pay the final amount directly.'}</small></div><div className={`lv2-modal-pricing ${isPro ? 'pro-only' : ''}`}><div className="lv2-modal-price-head"><span>SHARES</span><span>{isPro ? 'PRO PRICE' : 'NORMAL PRICE'}</span>{!isPro && <span>PRO PRICE</span>}</div>{(buyModal.pricing?.shares || []).map(p => { const n = Number(p.shares); const normal = Number(p.normal); const pro = Number(p.pro); const saving = Number.isFinite(normal) && Number.isFinite(pro) && normal > pro ? normal - pro : 0; const normalKey = `${buyModal.id}-${n}-normal-${useWallet ? 'wallet' : 'direct'}`; const proKey = `${buyModal.id}-${n}-pro-${useWallet ? 'wallet' : 'direct'}`; return <div className="lv2-modal-price-row" key={n}><div className="lv2-share-badge"><strong>{n}</strong><small>{n === 1 ? 'Single share' : `${n} shares`}</small></div>{!isPro && <button className="lv2-modal-price normal" disabled={buyModalClaimed || buying === normalKey} onClick={() => buy(buyModal, n, 'normal')}>{buying === normalKey ? 'Buying…' : money(normal)}</button>}{isPro && <div className="lv2-pro-member-price"><button className="lv2-modal-price pro selected-pro" disabled={buyModalClaimed || buying === proKey} onClick={() => buy(buyModal, n, 'pro')}>{buying === proKey ? 'Buying…' : money(pro)}</button>{saving > 0 && <small>Pro saved {money(saving)}</small>}</div>}{!isPro && <button className="lv2-modal-price pro" disabled={buyModalClaimed || buying === proKey} onClick={() => buy(buyModal, n, 'pro')}><span>{buying === proKey ? 'Buying…' : money(pro)}</span>{saving > 0 && <small>Save {money(saving)}</small>}</button>}</div> })}</div>{!isPro && <div className="lv2-pro-hint"><strong>Pro members save more</strong><span>Compare the Pro price above. Upgrade to Pro to unlock Pro pricing.</span><button onClick={() => { setBuyModal(null); setUpgrade(true) }}>View Pro →</button></div>}{buyModalClaimed && <div className="lv2-modal-owned">This lead is already purchased and available in your account.</div>}</div></div>}
-    {payment && paymentLead && (() => { const paymentRow = payment.payment || {}; const subtotal = Number(paymentRow.subtotal_amount ?? payment.coupon?.subtotalAmount ?? paymentRow.amount ?? 0); const discount = Number(paymentRow.discount_amount ?? payment.coupon?.discountAmount ?? 0); const finalAmount = Number(paymentRow.amount ?? payment.coupon?.finalAmount ?? Math.max(0, subtotal - discount)); const walletPaid = Number(payment.walletAmount ?? paymentRow.wallet_amount ?? 0); const directAmount = Number(payment.externalAmount ?? paymentRow.external_amount ?? Math.max(0, finalAmount - walletPaid)); const appliedCoupon = String(paymentRow.coupon_code || payment.coupon?.code || '').trim(); return <div className="lv2-overlay" onClick={() => !directSubmitting && setPayment(null)}><div className="lv2-upgrade lv2-payment-modal" onClick={e => e.stopPropagation()}><button onClick={() => !directSubmitting && setPayment(null)} disabled={directSubmitting}>×</button><span>PAYMENT</span><h2>Complete Lead #{paymentLead.id}</h2><p>{walletPaid > 0 ? `${money(walletPaid)} from your wallet was applied after the coupon discount.` : 'No wallet balance was used.'} {directAmount > 0 ? 'Pay the remaining amount directly.' : 'Your payment is complete.'}</p><div className="lv2-detail-grid"><div><small>Shares</small><b>{paymentShares}</b></div><div><small>Original</small><b>{money(subtotal)}</b></div></div><div className="lv2-payment-breakdown"><div><span>Original amount</span><b>{money(subtotal)}</b></div>{discount > 0 && <div className="discount"><span>{appliedCoupon ? `Coupon ${appliedCoupon}` : 'Coupon discount'}</span><b>−{money(discount)}</b></div>}<div><span>Final lead amount</span><b>{money(finalAmount)}</b></div><div><span>Wallet deduction</span><b>−{money(walletPaid)}</b></div><div className="due"><span>Amount to pay now</span><b>{money(directAmount)}</b></div></div>{directAmount > 0 && <><label>Payment reference / UTR<input id="lead-payment-utr" placeholder="Enter UTR or transaction ID" autoComplete="off" /></label><label>Payment proof<input id="lead-payment-proof" type="file" accept="image/*,.pdf" /></label>{paymentError && <div className="lv2-payment-error" role="alert">{paymentError}</div>}<div className="lv2-payment-submit"><button type="button" className="lv2-more" onClick={submitDirect} disabled={directSubmitting}>{directSubmitting ? 'Submitting…' : `Submit ${money(directAmount)} payment`}</button></div></>}</div></div> })()}
-    {paymentSuccess && <div className="lv2-overlay" onClick={() => setPaymentSuccess('')}><div className="lv2-upgrade lv2-payment-success" role="dialog" aria-modal="true" onClick={e => e.stopPropagation()}><div className="lv2-success-icon">✓</div><span>PAYMENT SUBMITTED</span><h2>Submitted successfully</h2><p>{paymentSuccess}</p><button onClick={() => setPaymentSuccess('')}>Done</button></div></div>}
+    {buyModal && !buyModalClaimed && <LeadPurchaseModal lead={buyModal} isPro={isPro} onClose={() => setBuyModal(null)} onPurchased={handlePurchased} onUpgrade={() => setUpgrade(true)} />}
     {upgrade && <div className="lv2-overlay"><div className="lv2-upgrade"><button onClick={() => setUpgrade(false)}>×</button><span>PRO ACCESS</span><h2>Unlock Exclusive access.</h2><p>Pro members get first access during the configured Pro-first period.</p><div><Link to="/dashboard">View Pro options →</Link><button onClick={() => setUpgrade(false)}>Not now</button></div></div></div>}
   </div>
 }
