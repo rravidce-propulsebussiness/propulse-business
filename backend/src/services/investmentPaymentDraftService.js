@@ -10,7 +10,7 @@ function cleanup() {
   }
 }
 
-function create({ userId, industryId, stateId, cityId, amount }) {
+function create({ userId, industryId, stateId, cityId, amount, reinvestmentEnabled = false }) {
   cleanup();
   const id = `draft_${crypto.randomBytes(18).toString('hex')}`;
   drafts.set(id, {
@@ -19,6 +19,7 @@ function create({ userId, industryId, stateId, cityId, amount }) {
     stateId: stateId == null ? null : Number(stateId),
     cityId: cityId == null ? null : Number(cityId),
     amount: Number(amount),
+    reinvestmentEnabled: Boolean(reinvestmentEnabled),
     createdAt: Date.now(),
   });
   return id;
