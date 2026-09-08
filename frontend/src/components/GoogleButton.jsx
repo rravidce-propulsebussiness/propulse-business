@@ -4,19 +4,26 @@ const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID
 
 function GoogleButton({ onCredential, disabled = false }) {
   const containerRef = useRef(null)
+  const credentialRef = useRef(onCredential)
+  const initializedRef = useRef(false)
   const [ready, setReady] = useState(Boolean(window.google?.accounts?.id))
+
+  useEffect(() => {
+    credentialRef.current = onCredential
+  }, [onCredential])
 
   useEffect(() => {
     if (!GOOGLE_CLIENT_ID || disabled) return undefined
     let cancelled = false
 
     function render() {
-      if (cancelled || !window.google?.accounts?.id || !containerRef.current) return
+      if (cancelled || initializedRef.current || !window.google?.accounts?.id || !containerRef.current) return
+      initializedRef.current = true
       setReady(true)
       containerRef.current.innerHTML = ''
       window.google.accounts.id.initialize({
         client_id: GOOGLE_CLIENT_ID,
-        callback: response => onCredential(response.credential),
+        callback: response => credentialRef.current?.(response.credential),
       })
       window.google.accounts.id.renderButton(containerRef.current, {
         type: 'standard',
@@ -44,7 +51,7 @@ function GoogleButton({ onCredential, disabled = false }) {
       cancelled = true
       window.clearInterval(interval)
     }
-  }, [onCredential, disabled])
+  }, [disabled])
 
   if (!GOOGLE_CLIENT_ID) {
     return <div className="google-unconfigured">Continue with Google is ready after <code>VITE_GOOGLE_CLIENT_ID</code> is added.</div>
