@@ -65,19 +65,13 @@ async function payout({ investmentId, adminId, transferReference, proofUrl }) {
       WHERE id=$5
     `, [payoutAmount, reference, proofUrl, adminId, inv.id]);
 
-    const wallet = (await client.query(
-      `INSERT INTO wallets(user_id) VALUES($1) ON CONFLICT(user_id) DO UPDATE SET user_id=EXCLUDED.user_id RETURNING id,balance`,
-      [inv.user_id]
-    )).rows[0];
-    const locked = (await client.query('SELECT id,balance FROM wallets WHERE id=$1 FOR UPDATE', [wallet.id])).rows[0];
-    const next = Number(locked.balance) + payoutAmount;
-    await client.query('UPDATE wallets SET balance=$1,updated_at=CURRENT_TIMESTAMP WHERE id=$2', [next, locked.id]);
+    // Returns are recorded as an external transfer to the investor owner account.
+    // Do not credit the Propulse wallet.
     if (payoutAmount > 0) {
-      await client.query(`INSERT INTO wallet_transactions(wallet_id,user_id,type,amount,balance_after,reference_type,reference_id,description) VALUES($1,$2,'credit',$3,$4,'investment_return',$5,'Realized lead-sale revenue paid')`, [locked.id, inv.user_id, payoutAmount, next, inv.id]);
       await client.query(`INSERT INTO investment_transactions(investment_id,user_id,type,amount,reference_type,reference_id) VALUES($1,$2,'return',$3,'admin_payout',$4)`, [inv.id, inv.user_id, payoutAmount, adminId]);
     }
     await client.query('COMMIT');
-    return { id: inv.id, status: 'paid', payout_amount: payoutAmount, realized_revenue: payoutAmount, payout_transfer_reference: reference, payout_proof_url: proofUrl, payout_transferred_at: new Date().toISOString() };
+    return { id: inv.id, status: 'paid', payout_amount: payoutAmount, realized_revenue: payoutAmount, payout_transfer_reference: reference, payout_proof_url: proofUrl, payout_transferred_at: new Date().toISOString(), payout_destination: 'owner_account' };
   } catch (error) {
     await client.query('ROLLBACK');
     throw error;
