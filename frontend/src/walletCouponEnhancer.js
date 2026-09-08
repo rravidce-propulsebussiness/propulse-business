@@ -9,6 +9,7 @@ function enhanceWalletCoupon(modal) {
   const amountInput = form.querySelector('input[type="number"]')
   if (!amountInput) return
   modal.dataset.walletCouponReady = 'true'
+  modal.dataset.walletCouponZero = 'false'
 
   const label = document.createElement('label')
   label.className = 'wallet-coupon-field'
@@ -32,9 +33,14 @@ function enhanceWalletCoupon(modal) {
     const validAmount = Number.isFinite(amount) && amount > 0
     const discount = applied && validAmount ? Math.min(Number(applied.discountAmount) || 0, amount) : 0
     const payable = validAmount ? Math.max(0, amount - discount) : 0
+    const fullyDiscounted = Boolean(applied && validAmount && payable === 0)
+    modal.dataset.walletCouponZero = fullyDiscounted ? 'true' : 'false'
     summary.querySelector('.wallet-coupon-credit').textContent = money(validAmount ? amount : 0)
     summary.querySelector('.wallet-coupon-discount').textContent = money(discount)
     summary.querySelector('.wallet-coupon-pay').textContent = money(payable)
+    summary.querySelector('.wallet-coupon-pay-row span').textContent = fullyDiscounted ? 'PAY NOW' : 'AMOUNT TO PAY NOW'
+    summary.querySelector('.wallet-coupon-pay').textContent = fullyDiscounted ? '₹0.00' : money(payable)
+    summary.querySelector('.wallet-coupon-summary>small').textContent = fullyDiscounted ? '100% coupon applied. No UTR or payment proof is required. Your wallet credit will be added immediately.' : 'After approval, the full wallet credit amount will be added to your balance.'
   }
 
   button.addEventListener('click', async () => {
@@ -66,7 +72,9 @@ function enhanceWalletCoupon(modal) {
       input.value = code
       render()
       status.className = 'wallet-coupon-status success'
-      status.textContent = `${code} applied — ${money(applied.discountAmount)} off. Pay ${money(applied.finalAmount)} and receive ${money(amount)} in your wallet after approval.`
+      status.textContent = applied.finalAmount === 0
+        ? `${code} applied — 100% off. Pay ₹0.00 and receive ${money(amount)} in your wallet immediately.`
+        : `${code} applied — ${money(applied.discountAmount)} off. Pay ${money(applied.finalAmount)} and receive ${money(amount)} in your wallet after approval.`
     } catch (error) {
       applied = null
       render()
@@ -80,12 +88,14 @@ function enhanceWalletCoupon(modal) {
 
   amountInput.addEventListener('input', () => {
     applied = null
+    modal.dataset.walletCouponZero = 'false'
     status.textContent = ''
     status.className = 'wallet-coupon-status'
     render()
   })
   input.addEventListener('input', () => {
     applied = null
+    modal.dataset.walletCouponZero = 'false'
     status.textContent = ''
     status.className = 'wallet-coupon-status'
     render()
