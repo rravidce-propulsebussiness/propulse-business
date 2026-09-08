@@ -6,4 +6,5 @@ function admin(req,res,next){if(req.user?.role!=='admin')return res.status(403).
 router.use(auth,admin);
 router.get('/investor-settings',c.investorSettings);
 router.put('/investor-settings',c.updateInvestor);
+router.get('/investment-dashboard',c.investmentDashboard);
 module.exports=router;
