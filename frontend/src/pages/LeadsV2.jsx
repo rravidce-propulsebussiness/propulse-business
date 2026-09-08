@@ -94,6 +94,11 @@ export default function LeadsV2() {
 
   useEffect(() => { setPage(1) }, [search, tier, category])
   useEffect(() => {
+    if (!payment) return
+    setBuying(null)
+    setBuyModal(null)
+  }, [payment])
+  useEffect(() => {
     let live = true
     const timer = setTimeout(async () => {
       setLoading(true); setError('')
@@ -146,7 +151,13 @@ export default function LeadsV2() {
     try {
       const d = await purchaseLead(lead.id, shares, { useWallet })
       if (d.requires_external_payment) {
-        setBuyModal(null); setPaymentError(''); setPayment(d); setPaymentLead(lead); setPaymentShares(shares); return
+        setBuying(null)
+        setBuyModal(null)
+        setPaymentError('')
+        setPayment(d)
+        setPaymentLead(lead)
+        setPaymentShares(shares)
+        return
       }
       const privateLead = await getLead(lead.id)
       setLeads(current => current.filter(x => x.id !== lead.id))
