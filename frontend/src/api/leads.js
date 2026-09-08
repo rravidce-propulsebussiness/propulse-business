@@ -55,6 +55,7 @@ export async function purchaseLead(id, shares, options = {}) {
   })
 
   const payment = data?.payment || {}
+  const coupon = data?.coupon || payment?.coupon || null
   const externalAmountRaw = data?.external_amount ?? data?.externalAmount ?? payment?.external_amount ?? payment?.externalAmount ?? 0
   const requiresExternalPayment = Boolean(
     data?.requires_external_payment ??
@@ -62,7 +63,7 @@ export async function purchaseLead(id, shares, options = {}) {
     (payment?.status === 'pending' && Number(externalAmountRaw) > 0)
   )
 
-  if (!requiresExternalPayment) return data
+  if (!requiresExternalPayment) return { ...data, coupon }
 
   const paymentId = data.payment_id ?? data.paymentId ?? payment.id ?? null
   const totalAmount = Number(payment.amount ?? data.amount ?? data.totalAmount ?? data.total_amount ?? data.purchase_amount ?? data.purchaseAmount ?? 0)
@@ -71,6 +72,7 @@ export async function purchaseLead(id, shares, options = {}) {
 
   return {
     ...data,
+    coupon,
     requires_external_payment: true,
     requiresExternalPayment: true,
     walletAmount: Number.isFinite(walletAmount) ? walletAmount : 0,
@@ -81,7 +83,8 @@ export async function purchaseLead(id, shares, options = {}) {
       id: paymentId,
       amount: Number.isFinite(totalAmount) ? totalAmount : 0,
       wallet_amount: walletAmount,
-      external_amount: externalAmount
+      external_amount: externalAmount,
+      coupon
     }
   }
 }
