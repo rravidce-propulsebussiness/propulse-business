@@ -21,6 +21,9 @@ function enhanceWalletCoupon(modal) {
   const input = label.querySelector('#wallet-coupon-code')
   const button = label.querySelector('.wallet-coupon-apply')
   const status = label.querySelector('.wallet-coupon-status')
+  const referenceLabel = [...form.querySelectorAll('label')].find(x => /payment reference|utr/i.test(x.textContent || ''))
+  const proofLabel = [...form.querySelectorAll('label')].find(x => /payment proof/i.test(x.textContent || ''))
+  const submitButton = form.querySelector('button[type="submit"]')
 
   const summary = document.createElement('div')
   summary.className = 'wallet-coupon-summary'
@@ -37,10 +40,12 @@ function enhanceWalletCoupon(modal) {
     modal.dataset.walletCouponZero = fullyDiscounted ? 'true' : 'false'
     summary.querySelector('.wallet-coupon-credit').textContent = money(validAmount ? amount : 0)
     summary.querySelector('.wallet-coupon-discount').textContent = money(discount)
-    summary.querySelector('.wallet-coupon-pay').textContent = money(payable)
     summary.querySelector('.wallet-coupon-pay-row span').textContent = fullyDiscounted ? 'PAY NOW' : 'AMOUNT TO PAY NOW'
     summary.querySelector('.wallet-coupon-pay').textContent = fullyDiscounted ? '₹0.00' : money(payable)
-    summary.querySelector('.wallet-coupon-summary>small').textContent = fullyDiscounted ? '100% coupon applied. No UTR or payment proof is required. Your wallet credit will be added immediately.' : 'After approval, the full wallet credit amount will be added to your balance.'
+    summary.querySelector('.wallet-coupon-summary>small').textContent = fullyDiscounted ? '100% coupon applied. No UTR or payment proof is required. Click the button below to credit your wallet immediately.' : 'After approval, the full wallet credit amount will be added to your balance.'
+    if (referenceLabel) referenceLabel.hidden = fullyDiscounted
+    if (proofLabel) proofLabel.hidden = fullyDiscounted
+    if (submitButton) submitButton.innerHTML = fullyDiscounted ? 'Add to wallet for ₹0 <span>→</span>' : 'Submit balance request <span>→</span>'
   }
 
   button.addEventListener('click', async () => {
