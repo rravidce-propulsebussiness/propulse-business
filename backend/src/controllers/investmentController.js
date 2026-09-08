@@ -45,6 +45,10 @@ async function mine(req, res) {
   try { return res.json(await service.getMyInvestments(req.user.id)); }
   catch (e) { return res.status(500).json({ error: 'Failed to load investments' }); }
 }
+async function soldLeads(req, res) {
+  try { return res.json(await service.getInvestorSoldLeads(req.user.id)); }
+  catch (e) { return res.status(500).json({ error: 'Failed to load sold leads' }); }
+}
 async function reinvest(req, res) {
   try {
     return res.status(201).json(await service.reinvestInvestment({ userId: req.user.id, investmentId: Number(req.params.id) }));
@@ -64,4 +68,4 @@ async function payout(req, res) {
     return res.status(map[e.code] || 400).json({ error: e.message, code: e.code });
   }
 }
-module.exports = { access, rules, locationRules, create, checkout, mine, reinvest, adminList, payout };
+module.exports = { access, rules, locationRules, create, checkout, mine, soldLeads, reinvest, adminList, payout };
