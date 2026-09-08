@@ -39,45 +39,45 @@ export function claimLead(id) {
   return authRequest(`/leads/${id}/claim`, { method: 'POST' })
 }
 
-export function purchaseLead(id, shares, options = {}) {
+export async function purchaseLead(id, shares, options = {}) {
   let useWallet = options.useWallet
   if (useWallet === undefined) {
     try { useWallet = localStorage.getItem('propulse_use_wallet') !== 'false' } catch { useWallet = true }
   }
   const couponCode = String(options.couponCode || '').trim()
-  return authRequest(`/leads/${id}/purchase`, {
+  const data = await authRequest(`/leads/${id}/purchase`, {
     method: 'POST',
     body: JSON.stringify({
       shares,
       useWallet: useWallet !== false,
       ...(couponCode ? { couponCode } : {})
     })
-  }).then(data => {
-    try {
-      if (data?.coupon) {
-        window.__propulseLastLeadCoupon = data.coupon
-      } else {
-        window.__propulseLastLeadCoupon = null
-      }
-    } catch {}
-    if (!data?.requires_external_payment) return data
-    const payment = data.payment || {}
-    const paymentId = data.payment_id ?? data.paymentId ?? payment.id ?? null
-    const totalAmount = Number(payment.amount ?? data.amount ?? data.totalAmount ?? data.total_amount ?? data.purchase_amount ?? data.purchaseAmount ?? 0)
-    const walletAmount = Number(data.walletAmount ?? data.wallet_amount ?? payment.walletAmount ?? payment.wallet_amount ?? 0)
-    const externalAmount = Number(data.externalAmount ?? data.external_amount ?? payment.externalAmount ?? payment.external_amount ?? Math.max(0, totalAmount - walletAmount))
-    return {
-      ...data,
-      walletAmount: Number.isFinite(walletAmount) ? walletAmount : 0,
-      externalAmount: Number.isFinite(externalAmount) ? externalAmount : 0,
-      balanceAfter: Number(data.balanceAfter ?? data.balance_after ?? payment.balanceAfter ?? payment.balance_after ?? 0),
-      payment: {
-        ...payment,
-        id: paymentId,
-        amount: Number.isFinite(totalAmount) ? totalAmount : 0,
-        wallet_amount: walletAmount,
-        external_amount: externalAmount
-      }
-    }
   })
+
+  try {
+    window.__propulseLastLeadCoupon = data?.coupon || null
+  } catch {}
+
+  if (!data?.requires_external_payment) return data
+
+  const payment = data.payment || {}
+  const paymentId = data.payment_id ?? data.paymentId ?? payment.id ?? null
+  const totalAmount = Number(payment.amount ?? data.amount ?? data.totalAmount ?? data.total_amount ?? data.purchase_amount ?? data.purchaseAmount ?? 0)
+  const walletAmount = Number(data.walletAmount ?? data.wallet_amount ?? payment.walletAmount ?? payment.wallet_amount ?? 0)
+  const externalAmount = Number(data.externalAmount ?? data.external_amount ?? payment.externalAmount ?? payment.external_amount ?? Math.max(0, totalAmount - walletAmount))
+
+  return {
+    ...data,
+    requires_external_payment: true,
+    walletAmount: Number.isFinite(walletAmount) ? walletAmount : 0,
+    externalAmount: Number.isFinite(externalAmount) ? externalAmount : 0,
+    balanceAfter: Number(data.balanceAfter ?? data.balance_after ?? payment.balanceAfter ?? payment.balance_after ?? 0),
+    payment: {
+      ...payment,
+      id: paymentId,
+      amount: Number.isFinite(totalAmount) ? totalAmount : 0,
+      wallet_amount: walletAmount,
+      external_amount: externalAmount
+    }
+  }
 }
