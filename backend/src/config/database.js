@@ -7,13 +7,18 @@ if (process.env.NODE_ENV === 'production') {
   if (missing.length) throw new Error(`Missing required database environment variables: ${missing.join(', ')}`);
 }
 
+const configuredPoolMax = Number(process.env.DB_POOL_MAX);
+const poolMax = Number.isFinite(configuredPoolMax) && configuredPoolMax > 0
+  ? Math.min(10, Math.max(2, configuredPoolMax))
+  : 5;
+
 const pool = new Pool({
   host: process.env.DB_HOST,
   port: Number(process.env.DB_PORT) || 5432,
   database: process.env.DB_NAME,
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
-  max: Math.min(100, Math.max(5, Number(process.env.DB_POOL_MAX) || 20)),
+  max: poolMax,
   idleTimeoutMillis: Math.max(1000, Number(process.env.DB_IDLE_TIMEOUT_MS) || 30000),
   connectionTimeoutMillis: Math.max(1000, Number(process.env.DB_CONNECTION_TIMEOUT_MS) || 10000),
   statement_timeout: Math.max(1000, Number(process.env.DB_STATEMENT_TIMEOUT_MS) || 30000),
