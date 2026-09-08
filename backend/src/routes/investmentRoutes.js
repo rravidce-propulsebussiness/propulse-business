@@ -11,6 +11,7 @@ const adminInvestmentWriteLimit = rateLimit({ windowMs: 60 * 1000, max: 30 });
 router.get('/access', auth, c.access);
 router.get('/rules', auth, c.rules);
 router.get('/location-rules', auth, c.locationRules);
+router.get('/sold-leads', auth, c.soldLeads);
 
 router.post('/checkout', auth, investmentWriteLimit, async (req, res, next) => {
   try {
