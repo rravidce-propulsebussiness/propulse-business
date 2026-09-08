@@ -31,7 +31,7 @@ async function getMarketplacePage({industryId,serviceId,subserviceId,stateId,cit
        AND (l.city_id IS NULL OR bpl.city_id=l.city_id OR (bc.name IS NOT NULL AND lc.name IS NOT NULL AND LOWER(TRIM(bc.name))=LOWER(TRIM(lc.name))))
    )`);
  }
- if(role!=='admin'&&userId){values.push(userId);const p3=`$${values.length}`;conditions.push(`NOT EXISTS (SELECT 1 FROM lead_purchases lp WHERE lp.lead_id=l.id AND lp.user_id=${p3} AND lp.status IN ('paid','pending_payment'))`)}
+ if(role!=='admin'&&userId){values.push(userId);const p3=`$${values.length}`;conditions.push(`NOT EXISTS (SELECT 1 FROM lead_purchases lp WHERE lp.lead_id=l.id AND lp.user_id=${p3} AND lp.status='paid')`)}
  const where=conditions.length?`WHERE ${conditions.join(' AND ')}`:'';
  const from=`leads l LEFT JOIN industries i ON i.id=l.industry_id LEFT JOIN services s ON s.id=l.service_id LEFT JOIN subservices ss ON ss.id=l.subservice_id LEFT JOIN states st ON st.id=l.state_id LEFT JOIN cities c ON c.id=l.city_id`;
  const count=await pool.query(`SELECT COUNT(DISTINCT l.id)::int AS total FROM ${from} ${where}`,values);const total=Number(count.rows[0]?.total||0);const offset=(safePage-1)*safeLimit;
