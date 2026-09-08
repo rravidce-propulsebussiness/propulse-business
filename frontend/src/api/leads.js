@@ -59,10 +59,11 @@ export async function purchaseLead(id, shares, options = {}) {
   } catch {}
 
   const payment = data?.payment || {}
+  const externalAmountRaw = data?.external_amount ?? data?.externalAmount ?? payment?.external_amount ?? payment?.externalAmount ?? 0
   const requiresExternalPayment = Boolean(
     data?.requires_external_payment ??
     data?.requiresExternalPayment ??
-    payment?.status === 'pending' && (data?.external_amount ?? data?.externalAmount ?? payment?.external_amount ?? payment?.externalAmount ?? 0) > 0
+    (payment?.status === 'pending' && Number(externalAmountRaw) > 0)
   )
 
   if (!requiresExternalPayment) return data
