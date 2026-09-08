@@ -11,7 +11,9 @@ async function getMarketplacePage({industryId,serviceId,subserviceId,stateId,cit
  if(role!=='admin'&&userId){values.push(userId);const p3=`$${values.length}`;conditions.push(`NOT EXISTS (SELECT 1 FROM lead_purchases lp WHERE lp.lead_id=l.id AND lp.user_id=${p3} AND lp.status IN ('paid','pending_payment'))`)}
  const where=conditions.length?`WHERE ${conditions.join(' AND ')}`:'';
  const from=`leads l LEFT JOIN industries i ON i.id=l.industry_id LEFT JOIN services s ON s.id=l.service_id LEFT JOIN subservices ss ON ss.id=l.subservice_id LEFT JOIN states st ON st.id=l.state_id LEFT JOIN cities c ON c.id=l.city_id`;
- const count=await pool.query(`SELECT COUNT(*)::int AS total FROM ${from} ${where}`,values);const total=Number(count.rows[0]?.total||0);const offset=(safePage-1)*safeLimit;
+ // The count query does not need dimension joins unless search actually references them. Keeping the default count on leads alone avoids building a large joined intermediate result on low-memory PostgreSQL hosts.
+ const countFrom=q?from:'leads l';
+ const count=await pool.query(`SELECT COUNT(*)::int AS total FROM ${countFrom} ${where}`,values);const total=Number(count.rows[0]?.total||0);const offset=(safePage-1)*safeLimit;
  const pageValues=[...values,safeLimit,offset];
  const rows=(await pool.query(`${leadSelect} ${where} ORDER BY l.created_at DESC,l.id DESC LIMIT $${pageValues.length-1} OFFSET $${pageValues.length}`,pageValues)).rows;
  if(role==='admin')return rows;
