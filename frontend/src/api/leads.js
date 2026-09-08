@@ -44,7 +44,13 @@ export async function purchaseLead(id, shares, options = {}) {
   if (useWallet === undefined) {
     try { useWallet = localStorage.getItem('propulse_use_wallet') !== 'false' } catch { useWallet = true }
   }
-  const couponCode = String(options.couponCode || '').trim()
+  let couponCode = String(options.couponCode || '').trim()
+  if (!couponCode && typeof window !== 'undefined') {
+    couponCode = String(window.__propulseLeadCouponCode || '').trim().toUpperCase()
+    if (!couponCode) {
+      try { couponCode = String(localStorage.getItem('propulse_lead_coupon_code') || '').trim().toUpperCase() } catch {}
+    }
+  }
   const data = await authRequest(`/leads/${id}/purchase`, {
     method: 'POST',
     body: JSON.stringify({
@@ -54,9 +60,7 @@ export async function purchaseLead(id, shares, options = {}) {
     })
   })
 
-  try {
-    window.__propulseLastLeadCoupon = data?.coupon || null
-  } catch {}
+  try { window.__propulseLastLeadCoupon = data?.coupon || null } catch {}
 
   const payment = data?.payment || {}
   const externalAmountRaw = data?.external_amount ?? data?.externalAmount ?? payment?.external_amount ?? payment?.externalAmount ?? 0
