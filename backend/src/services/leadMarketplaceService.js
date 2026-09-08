@@ -7,7 +7,7 @@ async function getMarketplacePage({industryId,serviceId,subserviceId,stateId,cit
  if(industryId&&String(industryId).toLowerCase()!=='all')add(industryId,'l.industry_id=?');
  if(serviceId)add(serviceId,'l.service_id=?');if(subserviceId)add(subserviceId,'l.subservice_id=?');if(stateId)add(stateId,'l.state_id=?');if(cityId)add(cityId,'l.city_id=?');
  const q=String(search||'').trim().toLowerCase();if(q){values.push(`%${q}%`);const p=`$${values.length}`;conditions.push(`(LOWER(COALESCE(i.name,'')) LIKE ${p} OR LOWER(COALESCE(s.name,'')) LIKE ${p} OR LOWER(COALESCE(ss.name,'')) LIKE ${p} OR LOWER(COALESCE(c.name,'')) LIKE ${p} OR LOWER(COALESCE(st.name,'')) LIKE ${p} OR LOWER(COALESCE(l.requirement,'')) LIKE ${p})`)}
- // Customer default matching: every available lead in any active profile industry AND any active profile location. Optional URL/UI filters further narrow this result.
+ // Customer default matching: every available lead in any active profile industry AND any active profile state. City/service filters remain optional refinements.
  if(role!=='admin'&&userId&&!String(allIndustries||'').match(/^(1|true)$/i)){
    values.push(userId);const p=`$${values.length}`;
    conditions.push(`EXISTS (
@@ -24,7 +24,6 @@ async function getMarketplacePage({industryId,serviceId,subserviceId,stateId,cit
      JOIN business_profile_locations bpl ON bpl.business_profile_id=bp2.id AND bpl.is_active=TRUE
      WHERE bp2.user_id=${p2}
        AND l.state_id=bpl.state_id
-       AND (l.city_id IS NULL OR l.city_id=bpl.city_id)
    )`);
  }
  if(role!=='admin'&&userId){values.push(userId);const p3=`$${values.length}`;conditions.push(`NOT EXISTS (SELECT 1 FROM lead_purchases lp WHERE lp.lead_id=l.id AND lp.user_id=${p3} AND lp.status IN ('paid','pending_payment'))`)}
