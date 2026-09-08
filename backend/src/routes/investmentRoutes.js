@@ -17,39 +17,19 @@ router.post('/checkout', auth, investmentWriteLimit, async (req, res, next) => {
   try {
     if (req.body.useWallet === false) {
       const amount = Number(req.body.amount);
-      if (!Number.isFinite(amount) || amount <= 0) {
-        return res.status(400).json({ error: 'Amount must be greater than zero', code: 'INVALID_AMOUNT' });
-      }
-      const draftId = draftService.create({
-        userId: req.user.id,
-        industryId: Number(req.body.industryId),
-        stateId: req.body.stateId == null || req.body.stateId === '' ? null : Number(req.body.stateId),
-        cityId: req.body.cityId == null || req.body.cityId === '' ? null : Number(req.body.cityId),
-        amount,
-      });
-      return res.status(200).json({
-        draft: true,
-        paymentPending: true,
-        payment: {
-          id: draftId,
-          amount,
-          external_amount: amount,
-          status: 'draft',
-          payment_method: 'manual',
-        },
-        investment: { id: null, amount },
-      });
+      if (!Number.isFinite(amount) || amount <= 0) return res.status(400).json({ error: 'Amount must be greater than zero', code: 'INVALID_AMOUNT' });
+      const draftId = draftService.create({ userId:req.user.id, industryId:Number(req.body.industryId), stateId:req.body.stateId==null||req.body.stateId===''?null:Number(req.body.stateId), cityId:req.body.cityId==null||req.body.cityId===''?null:Number(req.body.cityId), amount });
+      return res.status(200).json({ draft:true, paymentPending:true, payment:{id:draftId,amount,external_amount:amount,status:'draft',payment_method:'manual'}, investment:{id:null,amount} });
     }
     return c.checkout(req, res);
-  } catch (e) {
-    return next(e);
-  }
+  } catch(e){ return next(e); }
 });
 
 router.get('/', auth, c.mine);
 router.post('/', auth, investmentWriteLimit, c.create);
 router.post('/:id/reinvest', auth, investmentWriteLimit, c.reinvest);
 router.get('/admin/all', auth, admin, c.adminList);
+router.get('/admin/investor/:userId/linked-leads', auth, admin, c.linkedLeads);
 router.post('/admin/:id/payout', auth, admin, adminInvestmentWriteLimit, c.payout);
 
 module.exports = router;
