@@ -1,5 +1,4 @@
 import { BrowserRouter, Routes, Route, Navigate, Outlet, useLocation } from 'react-router-dom';
-import './investmentPremiumEnhancer.js';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
