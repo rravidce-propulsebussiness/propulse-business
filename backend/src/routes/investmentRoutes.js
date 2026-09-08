@@ -18,8 +18,15 @@ router.post('/checkout', auth, investmentWriteLimit, async (req, res, next) => {
     if (req.body.useWallet === false) {
       const amount = Number(req.body.amount);
       if (!Number.isFinite(amount) || amount <= 0) return res.status(400).json({ error: 'Amount must be greater than zero', code: 'INVALID_AMOUNT' });
-      const draftId = draftService.create({ userId:req.user.id, industryId:Number(req.body.industryId), stateId:req.body.stateId==null||req.body.stateId===''?null:Number(req.body.stateId), cityId:req.body.cityId==null||req.body.cityId===''?null:Number(req.body.cityId), amount });
-      return res.status(200).json({ draft:true, paymentPending:true, payment:{id:draftId,amount,external_amount:amount,status:'draft',payment_method:'manual'}, investment:{id:null,amount} });
+      const draftId = draftService.create({
+        userId:req.user.id,
+        industryId:Number(req.body.industryId),
+        stateId:req.body.stateId==null||req.body.stateId===''?null:Number(req.body.stateId),
+        cityId:req.body.cityId==null||req.body.cityId===''?null:Number(req.body.cityId),
+        amount,
+        reinvestmentEnabled:req.body.reinvestmentEnabled === true,
+      });
+      return res.status(200).json({ draft:true, paymentPending:true, payment:{id:draftId,amount,external_amount:amount,status:'draft',payment_method:'manual'}, investment:{id:null,amount}, reinvestmentEnabled:req.body.reinvestmentEnabled === true });
     }
     return c.checkout(req, res);
   } catch(e){ return next(e); }
