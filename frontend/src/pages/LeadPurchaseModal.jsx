@@ -176,19 +176,22 @@ export default function LeadPurchaseModal({ lead, isPro, onClose, onPurchased, o
       </>}
 
       {payment && <>
-        <div className="lv2-detail-grid">
-          <div><small>Shares</small><b>{payment.shares}</b></div>
-          <div><small>Original</small><b>{money(subtotal)}</b></div>
-        </div>
-        <div className="lv2-payment-breakdown">
-          <div><span>Original amount</span><b>{money(subtotal)}</b></div>
-          {discount > 0 && <div className="discount"><span>{appliedCoupon ? `Coupon ${appliedCoupon}` : 'Coupon discount'}</span><b>−{money(discount)}</b></div>}
-          <div><span>Final lead amount</span><b>{money(finalAmount)}</b></div>
-          <div><span>Wallet deduction</span><b>−{money(walletPaid)}</b></div>
-          <div className="due"><span>Amount to pay now</span><b>{money(externalAmount)}</b></div>
-        </div>
+        <section className="lv2-payment-summary" aria-label="Payment summary">
+          <div className="lv2-payment-summary-head">
+            <div><span>PAYMENT SUMMARY</span><strong>{payment.shares} {Number(payment.shares) === 1 ? 'share' : 'shares'}</strong></div>
+            <b>{money(finalAmount)}</b>
+          </div>
+          <div className="lv2-payment-breakdown">
+            <div><span>Lead price</span><b>{money(subtotal)}</b></div>
+            <div className="discount"><span>{appliedCoupon ? `Coupon (${appliedCoupon})` : 'Coupon discount'}</span><b>−{money(discount)}</b></div>
+            <div className="after-coupon"><span>Price after coupon</span><b>{money(finalAmount)}</b></div>
+            <div className="wallet"><span>Wallet applied</span><b>−{money(walletPaid)}</b></div>
+            <div className="due"><span>Pay directly now</span><b>{money(externalAmount)}</b></div>
+          </div>
+        </section>
 
         {externalAmount > 0 ? <>
+          <div className="lv2-payment-instruction"><strong>Complete direct payment</strong><span>Pay {money(externalAmount)} using the payment method provided by Propulse, then enter the transaction details below.</span></div>
           <label>Payment reference / UTR<input value={reference} onChange={e => { setReference(e.target.value); setSubmitError('') }} placeholder="Enter UTR or transaction ID" autoComplete="off" disabled={submitting} /></label>
           <label>Payment proof<input type="file" accept="image/*,.pdf" onChange={e => { setProofFile(e.target.files?.[0] || null); setSubmitError('') }} disabled={submitting} /></label>
           {submitError && <div className="lv2-payment-error" role="alert">{submitError}</div>}
