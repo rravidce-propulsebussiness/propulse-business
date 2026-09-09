@@ -44,6 +44,10 @@ async function updateLeadPaymentStatus({paymentId,status,notes}) {
       return updated;
     }
 
+    // Lead wallet funds may have been captured by an older payment flow before
+    // the reservation model was introduced. Refund idempotently before removing
+    // the pending purchase so rejected/failed legacy payments cannot strand funds.
+    await walletService.refundForPayment(client,{userId:payment.user_id,paymentId:payment.id,description:`Refund wallet allocation for rejected Lead #${payment.purchase_id} payment`});
     if(payment.coupon_id) await couponService.releaseForPayment(client,payment.id);
     await client.query(`DELETE FROM lead_purchases WHERE payment_id=$1 AND status='pending_payment'`,[payment.id]);
     const updated=(await client.query(`UPDATE payments SET status=$1,notes=COALESCE($2,notes),updated_at=CURRENT_TIMESTAMP WHERE id=$3 RETURNING *`,[status,notes||null,payment.id])).rows[0];
