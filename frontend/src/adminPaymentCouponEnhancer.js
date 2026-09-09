@@ -51,7 +51,7 @@ function closeLeadModal() {
   document.querySelector('.admin-lead-preview-backdrop')?.remove()
 }
 
-function showLeadModal(lead, payment) {
+function showLeadModal(lead, paymentData) {
   closeLeadModal()
   const backdrop = document.createElement('div')
   backdrop.className = 'admin-lead-preview-backdrop'
@@ -61,7 +61,7 @@ function showLeadModal(lead, payment) {
   header.className = 'admin-lead-preview-header'
   const title = document.createElement('div')
   title.className = 'admin-lead-preview-title'
-  text(title, 'span', `Lead #${lead?.id ?? payment?.purchase_id ?? '—'}`, 'admin-lead-preview-id')
+  text(title, 'span', `Lead #${lead?.id ?? paymentData?.purchase_id ?? '—'}`, 'admin-lead-preview-id')
   text(title, 'strong', lead?.customer_name || lead?.requirement || 'Lead details')
   header.appendChild(title)
   const close = document.createElement('button')
@@ -95,13 +95,13 @@ function showLeadModal(lead, payment) {
   })
   modal.appendChild(grid)
 
-  const payment = document.createElement('div')
-  payment.className = 'admin-lead-preview-payment'
-  text(payment, 'span', 'PAYMENT', 'admin-lead-preview-payment-label')
-  text(payment, 'b', `Original ${money(payment?.subtotal_amount ?? payment?.amount)}`)
-  text(payment, 'small', payment?.coupon_code ? `Coupon ${payment.coupon_code}: −${money(payment.discount_amount)}` : 'No coupon')
-  text(payment, 'strong', `Actual payable ${money(payment?.amount)}`)
-  modal.appendChild(payment)
+  const paymentBox = document.createElement('div')
+  paymentBox.className = 'admin-lead-preview-payment'
+  text(paymentBox, 'span', 'PAYMENT', 'admin-lead-preview-payment-label')
+  text(paymentBox, 'b', `Original ${money(paymentData?.subtotal_amount ?? paymentData?.amount)}`)
+  text(paymentBox, 'small', paymentData?.coupon_code ? `Coupon ${paymentData.coupon_code}: −${money(paymentData.discount_amount)}` : 'No coupon')
+  text(paymentBox, 'strong', `Actual payable ${money(paymentData?.amount)}`)
+  modal.appendChild(paymentBox)
 
   backdrop.appendChild(modal)
   backdrop.addEventListener('click', event => { if (event.target === backdrop) closeLeadModal() })
