@@ -3,7 +3,7 @@ const walletService = require('./walletService');
 const couponService = require('./couponService');
 const leadPurchaseService = require('./leadPurchaseService');
 
-async function updateLeadPaymentStatus({paymentId,status,adminId,notes}) {
+async function updateLeadPaymentStatus({paymentId,status,notes}) {
   if (!['paid','rejected','failed'].includes(status)) {
     throw Object.assign(new Error('Only paid, rejected, or failed are valid admin review outcomes'),{code:'INVALID_PAYMENT_TRANSITION'});
   }
