@@ -45,12 +45,23 @@ async function getHistory(userId) {
     `, [userId])
   ]);
 
-  const wallet = walletResult.rows
-    .filter(x => !(x.payment_id && x.purchase_type) || x.type === 'refund')
-    .map(x => ({
+  const wallet = walletResult.rows.map(x => {
+    const isDebit = x.type === 'debit';
+    const isRefund = x.type === 'refund';
+    const linkedPurchase = x.purchase_type && x.purchase_id;
+    const purchaseName = x.purchase_type === 'lead'
+      ? `Lead #${x.purchase_id}`
+      : x.purchase_type
+        ? purchaseLabel(x.purchase_type)
+        : null;
+    const description = isDebit && linkedPurchase
+      ? `Wallet debit — ${purchaseName}`
+      : x.description || (isDebit ? 'Wallet debit' : isRefund ? 'Wallet refund' : 'Wallet credit');
+
+    return {
       id: `wallet-${x.id}`,
       source: 'wallet',
-      kind: x.type === 'refund' ? 'refund' : x.type === 'debit' ? 'wallet_debit' : 'wallet_credit',
+      kind: isRefund ? 'refund' : isDebit ? 'wallet_debit' : 'wallet_credit',
       transaction_id: x.id,
       type: x.type,
       amount: Number(x.amount),
@@ -58,12 +69,16 @@ async function getHistory(userId) {
       reference_type: x.reference_type,
       reference_id: x.reference_id,
       payment_id: x.payment_id,
+      purchase_type: x.purchase_type,
+      purchase_id: x.purchase_id,
       status: x.status,
       payment_status: x.payment_status,
-      description: x.description || (x.type === 'debit' ? 'Wallet debit' : x.type === 'refund' ? 'Wallet refund' : 'Wallet credit'),
+      title: description,
+      description,
       created_at: x.created_at,
       manual_reference: x.manual_reference
-    }));
+    };
+  });
 
   const purchases = paymentResult.rows.map(x => {
     const isLead = x.purchase_type === 'lead';
