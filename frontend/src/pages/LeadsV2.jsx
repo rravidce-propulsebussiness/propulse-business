@@ -176,7 +176,14 @@ export default function LeadsV2() {
       setNotice(`Lead #${lead.id} purchased successfully from ${plan === 'pro' ? 'Pro' : 'Normal'} pricing.`)
       setExpanded(null)
     } catch (e) {
-      if (e.code === 'PRO_REQUIRED') { setBuyModal(null); setUpgrade(true) } else if (String(e.code || '').includes('COUPON') || ['MIN_ORDER', 'PURCHASE_NOT_ELIGIBLE', 'PLAN_NOT_ELIGIBLE', 'USER_NOT_ELIGIBLE', 'INDUSTRY_NOT_ELIGIBLE', 'USAGE_LIMIT', 'USER_USAGE_LIMIT'].includes(e.code)) setCouponError(e.message) else setError(e.message)
+      if (e.code === 'PRO_REQUIRED') {
+        setBuyModal(null)
+        setUpgrade(true)
+      } else if (String(e.code || '').includes('COUPON') || ['MIN_ORDER', 'PURCHASE_NOT_ELIGIBLE', 'PLAN_NOT_ELIGIBLE', 'USER_NOT_ELIGIBLE', 'INDUSTRY_NOT_ELIGIBLE', 'USAGE_LIMIT', 'USER_USAGE_LIMIT'].includes(e.code)) {
+        setCouponError(e.message)
+      } else {
+        setError(e.message)
+      }
     } finally { setBuying(current => current === key ? null : current); }
   }
   const submitDirect = async () => {
