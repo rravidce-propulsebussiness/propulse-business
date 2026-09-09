@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import UserHeader from '../components/UserHeader'
 import { API_BASE_URL, authRequest, getToken } from '../utils/auth'
 import './PurchasedLeads.css'
+import './PurchasedLeadsCRM.css'
 
 const CRM_STATUSES = [
   ['new', 'New'], ['contacted', 'Contacted'], ['follow_up', 'Follow-up'], ['interested', 'Interested'],
