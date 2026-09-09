@@ -24,6 +24,7 @@ function makeHarness({activeUses=0}={}){
     if(sql.includes('FROM payments WHERE user_id=$1'))return{rows:[]};
     if(sql.startsWith('INSERT INTO payments'))return{rows:[{id:77,user_id:12,membership_plan_id:3,amount:900,payment_method:'manual',status:'pending',wallet_amount:0,external_amount:900,purchase_type:'membership',purchase_id:3,coupon_id:9,coupon_code:'SAVE10',subtotal_amount:1000,discount_amount:100}]};
     if(sql.includes('SELECT balance FROM wallets WHERE user_id=$1 FOR UPDATE'))return{rows:[{balance:900}]};
+    if(sql.startsWith('UPDATE payments SET wallet_amount=$1,external_amount=0,wallet_transaction_id=$2,updated_at=CURRENT_TIMESTAMP WHERE id=$3 RETURNING *'))return{rows:[{id:77,user_id:12,membership_plan_id:3,amount:900,payment_method:'wallet',status:'pending',wallet_amount:900,external_amount:0,wallet_transaction_id:123,coupon_id:9,coupon_code:'SAVE10',subtotal_amount:1000,discount_amount:100}]};
     if(sql.startsWith('UPDATE payments SET payment_method'))return{rows:[{id:77,user_id:12,membership_plan_id:3,amount:900,payment_method:'wallet',status:'paid',wallet_amount:900,external_amount:0,coupon_id:9,coupon_code:'SAVE10',subtotal_amount:1000,discount_amount:100}]};
     if(sql.includes('FROM membership_plans WHERE id=$1'))return{rows:[{id:3,name:'Pro',plan_type:'pro',duration_days:30,price:'1000',is_active:true}]};
     if(sql.includes("FROM memberships m JOIN membership_plans mp")&&sql.includes('LIMIT 1 FOR UPDATE OF m'))return{rows:[]};
