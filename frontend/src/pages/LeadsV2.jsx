@@ -146,8 +146,8 @@ export default function LeadsV2() {
     if (!logged) { window.location.href = '/login'; return }
     setClaiming(lead.id); setNotice(''); setError('')
     try {
-      const d = await claimLead(lead.id)
-      const privateLead = await getLead(lead.id)
+      await claimLead(lead.id)
+      await getLead(lead.id)
       setLeads(current => current.filter(x => x.id !== lead.id))
       setNotice(`Lead #${lead.id} claimed successfully.`); setExpanded(null)
     } catch (e) { setError(e.message) }
@@ -170,14 +170,14 @@ export default function LeadsV2() {
         setPaymentShares(shares)
         return
       }
-      const privateLead = await getLead(lead.id)
+      await getLead(lead.id)
       setLeads(current => current.filter(x => x.id !== lead.id))
       setBuyModal(null)
       setNotice(`Lead #${lead.id} purchased successfully from ${plan === 'pro' ? 'Pro' : 'Normal'} pricing.`)
       setExpanded(null)
     } catch (e) {
       if (e.code === 'PRO_REQUIRED') { setBuyModal(null); setUpgrade(true) } else if (String(e.code || '').includes('COUPON') || ['MIN_ORDER', 'PURCHASE_NOT_ELIGIBLE', 'PLAN_NOT_ELIGIBLE', 'USER_NOT_ELIGIBLE', 'INDUSTRY_NOT_ELIGIBLE', 'USAGE_LIMIT', 'USER_USAGE_LIMIT'].includes(e.code)) setCouponError(e.message) else setError(e.message)
-    } finally { setBuying(current => current === key ? null : current) }
+    } finally { setBuying(current => current === key ? null : current); }
   }
   const submitDirect = async () => {
     setPaymentError('')
