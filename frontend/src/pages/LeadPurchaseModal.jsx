@@ -75,7 +75,6 @@ export default function LeadPurchaseModal({ lead, isPro, onClose, onPurchased, o
       setReference('')
       setProofFile(null)
       setSubmitError('')
-      if (Number(result?.availableBalance) >= 0) setWalletBalance(Number(result.availableBalance))
     } catch (e) {
       setError(e.message || 'Unable to calculate this lead purchase.')
     } finally {
@@ -240,9 +239,7 @@ export default function LeadPurchaseModal({ lead, isPro, onClose, onPurchased, o
           <label>Payment reference / UTR<input value={reference} onChange={e => { setReference(e.target.value); setSubmitError('') }} placeholder="Enter UTR or transaction ID" autoComplete="off" disabled={submitting} /></label>
           <label>Payment proof<input type="file" accept="image/*,.pdf" onChange={e => { setProofFile(e.target.files?.[0] || null); setSubmitError('') }} disabled={submitting} /></label>
           {submitError && <div className="lv2-payment-error" role="alert">{submitError}</div>}
-          <div className="lv2-payment-submit">
-            <button type="button" className="lv2-more" onClick={submitPayment} disabled={submitting}>{submitting ? 'Submitting…' : `Submit ${money(externalAmount)} payment`}</button>
-          </div>
+          <div className="lv2-payment-submit"><button type="button" className="lv2-more" onClick={submitPayment} disabled={submitting}>{submitting ? 'Submitting…' : `Submit ${money(externalAmount)} payment`}</button></div>
         </> : <>
           {submitError && <div className="lv2-payment-error" role="alert">{submitError}</div>}
           <div className="lv2-payment-submit"><button type="button" className="lv2-more" onClick={submitPayment} disabled={submitting}>{submitting ? 'Submitting…' : 'Submit purchase'}</button></div>
