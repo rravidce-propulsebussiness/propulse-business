@@ -91,9 +91,9 @@ export default function LeadsV2() {
         const d = await listLeads({ status: 'available', page, limit: 20, ...(tier !== 'all' ? { leadType: tier } : {}), ...(terms ? { search: terms } : {}) }, token)
         if (live) {
           const items = Array.isArray(d) ? d : (d.items || [])
-          const availableItems = items.filter(l => !l.is_purchased && !l.purchased && !l.access?.claimed && !l.access?.purchased)
-          setLeads(availableItems)
-          setPagination(d.pagination ? { ...d.pagination, total: Math.max(0, Number(d.pagination.total || 0) - (items.length - availableItems.length)) } : { page, limit: 20, total: availableItems.length, hasNext: false, hasPrevious: page > 1 })
+          const marketplaceItems = items.filter(l => !l.is_purchased && !l.purchased && !l.access?.claimed && !l.access?.purchased)
+          setLeads(marketplaceItems)
+          setPagination(d.pagination ? { ...d.pagination, total: Math.max(0, Number(d.pagination.total || 0) - (items.length - marketplaceItems.length)) } : { page, limit: 20, total: marketplaceItems.length, hasNext: false, hasPrevious: page > 1 })
         }
       } catch (e) { if (live) setError(e.message) }
       finally { if (live) setLoading(false) }
@@ -128,8 +128,8 @@ export default function LeadsV2() {
   }
   const handlePurchased = async (_, leadId) => {
     try { await getLead(leadId) } catch {}
-    setLeads(current => current.filter(x => x.id !== leadId))
-    setNotice(`Lead #${leadId} purchase submitted successfully.`)
+    setLeads(current => current.map(x => x.id === leadId ? {...x, purchase_status:'pending_payment', pending_payment:true} : x))
+    setNotice(`Lead #${leadId} is pending approval. It will move to your purchased leads after payment approval.`)
     setExpanded(null)
   }
 
@@ -149,6 +149,7 @@ export default function LeadsV2() {
           const exclusive = Boolean(lead.has_exclusive_option)
           const leadAccess = lead.access || {}
           const claimed = Boolean(leadAccess.claimed || leadAccess.purchased)
+          const pendingApproval = lead.purchase_status === 'pending_payment' || lead.pending_payment === true
           const location = [lead.city_name, lead.state_name].filter(hasValue).join(', ')
           const timeline = getCustom(lead.custom_fields, ['Timeline', 'Timeframe', 'Project Timeline', 'Expected Timeline', 'When'], ['timeline', 'timeframe'])
           const property = hasValue(lead.property_type) ? lead.property_type : getCustom(lead.custom_fields, ['Property Type', 'Property'], ['property'])
@@ -159,8 +160,8 @@ export default function LeadsV2() {
           const buyerCapacity = Math.max(2, Number(lead.buyer_capacity) || 3)
           const purchasedBuyers = Math.min(buyerCapacity, Math.max(0, Number(lead.purchased_buyer_count) || 0))
           const initials = String(lead.customer_name || lead.service_name || lead.industry_name || 'L').trim().charAt(0).toUpperCase()
-          return <article className={`lv2-card ${lead.lead_type || 'basic'} ${exclusive ? 'has-exclusive' : ''}`} key={lead.id}>
-            <div className="lv2-card-top"><span className="lv2-new">New</span><span className="lv2-id">#L-{String(lead.id).padStart(6, '0')}</span><small>{timeAgo(lead.created_at)}</small></div>
+          return <article className={`lv2-card ${lead.lead_type || 'basic'} ${exclusive ? 'has-exclusive' : ''} ${pendingApproval ? 'pending-approval' : ''}`} key={lead.id}>
+            <div className="lv2-card-top"><span className={pendingApproval ? 'lv2-pending-badge' : 'lv2-new'}>{pendingApproval ? 'Pending approval' : 'New'}</span><span className="lv2-id">#L-{String(lead.id).padStart(6, '0')}</span><small>{timeAgo(lead.created_at)}</small></div>
             <div className="lv2-person"><div className="lv2-avatar">{initials}</div><div className="lv2-person-copy"><div><h2>{hasValue(lead.customer_name) ? lead.customer_name : (lead.service_name || lead.industry_name || 'Business opportunity')}</h2><span className="lv2-verified-mini">✓ Verified</span></div><p>{lead.requirement || 'Verified business requirement'}</p></div></div>
             <div className="lv2-facts">
               {hasValue(lead.industry_name) && <div><span>▣</span><b>{lead.industry_name}</b></div>}
@@ -173,12 +174,13 @@ export default function LeadsV2() {
               <div><span>◉</span><b>Purchased {purchasedBuyers}/{buyerCapacity}</b></div>
             </div>
             <div className="lv2-contact"><span>Contact Details (Masked)</span><div>{hasValue(lead.customer_phone) && <b>⌕ &nbsp; {maskContact(lead.customer_phone)}</b>}{hasValue(workPhone) && <b>⌖ &nbsp; Work {workPhone}</b>}{hasValue(lead.customer_email) && <b>✉ &nbsp; {maskContact(lead.customer_email)}</b>}{!hasValue(lead.customer_phone) && !hasValue(workPhone) && !hasValue(lead.customer_email) && <b>Contact available after purchase</b>}</div></div>
-            <div className="lv2-card-actions"><button className="lv2-details-link" onClick={() => setExpanded(open ? null : lead.id)}>{open ? 'Hide Full Details' : 'View Full Details'} <b>→</b></button><button className="lv2-buy" onClick={() => openBuyModal(lead)} disabled={!shares.length}>{claimed ? 'Purchased' : '🛒  Buy Lead'}</button></div>
-            {open && <div className="lv2-details"><div className="lv2-details-head"><h3>Lead details</h3><span>{claimed ? 'Access granted' : 'Verified opportunity'}</span></div><div className="lv2-detail-grid">{[['Industry', lead.industry_name], ['Service', lead.service_name], ['Subservice', lead.subservice_name], ['Location', location], ['Property type', property], ['Budget', budgetDisplay], ['Work numbers', workNumbers], ['Work phone', workPhone], ['Purchased', `${purchasedBuyers}/${buyerCapacity}`], ['Source', lead.source], ['Customer', lead.customer_name], ['Phone', lead.customer_phone ? maskContact(lead.customer_phone) : ''], ['Email', lead.customer_email ? maskContact(lead.customer_email) : '']].filter(([, v]) => hasValue(v)).map(([k, v]) => <div key={k}><small>{k}</small><b>{v}</b></div>)}{dynamic.map(([k, v]) => <div key={k}><small>{label(k)}</small><b>{displayValue(k, typeof v === 'object' ? JSON.stringify(v) : v)}</b></div>)}</div>{hasValue(lead.notes) && <p className="lv2-notes"><b>Notes</b>{maskContact(lead.notes)}</p>}</div>}
-            {logged && !claimed && leadAccess.canClaim && <div className="lv2-exclusive"><div><b>Membership access</b><span>Included in your current plan{leadAccess.remaining !== undefined ? ` · ${leadAccess.remaining} remaining` : ''}</span></div><button disabled={claiming === lead.id} onClick={() => claim(lead)}>{claiming === lead.id ? 'Claiming…' : 'Claim free →'}</button></div>}
-            {logged && !claimed && leadAccess.reason && !leadAccess.canClaim && <div className="lv2-card-cta"><div><b>Membership access</b><span>{leadAccess.reason}</span></div></div>}
+            <div className="lv2-card-actions"><button className="lv2-details-link" onClick={() => setExpanded(open ? null : lead.id)}>{open ? 'Hide Full Details' : 'View Full Details'} <b>→</b></button><button className="lv2-buy" onClick={() => openBuyModal(lead)} disabled={!shares.length || pendingApproval}>{pendingApproval ? 'Pending Approval' : (claimed ? 'Purchased' : '🛒  Buy Lead')}</button></div>
+            {open && <div className="lv2-details"><div className="lv2-details-head"><h3>Lead details</h3><span>{pendingApproval ? 'Purchase pending approval' : (claimed ? 'Access granted' : 'Verified opportunity')}</span></div><div className="lv2-detail-grid">{[['Industry', lead.industry_name], ['Service', lead.service_name], ['Subservice', lead.subservice_name], ['Location', location], ['Property type', property], ['Budget', budgetDisplay], ['Work numbers', workNumbers], ['Work phone', workPhone], ['Purchased', `${purchasedBuyers}/${buyerCapacity}`], ['Source', lead.source], ['Customer', lead.customer_name], ['Phone', lead.customer_phone ? maskContact(lead.customer_phone) : ''], ['Email', lead.customer_email ? maskContact(lead.customer_email) : '']].filter(([, v]) => hasValue(v)).map(([k, v]) => <div key={k}><small>{k}</small><b>{v}</b></div>)}{dynamic.map(([k, v]) => <div key={k}><small>{label(k)}</small><b>{displayValue(k, typeof v === 'object' ? JSON.stringify(v) : v)}</b></div>)}</div>{hasValue(lead.notes) && <p className="lv2-notes"><b>Notes</b>{maskContact(lead.notes)}</p>}</div>}
+            {pendingApproval && <div className="lv2-card-cta pending-approval-cta"><div><b>Payment submitted</b><span>Your lead purchase is waiting for admin payment approval.</span></div><span>Pending approval</span></div>}
+            {logged && !claimed && !pendingApproval && leadAccess.canClaim && <div className="lv2-exclusive"><div><b>Membership access</b><span>Included in your current plan{leadAccess.remaining !== undefined ? ` · ${leadAccess.remaining} remaining` : ''}</span></div><button disabled={claiming === lead.id} onClick={() => claim(lead)}>{claiming === lead.id ? 'Claiming…' : 'Claim free →'}</button></div>}
+            {logged && !claimed && !pendingApproval && leadAccess.reason && !leadAccess.canClaim && <div className="lv2-card-cta"><div><b>Membership access</b><span>{leadAccess.reason}</span></div></div>}
             {claimed && <div className="lv2-card-cta"><div><b>Lead access granted</b><span>You can use this lead from your account.</span></div><Link to="/dashboard">Open dashboard →</Link></div>}
-            {exclusive && logged && !claimed && <div className="lv2-exclusive"><div><b>Exclusive access</b><span>{lead.exclusive_action === 'upgrade_to_pro' ? 'Pro members get first access' : 'Available for purchase'}</span></div>{lead.exclusive_action === 'upgrade_to_pro' ? <button onClick={() => setUpgrade(true)}>Get Pro →</button> : <button onClick={() => openBuyModal(lead)}>Buy →</button>}</div>}
+            {exclusive && logged && !claimed && !pendingApproval && <div className="lv2-exclusive"><div><b>Exclusive access</b><span>{lead.exclusive_action === 'upgrade_to_pro' ? 'Pro members get first access' : 'Available for purchase'}</span></div>{lead.exclusive_action === 'upgrade_to_pro' ? <button onClick={() => setUpgrade(true)}>Get Pro →</button> : <button onClick={() => openBuyModal(lead)}>Buy →</button>}</div>}
             {!logged && <div className="lv2-card-cta"><div><b>Interested in this lead?</b><span>Sign in to view purchase options.</span></div><button onClick={() => openBuyModal(lead)}>Login to buy →</button></div>}
           </article>
         })}
