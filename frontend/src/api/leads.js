@@ -39,21 +39,7 @@ export function claimLead(id) {
   return authRequest(`/leads/${id}/claim`, { method: 'POST' })
 }
 
-export async function purchaseLead(id, shares, options = {}) {
-  let useWallet = options.useWallet
-  if (useWallet === undefined) {
-    try { useWallet = localStorage.getItem('propulse_use_wallet') !== 'false' } catch { useWallet = true }
-  }
-  const couponCode = String(options.couponCode || '').trim().toUpperCase()
-  const data = await authRequest(`/leads/${id}/purchase`, {
-    method: 'POST',
-    body: JSON.stringify({
-      shares,
-      useWallet: useWallet !== false,
-      ...(couponCode ? { couponCode } : {})
-    })
-  })
-
+const normalizePurchase = data => {
   const payment = data?.payment || {}
   const coupon = data?.coupon || payment?.coupon || null
   const externalAmountRaw = data?.external_amount ?? data?.externalAmount ?? payment?.external_amount ?? payment?.externalAmount ?? 0
@@ -62,29 +48,67 @@ export async function purchaseLead(id, shares, options = {}) {
     data?.requiresExternalPayment ??
     (payment?.status === 'pending' && Number(externalAmountRaw) > 0)
   )
-
-  if (!requiresExternalPayment) return { ...data, coupon }
-
   const paymentId = data.payment_id ?? data.paymentId ?? payment.id ?? null
   const totalAmount = Number(payment.amount ?? data.amount ?? data.totalAmount ?? data.total_amount ?? data.purchase_amount ?? data.purchaseAmount ?? 0)
   const walletAmount = Number(data.walletAmount ?? data.wallet_amount ?? payment.walletAmount ?? payment.wallet_amount ?? 0)
   const externalAmount = Number(data.externalAmount ?? data.external_amount ?? payment.externalAmount ?? payment.external_amount ?? Math.max(0, totalAmount - walletAmount))
-
   return {
     ...data,
     coupon,
-    requires_external_payment: true,
-    requiresExternalPayment: true,
+    requires_external_payment: requiresExternalPayment,
+    requiresExternalPayment,
     walletAmount: Number.isFinite(walletAmount) ? walletAmount : 0,
     externalAmount: Number.isFinite(externalAmount) ? externalAmount : 0,
     balanceAfter: Number(data.balanceAfter ?? data.balance_after ?? payment.balanceAfter ?? payment.balance_after ?? 0),
-    payment: {
+    availableBalance: Number(data.availableBalance ?? data.available_balance ?? payment.availableBalance ?? payment.available_balance ?? 0),
+    payment: payment.id || paymentId ? {
       ...payment,
       id: paymentId,
       amount: Number.isFinite(totalAmount) ? totalAmount : 0,
       wallet_amount: walletAmount,
       external_amount: externalAmount,
       coupon
-    }
+    } : payment
   }
+}
+
+export async function quoteLead(id, shares, options = {}) {
+  let useWallet = options.useWallet
+  if (useWallet === undefined) {
+    try { useWallet = localStorage.getItem('propulse_use_wallet') !== 'false' } catch { useWallet = true }
+  }
+  const couponCode = String(options.couponCode || '').trim().toUpperCase()
+  return normalizePurchase(await authRequest(`/leads/${id}/purchase/quote`, {
+    method: 'POST',
+    body: JSON.stringify({
+      shares,
+      useWallet: useWallet !== false,
+      ...(couponCode ? { couponCode } : {})
+    })
+  }))
+}
+
+export async function submitLeadPurchase(id, shares, options = {}) {
+  let useWallet = options.useWallet
+  if (useWallet === undefined) {
+    try { useWallet = localStorage.getItem('propulse_use_wallet') !== 'false' } catch { useWallet = true }
+  }
+  const couponCode = String(options.couponCode || '').trim().toUpperCase()
+  return normalizePurchase(await authRequest(`/leads/${id}/purchase/submit`, {
+    method: 'POST',
+    body: JSON.stringify({
+      shares,
+      useWallet: useWallet !== false,
+      ...(couponCode ? { couponCode } : {}),
+      manualReference: String(options.manualReference || '').trim(),
+      proofUrl: String(options.proofUrl || '').trim()
+    })
+  }))
+}
+
+export async function purchaseLead(id, shares, options = {}) {
+  if (!String(options.manualReference || '').trim() || !String(options.proofUrl || '').trim()) {
+    throw Object.assign(new Error('Payment reference / UTR and payment proof are required before payment can be processed.'), { code: 'PAYMENT_SUBMISSION_REQUIRED' })
+  }
+  return submitLeadPurchase(id, shares, options)
 }
