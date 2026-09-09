@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { authRequest } from '../utils/auth'
-import { purchaseLead } from '../api/leads'
+import { quoteLead, submitLeadPurchase } from '../api/leads'
 import './LeadsV2.css'
 import './LeadsV2Payment.css'
 
@@ -25,7 +25,7 @@ export default function LeadPurchaseModal({ lead, isPro, onClose, onPurchased, o
   const [submitted, setSubmitted] = useState(false)
 
   useEffect(() => {
-    authRequest('/wallet').then(data => setWalletBalance(Number(data?.balance ?? data?.wallet?.balance ?? 0))).catch(() => setWalletBalance(0))
+    authRequest('/wallet').then(data => setWalletBalance(Number(data?.availableBalance ?? data?.available_balance ?? data?.balance ?? data?.wallet?.balance ?? 0))).catch(() => setWalletBalance(0))
   }, [])
 
   useEffect(() => {
@@ -56,7 +56,7 @@ export default function LeadPurchaseModal({ lead, isPro, onClose, onPurchased, o
     }
     setCouponCode(normalized)
     setCouponApplied(true)
-    setCouponMessage(`${normalized} applied. The server will validate it for the selected share pack.`)
+    setCouponMessage(`${normalized} selected. The server will validate it for the selected share pack.`)
   }
 
   const buy = async (shares, plan) => {
@@ -70,18 +70,14 @@ export default function LeadPurchaseModal({ lead, isPro, onClose, onPurchased, o
     setError('')
     setSubmitError('')
     try {
-      const result = await purchaseLead(lead.id, shares, { useWallet, couponCode: couponApplied ? couponCode : '' })
-      if (result?.requires_external_payment || result?.requiresExternalPayment || result?.payment?.status === 'pending') {
-        setPayment({ ...result, shares })
-        setReference('')
-        setProofFile(null)
-        setSubmitError('')
-        return
-      }
-      onPurchased?.(result, lead.id)
-      onClose()
+      const result = await quoteLead(lead.id, shares, { useWallet, couponCode: couponApplied ? couponCode : '' })
+      setPayment({ ...result, shares, plan })
+      setReference('')
+      setProofFile(null)
+      setSubmitError('')
+      if (Number(result?.availableBalance) >= 0) setWalletBalance(Number(result.availableBalance))
     } catch (e) {
-      setError(e.message || 'Unable to purchase this lead.')
+      setError(e.message || 'Unable to calculate this lead purchase.')
     } finally {
       setBuying(current => current === key ? '' : current)
     }
@@ -89,41 +85,44 @@ export default function LeadPurchaseModal({ lead, isPro, onClose, onPurchased, o
 
   const submitPayment = async () => {
     const trimmedReference = reference.trim()
-    if (!trimmedReference) {
+    const externalAmount = Number(payment?.externalAmount ?? payment?.payment?.external_amount ?? 0)
+    if (externalAmount > 0 && !trimmedReference) {
       setSubmitError('Enter the payment reference / UTR first.')
       return
     }
-    if (!proofFile) {
+    if (externalAmount > 0 && !proofFile) {
       setSubmitError('Upload the payment screenshot or PDF first.')
       return
     }
-    if (proofFile.size > 5 * 1024 * 1024) {
+    if (proofFile && proofFile.size > 5 * 1024 * 1024) {
       setSubmitError('Payment proof must be 5 MB or smaller.')
       return
     }
-    if (!payment?.payment?.id) {
-      setSubmitError('Payment session is unavailable. Please start the purchase again.')
+    if (!payment?.shares) {
+      setSubmitError('Payment selection is unavailable. Please start the purchase again.')
       return
     }
 
     setSubmitting(true)
     setSubmitError('')
     try {
-      const proofUrl = await new Promise((resolve, reject) => {
-        const reader = new FileReader()
-        reader.onload = () => resolve(String(reader.result))
-        reader.onerror = () => reject(new Error('Unable to read payment proof'))
-        reader.readAsDataURL(proofFile)
-      })
+      let proofUrl = ''
+      if (proofFile) {
+        proofUrl = await new Promise((resolve, reject) => {
+          const reader = new FileReader()
+          reader.onload = () => resolve(String(reader.result))
+          reader.onerror = () => reject(new Error('Unable to read payment proof'))
+          reader.readAsDataURL(proofFile)
+        })
+      }
 
-      await authRequest(`/payments/${payment.payment.id}/reference`, {
-        method: 'POST',
-        body: JSON.stringify({
-          manualReference: trimmedReference,
-          proofUrl,
-          notes: `Lead #${lead.id} direct payment${Number(payment.walletAmount) > 0 ? ` after wallet payment of ${money(payment.walletAmount)}` : ''}`,
-        }),
+      const result = await submitLeadPurchase(lead.id, payment.shares, {
+        useWallet,
+        couponCode: couponApplied ? couponCode : (payment?.coupon?.code || ''),
+        manualReference: trimmedReference,
+        proofUrl,
       })
+      setPayment(result)
       setSubmitted(true)
     } catch (e) {
       setSubmitError(e.message || 'Unable to submit payment. Please try again.')
@@ -135,30 +134,32 @@ export default function LeadPurchaseModal({ lead, isPro, onClose, onPurchased, o
   const shares = lead?.pricing?.shares || []
 
   if (submitted) {
+    const walletPending = Number(payment?.walletAmount ?? payment?.payment?.wallet_amount ?? 0)
+    const directPaid = Number(payment?.externalAmount ?? payment?.payment?.external_amount ?? 0)
     return <div className="lv2-overlay">
       <div className="lv2-upgrade lv2-payment-success" role="dialog" aria-modal="true" onClick={e => e.stopPropagation()}>
         <div className="lv2-success-icon">✓</div>
         <span>PAYMENT SUBMITTED</span>
-        <h2>Submitted successfully</h2>
-        <p>{Number(payment?.walletAmount) > 0 ? `${money(payment.walletAmount)} was deducted from your wallet. ` : ''}Your remaining {money(payment?.externalAmount)} payment and proof have been submitted for verification.</p>
+        <h2>Waiting for approval</h2>
+        <p>{walletPending > 0 ? `${money(walletPending)} from your wallet is reserved and cannot be used for another lead until this payment is approved. ` : ''}{directPaid > 0 ? `${money(directPaid)} direct payment and proof were submitted for verification.` : 'Your purchase was submitted for processing.'}</p>
         <button type="button" onClick={() => { onPurchased?.(payment, lead.id); onClose() }}>Done</button>
       </div>
     </div>
   }
 
-  const subtotal = Number(payment?.payment?.subtotal_amount ?? payment?.coupon?.subtotalAmount ?? payment?.payment?.amount ?? 0)
+  const subtotal = Number(payment?.payment?.subtotal_amount ?? payment?.coupon?.subtotalAmount ?? payment?.payment?.amount ?? payment?.amount ?? 0)
   const discount = Number(payment?.payment?.discount_amount ?? payment?.coupon?.discountAmount ?? 0)
-  const finalAmount = Number(payment?.payment?.amount ?? payment?.coupon?.finalAmount ?? Math.max(0, subtotal - discount))
+  const finalAmount = Number(payment?.payment?.amount ?? payment?.coupon?.finalAmount ?? payment?.amount ?? Math.max(0, subtotal - discount))
   const walletPaid = Number(payment?.walletAmount ?? payment?.payment?.wallet_amount ?? 0)
   const externalAmount = Number(payment?.externalAmount ?? payment?.payment?.external_amount ?? Math.max(0, finalAmount - walletPaid))
-  const appliedCoupon = String(payment?.payment?.coupon_code || payment?.coupon?.code || '').trim()
+  const appliedCoupon = String(payment?.payment?.coupon_code || payment?.coupon?.code || couponCode || '').trim()
 
   return <div className="lv2-overlay" onClick={() => !submitting && onClose()}>
     <div className={`lv2-buy-modal ${payment ? 'lv2-payment-modal' : ''}`} onClick={e => e.stopPropagation()}>
       <button className="lv2-modal-close" onClick={() => !submitting && onClose()} disabled={submitting}>×</button>
       <span className="lv2-modal-kicker">{payment ? 'PAYMENT' : 'LEAD PRICING'}</span>
       <h2>{payment ? `Complete Lead #${lead.id}` : `Buy Lead #${lead.id}`}</h2>
-      <p className="lv2-modal-subtitle">{payment ? (walletPaid > 0 ? `${money(walletPaid)} from your wallet was applied after the coupon discount. Pay the remaining amount directly.` : 'Complete the direct payment and submit your payment proof for verification.') : 'Choose your share pack and apply any coupon before payment.'}</p>
+      <p className="lv2-modal-subtitle">{payment ? (walletPaid > 0 ? `${money(walletPaid)} is reserved from your available wallet balance after the coupon. It will be captured only after admin approval.` : 'Complete the direct payment and submit your payment proof for verification.') : 'Choose your share pack and apply any coupon before payment.'}</p>
 
       {!payment && <>
         <section className="lv2-coupon-box" aria-label="Coupon code">
@@ -173,7 +174,7 @@ export default function LeadPurchaseModal({ lead, isPro, onClose, onPurchased, o
         <div className="lv2-wallet-choice">
           <label><input type="checkbox" checked={useWallet} onChange={e => setUseWallet(e.target.checked)} /> <span>Use wallet balance</span></label>
           <strong>{money(walletBalance)}</strong>
-          <small>Coupon is applied before wallet deduction.</small>
+          <small>Available wallet balance. Any amount reserved by a submitted lead payment is excluded.</small>
         </div>
 
         {error && <div className="lv2-payment-error" role="alert">{error}</div>}
@@ -188,9 +189,9 @@ export default function LeadPurchaseModal({ lead, isPro, onClose, onPurchased, o
             const proKey = `${n}-pro`
             return <div className="lv2-modal-price-row" key={n}>
               <div className="lv2-share-badge"><strong>{n}</strong><small>{n === 1 ? 'Single share' : `${n} shares`}</small></div>
-              {!isPro && <button className="lv2-modal-price normal" disabled={Boolean(buying)} onClick={() => buy(n, 'normal')}>{buying === normalKey ? 'Buying…' : money(normal)}</button>}
-              {isPro && <button className="lv2-modal-price pro selected-pro" disabled={Boolean(buying)} onClick={() => buy(n, 'pro')}>{buying === proKey ? 'Buying…' : money(pro)}</button>}
-              {!isPro && <button className="lv2-modal-price pro" disabled={Boolean(buying)} onClick={() => buy(n, 'pro')}><span>{buying === proKey ? 'Buying…' : money(pro)}</span></button>}
+              {!isPro && <button className="lv2-modal-price normal" disabled={Boolean(buying)} onClick={() => buy(n, 'normal')}>{buying === normalKey ? 'Checking…' : money(normal)}</button>}
+              {isPro && <button className="lv2-modal-price pro selected-pro" disabled={Boolean(buying)} onClick={() => buy(n, 'pro')}>{buying === proKey ? 'Checking…' : money(pro)}</button>}
+              {!isPro && <button className="lv2-modal-price pro" disabled={Boolean(buying)} onClick={() => buy(n, 'pro')}><span>{buying === proKey ? 'Checking…' : money(pro)}</span></button>}
             </div>
           })}
         </div>
@@ -203,11 +204,11 @@ export default function LeadPurchaseModal({ lead, isPro, onClose, onPurchased, o
             <b>{money(finalAmount)}</b>
           </div>
           <div className="lv2-payment-breakdown">
-            <div><span>Lead price</span><b>{money(subtotal)}</b></div>
+            <div><span>Original</span><b>{money(subtotal)}</b></div>
             <div className="discount"><span>{appliedCoupon ? `Coupon (${appliedCoupon})` : 'Coupon discount'}</span><b>−{money(discount)}</b></div>
-            <div className="after-coupon"><span>Price after coupon</span><b>{money(finalAmount)}</b></div>
-            <div className="wallet"><span>Wallet applied</span><b>−{money(walletPaid)}</b></div>
-            <div className="due"><span>Pay directly now</span><b>{money(externalAmount)}</b></div>
+            <div className="after-coupon"><span>Final</span><b>{money(finalAmount)}</b></div>
+            <div className="wallet"><span>Wallet reserved</span><b>−{money(walletPaid)}</b></div>
+            <div className="due"><span>Amount to pay</span><b>{money(externalAmount)}</b></div>
           </div>
         </section>
 
@@ -242,7 +243,10 @@ export default function LeadPurchaseModal({ lead, isPro, onClose, onPurchased, o
           <div className="lv2-payment-submit">
             <button type="button" className="lv2-more" onClick={submitPayment} disabled={submitting}>{submitting ? 'Submitting…' : `Submit ${money(externalAmount)} payment`}</button>
           </div>
-        </> : <div className="lv2-payment-submit"><button type="button" className="lv2-more" onClick={() => { onPurchased?.(payment, lead.id); onClose() }}>Complete purchase</button></div>}
+        </> : <>
+          {submitError && <div className="lv2-payment-error" role="alert">{submitError}</div>}
+          <div className="lv2-payment-submit"><button type="button" className="lv2-more" onClick={submitPayment} disabled={submitting}>{submitting ? 'Submitting…' : 'Submit purchase'}</button></div>
+        </>}
       </>}
     </div>
   </div>
