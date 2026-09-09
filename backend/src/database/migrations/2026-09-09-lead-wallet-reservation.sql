@@ -22,11 +22,7 @@ BEGIN
        AND purchase_type='lead'
        AND status='pending'
        AND id<>NEW.id
-       AND COALESCE(wallet_amount,0)>0
-       AND (
-         COALESCE(BTRIM(manual_reference),'')<>''
-         OR COALESCE(BTRIM(proof_url),'')<>''
-       );
+       AND COALESCE(wallet_amount,0)>0;
 
     available_balance:=GREATEST(0,COALESCE(wallet_balance,0)-reserved_amount);
     wallet_amount:=LEAST(available_balance,GREATEST(0,COALESCE(NEW.amount,0)));
