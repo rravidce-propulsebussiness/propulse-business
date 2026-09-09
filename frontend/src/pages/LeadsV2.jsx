@@ -128,8 +128,7 @@ export default function LeadsV2() {
   }
   const handlePurchased = async (_, leadId) => {
     try { await getLead(leadId) } catch {}
-    setLeads(current => current.map(x => x.id === leadId ? {...x, purchase_status:'pending_payment', pending_payment:true} : x))
-    setNotice(`Lead #${leadId} is pending approval. It will move to your purchased leads after payment approval.`)
+    setNotice(`Lead #${leadId} payment was submitted. Its status will update from the server after admin verification.`)
     setExpanded(null)
   }
 
