@@ -9,43 +9,18 @@ async function getMarketplacePage({industryId,serviceId,subserviceId,stateId,cit
  const q=String(search||'').trim().toLowerCase();if(q){values.push(`%${q}%`);const p=`$${values.length}`;conditions.push(`(LOWER(COALESCE(i.name,'')) LIKE ${p} OR LOWER(COALESCE(s.name,'')) LIKE ${p} OR LOWER(COALESCE(ss.name,'')) LIKE ${p} OR LOWER(COALESCE(c.name,'')) LIKE ${p} OR LOWER(COALESCE(st.name,'')) LIKE ${p} OR LOWER(COALESCE(l.requirement,'')) LIKE ${p})`)}
  if(role!=='admin'&&userId&&!String(allIndustries||'').match(/^(1|true)$/i)){
    values.push(userId);const p=`$${values.length}`;
-   conditions.push(`EXISTS (
-     SELECT 1 FROM business_profiles bp
-     JOIN business_profile_services bps ON bps.business_profile_id=bp.id AND bps.is_active=TRUE
-     WHERE bp.user_id=${p}
-       AND (l.industry_id IS NULL OR bps.industry_id=l.industry_id)
-       AND (l.service_id IS NULL OR bps.service_id=l.service_id)
-       AND (l.subservice_id IS NULL OR bps.subservice_id IS NULL OR bps.subservice_id=l.subservice_id)
-   )`);
+   conditions.push(`EXISTS (SELECT 1 FROM business_profiles bp JOIN business_profile_services bps ON bps.business_profile_id=bp.id AND bps.is_active=TRUE WHERE bp.user_id=${p} AND (l.industry_id IS NULL OR bps.industry_id=l.industry_id) AND (l.service_id IS NULL OR bps.service_id=l.service_id) AND (l.subservice_id IS NULL OR bps.subservice_id IS NULL OR bps.subservice_id=l.subservice_id))`);
    values.push(userId);const p2=`$${values.length}`;
-   conditions.push(`EXISTS (
-     SELECT 1
-     FROM business_profiles bp2
-     JOIN business_profile_locations bpl ON bpl.business_profile_id=bp2.id AND bpl.is_active=TRUE
-     JOIN states bst ON bst.id=bpl.state_id
-     LEFT JOIN cities bc ON bc.id=bpl.city_id
-     LEFT JOIN states lst ON lst.id=l.state_id
-     LEFT JOIN cities lc ON lc.id=l.city_id
-     WHERE bp2.user_id=${p2}
-       AND (l.state_id IS NULL OR LOWER(TRIM(bst.name))=LOWER(TRIM(lst.name)))
-       AND (l.city_id IS NULL OR bpl.city_id=l.city_id OR (bc.name IS NOT NULL AND lc.name IS NOT NULL AND LOWER(TRIM(bc.name))=LOWER(TRIM(lc.name))))
-   )`);
+   conditions.push(`EXISTS (SELECT 1 FROM business_profiles bp2 JOIN business_profile_locations bpl ON bpl.business_profile_id=bp2.id AND bpl.is_active=TRUE JOIN states bst ON bst.id=bpl.state_id LEFT JOIN cities bc ON bc.id=bpl.city_id LEFT JOIN states lst ON lst.id=l.state_id LEFT JOIN cities lc ON lc.id=l.city_id WHERE bp2.user_id=${p2} AND (l.state_id IS NULL OR LOWER(TRIM(bst.name))=LOWER(TRIM(lst.name))) AND (l.city_id IS NULL OR bpl.city_id=l.city_id OR (bc.name IS NOT NULL AND lc.name IS NOT NULL AND LOWER(TRIM(bc.name))=LOWER(TRIM(lc.name)))))`);
  }
  if(role!=='admin'&&userId){values.push(userId);const p3=`$${values.length}`;conditions.push(`NOT EXISTS (SELECT 1 FROM lead_purchases lp WHERE lp.lead_id=l.id AND lp.user_id=${p3} AND lp.status='paid')`)}
  const where=conditions.length?`WHERE ${conditions.join(' AND ')}`:'';
  const from=`leads l LEFT JOIN industries i ON i.id=l.industry_id LEFT JOIN services s ON s.id=l.service_id LEFT JOIN subservices ss ON ss.id=l.subservice_id LEFT JOIN states st ON st.id=l.state_id LEFT JOIN cities c ON c.id=l.city_id`;
  const count=await pool.query(`SELECT COUNT(DISTINCT l.id)::int AS total FROM ${from} ${where}`,values);const total=Number(count.rows[0]?.total||0);const offset=(safePage-1)*safeLimit;
- const pageValues=[...values,safeLimit,offset];
- const rows=(await pool.query(`${leadSelect} ${where} ORDER BY l.created_at DESC,l.id DESC LIMIT $${pageValues.length-1} OFFSET $${pageValues.length}`,pageValues)).rows;
+ const pageValues=[...values,safeLimit,offset];const rows=(await pool.query(`${leadSelect} ${where} ORDER BY l.created_at DESC,l.id DESC LIMIT $${pageValues.length-1} OFFSET $${pageValues.length}`,pageValues)).rows;
  if(role==='admin')return rows;
  const pendingIds=new Set();
- if(userId&&rows.length){
-   const ids=rows.map(row=>Number(row.id)).filter(Number.isInteger);
-   if(ids.length){
-     const pendingRows=(await pool.query(`SELECT DISTINCT lp.lead_id FROM lead_purchases lp JOIN payments p ON p.id=lp.payment_id WHERE lp.user_id=$1 AND lp.status='pending_payment' AND p.status='pending' AND (COALESCE(BTRIM(p.manual_reference),'')<>'' OR COALESCE(BTRIM(p.proof_url),'')<>'') AND lp.lead_id=ANY($2::int[])`,[userId,ids])).rows;
-     pendingRows.forEach(row=>pendingIds.add(Number(row.lead_id)));
-   }
- }
+ if(userId&&rows.length){const ids=rows.map(row=>Number(row.id)).filter(Number.isInteger);if(ids.length){const pendingRows=(await pool.query(`SELECT DISTINCT lp.lead_id FROM lead_purchases lp JOIN payments p ON p.id=lp.payment_id WHERE lp.user_id=$1 AND lp.status='pending_payment' AND p.status='pending' AND COALESCE(p.wallet_amount,0)>0 OR (lp.user_id=$1 AND lp.status='pending_payment' AND p.status='pending' AND (COALESCE(BTRIM(p.manual_reference),'')<>'' OR COALESCE(BTRIM(p.proof_url),'')<>'')) AND lp.lead_id=ANY($2::int[])`,[userId,ids])).rows;pendingRows.forEach(row=>pendingIds.add(Number(row.lead_id)))} }
  const pro=await isProMember(userId);const items=[];const seen=new Set();for(const row of rows){const id=Number(row.id);if(seen.has(id))continue;seen.add(id);const pendingApproval=pendingIds.has(id);items.push({...maskLead(row),is_purchased:false,is_accessible:false,is_pro_member:pro,purchase_status:pendingApproval?'pending_payment':null,pending_payment:pendingApproval,has_exclusive_option:Boolean(row.is_exclusive),exclusive_available:Boolean(row.is_exclusive)&&(!row.exclusive_available_at||new Date(row.exclusive_available_at)<=new Date()||pro),exclusive_can_buy:Boolean(row.is_exclusive)&&(!row.exclusive_available_at||new Date(row.exclusive_available_at)<=new Date()||pro),exclusive_action:'buy'});}
  return{items,pagination:{page:safePage,limit:safeLimit,total,hasNext:offset+rows.length<total,hasPrevious:safePage>1}};
 }
