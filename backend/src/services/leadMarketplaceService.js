@@ -42,7 +42,7 @@ async function getMarketplacePage({industryId,serviceId,subserviceId,stateId,cit
  if(userId&&rows.length){
    const ids=rows.map(row=>Number(row.id)).filter(Number.isInteger);
    if(ids.length){
-     const pendingRows=(await pool.query(`SELECT DISTINCT lp.lead_id FROM lead_purchases lp JOIN payments p ON p.id=lp.payment_id WHERE lp.user_id=$1 AND lp.status='pending_payment' AND p.status='pending' AND lp.lead_id=ANY($2::int[])`,[userId,ids])).rows;
+     const pendingRows=(await pool.query(`SELECT DISTINCT lp.lead_id FROM lead_purchases lp JOIN payments p ON p.id=lp.payment_id WHERE lp.user_id=$1 AND lp.status='pending_payment' AND p.status='pending' AND (COALESCE(BTRIM(p.manual_reference),'')<>'' OR COALESCE(BTRIM(p.proof_url),'')<>'') AND lp.lead_id=ANY($2::int[])`,[userId,ids])).rows;
      pendingRows.forEach(row=>pendingIds.add(Number(row.lead_id)));
    }
  }
