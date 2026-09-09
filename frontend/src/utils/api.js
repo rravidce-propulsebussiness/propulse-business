@@ -12,6 +12,7 @@ export async function apiRequest(path, options = {}, includeToken = true) {
     localStorage.removeItem('propulse_auth_token')
     localStorage.removeItem('propulse_auth_user')
     localStorage.removeItem('propulse_session_mode')
+    localStorage.removeItem('propulse_is_pro_member')
     if (window.location.pathname !== '/login') window.location.assign('/login')
   }
 
