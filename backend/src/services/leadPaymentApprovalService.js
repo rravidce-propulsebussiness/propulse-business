@@ -27,13 +27,19 @@ async function updateLeadPaymentStatus({paymentId,status,notes}) {
     if(status==='paid') {
       if(Number(payment.external_amount)>0&&!String(payment.manual_reference||'').trim()) throw Object.assign(new Error('Customer payment reference / UTR is required before approval'),{code:'REFERENCE_REQUIRED'});
       if(Number(payment.external_amount)>0&&!String(payment.proof_url||'').trim()) throw Object.assign(new Error('Customer payment proof is required before approval'),{code:'PROOF_REQUIRED'});
-      if(Number(payment.wallet_amount)>0&&!payment.wallet_transaction_id){
-        const wallet=(await client.query(`SELECT balance FROM wallets WHERE user_id=$1 FOR UPDATE`,[payment.user_id])).rows[0];
-        const balance=Number(wallet?.balance||0),required=Number(payment.wallet_amount||0);
-        if(balance+0.000001<required) throw Object.assign(new Error(`Wallet balance is insufficient to capture ₹${required.toFixed(2)}. Current balance is ₹${balance.toFixed(2)}.`),{code:'INSUFFICIENT_BALANCE'});
-        const debit=await walletService.debitForPayment(client,{userId:payment.user_id,amount:required,paymentId:payment.id,referenceType:'lead',referenceId:payment.purchase_id,description:`Lead #${payment.purchase_id} purchase`});
-        if(Number(debit.walletAmount)+0.000001<required) throw Object.assign(new Error('Unable to capture the reserved wallet amount for this payment'),{code:'INSUFFICIENT_BALANCE'});
-        payment.wallet_transaction_id=debit.walletTransactionId;
+      if(Number(payment.wallet_amount)>0){
+        const required=Number(payment.wallet_amount||0);
+        if(payment.wallet_transaction_id){
+          const debit=(await client.query(`SELECT id,amount,balance_after FROM wallet_transactions WHERE id=$1 AND payment_id=$2 AND type='debit' FOR UPDATE`,[payment.wallet_transaction_id,payment.id])).rows[0];
+          if(!debit||Number(debit.amount)!==required) throw Object.assign(new Error('Wallet debit for this payment is missing or invalid'),{code:'WALLET_LEDGER_MISMATCH'});
+        }else{
+          const wallet=(await client.query(`SELECT balance FROM wallets WHERE user_id=$1 FOR UPDATE`,[payment.user_id])).rows[0];
+          const balance=Number(wallet?.balance||0);
+          if(balance+0.000001<required) throw Object.assign(new Error(`Wallet balance is insufficient to capture ₹${required.toFixed(2)}. Current balance is ₹${balance.toFixed(2)}.`),{code:'INSUFFICIENT_BALANCE'});
+          const debit=await walletService.debitForPayment(client,{userId:payment.user_id,amount:required,paymentId:payment.id,referenceType:'lead',referenceId:payment.purchase_id,description:`Lead #${payment.purchase_id} purchase`});
+          if(Number(debit.walletAmount)+0.000001<required) throw Object.assign(new Error('Unable to capture the reserved wallet amount for this payment'),{code:'INSUFFICIENT_BALANCE'});
+          payment.wallet_transaction_id=debit.walletTransactionId;
+        }
       }
       const updated=payment.wallet_transaction_id
         ?(await client.query(`UPDATE payments SET status='paid',wallet_transaction_id=$1,paid_at=CURRENT_TIMESTAMP,notes=COALESCE($2,notes),updated_at=CURRENT_TIMESTAMP WHERE id=$3 RETURNING *`,[payment.wallet_transaction_id,notes||null,payment.id])).rows[0]
@@ -46,7 +52,8 @@ async function updateLeadPaymentStatus({paymentId,status,notes}) {
 
     // Lead wallet funds may have been captured by an older payment flow before
     // the reservation model was introduced. Refund idempotently before removing
-    // the pending purchase so rejected/failed legacy payments cannot strand funds.
+    // the pending purchase so rejected/failed legacy payments cannot strand
+    // funds.
     await walletService.refundForPayment(client,{userId:payment.user_id,paymentId:payment.id,description:`Refund wallet allocation for rejected Lead #${payment.purchase_id} payment`});
     if(payment.coupon_id) await couponService.releaseForPayment(client,payment.id);
     await client.query(`DELETE FROM lead_purchases WHERE payment_id=$1 AND status='pending_payment'`,[payment.id]);
