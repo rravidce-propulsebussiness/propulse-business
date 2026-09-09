@@ -10,13 +10,11 @@ async function clearConflictingPending({leadId,userId,shares,couponCode}) {
     const pending=(await client.query(`SELECT lp.id AS lead_purchase_id,lp.shares,p.id AS payment_id,p.coupon_code,p.wallet_amount,p.manual_reference,p.proof_url FROM lead_purchases lp JOIN payments p ON p.id=lp.payment_id WHERE lp.lead_id=$1 AND lp.user_id=$2 AND lp.status='pending_payment' AND p.status='pending' ORDER BY lp.id DESC LIMIT 1 FOR UPDATE OF lp,p`,[leadId,userId])).rows[0]
     if(!pending){await client.query('COMMIT');return}
 
-    const requestedCoupon=String(couponCode||'').trim().toUpperCase()
-    const existingCoupon=String(pending.coupon_code||'').trim().toUpperCase()
-    const samePackage=Number(pending.shares)===Number(shares)
-    const sameCoupon=existingCoupon===requestedCoupon
     const hasSubmittedProof=Boolean(String(pending.manual_reference||'').trim()||String(pending.proof_url||'').trim())
 
-    if(samePackage&&sameCoupon){await client.query('COMMIT');return}
+    // A pending payment without submitted proof is only a checkout reservation.
+    // Always replace it when the buyer starts a new purchase selection so stale
+    // coupon/share pricing or an old wallet allocation cannot be resumed.
     if(hasSubmittedProof){await client.query('COMMIT');return}
 
     if(Number(pending.wallet_amount||0)>0){
