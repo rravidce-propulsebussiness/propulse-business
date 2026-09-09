@@ -14,6 +14,7 @@ router.get('/membership/current', paymentController.getCurrentMembership);
 router.get('/membership/history', paymentController.getUserMembershipPayments);
 router.get('/memberships/customers', requireAdmin, paymentController.getMembershipCustomers);
 router.get('/memberships/customers/:userId', requireAdmin, paymentController.getMembershipCustomerDetails);
+router.get('/lead-approvals', requireAdmin, paymentController.getLeadPayments);
 router.get('/', requireAdmin, paymentController.getPayments);
 router.patch('/:id/status', requireAdmin, adminPaymentWriteLimit, paymentController.updatePaymentStatus);
 router.patch('/memberships/:id', requireAdmin, adminPaymentWriteLimit, paymentController.updateMembership);
