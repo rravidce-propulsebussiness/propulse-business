@@ -13,6 +13,8 @@ router.post('/google-sheet/preview',requireAdmin,leadController.previewGoogleShe
 router.get('/purchased',requireAuth,leadPurchaseController.purchases);
 router.get('/:id/access',requireAuth,leadAccessLimit,leadEntitlementController.getAccess);
 router.post('/:id/claim',requireAuth,leadActionLimit,leadEntitlementController.claim);
+router.post('/:id/purchase/quote',requireAuth,leadActionLimit,leadPurchaseController.quote);
+router.post('/:id/purchase/submit',requireAuth,leadActionLimit,leadPurchaseController.submit);
 router.post('/:id/purchase',requireAuth,leadActionLimit,leadPurchaseController.purchase);
 router.get('/:id',requireAuth,leadController.getLeadById);
 router.post('/',requireAdmin,leadController.createLead);
