@@ -10,7 +10,7 @@
 .purchased-hero-copy p{font-size:0!important;line-height:1.7}
 .purchased-hero-copy p::after{content:'Pro Tip: Call within 5 minutes, ask what they need most, understand their budget, and give 2–3 clear options. Always end with one specific next step.';display:block;font-size:15px;line-height:1.7;color:#c9d8e9;max-width:650px}
 .purchased-hero-actions::before{content:'QUICK TIPS\A ✓ Respond fast\A ✓ Ask the right questions\A ✓ Share relevant work / quotes\A ✓ Set the next follow-up\A ✓ Be consistent';white-space:pre;position:absolute;right:285px;bottom:48px;width:175px;padding:15px 17px;border-radius:10px;background:#fffdf4;color:#23415f;box-shadow:0 14px 30px rgba(8,35,67,.18);font-size:11px;line-height:1.65;font-weight:700;transform:rotate(-2deg);z-index:3}
-.purchased-hero-actions::after{content:'Small\A steps\A Big deals!';white-space:pre;position:absolute;right:8px;top:-8px;color:#a9c5e7;font-size:19px;line-height:1.05;font-weight:800;font-style:italic;transform:rotate(-4deg);z-index:3}
+.purchased-hero-actions::after{content:'Small\A steps\A Big deals!';white-space:pre;position:absolute;right:8px;top:-145px;width:135px;color:#a9c5e7;font-size:19px;line-height:1.05;font-weight:800;font-style:italic;transform:rotate(-4deg);z-index:3;text-align:center;pointer-events:none}
 .export-wrap{z-index:5}
 @media(max-width:1000px){.purchased-hero-actions::before{right:205px}.purchased-hero-actions::after{display:none}}
 @media(max-width:650px){.purchased-hero-copy h1::after{font-size:33px}.purchased-hero-actions::before,.purchased-hero-actions::after{display:none}.purchased-hero-copy p::after{font-size:14px}.purchased-hero{overflow:visible!important}}
