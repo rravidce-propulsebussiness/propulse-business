@@ -39,6 +39,31 @@ async function createTopupWithCoupon({userId,amount,reference,proofUrl,couponCod
   }catch(e){await client.query('ROLLBACK');throw e}finally{client.release()}
 }
 
-async function syncApprovedTopup({topupId}){const client=await pool.connect();try{await client.query('BEGIN');const payment=(await client.query(`SELECT * FROM payments WHERE purchase_type='wallet_topup' AND purchase_id=$1 FOR UPDATE`,[topupId])).rows[0];if(payment&&payment.status==='pending'){await client.query(`UPDATE payments SET status='paid',payment_method='manual',paid_at=CURRENT_TIMESTAMP,updated_at=CURRENT_TIMESTAMP WHERE id=$1`,[payment.id]);if(payment.coupon_id)await couponService.redeemForPayment(client,payment.id)}await client.query('COMMIT');return payment}catch(e){await client.query('ROLLBACK');throw e}finally{client.release()}}
-async function syncRejectedTopup({topupId}){const client=await pool.connect();try{await client.query('BEGIN');const payment=(await client.query(`SELECT * FROM payments WHERE purchase_type='wallet_topup' AND purchase_id=$1 FOR UPDATE`,[topupId])).rows[0];if(payment&&payment.status==='pending'){await client.query(`UPDATE payments SET status='rejected',updated_at=CURRENT_TIMESTAMP WHERE id=$1`,[payment.id]);if(payment.coupon_id)await couponService.releaseForPayment(client,payment.id)}await client.query('COMMIT');return payment}catch(e){await client.query('ROLLBACK');throw e}finally{client.release()}}
+async function syncApprovedTopup({topupId,client:providedClient=null}){
+  const client=providedClient||await pool.connect();const ownsTransaction=!providedClient
+  try{
+    if(ownsTransaction)await client.query('BEGIN')
+    const payment=(await client.query(`SELECT * FROM payments WHERE purchase_type='wallet_topup' AND purchase_id=$1 FOR UPDATE`,[topupId])).rows[0]
+    if(payment&&payment.status==='pending'){
+      await client.query(`UPDATE payments SET status='paid',payment_method='manual',paid_at=CURRENT_TIMESTAMP,updated_at=CURRENT_TIMESTAMP WHERE id=$1`,[payment.id])
+      if(payment.coupon_id)await couponService.redeemForPayment(client,payment.id)
+    }
+    if(ownsTransaction)await client.query('COMMIT')
+    return payment
+  }catch(e){if(ownsTransaction)await client.query('ROLLBACK');throw e}finally{if(ownsTransaction)client.release()}
+}
+
+async function syncRejectedTopup({topupId,client:providedClient=null}){
+  const client=providedClient||await pool.connect();const ownsTransaction=!providedClient
+  try{
+    if(ownsTransaction)await client.query('BEGIN')
+    const payment=(await client.query(`SELECT * FROM payments WHERE purchase_type='wallet_topup' AND purchase_id=$1 FOR UPDATE`,[topupId])).rows[0]
+    if(payment&&payment.status==='pending'){
+      await client.query(`UPDATE payments SET status='rejected',updated_at=CURRENT_TIMESTAMP WHERE id=$1`,[payment.id])
+      if(payment.coupon_id)await couponService.releaseForPayment(client,payment.id)
+    }
+    if(ownsTransaction)await client.query('COMMIT')
+    return payment
+  }catch(e){if(ownsTransaction)await client.query('ROLLBACK');throw e}finally{if(ownsTransaction)client.release()}
+}
 module.exports={createTopupWithCoupon,syncApprovedTopup,syncRejectedTopup}
