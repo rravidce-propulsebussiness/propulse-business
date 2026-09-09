@@ -275,9 +275,7 @@ export default function Wallet() {
       <UserHeader />
       <main className="wallet-main">
         <header className="wallet-head">
-          <span>WALLET</span>
-          <h1>Your wallet</h1>
-          <p>Manage your balance, payments and lead spending in one place.</p>
+          <span>WALLET MANAGEMENT</span>
         </header>
 
         {error && <div className="wallet-alert error">{error}</div>}
