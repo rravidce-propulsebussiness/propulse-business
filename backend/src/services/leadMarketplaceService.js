@@ -38,7 +38,15 @@ async function getMarketplacePage({industryId,serviceId,subserviceId,stateId,cit
  const pageValues=[...values,safeLimit,offset];
  const rows=(await pool.query(`${leadSelect} ${where} ORDER BY l.created_at DESC,l.id DESC LIMIT $${pageValues.length-1} OFFSET $${pageValues.length}`,pageValues)).rows;
  if(role==='admin')return rows;
- const pro=await isProMember(userId);const items=[];const seen=new Set();for(const row of rows){const id=Number(row.id);if(seen.has(id))continue;seen.add(id);items.push({...maskLead(row),is_purchased:false,is_accessible:false,is_pro_member:pro,has_exclusive_option:Boolean(row.is_exclusive),exclusive_available:Boolean(row.is_exclusive)&&(!row.exclusive_available_at||new Date(row.exclusive_available_at)<=new Date()||pro),exclusive_can_buy:Boolean(row.is_exclusive)&&(!row.exclusive_available_at||new Date(row.exclusive_available_at)<=new Date()||pro),exclusive_action:'buy'});}
+ const pendingIds=new Set();
+ if(userId&&rows.length){
+   const ids=rows.map(row=>Number(row.id)).filter(Number.isInteger);
+   if(ids.length){
+     const pendingRows=(await pool.query(`SELECT DISTINCT lp.lead_id FROM lead_purchases lp JOIN payments p ON p.id=lp.payment_id WHERE lp.user_id=$1 AND lp.status='pending_payment' AND p.status='pending' AND lp.lead_id=ANY($2::int[])`,[userId,ids])).rows;
+     pendingRows.forEach(row=>pendingIds.add(Number(row.lead_id)));
+   }
+ }
+ const pro=await isProMember(userId);const items=[];const seen=new Set();for(const row of rows){const id=Number(row.id);if(seen.has(id))continue;seen.add(id);const pendingApproval=pendingIds.has(id);items.push({...maskLead(row),is_purchased:false,is_accessible:false,is_pro_member:pro,purchase_status:pendingApproval?'pending_payment':null,pending_payment:pendingApproval,has_exclusive_option:Boolean(row.is_exclusive),exclusive_available:Boolean(row.is_exclusive)&&(!row.exclusive_available_at||new Date(row.exclusive_available_at)<=new Date()||pro),exclusive_can_buy:Boolean(row.is_exclusive)&&(!row.exclusive_available_at||new Date(row.exclusive_available_at)<=new Date()||pro),exclusive_action:'buy'});}
  return{items,pagination:{page:safePage,limit:safeLimit,total,hasNext:offset+rows.length<total,hasPrevious:safePage>1}};
 }
 module.exports={getMarketplacePage};
