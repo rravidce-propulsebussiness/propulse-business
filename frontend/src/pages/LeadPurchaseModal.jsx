@@ -15,6 +15,9 @@ export default function LeadPurchaseModal({ lead, isPro, onClose, onPurchased, o
   const [buying, setBuying] = useState('')
   const [error, setError] = useState('')
   const [payment, setPayment] = useState(null)
+  const [receivingDetails, setReceivingDetails] = useState([])
+  const [receivingLoading, setReceivingLoading] = useState(false)
+  const [receivingError, setReceivingError] = useState('')
   const [reference, setReference] = useState('')
   const [proofFile, setProofFile] = useState(null)
   const [submitting, setSubmitting] = useState(false)
@@ -24,6 +27,24 @@ export default function LeadPurchaseModal({ lead, isPro, onClose, onPurchased, o
   useEffect(() => {
     authRequest('/wallet').then(data => setWalletBalance(Number(data?.balance ?? data?.wallet?.balance ?? 0))).catch(() => setWalletBalance(0))
   }, [])
+
+  useEffect(() => {
+    if (!payment || Number(payment.externalAmount ?? payment.payment?.external_amount ?? 0) <= 0) return
+    let cancelled = false
+    setReceivingLoading(true)
+    setReceivingError('')
+    authRequest('/payment-receiving-details')
+      .then(data => {
+        if (!cancelled) setReceivingDetails(Array.isArray(data) ? data.filter(item => item?.is_active !== false) : [])
+      })
+      .catch(e => {
+        if (!cancelled) setReceivingError(e.message || 'Unable to load payment receiving details.')
+      })
+      .finally(() => {
+        if (!cancelled) setReceivingLoading(false)
+      })
+    return () => { cancelled = true }
+  }, [payment])
 
   const applyCoupon = () => {
     const normalized = couponCode.trim().toUpperCase()
@@ -191,7 +212,30 @@ export default function LeadPurchaseModal({ lead, isPro, onClose, onPurchased, o
         </section>
 
         {externalAmount > 0 ? <>
-          <div className="lv2-payment-instruction"><strong>Complete direct payment</strong><span>Pay {money(externalAmount)} using the payment method provided by Propulse, then enter the transaction details below.</span></div>
+          <section className="lv2-payment-receiving" aria-label="Payment receiving details">
+            <div className="lv2-payment-receiving-head">
+              <div><strong>Pay to Propulse</strong><span>Use one of the active payment accounts below for this payment.</span></div>
+              {receivingDetails.length > 0 && <b>{receivingDetails.length} {receivingDetails.length === 1 ? 'option' : 'options'}</b>}
+            </div>
+            {receivingLoading && <div className="lv2-payment-receiving-status">Loading payment account details…</div>}
+            {receivingError && <div className="lv2-payment-receiving-status error">{receivingError}</div>}
+            {!receivingLoading && !receivingError && !receivingDetails.length && <div className="lv2-payment-receiving-status error">Payment account details are not configured yet. Please contact Propulse before paying.</div>}
+            {!receivingLoading && receivingDetails.map(item => <article className="lv2-payment-account" key={item.id}>
+              <div className="lv2-payment-account-title"><strong>{item.label || 'Propulse payment account'}</strong><span>{item.method_type === 'both' ? 'UPI + BANK' : String(item.method_type || '').toUpperCase()}</span></div>
+              <div className="lv2-payment-account-grid">
+                {item.account_name && <div><small>ACCOUNT NAME</small><strong>{item.account_name}</strong></div>}
+                {item.upi_id && <div><small>UPI ID</small><strong>{item.upi_id}</strong></div>}
+                {item.bank_name && <div><small>BANK</small><strong>{item.bank_name}</strong></div>}
+                {item.account_number && <div className="account-number"><small>ACCOUNT NUMBER</small><strong>{item.account_number}</strong></div>}
+                {item.ifsc_code && <div><small>IFSC</small><strong>{item.ifsc_code}</strong></div>}
+                {item.branch_name && <div><small>BRANCH</small><strong>{item.branch_name}</strong></div>}
+              </div>
+              {item.qr_code && <div className="lv2-payment-qr"><img src={item.qr_code} alt={`${item.label || 'Propulse'} payment QR`} /></div>}
+              {item.instructions && <p>{item.instructions}</p>}
+            </article>)}
+          </section>
+
+          <div className="lv2-payment-instruction"><strong>Complete direct payment</strong><span>Pay {money(externalAmount)} using one of the payment methods above, then enter the transaction details below.</span></div>
           <label>Payment reference / UTR<input value={reference} onChange={e => { setReference(e.target.value); setSubmitError('') }} placeholder="Enter UTR or transaction ID" autoComplete="off" disabled={submitting} /></label>
           <label>Payment proof<input type="file" accept="image/*,.pdf" onChange={e => { setProofFile(e.target.files?.[0] || null); setSubmitError('') }} disabled={submitting} /></label>
           {submitError && <div className="lv2-payment-error" role="alert">{submitError}</div>}
