@@ -9,6 +9,15 @@ async function updateLeadPaymentStatus({paymentId,status,notes}) {
   try {
     await client.query('BEGIN');
     await client.query('SELECT pg_advisory_xact_lock(hashtext($1))',[`admin-payment:${paymentId}`]);
+
+    // Match the customer purchase lock order before locking the payment row.
+    // Customer checkout acquires purchase:${userId}:lead:${leadId} before its
+    // lead/payment locks. Keeping that order here prevents payment↔lead deadlocks.
+    const snapshot=(await client.query(`SELECT id,user_id,purchase_type,purchase_id,status,payment_method FROM payments WHERE id=$1`,[paymentId])).rows[0];
+    if(!snapshot) throw Object.assign(new Error('Payment not found'),{code:'NOT_FOUND'});
+    if(snapshot.purchase_type!=='lead') throw Object.assign(new Error('This approval handler only supports lead payments'),{code:'INVALID_PURCHASE'});
+    await client.query('SELECT pg_advisory_xact_lock(hashtext($1))',[`purchase:${snapshot.user_id}:lead:${snapshot.purchase_id}`]);
+
     const payment=(await client.query(`SELECT * FROM payments WHERE id=$1 FOR UPDATE`,[paymentId])).rows[0];
     if(!payment) throw Object.assign(new Error('Payment not found'),{code:'NOT_FOUND'});
     if(payment.purchase_type!=='lead') throw Object.assign(new Error('This approval handler only supports lead payments'),{code:'INVALID_PURCHASE'});
