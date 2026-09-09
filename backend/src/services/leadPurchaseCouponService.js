@@ -21,5 +21,6 @@ async function clearConflictingPending({leadId,userId}) {
 
 async function purchaseLead(args){await clearConflictingPending(args);return base.purchaseLead(args)}
 async function quoteLead(args){await clearConflictingPending(args);return base.quoteLead(args)}
+async function submitLeadPurchase(args){await clearConflictingPending(args);return base.submitLeadPurchase(args)}
 
-module.exports={...base,purchaseLead,quoteLead}
+module.exports={...base,purchaseLead,quoteLead,submitLeadPurchase}
