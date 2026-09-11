@@ -12,6 +12,7 @@ router.get('/access', auth, c.access);
 router.get('/rules', auth, c.rules);
 router.get('/location-rules', auth, c.locationRules);
 router.get('/sold-leads', auth, c.soldLeads);
+router.get('/assigned-leads', auth, c.linkedInvestorLeads);
 
 router.post('/checkout', auth, investmentWriteLimit, async (req, res, next) => {
   try {
