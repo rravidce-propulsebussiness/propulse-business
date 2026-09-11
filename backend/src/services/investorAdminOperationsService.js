@@ -32,6 +32,7 @@ async function getLinkedLeads({ investorId, investmentId = null }) {
       l.updated_at,
       COALESCE(SUM(lp.amount) FILTER (WHERE lp.status='paid'),0) AS gross_sale_amount,
       COUNT(DISTINCT lp.id) FILTER (WHERE lp.status='paid')::int AS paid_sale_count,
+      COUNT(DISTINCT lp.user_id) FILTER (WHERE lp.status='paid')::int AS purchased_buyer_count,
       COALESCE((SELECT SUM(a.allocated_amount)
         FROM investment_revenue_allocations a
         JOIN investments ix ON ix.id=a.investment_id
@@ -58,6 +59,9 @@ async function getLinkedLeads({ investorId, investmentId = null }) {
     ...row,
     gross_sale_amount: Number(row.gross_sale_amount || 0),
     paid_sale_count: Number(row.paid_sale_count || 0),
+    purchased_buyer_count: Number(row.purchased_buyer_count || 0),
+    buyer_capacity: Math.max(1, Number(row.buyer_capacity || 1)),
+    remaining_buyer_slots: Math.max(0, Number(row.buyer_capacity || 1) - Number(row.purchased_buyer_count || 0)),
     investor_revenue: Number(row.investor_revenue || 0),
   }));
 }
@@ -71,10 +75,8 @@ async function payout({ investmentId, adminId, transferReference, proofUrl }) {
     if (inv.status === 'paid') throw Object.assign(new Error('Investment has already been paid'), { code: 'ALREADY_PAID' });
     if (inv.status === 'cancelled') throw Object.assign(new Error('Cancelled investment cannot be paid'), { code: 'CANCELLED' });
     if (new Date(inv.matures_at) > new Date()) throw Object.assign(new Error('Investment has not matured yet'), { code: 'NOT_MATURED' });
-
     const revenue = Number((await client.query('SELECT COALESCE(SUM(allocated_amount),0) AS total FROM investment_revenue_allocations WHERE investment_id=$1',[inv.id])).rows[0].total || 0);
     const payoutAmount = Number(revenue.toFixed(2));
-
     const reference = String(transferReference || '').trim();
     if (!reference) throw Object.assign(new Error('Transfer reference / UTR is required'), { code: 'TRANSFER_REFERENCE_REQUIRED' });
     if (!proofUrl) throw Object.assign(new Error('Transfer screenshot or proof is required'), { code: 'TRANSFER_PROOF_REQUIRED' });
