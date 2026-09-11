@@ -24,15 +24,28 @@ export default function InvestorHeader() {
     setOpen(false)
     navigate('/')
   }
-  const active = path => location.pathname === path ? ' active' : ''
+
+  const isActive = target => {
+    if (target === '/') return location.pathname === '/'
+    if (target === '/investment') return location.pathname === '/investment' && !['#invested-leads', '#lead-sales', '#history', '#payouts'].includes(location.hash)
+    return location.pathname === '/investment' && location.hash === target
+  }
+
+  const nav = [
+    { label: 'Home', to: '/' },
+    { label: 'Invest', to: '/investment' },
+    { label: 'Invested Leads', to: '/investment#invested-leads' },
+    { label: 'Lead Sales', to: '/investment#lead-sales' },
+    { label: 'Payouts', to: '/investment#payouts' },
+    { label: 'History', to: '/investment#history' },
+  ]
   const avatar = businessName.trim().charAt(0).toUpperCase() || 'B'
 
   return <header className="investor-header">
     <Link className="investor-header-brand" to="/" onClick={() => setOpen(false)}><img src="/brand/propulse-logo.png" alt="Propulse Business" /></Link>
     <div className="investor-header-label">INVESTOR</div>
     <nav className={`investor-header-nav${open ? ' open' : ''}`}>
-      <Link className={active('/')} to="/" onClick={() => setOpen(false)}>Home</Link>
-      <Link className={active('/investment')} to="/investment" onClick={() => setOpen(false)}>Invest</Link>
+      {nav.map(item => <Link key={item.to} className={isActive(item.to.includes('#') ? item.to.slice(item.to.indexOf('#')) : item.to) ? 'active' : ''} to={item.to} onClick={() => setOpen(false)}>{item.label}</Link>)}
       <button className="investor-mobile-logout" onClick={logout}>Logout</button>
     </nav>
     <div className="investor-header-right">
