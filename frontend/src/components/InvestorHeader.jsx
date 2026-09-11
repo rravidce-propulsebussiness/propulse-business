@@ -34,7 +34,7 @@ export default function InvestorHeader() {
   const nav = [
     { label: 'Home', to: '/' },
     { label: 'Invest', to: '/investment' },
-    { label: 'Investment Leads', to: '/investment#lead-sales' },
+    { label: 'Invested Leads', to: '/investment#lead-sales' },
     { label: 'Payouts', to: '/investment#payouts' },
     { label: 'History', to: '/investment#history' },
   ]
