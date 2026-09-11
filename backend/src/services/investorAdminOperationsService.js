@@ -5,9 +5,19 @@ async function getLinkedLeads({ investorId, investmentId = null }) {
   const extra = investmentId ? 'AND x.id=$2' : '';
   if (investmentId) values.push(Number(investmentId));
   return (await pool.query(`
-    SELECT DISTINCT l.id,l.name,l.phone,l.email,l.industry_id,
-      i.name AS industry_name,s.name AS service_name,st.name AS state_name,c.name AS city_name,
-      l.budget,l.requirements,l.status,l.created_at,
+    SELECT DISTINCT l.id,
+      l.customer_name AS name,
+      l.customer_phone AS phone,
+      l.customer_email AS email,
+      l.industry_id,
+      i.name AS industry_name,
+      s.name AS service_name,
+      st.name AS state_name,
+      c.name AS city_name,
+      l.budget,
+      l.requirement AS requirements,
+      l.status,
+      l.created_at,
       COALESCE(SUM(lp.amount) FILTER (WHERE lp.status='paid'),0) AS gross_sale_amount,
       COUNT(DISTINCT lp.id) FILTER (WHERE lp.status='paid')::int AS paid_sale_count,
       COALESCE((SELECT SUM(a.allocated_amount)
@@ -29,7 +39,7 @@ async function getLinkedLeads({ investorId, investmentId = null }) {
       AND (x.city_id IS NULL OR l.city_id=x.city_id)
       ${extra}
     WHERE l.investor_user_id=$1
-    GROUP BY l.id,i.name,s.name,st.name,c.name,l.name,l.phone,l.email,l.budget,l.requirements,l.status,l.created_at
+    GROUP BY l.id,l.customer_name,l.customer_phone,l.customer_email,l.industry_id,i.name,s.name,st.name,c.name,l.budget,l.requirement,l.status,l.created_at
     ORDER BY l.created_at DESC,l.id DESC
   `, values)).rows.map(row => ({
     ...row,
