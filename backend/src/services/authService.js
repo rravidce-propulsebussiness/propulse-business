@@ -22,7 +22,7 @@ async function publicUser(user, profile = null) {
 }
 
 function signToken(user) {
-  return jwt.sign({ id: user.id, email: user.email, role: user.role }, EFFECTIVE_JWT_SECRET, { expiresIn: '7d' });
+  return jwt.sign({ id: user.id, email: user.email, role: user.role, auth_version: Number(user.auth_version || 0) }, EFFECTIVE_JWT_SECRET, { expiresIn: '7d' });
 }
 
 async function getBusinessProfile(userId, client = pool) {
@@ -72,7 +72,7 @@ async function signup({ name, email, password, phone, businessName, businessDeta
     if (existing.rows.length) throw Object.assign(new Error('An account with this email already exists'), { code: 'EMAIL_EXISTS' });
     await validateBusinessSelections(client, services, locations);
     const passwordHash = await bcrypt.hash(password, 12);
-    const user = (await client.query(`INSERT INTO users (name,email,password_hash,role) VALUES ($1,$2,$3,'business') RETURNING id,name,email,role`, [name.trim(), normalizedEmail, passwordHash])).rows[0];
+    const user = (await client.query(`INSERT INTO users (name,email,password_hash,role) VALUES ($1,$2,$3,'business') RETURNING id,name,email,role,auth_version`, [name.trim(), normalizedEmail, passwordHash])).rows[0];
     const profileId = (await client.query(`INSERT INTO business_profiles (user_id,phone,business_name,business_details) VALUES ($1,$2,$3,$4) RETURNING id`, [user.id, phone.trim(), businessName.trim(), businessDetails.trim()])).rows[0].id;
     for (const selection of services) await client.query(`INSERT INTO business_profile_services (business_profile_id,industry_id,service_id,subservice_id) VALUES ($1,$2,$3,$4) ON CONFLICT DO NOTHING`, [profileId, selection.industryId, selection.serviceId, selection.subserviceId || null]);
     for (const location of locations) await client.query(`INSERT INTO business_profile_locations (business_profile_id,state_id,city_id) VALUES ($1,$2,$3) ON CONFLICT DO NOTHING`, [profileId, location.stateId, location.cityId]);
@@ -85,7 +85,7 @@ async function signup({ name, email, password, phone, businessName, businessDeta
 
 async function login({ email, password }) {
   const normalizedEmail = email.trim().toLowerCase();
-  const result = await pool.query(`SELECT id,name,email,password_hash,role FROM users WHERE LOWER(email)=$1 AND is_active=TRUE`, [normalizedEmail]);
+  const result = await pool.query(`SELECT id,name,email,password_hash,role,auth_version FROM users WHERE LOWER(email)=$1 AND is_active=TRUE`, [normalizedEmail]);
   const user = result.rows[0];
   if (!user || !(await bcrypt.compare(password, user.password_hash))) throw Object.assign(new Error('Invalid email or password'), { code: 'INVALID_CREDENTIALS' });
   return { user: await publicUser(user, await getBusinessProfile(user.id)), token: signToken(user) };
@@ -94,12 +94,9 @@ async function login({ email, password }) {
 async function verifyGoogleIdToken(idToken) {
   if (!process.env.GOOGLE_CLIENT_ID) throw Object.assign(new Error('Google sign-in is not configured'), { code: 'GOOGLE_NOT_CONFIGURED' });
   if (!idToken || typeof idToken !== 'string') throw Object.assign(new Error('Google credential is required'), { code: 'INVALID_GOOGLE_TOKEN' });
-
   const response = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(idToken)}`);
   const payload = await response.json().catch(() => ({}));
-  if (!response.ok || payload.aud !== process.env.GOOGLE_CLIENT_ID || !['https://accounts.google.com', 'accounts.google.com'].includes(payload.iss) || payload.email_verified !== 'true' || !payload.email || !payload.sub) {
-    throw Object.assign(new Error('Invalid Google sign-in credential'), { code: 'INVALID_GOOGLE_TOKEN' });
-  }
+  if (!response.ok || payload.aud !== process.env.GOOGLE_CLIENT_ID || !['https://accounts.google.com', 'accounts.google.com'].includes(payload.iss) || payload.email_verified !== 'true' || !payload.email || !payload.sub) throw Object.assign(new Error('Invalid Google sign-in credential'), { code: 'INVALID_GOOGLE_TOKEN' });
   return payload;
 }
 
@@ -109,14 +106,12 @@ async function googleLogin({ idToken }) {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
-    let user = (await client.query(`SELECT id,name,email,password_hash,role FROM users WHERE LOWER(email)=$1 AND is_active=TRUE FOR UPDATE`, [normalizedEmail])).rows[0];
-
+    let user = (await client.query(`SELECT id,name,email,password_hash,role,auth_version FROM users WHERE LOWER(email)=$1 AND is_active=TRUE FOR UPDATE`, [normalizedEmail])).rows[0];
     if (!user) {
       const placeholderPassword = await bcrypt.hash(crypto.randomBytes(32).toString('hex'), 12);
-      user = (await client.query(`INSERT INTO users (name,email,password_hash,role) VALUES ($1,$2,$3,'business') RETURNING id,name,email,password_hash,role`, [String(googleUser.name || normalizedEmail.split('@')[0]).trim().slice(0, 120), normalizedEmail, placeholderPassword])).rows[0];
+      user = (await client.query(`INSERT INTO users (name,email,password_hash,role) VALUES ($1,$2,$3,'business') RETURNING id,name,email,password_hash,role,auth_version`, [String(googleUser.name || normalizedEmail.split('@')[0]).trim().slice(0, 120), normalizedEmail, placeholderPassword])).rows[0];
       await client.query(`INSERT INTO business_profiles (user_id,phone,business_name,business_details) VALUES ($1,$2,$3,$4)`, [user.id, 'Not provided', String(googleUser.name || normalizedEmail.split('@')[0]).trim().slice(0, 160), 'Google account. Complete your business profile to receive better lead matches.']);
     }
-
     await client.query('COMMIT');
     return { user: await publicUser(user, await getBusinessProfile(user.id)), token: signToken(user) };
   } catch (error) {
@@ -131,7 +126,6 @@ async function createPasswordReset(email) {
   const result = await pool.query(`SELECT id,name,email FROM users WHERE LOWER(email)=$1 AND is_active=TRUE`, [normalizedEmail]);
   const user = result.rows[0];
   if (!user) return null;
-
   const rawToken = crypto.randomBytes(32).toString('hex');
   const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex');
   await pool.query(`DELETE FROM password_reset_tokens WHERE user_id=$1 OR expires_at < CURRENT_TIMESTAMP`, [user.id]);
@@ -145,11 +139,11 @@ async function resetPassword({ token, password }) {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
-    const result = await client.query(`SELECT pr.id,pr.user_id,u.id,u.name,u.email,u.role FROM password_reset_tokens pr INNER JOIN users u ON u.id=pr.user_id WHERE pr.token_hash=$1 AND pr.used_at IS NULL AND pr.expires_at > CURRENT_TIMESTAMP AND u.is_active=TRUE FOR UPDATE`, [tokenHash]);
+    const result = await client.query(`SELECT pr.id,pr.user_id,u.id,u.name,u.email,u.role,u.auth_version FROM password_reset_tokens pr INNER JOIN users u ON u.id=pr.user_id WHERE pr.token_hash=$1 AND pr.used_at IS NULL AND pr.expires_at > CURRENT_TIMESTAMP AND u.is_active=TRUE FOR UPDATE`, [tokenHash]);
     const row = result.rows[0];
     if (!row) throw Object.assign(new Error('This password reset link is invalid or has expired'), { code: 'INVALID_RESET_TOKEN' });
     const passwordHash = await bcrypt.hash(password, 12);
-    await client.query(`UPDATE users SET password_hash=$1,updated_at=CURRENT_TIMESTAMP WHERE id=$2`, [passwordHash, row.user_id]);
+    await client.query(`UPDATE users SET password_hash=$1,auth_version=auth_version+1,updated_at=CURRENT_TIMESTAMP WHERE id=$2`, [passwordHash, row.user_id]);
     await client.query(`UPDATE password_reset_tokens SET used_at=CURRENT_TIMESTAMP WHERE user_id=$1`, [row.user_id]);
     await client.query('COMMIT');
     return { user: await publicUser({ id: row.user_id, name: row.name, email: row.email, role: row.role }, await getBusinessProfile(row.user_id)) };
@@ -159,9 +153,12 @@ async function resetPassword({ token, password }) {
 
 function verifyToken(token) { return jwt.verify(token, EFFECTIVE_JWT_SECRET); }
 
-async function getAuthenticatedUser(id) {
-  const result = await pool.query(`SELECT id,name,email,role FROM users WHERE id=$1 AND is_active=TRUE`, [id]);
-  return result.rows[0] || null;
+async function getAuthenticatedUser(id, authVersion) {
+  const result = await pool.query(`SELECT id,name,email,role,auth_version FROM users WHERE id=$1 AND is_active=TRUE`, [id]);
+  const user = result.rows[0];
+  if (!user) return null;
+  if (authVersion !== undefined && Number(user.auth_version || 0) !== Number(authVersion)) return null;
+  return user;
 }
 
 async function getUserById(id) {
