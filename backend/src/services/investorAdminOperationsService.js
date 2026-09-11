@@ -5,7 +5,7 @@ async function getLinkedLeads({ investorId, investmentId = null }) {
   const extra = investmentId ? 'AND x.id=$2' : '';
   if (investmentId) values.push(Number(investmentId));
   return (await pool.query(`
-    SELECT DISTINCT l.id,l.name,l.phone,l.email,l.work_phone,l.industry_id,
+    SELECT DISTINCT l.id,l.name,l.phone,l.email,l.industry_id,
       i.name AS industry_name,s.name AS service_name,st.name AS state_name,c.name AS city_name,
       l.budget,l.requirements,l.status,l.created_at,
       COALESCE(SUM(lp.amount) FILTER (WHERE lp.status='paid'),0) AS gross_sale_amount,
@@ -23,12 +23,13 @@ async function getLinkedLeads({ investorId, investmentId = null }) {
       AND (x.city_id IS NULL OR l.city_id=x.city_id)
       ${extra}
     WHERE l.investor_user_id=$1
-    GROUP BY l.id,i.name,s.name,st.name,c.name,l.name,l.phone,l.email,l.work_phone,l.budget,l.requirements,l.status,l.created_at
+    GROUP BY l.id,i.name,s.name,st.name,c.name,l.name,l.phone,l.email,l.budget,l.requirements,l.status,l.created_at
     ORDER BY l.created_at DESC,l.id DESC
   `, values)).rows.map(row => ({
     ...row,
     gross_sale_amount: Number(row.gross_sale_amount || 0),
     paid_sale_count: Number(row.paid_sale_count || 0),
+    investor_revenue: 0,
   }));
 }
 
@@ -45,8 +46,6 @@ async function payout({ investmentId, adminId, transferReference, proofUrl }) {
     const revenue = Number((await client.query('SELECT COALESCE(SUM(allocated_amount),0) AS total FROM investment_revenue_allocations WHERE investment_id=$1',[inv.id])).rows[0].total || 0);
     const payoutAmount = Number(revenue.toFixed(2));
 
-    // Reinvestment is an explicit investor action through /investments/:id/reinvest.
-    // Admin settlement must never silently move investor proceeds into another cycle.
     const reference = String(transferReference || '').trim();
     if (!reference) throw Object.assign(new Error('Transfer reference / UTR is required'), { code: 'TRANSFER_REFERENCE_REQUIRED' });
     if (!proofUrl) throw Object.assign(new Error('Transfer screenshot or proof is required'), { code: 'TRANSFER_PROOF_REQUIRED' });
