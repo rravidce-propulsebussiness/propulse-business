@@ -1,0 +1,3 @@
+const leadCrmService = require('../services/leadCrmService');
+async function update(req,res){try{const row=await leadCrmService.updateLeadCrm({leadId:req.params.id,userId:req.user.id,status:req.body.status,remarks:req.body.remarks,nextFollowupAt:req.body.nextFollowupAt,markFollowedUp:req.body.markFollowedUp===true});return res.json(row)}catch(error){const map={INVALID_LEAD:400,INVALID_STATUS:400,INVALID_DATE:400,FORBIDDEN:403};return res.status(map[error.code]||500).json({error:error.message||'Failed to update lead CRM',code:error.code||'CRM_UPDATE_FAILED'})}}
+module.exports={update};
