@@ -2,6 +2,7 @@ import { authRequest } from './utils/auth'
 
 const money = value => `₹${Number(value || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 let paymentMap = new Map()
+let paymentById = new Map()
 let approvalQueue = 'membership'
 let investmentPendingCount = 0
 let lastFetchAt = 0
@@ -19,7 +20,8 @@ async function loadPaymentMap(force = false) {
   fetchInFlight = authRequest('/payments?status=all&search=&page=1&limit=100')
     .then(data => {
       const items = Array.isArray(data) ? data : data?.items || []
-      paymentMap = new Map(items.filter(x => x?.id != null).map(x => [String(x.id), x]))
+      paymentById = new Map(items.filter(x => x?.id != null).map(x => [String(x.id), x]))
+      paymentMap = new Map(items.filter(x => x?.purchase_id != null).map(x => [String(x.purchase_id), x]))
       investmentPendingCount = items.filter(x => String(x?.purchase_type || x?.payment_type || '').toLowerCase() === 'investment' && x?.status === 'pending').length
     })
     .catch(() => {})
@@ -57,7 +59,7 @@ function filterApprovalQueue(queue){
   const title=document.querySelector('.approval-switcher')?.nextElementSibling?.querySelector('h3')
   rows.forEach(row=>{
     const id=row.querySelector('td:first-child')?.textContent?.replace('#','').trim()
-    const payment=paymentMap.get(id)
+    const payment=paymentById.get(id)
     const match=queue==='leads'?payment?.purchase_type==='lead':queue==='investment'?String(payment?.purchase_type||payment?.payment_type||'').toLowerCase()==='investment':queue==='wallet'
     row.style.display=queue==='leads'||queue==='investment'?(match?'':'none'):''
     const details=row.nextElementSibling
