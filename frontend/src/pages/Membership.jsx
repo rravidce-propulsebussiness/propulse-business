@@ -19,8 +19,8 @@ const cycles = ['monthly', 'quarterly', 'halfYearly', 'yearly']
 const cycleMonths = { monthly: 1, quarterly: 3, halfYearly: 6, yearly: 12 }
 const cycleLabel = (key) => (key === 'halfYearly' ? 'Half-Yearly' : `${key[0].toUpperCase()}${key.slice(1)}`)
 const fallbackBenefits = {
-  pro: ['Priority lead access', 'Pro lead pricing', 'Earlier access to selected opportunities'],
-  booster: ['Boost your lead-buying capacity', 'Flexible booster access', 'Use alongside your active membership']
+  pro: ['Qualified lead access at near-generation pricing', 'Get more business leads for less', 'Priority access to selected opportunities'],
+  booster: ['Marketing-focused business visibility', 'SEO-oriented growth and discoverability support', 'Designed to strengthen your lead-generation presence']
 }
 
 export default function Membership() {
@@ -221,9 +221,9 @@ export default function Membership() {
       <section className="membership-hero">
         <div className="membership-hero-copy">
           <span className="membership-kicker">PROPULSE MEMBERSHIP</span>
-          <h1>Choose the access that fits your business.</h1>
-          <p>Activate Pro for advanced marketplace access. Investment is a Pro-enabled feature funded from your Propulse wallet, while Booster remains an optional paid add-on.</p>
-          <div className="membership-hero-points"><span><i /> Flexible billing</span><span><i /> Clear pricing</span><span><i /> Business-first access</span></div>
+          <h1>Choose your growth goal.</h1>
+          <p>Get leads at near-generation pricing with Pro, strengthen your marketing and SEO with Booster, or choose Investment to help fund lead generation while participating in realized lead-sale income.</p>
+          <div className="membership-hero-points"><span><i /> More leads</span><span><i /> Stronger visibility</span><span><i /> Growth-focused investment</span></div>
         </div>
         <div className="membership-current">
           <span>YOUR CURRENT PLAN</span>
@@ -249,21 +249,20 @@ export default function Membership() {
                 <div>
                   <span className="plan-label">{group.name.toUpperCase()}</span>
                   <h2>{group.name}</h2>
-                  <p>{locked ? 'Available after activating an active Pro membership.' : plan?.description || `${group.name} membership for businesses using the Propulse marketplace.`}</p>
+                  <p>{locked ? 'Available after activating an active Pro membership.' : plan?.description || (group.type === 'pro' ? 'Get qualified business leads at near-generation pricing.' : 'A marketing and SEO-oriented service built to strengthen your business visibility and lead generation.')}</p>
                 </div>
-                {isCurrent ? <span className="current-badge">CURRENT</span> : group.type === 'pro' ? <span className="popular-badge">RECOMMENDED</span> : locked ? <span className="current-badge">PRO REQUIRED</span> : <span className="popular-badge">AVAILABLE</span>}
+                {isCurrent ? <span className="current-badge">CURRENT</span> : group.type === 'pro' ? <span className="popular-badge">BEST FOR LEADS</span> : locked ? <span className="current-badge">PRO REQUIRED</span> : <span className="popular-badge">GROW VISIBILITY</span>}
               </div>
 
               <div className="card-billing">
                 <div><span>CHOOSE BILLING</span><small>Cycle length</small></div>
                 <div className="membership-cycles">{cycles.map((key) => <button type="button" key={key} className={selectedCycle === key ? 'active' : ''} onClick={() => setSelectedCycles((previous) => ({ ...previous, [group.key]: key }))}>{cycleLabel(key)}</button>)}</div>
               </div>
-
               <div className="membership-price">{plan ? money(plan.price) : '—'}<small>{plan ? ` / ${period(plan).toLowerCase()}` : ''}</small></div>
               {locked && <div className="saving-note">🔒 Unlock with Pro</div>}
               {group.type === 'booster' && isProMember && <div className="saving-note">✓ Booster unlocked for Pro members</div>}
               <div className="membership-divider" />
-              <h3>Included with {group.name}</h3>
+              <h3>{group.type === 'pro' ? 'Your lead advantage' : 'What Booster is built for'}</h3>
               <ul>{benefits(plan, group.type).map((item, index) => <li key={`${item}-${index}`}><b>✓</b><span>{item}</span></li>)}</ul>
               {planAddOns.length > 0 && <div className="membership-addons"><div><span>AVAILABLE ADD-ONS</span><small>Configured in Admin</small></div><ul>{planAddOns.map((item, index) => <li key={`${item}-${index}`}><b>+</b><span>{item}</span></li>)}</ul></div>}
               {isCurrent ? <button className="membership-primary current" disabled>✓ Current {group.name}</button> : locked ? <button className="membership-primary current" disabled>🔒 Pro membership required</button> : !plan ? <button className="membership-primary current" disabled>Plan being configured</button> : <button className="membership-primary" onClick={() => openPlan(plan, group.type)} disabled={submitting}>Choose {group.name} <span>→</span></button>}
@@ -273,26 +272,26 @@ export default function Membership() {
           <article className="membership-plan investor-plan investment-access-card">
             <div className="membership-plan-top">
               <div>
-                <span className="plan-label">INVESTMENT ACCESS</span>
+                <span className="plan-label">INVESTMENT</span>
                 <h2>Investment</h2>
-                <p>Invest from your Propulse wallet in eligible industries and locations using the limits configured by Admin.</p>
+                <p>Put capital behind lead generation: Propulse runs ads on your investor profile, helps generate and boost business leads, and you participate in income from leads that are actually sold.</p>
               </div>
               {isProMember ? <span className="popular-badge">UNLOCKED WITH PRO</span> : <span className="current-badge">PRO REQUIRED</span>}
             </div>
 
             <div className="investor-model">
-              <div><b>WALLET FUNDED</b><span>Add money to your Propulse wallet, then choose an eligible investment.</span></div>
-              <div><b>ADMIN LIMITS APPLY</b><span>Industry, state/city and investor capacity limits are checked before investing.</span></div>
-              <div><b>ACTUAL SALES ONLY</b><span>Returns are based on eligible lead-sale revenue actually realized. No fixed or guaranteed return.</span></div>
+              <div><b>ADS ON YOUR PROFILE</b><span>Propulse runs promotional ads around your investor profile to increase visibility and attract business demand.</span></div>
+              <div><b>BOOST BUSINESS LEADS</b><span>Your investment supports lead-generation activity designed to increase the flow of business leads.</span></div>
+              <div><b>SHARE IN REALIZED SALES INCOME</b><span>When eligible leads are sold, you participate in the income actually generated from those lead sales. Returns are not fixed or guaranteed.</span></div>
             </div>
 
             <div className="membership-divider" />
             <h3>How Investment works</h3>
             <ul>
-              <li><b>01</b><span>Keep enough funds in your Propulse wallet.</span></li>
-              <li><b>02</b><span>Select an eligible industry and location.</span></li>
-              <li><b>03</b><span>Invest within the Admin-configured limits.</span></li>
-              <li><b>04</b><span>At settlement, keep the realized payout or reinvest it.</span></li>
+              <li><b>01</b><span>Fund your investment within the available Propulse limits.</span></li>
+              <li><b>02</b><span>Propulse promotes your investor profile through advertising activity.</span></li>
+              <li><b>03</b><span>Ad-driven demand helps generate and boost eligible business leads.</span></li>
+              <li><b>04</b><span>As eligible leads are sold, you participate in the realized lead-sale income.</span></li>
             </ul>
 
             {isProMember ? <a className="membership-primary" href="/investment">Open Investment <span>→</span></a> : <button className="membership-primary current" disabled>🔒 Activate Pro first</button>}
@@ -303,11 +302,11 @@ export default function Membership() {
       <MembershipPayments />
 
       <section className="membership-value">
-        <div><span className="membership-kicker">WHY MEMBERSHIP</span><h2>Simple access. Clear control.</h2><p>Pro controls access to advanced features. Investment uses your wallet and the investment rules configured by Admin — it is not a separate membership plan.</p></div>
+        <div><span className="membership-kicker">CHOOSE BY GOAL</span><h2>One membership page. Three clear growth paths.</h2><p>Choose Pro when your goal is buying leads at near-generation pricing. Choose Booster when your goal is stronger marketing and SEO visibility. Choose Investment when you want Propulse to promote your investor profile, help drive business leads, and participate in realized income from leads sold.</p></div>
         <div className="value-grid">
-          <div><strong>01</strong><b>Pick Pro</b><span>Activate Pro to unlock advanced marketplace access and Investment.</span></div>
-          <div><strong>02</strong><b>Add wallet funds</b><span>Investment capital comes from your Propulse wallet, not a membership payment.</span></div>
-          <div><strong>03</strong><b>Invest when eligible</b><span>Use the Investment page to select an eligible industry and location within Admin limits.</span></div>
+          <div><strong>01</strong><b>Get leads with Pro</b><span>Access qualified business leads at pricing designed to stay close to the cost of generating them.</span></div>
+          <div><strong>02</strong><b>Grow visibility with Booster</b><span>Use marketing and SEO-oriented support to strengthen discoverability, presence and lead-generation potential.</span></div>
+          <div><strong>03</strong><b>Invest in lead growth</b><span>Propulse advertises your investor profile, supports lead generation and shares realized lead-sale income according to the applicable investment terms.</span></div>
         </div>
       </section>
     </main>
