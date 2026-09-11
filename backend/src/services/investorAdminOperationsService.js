@@ -9,7 +9,13 @@ async function getLinkedLeads({ investorId, investmentId = null }) {
       i.name AS industry_name,s.name AS service_name,st.name AS state_name,c.name AS city_name,
       l.budget,l.requirements,l.status,l.created_at,
       COALESCE(SUM(lp.amount) FILTER (WHERE lp.status='paid'),0) AS gross_sale_amount,
-      COUNT(DISTINCT lp.id) FILTER (WHERE lp.status='paid')::int AS paid_sale_count
+      COUNT(DISTINCT lp.id) FILTER (WHERE lp.status='paid')::int AS paid_sale_count,
+      COALESCE((SELECT SUM(a.allocated_amount)
+        FROM investment_revenue_allocations a
+        JOIN investments ix ON ix.id=a.investment_id
+        WHERE ix.user_id=$1
+          AND a.lead_purchase_id IN (SELECT id FROM lead_purchases WHERE lead_id=l.id)
+      ),0) AS investor_revenue
     FROM leads l
     JOIN industries i ON i.id=l.industry_id
     LEFT JOIN services s ON s.id=l.service_id
@@ -29,7 +35,7 @@ async function getLinkedLeads({ investorId, investmentId = null }) {
     ...row,
     gross_sale_amount: Number(row.gross_sale_amount || 0),
     paid_sale_count: Number(row.paid_sale_count || 0),
-    investor_revenue: 0,
+    investor_revenue: Number(row.investor_revenue || 0),
   }));
 }
 
