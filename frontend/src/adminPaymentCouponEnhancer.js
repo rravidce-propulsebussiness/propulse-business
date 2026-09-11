@@ -28,6 +28,20 @@ async function loadPaymentMap(force = false) {
   return fetchInFlight
 }
 
+function enhanceApprovalSwitcher(){
+  if(!isAdminPaymentsPage()) return
+  const switcher=document.querySelector('.approval-switcher')
+  if(!switcher||switcher.dataset.fourQueues==='1') return
+  const existing=[...switcher.querySelectorAll('button')]
+  const membership=existing.find(b=>b.textContent.includes('Membership'))
+  const wallet=existing.find(b=>b.textContent.includes('Wallet'))
+  if(!membership||!wallet) return
+  const make=(label,path)=>{const b=document.createElement('button');b.type='button';b.className='approval-external-queue';b.innerHTML=`<span>${label}</span>`;b.onclick=()=>{window.location.href=path};return b}
+  switcher.textContent=''
+  switcher.append(wallet,make('Leads','/admin/leads'),membership,make('Investment','/admin/investments'))
+  switcher.dataset.fourQueues='1'
+}
+
 function decorateRows() {
   if (!isAdminPaymentsPage()) return
   document.querySelectorAll('.approval-table-wrap .approval-row').forEach(row => {
@@ -64,6 +78,7 @@ function decorateRows() {
 async function run() {
   if (!isAdminPaymentsPage()) return
   await loadPaymentMap()
+  enhanceApprovalSwitcher()
   decorateRows()
 }
 
@@ -78,15 +93,18 @@ style.textContent = `
 .admin-coupon-details b,.admin-coupon-details small,.admin-coupon-details strong{display:block!important}
 .admin-coupon-details small{margin-top:3px;color:#718096;font-size:10px}
 .admin-coupon-details strong{margin-top:6px;color:#18713c;font-size:14px}
+.approval-external-queue{flex:1;display:flex;align-items:center;justify-content:space-between;gap:12px;border:1px solid #dfe5ec;background:#fff;color:#526071;border-radius:12px;padding:12px 14px;font-weight:800;cursor:pointer;text-align:left}
+.approval-external-queue span{font-size:13px}
+.approval-external-queue:hover{background:#f5f8fb}
 `
 document.head.appendChild(style)
 
-const observer = new MutationObserver(() => decorateRows())
+const observer = new MutationObserver(() => { enhanceApprovalSwitcher(); decorateRows() })
 observer.observe(document.body, { childList: true, subtree: true })
 
 setInterval(() => {
   if (isAdminPaymentsPage()) {
-    loadPaymentMap(true).then(decorateRows)
+    loadPaymentMap(true).then(() => { enhanceApprovalSwitcher(); decorateRows() })
   }
 }, 15000)
 
