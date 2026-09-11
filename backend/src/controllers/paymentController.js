@@ -4,15 +4,30 @@ const investmentService = require('../services/investmentService');
 const investmentPaymentDraftService = require('../services/investmentPaymentDraftService');
 const { getMembershipAccess, getCurrentProMembership } = require('../services/membershipAccessService');
 
+const MAX_PROOF_BYTES = 5 * 1024 * 1024;
+const PROOF_DATA_URL = /^data:(image\/(?:png|jpeg|webp)|application\/pdf);base64,([A-Za-z0-9+/]+={0,2})$/i;
+
+function validatePaymentProof(proofUrl){
+  if(typeof proofUrl !== 'string' || !proofUrl.trim()) return { valid:false, code:'PROOF_REQUIRED', message:'Payment proof is required' };
+  const match = proofUrl.trim().match(PROOF_DATA_URL);
+  if(!match) return { valid:false, code:'INVALID_PROOF', message:'Payment proof must be a PNG, JPEG, WebP, or PDF data file' };
+  const payload = match[2].replace(/\s/g,'');
+  const padding = payload.endsWith('==') ? 2 : payload.endsWith('=') ? 1 : 0;
+  const bytes = Math.floor(payload.length * 3 / 4) - padding;
+  if(bytes <= 0 || bytes > MAX_PROOF_BYTES) return { valid:false, code:'PROOF_TOO_LARGE', message:'Payment proof must be 5 MB or smaller' };
+  return { valid:true };
+}
+
 async function checkoutMembership(req,res){try{const result=await paymentService.createMembershipCheckout({userId:req.user.id,membershipPlanId:req.body.membershipPlanId,couponCode:req.body.couponCode});res.status(201).json(result)}catch(error){console.error('Membership checkout failed:',error.message);const status=error.code==='PAYMENT_PENDING'||error.code==='DUPLICATE_COUPON_REDEMPTION'?409:['INVALID_PLAN','PLAN_NOT_FOUND','INVALID_AMOUNT','PRO_REQUIRED','COUPON_NOT_FOUND','COUPON_INACTIVE','COUPON_NOT_STARTED','COUPON_EXPIRED','MIN_ORDER','PURCHASE_NOT_ELIGIBLE','PLAN_NOT_ELIGIBLE','USER_NOT_ELIGIBLE','INDUSTRY_NOT_ELIGIBLE','USAGE_LIMIT','USER_USAGE_LIMIT','INVALID_AMOUNT','COUPON_REDEMPTION_INVALID'].includes(error.code)?400:500;res.status(status).json({error:error.message||'Failed to create membership payment',code:error.code,paymentId:error.paymentId})}}
 async function submitPaymentReference(req,res){
   try {
     const draftId=String(req.params.id||'');
     const manualReference=String(req.body.manualReference||'').trim();
     const proofUrl=req.body.proofUrl;
+    if(!manualReference)return res.status(400).json({error:'Payment reference / UTR is required',code:'REFERENCE_REQUIRED'});
+    const proofValidation=validatePaymentProof(proofUrl);
+    if(!proofValidation.valid)return res.status(400).json({error:proofValidation.message,code:proofValidation.code});
     if(draftId.startsWith('draft_')){
-      if(!manualReference)return res.status(400).json({error:'Payment reference / UTR is required',code:'REFERENCE_REQUIRED'});
-      if(!proofUrl)return res.status(400).json({error:'Payment proof is required',code:'PROOF_REQUIRED'});
       const draft=investmentPaymentDraftService.consume(draftId,req.user.id);
       if(!draft)return res.status(404).json({error:'Payment session expired. Please start the direct payment again.',code:'DRAFT_NOT_FOUND'});
       const result=await investmentService.createInvestmentCheckout({...draft,useWallet:false});
@@ -21,7 +36,7 @@ async function submitPaymentReference(req,res){
       return res.json(updated);
     }
     const result=await paymentService.submitPaymentReference({userId:req.user.id,paymentId:req.params.id,manualReference,proofUrl,notes:req.body.notes});res.json(result)
-  }catch(error){console.error('Submit payment reference failed:',error.message);const status=error.code==='DUPLICATE_REFERENCE'?409:['REFERENCE_REQUIRED','PROOF_REQUIRED','PAYMENT_NOT_PENDING'].includes(error.code)?400:error.code==='NOT_FOUND'||error.code==='DRAFT_NOT_FOUND'?404:error.code==='PAYMENT_PENDING'?409:500;res.status(status).json({error:error.message||'Failed to submit payment reference',code:error.code})}
+  }catch(error){console.error('Submit payment reference failed:',error.message);const status=error.code==='DUPLICATE_REFERENCE'?409:['REFERENCE_REQUIRED','PROOF_REQUIRED','INVALID_PROOF','PROOF_TOO_LARGE','PAYMENT_NOT_PENDING'].includes(error.code)?400:error.code==='NOT_FOUND'||error.code==='DRAFT_NOT_FOUND'?404:error.code==='PAYMENT_PENDING'?409:500;res.status(status).json({error:error.message||'Failed to submit payment reference',code:error.code})}
 }
 async function getCurrentMembership(req,res){try{const [membership,access]=await Promise.all([getCurrentProMembership(req.user.id),getMembershipAccess(req.user.id)]);res.json(membership?{...membership,...access}:access)}catch(error){console.error('Get membership access failed:',error.message);res.status(500).json({error:'Failed to fetch membership'})}}
 async function getUserMembershipPayments(req,res){try{res.json(await paymentService.getUserMembershipPayments(req.user.id));}catch(error){console.error('Get user membership payments failed:',error.message);res.status(500).json({error:'Failed to fetch membership payment history'});}}
