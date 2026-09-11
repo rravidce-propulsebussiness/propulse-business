@@ -27,15 +27,14 @@ export default function InvestorHeader() {
 
   const isActive = target => {
     if (target === '/') return location.pathname === '/'
-    if (target === '/investment') return location.pathname === '/investment' && !['#invested-leads', '#lead-sales', '#history', '#payouts'].includes(location.hash)
+    if (target === '/investment') return location.pathname === '/investment' && !location.hash
     return location.pathname === '/investment' && location.hash === target
   }
 
   const nav = [
     { label: 'Home', to: '/' },
     { label: 'Invest', to: '/investment' },
-    { label: 'Invested Leads', to: '/investment#invested-leads' },
-    { label: 'Lead Sales', to: '/investment#lead-sales' },
+    { label: 'Investment Leads', to: '/investment#lead-sales' },
     { label: 'Payouts', to: '/investment#payouts' },
     { label: 'History', to: '/investment#history' },
   ]
