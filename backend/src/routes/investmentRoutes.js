@@ -13,6 +13,10 @@ router.get('/rules', auth, c.rules);
 router.get('/location-rules', auth, c.locationRules);
 router.get('/sold-leads', auth, c.soldLeads);
 router.get('/assigned-leads', auth, c.linkedInvestorLeads);
+router.get('/funds', auth, c.investorFunds);
+router.post('/funds/transfer-request', auth, investmentWriteLimit, c.requestInvestorTransfer);
+router.get('/admin/transfer-requests', auth, admin, c.adminInvestorTransferRequests);
+router.post('/admin/transfer-requests/:id/process', auth, admin, adminInvestmentWriteLimit, c.adminProcessInvestorTransfer);
 
 router.post('/checkout', auth, investmentWriteLimit, async (req, res, next) => {
   try {
