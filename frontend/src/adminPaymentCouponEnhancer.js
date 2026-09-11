@@ -2,6 +2,7 @@ import { authRequest } from './utils/auth'
 
 const money = value => `₹${Number(value || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 let paymentMap = new Map()
+let investmentPendingCount = 0
 let lastFetchAt = 0
 let fetchInFlight = null
 
@@ -22,6 +23,7 @@ async function loadPaymentMap(force = false) {
           .filter(x => x?.purchase_type === 'wallet_topup' && x?.purchase_id != null)
           .map(x => [String(x.purchase_id), x])
       )
+      investmentPendingCount = items.filter(x => String(x?.purchase_type || x?.payment_type || '').toLowerCase() === 'investment' && x?.status === 'pending').length
     })
     .catch(() => {})
     .finally(() => { fetchInFlight = null })
@@ -36,9 +38,9 @@ function enhanceApprovalSwitcher(){
   const membership=existing.find(b=>b.textContent.includes('Membership'))
   const wallet=existing.find(b=>b.textContent.includes('Wallet'))
   if(!membership||!wallet) return
-  const make=(label,path)=>{const b=document.createElement('button');b.type='button';b.className='approval-external-queue';b.innerHTML=`<span>${label}</span>`;b.onclick=()=>{window.location.href=path};return b}
+  const make=(label,path,badge=0)=>{const b=document.createElement('button');b.type='button';b.className='approval-external-queue';const count=Number(badge)>0?`<b>${badge}</b>`:'';b.innerHTML=`<span>${label}</span>${count}`;b.onclick=()=>{window.location.href=path};return b}
   switcher.textContent=''
-  switcher.append(wallet,make('Leads','/admin/leads'),membership,make('Investment','/admin/investments'))
+  switcher.append(wallet,make('Leads','/admin/leads'),membership,make('Investment','/admin/investments',investmentPendingCount))
   switcher.dataset.fourQueues='1'
 }
 
@@ -95,6 +97,7 @@ style.textContent = `
 .admin-coupon-details strong{margin-top:6px;color:#18713c;font-size:14px}
 .approval-external-queue{flex:1;display:flex;align-items:center;justify-content:space-between;gap:12px;border:1px solid #dfe5ec;background:#fff;color:#526071;border-radius:12px;padding:12px 14px;font-weight:800;cursor:pointer;text-align:left}
 .approval-external-queue span{font-size:13px}
+.approval-external-queue b{min-width:24px;height:24px;padding:0 7px;display:inline-flex;align-items:center;justify-content:center;border-radius:999px;background:#eef2f6;color:#526071;font-size:11px}
 .approval-external-queue:hover{background:#f5f8fb}
 `
 document.head.appendChild(style)
