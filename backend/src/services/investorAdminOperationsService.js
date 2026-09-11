@@ -66,6 +66,23 @@ async function getLinkedLeads({ investorId, investmentId = null }) {
   }));
 }
 
+async function updateAdAmount({ investmentId, amount, adminId }) {
+  const value = Number(amount);
+  if (!Number.isFinite(value) || value < 0) throw Object.assign(new Error('Amount in ads must be zero or greater'), { code:'INVALID_AMOUNT' });
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const inv = (await client.query('SELECT id,user_id,amount,status FROM investments WHERE id=$1 FOR UPDATE',[Number(investmentId)])).rows[0];
+    if (!inv) throw Object.assign(new Error('Investment not found'),{code:'NOT_FOUND'});
+    if (inv.status === 'cancelled') throw Object.assign(new Error('Cancelled investment cannot have ad allocation'),{code:'CANCELLED'});
+    if (value > Number(inv.amount)) throw Object.assign(new Error('Amount in ads cannot exceed the investment amount'),{code:'AMOUNT_EXCEEDS_INVESTMENT'});
+    const updated=(await client.query(`UPDATE investments SET amount_in_ads=$1,updated_at=CURRENT_TIMESTAMP WHERE id=$2 RETURNING id,user_id,amount,amount_in_ads,status,updated_at`,[value,Number(investmentId)])).rows[0];
+    await client.query('COMMIT');
+    return {...updated,amount:Number(updated.amount),amount_in_ads:Number(updated.amount_in_ads),updated_by_admin:Number(adminId)};
+  } catch(error){await client.query('ROLLBACK');throw error}
+  finally{client.release()}
+}
+
 async function payout({ investmentId, adminId, transferReference, proofUrl }) {
   const client = await pool.connect();
   try {
@@ -90,4 +107,4 @@ async function payout({ investmentId, adminId, transferReference, proofUrl }) {
   finally { client.release(); }
 }
 
-module.exports = { getLinkedLeads, payout };
+module.exports = { getLinkedLeads, updateAdAmount, payout };
