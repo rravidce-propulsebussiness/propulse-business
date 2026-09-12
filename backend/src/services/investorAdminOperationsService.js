@@ -106,8 +106,9 @@ async function payout({ investmentId, adminId, transferReference, proofUrl }) {
       if (!inv.state_id) throw Object.assign(new Error('Investment location is required for reinvestment'), { code:'LOCATION_REQUIRED' });
       const location = (await client.query(`SELECT l.* FROM investor_industry_location_limits l WHERE l.industry_id=$1 AND l.state_id=$2 AND (l.city_id IS NULL OR l.city_id=$3) AND l.is_active=TRUE ORDER BY CASE WHEN l.city_id=$3 THEN 0 ELSE 1 END,l.id LIMIT 1 FOR UPDATE`,[Number(inv.industry_id),Number(inv.state_id),inv.city_id?Number(inv.city_id):null])).rows[0];
       if (!location) throw Object.assign(new Error('Investment is no longer available for this industry and location'), { code:'LOCATION_UNAVAILABLE' });
-      const params=[Number(inv.industry_id),Number(inv.state_id)]; let where="industry_id=$1 AND state_id=$2 AND status IN ('active','matured','paid')";
-      if (location.city_id !== null) { params.push(Number(location.city_id)); where += ' AND city_id=$3'; }
+      const params=[Number(inv.industry_id),Number(inv.state_id)]; let where="industry_id=$1 AND state_id=$2 AND status IN ('active','matured','paid') AND user_id<>$3";
+      params.push(Number(inv.user_id));
+      if (location.city_id !== null) { params.push(Number(location.city_id)); where += ' AND city_id=$4'; }
       const used=Number((await client.query(`SELECT COUNT(DISTINCT user_id)::int AS total FROM investments WHERE ${where}`,params)).rows[0].total||0);
       if (used >= Number(location.investor_limit)) throw Object.assign(new Error('Investor limit completed for this industry and location'), { code:'LOCATION_CAPACITY_REACHED' });
       const settings=(await client.query('SELECT investment_cycle_days FROM investor_settings WHERE id=1 FOR SHARE')).rows[0];
@@ -124,7 +125,7 @@ async function payout({ investmentId, adminId, transferReference, proofUrl }) {
     if (!reference) throw Object.assign(new Error('Transfer reference / UTR is required'), { code: 'TRANSFER_REFERENCE_REQUIRED' });
     if (!proofUrl) throw Object.assign(new Error('Transfer screenshot or proof is required'), { code: 'TRANSFER_PROOF_REQUIRED' });
     const duplicate = (await client.query('SELECT id FROM investments WHERE payout_transfer_reference=$1 AND id<>$2 LIMIT 1',[reference,inv.id])).rows[0];
-    if (duplicate) throw Object.assign(new Error('This transfer reference has already been used'), { code: 'DUPLICATE_TRANSFER_REFERENCE' });
+    if (duplicate) throw Object.assign(new Error('This transfer reference has already been used'), { code:'DUPLICATE_TRANSFER_REFERENCE' });
     const updated = (await client.query(`UPDATE investments SET status='paid',realized_revenue=$1,payout_amount=$1,payout_transfer_reference=$2,payout_proof_url=$3,payout_transferred_at=CURRENT_TIMESTAMP,payout_transferred_by=$4,updated_at=CURRENT_TIMESTAMP WHERE id=$5 RETURNING *`,[payoutAmount,reference,proofUrl,adminId,inv.id])).rows[0];
     if (payoutAmount > 0) await client.query(`INSERT INTO investment_transactions(investment_id,user_id,type,amount,reference_type,reference_id) VALUES($1,$2,'return',$3,'admin_payout',$4)`,[inv.id,inv.user_id,payoutAmount,adminId]);
     await client.query('COMMIT');
