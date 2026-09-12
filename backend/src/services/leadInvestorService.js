@@ -11,7 +11,9 @@ async function setInvestorLink(leadId,investorUserId){
 }
 
 async function getInvestors(){
-  return (await pool.query("SELECT u.id,u.name,u.email,COUNT(i.id)::int AS active_investments FROM users u JOIN investments i ON i.user_id=u.id WHERE u.is_active=TRUE AND i.status='active' AND i.starts_at<=CURRENT_TIMESTAMP AND i.matures_at>CURRENT_TIMESTAMP GROUP BY u.id,u.name,u.email ORDER BY u.name ASC,u.email ASC")).rows;
+  // Admins may manually assign a lead to any investor, regardless of
+  // whether the investor currently has an active or matured investment.
+  return (await pool.query("SELECT DISTINCT u.id,u.name,u.email,COUNT(i.id)::int AS investments_count FROM users u JOIN investments i ON i.user_id=u.id WHERE u.is_active=TRUE GROUP BY u.id,u.name,u.email ORDER BY u.name ASC,u.email ASC")).rows;
 }
 
 module.exports={assertInvestorLink,setInvestorLink,getInvestors};
