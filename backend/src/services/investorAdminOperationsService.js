@@ -120,24 +120,19 @@ async function payout({ investmentId, adminId, transferReference, proofUrl, forc
       const settings=(await client.query('SELECT investment_cycle_days FROM investor_settings WHERE id=1 FOR SHARE')).rows[0];
       const configuredCycle=settings?.investment_cycle_days==null?null:Number(settings.investment_cycle_days);
       const maturityDays=configuredCycle===null?Number(rule.maturity_days??30):configuredCycle;
-      const child=(await client.query(`INSERT INTO investments(user_id,industry_id,state_id,city_id,amount,return_percent,expected_return,maturity_days,reinvestment_enabled,parent_investment_id,starts_at,matures_at) VALUES($1,$2,$3,$4,$5,0,$5,$6,FALSE,$7,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP+make_interval(days=>$6)) RETURNING *`,[Number(inv.user_id),Number(inv.industry_id),Number(inv.state_id),location.city_id==null?null:Number(location.city_id),payoutAmount,maturityDays,Number(inv.id)])).rows[0];
-      await client.query(`UPDATE investments SET status='paid',realized_revenue=$1,payout_amount=0,payout_transfer_reference=$2,payout_proof_url=NULL,payout_transferred_at=NULL,payout_transferred_by=NULL,updated_at=CURRENT_TIMESTAMP WHERE id=$4`,[payoutAmount,`REINVESTMENT-${inv.id}-${child.id}`,Number(adminId),Number(inv.id)]);
-      await client.query(`INSERT INTO investment_transactions(investment_id,user_id,type,amount,reference_type,reference_id) VALUES($1,$2,'return',$3,'reinvestment',$4)`,[Number(inv.id),Number(inv.user_id),payoutAmount,Number(child.id)]);
-      await client.query(`INSERT INTO investment_transactions(investment_id,user_id,type,amount,reference_type,reference_id) VALUES($1,$2,'investment',$3,'reinvestment',$4)`,[Number(child.id),Number(inv.user_id),payoutAmount,Number(inv.id)]);
+      const childStatus=maturityDays===0?'matured':'active';
+      const child=(await client.query(`INSERT INTO investments(user_id,industry_id,state_id,city_id,amount,amount_in_ads,ad_spend_status,status,maturity_days,starts_at,matures_at,reinvestment_enabled,parent_investment_id) VALUES($1,$2,$3,$4,$5,0,'unallocated',$6,$7,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP+make_interval(days=>$7),FALSE,$8) RETURNING *`,[Number(inv.user_id),Number(inv.industry_id),Number(inv.state_id),inv.city_id?Number(inv.city_id):null,payoutAmount,childStatus,maturityDays,inv.id])).rows[0];
+      await client.query(`UPDATE investments SET status='paid',payout_amount=$1,payout_transfer_reference=$2,payout_proof_url=$3,reinvestment_child_investment_id=$4,updated_at=CURRENT_TIMESTAMP WHERE id=$5`,[0,'REINVESTMENT-'+child.id,null,child.id,inv.id]);
       await client.query('COMMIT');
-      return {...child,amount:Number(child.amount),realized_revenue:payoutAmount,payout_amount:0,payout_destination:'reinvestment',parent_investment_id:Number(inv.id),reinvested_from_investment_id:Number(inv.id),reinvested_to_investment_id:Number(child.id),status:'reinvested'};
+      return { investment: {...inv,status:'paid',payout_amount:0,payout_transfer_reference:'REINVESTMENT-'+child.id,payout_proof_url:null,reinvestment_child_investment_id:child.id}, reinvestment: child, payout_amount:payoutAmount, transferred_to_investor:0 };
     }
-    const reference = String(transferReference || '').trim();
-    if (!reference) throw Object.assign(new Error('Transfer reference / UTR is required'), { code: 'TRANSFER_REFERENCE_REQUIRED' });
-    if (!proofUrl) throw Object.assign(new Error('Transfer screenshot or proof is required'), { code: 'TRANSFER_PROOF_REQUIRED' });
-    const duplicate = (await client.query('SELECT id FROM investments WHERE payout_transfer_reference=$1 AND id<>$2 LIMIT 1',[reference,inv.id])).rows[0];
-    if (duplicate) throw Object.assign(new Error('This transfer reference has already been used'), { code:'DUPLICATE_TRANSFER_REFERENCE' });
-    const updated = (await client.query(`UPDATE investments SET status='paid',realized_revenue=$1,payout_amount=$1,payout_transfer_reference=$2,payout_proof_url=$3,payout_transferred_at=CURRENT_TIMESTAMP,payout_transferred_by=$4,updated_at=CURRENT_TIMESTAMP WHERE id=$5 RETURNING *`,[payoutAmount,reference,proofUrl,adminId,inv.id])).rows[0];
-    if (payoutAmount > 0) await client.query(`INSERT INTO investment_transactions(investment_id,user_id,type,amount,reference_type,reference_id) VALUES($1,$2,'return',$3,'admin_payout',$4)`,[inv.id,inv.user_id,payoutAmount,adminId]);
+    if (!String(transferReference || '').trim()) throw Object.assign(new Error('Transfer reference is required'), { code:'TRANSFER_REFERENCE_REQUIRED' });
+    if (!String(proofUrl || '').trim()) throw Object.assign(new Error('Transfer proof is required'), { code:'TRANSFER_PROOF_REQUIRED' });
+    await client.query(`UPDATE investments SET status='paid',payout_amount=$1,payout_transfer_reference=$2,payout_proof_url=$3,updated_at=CURRENT_TIMESTAMP WHERE id=$4`,[payoutAmount,String(transferReference).trim(),String(proofUrl).trim(),inv.id]);
     await client.query('COMMIT');
-    return {...updated,amount:Number(updated.amount),realized_revenue:payoutAmount,payout_amount:payoutAmount,payout_destination:'owner_account'};
-  } catch(error) { await client.query('ROLLBACK'); throw error; }
-  finally { client.release(); }
+    return { investment: {...inv,status:'paid',payout_amount:payoutAmount,payout_transfer_reference:String(transferReference).trim(),payout_proof_url:String(proofUrl).trim()}, payout_amount:payoutAmount, transferred_to_investor:payoutAmount };
+  } catch(error){await client.query('ROLLBACK');throw error}
+  finally{client.release()}
 }
 
-module.exports = { getLinkedLeads, updateAdAmount, getAdSpend, recordAdSpend, payout };
+module.exports={getLinkedLeads,updateAdAmount,getAdSpend,recordAdSpend,payout};
