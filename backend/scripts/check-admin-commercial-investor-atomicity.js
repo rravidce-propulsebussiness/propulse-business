@@ -24,6 +24,7 @@ const fakePool={
         if(text.startsWith('DELETE FROM investor_industry_location_limits'))return {rows:[]};
         if(text.startsWith('UPDATE investor_industry_limits SET'))return {rows:[]};
         if(text.startsWith('UPDATE investment_industry_rules SET'))return {rows:[]};
+        if(text.startsWith('UPDATE investments SET maturity_days='))return {rows:[]};
         if(text.startsWith('INSERT INTO investor_industry_limits'))return {rows:[]};
         if(text.startsWith('INSERT INTO investor_industry_location_limits'))return {rows:[]};
         if(text.startsWith('SELECT id FROM states'))return {rows:[{id:1}]};
@@ -31,7 +32,8 @@ const fakePool={
         if(text.startsWith('INSERT INTO investment_industry_rules'))return {rows:[]};
         throw new Error(`Unexpected client query: ${sql}`);
       },
-      release(){clientCalls.push({sql:'RELEASE'});}
+      release(){clientCalls.push({sql:'RELEASE'});
+      }
     };
   }
 };
