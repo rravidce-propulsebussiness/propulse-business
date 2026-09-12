@@ -76,9 +76,6 @@ async function getDashboard({ search = '', status = 'all', industryId = '' } = {
       FROM leads l
       LEFT JOIN lead_purchases lp ON lp.lead_id=l.id
       WHERE l.investor_user_id=x.user_id
-        AND l.industry_id=x.industry_id
-        AND (x.state_id IS NULL OR l.state_id=x.state_id)
-        AND (x.city_id IS NULL OR l.city_id=x.city_id)
     ) ls ON TRUE
     WHERE ${where.join(' AND ')}
     ORDER BY x.created_at DESC,x.id DESC
