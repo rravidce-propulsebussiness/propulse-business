@@ -45,7 +45,7 @@ async function updateInvestorSettings(data) {
 
     if(cycleDays!==null){
       await client.query(`UPDATE investment_industry_rules SET maturity_days=$1,updated_at=CURRENT_TIMESTAMP WHERE is_active=TRUE`,[cycleDays]);
-      await client.query(`UPDATE investments SET maturity_days=$1,matures_at=COALESCE(starts_at,created_at)+make_interval(days=>$1),updated_at=CURRENT_TIMESTAMP WHERE status='active'`,[cycleDays]);
+      await client.query(`UPDATE investments SET maturity_days=$1,matures_at=COALESCE(starts_at,created_at)+make_interval(days=>$1),status=CASE WHEN $1=0 THEN 'matured' ELSE status END,updated_at=CURRENT_TIMESTAMP WHERE status='active'`,[cycleDays]);
     }
 
     if(Array.isArray(data.industryLimits)){
