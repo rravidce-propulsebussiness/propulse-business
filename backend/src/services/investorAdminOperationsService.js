@@ -91,7 +91,7 @@ async function recordAdSpend({ investmentId, amount, platform, campaign, spendDa
   finally{client.release()}
 }
 
-async function payout({ investmentId, adminId, transferReference, proofUrl }) {
+async function payout({ investmentId, adminId, transferReference, proofUrl, forceTransfer = false }) {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
@@ -103,7 +103,7 @@ async function payout({ investmentId, adminId, transferReference, proofUrl }) {
     const revenue = Number((await client.query('SELECT COALESCE(SUM(allocated_amount),0) AS total FROM investment_revenue_allocations WHERE investment_id=$1',[inv.id])).rows[0].total || 0);
     const payoutAmount = Number(revenue.toFixed(2));
     if (payoutAmount <= 0) throw Object.assign(new Error('There are no realized earnings available for settlement'), { code:'NO_REALIZED_AMOUNT' });
-    if (Boolean(inv.reinvestment_enabled)) {
+    if (Boolean(inv.reinvestment_enabled) && !forceTransfer) {
       const existing = (await client.query('SELECT id FROM investments WHERE parent_investment_id=$1 LIMIT 1',[inv.id])).rows[0];
       if (existing) throw Object.assign(new Error('This investment has already been reinvested'), { code:'REINVESTMENT_EXISTS' });
       const rule = (await client.query('SELECT * FROM investment_industry_rules WHERE industry_id=$1 AND is_active=TRUE FOR UPDATE',[Number(inv.industry_id)])).rows[0];
@@ -121,11 +121,11 @@ async function payout({ investmentId, adminId, transferReference, proofUrl }) {
       const configuredCycle=settings?.investment_cycle_days==null?null:Number(settings.investment_cycle_days);
       const maturityDays=configuredCycle===null?Number(rule.maturity_days??30):configuredCycle;
       const child=(await client.query(`INSERT INTO investments(user_id,industry_id,state_id,city_id,amount,return_percent,expected_return,maturity_days,reinvestment_enabled,parent_investment_id,starts_at,matures_at) VALUES($1,$2,$3,$4,$5,0,$5,$6,FALSE,$7,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP+make_interval(days=>$6)) RETURNING *`,[Number(inv.user_id),Number(inv.industry_id),Number(inv.state_id),location.city_id==null?null:Number(location.city_id),payoutAmount,maturityDays,Number(inv.id)])).rows[0];
-      await client.query(`UPDATE investments SET status='paid',realized_revenue=$1,payout_amount=$1,payout_transfer_reference=$2,payout_proof_url=NULL,payout_transferred_at=CURRENT_TIMESTAMP,payout_transferred_by=$3,updated_at=CURRENT_TIMESTAMP WHERE id=$4`,[payoutAmount,`REINVESTMENT-${inv.id}-${child.id}`,Number(adminId),Number(inv.id)]);
+      await client.query(`UPDATE investments SET status='paid',realized_revenue=$1,payout_amount=0,payout_transfer_reference=$2,payout_proof_url=NULL,payout_transferred_at=NULL,payout_transferred_by=NULL,updated_at=CURRENT_TIMESTAMP WHERE id=$4`,[payoutAmount,`REINVESTMENT-${inv.id}-${child.id}`,Number(adminId),Number(inv.id)]);
       await client.query(`INSERT INTO investment_transactions(investment_id,user_id,type,amount,reference_type,reference_id) VALUES($1,$2,'return',$3,'reinvestment',$4)`,[Number(inv.id),Number(inv.user_id),payoutAmount,Number(child.id)]);
       await client.query(`INSERT INTO investment_transactions(investment_id,user_id,type,amount,reference_type,reference_id) VALUES($1,$2,'investment',$3,'reinvestment',$4)`,[Number(child.id),Number(inv.user_id),payoutAmount,Number(inv.id)]);
       await client.query('COMMIT');
-      return {...child,amount:Number(child.amount),realized_revenue:payoutAmount,payout_amount:payoutAmount,payout_destination:'reinvestment',parent_investment_id:Number(inv.id),reinvested_from_investment_id:Number(inv.id),reinvested_to_investment_id:Number(child.id),status:'reinvested'};
+      return {...child,amount:Number(child.amount),realized_revenue:payoutAmount,payout_amount:0,payout_destination:'reinvestment',parent_investment_id:Number(inv.id),reinvested_from_investment_id:Number(inv.id),reinvested_to_investment_id:Number(child.id),status:'reinvested'};
     }
     const reference = String(transferReference || '').trim();
     if (!reference) throw Object.assign(new Error('Transfer reference / UTR is required'), { code: 'TRANSFER_REFERENCE_REQUIRED' });
