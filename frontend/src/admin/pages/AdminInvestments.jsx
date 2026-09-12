@@ -27,6 +27,7 @@ export default function AdminInvestments() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [linked, setLinked] = useState(null)
+  const [account, setAccount] = useState(null)
   const [linkedLoading, setLinkedLoading] = useState(false)
   const [menu, setMenu] = useState(null)
   const [spendModal, setSpendModal] = useState(null)
@@ -85,7 +86,10 @@ export default function AdminInvestments() {
 
   const investors = useMemo(() => data.investors.map(item => {
     const records = Array.isArray(item.cycles) ? item.cycles.filter(x => x.status !== 'cancelled') : []
-    const adBalance = Number(item.ad_remaining || 0) + Number(item.funds_available_for_ads || 0)
+    const contributed = records.filter(x => !x.is_reinvestment).reduce((sum, x) => sum + Number(x.amount || 0), 0)
+    const totalFunding = records.reduce((sum, x) => sum + Number(x.amount || 0), 0)
+    const adSpent = records.reduce((sum, x) => sum + Number(x.ad_spent || 0), 0)
+    const adBalance = Math.max(0, totalFunding - adSpent)
     const gross = Number(item.linked_gross_sales || 0)
     const earnings = Number(item.allocated_revenue || 0)
     const commission = Math.max(0, gross - earnings)
@@ -93,11 +97,11 @@ export default function AdminInvestments() {
     const statusRecord = records.find(x => x.status === 'active') || records.find(x => x.status === 'matured') || records.find(x => x.status === 'pending') || records[0]
     const accountStatus = statusRecord?.status || 'active'
     const joinedAt = records.reduce((oldest, row) => !oldest || new Date(row.created_at) < new Date(oldest) ? row.created_at : oldest, null)
-    return { ...item, records, adBalance, gross, earnings, commission, payable, accountStatus, joinedAt }
+    return { ...item, records, contributed, totalFunding, adSpent, adBalance, gross, earnings, commission, payable, accountStatus, joinedAt }
   }), [data.investors])
 
   const totals = useMemo(() => investors.reduce((out, investor) => {
-    out.capital += Number(investor.total_invested || 0)
+    out.capital += investor.contributed
     out.adBalance += investor.adBalance
     out.gross += investor.gross
     out.payable += investor.payable
@@ -144,6 +148,32 @@ export default function AdminInvestments() {
     } catch (e) { setError(e.message || 'Unable to save settlement period.') } finally { setSettingsBusy(false) }
   }
 
+  const showAccount = investor => {
+    setMenu(null)
+    const flow = []
+    const sorted = [...investor.records].sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
+    let balance = 0
+    sorted.forEach(record => {
+      const funding = Number(record.amount || 0)
+      const spend = Number(record.ad_spent || 0)
+      if (funding > 0) {
+        balance += funding
+        flow.push({ type: record.is_reinvestment ? 'reinvest' : 'investment', date: record.created_at, title: record.is_reinvestment ? 'Earnings reinvested' : 'Investment added', amount: funding, balance, note: record.is_reinvestment ? 'Investor earnings added back to advertising balance' : 'Investor contributed capital' })
+      }
+      if (spend > 0) {
+        balance = Math.max(0, balance - spend)
+        flow.push({ type: 'spend', date: record.updated_at || record.created_at, title: 'Ads spent', amount: -spend, balance, note: 'Actual advertising spend' })
+      }
+      const revenue = Number(record.allocated_revenue || 0)
+      if (revenue > 0) flow.push({ type: 'revenue', date: record.updated_at || record.created_at, title: 'Lead revenue', amount: revenue, balance, note: `${Number(record.allocated_sales || record.linked_paid_sales || 0)} lead sale(s)` })
+      const paid = Number(record.paid_to_investor || 0)
+      if (paid > 0) flow.push({ type: 'paid', date: record.updated_at || record.created_at, title: 'Transferred to investor', amount: -paid, balance, note: 'Earnings transferred out' })
+    })
+    const sales = investor.gross
+    if (sales > 0 && !flow.some(item => item.type === 'revenue')) flow.push({ type: 'revenue', date: investor.joinedAt, title: 'Lead sales generated', amount: sales, balance, note: 'Revenue from linked lead sales' })
+    setAccount({ investor, flow: flow.sort((a, b) => new Date(b.date) - new Date(a.date)) })
+  }
+
   const showLinked = async investor => {
     setMenu(null); setLinked({ investor, items: [] }); setLinkedLoading(true)
     try {
@@ -153,8 +183,7 @@ export default function AdminInvestments() {
     finally { setLinkedLoading(false) }
   }
 
-  const pickFundingRecord = investor => investor.records
-    .sort((a, b) => (Number(b.funds_available_for_ads || 0) + Number(b.ad_remaining || 0)) - (Number(a.funds_available_for_ads || 0) + Number(a.ad_remaining || 0)))[0]
+  const pickFundingRecord = investor => [...investor.records].sort((a, b) => (Number(b.funds_available_for_ads || 0) + Number(b.ad_remaining || 0)) - (Number(a.funds_available_for_ads || 0) + Number(a.ad_remaining || 0)))[0]
 
   const openSpend = async investor => {
     setMenu(null)
@@ -209,15 +238,15 @@ export default function AdminInvestments() {
     <section className="admin-investment-stats">
       <article className="stat-capital"><span>Investor Capital</span><strong>{money(totals.capital)}</strong><small>Money personally contributed</small></article>
       <article className="stat-balance"><span>Ad Balance</span><strong>{money(totals.adBalance)}</strong><small>Currently available to spend</small></article>
-      <article className="stat-revenue"><span>Lead Revenue</span><strong>{money(totals.gross)}</strong><small>Investor earnings generated</small></article>
-      <article className="stat-transfer"><span>Ready to Transfer</span><strong>{money(totals.payable)}</strong><small>{investors.filter(x => x.accountStatus === 'matured' && x.payable > 0).length} matured accounts</small></article>
+      <article className="stat-revenue"><span>Lead Revenue</span><strong>{money(totals.gross)}</strong><small>Revenue from linked lead sales</small></article>
+      <article className="stat-transfer"><span>Ready to Transfer</span><strong>{money(totals.payable)}</strong><small>{investors.filter(x => x.payable > 0).length} investors with earnings ready</small></article>
     </section>
 
     <section className="admin-settings-grid">
       <article className="settings-card commission-settings">
         <div className="settings-card-head"><div className="settings-icon">%</div><div><h2>ProPulse Commission</h2><p>Set the platform commission taken from investor earnings.</p></div></div>
         <label className="settings-field"><span>Commission Percentage</span><div className="percent-input"><input type="number" min="0" max="100" step="0.1" value={commissionPercent} onChange={e => setCommissionPercent(e.target.value)} disabled={settingsLoading || settingsBusy} /><b>%</b></div></label>
-        <div className="settings-bottom"><div className="settings-info"><i>i</i><span>Investors receive <strong>{100 - Number(commissionPercent || 0)}%</strong> of the earnings ({100 - Number(commissionPercent || 0)}% after commission).</span></div><button onClick={saveCommission} disabled={settingsLoading || settingsBusy}>{settingsBusy ? 'Saving…' : 'Save'}</button></div>
+        <div className="settings-bottom"><div className="settings-info"><i>i</i><span>Investors receive <strong>{100 - Number(commissionPercent || 0)}%</strong> of earnings after commission.</span></div><button onClick={saveCommission} disabled={settingsLoading || settingsBusy}>{settingsBusy ? 'Saving…' : 'Save'}</button></div>
       </article>
 
       <article className="settings-card maturity-settings">
@@ -234,18 +263,19 @@ export default function AdminInvestments() {
         <div className="investor-table-body">{investors.map((investor, index) => <article className="investor-table-row" key={investor.user_id}>
           <span className="row-number">{index + 1}</span>
           <div className="row-investor"><div className="row-avatar">{String(investor.user_name || 'I').trim().charAt(0).toUpperCase()}</div><div><strong>{investor.user_name || 'Investor'}</strong><small>{investor.user_email || '—'}</small></div></div>
-          <strong className="row-money">{money(investor.total_invested)}</strong>
+          <strong className="row-money">{money(investor.contributed)}</strong>
           <strong className="row-money">{money(investor.adBalance)}</strong>
           <strong className="row-money">{money(investor.gross)}</strong>
           <strong className="row-money">{money(investor.payable)}</strong>
           <span><b className={`status-pill ${investor.accountStatus}`}>{investor.accountStatus}</b></span>
           <span className="joined-date">{date(investor.joinedAt)}</span>
-          <div className="row-actions"><button className="view-btn" onClick={() => showLinked(investor)}>View</button><div className="action-menu-wrap"><button className="more-btn" aria-label="More actions" onClick={() => setMenu(menu === investor.user_id ? null : investor.user_id)}>•••</button>{menu === investor.user_id && <div className="action-menu"><button onClick={() => openSpend(investor)}>Add ad spend</button>{investor.payable > 0 && <button onClick={() => openPayout(investor)}>Transfer earnings</button>}<button onClick={() => showLinked(investor)}>View linked leads</button></div>}</div></div>
+          <div className="row-actions"><button className="view-btn" onClick={() => showAccount(investor)}>View</button><div className="action-menu-wrap"><button className="more-btn" aria-label="More actions" onClick={() => setMenu(menu === investor.user_id ? null : investor.user_id)}>•••</button>{menu === investor.user_id && <div className="action-menu"><button onClick={() => openSpend(investor)}>Add ad spend</button>{investor.payable > 0 && <button onClick={() => openPayout(investor)}>Transfer earnings</button>}<button onClick={() => showLinked(investor)}>View linked leads</button></div>}</div></div>
         </article>)}</div>
         <div className="table-footer"><span>Showing 1 to {investors.length} of {investors.length} investors</span><div><button disabled>‹</button><b>1</b><button disabled>›</button></div></div>
       </>}
     </section>
 
+    {account && <div className="admin-modal-backdrop" onMouseDown={() => setAccount(null)}><div className="admin-modal account-modal" onMouseDown={e => e.stopPropagation()}><button className="modal-close" onClick={() => setAccount(null)}>×</button><div className="admin-settings-kicker">INVESTOR ACCOUNT</div><h2>{account.investor.user_name || 'Investor'}</h2><p>Complete money flow from contributed capital to advertising, lead revenue and transfers.</p><div className="account-summary-grid"><div><span>Capital contributed</span><strong>{money(account.investor.contributed)}</strong></div><div><span>Total ad funding</span><strong>{money(account.investor.totalFunding)}</strong></div><div><span>Ads spent</span><strong>{money(account.investor.adSpent)}</strong></div><div><span>Current ad balance</span><strong>{money(account.investor.adBalance)}</strong></div><div><span>Lead revenue</span><strong className="positive">{money(account.investor.gross)}</strong></div><div><span>Ready to transfer</span><strong className="transfer-value">{money(account.investor.payable)}</strong></div></div><div className="money-flow-head"><h3>Money Flow</h3><span>Every funding and spend movement is shown here</span></div>{!account.flow.length ? <div className="admin-empty">No money movements recorded yet.</div> : <div className="money-flow">{account.flow.map((item, index) => <div className={`money-flow-row ${item.type}`} key={`${item.date}-${item.type}-${index}`}><div className="flow-icon">{item.type === 'investment' ? '+' : item.type === 'reinvest' ? '↻' : item.type === 'spend' ? '−' : item.type === 'revenue' ? '₹' : '↗'}</div><div className="flow-main"><strong>{item.title}</strong><small>{date(item.date)} · {item.note}</small></div><strong className="flow-amount">{item.amount >= 0 ? '+' : ''}{money(item.amount)}</strong><div className="flow-balance"><span>Balance</span><strong>{money(item.balance)}</strong></div></div>)}</div>}<div className="account-footer-note"><span>Investor capital is separate from earnings. Only earnings can be transferred or reinvested after they become eligible.</span></div></div></div>}
     {linked && <div className="admin-modal-backdrop" onMouseDown={() => setLinked(null)}><div className="admin-modal leads-modal" onMouseDown={e => e.stopPropagation()}><button className="modal-close" onClick={() => setLinked(null)}>×</button><div className="admin-settings-kicker">INVESTOR LEADS</div><h2>{linked.investor.user_name || 'Investor'}</h2><p>{linked.items.length} linked leads</p>{linkedLoading ? <div className="admin-empty">Loading leads…</div> : !linked.items.length ? <div className="admin-empty">No linked leads found.</div> : <div className="lead-table"><div className="lead-table-head"><span>Lead</span><span>Industry</span><span>Sales</span><span>Gross</span><span>Investor earning</span></div>{linked.items.map(lead => <div className="lead-table-row" key={lead.id}><div><b>#{lead.id} · {lead.name || 'Lead'}</b><small>{lead.state_name || '—'}{lead.city_name ? `, ${lead.city_name}` : ''}</small></div><span>{lead.industry_name || '—'}</span><span>{lead.paid_sale_count || 0}</span><span>{money(lead.gross_sale_amount)}</span><strong>{money(lead.investor_revenue)}</strong></div>)}</div>}</div></div>}
     {spendModal && <div className="admin-modal-backdrop" onMouseDown={() => setSpendModal(null)}><div className="admin-modal" onMouseDown={e => e.stopPropagation()}><button className="modal-close" onClick={() => setSpendModal(null)}>×</button><div className="admin-settings-kicker">ADVERTISING</div><h2>Spend investor ad balance</h2><p>{spendModal.investor.user_name || 'Investor'} · Account balance {money(spendModal.investor.adBalance)}</p>{spendLoading ? <div className="admin-empty">Loading ad balance…</div> : <form onSubmit={submitSpend}><div className="spend-available"><span>Current funding available</span><strong>{money(Number(spendData?.investment?.funds_available_for_ads || 0) + Number(spendData?.investment?.ad_remaining || 0))}</strong></div><label>Amount<input autoFocus type="number" min="0.01" step="0.01" value={spendForm.amount} onChange={e => setSpendForm(v => ({ ...v, amount: e.target.value }))} required /></label><div className="modal-grid"><label>Platform<input value={spendForm.platform} onChange={e => setSpendForm(v => ({ ...v, platform: e.target.value }))} placeholder="Meta, Google…" /></label><label>Campaign<input value={spendForm.campaign} onChange={e => setSpendForm(v => ({ ...v, campaign: e.target.value }))} /></label></div><label>Reference<input value={spendForm.reference} onChange={e => setSpendForm(v => ({ ...v, reference: e.target.value }))} /></label><label>Notes<textarea value={spendForm.notes} onChange={e => setSpendForm(v => ({ ...v, notes: e.target.value }))} /></label><div className="modal-actions"><button type="button" onClick={() => setSpendModal(null)}>Cancel</button><button className="primary" disabled={spendBusy}>{spendBusy ? 'Saving…' : 'Record ad spend'}</button></div></form>}</div></div>}
     {payoutModal && <div className="admin-modal-backdrop" onMouseDown={() => setPayoutModal(null)}><div className="admin-modal" onMouseDown={e => e.stopPropagation()}><button className="modal-close" onClick={() => setPayoutModal(null)}>×</button><div className="admin-settings-kicker">EARNINGS SETTLEMENT</div><h2>{payoutModal.target.reinvestment_enabled ? 'Reinvest investor earnings' : 'Transfer investor earnings'}</h2><p>{payoutModal.investor.user_name || 'Investor'} · {money(payoutModal.target.payable_now)} ready</p>{payoutModal.target.reinvestment_enabled ? <div className="auto-reinvest-box"><strong>Auto reinvest is ON</strong><span>Eligible earnings will be moved back into advertising instead of being transferred to the bank.</span></div> : <><label>Transfer reference / UTR<input value={transferReference} onChange={e => setTransferReference(e.target.value)} /></label><label>Transfer proof<input type="file" accept="image/png,image/jpeg,image/webp,application/pdf" onChange={e => setProofFile(e.target.files?.[0] || null)} /></label></>}<div className="modal-actions"><button onClick={() => setPayoutModal(null)}>Cancel</button><button className="success" onClick={submitPayout} disabled={payoutBusy}>{payoutBusy ? 'Processing…' : payoutModal.target.reinvestment_enabled ? 'Reinvest earnings' : 'Confirm transfer'}</button></div></div></div>}
