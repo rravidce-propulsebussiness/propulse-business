@@ -23,15 +23,31 @@ async function getInvestorFunds(userId) {
   const balance = await getBalance(userId);
   const [requests, investments] = await Promise.all([
     pool.query(`SELECT id, amount, status, transfer_reference, notes, requested_at, processed_at FROM investor_payout_requests WHERE user_id=$1 ORDER BY requested_at DESC,id DESC`, [Number(userId)]),
-    pool.query(`SELECT COALESCE(SUM(amount) FILTER (WHERE status IN ('active','matured')),0) AS total_invested, COALESCE(SUM(amount_in_ads) FILTER (WHERE status IN ('active','matured')),0) AS amount_in_ads FROM investments WHERE user_id=$1 AND status <> 'cancelled'`, [Number(userId)]),
+    pool.query(`
+      SELECT
+        COALESCE(SUM(amount) FILTER (WHERE status IN ('active','matured')),0) AS total_invested,
+        COALESCE(SUM(amount_in_ads) FILTER (WHERE status IN ('active','matured')),0) AS amount_in_ads,
+        COALESCE((
+          SELECT SUM(s.amount)
+          FROM investment_ad_spends s
+          JOIN investments spent_investment ON spent_investment.id=s.investment_id
+          WHERE spent_investment.user_id=$1
+            AND spent_investment.status <> 'cancelled'
+        ),0) AS total_ad_spent
+      FROM investments
+      WHERE user_id=$1 AND status <> 'cancelled'
+    `, [Number(userId)]),
   ]);
   const totalInvested = Number(investments.rows[0]?.total_invested || 0);
   const amountInAds = Number(investments.rows[0]?.amount_in_ads || 0);
+  const totalAdSpent = Number(investments.rows[0]?.total_ad_spent || 0);
+  const unallocatedInvestmentCapital = Math.max(0, totalInvested - totalAdSpent - amountInAds);
   return {
     ...balance,
     total_invested: totalInvested,
     amount_in_ads: amountInAds,
-    unallocated_investment_capital: Math.max(0, totalInvested - amountInAds),
+    total_ad_spent: totalAdSpent,
+    unallocated_investment_capital: Number(unallocatedInvestmentCapital.toFixed(2)),
     requests: requests.rows.map(row => ({...row, amount:Number(row.amount || 0)})),
   };
 }
