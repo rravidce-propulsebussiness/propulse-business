@@ -8,6 +8,7 @@ const money = value => `₹${Number(value || 0).toLocaleString('en-IN', { maximu
 const date = value => value ? new Date(value).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'
 
 const MATURITY_OPTIONS = [
+  { value: 'immediate', label: 'Immediate', hint: 'Mature now · testing' },
   { value: '7', label: 'Weekly', hint: '7 days' },
   { value: '14', label: 'Biweekly', hint: '14 days' },
   { value: '30', label: 'Monthly', hint: '30 days' },
@@ -77,10 +78,10 @@ export default function AdminInvestments() {
     try {
       const result = await request('/admin/commercial/investor-settings')
       setSettings(result)
-      const days = Number(result.investment_cycle_days || 30)
-      const known = MATURITY_OPTIONS.some(option => option.value === String(days))
-      setMaturityPreset(known ? String(days) : 'custom')
-      setMaturityDays(String(days))
+      const days = Number(result.investment_cycle_days)
+      const known = days === 0 || MATURITY_OPTIONS.some(option => option.value === String(days))
+      setMaturityPreset(days === 0 ? 'immediate' : known ? String(days) : 'custom')
+      setMaturityDays(String(days || 0))
     } catch (e) {
       setError(e.message || 'Unable to load investment maturity settings.')
     } finally {
@@ -107,14 +108,15 @@ export default function AdminInvestments() {
 
   const selectMaturity = value => {
     setMaturityPreset(value)
-    if (value !== 'custom') setMaturityDays(value)
+    if (value === 'immediate') setMaturityDays('0')
+    else if (value !== 'custom') setMaturityDays(value)
   }
 
   const saveMaturity = async () => {
     if (!settings) return
     const days = Number(maturityDays)
-    if (!Number.isInteger(days) || days < 1 || days > 3650) {
-      setError('Maturity must be a whole number between 1 and 3650 days.')
+    if (!Number.isInteger(days) || days < 0 || days > 3650) {
+      setError('Maturity must be a whole number between 0 and 3650 days.')
       return
     }
     setSettingsBusy(true)
@@ -138,8 +140,8 @@ export default function AdminInvestments() {
       })
       setSettings(updated)
       setMaturityDays(String(days))
-      setMaturityPreset(MATURITY_OPTIONS.some(option => option.value === String(days)) ? String(days) : 'custom')
-      setSettingsMessage(`Saved: ${days} days. Active cycles were updated for testing.`)
+      setMaturityPreset(days === 0 ? 'immediate' : MATURITY_OPTIONS.some(option => option.value === String(days)) ? String(days) : 'custom')
+      setSettingsMessage(days === 0 ? 'Saved: immediate maturity. Active cycles can mature now for testing.' : `Saved: ${days} days. Active cycles were updated for testing.`)
       await load(true)
     } catch (e) {
       setError(e.message || 'Unable to save maturity settings.')
@@ -267,14 +269,14 @@ export default function AdminInvestments() {
         <div className="admin-maturity-copy">
           <span className="admin-settings-kicker">CYCLE SETTINGS</span>
           <h2>Investment maturity</h2>
-          <p>Choose the default duration for investment cycles. Saving a new duration also updates active cycles immediately for testing. Pending cycles use the selected duration when activated.</p>
+          <p>Choose the default duration for investment cycles. Use Immediate only for testing. Saving a duration updates active cycles immediately; pending cycles use it when activated.</p>
         </div>
         <div className="admin-maturity-controls">
           <label><span>Period</span><select value={maturityPreset} onChange={e => selectMaturity(e.target.value)} disabled={settingsLoading || settingsBusy}>{MATURITY_OPTIONS.map(option => <option key={option.value} value={option.value}>{option.label} · {option.hint}</option>)}</select></label>
-          {maturityPreset === 'custom' && <label><span>Days</span><input type="number" min="1" max="3650" value={maturityDays} onChange={e => setMaturityDays(e.target.value)} disabled={settingsLoading || settingsBusy} /></label>}
+          {maturityPreset === 'custom' && <label><span>Days</span><input type="number" min="0" max="3650" value={maturityDays} onChange={e => setMaturityDays(e.target.value)} disabled={settingsLoading || settingsBusy} /></label>}
           <button type="button" className="admin-maturity-save" onClick={saveMaturity} disabled={settingsLoading || settingsBusy}>{settingsBusy ? 'Saving…' : 'Save maturity'}</button>
         </div>
-        <div className="admin-maturity-current"><b>Current default</b><strong>{settingsLoading ? 'Loading…' : `${Number(settings?.investment_cycle_days || maturityDays || 30)} days`}</strong>{settingsMessage && <span>{settingsMessage}</span>}</div>
+        <div className="admin-maturity-current"><b>Current default</b><strong>{settingsLoading ? 'Loading…' : Number(settings?.investment_cycle_days ?? maturityDays ?? 30) === 0 ? 'Immediate' : `${Number(settings?.investment_cycle_days ?? maturityDays ?? 30)} days`}</strong>{settingsMessage && <span>{settingsMessage}</span>}</div>
       </section>
 
       <section className="admin-investment-panel">
@@ -298,13 +300,13 @@ export default function AdminInvestments() {
                   <div className="admin-investor-summary">
                     <button type="button" className="admin-investor-summary-main" onClick={() => toggle(investor.user_id)}>
                       <span className="admin-investor-primary"><span className="admin-investor-chevron">{open ? '⌄' : '›'}</span><span className="admin-investor-identity"><span className="admin-investor-avatar">{String(investor.user_name || 'I').slice(0, 1).toUpperCase()}</span><span><strong>{investor.user_name || 'Investor'}</strong><small>{investor.user_email}</small></span></span></span>
-                      <span><b>{money(investor.total_invested)}</b></span>
-                      <span><b>{money(investor.ad_spent)}</b></span>
-                      <span><b className="revenue-text">{money(investor.allocated_revenue)}</b></span>
-                      <span><b className={Number(investor.payable_now) > 0 ? 'payable-text' : ''}>{money(investor.payable_now)}</b></span>
-                      <span><span className={`admin-investment-status ${latestCycle?.status || 'active'}`}>{latestCycle?.status || 'active'}</span></span>
+                      <div><b>{money(investor.total_invested)}</b></div>
+                      <div><b>{money(investor.ad_spent)}</b></div>
+                      <div><b className="revenue-text">{money(investor.allocated_revenue)}</b></div>
+                      <div><b className={Number(investor.payable_now) > 0 ? 'payable-text' : ''}>{money(investor.payable_now)}</b></div>
+                      <div><span className={`admin-investment-status ${latestCycle?.status || 'active'}`}>{latestCycle?.status || 'active'}</span></div>
                     </button>
-                    <button type="button" className="admin-view-button" onClick={() => toggle(investor.user_id)}>{open ? 'Hide' : 'Details'}</button>
+                    <button type="button" className="admin-view-button" onClick={() => toggle(investor.user_id)}>{open ? 'Hide details' : 'View details'}</button>
                   </div>
 
                   {open && (
@@ -319,20 +321,17 @@ export default function AdminInvestments() {
                               <div><span className="cycle-eyebrow">LATEST CYCLE</span><h2>Investment Cycle #{cycle.id} <span className={`admin-investment-status ${cycle.status}`}>{cycle.status}</span></h2><p>{cycle.industry_name} · Started {date(cycle.starts_at || cycle.created_at)}</p></div>
                               <div className="admin-cycle-meta"><div><span>Maturity</span><strong>{date(cycle.matures_at)}</strong></div><div><span>Duration</span><strong>{Number(cycle.maturity_days || 0)} days</strong></div><div><span>Auto reinvest</span><b className={cycle.reinvestment_enabled ? 'switch-on' : 'switch-off'}>{cycle.reinvestment_enabled ? 'ON' : 'OFF'}</b></div></div>
                             </div>
-
                             <div className="admin-cycle-cards">
                               <section className="cycle-card investment-card"><h3><i>₹</i> Capital</h3><div><span>Original investment</span><b>{money(cycle.amount)}</b></div><div><span>Historical ad spend</span><b>{money(cycle.ad_spent)}</b></div><div><span>Current ad allocation</span><b>{money(cycle.current_ad_allocation)}</b></div><div><span>Available for future ads</span><b className="green-text">{money(cycle.funds_available_for_ads)}</b></div><aside>Original capital remains separate from earnings. Future ad capacity = original capital − historical ad spend − current unspent allocation.</aside></section>
                               <section className="cycle-card ads-card"><h3><i>↗</i> Ad Spend</h3><div><span>Current allocation</span><b>{money(cycle.current_ad_allocation)}</b></div><div><span>Spent from current allocation</span><b>{money(cycle.current_ad_spent)}</b></div><div><span>Current budget remaining</span><b className="green-text">{money(cycle.ad_remaining)}</b></div><div className="progress-row"><div><span style={{ width: `${adPercent}%` }} /></div><b>{Math.round(adPercent)}%</b></div><aside>Historical spend stays in the ledger. Only the active allocation is available to spend now.</aside></section>
                               <section className="cycle-card revenue-card"><h3><i>✓</i> Earnings</h3><div><span>Revenue generated</span><b>{money(cycle.allocated_revenue)}</b></div><div><span>Ready for settlement</span><b className="green-text">{money(cycle.payable_now)}</b></div><div><span>Already settled</span><b>{money(cycle.paid_to_investor)}</b></div><div><span>Paid sales</span><b>{cycle.allocated_sales || cycle.linked_paid_sales || 0}</b></div><aside>Earnings come from eligible paid lead sales. They do not increase the original investment capital.</aside></section>
                               <section className="cycle-card reinvest-card"><h3><i>↻</i> Reinvestment</h3><div><span>Auto reinvest earnings</span><b className={cycle.reinvestment_enabled ? 'switch-on' : 'switch-off'}>{cycle.reinvestment_enabled ? 'ON' : 'OFF'}</b></div><div><span>Eligible amount</span><b>{money(cycle.payable_now)}</b></div><div><span>Next cycle funding</span><b>{money(cycle.reinvestment_enabled ? cycle.payable_now : 0)}</b></div><aside>{cycle.reinvestment_enabled ? `Only ${money(cycle.payable_now)} of realized earnings will fund the next cycle. Original capital is never reinvested.` : 'Automatic reinvestment is disabled for this investment.'}</aside></section>
                             </div>
-
                             <div className="admin-cycle-actions">
                               <button type="button" className="outline-action" onClick={() => showLinked(investor)}>◉ View linked leads</button>
                               <button type="button" className="blue-action" onClick={() => openSpend(cycle)}>＋ Add ad spend</button>
                               {Number(cycle.payable_now) > 0 && <button type="button" className="green-action" onClick={() => openPayout(cycle)}>↻ {cycle.reinvestment_enabled ? 'Reinvest' : 'Pay'} {money(cycle.payable_now)}</button>}
                             </div>
-
                             <div className="admin-transaction-history">
                               <div className="transaction-title"><h3>Cycle ledger</h3><span>Capital · Ads · Earnings</span></div>
                               <div className="transaction-table-wrap"><table><thead><tr><th>DATE</th><th>TYPE</th><th>DESCRIPTION</th><th>AMOUNT</th><th>REFERENCE</th></tr></thead><tbody>
