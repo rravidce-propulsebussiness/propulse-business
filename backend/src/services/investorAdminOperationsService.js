@@ -94,11 +94,9 @@ async function payout({ investmentId, adminId, transferReference, proofUrl }) {
     if (inv.status === 'paid') throw Object.assign(new Error('Investment has already been paid'), { code: 'ALREADY_PAID' });
     if (inv.status === 'cancelled') throw Object.assign(new Error('Cancelled investment cannot be paid'), { code: 'CANCELLED' });
     if (new Date(inv.matures_at) > new Date()) throw Object.assign(new Error('Investment has not matured yet'), { code: 'NOT_MATURED' });
-
     const revenue = Number((await client.query('SELECT COALESCE(SUM(allocated_amount),0) AS total FROM investment_revenue_allocations WHERE investment_id=$1',[inv.id])).rows[0].total || 0);
     const payoutAmount = Number(revenue.toFixed(2));
     if (payoutAmount <= 0) throw Object.assign(new Error('There are no realized earnings available for settlement'), { code:'NO_REALIZED_AMOUNT' });
-
     if (Boolean(inv.reinvestment_enabled)) {
       const existing = (await client.query('SELECT id FROM investments WHERE parent_investment_id=$1 LIMIT 1',[inv.id])).rows[0];
       if (existing) throw Object.assign(new Error('This investment has already been reinvested'), { code:'REINVESTMENT_EXISTS' });
@@ -113,7 +111,8 @@ async function payout({ investmentId, adminId, transferReference, proofUrl }) {
       const used=Number((await client.query(`SELECT COUNT(DISTINCT user_id)::int AS total FROM investments WHERE ${where}`,params)).rows[0].total||0);
       if (used >= Number(location.investor_limit)) throw Object.assign(new Error('Investor limit completed for this industry and location'), { code:'LOCATION_CAPACITY_REACHED' });
       const settings=(await client.query('SELECT investment_cycle_days FROM investor_settings WHERE id=1 FOR SHARE')).rows[0];
-      const maturityDays=Number(settings?.investment_cycle_days||rule.maturity_days||30);
+      const configuredCycle=settings?.investment_cycle_days==null?null:Number(settings.investment_cycle_days);
+      const maturityDays=configuredCycle===null?Number(rule.maturity_days??30):configuredCycle;
       const child=(await client.query(`INSERT INTO investments(user_id,industry_id,state_id,city_id,amount,return_percent,expected_return,maturity_days,reinvestment_enabled,parent_investment_id,starts_at,matures_at) VALUES($1,$2,$3,$4,$5,0,$5,$6,FALSE,$7,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP+make_interval(days=>$6)) RETURNING *`,[Number(inv.user_id),Number(inv.industry_id),Number(inv.state_id),location.city_id==null?null:Number(location.city_id),payoutAmount,maturityDays,Number(inv.id)])).rows[0];
       await client.query(`UPDATE investments SET status='paid',realized_revenue=$1,payout_amount=$1,payout_transfer_reference=$2,payout_proof_url=NULL,payout_transferred_at=CURRENT_TIMESTAMP,payout_transferred_by=$3,updated_at=CURRENT_TIMESTAMP WHERE id=$4`,[payoutAmount,`REINVESTMENT-${inv.id}-${child.id}`,Number(adminId),Number(inv.id)]);
       await client.query(`INSERT INTO investment_transactions(investment_id,user_id,type,amount,reference_type,reference_id) VALUES($1,$2,'return',$3,'reinvestment',$4)`,[Number(inv.id),Number(inv.user_id),payoutAmount,Number(child.id)]);
@@ -121,7 +120,6 @@ async function payout({ investmentId, adminId, transferReference, proofUrl }) {
       await client.query('COMMIT');
       return {...child,amount:Number(child.amount),realized_revenue:payoutAmount,payout_amount:payoutAmount,payout_destination:'reinvestment',parent_investment_id:Number(inv.id),reinvested_from_investment_id:Number(inv.id),reinvested_to_investment_id:Number(child.id),status:'reinvested'};
     }
-
     const reference = String(transferReference || '').trim();
     if (!reference) throw Object.assign(new Error('Transfer reference / UTR is required'), { code: 'TRANSFER_REFERENCE_REQUIRED' });
     if (!proofUrl) throw Object.assign(new Error('Transfer screenshot or proof is required'), { code: 'TRANSFER_PROOF_REQUIRED' });
