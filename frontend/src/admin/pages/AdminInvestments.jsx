@@ -172,7 +172,7 @@ export default function AdminInvestments() {
       const revenue = Number(record.allocated_revenue || 0)
       if (revenue > 0) {
         earningsBalance += revenue
-        flow.push({ type: 'revenue', date: record.updated_at || record.created_at, title: 'Lead revenue', amount: revenue, balance: earningsBalance, balanceLabel: 'Earnings', note: `${Number(record.allocated_sales || record.linked_paid_sales || 0)} lead sale(s)` })
+        flow.push({ type: 'revenue', date: record.updated_at || record.created_at, title: 'Lead sold', amount: revenue, balance: earningsBalance, balanceLabel: 'Earnings', note: `${Number(record.allocated_sales || record.linked_paid_sales || 0)} lead sale(s) purchased by a customer account` })
       }
       const reference = String(record.payout_transfer_reference || '').trim().toUpperCase()
       const paid = record.status === 'paid' && !reference.startsWith('REINVESTMENT-') ? Number(record.paid_to_investor || 0) : 0
@@ -183,7 +183,7 @@ export default function AdminInvestments() {
     })
     if (investor.earnings > 0 && !flow.some(item => item.type === 'revenue')) {
       earningsBalance += investor.earnings
-      flow.push({ type: 'revenue', date: investor.joinedAt, title: 'Lead revenue', amount: investor.earnings, balance: earningsBalance, balanceLabel: 'Earnings', note: 'Investor earnings from linked lead sales' })
+      flow.push({ type: 'revenue', date: investor.joinedAt, title: 'Lead sold', amount: investor.earnings, balance: earningsBalance, balanceLabel: 'Earnings', note: 'Lead sales purchased by customer accounts generated investor earnings' })
     }
     setAccount({ investor, flow })
   }
