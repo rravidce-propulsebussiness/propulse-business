@@ -43,6 +43,10 @@ async function updateInvestorSettings(data) {
     await client.query('BEGIN');
     await client.query(`UPDATE investor_settings SET global_limit=$1,default_industry_limit=$2,customer_industry_limit=$3,min_investment=$4,max_investment=$5,enabled=$6,is_enabled=$6,requires_pro=$7,investment_cycle_days=COALESCE($8,investment_cycle_days),auto_reinvest=COALESCE($9,auto_reinvest),investor_revenue_share_percent=COALESCE($10,investor_revenue_share_percent),updated_at=CURRENT_TIMESTAMP WHERE id=1`,[globalLimit,defaultIndustryLimit,customerIndustryLimit,minInvestment,maxInvestment,Boolean(data.enabled),data.requiresPro!==false,cycleDays,autoReinvest,revenueShare]);
 
+    if(cycleDays!==null){
+      await client.query(`UPDATE investment_industry_rules SET maturity_days=$1,updated_at=CURRENT_TIMESTAMP WHERE is_active=TRUE`,[cycleDays]);
+    }
+
     if(Array.isArray(data.industryLimits)){
       const settings=(await client.query('SELECT investor_revenue_share_percent FROM investor_settings WHERE id=1')).rows[0];
       const share=Number(settings.investor_revenue_share_percent ?? 100);
@@ -84,7 +88,7 @@ async function updateInvestorSettings(data) {
         await client.query('UPDATE investor_industry_limits SET investor_limit=$1 WHERE industry_id=$2',[aggregate,industryId]);
         if(active){
           const maximum=maxInvestment===null?Math.max(minInvestment,globalLimit||minInvestment):maxInvestment;
-          await client.query(`INSERT INTO investment_industry_rules(industry_id,minimum_amount,maximum_amount,total_capacity,investor_revenue_share_percent,is_active) VALUES($1,$2,$3,NULL,$4,TRUE) ON CONFLICT(industry_id) DO UPDATE SET minimum_amount=EXCLUDED.minimum_amount,maximum_amount=EXCLUDED.maximum_amount,total_capacity=NULL,investor_revenue_share_percent=EXCLUDED.investor_revenue_share_percent,is_active=TRUE,updated_at=CURRENT_TIMESTAMP`,[industryId,minInvestment,maximum,share]);
+          await client.query(`INSERT INTO investment_industry_rules(industry_id,minimum_amount,maximum_amount,total_capacity,investor_revenue_share_percent,maturity_days,is_active) VALUES($1,$2,$3,NULL,$4,COALESCE($5,30),TRUE) ON CONFLICT(industry_id) DO UPDATE SET minimum_amount=EXCLUDED.minimum_amount,maximum_amount=EXCLUDED.maximum_amount,total_capacity=NULL,investor_revenue_share_percent=EXCLUDED.investor_revenue_share_percent,maturity_days=EXCLUDED.maturity_days,is_active=TRUE,updated_at=CURRENT_TIMESTAMP`,[industryId,minInvestment,maximum,share,cycleDays]);
         }else await client.query('UPDATE investment_industry_rules SET is_active=FALSE,updated_at=CURRENT_TIMESTAMP WHERE industry_id=$1',[industryId]);
       }
       if(seenIndustries.size){const ids=Array.from(seenIndustries);await client.query('DELETE FROM investor_industry_location_limits WHERE industry_id <> ALL($1::int[])',[ids]);}
