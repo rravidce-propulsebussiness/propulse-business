@@ -6,11 +6,11 @@ async function allocateInvestmentRevenue(client,{leadPurchaseId,industryId,state
   // recording revenue; only payout/reinvestment eligibility depends on maturity.
   let investors=[];
   if(investorUserId!=null){
-    investors=(await client.query(`SELECT id,amount FROM investments WHERE user_id=$1 AND industry_id=$2 AND status='active' AND starts_at<=CURRENT_TIMESTAMP AND (state_id IS NULL OR (state_id=$3 AND (city_id IS NULL OR city_id=$4))) ORDER BY created_at DESC,id DESC LIMIT 1 FOR UPDATE`,[Number(investorUserId),industryId,stateId||null,cityId||null])).rows;
+    investors=(await client.query(`SELECT id,amount FROM investments WHERE user_id=$1 AND industry_id=$2 AND status IN ('active','matured') AND starts_at<=CURRENT_TIMESTAMP AND (state_id IS NULL OR (state_id=$3 AND (city_id IS NULL OR city_id=$4))) ORDER BY created_at DESC,id DESC LIMIT 1 FOR UPDATE`,[Number(investorUserId),industryId,stateId||null,cityId||null])).rows;
   }
   // Ordinary marketplace sales retain pooled allocation behaviour.
   if(!investors.length&&!investorUserId){
-    investors=(await client.query(`SELECT id,amount FROM investments WHERE industry_id=$1 AND status='active' AND starts_at<=CURRENT_TIMESTAMP AND (state_id IS NULL OR (state_id=$2 AND (city_id IS NULL OR city_id=$3))) ORDER BY id FOR UPDATE`,[industryId,stateId||null,cityId||null])).rows;
+    investors=(await client.query(`SELECT id,amount FROM investments WHERE industry_id=$1 AND status IN ('active','matured') AND starts_at<=CURRENT_TIMESTAMP AND (state_id IS NULL OR (state_id=$2 AND (city_id IS NULL OR city_id=$3))) ORDER BY id FOR UPDATE`,[industryId,stateId||null,cityId||null])).rows;
   }
   if(!investors.length)return;const total=investors.reduce((sum,x)=>sum+Number(x.amount),0);if(total<=0)return;
   for(const inv of investors){const allocated=distributable*(Number(inv.amount)/total);if(allocated<=0)continue;await client.query(`INSERT INTO investment_revenue_allocations(investment_id,lead_purchase_id,industry_id,gross_sale_amount,investor_share_percent,allocated_amount) VALUES($1,$2,$3,$4,$5,$6) ON CONFLICT(investment_id,lead_purchase_id) DO NOTHING`,[inv.id,leadPurchaseId,industryId,grossAmount,distributableShare,allocated])}}
