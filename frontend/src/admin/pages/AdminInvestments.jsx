@@ -12,7 +12,7 @@ function InvestorModalActions() {
       .investor-table-head>span:last-child{position:sticky;right:0;z-index:6;background:#f4f8fc;box-shadow:-8px 0 12px rgba(28,68,112,.06)}
       .investor-table-row>.row-actions{position:sticky;right:0;z-index:5;background:#fff;box-shadow:-8px 0 12px rgba(28,68,112,.06);padding-left:8px}
       .row-actions .more-btn{display:grid;place-items:center;font-size:16px;line-height:1;letter-spacing:0;font-weight:900;color:#315a87}
-      .investor-history-modal .investor-history-actions{display:flex;align-items:center;justify-content:flex-end;gap:10px;padding:14px 26px;border-top:1px solid #e4ebf3;background:#fff;flex:0 0 auto}
+      .investor-history-modal .investor-history-actions{display:flex;align-items:center;justify-content:flex-end;gap:10px;padding:14px 26px;border-top:1px solid #e4ebf3;background:#fff;flex:0 0 auto;position:relative;z-index:10;box-sizing:border-box}
       .investor-history-modal .investor-history-actions button{height:42px;padding:0 18px;border:1px solid #d6e3ef;border-radius:9px;background:#fff;color:#17457f;font-size:11px;font-weight:900;cursor:pointer}
       .investor-history-modal .investor-history-actions button:hover{background:#f4f8fd}
       .investor-history-modal .investor-history-actions .spend-action{border-color:#d5e5f5;background:#eef6ff;color:#126fca}
@@ -60,13 +60,16 @@ function InvestorModalActions() {
     }
 
     const injectActions = async modal => {
-      if (!modal || modal.dataset.actionsReady === '1' || busy) return
+      const existingFooter = modal?.querySelector('.investor-history-actions')
+      if (!modal || existingFooter || busy) return
+      // React can rerender the modal and remove a DOM-injected footer. Do not rely on a stale dataset flag.
+      modal.dataset.actionsReady = '0'
       const headEmail = modal.querySelector('.investor-history-head p')?.textContent?.split(' · ')[0]?.trim() || ''
       if (!headEmail) return
       busy = true
       try {
         const investor = await getInvestor(headEmail)
-        if (!investor || modal.dataset.actionsReady === '1') return
+        if (!investor || modal.querySelector('.investor-history-actions')) return
 
         const records = Array.isArray(investor.cycles) ? investor.cycles.filter(x => x.status !== 'cancelled') : []
         const adBalance = Math.max(0, records.reduce((sum, x) => sum + Number(x.amount || 0), 0) - records.reduce((sum, x) => sum + Number(x.ad_spent || 0), 0))
@@ -79,8 +82,6 @@ function InvestorModalActions() {
         footer.className = 'investor-history-actions'
         footer.innerHTML = `<span class="action-status">Ad balance <strong>${money(adBalance)}</strong> · Bank transfer <strong>${money(bankTransfer)}</strong></span><button type="button" class="spend-action">Spend on Ads</button><button type="button" class="transfer-action" ${bankTransfer <= 0 ? 'disabled' : ''}>Transfer to Bank</button>`
 
-        const body = modal.querySelector('.investor-history-body')
-        if (!body) return
         modal.appendChild(footer)
         modal.dataset.actionsReady = '1'
 
@@ -126,7 +127,7 @@ function InvestorModalActions() {
     const scan = () => {
       refreshTableIdentity()
       const modal = document.querySelector('.investor-history-modal')
-      if (modal) injectActions(modal)
+      if (modal && !modal.querySelector('.investor-history-actions')) injectActions(modal)
     }
 
     observer = new MutationObserver(scan)
