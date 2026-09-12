@@ -8,10 +8,7 @@ function InvestorModalActions() {
   useEffect(() => {
     const style = document.createElement('style')
     style.textContent = `
-      .investor-table-wrap{position:relative}
-      .investor-table-head>span:last-child{position:sticky;right:0;z-index:6;background:#f4f8fc;box-shadow:-8px 0 12px rgba(28,68,112,.06)}
-      .investor-table-row>.row-actions{position:sticky;right:0;z-index:5;background:#fff;box-shadow:-8px 0 12px rgba(28,68,112,.06);padding-left:8px}
-      .row-actions .more-btn{display:grid;place-items:center;font-size:16px;line-height:1;letter-spacing:0;font-weight:900;color:#315a87}
+      .investor-table-row .more-btn,.investor-table-row .action-menu-wrap{display:none!important}
       .investor-history-modal .investor-history-actions{display:flex;align-items:center;justify-content:flex-end;gap:10px;padding:14px 26px;border-top:1px solid #e4ebf3;background:#fff;flex:0 0 auto;position:relative;z-index:10;box-sizing:border-box}
       .investor-history-modal .investor-history-actions button{height:42px;padding:0 18px;border:1px solid #d6e3ef;border-radius:9px;background:#fff;color:#17457f;font-size:11px;font-weight:900;cursor:pointer}
       .investor-history-modal .investor-history-actions button:hover{background:#f4f8fd}
@@ -26,34 +23,6 @@ function InvestorModalActions() {
 
     let observer
     let busy = false
-    let dashboardInvestors = []
-
-    const refreshTableIdentity = () => {
-      const rows = [...document.querySelectorAll('.investor-table-row')]
-      rows.forEach((row, index) => {
-        const investor = dashboardInvestors[index]
-        if (!investor) return
-        const name = investor.user_name || investor.name || investor.full_name || (investor.user_email ? investor.user_email.split('@')[0] : `Investor #${investor.user_id}`)
-        const email = investor.user_email || `Account ID ${investor.user_id}`
-        const nameEl = row.querySelector('.row-investor strong')
-        const emailEl = row.querySelector('.row-investor small')
-        const avatarEl = row.querySelector('.row-avatar')
-        const currentName = nameEl?.textContent?.trim() || ''
-        const currentEmail = emailEl?.textContent?.trim() || ''
-        const avatar = String(name || 'I').slice(0, 1).toUpperCase()
-        if (nameEl && (currentName === '' || currentName === 'Investor') && currentName !== name) nameEl.textContent = name
-        if (emailEl && (currentEmail === '' || currentEmail === '—') && currentEmail !== email) emailEl.textContent = email
-        if (avatarEl && avatarEl.textContent !== avatar) avatarEl.textContent = avatar
-      })
-    }
-
-    const loadInvestorsForIdentity = async () => {
-      try {
-        const dashboard = await apiRequest('/admin/commercial/investment-dashboard?search=&status=all&industryId=')
-        dashboardInvestors = Array.isArray(dashboard?.investors) ? dashboard.investors : []
-        refreshTableIdentity()
-      } catch (_) {}
-    }
 
     const getInvestor = async email => {
       const params = new URLSearchParams({ search: email || '', status: 'all', industryId: '' })
@@ -63,8 +32,7 @@ function InvestorModalActions() {
     }
 
     const injectActions = async modal => {
-      const existingFooter = modal?.querySelector('.investor-history-actions')
-      if (!modal || existingFooter || busy) return
+      if (!modal || modal.querySelector('.investor-history-actions') || busy) return
       const headEmail = modal.querySelector('.investor-history-head p')?.textContent?.split(' · ')[0]?.trim() || ''
       if (!headEmail) return
       busy = true
@@ -82,7 +50,6 @@ function InvestorModalActions() {
         const footer = document.createElement('div')
         footer.className = 'investor-history-actions'
         footer.innerHTML = `<span class="action-status">Ad balance <strong>${money(adBalance)}</strong> · Bank transfer <strong>${money(bankTransfer)}</strong></span><button type="button" class="spend-action">Spend on Ads</button><button type="button" class="transfer-action" ${bankTransfer <= 0 ? 'disabled' : ''}>Transfer to Bank</button>`
-
         modal.appendChild(footer)
 
         footer.querySelector('.spend-action').addEventListener('click', async () => {
@@ -125,7 +92,6 @@ function InvestorModalActions() {
     }
 
     const scan = () => {
-      refreshTableIdentity()
       const modal = document.querySelector('.investor-history-modal')
       if (modal && !modal.querySelector('.investor-history-actions')) injectActions(modal)
     }
@@ -133,7 +99,6 @@ function InvestorModalActions() {
     observer = new MutationObserver(scan)
     observer.observe(document.body, { childList: true, subtree: true })
     scan()
-    loadInvestorsForIdentity()
 
     return () => {
       observer?.disconnect()
