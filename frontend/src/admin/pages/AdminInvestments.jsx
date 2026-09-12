@@ -139,7 +139,7 @@ export default function AdminInvestments() {
       setSettings(updated)
       setMaturityDays(String(days))
       setMaturityPreset(MATURITY_OPTIONS.some(option => option.value === String(days)) ? String(days) : 'custom')
-      setSettingsMessage(`Saved: ${days} day maturity for new investment cycles.`)
+      setSettingsMessage(`Saved: ${days} days. Active cycles were updated for testing.`)
       await load(true)
     } catch (e) {
       setError(e.message || 'Unable to save maturity settings.')
@@ -267,7 +267,7 @@ export default function AdminInvestments() {
         <div className="admin-maturity-copy">
           <span className="admin-settings-kicker">CYCLE SETTINGS</span>
           <h2>Investment maturity</h2>
-          <p>Choose how long new investment cycles run. Changing this does not change existing cycles or their maturity dates.</p>
+          <p>Choose the default duration for investment cycles. Saving a new duration also updates active cycles immediately for testing. Pending cycles use the selected duration when activated.</p>
         </div>
         <div className="admin-maturity-controls">
           <label><span>Period</span><select value={maturityPreset} onChange={e => selectMaturity(e.target.value)} disabled={settingsLoading || settingsBusy}>{MATURITY_OPTIONS.map(option => <option key={option.value} value={option.value}>{option.label} · {option.hint}</option>)}</select></label>
@@ -297,15 +297,14 @@ export default function AdminInvestments() {
                 <article className={`admin-investor-card ${open ? 'open' : ''}`} key={investor.user_id}>
                   <div className="admin-investor-summary">
                     <button type="button" className="admin-investor-summary-main" onClick={() => toggle(investor.user_id)}>
-                      <span className="admin-investor-chevron">{open ? '⌄' : '›'}</span>
-                      <div className="admin-investor-identity"><span className="admin-investor-avatar">{String(investor.user_name || 'I').slice(0, 1).toUpperCase()}</span><div><strong>{investor.user_name || 'Investor'}</strong><small>{investor.user_email}</small></div></div>
-                      <div><b>{money(investor.total_invested)}</b></div>
-                      <div><b>{money(investor.ad_spent)}</b></div>
-                      <div><b className="revenue-text">{money(investor.allocated_revenue)}</b></div>
-                      <div><b className={Number(investor.payable_now) > 0 ? 'payable-text' : ''}>{money(investor.payable_now)}</b></div>
-                      <div><span className={`admin-investment-status ${latestCycle?.status || 'active'}`}>{latestCycle?.status || 'active'}</span></div>
+                      <span className="admin-investor-primary"><span className="admin-investor-chevron">{open ? '⌄' : '›'}</span><span className="admin-investor-identity"><span className="admin-investor-avatar">{String(investor.user_name || 'I').slice(0, 1).toUpperCase()}</span><span><strong>{investor.user_name || 'Investor'}</strong><small>{investor.user_email}</small></span></span></span>
+                      <span><b>{money(investor.total_invested)}</b></span>
+                      <span><b>{money(investor.ad_spent)}</b></span>
+                      <span><b className="revenue-text">{money(investor.allocated_revenue)}</b></span>
+                      <span><b className={Number(investor.payable_now) > 0 ? 'payable-text' : ''}>{money(investor.payable_now)}</b></span>
+                      <span><span className={`admin-investment-status ${latestCycle?.status || 'active'}`}>{latestCycle?.status || 'active'}</span></span>
                     </button>
-                    <button type="button" className="admin-view-button" onClick={() => toggle(investor.user_id)}>{open ? 'Hide details' : 'View details'}</button>
+                    <button type="button" className="admin-view-button" onClick={() => toggle(investor.user_id)}>{open ? 'Hide' : 'Details'}</button>
                   </div>
 
                   {open && (
