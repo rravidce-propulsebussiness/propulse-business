@@ -15,7 +15,7 @@ async function getDashboard({ search = '', status = 'all', industryId = '' } = {
       COALESCE(ls.linked_lead_ids,'[]'::json) AS linked_lead_ids
     FROM investments x JOIN users u ON u.id=x.user_id JOIN industries i ON i.id=x.industry_id LEFT JOIN states s ON s.id=x.state_id LEFT JOIN cities c ON c.id=x.city_id
     LEFT JOIN LATERAL (SELECT COALESCE(SUM(ira.allocated_amount),0) AS allocated_revenue,COUNT(DISTINCT ira.lead_purchase_id)::int AS allocated_sales FROM investment_revenue_allocations ira WHERE ira.investment_id=x.id) a ON TRUE
-    LEFT JOIN LATERAL (SELECT COALESCE(SUM(ias.amount),0) AS total_spent,COALESCE((SELECT SUM(a2.amount) FROM investment_ad_allocations a2 WHERE a2.investment_id=x.id),0) AS total_allocated FROM investment_ad_spends ias WHERE ias.investment_id=x.id) adtotal ON TRUE
+    LEFT JOIN LATERAL (SELECT COALESCE((SELECT SUM(ias.amount) FROM investment_ad_spends ias WHERE ias.investment_id=x.id),0) AS total_spent,COALESCE((SELECT SUM(a2.amount) FROM investment_ad_allocations a2 WHERE a2.investment_id=x.id),0) AS total_allocated) adtotal ON TRUE
     LEFT JOIN LATERAL (
       SELECT aa.amount AS current_allocation,COALESCE((SELECT SUM(s2.amount) FROM investment_ad_spends s2 WHERE s2.allocation_id=aa.id),0) AS current_spent,
         GREATEST(0,aa.amount-COALESCE((SELECT SUM(s3.amount) FROM investment_ad_spends s3 WHERE s3.allocation_id=aa.id),0)) AS current_remaining
