@@ -4,18 +4,21 @@ async function getBalance(userId, client = pool) {
   const result = await client.query(`
     SELECT
       COALESCE((SELECT SUM(a.allocated_amount) FROM investment_revenue_allocations a JOIN investments i ON i.id=a.investment_id WHERE i.user_id=$1 AND i.status <> 'cancelled'),0) AS generated,
+      COALESCE((SELECT SUM(i.payout_amount) FROM investments i WHERE i.user_id=$1 AND i.status='paid'),0) AS settled_investment_earnings,
       COALESCE((SELECT SUM(r.amount) FROM investor_payout_requests r WHERE r.user_id=$1 AND r.status='paid'),0) AS transferred,
       COALESCE((SELECT SUM(r.amount) FROM investor_payout_requests r WHERE r.user_id=$1 AND r.status='pending'),0) AS reserved
   `, [Number(userId)]);
   const row = result.rows[0];
   const generated = Number(row.generated || 0);
+  const settledInvestmentEarnings = Number(row.settled_investment_earnings || 0);
   const transferred = Number(row.transferred || 0);
   const reserved = Number(row.reserved || 0);
   return {
     generated,
+    settled_investment_earnings: settledInvestmentEarnings,
     transferred,
     reserved,
-    available: Math.max(0, generated - transferred - reserved),
+    available: Math.max(0, generated - settledInvestmentEarnings - transferred - reserved),
   };
 }
 
