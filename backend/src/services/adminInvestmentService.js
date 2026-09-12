@@ -23,7 +23,7 @@ async function getDashboard({ search = '', status = 'all', industryId = '' } = {
       x.industry_id,i.name AS industry_name,x.state_id,s.name AS state_name,
       x.city_id,c.name AS city_name,x.amount,x.amount_in_ads,x.ad_spend_status,
       x.status,x.starts_at,x.matures_at,x.maturity_days,x.created_at,x.updated_at,
-      x.reinvestment_enabled,
+      x.reinvestment_enabled,x.parent_investment_id,
       COALESCE(a.allocated_revenue,0)::numeric AS allocated_revenue,
       COALESCE(a.allocated_sales,0)::int AS allocated_sales,
       COALESCE(x.payout_amount,0)::numeric AS paid_to_investor,
@@ -95,6 +95,7 @@ async function getDashboard({ search = '', status = 'all', industryId = '' } = {
       ...row,
       amount: Number(row.amount || 0),
       amount_in_ads: currentAllocation,
+      is_reinvestment: row.parent_investment_id !== null,
       ad_spent: totalSpent,
       current_ad_spent: currentSpent,
       ad_remaining: currentRemaining,
@@ -143,8 +144,8 @@ async function getDashboard({ search = '', status = 'all', industryId = '' } = {
 
     const investor = investorsMap.get(row.user_id);
     investor.investment_count += 1;
-    investor.total_invested += row.amount;
-    if (row.status === 'active') investor.active_invested += row.amount;
+    if (!row.is_reinvestment) investor.total_invested += row.amount;
+    if (row.status === 'active' && !row.is_reinvestment) investor.active_invested += row.amount;
     if (row.payable_now > 0) investor.matured_unpaid += 1;
     investor.payable_now += row.payable_now;
     investor.ad_allocated += row.current_ad_allocation;
@@ -189,8 +190,8 @@ async function getDashboard({ search = '', status = 'all', industryId = '' } = {
   const stats = {
     investors: investors.length,
     investment_cycles: rows.length,
-    total_invested: Number(rows.reduce((sum, x) => sum + x.amount, 0).toFixed(2)),
-    active_invested: Number(rows.filter(x => x.status === 'active').reduce((sum, x) => sum + x.amount, 0).toFixed(2)),
+    total_invested: Number(rows.filter(x => !x.is_reinvestment).reduce((sum, x) => sum + x.amount, 0).toFixed(2)),
+    active_invested: Number(rows.filter(x => x.status === 'active' && !x.is_reinvestment).reduce((sum, x) => sum + x.amount, 0).toFixed(2)),
     matured_unpaid: rows.filter(x => x.payable_now > 0).length,
     linked_leads: Number(investors.reduce((sum, x) => sum + x.linked_leads, 0)),
     sold_linked_leads: Number(investors.reduce((sum, x) => sum + x.sold_linked_leads, 0)),
