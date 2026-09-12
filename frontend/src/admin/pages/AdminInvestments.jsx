@@ -311,14 +311,14 @@ export default function AdminInvestments() {
 
                   {open && (
                     <div className="admin-investor-details">
-                      {cycles.slice(0, 1).map(cycle => {
+                      {cycles.map(cycle => {
                         const allocation = Number(cycle.current_ad_allocation || 0)
                         const spent = Number(cycle.current_ad_spent || 0)
                         const adPercent = allocation > 0 ? Math.min(100, (spent / allocation) * 100) : 0
                         return (
                           <div className="admin-cycle-focus" key={cycle.id}>
                             <div className="admin-cycle-focus-head">
-                              <div><span className="cycle-eyebrow">LATEST CYCLE</span><h2>Investment Cycle #{cycle.id} <span className={`admin-investment-status ${cycle.status}`}>{cycle.status}</span></h2><p>{cycle.industry_name} · Started {date(cycle.starts_at || cycle.created_at)}</p></div>
+                              <div><span className="cycle-eyebrow">INVESTMENT CYCLE</span><h2>Investment Cycle #{cycle.id} <span className={`admin-investment-status ${cycle.status}`}>{cycle.status}</span></h2><p>{cycle.industry_name} · Started {date(cycle.starts_at || cycle.created_at)}</p></div>
                               <div className="admin-cycle-meta"><div><span>Maturity</span><strong>{date(cycle.matures_at)}</strong></div><div><span>Duration</span><strong>{Number(cycle.maturity_days || 0)} days</strong></div><div><span>Auto reinvest</span><b className={cycle.reinvestment_enabled ? 'switch-on' : 'switch-off'}>{cycle.reinvestment_enabled ? 'ON' : 'OFF'}</b></div></div>
                             </div>
                             <div className="admin-cycle-cards">
@@ -343,7 +343,7 @@ export default function AdminInvestments() {
                           </div>
                         )
                       })}
-                      {cycles.length > 1 && <div className="admin-more-cycles">+ {cycles.length - 1} additional investment cycle{cycles.length - 1 === 1 ? '' : 's'} · open the investor's history for older cycles</div>}
+                      
                     </div>
                   )}
                 </article>
