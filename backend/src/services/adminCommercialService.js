@@ -35,7 +35,7 @@ async function updateInvestorSettings(data) {
   const autoReinvest=data.autoReinvest == null ? null : Boolean(data.autoReinvest);
   if(!Number.isFinite(minInvestment)||minInvestment<=0)throw Object.assign(new Error('Minimum investment must be greater than zero'),{code:'INVALID_INVESTMENT_CONFIG'});
   if(maxInvestment!==null&&(!Number.isFinite(maxInvestment)||maxInvestment<minInvestment))throw Object.assign(new Error('Maximum investment must be greater than or equal to minimum investment'),{code:'INVALID_INVESTMENT_CONFIG'});
-  if(cycleDays!==null&&(!Number.isInteger(cycleDays)||cycleDays<=0||cycleDays>3650))throw Object.assign(new Error('Investment cycle must be between 1 and 3650 days'),{code:'INVALID_INVESTMENT_CONFIG'});
+  if(cycleDays!==null&&(!Number.isInteger(cycleDays)||cycleDays<0||cycleDays>3650))throw Object.assign(new Error('Investment cycle must be between 0 and 3650 days'),{code:'INVALID_INVESTMENT_CONFIG'});
   if(revenueShare!==null&&(!Number.isFinite(revenueShare)||revenueShare<0||revenueShare>100))throw Object.assign(new Error('Investor revenue share must be between 0 and 100%'),{code:'INVALID_INVESTMENT_CONFIG'});
 
   const client=await pool.connect();
@@ -45,8 +45,6 @@ async function updateInvestorSettings(data) {
 
     if(cycleDays!==null){
       await client.query(`UPDATE investment_industry_rules SET maturity_days=$1,updated_at=CURRENT_TIMESTAMP WHERE is_active=TRUE`,[cycleDays]);
-      // Apply a newly selected maturity immediately to active cycles as well.
-      // Pending cycles are excluded because their maturity is recalculated when payment activates them.
       await client.query(`UPDATE investments SET maturity_days=$1,matures_at=COALESCE(starts_at,created_at)+make_interval(days=>$1),updated_at=CURRENT_TIMESTAMP WHERE status='active'`,[cycleDays]);
     }
 
