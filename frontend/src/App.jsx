@@ -33,7 +33,6 @@ import AdminLeads from './admin/pages/AdminLeads';
 import AdminLeadPricing from './admin/pages/AdminLeadPricing';
 import AdminMembershipPlansConfig from './admin/pages/AdminMembershipPlansConfig';
 import AdminInvestments from './admin/pages/AdminInvestments';
-import AdminInvestorPayoutRequests from './admin/pages/AdminInvestorPayoutRequests';
 import AdminRoute from './admin/components/AdminRoute';
 import AdminLayout from './admin/components/AdminLayout';
 import { getToken, getUser } from './utils/auth';
@@ -196,10 +195,6 @@ function App() {
               element={<AdminMembershipPlansConfig />}
             />
             <Route path="/admin/investments" element={<AdminInvestments />} />
-            <Route
-              path="/admin/investor-transfer-requests"
-              element={<AdminInvestorPayoutRequests />}
-            />
           </Route>
         </Route>
 
