@@ -248,7 +248,6 @@ export default function AdminInvestments() {
           <h1>Investments</h1>
           <p>Manage investor capital, ad spend, lead sales, earnings and reinvestment cycles.</p>
         </div>
-        <button className="admin-investments-refresh" type="button" onClick={() => { load(); loadSettings() }}>↻ Refresh</button>
       </header>
 
       {error && <div className="admin-investments-error">{error}</div>}
@@ -343,7 +342,6 @@ export default function AdminInvestments() {
                           </div>
                         )
                       })}
-                      
                     </div>
                   )}
                 </article>
