@@ -25,7 +25,7 @@ async function updateAdAmount({ investmentId, amount, adminId }) {
     const inv = (await client.query(`SELECT x.id,x.user_id,x.amount,x.amount_in_ads,x.status FROM investments x WHERE x.id=$1 FOR UPDATE`,[Number(investmentId)])).rows[0];
     if (!inv) throw Object.assign(new Error('Investment not found'),{code:'NOT_FOUND'});
     if (inv.status === 'cancelled') throw Object.assign(new Error('Cancelled investment cannot have ad allocation'),{code:'CANCELLED'});
-    const current = (await client.query(`SELECT aa.id,aa.amount,aa.status,COALESCE(SUM(s.amount),0) AS spent FROM investment_ad_allocations aa LEFT JOIN investment_ad_spends s ON s.allocation_id=aa.id WHERE aa.investment_id=$1 AND aa.status IN ('allocated','spending') GROUP BY aa.id ORDER BY aa.id DESC LIMIT 1`,[Number(investmentId)])).rows[0];
+    const current = (await client.query(`SELECT aa.id,aa.amount,aa.status,COALESCE((SELECT SUM(s.amount) FROM investment_ad_spends s WHERE s.allocation_id=aa.id),0) AS spent FROM investment_ad_allocations aa WHERE aa.investment_id=$1 AND aa.status IN ('allocated','spending') ORDER BY aa.id DESC LIMIT 1 FOR UPDATE`,[Number(investmentId)])).rows[0];
     const currentSpent = Number(current?.spent || 0);
     if (current && value < currentSpent) throw Object.assign(new Error(`Ad allocation cannot be lower than ${currentSpent.toFixed(2)} already spent from the current allocation`),{code:'ALLOCATION_BELOW_SPEND'});
     const totalSpent = Number((await client.query(`SELECT COALESCE(SUM(amount),0) AS total FROM investment_ad_spends WHERE investment_id=$1`,[Number(investmentId)])).rows[0].total || 0);
@@ -47,11 +47,9 @@ async function updateAdAmount({ investmentId, amount, adminId }) {
 }
 
 async function getAdSpend({ investmentId }) {
-  const investment = (await pool.query(`SELECT x.id,x.user_id,x.amount,x.amount_in_ads,x.ad_spend_status,x.status,COALESCE((SELECT SUM(s.amount) FROM investment_ad_spends s WHERE s.investment_id=x.id),0) AS total_ad_spent,
-    COALESCE((SELECT SUM(s.amount) FROM investment_ad_spends s JOIN investment_ad_allocations aa ON aa.id=s.allocation_id WHERE s.investment_id=x.id AND aa.id=(SELECT MAX(id) FROM investment_ad_allocations WHERE investment_id=x.id AND status IN ('allocated','spending'))),0) AS current_ad_spent
-    FROM investments x WHERE x.id=$1`, [Number(investmentId)])).rows[0];
+  const investment = (await pool.query(`SELECT x.id,x.user_id,x.amount,x.amount_in_ads,x.ad_spend_status,x.status,COALESCE((SELECT SUM(s.amount) FROM investment_ad_spends s WHERE s.investment_id=x.id),0) AS total_ad_spent FROM investments x WHERE x.id=$1`, [Number(investmentId)])).rows[0];
   if (!investment) throw Object.assign(new Error('Investment not found'), { code:'NOT_FOUND' });
-  const allocations = (await pool.query(`SELECT aa.id,aa.amount,aa.status,aa.created_at,aa.updated_at,COALESCE(SUM(s.amount),0) AS spent,GREATEST(0,aa.amount-COALESCE(SUM(s.amount),0)) AS remaining FROM investment_ad_allocations aa LEFT JOIN investment_ad_spends s ON s.allocation_id=aa.id WHERE aa.investment_id=$1 GROUP BY aa.id ORDER BY aa.id DESC`, [Number(investmentId)])).rows.map(a=>({...a,amount:Number(a.amount),spent:Number(a.spent||0),remaining:Number(a.remaining||0)}));
+  const allocations = (await pool.query(`SELECT aa.id,aa.amount,aa.status,aa.created_at,aa.updated_at,COALESCE((SELECT SUM(s.amount) FROM investment_ad_spends s WHERE s.allocation_id=aa.id),0) AS spent FROM investment_ad_allocations aa WHERE aa.investment_id=$1 ORDER BY aa.id DESC`, [Number(investmentId)])).rows.map(a=>({...a,amount:Number(a.amount),spent:Number(a.spent||0),remaining:Number(Math.max(0,Number(a.amount)-Number(a.spent||0)))}));
   const spends = (await pool.query(`SELECT s.id,s.allocation_id,s.amount,s.platform,s.campaign,s.spend_date,s.reference,s.notes,s.created_at,u.name AS created_by_name FROM investment_ad_spends s LEFT JOIN users u ON u.id=s.created_by WHERE s.investment_id=$1 ORDER BY s.spend_date DESC,s.id DESC`, [Number(investmentId)])).rows.map(s=>({...s,amount:Number(s.amount)}));
   const totalSpent=Number(investment.total_ad_spent||0);
   const currentAllocation=allocations.find(a=>['allocated','spending'].includes(String(a.status))) || null;
@@ -68,7 +66,10 @@ async function recordAdSpend({ investmentId, amount, platform, campaign, spendDa
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
-    const allocation = (await client.query(`SELECT aa.id,aa.amount,aa.status,COALESCE(SUM(s.amount),0) AS spent,x.amount AS investment_amount FROM investment_ad_allocations aa JOIN investments x ON x.id=aa.investment_id LEFT JOIN investment_ad_spends s ON s.allocation_id=aa.id WHERE aa.investment_id=$1 AND aa.status IN ('allocated','spending') GROUP BY aa.id,x.amount ORDER BY aa.id DESC LIMIT 1 FOR UPDATE OF aa,x`, [Number(investmentId)])).rows[0];
+    const investment = (await client.query(`SELECT id,amount,status FROM investments WHERE id=$1 FOR UPDATE`,[Number(investmentId)])).rows[0];
+    if (!investment) throw Object.assign(new Error('Investment not found'), { code:'NOT_FOUND' });
+    if (investment.status === 'cancelled') throw Object.assign(new Error('Cancelled investment cannot record ad spend'), { code:'CANCELLED' });
+    const allocation = (await client.query(`SELECT aa.id,aa.amount,aa.status,COALESCE((SELECT SUM(s.amount) FROM investment_ad_spends s WHERE s.allocation_id=aa.id),0) AS spent FROM investment_ad_allocations aa WHERE aa.investment_id=$1 AND aa.status IN ('allocated','spending') ORDER BY aa.id DESC LIMIT 1 FOR UPDATE`,[Number(investmentId)])).rows[0];
     if (!allocation) throw Object.assign(new Error('Allocate an ad budget before recording ad spend'), { code:'NO_AD_ALLOCATION' });
     const allocated=Number(allocation.amount); const spent=Number(allocation.spent||0); const remaining=Math.max(0,allocated-spent);
     if (value > remaining) throw Object.assign(new Error(`Ad spend cannot exceed the current allocation remaining amount of ${remaining.toFixed(2)}`), { code:'SPEND_EXCEEDS_ALLOCATION' });
@@ -77,7 +78,7 @@ async function recordAdSpend({ investmentId, amount, platform, campaign, spendDa
     await client.query(`UPDATE investment_ad_allocations SET status=$1,updated_at=CURRENT_TIMESTAMP WHERE id=$2`,[nextStatus,Number(allocation.id)]);
     await client.query(`UPDATE investments SET amount_in_ads=$1,ad_spend_status=$2,updated_at=CURRENT_TIMESTAMP WHERE id=$3`,[nextStatus==='spent'?0:allocated,nextStatus,Number(investmentId)]);
     const totalSpent=Number((await client.query(`SELECT COALESCE(SUM(amount),0) AS total FROM investment_ad_spends WHERE investment_id=$1`,[Number(investmentId)])).rows[0].total||0);
-    const fundsAvailable=Math.max(0,Number(allocation.investment_amount)-totalSpent-(nextStatus==='spent'?0:Math.max(0,allocated-nextSpent)));
+    const fundsAvailable=Math.max(0,Number(investment.amount)-totalSpent-(nextStatus==='spent'?0:Math.max(0,allocated-nextSpent)));
     await client.query('COMMIT');
     return {...result,amount:Number(result.amount),allocation_id:Number(allocation.id),ad_spent:Number(totalSpent.toFixed(2)),current_ad_spent:Number(nextSpent.toFixed(2)),ad_remaining:Number(Math.max(0,allocated-nextSpent).toFixed(2)),funds_available_for_ads:Number(fundsAvailable.toFixed(2)),ad_spend_status:nextStatus};
   } catch(error){await client.query('ROLLBACK');throw error}
