@@ -16,7 +16,7 @@ function InvestorModalActions() {
       .investor-history-modal .investor-history-actions button:disabled{opacity:.5;cursor:not-allowed}
       .investor-history-modal .investor-history-actions .action-status{margin-right:auto;color:#7890aa;font-size:9px}
       .investor-history-modal .investor-history-actions .action-status strong{color:#17457f}
-      .investor-history-modal + .admin-modal-backdrop{display:none!important}
+      .admin-modal-backdrop:has(.investor-history-modal) + .admin-modal-backdrop{display:none!important}
     `
     document.head.appendChild(style)
 
