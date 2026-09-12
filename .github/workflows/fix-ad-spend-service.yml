@@ -1,0 +1,58 @@
+name: Fix admin ad spend service
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  patch:
+    if: contains(github.event.head_commit.message, 'Patch admin ad spend service')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch recordAdSpend
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('backend/src/services/investorAdminOperationsService.js')
+          s=p.read_text()
+          old="""    const allocation = (await client.query(`SELECT aa.id,aa.amount,aa.status,COALESCE((SELECT SUM(s.amount) FROM investment_ad_spends s WHERE s.allocation_id=aa.id),0) AS spent FROM investment_ad_allocations aa WHERE aa.investment_id=$1 AND aa.status IN ('allocated','spending') ORDER BY aa.id DESC LIMIT 1 FOR UPDATE`,[Number(investmentId)])).rows[0];
+    if (!allocation) throw Object.assign(new Error('No active ad allocation for this investment'),{code:'NO_AD_ALLOCATION'});
+    const allocated=Number(allocation.amount||0);
+    const currentSpent=Number(allocation.spent||0);
+    if (currentSpent + value > allocated + 1e-6) throw Object.assign(new Error(`Ad allocation cannot exceed ₹${allocated.toFixed(2)}`),{code:'SPEND_EXCEEDS_ALLOCATION'});
+"""
+          if old not in s:
+              raise SystemExit('target block not found')
+          new="""    let allocation = (await client.query(`SELECT aa.id,aa.amount,aa.status,COALESCE((SELECT SUM(s.amount) FROM investment_ad_spends s WHERE s.allocation_id=aa.id),0) AS spent FROM investment_ad_allocations aa WHERE aa.investment_id=$1 AND aa.status IN ('allocated','spending') ORDER BY aa.id DESC LIMIT 1 FOR UPDATE`,[Number(investmentId)])).rows[0];
+    if (!allocation) {
+      const totalSpent=Number((await client.query(`SELECT COALESCE(SUM(amount),0) AS total FROM investment_ad_spends WHERE investment_id=$1`,[Number(investmentId)])).rows[0].total||0);
+      const available=Math.max(0,Number(inv.amount||0)-totalSpent);
+      if (value > available + 1e-6) throw Object.assign(new Error(`Ad spend exceeds available ad funds of ₹${available.toFixed(2)}`),{code:'SPEND_EXCEEDS_AVAILABLE_AD_FUNDS'});
+      allocation=(await client.query(`INSERT INTO investment_ad_allocations (investment_id,amount,status,allocated_at,created_by) VALUES ($1,$2,'allocated',CURRENT_TIMESTAMP,$3) RETURNING id,amount,status`,[Number(investmentId),value,adminId])).rows[0];
+      allocation.spent=0;
+    }
+    const allocated=Number(allocation.amount||0);
+    const currentSpent=Number(allocation.spent||0);
+    if (currentSpent + value > allocated + 1e-6) throw Object.assign(new Error(`Ad allocation cannot exceed ₹${allocated.toFixed(2)}`),{code:'SPEND_EXCEEDS_ALLOCATION'});
+"""
+          p.write_text(s.replace(old,new))
+          PY
+          node --check backend/src/services/investorAdminOperationsService.js
+      - name: Commit patch
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add backend/src/services/investorAdminOperationsService.js
+          git commit -m "Fix admin ad spend service" || exit 0
+          git push
+      - name: Remove workflow
+        if: success()
+        run: |
+          rm .github/workflows/fix-ad-spend-service.yml
+          git add .github/workflows/fix-ad-spend-service.yml
+          git commit -m "Remove temporary ad spend patch workflow"
+          git push
