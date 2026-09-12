@@ -112,7 +112,8 @@ async function payout({ investmentId, adminId, transferReference, proofUrl }) {
       if (location.city_id !== null) { params.push(Number(location.city_id)); where += ' AND city_id=$3'; }
       const used=Number((await client.query(`SELECT COUNT(DISTINCT user_id)::int AS total FROM investments WHERE ${where}`,params)).rows[0].total||0);
       if (used >= Number(location.investor_limit)) throw Object.assign(new Error('Investor limit completed for this industry and location'), { code:'LOCATION_CAPACITY_REACHED' });
-      const maturityDays=Number(rule.maturity_days||30);
+      const settings=(await client.query('SELECT investment_cycle_days FROM investor_settings WHERE id=1 FOR SHARE')).rows[0];
+      const maturityDays=Number(settings?.investment_cycle_days||rule.maturity_days||30);
       const child=(await client.query(`INSERT INTO investments(user_id,industry_id,state_id,city_id,amount,return_percent,expected_return,maturity_days,reinvestment_enabled,parent_investment_id,starts_at,matures_at) VALUES($1,$2,$3,$4,$5,0,$5,$6,FALSE,$7,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP+make_interval(days=>$6)) RETURNING *`,[Number(inv.user_id),Number(inv.industry_id),Number(inv.state_id),location.city_id==null?null:Number(location.city_id),payoutAmount,maturityDays,Number(inv.id)])).rows[0];
       await client.query(`UPDATE investments SET status='paid',realized_revenue=$1,payout_amount=$1,payout_transfer_reference=$2,payout_proof_url=NULL,payout_transferred_at=CURRENT_TIMESTAMP,payout_transferred_by=$3,updated_at=CURRENT_TIMESTAMP WHERE id=$4`,[payoutAmount,`REINVESTMENT-${inv.id}-${child.id}`,Number(adminId),Number(inv.id)]);
       await client.query(`INSERT INTO investment_transactions(investment_id,user_id,type,amount,reference_type,reference_id) VALUES($1,$2,'return',$3,'reinvestment',$4)`,[Number(inv.id),Number(inv.user_id),payoutAmount,Number(child.id)]);
