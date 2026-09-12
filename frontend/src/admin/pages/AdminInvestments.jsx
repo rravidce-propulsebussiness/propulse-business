@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { apiRequest } from '../../utils/api'
 import { getToken, clearSession } from '../../utils/auth'
 import { useNavigate } from 'react-router-dom'
-import './AdminInvestments.css'
+import './AdminInvestmentsPremium.css'
 
 const money = value => `₹${Number(value || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}`
 const date = value => value ? new Date(value).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'
@@ -41,9 +41,11 @@ export default function AdminInvestments() {
   const [settings, setSettings] = useState(null)
   const [maturityPreset, setMaturityPreset] = useState('30')
   const [maturityDays, setMaturityDays] = useState('30')
+  const [commissionPercent, setCommissionPercent] = useState('5')
   const [settingsLoading, setSettingsLoading] = useState(true)
   const [settingsBusy, setSettingsBusy] = useState(false)
   const [settingsMessage, setSettingsMessage] = useState('')
+  const [commissionMessage, setCommissionMessage] = useState('')
 
   const request = async (path, options = {}) => {
     if (!getToken()) {
@@ -81,6 +83,8 @@ export default function AdminInvestments() {
       const known = days === 0 || MATURITY_OPTIONS.some(option => option.value === String(days))
       setMaturityPreset(days === 0 ? 'immediate' : known ? String(days) : 'custom')
       setMaturityDays(String(days || 0))
+      const share = Number(result.investor_revenue_share_percent)
+      setCommissionPercent(String(Number.isFinite(share) ? Math.max(0, Math.min(100, 100 - share)) : 5))
     } catch (e) {
       setError(e.message || 'Unable to load investment settings.')
     } finally {
@@ -110,36 +114,66 @@ export default function AdminInvestments() {
     else if (value !== 'custom') setMaturityDays(value)
   }
 
+  const saveCommercialSettings = async ({ days, commission }) => {
+    if (!settings) return
+    const nextDays = Number(days)
+    const nextCommission = Number(commission)
+    if (!Number.isInteger(nextDays) || nextDays < 0 || nextDays > 3650) throw new Error('Maturity must be a whole number between 0 and 3650 days.')
+    if (!Number.isFinite(nextCommission) || nextCommission < 0 || nextCommission > 100) throw new Error('Commission must be between 0% and 100%.')
+    return request('/admin/commercial/investor-settings', {
+      method: 'PUT',
+      body: JSON.stringify({
+        globalLimit: settings.global_limit,
+        defaultIndustryLimit: settings.default_industry_limit,
+        customerIndustryLimit: settings.customer_industry_limit,
+        minInvestment: settings.min_investment,
+        maxInvestment: settings.max_investment == null ? '' : settings.max_investment,
+        enabled: Boolean(settings.is_enabled ?? settings.enabled),
+        requiresPro: Boolean(settings.requires_pro),
+        investmentCycleDays: nextDays,
+        autoReinvest: settings.auto_reinvest == null ? false : Boolean(settings.auto_reinvest),
+        investorRevenueSharePercent: 100 - nextCommission,
+      }),
+    })
+  }
+
   const saveMaturity = async () => {
     if (!settings) return
-    const days = Number(maturityDays)
-    if (!Number.isInteger(days) || days < 0 || days > 3650) return setError('Maturity must be a whole number between 0 and 3650 days.')
     setSettingsBusy(true)
     setSettingsMessage('')
     setError('')
     try {
-      const updated = await request('/admin/commercial/investor-settings', {
-        method: 'PUT',
-        body: JSON.stringify({
-          globalLimit: settings.global_limit,
-          defaultIndustryLimit: settings.default_industry_limit,
-          customerIndustryLimit: settings.customer_industry_limit,
-          minInvestment: settings.min_investment,
-          maxInvestment: settings.max_investment == null ? '' : settings.max_investment,
-          enabled: Boolean(settings.is_enabled ?? settings.enabled),
-          requiresPro: Boolean(settings.requires_pro),
-          investmentCycleDays: days,
-          autoReinvest: settings.auto_reinvest == null ? false : Boolean(settings.auto_reinvest),
-          investorRevenueSharePercent: settings.investor_revenue_share_percent == null ? 100 : settings.investor_revenue_share_percent,
-        }),
-      })
+      const updated = await saveCommercialSettings({ days: maturityDays, commission: commissionPercent })
+      const days = Number(maturityDays)
       setSettings(updated)
       setMaturityDays(String(days))
       setMaturityPreset(days === 0 ? 'immediate' : MATURITY_OPTIONS.some(option => option.value === String(days)) ? String(days) : 'custom')
+      setCommissionPercent(String(100 - Number(updated.investor_revenue_share_percent ?? 95)))
       setSettingsMessage('Saved')
       await load(true)
     } catch (e) {
-      setError(e.message || 'Unable to save maturity settings.')
+      setError(e.message || 'Unable to save investment settings.')
+    } finally {
+      setSettingsBusy(false)
+    }
+  }
+
+  const saveCommission = async () => {
+    if (!settings) return
+    const value = Number(commissionPercent)
+    if (!Number.isFinite(value) || value < 0 || value > 100) return setError('Commission must be between 0% and 100%.')
+    setSettingsBusy(true)
+    setCommissionMessage('')
+    setError('')
+    try {
+      const days = Number(settings.investment_cycle_days ?? maturityDays ?? 30)
+      const updated = await saveCommercialSettings({ days, commission: value })
+      setSettings(updated)
+      setCommissionPercent(String(value))
+      setCommissionMessage('Saved')
+      await load(true)
+    } catch (e) {
+      setError(e.message || 'Unable to save commission.')
     } finally {
       setSettingsBusy(false)
     }
@@ -220,17 +254,17 @@ export default function AdminInvestments() {
   }
 
   const stats = data.stats || {}
-  const commissionPercent = Math.max(0, Math.min(100, 100 - Number(settings?.investor_revenue_share_percent ?? 95)))
 
   return (
     <main className="admin-investments-page">
       <header className="admin-investments-head">
-        <div>
-          <span className="admin-investments-kicker">INVESTOR MONEY FLOW</span>
-          <h1>Investments</h1>
-          <p>Track investor capital, advertising balance, lead sales and earnings in one simple view.</p>
+        <h1>Investments</h1>
+        <div className="admin-commission-card">
+          <div className="admin-commission-copy"><span>ProPulse commission</span><small>Applied to lead revenue</small></div>
+          <div className="admin-commission-input"><input type="number" min="0" max="100" step="0.1" value={commissionPercent} onChange={e => setCommissionPercent(e.target.value)} disabled={settingsLoading || settingsBusy} aria-label="ProPulse commission percentage" /><b>%</b></div>
+          <button type="button" className="admin-commission-save" onClick={saveCommission} disabled={settingsLoading || settingsBusy}>{settingsBusy ? 'Saving…' : 'Save'}</button>
+          {commissionMessage && <span className="admin-commission-saved">{commissionMessage}</span>}
         </div>
-        <div className="admin-flow-badge"><span>ProPulse commission</span><strong>{commissionPercent}%</strong></div>
       </header>
 
       {error && <div className="admin-investments-error">{error}</div>}
@@ -243,15 +277,12 @@ export default function AdminInvestments() {
       </section>
 
       <section className="admin-money-flow">
-        <div className="flow-title"><span>HOW IT WORKS</span><b>Simple money flow</b></div>
+        <div className="flow-title"><b>Capital flow</b></div>
         <div className="flow-steps">
-          <div><i>1</i><strong>Investor adds capital</strong><small>Up to the configured maximum</small></div>
-          <em>→</em>
-          <div><i>2</i><strong>We run ads</strong><small>Capital becomes ad budget</small></div>
-          <em>→</em>
-          <div><i>3</i><strong>Leads are sold</strong><small>Revenue is recorded</small></div>
-          <em>→</em>
-          <div><i>4</i><strong>Earnings</strong><small>Pay to bank or reinvest</small></div>
+          <div><i>1</i><strong>Investor adds capital</strong><small>Up to the configured maximum</small></div><em>→</em>
+          <div><i>2</i><strong>We run ads</strong><small>Capital becomes ad budget</small></div><em>→</em>
+          <div><i>3</i><strong>Leads are sold</strong><small>Revenue is recorded</small></div><em>→</em>
+          <div><i>4</i><strong>Earnings</strong><small>Transfer or reinvest</small></div>
         </div>
       </section>
 
@@ -297,7 +328,6 @@ export default function AdminInvestments() {
 
                   {open && <div className="admin-investor-details">
                     <div className="investor-detail-head"><div><span className="detail-kicker">INVESTOR ACCOUNT</span><h2>{investor.user_name || 'Investor'}</h2><p>{investor.user_email}</p></div><div className="capital-limit"><span>Contributed capital</span><strong>{money(investor.total_invested)}</strong><small>Maximum is controlled by investment settings</small></div></div>
-
                     <div className="money-dashboard">
                       <section><span>Investor capital</span><strong>{money(investor.total_invested)}</strong><small>Personal money contributed</small></section>
                       <section><span>Ad balance</span><strong className="green-text">{money(investor.ad_remaining)}</strong><small>Available for the next ad spend</small></section>
@@ -306,7 +336,6 @@ export default function AdminInvestments() {
                       <section><span>Ready to transfer</span><strong className="payable-text">{money(investor.payable_now)}</strong><small>Eligible after maturity</small></section>
                       <section><span>Auto reinvest</span><strong>{cycles.some(cycle => cycle.reinvestment_enabled) ? 'ON' : 'OFF'}</strong><small>Only earnings are reinvested</small></section>
                     </div>
-
                     <div className="admin-cycle-list">
                       {cycles.map(cycle => {
                         const gross = Number(cycle.linked_gross_sales || 0)
@@ -314,9 +343,7 @@ export default function AdminInvestments() {
                         const commission = Math.max(0, gross - earnings)
                         return <div className="simple-cycle" key={cycle.id}>
                           <div className="simple-cycle-top"><div><span>AD / EARNINGS CYCLE #{cycle.id}</span><h3>{cycle.industry_name} <span className={`admin-investment-status ${cycle.status}`}>{cycle.status}</span></h3><small>Started {date(cycle.starts_at || cycle.created_at)} · Maturity {date(cycle.matures_at)}</small></div><div className="cycle-reinvest"><span>Auto reinvest</span><b className={cycle.reinvestment_enabled ? 'on' : 'off'}>{cycle.reinvestment_enabled ? 'ON' : 'OFF'}</b></div></div>
-                          <div className="simple-flow">
-                            <div><span>Capital</span><b>{money(cycle.amount)}</b></div><i>→</i><div><span>Ad spent</span><b>{money(cycle.ad_spent)}</b></div><i>→</i><div><span>Ad balance</span><b className="green-text">{money(cycle.ad_remaining)}</b></div><i>→</i><div><span>Lead earnings</span><b className="revenue-text">{money(cycle.allocated_revenue)}</b></div>
-                          </div>
+                          <div className="simple-flow"><div><span>Capital</span><b>{money(cycle.amount)}</b></div><i>→</i><div><span>Ad spent</span><b>{money(cycle.ad_spent)}</b></div><i>→</i><div><span>Ad balance</span><b className="green-text">{money(cycle.ad_remaining)}</b></div><i>→</i><div><span>Lead earnings</span><b className="revenue-text">{money(cycle.allocated_revenue)}</b></div></div>
                           <div className="simple-cycle-foot"><span>{cycle.allocated_sales || cycle.linked_paid_sales || 0} lead sale(s) · Gross sales {money(gross)} · ProPulse commission {money(commission)}</span><div><button className="outline-action" type="button" onClick={() => showLinked(investor)}>View leads</button><button className="blue-action" type="button" onClick={() => openSpend(cycle)}>＋ Spend</button>{Number(cycle.payable_now) > 0 && <button className="green-action" type="button" onClick={() => openPayout(cycle)}>{cycle.reinvestment_enabled ? '↻ Reinvest' : 'Transfer'} {money(cycle.payable_now)}</button>}</div></div>
                         </div>
                       })}
