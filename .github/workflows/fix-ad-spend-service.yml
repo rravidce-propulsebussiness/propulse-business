@@ -6,7 +6,6 @@ on:
 
 jobs:
   patch:
-    if: contains(github.event.head_commit.message, 'Patch admin ad spend service')
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -42,6 +41,7 @@ jobs:
           p.write_text(s.replace(old,new))
           PY
           node --check backend/src/services/investorAdminOperationsService.js
+          grep -q "SPEND_EXCEEDS_AVAILABLE_AD_FUNDS" backend/src/services/investorAdminOperationsService.js
       - name: Commit patch
         run: |
           git config user.name github-actions
