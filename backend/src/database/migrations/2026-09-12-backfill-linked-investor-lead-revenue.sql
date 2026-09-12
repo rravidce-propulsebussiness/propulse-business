@@ -1,5 +1,5 @@
 -- A paid lead explicitly linked to an investor must create an investor revenue allocation.
--- This is independent of maturity: maturity controls payout/reinvestment eligibility,
+-- This is independent of maturity: maturity controls when earnings can be settled,
 -- not whether the sale is recorded as revenue.
 WITH candidates AS (
   SELECT DISTINCT ON (lp.id)
@@ -14,7 +14,8 @@ WITH candidates AS (
   JOIN investments inv
     ON inv.user_id=l.investor_user_id
    AND inv.industry_id=l.industry_id
-   AND inv.status='active'
+   AND inv.status IN ('active','matured')
+   AND inv.starts_at<=CURRENT_TIMESTAMP
    AND (inv.state_id IS NULL OR (inv.state_id=l.state_id AND (inv.city_id IS NULL OR inv.city_id=l.city_id)))
   WHERE lp.status='paid'
     AND l.investor_user_id IS NOT NULL
