@@ -42,7 +42,9 @@ router.post('/', auth, investmentWriteLimit, c.create);
 router.post('/:id/reinvest', auth, investmentWriteLimit, c.reinvest);
 router.get('/admin/all', auth, admin, c.adminList);
 router.get('/admin/investor/:userId/linked-leads', auth, admin, c.linkedLeads);
+router.get('/admin/:id/ad-spend', auth, admin, c.getAdSpend);
 router.put('/admin/:id/ad-amount', auth, admin, adminInvestmentWriteLimit, c.updateAdAmount);
+router.post('/admin/:id/ad-spend', auth, admin, adminInvestmentWriteLimit, c.recordAdSpend);
 router.post('/admin/:id/payout', auth, admin, adminInvestmentWriteLimit, c.payout);
 
 module.exports = router;
