@@ -28,14 +28,6 @@ function InvestorModalActions() {
     let busy = false
     let dashboardInvestors = []
 
-    const loadInvestorsForIdentity = async () => {
-      try {
-        const dashboard = await apiRequest('/admin/commercial/investment-dashboard?search=&status=all&industryId=')
-        dashboardInvestors = Array.isArray(dashboard?.investors) ? dashboard.investors : []
-        refreshTableIdentity()
-      } catch (_) {}
-    }
-
     const refreshTableIdentity = () => {
       const rows = [...document.querySelectorAll('.investor-table-row')]
       rows.forEach((row, index) => {
@@ -46,10 +38,21 @@ function InvestorModalActions() {
         const nameEl = row.querySelector('.row-investor strong')
         const emailEl = row.querySelector('.row-investor small')
         const avatarEl = row.querySelector('.row-avatar')
-        if (nameEl && (!nameEl.textContent.trim() || nameEl.textContent.trim() === 'Investor')) nameEl.textContent = name
-        if (emailEl && (!emailEl.textContent.trim() || emailEl.textContent.trim() === '—')) emailEl.textContent = email
-        if (avatarEl) avatarEl.textContent = String(name || 'I').slice(0, 1).toUpperCase()
+        const currentName = nameEl?.textContent?.trim() || ''
+        const currentEmail = emailEl?.textContent?.trim() || ''
+        const avatar = String(name || 'I').slice(0, 1).toUpperCase()
+        if (nameEl && (currentName === '' || currentName === 'Investor') && currentName !== name) nameEl.textContent = name
+        if (emailEl && (currentEmail === '' || currentEmail === '—') && currentEmail !== email) emailEl.textContent = email
+        if (avatarEl && avatarEl.textContent !== avatar) avatarEl.textContent = avatar
       })
+    }
+
+    const loadInvestorsForIdentity = async () => {
+      try {
+        const dashboard = await apiRequest('/admin/commercial/investment-dashboard?search=&status=all&industryId=')
+        dashboardInvestors = Array.isArray(dashboard?.investors) ? dashboard.investors : []
+        refreshTableIdentity()
+      } catch (_) {}
     }
 
     const getInvestor = async email => {
@@ -62,8 +65,6 @@ function InvestorModalActions() {
     const injectActions = async modal => {
       const existingFooter = modal?.querySelector('.investor-history-actions')
       if (!modal || existingFooter || busy) return
-      // React can rerender the modal and remove a DOM-injected footer. Do not rely on a stale dataset flag.
-      modal.dataset.actionsReady = '0'
       const headEmail = modal.querySelector('.investor-history-head p')?.textContent?.split(' · ')[0]?.trim() || ''
       if (!headEmail) return
       busy = true
@@ -83,7 +84,6 @@ function InvestorModalActions() {
         footer.innerHTML = `<span class="action-status">Ad balance <strong>${money(adBalance)}</strong> · Bank transfer <strong>${money(bankTransfer)}</strong></span><button type="button" class="spend-action">Spend on Ads</button><button type="button" class="transfer-action" ${bankTransfer <= 0 ? 'disabled' : ''}>Transfer to Bank</button>`
 
         modal.appendChild(footer)
-        modal.dataset.actionsReady = '1'
 
         footer.querySelector('.spend-action').addEventListener('click', async () => {
           const raw = window.prompt(`Enter actual ad spend (available ${money(adBalance)}):`)
