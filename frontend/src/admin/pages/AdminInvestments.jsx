@@ -68,7 +68,6 @@ function InvestorModalActions() {
         const summaryCards = modal.querySelectorAll('.history-summary-card')
         const currentBalanceCard = summaryCards[0]
         const currentBalance = parseMoney(currentBalanceCard?.querySelector('strong')?.textContent)
-        const amountInAds = Math.max(0, totalFunding - adSpent)
         const availableForAds = reinvestmentEnabled ? currentBalance : allocatedAdBalance
         const bankTransfer = records.reduce((sum, x) => {
           const ref = String(x.payout_transfer_reference || '').trim().toUpperCase()
@@ -85,10 +84,10 @@ function InvestorModalActions() {
 
         const amountCard = document.createElement('article')
         amountCard.className = 'history-summary-card blue'
-        amountCard.innerHTML = `<span>AMOUNT IN ADS</span><strong>${money(amountInAds)}</strong><small>Capital currently remaining in the ad allocation</small>`
+        amountCard.innerHTML = `<span>AD SPENT</span><strong>${money(adSpent)}</strong><small>Total amount actually spent on advertising</small>`
         const summary = modal.querySelector('.investor-history-summary')
-        if (summary && !summary.querySelector('[data-amount-in-ads]')) {
-          amountCard.setAttribute('data-amount-in-ads','true')
+        if (summary && !summary.querySelector('[data-ad-spent]')) {
+          amountCard.setAttribute('data-ad-spent','true')
           summary.insertBefore(amountCard, summaryCards[2] || null)
         }
 
