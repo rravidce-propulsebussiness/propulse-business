@@ -4,7 +4,7 @@ import { clearSession, getToken } from '../../utils/auth'
 import { useNavigate } from 'react-router-dom'
 import './AdminInvestorWithdrawals.css'
 
-const money = value => `₹${Number(value || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })`
+const money = value => `₹${Number(value || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}`
 const date = value => value ? new Date(value).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—'
 
 function payoutSnapshot(request) {
