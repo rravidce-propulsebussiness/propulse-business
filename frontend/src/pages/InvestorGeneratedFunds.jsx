@@ -18,8 +18,8 @@ export default function InvestorGeneratedFunds(){
   }
   useEffect(()=>{load()},[])
 
-  const available=Number(data?.available ?? 0)
-  const transferable=Number(data?.transferable ?? data?.available ?? 0)
+  const availableForAds=Number(data?.available_for_ads ?? data?.amount_in_ads ?? 0)
+  const transferable=Number(data?.transferable ?? 0)
   const reserved=Number(data?.reserved ?? 0)
   const canTransfer=transferable>0 && Boolean(account)
 
@@ -60,11 +60,12 @@ export default function InvestorGeneratedFunds(){
     </div>
 
     <div className="investor-generated-grid">
-      <article><span>AMOUNT IN ADS</span><strong>{money(data?.amount_in_ads)}</strong><small>Capital currently deployed into advertising.</small></article>
-      <article><span>TOTAL INVESTMENT CAPITAL</span><strong>{money(data?.total_invested)}</strong><small>Your invested capital across active and matured cycles.</small></article>
-      <article className="available"><span>GENERATED EARNINGS</span><strong>{money(available)}</strong><small>Lead-sale revenue currently available in the investment funds account.</small></article>
-      <article className="transferable"><span>READY TO TRANSFER</span><strong>{money(transferable)}</strong><small>Amount you can request to your saved Bank Account or UPI.</small></article>
-      <article><span>TRANSFER RESERVED</span><strong>{money(reserved)}</strong><small>Generated funds reserved against pending requests.</small></article>
+      <article className="available"><span>AVAILABLE FOR ADS</span><strong>{money(availableForAds)}</strong><small>Capital and eligible Auto-Invest earnings currently available for Propulse advertising.</small></article>
+      <article><span>AD SPENT</span><strong>{money(data?.total_ad_spent)}</strong><small>Total actual advertising spend recorded against your investment.</small></article>
+      <article><span>TOTAL INVESTMENT CAPITAL</span><strong>{money(data?.total_invested)}</strong><small>Your investor-contributed capital across investment cycles.</small></article>
+      <article><span>GENERATED EARNINGS</span><strong>{money(data?.generated)}</strong><small>Total earnings generated from eligible paid lead sales.</small></article>
+      <article className="transferable"><span>READY TO TRANSFER</span><strong>{money(transferable)}</strong><small>Non-Auto-Invest earnings you can request to your saved Bank Account or UPI.</small></article>
+      <article><span>TRANSFER RESERVED</span><strong>{money(reserved)}</strong><small>Generated funds reserved against pending transfer requests.</small></article>
     </div>
 
     <div className="investor-transfer-history">
