@@ -1,5 +1,10 @@
 BEGIN;
 
+-- The legacy investment balance is still used by the ad-allocation ledger
+-- migration below. Ensure fresh databases have the column before backfilling.
+ALTER TABLE investments
+  ADD COLUMN IF NOT EXISTS amount_in_ads NUMERIC(14,2) NOT NULL DEFAULT 0;
+
 -- This ledger migration must also be safe on a fresh database. Older databases
 -- already have this table; IF NOT EXISTS keeps the migration backwards-compatible.
 CREATE TABLE IF NOT EXISTS investment_ad_spends (
