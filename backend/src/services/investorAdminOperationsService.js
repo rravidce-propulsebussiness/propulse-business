@@ -122,9 +122,11 @@ async function payout({ investmentId, adminId, transferReference, proofUrl, forc
       const maturityDays=configuredCycle===null?Number(rule.maturity_days??30):configuredCycle;
       const childStatus=maturityDays===0?'matured':'active';
       const child=(await client.query(`INSERT INTO investments(user_id,industry_id,state_id,city_id,amount,amount_in_ads,ad_spend_status,status,maturity_days,starts_at,matures_at,reinvestment_enabled,parent_investment_id) VALUES($1,$2,$3,$4,$5,0,'unallocated',$6,$7,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP+make_interval(days=>$7),FALSE,$8) RETURNING *`,[Number(inv.user_id),Number(inv.industry_id),Number(inv.state_id),inv.city_id?Number(inv.city_id):null,payoutAmount,childStatus,maturityDays,inv.id])).rows[0];
+      const childAllocation=(await client.query(`INSERT INTO investment_ad_allocations(investment_id,amount,status,created_by) VALUES($1,$2,'allocated',$3) RETURNING id,amount,status`,[Number(child.id),payoutAmount,Number(adminId)])).rows[0];
+      await client.query(`UPDATE investments SET amount_in_ads=$1,ad_spend_status='allocated',updated_at=CURRENT_TIMESTAMP WHERE id=$2`,[payoutAmount,Number(child.id)]);
       await client.query(`UPDATE investments SET status='paid',payout_amount=$1,payout_transfer_reference=$2,payout_proof_url=$3,reinvestment_child_investment_id=$4,updated_at=CURRENT_TIMESTAMP WHERE id=$5`,[0,'REINVESTMENT-'+child.id,null,child.id,inv.id]);
       await client.query('COMMIT');
-      return { investment: {...inv,status:'paid',payout_amount:0,payout_transfer_reference:'REINVESTMENT-'+child.id,payout_proof_url:null,reinvestment_child_investment_id:child.id}, reinvestment: child, payout_amount:payoutAmount, transferred_to_investor:0 };
+      return { investment: {...inv,status:'paid',payout_amount:0,payout_transfer_reference:'REINVESTMENT-'+child.id,payout_proof_url:null,reinvestment_child_investment_id:child.id}, reinvestment: {...child,amount_in_ads:payoutAmount,ad_spend_status:'allocated',reinvestment_allocation_id:Number(childAllocation.id)}, payout_amount:payoutAmount, transferred_to_investor:0 };
     }
     if (!String(transferReference || '').trim()) throw Object.assign(new Error('Transfer reference is required'), { code:'TRANSFER_REFERENCE_REQUIRED' });
     if (!String(proofUrl || '').trim()) throw Object.assign(new Error('Transfer proof is required'), { code:'TRANSFER_PROOF_REQUIRED' });
