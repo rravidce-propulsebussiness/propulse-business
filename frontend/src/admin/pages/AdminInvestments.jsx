@@ -33,26 +33,21 @@ function InvestorModalActions() {
       @media(max-width:720px){.investor-history-modal .investor-history-summary{grid-template-columns:repeat(2,minmax(0,1fr))!important}.investor-history-modal .investor-history-actions{padding:10px 14px;flex-wrap:wrap}.investor-history-modal .investor-history-actions .action-status{width:100%;margin-right:0}}
     `
     document.head.appendChild(style)
-
     let observer
     let busy = false
-
     const getInvestor = async email => {
       const params = new URLSearchParams({ search: email || '', status: 'all', industryId: '' })
       const dashboard = await apiRequest(`/admin/commercial/investment-dashboard?${params}`)
       const investors = dashboard?.investors || []
       return investors.find(item => String(item.email || item.user_email || '').toLowerCase() === String(email || '').toLowerCase()) || investors[0] || null
     }
-
     const parseMoney = value => {
       const parsed = Number(String(value || '').replace(/[^0-9.-]/g, ''))
       return Number.isFinite(parsed) ? parsed : 0
     }
-
     const loadPayoutAccount = async userId => {
       try { return await apiRequest(`/investments/admin/investor/${userId}/payout-account`) } catch { return null }
     }
-
     const injectActions = async modal => {
       if (!modal || modal.querySelector('.investor-history-actions') || busy) return
       const headEmail = modal.querySelector('.investor-history-head p')?.textContent?.split(' · ')[0]?.trim() || ''
@@ -61,7 +56,6 @@ function InvestorModalActions() {
       try {
         const investor = await getInvestor(headEmail)
         if (!investor || modal.querySelector('.investor-history-actions')) return
-
         const records = Array.isArray(investor.cycles) ? investor.cycles.filter(x => x.status !== 'cancelled') : []
         const totalFunding = records.reduce((sum, x) => sum + Number(x.amount || 0), 0)
         const adSpent = records.reduce((sum, x) => sum + Number(x.ad_spent || 0), 0)
@@ -80,7 +74,6 @@ function InvestorModalActions() {
           const ref = String(x.payout_transfer_reference || '').trim().toUpperCase()
           return sum + (!Boolean(x.reinvestment_enabled) && !ref.startsWith('REINVESTMENT-') && x.status !== 'paid' ? Number(x.payable_now || 0) : 0)
         }, 0)
-
         const adSummary = summaryCards[2]
         if (adSummary) {
           const value = adSummary.querySelector('strong')
@@ -88,7 +81,6 @@ function InvestorModalActions() {
           if (value) value.textContent = money(availableForAds)
           if (note) note.textContent = reinvestmentEnabled ? 'Current balance available for ads' : 'Current ad allocation remaining'
         }
-
         const amountCard = document.createElement('article')
         amountCard.className = 'history-summary-card blue'
         amountCard.innerHTML = `<span>AD SPENT</span><strong>${money(adSpent)}</strong><small>Total amount actually spent on advertising</small>`
@@ -97,55 +89,38 @@ function InvestorModalActions() {
           amountCard.setAttribute('data-ad-spent','true')
           summary.insertBefore(amountCard, summaryCards[2] || null)
         }
-
         const footer = document.createElement('div')
         footer.className = 'investor-history-actions'
         footer.innerHTML = `<span class="action-status">${reinvestmentEnabled ? 'Current balance' : 'Ad balance'} <strong>${money(availableForAds)}</strong> · Transferable <strong>${money(bankTransfer)}</strong></span><button type="button" class="spend-action">Spend on Ads</button><button type="button" class="transfer-action" ${bankTransfer <= 0 ? 'disabled' : ''}>Transfer to Account</button>`
         modal.appendChild(footer)
-
-        footer.querySelector('.spend-action').addEventListener('click', () => {
-          setActionState({ type: 'spend', investor, availableForAds, transferable: bankTransfer, payoutAccount: null })
-        })
-
+        footer.querySelector('.spend-action').addEventListener('click', () => setActionState({ type: 'spend', investor, availableForAds, transferable: bankTransfer, payoutAccount: null }))
         footer.querySelector('.transfer-action').addEventListener('click', async () => {
           if (bankTransfer <= 0) return
           const payoutAccount = await loadPayoutAccount(investor.user_id)
           setActionState({ type: 'transfer', investor, availableForAds, transferable: bankTransfer, payoutAccount })
         })
-      } finally {
-        busy = false
-      }
+      } finally { busy = false }
     }
-
     const scan = () => {
       const modal = document.querySelector('.investor-history-modal')
       if (modal && !modal.querySelector('.investor-history-actions')) injectActions(modal)
     }
-
     observer = new MutationObserver(scan)
     observer.observe(document.body, { childList: true, subtree: true })
     scan()
-
-    return () => {
-      observer?.disconnect()
-      style.remove()
-    }
+    return () => { observer?.disconnect(); style.remove() }
   }, [])
 
   const closeActions = () => setActionState({ type: null, investor: null, availableForAds: 0, transferable: 0, payoutAccount: null })
 
   const handleSpend = async payload => {
     const investor = actionState.investor
-    const records = Array.isArray(investor?.cycles) ? investor.cycles.filter(x => x.status !== 'cancelled') : []
-    const investmentId = records.find(x => Number(x.ad_remaining || 0) > 0)?.id || records.find(x => x.status === 'active' || x.status === 'matured')?.id
-    if (!investmentId) return
+    if (!investor?.user_id || Number(payload?.amount || 0) <= 0) return
     try {
-      await apiRequest(`/investments/admin/${investmentId}/ad-spend`, { method: 'POST', body: JSON.stringify(payload) })
+      await apiRequest(`/investments/admin/investor/${investor.user_id}/managed-ad-spend`, { method: 'POST', body: JSON.stringify(payload) })
       closeActions()
       window.location.reload()
-    } catch (error) {
-      window.alert(error?.message || 'Unable to record ad spend.')
-    }
+    } catch (error) { window.alert(error?.message || 'Unable to record ad spend.') }
   }
 
   const handleTransfer = async payload => {
@@ -155,17 +130,10 @@ function InvestorModalActions() {
       await apiRequest(`/investments/admin/${investor.user_id}/payout`, { method: 'POST', body: JSON.stringify({ amount: actionState.transferable, ...payload, forceTransfer: true }) })
       closeActions()
       window.location.reload()
-    } catch (error) {
-      window.alert(error?.message || 'Unable to transfer investor money.')
-    }
+    } catch (error) { window.alert(error?.message || 'Unable to transfer investor money.') }
   }
 
-  return <>
-    <AdminInvestmentsWallet />
-    <InvestorActionModals spendOpen={actionState.type === 'spend'} transferOpen={actionState.type === 'transfer'} availableForAds={actionState.availableForAds} transferable={actionState.transferable} payoutAccount={actionState.payoutAccount} onCloseSpend={closeActions} onCloseTransfer={closeActions} onSpend={handleSpend} onTransfer={handleTransfer} />
-  </>
+  return <><AdminInvestmentsWallet /><InvestorActionModals spendOpen={actionState.type === 'spend'} transferOpen={actionState.type === 'transfer'} availableForAds={actionState.availableForAds} transferable={actionState.transferable} payoutAccount={actionState.payoutAccount} onCloseSpend={closeActions} onCloseTransfer={closeActions} onSpend={handleSpend} onTransfer={handleTransfer} /></>
 }
 
-export default function AdminInvestments() {
-  return <InvestorModalActions />
-}
+export default function AdminInvestments() { return <InvestorModalActions /> }
