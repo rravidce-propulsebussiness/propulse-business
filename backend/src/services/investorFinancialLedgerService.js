@@ -11,8 +11,8 @@ async function lockInvestorFinancials(client, userId) {
 /**
  * Single financial source of truth for an investor.
  * Principal is never transferable. Auto-invest earnings first replenish the
- * advertising pool; only the portion not consumed by cumulative ad spend is
- * eligible for withdrawal.
+ * advertising pool; only the portion not consumed by cumulative ad spend and
+ * not already paid/reserved can be withdrawn.
  */
 async function getInvestorFinancialSummary(userId, client = pool) {
   const result = await client.query(`
@@ -38,10 +38,22 @@ async function getInvestorFinancialSummary(userId, client = pool) {
   // Capital is consumed first by advertising. Only spend beyond principal
   // can consume Auto-Invest earnings.
   const autoInvestEarningsConsumed = Math.min(autoInvestEarnings, Math.max(0, adSpent - capital));
-  const autoInvestEarningsWithdrawable = Math.max(0, autoInvestEarnings - autoInvestEarningsConsumed);
-  const nonAutoEarningsWithdrawable = Math.max(0, nonAutoEarnings - settledNonAuto);
+  const autoInvestEarningsRemaining = Math.max(0, autoInvestEarnings - autoInvestEarningsConsumed);
+  const nonAutoEarningsRemaining = Math.max(0, nonAutoEarnings - settledNonAuto);
+
+  // Payouts are allocated against non-auto earnings first. Any amount beyond
+  // that pool is therefore an auto-invest withdrawal and must also leave the
+  // advertising pool. Pending reservations use the same deterministic order.
+  const paidFromNonAuto = Math.min(payoutTransferred, nonAutoEarningsRemaining);
+  const autoInvestEarningsPaid = Math.min(autoInvestEarningsRemaining, Math.max(0, payoutTransferred - paidFromNonAuto));
+  const nonAutoAfterPaid = Math.max(0, nonAutoEarningsRemaining - paidFromNonAuto);
+  const pendingFromNonAuto = Math.min(payoutReserved, nonAutoAfterPaid);
+  const autoInvestEarningsReserved = Math.min(autoInvestEarningsRemaining - autoInvestEarningsPaid, Math.max(0, payoutReserved - pendingFromNonAuto));
+
+  const autoInvestEarningsWithdrawable = Math.max(0, autoInvestEarningsRemaining - autoInvestEarningsPaid - autoInvestEarningsReserved);
+  const nonAutoEarningsWithdrawable = Math.max(0, nonAutoAfterPaid - pendingFromNonAuto);
   const grossWithdrawableEarnings = Math.max(0, autoInvestEarningsWithdrawable + nonAutoEarningsWithdrawable);
-  const withdrawableEarnings = Math.max(0, grossWithdrawableEarnings - payoutTransferred - payoutReserved);
+  const withdrawableEarnings = grossWithdrawableEarnings;
 
   return {
     contributed_capital: capital,
@@ -50,13 +62,15 @@ async function getInvestorFinancialSummary(userId, client = pool) {
     auto_invest_earnings: autoInvestEarnings,
     auto_invest_earnings_consumed: autoInvestEarningsConsumed,
     auto_invest_earnings_withdrawable: autoInvestEarningsWithdrawable,
+    auto_invest_earnings_paid: autoInvestEarningsPaid,
+    auto_invest_earnings_reserved: autoInvestEarningsReserved,
     non_auto_earnings: nonAutoEarnings,
     non_auto_earnings_withdrawable: nonAutoEarningsWithdrawable,
     settled_non_auto_earnings: settledNonAuto,
     withdrawable_earnings: withdrawableEarnings,
     payout_transferred: payoutTransferred,
     payout_reserved: payoutReserved,
-    available_for_ads: Math.max(0, capital + autoInvestEarnings - adSpent),
+    available_for_ads: Math.max(0, capital + autoInvestEarnings - adSpent - autoInvestEarningsPaid - autoInvestEarningsReserved),
     transferable: withdrawableEarnings,
   };
 }
