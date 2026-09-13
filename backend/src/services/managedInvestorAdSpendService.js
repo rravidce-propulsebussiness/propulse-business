@@ -1,18 +1,15 @@
 const pool = require('../config/database');
+const ledger = require('./investorFinancialLedgerService');
 
 async function getAvailableForAds(client, userId) {
-  const row = (await client.query(`
-    SELECT
-      COALESCE((SELECT SUM(i.amount) FROM investments i WHERE i.user_id=$1 AND i.status IN ('active','matured')),0) AS capital,
-      COALESCE((SELECT SUM(s.amount) FROM investment_ad_spends s JOIN investments i ON i.id=s.investment_id WHERE i.user_id=$1 AND i.status <> 'cancelled'),0) AS spent,
-      COALESCE((SELECT SUM(a.allocated_amount) FROM investment_revenue_allocations a JOIN investments i ON i.id=a.investment_id WHERE i.user_id=$1 AND i.status <> 'cancelled' AND COALESCE(i.reinvestment_enabled,FALSE)=TRUE AND COALESCE(i.payout_transfer_reference,'') NOT ILIKE 'REINVESTMENT-%'),0) AS reinvestable_earnings,
-      COALESCE((SELECT SUM(i.payout_amount) FROM investments i WHERE i.user_id=$1 AND i.status='paid' AND COALESCE(i.payout_transfer_reference,'') NOT ILIKE 'REINVESTMENT-%'),0) AS paid_earnings
-  `, [Number(userId)])).rows[0];
-  const capital = Number(row.capital || 0);
-  const spent = Number(row.spent || 0);
-  const reinvestable = Number(row.reinvestable_earnings || 0);
-  const paid = Number(row.paid_earnings || 0);
-  return { capital, spent, reinvestable, paid, available: Math.max(0, capital + reinvestable - spent - paid) };
+  const summary = await ledger.getInvestorFinancialSummary(userId, client);
+  return {
+    capital: summary.capital,
+    spent: summary.ad_spent,
+    reinvestable: summary.auto_invest_earnings,
+    paid: summary.settled_non_auto_earnings,
+    available: summary.available_for_ads,
+  };
 }
 
 async function recordSpend({ userId, amount, platform, campaign, spendDate, reference, notes, adminId }) {
