@@ -2,6 +2,8 @@ const pool = require('../config/database');
 const payoutAccounts = require('./investorPayoutAccountService');
 const ledger = require('./investorFinancialLedgerService');
 
+const MAX_PROOF_DATA_URL_LENGTH = 8 * 1024 * 1024;
+
 async function getBalance(userId, client = pool) {
   const summary = await ledger.getInvestorFinancialSummary(userId, client);
   return { generated: summary.auto_invest_earnings + summary.non_auto_earnings, settled_investment_earnings: summary.settled_non_auto_earnings, transferred: summary.payout_transferred, reserved: summary.payout_reserved, available: summary.transferable };
@@ -79,7 +81,26 @@ async function adminList({ status='all', search='' }) {
   const values=[]; const where=[];
   if (status !== 'all') { values.push(status); where.push(`r.status=$${values.length}`); }
   if (String(search).trim()) { values.push(`%${String(search).trim()}%`); where.push(`(u.name ILIKE $${values.length} OR u.email ILIKE $${values.length})`); }
-  return (await pool.query(`SELECT r.*,u.name AS user_name,u.email AS user_email FROM investor_payout_requests r JOIN users u ON u.id=r.user_id ${where.length?'WHERE '+where.join(' AND '):''} ORDER BY r.requested_at DESC,r.id DESC`, values)).rows.map(row => ({...row,amount:Number(row.amount||0)}));
+  const rows = (await pool.query(`SELECT r.id,r.user_id,r.amount,r.status,r.transfer_reference,r.notes,r.requested_at,r.processed_at,r.processed_by,r.payout_method,u.name AS user_name,u.email AS user_email FROM investor_payout_requests r JOIN users u ON u.id=r.user_id ${where.length?'WHERE '+where.join(' AND '):''} ORDER BY r.requested_at DESC,r.id DESC`, values)).rows;
+  return rows.map(row => ({...row,amount:Number(row.amount||0)}));
+}
+
+async function getAdminProof(requestId) {
+  const row = (await pool.query(`SELECT id,status,proof_url,transfer_reference,processed_at FROM investor_payout_requests WHERE id=$1`, [Number(requestId)])).rows[0];
+  if (!row) throw Object.assign(new Error('Transfer request not found'), {code:'NOT_FOUND'});
+  return { id:Number(row.id), status:row.status, proof_url:row.proof_url || null, transfer_reference:row.transfer_reference || null, processed_at:row.processed_at };
+}
+
+function validateProof(proofUrl) {
+  const value = String(proofUrl || '').trim();
+  if (!value) throw Object.assign(new Error('Transfer proof is required'), {code:'TRANSFER_PROOF_REQUIRED'});
+  if (value.length > MAX_PROOF_DATA_URL_LENGTH) throw Object.assign(new Error('Transfer proof image is too large. Please use an image under 6 MB.'), {code:'TRANSFER_PROOF_TOO_LARGE'});
+  if (value.startsWith('data:')) {
+    if (!/^data:image\/(png|jpeg|jpg|webp);base64,[A-Za-z0-9+/=]+$/i.test(value)) throw Object.assign(new Error('Transfer proof must be a PNG, JPG, or WebP screenshot.'), {code:'INVALID_TRANSFER_PROOF'});
+  } else if (!/^https?:\/\//i.test(value)) {
+    throw Object.assign(new Error('Transfer proof must be an image screenshot or a valid proof URL.'), {code:'INVALID_TRANSFER_PROOF'});
+  }
+  return value;
 }
 
 async function adminProcess({ requestId, adminId, action, transferReference, proofUrl, notes }) {
@@ -98,16 +119,16 @@ async function adminProcess({ requestId, adminId, action, transferReference, pro
     }
     const reference=String(transferReference||'').trim();
     if(!reference) throw Object.assign(new Error('Transfer reference / UTR is required'),{code:'TRANSFER_REFERENCE_REQUIRED'});
-    if(!proofUrl) throw Object.assign(new Error('Transfer proof is required'),{code:'TRANSFER_PROOF_REQUIRED'});
+    const proof = validateProof(proofUrl);
     const duplicate=(await client.query(`SELECT id FROM investor_payout_requests WHERE transfer_reference=$1 AND id<>$2 UNION ALL SELECT id FROM investments WHERE payout_transfer_reference=$1 LIMIT 1`,[reference,Number(requestId)])).rows[0];
     if(duplicate) throw Object.assign(new Error('This transfer reference has already been used'),{code:'DUPLICATE_REFERENCE'});
     const summary = await ledger.getInvestorFinancialSummary(row.user_id, client);
     const earningsAvailableBeforePending = Math.max(0, summary.transferable + summary.payout_reserved);
     if(Number(row.amount)>earningsAvailableBeforePending + 1e-6) throw Object.assign(new Error('Withdrawal amount is no longer available.'),{code:'INSUFFICIENT_GENERATED_FUNDS'});
-    const updated=(await client.query(`UPDATE investor_payout_requests SET status='paid',transfer_reference=$1,proof_url=$2,notes=COALESCE($3,notes),processed_at=CURRENT_TIMESTAMP,processed_by=$4,updated_at=CURRENT_TIMESTAMP WHERE id=$5 RETURNING *`,[reference,proofUrl,String(notes||'').trim()||null,Number(adminId),Number(requestId)])).rows[0];
+    const updated=(await client.query(`UPDATE investor_payout_requests SET status='paid',transfer_reference=$1,proof_url=$2,notes=COALESCE($3,notes),processed_at=CURRENT_TIMESTAMP,processed_by=$4,updated_at=CURRENT_TIMESTAMP WHERE id=$5 RETURNING *`,[reference,proof,String(notes||'').trim()||null,Number(adminId),Number(requestId)])).rows[0];
     await client.query('COMMIT'); return {...updated,amount:Number(updated.amount)};
   } catch(error) { await client.query('ROLLBACK'); throw error; }
   finally { client.release(); }
 }
 
-module.exports={getInvestorFunds,requestTransfer,adminList,adminProcess};
+module.exports={getInvestorFunds,requestTransfer,adminList,getAdminProof,adminProcess};
