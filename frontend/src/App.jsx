@@ -34,6 +34,7 @@ import AdminLeads from './admin/pages/AdminLeads';
 import AdminLeadPricing from './admin/pages/AdminLeadPricing';
 import AdminMembershipPlansConfig from './admin/pages/AdminMembershipPlansConfig';
 import AdminInvestments from './admin/pages/AdminInvestments';
+import AdminInvestorWithdrawals from './admin/pages/AdminInvestorWithdrawals';
 import AdminRoute from './admin/components/AdminRoute';
 import AdminLayout from './admin/components/AdminLayout';
 import { authRequest, getToken, getUser } from './utils/auth';
@@ -132,6 +133,7 @@ function App() {
       <Route path="/admin/leads" element={<AdminLeads />} /><Route path="/admin/lead-pricing" element={<AdminLeadPricing />} />
       <Route path="/admin/membership-plans" element={<AdminMembershipPlansConfig />} /><Route path="/admin/memberships" element={<AdminMembershipPlansConfig />} />
       <Route path="/admin/investments" element={<AdminInvestments />} />
+      <Route path="/admin/investor-withdrawals" element={<AdminInvestorWithdrawals />} />
     </Route></Route>
     <Route path="*" element={<Navigate to="/" replace />} />
   </Routes></BrowserRouter>;
