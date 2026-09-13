@@ -49,7 +49,7 @@ function InvestorModalActions() {
 
         const footer = document.createElement('div')
         footer.className = 'investor-history-actions'
-        footer.innerHTML = `<span class="action-status">Ad balance <strong>${money(adBalance)}</strong> · Bank transfer <strong>${money(bankTransfer)}</strong></span><button type="button" class="spend-action">Spend on Ads</button><button type="button" class="transfer-action" ${bankTransfer <= 0 ? 'disabled' : ''}>Transfer to Bank</button>`
+        footer.innerHTML = `<span class="action-status">Ad balance <strong>${money(adBalance)}</strong> · Transferable <strong>${money(bankTransfer)}</strong></span><button type="button" class="spend-action">Spend on Ads</button><button type="button" class="transfer-action" ${bankTransfer <= 0 ? 'disabled' : ''}>Transfer to Account</button>`
         modal.appendChild(footer)
 
         footer.querySelector('.spend-action').addEventListener('click', async () => {
@@ -76,11 +76,15 @@ function InvestorModalActions() {
 
         footer.querySelector('.transfer-action').addEventListener('click', async () => {
           if (bankTransfer <= 0) return
-          const reference = window.prompt(`Enter bank transfer UTR/reference for ${money(bankTransfer)}:`)
-          if (!reference) return
-          const proofUrl = window.prompt('Enter transfer proof URL (optional):') || ''
+          const reference = window.prompt(`Enter bank/UPI transfer UTR or reference for ${money(bankTransfer)}:`)
+          if (!reference || !reference.trim()) return
+          const proofUrl = window.prompt('Enter transfer proof URL (required):')
+          if (!proofUrl || !proofUrl.trim()) {
+            window.alert('Transfer proof URL is required before completing the transfer.')
+            return
+          }
           try {
-            await apiRequest(`/investments/admin/${investor.user_id}/payout`, { method: 'POST', body: JSON.stringify({ amount: bankTransfer, transferReference: reference.trim(), proofUrl, forceTransfer: true }) })
+            await apiRequest(`/investments/admin/${investor.user_id}/payout`, { method: 'POST', body: JSON.stringify({ amount: bankTransfer, transferReference: reference.trim(), proofUrl: proofUrl.trim(), forceTransfer: true }) })
             window.location.reload()
           } catch (error) {
             window.alert(error?.message || 'Unable to transfer investor money.')
