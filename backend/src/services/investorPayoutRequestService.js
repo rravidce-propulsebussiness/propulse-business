@@ -1,96 +1,43 @@
 const pool = require('../config/database');
 const payoutAccounts = require('./investorPayoutAccountService');
+const ledger = require('./investorFinancialLedgerService');
 
 async function getBalance(userId, client = pool) {
-  const result = await client.query(`
-    SELECT
-      COALESCE((SELECT SUM(a.allocated_amount) FROM investment_revenue_allocations a JOIN investments i ON i.id=a.investment_id WHERE i.user_id=$1 AND i.status <> 'cancelled'),0) AS generated,
-      COALESCE((SELECT SUM(i.payout_amount) FROM investments i WHERE i.user_id=$1 AND i.status='paid'),0) AS settled_investment_earnings,
-      COALESCE((SELECT SUM(r.amount) FROM investor_payout_requests r WHERE r.user_id=$1 AND r.status='paid'),0) AS transferred,
-      COALESCE((SELECT SUM(r.amount) FROM investor_payout_requests r WHERE r.user_id=$1 AND r.status='pending'),0) AS reserved
-  `, [Number(userId)]);
-  const row = result.rows[0];
-  const generated = Number(row.generated || 0);
-  const settledInvestmentEarnings = Number(row.settled_investment_earnings || 0);
-  const transferred = Number(row.transferred || 0);
-  const reserved = Number(row.reserved || 0);
+  const summary = await ledger.getInvestorFinancialSummary(userId, client);
   return {
-    generated,
-    settled_investment_earnings: settledInvestmentEarnings,
-    transferred,
-    reserved,
-    available: Math.max(0, generated - settledInvestmentEarnings - transferred - reserved),
+    generated: summary.auto_invest_earnings + summary.non_auto_earnings,
+    settled_investment_earnings: summary.settled_non_auto_earnings,
+    transferred: summary.payout_transferred,
+    reserved: summary.payout_reserved,
+    available: Math.max(0, summary.auto_invest_earnings + summary.non_auto_earnings - summary.settled_non_auto_earnings - summary.payout_transferred - summary.payout_reserved),
   };
 }
 
 async function getTransferableBalance(userId, client = pool) {
-  const result = await client.query(`
-    SELECT
-      COALESCE((SELECT SUM(a.allocated_amount)
-        FROM investment_revenue_allocations a
-        JOIN investments i ON i.id=a.investment_id
-        WHERE i.user_id=$1 AND i.status <> 'cancelled' AND COALESCE(i.reinvestment_enabled,FALSE)=FALSE),0) AS generated,
-      COALESCE((SELECT SUM(i.payout_amount)
-        FROM investments i
-        WHERE i.user_id=$1 AND i.status='paid' AND COALESCE(i.reinvestment_enabled,FALSE)=FALSE),0) AS settled,
-      COALESCE((SELECT SUM(r.amount)
-        FROM investor_payout_requests r
-        WHERE r.user_id=$1 AND r.status='paid'),0) AS transferred,
-      COALESCE((SELECT SUM(r.amount)
-        FROM investor_payout_requests r
-        WHERE r.user_id=$1 AND r.status='pending'),0) AS reserved
-  `, [Number(userId)]);
-  const row = result.rows[0];
-  const generated = Number(row.generated || 0);
-  const settled = Number(row.settled || 0);
-  const transferred = Number(row.transferred || 0);
-  const reserved = Number(row.reserved || 0);
-  return Math.max(0, generated - settled - transferred - reserved);
+  const summary = await ledger.getInvestorFinancialSummary(userId, client);
+  return summary.transferable;
 }
 
 async function getInvestorFunds(userId) {
-  const balance = await getBalance(userId);
-  const transferable = await getTransferableBalance(userId);
-  const account = await payoutAccounts.get(userId);
-  const [requests, investments] = await Promise.all([
+  const [summary, account, requests, investments] = await Promise.all([
+    ledger.getInvestorFinancialSummary(userId),
+    payoutAccounts.get(userId),
     pool.query(`SELECT id, amount, status, transfer_reference, notes, requested_at, processed_at, payout_method, payout_account_snapshot FROM investor_payout_requests WHERE user_id=$1 ORDER BY requested_at DESC,id DESC`, [Number(userId)]),
-    pool.query(`
-      SELECT
-        COALESCE(SUM(amount) FILTER (WHERE status <> 'cancelled' AND parent_investment_id IS NULL),0) AS total_invested,
-        COALESCE(SUM(amount) FILTER (WHERE status <> 'cancelled'),0) AS total_funding,
-        COALESCE((SELECT SUM(s.amount)
-          FROM investment_ad_spends s
-          JOIN investments spent_investment ON spent_investment.id=s.investment_id
-          WHERE spent_investment.user_id=$1 AND spent_investment.status <> 'cancelled'),0) AS total_ad_spent,
-        COALESCE((SELECT SUM(a.allocated_amount)
-          FROM investment_revenue_allocations a
-          JOIN investments auto_i ON auto_i.id=a.investment_id
-          WHERE auto_i.user_id=$1
-            AND auto_i.status NOT IN ('paid','cancelled')
-            AND COALESCE(auto_i.reinvestment_enabled,FALSE)=TRUE),0) AS auto_invest_earnings
-      FROM investments
-      WHERE user_id=$1 AND status <> 'cancelled'
-    `, [Number(userId)]),
+    pool.query(`SELECT COALESCE(SUM(amount) FILTER (WHERE status <> 'cancelled' AND parent_investment_id IS NULL),0) AS total_invested FROM investments WHERE user_id=$1 AND status <> 'cancelled'`, [Number(userId)]),
   ]);
-  const row = investments.rows[0] || {};
-  const totalInvested = Number(row.total_invested || 0);
-  const totalFunding = Number(row.total_funding || 0);
-  const totalAdSpent = Number(row.total_ad_spent || 0);
-  const autoInvestEarnings = Number(row.auto_invest_earnings || 0);
-  // Match Admin Investments: unspent investment funding plus eligible
-  // auto-invest earnings that are waiting to be routed back into ads.
-  const availableForAds = Math.max(0, totalFunding - totalAdSpent + autoInvestEarnings);
-  const unallocatedInvestmentCapital = Math.max(0, totalInvested - totalAdSpent);
+  const totalInvested = Number(investments.rows[0]?.total_invested || 0);
   return {
-    ...balance,
-    transferable,
+    generated: Number((summary.auto_invest_earnings + summary.non_auto_earnings).toFixed(2)),
+    transferable: Number(summary.transferable.toFixed(2)),
     payout_account: account,
-    total_invested: totalInvested,
-    amount_in_ads: Number(availableForAds.toFixed(2)),
-    available_for_ads: Number(availableForAds.toFixed(2)),
-    total_ad_spent: Number(totalAdSpent.toFixed(2)),
-    auto_invest_earnings: Number(autoInvestEarnings.toFixed(2)),
-    unallocated_investment_capital: Number(unallocatedInvestmentCapital.toFixed(2)),
+    total_invested: Number(totalInvested.toFixed(2)),
+    available_for_ads: Number(summary.available_for_ads.toFixed(2)),
+    amount_in_ads: Number(summary.available_for_ads.toFixed(2)),
+    total_ad_spent: Number(summary.ad_spent.toFixed(2)),
+    auto_invest_earnings: Number(summary.auto_invest_earnings.toFixed(2)),
+    non_auto_earnings: Number(summary.non_auto_earnings.toFixed(2)),
+    unallocated_investment_capital: Number(Math.max(0, summary.capital - summary.ad_spent).toFixed(2)),
+    reserved: Number(summary.payout_reserved.toFixed(2)),
     requests: requests.rows.map(row => ({...row, amount:Number(row.amount || 0)})),
   };
 }
