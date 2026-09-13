@@ -9,7 +9,10 @@ function InvestorModalActions() {
     const style = document.createElement('style')
     style.textContent = `
       .investor-table-row .more-btn,.investor-table-row .action-menu-wrap{display:none!important}
-      .investor-history-modal .investor-history-actions{display:flex;align-items:center;justify-content:flex-end;gap:10px;padding:14px 26px;border-top:1px solid #e4ebf3;background:#fff;flex:0 0 auto;position:relative;z-index:10;box-sizing:border-box}
+      .investor-table-head > span:last-child,.investor-table-row > .row-actions{position:sticky;right:0;z-index:5;background:#fff;box-shadow:-10px 0 16px rgba(20,67,120,.07)}
+      .investor-table-head > span:last-child{background:#f4f8fc;z-index:6}
+      .investor-table-row > .row-actions{padding-left:8px}
+      .investor-history-modal .investor-history-actions{display:flex;align-items:center;justify-content:flex-end;gap:10px;padding:12px 26px;border-top:1px solid #e4ebf3;background:#fff;flex:0 0 auto;position:relative;z-index:10;box-sizing:border-box}
       .investor-history-modal .investor-history-actions button{height:42px;padding:0 18px;border:1px solid #d6e3ef;border-radius:9px;background:#fff;color:#17457f;font-size:11px;font-weight:900;cursor:pointer}
       .investor-history-modal .investor-history-actions button:hover{background:#f4f8fd}
       .investor-history-modal .investor-history-actions .spend-action{border-color:#d5e5f5;background:#eef6ff;color:#126fca}
@@ -17,7 +20,13 @@ function InvestorModalActions() {
       .investor-history-modal .investor-history-actions button:disabled{opacity:.5;cursor:not-allowed}
       .investor-history-modal .investor-history-actions .action-status{margin-right:auto;color:#7890aa;font-size:9px}
       .investor-history-modal .investor-history-actions .action-status strong{color:#17457f}
-      .admin-modal-backdrop:has(.investor-history-modal) + .admin-modal-backdrop{display:none!important}
+      .investor-history-modal .investor-history-summary{grid-template-columns:repeat(6,minmax(0,1fr))!important;padding-top:13px;padding-bottom:13px;gap:8px}
+      .investor-history-modal .history-summary-card{padding:11px 12px}
+      .investor-history-modal .history-summary-card strong{font-size:17px;margin-top:5px}
+      .investor-history-modal .history-summary-card small{font-size:7px}
+      .investor-history-modal .investor-history-body{padding-bottom:66px}
+      @media(max-width:1100px){.investor-history-modal .investor-history-summary{grid-template-columns:repeat(3,minmax(0,1fr))!important}}
+      @media(max-width:720px){.investor-history-modal .investor-history-summary{grid-template-columns:repeat(2,minmax(0,1fr))!important}.investor-history-modal .investor-history-actions{padding:10px 14px;flex-wrap:wrap}.investor-history-modal .investor-history-actions .action-status{width:100%;margin-right:0}}
     `
     document.head.appendChild(style)
 
@@ -56,13 +65,10 @@ function InvestorModalActions() {
         const reinvestmentEnabled = records.some(x => Boolean(x.reinvestment_enabled))
         const allocatedAdBalance = Math.max(0, totalFunding - adSpent) + autoInvestEarnings
 
-        // The transaction-history component is the source of truth for the
-        // investor's running balance. When reinvestment is enabled, that full
-        // current balance can be routed back into advertising. Do not use the
-        // original allocation remainder in that case.
         const summaryCards = modal.querySelectorAll('.history-summary-card')
         const currentBalanceCard = summaryCards[0]
         const currentBalance = parseMoney(currentBalanceCard?.querySelector('strong')?.textContent)
+        const amountInAds = Math.max(0, totalFunding - adSpent)
         const availableForAds = reinvestmentEnabled ? currentBalance : allocatedAdBalance
         const bankTransfer = records.reduce((sum, x) => {
           const ref = String(x.payout_transfer_reference || '').trim().toUpperCase()
@@ -75,6 +81,15 @@ function InvestorModalActions() {
           const note = adSummary.querySelector('small')
           if (value) value.textContent = money(availableForAds)
           if (note) note.textContent = reinvestmentEnabled ? 'Current balance available for ads' : 'Current ad allocation remaining'
+        }
+
+        const amountCard = document.createElement('article')
+        amountCard.className = 'history-summary-card blue'
+        amountCard.innerHTML = `<span>AMOUNT IN ADS</span><strong>${money(amountInAds)}</strong><small>Capital currently remaining in the ad allocation</small>`
+        const summary = modal.querySelector('.investor-history-summary')
+        if (summary && !summary.querySelector('[data-amount-in-ads]')) {
+          amountCard.setAttribute('data-amount-in-ads','true')
+          summary.insertBefore(amountCard, summaryCards[2] || null)
         }
 
         const footer = document.createElement('div')
@@ -97,7 +112,7 @@ function InvestorModalActions() {
             return
           }
           try {
-            await apiRequest(`/investments/admin/${investor.user_id}/ad-spend`, { method: 'POST', body: JSON.stringify({ investmentId, amount }) })
+            await apiRequest(`/investments/admin/${investmentId}/ad-spend`, { method: 'POST', body: JSON.stringify({ amount }) })
             window.location.reload()
           } catch (error) {
             window.alert(error?.message || 'Unable to record ad spend.')
