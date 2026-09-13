@@ -11,11 +11,24 @@ async function getTransferableBalance(userId, client = pool) {
   return ledger.getInvestorFinancialSummary(userId, client).then(summary => summary.transferable);
 }
 
+function sanitizeInvestorRequest(row) {
+  return {
+    id: Number(row.id),
+    amount: Number(row.amount || 0),
+    status: row.status,
+    transfer_reference: row.transfer_reference || null,
+    notes: row.notes || null,
+    requested_at: row.requested_at,
+    processed_at: row.processed_at,
+    payout_method: row.payout_method || null,
+  };
+}
+
 async function getInvestorFunds(userId) {
   const [summary, account, requests, investments] = await Promise.all([
     ledger.getInvestorFinancialSummary(userId),
     payoutAccounts.get(userId),
-    pool.query(`SELECT id, amount, status, transfer_reference, notes, requested_at, processed_at, payout_method, payout_account_snapshot FROM investor_payout_requests WHERE user_id=$1 ORDER BY requested_at DESC,id DESC`, [Number(userId)]),
+    pool.query(`SELECT id, amount, status, transfer_reference, notes, requested_at, processed_at, payout_method FROM investor_payout_requests WHERE user_id=$1 ORDER BY requested_at DESC,id DESC`, [Number(userId)]),
     pool.query(`SELECT COALESCE(SUM(amount) FILTER (WHERE status <> 'cancelled' AND parent_investment_id IS NULL),0) AS total_invested FROM investments WHERE user_id=$1 AND status <> 'cancelled'`, [Number(userId)]),
   ]);
   const totalInvested = Number(investments.rows[0]?.total_invested || 0);
@@ -37,7 +50,7 @@ async function getInvestorFunds(userId) {
     payout_transferred: Number(summary.payout_transferred.toFixed(2)),
     unallocated_investment_capital: Number(Math.max(0, summary.capital - summary.ad_spent).toFixed(2)),
     reserved: Number(summary.payout_reserved.toFixed(2)),
-    requests: requests.rows.map(row => ({...row, amount:Number(row.amount || 0)})),
+    requests: requests.rows.map(sanitizeInvestorRequest),
   };
 }
 
@@ -66,7 +79,7 @@ async function adminList({ status='all', search='' }) {
   const values=[]; const where=[];
   if (status !== 'all') { values.push(status); where.push(`r.status=$${values.length}`); }
   if (String(search).trim()) { values.push(`%${String(search).trim()}%`); where.push(`(u.name ILIKE $${values.length} OR u.email ILIKE $${values.length})`); }
-  return (await pool.query(`SELECT r.*,u.name AS user_name,u.email AS user_email FROM investor_payout_requests r JOIN users u ON u.id=r.user_id ${where.length?'WHERE '+where.join(' AND '):''} ORDER BY r.requested_at DESC,r.id DESC`, values)).rows.map(row=>({...row,amount:Number(row.amount||0)}));
+  return (await pool.query(`SELECT r.*,u.name AS user_name,u.email AS user_email FROM investor_payout_requests r JOIN users u ON u.id=r.user_id ${where.length?'WHERE '+where.join(' AND '):''} ORDER BY r.requested_at DESC,r.id DESC`, values)).rows.map(row => ({...row,amount:Number(row.amount||0)}));
 }
 
 async function adminProcess({ requestId, adminId, action, transferReference, proofUrl, notes }) {
