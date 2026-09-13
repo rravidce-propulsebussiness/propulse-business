@@ -2,95 +2,30 @@ const pool = require('../config/database');
 const payoutAccounts = require('./investorPayoutAccountService');
 const ledger = require('./investorFinancialLedgerService');
 
-async function getBalance(userId, client = pool) {
-  const summary = await ledger.getInvestorFinancialSummary(userId, client);
-  return {
-    generated: summary.auto_invest_earnings + summary.non_auto_earnings,
-    settled_investment_earnings: summary.settled_non_auto_earnings,
-    transferred: summary.payout_transferred,
-    reserved: summary.payout_reserved,
-    available: Math.max(0, summary.auto_invest_earnings + summary.non_auto_earnings - summary.settled_non_auto_earnings - summary.payout_transferred - summary.payout_reserved),
-  };
+async function getBalance(userId,client=pool){const summary=await ledger.getInvestorFinancialSummary(userId,client);return{generated:summary.auto_invest_earnings+summary.non_auto_earnings,settled_investment_earnings:summary.settled_non_auto_earnings,transferred:summary.payout_transferred,reserved:summary.payout_reserved,available:summary.withdrawable_earnings};}
+async function getTransferableBalance(userId,client=pool){return(await ledger.getInvestorFinancialSummary(userId,client)).transferable;}
+
+async function getInvestorFunds(userId){
+ const [summary,account,requests,investments]=await Promise.all([ledger.getInvestorFinancialSummary(userId),payoutAccounts.get(userId),pool.query(`SELECT id,amount,status,transfer_reference,notes,requested_at,processed_at,payout_method,payout_account_snapshot FROM investor_payout_requests WHERE user_id=$1 ORDER BY requested_at DESC,id DESC`,[Number(userId)]),pool.query(`SELECT COALESCE(SUM(amount) FILTER (WHERE status<>'cancelled' AND parent_investment_id IS NULL),0) AS total_invested FROM investments WHERE user_id=$1 AND status<>'cancelled'`,[Number(userId)])]);
+ const totalInvested=Number(investments.rows[0]?.total_invested||0),pending=Number(summary.payout_reserved||0);
+ return{generated:Number((summary.auto_invest_earnings+summary.non_auto_earnings).toFixed(2)),transferable:Number(summary.transferable.toFixed(2)),withdrawable_earnings:Number(summary.withdrawable_earnings.toFixed(2)),auto_invest_earnings:Number(summary.auto_invest_earnings.toFixed(2)),auto_invest_earnings_consumed:Number(summary.auto_invest_earnings_consumed.toFixed(2)),auto_invest_earnings_withdrawable:Number(summary.auto_invest_earnings_withdrawable.toFixed(2)),non_auto_earnings:Number(summary.non_auto_earnings.toFixed(2)),non_auto_earnings_withdrawable:Number(summary.non_auto_earnings_withdrawable.toFixed(2)),payout_reserved:Number(pending.toFixed(2)),payout_transferred:Number(summary.payout_transferred.toFixed(2)),payout_account:account,total_invested:Number(totalInvested.toFixed(2)),available_for_ads:Number(summary.available_for_ads.toFixed(2)),amount_in_ads:Number(summary.available_for_ads.toFixed(2)),total_ad_spent:Number(summary.ad_spent.toFixed(2)),ad_spent:Number(summary.ad_spent.toFixed(2)),unallocated_investment_capital:Number(Math.max(0,summary.capital-summary.ad_spent).toFixed(2)),pending_withdrawal:pending,requests:requests.rows.map(row=>({...row,amount:Number(row.amount||0)}))};
 }
 
-async function getTransferableBalance(userId, client = pool) {
-  const summary = await ledger.getInvestorFinancialSummary(userId, client);
-  return summary.transferable;
+async function requestTransfer({userId,amount,notes}){
+ const requestedAmount=Number(amount);if(!Number.isFinite(requestedAmount)||requestedAmount<=0)throw Object.assign(new Error('Withdrawal amount must be greater than zero'),{code:'INVALID_AMOUNT'});
+ const client=await pool.connect();
+ try{
+  await client.query('BEGIN');
+  await client.query('SELECT id FROM investments WHERE user_id=$1 FOR UPDATE',[Number(userId)]);
+  const account=await payoutAccounts.getInternal(client,userId);if(!account)throw Object.assign(new Error('Add your Bank Account or UPI before withdrawing.'),{code:'PAYOUT_ACCOUNT_REQUIRED'});
+  const available=await getTransferableBalance(userId,client);if(requestedAmount>available)throw Object.assign(new Error('Withdrawal amount exceeds your available earnings.'),{code:'INSUFFICIENT_GENERATED_FUNDS'});
+  const snapshot=account.method==='upi'?{method:'upi',upi_id:account.upi_id}:{method:'bank',account_holder_name:account.account_holder_name,account_number:account.account_number,ifsc_code:account.ifsc_code,bank_name:account.bank_name};
+  const result=await client.query(`INSERT INTO investor_payout_requests(user_id,amount,notes,payout_account_id,payout_method,payout_account_snapshot) VALUES($1,$2,$3,$4,$5,$6) RETURNING *`,[Number(userId),requestedAmount,String(notes||'').trim()||null,account.id,account.method,snapshot]);
+  await client.query('COMMIT');return{...result.rows[0],amount:Number(result.rows[0].amount)};
+ }catch(error){await client.query('ROLLBACK');throw error}finally{client.release()}
 }
 
-async function getInvestorFunds(userId) {
-  const [summary, account, requests, investments] = await Promise.all([
-    ledger.getInvestorFinancialSummary(userId),
-    payoutAccounts.get(userId),
-    pool.query(`SELECT id, amount, status, transfer_reference, notes, requested_at, processed_at, payout_method, payout_account_snapshot FROM investor_payout_requests WHERE user_id=$1 ORDER BY requested_at DESC,id DESC`, [Number(userId)]),
-    pool.query(`SELECT COALESCE(SUM(amount) FILTER (WHERE status <> 'cancelled' AND parent_investment_id IS NULL),0) AS total_invested FROM investments WHERE user_id=$1 AND status <> 'cancelled'`, [Number(userId)]),
-  ]);
-  const totalInvested = Number(investments.rows[0]?.total_invested || 0);
-  return {
-    generated: Number((summary.auto_invest_earnings + summary.non_auto_earnings).toFixed(2)),
-    transferable: Number(summary.transferable.toFixed(2)),
-    payout_account: account,
-    total_invested: Number(totalInvested.toFixed(2)),
-    available_for_ads: Number(summary.available_for_ads.toFixed(2)),
-    amount_in_ads: Number(summary.available_for_ads.toFixed(2)),
-    total_ad_spent: Number(summary.ad_spent.toFixed(2)),
-    auto_invest_earnings: Number(summary.auto_invest_earnings.toFixed(2)),
-    non_auto_earnings: Number(summary.non_auto_earnings.toFixed(2)),
-    unallocated_investment_capital: Number(Math.max(0, summary.capital - summary.ad_spent).toFixed(2)),
-    reserved: Number(summary.payout_reserved.toFixed(2)),
-    requests: requests.rows.map(row => ({...row, amount:Number(row.amount || 0)})),
-  };
-}
+async function adminList({status='all',search=''}){const values=[],where=[];if(status!=='all'){values.push(status);where.push(`r.status=$${values.length}`)}if(String(search).trim()){values.push(`%${String(search).trim()}%`);where.push(`(u.name ILIKE $${values.length} OR u.email ILIKE $${values.length})`)}return(await pool.query(`SELECT r.*,u.name AS user_name,u.email AS user_email FROM investor_payout_requests r JOIN users u ON u.id=r.user_id ${where.length?'WHERE '+where.join(' AND '):''} ORDER BY r.requested_at DESC,r.id DESC`,values)).rows.map(row=>({...row,amount:Number(row.amount||0)}));}
 
-async function requestTransfer({ userId, amount, notes }) {
-  const requestedAmount = Number(amount);
-  if (!Number.isFinite(requestedAmount) || requestedAmount <= 0) throw Object.assign(new Error('Transfer amount must be greater than zero'), {code:'INVALID_AMOUNT'});
-  const client = await pool.connect();
-  try {
-    await client.query('BEGIN');
-    const account = await payoutAccounts.getInternal(client, userId);
-    if (!account) throw Object.assign(new Error('Add a Bank Account or UPI before requesting a transfer'), {code:'PAYOUT_ACCOUNT_REQUIRED'});
-    const available = await getTransferableBalance(userId, client);
-    if (requestedAmount > available) throw Object.assign(new Error(`Transfer amount exceeds available non-auto-invest earnings (${available.toFixed(2)})`), {code:'INSUFFICIENT_GENERATED_FUNDS'});
-    const snapshot = account.method === 'upi'
-      ? { method:'upi', upi_id:account.upi_id }
-      : { method:'bank', account_holder_name:account.account_holder_name, account_number:account.account_number, ifsc_code:account.ifsc_code, bank_name:account.bank_name };
-    const result = await client.query(`INSERT INTO investor_payout_requests(user_id,amount,notes,payout_account_id,payout_method,payout_account_snapshot) VALUES($1,$2,$3,$4,$5,$6) RETURNING *`, [Number(userId), requestedAmount, String(notes || '').trim() || null, account.id, account.method, snapshot]);
-    await client.query('COMMIT');
-    return {...result.rows[0], amount:Number(result.rows[0].amount)};
-  } catch(error) { await client.query('ROLLBACK'); throw error; }
-  finally { client.release(); }
-}
-
-async function adminList({ status='all', search='' }) {
-  const values=[]; const where=[];
-  if (status !== 'all') { values.push(status); where.push(`r.status=$${values.length}`); }
-  if (String(search).trim()) { values.push(`%${String(search).trim()}%`); where.push(`(u.name ILIKE $${values.length} OR u.email ILIKE $${values.length})`); }
-  return (await pool.query(`SELECT r.*,u.name AS user_name,u.email AS user_email FROM investor_payout_requests r JOIN users u ON u.id=r.user_id ${where.length?'WHERE '+where.join(' AND '):''} ORDER BY r.requested_at DESC,r.id DESC`, values)).rows.map(row=>({...row,amount:Number(row.amount||0)}));
-}
-
-async function adminProcess({ requestId, adminId, action, transferReference, proofUrl, notes }) {
-  const client = await pool.connect();
-  try {
-    await client.query('BEGIN');
-    const row = (await client.query('SELECT * FROM investor_payout_requests WHERE id=$1 FOR UPDATE',[Number(requestId)])).rows[0];
-    if (!row) throw Object.assign(new Error('Transfer request not found'),{code:'NOT_FOUND'});
-    if (row.status !== 'pending') throw Object.assign(new Error('Transfer request has already been processed'),{code:'ALREADY_PROCESSED'});
-    if (action === 'reject') {
-      const updated=(await client.query(`UPDATE investor_payout_requests SET status='rejected',notes=COALESCE($1,notes),processed_at=CURRENT_TIMESTAMP,processed_by=$2,updated_at=CURRENT_TIMESTAMP WHERE id=$3 RETURNING *`,[String(notes||'').trim()||null,Number(adminId),Number(requestId)])).rows[0];
-      await client.query('COMMIT'); return {...updated,amount:Number(updated.amount)};
-    }
-    const reference=String(transferReference||'').trim();
-    if(!reference) throw Object.assign(new Error('Transfer reference / UTR is required'),{code:'TRANSFER_REFERENCE_REQUIRED'});
-    if(!proofUrl) throw Object.assign(new Error('Transfer proof is required'),{code:'TRANSFER_PROOF_REQUIRED'});
-    const duplicate=(await client.query('SELECT id FROM investor_payout_requests WHERE transfer_reference=$1 AND id<>$2 LIMIT 1',[reference,Number(requestId)])).rows[0];
-    if(duplicate) throw Object.assign(new Error('This transfer reference has already been used'),{code:'DUPLICATE_REFERENCE'});
-    const available=await getTransferableBalance(row.user_id,client);
-    if(Number(row.amount)>available) throw Object.assign(new Error('Non-auto-invest earnings are no longer available for this request'),{code:'INSUFFICIENT_GENERATED_FUNDS'});
-    const updated=(await client.query(`UPDATE investor_payout_requests SET status='paid',transfer_reference=$1,proof_url=$2,notes=COALESCE($3,notes),processed_at=CURRENT_TIMESTAMP,processed_by=$4,updated_at=CURRENT_TIMESTAMP WHERE id=$5 RETURNING *`,[reference,proofUrl,String(notes||'').trim()||null,Number(adminId),Number(requestId)])).rows[0];
-    await client.query('COMMIT'); return {...updated,amount:Number(updated.amount)};
-  } catch(error) { await client.query('ROLLBACK'); throw error; }
-  finally { client.release(); }
-}
-
+async function adminProcess({requestId,adminId,action,transferReference,proofUrl,notes}){const client=await pool.connect();try{await client.query('BEGIN');const row=(await client.query('SELECT * FROM investor_payout_requests WHERE id=$1 FOR UPDATE',[Number(requestId)])).rows[0];if(!row)throw Object.assign(new Error('Transfer request not found'),{code:'NOT_FOUND'});if(row.status!=='pending')throw Object.assign(new Error('Transfer request has already been processed'),{code:'ALREADY_PROCESSED'});if(action==='reject'){const updated=(await client.query(`UPDATE investor_payout_requests SET status='rejected',notes=COALESCE($1,notes),processed_at=CURRENT_TIMESTAMP,processed_by=$2,updated_at=CURRENT_TIMESTAMP WHERE id=$3 RETURNING *`,[String(notes||'').trim()||null,Number(adminId),Number(requestId)])).rows[0];await client.query('COMMIT');return{...updated,amount:Number(updated.amount)}}const reference=String(transferReference||'').trim();if(!reference)throw Object.assign(new Error('Transfer reference / UTR is required'),{code:'TRANSFER_REFERENCE_REQUIRED'});if(!proofUrl)throw Object.assign(new Error('Transfer proof is required'),{code:'TRANSFER_PROOF_REQUIRED'});const duplicate=(await client.query('SELECT id FROM investor_payout_requests WHERE transfer_reference=$1 AND id<>$2 LIMIT 1',[reference,Number(requestId)])).rows[0];if(duplicate)throw Object.assign(new Error('This transfer reference has already been used'),{code:'DUPLICATE_REFERENCE'});await client.query('SELECT id FROM investments WHERE user_id=$1 FOR UPDATE',[Number(row.user_id)]);const available=await getTransferableBalance(row.user_id,client);if(Number(row.amount)>available)throw Object.assign(new Error('Withdrawal amount exceeds your available earnings.'),{code:'INSUFFICIENT_GENERATED_FUNDS'});const updated=(await client.query(`UPDATE investor_payout_requests SET status='paid',transfer_reference=$1,proof_url=$2,notes=COALESCE($3,notes),processed_at=CURRENT_TIMESTAMP,processed_by=$4,updated_at=CURRENT_TIMESTAMP WHERE id=$5 RETURNING *`,[reference,proofUrl,String(notes||'').trim()||null,Number(adminId),Number(requestId)])).rows[0];await client.query('COMMIT');return{...updated,amount:Number(updated.amount)}}catch(error){await client.query('ROLLBACK');throw error}finally{client.release()}}
 module.exports={getInvestorFunds,requestTransfer,adminList,adminProcess};
