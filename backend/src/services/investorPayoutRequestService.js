@@ -83,6 +83,8 @@ async function adminList({ status='all', search='' }) {
 }
 
 async function adminProcess({ requestId, adminId, action, transferReference, proofUrl, notes }) {
+  const normalizedAction = String(action || '').trim().toLowerCase();
+  if (!['paid', 'reject'].includes(normalizedAction)) throw Object.assign(new Error('Invalid withdrawal action.'), {code:'INVALID_ACTION'});
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
@@ -90,7 +92,7 @@ async function adminProcess({ requestId, adminId, action, transferReference, pro
     if (!row) throw Object.assign(new Error('Transfer request not found'),{code:'NOT_FOUND'});
     if (row.status !== 'pending') throw Object.assign(new Error('Transfer request has already been processed'),{code:'ALREADY_PROCESSED'});
     await ledger.lockInvestorFinancials(client, row.user_id);
-    if (action === 'reject') {
+    if (normalizedAction === 'reject') {
       const updated=(await client.query(`UPDATE investor_payout_requests SET status='rejected',notes=COALESCE($1,notes),processed_at=CURRENT_TIMESTAMP,processed_by=$2,updated_at=CURRENT_TIMESTAMP WHERE id=$3 RETURNING *`,[String(notes||'').trim()||null,Number(adminId),Number(requestId)])).rows[0];
       await client.query('COMMIT'); return {...updated,amount:Number(updated.amount)};
     }
