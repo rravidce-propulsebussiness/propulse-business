@@ -4,13 +4,7 @@ const ledger = require('./investorFinancialLedgerService');
 
 async function getBalance(userId, client = pool) {
   const summary = await ledger.getInvestorFinancialSummary(userId, client);
-  return {
-    generated: summary.auto_invest_earnings + summary.non_auto_earnings,
-    settled_investment_earnings: summary.settled_non_auto_earnings,
-    transferred: summary.payout_transferred,
-    reserved: summary.payout_reserved,
-    available: summary.transferable,
-  };
+  return { generated: summary.auto_invest_earnings + summary.non_auto_earnings, settled_investment_earnings: summary.settled_non_auto_earnings, transferred: summary.payout_transferred, reserved: summary.payout_reserved, available: summary.transferable };
 }
 
 async function getTransferableBalance(userId, client = pool) {
@@ -41,7 +35,6 @@ async function getInvestorFunds(userId) {
     ad_spent: Number(summary.ad_spent.toFixed(2)),
     payout_reserved: Number(summary.payout_reserved.toFixed(2)),
     payout_transferred: Number(summary.payout_transferred.toFixed(2)),
-    // Kept only as a compatibility alias; new UI uses available_for_ads.
     amount_in_ads: Number(summary.available_for_ads.toFixed(2)),
     unallocated_investment_capital: Number(Math.max(0, summary.capital - summary.ad_spent).toFixed(2)),
     reserved: Number(summary.payout_reserved.toFixed(2)),
@@ -92,13 +85,13 @@ async function adminProcess({ requestId, adminId, action, transferReference, pro
     const reference=String(transferReference||'').trim();
     if(!reference) throw Object.assign(new Error('Transfer reference / UTR is required'),{code:'TRANSFER_REFERENCE_REQUIRED'});
     if(!proofUrl) throw Object.assign(new Error('Transfer proof is required'),{code:'TRANSFER_PROOF_REQUIRED'});
-    const duplicate=(await client.query('SELECT id FROM investor_payout_requests WHERE transfer_reference=$1 AND id<>$2 LIMIT 1',[reference,Number(requestId)])).rows[0];
+    const duplicate=(await client.query(`SELECT id FROM investor_payout_requests WHERE transfer_reference=$1 AND id<>$2 UNION ALL SELECT id FROM investments WHERE payout_transfer_reference=$1 LIMIT 1`,[reference,Number(requestId)])).rows[0];
     if(duplicate) throw Object.assign(new Error('This transfer reference has already been used'),{code:'DUPLICATE_REFERENCE'});
-    // The request itself is currently included in payout_reserved. Add it back
-    // for this validation because it is about to leave pending state.
+    // The request is part of payout_reserved. Validate against the earnings
+    // remaining before all pending reservations, after any intervening ad spend.
     const summary = await ledger.getInvestorFinancialSummary(row.user_id, client);
-    const availableForThisRequest = summary.transferable + Number(row.amount || 0);
-    if(Number(row.amount)>availableForThisRequest + 1e-6) throw Object.assign(new Error('Withdrawal amount is no longer available.'),{code:'INSUFFICIENT_GENERATED_FUNDS'});
+    const earningsAvailableBeforePending = Math.max(0, summary.transferable + summary.payout_reserved);
+    if(Number(row.amount)>earningsAvailableBeforePending + 1e-6) throw Object.assign(new Error('Withdrawal amount is no longer available.'),{code:'INSUFFICIENT_GENERATED_FUNDS'});
     const updated=(await client.query(`UPDATE investor_payout_requests SET status='paid',transfer_reference=$1,proof_url=$2,notes=COALESCE($3,notes),processed_at=CURRENT_TIMESTAMP,processed_by=$4,updated_at=CURRENT_TIMESTAMP WHERE id=$5 RETURNING *`,[reference,proofUrl,String(notes||'').trim()||null,Number(adminId),Number(requestId)])).rows[0];
     await client.query('COMMIT'); return {...updated,amount:Number(updated.amount)};
   } catch(error) { await client.query('ROLLBACK'); throw error; }
