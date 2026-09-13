@@ -39,11 +39,10 @@ function InvestorModalActions() {
       const params = new URLSearchParams({ search: email || '', status: 'all', industryId: '' })
       const dashboard = await apiRequest(`/admin/commercial/investment-dashboard?${params}`)
       const investors = dashboard?.investors || []
-      return investors.find(item => String(item.email || item.user_email || '').toLowerCase() === String(email || '').toLowerCase()) || investors[0] || null
-    }
-    const parseMoney = value => {
-      const parsed = Number(String(value || '').replace(/[^0-9.-]/g, ''))
-      return Number.isFinite(parsed) ? parsed : 0
+      const investor = investors.find(item => String(item.email || item.user_email || '').toLowerCase() === String(email || '').toLowerCase()) || investors[0] || null
+      if (!investor?.user_id) return null
+      const funds = await apiRequest(`/investments/admin/investor/${investor.user_id}/funds`)
+      return { ...investor, funds }
     }
     const loadPayoutAccount = async userId => {
       try { return await apiRequest(`/investments/admin/investor/${userId}/payout-account`) } catch { return null }
@@ -56,34 +55,27 @@ function InvestorModalActions() {
       try {
         const investor = await getInvestor(headEmail)
         if (!investor || modal.querySelector('.investor-history-actions')) return
-        const records = Array.isArray(investor.cycles) ? investor.cycles.filter(x => x.status !== 'cancelled') : []
-        const totalFunding = records.reduce((sum, x) => sum + Number(x.amount || 0), 0)
-        const adSpent = records.reduce((sum, x) => sum + Number(x.ad_spent || 0), 0)
-        const autoInvestEarnings = records.reduce((sum, x) => {
-          const ref = String(x.payout_transfer_reference || '').trim().toUpperCase()
-          const alreadyReinvested = ref.startsWith('REINVESTMENT-')
-          return sum + (Boolean(x.reinvestment_enabled) && !alreadyReinvested && x.status !== 'paid' ? Number(x.allocated_revenue || 0) : 0)
-        }, 0)
-        const reinvestmentEnabled = records.some(x => Boolean(x.reinvestment_enabled))
-        const allocatedAdBalance = Math.max(0, totalFunding - adSpent) + autoInvestEarnings
+        const funds = investor.funds || {}
+        const availableForAds = Math.max(0, Number(funds.available_for_ads ?? 0))
+        const transferable = Math.max(0, Number(funds.transferable ?? funds.withdrawable_earnings ?? 0))
+        const adSpent = Math.max(0, Number(funds.ad_spent ?? funds.total_ad_spent ?? 0))
+        const generatedEarnings = Math.max(0, Number(funds.generated ?? funds.auto_invest_earnings ?? 0) + Number(funds.non_auto_earnings ?? 0))
+        const totalInvestment = Math.max(0, Number(funds.total_invested ?? funds.contributed_capital ?? 0))
         const summaryCards = modal.querySelectorAll('.history-summary-card')
         const currentBalanceCard = summaryCards[0]
-        const currentBalance = parseMoney(currentBalanceCard?.querySelector('strong')?.textContent)
-        const availableForAds = reinvestmentEnabled ? currentBalance : allocatedAdBalance
-        const bankTransfer = records.reduce((sum, x) => {
-          const ref = String(x.payout_transfer_reference || '').trim().toUpperCase()
-          return sum + (!Boolean(x.reinvestment_enabled) && !ref.startsWith('REINVESTMENT-') && x.status !== 'paid' ? Number(x.payable_now || 0) : 0)
-        }, 0)
+        const currentBalance = currentBalanceCard?.querySelector('strong')
+        if (currentBalance) currentBalance.textContent = money(totalInvestment + generatedEarnings - adSpent)
+        const totalCard = summaryCards[1]
+        if (totalCard) { const value = totalCard.querySelector('strong'); const note = totalCard.querySelector('small'); if (value) value.textContent = money(totalInvestment); if (note) note.textContent = 'Investor-contributed capital; principal is never withdrawable' }
         const adSummary = summaryCards[2]
-        if (adSummary) {
-          const value = adSummary.querySelector('strong')
-          const note = adSummary.querySelector('small')
-          if (value) value.textContent = money(availableForAds)
-          if (note) note.textContent = reinvestmentEnabled ? 'Current balance available for ads' : 'Current ad allocation remaining'
-        }
+        if (adSummary) { const value = adSummary.querySelector('strong'); const note = adSummary.querySelector('small'); if (value) value.textContent = money(availableForAds); if (note) note.textContent = 'Authoritative ledger balance available for advertising' }
+        const transferSummary = summaryCards[3]
+        if (transferSummary) { const value = transferSummary.querySelector('strong'); const note = transferSummary.querySelector('small'); if (value) value.textContent = money(transferable); if (note) note.textContent = 'Eligible earnings available for transfer; pending requests are reserved' }
+        const revenueSummary = summaryCards[4]
+        if (revenueSummary) { const value = revenueSummary.querySelector('strong'); const note = revenueSummary.querySelector('small'); if (value) value.textContent = money(generatedEarnings); if (note) note.textContent = 'Generated investor earnings before transfer reservations' }
         const amountCard = document.createElement('article')
         amountCard.className = 'history-summary-card blue'
-        amountCard.innerHTML = `<span>AD SPENT</span><strong>${money(adSpent)}</strong><small>Total amount actually spent on advertising</small>`
+        amountCard.innerHTML = `<span>AD SPENT</span><strong>${money(adSpent)}</strong><small>Cumulative advertising spend from the investor ledger</small>`
         const summary = modal.querySelector('.investor-history-summary')
         if (summary && !summary.querySelector('[data-ad-spent]')) {
           amountCard.setAttribute('data-ad-spent','true')
@@ -91,13 +83,13 @@ function InvestorModalActions() {
         }
         const footer = document.createElement('div')
         footer.className = 'investor-history-actions'
-        footer.innerHTML = `<span class="action-status">${reinvestmentEnabled ? 'Current balance' : 'Ad balance'} <strong>${money(availableForAds)}</strong> · Transferable <strong>${money(bankTransfer)}</strong></span><button type="button" class="spend-action">Spend on Ads</button><button type="button" class="transfer-action" ${bankTransfer <= 0 ? 'disabled' : ''}>Transfer to Account</button>`
+        footer.innerHTML = `<span class="action-status">Available for Ads <strong>${money(availableForAds)}</strong> · Ready to Transfer <strong>${money(transferable)}</strong></span><button type="button" class="spend-action" ${availableForAds <= 0 ? 'disabled' : ''}>Spend on Ads</button><button type="button" class="transfer-action" ${transferable <= 0 ? 'disabled' : ''}>Transfer to Account</button>`
         modal.appendChild(footer)
-        footer.querySelector('.spend-action').addEventListener('click', () => setActionState({ type: 'spend', investor, availableForAds, transferable: bankTransfer, payoutAccount: null }))
+        footer.querySelector('.spend-action').addEventListener('click', () => setActionState({ type: 'spend', investor, availableForAds, transferable, payoutAccount: null }))
         footer.querySelector('.transfer-action').addEventListener('click', async () => {
-          if (bankTransfer <= 0) return
+          if (transferable <= 0) return
           const payoutAccount = await loadPayoutAccount(investor.user_id)
-          setActionState({ type: 'transfer', investor, availableForAds, transferable: bankTransfer, payoutAccount })
+          setActionState({ type: 'transfer', investor, availableForAds, transferable, payoutAccount })
         })
       } finally { busy = false }
     }
