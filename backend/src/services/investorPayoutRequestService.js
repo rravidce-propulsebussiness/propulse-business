@@ -35,7 +35,6 @@ async function getInvestorFunds(userId) {
     ad_spent: Number(summary.ad_spent.toFixed(2)),
     payout_reserved: Number(summary.payout_reserved.toFixed(2)),
     payout_transferred: Number(summary.payout_transferred.toFixed(2)),
-    amount_in_ads: Number(summary.available_for_ads.toFixed(2)),
     unallocated_investment_capital: Number(Math.max(0, summary.capital - summary.ad_spent).toFixed(2)),
     reserved: Number(summary.payout_reserved.toFixed(2)),
     requests: requests.rows.map(row => ({...row, amount:Number(row.amount || 0)})),
@@ -87,8 +86,6 @@ async function adminProcess({ requestId, adminId, action, transferReference, pro
     if(!proofUrl) throw Object.assign(new Error('Transfer proof is required'),{code:'TRANSFER_PROOF_REQUIRED'});
     const duplicate=(await client.query(`SELECT id FROM investor_payout_requests WHERE transfer_reference=$1 AND id<>$2 UNION ALL SELECT id FROM investments WHERE payout_transfer_reference=$1 LIMIT 1`,[reference,Number(requestId)])).rows[0];
     if(duplicate) throw Object.assign(new Error('This transfer reference has already been used'),{code:'DUPLICATE_REFERENCE'});
-    // The request is part of payout_reserved. Validate against the earnings
-    // remaining before all pending reservations, after any intervening ad spend.
     const summary = await ledger.getInvestorFinancialSummary(row.user_id, client);
     const earningsAvailableBeforePending = Math.max(0, summary.transferable + summary.payout_reserved);
     if(Number(row.amount)>earningsAvailableBeforePending + 1e-6) throw Object.assign(new Error('Withdrawal amount is no longer available.'),{code:'INSUFFICIENT_GENERATED_FUNDS'});
