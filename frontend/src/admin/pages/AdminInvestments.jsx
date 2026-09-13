@@ -41,11 +41,20 @@ function InvestorModalActions() {
         if (!investor || modal.querySelector('.investor-history-actions')) return
 
         const records = Array.isArray(investor.cycles) ? investor.cycles.filter(x => x.status !== 'cancelled') : []
-        const adBalance = Math.max(0, records.reduce((sum, x) => sum + Number(x.amount || 0), 0) - records.reduce((sum, x) => sum + Number(x.ad_spent || 0), 0))
+        const adBalance = Math.max(0, records.reduce((sum, x) => sum + Number(x.ad_remaining || 0), 0))
         const bankTransfer = records.reduce((sum, x) => {
           const ref = String(x.payout_transfer_reference || '').trim().toUpperCase()
           return sum + (!Boolean(x.reinvestment_enabled) && !ref.startsWith('REINVESTMENT-') && x.status !== 'paid' ? Number(x.payable_now || 0) : 0)
         }, 0)
+
+        const summaryCards = modal.querySelectorAll('.history-summary-card')
+        const adSummary = summaryCards[2]
+        if (adSummary) {
+          const value = adSummary.querySelector('strong')
+          const note = adSummary.querySelector('small')
+          if (value) value.textContent = money(adBalance)
+          if (note) note.textContent = 'Current ad allocation remaining'
+        }
 
         const footer = document.createElement('div')
         footer.className = 'investor-history-actions'
@@ -61,7 +70,7 @@ function InvestorModalActions() {
             window.alert(`Ad spend cannot exceed the available ad balance of ${money(adBalance)}.`)
             return
           }
-          const investmentId = records.find(x => Number(x.ad_available || 0) > 0)?.id || records.find(x => x.status === 'active' || x.status === 'matured')?.id
+          const investmentId = records.find(x => Number(x.ad_remaining || 0) > 0)?.id || records.find(x => x.status === 'active' || x.status === 'matured')?.id
           if (!investmentId) {
             window.alert('No eligible investment is available for ad spending.')
             return
