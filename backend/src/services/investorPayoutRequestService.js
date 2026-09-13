@@ -57,6 +57,7 @@ async function getInvestorFunds(userId) {
     pool.query(`
       SELECT
         COALESCE(SUM(amount) FILTER (WHERE status <> 'cancelled' AND parent_investment_id IS NULL),0) AS total_invested,
+        COALESCE(SUM(amount) FILTER (WHERE status <> 'cancelled'),0) AS total_funding,
         COALESCE(SUM(amount_in_ads) FILTER (WHERE status IN ('active','matured')),0) AS amount_in_ads,
         COALESCE((
           SELECT SUM(s.amount)
@@ -69,17 +70,24 @@ async function getInvestorFunds(userId) {
       WHERE user_id=$1 AND status <> 'cancelled'
     `, [Number(userId)]),
   ]);
-  const totalInvested = Number(investments.rows[0]?.total_invested || 0);
-  const amountInAds = Number(investments.rows[0]?.amount_in_ads || 0);
-  const totalAdSpent = Number(investments.rows[0]?.total_ad_spent || 0);
+  const row = investments.rows[0] || {};
+  const totalInvested = Number(row.total_invested || 0);
+  const totalFunding = Number(row.total_funding || 0);
+  const totalAdSpent = Number(row.total_ad_spent || 0);
+  // Match the Admin Investments "Available for Ads" definition:
+  // all non-cancelled investment funding (including reinvestment child funding)
+  // minus actual advertising spend. This is the spendable advertising balance.
+  const availableForAds = Math.max(0, totalFunding - totalAdSpent);
+  const amountInAds = availableForAds;
   const unallocatedInvestmentCapital = Math.max(0, totalInvested - totalAdSpent - amountInAds);
   return {
     ...balance,
     transferable,
     payout_account: account,
     total_invested: totalInvested,
-    amount_in_ads: amountInAds,
-    total_ad_spent: totalAdSpent,
+    amount_in_ads: Number(amountInAds.toFixed(2)),
+    available_for_ads: Number(availableForAds.toFixed(2)),
+    total_ad_spent: Number(totalAdSpent.toFixed(2)),
     unallocated_investment_capital: Number(unallocatedInvestmentCapital.toFixed(2)),
     requests: requests.rows.map(row => ({...row, amount:Number(row.amount || 0)})),
   };
