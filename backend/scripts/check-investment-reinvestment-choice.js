@@ -21,7 +21,7 @@ assert(!reinvestBlock.includes('walletService'), 'Reinvestment must not use wall
 assert(!reinvestBlock.includes('wallet_transactions'), 'Reinvestment must not debit the wallet');
 assert(controller.includes('service.reinvestInvestment'), 'Controller must expose investor reinvestment');
 assert(routes.includes("router.post('/:id/reinvest'"), 'Investor reinvestment route is missing');
-assert(/checked=\{reinvestmentEnabled\}/.test(investmentUi), 'Investor UI must bind the reinvestment choice');
+assert(investmentUi.includes('checked={autoInvest}'), 'Investor UI must bind the reinvestment choice');
 assert(/reinvestmentEnabled\s*:\s*autoInvest/.test(investmentUi) || investmentUi.includes('reinvestmentEnabled })'), 'Investor checkout must persist the reinvestment choice');
 assert(investmentUi.includes('Direct owner transfer'), 'Investor UI must describe owner-account payout flow');
 
