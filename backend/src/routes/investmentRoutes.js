@@ -44,6 +44,7 @@ router.get('/assigned-leads', auth, c.linkedInvestorLeads);
 router.get('/funds', auth, c.investorFunds);
 router.post('/funds/transfer-request', auth, investmentWriteLimit, c.requestInvestorTransfer);
 router.get('/admin/transfer-requests', auth, admin, c.adminInvestorTransferRequests);
+router.get('/admin/transfer-requests/:id/proof', auth, admin, c.adminInvestorTransferProof);
 router.post('/admin/transfer-requests/:id/process', auth, admin, adminInvestmentWriteLimit, c.adminProcessInvestorTransfer);
 router.get('/admin/investor/:userId/payout-account', auth, admin, async (req,res)=>{try{return res.json(await payoutAccounts.get(Number(req.params.userId)))}catch(e){return res.status(500).json({error:e.message||'Failed to load payout account'})}});
 router.get('/admin/investor/:userId/funds', auth, admin, async (req,res)=>{try{return res.json(await payoutRequests.getInvestorFunds(Number(req.params.userId)))}catch(e){return res.status(500).json({error:e.message||'Failed to load investor funds'})}});
