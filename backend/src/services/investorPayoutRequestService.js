@@ -58,14 +58,16 @@ async function getInvestorFunds(userId) {
       SELECT
         COALESCE(SUM(amount) FILTER (WHERE status <> 'cancelled' AND parent_investment_id IS NULL),0) AS total_invested,
         COALESCE(SUM(amount) FILTER (WHERE status <> 'cancelled'),0) AS total_funding,
-        COALESCE(SUM(amount_in_ads) FILTER (WHERE status IN ('active','matured')),0) AS amount_in_ads,
-        COALESCE((
-          SELECT SUM(s.amount)
+        COALESCE((SELECT SUM(s.amount)
           FROM investment_ad_spends s
           JOIN investments spent_investment ON spent_investment.id=s.investment_id
-          WHERE spent_investment.user_id=$1
-            AND spent_investment.status <> 'cancelled'
-        ),0) AS total_ad_spent
+          WHERE spent_investment.user_id=$1 AND spent_investment.status <> 'cancelled'),0) AS total_ad_spent,
+        COALESCE((SELECT SUM(a.allocated_amount)
+          FROM investment_revenue_allocations a
+          JOIN investments auto_i ON auto_i.id=a.investment_id
+          WHERE auto_i.user_id=$1
+            AND auto_i.status NOT IN ('paid','cancelled')
+            AND COALESCE(auto_i.reinvestment_enabled,FALSE)=TRUE),0) AS auto_invest_earnings
       FROM investments
       WHERE user_id=$1 AND status <> 'cancelled'
     `, [Number(userId)]),
@@ -74,20 +76,20 @@ async function getInvestorFunds(userId) {
   const totalInvested = Number(row.total_invested || 0);
   const totalFunding = Number(row.total_funding || 0);
   const totalAdSpent = Number(row.total_ad_spent || 0);
-  // Match the Admin Investments "Available for Ads" definition:
-  // all non-cancelled investment funding (including reinvestment child funding)
-  // minus actual advertising spend. This is the spendable advertising balance.
-  const availableForAds = Math.max(0, totalFunding - totalAdSpent);
-  const amountInAds = availableForAds;
-  const unallocatedInvestmentCapital = Math.max(0, totalInvested - totalAdSpent - amountInAds);
+  const autoInvestEarnings = Number(row.auto_invest_earnings || 0);
+  // Match Admin Investments: unspent investment funding plus eligible
+  // auto-invest earnings that are waiting to be routed back into ads.
+  const availableForAds = Math.max(0, totalFunding - totalAdSpent + autoInvestEarnings);
+  const unallocatedInvestmentCapital = Math.max(0, totalInvested - totalAdSpent);
   return {
     ...balance,
     transferable,
     payout_account: account,
     total_invested: totalInvested,
-    amount_in_ads: Number(amountInAds.toFixed(2)),
+    amount_in_ads: Number(availableForAds.toFixed(2)),
     available_for_ads: Number(availableForAds.toFixed(2)),
     total_ad_spent: Number(totalAdSpent.toFixed(2)),
+    auto_invest_earnings: Number(autoInvestEarnings.toFixed(2)),
     unallocated_investment_capital: Number(unallocatedInvestmentCapital.toFixed(2)),
     requests: requests.rows.map(row => ({...row, amount:Number(row.amount || 0)})),
   };
