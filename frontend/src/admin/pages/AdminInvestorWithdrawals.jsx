@@ -4,7 +4,7 @@ import { clearSession, getToken } from '../../utils/auth'
 import { useNavigate } from 'react-router-dom'
 import './AdminInvestorWithdrawals.css'
 
-const money = value => `₹${Number(value || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}`
+const money = value => `₹${Number(value || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })`
 const date = value => value ? new Date(value).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—'
 
 function payoutSnapshot(request) {
@@ -22,6 +22,18 @@ function destinationLabel(request) {
   return request.payout_method || 'Payout account'
 }
 
+function fileToDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(String(reader.result || ''))
+    reader.onerror = () => reject(new Error('Unable to read the screenshot.'))
+    reader.readAsDataURL(file)
+  })
+}
+
+const MAX_PROOF_FILE_BYTES = 6 * 1024 * 1024
+const PROOF_TYPES = ['image/png', 'image/jpeg', 'image/webp']
+
 export default function AdminInvestorWithdrawals() {
   const navigate = useNavigate()
   const [requests, setRequests] = useState([])
@@ -29,7 +41,8 @@ export default function AdminInvestorWithdrawals() {
   const [search, setSearch] = useState('')
   const [selected, setSelected] = useState(null)
   const [reference, setReference] = useState('')
-  const [proofUrl, setProofUrl] = useState('')
+  const [proofData, setProofData] = useState('')
+  const [existingProofUrl, setExistingProofUrl] = useState('')
   const [notes, setNotes] = useState('')
   const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState(null)
@@ -76,27 +89,65 @@ export default function AdminInvestorWithdrawals() {
     total: requests.length,
   }), [requests])
 
-  function openRequest(requestItem) {
+  async function openRequest(requestItem) {
     setSelected(requestItem)
     setReference('')
-    setProofUrl('')
+    setProofData('')
+    setExistingProofUrl('')
     setNotes('')
     setError('')
     setSuccess('')
+    try {
+      const proof = await request(`/investments/admin/transfer-requests/${requestItem.id}/proof`)
+      setExistingProofUrl(proof?.proof_url || '')
+    } catch (e) {
+      setError(e.message || 'Unable to load transfer proof.')
+    }
   }
 
   function closeRequest() {
     if (busy) return
     setSelected(null)
+    setProofData('')
+    setExistingProofUrl('')
+  }
+
+  async function handleProofFile(file) {
+    if (!file) return
+    if (!PROOF_TYPES.includes(file.type)) {
+      setError('Transfer proof must be a PNG, JPG, or WebP screenshot.')
+      return
+    }
+    if (file.size > MAX_PROOF_FILE_BYTES) {
+      setError('Transfer proof image is too large. Please use an image under 6 MB.')
+      return
+    }
+    try {
+      setError('')
+      setProofData(await fileToDataUrl(file))
+      setExistingProofUrl('')
+    } catch (e) {
+      setError(e.message || 'Unable to read the screenshot.')
+    }
+  }
+
+  function handleProofInput(event) {
+    handleProofFile(event.target.files?.[0])
+  }
+
+  function handleProofPaste(event) {
+    const imageItem = Array.from(event.clipboardData?.items || []).find(item => item.type.startsWith('image/'))
+    if (!imageItem) return
+    event.preventDefault()
+    handleProofFile(imageItem.getAsFile())
   }
 
   async function processRequest(action) {
     if (!selected || busy) return
     if (action === 'paid') {
       const transferReference = reference.trim()
-      const proof = proofUrl.trim()
       if (!transferReference) { setError('Transfer reference / UTR is required.'); return }
-      if (!proof) { setError('Transfer proof URL is required.'); return }
+      if (!proofData) { setError('Upload a screenshot of the completed bank/UPI transfer.'); return }
       if (!window.confirm(`Mark ${money(selected.amount)} withdrawal for ${selected.user_name || selected.user_email} as paid?\n\nUse this only after the bank/UPI transfer has actually completed.`)) return
     } else if (!window.confirm(`Reject the ${money(selected.amount)} withdrawal request from ${selected.user_name || selected.user_email}?`)) return
 
@@ -109,7 +160,7 @@ export default function AdminInvestorWithdrawals() {
         body: JSON.stringify({
           action,
           transferReference: reference.trim() || undefined,
-          proofUrl: proofUrl.trim() || undefined,
+          proofUrl: proofData || undefined,
           notes: notes.trim() || undefined,
         }),
       })
@@ -183,10 +234,17 @@ export default function AdminInvestorWithdrawals() {
 
         {selected.status === 'pending' ? <div className="admin-withdrawal-form">
           <label>Transfer reference / UTR<input value={reference} onChange={event => setReference(event.target.value)} placeholder="Enter bank/UPI transaction reference" /></label>
-          <label>Transfer proof URL<input value={proofUrl} onChange={event => setProofUrl(event.target.value)} placeholder="https://…" /></label>
+          <label>Transfer proof screenshot
+            <div className="withdrawal-proof-upload" tabIndex="0" onPaste={handleProofPaste}>
+              <input type="file" accept="image/png,image/jpeg,image/webp" onChange={handleProofInput} aria-label="Upload transfer proof screenshot" />
+              <strong>{proofData ? 'Screenshot selected' : 'Choose screenshot'}</strong>
+              <span>PNG, JPG, or WebP · max 6 MB · you can also paste a screenshot here</span>
+            </div>
+            {proofData && <img className="withdrawal-proof-preview" src={proofData} alt="Selected transfer proof preview" />}
+          </label>
           <label>Admin notes<textarea value={notes} onChange={event => setNotes(event.target.value)} placeholder="Optional processing note" rows="3" /></label>
           <div className="admin-withdrawal-warning">Only click <b>Mark as paid</b> after the actual transfer succeeds. The backend checks the current ledger balance, prevents duplicate transfer references, and permanently settles the request.</div>
-        </div> : <div className="admin-withdrawal-processed"><strong>This request is already {selected.status}.</strong><span>{selected.transfer_reference ? `Reference: ${selected.transfer_reference}` : 'No transfer reference recorded.'}</span><span>{selected.processed_at ? `Processed: ${date(selected.processed_at)}` : ''}</span></div>}
+        </div> : <div className="admin-withdrawal-processed"><strong>This request is already {selected.status}.</strong><span>{selected.transfer_reference ? `Reference: ${selected.transfer_reference}` : 'No transfer reference recorded.'}</span><span>{selected.processed_at ? `Processed: ${date(selected.processed_at)}` : ''}</span>{existingProofUrl && <a className="withdrawal-proof-link" href={existingProofUrl} target="_blank" rel="noreferrer">View transfer proof</a>}</div>}
 
         <div className="admin-withdrawal-modal-foot"><button className="secondary" onClick={closeRequest} disabled={Boolean(busy)}>Close</button>{selected.status === 'pending' && <><button className="reject" onClick={() => processRequest('reject')} disabled={Boolean(busy)}>{busy === 'reject' ? 'Rejecting…' : 'Reject & Release'}</button><button className="pay" onClick={() => processRequest('paid')} disabled={Boolean(busy)}>{busy === 'paid' ? 'Processing…' : 'Mark as Paid'}</button></>}</div>
       </div>
