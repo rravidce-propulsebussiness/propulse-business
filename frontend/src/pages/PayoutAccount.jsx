@@ -17,14 +17,14 @@ export default function PayoutAccount(){
     e.preventDefault();setSaving(true);setError('');setMessage('')
     try{
       const result=await authRequest('/investor/payout-account',{method:'POST',body:JSON.stringify({method,...form,ifscCode:form.ifscCode.toUpperCase()})})
-      setAccount(result);setMessage('Payout account saved successfully.');
+      setAccount(result);setMessage('Payout account saved successfully.')
       setForm({accountHolderName:'',accountNumber:'',ifscCode:'',bankName:'',upiId:''})
     }catch(e){setError(e.message||'Unable to save payout account')}finally{setSaving(false)}
   }
 
   if(loading)return <main className="payout-account-page"><div className="payout-account-shell">Loading payout account…</div></main>
   return <main className="payout-account-page"><div className="payout-account-shell">
-    <header className="payout-account-head"><div><span>PAYOUT ACCOUNT</span><h1>Where should we send your earnings?</h1><p>Add a bank account or UPI ID before requesting a transfer of non-auto-invest earnings.</p></div></header>
+    <header className="payout-account-head"><div><span>PAYOUT ACCOUNT</span><h1>Where should we send your earnings?</h1><p>Add a bank account or UPI ID before requesting an earnings withdrawal.</p></div></header>
     {message&&<div className="payout-account-alert success">{message}</div>}{error&&<div className="payout-account-alert error">{error}</div>}
     {account&&<section className="payout-account-current"><div><span>CURRENT ACTIVE ACCOUNT</span><strong>{account.method==='upi'?'UPI':'Bank Account'}</strong></div><div>{account.method==='upi'?<b>{account.upi_id}</b>:<><b>{account.bank_name}</b><small>{account.account_holder_name} · {account.account_number_masked} · {account.ifsc_code}</small></>}</div></section>}
     <form className="payout-account-form" onSubmit={save}>
