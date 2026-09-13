@@ -9,13 +9,12 @@ async function getBalance(userId, client = pool) {
     settled_investment_earnings: summary.settled_non_auto_earnings,
     transferred: summary.payout_transferred,
     reserved: summary.payout_reserved,
-    available: Math.max(0, summary.auto_invest_earnings + summary.non_auto_earnings - summary.settled_non_auto_earnings - summary.payout_transferred - summary.payout_reserved),
+    available: summary.transferable,
   };
 }
 
 async function getTransferableBalance(userId, client = pool) {
-  const summary = await ledger.getInvestorFinancialSummary(userId, client);
-  return summary.transferable;
+  return ledger.getInvestorFinancialSummary(userId, client).then(summary => summary.transferable);
 }
 
 async function getInvestorFunds(userId) {
@@ -29,13 +28,21 @@ async function getInvestorFunds(userId) {
   return {
     generated: Number((summary.auto_invest_earnings + summary.non_auto_earnings).toFixed(2)),
     transferable: Number(summary.transferable.toFixed(2)),
+    withdrawable_earnings: Number(summary.withdrawable_earnings.toFixed(2)),
     payout_account: account,
     total_invested: Number(totalInvested.toFixed(2)),
     available_for_ads: Number(summary.available_for_ads.toFixed(2)),
-    amount_in_ads: Number(summary.available_for_ads.toFixed(2)),
     total_ad_spent: Number(summary.ad_spent.toFixed(2)),
     auto_invest_earnings: Number(summary.auto_invest_earnings.toFixed(2)),
+    auto_invest_earnings_consumed: Number(summary.auto_invest_earnings_consumed.toFixed(2)),
+    auto_invest_earnings_withdrawable: Number(summary.auto_invest_earnings_withdrawable.toFixed(2)),
     non_auto_earnings: Number(summary.non_auto_earnings.toFixed(2)),
+    non_auto_earnings_withdrawable: Number(summary.non_auto_earnings_withdrawable.toFixed(2)),
+    ad_spent: Number(summary.ad_spent.toFixed(2)),
+    payout_reserved: Number(summary.payout_reserved.toFixed(2)),
+    payout_transferred: Number(summary.payout_transferred.toFixed(2)),
+    // Kept only as a compatibility alias; new UI uses available_for_ads.
+    amount_in_ads: Number(summary.available_for_ads.toFixed(2)),
     unallocated_investment_capital: Number(Math.max(0, summary.capital - summary.ad_spent).toFixed(2)),
     reserved: Number(summary.payout_reserved.toFixed(2)),
     requests: requests.rows.map(row => ({...row, amount:Number(row.amount || 0)})),
@@ -44,14 +51,15 @@ async function getInvestorFunds(userId) {
 
 async function requestTransfer({ userId, amount, notes }) {
   const requestedAmount = Number(amount);
-  if (!Number.isFinite(requestedAmount) || requestedAmount <= 0) throw Object.assign(new Error('Transfer amount must be greater than zero'), {code:'INVALID_AMOUNT'});
+  if (!Number.isFinite(requestedAmount) || requestedAmount <= 0) throw Object.assign(new Error('Withdrawal amount must be greater than zero.'), {code:'INVALID_AMOUNT'});
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
+    await ledger.lockInvestorFinancials(client, userId);
     const account = await payoutAccounts.getInternal(client, userId);
-    if (!account) throw Object.assign(new Error('Add a Bank Account or UPI before requesting a transfer'), {code:'PAYOUT_ACCOUNT_REQUIRED'});
+    if (!account) throw Object.assign(new Error('Add a Bank Account or UPI before requesting a withdrawal.'), {code:'PAYOUT_ACCOUNT_REQUIRED'});
     const available = await getTransferableBalance(userId, client);
-    if (requestedAmount > available) throw Object.assign(new Error(`Transfer amount exceeds available non-auto-invest earnings (${available.toFixed(2)})`), {code:'INSUFFICIENT_GENERATED_FUNDS'});
+    if (requestedAmount > available + 1e-6) throw Object.assign(new Error('Withdrawal amount exceeds your available earnings.'), {code:'INSUFFICIENT_GENERATED_FUNDS'});
     const snapshot = account.method === 'upi'
       ? { method:'upi', upi_id:account.upi_id }
       : { method:'bank', account_holder_name:account.account_holder_name, account_number:account.account_number, ifsc_code:account.ifsc_code, bank_name:account.bank_name };
@@ -76,6 +84,7 @@ async function adminProcess({ requestId, adminId, action, transferReference, pro
     const row = (await client.query('SELECT * FROM investor_payout_requests WHERE id=$1 FOR UPDATE',[Number(requestId)])).rows[0];
     if (!row) throw Object.assign(new Error('Transfer request not found'),{code:'NOT_FOUND'});
     if (row.status !== 'pending') throw Object.assign(new Error('Transfer request has already been processed'),{code:'ALREADY_PROCESSED'});
+    await ledger.lockInvestorFinancials(client, row.user_id);
     if (action === 'reject') {
       const updated=(await client.query(`UPDATE investor_payout_requests SET status='rejected',notes=COALESCE($1,notes),processed_at=CURRENT_TIMESTAMP,processed_by=$2,updated_at=CURRENT_TIMESTAMP WHERE id=$3 RETURNING *`,[String(notes||'').trim()||null,Number(adminId),Number(requestId)])).rows[0];
       await client.query('COMMIT'); return {...updated,amount:Number(updated.amount)};
@@ -85,8 +94,11 @@ async function adminProcess({ requestId, adminId, action, transferReference, pro
     if(!proofUrl) throw Object.assign(new Error('Transfer proof is required'),{code:'TRANSFER_PROOF_REQUIRED'});
     const duplicate=(await client.query('SELECT id FROM investor_payout_requests WHERE transfer_reference=$1 AND id<>$2 LIMIT 1',[reference,Number(requestId)])).rows[0];
     if(duplicate) throw Object.assign(new Error('This transfer reference has already been used'),{code:'DUPLICATE_REFERENCE'});
-    const available=await getTransferableBalance(row.user_id,client);
-    if(Number(row.amount)>available) throw Object.assign(new Error('Non-auto-invest earnings are no longer available for this request'),{code:'INSUFFICIENT_GENERATED_FUNDS'});
+    // The request itself is currently included in payout_reserved. Add it back
+    // for this validation because it is about to leave pending state.
+    const summary = await ledger.getInvestorFinancialSummary(row.user_id, client);
+    const availableForThisRequest = summary.transferable + Number(row.amount || 0);
+    if(Number(row.amount)>availableForThisRequest + 1e-6) throw Object.assign(new Error('Withdrawal amount is no longer available.'),{code:'INSUFFICIENT_GENERATED_FUNDS'});
     const updated=(await client.query(`UPDATE investor_payout_requests SET status='paid',transfer_reference=$1,proof_url=$2,notes=COALESCE($3,notes),processed_at=CURRENT_TIMESTAMP,processed_by=$4,updated_at=CURRENT_TIMESTAMP WHERE id=$5 RETURNING *`,[reference,proofUrl,String(notes||'').trim()||null,Number(adminId),Number(requestId)])).rows[0];
     await client.query('COMMIT'); return {...updated,amount:Number(updated.amount)};
   } catch(error) { await client.query('ROLLBACK'); throw error; }
