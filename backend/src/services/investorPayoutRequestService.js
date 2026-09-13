@@ -56,7 +56,7 @@ async function getInvestorFunds(userId) {
     pool.query(`SELECT id, amount, status, transfer_reference, notes, requested_at, processed_at, payout_method, payout_account_snapshot FROM investor_payout_requests WHERE user_id=$1 ORDER BY requested_at DESC,id DESC`, [Number(userId)]),
     pool.query(`
       SELECT
-        COALESCE(SUM(amount) FILTER (WHERE status IN ('active','matured')),0) AS total_invested,
+        COALESCE(SUM(amount) FILTER (WHERE status <> 'cancelled' AND parent_investment_id IS NULL),0) AS total_invested,
         COALESCE(SUM(amount_in_ads) FILTER (WHERE status IN ('active','matured')),0) AS amount_in_ads,
         COALESCE((
           SELECT SUM(s.amount)
