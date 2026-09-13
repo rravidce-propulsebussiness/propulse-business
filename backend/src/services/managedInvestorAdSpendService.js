@@ -18,6 +18,7 @@ async function recordSpend({ userId, amount, platform, campaign, spendDate, refe
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
+    await ledger.lockInvestorFinancials(client, userId);
     const available = await getAvailableForAds(client, userId);
     if (value > available.available + 1e-6) throw Object.assign(new Error(`Ad spend exceeds available funds of ₹${available.available.toFixed(2)}`), { code:'SPEND_EXCEEDS_AVAILABLE_AD_FUNDS' });
     const investment = (await client.query(`SELECT id FROM investments WHERE user_id=$1 AND status IN ('active','matured') ORDER BY created_at ASC,id ASC LIMIT 1 FOR UPDATE`, [Number(userId)])).rows[0];
