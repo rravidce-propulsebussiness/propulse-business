@@ -3,12 +3,37 @@ const auth = require('../middleware/authMiddleware');
 const admin = require('../middleware/adminMiddleware');
 const rateLimit = require('../middleware/rateLimitMiddleware');
 const c = require('../controllers/investmentController');
+const investmentService = require('../services/investmentService');
 const draftService = require('../services/investmentPaymentDraftService');
 const payoutAccounts = require('../services/investorPayoutAccountService');
 const managedAdSpend = require('../services/managedInvestorAdSpendService');
 
 const investmentWriteLimit = rateLimit({ windowMs: 60 * 1000, max: 10 });
 const adminInvestmentWriteLimit = rateLimit({ windowMs: 60 * 1000, max: 30 });
+
+/**
+ * Investor chooses only an amount. Propulse selects an active investment
+ * industry/location target behind the scenes. Profile targeting remains
+ * useful for lead operations, but it does not block an investment.
+ */
+async function applyManagedTarget(req) {
+  const hasTarget = req.body.industryId && req.body.stateId;
+  if (hasTarget) return;
+  const rules = await investmentService.getRules();
+  const candidates = [];
+  for (const rule of Array.isArray(rules) ? rules : []) {
+    for (const location of (Array.isArray(rule.locations) ? rule.locations : [])) {
+      if (Boolean(location.is_active) && Number(location.remaining_count || 0) > 0) {
+        candidates.push({ industryId:Number(rule.industry_id), stateId:Number(location.state_id), cityId:location.city_id == null ? null : Number(location.city_id) });
+      }
+    }
+  }
+  if (!candidates.length) throw Object.assign(new Error('Propulse investment capacity is currently full. Please try again later.'), { code:'INVESTMENT_CAPACITY_FULL' });
+  const target = candidates[0];
+  req.body.industryId = target.industryId;
+  req.body.stateId = target.stateId;
+  req.body.cityId = target.cityId;
+}
 
 router.get('/access', auth, c.access);
 router.get('/rules', auth, c.rules);
@@ -24,6 +49,7 @@ router.post('/admin/investor/:userId/managed-ad-spend', auth, admin, adminInvest
 
 router.post('/checkout', auth, investmentWriteLimit, async (req, res, next) => {
   try {
+    await applyManagedTarget(req);
     if (req.body.useWallet === false) {
       const amount = Number(req.body.amount);
       if (!Number.isFinite(amount) || amount <= 0) return res.status(400).json({ error: 'Amount must be greater than zero', code: 'INVALID_AMOUNT' });
@@ -35,7 +61,7 @@ router.post('/checkout', auth, investmentWriteLimit, async (req, res, next) => {
 });
 
 router.get('/', auth, c.mine);
-router.post('/', auth, investmentWriteLimit, c.create);
+router.post('/', auth, investmentWriteLimit, async (req,res,next)=>{try{await applyManagedTarget(req);return c.create(req,res)}catch(e){return next(e)}});
 router.post('/:id/reinvest', auth, investmentWriteLimit, c.reinvest);
 router.get('/admin/all', auth, admin, c.adminList);
 router.get('/admin/investor/:userId/linked-leads', auth, admin, c.linkedLeads);
