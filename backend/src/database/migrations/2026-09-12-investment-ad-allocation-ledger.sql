@@ -1,5 +1,22 @@
 BEGIN;
 
+-- This ledger migration must also be safe on a fresh database. Older databases
+-- already have this table; IF NOT EXISTS keeps the migration backwards-compatible.
+CREATE TABLE IF NOT EXISTS investment_ad_spends (
+  id SERIAL PRIMARY KEY,
+  investment_id INTEGER NOT NULL REFERENCES investments(id) ON DELETE RESTRICT,
+  amount NUMERIC(14,2) NOT NULL CHECK (amount > 0),
+  platform VARCHAR(100),
+  campaign VARCHAR(255),
+  spend_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  reference VARCHAR(255),
+  notes TEXT,
+  created_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_investment_ad_spends_investment ON investment_ad_spends(investment_id, spend_date DESC, id DESC);
+
 CREATE TABLE IF NOT EXISTS investment_ad_allocations (
   id SERIAL PRIMARY KEY,
   investment_id INTEGER NOT NULL REFERENCES investments(id) ON DELETE RESTRICT,
