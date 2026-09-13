@@ -23,6 +23,6 @@ assert(controller.includes('service.reinvestInvestment'), 'Controller must expos
 assert(routes.includes("router.post('/:id/reinvest'"), 'Investor reinvestment route is missing');
 assert(investmentUi.includes('checked={autoInvest}'), 'Investor UI must bind the reinvestment choice');
 assert(/reinvestmentEnabled\s*:\s*autoInvest/.test(investmentUi) || investmentUi.includes('reinvestmentEnabled })'), 'Investor checkout must persist the reinvestment choice');
-assert(investmentUi.includes('Direct owner transfer'), 'Investor UI must describe owner-account payout flow');
+assert(investmentUi.includes('WITHDRAW EARNINGS') || investmentUi.includes('Withdraw Earnings'), 'Investor UI must provide the owner-account earnings withdrawal flow');
 
 console.log('Investor-choice reinvestment regression test passed.');
