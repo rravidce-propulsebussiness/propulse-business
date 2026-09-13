@@ -17,16 +17,18 @@ async function transferInvestorEarnings({ userId, adminId, transferReference, pr
     if (duplicate) throw Object.assign(new Error('This transfer reference has already been used'), { code:'DUPLICATE_TRANSFER_REFERENCE' });
 
     const investments = (await client.query(`
-      SELECT x.id, x.amount, x.status, x.matures_at,
-             COALESCE(SUM(a.allocated_amount),0) AS earnings
+      SELECT x.id, x.amount, x.status, x.matures_at, COALESCE(a.earnings,0) AS earnings
       FROM investments x
-      LEFT JOIN investment_revenue_allocations a ON a.investment_id=x.id
+      JOIN (
+        SELECT investment_id, SUM(allocated_amount) AS earnings
+        FROM investment_revenue_allocations
+        GROUP BY investment_id
+      ) a ON a.investment_id=x.id
       WHERE x.user_id=$1
         AND x.status IN ('active','matured')
         AND COALESCE(x.reinvestment_enabled,FALSE)=FALSE
         AND x.matures_at <= CURRENT_TIMESTAMP
-      GROUP BY x.id
-      HAVING COALESCE(SUM(a.allocated_amount),0) > 0
+        AND a.earnings > 0
       ORDER BY x.matures_at ASC, x.id ASC
       FOR UPDATE OF x
     `, [Number(userId)])).rows;
@@ -41,25 +43,11 @@ async function transferInvestorEarnings({ userId, adminId, transferReference, pr
 
     for (const row of investments) {
       const amount = Number(Number(row.earnings || 0).toFixed(2));
-      await client.query(`
-        UPDATE investments
-        SET status='paid', payout_amount=$1, payout_transfer_reference=$2,
-            payout_proof_url=$3, updated_at=CURRENT_TIMESTAMP
-        WHERE id=$4
-      `, [amount, reference, proof, Number(row.id)]);
+      await client.query(`UPDATE investments SET status='paid',payout_amount=$1,payout_transfer_reference=$2,payout_proof_url=$3,updated_at=CURRENT_TIMESTAMP WHERE id=$4`, [amount, reference, proof, Number(row.id)]);
     }
 
     await client.query('COMMIT');
-    return {
-      user_id:Number(userId),
-      transferred_amount:payoutAmount,
-      investment_count:investments.length,
-      transfer_reference:reference,
-      proof_url:proof,
-      payout_method:account.method,
-      payout_account_snapshot:snapshot,
-      transferred_by_admin:Number(adminId),
-    };
+    return { user_id:Number(userId), transferred_amount:payoutAmount, investment_count:investments.length, transfer_reference:reference, proof_url:proof, payout_method:account.method, payout_account_snapshot:snapshot, transferred_by_admin:Number(adminId) };
   } catch (error) {
     await client.query('ROLLBACK');
     throw error;
