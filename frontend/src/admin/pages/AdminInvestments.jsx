@@ -31,6 +31,11 @@ function InvestorModalActions() {
       return investors.find(item => String(item.email || item.user_email || '').toLowerCase() === String(email || '').toLowerCase()) || investors[0] || null
     }
 
+    const parseMoney = value => {
+      const parsed = Number(String(value || '').replace(/[^0-9.-]/g, ''))
+      return Number.isFinite(parsed) ? parsed : 0
+    }
+
     const injectActions = async modal => {
       if (!modal || modal.querySelector('.investor-history-actions') || busy) return
       const headEmail = modal.querySelector('.investor-history-head p')?.textContent?.split(' · ')[0]?.trim() || ''
@@ -49,34 +54,41 @@ function InvestorModalActions() {
           return sum + (Boolean(x.reinvestment_enabled) && !alreadyReinvested && x.status !== 'paid' ? Number(x.allocated_revenue || 0) : 0)
         }, 0)
         const reinvestmentEnabled = records.some(x => Boolean(x.reinvestment_enabled))
-        const adBalance = Math.max(0, totalFunding - adSpent) + autoInvestEarnings
-        const currentBalance = adBalance
+        const allocatedAdBalance = Math.max(0, totalFunding - adSpent) + autoInvestEarnings
+
+        // The transaction-history component is the source of truth for the
+        // investor's running balance. When reinvestment is enabled, that full
+        // current balance can be routed back into advertising. Do not use the
+        // original allocation remainder in that case.
+        const summaryCards = modal.querySelectorAll('.history-summary-card')
+        const currentBalanceCard = summaryCards[0]
+        const currentBalance = parseMoney(currentBalanceCard?.querySelector('strong')?.textContent)
+        const availableForAds = reinvestmentEnabled ? currentBalance : allocatedAdBalance
         const bankTransfer = records.reduce((sum, x) => {
           const ref = String(x.payout_transfer_reference || '').trim().toUpperCase()
           return sum + (!Boolean(x.reinvestment_enabled) && !ref.startsWith('REINVESTMENT-') && x.status !== 'paid' ? Number(x.payable_now || 0) : 0)
         }, 0)
 
-        const summaryCards = modal.querySelectorAll('.history-summary-card')
         const adSummary = summaryCards[2]
         if (adSummary) {
           const value = adSummary.querySelector('strong')
           const note = adSummary.querySelector('small')
-          if (value) value.textContent = money(adBalance)
+          if (value) value.textContent = money(availableForAds)
           if (note) note.textContent = reinvestmentEnabled ? 'Current balance available for ads' : 'Current ad allocation remaining'
         }
 
         const footer = document.createElement('div')
         footer.className = 'investor-history-actions'
-        footer.innerHTML = `<span class="action-status">${reinvestmentEnabled ? 'Current balance' : 'Ad balance'} <strong>${money(currentBalance)}</strong> · Transferable <strong>${money(bankTransfer)}</strong></span><button type="button" class="spend-action">Spend on Ads</button><button type="button" class="transfer-action" ${bankTransfer <= 0 ? 'disabled' : ''}>Transfer to Account</button>`
+        footer.innerHTML = `<span class="action-status">${reinvestmentEnabled ? 'Current balance' : 'Ad balance'} <strong>${money(availableForAds)}</strong> · Transferable <strong>${money(bankTransfer)}</strong></span><button type="button" class="spend-action">Spend on Ads</button><button type="button" class="transfer-action" ${bankTransfer <= 0 ? 'disabled' : ''}>Transfer to Account</button>`
         modal.appendChild(footer)
 
         footer.querySelector('.spend-action').addEventListener('click', async () => {
-          const raw = window.prompt(`Enter actual ad spend (available ${money(currentBalance)}):`)
+          const raw = window.prompt(`Enter actual ad spend (available ${money(availableForAds)}):`)
           if (raw == null) return
           const amount = Number(raw)
           if (!Number.isFinite(amount) || amount <= 0) return
-          if (amount > currentBalance) {
-            window.alert(`Ad spend cannot exceed the available ad balance of ${money(currentBalance)}.`)
+          if (amount > availableForAds) {
+            window.alert(`Ad spend cannot exceed the available amount of ${money(availableForAds)}.`)
             return
           }
           const investmentId = records.find(x => Number(x.ad_remaining || 0) > 0)?.id || records.find(x => x.status === 'active' || x.status === 'matured')?.id
