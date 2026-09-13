@@ -81,7 +81,7 @@ async function adminList({ status='all', search='' }) {
   const values=[]; const where=[];
   if (status !== 'all') { values.push(status); where.push(`r.status=$${values.length}`); }
   if (String(search).trim()) { values.push(`%${String(search).trim()}%`); where.push(`(u.name ILIKE $${values.length} OR u.email ILIKE $${values.length})`); }
-  const rows = (await pool.query(`SELECT r.id,r.user_id,r.amount,r.status,r.transfer_reference,r.notes,r.requested_at,r.processed_at,r.processed_by,r.payout_method,u.name AS user_name,u.email AS user_email FROM investor_payout_requests r JOIN users u ON u.id=r.user_id ${where.length?'WHERE '+where.join(' AND '):''} ORDER BY r.requested_at DESC,r.id DESC`, values)).rows;
+  const rows = (await pool.query(`SELECT r.id,r.user_id,r.amount,r.status,r.transfer_reference,r.notes,r.requested_at,r.processed_at,r.processed_by,r.payout_method,r.payout_account_snapshot,u.name AS user_name,u.email AS user_email FROM investor_payout_requests r JOIN users u ON u.id=r.user_id ${where.length?'WHERE '+where.join(' AND '):''} ORDER BY r.requested_at DESC,r.id DESC`, values)).rows;
   return rows.map(row => ({...row,amount:Number(row.amount||0)}));
 }
 
