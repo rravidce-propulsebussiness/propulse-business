@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import {
   BrowserRouter,
   Routes,
@@ -36,7 +36,7 @@ import AdminMembershipPlansConfig from './admin/pages/AdminMembershipPlansConfig
 import AdminInvestments from './admin/pages/AdminInvestments';
 import AdminRoute from './admin/components/AdminRoute';
 import AdminLayout from './admin/components/AdminLayout';
-import { getToken, getUser } from './utils/auth';
+import { authRequest, getToken, getUser } from './utils/auth';
 
 function LoggedInHomeRoute() {
   const token = getToken();
@@ -59,6 +59,29 @@ function CustomerRoute() {
   const user = getUser();
   if (!token || !user) return <Navigate to="/login" state={{ from: location }} replace />;
   if (user.role === 'admin') return <Navigate to="/admin" replace />;
+  return <Outlet />;
+}
+
+function ProRoute() {
+  const location = useLocation();
+  const [state, setState] = useState('checking');
+
+  useEffect(() => {
+    let active = true;
+    authRequest('/investments/access')
+      .then(access => {
+        if (active) setState(access?.isPro === true ? 'allowed' : 'denied');
+      })
+      .catch(() => {
+        if (active) setState('denied');
+      });
+    return () => { active = false; };
+  }, []);
+
+  if (state === 'checking') {
+    return <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', fontFamily: 'inherit' }}>Checking membership…</div>;
+  }
+  if (state !== 'allowed') return <Navigate to="/membership" state={{ from: location, investmentRequired: true }} replace />;
   return <Outlet />;
 }
 
@@ -91,11 +114,13 @@ function App() {
       <Route path="/dashboard" element={<Navigate to="/leads" replace />} />
       <Route path="/purchased-leads" element={<PurchasedLeads />} /><Route path="/my-leads" element={<PurchasedLeads />} />
       <Route path="/wallet" element={<Wallet />} /><Route path="/membership" element={<Membership />} />
-      <Route path="/investment" element={<InvestorWithHeader />} />
-      <Route path="/investment/leads" element={<InvestorSectionWithHeader type="leads" />} />
-      <Route path="/investment/sold-leads" element={<InvestorSectionWithHeader type="sold" />} />
-      <Route path="/investment/history" element={<InvestorSectionWithHeader type="history" />} />
-      <Route path="/investment/payouts" element={<InvestorSectionWithHeader type="payouts" />} />
+      <Route element={<ProRoute />}>
+        <Route path="/investment" element={<InvestorWithHeader />} />
+        <Route path="/investment/leads" element={<InvestorSectionWithHeader type="leads" />} />
+        <Route path="/investment/sold-leads" element={<InvestorSectionWithHeader type="sold" />} />
+        <Route path="/investment/history" element={<InvestorSectionWithHeader type="history" />} />
+        <Route path="/investment/payouts" element={<InvestorSectionWithHeader type="payouts" />} />
+      </Route>
       <Route path="/profile" element={<Profile />} />
       <Route path="/profile/payout-account" element={<PayoutAccount />} />
     </Route>
