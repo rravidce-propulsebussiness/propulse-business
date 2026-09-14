@@ -19,6 +19,7 @@ async function reconcileCycleRevenue(client, userId, cycleId) {
     ORDER BY lp.id
     FOR UPDATE OF lp
   `, [uid, cid])).rows;
+
   for (const purchase of purchases) {
     const shareRow = (await client.query(`
       SELECT COALESCE(r.investor_revenue_share_percent,s.investor_revenue_share_percent,100) AS share
@@ -28,21 +29,26 @@ async function reconcileCycleRevenue(client, userId, cycleId) {
     `, [Number(purchase.industry_id)])).rows[0];
     const share = Math.max(0, Math.min(100, Number(shareRow?.share ?? 100)));
     if (share <= 0) continue;
+
+    // Investors now use amount-only investment targeting. Lead targeting is
+    // controlled by Propulse, so revenue belongs to the investor's cycle,
+    // regardless of which industry was selected internally for the lead.
     const investors = (await client.query(`
       SELECT id,amount
       FROM investments
-      WHERE user_id=$1 AND cycle_id=$2 AND industry_id=$3
+      WHERE user_id=$1 AND cycle_id=$2
         AND status IN ('active','matured','paid')
         AND starts_at<=CURRENT_TIMESTAMP
-        AND status<>'cancelled'
       ORDER BY created_at,id
       FOR UPDATE
-    `, [uid, cid, Number(purchase.industry_id)])).rows;
+    `, [uid, cid])).rows;
     if (!investors.length) continue;
+
     const total = investors.reduce((sum, row) => sum + Number(row.amount || 0), 0);
     if (total <= 0) continue;
     const gross = Number(purchase.amount || 0);
     const distributable = gross * share / 100;
+
     for (const investment of investors) {
       const allocated = distributable * (Number(investment.amount || 0) / total);
       if (allocated <= 0) continue;
@@ -63,6 +69,7 @@ async function getInvestorFinancialSummary(userId, client = pool, cycleId = null
     await lockInvestorFinancials(client, userId);
     await reconcileCycleRevenue(client, userId, cycleValue);
   }
+
   const investmentFilter = scoped ? ' AND i.cycle_id=$2' : '';
   const spendFilter = scoped ? ' AND i.cycle_id=$2' : '';
   const allocationFilter = scoped ? ' AND i.cycle_id=$2' : '';
