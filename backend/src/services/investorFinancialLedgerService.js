@@ -13,18 +13,28 @@ async function lockInvestorFinancials(client, userId) {
  * Principal is never transferable. Auto-invest earnings first replenish the
  * advertising pool; only the portion not consumed by cumulative ad spend and
  * not already paid/reserved can be withdrawn.
+ *
+ * When cycleId is supplied, every financial figure is scoped to that cycle.
+ * This keeps the admin investor account focused on the latest cycle while
+ * preserving the global ledger as the default for investor withdrawals.
  */
-async function getInvestorFinancialSummary(userId, client = pool) {
+async function getInvestorFinancialSummary(userId, client = pool, cycleId = null) {
+  const scoped = cycleId != null;
+  const cycleValue = scoped ? Number(cycleId) : null;
+  const investmentFilter = scoped ? ' AND i.cycle_id=$2' : '';
+  const spendFilter = scoped ? ' AND i.cycle_id=$2' : '';
+  const allocationFilter = scoped ? ' AND i.cycle_id=$2' : '';
+  const payoutFilter = scoped ? ' AND r.cycle_id=$2' : '';
   const result = await client.query(`
     SELECT
-      COALESCE((SELECT SUM(i.amount) FROM investments i WHERE i.user_id=$1 AND i.status IN ('active','matured','paid') AND i.parent_investment_id IS NULL),0) AS contributed_capital,
-      COALESCE((SELECT SUM(s.amount) FROM investment_ad_spends s JOIN investments i ON i.id=s.investment_id WHERE i.user_id=$1 AND i.status <> 'cancelled'),0) AS ad_spent,
-      COALESCE((SELECT SUM(a.allocated_amount) FROM investment_revenue_allocations a JOIN investments i ON i.id=a.investment_id WHERE i.user_id=$1 AND i.status <> 'cancelled' AND COALESCE(i.reinvestment_enabled,FALSE)=TRUE),0) AS auto_invest_earnings,
-      COALESCE((SELECT SUM(a.allocated_amount) FROM investment_revenue_allocations a JOIN investments i ON i.id=a.investment_id WHERE i.user_id=$1 AND i.status <> 'cancelled' AND COALESCE(i.reinvestment_enabled,FALSE)=FALSE),0) AS non_auto_earnings,
-      COALESCE((SELECT SUM(i.payout_amount) FROM investments i WHERE i.user_id=$1 AND i.status='paid' AND COALESCE(i.reinvestment_enabled,FALSE)=FALSE),0) AS settled_non_auto_earnings,
-      COALESCE((SELECT SUM(r.amount) FROM investor_payout_requests r WHERE r.user_id=$1 AND r.status='paid'),0) AS payout_transferred,
-      COALESCE((SELECT SUM(r.amount) FROM investor_payout_requests r WHERE r.user_id=$1 AND r.status='pending'),0) AS payout_reserved
-  `, [Number(userId)]);
+      COALESCE((SELECT SUM(i.amount) FROM investments i WHERE i.user_id=$1 AND i.status IN ('active','matured','paid') AND i.parent_investment_id IS NULL${investmentFilter}),0) AS contributed_capital,
+      COALESCE((SELECT SUM(s.amount) FROM investment_ad_spends s JOIN investments i ON i.id=s.investment_id WHERE i.user_id=$1 AND i.status <> 'cancelled'${spendFilter}),0) AS ad_spent,
+      COALESCE((SELECT SUM(a.allocated_amount) FROM investment_revenue_allocations a JOIN investments i ON i.id=a.investment_id WHERE i.user_id=$1 AND i.status <> 'cancelled' AND COALESCE(i.reinvestment_enabled,FALSE)=TRUE${allocationFilter}),0) AS auto_invest_earnings,
+      COALESCE((SELECT SUM(a.allocated_amount) FROM investment_revenue_allocations a JOIN investments i ON i.id=a.investment_id WHERE i.user_id=$1 AND i.status <> 'cancelled' AND COALESCE(i.reinvestment_enabled,FALSE)=FALSE${allocationFilter}),0) AS non_auto_earnings,
+      COALESCE((SELECT SUM(i.payout_amount) FROM investments i WHERE i.user_id=$1 AND i.status='paid' AND COALESCE(i.reinvestment_enabled,FALSE)=FALSE${investmentFilter}),0) AS settled_non_auto_earnings,
+      COALESCE((SELECT SUM(r.amount) FROM investor_payout_requests r WHERE r.user_id=$1 AND r.status='paid'${payoutFilter}),0) AS payout_transferred,
+      COALESCE((SELECT SUM(r.amount) FROM investor_payout_requests r WHERE r.user_id=$1 AND r.status='pending'${payoutFilter}),0) AS payout_reserved
+  `, scoped ? [Number(userId), cycleValue] : [Number(userId)]);
 
   const row = result.rows[0] || {};
   const capital = Math.max(0, Number(row.contributed_capital || 0));
