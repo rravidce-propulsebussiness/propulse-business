@@ -1,7 +1,55 @@
-const pool = require('../config/database');
 const cycleService = require('../services/investmentCycleService');
 
-async function current(req,res){try{const cycle=await cycleService.getCycleSummary(Number(req.user.id),req.query.cycleId?Number(req.query.cycleId):null);return res.json(cycle||{cycle:null});}catch(e){console.error('Investment cycle load failed:',e.message);return res.status(500).json({error:'Failed to load investment cycle'});}}
-async function requestFinalExit(req,res){try{return res.json(await cycleService.requestFinalExit({userId:Number(req.user.id),cycleId:req.body?.cycleId?Number(req.body.cycleId):null}));}catch(e){const map={CYCLE_NOT_FOUND:404,CYCLE_ALREADY_CLOSED:409,CYCLE_NOT_MATURED:400,CYCLE_CLOSING:409};return res.status(map[e.code]||400).json({error:e.message||'Failed to request cycle exit',code:e.code});}}
-async function adminList(req,res){try{const values=[],where=[];if(req.query.status&&req.query.status!=='all'){values.push(String(req.query.status).toUpperCase());where.push(`c.status=$${values.length}`);}if(req.query.search){values.push(`%${String(req.query.search).trim()}%`);where.push(`(u.name ILIKE $${values.length} OR u.email ILIKE $${values.length})`);}const rows=(await pool.query(`SELECT c.id,c.user_id,c.status,c.auto_invest,c.started_at,c.maturity_at,c.exit_requested_at,c.closed_at,c.exit_reason,u.name AS user_name,u.email AS user_email,COALESCE(SUM(i.amount) FILTER (WHERE i.status<>'cancelled'),0) AS principal,COUNT(DISTINCT l.id)::int AS total_leads,COUNT(DISTINCT l.id) FILTER (WHERE LOWER(COALESCE(l.status,'')) IN ('sold','consumed','expired','closed','admin_closed'))::int AS final_leads FROM investment_cycles c JOIN users u ON u.id=c.user_id LEFT JOIN investments i ON i.cycle_id=c.id LEFT JOIN leads l ON l.cycle_id=c.id ${where.length?'WHERE '+where.join(' AND '):''} GROUP BY c.id,u.name,u.email ORDER BY c.created_at DESC,c.id DESC`,values)).rows;return res.json(rows.map(r=>({...r,id:Number(r.id),user_id:Number(r.user_id),auto_invest:Boolean(r.auto_invest),principal:Number(r.principal||0),total_leads:Number(r.total_leads||0),final_leads:Number(r.final_leads||0),pending_leads:Math.max(0,Number(r.total_leads||0)-Number(r.final_leads||0))})));}catch(e){return res.status(500).json({error:e.message||'Failed to load investment cycles'});}}
-module.exports={current,requestFinalExit,adminList};
+async function current(req,res){
+  try{
+    const cycle=await cycleService.getCycleSummary(Number(req.user.id),req.query.cycleId?Number(req.query.cycleId):null);
+    return res.json(cycle||{cycle:null});
+  }catch(e){
+    console.error('Investment cycle load failed:',e.message);
+    return res.status(500).json({error:'Failed to load investment cycle'});
+  }
+}
+
+async function requestFinalExit(req,res){
+  try{
+    return res.json(await cycleService.requestFinalExit({userId:Number(req.user.id),cycleId:req.body?.cycleId?Number(req.body.cycleId):null}));
+  }catch(e){
+    const map={CYCLE_NOT_FOUND:404,CYCLE_ALREADY_CLOSED:409,CYCLE_NOT_MATURED:400,CYCLE_CLOSING:409};
+    return res.status(map[e.code]||400).json({error:e.message||'Failed to request cycle exit',code:e.code});
+  }
+}
+
+async function adminList(req,res){
+  try{
+    return res.json(await cycleService.adminList());
+  }catch(e){
+    console.error('Admin investment cycles load failed:',e);
+    return res.status(500).json({error:'Failed to load investment cycles'});
+  }
+}
+
+async function adminFinish(req,res){
+  try{
+    const cycle=await cycleService.adminFinishCycle({
+      cycleId:Number(req.params.id),
+      adminId:Number(req.user.id),
+      reason:req.body?.reason,
+    });
+    return res.json(cycle);
+  }catch(e){
+    const map={CYCLE_NOT_FOUND:404,CYCLE_ALREADY_CLOSED:409,REASON_REQUIRED:400,REASON_TOO_LONG:400,LEADS_NOT_FINAL:409};
+    return res.status(map[e.code]||500).json({error:e.message||'Failed to finish investment cycle',code:e.code});
+  }
+}
+
+async function adminClose(req,res){
+  try{
+    const cycle=await cycleService.adminCloseCycle({cycleId:Number(req.params.id)});
+    return res.json(cycle);
+  }catch(e){
+    const map={CYCLE_NOT_FOUND:404,CYCLE_ALREADY_CLOSED:409,CYCLE_NOT_ELIGIBLE:409};
+    return res.status(map[e.code]||500).json({error:e.message||'Failed to close investment cycle',code:e.code});
+  }
+}
+
+module.exports={current,requestFinalExit,adminList,adminFinish,adminClose};
