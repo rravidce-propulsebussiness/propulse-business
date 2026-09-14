@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { apiRequest } from '../../utils/api'
 import AdminInvestmentsWallet from './AdminInvestmentsWallet'
+import InvestmentCycleControls from './InvestmentCycleControls'
 import InvestorActionModals from './InvestorActionModals'
 import './InvestorActionModals.css'
 
@@ -105,7 +106,7 @@ function InvestorModalActions() {
     } catch (error) { window.alert(error?.message || 'Unable to record ad spend.') }
   }
 
-  return <><AdminInvestmentsWallet /><InvestorActionModals spendOpen={actionState.type === 'spend'} transferOpen={false} availableForAds={actionState.availableForAds} transferable={actionState.transferable} payoutAccount={null} onCloseSpend={closeActions} onCloseTransfer={closeActions} onSpend={handleSpend} onTransfer={undefined} /></>
+  return <><InvestmentCycleControls /><AdminInvestmentsWallet /><InvestorActionModals spendOpen={actionState.type === 'spend'} transferOpen={false} availableForAds={actionState.availableForAds} transferable={actionState.transferable} payoutAccount={null} onCloseSpend={closeActions} onCloseTransfer={closeActions} onSpend={handleSpend} onTransfer={undefined} /></>
 }
 
 export default function AdminInvestments() { return <InvestorModalActions /> }
