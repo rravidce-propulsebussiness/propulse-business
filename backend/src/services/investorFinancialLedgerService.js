@@ -15,40 +15,39 @@ async function reconcileCycleRevenue(client, userId, cycleId) {
     FROM lead_purchases lp
     JOIN leads l ON l.id=lp.lead_id
     WHERE l.investor_user_id=$1 AND l.cycle_id=$2 AND lp.status='paid'
-      AND NOT EXISTS (SELECT 1 FROM investment_revenue_allocations ira WHERE ira.lead_purchase_id=lp.id)
+      AND NOT EXISTS (
+        SELECT 1
+        FROM investment_revenue_allocations ira
+        JOIN investments existing_i ON existing_i.id=ira.investment_id
+        WHERE ira.lead_purchase_id=lp.id AND existing_i.user_id=$1 AND existing_i.cycle_id=$2
+      )
     ORDER BY lp.id
     FOR UPDATE OF lp
   `, [uid, cid])).rows;
-
   for (const purchase of purchases) {
     const shareRow = (await client.query(`
-      SELECT COALESCE(r.investor_revenue_share_percent,s.investor_revenue_share_percent,100) AS share
+      SELECT COALESCE(r.investor_revenue_share_percent,s.investor_revenue_share_percent,95) AS share
       FROM investor_settings s
       LEFT JOIN investment_industry_rules r ON r.industry_id=$1 AND r.is_active=TRUE
       WHERE s.id=1
     `, [Number(purchase.industry_id)])).rows[0];
-    const share = Math.max(0, Math.min(100, Number(shareRow?.share ?? 100)));
+    const share = Math.max(0, Math.min(100, Number(shareRow?.share ?? 95)));
     if (share <= 0) continue;
-
-    // Investors now use amount-only investment targeting. Lead targeting is
-    // controlled by Propulse, so revenue belongs to the investor's cycle,
-    // regardless of which industry was selected internally for the lead.
     const investors = (await client.query(`
       SELECT id,amount
       FROM investments
       WHERE user_id=$1 AND cycle_id=$2
         AND status IN ('active','matured','paid')
         AND starts_at<=CURRENT_TIMESTAMP
+        AND status<>'cancelled'
       ORDER BY created_at,id
       FOR UPDATE
     `, [uid, cid])).rows;
     if (!investors.length) continue;
-
     const total = investors.reduce((sum, row) => sum + Number(row.amount || 0), 0);
     if (total <= 0) continue;
     const gross = Number(purchase.amount || 0);
     const distributable = gross * share / 100;
-
     for (const investment of investors) {
       const allocated = distributable * (Number(investment.amount || 0) / total);
       if (allocated <= 0) continue;
@@ -56,7 +55,10 @@ async function reconcileCycleRevenue(client, userId, cycleId) {
         INSERT INTO investment_revenue_allocations
           (investment_id,lead_purchase_id,industry_id,gross_sale_amount,investor_share_percent,allocated_amount)
         VALUES($1,$2,$3,$4,$5,$6)
-        ON CONFLICT(investment_id,lead_purchase_id) DO NOTHING
+        ON CONFLICT(investment_id,lead_purchase_id) DO UPDATE
+        SET gross_sale_amount=EXCLUDED.gross_sale_amount,
+            investor_share_percent=EXCLUDED.investor_share_percent,
+            allocated_amount=EXCLUDED.allocated_amount
       `, [Number(investment.id), Number(purchase.id), Number(purchase.industry_id), gross, share, allocated]);
     }
   }
@@ -69,7 +71,6 @@ async function getInvestorFinancialSummary(userId, client = pool, cycleId = null
     await lockInvestorFinancials(client, userId);
     await reconcileCycleRevenue(client, userId, cycleValue);
   }
-
   const investmentFilter = scoped ? ' AND i.cycle_id=$2' : '';
   const spendFilter = scoped ? ' AND i.cycle_id=$2' : '';
   const allocationFilter = scoped ? ' AND i.cycle_id=$2' : '';
