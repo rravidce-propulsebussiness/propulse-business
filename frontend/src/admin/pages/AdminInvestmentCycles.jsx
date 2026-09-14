@@ -4,7 +4,7 @@ import { clearSession, getToken } from '../../utils/auth'
 import { useNavigate } from 'react-router-dom'
 import './AdminInvestmentCycles.css'
 
-const money = value => `₹${Number(value || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}`
+const money = value => `₹${Number(value || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })`
 const date = value => value ? new Date(value).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—'
 
 export default function AdminInvestmentCycles() {
@@ -63,31 +63,54 @@ export default function AdminInvestmentCycles() {
     } finally { setBusy(false) }
   }
 
+  async function closeCycle(cycle) {
+    if (busy) return
+    if (Number(cycle.pending_leads ?? 0) !== 0) {
+      setError('This cycle still has unresolved leads and cannot be normally closed.')
+      return
+    }
+    if (!window.confirm(`Close cycle #${cycle.id}? This is the normal lifecycle closure and will not modify lead records.`)) return
+    setBusy(true)
+    setError('')
+    try {
+      await request(`/investments/admin/cycles/${cycle.id}/close`, { method: 'POST' })
+      await load()
+    } catch (e) {
+      setError(e.message || 'Unable to close the investment cycle.')
+    } finally { setBusy(false) }
+  }
+
   return <section className="admin-cycles-page">
     <div className="admin-cycles-header">
       <div><span className="admin-cycles-kicker">INVESTMENT OPERATIONS</span><h1>Investment Cycles</h1><p>Monitor investor cycles and close completed or manually resolved cycles without deleting their associated leads.</p></div>
-      <button className="admin-cycles-refresh" onClick={load} disabled={loading}>↻ Refresh</button>
+      <button className="admin-cycles-refresh" onClick={load} disabled={loading || busy}>↻ Refresh</button>
     </div>
 
     {error && <div className="admin-cycles-alert">{error}</div>}
 
     <div className="admin-cycles-table-wrap">
       {loading ? <div className="admin-cycles-empty">Loading investment cycles…</div> : cycles.length === 0 ? <div className="admin-cycles-empty"><strong>No investment cycles found</strong><span>Cycles will appear here after the cycle migration is active.</span></div> : <table className="admin-cycles-table">
-        <thead><tr><th>Cycle</th><th>Investor</th><th>Mode</th><th>Principal</th><th>Leads</th><th>Started</th><th>Status</th><th /></tr></thead>
+        <thead><tr><th>Cycle</th><th>Investor</th><th>Mode</th><th>Principal</th><th>Leads</th><th>Started</th><th>Status</th><th>Actions</th></tr></thead>
         <tbody>{cycles.map(cycle => {
           const finalLeads = Number(cycle.final_leads ?? cycle.finalLeadCount ?? 0)
           const pendingLeads = Number(cycle.pending_leads ?? cycle.pendingLeadCount ?? 0)
           const totalLeads = Number(cycle.lead_count ?? cycle.total_leads ?? finalLeads + pendingLeads)
           const closed = String(cycle.status || '').toUpperCase() === 'CLOSED'
+          const matured = !cycle.maturity_at || new Date(cycle.maturity_at) <= new Date()
+          const autoInvest = Boolean(cycle.auto_invest)
+          const canClose = !closed && pendingLeads === 0 && ((autoInvest && String(cycle.status || '').toUpperCase() === 'EXIT_REQUESTED') || (!autoInvest && matured))
           return <tr key={cycle.id}>
             <td><strong>#{cycle.id}</strong><span>{cycle.withdrawal_count != null ? `${cycle.withdrawal_count} withdrawals` : 'Investment cycle'}</span></td>
             <td><strong>{cycle.user_name || cycle.name || 'Investor'}</strong><span>{cycle.user_email || cycle.email || `User #${cycle.user_id}`}</span></td>
-            <td><span className={`cycle-mode ${cycle.auto_invest ? 'auto' : 'manual'}`}>{cycle.auto_invest ? 'AUTO-INVEST' : 'NON-AUTO'}</span></td>
+            <td><span className={`cycle-mode ${autoInvest ? 'auto' : 'manual'}`}>{autoInvest ? 'AUTO-INVEST' : 'NON-AUTO'}</span></td>
             <td><strong>{money(cycle.principal ?? cycle.total_principal ?? cycle.total_invested)}</strong><span>{cycle.investment_count != null ? `${cycle.investment_count} investments` : ''}</span></td>
             <td><strong>{totalLeads}</strong><span>{finalLeads} final · {pendingLeads} pending</span></td>
             <td>{date(cycle.started_at)}</td>
             <td><span className={`cycle-status ${String(cycle.status || '').toLowerCase()}`}>{cycle.status || '—'}</span></td>
-            <td>{!closed && <button className="finish-cycle-btn" onClick={() => openFinish(cycle)}>Mark as Finished</button>}</td>
+            <td className="admin-cycle-actions">
+              {canClose && <button className="close-cycle-btn" onClick={() => closeCycle(cycle)} disabled={busy}>Close Cycle</button>}
+              {!closed && <button className="finish-cycle-btn" onClick={() => openFinish(cycle)} disabled={busy}>Mark as Finished</button>}
+            </td>
           </tr>
         })}</tbody>
       </table>}
