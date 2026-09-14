@@ -9,18 +9,35 @@ async function getCycleStatement(userId, cycleId) {
 
   const cycle = (await pool.query(`
     SELECT id,user_id,status,auto_invest,started_at,maturity_at,exit_requested_at,closed_at,
-           created_at,updated_at,admin_closed_by,admin_closed_reason,exit_reason
+           admin_closed_by,admin_closed_reason,exit_reason
     FROM investment_cycles
     WHERE id=$1 AND user_id=$2
   `, [cid, uid])).rows[0];
   if (!cycle) throw Object.assign(new Error('Investment cycle not found'), { code: 'CYCLE_NOT_FOUND' });
 
-  const investment = (await pool.query(`
-    SELECT COUNT(*)::int AS count,
-           COALESCE(SUM(amount) FILTER (WHERE status<>'cancelled'),0)::numeric AS principal
-    FROM investments
-    WHERE user_id=$1 AND cycle_id=$2 AND status<>'cancelled'
-  `, [uid, cid])).rows[0];
+  const investmentRows = (await pool.query(`
+    SELECT i.id,i.amount,i.status,i.created_at,i.updated_at,i.reinvestment_enabled,i.parent_investment_id,
+           COALESCE((SELECT SUM(s.amount) FROM investment_ad_spends s WHERE s.investment_id=i.id),0)::numeric AS ad_spent,
+           COALESCE((SELECT SUM(a.allocated_amount) FROM investment_revenue_allocations a WHERE a.investment_id=i.id),0)::numeric AS investor_earnings
+    FROM investments i
+    WHERE i.user_id=$1 AND i.cycle_id=$2 AND i.status<>'cancelled'
+    ORDER BY i.created_at ASC,i.id ASC
+  `, [uid, cid])).rows.map(row => ({
+    id: Number(row.id),
+    amount: Number(row.amount || 0),
+    status: row.status,
+    created_at: row.created_at,
+    updated_at: row.updated_at,
+    reinvestment_enabled: Boolean(row.reinvestment_enabled),
+    parent_investment_id: row.parent_investment_id == null ? null : Number(row.parent_investment_id),
+    ad_spent: Number(row.ad_spent || 0),
+    investor_earnings: Number(row.investor_earnings || 0),
+  }));
+
+  const investment = {
+    count: investmentRows.length,
+    principal: investmentRows.reduce((sum, row) => sum + row.amount, 0),
+  };
 
   const ads = (await pool.query(`
     SELECT
@@ -29,6 +46,22 @@ async function getCycleStatement(userId, cycleId) {
       COALESCE((SELECT SUM(s.amount) FROM investment_ad_spends s JOIN investments i ON i.id=s.investment_id WHERE i.user_id=$1 AND i.cycle_id=$2 AND i.status<>'cancelled'),0)::numeric AS spent
   `, [uid, cid])).rows[0];
   ads.remaining = Math.max(0, Number(ads.allocated || 0) - Number(ads.spent || 0));
+
+  const adSpendRows = (await pool.query(`
+    SELECT s.id,s.investment_id,s.amount,s.spend_date,s.reference,s.platform,s.campaign
+    FROM investment_ad_spends s
+    JOIN investments i ON i.id=s.investment_id
+    WHERE i.user_id=$1 AND i.cycle_id=$2 AND i.status<>'cancelled'
+    ORDER BY s.spend_date ASC,s.id ASC
+  `, [uid, cid])).rows.map(row => ({
+    id: Number(row.id),
+    investment_id: Number(row.investment_id),
+    amount: Number(row.amount || 0),
+    spend_date: row.spend_date,
+    reference: row.reference,
+    platform: row.platform,
+    campaign: row.campaign,
+  }));
 
   const leads = (await pool.query(`
     SELECT
@@ -126,6 +159,66 @@ async function getCycleStatement(userId, cycleId) {
     investor_earnings: Number(row.investor_earnings || 0),
   }));
 
+  const withdrawalRows = (await pool.query(`
+    SELECT id,amount,status,created_at,paid_at,transfer_reference
+    FROM investor_payout_requests
+    WHERE user_id=$1 AND cycle_id=$2
+    ORDER BY created_at ASC,id ASC
+  `, [uid, cid])).rows.map(row => ({
+    id: Number(row.id),
+    amount: Number(row.amount || 0),
+    status: row.status,
+    created_at: row.created_at,
+    paid_at: row.paid_at,
+    transfer_reference: row.transfer_reference,
+  }));
+
+  const events = [];
+  for (const row of investmentRows) {
+    events.push({
+      type: row.parent_investment_id == null ? 'investment' : 'reinvestment',
+      reference_id: row.id,
+      description: row.parent_investment_id == null ? `Investment #${row.id} added` : `Reinvestment #${row.id} added`,
+      amount: row.amount,
+      occurred_at: row.created_at,
+    });
+  }
+  for (const row of adSpendRows) {
+    events.push({
+      type: 'ad_spend',
+      reference_id: row.id,
+      description: `Ads spent · Investment #${row.investment_id}`,
+      amount: -Math.abs(row.amount),
+      occurred_at: row.spend_date,
+    });
+  }
+  for (const row of saleRows) {
+    events.push({
+      type: 'lead_sale',
+      reference_id: row.purchase_id,
+      description: `Lead #${row.lead_id} sold · ${row.shares === 1 ? '1 single share' : `${row.shares} shared shares`}`,
+      amount: row.investor_earnings,
+      occurred_at: row.sold_at,
+    });
+  }
+  for (const row of withdrawalRows) {
+    if (String(row.status || '').toLowerCase() === 'paid') {
+      events.push({
+        type: 'withdrawal_paid',
+        reference_id: row.id,
+        description: `Withdrawal paid · ${row.transfer_reference || 'Manual transfer'}`,
+        amount: -Math.abs(row.amount),
+        occurred_at: row.paid_at || row.created_at,
+      });
+    }
+  }
+  events.sort((a,b)=>new Date(a.occurred_at || 0)-new Date(b.occurred_at || 0) || Number(a.reference_id)-Number(b.reference_id));
+  let running = 0;
+  for (const event of events) {
+    running += Number(event.amount || 0);
+    event.balance_after = Number(running.toFixed(2));
+  }
+
   return {
     cycle: {
       ...cycle,
@@ -137,11 +230,13 @@ async function getCycleStatement(userId, cycleId) {
       count: Number(investment.count || 0),
       principal: Number(investment.principal || 0),
     },
+    investments: investmentRows,
     ads: {
       transactions: Number(ads.transactions || 0),
       allocated: Number(ads.allocated || 0),
       spent: Number(ads.spent || 0),
       remaining: Number(ads.remaining || 0),
+      detail: adSpendRows,
     },
     leads: {
       linked: Number(leads.linked || 0),
@@ -166,8 +261,10 @@ async function getCycleStatement(userId, cycleId) {
       pending: Number(payouts.pending || 0),
       rejected: Number(payouts.rejected || 0),
     },
+    withdrawal_detail: withdrawalRows,
     leads_detail: leadRows,
     sales_detail: saleRows,
+    events,
   };
 }
 
