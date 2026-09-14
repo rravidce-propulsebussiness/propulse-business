@@ -2,7 +2,7 @@ const pool = require('../config/database');
 
 async function getDashboard({ search = '', status = 'all', industryId = '' } = {}) {
   const values = [];
-  const where = ["x.status <> 'cancelled'"];
+  const where = ["x.status <> 'cancelled'", 'x.cycle_id=current_cycle.id'];
   const q = String(search || '').trim();
   if (q) {
     values.push(`%${q}%`);
@@ -42,6 +42,13 @@ async function getDashboard({ search = '', status = 'all', industryId = '' } = {
     JOIN industries i ON i.id=x.industry_id
     LEFT JOIN states s ON s.id=x.state_id
     LEFT JOIN cities c ON c.id=x.city_id
+    LEFT JOIN LATERAL (
+      SELECT ic.id
+      FROM investment_cycles ic
+      WHERE ic.user_id=x.user_id
+      ORDER BY CASE WHEN ic.status IN ('ACTIVE','EXIT_REQUESTED','WAITING_FOR_LEADS') THEN 0 ELSE 1 END, ic.id DESC
+      LIMIT 1
+    ) current_cycle ON TRUE
     LEFT JOIN LATERAL (
       SELECT
         COALESCE(SUM(ira.allocated_amount),0) AS allocated_revenue,
