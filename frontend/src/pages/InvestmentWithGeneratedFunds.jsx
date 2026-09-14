@@ -16,9 +16,8 @@ function Dashboard() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
-  const load = async () => {
-    setLoading(true)
-    setError('')
+  const load = async (initial = false) => {
+    if (initial) setLoading(true)
     try {
       const [cycleResult, investmentsResult] = await Promise.all([
         authRequest('/investments/cycle'),
@@ -29,19 +28,20 @@ function Dashboard() {
       const investmentRows = Array.isArray(investmentsResult) ? investmentsResult : Array.isArray(investmentsResult?.data) ? investmentsResult.data : Array.isArray(investmentsResult?.rows) ? investmentsResult.rows : []
       setCycle(activeCycle)
       setRows(activeCycle ? investmentRows.filter(row => Number(row?.cycle_id) === Number(activeCycle.id) && investedStatuses.has(normalizeStatus(row?.status))) : [])
+      setError('')
     } catch (err) {
-      setCycle(null)
-      setRows([])
       setError(err?.message || 'Unable to load the current investment cycle')
     } finally {
-      setLoading(false)
+      if (initial) setLoading(false)
     }
   }
 
   useEffect(() => {
-    load()
-    const timer = setInterval(load, 5000)
-    return () => clearInterval(timer)
+    let cancelled = false
+    const run = async () => { if (!cancelled) await load(true) }
+    run()
+    const timer = setInterval(() => { if (!cancelled) load(false) }, 15000)
+    return () => { cancelled = true; clearInterval(timer) }
   }, [])
 
   const openInvest = () => document.querySelector('.legacy-investment .investment-hero-action button')?.click()
@@ -79,23 +79,15 @@ function Dashboard() {
         <div>
           <span className="cycle-kicker">{active ? 'CURRENT INVESTMENT CYCLE' : 'INVESTMENT WORKSPACE'}</span>
           <h1>{active ? `Cycle #${cycle.id} · ${autoInvest ? 'Auto-Invest ON' : 'Auto-Invest OFF'}` : 'No Active Investment Cycle'}</h1>
-          <p>
-            {active
-              ? `${String(cycle.status || '').replaceAll('_', ' ')} · Started ${dateTime(cycle.started_at)} · Maturity ${dateTime(cycle.maturity_at)}`
-              : 'Your previous cycle is closed. Current-cycle balances are ₹0. Previous-cycle investment, advertising, lead sales and withdrawals are available in History.'}
-          </p>
+          <p>{active ? `${String(cycle.status || '').replaceAll('_', ' ')} · Started ${dateTime(cycle.started_at)} · Maturity ${dateTime(cycle.maturity_at)}` : 'Your previous cycle is closed. Current-cycle balances are ₹0. Previous-cycle investment, advertising, lead sales and withdrawals are available in History.'}</p>
         </div>
         <div className="cycle-dashboard-actions">
-          {active ? (
-            <>
-              <button type="button" onClick={openInvest} disabled={closing}>＋ Add Investment</button>
-              {autoInvest && !closing && <button type="button" className="secondary" onClick={exit}>Request Final Exit</button>}
-              {!autoInvest && transferable > 0 && <button type="button" className="secondary" onClick={withdraw}>Withdraw Earnings</button>}
-            </>
-          ) : (
-            <button type="button" onClick={openInvest}>＋ Start Investment</button>
-          )}
-          <Link className="secondary link" to="/investment/history">History →</Link>
+          {active ? <>
+            <button type="button" onClick={openInvest} disabled={closing}>＋ Add Investment</button>
+            {autoInvest && !closing && <button type="button" className="secondary" onClick={exit}>Request Final Exit</button>}
+            {!autoInvest && transferable > 0 && <button type="button" className="secondary" onClick={withdraw}>Withdraw Earnings</button>}
+          </> : <button type="button" onClick={openInvest}>＋ Start Investment</button>}
+          <Link className="secondary link" to="/investment/payouts">Withdrawals →</Link>
         </div>
       </div>
 
@@ -115,7 +107,7 @@ function Dashboard() {
         <div><b>Linked Leads</b><span>{linkedLeads}</span></div><div><b>Leads Sold</b><span>{soldLeads}</span></div><div><b>Final Leads</b><span>{finalLeads}</span></div><div><b>Pending Leads</b><span>{pendingLeads}</span></div><div><b>Transfer Paid</b><span>{money(transferPaid)}</span></div><div><b>Transfer Reserved</b><span>{money(transferReserved)}</span></div>
       </div>
 
-      <div className="cycle-dashboard-nav"><Link to="/investment/leads">Linked Leads</Link><Link to="/investment/history">History</Link><Link to="/investment/faq">FAQ</Link></div>
+      <div className="cycle-dashboard-nav"><Link to="/investment/leads">Linked Leads</Link><Link to="/investment/payouts">Withdrawals</Link><Link to="/investment/faq">FAQ</Link></div>
 
       <div className="cycle-dashboard-note">{active
         ? <><b>Current Cycle Only</b><span>{autoInvest ? 'Auto-Invest eligible earnings can be used for advertising; bank transfer shows only transferable earnings.' : 'This dashboard shows only this active cycle. Previous cycles remain under History.'}</span></>
@@ -125,10 +117,5 @@ function Dashboard() {
 }
 
 export default function InvestmentWithGeneratedFunds() {
-  return (
-    <>
-      <Dashboard />
-      <div className="legacy-investment" aria-hidden="true"><Investment /></div>
-    </>
-  )
+  return <><Dashboard /><div className="legacy-investment" aria-hidden="true"><Investment /></div></>
 }
