@@ -6,6 +6,7 @@ import InvestorActionModals from './InvestorActionModals'
 import './InvestorActionModals.css'
 
 const money = value => `₹${Number(value || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}`
+const OPEN = ['ACTIVE', 'EXIT_REQUESTED', 'WAITING_FOR_LEADS']
 
 function InvestorModalActions() {
   const [actionState, setActionState] = useState({ type: null, investor: null, availableForAds: 0, transferable: 0 })
@@ -16,67 +17,88 @@ function InvestorModalActions() {
     document.head.appendChild(style)
     let observer
     let busy = false
+
     const getInvestor = async email => {
       const params = new URLSearchParams({ search: email || '', status: 'all', industryId: '' })
       const dashboard = await apiRequest(`/admin/commercial/investment-dashboard?${params}`)
       const investors = dashboard?.investors || []
       const investor = investors.find(item => String(item.email || item.user_email || '').toLowerCase() === String(email || '').toLowerCase()) || investors[0] || null
       if (!investor?.user_id) return null
-      const funds = await apiRequest(`/investments/admin/investor/${investor.user_id}/funds`)
-      return { ...investor, funds }
+
+      const cyclesResult = await apiRequest('/investments/admin/cycles').catch(() => [])
+      const allCycles = Array.isArray(cyclesResult) ? cyclesResult : (Array.isArray(cyclesResult?.cycles) ? cyclesResult.cycles : [])
+      const investorCycles = allCycles.filter(cycle => Number(cycle.user_id) === Number(investor.user_id))
+      const activeCycle = investorCycles.find(cycle => OPEN.includes(String(cycle.status || '').toUpperCase())) || null
+      const funds = activeCycle
+        ? await apiRequest(`/investments/admin/investor/${investor.user_id}/funds`)
+        : { available_for_ads: 0, transferable: 0, withdrawable_earnings: 0, ad_spent: 0, total_ad_spent: 0, generated: 0, total_invested: 0 }
+
+      return { ...investor, funds, activeCycle, investorCycles }
     }
+
     const injectActions = async modal => {
       if (!modal || modal.querySelector('.investor-history-actions') || busy) return
       const head = modal.querySelector('.investor-history-head p')
-      const headEmail = head?.textContent?.split(' · ')[0]?.trim() || ''
+      const rawHead = head?.textContent || ''
+      const headEmail = rawHead.split(' · ')[0]?.trim() || ''
       if (!headEmail) return
       busy = true
       try {
         const investor = await getInvestor(headEmail)
         if (!investor || modal.querySelector('.investor-history-actions')) return
         const funds = investor.funds || {}
-        const currentCycleId = investor.latest_cycle_id || investor.cycles?.[0]?.cycle_id || null
-        const autoInvest = Boolean(investor.cycles?.[0]?.reinvestment_enabled)
-        const availableForAds = Math.max(0, Number(funds.available_for_ads ?? 0))
-        const transferable = Math.max(0, Number(funds.transferable ?? funds.withdrawable_earnings ?? 0))
-        const adSpent = Math.max(0, Number(funds.ad_spent ?? funds.total_ad_spent ?? 0))
-        const generatedEarnings = Math.max(0, Number(funds.generated ?? 0))
-        const totalInvestment = Math.max(0, Number(funds.total_invested ?? funds.contributed_capital ?? 0))
+        const activeCycle = investor.activeCycle
+        const hasActiveCycle = Boolean(activeCycle)
+        const currentCycleId = activeCycle?.id || null
+        const autoInvest = Boolean(activeCycle?.auto_invest)
+        const availableForAds = hasActiveCycle ? Math.max(0, Number(funds.available_for_ads ?? 0)) : 0
+        const transferable = hasActiveCycle ? Math.max(0, Number(funds.transferable ?? funds.withdrawable_earnings ?? 0)) : 0
+        const adSpent = hasActiveCycle ? Math.max(0, Number(funds.ad_spent ?? funds.total_ad_spent ?? 0)) : 0
+        const generatedEarnings = hasActiveCycle ? Math.max(0, Number(funds.generated ?? 0)) : 0
+        const totalInvestment = hasActiveCycle ? Math.max(0, Number(funds.total_invested ?? funds.contributed_capital ?? 0)) : 0
         const primaryAvailable = autoInvest ? availableForAds : transferable
-        if (head) head.textContent = `${headEmail} · Cycle #${currentCycleId || '—'} · ${autoInvest ? 'Auto-Invest' : 'Non-Auto'} · Current cycle only`
+
+        if (head) {
+          head.textContent = hasActiveCycle
+            ? `${headEmail} · Cycle #${currentCycleId} · ${autoInvest ? 'Auto-Invest' : 'Non-Auto'} · Current cycle only`
+            : `${headEmail} · No Active Cycle · Current cycle only`
+        }
 
         const summaryCards = modal.querySelectorAll('.history-summary-card')
-        const currentBalance = summaryCards[0]?.querySelector('strong')
-        const currentNote = summaryCards[0]?.querySelector('small')
-        if (currentBalance) currentBalance.textContent = money(primaryAvailable)
-        if (currentNote) currentNote.textContent = autoInvest ? 'Current-cycle funds available for advertising' : 'Current-cycle earnings available for transfer'
+        const setCard = (index, value, note) => {
+          const card = summaryCards[index]
+          if (!card) return
+          const strong = card.querySelector('strong')
+          const small = card.querySelector('small')
+          if (strong) strong.textContent = money(value)
+          if (small) small.textContent = note
+        }
 
-        const totalCard = summaryCards[1]
-        if (totalCard) { const value = totalCard.querySelector('strong'); const note = totalCard.querySelector('small'); if (value) value.textContent = money(totalInvestment); if (note) note.textContent = 'Current-cycle investor capital; principal is never withdrawable' }
+        setCard(0, primaryAvailable, hasActiveCycle ? (autoInvest ? 'Current-cycle funds available for advertising' : 'Current-cycle earnings available for transfer') : 'No active-cycle balance')
+        setCard(1, totalInvestment, hasActiveCycle ? 'Current-cycle investor capital; principal is never withdrawable' : 'No active-cycle investment')
+        setCard(2, availableForAds, hasActiveCycle && autoInvest ? 'Available for Auto-Invest ad spending' : 'No active Auto-Invest advertising balance')
+        setCard(3, transferable, hasActiveCycle ? (autoInvest ? 'Earnings eligible for transfer after ad-spend reservations' : 'Earnings currently available for transfer') : 'No active-cycle earnings available for transfer')
+        setCard(4, generatedEarnings, hasActiveCycle ? 'Investor earnings from sold leads in the current cycle' : 'No active-cycle lead earnings')
 
-        const availableSummary = summaryCards[2]
-        if (availableSummary) { const value = availableSummary.querySelector('strong'); const note = availableSummary.querySelector('small'); if (value) value.textContent = money(availableForAds); if (note) note.textContent = autoInvest ? 'Available for Auto-Invest ad spending' : 'Not available for Non-Auto principal spending' }
-
-        const transferSummary = summaryCards[3]
-        if (transferSummary) { const value = transferSummary.querySelector('strong'); const note = transferSummary.querySelector('small'); if (value) value.textContent = money(transferable); if (note) note.textContent = autoInvest ? 'Earnings eligible for transfer after ad-spend reservations' : 'Earnings currently available for transfer' }
-
-        const revenueSummary = summaryCards[4]
-        if (revenueSummary) { const value = revenueSummary.querySelector('strong'); const note = revenueSummary.querySelector('small'); if (value) value.textContent = money(generatedEarnings); if (note) note.textContent = 'Investor earnings from sold leads in the current cycle' }
-
+        const summary = modal.querySelector('.investor-history-summary')
+        const oldInjectedAdSpent = summary?.querySelector('[data-ad-spent]')
+        oldInjectedAdSpent?.remove()
         const amountCard = document.createElement('article')
         amountCard.className = 'history-summary-card blue'
-        amountCard.setAttribute('data-ad-spent','true')
-        amountCard.innerHTML = `<span>AD SPENT</span><strong>${money(adSpent)}</strong><small>Current-cycle advertising spend</small>`
-        const summary = modal.querySelector('.investor-history-summary')
-        if (summary && !summary.querySelector('[data-ad-spent]')) summary.insertBefore(amountCard, summaryCards[2] || null)
+        amountCard.setAttribute('data-ad-spent', 'true')
+        amountCard.innerHTML = `<span>AD SPENT</span><strong>${money(adSpent)}</strong><small>${hasActiveCycle ? 'Current-cycle advertising spend' : 'No current-cycle ad spend'}</small>`
+        if (summary) summary.insertBefore(amountCard, summaryCards[2] || null)
 
         const footer = document.createElement('div')
         footer.className = 'investor-history-actions'
-        footer.innerHTML = `<span class="action-status">${autoInvest ? 'Available for Ads' : 'Ready to Transfer'} <strong>${money(primaryAvailable)}</strong> · Current cycle <strong>#${currentCycleId || '—'}</strong></span><button type="button" class="spend-action" ${availableForAds <= 0 ? 'disabled' : ''}>Spend on Ads</button>`
+        footer.innerHTML = `<span class="action-status">${hasActiveCycle ? (autoInvest ? 'Available for Ads' : 'Ready to Transfer') : 'No Active Cycle'} <strong>${money(primaryAvailable)}</strong> · ${hasActiveCycle ? 'Current cycle' : 'History only'}${currentCycleId ? ` <strong>#${currentCycleId}</strong>` : ''}</span><button type="button" class="spend-action" ${!hasActiveCycle || !autoInvest || availableForAds <= 0 ? 'disabled' : ''}>Spend on Ads</button>`
         modal.appendChild(footer)
         footer.querySelector('.spend-action').addEventListener('click', () => setActionState({ type: 'spend', investor, availableForAds, transferable }))
-      } finally { busy = false }
+      } finally {
+        busy = false
+      }
     }
+
     const scan = () => {
       const modal = document.querySelector('.investor-history-modal')
       if (modal && !modal.querySelector('.investor-history-actions')) injectActions(modal)
