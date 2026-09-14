@@ -83,7 +83,7 @@ function Dashboard() {
             {autoInvest && !closing && <button type="button" className="secondary" onClick={exit}>Request Final Exit</button>}
           </> : <button type="button" onClick={openInvest}>＋ Start Investment</button>}
           <Link className="secondary link" to="/investment/history">History →</Link>
-          {active && !autoInvest && transferable > 0 && <Link className="secondary link" to="/investment/payouts">Withdraw Earnings →</Link>}
+          {active && transferable > 0 && !closing && <Link className="withdraw-dashboard-button" to="/investment/payouts">Withdraw Earnings →</Link>}
         </div>
       </div>
 
@@ -95,7 +95,7 @@ function Dashboard() {
         <article><span>TOTAL INVESTMENT</span><strong>{money(totalInvested)}</strong><small>{active ? 'Actual investment + reinvestment for this cycle.' : 'No active-cycle investment.'}</small></article>
         <article><span>MY EARNINGS</span><strong>{money(investorEarnings)}</strong><small>{active ? 'My realized earnings from paid lead sales in this cycle.' : 'No active-cycle earnings.'}</small></article>
         <article><span>ADS SPENT</span><strong>{money(adSpent)}</strong><small>{active ? 'Actual advertising spend recorded in this cycle.' : 'No current-cycle ad spend.'}</small></article>
-        <article><span>AVAILABLE FOR BANK TRANSFER</span><strong>{money(transferable)}</strong><small>{active ? 'Eligible current-cycle earnings available for withdrawal.' : 'No active-cycle earnings available for transfer.'}</small>{active && transferable > 0 && <Link className="cycle-withdraw-button" to="/investment/payouts">Withdraw Earnings</Link>}</article>
+        <article><span>AVAILABLE FOR BANK TRANSFER</span><strong>{money(transferable)}</strong><small>{active ? 'Eligible current-cycle earnings available for withdrawal.' : 'No active-cycle earnings available for transfer.'}</small>{active && transferable > 0 && !closing && <Link className="cycle-withdraw-button" to="/investment/payouts">Withdraw Earnings</Link>}</article>
         <article><span>UNMATURED FUND</span><strong>{money(unmaturedFund)}</strong><small>{active ? 'Current-cycle investment capital whose maturity date has not yet been reached.' : 'No active-cycle unmatured funds.'}</small></article>
       </div>
 
