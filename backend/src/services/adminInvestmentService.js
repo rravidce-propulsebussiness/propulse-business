@@ -82,7 +82,7 @@ async function getDashboard({ search = '', status = 'all', industryId = '' } = {
         COALESCE(json_agg(DISTINCT l.id) FILTER (WHERE l.id IS NOT NULL),'[]'::json) AS linked_lead_ids
       FROM leads l
       LEFT JOIN lead_purchases lp ON lp.lead_id=l.id
-      WHERE l.investor_user_id=x.user_id
+      WHERE l.investor_user_id=x.user_id AND l.cycle_id=current_cycle.id
     ) ls ON TRUE
     WHERE ${where.join(' AND ')}
     ORDER BY x.created_at DESC,x.id DESC
