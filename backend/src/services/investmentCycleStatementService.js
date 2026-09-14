@@ -23,15 +23,12 @@ async function getCycleStatement(userId, cycleId) {
   `, [uid, cid])).rows[0];
 
   const ads = (await pool.query(`
-    SELECT COUNT(ias.id)::int AS transactions,
-           COALESCE(SUM(ia.amount),0)::numeric AS allocated,
-           COALESCE(SUM(ias.amount),0)::numeric AS spent,
-           GREATEST(0,COALESCE(SUM(ia.amount),0)-COALESCE(SUM(ias.amount),0))::numeric AS remaining
-    FROM investments i
-    LEFT JOIN investment_ad_allocations ia ON ia.investment_id=i.id
-    LEFT JOIN investment_ad_spends ias ON ias.investment_id=i.id
-    WHERE i.user_id=$1 AND i.cycle_id=$2 AND i.status<>'cancelled'
+    SELECT
+      (SELECT COUNT(*) FROM investment_ad_spends s JOIN investments i ON i.id=s.investment_id WHERE i.user_id=$1 AND i.cycle_id=$2 AND i.status<>'cancelled')::int AS transactions,
+      COALESCE((SELECT SUM(a.amount) FROM investment_ad_allocations a JOIN investments i ON i.id=a.investment_id WHERE i.user_id=$1 AND i.cycle_id=$2 AND i.status<>'cancelled'),0)::numeric AS allocated,
+      COALESCE((SELECT SUM(s.amount) FROM investment_ad_spends s JOIN investments i ON i.id=s.investment_id WHERE i.user_id=$1 AND i.cycle_id=$2 AND i.status<>'cancelled'),0)::numeric AS spent
   `, [uid, cid])).rows[0];
+  ads.remaining = Math.max(0, Number(ads.allocated || 0) - Number(ads.spent || 0));
 
   const leads = (await pool.query(`
     SELECT
