@@ -12,26 +12,7 @@ function InvestorModalActions() {
 
   useEffect(() => {
     const style = document.createElement('style')
-    style.textContent = `
-      .investor-table-row .more-btn,.investor-table-row .action-menu-wrap{display:none!important}
-      .investor-table-head > span:last-child,.investor-table-row > .row-actions{position:sticky;right:0;z-index:5;background:#fff;box-shadow:-10px 0 16px rgba(20,67,120,.07)}
-      .investor-table-head > span:last-child{background:#f4f8fc;z-index:6}
-      .investor-table-row > .row-actions{padding-left:8px}
-      .investor-history-modal .investor-history-actions{display:flex;align-items:center;justify-content:flex-end;gap:10px;padding:12px 26px;border-top:1px solid #e4ebf3;background:#fff;flex:0 0 auto;position:relative;z-index:10;box-sizing:border-box}
-      .investor-history-modal .investor-history-actions button{height:42px;padding:0 18px;border:1px solid #d6e3ef;border-radius:9px;background:#fff;color:#17457f;font-size:11px;font-weight:900;cursor:pointer}
-      .investor-history-modal .investor-history-actions button:hover{background:#f4f8fd}
-      .investor-history-modal .investor-history-actions .spend-action{border-color:#d5e5f5;background:#eef6ff;color:#126fca}
-      .investor-history-modal .investor-history-actions button:disabled{opacity:.5;cursor:not-allowed}
-      .investor-history-modal .investor-history-actions .action-status{margin-right:auto;color:#7890aa;font-size:9px}
-      .investor-history-modal .investor-history-actions .action-status strong{color:#17457f}
-      .investor-history-modal .investor-history-summary{grid-template-columns:repeat(6,minmax(0,1fr))!important;padding-top:13px;padding-bottom:13px;gap:8px}
-      .investor-history-modal .history-summary-card{padding:11px 12px}
-      .investor-history-modal .history-summary-card strong{font-size:17px;margin-top:5px}
-      .investor-history-modal .history-summary-card small{font-size:7px}
-      .investor-history-modal .investor-history-body{padding-bottom:66px}
-      @media(max-width:1100px){.investor-history-modal .investor-history-summary{grid-template-columns:repeat(3,minmax(0,1fr))!important}}
-      @media(max-width:720px){.investor-history-modal .investor-history-summary{grid-template-columns:repeat(2,minmax(0,1fr))!important}.investor-history-modal .investor-history-actions{padding:10px 14px;flex-wrap:wrap}.investor-history-modal .investor-history-actions .action-status{width:100%;margin-right:0}}
-    `
+    style.textContent = `.investor-table-row .more-btn,.investor-table-row .action-menu-wrap{display:none!important}.investor-table-head > span:last-child,.investor-table-row > .row-actions{position:sticky;right:0;z-index:5;background:#fff;box-shadow:-10px 0 16px rgba(20,67,120,.07)}.investor-table-head > span:last-child{background:#f4f8fc;z-index:6}.investor-table-row > .row-actions{padding-left:8px}.investor-history-modal .investor-history-actions{display:flex;align-items:center;justify-content:flex-end;gap:10px;padding:12px 26px;border-top:1px solid #e4ebf3;background:#fff;flex:0 0 auto;position:relative;z-index:10;box-sizing:border-box}.investor-history-modal .investor-history-actions button{height:42px;padding:0 18px;border:1px solid #d6e3ef;border-radius:9px;background:#fff;color:#17457f;font-size:11px;font-weight:900;cursor:pointer}.investor-history-modal .investor-history-actions .spend-action{border-color:#d5e5f5;background:#eef6ff;color:#126fca}.investor-history-modal .investor-history-actions button:disabled{opacity:.5;cursor:not-allowed}.investor-history-modal .investor-history-actions .action-status{margin-right:auto;color:#7890aa;font-size:9px}.investor-history-modal .investor-history-actions .action-status strong{color:#17457f}.investor-history-modal .investor-history-summary{grid-template-columns:repeat(6,minmax(0,1fr))!important;padding-top:13px;padding-bottom:13px;gap:8px}.investor-history-modal .history-summary-card{padding:11px 12px}.investor-history-modal .history-summary-card strong{font-size:17px;margin-top:5px}.investor-history-modal .history-summary-card small{font-size:7px}.investor-history-modal .investor-history-body{padding-bottom:66px}@media(max-width:1100px){.investor-history-modal .investor-history-summary{grid-template-columns:repeat(3,minmax(0,1fr))!important}}@media(max-width:720px){.investor-history-modal .investor-history-summary{grid-template-columns:repeat(2,minmax(0,1fr))!important}.investor-history-modal .investor-history-actions{padding:10px 14px;flex-wrap:wrap}.investor-history-modal .investor-history-actions .action-status{width:100%;margin-right:0}}`
     document.head.appendChild(style)
     let observer
     let busy = false
@@ -68,22 +49,26 @@ function InvestorModalActions() {
         const currentBalance = summaryCards[0]?.querySelector('strong')
         const currentNote = summaryCards[0]?.querySelector('small')
         if (currentBalance) currentBalance.textContent = money(primaryAvailable)
-        if (currentNote) currentNote.textContent = autoInvest ? 'Current cycle funds available for advertising' : 'Current cycle earnings available for transfer'
+        if (currentNote) currentNote.textContent = autoInvest ? 'Current-cycle funds available for advertising' : 'Current-cycle earnings available for transfer'
 
         const totalCard = summaryCards[1]
         if (totalCard) { const value = totalCard.querySelector('strong'); const note = totalCard.querySelector('small'); if (value) value.textContent = money(totalInvestment); if (note) note.textContent = 'Current-cycle investor capital; principal is never withdrawable' }
 
-        const adSummary = summaryCards[2]
-        if (adSummary) { const value = adSummary.querySelector('strong'); const note = adSummary.querySelector('small'); if (value) value.textContent = money(adSpent); if (note) note.textContent = 'Current-cycle advertising spend' }
-
-        const availableSummary = summaryCards[3]
+        const availableSummary = summaryCards[2]
         if (availableSummary) { const value = availableSummary.querySelector('strong'); const note = availableSummary.querySelector('small'); if (value) value.textContent = money(availableForAds); if (note) note.textContent = autoInvest ? 'Available for Auto-Invest ad spending' : 'Not available for Non-Auto principal spending' }
 
-        const transferSummary = summaryCards[4]
+        const transferSummary = summaryCards[3]
         if (transferSummary) { const value = transferSummary.querySelector('strong'); const note = transferSummary.querySelector('small'); if (value) value.textContent = money(transferable); if (note) note.textContent = autoInvest ? 'Earnings eligible for transfer after ad-spend reservations' : 'Earnings currently available for transfer' }
 
-        const revenueSummary = summaryCards[5]
+        const revenueSummary = summaryCards[4]
         if (revenueSummary) { const value = revenueSummary.querySelector('strong'); const note = revenueSummary.querySelector('small'); if (value) value.textContent = money(generatedEarnings); if (note) note.textContent = 'Investor earnings from sold leads in the current cycle' }
+
+        const amountCard = document.createElement('article')
+        amountCard.className = 'history-summary-card blue'
+        amountCard.setAttribute('data-ad-spent','true')
+        amountCard.innerHTML = `<span>AD SPENT</span><strong>${money(adSpent)}</strong><small>Current-cycle advertising spend</small>`
+        const summary = modal.querySelector('.investor-history-summary')
+        if (summary && !summary.querySelector('[data-ad-spent]')) summary.insertBefore(amountCard, summaryCards[2] || null)
 
         const footer = document.createElement('div')
         footer.className = 'investor-history-actions'
