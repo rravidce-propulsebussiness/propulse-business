@@ -65,11 +65,11 @@ export default function AdminInvestmentCycles() {
 
   async function closeCycle(cycle) {
     if (busy) return
-    if (Number(cycle.pending_leads ?? 0) !== 0) {
-      setError('This cycle still has unresolved leads and cannot be normally closed.')
-      return
-    }
-    if (!window.confirm(`Close cycle #${cycle.id}? This is the normal lifecycle closure and will not modify lead records.`)) return
+    const pendingLeads = Number(cycle.pending_leads ?? cycle.pendingLeadCount ?? 0)
+    const message = pendingLeads > 0
+      ? `Close cycle #${cycle.id}? It has ${pendingLeads} unresolved lead${pendingLeads === 1 ? '' : 's'}. They will remain unchanged and will not be deleted or marked as sold. New lead assignment will stop for this cycle.`
+      : `Close cycle #${cycle.id}? This will close the cycle and will not modify lead records.`
+    if (!window.confirm(message)) return
     setBusy(true)
     setError('')
     try {
@@ -96,9 +96,7 @@ export default function AdminInvestmentCycles() {
           const pendingLeads = Number(cycle.pending_leads ?? cycle.pendingLeadCount ?? 0)
           const totalLeads = Number(cycle.lead_count ?? cycle.total_leads ?? finalLeads + pendingLeads)
           const closed = String(cycle.status || '').toUpperCase() === 'CLOSED'
-          const matured = !cycle.maturity_at || new Date(cycle.maturity_at) <= new Date()
           const autoInvest = Boolean(cycle.auto_invest)
-          const canClose = !closed && pendingLeads === 0 && ((autoInvest && String(cycle.status || '').toUpperCase() === 'EXIT_REQUESTED') || (!autoInvest && matured))
           return <tr key={cycle.id}>
             <td><strong>#{cycle.id}</strong><span>{cycle.withdrawal_count != null ? `${cycle.withdrawal_count} withdrawals` : 'Investment cycle'}</span></td>
             <td><strong>{cycle.user_name || cycle.name || 'Investor'}</strong><span>{cycle.user_email || cycle.email || `User #${cycle.user_id}`}</span></td>
@@ -108,7 +106,7 @@ export default function AdminInvestmentCycles() {
             <td>{date(cycle.started_at)}</td>
             <td><span className={`cycle-status ${String(cycle.status || '').toLowerCase()}`}>{cycle.status || '—'}</span></td>
             <td className="admin-cycle-actions">
-              {canClose && <button className="close-cycle-btn" onClick={() => closeCycle(cycle)} disabled={busy}>Close Cycle</button>}
+              {!closed && <button className="close-cycle-btn" onClick={() => closeCycle(cycle)} disabled={busy}>Close Cycle</button>}
               {!closed && <button className="finish-cycle-btn" onClick={() => openFinish(cycle)} disabled={busy}>Mark as Finished</button>}
             </td>
           </tr>
