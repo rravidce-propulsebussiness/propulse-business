@@ -2,7 +2,7 @@ const pool = require('../config/database');
 
 async function getDashboard({ search = '', status = 'all', industryId = '' } = {}) {
   const values = [];
-  const where = ["x.status <> 'cancelled'"];
+  const where = ["x.status <> 'cancelled'", 'x.cycle_id=current_cycle.id'];
   const q = String(search || '').trim();
   if (q) {
     values.push(`%${q}%`);
@@ -43,6 +43,13 @@ async function getDashboard({ search = '', status = 'all', industryId = '' } = {
     LEFT JOIN states s ON s.id=x.state_id
     LEFT JOIN cities c ON c.id=x.city_id
     LEFT JOIN LATERAL (
+      SELECT ic.id
+      FROM investment_cycles ic
+      WHERE ic.user_id=x.user_id
+      ORDER BY CASE WHEN ic.status IN ('ACTIVE','EXIT_REQUESTED','WAITING_FOR_LEADS') THEN 0 ELSE 1 END, ic.id DESC
+      LIMIT 1
+    ) current_cycle ON TRUE
+    LEFT JOIN LATERAL (
       SELECT
         COALESCE(SUM(ira.allocated_amount),0) AS allocated_revenue,
         COUNT(DISTINCT ira.lead_purchase_id)::int AS allocated_sales
@@ -75,7 +82,7 @@ async function getDashboard({ search = '', status = 'all', industryId = '' } = {
         COALESCE(json_agg(DISTINCT l.id) FILTER (WHERE l.id IS NOT NULL),'[]'::json) AS linked_lead_ids
       FROM leads l
       LEFT JOIN lead_purchases lp ON lp.lead_id=l.id
-      WHERE l.investor_user_id=x.user_id
+      WHERE l.investor_user_id=x.user_id AND l.cycle_id=current_cycle.id
     ) ls ON TRUE
     WHERE ${where.join(' AND ')}
     ORDER BY x.created_at DESC,x.id DESC
