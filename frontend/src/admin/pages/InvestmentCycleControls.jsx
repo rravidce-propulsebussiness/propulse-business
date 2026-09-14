@@ -1,98 +1,64 @@
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { apiRequest } from '../../utils/api'
-import { getToken, clearSession } from '../../utils/auth'
-import { useNavigate } from 'react-router-dom'
 
 const money = value => `₹${Number(value || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}`
 
 export default function InvestmentCycleControls() {
-  const navigate = useNavigate()
-  const [cycles, setCycles] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [busyId, setBusyId] = useState(null)
-  const [error, setError] = useState('')
+  useEffect(() => {
+    const style = document.createElement('style')
+    style.textContent = `.investor-cycle-panel{margin:0 0 16px;padding:14px 16px;border:1px solid #dce7f1;border-radius:10px;background:#f8fbfe}.investor-cycle-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}.investor-cycle-head strong{color:#123d7b;font-size:12px}.investor-cycle-head span{color:#7a8da5;font-size:8px}.investor-cycle-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-top:1px solid #e5edf5}.investor-cycle-info strong{display:block;color:#173f78;font-size:10px}.investor-cycle-info small{display:block;color:#8497ae;font-size:8px;margin-top:3px}.investor-cycle-status{padding:5px 8px;border-radius:999px;background:#e8f7ef;color:#16804d;font-size:8px;font-weight:900;white-space:nowrap}.investor-cycle-status.closed{background:#edf1f5;color:#65778c}.investor-cycle-actions{display:flex;gap:7px}.investor-cycle-actions button{height:32px;padding:0 10px;border-radius:7px;font-size:9px;font-weight:900;cursor:pointer}.investor-cycle-actions .close-cycle{border:1px solid #1762aa;background:#fff;color:#1762aa}.investor-cycle-actions .finish-cycle{border:1px solid #d9e3ed;background:#fff;color:#526b85}@media(max-width:720px){.investor-cycle-row{align-items:flex-start;flex-direction:column}}`
+    document.head.appendChild(style)
+    let stopped = false
+    let busy = false
 
-  const request = async (path, options = {}) => {
-    if (!getToken()) {
-      clearSession()
-      navigate('/login', { replace: true })
-      throw new Error('Your admin session has expired. Please sign in again.')
+    const getInvestorId = async modal => {
+      const email = modal.querySelector('.investor-history-head p')?.textContent?.split(' · ')[0]?.trim() || ''
+      if (!email) return null
+      const params = new URLSearchParams({ search: email, status: 'all', industryId: '' })
+      const dashboard = await apiRequest(`/admin/commercial/investment-dashboard?${params}`)
+      const investors = dashboard?.investors || []
+      const investor = investors.find(item => String(item.email || item.user_email || '').toLowerCase() === email.toLowerCase()) || investors[0]
+      return investor?.user_id || null
     }
-    return apiRequest(path, options)
-  }
 
-  const load = async () => {
-    setLoading(true)
-    setError('')
-    try {
-      const data = await request('/investments/admin/cycles')
-      setCycles(Array.isArray(data) ? data : (Array.isArray(data?.cycles) ? data.cycles : []))
-    } catch (e) {
-      setError(e.message || 'Unable to load investment cycle status.')
-    } finally {
-      setLoading(false)
+    const renderPanel = async modal => {
+      if (stopped || !modal || modal.querySelector('.investor-cycle-panel') || busy) return
+      busy = true
+      try {
+        const userId = await getInvestorId(modal)
+        if (!userId || stopped || !modal.isConnected) return
+        const result = await apiRequest('/investments/admin/cycles')
+        const all = Array.isArray(result) ? result : (Array.isArray(result?.cycles) ? result.cycles : [])
+        const cycles = all.filter(cycle => Number(cycle.user_id) === Number(userId))
+        const panel = document.createElement('div')
+        panel.className = 'investor-cycle-panel'
+        panel.innerHTML = `<div class="investor-cycle-head"><strong>Investment Cycle</strong><span>Managed from this investor account</span></div>${cycles.length ? cycles.map(cycle => { const closed = String(cycle.status || '').toUpperCase() === 'CLOSED'; return `<div class="investor-cycle-row"><div class="investor-cycle-info"><strong>Cycle #${cycle.id} · ${cycle.auto_invest ? 'Auto-Invest' : 'Non-Auto'}</strong><small>${money(cycle.principal)} principal · ${Number(cycle.total_leads || 0)} leads · ${Number(cycle.final_leads || 0)} final · ${Number(cycle.pending_leads || 0)} pending</small></div><span class="investor-cycle-status ${closed ? 'closed' : ''}">${cycle.status || '—'}</span>${closed ? '' : `<div class="investor-cycle-actions"><button class="close-cycle" data-cycle-id="${cycle.id}">Close Cycle</button><button class="finish-cycle" data-cycle-id="${cycle.id}">Finish</button></div>`}</div>` }).join('') : '<div style="padding:8px 0;color:#8497ae;font-size:9px">No investment cycle found.</div>'}`
+        const body = modal.querySelector('.investor-history-body')
+        if (body) body.insertBefore(panel, body.querySelector('.history-caption') || body.firstChild)
+        else modal.appendChild(panel)
+
+        panel.querySelectorAll('.close-cycle').forEach(button => button.addEventListener('click', async () => {
+          if (!window.confirm(`Close cycle #${button.dataset.cycleId}? Unresolved leads will remain unchanged.`)) return
+          button.disabled = true
+          try { await apiRequest(`/investments/admin/cycles/${button.dataset.cycleId}/close`, { method: 'POST' }); panel.remove(); await renderPanel(modal) } catch (error) { window.alert(error?.message || 'Unable to close the investment cycle.'); button.disabled = false }
+        }))
+        panel.querySelectorAll('.finish-cycle').forEach(button => button.addEventListener('click', async () => {
+          const reason = window.prompt('Reason for administrative finish:')
+          if (!reason?.trim()) return
+          button.disabled = true
+          try { await apiRequest(`/investments/admin/cycles/${button.dataset.cycleId}/finish`, { method: 'POST', body: JSON.stringify({ reason: reason.trim() }) }); panel.remove(); await renderPanel(modal) } catch (error) { window.alert(error?.message || 'Unable to finish the investment cycle.'); button.disabled = false }
+        }))
+      } catch (error) {
+        if (!stopped && modal.isConnected) { const panel = document.createElement('div'); panel.className = 'investor-cycle-panel'; panel.innerHTML = `<strong style="color:#b9432c;font-size:9px">Unable to load investment cycle.</strong>`; modal.querySelector('.investor-history-body')?.prepend(panel) }
+      } finally { busy = false }
     }
-  }
 
-  useEffect(() => { load() }, [])
+    const scan = () => { const modal = document.querySelector('.investor-history-modal'); if (modal && !modal.querySelector('.investor-cycle-panel')) renderPanel(modal) }
+    const observer = new MutationObserver(scan)
+    observer.observe(document.body, { childList: true, subtree: true })
+    scan()
+    return () => { stopped = true; observer.disconnect(); style.remove() }
+  }, [])
 
-  const closeCycle = async cycle => {
-    if (busyId || String(cycle.status).toUpperCase() === 'CLOSED') return
-    if (!window.confirm(`Close cycle #${cycle.id} for ${cycle.user_name || cycle.user_email || 'this investor'}? Unresolved leads will remain unchanged. The cycle will stop accepting new activity.`)) return
-    setBusyId(cycle.id)
-    setError('')
-    try {
-      await request(`/investments/admin/cycles/${cycle.id}/close`, { method: 'POST' })
-      await load()
-    } catch (e) {
-      setError(e.message || 'Unable to close the investment cycle.')
-    } finally {
-      setBusyId(null)
-    }
-  }
-
-  const finishCycle = async cycle => {
-    if (busyId || String(cycle.status).toUpperCase() === 'CLOSED') return
-    const reason = window.prompt('Reason for administrative finish:')
-    if (!reason?.trim()) return
-    setBusyId(cycle.id)
-    setError('')
-    try {
-      await request(`/investments/admin/cycles/${cycle.id}/finish`, {
-        method: 'POST',
-        body: JSON.stringify({ reason: reason.trim() }),
-      })
-      await load()
-    } catch (e) {
-      setError(e.message || 'Unable to finish the investment cycle.')
-    } finally {
-      setBusyId(null)
-    }
-  }
-
-  return <section style={{ margin: '0 0 20px', border: '1px solid #dce7f1', borderRadius: 12, background: '#fff', overflow: 'hidden' }}>
-    <div style={{ padding: '16px 18px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, borderBottom: '1px solid #e5edf5' }}>
-      <div><h2 style={{ margin: 0, color: '#123d7b', fontSize: 15, fontWeight: 850 }}>Investment Cycle Management</h2><p style={{ margin: '4px 0 0', color: '#7a8da5', fontSize: 10 }}>Cycle status and manual closure are now managed directly inside Investments.</p></div>
-      <button onClick={load} disabled={loading || Boolean(busyId)} style={{ border: '1px solid #d6e3ef', borderRadius: 8, background: '#fff', color: '#17457f', padding: '9px 13px', fontWeight: 800, cursor: 'pointer' }}>↻ Refresh</button>
-    </div>
-    {error && <div style={{ margin: 12, padding: '10px 12px', borderRadius: 8, background: '#fff1ed', color: '#b9432c', fontSize: 10 }}>{error}</div>}
-    <div style={{ overflowX: 'auto' }}>
-      <table style={{ width: '100%', minWidth: 900, borderCollapse: 'collapse', fontSize: 10 }}>
-        <thead><tr style={{ background: '#f4f8fc', color: '#7388a3', textAlign: 'left' }}><th style={{ padding: '10px 14px' }}>Cycle</th><th style={{ padding: '10px 14px' }}>Investor</th><th style={{ padding: '10px 14px' }}>Mode</th><th style={{ padding: '10px 14px' }}>Principal</th><th style={{ padding: '10px 14px' }}>Leads</th><th style={{ padding: '10px 14px' }}>Status</th><th style={{ padding: '10px 14px' }}>Actions</th></tr></thead>
-        <tbody>{loading ? <tr><td colSpan="7" style={{ padding: 24, textAlign: 'center', color: '#8497ae' }}>Loading cycle status…</td></tr> : cycles.length === 0 ? <tr><td colSpan="7" style={{ padding: 24, textAlign: 'center', color: '#8497ae' }}>No investment cycles found.</td></tr> : cycles.map(cycle => {
-          const closed = String(cycle.status || '').toUpperCase() === 'CLOSED'
-          const pending = Number(cycle.pending_leads || 0)
-          return <tr key={cycle.id} style={{ borderTop: '1px solid #e8eef4' }}>
-            <td style={{ padding: '11px 14px' }}><strong>#{cycle.id}</strong></td>
-            <td style={{ padding: '11px 14px' }}><strong style={{ display: 'block', color: '#173f78' }}>{cycle.user_name || 'Investor'}</strong><small style={{ color: '#8a9bb0' }}>{cycle.user_email || `User #${cycle.user_id}`}</small></td>
-            <td style={{ padding: '11px 14px' }}>{cycle.auto_invest ? 'AUTO-INVEST' : 'NON-AUTO'}</td>
-            <td style={{ padding: '11px 14px', fontWeight: 850 }}>{money(cycle.principal)}</td>
-            <td style={{ padding: '11px 14px' }}><strong>{Number(cycle.total_leads || 0)}</strong><small style={{ display: 'block', color: '#8a9bb0' }}>{Number(cycle.final_leads || 0)} final · {pending} pending</small></td>
-            <td style={{ padding: '11px 14px' }}><span style={{ display: 'inline-block', padding: '6px 9px', borderRadius: 999, background: closed ? '#edf1f5' : '#e9f7ef', color: closed ? '#65778c' : '#16804d', fontWeight: 850 }}>{cycle.status || '—'}</span></td>
-            <td style={{ padding: '11px 14px' }}>{closed ? <span style={{ color: '#8497ae' }}>Closed</span> : <div style={{ display: 'flex', gap: 7 }}><button onClick={() => closeCycle(cycle)} disabled={Boolean(busyId)} style={{ border: 0, borderRadius: 7, background: '#174f91', color: '#fff', padding: '8px 10px', fontWeight: 800, cursor: 'pointer' }}>{busyId === cycle.id ? 'Closing…' : 'Close Cycle'}</button><button onClick={() => finishCycle(cycle)} disabled={Boolean(busyId)} style={{ border: '1px solid #d9e3ed', borderRadius: 7, background: '#fff', color: '#526b85', padding: '8px 10px', fontWeight: 800, cursor: 'pointer' }}>Finish</button></div>}</td>
-          </tr>
-        })}</tbody>
-      </table>
-    </div>
-  </section>
+  return null
 }
