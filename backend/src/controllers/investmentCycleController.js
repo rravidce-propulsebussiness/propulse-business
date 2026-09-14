@@ -28,6 +28,17 @@ async function adminList(req,res){
   }
 }
 
+async function adminStatement(req,res){
+  try{
+    const userId=Number(req.params.userId);
+    const cycleId=Number(req.params.cycleId);
+    if(!Number.isInteger(userId)||userId<=0||!Number.isInteger(cycleId)||cycleId<=0)return res.status(400).json({error:'Invalid investor or cycle'});
+    return res.json(await cycleService.adminCycleStatement({userId,cycleId}));
+  }catch(e){
+    return res.status(e.code==='CYCLE_NOT_FOUND'?404:500).json({error:e.message||'Failed to load cycle statement',code:e.code});
+  }
+}
+
 async function adminFinish(req,res){
   try{
     const cycle=await cycleService.adminFinishCycle({
@@ -52,4 +63,4 @@ async function adminClose(req,res){
   }
 }
 
-module.exports={current,requestFinalExit,adminList,adminFinish,adminClose};
+module.exports={current,requestFinalExit,adminList,adminStatement,adminFinish,adminClose};
