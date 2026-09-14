@@ -1,35 +1,137 @@
-import {useEffect,useState} from 'react'
-import {Link} from 'react-router-dom'
-import {authRequest} from '../utils/auth'
-import './InvestorInvestmentSection.css'
+import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
+import { authRequest } from '../utils/auth'
+import './InvestorCycleHistory.css'
 
-const money=v=>`₹${Number(v||0).toLocaleString('en-IN',{maximumFractionDigits:2})}`
-const date=v=>v?new Date(v).toLocaleString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}):'—'
-const status=v=>String(v||'').toUpperCase()
-const openStatuses=new Set(['ACTIVE','EXIT_REQUESTED','WAITING_FOR_LEADS'])
+const money = v => `₹${Number(v || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}`
+const date = v => v ? new Date(v).toLocaleString('en-IN', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' }) : '—'
+const status = v => String(v || '').toUpperCase()
+const cycleType = c => Boolean(c.auto_invest) ? 'Auto-Invest' : 'Non-Auto'
 
-function EventRows({events=[]}){return <div className="investor-detail-list">{events.length?events.map((e,i)=><article className="investor-history-row" key={`${e.type}-${e.reference_id}-${i}`}><div><strong>{e.description}</strong><span>{date(e.occurred_at)}</span></div><span className="investor-status">{e.type.replaceAll('_',' ').toUpperCase()}</span><div className="investor-history-metrics"><span>AMOUNT <b className={Number(e.amount)>=0?'cycle-positive':'cycle-negative'}>{Number(e.amount)>=0?'+':''}{money(e.amount)}</b></span><span>BALANCE AFTER <b>{money(e.balance_after)}</b></span></div></article>):<div className="investor-section-empty">No financial transactions recorded in this cycle.</div>}</div>}
-
-function Detail({detail}){
- const inv=detail.investment||{},ads=detail.ads||{},leads=detail.leads||{},rev=detail.revenue||{},p=detail.payouts||{}
- return <div className="cycle-history-expanded">
-  <div className="investor-lead-stats cycle-history-stats"><div><strong>{money(detail.investments?.filter(x=>!x.parent_investment_id).reduce((s,x)=>s+Number(x.amount||0),0))}</strong><span>ACTUAL INVESTMENT</span></div><div><strong>{money(detail.investments?.filter(x=>x.parent_investment_id).reduce((s,x)=>s+Number(x.amount||0),0))}</strong><span>REINVESTMENT</span></div><div><strong>{money(inv.principal)}</strong><span>TOTAL INVESTMENT</span></div><div><strong>{money(ads.spent)}</strong><span>AD SPENT</span></div><div><strong>{money(rev.gross_sales)}</strong><span>GROSS LEAD REVENUE</span></div><div><strong>{money(rev.investor_earnings)}</strong><span>MY EARNINGS</span></div></div>
-  <section className="investor-section-card cycle-history-subcard"><div className="cycle-history-subhead"><h3>Investment &amp; Ad-Spend History</h3><span>Every money movement in this cycle.</span></div><EventRows events={detail.events?.filter(e=>['investment','reinvestment','ad_spend'].includes(e.type))}/></section>
-  <section className="investor-section-card cycle-history-subcard"><div className="cycle-history-subhead"><h3>Lead-Sale History</h3><span>Single-share and shared sales remain separate.</span></div>{detail.sales_detail?.length?<div className="cycle-sales-detail">{detail.sales_detail.map(s=><div className="cycle-sales-row" key={s.purchase_id}><div><b>Lead #{s.lead_id} sold</b><small>{date(s.sold_at)}</small></div><span>{s.shares===1?'1 · Single':`${s.shares} · Shared`}</span><strong>{money(s.amount)}</strong><em>Investor {money(s.investor_earnings)}</em></div>)}</div>:<div className="investor-section-empty">No paid lead sales in this cycle.</div>}</section>
-  <section className="investor-section-card cycle-history-subcard"><div className="cycle-history-subhead"><h3>Cycle Financial Activity</h3><span>Investor-side running balance for this cycle.</span></div><EventRows events={detail.events}/></section>
-  <div className="cycle-history-footer"><span>Linked {leads.linked||0} · Sold {leads.sold||0} · Single {leads.single_share_sales||0} · Shared {leads.shared_sales||0} · Shares {leads.shares_sold||0}</span><span>Paid {money(p.paid)} · Pending {money(p.pending)}</span></div>
- </div>
+function Stat({ label, value, tone='' }) {
+  return <div className={`cycle-history-stat ${tone}`}><span>{label}</span><strong>{value}</strong></div>
 }
 
-function CycleCard({cycle}){
- const [open,setOpen]=useState(false),[detail,setDetail]=useState(null),[loading,setLoading]=useState(false),[error,setError]=useState('')
- const toggle=async()=>{if(open){setOpen(false);return}setOpen(true);if(detail)return;setLoading(true);setError('');try{setDetail(await authRequest(`/investments/cycles/${cycle.id}/statement`))}catch(e){setError(e?.message||'Unable to load cycle history')}finally{setLoading(false)}}
- const closed=status(cycle.status)==='CLOSED'
- return <article className="investor-history-cycle"><div className="investor-history-cycle-head"><div><span className="cycle-history-kicker">{closed?'PREVIOUS CYCLE':'CURRENT CYCLE'}</span><h2>Cycle #{cycle.id} · {cycle.auto_invest?'Auto-Invest':'Non-Auto'}</h2><p>{status(cycle.status).replaceAll('_',' ')} · Started {date(cycle.started_at)} · Maturity {date(cycle.maturity_at)}</p></div><div className="investor-history-cycle-action"><span className={`cycle-history-status ${closed?'closed':'open'}`}>{status(cycle.status)}</span><button type="button" onClick={toggle}>{loading?'Loading…':open?'Hide History':'View Full History'}</button></div></div><div className="cycle-history-metrics"><span>TOTAL INVESTED <b>{money(cycle.total_invested)}</b></span><span>AD SPENT <b>{money(cycle.ad_spent)}</b></span><span>GROSS REVENUE <b>{money(cycle.gross_revenue)}</b></span><span>MY EARNINGS <b>{money(cycle.investor_earnings)}</b></span><span>LEADS <b>{cycle.sold_leads}/{cycle.linked_leads}</b></span></div>{error&&<div className="investor-section-error" style={{marginTop:10}}>{error}</div>}{open&&detail&&<Detail detail={detail}/>}</article>
+function EventList({ events }) {
+  if (!events?.length) return <div className="cycle-history-empty-inline">No financial activity recorded in this cycle.</div>
+  return <div className="cycle-event-list">
+    {events.map((event, index) => {
+      const positive = Number(event.amount || 0) >= 0
+      return <article className="cycle-event-row" key={`${event.type}-${event.reference_id}-${index}`}>
+        <div className="cycle-event-main">
+          <span className={`cycle-event-type ${positive ? 'positive' : 'negative'}`}>{String(event.type || '').replaceAll('_',' ').toUpperCase()}</span>
+          <strong>{event.description}</strong>
+          <small>{date(event.occurred_at)}</small>
+        </div>
+        <div className="cycle-event-amount">
+          <b className={positive ? 'positive' : 'negative'}>{positive ? '+' : ''}{money(event.amount)}</b>
+          <small>Balance after {money(event.balance_after)}</small>
+        </div>
+      </article>
+    })}
+  </div>
 }
 
-export default function InvestorCycleHistory(){
- const [cycles,setCycles]=useState([]),[loading,setLoading]=useState(true),[error,setError]=useState('')
- useEffect(()=>{let alive=true;authRequest('/investments/cycles').then(result=>{if(alive)setCycles(Array.isArray(result)?result:[])}).catch(e=>{if(alive)setError(e?.message||'Unable to load investment cycles')}).finally(()=>{if(alive)setLoading(false)});return()=>{alive=false}},[])
- return <main className="investor-section-page"><div className="investor-section-shell"><header className="investor-section-head"><div><span>INVESTMENT HISTORY</span><h1>Investment Cycles</h1><p>Each cycle is completely separate. Open any cycle to review investments, advertising, lead sales, earnings and withdrawals.</p></div><Link className="investor-section-invest" to="/investment?new=1">＋ New Investment</Link></header>{error&&<div className="investor-section-error">{error}</div>}{loading?<div className="investor-section-card">Loading investment cycles…</div>:cycles.length?cycles.map(c=><CycleCard cycle={c} key={c.id}/>):<div className="investor-section-card"><div className="investor-section-empty">No investment cycles yet.</div></div>}</div></main>
+function CycleDetail({ detail }) {
+  const investmentRows = Array.isArray(detail.investments) ? detail.investments : []
+  const actual = investmentRows.filter(x => x.parent_investment_id == null).reduce((s,x) => s + Number(x.amount || 0), 0)
+  const reinvest = investmentRows.filter(x => x.parent_investment_id != null).reduce((s,x) => s + Number(x.amount || 0), 0)
+  return <div className="cycle-history-detail">
+    <div className="cycle-history-detail-stats">
+      <Stat label="Actual Investment" value={money(actual)} />
+      <Stat label="Reinvestment" value={money(reinvest)} />
+      <Stat label="Total Investment" value={money(detail.investment?.principal)} tone="primary" />
+      <Stat label="Ad Spent" value={money(detail.ads?.spent)} />
+      <Stat label="Gross Lead Revenue" value={money(detail.revenue?.gross_sales)} />
+      <Stat label="My Earnings" value={money(detail.revenue?.investor_earnings)} tone="earnings" />
+    </div>
+
+    <section className="cycle-history-section">
+      <header><div><span>FINANCIAL HISTORY</span><h3>Investment &amp; Ad-Spend History</h3></div><small>{detail.ads?.transactions || 0} ad-spend transaction(s)</small></header>
+      <EventList events={(detail.events || []).filter(e => ['investment','reinvestment','ad_spend'].includes(e.type))} />
+    </section>
+
+    <section className="cycle-history-section">
+      <header><div><span>LEAD SALES</span><h3>Lead-Sale History</h3></div><small>{detail.sales_detail?.length || 0} paid sale(s)</small></header>
+      {detail.sales_detail?.length ? <div className="cycle-sales-list">{detail.sales_detail.map(s => <article className="cycle-sales-row" key={s.purchase_id}>
+        <div><strong>Lead #{s.lead_id} sold</strong><small>{date(s.sold_at)}</small></div>
+        <span className={Number(s.shares) > 1 ? 'shared' : 'single'}>{Number(s.shares) === 1 ? '1 · Single' : `${s.shares} · Shared`}</span>
+        <b>{money(s.amount)}</b>
+        <em>{money(s.investor_earnings)} earnings</em>
+      </article>)}</div> : <div className="cycle-history-empty-inline">No paid lead sales in this cycle.</div>}
+    </section>
+
+    <section className="cycle-history-section">
+      <header><div><span>CYCLE BALANCE</span><h3>Complete Cycle Activity</h3></div><small>Cycle-isolated running balance</small></header>
+      <EventList events={detail.events} />
+    </section>
+
+    <footer className="cycle-history-detail-footer">
+      <span>Linked {detail.leads?.linked || 0} · Sold {detail.leads?.sold || 0} · Single {detail.leads?.single_share_sales || 0} · Shared {detail.leads?.shared_sales || 0} · Shares {detail.leads?.shares_sold || 0}</span>
+      <span>Withdrawn {money(detail.payouts?.paid)} · Pending {money(detail.payouts?.pending)}</span>
+    </footer>
+  </div>
+}
+
+function CycleCard({ cycle }) {
+  const [open, setOpen] = useState(false)
+  const [detail, setDetail] = useState(null)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+  const toggle = async () => {
+    if (open) { setOpen(false); return }
+    setOpen(true)
+    if (detail) return
+    setLoading(true); setError('')
+    try { setDetail(await authRequest(`/investments/cycles/${cycle.id}/statement`)) }
+    catch (e) { setError(e?.message || 'Unable to load cycle statement') }
+    finally { setLoading(false) }
+  }
+  const closed = status(cycle.status) === 'CLOSED'
+  return <article className={`investor-history-cycle ${closed ? 'closed' : 'open'}`}>
+    <header className="investor-history-cycle-head">
+      <div>
+        <span className="cycle-history-kicker">{closed ? 'PREVIOUS CYCLE' : 'CURRENT CYCLE'}</span>
+        <h2>Cycle #{cycle.id} · {cycleType(cycle)}</h2>
+        <p>{status(cycle.status).replaceAll('_',' ')} · Started {date(cycle.started_at)} · Maturity {date(cycle.maturity_at)}</p>
+      </div>
+      <div className="investor-history-cycle-action">
+        <span className={`cycle-history-status ${closed ? 'closed' : 'open'}`}>{status(cycle.status)}</span>
+        <button type="button" onClick={toggle} disabled={loading}>{loading ? 'Loading…' : open ? 'Hide History' : 'View Full History'}</button>
+      </div>
+    </header>
+    <div className="cycle-history-overview-stats">
+      <Stat label="Total Invested" value={money(cycle.total_invested)} tone="primary" />
+      <Stat label="Ad Spent" value={money(cycle.ad_spent)} />
+      <Stat label="Gross Revenue" value={money(cycle.gross_revenue)} />
+      <Stat label="My Earnings" value={money(cycle.investor_earnings)} tone="earnings" />
+      <Stat label="Leads Sold" value={`${cycle.sold_leads || 0}/${cycle.linked_leads || 0}`} />
+    </div>
+    {error && <div className="investor-section-error">{error}</div>}
+    {open && detail && <CycleDetail detail={detail} />}
+  </article>
+}
+
+export default function InvestorCycleHistory() {
+  const [cycles, setCycles] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+  useEffect(() => {
+    let alive = true
+    authRequest('/investments/cycles')
+      .then(result => { if (alive) setCycles(Array.isArray(result) ? result : []) })
+      .catch(e => { if (alive) setError(e?.message || 'Unable to load investment cycles') })
+      .finally(() => { if (alive) setLoading(false) })
+    return () => { alive = false }
+  }, [])
+  const current = cycles.filter(c => ['ACTIVE','EXIT_REQUESTED','WAITING_FOR_LEADS'].includes(status(c.status)))
+  const previous = cycles.filter(c => !['ACTIVE','EXIT_REQUESTED','WAITING_FOR_LEADS'].includes(status(c.status)))
+  if (loading) return <main className="investor-section-page"><div className="investor-section-shell"><div className="investor-section-card">Loading investment cycles…</div></div></main>
+  return <main className="investor-section-page cycle-history-page"><div className="investor-section-shell">
+    <header className="investor-section-head cycle-history-head"><div><span>INVESTMENT HISTORY</span><h1>Investment Cycles</h1><p>Every cycle stays separate. Open a cycle to see its investment, advertising, lead sales, earnings, withdrawals and running balance.</p></div><Link className="investor-section-invest" to="/investment">Back to Investment</Link></header>
+    {error && <div className="investor-section-error">{error}</div>}
+    {current.length > 0 && <section className="cycle-history-group"><h2>Current Cycle</h2>{current.map(c => <CycleCard key={c.id} cycle={c} />)}</section>}
+    {previous.length > 0 && <section className="cycle-history-group"><h2>Previous Cycles</h2>{previous.map(c => <CycleCard key={c.id} cycle={c} />)}</section>}
+    {!current.length && !previous.length && <div className="investor-section-card"><div className="investor-section-empty">No investment cycles yet.</div></div>}
+  </div></main>
 }
