@@ -45,7 +45,6 @@ function Dashboard() {
   }, [])
 
   const openInvest = () => document.querySelector('.legacy-investment .investment-hero-action button')?.click()
-  const withdraw = () => document.querySelector('.legacy-investment .investment-withdraw-card button')?.click()
   const exit = () => document.querySelector('.legacy-investment .investment-pending-card button')?.click()
 
   if (loading) return <section className="cycle-dashboard-loading">Loading investment dashboard…</section>
@@ -64,9 +63,6 @@ function Dashboard() {
     : 0
   const linkedLeads = active ? Number(cycle.total_leads ?? 0) : 0
   const soldLeads = active ? Number(cycle.sold_leads ?? 0) : 0
-  const singleSales = active ? Number(cycle.single_share_sales ?? 0) : 0
-  const sharedSales = active ? Number(cycle.shared_sales ?? 0) : 0
-  const sharesSold = active ? Number(cycle.shares_sold ?? 0) : 0
   const finalLeads = active ? Number(cycle.final_leads ?? 0) : 0
   const pendingLeads = active ? Number(cycle.pending_leads ?? 0) : 0
   const transferPaid = active ? Number(cycle.payout_transferred ?? 0) : 0
@@ -85,9 +81,9 @@ function Dashboard() {
           {active ? <>
             <button type="button" onClick={openInvest} disabled={closing}>＋ Add Investment</button>
             {autoInvest && !closing && <button type="button" className="secondary" onClick={exit}>Request Final Exit</button>}
-            {!autoInvest && transferable > 0 && <button type="button" className="secondary" onClick={withdraw}>Withdraw Earnings</button>}
           </> : <button type="button" onClick={openInvest}>＋ Start Investment</button>}
-          <Link className="secondary link" to="/investment/payouts">Withdrawals →</Link>
+          <Link className="secondary link" to="/investment/history">History →</Link>
+          {active && !autoInvest && transferable > 0 && <Link className="secondary link" to="/investment/payouts">Withdraw Earnings →</Link>}
         </div>
       </div>
 
@@ -99,7 +95,7 @@ function Dashboard() {
         <article><span>TOTAL INVESTMENT</span><strong>{money(totalInvested)}</strong><small>{active ? 'Actual investment + reinvestment for this cycle.' : 'No active-cycle investment.'}</small></article>
         <article><span>MY EARNINGS</span><strong>{money(investorEarnings)}</strong><small>{active ? 'My realized earnings from paid lead sales in this cycle.' : 'No active-cycle earnings.'}</small></article>
         <article><span>ADS SPENT</span><strong>{money(adSpent)}</strong><small>{active ? 'Actual advertising spend recorded in this cycle.' : 'No current-cycle ad spend.'}</small></article>
-        <article><span>AVAILABLE FOR BANK TRANSFER</span><strong>{money(transferable)}</strong><small>{active ? 'Eligible current-cycle earnings available for withdrawal.' : 'No active-cycle earnings available for transfer.'}</small>{active && transferable > 0 && <button type="button" onClick={withdraw}>Withdraw Earnings</button>}</article>
+        <article><span>AVAILABLE FOR BANK TRANSFER</span><strong>{money(transferable)}</strong><small>{active ? 'Eligible current-cycle earnings available for withdrawal.' : 'No active-cycle earnings available for transfer.'}</small>{active && transferable > 0 && <Link className="cycle-withdraw-button" to="/investment/payouts">Withdraw Earnings</Link>}</article>
         <article><span>UNMATURED FUND</span><strong>{money(unmaturedFund)}</strong><small>{active ? 'Current-cycle investment capital whose maturity date has not yet been reached.' : 'No active-cycle unmatured funds.'}</small></article>
       </div>
 
@@ -107,7 +103,7 @@ function Dashboard() {
         <div><b>Linked Leads</b><span>{linkedLeads}</span></div><div><b>Leads Sold</b><span>{soldLeads}</span></div><div><b>Final Leads</b><span>{finalLeads}</span></div><div><b>Pending Leads</b><span>{pendingLeads}</span></div><div><b>Transfer Paid</b><span>{money(transferPaid)}</span></div><div><b>Transfer Reserved</b><span>{money(transferReserved)}</span></div>
       </div>
 
-      <div className="cycle-dashboard-nav"><Link to="/investment/leads">Linked Leads</Link><Link to="/investment/payouts">Withdrawals</Link><Link to="/investment/faq">FAQ</Link></div>
+      <div className="cycle-dashboard-nav"><Link to="/investment/leads">Linked Leads</Link><Link to="/investment/history">History</Link><Link to="/investment/payouts">Withdrawals</Link><Link to="/investment/faq">FAQ</Link></div>
 
       <div className="cycle-dashboard-note">{active
         ? <><b>Current Cycle Only</b><span>{autoInvest ? 'Auto-Invest eligible earnings can be used for advertising; bank transfer shows only transferable earnings.' : 'This dashboard shows only this active cycle. Previous cycles remain under History.'}</span></>
