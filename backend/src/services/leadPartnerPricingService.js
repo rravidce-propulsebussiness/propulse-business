@@ -1,16 +1,18 @@
 const pool = require('../config/database');
 
+const ALLOWED_SHARES = new Set([1, 2, 3]);
+
 const normalizePricing = value => {
   const shares = Array.isArray(value?.shares) ? value.shares : [];
   return shares.map(row => ({ shares: Number(row?.shares), normal: Number(row?.normal), pro: Number(row?.pro) }))
-    .filter(row => Number.isInteger(row.shares) && row.shares > 0 && Number.isFinite(row.normal) && row.normal >= 0 && Number.isFinite(row.pro) && row.pro >= 0)
+    .filter(row => ALLOWED_SHARES.has(row.shares) && Number.isFinite(row.normal) && row.normal >= 0 && Number.isFinite(row.pro) && row.pro >= 0)
     .sort((a, b) => a.shares - b.shares);
 };
 
 const normalizeProTiers = value => {
   const shares = Array.isArray(value?.shares) ? value.shares : [];
   return shares.map(row => ({ shares: Number(row?.shares), pro: Number(row?.pro) }))
-    .filter(row => Number.isInteger(row.shares) && row.shares > 0 && Number.isFinite(row.pro) && row.pro >= 0)
+    .filter(row => ALLOWED_SHARES.has(row.shares) && Number.isFinite(row.pro) && row.pro >= 0)
     .sort((a, b) => a.shares - b.shares);
 };
 
@@ -75,8 +77,8 @@ async function applyRuleToExistingLeads(userId, rule, client = pool) {
   const target = rule.shares;
   const filters = ['created_by=$1','lead_type=$2','status IN (\'available\',\'paused\')','COALESCE(partner_pricing_overridden,FALSE)=FALSE'];
   const params = [userId, rule.leadType];
-  if (rule.industryId === null) filters.push('TRUE'); else { params.push(rule.industryId); filters.push(`industry_id=$${params.length}`); }
-  if (rule.cityId === null) filters.push('TRUE'); else { params.push(rule.cityId); filters.push(`city_id=$${params.length}`); }
+  if (rule.industryId !== null) { params.push(rule.industryId); filters.push(`industry_id=$${params.length}`); }
+  if (rule.cityId !== null) { params.push(rule.cityId); filters.push(`city_id=$${params.length}`); }
   const rows = (await client.query(`SELECT id,pricing FROM leads WHERE ${filters.join(' AND ')} FOR UPDATE`, params)).rows;
   for (const lead of rows) {
     const current = normalizePricing(lead.pricing);
@@ -157,7 +159,7 @@ async function update(userId, leadId, input) {
     const incoming = new Map();
     for (const item of requested) {
       const shares=Number(item?.shares),pro=Number(item?.pro);
-      if (!Number.isInteger(shares)||shares<=0||!Number.isFinite(pro)||pro<0) throw Object.assign(new Error('Every Pro price must be a valid non-negative amount'),{code:'INVALID_PRICING'});
+      if (!ALLOWED_SHARES.has(shares)||!Number.isFinite(pro)||pro<0) throw Object.assign(new Error('Lead Partner sharing tiers must be exactly 1, 2, or 3 shares, with valid Pro prices'),{code:'INVALID_PRICING'});
       if(incoming.has(shares)) throw Object.assign(new Error('Duplicate sharing tier'),{code:'INVALID_PRICING'});
       incoming.set(shares,pro);
     }
