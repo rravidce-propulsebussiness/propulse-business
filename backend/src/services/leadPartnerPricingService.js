@@ -7,51 +7,165 @@ const normalizePricing = value => {
     .sort((a, b) => a.shares - b.shares);
 };
 
+const normalizeProTiers = value => {
+  const shares = Array.isArray(value?.shares) ? value.shares : [];
+  return shares.map(row => ({ shares: Number(row?.shares), pro: Number(row?.pro) }))
+    .filter(row => Number.isInteger(row.shares) && row.shares > 0 && Number.isFinite(row.pro) && row.pro >= 0)
+    .sort((a, b) => a.shares - b.shares);
+};
+
+const parseOptionalId = value => {
+  if (value === undefined || value === null || value === '') return null;
+  const id = Number(value);
+  if (!Number.isInteger(id) || id <= 0) throw Object.assign(new Error('Industry and City must be valid IDs'), { code:'INVALID_PRICING' });
+  return id;
+};
+
 async function getSettings() {
   const row = (await pool.query('SELECT commission_percent,normal_price_uplift FROM lead_partner_settings WHERE id=1')).rows[0] || {};
   return { commissionPercent: Number(row.commission_percent ?? 5), normalPriceUplift: Number(row.normal_price_uplift ?? 100) };
+}
+
+async function listRules(userId) {
+  const rows = await pool.query(`
+    SELECT r.id,r.industry_id,r.city_id,r.lead_type,r.pricing,r.is_active,r.created_at,r.updated_at,
+           i.name AS industry_name,c.name AS city_name
+    FROM lead_partner_pricing_rules r
+    LEFT JOIN industries i ON i.id=r.industry_id
+    LEFT JOIN cities c ON c.id=r.city_id
+    WHERE r.partner_user_id=$1
+    ORDER BY CASE WHEN r.industry_id IS NULL THEN 0 ELSE 1 END,
+             r.industry_id NULLS FIRST,
+             CASE WHEN r.city_id IS NULL THEN 0 ELSE 1 END,
+             r.city_id NULLS FIRST,
+             r.lead_type,r.id`, [userId]);
+  return rows.rows.map(row => ({
+    id:Number(row.id), industryId:row.industry_id == null ? null : Number(row.industry_id), cityId:row.city_id == null ? null : Number(row.city_id),
+    leadType:row.lead_type, industryName:row.industry_name, cityName:row.city_name,
+    pricing:{shares:normalizeProTiers(row.pricing)}, isActive:Boolean(row.is_active), createdAt:row.created_at, updatedAt:row.updated_at,
+  }));
 }
 
 async function list(userId, { search = '', status = 'all' } = {}) {
   const params = [userId]; const conditions = ['l.created_by=$1'];
   if (status && status !== 'all') { params.push(status); conditions.push(`l.status=$${params.length}`); }
   if (String(search).trim()) { params.push(`%${String(search).trim()}%`); conditions.push(`(l.customer_name ILIKE $${params.length} OR l.customer_phone ILIKE $${params.length} OR l.requirement ILIKE $${params.length})`); }
-  const [settings, rows] = await Promise.all([
-    getSettings(),
+  const [settings, rules, rows] = await Promise.all([
+    getSettings(), listRules(userId),
     pool.query(`SELECT l.id,l.customer_name,l.customer_phone,l.status,l.lead_type,l.created_at,l.pricing,l.partner_base_pricing,COALESCE(l.partner_pricing_overridden,FALSE) AS partner_pricing_overridden,l.partner_pricing_updated_at,i.name AS industry_name,s.name AS service_name,c.name AS city_name FROM leads l JOIN industries i ON i.id=l.industry_id JOIN services s ON s.id=l.service_id JOIN cities c ON c.id=l.city_id WHERE ${conditions.join(' AND ')} ORDER BY l.created_at DESC,l.id DESC LIMIT 500`, params),
   ]);
-  return { settings, leads: rows.rows.map(row => ({ id: row.id, customerName: row.customer_name, customerPhone: row.customer_phone, status: row.status, leadType: row.lead_type, createdAt: row.created_at, industryName: row.industry_name, serviceName: row.service_name, cityName: row.city_name, pricing: { shares: normalizePricing(row.pricing) }, adminPricing: { shares: normalizePricing(row.partner_base_pricing || row.pricing) }, overridden: Boolean(row.partner_pricing_overridden), updatedAt: row.partner_pricing_updated_at })) };
+  return { settings, rules, leads: rows.rows.map(row => ({ id:row.id, customerName:row.customer_name, customerPhone:row.customer_phone, status:row.status, leadType:row.lead_type, createdAt:row.created_at, industryName:row.industry_name, serviceName:row.service_name, cityName:row.city_name, pricing:{shares:normalizePricing(row.pricing)}, adminPricing:{shares:normalizePricing(row.partner_base_pricing || row.pricing)}, overridden:Boolean(row.partner_pricing_overridden), updatedAt:row.partner_pricing_updated_at })) };
+}
+
+function validateRuleInput(input) {
+  const industryId = parseOptionalId(input?.industryId);
+  const cityId = parseOptionalId(input?.cityId);
+  const leadType = String(input?.leadType || 'basic').trim().toLowerCase();
+  if (!['basic','premium'].includes(leadType)) throw Object.assign(new Error('Lead type must be basic or premium'), { code:'INVALID_PRICING' });
+  const shares = normalizeProTiers(input?.pricing);
+  if (!shares.length) throw Object.assign(new Error('At least one Pro pricing tier is required'), { code:'INVALID_PRICING' });
+  const seen = new Set();
+  for (const tier of shares) { if (seen.has(tier.shares)) throw Object.assign(new Error('Duplicate sharing tier'), { code:'INVALID_PRICING' }); seen.add(tier.shares); }
+  return { industryId, cityId, leadType, shares, isActive:input?.isActive !== false };
+}
+
+async function applyRuleToExistingLeads(userId, rule, client = pool) {
+  const settings = await getSettings();
+  const uplift = Number(settings.normalPriceUplift ?? 100);
+  const target = rule.shares;
+  const filters = ['created_by=$1','lead_type=$2','status IN (\'available\',\'paused\')','COALESCE(partner_pricing_overridden,FALSE)=FALSE'];
+  const params = [userId, rule.leadType];
+  if (rule.industryId === null) filters.push('TRUE'); else { params.push(rule.industryId); filters.push(`industry_id=$${params.length}`); }
+  if (rule.cityId === null) filters.push('TRUE'); else { params.push(rule.cityId); filters.push(`city_id=$${params.length}`); }
+  const rows = (await client.query(`SELECT id,pricing FROM leads WHERE ${filters.join(' AND ')} FOR UPDATE`, params)).rows;
+  for (const lead of rows) {
+    const current = normalizePricing(lead.pricing);
+    const merged = current.map(tier => {
+      const override = target.find(x => x.shares === tier.shares);
+      const pro = override ? override.pro : tier.pro;
+      return { shares:tier.shares, pro, normal:pro + uplift };
+    });
+    await client.query('UPDATE leads SET pricing=$1::jsonb,updated_at=CURRENT_TIMESTAMP WHERE id=$2 AND created_by=$3',[JSON.stringify({shares:merged}),lead.id,userId]);
+  }
+}
+
+async function saveRule(userId, input) {
+  const rule = validateRuleInput(input);
+  const id = input?.id == null || input.id === '' ? null : Number(input.id);
+  if (id !== null && (!Number.isInteger(id) || id <= 0)) throw Object.assign(new Error('Pricing rule ID must be valid'), { code:'INVALID_PRICING' });
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    if (rule.industryId !== null) { const exists = (await client.query('SELECT id FROM industries WHERE id=$1 AND is_active=TRUE',[rule.industryId])).rows[0]; if (!exists) throw Object.assign(new Error('Selected industry is invalid'),{code:'INVALID_PRICING'}); }
+    if (rule.cityId !== null) { const exists = (await client.query('SELECT id FROM cities WHERE id=$1 AND is_active=TRUE',[rule.cityId])).rows[0]; if (!exists) throw Object.assign(new Error('Selected city is invalid'),{code:'INVALID_PRICING'}); }
+    const pricing = {shares:rule.shares};
+    let row;
+    if (id !== null) {
+      const existing = (await client.query('SELECT id FROM lead_partner_pricing_rules WHERE id=$1 AND partner_user_id=$2',[id,userId])).rows[0];
+      if (!existing) throw Object.assign(new Error('Pricing rule not found'),{code:'NOT_FOUND'});
+      try { row = (await client.query('UPDATE lead_partner_pricing_rules SET industry_id=$1,city_id=$2,lead_type=$3,pricing=$4::jsonb,is_active=$5,updated_at=CURRENT_TIMESTAMP WHERE id=$6 AND partner_user_id=$7 RETURNING *',[rule.industryId,rule.cityId,rule.leadType,JSON.stringify(pricing),rule.isActive,id,userId])).rows[0]; }
+      catch(e){if(e.code==='23505')throw Object.assign(new Error('A pricing configuration already exists for this Industry, City and Lead Type'),{code:'PRICING_SCOPE_EXISTS'});throw e;}
+    } else {
+      try { row = (await client.query('INSERT INTO lead_partner_pricing_rules(partner_user_id,industry_id,city_id,lead_type,pricing,is_active) VALUES($1,$2,$3,$4,$5::jsonb,$6) RETURNING *',[userId,rule.industryId,rule.cityId,rule.leadType,JSON.stringify(pricing),rule.isActive])).rows[0]; }
+      catch(e){if(e.code==='23505')throw Object.assign(new Error('A pricing configuration already exists for this Industry, City and Lead Type'),{code:'PRICING_SCOPE_EXISTS'});throw e;}
+    }
+    if (rule.isActive) await applyRuleToExistingLeads(userId, rule, client);
+    await client.query('COMMIT');
+    return { id:Number(row.id), pricing, industryId:rule.industryId, cityId:rule.cityId, leadType:rule.leadType, isActive:rule.isActive };
+  } catch(e) { await client.query('ROLLBACK'); throw e; } finally { client.release(); }
+}
+
+async function deleteRule(userId, id) {
+  const numeric = Number(id);
+  if (!Number.isInteger(numeric) || numeric <= 0) throw Object.assign(new Error('Pricing rule ID must be valid'),{code:'INVALID_PRICING'});
+  const result = await pool.query('DELETE FROM lead_partner_pricing_rules WHERE id=$1 AND partner_user_id=$2 RETURNING id',[numeric,userId]);
+  if (!result.rows[0]) throw Object.assign(new Error('Pricing rule not found'),{code:'NOT_FOUND'});
+  return {deleted:true,id:numeric};
+}
+
+async function getConfiguredPartnerPricing(userId, industryId, cityId, leadType = 'basic') {
+  const type = String(leadType || 'basic').toLowerCase();
+  const result = await pool.query(`SELECT pricing FROM lead_partner_pricing_rules WHERE partner_user_id=$1 AND is_active=TRUE AND lead_type=$4 AND (industry_id=$2 OR industry_id IS NULL) AND (city_id=$3 OR city_id IS NULL) ORDER BY CASE WHEN industry_id IS NOT NULL AND city_id IS NOT NULL THEN 3 WHEN industry_id IS NOT NULL THEN 2 WHEN city_id IS NOT NULL THEN 1 ELSE 0 END DESC,id DESC LIMIT 1`,[userId,industryId||null,cityId||null,type]);
+  return normalizeProTiers(result.rows[0]?.pricing);
+}
+
+async function applyConfiguredPricingToLead(userId, leadId, leadPricing, industryId, cityId, leadType) {
+  const overrides = await getConfiguredPartnerPricing(userId, industryId, cityId, leadType);
+  if (!overrides.length) return leadPricing;
+  const settings = await getSettings();
+  const uplift = Number(settings.normalPriceUplift ?? 100);
+  const current = normalizePricing(leadPricing);
+  return { shares: current.map(tier => { const match = overrides.find(x => x.shares === tier.shares); const pro = match ? match.pro : tier.pro; return { shares:tier.shares, pro, normal:pro + uplift }; }) };
 }
 
 async function update(userId, leadId, input) {
   const id = Number(leadId);
-  if (!Number.isInteger(id) || id <= 0) throw Object.assign(new Error('Lead ID must be valid'), { code: 'INVALID_LEAD_ID' });
+  if (!Number.isInteger(id) || id <= 0) throw Object.assign(new Error('Lead ID must be valid'), { code:'INVALID_LEAD_ID' });
   const requested = Array.isArray(input?.shares) ? input.shares : [];
-  if (!requested.length) throw Object.assign(new Error('At least one pricing tier is required'), { code: 'INVALID_PRICING' });
+  if (!requested.length) throw Object.assign(new Error('At least one pricing tier is required'), { code:'INVALID_PRICING' });
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
-    const lead = (await client.query(`SELECT id,status,pricing FROM leads WHERE id=$1 AND created_by=$2 FOR UPDATE`, [id, userId])).rows[0];
-    if (!lead) throw Object.assign(new Error('Lead not found in your inventory'), { code: 'NOT_FOUND' });
-    if (!['available','paused'].includes(String(lead.status).toLowerCase())) throw Object.assign(new Error('Pricing can only be changed while a lead is available or paused'), { code: 'PRICING_LOCKED' });
+    const lead = (await client.query(`SELECT id,status,industry_id,city_id,lead_type,pricing FROM leads WHERE id=$1 AND created_by=$2 FOR UPDATE`, [id,userId])).rows[0];
+    if (!lead) throw Object.assign(new Error('Lead not found in your inventory'), { code:'NOT_FOUND' });
+    if (!['available','paused'].includes(String(lead.status).toLowerCase())) throw Object.assign(new Error('Pricing can only be changed while a lead is available or paused'), { code:'PRICING_LOCKED' });
     const current = normalizePricing(lead.pricing);
-    if (!current.length) throw Object.assign(new Error('This lead has no configured pricing tiers'), { code: 'PRICING_NOT_CONFIGURED' });
+    if (!current.length) throw Object.assign(new Error('This lead has no configured pricing tiers'), { code:'PRICING_NOT_CONFIGURED' });
     const settings = (await client.query('SELECT normal_price_uplift FROM lead_partner_settings WHERE id=1')).rows[0] || {};
     const uplift = Number(settings.normal_price_uplift ?? 100);
-    if (!Number.isFinite(uplift) || uplift < 0) throw Object.assign(new Error('Lead Partner normal-price uplift is invalid'), { code: 'INVALID_PRICING_CONFIG' });
+    if (!Number.isFinite(uplift) || uplift < 0) throw Object.assign(new Error('Lead Partner normal-price uplift is invalid'), { code:'INVALID_PRICING_CONFIG' });
     const incoming = new Map();
     for (const item of requested) {
-      const shares = Number(item?.shares); const pro = Number(item?.pro);
-      if (!Number.isInteger(shares) || shares <= 0 || !Number.isFinite(pro) || pro < 0) throw Object.assign(new Error('Every Pro price must be a valid non-negative amount'), { code: 'INVALID_PRICING' });
-      if (incoming.has(shares)) throw Object.assign(new Error('Duplicate sharing tier'), { code: 'INVALID_PRICING' });
-      incoming.set(shares, pro);
+      const shares=Number(item?.shares),pro=Number(item?.pro);
+      if (!Number.isInteger(shares)||shares<=0||!Number.isFinite(pro)||pro<0) throw Object.assign(new Error('Every Pro price must be a valid non-negative amount'),{code:'INVALID_PRICING'});
+      if(incoming.has(shares)) throw Object.assign(new Error('Duplicate sharing tier'),{code:'INVALID_PRICING'});
+      incoming.set(shares,pro);
     }
-    const pricing = { shares: current.map(tier => { const pro = incoming.has(tier.shares) ? incoming.get(tier.shares) : tier.pro; return { shares: tier.shares, pro, normal: pro + uplift }; }) };
-    await client.query('UPDATE leads SET pricing=$1::jsonb,partner_pricing_overridden=TRUE,partner_pricing_updated_at=CURRENT_TIMESTAMP,updated_at=CURRENT_TIMESTAMP WHERE id=$2 AND created_by=$3', [JSON.stringify(pricing), id, userId]);
+    const pricing={shares:current.map(tier=>{const pro=incoming.has(tier.shares)?incoming.get(tier.shares):tier.pro;return{shares:tier.shares,pro,normal:pro+uplift};})};
+    await client.query('UPDATE leads SET pricing=$1::jsonb,partner_pricing_overridden=TRUE,partner_pricing_updated_at=CURRENT_TIMESTAMP,updated_at=CURRENT_TIMESTAMP WHERE id=$2 AND created_by=$3',[JSON.stringify(pricing),id,userId]);
     await client.query('COMMIT');
-    return { id, pricing, normalPriceUplift: uplift, overridden: true };
-  } catch (error) { await client.query('ROLLBACK'); throw error; }
-  finally { client.release(); }
+    return {id,pricing,normalPriceUplift:uplift,overridden:true};
+  } catch(e){await client.query('ROLLBACK');throw e;} finally{client.release();}
 }
 
-module.exports = { getSettings, list, update };
+module.exports = { getSettings, list, update, listRules, saveRule, deleteRule, getConfiguredPartnerPricing, applyConfiguredPricingToLead, normalizePricing, normalizeProTiers };
