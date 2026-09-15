@@ -5,12 +5,24 @@ function validatePassword(password) {
   return typeof password === 'string' && password.length >= 8;
 }
 
+const PUBLIC_SIGNUP_ROLES = new Set(['business', 'lead_partner']);
+
+function normalizePublicSignupRole(value) {
+  const role = String(value || 'business').trim().toLowerCase();
+  return PUBLIC_SIGNUP_ROLES.has(role) ? role : null;
+}
+
 async function signup(req, res) {
   try {
     const {
       name, email, password, phone, businessName, businessDetails, services, locations,
+      accountType,
     } = req.body;
 
+    const role = normalizePublicSignupRole(accountType);
+    if (!role) {
+      return res.status(400).json({ error: 'Choose either User or Lead Partner as your account type' });
+    }
     if (!name?.trim() || !email?.trim() || !validatePassword(password)) {
       return res.status(400).json({ error: 'Name, email and a password of at least 8 characters are required' });
     }
@@ -22,7 +34,7 @@ async function signup(req, res) {
     }
 
     const result = await authService.signup({
-      name, email, password, phone, businessName, businessDetails, services, locations,
+      name, email, password, phone, businessName, businessDetails, services, locations, role,
     });
     return res.status(201).json(result);
   } catch (error) {
@@ -47,8 +59,9 @@ async function login(req, res) {
 
 async function googleLogin(req, res) {
   try {
-    const { credential } = req.body;
-    return res.json(await authService.googleLogin({ idToken: credential }));
+    const { credential, accountType } = req.body || {};
+    const role = normalizePublicSignupRole(accountType);
+    return res.json(await authService.googleLogin({ idToken: credential, role }));
   } catch (error) {
     if (['GOOGLE_NOT_CONFIGURED', 'INVALID_GOOGLE_TOKEN'].includes(error.code)) return res.status(400).json({ error: error.message });
     if (error.code === 'EMAIL_EXISTS') return res.status(409).json({ error: error.message });
