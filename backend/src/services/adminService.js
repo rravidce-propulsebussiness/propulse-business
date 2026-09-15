@@ -4,6 +4,7 @@ const { validateSelections } = require('./profileService');
 
 const DEFAULT_PAGE_SIZE = 25;
 const MAX_PAGE_SIZE = 100;
+const MANAGEABLE_ROLES = new Set(['business', 'lead_partner', 'admin']);
 
 function parsePagination(query = {}) {
   const rawPage = Number.parseInt(query.page, 10);
@@ -135,6 +136,53 @@ async function setUserStatus(userId,isActive) {
   return result.rows[0]||null;
 }
 
+async function setUserRole({ userId, role, actingAdminId }) {
+  const targetUserId = Number(userId);
+  const normalizedRole = String(role || '').trim().toLowerCase();
+  const actorId = Number(actingAdminId);
+  if (!Number.isInteger(targetUserId) || !MANAGEABLE_ROLES.has(normalizedRole)) {
+    const error = new Error('Choose a valid account type: User, Lead Partner, or Admin');
+    error.code = 'INVALID_ROLE';
+    throw error;
+  }
+  if (targetUserId === actorId) {
+    const error = new Error('You cannot change your own administrator role.');
+    error.code = 'SELF_ROLE_CHANGE';
+    throw error;
+  }
+
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const current = (await client.query('SELECT id,name,email,role,is_active FROM users WHERE id=$1 FOR UPDATE',[targetUserId])).rows[0];
+    if (!current) {
+      const error = new Error('User not found');
+      error.code = 'NOT_FOUND';
+      throw error;
+    }
+    if (current.role === normalizedRole) {
+      await client.query('COMMIT');
+      return current;
+    }
+    if (current.role === 'admin' && normalizedRole !== 'admin') {
+      const activeAdmins = Number((await client.query(`SELECT COUNT(*)::int AS total FROM users WHERE role='admin' AND is_active=TRUE AND id<>$1`,[targetUserId])).rows[0].total || 0);
+      if (activeAdmins < 1) {
+        const error = new Error('At least one other active administrator must remain.');
+        error.code = 'LAST_ADMIN';
+        throw error;
+      }
+    }
+    const updated = (await client.query(`UPDATE users SET role=$1,auth_version=auth_version+1,updated_at=CURRENT_TIMESTAMP WHERE id=$2 RETURNING id,name,email,role,is_active,created_at`,[normalizedRole,targetUserId])).rows[0];
+    await client.query('COMMIT');
+    return updated;
+  } catch (error) {
+    await client.query('ROLLBACK');
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
 async function updateUserProfile(userId, { name, email, phone, businessName, businessDetails, services, locations }) {
   const client = await pool.connect();
   try {
@@ -174,4 +222,4 @@ async function updateUserProfile(userId, { name, email, phone, businessName, bus
   } catch (error) { await client.query('ROLLBACK'); throw error; } finally { client.release(); }
 }
 
-module.exports={getDashboardStats,getUsers,createAdmin,setUserStatus,updateUserProfile};
+module.exports={getDashboardStats,getUsers,createAdmin,setUserStatus,setUserRole,updateUserProfile};
