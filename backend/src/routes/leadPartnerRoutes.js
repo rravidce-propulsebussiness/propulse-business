@@ -11,5 +11,7 @@ router.post('/inventory/import/google-sheet', inventoryController.importGoogleSh
 router.post('/inventory/import/csv', inventoryController.importCsv);
 router.get('/pricing', controller.pricing);
 router.put('/pricing/:leadId', controller.updatePricing);
+router.get('/payout-account', controller.payoutAccount);
+router.post('/payout-account', controller.savePayoutAccount);
 
 module.exports = router;
