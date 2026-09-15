@@ -1,4 +1,4 @@
-const express=require('express');const leadController=require('../controllers/leadController');const leadPurchaseController=require('../controllers/leadPurchaseController');const leadEntitlementController=require('../controllers/leadEntitlementController');const leadCrmController=require('../controllers/leadCrmController');const requireAuth=require('../middleware/authMiddleware');const optionalAuth=require('../middleware/optionalAuthMiddleware');const requireAdmin=require('../middleware/adminMiddleware');const rateLimit=require('../middleware/rateLimitMiddleware');const router=express.Router();
+const express=require('express');const leadController=require('../controllers/leadController');const leadPurchaseController=require('../controllers/leadPurchaseController');const leadEntitlementController=require('../controllers/leadEntitlementController');const leadCrmController=require('../controllers/leadCrmController');const adminLeadPartnerPricingController=require('../controllers/adminLeadPartnerPricingController');const requireAuth=require('../middleware/authMiddleware');const optionalAuth=require('../middleware/optionalAuthMiddleware');const requireAdmin=require('../middleware/adminMiddleware');const rateLimit=require('../middleware/rateLimitMiddleware');const router=express.Router();
 const leadActionLimit=rateLimit({windowMs:60*1000,max:30});
 const leadAccessLimit=rateLimit({windowMs:60*1000,max:60});
 router.get('/',optionalAuth,leadController.getLeads);
@@ -9,6 +9,8 @@ router.get('/pricing/rules',requireAdmin,leadController.getPricingRules);
 router.post('/pricing/rules',requireAdmin,leadController.savePricingRule);
 router.put('/pricing/rules/:id',requireAdmin,leadController.savePricingRule);
 router.delete('/pricing/rules/:id',requireAdmin,leadController.deletePricingRule);
+router.get('/pricing/partner-settings',requireAdmin,adminLeadPartnerPricingController.getSettings);
+router.put('/pricing/partner-settings',requireAdmin,adminLeadPartnerPricingController.updateSettings);
 router.post('/google-sheet/preview',requireAdmin,leadController.previewGoogleSheet);
 router.get('/purchased',requireAuth,leadPurchaseController.purchases);
 router.get('/purchased/export',requireAuth,leadPurchaseController.exportPurchases);
