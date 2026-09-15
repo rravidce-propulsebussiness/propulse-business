@@ -1,6 +1,6 @@
 const pool=require('../config/database');
 
-const leadSelect=`SELECT l.*,i.name AS industry_name,s.name AS service_name,ss.name AS subservice_name,st.name AS state_name,c.name AS city_name,iu.name AS investor_name,iu.email AS investor_email,CASE WHEN l.is_exclusive THEN (l.created_at + make_interval(days => l.exclusive_delay_days)) ELSE NULL END AS exclusive_available_at,(SELECT COUNT(DISTINCT lp.user_id)::int FROM lead_purchases lp WHERE lp.lead_id=l.id AND lp.status='paid') AS purchased_buyer_count FROM leads l LEFT JOIN industries i ON i.id=l.industry_id LEFT JOIN services s ON s.id=l.service_id LEFT JOIN subservices ss ON ss.id=l.subservice_id LEFT JOIN states st ON st.id=l.state_id LEFT JOIN cities c ON c.id=l.city_id LEFT JOIN users iu ON iu.id=l.investor_user_id`;
+const leadSelect=`SELECT l.*,i.name AS industry_name,s.name AS service_name,ss.name AS subservice_name,st.name AS state_name,c.name AS city_name,iu.name AS investor_name,iu.email AS investor_email,lp.status AS lead_partner_status,lpu.name AS lead_partner_name,lpu.email AS lead_partner_email,CASE WHEN l.is_exclusive THEN (l.created_at + make_interval(days => l.exclusive_delay_days)) ELSE NULL END AS exclusive_available_at,(SELECT COUNT(DISTINCT lp2.user_id)::int FROM lead_purchases lp2 WHERE lp2.lead_id=l.id AND lp2.status='paid') AS purchased_buyer_count FROM leads l LEFT JOIN industries i ON i.id=l.industry_id LEFT JOIN services s ON s.id=l.service_id LEFT JOIN subservices ss ON ss.id=l.subservice_id LEFT JOIN states st ON st.id=l.state_id LEFT JOIN cities c ON c.id=l.city_id LEFT JOIN users iu ON iu.id=l.investor_user_id LEFT JOIN lead_partners lp ON lp.id=l.lead_partner_id LEFT JOIN users lpu ON lpu.id=lp.user_id`;
 
 const normalizeLeadPricing=pricing=>{
   const shares=Array.isArray(pricing?.shares)?pricing.shares:[];
@@ -50,8 +50,6 @@ const normalizeLeadRow=row=>{
     if(budgetCustom)custom.Budget=budgetCustom;
     else if(String(row.budget??'').trim())custom.Budget=String(row.budget).trim();
   }
-  const normalizedBudget=String(row.budget??'').trim()||budgetCustom;
-
   const workNumbers=customValue(custom,['Work Numbers','Work Number','Number of Works','Number of Work','No. of Works','No of Works','Works','Quantity','Project Quantity','Number of Projects','Project Count'])||
     customValueContains(custom,['worknumbers','worknumber','numberofworks','numberofwork','noofworks','projectquantity','quantity','projectcount']);
   if(!hasCustomKeyMatching(custom,['worknumber','worknumbers','numberofworks','numberofwork','noofworks','projectquantity','quantity','projectcount'])){
@@ -99,7 +97,11 @@ const appendAdminDynamicDetails=row=>{
     if(requirement===dynamicText)requirement='';
     else if(requirement.endsWith(` · ${dynamicText}`))requirement=requirement.slice(0,-(` · ${dynamicText}`).length).trim();
   }
-  return{...normalized,requirement,dynamic_details:details};
+  const partnerDetails=normalized.lead_partner_id?[
+    {key:'leadPartner',label:'Lead Partner',value:normalized.lead_partner_name||`Partner #${normalized.lead_partner_id}`},
+    {key:'leadPartnerStatus',label:'Lead Partner Status',value:normalized.lead_partner_status||'unknown'}
+  ]:[];
+  return{...normalized,requirement,dynamic_details:[...partnerDetails,...details]};
 };
 
 const contactKey=k=>/(phone|mobile|whatsapp|contact|email|mail|tel|telephone|alternate|address|pincode|pin|zipcode|zip|postal|website|url|social|instagram|facebook|linkedin)/i.test(String(k||''));
