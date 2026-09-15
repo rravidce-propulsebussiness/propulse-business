@@ -8,7 +8,7 @@ function validatePassword(password) {
 const PUBLIC_SIGNUP_ROLES = new Set(['business', 'lead_partner']);
 
 function normalizePublicSignupRole(value) {
-  const role = String(value || 'business').trim().toLowerCase();
+  const role = String(value || '').trim().toLowerCase();
   return PUBLIC_SIGNUP_ROLES.has(role) ? role : null;
 }
 
@@ -40,6 +40,7 @@ async function signup(req, res) {
   } catch (error) {
     if (error.code === 'EMAIL_EXISTS') return res.status(409).json({ error: error.message });
     if (error.code === 'INVALID_BUSINESS_SELECTION') return res.status(400).json({ error: error.message });
+    if (error.code === 'INVALID_SIGNUP_ROLE') return res.status(400).json({ error: error.message });
     console.error('Signup failed:', error.message);
     return res.status(500).json({ error: 'Failed to create account' });
   }
@@ -61,9 +62,10 @@ async function googleLogin(req, res) {
   try {
     const { credential, accountType } = req.body || {};
     const role = normalizePublicSignupRole(accountType);
+    if (!role) return res.status(400).json({ error: 'Choose either User or Lead Partner as your account type' });
     return res.json(await authService.googleLogin({ idToken: credential, role }));
   } catch (error) {
-    if (['GOOGLE_NOT_CONFIGURED', 'INVALID_GOOGLE_TOKEN'].includes(error.code)) return res.status(400).json({ error: error.message });
+    if (['GOOGLE_NOT_CONFIGURED', 'INVALID_GOOGLE_TOKEN', 'INVALID_SIGNUP_ROLE'].includes(error.code)) return res.status(400).json({ error: error.message });
     if (error.code === 'EMAIL_EXISTS') return res.status(409).json({ error: error.message });
     console.error('Google login failed:', error.message);
     return res.status(500).json({ error: 'Failed to sign in with Google' });
