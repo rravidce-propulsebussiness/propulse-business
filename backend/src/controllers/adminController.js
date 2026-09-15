@@ -15,6 +15,15 @@ async function createAdmin(req, res) {
   }
 }
 async function setUserStatus(req, res) { try { const user = await adminService.setUserStatus(req.params.id, Boolean(req.body?.isActive)); if (!user) return res.status(404).json({ error: 'User not found' }); return res.json(user); } catch (error) { console.error('Set user status failed:', error.message); return res.status(500).json({ error: 'Failed to update user status' }); } }
+async function setUserRole(req, res) {
+  try { return res.json(await adminService.setUserRole({ userId: req.params.id, role: req.body?.role, actingAdminId: req.user.id })); }
+  catch (error) {
+    const map = { INVALID_ROLE: 400, NOT_FOUND: 404, SELF_ROLE_CHANGE: 400, LAST_ADMIN: 409 };
+    if (map[error.code]) return res.status(map[error.code]).json({ error: error.message, code: error.code });
+    console.error('Set user role failed:', error.message);
+    return res.status(500).json({ error: 'Failed to change account type' });
+  }
+}
 async function updateUserProfile(req, res) {
   try { return res.json(await adminService.updateUserProfile(req.params.id, req.body || {})); }
   catch (error) {
@@ -24,4 +33,4 @@ async function updateUserProfile(req, res) {
     return res.status(500).json({ error: 'Failed to update user profile' });
   }
 }
-module.exports = { getDashboardStats, getUsers, createAdmin, setUserStatus, updateUserProfile };
+module.exports = { getDashboardStats, getUsers, createAdmin, setUserStatus, setUserRole, updateUserProfile };
