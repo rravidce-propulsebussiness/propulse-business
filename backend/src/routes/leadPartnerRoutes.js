@@ -9,5 +9,7 @@ router.get('/dashboard', controller.dashboard);
 router.get('/inventory', inventoryController.inventory);
 router.post('/inventory/import/google-sheet', inventoryController.importGoogleSheet);
 router.post('/inventory/import/csv', inventoryController.importCsv);
+router.get('/pricing', controller.pricing);
+router.put('/pricing/:leadId', controller.updatePricing);
 
 module.exports = router;
