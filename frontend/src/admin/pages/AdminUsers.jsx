@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { authRequest } from '../../utils/auth';
+import { authRequest, getUser } from '../../utils/auth';
 import './AdminUsers.css';
 
 const dateOnly = value => value ? new Date(value).toLocaleDateString() : '—';
@@ -12,9 +12,10 @@ export default function AdminUsers() {
   const [users, setUsers] = useState([]), [catalogs, setCatalogs] = useState(null), [subcitiesByCity, setSubcitiesByCity] = useState({});
   const [query, setQuery] = useState(''), [role, setRole] = useState('all'), [status, setStatus] = useState('all'), [userPage, setUserPage] = useState(1), [userPagination, setUserPagination] = useState(null);
   const [loading, setLoading] = useState(true), [catalogLoading, setCatalogLoading] = useState(false), [error, setError] = useState(''), [selected, setSelected] = useState(null);
-  const [editing, setEditing] = useState(false), [saving, setSaving] = useState(false);
+  const [editing, setEditing] = useState(false), [saving, setSaving] = useState(false), [roleSaving, setRoleSaving] = useState(false), [roleDraft, setRoleDraft] = useState('business');
   const [showCreate, setShowCreate] = useState(false), [form, setForm] = useState({ name: '', email: '', password: '' });
   const [editForm, setEditForm] = useState(null);
+  const currentUser = getUser();
 
   async function loadUsers() {
     try { setLoading(true); setError(''); const p = new URLSearchParams({ search: query, role, status, page: String(userPage), pageSize: '100' }); const response = await authRequest(`/admin/users?${p}`); setUsers(listData(response)); setUserPagination(response?.pagination || null); }
@@ -40,7 +41,7 @@ export default function AdminUsers() {
   const subcityOptions = useMemo(() => editForm ? editForm.locations.map(x => subcitiesByCity[x.cityId] || []) : [], [editForm, subcitiesByCity]);
 
   function openUser(u) {
-    setSelected(u); setEditing(false); setError('');
+    setSelected(u); setEditing(false); setError(''); setRoleDraft(u.role || 'business');
     setEditForm({
       name: u.name || '', email: u.email || '', phone: u.phone || '', businessName: u.business_name || '', businessDetails: u.business_details || '',
       services: (u.services || []).map(x => ({ industryId: String(x.industryId), serviceId: String(x.serviceId), subserviceId: x.subserviceId ? String(x.subserviceId) : '' })),
@@ -54,6 +55,18 @@ export default function AdminUsers() {
   async function toggleStatus(u) {
     try { setError(''); const x = await authRequest(`/admin/users/${u.id}/status`, { method: 'PATCH', body: JSON.stringify({ isActive: !u.is_active }) }); setUsers(c => c.map(v => v.id === u.id ? { ...v, ...x } : v)); setSelected(v => v && v.id === u.id ? { ...v, ...x } : v); }
     catch (e) { setError(e.message); }
+  }
+  async function changeRole() {
+    if (!selected || roleDraft === selected.role) return;
+    if (!window.confirm(`Change ${selected.name || 'this account'} from ${accountTypeLabel(selected.role)} to ${accountTypeLabel(roleDraft)}?`)) return;
+    try {
+      setRoleSaving(true); setError('');
+      const updated = await authRequest(`/admin/users/${selected.id}/role`, { method: 'PATCH', body: JSON.stringify({ role: roleDraft }) });
+      setUsers(current => current.map(item => item.id === selected.id ? { ...item, ...updated } : item));
+      setSelected(current => current ? { ...current, ...updated } : current);
+      setRoleDraft(updated.role);
+    } catch (e) { setError(e.message); setRoleDraft(selected.role); }
+    finally { setRoleSaving(false); }
   }
   function updateService(index, field, value) {
     setEditForm(x => ({ ...x, services: x.services.map((item, i) => i !== index ? item : field === 'industryId' ? { industryId: value, serviceId: '', subserviceId: '' } : field === 'serviceId' ? { ...item, serviceId: value, subserviceId: '' } : { ...item, [field]: value }) }));
@@ -100,6 +113,7 @@ export default function AdminUsers() {
     {userPagination && userPagination.totalPages > 1 && <div className="users-pagination"><span>Page {userPagination.page} of {userPagination.totalPages} · {userPagination.total} users</span><div><button type="button" disabled={userPagination.page <= 1 || loading} onClick={() => setUserPage(p => Math.max(1, p - 1))}>Previous</button><button type="button" disabled={userPagination.page >= userPagination.totalPages || loading} onClick={() => setUserPage(p => p + 1)}>Next</button></div></div>}
 
     {selected && <div className="modal-backdrop" onClick={() => setSelected(null)}><div className="user-modal user-management-modal" onClick={e => e.stopPropagation()}><div className="modal-head"><div><h2>{selected.business_name || selected.name}</h2><small className="management-subtitle">#{selected.id} · {accountTypeLabel(selected.role)} account</small></div><button onClick={() => setSelected(null)}>×</button></div>{error && <div className="users-error">{error}</div>}
+      <div className="management-section role-management-section"><div className="management-section-head"><div><b>Account type</b><small>Change this account between User, Lead Partner, and Admin.</small></div></div><div className="role-management-controls"><select value={roleDraft} onChange={e => setRoleDraft(e.target.value)} disabled={roleSaving || Number(currentUser?.id) === Number(selected.id)}><option value="business">User</option><option value="lead_partner">Lead Partner</option><option value="admin">Admin</option></select><button type="button" className="admin-primary-btn" onClick={changeRole} disabled={roleSaving || roleDraft === selected.role || Number(currentUser?.id) === Number(selected.id)}>{roleSaving ? 'Updating...' : 'Change account type'}</button></div>{Number(currentUser?.id) === Number(selected.id) && <div className="role-management-note">You cannot change your own administrator role.</div>}</div>
       <form onSubmit={saveProfile}>{editing && <div className="inline-actions"><button type="button" onClick={() => setEditing(false)}>Cancel</button><button className="admin-primary-btn" type="submit" disabled={saving || catalogLoading}>{saving ? 'Saving...' : 'Save all business changes'}</button></div>}<div className="management-section"><div className="management-section-head"><div><b>User & business details</b></div>{!editing && <button type="button" onClick={() => ['business', 'lead_partner'].includes(selected.role) ? startBusinessEdit() : setEditing(true)}>Edit</button>}</div>
       {editing ? <div className="management-grid"><label>Name<input required value={editForm.name} onChange={e => setEditForm({ ...editForm, name: e.target.value })} /></label><label>Email<input required type="email" value={editForm.email} onChange={e => setEditForm({ ...editForm, email: e.target.value })} /></label>{['business', 'lead_partner'].includes(selected.role) && <><label>Phone<input required value={editForm.phone} onChange={e => setEditForm({ ...editForm, phone: e.target.value })} /></label><label>Business name<input required value={editForm.businessName} onChange={e => setEditForm({ ...editForm, businessName: e.target.value })} /></label><label className="management-wide">Business details<textarea required rows="3" value={editForm.businessDetails} onChange={e => setEditForm({ ...editForm, businessDetails: e.target.value })} /></label><div className="management-wide configuration-editor">{catalogLoading && <div className="configuration-loading">Loading configuration options…</div>}<div className="configuration-title"><b>Services</b><button type="button" onClick={() => setEditForm({ ...editForm, services: [...editForm.services, emptyService()] })}>+ Add service</button></div>{editForm.services.map((x, i) => <div className="configuration-row" key={`service-${i}`}><span>{String(i + 1).padStart(2, '0')}</span><select required value={x.industryId} onChange={e => updateService(i, 'industryId', e.target.value)}><option value="">Industry</option>{(catalogs?.industries || []).map(v => <option key={v.id} value={v.id}>{v.name}</option>)}</select><select required disabled={!x.industryId} value={x.serviceId} onChange={e => updateService(i, 'serviceId', e.target.value)}><option value="">Service</option>{serviceOptions[i]?.map(v => <option key={v.id} value={v.id}>{v.name}</option>)}</select><select disabled={!x.serviceId} value={x.subserviceId} onChange={e => setEditForm({ ...e, subserviceId: e.target.value })}><option value="">All subservices</option>{subserviceOptions[i]?.map(v => <option key={v.id} value={v.id}>{v.name}</option>)}</select><button type="button" className="add-all-services" onClick={() => addAllServicesForIndustry(i)} disabled={!x.industryId}>Add all services</button><button type="button" onClick={() => setEditForm({ ...editForm, services: editForm.services.filter((_, n) => n !== i) })}>Remove</button></div>)}</div><div className="management-wide configuration-editor"><div className="configuration-title"><b>Locations</b><button type="button" onClick={() => setEditForm({ ...editForm, locations: [...editForm.locations, emptyLocation()] })}>+ Add location</button></div>{editForm.locations.map((x, i) => <div className="configuration-row location-config" key={`location-${i}`}><span>{String(i + 1).padStart(2, '0')}</span><select required value={x.stateId} onChange={e => updateLocation(i, 'stateId', e.target.value)}><option value="">State / UT</option>{(catalogs?.states || []).map(v => <option key={v.id} value={v.id}>{v.name}</option>)}</select><select required disabled={!x.stateId} value={x.cityId} onChange={e => updateLocation(i, 'cityId', e.target.value)}><option value="">City</option>{cityOptions[i]?.map(v => <option key={v.id} value={v.id}>{v.name}</option>)}</select><select disabled={!x.cityId} value={x.subcityId} onChange={e => setEditForm({ ...e, subcityId: e.target.value })}><option value="">All areas</option>{subcityOptions[i]?.map(v => <option key={v.id} value={v.id}>{v.name}</option>)}</select><select disabled={!x.cityId} value={x.pincode} onChange={e => updateLocation(i, 'pincode', e.target.value)}><option value="">Pincode</option>{((catalogs?.cities || []).find(v => String(v.id) === String(x.cityId))?.pincodes || []).map(v => <option key={v.id} value={v.pincode}>{v.pincode}{v.officeName ? ` · ${v.officeName}` : ''}</option>)}</select><button type="button" onClick={() => setEditForm({ ...editForm, locations: editForm.locations.filter((_, n) => n !== i) })}>Remove</button></div>)}</div></>}</div> : <div className="detail-list"><div><span>Name</span><b>{selected.name}</b></div><div><span>Email</span><b>{selected.email}</b></div><div><span>Phone</span><b>{selected.phone || '—'}</b></div><div><span>Business</span><b>{selected.business_name || '—'}</b></div>{['business', 'lead_partner'].includes(selected.role) && <div className="management-wide"><span>Business details</span><b>{selected.business_details || '—'}</b></div>}</div>}</div>
 
