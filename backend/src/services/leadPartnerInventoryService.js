@@ -31,8 +31,7 @@ function parseCsv(text) {
   row.push(cell); if (row.some(v => clean(v))) rows.push(row);
   if (!rows.length) return [];
   const headers = rows[0].map(h => aliases[norm(h)] || clean(h));
-  return rows.slice(1).map(source => Object.fromEntries(headers.map((h, i) => [h, clean(source[i])])))
-    .filter(row => Object.values(row).some(Boolean));
+  return rows.slice(1).map(source => Object.fromEntries(headers.map((h, i) => [h, clean(source[i])]))).filter(row => Object.values(row).some(Boolean));
 }
 
 async function catalogs() {
@@ -52,9 +51,7 @@ const findByName = (items, name) => {
 
 async function buildLead(row, cat) {
   const industry = findByName(cat.industries, row.industry);
-  const service = industry
-    ? cat.services.find(x => Number(x.industry_id) === Number(industry.id) && norm(x.name) === norm(row.service))
-    : findByName(cat.services, row.service);
+  const service = industry ? cat.services.find(x => Number(x.industry_id) === Number(industry.id) && norm(x.name) === norm(row.service)) : findByName(cat.services, row.service);
   const subservice = service ? cat.subservices.find(x => Number(x.service_id) === Number(service.id) && norm(x.name) === norm(row.subservice)) : null;
   const state = findByName(cat.states, row.state);
   const city = state ? cat.cities.find(x => Number(x.state_id) === Number(state.id) && norm(x.name) === norm(row.city)) : findByName(cat.cities, row.city);
@@ -80,6 +77,10 @@ async function buildLead(row, cat) {
   };
 }
 
+async function initializePartnerPricing(userId, leadId, pricing) {
+  await pool.query(`UPDATE leads SET partner_base_pricing=$1::jsonb, partner_pricing_overridden=FALSE, partner_pricing_updated_at=NULL, updated_at=CURRENT_TIMESTAMP WHERE id=$2 AND created_by=$3`, [JSON.stringify(pricing || { shares: [] }), leadId, userId]);
+}
+
 async function importCsv({ userId, csv }) {
   const rows = parseCsv(csv);
   if (!rows.length) throw new Error('CSV contains no data rows');
@@ -89,11 +90,11 @@ async function importCsv({ userId, csv }) {
   for (const row of rows) {
     try {
       const lead = await buildLead(row, cat);
-      await leadService.createLead({ ...lead, createdBy: userId });
+      const createdLead = await leadService.createLead({ ...lead, createdBy: userId });
+      await initializePartnerPricing(userId, createdLead.id, createdLead.pricing);
       created += 1;
     } catch (error) {
-      if (error.code === 'DUPLICATE_LEAD') duplicate += 1;
-      else failed += 1;
+      if (error.code === 'DUPLICATE_LEAD') duplicate += 1; else failed += 1;
       failures.push(`${row.id || row.customerPhone || row.customerEmail || created + failed + duplicate}: ${error.message}`);
     }
   }
