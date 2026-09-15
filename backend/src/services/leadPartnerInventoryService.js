@@ -1,5 +1,6 @@
 const pool = require('../config/database');
 const leadService = require('./leadService');
+const partnerPricing = require('./leadPartnerPricingService');
 const { fetchGoogleSheetCsv } = require('./googleSheetService');
 const { resolvePincode } = require('./pincodeService');
 
@@ -31,7 +32,8 @@ function parseCsv(text) {
   row.push(cell); if (row.some(v => clean(v))) rows.push(row);
   if (!rows.length) return [];
   const headers = rows[0].map(h => aliases[norm(h)] || clean(h));
-  return rows.slice(1).map(source => Object.fromEntries(headers.map((h, i) => [h, clean(source[i])]))).filter(row => Object.values(row).some(Boolean));
+  return rows.slice(1).map(source => Object.fromEntries(headers.map((h, i) => [h, clean(source[i])])))
+    .filter(row => Object.values(row).some(Boolean));
 }
 
 async function catalogs() {
@@ -78,7 +80,8 @@ async function buildLead(row, cat) {
 }
 
 async function initializePartnerPricing(userId, leadId, pricing) {
-  await pool.query(`UPDATE leads SET partner_base_pricing=$1::jsonb, partner_pricing_overridden=FALSE, partner_pricing_updated_at=NULL, updated_at=CURRENT_TIMESTAMP WHERE id=$2 AND created_by=$3`, [JSON.stringify(pricing || { shares: [] }), leadId, userId]);
+  const configured = await partnerPricing.applyConfiguredPricingToLead(userId, leadId, pricing, null, null, 'basic');
+  await pool.query(`UPDATE leads SET partner_base_pricing=$1::jsonb,partner_pricing_overridden=$2,partner_pricing_updated_at=$3,pricing=$4::jsonb,updated_at=CURRENT_TIMESTAMP WHERE id=$5 AND created_by=$6`, [JSON.stringify(pricing || { shares: [] }), Boolean(configured !== pricing && configured), configured !== pricing ? new Date() : null, JSON.stringify(configured || pricing || { shares: [] }), leadId, userId]);
 }
 
 async function importCsv({ userId, csv }) {
@@ -91,7 +94,8 @@ async function importCsv({ userId, csv }) {
     try {
       const lead = await buildLead(row, cat);
       const createdLead = await leadService.createLead({ ...lead, createdBy: userId });
-      await initializePartnerPricing(userId, createdLead.id, createdLead.pricing);
+      const configured = await partnerPricing.applyConfiguredPricingToLead(userId, createdLead.id, createdLead.pricing, lead.industryId, lead.cityId, lead.leadType);
+      await pool.query(`UPDATE leads SET partner_base_pricing=$1::jsonb,partner_pricing_overridden=$2,partner_pricing_updated_at=$3,pricing=$4::jsonb,updated_at=CURRENT_TIMESTAMP WHERE id=$5 AND created_by=$6`, [JSON.stringify(createdLead.pricing || { shares: [] }), Boolean(configured && JSON.stringify(configured)!==JSON.stringify(createdLead.pricing)), configured && JSON.stringify(configured)!==JSON.stringify(createdLead.pricing) ? new Date() : null, JSON.stringify(configured || createdLead.pricing || { shares: [] }), createdLead.id, userId]);
       created += 1;
     } catch (error) {
       if (error.code === 'DUPLICATE_LEAD') duplicate += 1; else failed += 1;
