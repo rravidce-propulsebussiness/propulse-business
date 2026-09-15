@@ -8,5 +8,6 @@ router.get('/dashboard/stats', adminController.getDashboardStats);
 router.get('/users', adminController.getUsers);
 router.post('/users/admin', adminController.createAdmin);
 router.patch('/users/:id/status', adminController.setUserStatus);
+router.patch('/users/:id/role', adminController.setUserRole);
 router.patch('/users/:id', adminController.updateUserProfile);
 module.exports = router;
