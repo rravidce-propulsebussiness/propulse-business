@@ -4,8 +4,6 @@ import { authRequest, clearSession, getUser } from '../utils/auth'
 import './LeadPartnerHome.css'
 
 const money = value => `₹${Number(value || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}`
-const dateOnly = value => value ? new Date(value).toLocaleDateString() : '—'
-const cap = value => String(value || '—').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
 
 export default function LeadPartnerHome() {
   const navigate = useNavigate()
@@ -26,7 +24,6 @@ export default function LeadPartnerHome() {
   const initials = useMemo(() => (user?.name || 'Lead Partner').split(' ').filter(Boolean).slice(0, 2).map(x => x[0]).join('').toUpperCase() || 'LP', [user?.name])
   const stats = data?.stats || {}
   const pricing = data?.pricing || {}
-  const recentLeads = Array.isArray(data?.recentLeads) ? data.recentLeads : []
 
   function signOut() {
     clearSession()
@@ -57,8 +54,6 @@ export default function LeadPartnerHome() {
           <section className="partner-feature-grid">
             <article className="partner-panel" id="pricing"><div className="partner-panel-head"><div><span className="partner-kicker">PRICING</span><h2>Partner pricing model</h2></div><span className="partner-badge">{pricing.commissionPercent ?? 5}% commission</span></div><div className="partner-pricing-flow"><div><small>YOUR PRO PRICE</small><strong>Set per lead</strong><span>Partner controls the Pro price.</span></div><b>＋</b><div><small>NORMAL PRICE UPLIFT</small><strong>{pricing.normalPriceUplift == null ? 'Admin controlled' : money(pricing.normalPriceUplift)}</strong><span>Added automatically for non-Pro customers.</span></div><b>＝</b><div><small>NORMAL CUSTOMER PRICE</small><strong>Auto calculated</strong><span>Pro price + Admin uplift.</span></div></div><div className="partner-panel-note">Partner commission is currently {pricing.commissionPercent ?? 5}%. The Pro-to-Normal price difference is controlled by ProPulse Admin settings.</div></article>
             <article className="partner-panel" id="account"><div className="partner-panel-head"><div><span className="partner-kicker">ACCOUNT</span><h2>{data?.partner?.business_name || user?.name || 'Lead Partner'}</h2></div><span className="partner-account-pill">Lead Partner</span></div><div className="partner-account-list"><div><span>Name</span><b>{user?.name || '—'}</b></div><div><span>Email</span><b>{user?.email || '—'}</b></div><div><span>Phone</span><b>{data?.partner?.phone || '—'}</b></div><div><span>Commission</span><b>{pricing.commissionPercent ?? 5}%</b></div></div></article>
-          </section>
-          <section className="partner-panel partner-leads-panel" id="leads"><div className="partner-panel-head"><div><span className="partner-kicker">LEAD INVENTORY</span><h2>Recent leads</h2><p>Latest leads belonging to your partner inventory.</p></div><div className="partner-panel-actions"><span className="partner-count-badge">{loading ? '—' : recentLeads.length} recent</span><Link className="partner-action-btn" to="/lead-partner/inventory">Manage inventory →</Link></div></div>{loading ? <div className="partner-empty">Loading leads…</div> : !recentLeads.length ? <div className="partner-empty">No leads have been added to your inventory yet.</div> : <div className="partner-table-wrap"><table className="partner-table"><thead><tr><th>LEAD</th><th>INDUSTRY / SERVICE</th><th>CITY</th><th>STATUS</th><th>ADDED</th></tr></thead><tbody>{recentLeads.map(lead => <tr key={lead.id}><td><b>#{lead.id}</b><small>{lead.customer_name || 'Customer'}</small><span>{lead.requirement || 'No requirement summary'}</span></td><td><b>{lead.industry_name || '—'}</b><small>{lead.service_name || '—'}</small></td><td>{lead.city_name || '—'}</td><td><em className={`partner-status ${lead.status}`}>{cap(lead.status)}</em></td><td>{dateOnly(lead.created_at)}</td></tr>)}</tbody></table></div>}
           </section>
         </div>
       </main>
