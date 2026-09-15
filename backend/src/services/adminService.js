@@ -22,6 +22,8 @@ async function getDashboardStats() {
       (SELECT COUNT(*)::int FROM users WHERE is_active = TRUE) AS active_users,
       (SELECT COUNT(*)::int FROM users WHERE role = 'business') AS businesses,
       (SELECT COUNT(*)::int FROM users WHERE role = 'business' AND is_active = TRUE) AS active_businesses,
+      (SELECT COUNT(*)::int FROM users WHERE role = 'lead_partner') AS lead_partners,
+      (SELECT COUNT(*)::int FROM users WHERE role = 'lead_partner' AND is_active = TRUE) AS active_lead_partners,
       (SELECT COUNT(*)::int FROM industries WHERE is_active = TRUE) AS industries,
       (SELECT COUNT(*)::int FROM services WHERE is_active = TRUE) AS services,
       (SELECT COUNT(*)::int FROM subservices WHERE is_active = TRUE) AS subservices,
@@ -29,7 +31,19 @@ async function getDashboardStats() {
       (SELECT COUNT(*)::int FROM cities WHERE is_active = TRUE) AS cities
   `);
   const row = result.rows[0];
-  return { totalUsers: row.total_users, activeUsers: row.active_users, businesses: row.businesses, activeBusinesses: row.active_businesses, industries: row.industries, services: row.services, subservices: row.subservices, states: row.states, cities: row.cities };
+  return {
+    totalUsers: row.total_users,
+    activeUsers: row.active_users,
+    businesses: row.businesses,
+    activeBusinesses: row.active_businesses,
+    leadPartners: row.lead_partners,
+    activeLeadPartners: row.active_lead_partners,
+    industries: row.industries,
+    services: row.services,
+    subservices: row.subservices,
+    states: row.states,
+    cities: row.cities,
+  };
 }
 
 async function getUsers({ search = '', role = 'all', status = 'all', industryId = '', serviceId = '', stateId = '', cityId = '', page, pageSize, limit } = {}) {
@@ -40,7 +54,7 @@ async function getUsers({ search = '', role = 'all', status = 'all', industryId 
     params.push(`%${String(search).trim()}%`);
     conditions.push(`(u.name ILIKE $${params.length} OR u.email ILIKE $${params.length} OR bp.business_name ILIKE $${params.length} OR bp.phone ILIKE $${params.length})`);
   }
-  if (role === 'admin' || role === 'business') { params.push(role); conditions.push(`u.role = $${params.length}`); }
+  if (['admin', 'business', 'lead_partner'].includes(role)) { params.push(role); conditions.push(`u.role = $${params.length}`); }
   if (status === 'active' || status === 'inactive') { params.push(status === 'active'); conditions.push(`u.is_active = $${params.length}`); }
   if (industryId) { params.push(industryId); conditions.push(`EXISTS (SELECT 1 FROM business_profile_services x WHERE x.business_profile_id=bp.id AND x.industry_id=$${params.length} AND x.is_active=TRUE)`); }
   if (serviceId) { params.push(serviceId); conditions.push(`EXISTS (SELECT 1 FROM business_profile_services x WHERE x.business_profile_id=bp.id AND x.service_id=$${params.length} AND x.is_active=TRUE)`); }
@@ -133,7 +147,7 @@ async function updateUserProfile(userId, { name, email, phone, businessName, bus
     const duplicate = await client.query('SELECT id FROM users WHERE LOWER(email)=$1 AND id<>$2', [normalizedEmail,userId]);
     if (duplicate.rowCount) { const e=new Error('An account with this email already exists'); e.code='EMAIL_EXISTS'; throw e; }
     const updatedUser = (await client.query('UPDATE users SET name=$1,email=$2,updated_at=CURRENT_TIMESTAMP WHERE id=$3 RETURNING id,name,email,role,is_active,created_at', [cleanName,normalizedEmail,userId])).rows[0];
-    if (user.role === 'business') {
+    if (['business', 'lead_partner'].includes(user.role)) {
       const hasConfiguration = Array.isArray(services) || Array.isArray(locations);
       if (hasConfiguration) await validateSelections(client, services, locations);
       const profile = (await client.query('SELECT id FROM business_profiles WHERE user_id=$1 FOR UPDATE',[userId])).rows[0];
@@ -151,7 +165,7 @@ async function updateUserProfile(userId, { name, email, phone, businessName, bus
           await client.query('UPDATE business_profile_services SET is_active=FALSE,updated_at=CURRENT_TIMESTAMP WHERE business_profile_id=$1',[profile.id]);
           for (const item of services) await client.query(`INSERT INTO business_profile_services (business_profile_id,industry_id,service_id,subservice_id,is_active) VALUES($1,$2,$3,$4,TRUE) ON CONFLICT (business_profile_id,industry_id,service_id,subservice_id) DO UPDATE SET is_active=TRUE,updated_at=CURRENT_TIMESTAMP`,[profile.id,item.industryId,item.serviceId,item.subserviceId||null]);
           await client.query('UPDATE business_profile_locations SET is_active=FALSE,updated_at=CURRENT_TIMESTAMP WHERE business_profile_id=$1',[profile.id]);
-          for (const item of locations) await client.query(`INSERT INTO business_profile_locations (business_profile_id,state_id,city_id,subcity_id,pincode,is_active) VALUES($1,$2,$3,$4,$5,TRUE) ON CONFLICT (business_profile_id,state_id,city_id) DO UPDATE SET subcity_id=EXCLUDED.subcity_id,pincode=EXCLUDED.pincode,is_active=TRUE,updated_at=CURRENT_TIMESTAMP`,[profile.id,item.stateId,item.cityId,item.subcityId||null,item.pincode||null]);
+          for (const item of locations) await client.query(`INSERT INTO business_profile_locations (business_profile_id,state_id,city_id,subcity_id,pincode,is_active) VALUES($1,$2,$3,$4,$5,TRUE) ON CONFLICT (business_profile_id,state_id,city_id) DO UPDATE SET subcity_id=EXCLUDED.subcity_id,pincode=EXCLUDED.pincode,is_active=TRUE,updated_at=CURRENT_TIMESTAMP`,[profile.id,item.stateId,item.cityId,item.subcityId||null,item.subcityId||null]);
         }
       }
     }
