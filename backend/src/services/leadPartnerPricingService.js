@@ -1,18 +1,29 @@
 const pool = require('../config/database');
 
-const ALLOWED_SHARES = new Set([1, 2, 3]);
+const ALLOWED_SHARES = [1, 2, 3];
+const ALLOWED_SHARE_SET = new Set(ALLOWED_SHARES);
+
+function ensureExactPartnerShares(shares) {
+  const normalized = Array.isArray(shares)
+    ? shares.map(item => Number(item?.shares)).filter(Number.isInteger)
+    : [];
+  const unique = [...new Set(normalized)].sort((a, b) => a - b);
+  if (unique.length !== ALLOWED_SHARES.length || unique.some((value, index) => value !== ALLOWED_SHARES[index])) {
+    throw Object.assign(new Error('Lead Partner pricing must include exactly 1, 2, and 3 shares'), { code:'INVALID_PRICING' });
+  }
+}
 
 const normalizePricing = value => {
   const shares = Array.isArray(value?.shares) ? value.shares : [];
   return shares.map(row => ({ shares: Number(row?.shares), normal: Number(row?.normal), pro: Number(row?.pro) }))
-    .filter(row => ALLOWED_SHARES.has(row.shares) && Number.isFinite(row.normal) && row.normal >= 0 && Number.isFinite(row.pro) && row.pro >= 0)
+    .filter(row => ALLOWED_SHARE_SET.has(row.shares) && Number.isFinite(row.normal) && row.normal >= 0 && Number.isFinite(row.pro) && row.pro >= 0)
     .sort((a, b) => a.shares - b.shares);
 };
 
 const normalizeProTiers = value => {
   const shares = Array.isArray(value?.shares) ? value.shares : [];
   return shares.map(row => ({ shares: Number(row?.shares), pro: Number(row?.pro) }))
-    .filter(row => ALLOWED_SHARES.has(row.shares) && Number.isFinite(row.pro) && row.pro >= 0)
+    .filter(row => ALLOWED_SHARE_SET.has(row.shares) && Number.isFinite(row.pro) && row.pro >= 0)
     .sort((a, b) => a.shares - b.shares);
 };
 
@@ -65,7 +76,8 @@ function validateRuleInput(input) {
   const leadType = String(input?.leadType || 'basic').trim().toLowerCase();
   if (!['basic','premium'].includes(leadType)) throw Object.assign(new Error('Lead type must be basic or premium'), { code:'INVALID_PRICING' });
   const shares = normalizeProTiers(input?.pricing);
-  if (!shares.length) throw Object.assign(new Error('At least one Pro pricing tier is required'), { code:'INVALID_PRICING' });
+  ensureExactPartnerShares(input?.pricing?.shares);
+  if (shares.length !== ALLOWED_SHARES.length) throw Object.assign(new Error('Exactly 1, 2, and 3 share tiers are required'), { code:'INVALID_PRICING' });
   const seen = new Set();
   for (const tier of shares) { if (seen.has(tier.shares)) throw Object.assign(new Error('Duplicate sharing tier'), { code:'INVALID_PRICING' }); seen.add(tier.shares); }
   return { industryId, cityId, leadType, shares, isActive:input?.isActive !== false };
@@ -82,10 +94,11 @@ async function applyRuleToExistingLeads(userId, rule, client = pool) {
   const rows = (await client.query(`SELECT id,pricing FROM leads WHERE ${filters.join(' AND ')} FOR UPDATE`, params)).rows;
   for (const lead of rows) {
     const current = normalizePricing(lead.pricing);
-    const merged = current.map(tier => {
-      const override = target.find(x => x.shares === tier.shares);
-      const pro = override ? override.pro : tier.pro;
-      return { shares:tier.shares, pro, normal:pro + uplift };
+    const merged = ALLOWED_SHARES.map(shares => {
+      const override = target.find(x => x.shares === shares);
+      const currentTier = current.find(x => x.shares === shares);
+      const pro = override ? override.pro : Number(currentTier?.pro || 0);
+      return { shares, pro, normal:pro + uplift };
     });
     await client.query('UPDATE leads SET pricing=$1::jsonb,updated_at=CURRENT_TIMESTAMP WHERE id=$2 AND created_by=$3',[JSON.stringify({shares:merged}),lead.id,userId]);
   }
@@ -137,7 +150,7 @@ async function applyConfiguredPricingToLead(userId, leadId, leadPricing, industr
   const settings = await getSettings();
   const uplift = Number(settings.normalPriceUplift ?? 100);
   const current = normalizePricing(leadPricing);
-  return { shares: current.map(tier => { const match = overrides.find(x => x.shares === tier.shares); const pro = match ? match.pro : tier.pro; return { shares:tier.shares, pro, normal:pro + uplift }; }) };
+  return { shares: ALLOWED_SHARES.map(shares => { const match = overrides.find(x => x.shares === shares); const currentTier = current.find(x => x.shares === shares); const pro = match ? match.pro : Number(currentTier?.pro || 0); return { shares, pro, normal:pro + uplift }; }) };
 }
 
 async function update(userId, leadId, input) {
@@ -145,6 +158,7 @@ async function update(userId, leadId, input) {
   if (!Number.isInteger(id) || id <= 0) throw Object.assign(new Error('Lead ID must be valid'), { code:'INVALID_LEAD_ID' });
   const requested = Array.isArray(input?.shares) ? input.shares : [];
   if (!requested.length) throw Object.assign(new Error('At least one pricing tier is required'), { code:'INVALID_PRICING' });
+  ensureExactPartnerShares(requested);
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
@@ -159,15 +173,15 @@ async function update(userId, leadId, input) {
     const incoming = new Map();
     for (const item of requested) {
       const shares=Number(item?.shares),pro=Number(item?.pro);
-      if (!ALLOWED_SHARES.has(shares)||!Number.isFinite(pro)||pro<0) throw Object.assign(new Error('Lead Partner sharing tiers must be exactly 1, 2, or 3 shares, with valid Pro prices'),{code:'INVALID_PRICING'});
+      if (!ALLOWED_SHARE_SET.has(shares)||!Number.isFinite(pro)||pro<0) throw Object.assign(new Error('Lead Partner sharing tiers must be exactly 1, 2, or 3 shares, with valid Pro prices'),{code:'INVALID_PRICING'});
       if(incoming.has(shares)) throw Object.assign(new Error('Duplicate sharing tier'),{code:'INVALID_PRICING'});
       incoming.set(shares,pro);
     }
-    const pricing={shares:current.map(tier=>{const pro=incoming.has(tier.shares)?incoming.get(tier.shares):tier.pro;return{shares:tier.shares,pro,normal:pro+uplift};})};
+    const pricing={shares:ALLOWED_SHARES.map(shares=>{const pro=incoming.get(shares);return{shares,pro,normal:pro+uplift};})};
     await client.query('UPDATE leads SET pricing=$1::jsonb,partner_pricing_overridden=TRUE,partner_pricing_updated_at=CURRENT_TIMESTAMP,updated_at=CURRENT_TIMESTAMP WHERE id=$2 AND created_by=$3',[JSON.stringify(pricing),id,userId]);
     await client.query('COMMIT');
     return {id,pricing,normalPriceUplift:uplift,overridden:true};
   } catch(e){await client.query('ROLLBACK');throw e;} finally{client.release();}
 }
 
-module.exports = { getSettings, list, update, listRules, saveRule, deleteRule, getConfiguredPartnerPricing, applyConfiguredPricingToLead, normalizePricing, normalizeProTiers };
+module.exports = { getSettings, list, update, listRules, saveRule, deleteRule, getConfiguredPartnerPricing, applyConfiguredPricingToLead, normalizePricing, normalizeProTiers, ALLOWED_SHARES };
