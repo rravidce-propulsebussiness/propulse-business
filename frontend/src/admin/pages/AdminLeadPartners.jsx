@@ -3,7 +3,7 @@ import { authRequest } from '../../utils/auth'
 
 const STATUSES = [['','All'],['pending','Pending'],['active','Active'],['suspended','Suspended'],['rejected','Rejected']]
 const NEXT_STATUS = { pending:'active', active:'suspended', suspended:'active', rejected:'active' }
-const money = v => `₹${Number(v || 0).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2})}`
+const money = v => `₹${Number(v || 0).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2})`
 
 export default function AdminLeadPartners(){
   const [status,setStatus]=useState('')
@@ -47,10 +47,11 @@ export default function AdminLeadPartners(){
         <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',gap:16}}><div><span className="admin-eyebrow">PARTNER ACCOUNT</span><h2 style={{margin:'4px 0'}}>{selected.user_name||'Partner'}</h2><div style={{color:'#66778b'}}>{selected.user_email||'—'} · Partner #{selected.id}</div></div><button onClick={()=>setSelected(null)}>Close</button></div>
         {financialLoading?<div className="admin-loading" style={{marginTop:24}}>Loading financial history…</div>:financials&&<>
           <div style={{display:'grid',gridTemplateColumns:'repeat(2,minmax(0,1fr))',gap:12,marginTop:24}}>
-            {[['Gross sales',financials.grossSales],['Available earnings',financials.availableEarnings],['Paid earnings',financials.paidEarnings],['Reversed earnings',financials.reversedEarnings]].map(([label,value])=><div key={label} style={{padding:16,border:'1px solid #e1e8f0',borderRadius:12,background:'#f8fbff'}}><div style={{fontSize:12,color:'#6b7a8c',fontWeight:800,textTransform:'uppercase'}}>{label}</div><div style={{fontSize:24,fontWeight:900,color:'#0b2d63',marginTop:5}}>{money(value)}</div></div>)}
+            {[['Gross sales',financials.grossSales],['Available earnings',financials.availableEarnings],['Paid earnings',financials.paidEarnings],['Reversed earnings',financials.reversedEarnings],['Recovery outstanding',financials.recoveryOutstanding]].map(([label,value])=><div key={label} style={{padding:16,border:'1px solid #e1e8f0',borderRadius:12,background:'#f8fbff'}}><div style={{fontSize:12,color:'#6b7a8c',fontWeight:800,textTransform:'uppercase'}}>{label}</div><div style={{fontSize:24,fontWeight:900,color:'#0b2d63',marginTop:5}}>{money(value)}</div></div>)}
           </div>
+          {Number(financials.recoveryOutstanding||0)>0&&<div style={{marginTop:14,padding:12,border:'1px solid #f5d48a',borderRadius:10,background:'#fff8e6',color:'#8a5a00'}}>Recovery is being offset against future eligible earnings; it is excluded from the partner's withdrawable balance.</div>}
           <div style={{marginTop:24,fontWeight:900,color:'#173f78'}}>Earnings history</div>
-          {!financials.history?.length?<div className="admin-empty" style={{marginTop:10}}>No earning events yet.</div>:<div className="admin-table-wrap" style={{marginTop:10}}><table className="admin-table"><thead><tr><th>DATE</th><th>LEAD</th><th>SALE</th><th>COMMISSION</th><th>EARNING</th><th>STATUS</th></tr></thead><tbody>{financials.history.map(item=><tr key={item.id}><td>{item.created_at?new Date(item.created_at).toLocaleString('en-IN'): '—'}</td><td><b>#{item.lead_id}</b><small>{item.industry_name||'—'}{item.city_name?` · ${item.city_name}`:''}</small></td><td>{money(item.gross_sale_amount)}</td><td>{Number(item.commission_percent||0).toFixed(2)}%</td><td><b>{money(item.earning_amount)}</b></td><td>{item.status}</td></tr>)}</tbody></table></div>}
+          {!financials.history?.length?<div className="admin-empty" style={{marginTop:10}}>No earning events yet.</div>:<div className="admin-table-wrap" style={{marginTop:10}}><table className="admin-table"><thead><tr><th>DATE</th><th>LEAD</th><th>SALE</th><th>COMMISSION</th><th>EARNING</th><th>RECOVERY USED</th><th>STATUS</th></tr></thead><tbody>{financials.history.map(item=><tr key={item.id}><td>{item.created_at?new Date(item.created_at).toLocaleString('en-IN'): '—'}</td><td><b>#{item.lead_id}</b><small>{item.industry_name||'—'}{item.city_name?` · ${item.city_name}`:''}</small></td><td>{money(item.gross_sale_amount)}</td><td>{Number(item.commission_percent||0).toFixed(2)}%</td><td><b>{money(item.earning_amount)}</b></td><td>{money(item.recovery_allocated)}</td><td>{item.status}</td></tr>)}</tbody></table></div>}
         </>}
       </aside>
     </div>}
