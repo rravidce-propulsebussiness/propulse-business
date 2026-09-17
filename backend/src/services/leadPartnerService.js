@@ -92,6 +92,52 @@ async function getMyLeads(userId, { status, page = 1, limit = 50 } = {}) {
   return { partner, leads: rows, pagination: { page: currentPage, limit: pageSize, total: Number(count.total || 0), totalPages: Math.ceil(Number(count.total || 0) / pageSize) } };
 }
 
+async function getQualityMetrics(partnerId, client = pool) {
+  const id = Number(partnerId);
+  if (!Number.isInteger(id) || id <= 0) throw new Error('Invalid Lead Partner ID');
+  const result = await client.query(
+    `WITH partner_leads AS (
+       SELECT id FROM leads WHERE lead_partner_id=$1
+     ),
+     purchased AS (
+       SELECT DISTINCT lp.lead_id
+       FROM lead_purchases lp
+       JOIN partner_leads pl ON pl.id=lp.lead_id
+       WHERE lp.status='paid'
+     ),
+     fake AS (
+       SELECT DISTINCT r.lead_id
+       FROM lead_reports r
+       JOIN partner_leads pl ON pl.id=r.lead_id
+       WHERE r.status='verified_fake'
+     ),
+     genuine AS (
+       SELECT DISTINCT r.id
+       FROM lead_reports r
+       JOIN partner_leads pl ON pl.id=r.lead_id
+       WHERE r.status='verified_genuine'
+     )
+     SELECT
+       (SELECT COUNT(*) FROM partner_leads)::int AS total_leads,
+       (SELECT COUNT(*) FROM purchased)::int AS purchased_leads,
+       (SELECT COUNT(*) FROM fake)::int AS verified_fake_leads,
+       (SELECT COUNT(*) FROM genuine)::int AS verified_genuine_reports,
+       CASE WHEN (SELECT COUNT(*) FROM purchased)=0 THEN 0
+            ELSE ROUND((SELECT COUNT(*) FROM fake)::numeric * 100.0 / (SELECT COUNT(*) FROM purchased), 2)
+       END AS verified_fake_rate_pct`,
+    [id]
+  );
+  const row = result.rows[0] || {};
+  return {
+    totalLeads: Number(row.total_leads || 0),
+    purchasedLeads: Number(row.purchased_leads || 0),
+    verifiedFakeLeads: Number(row.verified_fake_leads || 0),
+    verifiedGenuineReports: Number(row.verified_genuine_reports || 0),
+    verifiedFakeRatePct: Number(row.verified_fake_rate_pct || 0),
+    fakeRateDefinition: 'Verified fake partner leads divided by distinct partner leads with at least one paid purchase.',
+  };
+}
+
 async function updateStatus(partnerId, status) {
   const id = Number(partnerId);
   const nextStatus = String(status || '').trim().toLowerCase();
@@ -123,21 +169,38 @@ async function getAdminPartners({ status, page = 1, limit = 50 } = {}) {
     filter += ` AND lp.status=$${values.length}`;
   }
   const count = (await pool.query(`SELECT COUNT(*)::int AS total FROM lead_partners lp WHERE ${filter}`, values)).rows[0];
-  values.push(pageSize, offset);
   const rows = (await pool.query(
     `SELECT lp.*,u.name AS user_name,u.email AS user_email,
             COUNT(l.id)::int AS total_leads,
-            COUNT(l.id) FILTER (WHERE l.status='invalid')::int AS invalid_leads
+            COUNT(l.id) FILTER (WHERE l.status='invalid')::int AS invalid_leads,
+            COUNT(DISTINCT CASE WHEN p.status='paid' THEN p.lead_id END)::int AS purchased_leads,
+            COUNT(DISTINCT CASE WHEN r.status='verified_fake' THEN r.lead_id END)::int AS verified_fake_leads,
+            COUNT(DISTINCT CASE WHEN r.status='verified_genuine' THEN r.id END)::int AS verified_genuine_reports,
+            CASE WHEN COUNT(DISTINCT CASE WHEN p.status='paid' THEN p.lead_id END)=0 THEN 0
+                 ELSE ROUND(COUNT(DISTINCT CASE WHEN r.status='verified_fake' THEN r.lead_id END)::numeric * 100.0 / COUNT(DISTINCT CASE WHEN p.status='paid' THEN p.lead_id END), 2)
+            END AS verified_fake_rate_pct
      FROM lead_partners lp
      JOIN users u ON u.id=lp.user_id
      LEFT JOIN leads l ON l.lead_partner_id=lp.id
+     LEFT JOIN lead_purchases p ON p.lead_id=l.id
+     LEFT JOIN lead_reports r ON r.lead_id=l.id
      WHERE ${filter}
      GROUP BY lp.id,u.id
      ORDER BY lp.created_at DESC,lp.id DESC
-     LIMIT $${values.length - 1} OFFSET $${values.length}`,
-    values
+     LIMIT $${values.length + 1} OFFSET $${values.length + 2}`,
+    [...values, pageSize, offset]
   )).rows;
-  return { partners: rows, pagination: { page: currentPage, limit: pageSize, total: Number(count.total || 0), totalPages: Math.ceil(Number(count.total || 0) / pageSize) } };
+  const partners = rows.map(row => ({
+    ...row,
+    total_leads: Number(row.total_leads || 0),
+    invalid_leads: Number(row.invalid_leads || 0),
+    purchased_leads: Number(row.purchased_leads || 0),
+    verified_fake_leads: Number(row.verified_fake_leads || 0),
+    verified_genuine_reports: Number(row.verified_genuine_reports || 0),
+    verified_fake_rate_pct: Number(row.verified_fake_rate_pct || 0),
+    quality_metric_definition: 'Verified fake partner leads divided by distinct partner leads with at least one paid purchase.',
+  }));
+  return { partners, pagination: { page: currentPage, limit: pageSize, total: Number(count.total || 0), totalPages: Math.ceil(Number(count.total || 0) / pageSize) } };
 }
 
 async function getDashboard(userId) {
@@ -148,12 +211,14 @@ async function getDashboard(userId) {
     getPartnerByUserId(userId),
   ]);
   const summary = summaryResult.rows[0] || {};
+  const quality = partnerResult ? await getQualityMetrics(partnerResult.id) : null;
   return {
     partner: partnerResult || profileResult.rows[0] || null,
     stats: { totalLeads: Number(summary.total_leads || 0), activeLeads: Number(summary.active_leads || 0), soldLeads: Number(summary.sold_leads || 0), closedLeads: Number(summary.closed_leads || 0) },
+    quality,
     recentLeads: recentResult.rows,
     pricing: { commissionPercent: 5, normalPriceUplift: null, configured: false },
   };
 }
 
-module.exports = { PARTNER_STATUSES, getPartnerByUserId, apply, assertActivePartner, createLead, getMyLeads, getAdminPartners, updateStatus, getDashboard };
+module.exports = { PARTNER_STATUSES, getPartnerByUserId, apply, assertActivePartner, createLead, getMyLeads, getQualityMetrics, getAdminPartners, updateStatus, getDashboard };
