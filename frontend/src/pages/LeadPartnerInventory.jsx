@@ -7,6 +7,31 @@ import './LeadPartnerInventory.css';
 const statusLabel = value => String(value || '').replace(/_/g, ' ').replace(/\b\w/g, x => x.toUpperCase());
 const formatDate = value => value ? new Date(value).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }) : 'Never';
 
+function downloadCsvSample() {
+  const headers = [
+    'Lead ID', 'Industry', 'Service', 'Subservice', 'State', 'City', 'Pincode',
+    'Customer Name', 'Customer Phone', 'Customer Email', 'Requirement', 'Property Type',
+    'Budget', 'Source', 'Notes', 'Buyer Capacity', 'Lead Type', 'Exclusive',
+  ];
+  const row = [
+    'LP-001', 'REPLACE WITH ACTIVE INDUSTRY', '', '', 'REPLACE WITH STATE',
+    'REPLACE WITH CITY', '500001', 'Example Customer', '9876500000', 'customer@example.com',
+    'Example lead requirement', 'Residential', '2500000', 'Website', 'Example note',
+    '3', 'basic', 'FALSE',
+  ];
+  const esc = value => `"${String(value ?? '').replace(/"/g, '""')}"`;
+  const csv = [headers, row].map(values => values.map(esc).join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = 'propulse-lead-partner-upload-sample.csv';
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
+
 export default function LeadPartnerInventory() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -94,7 +119,8 @@ export default function LeadPartnerInventory() {
       const result = await authRequest('/lead-partner/inventory/import/csv', {
         method: 'POST', body: JSON.stringify({ csv }),
       });
-      setMessage({ type: result.failed ? 'error' : 'success', text: `Imported ${result.created} leads. ${result.duplicate} duplicates, ${result.failed} failed.` });
+      const failureText = result.failed ? ` First failure: ${result.failures?.[0] || 'check the import details.'}` : '';
+      setMessage({ type: result.failed ? 'error' : 'success', text: `Imported ${result.created} leads. ${result.duplicate} duplicates, ${result.failed} failed.${failureText}` });
       await load();
     } catch (error) { setMessage({ type: 'error', text: error.message }); }
     finally { setImporting(false); if (fileRef.current) fileRef.current.value = ''; }
@@ -146,10 +172,10 @@ export default function LeadPartnerInventory() {
 
             <article className="partner-panel partner-import-card">
               <div className="partner-panel-head"><div><span className="partner-kicker">CSV UPLOAD</span><h2>Upload a CSV</h2></div><span className="partner-badge">Import</span></div>
-              <p>Use the same lead columns supported by ProPulse sheet imports.</p>
-              <button className="partner-upload-btn" type="button" disabled={importing || sheetBusy} onClick={() => fileRef.current?.click()}>{importing ? 'Importing…' : 'Choose CSV file'}</button>
+              <p>Use the same classification rules as Admin Leads. Industry can be supplied alone; Service or Subservice can also derive the parent Industry automatically.</p>
+              <div className="partner-csv-actions"><button className="partner-upload-btn" type="button" disabled={importing || sheetBusy} onClick={() => fileRef.current?.click()}>{importing ? 'Importing…' : 'Choose CSV file'}</button><button className="partner-action-btn" type="button" disabled={importing || sheetBusy} onClick={downloadCsvSample}>Download sample</button></div>
               <input ref={fileRef} hidden type="file" accept=".csv,text/csv" onChange={e => importCsv(e.target.files?.[0])} />
-              <small>No upload count limit.</small>
+              <small>Industry, Service and Subservice: provide at least one. If Service is provided without Industry, Industry is derived automatically; if Subservice is provided, Service and Industry are derived automatically. No upload count limit.</small>
             </article>
           </section>
 
@@ -189,7 +215,7 @@ export default function LeadPartnerInventory() {
 
           <section className="partner-panel partner-leads-panel">
             <div className="partner-panel-head"><div><span className="partner-kicker">YOUR INVENTORY</span><h2>Uploaded Leads</h2><p>Search and filter the leads currently owned by your partner account.</p></div><div className="partner-filters"><input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search customer, phone or requirement" /><select value={status} onChange={e => setStatus(e.target.value)}><option value="all">All status</option><option value="available">Available</option><option value="paused">Paused</option><option value="sold">Sold</option><option value="closed">Closed</option><option value="invalid">Invalid</option></select></div></div>
-            <div className="partner-table-wrap">{loading ? <div className="partner-empty">Loading inventory…</div> : !data.data?.length ? <div className="partner-empty">No partner leads found.</div> : <table className="partner-table"><thead><tr><th>ID</th><th>LEAD</th><th>SERVICE</th><th>LOCATION</th><th>TYPE</th><th>BUYERS</th><th>STATUS</th><th>ADDED</th></tr></thead><tbody>{data.data.map(lead => <tr key={lead.id}><td>#{lead.id}</td><td><b>{lead.customer_name}</b><small>{lead.customer_phone}</small></td><td><b>{lead.industry_name}</b><small>{lead.service_name}{lead.lead_type === 'premium' ? ' · Premium' : ''}</small></td><td>{lead.city_name}<small>{lead.state_name} · {lead.pincode}</small></td><td>{lead.is_exclusive ? 'Exclusive' : 'Shared'}</td><td>{lead.buyer_capacity}</td><td><span className={`partner-status ${lead.status}`}>{statusLabel(lead.status)}</span></td><td>{new Date(lead.created_at).toLocaleDateString('en-IN')}</td></tr>)}</tbody></table>}</div>
+            <div className="partner-table-wrap">{loading ? <div className="partner-empty">Loading inventory…</div> : !data.data?.length ? <div className="partner-empty">No partner leads found.</div> : <table className="partner-table"><thead><tr><th>ID</th><th>LEAD</th><th>SERVICE</th><th>LOCATION</th><th>TYPE</th><th>BUYERS</th><th>STATUS</th><th>ADDED</th></tr></thead><tbody>{data.data.map(lead => <tr key={lead.id}><td>#{lead.id}</td><td><b>{lead.customer_name}</b><small>{lead.customer_phone}</small></td><td><b>{lead.industry_name}</b><small>{lead.service_name || (lead.subservice_name ? `↳ ${lead.subservice_name}` : 'Industry only')}</small></td><td>{lead.city_name}<small>{lead.state_name} · {lead.pincode}</small></td><td>{lead.is_exclusive ? 'Exclusive' : 'Shared'}</td><td>{lead.buyer_capacity}</td><td><span className={`partner-status ${lead.status}`}>{statusLabel(lead.status)}</span></td><td>{new Date(lead.created_at).toLocaleDateString('en-IN')}</td></tr>)}</tbody></table>}</div>
           </section>
         </div>
       </main>
