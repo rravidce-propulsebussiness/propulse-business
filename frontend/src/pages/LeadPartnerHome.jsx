@@ -22,7 +22,7 @@ export default function LeadPartnerHome() {
   const initials = useMemo(() => (user?.name || 'Lead Partner').split(' ').filter(Boolean).slice(0, 2).map(x => x[0]).join('').toUpperCase() || 'LP', [user?.name])
   const stats = data?.stats || {}
   const quality = data?.quality || {}
-  const fakeRate = Number(quality.fakeRatePercent || 0)
+  const fakeRate = Number(quality.verifiedFakeRatePct || 0)
 
   function signOut() {
     clearSession()
@@ -52,7 +52,7 @@ export default function LeadPartnerHome() {
           <section className="partner-stats-grid"><article><span>Total leads</span><strong>{loading ? '—' : stats.totalLeads ?? 0}</strong><small>Added to your inventory</small></article><article><span>Active leads</span><strong>{loading ? '—' : stats.activeLeads ?? 0}</strong><small>Available or paused</small></article><article><span>Sold leads</span><strong>{loading ? '—' : stats.soldLeads ?? 0}</strong><small>Successfully sold</small></article><article><span>Closed leads</span><strong>{loading ? '—' : stats.closedLeads ?? 0}</strong><small>Closed or completed</small></article></section>
           <section className="partner-quality-grid">
             <article className="partner-panel partner-quality-card"><div className="partner-panel-head"><div><span className="partner-kicker">QUALITY</span><h2>Verified partner quality</h2></div><span className="partner-account-pill">Admin verified</span></div><div className="partner-quality-score"><strong>{loading ? '—' : `${fakeRate.toFixed(2)}%`}</strong><span>Verified fake rate</span></div><p>Based only on Admin-verified fake decisions. Pending customer reports are not counted.</p></article>
-            <article className="partner-panel partner-quality-card"><div className="partner-panel-head"><div><span className="partner-kicker">QUALITY HISTORY</span><h2>Report outcomes</h2></div></div><div className="partner-quality-mini"><div><strong>{loading ? '—' : quality.purchasedPartnerLeads ?? 0}</strong><span>Purchased partner leads</span></div><div><strong>{loading ? '—' : quality.verifiedFakeLeads ?? 0}</strong><span>Verified fake leads</span></div><div><strong>{loading ? '—' : quality.verifiedGenuineReports ?? 0}</strong><span>Verified genuine reports</span></div></div></article>
+            <article className="partner-panel partner-quality-card"><div className="partner-panel-head"><div><span className="partner-kicker">QUALITY HISTORY</span><h2>Report outcomes</h2></div></div><div className="partner-quality-mini"><div><strong>{loading ? '—' : quality.purchasedLeads ?? 0}</strong><span>Purchased partner leads</span></div><div><strong>{loading ? '—' : quality.verifiedFakeLeads ?? 0}</strong><span>Verified fake leads</span></div><div><strong>{loading ? '—' : quality.verifiedGenuineReports ?? 0}</strong><span>Verified genuine reports</span></div></div></article>
           </section>
           <section className="partner-panel partner-panel-account" id="account"><div className="partner-panel-head"><div><span className="partner-kicker">ACCOUNT</span><h2>{data?.partner?.business_name || user?.name || 'Lead Partner'}</h2></div><span className="partner-account-pill">Lead Partner</span></div><div className="partner-account-list"><div><span>Name</span><b>{user?.name || '—'}</b></div><div><span>Email</span><b>{user?.email || '—'}</b></div><div><span>Phone</span><b>{data?.partner?.phone || '—'}</b></div></div></section>
         </div>
