@@ -9,6 +9,7 @@ function Login() {
   const navigate = useNavigate()
   const location = useLocation()
   const [form, setForm] = useState({ email: '', password: '' })
+  const [accountType, setAccountType] = useState('business')
   const [showPassword, setShowPassword] = useState(false)
   const [remember, setRemember] = useState(true)
   const [loading, setLoading] = useState(false)
@@ -42,14 +43,17 @@ function Login() {
     setError('')
     try {
       setGoogleLoading(true)
-      const result = await authRequest('/auth/google', { method: 'POST', body: JSON.stringify({ credential }) })
+      const result = await authRequest('/auth/google', {
+        method: 'POST',
+        body: JSON.stringify({ credential, accountType }),
+      })
       finishLogin(result)
     } catch (err) {
       setError(err.message)
     } finally {
       setGoogleLoading(false)
     }
-  }, [finishLogin])
+  }, [accountType, finishLogin])
 
   return (
     <div className="auth-page">
@@ -82,6 +86,16 @@ function Login() {
           </div>
 
           {error && <div className="auth-error" role="alert">{error}</div>}
+
+          <div className="account-type-grid" role="radiogroup" aria-label="Account type">
+            <button type="button" className={`account-type-card ${accountType === 'business' ? 'selected' : ''}`} onClick={() => setAccountType('business')} aria-pressed={accountType === 'business'} disabled={loading || googleLoading}>
+              <strong>User</strong><span>For businesses that find and buy leads.</span>
+            </button>
+            <button type="button" className={`account-type-card ${accountType === 'lead_partner' ? 'selected' : ''}`} onClick={() => setAccountType('lead_partner')} aria-pressed={accountType === 'lead_partner'} disabled={loading || googleLoading}>
+              <strong>Lead Partner</strong><span>For partners who submit lead opportunities.</span>
+            </button>
+          </div>
+          <div className="signup-role-note">Google sign-in uses the selected account type for new accounts.</div>
 
           <div className="google-auth-block">
             <GoogleButton onCredential={handleGoogle} disabled={loading || googleLoading} />
