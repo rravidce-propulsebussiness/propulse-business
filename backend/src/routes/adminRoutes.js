@@ -12,5 +12,6 @@ router.patch('/users/:id/status', adminController.setUserStatus);
 router.patch('/users/:id/role', adminController.setUserRole);
 router.patch('/users/:id', adminController.updateUserProfile);
 router.get('/lead-partners', leadPartnerController.adminPartners);
+router.get('/lead-partners/:partnerId/financials', leadPartnerController.adminPartnerFinancials);
 router.patch('/lead-partners/:partnerId/status', leadPartnerController.adminUpdateStatus);
 module.exports = router;
