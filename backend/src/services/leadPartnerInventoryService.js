@@ -8,7 +8,7 @@ const clean = v => String(v ?? '').trim();
 const norm = v => clean(v).toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]/g, '');
 const aliases = {
   id: 'id', leadid: 'id', lead_id: 'id', externalid: 'id', external_id: 'id',
-  industry: 'industry', industryname: 'industry', industrytype: 'industry',
+  industry: 'industry', industryname: 'industry', industrytype: 'industry', industrycategory: 'industry', category: 'industry',
   service: 'service', servicename: 'service', servicetype: 'service', servicecategory: 'service',
   subservice: 'subservice', subservicename: 'subservice',
   state: 'state', statename: 'state', city: 'city', cityname: 'city',
@@ -49,11 +49,24 @@ async function catalogs() {
   return { industries: industries.rows, services: services.rows, subservices: subservices.rows, states: states.rows, cities: cities.rows };
 }
 
-const findExact = (items, value) => {
+function candidateMatches(items, value) {
   const wanted = norm(value);
-  if (!wanted) return null;
-  return items.find(x => norm(x.name) === wanted || norm(x.slug) === wanted) || null;
-};
+  if (!wanted) return [];
+  const exact = items.filter(x => norm(x.name) === wanted || norm(x.slug) === wanted);
+  if (exact.length) return exact;
+
+  // Sheets often contain human-friendly catalog variants such as
+  // "Construction" vs "Construction & Interior". Accept a relaxed match
+  // only when it resolves to exactly one catalog row, avoiding silent ambiguity.
+  const relaxed = items.filter(x => {
+    const name = norm(x.name);
+    const slug = norm(x.slug);
+    return name.includes(wanted) || wanted.includes(name) || slug.includes(wanted) || wanted.includes(slug);
+  });
+  return relaxed.length === 1 ? relaxed : [];
+}
+
+const findExact = (items, value) => candidateMatches(items, value)[0] || null;
 
 const findScoped = (items, value, parentId, parentKey) => {
   const scoped = parentId == null ? items : items.filter(x => Number(x[parentKey]) === Number(parentId));
@@ -65,20 +78,17 @@ function resolveClassification(row, cat) {
   let service = findScoped(cat.services, row.service, industry?.id, 'industry_id');
   let subservice = findScoped(cat.subservices, row.subservice, service?.id, 'service_id');
 
-  // Match the Admin Leads importer: a sheet may identify a subservice without
-  // repeating its parent service/industry. Derive the hierarchy from it.
+  // A sheet may identify a subservice without repeating its parent service/industry.
   if (!service && subservice) service = cat.services.find(x => Number(x.id) === Number(subservice.service_id)) || null;
   if (!industry && service) industry = cat.industries.find(x => Number(x.id) === Number(service.industry_id)) || null;
 
-  // If an industry was supplied, reject an ambiguous service instead of
-  // silently selecting the wrong service from another industry.
   if (row.service && !service) {
-    const matches = cat.services.filter(x => norm(x.name) === norm(row.service) || norm(x.slug) === norm(row.service));
+    const matches = candidateMatches(cat.services, row.service);
     if (matches.length > 1) throw new Error('Service is ambiguous; include Industry');
     throw new Error('Service could not be resolved');
   }
   if (row.subservice && !subservice) {
-    const matches = cat.subservices.filter(x => norm(x.name) === norm(row.subservice) || norm(x.slug) === norm(row.subservice));
+    const matches = candidateMatches(cat.subservices, row.subservice);
     if (matches.length > 1) throw new Error('Subservice is ambiguous; include Service');
     throw new Error('Subservice could not be resolved');
   }
@@ -178,7 +188,7 @@ async function listInventory({ userId, status = 'all', search = '' }) {
   const where = conditions.join(' AND ');
   const [data, stats] = await Promise.all([
     pool.query(`SELECT l.id,l.customer_name,l.customer_phone,l.customer_email,l.requirement,l.status,l.lead_type,l.buyer_capacity,l.is_exclusive,l.pincode,l.created_at,i.name AS industry_name,s.name AS service_name,st.name AS state_name,c.name AS city_name FROM leads l JOIN lead_partners lp ON lp.id=l.lead_partner_id JOIN industries i ON i.id=l.industry_id JOIN services s ON s.id=l.service_id JOIN states st ON st.id=l.state_id JOIN cities c ON c.id=l.city_id WHERE ${where} ORDER BY l.created_at DESC,l.id DESC LIMIT 500`, params),
-    pool.query(`SELECT COUNT(*)::int AS total, COUNT(*) FILTER (WHERE l.status IN ('available','paused'))::int AS active, COUNT(*) FILTER (WHERE l.status='sold')::int AS sold, COUNT(*) FILTER (WHERE l.status='closed')::int AS closed FROM leads l JOIN lead_partners lp ON lp.id=l.lead_partner_id WHERE lp.user_id=$1`, [userId]),
+    pool.query(`SELECT COUNT(*)::int AS total, COUNT(*) FILTER (WHERE status IN ('available','paused'))::int AS active, COUNT(*) FILTER (WHERE status='sold')::int AS sold, COUNT(*) FILTER (WHERE status='closed')::int AS closed FROM leads l JOIN lead_partners lp ON lp.id=l.lead_partner_id WHERE lp.user_id=$1`, [userId]),
   ]);
   return { data: data.rows, stats: stats.rows[0] || {} };
 }
