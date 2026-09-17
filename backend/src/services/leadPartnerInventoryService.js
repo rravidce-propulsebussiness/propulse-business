@@ -79,15 +79,9 @@ async function buildLead(row, cat) {
   };
 }
 
-async function initializePartnerPricing(userId, leadId, pricing) {
-  const configured = await partnerPricing.applyConfiguredPricingToLead(userId, leadId, pricing, null, null, 'basic');
-  await pool.query(`UPDATE leads SET partner_base_pricing=$1::jsonb,partner_pricing_overridden=$2,partner_pricing_updated_at=$3,pricing=$4::jsonb,updated_at=CURRENT_TIMESTAMP WHERE id=$5 AND created_by=$6`, [JSON.stringify(pricing || { shares: [] }), Boolean(configured !== pricing && configured), configured !== pricing ? new Date() : null, JSON.stringify(configured || pricing || { shares: [] }), leadId, userId]);
-}
-
 async function importCsv({ userId, csv }) {
   const rows = parseCsv(csv);
   if (!rows.length) throw new Error('CSV contains no data rows');
-  if (rows.length > 2000) throw new Error('Maximum 2,000 leads can be imported at once');
   const cat = await catalogs();
   let created = 0; let failed = 0; let duplicate = 0; const failures = [];
   for (const row of rows) {
