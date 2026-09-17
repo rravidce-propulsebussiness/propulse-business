@@ -8,15 +8,17 @@ const clean = v => String(v ?? '').trim();
 const norm = v => clean(v).toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]/g, '');
 const aliases = {
   id: 'id', leadid: 'id', lead_id: 'id', externalid: 'id', external_id: 'id',
-  industry: 'industry', industryname: 'industry', service: 'service', servicename: 'service',
-  subservice: 'subservice', subservicename: 'subservice', state: 'state', city: 'city',
-  pincode: 'pincode', pin: 'pincode', zipcode: 'pincode', postalcode: 'pincode',
+  industry: 'industry', industryname: 'industry', industrytype: 'industry',
+  service: 'service', servicename: 'service', servicetype: 'service', servicecategory: 'service',
+  subservice: 'subservice', subservicename: 'subservice',
+  state: 'state', statename: 'state', city: 'city', cityname: 'city',
+  pincode: 'pincode', pin: 'pincode', zipcode: 'pincode', postalcode: 'pincode', postal: 'pincode',
   customername: 'customerName', name: 'customerName', customer: 'customerName',
-  customerphone: 'customerPhone', phone: 'customerPhone', mobile: 'customerPhone',
+  customerphone: 'customerPhone', phone: 'customerPhone', mobile: 'customerPhone', whatsapp: 'customerPhone',
   customeremail: 'customerEmail', email: 'customerEmail',
   requirement: 'requirement', requirements: 'requirement', requirementdetails: 'requirement',
   propertytype: 'propertyType', budget: 'budget', source: 'source', notes: 'notes',
-  buyercapacity: 'buyerCapacity', maxbuyers: 'buyerCapacity', capacity: 'buyerCapacity',
+  buyercapacity: 'buyerCapacity', buyercapacitylimit: 'buyerCapacity', maxbuyers: 'buyerCapacity', capacity: 'buyerCapacity',
   leadtype: 'leadType', exclusive: 'isExclusive', isexclusive: 'isExclusive',
 };
 
@@ -33,7 +35,7 @@ function parseCsv(text) {
   if (!rows.length) return [];
   const headers = rows[0].map(h => aliases[norm(h)] || clean(h));
   return rows.slice(1).map(source => Object.fromEntries(headers.map((h, i) => [h, clean(source[i])])))
-    .filter(row => Object.values(row).some(Boolean));
+    .filter(r => Object.values(r).some(Boolean));
 }
 
 async function catalogs() {
@@ -47,18 +49,50 @@ async function catalogs() {
   return { industries: industries.rows, services: services.rows, subservices: subservices.rows, states: states.rows, cities: cities.rows };
 }
 
-const findByName = (items, name) => {
-  const wanted = norm(name); return wanted ? items.find(x => norm(x.name) === wanted) || null : null;
+const findExact = (items, value) => {
+  const wanted = norm(value);
+  if (!wanted) return null;
+  return items.find(x => norm(x.name) === wanted || norm(x.slug) === wanted) || null;
 };
 
-async function buildLead(row, cat) {
-  const industry = findByName(cat.industries, row.industry);
-  const service = industry ? cat.services.find(x => Number(x.industry_id) === Number(industry.id) && norm(x.name) === norm(row.service)) : findByName(cat.services, row.service);
-  const subservice = service ? cat.subservices.find(x => Number(x.service_id) === Number(service.id) && norm(x.name) === norm(row.subservice)) : null;
-  const state = findByName(cat.states, row.state);
-  const city = state ? cat.cities.find(x => Number(x.state_id) === Number(state.id) && norm(x.name) === norm(row.city)) : findByName(cat.cities, row.city);
+const findScoped = (items, value, parentId, parentKey) => {
+  const scoped = parentId == null ? items : items.filter(x => Number(x[parentKey]) === Number(parentId));
+  return findExact(scoped, value);
+};
+
+function resolveClassification(row, cat) {
+  let industry = findExact(cat.industries, row.industry);
+  let service = findScoped(cat.services, row.service, industry?.id, 'industry_id');
+  let subservice = findScoped(cat.subservices, row.subservice, service?.id, 'service_id');
+
+  // Match the Admin Leads importer: a sheet may identify a subservice without
+  // repeating its parent service/industry. Derive the hierarchy from it.
+  if (!service && subservice) service = cat.services.find(x => Number(x.id) === Number(subservice.service_id)) || null;
+  if (!industry && service) industry = cat.industries.find(x => Number(x.id) === Number(service.industry_id)) || null;
+
+  // If an industry was supplied, reject an ambiguous service instead of
+  // silently selecting the wrong service from another industry.
+  if (row.service && !service) {
+    const matches = cat.services.filter(x => norm(x.name) === norm(row.service) || norm(x.slug) === norm(row.service));
+    if (matches.length > 1) throw new Error('Service is ambiguous; include Industry');
+    throw new Error('Service could not be resolved');
+  }
+  if (row.subservice && !subservice) {
+    const matches = cat.subservices.filter(x => norm(x.name) === norm(row.subservice) || norm(x.slug) === norm(row.subservice));
+    if (matches.length > 1) throw new Error('Subservice is ambiguous; include Service');
+    throw new Error('Subservice could not be resolved');
+  }
+  if (service && industry && Number(service.industry_id) !== Number(industry.id)) throw new Error('Service does not belong to the selected Industry');
+  if (subservice && service && Number(subservice.service_id) !== Number(service.id)) throw new Error('Subservice does not belong to the selected Service');
   if (!industry) throw new Error('Industry could not be resolved');
   if (!service) throw new Error('Service could not be resolved');
+  return { industry, service, subservice };
+}
+
+async function buildLead(row, cat) {
+  const { industry, service, subservice } = resolveClassification(row, cat);
+  const state = findExact(cat.states, row.state);
+  const city = findScoped(cat.cities, row.city, state?.id, 'state_id');
   if (!state) throw new Error('State could not be resolved');
   if (!city) throw new Error('City could not be resolved');
   let pincode = clean(row.pincode).replace(/\D/g, '');
@@ -122,7 +156,7 @@ async function connectGoogleSheet({ userId, url }) {
 }
 
 async function syncGoogleSheet({ userId, connectionId }) {
-  const connection = (await pool.query('SELECT * FROM lead_partner_sheet_connections WHERE id=$1 AND user_id=$2 AND status=\'active\'', [connectionId, userId])).rows[0];
+  const connection = (await pool.query(`SELECT * FROM lead_partner_sheet_connections WHERE id=$1 AND user_id=$2 AND status='active'`, [connectionId, userId])).rows[0];
   if (!connection) { const error = new Error('Active Google Sheet connection not found'); error.code = 'SHEET_CONNECTION_NOT_FOUND'; throw error; }
   const result = await fetchGoogleSheetCsv(connection.source_url);
   if (result.spreadsheetId !== connection.spreadsheet_id || String(result.gid || '0') !== String(connection.gid || '0')) throw new Error('Google Sheet URL no longer matches the connected sheet');
@@ -138,13 +172,13 @@ async function disableSheetConnection({ userId, connectionId }) {
 }
 
 async function listInventory({ userId, status = 'all', search = '' }) {
-  const params = [userId]; const conditions = ['l.created_by=$1'];
+  const params = [userId]; const conditions = ['lp.user_id=$1'];
   if (status && status !== 'all') { params.push(status); conditions.push(`l.status=$${params.length}`); }
   if (clean(search)) { params.push(`%${clean(search)}%`); conditions.push(`(l.customer_name ILIKE $${params.length} OR l.customer_phone ILIKE $${params.length} OR l.requirement ILIKE $${params.length})`); }
   const where = conditions.join(' AND ');
   const [data, stats] = await Promise.all([
-    pool.query(`SELECT l.id,l.customer_name,l.customer_phone,l.customer_email,l.requirement,l.status,l.lead_type,l.buyer_capacity,l.is_exclusive,l.pincode,l.created_at,i.name AS industry_name,s.name AS service_name,st.name AS state_name,c.name AS city_name FROM leads l JOIN industries i ON i.id=l.industry_id JOIN services s ON s.id=l.service_id JOIN states st ON st.id=l.state_id JOIN cities c ON c.id=l.city_id WHERE ${where} ORDER BY l.created_at DESC,l.id DESC LIMIT 500`, params),
-    pool.query(`SELECT COUNT(*)::int AS total, COUNT(*) FILTER (WHERE status IN ('available','paused'))::int AS active, COUNT(*) FILTER (WHERE status='sold')::int AS sold, COUNT(*) FILTER (WHERE status='closed')::int AS closed FROM leads WHERE created_by=$1`, [userId]),
+    pool.query(`SELECT l.id,l.customer_name,l.customer_phone,l.customer_email,l.requirement,l.status,l.lead_type,l.buyer_capacity,l.is_exclusive,l.pincode,l.created_at,i.name AS industry_name,s.name AS service_name,st.name AS state_name,c.name AS city_name FROM leads l JOIN lead_partners lp ON lp.id=l.lead_partner_id JOIN industries i ON i.id=l.industry_id JOIN services s ON s.id=l.service_id JOIN states st ON st.id=l.state_id JOIN cities c ON c.id=l.city_id WHERE ${where} ORDER BY l.created_at DESC,l.id DESC LIMIT 500`, params),
+    pool.query(`SELECT COUNT(*)::int AS total, COUNT(*) FILTER (WHERE l.status IN ('available','paused'))::int AS active, COUNT(*) FILTER (WHERE l.status='sold')::int AS sold, COUNT(*) FILTER (WHERE l.status='closed')::int AS closed FROM leads l JOIN lead_partners lp ON lp.id=l.lead_partner_id WHERE lp.user_id=$1`, [userId]),
   ]);
   return { data: data.rows, stats: stats.rows[0] || {} };
 }
