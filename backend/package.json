@@ -10,7 +10,8 @@
     "db:bootstrap": "node src/database/bootstrapDatabase.js",
     "db:migrate": "node src/database/runMigrations.js",
     "migrate:lead-access": "node src/database/runLeadAccessMigrations.js",
-    "test": "node scripts/check-syntax.js && node scripts/check-migration-runner.js"
+    "test": "node scripts/check-syntax.js && node scripts/check-migration-runner.js",
+    "test:ledger": "node scripts/check-lead-partner-ledger.js"
   },
   "keywords": [],
   "author": "",
