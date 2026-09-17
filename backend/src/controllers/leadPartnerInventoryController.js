@@ -28,7 +28,7 @@ async function importCsv(req, res) {
 }
 
 async function sheetConnections(req, res) {
-  try { return res.json({ data: await service.getSheetConnections({ userId: req.user.id }) }); }
+  try { return res.json({ connections: await service.getSheetConnections({ userId: req.user.id }) }); }
   catch (error) { console.error('Lead Partner sheet connections failed:', error.message); return res.status(500).json({ error: 'Failed to load Google Sheet connections' }); }
 }
 
