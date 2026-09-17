@@ -23,14 +23,15 @@ BEGIN
 END $$;
 
 -- Keep the earning convenience pointer synchronized for rows that already have
--- payout items. The payout-item table remains the source of truth for totals.
+-- payout items. Because one earning can participate in multiple payout requests,
+-- choose the newest payout item by payout id rather than taking MAX() blindly.
 UPDATE lead_partner_earnings e
 SET payout_id = x.payout_id,
     updated_at = CURRENT_TIMESTAMP
 FROM (
-  SELECT earning_id, MAX(payout_id) AS payout_id
+  SELECT DISTINCT ON (earning_id) earning_id, payout_id
   FROM lead_partner_payout_items
-  GROUP BY earning_id
+  ORDER BY earning_id, payout_id DESC, id DESC
 ) x
 WHERE e.id = x.earning_id
   AND e.payout_id IS DISTINCT FROM x.payout_id;
