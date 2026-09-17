@@ -2,7 +2,7 @@ const pool = require('../config/database');
 const leadService = require('./leadService');
 const partnerPricing = require('./leadPartnerPricingService');
 const { fetchGoogleSheetCsv } = require('./googleSheetService');
-const { resolvePincode } = require('./pincodeService');
+const { getPincode } = require('./pincodeService');
 
 const clean = v => String(v ?? '').trim();
 const norm = v => clean(v).toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]/g, '');
@@ -55,88 +55,68 @@ function candidateMatches(items, value) {
   const exact = items.filter(x => norm(x.name) === wanted || norm(x.slug) === wanted);
   if (exact.length) return exact;
   const relaxed = items.filter(x => {
-    const name = norm(x.name);
-    const slug = norm(x.slug);
+    const name = norm(x.name); const slug = norm(x.slug);
     return name.includes(wanted) || wanted.includes(name) || slug.includes(wanted) || wanted.includes(slug);
   });
   return relaxed.length === 1 ? relaxed : [];
 }
-
-const findExact = (items, value) => {
-  const matches = candidateMatches(items, value);
-  return matches.length === 1 ? matches[0] : null;
-};
-
-const findScoped = (items, value, parentId, parentKey) => {
-  const scoped = parentId == null ? items : items.filter(x => Number(x[parentKey]) === Number(parentId));
-  return findExact(scoped, value);
-};
+const findExact = (items, value) => { const matches = candidateMatches(items, value); return matches.length === 1 ? matches[0] : null; };
+const findScoped = (items, value, parentId, parentKey) => findExact(parentId == null ? items : items.filter(x => Number(x[parentKey]) === Number(parentId)), value);
 
 function resolveClassification(row, cat) {
   let industry = findExact(cat.industries, row.industry);
   let service = findScoped(cat.services, row.service, industry?.id, 'industry_id');
   let subservice = findScoped(cat.subservices, row.subservice, service?.id, 'service_id');
-
-  // Match the Admin Leads import rules:
-  // - Industry may be supplied by itself.
-  // - Service may be supplied without Industry; derive Industry from Service.
-  // - Subservice may be supplied without Service/Industry; derive both parents.
-  // - If more than one catalog item can match, require the parent column to disambiguate.
   if (!service && subservice) service = cat.services.find(x => Number(x.id) === Number(subservice.service_id)) || null;
   if (!industry && service) industry = cat.industries.find(x => Number(x.id) === Number(service.industry_id)) || null;
-
-  if (row.industry && !industry) {
-    const matches = candidateMatches(cat.industries, row.industry);
-    if (matches.length > 1) throw new Error('Industry is ambiguous');
-    throw new Error('Industry could not be resolved');
-  }
-  if (row.service && !service) {
-    const matches = candidateMatches(cat.services, row.service);
-    if (matches.length > 1) throw new Error('Service is ambiguous; include Industry');
-    throw new Error('Service could not be resolved');
-  }
-  if (row.subservice && !subservice) {
-    const matches = candidateMatches(cat.subservices, row.subservice);
-    if (matches.length > 1) throw new Error('Subservice is ambiguous; include Service');
-    throw new Error('Subservice could not be resolved');
-  }
+  if (row.industry && !industry) { const matches = candidateMatches(cat.industries, row.industry); throw new Error(matches.length > 1 ? 'Industry is ambiguous' : 'Industry could not be resolved'); }
+  if (row.service && !service) { const matches = candidateMatches(cat.services, row.service); throw new Error(matches.length > 1 ? 'Service is ambiguous; include Industry' : 'Service could not be resolved'); }
+  if (row.subservice && !subservice) { const matches = candidateMatches(cat.subservices, row.subservice); throw new Error(matches.length > 1 ? 'Subservice is ambiguous; include Service' : 'Subservice could not be resolved'); }
   if (service && industry && Number(service.industry_id) !== Number(industry.id)) throw new Error('Service does not belong to the selected Industry');
   if (subservice && service && Number(subservice.service_id) !== Number(service.id)) throw new Error('Subservice does not belong to the selected Service');
   if (!industry) throw new Error('Industry is required or must be derivable from Service/Subservice');
   return { industry, service, subservice };
 }
 
+async function resolveLocationFromPincode(pincode, cat, suppliedState, suppliedCity) {
+  const value = clean(pincode).replace(/\D/g, '');
+  if (!/^\d{6}$/.test(value)) throw new Error('Pincode is required and must be a valid 6-digit Indian PIN');
+  const pin = await getPincode(value);
+  if (!pin) throw new Error(`Pincode ${value} could not be resolved`);
+  const state = cat.states.find(x => Number(x.id) === Number(pin.state_id) || norm(x.name) === norm(pin.state_name));
+  if (!state) throw new Error(`State for pincode ${value} is not present in the catalog`);
+  const cityRows = (await pool.query(`SELECT DISTINCT c.id,c.name,c.slug,c.state_id FROM city_pincodes cp JOIN cities c ON c.id=cp.city_id WHERE cp.pincode=$1 AND cp.is_active=TRUE AND c.is_active=TRUE`, [value])).rows;
+  const uniqueCities = [...new Map(cityRows.map(x => [String(x.id), x])).values()];
+  let city = uniqueCities.length === 1 ? uniqueCities[0] : null;
+  if (!city && suppliedCity) city = uniqueCities.find(x => norm(x.name) === norm(suppliedCity)) || null;
+  if (!city && uniqueCities.length > 1) throw new Error(`Pincode ${value} maps to multiple cities; provide a matching City`);
+  if (!city) throw new Error(`City for pincode ${value} could not be resolved`);
+  if (Number(city.state_id) !== Number(state.id)) throw new Error(`Pincode ${value} resolved to a city outside the resolved state`);
+  // State is canonical from the pincode. If a CSV State was supplied, it must agree with it.
+  if (suppliedState && norm(suppliedState) !== norm(state.name)) throw new Error(`Pincode ${value} belongs to ${state.name}, not ${suppliedState}`);
+  if (suppliedCity && norm(suppliedCity) !== norm(city.name)) throw new Error(`Pincode ${value} belongs to ${city.name}, not ${suppliedCity}`);
+  return { pincode: value, state, city };
+}
+
 async function buildLead(row, cat) {
   const { industry, service, subservice } = resolveClassification(row, cat);
-  const state = findExact(cat.states, row.state);
-  const city = findScoped(cat.cities, row.city, state?.id, 'state_id');
-  if (!state) throw new Error('State could not be resolved');
-  if (!city) throw new Error('City could not be resolved');
-  let pincode = clean(row.pincode).replace(/\D/g, '');
-  if (!/^\d{6}$/.test(pincode)) {
-    const resolved = await resolvePincode({ stateId: state.id, cityId: city.id, location: row.city, district: row.city });
-    pincode = clean(resolved?.pincode);
-  }
-  if (!/^\d{6}$/.test(pincode)) throw new Error('Pincode is required and could not be resolved from the supplied location');
+  const location = await resolveLocationFromPincode(row.pincode, cat, row.state, row.city);
   const capacity = Number(row.buyerCapacity);
   return {
     industryId: industry.id, serviceId: service?.id || null, subserviceId: subservice?.id || null,
-    stateId: state.id, cityId: city.id, customerName: row.customerName, customerPhone: row.customerPhone,
-    customerEmail: row.customerEmail || '', requirement: row.requirement || 'Lead requirement not provided',
-    propertyType: row.propertyType || '', budget: row.budget || '', source: row.source || 'lead-partner-upload', notes: row.notes || '',
-    pincode, buyerCapacity: Number.isFinite(capacity) && capacity >= 2 ? Math.floor(capacity) : 3,
-    leadType: norm(row.leadType) === 'premium' ? 'premium' : 'basic',
-    isExclusive: ['true', 'yes', 'y', '1', 'exclusive'].includes(norm(row.isExclusive)),
+    stateId: location.state.id, cityId: location.city.id, customerName: row.customerName, customerPhone: row.customerPhone,
+    customerEmail: row.customerEmail || '', requirement: row.requirement || 'Lead requirement not provided', propertyType: row.propertyType || '', budget: row.budget || '',
+    source: row.source || 'lead-partner-upload', notes: row.notes || '', pincode: location.pincode,
+    buyerCapacity: Number.isFinite(capacity) && capacity >= 2 ? Math.floor(capacity) : 3,
+    leadType: norm(row.leadType) === 'premium' ? 'premium' : 'basic', isExclusive: ['true', 'yes', 'y', '1', 'exclusive'].includes(norm(row.isExclusive)),
   };
 }
 
 async function importCsv({ userId, csv }) {
-  const rows = parseCsv(csv);
-  if (!rows.length) throw new Error('CSV contains no data rows');
+  const rows = parseCsv(csv); if (!rows.length) throw new Error('CSV contains no data rows');
   const cat = await catalogs();
   const partner = (await pool.query('SELECT id,status FROM lead_partners WHERE user_id=$1 LIMIT 1', [userId])).rows[0];
-  if (!partner) throw new Error('Lead Partner profile not found');
-  if (partner.status !== 'active') throw new Error('Lead Partner account is not active');
+  if (!partner) throw new Error('Lead Partner profile not found'); if (partner.status !== 'active') throw new Error('Lead Partner account is not active');
   let created = 0; let failed = 0; let duplicate = 0; const failures = [];
   for (const row of rows) {
     try {
@@ -154,50 +134,10 @@ async function importCsv({ userId, csv }) {
   return { total: rows.length, created, duplicate, failed, failures };
 }
 
-async function importGoogleSheet({ userId, url }) {
-  const result = await fetchGoogleSheetCsv(url);
-  const imported = await importCsv({ userId, csv: result.csv });
-  return { ...imported, spreadsheetId: result.spreadsheetId, gid: result.gid };
-}
-
-async function getSheetConnections({ userId }) {
-  const result = await pool.query(`SELECT id,spreadsheet_id,gid,source_url,status,last_synced_at,last_sync_created,last_sync_duplicate,last_sync_failed,last_sync_failures,created_at,updated_at FROM lead_partner_sheet_connections WHERE user_id=$1 ORDER BY updated_at DESC,id DESC`, [userId]);
-  return result.rows;
-}
-
-async function connectGoogleSheet({ userId, url }) {
-  const result = await fetchGoogleSheetCsv(url);
-  const imported = await importCsv({ userId, csv: result.csv });
-  const saved = (await pool.query(`INSERT INTO lead_partner_sheet_connections(user_id,spreadsheet_id,gid,source_url,last_synced_at,last_sync_created,last_sync_duplicate,last_sync_failed,last_sync_failures) VALUES($1,$2,$3,$4,CURRENT_TIMESTAMP,$5,$6,$7,$8::jsonb) ON CONFLICT(user_id,spreadsheet_id,gid) DO UPDATE SET source_url=EXCLUDED.source_url,status='active',last_synced_at=EXCLUDED.last_synced_at,last_sync_created=EXCLUDED.last_sync_created,last_sync_duplicate=EXCLUDED.last_sync_duplicate,last_sync_failed=EXCLUDED.last_sync_failed,last_sync_failures=EXCLUDED.last_sync_failures,updated_at=CURRENT_TIMESTAMP RETURNING *`, [userId, result.spreadsheetId, result.gid || '0', url, imported.created, imported.duplicate, imported.failed, JSON.stringify(imported.failures)])).rows[0];
-  return { connection: saved, import: imported };
-}
-
-async function syncGoogleSheet({ userId, connectionId }) {
-  const connection = (await pool.query(`SELECT * FROM lead_partner_sheet_connections WHERE id=$1 AND user_id=$2 AND status='active'`, [connectionId, userId])).rows[0];
-  if (!connection) { const error = new Error('Active Google Sheet connection not found'); error.code = 'SHEET_CONNECTION_NOT_FOUND'; throw error; }
-  const result = await fetchGoogleSheetCsv(connection.source_url);
-  if (result.spreadsheetId !== connection.spreadsheet_id || String(result.gid || '0') !== String(connection.gid || '0')) throw new Error('Google Sheet URL no longer matches the connected sheet');
-  const imported = await importCsv({ userId, csv: result.csv });
-  const saved = (await pool.query(`UPDATE lead_partner_sheet_connections SET last_synced_at=CURRENT_TIMESTAMP,last_sync_created=$1,last_sync_duplicate=$2,last_sync_failed=$3,last_sync_failures=$4::jsonb,updated_at=CURRENT_TIMESTAMP WHERE id=$5 AND user_id=$6 RETURNING *`, [imported.created, imported.duplicate, imported.failed, JSON.stringify(imported.failures), connectionId, userId])).rows[0];
-  return { connection: saved, import: imported };
-}
-
-async function disableSheetConnection({ userId, connectionId }) {
-  const result = await pool.query(`UPDATE lead_partner_sheet_connections SET status='disabled',updated_at=CURRENT_TIMESTAMP WHERE id=$1 AND user_id=$2 RETURNING *`, [connectionId, userId]);
-  if (!result.rows[0]) { const error = new Error('Sheet connection not found'); error.code = 'SHEET_CONNECTION_NOT_FOUND'; throw error; }
-  return result.rows[0];
-}
-
-async function listInventory({ userId, status = 'all', search = '' }) {
-  const params = [userId]; const conditions = ['lp.user_id=$1'];
-  if (status && status !== 'all') { params.push(status); conditions.push(`l.status=$${params.length}`); }
-  if (clean(search)) { params.push(`%${clean(search)}%`); conditions.push(`(l.customer_name ILIKE $${params.length} OR l.customer_phone ILIKE $${params.length} OR l.requirement ILIKE $${params.length})`); }
-  const where = conditions.join(' AND ');
-  const [data, stats] = await Promise.all([
-    pool.query(`SELECT l.id,l.customer_name,l.customer_phone,l.customer_email,l.requirement,l.status,l.lead_type,l.buyer_capacity,l.is_exclusive,l.pincode,l.created_at,i.name AS industry_name,s.name AS service_name,ss.name AS subservice_name,st.name AS state_name,c.name AS city_name FROM leads l JOIN lead_partners lp ON lp.id=l.lead_partner_id JOIN industries i ON i.id=l.industry_id LEFT JOIN services s ON s.id=l.service_id LEFT JOIN subservices ss ON ss.id=l.subservice_id JOIN states st ON st.id=l.state_id JOIN cities c ON c.id=l.city_id WHERE ${where} ORDER BY l.created_at DESC,l.id DESC LIMIT 500`, params),
-    pool.query(`SELECT COUNT(*)::int AS total, COUNT(*) FILTER (WHERE status IN ('available','paused'))::int AS active, COUNT(*) FILTER (WHERE status='sold')::int AS sold, COUNT(*) FILTER (WHERE status='closed')::int AS closed FROM leads l JOIN lead_partners lp ON lp.id=l.lead_partner_id WHERE lp.user_id=$1`, [userId]),
-  ]);
-  return { data: data.rows, stats: stats.rows[0] || {} };
-}
-
+async function importGoogleSheet({ userId, url }) { const result = await fetchGoogleSheetCsv(url); const imported = await importCsv({ userId, csv: result.csv }); return { ...imported, spreadsheetId: result.spreadsheetId, gid: result.gid }; }
+async function getSheetConnections({ userId }) { return (await pool.query(`SELECT id,spreadsheet_id,gid,source_url,status,last_synced_at,last_sync_created,last_sync_duplicate,last_sync_failed,last_sync_failures,created_at,updated_at FROM lead_partner_sheet_connections WHERE user_id=$1 ORDER BY updated_at DESC,id DESC`, [userId])).rows; }
+async function connectGoogleSheet({ userId, url }) { const result = await fetchGoogleSheetCsv(url); const imported = await importCsv({ userId, csv: result.csv }); const saved = (await pool.query(`INSERT INTO lead_partner_sheet_connections(user_id,spreadsheet_id,gid,source_url,last_synced_at,last_sync_created,last_sync_duplicate,last_sync_failed,last_sync_failures) VALUES($1,$2,$3,$4,CURRENT_TIMESTAMP,$5,$6,$7,$8::jsonb) ON CONFLICT(user_id,spreadsheet_id,gid) DO UPDATE SET source_url=EXCLUDED.source_url,status='active',last_synced_at=EXCLUDED.last_synced_at,last_sync_created=EXCLUDED.last_sync_created,last_sync_duplicate=EXCLUDED.last_sync_duplicate,last_sync_failed=EXCLUDED.last_sync_failed,last_sync_failures=EXCLUDED.last_sync_failures,updated_at=CURRENT_TIMESTAMP RETURNING *`, [userId, result.spreadsheetId, result.gid || '0', url, imported.created, imported.duplicate, imported.failed, JSON.stringify(imported.failures)])).rows[0]; return { connection: saved, import: imported }; }
+async function syncGoogleSheet({ userId, connectionId }) { const connection = (await pool.query(`SELECT * FROM lead_partner_sheet_connections WHERE id=$1 AND user_id=$2 AND status='active'`, [connectionId, userId])).rows[0]; if (!connection) { const error = new Error('Active Google Sheet connection not found'); error.code = 'SHEET_CONNECTION_NOT_FOUND'; throw error; } const result = await fetchGoogleSheetCsv(connection.source_url); if (result.spreadsheetId !== connection.spreadsheet_id || String(result.gid || '0') !== String(connection.gid || '0')) throw new Error('Google Sheet URL no longer matches the connected sheet'); const imported = await importCsv({ userId, csv: result.csv }); const saved = (await pool.query(`UPDATE lead_partner_sheet_connections SET last_synced_at=CURRENT_TIMESTAMP,last_sync_created=$1,last_sync_duplicate=$2,last_sync_failed=$3,last_sync_failures=$4::jsonb,updated_at=CURRENT_TIMESTAMP WHERE id=$5 AND user_id=$6 RETURNING *`, [imported.created, imported.duplicate, imported.failed, JSON.stringify(imported.failures), connectionId, userId])).rows[0]; return { connection: saved, import: imported }; }
+async function disableSheetConnection({ userId, connectionId }) { const result = await pool.query(`UPDATE lead_partner_sheet_connections SET status='disabled',updated_at=CURRENT_TIMESTAMP WHERE id=$1 AND user_id=$2 RETURNING *`, [connectionId, userId]); if (!result.rows[0]) { const error = new Error('Sheet connection not found'); error.code = 'SHEET_CONNECTION_NOT_FOUND'; throw error; } return result.rows[0]; }
+async function listInventory({ userId, status = 'all', search = '' }) { const params = [userId]; const conditions = ['lp.user_id=$1']; if (status && status !== 'all') { params.push(status); conditions.push(`l.status=$${params.length}`); } if (clean(search)) { params.push(`%${clean(search)}%`); conditions.push(`(l.customer_name ILIKE $${params.length} OR l.customer_phone ILIKE $${params.length} OR l.requirement ILIKE $${params.length})`); } const where = conditions.join(' AND '); const [data, stats] = await Promise.all([pool.query(`SELECT l.id,l.customer_name,l.customer_phone,l.customer_email,l.requirement,l.status,l.lead_type,l.buyer_capacity,l.is_exclusive,l.pincode,l.created_at,i.name AS industry_name,s.name AS service_name,ss.name AS subservice_name,st.name AS state_name,c.name AS city_name FROM leads l JOIN lead_partners lp ON lp.id=l.lead_partner_id JOIN industries i ON i.id=l.industry_id LEFT JOIN services s ON s.id=l.service_id LEFT JOIN subservices ss ON ss.id=l.subservice_id JOIN states st ON st.id=l.state_id JOIN cities c ON c.id=l.city_id WHERE ${where} ORDER BY l.created_at DESC,l.id DESC LIMIT 500`, params), pool.query(`SELECT COUNT(*)::int AS total, COUNT(*) FILTER (WHERE status IN ('available','paused'))::int AS active, COUNT(*) FILTER (WHERE status='sold')::int AS sold, COUNT(*) FILTER (WHERE status='closed')::int AS closed FROM leads l JOIN lead_partners lp ON lp.id=l.lead_partner_id WHERE lp.user_id=$1`, [userId])]); return { data: data.rows, stats: stats.rows[0] || {} }; }
 module.exports = { importCsv, importGoogleSheet, listInventory, getSheetConnections, connectGoogleSheet, syncGoogleSheet, disableSheetConnection, parseCsv };
