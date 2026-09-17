@@ -25,6 +25,7 @@ export default function AdminLeadPartnerPayouts(){
   const process=async action=>{
     if(!selected)return;
     setError('');
+    if(action==='reject'&&!reason.trim()) {setError('Enter a rejection reason before rejecting the payout.');return}
     if(action==='paid'&&!proof) {setError('Upload the payment proof screenshot before marking the payout as paid.');return}
     if(action==='paid'&&!reference.trim()) {setError('Transfer reference / UTR is required.');return}
     setBusy(selected.id);
