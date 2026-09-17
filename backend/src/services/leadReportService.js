@@ -1,5 +1,4 @@
 const pool=require('../config/database');
-const walletService=require('./walletService');
 const couponService=require('./couponService');
 
 const REPORT_REASONS=['fake','wrong_number','not_interested','duplicate','other'];
@@ -39,17 +38,35 @@ async function getAdminReports({status='pending',page=1,limit=50}={}){
   const where=normalized==='all'?'':'WHERE r.status=$1';
   const total=(await pool.query(`SELECT COUNT(*)::int AS count FROM lead_reports r ${where}`,normalized==='all'?[]:[normalized])).rows[0].count;
   const params=normalized==='all'?[safeLimit,offset]:[normalized,safeLimit,offset];
-  const result=await pool.query(`SELECT r.*,l.customer_name,l.customer_phone,l.customer_email,l.status AS lead_status,i.name AS industry_name,reporter.name AS reporter_name,reporter.email AS reporter_email,reviewer.name AS reviewer_name FROM lead_reports r JOIN leads l ON l.id=r.lead_id LEFT JOIN industries i ON i.id=l.industry_id LEFT JOIN users reporter ON reporter.id=r.reporter_user_id LEFT JOIN users reviewer ON reviewer.id=r.reviewed_by ${where} ORDER BY r.created_at DESC,r.id DESC LIMIT $${params.length-1} OFFSET $${params.length}`,params);
+  const result=await pool.query(`SELECT r.*,l.customer_name,l.customer_phone,l.customer_email,l.status AS lead_status,i.name AS industry_name,reporter.name AS reporter_name,reporter.email AS reporter_email,reviewer.name AS reviewer_name,COALESCE(control.can_report_leads,TRUE) AS can_report_leads,COALESCE(control.false_report_count,0)::int AS false_report_count,control.restriction_reason FROM lead_reports r JOIN leads l ON l.id=r.lead_id LEFT JOIN industries i ON i.id=l.industry_id LEFT JOIN users reporter ON reporter.id=r.reporter_user_id LEFT JOIN users reviewer ON reviewer.id=r.reviewed_by LEFT JOIN lead_reporting_controls control ON control.user_id=r.reporter_user_id ${where} ORDER BY r.created_at DESC,r.id DESC LIMIT $${params.length-1} OFFSET $${params.length}`,params);
   return {data:result.rows,pagination:{page:safePage,limit:safeLimit,total,totalPages:Math.ceil(total/safeLimit)}};
 }
+
+async function refundPaymentToWallet(client,payment,description){
+  const paymentId=Number(payment?.id);
+  const userId=Number(payment?.user_id);
+  const total=Number(Number(payment?.amount??(Number(payment?.wallet_amount||0)+Number(payment?.external_amount||0))).toFixed(2));
+  if(!Number.isInteger(paymentId)||paymentId<=0||!Number.isInteger(userId)||userId<=0||total<=0)return{refundedAmount:0,balanceAfter:null,walletTransactionId:null};
+
+  const existing=(await client.query(`SELECT id,amount,balance_after FROM wallet_transactions WHERE payment_id=$1 AND type='refund' FOR UPDATE`,[paymentId])).rows[0];
+  if(existing)return{refundedAmount:Number(existing.amount),balanceAfter:Number(existing.balance_after),walletTransactionId:existing.id};
+
+  const wallet=(await client.query(`INSERT INTO wallets(user_id) VALUES($1) ON CONFLICT(user_id) DO UPDATE SET user_id=EXCLUDED.user_id RETURNING id,balance`,[userId])).rows[0];
+  const locked=(await client.query('SELECT id,balance FROM wallets WHERE id=$1 FOR UPDATE',[wallet.id])).rows[0];
+  const next=Number((Number(locked.balance||0)+total).toFixed(2));
+  await client.query('UPDATE wallets SET balance=$1,updated_at=CURRENT_TIMESTAMP WHERE id=$2',[next,locked.id]);
+  const tx=(await client.query(`INSERT INTO wallet_transactions(wallet_id,user_id,type,amount,balance_after,reference_type,reference_id,payment_id,description) VALUES($1,$2,'refund',$3,$4,'payment',$5,$6,$7) RETURNING id`,[locked.id,userId,total,paymentId,paymentId,paymentId,description||'Verified fake lead refund'])).rows[0];
+  return{refundedAmount:total,balanceAfter:next,walletTransactionId:tx.id};
+}
+
 async function refundFakeLead(client,report){
-  const purchases=(await client.query(`SELECT lp.*,p.status AS payment_status,p.payment_method,p.wallet_amount,p.external_amount,p.coupon_id FROM lead_purchases lp LEFT JOIN payments p ON p.id=lp.payment_id WHERE lp.lead_id=$1 AND lp.status='paid' ORDER BY lp.id FOR UPDATE OF lp`,[report.lead_id])).rows;
+  const purchases=(await client.query(`SELECT lp.*,p.status AS payment_status,p.payment_method,p.wallet_amount,p.external_amount,p.amount AS payment_amount,p.coupon_id FROM lead_purchases lp LEFT JOIN payments p ON p.id=lp.payment_id WHERE lp.lead_id=$1 AND lp.status='paid' ORDER BY lp.id FOR UPDATE OF lp`,[report.lead_id])).rows;
   for(const purchase of purchases){
     const paymentId=purchase.payment_id;
     if(paymentId){
       const payment=(await client.query('SELECT * FROM payments WHERE id=$1 FOR UPDATE',[paymentId])).rows[0];
       if(payment){
-        await walletService.refundForPayment(client,{userId:purchase.user_id,paymentId,description:`Refund for verified fake lead #${report.lead_id}`});
+        await refundPaymentToWallet(client,payment,`Refund for verified fake lead #${report.lead_id}`);
         await couponService.releaseForPayment(client,paymentId);
         if(payment.status!=='refunded')await client.query("UPDATE payments SET status='refunded',updated_at=CURRENT_TIMESTAMP WHERE id=$1",[paymentId]);
       }
