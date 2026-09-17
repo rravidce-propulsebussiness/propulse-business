@@ -3,8 +3,6 @@ const couponService=require('./couponService');
 
 const REPORT_REASONS=['fake','wrong_number','not_interested','duplicate','other'];
 const REVIEW_STATUSES=['verified_fake','verified_genuine','rejected'];
-const AUTO_FAKE_REPORT_THRESHOLD=2;
-const AUTO_FAKE_REASONS=['fake','wrong_number'];
 
 async function getReportingControl(userId){
   const result=await pool.query('SELECT can_report_leads,false_report_count,restriction_reason FROM lead_reporting_controls WHERE user_id=$1',[userId]);
@@ -21,26 +19,12 @@ async function createReport({leadId,reporterUserId,reason,details}){
   const control=await getReportingControl(reporterUserId);
   if(!control.can_report_leads){const e=new Error(control.restriction_reason||'Lead reporting is currently disabled for your account');e.code='REPORTING_DISABLED';throw e;}
   if(!(await hasLeadAccess(reporterUserId,id))){const e=new Error('You can report a lead only after you have access to it');e.code='REPORT_NOT_ELIGIBLE';throw e;}
-  const client=await pool.connect();
-  try{
-    await client.query('BEGIN');
-    const lead=(await client.query('SELECT id,status FROM leads WHERE id=$1 FOR UPDATE',[id])).rows[0];
-    if(!lead){const e=new Error('Lead not found');e.code='LEAD_NOT_FOUND';throw e;}
-    if(lead.status==='invalid'){const e=new Error('This lead has already been marked invalid');e.code='LEAD_ALREADY_INVALID';throw e;}
-    const existing=(await client.query('SELECT id,status FROM lead_reports WHERE lead_id=$1 AND reporter_user_id=$2 ORDER BY id DESC LIMIT 1',[id,reporterUserId])).rows[0];
-    if(existing?.status==='pending'){const e=new Error('You already have a pending report for this lead');e.code='REPORT_ALREADY_PENDING';throw e;}
-    const report=(await client.query('INSERT INTO lead_reports(lead_id,reporter_user_id,reason,details) VALUES($1,$2,$3,$4) RETURNING *',[id,reporterUserId,reason,String(details||'').trim()||null])).rows[0];
-    const reporterCount=Number((await client.query(`SELECT COUNT(DISTINCT reporter_user_id)::int AS count FROM lead_reports WHERE lead_id=$1 AND reason=ANY($2::varchar[])`,[id,AUTO_FAKE_REASONS])).rows[0].count||0);
-    let autoInvalidated=false; let refunds=[];
-    if(reporterCount>=AUTO_FAKE_REPORT_THRESHOLD){
-      await client.query("UPDATE leads SET status='invalid',updated_at=CURRENT_TIMESTAMP WHERE id=$1 AND status<>'invalid'",[id]);
-      refunds=await refundFakeLead(client,{lead_id:id});
-      await client.query("UPDATE lead_reports SET status='verified_fake',reviewed_at=CURRENT_TIMESTAMP,updated_at=CURRENT_TIMESTAMP WHERE lead_id=$1 AND status='pending' AND reason=ANY($2::varchar[])",[id,AUTO_FAKE_REASONS]);
-      autoInvalidated=true;
-    }
-    await client.query('COMMIT');
-    return {...report,auto_invalidated:autoInvalidated,reporter_count:reporterCount,auto_fake_threshold:AUTO_FAKE_REPORT_THRESHOLD,refunds,refunded_amount:refunds.reduce((sum,item)=>sum+Number(item.amount||0),0)};
-  }catch(error){await client.query('ROLLBACK');throw error}finally{client.release()}
+  const lead=(await pool.query('SELECT id,status FROM leads WHERE id=$1',[id])).rows[0];
+  if(!lead){const e=new Error('Lead not found');e.code='LEAD_NOT_FOUND';throw e;}
+  if(lead.status==='invalid'){const e=new Error('This lead has already been marked invalid');e.code='LEAD_ALREADY_INVALID';throw e;}
+  const existing=(await pool.query('SELECT id,status FROM lead_reports WHERE lead_id=$1 AND reporter_user_id=$2 ORDER BY id DESC LIMIT 1',[id,reporterUserId])).rows[0];
+  if(existing?.status==='pending'){const e=new Error('You already have a pending report for this lead');e.code='REPORT_ALREADY_PENDING';throw e;}
+  return (await pool.query('INSERT INTO lead_reports(lead_id,reporter_user_id,reason,details) VALUES($1,$2,$3,$4) RETURNING *',[id,reporterUserId,reason,String(details||'').trim()||null])).rows[0];
 }
 async function getMyReports(userId){
   const result=await pool.query(`SELECT r.*,l.customer_name,l.industry_id,l.status AS lead_status,i.name AS industry_name FROM lead_reports r JOIN leads l ON l.id=r.lead_id LEFT JOIN industries i ON i.id=l.industry_id WHERE r.reporter_user_id=$1 ORDER BY r.created_at DESC,r.id DESC`,[userId]);
