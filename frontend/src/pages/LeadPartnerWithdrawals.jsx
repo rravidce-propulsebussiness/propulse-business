@@ -8,7 +8,7 @@ const money=v=>`₹${Number(v||0).toLocaleString('en-IN',{minimumFractionDigits:
 
 export default function LeadPartnerWithdrawals(){
  const navigate=useNavigate(),location=useLocation(),user=getUser();
- const [funds,setFunds]=useState(null),[amount,setAmount]=useState(''),[notes,setNotes]=useState(''),[loading,setLoading]=useState(true),[saving,setSaving]=useState(false),[error,setError]=useState(''),[message,setMessage]=useState('');
+ const [funds,setFunds]=useState(null),[amount,setAmount]=useState(''),[notes,setNotes]=useState(''),[loading,setLoading]=useState(true),[saving,setSaving]=useState(false),[error,setError]=useState(''),[message,setMessage]=useState(''),[proof,setProof]=useState(null);
  const initials=useMemo(()=>(user?.name||'Lead Partner').split(' ').filter(Boolean).slice(0,2).map(x=>x[0]).join('').toUpperCase()||'LP',[user?.name]);
 
  async function load(){
@@ -66,10 +66,16 @@ export default function LeadPartnerWithdrawals(){
       </section>
       <section className="partner-panel" style={{marginTop:20}}>
        <div className="partner-panel-head"><div><span className="partner-kicker">PAYOUT HISTORY</span><h2>Withdrawal history</h2><p>Pending, rejected and paid requests are retained here.</p></div></div>
-       <div style={{overflowX:'auto'}}><table className="partner-table"><thead><tr>{['ID','Amount','Status','Method','Requested','Processed','Reference / Reason'].map(x=><th key={x}>{x}</th>)}</tr></thead><tbody>{(funds?.requests||[]).map(r=><tr key={r.id}><td>#{r.id}</td><td><b>{money(r.amount)}</b></td><td><span className={`partner-status ${r.status}`}>{r.status}</span></td><td>{r.payout_method||'—'}</td><td>{r.requested_at?new Date(r.requested_at).toLocaleString('en-IN'):'—'}</td><td>{r.processed_at?new Date(r.processed_at).toLocaleString('en-IN'):'—'}</td><td>{r.transfer_reference||r.rejection_reason||'—'}</td></tr>)}</tbody></table>{!(funds?.requests||[]).length&&<div className="partner-empty">No withdrawal requests yet.</div>}</div>
+       <div style={{overflowX:'auto'}}><table className="partner-table"><thead><tr>{['ID','Amount','Status','Method','Requested','Processed','Reference / Reason'].map(x=><th key={x}>{x}</th>)}</tr></thead><tbody>{(funds?.requests||[]).map(r=><tr key={r.id}><td>#{r.id}</td><td><b>{money(r.amount)}</b></td><td><span className={`partner-status ${r.status}`}>{r.status}</span></td><td>{r.payout_method||'—'}</td><td>{r.requested_at?new Date(r.requested_at).toLocaleString('en-IN'):'—'}</td><td>{r.processed_at?new Date(r.processed_at).toLocaleString('en-IN'):'—'}</td><td>{r.transfer_reference||r.rejection_reason||'—'} {r.proof_url&&r.status==='paid'&&<button type="button" onClick={()=>setProof(r.proof_url)} style={{marginLeft:8}}>View proof</button>}</td></tr>)}</tbody></table>{!(funds?.requests||[]).length&&<div className="partner-empty">No withdrawal requests yet.</div>}</div>
       </section>
     </>}
    </div>
   </main>
+  {proof&&<div onClick={()=>setProof(null)} style={{position:'fixed',inset:0,background:'rgba(0,0,0,.55)',display:'grid',placeItems:'center',padding:20,zIndex:1000}}>
+   <div onClick={e=>e.stopPropagation()} style={{background:'#fff',borderRadius:14,padding:16,maxWidth:'min(900px,95vw)',maxHeight:'90vh',overflow:'auto'}}>
+    <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',gap:16,marginBottom:12}}><strong>Payment proof</strong><button type="button" onClick={()=>setProof(null)}>Close</button></div>
+    <img src={proof} alt="Payment proof" style={{display:'block',maxWidth:'100%',maxHeight:'75vh',objectFit:'contain'}}/>
+   </div>
+  </div>}
  </div>
 }
