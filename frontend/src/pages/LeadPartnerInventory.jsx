@@ -112,7 +112,7 @@ export default function LeadPartnerInventory() {
               <p>Use the same lead columns supported by ProPulse sheet imports.</p>
               <button className="partner-upload-btn" type="button" disabled={importing} onClick={() => fileRef.current?.click()}>{importing ? 'Importing…' : 'Choose CSV file'}</button>
               <input ref={fileRef} hidden type="file" accept=".csv,text/csv" onChange={e => importCsv(e.target.files?.[0])} />
-              <small>Maximum 2,000 leads per import.</small>
+              <small>No upload count limit.</small>
             </article>
           </section>
 
