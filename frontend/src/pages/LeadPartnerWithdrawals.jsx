@@ -13,8 +13,9 @@ export default function LeadPartnerWithdrawals(){
   <h1 style={{marginBottom:6}}>Earnings & Withdrawals</h1><p style={{color:'#667085',marginTop:0}}>Withdraw eligible Lead Partner earnings to your saved Bank Account or UPI.</p>
   {error&&<div style={{padding:12,background:'#fff1f0',color:'#b42318',borderRadius:10,marginBottom:16}}>{error}</div>}
   {message&&<div style={{padding:12,background:'#ecfdf3',color:'#027a48',borderRadius:10,marginBottom:16}}>{message}</div>}
+  {Number(funds?.recovery_outstanding||0)>0&&<div style={{padding:14,background:'#fff8e6',color:'#8a5a00',border:'1px solid #f5d48a',borderRadius:12,marginBottom:18}}><b>Recovery adjustment: {money(funds.recovery_outstanding)}</b><div style={{fontSize:13,marginTop:4}}>This amount is being recovered from future eligible earnings and is not available for withdrawal.</div></div>}
   <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(190px,1fr))',gap:14,marginBottom:24}}>
-   {[['Available',funds?.available],['Pending',funds?.reserved],['Paid',funds?.paid]].map(([label,value])=><div key={label} style={{padding:20,border:'1px solid #e4e7ec',borderRadius:14}}><div style={{fontSize:13,color:'#667085'}}>{label}</div><strong style={{display:'block',fontSize:25,marginTop:7}}>{money(value)}</strong></div>)}
+   {[['Available',funds?.available],['Pending',funds?.reserved],['Paid',funds?.paid],['Recovery outstanding',funds?.recovery_outstanding]].map(([label,value])=><div key={label} style={{padding:20,border:'1px solid #e4e7ec',borderRadius:14}}><div style={{fontSize:13,color:'#667085'}}>{label}</div><strong style={{display:'block',fontSize:25,marginTop:7}}>{money(value)}</strong></div>)}
   </div>
   <div style={{display:'grid',gridTemplateColumns:'minmax(280px,1fr) minmax(320px,1fr)',gap:20,alignItems:'start'}}>
    <section style={{border:'1px solid #e4e7ec',borderRadius:14,padding:20}}><h2 style={{fontSize:18,marginTop:0}}>Request withdrawal</h2><p style={{fontSize:13,color:'#667085'}}>Available now: {money(funds?.available)}</p>
