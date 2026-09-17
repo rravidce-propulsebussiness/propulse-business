@@ -62,7 +62,10 @@ function candidateMatches(items, value) {
   return relaxed.length === 1 ? relaxed : [];
 }
 
-const findExact = (items, value) => candidateMatches(items, value)[0] || null;
+const findExact = (items, value) => {
+  const matches = candidateMatches(items, value);
+  return matches.length === 1 ? matches[0] : null;
+};
 
 const findScoped = (items, value, parentId, parentKey) => {
   const scoped = parentId == null ? items : items.filter(x => Number(x[parentKey]) === Number(parentId));
