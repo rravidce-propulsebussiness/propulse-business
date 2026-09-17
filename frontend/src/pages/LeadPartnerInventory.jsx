@@ -5,6 +5,7 @@ import './LeadPartnerHome.css';
 import './LeadPartnerInventory.css';
 
 const statusLabel = value => String(value || '').replace(/_/g, ' ').replace(/\b\w/g, x => x.toUpperCase());
+const formatDate = value => value ? new Date(value).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }) : 'Never';
 
 export default function LeadPartnerInventory() {
   const navigate = useNavigate();
@@ -14,9 +15,12 @@ export default function LeadPartnerInventory() {
   const [data, setData] = useState({ data: [], stats: {} });
   const [loading, setLoading] = useState(true);
   const [importing, setImporting] = useState(false);
+  const [sheetBusy, setSheetBusy] = useState(false);
+  const [syncingId, setSyncingId] = useState(null);
   const [sheetUrl, setSheetUrl] = useState('');
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('all');
+  const [connections, setConnections] = useState([]);
   const [message, setMessage] = useState(null);
 
   const initials = useMemo(() => (user?.name || 'Lead Partner').split(' ').filter(Boolean).slice(0, 2).map(x => x[0]).join('').toUpperCase() || 'LP', [user?.name]);
@@ -33,20 +37,52 @@ export default function LeadPartnerInventory() {
     } finally { setLoading(false); }
   }
 
-  useEffect(() => { load(); }, [status, search]);
+  async function loadConnections() {
+    try {
+      const result = await authRequest('/lead-partner/inventory/sheets');
+      setConnections(result?.connections || []);
+    } catch (error) {
+      setMessage({ type: 'error', text: error.message });
+    }
+  }
 
-  async function importGoogleSheet(e) {
+  useEffect(() => { load(); }, [status, search]);
+  useEffect(() => { loadConnections(); }, []);
+
+  async function connectGoogleSheet(e) {
     e.preventDefault();
     if (!sheetUrl.trim()) return setMessage({ type: 'error', text: 'Enter a Google Sheets URL.' });
     try {
-      setImporting(true); setMessage(null);
-      const result = await authRequest('/lead-partner/inventory/import/google-sheet', {
+      setSheetBusy(true); setMessage(null);
+      const result = await authRequest('/lead-partner/inventory/sheets', {
         method: 'POST', body: JSON.stringify({ url: sheetUrl.trim() }),
       });
-      setMessage({ type: result.failed ? 'error' : 'success', text: `Imported ${result.created} leads. ${result.duplicate} duplicates, ${result.failed} failed.` });
-      await load();
+      setSheetUrl('');
+      setMessage({ type: result.failed ? 'error' : 'success', text: `Sheet connected. Imported ${result.created} leads. ${result.duplicate} duplicates, ${result.failed} failed.` });
+      await Promise.all([load(), loadConnections()]);
     } catch (error) { setMessage({ type: 'error', text: error.message }); }
-    finally { setImporting(false); }
+    finally { setSheetBusy(false); }
+  }
+
+  async function syncSheet(connectionId) {
+    try {
+      setSyncingId(connectionId); setMessage(null);
+      const result = await authRequest(`/lead-partner/inventory/sheets/${connectionId}/sync`, { method: 'POST' });
+      setMessage({ type: result.failed ? 'error' : 'success', text: `Sync complete. Imported ${result.created} leads. ${result.duplicate} duplicates, ${result.failed} failed.` });
+      await Promise.all([load(), loadConnections()]);
+    } catch (error) { setMessage({ type: 'error', text: error.message }); }
+    finally { setSyncingId(null); }
+  }
+
+  async function disconnectSheet(connectionId) {
+    if (!window.confirm('Disconnect this Google Sheet? Existing imported leads will remain in your inventory.')) return;
+    try {
+      setSheetBusy(true); setMessage(null);
+      await authRequest(`/lead-partner/inventory/sheets/${connectionId}`, { method: 'DELETE' });
+      setMessage({ type: 'success', text: 'Google Sheet disconnected. Existing leads were not deleted.' });
+      await loadConnections();
+    } catch (error) { setMessage({ type: 'error', text: error.message }); }
+    finally { setSheetBusy(false); }
   }
 
   async function importCsv(file) {
@@ -71,6 +107,7 @@ export default function LeadPartnerInventory() {
   }
 
   const stats = data.stats || {};
+  const activeConnections = connections.filter(connection => connection.status === 'active');
 
   return (
     <div className="partner-shell">
@@ -101,19 +138,46 @@ export default function LeadPartnerInventory() {
 
           <section className="partner-feature-grid partner-import-grid">
             <article className="partner-panel partner-import-card">
-              <div className="partner-panel-head"><div><span className="partner-kicker">GOOGLE SHEETS</span><h2>Connect a Google Sheet</h2></div><span className="partner-badge">Import</span></div>
-              <p>Paste a shareable Google Sheets link and import the rows into your partner inventory.</p>
-              <form onSubmit={importGoogleSheet} className="partner-sheet-form"><input value={sheetUrl} onChange={e => setSheetUrl(e.target.value)} placeholder="https://docs.google.com/spreadsheets/d/..." /><button disabled={importing}>{importing ? 'Importing…' : 'Import Sheet'}</button></form>
-              <small>Set General access to “Anyone with the link · Viewer”.</small>
+              <div className="partner-panel-head"><div><span className="partner-kicker">GOOGLE SHEETS</span><h2>Connect a Google Sheet</h2></div><span className="partner-badge">Sync</span></div>
+              <p>Connect a shareable Google Sheet. ProPulse keeps the connection so you can sync new rows later.</p>
+              <form onSubmit={connectGoogleSheet} className="partner-sheet-form"><input value={sheetUrl} onChange={e => setSheetUrl(e.target.value)} placeholder="https://docs.google.com/spreadsheets/d/..." /><button disabled={sheetBusy || importing}>{sheetBusy ? 'Connecting…' : 'Connect Sheet'}</button></form>
+              <small>Set General access to “Anyone with the link · Viewer”. Existing imported leads are not deleted when a sheet is disconnected.</small>
             </article>
 
             <article className="partner-panel partner-import-card">
               <div className="partner-panel-head"><div><span className="partner-kicker">CSV UPLOAD</span><h2>Upload a CSV</h2></div><span className="partner-badge">Import</span></div>
               <p>Use the same lead columns supported by ProPulse sheet imports.</p>
-              <button className="partner-upload-btn" type="button" disabled={importing} onClick={() => fileRef.current?.click()}>{importing ? 'Importing…' : 'Choose CSV file'}</button>
+              <button className="partner-upload-btn" type="button" disabled={importing || sheetBusy} onClick={() => fileRef.current?.click()}>{importing ? 'Importing…' : 'Choose CSV file'}</button>
               <input ref={fileRef} hidden type="file" accept=".csv,text/csv" onChange={e => importCsv(e.target.files?.[0])} />
               <small>No upload count limit.</small>
             </article>
+          </section>
+
+          <section className="partner-panel partner-sheets-panel">
+            <div className="partner-panel-head"><div><span className="partner-kicker">CONNECTED SOURCES</span><h2>Google Sheets connections</h2><p>{activeConnections.length} active connection{activeConnections.length === 1 ? '' : 's'}. Syncing imports only new/non-duplicate leads.</p></div></div>
+            {!connections.length ? <div className="partner-empty partner-sheet-empty">No Google Sheets connected yet. Connect one above to enable repeat syncing.</div> : (
+              <div className="partner-sheet-list">
+                {connections.map(connection => {
+                  const failures = Array.isArray(connection.last_sync_failures) ? connection.last_sync_failures : [];
+                  const busy = syncingId === connection.id;
+                  return (
+                    <article className={`partner-sheet-row ${connection.status === 'disabled' ? 'disabled' : ''}`} key={connection.id}>
+                      <div className="partner-sheet-info">
+                        <div className="partner-sheet-title"><strong>Google Sheet</strong><span className={`partner-connection-status ${connection.status}`}>{statusLabel(connection.status)}</span></div>
+                        <a href={connection.source_url} target="_blank" rel="noreferrer">{connection.source_url}</a>
+                        <small>Spreadsheet: {connection.spreadsheet_id} · Tab: {connection.gid}</small>
+                        <small>Last sync: {formatDate(connection.last_synced_at)} · Created {connection.last_sync_created ?? 0} · Duplicates {connection.last_sync_duplicate ?? 0} · Failed {connection.last_sync_failed ?? 0}</small>
+                        {failures.length > 0 && <details className="partner-sheet-failures"><summary>View {failures.length} import failure{failures.length === 1 ? '' : 's'}</summary><ul>{failures.slice(0, 20).map((failure, index) => <li key={index}>{typeof failure === 'string' ? failure : failure.message || JSON.stringify(failure)}</li>)}</ul>{failures.length > 20 && <small>Showing the first 20 failures.</small>}</details>}
+                      </div>
+                      <div className="partner-sheet-actions">
+                        {connection.status === 'active' && <button className="partner-action-btn primary" disabled={busy || sheetBusy} onClick={() => syncSheet(connection.id)}>{busy ? 'Syncing…' : 'Sync now'}</button>}
+                        {connection.status === 'active' && <button className="partner-action-btn danger" disabled={busy || sheetBusy} onClick={() => disconnectSheet(connection.id)}>Disconnect</button>}
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+            )}
           </section>
 
           <section className="partner-stats-grid">
