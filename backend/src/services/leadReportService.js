@@ -9,12 +9,10 @@ async function getReportingControl(userId){
   const result=await pool.query('SELECT can_report_leads,false_report_count,restriction_reason FROM lead_reporting_controls WHERE user_id=$1',[userId]);
   return result.rows[0]||{can_report_leads:true,false_report_count:0,restriction_reason:null};
 }
-
 async function hasLeadAccess(userId,leadId){
   const result=await pool.query("SELECT 1 FROM lead_purchases WHERE user_id=$1 AND lead_id=$2 AND status='paid' UNION ALL SELECT 1 FROM lead_entitlement_claims WHERE user_id=$1 AND lead_id=$2 AND (expires_at IS NULL OR expires_at>=CURRENT_TIMESTAMP) LIMIT 1",[userId,leadId]);
   return result.rows.length>0;
 }
-
 async function createReport({leadId,reporterUserId,reason,details}){
   const id=Number(leadId);
   if(!Number.isInteger(id)||id<=0)throw new Error('Invalid lead ID');
@@ -29,12 +27,10 @@ async function createReport({leadId,reporterUserId,reason,details}){
   if(existing?.status==='pending'){const e=new Error('You already have a pending report for this lead');e.code='REPORT_ALREADY_PENDING';throw e;}
   return (await pool.query('INSERT INTO lead_reports(lead_id,reporter_user_id,reason,details) VALUES($1,$2,$3,$4) RETURNING *',[id,reporterUserId,reason,String(details||'').trim()||null])).rows[0];
 }
-
 async function getMyReports(userId){
   const result=await pool.query(`SELECT r.*,l.customer_name,l.industry_id,l.status AS lead_status,i.name AS industry_name FROM lead_reports r JOIN leads l ON l.id=r.lead_id LEFT JOIN industries i ON i.id=l.industry_id WHERE r.reporter_user_id=$1 ORDER BY r.created_at DESC,r.id DESC`,[userId]);
   return result.rows;
 }
-
 async function getAdminReports({status='pending',page=1,limit=50}={}){
   const allowed=['pending','verified_fake','verified_genuine','rejected','all'];
   const normalized=String(status||'pending').toLowerCase();
@@ -46,7 +42,6 @@ async function getAdminReports({status='pending',page=1,limit=50}={}){
   const result=await pool.query(`SELECT r.*,l.customer_name,l.customer_phone,l.customer_email,l.status AS lead_status,i.name AS industry_name,reporter.name AS reporter_name,reporter.email AS reporter_email,reviewer.name AS reviewer_name FROM lead_reports r JOIN leads l ON l.id=r.lead_id LEFT JOIN industries i ON i.id=l.industry_id LEFT JOIN users reporter ON reporter.id=r.reporter_user_id LEFT JOIN users reviewer ON reviewer.id=r.reviewed_by ${where} ORDER BY r.created_at DESC,r.id DESC LIMIT $${params.length-1} OFFSET $${params.length}`,params);
   return {data:result.rows,pagination:{page:safePage,limit:safeLimit,total,totalPages:Math.ceil(total/safeLimit)}};
 }
-
 async function refundFakeLead(client,report){
   const purchases=(await client.query(`SELECT lp.*,p.status AS payment_status,p.payment_method,p.wallet_amount,p.external_amount,p.coupon_id FROM lead_purchases lp LEFT JOIN payments p ON p.id=lp.payment_id WHERE lp.lead_id=$1 AND lp.status='paid' ORDER BY lp.id FOR UPDATE OF lp`,[report.lead_id])).rows;
   for(const purchase of purchases){
@@ -54,29 +49,16 @@ async function refundFakeLead(client,report){
     if(paymentId){
       const payment=(await client.query('SELECT * FROM payments WHERE id=$1 FOR UPDATE',[paymentId])).rows[0];
       if(payment){
-        const alreadyRefunded=(await client.query("SELECT id FROM wallet_transactions WHERE payment_id=$1 AND type='refund' LIMIT 1",[paymentId])).rows[0];
-        if(!alreadyRefunded){
-          const wallet=await client.query(`INSERT INTO wallets(user_id) VALUES($1) ON CONFLICT(user_id) DO UPDATE SET user_id=EXCLUDED.user_id RETURNING id,balance`,[purchase.user_id]);
-          const locked=(await client.query('SELECT id,balance FROM wallets WHERE id=$1 FOR UPDATE',[wallet.rows[0].id])).rows[0];
-          const refundAmount=Number(payment.amount||purchase.amount||0);
-          if(refundAmount>0){
-            const next=Number((Number(locked.balance||0)+refundAmount).toFixed(2));
-            await client.query('UPDATE wallets SET balance=$1,updated_at=CURRENT_TIMESTAMP WHERE id=$2',[next,locked.id]);
-            await client.query(`INSERT INTO wallet_transactions(wallet_id,user_id,type,amount,balance_after,reference_type,reference_id,payment_id,description) VALUES($1,$2,'refund',$3,$4,'lead_report',$5,$6,$7)`,[locked.id,purchase.user_id,refundAmount,next,report.id,paymentId,`Refund for verified fake lead #${report.lead_id}`]);
-          }
-        }
-        if(payment.status!=='refunded')await client.query("UPDATE payments SET status='refunded',updated_at=CURRENT_TIMESTAMP WHERE id=$1",[paymentId]);
+        await walletService.refundForPayment(client,{userId:purchase.user_id,paymentId,description:`Refund for verified fake lead #${report.lead_id}`});
         await couponService.releaseForPayment(client,paymentId);
+        if(payment.status!=='refunded')await client.query("UPDATE payments SET status='refunded',updated_at=CURRENT_TIMESTAMP WHERE id=$1",[paymentId]);
       }
     }
     await client.query("UPDATE lead_purchases SET status='refunded',updated_at=CURRENT_TIMESTAMP WHERE id=$1 AND status='paid'",[purchase.id]);
   }
-  // A membership entitlement is restored by removing the claim for this invalid lead.
   await client.query('DELETE FROM lead_entitlement_claims WHERE lead_id=$1',[report.lead_id]);
-  // Revenue allocated from a fake lead must not remain as investor earnings.
   await client.query('DELETE FROM investment_revenue_allocations WHERE lead_purchase_id IN (SELECT id FROM lead_purchases WHERE lead_id=$1)',[report.lead_id]);
 }
-
 async function reviewReport({reportId,reviewerUserId,status}){
   const id=Number(reportId);
   if(!Number.isInteger(id)||id<=0)throw new Error('Invalid report ID');
@@ -97,11 +79,9 @@ async function reviewReport({reportId,reviewerUserId,status}){
     return updated;
   }catch(error){await client.query('ROLLBACK');throw error}finally{client.release()}
 }
-
 async function setReportingControl({userId,canReportLeads,reason,adminUserId}){
   const id=Number(userId);
   if(!Number.isInteger(id)||id<=0)throw new Error('Invalid user ID');
   return (await pool.query('INSERT INTO lead_reporting_controls(user_id,can_report_leads,restriction_reason,updated_by) VALUES($1,$2,$3,$4) ON CONFLICT(user_id) DO UPDATE SET can_report_leads=EXCLUDED.can_report_leads,restriction_reason=EXCLUDED.restriction_reason,updated_by=EXCLUDED.updated_by,updated_at=CURRENT_TIMESTAMP RETURNING *',[id,Boolean(canReportLeads),Boolean(canReportLeads)?null:String(reason||'Lead reporting disabled by admin').trim()||'Lead reporting disabled by admin',adminUserId])).rows[0];
 }
-
 module.exports={REPORT_REASONS,REVIEW_STATUSES,getReportingControl,createReport,getMyReports,getAdminReports,reviewReport,setReportingControl};
