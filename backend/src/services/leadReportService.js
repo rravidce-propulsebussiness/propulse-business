@@ -4,6 +4,7 @@ const couponService=require('./couponService');
 const REPORT_REASONS=['fake','wrong_number','not_interested','duplicate','other'];
 const REVIEW_STATUSES=['verified_fake','verified_genuine','rejected'];
 const AUTO_FAKE_REPORT_THRESHOLD=2;
+const AUTO_FAKE_REASONS=['fake','wrong_number'];
 
 async function getReportingControl(userId){
   const result=await pool.query('SELECT can_report_leads,false_report_count,restriction_reason FROM lead_reporting_controls WHERE user_id=$1',[userId]);
@@ -29,12 +30,12 @@ async function createReport({leadId,reporterUserId,reason,details}){
     const existing=(await client.query('SELECT id,status FROM lead_reports WHERE lead_id=$1 AND reporter_user_id=$2 ORDER BY id DESC LIMIT 1',[id,reporterUserId])).rows[0];
     if(existing?.status==='pending'){const e=new Error('You already have a pending report for this lead');e.code='REPORT_ALREADY_PENDING';throw e;}
     const report=(await client.query('INSERT INTO lead_reports(lead_id,reporter_user_id,reason,details) VALUES($1,$2,$3,$4) RETURNING *',[id,reporterUserId,reason,String(details||'').trim()||null])).rows[0];
-    const reporterCount=Number((await client.query('SELECT COUNT(DISTINCT reporter_user_id)::int AS count FROM lead_reports WHERE lead_id=$1',[id])).rows[0].count||0);
+    const reporterCount=Number((await client.query(`SELECT COUNT(DISTINCT reporter_user_id)::int AS count FROM lead_reports WHERE lead_id=$1 AND reason=ANY($2::varchar[])`,[id,AUTO_FAKE_REASONS])).rows[0].count||0);
     let autoInvalidated=false; let refunds=[];
     if(reporterCount>=AUTO_FAKE_REPORT_THRESHOLD){
       await client.query("UPDATE leads SET status='invalid',updated_at=CURRENT_TIMESTAMP WHERE id=$1 AND status<>'invalid'",[id]);
       refunds=await refundFakeLead(client,{lead_id:id});
-      await client.query("UPDATE lead_reports SET status='verified_fake',reviewed_at=CURRENT_TIMESTAMP,updated_at=CURRENT_TIMESTAMP WHERE lead_id=$1 AND status='pending'",[id]);
+      await client.query("UPDATE lead_reports SET status='verified_fake',reviewed_at=CURRENT_TIMESTAMP,updated_at=CURRENT_TIMESTAMP WHERE lead_id=$1 AND status='pending' AND reason=ANY($2::varchar[])",[id,AUTO_FAKE_REASONS]);
       autoInvalidated=true;
     }
     await client.query('COMMIT');
