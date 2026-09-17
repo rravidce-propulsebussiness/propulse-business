@@ -83,11 +83,15 @@ async function importCsv({ userId, csv }) {
   const rows = parseCsv(csv);
   if (!rows.length) throw new Error('CSV contains no data rows');
   const cat = await catalogs();
+  const partner = (await pool.query('SELECT id,status FROM lead_partners WHERE user_id=$1 LIMIT 1', [userId])).rows[0];
+  if (!partner) throw new Error('Lead Partner profile not found');
+  if (partner.status !== 'active') throw new Error('Lead Partner account is not active');
   let created = 0; let failed = 0; let duplicate = 0; const failures = [];
   for (const row of rows) {
     try {
       const lead = await buildLead(row, cat);
       const createdLead = await leadService.createLead({ ...lead, createdBy: userId });
+      await pool.query('UPDATE leads SET lead_partner_id=$1 WHERE id=$2 AND created_by=$3', [partner.id, createdLead.id, userId]);
       const configured = await partnerPricing.applyConfiguredPricingToLead(userId, createdLead.id, createdLead.pricing, lead.industryId, lead.cityId, lead.leadType);
       await pool.query(`UPDATE leads SET partner_base_pricing=$1::jsonb,partner_pricing_overridden=$2,partner_pricing_updated_at=$3,pricing=$4::jsonb,updated_at=CURRENT_TIMESTAMP WHERE id=$5 AND created_by=$6`, [JSON.stringify(createdLead.pricing || { shares: [] }), Boolean(configured && JSON.stringify(configured)!==JSON.stringify(createdLead.pricing)), configured && JSON.stringify(configured)!==JSON.stringify(createdLead.pricing) ? new Date() : null, JSON.stringify(configured || createdLead.pricing || { shares: [] }), createdLead.id, userId]);
       created += 1;
@@ -101,7 +105,36 @@ async function importCsv({ userId, csv }) {
 
 async function importGoogleSheet({ userId, url }) {
   const result = await fetchGoogleSheetCsv(url);
-  return { ...(await importCsv({ userId, csv: result.csv })), spreadsheetId: result.spreadsheetId, gid: result.gid };
+  const imported = await importCsv({ userId, csv: result.csv });
+  return { ...imported, spreadsheetId: result.spreadsheetId, gid: result.gid };
+}
+
+async function getSheetConnections({ userId }) {
+  const result = await pool.query(`SELECT id,spreadsheet_id,gid,source_url,status,last_synced_at,last_sync_created,last_sync_duplicate,last_sync_failed,last_sync_failures,created_at,updated_at FROM lead_partner_sheet_connections WHERE user_id=$1 ORDER BY updated_at DESC,id DESC`, [userId]);
+  return result.rows;
+}
+
+async function connectGoogleSheet({ userId, url }) {
+  const result = await fetchGoogleSheetCsv(url);
+  const imported = await importCsv({ userId, csv: result.csv });
+  const saved = (await pool.query(`INSERT INTO lead_partner_sheet_connections(user_id,spreadsheet_id,gid,source_url,last_synced_at,last_sync_created,last_sync_duplicate,last_sync_failed,last_sync_failures) VALUES($1,$2,$3,$4,CURRENT_TIMESTAMP,$5,$6,$7,$8::jsonb) ON CONFLICT(user_id,spreadsheet_id,gid) DO UPDATE SET source_url=EXCLUDED.source_url,status='active',last_synced_at=EXCLUDED.last_synced_at,last_sync_created=EXCLUDED.last_sync_created,last_sync_duplicate=EXCLUDED.last_sync_duplicate,last_sync_failed=EXCLUDED.last_sync_failed,last_sync_failures=EXCLUDED.last_sync_failures,updated_at=CURRENT_TIMESTAMP RETURNING *`, [userId, result.spreadsheetId, result.gid || '0', url, imported.created, imported.duplicate, imported.failed, JSON.stringify(imported.failures)])).rows[0];
+  return { connection: saved, import: imported };
+}
+
+async function syncGoogleSheet({ userId, connectionId }) {
+  const connection = (await pool.query('SELECT * FROM lead_partner_sheet_connections WHERE id=$1 AND user_id=$2 AND status=\'active\'', [connectionId, userId])).rows[0];
+  if (!connection) { const error = new Error('Active Google Sheet connection not found'); error.code = 'SHEET_CONNECTION_NOT_FOUND'; throw error; }
+  const result = await fetchGoogleSheetCsv(connection.source_url);
+  if (result.spreadsheetId !== connection.spreadsheet_id || String(result.gid || '0') !== String(connection.gid || '0')) throw new Error('Google Sheet URL no longer matches the connected sheet');
+  const imported = await importCsv({ userId, csv: result.csv });
+  const saved = (await pool.query(`UPDATE lead_partner_sheet_connections SET last_synced_at=CURRENT_TIMESTAMP,last_sync_created=$1,last_sync_duplicate=$2,last_sync_failed=$3,last_sync_failures=$4::jsonb,updated_at=CURRENT_TIMESTAMP WHERE id=$5 AND user_id=$6 RETURNING *`, [imported.created, imported.duplicate, imported.failed, JSON.stringify(imported.failures), connectionId, userId])).rows[0];
+  return { connection: saved, import: imported };
+}
+
+async function disableSheetConnection({ userId, connectionId }) {
+  const result = await pool.query(`UPDATE lead_partner_sheet_connections SET status='disabled',updated_at=CURRENT_TIMESTAMP WHERE id=$1 AND user_id=$2 RETURNING *`, [connectionId, userId]);
+  if (!result.rows[0]) { const error = new Error('Sheet connection not found'); error.code = 'SHEET_CONNECTION_NOT_FOUND'; throw error; }
+  return result.rows[0];
 }
 
 async function listInventory({ userId, status = 'all', search = '' }) {
@@ -116,4 +149,4 @@ async function listInventory({ userId, status = 'all', search = '' }) {
   return { data: data.rows, stats: stats.rows[0] || {} };
 }
 
-module.exports = { importCsv, importGoogleSheet, listInventory, parseCsv };
+module.exports = { importCsv, importGoogleSheet, listInventory, getSheetConnections, connectGoogleSheet, syncGoogleSheet, disableSheetConnection, parseCsv };
