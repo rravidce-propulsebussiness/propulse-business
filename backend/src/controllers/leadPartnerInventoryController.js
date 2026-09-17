@@ -1,4 +1,4 @@
-const service = require('../services/leadPartnerInventoryService');
+const service = require('../services/leadPartnerInventoryCompatService');
 
 async function inventory(req, res) {
   try { return res.json(await service.listInventory({ userId: req.user.id, status: req.query.status, search: req.query.search })); }
