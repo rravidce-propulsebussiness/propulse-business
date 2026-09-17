@@ -1,6 +1,5 @@
--- This migration is intentionally self-contained because migration files are applied
--- lexicographically. The backfill filename sorts before the ledger filename.
--- Create the ledger first, then backfill existing paid/refunded partner purchases.
+-- Ensure the earnings ledger exists before backfilling existing purchases. This migration
+-- sorts before the later ledger/index hardening migrations.
 CREATE TABLE IF NOT EXISTS lead_partner_earnings (
   id SERIAL PRIMARY KEY,
   partner_id INTEGER NOT NULL REFERENCES lead_partners(id) ON DELETE CASCADE,
