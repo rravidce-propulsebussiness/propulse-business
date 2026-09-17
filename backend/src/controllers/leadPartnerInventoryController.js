@@ -36,7 +36,8 @@ async function connectGoogleSheet(req, res) {
   try {
     const url = String(req.body?.url || '').trim();
     if (!url) return res.status(400).json({ error: 'Google Sheets URL is required' });
-    return res.status(201).json(await service.connectGoogleSheet({ userId: req.user.id, url }));
+    const result = await service.connectGoogleSheet({ userId: req.user.id, url });
+    return res.status(201).json({ ...result.import, connection: result.connection });
   } catch (error) {
     console.error('Lead Partner Google Sheet connect failed:', error.message);
     return res.status(/Google Sheet|CSV|Industry|Service|State|City|Pincode|Maximum|active/.test(error.message) ? 400 : 500).json({ error: error.message || 'Failed to connect Google Sheet' });
@@ -44,8 +45,10 @@ async function connectGoogleSheet(req, res) {
 }
 
 async function syncGoogleSheet(req, res) {
-  try { return res.json(await service.syncGoogleSheet({ userId: req.user.id, connectionId: Number(req.params.connectionId) })); }
-  catch (error) {
+  try {
+    const result = await service.syncGoogleSheet({ userId: req.user.id, connectionId: Number(req.params.connectionId) });
+    return res.json({ ...result.import, connection: result.connection });
+  } catch (error) {
     console.error('Lead Partner Google Sheet sync failed:', error.message);
     const status = error.code === 'SHEET_CONNECTION_NOT_FOUND' || /Google Sheet|CSV|Industry|Service|State|City|Pincode|Maximum|active/.test(error.message) ? 400 : 500;
     return res.status(status).json({ error: error.message || 'Failed to sync Google Sheet' });
