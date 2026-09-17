@@ -3,7 +3,7 @@ import { authRequest } from '../../utils/auth'
 
 const STATUSES = [['','All'],['pending','Pending'],['active','Active'],['suspended','Suspended'],['rejected','Rejected']]
 const NEXT_STATUS = { pending:'active', active:'suspended', suspended:'active', rejected:'active' }
-const money = v => `₹${Number(v || 0).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2})`
+const money = v => `₹${Number(v || 0).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2})}`
 
 export default function AdminLeadPartners(){
   const [status,setStatus]=useState('')
