@@ -103,7 +103,7 @@ async function getQualityMetrics(partnerId, client = pool) {
        SELECT DISTINCT lp.lead_id
        FROM lead_purchases lp
        JOIN partner_leads pl ON pl.id=lp.lead_id
-       WHERE lp.status='paid'
+       WHERE lp.status IN ('paid','refunded')
      ),
      fake AS (
        SELECT DISTINCT r.lead_id
@@ -134,7 +134,7 @@ async function getQualityMetrics(partnerId, client = pool) {
     verifiedFakeLeads: Number(row.verified_fake_leads || 0),
     verifiedGenuineReports: Number(row.verified_genuine_reports || 0),
     verifiedFakeRatePct: Number(row.verified_fake_rate_pct || 0),
-    fakeRateDefinition: 'Verified fake partner leads divided by distinct partner leads with at least one paid purchase.',
+    fakeRateDefinition: 'Verified fake partner leads divided by distinct partner leads with at least one completed purchase, including purchases later refunded after an Admin-verified fake decision.',
   };
 }
 
@@ -173,11 +173,11 @@ async function getAdminPartners({ status, page = 1, limit = 50 } = {}) {
     `SELECT lp.*,u.name AS user_name,u.email AS user_email,
             COUNT(l.id)::int AS total_leads,
             COUNT(l.id) FILTER (WHERE l.status='invalid')::int AS invalid_leads,
-            COUNT(DISTINCT CASE WHEN p.status='paid' THEN p.lead_id END)::int AS purchased_leads,
+            COUNT(DISTINCT CASE WHEN p.status IN ('paid','refunded') THEN p.lead_id END)::int AS purchased_leads,
             COUNT(DISTINCT CASE WHEN r.status='verified_fake' THEN r.lead_id END)::int AS verified_fake_leads,
             COUNT(DISTINCT CASE WHEN r.status='verified_genuine' THEN r.id END)::int AS verified_genuine_reports,
-            CASE WHEN COUNT(DISTINCT CASE WHEN p.status='paid' THEN p.lead_id END)=0 THEN 0
-                 ELSE ROUND(COUNT(DISTINCT CASE WHEN r.status='verified_fake' THEN r.lead_id END)::numeric * 100.0 / COUNT(DISTINCT CASE WHEN p.status='paid' THEN p.lead_id END), 2)
+            CASE WHEN COUNT(DISTINCT CASE WHEN p.status IN ('paid','refunded') THEN p.lead_id END)=0 THEN 0
+                 ELSE ROUND(COUNT(DISTINCT CASE WHEN r.status='verified_fake' THEN r.lead_id END)::numeric * 100.0 / COUNT(DISTINCT CASE WHEN p.status IN ('paid','refunded') THEN p.lead_id END), 2)
             END AS verified_fake_rate_pct
      FROM lead_partners lp
      JOIN users u ON u.id=lp.user_id
@@ -198,7 +198,7 @@ async function getAdminPartners({ status, page = 1, limit = 50 } = {}) {
     verified_fake_leads: Number(row.verified_fake_leads || 0),
     verified_genuine_reports: Number(row.verified_genuine_reports || 0),
     verified_fake_rate_pct: Number(row.verified_fake_rate_pct || 0),
-    quality_metric_definition: 'Verified fake partner leads divided by distinct partner leads with at least one paid purchase.',
+    quality_metric_definition: 'Verified fake partner leads divided by distinct partner leads with at least one completed purchase, including purchases later refunded after an Admin-verified fake decision.',
   }));
   return { partners, pagination: { page: currentPage, limit: pageSize, total: Number(count.total || 0), totalPages: Math.ceil(Number(count.total || 0) / pageSize) } };
 }
