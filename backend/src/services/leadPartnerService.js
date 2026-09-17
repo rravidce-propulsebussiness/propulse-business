@@ -170,22 +170,46 @@ async function getAdminPartners({ status, page = 1, limit = 50 } = {}) {
   }
   const count = (await pool.query(`SELECT COUNT(*)::int AS total FROM lead_partners lp WHERE ${filter}`, values)).rows[0];
   const rows = (await pool.query(
-    `SELECT lp.*,u.name AS user_name,u.email AS user_email,
-            COUNT(l.id)::int AS total_leads,
-            COUNT(l.id) FILTER (WHERE l.status='invalid')::int AS invalid_leads,
-            COUNT(DISTINCT CASE WHEN p.status IN ('paid','refunded') THEN p.lead_id END)::int AS purchased_leads,
-            COUNT(DISTINCT CASE WHEN r.status='verified_fake' THEN r.lead_id END)::int AS verified_fake_leads,
-            COUNT(DISTINCT CASE WHEN r.status='verified_genuine' THEN r.id END)::int AS verified_genuine_reports,
-            CASE WHEN COUNT(DISTINCT CASE WHEN p.status IN ('paid','refunded') THEN p.lead_id END)=0 THEN 0
-                 ELSE ROUND(COUNT(DISTINCT CASE WHEN r.status='verified_fake' THEN r.lead_id END)::numeric * 100.0 / COUNT(DISTINCT CASE WHEN p.status IN ('paid','refunded') THEN p.lead_id END), 2)
+    `WITH lead_stats AS (
+       SELECT lead_partner_id,
+              COUNT(*)::int AS total_leads,
+              COUNT(*) FILTER (WHERE status='invalid')::int AS invalid_leads
+       FROM leads
+       WHERE lead_partner_id IS NOT NULL
+       GROUP BY lead_partner_id
+     ),
+     purchase_stats AS (
+       SELECT l.lead_partner_id,
+              COUNT(DISTINCT p.lead_id) FILTER (WHERE p.status IN ('paid','refunded'))::int AS purchased_leads
+       FROM lead_purchases p
+       JOIN leads l ON l.id=p.lead_id
+       WHERE l.lead_partner_id IS NOT NULL
+       GROUP BY l.lead_partner_id
+     ),
+     report_stats AS (
+       SELECT l.lead_partner_id,
+              COUNT(DISTINCT r.lead_id) FILTER (WHERE r.status='verified_fake')::int AS verified_fake_leads,
+              COUNT(DISTINCT r.id) FILTER (WHERE r.status='verified_genuine')::int AS verified_genuine_reports
+       FROM lead_reports r
+       JOIN leads l ON l.id=r.lead_id
+       WHERE l.lead_partner_id IS NOT NULL
+       GROUP BY l.lead_partner_id
+     )
+     SELECT lp.*,u.name AS user_name,u.email AS user_email,
+            COALESCE(ls.total_leads,0)::int AS total_leads,
+            COALESCE(ls.invalid_leads,0)::int AS invalid_leads,
+            COALESCE(ps.purchased_leads,0)::int AS purchased_leads,
+            COALESCE(rs.verified_fake_leads,0)::int AS verified_fake_leads,
+            COALESCE(rs.verified_genuine_reports,0)::int AS verified_genuine_reports,
+            CASE WHEN COALESCE(ps.purchased_leads,0)=0 THEN 0
+                 ELSE ROUND(COALESCE(rs.verified_fake_leads,0)::numeric * 100.0 / ps.purchased_leads, 2)
             END AS verified_fake_rate_pct
      FROM lead_partners lp
      JOIN users u ON u.id=lp.user_id
-     LEFT JOIN leads l ON l.lead_partner_id=lp.id
-     LEFT JOIN lead_purchases p ON p.lead_id=l.id
-     LEFT JOIN lead_reports r ON r.lead_id=l.id
+     LEFT JOIN lead_stats ls ON ls.lead_partner_id=lp.id
+     LEFT JOIN purchase_stats ps ON ps.lead_partner_id=lp.id
+     LEFT JOIN report_stats rs ON rs.lead_partner_id=lp.id
      WHERE ${filter}
-     GROUP BY lp.id,u.id
      ORDER BY lp.created_at DESC,lp.id DESC
      LIMIT $${values.length + 1} OFFSET $${values.length + 2}`,
     [...values, pageSize, offset]
