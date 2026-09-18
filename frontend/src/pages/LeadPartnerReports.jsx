@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react'import LeadPartnerSidebar from '../components/LeadPartnerSidebar';
+;
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { authRequest, clearSession, getUser } from '../utils/auth';
 import './LeadPartnerReports.css';
@@ -42,19 +43,7 @@ export default function LeadPartnerReports(){
   }
 
   return <div className="reports-shell">
-    <aside className="reports-sidebar">
-      <div className="reports-brand"><span className="reports-brand-mark">P</span><span><b>PRO<span>PULSE</span></b><small>LEAD PARTNER</small></span></div>
-      <div className="reports-nav-label">WORKSPACE</div>
-      <nav className="reports-nav">
-        <Link className={location.pathname==='/lead-partner'?'active':''} to="/lead-partner"><i>⌂</i><span>Overview</span></Link>
-        <Link className={location.pathname.startsWith('/lead-partner/inventory')?'active':''} to="/lead-partner/inventory"><i>◈</i><span>Lead Inventory</span></Link>
-        <Link className={location.pathname.startsWith('/lead-partner/pricing')?'active':''} to="/lead-partner/pricing"><i>₹</i><span>Pricing & Revenue</span></Link>
-        <Link className={location.pathname.startsWith('/lead-partner/withdrawals')?'active':''} to="/lead-partner/withdrawals"><i>⇩</i><span>Earnings & Withdrawals</span></Link>
-        <Link className="active" to="/lead-partner/reports"><i>▥</i><span>Reports</span></Link><Link className={location.pathname.startsWith('/lead-partner/faqs')?'active':''} to="/lead-partner/faqs"><i>?</i><span>FAQs</span></Link>
-        <Link className={location.pathname.startsWith('/lead-partner/account')?'active':''} to="/lead-partner/account"><i>◎</i><span>Account</span></Link>
-      </nav>
-      <div className="reports-sidebar-bottom"><div className="reports-user"><span>{initials}</span><div><b>{user?.name||'Lead Partner'}</b><small>{user?.email||'Partner account'}</small></div></div><button onClick={signOut}>↪ <span>Log out</span></button></div>
-    </aside>
+    <LeadPartnerSidebar user={user} onSignOut={signOut} />
     <main className="reports-main">
       <header className="reports-topbar"><div className="reports-breadcrumb"><span>Lead Partner</span><b>/</b><strong>Reports</strong></div><div className="reports-top-status"><i/> Partner account</div></header>
       <div className="reports-content">
