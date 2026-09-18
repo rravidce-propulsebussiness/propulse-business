@@ -22,7 +22,7 @@ export default function UserHeader() {
     <nav className={`user-header-nav${open?' open':''}`}>
       <Link to="/">Home</Link>
       <Link to="/industries">Industries</Link>
-      <Link to="/pricing" onClick={()=>setOpen(false)}>Pricing</Link>
+      <Link to="/#pricing" onClick={()=>setOpen(false)}>Pricing</Link>
       <Link className="leads-active" to="/leads" onClick={()=>setOpen(false)}>Explore Leads</Link>
       <Link className="public-nav-auth" to="/login" onClick={()=>setOpen(false)}>Login</Link>
       <Link className="public-nav-auth" to="/signup" onClick={()=>setOpen(false)}>Sign up</Link>
