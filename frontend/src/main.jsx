@@ -7,9 +7,11 @@ import './admin/leadImportBulkEnhancer.js'
 import './adminPaymentCouponEnhancer.js'
 import './homeLeadHighlight.css'
 import App from './App.jsx'
+import SupportChat from './components/SupportChat.jsx'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <App />
+    <SupportChat />
   </StrictMode>,
 )
