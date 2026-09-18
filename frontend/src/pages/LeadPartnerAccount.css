@@ -22,3 +22,5 @@
 .transaction-balance-grid .addition-balance{color:#14844f}.transaction-balance-grid .deduction-balance{color:#c2473d}.transaction-balance-grid .pending-balance{color:#9a6a08}.transaction-balance-grid .recovery-balance{color:#8a5d08}.account-tx-status.neutral{background:#eef2f7;color:#6d7c90}.account-table .neutral{color:#7d8998}.row-balance{color:#173b66!important;white-space:nowrap}
 .account-status.active{background:#e5f8ee;color:#14844f}
 @media(max-width:1100px){.transaction-balance-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}@media(max-width:850px){.transaction-balance-grid{grid-template-columns:1fr 1fr}}@media(max-width:720px){.transaction-balance-grid{grid-template-columns:1fr}}
+
+.account-tx-type.reversal{background:#fff0ef;color:#bf4b40}.account-tx-status.reversed{background:#fff0ef;color:#b74239}.account-table .debit{color:#c2473d}.account-table td small+small{margin-top:2px}
