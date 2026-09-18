@@ -56,8 +56,8 @@ async function main() {
       )).rows[0];
 
       const payment = (await c.query(
-        `INSERT INTO payments(user_id,amount,payment_method,status)
-         VALUES($1,$2,'manual','paid') RETURNING id`, [ids.user, amount]
+        `INSERT INTO payments(user_id,amount,payment_method,status,wallet_amount,external_amount)
+         VALUES($1,$2,'manual','paid',0,$2) RETURNING id`, [ids.user, amount]
       )).rows[0];
 
       const purchase = (await c.query(
