@@ -108,6 +108,22 @@ function Home() {
     return () => { live = false }
   }, [token])
 
+  const scrollToHome = event => {
+    event?.preventDefault()
+    const home = document.getElementById('home-top')
+    window.history.replaceState({}, '', '/')
+    setActiveNav('home')
+    if (home) home.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    else window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  const scrollToSection = (event, id) => {
+    event?.preventDefault()
+    const target = document.getElementById(id)
+    setActiveNav(id)
+    if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+
   const dashboardPath = user?.role === 'admin' ? '/admin' : '/leads'
   const leadLabel = useMemo(() => leadTotal === 1 ? 'live lead available' : 'live leads available', [leadTotal])
 
@@ -118,11 +134,11 @@ function Home() {
           <img src="/brand/propulse-logo.png" alt="Propulse" />
         </Link>
         <nav className="desktop-nav" aria-label="Main navigation">
-          <Link className={activeNav === 'home' ? 'nav-active' : ''} to="/">Home</Link>
+          <a className={activeNav === 'home' ? 'nav-active' : ''} href="#home-top" onClick={scrollToHome}>Home</a>
           <Link to="/leads">Buy Leads</Link>
-          <a className={activeNav === 'how-it-works' ? 'nav-active' : ''} href="#how-it-works" onClick={() => setActiveNav('how-it-works')}>How It Works</a>
+          <a className={activeNav === 'how-it-works' ? 'nav-active' : ''} href="#how-it-works" onClick={event => scrollToSection(event, 'how-it-works')}>How It Works</a>
           <Link to="/membership">Pricing</Link>
-          <a className={activeNav === 'why-propulse' ? 'nav-active' : ''} href="#why-propulse" onClick={() => setActiveNav('why-propulse')}>About</a>
+          <a className={activeNav === 'why-propulse' ? 'nav-active' : ''} href="#why-propulse" onClick={event => scrollToSection(event, 'why-propulse')}>About</a>
           <Link to="/contact">Contact</Link>
         </nav>
         <div className="header-actions">
@@ -182,16 +198,16 @@ function Home() {
         <section className="how-section home-reveal" id="how-it-works">
           <div className="section-heading">
             <div>
-              <span className="section-kicker">HOW PROPULSE WORKS</span>
-              <h2>Get leads in 3 simple steps.</h2>
-              <p>Move from searching for opportunities to contacting potential customers with a clear marketplace flow.</p>
+              <span className="section-kicker">THE PROPULSE BUYING FLOW</span>
+              <h2>Discover. Evaluate. Buy. Connect.</h2>
+              <p>Move from your first search to customer follow-up through a clear, focused lead marketplace experience.</p>
             </div>
-            <div className="join-card"><span>READY TO GROW?</span><strong>Start finding projects.</strong><Link to="/signup">Get Started Now <b>→</b></Link></div>
+            <div className="join-card"><span>READY WHEN YOU ARE</span><strong>Start with the right opportunities.</strong><Link to="/leads">Explore Live Leads <b>→</b></Link></div>
           </div>
           <div className="steps-grid">
-            <article className="step"><div><b>1</b><span>▤</span></div><h3>Choose your plan</h3><p>Select the membership or buying option that fits your business.</p></article>
-            <article className="step"><div><b>2</b><span>⌕</span></div><h3>Browse leads</h3><p>Explore verified project enquiries by service, industry and location.</p></article>
-            <article className="step"><div><b>3</b><span>♟</span></div><h3>Buy &amp; connect</h3><p>Purchase eligible lead access and use the customer details provided.</p></article>
+            <article className="step"><div><b>1</b><span>⌖</span></div><h3>Set your target</h3><p>Choose the industries, services and locations that match your business.</p></article>
+            <article className="step"><div><b>2</b><span>⌕</span></div><h3>Browse &amp; evaluate</h3><p>Review each opportunity, requirement and available purchase details.</p></article>
+            <article className="step"><div><b>3</b><span>↗</span></div><h3>Buy access &amp; connect</h3><p>Complete your purchase, unlock eligible contact details and follow up.</p></article>
           </div>
         </section>
 
@@ -268,7 +284,7 @@ function Home() {
       <footer className="public-footer">
         <div className="footer-brand"><Link to="/"><img src="/brand/propulse-logo.png" alt="Propulse" /></Link><p>Quality Leads. Real Growth.</p></div>
         <div><strong>Marketplace</strong><Link to="/leads">Buy Leads</Link><Link to="/membership">Pricing</Link><Link to="/industries">Industries</Link></div>
-        <div><strong>Support</strong><Link to="/contact">Contact</Link><Link to="/contact">Help &amp; Support</Link><a href="#how-it-works">How It Works</a><a className={activeNav === 'faq' ? 'nav-active' : ''} href="#faq">FAQs</a></div>
+        <div><strong>Support</strong><Link to="/contact">Contact</Link><Link to="/contact">Help &amp; Support</Link><a href="#how-it-works">How It Works</a><a className={activeNav === 'faq' ? 'nav-active' : ''} href="#faq" onClick={event => scrollToSection(event, 'faq')}>FAQs</a></div>
         <div><strong>Account</strong><Link to="/login">Login</Link><Link to="/signup">Create Account</Link><Link to="/profile">My Account</Link></div>
         <div><strong>Follow Us</strong><div className="socials"><span>f</span><span>◎</span><span>in</span><span>▶</span></div><small>Quality leads. Real opportunities.</small></div>
         <div className="footer-bottom"><span>© {new Date().getFullYear()} Propulse Business. All rights reserved.</span><span>Building businesses. Creating opportunities.</span></div>
