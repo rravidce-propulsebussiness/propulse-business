@@ -3,7 +3,7 @@ const telegram=require('../services/telegramSupportService');
 
 const MAX_MESSAGE_LENGTH=4000;
 
-function normalize(value){return String(value||'').toLowerCase().replace(/[^a-z0-9\\s]/g,' ').replace(/\\s+/g,' ').trim();}
+function normalize(value){return String(value||'').toLowerCase().replace(/[^a-z0-9\s]/g,' ').replace(/\s+/g,' ').trim();}
 function senderType(user){return user?.role==='lead_partner'?'lead_partner':'user';}
 
 async function getOrCreateConversation(userId){
@@ -85,7 +85,7 @@ exports.sendMessage=async(req,res)=>{
 
     await pool.query("UPDATE chat_conversations SET status='human',last_message_at=CURRENT_TIMESTAMP,updated_at=CURRENT_TIMESTAMP WHERE id=$1",[conversation.id]);
     const identity=`#${conversation.id} | User #${req.user.id} | ${audience}`;
-    const tgText=`Propulse Support\\n\\n${identity}\\n\\nCustomer: ${text}\\n\\nReply to this message to send the response back to the website.`;
+    const tgText=`Propulse Support\n\n${identity}\n\nCustomer: ${text}\n\nReply to this message to send the response back to the website.`;
     const sent=await telegram.sendSupportMessage(tgText);
     if(sent.configured){
       await pool.query(
@@ -103,7 +103,7 @@ exports.sendMessage=async(req,res)=>{
 
 exports.setupTelegramWebhook=async(req,res)=>{
   try{
-    const base=String(process.env.PUBLIC_APP_URL||'').trim().replace(/\\/$/,'');
+    const base=String(process.env.PUBLIC_APP_URL||'').trim().replace(/\/$/,'');
     if(!base) return res.status(400).json({error:'PUBLIC_APP_URL is not configured'});
     const result=await telegram.setWebhook(base+'/api/telegram/webhook');
     if(!result.configured) return res.status(503).json({error:'Telegram support is not configured'});
