@@ -238,8 +238,8 @@ async function getDashboard(userId) {
   const quality = partnerResult ? await getQualityMetrics(partnerResult.id) : null;
   const financialResult = partnerResult ? await pool.query(`
     SELECT
-      COALESCE((SELECT SUM(p.amount) FROM lead_purchases p JOIN leads l ON l.id=p.lead_id WHERE l.lead_partner_id=$1 AND p.status IN ('paid','refunded')),0) AS gross_sales,
-      COALESCE((SELECT SUM(e.earning_amount) FROM lead_partner_earnings e WHERE e.partner_id=$1),0) AS earnings_generated,
+      COALESCE((SELECT SUM(p.amount) FROM lead_purchases p JOIN leads l ON l.id=p.lead_id WHERE l.lead_partner_id=$1 AND p.status='paid'),0) AS gross_sales,
+      COALESCE((SELECT SUM(e.earning_amount) FROM lead_partner_earnings e WHERE e.partner_id=$1 AND e.status<>'reversed'),0) AS earnings_generated,
       COALESCE((SELECT SUM(r.amount) FROM lead_partner_payout_requests r WHERE r.partner_id=$1 AND r.status='paid'),0) AS amount_received,
       COALESCE((SELECT SUM(r.amount) FROM lead_partner_payout_requests r WHERE r.partner_id=$1 AND r.status='pending'),0) AS pending_withdrawals,
       COALESCE((SELECT SUM(e.earning_amount-COALESCE(x.adjusted,0)-COALESCE(x.reserved,0)-COALESCE(x.paid,0))
@@ -254,6 +254,19 @@ async function getDashboard(userId) {
       COALESCE((SELECT SUM(amount-COALESCE((SELECT SUM(a.amount) FROM lead_partner_earning_adjustment_allocations a WHERE a.adjustment_id=adj.id),0)) FROM lead_partner_earning_adjustments adj WHERE adj.partner_id=$1 AND adj.status='outstanding'),0) AS recovery_outstanding
   `, [partnerResult.id]) : { rows: [{}] };
   const financial = financialResult.rows[0] || {};
+  const partnerId = partnerResult?.id || 0;
+  const [chartResult,statusResult,payoutResult] = partnerResult ? await Promise.all([
+    pool.query(`WITH months AS (
+      SELECT generate_series(date_trunc('month', CURRENT_DATE) - interval '5 months', date_trunc('month', CURRENT_DATE), interval '1 month') AS month
+    )
+    SELECT to_char(m.month,'Mon') AS label,
+           COALESCE((SELECT SUM(e.earning_amount) FROM lead_partner_earnings e WHERE e.partner_id=$1 AND e.status<>'reversed' AND date_trunc('month',e.created_at)=m.month),0) AS earnings,
+           COALESCE((SELECT SUM(r.amount) FROM lead_partner_payout_requests r WHERE r.partner_id=$1 AND r.status='paid' AND date_trunc('month',r.processed_at)=m.month),0) AS received
+    FROM months m ORDER BY m.month`, [partnerId]),
+    pool.query(`SELECT status,COUNT(*)::int AS count FROM leads WHERE lead_partner_id=$1 GROUP BY status`, [partnerId]),
+    pool.query(`SELECT id,amount,status,transfer_reference,requested_at,processed_at,payout_account_snapshot FROM lead_partner_payout_requests WHERE partner_id=$1 ORDER BY requested_at DESC,id DESC LIMIT 5`, [partnerId])
+  ]) : [{rows:[]},{rows:[]},{rows:[]}];
+  const leadStatus = Object.fromEntries(statusResult.rows.map(x=>[x.status,Number(x.count||0)]));
   return {
     partner: partnerResult || profileResult.rows[0] || null,
     stats: {
@@ -268,8 +281,13 @@ async function getDashboard(userId) {
       availableEarnings: Number(financial.available_earnings || 0),
       recoveryOutstanding: Number(financial.recovery_outstanding || 0),
     },
+    charts: {
+      earnings: chartResult.rows.map(x=>({label:x.label,earnings:Number(x.earnings||0),received:Number(x.received||0)})),
+      leadStatus: { available:Number(leadStatus.available||0), sold:Number(leadStatus.sold||0), closed:Number(leadStatus.closed||0), paused:Number(leadStatus.paused||0), invalid:Number(leadStatus.invalid||0) },
+    },
     quality,
     recentLeads: recentResult.rows,
+    recentPayouts: payoutResult.rows.map(x=>({id:x.id,amount:Number(x.amount||0),status:x.status,transfer_reference:x.transfer_reference,requested_at:x.requested_at,processed_at:x.processed_at})),
     pricing: { commissionPercent: 5, normalPriceUplift: null, configured: false },
   };
 }
