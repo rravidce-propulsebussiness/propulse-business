@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react'import LeadPartnerSidebar from '../components/LeadPartnerSidebar';
+;
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { authRequest, clearSession, getUser } from '../utils/auth';
 import './LeadPartnerFaq.css';
@@ -23,20 +24,7 @@ export default function LeadPartnerFaq(){
 
   function signOut(){clearSession();localStorage.removeItem('propulse_session_mode');navigate('/login',{replace:true})}
   return <div className="faq-shell">
-    <aside className="faq-sidebar">
-      <div className="faq-brand"><span className="faq-brand-mark">P</span><span><b>PRO<span>PULSE</span></b><small>LEAD PARTNER</small></span></div>
-      <div className="faq-nav-label">WORKSPACE</div>
-      <nav className="faq-nav">
-        <Link to="/lead-partner" className={location.pathname==='/lead-partner'?'active':''}><i>⌂</i><span>Overview</span></Link>
-        <Link to="/lead-partner/inventory" className={location.pathname.startsWith('/lead-partner/inventory')?'active':''}><i>◈</i><span>Lead Inventory</span></Link>
-        <Link to="/lead-partner/pricing" className={location.pathname.startsWith('/lead-partner/pricing')?'active':''}><i>₹</i><span>Pricing &amp; Revenue</span></Link>
-        <Link to="/lead-partner/withdrawals" className={location.pathname.startsWith('/lead-partner/withdrawals')?'active':''}><i>⇩</i><span>Earnings &amp; Withdrawals</span></Link>
-        <Link to="/lead-partner/reports" className={location.pathname.startsWith('/lead-partner/reports')?'active':''}><i>▥</i><span>Reports</span></Link>
-        <Link to="/lead-partner/faqs" className="active"><i>?</i><span>FAQs</span></Link>
-        <Link to="/lead-partner/account" className={location.pathname.startsWith('/lead-partner/account')?'active':''}><i>◎</i><span>Account</span></Link>
-      </nav>
-      <div className="faq-sidebar-bottom"><div className="faq-user"><span>{initials}</span><div><b>{user?.name||'Lead Partner'}</b><small>{user?.email||'Partner account'}</small></div></div><button onClick={signOut}>↪ <span>Log out</span></button></div>
-    </aside>
+    <LeadPartnerSidebar user={user} onSignOut={signOut} />
     <main className="faq-main">
       <header className="faq-topbar"><div className="faq-breadcrumb"><span>Lead Partner</span><b>/</b><strong>FAQs</strong></div><div className="faq-top-status"><i/> Partner account</div></header>
       <div className="faq-content">
