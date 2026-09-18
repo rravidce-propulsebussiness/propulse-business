@@ -43,8 +43,8 @@ export default function AdminHomepageMedia(){
       setError('Only JPG, PNG and WebP images are supported.')
       return
     }
-    if(file.size>8*1024*1024){
-      setError('Each image must be 8 MB or smaller.')
+    if(file.size>7*1024*1024){
+      setError('Each image must be 7 MB or smaller.')
       return
     }
     try{
@@ -113,7 +113,7 @@ export default function AdminHomepageMedia(){
 
     <div className="admin-home-media-footer">
       <a href="/" target="_blank" rel="noreferrer">Open homepage ↗</a>
-      <span>Recommended: WebP or optimized JPG/PNG, up to 8 MB.</span>
+      <span>Recommended: WebP or optimized JPG/PNG, up to 7 MB.</span>
     </div>
   </main>
 }
