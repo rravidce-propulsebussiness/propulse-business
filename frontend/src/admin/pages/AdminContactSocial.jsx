@@ -46,3 +46,4 @@ export default function AdminContactSocial(){
       <div className="admin-contact-actions"><a href="/contact" target="_blank" rel="noreferrer" className="admin-contact-preview">View Contact page ↗</a><button type="submit" className="admin-contact-save" disabled={saving}>{saving?'Saving…':'Save changes'} <span>→</span></button></div>
     </form>
   </main>
+}
