@@ -104,7 +104,7 @@ export default function AdminHomepageMedia(){
           <div className="admin-home-media-copy"><span className="admin-home-media-kicker">{slot.key.replace('_',' ').toUpperCase()}</span><h2>{slot.label}</h2><p>{slot.description}</p><small>{custom?'File-backed custom image':'Built-in file default'}</small></div>
           <div className="admin-home-media-actions">
             <input ref={el=>{refs.current[slot.key]=el}} type="file" accept="image/jpeg,image/png,image/webp" onChange={e=>upload(slot,e.target.files?.[0])}/>
-            <button type="button" className="upload" disabled={busy===slot.key}>{busy===slot.key?'Saving…':'Replace image'}</button>
+            <button type="button" className="upload" disabled={busy===slot.key} onClick={()=>refs.current[slot.key]?.click()}>{busy===slot.key?'Saving…':'Replace image'}</button>
             {custom&&<button type="button" className="remove" disabled={busy===slot.key} onClick={()=>remove(slot)}>Use default</button>}
           </div>
         </article>
