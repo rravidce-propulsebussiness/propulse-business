@@ -25,7 +25,7 @@ export default function LeadPartnerAccount(){
   const [error,setError] = useState('');
   const [tab,setTab] = useState('payout');
   const [transactions,setTransactions] = useState([]);
-  const [transactionFunds,setTransactionFunds] = useState({available:0,reserved:0,paid:0,total_earned:0,total_additions:0,total_deductions:0,opening_balance:0,recovery_outstanding:0});
+  const [transactionFunds,setTransactionFunds] = useState({available:0,reserved:0,paid:0,total_earned:0,total_additions:0,total_deductions:0,transaction_net:0,recovery_outstanding:0});
   const [transactionsLoading,setTransactionsLoading] = useState(false);
   const [transactionError,setTransactionError] = useState('');
   const [me,setMe] = useState(null);
@@ -56,7 +56,7 @@ export default function LeadPartnerAccount(){
       setTransactionsLoading(true); setTransactionError('');
       const result = await authRequest('/lead-partner/transactions');
       setTransactions(Array.isArray(result?.transactions) ? result.transactions : []);
-      setTransactionFunds({available:Number(result?.available || 0),reserved:Number(result?.reserved || 0),paid:Number(result?.paid || 0),total_earned:Number(result?.total_earned || 0),total_additions:Number(result?.total_additions || 0),total_deductions:Number(result?.total_deductions || 0),opening_balance:Number(result?.opening_balance || 0),recovery_outstanding:Number(result?.recovery_outstanding || 0)});
+      setTransactionFunds({available:Number(result?.available || 0),reserved:Number(result?.reserved || 0),paid:Number(result?.paid || 0),total_earned:Number(result?.total_earned || 0),total_additions:Number(result?.total_additions || 0),total_deductions:Number(result?.total_deductions || 0),transaction_net:Number(result?.transaction_net || 0),recovery_outstanding:Number(result?.recovery_outstanding || 0)});
     }catch(e){setTransactionError(e.message || 'Unable to load transaction history')}
     finally{setTransactionsLoading(false)}
   },[]);
@@ -181,10 +181,10 @@ export default function LeadPartnerAccount(){
             <button type="button" className="account-refresh" onClick={loadTransactions} disabled={transactionsLoading}>{transactionsLoading?'Refreshing…':'↻ Refresh'}</button>
           </div>
                               <div className="transaction-balance-grid">
-            <div><span>Current balance</span><strong>{transactionsLoading && !transactions.length ? '—' : money(transactionFunds.available)}</strong><small>Current eligible balance</small></div>
+            <div><span>Current ledger balance</span><strong>{transactionsLoading && !transactions.length ? '—' : money(transactionFunds.available)}</strong><small>Eligible balance available for withdrawal</small></div>
+            <div><span>Transaction net balance</span><strong className={Number(transactionFunds.transaction_net||0)<0?'negative-balance':'addition-balance'}>{transactionsLoading && !transactions.length ? '—' : money(transactionFunds.transaction_net)}</strong><small>Signed net of the transactions shown below</small></div>
             <div><span>Total additions</span><strong className="addition-balance">{transactionsLoading && !transactions.length ? '—' : '+'+money(transactionFunds.total_additions)}</strong><small>Total earnings credited</small></div>
             <div><span>Total deductions</span><strong className="deduction-balance">{transactionsLoading && !transactions.length ? '—' : '−'+money(transactionFunds.total_deductions)}</strong><small>Pending and paid withdrawals</small></div>
-            <div><span>Opening balance</span><strong>{transactionsLoading && !transactions.length ? '—' : money(transactionFunds.opening_balance)}</strong><small>Balance carried before shown transactions</small></div>
             <div><span>Recovery outstanding</span><strong className="recovery-balance">{transactionsLoading && !transactions.length ? '—' : money(transactionFunds.recovery_outstanding)}</strong><small>Recovered from future eligible earnings</small></div>
           </div>
           {transactionError&&<div className="account-message error">{transactionError}</div>}
