@@ -4,11 +4,14 @@ import { Link } from 'react-router-dom';
 import { apiRequest } from '../utils/api';
 import './Home.css';
 import './Contact.css';
+import PortalContact from './PortalContact';
 
 function Icon({children}){return <span className="contact-icon" aria-hidden="true">{children}</span>}
 
 export default function Contact(){
   const [searchParams]=useSearchParams();
+  const portalAudience=searchParams.get('audience');
+  if(portalAudience==='lead_partners'||portalAudience==='users') return <PortalContact audience={portalAudience}/>;
   const audience=['website','users','lead_partners','common'].includes(searchParams.get('audience')||'website')?searchParams.get('audience')||'website':'website';
   const audienceLabel={website:'Public Website',users:'Customer Support',lead_partners:'Lead Partner Support',common:'ProPulse Support'}[audience];
   const [data,setData]=useState(null);
