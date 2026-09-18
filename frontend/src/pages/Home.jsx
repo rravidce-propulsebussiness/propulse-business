@@ -112,13 +112,12 @@ function Home() {
       raf = requestAnimationFrame(() => {
         const probe = window.scrollY + 125
         let current = 'home'
-        sectionIds.forEach(id => {
+        for (const id of sectionIds) {
           const node = document.getElementById(id)
-          if (!node) return
-          if (node.offsetTop <= probe) {
+          if (node && node.getBoundingClientRect().top + window.scrollY <= probe) {
             current = id === 'home-top' ? 'home' : id
           }
-        })
+        }
         setActiveNav(current)
       })
     }
@@ -132,13 +131,14 @@ function Home() {
     }
   }, [])
 
-
   useEffect(() => {
     document.documentElement.classList.add('home-scroll')
     const hash = window.location.hash.replace('#', '')
     if (hash === 'how-it-works' || hash === 'pricing' || hash === 'about' || hash === 'contact' || hash === 'upcoming-features' || hash === 'faq') {
       setActiveNav(hash)
-      requestAnimationFrame(() => document.getElementById(hash)?.scrollIntoView({ behavior: 'auto', block: 'start' }))
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        document.getElementById(hash)?.scrollIntoView({ behavior: 'auto', block: 'start' })
+      }))
     } else {
       setActiveNav('home')
     }
@@ -178,7 +178,7 @@ function Home() {
     event?.preventDefault()
     const target = document.getElementById(id)
     setActiveNav(id)
-    window.history.replaceState({}, '', '#' + id)
+    window.history.replaceState({}, '', window.location.pathname + window.location.search + '#' + id)
     if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
 
