@@ -137,7 +137,7 @@ function Home() {
           <a className={activeNav === 'home' ? 'nav-active' : ''} href="#home-top" onClick={scrollToHome}>Home</a>
           <Link to="/leads">Buy Leads</Link>
           <a className={activeNav === 'how-it-works' ? 'nav-active' : ''} href="#how-it-works" onClick={event => scrollToSection(event, 'how-it-works')}>How It Works</a>
-          <Link to="/membership">Pricing</Link>
+          <Link to="/pricing">Pricing</Link>
           <a className={activeNav === 'why-propulse' ? 'nav-active' : ''} href="#why-propulse" onClick={event => scrollToSection(event, 'why-propulse')}>About</a>
           <Link to="/contact">Contact</Link>
         </nav>
@@ -277,13 +277,13 @@ function Home() {
 
         <section className="final-cta home-reveal">
           <div><span className="section-kicker">READY TO FIND YOUR NEXT PROJECT?</span><h2>Start exploring verified leads.</h2><p>Browse the live marketplace and find opportunities relevant to your business.</p></div>
-          <div><Link className="final-primary" to="/leads">View Leads <span>→</span></Link><Link className="final-secondary" to="/membership">View Pricing</Link></div>
+          <div><Link className="final-primary" to="/leads">View Leads <span>→</span></Link><Link className="final-secondary" to="/pricing">View Pricing</Link></div>
         </section>
       </main>
 
       <footer className="public-footer">
         <div className="footer-brand"><Link to="/"><img src="/brand/propulse-logo.png" alt="Propulse" /></Link><p>Quality Leads. Real Growth.</p></div>
-        <div><strong>Marketplace</strong><Link to="/leads">Buy Leads</Link><Link to="/membership">Pricing</Link><Link to="/industries">Industries</Link></div>
+        <div><strong>Marketplace</strong><Link to="/leads">Buy Leads</Link><Link to="/pricing">Pricing</Link><Link to="/industries">Industries</Link></div>
         <div><strong>Support</strong><Link to="/contact">Contact</Link><Link to="/contact">Help &amp; Support</Link><a href="#how-it-works">How It Works</a><a className={activeNav === 'faq' ? 'nav-active' : ''} href="#faq" onClick={event => scrollToSection(event, 'faq')}>FAQs</a></div>
         <div><strong>Account</strong><Link to="/login">Login</Link><Link to="/signup">Create Account</Link><Link to="/profile">My Account</Link></div>
         <div><strong>Follow Us</strong><div className="socials"><span>f</span><span>◎</span><span>in</span><span>▶</span></div><small>Quality leads. Real opportunities.</small></div>
