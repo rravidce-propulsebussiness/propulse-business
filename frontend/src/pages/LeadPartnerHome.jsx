@@ -77,6 +77,7 @@ export default function LeadPartnerHome(){
         <Link to="/lead-partner/inventory"><Icon>▤</Icon><span>Lead Inventory</span></Link>
         <Link to="/lead-partner/pricing"><Icon>₹</Icon><span>Pricing & Revenue</span></Link>
         <Link to="/lead-partner/withdrawals"><Icon>▣</Icon><span>Earnings & Withdrawals</span></Link>
+        <Link to="/lead-partner/account"><Icon>◎</Icon><span>Account</span></Link>
       </nav>
       <div className="lp-sidebar-bottom">
         <div className="lp-sidebar-user"><span>{initials}</span><div><b>{user?.name||'Lead Partner'}</b><small>{user?.email||'Partner account'}</small></div></div>
