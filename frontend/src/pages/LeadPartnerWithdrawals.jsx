@@ -105,14 +105,7 @@ export default function LeadPartnerWithdrawals() {
         </header>
 
         <div className="withdrawals-content">
-          <section className="withdrawals-heading">
-            <div>
-              <span className="withdrawals-eyebrow">LEAD PARTNER PORTAL · FINANCE</span>
-              <h1>Withdrawals</h1>
-              <p>Manage your eligible earnings, payout destination and withdrawal history.</p>
-            </div>
-            <div className="withdrawals-live"><i /> Live earnings</div>
-          </section>
+          <section className="withdrawals-heading"><div><h1>Withdrawals</h1></div><div className="withdrawals-live"><i /> Live earnings</div></section>
 
           {error && <div className="withdrawals-message error">{error}</div>}
           {message && <div className="withdrawals-message success">✓ {message}</div>}
