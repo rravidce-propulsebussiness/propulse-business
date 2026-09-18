@@ -24,6 +24,7 @@ const investmentRoutes=require('./routes/investmentRoutes');
 const investorPayoutAccountRoutes=require('./routes/investorPayoutAccountRoutes');
 const leadPartnerRoutes=require('./routes/leadPartnerRoutes');
 const leadReportRoutes=require('./routes/leadReportRoutes');
+const { startLeadPartnerSheetAutoSync }=require('./services/leadPartnerSheetSyncScheduler');
 const app=express();
 const isProduction=process.env.NODE_ENV==='production';
 const PORT=Number(process.env.PORT)||5000;
@@ -41,6 +42,6 @@ app.get('/health',async(req,res)=>{try{await pool.query('SELECT 1');res.json({st
 app.use('/api/auth',authRoutes);app.use('/api/profile',profileRoutes);app.use('/api/admin',adminRoutes);app.use('/api/lead-partner',leadPartnerRoutes);app.use('/api/lead-reports',leadReportRoutes);app.use('/api/leads',leadRoutes);app.use('/api/payments',paymentRoutes);app.use('/api/payment-receiving-details',paymentReceivingDetailsRoutes);app.use('/api/coupons',couponRoutes);app.use('/api/membership-plans',membershipPlanRoutes);app.use('/api/admin/commercial',adminCommercialRoutes);app.use('/api/wallet',walletRoutes);app.use('/api/investments',investmentRoutes);app.use('/api/investor/payout-account',investorPayoutAccountRoutes);app.use('/api/industries',industryRoutes);app.use('/api/services',serviceRoutes);app.use('/api/subservices',subserviceRoutes);app.use('/api/states',stateRoutes);app.use('/api/cities',cityRoutes);app.use('/api/subcities',subcityRoutes);app.use('/api/pincodes',pincodeRoutes);
 app.use((req,res)=>res.status(404).json({error:'Not found'}));
 app.use((err,req,res,next)=>{if(err.message==='CORS origin not allowed')return res.status(403).json({error:'Origin not allowed'});if(err.type==='entity.too.large')return res.status(413).json({error:'Request body is too large'});console.error('Unhandled server error:',err.stack||err);return res.status(500).json({error:'Internal server error'});});
-let server;async function shutdown(signal){console.log(`${signal} received; shutting down gracefully.`);if(server)await new Promise(resolve=>server.close(resolve));await pool.end();process.exit(0)}
-async function start(){try{await runMigrations();server=app.listen(PORT,'0.0.0.0',()=>console.log(`Server running on port ${PORT}`));process.once('SIGTERM',()=>shutdown('SIGTERM'));process.once('SIGINT',()=>shutdown('SIGINT'));}catch(error){console.error('Backend startup failed:');console.error(error?.stack||error||'Unknown error');await pool.end();process.exitCode=1;}}
+let server;let stopLeadPartnerSheetAutoSync=()=>{};async function shutdown(signal){console.log(`${signal} received; shutting down gracefully.`);if(server)await new Promise(resolve=>server.close(resolve));stopLeadPartnerSheetAutoSync();await pool.end();process.exit(0)}
+async function start(){try{await runMigrations();server=app.listen(PORT,'0.0.0.0',()=>{console.log(`Server running on port ${PORT}`);stopLeadPartnerSheetAutoSync=startLeadPartnerSheetAutoSync();});process.once('SIGTERM',()=>shutdown('SIGTERM'));process.once('SIGINT',()=>shutdown('SIGINT'));}catch(error){console.error('Backend startup failed:');console.error(error?.stack||error||'Unknown error');await pool.end();process.exitCode=1;}}
 start();
