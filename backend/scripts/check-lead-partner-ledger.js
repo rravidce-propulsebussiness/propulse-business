@@ -22,6 +22,9 @@ async function main(){
   if(missing.length)throw new Error('Required Lead Partner ledger tables are missing: '+missing.join(', '));
 
   const checks={};
+  checks.duplicateWalletRefunds=await query(
+    "SELECT payment_id,COUNT(*) AS count FROM wallet_transactions WHERE type='refund' AND payment_id IS NOT NULL GROUP BY payment_id HAVING COUNT(*)>1"
+  );
   checks.duplicatePayoutItems=await query(
     "SELECT payout_id,earning_id,COUNT(*) AS count FROM lead_partner_payout_items GROUP BY payout_id,earning_id HAVING COUNT(*)>1"
   );
