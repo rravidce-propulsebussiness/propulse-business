@@ -1,7 +1,7 @@
 .withdrawals-shell{min-height:100dvh;background:#f6f8fc;color:#18375f;display:flex;font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif}
 .withdrawals-sidebar{position:fixed;inset:0 auto 0 0;width:280px;background:#fff;border-right:1px solid #e7ebf2;display:flex;flex-direction:column;z-index:20}
-.withdrawals-brand{height:88px;display:flex;align-items:center;gap:13px;padding:0 25px;border-bottom:1px solid #edf1f6}
-.withdrawals-brand-mark{width:43px;height:43px;border-radius:12px;background:#0d3a7b;color:#fff;display:grid;place-items:center;font-size:24px;font-weight:900}
+.withdrawals-brand{height:94px;display:flex;align-items:center;gap:13px;padding:0 24px;border-bottom:1px solid #edf1f6}
+.withdrawals-brand-mark{width:44px;height:44px;border-radius:11px;background:#103a78;color:#fff;display:grid;place-items:center;font-size:24px;font-weight:900}
 .withdrawals-brand b{display:block;color:#123661;font-size:19px;line-height:1;letter-spacing:.02em}.withdrawals-brand b span{color:#f15b2a}.withdrawals-brand small{display:block;margin-top:6px;color:#8997aa;font-size:8px;font-weight:900;letter-spacing:.18em}
 .withdrawals-nav-label{padding:31px 27px 13px;color:#8a97aa;font-size:10px;font-weight:900;letter-spacing:.15em}.withdrawals-nav{display:flex;flex-direction:column;gap:4px;padding:0 13px}
 .withdrawals-nav a{display:flex;align-items:center;gap:15px;padding:13px 16px;border-radius:10px;text-decoration:none;color:#60738d;font-size:13px;font-weight:800}.withdrawals-nav a:hover{background:#f5f8fd}.withdrawals-nav a.active{background:#eaf2ff;color:#0d3979}.withdrawals-nav i{width:22px;text-align:center;font-style:normal;font-size:18px}
