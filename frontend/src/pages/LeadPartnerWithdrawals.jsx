@@ -86,7 +86,7 @@ export default function LeadPartnerWithdrawals() {
           <Link className={location.pathname === '/lead-partner' ? 'active' : ''} to="/lead-partner"><i>⌂</i><span>Overview</span></Link>
           <Link className={location.pathname.startsWith('/lead-partner/inventory') ? 'active' : ''} to="/lead-partner/inventory"><i>◈</i><span>Lead Inventory</span></Link>
           <Link className={location.pathname.startsWith('/lead-partner/pricing') ? 'active' : ''} to="/lead-partner/pricing"><i>₹</i><span>Pricing & Revenue</span></Link>
-          <Link className={location.pathname.startsWith('/lead-partner/withdrawals') ? 'active' : ''} to="/lead-partner/withdrawals"><i>⇩</i><span>Earnings & Withdrawals</span></Link>
+          <Link className={location.pathname.startsWith('/lead-partner/withdrawals') ? 'active' : ''} to="/lead-partner/withdrawals"><i>⇩</i><span>Earnings & Withdrawals</span></Link><Link className={location.pathname.startsWith('/lead-partner/reports')?'active':''} to="/lead-partner/reports"><i>▥</i><span>Reports</span></Link>
           <Link className={location.pathname.startsWith('/lead-partner/account') ? 'active' : ''} to="/lead-partner/account"><i>◎</i><span>Account</span></Link>
         </nav>
         <div className="withdrawals-sidebar-bottom">
