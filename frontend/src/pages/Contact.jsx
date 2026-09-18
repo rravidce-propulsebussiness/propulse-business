@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
+import { Link, Navigate, useSearchParams } from 'react-router-dom'
 import { apiRequest } from '../utils/api'
 import PortalContact from './PortalContact'
 import './Contact.css'
@@ -12,7 +12,7 @@ export default function Contact(){
   const [searchParams]=useSearchParams()
   const portalAudience=searchParams.get('audience')
   if(portalAudience==='lead_partners'||portalAudience==='users') return <PortalContact audience={portalAudience}/>
-  return <PublicContact searchParams={searchParams}/>
+  return <Navigate to="/#contact" replace/>
 }
 
 function PublicContact({searchParams}){
