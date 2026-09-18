@@ -13,6 +13,7 @@ function normalize(input={}){
     description:clean(input.description),
     price_label:clean(input.price_label)||'Custom quote',
     billing_note:clean(input.billing_note),
+    image_url:clean(input.image_url),
     features,
     cta_label:clean(input.cta_label)||'Get Started',
     cta_url:clean(input.cta_url)||'/contact',
@@ -22,7 +23,7 @@ function normalize(input={}){
   }
 }
 async function list(activeOnly=true){
-  const r=await pool.query(`SELECT id,category,name,slug,tagline,description,price_label,billing_note,features,cta_label,cta_url,highlighted,sort_order,is_active,updated_at
+  const r=await pool.query(`SELECT id,category,name,slug,tagline,description,price_label,billing_note,features,cta_label,cta_url,image_url,highlighted,sort_order,is_active,updated_at
     FROM service_pricing ${activeOnly?'WHERE is_active=TRUE':''} ORDER BY sort_order ASC,id ASC`);
   return r.rows
 }
@@ -31,9 +32,9 @@ async function create(input){
   const value=normalize(input);
   if(value.name.length<2) {const e=new Error('Pricing item name is required');e.code='INVALID_PRICING';throw e}
   if(!value.slug){const e=new Error('Pricing item slug is required');e.code='INVALID_PRICING';throw e}
-  const r=await pool.query(`INSERT INTO service_pricing(category,name,slug,tagline,description,price_label,billing_note,features,cta_label,cta_url,highlighted,sort_order,is_active)
-    VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13) RETURNING *`,
-    [value.category,value.name,value.slug,value.tagline,value.description,value.price_label,value.billing_note,JSON.stringify(value.features),value.cta_label,value.cta_url,value.highlighted,value.sort_order,value.is_active]);
+  const r=await pool.query(`INSERT INTO service_pricing(category,name,slug,tagline,description,price_label,billing_note,features,cta_label,cta_url,image_url,highlighted,sort_order,is_active)
+    VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14) RETURNING *`,
+    [value.category,value.name,value.slug,value.tagline,value.description,value.price_label,value.billing_note,JSON.stringify(value.features),value.cta_label,value.cta_url,value.image_url,value.highlighted,value.sort_order,value.is_active]);
   return r.rows[0]
 }
 async function update(id,input){
@@ -41,8 +42,8 @@ async function update(id,input){
   const merged={...current,...input};
   const value=normalize(merged);
   if(value.name.length<2){const e=new Error('Pricing item name is required');e.code='INVALID_PRICING';throw e}
-  const r=await pool.query(`UPDATE service_pricing SET category=$1,name=$2,slug=$3,tagline=$4,description=$5,price_label=$6,billing_note=$7,features=$8,cta_label=$9,cta_url=$10,highlighted=$11,sort_order=$12,is_active=$13,updated_at=CURRENT_TIMESTAMP WHERE id=$14 RETURNING *`,
-    [value.category,value.name,value.slug,value.tagline,value.description,value.price_label,value.billing_note,JSON.stringify(value.features),value.cta_label,value.cta_url,value.highlighted,value.sort_order,value.is_active,id]);
+  const r=await pool.query(`UPDATE service_pricing SET category=$1,name=$2,slug=$3,tagline=$4,description=$5,price_label=$6,billing_note=$7,features=$8,cta_label=$9,cta_url=$10,image_url=$11,highlighted=$12,sort_order=$13,is_active=$14,updated_at=CURRENT_TIMESTAMP WHERE id=$15 RETURNING *`,
+    [value.category,value.name,value.slug,value.tagline,value.description,value.price_label,value.billing_note,JSON.stringify(value.features),value.cta_label,value.cta_url,value.image_url,value.highlighted,value.sort_order,value.is_active,id]);
   return r.rows[0]
 }
 async function remove(id){return (await pool.query('DELETE FROM service_pricing WHERE id=$1 RETURNING id',[id])).rows[0]||null}
