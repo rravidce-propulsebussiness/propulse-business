@@ -1,0 +1,22 @@
+/* Shared Lead Partner workspace geometry.
+   Every Lead Partner page uses the same desktop canvas, sidebar and topbar dimensions.
+   Page-specific CSS should only control page content, not global shell geometry. */
+:root{--lp-shell-sidebar:280px;--lp-shell-topbar:58px;--lp-shell-content-max:1450px;--lp-shell-content-pad-x:28px;--lp-shell-content-pad-y:27px}
+.lp-sidebar,.pricing-sidebar,.partner-sidebar,.withdrawals-sidebar,.account-sidebar,.reports-sidebar,.faq-sidebar{width:var(--lp-shell-sidebar)!important;height:100dvh!important;box-sizing:border-box}
+.lp-main,.pricing-main,.partner-main,.withdrawals-main,.account-main,.reports-main,.faq-main{margin-left:var(--lp-shell-sidebar)!important;width:calc(100% - var(--lp-shell-sidebar))!important;min-height:100dvh}
+.lp-topbar,.pricing-topbar,.partner-topbar,.withdrawals-topbar,.account-topbar,.reports-topbar,.faq-topbar{height:var(--lp-shell-topbar)!important;box-sizing:border-box}
+.lp-content,.pricing-content,.partner-content,.withdrawals-content,.account-content,.reports-content,.faq-content{max-width:var(--lp-shell-content-max)!important;box-sizing:border-box;margin-left:auto!important;margin-right:auto!important;padding-top:var(--lp-shell-content-pad-y)!important;padding-left:var(--lp-shell-content-pad-x)!important;padding-right:var(--lp-shell-content-pad-x)!important}
+.lp-brand,.pricing-brand,.partner-brand,.withdrawals-brand,.account-brand,.reports-brand,.faq-brand{height:94px!important;box-sizing:border-box}
+.lp-nav-label,.pricing-nav-label,.partner-nav-label,.withdrawals-nav-label,.account-nav-label,.reports-nav-label,.faq-nav-label{padding-top:34px!important;padding-left:25px!important;padding-right:25px!important;padding-bottom:13px!important}
+.lp-nav,.pricing-nav,.partner-nav,.withdrawals-nav,.account-nav,.reports-nav,.faq-nav{padding-left:13px!important;padding-right:13px!important;gap:4px!important}
+.lp-nav a,.pricing-nav a,.partner-nav a,.withdrawals-nav a,.account-nav a,.reports-nav a,.faq-nav a{min-height:44px;box-sizing:border-box}
+.lp-sidebar-bottom,.pricing-sidebar-bottom,.partner-sidebar-bottom,.withdrawals-sidebar-bottom,.account-sidebar-bottom,.reports-sidebar-bottom,.faq-sidebar-bottom{padding-left:15px!important;padding-right:15px!important}
+@media(max-width:1100px) and (min-width:721px){
+  :root{--lp-shell-sidebar:240px}
+}
+@media(max-width:720px){
+  .lp-sidebar,.pricing-sidebar,.partner-sidebar,.withdrawals-sidebar,.account-sidebar,.reports-sidebar,.faq-sidebar{position:static!important;width:100%!important;height:auto!important}
+  .lp-main,.pricing-main,.partner-main,.withdrawals-main,.account-main,.reports-main,.faq-main{margin-left:0!important;width:100%!important}
+  .lp-content,.pricing-content,.partner-content,.withdrawals-content,.account-content,.reports-content,.faq-content{max-width:none!important;padding-left:14px!important;padding-right:14px!important;padding-top:20px!important}
+  .lp-brand,.pricing-brand,.partner-brand,.withdrawals-brand,.account-brand,.reports-brand,.faq-brand{height:78px!important}
+}
