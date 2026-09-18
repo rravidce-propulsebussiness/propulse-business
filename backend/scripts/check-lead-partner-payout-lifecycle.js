@@ -52,8 +52,8 @@ async function main() {
         `INSERT INTO leads(industry_id,service_id,state_id,city_id,customer_name,customer_phone,requirement,created_by,lead_partner_id,pricing)
          VALUES($1,$2,$3,$4,$5,'9000000000','Test requirement',$6,$7,'{"shares":[{"shares":1,"normal":100,"pro":100}]}')
          RETURNING id`,
-        [industry.id, service.id, state.id, city.id, `${tag}-lead-${amount}-${Math.random()}`, ids.user, ids.partner]
-      )).rows[0];
+        [industry.id, service.id, state.id, city.id, `${tag}-lead-${amount}-${Date.now()}-${Math.random()}`, ids.user, ids.partner]
+      ).catch(error => { throw new Error(`fixture lead insert failed: ${error.message}`); })).rows[0];
 
       const payment = (await c.query(
         `INSERT INTO payments(user_id,amount,payment_method,status,wallet_amount,external_amount)
@@ -198,7 +198,6 @@ async function main() {
         cleanup.release();
       }
     }
-    clearTimeout(timeout);
     await pool.end();
   }
 }
