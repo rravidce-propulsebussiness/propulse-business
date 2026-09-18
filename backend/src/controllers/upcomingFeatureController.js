@@ -1,0 +1,7 @@
+const service=require('../services/upcomingFeatureService');
+async function getPublic(req,res){try{return res.json(await service.list(true))}catch(e){console.error('Get upcoming features failed:',e.message);return res.status(500).json({error:'Failed to load upcoming features'})}}
+async function getAdmin(req,res){try{return res.json(await service.list(false))}catch(e){return res.status(500).json({error:'Failed to load upcoming features'})}}
+async function create(req,res){try{return res.status(201).json(await service.create(req.body||{}))}catch(e){return res.status(e.code==='INVALID_FEATURE'?400:e.code==='23505'?409:500).json({error:e.code==='23505'?'Feature slug already exists':e.message||'Failed to create feature',code:e.code})}}
+async function update(req,res){try{const item=await service.update(req.params.id,req.body||{});if(!item)return res.status(404).json({error:'Upcoming feature not found'});return res.json(item)}catch(e){return res.status(e.code==='INVALID_FEATURE'?400:e.code==='23505'?409:500).json({error:e.code==='23505'?'Feature slug already exists':e.message||'Failed to update feature',code:e.code})}}
+async function remove(req,res){try{const item=await service.remove(req.params.id);if(!item)return res.status(404).json({error:'Upcoming feature not found'});return res.json({id:item.id})}catch(e){return res.status(500).json({error:'Failed to delete upcoming feature'})}}
+module.exports={getPublic,getAdmin,create,update,remove};
