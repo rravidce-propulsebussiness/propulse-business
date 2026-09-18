@@ -1,6 +1,11 @@
+const fs=require('fs');
+const path=require('path');
 const pool=require('../config/database');
 
 const CATEGORIES=['Marketing','Lead Sales','Government Compliance'];
+const MAX_IMAGE_BYTES=7*1024*1024;
+const MIME_EXTENSIONS={'image/jpeg':'jpg','image/png':'png','image/webp':'webp'};
+const UPLOAD_ROOT=path.join(__dirname,'../../uploads/service-pricing');
 function clean(v){return String(v??'').trim()}
 function safeJson(v){if(Array.isArray(v))return v;try{const parsed=typeof v==='string'?JSON.parse(v):v;return Array.isArray(parsed)?parsed:[]}catch{return[]}}
 function normalize(input={}){
@@ -46,5 +51,44 @@ async function update(id,input){
     [value.category,value.name,value.slug,value.tagline,value.description,value.price_label,value.billing_note,JSON.stringify(value.features),value.cta_label,value.cta_url,value.image_url,value.highlighted,value.sort_order,value.is_active,id]);
   return r.rows[0]
 }
-async function remove(id){return (await pool.query('DELETE FROM service_pricing WHERE id=$1 RETURNING id',[id])).rows[0]||null}
-module.exports={list,get,create,update,remove,CATEGORIES};
+function parseImage(dataUrl){
+  const value=clean(dataUrl);
+  const match=value.match(/^data:(image\\/(?:jpeg|png|webp));base64,([A-Za-z0-9+/=\\s]+)$/i);
+  if(!match){const e=new Error('Only JPG, PNG or WebP images are allowed');e.code='INVALID_IMAGE';throw e}
+  const mime=match[1].toLowerCase();
+  const buffer=Buffer.from(match[2].replace(/\\s/g,''),'base64');
+  if(!buffer.length){const e=new Error('Image file is empty');e.code='INVALID_IMAGE';throw e}
+  if(buffer.length>MAX_IMAGE_BYTES){const e=new Error('Image must be 7 MB or smaller');e.code='IMAGE_TOO_LARGE';throw e}
+  return {buffer,extension:MIME_EXTENSIONS[mime]}
+}
+async function replaceImage(id,dataUrl){
+  const current=await get(id); if(!current)return null;
+  const parsed=parseImage(dataUrl);
+  await fs.promises.mkdir(UPLOAD_ROOT,{recursive:true});
+  const filename=`pricing-${id}-${Date.now()}-${Math.random().toString(36).slice(2,8)}.${parsed.extension}`;
+  const destination=path.join(UPLOAD_ROOT,filename);
+  await fs.promises.writeFile(destination,parsed.buffer,{flag:'wx'});
+  const url=`/uploads/service-pricing/${filename}`;
+  const result=await pool.query('UPDATE service_pricing SET image_url=$1,updated_at=CURRENT_TIMESTAMP WHERE id=$2 RETURNING *',[url,id]);
+  if(current.image_url&&current.image_url.startsWith('/uploads/service-pricing/')){
+    const oldPath=path.resolve(__dirname,'../..',current.image_url.replace(/^\\//,''));
+    await fs.promises.unlink(oldPath).catch(()=>{});
+  }
+  return result.rows[0]||null;
+}
+async function removeImage(id){
+  const current=await get(id); if(!current)return null;
+  const result=await pool.query("UPDATE service_pricing SET image_url='' , updated_at=CURRENT_TIMESTAMP WHERE id=$1 RETURNING *",[id]);
+  if(current.image_url&&current.image_url.startsWith('/uploads/service-pricing/')){
+    const oldPath=path.resolve(__dirname,'../..',current.image_url.replace(/^\\//,''));
+    await fs.promises.unlink(oldPath).catch(()=>{});
+  }
+  return result.rows[0]||null;
+}
+async function remove(id){
+  const current=await get(id);
+  if(!current)return null;
+  await removeImage(id).catch(()=>{});
+  return (await pool.query('DELETE FROM service_pricing WHERE id=$1 RETURNING id',[id])).rows[0]||null
+}
+module.exports={list,get,create,update,remove,replaceImage,removeImage,CATEGORIES,MAX_IMAGE_BYTES};
