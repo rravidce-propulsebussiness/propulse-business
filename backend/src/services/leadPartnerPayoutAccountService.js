@@ -61,6 +61,7 @@ async function save({userId, method, accountHolderName, accountNumber, ifscCode,
   const client = await pool.connect()
   try {
     await client.query('BEGIN')
+    await client.query('SELECT pg_advisory_xact_lock(hashtext($1))',[`lead-partner-payout-account:${Number(userId)}`])
     await client.query(`UPDATE lead_partner_payout_accounts SET is_active=FALSE,updated_at=CURRENT_TIMESTAMP WHERE user_id=$1 AND is_active=TRUE`, [Number(userId)])
     const result = await client.query(`INSERT INTO lead_partner_payout_accounts (user_id,method,account_holder_name,account_number,ifsc_code,bank_name,upi_id,is_verified,is_active) VALUES ($1,$2,$3,$4,$5,$6,$7,FALSE,TRUE) RETURNING *`, [Number(userId),details.method,details.accountHolderName || null,details.accountNumber || null,details.ifscCode || null,details.bankName || null,details.upiId || null])
     await client.query('COMMIT')
