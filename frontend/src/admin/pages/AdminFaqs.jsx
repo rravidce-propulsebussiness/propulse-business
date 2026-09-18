@@ -11,7 +11,7 @@ export default function AdminFaqs(){
   useEffect(()=>{load()},[]);
   function reset(){setEditId(null);setForm({...empty});setOk('');setError('')}
   function edit(row){setEditId(row.id);setForm({category:row.category,question:row.question,answer:row.answer,sort_order:row.sort_order,is_active:row.is_active});setOk('');setError('');window.scrollTo({top:0,behavior:'smooth'})}
-  async function save(e){e.preventDefault();try{setSaving(true);setError('');setOk('');const body={...form,audience:'lead_partner',sort_order:Number(form.sort_order)||0};await apiRequest(editId?'/admin/faqs/'+editId:'/admin/faqs',{method:editId?'PUT':'POST',body:JSON.stringify(body)});setOk(editId?'FAQ updated successfully.':'FAQ created successfully.');reset();await load();}catch(e){setError(e.message||'Unable to save FAQ')}finally{setSaving(false)}}
+  async function save(e){e.preventDefault();try{setSaving(true);setError('');setOk('');const body={...form,audience:'lead_partner',sort_order:Number(form.sort_order)||0};await apiRequest(editId?'/admin/faqs/'+editId:'/admin/faqs',{method:editId?'PUT':'POST',body:JSON.stringify(body)});const successMessage=editId?'FAQ updated successfully.':'FAQ created successfully.';reset();setOk(successMessage);await load();}catch(e){setError(e.message||'Unable to save FAQ')}finally{setSaving(false)}}
   async function remove(id){if(!window.confirm('Delete this FAQ?'))return;try{setError('');await apiRequest('/admin/faqs/'+id,{method:'DELETE'});setOk('FAQ deleted.');await load()}catch(e){setError(e.message||'Unable to delete FAQ')}}
   const filtered=rows.filter(r=>[r.question,r.answer,r.category].join(' ').toLowerCase().includes(search.trim().toLowerCase()));
   return <main className="admin-faq-page">
