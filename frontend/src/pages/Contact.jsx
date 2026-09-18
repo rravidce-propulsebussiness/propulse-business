@@ -12,7 +12,11 @@ export default function Contact(){
   const [searchParams]=useSearchParams();
   const portalAudience=searchParams.get('audience');
   if(portalAudience==='lead_partners'||portalAudience==='users') return <PortalContact audience={portalAudience}/>;
-  const audience=['website','users','lead_partners','common'].includes(searchParams.get('audience')||'website')?searchParams.get('audience')||'website':'website';
+  return <PublicContact searchParams={searchParams}/>;
+}
+
+function PublicContact({searchParams}){
+  const audience=['website','common'].includes(searchParams.get('audience')||'website')?searchParams.get('audience')||'website':'website';
   const audienceLabel={website:'Public Website',users:'Customer Support',lead_partners:'Lead Partner Support',common:'ProPulse Support'}[audience];
   const [data,setData]=useState(null);
   const [loading,setLoading]=useState(true);
