@@ -36,6 +36,12 @@ const faqs = [
   ['How does lead pricing work?', 'Pricing is configured by Propulse and can vary by lead, share package and eligible membership pricing. The exact price is shown before purchase.'],
 ]
 
+const pricingFallback = [
+  { category: 'Marketing', name: 'Marketing & Technology', tagline: 'Websites, apps, marketing & creative.', description: 'Websites, web apps, mobile apps, SEO, social media, performance marketing, branding, photography and video.', price_label: 'Custom quote', billing_note: 'Scope-based pricing', features: ['Website & web app development', 'Mobile app development', 'SEO, social media & performance marketing', 'Branding, photography & video'], cta_label: 'Talk to Marketing', cta_url: '/contact', highlighted: false, image_url: '/homepage/default-marketing.svg' },
+  { category: 'Lead Sales', name: 'Lead Marketplace', tagline: 'Buy leads. Reach real opportunities.', description: 'Discover relevant customer enquiries by service and location, review the opportunity and buy eligible access.', price_label: 'Pay per lead', billing_note: 'Exact price shown before purchase', features: ['Location-based lead discovery', 'Protected customer contact data', 'Configured lead pricing', 'Purchased-lead management'], cta_label: 'Explore Leads', cta_url: '/leads', highlighted: true, image_url: '/homepage/default-hero.svg' },
+  { category: 'Government Compliance', name: 'Business & Tax Compliance', tagline: 'Registration, GST, ITR & filing support.', description: 'Support for company registration, GST workflows, ITR preparation and filing, documentation and selected statutory compliance workflows.', price_label: 'Custom quote', billing_note: 'Scope and authority dependent', features: ['Company / business registration support', 'GST registration & workflow support', 'ITR preparation & filing support', 'Statutory document coordination'], cta_label: 'Talk to Compliance', cta_url: '/contact', highlighted: false, image_url: '/homepage/default-compliance.svg' }
+]
+
 function Home() {
   const token = getToken()
   const user = getUser()
@@ -45,6 +51,7 @@ function Home() {
   const [loadingLeads, setLoadingLeads] = useState(true)
   const [media, setMedia] = useState({ hero_image_url: '', category_images: {} })
   const [activeNav, setActiveNav] = useState('home')
+  const [servicePricing, setServicePricing] = useState(pricingFallback)
 
   useEffect(() => {
     let live = true
@@ -55,9 +62,20 @@ function Home() {
   }, [])
 
   useEffect(() => {
+    let live = true
+    publicRequest('/service-pricing').then(data => {
+      if (!live) return
+      const items = Array.isArray(data) ? data.filter(item => item?.is_active !== false).slice(0, 3) : []
+      if (items.length) setServicePricing(items)
+    }).catch(() => {})
+    return () => { live = false }
+  }, [])
+
+  useEffect(() => {
     const sections = [
       ['home', 'home-top'],
       ['how-it-works', 'how-it-works'],
+      ['pricing', 'pricing'],
       ['why-propulse', 'why-propulse'],
       ['faq', 'faq']
     ]
@@ -83,7 +101,7 @@ function Home() {
   useEffect(() => {
     document.documentElement.classList.add('home-scroll')
     const hash = window.location.hash.replace('#', '')
-    if (hash === 'how-it-works' || hash === 'why-propulse' || hash === 'faq') setActiveNav(hash)
+    if (hash === 'how-it-works' || hash === 'pricing' || hash === 'why-propulse' || hash === 'faq') setActiveNav(hash)
     else if (!hash) setActiveNav('home')
     return () => document.documentElement.classList.remove('home-scroll')
   }, [])
@@ -137,7 +155,7 @@ function Home() {
           <a className={activeNav === 'home' ? 'nav-active' : ''} href="#home-top" onClick={scrollToHome}>Home</a>
           <Link to="/leads">Buy Leads</Link>
           <a className={activeNav === 'how-it-works' ? 'nav-active' : ''} href="#how-it-works" onClick={event => scrollToSection(event, 'how-it-works')}>How It Works</a>
-          <Link to="/pricing">Pricing</Link>
+          <a className={activeNav === 'pricing' ? 'nav-active' : ''} href="#pricing" onClick={event => scrollToSection(event, 'pricing')}>Pricing</a>
           <a className={activeNav === 'why-propulse' ? 'nav-active' : ''} href="#why-propulse" onClick={event => scrollToSection(event, 'why-propulse')}>About</a>
           <Link to="/contact">Contact</Link>
         </nav>
@@ -211,6 +229,46 @@ function Home() {
           </div>
         </section>
 
+        <section className="pricing-section-home home-reveal" id="pricing">
+          <div className="pricing-home-head">
+            <div>
+              <span className="section-kicker">SERVICES &amp; PRICING</span>
+              <h2>Everything your business needs to grow.</h2>
+              <p>Choose the service that matches your next business goal — digital growth, lead acquisition, or business and tax compliance support.</p>
+            </div>
+            <Link className="pricing-home-action" to="/leads">Browse Live Leads <span>→</span></Link>
+          </div>
+
+          <div className="pricing-home-grid">
+            {servicePricing.map((item, index) => (
+              <article className={item.highlighted ? 'pricing-home-card featured' : 'pricing-home-card'} key={item.id || item.slug || item.name}>
+                <div className="pricing-home-image">
+                  <img src={item.image_url || pricingFallback[index]?.image_url || '/homepage/default-hero.svg'} alt="" />
+                  {item.highlighted && <span className="pricing-home-badge">LEAD MARKETPLACE</span>}
+                </div>
+                <div className="pricing-home-card-body">
+                  <div className="pricing-home-meta"><span>{item.category}</span><small>{item.highlighted ? 'Core marketplace' : 'Business service'}</small></div>
+                  <h3>{item.name}</h3>
+                  <strong>{item.tagline}</strong>
+                  <p>{item.description}</p>
+                  <div className="pricing-home-price"><b>{item.price_label}</b><span>{item.billing_note}</span></div>
+                  <ul>
+                    {(Array.isArray(item.features) ? item.features : []).slice(0, 4).map((feature, featureIndex) => (
+                      <li key={featureIndex}><i>✓</i><span>{feature}</span></li>
+                    ))}
+                  </ul>
+                  <Link className={item.highlighted ? 'pricing-home-cta primary' : 'pricing-home-cta'} to={item.cta_url || '/contact'}>{item.cta_label || 'Get Started'} <span>→</span></Link>
+                </div>
+              </article>
+            ))}
+          </div>
+
+          <div className="pricing-home-footer">
+            <span>Pricing, features, images and service descriptions are managed from Admin.</span>
+            <Link to="/pricing">View full service details →</Link>
+          </div>
+        </section>
+
         <section className="benefit-band">
           <div><span>⌖</span><div><strong>Location-Based Leads</strong><small>Find opportunities from target cities.</small></div></div>
           <div><span>✓</span><div><strong>Verified Enquiries</strong><small>Real people. Real project requirements.</small></div></div>
@@ -277,13 +335,13 @@ function Home() {
 
         <section className="final-cta home-reveal">
           <div><span className="section-kicker">READY TO FIND YOUR NEXT PROJECT?</span><h2>Start exploring verified leads.</h2><p>Browse the live marketplace and find opportunities relevant to your business.</p></div>
-          <div><Link className="final-primary" to="/leads">View Leads <span>→</span></Link><Link className="final-secondary" to="/pricing">View Pricing</Link></div>
+          <div><Link className="final-primary" to="/leads">View Leads <span>→</span></Link><a className="final-secondary" href="#pricing" onClick={event => scrollToSection(event, 'pricing')}>View Pricing</a></div>
         </section>
       </main>
 
       <footer className="public-footer">
         <div className="footer-brand"><Link to="/"><img src="/brand/propulse-logo.png" alt="Propulse" /></Link><p>Quality Leads. Real Growth.</p></div>
-        <div><strong>Marketplace</strong><Link to="/leads">Buy Leads</Link><Link to="/pricing">Pricing</Link><Link to="/industries">Industries</Link></div>
+        <div><strong>Marketplace</strong><Link to="/leads">Buy Leads</Link><a href="#pricing" onClick={event => scrollToSection(event, 'pricing')}>Pricing</a><Link to="/industries">Industries</Link></div>
         <div><strong>Support</strong><Link to="/contact">Contact</Link><Link to="/contact">Help &amp; Support</Link><a href="#how-it-works">How It Works</a><a className={activeNav === 'faq' ? 'nav-active' : ''} href="#faq" onClick={event => scrollToSection(event, 'faq')}>FAQs</a></div>
         <div><strong>Account</strong><Link to="/login">Login</Link><Link to="/signup">Create Account</Link><Link to="/profile">My Account</Link></div>
         <div><strong>Follow Us</strong><div className="socials"><span>f</span><span>◎</span><span>in</span><span>▶</span></div><small>Quality leads. Real opportunities.</small></div>
