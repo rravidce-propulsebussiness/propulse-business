@@ -8,8 +8,8 @@ const empty={audience:'website',category:'general',question:'',answer:'',sort_or
 
 export default function AdminFaqs(){
   const [rows,setRows]=useState([]),[form,setForm]=useState(empty),[editId,setEditId]=useState(null),[loading,setLoading]=useState(true),[saving,setSaving]=useState(false),[error,setError]=useState(''),[ok,setOk]=useState(''),[search,setSearch]=useState('');
-  async function load(){try{setLoading(true);setError('');const data=await apiRequest('/admin/faqs?audience='+encodeURIComponent(form.audience||'website'));setRows(Array.isArray(data)?data:[])}catch(e){setError(e.message||'Unable to load FAQs')}finally{setLoading(false)}}
-  useEffect(()=>{load()},[]);
+  async function load(audienceKey=form.audience||'website'){try{setLoading(true);setError('');const data=await apiRequest('/admin/faqs?audience='+encodeURIComponent(audienceKey));setRows(Array.isArray(data)?data:[])}catch(e){setError(e.message||'Unable to load FAQs')}finally{setLoading(false)}}
+  useEffect(()=>{load(form.audience)},[form.audience]);
   function reset(){setEditId(null);setForm({...empty});setOk('');setError('')}
   function edit(row){setEditId(row.id);setForm({audience:row.audience||'website',category:row.category,question:row.question,answer:row.answer,sort_order:row.sort_order,is_active:row.is_active});setOk('');setError('');window.scrollTo({top:0,behavior:'smooth'})}
   async function save(e){e.preventDefault();try{setSaving(true);setError('');setOk('');const body={...form,sort_order:Number(form.sort_order)||0};await apiRequest(editId?'/admin/faqs/'+editId:'/admin/faqs',{method:editId?'PUT':'POST',body:JSON.stringify(body)});const successMessage=editId?'FAQ updated successfully.':'FAQ created successfully.';reset();setOk(successMessage);await load();}catch(e){setError(e.message||'Unable to save FAQ')}finally{setSaving(false)}}
