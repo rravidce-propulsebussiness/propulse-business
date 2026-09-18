@@ -22,9 +22,9 @@ export default function Pricing(){
     </header>
     <main>
       <section className="pricing-hero">
-        <span>PROPULSE BUSINESS</span>
-        <h1>One partner for <em>marketing, leads &amp; compliance.</em></h1>
-        <p>Choose the service that matches what your business needs now. Lead purchases use marketplace pricing; service and compliance work can be scoped to your requirements.</p>
+        <span>PROPULSE BUSINESS · SERVICES &amp; PRICING</span>
+        <h1>Build demand. Buy leads. <em>Stay compliant.</em></h1>
+        <p>Propulse brings digital marketing and technology, lead sales, and business compliance support into one clear service marketplace.</p>
         <div className="pricing-hero-points"><span>✓ Transparent options</span><span>✓ Business-ready support</span><span>✓ Admin-managed pricing</span></div>
       </section>
       <section className="pricing-section" id="services">
@@ -32,6 +32,7 @@ export default function Pricing(){
         {error&&<div className="pricing-alert">{error}</div>}
         {loading?<div className="pricing-loading">Loading current pricing…</div>:<div className="pricing-grid">{items.filter(item=>item?.is_active!==false).map(item=><article className={item.highlighted?'pricing-card featured':'pricing-card'} key={item.id||item.slug||item.name}>
           {item.highlighted&&<div className="pricing-featured">MOST RELEVANT FOR LEAD BUYERS</div>}
+          <div className="pricing-card-image"><img src={item.image_url || 'https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=1400&q=85'} alt="" /></div>
           <div className="pricing-card-top"><span>{item.category}</span>{item.highlighted&&<b>Featured</b>}</div>
           <h3>{item.name}</h3><strong className="pricing-tagline">{item.tagline}</strong><p>{item.description}</p>
           <div className="price-line"><strong>{item.price_label}</strong><small>{item.billing_note}</small></div>
