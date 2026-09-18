@@ -14,6 +14,7 @@ async function q(sql, params = []) {
 
 async function main() {
   const c = await pool.connect();
+  const timeout = setTimeout(() => { throw new Error('Payout lifecycle test timed out after 60 seconds. Check database connectivity/locks.'); }, 60000);
   try {
     await c.query('BEGIN');
 
@@ -56,7 +57,7 @@ async function main() {
 
       const purchase = (await c.query(
         `INSERT INTO lead_purchases(lead_id,user_id,shares,amount,pricing_tier,status)
-         VALUES($1,$2,1,$3,'normal','paid',$4) RETURNING id`,
+         VALUES($1,$2,1,$3,'normal','paid') RETURNING id`,
         [lead.id, ids.user, amount]
       )).rows[0];
 
@@ -185,6 +186,7 @@ async function main() {
       cleanup.release();
       await pool.end();
     }
+    clearTimeout(timeout);
   }
 }
 
