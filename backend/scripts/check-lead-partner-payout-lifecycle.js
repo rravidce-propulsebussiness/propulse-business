@@ -48,9 +48,9 @@ async function main() {
     assert(industry && service && state && city, 'Base catalog is required');
 
     async function makeEarning(amount) {
-      const testPhone = `7${String(ids.user).replace(/\D/g,'').slice(-7)}${String(Date.now()).slice(-2)}`;
-      const testCustomer = `${tag}-customer-${amount}`;
-      const testRequirement = `${tag} requirement ${amount}`;
+      const testPhone = `7${String(Date.now()).slice(-9)}`;
+      const testCustomer = `${tag}-customer-${amount}-${Date.now()}`;
+      const testRequirement = `${tag} requirement ${amount}-${Date.now()}`;
       console.log(`fixture: creating lead for ${amount} with phone ${testPhone}`);
       const lead = (await c.query(
         `INSERT INTO leads(industry_id,service_id,state_id,city_id,customer_name,customer_phone,requirement,created_by,lead_partner_id,pricing)
