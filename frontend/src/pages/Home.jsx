@@ -52,6 +52,7 @@ function Home() {
   const [media, setMedia] = useState({ hero_image_url: '', category_images: {} })
   const [activeNav, setActiveNav] = useState('home')
   const [servicePricing, setServicePricing] = useState(pricingFallback)
+  const [contactData, setContactData] = useState({})
 
   useEffect(() => {
     let live = true
@@ -72,11 +73,20 @@ function Home() {
   }, [])
 
   useEffect(() => {
+    let live = true
+    publicRequest('/contact?audience=website').then(data => {
+      if (live) setContactData(data || {})
+    }).catch(() => {})
+    return () => { live = false }
+  }, [])
+
+  useEffect(() => {
     const sections = [
       ['home', 'home-top'],
       ['how-it-works', 'how-it-works'],
       ['pricing', 'pricing'],
       ['about', 'about'],
+      ['contact', 'contact'],
       ['faq', 'faq']
     ]
     const observed = sections.map(([key, id]) => {
@@ -101,7 +111,7 @@ function Home() {
   useEffect(() => {
     document.documentElement.classList.add('home-scroll')
     const hash = window.location.hash.replace('#', '')
-    if (hash === 'how-it-works' || hash === 'pricing' || hash === 'about' || hash === 'faq') setActiveNav(hash)
+    if (hash === 'how-it-works' || hash === 'pricing' || hash === 'about' || hash === 'contact' || hash === 'faq') setActiveNav(hash)
     else if (!hash) setActiveNav('home')
     return () => document.documentElement.classList.remove('home-scroll')
   }, [])
@@ -157,7 +167,7 @@ function Home() {
           <a className={activeNav === 'how-it-works' ? 'nav-active' : ''} href="#how-it-works" onClick={event => scrollToSection(event, 'how-it-works')}>How It Works</a>
           <a className={activeNav === 'pricing' ? 'nav-active' : ''} href="#pricing" onClick={event => scrollToSection(event, 'pricing')}>Pricing</a>
           <a className={activeNav === 'about' ? 'nav-active' : ''} href="#about" onClick={event => scrollToSection(event, 'about')}>About</a>
-          <Link to="/contact">Contact</Link>
+          <a className={activeNav === 'contact' ? 'nav-active' : ''} href="#contact" onClick={event => scrollToSection(event, 'contact')}>Contact</a>
         </nav>
         <div className="header-actions">
           <Link className="header-search" to="/leads" aria-label="Search leads">⌕</Link>
@@ -313,7 +323,7 @@ function Home() {
             <p><strong>Propulse Business Technologies Private Limited</strong> is an IT technology company focused on helping businesses build, digitize, operate and scale.</p>
             <p>We bring practical digital capabilities together under one platform — from websites and business software to mobile apps, digital marketing, lead acquisition, automation and technology support.</p>
             <p>Our goal is simple: make it easier for a business to use technology across the full journey, from getting discovered and generating opportunities to managing digital operations and supporting day-to-day business needs.</p>
-            <Link className="why-cta" to="/contact">Talk to Propulse <span>→</span></Link>
+            <a className="why-cta" href="#contact" onClick={event => scrollToSection(event, 'contact')}>Talk to Propulse <span>→</span></a>
           </div>
           <div className="why-list about-capabilities">
             <div><b>01</b><strong>Build digital presence</strong><span>Websites, web apps, business portals, mobile applications and digital experiences designed around your business.</span></div>
@@ -326,7 +336,7 @@ function Home() {
         </section>
 
         <section className="testimonial-section home-reveal">
-          <div className="testimonial-intro"><span className="section-kicker">BUILT FOR BUSINESSES</span><h2>One marketplace for new project opportunities.</h2><p>Use Propulse to discover demand without building your own lead-search workflow from scratch.</p><Link to="/contact">Talk to our team <span>→</span></Link></div>
+          <div className="testimonial-intro"><span className="section-kicker">BUILT FOR BUSINESSES</span><h2>One marketplace for new project opportunities.</h2><p>Use Propulse to discover demand without building your own lead-search workflow from scratch.</p><a href="#contact" onClick={event => scrollToSection(event, 'contact')}>Talk to our team <span>→</span></a></div>
           <div className="testimonial-cards">
             <article><b>“</b><p>Find opportunities by service and location, review the requirement and decide whether to purchase access.</p><strong>Marketplace workflow</strong><small>Search → Review → Buy</small></article>
             <article><b>“</b><p>Keep purchased opportunities organized in your account and continue the customer conversation from there.</p><strong>Lead management</strong><small>Purchase → Access → Follow up</small></article>
@@ -338,12 +348,59 @@ function Home() {
           <div><span className="section-kicker">READY TO FIND YOUR NEXT PROJECT?</span><h2>Start exploring verified leads.</h2><p>Browse the live marketplace and find opportunities relevant to your business.</p></div>
           <div><Link className="final-primary" to="/leads">View Leads <span>→</span></Link><a className="final-secondary" href="#pricing" onClick={event => scrollToSection(event, 'pricing')}>View Pricing</a></div>
         </section>
+
+        <section className="contact-home-section home-reveal" id="contact">
+          <div className="contact-home-head">
+            <div>
+              <span className="section-kicker">CONTACT PROPULSE</span>
+              <h2>One conversation.<br /><em>Many ways to move forward.</em></h2>
+              <p>Propulse Business Technologies Private Limited helps businesses build, market, sell and digitize. Tell us what you need — technology, digital marketing, lead opportunities, automation or business support.</p>
+            </div>
+            <div className="contact-home-company">
+              <span>PROPULSE BUSINESS TECHNOLOGIES</span>
+              <strong>{contactData.company_name || 'Propulse Business Technologies Private Limited'}</strong>
+              <small>IT Technology • Digital Growth • Lead Sales • Business Support</small>
+            </div>
+          </div>
+
+          <div className="contact-home-grid">
+            <div className="contact-home-details">
+              <a href={contactData.email ? 'mailto:' + contactData.email : '#'}><b>✉</b><div><small>Email</small><strong>{contactData.email || 'Email not configured'}</strong><span>General business enquiries</span></div><i>→</i></a>
+              <a href={contactData.phone ? 'tel:' + contactData.phone : '#'}><b>☎</b><div><small>Phone</small><strong>{contactData.phone || 'Phone not configured'}</strong><span>Speak with the team</span></div><i>→</i></a>
+              <a href={contactData.whatsapp ? 'https://wa.me/' + String(contactData.whatsapp).replace(/\D/g,'') : '#'} target="_blank" rel="noreferrer"><b>◉</b><div><small>WhatsApp</small><strong>{contactData.whatsapp || 'WhatsApp not configured'}</strong><span>Quick business conversation</span></div><i>↗</i></a>
+              <div><b>◷</b><div><small>Business hours</small><strong>{contactData.business_hours || 'Business hours not configured'}</strong><span>Response time depends on enquiry type</span></div></div>
+            </div>
+
+            <div className="contact-home-right">
+              <div className="contact-home-address">
+                <span className="contact-home-label">OFFICE &amp; LOCATION</span>
+                <h3>{contactData.company_name || 'Propulse Business Technologies Private Limited'}</h3>
+                <p>{contactData.address || 'Address not configured in Admin Contact settings.'}</p>
+                {contactData.maps_url && <a href={contactData.maps_url} target="_blank" rel="noreferrer">Open in Maps ↗</a>}
+              </div>
+              <div className="contact-home-social">
+                <span className="contact-home-label">OFFICIAL SOCIAL CHANNELS</span>
+                <div className="contact-home-social-grid">
+                  {Array.isArray(contactData.social_handles) && contactData.social_handles.filter(item => item?.enabled && item?.url).map(item => (
+                    <a href={item.url} target="_blank" rel="noreferrer" key={item.id || item.platform}><span>{String(item.platform).slice(0,1).toUpperCase()}</span><strong>{item.platform}</strong><i>↗</i></a>
+                  ))}
+                  {(!Array.isArray(contactData.social_handles) || !contactData.social_handles.some(item => item?.enabled && item?.url)) && <small>No social channels published yet.</small>}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="contact-home-bottom">
+            <div><span className="section-kicker">START WITH A REQUIREMENT</span><strong>Need a website, app, marketing support, leads or business technology?</strong></div>
+            <div><a href={contactData.email ? 'mailto:' + contactData.email : '#'}>Email Propulse <span>→</span></a><Link to="/leads">Explore Leads</Link></div>
+          </div>
+        </section>
       </main>
 
       <footer className="public-footer">
         <div className="footer-brand"><Link to="/"><img src="/brand/propulse-logo.png" alt="Propulse" /></Link><p>Quality Leads. Real Growth.</p></div>
         <div><strong>Marketplace</strong><Link to="/leads">Buy Leads</Link><a href="#pricing" onClick={event => scrollToSection(event, 'pricing')}>Pricing</a><Link to="/industries">Industries</Link></div>
-        <div><strong>Support</strong><Link to="/contact">Contact</Link><Link to="/contact">Help &amp; Support</Link><a href="#how-it-works">How It Works</a><a className={activeNav === 'faq' ? 'nav-active' : ''} href="#faq" onClick={event => scrollToSection(event, 'faq')}>FAQs</a></div>
+        <div><strong>Support</strong><a href="#contact" onClick={event => scrollToSection(event, 'contact')}>Contact</a><a href="#contact" onClick={event => scrollToSection(event, 'contact')}>Help &amp; Support</a><a href="#how-it-works">How It Works</a><a className={activeNav === 'faq' ? 'nav-active' : ''} href="#faq" onClick={event => scrollToSection(event, 'faq')}>FAQs</a></div>
         <div><strong>Account</strong><Link to="/login">Login</Link><Link to="/signup">Create Account</Link><Link to="/profile">My Account</Link></div>
         <div><strong>Follow Us</strong><div className="socials"><span>f</span><span>◎</span><span>in</span><span>▶</span></div><small>Quality leads. Real opportunities.</small></div>
         <div className="footer-bottom"><span>© {new Date().getFullYear()} Propulse Business. All rights reserved.</span><span>Building businesses. Creating opportunities.</span></div>
