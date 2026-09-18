@@ -17,19 +17,19 @@ export default function LeadPartnerHome(){
 
   useEffect(()=>{
     let mounted=true
-    authRequest('/lead-partner/dashboard')
+    authRequest(`/lead-partner/dashboard?period=${period}`)
       .then(v=>mounted&&setData(v))
       .catch(e=>mounted&&setError(e.message||'Unable to load dashboard'))
       .finally(()=>mounted&&setLoading(false))
     return()=>{mounted=false}
-  },[])
+  },[period])
 
   const initials=useMemo(()=>(user?.name||'Lead Partner').split(' ').filter(Boolean).slice(0,2).map(x=>x[0]).join('').toUpperCase()||'LP',[user?.name])
   const stats=data?.stats||{}
   const chart=data?.charts?.earnings||[]
   const status=data?.charts?.leadStatus||{}
   const recentLeads=data?.recentLeads||[]
-  const recentPayouts=data?.recentPayouts||[]
+  const recentPayouts=data?.recentPayouts||[]\n  const periodLabels={month:'This Month',last_month:'Last Month',last_3_months:'Last 3 Months',last_6_months:'Last 6 Months',all:'All Time'}
 
   const chartMax=Math.max(1,...chart.flatMap(x=>[Number(x.earnings||0),Number(x.received||0)]))
   const chartPoints=(key)=>{
@@ -90,7 +90,7 @@ export default function LeadPartnerHome(){
       <div className="lp-content">
         <section className="lp-hero">
           <div><span className="lp-eyebrow">WELCOME BACK</span><h1>{user?.name||'Lead Partner'}</h1><p>Here's your lead business overview. Keep growing!</p></div>
-          <button className="lp-period" type="button"><span>▣</span> This Month <b>⌄</b></button>
+          <div className="lp-period-wrap"><button className={`lp-period ${periodOpen?'open':''}`} type="button" onClick={()=>setPeriodOpen(v=>!v)} aria-expanded={periodOpen}><span>▣</span> {periodLabels[period]} <b>⌄</b></button>{periodOpen&&<div className="lp-period-menu">{Object.entries(periodLabels).map(([key,label])=><button key={key} type="button" className={period===key?'selected':''} onClick={()=>{setPeriod(key);setPeriodOpen(false)}}>{label}{period===key&&<span>✓</span>}</button>)}</div>}</div>
         </section>
 
         {error&&<div className="lp-alert"><strong>Dashboard unavailable</strong><span>{error}</span></div>}
