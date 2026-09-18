@@ -87,6 +87,14 @@ async function resolveLocationFromPincode(pincode, cat, suppliedState, suppliedC
   // State is always canonical from the PIN lookup, exactly like the Admin uploader.
   const state = cat.states.find(x => Number(x.id) === Number(pin.state_id) || norm(x.name) === norm(pin.state_name));
   if (!state) throw new Error(`State for pincode ${value} is not present in the catalog`);
+  // Persist the canonical state ID for newly discovered PINs. This also lets the
+  // directory trigger maintain city_pincodes automatically when district == city.
+  await pool.query(
+    `UPDATE india_pincodes
+        SET state_id=$1,updated_at=CURRENT_TIMESTAMP
+      WHERE pincode=$2 AND (state_id IS DISTINCT FROM $1 OR state_id IS NULL)`,
+    [state.id, value]
+  ).catch(() => {});
   if (suppliedState && norm(suppliedState) !== norm(state.name)) {
     throw new Error(`Pincode ${value} belongs to ${state.name}, not ${suppliedState}`);
   }
@@ -135,6 +143,19 @@ async function resolveLocationFromPincode(pincode, cat, suppliedState, suppliedC
 
   if (!city) throw new Error(`City for pincode ${value} could not be resolved. Include a valid City from the ${state.name} catalog.`);
   if (Number(city.state_id) !== Number(state.id)) throw new Error(`City ${city.name} is outside the resolved state ${state.name}`);
+
+  // When a PIN is new to the directory, remember the validated City↔PIN
+  // relationship. Future sheet imports can resolve the same PIN locally without
+  // another manual catalog update. Never create a new city implicitly.
+  await pool.query(
+    `INSERT INTO city_pincodes(city_id,pincode,office_name,source,is_active)
+     VALUES($1,$2,$3,'lead-partner-pincode',TRUE)
+     ON CONFLICT(city_id,pincode) DO UPDATE SET
+       office_name=COALESCE(EXCLUDED.office_name,city_pincodes.office_name),
+       is_active=TRUE,updated_at=CURRENT_TIMESTAMP`,
+    [city.id, value, pin.office_name || pin.district_name || city.name]
+  ).catch(() => {});
+
   return { pincode: value, state, city };
 }
 
