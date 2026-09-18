@@ -48,6 +48,7 @@ async function fetchPostalPincode(pincode) {
       // API's first record reports a postal district instead.
       office_names: offices.map(x => String(x?.Name || '').trim()).filter(Boolean),
       office_count: offices.length,
+      office_names: offices.map(x => String(x?.Name || '').trim()).filter(Boolean),
       source: 'postalpincode-api',
       synced_at: new Date(),
     };
@@ -61,7 +62,7 @@ async function fetchPostalPincode(pincode) {
 async function getPincode(pincode) {
   const value = String(pincode).trim();
   const local = (await pool.query(
-    'SELECT pincode,state_id,state_name,district_name,office_count,source,synced_at FROM india_pincodes WHERE pincode=$1 AND is_active=TRUE',
+    'SELECT pincode,state_id,state_name,district_name,office_count,office_names,source,synced_at FROM india_pincodes WHERE pincode=$1 AND is_active=TRUE',
     [value]
   )).rows[0];
   if (local) return local;
@@ -74,16 +75,17 @@ async function getPincode(pincode) {
   // Cache the successful lookup so repeated sheet syncs do not need an API call.
   try {
     await pool.query(
-      `INSERT INTO india_pincodes(pincode,state_id,state_name,district_name,office_count,source,synced_at,is_active)
-       VALUES($1,NULL,$2,$3,$4,$5,CURRENT_TIMESTAMP,TRUE)
+      `INSERT INTO india_pincodes(pincode,state_id,state_name,district_name,office_count,office_names,source,synced_at,is_active)
+       VALUES($1,NULL,$2,$3,$4,$5,$6,CURRENT_TIMESTAMP,TRUE)
        ON CONFLICT(pincode) DO UPDATE SET
          state_name=EXCLUDED.state_name,
          district_name=EXCLUDED.district_name,
          office_count=EXCLUDED.office_count,
+         office_names=EXCLUDED.office_names,
          source=EXCLUDED.source,
          synced_at=CURRENT_TIMESTAMP,
          is_active=TRUE`,
-      [external.pincode, external.state_name, external.district_name, external.office_count, external.source]
+      [external.pincode, external.state_name, external.district_name, external.office_count, external.office_names || [], external.source]
     );
   } catch (_) {
     // Lookup is still valid even if the optional cache write cannot be completed.
