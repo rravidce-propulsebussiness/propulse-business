@@ -242,7 +242,7 @@ async function detectPincode(pincode, { forceRefresh = false } = {}) {
 
   const existing = await getStoredPin(pin);
   let directory = existing;
-  if (!existing || forceRefresh) {
+  if (!existing || forceRefresh || !Array.isArray(existing.postal_areas) || !existing.postal_areas.length) {
     const offices = await fetchIndiaPost(pin);
     directory = await savePinDirectory({ pincode: pin, offices });
   }
@@ -253,6 +253,19 @@ async function detectPincode(pincode, { forceRefresh = false } = {}) {
       ? directory.postal_data.map(x => x.name).filter(Boolean)
       : [];
 
+  const mapped = await pool.query(
+    'SELECT DISTINCT c.id,c.name,c.state_id,s.name AS state_name FROM city_pincodes cp JOIN cities c ON c.id=cp.city_id AND c.is_active=TRUE JOIN states s ON s.id=c.state_id AND s.is_active=TRUE WHERE cp.pincode=$1 AND cp.is_active=TRUE ORDER BY c.id',
+    [pin]
+  );
+  if (mapped.rows.length === 1) {
+    return {
+      ...directory,
+      status: 'MANUALLY_MAPPED',
+      city: mapped.rows[0],
+      candidates: mapped.rows,
+      mapping: { pincode: pin, city: mapped.rows[0], mappingSource: 'existing' },
+    };
+  }
   const match = await findSafeCityMatch({
     stateName: directory.state_name,
     officeNames,
