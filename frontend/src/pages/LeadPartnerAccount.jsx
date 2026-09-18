@@ -129,7 +129,7 @@ export default function LeadPartnerAccount(){
 
       <div className="account-content">
         <section className="account-heading">
-          <div><span className="account-eyebrow">LEAD PARTNER PORTAL</span><h1>Account</h1><p>Manage your payout destination, review financial transactions and access account settings.</p></div>
+          <div><h1>Account</h1></div>
           <div className="account-secure"><span>✓</span><div><strong>Secure payout details</strong><small>Only masked payout information is shown in the portal.</small></div></div>
         </section>
 
