@@ -2,7 +2,8 @@ const pool = require('../config/database');
 const leadService = require('./leadService');
 const partnerPricing = require('./leadPartnerPricingService');
 const { fetchGoogleSheetCsv } = require('./googleSheetService');
-const { getPincode } = require('./pincodeService');
+const { detectPincode } = require('./pincodeDetectionService');
+const cityService = require('./cityService');
 
 const clean = v => String(v ?? '').trim();
 const norm = v => clean(v).toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]/g, '');
@@ -81,7 +82,11 @@ function resolveClassification(row, cat) {
 async function resolveLocationFromPincode(pincode, cat, suppliedState, suppliedCity) {
   const value = clean(pincode).replace(/\D/g, '');
   if (!/^\d{6}$/.test(value)) throw new Error('Pincode is required and must be a valid 6-digit Indian PIN');
-  const pin = await getPincode(value);
+
+  // Use the same detector as the Admin PIN Mapping page so a new Google Sheet
+  // PIN is persisted to india_pincodes with complete India Post metadata.
+  const detected = await detectPincode(value);
+  const pin = detected;
   if (!pin) throw new Error(`Pincode ${value} could not be resolved`);
 
   // State is always canonical from the PIN lookup, exactly like the Admin uploader.
@@ -111,7 +116,21 @@ async function resolveLocationFromPincode(pincode, cat, suppliedState, suppliedC
     else {
       const relaxed = candidateMatches(cat.cities.filter(x => Number(x.state_id) === Number(state.id)), suppliedCity);
       if (relaxed.length === 1) city = relaxed[0];
-      else throw new Error(`City ${suppliedCity} is not present in the ${state.name} catalog`);
+      else {
+        // An explicitly supplied City is safe to add to the business catalog.
+        // Never create a city from a postal district alone.
+        const cityName = clean(suppliedCity);
+        const slug = cityName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+        try {
+          city = await cityService.createCity({ stateId: state.id, name: cityName, slug });
+          cat.cities.push(city);
+        } catch (error) {
+          if (error.code === 'CITY_ALREADY_EXISTS') {
+            city = findExact(cat.cities.filter(x => Number(x.state_id) === Number(state.id)), cityName);
+          }
+          if (!city) throw new Error(`City ${suppliedCity} is not present in the ${state.name} catalog and could not be created: ${error.message}`);
+        }
+      }
     }
   }
 
@@ -172,17 +191,16 @@ async function resolveLocationFromPincode(pincode, cat, suppliedState, suppliedC
   }
   if (Number(city.state_id) !== Number(state.id)) throw new Error(`City ${city.name} is outside the resolved state ${state.name}`);
 
-  // When a PIN is new to the directory, remember the validated City↔PIN
-  // relationship. Future sheet imports can resolve the same PIN locally without
-  // another manual catalog update. Never create a new city implicitly.
+  // Persist the validated City↔PIN relationship. Do not swallow database
+  // errors: a successful import must never report a mapping that was not saved.
   await pool.query(
-    `INSERT INTO city_pincodes(city_id,pincode,office_name,source,is_active)
-     VALUES($1,$2,$3,'lead-partner-pincode',TRUE)
+    `INSERT INTO city_pincodes(city_id,pincode,office_name,is_active)
+     VALUES($1,$2,$3,TRUE)
      ON CONFLICT(city_id,pincode) DO UPDATE SET
        office_name=COALESCE(EXCLUDED.office_name,city_pincodes.office_name),
        is_active=TRUE,updated_at=CURRENT_TIMESTAMP`,
     [city.id, value, pin.office_name || pin.district_name || city.name]
-  ).catch(() => {});
+  );
 
   return { pincode: value, state, city };
 }
