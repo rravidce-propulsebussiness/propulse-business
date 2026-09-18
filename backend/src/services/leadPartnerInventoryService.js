@@ -268,6 +268,8 @@ async function listInventory({ userId, status = 'all', search = '' }) {
     pool.query(
       `SELECT COUNT(*)::int AS total,
               COUNT(*) FILTER (WHERE l.status IN ('available','paused'))::int AS active,
+              COUNT(*) FILTER (WHERE l.status='available')::int AS available,
+              COUNT(*) FILTER (WHERE l.status='paused')::int AS paused,
               COUNT(*) FILTER (WHERE l.status='sold')::int AS sold,
               COUNT(*) FILTER (WHERE l.status='closed')::int AS closed
          FROM leads l
@@ -276,7 +278,7 @@ async function listInventory({ userId, status = 'all', search = '' }) {
       [userId]
     )
   ]);
-  return { data: data.rows, stats: stats.rows[0] || { total: 0, active: 0, sold: 0, closed: 0 } };
+  return { data: data.rows, stats: stats.rows[0] || { total: 0, active: 0, available: 0, paused: 0, sold: 0, closed: 0 } };
 }
 
 module.exports = { importCsv, importGoogleSheet, getSheetConnections, connectGoogleSheet, syncGoogleSheet, disableSheetConnection, listInventory };
