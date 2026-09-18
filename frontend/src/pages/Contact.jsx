@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { apiRequest } from '../utils/api';
+import './Home.css';
 import './Contact.css';
 
 function Icon({children}){return <span className="contact-icon" aria-hidden="true">{children}</span>}
