@@ -336,16 +336,34 @@ async function disableSheetConnection({ userId, connectionId }) {
   return result.rows[0];
 }
 
-async function listInventory({ userId, status = 'all', search = '' }) {
+async function listInventory({ userId, status = 'all', search = '', industryId = 'all', cityId = 'all' } = {}) {
   const params = [userId];
   const conditions = ['((lp.user_id=$1 AND l.lead_partner_id=lp.id) OR (l.created_by=$1 AND l.lead_partner_id IS NULL))'];
-  if (status && status !== 'all') { params.push(status); conditions.push(`l.status=$${params.length}`); }
-  if (clean(search)) { params.push(`%${clean(search)}%`); conditions.push(`(l.customer_name ILIKE $${params.length} OR l.customer_phone ILIKE $${params.length} OR l.requirement ILIKE $${params.length})`); }
+  const outcomeSql = `CASE
+    WHEN EXISTS (SELECT 1 FROM lead_reports r WHERE r.lead_id=l.id AND r.status='verified_fake') THEN 'fake'
+    WHEN EXISTS (SELECT 1 FROM lead_purchases p WHERE p.lead_id=l.id AND p.status='refunded') THEN 'refunded'
+    WHEN EXISTS (SELECT 1 FROM lead_purchases p WHERE p.lead_id=l.id AND p.status='paid') THEN 'sold'
+    WHEN EXISTS (SELECT 1 FROM lead_entitlement_claims ec WHERE ec.lead_id=l.id AND ec.expires_at IS NOT NULL AND ec.expires_at < CURRENT_TIMESTAMP) THEN 'expired'
+    ELSE l.status
+  END`;
+  if (status && status !== 'all') {
+    if (['fake','refunded','sold','expired'].includes(String(status))) conditions.push(`(${outcomeSql})=$${params.length+1}`);
+    else conditions.push(`l.status=$${params.length+1}`);
+    params.push(String(status));
+  }
+  if (industryId && industryId !== 'all') { params.push(Number(industryId)); conditions.push(`l.industry_id=$${params.length}`); }
+  if (cityId && cityId !== 'all') { params.push(Number(cityId)); conditions.push(`l.city_id=$${params.length}`); }
+  if (clean(search)) {
+    params.push(`%${clean(search)}%`);
+    conditions.push(`(l.customer_name ILIKE $${params.length} OR l.customer_phone ILIKE $${params.length} OR COALESCE(l.customer_email,'') ILIKE $${params.length} OR l.requirement ILIKE $${params.length} OR CAST(l.id AS TEXT) ILIKE $${params.length})`);
+  }
   const where = conditions.join(' AND ');
-  const [data, stats] = await Promise.all([
+  const [data, stats, filters] = await Promise.all([
     pool.query(
       `SELECT l.id,l.customer_name,l.customer_phone,l.customer_email,l.requirement,l.status,l.lead_type,l.buyer_capacity,l.is_exclusive,l.pincode,l.created_at,
-              i.name AS industry_name,s.name AS service_name,ss.name AS subservice_name,st.name AS state_name,c.name AS city_name
+              i.name AS industry_name,s.name AS service_name,ss.name AS subservice_name,st.name AS state_name,c.name AS city_name,
+              (${outcomeSql}) AS outcome_status,
+              (SELECT COUNT(DISTINCT p.id)::int FROM lead_purchases p WHERE p.lead_id=l.id AND p.status='paid') AS buyer_count
          FROM leads l
          LEFT JOIN lead_partners lp ON lp.id=l.lead_partner_id
          JOIN industries i ON i.id=l.industry_id
@@ -359,19 +377,36 @@ async function listInventory({ userId, status = 'all', search = '' }) {
       params
     ),
     pool.query(
-      `SELECT COUNT(*)::int AS total,
-              COUNT(*) FILTER (WHERE l.status IN ('available','paused'))::int AS active,
-              COUNT(*) FILTER (WHERE l.status='available')::int AS available,
-              COUNT(*) FILTER (WHERE l.status='paused')::int AS paused,
-              COUNT(*) FILTER (WHERE l.status='sold')::int AS sold,
-              COUNT(*) FILTER (WHERE l.status='closed')::int AS closed
-         FROM leads l
-         JOIN lead_partners lp ON lp.id=l.lead_partner_id
-        WHERE ((lp.user_id=$1 AND l.lead_partner_id=lp.id) OR (l.created_by=$1 AND l.lead_partner_id IS NULL))`,
+      `WITH base AS (
+        SELECT l.id,l.status,
+          ${outcomeSql} AS outcome_status
+        FROM leads l
+        LEFT JOIN lead_partners lp ON lp.id=l.lead_partner_id
+        WHERE ((lp.user_id=$1 AND l.lead_partner_id=lp.id) OR (l.created_by=$1 AND l.lead_partner_id IS NULL))
+      )
+      SELECT COUNT(*)::int AS total,
+             COUNT(*) FILTER (WHERE outcome_status IN ('available','paused'))::int AS active,
+             COUNT(*) FILTER (WHERE outcome_status='available')::int AS available,
+             COUNT(*) FILTER (WHERE outcome_status='paused')::int AS paused,
+             COUNT(*) FILTER (WHERE outcome_status='sold')::int AS sold,
+             COUNT(*) FILTER (WHERE outcome_status='refunded')::int AS refunded,
+             COUNT(*) FILTER (WHERE outcome_status='fake')::int AS fake,
+             COUNT(*) FILTER (WHERE outcome_status='expired')::int AS expired,
+             COUNT(*) FILTER (WHERE outcome_status='closed')::int AS closed,
+             COUNT(*) FILTER (WHERE outcome_status='invalid')::int AS invalid
+        FROM base`,
       [userId]
-    )
+    ),
+    Promise.all([
+      pool.query('SELECT id,name FROM industries WHERE is_active=TRUE ORDER BY name'),
+      pool.query('SELECT id,name,state_id FROM cities WHERE is_active=TRUE ORDER BY name')
+    ])
   ]);
-  return { data: data.rows, stats: stats.rows[0] || { total: 0, active: 0, available: 0, paused: 0, sold: 0, closed: 0 } };
+  return {
+    data: data.rows,
+    stats: stats.rows[0] || { total:0,active:0,available:0,paused:0,sold:0,refunded:0,fake:0,expired:0,closed:0,invalid:0 },
+    filters: { industries: filters[0].rows, cities: filters[1].rows }
+  };
 }
 
 module.exports = { importCsv, importGoogleSheet, getSheetConnections, connectGoogleSheet, syncGoogleSheet, disableSheetConnection, listInventory };
