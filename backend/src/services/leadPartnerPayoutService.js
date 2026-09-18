@@ -13,29 +13,38 @@ async function adminProcess({requestId,adminId,action,transferReference,proofUrl
 async function getTransactions(userId){
   const b=await balance(userId);
   const earnings=(await pool.query(
-    `SELECT e.id,e.earning_amount,e.status,e.created_at,e.updated_at,l.id AS lead_id,l.customer_name
+    `SELECT e.id,e.earning_amount,e.status,e.created_at,e.updated_at,
+            l.id AS lead_id,l.customer_name,
+            COALESCE((SELECT SUM(a.amount)
+                      FROM lead_partner_earning_adjustment_allocations a
+                      WHERE a.earning_id=e.id),0) AS recovery_allocated
      FROM lead_partner_earnings e
      LEFT JOIN leads l ON l.id=e.lead_id
      WHERE e.partner_id=$1 AND e.status<>'reversed'
-     ORDER BY e.created_at DESC,e.id DESC
+     ORDER BY e.created_at ASC,e.id ASC
      LIMIT 500`,[b.partner.id]
-  )).rows.map(r=>({
-    id:`E-${Number(r.id)}`,
-    type:'earning',
-    amount:money(r.earning_amount),
-    direction:'credit',
-    impact:money(r.earning_amount),
-    status:r.status,
-    description:r.customer_name?`Lead earning · ${r.customer_name}`:'Partner earning',
-    lead_id:r.lead_id?Number(r.lead_id):null,
-    created_at:r.created_at,
-    processed_at:r.updated_at
-  }));
+  )).rows.map(r=>{
+    const gross=money(r.earning_amount);
+    const recoveryAllocated=money(r.recovery_allocated);
+    return {
+      id:`E-${Number(r.id)}`,
+      type:'earning',
+      amount:gross,
+      direction:'credit',
+      impact:money(Math.max(0,gross-recoveryAllocated)),
+      recovery_allocated:recoveryAllocated,
+      status:r.status,
+      description:r.customer_name?`Lead earning · ${r.customer_name}`:'Partner earning',
+      lead_id:r.lead_id?Number(r.lead_id):null,
+      created_at:r.created_at,
+      processed_at:r.updated_at
+    };
+  });
   const payouts=(await pool.query(
     `SELECT id,amount,status,transfer_reference,rejection_reason,requested_at,processed_at,payout_method
      FROM lead_partner_payout_requests
      WHERE partner_id=$1
-     ORDER BY requested_at DESC,id DESC
+     ORDER BY requested_at ASC,id ASC
      LIMIT 500`,[b.partner.id]
   )).rows.map(r=>{
     const isDebit=['pending','paid'].includes(String(r.status||'').toLowerCase());
@@ -54,20 +63,27 @@ async function getTransactions(userId){
       processed_at:r.processed_at
     };
   });
-  const transactions=[...earnings,...payouts].sort((a,z)=>{
-    const diff=new Date(z.created_at)-new Date(a.created_at);
-    return diff || String(z.id).localeCompare(String(a.id));
+
+  const chronological=[...earnings,...payouts].sort((a,z)=>{
+    const diff=new Date(a.created_at)-new Date(z.created_at);
+    return diff || String(a.id).localeCompare(String(z.id));
   });
-  let running=money(b.available);
-  for(const tx of transactions){
+  const netImpact=money(chronological.reduce((sum,tx)=>sum+Number(tx.impact||0),0));
+  const openingBalance=money(Math.max(0,b.available-netImpact));
+  let running=openingBalance;
+  for(const tx of chronological){
+    running=money(Math.max(0,running+Number(tx.impact||0)));
     tx.balance_after=running;
-    running=money(running-Number(tx.impact||0));
   }
+  const transactions=[...chronological].reverse();
+
   return {
     available:b.available,
     reserved:b.reserved,
     paid:b.paid,
     total_earned:b.totalEarned,
+    recovery_outstanding:b.recoveryOutstanding,
+    opening_balance:openingBalance,
     total_additions:money(earnings.reduce((sum,x)=>sum+Number(x.amount||0),0)),
     total_deductions:money(payouts.filter(x=>x.direction==='debit').reduce((sum,x)=>sum+Number(x.amount||0),0)),
     transactions
