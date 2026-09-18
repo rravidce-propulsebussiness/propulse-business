@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'import LeadPartnerSidebar from '../components/LeadPartnerSidebar';
-;
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import LeadPartnerSidebar from '../components/LeadPartnerSidebar';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { authRequest, clearSession, getUser } from '../utils/auth';
 import './LeadPartnerWithdrawals.css';
