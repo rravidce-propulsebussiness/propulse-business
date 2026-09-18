@@ -116,7 +116,7 @@ export default function LeadPartnerPricing() {
   return (
     <div className="pricing-shell">
       <aside className="pricing-sidebar">
-        <div className="pricing-brand"><span className="pricing-brand-mark">P</span><span><b>PRO<span>PULSE</span></b><small>Building Spaces. Elevating Lives.</small><em>LEAD PARTNER</em></span></div>
+        <div className="pricing-brand"><span className="pricing-brand-mark">P</span><span><b>PRO<span>PULSE</span></b><small>LEAD PARTNER</small></span></div>
         <div className="pricing-nav-label">WORKSPACE</div>
         <nav className="pricing-nav">
           <Link className={location.pathname === '/lead-partner' ? 'active' : ''} to="/lead-partner"><i>⌂</i><span>Overview</span></Link>
