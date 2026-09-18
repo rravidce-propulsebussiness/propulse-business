@@ -65,8 +65,10 @@ async function getPincode(pincode) {
     'SELECT pincode,state_id,state_name,district_name,office_count,office_names,source,synced_at FROM india_pincodes WHERE pincode=$1 AND is_active=TRUE',
     [value]
   )).rows[0];
-  if (local) return local;
+  if (local && Array.isArray(local.office_names) && local.office_names.length) return local;
 
+  // Older cached PIN rows did not retain all postal offices. Refresh those
+  // rows once so city/taluk names can participate in catalog matching.
   // Keep the Lead Partner importer consistent with the Admin lead uploader,
   // which detects the location from the same public India PIN lookup API.
   const external = await fetchPostalPincode(value);
