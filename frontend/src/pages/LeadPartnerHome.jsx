@@ -100,7 +100,10 @@ export default function LeadPartnerHome(){
 
         <section className="lp-kpi-grid">
           <article className="lp-kpi"><div className="lp-kpi-icon blue"><Icon>♙</Icon></div><div><span>Leads Uploaded</span><strong>{loading?'—':stats.totalLeads??0}</strong><small>↗ {loading?'—':stats.activeLeads??0} active now</small></div></article>
-          <article className="lp-kpi"><div className="lp-kpi-icon green"><Icon>🛒</Icon></div><div><span>Leads Sold</span><strong>{loading?'—':stats.soldLeads??0}</strong><small>{stats.totalLeads?((Number(stats.soldLeads||0)/Number(stats.totalLeads||1))*100).toFixed(1):'0.0'}% of total</small></div></article>
+          <article className="lp-kpi"><div className="lp-kpi-icon green"><Icon>🛒</Icon></div><div><span>Leads Sold</span><strong>{loading?'—':stats.soldLeads??0}</strong><small>Completed paid purchases</small></div></article>
+          <article className="lp-kpi"><div className="lp-kpi-icon red"><Icon>⚠</Icon></div><div><span>Verified Fake Leads</span><strong>{loading?'—':stats.verifiedFakeLeads??0}</strong><small>Confirmed by Admin review</small></div></article>
+          <article className="lp-kpi"><div className="lp-kpi-icon orange"><Icon>↩</Icon></div><div><span>Refunded Leads</span><strong>{loading?'—':stats.refundedLeads??0}</strong><small>Purchases refunded</small></div></article>
+          <article className="lp-kpi"><div className="lp-kpi-icon yellow"><Icon>◷</Icon></div><div><span>Expired Access</span><strong>{loading?'—':stats.expiredAccessLeads??0}</strong><small>Buyer access that has expired</small></div></article>
           <article className="lp-kpi"><div className="lp-kpi-icon orange"><Icon>₹</Icon></div><div><span>Gross Sales Generated</span><strong>{loading?'—':money(stats.grossSales)}</strong><small>Total paid lead value</small></div></article>
           <article className="lp-kpi"><div className="lp-kpi-icon purple"><Icon>↗</Icon></div><div><span>Your Earnings</span><strong>{loading?'—':money(stats.earningsGenerated)}</strong><small>After 5% commission</small></div></article>
           <article className="lp-kpi"><div className="lp-kpi-icon green"><Icon>✓</Icon></div><div><span>Amount Received</span><strong>{loading?'—':money(stats.amountReceived)}</strong><small>Withdrawn & paid</small></div></article>
