@@ -227,7 +227,10 @@ async function getAdminPartners({ status, page = 1, limit = 50 } = {}) {
   return { partners, pagination: { page: currentPage, limit: pageSize, total: Number(count.total || 0), totalPages: Math.ceil(Number(count.total || 0) / pageSize) } };
 }
 
-async function getDashboard(userId, period='month') {\n  const periodKey=['month','last_month','last_3_months','last_6_months','all'].includes(String(period)) ? String(period) : 'month';\n  const periodStartSql={month:"date_trunc('month',CURRENT_DATE)",last_month:"date_trunc('month',CURRENT_DATE)-interval '1 month'",last_3_months:"date_trunc('month',CURRENT_DATE)-interval '2 months'",last_6_months:"date_trunc('month',CURRENT_DATE)-interval '5 months'",all:'NULL'}[periodKey];\n  const periodCondition=(column)=>periodKey==='all'?'TRUE':`${column} >= ${periodStartSql}`;
+async function getDashboard(userId, period='month') {
+  const periodKey=['month','last_month','last_3_months','last_6_months','all'].includes(String(period)) ? String(period) : 'month';
+  const periodStartSql={month:"date_trunc('month',CURRENT_DATE)",last_month:"date_trunc('month',CURRENT_DATE)-interval '1 month'",last_3_months:"date_trunc('month',CURRENT_DATE)-interval '2 months'",last_6_months:"date_trunc('month',CURRENT_DATE)-interval '5 months'",all:'NULL'}[periodKey];
+  const periodCondition=(column)=>periodKey==='all'?'TRUE':`${column} >= ${periodStartSql}`;
   const [summaryResult, recentResult, profileResult, partnerResult] = await Promise.all([
     pool.query(`SELECT COUNT(*)::int AS total_leads, COUNT(*) FILTER (WHERE status IN ('available','paused'))::int AS active_leads, COUNT(*) FILTER (WHERE status='sold')::int AS sold_leads, COUNT(*) FILTER (WHERE status='closed')::int AS closed_leads FROM leads WHERE lead_partner_id=(SELECT id FROM lead_partners WHERE user_id=$1 LIMIT 1) AND ${periodCondition('created_at')}`, [userId]),
     pool.query(`SELECT l.id,l.customer_name,l.requirement,l.status,l.created_at,i.name AS industry_name,s.name AS service_name,c.name AS city_name FROM leads l LEFT JOIN industries i ON i.id=l.industry_id LEFT JOIN services s ON s.id=l.service_id LEFT JOIN cities c ON c.id=l.city_id WHERE l.lead_partner_id=(SELECT id FROM lead_partners WHERE user_id=$1 LIMIT 1) AND ${periodCondition('l.created_at')} ORDER BY l.created_at DESC,l.id DESC LIMIT 8`, [userId]),
@@ -288,7 +291,8 @@ async function getDashboard(userId, period='month') {\n  const periodKey=['month
     quality,
     recentLeads: recentResult.rows,
     recentPayouts: payoutResult.rows.map(x=>({id:x.id,amount:Number(x.amount||0),status:x.status,transfer_reference:x.transfer_reference,requested_at:x.requested_at,processed_at:x.processed_at})),
-    pricing: { commissionPercent: 5, normalPriceUplift: null, configured: false },\n    period: periodKey,
+    pricing: { commissionPercent: 5, normalPriceUplift: null, configured: false },
+    period: periodKey,
   };
 }
 
