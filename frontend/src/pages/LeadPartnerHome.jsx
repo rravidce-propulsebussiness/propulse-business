@@ -46,7 +46,7 @@ export default function LeadPartnerHome(){
   }
   const totalStatus=Object.values(status).reduce((sum,v)=>sum+Number(v||0),0)
   const statusSegments=[
-    ['available','Available'],['sold','Sold'],['closed','Closed'],['paused','Paused']
+    ['available','Available'],['sold','Sold'],['refunded','Refunded'],['fake','Verified fake'],['closed','Closed'],['paused','Paused']
   ].map(([key,label])=>({key,label,value:Number(status[key]||0)})).filter(x=>x.value>0)
   const statusGradient=(()=>{
     if(!totalStatus)return 'conic-gradient(#dfe6ef 0 100%)'
@@ -55,8 +55,8 @@ export default function LeadPartnerHome(){
       const start=cursor
       cursor+=(x.value/totalStatus)*100
       const end=cursor
-      const cls=['available','sold','closed','paused'][i]
-      const color={available:'#12b76a',sold:'#377dff',closed:'#f6ad12',paused:'#8392a8'}[cls]
+      const cls=x.key
+      const color={available:'#12b76a',sold:'#377dff',refunded:'#f79009',fake:'#ef4444',closed:'#f6ad12',paused:'#8392a8'}[cls] || '#8392a8'
       return `${color} ${start}% ${end}%`
     })
     return `conic-gradient(${stops.join(',')})`
