@@ -80,7 +80,6 @@ function Login() {
 
       <main className="auth-card-wrap login-premium-card-wrap">
         <div className="auth-card login-premium-card">
-          <div className="login-premium-card-head"><div className="mobile-brand"><img src="/brand/propulse-logo.png" alt="Propulse Business" /></div><div className="login-new-user"><span>New to Propulse?</span><Link to="/signup">Get Started <b>→</b></Link></div></div>
           <div className="auth-heading login-heading">
             <p className="auth-kicker">WELCOME BACK</p>
             <h2>Welcome back.</h2>
