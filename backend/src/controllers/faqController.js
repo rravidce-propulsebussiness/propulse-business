@@ -1,7 +1,7 @@
 const faqService=require('../services/faqService');
 
 async function list(req,res){
-  try{return res.json(await faqService.list('lead_partner',false))}
+  try{return res.json(await faqService.list(String(req.query?.audience||'lead_partner'),false))}
   catch(error){console.error('List Lead Partner FAQs failed:',error.message);return res.status(500).json({error:'Failed to load FAQs'})}
 }
 async function adminList(req,res){
