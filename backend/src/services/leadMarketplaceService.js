@@ -1,13 +1,13 @@
 const pool=require('../config/database');const {leadSelect,maskLead,normalizeLeadType,isProMember}=require('./leadReadService');
 
-async function getMarketplacePage({industryId,serviceId,subserviceId,stateId,cityId,status='available',leadType,search,allIndustries,userId,role,page=1,limit=20}){
+async function getMarketplacePage({industryId,serviceId,subserviceId,stateId,cityId,status='available',leadType,search,allIndustries,allLocations,userId,role,page=1,limit=20}){
  const safePage=Math.max(1,Number.parseInt(page,10)||1);const safeLimit=Math.min(50,Math.max(1,Number.parseInt(limit,10)||20));const values=[];const conditions=[];const add=(value,sql)=>{values.push(value);conditions.push(sql.replace('?',`$${values.length}`))};
  if(status&&status!=='all')add(status,'l.status=?');
  const type=normalizeLeadType(leadType);if(type)add(type,'l.lead_type=?');
  if(industryId&&String(industryId).toLowerCase()!=='all')add(industryId,'l.industry_id=?');
  if(serviceId)add(serviceId,'l.service_id=?');if(subserviceId)add(subserviceId,'l.subservice_id=?');if(stateId)add(stateId,'l.state_id=?');if(cityId)add(cityId,'l.city_id=?');
  const q=String(search||'').trim().toLowerCase();if(q){values.push(`%${q}%`);const p=`$${values.length}`;conditions.push(`(LOWER(COALESCE(i.name,'')) LIKE ${p} OR LOWER(COALESCE(s.name,'')) LIKE ${p} OR LOWER(COALESCE(ss.name,'')) LIKE ${p} OR LOWER(COALESCE(c.name,'')) LIKE ${p} OR LOWER(COALESCE(st.name,'')) LIKE ${p} OR LOWER(COALESCE(l.requirement,'')) LIKE ${p})`)}
- if(role!=='admin'&&userId&&!String(allIndustries||'').match(/^(1|true)$/i)){
+ if(role!=='admin'&&userId&&!String(allIndustries||'').match(/^(1|true)$/i)&&!String(allLocations||'').match(/^(1|true)$/i)){
    values.push(userId);const p=`$${values.length}`;
    conditions.push(`EXISTS (
      SELECT 1 FROM business_profiles bp
