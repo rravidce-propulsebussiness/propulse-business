@@ -58,7 +58,7 @@ export default function LeadPartnerReports(){
     <main className="reports-main">
       <header className="reports-topbar"><div className="reports-breadcrumb"><span>Lead Partner</span><b>/</b><strong>Reports</strong></div><div className="reports-top-status"><i/> Partner account</div></header>
       <div className="reports-content">
-        <section className="reports-heading"><div><span className="reports-eyebrow">LEAD QUALITY · REPORTING</span><h1>Lead &amp; Earnings Reports</h1><p>Track the leads you reported, review outcomes, and understand reported-lead activity.</p></div><button className="reports-export" type="button" onClick={exportReport}>⇩ Export Report</button></section>
+        <section className="reports-heading"><div><h1>Lead &amp; Earnings Reports</h1></div><button className="reports-export" type="button" onClick={exportReport}>⇩ Export Report</button></section>
         {error&&<div className="reports-alert">{error}<button onClick={load}>Retry</button></div>}
         <section className="reports-kpi-grid">
           <article><div className="reports-kpi-icon blue">▤</div><div><span>Reported Leads</span><strong>{loading?'—':counts.reported_leads}</strong><small>Leads reported by buyers / users</small></div></article>
