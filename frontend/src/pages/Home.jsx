@@ -120,9 +120,9 @@ function Home() {
         <nav className="desktop-nav" aria-label="Main navigation">
           <Link className={activeNav === 'home' ? 'nav-active' : ''} to="/">Home</Link>
           <Link to="/leads">Buy Leads</Link>
-          <a className={activeNav === 'how-it-works' ? 'nav-active' : ''} href="#how-it-works">How It Works</a>
+          <a className={activeNav === 'how-it-works' ? 'nav-active' : ''} href="#how-it-works" onClick={() => setActiveNav('how-it-works')}>How It Works</a>
           <Link to="/membership">Pricing</Link>
-          <a className={activeNav === 'why-propulse' ? 'nav-active' : ''} href="#why-propulse">About</a>
+          <a className={activeNav === 'why-propulse' ? 'nav-active' : ''} href="#why-propulse" onClick={() => setActiveNav('why-propulse')}>About</a>
           <Link to="/contact">Contact</Link>
         </nav>
         <div className="header-actions">
@@ -137,8 +137,7 @@ function Home() {
       </header>
 
       <main>
-        <span id="home-top" className="home-anchor" aria-hidden="true" />
-        <section className="hero-section home-reveal is-visible">
+        <section id="home-top" className="hero-section home-reveal is-visible">
           <div className="hero-copy">
             <span className="hero-kicker">PREMIUM LEADS FOR CONSTRUCTION &amp; INTERIOR BUSINESSES</span>
             <h1>Verified Leads.<br /><em>Real Projects.</em></h1>
