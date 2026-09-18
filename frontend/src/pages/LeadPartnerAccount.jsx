@@ -104,8 +104,8 @@ export default function LeadPartnerAccount(){
     navigate('/login',{replace:true});
   }
 
-  const verified=account?.is_verified===true;
-  const statusText=loading?'Loading…':!account?'Not configured':verified?'Verified':'Verification pending';
+  const verified=Boolean(account);
+  const statusText=loading?'Loading…':!account?'Not configured':'Active';
 
   return <div className="account-shell">
     <aside className="account-sidebar">
@@ -145,7 +145,7 @@ export default function LeadPartnerAccount(){
         {tab==='payout'&&<section className="account-main-grid">
           <div className="account-left-column">
             <article className="account-card current-card">
-              <div className="account-card-head"><div><span className="account-kicker">CURRENT PAYOUT CONFIGURATION</span><h2>Current payout account</h2></div><span className={account?(verified?'account-status verified':'account-status pending'):'account-status idle'}>● {statusText}</span></div>
+              <div className="account-card-head"><div><span className="account-kicker">CURRENT PAYOUT CONFIGURATION</span><h2>Current payout account</h2></div><span className={account?(verified?'account-status verified':'account-status active'):'account-status idle'}>● {statusText}</span></div>
               {loading?<div className="account-loading">Loading payout configuration…</div>:account?
                 <div className="account-current-box">
                   <div className="account-bank-symbol">{account.method==='upi'?'@':'▥'}</div>
@@ -168,7 +168,7 @@ export default function LeadPartnerAccount(){
           </div>
 
           <aside className="account-right-column">
-            <article className="account-side-card verification-card"><div className="verification-icon">{verified?'✓':'!'}</div><h3>{verified?'Account Verified':account?'Verification Pending':'Add Your Payout Account'}</h3><p>{verified?'Your payout details have been verified for eligible payouts.':account?'Your payout details are saved. Admin verification is still pending.':'Add a valid bank account or UPI ID to enable withdrawals.'}</p>{account&&<small>{verified?'Verified account':'Awaiting verification'}</small>}</article>
+            <article className="account-side-card verification-card"><div className="verification-icon">{account?'✓':'+'}</div><h3>{account?'Payout Account Active':'Add Your Payout Account'}</h3><p>{account?'Your saved bank account or UPI destination is ready to receive approved withdrawals.':'Add a valid bank account or UPI ID to enable withdrawals.'}</p>{account&&<small>Ready for payouts</small>}</article>
             <article className="account-side-card"><h3><span>ⓘ</span> Important Information</h3><ul><li>Use a valid bank account or UPI ID.</li><li>Make sure the account belongs to you.</li><li>Saving a new destination replaces the active one.</li><li>Only eligible partner earnings can be withdrawn.</li><li>Pending withdrawals remain reserved until processed or rejected.</li></ul></article>
             <article className="account-support-card"><div><span>◉</span><div><small>NEED HELP?</small><strong>Questions about payouts?</strong><p>Use your withdrawal ID when contacting your ProPulse administrator.</p></div></div><Link to="/lead-partner/withdrawals">Go to Withdrawals →</Link></article>
           </aside>
