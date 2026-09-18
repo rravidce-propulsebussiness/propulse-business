@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { useEffect, useMemo, useState } from 'react'
-import { getUser, getToken } from '../utils/auth'
+import { getUser, getToken, publicRequest } from '../utils/auth'
 import { listLeads } from '../api/leads'
 import './Home.css'
 
@@ -43,6 +43,15 @@ function Home() {
   const [leads, setLeads] = useState([])
   const [leadTotal, setLeadTotal] = useState(0)
   const [loadingLeads, setLoadingLeads] = useState(true)
+  const [media, setMedia] = useState({ hero_image_url: '', category_images: {} })
+
+  useEffect(() => {
+    let live = true
+    publicRequest('/homepage-media').then(data => {
+      if (live) setMedia({ hero_image_url: data?.hero_image_url || '', category_images: data?.category_images || {} })
+    }).catch(() => {})
+    return () => { live = false }
+  }, [])
 
   useEffect(() => {
     let live = true
@@ -130,7 +139,7 @@ function Home() {
         <section className="category-strip" aria-label="Lead categories">
           {categories.map(category => (
             <Link className="category-card" to={`/leads?search=${encodeURIComponent(category.query)}`} key={category.name}>
-              <div className={`category-art art-${category.query.replaceAll(' ', '-')}`}><span>{category.icon}</span></div>
+              <div className={`category-art art-${category.query.replaceAll(' ', '-')}`}><img src={media.category_images?.[category.query.replaceAll(' ', '-').replace('plot-land','plot_land')] || `/homepage/default-${category.query.replaceAll(' ', '-')}.svg`} alt="" /><span>{category.icon}</span></div>
               <div className="category-copy"><strong>{category.name}</strong><small>{category.text}</small></div>
               <b>→</b>
             </Link>
