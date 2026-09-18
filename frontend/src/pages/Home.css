@@ -8,13 +8,13 @@ html.home-scroll{scroll-behavior:smooth}
 .home-page{scroll-behavior:smooth}
 .home-anchor{position:absolute;top:0;left:0;width:1px;height:1px}
 #how-it-works,#why-propulse,#faq{scroll-margin-top:92px}
-.home-reveal{opacity:0;transform:translateY(22px);transition:opacity .7s ease,transform .7s cubic-bezier(.2,.7,.2,1)}
-.home-reveal.is-visible{opacity:1;transform:none}
+.home-reveal{opacity:1;transform:none;animation:homeSectionIn .7s cubic-bezier(.2,.7,.2,1) both;}
+.home-reveal.is-visible{opacity:1;transform:none;}
 .hero-section.home-reveal.is-visible{animation:homeHeroIn .85s ease both}
 .hero-photo{transition:transform .45s ease,box-shadow .45s ease}
 .hero-photo:hover{transform:translateY(-4px);box-shadow:0 34px 78px rgba(0,0,0,.3)}
 .category-card,.step,.lead-card,.testimonial-cards article,.join-card{transition:transform .28s ease,box-shadow .28s ease,border-color .28s ease}
 .category-card:hover,.step:hover{transform:translateY(-4px)}
 .lead-card:hover,.testimonial-cards article:hover,.join-card:hover{transform:translateY(-5px);box-shadow:0 18px 36px rgba(15,39,77,.1)}
-@keyframes homeHeroIn{from{opacity:0;transform:translateY(18px) scale(.985)}to{opacity:1;transform:none}}
-@media(prefers-reduced-motion:reduce){html.home-scroll{scroll-behavior:auto}.home-reveal,.home-reveal.is-visible{opacity:1;transform:none;transition:none}.hero-section.home-reveal.is-visible{animation:none}.hero-photo,.category-card,.step,.lead-card,.testimonial-cards article,.join-card{transition:none}}
+@keyframes homeHeroIn{from{opacity:0;transform:translateY(18px) scale(.985)}to{opacity:1;transform:none}}@keyframes homeSectionIn{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){html.home-scroll{scroll-behavior:auto}.home-reveal,.home-reveal.is-visible{opacity:1;transform:none;animation:none}.hero-section.home-reveal.is-visible{animation:none}.hero-photo,.category-card,.step,.lead-card,.testimonial-cards article,.join-card{transition:none}}
