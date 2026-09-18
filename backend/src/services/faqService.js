@@ -13,7 +13,7 @@ function normalizeInput(body={}){
   const question=String(body.question||'').trim();
   const answer=String(body.answer||'').trim();
   const sortOrder=Number.isFinite(Number(body.sort_order))?Math.trunc(Number(body.sort_order)):0;
-  if(audience!=='lead_partner') {const e=new Error('Only Lead Partner FAQs can be edited here');e.code='INVALID_AUDIENCE';throw e}
+  if(!['lead_partner','website'].includes(audience)) {const e=new Error('Invalid FAQ audience');e.code='INVALID_AUDIENCE';throw e}
   if(!CATEGORIES.includes(category)){const e=new Error('Invalid FAQ category');e.code='INVALID_CATEGORY';throw e}
   if(question.length<4){const e=new Error('FAQ question is required');e.code='INVALID_QUESTION';throw e}
   if(answer.length<2){const e=new Error('FAQ answer is required');e.code='INVALID_ANSWER';throw e}
