@@ -14,6 +14,8 @@ export default function LeadPartnerHome(){
   const [data,setData]=useState(null)
   const [loading,setLoading]=useState(true)
   const [error,setError]=useState('')
+  const [period,setPeriod]=useState('month')
+  const [periodOpen,setPeriodOpen]=useState(false)
 
   useEffect(()=>{
     let mounted=true
@@ -29,7 +31,8 @@ export default function LeadPartnerHome(){
   const chart=data?.charts?.earnings||[]
   const status=data?.charts?.leadStatus||{}
   const recentLeads=data?.recentLeads||[]
-  const recentPayouts=data?.recentPayouts||[]\n  const periodLabels={month:'This Month',last_month:'Last Month',last_3_months:'Last 3 Months',last_6_months:'Last 6 Months',all:'All Time'}
+  const recentPayouts=data?.recentPayouts||[]
+  const periodLabels={month:'This Month',last_month:'Last Month',last_3_months:'Last 3 Months',last_6_months:'Last 6 Months',all:'All Time'}
 
   const chartMax=Math.max(1,...chart.flatMap(x=>[Number(x.earnings||0),Number(x.received||0)]))
   const chartPoints=(key)=>{
