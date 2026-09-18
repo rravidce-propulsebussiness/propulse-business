@@ -145,3 +145,7 @@ vite.config.ts.timestamp-*
 # Runtime-uploaded homepage media
 backend/uploads/homepage/*
 !backend/uploads/homepage/.gitkeep
+
+# Runtime-uploaded service pricing media
+backend/uploads/service-pricing/*
+!backend/uploads/service-pricing/.gitkeep
