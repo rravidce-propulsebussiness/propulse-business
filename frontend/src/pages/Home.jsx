@@ -51,7 +51,7 @@ function Home() {
           <a href="#services">Services</a>
           <a href="#why-propulse">Why Propulse</a>
           <a href="#how-it-works">How it works</a>
-          <a href="#faq">FAQ</a>
+          <a href="#faq">FAQ</a><Link to="/contact" className="home-contact-link">Contact</Link>
         </nav>
         <div className="header-actions">
           <Link className="header-leads" to="/leads">See Leads</Link>
@@ -204,7 +204,7 @@ function Home() {
 
       <footer className="public-footer">
         <span>© {new Date().getFullYear()} Propulse Business</span>
-        <div><Link to="/">Home</Link><Link to="/leads">See Leads</Link><Link to="/login">Login</Link><Link to="/signup">Sign up</Link><a href="#faq">FAQ</a></div>
+        <div><Link to="/">Home</Link><Link to="/leads">See Leads</Link><Link to="/login">Login</Link><Link to="/signup">Sign up</Link><a href="#faq">FAQ</a><Link to="/contact" className="home-contact-link">Contact</Link></div>
       </footer>
     </div>
   )
