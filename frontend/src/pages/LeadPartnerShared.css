@@ -47,7 +47,7 @@
 }
 #root .lp-brand-mark,#root .pricing-brand-mark,#root .partner-brand-mark,#root .withdrawals-brand-mark,#root .account-brand-mark,#root .reports-brand-mark,#root .faq-brand-mark{
   width:44px!important;height:44px!important;min-width:44px!important;max-width:44px!important;
-  border-radius:11px!important;background:#103a78!important;color:#fff!important;
+  border-radius:11px!important;background:#f45125!important;color:#fff!important;
   display:grid!important;place-items:center!important;font-size:24px!important;line-height:1!important;font-weight:900!important;
 }
 #root .lp-brand>b,#root .pricing-brand>b,#root .partner-brand>b,#root .withdrawals-brand>b,#root .account-brand>b,#root .reports-brand>b,#root .faq-brand>b,
