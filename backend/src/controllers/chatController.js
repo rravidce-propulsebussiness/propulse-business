@@ -40,10 +40,10 @@ async function findFaq(message,audience){
   return null;
 }
 
-async function addMessage(conversationId,user,message,isAutomated=false){
+async function addMessage(conversationId,user,message,isAutomated=false,sender='user'){
   const result=await pool.query(
     "INSERT INTO chat_messages(conversation_id,sender_type,sender_user_id,message,is_automated) VALUES($1,$2,$3,$4,$5) RETURNING id,conversation_id,sender_type,message,is_automated,created_at",
-    [conversationId,senderType(user),user.id,message,isAutomated]
+    [conversationId,sender,user.id,message,isAutomated]
   );
   await pool.query("UPDATE chat_conversations SET last_message_at=CURRENT_TIMESTAMP,updated_at=CURRENT_TIMESTAMP WHERE id=$1",[conversationId]);
   return result.rows[0];
