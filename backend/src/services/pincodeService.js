@@ -43,6 +43,10 @@ async function fetchPostalPincode(pincode) {
       district_name: String(first.District || first.Block || '').trim(),
       office_name: String(first.Name || '').trim(),
       city_name: String(first.District || first.Block || first.Name || '').trim(),
+      // A PIN can serve several post offices. Keep all office names so the
+      // importer can match a Propulse city such as Patancheru even when the
+      // API's first record reports a postal district instead.
+      office_names: offices.map(x => String(x?.Name || '').trim()).filter(Boolean),
       office_count: offices.length,
       source: 'postalpincode-api',
       synced_at: new Date(),
