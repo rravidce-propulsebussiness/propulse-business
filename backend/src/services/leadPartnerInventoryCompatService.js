@@ -5,15 +5,26 @@ const { fetchGoogleSheetCsv } = require('./googleSheetService');
 const clean = v => String(v ?? '').trim();
 const norm = v => clean(v).toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]/g, '');
 
+// Fields that become first-class lead columns. Every other non-empty Google
+// Sheet column is retained in custom_fields so Admin can render it dynamically.
 const canonical = new Set([
-  'id','leadid','lead_id','externalid','external_id','industry','industryname','industrytype','industrycategory','category',
-  'service','servicename','servicetype','servicecategory','subservice','subservicename','state','statename','city','cityname',
-  'pincode','pin','zipcode','postalcode','postal','customername','name','customer','fullname','full_name','firstname','first_name',
-  'customerphone','phone','mobile','whatsapp','whatsappnumber','phonenumber','phone_number','customeremail','email',
-  'requirement','requirements','requirementdetails','givemoredetails','givemoredetailsandrequirement','update',
-  'propertytype','property','interiortype','typeofproperty','budget','source','notes','buyercapacity','buyercapacitylimit','maxbuyers','capacity',
-  'leadtype','exclusive','isexclusive','investor','investorname','investoremail','pricing','leadpricing','leadprice','price',
-  'exclusivedelaydays','exclusivedelayhours','status'
+  'id','leadid','lead_id','externalid','external_id',
+  'industry','industryname','industrytype','industrycategory','category',
+  'service','servicename','servicetype','servicecategory',
+  'subservice','subservicename',
+  'state','statename','city','cityname',
+  'pincode','pincode','pin','zipcode','postalcode','postal',
+  'customername','name','customer','fullname','full_name',
+  'customerphone','phone','mobile','phonenumber','phone_number',
+  'customeremail','email',
+  'requirement','requirements','requirementdetails',
+  'propertytype','property','interiortype',
+  'budget','source','notes',
+  'buyercapacity','buyercapacitylimit','maxbuyers','capacity',
+  'leadtype','exclusive','isexclusive',
+  'investor','investorname','investoremail',
+  'pricing','leadpricing','leadprice','price',
+  'exclusivedelaydays','exclusivedelayhours'
 ]);
 
 function parseCsv(text) {
@@ -73,27 +84,6 @@ function buildCustomFields(raw){
     if(!clean(value))continue;
     if(canonical.has(norm(key)))continue;
     fields[key]=value;
-  }
-  // Preserve common Admin dynamic fields even when their header was normalized to a canonical field.
-  const aliases={
-    'WhatsApp Number':['WhatsApp Number','WhatsApp'],
-    'Status':['STATUS','Status'],
-    'Remarks':['Remarks'],
-    'Contacted By':['CONTACTED BY','Contacted By'],
-    'Next Followup':['NEXT FOLLOWUP','Next Followup'],
-    'How soon do you want to buy?':['How soon do you want to buy?'],
-    'Job Title':['Job title','Job Title'],
-    'Created Time':['Created Time'],
-    'Campaign Name':['Campaign Name'],
-    'Planning Date':['Planning Date'],
-    'Stage Name':['Stage Name'],
-    'No of Floors':['No of Floors'],
-    'FALT SIZE':['FALT SIZE'],
-    'GIVE MORE DETAILS':['GIVE MORE DETAILS']
-  };
-  for(const [label,names] of Object.entries(aliases)){
-    const value=first(raw,names);
-    if(value&&!Object.keys(fields).some(k=>norm(k)===norm(label)))fields[label]=value;
   }
   return fields;
 }
