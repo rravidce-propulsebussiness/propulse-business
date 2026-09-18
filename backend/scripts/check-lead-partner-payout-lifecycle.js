@@ -48,11 +48,14 @@ async function main() {
     assert(industry && service && state && city, 'Base catalog is required');
 
     async function makeEarning(amount) {
+      const testPhone = `9${String(ids.user).padStart(9,'0').slice(-9)}${String(amount).replace(/\\D/g,'').slice(-2)}`.slice(0,10);
+      const testCustomer = `${tag}-customer-${amount}`;
+      const testRequirement = `${tag} requirement ${amount}`;
       const lead = (await c.query(
         `INSERT INTO leads(industry_id,service_id,state_id,city_id,customer_name,customer_phone,requirement,created_by,lead_partner_id,pricing)
-         VALUES($1,$2,$3,$4,$5,'9000000000','Test requirement',$6,$7,'{"shares":[{"shares":1,"normal":100,"pro":100}]}')
+         VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,'{"shares":[{"shares":1,"normal":100,"pro":100}]}')
          RETURNING id`,
-        [industry.id, service.id, state.id, city.id, `${tag}-lead-${amount}-${Date.now()}-${Math.random()}`, ids.user, ids.partner]
+        [industry.id, service.id, state.id, city.id, testCustomer, testPhone, testRequirement, ids.user, ids.partner]
       ).catch(error => { throw new Error(`fixture lead insert failed: ${error.message}`); })).rows[0];
 
       const payment = (await c.query(
