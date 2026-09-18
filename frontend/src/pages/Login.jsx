@@ -121,7 +121,7 @@ function Login() {
 
             <div className="auth-options">
               <label className="check"><input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} /> Remember me</label>
-              <div className="auth-secondary-links"><Link className="text-button" to="/#pricing">View Pricing</Link><Link className="text-button" to="/forgot-password">Forgot password?</Link></div>
+              <div className="auth-secondary-links"><Link className="text-button" to="/forgot-password">Forgot password?</Link></div>
             </div>
 
             <button className="auth-submit login-premium-submit" disabled={loading || googleLoading}>
