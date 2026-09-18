@@ -53,6 +53,8 @@ function Home() {
   const [activeNav, setActiveNav] = useState('home')
   const [servicePricing, setServicePricing] = useState(pricingFallback)
   const [contactData, setContactData] = useState({})
+  const [homepageFaqs, setHomepageFaqs] = useState([])
+  const [openFaq, setOpenFaq] = useState(null)
 
   useEffect(() => {
     let live = true
@@ -76,6 +78,16 @@ function Home() {
     let live = true
     publicRequest('/contact?audience=website').then(data => {
       if (live) setContactData(data || {})
+    }).catch(() => {})
+    return () => { live = false }
+  }, [])
+
+  useEffect(() => {
+    let live = true
+    publicRequest('/faqs?audience=website').then(data => {
+      if (!live) return
+      const items = Array.isArray(data) ? data.filter(item => item?.is_active !== false) : []
+      if (items.length) setHomepageFaqs(items)
     }).catch(() => {})
     return () => { live = false }
   }, [])
@@ -397,6 +409,28 @@ function Home() {
         </section>
       </main>
 
+      <section className="faq-section home-reveal premium-home-faq" id="faq">
+        <div className="section-heading centered"><span className="section-kicker">FAQ</span><h2>Questions, clearly answered.</h2><p>Everything you need to understand Propulse, its services and the lead marketplace before you get started.</p></div>
+        <div className="faq-home-layout">
+          <div className="faq-list">
+            {(homepageFaqs.length ? homepageFaqs : faqs.map(([question, answer], index) => ({ id: `fallback-${index}`, question, answer }))).map(item => (
+              <article className={openFaq === item.id ? 'faq-home-item open' : 'faq-home-item'} key={item.id}>
+                <button type="button" onClick={() => setOpenFaq(openFaq === item.id ? null : item.id)}>
+                  <span>{item.question}</span><b>{openFaq === item.id ? '−' : '+'}</b>
+                </button>
+                {openFaq === item.id && <div className="faq-home-answer"><p>{item.answer}</p></div>}
+              </article>
+            ))}
+          </div>
+          <aside className="faq-home-aside">
+            <span className="section-kicker">NEED MORE HELP?</span>
+            <h3>Talk to Propulse.</h3>
+            <p>Have a technology, digital marketing, lead or business-support requirement? Start a conversation with the team.</p>
+            <a href="#contact" onClick={event => scrollToSection(event, 'contact')}>Contact Propulse <span>→</span></a>
+          </aside>
+        </div>
+      </section>
+
       <footer className="public-footer">
         <div className="footer-brand"><Link to="/"><img src="/brand/propulse-logo.png" alt="Propulse" /></Link><p>Quality Leads. Real Growth.</p></div>
         <div><strong>Marketplace</strong><Link to="/leads">Buy Leads</Link><a href="#pricing" onClick={event => scrollToSection(event, 'pricing')}>Pricing</a><Link to="/industries">Industries</Link></div>
@@ -406,12 +440,7 @@ function Home() {
         <div className="footer-bottom"><span>© {new Date().getFullYear()} Propulse Business. All rights reserved.</span><span>Building businesses. Creating opportunities.</span></div>
       </footer>
 
-      <section className="faq-section home-reveal" id="faq">
-        <div className="section-heading centered"><span className="section-kicker">FAQ</span><h2>Questions, answered.</h2><p>Understand the lead marketplace before you start.</p></div>
-        <div className="faq-list">
-          {faqs.map(([question, answer]) => <details className="faq-item" key={question}><summary>{question}<span>+</span></summary><p>{answer}</p></details>)}
-        </div>
-      </section>
+
     </div>
   )
 }
