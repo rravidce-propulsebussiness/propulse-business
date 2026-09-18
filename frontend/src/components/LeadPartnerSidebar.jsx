@@ -16,6 +16,7 @@ export default function LeadPartnerSidebar({user,onSignOut}){
       <Link className={is('/lead-partner/pricing')?'active':''} to="/lead-partner/pricing"><span className="lead-partner-nav-icon">₹</span><span>Pricing &amp; Revenue</span></Link>
       <Link className={is('/lead-partner/withdrawals')?'active':''} to="/lead-partner/withdrawals"><span className="lead-partner-nav-icon">⇩</span><span>Earnings &amp; Withdrawals</span></Link>
       <Link className={is('/lead-partner/reports')?'active':''} to="/lead-partner/reports"><span className="lead-partner-nav-icon">▥</span><span>Reports</span></Link>
+      <Link className={location.pathname==='/contact' && new URLSearchParams(location.search).get('audience')==='lead_partners'?'active':''} to="/contact?audience=lead_partners"><span className="lead-partner-nav-icon">☎</span><span>Contact</span></Link>
       <Link className={is('/lead-partner/faqs')?'active':''} to="/lead-partner/faqs"><span className="lead-partner-nav-icon">?</span><span>FAQs</span></Link>
       <Link className={is('/lead-partner/account')?'active':''} to="/lead-partner/account"><span className="lead-partner-nav-icon">◎</span><span>Account</span></Link>
     </nav>
