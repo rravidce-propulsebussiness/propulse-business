@@ -172,10 +172,15 @@ export default function LeadPartnerAccount(){
           </aside>
         </section>}
 
+
         {tab==='transactions'&&<section className="account-transaction-panel account-card">
           <div className="account-card-head history-head">
-            <div><span className="account-kicker">FINANCIAL ACTIVITY</span><h2>Transaction History</h2><p>Real earnings and withdrawal transactions from your Lead Partner ledger.</p></div>
+            <div><span className="account-kicker">FINANCIAL ACTIVITY</span><h2>Transaction History</h2><p>Real earnings and withdrawal activity from your Lead Partner ledger.</p></div>
             <button type="button" className="account-refresh" onClick={loadTransactions} disabled={transactionsLoading}>{transactionsLoading?'Refreshing…':'↻ Refresh'}</button>
+          </div>
+          <div className="transaction-balance-grid">
+            <div><span>Current balance</span><strong>{money(transactionsLoading && !transactions.length ? 0 : (transactions.reduce((sum,x)=>x.direction==='credit'?sum+Number(x.amount||0):sum-Number(x.amount||0),0)))}</strong><small>Net activity represented in transaction history</small></div>
+            <div><span>Available to withdraw</span><strong className="green-balance">Loading from ledger</strong><Link to="/lead-partner/withdrawals">View withdrawable balance →</Link></div>
           </div>
           {transactionError&&<div className="account-message error">{transactionError}</div>}
           {transactionsLoading&&!transactions.length?<div className="account-loading">Loading transaction history…</div>:!transactions.length?<div className="account-empty-state"><span>◷</span><div><strong>No transactions yet</strong><small>Your earnings and withdrawal activity will appear here as transactions are created.</small></div></div>:
@@ -183,11 +188,10 @@ export default function LeadPartnerAccount(){
             {transactions.map(tx=><tr key={tx.id}><td>{dateTime(tx.created_at)}</td><td><span className={`account-tx-type ${tx.type}`}>{tx.type==='earning'?'Earning':'Withdrawal'}</span></td><td><b>{tx.description}</b>{tx.lead_id&&<small>Lead #{tx.lead_id}</small>}</td><td><span className={`account-tx-status ${tx.status}`}>{tx.status}</span></td><td><strong className={tx.direction==='credit'?'credit':'debit'}>{tx.direction==='credit'?'+':'−'}{money(tx.amount)}</strong></td><td>{tx.transfer_reference||tx.rejection_reason||'—'}</td></tr>)}
           </tbody></table></div>}
         </section>}
-
         {tab==='settings'&&<section className="account-main-grid">
           <div className="account-left-column">
             <article className="account-card">
-              <div className="account-card-head"><div><span className="account-kicker">ACCOUNT SETTINGS</span><h2>Account information</h2><p>These details come from your authenticated ProPulse account.</p></div></div>
+              <div className="account-card-head"><div><span className="account-kicker">ACCOUNT SETTINGS</span><h2>Account information</h2><p>Your authenticated ProPulse account details.</p></div></div>
               {settingsError&&<div className="account-message error">{settingsError}</div>}
               {settingsLoading?<div className="account-loading">Loading account settings…</div>:<div className="settings-list">
                 <div><span>Full name</span><strong>{me?.name||user?.name||'—'}</strong></div>
@@ -196,18 +200,13 @@ export default function LeadPartnerAccount(){
                 <div><span>Lead Partner status</span><strong>Active</strong></div>
               </div>}
             </article>
-            <article className="account-card settings-actions-card">
-              <div className="account-card-head"><div><span className="account-kicker">MANAGE ACCESS</span><h2>Security & profile</h2><p>Use the existing account profile and authentication flows to manage your access details.</p></div></div>
-              <div className="settings-actions"><Link to="/profile">Business profile →</Link><Link to="/lead-partner/account" onClick={()=>selectTab('payout')}>Payout account →</Link><button type="button" onClick={signOut}>Sign out</button></div>
-            </article>
           </div>
           <aside className="account-right-column">
-            <article className="account-side-card"><div className="verification-icon">✓</div><h3>Authentication active</h3><p>Your current session is authenticated. Password changes continue through the existing account recovery flow.</p><small>Secure session</small></article>
-            <article className="account-side-card"><h3><span>ⓘ</span> Account guidance</h3><ul><li>Keep your email address current.</li><li>Keep payout details up to date.</li><li>Never share your authentication credentials.</li><li>Review transactions after every processed payout.</li></ul></article>
+            <article className="account-side-card"><div className="verification-icon">✓</div><h3>Account active</h3><p>Your Lead Partner account is currently authenticated and active.</p><small>Secure session</small></article>
+            <article className="account-side-card"><h3><span>ⓘ</span> Account guidance</h3><ul><li>Keep your email address current.</li><li>Keep payout details up to date.</li><li>Review transactions after processed payouts.</li><li>Use the withdrawal page for payout activity.</li></ul></article>
             <article className="account-support-card"><div><span>◉</span><div><small>FINANCE</small><strong>Review your withdrawals</strong><p>Open Earnings & Withdrawals to submit or track payout requests.</p></div></div><Link to="/lead-partner/withdrawals">View withdrawals →</Link></article>
           </aside>
-        </section>}
-      </div>
+        </section>}      </div>
     </main>
   </div>;
 }
