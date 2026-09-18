@@ -101,6 +101,16 @@ exports.sendMessage=async(req,res)=>{
   }catch(error){console.error('chat sendMessage:',error);res.status(500).json({error:'Unable to send support message'});}
 };
 
+exports.setupTelegramWebhook=async(req,res)=>{
+  try{
+    const base=String(process.env.PUBLIC_APP_URL||'').trim().replace(/\\/$/,'');
+    if(!base) return res.status(400).json({error:'PUBLIC_APP_URL is not configured'});
+    const result=await telegram.setWebhook(base+'/api/telegram/webhook');
+    if(!result.configured) return res.status(503).json({error:'Telegram support is not configured'});
+    return res.json({ok:true,webhook:base+'/api/telegram/webhook'});
+  }catch(error){console.error('setupTelegramWebhook:',error);return res.status(500).json({error:'Unable to configure Telegram webhook'});}
+};
+
 exports.telegramWebhook=async(req,res)=>{
   const secret=String(process.env.TELEGRAM_WEBHOOK_SECRET||'').trim();
   if(secret&&req.headers['x-telegram-bot-api-secret-token']!==secret) return res.status(401).json({error:'Unauthorized'});
