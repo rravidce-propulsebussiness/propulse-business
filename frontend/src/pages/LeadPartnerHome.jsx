@@ -141,6 +141,30 @@ export default function LeadPartnerHome(){
           </article>
         </section>
 
+        <section className="lp-insight-grid">
+          <article className="lp-card lp-quality-card">
+            <div className="lp-card-head"><div><h2>Lead Quality</h2><p>Verified outcomes across your purchased leads</p></div><Link to="/lead-partner/inventory">View inventory</Link></div>
+            <div className="lp-quality-grid">
+              <div><span>Purchased leads</span><strong>{loading?'—':data?.quality?.purchasedLeads??0}</strong></div>
+              <div><span>Verified genuine</span><strong>{loading?'—':data?.quality?.verifiedGenuineReports??0}</strong></div>
+              <div><span>Verified fake</span><strong className="quality-danger">{loading?'—':data?.quality?.verifiedFakeLeads??0}</strong></div>
+              <div><span>Fake rate</span><strong>{loading?'—':Number(data?.quality?.verifiedFakeRatePct||0).toFixed(2)}%</strong></div>
+            </div>
+            <div className="lp-quality-note">Fake rate = verified fake leads ÷ distinct purchased leads, including purchases later refunded after Admin verification.</div>
+          </article>
+          <article className="lp-card lp-health-card">
+            <div className="lp-card-head"><div><h2>Financial Health</h2><p>What your current balance means</p></div><Link to="/lead-partner/withdrawals">Manage funds</Link></div>
+            <div className="lp-health-list">
+              <div><span>Gross sales</span><b>{loading?'—':money(stats.grossSales)}</b></div>
+              <div><span>Partner earnings</span><b>{loading?'—':money(stats.earningsGenerated)}</b></div>
+              <div><span>Already received</span><b>{loading?'—':money(stats.amountReceived)}</b></div>
+              <div><span>Pending payout</span><b>{loading?'—':money(stats.pendingWithdrawals)}</b></div>
+              <div className="highlight"><span>Available now</span><b>{loading?'—':money(stats.availableEarnings)}</b></div>
+              <div className={Number(stats.recoveryOutstanding||0)>0?'warning':''}><span>Recovery outstanding</span><b>{loading?'—':money(stats.recoveryOutstanding)}</b></div>
+            </div>
+          </article>
+        </section>
+
         <section className="lp-bottom-grid">
           <article className="lp-card lp-table-card">
             <div className="lp-card-head"><div><h2>Recent Leads</h2><p>Your latest uploaded leads</p></div><Link to="/lead-partner/inventory">View all</Link></div>
