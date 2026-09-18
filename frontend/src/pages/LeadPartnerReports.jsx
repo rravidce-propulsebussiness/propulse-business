@@ -20,7 +20,17 @@ export default function LeadPartnerReports(){
   async function refresh(){try{setRefreshing(true);await load()}finally{setRefreshing(false)}}
   function signOut(){clearSession();localStorage.removeItem('propulse_session_mode');navigate('/login',{replace:true})}
 
-  const counts=useMemo(()=>({all:Number(reportSummary.total_reports||reports.length),reported_leads:Number(reportSummary.reported_leads||new Set(reports.map(r=>r.lead_id)).size),pending:Number(reportSummary.pending||0),verified_fake:Number(reportSummary.verified_fake||0),verified_genuine:Number(reportSummary.verified_genuine||0),rejected:Number(reportSummary.rejected||0)}),[reportSummary,reports]);
+  const counts=useMemo(()=>{
+    const statusOf=r=>String(r.status||'').trim().toLowerCase();
+    return {
+      all:reports.length,
+      reported_leads:new Set(reports.map(r=>Number(r.lead_id)).filter(Number.isFinite)).size,
+      pending:reports.filter(r=>statusOf(r)==='pending').length,
+      verified_fake:reports.filter(r=>statusOf(r)==='verified_fake').length,
+      verified_genuine:reports.filter(r=>statusOf(r)==='verified_genuine').length,
+      rejected:reports.filter(r=>statusOf(r)==='rejected').length
+    };
+  },[reports]);
   const reasonCounts=useMemo(()=>Object.entries(REASONS).map(([key,label])=>({key,label,count:reports.filter(r=>r.reason===key).length})).filter(x=>x.count>0).sort((a,b)=>b.count-a.count),[reports]);
   const filtered=useMemo(()=>{const q=search.trim().toLowerCase();return reports.filter(r=>{const text=[r.customer_name,r.customer_phone,r.industry_name,r.service_name,r.city_name,r.state_name,r.details,REASONS[r.reason]||r.reason,STATUS[r.status]||r.status].join(' ').toLowerCase();return (filter==='all'||r.status===filter)&&(!q||text.includes(q))})},[reports,filter,search]);
 
