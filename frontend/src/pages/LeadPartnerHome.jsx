@@ -117,7 +117,7 @@ export default function LeadPartnerHome(){
           <div className="lp-balance-card">
             <div className="lp-balance-top"><div><span className="lp-card-overline">AVAILABLE TO WITHDRAW</span><small>Eligible partner earnings</small></div><Link to="/lead-partner/withdrawals">Withdraw →</Link></div>
             <strong>{loading?'—':money(stats.availableEarnings)}</strong>
-            <div className="lp-balance-foot"><span>Partner earnings {loading?'—':money(stats.earningsGenerated)}</span><span>Recovery {loading?'—':money(stats.recoveryOutstanding)}</span></div>
+            <div className="lp-balance-foot"><span>Earnings {loading?'—':money(stats.earningsGenerated)}</span><span>Recovery {loading?'—':money(stats.recoveryOutstanding)}</span></div>
           </div>
           <div className="lp-finance-mini-grid">
             <article><span>Gross sales</span><strong>{loading?'—':money(stats.grossSales)}</strong><small>Paid lead value</small></article>
@@ -174,7 +174,7 @@ export default function LeadPartnerHome(){
             <div className="lp-card-head"><div><span className="lp-card-overline dark">FINANCIAL POSITION</span><h2>Balance breakdown</h2><p>Understand how the current balance is composed.</p></div><Link to="/lead-partner/account">Account →</Link></div>
             <div className="lp-health-list">
               <div><span>Gross sales</span><b>{loading?'—':money(stats.grossSales)}</b></div>
-              <div><span>Partner earnings</span><b>{loading?'—':money(stats.earningsGenerated)}</b></div>
+              <div><span>Earnings</span><b>{loading?'—':money(stats.earningsGenerated)}</b></div>
               <div><span>Already received</span><b>{loading?'—':money(stats.amountReceived)}</b></div>
               <div><span>Pending payout</span><b>{loading?'—':money(stats.pendingWithdrawals)}</b></div>
               <div className="highlight"><span>Available now</span><b>{loading?'—':money(stats.availableEarnings)}</b></div>
