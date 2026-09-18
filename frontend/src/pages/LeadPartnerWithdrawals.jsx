@@ -71,7 +71,7 @@ export default function LeadPartnerWithdrawals() {
   const reserved = Number(funds?.reserved || 0);
   const paid = Number(funds?.paid || 0);
   const recovery = Number(funds?.recovery_outstanding || 0);
-  const totalEarned = available + reserved + paid + recovery;
+  const totalEarned = Number(funds?.total_earned ?? (available + reserved + paid + recovery));
   const totalWithdrawn = paid;
 
   return (
