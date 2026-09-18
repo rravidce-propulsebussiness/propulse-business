@@ -102,7 +102,7 @@ export default function LeadsV2() {
       setLoading(true); setError('')
       try {
         const terms = [category?.replaceAll('-', ' '), search.trim()].filter(Boolean).join(' ')
-        const d = await listLeads({ status: 'available', page, limit: 20, ...(tier !== 'all' ? { leadType: tier } : {}), ...(terms ? { search: terms } : {}) }, token)
+        const d = await listLeads({ status: 'available', page, limit: 20, allIndustries: true, allLocations: true, ...(tier !== 'all' ? { leadType: tier } : {}), ...(terms ? { search: terms } : {}) }, token)
         if (live) {
           const items = Array.isArray(d) ? d : (d.items || [])
           const availableItems = items.filter(l => !l.is_purchased && !l.purchased && !l.access?.claimed && !l.access?.purchased)
