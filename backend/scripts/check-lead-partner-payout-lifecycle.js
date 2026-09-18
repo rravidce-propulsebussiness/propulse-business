@@ -14,7 +14,7 @@ async function q(sql, params = []) {
 
 async function main() {
   const c = await pool.connect();
-  const timeout = setTimeout(() => { throw new Error('Payout lifecycle test timed out after 60 seconds. Check database connectivity/locks.'); }, 60000);
+  const timeout = setTimeout(() => { console.error('Payout lifecycle test timed out after 60 seconds. Check database connectivity/locks.'); process.exitCode = 1; process.exit(); }, 60000);
   try {
     await c.query('BEGIN');
 
@@ -23,11 +23,13 @@ async function main() {
        VALUES($1,$2,'test','lead_partner',TRUE) RETURNING id`, ['Payout Test Partner', email]
     )).rows[0];
     ids.user = Number(user.id);
+    console.log('fixture: partner user created');
 
     const partner = (await c.query(
       `INSERT INTO lead_partners(user_id,status) VALUES($1,'active') RETURNING id`, [ids.user]
     )).rows[0];
     ids.partner = Number(partner.id);
+    console.log('fixture: partner created');
 
     const admin = (await c.query(
       `INSERT INTO users(name,email,password_hash,role,is_active)
@@ -35,6 +37,7 @@ async function main() {
       ['Payout Test Admin', `${tag}-admin@example.test`]
     )).rows[0];
     ids.admin = Number(admin.id);
+    console.log('fixture: admin created');
 
     const industry = (await c.query('SELECT id FROM industries ORDER BY id LIMIT 1')).rows[0];
     const service = (await c.query('SELECT id FROM services ORDER BY id LIMIT 1')).rows[0];
@@ -83,8 +86,10 @@ async function main() {
     );
 
     await c.query('COMMIT');
+    console.log('fixture: committed');
 
     // Concurrent requests must not reserve the same earnings.
+    console.log('test: concurrent withdrawals');
     const concurrent = await Promise.allSettled([
       payoutService.requestWithdrawal({userId:ids.user,amount:665,notes:'concurrency A'}),
       payoutService.requestWithdrawal({userId:ids.user,amount:665,notes:'concurrency B'})
@@ -106,6 +111,7 @@ async function main() {
     assert.strictEqual(Number(reserved.total), 665, 'Pending payout must reserve exactly its request amount');
 
     // Rejection must release the reservation.
+    console.log('test: reject payout');
     await payoutService.adminProcess({
       requestId:Number(pending.id), adminId:ids.admin, action:'reject', rejectionReason:'Test rejection'
     });
@@ -115,12 +121,14 @@ async function main() {
     assert.strictEqual(Number(rejectedItems.count), 0, 'Rejected payout cannot retain reservations');
 
     // A new withdrawal can use the released earning.
+    console.log('test: second withdrawal');
     const secondPayout = await payoutService.requestWithdrawal({userId:ids.user,amount:665,notes:'paid lifecycle'});
     const secondAccount = (await q(
       `SELECT payout_account_snapshot FROM lead_partner_payout_requests WHERE id=$1`, [secondPayout.id]
     ))[0];
     assert.strictEqual(secondAccount.payout_account_snapshot.upi_id, `${tag}@upi`, 'Second payout snapshot must be stored');
 
+    console.log('test: pay payout');
     await payoutService.adminProcess({
       requestId:Number(secondPayout.id), adminId:ids.admin, action:'paid',
       transferReference:`${tag}-UTR-1`, proofUrl:proof
