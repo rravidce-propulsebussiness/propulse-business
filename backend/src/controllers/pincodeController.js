@@ -1,4 +1,5 @@
 const pincodeService = require('../services/pincodeService');
+const detectionService = require('../services/pincodeDetectionService');
 
 async function search(req, res) {
   try {
@@ -37,4 +38,35 @@ async function getOne(req, res) {
   }
 }
 
-module.exports = { search, resolve, getOne };
+async function detect(req, res) {
+  try {
+    const result = await detectionService.detectPincode(req.body?.pincode || req.params?.pincode, {
+      forceRefresh: req.body?.forceRefresh === true,
+    });
+    return res.json(result);
+  } catch (error) {
+    const bad = ['INVALID_PINCODE', 'PIN_NOT_FOUND', 'PIN_LOOKUP_TIMEOUT'];
+    return res.status(bad.includes(error.code) ? 400 : 502).json({ error: error.message || 'Failed to detect PIN', code: error.code });
+  }
+}
+
+async function listUnmapped(req, res) {
+  try {
+    return res.json(await detectionService.listUnmappedPins({ limit: req.query.limit }));
+  } catch (error) {
+    console.error('List unmapped PINs failed:', error.message);
+    return res.status(500).json({ error: 'Failed to fetch unmapped PINs' });
+  }
+}
+
+async function mapToCity(req, res) {
+  try {
+    const result = await detectionService.mapPinToCity(req.params.pincode, req.body?.cityId, 'manual');
+    return res.json(result);
+  } catch (error) {
+    const bad = ['INVALID_PINCODE', 'INVALID_CITY', 'PIN_NOT_DETECTED', 'CITY_NOT_FOUND', 'CITY_STATE_MISMATCH'];
+    return res.status(bad.includes(error.code) ? 400 : 500).json({ error: error.message || 'Failed to map PIN', code: error.code });
+  }
+}
+
+module.exports = { search, resolve, getOne, detect, listUnmapped, mapToCity };
