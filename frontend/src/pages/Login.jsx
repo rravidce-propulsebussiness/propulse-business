@@ -2,9 +2,7 @@ import { useCallback, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { authRequest, saveSession } from '../utils/auth'
 import GoogleButton from '../components/GoogleButton'
-import './Auth.css'
-import './AuthExtras.css'
-import './LoginPremium.css'
+import './Login.css'
 
 function Login() {
   const navigate = useNavigate()
@@ -68,7 +66,7 @@ function Login() {
         <div className="login-premium-glow"/>
         <div className="login-premium-visual-content">
           <span className="login-premium-kicker">WELCOME TO PROPULSE</span>
-          <h1>Business growth<br /><em>starts here.</em></h1>
+          <h1>Technology built around<br /><em>business growth.</em></h1>
           <p><strong>Propulse Business Technologies Private Limited</strong> helps businesses build, digitize, operate and scale through practical technology, digital growth and business solutions.</p>
           <div className="login-premium-features">
             <div><b>01</b><span><strong>Technology</strong><small>Websites, apps, software and automation.</small></span></div>
@@ -93,10 +91,10 @@ function Login() {
 
           <div className="account-type-grid" role="radiogroup" aria-label="Account type">
             <button type="button" className={`account-type-card ${accountType === 'business' ? 'selected' : ''}`} onClick={() => setAccountType('business')} aria-pressed={accountType === 'business'} disabled={loading || googleLoading}>
-              <strong>User</strong><span>For businesses that find and buy leads.</span>
+              <span className="account-icon" aria-hidden="true">♙</span><span className="account-copy"><strong>User</strong><small>Buy leads &amp; grow your business</small></span>
             </button>
             <button type="button" className={`account-type-card ${accountType === 'lead_partner' ? 'selected' : ''}`} onClick={() => setAccountType('lead_partner')} aria-pressed={accountType === 'lead_partner'} disabled={loading || googleLoading}>
-              <strong>Lead Partner</strong><span>For partners who submit lead opportunities.</span>
+              <span className="account-icon" aria-hidden="true">♙♙</span><span className="account-copy"><strong>Lead Partner</strong><small>Submit &amp; manage leads</small></span>
             </button>
           </div>
           <div className="signup-role-note">Choose how you use Propulse. Google sign-in uses the selected account type for new accounts.</div>
@@ -131,6 +129,7 @@ function Login() {
 
           <div className="auth-divider"><span /> <b>NEW TO PRO PULSE?</b> <span /></div>
           <Link className="auth-outline" to="/signup">Create an account <span>→</span></Link>
+          <p className="login-legal-note">By continuing, you agree to use Propulse for business-related technology, growth and lead services.</p>
         </div>
       </main>
     </div>
