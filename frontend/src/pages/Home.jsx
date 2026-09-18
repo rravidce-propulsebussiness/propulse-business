@@ -263,10 +263,7 @@ function Home() {
             ))}
           </div>
 
-          <div className="pricing-home-footer">
-            <span>Pricing, features, images and service descriptions are managed from Admin.</span>
-            <Link to="/pricing">View full service details →</Link>
-          </div>
+          <div className="pricing-home-footer"><span>Pricing, features, images and service descriptions are managed from Admin.</span><span>Choose a service and contact Propulse to get started.</span></div>
         </section>
 
         <section className="benefit-band">
