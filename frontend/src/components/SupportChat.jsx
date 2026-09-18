@@ -5,7 +5,7 @@ import './SupportChat.css'
 export default function SupportChat(){
   const [open,setOpen]=useState(false),[messages,setMessages]=useState([]),[text,setText]=useState(''),[loading,setLoading]=useState(false)
   const endRef=useRef(null)
-  useEffect(()=>{if(!getToken())return;authRequest('/chat/conversation').then(x=>setMessages(x.messages||[])).catch(()=>{})},[])
+  useEffect(()=>{if(!getToken())return;let active=true;const load=()=>authRequest('/chat/conversation').then(x=>{if(active)setMessages(x.messages||[])}).catch(()=>{});load();const timer=setInterval(()=>{if(open)load()},5000);return()=>{active=false;clearInterval(timer)}},[open])
   useEffect(()=>{endRef.current?.scrollIntoView({behavior:'smooth'})},[messages,open])
   if(!getToken())return null
   async function send(){
