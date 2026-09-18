@@ -44,6 +44,7 @@ function Home() {
   const [leadTotal, setLeadTotal] = useState(0)
   const [loadingLeads, setLoadingLeads] = useState(true)
   const [media, setMedia] = useState({ hero_image_url: '', category_images: {} })
+  const [activeNav, setActiveNav] = useState('home')
 
   useEffect(() => {
     let live = true
@@ -51,6 +52,40 @@ function Home() {
       if (live) setMedia({ hero_image_url: data?.hero_image_url || '', category_images: data?.category_images || {} })
     }).catch(() => {})
     return () => { live = false }
+  }, [])
+
+  useEffect(() => {
+    const sections = [
+      ['home', 'home-top'],
+      ['how-it-works', 'how-it-works'],
+      ['why-propulse', 'why-propulse'],
+      ['faq', 'faq']
+    ]
+    const observed = sections.map(([key, id]) => {
+      const node = document.getElementById(id)
+      return node ? [key, node] : null
+    }).filter(Boolean)
+    if (!observed.length) return undefined
+
+    const observer = new IntersectionObserver(entries => {
+      const visible = entries
+        .filter(entry => entry.isIntersecting)
+        .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0]
+      if (!visible) return
+      const match = observed.find(([, node]) => node === visible.target)
+      if (match) setActiveNav(match[0])
+    }, { rootMargin: '-18% 0px -62% 0px', threshold: [0, 0.15, 0.35, 0.6] })
+
+    observed.forEach(([, node]) => observer.observe(node))
+    return () => observer.disconnect()
+  }, [])
+
+  useEffect(() => {
+    document.documentElement.classList.add('home-scroll')
+    const hash = window.location.hash.replace('#', '')
+    if (hash === 'how-it-works' || hash === 'why-propulse' || hash === 'faq') setActiveNav(hash)
+    else if (!hash) setActiveNav('home')
+    return () => document.documentElement.classList.remove('home-scroll')
   }, [])
 
   useEffect(() => {
@@ -83,11 +118,11 @@ function Home() {
           <img src="/brand/propulse-logo.png" alt="Propulse" />
         </Link>
         <nav className="desktop-nav" aria-label="Main navigation">
-          <Link className="nav-active" to="/">Home</Link>
+          <Link className={activeNav === 'home' ? 'nav-active' : ''} to="/">Home</Link>
           <Link to="/leads">Buy Leads</Link>
-          <a href="#how-it-works">How It Works</a>
+          <a className={activeNav === 'how-it-works' ? 'nav-active' : ''} href="#how-it-works">How It Works</a>
           <Link to="/membership">Pricing</Link>
-          <a href="#why-propulse">About</a>
+          <a className={activeNav === 'why-propulse' ? 'nav-active' : ''} href="#why-propulse">About</a>
           <Link to="/contact">Contact</Link>
         </nav>
         <div className="header-actions">
@@ -102,7 +137,8 @@ function Home() {
       </header>
 
       <main>
-        <section className="hero-section">
+        <span id="home-top" className="home-anchor" aria-hidden="true" />
+        <section className="hero-section home-reveal is-visible">
           <div className="hero-copy">
             <span className="hero-kicker">PREMIUM LEADS FOR CONSTRUCTION &amp; INTERIOR BUSINESSES</span>
             <h1>Verified Leads.<br /><em>Real Projects.</em></h1>
@@ -144,7 +180,7 @@ function Home() {
           ))}
         </section>
 
-        <section className="how-section" id="how-it-works">
+        <section className="how-section home-reveal" id="how-it-works">
           <div className="section-heading">
             <div>
               <span className="section-kicker">HOW PROPULSE WORKS</span>
@@ -167,7 +203,7 @@ function Home() {
           <div><span>♧</span><div><strong>Dedicated Support</strong><small>Help when you need it.</small></div></div>
         </section>
 
-        <section className="live-leads-section" id="live-leads">
+        <section className="live-leads-section home-reveal" id="live-leads">
           <div className="section-heading">
             <div><span className="section-kicker">LIVE MARKETPLACE</span><h2>Find your next project.</h2><p>These opportunities are loaded from the live Propulse lead marketplace.</p></div>
             <Link className="outline-link" to="/leads">View All Leads <span>→</span></Link>
@@ -200,7 +236,7 @@ function Home() {
           )}
         </section>
 
-        <section className="why-section" id="why-propulse">
+        <section className="why-section home-reveal" id="why-propulse">
           <div className="why-copy">
             <span className="section-kicker">WHY PROPULSE</span>
             <h2>Less searching.<br /><em>More opportunity.</em></h2>
@@ -215,7 +251,7 @@ function Home() {
           </div>
         </section>
 
-        <section className="testimonial-section">
+        <section className="testimonial-section home-reveal">
           <div className="testimonial-intro"><span className="section-kicker">BUILT FOR BUSINESSES</span><h2>One marketplace for new project opportunities.</h2><p>Use Propulse to discover demand without building your own lead-search workflow from scratch.</p><Link to="/contact">Talk to our team <span>→</span></Link></div>
           <div className="testimonial-cards">
             <article><b>“</b><p>Find opportunities by service and location, review the requirement and decide whether to purchase access.</p><strong>Marketplace workflow</strong><small>Search → Review → Buy</small></article>
@@ -224,7 +260,7 @@ function Home() {
           </div>
         </section>
 
-        <section className="final-cta">
+        <section className="final-cta home-reveal">
           <div><span className="section-kicker">READY TO FIND YOUR NEXT PROJECT?</span><h2>Start exploring verified leads.</h2><p>Browse the live marketplace and find opportunities relevant to your business.</p></div>
           <div><Link className="final-primary" to="/leads">View Leads <span>→</span></Link><Link className="final-secondary" to="/membership">View Pricing</Link></div>
         </section>
@@ -233,13 +269,13 @@ function Home() {
       <footer className="public-footer">
         <div className="footer-brand"><Link to="/"><img src="/brand/propulse-logo.png" alt="Propulse" /></Link><p>Quality Leads. Real Growth.</p></div>
         <div><strong>Marketplace</strong><Link to="/leads">Buy Leads</Link><Link to="/membership">Pricing</Link><Link to="/industries">Industries</Link></div>
-        <div><strong>Support</strong><Link to="/contact">Contact</Link><Link to="/contact">Help &amp; Support</Link><a href="#how-it-works">How It Works</a><a href="#faq">FAQs</a></div>
+        <div><strong>Support</strong><Link to="/contact">Contact</Link><Link to="/contact">Help &amp; Support</Link><a href="#how-it-works">How It Works</a><a className={activeNav === 'faq' ? 'nav-active' : ''} href="#faq">FAQs</a></div>
         <div><strong>Account</strong><Link to="/login">Login</Link><Link to="/signup">Create Account</Link><Link to="/profile">My Account</Link></div>
         <div><strong>Follow Us</strong><div className="socials"><span>f</span><span>◎</span><span>in</span><span>▶</span></div><small>Quality leads. Real opportunities.</small></div>
         <div className="footer-bottom"><span>© {new Date().getFullYear()} Propulse Business. All rights reserved.</span><span>Building businesses. Creating opportunities.</span></div>
       </footer>
 
-      <section className="faq-section" id="faq">
+      <section className="faq-section home-reveal" id="faq">
         <div className="section-heading centered"><span className="section-kicker">FAQ</span><h2>Questions, answered.</h2><p>Understand the lead marketplace before you start.</p></div>
         <div className="faq-list">
           {faqs.map(([question, answer]) => <details className="faq-item" key={question}><summary>{question}<span>+</span></summary><p>{answer}</p></details>)}
