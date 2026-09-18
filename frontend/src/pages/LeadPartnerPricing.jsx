@@ -132,10 +132,7 @@ export default function LeadPartnerPricing() {
         <header className="pricing-topbar"><div className="pricing-breadcrumb"><span>Lead Partner</span><b>/</b><strong>Pricing & Revenue</strong></div><div className="pricing-top-actions"><span><i /> Partner account</span><b>♧</b></div></header>
 
         <div className="pricing-content">
-          <section className="pricing-hero">
-            <div><span className="pricing-eyebrow">LEAD PARTNER PORTAL · PRICING</span><h1>Pricing & Revenue</h1><p>Configure Pro pricing with fixed 1, 2 and 3-share ratios. Only the 1-share Pro amount is editable.</p><small><i /> Live pricing</small></div>
-            <div className="pricing-help"><span>☼</span><div><strong>Need help?</strong><p>Set the right pricing for your target locations and lead types.</p><a href="#pricing-guide">View guide →</a></div></div>
-          </section>
+          <section className="pricing-hero"><div><h1>Pricing & Revenue</h1></div></section>
 
           {(error || success) && <div className={`pricing-message ${error ? 'error' : 'success'}`}>{error || success}</div>}
 
