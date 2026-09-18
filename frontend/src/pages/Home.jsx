@@ -105,39 +105,43 @@ function Home() {
   }, [])
 
   useEffect(() => {
-    const sections = [
-      ['home', 'home-top'],
-      ['how-it-works', 'how-it-works'],
-      ['pricing', 'pricing'],
-      ['about', 'about'],
-      ['contact', 'contact'],
-      ['upcoming-features', 'upcoming-features'],
-      ['faq', 'faq']
-    ]
-    const observed = sections.map(([key, id]) => {
-      const node = document.getElementById(id)
-      return node ? [key, node] : null
-    }).filter(Boolean)
-    if (!observed.length) return undefined
-
-    const observer = new IntersectionObserver(entries => {
-      const visible = entries
-        .filter(entry => entry.isIntersecting)
-        .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0]
-      if (!visible) return
-      const match = observed.find(([, node]) => node === visible.target)
-      if (match) setActiveNav(match[0])
-    }, { rootMargin: '-18% 0px -62% 0px', threshold: [0, 0.15, 0.35, 0.6] })
-
-    observed.forEach(([, node]) => observer.observe(node))
-    return () => observer.disconnect()
+    const sectionIds = ['home-top', 'how-it-works', 'pricing', 'about', 'contact', 'upcoming-features', 'faq']
+    let raf = 0
+    const updateActiveSection = () => {
+      cancelAnimationFrame(raf)
+      raf = requestAnimationFrame(() => {
+        const probe = window.scrollY + 125
+        let current = 'home'
+        sectionIds.forEach(id => {
+          const node = document.getElementById(id)
+          if (!node) return
+          if (node.offsetTop <= probe) {
+            current = id === 'home-top' ? 'home' : id
+          }
+        })
+        setActiveNav(current)
+      })
+    }
+    updateActiveSection()
+    window.addEventListener('scroll', updateActiveSection, { passive: true })
+    window.addEventListener('resize', updateActiveSection)
+    return () => {
+      cancelAnimationFrame(raf)
+      window.removeEventListener('scroll', updateActiveSection)
+      window.removeEventListener('resize', updateActiveSection)
+    }
   }, [])
+
 
   useEffect(() => {
     document.documentElement.classList.add('home-scroll')
     const hash = window.location.hash.replace('#', '')
-    if (hash === 'how-it-works' || hash === 'pricing' || hash === 'about' || hash === 'contact' || hash === 'upcoming-features' || hash === 'faq') setActiveNav(hash)
-    else if (!hash) setActiveNav('home')
+    if (hash === 'how-it-works' || hash === 'pricing' || hash === 'about' || hash === 'contact' || hash === 'upcoming-features' || hash === 'faq') {
+      setActiveNav(hash)
+      requestAnimationFrame(() => document.getElementById(hash)?.scrollIntoView({ behavior: 'auto', block: 'start' }))
+    } else {
+      setActiveNav('home')
+    }
     return () => document.documentElement.classList.remove('home-scroll')
   }, [])
 
@@ -164,7 +168,7 @@ function Home() {
   const scrollToHome = event => {
     event?.preventDefault()
     const home = document.getElementById('home-top')
-    window.history.replaceState({}, '', '/')
+    window.history.replaceState({}, '', window.location.pathname + window.location.search)
     setActiveNav('home')
     if (home) home.scrollIntoView({ behavior: 'smooth', block: 'start' })
     else window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -174,6 +178,7 @@ function Home() {
     event?.preventDefault()
     const target = document.getElementById(id)
     setActiveNav(id)
+    window.history.replaceState({}, '', '#' + id)
     if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
 
@@ -197,7 +202,6 @@ function Home() {
           <a className={activeNav === 'upcoming-features' ? 'nav-active' : ''} href="#upcoming-features" onClick={event => scrollToSection(event, 'upcoming-features')}>Upcoming Features</a>
         </nav>
         <div className="header-actions">
-          <Link className="header-search" to="/leads" aria-label="Search leads">⌕</Link>
           {loggedIn ? (
             <Link className="header-login" to={dashboardPath}>Marketplace</Link>
           ) : (
