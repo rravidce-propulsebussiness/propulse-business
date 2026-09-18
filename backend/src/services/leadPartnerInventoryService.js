@@ -132,16 +132,31 @@ async function resolveLocationFromPincode(pincode, cat, suppliedState, suppliedC
     if (uniqueCities.length > 1) throw new Error(`Pincode ${value} maps to multiple cities; provide a matching City`);
   }
 
-  // Last fallback matches the same live PIN response fields used by Admin.
+  // Last fallback uses every postal office name, not just the API's first
+  // district/city field. A single PIN can cover many offices; for example
+  // 502319 includes Patancheru and several surrounding offices. If one of
+  // those names is an exact Propulse city, use that catalog city.
   if (!city) {
-    const candidates = [pin.city_name, pin.district_name, pin.office_name].filter(Boolean);
+    const postalNames = Array.isArray(pin.office_names) ? pin.office_names : [];
+    const candidates = [...postalNames, pin.city_name, pin.district_name, pin.office_name]
+      .filter(Boolean)
+      .map(x => String(x).trim());
     for (const candidate of candidates) {
-      const matches = cat.cities.filter(x => Number(x.state_id) === Number(state.id) && norm(x.name) === norm(candidate));
-      if (matches.length === 1) { city = matches[0]; break; }
+      const exact = cat.cities.filter(x =>
+        Number(x.state_id) === Number(state.id) && norm(x.name) === norm(candidate)
+      );
+      if (exact.length === 1) { city = exact[0]; break; }
     }
   }
 
-  if (!city) throw new Error(`City for pincode ${value} could not be resolved. Include a valid City from the ${state.name} catalog.`);
+  // A postal district is not necessarily a Propulse city. If the row has no
+  // city and no postal-office name matches the catalog, keep the import
+  // deterministic instead of guessing between multiple cities.
+  if (!city) {
+    throw new Error(
+      `Pincode ${value} is valid, but its postal area is not mapped to a Propulse City yet. Add the City to the location catalog (or include City in the sheet) and sync again.`
+    );
+  }
   if (Number(city.state_id) !== Number(state.id)) throw new Error(`City ${city.name} is outside the resolved state ${state.name}`);
 
   // When a PIN is new to the directory, remember the validated City↔PIN
