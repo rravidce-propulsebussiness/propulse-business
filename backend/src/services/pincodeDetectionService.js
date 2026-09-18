@@ -54,9 +54,9 @@ async function getStoredPin(pincode) {
   )).rows[0] || null;
 }
 
-async function findSafeCityMatch({ stateName, officeNames }) {
+async function findSafeCityMatch({ stateName, districtName, officeNames }) {
   const names = [...new Set((officeNames || []).map(normalizeText).filter(Boolean))];
-  if (!stateName || !names.length) return { status: 'NO_MATCH', candidates: [] };
+  if (!stateName) return { status: 'NO_MATCH', candidates: [] };
 
   const result = await pool.query(
     `SELECT DISTINCT c.id,c.name,c.state_id,s.name AS state_name
@@ -67,16 +67,23 @@ async function findSafeCityMatch({ stateName, officeNames }) {
       WHERE c.is_active=TRUE
         AND s.is_active=TRUE
         AND LOWER(TRIM(s.name))=LOWER(TRIM($1))
-        AND EXISTS (
-          SELECT 1
-            FROM unnest($2::text[]) AS office_name
-           WHERE regexp_replace(LOWER(TRIM(office_name)), '[^a-z0-9]+', '', 'g')
-                 = regexp_replace(LOWER(TRIM(c.name)), '[^a-z0-9]+', '', 'g')
-              OR regexp_replace(LOWER(TRIM(office_name)), '[^a-z0-9]+', '', 'g')
-                 = regexp_replace(LOWER(TRIM(COALESCE(sc.name,''))), '[^a-z0-9]+', '', 'g')
+        AND (
+          EXISTS (
+            SELECT 1
+              FROM unnest($2::text[]) AS office_name
+             WHERE regexp_replace(LOWER(TRIM(office_name)), '[^a-z0-9]+', '', 'g')
+                   = regexp_replace(LOWER(TRIM(c.name)), '[^a-z0-9]+', '', 'g')
+                OR regexp_replace(LOWER(TRIM(office_name)), '[^a-z0-9]+', '', 'g')
+                   = regexp_replace(LOWER(TRIM(COALESCE(sc.name,''))), '[^a-z0-9]+', '', 'g')
+          )
+          OR (
+            NULLIF(regexp_replace(LOWER(TRIM($3)), '[^a-z0-9]+', '', 'g'),'') IS NOT NULL
+            AND regexp_replace(LOWER(TRIM($3)), '[^a-z0-9]+', '', 'g')
+                = regexp_replace(LOWER(TRIM(c.name)), '[^a-z0-9]+', '', 'g')
+          )
         )
       ORDER BY c.id`,
-    [stateName, names]
+    [stateName, names, districtName || '']
   );
 
   const unique = [];
@@ -268,6 +275,7 @@ async function detectPincode(pincode, { forceRefresh = false } = {}) {
   }
   const match = await findSafeCityMatch({
     stateName: directory.state_name,
+    districtName: directory.district_name,
     officeNames,
   });
 
