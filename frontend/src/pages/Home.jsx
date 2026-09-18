@@ -180,6 +180,7 @@ function Home() {
           <a className={activeNav === 'pricing' ? 'nav-active' : ''} href="#pricing" onClick={event => scrollToSection(event, 'pricing')}>Pricing</a>
           <a className={activeNav === 'about' ? 'nav-active' : ''} href="#about" onClick={event => scrollToSection(event, 'about')}>About</a>
           <a className={activeNav === 'contact' ? 'nav-active' : ''} href="#contact" onClick={event => scrollToSection(event, 'contact')}>Contact</a>
+          <a className={activeNav === 'faq' ? 'nav-active' : ''} href="#faq" onClick={event => scrollToSection(event, 'faq')}>FAQ</a>
         </nav>
         <div className="header-actions">
           <Link className="header-search" to="/leads" aria-label="Search leads">⌕</Link>
