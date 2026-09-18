@@ -233,10 +233,10 @@ async function getDashboard(userId, period='month') {
   const periodCondition=(column)=>periodKey==='all'?'TRUE':`${column} >= ${periodStartSql}`;
   const [summaryResult, recentResult, profileResult, partnerResult] = await Promise.all([
     pool.query(`SELECT
-      COUNT(*)::int AS total_leads,
-      COUNT(*) FILTER (WHERE status IN ('available','paused'))::int AS active_leads,
+      COUNT(DISTINCT l.id)::int AS total_leads,
+      COUNT(DISTINCT l.id) FILTER (WHERE l.status IN ('available','paused'))::int AS active_leads,
       COUNT(DISTINCT p.lead_id) FILTER (WHERE p.status='paid' AND ${periodCondition('p.created_at')})::int AS sold_leads,
-      COUNT(*) FILTER (WHERE status='closed')::int AS closed_leads,
+      COUNT(DISTINCT l.id) FILTER (WHERE l.status='closed')::int AS closed_leads,
       COUNT(DISTINCT p.lead_id) FILTER (WHERE p.status='refunded' AND ${periodCondition('p.updated_at')})::int AS refunded_leads,
       COUNT(DISTINCT r.lead_id) FILTER (WHERE r.status='verified_fake' AND ${periodCondition('r.reviewed_at')})::int AS verified_fake_leads,
       COUNT(DISTINCT c.lead_id) FILTER (WHERE c.expires_at IS NOT NULL AND c.expires_at < CURRENT_TIMESTAMP AND ${periodCondition('c.expires_at')})::int AS expired_access_leads
