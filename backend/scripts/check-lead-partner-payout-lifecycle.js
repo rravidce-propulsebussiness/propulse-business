@@ -55,9 +55,9 @@ async function main() {
       )).rows[0];
 
       const purchase = (await c.query(
-        `INSERT INTO lead_purchases(lead_id,user_id,shares,amount,pricing_tier,status,payment_id)
+        `INSERT INTO lead_purchases(lead_id,user_id,shares,amount,pricing_tier,status)
          VALUES($1,$2,1,$3,'normal','paid',$4) RETURNING id`,
-        [lead.id, ids.user, amount, payment.id]
+        [lead.id, ids.user, amount]
       )).rows[0];
 
       const earning = (await c.query(
