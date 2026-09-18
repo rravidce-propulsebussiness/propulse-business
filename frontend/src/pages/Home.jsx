@@ -253,7 +253,7 @@ function Home() {
                   <p>{item.description}</p>
                   <div className="pricing-home-price"><b>{item.price_label}</b><span>{item.billing_note}</span></div>
                   <ul>
-                    {(Array.isArray(item.features) ? item.features : []).slice(0, 4).map((feature, featureIndex) => (
+                    {(Array.isArray(item.features) ? item.features : []).slice(0, 5).map((feature, featureIndex) => (
                       <li key={featureIndex}><i>✓</i><span>{feature}</span></li>
                     ))}
                   </ul>
