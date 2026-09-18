@@ -68,14 +68,15 @@ async function getTransactions(userId){
     const diff=new Date(a.created_at)-new Date(z.created_at);
     return diff || String(a.id).localeCompare(String(z.id));
   });
-  const netImpact=money(chronological.reduce((sum,tx)=>sum+Number(tx.impact||0),0));
-  const openingBalance=money(Math.max(0,b.available-netImpact));
-  let running=openingBalance;
+
+  // Transaction-history balance intentionally starts at zero and preserves
+  // negative values. This is the net movement represented by the transactions
+  // currently shown and must not be back-solved from the available ledger balance.
+  let running=0;
   for(const tx of chronological){
-    running=money(Math.max(0,running+Number(tx.impact||0)));
+    running=money(running+Number(tx.impact||0));
     tx.balance_after=running;
   }
-  const transactions=[...chronological].reverse();
 
   return {
     available:b.available,
@@ -83,10 +84,10 @@ async function getTransactions(userId){
     paid:b.paid,
     total_earned:b.totalEarned,
     recovery_outstanding:b.recoveryOutstanding,
-    opening_balance:openingBalance,
+    transaction_net:money(running),
     total_additions:money(earnings.reduce((sum,x)=>sum+Number(x.amount||0),0)),
     total_deductions:money(payouts.filter(x=>x.direction==='debit').reduce((sum,x)=>sum+Number(x.amount||0),0)),
-    transactions
+    transactions:[...chronological].reverse()
   };
 }
 module.exports={getFunds,getTransactions,requestWithdrawal,adminList,adminProcess};
