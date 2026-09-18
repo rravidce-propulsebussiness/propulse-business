@@ -80,7 +80,7 @@ async function removeImage(id){
   const current=await get(id); if(!current)return null;
   const result=await pool.query("UPDATE service_pricing SET image_url='' , updated_at=CURRENT_TIMESTAMP WHERE id=$1 RETURNING *",[id]);
   if(current.image_url&&current.image_url.startsWith('/uploads/service-pricing/')){
-    const oldPath=path.resolve(__dirname,'../..',current.image_url.replace(/^\\//,''));
+    const oldPath=path.resolve(__dirname,'../..',current.image_url.replace(/^\//,''));
     await fs.promises.unlink(oldPath).catch(()=>{});
   }
   return result.rows[0]||null;
