@@ -254,7 +254,7 @@ async function listInventory({ userId, status = 'all', search = '' }) {
       `SELECT l.id,l.customer_name,l.customer_phone,l.customer_email,l.requirement,l.status,l.lead_type,l.buyer_capacity,l.is_exclusive,l.pincode,l.created_at,
               i.name AS industry_name,s.name AS service_name,ss.name AS subservice_name,st.name AS state_name,c.name AS city_name
          FROM leads l
-         JOIN lead_partners lp ON lp.id=l.lead_partner_id
+         LEFT JOIN lead_partners lp ON lp.id=l.lead_partner_id
          JOIN industries i ON i.id=l.industry_id
          LEFT JOIN services s ON s.id=l.service_id
          LEFT JOIN subservices ss ON ss.id=l.subservice_id
