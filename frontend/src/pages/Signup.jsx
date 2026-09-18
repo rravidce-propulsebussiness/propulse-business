@@ -129,6 +129,18 @@ function Signup() {
             <div className="auth-benefit"><b>04</b><div><strong>Secure account</strong><span>Keep your account protected.</span></div></div>
           </div>
           <div className="auth-trust-card"><span className="quote-mark">“</span><strong>Technology built around business growth.</strong><small>— Propulse Business Technologies</small></div>
+          <div className="auth-architecture" aria-hidden="true">
+            <div className="architecture-glow" />
+            <div className="architecture-building">
+              <span className="building-roof" />
+              <span className="building-floor floor-one"><i /><i /><i /></span>
+              <span className="building-floor floor-two"><i /><i /><i /></span>
+              <span className="building-floor floor-three"><i /><i /><i /></span>
+              <span className="building-base" />
+            </div>
+            <div className="architecture-orbit orbit-a" />
+            <div className="architecture-orbit orbit-b" />
+          </div>
           <div className="auth-visual-footer"><span>CONNECT</span><i /><span>GROW</span><i /><span>BUILD</span><i /><span>SUCCEED</span></div>
         </div>
       </section>
