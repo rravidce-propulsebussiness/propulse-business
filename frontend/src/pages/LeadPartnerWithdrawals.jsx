@@ -1,4 +1,4 @@
-import { useEffect,useMemo,useState } from 'react';
+import { useCallback, useEffect,useMemo,useState } from 'react';
 import { Link,useLocation,useNavigate } from 'react-router-dom';
 import { authRequest,clearSession,getUser } from '../utils/auth';
 import './LeadPartnerHome.css';
@@ -11,12 +11,12 @@ export default function LeadPartnerWithdrawals(){
  const [funds,setFunds]=useState(null),[amount,setAmount]=useState(''),[notes,setNotes]=useState(''),[loading,setLoading]=useState(true),[saving,setSaving]=useState(false),[error,setError]=useState(''),[message,setMessage]=useState(''),[proof,setProof]=useState(null);
  const initials=useMemo(()=>(user?.name||'Lead Partner').split(' ').filter(Boolean).slice(0,2).map(x=>x[0]).join('').toUpperCase()||'LP',[user?.name]);
 
- async function load(){
+ const load=useCallback(async()=>{
    try{setLoading(true);setError('');setFunds(await authRequest('/lead-partner/funds'))}
    catch(e){setError(e.message||'Unable to load earnings and withdrawals')}
    finally{setLoading(false)}
- }
- useEffect(()=>{load()},[]);
+ },[])
+ useEffect(()=>{load()},[load]);
  async function submit(e){
    e.preventDefault();setError('');setMessage('');setSaving(true);
    try{await authRequest('/lead-partner/withdrawals',{method:'POST',body:JSON.stringify({amount:Number(amount),notes})});setAmount('');setNotes('');setMessage('Withdrawal request submitted for Admin review.');await load()}
