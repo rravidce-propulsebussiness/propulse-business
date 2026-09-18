@@ -31,6 +31,15 @@ async function main(){
   checks.invalidEarningStatuses=await query(
     "SELECT e.id,e.status,e.earning_amount,COALESCE(a.recovery,0) recovery,COALESCE(p.paid_reserved,0) paid_reserved FROM lead_partner_earnings e LEFT JOIN (SELECT earning_id,SUM(amount) recovery FROM lead_partner_earning_adjustment_allocations GROUP BY earning_id) a ON a.earning_id=e.id LEFT JOIN (SELECT earning_id,SUM(amount) paid_reserved FROM lead_partner_payout_items WHERE status IN ('reserved','paid') GROUP BY earning_id) p ON p.earning_id=e.id WHERE (e.status='paid' AND COALESCE(p.paid_reserved,0)+COALESCE(a.recovery,0)<e.earning_amount-0.001) OR (e.status='reversed' AND COALESCE(p.paid_reserved,0)>0)"
   );
+  checks.recoveryPartnerMismatches=await query(
+    "SELECT a.id adjustment_id,a.partner_id adjustment_partner,e.id earning_id,e.partner_id earning_partner FROM lead_partner_earning_adjustments a JOIN lead_partner_earning_adjustment_allocations x ON x.adjustment_id=a.id JOIN lead_partner_earnings e ON e.id=x.earning_id WHERE a.partner_id<>e.partner_id OR a.user_id<>e.user_id"
+  );
+  checks.recoveryOrphans=await query(
+    "SELECT a.id,a.earning_id,a.lead_purchase_id FROM lead_partner_earning_adjustments a LEFT JOIN lead_partner_earnings e ON e.id=a.earning_id WHERE a.type='fake_lead_recovery' AND (a.earning_id IS NULL OR e.id IS NULL OR a.lead_purchase_id IS NULL OR e.lead_purchase_id<>a.lead_purchase_id)"
+  );
+  checks.recoveryAgainstReversedEarnings=await query(
+    "SELECT x.id allocation_id,x.earning_id,e.status FROM lead_partner_earning_adjustment_allocations x JOIN lead_partner_earnings e ON e.id=x.earning_id WHERE e.status='reversed'"
+  );
   checks.invalidRecoveryStates=await query(
     "SELECT a.id,a.amount,a.status,COALESCE(x.allocated,0) allocated FROM lead_partner_earning_adjustments a LEFT JOIN (SELECT adjustment_id,SUM(amount) allocated FROM lead_partner_earning_adjustment_allocations GROUP BY adjustment_id) x ON x.adjustment_id=a.id WHERE (a.status='recovered' AND COALESCE(x.allocated,0)<a.amount-0.001) OR (a.status='outstanding' AND COALESCE(x.allocated,0)>=a.amount-0.001)"
   );
