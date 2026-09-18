@@ -232,7 +232,20 @@ async function getDashboard(userId, period='month') {
   const periodStartSql={month:"date_trunc('month',CURRENT_DATE)",last_month:"date_trunc('month',CURRENT_DATE)-interval '1 month'",last_3_months:"date_trunc('month',CURRENT_DATE)-interval '2 months'",last_6_months:"date_trunc('month',CURRENT_DATE)-interval '5 months'",all:'NULL'}[periodKey];
   const periodCondition=(column)=>periodKey==='all'?'TRUE':`${column} >= ${periodStartSql}`;
   const [summaryResult, recentResult, profileResult, partnerResult] = await Promise.all([
-    pool.query(`SELECT COUNT(*)::int AS total_leads, COUNT(*) FILTER (WHERE status IN ('available','paused'))::int AS active_leads, COUNT(*) FILTER (WHERE status='sold')::int AS sold_leads, COUNT(*) FILTER (WHERE status='closed')::int AS closed_leads FROM leads WHERE lead_partner_id=(SELECT id FROM lead_partners WHERE user_id=$1 LIMIT 1) AND ${periodCondition('created_at')}`, [userId]),
+    pool.query(`SELECT
+      COUNT(*)::int AS total_leads,
+      COUNT(*) FILTER (WHERE status IN ('available','paused'))::int AS active_leads,
+      COUNT(DISTINCT p.lead_id) FILTER (WHERE p.status='paid' AND ${periodCondition('p.created_at')})::int AS sold_leads,
+      COUNT(*) FILTER (WHERE status='closed')::int AS closed_leads,
+      COUNT(DISTINCT p.lead_id) FILTER (WHERE p.status='refunded' AND ${periodCondition('p.updated_at')})::int AS refunded_leads,
+      COUNT(DISTINCT r.lead_id) FILTER (WHERE r.status='verified_fake' AND ${periodCondition('r.reviewed_at')})::int AS verified_fake_leads,
+      COUNT(DISTINCT c.lead_id) FILTER (WHERE c.expires_at IS NOT NULL AND c.expires_at < CURRENT_TIMESTAMP AND ${periodCondition('c.expires_at')})::int AS expired_access_leads
+     FROM leads l
+     LEFT JOIN lead_purchases p ON p.lead_id=l.id
+     LEFT JOIN lead_reports r ON r.lead_id=l.id
+     LEFT JOIN lead_entitlement_claims c ON c.lead_id=l.id
+     WHERE l.lead_partner_id=(SELECT id FROM lead_partners WHERE user_id=$1 LIMIT 1)
+       AND ${periodCondition('l.created_at')}`, [userId]),
     pool.query(`SELECT l.id,l.customer_name,l.requirement,l.status,l.created_at,i.name AS industry_name,s.name AS service_name,c.name AS city_name FROM leads l LEFT JOIN industries i ON i.id=l.industry_id LEFT JOIN services s ON s.id=l.service_id LEFT JOIN cities c ON c.id=l.city_id WHERE l.lead_partner_id=(SELECT id FROM lead_partners WHERE user_id=$1 LIMIT 1) AND ${periodCondition('l.created_at')} ORDER BY l.created_at DESC,l.id DESC LIMIT 8`, [userId]),
     pool.query(`SELECT bp.business_name,bp.phone,bp.business_details FROM business_profiles bp WHERE bp.user_id=$1 LIMIT 1`, [userId]),
     getPartnerByUserId(userId),
@@ -277,6 +290,9 @@ async function getDashboard(userId, period='month') {
       activeLeads: Number(summary.active_leads || 0),
       soldLeads: Number(summary.sold_leads || 0),
       closedLeads: Number(summary.closed_leads || 0),
+      refundedLeads: Number(summary.refunded_leads || 0),
+      verifiedFakeLeads: Number(summary.verified_fake_leads || 0),
+      expiredAccessLeads: Number(summary.expired_access_leads || 0),
       grossSales: Number(financial.gross_sales || 0),
       earningsGenerated: Number(financial.earnings_generated || 0),
       amountReceived: Number(financial.amount_received || 0),
