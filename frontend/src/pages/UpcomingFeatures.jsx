@@ -25,6 +25,12 @@ export default function UpcomingFeatures(){
   const [loading,setLoading]=useState(true)
   const [active,setActive]=useState('all')
   useEffect(()=>{
+    const previous=window.history.scrollRestoration
+    window.history.scrollRestoration='manual'
+    window.scrollTo({top:0,left:0,behavior:'auto'})
+    return()=>{window.history.scrollRestoration=previous}
+  },[])
+  useEffect(()=>{
     let live=true
     publicRequest('/upcoming-features').then(data=>{
       if(!live)return
