@@ -59,3 +59,41 @@
   display:block!important;margin-top:7px!important;color:#8795aa!important;font-size:8px!important;font-weight:900!important;line-height:1!important;letter-spacing:.17em!important;
 }
 #root .pricing-brand em{display:none!important}
+
+
+/* Final typography lock for every Lead Partner sidebar */
+#root .lp-nav a,#root .pricing-nav a,#root .partner-nav a,#root .withdrawals-nav a,#root .reports-nav a,#root .faq-nav a,#root .account-nav a{
+  display:flex!important;align-items:center!important;gap:15px!important;
+  min-height:44px!important;height:44px!important;box-sizing:border-box!important;
+  padding:0 15px!important;border-radius:10px!important;
+  font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif!important;
+  font-size:13px!important;line-height:1!important;font-weight:800!important;
+  letter-spacing:0!important;
+}
+#root .lp-nav a .lp-icon,#root .pricing-nav a i,#root .partner-nav a i,#root .withdrawals-nav a i,#root .reports-nav a i,#root .faq-nav a i,#root .account-nav a i{
+  width:22px!important;min-width:22px!important;text-align:center!important;
+  font-size:17px!important;line-height:1!important;font-weight:700!important;
+}
+#root .lp-nav-label,#root .pricing-nav-label,#root .partner-nav-label,#root .withdrawals-nav-label,#root .reports-nav-label,#root .faq-nav-label,#root .account-nav-label{
+  padding:34px 25px 13px!important;
+  font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif!important;
+  font-size:10px!important;line-height:1.2!important;font-weight:900!important;
+  letter-spacing:.14em!important;
+}
+#root .lp-sidebar-bottom,#root .pricing-sidebar-bottom,#root .partner-sidebar-bottom,#root .withdrawals-sidebar-bottom,#root .reports-sidebar-bottom,#root .faq-sidebar-bottom,#root .account-sidebar-bottom{
+  padding:18px 15px!important;
+}
+#root .lp-sidebar-user,#root .pricing-user,#root .partner-user,#root .withdrawals-user,#root .reports-user,#root .faq-user,#root .account-user{
+  display:flex!important;align-items:center!important;gap:10px!important;padding:7px!important;
+}
+#root .lp-sidebar-user>b,#root .pricing-user>b,#root .partner-user>b,#root .withdrawals-user>b,#root .reports-user>b,#root .faq-user>b,#root .account-user>b{
+  font-size:12px!important;font-weight:800!important;
+}
+#root .lp-sidebar-user small,#root .pricing-user small,#root .partner-user small,#root .withdrawals-user small,#root .reports-user small,#root .faq-user small,#root .account-user small{
+  font-size:9px!important;font-weight:500!important;
+}
+#root .lp-sidebar-bottom button,#root .pricing-sidebar-bottom button,#root .partner-sidebar-bottom button,#root .withdrawals-sidebar-bottom button,#root .reports-sidebar-bottom button,#root .faq-sidebar-bottom button,#root .account-sidebar-bottom button{
+  font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif!important;
+  font-size:11px!important;line-height:1.2!important;font-weight:800!important;
+  padding:10px 11px!important;
+}
