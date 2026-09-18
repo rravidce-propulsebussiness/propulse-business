@@ -3,7 +3,7 @@ const pricingService = require('../services/leadPartnerPricingService');
 const payoutAccountService = require('../services/leadPartnerPayoutAccountService');
 const earningsService = require('../services/leadPartnerEarningsService');
 const payoutService = require('../services/leadPartnerPayoutService');
-async function dashboard(req,res){try{return res.json(await leadPartnerService.getDashboard(req.user.id));}catch(e){return res.status(500).json({error:'Failed to load Lead Partner dashboard'});}}
+async function dashboard(req,res){try{return res.json(await leadPartnerService.getDashboard(req.user.id,req.query?.period));}catch(e){return res.status(500).json({error:'Failed to load Lead Partner dashboard'});}}
 async function apply(req,res){try{return res.status(201).json(await leadPartnerService.apply(req.user.id));}catch(e){return res.status(500).json({error:e.message,code:e.code});}}
 async function me(req,res){try{return res.json(await leadPartnerService.getPartnerByUserId(req.user.id));}catch(e){return res.status(500).json({error:'Failed to load Lead Partner profile'});}}
 async function createLead(req,res){try{return res.status(201).json(await leadPartnerService.createLead({userId:req.user.id,...(req.body||{})}));}catch(e){const s=['PARTNER_NOT_FOUND','PARTNER_NOT_ACTIVE'].includes(e.code)?403:400;return res.status(s).json({error:e.message,code:e.code});}}
