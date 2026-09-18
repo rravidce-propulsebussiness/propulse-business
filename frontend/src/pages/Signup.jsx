@@ -114,7 +114,18 @@ function Signup() {
       <section className="auth-visual" aria-label="Pro Pulse Business">
         <div className="auth-visual-overlay" /><div className="auth-visual-content">
           <div className="auth-logo-frame"><img className="auth-logo" src="/brand/propulse-logo.png" alt="Pro Pulse Business" /></div>
-          <div className="auth-visual-copy"><span>QUALIFIED LEADS. BETTER OPPORTUNITIES.</span><h1>Get High-Value<br /><em>Clients.</em></h1><p>Choose the services you provide and the locations you serve. We'll match you with relevant opportunities.</p></div>
+          <div className="auth-visual-copy">
+            <span>PROPULSE BUSINESS · GROWTH PLATFORM</span>
+            <h1>Build your<br />business with <em>Propulse.</em></h1>
+            <p>Create your business profile once, choose the services and locations you cover, and build a stronger foundation for finding relevant opportunities.</p>
+          </div>
+          <div className="auth-benefit-grid">
+            <div className="auth-benefit"><b>01</b><div><strong>More opportunities</strong><span>Discover relevant business enquiries and projects.</span></div></div>
+            <div className="auth-benefit"><b>02</b><div><strong>Grow your network</strong><span>Connect your services with the right markets.</span></div></div>
+            <div className="auth-benefit"><b>03</b><div><strong>Manage efficiently</strong><span>Keep your business profile and service coverage organized.</span></div></div>
+            <div className="auth-benefit"><b>04</b><div><strong>Secure &amp; reliable</strong><span>Business-focused workflows built for everyday use.</span></div></div>
+          </div>
+          <div className="auth-trust-card"><span className="quote-mark">“</span><strong>Technology built around business growth.</strong><small>— Propulse Business Technologies</small></div>
           <div className="auth-visual-footer"><span>CONNECT</span><i /><span>GROW</span><i /><span>BUILD</span><i /><span>SUCCEED</span></div>
         </div>
       </section>
