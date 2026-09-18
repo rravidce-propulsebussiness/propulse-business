@@ -12,21 +12,24 @@ async function adminList({status='all',search=''}={}){const v=[],w=[];if(status!
 async function adminProcess({requestId,adminId,action,transferReference,proofUrl,rejectionReason,notes}){const a=String(action||'').trim().toLowerCase();if(!['paid','reject'].includes(a))throw err('Invalid payout action.','INVALID_ACTION');const c=await pool.connect();try{await c.query('BEGIN');const r=(await c.query('SELECT * FROM lead_partner_payout_requests WHERE id=$1 FOR UPDATE',[Number(requestId)])).rows[0];if(!r)throw err('Payout request not found.','NOT_FOUND');if(r.status!=='pending')throw err('Payout request has already been processed.','ALREADY_PROCESSED');await c.query('SELECT id FROM lead_partners WHERE id=$1 FOR UPDATE',[r.partner_id]);if(a==='reject'){const rejection=String(rejectionReason||'').trim();if(!rejection)throw err('Rejection reason is required.','REJECTION_REASON_REQUIRED');const u=(await c.query(`UPDATE lead_partner_payout_requests SET status='rejected',rejection_reason=$1,notes=COALESCE($2,notes),processed_at=CURRENT_TIMESTAMP,processed_by=$3,updated_at=CURRENT_TIMESTAMP WHERE id=$4 RETURNING *`,[String(rejectionReason||'').trim()||null,String(notes||'').trim()||null,Number(adminId),Number(requestId)])).rows[0];await c.query(`UPDATE lead_partner_payout_items SET status='released',updated_at=CURRENT_TIMESTAMP WHERE payout_id=$1 AND status='reserved'`,[r.id]);await c.query('COMMIT');return{...u,id:Number(u.id),amount:money(u.amount)}}const ref=String(transferReference||'').trim();if(!ref)throw err('Transfer reference / UTR is required.','TRANSFER_REFERENCE_REQUIRED');const p=proof(proofUrl);if((await c.query(`SELECT id FROM lead_partner_payout_requests WHERE transfer_reference=$1 AND id<>$2`,[ref,r.id])).rows[0])throw err('This transfer reference has already been used.','DUPLICATE_REFERENCE');const allocated=money((await c.query(`SELECT COALESCE(SUM(amount),0) total FROM lead_partner_payout_items WHERE payout_id=$1 AND status='reserved'`,[r.id])).rows[0].total);if(allocated!==money(r.amount))throw err('Payout allocation does not match the requested amount.','PAYOUT_ALLOCATION_MISMATCH');const u=(await c.query(`UPDATE lead_partner_payout_requests SET status='paid',transfer_reference=$1,proof_url=$2,notes=COALESCE($3,notes),processed_at=CURRENT_TIMESTAMP,processed_by=$4,paid_at=CURRENT_TIMESTAMP,updated_at=CURRENT_TIMESTAMP WHERE id=$5 RETURNING *`,[ref,p,String(notes||'').trim()||null,Number(adminId),r.id])).rows[0];await c.query(`UPDATE lead_partner_payout_items SET status='paid',updated_at=CURRENT_TIMESTAMP WHERE payout_id=$1 AND status='reserved'`,[r.id]);await c.query(`UPDATE lead_partner_earnings e SET status=CASE WHEN COALESCE((SELECT SUM(i.amount) FROM lead_partner_payout_items i WHERE i.earning_id=e.id AND i.status='paid'),0)+COALESCE((SELECT SUM(a.amount) FROM lead_partner_earning_adjustment_allocations a WHERE a.earning_id=e.id),0)>=e.earning_amount THEN 'paid' ELSE 'available' END,updated_at=CURRENT_TIMESTAMP WHERE e.id IN (SELECT earning_id FROM lead_partner_payout_items WHERE payout_id=$1)`,[r.id]);await c.query('COMMIT');return{...u,id:Number(u.id),amount:money(u.amount)}}catch(e){await c.query('ROLLBACK');if(e?.code==='23505' && e?.constraint==='uq_lp_payout_transfer_reference')throw err('This transfer reference has already been used.','DUPLICATE_REFERENCE');throw e}finally{c.release()}}
 async function getTransactions(userId){
   const b=await balance(userId);
-  const earnings=(await pool.query(
-    `SELECT e.id,e.earning_amount,e.status,e.created_at,e.updated_at,
+  const earningRows=(await pool.query(
+    `SELECT e.id,e.earning_amount,e.status,e.created_at,e.updated_at,e.reversal_reason,
             l.id AS lead_id,l.customer_name,
             COALESCE((SELECT SUM(a.amount)
                       FROM lead_partner_earning_adjustment_allocations a
                       WHERE a.earning_id=e.id),0) AS recovery_allocated
      FROM lead_partner_earnings e
      LEFT JOIN leads l ON l.id=e.lead_id
-     WHERE e.partner_id=$1 AND e.status<>'reversed'
+     WHERE e.partner_id=$1
      ORDER BY e.created_at ASC,e.id ASC
      LIMIT 500`,[b.partner.id]
-  )).rows.map(r=>{
+  )).rows;
+
+  const earnings=[];
+  for(const r of earningRows){
     const gross=money(r.earning_amount);
     const recoveryAllocated=money(r.recovery_allocated);
-    return {
+    earnings.push({
       id:`E-${Number(r.id)}`,
       type:'earning',
       amount:gross,
@@ -38,8 +41,28 @@ async function getTransactions(userId){
       lead_id:r.lead_id?Number(r.lead_id):null,
       created_at:r.created_at,
       processed_at:r.updated_at
-    };
-  });
+    });
+
+    // A sold lead that is later verified fake/invalidated remains visible as
+    // the original earning plus a separate reversal deduction. This keeps the
+    // transaction history transparent and allows the signed balance to go negative.
+    if(String(r.status).toLowerCase()==='reversed'){
+      earnings.push({
+        id:`R-${Number(r.id)}`,
+        type:'reversal',
+        amount:gross,
+        direction:'debit',
+        impact:money(-gross),
+        status:'reversed',
+        description:r.customer_name?`Lead invalidated / earning refunded · ${r.customer_name}`:'Lead earning reversed / refunded',
+        lead_id:r.lead_id?Number(r.lead_id):null,
+        reason:r.reversal_reason || 'Verified fake lead',
+        created_at:r.updated_at || r.created_at,
+        processed_at:r.updated_at
+      });
+    }
+  }
+
   const payouts=(await pool.query(
     `SELECT id,amount,status,transfer_reference,rejection_reason,requested_at,processed_at,payout_method
      FROM lead_partner_payout_requests
@@ -69,9 +92,6 @@ async function getTransactions(userId){
     return diff || String(a.id).localeCompare(String(z.id));
   });
 
-  // Transaction-history balance intentionally starts at zero and preserves
-  // negative values. This is the net movement represented by the transactions
-  // currently shown and must not be back-solved from the available ledger balance.
   let running=0;
   for(const tx of chronological){
     running=money(running+Number(tx.impact||0));
@@ -85,8 +105,8 @@ async function getTransactions(userId){
     total_earned:b.totalEarned,
     recovery_outstanding:b.recoveryOutstanding,
     transaction_net:money(running),
-    total_additions:money(earnings.reduce((sum,x)=>sum+Number(x.amount||0),0)),
-    total_deductions:money(payouts.filter(x=>x.direction==='debit').reduce((sum,x)=>sum+Number(x.amount||0),0)),
+    total_additions:money(earnings.filter(x=>x.direction==='credit').reduce((sum,x)=>sum+Number(x.amount||0),0)),
+    total_deductions:money(earnings.filter(x=>x.direction==='debit').reduce((sum,x)=>sum+Number(x.amount||0),0)+payouts.filter(x=>x.direction==='debit').reduce((sum,x)=>sum+Number(x.amount||0),0)),
     transactions:[...chronological].reverse()
   };
 }
