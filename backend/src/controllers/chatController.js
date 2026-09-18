@@ -19,7 +19,7 @@ async function getOrCreateConversation(userId){
 }
 
 async function getAudience(userId){
-  const result=await pool.query("SELECT EXISTS(SELECT 1 FROM lead_partners WHERE user_id=$1 AND status IN ('pending','active','suspended')) AS is_partner",[userId]);
+  const result=await pool.query("SELECT EXISTS(SELECT 1 FROM lead_partners WHERE user_id=$1) AS is_partner",[userId]);
   return result.rows[0]?.is_partner?'lead_partner':'user';
 }
 
@@ -71,8 +71,8 @@ exports.sendMessage=async(req,res)=>{
   if(text.length>MAX_MESSAGE_LENGTH) return res.status(400).json({error:`Message must be ${MAX_MESSAGE_LENGTH} characters or fewer`});
   try{
     const conversation=await getOrCreateConversation(req.user.id);
-    const userMessage=await addMessage(conversation.id,req.user,text,false);
     const audience=await getAudience(req.user.id);
+    const userMessage=await addMessage(conversation.id,req.user,text,false,audience);
     const faq=await findFaq(text,audience);
     if(faq){
       const automated=await pool.query(
