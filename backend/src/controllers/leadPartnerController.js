@@ -3,6 +3,7 @@ const pricingService = require('../services/leadPartnerPricingService');
 const payoutAccountService = require('../services/leadPartnerPayoutAccountService');
 const earningsService = require('../services/leadPartnerEarningsService');
 const payoutService = require('../services/leadPartnerPayoutService');
+const leadReportService = require('../services/leadReportService');
 async function dashboard(req,res){try{return res.json(await leadPartnerService.getDashboard(req.user.id,req.query?.period));}catch(e){return res.status(500).json({error:'Failed to load Lead Partner dashboard'});}}
 async function apply(req,res){try{return res.status(201).json(await leadPartnerService.apply(req.user.id));}catch(e){return res.status(500).json({error:e.message,code:e.code});}}
 async function me(req,res){try{return res.json(await leadPartnerService.getPartnerByUserId(req.user.id));}catch(e){return res.status(500).json({error:'Failed to load Lead Partner profile'});}}
