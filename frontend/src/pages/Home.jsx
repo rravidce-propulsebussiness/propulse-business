@@ -76,7 +76,7 @@ function Home() {
       ['home', 'home-top'],
       ['how-it-works', 'how-it-works'],
       ['pricing', 'pricing'],
-      ['why-propulse', 'why-propulse'],
+      ['about', 'about'],
       ['faq', 'faq']
     ]
     const observed = sections.map(([key, id]) => {
@@ -101,7 +101,7 @@ function Home() {
   useEffect(() => {
     document.documentElement.classList.add('home-scroll')
     const hash = window.location.hash.replace('#', '')
-    if (hash === 'how-it-works' || hash === 'pricing' || hash === 'why-propulse' || hash === 'faq') setActiveNav(hash)
+    if (hash === 'how-it-works' || hash === 'pricing' || hash === 'about' || hash === 'faq') setActiveNav(hash)
     else if (!hash) setActiveNav('home')
     return () => document.documentElement.classList.remove('home-scroll')
   }, [])
@@ -156,7 +156,7 @@ function Home() {
           <Link to="/leads">Buy Leads</Link>
           <a className={activeNav === 'how-it-works' ? 'nav-active' : ''} href="#how-it-works" onClick={event => scrollToSection(event, 'how-it-works')}>How It Works</a>
           <a className={activeNav === 'pricing' ? 'nav-active' : ''} href="#pricing" onClick={event => scrollToSection(event, 'pricing')}>Pricing</a>
-          <a className={activeNav === 'why-propulse' ? 'nav-active' : ''} href="#why-propulse" onClick={event => scrollToSection(event, 'why-propulse')}>About</a>
+          <a className={activeNav === 'about' ? 'nav-active' : ''} href="#about" onClick={event => scrollToSection(event, 'about')}>About</a>
           <Link to="/contact">Contact</Link>
         </nav>
         <div className="header-actions">
@@ -306,18 +306,22 @@ function Home() {
           )}
         </section>
 
-        <section className="why-section home-reveal" id="why-propulse">
-          <div className="why-copy">
-            <span className="section-kicker">WHY PROPULSE</span>
-            <h2>Less searching.<br /><em>More opportunity.</em></h2>
-            <p>Propulse brings project enquiries into one marketplace so businesses can spend less time searching for prospects and more time evaluating opportunities that match their services and locations.</p>
-            <Link className="why-cta" to="/leads">Explore the marketplace <span>→</span></Link>
+        <section className="why-section about-section home-reveal" id="about">
+          <div className="why-copy about-copy">
+            <span className="section-kicker">ABOUT PROPULSE</span>
+            <h2>Technology built around <em>business growth.</em></h2>
+            <p><strong>Propulse Business Technologies Private Limited</strong> is an IT technology company focused on helping businesses build, digitize, operate and scale.</p>
+            <p>We bring practical digital capabilities together under one platform — from websites and business software to mobile apps, digital marketing, lead acquisition, automation and technology support.</p>
+            <p>Our goal is simple: make it easier for a business to use technology across the full journey, from getting discovered and generating opportunities to managing digital operations and supporting day-to-day business needs.</p>
+            <Link className="why-cta" to="/contact">Talk to Propulse <span>→</span></Link>
           </div>
-          <div className="why-list">
-            <div><b>01</b><strong>Relevant demand</strong><span>Browse opportunities around the services your business provides.</span></div>
-            <div><b>02</b><strong>Protected contact data</strong><span>Customer contact details stay protected until eligible access is purchased or granted.</span></div>
-            <div><b>03</b><strong>Clear purchase flow</strong><span>Review lead information and the configured price before completing a purchase.</span></div>
-            <div><b>04</b><strong>Business-ready workflow</strong><span>Purchased leads are available through your account for follow-up and management.</span></div>
+          <div className="why-list about-capabilities">
+            <div><b>01</b><strong>Build digital presence</strong><span>Websites, web apps, business portals, mobile applications and digital experiences designed around your business.</span></div>
+            <div><b>02</b><strong>Generate demand</strong><span>SEO, social media, performance marketing, creative production, photography, video and business-focused campaigns.</span></div>
+            <div><b>03</b><strong>Acquire opportunities</strong><span>Propulse connects businesses with a lead marketplace for discovering, evaluating and purchasing relevant customer enquiries.</span></div>
+            <div><b>04</b><strong>Digitize operations</strong><span>Business software, automation, workflows, data tools and technology support that help teams work more efficiently.</span></div>
+            <div><b>05</b><strong>Support business requirements</strong><span>Technology-led support for business processes, documentation and selected compliance workflows, depending on the requirement.</span></div>
+            <div><b>06</b><strong>Scale with one technology partner</strong><span>Use Propulse for individual digital projects or combine services as your business grows and requirements change.</span></div>
           </div>
         </section>
 
