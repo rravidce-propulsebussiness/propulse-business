@@ -129,6 +129,14 @@ jobs:
           DB_USER: ci_smoke
           DB_PASSWORD: ci_smoke
         run: npm run test:ledger
+      - name: Verify Lead Partner payout lifecycle
+        env:
+          DB_HOST: 127.0.0.1
+          DB_PORT: 5432
+          DB_NAME: ci_smoke
+          DB_USER: ci_smoke
+          DB_PASSWORD: ci_smoke
+        run: npm run test:payout
 
       - name: Start backend
         env:
