@@ -25,6 +25,9 @@ async function main(){
   checks.duplicateWalletRefunds=await query(
     "SELECT payment_id,COUNT(*) AS count FROM wallet_transactions WHERE type='refund' AND payment_id IS NOT NULL GROUP BY payment_id HAVING COUNT(*)>1"
   );
+  checks.earningPaymentMismatches=await query(
+    "SELECT e.id,e.lead_purchase_id,e.gross_sale_amount,lp.amount purchase_amount,lp.status purchase_status,p.status payment_status,p.amount payment_amount FROM lead_partner_earnings e JOIN lead_purchases lp ON lp.id=e.lead_purchase_id LEFT JOIN payments p ON p.id=e.payment_id WHERE lp.status<>'paid' OR p.id IS NULL OR p.status<>'paid' OR ABS(COALESCE(e.gross_sale_amount,0)-COALESCE(lp.amount,0))>0.001 OR ABS(COALESCE(e.gross_sale_amount,0)-COALESCE(p.amount,0))>0.001"
+  );
   checks.duplicatePayoutItems=await query(
     "SELECT payout_id,earning_id,COUNT(*) AS count FROM lead_partner_payout_items GROUP BY payout_id,earning_id HAVING COUNT(*)>1"
   );
