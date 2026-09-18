@@ -55,6 +55,8 @@ function Home() {
   const [contactData, setContactData] = useState({})
   const [homepageFaqs, setHomepageFaqs] = useState([])
   const [openFaq, setOpenFaq] = useState(null)
+  const [upcomingFeatures, setUpcomingFeatures] = useState([])
+  const [upcomingFilter, setUpcomingFilter] = useState('all')
 
   useEffect(() => {
     let live = true
@@ -93,12 +95,23 @@ function Home() {
   }, [])
 
   useEffect(() => {
+    let live = true
+    publicRequest('/upcoming-features').then(data => {
+      if (!live) return
+      const items = Array.isArray(data) ? data.filter(item => item?.is_active !== false) : []
+      if (items.length) setUpcomingFeatures(items)
+    }).catch(() => {})
+    return () => { live = false }
+  }, [])
+
+  useEffect(() => {
     const sections = [
       ['home', 'home-top'],
       ['how-it-works', 'how-it-works'],
       ['pricing', 'pricing'],
       ['about', 'about'],
       ['contact', 'contact'],
+      ['upcoming-features', 'upcoming-features'],
       ['faq', 'faq']
     ]
     const observed = sections.map(([key, id]) => {
@@ -123,7 +136,7 @@ function Home() {
   useEffect(() => {
     document.documentElement.classList.add('home-scroll')
     const hash = window.location.hash.replace('#', '')
-    if (hash === 'how-it-works' || hash === 'pricing' || hash === 'about' || hash === 'contact' || hash === 'faq') setActiveNav(hash)
+    if (hash === 'how-it-works' || hash === 'pricing' || hash === 'about' || hash === 'contact' || hash === 'upcoming-features' || hash === 'faq') setActiveNav(hash)
     else if (!hash) setActiveNav('home')
     return () => document.documentElement.classList.remove('home-scroll')
   }, [])
@@ -181,7 +194,7 @@ function Home() {
           <a className={activeNav === 'about' ? 'nav-active' : ''} href="#about" onClick={event => scrollToSection(event, 'about')}>About</a>
           <a className={activeNav === 'contact' ? 'nav-active' : ''} href="#contact" onClick={event => scrollToSection(event, 'contact')}>Contact</a>
           <a className={activeNav === 'faq' ? 'nav-active' : ''} href="#faq" onClick={event => scrollToSection(event, 'faq')}>FAQ</a>
-          <Link to="/upcoming-features">Upcoming Features</Link>
+          <a className={activeNav === 'upcoming-features' ? 'nav-active' : ''} href="#upcoming-features" onClick={event => scrollToSection(event, 'upcoming-features')}>Upcoming Features</a>
         </nav>
         <div className="header-actions">
           <Link className="header-search" to="/leads" aria-label="Search leads">⌕</Link>
@@ -411,6 +424,57 @@ function Home() {
         </section>
       </main>
 
+      <section className="upcoming-home-section home-reveal" id="upcoming-features">
+        <div className="upcoming-home-head">
+          <div>
+            <span className="section-kicker">UPCOMING FEATURES</span>
+            <h2>More technology. More ways to scale.</h2>
+            <p>Propulse is expanding beyond lead sales with business software, automation, AI, marketplaces and specialist consultation products.</p>
+          </div>
+          <a className="upcoming-home-cta" href="#contact" onClick={event => scrollToSection(event, 'contact')}>Discuss your requirement <span>→</span></a>
+        </div>
+        <div className="upcoming-home-filterbar">
+          <div><span>PRODUCT ROADMAP</span><small>{upcomingFeatures.length || 12} capabilities</small></div>
+          <div className="upcoming-home-filters">
+            {[
+              "all", ...Array.from(new Set(upcomingFeatures.map(item => item.category).filter(Boolean))).slice(0, 5)
+            ].map(filter => (
+              <button type="button" key={filter} className={upcomingFilter === filter ? 'active' : ''} onClick={() => setUpcomingFilter(filter)}>{filter === 'all' ? 'All' : filter}</button>
+            ))}
+          </div>
+        </div>
+        <div className="upcoming-home-grid">
+          {(upcomingFeatures.length ? upcomingFeatures : [
+            {name:'WhatsApp API',category:'Business Communication',short_description:'Connect WhatsApp with business workflows.',description:'Business communication and automation.',icon:'◉',status:'In development',timeline:'Coming soon',highlighted:true},
+            {name:'Project Management Apps',category:'Business Software',short_description:'Plan projects, teams, tasks and progress.',description:'Project planning and delivery workflows.',icon:'▦',status:'Planned',timeline:'Coming soon'},
+            {name:'Website Builder',category:'Business Software',short_description:'Build and manage business websites faster.',description:'Visual website creation and publishing.',icon:'▤',status:'In development',timeline:'Coming soon',highlighted:true},
+            {name:'Billing Software',category:'Business Software',short_description:'Simplify billing and business transactions.',description:'Billing, invoices and operational records.',icon:'₹',status:'Planned',timeline:'Coming soon'},
+            {name:'Construction Consultation',category:'Consultation',short_description:'Technology-enabled support for construction businesses.',description:'Construction-focused business and technology support.',icon:'⌂',status:'Planned',timeline:'Coming soon'},
+            {name:'Interior Consultation',category:'Consultation',short_description:'Digital support for interior businesses and projects.',description:'Interior business and project support.',icon:'◇',status:'Planned',timeline:'Coming soon'},
+            {name:'Real Estate Consultation',category:'Consultation',short_description:'Digital and business support for real estate.',description:'Real-estate technology and business support.',icon:'⌖',status:'Planned',timeline:'Coming soon'},
+            {name:'Brochure Builder',category:'Creative Tools',short_description:'Create professional brochures and marketing material.',description:'Browser-based brochure creation and export.',icon:'▧',status:'Planned',timeline:'Coming soon'},
+            {name:'Marketing Automation',category:'Marketing Technology',short_description:'Automate repetitive marketing workflows.',description:'Campaigns, follow-ups and lead workflows.',icon:'⚡',status:'In development',timeline:'Coming soon',highlighted:true},
+            {name:'AI Audio Calling',category:'AI & Automation',short_description:'AI-assisted audio calling for business workflows.',description:'AI-assisted business communication and follow-up.',icon:'◌',status:'Researching',timeline:'Future release'},
+            {name:'Construction & Interior Material Marketplace',category:'Marketplaces',short_description:'Discover materials, products and suppliers in one place.',description:'Future marketplace for materials and suppliers.',icon:'◆',status:'Researching',timeline:'Future release'},
+            {name:'More Business Technology',category:'Platform',short_description:'More tools are being planned.',description:'Additional business technology products as the platform evolves.',icon:'＋',status:'Planned',timeline:'More to come'}
+          ]).filter(item => upcomingFilter === 'all' || item.category === upcomingFilter).slice(0, 6).map((item, index) => (
+            <article className={item.highlighted ? 'upcoming-home-card featured' : 'upcoming-home-card'} key={item.id || item.slug || item.name} style={{'--up-delay': Math.min(index, 5) * 70 + 'ms'}}>
+              <div className="upcoming-home-icon">{item.icon || '✦'}</div>
+              <div className="upcoming-home-card-copy">
+                <div className="upcoming-home-meta"><span>{item.category}</span><small>{item.status}</small></div>
+                <h3>{item.name}</h3>
+                <strong>{item.short_description}</strong>
+                <p>{item.description}</p>
+              </div>
+              <div className="upcoming-home-card-foot"><span>{item.timeline}</span><b>↗</b></div>
+            </article>
+          ))}
+        </div>
+        <div className="upcoming-home-footer">
+          <span>Roadmap items, descriptions, status, order and publication are managed from Admin.</span>
+          <a href="#contact" onClick={event => scrollToSection(event, 'contact')}>Talk to Propulse <span>→</span></a>
+        </div>
+      </section>
       <section className="faq-section home-reveal premium-home-faq" id="faq">
         <div className="section-heading centered"><span className="section-kicker">FAQ</span><h2>Questions, clearly answered.</h2><p>Everything you need to understand Propulse, its services and the lead marketplace before you get started.</p></div>
         <div className="faq-home-layout">
