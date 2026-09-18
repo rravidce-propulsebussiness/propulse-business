@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { authRequest } from '../../utils/auth'
 
 const STATUSES = [['','All'],['pending','Pending'],['active','Active'],['suspended','Suspended'],['rejected','Rejected']]
@@ -16,12 +16,12 @@ export default function AdminLeadPartners(){
   const [financials,setFinancials]=useState(null)
   const [financialLoading,setFinancialLoading]=useState(false)
 
-  async function load(){
+  const load=useCallback(async()=>{
     try{setLoading(true);setError('');setData(await authRequest(`/admin/lead-partners${status?`?status=${encodeURIComponent(status)}`:''}`))}
     catch(e){setError(e.message||'Failed to load Lead Partners')}
     finally{setLoading(false)}
-  }
-  useEffect(()=>{load()},[status])
+  },[status])
+  useEffect(()=>{load()},[load])
 
   async function changeStatus(partnerId,nextStatus){
     try{setBusy(partnerId);setError('');setMessage('');await authRequest(`/admin/lead-partners/${partnerId}/status`,{method:'PATCH',body:JSON.stringify({status:nextStatus})});setMessage(`Lead Partner #${partnerId} is now ${nextStatus}.`);await load()}
