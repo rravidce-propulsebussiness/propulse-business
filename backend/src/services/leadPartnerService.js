@@ -229,16 +229,45 @@ async function getAdminPartners({ status, page = 1, limit = 50 } = {}) {
 
 async function getDashboard(userId) {
   const [summaryResult, recentResult, profileResult, partnerResult] = await Promise.all([
-    pool.query(`SELECT COUNT(*)::int AS total_leads, COUNT(*) FILTER (WHERE status IN ('available','paused'))::int AS active_leads, COUNT(*) FILTER (WHERE status='sold')::int AS sold_leads, COUNT(*) FILTER (WHERE status='closed')::int AS closed_leads FROM leads WHERE created_by=$1`, [userId]),
-    pool.query(`SELECT l.id,l.customer_name,l.requirement,l.status,l.created_at,i.name AS industry_name,s.name AS service_name,c.name AS city_name FROM leads l LEFT JOIN industries i ON i.id=l.industry_id LEFT JOIN services s ON s.id=l.service_id LEFT JOIN cities c ON c.id=l.city_id WHERE l.created_by=$1 ORDER BY l.created_at DESC,l.id DESC LIMIT 8`, [userId]),
+    pool.query(`SELECT COUNT(*)::int AS total_leads, COUNT(*) FILTER (WHERE status IN ('available','paused'))::int AS active_leads, COUNT(*) FILTER (WHERE status='sold')::int AS sold_leads, COUNT(*) FILTER (WHERE status='closed')::int AS closed_leads FROM leads WHERE lead_partner_id=(SELECT id FROM lead_partners WHERE user_id=$1 LIMIT 1)`, [userId]),
+    pool.query(`SELECT l.id,l.customer_name,l.requirement,l.status,l.created_at,i.name AS industry_name,s.name AS service_name,c.name AS city_name FROM leads l LEFT JOIN industries i ON i.id=l.industry_id LEFT JOIN services s ON s.id=l.service_id LEFT JOIN cities c ON c.id=l.city_id WHERE l.lead_partner_id=(SELECT id FROM lead_partners WHERE user_id=$1 LIMIT 1) ORDER BY l.created_at DESC,l.id DESC LIMIT 8`, [userId]),
     pool.query(`SELECT bp.business_name,bp.phone,bp.business_details FROM business_profiles bp WHERE bp.user_id=$1 LIMIT 1`, [userId]),
     getPartnerByUserId(userId),
   ]);
   const summary = summaryResult.rows[0] || {};
   const quality = partnerResult ? await getQualityMetrics(partnerResult.id) : null;
+  const financialResult = partnerResult ? await pool.query(`
+    SELECT
+      COALESCE((SELECT SUM(p.amount) FROM lead_purchases p JOIN leads l ON l.id=p.lead_id WHERE l.lead_partner_id=$1 AND p.status IN ('paid','refunded')),0) AS gross_sales,
+      COALESCE((SELECT SUM(e.earning_amount) FROM lead_partner_earnings e WHERE e.partner_id=$1),0) AS earnings_generated,
+      COALESCE((SELECT SUM(r.amount) FROM lead_partner_payout_requests r WHERE r.partner_id=$1 AND r.status='paid'),0) AS amount_received,
+      COALESCE((SELECT SUM(r.amount) FROM lead_partner_payout_requests r WHERE r.partner_id=$1 AND r.status='pending'),0) AS pending_withdrawals,
+      COALESCE((SELECT SUM(e.earning_amount-COALESCE(x.adjusted,0)-COALESCE(x.reserved,0)-COALESCE(x.paid,0))
+        FROM lead_partner_earnings e
+        LEFT JOIN LATERAL (
+          SELECT
+            COALESCE((SELECT SUM(a.amount) FROM lead_partner_earning_adjustment_allocations a WHERE a.earning_id=e.id),0) adjusted,
+            COALESCE((SELECT SUM(i.amount) FROM lead_partner_payout_items i JOIN lead_partner_payout_requests r ON r.id=i.payout_id WHERE i.earning_id=e.id AND i.status='reserved' AND r.status='pending'),0) reserved,
+            COALESCE((SELECT SUM(i.amount) FROM lead_partner_payout_items i JOIN lead_partner_payout_requests r ON r.id=i.payout_id WHERE i.earning_id=e.id AND i.status='paid' AND r.status='paid'),0) paid
+        ) x ON TRUE
+        WHERE e.partner_id=$1 AND e.status='available'),0) AS available_earnings,
+      COALESCE((SELECT SUM(amount-COALESCE((SELECT SUM(a.amount) FROM lead_partner_earning_adjustment_allocations a WHERE a.adjustment_id=adj.id),0)) FROM lead_partner_earning_adjustments adj WHERE adj.partner_id=$1 AND adj.status='outstanding'),0) AS recovery_outstanding
+  `, [partnerResult.id]) : { rows: [{}] };
+  const financial = financialResult.rows[0] || {};
   return {
     partner: partnerResult || profileResult.rows[0] || null,
-    stats: { totalLeads: Number(summary.total_leads || 0), activeLeads: Number(summary.active_leads || 0), soldLeads: Number(summary.sold_leads || 0), closedLeads: Number(summary.closed_leads || 0) },
+    stats: {
+      totalLeads: Number(summary.total_leads || 0),
+      activeLeads: Number(summary.active_leads || 0),
+      soldLeads: Number(summary.sold_leads || 0),
+      closedLeads: Number(summary.closed_leads || 0),
+      grossSales: Number(financial.gross_sales || 0),
+      earningsGenerated: Number(financial.earnings_generated || 0),
+      amountReceived: Number(financial.amount_received || 0),
+      pendingWithdrawals: Number(financial.pending_withdrawals || 0),
+      availableEarnings: Number(financial.available_earnings || 0),
+      recoveryOutstanding: Number(financial.recovery_outstanding || 0),
+    },
     quality,
     recentLeads: recentResult.rows,
     pricing: { commissionPercent: 5, normalPriceUplift: null, configured: false },
