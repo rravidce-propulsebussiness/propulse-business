@@ -115,6 +115,19 @@ async function resolveLocationFromPincode(pincode, cat, suppliedState, suppliedC
     }
   }
 
+  // If City was not supplied, first use an exact State + India Post District
+  // match when it resolves to exactly one Propulse City. A postal district is
+  // not always a business city, so never use fuzzy or partial matching here.
+  if (!city && pin.district_name) {
+    const districtMatches = cat.cities.filter(x =>
+      Number(x.state_id) === Number(state.id) && norm(x.name) === norm(pin.district_name)
+    );
+    if (districtMatches.length === 1) city = districtMatches[0];
+    else if (districtMatches.length > 1) {
+      throw new Error(`Pincode ${value} has an ambiguous Propulse City for postal district ${pin.district_name}; provide City in the sheet`);
+    }
+  }
+
   // If City was not supplied, prefer the canonical city_pincodes mapping.
   if (!city) {
     const cityRows = (await pool.query(
