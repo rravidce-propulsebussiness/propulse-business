@@ -1,9 +1,11 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { authRequest, clearSession, getUser } from '../utils/auth';
 import './LeadPartnerAccount.css';
 
 const emptyForm = { accountHolderName:'', accountNumber:'', ifscCode:'', bankName:'', upiId:'' };
+const money = value => `₹${Number(value || 0).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2})}`;
+const dateTime = value => value ? new Date(value).toLocaleString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}) : '—';
 
 function maskAccount(value){
   const raw = String(value || '').replace(/\D/g,'');
@@ -21,70 +23,78 @@ export default function LeadPartnerAccount(){
   const [saving,setSaving] = useState(false);
   const [message,setMessage] = useState('');
   const [error,setError] = useState('');
+  const [tab,setTab] = useState('payout');
+  const [transactions,setTransactions] = useState([]);
+  const [transactionsLoading,setTransactionsLoading] = useState(false);
+  const [transactionError,setTransactionError] = useState('');
+  const [me,setMe] = useState(null);
+  const [settingsLoading,setSettingsLoading] = useState(false);
+  const [settingsError,setSettingsError] = useState('');
 
   const initials = useMemo(
     () => (user?.name || 'Lead Partner').split(' ').filter(Boolean).slice(0,2).map(x=>x[0]).join('').toUpperCase() || 'LP',
     [user?.name]
   );
 
-  useEffect(()=>{
-    authRequest('/lead-partner/payout-account')
-      .then(result=>{
-        setAccount(result);
-        if(result?.method) setMethod(result.method);
-        if(result?.method === 'upi'){
-          setForm(current=>({...current, upiId:result.upi_id || ''}));
-        }else if(result){
-          setForm(current=>({
-            ...current,
-            accountHolderName:result.account_holder_name || '',
-            bankName:result.bank_name || '',
-            ifscCode:result.ifsc_code || ''
-          }));
-        }
-      })
-      .catch(e=>setError(e.message || 'Unable to load payout account'))
-      .finally(()=>setLoading(false));
+  const loadAccount = useCallback(async()=>{
+    try{
+      setLoading(true); setError('');
+      const result = await authRequest('/lead-partner/payout-account');
+      setAccount(result);
+      if(result?.method) setMethod(result.method);
+      if(result?.method==='upi') setForm(current=>({...current,upiId:result.upi_id||''}));
+      else if(result) setForm(current=>({...current,accountHolderName:result.account_holder_name||'',bankName:result.bank_name||'',ifscCode:result.ifsc_code||''}));
+    }catch(e){setError(e.message || 'Unable to load payout account')}
+    finally{setLoading(false)}
   },[]);
+
+  useEffect(()=>{loadAccount()},[loadAccount]);
+
+  const loadTransactions = useCallback(async()=>{
+    try{
+      setTransactionsLoading(true); setTransactionError('');
+      const result = await authRequest('/lead-partner/transactions');
+      setTransactions(Array.isArray(result?.transactions) ? result.transactions : []);
+    }catch(e){setTransactionError(e.message || 'Unable to load transaction history')}
+    finally{setTransactionsLoading(false)}
+  },[]);
+
+  const loadSettings = useCallback(async()=>{
+    try{
+      setSettingsLoading(true); setSettingsError('');
+      setMe(await authRequest('/auth/me'));
+    }catch(e){setSettingsError(e.message || 'Unable to load account settings')}
+    finally{setSettingsLoading(false)}
+  },[]);
+
+  function selectTab(next){
+    setTab(next);
+    setMessage('');
+    setError('');
+    if(next==='transactions' && !transactions.length) loadTransactions();
+    if(next==='settings' && !me) loadSettings();
+  }
 
   const update=(key,value)=>setForm(current=>({...current,[key]:value}));
 
   async function save(event){
     event.preventDefault();
-    setSaving(true);
-    setMessage('');
-    setError('');
+    setSaving(true); setMessage(''); setError('');
     try{
-      const result = await authRequest('/lead-partner/payout-account',{
+      const result=await authRequest('/lead-partner/payout-account',{
         method:'POST',
-        body:JSON.stringify({
-          method,
-          ...form,
-          ifscCode:String(form.ifscCode || '').toUpperCase()
-        })
+        body:JSON.stringify({method,...form,ifscCode:String(form.ifscCode||'').toUpperCase()})
       });
       setAccount(result);
       setMessage('Payout account saved successfully. It is now available for withdrawal requests.');
       setForm(current=>method==='upi'
-        ? ({...emptyForm,upiId:result?.upi_id || current.upiId})
-        : ({
-            ...emptyForm,
-            accountHolderName:result?.account_holder_name || current.accountHolderName,
-            bankName:result?.bank_name || current.bankName,
-            ifscCode:result?.ifsc_code || current.ifscCode
-          }));
-    }catch(e){
-      setError(e.message || 'Unable to save payout account');
-    }finally{
-      setSaving(false);
-    }
+        ? ({...emptyForm,upiId:result?.upi_id||current.upiId})
+        : ({...emptyForm,accountHolderName:result?.account_holder_name||current.accountHolderName,bankName:result?.bank_name||current.bankName,ifscCode:result?.ifsc_code||current.ifscCode}));
+    }catch(e){setError(e.message || 'Unable to save payout account')}
+    finally{setSaving(false)}
   }
 
-  function chooseMethod(next){
-    setMethod(next);
-    setError('');
-    setMessage('');
-  }
+  function chooseMethod(next){setMethod(next);setError('');setMessage('')}
 
   function signOut(){
     clearSession();
@@ -92,15 +102,12 @@ export default function LeadPartnerAccount(){
     navigate('/login',{replace:true});
   }
 
-  const verified = account?.is_verified === true;
-  const statusText = loading ? 'Loading…' : !account ? 'Not configured' : verified ? 'Verified' : 'Verification pending';
+  const verified=account?.is_verified===true;
+  const statusText=loading?'Loading…':!account?'Not configured':verified?'Verified':'Verification pending';
 
   return <div className="account-shell">
     <aside className="account-sidebar">
-      <div className="account-brand">
-        <span className="account-brand-mark">P</span>
-        <span><b>PRO<span>PULSE</span></b><small>LEAD PARTNER</small></span>
-      </div>
+      <div className="account-brand"><span className="account-brand-mark">P</span><span><b>PRO<span>PULSE</span></b><small>LEAD PARTNER</small></span></div>
       <div className="account-nav-label">WORKSPACE</div>
       <nav className="account-nav">
         <Link className={location.pathname==='/lead-partner'?'active':''} to="/lead-partner"><i>⌂</i><span>Overview</span></Link>
@@ -109,10 +116,7 @@ export default function LeadPartnerAccount(){
         <Link className={location.pathname.startsWith('/lead-partner/withdrawals')?'active':''} to="/lead-partner/withdrawals"><i>⇩</i><span>Earnings & Withdrawals</span></Link>
         <Link className={location.pathname.startsWith('/lead-partner/account')?'active':''} to="/lead-partner/account"><i>◎</i><span>Account</span></Link>
       </nav>
-      <div className="account-sidebar-bottom">
-        <div className="account-user"><span>{initials}</span><div><b>{user?.name || 'Lead Partner'}</b><small>{user?.email || 'Partner account'}</small></div></div>
-        <button onClick={signOut}>↪ <span>Log out</span></button>
-      </div>
+      <div className="account-sidebar-bottom"><div className="account-user"><span>{initials}</span><div><b>{user?.name||'Lead Partner'}</b><small>{user?.email||'Partner account'}</small></div></div><button onClick={signOut}>↪ <span>Log out</span></button></div>
     </aside>
 
     <main className="account-main">
@@ -123,105 +127,86 @@ export default function LeadPartnerAccount(){
 
       <div className="account-content">
         <section className="account-heading">
-          <div>
-            <span className="account-eyebrow">LEAD PARTNER PORTAL</span>
-            <h1>Payout Account</h1>
-            <p>Add or update the bank account or UPI ID where ProPulse can send your eligible partner earnings.</p>
-          </div>
+          <div><span className="account-eyebrow">LEAD PARTNER PORTAL</span><h1>Account</h1><p>Manage your payout destination, review financial transactions and access account settings.</p></div>
           <div className="account-secure"><span>✓</span><div><strong>Secure payout details</strong><small>Only masked payout information is shown in the portal.</small></div></div>
         </section>
 
-        {message && <div className="account-message success">✓ {message}</div>}
-        {error && <div className="account-message error">{error}</div>}
+        {message&&<div className="account-message success">✓ {message}</div>}
+        {error&&<div className="account-message error">{error}</div>}
 
         <div className="account-tabs" role="tablist" aria-label="Account sections">
-          <span className="active">▣ &nbsp;Payout Account</span>
-          <span>◷ &nbsp;Transaction History</span>
-          <span>⚙ &nbsp;Account Settings</span>
+          <button type="button" className={tab==='payout'?'active':''} onClick={()=>selectTab('payout')}>▣ &nbsp;Payout Account</button>
+          <button type="button" className={tab==='transactions'?'active':''} onClick={()=>selectTab('transactions')}>◷ &nbsp;Transaction History</button>
+          <button type="button" className={tab==='settings'?'active':''} onClick={()=>selectTab('settings')}>⚙ &nbsp;Account Settings</button>
         </div>
 
-        <section className="account-main-grid">
+        {tab==='payout'&&<section className="account-main-grid">
           <div className="account-left-column">
             <article className="account-card current-card">
-              <div className="account-card-head">
-                <div><span className="account-kicker">CURRENT PAYOUT CONFIGURATION</span><h2>Current payout account</h2></div>
-                <span className={account ? (verified ? 'account-status verified' : 'account-status pending') : 'account-status idle'}>● {statusText}</span>
-              </div>
-              {loading ? <div className="account-loading">Loading payout configuration…</div> :
-                account ? <div className="account-current-box">
+              <div className="account-card-head"><div><span className="account-kicker">CURRENT PAYOUT CONFIGURATION</span><h2>Current payout account</h2></div><span className={account?(verified?'account-status verified':'account-status pending'):'account-status idle'}>● {statusText}</span></div>
+              {loading?<div className="account-loading">Loading payout configuration…</div>:account?
+                <div className="account-current-box">
                   <div className="account-bank-symbol">{account.method==='upi'?'@':'▥'}</div>
-                  <div className="account-current-primary">
-                    <strong>{account.method==='upi'?'UPI account':account.bank_name || 'Bank account'}</strong>
-                    <span>{account.method==='upi' ? account.upi_id : maskAccount(account.account_number_masked)}</span>
-                    <small>{account.method==='upi' ? 'UPI payout destination' : account.account_holder_name || 'Account holder'}</small>
-                  </div>
-                  <div className="account-current-details">
-                    {account.method==='upi' ? <><span>Method <b>UPI</b></span><span>Status <b>{verified?'Verified':'Pending verification'}</b></span></> :
-                      <><span>IFSC Code <b>{account.ifsc_code || '—'}</b></span><span>Bank <b>{account.bank_name || '—'}</b></span></>}
-                  </div>
-                  <div className="account-current-actions">
-                    <button type="button" onClick={()=>document.getElementById('payout-form')?.scrollIntoView({behavior:'smooth',block:'center'})}>✎ Update</button>
-                  </div>
-                </div> :
-                <div className="account-empty-state"><span>+</span><div><strong>No payout account yet</strong><small>Add a Bank Account or UPI destination below to enable withdrawal requests.</small></div></div>
-              }
+                  <div className="account-current-primary"><strong>{account.method==='upi'?'UPI account':account.bank_name||'Bank account'}</strong><span>{account.method==='upi'?account.upi_id:maskAccount(account.account_number_masked)}</span><small>{account.method==='upi'?'UPI payout destination':account.account_holder_name||'Account holder'}</small></div>
+                  <div className="account-current-details">{account.method==='upi'?<><span>Method <b>UPI</b></span><span>Status <b>{verified?'Verified':'Pending verification'}</b></span></>:<><span>IFSC Code <b>{account.ifsc_code||'—'}</b></span><span>Bank <b>{account.bank_name||'—'}</b></span></>}</div>
+                  <div className="account-current-actions"><button type="button" onClick={()=>document.getElementById('payout-form')?.scrollIntoView({behavior:'smooth',block:'center'})}>✎ Update</button></div>
+                </div>
+                :<div className="account-empty-state"><span>+</span><div><strong>No payout account yet</strong><small>Add a Bank Account or UPI destination below to enable withdrawal requests.</small></div></div>}
             </article>
 
             <article className="account-card edit-card" id="payout-form">
-              <div className="account-card-head">
-                <div><span className="account-kicker">ADD / UPDATE PAYOUT DETAILS</span><h2>{account ? 'Update payout details' : 'Add payout details'}</h2><p>Saving a new destination replaces the currently active payout account.</p></div>
-              </div>
-
-              <div className="account-methods">
-                <button type="button" className={method==='bank'?'active':''} onClick={()=>chooseMethod('bank')}><span>▥</span><div><strong>Bank Account</strong><small>Direct bank transfer</small></div></button>
-                <button type="button" className={method==='upi'?'active':''} onClick={()=>chooseMethod('upi')}><span>@</span><div><strong>UPI Account</strong><small>UPI transfer</small></div></button>
-              </div>
-
+              <div className="account-card-head"><div><span className="account-kicker">ADD / UPDATE PAYOUT DETAILS</span><h2>{account?'Update payout details':'Add payout details'}</h2><p>Saving a new destination replaces the currently active payout account.</p></div></div>
+              <div className="account-methods"><button type="button" className={method==='bank'?'active':''} onClick={()=>chooseMethod('bank')}><span>▥</span><div><strong>Bank Account</strong><small>Direct bank transfer</small></div></button><button type="button" className={method==='upi'?'active':''} onClick={()=>chooseMethod('upi')}><span>@</span><div><strong>UPI Account</strong><small>UPI transfer</small></div></button></div>
               <form onSubmit={save}>
-                {method==='bank' ? <div className="account-form-grid">
-                  <label>Account holder name *<input value={form.accountHolderName} onChange={e=>update('accountHolderName',e.target.value)} placeholder="Enter account holder name" required /></label>
-                  <label>Account number *<input inputMode="numeric" value={form.accountNumber} onChange={e=>update('accountNumber',e.target.value.replace(/\D/g,''))} placeholder={account?'Re-enter account number':'Enter account number'} required /></label>
-                  <label>IFSC code *<input value={form.ifscCode} onChange={e=>update('ifscCode',e.target.value.toUpperCase())} maxLength="11" placeholder="Enter IFSC code" required /></label>
-                  <label>Bank name *<input value={form.bankName} onChange={e=>update('bankName',e.target.value)} placeholder="Enter bank name" required /></label>
-                </div> : <label className="account-upi-field">UPI ID *<input placeholder="yourname@upi" value={form.upiId} onChange={e=>update('upiId',e.target.value)} required /><small>Example: name@okaxis or name@ybl</small></label>}
-
-                <div className="account-form-footer">
-                  <div className="account-info-note"><span>i</span><p>Make sure the payout details are correct. Approved withdrawals are sent to this active destination.</p></div>
-                  <button className="account-save" disabled={saving || loading}>{saving ? 'Saving…' : 'Save Payout Account'} <span>→</span></button>
-                </div>
+                {method==='bank'?<div className="account-form-grid"><label>Account holder name *<input value={form.accountHolderName} onChange={e=>update('accountHolderName',e.target.value)} placeholder="Enter account holder name" required/></label><label>Account number *<input inputMode="numeric" value={form.accountNumber} onChange={e=>update('accountNumber',e.target.value.replace(/\D/g,''))} placeholder={account?'Re-enter account number':'Enter account number'} required/></label><label>IFSC code *<input value={form.ifscCode} onChange={e=>update('ifscCode',e.target.value.toUpperCase())} maxLength="11" placeholder="Enter IFSC code" required/></label><label>Bank name *<input value={form.bankName} onChange={e=>update('bankName',e.target.value)} placeholder="Enter bank name" required/></label></div>:<label className="account-upi-field">UPI ID *<input placeholder="yourname@upi" value={form.upiId} onChange={e=>update('upiId',e.target.value)} required/><small>Example: name@okaxis or name@ybl</small></label>}
+                <div className="account-form-footer"><div className="account-info-note"><span>i</span><p>Make sure the payout details are correct. Approved withdrawals are sent to this active destination.</p></div><button className="account-save" disabled={saving||loading}>{saving?'Saving…':'Save Payout Account'} <span>→</span></button></div>
               </form>
             </article>
-
-            <article className="account-privacy">
-              <span>✓</span><div><strong>Your privacy matters</strong><p>Your account number is stored and displayed using masked details. Payout requests use the active destination saved to your account.</p></div>
-            </article>
+            <article className="account-privacy"><span>✓</span><div><strong>Your privacy matters</strong><p>Your account number is stored and displayed using masked details. Payout requests use the active destination saved to your account.</p></div></article>
           </div>
 
           <aside className="account-right-column">
-            <article className="account-side-card verification-card">
-              <div className="verification-icon">{verified ? '✓' : '!'}</div>
-              <h3>{verified ? 'Account Verified' : account ? 'Verification Pending' : 'Add Your Payout Account'}</h3>
-              <p>{verified ? 'Your payout details have been verified for eligible payouts.' : account ? 'Your payout details are saved. Admin verification is still pending.' : 'Add a valid bank account or UPI ID to enable withdrawals.'}</p>
-              {account && <small>{verified ? 'Verified account' : 'Awaiting verification'}</small>}
-            </article>
-
-            <article className="account-side-card">
-              <h3><span>ⓘ</span> Important Information</h3>
-              <ul>
-                <li>Use a valid bank account or UPI ID.</li>
-                <li>Make sure the account belongs to you.</li>
-                <li>Saving a new destination replaces the active one.</li>
-                <li>Only eligible partner earnings can be withdrawn.</li>
-                <li>Pending withdrawals remain reserved until processed or rejected.</li>
-              </ul>
-            </article>
-
-            <article className="account-support-card">
-              <div><span>◉</span><div><small>NEED HELP?</small><strong>Questions about payouts?</strong><p>Use your withdrawal ID when contacting your ProPulse administrator.</p></div></div>
-              <Link to="/lead-partner/withdrawals">Go to Withdrawals →</Link>
-            </article>
+            <article className="account-side-card verification-card"><div className="verification-icon">{verified?'✓':'!'}</div><h3>{verified?'Account Verified':account?'Verification Pending':'Add Your Payout Account'}</h3><p>{verified?'Your payout details have been verified for eligible payouts.':account?'Your payout details are saved. Admin verification is still pending.':'Add a valid bank account or UPI ID to enable withdrawals.'}</p>{account&&<small>{verified?'Verified account':'Awaiting verification'}</small>}</article>
+            <article className="account-side-card"><h3><span>ⓘ</span> Important Information</h3><ul><li>Use a valid bank account or UPI ID.</li><li>Make sure the account belongs to you.</li><li>Saving a new destination replaces the active one.</li><li>Only eligible partner earnings can be withdrawn.</li><li>Pending withdrawals remain reserved until processed or rejected.</li></ul></article>
+            <article className="account-support-card"><div><span>◉</span><div><small>NEED HELP?</small><strong>Questions about payouts?</strong><p>Use your withdrawal ID when contacting your ProPulse administrator.</p></div></div><Link to="/lead-partner/withdrawals">Go to Withdrawals →</Link></article>
           </aside>
-        </section>
+        </section>}
+
+        {tab==='transactions'&&<section className="account-transaction-panel account-card">
+          <div className="account-card-head history-head">
+            <div><span className="account-kicker">FINANCIAL ACTIVITY</span><h2>Transaction History</h2><p>Real earnings and withdrawal transactions from your Lead Partner ledger.</p></div>
+            <button type="button" className="account-refresh" onClick={loadTransactions} disabled={transactionsLoading}>{transactionsLoading?'Refreshing…':'↻ Refresh'}</button>
+          </div>
+          {transactionError&&<div className="account-message error">{transactionError}</div>}
+          {transactionsLoading&&!transactions.length?<div className="account-loading">Loading transaction history…</div>:!transactions.length?<div className="account-empty-state"><span>◷</span><div><strong>No transactions yet</strong><small>Your earnings and withdrawal activity will appear here as transactions are created.</small></div></div>:
+          <div className="account-table-wrap"><table className="account-table"><thead><tr><th>DATE</th><th>TYPE</th><th>DESCRIPTION</th><th>STATUS</th><th>AMOUNT</th><th>REFERENCE</th></tr></thead><tbody>
+            {transactions.map(tx=><tr key={tx.id}><td>{dateTime(tx.created_at)}</td><td><span className={`account-tx-type ${tx.type}`}>{tx.type==='earning'?'Earning':'Withdrawal'}</span></td><td><b>{tx.description}</b>{tx.lead_id&&<small>Lead #{tx.lead_id}</small>}</td><td><span className={`account-tx-status ${tx.status}`}>{tx.status}</span></td><td><strong className={tx.direction==='credit'?'credit':'debit'}>{tx.direction==='credit'?'+':'−'}{money(tx.amount)}</strong></td><td>{tx.transfer_reference||tx.rejection_reason||'—'}</td></tr>)}
+          </tbody></table></div>}
+        </section>}
+
+        {tab==='settings'&&<section className="account-main-grid">
+          <div className="account-left-column">
+            <article className="account-card">
+              <div className="account-card-head"><div><span className="account-kicker">ACCOUNT SETTINGS</span><h2>Account information</h2><p>These details come from your authenticated ProPulse account.</p></div></div>
+              {settingsError&&<div className="account-message error">{settingsError}</div>}
+              {settingsLoading?<div className="account-loading">Loading account settings…</div>:<div className="settings-list">
+                <div><span>Full name</span><strong>{me?.name||user?.name||'—'}</strong></div>
+                <div><span>Email address</span><strong>{me?.email||user?.email||'—'}</strong></div>
+                <div><span>Account role</span><strong>{String(me?.role||user?.role||'lead_partner').replace(/_/g,' ')}</strong></div>
+                <div><span>Lead Partner status</span><strong>Active</strong></div>
+              </div>}
+            </article>
+            <article className="account-card settings-actions-card">
+              <div className="account-card-head"><div><span className="account-kicker">MANAGE ACCESS</span><h2>Security & profile</h2><p>Use the existing account profile and authentication flows to manage your access details.</p></div></div>
+              <div className="settings-actions"><Link to="/profile">Business profile →</Link><Link to="/lead-partner/account" onClick={()=>selectTab('payout')}>Payout account →</Link><button type="button" onClick={signOut}>Sign out</button></div>
+            </article>
+          </div>
+          <aside className="account-right-column">
+            <article className="account-side-card"><div className="verification-icon">✓</div><h3>Authentication active</h3><p>Your current session is authenticated. Password changes continue through the existing account recovery flow.</p><small>Secure session</small></article>
+            <article className="account-side-card"><h3><span>ⓘ</span> Account guidance</h3><ul><li>Keep your email address current.</li><li>Keep payout details up to date.</li><li>Never share your authentication credentials.</li><li>Review transactions after every processed payout.</li></ul></article>
+            <article className="account-support-card"><div><span>◉</span><div><small>FINANCE</small><strong>Review your withdrawals</strong><p>Open Earnings & Withdrawals to submit or track payout requests.</p></div></div><Link to="/lead-partner/withdrawals">View withdrawals →</Link></article>
+          </aside>
+        </section>}
       </div>
     </main>
   </div>;
