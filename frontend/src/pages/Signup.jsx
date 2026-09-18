@@ -121,6 +121,15 @@ function Signup() {
       <main className="auth-card-wrap"><div className="auth-card signup-card signup-wide">
         <div className="mobile-brand"><img src="/brand/propulse-logo.png" alt="Pro Pulse" /></div>
         <div className="auth-heading"><p className="auth-kicker">BUSINESS PROFILE</p><h2>Create account</h2><p>Tell us what you sell and where you serve.</p></div>
+        <div className="signup-progress" aria-label="Signup progress">
+          <div className="signup-progress-step is-active"><b>01</b><span>Account</span><small>Your details</small></div>
+          <i />
+          <div className="signup-progress-step"><b>02</b><span>Business</span><small>Your business</small></div>
+          <i />
+          <div className="signup-progress-step"><b>03</b><span>Services</span><small>What you provide</small></div>
+          <i />
+          <div className="signup-progress-step"><b>04</b><span>Finish</span><small>Get started</small></div>
+        </div>
         {error && <div className="auth-error" role="alert">{error}</div>}
         <div className="google-auth-block"><GoogleButton onCredential={handleGoogle} disabled={loading || googleLoading || loadingData} /></div>
         <div className="auth-divider"><span /><b>OR CREATE WITH EMAIL</b><span /></div>
