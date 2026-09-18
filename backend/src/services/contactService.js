@@ -1,6 +1,12 @@
 const pool=require('../config/database');
 
+const AUDIENCES=['website','users','lead_partners','common'];
 function clean(value){return String(value??'').trim()}
+function normalizeAudience(value){
+  const audience=clean(value||'website').toLowerCase();
+  if(!AUDIENCES.includes(audience)){const e=new Error('Invalid contact audience');e.code='INVALID_AUDIENCE';throw e}
+  return audience;
+}
 function normalizeSocials(value){
   if(!Array.isArray(value)) return [];
   return value.map((item,index)=>({
@@ -25,21 +31,24 @@ function normalize(input={}){
     social_handles:normalizeSocials(input.social_handles)
   };
 }
-async function get(){
-  const result=await pool.query(`SELECT id,company_name,email,phone,whatsapp,address,business_hours,support_email,careers_email,maps_url,website_url,social_handles,updated_at FROM contact_settings WHERE id=1`);
-  if(!result.rows[0]) return normalize({});
+function empty(audience){return {audience,...normalize({})}}
+async function get(audience='website'){
+  const key=normalizeAudience(audience);
+  const result=await pool.query(`SELECT audience,company_name,email,phone,whatsapp,address,business_hours,support_email,careers_email,maps_url,website_url,social_handles,updated_at FROM contact_audience_settings WHERE audience=$1`,[key]);
+  if(!result.rows[0]) return empty(key);
   return result.rows[0];
 }
-async function update(input){
+async function update(input,audience='website'){
+  const key=normalizeAudience(audience);
   const value=normalize(input);
-  if(value.company_name.length<2) {const e=new Error('Company name is required');e.code='INVALID_COMPANY';throw e}
+  if(key!=='common' && value.company_name.length<2){const e=new Error('Company name is required');e.code='INVALID_COMPANY';throw e}
   const result=await pool.query(
-    `INSERT INTO contact_settings(id,company_name,email,phone,whatsapp,address,business_hours,support_email,careers_email,maps_url,website_url,social_handles)
-     VALUES(1,$1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
-     ON CONFLICT(id) DO UPDATE SET company_name=EXCLUDED.company_name,email=EXCLUDED.email,phone=EXCLUDED.phone,whatsapp=EXCLUDED.whatsapp,address=EXCLUDED.address,business_hours=EXCLUDED.business_hours,support_email=EXCLUDED.support_email,careers_email=EXCLUDED.careers_email,maps_url=EXCLUDED.maps_url,website_url=EXCLUDED.website_url,social_handles=EXCLUDED.social_handles,updated_at=CURRENT_TIMESTAMP
-     RETURNING id,company_name,email,phone,whatsapp,address,business_hours,support_email,careers_email,maps_url,website_url,social_handles,updated_at`,
-    [value.company_name,value.email,value.phone,value.whatsapp,value.address,value.business_hours,value.support_email,value.careers_email,value.maps_url,value.website_url,JSON.stringify(value.social_handles)]
+    `INSERT INTO contact_audience_settings(audience,company_name,email,phone,whatsapp,address,business_hours,support_email,careers_email,maps_url,website_url,social_handles)
+     VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
+     ON CONFLICT(audience) DO UPDATE SET company_name=EXCLUDED.company_name,email=EXCLUDED.email,phone=EXCLUDED.phone,whatsapp=EXCLUDED.whatsapp,address=EXCLUDED.address,business_hours=EXCLUDED.business_hours,support_email=EXCLUDED.support_email,careers_email=EXCLUDED.careers_email,maps_url=EXCLUDED.maps_url,website_url=EXCLUDED.website_url,social_handles=EXCLUDED.social_handles,updated_at=CURRENT_TIMESTAMP
+     RETURNING audience,company_name,email,phone,whatsapp,address,business_hours,support_email,careers_email,maps_url,website_url,social_handles,updated_at`,
+    [key,value.company_name,value.email,value.phone,value.whatsapp,value.address,value.business_hours,value.support_email,value.careers_email,value.maps_url,value.website_url,JSON.stringify(value.social_handles)]
   );
   return result.rows[0];
 }
-module.exports={get,update};
+module.exports={AUDIENCES,get,update};
