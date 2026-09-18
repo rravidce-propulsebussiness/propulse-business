@@ -150,7 +150,7 @@ export default function LeadPartnerAccount(){
                 <div className="account-current-box">
                   <div className="account-bank-symbol">{account.method==='upi'?'@':'▥'}</div>
                   <div className="account-current-primary"><strong>{account.method==='upi'?'UPI account':account.bank_name||'Bank account'}</strong><span>{account.method==='upi'?account.upi_id:maskAccount(account.account_number_masked)}</span><small>{account.method==='upi'?'UPI payout destination':account.account_holder_name||'Account holder'}</small></div>
-                  <div className="account-current-details">{account.method==='upi'?<><span>Method <b>UPI</b></span><span>Status <b>{verified?'Verified':'Pending verification'}</b></span></>:<><span>IFSC Code <b>{account.ifsc_code||'—'}</b></span><span>Bank <b>{account.bank_name||'—'}</b></span></>}</div>
+                  <div className="account-current-details">{account.method==='upi'?<><span>Method <b>UPI</b></span><span>Status <b>Active</b></span></>:<><span>IFSC Code <b>{account.ifsc_code||'—'}</b></span><span>Bank <b>{account.bank_name||'—'}</b></span></>}</div>
                   <div className="account-current-actions"><button type="button" onClick={()=>document.getElementById('payout-form')?.scrollIntoView({behavior:'smooth',block:'center'})}>✎ Update</button></div>
                 </div>
                 :<div className="account-empty-state"><span>+</span><div><strong>No payout account yet</strong><small>Add a Bank Account or UPI destination below to enable withdrawal requests.</small></div></div>}
