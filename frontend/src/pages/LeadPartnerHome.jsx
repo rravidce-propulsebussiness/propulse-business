@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import LeadPartnerSidebar from '../components/LeadPartnerSidebar';
 import { Link, useNavigate } from 'react-router-dom'
 import { authRequest, clearSession, getUser } from '../utils/auth'
 import './LeadPartnerHome.css'
@@ -78,22 +79,7 @@ export default function LeadPartnerHome(){
   }
 
   return <div className="lp-shell">
-    <aside className="lp-sidebar">
-      <div className="lp-brand"><span className="lp-brand-mark">P</span><span><b>PRO<span>PULSE</span></b><small>LEAD PARTNER</small></span></div>
-      <div className="lp-nav-label">WORKSPACE</div>
-      <nav className="lp-nav">
-        <Link className="active" to="/lead-partner"><Icon>⌂</Icon><span>Overview</span></Link>
-        <Link to="/lead-partner/inventory"><Icon>◈</Icon><span>Lead Inventory</span></Link>
-        <Link to="/lead-partner/pricing"><Icon>₹</Icon><span>Pricing & Revenue</span></Link>
-        <Link to="/lead-partner/withdrawals"><Icon>⇩</Icon><span>Earnings & Withdrawals</span></Link>
-        <Link to="/lead-partner/reports"><Icon>▥</Icon><span>Reports</span></Link><Link to="/lead-partner/faqs"><Icon>?</Icon><span>FAQs</span></Link>
-        <Link to="/lead-partner/account"><Icon>◎</Icon><span>Account</span></Link>
-      </nav>
-      <div className="lp-sidebar-bottom">
-        <div className="lp-sidebar-user"><span>{initials}</span><div><b>{user?.name||'Lead Partner'}</b><small>{user?.email||'Partner account'}</small></div></div>
-        <button onClick={signOut}>↪ <span>Log out</span></button>
-      </div>
-    </aside>
+    <LeadPartnerSidebar user={user} onSignOut={signOut} />
 
     <main className="lp-main">
       <header className="lp-topbar">
