@@ -245,7 +245,7 @@ async function disableSheetConnection({ userId, connectionId }) {
 
 async function listInventory({ userId, status = 'all', search = '' }) {
   const params = [userId];
-  const conditions = ['lp.user_id=$1 AND (l.lead_partner_id=lp.id OR (l.created_by=$1 AND l.lead_partner_id IS NULL))'];
+  const conditions = ['((lp.user_id=$1 AND l.lead_partner_id=lp.id) OR (l.created_by=$1 AND l.lead_partner_id IS NULL))'];
   if (status && status !== 'all') { params.push(status); conditions.push(`l.status=$${params.length}`); }
   if (clean(search)) { params.push(`%${clean(search)}%`); conditions.push(`(l.customer_name ILIKE $${params.length} OR l.customer_phone ILIKE $${params.length} OR l.requirement ILIKE $${params.length})`); }
   const where = conditions.join(' AND ');
@@ -272,7 +272,7 @@ async function listInventory({ userId, status = 'all', search = '' }) {
               COUNT(*) FILTER (WHERE l.status='closed')::int AS closed
          FROM leads l
          JOIN lead_partners lp ON lp.id=l.lead_partner_id
-        WHERE lp.user_id=$1 AND (l.lead_partner_id=lp.id OR (l.created_by=$1 AND l.lead_partner_id IS NULL))`,
+        WHERE ((lp.user_id=$1 AND l.lead_partner_id=lp.id) OR (l.created_by=$1 AND l.lead_partner_id IS NULL))`,
       [userId]
     )
   ]);
