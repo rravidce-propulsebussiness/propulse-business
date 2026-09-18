@@ -181,6 +181,7 @@ function Home() {
           <a className={activeNav === 'about' ? 'nav-active' : ''} href="#about" onClick={event => scrollToSection(event, 'about')}>About</a>
           <a className={activeNav === 'contact' ? 'nav-active' : ''} href="#contact" onClick={event => scrollToSection(event, 'contact')}>Contact</a>
           <a className={activeNav === 'faq' ? 'nav-active' : ''} href="#faq" onClick={event => scrollToSection(event, 'faq')}>FAQ</a>
+          <Link to="/upcoming-features">Upcoming Features</Link>
         </nav>
         <div className="header-actions">
           <Link className="header-search" to="/leads" aria-label="Search leads">⌕</Link>
