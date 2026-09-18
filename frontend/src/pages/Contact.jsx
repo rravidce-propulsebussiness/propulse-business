@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Link } from 'react-router-dom';
 import { apiRequest } from '../utils/api';
 import './Home.css';
@@ -7,9 +8,12 @@ import './Contact.css';
 function Icon({children}){return <span className="contact-icon" aria-hidden="true">{children}</span>}
 
 export default function Contact(){
+  const [searchParams]=useSearchParams();
+  const audience=['website','users','lead_partners','common'].includes(searchParams.get('audience')||'website')?searchParams.get('audience')||'website':'website';
+  const audienceLabel={website:'Public Website',users:'Customer Support',lead_partners:'Lead Partner Support',common:'ProPulse Support'}[audience];
   const [data,setData]=useState(null);
   const [loading,setLoading]=useState(true);
-  useEffect(()=>{let active=true;apiRequest('/contact',{},false).then(v=>{if(active)setData(v)}).catch(()=>{if(active)setData({})}).finally(()=>active&&setLoading(false));return()=>{active=false}},[]);
+  useEffect(()=>{let active=true;apiRequest('/contact?audience='+encodeURIComponent(audience),{},false).then(v=>{if(active)setData(v)}).catch(()=>{if(active)setData({})}).finally(()=>active&&setLoading(false));return()=>{active=false}},[]);
   const socials=useMemo(()=>Array.isArray(data?.social_handles)?data.social_handles.filter(s=>s.enabled&&s.url):[],[data]);
   const wa=data?.whatsapp?String(data.whatsapp).replace(/\D/g,''):'';
   return <div className="contact-page">
@@ -19,7 +23,7 @@ export default function Contact(){
       <div className="header-actions"><Link className="header-leads" to="/leads">See Leads</Link><Link className="header-signup" to="/signup">Get started</Link></div>
     </header>
     <main>
-      <section className="contact-hero"><div><span className="contact-kicker">LET’S TALK</span><h1>Contact ProPulse</h1><p>Have a question about leads, digital growth or your business account? Reach the team through the channel that works best for you.</p></div><div className="contact-hero-badge"><span>PRO</span><strong>PULSE</strong><small>Business growth &amp; lead opportunities</small></div></section>
+      <section className="contact-hero"><div><span className="contact-kicker">{audienceLabel.toUpperCase()}</span><h1>Contact ProPulse</h1><p>{audience==='lead_partners'?'Need help with lead uploads, pricing, reports or withdrawals? Reach the ProPulse team through the channel that works best for you.':audience==='users'?'Need help with leads, your account, wallet or membership? Reach the ProPulse support team through the channel that works best for you.':'Have a question about leads, digital growth or your business account? Reach the team through the channel that works best for you.'}</p></div><div className="contact-hero-badge"><span>PRO</span><strong>PULSE</strong><small>Business growth &amp; lead opportunities</small></div></section>
       <section className="contact-grid">
         <div className="contact-left">
           <article className="contact-card contact-main-card"><div className="contact-card-head"><div><span className="contact-kicker">CONTACT DETAILS</span><h2>We’re here to help</h2><p>Connect with ProPulse for support, business enquiries and partnership conversations.</p></div></div>
