@@ -3,7 +3,7 @@ const path=require('path');
 const pool=require('../config/database');
 
 const SLOT_NAMES=['hero','residential','interior','commercial','turnkey','plot_land'];
-const MAX_BYTES=8*1024*1024;
+const MAX_BYTES=7*1024*1024;
 const MIME_EXTENSIONS={'image/jpeg':'jpg','image/png':'png','image/webp':'webp'};
 const UPLOAD_ROOT=path.join(__dirname,'../../uploads/homepage');
 
@@ -35,7 +35,7 @@ function parseImage(dataUrl){
   const mime=match[1].toLowerCase();
   const buffer=Buffer.from(match[2].replace(/\s/g,''),'base64');
   if(!buffer.length){const e=new Error('Image file is empty');e.code='INVALID_IMAGE';throw e}
-  if(buffer.length>MAX_BYTES){const e=new Error('Image must be 8 MB or smaller');e.code='IMAGE_TOO_LARGE';throw e}
+  if(buffer.length>MAX_BYTES){const e=new Error('Image must be 7 MB or smaller');e.code='IMAGE_TOO_LARGE';throw e}
   return {mime,buffer,extension:MIME_EXTENSIONS[mime]};
 }
 function assertSlot(slot){
