@@ -122,11 +122,8 @@ function Home() {
 
           <div className="hero-visual" aria-label="Propulse lead marketplace preview">
             <div className="hero-photo">
-              <img className="hero-media-image" src={media.hero_image_url || "/homepage/default-hero.svg"} alt="" />
+              <img className="hero-media-image" src={media.hero_image_url || "/homepage/default-hero.svg"} alt="Propulse project opportunities" />
               <div className="photo-overlay" />
-              <div className="hero-building"><span>PROPULSE</span><b>PROJECT<br />OPPORTUNITY</b></div>
-              <div className="hero-person"><div className="person-head" /><div className="person-body"><span>P</span></div></div>
-              <div className="hero-note"><strong>More Projects</strong><em>Bigger Possibilities</em><span /></div>
             </div>
             <div className="hero-live-card">
               <span className="live-dot" />
