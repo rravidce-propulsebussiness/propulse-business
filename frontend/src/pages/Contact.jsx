@@ -47,7 +47,6 @@ function PublicContact({searchParams}){
         <Link className="nav-active" to="/contact">Contact</Link>
       </nav>
       <div className="header-actions">
-        <Link className="header-search" to="/leads" aria-label="Search leads">⌕</Link>
         <Link className="header-login" to="/login">Login</Link>
         <Link className="header-signup" to="/signup">Get Started <span>→</span></Link>
       </div>
