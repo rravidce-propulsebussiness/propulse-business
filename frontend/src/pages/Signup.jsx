@@ -2,8 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { publicRequest, authRequest, saveSession } from '../utils/auth'
 import GoogleButton from '../components/GoogleButton'
-import './Auth.css'
-import './AuthExtras.css'
+import './Signup.css'
 
 const emptyForm = { name: '', email: '', phone: '', businessName: '', businessDetails: '', password: '', confirm: '' }
 const newService = () => ({ industryId: '', serviceId: '', subserviceId: '' })
@@ -112,51 +111,148 @@ function Signup() {
   }, [accountType, agree, navigate])
 
   return (
-    <div className="auth-page">
-      <header className="auth-topbar">
-        <Link className="auth-topbar-brand" to="/" aria-label="ProPulse Business home"><img src="/brand/propulse-logo.png" alt="ProPulse Business" /></Link>
-        <Link className="auth-home-button" to="/"><span>←</span> Homepage</Link>
-      </header>
-      <section className="auth-visual" aria-label="Pro Pulse Business">
-        <div className="auth-visual-overlay" /><div className="auth-visual-content">
-          <div className="auth-logo-frame"><img className="auth-logo" src="/brand/propulse-logo.png" alt="Pro Pulse Business" /></div>
-          <div className="auth-visual-copy"><span>QUALIFIED LEADS. BETTER OPPORTUNITIES.</span><h1>Get High-Value<br /><em>Clients.</em></h1><p>Choose the services you provide and the locations you serve. We'll match you with relevant opportunities.</p></div>
-          <div className="auth-visual-footer"><span>CONNECT</span><i /><span>GROW</span><i /><span>BUILD</span><i /><span>SUCCEED</span></div>
+    <div className="signup-premium-page">
+      <section className="signup-premium-visual" aria-label="Propulse Business">
+        <div className="signup-visual-bg" />
+        <div className="signup-visual-overlay" />
+        <div className="signup-visual-orbit orbit-a" />
+        <div className="signup-visual-orbit orbit-b" />
+
+        <div className="signup-visual-top">
+          <Link className="signup-brand" to="/" aria-label="Propulse Business home">
+            <img src="/brand/propulse-logo.png" alt="Propulse Business Technologies Private Limited" />
+            <span>Building Business Together.</span>
+          </Link>
+          <div className="signup-visual-nav"><span>Technology</span><i/><span>Growth</span><i/><span>Opportunities</span></div>
         </div>
-      </section>
-      <main className="auth-card-wrap"><div className="auth-card signup-card signup-wide">
-        <div className="mobile-brand"><img src="/brand/propulse-logo.png" alt="Pro Pulse" /></div>
-        <div className="auth-heading"><p className="auth-kicker">ACCOUNT TYPE</p><h2>Create account</h2><p>Choose how you'll use ProPulse Business.</p></div>
-        {error && <div className="auth-error" role="alert">{error}</div>}
-        <div className="account-type-grid" role="radiogroup" aria-label="Account type">
-          <button type="button" className={`account-type-card ${accountType === 'business' ? 'selected' : ''}`} onClick={() => setAccountType('business')} aria-pressed={accountType === 'business'} disabled={loading || googleLoading}>
-            <strong>User</strong><span>For businesses that want to find and buy leads.</span>
-          </button>
-          <button type="button" className={`account-type-card ${accountType === 'lead_partner' ? 'selected' : ''}`} onClick={() => setAccountType('lead_partner')} aria-pressed={accountType === 'lead_partner'} disabled={loading || googleLoading}>
-            <strong>Lead Partner</strong><span>For partners who work with ProPulse lead opportunities.</span>
-          </button>
-        </div>
-        <div className="signup-role-note">Creating a <strong>{accountTypeLabel()}</strong> account. Investor is not a separate signup type; Pro membership unlocks investor features for Users.</div>
-        <div className="google-auth-block"><GoogleButton onCredential={handleGoogle} disabled={loading || googleLoading || loadingData} /></div>
-        <div className="auth-divider"><span /><b>OR CREATE WITH EMAIL</b><span /></div>
-        {loadingData && <div className="auth-loading">Loading options…</div>}
-        <form onSubmit={submit}>
-          <div className="signup-section-label">Personal details</div>
-          <div className="auth-form-grid">
-            <label>Full name<input autoComplete="name" value={form.name} onChange={(e) => update('name', e.target.value)} placeholder="Your name" required /></label>
-            <label>Phone number<input type="tel" autoComplete="tel" value={form.phone} onChange={(e) => update('phone', e.target.value)} placeholder="10-digit mobile number" required /></label>
-            <label className="full-span">Email address<input type="email" autoComplete="email" value={form.email} onChange={(e) => update('email', e.target.value)} placeholder="you@company.com" required /></label>
+
+        <div className="signup-visual-content">
+          <div className="signup-visual-kicker"><span /> JOIN PROPULSE</div>
+          <h1>Be Part of<br /><em>Bigger Growth.</em></h1>
+          <p>Create your account and unlock opportunities in technology, digital growth, lead sales and business solutions with Propulse.</p>
+
+          <div className="signup-benefits">
+            <div><b>01</b><span><strong>Access Leads</strong><small>Discover relevant customer opportunities.</small></span></div>
+            <div><b>02</b><span><strong>Grow Your Business</strong><small>Use technology, marketing and digital tools.</small></span></div>
+            <div><b>03</b><span><strong>Expert Support</strong><small>Build, digitize and scale with practical support.</small></span></div>
+            <div><b>04</b><span><strong>Secure &amp; Reliable</strong><small>Business-focused systems and workflows.</small></span></div>
           </div>
-          <div className="signup-section-label">Business details</div>
-          <div className="auth-form-grid"><label className="full-span">Business name<input value={form.businessName} onChange={(e) => update('businessName', e.target.value)} placeholder="Your company or business name" required /></label><label className="full-span">Business details<textarea value={form.businessDetails} onChange={(e) => update('businessDetails', e.target.value)} placeholder="Tell customers what your business does" rows="3" required /></label></div>
-          <div className="signup-section-label section-heading-row"><div><span>Services you provide</span><small>Add every service you want matching leads for.</small></div><button type="button" className="add-selection primary-add" onClick={addServiceSelection}>+ Add service</button></div>
-          <div className="selection-list">{serviceSelections.map((selection, index) => <div className="selection-card" key={`service-${index}`}><div className="selection-card-top"><span>Service {index + 1}</span>{serviceSelections.length > 1 && <button type="button" className="remove-selection" onClick={() => removeServiceSelection(index)}>Remove</button>}</div><div className="selection-grid"><label>Industry<select value={selection.industryId} onChange={(e) => updateServiceSelection(index, 'industryId', e.target.value)} disabled={loadingData} required><option value="">Select industry</option>{industries.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label><label>Service<select value={selection.serviceId} onChange={(e) => updateServiceSelection(index, 'serviceId', e.target.value)} disabled={!selection.industryId} required><option value="">{selection.industryId ? 'Select service' : 'Select industry first'}</option>{(serviceOptions[index] || []).map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label><label>Subservice <span className="optional">Optional</span><select value={selection.subserviceId} onChange={(e) => updateServiceSelection(index, 'subserviceId', e.target.value)} disabled={!selection.serviceId}><option value="">All related subservices</option>{(subserviceOptions[index] || []).map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label></div></div>)}</div>
-          <div className="signup-section-label section-heading-row"><div><span>Locations you serve</span><small>Add every city where you want to receive leads.</small></div><button type="button" className="add-selection primary-add" onClick={addLocationSelection}>+ Add location</button></div>
-          <div className="selection-list">{locationSelections.map((selection, index) => <div className="selection-card" key={`location-${index}`}><div className="selection-card-top"><span>Location {index + 1}</span>{locationSelections.length > 1 && <button type="button" className="remove-selection" onClick={() => removeLocationSelection(index)}>Remove</button>}</div><div className="selection-grid location-grid"><label>State / UT<select value={selection.stateId} onChange={(e) => updateLocationSelection(index, 'stateId', e.target.value)} disabled={loadingData} required><option value="">Select state / UT</option>{states.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label><label>City<select value={selection.cityId} onChange={(e) => updateLocationSelection(index, 'cityId', e.target.value)} disabled={!selection.stateId} required><option value="">{selection.stateId ? 'Select city' : 'Select state first'}</option>{(cityOptions[index] || []).map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label></div></div>)}</div>
-          <div className="signup-section-label">Secure your account</div><div className="auth-form-grid"><label>Password<div className="password-field"><input type={showPassword ? 'text' : 'password'} autoComplete="new-password" value={form.password} onChange={(e) => update('password', e.target.value)} placeholder="At least 8 characters" required /><button type="button" onClick={() => setShowPassword((v) => !v)}>{showPassword ? 'Hide' : 'Show'}</button></div></label><label>Confirm password<input type={showPassword ? 'text' : 'password'} autoComplete="new-password" value={form.confirm} onChange={(e) => update('confirm', e.target.value)} placeholder="Repeat your password" required /></label></div>
-          <label className="check terms"><input type="checkbox" checked={agree} onChange={(e) => setAgree(e.target.checked)} /> I agree to the terms and privacy policy.</label><button className="auth-submit" disabled={loading || googleLoading || loadingData}>{loading ? 'Creating…' : `Create ${accountTypeLabel()} account`} <span>→</span></button>
-        </form><p className="auth-switch">Already have an account? <Link to="/login">Sign in</Link></p>
-      </div></main>
+
+          <div className="signup-quote">
+            <span>“</span>
+            <div><p>Technology built around business growth.</p><small>— Propulse Business Technologies</small></div>
+          </div>
+        </div>
+
+        <div className="signup-visual-foot">PROPULSE BUSINESS TECHNOLOGIES PRIVATE LIMITED</div>
+      </section>
+
+      <main className="signup-premium-main">
+        <div className="signup-card-premium">
+          <div className="signup-card-top">
+            <Link className="signup-card-logo" to="/" aria-label="Propulse Business home">
+              <img src="/brand/propulse-logo.png" alt="Propulse Business" />
+            </Link>
+            <div className="signup-top-link"><span>Already have an account?</span><Link to="/login">Sign in <b>→</b></Link></div>
+          </div>
+
+          <div className="signup-heading">
+            <span>JOIN PROPULSE</span>
+            <h2>Create your account</h2>
+            <p>Join Propulse and start your business journey today.</p>
+          </div>
+
+          {error && <div className="signup-error" role="alert">{error}</div>}
+
+          <div className="signup-account-grid" role="radiogroup" aria-label="Account type">
+            <button type="button" className={`signup-account-option ${accountType === 'business' ? 'selected' : ''}`} onClick={() => setAccountType('business')} aria-pressed={accountType === 'business'} disabled={loading || googleLoading}>
+              <span className="signup-option-icon">♙</span>
+              <span><strong>User</strong><small>Buy leads &amp; grow your business</small></span>
+            </button>
+            <button type="button" className={`signup-account-option ${accountType === 'lead_partner' ? 'selected' : ''}`} onClick={() => setAccountType('lead_partner')} aria-pressed={accountType === 'lead_partner'} disabled={loading || googleLoading}>
+              <span className="signup-option-icon">♙♙</span>
+              <span><strong>Lead Partner</strong><small>Submit &amp; manage lead opportunities</small></span>
+            </button>
+          </div>
+
+          <div className="signup-role-note">Creating a <strong>{accountTypeLabel()}</strong> account. Select the account type that matches how you use Propulse.</div>
+
+          {loadingData && <div className="signup-loading">Loading business options…</div>}
+
+          <form className="signup-form" onSubmit={submit}>
+            <section className="signup-form-section">
+              <div className="signup-section-head"><span>01</span><div><strong>Your details</strong><small>Tell us how to reach you.</small></div></div>
+              <div className="signup-form-grid">
+                <label>Full name<input autoComplete="name" value={form.name} onChange={(e) => update('name', e.target.value)} placeholder="Enter your full name" required /></label>
+                <label>Email address<input type="email" autoComplete="email" value={form.email} onChange={(e) => update('email', e.target.value)} placeholder="Enter your email address" required /></label>
+                <label>Mobile number<input type="tel" autoComplete="tel" value={form.phone} onChange={(e) => update('phone', e.target.value)} placeholder="Enter your mobile number" required /></label>
+                <label>Password<div className="signup-password-field"><input type={showPassword ? 'text' : 'password'} autoComplete="new-password" value={form.password} onChange={(e) => update('password', e.target.value)} placeholder="Create a password" required /><button type="button" onClick={() => setShowPassword(v => !v)}>{showPassword ? 'Hide' : 'Show'}</button></div></label>
+                <label className="signup-full">Confirm password<input type={showPassword ? 'text' : 'password'} autoComplete="new-password" value={form.confirm} onChange={(e) => update('confirm', e.target.value)} placeholder="Repeat your password" required /></label>
+              </div>
+            </section>
+
+            <section className="signup-form-section">
+              <div className="signup-section-head"><span>02</span><div><strong>Your business</strong><small>Help us understand what you do.</small></div></div>
+              <div className="signup-form-grid">
+                <label className="signup-full">Business name<input value={form.businessName} onChange={(e) => update('businessName', e.target.value)} placeholder="Your company or business name" required /></label>
+                <label className="signup-full">Business details<textarea value={form.businessDetails} onChange={(e) => update('businessDetails', e.target.value)} placeholder="Tell us what your business does" rows="3" required /></label>
+              </div>
+            </section>
+
+            <section className="signup-form-section">
+              <div className="signup-section-head signup-section-head-inline">
+                <span>03</span>
+                <div><strong>Services you provide</strong><small>Select every service you want matching leads for.</small></div>
+                <button type="button" className="signup-add-button" onClick={addServiceSelection}>+ Add service</button>
+              </div>
+              <div className="signup-selection-list">
+                {serviceSelections.map((selection, index) => (
+                  <div className="signup-selection-card" key={`service-${index}`}>
+                    <div className="signup-selection-top"><span>Service {index + 1}</span>{serviceSelections.length > 1 && <button type="button" onClick={() => removeServiceSelection(index)}>Remove</button>}</div>
+                    <div className="signup-selection-grid">
+                      <label>Industry<select value={selection.industryId} onChange={(e) => updateServiceSelection(index, 'industryId', e.target.value)} disabled={loadingData} required><option value="">Select industry</option>{industries.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
+                      <label>Service<select value={selection.serviceId} onChange={(e) => updateServiceSelection(index, 'serviceId', e.target.value)} disabled={!selection.industryId} required><option value="">{selection.industryId ? 'Select service' : 'Select industry first'}</option>{(serviceOptions[index] || []).map(item => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
+                      <label>Subservice <small>Optional</small><select value={selection.subserviceId} onChange={(e) => updateServiceSelection(index, 'subserviceId', e.target.value)} disabled={!selection.serviceId}><option value="">All related subservices</option>{(subserviceOptions[index] || []).map(item => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            <section className="signup-form-section">
+              <div className="signup-section-head signup-section-head-inline">
+                <span>04</span>
+                <div><strong>Locations you serve</strong><small>Select the cities where you want relevant leads.</small></div>
+                <button type="button" className="signup-add-button" onClick={addLocationSelection}>+ Add location</button>
+              </div>
+              <div className="signup-selection-list">
+                {locationSelections.map((selection, index) => (
+                  <div className="signup-selection-card" key={`location-${index}`}>
+                    <div className="signup-selection-top"><span>Location {index + 1}</span>{locationSelections.length > 1 && <button type="button" onClick={() => removeLocationSelection(index)}>Remove</button>}</div>
+                    <div className="signup-selection-grid signup-location-grid">
+                      <label>State / UT<select value={selection.stateId} onChange={(e) => updateLocationSelection(index, 'stateId', e.target.value)} disabled={loadingData} required><option value="">Select state / UT</option>{states.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
+                      <label>City<select value={selection.cityId} onChange={(e) => updateLocationSelection(index, 'cityId', e.target.value)} disabled={!selection.stateId} required><option value="">{selection.stateId ? 'Select city' : 'Select state first'}</option>{(cityOptions[index] || []).map(item => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            <div className="signup-consent">
+              <label><input type="checkbox" checked={agree} onChange={(e) => setAgree(e.target.checked)} /> <span>I agree to the <b>Terms of Service</b> and <b>Privacy Policy</b>.</span></label>
+            </div>
+
+            <button className="signup-submit" disabled={loading || googleLoading || loadingData}>{loading ? 'Creating Account…' : `Create ${accountTypeLabel()} Account`} <span>→</span></button>
+          </form>
+
+          <div className="signup-or"><span /> <b>OR</b> <span /></div>
+          <div className="signup-google"><GoogleButton onCredential={handleGoogle} disabled={loading || googleLoading || loadingData} /></div>
+
+          <div className="signup-security"><span>⌑</span><div><strong>Your information is secure with us.</strong><small>Business account details are used to provide the Propulse service experience.</small></div></div>
+
+          <p className="signup-bottom-login">Already have an account? <Link to="/login">Sign in <b>→</b></Link></p>
+        </div>
+      </main>
     </div>
   )
 }
