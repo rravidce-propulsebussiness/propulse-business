@@ -279,7 +279,20 @@ async function getDashboard(userId, period='month') {
            COALESCE((SELECT SUM(e.earning_amount) FROM lead_partner_earnings e WHERE e.partner_id=$1 AND e.status<>'reversed' AND date_trunc('month',e.created_at)=m.month),0) AS earnings,
            COALESCE((SELECT SUM(r.amount) FROM lead_partner_payout_requests r WHERE r.partner_id=$1 AND r.status='paid' AND date_trunc('month',r.processed_at)=m.month),0) AS received
     FROM months m ORDER BY m.month`, [partnerId]),
-    pool.query(`SELECT status,COUNT(*)::int AS count FROM leads WHERE lead_partner_id=$1 GROUP BY status`, [partnerId]),
+    pool.query(`WITH outcome AS (
+      SELECT l.id,
+        CASE
+          WHEN EXISTS (SELECT 1 FROM lead_reports r WHERE r.lead_id=l.id AND r.status='verified_fake') THEN 'fake'
+          WHEN EXISTS (SELECT 1 FROM lead_purchases p WHERE p.lead_id=l.id AND p.status='refunded') THEN 'refunded'
+          WHEN EXISTS (SELECT 1 FROM lead_purchases p WHERE p.lead_id=l.id AND p.status='paid') THEN 'sold'
+          WHEN l.status='closed' THEN 'closed'
+          WHEN l.status='paused' THEN 'paused'
+          ELSE 'available'
+        END AS status
+      FROM leads l
+      WHERE l.lead_partner_id=$1
+    )
+    SELECT status,COUNT(*)::int AS count FROM outcome GROUP BY status`, [partnerId]),
     pool.query(`SELECT id,amount,status,transfer_reference,requested_at,processed_at,payout_account_snapshot FROM lead_partner_payout_requests WHERE partner_id=$1 ORDER BY requested_at DESC,id DESC LIMIT 5`, [partnerId])
   ]) : [{rows:[]},{rows:[]},{rows:[]}];
   const leadStatus = Object.fromEntries(statusResult.rows.map(x=>[x.status,Number(x.count||0)]));
@@ -302,7 +315,14 @@ async function getDashboard(userId, period='month') {
     },
     charts: {
       earnings: chartResult.rows.map(x=>({label:x.label,earnings:Number(x.earnings||0),received:Number(x.received||0)})),
-      leadStatus: { available:Number(leadStatus.available||0), sold:Number(leadStatus.sold||0), closed:Number(leadStatus.closed||0), paused:Number(leadStatus.paused||0), invalid:Number(leadStatus.invalid||0) },
+      leadStatus: {
+        available:Number(leadStatus.available||0),
+        sold:Number(leadStatus.sold||0),
+        refunded:Number(leadStatus.refunded||0),
+        fake:Number(leadStatus.fake||0),
+        closed:Number(leadStatus.closed||0),
+        paused:Number(leadStatus.paused||0),
+      },
     },
     quality,
     recentLeads: recentResult.rows,
