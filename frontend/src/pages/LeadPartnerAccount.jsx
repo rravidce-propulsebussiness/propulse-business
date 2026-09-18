@@ -25,7 +25,7 @@ export default function LeadPartnerAccount(){
   const [error,setError] = useState('');
   const [tab,setTab] = useState('payout');
   const [transactions,setTransactions] = useState([]);
-  const [transactionFunds,setTransactionFunds] = useState({available:0,reserved:0,paid:0,total_earned:0,total_additions:0,total_deductions:0});
+  const [transactionFunds,setTransactionFunds] = useState({available:0,reserved:0,paid:0,total_earned:0,total_additions:0,total_deductions:0,opening_balance:0,recovery_outstanding:0});
   const [transactionsLoading,setTransactionsLoading] = useState(false);
   const [transactionError,setTransactionError] = useState('');
   const [me,setMe] = useState(null);
@@ -56,7 +56,7 @@ export default function LeadPartnerAccount(){
       setTransactionsLoading(true); setTransactionError('');
       const result = await authRequest('/lead-partner/transactions');
       setTransactions(Array.isArray(result?.transactions) ? result.transactions : []);
-      setTransactionFunds({available:Number(result?.available || 0),reserved:Number(result?.reserved || 0),paid:Number(result?.paid || 0),total_earned:Number(result?.total_earned || 0),total_additions:Number(result?.total_additions || 0),total_deductions:Number(result?.total_deductions || 0)});
+      setTransactionFunds({available:Number(result?.available || 0),reserved:Number(result?.reserved || 0),paid:Number(result?.paid || 0),total_earned:Number(result?.total_earned || 0),total_additions:Number(result?.total_additions || 0),total_deductions:Number(result?.total_deductions || 0),opening_balance:Number(result?.opening_balance || 0),recovery_outstanding:Number(result?.recovery_outstanding || 0)});
     }catch(e){setTransactionError(e.message || 'Unable to load transaction history')}
     finally{setTransactionsLoading(false)}
   },[]);
@@ -180,11 +180,12 @@ export default function LeadPartnerAccount(){
             <div><span className="account-kicker">FINANCIAL ACTIVITY</span><h2>Transaction History</h2><p>Real earnings and withdrawal activity from your Lead Partner ledger.</p></div>
             <button type="button" className="account-refresh" onClick={loadTransactions} disabled={transactionsLoading}>{transactionsLoading?'Refreshing…':'↻ Refresh'}</button>
           </div>
-                    <div className="transaction-balance-grid">
+                              <div className="transaction-balance-grid">
             <div><span>Current balance</span><strong>{transactionsLoading && !transactions.length ? '—' : money(transactionFunds.available)}</strong><small>Current eligible balance</small></div>
-            <div><span>Total additions</span><strong className="addition-balance">{transactionsLoading && !transactions.length ? '—' : '+'+money(transactionFunds.total_additions)}</strong><small>Total earnings credited to the ledger</small></div>
+            <div><span>Total additions</span><strong className="addition-balance">{transactionsLoading && !transactions.length ? '—' : '+'+money(transactionFunds.total_additions)}</strong><small>Total earnings credited</small></div>
             <div><span>Total deductions</span><strong className="deduction-balance">{transactionsLoading && !transactions.length ? '—' : '−'+money(transactionFunds.total_deductions)}</strong><small>Pending and paid withdrawals</small></div>
-            <div><span>Pending payout</span><strong className="pending-balance">{transactionsLoading && !transactions.length ? '—' : money(transactionFunds.reserved)}</strong><small>Currently reserved for processing</small><Link to="/lead-partner/withdrawals">Manage withdrawals →</Link></div>
+            <div><span>Opening balance</span><strong>{transactionsLoading && !transactions.length ? '—' : money(transactionFunds.opening_balance)}</strong><small>Balance carried before shown transactions</small></div>
+            <div><span>Recovery outstanding</span><strong className="recovery-balance">{transactionsLoading && !transactions.length ? '—' : money(transactionFunds.recovery_outstanding)}</strong><small>Recovered from future eligible earnings</small></div>
           </div>
           {transactionError&&<div className="account-message error">{transactionError}</div>}
           {transactionsLoading&&!transactions.length?<div className="account-loading">Loading transaction history…</div>:!transactions.length?<div className="account-empty-state"><span>◷</span><div><strong>No transactions yet</strong><small>Your earnings and withdrawal activity will appear here as transactions are created.</small></div></div>:
