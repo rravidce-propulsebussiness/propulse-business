@@ -72,6 +72,7 @@ const normalizeLeadRow=row=>{
     custom['Property Type']=property;
   }
 
+  const normalizedBudget=budgetCustom||String(row.budget??'').trim()||null;
   return{
     ...row,
     budget:normalizedBudget,
