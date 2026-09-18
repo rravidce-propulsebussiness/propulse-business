@@ -37,3 +37,25 @@
   #root .lp-main,#root .pricing-main,#root .partner-main,#root .withdrawals-main,#root .account-main,#root .reports-main,#root .faq-main{margin-left:0!important;width:100%!important}
   #root .lp-topbar,#root .pricing-topbar,#root .partner-topbar,#root .withdrawals-topbar,#root .account-topbar,#root .reports-topbar,#root .faq-topbar{height:58px!important;min-height:58px!important}
 }
+
+
+/* Unified ProPulse Lead Partner brand lock */
+#root .lp-brand,#root .pricing-brand,#root .partner-brand,#root .withdrawals-brand,#root .account-brand,#root .reports-brand,#root .faq-brand{
+  width:100%!important;height:94px!important;min-height:94px!important;box-sizing:border-box!important;
+  display:flex!important;align-items:center!important;gap:13px!important;padding:0 24px!important;
+  border-bottom:1px solid #edf1f6!important;
+}
+#root .lp-brand-mark,#root .pricing-brand-mark,#root .partner-brand-mark,#root .withdrawals-brand-mark,#root .account-brand-mark,#root .reports-brand-mark,#root .faq-brand-mark{
+  width:44px!important;height:44px!important;min-width:44px!important;max-width:44px!important;
+  border-radius:11px!important;background:#103a78!important;color:#fff!important;
+  display:grid!important;place-items:center!important;font-size:24px!important;line-height:1!important;font-weight:900!important;
+}
+#root .lp-brand>b,#root .pricing-brand>b,#root .partner-brand>b,#root .withdrawals-brand>b,#root .account-brand>b,#root .reports-brand>b,#root .faq-brand>b,
+#root .lp-brand>span>b,#root .pricing-brand>span>b,#root .partner-brand>span>b,#root .withdrawals-brand>span>b,#root .account-brand>span>b,#root .reports-brand>span>b,#root .faq-brand>span>b{
+  display:block!important;color:#11345f!important;font-size:20px!important;line-height:1!important;letter-spacing:.01em!important;margin:0!important;
+}
+#root .lp-brand b span,#root .pricing-brand b span,#root .partner-brand b span,#root .withdrawals-brand b span,#root .account-brand b span,#root .reports-brand b span,#root .faq-brand b span{color:#f45125!important}
+#root .lp-brand small,#root .pricing-brand small,#root .partner-brand small,#root .withdrawals-brand small,#root .account-brand small,#root .reports-brand small,#root .faq-brand small{
+  display:block!important;margin-top:7px!important;color:#8795aa!important;font-size:8px!important;font-weight:900!important;line-height:1!important;letter-spacing:.17em!important;
+}
+#root .pricing-brand em{display:none!important}
