@@ -231,6 +231,19 @@ async function resolveLocationFromPincode(pincode, cat, suppliedState, suppliedC
   return { pincode: value, state, city };
 }
 
+const CORE_SHEET_FIELDS = new Set([
+  'id','industry','service','subservice','state','city','pincode','customerName','customerPhone','customerEmail',
+  'requirement','propertyType','budget','source','notes','buyerCapacity','leadType','isExclusive'
+]);
+
+function buildImportedCustomFields(row) {
+  return Object.fromEntries(
+    Object.entries(row)
+      .filter(([key, value]) => !CORE_SHEET_FIELDS.has(key) && clean(value))
+      .map(([key, value]) => [key, value])
+  );
+}
+
 async function buildLead(row, cat) {
   const { industry, service, subservice } = resolveClassification(row, cat);
   const location = await resolveLocationFromPincode(row.pincode, cat, row.state, row.city);
@@ -239,7 +252,7 @@ async function buildLead(row, cat) {
     industryId: industry.id, serviceId: service?.id || null, subserviceId: subservice?.id || null,
     stateId: location.state.id, cityId: location.city.id, customerName: row.customerName, customerPhone: row.customerPhone,
     customerEmail: row.customerEmail || '', requirement: row.requirement || 'Lead requirement not provided', propertyType: row.propertyType || '', budget: row.budget || '',
-    source: row.source || 'lead-partner-upload', notes: row.notes || '', pincode: location.pincode,
+    source: row.source || 'lead-partner-upload', notes: row.notes || '', customFields: buildImportedCustomFields(row), pincode: location.pincode,
     buyerCapacity: Number.isFinite(capacity) && capacity >= 2 ? Math.floor(capacity) : 3,
     leadType: norm(row.leadType) === 'premium' ? 'premium' : 'basic', isExclusive: ['true', 'yes', 'y', '1', 'exclusive'].includes(norm(row.isExclusive)),
   };
@@ -360,7 +373,7 @@ async function listInventory({ userId, status = 'all', search = '', industryId =
   const where = conditions.join(' AND ');
   const [data, stats, filters] = await Promise.all([
     pool.query(
-      `SELECT l.id,l.customer_name,l.customer_phone,l.customer_email,l.requirement,l.status,l.lead_type,l.buyer_capacity,l.is_exclusive,l.pincode,l.created_at,
+      `SELECT l.id,l.customer_name,l.customer_phone,l.customer_email,l.requirement,l.status,l.lead_type,l.buyer_capacity,l.is_exclusive,l.pincode,l.created_at,l.custom_fields,
               i.name AS industry_name,s.name AS service_name,ss.name AS subservice_name,st.name AS state_name,c.name AS city_name,
               (${outcomeSql}) AS outcome_status,
               (SELECT COUNT(DISTINCT p.id)::int FROM lead_purchases p WHERE p.lead_id=l.id AND p.status='paid') AS buyer_count
