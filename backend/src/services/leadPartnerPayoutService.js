@@ -18,12 +18,13 @@ async function getTransactions(userId){
      LEFT JOIN leads l ON l.id=e.lead_id
      WHERE e.partner_id=$1 AND e.status<>'reversed'
      ORDER BY e.created_at DESC,e.id DESC
-     LIMIT 200`,[b.partner.id]
+     LIMIT 500`,[b.partner.id]
   )).rows.map(r=>({
     id:`E-${Number(r.id)}`,
     type:'earning',
     amount:money(r.earning_amount),
     direction:'credit',
+    impact:money(r.earning_amount),
     status:r.status,
     description:r.customer_name?`Lead earning · ${r.customer_name}`:'Partner earning',
     lead_id:r.lead_id?Number(r.lead_id):null,
@@ -35,27 +36,41 @@ async function getTransactions(userId){
      FROM lead_partner_payout_requests
      WHERE partner_id=$1
      ORDER BY requested_at DESC,id DESC
-     LIMIT 200`,[b.partner.id]
-  )).rows.map(r=>({
-    id:`W-${Number(r.id)}`,
-    type:'withdrawal',
-    amount:money(r.amount),
-    direction:'debit',
-    status:r.status,
-    description:r.status==='paid'?'Withdrawal paid':r.status==='rejected'?'Withdrawal rejected':'Withdrawal requested',
-    payout_method:r.payout_method,
-    transfer_reference:r.transfer_reference,
-    rejection_reason:r.rejection_reason,
-    created_at:r.requested_at,
-    processed_at:r.processed_at
-  }));
+     LIMIT 500`,[b.partner.id]
+  )).rows.map(r=>{
+    const isDebit=['pending','paid'].includes(String(r.status||'').toLowerCase());
+    return {
+      id:`W-${Number(r.id)}`,
+      type:'withdrawal',
+      amount:money(r.amount),
+      direction:isDebit?'debit':'neutral',
+      impact:isDebit?money(Number(r.amount)*-1):0,
+      status:r.status,
+      description:r.status==='paid'?'Withdrawal paid':r.status==='rejected'?'Withdrawal rejected':'Withdrawal requested',
+      payout_method:r.payout_method,
+      transfer_reference:r.transfer_reference,
+      rejection_reason:r.rejection_reason,
+      created_at:r.requested_at,
+      processed_at:r.processed_at
+    };
+  });
+  const transactions=[...earnings,...payouts].sort((a,z)=>{
+    const diff=new Date(z.created_at)-new Date(a.created_at);
+    return diff || String(z.id).localeCompare(String(a.id));
+  });
+  let running=money(b.available);
+  for(const tx of transactions){
+    tx.balance_after=running;
+    running=money(running-Number(tx.impact||0));
+  }
   return {
     available:b.available,
     reserved:b.reserved,
     paid:b.paid,
     total_earned:b.totalEarned,
-    transactions:[...earnings,...payouts].sort((a,z)=>new Date(z.created_at)-new Date(a.created_at))
+    total_additions:money(earnings.reduce((sum,x)=>sum+Number(x.amount||0),0)),
+    total_deductions:money(payouts.filter(x=>x.direction==='debit').reduce((sum,x)=>sum+Number(x.amount||0),0)),
+    transactions
   };
 }
-
 module.exports={getFunds,getTransactions,requestWithdrawal,adminList,adminProcess};
