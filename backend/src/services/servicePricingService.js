@@ -53,10 +53,10 @@ async function update(id,input){
 }
 function parseImage(dataUrl){
   const value=clean(dataUrl);
-  const match=value.match(/^data:(image\\/(?:jpeg|png|webp));base64,([A-Za-z0-9+/=\\s]+)$/i);
+  const match=value.match(/^data:(image\/(?:jpeg|png|webp));base64,([A-Za-z0-9+/=\s]+)$/i);
   if(!match){const e=new Error('Only JPG, PNG or WebP images are allowed');e.code='INVALID_IMAGE';throw e}
   const mime=match[1].toLowerCase();
-  const buffer=Buffer.from(match[2].replace(/\\s/g,''),'base64');
+  const buffer=Buffer.from(match[2].replace(/\s/g,''),'base64');
   if(!buffer.length){const e=new Error('Image file is empty');e.code='INVALID_IMAGE';throw e}
   if(buffer.length>MAX_IMAGE_BYTES){const e=new Error('Image must be 7 MB or smaller');e.code='IMAGE_TOO_LARGE';throw e}
   return {buffer,extension:MIME_EXTENSIONS[mime]}
@@ -71,7 +71,7 @@ async function replaceImage(id,dataUrl){
   const url=`/uploads/service-pricing/${filename}`;
   const result=await pool.query('UPDATE service_pricing SET image_url=$1,updated_at=CURRENT_TIMESTAMP WHERE id=$2 RETURNING *',[url,id]);
   if(current.image_url&&current.image_url.startsWith('/uploads/service-pricing/')){
-    const oldPath=path.resolve(__dirname,'../..',current.image_url.replace(/^\\//,''));
+    const oldPath=path.resolve(__dirname,'../..',current.image_url.replace(/^\//,''));
     await fs.promises.unlink(oldPath).catch(()=>{});
   }
   return result.rows[0]||null;
