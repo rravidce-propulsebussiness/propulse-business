@@ -41,7 +41,6 @@ async function getLeadPartnerReports(userId){
        r.reviewed_at,
        r.reviewed_by,
        r.updated_at,
-       r.refunded_amount,
        l.customer_name,
        l.customer_phone,
        l.customer_email,
