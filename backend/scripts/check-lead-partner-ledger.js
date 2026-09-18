@@ -28,6 +28,9 @@ async function main(){
   checks.earningPaymentMismatches=await query(
     "SELECT e.id,e.lead_purchase_id,e.gross_sale_amount,lp.amount purchase_amount,lp.status purchase_status,p.status payment_status,p.amount payment_amount FROM lead_partner_earnings e JOIN lead_purchases lp ON lp.id=e.lead_purchase_id LEFT JOIN payments p ON p.id=e.payment_id WHERE ((e.status<>'reversed' AND lp.status<>'paid') OR (e.status<>'reversed' AND p.id IS NULL) OR (e.status<>'reversed' AND p.status<>'paid')) OR ABS(COALESCE(e.gross_sale_amount,0)-COALESCE(lp.amount,0))>0.001 OR ABS(COALESCE(e.gross_sale_amount,0)-COALESCE(p.amount,0))>0.001"
   );
+  checks.payoutReservationMismatches=await query(
+    "SELECT r.id,r.status,r.amount,COALESCE(SUM(i.amount) FILTER(WHERE i.status='reserved'),0) reserved,COALESCE(SUM(i.amount) FILTER(WHERE i.status='paid'),0) paid FROM lead_partner_payout_requests r LEFT JOIN lead_partner_payout_items i ON i.payout_id=r.id GROUP BY r.id,r.status,r.amount HAVING (r.status='pending' AND ABS(COALESCE(SUM(i.amount) FILTER(WHERE i.status='reserved'),0)-r.amount)>0.001) OR (r.status='rejected' AND COALESCE(SUM(i.amount) FILTER(WHERE i.status='reserved'),0)>0.001) OR (r.status='paid' AND COALESCE(SUM(i.amount) FILTER(WHERE i.status='reserved'),0)>0.001) OR (r.status='paid' AND ABS(COALESCE(SUM(i.amount) FILTER(WHERE i.status='paid'),0)-r.amount)>0.001)"
+  );
   checks.duplicatePayoutItems=await query(
     "SELECT payout_id,earning_id,COUNT(*) AS count FROM lead_partner_payout_items GROUP BY payout_id,earning_id HAVING COUNT(*)>1"
   );
