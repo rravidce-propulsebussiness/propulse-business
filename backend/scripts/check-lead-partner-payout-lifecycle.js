@@ -14,9 +14,11 @@ async function q(sql, params = []) {
 
 async function main() {
   const c = await pool.connect();
-  const timeout = setTimeout(() => { console.error('Payout lifecycle test timed out after 60 seconds. Check database connectivity/locks.'); process.exitCode = 1; process.exit(); }, 60000);
+  let cleanupNeeded = false;
   try {
     await c.query('BEGIN');
+    await c.query('SET LOCAL lock_timeout = 5000');
+    await c.query('SET LOCAL statement_timeout = 30000');
 
     const user = (await c.query(
       `INSERT INTO users(name,email,password_hash,role,is_active)
@@ -86,9 +88,9 @@ async function main() {
     );
 
     await c.query('COMMIT');
+    cleanupNeeded = true;
     console.log('fixture: committed');
 
-    // Concurrent requests must not reserve the same earnings.
     console.log('test: concurrent withdrawals');
     const concurrent = await Promise.allSettled([
       payoutService.requestWithdrawal({userId:ids.user,amount:665,notes:'concurrency A'}),
@@ -110,7 +112,6 @@ async function main() {
     ))[0];
     assert.strictEqual(Number(reserved.total), 665, 'Pending payout must reserve exactly its request amount');
 
-    // Rejection must release the reservation.
     console.log('test: reject payout');
     await payoutService.adminProcess({
       requestId:Number(pending.id), adminId:ids.admin, action:'reject', rejectionReason:'Test rejection'
@@ -120,7 +121,6 @@ async function main() {
     ))[0];
     assert.strictEqual(Number(rejectedItems.count), 0, 'Rejected payout cannot retain reservations');
 
-    // A new withdrawal can use the released earning.
     console.log('test: second withdrawal');
     const secondPayout = await payoutService.requestWithdrawal({userId:ids.user,amount:665,notes:'paid lifecycle'});
     const secondAccount = (await q(
@@ -144,7 +144,7 @@ async function main() {
     ))[0];
     assert.strictEqual(earning1.status, 'paid', 'Fully paid earning must become paid');
 
-    // Duplicate UTR must be rejected.
+    console.log('test: duplicate UTR');
     const thirdPayout = await payoutService.requestWithdrawal({userId:ids.user,amount:95,notes:'duplicate UTR'});
     await assert.rejects(
       () => payoutService.adminProcess({
@@ -154,7 +154,7 @@ async function main() {
       e => e.code === 'DUPLICATE_REFERENCE'
     );
 
-    // Reversing an earning with a pending payout must release/reject that payout.
+    console.log('test: earning reversal against pending payout');
     const fourthPayout = await payoutService.requestWithdrawal({userId:ids.user,amount:47.5,notes:'fake lead pending test'});
     await earningsService.reverseForPurchase(
       pool,
@@ -167,37 +167,41 @@ async function main() {
     assert.strictEqual(reversedPayout.status, 'rejected', 'Payout emptied by earning reversal must be rejected');
 
     console.log('Lead Partner payout lifecycle tests passed.');
+  } catch (error) {
+    console.error(`Lead Partner payout lifecycle tests failed: ${error.message}`);
+    throw error;
   } finally {
     await c.query('ROLLBACK').catch(() => {});
-    // Fixture rows were committed above so clean them explicitly in dependency order.
-    const cleanup = await pool.connect();
-    try {
-      await cleanup.query('BEGIN');
-      await cleanup.query('DELETE FROM lead_partner_payout_items WHERE payout_id IN (SELECT id FROM lead_partner_payout_requests WHERE user_id=$1)', [ids.user || 0]);
-      await cleanup.query('DELETE FROM lead_partner_payout_requests WHERE user_id=$1', [ids.user || 0]);
-      await cleanup.query('DELETE FROM lead_partner_earning_adjustment_allocations WHERE earning_id IN (SELECT id FROM lead_partner_earnings WHERE user_id=$1)', [ids.user || 0]);
-      await cleanup.query('DELETE FROM lead_partner_earning_adjustments WHERE user_id=$1', [ids.user || 0]);
-      await cleanup.query('DELETE FROM lead_partner_earnings WHERE user_id=$1', [ids.user || 0]);
-      await cleanup.query('DELETE FROM lead_purchases WHERE user_id=$1', [ids.user || 0]);
-      await cleanup.query('DELETE FROM payments WHERE user_id=$1', [ids.user || 0]);
-      await cleanup.query('DELETE FROM lead_partner_payout_accounts WHERE user_id=$1', [ids.user || 0]);
-      await cleanup.query('DELETE FROM leads WHERE created_by=$1', [ids.user || 0]);
-      await cleanup.query('DELETE FROM lead_partners WHERE user_id=$1', [ids.user || 0]);
-      await cleanup.query('DELETE FROM users WHERE id=$1', [ids.admin || 0]);
-      await cleanup.query('DELETE FROM users WHERE id=$1', [ids.user || 0]);
-      await cleanup.query('COMMIT');
-    } catch (e) {
-      await cleanup.query('ROLLBACK').catch(() => {});
-      console.error('Payout test cleanup failed:', e.message);
-      process.exitCode = 1;
-    } finally {
-      cleanup.release();
-      await pool.end();
+    if (cleanupNeeded) {
+      const cleanup = await pool.connect();
+      try {
+        await cleanup.query('BEGIN');
+        await cleanup.query('SET LOCAL lock_timeout = 5000');
+        await cleanup.query('DELETE FROM lead_partner_payout_items WHERE payout_id IN (SELECT id FROM lead_partner_payout_requests WHERE user_id=$1)', [ids.user || 0]);
+        await cleanup.query('DELETE FROM lead_partner_payout_requests WHERE user_id=$1', [ids.user || 0]);
+        await cleanup.query('DELETE FROM lead_partner_earning_adjustment_allocations WHERE earning_id IN (SELECT id FROM lead_partner_earnings WHERE user_id=$1)', [ids.user || 0]);
+        await cleanup.query('DELETE FROM lead_partner_earning_adjustments WHERE user_id=$1', [ids.user || 0]);
+        await cleanup.query('DELETE FROM lead_partner_earnings WHERE user_id=$1', [ids.user || 0]);
+        await cleanup.query('DELETE FROM lead_purchases WHERE user_id=$1', [ids.user || 0]);
+        await cleanup.query('DELETE FROM payments WHERE user_id=$1', [ids.user || 0]);
+        await cleanup.query('DELETE FROM lead_partner_payout_accounts WHERE user_id=$1', [ids.user || 0]);
+        await cleanup.query('DELETE FROM leads WHERE created_by=$1', [ids.user || 0]);
+        await cleanup.query('DELETE FROM lead_partners WHERE user_id=$1', [ids.user || 0]);
+        await cleanup.query('DELETE FROM users WHERE id=$1', [ids.admin || 0]);
+        await cleanup.query('DELETE FROM users WHERE id=$1', [ids.user || 0]);
+        await cleanup.query('COMMIT');
+      } catch (e) {
+        await cleanup.query('ROLLBACK').catch(() => {});
+        console.error('Payout test cleanup failed:', e.message);
+        process.exitCode = 1;
+      } finally {
+        cleanup.release();
+      }
     }
     clearTimeout(timeout);
+    await pool.end();
   }
 }
-
 main().catch(error => {
   console.error(`Lead Partner payout lifecycle tests failed: ${error.message}`);
   process.exitCode = 1;
