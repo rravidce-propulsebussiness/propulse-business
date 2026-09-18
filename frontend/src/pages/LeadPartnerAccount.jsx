@@ -25,6 +25,7 @@ export default function LeadPartnerAccount(){
   const [error,setError] = useState('');
   const [tab,setTab] = useState('payout');
   const [transactions,setTransactions] = useState([]);
+  const [transactionFunds,setTransactionFunds] = useState({available:0,reserved:0,paid:0,total_earned:0});
   const [transactionsLoading,setTransactionsLoading] = useState(false);
   const [transactionError,setTransactionError] = useState('');
   const [me,setMe] = useState(null);
@@ -55,6 +56,7 @@ export default function LeadPartnerAccount(){
       setTransactionsLoading(true); setTransactionError('');
       const result = await authRequest('/lead-partner/transactions');
       setTransactions(Array.isArray(result?.transactions) ? result.transactions : []);
+      setTransactionFunds({available:Number(result?.available || 0),reserved:Number(result?.reserved || 0),paid:Number(result?.paid || 0),total_earned:Number(result?.total_earned || 0)});
     }catch(e){setTransactionError(e.message || 'Unable to load transaction history')}
     finally{setTransactionsLoading(false)}
   },[]);
@@ -178,9 +180,9 @@ export default function LeadPartnerAccount(){
             <div><span className="account-kicker">FINANCIAL ACTIVITY</span><h2>Transaction History</h2><p>Real earnings and withdrawal activity from your Lead Partner ledger.</p></div>
             <button type="button" className="account-refresh" onClick={loadTransactions} disabled={transactionsLoading}>{transactionsLoading?'Refreshing…':'↻ Refresh'}</button>
           </div>
-          <div className="transaction-balance-grid">
-            <div><span>Current balance</span><strong>{money(transactionsLoading && !transactions.length ? 0 : (transactions.reduce((sum,x)=>x.direction==='credit'?sum+Number(x.amount||0):sum-Number(x.amount||0),0)))}</strong><small>Net activity represented in transaction history</small></div>
-            <div><span>Available to withdraw</span><strong className="green-balance">Loading from ledger</strong><Link to="/lead-partner/withdrawals">View withdrawable balance →</Link></div>
+                    <div className="transaction-balance-grid">
+            <div><span>Current balance</span><strong>{transactionsLoading && !transactions.length ? '—' : money(transactionFunds.available)}</strong><small>Currently available from eligible partner earnings</small></div>
+            <div><span>Pending payout</span><strong className="pending-balance">{transactionsLoading && !transactions.length ? '—' : money(transactionFunds.reserved)}</strong><small>Reserved in pending withdrawal requests</small><Link to="/lead-partner/withdrawals">Manage withdrawals →</Link></div>
           </div>
           {transactionError&&<div className="account-message error">{transactionError}</div>}
           {transactionsLoading&&!transactions.length?<div className="account-loading">Loading transaction history…</div>:!transactions.length?<div className="account-empty-state"><span>◷</span><div><strong>No transactions yet</strong><small>Your earnings and withdrawal activity will appear here as transactions are created.</small></div></div>:
