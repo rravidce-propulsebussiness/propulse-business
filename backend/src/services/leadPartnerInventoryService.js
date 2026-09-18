@@ -181,12 +181,38 @@ async function resolveLocationFromPincode(pincode, cat, suppliedState, suppliedC
     }
   }
 
-  // A postal district is not necessarily a Propulse city. If the row has no
-  // city and no postal-office name matches the catalog, keep the import
-  // deterministic instead of guessing between multiple cities.
+  // If there is still no City, create a catalog City from the canonical
+  // India Post district. This is the automatic-city-creation fallback for
+  // Google Sheet imports: State comes from the PIN and district is used only
+  // when there is no existing city/office mapping.
+  if (!city && pin.district_name) {
+    const districtName = clean(pin.district_name);
+    const districtSlug = districtName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    try {
+      city = await cityService.createCity({
+        stateId: state.id,
+        name: districtName,
+        slug: districtSlug,
+      });
+      cat.cities.push(city);
+    } catch (error) {
+      if (error.code === 'CITY_ALREADY_EXISTS') {
+        city = findExact(
+          cat.cities.filter(x => Number(x.state_id) === Number(state.id)),
+          districtName
+        );
+      }
+      if (!city) {
+        throw new Error(
+          `Pincode ${value} is valid, but its postal district ${districtName} could not be mapped to a Propulse City: ${error.message}`
+        );
+      }
+    }
+  }
+
   if (!city) {
     throw new Error(
-      `Pincode ${value} is valid, but its postal area is not mapped to a Propulse City yet. Add the City to the location catalog (or include City in the sheet) and sync again.`
+      `Pincode ${value} is valid, but no State/City mapping could be created from the India Post directory.`
     );
   }
   if (Number(city.state_id) !== Number(state.id)) throw new Error(`City ${city.name} is outside the resolved state ${state.name}`);
