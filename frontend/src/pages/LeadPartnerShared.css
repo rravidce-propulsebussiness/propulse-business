@@ -20,3 +20,20 @@
   .lp-content,.pricing-content,.partner-content,.withdrawals-content,.account-content,.reports-content,.faq-content{max-width:none!important;padding-left:14px!important;padding-right:14px!important;padding-top:20px!important}
   .lp-brand,.pricing-brand,.partner-brand,.withdrawals-brand,.account-brand,.reports-brand,.faq-brand{height:78px!important}
 }
+
+/* Final shell lock: higher specificity keeps individual page CSS from changing
+   workspace geometry. Page styles remain responsible only for their content. */
+#root .lp-sidebar,#root .pricing-sidebar,#root .partner-sidebar,#root .withdrawals-sidebar,#root .account-sidebar,#root .reports-sidebar,#root .faq-sidebar{width:280px!important;min-width:280px!important;max-width:280px!important}
+#root .lp-main,#root .pricing-main,#root .partner-main,#root .withdrawals-main,#root .account-main,#root .reports-main,#root .faq-main{margin-left:280px!important;width:calc(100% - 280px)!important;max-width:none!important}
+#root .lp-topbar,#root .pricing-topbar,#root .partner-topbar,#root .withdrawals-topbar,#root .account-topbar,#root .reports-topbar,#root .faq-topbar{height:58px!important;min-height:58px!important}
+#root .lp-content,#root .pricing-content,#root .partner-content,#root .withdrawals-content,#root .account-content,#root .reports-content,#root .faq-content{max-width:1450px!important;margin-left:auto!important;margin-right:auto!important}
+#root .lp-brand,#root .pricing-brand,#root .partner-brand,#root .withdrawals-brand,#root .account-brand,#root .reports-brand,#root .faq-brand{height:94px!important;min-height:94px!important}
+@media(max-width:1100px) and (min-width:721px){
+  #root .lp-sidebar,#root .pricing-sidebar,#root .partner-sidebar,#root .withdrawals-sidebar,#root .account-sidebar,#root .reports-sidebar,#root .faq-sidebar{width:240px!important;min-width:240px!important;max-width:240px!important}
+  #root .lp-main,#root .pricing-main,#root .partner-main,#root .withdrawals-main,#root .account-main,#root .reports-main,#root .faq-main{margin-left:240px!important;width:calc(100% - 240px)!important}
+}
+@media(max-width:720px){
+  #root .lp-sidebar,#root .pricing-sidebar,#root .partner-sidebar,#root .withdrawals-sidebar,#root .account-sidebar,#root .reports-sidebar,#root .faq-sidebar{width:100%!important;min-width:0!important;max-width:none!important}
+  #root .lp-main,#root .pricing-main,#root .partner-main,#root .withdrawals-main,#root .account-main,#root .reports-main,#root .faq-main{margin-left:0!important;width:100%!important}
+  #root .lp-topbar,#root .pricing-topbar,#root .partner-topbar,#root .withdrawals-topbar,#root .account-topbar,#root .reports-topbar,#root .faq-topbar{height:58px!important;min-height:58px!important}
+}
