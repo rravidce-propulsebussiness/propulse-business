@@ -15,14 +15,27 @@ function Login() {
   const [loading, setLoading] = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
   const [error, setError] = useState('')
+  const [accountType, setAccountType] = useState('customer')
 
-  const finishLogin = useCallback((result) => {
+  const finishLogin = useCallback(async (result) => {
+    const user = result.user
+    if (accountType === 'admin' && user?.role !== 'admin') throw new Error('This account is not an Admin account.')
+    if (accountType === 'lead_partner') {
+      if (user?.role !== 'business') throw new Error('Lead Partner access requires a Business account.')
+      const partner = await authRequest('/lead-partner/me')
+      if (partner?.status !== 'active') throw new Error('This Business account is not an active Lead Partner account.')
+    }
+    if (accountType === 'investor') {
+      if (user?.role !== 'business') throw new Error('Investment access requires a Business account.')
+      const access = await authRequest('/investments/access')
+      if (!access?.isPro) throw new Error('An active Pro membership is required for Investment access.')
+    }
     saveSession(result)
     if (!remember) localStorage.setItem('propulse_session_mode', 'session')
     const destination = location.state?.from?.pathname
-      || (result.user?.role === 'admin' ? '/admin' : '/leads')
+      || (accountType === 'admin' ? '/admin' : accountType === 'lead_partner' ? '/lead-partner' : accountType === 'investor' ? '/investment' : '/leads')
     navigate(destination, { replace: true })
-  }, [location.state, navigate, remember])
+  }, [accountType, location.state, navigate, remember])
 
   async function submit(e) {
     e.preventDefault()
@@ -31,7 +44,7 @@ function Login() {
     try {
       setLoading(true)
       const result = await authRequest('/auth/login', { method: 'POST', body: JSON.stringify(form) })
-      finishLogin(result)
+      await finishLogin(result)
     } catch (err) {
       setError(err.message)
     } finally {
@@ -44,7 +57,7 @@ function Login() {
     try {
       setGoogleLoading(true)
       const result = await authRequest('/auth/google', { method: 'POST', body: JSON.stringify({ credential }) })
-      finishLogin(result)
+      await finishLogin(result)
     } catch (err) {
       setError(err.message)
     } finally {
@@ -84,6 +97,17 @@ function Login() {
           <div className="mobile-brand">
             <img src="/brand/propulse-logo.png" alt="Pro Pulse" />
           </div>
+          <div className="login-account-types" role="tablist" aria-label="Account type">
+            {[
+              ['customer','Customer'],
+              ['lead_partner','Lead Partner'],
+              ['investor','Investor'],
+              ['admin','Admin']
+            ].map(([value,label]) => (
+              <button key={value} type="button" className={accountType===value?'active':''} onClick={()=>{setAccountType(value);setError('')}}>{label}</button>
+            ))}
+          </div>
+
           <div className="auth-heading login-heading">
             <p className="auth-kicker">ACCOUNT ACCESS</p>
             <h2>Sign in to <em>Propulse</em></h2>
