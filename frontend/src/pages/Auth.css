@@ -1166,3 +1166,105 @@
   .login-value-grid{margin-top:18px !important}
   .login-page .login-card{padding:25px 18px !important}
 }
+
+/* FINAL LOGIN FIT — show every control, remove duplicate visual weight, preserve premium spacing */
+.login-page .auth-card-wrap{
+  align-items:flex-start !important;
+  justify-content:center !important;
+  overflow-y:auto !important;
+  overflow-x:hidden !important;
+  padding:18px clamp(22px,4vw,56px) 24px !important;
+}
+.login-page .login-card{
+  width:min(500px,100%) !important;
+  max-height:none !important;
+  height:auto !important;
+  padding:25px 34px 24px !important;
+  margin:0 auto !important;
+}
+.login-page .login-heading{
+  margin-bottom:14px !important;
+}
+.login-page .login-heading h2{
+  font-size:30px !important;
+  line-height:1.08 !important;
+  margin:3px 0 6px !important;
+}
+.login-page .login-heading p:last-child{
+  font-size:12px !important;
+  line-height:1.45 !important;
+}
+.login-page .google-auth-block{
+  margin:0 0 9px !important;
+}
+.login-page .google-button-wrap{
+  min-height:42px !important;
+}
+.login-page .auth-divider{
+  margin:10px 0 !important;
+}
+.login-page .auth-card form{
+  gap:10px !important;
+}
+.login-page .auth-card form>label{
+  gap:5px !important;
+  font-size:11px !important;
+}
+.login-page .auth-card input:not([type=checkbox]){
+  height:46px !important;
+  box-sizing:border-box !important;
+}
+.login-page .password-field{
+  height:46px !important;
+}
+.login-page .auth-options{
+  min-height:34px;
+  margin-top:0 !important;
+}
+.login-page .auth-submit{
+  height:49px !important;
+  margin-top:1px !important;
+}
+.login-page .auth-outline{
+  height:46px !important;
+}
+.login-page .mobile-brand{
+  display:none !important;
+}
+.login-page .auth-card .auth-error{
+  margin-bottom:9px !important;
+}
+@media(max-height:820px) and (min-width:851px){
+  .login-page .auth-card-wrap{
+    padding-top:14px !important;
+    padding-bottom:18px !important;
+  }
+  .login-page .login-card{
+    padding:22px 30px 20px !important;
+  }
+  .login-page .login-heading{margin-bottom:10px !important}
+  .login-page .login-heading h2{font-size:28px !important}
+  .login-page .auth-divider{margin:8px 0 !important}
+  .login-page .auth-card form{gap:8px !important}
+  .login-page .auth-card input:not([type=checkbox]),
+  .login-page .password-field{height:44px !important}
+  .login-page .auth-options{min-height:31px !important}
+  .login-page .auth-submit{height:47px !important}
+  .login-page .auth-outline{height:44px !important}
+}
+@media(max-width:850px){
+  .login-page .auth-card-wrap{
+    overflow:visible !important;
+    padding:20px !important;
+  }
+  .login-page .login-card{
+    padding:27px 24px 24px !important;
+  }
+  .login-page .mobile-brand{display:none !important}
+}
+@media(max-width:520px){
+  .login-page .login-card{
+    padding:24px 18px 21px !important;
+  }
+  .login-page .login-heading h2{font-size:27px !important}
+}
