@@ -360,6 +360,13 @@
 .login-premium-submit{height:55px!important;font-size:12px!important}
 .login-premium-card .password-field button{font-size:8px!important}
 
+/* Final compact desktop form: no internal scrollbar and remember-me controls on one row. */
+.login-premium-card{max-height:none!important;overflow:visible!important}
+.login-premium-card-wrap{overflow:visible!important}
+.login-premium-card form{gap:12px!important}
+.login-premium-card .form-options,.login-premium-card .login-options,.login-premium-card .remember-row{display:flex!important;align-items:center!important;justify-content:space-between!important;flex-wrap:nowrap!important}
+.login-premium-card .check{display:flex!important;align-items:center!important;gap:7px!important;white-space:nowrap!important}
+
 @media(max-width:1180px){.login-premium{grid-template-columns:48% 52%}.login-topbar{grid-template-columns:auto 1fr auto;padding:0 24px}.login-topbar-brand span{display:none}.login-premium-visual h1{font-size:53px}.login-premium-features{grid-template-columns:1fr 1fr}.login-premium-card{padding:27px 28px}}
 @media(max-width:920px){.login-premium{display:block;padding-top:70px}.login-topbar{height:70px}.login-premium-visual{min-height:360px;padding-top:0}.login-premium-visual-content{min-height:360px;padding:40px 28px 25px}.login-premium-visual h1{font-size:47px}.login-premium-features{max-width:650px}.login-premium-card-wrap{min-height:0;padding:22px 22px 40px}.login-premium-card{max-width:680px}}
 @media(max-width:600px){.login-topbar{height:64px;padding:0 14px}.login-topbar-brand img{width:118px;height:42px}.login-topbar-context{display:none}.login-back-home{padding:9px 11px;font-size:8px}.login-premium{padding-top:64px}.login-premium-visual,.login-premium-visual-content{min-height:330px;height:auto}.login-premium-visual-content{padding:31px 19px 23px}.login-premium-visual h1{font-size:36px;letter-spacing:-1.8px}.login-premium-visual-content>p{font-size:10px}.login-premium-features{margin-top:20px;grid-template-columns:1fr 1fr}.login-premium-features>div{padding:11px 9px}.login-premium-features>div:nth-child(n+3){display:none}.login-premium-quote{display:none}.login-premium-card-wrap{padding:14px;background:#eef3f8}.login-premium-card{border-radius:18px;padding:21px 17px}.login-premium-card-head{margin-bottom:18px}.login-premium-card-head .mobile-brand img{width:132px;height:50px}.login-new-user span{display:none}.login-heading h2{font-size:31px}.login-premium .account-type-grid{grid-template-columns:1fr}.login-premium .account-type-card{min-height:64px}.login-premium .signup-role-note{font-size:7px}.login-premium-card form>label{font-size:8px}}
