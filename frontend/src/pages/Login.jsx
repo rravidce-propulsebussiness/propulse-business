@@ -52,33 +52,42 @@ function Login() {
   }, [finishLogin])
 
   return (
-    <div className="auth-page">
+    <div className="auth-page login-page">
+      <header className="login-topbar">
+        <Link className="login-brand" to="/"><span>P</span><strong>Propulse <em>Business</em></strong></Link>
+        <Link className="login-home" to="/signup">Create account <b>→</b></Link>
+      </header>
       <section className="auth-visual" aria-label="Pro Pulse Business">
         <div className="auth-visual-overlay" />
         <div className="auth-visual-content">
-          <div className="auth-logo-frame">
-            <img className="auth-logo" src="/brand/propulse-logo.png" alt="Pro Pulse Business Technologies Private Limited" />
+          <div className="login-visual-brand">
+            <div className="login-brand-mark">P</div>
+            <div><strong>Propulse</strong><span>Business</span></div>
           </div>
-          <div className="auth-visual-copy">
-            <span>QUALIFIED LEADS. BETTER OPPORTUNITIES.</span>
-            <h1>Get High-Value<br /><em>Clients.</em></h1>
-            <p>Connect with qualified customers actively looking for your services — and turn more opportunities into paying clients.</p>
+          <div className="login-visual-copy">
+            <span>YOUR BUSINESS · YOUR OPPORTUNITIES</span>
+            <h1>Welcome back.<br /><em>Let's grow.</em></h1>
+            <p>Sign in to manage your business, follow opportunities, and continue where you left off.</p>
           </div>
-          <div className="auth-visual-footer">
-            <span>CONNECT</span><i /> <span>GROW</span><i /> <span>BUILD</span><i /> <span>SUCCEED</span>
+          <div className="login-value-grid">
+            <div><b>01</b><strong>Business workspace</strong><span>Everything in one place.</span></div>
+            <div><b>02</b><strong>Relevant opportunities</strong><span>Stay connected to demand.</span></div>
+            <div><b>03</b><strong>Secure access</strong><span>Protected account workflow.</span></div>
           </div>
+          <div className="login-visual-note"><span>“</span><div><strong>Technology built around business growth.</strong><small>Propulse Business Technologies</small></div></div>
+          <div className="auth-visual-footer"><span>CONNECT</span><i /> <span>GROW</span><i /> <span>BUILD</span><i /> <span>SUCCEED</span></div>
         </div>
       </section>
 
       <main className="auth-card-wrap">
-        <div className="auth-card">
+        <div className="auth-card login-card">
           <div className="mobile-brand">
             <img src="/brand/propulse-logo.png" alt="Pro Pulse" />
           </div>
-          <div className="auth-heading">
+          <div className="auth-heading login-heading">
             <p className="auth-kicker">WELCOME BACK</p>
-            <h2>Sign in</h2>
-            <p>Access your leads and business opportunities.</p>
+            <h2>Sign in to Propulse</h2>
+            <p>Access your business workspace and opportunities.</p>
           </div>
 
           {error && <div className="auth-error" role="alert">{error}</div>}
