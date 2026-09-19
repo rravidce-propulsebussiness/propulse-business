@@ -1002,3 +1002,167 @@
     align-items:stretch !important;
   }
 }
+
+/* FINAL POLISH — stable desktop composition, zero clipping, zero dead space */
+.login-page{
+  height:100dvh !important;
+  min-height:100dvh !important;
+  overflow:hidden !important;
+  padding-top:72px !important;
+  box-sizing:border-box !important;
+}
+.login-page .login-topbar{
+  position:absolute !important;
+  inset:0 0 auto 0 !important;
+  height:72px !important;
+}
+.login-page .auth-visual{
+  height:calc(100dvh - 72px) !important;
+  min-height:0 !important;
+  overflow:hidden !important;
+}
+.login-page .auth-visual-content{
+  height:100% !important;
+  min-height:0 !important;
+  padding:38px clamp(34px,5.2vw,70px) 22px !important;
+  overflow:hidden !important;
+}
+.login-visual-brand{
+  flex:0 0 auto;
+}
+.login-visual-copy{
+  margin-top:58px !important;
+  margin-bottom:0 !important;
+  flex:0 0 auto;
+}
+.login-visual-copy h1{
+  margin:12px 0 14px !important;
+  font-size:clamp(48px,4.6vw,66px) !important;
+  line-height:.92 !important;
+}
+.login-visual-copy p{
+  font-size:13px !important;
+  line-height:1.55 !important;
+}
+.login-value-grid{
+  margin-top:24px !important;
+  flex:0 0 auto;
+}
+.login-value-grid>div{
+  min-height:82px !important;
+  padding:11px !important;
+}
+.login-value-grid b{margin-bottom:10px !important}
+.login-visual-note{
+  margin-top:10px !important;
+  padding:10px 13px !important;
+  flex:0 0 auto;
+}
+.login-page .auth-visual-footer{
+  position:static !important;
+  margin-top:auto !important;
+  flex:0 0 auto;
+}
+.login-page .auth-card-wrap{
+  height:calc(100dvh - 72px) !important;
+  min-height:0 !important;
+  padding:24px clamp(22px,4vw,56px) !important;
+  align-items:center !important;
+  overflow:hidden !important;
+}
+.login-page .login-card{
+  width:min(500px,100%) !important;
+  padding:32px 36px !important;
+  border-radius:24px !important;
+  max-height:calc(100dvh - 120px);
+  box-sizing:border-box;
+}
+.login-page .login-heading{
+  margin-bottom:18px !important;
+}
+.login-page .login-heading h2{
+  font-size:32px !important;
+  margin-bottom:7px !important;
+}
+.login-page .login-heading p:last-child{
+  font-size:13px !important;
+}
+.login-page .google-auth-block{
+  margin:0 0 12px !important;
+}
+.login-page .auth-divider{
+  margin:13px 0 !important;
+}
+.login-page .auth-card form{
+  gap:13px !important;
+}
+.login-page .auth-card label{
+  gap:6px !important;
+}
+.login-page .auth-card input:not([type=checkbox]){
+  height:50px !important;
+}
+.login-page .auth-options{
+  margin-top:-1px !important;
+}
+.login-page .auth-submit{
+  height:52px !important;
+}
+.login-page .auth-outline{
+  height:48px !important;
+}
+@media(max-width:1100px) and (min-width:851px){
+  .login-page{
+    grid-template-columns:minmax(430px,43%) minmax(520px,57%) !important;
+  }
+  .login-page .auth-visual-content{
+    padding-left:28px !important;
+    padding-right:28px !important;
+  }
+  .login-visual-copy{margin-top:44px !important}
+  .login-visual-copy h1{font-size:48px !important}
+  .login-value-grid>div{min-height:76px !important}
+  .login-page .login-card{padding:28px 30px !important}
+}
+@media(max-width:850px){
+  .login-page{
+    height:auto !important;
+    min-height:100dvh !important;
+    overflow:visible !important;
+    padding-top:64px !important;
+  }
+  .login-page .login-topbar{
+    position:fixed !important;
+    height:64px !important;
+  }
+  .login-page .auth-visual{
+    height:auto !important;
+    min-height:500px !important;
+    overflow:hidden !important;
+  }
+  .login-page .auth-visual-content{
+    height:auto !important;
+    min-height:500px !important;
+    padding:27px 22px 22px !important;
+    overflow:hidden !important;
+  }
+  .login-visual-copy{margin-top:32px !important}
+  .login-page .auth-visual-footer{margin-top:22px !important}
+  .login-page .auth-card-wrap{
+    height:auto !important;
+    min-height:0 !important;
+    overflow:visible !important;
+    padding:20px !important;
+  }
+  .login-page .login-card{
+    max-height:none !important;
+    padding:28px !important;
+  }
+}
+@media(max-width:520px){
+  .login-page .auth-visual-content{padding:22px 18px 20px !important}
+  .login-visual-copy{margin-top:28px !important}
+  .login-visual-copy h1{font-size:38px !important}
+  .login-value-grid{margin-top:18px !important}
+  .login-page .login-card{padding:25px 18px !important}
+}
