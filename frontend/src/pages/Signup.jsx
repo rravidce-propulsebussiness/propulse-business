@@ -173,7 +173,7 @@ function Signup() {
                 <label className="signup-full">Confirm password<input type={showPassword ? 'text' : 'password'} autoComplete="new-password" value={form.confirm} onChange={(e) => update('confirm', e.target.value)} placeholder="Repeat your password" required /></label>
               </div>
             </section>
-            <button className="signup-submit" type="submit" disabled={loading || googleLoading || loadingData}>Continue <span>→</span></button>
+            <button className="signup-submit" type="submit" disabled={loading || googleLoading || loadingData}>Create account <span>→</span></button>
           </form>
           {showBusinessModal && (
             <div className="signup-business-modal-backdrop" role="presentation" onMouseDown={(e) => { if (e.target === e.currentTarget) setShowBusinessModal(false) }}>
