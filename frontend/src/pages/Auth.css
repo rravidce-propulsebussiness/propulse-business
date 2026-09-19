@@ -1547,3 +1547,56 @@
     border-radius:22px !important;
   }
 }
+
+
+/* LOGIN FINAL POLISH — floating card like signup + explicit Home action */
+.login-header-actions{
+  display:flex !important;
+  align-items:center !important;
+  justify-content:flex-end !important;
+  gap:10px !important;
+}
+.login-home-secondary{
+  background:rgba(255,255,255,.96) !important;
+  color:var(--login-navy) !important;
+  border:1px solid rgba(6,26,59,.12) !important;
+  box-shadow:0 8px 22px rgba(6,26,59,.08) !important;
+}
+.login-home-secondary:hover{
+  background:#fff !important;
+  transform:translateY(-1px) !important;
+}
+@media(min-width:851px){
+  .login-page .auth-card-wrap{
+    padding-top:20px !important;
+    padding-bottom:28px !important;
+    overflow-y:auto !important;
+    overflow-x:hidden !important;
+    align-items:flex-start !important;
+  }
+  .login-page .login-card{
+    margin:0 auto 0 !important;
+    border-radius:24px !important;
+  }
+}
+@media(max-width:850px){
+  .login-header-actions{gap:7px !important}
+  .login-home-secondary{display:inline-flex !important}
+  .login-page .auth-card-wrap{
+    padding:18px !important;
+    overflow:visible !important;
+  }
+  .login-page .login-card{
+    margin:0 auto !important;
+    border-radius:22px !important;
+  }
+}
+@media(max-width:520px){
+  .login-home-secondary{
+    padding:9px 10px !important;
+    font-size:10px !important;
+  }
+  .login-home{
+    padding:9px 10px !important;
+  }
+}
