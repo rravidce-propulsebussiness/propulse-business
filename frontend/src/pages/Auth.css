@@ -1467,3 +1467,83 @@
     padding:27px 24px 24px !important;
   }
 }
+
+
+/* FINAL AUTH SURFACE — same premium navy canvas on signup + login, no split-color gap */
+.auth-page{
+  background:var(--navy) !important;
+}
+.auth-page .auth-card-wrap{
+  background:
+    radial-gradient(circle at 78% 12%,rgba(49,105,205,.50),transparent 30%),
+    radial-gradient(circle at 8% 78%,rgba(244,81,30,.16),transparent 28%),
+    linear-gradient(150deg,#04152f 0%,#09285a 52%,#041329 100%) !important;
+  position:relative !important;
+}
+.auth-page .auth-card-wrap::before{
+  content:"";
+  position:absolute;
+  width:420px;
+  height:420px;
+  right:-220px;
+  bottom:-180px;
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:50%;
+  box-shadow:0 0 0 70px rgba(255,255,255,.025),0 0 0 140px rgba(255,255,255,.018);
+  pointer-events:none;
+}
+.auth-page .auth-card-wrap > .auth-card{
+  position:relative;
+  z-index:2;
+}
+
+/* Login: header and main surface meet directly with no empty band. */
+.login-page{
+  padding-top:72px !important;
+  margin:0 !important;
+  row-gap:0 !important;
+  column-gap:0 !important;
+  background:var(--navy) !important;
+}
+.login-page .auth-visual,
+.login-page .auth-card-wrap{
+  margin:0 !important;
+  border:0 !important;
+}
+.login-page .auth-card-wrap{
+  padding-top:0 !important;
+  padding-bottom:0 !important;
+  align-items:flex-start !important;
+}
+.login-page .login-card{
+  margin-top:0 !important;
+  border-radius:0 0 24px 24px !important;
+}
+@media(min-width:851px){
+  .login-page .auth-visual,
+  .login-page .auth-card-wrap{
+    height:calc(100dvh - 72px) !important;
+    min-height:calc(100dvh - 72px) !important;
+  }
+  .login-page .auth-card-wrap{
+    padding-left:clamp(22px,4vw,56px) !important;
+    padding-right:clamp(22px,4vw,56px) !important;
+  }
+}
+@media(max-width:850px){
+  .auth-page .auth-card-wrap{
+    background:
+      radial-gradient(circle at 78% 12%,rgba(49,105,205,.50),transparent 30%),
+      radial-gradient(circle at 8% 78%,rgba(244,81,30,.16),transparent 28%),
+      linear-gradient(150deg,#04152f 0%,#09285a 52%,#041329 100%) !important;
+  }
+  .login-page{
+    padding-top:64px !important;
+  }
+  .login-page .auth-card-wrap{
+    padding:18px !important;
+  }
+  .login-page .login-card{
+    border-radius:22px !important;
+  }
+}
