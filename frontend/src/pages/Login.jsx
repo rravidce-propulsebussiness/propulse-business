@@ -15,11 +15,26 @@ function Login() {
   const [googleLoading, setGoogleLoading] = useState(false)
   const [error, setError] = useState('')
 
-  const finishLogin = useCallback((result) => {
+  const finishLogin = useCallback(async (result) => {
     saveSession(result)
     if (!remember) localStorage.setItem('propulse_session_mode', 'session')
-    const destination = location.state?.from?.pathname
-      || (result.user?.role === 'admin' ? '/admin' : '/leads')
+
+    if (result.user?.role === 'admin') {
+      navigate('/admin', { replace: true })
+      return
+    }
+
+    // Lead Partners should land in their dedicated portal after login.
+    // This also supports business-role accounts that have an active Lead Partner relationship.
+    try {
+      const partner = await authRequest('/lead-partner/me')
+      if (partner?.status === 'active') {
+        navigate('/lead-partner', { replace: true })
+        return
+      }
+    } catch {}
+
+    const destination = location.state?.from?.pathname || '/leads'
     navigate(destination, { replace: true })
   }, [location.state, navigate, remember])
 
@@ -30,7 +45,7 @@ function Login() {
     try {
       setLoading(true)
       const result = await authRequest('/auth/login', { method: 'POST', body: JSON.stringify(form) })
-      finishLogin(result)
+      await finishLogin(result)
     } catch (err) {
       setError(err.message)
     } finally {
