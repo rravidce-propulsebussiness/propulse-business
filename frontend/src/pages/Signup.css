@@ -263,7 +263,16 @@
 .signup-form-grid input{height:52px!important}
 .signup-form>.signup-submit{margin-top:8px!important}
 .signup-bottom-login{margin-top:24px!important;font-size:11px!important}.signup-bottom-login a{font-size:13px!important}.signup-bottom-login b{font-size:14px!important}
-.signup-security{display:none!important}
+.signup-security{display:none!important}\n.signup-main-proof{margin-top:4px;padding:12px 14px;border:1px solid #e4ebf1;border-radius:10px;background:#f8fbff}
+.signup-main-proof-head{display:grid;gap:3px;margin-bottom:9px;text-align:left}
+.signup-main-proof-head strong{font-size:9px;color:#17395f}
+.signup-main-proof-head small{font-size:7px;color:#71849a;line-height:1.45}
+.signup-main-proof .signup-document-upload{min-height:64px;margin-top:0}
+.signup-main-proof .signup-document-upload strong{font-size:9px}
+.signup-main-proof .signup-document-upload small{font-size:7px}
+.signup-main-proof .signup-document-list{margin-top:7px}
+.signup-main-proof .signup-document-list>div{font-size:8px;padding:6px 8px}
+
 .signup-google-signup{display:block!important}
 .signup-google-signup .signup-google-label{margin:0 0 8px;text-align:center;color:#17395f;font-size:9px;font-weight:900}
 .signup-google-signup .google-button-wrap{min-height:48px}
