@@ -241,7 +241,8 @@ function Signup() {
           {showBusinessModal && (
             <div className="signup-business-modal-backdrop" role="presentation" onMouseDown={(e) => { if (e.target === e.currentTarget) setShowBusinessModal(false) }}>
               <div className="signup-business-modal" role="dialog" aria-modal="true" aria-labelledby="business-details-title">
-                <div className="signup-business-modal-head">
+                {error && <div className="signup-modal-error" role="alert">{error}</div>}
+              <div className="signup-business-modal-head">
                   <div><span>BUSINESS DETAILS</span><h3 id="business-details-title">Complete your profile</h3><p>A few more details help us personalize your Propulse experience.</p></div>
                   <button type="button" onClick={() => setShowBusinessModal(false)} aria-label="Close">×</button>
                 </div>
@@ -265,7 +266,7 @@ function Signup() {
                     </div>}
                   </section>
                   <div className="signup-consent"><label><input type="checkbox" checked={agree} onChange={(e)=>setAgree(e.target.checked)} /> <span>I agree to the <b>Terms of Service</b> and <b>Privacy Policy</b>.</span></label></div>
-                  <button className="signup-submit" disabled={loading || googleLoading || loadingData}>{loading ? 'Creating Account…' : (googleCredential ? 'Create Google Account' : `Create ${accountTypeLabel()} Account`)} <span>→</span></button>
+                  <button className="signup-submit" disabled={loading || googleLoading || loadingData}>{loading ? 'Submitting…' : 'Submit'} <span>→</span></button>
                 </form>
               </div>
             </div>
