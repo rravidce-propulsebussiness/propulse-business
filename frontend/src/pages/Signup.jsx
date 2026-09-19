@@ -33,6 +33,7 @@ function Signup() {
   const [loadingData, setLoadingData] = useState(true)
   const [error, setError] = useState('')
   const [showBusinessModal, setShowBusinessModal] = useState(false)
+  const [proofDocuments, setProofDocuments] = useState([])
 
   useEffect(() => {
     async function loadMasterData() {
@@ -93,14 +94,30 @@ function Signup() {
     if (!form.name || !form.email || !form.phone || !form.businessName || !form.businessDetails) return setError('Complete your personal and business details.')
     if (form.password.length < 8) return setError('Password must be at least 8 characters.')
     if (form.password !== form.confirm) return setError('Passwords do not match.')
-    const cleanServices = serviceSelections.filter((x) => x.industryId && x.serviceId).map((x) => ({ industryId: Number(x.industryId), serviceId: Number(x.serviceId), subserviceId: x.subserviceId ? Number(x.subserviceId) : null }))
+    const cleanServices = serviceSelections.flatMap((x) => {
+      if (!x.industryId || !x.serviceId) return []
+      if (x.serviceId === '__all__') {
+        return services.filter((item) => String(item.industry_id) === String(x.industryId)).map((item) => ({
+          industryId: Number(x.industryId), serviceId: Number(item.id), subserviceId: null,
+        }))
+      }
+      return [{ industryId: Number(x.industryId), serviceId: Number(x.serviceId), subserviceId: x.subserviceId ? Number(x.subserviceId) : null }]
+    })
     const cleanLocations = locationSelections.filter((x) => x.stateId && x.cityId).map((x) => ({ stateId: Number(x.stateId), cityId: Number(x.cityId) }))
     if (!cleanServices.length) return setError('Add at least one service.')
     if (!cleanLocations.length) return setError('Add at least one location.')
     try {
       setLoading(true)
+      if (!proofDocuments.length) return setError('Upload at least one company proof document.')
       const result = await authRequest('/auth/signup', { method: 'POST', body: JSON.stringify({ ...form, confirm: undefined, accountType, services: cleanServices, locations: cleanLocations }) })
       saveSession(result)
+      const documentPayload = await Promise.all(proofDocuments.map(async (file) => new Promise((resolve, reject) => {
+        const reader = new FileReader()
+        reader.onload = () => resolve({ name: file.name, type: file.type, size: file.size, data: reader.result })
+        reader.onerror = reject
+        reader.readAsDataURL(file)
+      })))
+      await authRequest('/auth/company-proofs', { method: 'POST', body: JSON.stringify({ documents: documentPayload }) })
       navigate('/dashboard', { replace: true })
     } catch (err) { setError(err.message) } finally { setLoading(false) }
   }
@@ -190,6 +207,14 @@ function Signup() {
                   <section className="signup-form-section"><div className="signup-form-grid"><label className="signup-full">Business name<input value={form.businessName} onChange={(e) => update('businessName', e.target.value)} placeholder="Your company or business name" required /></label><label className="signup-full">Business details<textarea value={form.businessDetails} onChange={(e) => update('businessDetails', e.target.value)} placeholder="Tell us what your business does" rows="3" required /></label></div></section>
                   <section className="signup-form-section"><div className="signup-section-head signup-section-head-inline"><span>01</span><div><strong>Services you provide</strong><small>Select every service you want matching leads for.</small></div><button type="button" className="signup-add-button" onClick={addServiceSelection}>+ Add service</button></div><div className="signup-selection-list">{serviceSelections.map((selection,index)=><div className="signup-selection-card" key={`service-${index}`}><div className="signup-selection-top"><span>Service {index+1}</span>{serviceSelections.length>1&&<button type="button" onClick={()=>removeServiceSelection(index)}>Remove</button>}</div><div className="signup-selection-grid"><label>Industry<select value={selection.industryId} onChange={(e)=>updateServiceSelection(index,'industryId',e.target.value)} disabled={loadingData} required><option value="">Select industry</option>{industries.map(item=><option key={item.id} value={item.id}>{item.name}</option>)}</select></label><label>Service<select value={selection.serviceId} onChange={(e)=>updateServiceSelection(index,'serviceId',e.target.value)} disabled={!selection.industryId} required><option value="">Select service</option>{(serviceOptions[index]||[]).map(item=><option key={item.id} value={item.id}>{item.name}</option>)}</select></label><label>Subservice <small>Optional</small><select value={selection.subserviceId} onChange={(e)=>updateServiceSelection(index,'subserviceId',e.target.value)} disabled={!selection.serviceId}><option value="">All related subservices</option>{(subserviceOptions[index]||[]).map(item=><option key={item.id} value={item.id}>{item.name}</option>)}</select></label></div></div>)}</div></section>
                   <section className="signup-form-section"><div className="signup-section-head signup-section-head-inline"><span>02</span><div><strong>Locations you serve</strong><small>Select the cities where you want relevant leads.</small></div><button type="button" className="signup-add-button" onClick={addLocationSelection}>+ Add location</button></div><div className="signup-selection-list">{locationSelections.map((selection,index)=><div className="signup-selection-card" key={`location-${index}`}><div className="signup-selection-top"><span>Location {index+1}</span>{locationSelections.length>1&&<button type="button" onClick={()=>removeLocationSelection(index)}>Remove</button>}</div><div className="signup-selection-grid signup-location-grid"><label>State / UT<select value={selection.stateId} onChange={(e)=>updateLocationSelection(index,'stateId',e.target.value)} disabled={loadingData} required><option value="">Select state / UT</option>{states.map(item=><option key={item.id} value={item.id}>{item.name}</option>)}</select></label><label>City<select value={selection.cityId} onChange={(e)=>updateLocationSelection(index,'cityId',e.target.value)} disabled={!selection.stateId} required><option value="">Select city</option>{(cityOptions[index]||[]).map(item=><option key={item.id} value={item.id}>{item.name}</option>)}</select></label></div></div>)}</div></section>
+                  <section className="signup-form-section signup-proof-section">
+                    <div className="signup-section-head signup-section-head-inline"><span>03</span><div><strong>Company proof documents</strong><small>Upload GST, registration, PAN, incorporation or other company proof.</small></div></div>
+                    <label className="signup-document-upload">
+                      <input type="file" accept=".pdf,.jpg,.jpeg,.png" multiple onChange={(e) => setProofDocuments(Array.from(e.target.files || []))} />
+                      <strong>Choose documents</strong><small>PDF, JPG or PNG · up to 5 MB each · multiple files allowed</small>
+                    </label>
+                    {proofDocuments.length > 0 && <div className="signup-document-list">{proofDocuments.map((file) => <div key={file.name}><span>{file.name}</span><small>{(file.size / 1024 / 1024).toFixed(2)} MB</small></div>)}</div>}
+                  </section>
                   <div className="signup-consent"><label><input type="checkbox" checked={agree} onChange={(e)=>setAgree(e.target.checked)} /> <span>I agree to the <b>Terms of Service</b> and <b>Privacy Policy</b>.</span></label></div>
                   <button className="signup-submit" disabled={loading || googleLoading || loadingData}>{loading ? 'Creating Account…' : `Create ${accountTypeLabel()} Account`} <span>→</span></button>
                 </form>
