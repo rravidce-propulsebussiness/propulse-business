@@ -1,0 +1,106 @@
+
+/* Signup heading — intentionally matched to the premium login heading */
+.signup-card .auth-heading.signup-heading {
+  position: relative;
+  margin: -31px -38px 17px !important;
+  padding: 29px 34px 32px !important;
+  text-align: center !important;
+  background:
+    radial-gradient(circle at 12% 120%, rgba(255,90,36,.30), transparent 32%),
+    radial-gradient(circle at 88% 120%, rgba(255,90,36,.30), transparent 32%),
+    linear-gradient(160deg, #061a3b 0%, #0b2f68 72%, #061a3b 100%) !important;
+  color: #fff !important;
+  border-radius: 24px 24px 0 0 !important;
+  overflow: hidden !important;
+  border-bottom: 0 !important;
+}
+
+.signup-card .auth-heading.signup-heading::before,
+.signup-card .auth-heading.signup-heading::after {
+  content: "";
+  position: absolute;
+  width: 240px;
+  height: 120px;
+  bottom: -52px;
+  border: 1px solid rgba(255,106,47,.58);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.signup-card .auth-heading.signup-heading::before {
+  left: -92px;
+  transform: rotate(22deg);
+  box-shadow: 0 0 0 12px rgba(255,106,47,.08);
+}
+
+.signup-card .auth-heading.signup-heading::after {
+  right: -92px;
+  transform: rotate(-22deg);
+  box-shadow: 0 0 0 12px rgba(255,106,47,.08);
+}
+
+.signup-card .auth-heading.signup-heading .auth-kicker {
+  position: relative;
+  z-index: 2;
+  color: #ff6a2f !important;
+  margin: 0 0 10px !important;
+  text-align: center !important;
+  letter-spacing: .2em !important;
+  font-size: 10px !important;
+}
+
+.signup-card .auth-heading.signup-heading h2 {
+  position: relative;
+  z-index: 2;
+  margin: 0 !important;
+  color: #fff !important;
+  font-size: clamp(30px, 3vw, 40px) !important;
+  line-height: 1.02 !important;
+  letter-spacing: -.055em !important;
+  text-align: center !important;
+}
+
+.signup-card .auth-heading.signup-heading h2 em {
+  color: #ff5a24 !important;
+  font-style: normal !important;
+}
+
+.signup-card .auth-heading.signup-heading h2::after {
+  content: "";
+  display: block;
+  width: 66px;
+  height: 3px;
+  margin: 12px auto 0;
+  border-radius: 999px;
+  background: #ff5a24;
+  box-shadow: 0 0 18px rgba(255,90,36,.42);
+}
+
+.signup-card .auth-heading.signup-heading > p:last-child {
+  position: relative;
+  z-index: 2;
+  margin: 13px auto 0 !important;
+  max-width: 390px;
+  color: rgba(255,255,255,.78) !important;
+  font-size: 13px !important;
+  line-height: 1.45 !important;
+  text-align: center !important;
+}
+
+@media (max-width: 850px) {
+  .signup-card .auth-heading.signup-heading {
+    margin: -27px -28px 17px !important;
+    padding: 25px 24px 29px !important;
+  }
+}
+
+@media (max-width: 520px) {
+  .signup-card .auth-heading.signup-heading {
+    margin: -24px -18px 17px !important;
+    padding: 23px 18px 27px !important;
+  }
+
+  .signup-card .auth-heading.signup-heading h2 {
+    font-size: 29px !important;
+  }
+}
