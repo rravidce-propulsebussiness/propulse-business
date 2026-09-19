@@ -536,3 +536,82 @@
   .auth-benefit{background:rgba(6,26,59,.96)}
   .auth-architecture{height:25%;min-height:150px;opacity:.35}
 }
+
+/* Final balance pass: all left-panel copy remains visible inside the viewport */
+.auth-visual-content{
+  padding-top:30px;
+  padding-bottom:20px;
+}
+.auth-visual-brand .auth-brand-mark{width:40px;height:40px}
+.auth-visual-brand strong{font-size:20px}
+.auth-visual-copy{
+  margin-top:28px;
+  margin-bottom:17px;
+}
+.auth-visual-copy h1{
+  font-size:clamp(42px,4.25vw,62px);
+  line-height:.93;
+  margin:11px 0 15px;
+}
+.auth-visual-copy p{
+  max-width:470px;
+  font-size:13px;
+  line-height:1.58;
+}
+.auth-benefit-grid{
+  gap:8px;
+  max-width:560px;
+}
+.auth-benefit{
+  min-height:58px;
+  padding:9px 11px;
+}
+.auth-benefit>b{
+  width:31px;height:31px;flex-basis:31px;
+}
+.auth-benefit strong{font-size:10px}
+.auth-benefit span{font-size:7px}
+.auth-trust-card{
+  max-width:560px;
+  margin-top:9px;
+  padding:10px 13px;
+}
+.auth-trust-card strong{font-size:10px}
+.auth-trust-card small{font-size:7px;margin-top:4px}
+.auth-architecture{
+  height:36%;
+  min-height:180px;
+  opacity:.38;
+}
+.auth-visual:has(.auth-architecture) .auth-visual-footer{
+  bottom:12px;
+  font-size:8px;
+}
+@media(max-width:1100px){
+  .auth-visual-copy h1{font-size:44px}
+  .auth-benefit{min-height:54px}
+  .auth-benefit span{font-size:6.5px}
+  .auth-trust-card{display:block}
+}
+@media(max-height:800px) and (min-width:851px){
+  .auth-visual-content{padding-top:22px}
+  .auth-visual-copy{margin-top:20px;margin-bottom:12px}
+  .auth-visual-copy h1{font-size:40px;margin:8px 0 11px}
+  .auth-visual-copy p{font-size:12px}
+  .auth-benefit{min-height:50px;padding:7px 9px}
+  .auth-benefit span{display:none}
+  .auth-trust-card{padding:8px 11px}
+  .auth-architecture{height:31%;min-height:150px}
+}
+@media(max-width:850px){
+  .auth-visual-content{padding-top:25px}
+  .auth-visual-copy{margin-top:28px}
+  .auth-visual-copy h1{font-size:46px}
+  .auth-architecture{height:31%;min-height:170px}
+}
+@media(max-width:520px){
+  .auth-visual-copy{margin-top:25px}
+  .auth-visual-copy h1{font-size:38px}
+  .auth-visual-copy p{font-size:12px}
+  .auth-trust-card{padding:9px 11px}
+}
