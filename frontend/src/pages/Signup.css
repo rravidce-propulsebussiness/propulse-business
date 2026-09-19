@@ -365,6 +365,14 @@
 .signup-document-list>div{gap:10px!important}
 .signup-document-list>div span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .signup-document-list>div button{border:0!important;background:transparent!important;color:#df4b22!important;font-size:8px!important;font-weight:900!important;cursor:pointer!important;padding:2px 0!important}
+.signup-document-summary{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:10px!important;padding:8px 10px!important;border:1px solid #dbe7f1!important;border-radius:8px!important;background:#f3f8fc!important;color:#173f70!important;font-size:8px!important}
+.signup-document-summary strong{font-size:8px!important}
+.signup-document-summary span{color:#5f7892!important;font-size:7px!important}
+.signup-document-item{display:flex!important;align-items:center!important;gap:10px!important}
+.signup-document-item .signup-document-name{display:flex!important;align-items:center!important;gap:6px!important;min-width:0!important;flex:1!important}
+.signup-document-item .signup-document-name b{width:18px!important;height:18px!important;display:grid!important;place-items:center!important;border-radius:50%!important;background:#e7f7ee!important;color:#16834a!important;font-size:9px!important;flex:0 0 auto!important}
+.signup-document-item button:disabled{opacity:.45!important;cursor:not-allowed!important}
+
 
 /* Desktop compact mode: reduce the signup UI by 15% while keeping the page full-width. */
 @media(min-width:901px){
