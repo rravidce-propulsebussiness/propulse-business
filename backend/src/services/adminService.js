@@ -21,7 +21,6 @@ async function getDashboardStats() {
       (SELECT COUNT(*)::int FROM users) AS total_users,
       (SELECT COUNT(*)::int FROM users WHERE is_active = TRUE) AS active_users,
       (SELECT COUNT(*)::int FROM users WHERE role = 'business') AS businesses,
-      (SELECT COUNT(*)::int FROM users WHERE role = 'investor') AS investors,
       (SELECT COUNT(*)::int FROM users WHERE role = 'business' AND is_active = TRUE) AS active_businesses,
       (SELECT COUNT(*)::int FROM industries WHERE is_active = TRUE) AS industries,
       (SELECT COUNT(*)::int FROM services WHERE is_active = TRUE) AS services,
@@ -30,7 +29,7 @@ async function getDashboardStats() {
       (SELECT COUNT(*)::int FROM cities WHERE is_active = TRUE) AS cities
   `);
   const row = result.rows[0];
-  return { totalUsers: row.total_users, activeUsers: row.active_users, businesses: row.businesses, investors: row.investors, activeBusinesses: row.active_businesses, industries: row.industries, services: row.services, subservices: row.subservices, states: row.states, cities: row.cities };
+  return { totalUsers: row.total_users, activeUsers: row.active_users, businesses: row.businesses, activeBusinesses: row.active_businesses, industries: row.industries, services: row.services, subservices: row.subservices, states: row.states, cities: row.cities };
 }
 
 async function getUsers({ search = '', role = 'all', status = 'all', industryId = '', serviceId = '', stateId = '', cityId = '', page, pageSize, limit } = {}) {
@@ -164,19 +163,4 @@ async function updateUserProfile(userId, { name, email, phone, businessName, bus
 }
 
 
-async function convertUserToInvestor(userId) {
-  const id=Number(userId);
-  const client=await pool.connect();
-  try {
-    await client.query('BEGIN');
-    const user=(await client.query(`SELECT id,name,email,role,is_active,auth_version FROM users WHERE id=$1 FOR UPDATE`,[id])).rows[0];
-    if(!user){const e=new Error('User not found');e.code='NOT_FOUND';throw e;}
-    if(user.role==='admin'){const e=new Error('Administrator accounts cannot be converted to investors');e.code='INVALID_ROLE';throw e;}
-    if(user.role==='investor'){await client.query('COMMIT');return user;}
-    const updated=(await client.query(`UPDATE users SET role='investor',auth_version=auth_version+1,updated_at=CURRENT_TIMESTAMP WHERE id=$1 RETURNING id,name,email,role,is_active,created_at`,[id])).rows[0];
-    await client.query('COMMIT');
-    return updated;
-  }catch(e){await client.query('ROLLBACK');throw e;}finally{client.release();}
-}
-
-module.exports={getDashboardStats,getUsers,createAdmin,setUserStatus,updateUserProfile,convertUserToInvestor};
+module.exports={getDashboardStats,getUsers,createAdmin,setUserStatus,updateUserProfile};
