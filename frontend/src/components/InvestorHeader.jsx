@@ -4,10 +4,32 @@ import { authRequest, clearSession, getToken, getUser } from '../utils/auth'
 import './InvestorHeader.css'
 
 export default function InvestorHeader() {
-  const navigate=useNavigate();const location=useLocation();const user=getUser();const [open,setOpen]=useState(false);const [businessName,setBusinessName]=useState(user?.business_name||user?.businessName||'Your Business');const [isPro,setIsPro]=useState(Boolean(user?.is_pro||user?.isPro||user?.membership_plan==='pro'||user?.membershipPlan==='pro'))
-  useEffect(()=>{let active=true;if(!getToken()||user?.role==='admin')return undefined;const requests=[authRequest('/profile')];if(user?.role==='business')requests.push(authRequest('/lead-partner/me').catch(()=>null));Promise.all(requests).then(([profile,partner])=>{if(!active)return;if(profile?.business_name)setBusinessName(profile.business_name);if(user?.role==='business')setLeadPartnerStatus(partner?.status||null);setIsPro(Boolean(profile?.is_pro||profile?.isPro||String(profile?.membership_plan||profile?.membershipPlan||'').toLowerCase()==='pro'||profile?.membership?.plan&&String(profile.membership.plan).toLowerCase()==='pro'))}).catch(()=>{});return()=>{active=false}},[user?.role])
-  const logout=()=>{clearSession();setOpen(false);navigate('/')};const isActive=target=>target==='/'?location.pathname==='/':location.pathname===target
-  const investorOnly=user?.role==='investor'; const leadPartnerActive=user?.role==='business'&&leadPartnerStatus==='active'; const nav=investorOnly?[{label:'Investment',to:'/investment'},{label:'Available Leads',to:'/investment/leads'},{label:'Sold Leads',to:'/investment/sold-leads'},{label:'Payouts',to:'/investment/payouts'},{label:'History',to:'/investment/history'},{label:'Payout Account',to:'/profile/payout-account'}]:[{label:'Home',to:'/'},...(isPro?[{label:'Invest',to:'/investment'},{label:'Available Leads',to:'/investment/leads'},{label:'Sold Leads',to:'/investment/sold-leads'},{label:'Payouts',to:'/investment/payouts'},{label:'History',to:'/investment/history'},{label:'Payout Account',to:'/profile/payout-account'}]:[])]
-  const avatar=businessName.trim().charAt(0).toUpperCase()||'I'
-  return <header className="investor-header"><Link className="investor-header-brand" to="/" onClick={()=>setOpen(false)}><img src="/brand/propulse-logo.png" alt="Propulse Business"/></Link>{investorOnly&&<div className="investor-header-label">INVESTOR</div>}{leadPartnerActive&&<div className="investor-header-label">LEAD PARTNER</div>}<nav className={`investor-header-nav${open?' open':''}`}>{nav.map(item=><Link key={item.to} className={isActive(item.to)?'active':''} to={item.to} onClick={()=>setOpen(false)}>{item.label}</Link>)}<button className="investor-mobile-logout" onClick={logout}>Logout</button></nav><div className="investor-header-right">{(isPro||investorOnly||leadPartnerActive)&&<Link className="investor-invest-button" to="/investment?new=1" onClick={()=>setOpen(false)}>＋ Invest</Link>}{!investorOnly&&<Link className="investor-profile" to="/profile" aria-label="Open business profile"><span className="investor-avatar">{avatar}</span><span className="investor-profile-name">{businessName}</span></Link>}<button className="investor-logout" onClick={logout}>Logout</button><button className="investor-menu" aria-label="Open investor navigation" onClick={()=>setOpen(value=>!value)}>☰</button></div></header>
+  const navigate=useNavigate(); const location=useLocation(); const user=getUser()
+  const [open,setOpen]=useState(false); const [businessName,setBusinessName]=useState(user?.business_name||user?.businessName||'Your Business')
+  const [isPro,setIsPro]=useState(false); const [leadPartnerStatus,setLeadPartnerStatus]=useState(null)
+  useEffect(()=>{let active=true;if(!getToken()||user?.role==='admin')return undefined
+    Promise.all([
+      authRequest('/profile').catch(()=>null),
+      user?.role==='business'?authRequest('/lead-partner/me').catch(()=>null):Promise.resolve(null),
+      authRequest('/investments/access').catch(()=>null)
+    ]).then(([profile,partner,access])=>{if(!active)return
+      if(profile?.business_name)setBusinessName(profile.business_name)
+      setLeadPartnerStatus(partner?.status||null); setIsPro(Boolean(access?.isPro))
+    }); return()=>{active=false}
+  },[user?.role])
+  const logout=()=>{clearSession();setOpen(false);navigate('/')}
+  const isActive=target=>target==='/investment'?location.pathname.startsWith('/investment'):location.pathname===target
+  const leadPartnerActive=user?.role==='business'&&leadPartnerStatus==='active'
+  const nav=[
+    {label:'Home',to:'/'},{label:'My Leads',to:'/my-leads'},{label:'Wallet',to:'/wallet'},{label:'Membership',to:'/membership'},
+    ...(isPro?[{label:'Investment',to:'/investment'},{label:'Available Leads',to:'/investment/leads'},{label:'Sold Leads',to:'/investment/sold-leads'},{label:'Payouts',to:'/investment/payouts'},{label:'History',to:'/investment/history'}]:[]),
+    {label:'Lead Partner',to:'/lead-partner'}
+  ]
+  const avatar=businessName.trim().charAt(0).toUpperCase()||'B'
+  return <header className="investor-header">
+    <Link className="investor-header-brand" to="/" onClick={()=>setOpen(false)}><img src="/brand/propulse-logo.png" alt="Propulse Business"/></Link>
+    {isPro&&<div className="investor-header-label">INVESTOR</div>}{leadPartnerActive&&<div className="investor-header-label">LEAD PARTNER</div>}
+    <nav className={`investor-header-nav${open?' open':''}`}>{nav.map(item=><Link key={item.to} className={isActive(item.to)?'active':''} to={item.to} onClick={()=>setOpen(false)}>{item.label}</Link>)}<button className="investor-mobile-logout" onClick={logout}>Logout</button></nav>
+    <div className="investor-header-right"><Link className="investor-profile" to="/profile" aria-label="Open business profile"><span className="investor-avatar">{avatar}</span><span className="investor-profile-name">{businessName}</span></Link>{isPro&&<Link className="investor-invest-button" to="/investment?new=1" onClick={()=>setOpen(false)}>＋ Invest</Link>}<button className="investor-logout" onClick={logout}>Logout</button><button className="investor-menu" aria-label="Open navigation" onClick={()=>setOpen(value=>!value)}>☰</button></div>
+  </header>
 }
