@@ -21,6 +21,7 @@ async function getDashboardStats() {
       (SELECT COUNT(*)::int FROM users) AS total_users,
       (SELECT COUNT(*)::int FROM users WHERE is_active = TRUE) AS active_users,
       (SELECT COUNT(*)::int FROM users WHERE role = 'business') AS businesses,
+      (SELECT COUNT(*)::int FROM users WHERE role = 'investor') AS investors,
       (SELECT COUNT(*)::int FROM users WHERE role = 'business' AND is_active = TRUE) AS active_businesses,
       (SELECT COUNT(*)::int FROM industries WHERE is_active = TRUE) AS industries,
       (SELECT COUNT(*)::int FROM services WHERE is_active = TRUE) AS services,
@@ -29,7 +30,7 @@ async function getDashboardStats() {
       (SELECT COUNT(*)::int FROM cities WHERE is_active = TRUE) AS cities
   `);
   const row = result.rows[0];
-  return { totalUsers: row.total_users, activeUsers: row.active_users, businesses: row.businesses, activeBusinesses: row.active_businesses, industries: row.industries, services: row.services, subservices: row.subservices, states: row.states, cities: row.cities };
+  return { totalUsers: row.total_users, activeUsers: row.active_users, businesses: row.businesses, investors: row.investors, activeBusinesses: row.active_businesses, industries: row.industries, services: row.services, subservices: row.subservices, states: row.states, cities: row.cities };
 }
 
 async function getUsers({ search = '', role = 'all', status = 'all', industryId = '', serviceId = '', stateId = '', cityId = '', page, pageSize, limit } = {}) {
@@ -40,7 +41,7 @@ async function getUsers({ search = '', role = 'all', status = 'all', industryId 
     params.push(`%${String(search).trim()}%`);
     conditions.push(`(u.name ILIKE $${params.length} OR u.email ILIKE $${params.length} OR bp.business_name ILIKE $${params.length} OR bp.phone ILIKE $${params.length})`);
   }
-  if (role === 'admin' || role === 'business') { params.push(role); conditions.push(`u.role = $${params.length}`); }
+  if (['admin','business','investor'].includes(role)) { params.push(role); conditions.push(`u.role = ${params.length}`); }
   if (status === 'active' || status === 'inactive') { params.push(status === 'active'); conditions.push(`u.is_active = $${params.length}`); }
   if (industryId) { params.push(industryId); conditions.push(`EXISTS (SELECT 1 FROM business_profile_services x WHERE x.business_profile_id=bp.id AND x.industry_id=$${params.length} AND x.is_active=TRUE)`); }
   if (serviceId) { params.push(serviceId); conditions.push(`EXISTS (SELECT 1 FROM business_profile_services x WHERE x.business_profile_id=bp.id AND x.service_id=$${params.length} AND x.is_active=TRUE)`); }
