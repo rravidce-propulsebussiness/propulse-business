@@ -101,21 +101,6 @@ function Login() {
 
       <main className="auth-card-wrap login-premium-card-wrap">
         <div className="auth-card login-premium-card">
-          <div className="login-premium-card-head">
-            <Link className="mobile-brand" to="/" aria-label="Propulse Business home">
-              <img src="/brand/propulse-logo.png" alt="Propulse Business Technologies Private Limited" />
-            </Link>
-            <div className="login-new-user">
-              <span>New to Propulse?</span>
-              <Link to="/signup">Create an Account <b>→</b></Link>
-            </div>
-          </div>
-          <div className="auth-heading login-heading">
-            <p className="auth-kicker">WELCOME BACK</p>
-            <h2>Welcome back.</h2>
-            <p>Sign in to continue your business journey.</p>
-          </div>
-
           {error && <div className="auth-error" role="alert">{error}</div>}
 
           <div className="account-type-grid" role="radiogroup" aria-label="Account type">
