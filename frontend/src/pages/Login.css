@@ -303,6 +303,46 @@
 .login-premium .auth-outline{height:50px!important;background:#fff!important;color:#173f72!important;border-color:#d4dee8!important;font-size:11px!important}
 .login-legal-note{color:#8a9bad!important;font-size:7.5px!important}
 
+/* Final clean login: white canvas, homepage header, no account selector. */
+.login-premium{background:#fff!important;grid-template-columns:50% 50%!important;color:#0b1f3f!important}
+.login-topbar{height:76px!important;background:#062654!important;border-bottom:1px solid rgba(255,255,255,.1)!important;box-shadow:0 8px 24px rgba(6,38,84,.12)!important;backdrop-filter:none!important}
+.login-topbar-brand img{background:transparent!important;mix-blend-mode:normal!important}
+.login-back-home{background:#f45125!important;border-color:#f45125!important;color:#fff!important;border-radius:8px!important;padding:12px 20px!important}
+.login-premium-visual{background:#fff!important;min-height:calc(100dvh - 76px)!important;padding-top:0!important}
+.login-premium-image{background-image:linear-gradient(180deg,rgba(255,255,255,.97),rgba(255,255,255,.93)),url('/homepage/login-hero.svg')!important;background-size:cover!important;background-position:center!important}
+.login-premium-visual:after{background:linear-gradient(90deg,rgba(255,255,255,.93),rgba(255,255,255,.78))!important}
+.login-premium-visual-content{min-height:calc(100dvh - 76px)!important;height:auto!important;justify-content:center!important;color:#0b1f3f!important}
+.login-premium-visual h1{color:#0b2a57!important;text-shadow:none!important}
+.login-premium-visual h1 em{color:#f45125!important}
+.login-premium-visual-content>p{color:#415a78!important}
+.login-premium-visual-content>p strong{color:#0b2a57!important}
+.login-premium-kicker{color:#f45125!important}
+.login-premium-features{border-color:#e7edf4!important}
+.login-premium-features>div{border-color:#e7edf4!important}
+.login-premium-features>div>b{background:#fff3ee!important;border-color:#ffd8ca!important;color:#f45125!important}
+.login-premium-features strong{color:#0b2a57!important}
+.login-premium-features small{color:#71849a!important}
+.login-premium-quote{background:#fff7f3!important;border-color:#f45125!important}
+.login-premium-quote p{color:#0b2a57!important}
+.login-premium-card-wrap{background:#fff!important;background-image:none!important;min-height:calc(100dvh - 76px)!important;height:auto!important;padding:34px clamp(30px,5vw,72px) 42px!important}
+.login-premium-card-wrap:before{display:none!important}
+.login-premium-card{width:min(760px,100%)!important;max-height:calc(100dvh - 128px)!important;overflow-y:auto!important;overflow-x:hidden!important;background:#fff!important;border:1px solid #e1e8f0!important;border-radius:24px!important;box-shadow:0 24px 65px rgba(10,37,69,.12)!important;padding:42px 46px 34px!important}
+.login-premium-card-head{display:none!important}
+.login-premium .account-type-grid,.login-premium .signup-role-note{display:none!important}
+.login-premium .google-auth-block{margin:0 0 16px}
+.login-premium .google-button-wrap{min-height:52px!important;background:#fff!important;border-color:#d8e2eb!important}
+.login-premium .google-button-wrap>div{min-height:52px!important}
+.login-premium .auth-divider{margin:15px 0!important;color:#8da0b4!important}
+.login-premium-card form{gap:15px!important}
+.login-premium-card form>label{font-size:10px!important;color:#39516d!important}
+.login-premium-card input:not([type=checkbox]){height:56px!important;background:#f9fbfd!important;color:#0f2747!important;border-color:#d4e0eb!important;font-size:13px!important}
+.login-premium-card input:not([type=checkbox]):focus{background:#fff!important;border-color:#5e8dc0!important}
+.login-premium-card .password-field button{color:#61758b!important}
+.login-premium-card .check{font-size:10px!important;color:#66798e!important}
+.login-premium-card .text-button{font-size:10px!important;color:#f45125!important}
+.login-premium-submit{height:58px!important;font-size:13px!important}
+.login-premium .auth-card>.auth-divider:last-of-type,.login-premium .auth-outline,.login-legal-note{display:none!important}
+
 @media(max-width:1180px){.login-premium{grid-template-columns:48% 52%}.login-topbar{grid-template-columns:auto 1fr auto;padding:0 24px}.login-topbar-brand span{display:none}.login-premium-visual h1{font-size:53px}.login-premium-features{grid-template-columns:1fr 1fr}.login-premium-card{padding:27px 28px}}
 @media(max-width:920px){.login-premium{display:block;padding-top:70px}.login-topbar{height:70px}.login-premium-visual{min-height:360px;padding-top:0}.login-premium-visual-content{min-height:360px;padding:40px 28px 25px}.login-premium-visual h1{font-size:47px}.login-premium-features{max-width:650px}.login-premium-card-wrap{min-height:0;padding:22px 22px 40px}.login-premium-card{max-width:680px}}
 @media(max-width:600px){.login-topbar{height:64px;padding:0 14px}.login-topbar-brand img{width:118px;height:42px}.login-topbar-context{display:none}.login-back-home{padding:9px 11px;font-size:8px}.login-premium{padding-top:64px}.login-premium-visual,.login-premium-visual-content{min-height:330px;height:auto}.login-premium-visual-content{padding:31px 19px 23px}.login-premium-visual h1{font-size:36px;letter-spacing:-1.8px}.login-premium-visual-content>p{font-size:10px}.login-premium-features{margin-top:20px;grid-template-columns:1fr 1fr}.login-premium-features>div{padding:11px 9px}.login-premium-features>div:nth-child(n+3){display:none}.login-premium-quote{display:none}.login-premium-card-wrap{padding:14px;background:#eef3f8}.login-premium-card{border-radius:18px;padding:21px 17px}.login-premium-card-head{margin-bottom:18px}.login-premium-card-head .mobile-brand img{width:132px;height:50px}.login-new-user span{display:none}.login-heading h2{font-size:31px}.login-premium .account-type-grid{grid-template-columns:1fr}.login-premium .account-type-card{min-height:64px}.login-premium .signup-role-note{font-size:7px}.login-premium-card form>label{font-size:8px}}
