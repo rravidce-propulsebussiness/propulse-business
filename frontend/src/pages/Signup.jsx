@@ -35,6 +35,7 @@ function Signup() {
   const [showBusinessModal, setShowBusinessModal] = useState(false)
   const [proofDocuments, setProofDocuments] = useState([])
   const [googleCredential, setGoogleCredential] = useState('')
+  const [documentUploadStatus, setDocumentUploadStatus] = useState('idle')
 
   useEffect(() => {
     async function loadMasterData() {
@@ -68,8 +69,29 @@ function Signup() {
   }
   function addServiceSelection() { setServiceSelections((current) => [...current, newService()]) }
   function removeServiceSelection(index) { setServiceSelections((current) => current.filter((_, i) => i !== index)) }
-  function addProofDocuments(files) { setProofDocuments((current) => { const incoming = Array.from(files || []); const existing = new Set(current.map((file) => `${file.name}:${file.size}:${file.lastModified}`)); return [...current, ...incoming.filter((file) => !existing.has(`${file.name}:${file.size}:${file.lastModified}`))] }) }
-  function removeProofDocument(index) { setProofDocuments((current) => current.filter((_, i) => i !== index)) }
+  function addProofDocuments(files) {
+    setError('')
+    const incoming = Array.from(files || [])
+    const allowed = new Set(['application/pdf', 'image/jpeg', 'image/png'])
+    const valid = incoming.filter((file) => {
+      if (!allowed.has(file.type) || file.size > 5 * 1024 * 1024) {
+        setError(`${file.name}: only PDF, JPG or PNG files up to 5 MB are allowed.`)
+        return false
+      }
+      return true
+    })
+    setProofDocuments((current) => {
+      const existing = new Set(current.map((file) => `${file.name}:${file.size}:${file.lastModified}`))
+      const next = [...current, ...valid.filter((file) => !existing.has(`${file.name}:${file.size}:${file.lastModified}`))]
+      if (next.length > 8) {
+        setError('You can upload up to 8 company proof documents.')
+        return next.slice(0, 8)
+      }
+      return next
+    })
+    if (valid.length) setDocumentUploadStatus('selected')
+  }
+  function removeProofDocument(index) { setProofDocuments((current) => current.filter((_, i) => i !== index)); setDocumentUploadStatus('selected') }
   function addLocationSelection() { setLocationSelections((current) => [...current, newLocation()]) }
   function removeLocationSelection(index) { setLocationSelections((current) => current.filter((_, i) => i !== index)) }
 
@@ -114,6 +136,7 @@ function Signup() {
       if (!proofDocuments.length) return setError('Upload at least one company proof document.')
       const result = await authRequest('/auth/signup', { method: 'POST', body: JSON.stringify({ ...form, confirm: undefined, password: googleCredential ? undefined : form.password, accountType, services: cleanServices, locations: cleanLocations, googleCredential: googleCredential || undefined }) })
       saveSession(result)
+      setDocumentUploadStatus('uploading')
       for (const file of proofDocuments) {
         const documentPayload = await new Promise((resolve, reject) => {
         const reader = new FileReader()
@@ -123,6 +146,8 @@ function Signup() {
         })
         await authRequest('/auth/company-proofs', { method: 'POST', body: JSON.stringify({ documents: [documentPayload] }) })
       }
+      setDocumentUploadStatus('uploaded')
+      await new Promise((resolve) => setTimeout(resolve, 700))
       navigate('/dashboard', { replace: true })
     } catch (err) { setError(err.message) } finally { setLoading(false) }
   }
@@ -234,7 +259,10 @@ function Signup() {
                       <input type="file" accept=".pdf,.jpg,.jpeg,.png" multiple onChange={(e) => { addProofDocuments(e.target.files); e.target.value = '' }} />
                       <strong>Choose documents</strong><small>PDF, JPG or PNG · up to 5 MB each · multiple files allowed</small>
                     </label>
-                    {proofDocuments.length > 0 && <div className="signup-document-list">{proofDocuments.map((file, index) => <div key={file.name + ":" + file.size + ":" + file.lastModified}><span>{file.name}</span><small>{(file.size / 1024 / 1024).toFixed(2)} MB</small><button type="button" onClick={() => removeProofDocument(index)}>Remove</button></div>)}</div>}
+                    {proofDocuments.length > 0 && <div className="signup-document-list">
+                      <div className="signup-document-summary"><strong>{proofDocuments.length} document{proofDocuments.length > 1 ? 's' : ''} selected</strong><span>{documentUploadStatus === 'uploaded' ? '✓ Uploaded successfully' : documentUploadStatus === 'uploading' ? 'Uploading…' : 'Ready to upload when you create the account'}</span></div>
+                      {proofDocuments.map((file, index) => <div className="signup-document-item" key={file.name + ":" + file.size + ":" + file.lastModified}><span className="signup-document-name"><b>✓</b>{file.name}</span><small>{(file.size / 1024 / 1024).toFixed(2)} MB</small><button type="button" onClick={() => removeProofDocument(index)} disabled={loading}>Remove</button></div>)}
+                    </div>}
                   </section>
                   <div className="signup-consent"><label><input type="checkbox" checked={agree} onChange={(e)=>setAgree(e.target.checked)} /> <span>I agree to the <b>Terms of Service</b> and <b>Privacy Policy</b>.</span></label></div>
                   <button className="signup-submit" disabled={loading || googleLoading || loadingData}>{loading ? 'Creating Account…' : (googleCredential ? 'Create Google Account' : `Create ${accountTypeLabel()} Account`)} <span>→</span></button>
