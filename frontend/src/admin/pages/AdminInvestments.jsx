@@ -24,7 +24,7 @@ function InvestorModalActions() {
       .investor-history-modal .investor-history-actions button:disabled{opacity:.5;cursor:not-allowed}
       .investor-history-modal .investor-history-actions .action-status{margin-right:auto;color:#7890aa;font-size:9px}
       .investor-history-modal .investor-history-actions .action-status strong{color:#17457f}
-      .investor-history-modal .investor-history-summary{grid-template-columns:repeat(6,minmax(0,1fr))!important;padding-top:13px;padding-bottom:13px;gap:8px}
+      .investor-history-modal .investor-history-summary{grid-template-columns:repeat(5,minmax(0,1fr))!important;padding-top:13px;padding-bottom:13px;gap:8px}
       .investor-history-modal .history-summary-card{padding:11px 12px}
       .investor-history-modal .history-summary-card strong{font-size:17px;margin-top:5px}
       .investor-history-modal .history-summary-card small{font-size:7px}
