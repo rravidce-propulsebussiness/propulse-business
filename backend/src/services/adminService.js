@@ -160,4 +160,20 @@ async function updateUserProfile(userId, { name, email, phone, businessName, bus
   } catch (error) { await client.query('ROLLBACK'); throw error; } finally { client.release(); }
 }
 
-module.exports={getDashboardStats,getUsers,createAdmin,setUserStatus,updateUserProfile};
+
+async function convertUserToInvestor(userId) {
+  const id=Number(userId);
+  const client=await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const user=(await client.query(`SELECT id,name,email,role,is_active,auth_version FROM users WHERE id=$1 FOR UPDATE`,[id])).rows[0];
+    if(!user){const e=new Error('User not found');e.code='NOT_FOUND';throw e;}
+    if(user.role==='admin'){const e=new Error('Administrator accounts cannot be converted to investors');e.code='INVALID_ROLE';throw e;}
+    if(user.role==='investor'){await client.query('COMMIT');return user;}
+    const updated=(await client.query(`UPDATE users SET role='investor',auth_version=auth_version+1,updated_at=CURRENT_TIMESTAMP WHERE id=$1 RETURNING id,name,email,role,is_active,created_at`,[id])).rows[0];
+    await client.query('COMMIT');
+    return updated;
+  }catch(e){await client.query('ROLLBACK');throw e;}finally{client.release();}
+}
+
+module.exports={getDashboardStats,getUsers,createAdmin,setUserStatus,updateUserProfile,convertUserToInvestor};
