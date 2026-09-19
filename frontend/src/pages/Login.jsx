@@ -24,8 +24,14 @@ function Login() {
       return
     }
 
-    // Lead Partners should land in their dedicated portal after login.
-    // This also supports business-role accounts that have an active Lead Partner relationship.
+    // Lead Partner accounts must never enter the marketplace.
+    // Route by the authenticated role first; the selected account type is also
+    // honored for legacy/business-role partner accounts with an active partner record.
+    if (result.user?.role === 'lead_partner' || accountType === 'lead_partner') {
+      navigate('/lead-partner', { replace: true })
+      return
+    }
+
     try {
       const partner = await authRequest('/lead-partner/me')
       if (partner?.status === 'active') {
@@ -36,7 +42,7 @@ function Login() {
 
     const destination = location.state?.from?.pathname || '/leads'
     navigate(destination, { replace: true })
-  }, [location.state, navigate, remember])
+  }, [accountType, location.state, navigate, remember])
 
   async function submit(e) {
     e.preventDefault()
