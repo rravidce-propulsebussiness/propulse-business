@@ -45,6 +45,8 @@ async function createLead(req, res) {
   }
 }
 
+async function updateLeadPricing(req, res) { try { const result = await leadPartnerService.update(req.user.id, Number(req.params.leadId), req.body); return res.json(result); } catch (error) { if (['PARTNER_NOT_FOUND','PARTNER_NOT_ACTIVE'].includes(error.code)) return res.status(403).json({ error: error.message, code: error.code }); if (error.code === 'NOT_FOUND') return res.status(404).json({ error: error.message, code: error.code }); return res.status(400).json({ error: error.message || 'Failed to update lead pricing', code: error.code }); } }
+
 async function myLeads(req, res) {
   try {
     return res.json(await leadPartnerService.getMyLeads(req.user.id, req.query));
@@ -72,4 +74,4 @@ async function adminUpdateStatus(req, res) {
   }
 }
 
-module.exports = { apply, me, createLead, myLeads, adminPartners, adminUpdateStatus };
+module.exports = { apply, me, createLead, myLeads, updateLeadPricing, adminPartners, adminUpdateStatus };

@@ -1,7 +1,8 @@
 const pool=require('../config/database');
 
-async function getLinkedLeads({investorId}){
+async function getLinkedLeads({investorId, investmentId = null}){
   const id=Number(investorId);
+  const cycleId = investmentId == null || investmentId === '' ? null : Number(investmentId);
   return (await pool.query(`
     SELECT DISTINCT l.id,l.customer_name AS name,l.customer_phone AS phone,l.customer_email AS email,l.industry_id,i.name AS industry_name,s.name AS service_name,ss.name AS subservice_name,st.name AS state_name,c.name AS city_name,l.budget,l.requirement AS requirements,l.property_type,l.source,l.notes,l.custom_fields,l.pricing,l.lead_type,l.is_exclusive,l.exclusive_delay_days,l.buyer_capacity,l.pincode,l.status,l.created_at,l.updated_at,
       COALESCE(SUM(lp.amount) FILTER (WHERE lp.status='paid'),0) AS gross_sale_amount,
@@ -16,9 +17,15 @@ async function getLinkedLeads({investorId}){
     LEFT JOIN cities c ON c.id=l.city_id
     LEFT JOIN lead_purchases lp ON lp.lead_id=l.id
     WHERE l.investor_user_id=$1
+      AND ($2::int IS NULL OR EXISTS (
+        SELECT 1
+        FROM investment_revenue_allocations ira_cycle
+        JOIN lead_purchases lp_cycle ON lp_cycle.id=ira_cycle.lead_purchase_id
+        WHERE ira_cycle.investment_id=$2 AND lp_cycle.lead_id=l.id
+      ))
     GROUP BY l.id,l.customer_name,l.customer_phone,l.customer_email,l.industry_id,i.name,s.name,ss.name,st.name,c.name,l.budget,l.requirement,l.property_type,l.source,l.notes,l.custom_fields,l.pricing,l.lead_type,l.is_exclusive,l.exclusive_delay_days,l.buyer_capacity,l.pincode,l.status,l.created_at,l.updated_at
     ORDER BY l.created_at DESC,l.id DESC
-  `,[id])).rows.map(row=>({...row,gross_sale_amount:Number(row.gross_sale_amount||0),paid_sale_count:Number(row.paid_sale_count||0),purchased_buyer_count:Number(row.purchased_buyer_count||0),buyer_capacity:Math.max(1,Number(row.buyer_capacity||1)),remaining_buyer_slots:Math.max(0,Number(row.buyer_capacity||1)-Number(row.purchased_buyer_count||0)),investor_revenue:Number(row.investor_revenue||0)}));
+  `,[id,cycleId])).rows.map(row=>({...row,gross_sale_amount:Number(row.gross_sale_amount||0),paid_sale_count:Number(row.paid_sale_count||0),purchased_buyer_count:Number(row.purchased_buyer_count||0),buyer_capacity:Math.max(1,Number(row.buyer_capacity||1)),remaining_buyer_slots:Math.max(0,Number(row.buyer_capacity||1)-Number(row.purchased_buyer_count||0)),investor_revenue:Number(row.investor_revenue||0)}));
 }
 
 module.exports={getLinkedLeads};

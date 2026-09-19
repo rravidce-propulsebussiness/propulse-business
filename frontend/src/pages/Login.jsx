@@ -4,6 +4,7 @@ import { authRequest, saveSession } from '../utils/auth'
 import GoogleButton from '../components/GoogleButton'
 import './Auth.css'
 import './AuthExtras.css'
+import './LoginPremium.css'
 
 function Login() {
   const navigate = useNavigate()
@@ -14,14 +15,33 @@ function Login() {
   const [loading, setLoading] = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
   const [error, setError] = useState('')
+  const [accountType, setAccountType] = useState('customer')
+  const accountCopy = {
+    customer: { eyebrow: 'BUSINESS WORKSPACE', title: 'Welcome back.', accent: "Let’s grow.", description: 'Manage your business, discover verified opportunities, and keep every lead in one place.' },
+    lead_partner: { eyebrow: 'LEAD PARTNER PORTAL', title: 'Supply demand.', accent: 'Grow together.', description: 'Access your partner workspace, manage submitted leads, pricing, inventory, and performance.' },
+    investor: { eyebrow: 'PRO INVESTMENT', title: 'Put capital to work.', accent: 'Build returns.', description: 'Access investment opportunities available to eligible Business users with active Pro membership.' },
+    admin: { eyebrow: 'ADMIN CONTROL CENTER', title: 'Run the platform.', accent: 'Stay in control.', description: 'Secure access to users, leads, verification, reporting, investments, and platform operations.' }
+  }[accountType]
 
-  const finishLogin = useCallback((result) => {
+  const finishLogin = useCallback(async (result) => {
+    const user = result.user
+    if (accountType === 'admin' && user?.role !== 'admin') throw new Error('This account is not an Admin account.')
+    if (accountType === 'lead_partner') {
+      if (user?.role !== 'business') throw new Error('Lead Partner access requires a Business account.')
+      const partner = await authRequest('/lead-partner/me')
+      if (partner?.status !== 'active') throw new Error('This Business account is not an active Lead Partner account.')
+    }
+    if (accountType === 'investor') {
+      if (user?.role !== 'business') throw new Error('Investment access requires a Business account.')
+      const access = await authRequest('/investments/access')
+      if (!access?.isPro) throw new Error('An active Pro membership is required for Investment access.')
+    }
     saveSession(result)
     if (!remember) localStorage.setItem('propulse_session_mode', 'session')
     const destination = location.state?.from?.pathname
-      || (result.user?.role === 'admin' ? '/admin' : '/leads')
+      || (accountType === 'admin' ? '/admin' : accountType === 'lead_partner' ? '/lead-partner' : accountType === 'investor' ? '/investment' : '/leads')
     navigate(destination, { replace: true })
-  }, [location.state, navigate, remember])
+  }, [accountType, location.state, navigate, remember])
 
   async function submit(e) {
     e.preventDefault()
@@ -30,7 +50,7 @@ function Login() {
     try {
       setLoading(true)
       const result = await authRequest('/auth/login', { method: 'POST', body: JSON.stringify(form) })
-      finishLogin(result)
+      await finishLogin(result)
     } catch (err) {
       setError(err.message)
     } finally {
@@ -43,7 +63,7 @@ function Login() {
     try {
       setGoogleLoading(true)
       const result = await authRequest('/auth/google', { method: 'POST', body: JSON.stringify({ credential }) })
-      finishLogin(result)
+      await finishLogin(result)
     } catch (err) {
       setError(err.message)
     } finally {
@@ -52,33 +72,56 @@ function Login() {
   }, [finishLogin])
 
   return (
-    <div className="auth-page">
+    <div className="auth-page login-page">
+      <header className="login-topbar">
+        <Link className="login-brand" to="/"><span>P</span><strong>Propulse <em>Business</em></strong></Link>
+        <div className="login-header-actions">
+          <Link className="login-home login-home-secondary" to="/">← Home</Link>
+          <Link className="login-home" to="/signup">Create account <b>→</b></Link>
+        </div>
+      </header>
       <section className="auth-visual" aria-label="Pro Pulse Business">
         <div className="auth-visual-overlay" />
         <div className="auth-visual-content">
-          <div className="auth-logo-frame">
-            <img className="auth-logo" src="/brand/propulse-logo.png" alt="Pro Pulse Business Technologies Private Limited" />
+          <div className="login-visual-brand">
+            <div className="login-brand-mark">P</div>
+            <div><strong>Propulse</strong><span>BUSINESS TECHNOLOGIES</span></div>
           </div>
-          <div className="auth-visual-copy">
-            <span>QUALIFIED LEADS. BETTER OPPORTUNITIES.</span>
-            <h1>Get High-Value<br /><em>Clients.</em></h1>
-            <p>Connect with qualified customers actively looking for your services — and turn more opportunities into paying clients.</p>
+          <div className="login-visual-copy">
+            <span>{accountCopy.eyebrow}</span>
+            <h1>{accountCopy.title}<br /><em>{accountCopy.accent}</em></h1>
+            <p>{accountCopy.description}</p>
           </div>
-          <div className="auth-visual-footer">
-            <span>CONNECT</span><i /> <span>GROW</span><i /> <span>BUILD</span><i /> <span>SUCCEED</span>
+          <div className="login-value-grid">
+            <div><b>01</b><strong>Verified opportunities</strong><span>Connect with relevant business demand.</span></div>
+            <div><b>02</b><strong>One business workspace</strong><span>Leads, wallet, membership and more.</span></div>
+            <div><b>03</b><strong>Secure account access</strong><span>Role and capability checks stay server-side.</span></div>
           </div>
+          <div className="login-visual-note"><span>✦</span><div><strong>Technology built around business growth.</strong><small>One platform. Multiple business capabilities.</small></div></div>
+          <div className="auth-visual-footer"><span>CONNECT</span><i /> <span>GROW</span><i /> <span>BUILD</span><i /> <span>SUCCEED</span></div>
         </div>
       </section>
 
       <main className="auth-card-wrap">
-        <div className="auth-card">
+        <div className="auth-card login-card">
           <div className="mobile-brand">
             <img src="/brand/propulse-logo.png" alt="Pro Pulse" />
           </div>
-          <div className="auth-heading">
-            <p className="auth-kicker">WELCOME BACK</p>
-            <h2>Sign in</h2>
-            <p>Access your leads and business opportunities.</p>
+          <div className="login-account-types" role="tablist" aria-label="Account type">
+            {[
+              ['customer','Customer'],
+              ['lead_partner','Lead Partner'],
+              ['investor','Investor'],
+              ['admin','Admin']
+            ].map(([value,label]) => (
+              <button key={value} type="button" className={accountType===value?'active':''} onClick={()=>{setAccountType(value);setError('')}}>{label}</button>
+            ))}
+          </div>
+
+          <div className="auth-heading login-heading">
+            <p className="auth-kicker">{accountCopy.eyebrow}</p>
+            <h2>Sign in to <em>Propulse</em></h2>
+            <p>{accountType === 'customer' ? 'Access your business workspace and opportunities.' : accountCopy.description}</p>
           </div>
 
           {error && <div className="auth-error" role="alert">{error}</div>}

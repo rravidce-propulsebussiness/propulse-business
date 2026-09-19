@@ -1,35 +1,38 @@
 const pool=require('../config/database');const {leadSelect,maskLead,normalizeLeadType,isProMember}=require('./leadReadService');
 
-async function getMarketplacePage({industryId,serviceId,subserviceId,stateId,cityId,status='available',leadType,search,allIndustries,userId,role,page=1,limit=20}){
+async function getMarketplacePage({industryId,serviceId,subserviceId,stateId,cityId,status='available',leadType,search,allIndustries,allLocations,userId,role,page=1,limit=20}){
  const safePage=Math.max(1,Number.parseInt(page,10)||1);const safeLimit=Math.min(50,Math.max(1,Number.parseInt(limit,10)||20));const values=[];const conditions=[];const add=(value,sql)=>{values.push(value);conditions.push(sql.replace('?',`$${values.length}`))};
  if(status&&status!=='all')add(status,'l.status=?');
  const type=normalizeLeadType(leadType);if(type)add(type,'l.lead_type=?');
  if(industryId&&String(industryId).toLowerCase()!=='all')add(industryId,'l.industry_id=?');
  if(serviceId)add(serviceId,'l.service_id=?');if(subserviceId)add(subserviceId,'l.subservice_id=?');if(stateId)add(stateId,'l.state_id=?');if(cityId)add(cityId,'l.city_id=?');
  const q=String(search||'').trim().toLowerCase();if(q){values.push(`%${q}%`);const p=`$${values.length}`;conditions.push(`(LOWER(COALESCE(i.name,'')) LIKE ${p} OR LOWER(COALESCE(s.name,'')) LIKE ${p} OR LOWER(COALESCE(ss.name,'')) LIKE ${p} OR LOWER(COALESCE(c.name,'')) LIKE ${p} OR LOWER(COALESCE(st.name,'')) LIKE ${p} OR LOWER(COALESCE(l.requirement,'')) LIKE ${p})`)}
- if(role!=='admin'&&userId&&!String(allIndustries||'').match(/^(1|true)$/i)){
-   values.push(userId);const p=`$${values.length}`;
-   conditions.push(`EXISTS (
-     SELECT 1 FROM business_profiles bp
-     JOIN business_profile_services bps ON bps.business_profile_id=bp.id AND bps.is_active=TRUE
-     WHERE bp.user_id=${p}
-       AND (l.industry_id IS NULL OR bps.industry_id=l.industry_id)
-       AND (l.service_id IS NULL OR bps.service_id=l.service_id)
-       AND (l.subservice_id IS NULL OR bps.subservice_id IS NULL OR bps.subservice_id=l.subservice_id)
-   )`);
-   values.push(userId);const p2=`$${values.length}`;
-   conditions.push(`EXISTS (
-     SELECT 1
-     FROM business_profiles bp2
-     JOIN business_profile_locations bpl ON bpl.business_profile_id=bp2.id AND bpl.is_active=TRUE
-     JOIN states bst ON bst.id=bpl.state_id
-     LEFT JOIN cities bc ON bc.id=bpl.city_id
-     LEFT JOIN states lst ON lst.id=l.state_id
-     LEFT JOIN cities lc ON lc.id=l.city_id
-     WHERE bp2.user_id=${p2}
-       AND (l.state_id IS NULL OR LOWER(TRIM(bst.name))=LOWER(TRIM(lst.name)))
-       AND (l.city_id IS NULL OR bpl.city_id=l.city_id OR (bc.name IS NOT NULL AND lc.name IS NOT NULL AND LOWER(TRIM(bc.name))=LOWER(TRIM(lc.name))))
-   )`);
+ if(role!=='admin'&&userId){
+   if(!String(allIndustries||'').match(/^(1|true)$/i)){
+     values.push(userId);const p=`${values.length}`;
+     conditions.push(`EXISTS (
+       SELECT 1 FROM business_profiles bp
+       JOIN business_profile_services bps ON bps.business_profile_id=bp.id AND bps.is_active=TRUE
+       WHERE bp.user_id=${p}
+         AND (l.industry_id IS NULL OR bps.industry_id=l.industry_id)
+         AND (l.service_id IS NULL OR bps.service_id=l.service_id)
+         AND (l.subservice_id IS NULL OR bps.subservice_id IS NULL OR bps.subservice_id=l.subservice_id)
+     )`);
+   }
+   if(!String(allLocations||'').match(/^(1|true)$/i)){
+     values.push(userId);const p2=`${values.length}`;
+     conditions.push(`EXISTS (
+       SELECT 1 FROM business_profiles bp2
+       JOIN business_profile_locations bpl ON bpl.business_profile_id=bp2.id AND bpl.is_active=TRUE
+       JOIN states bst ON bst.id=bpl.state_id
+       LEFT JOIN cities bc ON bc.id=bpl.city_id
+       LEFT JOIN states lst ON lst.id=l.state_id
+       LEFT JOIN cities lc ON lc.id=l.city_id
+       WHERE bp2.user_id=${p2}
+         AND (l.state_id IS NULL OR LOWER(TRIM(bst.name))=LOWER(TRIM(lst.name)))
+         AND (l.city_id IS NULL OR bpl.city_id=l.city_id OR (bc.name IS NOT NULL AND lc.name IS NOT NULL AND LOWER(TRIM(bc.name))=LOWER(TRIM(lc.name))))
+     )`);
+   }
  }
  if(role!=='admin'&&userId){values.push(userId);const p3=`$${values.length}`;conditions.push(`NOT EXISTS (SELECT 1 FROM lead_purchases lp WHERE lp.lead_id=l.id AND lp.user_id=${p3} AND lp.status='paid')`);values.push(userId);const p4=`$${values.length}`;conditions.push(`l.investor_user_id IS DISTINCT FROM ${p4}`)}
  const where=conditions.length?`WHERE ${conditions.join(' AND ')}`:'';

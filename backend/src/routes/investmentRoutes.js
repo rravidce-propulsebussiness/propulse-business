@@ -7,6 +7,7 @@ const investmentService = require('../services/investmentService');
 const draftService = require('../services/investmentPaymentDraftService');
 const payoutAccounts = require('../services/investorPayoutAccountService');
 const managedAdSpend = require('../services/managedInvestorAdSpendService');
+const investorLedger = require('../services/investorFinancialLedgerService');
 
 const investmentWriteLimit = rateLimit({ windowMs: 60 * 1000, max: 10 });
 const adminInvestmentWriteLimit = rateLimit({ windowMs: 60 * 1000, max: 30 });
@@ -45,6 +46,7 @@ router.post('/funds/transfer-request', auth, investmentWriteLimit, c.requestInve
 router.get('/admin/transfer-requests', auth, admin, c.adminInvestorTransferRequests);
 router.post('/admin/transfer-requests/:id/process', auth, admin, adminInvestmentWriteLimit, c.adminProcessInvestorTransfer);
 router.get('/admin/investor/:userId/payout-account', auth, admin, async (req,res)=>{try{return res.json(await payoutAccounts.get(Number(req.params.userId)))}catch(e){return res.status(500).json({error:e.message||'Failed to load payout account'})}});
+router.get('/admin/investor/:userId/financial-summary', auth, admin, async (req,res)=>{try{return res.json(await investorLedger.getInvestorFinancialSummary(Number(req.params.userId)))}catch(e){return res.status(500).json({error:e.message||'Failed to load investor financial summary'})}});
 router.post('/admin/investor/:userId/managed-ad-spend', auth, admin, adminInvestmentWriteLimit, async (req,res)=>{try{return res.status(201).json(await managedAdSpend.recordSpend({userId:Number(req.params.userId),amount:req.body.amount,platform:req.body.platform,campaign:req.body.campaign,spendDate:req.body.spendDate,reference:req.body.reference,notes:req.body.notes,adminId:req.user.id}))}catch(e){const map={INVALID_SPEND_AMOUNT:400,SPEND_EXCEEDS_AVAILABLE_AD_FUNDS:400,NO_ACTIVE_INVESTMENT:400};return res.status(map[e.code]||500).json({error:e.message||'Failed to record ad spend',code:e.code})}});
 
 router.post('/checkout', auth, investmentWriteLimit, async (req, res, next) => {

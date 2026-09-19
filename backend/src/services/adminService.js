@@ -40,7 +40,7 @@ async function getUsers({ search = '', role = 'all', status = 'all', industryId 
     params.push(`%${String(search).trim()}%`);
     conditions.push(`(u.name ILIKE $${params.length} OR u.email ILIKE $${params.length} OR bp.business_name ILIKE $${params.length} OR bp.phone ILIKE $${params.length})`);
   }
-  if (role === 'admin' || role === 'business') { params.push(role); conditions.push(`u.role = $${params.length}`); }
+  if (['admin','business'].includes(role)) { params.push(role); conditions.push(`u.role = ${params.length}`); }
   if (status === 'active' || status === 'inactive') { params.push(status === 'active'); conditions.push(`u.is_active = $${params.length}`); }
   if (industryId) { params.push(industryId); conditions.push(`EXISTS (SELECT 1 FROM business_profile_services x WHERE x.business_profile_id=bp.id AND x.industry_id=$${params.length} AND x.is_active=TRUE)`); }
   if (serviceId) { params.push(serviceId); conditions.push(`EXISTS (SELECT 1 FROM business_profile_services x WHERE x.business_profile_id=bp.id AND x.service_id=$${params.length} AND x.is_active=TRUE)`); }
@@ -60,6 +60,7 @@ async function getUsers({ search = '', role = 'all', status = 'all', industryId 
   const result = await pool.query(`
     SELECT u.id, u.name, u.email, u.role, u.is_active, u.created_at,
            bp.id AS business_profile_id, bp.business_name, bp.phone, bp.business_details,
+           lp.id AS lead_partner_id, lp.status AS lead_partner_status,
            COALESCE((SELECT COUNT(*)::int FROM business_profile_services x WHERE x.business_profile_id = bp.id AND x.is_active = TRUE), 0) AS service_count,
            COALESCE((SELECT COUNT(*)::int FROM business_profile_locations x WHERE x.business_profile_id = bp.id AND x.is_active = TRUE), 0) AS location_count,
            COALESCE((SELECT json_agg(json_build_object('industryId',x.industry_id,'industryName',i.name,'serviceId',x.service_id,'serviceName',s.name,'subserviceId',x.subservice_id,'subserviceName',ss.name) ORDER BY i.name,s.name,ss.name)
@@ -76,6 +77,7 @@ async function getUsers({ search = '', role = 'all', status = 'all', industryId 
              WHERE x.business_profile_id=bp.id AND x.is_active=TRUE), '[]'::json) AS locations
     FROM users u
     LEFT JOIN business_profiles bp ON bp.user_id = u.id
+    LEFT JOIN lead_partners lp ON lp.user_id = u.id
     ${whereClause}
     ORDER BY u.created_at DESC, u.id DESC
     LIMIT $${dataParams.length - 1} OFFSET $${dataParams.length}
@@ -159,5 +161,6 @@ async function updateUserProfile(userId, { name, email, phone, businessName, bus
     return updatedUser;
   } catch (error) { await client.query('ROLLBACK'); throw error; } finally { client.release(); }
 }
+
 
 module.exports={getDashboardStats,getUsers,createAdmin,setUserStatus,updateUserProfile};
