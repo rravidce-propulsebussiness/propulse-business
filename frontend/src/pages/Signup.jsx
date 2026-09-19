@@ -157,30 +157,82 @@ function Signup() {
   }
 
 
-  const handleGoogleSignup = useCallback((credential) => {
-    setError('')
-    setGoogleCredential(credential)
-    try {
-      const payload = JSON.parse(atob(credential.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')))
-      setForm((current) => ({ ...current, name: current.name || payload.name || '', email: current.email || payload.email || '' }))
-    } catch {}
-    setShowBusinessModal(true)
-  }, [])
+  const completeGoogleLogin = useCallback(async (result) => {
+    saveSession(result)
 
-  const handleGoogle = useCallback(async credential => {
+    if (result.user?.role === 'admin') {
+      navigate('/admin', { replace: true })
+      return
+    }
+
+    if (result.user?.role === 'lead_partner') {
+      navigate('/lead-partner', { replace: true })
+      return
+    }
+
+    try {
+      const partner = await authRequest('/lead-partner/me')
+      if (partner?.status === 'active') {
+        navigate('/lead-partner', { replace: true })
+        return
+      }
+    } catch {}
+
+    navigate('/leads', { replace: true })
+  }, [navigate])
+
+  const handleGoogleSignup = useCallback(async (credential) => {
     setError('')
-    if (!agree) return setError('Please accept the terms to continue with Google.')
     try {
       setGoogleLoading(true)
-      const result = await authRequest('/auth/google', { method: 'POST', body: JSON.stringify({ credential, accountType }) })
-      saveSession(result)
-      navigate('/dashboard', { replace: true })
+
+      // If this Google email already has a Propulse account, authenticate it
+      // immediately instead of showing the registration form again.
+      try {
+        const result = await authRequest('/auth/google', {
+          method: 'POST',
+          body: JSON.stringify({ credential }),
+        })
+        await completeGoogleLogin(result)
+        return
+      } catch (err) {
+        // A verified Google account that is not registered yet continues into
+        // the normal signup flow so the user can complete the business profile.
+        if (err.status !== 404) throw err
+      }
+
+      setGoogleCredential(credential)
+      try {
+        const payload = JSON.parse(atob(credential.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')))
+        setForm((current) => ({
+          ...current,
+          name: current.name || payload.name || '',
+          email: current.email || payload.email || ''
+        }))
+      } catch {}
+      setShowBusinessModal(true)
     } catch (err) {
       setError(err.message)
     } finally {
       setGoogleLoading(false)
     }
-  }, [accountType, agree, navigate])
+  }, [completeGoogleLogin])
+
+  const handleGoogle = useCallback(async credential => {
+    setError('')
+    try {
+      setGoogleLoading(true)
+      const result = await authRequest('/auth/google', {
+        method: 'POST',
+        body: JSON.stringify({ credential }),
+      })
+      await completeGoogleLogin(result)
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setGoogleLoading(false)
+    }
+  }, [completeGoogleLogin])
 
   return (
     <div className="signup-premium-page">
@@ -238,7 +290,7 @@ function Signup() {
             <button className="signup-submit" type="submit" disabled={loading || googleLoading || loadingData}>Create Account <span>→</span></button>
             <div className="signup-or"><span /> <b>OR</b> <span /></div>
             <div className="signup-google signup-google-signup">
-              <div className="signup-google-label">Sign up with Google</div>
+              <div className="signup-google-label">Continue with Google</div>
               <GoogleButton onCredential={handleGoogleSignup} disabled={loading || googleLoading || loadingData} />
             </div>
           </form>
