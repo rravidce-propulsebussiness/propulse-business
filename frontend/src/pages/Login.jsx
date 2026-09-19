@@ -4,6 +4,7 @@ import { authRequest, saveSession } from '../utils/auth'
 import GoogleButton from '../components/GoogleButton'
 import './Auth.css'
 import './AuthExtras.css'
+import './LoginPremium.css'
 
 function Login() {
   const navigate = useNavigate()
@@ -85,7 +86,7 @@ function Login() {
           </div>
           <div className="auth-heading login-heading">
             <p className="auth-kicker">ACCOUNT ACCESS</p>
-            <h2>Sign in to Propulse</h2>
+            <h2>Sign in to <em>Propulse</em></h2>
             <p>Access your business workspace and opportunities.</p>
           </div>
 
