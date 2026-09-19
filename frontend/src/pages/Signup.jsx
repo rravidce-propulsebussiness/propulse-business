@@ -32,6 +32,7 @@ function Signup() {
   const [googleLoading, setGoogleLoading] = useState(false)
   const [loadingData, setLoadingData] = useState(true)
   const [error, setError] = useState('')
+  const [showBusinessModal, setShowBusinessModal] = useState(false)
 
   useEffect(() => {
     async function loadMasterData() {
@@ -74,6 +75,15 @@ function Signup() {
 
   function accountTypeLabel() {
     return accountType === 'lead_partner' ? 'Lead Partner' : 'User'
+  }
+
+  function openBusinessDetails(e) {
+    e.preventDefault()
+    setError('')
+    if (!form.name || !form.email || !form.phone || !form.password || !form.confirm) return setError('Complete your basic account details.')
+    if (form.password.length < 8) return setError('Password must be at least 8 characters.')
+    if (form.password !== form.confirm) return setError('Passwords do not match.')
+    setShowBusinessModal(true)
   }
 
   async function submit(e) {
@@ -164,7 +174,7 @@ function Signup() {
 
           {error && <div className="signup-error" role="alert">{error}</div>}
 
-          <div className="signup-account-grid" role="radiogroup" aria-label="Account type">
+          <div className="signup-account-grid signup-account-grid-modal" role="radiogroup" aria-label="Account type">
             <button type="button" className={`signup-account-option ${accountType === 'business' ? 'selected' : ''}`} onClick={() => setAccountType('business')} aria-pressed={accountType === 'business'} disabled={loading || googleLoading}>
               <span className="signup-option-icon">♙</span>
               <span><strong>User</strong><small>Buy leads &amp; grow your business</small></span>
@@ -179,72 +189,39 @@ function Signup() {
 
           {loadingData && <div className="signup-loading">Loading business options…</div>}
 
-          <form className="signup-form" onSubmit={submit}>
+          <form className="signup-form" onSubmit={openBusinessDetails}>
             <section className="signup-form-section">
-              <div className="signup-section-head"><span>01</span><div><strong>Your details</strong><small>Tell us how to reach you.</small></div></div>
               <div className="signup-form-grid">
                 <label>Full name<input autoComplete="name" value={form.name} onChange={(e) => update('name', e.target.value)} placeholder="Enter your full name" required /></label>
                 <label>Email address<input type="email" autoComplete="email" value={form.email} onChange={(e) => update('email', e.target.value)} placeholder="Enter your email address" required /></label>
                 <label>Mobile number<input type="tel" autoComplete="tel" value={form.phone} onChange={(e) => update('phone', e.target.value)} placeholder="Enter your mobile number" required /></label>
-                <label>Password<div className="signup-password-field"><input type={showPassword ? 'text' : 'password'} autoComplete="new-password" value={form.password} onChange={(e) => update('password', e.target.value)} placeholder="Create a password" required /><button type="button" onClick={() => setShowPassword(v => !v)}>{showPassword ? 'Hide' : 'Show'}</button></div></label>
+                <label>Password><div className="signup-password-field"><input type={showPassword ? 'text' : 'password'} autoComplete="new-password" value={form.password} onChange={(e) => update('password', e.target.value)} placeholder="Create a password" required /><button type="button" onClick={() => setShowPassword(v => !v)}>{showPassword ? 'Hide' : 'Show'}</button></div></label>
                 <label className="signup-full">Confirm password<input type={showPassword ? 'text' : 'password'} autoComplete="new-password" value={form.confirm} onChange={(e) => update('confirm', e.target.value)} placeholder="Repeat your password" required /></label>
               </div>
             </section>
-
-            <section className="signup-form-section">
-              <div className="signup-section-head"><span>02</span><div><strong>Your business</strong><small>Help us understand what you do.</small></div></div>
-              <div className="signup-form-grid">
-                <label className="signup-full">Business name<input value={form.businessName} onChange={(e) => update('businessName', e.target.value)} placeholder="Your company or business name" required /></label>
-                <label className="signup-full">Business details<textarea value={form.businessDetails} onChange={(e) => update('businessDetails', e.target.value)} placeholder="Tell us what your business does" rows="3" required /></label>
-              </div>
-            </section>
-
-            <section className="signup-form-section">
-              <div className="signup-section-head signup-section-head-inline">
-                <span>03</span>
-                <div><strong>Services you provide</strong><small>Select every service you want matching leads for.</small></div>
-                <button type="button" className="signup-add-button" onClick={addServiceSelection}>+ Add service</button>
-              </div>
-              <div className="signup-selection-list">
-                {serviceSelections.map((selection, index) => (
-                  <div className="signup-selection-card" key={`service-${index}`}>
-                    <div className="signup-selection-top"><span>Service {index + 1}</span>{serviceSelections.length > 1 && <button type="button" onClick={() => removeServiceSelection(index)}>Remove</button>}</div>
-                    <div className="signup-selection-grid">
-                      <label>Industry<select value={selection.industryId} onChange={(e) => updateServiceSelection(index, 'industryId', e.target.value)} disabled={loadingData} required><option value="">Select industry</option>{industries.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
-                      <label>Service<select value={selection.serviceId} onChange={(e) => updateServiceSelection(index, 'serviceId', e.target.value)} disabled={!selection.industryId} required><option value="">{selection.industryId ? 'Select service' : 'Select industry first'}</option>{(serviceOptions[index] || []).map(item => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
-                      <label>Subservice <small>Optional</small><select value={selection.subserviceId} onChange={(e) => updateServiceSelection(index, 'subserviceId', e.target.value)} disabled={!selection.serviceId}><option value="">All related subservices</option>{(subserviceOptions[index] || []).map(item => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </section>
-
-            <section className="signup-form-section">
-              <div className="signup-section-head signup-section-head-inline">
-                <span>04</span>
-                <div><strong>Locations you serve</strong><small>Select the cities where you want relevant leads.</small></div>
-                <button type="button" className="signup-add-button" onClick={addLocationSelection}>+ Add location</button>
-              </div>
-              <div className="signup-selection-list">
-                {locationSelections.map((selection, index) => (
-                  <div className="signup-selection-card" key={`location-${index}`}>
-                    <div className="signup-selection-top"><span>Location {index + 1}</span>{locationSelections.length > 1 && <button type="button" onClick={() => removeLocationSelection(index)}>Remove</button>}</div>
-                    <div className="signup-selection-grid signup-location-grid">
-                      <label>State / UT<select value={selection.stateId} onChange={(e) => updateLocationSelection(index, 'stateId', e.target.value)} disabled={loadingData} required><option value="">Select state / UT</option>{states.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
-                      <label>City<select value={selection.cityId} onChange={(e) => updateLocationSelection(index, 'cityId', e.target.value)} disabled={!selection.stateId} required><option value="">{selection.stateId ? 'Select city' : 'Select state first'}</option>{(cityOptions[index] || []).map(item => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </section>
-
-            <div className="signup-consent">
-              <label><input type="checkbox" checked={agree} onChange={(e) => setAgree(e.target.checked)} /> <span>I agree to the <b>Terms of Service</b> and <b>Privacy Policy</b>.</span></label>
-            </div>
-
-            <button className="signup-submit" disabled={loading || googleLoading || loadingData}>{loading ? 'Creating Account…' : `Create ${accountTypeLabel()} Account`} <span>→</span></button>
+            <button className="signup-submit" type="submit" disabled={loading || googleLoading || loadingData}>Continue <span>→</span></button>
           </form>
-
+          {showBusinessModal && (
+            <div className="signup-business-modal-backdrop" role="presentation" onMouseDown={(e) => { if (e.target === e.currentTarget) setShowBusinessModal(false) }}>
+              <div className="signup-business-modal" role="dialog" aria-modal="true" aria-labelledby="business-details-title">
+                <div className="signup-business-modal-head">
+                  <div><span>BUSINESS DETAILS</span><h3 id="business-details-title">Complete your profile</h3><p>A few more details help us personalize your Propulse experience.</p></div>
+                  <button type="button" onClick={() => setShowBusinessModal(false)} aria-label="Close">×</button>
+                </div>
+                <div className="signup-account-grid" role="radiogroup" aria-label="Account type">
+                  <button type="button" className={`signup-account-option ${accountType === 'business' ? 'selected' : ''}`} onClick={() => setAccountType('business')} disabled={loading}><span className="signup-option-icon">♙</span><span><strong>User</strong><small>Buy leads &amp; grow your business</small></span></button>
+                  <button type="button" className={`signup-account-option ${accountType === 'lead_partner' ? 'selected' : ''}`} onClick={() => setAccountType('lead_partner')} disabled={loading}><span className="signup-option-icon">♙♙</span><span><strong>Lead Partner</strong><small>Submit &amp; manage leads</small></span></button>
+                </div>
+                <form className="signup-form signup-modal-form" onSubmit={submit}>
+                  <section className="signup-form-section"><div className="signup-form-grid"><label className="signup-full">Business name<input value={form.businessName} onChange={(e) => update('businessName', e.target.value)} placeholder="Your company or business name" required /></label><label className="signup-full">Business details<textarea value={form.businessDetails} onChange={(e) => update('businessDetails', e.target.value)} placeholder="Tell us what your business does" rows="3" required /></label></div></section>
+                  <section className="signup-form-section"><div className="signup-section-head signup-section-head-inline"><span>01</span><div><strong>Services you provide</strong><small>Select every service you want matching leads for.</small></div><button type="button" className="signup-add-button" onClick={addServiceSelection}>+ Add service</button></div><div className="signup-selection-list">{serviceSelections.map((selection,index)=><div className="signup-selection-card" key={`service-${index}`}><div className="signup-selection-top"><span>Service {index+1}</span>{serviceSelections.length>1&&<button type="button" onClick={()=>removeServiceSelection(index)}>Remove</button>}</div><div className="signup-selection-grid"><label>Industry<select value={selection.industryId} onChange={(e)=>updateServiceSelection(index,'industryId',e.target.value)} disabled={loadingData} required><option value="">Select industry</option>{industries.map(item=><option key={item.id} value={item.id}>{item.name}</option>)}</select></label><label>Service<select value={selection.serviceId} onChange={(e)=>updateServiceSelection(index,'serviceId',e.target.value)} disabled={!selection.industryId} required><option value="">Select service</option>{(serviceOptions[index]||[]).map(item=><option key={item.id} value={item.id}>{item.name}</option>)}</select></label><label>Subservice <small>Optional</small><select value={selection.subserviceId} onChange={(e)=>updateServiceSelection(index,'subserviceId',e.target.value)} disabled={!selection.serviceId}><option value="">All related subservices</option>{(subserviceOptions[index]||[]).map(item=><option key={item.id} value={item.id}>{item.name}</option>)}</select></label></div></div>)}</div></section>
+                  <section className="signup-form-section"><div className="signup-section-head signup-section-head-inline"><span>02</span><div><strong>Locations you serve</strong><small>Select the cities where you want relevant leads.</small></div><button type="button" className="signup-add-button" onClick={addLocationSelection}>+ Add location</button></div><div className="signup-selection-list">{locationSelections.map((selection,index)=><div className="signup-selection-card" key={`location-${index}`}><div className="signup-selection-top"><span>Location {index+1}</span>{locationSelections.length>1&&<button type="button" onClick={()=>removeLocationSelection(index)}>Remove</button>}</div><div className="signup-selection-grid signup-location-grid"><label>State / UT<select value={selection.stateId} onChange={(e)=>updateLocationSelection(index,'stateId',e.target.value)} disabled={loadingData} required><option value="">Select state / UT</option>{states.map(item=><option key={item.id} value={item.id}>{item.name}</option>)}</select></label><label>City<select value={selection.cityId} onChange={(e)=>updateLocationSelection(index,'cityId',e.target.value)} disabled={!selection.stateId} required><option value="">Select city</option>{(cityOptions[index]||[]).map(item=><option key={item.id} value={item.id}>{item.name}</option>)}</select></label></div></div>)}</div></section>
+                  <div className="signup-consent"><label><input type="checkbox" checked={agree} onChange={(e)=>setAgree(e.target.checked)} /> <span>I agree to the <b>Terms of Service</b> and <b>Privacy Policy</b>.</span></label></div>
+                  <button className="signup-submit" disabled={loading || googleLoading || loadingData}>{loading ? 'Creating Account…' : `Create ${accountTypeLabel()} Account`} <span>→</span></button>
+                </form>
+              </div>
+            </div>
+          )}
           <div className="signup-or"><span /> <b>OR</b> <span /></div>
           <div className="signup-google"><GoogleButton onCredential={handleGoogle} disabled={loading || googleLoading || loadingData} /></div>
 
