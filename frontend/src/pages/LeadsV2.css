@@ -100,3 +100,34 @@
 *,*::before,*::after{box-sizing:border-box}
 html,body,#root{max-width:100%;overflow-x:hidden}
 .lv2-page,.lv2-market-head,.lv2-controls,.lv2-stats,.lv2-grid{max-width:100%}
+
+/* Final desktop alignment: keep the title clear of controls and fit every control inside the viewport. */
+@media (min-width:1251px){
+  .lv2-page{padding-left:32px;padding-right:32px}
+  .lv2-market-head{
+    grid-template-columns:minmax(410px,.72fr) minmax(0,1.28fr);
+    gap:18px;
+  }
+  .lv2-controls{
+    grid-template-columns:minmax(0,1fr) auto auto;
+    gap:8px;
+  }
+  .lv2-filter-group,.lv2-sort-group{
+    max-width:100%;
+    overflow:hidden;
+  }
+  .lv2-filter-group button,.lv2-sort-group button{
+    padding-left:8px;
+    padding-right:8px;
+    font-size:11px;
+  }
+  .lv2-sort-group>span{padding-left:7px;padding-right:6px}
+}
+@media (min-width:1251px) and (max-width:1450px){
+  .lv2-page{padding-left:24px;padding-right:24px}
+  .lv2-market-head{grid-template-columns:minmax(370px,.68fr) minmax(0,1.32fr);gap:14px}
+  .lv2-filter-group button,.lv2-sort-group button{padding-left:6px;padding-right:6px;font-size:10px}
+  .lv2-sort-group>span{font-size:9px;padding-left:5px;padding-right:4px}
+  .lv2-title-block h1{font-size:32px}
+  .lv2-title-block p{font-size:15px}
+}
