@@ -8,6 +8,7 @@ const authWriteLimit = rateLimit({ windowMs: 15 * 60 * 1000, max: 10 });
 const recoveryLimit = rateLimit({ windowMs: 15 * 60 * 1000, max: 5 });
 
 router.post('/signup', authWriteLimit, authController.signup);
+router.post('/company-proofs', requireAuth, authController.uploadCompanyProofs);
 router.post('/login', authWriteLimit, authController.login);
 router.post('/google', authWriteLimit, authController.googleLogin);
 router.post('/forgot-password', recoveryLimit, authController.forgotPassword);
