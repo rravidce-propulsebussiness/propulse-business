@@ -242,9 +242,6 @@ function Signup() {
               </div>
             </div>
           )}
-          <div className="signup-or"><span /> <b>OR</b> <span /></div>
-          <div className="signup-google"><GoogleButton onCredential={handleGoogle} disabled={loading || googleLoading || loadingData} /></div>
-
           <div className="signup-security"><span>⌑</span><div><strong>Your information is secure with us.</strong><small>Business account details are used to provide the Propulse service experience.</small></div></div>
 
           <p className="signup-bottom-login">Already have an account? <Link to="/login">Sign in <b>→</b></Link></p>
