@@ -16,6 +16,12 @@ function Login() {
   const [googleLoading, setGoogleLoading] = useState(false)
   const [error, setError] = useState('')
   const [accountType, setAccountType] = useState('customer')
+  const accountCopy = {
+    customer: { eyebrow: 'BUSINESS WORKSPACE', title: 'Welcome back.', accent: "Let’s grow.", description: 'Manage your business, discover verified opportunities, and keep every lead in one place.' },
+    lead_partner: { eyebrow: 'LEAD PARTNER PORTAL', title: 'Supply demand.', accent: 'Grow together.', description: 'Access your partner workspace, manage submitted leads, pricing, inventory, and performance.' },
+    investor: { eyebrow: 'PRO INVESTMENT', title: 'Put capital to work.', accent: 'Build returns.', description: 'Access investment opportunities available to eligible Business users with active Pro membership.' },
+    admin: { eyebrow: 'ADMIN CONTROL CENTER', title: 'Run the platform.', accent: 'Stay in control.', description: 'Secure access to users, leads, verification, reporting, investments, and platform operations.' }
+  }[accountType]
 
   const finishLogin = useCallback(async (result) => {
     const user = result.user
@@ -77,17 +83,21 @@ function Login() {
       <section className="auth-visual" aria-label="Pro Pulse Business">
         <div className="auth-visual-overlay" />
         <div className="auth-visual-content">
+          <div className="login-visual-brand">
+            <div className="login-brand-mark">P</div>
+            <div><strong>Propulse</strong><span>BUSINESS TECHNOLOGIES</span></div>
+          </div>
           <div className="login-visual-copy">
-            <span>YOUR BUSINESS · YOUR OPPORTUNITIES</span>
-            <h1>Welcome back.<br /><em>Let's grow.</em></h1>
-            <p>Sign in to manage your business, follow opportunities, and continue where you left off.</p>
+            <span>{accountCopy.eyebrow}</span>
+            <h1>{accountCopy.title}<br /><em>{accountCopy.accent}</em></h1>
+            <p>{accountCopy.description}</p>
           </div>
           <div className="login-value-grid">
-            <div><b>01</b><strong>Business workspace</strong><span>Everything in one place.</span></div>
-            <div><b>02</b><strong>Relevant opportunities</strong><span>Stay connected to demand.</span></div>
-            <div><b>03</b><strong>Secure access</strong><span>Protected account workflow.</span></div>
+            <div><b>01</b><strong>Verified opportunities</strong><span>Connect with relevant business demand.</span></div>
+            <div><b>02</b><strong>One business workspace</strong><span>Leads, wallet, membership and more.</span></div>
+            <div><b>03</b><strong>Secure account access</strong><span>Role and capability checks stay server-side.</span></div>
           </div>
-          <div className="login-visual-note"><span>“</span><div><strong>Technology built around business growth.</strong><small>Propulse Business Technologies</small></div></div>
+          <div className="login-visual-note"><span>✦</span><div><strong>Technology built around business growth.</strong><small>One platform. Multiple business capabilities.</small></div></div>
           <div className="auth-visual-footer"><span>CONNECT</span><i /> <span>GROW</span><i /> <span>BUILD</span><i /> <span>SUCCEED</span></div>
         </div>
       </section>
@@ -109,9 +119,9 @@ function Login() {
           </div>
 
           <div className="auth-heading login-heading">
-            <p className="auth-kicker">ACCOUNT ACCESS</p>
+            <p className="auth-kicker">{accountCopy.eyebrow}</p>
             <h2>Sign in to <em>Propulse</em></h2>
-            <p>Access your business workspace and opportunities.</p>
+            <p>{accountType === 'customer' ? 'Access your business workspace and opportunities.' : accountCopy.description}</p>
           </div>
 
           {error && <div className="auth-error" role="alert">{error}</div>}
