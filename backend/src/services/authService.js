@@ -109,19 +109,15 @@ async function verifyGoogleIdToken(idToken) {
   return payload;
 }
 
-async function googleLogin({ idToken, role = 'business' }) {
+async function googleLogin({ idToken }) {
   const googleUser = await verifyGoogleIdToken(idToken);
-  const signupRole = normalizePublicSignupRole(role);
-  if (!signupRole) throw Object.assign(new Error('Choose either User or Lead Partner as your account type'), { code: 'INVALID_SIGNUP_ROLE' });
   const normalizedEmail = googleUser.email.trim().toLowerCase();
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
-    let user = (await client.query(`SELECT id,name,email,password_hash,role,auth_version FROM users WHERE LOWER(email)=$1 AND is_active=TRUE FOR UPDATE`, [normalizedEmail])).rows[0];
+    const user = (await client.query(`SELECT id,name,email,password_hash,role,auth_version FROM users WHERE LOWER(email)=$1 AND is_active=TRUE FOR UPDATE`, [normalizedEmail])).rows[0];
     if (!user) {
-      const placeholderPassword = await bcrypt.hash(crypto.randomBytes(32).toString('hex'), 12);
-      user = (await client.query(`INSERT INTO users (name,email,password_hash,role) VALUES ($1,$2,$3,$4) RETURNING id,name,email,password_hash,role,auth_version`, [String(googleUser.name || normalizedEmail.split('@')[0]).trim().slice(0, 120), normalizedEmail, placeholderPassword, signupRole])).rows[0];
-      await client.query(`INSERT INTO business_profiles (user_id,phone,business_name,business_details) VALUES ($1,$2,$3,$4)`, [user.id, 'Not provided', String(googleUser.name || normalizedEmail.split('@')[0]).trim().slice(0, 160), 'Google account. Complete your business profile to receive better lead matches.']);
+      throw Object.assign(new Error('No Propulse account exists for this Google email. Please create an account first.'), { code: 'GOOGLE_ACCOUNT_NOT_FOUND' });
     }
     await client.query('COMMIT');
     return { user: await publicUser(user, await getBusinessProfile(user.id)), token: signToken(user) };
