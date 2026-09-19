@@ -1,6 +1,8 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
+const fs = require('fs');
+const path = require('path');
 const pool = require('../config/database');
 const { getMembershipAccess } = require('./membershipAccessService');
 
@@ -92,6 +94,31 @@ async function signup({ name, email, password, phone, businessName, businessDeta
   finally { client.release(); }
 }
 
+async function saveCompanyProofDocuments(userId, documents = []) {
+  if (!Array.isArray(documents) || !documents.length) throw new Error('At least one company proof document is required');
+  if (documents.length > 8) throw new Error('You can upload up to 8 company proof documents');
+  const allowedTypes = new Set(['application/pdf', 'image/jpeg', 'image/png']);
+  const uploadDir = path.join(__dirname, '../../uploads/company-proofs');
+  fs.mkdirSync(uploadDir, { recursive: true });
+  const saved = [];
+  for (const document of documents) {
+    const mimeType = String(document?.type || '').toLowerCase();
+    const originalName = String(document?.name || 'document').replace(/[^a-zA-Z0-9._-]/g, '_').slice(0, 180);
+    const raw = String(document?.data || '');
+    if (!allowedTypes.has(mimeType) || !raw.startsWith('data:')) throw new Error('Only PDF, JPG and PNG company proof documents are allowed');
+    const base64 = raw.replace(/^data:[^;]+;base64,/, '');
+    const buffer = Buffer.from(base64, 'base64');
+    if (!buffer.length || buffer.length > 5 * 1024 * 1024) throw new Error('Each company proof document must be 5 MB or smaller');
+    const extension = mimeType === 'application/pdf' ? '.pdf' : mimeType === 'image/png' ? '.png' : '.jpg';
+    const storedName = `${userId}-${Date.now()}-${crypto.randomBytes(8).toString('hex')}${extension}`;
+    fs.writeFileSync(path.join(uploadDir, storedName), buffer, { flag: 'wx' });
+    const fileUrl = `/uploads/company-proofs/${storedName}`;
+    await pool.query(`INSERT INTO company_proof_documents (user_id,original_name,stored_name,mime_type,file_size,file_url) VALUES ($1,$2,$3,$4,$5,$6)`, [userId, originalName, storedName, mimeType, buffer.length, fileUrl]);
+    saved.push({ original_name: originalName, mime_type: mimeType, file_size: buffer.length, file_url: fileUrl, status: 'pending' });
+  }
+  return saved;
+}
+
 async function login({ email, password }) {
   const normalizedEmail = email.trim().toLowerCase();
   const result = await pool.query(`SELECT id,name,email,password_hash,role,auth_version FROM users WHERE LOWER(email)=$1 AND is_active=TRUE`, [normalizedEmail]);
@@ -174,4 +201,4 @@ async function getUserById(id) {
   return await publicUser(user, await getBusinessProfile(id));
 }
 
-module.exports = { signup, login, googleLogin, createPasswordReset, resetPassword, verifyToken, getUserById, getAuthenticatedUser };
+module.exports = { signup, saveCompanyProofDocuments, login, googleLogin, createPasswordReset, resetPassword, verifyToken, getUserById, getAuthenticatedUser };
