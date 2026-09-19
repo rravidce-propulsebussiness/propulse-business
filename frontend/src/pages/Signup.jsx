@@ -34,6 +34,7 @@ function Signup() {
   const [error, setError] = useState('')
   const [showBusinessModal, setShowBusinessModal] = useState(false)
   const [proofDocuments, setProofDocuments] = useState([])
+  const [googleCredential, setGoogleCredential] = useState('')
 
   useEffect(() => {
     async function loadMasterData() {
@@ -111,18 +112,31 @@ function Signup() {
     try {
       setLoading(true)
       if (!proofDocuments.length) return setError('Upload at least one company proof document.')
-      const result = await authRequest('/auth/signup', { method: 'POST', body: JSON.stringify({ ...form, confirm: undefined, accountType, services: cleanServices, locations: cleanLocations }) })
+      const result = await authRequest('/auth/signup', { method: 'POST', body: JSON.stringify({ ...form, confirm: undefined, password: googleCredential ? undefined : form.password, accountType, services: cleanServices, locations: cleanLocations, googleCredential: googleCredential || undefined }) })
       saveSession(result)
-      const documentPayload = await Promise.all(proofDocuments.map(async (file) => new Promise((resolve, reject) => {
+      for (const file of proofDocuments) {
+        const documentPayload = await new Promise((resolve, reject) => {
         const reader = new FileReader()
         reader.onload = () => resolve({ name: file.name, type: file.type, size: file.size, data: reader.result })
         reader.onerror = reject
-        reader.readAsDataURL(file)
-      })))
-      await authRequest('/auth/company-proofs', { method: 'POST', body: JSON.stringify({ documents: documentPayload }) })
+          reader.readAsDataURL(file)
+        })
+        await authRequest('/auth/company-proofs', { method: 'POST', body: JSON.stringify({ documents: [documentPayload] }) })
+      }
       navigate('/dashboard', { replace: true })
     } catch (err) { setError(err.message) } finally { setLoading(false) }
   }
+
+
+  const handleGoogleSignup = useCallback((credential) => {
+    setError('')
+    setGoogleCredential(credential)
+    try {
+      const payload = JSON.parse(atob(credential.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')))
+      setForm((current) => ({ ...current, name: current.name || payload.name || '', email: current.email || payload.email || '' }))
+    } catch {}
+    setShowBusinessModal(true)
+  }, [])
 
   const handleGoogle = useCallback(async credential => {
     setError('')
@@ -192,7 +206,7 @@ function Signup() {
                 <label className="signup-full">Confirm password<input type={showPassword ? 'text' : 'password'} autoComplete="new-password" value={form.confirm} onChange={(e) => update('confirm', e.target.value)} placeholder="Repeat your password" required /></label>
               </div>
             </section>
-            <button className="signup-submit" type="submit" disabled={loading || googleLoading || loadingData}>Create account <span>→</span></button>
+            <button className="signup-submit" type="submit" disabled={loading || googleLoading || loadingData}>Create account <span>→</span></button><div className="signup-google signup-google-signup"><GoogleButton onCredential={handleGoogleSignup} disabled={loading || googleLoading || loadingData} /></div>
           </form>
           {showBusinessModal && (
             <div className="signup-business-modal-backdrop" role="presentation" onMouseDown={(e) => { if (e.target === e.currentTarget) setShowBusinessModal(false) }}>
@@ -218,7 +232,7 @@ function Signup() {
                     {proofDocuments.length > 0 && <div className="signup-document-list">{proofDocuments.map((file, index) => <div key={file.name + ":" + file.size + ":" + file.lastModified}><span>{file.name}</span><small>{(file.size / 1024 / 1024).toFixed(2)} MB</small><button type="button" onClick={() => removeProofDocument(index)}>Remove</button></div>)}</div>}
                   </section>
                   <div className="signup-consent"><label><input type="checkbox" checked={agree} onChange={(e)=>setAgree(e.target.checked)} /> <span>I agree to the <b>Terms of Service</b> and <b>Privacy Policy</b>.</span></label></div>
-                  <button className="signup-submit" disabled={loading || googleLoading || loadingData}>{loading ? 'Creating Account…' : `Create ${accountTypeLabel()} Account`} <span>→</span></button>
+                  <button className="signup-submit" disabled={loading || googleLoading || loadingData}>{loading ? 'Creating Account…' : `{googleCredential ? 'Create Google Account' : `Create ${accountTypeLabel()} Account`}`} <span>→</span></button>
                 </form>
               </div>
             </div>
