@@ -1,4 +1,4 @@
-.lv2-shell{min-height:100vh;background:#f7fafd;color:#173b70}.lv2-page{max-width:1600px;margin:0 auto;padding:34px 42px 70px}.lv2-market-head{display:grid;grid-template-columns:minmax(360px,0.9fr) minmax(0,1.1fr);align-items:center;gap:22px;margin-bottom:24px;padding:4px 0;width:100%}
+.lv2-shell{min-height:100vh;width:100%;max-width:100%;overflow-x:hidden;background:#f7fafd;color:#173b70}.lv2-page{width:100%;max-width:1600px;box-sizing:border-box;margin:0 auto;padding:34px 42px 70px;overflow-x:clip}.lv2-market-head{display:grid;grid-template-columns:minmax(360px,0.9fr) minmax(0,1.1fr);align-items:center;gap:22px;margin-bottom:24px;padding:4px 0;width:100%}
 .lv2-title-block{display:flex;align-items:center;gap:15px;min-width:0;flex:0 0 auto}
 .lv2-title-block>span{width:6px;height:68px;border-radius:5px;background:#ff5b22;display:block;box-shadow:0 0 0 1px rgba(255,91,34,.08)}
 .lv2-title-block h1{margin:0;color:#0a2c61;font-size:38px;line-height:1.08;letter-spacing:-.045em;font-weight:900}
@@ -96,3 +96,7 @@
   .lv2-market-head{grid-template-columns:1fr;gap:14px}
   .lv2-controls{grid-template-columns:minmax(220px,1fr) auto auto}
 }
+
+*,*::before,*::after{box-sizing:border-box}
+html,body,#root{max-width:100%;overflow-x:hidden}
+.lv2-page,.lv2-market-head,.lv2-controls,.lv2-stats,.lv2-grid{max-width:100%}
