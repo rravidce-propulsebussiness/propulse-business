@@ -46,6 +46,18 @@ async function signup(req, res) {
   }
 }
 
+async function uploadCompanyProofs(req, res) {
+  try {
+    const documents = req.body?.documents;
+    if (!Array.isArray(documents) || !documents.length) return res.status(400).json({ error: 'Upload at least one company proof document' });
+    const saved = await authService.saveCompanyProofDocuments(req.user.id, documents);
+    return res.status(201).json({ documents: saved });
+  } catch (error) {
+    console.error('Company proof upload failed:', error.message);
+    return res.status(400).json({ error: error.message || 'Failed to upload company proof documents' });
+  }
+}
+
 async function login(req, res) {
   try {
     const { email, password } = req.body;
@@ -116,4 +128,4 @@ async function me(req, res) {
   }
 }
 
-module.exports = { signup, login, googleLogin, forgotPassword, resetPassword, me };
+module.exports = { signup, uploadCompanyProofs, login, googleLogin, forgotPassword, resetPassword, me };
