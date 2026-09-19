@@ -55,7 +55,10 @@ function Login() {
     <div className="auth-page login-page">
       <header className="login-topbar">
         <Link className="login-brand" to="/"><span>P</span><strong>Propulse <em>Business</em></strong></Link>
-        <Link className="login-home" to="/signup">Create account <b>→</b></Link>
+        <div className="login-header-actions">
+          <Link className="login-home login-home-secondary" to="/">← Home</Link>
+          <Link className="login-home" to="/signup">Create account <b>→</b></Link>
+        </div>
       </header>
       <section className="auth-visual" aria-label="Pro Pulse Business">
         <div className="auth-visual-overlay" />
