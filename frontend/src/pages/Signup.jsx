@@ -85,8 +85,8 @@ function Signup() {
     e.preventDefault()
     setError('')
     if (!form.name || !form.email || !form.phone || !form.password || !form.confirm) return setError('Complete your basic account details.')
-    if (form.password.length < 8) return setError('Password must be at least 8 characters.')
-    if (form.password !== form.confirm) return setError('Passwords do not match.')
+    if (!googleCredential && form.password.length < 8) return setError('Password must be at least 8 characters.')
+    if (!googleCredential && form.password !== form.confirm) return setError('Passwords do not match.')
     setShowBusinessModal(true)
   }
 
