@@ -206,9 +206,12 @@ function Signup() {
                 <label className="signup-full">Confirm password<input type={showPassword ? 'text' : 'password'} autoComplete="new-password" value={form.confirm} onChange={(e) => update('confirm', e.target.value)} placeholder="Repeat your password" required /></label>
               </div>
             </section>
-            <button className="signup-submit" type="submit" disabled={loading || googleLoading || loadingData}>Sign up with Email <span>→</span></button>
+            <button className="signup-submit" type="submit" disabled={loading || googleLoading || loadingData}>Continue with Email <span>→</span></button>
             <div className="signup-or"><span /> <b>OR</b> <span /></div>
-            <div className="signup-google signup-google-signup"><GoogleButton onCredential={handleGoogleSignup} disabled={loading || googleLoading || loadingData} /></div>
+            <div className="signup-google signup-google-signup">
+              <div className="signup-google-label">Sign up with Google</div>
+              <GoogleButton onCredential={handleGoogleSignup} disabled={loading || googleLoading || loadingData} />
+            </div>
           </form>
           {showBusinessModal && (
             <div className="signup-business-modal-backdrop" role="presentation" onMouseDown={(e) => { if (e.target === e.currentTarget) setShowBusinessModal(false) }}>
