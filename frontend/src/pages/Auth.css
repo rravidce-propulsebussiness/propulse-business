@@ -1600,3 +1600,44 @@
     padding:9px 10px !important;
   }
 }
+
+
+/* BRAND ALIGNMENT — auth header/buttons match the public homepage palette */
+.auth-page .auth-topbar,
+.login-page .login-topbar{
+  background:rgba(5,30,67,.97) !important;
+  border-bottom:1px solid rgba(255,255,255,.10) !important;
+  box-shadow:0 8px 24px rgba(3,18,40,.12) !important;
+  backdrop-filter:blur(16px) !important;
+}
+.auth-page .auth-topbar-brand,
+.login-page .login-brand{
+  color:#fff !important;
+}
+.auth-page .auth-topbar-brand:before,
+.login-page .login-brand>span{
+  background:linear-gradient(145deg,#f45125,#ff713f) !important;
+  box-shadow:0 7px 16px rgba(244,81,37,.24) !important;
+}
+.auth-page .auth-home-button,
+.login-page .login-home{
+  background:#f45125 !important;
+  color:#fff !important;
+  border:1px solid #f45125 !important;
+  box-shadow:0 9px 24px rgba(244,81,37,.25) !important;
+}
+.auth-page .auth-home-button:hover,
+.login-page .login-home:hover{
+  background:#ff713f !important;
+  border-color:#ff713f !important;
+}
+.login-page .login-home-secondary{
+  background:transparent !important;
+  color:#fff !important;
+  border:1px solid rgba(255,255,255,.30) !important;
+  box-shadow:none !important;
+}
+.login-page .login-home-secondary:hover{
+  background:rgba(255,255,255,.08) !important;
+  border-color:rgba(255,255,255,.48) !important;
+}
