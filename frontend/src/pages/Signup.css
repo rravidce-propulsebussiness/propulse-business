@@ -263,7 +263,10 @@
 .signup-form-grid input{height:52px!important}
 .signup-form>.signup-submit{margin-top:8px!important}
 .signup-bottom-login{margin-top:18px!important}
-.signup-or,.signup-google,.signup-security{display:none!important}
+.signup-security{display:none!important}
+.signup-google-signup{display:block!important}
+.signup-google-signup .signup-google-label{margin:0 0 8px;text-align:center;color:#17395f;font-size:9px;font-weight:900}
+.signup-google-signup .google-button-wrap{min-height:48px}
 .signup-business-modal-backdrop{
   position:fixed!important;
   inset:0!important;
