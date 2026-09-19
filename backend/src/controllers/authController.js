@@ -75,10 +75,10 @@ async function login(req, res) {
 
 async function googleLogin(req, res) {
   try {
-    const { credential, accountType } = req.body || {};
-    const role = normalizePublicSignupRole(accountType);
-    if (!role) return res.status(400).json({ error: 'Choose either User or Lead Partner as your account type' });
-    return res.json(await authService.googleLogin({ idToken: credential, role }));
+    const { credential } = req.body || {};
+    // Google sign-in is an authentication flow, not account creation.
+    // The verified Google email determines the existing Propulse account.
+    return res.json(await authService.googleLogin({ idToken: credential }));
   } catch (error) {
     if (['GOOGLE_NOT_CONFIGURED', 'INVALID_GOOGLE_TOKEN', 'INVALID_SIGNUP_ROLE'].includes(error.code)) return res.status(400).json({ error: error.message });
     if (error.code === 'GOOGLE_ACCOUNT_NOT_FOUND') return res.status(404).json({ error: error.message });
