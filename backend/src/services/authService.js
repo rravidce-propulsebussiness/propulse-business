@@ -72,18 +72,27 @@ async function validateBusinessSelections(client, services, locations) {
   }
 }
 
-async function signup({ name, email, password, phone, businessName, businessDetails, services, locations, role = 'business' }) {
+async function signup({ name, email, password, phone, businessName, businessDetails, services, locations, role = 'business', googleCredential = null }) {
   const signupRole = normalizePublicSignupRole(role);
   if (!signupRole) throw Object.assign(new Error('Only User or Lead Partner accounts can be created through public signup'), { code: 'INVALID_SIGNUP_ROLE' });
-  const normalizedEmail = email.trim().toLowerCase();
+  let normalizedEmail = email.trim().toLowerCase();
+  let signupName = name.trim();
+  let passwordValue = password;
+  if (googleCredential) {
+    const googleUser = await verifyGoogleIdToken(googleCredential);
+    normalizedEmail = googleUser.email.trim().toLowerCase();
+    signupName = String(googleUser.name || name || '').trim();
+    if (!signupName) throw Object.assign(new Error('Your Google account does not provide a name'), { code: 'INVALID_GOOGLE_TOKEN' });
+    passwordValue = crypto.randomBytes(32).toString('hex');
+  }
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
     const existing = await client.query('SELECT id FROM users WHERE LOWER(email)=$1', [normalizedEmail]);
     if (existing.rows.length) throw Object.assign(new Error('An account with this email already exists'), { code: 'EMAIL_EXISTS' });
     await validateBusinessSelections(client, services, locations);
-    const passwordHash = await bcrypt.hash(password, 12);
-    const user = (await client.query(`INSERT INTO users (name,email,password_hash,role) VALUES ($1,$2,$3,$4) RETURNING id,name,email,role,auth_version`, [name.trim(), normalizedEmail, passwordHash, signupRole])).rows[0];
+    const passwordHash = await bcrypt.hash(passwordValue, 12);
+    const user = (await client.query(`INSERT INTO users (name,email,password_hash,role) VALUES ($1,$2,$3,$4) RETURNING id,name,email,role,auth_version`, [signupName, normalizedEmail, passwordHash, signupRole])).rows[0];
     const profileId = (await client.query(`INSERT INTO business_profiles (user_id,phone,business_name,business_details) VALUES ($1,$2,$3,$4) RETURNING id`, [user.id, phone.trim(), businessName.trim(), businessDetails.trim()])).rows[0].id;
     for (const selection of services) await client.query(`INSERT INTO business_profile_services (business_profile_id,industry_id,service_id,subservice_id) VALUES ($1,$2,$3,$4) ON CONFLICT DO NOTHING`, [profileId, selection.industryId, selection.serviceId, selection.subserviceId || null]);
     for (const location of locations) await client.query(`INSERT INTO business_profile_locations (business_profile_id,state_id,city_id) VALUES ($1,$2,$3) ON CONFLICT DO NOTHING`, [profileId, location.stateId, location.cityId]);
