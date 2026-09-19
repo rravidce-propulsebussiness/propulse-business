@@ -4,6 +4,7 @@ import { publicRequest, authRequest, saveSession } from '../utils/auth'
 import GoogleButton from '../components/GoogleButton'
 import './Auth.css'
 import './AuthExtras.css'
+import './SignupPremium.css'
 
 const emptyForm = { name: '', email: '', phone: '', businessName: '', businessDetails: '', password: '', confirm: '' }
 const newService = () => ({ industryId: '', serviceId: '', subserviceId: '' })
@@ -146,7 +147,7 @@ function Signup() {
       </section>
       <main className="auth-card-wrap"><div className="auth-card signup-card signup-wide">
         <div className="mobile-brand"><span className="mobile-brand-mark">P</span><strong>Propulse <em>Business</em></strong></div>
-        <div className="auth-heading"><p className="auth-kicker">BUSINESS PROFILE</p><h2>Create account</h2><p>Tell us what you sell and where you serve.</p></div>
+        <div className="auth-heading signup-heading"><p className="auth-kicker">BUSINESS PROFILE</p><h2>Create <em>account</em></h2><p>Tell us what you sell and where you serve.</p></div>
         <div className="signup-progress" aria-label="Signup progress">
           <div className="signup-progress-step is-active"><b>01</b><span>Account</span><small>Your details</small></div><i />
           <div className="signup-progress-step"><b>02</b><span>Business</span><small>Your business</small></div><i />
