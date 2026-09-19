@@ -206,14 +206,6 @@ function Signup() {
                 <label className="signup-full">Confirm password<input type={showPassword ? 'text' : 'password'} autoComplete="new-password" value={form.confirm} onChange={(e) => update('confirm', e.target.value)} placeholder="Repeat your password" required /></label>
               </div>
             </section>
-            <section className="signup-main-proof">
-              <div className="signup-main-proof-head"><strong>Company proof documents</strong><small>Upload GST, registration, PAN, incorporation or other company proof.</small></div>
-              <label className="signup-document-upload">
-                <input type="file" accept=".pdf,.jpg,.jpeg,.png" multiple onChange={(e) => { addProofDocuments(e.target.files); e.target.value = '' }} />
-                <strong>Choose company documents</strong><small>PDF, JPG or PNG · up to 5 MB each · multiple files allowed</small>
-              </label>
-              {proofDocuments.length > 0 && <div className="signup-document-list">{proofDocuments.map((file, index) => <div key={file.name + ":" + file.size + ":" + file.lastModified}><span>{file.name}</span><small>{(file.size / 1024 / 1024).toFixed(2)} MB</small><button type="button" onClick={() => removeProofDocument(index)}>Remove</button></div>)}</div>}
-            </section>
             <button className="signup-submit" type="submit" disabled={loading || googleLoading || loadingData}>Create Account <span>→</span></button>
             <div className="signup-or"><span /> <b>OR</b> <span /></div>
             <div className="signup-google signup-google-signup">
