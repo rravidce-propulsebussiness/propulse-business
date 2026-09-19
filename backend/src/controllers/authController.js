@@ -16,15 +16,18 @@ async function signup(req, res) {
   try {
     const {
       name, email, password, phone, businessName, businessDetails, services, locations,
-      accountType,
+      accountType, googleCredential,
     } = req.body;
 
     const role = normalizePublicSignupRole(accountType);
     if (!role) {
       return res.status(400).json({ error: 'Choose either User or Lead Partner as your account type' });
     }
-    if (!name?.trim() || !email?.trim() || !validatePassword(password)) {
+    if (!googleCredential && (!name?.trim() || !email?.trim() || !validatePassword(password))) {
       return res.status(400).json({ error: 'Name, email and a password of at least 8 characters are required' });
+    }
+    if (googleCredential && (!name?.trim() || !email?.trim())) {
+      return res.status(400).json({ error: 'Google registration requires a verified Google account' });
     }
     if (!phone?.trim() || !businessName?.trim() || !businessDetails?.trim()) {
       return res.status(400).json({ error: 'Phone, business name and business details are required' });
@@ -34,7 +37,7 @@ async function signup(req, res) {
     }
 
     const result = await authService.signup({
-      name, email, password, phone, businessName, businessDetails, services, locations, role,
+      name, email, password, phone, businessName, businessDetails, services, locations, role, googleCredential,
     });
     return res.status(201).json(result);
   } catch (error) {
