@@ -91,6 +91,53 @@
 .login-legal-note{margin:10px auto 0;max-width:430px;text-align:center;color:#9aa7b5;font-size:6.5px;line-height:1.5}
 @keyframes login-card-in{from{opacity:0;transform:translateY(14px) scale(.995)}to{opacity:1;transform:none}}
 @keyframes login-ring{to{transform:rotate(360deg)}}
+/* Premium login UI refinement — visual only; authentication and routing remain unchanged. */
+.login-premium{grid-template-columns:minmax(560px,54%) minmax(500px,46%);background:#f5f7fa}
+.login-topbar{background:linear-gradient(180deg,rgba(3,18,39,.9),rgba(3,18,39,.58) 70%,transparent);border-bottom:0;box-shadow:none;backdrop-filter:none}
+.login-topbar-brand img{width:166px;height:54px;background:transparent}
+.login-topbar-brand span{color:#c8d7e8}
+.login-topbar-context{color:#e7eef7;font-size:10px}
+.login-back-home{padding:12px 18px;border-color:rgba(255,255,255,.34);background:rgba(255,255,255,.09);font-size:11px;border-radius:10px}
+.login-premium-visual{padding-top:0}
+.login-premium-image{background-image:linear-gradient(180deg,rgba(3,18,39,.08),rgba(3,17,36,.48) 70%,rgba(2,13,29,.92)),url('/homepage/login-hero.svg');background-position:center}
+.login-premium-visual-content{min-height:100dvh;padding:120px clamp(40px,6vw,78px) 44px;justify-content:flex-end}
+.login-premium-kicker{font-size:11px}
+.login-premium-visual h1{font-size:clamp(52px,5.1vw,78px);letter-spacing:-4px;margin:15px 0 20px}
+.login-premium-visual-content>p{font-size:15px;line-height:1.65;max-width:650px}
+.login-premium-features{max-width:760px;margin-top:38px}
+.login-premium-features>div{padding:19px 15px}
+.login-premium-features>div>b{width:42px;height:42px;border-radius:50%;font-size:9px}
+.login-premium-features strong{font-size:12px}
+.login-premium-features small{font-size:9px}
+.login-premium-quote{font-size:12px;margin-top:30px}
+.login-premium-card-wrap{padding:100px clamp(30px,5vw,72px) 42px;background:linear-gradient(145deg,#f1f5f9 0%,#fff 100%)}
+.login-premium-card{width:min(610px,100%);border-radius:24px;padding:30px 42px 28px;box-shadow:0 30px 80px rgba(8,35,65,.16)}
+.login-premium-card-head{margin-bottom:22px}
+.login-premium-card-head .mobile-brand img{width:165px;height:64px}
+.login-new-user{gap:12px}
+.login-new-user span{font-size:11px;color:#52657d}
+.login-new-user a{padding:11px 15px;border-color:#ff7c52;background:#fff;color:#e94d22;font-size:11px;border-radius:10px}
+.login-heading{margin-bottom:22px;text-align:center}
+.login-heading .auth-kicker{font-size:10px}
+.login-heading h2{font-size:42px;letter-spacing:-2px}
+.login-heading p:last-child{font-size:13px}
+.login-premium .account-type-card{min-height:76px}
+.account-icon{width:42px;height:42px;border-radius:50%}
+.account-copy strong{font-size:12px}
+.account-copy small{font-size:9px}
+.login-premium .signup-role-note{font-size:9px;padding:9px 11px}
+.login-premium .google-button-wrap{min-height:48px}
+.login-premium .google-button-wrap>div{min-height:48px}
+.login-premium-card form>label{font-size:10px}
+.login-premium-card input:not([type=checkbox]){height:50px;font-size:12px;border-radius:10px}
+.login-premium-card .password-field button{font-size:9px}
+.login-premium-card .check{font-size:10px!important}
+.login-premium-card .text-button{font-size:10px}
+.login-premium-submit{height:53px!important;border-radius:10px!important;font-size:12px!important}
+.login-premium .auth-divider b{font-size:8px}
+.login-premium .auth-outline{height:48px;font-size:11px}
+.login-legal-note{font-size:8px}
+
 @media(max-width:1180px){.login-premium{grid-template-columns:48% 52%}.login-topbar{grid-template-columns:auto 1fr auto;padding:0 24px}.login-topbar-brand span{display:none}.login-premium-visual h1{font-size:53px}.login-premium-features{grid-template-columns:1fr 1fr}.login-premium-card{padding:27px 28px}}
 @media(max-width:920px){.login-premium{display:block;padding-top:70px}.login-topbar{height:70px}.login-premium-visual{min-height:360px;padding-top:0}.login-premium-visual-content{min-height:360px;padding:40px 28px 25px}.login-premium-visual h1{font-size:47px}.login-premium-features{max-width:650px}.login-premium-card-wrap{min-height:0;padding:22px 22px 40px}.login-premium-card{max-width:680px}}
 @media(max-width:600px){.login-topbar{height:64px;padding:0 14px}.login-topbar-brand img{width:118px;height:42px}.login-topbar-context{display:none}.login-back-home{padding:9px 11px;font-size:8px}.login-premium{padding-top:64px}.login-premium-visual,.login-premium-visual-content{min-height:330px;height:auto}.login-premium-visual-content{padding:31px 19px 23px}.login-premium-visual h1{font-size:36px;letter-spacing:-1.8px}.login-premium-visual-content>p{font-size:10px}.login-premium-features{margin-top:20px;grid-template-columns:1fr 1fr}.login-premium-features>div{padding:11px 9px}.login-premium-features>div:nth-child(n+3){display:none}.login-premium-quote{display:none}.login-premium-card-wrap{padding:14px;background:#eef3f8}.login-premium-card{border-radius:18px;padding:21px 17px}.login-premium-card-head{margin-bottom:18px}.login-premium-card-head .mobile-brand img{width:132px;height:50px}.login-new-user span{display:none}.login-heading h2{font-size:31px}.login-premium .account-type-grid{grid-template-columns:1fr}.login-premium .account-type-card{min-height:64px}.login-premium .signup-role-note{font-size:7px}.login-premium-card form>label{font-size:8px}}
