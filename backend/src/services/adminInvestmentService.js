@@ -73,9 +73,10 @@ async function getDashboard({ search = '', status = 'all', industryId = '' } = {
         COUNT(DISTINCT lp.id) FILTER (WHERE lp.status='paid')::int AS linked_paid_sales,
         COALESCE(SUM(lp.amount) FILTER (WHERE lp.status='paid'),0) AS linked_gross_sales,
         COALESCE(json_agg(DISTINCT l.id) FILTER (WHERE l.id IS NOT NULL),'[]'::json) AS linked_lead_ids
-      FROM leads l
-      LEFT JOIN lead_purchases lp ON lp.lead_id=l.id
-      WHERE l.investor_user_id=x.user_id
+      FROM investment_revenue_allocations ira_cycle
+      JOIN lead_purchases lp ON lp.id=ira_cycle.lead_purchase_id
+      JOIN leads l ON l.id=lp.lead_id
+      WHERE ira_cycle.investment_id=x.id AND l.investor_user_id=x.user_id
     ) ls ON TRUE
     WHERE ${where.join(' AND ')}
     ORDER BY x.created_at DESC,x.id DESC
