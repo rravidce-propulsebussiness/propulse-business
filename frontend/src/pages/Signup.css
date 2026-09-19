@@ -108,6 +108,150 @@
 .signup-bottom-login b{font-size:11px}
 @keyframes sp-card-in{from{opacity:0;transform:translateY(14px) scale(.995)}to{opacity:1;transform:none}}
 @keyframes sp-orbit{to{transform:rotate(360deg)}}
+/* Match the premium login page: full-width homepage header, 50/50 body, white canvas. */
+.signup-premium-page{
+  min-height:100dvh!important;
+  display:grid!important;
+  grid-template-columns:50% 50%!important;
+  grid-template-rows:76px auto!important;
+  background:#fff!important;
+  color:var(--sp-ink)!important;
+  overflow-x:hidden!important;
+}
+.signup-topbar{
+  grid-column:1/-1;
+  grid-row:1;
+  height:76px;
+  box-sizing:border-box;
+  display:grid;
+  grid-template-columns:1fr auto 1fr;
+  align-items:center;
+  padding:0 clamp(28px,5vw,72px);
+  background:#062654;
+  border-bottom:1px solid rgba(255,255,255,.1);
+  box-shadow:0 8px 24px rgba(6,38,84,.12);
+  z-index:20;
+}
+.signup-topbar-brand{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  justify-self:start;
+  text-decoration:none;
+}
+.signup-topbar-brand img{
+  width:62px;
+  height:62px;
+  object-fit:contain;
+  background:#fff;
+}
+.signup-topbar-brand span{
+  max-width:96px;
+  color:#b4c6dc;
+  font-size:8px;
+  line-height:1.45;
+  border-left:1px solid rgba(255,255,255,.18);
+  padding-left:12px;
+}
+.signup-topbar-context{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:14px;
+  color:#fff;
+  font-size:12px;
+  font-weight:850;
+}
+.signup-topbar-context i{
+  width:4px;
+  height:4px;
+  border-radius:50%;
+  background:#f45125;
+}
+.signup-back-home{
+  justify-self:end;
+  display:inline-flex;
+  align-items:center;
+  gap:10px;
+  padding:12px 20px;
+  border:1px solid #f45125;
+  border-radius:8px;
+  background:#f45125;
+  color:#fff;
+  text-decoration:none;
+  font-size:11px;
+  font-weight:900;
+}
+.signup-back-home span{font-size:16px}
+.signup-premium-visual{
+  grid-column:1;
+  grid-row:2;
+  position:relative!important;
+  height:auto!important;
+  min-height:calc(100dvh - 76px)!important;
+  overflow:hidden!important;
+  background:#fff!important;
+  color:#0b1f3f!important;
+}
+.signup-visual-bg{
+  background-image:linear-gradient(180deg,rgba(255,255,255,.97),rgba(255,255,255,.93)),url('/homepage/login-hero.svg')!important;
+}
+.signup-visual-overlay{
+  background:linear-gradient(90deg,rgba(255,255,255,.93),rgba(255,255,255,.78))!important;
+}
+.signup-visual-content{
+  min-height:calc(100dvh - 76px)!important;
+  padding:70px clamp(30px,5.5vw,90px) 40px!important;
+  justify-content:center!important;
+  color:#0b1f3f!important;
+}
+.signup-visual-kicker{color:#f45125!important}
+.signup-visual-content h1{color:#0b2a57!important;text-shadow:none!important}
+.signup-visual-content h1 em{color:#f45125!important}
+.signup-visual-content>p{color:#415a78!important}
+.signup-benefits{border-color:#e7edf4!important}
+.signup-benefits>div{
+  border-color:#e7edf4!important;
+  background:#fff!important;
+  box-shadow:none!important;
+}
+.signup-benefits>div:hover{background:#fff8f4!important;border-color:#f5b9a8!important}
+.signup-benefits>div>b{background:#fff3ee!important;border-color:#ffd8ca!important;color:#f45125!important}
+.signup-benefits strong{color:#0b2a57!important}
+.signup-benefits small{color:#71849a!important}
+.signup-quote{
+  background:#fff7f3!important;
+  border-color:#f45125!important;
+}
+.signup-quote p{color:#0b2a57!important}
+.signup-quote small{color:#71849a!important}
+.signup-visual-foot{color:rgba(11,42,87,.38)!important}
+.signup-premium-main{
+  grid-column:2;
+  grid-row:2;
+  min-width:0;
+  min-height:calc(100dvh - 76px)!important;
+  padding:34px clamp(28px,4vw,64px) 50px!important;
+  background:#fff!important;
+  display:flex;
+  justify-content:center;
+  align-items:flex-start;
+  box-sizing:border-box;
+}
+.signup-card-premium{
+  width:min(680px,100%)!important;
+  margin:0 auto!important;
+  background:#fff!important;
+  border:1px solid #dfe7ef!important;
+  border-radius:22px!important;
+  box-shadow:0 24px 65px rgba(10,37,69,.12)!important;
+}
+.signup-card-top{margin-bottom:18px}
+.signup-card-logo img{background:#fff!important}
+.signup-heading h2{color:#0b2a57!important}
+.signup-heading>span{color:#123f80!important}
+.signup-heading p{color:#71849a!important}
+
 @media(max-width:1150px){.signup-premium-page{grid-template-columns:46% 54%}.signup-visual-top{padding-left:30px;padding-right:25px}.signup-brand>span{display:none}.signup-visual-content{padding-left:30px;padding-right:24px}.signup-visual-content h1{font-size:54px}.signup-premium-main{padding:25px 22px 40px}.signup-card-premium{padding:30px 28px 25px}}
 @media(max-width:900px){.signup-premium-page{display:block}.signup-premium-visual{position:relative;height:430px;min-height:430px}.signup-visual-top{padding:22px 22px 0}.signup-visual-nav{display:none}.signup-visual-content{min-height:365px;padding:35px 22px 25px;justify-content:flex-end}.signup-visual-content h1{font-size:47px;letter-spacing:-2.4px}.signup-visual-content>p{font-size:10px;max-width:650px}.signup-benefits{margin-top:17px;grid-template-columns:1fr 1fr}.signup-benefits>div{padding:9px}.signup-benefits small{font-size:6.5px}.signup-quote{display:none}.signup-visual-foot{left:22px;bottom:16px}.signup-premium-main{padding:18px 16px 40px}.signup-card-premium{margin-top:0;max-width:720px}}
 @media(max-width:600px){.signup-premium-visual{height:405px;min-height:405px}.signup-visual-content{min-height:340px;padding:28px 18px 20px}.signup-visual-content h1{font-size:38px;letter-spacing:-1.9px}.signup-visual-content>p{font-size:9px}.signup-benefits{grid-template-columns:1fr 1fr;gap:6px}.signup-benefits>div:nth-child(n+3){display:none}.signup-brand img{width:122px;height:42px}.signup-premium-main{padding:12px 10px 30px}.signup-card-premium{padding:20px 16px;border-radius:18px}.signup-card-top{margin-bottom:17px}.signup-card-logo img{width:128px;height:48px}.signup-top-link span{display:none}.signup-heading h2{font-size:31px}.signup-account-grid{grid-template-columns:1fr}.signup-form-grid{grid-template-columns:1fr}.signup-full{grid-column:auto}.signup-selection-grid,.signup-location-grid{grid-template-columns:1fr}.signup-section-head-inline{grid-template-columns:25px minmax(0,1fr)}.signup-add-button{grid-column:2;justify-self:start;margin-top:3px}.signup-premium-main input:not([type=checkbox]),.signup-premium-main select{height:45px}}
