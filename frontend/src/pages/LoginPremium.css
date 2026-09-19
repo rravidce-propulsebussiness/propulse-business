@@ -1,0 +1,172 @@
+
+/* Premium login hero/card treatment — scoped to /login only */
+.login-page .auth-card-wrap {
+  background:
+    radial-gradient(circle at 75% 8%, rgba(35, 92, 190, .34), transparent 34%),
+    linear-gradient(145deg, #04152f 0%, #09285a 56%, #031329 100%) !important;
+  padding-top: 18px !important;
+  padding-bottom: 24px !important;
+}
+
+.login-page .login-card {
+  overflow: hidden !important;
+  padding: 0 !important;
+  background: #fff !important;
+  border: 1px solid rgba(255,255,255,.55) !important;
+  border-radius: 24px !important;
+  box-shadow: 0 28px 70px rgba(0, 8, 25, .28) !important;
+}
+
+.login-page .login-card .login-heading {
+  position: relative;
+  margin: 0 !important;
+  padding: 29px 34px 32px !important;
+  text-align: center !important;
+  background:
+    radial-gradient(circle at 12% 120%, rgba(255,90,36,.30), transparent 32%),
+    radial-gradient(circle at 88% 120%, rgba(255,90,36,.30), transparent 32%),
+    linear-gradient(160deg, #061a3b 0%, #0b2f68 72%, #061a3b 100%) !important;
+  color: #fff !important;
+  border-bottom: 0 !important;
+}
+
+.login-page .login-card .login-heading::before,
+.login-page .login-card .login-heading::after {
+  content: "";
+  position: absolute;
+  width: 240px;
+  height: 120px;
+  bottom: -52px;
+  border: 1px solid rgba(255, 106, 47, .58);
+  border-radius: 50%;
+  pointer-events: none;
+}
+.login-page .login-card .login-heading::before {
+  left: -92px;
+  transform: rotate(22deg);
+  box-shadow: 0 0 0 12px rgba(255,106,47,.08);
+}
+.login-page .login-card .login-heading::after {
+  right: -92px;
+  transform: rotate(-22deg);
+  box-shadow: 0 0 0 12px rgba(255,106,47,.08);
+}
+
+.login-page .login-card .login-heading .auth-kicker {
+  position: relative;
+  z-index: 2;
+  color: #ff6a2f !important;
+  margin: 0 0 10px !important;
+  text-align: center !important;
+  letter-spacing: .2em !important;
+  font-size: 10px !important;
+}
+
+.login-page .login-card .login-heading h2 {
+  position: relative;
+  z-index: 2;
+  margin: 0 !important;
+  color: #fff !important;
+  font-size: clamp(30px, 3vw, 40px) !important;
+  line-height: 1.02 !important;
+  letter-spacing: -.055em !important;
+  text-align: center !important;
+}
+
+.login-page .login-card .login-heading h2 em {
+  color: #ff5a24 !important;
+  font-style: normal !important;
+}
+
+.login-page .login-card .login-heading h2::after {
+  content: "";
+  display: block;
+  width: 66px;
+  height: 3px;
+  margin: 12px auto 0;
+  border-radius: 999px;
+  background: #ff5a24;
+  box-shadow: 0 0 18px rgba(255,90,36,.42);
+}
+
+.login-page .login-card .login-heading > p:last-child {
+  position: relative;
+  z-index: 2;
+  margin: 13px auto 0 !important;
+  max-width: 390px;
+  color: rgba(255,255,255,.78) !important;
+  font-size: 13px !important;
+  line-height: 1.45 !important;
+  text-align: center !important;
+}
+
+.login-page .login-card > .google-auth-block,
+.login-page .login-card > .auth-divider,
+.login-page .login-card > form,
+.login-page .login-card > .auth-switch {
+  position: relative;
+  z-index: 3;
+  margin-left: 34px;
+  margin-right: 34px;
+}
+
+.login-page .login-card > .google-auth-block {
+  margin-top: 16px !important;
+  margin-bottom: 9px !important;
+}
+
+.login-page .login-card > .auth-divider {
+  margin-top: 9px !important;
+  margin-bottom: 15px !important;
+}
+
+.login-page .login-card > form {
+  padding-bottom: 2px;
+}
+
+.login-page .login-card .auth-submit {
+  background: linear-gradient(135deg, #ff5a24 0%, #f45125 100%) !important;
+  box-shadow: 0 13px 28px rgba(244,81,37,.24) !important;
+}
+
+.login-page .login-card .auth-submit:hover {
+  background: linear-gradient(135deg, #ff713f 0%, #f45125 100%) !important;
+  box-shadow: 0 16px 32px rgba(244,81,37,.30) !important;
+}
+
+.login-page .login-card .auth-switch {
+  margin-top: 15px !important;
+  margin-bottom: 22px !important;
+}
+
+@media (max-width: 850px) {
+  .login-page .auth-card-wrap {
+    padding: 18px !important;
+  }
+  .login-page .login-card .login-heading {
+    padding: 25px 24px 29px !important;
+  }
+  .login-page .login-card > .google-auth-block,
+  .login-page .login-card > .auth-divider,
+  .login-page .login-card > form,
+  .login-page .login-card > .auth-switch {
+    margin-left: 24px;
+    margin-right: 24px;
+  }
+}
+
+@media (max-width: 520px) {
+  .login-page .login-card .login-heading {
+    padding: 23px 18px 27px !important;
+  }
+  .login-page .login-card .login-heading h2 {
+    font-size: 29px !important;
+  }
+  .login-page .login-card > .google-auth-block,
+  .login-page .login-card > .auth-divider,
+  .login-page .login-card > form,
+  .login-page .login-card > .auth-switch {
+    margin-left: 18px;
+    margin-right: 18px;
+  }
+}
