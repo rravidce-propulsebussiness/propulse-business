@@ -252,6 +252,77 @@
 .signup-heading>span{color:#123f80!important}
 .signup-heading p{color:#71849a!important}
 
+/* Simplified signup first step and business-details modal. */
+.signup-card-premium{padding:34px 38px 32px!important}
+.signup-heading{text-align:center!important;margin-bottom:26px!important}
+.signup-heading>span,.signup-heading h2,.signup-heading p{display:none!important}
+.signup-form-section{border:0!important;padding:0!important;margin:0!important}
+.signup-form-section .signup-section-head{display:none!important}
+.signup-form-grid{gap:14px!important}
+.signup-form-grid label{font-size:10px!important}
+.signup-form-grid input{height:52px!important}
+.signup-form>.signup-submit{margin-top:8px!important}
+.signup-bottom-login{margin-top:18px!important}
+.signup-or,.signup-google,.signup-security{display:none!important}
+.signup-business-modal-backdrop{
+  position:fixed!important;
+  inset:0!important;
+  z-index:100!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  padding:28px!important;
+  background:rgba(4,20,43,.72)!important;
+  backdrop-filter:blur(8px)!important;
+}
+.signup-business-modal{
+  width:min(820px,96vw)!important;
+  max-height:90vh!important;
+  overflow:auto!important;
+  padding:30px!important;
+  border:1px solid rgba(255,255,255,.14)!important;
+  border-radius:20px!important;
+  background:#fff!important;
+  box-shadow:0 30px 90px rgba(0,0,0,.3)!important;
+}
+.signup-business-modal-head{
+  display:flex!important;
+  align-items:flex-start!important;
+  justify-content:space-between!important;
+  gap:20px!important;
+  margin-bottom:22px!important;
+}
+.signup-business-modal-head span{
+  color:#f45125!important;
+  font-size:9px!important;
+  font-weight:900!important;
+  letter-spacing:.16em!important;
+}
+.signup-business-modal-head h3{
+  margin:5px 0!important;
+  color:#0b2a57!important;
+  font-size:24px!important;
+}
+.signup-business-modal-head p{
+  margin:0!important;
+  color:#71849a!important;
+  font-size:11px!important;
+}
+.signup-business-modal-head>button{
+  width:34px!important;
+  height:34px!important;
+  border:1px solid #dce5ee!important;
+  border-radius:50%!important;
+  background:#fff!important;
+  color:#0b2a57!important;
+  font-size:20px!important;
+  cursor:pointer!important;
+}
+.signup-business-modal .signup-account-grid{margin-bottom:18px!important}
+.signup-modal-form .signup-form-section{margin-bottom:20px!important}
+.signup-modal-form .signup-section-head{display:flex!important}
+.signup-modal-form .signup-submit{margin-top:10px!important}
+
 @media(max-width:1150px){.signup-premium-page{grid-template-columns:46% 54%}.signup-visual-top{padding-left:30px;padding-right:25px}.signup-brand>span{display:none}.signup-visual-content{padding-left:30px;padding-right:24px}.signup-visual-content h1{font-size:54px}.signup-premium-main{padding:25px 22px 40px}.signup-card-premium{padding:30px 28px 25px}}
 @media(max-width:900px){.signup-premium-page{display:block}.signup-premium-visual{position:relative;height:430px;min-height:430px}.signup-visual-top{padding:22px 22px 0}.signup-visual-nav{display:none}.signup-visual-content{min-height:365px;padding:35px 22px 25px;justify-content:flex-end}.signup-visual-content h1{font-size:47px;letter-spacing:-2.4px}.signup-visual-content>p{font-size:10px;max-width:650px}.signup-benefits{margin-top:17px;grid-template-columns:1fr 1fr}.signup-benefits>div{padding:9px}.signup-benefits small{font-size:6.5px}.signup-quote{display:none}.signup-visual-foot{left:22px;bottom:16px}.signup-premium-main{padding:18px 16px 40px}.signup-card-premium{margin-top:0;max-width:720px}}
 @media(max-width:600px){.signup-premium-visual{height:405px;min-height:405px}.signup-visual-content{min-height:340px;padding:28px 18px 20px}.signup-visual-content h1{font-size:38px;letter-spacing:-1.9px}.signup-visual-content>p{font-size:9px}.signup-benefits{grid-template-columns:1fr 1fr;gap:6px}.signup-benefits>div:nth-child(n+3){display:none}.signup-brand img{width:122px;height:42px}.signup-premium-main{padding:12px 10px 30px}.signup-card-premium{padding:20px 16px;border-radius:18px}.signup-card-top{margin-bottom:17px}.signup-card-logo img{width:128px;height:48px}.signup-top-link span{display:none}.signup-heading h2{font-size:31px}.signup-account-grid{grid-template-columns:1fr}.signup-form-grid{grid-template-columns:1fr}.signup-full{grid-column:auto}.signup-selection-grid,.signup-location-grid{grid-template-columns:1fr}.signup-section-head-inline{grid-template-columns:25px minmax(0,1fr)}.signup-add-button{grid-column:2;justify-self:start;margin-top:3px}.signup-premium-main input:not([type=checkbox]),.signup-premium-main select{height:45px}}
