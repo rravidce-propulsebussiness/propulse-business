@@ -159,33 +159,7 @@ function Signup() {
 
       <main className="signup-premium-main">
         <div className="signup-card-premium">
-          <div className="signup-card-top">
-            <Link className="signup-card-logo" to="/" aria-label="Propulse Business home">
-              <img src="/brand/propulse-logo.png" alt="Propulse Business" />
-            </Link>
-            <div className="signup-top-link"><span>Already have an account?</span><Link to="/login">Sign in <b>→</b></Link></div>
-          </div>
-
-          <div className="signup-heading">
-            <span>JOIN PROPULSE</span>
-            <h2>Create your account</h2>
-            <p>Join Propulse and start your business journey today.</p>
-          </div>
-
           {error && <div className="signup-error" role="alert">{error}</div>}
-
-          <div className="signup-account-grid signup-account-grid-modal" role="radiogroup" aria-label="Account type">
-            <button type="button" className={`signup-account-option ${accountType === 'business' ? 'selected' : ''}`} onClick={() => setAccountType('business')} aria-pressed={accountType === 'business'} disabled={loading || googleLoading}>
-              <span className="signup-option-icon">♙</span>
-              <span><strong>User</strong><small>Buy leads &amp; grow your business</small></span>
-            </button>
-            <button type="button" className={`signup-account-option ${accountType === 'lead_partner' ? 'selected' : ''}`} onClick={() => setAccountType('lead_partner')} aria-pressed={accountType === 'lead_partner'} disabled={loading || googleLoading}>
-              <span className="signup-option-icon">♙♙</span>
-              <span><strong>Lead Partner</strong><small>Submit &amp; manage lead opportunities</small></span>
-            </button>
-          </div>
-
-          <div className="signup-role-note">Creating a <strong>{accountTypeLabel()}</strong> account. Select the account type that matches how you use Propulse.</div>
 
           {loadingData && <div className="signup-loading">Loading business options…</div>}
 
