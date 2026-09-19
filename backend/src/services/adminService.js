@@ -40,7 +40,7 @@ async function getUsers({ search = '', role = 'all', status = 'all', industryId 
     params.push(`%${String(search).trim()}%`);
     conditions.push(`(u.name ILIKE $${params.length} OR u.email ILIKE $${params.length} OR bp.business_name ILIKE $${params.length} OR bp.phone ILIKE $${params.length})`);
   }
-  if (['admin','business','investor'].includes(role)) { params.push(role); conditions.push(`u.role = ${params.length}`); }
+  if (['admin','business'].includes(role)) { params.push(role); conditions.push(`u.role = ${params.length}`); }
   if (status === 'active' || status === 'inactive') { params.push(status === 'active'); conditions.push(`u.is_active = $${params.length}`); }
   if (industryId) { params.push(industryId); conditions.push(`EXISTS (SELECT 1 FROM business_profile_services x WHERE x.business_profile_id=bp.id AND x.industry_id=$${params.length} AND x.is_active=TRUE)`); }
   if (serviceId) { params.push(serviceId); conditions.push(`EXISTS (SELECT 1 FROM business_profile_services x WHERE x.business_profile_id=bp.id AND x.service_id=$${params.length} AND x.is_active=TRUE)`); }
