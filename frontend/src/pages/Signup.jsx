@@ -93,7 +93,6 @@ function Signup() {
 
   const handleGoogle = useCallback(async credential => {
     setError('')
-    if (!agree) return setError('Please accept the terms to continue with Google.')
     try {
       setGoogleLoading(true)
       const result = await authRequest('/auth/google', { method: 'POST', body: JSON.stringify({ credential }) })
@@ -104,7 +103,7 @@ function Signup() {
     } finally {
       setGoogleLoading(false)
     }
-  }, [agree, navigate])
+  }, [navigate])
 
   return (
     <div className="auth-page">
