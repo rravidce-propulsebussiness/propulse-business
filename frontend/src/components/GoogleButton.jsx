@@ -21,10 +21,17 @@ function GoogleButton({ onCredential, disabled = false }) {
       initializedRef.current = true
       setReady(true)
       containerRef.current.innerHTML = ''
-      window.google.accounts.id.initialize({
-        client_id: GOOGLE_CLIENT_ID,
-        callback: response => credentialRef.current?.(response.credential),
-      })
+      if (!window.__propulseGoogleInitialized) {
+        window.__propulseGoogleInitialized = true
+        window.__propulseGoogleCredential = credential => credential
+          ? window.__propulseGoogleCredentialHandler?.(credential)
+          : undefined
+        window.google.accounts.id.initialize({
+          client_id: GOOGLE_CLIENT_ID,
+          callback: response => window.__propulseGoogleCredential?.(response.credential),
+        })
+      }
+      window.__propulseGoogleCredentialHandler = credential => credentialRef.current?.(credential)
       window.google.accounts.id.renderButton(containerRef.current, {
         type: 'standard',
         theme: 'outline',
