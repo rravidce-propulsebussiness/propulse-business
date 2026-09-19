@@ -113,14 +113,46 @@ function Signup() {
       </header>
       <section className="auth-visual" aria-label="Pro Pulse Business">
         <div className="auth-visual-overlay" /><div className="auth-visual-content">
-          <div className="auth-logo-frame"><img className="auth-logo" src="/brand/propulse-logo.png" alt="Pro Pulse Business" /></div>
-          <div className="auth-visual-copy"><span>QUALIFIED LEADS. BETTER OPPORTUNITIES.</span><h1>Get High-Value<br /><em>Clients.</em></h1><p>Choose the services you provide and the locations you serve. We'll match you with relevant opportunities.</p></div>
+          <div className="auth-visual-brand">
+            <div className="auth-brand-mark">P</div>
+            <div><strong>Propulse</strong><span>Business</span></div>
+          </div>
+          <div className="auth-visual-copy">
+            <span>BUSINESS GROWTH PLATFORM</span>
+            <h1>Build your<br />business with <em>Propulse.</em></h1>
+            <p>Choose the services you provide and the locations you serve. We'll match you with relevant opportunities.</p>
+          </div>
+          <div className="auth-benefit-grid">
+            <div className="auth-benefit"><b>01</b><div><strong>Relevant opportunities</strong><span>Choose the services you provide.</span></div></div>
+            <div className="auth-benefit"><b>02</b><div><strong>Service coverage</strong><span>Tell us where you serve customers.</span></div></div>
+            <div className="auth-benefit"><b>03</b><div><strong>Business profile</strong><span>Present your business clearly.</span></div></div>
+            <div className="auth-benefit"><b>04</b><div><strong>Secure account</strong><span>Keep your account protected.</span></div></div>
+          </div>
+          <div className="auth-trust-card"><span className="quote-mark">“</span><strong>Technology built around business growth.</strong><small>— Propulse Business Technologies</small></div>
+          <div className="auth-architecture" aria-hidden="true">
+            <div className="architecture-glow" />
+            <div className="architecture-building">
+              <span className="building-roof" />
+              <span className="building-floor floor-one"><i /><i /><i /></span>
+              <span className="building-floor floor-two"><i /><i /><i /></span>
+              <span className="building-floor floor-three"><i /><i /><i /></span>
+              <span className="building-base" />
+            </div>
+            <div className="architecture-orbit orbit-a" />
+            <div className="architecture-orbit orbit-b" />
+          </div>
           <div className="auth-visual-footer"><span>CONNECT</span><i /><span>GROW</span><i /><span>BUILD</span><i /><span>SUCCEED</span></div>
         </div>
       </section>
       <main className="auth-card-wrap"><div className="auth-card signup-card signup-wide">
-        <div className="mobile-brand"><img src="/brand/propulse-logo.png" alt="Pro Pulse" /></div>
+        <div className="mobile-brand"><span className="mobile-brand-mark">P</span><strong>Propulse <em>Business</em></strong></div>
         <div className="auth-heading"><p className="auth-kicker">BUSINESS PROFILE</p><h2>Create account</h2><p>Tell us what you sell and where you serve.</p></div>
+        <div className="signup-progress" aria-label="Signup progress">
+          <div className="signup-progress-step is-active"><b>01</b><span>Account</span><small>Your details</small></div><i />
+          <div className="signup-progress-step"><b>02</b><span>Business</span><small>Your business</small></div><i />
+          <div className="signup-progress-step"><b>03</b><span>Services</span><small>What you provide</small></div><i />
+          <div className="signup-progress-step"><b>04</b><span>Finish</span><small>Get started</small></div>
+        </div>
         {error && <div className="auth-error" role="alert">{error}</div>}
         <div className="google-auth-block"><GoogleButton onCredential={handleGoogle} disabled={loading || googleLoading || loadingData} /></div>
         <div className="auth-divider"><span /><b>OR CREATE WITH EMAIL</b><span /></div>
