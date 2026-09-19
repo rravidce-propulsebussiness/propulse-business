@@ -3,7 +3,7 @@ import {Link} from 'react-router-dom'
 import {authRequest,getUser} from '../utils/auth'
 import UserHeader from '../components/UserHeader'
 import './LeadPartner.css'
-const money=v=>`₹${Number(v||0).toLocaleString('en-IN',{maximumFractionDigits:2})`
+const money=v=>`₹${Number(v||0).toLocaleString('en-IN',{maximumFractionDigits:2})}`
 export default function LeadPartner(){
  const user=getUser(),[partner,setPartner]=useState(null),[leads,setLeads]=useState([]),[loading,setLoading]=useState(true),[error,setError]=useState(''),[notice,setNotice]=useState(''),[search,setSearch]=useState(''),[status,setStatus]=useState('all'),[editing,setEditing]=useState(null),[saving,setSaving]=useState(false)
  const load=async()=>{setLoading(true);try{const p=await authRequest('/lead-partner/me');setPartner(p);if(p?.status==='active'){const d=await authRequest(`/lead-partner/leads?status=${encodeURIComponent(status)}`);setLeads(Array.isArray(d?.leads)?d.leads:[])}else setLeads([])}catch(e){setError(e.message||'Unable to load Lead Partner workspace')}finally{setLoading(false)}}
