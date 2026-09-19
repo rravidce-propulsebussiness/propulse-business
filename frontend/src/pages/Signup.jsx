@@ -84,7 +84,7 @@ function Signup() {
   function openBusinessDetails(e) {
     e.preventDefault()
     setError('')
-    if (!form.name || !form.email || !form.phone || !form.password || !form.confirm) return setError('Complete your basic account details.')
+    if (!form.name || !form.email || !form.phone || (!googleCredential && (!form.password || !form.confirm))) return setError('Complete your basic account details.')
     if (!googleCredential && form.password.length < 8) return setError('Password must be at least 8 characters.')
     if (!googleCredential && form.password !== form.confirm) return setError('Passwords do not match.')
     setShowBusinessModal(true)
@@ -95,8 +95,8 @@ function Signup() {
     if (!accountType) return setError('Choose an account type to continue.')
     if (!agree) return setError('Please accept the terms to continue.')
     if (!form.name || !form.email || !form.phone || !form.businessName || !form.businessDetails) return setError('Complete your personal and business details.')
-    if (form.password.length < 8) return setError('Password must be at least 8 characters.')
-    if (form.password !== form.confirm) return setError('Passwords do not match.')
+    if (!googleCredential && form.password.length < 8) return setError('Password must be at least 8 characters.')
+    if (!googleCredential && form.password !== form.confirm) return setError('Passwords do not match.')
     const cleanServices = serviceSelections.flatMap((x) => {
       if (!x.industryId || !x.serviceId) return []
       if (x.serviceId === '__all__') {
@@ -232,7 +232,7 @@ function Signup() {
                     {proofDocuments.length > 0 && <div className="signup-document-list">{proofDocuments.map((file, index) => <div key={file.name + ":" + file.size + ":" + file.lastModified}><span>{file.name}</span><small>{(file.size / 1024 / 1024).toFixed(2)} MB</small><button type="button" onClick={() => removeProofDocument(index)}>Remove</button></div>)}</div>}
                   </section>
                   <div className="signup-consent"><label><input type="checkbox" checked={agree} onChange={(e)=>setAgree(e.target.checked)} /> <span>I agree to the <b>Terms of Service</b> and <b>Privacy Policy</b>.</span></label></div>
-                  <button className="signup-submit" disabled={loading || googleLoading || loadingData}>{loading ? 'Creating Account…' : `{googleCredential ? 'Create Google Account' : `Create ${accountTypeLabel()} Account`}`} <span>→</span></button>
+                  <button className="signup-submit" disabled={loading || googleLoading || loadingData}>{loading ? 'Creating Account…' : (googleCredential ? 'Create Google Account' : `Create ${accountTypeLabel()} Account`)} <span>→</span></button>
                 </form>
               </div>
             </div>
