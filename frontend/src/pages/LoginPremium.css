@@ -170,3 +170,6 @@
     margin-right: 18px;
   }
 }
+
+
+.login-account-types{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:0 0 22px;padding:5px;background:#f3f6fa;border:1px solid #e2e8f0;border-radius:12px}.login-account-types button{border:0;background:transparent;border-radius:9px;padding:10px 6px;font:600 12px/1.2 inherit;color:#64748b;cursor:pointer;transition:.2s}.login-account-types button.active{background:#fff;color:#12376b;box-shadow:0 3px 12px rgba(15,35,65,.1)}.login-account-types button:hover{color:#12376b}@media(max-width:520px){.login-account-types{grid-template-columns:repeat(2,1fr)}}
