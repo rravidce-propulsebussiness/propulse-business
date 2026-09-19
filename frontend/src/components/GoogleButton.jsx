@@ -2,6 +2,14 @@ import { useEffect, useRef, useState } from 'react'
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID
 
+// Google Identity Services is a singleton. Keep initialization/callback state
+// on window so React StrictMode and HMR cannot initialize it repeatedly.
+const GOOGLE_STATE_KEY = '__propulse_google_state__'
+function getGoogleState() {
+  if (!window[GOOGLE_STATE_KEY]) window[GOOGLE_STATE_KEY] = { initialized: false, callback: null, clientId: null }
+  return window[GOOGLE_STATE_KEY]
+}
+
 function GoogleButton({ onCredential, disabled = false }) {
   const containerRef = useRef(null)
   const credentialRef = useRef(onCredential)
@@ -21,10 +29,16 @@ function GoogleButton({ onCredential, disabled = false }) {
       initializedRef.current = true
       setReady(true)
       containerRef.current.innerHTML = ''
-      window.google.accounts.id.initialize({
-        client_id: GOOGLE_CLIENT_ID,
-        callback: response => credentialRef.current?.(response.credential),
-      })
+      const googleState = getGoogleState()
+      googleState.callback = credentialRef.current
+      if (!googleState.initialized || googleState.clientId !== GOOGLE_CLIENT_ID) {
+        window.google.accounts.id.initialize({
+          client_id: GOOGLE_CLIENT_ID,
+          callback: response => getGoogleState().callback?.(response.credential),
+        })
+        googleState.initialized = true
+        googleState.clientId = GOOGLE_CLIENT_ID
+      }
       window.google.accounts.id.renderButton(containerRef.current, {
         type: 'standard',
         theme: 'outline',
