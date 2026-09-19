@@ -60,10 +60,6 @@ function Login() {
       <section className="auth-visual" aria-label="Pro Pulse Business">
         <div className="auth-visual-overlay" />
         <div className="auth-visual-content">
-          <div className="login-visual-brand">
-            <div className="login-brand-mark">P</div>
-            <div><strong>Propulse</strong><span>Business</span></div>
-          </div>
           <div className="login-visual-copy">
             <span>YOUR BUSINESS · YOUR OPPORTUNITIES</span>
             <h1>Welcome back.<br /><em>Let's grow.</em></h1>
@@ -85,7 +81,7 @@ function Login() {
             <img src="/brand/propulse-logo.png" alt="Pro Pulse" />
           </div>
           <div className="auth-heading login-heading">
-            <p className="auth-kicker">WELCOME BACK</p>
+            <p className="auth-kicker">ACCOUNT ACCESS</p>
             <h2>Sign in to Propulse</h2>
             <p>Access your business workspace and opportunities.</p>
           </div>
