@@ -24,9 +24,7 @@ function Login() {
     }
 
     // Lead Partner accounts must never enter the marketplace.
-    // Route by the authenticated role first; the selected account type is also
-    // honored for legacy/business-role partner accounts with an active partner record.
-    if (result.user?.role === 'lead_partner' || accountType === 'lead_partner') {
+    if (result.user?.role === 'lead_partner') {
       navigate('/lead-partner', { replace: true })
       return
     }
@@ -41,7 +39,7 @@ function Login() {
 
     const destination = location.state?.from?.pathname || '/leads'
     navigate(destination, { replace: true })
-  }, [accountType, location.state, navigate, remember])
+  }, [location.state, navigate, remember])
 
   async function submit(e) {
     e.preventDefault()
