@@ -112,19 +112,19 @@ function Signup() {
 
   return (
     <div className="signup-premium-page">
+      <header className="signup-topbar">
+        <Link className="signup-topbar-brand" to="/" aria-label="Propulse Business home">
+          <img src="/brand/propulse-logo.png" alt="Propulse Business Technologies Private Limited" />
+          <span>Building Business Together</span>
+        </Link>
+        <div className="signup-topbar-context">Technology <i/> Growth <i/> Opportunities</div>
+        <Link className="signup-back-home" to="/"><span>←</span> Back to Home</Link>
+      </header>
       <section className="signup-premium-visual" aria-label="Propulse Business">
         <div className="signup-visual-bg" />
         <div className="signup-visual-overlay" />
         <div className="signup-visual-orbit orbit-a" />
         <div className="signup-visual-orbit orbit-b" />
-
-        <div className="signup-visual-top">
-          <Link className="signup-brand" to="/" aria-label="Propulse Business home">
-            <img src="/brand/propulse-logo.png" alt="Propulse Business Technologies Private Limited" />
-            <span>Building Business Together.</span>
-          </Link>
-          <div className="signup-visual-nav"><span>Technology</span><i/><span>Growth</span><i/><span>Opportunities</span></div>
-        </div>
 
         <div className="signup-visual-content">
           <div className="signup-visual-kicker"><span /> JOIN PROPULSE</div>
