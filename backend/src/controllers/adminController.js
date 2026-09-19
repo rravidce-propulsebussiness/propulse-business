@@ -15,6 +15,7 @@ async function createAdmin(req, res) {
   }
 }
 async function setUserStatus(req, res) { try { const user = await adminService.setUserStatus(req.params.id, Boolean(req.body?.isActive)); if (!user) return res.status(404).json({ error: 'User not found' }); return res.json(user); } catch (error) { console.error('Set user status failed:', error.message); return res.status(500).json({ error: 'Failed to update user status' }); } }
+async function convertToInvestor(req,res){try{return res.json(await adminService.convertUserToInvestor(req.params.id))}catch(error){if(error.code==='NOT_FOUND')return res.status(404).json({error:error.message});if(error.code==='INVALID_ROLE')return res.status(400).json({error:error.message});console.error('Convert user to investor failed:',error.message);return res.status(500).json({error:'Failed to convert user to investor'})}}
 async function updateUserProfile(req, res) {
   try { return res.json(await adminService.updateUserProfile(req.params.id, req.body || {})); }
   catch (error) {
@@ -24,4 +25,4 @@ async function updateUserProfile(req, res) {
     return res.status(500).json({ error: 'Failed to update user profile' });
   }
 }
-module.exports = { getDashboardStats, getUsers, createAdmin, setUserStatus, updateUserProfile };
+module.exports = { getDashboardStats, getUsers, createAdmin, setUserStatus, updateUserProfile, convertToInvestor };
