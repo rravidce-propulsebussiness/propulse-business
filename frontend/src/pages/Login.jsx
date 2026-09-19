@@ -1,4 +1,5 @@
 import { useCallback, useState } from 'react'
+import { useCallback, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { authRequest, saveSession } from '../utils/auth'
 import GoogleButton from '../components/GoogleButton'
@@ -61,7 +62,7 @@ function Login() {
         method: 'POST',
         body: JSON.stringify({ credential, accountType }),
       })
-      finishLogin(result)
+      await finishLogin(result)
     } catch (err) {
       setError(err.message)
     } finally {
