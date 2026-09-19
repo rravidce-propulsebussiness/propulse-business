@@ -851,3 +851,76 @@
     width:100%;
   }
 }
+
+/* Final login spacing: header overlays the canvas; both panels start immediately below it */
+.login-page{
+  position:relative;
+  display:grid;
+  grid-template-columns:minmax(500px,46%) minmax(520px,54%);
+  grid-template-rows:minmax(calc(100dvh - 72px),1fr);
+  min-height:100dvh;
+  padding-top:72px;
+  box-sizing:border-box;
+  overflow-x:hidden;
+}
+.login-page .login-topbar{
+  position:absolute;
+  inset:0 0 auto 0;
+  grid-column:auto;
+  grid-row:auto;
+}
+.login-page .auth-visual{
+  grid-column:1;
+  grid-row:1;
+  min-height:calc(100dvh - 72px);
+  height:calc(100dvh - 72px);
+  margin:0;
+  padding:0;
+}
+.login-page .auth-visual-content{
+  min-height:calc(100dvh - 72px);
+  height:100%;
+  padding-top:34px;
+  padding-bottom:22px;
+  box-sizing:border-box;
+}
+.login-page .auth-card-wrap{
+  grid-column:2;
+  grid-row:1;
+  min-height:calc(100dvh - 72px);
+  height:calc(100dvh - 72px);
+  padding:34px clamp(22px,4.5vw,58px) 34px;
+  align-items:center;
+  box-sizing:border-box;
+}
+.login-page .login-card{
+  margin:0;
+}
+@media(max-width:1100px) and (min-width:851px){
+  .login-page{
+    grid-template-columns:minmax(390px,43%) minmax(500px,57%);
+  }
+}
+@media(max-width:850px){
+  .login-page{
+    display:block;
+    padding-top:64px;
+    min-height:100dvh;
+  }
+  .login-page .login-topbar{
+    position:fixed;
+  }
+  .login-page .auth-visual{
+    min-height:500px;
+    height:auto;
+  }
+  .login-page .auth-visual-content{
+    min-height:500px;
+    height:auto;
+  }
+  .login-page .auth-card-wrap{
+    min-height:0;
+    height:auto;
+    padding:20px;
+  }
+}
