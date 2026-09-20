@@ -11,7 +11,7 @@ export default function UserHeader() {
   const active=p=>{
     const [pathname,query]=p.split('?')
     if(location.pathname!==pathname) return ''
-    if(!query) return ' active'
+    if(!query) return location.search ? '' : ' active'
     const params=new URLSearchParams(query)
     const current=new URLSearchParams(location.search)
     return [...params.entries()].every(([k,v])=>current.get(k)===v)?' active':''
