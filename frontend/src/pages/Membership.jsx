@@ -308,7 +308,7 @@ export default function Membership() {
       <div className="membership-payment-modal" onClick={(event) => event.stopPropagation()}>
         <button className="membership-modal-close" onClick={() => setManualOpen(false)}>×</button>
         <span className="membership-kicker">DIRECT PAYMENT</span>
-        <h2>Complete {displayName(planType(selectedPlan))} payment</h2>
+        <h2>Complete Starter payment</h2>
         <p>{Number(checkout.walletAmount) > 0 ? 'Your wallet balance has been applied automatically. Pay only the remaining amount directly.' : 'Your wallet has no available balance, so the full amount is due directly.'}</p>
         <div className="manual-summary">
           {checkout?.coupon && <><span>Original price</span><strong>{money(checkout.coupon.subtotalAmount)}</strong><span>Coupon discount</span><strong>− {money(checkout.coupon.discountAmount)}</strong></>}
