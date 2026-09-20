@@ -84,6 +84,7 @@ export default function Membership() {
   const currentRaw = String(currentMembership?.plan_type || currentMembership?.plan?.plan_type || user?.membership_type || '').toLowerCase()
   const currentGroup = String(currentMembership?.plan_group || currentMembership?.plan?.plan_group || (currentMembership?.isPro || currentRaw === 'pro' ? 'grow' : '')).toLowerCase()
   const isProMember = Boolean(currentMembership?.isPro) || currentRaw === 'pro'
+  const hasActiveMembership = Boolean(currentMembership?.membership_plan_id && currentMembership?.expires_at && new Date(currentMembership.expires_at).getTime() > Date.now())
 
   const openPlan = (plan) => {
     if (!plan?.id) {
@@ -214,6 +215,16 @@ export default function Membership() {
           <h1>Start with <span>Propulse.</span></h1>
           <p>Choose GROW for the core Propulse membership. Upgrade from GROW to SCALE when you want the full growth-service layer.</p>
         </section>
+
+        {hasActiveMembership && <section className="membership-active-summary">
+          <div><span className="membership-kicker">YOUR CURRENT MEMBERSHIP</span><h2>{String(currentGroup).toUpperCase()}</h2></div>
+          <div className="membership-active-meta">
+            <div><span>Billing</span><strong>{period(currentMembership)}</strong></div>
+            <div><span>Started</span><strong>{dateLabel(currentMembership.starts_at)}</strong></div>
+            <div><span>Valid until</span><strong>{dateLabel(currentMembership.expires_at)}</strong></div>
+            <div><span>Remaining</span><strong>{daysLeft(currentMembership.expires_at)} days</strong></div>
+          </div>
+        </section>}
 
         {hasActiveMembership && <section className="membership-active-summary">
           <div><span className="membership-kicker">YOUR CURRENT MEMBERSHIP</span><h2>{String(currentGroup).toUpperCase()}</h2></div>
