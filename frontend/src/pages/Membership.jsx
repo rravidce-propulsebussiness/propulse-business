@@ -232,7 +232,6 @@ export default function Membership() {
             return <article className={`membership-plan ${group.type}-plan ${locked ? 'access-locked' : ''}`} key={group.key}>
               <div className="membership-plan-top">
                 <div>
-                  <span className="plan-label">{group.name.toUpperCase()}</span>
                   <h2>{group.name}</h2>
                 </div>
                 {isCurrent ? <span className="current-badge">CURRENT</span> : group.type === 'pro' ? <span className="popular-badge">BEST FOR LEADS</span> : locked ? <span className="current-badge">PRO REQUIRED</span> : <span className="popular-badge">GROW VISIBILITY</span>}
@@ -261,7 +260,6 @@ export default function Membership() {
           <article className="membership-plan investor-plan investment-access-card">
             <div className="membership-plan-top">
               <div>
-                <span className="plan-label">INVESTMENT</span>
                 <h2>Investment</h2>
               </div>
               {isProMember ? <span className="popular-badge">UNLOCKED WITH PRO</span> : <span className="current-badge">PRO REQUIRED</span>}
