@@ -663,3 +663,11 @@
 @media(prefers-reduced-motion:reduce){
   .membership-hero::before,.membership-plan,.growth-path,.growth-path a{animation:none!important;transition:none!important}
 }
+
+/* Configured GROW / SCALE pricing */
+.growth-pricing-list{display:grid;gap:10px;margin:18px 0 22px;padding:0;list-style:none}
+.growth-pricing-list li{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:10px 0;border-bottom:1px solid rgba(16,38,77,.09);color:#526b90}
+.growth-pricing-list li:last-child{border-bottom:0}
+.growth-pricing-list span{font-weight:600}
+.growth-pricing-list strong{color:#10264d;font-size:13px;white-space:nowrap}
+@media(max-width:620px){.growth-pricing-list li{align-items:flex-start;flex-direction:column;gap:4px}.growth-pricing-list strong{white-space:normal}}
