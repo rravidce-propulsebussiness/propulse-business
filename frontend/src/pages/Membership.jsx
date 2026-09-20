@@ -218,21 +218,6 @@ export default function Membership() {
   return <div className="membership-page-shell">
     <UserHeader />
     <main className="membership-page">
-      <section className="membership-hero">
-        <div className="membership-hero-copy">
-          <span className="membership-kicker">PROPULSE MEMBERSHIP</span>
-          <h1>Choose your growth goal.</h1>
-          <p>Get leads at near-generation pricing with Pro, strengthen your marketing and SEO with Booster, or choose Investment to help fund lead generation while participating in realized lead-sale income.</p>
-          <div className="membership-hero-points"><span><i /> More leads</span><span><i /> Stronger visibility</span><span><i /> Growth-focused investment</span></div>
-        </div>
-        <div className="membership-current">
-          <span>YOUR CURRENT PLAN</span>
-          <strong>{currentName}</strong>
-          <small>{currentType ? `${currentName} access is active on your account.` : 'You do not have an active paid membership yet.'}</small>
-          {currentMembership?.expires_at && <em>Active until {new Date(currentMembership.expires_at).toLocaleDateString('en-IN')}</em>}
-        </div>
-      </section>
-
       {submitted && <div className="membership-success">{checkout?.requiresExternalPayment ? 'Wallet amount was applied and the remaining direct payment was submitted for verification.' : 'Payment completed from your wallet and membership access is active.'}</div>}
       {error && <div className="membership-error">{error}</div>}
 
