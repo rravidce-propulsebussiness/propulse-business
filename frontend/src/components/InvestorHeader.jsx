@@ -21,9 +21,10 @@ export default function InvestorHeader() {
   const isActive=target=>target==='/investment'?location.pathname.startsWith('/investment'):location.pathname===target
   const leadPartnerActive=user?.role==='business'&&leadPartnerStatus==='active'
   const nav=[
-    {label:'Home',to:'/'},{label:'My Leads',to:'/my-leads'},{label:'Wallet',to:'/wallet'},{label:'Membership',to:'/membership'},
-    ...(isPro?[{label:'Investment',to:'/investment'},{label:'Available Leads',to:'/investment/leads'},{label:'Sold Leads',to:'/investment/sold-leads'},{label:'Payouts',to:'/investment/payouts'},{label:'History',to:'/investment/history'}]:[]),
-    {label:'Lead Partner',to:'/lead-partner'}
+    {label:'Home',to:'/'},
+    {label:'Investment',to:'/investment'},
+    {label:'Linked Leads',to:'/investment/leads'},
+    {label:'History',to:'/investment/history'}
   ]
   const avatar=businessName.trim().charAt(0).toUpperCase()||'B'
   return <header className="investor-header">
