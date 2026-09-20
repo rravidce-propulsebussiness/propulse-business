@@ -3,14 +3,14 @@ const walletService = require('./walletService');
 const { isProMember } = require('./membershipAccessService');
 const couponService = require('./couponService');
 
-async function createWalletFirstPayment(client,{userId,totalAmount,purchaseType,purchaseId,membershipPlanId=null,notes,coupon=null,subtotalAmount=null,useWallet=true}) {
+async function createWalletFirstPayment(client,{userId,totalAmount,purchaseType,purchaseId,membershipPlanId=null,notes,coupon=null,subtotalAmount=null,useWallet=true,membershipChangeType=null,membershipPreviousPlanId=null,membershipCredit=0,membershipTargetStartsAt=null,membershipTargetExpiresAt=null}) {
   const total=Number(totalAmount); if(!Number.isFinite(total)||total<=0) throw Object.assign(new Error('Amount must be greater than zero'),{code:'INVALID_AMOUNT'});
   if(!['membership','lead','booster','investment'].includes(purchaseType)) throw Object.assign(new Error('Invalid purchase type'),{code:'INVALID_PURCHASE'});
   if(!Number.isInteger(Number(purchaseId))||Number(purchaseId)<=0) throw Object.assign(new Error('Invalid purchase reference'),{code:'INVALID_REFERENCE'});
   await client.query('SELECT pg_advisory_xact_lock(hashtext($1))',[`purchase:${userId}:${purchaseType}:${purchaseId}`]);
   const pending=(await client.query(`SELECT * FROM payments WHERE user_id=$1 AND purchase_type=$2 AND purchase_id=$3 AND status IN ('pending','processing') ORDER BY id DESC LIMIT 1 FOR UPDATE`,[userId,purchaseType,purchaseId])).rows[0];
   if(pending) throw Object.assign(new Error('A payment for this purchase is already pending'),{code:'PAYMENT_PENDING',paymentId:pending.id});
-  const created=(await client.query(`INSERT INTO payments(user_id,membership_plan_id,amount,payment_method,status,wallet_amount,external_amount,purchase_type,purchase_id,notes,coupon_id,coupon_code,subtotal_amount,discount_amount) VALUES($1,$2,$3,'manual','pending',0,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING *`,[userId,membershipPlanId,total,purchaseType,purchaseId,notes||'Purchase payment',coupon?.coupon?.id||null,coupon?.coupon?.code||null,subtotalAmount==null?total:Number(subtotalAmount),coupon?.discountAmount||0])).rows[0];
+  const created=(await client.query(`INSERT INTO payments(user_id,membership_plan_id,amount,payment_method,status,wallet_amount,external_amount,purchase_type,purchase_id,notes,coupon_id,coupon_code,subtotal_amount,discount_amount,membership_change_type,membership_previous_plan_id,membership_credit,membership_target_starts_at,membership_target_expires_at) VALUES($1,$2,$3,'manual','pending',0,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15) RETURNING *`,[userId,membershipPlanId,total,purchaseType,purchaseId,notes||'Purchase payment',coupon?.coupon?.id||null,coupon?.coupon?.code||null,subtotalAmount==null?total:Number(subtotalAmount),coupon?.discountAmount||0,membershipChangeType,membershipPreviousPlanId,membershipCredit,membershipTargetStartsAt,membershipTargetExpiresAt])).rows[0];
   if(coupon) await couponService.reserveRedemption(client,{couponId:coupon.coupon.id,userId,paymentId:created.id,purchaseType,purchaseId,discountAmount:coupon.discountAmount});
   const allocation=useWallet
     ? await walletService.debitForPayment(client,{userId,amount:total,paymentId:created.id,referenceType:purchaseType,referenceId:purchaseId,description:`${purchaseType==='membership'?'Membership':purchaseType==='lead'?'Lead':purchaseType==='investment'?'Investment':'Booster'} purchase`})
@@ -21,13 +21,63 @@ async function createWalletFirstPayment(client,{userId,totalAmount,purchaseType,
 }
 
 async function createMembershipCheckout({userId,membershipPlanId,couponCode}) {
-  const planResult=await pool.query(`SELECT id,name,plan_group,plan_type,price,duration_days,is_active FROM membership_plans WHERE id=$1`,[membershipPlanId]); const plan=planResult.rows[0];
-  if(!plan||!plan.is_active) throw Object.assign(new Error('Membership plan is not available'),{code:'PLAN_NOT_FOUND'});
-  const type=String(plan.plan_type||'').toLowerCase(); if(!['pro','booster','investor'].includes(type)) throw Object.assign(new Error('This membership plan cannot be purchased'),{code:'INVALID_PLAN'});
-  if(['booster','investor'].includes(type)&&!(await isProMember(userId))) throw Object.assign(new Error(`An active Pro membership is required before purchasing ${type==='investor'?'Investment':'Booster'}`),{code:'PRO_REQUIRED'});
-  const client=await pool.connect(); try{await client.query('BEGIN'); const subtotal=Number(plan.price); const coupon=couponCode?await couponService.validateForUser({client,userId,code:couponCode,subtotal,purchaseType:'membership',membershipPlanId:plan.id}):null; const result=await createWalletFirstPayment(client,{userId,totalAmount:coupon?coupon.finalAmount:subtotal,purchaseType:'membership',purchaseId:plan.id,membershipPlanId:plan.id,notes:`${plan.name} membership`,coupon,subtotalAmount:subtotal}); let activation=null;if(result.externalAmount<=0){activation=await activateMembership(client,result.payment);if(coupon)await couponService.redeemForPayment(client,result.payment.id);} await client.query('COMMIT'); return {...result,plan,coupon:coupon?{code:coupon.coupon.code,discountAmount:coupon.discountAmount,subtotalAmount:subtotal,finalAmount:coupon.finalAmount}:null};}catch(e){await client.query('ROLLBACK');throw e}finally{client.release()}
-}
+  const client=await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const planResult=await client.query(`SELECT id,name,plan_group,plan_type,price,duration_days,is_active FROM membership_plans WHERE id=$1`,[membershipPlanId]);
+    const plan=planResult.rows[0];
+    if(!plan||!plan.is_active) throw Object.assign(new Error('Membership plan is not available'),{code:'PLAN_NOT_FOUND'});
+    const type=String(plan.plan_type||'').toLowerCase();
+    if(!['pro','booster','investor'].includes(type)) throw Object.assign(new Error('This membership plan cannot be purchased'),{code:'INVALID_PLAN'});
+    if(['booster','investor'].includes(type)&&!(await isProMember(userId))) throw Object.assign(new Error(`An active Pro membership is required before purchasing ${type==='investor'?'Investment':'Booster'}`),{code:'PRO_REQUIRED'});
 
+    let changeType=null, previousPlanId=null, membershipCredit=0, targetStartsAt=null, targetExpiresAt=null, currentMembership=null;
+    if(type==='pro' && ['grow','scale'].includes(String(plan.plan_group||'').toLowerCase())){
+      const currentResult=await client.query(`SELECT m.id,m.membership_plan_id,m.starts_at,m.expires_at,m.status,
+          p.id AS plan_id,p.name AS plan_name,p.plan_group,p.plan_type,p.price,p.duration_days,p.billing_period,p.billing_months
+        FROM memberships m JOIN membership_plans p ON p.id=m.membership_plan_id
+        WHERE m.user_id=$1 AND m.status='active' AND m.starts_at<=CURRENT_TIMESTAMP AND m.expires_at>CURRENT_TIMESTAMP
+          AND LOWER(REPLACE(COALESCE(p.plan_type,''),'-','_'))='pro'
+        ORDER BY m.expires_at DESC,m.id DESC LIMIT 1 FOR UPDATE OF m`,[userId]);
+      currentMembership=currentResult.rows[0]||null;
+      if(currentMembership){
+        if(Number(currentMembership.plan_id)===Number(plan.id)){
+          changeType='renew';
+        } else {
+          const currentGroup=String(currentMembership.plan_group||'').toLowerCase();
+          const targetGroup=String(plan.plan_group||'').toLowerCase();
+          if(currentGroup==='scale' && targetGroup==='grow') throw Object.assign(new Error('A SCALE membership already includes GROW. You cannot downgrade during an active SCALE term.'),{code:'SCALE_DOWNGRADE_NOT_ALLOWED'});
+          changeType=targetGroup==='scale'?'upgrade':'billing_change';
+        }
+        const now=new Date();
+        const starts=new Date(currentMembership.starts_at);
+        const expires=new Date(currentMembership.expires_at);
+        const remainingDays=Math.max(0,Math.ceil((expires.getTime()-now.getTime())/86400000));
+        const currentDuration=Math.max(1,Number(currentMembership.duration_days||30));
+        if(changeType!=='renew'){
+          membershipCredit=Math.min(Number(plan.price),Math.max(0,Number(currentMembership.price||0)*(remainingDays/currentDuration)));
+          targetStartsAt=starts;
+          targetExpiresAt=new Date(starts);
+          targetExpiresAt.setDate(targetExpiresAt.getDate()+Math.max(1,Number(plan.duration_days||30)));
+        }
+        previousPlanId=currentMembership.plan_id;
+      }
+    }
+
+    const grossPlanPrice=Number(plan.price);
+    const upgradeSubtotal=Math.max(0,Number((grossPlanPrice-membershipCredit).toFixed(2)));
+    const subtotal=changeType && changeType!=='renew' ? upgradeSubtotal : grossPlanPrice;
+    const coupon=couponCode?await couponService.validateForUser({client,userId,code:couponCode,subtotal,purchaseType:'membership',membershipPlanId:plan.id}):null;
+    const total=Number((coupon?coupon.finalAmount:subtotal).toFixed(2));
+    const result=await createWalletFirstPayment(client,{userId,totalAmount:total,purchaseType:'membership',purchaseId:plan.id,membershipPlanId:plan.id,
+      notes:changeType&&changeType!=='renew'?`Membership ${changeType}: ${currentMembership.plan_name} → ${plan.name}`:`${plan.name} membership`,
+      coupon,subtotalAmount:subtotal,membershipChangeType:changeType,membershipPreviousPlanId:previousPlanId,membershipCredit,membershipTargetStartsAt:targetStartsAt,membershipTargetExpiresAt:targetExpiresAt});
+    let activation=null;
+    if(result.externalAmount<=0){activation=await activateMembership(client,result.payment);if(coupon)await couponService.redeemForPayment(client,result.payment.id);}
+    await client.query('COMMIT');
+    return {...result,plan,proration:changeType&&changeType!=='renew'?{changeType,previousPlanName:currentMembership?.plan_name||null,previousPlanPrice:Number(currentMembership?.price||0),credit:Number(membershipCredit.toFixed(2)),grossPrice:grossPlanPrice,payableBeforeCoupon:subtotal,targetStartsAt,targetExpiresAt}:null,coupon:coupon?{code:coupon.coupon.code,discountAmount:coupon.discountAmount,subtotalAmount:subtotal,finalAmount:coupon.finalAmount}:null};
+  }catch(e){await client.query('ROLLBACK');throw e}finally{client.release()}
+}
 async function submitPaymentReference({userId,paymentId,manualReference,proofUrl,notes}) {
   const reference=String(manualReference||'').trim(); if(!reference) throw Object.assign(new Error('Payment reference / UTR is required'),{code:'REFERENCE_REQUIRED'});
   const client=await pool.connect(); try{await client.query('BEGIN'); await client.query('SELECT pg_advisory_xact_lock(hashtext($1))',[`payment-reference:${reference.toLowerCase()}`]); const duplicate=(await client.query(`SELECT id FROM payments WHERE LOWER(BTRIM(manual_reference))=LOWER(BTRIM($1)) AND id<>$2 LIMIT 1`,[reference,paymentId])).rows[0]; if(duplicate)throw Object.assign(new Error('This payment reference / UTR has already been submitted'),{code:'DUPLICATE_REFERENCE'}); const row=(await client.query(`SELECT * FROM payments WHERE id=$1 AND user_id=$2 FOR UPDATE`,[paymentId,userId])).rows[0]; if(!row)throw Object.assign(new Error('Payment not found'),{code:'NOT_FOUND'}); if(row.status!=='pending'||Number(row.external_amount)<=0)throw Object.assign(new Error('This payment is not awaiting direct payment'),{code:'PAYMENT_NOT_PENDING'}); const updated=(await client.query(`UPDATE payments SET manual_reference=$1,proof_url=COALESCE($2,proof_url),notes=COALESCE($3,notes),updated_at=CURRENT_TIMESTAMP WHERE id=$4 RETURNING *`,[reference,proofUrl||null,notes||null,paymentId])).rows[0]; await client.query('COMMIT'); return updated;}catch(e){await client.query('ROLLBACK');throw e}finally{client.release()}
