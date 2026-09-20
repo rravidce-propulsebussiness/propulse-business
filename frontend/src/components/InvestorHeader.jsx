@@ -24,7 +24,8 @@ export default function InvestorHeader() {
     {label:'Home',to:'/'},
     {label:'Investment',to:'/investment'},
     {label:'Linked Leads',to:'/investment/leads'},
-    {label:'History',to:'/investment/history'}
+    {label:'History',to:'/investment/history'},
+    {label:'Lead Partner',to:'/lead-partner'}
   ]
   const avatar=businessName.trim().charAt(0).toUpperCase()||'B'
   return <header className="investor-header">
