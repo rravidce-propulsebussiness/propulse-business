@@ -9,6 +9,8 @@ const money = (value) => `₹${Number(value || 0).toLocaleString('en-IN', { maxi
 const asArray = (value) => (Array.isArray(value) ? value : [])
 const planType = (plan) => String(plan?.plan_type || '').toLowerCase()
 const normalizeLabel = (value) => String(value || '').trim().replace(/[-_]+/g, ' ').replace(/\s+/g, ' ')
+const dateLabel = (value) => value ? new Date(value).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'
+const daysLeft = (value) => value ? Math.max(0, Math.ceil((new Date(value).getTime() - Date.now()) / 86400000)) : null
 const period = (plan) => {
   if (plan?.billing_period) return normalizeLabel(plan.billing_period)
   const months = Number(plan?.billing_months || 1)
@@ -24,7 +26,8 @@ export default function Membership() {
   const [currentMembership, setCurrentMembership] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [selectedCycleId, setSelectedCycleId] = useState(null)
+  const [selectedGrowCycleId, setSelectedGrowCycleId] = useState(null)
+  const [selectedScaleCycleId, setSelectedScaleCycleId] = useState(null)
   const [manualOpen, setManualOpen] = useState(false)
   const [selectedPlan, setSelectedPlan] = useState(null)
   const [checkout, setCheckout] = useState(null)
@@ -63,8 +66,8 @@ export default function Membership() {
 
   const growPlans = useMemo(() => plans.filter((item) => planType(item) === 'pro' && String(item?.plan_group || '').toLowerCase() === 'grow').sort((a, b) => Number(a?.billing_months || 0) - Number(b?.billing_months || 0) || Number(a?.price || 0) - Number(b?.price || 0)), [plans])
   const scalePlans = useMemo(() => plans.filter((item) => planType(item) === 'pro' && String(item?.plan_group || '').toLowerCase() === 'scale').sort((a, b) => Number(a?.billing_months || 0) - Number(b?.billing_months || 0) || Number(a?.price || 0) - Number(b?.price || 0)), [plans])
-  const selectedGrowPlan = useMemo(() => growPlans.find((item) => String(item.id) === String(selectedCycleId)) || growPlans[0] || null, [growPlans, selectedCycleId])
-  const selectedScalePlan = useMemo(() => scalePlans.find((item) => String(item.id) === String(selectedCycleId)) || scalePlans[0] || null, [scalePlans, selectedCycleId])
+  const selectedGrowPlan = useMemo(() => growPlans.find((item) => String(item.id) === String(selectedGrowCycleId)) || growPlans.find((item) => String(item.id) === String(currentMembership?.membership_plan_id)) || growPlans[0] || null, [growPlans, selectedGrowCycleId, currentMembership])
+  const selectedScalePlan = useMemo(() => scalePlans.find((item) => String(item.id) === String(selectedScaleCycleId)) || scalePlans.find((item) => String(item.id) === String(currentMembership?.membership_plan_id)) || scalePlans[0] || null, [scalePlans, selectedScaleCycleId, currentMembership])
 
   const currentRaw = String(currentMembership?.plan_type || currentMembership?.plan?.plan_type || user?.membership_type || '').toLowerCase()
   const currentGroup = String(currentMembership?.plan_group || currentMembership?.plan?.plan_group || (currentMembership?.isPro || currentRaw === 'pro' ? 'grow' : '')).toLowerCase()
@@ -214,16 +217,17 @@ export default function Membership() {
                 <div className="card-billing">
                   <div><span>CHOOSE BILLING</span><small>{level.plans.length > 1 ? 'Flexible billing cycle' : 'Configured by Admin'}</small></div>
                   {level.plans.length > 0 ? <div className="membership-cycles membership-cycles-dynamic">
-                    {level.plans.map((item) => <button type="button" key={item.id} className={String(level.selected?.id) === String(item.id) ? 'active' : ''} onClick={() => setSelectedCycleId(item.id)}>{period(item)}</button>)}
+                    {level.plans.map((item) => <button type="button" key={item.id} className={String(level.selected?.id) === String(item.id) ? 'active' : ''} onClick={() => level.key === 'grow' ? setSelectedGrowCycleId(item.id) : setSelectedScaleCycleId(item.id)}>{period(item)}</button>)}
                   </div> : <div className="membership-single-cycle unavailable">No active {level.label} billing cycle configured</div>}
                 </div>
                 <div className="membership-price">{level.selected ? money(level.selected.price) : '—'}<small>{level.selected ? ' / ' + period(level.selected).toLowerCase() : ''}</small></div>
+                {isCurrent && currentMembership && <div className="membership-current-details"><div><span>Current billing</span><strong>{period(currentMembership)}</strong></div><div><span>Started</span><strong>{dateLabel(currentMembership.starts_at)}</strong></div><div><span>Valid until</span><strong>{dateLabel(currentMembership.expires_at)}</strong></div><div><span>Remaining</span><strong>{daysLeft(currentMembership.expires_at)} days</strong></div></div>}
                 <div className="membership-divider" />
                 <details className="membership-fold" open><summary><span>{level.label} includes</span><b>+</b></summary>
                   <ul>{level.benefits.map((item) => <li key={item}><b>✓</b><span>{item}</span></li>)}</ul>
                 </details>
                 {isCurrent
-                  ? <button className="membership-primary current" disabled>✓ Current {level.label}</button>
+                  ? <button className="membership-primary" onClick={() => openPlan(level.selected)} disabled={submitting}>{String(currentMembership?.membership_plan_id) === String(level.selected?.id) ? `Renew ${level.label}` : `Change to ${period(level.selected)}`} <span>→</span></button>
                   : currentGroup === 'scale' && level.key === 'grow'
                     ? <button className="membership-primary current" disabled>✓ Included in SCALE</button>
                     : !level.selected
