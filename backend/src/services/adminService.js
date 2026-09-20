@@ -4,6 +4,7 @@ const { validateSelections } = require('./profileService');
 
 const DEFAULT_PAGE_SIZE = 25;
 const MAX_PAGE_SIZE = 100;
+const MANAGEABLE_ROLES = new Set(['business','lead_partner','admin']);
 
 function parsePagination(query = {}) {
   const rawPage = Number.parseInt(query.page, 10);
@@ -22,6 +23,8 @@ async function getDashboardStats() {
       (SELECT COUNT(*)::int FROM users WHERE is_active = TRUE) AS active_users,
       (SELECT COUNT(*)::int FROM users WHERE role = 'business') AS businesses,
       (SELECT COUNT(*)::int FROM users WHERE role = 'business' AND is_active = TRUE) AS active_businesses,
+      (SELECT COUNT(*)::int FROM users WHERE role = 'lead_partner') AS lead_partners,
+      (SELECT COUNT(*)::int FROM users WHERE role = 'lead_partner' AND is_active = TRUE) AS active_lead_partners,
       (SELECT COUNT(*)::int FROM industries WHERE is_active = TRUE) AS industries,
       (SELECT COUNT(*)::int FROM services WHERE is_active = TRUE) AS services,
       (SELECT COUNT(*)::int FROM subservices WHERE is_active = TRUE) AS subservices,
@@ -29,7 +32,7 @@ async function getDashboardStats() {
       (SELECT COUNT(*)::int FROM cities WHERE is_active = TRUE) AS cities
   `);
   const row = result.rows[0];
-  return { totalUsers: row.total_users, activeUsers: row.active_users, businesses: row.businesses, activeBusinesses: row.active_businesses, industries: row.industries, services: row.services, subservices: row.subservices, states: row.states, cities: row.cities };
+  return { totalUsers: row.total_users, activeUsers: row.active_users, businesses: row.businesses, activeBusinesses: row.active_businesses, leadPartners: row.lead_partners, activeLeadPartners: row.active_lead_partners, industries: row.industries, services: row.services, subservices: row.subservices, states: row.states, cities: row.cities };
 }
 
 async function getUsers({ search = '', role = 'all', status = 'all', industryId = '', serviceId = '', stateId = '', cityId = '', page, pageSize, limit } = {}) {
@@ -40,7 +43,7 @@ async function getUsers({ search = '', role = 'all', status = 'all', industryId 
     params.push(`%${String(search).trim()}%`);
     conditions.push(`(u.name ILIKE $${params.length} OR u.email ILIKE $${params.length} OR bp.business_name ILIKE $${params.length} OR bp.phone ILIKE $${params.length})`);
   }
-  if (['admin','business'].includes(role)) { params.push(role); conditions.push(`u.role = ${params.length}`); }
+  if (['admin','business','lead_partner'].includes(role)) { params.push(role); conditions.push(`u.role = ${params.length}`); }
   if (status === 'active' || status === 'inactive') { params.push(status === 'active'); conditions.push(`u.is_active = $${params.length}`); }
   if (industryId) { params.push(industryId); conditions.push(`EXISTS (SELECT 1 FROM business_profile_services x WHERE x.business_profile_id=bp.id AND x.industry_id=$${params.length} AND x.is_active=TRUE)`); }
   if (serviceId) { params.push(serviceId); conditions.push(`EXISTS (SELECT 1 FROM business_profile_services x WHERE x.business_profile_id=bp.id AND x.service_id=$${params.length} AND x.is_active=TRUE)`); }
@@ -60,7 +63,6 @@ async function getUsers({ search = '', role = 'all', status = 'all', industryId 
   const result = await pool.query(`
     SELECT u.id, u.name, u.email, u.role, u.is_active, u.created_at,
            bp.id AS business_profile_id, bp.business_name, bp.phone, bp.business_details,
-           lp.id AS lead_partner_id, lp.status AS lead_partner_status,
            COALESCE((SELECT COUNT(*)::int FROM business_profile_services x WHERE x.business_profile_id = bp.id AND x.is_active = TRUE), 0) AS service_count,
            COALESCE((SELECT COUNT(*)::int FROM business_profile_locations x WHERE x.business_profile_id = bp.id AND x.is_active = TRUE), 0) AS location_count,
            COALESCE((SELECT json_agg(json_build_object('industryId',x.industry_id,'industryName',i.name,'serviceId',x.service_id,'serviceName',s.name,'subserviceId',x.subservice_id,'subserviceName',ss.name) ORDER BY i.name,s.name,ss.name)
@@ -77,7 +79,6 @@ async function getUsers({ search = '', role = 'all', status = 'all', industryId 
              WHERE x.business_profile_id=bp.id AND x.is_active=TRUE), '[]'::json) AS locations
     FROM users u
     LEFT JOIN business_profiles bp ON bp.user_id = u.id
-    LEFT JOIN lead_partners lp ON lp.user_id = u.id AND u.role='business'
     ${whereClause}
     ORDER BY u.created_at DESC, u.id DESC
     LIMIT $${dataParams.length - 1} OFFSET $${dataParams.length}
@@ -123,6 +124,30 @@ async function setUserStatus(userId,isActive) {
   return result.rows[0]||null;
 }
 
+async function ensureLeadPartnerProfile(client,userId){
+  const existing=(await client.query('SELECT id,status FROM lead_partners WHERE user_id=$1 FOR UPDATE',[userId])).rows[0];
+  if(existing)return existing;
+  return (await client.query(\`INSERT INTO lead_partners(user_id,status) VALUES($1,'active') RETURNING id,status\`,[userId])).rows[0];
+}
+
+async function setUserRole({userId,role,actingAdminId}){
+  const targetUserId=Number(userId),normalizedRole=String(role||'').trim().toLowerCase(),actorId=Number(actingAdminId);
+  if(!Number.isInteger(targetUserId)||!MANAGEABLE_ROLES.has(normalizedRole)){const error=new Error('Choose a valid account type: User, Lead Partner, or Admin');error.code='INVALID_ROLE';throw error;}
+  if(targetUserId===actorId){const error=new Error('You cannot change your own administrator role.');error.code='SELF_ROLE_CHANGE';throw error;}
+  const client=await pool.connect();
+  try{await client.query('BEGIN');
+    const current=(await client.query('SELECT id,name,email,role,is_active FROM users WHERE id=$1 FOR UPDATE',[targetUserId])).rows[0];
+    if(!current){const error=new Error('User not found');error.code='NOT_FOUND';throw error;}
+    if(current.role==='admin'&&normalizedRole!=='admin'){
+      const activeAdmins=Number((await client.query(`SELECT COUNT(*)::int AS total FROM users WHERE role='admin' AND is_active=TRUE AND id<>$1`,[targetUserId])).rows[0].total||0);
+      if(activeAdmins<1){const error=new Error('At least one other active administrator must remain.');error.code='LAST_ADMIN';throw error;}
+    }
+    if(normalizedRole==='lead_partner')await ensureLeadPartnerProfile(client,targetUserId);
+    const updated=(await client.query(`UPDATE users SET role=$1,auth_version=auth_version+1,updated_at=CURRENT_TIMESTAMP WHERE id=$2 RETURNING id,name,email,role,is_active,created_at`,[normalizedRole,targetUserId])).rows[0];
+    await client.query('COMMIT'); return updated;
+  }catch(error){await client.query('ROLLBACK');throw error;}finally{client.release();}
+}
+
 async function updateUserProfile(userId, { name, email, phone, businessName, businessDetails, services, locations }) {
   const client = await pool.connect();
   try {
@@ -135,7 +160,7 @@ async function updateUserProfile(userId, { name, email, phone, businessName, bus
     const duplicate = await client.query('SELECT id FROM users WHERE LOWER(email)=$1 AND id<>$2', [normalizedEmail,userId]);
     if (duplicate.rowCount) { const e=new Error('An account with this email already exists'); e.code='EMAIL_EXISTS'; throw e; }
     const updatedUser = (await client.query('UPDATE users SET name=$1,email=$2,updated_at=CURRENT_TIMESTAMP WHERE id=$3 RETURNING id,name,email,role,is_active,created_at', [cleanName,normalizedEmail,userId])).rows[0];
-    if (user.role === 'business') {
+    if (['business','lead_partner'].includes(user.role)) {
       const hasConfiguration = Array.isArray(services) || Array.isArray(locations);
       if (hasConfiguration) await validateSelections(client, services, locations);
       const profile = (await client.query('SELECT id FROM business_profiles WHERE user_id=$1 FOR UPDATE',[userId])).rows[0];
@@ -163,4 +188,4 @@ async function updateUserProfile(userId, { name, email, phone, businessName, bus
 }
 
 
-module.exports={getDashboardStats,getUsers,createAdmin,setUserStatus,updateUserProfile};
+module.exports={getDashboardStats,getUsers,createAdmin,setUserStatus,setUserRole,updateUserProfile};
