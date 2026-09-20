@@ -112,8 +112,7 @@ async function getAdminPartners({ status, page = 1, limit = 50 } = {}) {
     conditions.push(`lp.status=$${values.length}`);
   }
   const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
-  const partnerWhere = conditions.length ? `${where} AND u.role='business'` : `WHERE u.role='business'`;
-  const count = await pool.query(`SELECT COUNT(*)::int AS total FROM lead_partners lp INNER JOIN users u ON u.id=lp.user_id ${partnerWhere}`, values);
+  const count = await pool.query(`SELECT COUNT(*)::int AS total FROM lead_partners lp ${where}`, values);
   values.push(safeLimit, offset);
   const rows = await pool.query(
     `SELECT lp.*, u.name AS user_name, u.email AS user_email,
@@ -122,7 +121,7 @@ async function getAdminPartners({ status, page = 1, limit = 50 } = {}) {
      FROM lead_partners lp
      INNER JOIN users u ON u.id=lp.user_id
      LEFT JOIN leads l ON l.lead_partner_id=lp.id
-     ${partnerWhere}
+     ${where}
      GROUP BY lp.id,u.name,u.email
      ORDER BY lp.created_at DESC,lp.id DESC
      LIMIT $${values.length - 1} OFFSET $${values.length}`,
@@ -134,11 +133,7 @@ async function getAdminPartners({ status, page = 1, limit = 50 } = {}) {
 async function updateStatus(partnerId, status) {
   if (!PARTNER_STATUSES.includes(status)) throw new Error('Invalid partner status');
   const result = await pool.query(
-    `UPDATE lead_partners lp
-     SET status=$1, updated_at=CURRENT_TIMESTAMP
-     FROM users u
-     WHERE lp.id=$2 AND u.id=lp.user_id AND u.role='business'
-     RETURNING lp.*`,
+    `UPDATE lead_partners SET status=$1,updated_at=CURRENT_TIMESTAMP WHERE id=$2 RETURNING *`,
     [status, partnerId]
   );
   return result.rows[0] || null;
