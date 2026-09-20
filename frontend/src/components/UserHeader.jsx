@@ -42,11 +42,8 @@ export default function UserHeader() {
       <Link className={active("/")} to="/" onClick={()=>setOpen(false)}>Home</Link>
       <Link className={active("/purchased-leads")} to="/purchased-leads" onClick={()=>setOpen(false)}>Purchased Leads</Link>
       <Link className={active("/wallet")} to="/wallet" onClick={()=>setOpen(false)}>Wallet</Link>
-      {isPro ? (
-        <Link className={active("/investment")} to="/investment" onClick={()=>setOpen(false)}>Investment</Link>
-      ) : (
-        <Link className={active("/membership")} to="/membership" onClick={()=>setOpen(false)}>Membership</Link>
-      )}
+      <Link className={active("/membership")} to="/membership" onClick={()=>setOpen(false)}>Membership</Link>
+      {isPro && <Link className={active("/investment")} to="/investment" onClick={()=>setOpen(false)}>Investment</Link>}
       <Link className={active("/contact?audience=users")} to="/contact?audience=users" onClick={()=>setOpen(false)}>Contact</Link>
       <button className="user-header-mobile-logout" onClick={logout}>Logout</button>
     </nav>
