@@ -33,7 +33,7 @@ export default function AdminUsers() {
   useEffect(() => { setUserPage(1); }, [query, role, status]);
   useEffect(() => { loadUsers(); }, [query, role, status, userPage]);
 
-  const active = users.filter(u => u.is_active).length, businesses = users.filter(u => u.role === 'business').length, admins = users.filter(u => u.role === 'admin').length;
+  const active = users.filter(u => u.is_active).length, businesses = users.filter(u => u.role === 'business').length, leadPartners = users.filter(u => u.role === 'lead_partner').length, admins = users.filter(u => u.role === 'admin').length;
   const serviceOptions = useMemo(() => editForm && catalogs ? editForm.services.map(x => catalogs.services.filter(s => String(s.industry_id) === String(x.industryId))) : [], [editForm, catalogs]);
   const subserviceOptions = useMemo(() => editForm && catalogs ? editForm.services.map(x => catalogs.subservices.filter(s => String(s.service_id) === String(x.serviceId))) : [], [editForm, catalogs]);
   const cityOptions = useMemo(() => editForm && catalogs ? editForm.locations.map(x => catalogs.cities.filter(c => String(c.state_id) === String(x.stateId))) : [], [editForm, catalogs]);
