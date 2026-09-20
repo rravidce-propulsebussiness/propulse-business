@@ -691,3 +691,9 @@
 .coupon-proration-summary .total{padding-top:8px;border-top:1px solid #dce6f2;font-weight:800}
 .coupon-proration-summary .total strong{font-size:16px;color:#f45125}
 @media(max-width:560px){.membership-proration-preview,.coupon-proration-summary{grid-template-columns:1fr auto}}
+
+.membership-active-summary{max-width:1180px;margin:0 auto 18px;padding:18px 22px;border:1px solid #dbe6f2;border-radius:18px;background:linear-gradient(135deg,#f8fbff,#fff);box-shadow:0 12px 30px rgba(10,45,90,.07);display:flex;align-items:center;justify-content:space-between;gap:20px}
+.membership-active-summary h2{margin:4px 0 0;font-size:28px;color:#0b2d63}
+.membership-active-meta{display:grid;grid-template-columns:repeat(4,minmax(100px,1fr));gap:14px}
+.membership-active-meta div{display:flex;flex-direction:column;gap:4px}.membership-active-meta span{font-size:10px;font-weight:800;text-transform:uppercase;color:#7b8da7}.membership-active-meta strong{font-size:13px;color:#173d70;white-space:nowrap}
+@media(max-width:900px){.membership-active-summary{align-items:flex-start;flex-direction:column}.membership-active-meta{width:100%;grid-template-columns:repeat(2,1fr)}}
