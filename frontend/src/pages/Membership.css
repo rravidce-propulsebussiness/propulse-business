@@ -473,3 +473,193 @@
   .investor-model b{font-size:6.5px}.investor-model span{font-size:8px}
   .membership-value{gap:23px;margin-top:18px;padding:20px 23px;border-radius:17px}
 }
+
+
+/* Starter / Grow / Scale membership model */
+.membership-hero{
+  position:relative;
+  text-align:center;
+  padding:34px 20px 26px;
+  margin-bottom:10px;
+}
+.membership-hero::before{
+  content:'';
+  position:absolute;
+  top:8px;
+  left:50%;
+  width:180px;
+  height:180px;
+  transform:translateX(-50%);
+  border-radius:50%;
+  background:radial-gradient(circle,rgba(244,81,37,.10),transparent 68%);
+  pointer-events:none;
+}
+.membership-hero-kicker{
+  position:relative;
+  display:inline-flex;
+  padding:7px 14px;
+  border:1px solid #ffd9cb;
+  border-radius:999px;
+  background:#fff5f0;
+  color:#d9562b;
+  font-size:8px;
+  font-weight:950;
+  letter-spacing:.2em;
+}
+.membership-hero h1{
+  position:relative;
+  margin:15px 0 8px;
+  color:#0b2d63;
+  font-size:clamp(34px,4vw,54px);
+  line-height:1;
+  letter-spacing:-.055em;
+}
+.membership-hero h1 span{color:var(--orange)}
+.membership-hero p{
+  position:relative;
+  max-width:650px;
+  margin:0 auto;
+  color:#70819a;
+  font-size:12px;
+  line-height:1.65;
+}
+.membership-plans-single{
+  grid-template-columns:minmax(0,720px);
+  justify-content:center;
+}
+.starter-plan{
+  border:2px solid var(--orange);
+  box-shadow:0 20px 55px rgba(244,81,37,.12);
+  padding:28px;
+}
+.starter-plan::before{transform:scaleX(1);background:var(--orange)}
+.membership-stage,.growth-stage{
+  display:block;
+  margin-bottom:8px;
+  color:var(--orange);
+  font-size:9px;
+  font-weight:950;
+  letter-spacing:.2em;
+}
+.starter-plan h2{font-size:38px}
+.starter-lead-copy{
+  margin:9px 0 0;
+  color:#19385f;
+  font-size:15px;
+  font-weight:850;
+}
+.membership-cycles-dynamic{
+  grid-template-columns:repeat(auto-fit,minmax(90px,1fr));
+}
+.membership-single-cycle.unavailable{color:#9aa6b5}
+.membership-growth-paths{
+  margin-top:28px;
+}
+.growth-path-heading{
+  text-align:center;
+  margin:0 auto 16px;
+  max-width:700px;
+}
+.growth-path-heading h2{
+  margin:5px 0 7px;
+  color:#102d57;
+  font-size:26px;
+  letter-spacing:-.04em;
+}
+.growth-path-heading p{
+  margin:0;
+  color:#78879b;
+  font-size:11px;
+  line-height:1.6;
+}
+.growth-path-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:18px;
+}
+.growth-path{
+  position:relative;
+  padding:24px;
+  border:1px solid #dce5ef;
+  border-radius:20px;
+  background:rgba(255,255,255,.94);
+  box-shadow:0 10px 30px rgba(11,45,99,.06);
+  overflow:hidden;
+}
+.growth-path::after{
+  content:'';
+  position:absolute;
+  right:-55px;
+  top:-55px;
+  width:150px;
+  height:150px;
+  border-radius:50%;
+  background:rgba(23,101,169,.07);
+}
+.scale-path::after{background:rgba(45,168,102,.08)}
+.growth-path h3{
+  position:relative;
+  margin:0 0 8px;
+  color:#15345d;
+  font-size:24px;
+  letter-spacing:-.035em;
+}
+.growth-path p{
+  position:relative;
+  margin:0 0 13px;
+  color:#718199;
+  font-size:10px;
+  line-height:1.65;
+}
+.growth-path ul{
+  position:relative;
+  list-style:none;
+  margin:0 0 18px;
+  padding:0;
+}
+.growth-path li{
+  position:relative;
+  margin:7px 0;
+  padding-left:18px;
+  color:#415978;
+  font-size:10px;
+}
+.growth-path li::before{
+  content:'✓';
+  position:absolute;
+  left:0;
+  color:#1765a9;
+  font-weight:950;
+}
+.scale-path li::before{color:#2da866}
+.growth-path a{
+  position:relative;
+  display:inline-flex;
+  align-items:center;
+  gap:7px;
+  min-height:40px;
+  padding:0 16px;
+  border:1px solid #d8e4f0;
+  border-radius:10px;
+  color:#173b67;
+  background:#f7faff;
+  font-size:10px;
+  font-weight:900;
+  text-decoration:none;
+  transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease;
+}
+.growth-path a:hover{
+  transform:translateY(-2px);
+  border-color:#c5d6e8;
+  box-shadow:0 8px 20px rgba(11,45,99,.08);
+}
+.scale-path a{color:#237b4e;background:#f3fbf6;border-color:#d1ebdc}
+@media(max-width:700px){
+  .membership-hero{padding:25px 10px 20px}
+  .membership-hero h1{font-size:36px}
+  .starter-plan{padding:20px}
+  .growth-path-grid{grid-template-columns:1fr}
+}
+@media(prefers-reduced-motion:reduce){
+  .membership-hero::before,.membership-plan,.growth-path,.growth-path a{animation:none!important;transition:none!important}
+}
