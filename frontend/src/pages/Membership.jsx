@@ -11,6 +11,17 @@ const planType = (plan) => String(plan?.plan_type || '').toLowerCase()
 const normalizeLabel = (value) => String(value || '').trim().replace(/[-_]+/g, ' ').replace(/\s+/g, ' ')
 const dateLabel = (value) => value ? new Date(value).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'
 const daysLeft = (value) => value ? Math.max(0, Math.ceil((new Date(value).getTime() - Date.now()) / 86400000)) : null
+const localProration = (current, target) => {
+  if (!current || !target || String(current.membership_plan_id) === String(target.id)) return null
+  const remainingDays = daysLeft(current.expires_at) || 0
+  const currentPrice = Number(current.price || 0)
+  const currentDuration = Math.max(1, Number(current.duration_days || 30))
+  const credit = Math.min(currentPrice, Math.max(0, Number((currentPrice * remainingDays / currentDuration).toFixed(2))))
+  const payable = Math.max(0, Number((Number(target.price || 0) - credit).toFixed(2)))
+  const targetExpiry = current.starts_at ? new Date(current.starts_at) : new Date()
+  targetExpiry.setDate(targetExpiry.getDate() + Math.max(1, Number(target.duration_days || 30)))
+  return { credit, payable, remainingDays, targetExpiry }
+}
 const period = (plan) => {
   if (plan?.billing_period) return normalizeLabel(plan.billing_period)
   const months = Number(plan?.billing_months || 1)
@@ -68,6 +79,7 @@ export default function Membership() {
   const scalePlans = useMemo(() => plans.filter((item) => planType(item) === 'pro' && String(item?.plan_group || '').toLowerCase() === 'scale').sort((a, b) => Number(a?.billing_months || 0) - Number(b?.billing_months || 0) || Number(a?.price || 0) - Number(b?.price || 0)), [plans])
   const selectedGrowPlan = useMemo(() => growPlans.find((item) => String(item.id) === String(selectedGrowCycleId)) || growPlans.find((item) => String(item.id) === String(currentMembership?.membership_plan_id)) || growPlans[0] || null, [growPlans, selectedGrowCycleId, currentMembership])
   const selectedScalePlan = useMemo(() => scalePlans.find((item) => String(item.id) === String(selectedScaleCycleId)) || scalePlans.find((item) => String(item.id) === String(currentMembership?.membership_plan_id)) || scalePlans[0] || null, [scalePlans, selectedScaleCycleId, currentMembership])
+  const selectedProration = useMemo(() => localProration(currentMembership, selectedPlan), [currentMembership, selectedPlan])
 
   const currentRaw = String(currentMembership?.plan_type || currentMembership?.plan?.plan_type || user?.membership_type || '').toLowerCase()
   const currentGroup = String(currentMembership?.plan_group || currentMembership?.plan?.plan_group || (currentMembership?.isPro || currentRaw === 'pro' ? 'grow' : '')).toLowerCase()
@@ -221,13 +233,16 @@ export default function Membership() {
                   </div> : <div className="membership-single-cycle unavailable">No active {level.label} billing cycle configured</div>}
                 </div>
                 <div className="membership-price">{level.selected ? money(level.selected.price) : '—'}<small>{level.selected ? ' / ' + period(level.selected).toLowerCase() : ''}</small></div>
+                {isCurrent && level.selected && String(currentMembership?.membership_plan_id) !== String(level.selected.id) && (() => { const p = localProration(currentMembership, level.selected); return p ? <div className="membership-proration-preview"><span>Unused current-plan credit</span><strong>− {money(p.credit)}</strong><span>You pay to change</span><strong>{money(p.payable)}</strong><small>New validity ends {dateLabel(p.targetExpiry)}</small></div> : null })()}
                 {isCurrent && currentMembership && <div className="membership-current-details"><div><span>Current billing</span><strong>{period(currentMembership)}</strong></div><div><span>Started</span><strong>{dateLabel(currentMembership.starts_at)}</strong></div><div><span>Valid until</span><strong>{dateLabel(currentMembership.expires_at)}</strong></div><div><span>Remaining</span><strong>{daysLeft(currentMembership.expires_at)} days</strong></div></div>}
                 <div className="membership-divider" />
                 <details className="membership-fold" open><summary><span>{level.label} includes</span><b>+</b></summary>
                   <ul>{level.benefits.map((item) => <li key={item}><b>✓</b><span>{item}</span></li>)}</ul>
                 </details>
                 {isCurrent
-                  ? <button className="membership-primary" onClick={() => openPlan(level.selected)} disabled={submitting}>{String(currentMembership?.membership_plan_id) === String(level.selected?.id) ? `Renew ${level.label}` : `Change to ${period(level.selected)}`} <span>→</span></button>
+                  ? String(currentMembership?.membership_plan_id) === String(level.selected?.id)
+                    ? <button className="membership-primary current" disabled>✓ Current {period(level.selected)}</button>
+                    : <button className="membership-primary" onClick={() => openPlan(level.selected)} disabled={submitting}>{`Change to ${period(level.selected)}`} <span>→</span></button>
                   : currentGroup === 'scale' && level.key === 'grow'
                     ? <button className="membership-primary current" disabled>✓ Included in SCALE</button>
                     : !level.selected
@@ -272,7 +287,8 @@ export default function Membership() {
         <button className="membership-modal-close" onClick={closeCoupon}>×</button>
         <span className="membership-kicker">COUPON</span>
         <h2>Have a coupon?</h2>
-        <p>Apply your coupon before payment. The discount is checked against this membership plan and your account eligibility.</p>
+        <p>Apply your coupon before payment. Your unused current membership value is credited before any coupon discount.</p>
+        {selectedProration && <div className="coupon-proration-summary"><div><span>New plan price</span><strong>{money(selectedPlan.price)}</strong></div><div><span>Unused current-plan credit</span><strong>− {money(selectedProration.credit)}</strong></div><div className="total"><span>Upgrade payable</span><strong>{money(selectedProration.payable)}</strong></div><small>Validity remains anchored to your original membership start date and runs through {dateLabel(selectedProration.targetExpiry)}.</small></div>}
         <div className="coupon-code-row">
           <input value={couponCode} onChange={(event) => { setCouponCode(event.target.value.toUpperCase()); setCouponResult(null); setCouponError('') }} placeholder="Enter coupon code" autoComplete="off" />
           <button type="button" onClick={validateCoupon} disabled={couponChecking || submitting}>{couponChecking ? 'Checking…' : 'Apply'}</button>
