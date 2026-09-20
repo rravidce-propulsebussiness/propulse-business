@@ -67,7 +67,7 @@ export default function Membership() {
   const selectedScalePlan = useMemo(() => scalePlans.find((item) => String(item.id) === String(selectedCycleId)) || scalePlans[0] || null, [scalePlans, selectedCycleId])
 
   const currentRaw = String(currentMembership?.plan_type || currentMembership?.plan?.plan_type || user?.membership_type || '').toLowerCase()
-  const currentGroup = String(currentMembership?.plan_group || currentMembership?.plan?.plan_group || '').toLowerCase()
+  const currentGroup = String(currentMembership?.plan_group || currentMembership?.plan?.plan_group || (currentMembership?.isPro || currentRaw === 'pro' ? 'grow' : '')).toLowerCase()
   const isProMember = Boolean(currentMembership?.isPro) || currentRaw === 'pro'
 
   const openPlan = (plan) => {
@@ -224,9 +224,11 @@ export default function Membership() {
                 </details>
                 {isCurrent
                   ? <button className="membership-primary current" disabled>✓ Current {level.label}</button>
-                  : !level.selected
-                    ? <button className="membership-primary current" disabled>Plan being configured</button>
-                    : <button className="membership-primary" onClick={() => openPlan(level.selected)} disabled={submitting}>{canUpgrade ? 'Upgrade to SCALE' : level.action} <span>→</span></button>}
+                  : currentGroup === 'scale' && level.key === 'grow'
+                    ? <button className="membership-primary current" disabled>✓ Included in SCALE</button>
+                    : !level.selected
+                      ? <button className="membership-primary current" disabled>Plan being configured</button>
+                      : <button className="membership-primary" onClick={() => openPlan(level.selected)} disabled={submitting}>{canUpgrade ? 'Upgrade to SCALE' : level.action} <span>→</span></button>
               </article>
             })}
         </section>
