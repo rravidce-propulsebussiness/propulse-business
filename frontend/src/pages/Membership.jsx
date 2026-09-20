@@ -247,34 +247,6 @@ export default function Membership() {
             })}
         </section>
 
-        <section className="membership-growth-paths">
-          <div className="growth-path-heading">
-            <span className="membership-kicker">YOUR PROPULSE MEMBERSHIP</span>
-            <h2>GROW → SCALE</h2>
-            <p>There are two paid membership plans. GROW includes the START foundation. SCALE upgrades the GROW experience for businesses ready for broader reach.</p>
-          </div>
-          <div className="growth-path-grid">
-            <article className="growth-path grow-path">
-              <span className="growth-stage">GROW</span>
-              <h3>START + Business Growth</h3>
-              <p>Best lead pricing, Exclusive Leads and investment access for eligible members.</p>
-              <a href="#grow">View GROW <span>→</span></a>
-            </article>
-            <article className="growth-path scale-path">
-              <span className="growth-stage">SCALE</span>
-              <h3>GROW + Broader Reach</h3>
-              <p>Everything in GROW, plus website development, SEO services and website maintenance.</p>
-              <a href="#scale">View SCALE <span>→</span></a>
-            </article>
-          </div>
-        </section>
-
-        <section className="membership-value">
-          <div><span className="membership-kicker">THE PROPULSE JOURNEY</span><h2>Start simple. Grow when you need it. Scale when you're ready.</h2><p>GROW includes Best Lead Pricing, Exclusive Leads and Investment access for eligible members. SCALE builds on GROW with website development, SEO and website maintenance.</p></div>
-          <div className="value-grid">
-            <div><strong>GROW</strong><b>Core Membership</b><span>Best lead pricing, Exclusive Leads and investment access for eligible members.</span></div><div><strong>SCALE</strong><b>GROW + Services</b><span>Upgrade from GROW to add website, SEO and maintenance services.</span></div>
-          </div>
-        </section>
       </>}
 
     {couponOpen && selectedPlan && <div className="membership-modal-backdrop" onClick={closeCoupon}>
