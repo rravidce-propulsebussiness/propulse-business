@@ -14,8 +14,8 @@ const period = (plan) => {
   const months = Number(plan?.billing_months || 1)
   return months === 12 ? 'Yearly' : months === 6 ? 'Half-Yearly' : months === 3 ? 'Quarterly' : 'Monthly'
 }
-const growBenefits = ['Everything in START', 'Website development', 'SEO services', 'Website maintenance']
-const scaleBenefits = ['Everything in GROW', 'Broader reach', 'Lead generation', 'Eligible earning programs, subject to program terms']
+const growBenefits = ['Best lead pricing', 'Exclusive Leads access', 'Investment access unlocked for eligible members']
+const scaleBenefits = ['Everything in GROW', 'Website development', 'SEO services', 'Website maintenance']
 
 export default function Membership() {
   const user = getUser()
@@ -197,12 +197,12 @@ export default function Membership() {
         <section className="membership-hero">
           <div className="membership-hero-kicker">ONE MEMBERSHIP. REAL GROWTH.</div>
           <h1>Start with <span>Propulse.</span></h1>
-          <p>Start with better lead pricing, Exclusive Leads and access to the Propulse investment program for eligible members. Upgrade to GROW or SCALE when your business needs more.</p>
+          <p>Choose GROW for the core Propulse membership. Upgrade from GROW to SCALE when you want the full growth-service layer.</p>
         </section>
 
         <section className="membership-plans membership-plans-two">
-          {[{ key: 'grow', label: 'GROW', plans: growPlans, selected: selectedGrowPlan, benefits: growBenefits, copy: 'Everything in START + Website + SEO + Maintenance', action: 'Choose GROW' },
-            { key: 'scale', label: 'SCALE', plans: scalePlans, selected: selectedScalePlan, benefits: scaleBenefits, copy: 'Everything in GROW + Broader Reach + Lead Generation', action: 'Upgrade to SCALE' }].map((level) => {
+          {[{ key: 'grow', label: 'GROW', plans: growPlans, selected: selectedGrowPlan, benefits: growBenefits, copy: 'Best Lead Pricing + Exclusive Leads + Investment Unlocked', action: 'Choose GROW' },
+            { key: 'scale', label: 'SCALE', plans: scalePlans, selected: selectedScalePlan, benefits: scaleBenefits, copy: 'Everything in GROW + Website + SEO + Maintenance', action: 'Upgrade to SCALE' }].map((level) => {
               const isCurrent = currentGroup === level.key;
               const canUpgrade = level.key === 'scale' && currentGroup === 'grow';
               return <article className={`membership-plan ${level.key === 'grow' ? 'starter-plan grow-plan' : 'scale-membership-plan'}`} key={level.key}>
@@ -241,22 +241,22 @@ export default function Membership() {
             <article className="growth-path grow-path">
               <span className="growth-stage">GROW</span>
               <h3>START + Business Growth</h3>
-              <p>Best lead pricing, Exclusive Leads and investment access for eligible members, plus website, SEO and maintenance services.</p>
+              <p>Best lead pricing, Exclusive Leads and investment access for eligible members.</p>
               <a href="#grow">View GROW <span>→</span></a>
             </article>
             <article className="growth-path scale-path">
               <span className="growth-stage">SCALE</span>
               <h3>GROW + Broader Reach</h3>
-              <p>Everything in GROW, plus broader reach, lead generation and access to eligible earning programs subject to program terms.</p>
+              <p>Everything in GROW, plus website development, SEO services and website maintenance.</p>
               <a href="#scale">View SCALE <span>→</span></a>
             </article>
           </div>
         </section>
 
         <section className="membership-value">
-          <div><span className="membership-kicker">THE PROPULSE JOURNEY</span><h2>Start simple. Grow when you need it. Scale when you're ready.</h2><p>START is the foundation inside GROW: Best Lead Pricing, Exclusive Leads and Investment access for eligible members. GROW adds website, SEO and maintenance. SCALE builds on GROW with broader reach, lead generation and eligible earning programs.</p></div>
+          <div><span className="membership-kicker">THE PROPULSE JOURNEY</span><h2>Start simple. Grow when you need it. Scale when you're ready.</h2><p>GROW includes Best Lead Pricing, Exclusive Leads and Investment access for eligible members. SCALE builds on GROW with website development, SEO and website maintenance.</p></div>
           <div className="value-grid">
-            <div><strong>START</strong><b>Foundation</b><span>Best lead pricing, Exclusive Leads and investment access for eligible members.</span></div><div><strong>GROW</strong><b>START + Services</b><span>The first paid membership: START plus website, SEO and maintenance.</span></div><div><strong>SCALE</strong><b>GROW + Reach</b><span>Upgrade from GROW for broader reach, lead generation and eligible programs.</span></div>
+            <div><strong>GROW</strong><b>Core Membership</b><span>Best lead pricing, Exclusive Leads and investment access for eligible members.</span></div><div><strong>SCALE</strong><b>GROW + Services</b><span>Upgrade from GROW to add website, SEO and maintenance services.</span></div>
           </div>
         </section>
       </>}
@@ -289,7 +289,7 @@ export default function Membership() {
       <div className="membership-payment-modal" onClick={(event) => event.stopPropagation()}>
         <button className="membership-modal-close" onClick={() => setManualOpen(false)}>×</button>
         <span className="membership-kicker">DIRECT PAYMENT</span>
-        <h2>Complete Starter payment</h2>
+        <h2>Complete membership payment</h2>
         <p>{Number(checkout.walletAmount) > 0 ? 'Your wallet balance has been applied automatically. Pay only the remaining amount directly.' : 'Your wallet has no available balance, so the full amount is due directly.'}</p>
         <div className="manual-summary">
           {checkout?.coupon && <><span>Original price</span><strong>{money(checkout.coupon.subtotalAmount)}</strong><span>Coupon discount</span><strong>− {money(checkout.coupon.discountAmount)}</strong></>}
