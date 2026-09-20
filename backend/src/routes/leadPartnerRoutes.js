@@ -1,5 +1,6 @@
 const express=require('express');
 const requireLeadPartner=require('../middleware/leadPartnerMiddleware');
+const requireAuth=require('../middleware/authMiddleware');
 const controller=require('../controllers/leadPartnerController');
 const inventoryController=require('../controllers/leadPartnerInventoryController');
 const router=express.Router();
