@@ -56,8 +56,8 @@ async function createMembershipCheckout({userId,membershipPlanId,couponCode}) {
         const currentDuration=Math.max(1,Number(currentMembership.duration_days||30));
         if(changeType!=='renew'){
           membershipCredit=Math.min(Number(plan.price),Math.max(0,Number(currentMembership.price||0)*(remainingDays/currentDuration)));
-          targetStartsAt=starts;
-          targetExpiresAt=new Date(starts);
+          targetStartsAt=now;
+          targetExpiresAt=new Date(now);
           targetExpiresAt.setDate(targetExpiresAt.getDate()+Math.max(1,Number(plan.duration_days||30)));
         }
         previousPlanId=currentMembership.plan_id;
