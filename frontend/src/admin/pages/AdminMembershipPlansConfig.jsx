@@ -15,10 +15,7 @@ const BOOSTER_CYCLES = [
   { key: 'yearly', label: 'Yearly', months: 12 },
 ];
 const BOOSTER_ADDON_CYCLES = BOOSTER_CYCLES;
-const DEFAULT_LEADS = [
-  { type: 'shared', monthly_quantity: 3, period_total_quantity: 3, complimentary: true },
-  { type: 'premium', monthly_quantity: 1, period_total_quantity: 1, complimentary: true },
-];
+const DEFAULT_LEADS = [];
 const DEFAULT_BOOSTER_ADDONS = [
   { name: 'Website Building & Maintenance', cycles: { monthly: { price: 4999, enabled: true, discount: 0 }, quarterly: { price: 12999, enabled: true, discount: 0 }, halfYearly: { price: 23999, enabled: true, discount: 0 }, yearly: { price: 44999, enabled: true, discount: 0 } } },
   { name: 'Digital Marketing', cycles: { monthly: { price: 7999, enabled: true, discount: 0 }, quarterly: { price: 20999, enabled: true, discount: 0 }, halfYearly: { price: 38999, enabled: true, discount: 0 }, yearly: { price: 74999, enabled: true, discount: 0 } } },
@@ -61,9 +58,9 @@ function freshForm(planType = 'pro') {
     leadEntitlements: DEFAULT_LEADS.map(x => ({ ...x, period_total_quantity: x.monthly_quantity * c.months })),
   }));
   return {
-    name: 'Pro', planType: 'pro', monthlyBasePrice: '', periods: cycles,
+    name: 'Starter', planType: 'pro', monthlyBasePrice: '', periods: cycles,
     pricing: Object.fromEntries(cycles.map(c => [c.key, { discount: 0, price: '', customPrice: false }])),
-    benefits: ['Priority lead access'], addOns: [],
+    benefits: ['Exclusive Leads access', 'Best member pricing'], addOns: [],
   };
 }
 
