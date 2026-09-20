@@ -228,7 +228,7 @@ export default function Membership() {
                     ? <button className="membership-primary current" disabled>✓ Included in SCALE</button>
                     : !level.selected
                       ? <button className="membership-primary current" disabled>Plan being configured</button>
-                      : <button className="membership-primary" onClick={() => openPlan(level.selected)} disabled={submitting}>{canUpgrade ? 'Upgrade to SCALE' : level.action} <span>→</span></button>
+                      : <button className="membership-primary" onClick={() => openPlan(level.selected)} disabled={submitting}>{canUpgrade ? 'Upgrade to SCALE' : level.action} <span>→</span></button>}
               </article>
             })}
         </section>
