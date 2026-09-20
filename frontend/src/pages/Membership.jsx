@@ -8,19 +8,13 @@ import './CouponCheckout.css'
 const money = (value) => `₹${Number(value || 0).toLocaleString('en-IN', { maximumFractionDigits: 0 })}`
 const asArray = (value) => (Array.isArray(value) ? value : [])
 const planType = (plan) => String(plan?.plan_type || '').toLowerCase()
+const normalizeLabel = (value) => String(value || '').trim().replace(/[-_]+/g, ' ').replace(/\s+/g, ' ')
 const period = (plan) => {
-  if (plan?.billing_period) return plan.billing_period
+  if (plan?.billing_period) return normalizeLabel(plan.billing_period)
   const months = Number(plan?.billing_months || 1)
   return months === 12 ? 'Yearly' : months === 6 ? 'Half-Yearly' : months === 3 ? 'Quarterly' : 'Monthly'
 }
-const displayName = (type) => ({ pro: 'Pro', booster: 'Booster' }[type] || type)
-const cycles = ['monthly', 'quarterly', 'halfYearly', 'yearly']
-const cycleMonths = { monthly: 1, quarterly: 3, halfYearly: 6, yearly: 12 }
-const cycleLabel = (key) => (key === 'halfYearly' ? 'Half-Yearly' : `${key[0].toUpperCase()}${key.slice(1)}`)
-const fallbackBenefits = {
-  pro: ['Qualified lead access at near-generation pricing', 'Get more business leads for less', 'Priority access to selected opportunities'],
-  booster: ['Marketing-focused business visibility', 'SEO-oriented growth and discoverability support', 'Designed to strengthen your lead-generation presence']
-}
+const starterBenefits = ['Exclusive Leads access', 'Best member pricing']
 
 export default function Membership() {
   const user = getUser()
@@ -29,7 +23,7 @@ export default function Membership() {
   const [currentMembership, setCurrentMembership] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [selectedCycles, setSelectedCycles] = useState({ pro: 'monthly', booster: 'monthly' })
+  const [selectedCycleId, setSelectedCycleId] = useState(null)
   const [manualOpen, setManualOpen] = useState(false)
   const [selectedPlan, setSelectedPlan] = useState(null)
   const [checkout, setCheckout] = useState(null)
@@ -66,40 +60,21 @@ export default function Membership() {
     return () => { active = false }
   }, [token])
 
-  const groups = useMemo(() => {
-    const grouped = new Map()
-    plans.forEach((item) => {
-      const type = planType(item)
-      if (!['pro', 'booster'].includes(type)) return
-      if (!grouped.has(type)) grouped.set(type, { key: type, type, name: displayName(type), plans: [] })
-      grouped.get(type).plans.push(item)
-    })
-    return ['pro', 'booster'].map((key) => grouped.get(key) || { key, type: key, name: displayName(key), plans: [] })
-  }, [plans])
+  const starterPlans = useMemo(() => plans
+    .filter((item) => planType(item) === 'pro')
+    .sort((a, b) => Number(a?.billing_months || 0) - Number(b?.billing_months || 0) || Number(a?.price || 0) - Number(b?.price || 0)), [plans])
 
-  const findPlan = (group, selectedCycle) => group.plans.find((item) => Number(item?.billing_months || 0) === cycleMonths[selectedCycle]) || group.plans[0]
-  const selectedPlans = useMemo(() => Object.fromEntries(groups.map((group) => [group.key, findPlan(group, selectedCycles[group.key] || 'monthly')])), [groups, selectedCycles])
+  const selectedStarterPlan = useMemo(() => {
+    if (!starterPlans.length) return null
+    return starterPlans.find((item) => String(item.id) === String(selectedCycleId)) || starterPlans[0]
+  }, [starterPlans, selectedCycleId])
 
   const currentRaw = String(currentMembership?.plan_type || currentMembership?.plan?.plan_type || user?.membership_type || '').toLowerCase()
-  const currentType = currentRaw === 'investment' ? 'pro' : currentRaw
-  const isProMember = Boolean(currentMembership?.isPro) || currentType === 'pro'
-  const isBoosterActive = Boolean(currentMembership?.isBoosterActive)
-  const currentName = currentType ? displayName(currentType) : (currentMembership?.plan_name || 'No active membership')
+  const isProMember = Boolean(currentMembership?.isPro) || currentRaw === 'pro'
 
-  const benefits = (plan, type) => {
-    const values = asArray(plan?.benefits).map(String).filter(Boolean)
-    return values.length ? values : fallbackBenefits[type]
-  }
-  const addOns = (plan) => asArray(plan?.add_ons || plan?.addons || plan?.booster_add_ons || plan?.booster_addons)
-  const addOnName = (item) => typeof item === 'string' ? item : String(item?.name || item?.title || item?.label || '')
-
-  const openPlan = (plan, type) => {
-    if (type === 'booster' && !isProMember) {
-      setError('Booster access is available only after you have an active Pro membership.')
-      return
-    }
+  const openPlan = (plan) => {
     if (!plan?.id) {
-      setError(`The ${displayName(type)} membership plan is unavailable.`)
+      setError('The Starter membership plan is unavailable.')
       return
     }
     setSelectedPlan(plan)
@@ -221,82 +196,89 @@ export default function Membership() {
       {error && <div className="membership-error">{error}</div>}
 
       {loading ? <div className="membership-state">Loading membership options…</div> : <>
-        <section className="membership-plans membership-plans-three">
-          {groups.map((group) => {
-            const availableCycles = cycles.filter((key) => group.plans.some((item) => Number(item?.billing_months || 0) === cycleMonths[key]))
-            const selectedCycle = availableCycles.includes(selectedCycles[group.key]) ? selectedCycles[group.key] : (availableCycles[0] || 'monthly')
-            const plan = findPlan(group, selectedCycle)
-            const isCurrent = group.type === 'pro' ? isProMember : isBoosterActive
-            const locked = group.type === 'booster' && !isProMember
-            const planAddOns = addOns(plan).map(addOnName).filter(Boolean)
-            return <article className={`membership-plan ${group.type}-plan ${locked ? 'access-locked' : ''}`} key={group.key}>
-              <div className="membership-plan-top">
-                <div>
-                  <h2>{group.name}</h2>
-                </div>
-                {isCurrent ? <span className="current-badge">CURRENT</span> : group.type === 'pro' ? <span className="popular-badge">BEST FOR LEADS</span> : locked ? <span className="current-badge">PRO REQUIRED</span> : <span className="popular-badge">GROW VISIBILITY</span>}
-              </div>
+        <section className="membership-hero">
+          <div className="membership-hero-kicker">ONE MEMBERSHIP. REAL GROWTH.</div>
+          <h1>Start with <span>Propulse.</span></h1>
+          <p>Get exclusive leads at the best member pricing. Choose the billing cycle that works for your business.</p>
+        </section>
 
-              <div className="card-billing">
-                <div><span>CHOOSE BILLING</span>{availableCycles.length > 1 && <small>Cycle length</small>}</div>
-                {availableCycles.length > 1 && <div className="membership-cycles">{availableCycles.map((key) => <button type="button" key={key} className={selectedCycle === key ? 'active' : ''} onClick={() => setSelectedCycles((previous) => ({ ...previous, [group.key]: key }))}>{cycleLabel(key)}</button>)}</div>}
-                {availableCycles.length === 1 && <div className="membership-single-cycle">{cycleLabel(availableCycles[0])}</div>}
-                {availableCycles.length === 0 && <div className="membership-single-cycle unavailable">No active billing cycle configured</div>}
-              </div>
-              <div className="membership-price">{plan ? money(plan.price) : '—'}<small>{plan ? ` / ${period(plan).toLowerCase()}` : ''}</small></div>
-              {locked && <div className="saving-note">🔒 Unlock with Pro</div>}
-              {group.type === 'booster' && isProMember && <div className="saving-note">✓ Booster unlocked for Pro members</div>}
-              <div className="membership-divider" />
-              <details className="membership-fold">
-                <summary><span>{group.type === 'pro' ? 'Your lead advantage' : 'What Booster is built for'}</span><b>+</b></summary>
-                <ul>{benefits(plan, group.type).map((item, index) => <li key={`${item}-${index}`}><b>✓</b><span>{item}</span></li>)}</ul>
-              </details>
-              {planAddOns.length > 0 && <details className="membership-fold membership-addons-fold">
-                <summary><span>Available add-ons</span><b>+</b></summary>
-                <div className="membership-addons"><div><span>AVAILABLE ADD-ONS</span><small>Configured in Admin</small></div><ul>{planAddOns.map((item, index) => <li key={`${item}-${index}`}><b>+</b><span>{item}</span></li>)}</ul></div>
-              </details>}
-              {isCurrent ? <button className="membership-primary current" disabled>✓ Current {group.name}</button> : locked ? <button className="membership-primary current" disabled>🔒 Pro membership required</button> : !plan ? <button className="membership-primary current" disabled>Plan being configured</button> : <button className="membership-primary" onClick={() => openPlan(plan, group.type)} disabled={submitting}>Choose {group.name} <span>→</span></button>}
-            </article>
-          })}
-
-          <article className="membership-plan investor-plan investment-access-card">
+        <section className="membership-plans membership-plans-single">
+          <article className="membership-plan starter-plan">
             <div className="membership-plan-top">
               <div>
-                <h2>Investment</h2>
+                <span className="membership-stage">START</span>
+                <h2>Starter</h2>
               </div>
-              {isProMember ? <span className="popular-badge">UNLOCKED WITH PRO</span> : <span className="current-badge">PRO REQUIRED</span>}
+              {isProMember ? <span className="current-badge">CURRENT</span> : <span className="popular-badge">BEST FOR LEADS</span>}
             </div>
 
-            <div className="investor-model">
-              <div><b>ADS ON YOUR PROFILE</b><span>Propulse runs promotional ads around your investor profile to increase visibility and attract business demand.</span></div>
-              <div><b>BOOST BUSINESS LEADS</b><span>Your investment supports lead-generation activity designed to increase the flow of business leads.</span></div>
-              <div><b>SHARE IN REALIZED SALES INCOME</b><span>When eligible leads are sold, you participate in the income actually generated from those lead sales. Returns are not fixed or guaranteed.</span></div>
+            <p className="starter-lead-copy">Exclusive Leads + Best Pricing</p>
+
+            <div className="card-billing">
+              <div><span>CHOOSE BILLING</span><small>{starterPlans.length > 1 ? 'Flexible billing cycle' : 'Configured by Admin'}</small></div>
+              {starterPlans.length > 0
+                ? <div className="membership-cycles membership-cycles-dynamic">
+                    {starterPlans.map((item) => <button type="button" key={item.id} className={String(selectedStarterPlan?.id) === String(item.id) ? 'active' : ''} onClick={() => setSelectedCycleId(item.id)}>{period(item)}</button>)}
+                  </div>
+                : <div className="membership-single-cycle unavailable">No active Starter billing cycle configured</div>}
             </div>
+
+            <div className="membership-price">{selectedStarterPlan ? money(selectedStarterPlan.price) : '—'}<small>{selectedStarterPlan ? ' / ' + period(selectedStarterPlan).toLowerCase() : ''}</small></div>
 
             <div className="membership-divider" />
-            <details className="membership-fold investment-fold">
-              <summary><span>How Investment works</span><b>+</b></summary>
-              <ul>
-                <li><b>01</b><span>Fund your investment within the available Propulse limits.</span></li>
-                <li><b>02</b><span>Propulse promotes your investor profile through advertising activity.</span></li>
-                <li><b>03</b><span>Ad-driven demand helps generate and boost eligible business leads.</span></li>
-                <li><b>04</b><span>As eligible leads are sold, you participate in the realized lead-sale income.</span></li>
-              </ul>
+            <details className="membership-fold" open>
+              <summary><span>Starter membership includes</span><b>+</b></summary>
+              <ul>{starterBenefits.map((item) => <li key={item}><b>✓</b><span>{item}</span></li>)}</ul>
             </details>
-            {isProMember ? <a className="membership-primary" href="/investment">Open Investment <span>→</span></a> : <button className="membership-primary current" disabled>🔒 Activate Pro first</button>}
+
+            {isProMember
+              ? <button className="membership-primary current" disabled>✓ Current Starter</button>
+              : !selectedStarterPlan
+                ? <button className="membership-primary current" disabled>Plan being configured</button>
+                : <button className="membership-primary" onClick={() => openPlan(selectedStarterPlan)} disabled={submitting}>Choose Starter <span>→</span></button>}
           </article>
         </section>
-      </>}
 
-      <section className="membership-value">
-        <div><span className="membership-kicker">CHOOSE BY GOAL</span><h2>One membership page. Three clear growth paths.</h2><p>Choose Pro when your goal is buying leads at near-generation pricing. Choose Booster when your goal is stronger marketing and SEO visibility. Choose Investment when you want Propulse to promote your investor profile, help drive business leads, and participate in realized income from leads sold.</p></div>
-        <div className="value-grid">
-          <div><strong>01</strong><b>Get leads with Pro</b><span>Access qualified business leads at pricing designed to stay close to the cost of generating them.</span></div>
-          <div><strong>02</strong><b>Grow visibility with Booster</b><span>Use marketing and SEO-oriented support to strengthen discoverability, presence and lead-generation potential.</span></div>
-          <div><strong>03</strong><b>Invest in lead growth</b><span>Propulse advertises your investor profile, supports lead generation and shares realized lead-sale income according to the applicable investment terms.</span></div>
-        </div>
-      </section>
-    </main>
+        <section className="membership-growth-paths">
+          <div className="growth-path-heading">
+            <span className="membership-kicker">AFTER START</span>
+            <h2>Grow and Scale when you're ready.</h2>
+            <p>These are separate Propulse services and programs — they are not included in Starter membership.</p>
+          </div>
+          <div className="growth-path-grid">
+            <article className="growth-path grow-path">
+              <span className="growth-stage">GROW</span>
+              <h3>Business Services</h3>
+              <p>Build a stronger digital presence with services you can add when your business needs them.</p>
+              <ul>
+                <li>Website development</li>
+                <li>SEO services</li>
+                <li>Website maintenance</li>
+              </ul>
+              <a href="/contact">Explore Services <span>→</span></a>
+            </article>
+            <article className="growth-path scale-path">
+              <span className="growth-stage">SCALE</span>
+              <h3>Broader Reach & Opportunities</h3>
+              <p>Propulse can promote your business profile to broaden reach, support lead generation and provide access to eligible earning programs.</p>
+              <ul>
+                <li>Business profile promotion</li>
+                <li>Broader reach and lead generation</li>
+                <li>Eligible earning programs, subject to program terms</li>
+              </ul>
+              <a href="/investment">Learn More <span>→</span></a>
+            </article>
+          </div>
+        </section>
+
+        <section className="membership-value">
+          <div><span className="membership-kicker">THE PROPULSE JOURNEY</span><h2>Start simple. Grow when you need it. Scale when you're ready.</h2><p>Starter keeps membership focused on the two things customers join Propulse for: Exclusive Leads and Best Pricing. Website, SEO and maintenance are optional growth services. Scale focuses on broader reach, lead generation and eligible earning programs.</p></div>
+          <div className="value-grid">
+            <div><strong>START</strong><b>Exclusive Leads</b><span>Access eligible Exclusive Leads through your Propulse membership.</span></div>
+            <div><strong>GROW</strong><b>Optional Services</b><span>Add website, SEO or maintenance services when your business is ready.</span></div>
+            <div><strong>SCALE</strong><b>Broader Reach</b><span>Promote your business, generate opportunities and access eligible programs subject to their terms.</span></div>
+          </div>
+        </section>
 
     {couponOpen && selectedPlan && <div className="membership-modal-backdrop" onClick={closeCoupon}>
       <div className="coupon-checkout-modal" onClick={(event) => event.stopPropagation()}>
