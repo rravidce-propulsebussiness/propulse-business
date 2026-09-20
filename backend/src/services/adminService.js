@@ -127,7 +127,7 @@ async function setUserStatus(userId,isActive) {
 async function ensureLeadPartnerProfile(client,userId){
   const existing=(await client.query('SELECT id,status FROM lead_partners WHERE user_id=$1 FOR UPDATE',[userId])).rows[0];
   if(existing)return existing;
-  return (await client.query(\`INSERT INTO lead_partners(user_id,status) VALUES($1,'active') RETURNING id,status\`,[userId])).rows[0];
+  return (await client.query(`INSERT INTO lead_partners(user_id,status) VALUES($1,'active') RETURNING id,status`,[userId])).rows[0];
 }
 
 async function setUserRole({userId,role,actingAdminId}){
