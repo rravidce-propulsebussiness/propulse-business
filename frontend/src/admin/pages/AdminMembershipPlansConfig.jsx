@@ -86,7 +86,7 @@ export default function AdminMembershipPlansConfig() {
   async function load() {
     setLoading(true);
     try {
-      const [membershipPlans, investorSettings, stateData, cityData] = await Promise.all([
+      const [membershipPlans, investorSettings, pricingData, stateData, cityData] = await Promise.all([
         req('/membership-plans'),
         req('/admin/commercial/investor-settings'),
         req('/admin/service-pricing'),
