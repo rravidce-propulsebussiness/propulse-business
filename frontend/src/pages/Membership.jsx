@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
 import UserHeader from '../components/UserHeader'
-import MembershipPayments from '../components/MembershipPayments'
 import { authRequest, getToken, getUser } from '../utils/auth'
 import { apiRequest } from '../utils/api'
 import './Membership.css'
@@ -288,8 +287,6 @@ export default function Membership() {
           </article>
         </section>
       </>}
-
-      <MembershipPayments />
 
       <section className="membership-value">
         <div><span className="membership-kicker">CHOOSE BY GOAL</span><h2>One membership page. Three clear growth paths.</h2><p>Choose Pro when your goal is buying leads at near-generation pricing. Choose Booster when your goal is stronger marketing and SEO visibility. Choose Investment when you want Propulse to promote your investor profile, help drive business leads, and participate in realized income from leads sold.</p></div>
