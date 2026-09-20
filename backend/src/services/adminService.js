@@ -77,7 +77,7 @@ async function getUsers({ search = '', role = 'all', status = 'all', industryId 
              WHERE x.business_profile_id=bp.id AND x.is_active=TRUE), '[]'::json) AS locations
     FROM users u
     LEFT JOIN business_profiles bp ON bp.user_id = u.id
-    LEFT JOIN lead_partners lp ON lp.user_id = u.id
+    LEFT JOIN lead_partners lp ON lp.user_id = u.id AND u.role='business'
     ${whereClause}
     ORDER BY u.created_at DESC, u.id DESC
     LIMIT $${dataParams.length - 1} OFFSET $${dataParams.length}
