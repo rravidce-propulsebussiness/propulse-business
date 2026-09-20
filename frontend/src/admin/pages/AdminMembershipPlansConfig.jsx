@@ -58,14 +58,14 @@ function freshForm(planType = 'pro') {
     leadEntitlements: DEFAULT_LEADS.map(x => ({ ...x, period_total_quantity: x.monthly_quantity * c.months })),
   }));
   return {
-    name: 'Starter', planType: 'pro', monthlyBasePrice: '', periods: cycles,
+    name: planType === 'scale' ? 'Scale' : 'Grow', planType: 'pro', monthlyBasePrice: '', periods: cycles,
     pricing: Object.fromEntries(cycles.map(c => [c.key, { discount: 0, price: '', customPrice: false }])),
-    benefits: ['Best lead pricing', 'Exclusive Leads access', 'Investment access unlocked for eligible members'], addOns: [],
+    benefits: planType === 'scale' ? ['Everything in GROW', 'Broader reach', 'Lead generation', 'Eligible earning programs, subject to program terms'] : ['Best lead pricing', 'Exclusive Leads access', 'Investment access unlocked for eligible members', 'Website development', 'SEO services', 'Website maintenance'], addOns: [],
   };
 }
 
 export default function AdminMembershipPlansConfig() {
-  const [tab, setTab] = useState('pro');
+  const [tab, setTab] = useState('grow');
   const [plans, setPlans] = useState([]);
   const [form, setForm] = useState(freshForm('pro'));
   const [editing, setEditing] = useState(null);
@@ -109,7 +109,7 @@ export default function AdminMembershipPlansConfig() {
     });
     return Object.values(map);
   }, [plans]);
-  const visibleGroups = groups.filter(group => tab === 'booster' ? group[0]?.plan_type === 'booster' : group[0]?.plan_type === 'pro');
+  const visibleGroups = groups.filter(group => tab === 'booster' ? group[0]?.plan_type === 'booster' : group[0]?.plan_type === 'pro' && String(group[0]?.plan_group || '').toLowerCase() === tab);
 
   const setField = (key, value) => setForm(current => ({ ...current, [key]: value }));
   const setPricing = (key, field, value) => setForm(current => ({ ...current, pricing: { ...current.pricing, [key]: { ...current.pricing[key], [field]: value } } }));
@@ -137,7 +137,7 @@ export default function AdminMembershipPlansConfig() {
     const final = base * (1 - Number(cfg.discount || 0) / 100);
     return { final, base, saving: Math.max(0, base - final) };
   };
-  function switchPlanTab(next) { setTab(next); setEditing(null); setForm(next === 'pro' || next === 'booster' ? freshForm(next) : form); setError(''); }
+  function switchPlanTab(next) { setTab(next); setEditing(null); setForm(next === 'grow' || next === 'scale' || next === 'booster' ? freshForm(next) : form); setError(''); }
 
   async function create(e) {
     e.preventDefault(); setError('');
@@ -153,12 +153,12 @@ export default function AdminMembershipPlansConfig() {
         const periods = activePeriods.map(p => ({ ...p, months: Number(p.months), leadEntitlements: p.leadEntitlements.map(x => ({ ...x, monthly_quantity: Number(x.monthly_quantity || 0), period_total_quantity: Number(x.period_total_quantity || 0), quantity: Number(x.monthly_quantity || 0) })) }));
         await req('/membership-plans', { method: 'POST', body: JSON.stringify({ name: form.name.trim(), planGroup: form.name.trim(), planType: 'pro', bundle: true, monthlyBasePrice: Number(form.monthlyBasePrice || 0), benefits: form.benefits, addOns: form.addOns, leadRolloverEnabled: true, leadExpiryDays: null, periods, pricing: Object.fromEntries(periods.map(p => [p.key, { discount: Number(form.pricing[p.key]?.discount || 0), price: form.pricing[p.key]?.price || '', customPrice: Boolean(form.pricing[p.key]?.customPrice) }])) }) });
       }
-      setForm(freshForm(form.planType)); await load();
+      setForm(freshForm(tab)); await load();
     } catch (e) { setError(e.message); }
   }
 
   function beginEdit(plan) {
-    setEditing(plan.id); setTab(plan.plan_type === 'booster' ? 'booster' : 'pro');
+    setEditing(plan.id); setTab(plan.plan_type === 'booster' ? 'booster' : String(plan.plan_group || '').toLowerCase() === 'scale' ? 'scale' : 'grow');
     if (plan.plan_type === 'booster') {
       const rawAddons = Array.isArray(plan.add_ons) ? plan.add_ons : [];
       const addons = rawAddons.length ? rawAddons.map(normalizeAddon) : DEFAULT_BOOSTER_ADDONS.map(normalizeAddon);
@@ -168,7 +168,7 @@ export default function AdminMembershipPlansConfig() {
       const leads = Array.isArray(plan.lead_entitlements) ? plan.lead_entitlements : []; const key = `edit-${plan.id}`; const months = Number(plan.billing_months || 1);
       setForm({
         name: plan.plan_group || plan.name.replace(/\s+[^\s]+$/i, ''),
-        planType: 'pro', monthlyBasePrice: plan.monthly_base_price || '',
+        planType: String(plan.plan_group || '').toLowerCase() === 'scale' ? 'scale' : 'grow', monthlyBasePrice: plan.monthly_base_price || '',
         periods: [{ key, label: plan.billing_period || 'Monthly', months, enabled: true, leadEntitlements: leads.map(x => ({ ...x, monthly_quantity: Number(x.monthly_quantity ?? x.quantity ?? 0), period_total_quantity: Number(x.period_total_quantity ?? (Number(x.monthly_quantity ?? x.quantity ?? 0) * months)) })) }],
         pricing: { [key]: { discount: Number(plan.discount_percent || 0), price: plan.price ?? '', customPrice: true } },
         benefits: Array.isArray(plan.benefits) ? plan.benefits : [], addOns: Array.isArray(plan.add_ons) ? plan.add_ons.map(normalizeAddon) : [],
@@ -290,9 +290,9 @@ export default function AdminMembershipPlansConfig() {
   return <main className="commercial-page membership-config-page">
     <header className="commercial-head"><h1>Membership & Growth</h1></header>
     {error && <div className="error">{error}</div>}
-    <nav className="tabs"><button className={tab === 'pro' ? 'selected' : ''} onClick={() => switchPlanTab('pro')}>START</button><button className={tab === 'grow' ? 'selected' : ''} onClick={() => switchPlanTab('grow')}>GROW</button><button className={tab === 'scale' ? 'selected' : ''} onClick={() => switchPlanTab('scale')}>SCALE</button><button className={tab === 'investor' ? 'selected' : ''} onClick={() => { setTab('investor'); setEditing(null); setError(''); }}>Investor</button></nav>
+    <nav className="tabs"><button className={tab === 'grow' ? 'selected' : ''} onClick={() => switchPlanTab('grow')}>GROW</button><button className={tab === 'scale' ? 'selected' : ''} onClick={() => switchPlanTab('scale')}>SCALE</button><button className={tab === 'investor' ? 'selected' : ''} onClick={() => { setTab('investor'); setEditing(null); setError(''); }}>Investor</button></nav>
 
-    {(tab === 'pro' || tab === 'booster') && <>
+    {(tab === 'grow' || tab === 'scale' || tab === 'booster') && <>
       <section className="create-card hero-card">
         <div className="card-heading"><h2>{editing ? `Edit ${form.name}` : `Configure ${form.name}`}</h2><span className="status on">Active</span></div>
         <form onSubmit={editing ? saveEdit : create}>
@@ -338,7 +338,7 @@ export default function AdminMembershipPlansConfig() {
         </form>
       </section>
 
-      <section className="plans-list">{loading ? <div className="empty">Loading…</div> : visibleGroups.length === 0 ? <div className="empty"><strong>No {tab === 'pro' ? 'Pro' : 'Booster'} plans</strong></div> : visibleGroups.map(group => <div className={`plan-group ${tab === 'booster' ? 'plan-booster' : ''}`} key={`${group[0].plan_type}-${group[0].plan_group || group[0].id}`}><div className="group-head"><h2>{tab === 'pro' ? 'START' : 'Booster'}</h2><span className="live-count">{group.filter(p => p.is_active).length}/{group.length} active</span></div>{group.slice().sort((a, b) => Number(a.billing_months || 1) - Number(b.billing_months || 1)).map(plan => <div className="option" key={plan.id}><div><b>{plan.billing_period}</b><small>{plan.billing_months} mo · {plan.discount_percent || 0}% off</small></div><strong>{money(plan.price)}</strong><div className="actions"><button onClick={() => beginEdit(plan)}>Edit</button><button onClick={() => toggle(plan)}>{plan.is_active ? 'Disable' : 'Enable'}</button><button className="danger" onClick={() => remove(plan)}>Delete</button></div></div>)}</div>)}</section>
+      <section className="plans-list">{loading ? <div className="empty">Loading…</div> : visibleGroups.length === 0 ? <div className="empty"><strong>No {tab === 'pro' ? 'Pro' : 'Booster'} plans</strong></div> : visibleGroups.map(group => <div className={`plan-group ${tab === 'booster' ? 'plan-booster' : ''}`} key={`${group[0].plan_type}-${group[0].plan_group || group[0].id}`}><div className="group-head"><h2>{tab === 'scale' ? 'SCALE' : tab === 'grow' ? 'GROW' : 'Booster'}</h2><span className="live-count">{group.filter(p => p.is_active).length}/{group.length} active</span></div>{group.slice().sort((a, b) => Number(a.billing_months || 1) - Number(b.billing_months || 1)).map(plan => <div className="option" key={plan.id}><div><b>{plan.billing_period}</b><small>{plan.billing_months} mo · {plan.discount_percent || 0}% off</small></div><strong>{money(plan.price)}</strong><div className="actions"><button onClick={() => beginEdit(plan)}>Edit</button><button onClick={() => toggle(plan)}>{plan.is_active ? 'Disable' : 'Enable'}</button><button className="danger" onClick={() => remove(plan)}>Delete</button></div></div>)}</div>)}</section>
     </>}
 
     {(tab === 'grow' || tab === 'scale') && <section className="create-card hero-card growth-scale-admin-card">
