@@ -1,5 +1,6 @@
 const express = require('express');
 const adminController = require('../controllers/adminController');
+const leadPartnerController = require('../controllers/leadPartnerController');
 const requireAuth = require('../middleware/authMiddleware');
 const router = express.Router();
 function requireAdmin(req, res, next) { if (req.user?.role !== 'admin') return res.status(403).json({ error: 'Admin access required' }); return next(); }
@@ -10,4 +11,9 @@ router.post('/users/admin', adminController.createAdmin);
 router.patch('/users/:id/status', adminController.setUserStatus);
 router.patch('/users/:id/role', adminController.setUserRole);
 router.patch('/users/:id', adminController.updateUserProfile);
+router.get('/lead-partners', leadPartnerController.adminPartners);
+router.get('/lead-partners/:partnerId/financials', leadPartnerController.adminPartnerFinancials);
+router.patch('/lead-partners/:partnerId/status', leadPartnerController.adminUpdateStatus);
+router.get('/lead-partner-payouts', leadPartnerController.adminPayouts);
+router.patch('/lead-partner-payouts/:payoutId', leadPartnerController.adminProcessPayout);
 module.exports = router;
