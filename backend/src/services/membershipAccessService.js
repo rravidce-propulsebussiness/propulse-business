@@ -35,7 +35,7 @@ async function getMembershipAccess(userId, client = pool) {
 async function getCurrentProMembership(userId, client = pool) {
   const result = await client.query(`
     SELECT m.id,m.user_id,m.membership_plan_id,m.payment_id,m.starts_at,m.expires_at,m.status,
-           p.name AS plan_name,p.plan_type,p.billing_period,p.billing_months,p.price
+           p.name AS plan_name,p.plan_group,p.plan_type,p.billing_period,p.billing_months,p.price,p.duration_days
     FROM memberships m
     JOIN membership_plans p ON p.id=m.membership_plan_id
     WHERE m.user_id=$1
