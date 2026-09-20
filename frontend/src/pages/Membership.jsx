@@ -234,7 +234,6 @@ export default function Membership() {
                 <div>
                   <span className="plan-label">{group.name.toUpperCase()}</span>
                   <h2>{group.name}</h2>
-                  <p>{locked ? 'Available after activating an active Pro membership.' : plan?.description || (group.type === 'pro' ? 'Get qualified business leads at near-generation pricing.' : 'A marketing and SEO-oriented service built to strengthen your business visibility and lead generation.')}</p>
                 </div>
                 {isCurrent ? <span className="current-badge">CURRENT</span> : group.type === 'pro' ? <span className="popular-badge">BEST FOR LEADS</span> : locked ? <span className="current-badge">PRO REQUIRED</span> : <span className="popular-badge">GROW VISIBILITY</span>}
               </div>
@@ -264,7 +263,6 @@ export default function Membership() {
               <div>
                 <span className="plan-label">INVESTMENT</span>
                 <h2>Investment</h2>
-                <p>Put capital behind lead generation: Propulse runs ads on your investor profile, helps generate and boost business leads, and you participate in income from leads that are actually sold.</p>
               </div>
               {isProMember ? <span className="popular-badge">UNLOCKED WITH PRO</span> : <span className="current-badge">PRO REQUIRED</span>}
             </div>
