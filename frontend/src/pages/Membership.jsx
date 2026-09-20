@@ -21,7 +21,6 @@ export default function Membership() {
   const user = getUser()
   const token = getToken()
   const [plans, setPlans] = useState([])
-  const [growthScalePricing, setGrowthScalePricing] = useState([])
   const [currentMembership, setCurrentMembership] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -45,14 +44,12 @@ export default function Membership() {
         return
       }
       try {
-        const [planData, pricingData, membership] = await Promise.all([
+        const [planData, membership] = await Promise.all([
           apiRequest('/membership-plans'),
-          apiRequest('/service-pricing').catch(() => []),
           authRequest('/payments/membership/current').catch(() => null)
         ])
         if (!active) return
         setPlans(asArray(planData).filter((item) => item?.is_active !== false))
-        setGrowthScalePricing(asArray(pricingData).filter((item) => item?.is_active !== false && ['Grow', 'Scale'].includes(item?.category)))
         setCurrentMembership(membership || null)
       } catch (err) {
         if (active) setError(err?.message || 'Unable to load membership options.')
@@ -236,9 +233,9 @@ export default function Membership() {
 
         <section className="membership-growth-paths">
           <div className="growth-path-heading">
-            <span className="membership-kicker">THE TWO MEMBERSHIP PLANS</span>
+            <span className="membership-kicker">YOUR PROPULSE MEMBERSHIP</span>
             <h2>GROW → SCALE</h2>
-            <p>START is the foundation included in GROW. GROW is the first paid membership. SCALE is the upgrade from GROW.</p>
+            <p>There are two paid membership plans. GROW includes the START foundation. SCALE upgrades the GROW experience for businesses ready for broader reach.</p>
           </div>
           <div className="growth-path-grid">
             <article className="growth-path grow-path">
