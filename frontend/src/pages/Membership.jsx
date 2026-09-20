@@ -251,7 +251,7 @@ export default function Membership() {
                   <ul>{level.benefits.map((item) => <li key={item}><b>✓</b><span>{item}</span></li>)}</ul>
                 </details>
                 {isCurrent
-                  ? String(currentMembership?.membership_plan_id) === String(level.selected?.id)
+                  ? (String(currentMembership?.membership_plan_id) === String(level.selected?.id) || period(currentMembership).toLowerCase() === period(level.selected).toLowerCase())
                     ? <button className="membership-primary current" disabled>✓ Current {period(level.selected)}</button>
                     : <button className="membership-primary" onClick={() => openPlan(level.selected)} disabled={submitting}>{`Change to ${period(level.selected)}`} <span>→</span></button>
                   : currentGroup === 'scale' && level.key === 'grow'
