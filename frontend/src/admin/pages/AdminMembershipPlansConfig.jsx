@@ -73,6 +73,8 @@ export default function AdminMembershipPlansConfig() {
   const [form, setForm] = useState(freshForm('pro'));
   const [editing, setEditing] = useState(null);
   const [investor, setInvestor] = useState(null);
+  const [servicePricing, setServicePricing] = useState([]);
+  const [pricingSaving, setPricingSaving] = useState(null);
   const [states, setStates] = useState([]);
   const [cities, setCities] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -87,11 +89,13 @@ export default function AdminMembershipPlansConfig() {
       const [membershipPlans, investorSettings, stateData, cityData] = await Promise.all([
         req('/membership-plans'),
         req('/admin/commercial/investor-settings'),
+        req('/admin/service-pricing'),
         req('/states'),
         req('/cities'),
       ]);
       setPlans(membershipPlans);
       setInvestor(investorSettings);
+      setServicePricing(Array.isArray(pricingData) ? pricingData : []);
       setStates(Array.isArray(stateData) ? stateData : []);
       setCities(Array.isArray(cityData) ? cityData : []);
       setError('');
@@ -136,7 +140,7 @@ export default function AdminMembershipPlansConfig() {
     const final = base * (1 - Number(cfg.discount || 0) / 100);
     return { final, base, saving: Math.max(0, base - final) };
   };
-  function switchPlanTab(next) { setTab(next); setEditing(null); setForm(freshForm(next)); setError(''); }
+  function switchPlanTab(next) { setTab(next); setEditing(null); setForm(next === 'pro' || next === 'booster' ? freshForm(next) : form); setError(''); }
 
   async function create(e) {
     e.preventDefault(); setError('');
@@ -257,13 +261,41 @@ export default function AdminMembershipPlansConfig() {
     }),
   }));
   const citiesForState = stateId => cities.filter(city => Number(city.state_id) === Number(stateId));
+  const growthScaleItems = useMemo(() => servicePricing
+    .filter(item => item.category === (tab === 'grow' ? 'Grow' : 'Scale'))
+    .slice()
+    .sort((a, b) => Number(a.sort_order || 0) - Number(b.sort_order || 0) || Number(a.id || 0) - Number(b.id || 0)), [servicePricing, tab]);
+  const updateServicePricing = (id, field, value) => setServicePricing(current => current.map(item => item.id === id ? { ...item, [field]: value } : item));
+  async function saveServicePricing(item) {
+    setPricingSaving(item.id); setError('');
+    try {
+      const payload = {
+        category: item.category,
+        name: String(item.name || '').trim(),
+        slug: item.slug,
+        tagline: item.tagline || '',
+        description: item.description || '',
+        price_label: String(item.price_label || '').trim() || 'Pricing to be configured',
+        billing_note: item.billing_note || '',
+        features: Array.isArray(item.features) ? item.features : [],
+        cta_label: item.cta_label || (item.category === 'Grow' ? 'Explore Services' : 'Learn More'),
+        cta_url: item.cta_url || (item.category === 'Grow' ? '/contact' : '/investment'),
+        highlighted: Boolean(item.highlighted),
+        sort_order: Number(item.sort_order || 0),
+        is_active: item.is_active !== false,
+      };
+      const saved = await req('/admin/service-pricing/' + item.id, { method: 'PUT', body: JSON.stringify(payload) });
+      setServicePricing(current => current.map(row => row.id === item.id ? saved : row));
+    } catch (e) { setError(e.message || 'Failed to save pricing'); }
+    finally { setPricingSaving(null); }
+  }
 
   return <main className="commercial-page membership-config-page">
-    <header className="commercial-head"><h1>Membership Plans</h1></header>
+    <header className="commercial-head"><h1>Membership & Growth</h1></header>
     {error && <div className="error">{error}</div>}
-    <nav className="tabs"><button className={tab === 'pro' ? 'selected' : ''} onClick={() => switchPlanTab('pro')}>Pro</button><button className={tab === 'booster' ? 'selected' : ''} onClick={() => switchPlanTab('booster')}>Booster</button><button className={tab === 'investor' ? 'selected' : ''} onClick={() => { setTab('investor'); setEditing(null); setError(''); }}>Investor</button></nav>
+    <nav className="tabs"><button className={tab === 'pro' ? 'selected' : ''} onClick={() => switchPlanTab('pro')}>START</button><button className={tab === 'grow' ? 'selected' : ''} onClick={() => switchPlanTab('grow')}>GROW</button><button className={tab === 'scale' ? 'selected' : ''} onClick={() => switchPlanTab('scale')}>SCALE</button><button className={tab === 'investor' ? 'selected' : ''} onClick={() => { setTab('investor'); setEditing(null); setError(''); }}>Investor</button></nav>
 
-    {tab !== 'investor' && <>
+    {(tab === 'pro' || tab === 'booster') && <>
       <section className="create-card hero-card">
         <div className="card-heading"><h2>{editing ? `Edit ${form.name}` : `Configure ${form.name}`}</h2><span className="status on">Active</span></div>
         <form onSubmit={editing ? saveEdit : create}>
@@ -312,6 +344,25 @@ export default function AdminMembershipPlansConfig() {
       <section className="plans-list">{loading ? <div className="empty">Loading…</div> : visibleGroups.length === 0 ? <div className="empty"><strong>No {tab === 'pro' ? 'Pro' : 'Booster'} plans</strong></div> : visibleGroups.map(group => <div className={`plan-group ${tab === 'booster' ? 'plan-booster' : ''}`} key={`${group[0].plan_type}-${group[0].plan_group || group[0].id}`}><div className="group-head"><h2>{group[0].plan_group || (tab === 'pro' ? 'Pro' : 'Booster')}</h2><span className="live-count">{group.filter(p => p.is_active).length}/{group.length} active</span></div>{group.slice().sort((a, b) => Number(a.billing_months || 1) - Number(b.billing_months || 1)).map(plan => <div className="option" key={plan.id}><div><b>{plan.billing_period}</b><small>{plan.billing_months} mo · {plan.discount_percent || 0}% off</small></div><strong>{money(plan.price)}</strong><div className="actions"><button onClick={() => beginEdit(plan)}>Edit</button><button onClick={() => toggle(plan)}>{plan.is_active ? 'Disable' : 'Enable'}</button><button className="danger" onClick={() => remove(plan)}>Delete</button></div></div>)}</div>)}</section>
     </>}
 
+    {(tab === 'grow' || tab === 'scale') && <section className="create-card hero-card growth-scale-admin-card">
+      <div className="card-heading"><div><h2>{tab === 'grow' ? 'GROW pricing' : 'SCALE pricing'}</h2><small>Configure the public-facing optional services and program pricing shown on the customer Membership page.</small></div><span className="status on">{growthScaleItems.length} configured</span></div>
+      <div className="pricing-config-note">Starter membership pricing stays under START. GROW and SCALE are separate services/programs, so their pricing is managed independently here.</div>
+      <div className="growth-scale-admin-list">
+        {loading ? <div className="empty">Loading pricing…</div> : growthScaleItems.length === 0 ? <div className="empty">No {tab === 'grow' ? 'GROW' : 'SCALE'} pricing items configured.</div> : growthScaleItems.map(item => <article className="growth-scale-admin-item" key={item.id}>
+          <div className="growth-scale-admin-head"><div><span>{item.category}</span><h3>{item.name}</h3></div><label className="check-row"><input type="checkbox" checked={item.is_active !== false} onChange={e => updateServicePricing(item.id, 'is_active', e.target.checked)} /> Published</label></div>
+          <div className="two">
+            <label>Service name<input value={item.name || ''} onChange={e => updateServicePricing(item.id, 'name', e.target.value)} /></label>
+            <label>Price display<input value={item.price_label || ''} onChange={e => updateServicePricing(item.id, 'price_label', e.target.value)} placeholder="₹9,999 / month / Custom quote" /></label>
+          </div>
+          <div className="two">
+            <label>Billing / pricing note<input value={item.billing_note || ''} onChange={e => updateServicePricing(item.id, 'billing_note', e.target.value)} placeholder="Monthly / one-time / scope-based" /></label>
+            <label>Customer CTA<input value={item.cta_label || ''} onChange={e => updateServicePricing(item.id, 'cta_label', e.target.value)} /></label>
+          </div>
+          <label>Short description<textarea rows="2" value={item.description || ''} onChange={e => updateServicePricing(item.id, 'description', e.target.value)} /></label>
+          <div className="form-footer"><button type="button" className="primary create-btn" onClick={() => saveServicePricing(item)} disabled={pricingSaving === item.id}>{pricingSaving === item.id ? 'Saving…' : 'Save pricing'}</button></div>
+        </article>)}
+      </div>
+    </section>}
     {tab === 'investor' && investor && <section className="create-card hero-card"><div className="card-heading"><div><h2>Investor</h2><small>Configure capacity as Industry → Location → Limit</small></div><label className="switch-label"><input type="checkbox" checked={Boolean(investor.enabled)} onChange={e => setInvestor({ ...investor, enabled: e.target.checked })} /> Enabled</label></div><form onSubmit={saveInvestor}><div className="two"><label>Customer limit / industry<input type="number" min="0" value={investor.customer_industry_limit ?? 10} onChange={e => setInvestor({ ...investor, customer_industry_limit: e.target.value })} /></label><label>Minimum investment ₹<input type="number" min="0" value={investor.min_investment} onChange={e => setInvestor({ ...investor, min_investment: e.target.value })} /></label><label>Maximum investment ₹<input type="number" min="0" value={investor.max_investment ?? ''} placeholder="No maximum" onChange={e => setInvestor({ ...investor, max_investment: e.target.value })} /></label></div><div className="editor-section investor-hierarchy-section"><div className="benefit-head"><div><b>Industry → Location → Limit</b><small>Each industry's capacity is configured only through its locations. A state row can cover all cities, or a specific city can have its own limit.</small></div></div><div className="investor-hierarchy">{(investor.industryLimits || []).map((industry, industryIndex) => <div className="investor-industry-card" key={industry.id}><div className="investor-industry-head"><div><strong>{industry.name}</strong><small>{(industry.locations || []).length} location {(industry.locations || []).length === 1 ? 'rule' : 'rules'}</small></div><label className="check-row"><input type="checkbox" checked={industry.is_active !== false} onChange={e => updateIndustry(industryIndex, 'is_active', e.target.checked)} /> Active</label></div><div className="investor-location-list">{(industry.locations || []).length === 0 && <div className="empty investor-empty">No locations configured for this industry.</div>}{(industry.locations || []).map((location, locationIndex) => <div className="investor-location-row" key={location.id || `${industry.id}-${locationIndex}`}><label>Location<select value={location.state_id || ''} onChange={e => updateIndustryLocation(industryIndex, locationIndex, 'state_id', e.target.value)}><option value="">Select state</option>{states.map(state => <option key={state.id} value={state.id}>{state.name}</option>)}</select></label><label>City<select value={location.city_id ?? ''} disabled={!location.state_id} onChange={e => updateIndustryLocation(industryIndex, locationIndex, 'city_id', e.target.value || null)}><option value="">All cities</option>{citiesForState(location.state_id).map(city => <option key={city.id} value={city.id}>{city.name}</option>)}</select></label><label>Limit ₹<input type="number" min="0" step="0.01" value={location.investor_limit ?? 0} onChange={e => updateIndustryLocation(industryIndex, locationIndex, 'investor_limit', e.target.value)} /></label><label className="check-row"><input type="checkbox" checked={location.is_active !== false} onChange={e => updateIndustryLocation(industryIndex, locationIndex, 'is_active', e.target.checked)} /> Active</label><button type="button" className="remove-lead" onClick={() => removeIndustryLocation(industryIndex, locationIndex)}>×</button></div>)}</div><button type="button" className="mini-action" onClick={() => addIndustryLocation(industryIndex)}>＋ Add location to {industry.name}</button></div>)}</div></div><div className="form-footer"><button className="primary create-btn">Save Investor limits</button></div></form></section>}
   </main>;
 }
