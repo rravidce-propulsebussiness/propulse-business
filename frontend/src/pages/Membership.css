@@ -684,3 +684,10 @@
 .membership-current-details strong{font-size:12px;color:#123764;white-space:nowrap}
 @media(max-width:900px){.membership-current-details{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:560px){.membership-current-details{grid-template-columns:1fr 1fr}.membership-current-details strong{white-space:normal}}
+
+.membership-proration-preview,.coupon-proration-summary{display:grid;grid-template-columns:1fr auto;gap:7px 14px;margin:12px 0;padding:12px 14px;border:1px solid #dce6f2;border-radius:12px;background:#f7faff;color:#58708f;font-size:12px}
+.membership-proration-preview strong,.coupon-proration-summary strong{color:#123c73;font-weight:800}
+.membership-proration-preview small,.coupon-proration-summary small{grid-column:1/-1;color:#7a8ca5;line-height:1.45}
+.coupon-proration-summary .total{padding-top:8px;border-top:1px solid #dce6f2;font-weight:800}
+.coupon-proration-summary .total strong{font-size:16px;color:#f45125}
+@media(max-width:560px){.membership-proration-preview,.coupon-proration-summary{grid-template-columns:1fr auto}}
