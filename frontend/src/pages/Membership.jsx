@@ -247,9 +247,14 @@ export default function Membership() {
               {locked && <div className="saving-note">🔒 Unlock with Pro</div>}
               {group.type === 'booster' && isProMember && <div className="saving-note">✓ Booster unlocked for Pro members</div>}
               <div className="membership-divider" />
-              <h3>{group.type === 'pro' ? 'Your lead advantage' : 'What Booster is built for'}</h3>
-              <ul>{benefits(plan, group.type).map((item, index) => <li key={`${item}-${index}`}><b>✓</b><span>{item}</span></li>)}</ul>
-              {planAddOns.length > 0 && <div className="membership-addons"><div><span>AVAILABLE ADD-ONS</span><small>Configured in Admin</small></div><ul>{planAddOns.map((item, index) => <li key={`${item}-${index}`}><b>+</b><span>{item}</span></li>)}</ul></div>}
+              <details className="membership-fold">
+                <summary><span>{group.type === 'pro' ? 'Your lead advantage' : 'What Booster is built for'}</span><b>+</b></summary>
+                <ul>{benefits(plan, group.type).map((item, index) => <li key={`${item}-${index}`}><b>✓</b><span>{item}</span></li>)}</ul>
+              </details>
+              {planAddOns.length > 0 && <details className="membership-fold membership-addons-fold">
+                <summary><span>Available add-ons</span><b>+</b></summary>
+                <div className="membership-addons"><div><span>AVAILABLE ADD-ONS</span><small>Configured in Admin</small></div><ul>{planAddOns.map((item, index) => <li key={`${item}-${index}`}><b>+</b><span>{item}</span></li>)}</ul></div>
+              </details>}
               {isCurrent ? <button className="membership-primary current" disabled>✓ Current {group.name}</button> : locked ? <button className="membership-primary current" disabled>🔒 Pro membership required</button> : !plan ? <button className="membership-primary current" disabled>Plan being configured</button> : <button className="membership-primary" onClick={() => openPlan(plan, group.type)} disabled={submitting}>Choose {group.name} <span>→</span></button>}
             </article>
           })}
@@ -271,14 +276,15 @@ export default function Membership() {
             </div>
 
             <div className="membership-divider" />
-            <h3>How Investment works</h3>
-            <ul>
-              <li><b>01</b><span>Fund your investment within the available Propulse limits.</span></li>
-              <li><b>02</b><span>Propulse promotes your investor profile through advertising activity.</span></li>
-              <li><b>03</b><span>Ad-driven demand helps generate and boost eligible business leads.</span></li>
-              <li><b>04</b><span>As eligible leads are sold, you participate in the realized lead-sale income.</span></li>
-            </ul>
-
+            <details className="membership-fold investment-fold">
+              <summary><span>How Investment works</span><b>+</b></summary>
+              <ul>
+                <li><b>01</b><span>Fund your investment within the available Propulse limits.</span></li>
+                <li><b>02</b><span>Propulse promotes your investor profile through advertising activity.</span></li>
+                <li><b>03</b><span>Ad-driven demand helps generate and boost eligible business leads.</span></li>
+                <li><b>04</b><span>As eligible leads are sold, you participate in the realized lead-sale income.</span></li>
+              </ul>
+            </details>
             {isProMember ? <a className="membership-primary" href="/investment">Open Investment <span>→</span></a> : <button className="membership-primary current" disabled>🔒 Activate Pro first</button>}
           </article>
         </section>
