@@ -63,7 +63,7 @@ export default function InvestorHeader() {
     if (!query) return true
     const targetParams = new URLSearchParams(query)
     const currentParams = new URLSearchParams(location.search)
-    return [...targetParams.entries()].every(([key,value]) => currentParams.get(key) === value)
+    return [...targetParams.entries()].every(([key, value]) => currentParams.get(key) === value)
   }
 
   const nav = isPro
@@ -88,8 +88,6 @@ export default function InvestorHeader() {
       >
         <img src="/brand/propulse-logo.png" alt="Propulse Business" />
       </Link>
-
-      {isPro && <div className="investor-header-label">INVESTOR</div>}
 
       <nav className={`investor-header-nav${open ? ' open' : ''}`}>
         {nav.map(item => (
