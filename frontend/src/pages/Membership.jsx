@@ -279,6 +279,7 @@ export default function Membership() {
             <div><strong>SCALE</strong><b>Broader Reach</b><span>Promote your business, generate opportunities and access eligible programs subject to their terms.</span></div>
           </div>
         </section>
+      </>}
 
     {couponOpen && selectedPlan && <div className="membership-modal-backdrop" onClick={closeCoupon}>
       <div className="coupon-checkout-modal" onClick={(event) => event.stopPropagation()}>
