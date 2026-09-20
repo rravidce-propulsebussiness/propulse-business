@@ -7,8 +7,6 @@ const { getMembershipAccess } = require('./membershipAccessService');
 const JWT_SECRET = process.env.JWT_SECRET;
 if (!JWT_SECRET && process.env.NODE_ENV === 'production') throw new Error('JWT_SECRET must be configured in production');
 const EFFECTIVE_JWT_SECRET = JWT_SECRET || 'change-this-secret-in-development-only';
-const PUBLIC_SIGNUP_ROLES = new Set(['business','lead_partner']);
-function normalizePublicSignupRole(value){ const role=String(value||'business').trim().toLowerCase(); return PUBLIC_SIGNUP_ROLES.has(role)?role:null; }
 
 async function getMembershipSummary(userId, client = pool) {
   try {
@@ -65,9 +63,7 @@ async function validateBusinessSelections(client, services, locations) {
   }
 }
 
-async function signup({ name, email, password, phone, businessName, businessDetails, services, locations, role = 'business' }) {
-  const signupRole = normalizePublicSignupRole(role);
-  if (!signupRole) throw Object.assign(new Error('Only User or Lead Partner accounts can be created through public signup'), { code: 'INVALID_SIGNUP_ROLE' });
+async function signup({ name, email, password, phone, businessName, businessDetails, services, locations }) {
   const normalizedEmail = email.trim().toLowerCase();
   const client = await pool.connect();
   try {
@@ -76,7 +72,7 @@ async function signup({ name, email, password, phone, businessName, businessDeta
     if (existing.rows.length) throw Object.assign(new Error('An account with this email already exists'), { code: 'EMAIL_EXISTS' });
     await validateBusinessSelections(client, services, locations);
     const passwordHash = await bcrypt.hash(password, 12);
-    const user = (await client.query(`INSERT INTO users (name,email,password_hash,role) VALUES ($1,$2,$3,$4) RETURNING id,name,email,role,auth_version`, [name.trim(), normalizedEmail, passwordHash, signupRole])).rows[0];
+    const user = (await client.query(`INSERT INTO users (name,email,password_hash,role) VALUES ($1,$2,$3,'business') RETURNING id,name,email,role,auth_version`, [name.trim(), normalizedEmail, passwordHash])).rows[0];
     const profileId = (await client.query(`INSERT INTO business_profiles (user_id,phone,business_name,business_details) VALUES ($1,$2,$3,$4) RETURNING id`, [user.id, phone.trim(), businessName.trim(), businessDetails.trim()])).rows[0].id;
     for (const selection of services) await client.query(`INSERT INTO business_profile_services (business_profile_id,industry_id,service_id,subservice_id) VALUES ($1,$2,$3,$4) ON CONFLICT DO NOTHING`, [profileId, selection.industryId, selection.serviceId, selection.subserviceId || null]);
     for (const location of locations) await client.query(`INSERT INTO business_profile_locations (business_profile_id,state_id,city_id) VALUES ($1,$2,$3) ON CONFLICT DO NOTHING`, [profileId, location.stateId, location.cityId]);
@@ -104,9 +100,7 @@ async function verifyGoogleIdToken(idToken) {
   return payload;
 }
 
-async function googleLogin({ idToken, role = 'business' }) {
-  const signupRole = normalizePublicSignupRole(role);
-  if (!signupRole) throw Object.assign(new Error('Choose either User or Lead Partner as your account type'), { code: 'INVALID_SIGNUP_ROLE' });
+async function googleLogin({ idToken }) {
   const googleUser = await verifyGoogleIdToken(idToken);
   const normalizedEmail = googleUser.email.trim().toLowerCase();
   const client = await pool.connect();
@@ -115,7 +109,7 @@ async function googleLogin({ idToken, role = 'business' }) {
     let user = (await client.query(`SELECT id,name,email,password_hash,role,auth_version FROM users WHERE LOWER(email)=$1 AND is_active=TRUE FOR UPDATE`, [normalizedEmail])).rows[0];
     if (!user) {
       const placeholderPassword = await bcrypt.hash(crypto.randomBytes(32).toString('hex'), 12);
-      user = (await client.query(`INSERT INTO users (name,email,password_hash,role) VALUES ($1,$2,$3,$4) RETURNING id,name,email,password_hash,role,auth_version`, [String(googleUser.name || normalizedEmail.split('@')[0]).trim().slice(0, 120), normalizedEmail, placeholderPassword, signupRole])).rows[0];
+      user = (await client.query(`INSERT INTO users (name,email,password_hash,role) VALUES ($1,$2,$3,'business') RETURNING id,name,email,password_hash,role,auth_version`, [String(googleUser.name || normalizedEmail.split('@')[0]).trim().slice(0, 120), normalizedEmail, placeholderPassword])).rows[0];
       await client.query(`INSERT INTO business_profiles (user_id,phone,business_name,business_details) VALUES ($1,$2,$3,$4)`, [user.id, 'Not provided', String(googleUser.name || normalizedEmail.split('@')[0]).trim().slice(0, 160), 'Google account. Complete your business profile to receive better lead matches.']);
     }
     await client.query('COMMIT');
