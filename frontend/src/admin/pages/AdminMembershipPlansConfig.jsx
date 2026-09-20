@@ -60,7 +60,7 @@ function freshForm(planType = 'pro') {
   return {
     name: planType === 'scale' ? 'Scale' : 'Grow', planType: 'pro', monthlyBasePrice: '', periods: cycles,
     pricing: Object.fromEntries(cycles.map(c => [c.key, { discount: 0, price: '', customPrice: false }])),
-    benefits: planType === 'scale' ? ['Everything in GROW', 'Broader reach', 'Lead generation', 'Eligible earning programs, subject to program terms'] : ['Best lead pricing', 'Exclusive Leads access', 'Investment access unlocked for eligible members', 'Website development', 'SEO services', 'Website maintenance'], addOns: [],
+    benefits: planType === 'scale' ? ['Everything in GROW', 'Website development', 'SEO services', 'Website maintenance'] : ['Best lead pricing', 'Exclusive Leads access', 'Investment access unlocked for eligible members'], addOns: [],
   };
 }
 
