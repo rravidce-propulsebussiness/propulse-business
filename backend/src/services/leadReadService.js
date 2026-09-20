@@ -68,6 +68,7 @@ const normalizeLeadRow=row=>{
   }
 
   const property=customValue(custom,['Property Type','Property','Interior Type','Type of Property'])||customValueContains(custom,['propertytype','property','interiortype']);
+  const normalizedBudget=String(row?.budget??'').trim();
   if(!hasCustomKeyMatching(custom,['propertytype','interiortype'])&&property){
     custom['Property Type']=property;
   }

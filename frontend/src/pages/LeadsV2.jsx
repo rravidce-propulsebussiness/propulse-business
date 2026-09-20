@@ -80,6 +80,7 @@ export default function LeadsV2() {
   const [useWallet, setUseWallet] = useState(true)
   const [search, setSearch] = useState('')
   const [tier, setTier] = useState('all')
+  const [sort, setSort] = useState('newest')
   const [page, setPage] = useState(1)
   const [pagination, setPagination] = useState({ page: 1, limit: 20, total: 0, hasNext: false, hasPrevious: false })
   const [buying, setBuying] = useState(null)
@@ -95,25 +96,31 @@ export default function LeadsV2() {
   const [couponStatus, setCouponStatus] = useState('')
   const [couponError, setCouponError] = useState('')
 
-  useEffect(() => { setPage(1) }, [search, tier, category])
+  useEffect(() => { setPage(1) }, [search, tier, sort, category])
   useEffect(() => {
     let live = true
     const timer = setTimeout(async () => {
       setLoading(true); setError('')
       try {
         const terms = [category?.replaceAll('-', ' '), search.trim()].filter(Boolean).join(' ')
-        const d = await listLeads({ status: 'available', page, limit: 20, ...(tier !== 'all' ? { leadType: tier } : {}), ...(terms ? { search: terms } : {}) }, token)
+        const d = await listLeads({ status: 'available', page, limit: 20, allIndustries: true, allLocations: true, ...(tier !== 'all' ? { leadType: tier } : {}), ...(terms ? { search: terms } : {}) }, token)
         if (live) {
           const items = Array.isArray(d) ? d : (d.items || [])
           const availableItems = items.filter(l => !l.is_purchased && !l.purchased && !l.access?.claimed && !l.access?.purchased)
-          setLeads(availableItems)
+          const orderedItems = [...availableItems].sort((a, b) => {
+            if (sort === 'oldest') return new Date(a.created_at || 0) - new Date(b.created_at || 0)
+            if (sort === 'price-low') return Number(a.pricing?.shares?.[0]?.normal || 0) - Number(b.pricing?.shares?.[0]?.normal || 0)
+            if (sort === 'price-high') return Number(b.pricing?.shares?.[0]?.normal || 0) - Number(a.pricing?.shares?.[0]?.normal || 0)
+            return new Date(b.created_at || 0) - new Date(a.created_at || 0)
+          })
+          setLeads(orderedItems)
           setPagination(d.pagination ? { ...d.pagination, total: Math.max(0, Number(d.pagination.total || 0) - (items.length - availableItems.length)) } : { page, limit: 20, total: availableItems.length, hasNext: false, hasPrevious: page > 1 })
         }
       } catch (e) { if (live) setError(e.message) }
       finally { if (live) setLoading(false) }
     }, 250)
     return () => { live = false; clearTimeout(timer) }
-  }, [token, page, search, tier, category])
+  }, [token, page, search, tier, sort, category])
 
   const isPro = Boolean(user?.is_pro_member || user?.membership_type === 'pro')
   const buyModalClaimed = Boolean(buyModal?.access?.claimed || buyModal?.access?.purchased)
@@ -217,7 +224,19 @@ export default function LeadsV2() {
   return <div className="lv2-shell">
     <UserHeader />
     <main className="lv2-page">
-      <section className="lv2-market-head"><div className="lv2-title-block"><span></span><div><h1>{title}</h1><p>High quality, verified leads to grow your business</p></div></div><div className="lv2-controls"><div className="lv2-search"><span>⌕</span><input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by industry, service, location..." aria-label="Search leads"/><b>⌕</b></div><button className="lv2-filter-button" onClick={() => setTier(tier === 'all' ? 'premium' : tier === 'premium' ? 'basic' : 'all')}><span>☷</span> Filters</button><div className="lv2-sort"><small>Sort by</small><strong>Newest</strong><span>⌄</span></div></div></section>
+      <section className="lv2-market-head"><div className="lv2-title-block"><span></span><div><h1><span>Available</span> <em>Leads</em></h1><p>High quality, verified leads to grow your business</p></div></div><div className="lv2-controls"><div className="lv2-search"><span>⌕</span><input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by industry, service, location..." aria-label="Search leads"/><b>⌕</b></div><div className="lv2-filter-group" role="group" aria-label="Filter by lead type">
+            <button className={tier === 'all' ? 'active' : ''} onClick={() => setTier('all')}>All</button>
+            <button className={tier === 'basic' ? 'active' : ''} onClick={() => setTier('basic')}>Basic</button>
+            <button className={tier === 'premium' ? 'active' : ''} onClick={() => setTier('premium')}>Premium</button>
+            <button className={tier === 'exclusive' ? 'active' : ''} onClick={() => setTier('exclusive')}>Exclusive</button>
+          </div>
+          <div className="lv2-sort-group" role="group" aria-label="Sort leads">
+            <span>Sort</span>
+            <button className={sort === 'newest' ? 'active' : ''} onClick={() => setSort('newest')}>Newest</button>
+            <button className={sort === 'oldest' ? 'active' : ''} onClick={() => setSort('oldest')}>Oldest</button>
+            <button className={sort === 'price-low' ? 'active' : ''} onClick={() => setSort('price-low')}>Price ↑</button>
+            <button className={sort === 'price-high' ? 'active' : ''} onClick={() => setSort('price-high')}>Price ↓</button>
+          </div></div></section>
       <section className="lv2-stats"><div className="lv2-stat orange"><span>▣</span><div><b>{pagination.total}</b><small>Total Leads</small></div></div><div className="lv2-stat blue"><span>♟</span><div><b>{topIndustry || 'Verified opportunities'}</b><small>Top Industry</small></div></div><div className="lv2-stat green"><span>●</span><div><b>{topLocation || 'India'}</b><small>Top Location</small></div></div><div className="lv2-stat purple"><span>★</span><div><b>4.8</b><small>Avg. Quality Score</small></div></div><div className="lv2-verified">✓ &nbsp; Verified Opportunities Only</div></section>
       {error && <div className="lv2-error">{error}</div>}{notice && <div className="lv2-error">{notice}</div>}
       {loading ? <div className="lv2-empty"><span>PROPULSE MARKETPLACE</span><strong>Loading opportunities...</strong></div> : !leads.length ? <div className="lv2-empty"><span>PROPULSE MARKETPLACE</span><strong>No matching leads</strong><p>Try another search or filter.</p></div> : <div className="lv2-grid">
