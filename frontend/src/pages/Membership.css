@@ -447,3 +447,4 @@
   .membership-plan,.membership-fold>ul,.membership-fold>.membership-addons{animation:none!important}
   .membership-plan,.membership-primary,.membership-cycles button,.investor-model div,.value-grid div{transition:none!important}
 }
+.membership-single-cycle{min-height:38px;display:flex;align-items:center;padding:0 12px;border-radius:9px;background:#e8eef6;color:#0b2d63;font-size:10px;font-weight:900}.membership-single-cycle.unavailable{color:#8a97a9;background:#f1f4f8}
