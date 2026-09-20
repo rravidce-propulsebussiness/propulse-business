@@ -342,7 +342,7 @@ export default function AdminMembershipPlansConfig() {
     </>}
 
     {(tab === 'grow' || tab === 'scale') && <section className="create-card hero-card growth-scale-admin-card">
-      <div className="card-heading"><div><h2>{tab === 'grow' ? 'GROW pricing' : 'SCALE pricing'}</h2><small>Configure the GROW level. GROW builds on START and adds website, SEO and maintenance services.</small></div><span className="status on">{growthScaleItems.length} configured</span></div>
+      <div className="card-heading"><div><h2>{tab === 'grow' ? 'GROW pricing' : 'SCALE pricing'}</h2><small>{tab === 'grow' ? 'Configure the GROW level. GROW builds on START and adds website, SEO and maintenance services.' : 'Configure the SCALE level. SCALE builds on GROW and adds broader reach, lead generation and eligible earning programs.'}</small></div><span className="status on">{growthScaleItems.length} configured</span></div>
       <div className="pricing-config-note">START is the base membership. GROW builds on START; SCALE builds on GROW. Configure each level's customer-facing pricing and terms here.</div>
       <div className="growth-scale-admin-list">
         {loading ? <div className="empty">Loading pricing…</div> : growthScaleItems.length === 0 ? <div className="empty">No {tab === 'grow' ? 'GROW' : 'SCALE'} pricing items configured.</div> : growthScaleItems.map(item => <article className="growth-scale-admin-item" key={item.id}>
