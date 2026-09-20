@@ -18,7 +18,7 @@ const localProration = (current, target) => {
   const currentDuration = Math.max(1, Number(current.duration_days || 30))
   const credit = Math.min(currentPrice, Math.max(0, Number((currentPrice * remainingDays / currentDuration).toFixed(2))))
   const payable = Math.max(0, Number((Number(target.price || 0) - credit).toFixed(2)))
-  const targetExpiry = current.starts_at ? new Date(current.starts_at) : new Date()
+  const targetExpiry = new Date()
   targetExpiry.setDate(targetExpiry.getDate() + Math.max(1, Number(target.duration_days || 30)))
   return { credit, payable, remainingDays, targetExpiry }
 }
@@ -288,7 +288,7 @@ export default function Membership() {
         <span className="membership-kicker">COUPON</span>
         <h2>Have a coupon?</h2>
         <p>Apply your coupon before payment. Your unused current membership value is credited before any coupon discount.</p>
-        {selectedProration && <div className="coupon-proration-summary"><div><span>New plan price</span><strong>{money(selectedPlan.price)}</strong></div><div><span>Unused current-plan credit</span><strong>− {money(selectedProration.credit)}</strong></div><div className="total"><span>Upgrade payable</span><strong>{money(selectedProration.payable)}</strong></div><small>Validity remains anchored to your original membership start date and runs through {dateLabel(selectedProration.targetExpiry)}.</small></div>}
+        {selectedProration && <div className="coupon-proration-summary"><div><span>New plan price</span><strong>{money(selectedPlan.price)}</strong></div><div><span>Unused current-plan credit</span><strong>− {money(selectedProration.credit)}</strong></div><div className="total"><span>Upgrade payable</span><strong>{money(selectedProration.payable)}</strong></div><small>New validity starts today and runs through {dateLabel(selectedProration.targetExpiry)}.</small></div>}
         <div className="coupon-code-row">
           <input value={couponCode} onChange={(event) => { setCouponCode(event.target.value.toUpperCase()); setCouponResult(null); setCouponError('') }} placeholder="Enter coupon code" autoComplete="off" />
           <button type="button" onClick={validateCoupon} disabled={couponChecking || submitting}>{couponChecking ? 'Checking…' : 'Apply'}</button>
