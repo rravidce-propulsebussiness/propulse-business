@@ -2,7 +2,7 @@ const fs=require('fs');
 const path=require('path');
 const pool=require('../config/database');
 
-const CATEGORIES=['Marketing','Lead Sales','Government Compliance'];
+const CATEGORIES=['Marketing','Lead Sales','Government Compliance','Grow','Scale'];
 const MAX_IMAGE_BYTES=7*1024*1024;
 const MIME_EXTENSIONS={'image/jpeg':'jpg','image/png':'png','image/webp':'webp'};
 const UPLOAD_ROOT=path.join(__dirname,'../../uploads/service-pricing');
