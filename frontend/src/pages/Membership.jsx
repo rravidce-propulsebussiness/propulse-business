@@ -224,8 +224,9 @@ export default function Membership() {
       {loading ? <div className="membership-state">Loading membership options…</div> : <>
         <section className="membership-plans membership-plans-three">
           {groups.map((group) => {
-            const selectedCycle = selectedCycles[group.key] || 'monthly'
-            const plan = selectedPlans[group.key]
+            const availableCycles = cycles.filter((key) => group.plans.some((item) => Number(item?.billing_months || 0) === cycleMonths[key]))
+            const selectedCycle = availableCycles.includes(selectedCycles[group.key]) ? selectedCycles[group.key] : (availableCycles[0] || 'monthly')
+            const plan = findPlan(group, selectedCycle)
             const isCurrent = group.type === 'pro' ? isProMember : isBoosterActive
             const locked = group.type === 'booster' && !isProMember
             const planAddOns = addOns(plan).map(addOnName).filter(Boolean)
@@ -238,8 +239,10 @@ export default function Membership() {
               </div>
 
               <div className="card-billing">
-                <div><span>CHOOSE BILLING</span><small>Cycle length</small></div>
-                <div className="membership-cycles">{cycles.map((key) => <button type="button" key={key} className={selectedCycle === key ? 'active' : ''} onClick={() => setSelectedCycles((previous) => ({ ...previous, [group.key]: key }))}>{cycleLabel(key)}</button>)}</div>
+                <div><span>CHOOSE BILLING</span>{availableCycles.length > 1 && <small>Cycle length</small>}</div>
+                {availableCycles.length > 1 && <div className="membership-cycles">{availableCycles.map((key) => <button type="button" key={key} className={selectedCycle === key ? 'active' : ''} onClick={() => setSelectedCycles((previous) => ({ ...previous, [group.key]: key }))}>{cycleLabel(key)}</button>)}</div>}
+                {availableCycles.length === 1 && <div className="membership-single-cycle">{cycleLabel(availableCycles[0])}</div>}
+                {availableCycles.length === 0 && <div className="membership-single-cycle unavailable">No active billing cycle configured</div>}
               </div>
               <div className="membership-price">{plan ? money(plan.price) : '—'}<small>{plan ? ` / ${period(plan).toLowerCase()}` : ''}</small></div>
               {locked && <div className="saving-note">🔒 Unlock with Pro</div>}
