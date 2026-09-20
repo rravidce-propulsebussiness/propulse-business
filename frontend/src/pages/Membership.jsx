@@ -324,5 +324,6 @@ export default function Membership() {
         <button className="membership-primary" onClick={submitManual} disabled={submitting}>{submitting ? 'Submitting…' : `Submit ${money(checkout.externalAmount)} payment`} <span>→</span></button>
       </div>
     </div>}
+    </main>
   </div>
 }
