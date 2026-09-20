@@ -1,29 +1,45 @@
 :root{--investment-nav-navy:#082b5f;--investment-nav-orange:#f45125}
-.investment-public-header{background:rgba(5,30,67,.97);border-bottom:1px solid rgba(255,255,255,.1);box-shadow:none}
-.investment-public-header .brand{display:flex;align-items:center;min-width:170px;flex:0 0 auto}
-.investment-public-header .brand img{display:block;width:164px;max-height:48px;object-fit:contain}
-.investment-public-header .desktop-nav{display:flex;align-items:center;gap:2px;flex:1;min-width:0}
-.investment-public-header .desktop-nav a{position:relative;padding:10px 9px;color:#dbe6f5;text-decoration:none;font-size:11px;font-weight:800;transition:.2s;white-space:nowrap}
-.investment-public-header .desktop-nav a:hover{color:#fff}
-.investment-public-header .desktop-nav a:focus-visible{outline:2px solid #ff9b78;outline-offset:2px;border-radius:6px}
-.investment-public-header .header-actions{display:flex;align-items:center;gap:9px;margin-left:auto}
-.investment-public-header .header-login,.investment-public-header .header-signup{display:inline-flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;font-size:11px;font-weight:850;border-radius:8px;padding:10px 15px;white-space:nowrap}
-.investment-public-header .header-login{color:#fff;border:1px solid rgba(255,255,255,.3)}
-.investment-public-header .header-signup{color:#fff;background:var(--investment-nav-orange);box-shadow:0 9px 24px rgba(244,81,37,.25)}
-.investment-public-header .header-login:hover{background:rgba(255,255,255,.08)}
-.investment-public-header .header-signup:hover{background:#ff713f}
-@media(max-width:1050px){
-  .investment-public-header .desktop-nav{gap:0}
-  .investment-public-header .desktop-nav a{padding:9px 6px;font-size:10px}
-  .investment-public-header .brand{min-width:150px}
-  .investment-public-header .brand img{width:150px}
-  .investment-public-header .header-login{display:none}
+.investor-header{height:76px;display:flex;align-items:center;gap:24px;padding:0 clamp(20px,4vw,56px);background:rgba(5,30,67,.97);border-bottom:1px solid rgba(255,255,255,.1);position:sticky;top:0;z-index:200;backdrop-filter:blur(16px)}
+.investor-header-brand{display:flex;align-items:center;min-width:170px;flex:0 0 auto}
+.investor-header-brand img{display:block;width:164px;max-height:48px;object-fit:contain}
+.investor-header-label{padding:5px 9px;border-radius:999px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.14);color:#ff9b78;font-size:8px;font-weight:900;letter-spacing:.14em;white-space:nowrap}
+.investor-header-nav{display:flex;align-items:center;gap:2px;flex:1;min-width:0}
+.investor-header-nav a{position:relative;padding:10px 9px;color:#dbe6f5;text-decoration:none;font-size:11px;font-weight:800;transition:.2s;white-space:nowrap}
+.investor-header-nav a:hover{color:#fff;background:rgba(255,255,255,.06);border-radius:8px}
+.investor-header-nav a.active{color:#fff;background:rgba(255,255,255,.07);border-radius:8px}
+.investor-header-nav a.active:after{content:"";position:absolute;left:12px;right:12px;bottom:3px;height:2px;border-radius:2px;background:var(--investment-nav-orange)}
+.investor-header-right{display:flex;align-items:center;gap:9px;margin-left:auto}
+.investor-profile{display:flex;align-items:center;gap:8px;padding:4px 9px 4px 4px;border:1px solid rgba(255,255,255,.24);border-radius:999px;background:rgba(255,255,255,.06);text-decoration:none}
+.investor-avatar{width:30px;height:30px;display:grid;place-items:center;border-radius:50%;background:#fff;color:#0b2d63;font-size:10px;font-weight:900}
+.investor-profile-name{max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#fff;font-size:10px;font-weight:850}
+.investor-invest-button{display:inline-flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;font-size:11px;font-weight:850;border-radius:8px;padding:10px 15px;color:#fff;background:var(--investment-nav-orange);box-shadow:0 9px 24px rgba(244,81,37,.25);white-space:nowrap;transition:.2s}
+.investor-invest-button:hover{background:#ff713f;transform:translateY(-1px)}
+.investor-logout,.investor-mobile-logout{border:0;background:transparent;color:#e8eef8;font-size:11px;font-weight:800;cursor:pointer;padding:9px 10px;border-radius:8px}
+.investor-logout:hover,.investor-mobile-logout:hover{background:rgba(244,81,37,.16);color:#fff}
+.investor-menu,.investor-mobile-logout{display:none}
+@media(max-width:1180px){
+  .investor-header{gap:12px}
+  .investor-header-label{display:none}
+  .investor-header-nav a{padding:9px 6px;font-size:10px}
+  .investor-profile-name{max-width:85px}
+  .investor-header-brand{min-width:150px}
+  .investor-header-brand img{width:150px}
+}
+@media(max-width:900px){
+  .investor-header-nav{display:none;position:absolute;left:10px;right:10px;top:76px;flex-direction:column;align-items:stretch;padding:9px;background:#fff;border:1px solid #e1e7ef;border-radius:14px;box-shadow:0 18px 45px rgba(10,38,78,.14)}
+  .investor-header-nav.open{display:flex}
+  .investor-header-nav a{padding:12px;color:#334e70;font-size:10px}
+  .investor-header-nav a:hover,.investor-header-nav a.active{color:#0b2d63;background:#f4f7fb}
+  .investor-header-nav a.active:after{left:12px;right:auto;width:22px;bottom:6px}
+  .investor-mobile-logout{display:block;text-align:left;color:#66758a}
+  .investor-profile-name,.investor-logout{display:none}
+  .investor-menu{display:block;border:1px solid rgba(255,255,255,.22);background:rgba(255,255,255,.08);color:#fff;width:36px;height:36px;border-radius:9px;font-size:16px;cursor:pointer}
+  .investor-invest-button{padding:10px 12px;font-size:10px}
 }
 @media(max-width:760px){
-  .investment-public-header{height:68px;padding:0 14px;gap:12px}
-  .investment-public-header .brand{min-width:0}
-  .investment-public-header .brand img{width:132px}
-  .investment-public-header .desktop-nav{display:none}
-  .investment-public-header .header-actions{margin-left:auto}
-  .investment-public-header .header-signup{padding:9px 11px}
+  .investor-header{height:68px;padding:0 14px;gap:12px}
+  .investor-header-brand{min-width:0}
+  .investor-header-brand img{width:132px}
+  .investor-invest-button{padding:9px 11px;font-size:9px}
+  .investor-header-right{gap:6px}
 }
