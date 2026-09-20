@@ -14,7 +14,8 @@ const period = (plan) => {
   const months = Number(plan?.billing_months || 1)
   return months === 12 ? 'Yearly' : months === 6 ? 'Half-Yearly' : months === 3 ? 'Quarterly' : 'Monthly'
 }
-const starterBenefits = ['Best lead pricing', 'Exclusive Leads access', 'Investment access unlocked for eligible members']
+const growBenefits = ['Everything in START', 'Website development', 'SEO services', 'Website maintenance']
+const scaleBenefits = ['Everything in GROW', 'Broader reach', 'Lead generation', 'Eligible earning programs, subject to program terms']
 
 export default function Membership() {
   const user = getUser()
@@ -63,21 +64,18 @@ export default function Membership() {
     return () => { active = false }
   }, [token])
 
-  const starterPlans = useMemo(() => plans
-    .filter((item) => planType(item) === 'pro')
-    .sort((a, b) => Number(a?.billing_months || 0) - Number(b?.billing_months || 0) || Number(a?.price || 0) - Number(b?.price || 0)), [plans])
-
-  const selectedStarterPlan = useMemo(() => {
-    if (!starterPlans.length) return null
-    return starterPlans.find((item) => String(item.id) === String(selectedCycleId)) || starterPlans[0]
-  }, [starterPlans, selectedCycleId])
+  const growPlans = useMemo(() => plans.filter((item) => planType(item) === 'pro' && String(item?.plan_group || '').toLowerCase() === 'grow').sort((a, b) => Number(a?.billing_months || 0) - Number(b?.billing_months || 0) || Number(a?.price || 0) - Number(b?.price || 0)), [plans])
+  const scalePlans = useMemo(() => plans.filter((item) => planType(item) === 'pro' && String(item?.plan_group || '').toLowerCase() === 'scale').sort((a, b) => Number(a?.billing_months || 0) - Number(b?.billing_months || 0) || Number(a?.price || 0) - Number(b?.price || 0)), [plans])
+  const selectedGrowPlan = useMemo(() => growPlans.find((item) => String(item.id) === String(selectedCycleId)) || growPlans[0] || null, [growPlans, selectedCycleId])
+  const selectedScalePlan = useMemo(() => scalePlans.find((item) => String(item.id) === String(selectedCycleId)) || scalePlans[0] || null, [scalePlans, selectedCycleId])
 
   const currentRaw = String(currentMembership?.plan_type || currentMembership?.plan?.plan_type || user?.membership_type || '').toLowerCase()
+  const currentGroup = String(currentMembership?.plan_group || currentMembership?.plan?.plan_group || '').toLowerCase()
   const isProMember = Boolean(currentMembership?.isPro) || currentRaw === 'pro'
 
   const openPlan = (plan) => {
     if (!plan?.id) {
-      setError('The Starter membership plan is unavailable.')
+      setError('The membership plan is unavailable.')
       return
     }
     setSelectedPlan(plan)
@@ -205,83 +203,63 @@ export default function Membership() {
           <p>Start with better lead pricing, Exclusive Leads and access to the Propulse investment program for eligible members. Upgrade to GROW or SCALE when your business needs more.</p>
         </section>
 
-        <section className="membership-plans membership-plans-single">
-          <article className="membership-plan starter-plan">
-            <div className="membership-plan-top">
-              <div>
-                <span className="membership-stage">START</span>
-                <h2>START</h2>
-              </div>
-              {isProMember ? <span className="current-badge">CURRENT</span> : <span className="popular-badge">BEST FOR LEADS</span>}
-            </div>
-
-            <p className="starter-lead-copy">Best Lead Pricing + Exclusive Leads + Investment Unlocked</p>
-
-            <div className="card-billing">
-              <div><span>CHOOSE BILLING</span><small>{starterPlans.length > 1 ? 'Flexible billing cycle' : 'Configured by Admin'}</small></div>
-              {starterPlans.length > 0
-                ? <div className="membership-cycles membership-cycles-dynamic">
-                    {starterPlans.map((item) => <button type="button" key={item.id} className={String(selectedStarterPlan?.id) === String(item.id) ? 'active' : ''} onClick={() => setSelectedCycleId(item.id)}>{period(item)}</button>)}
-                  </div>
-                : <div className="membership-single-cycle unavailable">No active Starter billing cycle configured</div>}
-            </div>
-
-            <div className="membership-price">{selectedStarterPlan ? money(selectedStarterPlan.price) : '—'}<small>{selectedStarterPlan ? ' / ' + period(selectedStarterPlan).toLowerCase() : ''}</small></div>
-
-            <div className="membership-divider" />
-            <details className="membership-fold" open>
-              <summary><span>START includes</span><b>+</b></summary>
-              <ul>{starterBenefits.map((item) => <li key={item}><b>✓</b><span>{item}</span></li>)}</ul>
-            </details>
-
-            {isProMember
-              ? <button className="membership-primary current" disabled>✓ Current START</button>
-              : !selectedStarterPlan
-                ? <button className="membership-primary current" disabled>Plan being configured</button>
-                : <button className="membership-primary" onClick={() => openPlan(selectedStarterPlan)} disabled={submitting}>Choose START <span>→</span></button>}
-          </article>
+        <section className="membership-plans membership-plans-two">
+          {[{ key: 'grow', label: 'GROW', plans: growPlans, selected: selectedGrowPlan, benefits: growBenefits, copy: 'Everything in START + Website + SEO + Maintenance', action: 'Choose GROW' },
+            { key: 'scale', label: 'SCALE', plans: scalePlans, selected: selectedScalePlan, benefits: scaleBenefits, copy: 'Everything in GROW + Broader Reach + Lead Generation', action: 'Upgrade to SCALE' }].map((level) => {
+              const isCurrent = currentGroup === level.key;
+              const canUpgrade = level.key === 'scale' && currentGroup === 'grow';
+              return <article className={`membership-plan ${level.key === 'grow' ? 'starter-plan grow-plan' : 'scale-membership-plan'}`} key={level.key}>
+                <div className="membership-plan-top">
+                  <div><span className="membership-stage">{level.label}</span><h2>{level.label}</h2></div>
+                  {isCurrent ? <span className="current-badge">CURRENT</span> : level.key === 'grow' ? <span className="popular-badge">CORE GROWTH</span> : <span className="popular-badge">NEXT LEVEL</span>}
+                </div>
+                <p className="starter-lead-copy">{level.copy}</p>
+                <div className="card-billing">
+                  <div><span>CHOOSE BILLING</span><small>{level.plans.length > 1 ? 'Flexible billing cycle' : 'Configured by Admin'}</small></div>
+                  {level.plans.length > 0 ? <div className="membership-cycles membership-cycles-dynamic">
+                    {level.plans.map((item) => <button type="button" key={item.id} className={String(level.selected?.id) === String(item.id) ? 'active' : ''} onClick={() => setSelectedCycleId(item.id)}>{period(item)}</button>)}
+                  </div> : <div className="membership-single-cycle unavailable">No active {level.label} billing cycle configured</div>}
+                </div>
+                <div className="membership-price">{level.selected ? money(level.selected.price) : '—'}<small>{level.selected ? ' / ' + period(level.selected).toLowerCase() : ''}</small></div>
+                <div className="membership-divider" />
+                <details className="membership-fold" open><summary><span>{level.label} includes</span><b>+</b></summary>
+                  <ul>{level.benefits.map((item) => <li key={item}><b>✓</b><span>{item}</span></li>)}</ul>
+                </details>
+                {isCurrent
+                  ? <button className="membership-primary current" disabled>✓ Current {level.label}</button>
+                  : !level.selected
+                    ? <button className="membership-primary current" disabled>Plan being configured</button>
+                    : <button className="membership-primary" onClick={() => openPlan(level.selected)} disabled={submitting}>{canUpgrade ? 'Upgrade to SCALE' : level.action} <span>→</span></button>}
+              </article>
+            })}
         </section>
 
         <section className="membership-growth-paths">
           <div className="growth-path-heading">
-            <span className="membership-kicker">YOUR PROPULSE GROWTH PATH</span>
-            <h2>START → GROW → SCALE</h2>
-            <p>Each level builds on the previous one. Upgrade from START to GROW, then from GROW to SCALE when your business needs the next level.</p>
+            <span className="membership-kicker">THE TWO MEMBERSHIP PLANS</span>
+            <h2>GROW → SCALE</h2>
+            <p>START is the foundation included in GROW. GROW is the first paid membership. SCALE is the upgrade from GROW.</p>
           </div>
           <div className="growth-path-grid">
             <article className="growth-path grow-path">
               <span className="growth-stage">GROW</span>
-              <h3>GROW</h3>
-              <p>Everything in START, plus website, SEO and maintenance services for a stronger digital presence.</p>
-              <ul className="growth-pricing-list">
-                {growthScalePricing.filter((item) => item.category === 'Grow').map((item) => (
-                  <li key={item.id}><span>{item.name}</span><strong>{item.price_label || 'Pricing to be configured'}</strong></li>
-                ))}
-                {!growthScalePricing.some((item) => item.category === 'Grow') && <li><span>Website, SEO and maintenance services</span><strong>Pricing to be configured</strong></li>}
-              </ul>
-              <a href="/contact">Upgrade to GROW <span>→</span></a>
+              <h3>START + Business Growth</h3>
+              <p>Best lead pricing, Exclusive Leads and investment access for eligible members, plus website, SEO and maintenance services.</p>
+              <a href="#grow">View GROW <span>→</span></a>
             </article>
             <article className="growth-path scale-path">
               <span className="growth-stage">SCALE</span>
-              <h3>SCALE</h3>
+              <h3>GROW + Broader Reach</h3>
               <p>Everything in GROW, plus broader reach, lead generation and access to eligible earning programs subject to program terms.</p>
-              <ul className="growth-pricing-list">
-                {growthScalePricing.filter((item) => item.category === 'Scale').map((item) => (
-                  <li key={item.id}><span>{item.name}</span><strong>{item.price_label || 'Pricing to be configured'}</strong></li>
-                ))}
-                {!growthScalePricing.some((item) => item.category === 'Scale') && <li><span>Broader reach, lead generation and eligible programs</span><strong>Pricing to be configured</strong></li>}
-              </ul>
-              <a href="/investment">Upgrade to SCALE <span>→</span></a>
+              <a href="#scale">View SCALE <span>→</span></a>
             </article>
           </div>
         </section>
 
         <section className="membership-value">
-          <div><span className="membership-kicker">THE PROPULSE JOURNEY</span><h2>Start simple. Grow when you need it. Scale when you're ready.</h2><p>Starter keeps membership focused on the two things customers join Propulse for: Exclusive Leads and Best Pricing. Website, SEO and maintenance are optional growth services. Scale focuses on broader reach, lead generation and eligible earning programs.</p></div>
+          <div><span className="membership-kicker">THE PROPULSE JOURNEY</span><h2>Start simple. Grow when you need it. Scale when you're ready.</h2><p>START is the foundation inside GROW: Best Lead Pricing, Exclusive Leads and Investment access for eligible members. GROW adds website, SEO and maintenance. SCALE builds on GROW with broader reach, lead generation and eligible earning programs.</p></div>
           <div className="value-grid">
-            <div><strong>START</strong><b>Lead Advantage</b><span>Best lead pricing, Exclusive Leads and investment access for eligible members.</span></div>
-            <div><strong>GROW</strong><b>START + Business Services</b><span>Everything in START, plus website, SEO and maintenance services.</span></div>
-            <div><strong>SCALE</strong><b>GROW + Broader Reach</b><span>Everything in GROW, plus broader reach, lead generation and eligible programs.</span></div>
+            <div><strong>START</strong><b>Foundation</b><span>Best lead pricing, Exclusive Leads and investment access for eligible members.</span></div><div><strong>GROW</strong><b>START + Services</b><span>The first paid membership: START plus website, SEO and maintenance.</span></div><div><strong>SCALE</strong><b>GROW + Reach</b><span>Upgrade from GROW for broader reach, lead generation and eligible programs.</span></div>
           </div>
         </section>
       </>}
