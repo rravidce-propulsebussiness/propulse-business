@@ -60,7 +60,7 @@ function freshForm(planType = 'pro') {
   return {
     name: 'Starter', planType: 'pro', monthlyBasePrice: '', periods: cycles,
     pricing: Object.fromEntries(cycles.map(c => [c.key, { discount: 0, price: '', customPrice: false }])),
-    benefits: ['Exclusive Leads access', 'Best member pricing'], addOns: [],
+    benefits: ['Best lead pricing', 'Exclusive Leads access', 'Investment access unlocked for eligible members'], addOns: [],
   };
 }
 
@@ -342,8 +342,8 @@ export default function AdminMembershipPlansConfig() {
     </>}
 
     {(tab === 'grow' || tab === 'scale') && <section className="create-card hero-card growth-scale-admin-card">
-      <div className="card-heading"><div><h2>{tab === 'grow' ? 'GROW pricing' : 'SCALE pricing'}</h2><small>Configure the public-facing optional services and program pricing shown on the customer Membership page.</small></div><span className="status on">{growthScaleItems.length} configured</span></div>
-      <div className="pricing-config-note">Starter membership pricing stays under START. GROW and SCALE are separate services/programs, so their pricing is managed independently here.</div>
+      <div className="card-heading"><div><h2>{tab === 'grow' ? 'GROW pricing' : 'SCALE pricing'}</h2><small>Configure the GROW level. GROW builds on START and adds website, SEO and maintenance services.</small></div><span className="status on">{growthScaleItems.length} configured</span></div>
+      <div className="pricing-config-note">START is the base membership. GROW builds on START; SCALE builds on GROW. Configure each level's customer-facing pricing and terms here.</div>
       <div className="growth-scale-admin-list">
         {loading ? <div className="empty">Loading pricing…</div> : growthScaleItems.length === 0 ? <div className="empty">No {tab === 'grow' ? 'GROW' : 'SCALE'} pricing items configured.</div> : growthScaleItems.map(item => <article className="growth-scale-admin-item" key={item.id}>
           <div className="growth-scale-admin-head"><div><span>{item.category}</span><h3>{item.name}</h3></div><label className="check-row"><input type="checkbox" checked={item.is_active !== false} onChange={e => updateServicePricing(item.id, 'is_active', e.target.checked)} /> Published</label></div>
