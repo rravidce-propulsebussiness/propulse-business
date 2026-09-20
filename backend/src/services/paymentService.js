@@ -21,7 +21,7 @@ async function createWalletFirstPayment(client,{userId,totalAmount,purchaseType,
 }
 
 async function createMembershipCheckout({userId,membershipPlanId,couponCode}) {
-  const planResult=await pool.query(`SELECT id,name,plan_type,price,duration_days,is_active FROM membership_plans WHERE id=$1`,[membershipPlanId]); const plan=planResult.rows[0];
+  const planResult=await pool.query(`SELECT id,name,plan_group,plan_type,price,duration_days,is_active FROM membership_plans WHERE id=$1`,[membershipPlanId]); const plan=planResult.rows[0];
   if(!plan||!plan.is_active) throw Object.assign(new Error('Membership plan is not available'),{code:'PLAN_NOT_FOUND'});
   const type=String(plan.plan_type||'').toLowerCase(); if(!['pro','booster','investor'].includes(type)) throw Object.assign(new Error('This membership plan cannot be purchased'),{code:'INVALID_PLAN'});
   if(['booster','investor'].includes(type)&&!(await isProMember(userId))) throw Object.assign(new Error(`An active Pro membership is required before purchasing ${type==='investor'?'Investment':'Booster'}`),{code:'PRO_REQUIRED'});
