@@ -210,22 +210,6 @@ export default function Membership() {
       {error && <div className="membership-error">{error}</div>}
 
       {loading ? <div className="membership-state">Loading membership options…</div> : <>
-        <section className="membership-hero">
-          <div className="membership-hero-kicker">ONE MEMBERSHIP. REAL GROWTH.</div>
-          <h1>Start with <span>Propulse.</span></h1>
-          <p>Choose GROW for the core Propulse membership. Upgrade from GROW to SCALE when you want the full growth-service layer.</p>
-        </section>
-
-        {hasActiveMembership && <section className="membership-active-summary">
-          <div><span className="membership-kicker">YOUR CURRENT MEMBERSHIP</span><h2>{String(currentGroup).toUpperCase()}</h2></div>
-          <div className="membership-active-meta">
-            <div><span>Billing</span><strong>{period(currentMembership)}</strong></div>
-            <div><span>Started</span><strong>{dateLabel(currentMembership.starts_at)}</strong></div>
-            <div><span>Valid until</span><strong>{dateLabel(currentMembership.expires_at)}</strong></div>
-            <div><span>Remaining</span><strong>{daysLeft(currentMembership.expires_at)} days</strong></div>
-          </div>
-        </section>}
-
         <section className="membership-plans membership-plans-two">
           {[{ key: 'grow', label: 'GROW', plans: growPlans, selected: selectedGrowPlan, benefits: growBenefits, copy: 'Best Lead Pricing + Exclusive Leads + Investment Unlocked', action: 'Choose GROW' },
             { key: 'scale', label: 'SCALE', plans: scalePlans, selected: selectedScalePlan, benefits: scaleBenefits, copy: 'Everything in GROW + Website + SEO + Maintenance', action: 'Upgrade to SCALE' }].map((level) => {
