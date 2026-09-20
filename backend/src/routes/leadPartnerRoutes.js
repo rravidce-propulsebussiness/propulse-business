@@ -1,31 +1,22 @@
-const express=require('express');
-const requireLeadPartner=require('../middleware/leadPartnerMiddleware');
-const controller=require('../controllers/leadPartnerController');
-const inventoryController=require('../controllers/leadPartnerInventoryController');
-const router=express.Router();
-router.post('/apply',controller.apply);
-router.get('/me',controller.me);
-router.get('/my-leads',controller.myLeads);
-router.use(requireLeadPartner);
-router.post('/leads',controller.createLead);
-router.get('/dashboard',controller.dashboard);
-router.get('/inventory',inventoryController.inventory);
-router.get('/inventory/sheets',inventoryController.sheetConnections);
-router.post('/inventory/sheets',inventoryController.connectGoogleSheet);
-router.post('/inventory/sheets/:connectionId/sync',inventoryController.syncGoogleSheet);
-router.delete('/inventory/sheets/:connectionId',inventoryController.disableSheetConnection);
-router.post('/inventory/import/google-sheet',inventoryController.importGoogleSheet);
-router.post('/inventory/import/csv',inventoryController.importCsv);
-router.get('/pricing',controller.pricing);
-router.post('/pricing/config',controller.createPricingRule);
-router.put('/pricing/config/:ruleId',controller.savePricingRule);
-router.delete('/pricing/config/:ruleId',controller.deletePricingRule);
-router.put('/pricing/:leadId',controller.updatePricing);
-router.get('/payout-account',controller.payoutAccount);
-router.post('/payout-account',controller.savePayoutAccount);
-router.get('/funds',controller.funds);
-router.get('/withdrawals',controller.funds);
-router.get('/transactions',controller.transactions);
-router.get('/reports',controller.reports);
-router.post('/withdrawals',controller.requestWithdrawal);
-module.exports=router;
+const express = require('express');
+const controller = require('../controllers/leadPartnerController');
+const requireAuth = require('../middleware/authMiddleware');
+const requireAdmin = require('../middleware/adminMiddleware');
+
+const router = express.Router();
+
+function requireBusinessUser(req, res, next) {
+  if (req.user?.role !== 'business') return res.status(403).json({ error: 'Lead Partner access is available only to business user accounts' });
+  return next();
+}
+
+router.post('/apply', requireAuth, requireBusinessUser, controller.apply);
+router.get('/me', requireAuth, requireBusinessUser, controller.me);
+router.post('/leads', requireAuth, requireBusinessUser, controller.createLead);
+router.get('/leads', requireAuth, requireBusinessUser, controller.myLeads);
+router.patch('/leads/:leadId/pricing', requireAuth, requireBusinessUser, controller.updateLeadPricing);
+
+router.get('/admin', requireAdmin, controller.adminPartners);
+router.patch('/admin/:id/status', requireAdmin, controller.adminUpdateStatus);
+
+module.exports = router;
