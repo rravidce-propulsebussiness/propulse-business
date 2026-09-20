@@ -20,6 +20,7 @@ export default function Membership() {
   const user = getUser()
   const token = getToken()
   const [plans, setPlans] = useState([])
+  const [growthScalePricing, setGrowthScalePricing] = useState([])
   const [currentMembership, setCurrentMembership] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -43,12 +44,14 @@ export default function Membership() {
         return
       }
       try {
-        const [planData, membership] = await Promise.all([
+        const [planData, pricingData, membership] = await Promise.all([
           apiRequest('/membership-plans'),
+          apiRequest('/service-pricing').catch(() => []),
           authRequest('/payments/membership/current').catch(() => null)
         ])
         if (!active) return
         setPlans(asArray(planData).filter((item) => item?.is_active !== false))
+        setGrowthScalePricing(asArray(pricingData).filter((item) => item?.is_active !== false && ['Grow', 'Scale'].includes(item?.category)))
         setCurrentMembership(membership || null)
       } catch (err) {
         if (active) setError(err?.message || 'Unable to load membership options.')
@@ -250,10 +253,11 @@ export default function Membership() {
               <span className="growth-stage">GROW</span>
               <h3>Business Services</h3>
               <p>Build a stronger digital presence with services you can add when your business needs them.</p>
-              <ul>
-                <li>Website development</li>
-                <li>SEO services</li>
-                <li>Website maintenance</li>
+              <ul className="growth-pricing-list">
+                {growthScalePricing.filter((item) => item.category === 'Grow').map((item) => (
+                  <li key={item.id}><span>{item.name}</span><strong>{item.price_label || 'Pricing to be configured'}</strong></li>
+                ))}
+                {!growthScalePricing.some((item) => item.category === 'Grow') && <li><span>Website, SEO and maintenance services</span><strong>Pricing to be configured</strong></li>}
               </ul>
               <a href="/contact">Explore Services <span>→</span></a>
             </article>
@@ -261,10 +265,11 @@ export default function Membership() {
               <span className="growth-stage">SCALE</span>
               <h3>Broader Reach & Opportunities</h3>
               <p>Propulse can promote your business profile to broaden reach, support lead generation and provide access to eligible earning programs.</p>
-              <ul>
-                <li>Business profile promotion</li>
-                <li>Broader reach and lead generation</li>
-                <li>Eligible earning programs, subject to program terms</li>
+              <ul className="growth-pricing-list">
+                {growthScalePricing.filter((item) => item.category === 'Scale').map((item) => (
+                  <li key={item.id}><span>{item.name}</span><strong>{item.price_label || 'Pricing to be configured'}</strong></li>
+                ))}
+                {!growthScalePricing.some((item) => item.category === 'Scale') && <li><span>Broader reach, lead generation and eligible programs</span><strong>Pricing to be configured</strong></li>}
               </ul>
               <a href="/investment">Learn More <span>→</span></a>
             </article>
