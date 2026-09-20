@@ -14,7 +14,7 @@ const period = (plan) => {
   const months = Number(plan?.billing_months || 1)
   return months === 12 ? 'Yearly' : months === 6 ? 'Half-Yearly' : months === 3 ? 'Quarterly' : 'Monthly'
 }
-const starterBenefits = ['Exclusive Leads access', 'Best member pricing']
+const starterBenefits = ['Best lead pricing', 'Exclusive Leads access', 'Investment access unlocked for eligible members']
 
 export default function Membership() {
   const user = getUser()
@@ -202,7 +202,7 @@ export default function Membership() {
         <section className="membership-hero">
           <div className="membership-hero-kicker">ONE MEMBERSHIP. REAL GROWTH.</div>
           <h1>Start with <span>Propulse.</span></h1>
-          <p>Get exclusive leads at the best member pricing. Choose the billing cycle that works for your business.</p>
+          <p>Start with better lead pricing, Exclusive Leads and access to the Propulse investment program for eligible members. Upgrade to GROW or SCALE when your business needs more.</p>
         </section>
 
         <section className="membership-plans membership-plans-single">
@@ -210,12 +210,12 @@ export default function Membership() {
             <div className="membership-plan-top">
               <div>
                 <span className="membership-stage">START</span>
-                <h2>Starter</h2>
+                <h2>START</h2>
               </div>
               {isProMember ? <span className="current-badge">CURRENT</span> : <span className="popular-badge">BEST FOR LEADS</span>}
             </div>
 
-            <p className="starter-lead-copy">Exclusive Leads + Best Pricing</p>
+            <p className="starter-lead-copy">Best Lead Pricing + Exclusive Leads + Investment Unlocked</p>
 
             <div className="card-billing">
               <div><span>CHOOSE BILLING</span><small>{starterPlans.length > 1 ? 'Flexible billing cycle' : 'Configured by Admin'}</small></div>
@@ -230,48 +230,48 @@ export default function Membership() {
 
             <div className="membership-divider" />
             <details className="membership-fold" open>
-              <summary><span>Starter membership includes</span><b>+</b></summary>
+              <summary><span>START includes</span><b>+</b></summary>
               <ul>{starterBenefits.map((item) => <li key={item}><b>✓</b><span>{item}</span></li>)}</ul>
             </details>
 
             {isProMember
-              ? <button className="membership-primary current" disabled>✓ Current Starter</button>
+              ? <button className="membership-primary current" disabled>✓ Current START</button>
               : !selectedStarterPlan
                 ? <button className="membership-primary current" disabled>Plan being configured</button>
-                : <button className="membership-primary" onClick={() => openPlan(selectedStarterPlan)} disabled={submitting}>Choose Starter <span>→</span></button>}
+                : <button className="membership-primary" onClick={() => openPlan(selectedStarterPlan)} disabled={submitting}>Choose START <span>→</span></button>}
           </article>
         </section>
 
         <section className="membership-growth-paths">
           <div className="growth-path-heading">
-            <span className="membership-kicker">AFTER START</span>
-            <h2>Grow and Scale when you're ready.</h2>
-            <p>These are separate Propulse services and programs — they are not included in Starter membership.</p>
+            <span className="membership-kicker">YOUR PROPULSE GROWTH PATH</span>
+            <h2>START → GROW → SCALE</h2>
+            <p>Each level builds on the previous one. Upgrade from START to GROW, then from GROW to SCALE when your business needs the next level.</p>
           </div>
           <div className="growth-path-grid">
             <article className="growth-path grow-path">
               <span className="growth-stage">GROW</span>
-              <h3>Business Services</h3>
-              <p>Build a stronger digital presence with services you can add when your business needs them.</p>
+              <h3>GROW</h3>
+              <p>Everything in START, plus website, SEO and maintenance services for a stronger digital presence.</p>
               <ul className="growth-pricing-list">
                 {growthScalePricing.filter((item) => item.category === 'Grow').map((item) => (
                   <li key={item.id}><span>{item.name}</span><strong>{item.price_label || 'Pricing to be configured'}</strong></li>
                 ))}
                 {!growthScalePricing.some((item) => item.category === 'Grow') && <li><span>Website, SEO and maintenance services</span><strong>Pricing to be configured</strong></li>}
               </ul>
-              <a href="/contact">Explore Services <span>→</span></a>
+              <a href="/contact">Upgrade to GROW <span>→</span></a>
             </article>
             <article className="growth-path scale-path">
               <span className="growth-stage">SCALE</span>
-              <h3>Broader Reach & Opportunities</h3>
-              <p>Propulse can promote your business profile to broaden reach, support lead generation and provide access to eligible earning programs.</p>
+              <h3>SCALE</h3>
+              <p>Everything in GROW, plus broader reach, lead generation and access to eligible earning programs subject to program terms.</p>
               <ul className="growth-pricing-list">
                 {growthScalePricing.filter((item) => item.category === 'Scale').map((item) => (
                   <li key={item.id}><span>{item.name}</span><strong>{item.price_label || 'Pricing to be configured'}</strong></li>
                 ))}
                 {!growthScalePricing.some((item) => item.category === 'Scale') && <li><span>Broader reach, lead generation and eligible programs</span><strong>Pricing to be configured</strong></li>}
               </ul>
-              <a href="/investment">Learn More <span>→</span></a>
+              <a href="/investment">Upgrade to SCALE <span>→</span></a>
             </article>
           </div>
         </section>
@@ -279,9 +279,9 @@ export default function Membership() {
         <section className="membership-value">
           <div><span className="membership-kicker">THE PROPULSE JOURNEY</span><h2>Start simple. Grow when you need it. Scale when you're ready.</h2><p>Starter keeps membership focused on the two things customers join Propulse for: Exclusive Leads and Best Pricing. Website, SEO and maintenance are optional growth services. Scale focuses on broader reach, lead generation and eligible earning programs.</p></div>
           <div className="value-grid">
-            <div><strong>START</strong><b>Exclusive Leads</b><span>Access eligible Exclusive Leads through your Propulse membership.</span></div>
-            <div><strong>GROW</strong><b>Optional Services</b><span>Add website, SEO or maintenance services when your business is ready.</span></div>
-            <div><strong>SCALE</strong><b>Broader Reach</b><span>Promote your business, generate opportunities and access eligible programs subject to their terms.</span></div>
+            <div><strong>START</strong><b>Lead Advantage</b><span>Best lead pricing, Exclusive Leads and investment access for eligible members.</span></div>
+            <div><strong>GROW</strong><b>START + Business Services</b><span>Everything in START, plus website, SEO and maintenance services.</span></div>
+            <div><strong>SCALE</strong><b>GROW + Broader Reach</b><span>Everything in GROW, plus broader reach, lead generation and eligible programs.</span></div>
           </div>
         </section>
       </>}
