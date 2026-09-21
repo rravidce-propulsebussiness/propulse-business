@@ -359,7 +359,6 @@ export default function LeadsV2() {
 
           <section className="lv2-pay-amount-card">
             <div><span>Amount to Pay Now</span><strong>{money(directAmount)}</strong></div>
-            <div className="lv2-pay-amount-note"><span>✓</span><small>Complete payment<br/>to get access</small></div>
           </section>
 
           <section className="lv2-pay-breakdown">
