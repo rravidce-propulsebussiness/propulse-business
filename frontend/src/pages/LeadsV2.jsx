@@ -91,7 +91,7 @@ export default function LeadsV2() {
   const [notice, setNotice] = useState('')
   const [payment, setPayment] = useState(null)
   const [paymentLead, setPaymentLead] = useState(null)
-  const [_paymentShares, setPaymentShares] = useState(0)
+  const [, setPaymentShares] = useState(0)
   const [directSubmitting, setDirectSubmitting] = useState(false)
   const [paymentError, setPaymentError] = useState('')
   const [paymentSuccess, setPaymentSuccess] = useState('')
