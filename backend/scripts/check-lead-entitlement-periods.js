@@ -41,7 +41,7 @@ function assertDateParts(date, expectedYear, expectedMonth, expectedDay, label) 
 
 async function runMonthlyResetTest() {
   const now = new Date();
-  const previousMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 1, 1));
+  const previousMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 1, 1, 12));
   const { service, calls, originalPool, servicePath, poolPath } = loadService({ startsAt: previousMonth.toISOString(), billingMonths: 3 });
   try {
     const access = await service.getLeadAccess(7, 1);
