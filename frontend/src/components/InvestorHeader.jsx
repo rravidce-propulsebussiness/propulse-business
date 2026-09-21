@@ -73,7 +73,6 @@ export default function InvestorHeader() {
         { label: 'Linked Leads', to: '/investment/leads' },
         { label: 'History', to: '/investment/history' },
         { label: 'FAQ', to: '/investment/faq' },
-        { label: 'Contact', to: '/contact?audience=users' },
       ]
     : [{ label: 'Home', to: '/' }]
 
