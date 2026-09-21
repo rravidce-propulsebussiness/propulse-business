@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import LeadPartnerSidebar from '../components/LeadPartnerSidebar';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { authRequest, clearSession, getUser } from '../utils/auth';
 import './LeadPartnerWithdrawals.css';
 
@@ -9,7 +9,6 @@ const dateTime = value => value ? new Date(value).toLocaleDateString('en-IN', { 
 
 export default function LeadPartnerWithdrawals() {
   const navigate = useNavigate();
-  const location = useLocation();
   const user = getUser();
   const [funds, setFunds] = useState(null);
   const [amount, setAmount] = useState('');
@@ -19,11 +18,6 @@ export default function LeadPartnerWithdrawals() {
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const [proof, setProof] = useState(null);
-
-  const initials = useMemo(
-    () => (user?.name || 'Lead Partner').split(' ').filter(Boolean).slice(0, 2).map(x => x[0]).join('').toUpperCase() || 'LP',
-    [user?.name]
-  );
 
   const load = useCallback(async () => {
     try {
