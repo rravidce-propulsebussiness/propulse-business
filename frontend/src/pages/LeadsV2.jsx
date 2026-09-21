@@ -355,8 +355,6 @@ export default function LeadsV2() {
         <div className="lv2-upgrade lv2-payment-modal" onClick={e => e.stopPropagation()}>
           <button className="lv2-payment-close" onClick={() => !directSubmitting && setPayment(null)} disabled={directSubmitting}>×</button>
           <span className="lv2-payment-kicker">PAYMENT</span>
-          <h2>Complete Lead #{paymentLead.id}</h2>
-
           <section className="lv2-pay-amount-card">
             <div><span>Amount to Pay Now</span><strong>{money(directAmount)}</strong></div>
           </section>
