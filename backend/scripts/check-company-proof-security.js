@@ -28,8 +28,9 @@ assert(
 );
 
 assert(
-  authService.includes('WHERE id=$1 AND (user_id=$2 OR $3=TRUE)'),
-  'Company-proof access must be limited to the owning user or an admin',
+  authService.includes('WHERE id=$1 AND (user_id=$2 OR $3=TRUE)') &&
+  authService.includes('getCompanyProofDocument, login'),
+  'Company-proof access must be limited to the owning user or an admin and exported for the protected route',
 );
 
 assert(
