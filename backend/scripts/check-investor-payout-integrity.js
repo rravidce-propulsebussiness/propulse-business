@@ -6,6 +6,7 @@ function loadService({summary,investments,revenueByInvestment}) {
   const calls=[];
   const updates=[];
   const client={
+    release() {},
     async query(sql,params=[]){
       calls.push(sql.trim());
       if(sql.trim()==='BEGIN' || sql.trim()==='COMMIT' || sql.trim()==='ROLLBACK') return {rows:[],rowCount:0};
@@ -43,7 +44,7 @@ async function main(){
     });
     await assert.rejects(
       service.transferInvestorEarnings({userId:7,adminId:1,transferReference:'UTR-1',proofUrl:'proof'}),
-      error=>error.code==='NO_REALIZED_AMOUNT'
+      error=>error && error.code==='NO_REALIZED_AMOUNT'
     );
     assert.strictEqual(updates.length,0,'A partially available investment must not be marked paid');
     assert(calls.indexOf('LOCK_INVESTOR_FINANCIALS')>=0,'Transfer-all must acquire the investor financial lock');
