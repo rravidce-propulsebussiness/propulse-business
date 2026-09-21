@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import LeadPartnerSidebar from '../components/LeadPartnerSidebar';
 import { useNavigate } from 'react-router-dom';
 import { authRequest, clearSession, getUser } from '../utils/auth';
@@ -31,11 +31,11 @@ export default function LeadPartnerPricing() {
   const [data, setData] = useState({ settings: { commissionPercent: 5, normalPriceUplift: 100 }, leads: [], rules: [] });
   const [industries, setIndustries] = useState([]);
   const [cities, setCities] = useState([]);
-  const [search, setSearch] = useState('');
-  const [status, setStatus] = useState('all');
+  const [search] = useState('');
+  const [status] = useState('all');
   const [loading, setLoading] = useState(true);
   const [savingId, setSavingId] = useState(null);
-  const [savingRule, setSavingRule] = useState(false);
+  const [savingRule] = useState(false);
   const [drafts, setDrafts] = useState({});
   const [ruleForm, setRuleForm] = useState({ id: null, industryId: '', cityId: '', leadType: 'basic', pricing: defaultTiers(), isActive: true });
   const [error, setError] = useState('');
@@ -46,7 +46,7 @@ export default function LeadPartnerPricing() {
   const leads = useMemo(() => Array.isArray(data.leads) ? data.leads : [], [data.leads]);
   const rules = useMemo(() => Array.isArray(data.rules) ? data.rules : [], [data.rules]);
 
-  async function load() {
+  const load = useCallback(async () => {
     try {
       setLoading(true); setError('');
       const params = new URLSearchParams({ search, status });
@@ -55,17 +55,17 @@ export default function LeadPartnerPricing() {
       setDrafts(Object.fromEntries((result?.leads || []).map(lead => [lead.id, normalizePartnerTiers(lead.pricing)])));
     } catch (e) { setError(e.message); }
     finally { setLoading(false); }
-  }
+  }, [search, status])
 
-  async function loadCatalogs() {
+  const loadCatalogs = useCallback(async () => {
     try {
       const [industryRows, cityRows] = await Promise.all([authRequest('/industries'), authRequest('/cities')]);
       setIndustries(Array.isArray(industryRows) ? industryRows : []);
       setCities(Array.isArray(cityRows) ? cityRows : []);
     } catch (e) { setError(e.message); }
-  }
+  }, [])
 
-  useEffect(() => { load(); loadCatalogs(); }, [search, status]);
+  useEffect(() => { load(); loadCatalogs(); }, [load, loadCatalogs]);
 
   function changeDraft(leadId, shares, value) {
     if (Number(shares) !== 1) return;
