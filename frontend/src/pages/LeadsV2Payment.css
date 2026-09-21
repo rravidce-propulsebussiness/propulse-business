@@ -75,3 +75,20 @@
 .lv2-pay-upload{min-height:40px;padding:6px 8px}
 .lv2-payment-submit .lv2-more{height:37px}
 .lv2-payment-submit>small{margin-top:6px}
+
+
+/* Final 5% compact pass */
+.lv2-payment-modal{width:min(532px,38vw);padding:15px 17px 12px}
+.lv2-payment-kicker{padding:5px 7px;font-size:7.5px!important}
+.lv2-payment-modal>h2{font-size:18px!important;margin:5px 34px 5px!important}
+.lv2-pay-amount-card{padding:8px 10px;margin-bottom:5px}
+.lv2-pay-amount-card strong{font-size:25px}
+.lv2-pay-breakdown{margin-bottom:5px}
+.lv2-pay-breakdown>div{padding:6px 7px}
+.lv2-pay-bank-card{padding:7px;margin-bottom:5px}
+.lv2-pay-section-head{margin-bottom:5px}
+.lv2-pay-bank-box>div{padding:3.5px 0}
+.lv2-pay-field{margin-bottom:4px!important}
+.lv2-pay-field input:not([type=file]){height:32px}
+.lv2-pay-upload{min-height:38px;padding:5px 7px}
+.lv2-payment-submit .lv2-more{height:36px}
