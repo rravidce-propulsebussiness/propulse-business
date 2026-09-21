@@ -138,3 +138,9 @@
 .lv2-summary-total strong{font-size:25px}
 @media(max-width:1050px){.lv2-pack-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:600px){.lv2-pack-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.lv2-pack-card{min-height:130px;padding:14px 11px}.lv2-pack-card strong{font-size:24px}.lv2-pack-card b{margin-top:13px;font-size:16px}.lv2-continue-purchase{height:48px;font-size:11px}}
+
+
+/* Checkout balance: keep the two premium columns visually closer */
+.lv2-buy-layout{grid-template-columns:minmax(0,1.25fr) minmax(330px,.75fr);gap:18px}
+.lv2-discount-value{color:#168057!important}
+@media(max-width:900px){.lv2-buy-layout{grid-template-columns:1fr}}
