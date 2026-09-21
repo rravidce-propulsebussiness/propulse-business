@@ -69,7 +69,7 @@ export default function LeadsV2() {
   const category = params.get('category')
   const user = getUser()
   const token = getToken()
-  const logged = Boolean(token && user)
+  const logged = Boolean(token)
   const [leads, setLeads] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
