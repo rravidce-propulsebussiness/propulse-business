@@ -101,12 +101,12 @@ export default function LeadsV2() {
 
   useEffect(() => {
     let live = true
-    if (!payment) { setPaymentReceiving([]); return undefined }
+    if (!buyModal && !payment) { setPaymentReceiving([]); return undefined }
     authRequest('/payment-receiving-details')
       .then(data => { if (live) setPaymentReceiving(Array.isArray(data) ? data.filter(item => item?.is_active !== false) : []) })
       .catch(() => { if (live) setPaymentReceiving([]) })
     return () => { live = false }
-  }, [payment])
+  }, [buyModal, payment])
   useEffect(() => { setPage(1) }, [search, tier, category])
   useEffect(() => {
     let live = true
@@ -194,6 +194,75 @@ export default function LeadsV2() {
     } catch (e) { setError(e.message) }
     finally { setClaiming(null) }
   }
+  const submitLeadCheckout = async (lead, shares, plan = 'normal') => {
+    if (!logged) { window.location.href = '/login'; return }
+    if (plan === 'pro' && !isPro) { setBuyModal(null); setUpgrade(true); return }
+    const row = (lead?.pricing?.shares || []).find(p => Number(p.shares) === Number(shares))
+    const selectedPrice = Number(row?.[isPro ? 'pro' : 'normal'] || 0)
+    const discountedTotal = Math.max(0, Number(couponFinalAmount != null ? couponFinalAmount : selectedPrice))
+    const walletDeduction = useWallet ? Math.min(Math.max(0, Number(walletBalance || 0)), discountedTotal) : 0
+    const estimatedExternal = Math.max(0, discountedTotal - walletDeduction)
+    if (estimatedExternal > 0) {
+      const reference = document.getElementById('lead-payment-utr')?.value?.trim()
+      const file = document.getElementById('lead-payment-proof')?.files?.[0]
+      if (!reference) return setPaymentError('Enter the payment reference / UTR first.')
+      if (!file) return setPaymentError('Upload the payment screenshot or PDF first.')
+      if (file.size > 5 * 1024 * 1024) return setPaymentError('Payment proof must be 5 MB or smaller.')
+    }
+    const key = `${lead.id}-${shares}-${plan}-${useWallet ? 'wallet' : 'direct'}`
+    setBuying(key); setPaymentError(''); setNotice(''); setError(''); setCouponError('')
+    try {
+      const d = await purchaseLead(lead.id, shares, { useWallet, couponCode })
+      const needsExternalPayment = Boolean(d?.requires_external_payment || d?.requiresExternalPayment || d?.payment?.status === 'pending')
+      if (needsExternalPayment) {
+        setPayment(d)
+        setPaymentLead(lead)
+        setPaymentShares(shares)
+        const reference = document.getElementById('lead-payment-utr')?.value?.trim()
+        const file = document.getElementById('lead-payment-proof')?.files?.[0]
+        if (!reference || !file) {
+          setBuying(null)
+          return setPaymentError('Enter the UTR and upload payment proof before submitting.')
+        }
+        setDirectSubmitting(true)
+        const proofUrl = await new Promise((resolve, reject) => {
+          const reader = new FileReader()
+          reader.onload = () => resolve(String(reader.result))
+          reader.onerror = () => reject(new Error('Unable to read payment proof'))
+          reader.readAsDataURL(file)
+        })
+        await authRequest(`/payments/${d.payment.id}/reference`, {
+          method: 'POST',
+          body: JSON.stringify({
+            manualReference: reference,
+            proofUrl,
+            notes: `Lead #${lead.id} direct payment${Number(d.walletAmount) > 0 ? ` after wallet payment of ${money(d.walletAmount)}` : ''}`
+          })
+        })
+        const submittedMessage = `${Number(d.walletAmount) > 0 ? `Wallet payment of ${money(d.walletAmount)} applied. ` : ''}Remaining ${money(d.externalAmount)} submitted for verification.`
+        setPayment(null); setPaymentLead(null); setPaymentShares(0); setPaymentError(''); setPaymentSuccess(submittedMessage); setBuyModal(null)
+        setBuying(null)
+        return
+      }
+      await getLead(lead.id)
+      setLeads(current => current.filter(x => x.id !== lead.id))
+      setBuyModal(null)
+      setNotice(`Lead #${lead.id} purchased successfully from ${plan === 'pro' ? 'Pro' : 'Normal'} pricing.`)
+      setExpanded(null)
+    } catch (e) {
+      if (e.code === 'PRO_REQUIRED') {
+        setBuyModal(null); setUpgrade(true)
+      } else if (String(e.code || '').includes('COUPON') || ['MIN_ORDER', 'PURCHASE_NOT_ELIGIBLE', 'PLAN_NOT_ELIGIBLE', 'USER_NOT_ELIGIBLE', 'INDUSTRY_NOT_ELIGIBLE', 'USAGE_LIMIT', 'USER_USAGE_LIMIT'].includes(e.code)) {
+        setCouponError(e.message)
+      } else {
+        setPaymentError(e.message || 'Unable to submit purchase.')
+      }
+    } finally {
+      setDirectSubmitting(false)
+      setBuying(current => current === key ? null : current)
+    }
+  }
+
   const buy = async (lead, shares, plan = 'normal') => {
     if (!logged) { window.location.href = '/login'; return }
     if (plan === 'pro' && !isPro) { setBuyModal(null); setUpgrade(true); return }
@@ -340,8 +409,8 @@ export default function LeadsV2() {
                 <div className="lv2-summary-row"><span>Coupon Discount</span><strong className={couponDiscount > 0 ? 'lv2-discount-value' : ''}>− {money(couponDiscount)}</strong></div>
                 <div className="lv2-summary-row lv2-wallet-deduction"><span>Wallet Balance Used</span><strong>− {money(walletDeduction)}</strong></div>
                 <div className="lv2-summary-total"><span>Amount to Pay</span><strong>{money(amountToPay)}</strong></div>
-                <button type="button" className="lv2-continue-purchase" disabled={!selectedSharePack || buyModalClaimed || Boolean(buying)} onClick={() => { const plan = isPro ? 'pro' : 'normal'; buy(buyModal, Number(selectedSharePack), plan) }}>
-                  {buying ? 'Processing…' : 'Submit'}
+                <button type="button" className="lv2-continue-purchase" disabled={!selectedSharePack || buyModalClaimed || Boolean(buying) || directSubmitting} onClick={() => { const plan = isPro ? 'pro' : 'normal'; submitLeadCheckout(buyModal, Number(selectedSharePack), plan) }}>
+                  {buying || directSubmitting ? 'Submitting…' : 'Submit Purchase'}
                 </button>
                 <div className="lv2-summary-secure"><strong>🛡 Secure & Safe Transaction</strong></div>
               </div>
@@ -350,13 +419,12 @@ export default function LeadsV2() {
         </aside>
       </div>
 
-      {payment && paymentLead && paymentLead.id === buyModal.id && (() => {
-        const paymentRow = payment.payment || {}
-        const subtotal = Number(paymentRow.subtotal_amount ?? payment.coupon?.subtotalAmount ?? paymentRow.amount ?? 0)
-        const discount = Number(paymentRow.discount_amount ?? payment.coupon?.discountAmount ?? 0)
-        const finalAmount = Number(paymentRow.amount ?? payment.coupon?.finalAmount ?? Math.max(0, subtotal - discount))
-        const walletPaid = Number(payment.walletAmount ?? paymentRow.wallet_amount ?? 0)
-        const directAmount = Number(payment.externalAmount ?? paymentRow.external_amount ?? Math.max(0, finalAmount - walletPaid))
+      {(() => {
+        const selectedRow = (buyModal.pricing?.shares || []).find(p => Number(p.shares) === Number(selectedSharePack))
+        const selectedPrice = Number(selectedRow?.[isPro ? 'pro' : 'normal'] || 0)
+        const discountedTotal = Math.max(0, Number(couponFinalAmount != null ? couponFinalAmount : selectedPrice))
+        const walletDeduction = useWallet ? Math.min(Math.max(0, Number(walletBalance || 0)), discountedTotal) : 0
+        const directAmount = Math.max(0, discountedTotal - walletDeduction)
         const bankAccounts = paymentReceiving.filter(item => ['bank', 'both'].includes(String(item.method_type || '').toLowerCase()))
         const receiving = bankAccounts[0] || paymentReceiving[0] || null
         const copyValue = async value => { if (!value) return; try { await navigator.clipboard.writeText(String(value)) } catch {} }
@@ -373,17 +441,14 @@ export default function LeadsV2() {
             </div> : <div className="lv2-buy-bank-empty">Payment receiving details are not configured yet. Please contact support.</div>}
             {receiving?.instructions && <div className="lv2-buy-payment-instructions">{receiving.instructions}</div>}
           </section>}
-          {directAmount > 0 && <>
-            <div className="lv2-buy-payment-fields">
-              <label><span>Payment reference / UTR</span><input id="lead-payment-utr" placeholder="Enter transaction ID / UTR" autoComplete="off" /></label>
-              <label><span>Payment proof</span><div className="lv2-buy-proof"><span>⌁</span><div><b>Upload payment proof</b><small>JPG, PNG or PDF · Max 5 MB</small></div><input id="lead-payment-proof" type="file" accept="image/*,.pdf" /></div></label>
-            </div>
-            {paymentError && <div className="lv2-payment-error" role="alert">{paymentError}</div>}
-            <button type="button" className="lv2-buy-submit-payment" onClick={submitDirect} disabled={directSubmitting}>{directSubmitting ? 'Submitting…' : 'Submit Purchase'}</button>
-            <div className="lv2-summary-secure"><strong>🔒 Secure & Safe Transaction</strong><small>Your payment information is always protected.</small></div>
-          </>}
+          {directAmount > 0 && <div className="lv2-buy-payment-fields">
+            <label><span>Payment reference / UTR</span><input id="lead-payment-utr" placeholder="Enter transaction ID / UTR" autoComplete="off" /></label>
+            <label><span>Payment proof</span><div className="lv2-buy-proof"><span>⌁</span><div><b>Upload payment proof</b><small>JPG, PNG or PDF · Max 5 MB</small></div><input id="lead-payment-proof" type="file" accept="image/*,.pdf" /></div></label>
+          </div>}
+          {paymentError && <div className="lv2-payment-error" role="alert">{paymentError}</div>}
+          <div className="lv2-buy-checkout-note"><strong>🔒 Secure & Safe Transaction</strong><small>Wallet deduction and coupon discount are applied automatically.</small></div>
         </section>
-      })()}
+      })()}}
     </div></div>}
     {payment && paymentLead && !buyModal && (() => {
       const paymentRow = payment.payment || {}
