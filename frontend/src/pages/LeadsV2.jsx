@@ -449,7 +449,7 @@ export default function LeadsV2() {
           </button>
 
         </section>
-      })()}}
+      })()}
     </div></div>}
     {payment && paymentLead && !buyModal && (() => {
       const paymentRow = payment.payment || {}
