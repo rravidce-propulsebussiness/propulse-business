@@ -1,4 +1,5 @@
 const pool = require('../config/database');
+const ledger = require('./investorFinancialLedgerService');
 
 async function transferInvestorEarnings({ userId, adminId, transferReference, proofUrl }) {
   const reference = String(transferReference || '').trim();
@@ -9,6 +10,7 @@ async function transferInvestorEarnings({ userId, adminId, transferReference, pr
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
+    await ledger.lockInvestorFinancials(client, userId);
     await client.query('SELECT pg_advisory_xact_lock(hashtext($1))', [`investor-payout-reference:${reference.toLowerCase()}`]);
     const duplicate = (await client.query(`SELECT id FROM investor_payout_requests WHERE LOWER(BTRIM(transfer_reference))=LOWER(BTRIM($1)) UNION ALL SELECT id FROM investments WHERE LOWER(BTRIM(payout_transfer_reference))=LOWER(BTRIM($1)) LIMIT 1`, [reference])).rows[0];
     if (duplicate) throw Object.assign(new Error('This transfer reference has already been used'), { code: 'DUPLICATE_REFERENCE' });
@@ -32,6 +34,8 @@ async function transferInvestorEarnings({ userId, adminId, transferReference, pr
       throw Object.assign(new Error('There are no matured non-auto-invest earnings ready for transfer'), { code: 'NO_REALIZED_AMOUNT' });
     }
 
+    const summary = await ledger.getInvestorFinancialSummary(userId, client);
+    let remaining = Number(summary.non_auto_earnings_withdrawable || 0);
     const settled = [];
     let total = 0;
     for (const row of investments) {
@@ -41,7 +45,7 @@ async function transferInvestorEarnings({ userId, adminId, transferReference, pr
         WHERE investment_id=$1
       `, [Number(row.id)])).rows[0]?.total || 0);
       const amount = Number(revenue.toFixed(2));
-      if (amount <= 0) continue;
+      if (amount <= 0 || amount > remaining + 1e-6) continue;
 
       const rowReference = investments.length === 1 ? reference : `${reference} / INV-${row.id}`;
       await client.query(`
@@ -55,6 +59,7 @@ async function transferInvestorEarnings({ userId, adminId, transferReference, pr
       `, [amount, rowReference, proof, Number(row.id)]);
 
       total += amount;
+      remaining = Math.max(0, remaining - amount);
       settled.push({ investment_id: Number(row.id), amount, transfer_reference: rowReference });
     }
 
