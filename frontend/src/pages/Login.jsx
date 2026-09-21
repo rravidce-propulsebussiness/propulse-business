@@ -29,14 +29,6 @@ function Login() {
       return
     }
 
-    try {
-      const partner = await authRequest('/lead-partner/me')
-      if (partner?.status === 'active') {
-        navigate('/lead-partner', { replace: true })
-        return
-      }
-    } catch {}
-
     const destination = location.state?.from?.pathname || '/leads'
     navigate(destination, { replace: true })
   }, [location.state, navigate, remember])
