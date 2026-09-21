@@ -45,7 +45,33 @@ async function createAdmin({ name, email, password }) {
   return (await pool.query(`INSERT INTO users (name,email,password_hash,role) VALUES ($1,$2,$3,'admin') RETURNING id,name,email,role,is_active,created_at`,[cleanName,normalizedEmail,passwordHash])).rows[0];
 }
 
-async function setUserStatus(userId,isActive) { return (await pool.query(`UPDATE users SET is_active=$1,updated_at=CURRENT_TIMESTAMP WHERE id=$2 RETURNING id,name,email,role,is_active`,[isActive,userId])).rows[0]||null; }
+const ADMIN_MUTATION_LOCK_NAMESPACE = 2147482999;
+
+async function lockAdminMutations(client) {
+  await client.query('SELECT pg_advisory_xact_lock($1)', [ADMIN_MUTATION_LOCK_NAMESPACE]);
+}
+
+async function setUserStatus(userId,isActive) {
+  const targetUserId=Number(userId);
+  const client=await pool.connect();
+  try{
+    await client.query('BEGIN');
+    await lockAdminMutations(client);
+    const current=(await client.query('SELECT id,name,email,role,is_active FROM users WHERE id=$1 FOR UPDATE',[targetUserId])).rows[0];
+    if(!current){await client.query('COMMIT');return null;}
+    if(current.role==='admin' && current.is_active && !Boolean(isActive)){
+      const activeAdmins=Number((await client.query(`SELECT COUNT(*)::int AS total FROM users WHERE role='admin' AND is_active=TRUE`)).rows[0].total||0);
+      if(activeAdmins<=1){
+        const error=new Error('At least one active administrator must remain.');
+        error.code='LAST_ADMIN';
+        throw error;
+      }
+    }
+    const updated=(await client.query(`UPDATE users SET is_active=$1,updated_at=CURRENT_TIMESTAMP WHERE id=$2 RETURNING id,name,email,role,is_active`,[Boolean(isActive),targetUserId])).rows[0]||null;
+    await client.query('COMMIT');
+    return updated;
+  }catch(error){await client.query('ROLLBACK');throw error;}finally{client.release();}
+}
 
 async function ensureLeadPartnerProfile(client,userId) {
   const existing=(await client.query('SELECT id,status FROM lead_partners WHERE user_id=$1 FOR UPDATE',[userId])).rows[0];
@@ -60,6 +86,7 @@ async function setUserRole({ userId, role, actingAdminId }) {
   const client=await pool.connect();
   try{
     await client.query('BEGIN');
+    await lockAdminMutations(client);
     const current=(await client.query('SELECT id,name,email,role,is_active FROM users WHERE id=$1 FOR UPDATE',[targetUserId])).rows[0];
     if(!current){const error=new Error('User not found');error.code='NOT_FOUND';throw error;}
     if(current.role==='admin'&&normalizedRole!=='admin'){
