@@ -40,7 +40,7 @@ function Profile() {
   const serviceOptions = useMemo(() => serviceSelections.map((x) => services.filter((s) => String(s.industry_id) === String(x.industryId))), [services, serviceSelections])
   const subserviceOptions = useMemo(() => serviceSelections.map((x) => subservices.filter((s) => String(s.service_id) === String(x.serviceId))), [subservices, serviceSelections])
   const cityOptions = useMemo(() => locationSelections.map((x) => cities.filter((c) => String(c.state_id) === String(x.stateId))), [cities, locationSelections])
-  const initials = (form.businessName || form.name || 'P').trim().split(/\\s+/).slice(0, 2).map((part) => part[0]).join('').toUpperCase() || 'P'
+  const initials = (form.businessName || form.name || 'P').trim().split(/\s+/).slice(0, 2).map((part) => part[0]).join('').toUpperCase() || 'P'
   const completionItems = [
     Boolean(form.name && form.email && form.phone),
     Boolean(form.businessName && form.businessDetails),
