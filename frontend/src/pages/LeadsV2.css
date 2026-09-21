@@ -181,3 +181,36 @@
 .lv2-summary-secure{margin-top:14px}
 @media(max-width:1050px){.lv2-pack-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:700px){.lv2-pack-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.lv2-pack-card{min-height:118px}}
+
+
+/* Second compact pass: reduce current checkout controls by another ~15% */
+.lv2-coupon-box{padding:9px 10px;margin-bottom:8px}
+.lv2-coupon-title{gap:7px;margin-bottom:6px}
+.lv2-coupon-title>span{width:23px;height:23px;font-size:13px}
+.lv2-coupon-title strong{font-size:8px}
+.lv2-coupon-title small{font-size:7px;margin-left:5px}
+.lv2-coupon-row{grid-template-columns:1fr 72px;gap:6px}
+.lv2-coupon-row input{height:32px;padding:0 8px;font-size:9px}
+.lv2-coupon-row button{font-size:8px}
+.lv2-coupon-status,.lv2-coupon-error{margin-top:5px;font-size:7px}
+.lv2-wallet-choice{gap:8px;margin-bottom:11px;padding:9px 10px;border-radius:11px}
+.lv2-wallet-choice label{gap:7px;font-size:9px}
+.lv2-wallet-choice label small{font-size:6.5px}
+.lv2-wallet-icon{width:28px;height:28px;flex-basis:28px;border-radius:7px;font-size:13px}
+.lv2-wallet-choice>strong{font-size:11px}
+.lv2-wallet-choice input{width:14px;height:14px}
+.lv2-share-section-head{gap:7px;margin-bottom:6px}
+.lv2-share-section-head strong{font-size:8px}
+.lv2-share-section-head small{font-size:6.5px}
+.lv2-pack-grid{gap:8px;padding:1px 0}
+.lv2-pack-card{min-height:108px;padding:11px 10px 9px;border-radius:10px}
+.lv2-pack-card strong{font-size:21px}
+.lv2-pack-card small{margin-top:3px;font-size:8px}
+.lv2-pack-card b{margin-top:11px;font-size:15px}
+.lv2-pack-card em{margin-top:6px;padding:3px 6px;font-size:6.5px}
+.lv2-pack-check{right:7px;top:7px;width:19px;height:19px;font-size:10px}
+.lv2-summary-head{padding:11px 12px}
+.lv2-summary-body{padding:10px 12px}
+.lv2-summary-row{margin-bottom:6px}
+.lv2-continue-purchase{height:40px;margin-top:11px;font-size:9px}
+.lv2-summary-secure{margin-top:10px}
