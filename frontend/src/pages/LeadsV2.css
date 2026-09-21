@@ -1092,3 +1092,34 @@
     grid-template-columns:1fr;
   }
 }
+
+/* Prevent horizontal page scrolling on Leads */
+html:has(.lv2-shell),
+body:has(.lv2-shell){
+  overflow-x:hidden!important;
+}
+.lv2-shell,
+.lv2-page{
+  max-width:100%;
+  overflow-x:hidden!important;
+}
+.lv2-page{
+  box-sizing:border-box;
+}
+.lv2-grid,
+.lv2-market-head,
+.lv2-controls,
+.lv2-stats{
+  min-width:0;
+  max-width:100%;
+}
+@media(max-width:760px){
+  .lv2-page{
+    width:100%;
+    max-width:100%;
+    overflow-x:hidden!important;
+  }
+  .lv2-grid{
+    width:100%;
+  }
+}
