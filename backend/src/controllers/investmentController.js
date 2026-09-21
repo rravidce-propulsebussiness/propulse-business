@@ -7,7 +7,7 @@ const payoutRequests = require('../services/investorPayoutRequestService');
 const adminInvestorTransfer = require('../services/adminInvestorTransferService');
 const cycleStatement = require('../services/investmentCycleStatementService');
 function booleanValue(value){return value===true||['true','1','on','yes'].includes(String(value??'').trim().toLowerCase())}
-async function setPreference(investmentId,userId,enabled){if(!investmentId)return;await pool.query('UPDATE investments SET reinvestment_enabled=$1,updated_at=CURRENT_TIMESTAMP WHERE id=$2 AND user_id=$3',[booleanValue(enabled),Number(investmentId)])}
+async function setPreference(investmentId,userId,enabled){if(!investmentId)return;await pool.query('UPDATE investments SET reinvestment_enabled=$1,updated_at=CURRENT_TIMESTAMP WHERE id=$2 AND user_id=$3',[booleanValue(enabled),Number(investmentId),Number(userId)])}
 async function access(req,res){try{return res.json(await service.getInvestmentAccess(req.user.id))}catch(e){console.error('Investment access failed:',e.message);return res.status(500).json({error:'Failed to load investment access'})}}
 async function rules(req,res){try{return res.json(await service.getRules())}catch(e){return res.status(500).json({error:'Failed to load investment rules'})}}
 async function locationRules(req,res){try{return res.json(await service.getLocationRules())}catch(e){return res.status(500).json({error:'Failed to load investment location rules'})}}
