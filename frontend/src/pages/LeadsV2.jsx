@@ -128,6 +128,8 @@ export default function LeadsV2() {
   }, [token, page, search, tier, category])
 
   const isPro = Boolean(user?.is_pro_member || user?.membership_type === 'pro')
+  const membershipLabel = norm(user?.membership_type || user?.membership?.type || user?.membership?.name || user?.plan || user?.plan_name || user?.subscription_plan || '')
+  const isGrowthScaleMember = ['growth', 'scale'].some(name => membershipLabel === name || membershipLabel.includes(name))
   const buyModalClaimed = Boolean(buyModal?.access?.claimed || buyModal?.access?.purchased)
   const title = category ? `${category.replaceAll('-', ' ')} leads` : 'Available Leads'
   const topIndustry = useMemo(() => leads.find(l => hasValue(l.industry_name))?.industry_name || '', [leads])
@@ -387,7 +389,7 @@ export default function LeadsV2() {
               <span>Price per share: <b>{selectedSharePack ? money((buyModal.pricing?.shares || []).find(p => Number(p.shares) === Number(selectedSharePack))?.[isPro ? 'pro' : 'normal']) : '—'}</b></span>
             </div>
             <div className="lv2-pack-grid">
-              {(buyModal.pricing?.shares || []).map(p => { const n = Number(p.shares); const normal = Number(p.normal); const pro = Number(p.pro); const price = isPro ? pro : normal; const saving = Number.isFinite(normal) && Number.isFinite(pro) && normal > pro ? normal - pro : 0; const selected = Number(selectedSharePack) === n; const key = buyModal.id + '-' + n + '-' + (isPro ? 'pro' : 'normal') + '-' + (useWallet ? 'wallet' : 'direct'); return <button key={key} type="button" className={"lv2-pack-card" + (selected ? ' selected' : '')} onClick={() => { setSelectedSharePack(n); if (couponCode.trim()) validateCouponForSelection(couponCode, n) }} disabled={buyModalClaimed || Boolean(buying)}><span className="lv2-pack-check">{selected ? '✓' : ''}</span><strong>{n}</strong><small>{n === 1 ? 'Share' : 'Shares'}</small><b>{money(price)}</b>{saving > 0 && <em>Save {money(saving)}</em>}{buying === key && <i>Processing…</i>}</button> })}
+              {(buyModal.pricing?.shares || []).map(p => { const n = Number(p.shares); const normal = Number(p.normal); const pro = Number(p.pro); const price = isPro ? pro : normal; const saving = Number.isFinite(normal) && Number.isFinite(pro) && normal > pro ? normal - pro : 0; const selected = Number(selectedSharePack) === n; const key = buyModal.id + '-' + n + '-' + (isPro ? 'pro' : 'normal') + '-' + (useWallet ? 'wallet' : 'direct'); const growthSavings = saving; const savingText = growthSavings > 0 ? (isGrowthScaleMember ? `Saved ${money(growthSavings)}` : `Save with Growth ${money(growthSavings)}`) : ''; return <button key={key} type="button" className={"lv2-pack-card" + (selected ? ' selected' : '')} onClick={() => { setSelectedSharePack(n); if (couponCode.trim()) validateCouponForSelection(couponCode, n) }} disabled={buyModalClaimed || Boolean(buying)}><span className="lv2-pack-check">{selected ? '✓' : ''}</span><strong>{n}</strong><small>{n === 1 ? 'Share' : 'Shares'}</small><b>{money(price)}</b>{savingText && <em className={isGrowthScaleMember ? 'lv2-pack-saving-member' : 'lv2-pack-saving-growth'}>{savingText}</em>}{buying === key && <i>Processing…</i>}</button> })}
             </div>
           </div>
           {!isPro && <div className="lv2-pro-hint"><strong>Pro members save more</strong><span>Pro pricing is available with a Pro membership.</span><button onClick={() => { setBuyModal(null); setUpgrade(true) }}>View Pro →</button></div>}
