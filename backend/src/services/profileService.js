@@ -9,7 +9,7 @@ async function getProfile(userId, client = pool) {
   const profile = profileResult.rows[0];
   if (!profile) return null;
 
-  const [services, locations] = await Promise.all([
+  const [services, locations, companyProofs] = await Promise.all([
     client.query(
       `SELECT bps.id, bps.industry_id, i.name AS industry_name,
               bps.service_id, s.name AS service_name,
@@ -31,9 +31,15 @@ async function getProfile(userId, client = pool) {
        WHERE bpl.business_profile_id = $1 AND bpl.is_active = TRUE
        ORDER BY st.name, c.name`, [profile.id]
     ),
+    client.query(
+      `SELECT id, original_name, mime_type, file_size, file_url, status, created_at
+       FROM company_proof_documents
+       WHERE user_id = $1
+       ORDER BY created_at DESC, id DESC`, [userId]
+    ),
   ]);
 
-  return { ...profile, services: services.rows, locations: locations.rows };
+  return { ...profile, services: services.rows, locations: locations.rows, company_proofs: companyProofs.rows };
 }
 
 async function validateSelections(client, services, locations) {
