@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { apiRequest } from '../../utils/api'
 import { clearSession, getToken } from '../../utils/auth'
 import { useNavigate } from 'react-router-dom'
@@ -58,7 +58,7 @@ export default function AdminInvestorWithdrawals() {
     return apiRequest(path, options)
   }
 
-  async function load(silent = false) {
+  const load = useCallback(async (silent = false) => {
     if (!silent) setLoading(true)
     setError('')
     try {
@@ -70,17 +70,17 @@ export default function AdminInvestorWithdrawals() {
     } finally {
       if (!silent) setLoading(false)
     }
-  }
+  }, [status, search])
 
-  useEffect(() => { load() }, [status])
+  useEffect(() => { load() }, [load])
   useEffect(() => {
     const timer = window.setTimeout(() => load(), 250)
     return () => window.clearTimeout(timer)
-  }, [search])
+  }, [load])
   useEffect(() => {
     const timer = window.setInterval(() => load(true), 15000)
     return () => window.clearInterval(timer)
-  }, [status, search])
+  }, [load])
 
   const counts = useMemo(() => ({
     pending: requests.filter(item => item.status === 'pending').length,
