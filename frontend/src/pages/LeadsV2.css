@@ -1002,3 +1002,43 @@
     min-width:82px!important;
   }
 }
+
+/* Restore premium View Plans link styling */
+.lv2-pro-hint .lv2-view-plans-link{
+  grid-column:2;
+  grid-row:1/3;
+  align-self:center;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width:94px;
+  height:36px;
+  box-sizing:border-box;
+  padding:0 12px;
+  border:1px solid #0b3b80;
+  border-radius:8px;
+  background:#0b3b80;
+  color:#fff!important;
+  text-decoration:none!important;
+  font-size:8px;
+  font-weight:900;
+  line-height:1;
+  cursor:pointer;
+  transition:all .18s ease;
+}
+.lv2-pro-hint .lv2-view-plans-link:hover{
+  background:#124d9f;
+  border-color:#124d9f;
+  color:#fff!important;
+  text-decoration:none!important;
+  transform:translateY(-1px);
+  box-shadow:0 6px 14px rgba(11,59,128,.18);
+}
+@media(max-width:600px){
+  .lv2-pro-hint .lv2-view-plans-link{
+    grid-column:1;
+    grid-row:auto;
+    justify-self:start;
+    margin-top:5px;
+  }
+}
