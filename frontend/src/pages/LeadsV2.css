@@ -280,3 +280,47 @@
 .lv2-summary-row{margin-bottom:4px}
 .lv2-continue-purchase{height:32px;margin-top:7px;font-size:7px}
 .lv2-summary-secure{margin-top:6px}
+
+
+/* Final approved modal composition: remove empty gaps and restore readable typography */
+.lv2-buy-modal{padding:22px 24px}
+.lv2-buy-layout{gap:16px}
+.lv2-buy-main{display:flex;flex-direction:column;gap:10px}
+.lv2-modal-lead{margin:0;padding:14px 16px}
+.lv2-coupon-box{margin:0;padding:12px 14px}
+.lv2-wallet-choice{margin:0;padding:12px 14px}
+.lv2-share-section{margin:0}
+.lv2-share-section-head{display:none}
+.lv2-pack-grid{margin:0;padding:0;gap:10px;grid-template-columns:repeat(3,minmax(0,1fr))}
+.lv2-pack-card{min-height:126px;padding:15px 13px 12px;border-radius:13px}
+.lv2-pack-card strong{font-size:27px}
+.lv2-pack-card small{font-size:10px;margin-top:4px}
+.lv2-pack-card b{font-size:19px;margin-top:15px}
+.lv2-pack-card em{font-size:8px;margin-top:9px;padding:4px 7px}
+.lv2-pack-check{width:23px;height:23px;right:8px;top:8px;font-size:12px}
+.lv2-coupon-title{gap:9px;margin-bottom:8px}
+.lv2-coupon-title>span{width:28px;height:28px;font-size:16px}
+.lv2-coupon-title strong{font-size:10px}
+.lv2-coupon-title small{font-size:9px}
+.lv2-coupon-row{grid-template-columns:1fr 92px;gap:8px}
+.lv2-coupon-row input{height:40px;font-size:11px;padding:0 11px}
+.lv2-coupon-row button{font-size:10px}
+.lv2-coupon-status,.lv2-coupon-error{font-size:9px;margin-top:6px}
+.lv2-wallet-choice{gap:12px}
+.lv2-wallet-choice label{font-size:11px;gap:10px}
+.lv2-wallet-choice label small{font-size:8px}
+.lv2-wallet-choice>strong{font-size:14px}
+.lv2-wallet-icon{width:36px;height:36px;flex-basis:36px;font-size:17px}
+.lv2-wallet-choice input{width:18px;height:18px}
+.lv2-purchase-summary{border-radius:16px}
+.lv2-summary-head{padding:17px 16px}
+.lv2-summary-head strong{font-size:18px}
+.lv2-summary-head small{font-size:9px}
+.lv2-summary-body{padding:16px}
+.lv2-summary-row{font-size:11px;margin-bottom:11px}
+.lv2-summary-row strong{font-size:11px}
+.lv2-summary-total span{font-size:11px}
+.lv2-summary-total strong{font-size:27px}
+.lv2-continue-purchase{height:48px;margin-top:15px;font-size:12px}
+.lv2-summary-secure{margin-top:14px}
+@media(max-width:900px){.lv2-buy-modal{padding:18px}.lv2-buy-layout{gap:12px}.lv2-buy-main{gap:8px}}
