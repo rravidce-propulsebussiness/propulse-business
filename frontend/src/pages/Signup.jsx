@@ -99,9 +99,6 @@ function Signup() {
   const subserviceOptions = useMemo(() => serviceSelections.map((s) => subservices.filter((item) => String(item.service_id) === String(s.serviceId))), [subservices, serviceSelections])
   const cityOptions = useMemo(() => locationSelections.map((s) => cities.filter((item) => String(item.state_id) === String(s.stateId))), [cities, locationSelections])
 
-  function accountTypeLabel() {
-    return accountType === 'lead_partner' ? 'Lead Partner' : 'User'
-  }
 
   function validateCredentials() {
     const mobile = String(form.phone || '').replace(/\D/g, '')
@@ -215,22 +212,6 @@ function Signup() {
         }))
       } catch {}
       setShowBusinessModal(true)
-    } catch (err) {
-      setError(err.message)
-    } finally {
-      setGoogleLoading(false)
-    }
-  }, [completeGoogleLogin])
-
-  const handleGoogle = useCallback(async credential => {
-    setError('')
-    try {
-      setGoogleLoading(true)
-      const result = await authRequest('/auth/google', {
-        method: 'POST',
-        body: JSON.stringify({ credential }),
-      })
-      await completeGoogleLogin(result)
     } catch (err) {
       setError(err.message)
     } finally {
