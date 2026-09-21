@@ -130,8 +130,8 @@ async function saveCompanyProofDocuments(userId, documents = []) {
     const storedName = `${userId}-${Date.now()}-${crypto.randomBytes(8).toString('hex')}${extension}`;
     fs.writeFileSync(path.join(uploadDir, storedName), buffer, { flag: 'wx' });
     const fileUrl = `/uploads/company-proofs/${storedName}`;
-    await pool.query(`INSERT INTO company_proof_documents (user_id,original_name,stored_name,mime_type,file_size,file_url) VALUES ($1,$2,$3,$4,$5,$6)`, [userId, originalName, storedName, mimeType, buffer.length, fileUrl]);
-    saved.push({ original_name: originalName, mime_type: mimeType, file_size: buffer.length, file_url: fileUrl, status: 'pending' });
+    const inserted = (await pool.query(`INSERT INTO company_proof_documents (user_id,original_name,stored_name,mime_type,file_size,file_url) VALUES ($1,$2,$3,$4,$5,$6) RETURNING id`, [userId, originalName, storedName, mimeType, buffer.length, fileUrl])).rows[0];
+    saved.push({ id: inserted.id, original_name: originalName, mime_type: mimeType, file_size: buffer.length, file_url: `/api/auth/company-proofs/${inserted.id}`, status: 'pending' });
   }
   return saved;
 }
@@ -216,6 +216,20 @@ async function getUserById(id) {
   const user = await getAuthenticatedUser(id);
   if (!user) return null;
   return await publicUser(user, await getBusinessProfile(id));
+}
+
+async function getCompanyProofDocument({ documentId, userId, isAdmin = false }) {
+  const normalizedDocumentId = Number(documentId);
+  const normalizedUserId = Number(userId);
+  if (!Number.isInteger(normalizedDocumentId) || normalizedDocumentId <= 0) return null;
+  if (!Number.isInteger(normalizedUserId) || normalizedUserId <= 0) return null;
+  const result = await pool.query(
+    `SELECT id,user_id,original_name,stored_name,mime_type,file_size,status
+     FROM company_proof_documents
+     WHERE id=$1 AND (user_id=$2 OR $3=TRUE)`,
+    [normalizedDocumentId, normalizedUserId, Boolean(isAdmin)],
+  );
+  return result.rows[0] || null;
 }
 
 module.exports = { signup, saveCompanyProofDocuments, login, googleLogin, createPasswordReset, resetPassword, verifyToken, getUserById, getAuthenticatedUser };
