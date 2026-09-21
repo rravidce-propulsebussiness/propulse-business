@@ -1,4 +1,3 @@
-import { useSearchParams } from 'react-router-dom'
 import { Navigate, useSearchParams } from 'react-router-dom'
 import PortalContact from './PortalContact'
 import './Contact.css'
