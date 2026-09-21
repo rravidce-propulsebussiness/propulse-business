@@ -121,11 +121,11 @@ export default function Industries() {
       || pins.some(pin => String(pin.pincode || '').includes(query) || String(pin.officeName || '').toLowerCase().includes(query))
   }
 
-  const filteredStates = useMemo(() => {
+  const filteredStates = (() => {
     const query = search.trim().toLowerCase()
     if (!query) return states
     return states.filter(state => String(state.name || '').toLowerCase().includes(query) || citiesFor(state.id).some(city => cityMatches(city, query)))
-  }, [states, cities, subcities, search])
+  })()
 
   const areaMatches = (area, query) => !query || String(area.name || '').toLowerCase().includes(query) || String(area.pincode || '').includes(query)
 
