@@ -75,6 +75,11 @@ async function validateBusinessSelections(client, services, locations) {
 async function signup({ name, email, password, phone, businessName, businessDetails, services, locations, role = 'business', googleCredential = null }) {
   const signupRole = normalizePublicSignupRole(role);
   if (!signupRole) throw Object.assign(new Error('Only User or Lead Partner accounts can be created through public signup'), { code: 'INVALID_SIGNUP_ROLE' });
+  const normalizedPhone = String(phone || '').replace(/\\D/g, '');
+  if (!/^\\d{10}$/.test(normalizedPhone)) throw Object.assign(new Error('Mobile number must be exactly 10 digits'), { code: 'INVALID_PHONE' });
+  if (!googleCredential && !/^(?=.*[A-Za-z])(?=.*\\d).{7,}$/.test(String(password || ''))) {
+    throw Object.assign(new Error('Password must contain letters and numbers, for example Ravi143'), { code: 'INVALID_PASSWORD' });
+  }
   let normalizedEmail = email.trim().toLowerCase();
   let signupName = name.trim();
   let passwordValue = password;
