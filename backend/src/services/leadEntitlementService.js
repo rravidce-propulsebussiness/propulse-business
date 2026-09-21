@@ -62,7 +62,7 @@ async function getLeadAccessMap(userId,leadIds){
   ]);
   const membership=membershipResult.rows[0]||null;const claims=new Map(claimsResult.rows.map(x=>[Number(x.lead_id),x]));const out={};
   if(!membership){for(const lead of leadsResult.rows){const claim=claims.get(Number(lead.id));out[lead.id]={authenticated:true,claimed:Boolean(claim),canClaim:false,reason:'No active membership entitlement',...(claim?{claim}:{})};}return out;}
-  const {billingMonths,periodStart,periodEnd}=periodForMembership(membership);const entitlements=parseEntitlements(membership.lead_entitlements);
+  const {billingMonths,periodStart,periodEnd,monthlyStart,monthlyEnd}=periodForMembership(membership);const entitlements=parseEntitlements(membership.lead_entitlements);
   const usageStart=membership.lead_rollover_enabled===false?monthlyStart:periodStart;const usageEnd=membership.lead_rollover_enabled===false?monthlyEnd:periodEnd;
   const usedResult=await pool.query(`SELECT entitlement_type,COUNT(*)::int AS used FROM lead_entitlement_claims WHERE user_id=$1 AND membership_id=$2 AND claimed_at>= $3 AND claimed_at < $4 GROUP BY entitlement_type`,[userId,membership.id,usageStart,usageEnd]);
   const usedByType=new Map(usedResult.rows.map(x=>[String(x.entitlement_type||'').toLowerCase(),Number(x.used||0)]));const now=new Date();
