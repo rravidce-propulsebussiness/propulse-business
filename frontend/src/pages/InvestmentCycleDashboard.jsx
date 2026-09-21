@@ -21,9 +21,10 @@ export default function InvestmentCycleDashboard() {
   const load = async (initial = false) => {
     if (initial) setLoading(true)
     try {
-      const [cycleResult, investmentResult, rulesResult, accessResult, walletResult, fundsResult, accountResult] = await Promise.all([authRequest('/investments/cycle'), authRequest('/investments'), authRequest('/investments/rules'), authRequest('/investments/access'), authRequest('/wallet'), authRequest('/investments/funds'), authRequest('/investor/payout-account')])
+      const [cycleResult, investmentResult, rulesResult, accessResult, walletResult, accountResult] = await Promise.all([authRequest('/investments/cycle'), authRequest('/investments'), authRequest('/investments/rules'), authRequest('/investments/access'), authRequest('/wallet'), authRequest('/investor/payout-account')])
       const candidate = cycleResult?.cycle || null
       const activeCycle = candidate && OPEN.has(st(candidate.status)) ? candidate : null
+      const fundsResult = activeCycle ? await authRequest(`/investments/funds?cycleId=${Number(activeCycle.id)}`) : null
       const investmentRows = list(investmentResult)
       setCycle(activeCycle)
       setRows(activeCycle ? investmentRows.filter(r => Number(r?.cycle_id) === Number(activeCycle.id) && INVESTED.has(st(r?.status))) : [])
