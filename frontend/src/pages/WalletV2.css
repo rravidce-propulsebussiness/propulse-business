@@ -229,3 +229,66 @@
   .wallet-add-modal form label:nth-child(3),
   .wallet-add-modal .wallet-primary{grid-column:1}
 }
+
+
+/* Final wallet modal cleanup */
+.wallet-add-modal .wallet-modal-subtitle{
+  display:none!important;
+}
+.wallet-add-modal form label:has(input[type="file"]){
+  align-content:start;
+}
+.wallet-add-modal form input[type="file"]{
+  position:absolute;
+  width:1px!important;
+  height:1px!important;
+  padding:0!important;
+  margin:-1px!important;
+  overflow:hidden!important;
+  clip:rect(0,0,0,0)!important;
+  white-space:nowrap!important;
+  border:0!important;
+}
+.wallet-add-modal form label:has(input[type="file"]):after{
+  content:'Choose File';
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  width:max-content;
+  min-width:145px;
+  height:40px;
+  box-sizing:border-box;
+  margin-top:0;
+  padding:0 18px;
+  border-radius:10px;
+  background:linear-gradient(135deg,#1765dc,#0b4fa8);
+  color:#fff;
+  font-size:11px;
+  font-weight:950;
+  letter-spacing:.01em;
+  box-shadow:0 8px 18px rgba(23,101,220,.18);
+  cursor:pointer;
+  transition:transform .15s ease,box-shadow .15s ease,filter .15s ease;
+}
+.wallet-add-modal form label:has(input[type="file"]):hover:after{
+  transform:translateY(-1px);
+  box-shadow:0 11px 22px rgba(23,101,220,.24);
+  filter:brightness(1.04);
+}
+.wallet-add-modal form label:has(input[type="file"]):before{
+  content:'📎';
+  position:absolute;
+  pointer-events:none;
+  margin-left:13px;
+  margin-top:20px;
+  z-index:2;
+  font-size:14px;
+}
+.wallet-add-modal form label:has(input[type="file"]){
+  position:relative;
+}
+@media(max-width:700px){
+  .wallet-add-modal form label:has(input[type="file"]):after{
+    width:100%;
+  }
+}
