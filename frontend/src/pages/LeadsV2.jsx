@@ -95,6 +95,8 @@ export default function LeadsV2() {
   const [couponCode, setCouponCode] = useState('')
   const [couponStatus, setCouponStatus] = useState('')
   const [couponError, setCouponError] = useState('')
+  const [couponDiscount, setCouponDiscount] = useState(0)
+  const [couponFinalAmount, setCouponFinalAmount] = useState(null)
 
   useEffect(() => { setPage(1) }, [search, tier, category])
   useEffect(() => {
@@ -128,21 +130,50 @@ export default function LeadsV2() {
   const openBuyModal = (lead) => {
     if (!logged) { window.location.href = '/login'; return }
     if (!lead.pricing?.shares?.length) { setError('Pricing is not available for this lead.'); return }
-    setError(''); setNotice(''); setPaymentError(''); setCouponCode(''); setCouponStatus(''); setCouponError(''); setUseWallet(true); setWalletBalance(0); setSelectedSharePack(Number(lead.pricing.shares[0]?.shares) || null); setBuyModal(lead)
+    setError(''); setNotice(''); setPaymentError(''); setCouponCode(''); setCouponStatus(''); setCouponError(''); setCouponDiscount(0); setCouponFinalAmount(null); setUseWallet(true); setWalletBalance(0); setSelectedSharePack(Number(lead.pricing.shares[0]?.shares) || null); setBuyModal(lead)
     authRequest('/wallet').then(data => setWalletBalance(Number(data?.balance ?? data?.wallet?.balance ?? 0))).catch(() => {})
   }
-  const applyCoupon = () => {
-    const normalized = String(couponCode || '').trim().toUpperCase()
+  const validateCouponForSelection = async (code = couponCode, shares = selectedSharePack) => {
+    const normalized = String(code || '').trim().toUpperCase()
     setCouponError('')
     if (!normalized) {
-      setCouponCode('')
       setCouponStatus('')
-      setCouponError('Enter a coupon code first.')
-      return
+      setCouponDiscount(0)
+      setCouponFinalAmount(null)
+      return false
     }
-    setCouponCode(normalized)
-    setCouponStatus(`${normalized} saved. The discount will be calculated from the exact share package you select.`)
+    const row = (buyModal?.pricing?.shares || []).find(p => Number(p.shares) === Number(shares))
+    const subtotal = Number(row?.[isPro ? 'pro' : 'normal'] || 0)
+    if (!subtotal) {
+      setCouponError('Select a share pack first.')
+      return false
+    }
+    try {
+      const result = await authRequest('/coupons/validate', {
+        method: 'POST',
+        body: JSON.stringify({
+          code: normalized,
+          subtotal,
+          purchaseType: 'lead',
+          industryId: buyModal?.industry_id || null
+        })
+      })
+      const discount = Number(result?.discountAmount || 0)
+      const finalAmount = Number(result?.finalAmount ?? Math.max(0, subtotal - discount))
+      setCouponCode(normalized)
+      setCouponDiscount(discount)
+      setCouponFinalAmount(finalAmount)
+      setCouponStatus(discount > 0 ? `${normalized} applied · You save ${money(discount)}` : `${normalized} applied`)
+      return true
+    } catch (e) {
+      setCouponDiscount(0)
+      setCouponFinalAmount(null)
+      setCouponStatus('')
+      setCouponError(e.message || 'Unable to validate coupon')
+      return false
+    }
   }
+  const applyCoupon = () => validateCouponForSelection()
   const claim = async (lead) => {
     if (!logged) { window.location.href = '/login'; return }
     setClaiming(lead.id); setNotice(''); setError('')
@@ -272,11 +303,11 @@ export default function LeadsV2() {
         <section className="lv2-buy-main">
           <div className="lv2-buy-heading"><div><span className="lv2-modal-kicker">LEAD PRICING</span><h2>Choose your share pack</h2><p className="lv2-modal-subtitle">Select how many shares you want for Lead #${buyModal.id}.</p></div><div className="lv2-buy-heading-badge"><span>▥</span><small>Quality Leads<br/>Better Business</small></div></div>
           <div className="lv2-modal-lead"><div className="lv2-avatar">{String(buyModal.customer_name || buyModal.service_name || buyModal.industry_name || 'L').trim().charAt(0).toUpperCase()}</div><div className="lv2-modal-lead-copy"><strong>{buyModal.customer_name || buyModal.service_name || buyModal.industry_name || 'Business opportunity'}</strong><small>⌖ {[buyModal.city_name, buyModal.state_name].filter(hasValue).join(' · ') || 'India'}</small>{hasValue(buyModal.service_name) && <small>⌂ {buyModal.service_name}</small>}</div><span className="lv2-lead-id-pill">Lead #${buyModal.id}</span></div>
-          <div className="lv2-coupon-box"><div className="lv2-coupon-title"><span>⌑</span><div><strong>COUPON CODE</strong><small>Optional · applied before wallet deduction</small></div></div><div className="lv2-coupon-row"><input value={couponCode} onChange={e => { setCouponCode(e.target.value.toUpperCase()); setCouponStatus(''); setCouponError('') }} onKeyDown={e => { if (e.key === 'Enter') applyCoupon() }} maxLength={50} autoComplete="off" placeholder="Enter coupon code"/><button type="button" onClick={applyCoupon}>Apply</button></div>{couponStatus && <small className="lv2-coupon-status">{couponStatus}</small>}{couponError && <small className="lv2-coupon-error">{couponError}</small>}</div>
+          <div className="lv2-coupon-box"><div className="lv2-coupon-title"><span>⌑</span><div><strong>COUPON CODE</strong><small>Optional · applied before wallet deduction</small></div></div><div className="lv2-coupon-row"><input value={couponCode} onChange={e => { setCouponCode(e.target.value.toUpperCase()); setCouponStatus(''); setCouponError(''); setCouponDiscount(0); setCouponFinalAmount(null) }} onKeyDown={e => { if (e.key === 'Enter') applyCoupon() }} maxLength={50} autoComplete="off" placeholder="Enter coupon code"/><button type="button" onClick={applyCoupon}>Apply</button></div>{couponStatus && <small className="lv2-coupon-status">{couponStatus}</small>}{couponError && <small className="lv2-coupon-error">{couponError}</small>}</div>
           <div className="lv2-wallet-choice"><label htmlFor="lv2-wallet-toggle"><span className="lv2-wallet-icon">▣</span><span><b>Use wallet balance</b><small>Available balance: {walletBalance > 0 ? money(walletBalance) : '₹0'}. You can pay the final amount directly.</small></span></label><strong>{walletBalance > 0 ? money(walletBalance) : '₹0'}</strong><input id="lv2-wallet-toggle" type="checkbox" checked={useWallet} onChange={e => setUseWallet(e.target.checked)} /></div>
           <div className="lv2-share-section"><div className="lv2-share-section-head"><span className="lv2-share-stack">▱</span><div><strong>Select Share Pack</strong><small>Choose the number of shares you want to purchase.</small></div></div>
             <div className="lv2-pack-grid">
-              {(buyModal.pricing?.shares || []).map(p => { const n = Number(p.shares); const normal = Number(p.normal); const pro = Number(p.pro); const price = isPro ? pro : normal; const saving = Number.isFinite(normal) && Number.isFinite(pro) && normal > pro ? normal - pro : 0; const selected = Number(selectedSharePack) === n; const key = buyModal.id + '-' + n + '-' + (isPro ? 'pro' : 'normal') + '-' + (useWallet ? 'wallet' : 'direct'); return <button type="button" className={"lv2-pack-card" + (selected ? ' selected' : '')} onClick={() => setSelectedSharePack(n)} disabled={buyModalClaimed || Boolean(buying)}><span className="lv2-pack-check">{selected ? '✓' : ''}</span><strong>{n}</strong><small>{n === 1 ? 'Share' : 'Shares'}</small><b>{money(price)}</b>{saving > 0 && <em>Save {money(saving)}</em>}{buying === key && <i>Processing…</i>}</button> })}
+              {(buyModal.pricing?.shares || []).map(p => { const n = Number(p.shares); const normal = Number(p.normal); const pro = Number(p.pro); const price = isPro ? pro : normal; const saving = Number.isFinite(normal) && Number.isFinite(pro) && normal > pro ? normal - pro : 0; const selected = Number(selectedSharePack) === n; const key = buyModal.id + '-' + n + '-' + (isPro ? 'pro' : 'normal') + '-' + (useWallet ? 'wallet' : 'direct'); return <button type="button" className={"lv2-pack-card" + (selected ? ' selected' : '')} onClick={() => { setSelectedSharePack(n); if (couponCode.trim()) validateCouponForSelection(couponCode, n) }} disabled={buyModalClaimed || Boolean(buying)}><span className="lv2-pack-check">{selected ? '✓' : ''}</span><strong>{n}</strong><small>{n === 1 ? 'Share' : 'Shares'}</small><b>{money(price)}</b>{saving > 0 && <em>Save {money(saving)}</em>}{buying === key && <i>Processing…</i>}</button> })}
             </div>
           </div>
           {!isPro && <div className="lv2-pro-hint"><strong>Pro members save more</strong><span>Pro pricing is available with a Pro membership.</span><button onClick={() => { setBuyModal(null); setUpgrade(true) }}>View Pro →</button></div>}
@@ -293,8 +324,8 @@ export default function LeadsV2() {
             <div className="lv2-summary-row"><span>Price per Share</span><strong>{selectedSharePack ? money((buyModal.pricing?.shares || []).find(p => Number(p.shares) === Number(selectedSharePack))?.[isPro ? 'pro' : 'normal']) : '—'}</strong></div>
             <div className="lv2-summary-divider"/>
             <div className="lv2-summary-row"><span>Subtotal</span><strong>{selectedSharePack ? money((buyModal.pricing?.shares || []).find(p => Number(p.shares) === Number(selectedSharePack))?.[isPro ? 'pro' : 'normal']) : '₹0'}</strong></div>
-            <div className="lv2-summary-row"><span>Coupon Discount</span><strong>- ₹0</strong></div>
-            <div className="lv2-summary-total"><span>Total Amount</span><strong>{selectedSharePack ? money((buyModal.pricing?.shares || []).find(p => Number(p.shares) === Number(selectedSharePack))?.[isPro ? 'pro' : 'normal']) : '₹0'}</strong></div>
+            <div className="lv2-summary-row"><span>Coupon Discount</span><strong className={couponDiscount > 0 ? 'lv2-discount-value' : ''}>− {money(couponDiscount)}</strong></div>
+            <div className="lv2-summary-total"><span>Total Amount</span><strong>{selectedSharePack ? money(couponFinalAmount != null ? couponFinalAmount : Number((buyModal.pricing?.shares || []).find(p => Number(p.shares) === Number(selectedSharePack))?.[isPro ? 'pro' : 'normal'] || 0)) : '₹0'}</strong></div>
             <button type="button" className="lv2-continue-purchase" disabled={!selectedSharePack || buyModalClaimed || Boolean(buying)} onClick={() => { const plan = isPro ? 'pro' : 'normal'; buy(buyModal, Number(selectedSharePack), plan) }}><span>🔒</span>{buying ? 'Processing…' : 'Continue to Purchase'} <b>→</b></button>
             <div className="lv2-summary-secure"><strong>🛡 Secure & Safe Transaction</strong><small>Your payment information is always protected.</small></div>
           </div>
