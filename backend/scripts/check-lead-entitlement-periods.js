@@ -87,8 +87,10 @@ async function runDayBoundaryTest() {
     await service.getLeadAccess(7, 1);
     const claimQuery = calls.find(call => call.sql.includes('SELECT COUNT(*)::int AS used'));
     assert(claimQuery, 'The entitlement usage query must be executed for the boundary test');
-    assertDateParts(new Date(claimQuery.params[3]), 2025, 8, 30, 'Billing period start before anniversary');
-    assertDateParts(new Date(claimQuery.params[4]), 2026, 8, 30, 'Billing period end at anniversary');
+    const billingStart = new Date(claimQuery.params[3]);
+    const billingEnd = new Date(claimQuery.params[4]);
+    assertDateParts(billingStart, 2025, 8, 30, 'Billing period start before anniversary');
+    assertDateParts(billingEnd, 2026, 8, 30, 'Billing period end at anniversary');
   } finally {
     restoreDate();
     require.cache[poolPath] = { id: poolPath, filename: poolPath, loaded: true, exports: originalPool };
