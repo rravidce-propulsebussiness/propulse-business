@@ -3,15 +3,34 @@ const pool=require('../config/database');
 function fail(message,code){throw Object.assign(new Error(message),{code});}
 function parseEntitlements(value){if(Array.isArray(value))return value;try{const x=typeof value==='string'?JSON.parse(value):value;return Array.isArray(x)?x:[]}catch{return[]}}
 function entitlementForLead(entitlements,lead){const wanted=lead.lead_type==='premium'?'premium':'shared';return entitlements.find(x=>String(x.type||'').toLowerCase()===wanted)||null}
-function monthsBetween(start,end){return Math.max(0,(end.getFullYear()-start.getFullYear())*12+end.getMonth()-start.getMonth());}
+function monthsBetween(start,end){
+  const months=(end.getFullYear()-start.getFullYear())*12+end.getMonth()-start.getMonth();
+  if(months<=0)return 0;
+  return Math.max(0,months-(end.getDate()<start.getDate()?1:0));
+}
+
+function addMonthsClamped(date,months){
+  const source=new Date(date);
+  const day=source.getDate();
+  const target=new Date(source);
+  target.setDate(1);
+  target.setMonth(target.getMonth()+months);
+  const lastDay=new Date(target.getFullYear(),target.getMonth()+1,0).getDate();
+  target.setDate(Math.min(day,lastDay));
+  return target;
+}
 
 function periodForMembership(membership){
   const billingMonths=Math.max(1,Number(membership.billing_months||1));
-  const starts=new Date(membership.starts_at);const now=new Date();
-  const elapsedMonths=monthsBetween(starts,now);const periodIndex=Math.floor(elapsedMonths/billingMonths);
-  const periodStart=new Date(starts);periodStart.setMonth(periodStart.getMonth()+periodIndex*billingMonths);
-  const periodEnd=new Date(periodStart);periodEnd.setMonth(periodEnd.getMonth()+billingMonths);
-  return {billingMonths,periodStart,periodEnd};
+  const starts=new Date(membership.starts_at);
+  const now=new Date();
+  const elapsedMonths=monthsBetween(starts,now);
+  const periodIndex=Math.floor(elapsedMonths/billingMonths);
+  const periodStart=addMonthsClamped(starts,periodIndex*billingMonths);
+  const periodEnd=addMonthsClamped(periodStart,billingMonths);
+  const monthlyStart=addMonthsClamped(starts,elapsedMonths);
+  const monthlyEnd=addMonthsClamped(monthlyStart,1);
+  return {billingMonths,periodStart,periodEnd,monthlyStart,monthlyEnd};
 }
 
 async function getLeadAccess(userId,leadId){
@@ -26,10 +45,11 @@ async function getLeadAccess(userId,leadId){
   const membershipResult=await pool.query(`SELECT m.id,m.starts_at,m.expires_at,m.membership_plan_id,mp.billing_months,mp.lead_entitlements,mp.lead_rollover_enabled,mp.lead_expiry_days FROM memberships m JOIN membership_plans mp ON mp.id=m.membership_plan_id WHERE m.user_id=$1 AND m.status='active' AND m.starts_at<=CURRENT_TIMESTAMP AND m.expires_at>=CURRENT_TIMESTAMP AND mp.is_active=TRUE AND LOWER(REPLACE(COALESCE(mp.plan_type,''),'-','_')) IN ('pro','non_pro') ORDER BY m.expires_at DESC LIMIT 1`,[userId]);
   const membership=membershipResult.rows[0];if(!membership)return{authenticated:true,claimed:false,canClaim:false,reason:'No active membership entitlement'};
   const entitlement=entitlementForLead(parseEntitlements(membership.lead_entitlements),lead);if(!entitlement||entitlement.complimentary===false)return{authenticated:true,claimed:false,canClaim:false,reason:'This lead is not included in your membership'};
-  const {billingMonths,periodStart,periodEnd}=periodForMembership(membership);
+  const {billingMonths,periodStart,periodEnd,monthlyStart,monthlyEnd}=periodForMembership(membership);
   const monthly=Math.max(0,Number(entitlement.monthly_quantity??entitlement.quantity??0));const periodTotal=Math.max(monthly*billingMonths,Number(entitlement.period_total_quantity??monthly*billingMonths));
   if(monthly<=0&&periodTotal<=0)return{authenticated:true,claimed:false,canClaim:false,reason:'No remaining entitlement configured'};
-  const usedResult=await pool.query(`SELECT COUNT(*)::int AS used FROM lead_entitlement_claims WHERE user_id=$1 AND membership_id=$2 AND entitlement_type=$3 AND claimed_at>= $4 AND claimed_at < $5`,[userId,membership.id,entitlement.type,periodStart,periodEnd]);
+  const usageStart=membership.lead_rollover_enabled===false?monthlyStart:periodStart;const usageEnd=membership.lead_rollover_enabled===false?monthlyEnd:periodEnd;
+  const usedResult=await pool.query(`SELECT COUNT(*)::int AS used FROM lead_entitlement_claims WHERE user_id=$1 AND membership_id=$2 AND entitlement_type=$3 AND claimed_at>= $4 AND claimed_at < $5`,[userId,membership.id,entitlement.type,usageStart,usageEnd]);
   const used=Number(usedResult.rows[0]?.used||0);const allowance=membership.lead_rollover_enabled===false?Math.max(0,monthly):Math.max(0,periodTotal);
   return{authenticated:true,claimed:false,canClaim:used<allowance,remaining:Math.max(0,allowance-used),monthlyLimit:monthly,periodTotalLimit:periodTotal,billingMonths,entitlementType:entitlement.type,membershipId:membership.id,periodStart,periodEnd,expiryDays:Math.max(0,Number(membership.lead_expiry_days||0))};
 }
@@ -44,7 +64,8 @@ async function getLeadAccessMap(userId,leadIds){
   const membership=membershipResult.rows[0]||null;const claims=new Map(claimsResult.rows.map(x=>[Number(x.lead_id),x]));const out={};
   if(!membership){for(const lead of leadsResult.rows){const claim=claims.get(Number(lead.id));out[lead.id]={authenticated:true,claimed:Boolean(claim),canClaim:false,reason:'No active membership entitlement',...(claim?{claim}:{})};}return out;}
   const {billingMonths,periodStart,periodEnd}=periodForMembership(membership);const entitlements=parseEntitlements(membership.lead_entitlements);
-  const usedResult=await pool.query(`SELECT entitlement_type,COUNT(*)::int AS used FROM lead_entitlement_claims WHERE user_id=$1 AND membership_id=$2 AND claimed_at>= $3 AND claimed_at < $4 GROUP BY entitlement_type`,[userId,membership.id,periodStart,periodEnd]);
+  const usageStart=membership.lead_rollover_enabled===false?monthlyStart:periodStart;const usageEnd=membership.lead_rollover_enabled===false?monthlyEnd:periodEnd;
+  const usedResult=await pool.query(`SELECT entitlement_type,COUNT(*)::int AS used FROM lead_entitlement_claims WHERE user_id=$1 AND membership_id=$2 AND claimed_at>= $3 AND claimed_at < $4 GROUP BY entitlement_type`,[userId,membership.id,usageStart,usageEnd]);
   const usedByType=new Map(usedResult.rows.map(x=>[String(x.entitlement_type||'').toLowerCase(),Number(x.used||0)]));const now=new Date();
   for(const lead of leadsResult.rows){
     const claimed=claims.get(Number(lead.id));if(claimed){out[lead.id]={authenticated:true,claimed:true,canClaim:false,claim:claimed};continue;}
@@ -77,8 +98,9 @@ async function claimLead(userId,leadId){
     const membershipResult=await client.query(`SELECT m.id,m.starts_at,m.expires_at,mp.billing_months,mp.lead_entitlements,mp.lead_rollover_enabled,mp.lead_expiry_days FROM memberships m JOIN membership_plans mp ON mp.id=m.membership_plan_id WHERE m.user_id=$1 AND m.status='active' AND m.starts_at<=CURRENT_TIMESTAMP AND m.expires_at>=CURRENT_TIMESTAMP AND mp.is_active=TRUE AND LOWER(REPLACE(COALESCE(mp.plan_type,''),'-','_')) IN ('pro','non_pro') ORDER BY m.expires_at DESC LIMIT 1 FOR UPDATE OF m`,[userId]);
     const membership=membershipResult.rows[0];if(!membership)fail('No active membership entitlement','NO_MEMBERSHIP_ENTITLEMENT');
     const entitlement=entitlementForLead(parseEntitlements(membership.lead_entitlements),lead);if(!entitlement||entitlement.complimentary===false)fail('This lead is not included in your membership','ENTITLEMENT_NOT_INCLUDED');
-    const {billingMonths,periodStart,periodEnd}=periodForMembership(membership);const monthly=Math.max(0,Number(entitlement.monthly_quantity??entitlement.quantity??0));const periodTotal=Math.max(monthly*billingMonths,Number(entitlement.period_total_quantity??monthly*billingMonths));if(monthly<=0&&periodTotal<=0)fail('No remaining entitlement configured','ENTITLEMENT_EMPTY');
-    const usedResult=await client.query(`SELECT COUNT(*)::int AS used FROM lead_entitlement_claims WHERE user_id=$1 AND membership_id=$2 AND entitlement_type=$3 AND claimed_at>= $4 AND claimed_at < $5`,[userId,membership.id,entitlement.type,periodStart,periodEnd]);
+    const {billingMonths,periodStart,periodEnd,monthlyStart,monthlyEnd}=periodForMembership(membership);const monthly=Math.max(0,Number(entitlement.monthly_quantity??entitlement.quantity??0));const periodTotal=Math.max(monthly*billingMonths,Number(entitlement.period_total_quantity??monthly*billingMonths));if(monthly<=0&&periodTotal<=0)fail('No remaining entitlement configured','ENTITLEMENT_EMPTY');
+    const usageStart=membership.lead_rollover_enabled===false?monthlyStart:periodStart;const usageEnd=membership.lead_rollover_enabled===false?monthlyEnd:periodEnd;
+    const usedResult=await client.query(`SELECT COUNT(*)::int AS used FROM lead_entitlement_claims WHERE user_id=$1 AND membership_id=$2 AND entitlement_type=$3 AND claimed_at>= $4 AND claimed_at < $5`,[userId,membership.id,entitlement.type,usageStart,usageEnd]);
     const used=Number(usedResult.rows[0]?.used||0);const allowance=membership.lead_rollover_enabled===false?Math.max(0,monthly):Math.max(0,periodTotal);if(used>=allowance)fail('Lead entitlement exhausted','ENTITLEMENT_EXHAUSTED');
     const expiryDays=Math.max(0,Number(membership.lead_expiry_days||0));const inserted=await client.query(`INSERT INTO lead_entitlement_claims(user_id,lead_id,membership_id,entitlement_type,expires_at) VALUES($1,$2,$3,$4,$5) RETURNING *`,[userId,leadId,membership.id,entitlement.type,expiryDays>0?new Date(Date.now()+expiryDays*86400000):null]);
     await client.query('COMMIT');return{claim:inserted.rows[0],lead,remaining:Math.max(0,allowance-used-1)};
