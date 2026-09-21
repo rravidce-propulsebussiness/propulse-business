@@ -55,3 +55,23 @@
 .lv2-success-icon{width:58px;height:58px;margin:0 auto 14px;border-radius:50%;display:grid;place-items:center;background:#e9f8f1;color:#16845b;font-size:30px;font-weight:900}
 .lv2-payment-success>button{width:100%;height:46px;border:0;border-radius:10px;background:#0b3b80;color:#fff;font-size:13px;font-weight:900;cursor:pointer}
 @media(max-width:760px){.lv2-payment-modal{width:calc(100vw - 20px);max-height:calc(100vh - 20px);padding:22px 16px 18px;border-radius:18px}.lv2-payment-modal>h2{font-size:25px!important}.lv2-pay-amount-card strong{font-size:32px}.lv2-pay-breakdown{grid-template-columns:1fr 1fr}.lv2-pay-breakdown>div:nth-child(2){border-right:0}.lv2-pay-breakdown>div:nth-child(-n+2){border-bottom:1px solid #dce6f2}.lv2-pay-bank-box>div{grid-template-columns:86px 1fr auto}.lv2-pay-upload{flex-wrap:wrap}.lv2-pay-upload input[type=file]{width:100%!important;margin-left:45px}.lv2-payment-success{padding:30px 20px 22px}}
+
+
+/* Payment header + vertical compact pass */
+.lv2-payment-modal>h2{font-size:19px!important;margin:5px 38px 6px!important;line-height:1.1}
+.lv2-payment-kicker{padding:5px 8px;font-size:8px!important}
+.lv2-payment-close{width:32px!important;height:32px!important;font-size:21px!important}
+.lv2-payment-modal{padding:16px 18px 13px}
+.lv2-pay-amount-card{padding:9px 11px;margin-bottom:6px}
+.lv2-pay-amount-card strong{font-size:26px}
+.lv2-pay-breakdown{margin-bottom:6px}
+.lv2-pay-breakdown>div{padding:7px 8px}
+.lv2-pay-breakdown strong{font-size:13px}
+.lv2-pay-breakdown .highlight strong{font-size:17px}
+.lv2-pay-bank-card{padding:8px;margin-bottom:6px}
+.lv2-pay-bank-box>div{padding:4px 0}
+.lv2-pay-field{margin-bottom:5px!important}
+.lv2-pay-field input:not([type=file]){height:33px}
+.lv2-pay-upload{min-height:40px;padding:6px 8px}
+.lv2-payment-submit .lv2-more{height:37px}
+.lv2-payment-submit>small{margin-top:6px}
