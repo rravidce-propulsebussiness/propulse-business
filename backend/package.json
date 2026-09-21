@@ -14,7 +14,8 @@
     "test:ledger": "node scripts/check-lead-partner-ledger.js",
     "test:payout": "node scripts/check-lead-partner-payout-lifecycle.js",
     "test:investor-payout": "node scripts/check-investor-payout-integrity.js",
-    "test:last-admin": "node scripts/check-last-admin-protection.js"
+    "test:last-admin": "node scripts/check-last-admin-protection.js",
+    "test:lead-entitlement": "node scripts/check-lead-entitlement-periods.js"
   },
   "keywords": [],
   "author": "",
