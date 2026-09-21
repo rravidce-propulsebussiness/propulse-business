@@ -31,6 +31,8 @@ export default function LeadPartnerPricing() {
   const [data, setData] = useState({ settings: { commissionPercent: 5, normalPriceUplift: 100 }, leads: [], rules: [] });
   const [industries, setIndustries] = useState([]);
   const [cities, setCities] = useState([]);
+  const [search, setSearch] = useState('');
+  const [status, setStatus] = useState('all');
   const [loading, setLoading] = useState(true);
   const [savingId, setSavingId] = useState(null);
   const [savingRule, setSavingRule] = useState(false);
@@ -39,7 +41,6 @@ export default function LeadPartnerPricing() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  const initials = useMemo(() => (user?.name || 'Lead Partner').split(' ').filter(Boolean).slice(0, 2).map(x => x[0]).join('').toUpperCase() || 'LP', [user?.name]);
   const settings = data.settings || {};
   const uplift = Number(settings.normalPriceUplift ?? 100);
   const leads = useMemo(() => Array.isArray(data.leads) ? data.leads : [], [data.leads]);
