@@ -115,9 +115,65 @@ async function runDayBoundaryTest() {
   }
 }
 
+
+async function runClaimLeadTest() {
+  const loaded = loadServiceWithNow({
+    startsAt: '2026-08-22T12:00:00Z',
+    now: '2026-09-22T12:00:00Z',
+    billingMonths: 3,
+  });
+  const { service, calls, originalPool, servicePath, poolPath, restoreDate } = loaded;
+  const originalConnect = originalPool.connect;
+  let committed = false;
+  let claimInserted = false;
+  const queries = [];
+  const client = {
+    async query(sql, params = []) {
+      queries.push({ sql, params });
+      if (sql === 'BEGIN') return { rows: [] };
+      if (sql === 'COMMIT') { committed = true; return { rows: [] }; }
+      if (sql === 'ROLLBACK') return { rows: [] };
+      if (sql.includes('FROM leads WHERE id=$1 FOR UPDATE')) {
+        return { rows: [{ id: 1, lead_type: 'shared', is_exclusive: false, created_at: new Date('2026-01-01T00:00:00Z'), exclusive_delay_days: 0, status: 'available', industry_id: 1, service_id: 1, subservice_id: null, state_id: 1, city_id: 1, customer_name: 'Test', customer_phone: '7000000000', customer_email: 'test@example.com', requirement: 'Test', property_type: 'house', budget: 100000, source: 'test', notes: '', custom_fields: {} }] };
+      }
+      if (sql.includes('FROM lead_entitlement_claims WHERE user_id=$1 AND lead_id=$2 FOR UPDATE')) return { rows: [] };
+      if (sql.includes('FROM lead_purchases WHERE user_id=$1')) return { rows: [] };
+      if (sql.includes('FROM business_profiles bp JOIN business_profile_services')) return { rows: [{}] };
+      if (sql.includes('FROM business_profiles bp JOIN business_profile_locations')) return { rows: [{}] };
+      if (sql.includes('FROM memberships m')) {
+        return { rows: [{ id: 10, starts_at: new Date('2026-08-22T12:00:00Z'), expires_at: new Date('2030-01-01T00:00:00Z'), billing_months: 3, lead_entitlements: [{ type: 'shared', monthly_quantity: 1, period_total_quantity: 3, complimentary: true }], lead_rollover_enabled: false, lead_expiry_days: 0 }] };
+      }
+      if (sql.includes('SELECT COUNT(*)::int AS used')) return { rows: [{ used: 0 }] };
+      if (sql.includes('INSERT INTO lead_entitlement_claims')) {
+        claimInserted = true;
+        return { rows: [{ id: 99, user_id: 7, lead_id: 1, membership_id: 10, entitlement_type: 'shared' }] };
+      }
+      throw new Error(`Unexpected claim SQL: ${sql}`);
+    },
+    release() {},
+  };
+  originalPool.connect = async () => client;
+  try {
+    const result = await service.claimLead(7, 1);
+    assert.strictEqual(committed, true, 'claimLead must commit the transaction');
+    assert.strictEqual(claimInserted, true, 'claimLead must insert the entitlement claim');
+    assert.strictEqual(result.remaining, 0, 'A one-per-month entitlement should have no remaining claims after the claim');
+    const usageQuery = queries.find(query => query.sql.includes('SELECT COUNT(*)::int AS used'));
+    assert(usageQuery, 'claimLead must check entitlement usage');
+    assertDateParts(new Date(usageQuery.params[3]), 2026, 7, 22, 'claimLead monthly period start');
+    assertDateParts(new Date(usageQuery.params[4]), 2026, 8, 22, 'claimLead monthly period end');
+  } finally {
+    originalPool.connect = originalConnect;
+    restoreDate();
+    require.cache[poolPath] = { id: poolPath, filename: poolPath, loaded: true, exports: originalPool };
+    delete require.cache[servicePath];
+  }
+}
+
 async function main() {
   await runMonthlyResetTest();
   await runDayBoundaryTest();
+  await runClaimLeadTest();
   console.log('Lead entitlement monthly-reset and date-boundary regression tests passed.');
 }
 
