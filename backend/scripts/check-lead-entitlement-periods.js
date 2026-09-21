@@ -45,7 +45,7 @@ async function runMonthlyResetTest() {
   const { service, calls, originalPool, servicePath, poolPath } = loadService({ startsAt: previousMonth.toISOString(), billingMonths: 3 });
   try {
     const access = await service.getLeadAccess(7, 1);
-    assert.strictEqual(access.canClaim, true, 'A monthly non-rollover entitlement must reset each month');
+    assert.strictEqual(access.canClaim, true, `A monthly non-rollover entitlement must reset each month; access=${JSON.stringify(access)}, calls=${JSON.stringify(calls)}`);
     assert.strictEqual(access.remaining, 10, 'A new monthly period should restore the monthly allowance');
     const claimQuery = calls.find(call => call.sql.includes('SELECT COUNT(*)::int AS used'));
     assert(claimQuery, 'The entitlement usage query must be executed');
