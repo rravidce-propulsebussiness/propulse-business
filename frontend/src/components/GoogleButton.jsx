@@ -37,7 +37,7 @@ function GoogleButton({ onCredential, disabled = false }) {
           googleId.initialize({
             client_id: clientId,
             callback: response => getGoogleState().callback?.(response.credential),
-            use_fedcm_for_button: true,
+            use_fedcm_for_button: false,
           })
           googleState.initialized = true
           googleState.clientId = clientId
