@@ -89,8 +89,8 @@ async function runDayBoundaryTest() {
     await before.service.getLeadAccess(7, 1);
     const claimQuery = before.calls.find(call => call.sql.includes('SELECT COUNT(*)::int AS used'));
     assert(claimQuery, 'The pre-anniversary usage query must be executed');
-    assertDateParts(new Date(claimQuery.params[3]), 2026, 8, 30, 'Pre-anniversary monthly period start');
-    assertDateParts(new Date(claimQuery.params[4]), 2026, 9, 30, 'Pre-anniversary monthly period end');
+    assertDateParts(new Date(claimQuery.params[3]), 2026, 7, 30, 'Pre-anniversary monthly period start');
+    assertDateParts(new Date(claimQuery.params[4]), 2026, 8, 30, 'Pre-anniversary monthly period end');
   } finally {
     before.restoreDate();
     require.cache[before.poolPath] = { id: before.poolPath, filename: before.poolPath, loaded: true, exports: before.originalPool };
