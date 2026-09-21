@@ -13,7 +13,7 @@ const list = value => Array.isArray(value) ? value : Array.isArray(value?.data) 
 export default function InvestmentCycleDashboard() {
   const location = useLocation()
   const [cycle, setCycle] = useState(null), [rows, setRows] = useState([]), [loading, setLoading] = useState(true), [error, setError] = useState('')
-  const [rules, setRules] = useState([]), [wallet, setWallet] = useState(null), [access, setAccess] = useState(null), [payoutAccount, setPayoutAccount] = useState(null), [funds, setFunds] = useState(null)
+  const [rules, setRules] = useState([]), [wallet, setWallet] = useState(null), [_access, setAccess] = useState(null), [payoutAccount, setPayoutAccount] = useState(null), [funds, setFunds] = useState(null)
   const [showInvest, setShowInvest] = useState(() => new URLSearchParams(window.location.search).get('new') === '1'), [showWithdraw, setShowWithdraw] = useState(false)
   const [amount, setAmount] = useState(''), [withdrawAmount, setWithdrawAmount] = useState(''), [autoInvestChoice, setAutoInvestChoice] = useState(true), [busy, setBusy] = useState(false), [withdrawBusy, setWithdrawBusy] = useState(false)
   const [message, setMessage] = useState(''), [actionError, setActionError] = useState(''), [directPayment, setDirectPayment] = useState(null), [receiving, setReceiving] = useState([]), [paymentReference, setPaymentReference] = useState(''), [paymentProof, setPaymentProof] = useState(null), [paymentBusy, setPaymentBusy] = useState(false)
@@ -46,7 +46,7 @@ export default function InvestmentCycleDashboard() {
     if (!shouldOpen) return
     setShowInvest(true)
     window.history.replaceState({}, '', location.pathname)
-  }, [location.search])
+  }, [location.search, location.pathname])
 
   const config = useMemo(() => {
     const activeRules = rules.filter(rule => rule && rule.is_active !== false)
