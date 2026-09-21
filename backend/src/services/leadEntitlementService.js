@@ -5,8 +5,7 @@ function parseEntitlements(value){if(Array.isArray(value))return value;try{const
 function entitlementForLead(entitlements,lead){const wanted=lead.lead_type==='premium'?'premium':'shared';return entitlements.find(x=>String(x.type||'').toLowerCase()===wanted)||null}
 function monthsBetween(start,end){
   const months=(end.getUTCFullYear()-start.getUTCFullYear())*12+end.getUTCMonth()-start.getUTCMonth();
-  if(months<=0)return 0;
-  return Math.max(0,months-(end.getUTCDate()<start.getUTCDate()?1:0));
+  return Math.max(0, months - (end.getUTCDate()<start.getUTCDate() ? 1 : 0));
 }
 
 function addMonthsClamped(date,months){
