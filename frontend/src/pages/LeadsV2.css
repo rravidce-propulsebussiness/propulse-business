@@ -4,7 +4,7 @@
 .lv2-modal-kicker{display:block;color:#f15a24;font-size:9px;font-weight:900;letter-spacing:.16em}.lv2-buy-modal h2{margin:8px 45px 4px 0;color:#102f58;font-size:24px;letter-spacing:-.03em}.lv2-modal-subtitle{margin:0;color:#72849b;font-size:11px;line-height:1.6}.lv2-modal-lead{display:flex;align-items:center;gap:12px;margin:18px 0;padding:12px;border:1px solid #e2eaf2;border-radius:12px;background:#f8fafd}.lv2-modal-lead .lv2-avatar{width:48px;height:48px;flex-basis:48px;font-size:16px}.lv2-modal-lead strong{display:block;color:#18385f;font-size:12px}.lv2-modal-lead small{display:block;margin-top:4px;color:#7c8da2;font-size:9px}.lv2-modal-pricing{border:1px solid #dbe5ef;border-radius:15px;background:#f7faff;padding:13px}.lv2-modal-price-head,.lv2-modal-price-row{display:grid;grid-template-columns:minmax(145px,1fr) 145px 145px;gap:9px;align-items:center}.lv2-modal-pricing.pro-only .lv2-modal-price-head,.lv2-modal-pricing.pro-only .lv2-modal-price-row{grid-template-columns:minmax(145px,1fr) 190px}.lv2-modal-price-head{padding:3px 5px 10px;color:#8b99aa;font-size:8px;font-weight:900;letter-spacing:.08em}.lv2-modal-price-head span:nth-child(3){color:#0b3b80}.lv2-modal-price-row{padding:11px 5px;border-top:1px solid #e1e9f1}.lv2-share-badge{display:flex;align-items:center;gap:9px}.lv2-share-badge strong{width:34px;height:34px;display:grid;place-items:center;border:1px solid #dce5ef;border-radius:9px;background:#fff;color:#173b70;font-size:11px}.lv2-share-badge small{color:#4d6688;font-size:9px;font-weight:800}.lv2-modal-price{min-height:43px;border:1px solid #d7e1ec;border-radius:10px;background:#fff;color:#173b70;font-size:11px;font-weight:900;cursor:pointer}.lv2-modal-price:hover:not(:disabled){border-color:#9db4d0;box-shadow:0 5px 13px rgba(20,53,94,.07)}.lv2-modal-price.pro{background:#eaf2ff;border-color:#c3d7f2;color:#0b3b80}.lv2-modal-price.selected-pro{background:#0b3b80;border-color:#0b3b80;color:#fff}.lv2-modal-price:disabled{opacity:.6;cursor:not-allowed}.lv2-modal-price span{display:block}.lv2-modal-price small{display:block;margin-top:3px;color:#18835b;font-size:7px;font-weight:900}.lv2-modal-price.selected-pro small{color:#d7f5e6}.lv2-pro-hint{display:grid;grid-template-columns:1fr auto;gap:4px 14px;margin-top:12px;padding:12px;border:1px solid #cbdcf2;border-radius:12px;background:#eef5ff}.lv2-pro-hint strong{color:#0b3b80;font-size:10px}.lv2-pro-hint span{grid-column:1;color:#67809f;font-size:8px;line-height:1.5}.lv2-pro-hint button{grid-column:2;grid-row:1/3;align-self:center;border:0;border-radius:8px;background:#0b3b80;color:#fff;padding:8px 10px;font-size:8px;font-weight:900;cursor:pointer}.lv2-modal-owned{margin-top:12px;padding:11px;border-radius:10px;background:#e8f7ef;color:#277b55;font-size:9px;font-weight:800}@media(max-width:600px){.lv2-buy-modal{padding:22px 15px;border-radius:18px}.lv2-modal-price-head,.lv2-modal-price-row{grid-template-columns:minmax(110px,1fr) 105px 105px;gap:6px}.lv2-modal-pricing.pro-only .lv2-modal-price-head,.lv2-modal-pricing.pro-only .lv2-modal-price-row{grid-template-columns:minmax(110px,1fr) 150px}.lv2-modal-price{min-height:40px;font-size:10px}.lv2-share-badge small{font-size:8px}.lv2-pro-hint{grid-template-columns:1fr}.lv2-pro-hint button{grid-column:1;grid-row:auto;justify-self:start;margin-top:5px}}
 
 /* Premium lead purchase modal — presentation only */
-.lv2-buy-modal{width:min(1080px,calc(100vw - 36px));max-height:calc(100vh - 32px);overflow:auto;padding:30px;border:1px solid #d9e3ef;border-radius:24px;background:#fff;box-shadow:0 32px 100px rgba(7,31,65,.28)}
+.lv2-buy-modal{width:min(980px,calc(100vw - 36px));max-height:calc(100vh - 48px);overflow:auto;padding:28px;border:1px solid #d9e3ef;border-radius:24px;background:#fff;box-shadow:0 32px 100px rgba(7,31,65,.28)}
 .lv2-buy-layout{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(300px,.72fr);gap:24px;align-items:stretch}
 .lv2-buy-main{min-width:0}
 .lv2-buy-heading{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;margin:0 42px 18px 0}
@@ -94,3 +94,18 @@
   .lv2-modal-pricing.premium-pricing.pro-only .lv2-modal-price-head,.lv2-modal-pricing.premium-pricing.pro-only .lv2-modal-price-row{grid-template-columns:70px 1fr}
   .lv2-modal-pricing.premium-pricing .lv2-modal-price{min-height:39px;font-size:10px}
 }
+
+/* Premium modal refinement: compact, balanced, closer to the approved concept */
+.lv2-buy-layout{grid-template-columns:minmax(0,1.72fr) minmax(270px,.62fr);gap:18px}
+.lv2-buy-heading{margin-bottom:14px}
+.lv2-modal-lead{margin-bottom:12px}
+.lv2-coupon-box{padding:12px;margin-bottom:11px}
+.lv2-wallet-choice{padding:11px 13px;margin-bottom:14px}
+.lv2-share-section-head{margin-bottom:7px}
+.lv2-modal-pricing.premium-pricing{padding:5px}
+.lv2-modal-pricing.premium-pricing .lv2-modal-price-row{padding:7px 4px}
+.lv2-purchase-summary{border-radius:16px}
+.lv2-summary-head{padding:17px 16px}
+.lv2-summary-body{padding:15px 16px}
+.lv2-summary-row{margin-bottom:10px}
+@media(max-width:900px){.lv2-buy-layout{grid-template-columns:1fr}}
