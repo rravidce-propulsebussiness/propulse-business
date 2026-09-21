@@ -313,6 +313,10 @@ export default function LeadsV2() {
           <div className="lv2-coupon-box"><div className="lv2-coupon-title"><span>⌑</span><div><strong>COUPON CODE</strong><small>Optional · applied before wallet deduction</small></div></div><div className="lv2-coupon-row"><input value={couponCode} onChange={e => { setCouponCode(e.target.value.toUpperCase()); setCouponStatus(''); setCouponError(''); setCouponDiscount(0); setCouponFinalAmount(null) }} onKeyDown={e => { if (e.key === 'Enter') applyCoupon() }} maxLength={50} autoComplete="off" placeholder="Enter coupon code"/><button type="button" onClick={applyCoupon}>Apply</button></div>{couponStatus && <small className="lv2-coupon-status">{couponStatus}</small>}{couponError && <small className="lv2-coupon-error">{couponError}</small>}</div>
           <div className="lv2-wallet-choice"><label htmlFor="lv2-wallet-toggle"><span className="lv2-wallet-icon">▣</span><span><b>Use wallet balance</b><small>Available balance: {walletBalance > 0 ? money(walletBalance) : '₹0'}. You can pay the final amount directly.</small></span></label><strong>{walletBalance > 0 ? money(walletBalance) : '₹0'}</strong><input id="lv2-wallet-toggle" type="checkbox" checked={useWallet} onChange={e => setUseWallet(e.target.checked)} /></div>
           <div className="lv2-share-section">
+            <div className="lv2-share-selection-title">
+              <strong>Select Number of Shares</strong>
+              <span>Price per share: <b>{selectedSharePack ? money((buyModal.pricing?.shares || []).find(p => Number(p.shares) === Number(selectedSharePack))?.[isPro ? 'pro' : 'normal']) : '—'}</b></span>
+            </div>
             <div className="lv2-pack-grid">
               {(buyModal.pricing?.shares || []).map(p => { const n = Number(p.shares); const normal = Number(p.normal); const pro = Number(p.pro); const price = isPro ? pro : normal; const saving = Number.isFinite(normal) && Number.isFinite(pro) && normal > pro ? normal - pro : 0; const selected = Number(selectedSharePack) === n; const key = buyModal.id + '-' + n + '-' + (isPro ? 'pro' : 'normal') + '-' + (useWallet ? 'wallet' : 'direct'); return <button type="button" className={"lv2-pack-card" + (selected ? ' selected' : '')} onClick={() => { setSelectedSharePack(n); if (couponCode.trim()) validateCouponForSelection(couponCode, n) }} disabled={buyModalClaimed || Boolean(buying)}><span className="lv2-pack-check">{selected ? '✓' : ''}</span><strong>{n}</strong><small>{n === 1 ? 'Share' : 'Shares'}</small><b>{money(price)}</b>{saving > 0 && <em>Save {money(saving)}</em>}{buying === key && <i>Processing…</i>}</button> })}
             </div>
@@ -321,21 +325,28 @@ export default function LeadsV2() {
           {buyModalClaimed && <div className="lv2-modal-owned">This lead is already purchased and available in your account.</div>}
         </section>
         <aside className="lv2-purchase-summary">
-          <div className="lv2-summary-head"><div><strong>Purchase Summary</strong><small>Lead #${buyModal.id}</small></div><span>🛒</span></div>
-          <div className="lv2-summary-body">
-            <div className="lv2-summary-row"><span>Customer</span><strong>{buyModal.customer_name || buyModal.service_name || 'Business opportunity'}</strong></div>
-            <div className="lv2-summary-row"><span>Location</span><strong>{[buyModal.city_name, buyModal.state_name].filter(hasValue).join(' · ') || 'India'}</strong></div>
-            <div className="lv2-summary-row"><span>Category</span><strong>{buyModal.industry_name || buyModal.service_name || 'Lead opportunity'}</strong></div>
-            <div className="lv2-summary-divider"/>
-            <div className="lv2-summary-row"><span>Selected Pack</span><strong>{selectedSharePack ? selectedSharePack + (selectedSharePack === 1 ? ' Share' : ' Shares') : 'Choose a pack'}</strong></div>
-            <div className="lv2-summary-row"><span>Price per Share</span><strong>{selectedSharePack ? money((buyModal.pricing?.shares || []).find(p => Number(p.shares) === Number(selectedSharePack))?.[isPro ? 'pro' : 'normal']) : '—'}</strong></div>
-            <div className="lv2-summary-divider"/>
-            <div className="lv2-summary-row"><span>Subtotal</span><strong>{selectedSharePack ? money((buyModal.pricing?.shares || []).find(p => Number(p.shares) === Number(selectedSharePack))?.[isPro ? 'pro' : 'normal']) : '₹0'}</strong></div>
-            <div className="lv2-summary-row"><span>Coupon Discount</span><strong className={couponDiscount > 0 ? 'lv2-discount-value' : ''}>− {money(couponDiscount)}</strong></div>
-            <div className="lv2-summary-total"><span>Total Amount</span><strong>{selectedSharePack ? money(couponFinalAmount != null ? couponFinalAmount : Number((buyModal.pricing?.shares || []).find(p => Number(p.shares) === Number(selectedSharePack))?.[isPro ? 'pro' : 'normal'] || 0)) : '₹0'}</strong></div>
-            <button type="button" className="lv2-continue-purchase" disabled={!selectedSharePack || buyModalClaimed || Boolean(buying)} onClick={() => { const plan = isPro ? 'pro' : 'normal'; buy(buyModal, Number(selectedSharePack), plan) }}><span>🔒</span>{buying ? 'Processing…' : 'Continue to Purchase'} <b>→</b></button>
-            <div className="lv2-summary-secure"><strong>🛡 Secure & Safe Transaction</strong><small>Your payment information is always protected.</small></div>
-          </div>
+          {(() => {
+            const selectedRow = (buyModal.pricing?.shares || []).find(p => Number(p.shares) === Number(selectedSharePack))
+            const selectedPrice = Number(selectedRow?.[isPro ? 'pro' : 'normal'] || 0)
+            const discountedTotal = Math.max(0, Number(couponFinalAmount != null ? couponFinalAmount : selectedPrice))
+            const walletDeduction = useWallet ? Math.min(Math.max(0, Number(walletBalance || 0)), discountedTotal) : 0
+            const amountToPay = Math.max(0, discountedTotal - walletDeduction)
+            return <>
+              <div className="lv2-summary-head"><div><strong>Order Summary</strong><small>Lead #${buyModal.id}</small></div><span>🛒</span></div>
+              <div className="lv2-summary-body">
+                <div className="lv2-summary-row"><span>Selected Pack</span><strong>{selectedSharePack ? selectedSharePack + (selectedSharePack === 1 ? ' Share' : ' Shares') : 'Choose a pack'}</strong></div>
+                <div className="lv2-summary-row"><span>Price per Share</span><strong>{selectedSharePack ? money(selectedPrice) : '—'}</strong></div>
+                <div className="lv2-summary-row"><span>Subtotal</span><strong>{selectedSharePack ? money(selectedPrice) : '₹0'}</strong></div>
+                <div className="lv2-summary-row"><span>Coupon Discount</span><strong className={couponDiscount > 0 ? 'lv2-discount-value' : ''}>− {money(couponDiscount)}</strong></div>
+                <div className="lv2-summary-row lv2-wallet-deduction"><span>Wallet Balance Used</span><strong>− {money(walletDeduction)}</strong></div>
+                <div className="lv2-summary-total"><span>Amount to Pay</span><strong>{money(amountToPay)}</strong></div>
+                <button type="button" className="lv2-continue-purchase" disabled={!selectedSharePack || buyModalClaimed || Boolean(buying)} onClick={() => { const plan = isPro ? 'pro' : 'normal'; buy(buyModal, Number(selectedSharePack), plan) }}>
+                  {buying ? 'Processing…' : 'Submit'}
+                </button>
+                <div className="lv2-summary-secure"><strong>🛡 Secure & Safe Transaction</strong></div>
+              </div>
+            </>
+          })()}
         </aside>
       </div>
 
