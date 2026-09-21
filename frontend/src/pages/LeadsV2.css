@@ -144,3 +144,40 @@
 .lv2-buy-layout{grid-template-columns:minmax(0,1.25fr) minmax(330px,.75fr);gap:18px}
 .lv2-discount-value{color:#168057!important}
 @media(max-width:900px){.lv2-buy-layout{grid-template-columns:1fr}}
+
+
+/* Compact approved checkout sizing — approximately 15% smaller */
+.lv2-buy-main{min-width:0}
+.lv2-coupon-box{padding:11px 12px;margin-bottom:10px;border-radius:12px}
+.lv2-coupon-title{gap:8px;margin-bottom:8px}
+.lv2-coupon-title>span{width:26px;height:26px;border-radius:7px;font-size:15px}
+.lv2-coupon-title strong{font-size:9px}
+.lv2-coupon-title small{font-size:8px}
+.lv2-coupon-row{grid-template-columns:1fr 82px;gap:7px}
+.lv2-coupon-row input{height:36px;padding:0 10px;font-size:10px}
+.lv2-coupon-row button{font-size:9px}
+.lv2-coupon-status,.lv2-coupon-error{margin-top:6px;font-size:8px}
+.lv2-wallet-choice{gap:10px;margin-bottom:14px;padding:11px 12px;border-radius:13px}
+.lv2-wallet-choice label{gap:9px;font-size:10px}
+.lv2-wallet-choice label small{font-size:7.5px}
+.lv2-wallet-icon{width:32px;height:32px;flex-basis:32px;border-radius:9px;font-size:15px}
+.lv2-wallet-choice>strong{font-size:13px}
+.lv2-wallet-choice input{width:16px;height:16px}
+.lv2-share-section-head{gap:8px;margin-bottom:8px}
+.lv2-share-section-head strong{font-size:9px}
+.lv2-share-section-head small{font-size:7.5px}
+.lv2-pack-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;padding:2px 0}
+.lv2-pack-card{min-height:128px;padding:14px 12px 11px;border-radius:12px}
+.lv2-pack-card strong{font-size:24px}
+.lv2-pack-card small{margin-top:4px;font-size:9px}
+.lv2-pack-card b{margin-top:14px;font-size:17px}
+.lv2-pack-card em{margin-top:8px;padding:4px 7px;font-size:7px}
+.lv2-pack-check{right:8px;top:8px;width:22px;height:22px;font-size:12px}
+.lv2-purchase-summary{min-width:0}
+.lv2-summary-head{padding:14px 14px}
+.lv2-summary-body{padding:13px 14px}
+.lv2-summary-row{margin-bottom:8px}
+.lv2-continue-purchase{height:46px;margin-top:15px;font-size:11px}
+.lv2-summary-secure{margin-top:14px}
+@media(max-width:1050px){.lv2-pack-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:700px){.lv2-pack-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.lv2-pack-card{min-height:118px}}
