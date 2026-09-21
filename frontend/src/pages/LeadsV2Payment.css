@@ -198,3 +198,73 @@
   min-width:48px!important;
   white-space:nowrap!important;
 }
+
+
+/* Premium payment modal: wider layout + two-column bank details */
+.lv2-payment-modal{
+  width:min(760px,72vw)!important;
+  max-width:760px!important;
+  max-height:calc(100vh - 24px)!important;
+  padding:18px 20px 14px!important;
+}
+.lv2-pay-bank-box{
+  display:grid!important;
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  gap:6px 10px!important;
+  padding:6px!important;
+}
+.lv2-payment-modal .lv2-pay-bank-box>div{
+  display:grid!important;
+  grid-template-columns:92px minmax(0,1fr) auto!important;
+  align-items:center!important;
+  width:100%!important;
+  min-width:0!important;
+  box-sizing:border-box!important;
+  gap:7px!important;
+  padding:7px 6px!important;
+  margin:0!important;
+  border:1px solid #edf1f6!important;
+  border-radius:7px!important;
+  background:#fff!important;
+}
+.lv2-payment-modal .lv2-pay-bank-box>div>span{
+  flex:none!important;
+  width:auto!important;
+  min-width:0!important;
+  white-space:nowrap!important;
+  font-size:9px!important;
+}
+.lv2-payment-modal .lv2-pay-bank-box>div>b{
+  min-width:0!important;
+  width:auto!important;
+  font-size:11px!important;
+  line-height:1.25!important;
+  overflow-wrap:anywhere!important;
+}
+.lv2-payment-modal .lv2-pay-bank-box>div>button{
+  min-width:48px!important;
+  padding:6px 8px!important;
+  text-align:center!important;
+}
+.lv2-payment-submit{
+  text-align:center!important;
+}
+.lv2-payment-submit .lv2-more{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  text-align:center!important;
+  margin:0 auto!important;
+}
+.lv2-payment-submit>small{
+  text-align:center!important;
+}
+@media(max-width:760px){
+  .lv2-payment-modal{
+    width:calc(100vw - 20px)!important;
+    max-width:none!important;
+  }
+  .lv2-pay-bank-box{
+    grid-template-columns:1fr!important;
+  }
+}
