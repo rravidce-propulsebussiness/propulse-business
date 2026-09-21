@@ -353,3 +353,23 @@
   .lv2-buy-layout{grid-template-columns:1fr;gap:10px}
   .lv2-purchase-summary{order:2}
 }
+
+
+/* Reduce overall checkout modal footprint by ~30% while preserving readability */
+.lv2-buy-modal{width:70%;max-width:1040px}
+.lv2-buy-layout{grid-template-columns:minmax(0,1.05fr) minmax(330px,.72fr);gap:12px}
+.lv2-modal-lead{padding:10px 12px}
+.lv2-coupon-box{padding:9px 11px}
+.lv2-wallet-choice{padding:9px 11px}
+.lv2-pack-grid{gap:7px}
+.lv2-pack-card{min-height:108px;padding:12px 10px 9px}
+.lv2-pack-card strong{font-size:24px}
+.lv2-pack-card b{font-size:17px}
+.lv2-summary-head{padding:13px 14px}
+.lv2-summary-body{padding:12px 14px}
+.lv2-summary-row{margin-bottom:8px}
+.lv2-summary-total strong{font-size:26px}
+.lv2-continue-purchase{height:44px;margin-top:11px}
+@media(max-width:900px){
+  .lv2-buy-modal{width:92%;max-width:none}
+}
