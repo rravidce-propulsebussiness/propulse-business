@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { apiRequest } from '../../utils/api'
 import { getToken, clearSession } from '../../utils/auth'
 import { useNavigate } from 'react-router-dom'
@@ -69,7 +69,7 @@ export default function AdminPayments() {
     setWalletMeta({ total: data.total ?? 0, pages: data.pages ?? 1, stats: data.stats || {} })
   }
 
-  async function load(nextPage = 1, silent = false) {
+  const load = useCallback(async (nextPage = 1, silent = false) => {
     if (!silent) setLoading(true)
     setError('')
     try {
@@ -87,13 +87,13 @@ export default function AdminPayments() {
     } finally {
       if (!silent) setLoading(false)
     }
-  }
+  }, [tab, status, search])
 
-  useEffect(() => { load(1) }, [tab, status])
+  useEffect(() => { load(1) }, [load])
   useEffect(() => {
     const timer = window.setInterval(() => load(1, true), 15000)
     return () => window.clearInterval(timer)
-  }, [tab, status, search])
+  }, [load])
 
   async function updatePayment(id, next) {
     if (busy) return
@@ -202,7 +202,7 @@ export default function AdminPayments() {
       setSelectedMembershipId(selectedPlan.membership_id)
       setExpiry(selectedPlan.expires_at ? new Date(selectedPlan.expires_at).toISOString().slice(0, 10) : '')
     }
-  }, [details?.plans?.length])
+  }, [selectedPlan])
 
   const pstats = paymentMeta.stats || {}
   const tstats = topupMeta.stats || {}
