@@ -323,3 +323,46 @@
     grid-template-columns:1fr!important;
   }
 }
+
+
+/* Final 20% compact pass: fit payment modal without visible scrolling */
+.lv2-payment-modal{
+  width:min(950px,90vw)!important;
+  max-width:950px!important;
+  max-height:calc(125vh - 30px)!important;
+  height:auto!important;
+  padding:18px 20px 12px!important;
+  overflow:hidden!important;
+  zoom:.8;
+}
+.lv2-payment-modal>h2{font-size:22px!important;margin:4px 36px 5px!important}
+.lv2-payment-kicker{padding:4px 7px!important;font-size:7px!important}
+.lv2-payment-close{width:32px!important;height:32px!important;font-size:20px!important}
+.lv2-pay-amount-card{padding:8px 10px!important;margin-bottom:4px!important}
+.lv2-pay-amount-card span{font-size:12px!important}
+.lv2-pay-amount-card strong{font-size:25px!important}
+.lv2-pay-bank-card{padding:7px!important;margin-bottom:4px!important}
+.lv2-pay-section-head{margin-bottom:4px!important}
+.lv2-pay-section-head>span{width:27px!important;height:27px!important}
+.lv2-pay-bank-box{gap:5px 7px!important;padding:5px!important}
+.lv2-payment-modal .lv2-pay-bank-box>div{padding:6px 5px!important;gap:5px!important}
+.lv2-payment-modal .lv2-pay-bank-box>div>span{font-size:8.5px!important}
+.lv2-payment-modal .lv2-pay-bank-box>div>b{font-size:10px!important}
+.lv2-payment-modal .lv2-pay-bank-box>div>button{min-width:45px!important;padding:5px 7px!important;font-size:8px!important}
+.lv2-pay-instructions{margin-top:5px!important;padding:6px 8px!important;font-size:8px!important}
+.lv2-pay-field{margin-bottom:3px!important}
+.lv2-pay-field>span{margin-bottom:4px!important}
+.lv2-pay-field input:not([type=file]){height:30px!important;padding:6px 9px!important}
+.lv2-pay-upload{min-height:34px!important;padding:5px 7px!important}
+.lv2-pay-upload>span{width:30px!important;height:30px!important}
+.lv2-payment-submit .lv2-more{height:34px!important}
+.lv2-payment-submit>small{margin-top:5px!important;font-size:8px!important}
+@media(max-width:760px){
+  .lv2-payment-modal{
+    width:calc(100vw - 20px)!important;
+    max-width:none!important;
+    max-height:calc(100vh - 20px)!important;
+    zoom:1;
+    overflow-y:auto!important;
+  }
+}
