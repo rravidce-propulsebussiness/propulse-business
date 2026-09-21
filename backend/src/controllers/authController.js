@@ -16,10 +16,12 @@ async function signup(req, res) {
   try {
     const {
       name, email, password, phone, businessName, businessDetails, services, locations,
-      accountType, googleCredential,
+      accountType, role: requestedRole, googleCredential,
     } = req.body;
 
-    const role = normalizePublicSignupRole(accountType);
+    // Accept both the current `accountType` field and the role field used by
+    // older/newer clients. Public signup still allows only business/lead_partner.
+    const role = normalizePublicSignupRole(accountType || requestedRole);
     if (!role) {
       return res.status(400).json({ error: 'Choose either User or Lead Partner as your account type' });
     }
