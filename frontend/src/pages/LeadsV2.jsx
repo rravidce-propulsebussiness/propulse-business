@@ -141,7 +141,10 @@ export default function LeadsV2() {
   const activeMembershipGroup = ['growth', 'scale'].find(name => membershipLabel === name || membershipLabel.includes(name)) || ''
   const isGrowthScaleMember = Boolean(activeMembershipGroup)
   const isPro = Boolean(user?.is_pro_member || user?.membership_type === 'pro' || currentMembership?.isPro || currentMembership?.plan_type === 'pro')
-  const memberSavingsLabel = activeMembershipGroup === 'scale' ? 'Scale' : activeMembershipGroup === 'growth' ? 'Growth' : 'Growth / Scale'
+  const memberBillingMonths = Number(currentMembership?.billing_months || currentMembership?.plan?.billing_months || currentMembership?.duration_months || currentMembership?.plan?.duration_months || 0)
+  const memberBillingPeriod = String(currentMembership?.billing_period || currentMembership?.plan?.billing_period || '').trim()
+  const memberPeriodLabel = memberBillingMonths === 12 || /year/i.test(memberBillingPeriod) ? 'Year' : memberBillingMonths === 6 || /half/i.test(memberBillingPeriod) ? 'Half-Year' : memberBillingMonths === 3 || /quarter/i.test(memberBillingPeriod) ? 'Quarter' : 'Month'
+  const memberSavingsLabel = activeMembershipGroup === 'scale' ? `Scale (${memberPeriodLabel})` : activeMembershipGroup === 'growth' ? `Growth (${memberPeriodLabel})` : 'Growth / Scale'
   const buyModalClaimed = Boolean(buyModal?.access?.claimed || buyModal?.access?.purchased)
   const title = category ? `${category.replaceAll('-', ' ')} leads` : 'Available Leads'
   const topIndustry = useMemo(() => leads.find(l => hasValue(l.industry_name))?.industry_name || '', [leads])
