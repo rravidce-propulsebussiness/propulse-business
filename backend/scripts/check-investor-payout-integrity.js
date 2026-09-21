@@ -11,6 +11,7 @@ function loadService({summary,investments,revenueByInvestment}) {
       calls.push(sql.trim());
       if(sql.trim()==='BEGIN' || sql.trim()==='COMMIT' || sql.trim()==='ROLLBACK') return {rows:[],rowCount:0};
       if(sql.includes('investor-payout-reference:')) return {rows:[],rowCount:0};
+      if(sql.includes('pg_advisory_xact_lock')) return {rows:[],rowCount:0};
       if(sql.includes('SELECT id FROM investor_payout_requests')) return {rows:[],rowCount:0};
       if(sql.includes('SELECT i.id') && sql.includes('FROM investments i')) return {rows:investments.map(id=>({id})),rowCount:investments.length};
       if(sql.includes('SELECT COALESCE(SUM(allocated_amount)')) {
