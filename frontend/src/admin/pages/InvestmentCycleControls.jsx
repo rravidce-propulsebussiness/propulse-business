@@ -120,7 +120,7 @@ export default function InvestmentCycleControls() {
         </div>`
         box.dataset.loaded = 'true'
         button.textContent = 'Hide History'
-      } catch (error) {
+      } catch {
         box.innerHTML = '<div class="cycle-error">Unable to load cycle statement/history.</div>'
         button.textContent = 'View Full History'
       } finally {
