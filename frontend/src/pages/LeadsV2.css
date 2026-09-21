@@ -324,3 +324,32 @@
 .lv2-continue-purchase{height:48px;margin-top:15px;font-size:12px}
 .lv2-summary-secure{margin-top:14px}
 @media(max-width:900px){.lv2-buy-modal{padding:18px}.lv2-buy-layout{gap:12px}.lv2-buy-main{gap:8px}}
+
+
+/* Premium compact composition: narrower left column, denser spacing, readable type */
+.lv2-buy-layout{grid-template-columns:minmax(0,1.08fr) minmax(390px,.72fr);gap:14px;align-items:stretch}
+.lv2-buy-main{gap:8px}
+.lv2-modal-lead{padding:12px 14px;border-radius:13px}
+.lv2-coupon-box{padding:10px 12px;border-radius:12px}
+.lv2-coupon-title{margin-bottom:6px}
+.lv2-coupon-row input{height:38px;font-size:12px}
+.lv2-coupon-row button{height:38px;font-size:10px}
+.lv2-wallet-choice{padding:10px 12px;border-radius:12px}
+.lv2-pack-grid{gap:8px}
+.lv2-pack-card{min-height:118px;padding:13px 11px 10px;border-radius:12px}
+.lv2-pack-card strong{font-size:26px}
+.lv2-pack-card small{font-size:10px}
+.lv2-pack-card b{font-size:18px;margin-top:13px}
+.lv2-pack-card em{font-size:8px}
+.lv2-purchase-summary{min-width:0}
+.lv2-summary-head{padding:15px 15px}
+.lv2-summary-head strong{font-size:18px}
+.lv2-summary-body{padding:14px 15px}
+.lv2-summary-row{font-size:11px;margin-bottom:10px}
+.lv2-summary-row strong{font-size:11px}
+.lv2-summary-total strong{font-size:28px}
+.lv2-continue-purchase{height:46px;font-size:12px;margin-top:13px}
+@media(max-width:900px){
+  .lv2-buy-layout{grid-template-columns:1fr;gap:10px}
+  .lv2-purchase-summary{order:2}
+}
