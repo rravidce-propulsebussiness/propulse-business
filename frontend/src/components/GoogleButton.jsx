@@ -13,7 +13,6 @@ function getGoogleState() {
 function GoogleButton({ onCredential, disabled = false }) {
   const containerRef = useRef(null)
   const credentialRef = useRef(onCredential)
-  const initializedRef = useRef(false)
   const [ready, setReady] = useState(false)
   const [loadError, setLoadError] = useState('')
 
@@ -44,7 +43,6 @@ function GoogleButton({ onCredential, disabled = false }) {
           googleState.clientId = clientId
         }
 
-        initializedRef.current = true
         containerRef.current.innerHTML = ''
         googleId.renderButton(containerRef.current, {
           type: 'standard',
@@ -61,7 +59,6 @@ function GoogleButton({ onCredential, disabled = false }) {
         }
       } catch (error) {
         if (cancelled) return
-        initializedRef.current = false
         setReady(false)
         setLoadError(error?.message || 'Google Sign-In could not be initialized.')
         if (import.meta.env.DEV) {
