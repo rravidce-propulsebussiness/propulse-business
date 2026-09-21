@@ -104,10 +104,10 @@ function Signup() {
   }
 
   function validateCredentials() {
-    const mobile = String(form.phone || '').replace(/\\D/g, '')
-    if (!/^\\d{10}$/.test(mobile)) return 'Mobile number must be exactly 10 digits.'
+    const mobile = String(form.phone || '').replace(/\D/g, '')
+    if (!/^\d{10}$/.test(mobile)) return 'Mobile number must be exactly 10 digits.'
     if (!googleCredential) {
-      if (!/^(?=.*[A-Za-z])(?=.*\\d).{7,}$/.test(form.password)) return 'Password must contain letters and numbers, for example Ravi143.'
+      if (!/^(?=.*[A-Za-z])(?=.*\d).{7,}$/.test(form.password)) return 'Password must contain letters and numbers, for example Ravi143.'
       if (form.password !== form.confirm) return 'Passwords do not match.'
     }
     return ''
@@ -119,7 +119,7 @@ function Signup() {
     if (!form.name || !form.email || !form.phone || (!googleCredential && (!form.password || !form.confirm))) return setError('Complete your basic account details.')
     const credentialError = validateCredentials()
     if (credentialError) return setError(credentialError)
-    setForm((current) => ({ ...current, phone: String(current.phone).replace(/\\D/g, '') }))
+    setForm((current) => ({ ...current, phone: String(current.phone).replace(/\D/g, '') }))
     setShowBusinessModal(true)
   }
 
@@ -130,7 +130,7 @@ function Signup() {
     if (!form.name) return setError('Full name is required.')
     if (!form.email) return setError('Email address is required.')
     if (!form.phone) return setError('Mobile number is required.')
-    if (!/^\\d{10}$/.test(String(form.phone).replace(/\\D/g, ''))) return setError('Mobile number must be exactly 10 digits.')
+    if (!/^\d{10}$/.test(String(form.phone).replace(/\D/g, ''))) return setError('Mobile number must be exactly 10 digits.')
     if (!form.businessName) return setError('Business name is required.')
     if (!form.businessDetails) return setError('Business details are required.')
     const credentialError = validateCredentials()
@@ -311,7 +311,7 @@ function Signup() {
                   <button type="button" className={`signup-account-option ${accountType === 'lead_partner' ? 'selected' : ''}`} onClick={() => setAccountType('lead_partner')} disabled={loading}><span className="signup-option-icon">♙♙</span><span><strong>Lead Partner</strong><small>Submit &amp; manage leads</small></span></button>
                 </div>
                 <form className="signup-form signup-modal-form" onSubmit={submit}>
-                  <section className="signup-form-section"><div className="signup-form-grid"><label className="signup-full">Mobile number<input name="phone" type="tel" inputMode="numeric" pattern="[0-9]{10}" maxLength={10} autoComplete="tel" value={form.phone} onChange={(e) => update('phone', e.target.value.replace(/\\D/g, '').slice(0, 10))} placeholder="10-digit mobile number" required /></label><label className="signup-full">Business name<input value={form.businessName} onChange={(e) => update('businessName', e.target.value)} placeholder="Your company or business name" required /></label><label className="signup-full">Business details<textarea value={form.businessDetails} onChange={(e) => update('businessDetails', e.target.value)} placeholder="Tell us what your business does" rows="3" required /></label></div></section>
+                  <section className="signup-form-section"><div className="signup-form-grid"><label className="signup-full">Mobile number<input name="phone" type="tel" inputMode="numeric" pattern="[0-9]{10}" maxLength={10} autoComplete="tel" value={form.phone} onChange={(e) => update('phone', e.target.value.replace(/\D/g, '').slice(0, 10))} placeholder="10-digit mobile number" required /></label><label className="signup-full">Business name<input value={form.businessName} onChange={(e) => update('businessName', e.target.value)} placeholder="Your company or business name" required /></label><label className="signup-full">Business details<textarea value={form.businessDetails} onChange={(e) => update('businessDetails', e.target.value)} placeholder="Tell us what your business does" rows="3" required /></label></div></section>
                   <section className="signup-form-section"><div className="signup-section-head signup-section-head-inline"><span>01</span><div><strong>Services you provide</strong><small>Select every service you want matching leads for.</small></div><button type="button" className="signup-add-button" onClick={addServiceSelection}>+ Add service</button></div><div className="signup-selection-list">{serviceSelections.map((selection,index)=><div className="signup-selection-card" key={`service-${index}`}><div className="signup-selection-top"><span>Service {index+1}</span>{serviceSelections.length>1&&<button type="button" onClick={()=>removeServiceSelection(index)}>Remove</button>}</div><div className="signup-selection-grid"><label>Industry<select value={selection.industryId} onChange={(e)=>updateServiceSelection(index,'industryId',e.target.value)} disabled={loadingData} required><option value="">Select industry</option>{industries.map(item=><option key={item.id} value={item.id}>{item.name}</option>)}</select></label><label>Service<select value={selection.serviceId} onChange={(e)=>updateServiceSelection(index,'serviceId',e.target.value)} disabled={!selection.industryId} required><option value="">Select service</option>{selection.industryId && (serviceOptions[index]||[]).length > 0 && <option value="__all__">All services</option>}{(serviceOptions[index]||[]).map(item=><option key={item.id} value={item.id}>{item.name}</option>)}</select></label><label>Subservice <small>Optional</small><select value={selection.subserviceId} onChange={(e)=>updateServiceSelection(index,'subserviceId',e.target.value)} disabled={!selection.serviceId}><option value="">All related subservices</option>{(subserviceOptions[index]||[]).map(item=><option key={item.id} value={item.id}>{item.name}</option>)}</select></label></div></div>)}</div></section>
                   <section className="signup-form-section"><div className="signup-section-head signup-section-head-inline"><span>02</span><div><strong>Locations you serve</strong><small>Select the cities where you want relevant leads.</small></div><button type="button" className="signup-add-button" onClick={addLocationSelection}>+ Add location</button></div><div className="signup-selection-list">{locationSelections.map((selection,index)=><div className="signup-selection-card" key={`location-${index}`}><div className="signup-selection-top"><span>Location {index+1}</span>{locationSelections.length>1&&<button type="button" onClick={()=>removeLocationSelection(index)}>Remove</button>}</div><div className="signup-selection-grid signup-location-grid"><label>State / UT<select value={selection.stateId} onChange={(e)=>updateLocationSelection(index,'stateId',e.target.value)} disabled={loadingData} required><option value="">Select state / UT</option>{states.map(item=><option key={item.id} value={item.id}>{item.name}</option>)}</select></label><label>City<select value={selection.cityId} onChange={(e)=>updateLocationSelection(index,'cityId',e.target.value)} disabled={!selection.stateId} required><option value="">Select city</option>{(cityOptions[index]||[]).map(item=><option key={item.id} value={item.id}>{item.name}</option>)}</select></label></div></div>)}</div></section>
                   <section className="signup-form-section signup-proof-section">
