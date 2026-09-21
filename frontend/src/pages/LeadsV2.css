@@ -247,3 +247,36 @@
 .lv2-summary-row{margin-bottom:5px}
 .lv2-continue-purchase{height:36px;margin-top:9px;font-size:8px}
 .lv2-summary-secure{margin-top:8px}
+
+
+/* Fourth compact pass: another ~25% reduction */
+.lv2-coupon-box{padding:6px 7px;margin-bottom:5px}
+.lv2-coupon-title{gap:5px;margin-bottom:4px}
+.lv2-coupon-title>span{width:18px;height:18px;font-size:10px}
+.lv2-coupon-title strong{font-size:6.5px}
+.lv2-coupon-title small{font-size:5.5px;margin-left:3px}
+.lv2-coupon-row{grid-template-columns:1fr 58px;gap:4px}
+.lv2-coupon-row input{height:25px;padding:0 6px;font-size:7px}
+.lv2-coupon-row button{font-size:6.5px}
+.lv2-coupon-status,.lv2-coupon-error{margin-top:3px;font-size:5.5px}
+.lv2-wallet-choice{gap:6px;margin-bottom:7px;padding:6px 7px;border-radius:8px}
+.lv2-wallet-choice label{gap:5px;font-size:7px}
+.lv2-wallet-choice label small{font-size:5.5px}
+.lv2-wallet-icon{width:22px;height:22px;flex-basis:22px;border-radius:5px;font-size:10px}
+.lv2-wallet-choice>strong{font-size:9px}
+.lv2-wallet-choice input{width:12px;height:12px}
+.lv2-share-section-head{gap:5px;margin-bottom:4px}
+.lv2-share-section-head strong{font-size:6.5px}
+.lv2-share-section-head small{font-size:5.5px}
+.lv2-pack-grid{gap:5px}
+.lv2-pack-card{min-height:76px;padding:7px 6px 6px;border-radius:7px}
+.lv2-pack-card strong{font-size:16px}
+.lv2-pack-card small{margin-top:1px;font-size:6px}
+.lv2-pack-card b{margin-top:7px;font-size:11px}
+.lv2-pack-card em{margin-top:4px;padding:2px 4px;font-size:5px}
+.lv2-pack-check{right:5px;top:5px;width:15px;height:15px;font-size:8px}
+.lv2-summary-head{padding:7px 8px}
+.lv2-summary-body{padding:6px 8px}
+.lv2-summary-row{margin-bottom:4px}
+.lv2-continue-purchase{height:32px;margin-top:7px;font-size:7px}
+.lv2-summary-secure{margin-top:6px}
