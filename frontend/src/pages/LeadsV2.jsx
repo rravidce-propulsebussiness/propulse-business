@@ -1,6 +1,6 @@
 import { Link, useSearchParams } from 'react-router-dom'
 import { useEffect, useMemo, useState } from 'react'
-import { authRequest, getToken, getUser } from '../utils/auth'
+import { authRequest, publicRequest, getToken, getUser } from '../utils/auth'
 import { claimLead, getLead, listLeads, purchaseLead } from '../api/leads'
 import UserHeader from '../components/UserHeader'
 import './LeadsV2.css'
@@ -123,20 +123,22 @@ export default function LeadsV2() {
   useEffect(() => {
     let live = true
     if (logged) { setFilterCatalog({ industries: [], cities: [] }); return undefined }
-    listLeads({ status: 'available', page: 1, limit: 1000, allIndustries: true }, null)
-      .then(data => {
+    Promise.all([
+      publicRequest('/industries'),
+      publicRequest('/cities')
+    ])
+      .then(([industryData, cityData]) => {
         if (!live) return
-        const items = Array.isArray(data) ? data : (data.items || [])
-        const sourceIndustries = Array.isArray(data?.industries) ? data.industries : []
-        const sourceCities = Array.isArray(data?.cities) ? data.cities : []
-        const industries = [...new Set([
-          ...sourceIndustries.map(x => typeof x === 'string' ? x : (x?.name || x?.label || '')),
-          ...items.map(l => l.industry_name)
-        ].map(x => String(x || '').trim()).filter(Boolean))].sort((a,b) => a.localeCompare(b))
-        const cities = [...new Set([
-          ...sourceCities.map(x => typeof x === 'string' ? x : (x?.name || x?.label || '')),
-          ...items.map(l => l.city_name)
-        ].map(x => String(x || '').trim()).filter(Boolean))].sort((a,b) => a.localeCompare(b))
+        const industryRows = Array.isArray(industryData) ? industryData : (industryData?.items || industryData?.industries || [])
+        const cityRows = Array.isArray(cityData) ? cityData : (cityData?.items || cityData?.cities || [])
+        const industries = industryRows
+          .map(x => ({ id: x?.id ?? x?.industry_id, name: String(x?.name || x?.label || x?.industry_name || '').trim() }))
+          .filter(x => x.name)
+          .sort((a,b) => a.name.localeCompare(b.name))
+        const cities = cityRows
+          .map(x => ({ id: x?.id ?? x?.city_id, name: String(x?.name || x?.label || x?.city_name || '').trim() }))
+          .filter(x => x.name)
+          .sort((a,b) => a.name.localeCompare(b.name))
         setFilterCatalog({ industries, cities })
       })
       .catch(() => { if (live) setFilterCatalog({ industries: [], cities: [] }) })
@@ -148,7 +150,14 @@ export default function LeadsV2() {
       setLoading(true); setError('')
       try {
         const terms = [category?.replaceAll('-', ' '), search.trim()].filter(Boolean).join(' ')
-        const d = await listLeads({ status: 'available', page, limit: 20, ...(terms ? { search: terms } : {}) }, token)
+        const d = await listLeads({
+          status: 'available',
+          page,
+          limit: 20,
+          ...(terms ? { search: terms } : {}),
+          ...(industryFilter ? { industryId: industryFilter } : {}),
+          ...(cityFilter ? { cityId: cityFilter } : {})
+        }, token)
         if (live) {
           const items = Array.isArray(d) ? d : (d.items || [])
           const availableItems = items.filter(l => !l.is_purchased && !l.purchased && !l.access?.claimed && !l.access?.purchased)
@@ -159,7 +168,7 @@ export default function LeadsV2() {
       finally { if (live) setLoading(false) }
     }, 250)
     return () => { live = false; clearTimeout(timer) }
-  }, [token, page, search, category])
+  }, [token, page, search, category, industryFilter, cityFilter])
 
   const membershipLabel = norm(currentMembership?.plan_group || currentMembership?.plan?.plan_group || currentMembership?.plan_type || currentMembership?.plan?.plan_type || user?.membership_type || user?.membership?.type || user?.membership?.name || user?.plan || user?.plan_name || user?.subscription_plan || '')
   const activeMembershipGroup = membershipLabel === 'grow' || membershipLabel.includes('grow') || membershipLabel.includes('growth') ? 'growth' : membershipLabel === 'scale' || membershipLabel.includes('scale') ? 'scale' : ''
@@ -171,27 +180,14 @@ export default function LeadsV2() {
   const memberSavingsLabel = activeMembershipGroup === 'scale' ? `Scale (${memberPeriodLabel})` : activeMembershipGroup === 'growth' ? `Growth (${memberPeriodLabel})` : 'Growth / Scale'
   const buyModalClaimed = Boolean(buyModal?.access?.claimed || buyModal?.access?.purchased)
   const title = category ? `${category.replaceAll('-', ' ')} leads` : 'Available Leads'
-  const visibleLeads = useMemo(() => {
-    if (logged) return leads
-    const industry = norm(industryFilter)
-    const city = norm(cityFilter)
-    return leads.filter(lead => {
-      const leadIndustry = norm(lead.industry_name)
-      const leadCity = norm(lead.city_name)
-      return (!industry || leadIndustry === industry) && (!city || leadCity === city)
-    })
-  }, [leads, logged, industryFilter, cityFilter])
+  const visibleLeads = useMemo(() => leads, [leads])
 
   const topIndustry = useMemo(() => visibleLeads.find(l => hasValue(l.industry_name))?.industry_name || '', [visibleLeads])
   const topLocation = useMemo(() => {
     const lead = visibleLeads.find(l => hasValue(l.state_name) || hasValue(l.city_name))
     return [lead?.city_name, lead?.state_name].filter(hasValue).join(', ')
   }, [visibleLeads])
-  const filterOptions = useMemo(() => {
-    const industries = filterCatalog.industries.length ? filterCatalog.industries : [...new Set(leads.map(l => String(l.industry_name || '').trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b))
-    const cities = filterCatalog.cities.length ? filterCatalog.cities : [...new Set(leads.map(l => String(l.city_name || '').trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b))
-    return { industries, cities }
-  }, [filterCatalog, leads])
+  const filterOptions = filterCatalog
 
   const openBuyModal = (lead) => {
     if (!logged) { window.location.href = '/login'; return }
@@ -383,7 +379,7 @@ export default function LeadsV2() {
   return <div className="lv2-shell">
     <UserHeader />
     <main className="lv2-page">
-      {!logged && <section className="lv2-market-head"><div className="lv2-title-block"><span></span><div><h1>{title}</h1><p>High quality, verified leads to grow your business</p></div></div><div className="lv2-controls"><div className="lv2-search"><span>⌕</span><input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by industry, service, location..." aria-label="Search leads"/><b>⌕</b></div>{!logged && <div className="lv2-guest-filters"><select value={industryFilter} onChange={e => setIndustryFilter(e.target.value)} aria-label="Filter by industry"><option value="">All Industries</option>{filterOptions.industries.map(item => <option key={item} value={item}>{item}</option>)}</select><select value={cityFilter} onChange={e => setCityFilter(e.target.value)} aria-label="Filter by city"><option value="">All Cities</option>{filterOptions.cities.map(item => <option key={item} value={item}>{item}</option>)}</select></div>}</div></section>}
+      {!logged && <section className="lv2-market-head"><div className="lv2-title-block"><span></span><div><h1>{title}</h1><p>High quality, verified leads to grow your business</p></div></div><div className="lv2-controls"><div className="lv2-search"><span>⌕</span><input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by industry, service, location..." aria-label="Search leads"/><b>⌕</b></div>{!logged && <div className="lv2-guest-filters"><select value={industryFilter} onChange={e => { setIndustryFilter(e.target.value); setCityFilter('') }} aria-label="Filter by industry"><option value="">All Industries</option>{filterOptions.industries.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}</select><select value={cityFilter} onChange={e => setCityFilter(e.target.value)} aria-label="Filter by city"><option value="">All Cities</option>{filterOptions.cities.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}</select></div>}</div></section>}
       <section className="lv2-stats"><div className="lv2-stat orange"><span>▣</span><div><b>{pagination.total}</b><small>Total Leads</small></div></div><div className="lv2-stat blue"><span>♟</span><div><b>{topIndustry || 'Verified opportunities'}</b><small>Top Industry</small></div></div><div className="lv2-stat green"><span>●</span><div><b>{topLocation || 'India'}</b><small>Top Location</small></div></div><div className="lv2-stat purple"><span>★</span><div><b>4.8</b><small>Avg. Quality Score</small></div></div><div className="lv2-verified">✓ &nbsp; Verified Opportunities Only</div></section>
       {error && <div className="lv2-error">{error}</div>}{notice && <div className="lv2-error">{notice}</div>}
       {loading ? <div className="lv2-empty"><span>PROPULSE MARKETPLACE</span><strong>Loading opportunities...</strong></div> : !visibleLeads.length ? <div className="lv2-empty"><span>PROPULSE MARKETPLACE</span><strong>No matching leads</strong><p>Try another search or filter.</p></div> : <div className="lv2-grid">
