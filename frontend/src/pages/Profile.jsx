@@ -33,6 +33,7 @@ function Profile() {
         setIndustries(industryData); setServices(serviceData); setSubservices(subserviceData); setStates(stateData); setCities(cityData)
         setServiceSelections(profile.services.map((x) => ({ industryId: String(x.industry_id), serviceId: String(x.service_id), subserviceId: x.subservice_id ? String(x.subservice_id) : '' })))
         setLocationSelections(profile.locations.map((x) => ({ stateId: String(x.state_id), cityId: String(x.city_id) })))
+        setCompanyProofs(Array.isArray(profile.company_proofs) ? profile.company_proofs : [])
       } catch (err) { setError(err.message) } finally { setLoading(false) }
     }
     load()
