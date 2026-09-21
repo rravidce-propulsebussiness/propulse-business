@@ -1042,3 +1042,53 @@
     margin-top:5px;
   }
 }
+
+/* Guest-only lead filters */
+.lv2-guest-filters{
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.lv2-guest-filters select{
+  height:50px;
+  min-width:145px;
+  padding:0 34px 0 14px;
+  border:1px solid #d3e0ef;
+  border-radius:14px;
+  background:#fff;
+  color:#173b70;
+  font-family:inherit;
+  font-size:11px;
+  font-weight:800;
+  outline:none;
+  cursor:pointer;
+  box-shadow:0 2px 8px rgba(18,55,95,.03);
+}
+.lv2-guest-filters select:focus{
+  border-color:#8db4e6;
+  box-shadow:0 0 0 3px rgba(30,100,190,.08);
+}
+@media(max-width:1100px){
+  .lv2-guest-filters{
+    flex-wrap:wrap;
+  }
+  .lv2-guest-filters select{
+    min-width:130px;
+  }
+}
+@media(max-width:760px){
+  .lv2-guest-filters{
+    width:100%;
+    display:grid;
+    grid-template-columns:1fr 1fr;
+  }
+  .lv2-guest-filters select{
+    width:100%;
+    min-width:0;
+  }
+}
+@media(max-width:520px){
+  .lv2-guest-filters{
+    grid-template-columns:1fr;
+  }
+}
