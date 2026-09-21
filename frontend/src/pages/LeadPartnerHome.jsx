@@ -5,10 +5,8 @@ import { authRequest, clearSession, getUser } from '../utils/auth'
 import './LeadPartnerHome.css'
 
 const money = value => `₹${Number(value || 0).toLocaleString('en-IN',{maximumFractionDigits:2})}`
-const date = value => value ? new Date(value).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}) : '—'
 const dateTime = value => value ? new Date(value).toLocaleString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}) : '—'
 
-function Icon({ children }) { return <span className="lp-icon" aria-hidden="true">{children}</span> }
 
 export default function LeadPartnerHome(){
   const navigate=useNavigate()
@@ -28,8 +26,6 @@ export default function LeadPartnerHome(){
       .finally(()=>mounted&&setLoading(false))
     return()=>{mounted=false}
   },[period])
-
-  const initials=useMemo(()=>(user?.name||'Lead Partner').split(' ').filter(Boolean).slice(0,2).map(x=>x[0]).join('').toUpperCase()||'LP',[user?.name])
   const stats=data?.stats||{}
   const chart=data?.charts?.earnings||[]
   const status=data?.charts?.leadStatus||{}
