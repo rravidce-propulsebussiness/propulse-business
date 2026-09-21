@@ -409,9 +409,6 @@ export default function LeadsV2() {
                 <div className="lv2-summary-row"><span>Coupon Discount</span><strong className={couponDiscount > 0 ? 'lv2-discount-value' : ''}>− {money(couponDiscount)}</strong></div>
                 <div className="lv2-summary-row lv2-wallet-deduction"><span>Wallet Balance Used</span><strong>− {money(walletDeduction)}</strong></div>
                 <div className="lv2-summary-total"><span>Amount to Pay</span><strong>{money(amountToPay)}</strong></div>
-                <button type="button" className="lv2-continue-purchase" disabled={!selectedSharePack || buyModalClaimed || Boolean(buying) || directSubmitting} onClick={() => { const plan = isPro ? 'pro' : 'normal'; submitLeadCheckout(buyModal, Number(selectedSharePack), plan) }}>
-                  {buying || directSubmitting ? 'Submitting…' : 'Submit Purchase'}
-                </button>
                 <div className="lv2-summary-secure"><strong>🛡 Secure & Safe Transaction</strong></div>
               </div>
             </>
@@ -447,6 +444,10 @@ export default function LeadsV2() {
           </div>}
           {paymentError && <div className="lv2-payment-error" role="alert">{paymentError}</div>}
           <div className="lv2-buy-checkout-note"><strong>🔒 Secure & Safe Transaction</strong><small>Wallet deduction and coupon discount are applied automatically.</small></div>
+          <button type="button" className="lv2-buy-final-submit" disabled={!selectedSharePack || buyModalClaimed || Boolean(buying) || directSubmitting} onClick={() => { const plan = isPro ? 'pro' : 'normal'; submitLeadCheckout(buyModal, Number(selectedSharePack), plan) }}>
+            {buying || directSubmitting ? 'Submitting…' : 'Submit Purchase'}
+          </button>
+
         </section>
       })()}}
     </div></div>}
