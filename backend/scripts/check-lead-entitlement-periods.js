@@ -39,40 +39,58 @@ function assertDateParts(date, expectedYear, expectedMonth, expectedDay, label) 
   assert.strictEqual(date.getUTCDate(), expectedDay, `${label}: day`);
 }
 
+function loadServiceWithNow({ startsAt, now, billingMonths = 3, used = 0 }) {
+  const loaded = loadService({ startsAt, billingMonths });
+  const originalDate = global.Date;
+  const fixedNow = new originalDate(now);
+
+  class FixedDate extends originalDate {
+    constructor(...args) {
+      if (args.length === 0) super(fixedNow.getTime());
+      else super(...args);
+    }
+    static now() { return fixedNow.getTime(); }
+  }
+
+  global.Date = FixedDate;
+  return { ...loaded, restoreDate: () => { global.Date = originalDate; } };
+}
+
 async function runMonthlyResetTest() {
-  const now = new Date();
-  const previousMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 1, 1, 12));
-  const { service, calls, originalPool, servicePath, poolPath } = loadService({ startsAt: previousMonth.toISOString(), billingMonths: 3 });
+  const { service, calls, originalPool, servicePath, poolPath, restoreDate } = loadServiceWithNow({
+    startsAt: '2026-08-22T12:00:00Z',
+    now: '2026-09-22T12:00:00Z',
+    billingMonths: 3,
+  });
   try {
     const access = await service.getLeadAccess(7, 1);
-    assert.strictEqual(access.canClaim, true, `A monthly non-rollover entitlement must reset each month; access=${JSON.stringify(access)}, calls=${JSON.stringify(calls)}`);
-    assert.strictEqual(access.remaining, 10, 'A new monthly period should restore the monthly allowance');
+    assert.strictEqual(access.canClaim, true, 'A non-rollover entitlement must reset for the new monthly period');
+    assert.strictEqual(access.remaining, 10, 'The new monthly period must restore the monthly allowance');
     const claimQuery = calls.find(call => call.sql.includes('SELECT COUNT(*)::int AS used'));
     assert(claimQuery, 'The entitlement usage query must be executed');
-    const periodStart = new Date(claimQuery.params[3]);
-    const periodEnd = new Date(claimQuery.params[4]);
-    assertDateParts(periodStart, now.getUTCFullYear(), now.getUTCMonth(), 1, 'Current monthly period start');
-    const expectedEnd = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1));
-    assertDateParts(periodEnd, expectedEnd.getUTCFullYear(), expectedEnd.getUTCMonth(), 1, 'Current monthly period end');
+    assertDateParts(new Date(claimQuery.params[3]), 2026, 8, 22, 'Monthly period start');
+    assertDateParts(new Date(claimQuery.params[4]), 2026, 9, 22, 'Monthly period end');
   } finally {
+    restoreDate();
     require.cache[poolPath] = { id: poolPath, filename: poolPath, loaded: true, exports: originalPool };
     delete require.cache[servicePath];
   }
 }
 
 async function runDayBoundaryTest() {
-  const now = new Date();
-  const start = new Date(Date.UTC(now.getUTCFullYear() - 1, now.getUTCMonth(), 30));
-  const { service, calls, originalPool, servicePath, poolPath } = loadService({ startsAt: start.toISOString(), billingMonths: 12 });
+  const { service, calls, originalPool, servicePath, poolPath, restoreDate } = loadServiceWithNow({
+    startsAt: '2025-09-30T12:00:00Z',
+    now: '2026-09-22T12:00:00Z',
+    billingMonths: 12,
+  });
   try {
     await service.getLeadAccess(7, 1);
     const claimQuery = calls.find(call => call.sql.includes('SELECT COUNT(*)::int AS used'));
     assert(claimQuery, 'The entitlement usage query must be executed for the boundary test');
-    const periodStart = new Date(claimQuery.params[3]);
-    assert.strictEqual(periodStart.getUTCFullYear(), start.getUTCFullYear() + 1, 'A 12-month billing period should advance after the anniversary day');
-    assert.strictEqual(periodStart.getUTCMonth(), now.getUTCMonth(), 'Billing period must use the current anniversary month');
-    assert.strictEqual(periodStart.getUTCDate(), 30, 'Membership anniversary must preserve the start day');
+    assertDateParts(new Date(claimQuery.params[3]), 2025, 8, 30, 'Billing period start before anniversary');
+    assertDateParts(new Date(claimQuery.params[4]), 2026, 8, 30, 'Billing period end at anniversary');
   } finally {
+    restoreDate();
     require.cache[poolPath] = { id: poolPath, filename: poolPath, loaded: true, exports: originalPool };
     delete require.cache[servicePath];
   }
