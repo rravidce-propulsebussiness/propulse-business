@@ -28,7 +28,8 @@ function periodForMembership(membership){
   const periodIndex=Math.floor(elapsedMonths/billingMonths);
   const periodStart=addMonthsClamped(starts,periodIndex*billingMonths);
   const periodEnd=addMonthsClamped(periodStart,billingMonths);
-  const monthlyStart=addMonthsClamped(starts,elapsedMonths);
+  const monthlyIndex=Math.floor(elapsedMonths);
+  const monthlyStart=addMonthsClamped(starts,monthlyIndex);
   const monthlyEnd=addMonthsClamped(monthlyStart,1);
   return {billingMonths,periodStart,periodEnd,monthlyStart,monthlyEnd};
 }
