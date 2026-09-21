@@ -92,12 +92,21 @@ export default function LeadsV2() {
   const [directSubmitting, setDirectSubmitting] = useState(false)
   const [paymentError, setPaymentError] = useState('')
   const [paymentSuccess, setPaymentSuccess] = useState('')
+  const [paymentReceiving, setPaymentReceiving] = useState([])
   const [couponCode, setCouponCode] = useState('')
   const [couponStatus, setCouponStatus] = useState('')
   const [couponError, setCouponError] = useState('')
   const [couponDiscount, setCouponDiscount] = useState(0)
   const [couponFinalAmount, setCouponFinalAmount] = useState(null)
 
+  useEffect(() => {
+    let live = true
+    if (!payment) { setPaymentReceiving([]); return undefined }
+    authRequest('/payment-receiving-details')
+      .then(data => { if (live) setPaymentReceiving(Array.isArray(data) ? data.filter(item => item?.is_active !== false) : []) })
+      .catch(() => { if (live) setPaymentReceiving([]) })
+    return () => { live = false }
+  }, [payment])
   useEffect(() => { setPage(1) }, [search, tier, category])
   useEffect(() => {
     let live = true
@@ -331,7 +340,58 @@ export default function LeadsV2() {
         </aside>
       </div>
     </div></div>}
-    {payment && paymentLead && (() => { const paymentRow = payment.payment || {}; const subtotal = Number(paymentRow.subtotal_amount ?? payment.coupon?.subtotalAmount ?? paymentRow.amount ?? 0); const discount = Number(paymentRow.discount_amount ?? payment.coupon?.discountAmount ?? 0); const finalAmount = Number(paymentRow.amount ?? payment.coupon?.finalAmount ?? Math.max(0, subtotal - discount)); const walletPaid = Number(payment.walletAmount ?? paymentRow.wallet_amount ?? 0); const directAmount = Number(payment.externalAmount ?? paymentRow.external_amount ?? Math.max(0, finalAmount - walletPaid)); const appliedCoupon = String(paymentRow.coupon_code || payment.coupon?.code || '').trim(); return <div className="lv2-overlay" onClick={() => !directSubmitting && setPayment(null)}><div className="lv2-upgrade lv2-payment-modal" onClick={e => e.stopPropagation()}><button onClick={() => !directSubmitting && setPayment(null)} disabled={directSubmitting}>×</button><span>PAYMENT</span><h2>Complete Lead #{paymentLead.id}</h2><p>{walletPaid > 0 ? `${money(walletPaid)} from your wallet was applied after the coupon discount.` : 'No wallet balance was used.'} {directAmount > 0 ? 'Pay the remaining amount directly.' : 'Your payment is complete.'}</p><div className="lv2-detail-grid"><div><small>Shares</small><b>{paymentShares}</b></div><div><small>Original</small><b>{money(subtotal)}</b></div></div><div className="lv2-payment-breakdown"><div><span>Original amount</span><b>{money(subtotal)}</b></div>{discount > 0 && <div className="discount"><span>{appliedCoupon ? `Coupon ${appliedCoupon}` : 'Coupon discount'}</span><b>−{money(discount)}</b></div>}<div><span>Final lead amount</span><b>{money(finalAmount)}</b></div><div><span>Wallet deduction</span><b>−{money(walletPaid)}</b></div><div className="due"><span>Amount to pay now</span><b>{money(directAmount)}</b></div></div>{directAmount > 0 && <><label>Payment reference / UTR<input id="lead-payment-utr" placeholder="Enter UTR or transaction ID" autoComplete="off" /></label><label>Payment proof<input id="lead-payment-proof" type="file" accept="image/*,.pdf" /></label>{paymentError && <div className="lv2-payment-error" role="alert">{paymentError}</div>}<div className="lv2-payment-submit"><button type="button" className="lv2-more" onClick={submitDirect} disabled={directSubmitting}>{directSubmitting ? 'Submitting…' : `Submit ${money(directAmount)} payment`}</button></div></>}</div></div> })()}
+    {payment && paymentLead && (() => {
+      const paymentRow = payment.payment || {}
+      const subtotal = Number(paymentRow.subtotal_amount ?? payment.coupon?.subtotalAmount ?? paymentRow.amount ?? 0)
+      const discount = Number(paymentRow.discount_amount ?? payment.coupon?.discountAmount ?? 0)
+      const finalAmount = Number(paymentRow.amount ?? payment.coupon?.finalAmount ?? Math.max(0, subtotal - discount))
+      const walletPaid = Number(payment.walletAmount ?? paymentRow.wallet_amount ?? 0)
+      const directAmount = Number(payment.externalAmount ?? paymentRow.external_amount ?? Math.max(0, finalAmount - walletPaid))
+      const appliedCoupon = String(paymentRow.coupon_code || payment.coupon?.code || '').trim()
+      const bankAccounts = paymentReceiving.filter(item => ['bank', 'both'].includes(String(item.method_type || '').toLowerCase()))
+      const receiving = bankAccounts[0] || paymentReceiving[0] || null
+      const copyValue = async value => { if (!value) return; try { await navigator.clipboard.writeText(String(value)) } catch {} }
+      return <div className="lv2-overlay" onClick={() => !directSubmitting && setPayment(null)}>
+        <div className="lv2-upgrade lv2-payment-modal" onClick={e => e.stopPropagation()}>
+          <button className="lv2-payment-close" onClick={() => !directSubmitting && setPayment(null)} disabled={directSubmitting}>×</button>
+          <span className="lv2-payment-kicker">PAYMENT</span>
+          <h2>Complete Lead #{paymentLead.id}</h2>
+          <p className="lv2-payment-intro">Transfer the amount below and submit your payment details.</p>
+
+          <section className="lv2-pay-amount-card">
+            <div><span>Amount to Pay Now</span><strong>{money(directAmount)}</strong></div>
+            <div className="lv2-pay-amount-note"><span>✓</span><small>Complete payment<br/>to get access</small></div>
+          </section>
+
+          <section className="lv2-pay-breakdown">
+            <div><span>Original Amount</span><strong>{money(subtotal)}</strong></div>
+            {discount > 0 && <div><span>{appliedCoupon ? 'Coupon Discount' : 'Discount'}</span><strong className="positive">− {money(discount)}</strong></div>}
+            <div><span>Wallet Deduction</span><strong>− {money(walletPaid)}</strong></div>
+            <div className="highlight"><span>Pay Now</span><strong>{money(directAmount)}</strong></div>
+          </section>
+
+          {directAmount > 0 && <section className="lv2-pay-bank-card">
+            <div className="lv2-pay-section-head"><span>🏦</span><div><strong>Bank Account Details</strong><small>Transfer the exact amount and enter the UTR below.</small></div></div>
+            {receiving ? <div className="lv2-pay-bank-box">
+              {receiving.bank_name && <div><span>Bank Name</span><b>{receiving.bank_name}</b><button type="button" onClick={() => copyValue(receiving.bank_name)}>Copy</button></div>}
+              {receiving.account_name && <div><span>Account Name</span><b>{receiving.account_name}</b><button type="button" onClick={() => copyValue(receiving.account_name)}>Copy</button></div>}
+              {receiving.account_number && <div><span>Account Number</span><b>{receiving.account_number}</b><button type="button" onClick={() => copyValue(receiving.account_number)}>Copy</button></div>}
+              {receiving.ifsc_code && <div><span>IFSC Code</span><b>{receiving.ifsc_code}</b><button type="button" onClick={() => copyValue(receiving.ifsc_code)}>Copy</button></div>}
+              {receiving.branch_name && <div><span>Branch</span><b>{receiving.branch_name}</b><button type="button" onClick={() => copyValue(receiving.branch_name)}>Copy</button></div>}
+              {receiving.upi_id && <div><span>UPI ID</span><b>{receiving.upi_id}</b><button type="button" onClick={() => copyValue(receiving.upi_id)}>Copy</button></div>}
+            </div> : <div className="lv2-pay-bank-empty">Payment receiving details are not configured yet. Please contact support.</div>}
+            {receiving?.instructions && <div className="lv2-pay-instructions">{receiving.instructions}</div>}
+          </section>}
+
+          {directAmount > 0 && <>
+            <label className="lv2-pay-field"><span>Payment reference / UTR</span><input id="lead-payment-utr" placeholder="Enter UTR or transaction ID" autoComplete="off" /></label>
+            <label className="lv2-pay-field"><span>Payment proof</span><div className="lv2-pay-upload"><span>⌁</span><div><b>Upload payment screenshot</b><small>JPG, PNG or PDF · Max 5 MB</small></div><input id="lead-payment-proof" type="file" accept="image/*,.pdf" /></div></label>
+            {paymentError && <div className="lv2-payment-error" role="alert">{paymentError}</div>}
+            <div className="lv2-payment-submit"><button type="button" className="lv2-more" onClick={submitDirect} disabled={directSubmitting}>{directSubmitting ? 'Submitting…' : `Submit ${money(directAmount)} payment →`}</button><small>🔒 Your payment information is always protected.</small></div>
+          </>}
+        </div>
+      </div>
+    })()}
     {paymentSuccess && <div className="lv2-overlay" onClick={() => setPaymentSuccess('')}><div className="lv2-upgrade lv2-payment-success" role="dialog" aria-modal="true" onClick={e => e.stopPropagation()}><div className="lv2-success-icon">✓</div><span>PAYMENT SUBMITTED</span><h2>Submitted successfully</h2><p>{paymentSuccess}</p><button onClick={() => setPaymentSuccess('')}>Done</button></div></div>}
     {upgrade && <div className="lv2-overlay"><div className="lv2-upgrade"><button onClick={() => setUpgrade(false)}>×</button><span>PRO ACCESS</span><h2>Unlock Exclusive access.</h2><p>Pro members get first access during the configured Pro-first period.</p><div><Link to="/dashboard">View Pro options →</Link><button onClick={() => setUpgrade(false)}>Not now</button></div></div></div>}
   </div>
