@@ -49,14 +49,14 @@ export default function AdminInvestorWithdrawals() {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
 
-  async function request(path, options = {}) {
+  const request = useCallback(async (path, options = {}) => {
     if (!getToken()) {
       clearSession()
       navigate('/login', { replace: true })
       throw new Error('Your admin session has expired. Please sign in again.')
     }
     return apiRequest(path, options)
-  }
+  }, [navigate])
 
   const load = useCallback(async (silent = false) => {
     if (!silent) setLoading(true)
@@ -70,7 +70,7 @@ export default function AdminInvestorWithdrawals() {
     } finally {
       if (!silent) setLoading(false)
     }
-  }, [status, search])
+  }, [request, status, search])
 
   useEffect(() => { load() }, [load])
   useEffect(() => {
