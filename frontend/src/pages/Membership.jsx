@@ -83,8 +83,6 @@ export default function Membership() {
 
   const currentRaw = String(currentMembership?.plan_type || currentMembership?.plan?.plan_type || user?.membership_type || '').toLowerCase()
   const currentGroup = String(currentMembership?.plan_group || currentMembership?.plan?.plan_group || (currentMembership?.isPro || currentRaw === 'pro' ? 'grow' : '')).toLowerCase()
-  const isProMember = Boolean(currentMembership?.isPro) || currentRaw === 'pro'
-  const hasActiveMembership = Boolean(currentMembership?.membership_plan_id && currentMembership?.expires_at && new Date(currentMembership.expires_at).getTime() > Date.now())
 
   const openPlan = (plan) => {
     if (!plan?.id) {
