@@ -4,19 +4,18 @@ function fail(message,code){throw Object.assign(new Error(message),{code});}
 function parseEntitlements(value){if(Array.isArray(value))return value;try{const x=typeof value==='string'?JSON.parse(value):value;return Array.isArray(x)?x:[]}catch{return[]}}
 function entitlementForLead(entitlements,lead){const wanted=lead.lead_type==='premium'?'premium':'shared';return entitlements.find(x=>String(x.type||'').toLowerCase()===wanted)||null}
 function monthsBetween(start,end){
-  const months=(end.getFullYear()-start.getFullYear())*12+end.getMonth()-start.getMonth();
+  const months=(end.getUTCFullYear()-start.getUTCFullYear())*12+end.getUTCMonth()-start.getUTCMonth();
   if(months<=0)return 0;
-  return Math.max(0,months-(end.getDate()<start.getDate()?1:0));
+  return Math.max(0,months-(end.getUTCDate()<start.getUTCDate()?1:0));
 }
 
 function addMonthsClamped(date,months){
   const source=new Date(date);
-  const day=source.getDate();
-  const target=new Date(source);
-  target.setDate(1);
-  target.setMonth(target.getMonth()+months);
-  const lastDay=new Date(target.getFullYear(),target.getMonth()+1,0).getDate();
-  target.setDate(Math.min(day,lastDay));
+  const day=source.getUTCDate();
+  const target=new Date(Date.UTC(source.getUTCFullYear(),source.getUTCMonth(),1,source.getUTCHours(),source.getUTCMinutes(),source.getUTCSeconds(),source.getUTCMilliseconds()));
+  target.setUTCMonth(target.getUTCMonth()+months);
+  const lastDay=new Date(Date.UTC(target.getUTCFullYear(),target.getUTCMonth()+1,0)).getUTCDate();
+  target.setUTCDate(Math.min(day,lastDay));
   return target;
 }
 
