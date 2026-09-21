@@ -48,13 +48,15 @@ async function recordSpendForInvestment({ investmentId, amount, platform, campai
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
+    const investmentRef = (await client.query(`SELECT id,user_id,cycle_id FROM investments WHERE id=$1`, [Number(investmentId)])).rows[0];
+    if (!investmentRef) throw Object.assign(new Error('Investment not found'), { code:'NOT_FOUND' });
+    await ledger.lockInvestorFinancials(client, Number(investmentRef.user_id));
     const investment = (await client.query(`SELECT id,user_id,cycle_id,status FROM investments WHERE id=$1 FOR UPDATE`, [Number(investmentId)])).rows[0];
     if (!investment) throw Object.assign(new Error('Investment not found'), { code:'NOT_FOUND' });
     if (!['active','matured'].includes(String(investment.status))) throw Object.assign(new Error('Only active or matured investments can fund advertising spend'), { code:'NO_ACTIVE_INVESTMENT' });
     if (!investment.cycle_id) throw Object.assign(new Error('Investment is not assigned to an investment cycle'), { code:'NO_ACTIVE_INVESTMENT' });
     const cycle = (await client.query(`SELECT id,status FROM investment_cycles WHERE id=$1 AND user_id=$2 FOR UPDATE`, [Number(investment.cycle_id), Number(investment.user_id)])).rows[0];
     if (!cycle || !OPEN_CYCLE_STATUSES.includes(String(cycle.status).toUpperCase())) throw Object.assign(new Error('Investment cycle is not active for advertising spend'), { code:'NO_ACTIVE_INVESTMENT' });
-    await ledger.lockInvestorFinancials(client, Number(investment.user_id));
     const available = await getAvailableForAds(client, Number(investment.user_id), Number(investment.cycle_id));
     if (value > available.available + 1e-6) throw Object.assign(new Error(`Ad spend exceeds available funds of ₹${available.available.toFixed(2)}`), { code:'SPEND_EXCEEDS_AVAILABLE_AD_FUNDS' });
     const allocation = (await client.query(`INSERT INTO investment_ad_allocations(investment_id,amount,status,created_by) VALUES($1,$2,'spending',$3) RETURNING id,amount,status`, [Number(investment.id), value, Number(adminId)])).rows[0];
