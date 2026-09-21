@@ -9,7 +9,7 @@ const QUICK=[
   ['How do I upload leads?','leads'],['How are leads verified?','leads'],['How do withdrawals work?','withdrawals'],['Why was a lead invalidated?','leads'],['How can I check my earnings?','payments'],['How do I manage my payout account?','account']
 ];
 export default function LeadPartnerFaq(){
-  const navigate=useNavigate(),location=useLocation(),user=getUser();
+  const navigate=useNavigate(),user=getUser();
   const [faqs,setFaqs]=useState([]),[loading,setLoading]=useState(true),[error,setError]=useState('');
   const [category,setCategory]=useState('all'),[search,setSearch]=useState(''),[open,setOpen]=useState(null);
   const initials=useMemo(()=>(user?.name||'Lead Partner').split(' ').filter(Boolean).slice(0,2).map(x=>x[0]).join('').toUpperCase()||'LP',[user?.name]);
@@ -20,7 +20,6 @@ export default function LeadPartnerFaq(){
     return (category==='all'||f.category===category)&&(!q||[f.question,f.answer,f.category].join(' ').toLowerCase().includes(q));
   }),[faqs,category,search]);
   const counts=useMemo(()=>Object.fromEntries(CATEGORIES.map(([key])=>[key,key==='all'?faqs.length:faqs.filter(f=>f.category===key).length])),[faqs]);
-  const initialsOr='';
 
   function signOut(){clearSession();localStorage.removeItem('propulse_session_mode');navigate('/login',{replace:true})}
   return <div className="faq-shell">
@@ -45,7 +44,7 @@ export default function LeadPartnerFaq(){
         <div className="faq-main-grid">
           <section className="faq-card faq-list-card">
             <div className="faq-card-head"><div><span className="faq-kicker">{category==='all'?'FREQUENTLY ASKED QUESTIONS':CATEGORIES.find(x=>x[0]===category)?.[1]?.toUpperCase()}</span><h2>{category==='all'?'Frequently Asked Questions':CATEGORIES.find(x=>x[0]===category)?.[1]+' Questions'}</h2><p>{CATEGORIES.find(x=>x[0]===category)?.[2]}</p></div><span className="faq-count">{visible.length} question{visible.length===1?'':'s'}</span></div>
-            {loading?<div className="faq-loading">Loading FAQs…</div>:!visible.length?<div className="faq-empty"><span>?</span><strong>No matching questions</strong><p>Try another search or category.</p></div>:<div className="faq-questions">{visible.map((item,i)=><article key={item.id} className={open===item.id?'open':''}><button type="button" onClick={()=>setOpen(open===item.id?null:item.id)}><span className="faq-q-icon">{open===item.id?'−':'+'}</span><strong>{item.question}</strong><span className="faq-chevron">{open===item.id?'⌃':'⌄'}</span></button>{open===item.id&&<div className="faq-answer"><p>{item.answer}</p></div>}</article>)}</div>}
+            {loading?<div className="faq-loading">Loading FAQs…</div>:!visible.length?<div className="faq-empty"><span>?</span><strong>No matching questions</strong><p>Try another search or category.</p></div>:<div className="faq-questions">{visible.map((item)=><article key={item.id} className={open===item.id?'open':''}><button type="button" onClick={()=>setOpen(open===item.id?null:item.id)}><span className="faq-q-icon">{open===item.id?'−':'+'}</span><strong>{item.question}</strong><span className="faq-chevron">{open===item.id?'⌃':'⌄'}</span></button>{open===item.id&&<div className="faq-answer"><p>{item.answer}</p></div>}</article>)}</div>}
           </section>
 
           <aside className="faq-side">
