@@ -82,6 +82,7 @@ export default function LeadsV2() {
   const [search, setSearch] = useState('')
   const [industryFilter, setIndustryFilter] = useState('')
   const [cityFilter, setCityFilter] = useState('')
+  const [filterCatalog, setFilterCatalog] = useState({ industries: [], cities: [] })
   const [page, setPage] = useState(1)
   const [pagination, setPagination] = useState({ page: 1, limit: 20, total: 0, hasNext: false, hasPrevious: false })
   const [buying, setBuying] = useState(null)
@@ -119,6 +120,28 @@ export default function LeadsV2() {
     return () => { live = false }
   }, [buyModal, payment])
   useEffect(() => { setPage(1) }, [search, category, industryFilter, cityFilter])
+  useEffect(() => {
+    let live = true
+    if (logged) { setFilterCatalog({ industries: [], cities: [] }); return undefined }
+    listLeads({ status: 'available', page: 1, limit: 1000, allIndustries: true }, null)
+      .then(data => {
+        if (!live) return
+        const items = Array.isArray(data) ? data : (data.items || [])
+        const sourceIndustries = Array.isArray(data?.industries) ? data.industries : []
+        const sourceCities = Array.isArray(data?.cities) ? data.cities : []
+        const industries = [...new Set([
+          ...sourceIndustries.map(x => typeof x === 'string' ? x : (x?.name || x?.label || '')),
+          ...items.map(l => l.industry_name)
+        ].map(x => String(x || '').trim()).filter(Boolean))].sort((a,b) => a.localeCompare(b))
+        const cities = [...new Set([
+          ...sourceCities.map(x => typeof x === 'string' ? x : (x?.name || x?.label || '')),
+          ...items.map(l => l.city_name)
+        ].map(x => String(x || '').trim()).filter(Boolean))].sort((a,b) => a.localeCompare(b))
+        setFilterCatalog({ industries, cities })
+      })
+      .catch(() => { if (live) setFilterCatalog({ industries: [], cities: [] }) })
+    return () => { live = false }
+  }, [logged])
   useEffect(() => {
     let live = true
     const timer = setTimeout(async () => {
@@ -165,10 +188,10 @@ export default function LeadsV2() {
     return [lead?.city_name, lead?.state_name].filter(hasValue).join(', ')
   }, [visibleLeads])
   const filterOptions = useMemo(() => {
-    const industries = [...new Set(leads.map(l => String(l.industry_name || '').trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b))
-    const cities = [...new Set(leads.map(l => String(l.city_name || '').trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b))
+    const industries = filterCatalog.industries.length ? filterCatalog.industries : [...new Set(leads.map(l => String(l.industry_name || '').trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b))
+    const cities = filterCatalog.cities.length ? filterCatalog.cities : [...new Set(leads.map(l => String(l.city_name || '').trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b))
     return { industries, cities }
-  }, [leads])
+  }, [filterCatalog, leads])
 
   const openBuyModal = (lead) => {
     if (!logged) { window.location.href = '/login'; return }
