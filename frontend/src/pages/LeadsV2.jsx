@@ -1,4 +1,4 @@
-import { Link, useSearchParams } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useEffect, useMemo, useState } from 'react'
 import { authRequest, publicRequest, getToken, getUser } from '../utils/auth'
 import { claimLead, getLead, listLeads, purchaseLead } from '../api/leads'
@@ -66,6 +66,7 @@ const timeAgo = (value) => {
 
 export default function LeadsV2() {
   const [params] = useSearchParams()
+  const navigate = useNavigate()
   const category = params.get('category')
   const user = getUser()
   const token = getToken()
@@ -90,7 +91,7 @@ export default function LeadsV2() {
   const [notice, setNotice] = useState('')
   const [payment, setPayment] = useState(null)
   const [paymentLead, setPaymentLead] = useState(null)
-  const [paymentShares, setPaymentShares] = useState(0)
+  const [_paymentShares, setPaymentShares] = useState(0)
   const [directSubmitting, setDirectSubmitting] = useState(false)
   const [paymentError, setPaymentError] = useState('')
   const [paymentSuccess, setPaymentSuccess] = useState('')
@@ -190,7 +191,7 @@ export default function LeadsV2() {
   const filterOptions = filterCatalog
 
   const openBuyModal = (lead) => {
-    if (!logged) { window.location.href = '/login'; return }
+    if (!logged) { navigate('/login'); return }
     if (!lead.pricing?.shares?.length) { setError('Pricing is not available for this lead.'); return }
     setError(''); setNotice(''); setPaymentError(''); setCouponCode(''); setCouponStatus(''); setCouponError(''); setCouponDiscount(0); setCouponFinalAmount(null); setUseWallet(true); setWalletBalance(0); setSelectedSharePack(Number(lead.pricing.shares[0]?.shares) || null); setBuyModal(lead)
     authRequest('/wallet').then(data => setWalletBalance(Number(data?.balance ?? data?.wallet?.balance ?? 0))).catch(() => {})
@@ -237,7 +238,7 @@ export default function LeadsV2() {
   }
   const applyCoupon = () => validateCouponForSelection()
   const claim = async (lead) => {
-    if (!logged) { window.location.href = '/login'; return }
+    if (!logged) { navigate('/login'); return }
     setClaiming(lead.id); setNotice(''); setError('')
     try {
       await claimLead(lead.id)
@@ -248,7 +249,7 @@ export default function LeadsV2() {
     finally { setClaiming(null) }
   }
   const submitLeadCheckout = async (lead, shares, plan = 'normal') => {
-    if (!logged) { window.location.href = '/login'; return }
+    if (!logged) { navigate('/login'); return }
     if (plan === 'pro' && !isPro) { setBuyModal(null); setUpgrade(true); return }
     const row = (lead?.pricing?.shares || []).find(p => Number(p.shares) === Number(shares))
     const selectedPrice = Number(row?.[isPro ? 'pro' : 'normal'] || 0)
@@ -316,38 +317,7 @@ export default function LeadsV2() {
     }
   }
 
-  const buy = async (lead, shares, plan = 'normal') => {
-    if (!logged) { window.location.href = '/login'; return }
-    if (plan === 'pro' && !isPro) { setBuyModal(null); setUpgrade(true); return }
-    const key = `${lead.id}-${shares}-${plan}-${useWallet ? 'wallet' : 'direct'}`
-    setBuying(key); setNotice(''); setError(''); setCouponError('')
-    try {
-      const d = await purchaseLead(lead.id, shares, { useWallet, couponCode })
-      const needsExternalPayment = Boolean(d?.requires_external_payment || d?.requiresExternalPayment || d?.payment?.status === 'pending')
-      if (needsExternalPayment) {
-        setBuying(null)
-        setPaymentError('')
-        setPayment(d)
-        setPaymentLead(lead)
-        setPaymentShares(shares)
-        return
-      }
-      await getLead(lead.id)
-      setLeads(current => current.filter(x => x.id !== lead.id))
-      setBuyModal(null)
-      setNotice(`Lead #${lead.id} purchased successfully from ${plan === 'pro' ? 'Pro' : 'Normal'} pricing.`)
-      setExpanded(null)
-    } catch (e) {
-      if (e.code === 'PRO_REQUIRED') {
-        setBuyModal(null)
-        setUpgrade(true)
-      } else if (String(e.code || '').includes('COUPON') || ['MIN_ORDER', 'PURCHASE_NOT_ELIGIBLE', 'PLAN_NOT_ELIGIBLE', 'USER_NOT_ELIGIBLE', 'INDUSTRY_NOT_ELIGIBLE', 'USAGE_LIMIT', 'USER_USAGE_LIMIT'].includes(e.code)) {
-        setCouponError(e.message)
-      } else {
-        setError(e.message)
-      }
-    } finally { setBuying(current => current === key ? null : current); }
-  }
+
   const submitDirect = async () => {
     setPaymentError('')
     const reference = document.getElementById('lead-payment-utr')?.value?.trim()
