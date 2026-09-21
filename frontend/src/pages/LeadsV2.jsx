@@ -80,7 +80,6 @@ export default function LeadsV2() {
   const [useWallet, setUseWallet] = useState(true)
   const [selectedSharePack, setSelectedSharePack] = useState(null)
   const [search, setSearch] = useState('')
-  const [tier, setTier] = useState('all')
   const [page, setPage] = useState(1)
   const [pagination, setPagination] = useState({ page: 1, limit: 20, total: 0, hasNext: false, hasPrevious: false })
   const [buying, setBuying] = useState(null)
@@ -117,14 +116,14 @@ export default function LeadsV2() {
       .catch(() => { if (live) setPaymentReceiving([]) })
     return () => { live = false }
   }, [buyModal, payment])
-  useEffect(() => { setPage(1) }, [search, tier, category])
+  useEffect(() => { setPage(1) }, [search, category])
   useEffect(() => {
     let live = true
     const timer = setTimeout(async () => {
       setLoading(true); setError('')
       try {
         const terms = [category?.replaceAll('-', ' '), search.trim()].filter(Boolean).join(' ')
-        const d = await listLeads({ status: 'available', page, limit: 20, ...(tier !== 'all' ? { leadType: tier } : {}), ...(terms ? { search: terms } : {}) }, token)
+        const d = await listLeads({ status: 'available', page, limit: 20, ...(terms ? { search: terms } : {}) }, token)
         if (live) {
           const items = Array.isArray(d) ? d : (d.items || [])
           const availableItems = items.filter(l => !l.is_purchased && !l.purchased && !l.access?.claimed && !l.access?.purchased)
@@ -135,7 +134,7 @@ export default function LeadsV2() {
       finally { if (live) setLoading(false) }
     }, 250)
     return () => { live = false; clearTimeout(timer) }
-  }, [token, page, search, tier, category])
+  }, [token, page, search, category])
 
   const membershipLabel = norm(currentMembership?.plan_group || currentMembership?.plan?.plan_group || currentMembership?.plan_type || currentMembership?.plan?.plan_type || user?.membership_type || user?.membership?.type || user?.membership?.name || user?.plan || user?.plan_name || user?.subscription_plan || '')
   const activeMembershipGroup = membershipLabel === 'grow' || membershipLabel.includes('grow') || membershipLabel.includes('growth') ? 'growth' : membershipLabel === 'scale' || membershipLabel.includes('scale') ? 'scale' : ''
@@ -343,7 +342,7 @@ export default function LeadsV2() {
   return <div className="lv2-shell">
     <UserHeader />
     <main className="lv2-page">
-      <section className="lv2-market-head"><div className="lv2-title-block"><span></span><div><h1>{title}</h1><p>High quality, verified leads to grow your business</p></div></div><div className="lv2-controls"><div className="lv2-search"><span>⌕</span><input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by industry, service, location..." aria-label="Search leads"/><b>⌕</b></div><button className="lv2-filter-button" onClick={() => setTier(tier === 'all' ? 'premium' : tier === 'premium' ? 'basic' : 'all')}><span>☷</span> Filters</button><div className="lv2-sort"><small>Sort by</small><strong>Newest</strong><span>⌄</span></div></div></section>
+      <section className="lv2-market-head"><div className="lv2-title-block"><span></span><div><h1>{title}</h1><p>High quality, verified leads to grow your business</p></div></div><div className="lv2-controls"><div className="lv2-search"><span>⌕</span><input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by industry, service, location..." aria-label="Search leads"/><b>⌕</b></div><div className="lv2-sort"><small>Sort by</small><strong>Newest</strong><span>⌄</span></div></div></section>
       <section className="lv2-stats"><div className="lv2-stat orange"><span>▣</span><div><b>{pagination.total}</b><small>Total Leads</small></div></div><div className="lv2-stat blue"><span>♟</span><div><b>{topIndustry || 'Verified opportunities'}</b><small>Top Industry</small></div></div><div className="lv2-stat green"><span>●</span><div><b>{topLocation || 'India'}</b><small>Top Location</small></div></div><div className="lv2-stat purple"><span>★</span><div><b>4.8</b><small>Avg. Quality Score</small></div></div><div className="lv2-verified">✓ &nbsp; Verified Opportunities Only</div></section>
       {error && <div className="lv2-error">{error}</div>}{notice && <div className="lv2-error">{notice}</div>}
       {loading ? <div className="lv2-empty"><span>PROPULSE MARKETPLACE</span><strong>Loading opportunities...</strong></div> : !leads.length ? <div className="lv2-empty"><span>PROPULSE MARKETPLACE</span><strong>No matching leads</strong><p>Try another search or filter.</p></div> : <div className="lv2-grid">
