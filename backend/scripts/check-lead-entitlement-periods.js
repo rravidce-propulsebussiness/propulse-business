@@ -52,9 +52,8 @@ function loadServiceWithNow({ startsAt, now, billingMonths = 3, used = 0 }) {
     static now() { return fixedNow.getTime(); }
   }
 
-  // The mock returns usage only for the current window; the tests below
-  // focus on the exact window boundaries calculated by the service.
-  loaded.pool.query = undefined;
+  // The mock returns usage for the current window; the tests below focus on
+  // exact window boundaries calculated by the service.
   global.Date = FixedDate;
   return { ...loaded, restoreDate: () => { global.Date = originalDate; } };
 }
