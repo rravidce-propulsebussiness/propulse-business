@@ -32,42 +32,42 @@ export default function AdminPayments() {
   const [adjustReason, setAdjustReason] = useState('')
   const [expandedApproval, setExpandedApproval] = useState({})
 
-  async function request(path, options = {}) {
+  const request = useCallback(async (path, options = {}) => {
     if (!getToken()) {
       clearSession()
       navigate('/login', { replace: true })
       throw new Error('Your admin session has expired. Please sign in again.')
     }
     return apiRequest(path, options)
-  }
+  }, [navigate])
 
-  async function fetchPayments(nextPage = 1, overrideStatus = status) {
+  const fetchPayments = useCallback(async(nextPage = 1, overrideStatus = status) {
     const qs = new URLSearchParams({ status: overrideStatus, search: search.trim(), page: String(nextPage), limit: '50' })
     const data = await request(`/payments?${qs}`)
     setPayments(Array.isArray(data) ? data : data.items || [])
     setPaymentMeta({ total: data.total ?? 0, pages: data.pages ?? 1, stats: data.stats || {} })
-  }
+  }, [request, search, status])
 
-  async function fetchTopups(nextPage = 1, overrideStatus = status) {
+  const fetchTopups = useCallback(async(nextPage = 1, overrideStatus = status) {
     const qs = new URLSearchParams({ status: overrideStatus, search: search.trim(), page: String(nextPage), limit: '50' })
     const data = await request(`/wallet/topups?${qs}`)
     setTopups(Array.isArray(data) ? data : data.items || [])
     setTopupMeta({ total: data.total ?? 0, pages: data.pages ?? 1, stats: data.stats || {} })
-  }
+  }, [request, search, status])
 
-  async function fetchCustomers(nextPage = 1) {
+  const fetchCustomers = useCallback(async(nextPage = 1) {
     const qs = new URLSearchParams({ search: search.trim(), page: String(nextPage), limit: '50' })
     const data = await request(`/payments/memberships/customers?${qs}`)
     setCustomers(Array.isArray(data) ? data : data.items || [])
     setCustomerMeta({ total: data.total ?? 0, pages: data.pages ?? 1 })
-  }
+  }, [request, search])
 
-  async function fetchWalletCustomers(nextPage = 1) {
+  const fetchWalletCustomers = useCallback(async(nextPage = 1) {
     const qs = new URLSearchParams({ search: search.trim(), page: String(nextPage), limit: '50' })
     const data = await request(`/wallet/admin/history/customers?${qs}`)
     setWalletCustomers(Array.isArray(data) ? data : data.items || [])
     setWalletMeta({ total: data.total ?? 0, pages: data.pages ?? 1, stats: data.stats || {} })
-  }
+  }, [request, search])
 
   const load = useCallback(async (nextPage = 1, silent = false) => {
     if (!silent) setLoading(true)
@@ -87,7 +87,7 @@ export default function AdminPayments() {
     } finally {
       if (!silent) setLoading(false)
     }
-  }, [tab, status, search])
+  }, [tab, status, fetchPayments, fetchTopups, fetchCustomers, fetchWalletCustomers])
 
   useEffect(() => { load(1) }, [load])
   useEffect(() => {
