@@ -1,43 +1,43 @@
-.lv2-payment-modal{width:min(780px,calc(100vw - 36px));max-height:calc(100vh - 28px);display:flex;flex-direction:column;padding:28px 30px 22px;overflow-y:auto;overflow-x:hidden;background:#fff;border-radius:24px;box-shadow:0 28px 80px rgba(5,24,55,.28);color:#173b70}
+.lv2-payment-modal{width:min(560px,40vw);max-height:calc(100vh - 24px);display:flex;flex-direction:column;padding:20px 22px 16px;overflow-y:auto;overflow-x:hidden;background:#fff;border-radius:20px;box-shadow:0 22px 60px rgba(5,24,55,.24);color:#173b70}
 .lv2-payment-close{position:absolute;right:14px;top:14px!important;width:38px!important;height:38px!important;border:0!important;border-radius:50%!important;background:#f1f5fa!important;color:#24466f!important;font-size:25px!important;line-height:1!important;display:grid!important;place-items:center;cursor:pointer}
 .lv2-payment-kicker{display:inline-flex!important;align-self:flex-start;padding:7px 11px;border-radius:8px;background:#fff1eb;color:#ff5724!important;font-size:10px!important;font-weight:900!important;letter-spacing:.14em}
-.lv2-payment-modal>h2{margin:10px 48px 4px!important;color:#0d356b;font-size:30px!important;line-height:1.15}
-.lv2-payment-intro{margin:0 0 16px!important;color:#6d819d;font-size:13px;line-height:1.5}
-.lv2-pay-amount-card{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:16px 18px;border:1px solid #ffb79f;border-radius:14px;background:linear-gradient(100deg,#fff8f4,#fff1eb);margin-bottom:10px}
+.lv2-payment-modal>h2{margin:8px 42px 8px!important;color:#0d356b;font-size:24px!important;line-height:1.15}
+
+.lv2-pay-amount-card{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:11px 13px;border:1px solid #ffb79f;border-radius:11px;background:linear-gradient(100deg,#fff8f4,#fff1eb);margin-bottom:7px}
 .lv2-pay-amount-card>div:first-child{display:flex;flex-direction:column;gap:2px}
 .lv2-pay-amount-card span{font-size:13px;font-weight:900;color:#173b70}
-.lv2-pay-amount-card strong{font-size:38px;line-height:1;color:#f0441d}
+.lv2-pay-amount-card strong{font-size:29px;line-height:1;color:#f0441d}
 .lv2-pay-amount-note{display:flex;align-items:center;gap:8px;color:#58708f}
 .lv2-pay-amount-note>span{width:27px;height:27px;border-radius:50%;display:grid;place-items:center;background:#e9f1fb;color:#315d92;font-weight:900}
 .lv2-pay-amount-note small{font-size:9px;line-height:1.35;font-weight:800}
-.lv2-pay-breakdown{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid #dce6f2;border-radius:13px;background:#f8fbfe;margin-bottom:10px;overflow:hidden}
-.lv2-pay-breakdown>div{padding:11px 12px;border-right:1px solid #dce6f2}
+.lv2-pay-breakdown{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid #dce6f2;border-radius:10px;background:#f8fbfe;margin-bottom:7px;overflow:hidden}
+.lv2-pay-breakdown>div{padding:8px 9px;border-right:1px solid #dce6f2}
 .lv2-pay-breakdown>div:last-child{border-right:0}
-.lv2-pay-breakdown span,.lv2-pay-breakdown strong{display:block}
+.lv2-pay-breakdown span,.lv2-pay-breakdown strong{margin-top:3px;font-size:14px;color:#143e77}
 .lv2-pay-breakdown span{font-size:9px;color:#69809e;font-weight:800}
 .lv2-pay-breakdown strong{margin-top:5px;font-size:17px;color:#143e77}
 .lv2-pay-breakdown .positive{color:#16865b}
 .lv2-pay-breakdown .highlight{background:#fff0ea}
 .lv2-pay-breakdown .highlight span{color:#f05a2b}
 .lv2-pay-breakdown .highlight strong{color:#f0441d;font-size:20px}
-.lv2-pay-bank-card{padding:14px;border:1px solid #dbe6f3;border-radius:14px;background:#f7faff;margin-bottom:10px}
-.lv2-pay-section-head{display:flex;align-items:center;gap:10px;margin-bottom:9px}
-.lv2-pay-section-head>span{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;background:#e8f1ff;font-size:18px}
-.lv2-pay-section-head strong,.lv2-pay-section-head small{display:block}
-.lv2-pay-section-head strong{color:#123a78;font-size:15px}
+.lv2-pay-bank-card{padding:10px;border:1px solid #dbe6f3;border-radius:11px;background:#f7faff;margin-bottom:7px}
+.lv2-pay-section-head{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.lv2-pay-section-head>span{width:29px;height:29px;border-radius:7px;display:grid;place-items:center;background:#e8f1ff;font-size:15px}
+.lv2-pay-section-head strong,.lv2-pay-section-head small{margin-top:1px;color:#71859f;font-size:8px}
+.lv2-pay-section-head strong{color:#123a78;font-size:13px}
 .lv2-pay-section-head small{margin-top:2px;color:#71859f;font-size:9px}
-.lv2-pay-bank-box{background:#fff;border:1px solid #e2eaf3;border-radius:10px;padding:4px 10px}
-.lv2-pay-bank-box>div{display:grid;grid-template-columns:105px 1fr auto;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid #edf1f6}
+.lv2-pay-bank-box{background:#fff;border:1px solid #e2eaf3;border-radius:8px;padding:2px 8px}
+.lv2-pay-bank-box>div{display:grid;grid-template-columns:92px 1fr auto;align-items:center;gap:6px;padding:5px 0;border-bottom:1px solid #edf1f6}
 .lv2-pay-bank-box>div:last-child{border-bottom:0}
 .lv2-pay-bank-box span{font-size:9px;color:#71849e;font-weight:800}
 .lv2-pay-bank-box b{font-size:11px;color:#153b73;word-break:break-word}
 .lv2-pay-bank-box button{border:1px solid #d9e5f4;background:#edf4ff;color:#1652a0;border-radius:6px;padding:5px 7px;font-size:8px;font-weight:900;cursor:pointer}
 .lv2-pay-bank-empty{padding:12px;border-radius:9px;background:#fff8e9;color:#946200;font-size:10px;font-weight:700}
 .lv2-pay-instructions{margin-top:8px;padding:8px 10px;border-radius:8px;background:#eef7f2;color:#39705a;font-size:9px;line-height:1.45}
-.lv2-pay-field{display:block!important;margin:0 0 9px!important;color:#173b70!important;font-size:11px!important;font-weight:900!important}
+.lv2-pay-field{display:block!important;margin:0 0 6px!important;color:#173b70!important;font-size:10px!important;font-weight:900!important}
 .lv2-pay-field>span{display:block;margin-bottom:6px}
-.lv2-pay-field input:not([type=file]){display:block;width:100%;box-sizing:border-box;height:42px;margin:0!important;padding:10px 12px;border:1px solid #d7e2ef;border-radius:10px;background:#fff;color:#173b70;font:inherit;font-size:12px;font-weight:600}
-.lv2-pay-upload{position:relative;display:flex;align-items:center;gap:10px;min-height:58px;padding:9px 11px;border:1.5px dashed #b9cee7;border-radius:10px;background:#f8fbff;overflow:hidden}
+.lv2-pay-field input:not([type=file]){display:block;width:100%;box-sizing:border-box;height:36px;margin:0!important;padding:8px 10px;border:1px solid #d7e2ef;border-radius:8px;background:#fff;color:#173b70;font:inherit;font-size:11px;font-weight:600}
+.lv2-pay-upload{position:relative;display:flex;align-items:center;gap:8px;min-height:45px;padding:7px 9px;border:1.5px dashed #b9cee7;border-radius:8px;background:#f8fbff;overflow:hidden}
 .lv2-pay-upload>span{width:35px;height:35px;display:grid;place-items:center;border-radius:8px;background:#eaf2ff;color:#1652a0;font-size:20px}
 .lv2-pay-upload b,.lv2-pay-upload small{display:block}
 .lv2-pay-upload b{font-size:10px;color:#173b70}
@@ -45,7 +45,7 @@
 .lv2-pay-upload input[type=file]{margin-left:auto;width:145px!important;min-height:auto!important;padding:6px!important;font-size:9px!important;border:0!important;background:transparent!important}
 .lv2-payment-error{margin:0 0 9px!important;padding:9px 11px;border:1px solid #f1c5c5;border-radius:9px;background:#fff3f3;color:#b42318;font-size:10px;font-weight:800;line-height:1.45}
 .lv2-payment-submit{margin:3px 0 0!important;padding:0!important;background:transparent!important;border:0!important;box-shadow:none!important;position:static!important}
-.lv2-payment-submit .lv2-more{width:100%;height:48px;border:0;border-radius:11px;background:linear-gradient(135deg,#ff5b22,#ff4c13);color:#fff;font-size:13px;font-weight:900;cursor:pointer;box-shadow:0 9px 20px rgba(255,83,28,.2)}
+.lv2-payment-submit .lv2-more{width:100%;height:40px;border:0;border-radius:9px;background:linear-gradient(135deg,#ff5b22,#ff4c13);color:#fff;font-size:11px;font-weight:900;cursor:pointer;box-shadow:0 7px 16px rgba(255,83,28,.18)}
 .lv2-payment-submit .lv2-more:disabled{opacity:.65;cursor:not-allowed}
 .lv2-payment-submit>small{display:block;text-align:center;margin-top:8px;color:#71859f;font-size:9px}
 .lv2-payment-success{width:min(420px,100%);text-align:center;padding:34px 30px 30px}
