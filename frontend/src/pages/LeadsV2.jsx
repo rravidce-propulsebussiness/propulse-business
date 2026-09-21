@@ -324,7 +324,7 @@ export default function LeadsV2() {
           {!isPro && <div className="lv2-pro-hint"><strong>Pro members save more</strong><span>Pro pricing is available with a Pro membership.</span><button onClick={() => { setBuyModal(null); setUpgrade(true) }}>View Pro →</button></div>}
           {buyModalClaimed && <div className="lv2-modal-owned">This lead is already purchased and available in your account.</div>}
         </section>
-        <aside className="lv2-purchase-summary">
+        <aside className={`lv2-purchase-summary${payment && paymentLead && paymentLead.id === buyModal.id ? " payment-ready" : ""}`}>
           {(() => {
             const selectedRow = (buyModal.pricing?.shares || []).find(p => Number(p.shares) === Number(selectedSharePack))
             const selectedPrice = Number(selectedRow?.[isPro ? 'pro' : 'normal'] || 0)
@@ -357,20 +357,12 @@ export default function LeadsV2() {
         const finalAmount = Number(paymentRow.amount ?? payment.coupon?.finalAmount ?? Math.max(0, subtotal - discount))
         const walletPaid = Number(payment.walletAmount ?? paymentRow.wallet_amount ?? 0)
         const directAmount = Number(payment.externalAmount ?? paymentRow.external_amount ?? Math.max(0, finalAmount - walletPaid))
-        const appliedCoupon = String(paymentRow.coupon_code || payment.coupon?.code || '').trim()
         const bankAccounts = paymentReceiving.filter(item => ['bank', 'both'].includes(String(item.method_type || '').toLowerCase()))
         const receiving = bankAccounts[0] || paymentReceiving[0] || null
         const copyValue = async value => { if (!value) return; try { await navigator.clipboard.writeText(String(value)) } catch {} }
         return <section className="lv2-buy-payment-section">
-          <div className="lv2-buy-payment-head"><div><span>PAYMENT</span><h3>Complete your payment</h3><p>Transfer the amount below, then submit your UTR and payment proof.</p></div><strong>{money(directAmount)}</strong></div>
-          <div className="lv2-buy-payment-breakdown">
-            <div><span>Original</span><b>{money(subtotal)}</b></div>
-            {discount > 0 && <div><span>{appliedCoupon ? 'Coupon' : 'Discount'}</span><b className="positive">− {money(discount)}</b></div>}
-            <div><span>Wallet</span><b>− {money(walletPaid)}</b></div>
-            <div className="highlight"><span>Pay Now</span><b>{money(directAmount)}</b></div>
-          </div>
           {directAmount > 0 && <section className="lv2-buy-bank-card">
-            <div className="lv2-buy-payment-section-title"><span>🏦</span><div><strong>Bank Account Details</strong><small>Pay exactly {money(directAmount)} to the configured account.</small></div></div>
+            <div className="lv2-buy-payment-section-title"><span>🏦</span><div><strong>Bank Account Details</strong><small>Transfer exactly {money(directAmount)} to the account below.</small></div></div>
             {receiving ? <div className="lv2-buy-bank-grid">
               {receiving.bank_name && <div><span>Bank Name</span><b>{receiving.bank_name}</b><button type="button" onClick={() => copyValue(receiving.bank_name)}>Copy</button></div>}
               {receiving.account_name && <div><span>Account Name</span><b>{receiving.account_name}</b><button type="button" onClick={() => copyValue(receiving.account_name)}>Copy</button></div>}
@@ -383,14 +375,15 @@ export default function LeadsV2() {
           </section>}
           {directAmount > 0 && <>
             <div className="lv2-buy-payment-fields">
-              <label><span>Payment reference / UTR</span><input id="lead-payment-utr" placeholder="Enter UTR or transaction ID" autoComplete="off" /></label>
-              <label><span>Payment proof</span><div className="lv2-buy-proof"><span>⌁</span><div><b>Upload payment screenshot</b><small>JPG, PNG or PDF · Max 5 MB</small></div><input id="lead-payment-proof" type="file" accept="image/*,.pdf" /></div></label>
+              <label><span>Payment reference / UTR</span><input id="lead-payment-utr" placeholder="Enter transaction ID / UTR" autoComplete="off" /></label>
+              <label><span>Payment proof</span><div className="lv2-buy-proof"><span>⌁</span><div><b>Upload payment proof</b><small>JPG, PNG or PDF · Max 5 MB</small></div><input id="lead-payment-proof" type="file" accept="image/*,.pdf" /></div></label>
             </div>
             {paymentError && <div className="lv2-payment-error" role="alert">{paymentError}</div>}
-            <button type="button" className="lv2-buy-submit-payment" onClick={submitDirect} disabled={directSubmitting}>{directSubmitting ? 'Submitting…' : 'Submit ' + money(directAmount) + ' payment →'}</button>
+            <button type="button" className="lv2-buy-submit-payment" onClick={submitDirect} disabled={directSubmitting}>{directSubmitting ? 'Submitting…' : 'Submit Purchase'}</button>
+            <div className="lv2-summary-secure"><strong>🔒 Secure & Safe Transaction</strong><small>Your payment information is always protected.</small></div>
           </>}
         </section>
-      })()}
+      })()}}
     </div></div>}
     {payment && paymentLead && !buyModal && (() => {
       const paymentRow = payment.payment || {}
