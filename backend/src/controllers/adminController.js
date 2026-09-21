@@ -14,7 +14,7 @@ async function createAdmin(req, res) {
     return res.status(500).json({ error: 'Failed to create admin' });
   }
 }
-async function setUserStatus(req, res) { try { const user = await adminService.setUserStatus(req.params.id, Boolean(req.body?.isActive)); if (!user) return res.status(404).json({ error: 'User not found' }); return res.json(user); } catch (error) { console.error('Set user status failed:', error.message); return res.status(500).json({ error: 'Failed to update user status' }); } }
+async function setUserStatus(req, res) { try { const user = await adminService.setUserStatus(req.params.id, Boolean(req.body?.isActive)); if (!user) return res.status(404).json({ error: 'User not found' }); return res.json(user); } catch (error) { if (error.code === 'LAST_ADMIN') return res.status(409).json({ error: error.message, code: error.code }); console.error('Set user status failed:', error.message); return res.status(500).json({ error: 'Failed to update user status' }); } }
 async function setUserRole(req, res) {
   try { return res.json(await adminService.setUserRole({ userId: req.params.id, role: req.body?.role, actingAdminId: req.user.id })); }
   catch (error) {
