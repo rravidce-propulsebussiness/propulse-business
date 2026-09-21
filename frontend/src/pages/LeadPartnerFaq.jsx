@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import LeadPartnerSidebar from '../components/LeadPartnerSidebar';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { authRequest, clearSession, getUser } from '../utils/auth';
 import './LeadPartnerFaq.css';
 
@@ -12,7 +12,6 @@ export default function LeadPartnerFaq(){
   const navigate=useNavigate(),user=getUser();
   const [faqs,setFaqs]=useState([]),[loading,setLoading]=useState(true),[error,setError]=useState('');
   const [category,setCategory]=useState('all'),[search,setSearch]=useState(''),[open,setOpen]=useState(null);
-  const initials=useMemo(()=>(user?.name||'Lead Partner').split(' ').filter(Boolean).slice(0,2).map(x=>x[0]).join('').toUpperCase()||'LP',[user?.name]);
   const load=async()=>{try{setLoading(true);setError('');setFaqs(await authRequest('/lead-partner/faqs'))}catch(e){setError(e.message||'Unable to load FAQs')}finally{setLoading(false)}};
   useEffect(()=>{load()},[]);
   const visible=useMemo(()=>faqs.filter(f=>{
