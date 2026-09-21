@@ -13,7 +13,8 @@
     "test": "node scripts/check-syntax.js && node scripts/check-migration-runner.js && node scripts/check-company-proof-security.js",
     "test:ledger": "node scripts/check-lead-partner-ledger.js",
     "test:payout": "node scripts/check-lead-partner-payout-lifecycle.js",
-    "test:investor-payout": "node scripts/check-investor-payout-integrity.js"
+    "test:investor-payout": "node scripts/check-investor-payout-integrity.js",
+    "test:last-admin": "node scripts/check-last-admin-protection.js"
   },
   "keywords": [],
   "author": "",
