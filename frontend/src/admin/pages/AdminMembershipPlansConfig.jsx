@@ -232,7 +232,7 @@ export default function AdminMembershipPlansConfig() {
     {error && <div className="error">{error}</div>}
     <nav className="tabs"><button className={tab === 'grow' ? 'selected' : ''} onClick={() => switchPlanTab('grow')}>GROW</button><button className={tab === 'scale' ? 'selected' : ''} onClick={() => switchPlanTab('scale')}>SCALE</button><button className={tab === 'investor' ? 'selected' : ''} onClick={() => { setTab('investor'); setEditing(null); setError(''); }}>Investor</button></nav>
 
-    {(tab === 'grow' || tab === 'scale' || tab === 'booster') && <>
+    {(tab === 'grow' || tab === 'scale') && <>
       <section className="create-card hero-card">
         <div className="card-heading"><h2>{editing ? `Edit ${form.name}` : `Configure ${form.name}`}</h2><span className="status on">Active</span></div>
         <form onSubmit={editing ? saveEdit : create}>
