@@ -182,14 +182,6 @@ function Signup() {
       return
     }
 
-    try {
-      const partner = await authRequest('/lead-partner/me')
-      if (partner?.status === 'active') {
-        navigate('/lead-partner', { replace: true })
-        return
-      }
-    } catch {}
-
     navigate('/leads', { replace: true })
   }, [navigate])
 
