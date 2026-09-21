@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import LeadPartnerSidebar from '../components/LeadPartnerSidebar';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { authRequest, clearSession, getUser } from '../utils/auth';
 import './LeadPartnerHome.css';
 import './LeadPartnerPricing.css';
@@ -27,13 +27,10 @@ function normalizePartnerTiers(value) {
 
 export default function LeadPartnerPricing() {
   const navigate = useNavigate();
-  const location = useLocation();
   const user = getUser();
   const [data, setData] = useState({ settings: { commissionPercent: 5, normalPriceUplift: 100 }, leads: [], rules: [] });
   const [industries, setIndustries] = useState([]);
   const [cities, setCities] = useState([]);
-  const [search, setSearch] = useState('');
-  const [status, setStatus] = useState('all');
   const [loading, setLoading] = useState(true);
   const [savingId, setSavingId] = useState(null);
   const [savingRule, setSavingRule] = useState(false);
@@ -89,28 +86,7 @@ export default function LeadPartnerPricing() {
   }
 
   function resetRule() { setRuleForm({ id: null, industryId: '', cityId: '', leadType: 'basic', pricing: defaultTiers(), isActive: true }); }
-  function editRule(rule) { setRuleForm({ id: rule.id, industryId: rule.industryId ?? '', cityId: rule.cityId ?? '', leadType: rule.leadType || 'basic', pricing: { shares: normalizePartnerTiers(rule.pricing) }, isActive: rule.isActive !== false }); window.scrollTo({ top: 0, behavior: 'smooth' }); }
-  function setRulePro(index, value) { if (index !== 0) return; setRuleForm(form => ({ ...form, pricing: { shares: buildFixedPartnerTiers(value) } })); }
 
-  async function saveRule() {
-    try {
-      setSavingRule(true); setError(''); setSuccess('');
-      const tiers = normalizePartnerTiers(ruleForm.pricing);
-      const body = { industryId: ruleForm.industryId, cityId: ruleForm.cityId, leadType: ruleForm.leadType, pricing: { shares: tiers.map(t => ({ shares: t.shares, pro: Number(t.pro) })) }, isActive: ruleForm.isActive };
-      if (ruleForm.id) await authRequest(`/lead-partner/pricing/config/${ruleForm.id}`, { method: 'PUT', body: JSON.stringify(body) });
-      else await authRequest('/lead-partner/pricing/config', { method: 'POST', body: JSON.stringify(body) });
-      resetRule();
-      setSuccess(ruleForm.id ? 'Pricing configuration updated.' : 'Pricing configuration created.');
-      await load();
-    } catch (e) { setError(e.message); }
-    finally { setSavingRule(false); }
-  }
-
-  async function deleteRule(id) {
-    if (!window.confirm('Delete this pricing configuration? Existing custom lead prices will not be changed.')) return;
-    try { setError(''); setSuccess(''); await authRequest(`/lead-partner/pricing/config/${id}`, { method: 'DELETE' }); setSuccess('Pricing configuration deleted.'); await load(); }
-    catch (e) { setError(e.message); }
-  }
 
   function signOut() { clearSession(); localStorage.removeItem('propulse_session_mode'); navigate('/login', { replace: true }); }
 
