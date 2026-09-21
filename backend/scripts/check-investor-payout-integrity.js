@@ -3,16 +3,17 @@ const assert=require('assert');
 function loadService({summary,investments,revenueByInvestment}) {
   const dbPath=require.resolve('../src/config/database');
   const ledgerPath=require.resolve('../src/services/investorFinancialLedgerService');
+  const payoutAccountsPath=require.resolve('../src/services/investorPayoutAccountService');
   const calls=[];
   const updates=[];
   const client={
     release() {},
-    async query(sql,params=[]){
+    async query(sql,params=[]) {
       calls.push(sql.trim());
       if(sql.trim()==='BEGIN' || sql.trim()==='COMMIT' || sql.trim()==='ROLLBACK') return {rows:[],rowCount:0};
       if(sql.includes('investor-payout-reference:')) return {rows:[],rowCount:0};
       if(sql.includes('pg_advisory_xact_lock')) return {rows:[],rowCount:0};
-      if(sql.includes('SELECT id FROM investor_payout_requests')) return {rows:[],rowCount:0};
+      if(sql.includes('FROM investor_payout_requests') && sql.includes('FROM investments') && sql.includes('payout_transfer_reference')) return {rows:[],rowCount:0};
       if(sql.includes('SELECT i.id') && sql.includes('FROM investments i')) return {rows:investments.map(id=>({id})),rowCount:investments.length};
       if(sql.includes('SELECT COALESCE(SUM(allocated_amount)')) {
         const id=Number(params[0]);
@@ -30,39 +31,27 @@ function loadService({summary,investments,revenueByInvestment}) {
     lockInvestorFinancials:async()=>calls.push('LOCK_INVESTOR_FINANCIALS'),
     getInvestorFinancialSummary:async()=>summary,
   };
+  const payoutAccounts={getInternal:async()=>({method:'upi',upi_id:'test@upi'})};
   require.cache[dbPath]={id:dbPath,filename:dbPath,loaded:true,exports:pool};
   require.cache[ledgerPath]={id:ledgerPath,filename:ledgerPath,loaded:true,exports:ledger};
-  delete require.cache[require.resolve('../src/services/investorAdminTransferService')];
-  return {service:require('../src/services/investorAdminTransferService'),calls,updates};
+  require.cache[payoutAccountsPath]={id:payoutAccountsPath,filename:payoutAccountsPath,loaded:true,exports:payoutAccounts};
+  delete require.cache[require.resolve('../src/services/adminInvestorTransferService')];
+  return {service:require('../src/services/adminInvestorTransferService'),calls,updates};
 }
 
 async function main(){
   {
-    const {service,calls,updates}=loadService({
-      summary:{non_auto_earnings_withdrawable:6000},
-      investments:[101],
-      revenueByInvestment:{101:10000},
-    });
-    await assert.rejects(
-      service.transferInvestorEarnings({userId:7,adminId:1,transferReference:'UTR-1',proofUrl:'proof'}),
-      error=>error && error.code==='NO_REALIZED_AMOUNT'
-    );
+    const {service,calls,updates}=loadService({summary:{non_auto_earnings_withdrawable:6000},investments:[101],revenueByInvestment:{101:10000}});
+    await assert.rejects(service.transferInvestorEarnings({userId:7,adminId:1,transferReference:'UTR-1',proofUrl:'proof'}),error=>error && error.code==='NO_REALIZED_AMOUNT');
     assert.strictEqual(updates.length,0,'A partially available investment must not be marked paid');
     assert(calls.indexOf('LOCK_INVESTOR_FINANCIALS')>=0,'Transfer-all must acquire the investor financial lock');
   }
-
   {
-    const {service,updates}=loadService({
-      summary:{non_auto_earnings_withdrawable:6000},
-      investments:[101,102],
-      revenueByInvestment:{101:4000,102:7000},
-    });
+    const {service,updates}=loadService({summary:{non_auto_earnings_withdrawable:6000},investments:[101,102],revenueByInvestment:{101:4000,102:7000}});
     const result=await service.transferInvestorEarnings({userId:7,adminId:1,transferReference:'UTR-2',proofUrl:'proof'});
     assert.strictEqual(result.transferred_amount,4000,'Transfer-all must not exceed the remaining withdrawable earnings');
     assert.deepStrictEqual(updates,[{id:101,amount:4000}]);
   }
-
   console.log('Investor payout double-payment regression test passed.');
 }
-
 main().catch(error=>{console.error(error.stack||error.message);process.exit(1)});
