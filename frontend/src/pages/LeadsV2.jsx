@@ -129,7 +129,7 @@ export default function LeadsV2() {
 
   const isPro = Boolean(user?.is_pro_member || user?.membership_type === 'pro')
   const membershipLabel = norm(user?.membership_type || user?.membership?.type || user?.membership?.name || user?.plan || user?.plan_name || user?.subscription_plan || '')
-  const isGrowthScaleMember = ['growth', 'scale'].some(name => membershipLabel === name || membershipLabel.includes(name))
+  const isGrowthScaleMember = isPro || ['growth', 'scale'].some(name => membershipLabel === name || membershipLabel.includes(name))
   const buyModalClaimed = Boolean(buyModal?.access?.claimed || buyModal?.access?.purchased)
   const title = category ? `${category.replaceAll('-', ' ')} leads` : 'Available Leads'
   const topIndustry = useMemo(() => leads.find(l => hasValue(l.industry_name))?.industry_name || '', [leads])
