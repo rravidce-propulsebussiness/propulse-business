@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { authRequest, getUser } from '../../utils/auth';
 import './AdminUsers.css';
 
@@ -17,10 +17,10 @@ export default function AdminUsers() {
   const [editForm, setEditForm] = useState(null);
   const currentUser = getUser();
 
-  async function loadUsers() {
+  const loadUsers = useCallback(async () => {
     try { setLoading(true); setError(''); const p = new URLSearchParams({ search: query, role, status, page: String(userPage), pageSize: '100' }); const response = await authRequest(`/admin/users?${p}`); setUsers(listData(response)); setUserPagination(response?.pagination || null); }
     catch (e) { setError(e.message); } finally { setLoading(false); }
-  }
+  }, [query, role, status, userPage]);
   async function loadCatalogs() {
     if (catalogs) return catalogs;
     const [industries, services, subservices, states, cities, subcities] = await Promise.all([
@@ -31,7 +31,7 @@ export default function AdminUsers() {
     return value;
   }
   useEffect(() => { setUserPage(1); }, [query, role, status]);
-  useEffect(() => { loadUsers(); }, [query, role, status, userPage]);
+  useEffect(() => { loadUsers(); }, [loadUsers]);
 
   const active = users.filter(u => u.is_active).length, businesses = users.filter(u => u.role === 'business').length, admins = users.filter(u => u.role === 'admin').length;
   const leadPartners = users.filter(u => u.role === 'lead_partner').length;
