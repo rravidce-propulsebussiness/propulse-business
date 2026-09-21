@@ -98,6 +98,16 @@ export default function LeadsV2() {
   const [couponError, setCouponError] = useState('')
   const [couponDiscount, setCouponDiscount] = useState(0)
   const [couponFinalAmount, setCouponFinalAmount] = useState(null)
+  const [currentMembership, setCurrentMembership] = useState(null)
+
+  useEffect(() => {
+    let live = true
+    if (!token) { setCurrentMembership(null); return undefined }
+    authRequest('/payments/membership/current')
+      .then(data => { if (live) setCurrentMembership(data || null) })
+      .catch(() => { if (live) setCurrentMembership(null) })
+    return () => { live = false }
+  }, [token])
 
   useEffect(() => {
     let live = true
@@ -127,9 +137,11 @@ export default function LeadsV2() {
     return () => { live = false; clearTimeout(timer) }
   }, [token, page, search, tier, category])
 
-  const isPro = Boolean(user?.is_pro_member || user?.membership_type === 'pro')
-  const membershipLabel = norm(user?.membership_type || user?.membership?.type || user?.membership?.name || user?.plan || user?.plan_name || user?.subscription_plan || '')
-  const isGrowthScaleMember = isPro || ['growth', 'scale'].some(name => membershipLabel === name || membershipLabel.includes(name))
+  const membershipLabel = norm(currentMembership?.plan_group || currentMembership?.plan?.plan_group || currentMembership?.plan_type || currentMembership?.plan?.plan_type || user?.membership_type || user?.membership?.type || user?.membership?.name || user?.plan || user?.plan_name || user?.subscription_plan || '')
+  const activeMembershipGroup = ['growth', 'scale'].find(name => membershipLabel === name || membershipLabel.includes(name)) || ''
+  const isGrowthScaleMember = Boolean(activeMembershipGroup)
+  const isPro = Boolean(user?.is_pro_member || user?.membership_type === 'pro' || currentMembership?.isPro || currentMembership?.plan_type === 'pro')
+  const memberSavingsLabel = activeMembershipGroup === 'scale' ? 'Scale' : activeMembershipGroup === 'growth' ? 'Growth' : 'Growth / Scale'
   const buyModalClaimed = Boolean(buyModal?.access?.claimed || buyModal?.access?.purchased)
   const title = category ? `${category.replaceAll('-', ' ')} leads` : 'Available Leads'
   const topIndustry = useMemo(() => leads.find(l => hasValue(l.industry_name))?.industry_name || '', [leads])
@@ -389,10 +401,10 @@ export default function LeadsV2() {
               <span>Price per share: <b>{selectedSharePack ? money((buyModal.pricing?.shares || []).find(p => Number(p.shares) === Number(selectedSharePack))?.[isPro ? 'pro' : 'normal']) : '—'}</b></span>
             </div>
             <div className="lv2-pack-grid">
-              {(buyModal.pricing?.shares || []).map(p => { const n = Number(p.shares); const normal = Number(p.normal); const pro = Number(p.pro); const price = isPro ? pro : normal; const saving = Number.isFinite(normal) && Number.isFinite(pro) && normal > pro ? normal - pro : 0; const selected = Number(selectedSharePack) === n; const key = buyModal.id + '-' + n + '-' + (isPro ? 'pro' : 'normal') + '-' + (useWallet ? 'wallet' : 'direct'); const growthSavings = saving; const savingText = growthSavings > 0 ? (isGrowthScaleMember ? `Saved ${money(growthSavings)}` : `Save with Growth ${money(growthSavings)}`) : ''; return <button key={key} type="button" className={"lv2-pack-card" + (selected ? ' selected' : '')} onClick={() => { setSelectedSharePack(n); if (couponCode.trim()) validateCouponForSelection(couponCode, n) }} disabled={buyModalClaimed || Boolean(buying)}><span className="lv2-pack-check">{selected ? '✓' : ''}</span><strong>{n}</strong><small>{n === 1 ? 'Share' : 'Shares'}</small><b>{money(price)}</b>{savingText && <em className={isGrowthScaleMember ? 'lv2-pack-saving-member' : 'lv2-pack-saving-growth'}>{savingText}</em>}{buying === key && <i>Processing…</i>}</button> })}
+              {(buyModal.pricing?.shares || []).map(p => { const n = Number(p.shares); const normal = Number(p.normal); const pro = Number(p.pro); const price = isPro ? pro : normal; const saving = Number.isFinite(normal) && Number.isFinite(pro) && normal > pro ? normal - pro : 0; const selected = Number(selectedSharePack) === n; const key = buyModal.id + '-' + n + '-' + (isPro ? 'pro' : 'normal') + '-' + (useWallet ? 'wallet' : 'direct'); const growthSavings = saving; const savingText = growthSavings > 0 ? (isGrowthScaleMember ? `Saved ${money(growthSavings)} with ${memberSavingsLabel}` : `Save with Growth ${money(growthSavings)}`) : ''; return <button key={key} type="button" className={"lv2-pack-card" + (selected ? ' selected' : '')} onClick={() => { setSelectedSharePack(n); if (couponCode.trim()) validateCouponForSelection(couponCode, n) }} disabled={buyModalClaimed || Boolean(buying)}><span className="lv2-pack-check">{selected ? '✓' : ''}</span><strong>{n}</strong><small>{n === 1 ? 'Share' : 'Shares'}</small><b>{money(price)}</b>{savingText && <em className={isGrowthScaleMember ? 'lv2-pack-saving-member' : 'lv2-pack-saving-growth'}>{savingText}</em>}{buying === key && <i>Processing…</i>}</button> })}
             </div>
           </div>
-          {!isPro && <div className="lv2-pro-hint"><strong>Pro members save more</strong><span>Pro pricing is available with a Pro membership.</span><button onClick={() => { setBuyModal(null); setUpgrade(true) }}>View Pro →</button></div>}
+          {!isGrowthScaleMember && <div className="lv2-pro-hint"><strong>Growth / Scale members save more</strong><span>Growth and Scale members get the configured member lead pricing.</span><button onClick={() => { setBuyModal(null); setUpgrade(true) }}>View Plans →</button></div>}
           {buyModalClaimed && <div className="lv2-modal-owned">This lead is already purchased and available in your account.</div>}
         </section>
         <aside className={`lv2-purchase-summary${payment && paymentLead && paymentLead.id === buyModal.id ? " payment-ready" : ""}`}>
