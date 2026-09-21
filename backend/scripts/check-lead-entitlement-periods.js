@@ -70,7 +70,7 @@ async function runDayBoundaryTest() {
     assert(claimQuery, 'The entitlement usage query must be executed for the boundary test');
     const periodStart = new Date(claimQuery.params[3]);
     assert.strictEqual(periodStart.getUTCFullYear(), start.getUTCFullYear(), 'A month must not elapse before the anniversary day');
-    assert.strictEqual(periodStart.getUTCMonth(), start.getUTCMonth(), 'A month must not elapse before the anniversary day');
+    assert.strictEqual(periodStart.getUTCMonth(), start.getUTCMonth(), 'Billing period must stay in the membership anniversary month');
     assert.strictEqual(periodStart.getUTCDate(), 30, 'Membership anniversary must preserve the start day');
   } finally {
     require.cache[poolPath] = { id: poolPath, filename: poolPath, loaded: true, exports: originalPool };
