@@ -383,7 +383,7 @@ export default function LeadsV2() {
             <div className="lv2-summary-secure"><strong>🔒 Secure & Safe Transaction</strong><small>Your payment information is always protected.</small></div>
           </>}
         </section>
-      })()}}
+      })()}
     </div></div>}
     {payment && paymentLead && !buyModal && (() => {
       const paymentRow = payment.payment || {}
