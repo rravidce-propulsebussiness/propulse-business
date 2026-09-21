@@ -1,20 +1,18 @@
 import { useEffect, useMemo, useState } from 'react';
 import LeadPartnerSidebar from '../components/LeadPartnerSidebar';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { authRequest, clearSession, getUser } from '../utils/auth';
 import './LeadPartnerReports.css';
 
 const REASONS={fake:'Fake / invalid lead',wrong_number:'Wrong number',not_interested:'Customer not interested',duplicate:'Duplicate lead',other:'Other'};
 const STATUS={pending:'Pending review',verified_fake:'Verified fake',verified_genuine:'Verified genuine',rejected:'Rejected'};
-const money=v=>`₹${Number(v||0).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2})}`;
 const formatDate=v=>v?new Date(v).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}):'—';
 const formatDateTime=v=>v?new Date(v).toLocaleString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}):'—';
 
 export default function LeadPartnerReports(){
-  const navigate=useNavigate(); const location=useLocation(); const user=getUser();
-  const [reports,setReports]=useState([]); const [reportSummary,setReportSummary]=useState({total_reports:0,reported_leads:0,pending:0,verified_fake:0,verified_genuine:0,rejected:0}); const [loading,setLoading]=useState(true); const [error,setError]=useState('');
+  const navigate=useNavigate(); const user=getUser();
+  const [reports,setReports]=useState([]); const [_reportSummary,setReportSummary]=useState({total_reports:0,reported_leads:0,pending:0,verified_fake:0,verified_genuine:0,rejected:0}); const [loading,setLoading]=useState(true); const [error,setError]=useState('');
   const [filter,setFilter]=useState('all'); const [search,setSearch]=useState(''); const [selected,setSelected]=useState(null); const [refreshing,setRefreshing]=useState(false);
-  const initials=useMemo(()=>(user?.name||'Lead Partner').split(' ').filter(Boolean).slice(0,2).map(x=>x[0]).join('').toUpperCase()||'LP',[user?.name]);
 
   async function load(){try{setLoading(true);setError('');const data=await authRequest('/lead-partner/reports');setReports(Array.isArray(data?.data)?data.data:[]);setReportSummary(data?.summary||{total_reports:0,reported_leads:0,pending:0,verified_fake:0,verified_genuine:0,rejected:0})}catch(e){setError(e.message||'Unable to load reported leads')}finally{setLoading(false)}}
   useEffect(()=>{load()},[]);
