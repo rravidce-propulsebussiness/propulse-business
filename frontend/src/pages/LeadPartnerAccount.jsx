@@ -15,7 +15,6 @@ function maskAccount(value){
 
 export default function LeadPartnerAccount(){
   const navigate = useNavigate();
-  const location = useLocation();
   const user = getUser();
   const [account,setAccount] = useState(null);
   const [method,setMethod] = useState('bank');
@@ -32,11 +31,6 @@ export default function LeadPartnerAccount(){
   const [me,setMe] = useState(null);
   const [settingsLoading,setSettingsLoading] = useState(false);
   const [settingsError,setSettingsError] = useState('');
-
-  const initials = useMemo(
-    () => (user?.name || 'Lead Partner').split(' ').filter(Boolean).slice(0,2).map(x=>x[0]).join('').toUpperCase() || 'LP',
-    [user?.name]
-  );
 
   const loadAccount = useCallback(async()=>{
     try{
