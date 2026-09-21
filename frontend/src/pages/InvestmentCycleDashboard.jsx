@@ -60,12 +60,15 @@ export default function InvestmentCycleDashboard() {
 
   const active = Boolean(cycle), auto = active ? Boolean(cycle.auto_invest) : Boolean(autoInvestChoice)
   const actual = active ? rows.filter(r => r?.parent_investment_id == null).reduce((s, r) => s + Number(r?.amount || 0), 0) : 0
-  const reinvest = active ? rows.filter(r => r?.parent_investment_id != null).reduce((s, r) => s + Number(r?.amount || 0), 0) : 0
-  const total = active ? (actual + reinvest || Number(cycle.total_invested ?? cycle.principal ?? 0)) : 0
-  const earnings = active ? Number(cycle.investor_earnings ?? cycle.generated ?? 0) : 0
+  const earnings = active ? Number(cycle.investor_earnings ?? cycle.generated ?? ((Number(funds?.auto_invest_earnings || 0) + Number(funds?.non_auto_earnings || 0)))) : 0
   const transferable = active ? Number(cycle.transferable ?? cycle.withdrawable_earnings ?? funds?.transferable ?? funds?.withdrawable_earnings ?? 0) : 0
   const spent = active ? Number(cycle.ad_spent ?? funds?.ad_spent ?? 0) : 0
-  const reinvestedEarnings = active ? Math.max(0, spent - total) : 0
+  // Advertising spend is funded by the original capital first. Any spend above
+  // that capital is earnings that have been reinvested into advertising.
+  const autoInvestEarnings = active ? Number(funds?.auto_invest_earnings ?? 0) : 0
+  const reinvestedEarnings = active ? Math.min(autoInvestEarnings, Math.max(0, spent - actual)) : 0
+  const reinvest = active ? reinvestedEarnings : 0
+  const total = active ? actual + reinvest : 0
   const unmatured = active ? Math.max(0, earnings - reinvestedEarnings) : 0
   const linked = active ? Number(cycle.total_leads ?? 0) : 0, sold = active ? Number(cycle.sold_leads ?? 0) : 0, final = active ? Number(cycle.final_leads ?? 0) : 0, pending = active ? Number(cycle.pending_leads ?? 0) : 0
   const paid = active ? Number(cycle.payout_transferred ?? 0) : 0, reserved = active ? Number(cycle.payout_reserved ?? 0) : 0
