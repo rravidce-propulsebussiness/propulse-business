@@ -9,6 +9,9 @@ async function transferInvestorEarnings({ userId, adminId, transferReference, pr
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
+    await client.query('SELECT pg_advisory_xact_lock(hashtext($1))', [`investor-payout-reference:${reference.toLowerCase()}`]);
+    const duplicate = (await client.query(`SELECT id FROM investor_payout_requests WHERE LOWER(BTRIM(transfer_reference))=LOWER(BTRIM($1)) UNION ALL SELECT id FROM investments WHERE LOWER(BTRIM(payout_transfer_reference))=LOWER(BTRIM($1)) LIMIT 1`, [reference])).rows[0];
+    if (duplicate) throw Object.assign(new Error('This transfer reference has already been used'), { code: 'DUPLICATE_REFERENCE' });
 
     const investments = (await client.query(`
       SELECT i.id
