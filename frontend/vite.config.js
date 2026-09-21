@@ -6,6 +6,9 @@ const apiTarget = process.env.VITE_DEV_API_TARGET || 'http://localhost:5000'
 export default defineConfig({
   plugins: [react()],
   server: {
+    headers: {
+      'Referrer-Policy': 'no-referrer-when-downgrade',
+    },
     proxy: {
       '/api': {
         target: apiTarget,
