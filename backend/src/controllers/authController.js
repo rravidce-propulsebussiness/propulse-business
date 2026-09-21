@@ -1,3 +1,5 @@
+const fs = require('fs');
+const path = require('path');
 const authService = require('../services/authService');
 const { sendPasswordResetEmail } = require('../services/emailService');
 
@@ -60,6 +62,31 @@ async function uploadCompanyProofs(req, res) {
   } catch (error) {
     console.error('Company proof upload failed:', error.message);
     return res.status(400).json({ error: error.message || 'Failed to upload company proof documents' });
+  }
+}
+
+async function downloadCompanyProof(req, res) {
+  try {
+    const document = await authService.getCompanyProofDocument({
+      documentId: req.params.documentId,
+      userId: req.user.id,
+      isAdmin: req.user.role === 'admin',
+    });
+    if (!document) return res.status(404).json({ error: 'Company proof document not found' });
+
+    const uploadDir = path.resolve(__dirname, '../../uploads/company-proofs');
+    const filePath = path.resolve(uploadDir, path.basename(document.stored_name));
+    if (!filePath.startsWith(path.resolve(uploadDir) + path.sep) || !fs.existsSync(filePath)) {
+      return res.status(404).json({ error: 'Company proof document not found' });
+    }
+
+    res.setHeader('Content-Type', document.mime_type);
+    const safeName = String(document.original_name || 'company-proof').replace(/["\\\r\n]/g, '_');
+    res.setHeader('Content-Disposition', 'inline; filename="' + safeName + '"');
+    return res.sendFile(filePath);
+  } catch (error) {
+    console.error('Company proof download failed:', error.message);
+    return res.status(500).json({ error: 'Failed to load company proof document' });
   }
 }
 
@@ -133,4 +160,4 @@ async function me(req, res) {
   }
 }
 
-module.exports = { signup, uploadCompanyProofs, login, googleLogin, forgotPassword, resetPassword, me };
+module.exports = { signup, uploadCompanyProofs, downloadCompanyProof, login, googleLogin, forgotPassword, resetPassword, me };
