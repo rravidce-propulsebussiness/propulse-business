@@ -512,3 +512,248 @@
     grid-template-columns:1fr!important;
   }
 }
+
+
+/* Integrated lead payment — same single-page checkout */
+.lv2-buy-payment-section{
+  margin-top:14px;
+  padding-top:14px;
+  border-top:1px solid #e3ebf4;
+}
+.lv2-buy-payment-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+  margin-bottom:9px;
+  padding:12px 14px;
+  border:1px solid #dce7f3;
+  border-radius:13px;
+  background:linear-gradient(135deg,#f6faff,#eef5ff);
+}
+.lv2-buy-payment-head span{
+  display:block;
+  margin-bottom:3px;
+  color:#f15a24;
+  font-size:8px;
+  font-weight:950;
+  letter-spacing:.14em;
+}
+.lv2-buy-payment-head h3{
+  margin:0;
+  color:#123a78;
+  font-size:17px;
+}
+.lv2-buy-payment-head p{
+  margin:3px 0 0;
+  color:#7186a0;
+  font-size:9px;
+}
+.lv2-buy-payment-head>strong{
+  flex:0 0 auto;
+  color:#f0441d;
+  font-size:24px;
+}
+.lv2-buy-payment-breakdown{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  margin-bottom:9px;
+  border:1px solid #dce6f2;
+  border-radius:10px;
+  overflow:hidden;
+  background:#f8fbfe;
+}
+.lv2-buy-payment-breakdown>div{
+  padding:8px 9px;
+  border-right:1px solid #dce6f2;
+}
+.lv2-buy-payment-breakdown>div:last-child{border-right:0}
+.lv2-buy-payment-breakdown span{
+  display:block;
+  color:#70839d;
+  font-size:8px;
+  font-weight:800;
+}
+.lv2-buy-payment-breakdown b{
+  display:block;
+  margin-top:3px;
+  color:#173b70;
+  font-size:12px;
+}
+.lv2-buy-payment-breakdown .positive{color:#16865b}
+.lv2-buy-payment-breakdown .highlight{background:#fff1eb}
+.lv2-buy-payment-breakdown .highlight span{color:#f15a24}
+.lv2-buy-payment-breakdown .highlight b{color:#f0441d;font-size:15px}
+.lv2-buy-bank-card{
+  padding:10px;
+  margin-bottom:9px;
+  border:1px solid #dbe6f3;
+  border-radius:12px;
+  background:#f7faff;
+}
+.lv2-buy-payment-section-title{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin-bottom:6px;
+}
+.lv2-buy-payment-section-title>span{
+  width:28px;height:28px;
+  display:grid;place-items:center;
+  border-radius:8px;
+  background:#e6f0ff;
+  font-size:15px;
+}
+.lv2-buy-payment-section-title strong{
+  display:block;
+  color:#123a78;
+  font-size:12px;
+}
+.lv2-buy-payment-section-title small{
+  display:block;
+  margin-top:2px;
+  color:#71859f;
+  font-size:8px;
+}
+.lv2-buy-bank-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:5px 6px;
+  padding:4px;
+  border:1px solid #e2eaf3;
+  border-radius:8px;
+  background:#fff;
+}
+.lv2-buy-bank-grid>div{
+  display:grid;
+  grid-template-columns:76px minmax(0,1fr) auto;
+  align-items:center;
+  gap:5px;
+  min-width:0;
+  padding:6px;
+  border:1px solid #edf1f6;
+  border-radius:7px;
+}
+.lv2-buy-bank-grid span{
+  color:#71849e;
+  font-size:8px;
+  font-weight:800;
+}
+.lv2-buy-bank-grid b{
+  min-width:0;
+  color:#153b73;
+  font-size:10px;
+  overflow-wrap:anywhere;
+}
+.lv2-buy-bank-grid button{
+  border:1px solid #d5e3f3;
+  border-radius:6px;
+  padding:5px 7px;
+  background:#edf4ff;
+  color:#1652a0;
+  font-size:8px;
+  font-weight:900;
+  cursor:pointer;
+}
+.lv2-buy-bank-empty{
+  padding:10px;
+  border-radius:8px;
+  background:#fff8e9;
+  color:#946200;
+  font-size:9px;
+  font-weight:700;
+}
+.lv2-buy-payment-instructions{
+  margin-top:6px;
+  padding:7px 9px;
+  border-radius:8px;
+  background:#eef7f2;
+  color:#39705a;
+  font-size:8px;
+  line-height:1.4;
+}
+.lv2-buy-payment-fields{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:9px;
+  margin-bottom:8px;
+}
+.lv2-buy-payment-fields label{
+  display:block;
+  color:#173b70;
+  font-size:9px;
+  font-weight:900;
+}
+.lv2-buy-payment-fields label>span{
+  display:block;
+  margin-bottom:4px;
+}
+.lv2-buy-payment-fields input:not([type=file]){
+  width:100%;
+  height:38px;
+  box-sizing:border-box;
+  border:1px solid #d7e2ef;
+  border-radius:8px;
+  padding:8px 10px;
+  background:#fff;
+  color:#173b70;
+  font-size:10px;
+  font-weight:600;
+  outline:0;
+}
+.lv2-buy-proof{
+  display:flex;
+  align-items:center;
+  gap:7px;
+  min-height:38px;
+  padding:5px 7px;
+  box-sizing:border-box;
+  border:1px dashed #b9cee7;
+  border-radius:8px;
+  background:#f8fbff;
+}
+.lv2-buy-proof>span{
+  width:27px;height:27px;
+  display:grid;place-items:center;
+  flex:0 0 27px;
+  border-radius:7px;
+  background:#eaf2ff;
+  color:#1652a0;
+}
+.lv2-buy-proof div{min-width:0;flex:1}
+.lv2-buy-proof b{display:block;color:#173b70;font-size:9px}
+.lv2-buy-proof small{display:block;margin-top:1px;color:#7a8da5;font-size:7px}
+.lv2-buy-proof input[type=file]{
+  width:105px;
+  min-width:0;
+  padding:2px;
+  border:0;
+  background:transparent;
+  font-size:7px;
+}
+.lv2-buy-submit-payment{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  width:100%;
+  height:42px;
+  margin:0;
+  border:0;
+  border-radius:9px;
+  background:linear-gradient(135deg,#ff5b22,#ff4c13);
+  color:#fff;
+  font-size:12px;
+  font-weight:950;
+  text-align:center;
+  box-shadow:0 8px 18px rgba(255,83,28,.18);
+  cursor:pointer;
+}
+.lv2-buy-submit-payment:disabled{opacity:.65;cursor:not-allowed}
+@media(max-width:600px){
+  .lv2-buy-payment-breakdown{grid-template-columns:1fr 1fr}
+  .lv2-buy-payment-breakdown>div:nth-child(2){border-right:0}
+  .lv2-buy-payment-breakdown>div:nth-child(-n+2){border-bottom:1px solid #dce6f2}
+  .lv2-buy-bank-grid{grid-template-columns:1fr}
+  .lv2-buy-payment-fields{grid-template-columns:1fr}
+  .lv2-buy-payment-head{align-items:flex-start;flex-direction:column}
+}
