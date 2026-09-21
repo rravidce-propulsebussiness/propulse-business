@@ -388,7 +388,13 @@ export default function LeadsV2() {
         </div>
       </div>
     })()}
-    {paymentSuccess && <div className="lv2-overlay" onClick={() => setPaymentSuccess('')}><div className="lv2-upgrade lv2-payment-success" role="dialog" aria-modal="true" onClick={e => e.stopPropagation()}><div className="lv2-success-icon">✓</div><span>PAYMENT SUBMITTED</span><h2>Submitted successfully</h2><p>{paymentSuccess}</p><button onClick={() => setPaymentSuccess('')}>Done</button></div></div>}
+    {paymentSuccess && <div className="lv2-overlay" onClick={() => setPaymentSuccess('')}><div className="lv2-upgrade lv2-payment-success" role="dialog" aria-modal="true" onClick={e => e.stopPropagation()}>
+      <header className="lv2-success-header"><span className="lv2-success-header-icon">✓</span><strong>Done</strong><button type="button" aria-label="Close" onClick={() => setPaymentSuccess('')}>×</button></header>
+      <div className="lv2-success-hero"><div className="lv2-success-confetti" aria-hidden="true"><i>•</i><i>•</i><i>✦</i><i>•</i><i>•</i></div><div className="lv2-success-icon">✓</div></div>
+      <span>PAYMENT SUBMITTED</span><h2>Submitted successfully!</h2><p>{paymentSuccess}</p>
+      <div className="lv2-success-info"><span>◷</span><div><strong>We’ll verify your payment and update you soon.</strong><small>You’ll get a notification once it’s confirmed.</small></div></div>
+      <button className="lv2-success-done" onClick={() => setPaymentSuccess('')}>Great!</button>
+    </div></div>}
     {upgrade && <div className="lv2-overlay"><div className="lv2-upgrade"><button onClick={() => setUpgrade(false)}>×</button><span>PRO ACCESS</span><h2>Unlock Exclusive access.</h2><p>Pro members get first access during the configured Pro-first period.</p><div><Link to="/dashboard">View Pro options →</Link><button onClick={() => setUpgrade(false)}>Not now</button></div></div></div>}
   </div>
 }
