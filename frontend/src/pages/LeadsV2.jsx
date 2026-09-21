@@ -138,10 +138,10 @@ export default function LeadsV2() {
   }, [token, page, search, tier, category])
 
   const membershipLabel = norm(currentMembership?.plan_group || currentMembership?.plan?.plan_group || currentMembership?.plan_type || currentMembership?.plan?.plan_type || user?.membership_type || user?.membership?.type || user?.membership?.name || user?.plan || user?.plan_name || user?.subscription_plan || '')
-  const activeMembershipGroup = ['growth', 'scale'].find(name => membershipLabel === name || membershipLabel.includes(name)) || ''
+  const activeMembershipGroup = membershipLabel === 'grow' || membershipLabel.includes('grow') || membershipLabel.includes('growth') ? 'growth' : membershipLabel === 'scale' || membershipLabel.includes('scale') ? 'scale' : ''
   const isGrowthScaleMember = Boolean(activeMembershipGroup)
   const isPro = Boolean(user?.is_pro_member || user?.membership_type === 'pro' || currentMembership?.isPro || currentMembership?.plan_type === 'pro')
-  const memberBillingMonths = Number(currentMembership?.billing_months || currentMembership?.plan?.billing_months || currentMembership?.duration_months || currentMembership?.plan?.duration_months || 0)
+  const memberBillingMonths = Number(currentMembership?.billing_months || currentMembership?.plan?.billing_months || currentMembership?.billing_months_count || currentMembership?.plan?.billing_months_count || currentMembership?.duration_months || currentMembership?.plan?.duration_months || currentMembership?.plan?.billing_months || 0)
   const memberBillingPeriod = String(currentMembership?.billing_period || currentMembership?.plan?.billing_period || '').trim()
   const memberPeriodLabel = memberBillingMonths === 12 || /year/i.test(memberBillingPeriod) ? 'Year' : memberBillingMonths === 6 || /half/i.test(memberBillingPeriod) ? 'Half-Year' : memberBillingMonths === 3 || /quarter/i.test(memberBillingPeriod) ? 'Quarter' : 'Month'
   const memberSavingsLabel = activeMembershipGroup === 'scale' ? `Scale (${memberPeriodLabel})` : activeMembershipGroup === 'growth' ? `Growth (${memberPeriodLabel})` : 'Growth / Scale'
