@@ -16,6 +16,7 @@ function Profile() {
   const [cities, setCities] = useState([])
   const [serviceSelections, setServiceSelections] = useState([])
   const [locationSelections, setLocationSelections] = useState([])
+  const [companyProofs, setCompanyProofs] = useState([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState('')
@@ -180,6 +181,30 @@ function Profile() {
           </section>
         </aside>
 
+        <section className="profile-panel profile-proof-panel">
+          <div className="panel-title">
+            <div><span>04</span><h2>Company proof</h2><p>Documents uploaded during signup are stored with your business account.</p></div>
+          </div>
+          {companyProofs.length ? (
+            <div className="profile-proof-list">
+              {companyProofs.map((doc) => (
+                <div className="profile-proof-item" key={doc.id || (doc.original_name + '-' + doc.created_at)}>
+                  <div className="profile-proof-icon">{String(doc.mime_type || '').includes('pdf') ? 'PDF' : 'IMG'}</div>
+                  <div className="profile-proof-info">
+                    <strong>{doc.original_name || 'Company proof document'}</strong>
+                    <small>{doc.mime_type || 'Document'} · {doc.file_size ? (Number(doc.file_size) / 1024 / 1024).toFixed(2) + ' MB' : ''}{doc.status ? ' · ' + String(doc.status).replace(/^./, (m) => m.toUpperCase()) : ''}</small>
+                  </div>
+                  {doc.file_url && <a className="profile-proof-view" href={doc.file_url} target="_blank" rel="noreferrer">View document ↗</a>}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="profile-proof-empty">
+              <strong>No company proof documents found</strong>
+              <span>Upload a proof document from signup to complete your business verification.</span>
+            </div>
+          )}
+        </section>
         <div className="profile-save"><button type="submit" disabled={saving}>{saving ? 'Saving…' : 'Save changes'} <span>→</span></button></div>
       </form>
     </div>
