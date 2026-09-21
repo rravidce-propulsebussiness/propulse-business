@@ -150,7 +150,7 @@ function Signup() {
     try {
       setLoading(true)
       if (!proofDocuments.length) return setError('Upload at least one company proof document.')
-      const result = await authRequest('/auth/signup', { method: 'POST', body: JSON.stringify({ ...form, confirm: undefined, password: googleCredential ? undefined : form.password, accountType, services: cleanServices, locations: cleanLocations, googleCredential: googleCredential || undefined }) })
+      const result = await authRequest('/auth/signup', { method: 'POST', body: JSON.stringify({ ...form, confirm: undefined, password: googleCredential ? undefined : form.password, role: accountType, services: cleanServices, locations: cleanLocations, googleCredential: googleCredential || undefined }) })
       saveSession(result)
       setDocumentUploadStatus('uploading')
       for (const file of proofDocuments) {
