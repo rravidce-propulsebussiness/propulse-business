@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { authRequest, clearSession, getUser } from '../utils/auth'
 import './LeadPartnerHome.css'
 
+const EMPTY_LIST = []
 const money = value => `₹${Number(value || 0).toLocaleString('en-IN',{maximumFractionDigits:2})}`
 const dateTime = value => value ? new Date(value).toLocaleString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}) : '—'
 
@@ -29,8 +30,8 @@ export default function LeadPartnerHome(){
   const stats=data?.stats||{}
   const chart=data?.charts?.earnings||[]
   const status=data?.charts?.leadStatus||{}
-  const recentLeads=data?.recentLeads||[]
-  const recentPayouts=data?.recentPayouts||[]
+  const recentLeads=data?.recentLeads??EMPTY_LIST
+  const recentPayouts=data?.recentPayouts??EMPTY_LIST
   const periodLabels={month:'This Month',last_month:'Last Month',last_3_months:'Last 3 Months',last_6_months:'Last 6 Months',all:'All Time'}
   const quality=data?.quality||{}
 
