@@ -12,7 +12,8 @@
     "migrate:lead-access": "node src/database/runLeadAccessMigrations.js",
     "test": "node scripts/check-syntax.js && node scripts/check-migration-runner.js",
     "test:ledger": "node scripts/check-lead-partner-ledger.js",
-    "test:payout": "node scripts/check-lead-partner-payout-lifecycle.js"
+    "test:payout": "node scripts/check-lead-partner-payout-lifecycle.js",
+    "test:investor-payout": "node scripts/check-investor-payout-integrity.js"
   },
   "keywords": [],
   "author": "",
