@@ -148,16 +148,6 @@ export default function LeadsV2() {
   const memberSavingsLabel = activeMembershipGroup === 'scale' ? `Scale (${memberPeriodLabel})` : activeMembershipGroup === 'growth' ? `Growth (${memberPeriodLabel})` : 'Growth / Scale'
   const buyModalClaimed = Boolean(buyModal?.access?.claimed || buyModal?.access?.purchased)
   const title = category ? `${category.replaceAll('-', ' ')} leads` : 'Available Leads'
-  const topIndustry = useMemo(() => visibleLeads.find(l => hasValue(l.industry_name))?.industry_name || '', [visibleLeads])
-  const topLocation = useMemo(() => {
-    const lead = visibleLeads.find(l => hasValue(l.state_name) || hasValue(l.city_name))
-    return [lead?.city_name, lead?.state_name].filter(hasValue).join(', ')
-  }, [visibleLeads])
-  const filterOptions = useMemo(() => {
-    const industries = [...new Set(leads.map(l => String(l.industry_name || '').trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b))
-    const cities = [...new Set(leads.map(l => String(l.city_name || '').trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b))
-    return { industries, cities }
-  }, [leads])
   const visibleLeads = useMemo(() => {
     if (logged) return leads
     const industry = norm(industryFilter)
@@ -168,6 +158,16 @@ export default function LeadsV2() {
       return (!industry || leadIndustry === industry) && (!city || leadCity === city)
     })
   }, [leads, logged, industryFilter, cityFilter])
+  const topIndustry = useMemo(() => visibleLeads.find(l => hasValue(l.industry_name))?.industry_name || '', [visibleLeads])
+  const topLocation = useMemo(() => {
+    const lead = visibleLeads.find(l => hasValue(l.state_name) || hasValue(l.city_name))
+    return [lead?.city_name, lead?.state_name].filter(hasValue).join(', ')
+  }, [visibleLeads])
+  const filterOptions = useMemo(() => {
+    const industries = [...new Set(leads.map(l => String(l.industry_name || '').trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b))
+    const cities = [...new Set(leads.map(l => String(l.city_name || '').trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b))
+    return { industries, cities }
+  }, [leads])
 
   const openBuyModal = (lead) => {
     if (!logged) { window.location.href = '/login'; return }
@@ -395,7 +395,7 @@ export default function LeadsV2() {
             </div>
             <div className="lv2-contact"><span>Contact Details (Masked)</span><div>{hasValue(lead.customer_phone) && <b>⌕ &nbsp; {maskContact(lead.customer_phone)}</b>}{hasValue(workPhone) && <b>⌖ &nbsp; Work {workPhone}</b>}{hasValue(lead.customer_email) && <b>✉ &nbsp; {maskContact(lead.customer_email)}</b>}{!hasValue(lead.customer_phone) && !hasValue(workPhone) && !hasValue(lead.customer_email) && <b>Contact available after purchase</b>}</div></div>
             <div className="lv2-card-actions"><button className="lv2-details-link" onClick={() => setExpanded(open ? null : lead.id)}>{open ? 'Hide Full Details' : 'View Full Details'} <b>→</b></button><button className="lv2-buy" onClick={() => openBuyModal(lead)} disabled={!shares.length}>{claimed ? 'Purchased' : '🛒  Buy Lead'}</button></div>
-            {open && <div className="lv2-details"><div className="lv2-details-head"><h3>Lead details</h3><span>{claimed ? 'Access granted' : 'Verified opportunity'}</span></div><div className="lv2-detail-grid">{[['Industry', lead.industry_name], ['Service', lead.service_name], ['Subservice', lead.subservice_name], ['Location', location], ['Property type', property], ['Budget', budgetDisplay], ['Work numbers', workNumbers], ['Work phone', workPhone], ['Purchased', `${purchasedBuyers}/${buyerCapacity}`], ['Source', lead.source], ['Customer', lead.customer_name], ['Phone', lead.customer_phone ? maskContact(lead.customer_phone) : ''], ['Email', lead.customer_email ? maskContact(lead.customer_email) : '']].filter(([, v]) => hasValue(v)).map(([k, v]) => <div key={k}><small>{k}</small><b>{v}</b></div>)}{dynamic.map(([k, v]) => <div key={k}><small>{label(k)}</small><b>{displayValue(k, typeof v === 'object' ? JSON.stringify(v) : v)}</b></div>)}</div>{hasValue(lead.notes) && <p className="lv2-notes"><b>Notes</b>{maskContact(lead.notes)}</p>}</div>}
+            {open && <div className="lv2-details"><div className="lv2-details-head"><h3>Lead details</h3><span>{claimed ? 'Access granted' : 'Verified opportunity'}</span></div><div className="lv2-detail-grid">{[['Industry', lead.industry_name], ['Service', lead.service_name], ['Subservice', lead.subservice_name], ['Location', location], ['Property type', property], ['Budget', budgetDisplay], ['Work numbers', workNumbers], ['Work phone', workPhone], ['Purchased', `${purchasedBuyers}/${buyerCapacity}`], ['Source', lead.source], ['Customer', lead.customer_name], ['Phone', lead.customer_phone ? maskContact(lead.customer_phone) : ''], ['Email', lead.customer_email ? maskContact(lead.customer_email) : '']].filter(([, v]) => hasValue(v)).map(([k, v], index) => <div key={`${k}-${index}`}><small>{k}</small><b>{v}</b></div>)}{dynamic.map(([k, v], index) => <div key={`${k}-${index}`}><small>{label(k)}</small><b>{displayValue(k, typeof v === 'object' ? JSON.stringify(v) : v)}</b></div>)}</div>{hasValue(lead.notes) && <p className="lv2-notes"><b>Notes</b>{maskContact(lead.notes)}</p>}</div>}
             {logged && !claimed && leadAccess.canClaim && <div className="lv2-exclusive"><div><b>Membership access</b><span>Included in your current plan{leadAccess.remaining !== undefined ? ` · ${leadAccess.remaining} remaining` : ''}</span></div><button disabled={claiming === lead.id} onClick={() => claim(lead)}>{claiming === lead.id ? 'Claiming…' : 'Claim free →'}</button></div>}
             {logged && !claimed && leadAccess.reason && !leadAccess.canClaim && <div className="lv2-card-cta"><div><b>Membership access</b><span>{leadAccess.reason}</span></div></div>}
             {claimed && <div className="lv2-card-cta"><div><b>Lead access granted</b><span>You can use this lead from your account.</span></div><Link to="/dashboard">Open dashboard →</Link></div>}
