@@ -1146,3 +1146,7 @@ body:has(.lv2-shell){
   .lv2-page{width:100%;max-width:100%;overflow-x:hidden!important}
   .lv2-grid{width:100%}
 }
+
+/* Account for the fixed UserHeader on the Leads page. */
+.lv2-shell{padding-top:76px}
+@media(max-width:760px){.lv2-shell{padding-top:68px}}
