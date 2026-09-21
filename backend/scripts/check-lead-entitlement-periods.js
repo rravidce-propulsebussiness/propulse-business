@@ -52,6 +52,9 @@ function loadServiceWithNow({ startsAt, now, billingMonths = 3, used = 0 }) {
     static now() { return fixedNow.getTime(); }
   }
 
+  // The mock returns usage only for the current window; the tests below
+  // focus on the exact window boundaries calculated by the service.
+  loaded.pool.query = undefined;
   global.Date = FixedDate;
   return { ...loaded, restoreDate: () => { global.Date = originalDate; } };
 }
@@ -78,24 +81,38 @@ async function runMonthlyResetTest() {
 }
 
 async function runDayBoundaryTest() {
-  const { service, calls, originalPool, servicePath, poolPath, restoreDate } = loadServiceWithNow({
+  const before = loadServiceWithNow({
     startsAt: '2025-09-30T12:00:00Z',
-    now: '2026-09-22T12:00:00Z',
+    now: '2026-09-29T12:00:00Z',
     billingMonths: 12,
   });
   try {
-    await service.getLeadAccess(7, 1);
-    const claimQuery = calls.find(call => call.sql.includes('SELECT COUNT(*)::int AS used'));
-    assert(claimQuery, 'The entitlement usage query must be executed for the boundary test');
-    const monthlyStart = new Date(claimQuery.params[3]);
-    const monthlyEnd = new Date(claimQuery.params[4]);
-    assertDateParts(monthlyStart, 2026, 8, 30, 'Current monthly entitlement start');
-    assertDateParts(monthlyEnd, 2026, 9, 30, 'Current monthly entitlement end');
-
+    await before.service.getLeadAccess(7, 1);
+    const claimQuery = before.calls.find(call => call.sql.includes('SELECT COUNT(*)::int AS used'));
+    assert(claimQuery, 'The pre-anniversary usage query must be executed');
+    assertDateParts(new Date(claimQuery.params[3]), 2026, 8, 30, 'Pre-anniversary monthly period start');
+    assertDateParts(new Date(claimQuery.params[4]), 2026, 9, 30, 'Pre-anniversary monthly period end');
   } finally {
-    restoreDate();
-    require.cache[poolPath] = { id: poolPath, filename: poolPath, loaded: true, exports: originalPool };
-    delete require.cache[servicePath];
+    before.restoreDate();
+    require.cache[before.poolPath] = { id: before.poolPath, filename: before.poolPath, loaded: true, exports: before.originalPool };
+    delete require.cache[before.servicePath];
+  }
+
+  const onAnniversary = loadServiceWithNow({
+    startsAt: '2025-09-30T12:00:00Z',
+    now: '2026-09-30T12:00:00Z',
+    billingMonths: 12,
+  });
+  try {
+    await onAnniversary.service.getLeadAccess(7, 1);
+    const claimQuery = onAnniversary.calls.find(call => call.sql.includes('SELECT COUNT(*)::int AS used'));
+    assert(claimQuery, 'The anniversary usage query must be executed');
+    assertDateParts(new Date(claimQuery.params[3]), 2026, 8, 30, 'Anniversary monthly period start');
+    assertDateParts(new Date(claimQuery.params[4]), 2026, 9, 30, 'Anniversary monthly period end');
+  } finally {
+    onAnniversary.restoreDate();
+    require.cache[onAnniversary.poolPath] = { id: onAnniversary.poolPath, filename: onAnniversary.poolPath, loaded: true, exports: onAnniversary.originalPool };
+    delete require.cache[onAnniversary.servicePath];
   }
 }
 
