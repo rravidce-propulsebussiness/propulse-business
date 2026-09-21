@@ -826,3 +826,45 @@
   margin:0 0 10px;
   background:#e3ebf4;
 }
+
+/* Final approved single-button checkout composition */
+.lv2-purchase-summary.payment-ready .lv2-continue-purchase,
+.lv2-purchase-summary.payment-ready .lv2-summary-secure{
+  display:none!important;
+}
+.lv2-purchase-summary.payment-ready{
+  border-bottom-left-radius:0!important;
+  border-bottom-right-radius:0!important;
+}
+.lv2-buy-payment-section{
+  margin-top:0!important;
+  padding:10px 13px 0!important;
+  border-top:1px solid #e3ebf4!important;
+  background:#fff!important;
+}
+.lv2-buy-payment-head,
+.lv2-buy-payment-breakdown{
+  display:none!important;
+}
+.lv2-buy-bank-card{
+  margin:0 0 8px!important;
+  padding:9px!important;
+}
+.lv2-buy-payment-fields{
+  grid-template-columns:1fr 1fr!important;
+  gap:8px!important;
+  margin-bottom:8px!important;
+}
+.lv2-buy-submit-payment{
+  height:44px!important;
+  border-radius:10px!important;
+  font-size:12px!important;
+  background:linear-gradient(135deg,#ff5b22,#ff4c13)!important;
+  box-shadow:0 8px 20px rgba(255,83,28,.18)!important;
+}
+.lv2-buy-payment-section .lv2-summary-secure{
+  margin-top:7px!important;
+}
+@media(max-width:600px){
+  .lv2-buy-payment-fields{grid-template-columns:1fr!important}
+}
