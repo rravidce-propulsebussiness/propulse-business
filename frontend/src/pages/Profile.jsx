@@ -40,6 +40,17 @@ function Profile() {
   const serviceOptions = useMemo(() => serviceSelections.map((x) => services.filter((s) => String(s.industry_id) === String(x.industryId))), [services, serviceSelections])
   const subserviceOptions = useMemo(() => serviceSelections.map((x) => subservices.filter((s) => String(s.service_id) === String(x.serviceId))), [subservices, serviceSelections])
   const cityOptions = useMemo(() => locationSelections.map((x) => cities.filter((c) => String(c.state_id) === String(x.stateId))), [cities, locationSelections])
+  const initials = (form.businessName || form.name || 'P').trim().split(/\\s+/).slice(0, 2).map((part) => part[0]).join('').toUpperCase() || 'P'
+  const completionItems = [
+    Boolean(form.name && form.email && form.phone),
+    Boolean(form.businessName && form.businessDetails),
+    serviceSelections.length > 0 && serviceSelections.every((x) => x.industryId && x.serviceId),
+    locationSelections.length > 0 && locationSelections.every((x) => x.stateId && x.cityId),
+  ]
+  const completion = Math.round((completionItems.filter(Boolean).length / completionItems.length) * 100)
+  function scrollToSection(id) {
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
 
   function update(field, value) { setForm((x) => ({ ...x, [field]: value })); setMessage('') }
   function updateService(index, field, value) {
@@ -84,14 +95,44 @@ function Profile() {
 
   return (
     <div className="profile-page">
-      <div className="profile-head">
-        <div><span className="profile-kicker">ACCOUNT</span><h1>Business profile</h1><p>Keep your business, services and lead locations up to date.</p></div>
-        <button className="profile-back" type="button" onClick={() => navigate('/dashboard')}>Back to dashboard</button>
-      </div>
+      <section className="profile-hero">
+        <div className="profile-hero-glow" />
+        <div className="profile-avatar">{initials}</div>
+        <div className="profile-hero-main">
+          <div className="profile-hero-title">
+            <div>
+              <span className="profile-kicker">ACCOUNT PROFILE</span>
+              <h1>{form.businessName || form.name || 'Business profile'}</h1>
+              <p>{form.businessDetails || 'Keep your business profile, services and lead coverage up to date.'}</p>
+            </div>
+            <button className="profile-hero-back" type="button" onClick={() => navigate('/dashboard')}>← Dashboard</button>
+          </div>
+          <div className="profile-hero-meta">
+            <span>✉ {form.email || 'Email not set'}</span>
+            <span>☎ {form.phone || 'Phone not set'}</span>
+            <span>⌁ {locationSelections.length} location{locationSelections.length === 1 ? '' : 's'}</span>
+            <span>✦ {serviceSelections.length} service{serviceSelections.length === 1 ? '' : 's'}</span>
+          </div>
+        </div>
+        <div className="profile-completion-mini">
+          <strong>{completion}%</strong>
+          <span>Profile complete</span>
+          <div><i style={{ width: `${completion}%` }} /></div>
+        </div>
+      </section>
+
+      <nav className="profile-tabs" aria-label="Profile sections">
+        <button type="button" className="active" onClick={() => scrollToSection('profile-information')}>Personal information</button>
+        <button type="button" onClick={() => scrollToSection('profile-services')}>Services</button>
+        <button type="button" onClick={() => scrollToSection('profile-locations')}>Locations</button>
+      </nav>
+
       {error && <div className="profile-alert error">{error}</div>}
       {message && <div className="profile-alert success">{message}</div>}
-      <form onSubmit={save}>
-        <section className="profile-panel">
+
+      <form onSubmit={save} className="profile-form">
+        <div className="profile-main-column">
+        <section className="profile-panel profile-information" id="profile-information">
           <div className="panel-title"><div><span>01</span><h2>Business information</h2></div></div>
           <div className="profile-grid">
             <label>Full name<input value={form.name} onChange={(e) => update('name', e.target.value)} required /></label>
@@ -102,19 +143,43 @@ function Profile() {
           </div>
         </section>
 
-        <section className="profile-panel">
+        <section className="profile-panel" id="profile-services">
           <div className="panel-title"><div><span>02</span><h2>Services you provide</h2><p>Add every service you want matching leads for.</p></div><button type="button" onClick={() => setServiceSelections((x) => [...x, emptyService()])}>+ Add service</button></div>
           <div className="profile-list">
             {serviceSelections.map((x, i) => <div className="profile-row" key={`s-${i}`}><div className="row-number">{String(i + 1).padStart(2, '0')}</div><label>Industry<select value={x.industryId} onChange={(e) => updateService(i, 'industryId', e.target.value)} required><option value="">Select industry</option>{industries.map((v) => <option key={v.id} value={v.id}>{v.name}</option>)}</select></label><label>Service<select value={x.serviceId} onChange={(e) => updateService(i, 'serviceId', e.target.value)} disabled={!x.industryId} required><option value="">Select service</option>{(serviceOptions[i] || []).map((v) => <option key={v.id} value={v.id}>{v.name}</option>)}</select></label><label>Subservice <small>Optional · blank means all</small><select value={x.subserviceId} onChange={(e) => updateService(i, 'subserviceId', e.target.value)} disabled={!x.serviceId}><option value="">All related</option>{(subserviceOptions[i] || []).map((v) => <option key={v.id} value={v.id}>{v.name}</option>)}</select></label><button type="button" className="add-all-services" onClick={() => addAllServicesForIndustry(i)} disabled={!x.industryId}>Add all services</button><button type="button" className="row-remove" onClick={() => setServiceSelections((items) => items.filter((_, n) => n !== i))}>Remove</button></div>)}
           </div>
         </section>
 
-        <section className="profile-panel">
+        <section className="profile-panel" id="profile-locations">
           <div className="panel-title"><div><span>03</span><h2>Locations you serve</h2><p>Add every city where you want to receive leads.</p></div><button type="button" onClick={() => setLocationSelections((x) => [...x, emptyLocation()])}>+ Add location</button></div>
           <div className="profile-list">
             {locationSelections.map((x, i) => <div className="profile-row location-row" key={`l-${i}`}><div className="row-number">{String(i + 1).padStart(2, '0')}</div><label>State / UT<select value={x.stateId} onChange={(e) => updateLocation(i, 'stateId', e.target.value)} required><option value="">Select state / UT</option>{states.map((v) => <option key={v.id} value={v.id}>{v.name}</option>)}</select></label><label>City<select value={x.cityId} onChange={(e) => updateLocation(i, 'cityId', e.target.value)} disabled={!x.stateId} required><option value="">Select city</option>{(cityOptions[i] || []).map((v) => <option key={v.id} value={v.id}>{v.name}</option>)}</select></label><button type="button" className="row-remove" onClick={() => setLocationSelections((items) => items.filter((_, n) => n !== i))}>Remove</button></div>)}
           </div>
         </section>
+        </div>
+
+        <aside className="profile-side-column">
+          <section className="profile-side-card profile-progress-card">
+            <div className="profile-ring" style={{ '--progress': `${completion * 3.6}deg` }}><strong>{completion}%</strong></div>
+            <div><span className="side-kicker">PROFILE COMPLETION</span><h3>Build a complete profile</h3><p>Complete your details to keep lead matching accurate.</p></div>
+            <ul>
+              <li className={completionItems[0] ? 'done' : ''}>Personal information</li>
+              <li className={completionItems[1] ? 'done' : ''}>Business details</li>
+              <li className={completionItems[2] ? 'done' : ''}>Services</li>
+              <li className={completionItems[3] ? 'done' : ''}>Lead locations</li>
+            </ul>
+          </section>
+
+          <section className="profile-side-card">
+            <span className="side-icon">✦</span>
+            <span className="side-kicker">LEAD MATCHING</span>
+            <h3>Your coverage</h3>
+            <div className="coverage-stat"><strong>{serviceSelections.length}</strong><span>Services</span></div>
+            <div className="coverage-stat"><strong>{locationSelections.length}</strong><span>Locations</span></div>
+            <p>Use the sections on the left to keep your matching preferences current.</p>
+          </section>
+        </aside>
+
         <div className="profile-save"><button type="submit" disabled={saving}>{saving ? 'Saving…' : 'Save changes'} <span>→</span></button></div>
       </form>
     </div>
