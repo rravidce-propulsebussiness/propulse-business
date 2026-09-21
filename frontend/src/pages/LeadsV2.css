@@ -109,3 +109,32 @@
 .lv2-summary-body{padding:15px 16px}
 .lv2-summary-row{margin-bottom:10px}
 @media(max-width:900px){.lv2-buy-layout{grid-template-columns:1fr}}
+
+
+/* Approved premium share-pack layout */
+.lv2-pack-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;padding:4px 0 2px}
+.lv2-pack-card{position:relative;min-width:0;min-height:154px;padding:18px 14px 14px;border:1px solid #dce5ef;border-radius:14px;background:#fff;text-align:left;color:#0b3b80;cursor:pointer;transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease,background .16s ease}
+.lv2-pack-card:hover:not(:disabled){transform:translateY(-2px);border-color:#a9bfd9;box-shadow:0 10px 24px rgba(18,55,95,.09)}
+.lv2-pack-card.selected{border:2px solid #ff5a20;background:linear-gradient(180deg,#fffaf7,#fff);box-shadow:0 9px 24px rgba(255,90,32,.11)}
+.lv2-pack-card:disabled{cursor:not-allowed;opacity:.7}
+.lv2-pack-card strong{display:block;font-size:28px;line-height:1;color:#0b3b80;letter-spacing:-.03em}
+.lv2-pack-card small{display:block;margin-top:5px;color:#294d79;font-size:10px;font-weight:700}
+.lv2-pack-card b{display:block;margin-top:18px;color:#102f58;font-size:19px;line-height:1}
+.lv2-pack-card.selected b{color:#102f58}
+.lv2-pack-card em{display:inline-block;margin-top:10px;padding:5px 8px;border-radius:6px;background:#dff5e9;color:#168057;font-size:8px;font-style:normal;font-weight:900}
+.lv2-pack-check{position:absolute;right:9px;top:9px;display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:transparent;color:transparent;font-size:13px;font-weight:900}
+.lv2-pack-card.selected .lv2-pack-check{background:#ff5a20;color:#fff}
+.lv2-pack-card i{display:block;margin-top:6px;color:#f15a24;font-size:8px;font-style:normal;font-weight:900}
+.lv2-continue-purchase{display:flex;align-items:center;justify-content:center;gap:9px;width:100%;height:51px;margin-top:20px;border:0;border-radius:11px;background:linear-gradient(135deg,#ff5b22,#ff4c13);color:#fff;font-size:13px;font-weight:900;cursor:pointer;box-shadow:0 10px 24px rgba(255,83,28,.22)}
+.lv2-continue-purchase:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 13px 28px rgba(255,83,28,.28)}
+.lv2-continue-purchase:disabled{opacity:.5;cursor:not-allowed;box-shadow:none}
+.lv2-continue-purchase span{font-size:13px}
+.lv2-continue-purchase b{font-size:18px;margin-left:2px}
+.lv2-summary-secure{display:flex;flex-direction:column;align-items:center;gap:5px;margin-top:18px;text-align:center}
+.lv2-summary-secure strong{color:#173b70;font-size:10px}
+.lv2-summary-secure small{color:#7890aa;font-size:8px}
+.lv2-summary-total{padding-top:3px}
+.lv2-summary-total span{font-size:11px;font-weight:900}
+.lv2-summary-total strong{font-size:25px}
+@media(max-width:1050px){.lv2-pack-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:600px){.lv2-pack-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.lv2-pack-card{min-height:130px;padding:14px 11px}.lv2-pack-card strong{font-size:24px}.lv2-pack-card b{margin-top:13px;font-size:16px}.lv2-continue-purchase{height:48px;font-size:11px}}
