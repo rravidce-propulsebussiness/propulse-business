@@ -41,28 +41,28 @@ export default function AdminPayments() {
     return apiRequest(path, options)
   }, [navigate])
 
-  const fetchPayments = useCallback(async(nextPage = 1, overrideStatus = status) {
+  const fetchPayments = useCallback(async (nextPage = 1, overrideStatus = status) => {
     const qs = new URLSearchParams({ status: overrideStatus, search: search.trim(), page: String(nextPage), limit: '50' })
     const data = await request(`/payments?${qs}`)
     setPayments(Array.isArray(data) ? data : data.items || [])
     setPaymentMeta({ total: data.total ?? 0, pages: data.pages ?? 1, stats: data.stats || {} })
   }, [request, search, status])
 
-  const fetchTopups = useCallback(async(nextPage = 1, overrideStatus = status) {
+  const fetchTopups = useCallback(async (nextPage = 1, overrideStatus = status) => {
     const qs = new URLSearchParams({ status: overrideStatus, search: search.trim(), page: String(nextPage), limit: '50' })
     const data = await request(`/wallet/topups?${qs}`)
     setTopups(Array.isArray(data) ? data : data.items || [])
     setTopupMeta({ total: data.total ?? 0, pages: data.pages ?? 1, stats: data.stats || {} })
   }, [request, search, status])
 
-  const fetchCustomers = useCallback(async(nextPage = 1) {
+  const fetchCustomers = useCallback(async (nextPage = 1) => {
     const qs = new URLSearchParams({ search: search.trim(), page: String(nextPage), limit: '50' })
     const data = await request(`/payments/memberships/customers?${qs}`)
     setCustomers(Array.isArray(data) ? data : data.items || [])
     setCustomerMeta({ total: data.total ?? 0, pages: data.pages ?? 1 })
   }, [request, search])
 
-  const fetchWalletCustomers = useCallback(async(nextPage = 1) {
+  const fetchWalletCustomers = useCallback(async (nextPage = 1) => {
     const qs = new URLSearchParams({ search: search.trim(), page: String(nextPage), limit: '50' })
     const data = await request(`/wallet/admin/history/customers?${qs}`)
     setWalletCustomers(Array.isArray(data) ? data : data.items || [])
