@@ -162,3 +162,67 @@
   .profile-grid{grid-template-columns:1fr}
   .profile-grid .wide{grid-column:auto}
 }
+
+
+/* Company proof documents */
+.profile-proof-panel .panel-title{margin-bottom:14px}
+.profile-proof-list{display:grid;gap:9px}
+.profile-proof-item{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:12px 14px;
+  border:1px solid #e1e8ef;
+  border-radius:12px;
+  background:linear-gradient(180deg,#fff,#f8fbfe);
+}
+.profile-proof-icon{
+  width:42px;
+  height:42px;
+  flex:0 0 42px;
+  display:grid;
+  place-items:center;
+  border-radius:10px;
+  background:#edf4fb;
+  color:#123f80;
+  font-size:8px;
+  font-weight:950;
+  letter-spacing:.04em;
+}
+.profile-proof-info{min-width:0;flex:1;display:grid;gap:4px}
+.profile-proof-info strong{
+  color:#17395f;
+  font-size:10px;
+  font-weight:900;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.profile-proof-info small{color:#8190a2;font-size:7px}
+.profile-proof-view{
+  flex:0 0 auto;
+  padding:8px 11px;
+  border:1px solid #ffbea9;
+  border-radius:8px;
+  background:#fff7f3;
+  color:#df4b22;
+  text-decoration:none;
+  font-size:7px;
+  font-weight:900;
+}
+.profile-proof-view:hover{background:#ffede6;border-color:#f45125}
+.profile-proof-empty{
+  display:grid;
+  gap:5px;
+  padding:16px;
+  border:1px dashed #cbd8e5;
+  border-radius:12px;
+  background:#f8fbff;
+}
+.profile-proof-empty strong{color:#17395f;font-size:9px}
+.profile-proof-empty span{color:#7c8da1;font-size:7px;line-height:1.5}
+@media(max-width:600px){
+  .profile-proof-item{align-items:flex-start;flex-wrap:wrap}
+  .profile-proof-info{width:calc(100% - 54px);flex-basis:calc(100% - 54px)}
+  .profile-proof-view{margin-left:54px}
+}
