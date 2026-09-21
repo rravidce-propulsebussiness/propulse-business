@@ -24,7 +24,7 @@ function loadService({ startsAt, billingMonths = 3 }) {
           lead_expiry_days: 0,
         }] };
       }
-      if (sql.includes('SELECT COUNT(*)::int AS used')) return { rows: [{ used: 10 }] };
+      if (sql.includes('SELECT COUNT(*)::int AS used')) return { rows: [{ used: 0 }] };
       throw new Error(`Unexpected SQL: ${sql}`);
     },
   };
