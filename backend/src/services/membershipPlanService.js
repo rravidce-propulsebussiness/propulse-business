@@ -23,7 +23,7 @@ function safeJson(value, fallback = []) {
 
 function normalizePlanType(value, fallback = 'non_pro') {
   const type = String(value || fallback).trim().toLowerCase();
-  return ['pro', 'investor', 'booster', 'non_pro'].includes(type) ? type : fallback;
+  return ['pro', 'investor', 'non_pro'].includes(type) ? type : fallback;
 }
 
 function normalizeEntitlements(items, months = 1) {
@@ -63,7 +63,7 @@ async function createPlan(d) {
   const finalPrice = hasOverride ? Math.max(0, toNumber(d.priceOverride)) : calculatePrice(base, months, discount);
   const days = Math.max(1, Math.round(toNumber(d.durationDays || months * 30.4375, 1)));
   const planType = normalizePlanType(d.planType);
-  const entitlements = planType === 'booster' ? [] : normalizeEntitlements(d.leadEntitlements, months);
+  const entitlements = normalizeEntitlements(d.leadEntitlements, months);
   const expiryDays = d.leadExpiryDays === undefined || d.leadExpiryDays === '' || d.leadExpiryDays === null ? null : Math.max(1, Math.round(toNumber(d.leadExpiryDays)));
   const r = await pool.query(`
     INSERT INTO membership_plans(name,plan_group,plan_type,description,price,duration_days,billing_period,billing_months,monthly_base_price,discount_percent,benefits,lead_entitlements,add_ons,lead_rollover_enabled,lead_expiry_days)
@@ -98,7 +98,7 @@ async function createPlanBundle(d) {
       const months = Math.max(1, Math.round(toNumber(period.months, 1)));
       const label = String(period.label || `${months}-month`).trim().slice(0, 40);
       const p = d.pricing?.[period.key] || {};
-      const entitlements = planType === 'booster' ? [] : normalizeEntitlements(period.leadEntitlements ?? d.leadEntitlements, months);
+      const entitlements = normalizeEntitlements(period.leadEntitlements ?? d.leadEntitlements, months);
       const name = normalizePlanName(`${planName} ${label}`);
       const base = Math.max(0, toNumber(d.monthlyBasePrice));
       const discount = Math.min(100, Math.max(0, toNumber(p.discount)));
@@ -144,7 +144,7 @@ async function updatePlan(id, d) {
   const final = hasOverride ? Math.max(0, toNumber(d.priceOverride)) : calculatePrice(base, months, discount);
   const planType = normalizePlanType(d.planType, normalizePlanType(current.plan_type));
   const incomingEntitlements = normalizeEntitlements(d.leadEntitlements, months);
-  const entitlements = planType === 'booster' ? [] : (incomingEntitlements.length ? incomingEntitlements : normalizeEntitlements(current.lead_entitlements, months));
+  const entitlements = incomingEntitlements.length ? incomingEntitlements : normalizeEntitlements(current.lead_entitlements, months);
   const expiryDays = d.leadExpiryDays === undefined ? current.lead_expiry_days : (d.leadExpiryDays === '' || d.leadExpiryDays === null ? null : Math.max(1, Math.round(toNumber(d.leadExpiryDays))));
   const r = await pool.query(`
     UPDATE membership_plans SET name=$1,plan_group=$2,plan_type=$3,description=$4,price=$5,duration_days=$6,
