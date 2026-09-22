@@ -158,8 +158,8 @@ async function runClaimLeadTest() {
     assert.strictEqual(result.remaining, 0, 'A one-per-month entitlement should have no remaining claims after the claim');
     const usageQuery = queries.find(query => query.sql.includes('SELECT COUNT(*)::int AS used'));
     assert(usageQuery, 'claimLead must check entitlement usage');
-    assertDateParts(new Date(usageQuery.params[3]), 2026, 7, 22, 'claimLead monthly period start');
-    assertDateParts(new Date(usageQuery.params[4]), 2026, 8, 22, 'claimLead monthly period end');
+    assertDateParts(new Date(usageQuery.params[3]), 2026, 8, 22, 'claimLead monthly period start');
+    assertDateParts(new Date(usageQuery.params[4]), 2026, 9, 22, 'claimLead monthly period end');
   } finally {
     loaded.pool.connect = undefined;
     restoreDate();
