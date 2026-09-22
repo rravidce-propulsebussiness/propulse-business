@@ -115,15 +115,13 @@ async function runDayBoundaryTest() {
   }
 }
 
-
 async function runClaimLeadTest() {
   const loaded = loadServiceWithNow({
     startsAt: '2026-08-22T12:00:00Z',
     now: '2026-09-22T12:00:00Z',
     billingMonths: 3,
   });
-  const { service, calls, originalPool, servicePath, poolPath, restoreDate } = loaded;
-  const originalConnect = originalPool.connect;
+  const { service, originalPool, servicePath, poolPath, restoreDate } = loaded;
   let committed = false;
   let claimInserted = false;
   const queries = [];
@@ -152,7 +150,7 @@ async function runClaimLeadTest() {
     },
     release() {},
   };
-  loaded.mockPool = loaded.mockPool || null;
+  loaded.pool.connect = async () => client;
   try {
     const result = await service.claimLead(7, 1);
     assert.strictEqual(committed, true, 'claimLead must commit the transaction');
