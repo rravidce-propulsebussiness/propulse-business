@@ -30,7 +30,7 @@ function loadService({ startsAt, billingMonths = 3 }) {
   };
   require.cache[poolPath] = { id: poolPath, filename: poolPath, loaded: true, exports: pool };
   delete require.cache[servicePath];
-  return { service: require(servicePath), calls, originalPool, servicePath, poolPath };
+  return { service: require(servicePath), calls, originalPool, pool, servicePath, poolPath };
 }
 
 function assertDateParts(date, expectedYear, expectedMonth, expectedDay, label) {
@@ -152,7 +152,7 @@ async function runClaimLeadTest() {
     },
     release() {},
   };
-  originalPool.connect = async () => client;
+  loaded.mockPool = loaded.mockPool || null;
   try {
     const result = await service.claimLead(7, 1);
     assert.strictEqual(committed, true, 'claimLead must commit the transaction');
@@ -163,7 +163,7 @@ async function runClaimLeadTest() {
     assertDateParts(new Date(usageQuery.params[3]), 2026, 7, 22, 'claimLead monthly period start');
     assertDateParts(new Date(usageQuery.params[4]), 2026, 8, 22, 'claimLead monthly period end');
   } finally {
-    originalPool.connect = originalConnect;
+    loaded.pool.connect = undefined;
     restoreDate();
     require.cache[poolPath] = { id: poolPath, filename: poolPath, loaded: true, exports: originalPool };
     delete require.cache[servicePath];
