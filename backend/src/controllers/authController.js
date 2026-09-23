@@ -127,7 +127,7 @@ async function forgotPassword(req, res) {
 
     const baseUrl = String(process.env.PUBLIC_APP_URL || process.env.CORS_ORIGIN || '').split(',')[0].replace(/\/$/, '');
     if (!baseUrl) throw new Error('PUBLIC_APP_URL is not configured');
-    const resetUrl = `${baseUrl}/reset-password?token=${encodeURIComponent(reset.token)}`;
+    const resetUrl = `${baseUrl}/reset-password#token=${encodeURIComponent(reset.token)}`;
     await sendPasswordResetEmail({ to: reset.user.email, name: reset.user.name, resetUrl });
     return res.json({ message: 'If an account exists for that email, a password reset link has been sent.' });
   } catch (error) {
