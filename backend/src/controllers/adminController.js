@@ -33,4 +33,53 @@ async function updateUserProfile(req, res) {
     return res.status(500).json({ error: 'Failed to update user profile' });
   }
 }
-module.exports = { getDashboardStats, getUsers, createAdmin, setUserStatus, setUserRole, updateUserProfile };
+async function getCompanyProofs(req, res) {
+  try { return res.json(await adminService.getCompanyProofs(req.query)); }
+  catch (error) {
+    if (error.code === 'INVALID_PROOF_STATUS') return res.status(400).json({ error: error.message, code: error.code });
+    console.error('Get company proofs failed:', error.message);
+    return res.status(500).json({ error: 'Failed to load company proof documents' });
+  }
+}
+
+async function verifyCompanyProof(req, res) {
+  try {
+    return res.json(await adminService.reviewCompanyProof({
+      documentId: req.params.documentId,
+      status: 'verified',
+      reviewedBy: req.user.id,
+    }));
+  } catch (error) {
+    const map = { INVALID_PROOF_DOCUMENT: 400, INVALID_PROOF_STATUS: 400, INVALID_REVIEWER: 400, NOT_FOUND: 404, PROOF_ALREADY_REVIEWED: 409 };
+    if (map[error.code]) return res.status(map[error.code]).json({ error: error.message, code: error.code });
+    console.error('Verify company proof failed:', error.message);
+    return res.status(500).json({ error: 'Failed to verify company proof' });
+  }
+}
+
+async function rejectCompanyProof(req, res) {
+  try {
+    return res.json(await adminService.reviewCompanyProof({
+      documentId: req.params.documentId,
+      status: 'rejected',
+      reviewReason: req.body?.reason,
+      reviewedBy: req.user.id,
+    }));
+  } catch (error) {
+    const map = {
+      INVALID_PROOF_DOCUMENT: 400,
+      INVALID_PROOF_STATUS: 400,
+      INVALID_REVIEWER: 400,
+      REJECTION_REASON_REQUIRED: 400,
+      REJECTION_REASON_TOO_LONG: 400,
+      NOT_FOUND: 404,
+      PROOF_ALREADY_REVIEWED: 409,
+    };
+    if (map[error.code]) return res.status(map[error.code]).json({ error: error.message, code: error.code });
+    console.error('Reject company proof failed:', error.message);
+    return res.status(500).json({ error: 'Failed to reject company proof' });
+  }
+}
+
+module.exports = { getDashboardStats, getUsers, createAdmin, setUserStatus, setUserRole, updateUserProfile, getCompanyProofs, verifyCompanyProof, rejectCompanyProof };
+
