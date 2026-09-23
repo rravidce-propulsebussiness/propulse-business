@@ -137,4 +137,116 @@ async function updateUserProfile(userId,{ name,email,phone,businessName,business
   }catch(error){await client.query('ROLLBACK');throw error;}finally{client.release();}
 }
 
-module.exports={getDashboardStats,getUsers,createAdmin,setUserStatus,setUserRole,updateUserProfile};
+async function getCompanyProofs({ status = 'pending', page, pageSize, limit } = {}) {
+  const normalizedStatus = String(status || 'pending').trim().toLowerCase();
+  if (!['pending', 'verified', 'rejected'].includes(normalizedStatus)) {
+    const error = new Error('Invalid company proof status');
+    error.code = 'INVALID_PROOF_STATUS';
+    throw error;
+  }
+  const { page: currentPage, pageSize: currentPageSize, offset } = parsePagination({ page, pageSize, limit });
+  const countResult = await pool.query(
+    `SELECT COUNT(*)::int AS total
+     FROM company_proof_documents cpd
+     WHERE cpd.status=$1`,
+    [normalizedStatus],
+  );
+  const total = countResult.rows[0]?.total || 0;
+  const result = await pool.query(
+    `SELECT cpd.id,cpd.user_id,cpd.original_name,cpd.mime_type,cpd.file_size,cpd.status,
+            cpd.created_at,cpd.updated_at,cpd.reviewed_by,cpd.reviewed_at,cpd.review_reason,
+            u.name AS user_name,u.email AS user_email,bp.business_name
+     FROM company_proof_documents cpd
+     INNER JOIN users u ON u.id=cpd.user_id
+     LEFT JOIN business_profiles bp ON bp.user_id=cpd.user_id
+     WHERE cpd.status=$1
+     ORDER BY CASE WHEN cpd.status='pending' THEN cpd.created_at END ASC, cpd.created_at DESC, cpd.id DESC
+     LIMIT $2 OFFSET $3`,
+    [normalizedStatus, currentPageSize, offset],
+  );
+  return {
+    data: result.rows,
+    pagination: {
+      page: currentPage,
+      pageSize: currentPageSize,
+      total,
+      totalPages: total === 0 ? 0 : Math.ceil(total / currentPageSize),
+      hasNextPage: currentPage * currentPageSize < total,
+      hasPreviousPage: currentPage > 1 && total > 0,
+    },
+  };
+}
+
+async function reviewCompanyProof({ documentId, status, reviewReason = '', reviewedBy }) {
+  const normalizedDocumentId = Number(documentId);
+  const normalizedStatus = String(status || '').trim().toLowerCase();
+  const normalizedReviewer = Number(reviewedBy);
+  const reason = String(reviewReason || '').trim();
+
+  if (!Number.isInteger(normalizedDocumentId) || normalizedDocumentId <= 0) {
+    const error = new Error('Invalid company proof document');
+    error.code = 'INVALID_PROOF_DOCUMENT';
+    throw error;
+  }
+  if (!['verified', 'rejected'].includes(normalizedStatus)) {
+    const error = new Error('Company proof can only be verified or rejected');
+    error.code = 'INVALID_PROOF_STATUS';
+    throw error;
+  }
+  if (!Number.isInteger(normalizedReviewer) || normalizedReviewer <= 0) {
+    const error = new Error('Invalid reviewing administrator');
+    error.code = 'INVALID_REVIEWER';
+    throw error;
+  }
+  if (normalizedStatus === 'rejected' && !reason) {
+    const error = new Error('A rejection reason is required');
+    error.code = 'REJECTION_REASON_REQUIRED';
+    throw error;
+  }
+  if (reason.length > 1000) {
+    const error = new Error('Rejection reason must be 1000 characters or fewer');
+    error.code = 'REJECTION_REASON_TOO_LONG';
+    throw error;
+  }
+
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const current = (await client.query(
+      'SELECT id,status FROM company_proof_documents WHERE id=$1 FOR UPDATE',
+      [normalizedDocumentId],
+    )).rows[0];
+
+    if (!current) {
+      const error = new Error('Company proof document not found');
+      error.code = 'NOT_FOUND';
+      throw error;
+    }
+    if (current.status !== 'pending') {
+      const error = new Error(`Company proof is already ${current.status}`);
+      error.code = 'PROOF_ALREADY_REVIEWED';
+      throw error;
+    }
+
+    const updated = (await client.query(
+      `UPDATE company_proof_documents
+       SET status=$1,reviewed_by=$2,reviewed_at=CURRENT_TIMESTAMP,
+           review_reason=$3,updated_at=CURRENT_TIMESTAMP
+       WHERE id=$4
+       RETURNING id,user_id,original_name,mime_type,file_size,status,
+                 created_at,updated_at,reviewed_by,reviewed_at,review_reason`,
+      [normalizedStatus, normalizedReviewer, normalizedStatus === 'rejected' ? reason : null, normalizedDocumentId],
+    )).rows[0];
+
+    await client.query('COMMIT');
+    return updated;
+  } catch (error) {
+    await client.query('ROLLBACK');
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
+module.exports={getDashboardStats,getUsers,createAdmin,setUserStatus,setUserRole,updateUserProfile,getCompanyProofs,reviewCompanyProof};
+
