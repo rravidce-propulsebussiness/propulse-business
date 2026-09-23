@@ -27,6 +27,11 @@ assert(
   'Uploaded company proofs must return the authenticated API URL instead of a public /uploads URL',
 );
 
+assert(authService.includes("const expectedPrefix = `data:${mimeType};base64,`;"), 'Company-proof uploads must require a MIME-matching data URL prefix');
+assert(authService.includes("Company proof document content does not match its file type"), 'Company-proof uploads must validate file signatures');
+assert(authService.includes("await fsp.writeFile(filePath, document.buffer, { flag: 'wx' });"), 'Company-proof writes must not block the Node.js event loop');
+assert(authService.includes("await fsp.rm(filePath, { force: true });"), 'Company-proof cleanup must use asynchronous filesystem operations');
+
 assert(
   authService.includes('WHERE id=$1 AND (user_id=$2 OR $3=TRUE)') &&
   authService.includes('getCompanyProofDocument, login'),
