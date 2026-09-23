@@ -3,12 +3,11 @@ export const API_BASE_URL = import.meta.env.VITE_API_URL || '/api'
 export async function apiRequest(path, options = {}, includeToken = true) {
   const requestOptions = options
   const headers = { 'Content-Type': 'application/json', ...(requestOptions.headers || {}) }
-  const token = includeToken ? localStorage.getItem('propulse_auth_token') : null
-  if (token) headers.Authorization = `Bearer ${token}`
-  const response = await fetch(`${API_BASE_URL}${path}`, { ...requestOptions, headers })
+  const token = null
+  const response = await fetch(`${API_BASE_URL}${path}`, { ...requestOptions, headers, credentials: 'include' } )
   const data = await response.json().catch(() => ({}))
 
-  if (response.status === 401 && token && path !== '/auth/login') {
+  if (response.status === 401 && includeToken && path !== '/auth/login') {
     localStorage.removeItem('propulse_auth_token')
     localStorage.removeItem('propulse_auth_user')
     localStorage.removeItem('propulse_session_mode')
