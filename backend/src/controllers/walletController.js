@@ -1,4 +1,5 @@
 const walletService=require('../services/walletService');
+const walletCouponService=require('../services/walletCouponService');
 const walletHistoryService=require('../services/walletHistoryService');
 async function get(req,res){try{res.json(await walletService.getWallet(req.user.id))}catch(e){console.error('Wallet get failed:',e.message);res.status(500).json({error:'Failed to fetch wallet'})}}
 async function history(req,res){try{res.json(await walletHistoryService.getHistory(req.user.id))}catch(e){console.error('Wallet history failed:',e.message);res.status(500).json({error:'Failed to fetch wallet history'})}}
