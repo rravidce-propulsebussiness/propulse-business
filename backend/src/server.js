@@ -1,7 +1,6 @@
 require('dotenv').config();
 const express=require('express');
 const cors=require('cors');
-const cookieParser=require('cookie-parser');
 const pool=require('./config/database');
 const {runMigrations}=require('./database/runMigrations');
 const industryRoutes=require('./routes/industryRoutes');
@@ -42,7 +41,6 @@ const trustProxy=String(process.env.TRUST_PROXY||'').trim();
 if(trustProxy) app.set('trust proxy',trustProxy==='true'?true:Number.isNaN(Number(trustProxy))?trustProxy:Number(trustProxy));
 app.disable('x-powered-by');
 app.use(cors({origin(origin,callback){if(!origin||configuredOrigins.includes(origin))return callback(null,true);return callback(new Error('CORS origin not allowed'));},credentials:true}));
-sapp.use(cookieParser());
 app.use((req,res,next)=>{res.setHeader('X-Content-Type-Options','nosniff');res.setHeader('X-Frame-Options','DENY');res.setHeader('Referrer-Policy','strict-origin-when-cross-origin');res.setHeader('Permissions-Policy','camera=(),microphone=(),geolocation=()');if(isProduction)res.setHeader('Strict-Transport-Security','max-age=31536000; includeSubDomains');next();});
 app.use(express.json({limit:MAX_JSON_BYTES}));
 app.use('/uploads',(req,res,next)=>{if(req.path==='/company-proofs'||req.path.startsWith('/company-proofs/'))return res.status(404).json({error:'Not found'});return next();});
