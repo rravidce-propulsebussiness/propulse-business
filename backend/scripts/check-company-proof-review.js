@@ -12,10 +12,10 @@ function assert(condition, message) {
 }
 
 assert(service.includes('company_proof_documents'), 'Admin service must query company proof documents');
-assert(service.includes("status IN ('pending','verified','rejected')"), 'Admin service must constrain review status');
+assert(service.includes("['pending', 'verified', 'rejected']") || service.includes("['verified', 'rejected']"), 'Admin service must constrain review status');
 assert(service.includes('FOR UPDATE'), 'Company proof review mutation must lock the document row');
 assert(service.includes('reviewed_by') && service.includes('reviewed_at') && service.includes('review_reason'), 'Company proof review metadata must be persisted');
-assert(service.includes("status <> 'pending'"), 'Company proof review must reject non-pending transitions');
+assert(service.includes("current.status !== 'pending'"), 'Company proof review must reject non-pending transitions');
 
 assert(controller.includes('getCompanyProofs'), 'Admin controller must expose company proof listing');
 assert(controller.includes('verifyCompanyProof') && controller.includes('rejectCompanyProof'), 'Admin controller must expose verify/reject actions');
