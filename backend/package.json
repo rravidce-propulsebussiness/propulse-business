@@ -16,7 +16,8 @@
     "test:investor-payout": "node scripts/check-investor-payout-integrity.js",
     "test:last-admin": "node scripts/check-last-admin-protection.js",
     "test:lead-entitlement": "node scripts/check-lead-entitlement-periods.js",
-    "test:company-proof-review": "node scripts/check-company-proof-review.js"
+    "test:company-proof-review": "node scripts/check-company-proof-review.js",
+    "test:wallet-coupon": "node scripts/check-wallet-coupon.js"
   },
   "keywords": [],
   "author": "",
