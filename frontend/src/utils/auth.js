@@ -20,7 +20,7 @@ export const getUser = () => {
   } catch { return null }
 }
 
-export function saveSession({ token, user }) {
+export function saveSession({ user }) {
   localStorage.removeItem(TOKEN_KEY)
   localStorage.setItem(USER_KEY, JSON.stringify(user))
   if (user?.is_pro_member !== undefined) localStorage.setItem(PRO_MEMBER_KEY, String(Boolean(user.is_pro_member)))
