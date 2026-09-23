@@ -7,11 +7,15 @@ const AUTH_COOKIE = 'propulse_auth';
 const AUTH_COOKIE_MAX_AGE = 7 * 24 * 60 * 60 * 1000;
 
 function setAuthCookie(res, token) {
-  res.cookie(AUTH_COOKIE, token, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', maxAge: AUTH_COOKIE_MAX_AGE, path: '/' });
+  const parts = [`${AUTH_COOKIE}=${encodeURIComponent(token)}`, 'HttpOnly', 'Path=/', 'SameSite=Lax', `Max-Age=${Math.floor(AUTH_COOKIE_MAX_AGE / 1000)}`];
+  if (process.env.NODE_ENV === 'production') parts.push('Secure');
+  res.setHeader('Set-Cookie', parts.join('; '));
 }
 
 function clearAuthCookie(res) {
-  res.clearCookie(AUTH_COOKIE, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', path: '/' });
+  const parts = [`${AUTH_COOKIE}=`, 'HttpOnly', 'Path=/', 'SameSite=Lax', 'Max-Age=0'];
+  if (process.env.NODE_ENV === 'production') parts.push('Secure');
+  res.setHeader('Set-Cookie', parts.join('; '));
 }
 
 function publicAuthResult(res, result, status = 200) {
