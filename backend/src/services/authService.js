@@ -114,26 +114,76 @@ async function signup({ name, email, password, phone, businessName, businessDeta
 async function saveCompanyProofDocuments(userId, documents = []) {
   if (!Array.isArray(documents) || !documents.length) throw new Error('At least one company proof document is required');
   if (documents.length > 8) throw new Error('You can upload up to 8 company proof documents');
+
   const allowedTypes = new Set(['application/pdf', 'image/jpeg', 'image/png']);
   const uploadDir = path.join(__dirname, '../../uploads/company-proofs');
   fs.mkdirSync(uploadDir, { recursive: true });
-  const saved = [];
-  for (const document of documents) {
+
+  // Validate and prepare every document before creating any file or database row.
+  const preparedDocuments = documents.map((document) => {
     const mimeType = String(document?.type || '').toLowerCase();
     const originalName = String(document?.name || 'document').replace(/[^a-zA-Z0-9._-]/g, '_').slice(0, 180);
     const raw = String(document?.data || '');
     if (!allowedTypes.has(mimeType) || !raw.startsWith('data:')) throw new Error('Only PDF, JPG and PNG company proof documents are allowed');
+
     const base64 = raw.replace(/^data:[^;]+;base64,/, '');
     const buffer = Buffer.from(base64, 'base64');
     if (!buffer.length || buffer.length > 5 * 1024 * 1024) throw new Error('Each company proof document must be 5 MB or smaller');
+
     const extension = mimeType === 'application/pdf' ? '.pdf' : mimeType === 'image/png' ? '.png' : '.jpg';
-    const storedName = `${userId}-${Date.now()}-${crypto.randomBytes(8).toString('hex')}${extension}`;
-    fs.writeFileSync(path.join(uploadDir, storedName), buffer, { flag: 'wx' });
-    const fileUrl = `/uploads/company-proofs/${storedName}`;
-    const inserted = (await pool.query(`INSERT INTO company_proof_documents (user_id,original_name,stored_name,mime_type,file_size,file_url) VALUES ($1,$2,$3,$4,$5,$6) RETURNING id`, [userId, originalName, storedName, mimeType, buffer.length, fileUrl])).rows[0];
-    saved.push({ id: inserted.id, original_name: originalName, mime_type: mimeType, file_size: buffer.length, file_url: `/api/auth/company-proofs/${inserted.id}`, status: 'pending' });
+    return { mimeType, originalName, buffer, extension };
+  });
+
+  const client = await pool.connect();
+  const createdFiles = [];
+  try {
+    await client.query('BEGIN');
+
+    const saved = [];
+    for (const document of preparedDocuments) {
+      const storedName = `${userId}-${Date.now()}-${crypto.randomBytes(8).toString('hex')}${document.extension}`;
+      const filePath = path.join(uploadDir, storedName);
+
+      fs.writeFileSync(filePath, document.buffer, { flag: 'wx' });
+      createdFiles.push(filePath);
+
+      const fileUrl = `/uploads/company-proofs/${storedName}`;
+      const inserted = (await client.query(
+        `INSERT INTO company_proof_documents (user_id,original_name,stored_name,mime_type,file_size,file_url) VALUES ($1,$2,$3,$4,$5,$6) RETURNING id`,
+        [userId, document.originalName, storedName, document.mimeType, document.buffer.length, fileUrl],
+      )).rows[0];
+
+      saved.push({
+        id: inserted.id,
+        original_name: document.originalName,
+        mime_type: document.mimeType,
+        file_size: document.buffer.length,
+        file_url: `/api/auth/company-proofs/${inserted.id}`,
+        status: 'pending',
+      });
+    }
+
+    await client.query('COMMIT');
+    return saved;
+  } catch (error) {
+    try {
+      await client.query('ROLLBACK');
+    } catch (rollbackError) {
+      console.error('Company proof upload rollback failed:', rollbackError.message);
+    }
+
+    for (const filePath of createdFiles) {
+      try {
+        fs.rmSync(filePath, { force: true });
+      } catch (cleanupError) {
+        console.error('Company proof orphan cleanup failed:', cleanupError.message);
+      }
+    }
+
+    throw error;
+  } finally {
+    client.release();
   }
-  return saved;
 }
 
 async function login({ email, password }) {
