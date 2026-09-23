@@ -4,7 +4,7 @@ const TOKEN_KEY = 'propulse_auth_token'
 const USER_KEY = 'propulse_auth_user'
 const PRO_MEMBER_KEY = 'propulse_is_pro_member'
 
-export const getToken = () => localStorage.getItem(TOKEN_KEY)
+export const getToken = () => null
 export const getUser = () => {
   try {
     const user = JSON.parse(localStorage.getItem(USER_KEY) || 'null')
@@ -21,7 +21,7 @@ export const getUser = () => {
 }
 
 export function saveSession({ token, user }) {
-  localStorage.setItem(TOKEN_KEY, token)
+  localStorage.removeItem(TOKEN_KEY)
   localStorage.setItem(USER_KEY, JSON.stringify(user))
   if (user?.is_pro_member !== undefined) localStorage.setItem(PRO_MEMBER_KEY, String(Boolean(user.is_pro_member)))
 }
