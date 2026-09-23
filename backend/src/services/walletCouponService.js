@@ -1,8 +1,12 @@
 const pool=require('../config/database')
 const couponService=require('./couponService')
+const { decodeBase64Payload, validateDataUrlSignature } = require('../utils/fileValidation');
+const MAX_TOPUP_PROOF_BYTES = 5 * 1024 * 1024;
+function validateTopupProof(proofUrl){ const value=String(proofUrl||'').trim(); if(!value) return; const parsed=decodeBase64Payload(value); if(!parsed || parsed.data.length<=0 || parsed.data.length>MAX_TOPUP_PROOF_BYTES || !validateDataUrlSignature(value,['image/png','image/jpeg','image/webp','application/pdf'])) throw Object.assign(new Error('Top-up proof must be a valid PNG, JPEG, WebP, or PDF file under 5 MB.'),{code:'INVALID_PROOF'}); }
 
 async function createTopupWithCoupon({userId,amount,reference,proofUrl,couponCode}){
   const value=Number(amount)
+  validateTopupProof(proofUrl)
   if(!Number.isFinite(value)||value<=0)throw Object.assign(new Error('Amount must be greater than zero'),{code:'INVALID_AMOUNT'})
   const normalizedReference=reference==null?null:String(reference).trim()||null
   const code=String(couponCode||'').trim()
