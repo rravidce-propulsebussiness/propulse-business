@@ -3,6 +3,23 @@ const path = require('path');
 const authService = require('../services/authService');
 const { sendPasswordResetEmail } = require('../services/emailService');
 
+const AUTH_COOKIE = 'propulse_auth';
+const AUTH_COOKIE_MAX_AGE = 7 * 24 * 60 * 60 * 1000;
+
+function setAuthCookie(res, token) {
+  res.cookie(AUTH_COOKIE, token, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', maxAge: AUTH_COOKIE_MAX_AGE, path: '/' });
+}
+
+function clearAuthCookie(res) {
+  res.clearCookie(AUTH_COOKIE, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', path: '/' });
+}
+
+function publicAuthResult(res, result, status = 200) {
+  setAuthCookie(res, result.token);
+  const { token, ...safeResult } = result;
+  return res.status(status).json(safeResult);
+}
+
 function validatePassword(password) {
   return typeof password === 'string' && password.length >= 8;
 }
@@ -43,7 +60,7 @@ async function signup(req, res) {
     const result = await authService.signup({
       name, email, password, phone, businessName, businessDetails, services, locations, role, googleCredential,
     });
-    return res.status(201).json(result);
+    return publicAuthResult(res, result, 201);
   } catch (error) {
     if (error.code === 'EMAIL_EXISTS') return res.status(409).json({ error: error.message });
     if (error.code === 'INVALID_BUSINESS_SELECTION') return res.status(400).json({ error: error.message });
@@ -94,7 +111,7 @@ async function login(req, res) {
   try {
     const { email, password } = req.body;
     if (!email?.trim() || !password) return res.status(400).json({ error: 'Email and password are required' });
-    return res.json(await authService.login({ email, password }));
+    return publicAuthResult(res, await authService.login({ email, password }));
   } catch (error) {
     if (error.code === 'INVALID_CREDENTIALS') return res.status(401).json({ error: error.message });
     console.error('Login failed:', error.message);
@@ -107,7 +124,7 @@ async function googleLogin(req, res) {
     const { credential } = req.body || {};
     // Google sign-in is an authentication flow, not account creation.
     // The verified Google email determines the existing Propulse account.
-    return res.json(await authService.googleLogin({ idToken: credential }));
+    return publicAuthResult(res, await authService.googleLogin({ idToken: credential }));
   } catch (error) {
     if (['GOOGLE_NOT_CONFIGURED', 'INVALID_GOOGLE_TOKEN', 'INVALID_SIGNUP_ROLE'].includes(error.code)) return res.status(400).json({ error: error.message });
     if (error.code === 'GOOGLE_ACCOUNT_NOT_FOUND') return res.status(404).json({ error: error.message });
@@ -149,6 +166,11 @@ async function resetPassword(req, res) {
   }
 }
 
+async function logout(req, res) {
+  clearAuthCookie(res);
+  return res.status(204).send();
+}
+
 async function me(req, res) {
   try {
     const user = await authService.getUserById(req.user.id);
@@ -160,4 +182,4 @@ async function me(req, res) {
   }
 }
 
-module.exports = { signup, uploadCompanyProofs, downloadCompanyProof, login, googleLogin, forgotPassword, resetPassword, me };
+module.exports = { signup, uploadCompanyProofs, downloadCompanyProof, login, googleLogin, forgotPassword, resetPassword, logout, me };
