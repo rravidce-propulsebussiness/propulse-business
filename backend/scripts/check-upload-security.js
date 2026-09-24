@@ -5,6 +5,8 @@ const { validateDataUrlSignature } = require('../src/utils/fileValidation');
 
 const homepage = fs.readFileSync(path.join(__dirname, '../src/services/homepageMediaService.js'), 'utf8');
 const pricing = fs.readFileSync(path.join(__dirname, '../src/services/servicePricingService.js'), 'utf8');
+const authRoutes = fs.readFileSync(path.join(__dirname, '../src/routes/authRoutes.js'), 'utf8');
+const authService = fs.readFileSync(path.join(__dirname, '../src/services/authService.js'), 'utf8');
 
 const png = Buffer.from([137,80,78,71,13,10,26,10]).toString('base64');
 const jpeg = Buffer.from([255,216,255,224]).toString('base64');
@@ -22,4 +24,7 @@ for (const [label, source] of [['homepage', homepage], ['service pricing', prici
   assert(source.includes("crypto.randomBytes(12).toString('hex')"), `${label}: upload filename is not generated with cryptographic randomness`);
 }
 
-console.log('Image upload signature security checks passed.');
+assert(authRoutes.includes("const companyProofUploadLimit = rateLimit({ windowMs: 15 * 60 * 1000, max: 10 });"), 'company proof upload rate limit is not configured');
+assert(authRoutes.includes("router.post('/company-proofs', requireAuth, companyProofUploadLimit, authController.uploadCompanyProofs);"), 'company proof upload route is missing its dedicated rate limit');
+assert(authService.includes("(?=.*[A-Za-z])(?=.*\\d).{8,}"), 'signup password minimum is not 8 characters');
+console.log('Image upload and authentication boundary security checks passed.');
