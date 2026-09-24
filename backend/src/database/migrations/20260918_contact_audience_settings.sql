@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS contact_audience_settings (
   business_hours VARCHAR(200) NOT NULL DEFAULT '',
   support_email VARCHAR(200) NOT NULL DEFAULT '',
   careers_email VARCHAR(200) NOT NULL DEFAULT '',
-  maps_url TEXT NOT NULL DEFAULT '',
+  maps_url TEXT NOT NULL DEFAULT '/',
   website_url TEXT NOT NULL DEFAULT '/',
   social_handles JSONB NOT NULL DEFAULT '[]'::jsonb,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
