@@ -9,6 +9,13 @@ const MAX_IMAGE_BYTES=7*1024*1024;
 const MIME_EXTENSIONS={'image/jpeg':'jpg','image/png':'png','image/webp':'webp'};
 const UPLOAD_ROOT=path.join(__dirname,'../../uploads/service-pricing');
 function clean(v){return String(v??'').trim()}
+function normalizeCtaUrl(value){
+  const url=clean(value)||'/contact';
+  if(!url.startsWith('/')||url.startsWith('//')||/[\\\r\n]/.test(url)){
+    const e=new Error('CTA URL must be an internal application path');e.code='INVALID_CTA_URL';throw e
+  }
+  return url
+}
 function safeJson(v){if(Array.isArray(v))return v;try{const parsed=typeof v==='string'?JSON.parse(v):v;return Array.isArray(parsed)?parsed:[]}catch{return[]}}
 function normalize(input={}){
   const features=safeJson(input.features).map(x=>clean(x)).filter(Boolean).slice(0,20);
@@ -23,7 +30,7 @@ function normalize(input={}){
     image_url:clean(input.image_url),
     features,
     cta_label:clean(input.cta_label)||'Get Started',
-    cta_url:clean(input.cta_url)||'/contact',
+    cta_url:normalizeCtaUrl(input.cta_url),
     highlighted:Boolean(input.highlighted),
     sort_order:Number.isFinite(Number(input.sort_order))?Number(input.sort_order):0,
     is_active:input.is_active!==false
