@@ -1,5 +1,6 @@
 const MAX_SHEET_BYTES=5*1024*1024;
 const SHEET_HOSTS=new Set(['docs.google.com']);
+const MAX_REDIRECTS=3;
 
 function parseGoogleSheetUrl(value){
   let url;
@@ -12,6 +13,28 @@ function parseGoogleSheetUrl(value){
   if(!gid&&url.hash){const hash=url.hash.match(/(?:^#|&)gid=(\d+)/);if(hash)gid=hash[1]}
   if(gid&&!/^\d+$/.test(gid))throw new Error('Google Sheet tab id (gid) must be numeric');
   return{spreadsheetId,gid:gid||'0'};
+}
+
+function validateGoogleSheetTarget(value){
+  let url;
+  try{url=new URL(String(value||''))}catch{throw new Error('Google Sheet redirect target is invalid')}
+  if(url.protocol!=='https:'||!SHEET_HOSTS.has(url.hostname))throw new Error('Google Sheet redirect target is not allowed');
+  const match=url.pathname.match(/\/spreadsheets\/(?:u\/\d+\/)?d\/([a-zA-Z0-9_-]+)/);
+  if(!match)throw new Error('Google Sheet redirect target is not allowed');
+  return url;
+}
+
+async function fetchWithSafeRedirects(target,options={}){
+  let current=validateGoogleSheetTarget(target);
+  for(let redirects=0;redirects<=MAX_REDIRECTS;redirects+=1){
+    const response=await fetch(current,{...options,redirect:'manual'});
+    if(response.status<300||response.status>=400)return response;
+    const location=response.headers.get('location');
+    if(!location)throw new Error('Google Sheet redirect did not provide a destination');
+    if(redirects===MAX_REDIRECTS)throw new Error('Google Sheet followed too many redirects');
+    current=validateGoogleSheetTarget(new URL(location,current).toString());
+  }
+  throw new Error('Google Sheet redirect validation failed');
 }
 
 async function readCsvResponse(response){
@@ -40,7 +63,7 @@ async function fetchGoogleSheetCsv(sheetUrl){
   try{
     for(const target of urls){
       try{
-        const response=await fetch(target,{redirect:'follow',signal:controller.signal,headers:{Accept:'text/csv,text/plain;q=0.9'}});
+        const response=await fetchWithSafeRedirects(target,{signal:controller.signal,headers:{Accept:'text/csv,text/plain;q=0.9'}});
         const csv=await readCsvResponse(response);
         return{csv,spreadsheetId,gid};
       }catch(error){
@@ -55,4 +78,4 @@ async function fetchGoogleSheetCsv(sheetUrl){
   }finally{clearTimeout(timeout)}
 }
 
-module.exports={parseGoogleSheetUrl,fetchGoogleSheetCsv};
+module.exports={parseGoogleSheetUrl,fetchGoogleSheetCsv,validateGoogleSheetTarget,fetchWithSafeRedirects};
