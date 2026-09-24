@@ -1,4 +1,5 @@
 const pool = require('../config/database');
+const { parseMoneyPaise, paiseToMoney, allocatePaise } = require('../utils/money');
 
 const INVESTOR_LEDGER_LOCK_NAMESPACE = 2147483000;
 
@@ -44,13 +45,16 @@ async function reconcileCycleRevenue(client, userId, cycleId) {
       FOR UPDATE
     `, [uid, cid])).rows;
     if (!investors.length) continue;
-    const total = investors.reduce((sum, row) => sum + Number(row.amount || 0), 0);
-    if (total <= 0) continue;
-    const gross = Number(purchase.amount || 0);
-    const distributable = gross * share / 100;
-    for (const investment of investors) {
-      const allocated = distributable * (Number(investment.amount || 0) / total);
-      if (allocated <= 0) continue;
+    const investmentPaise = investors.map(row => ({ row, paise: parseMoneyPaise(row.amount, { allowZero: true }) })).filter(x => x.paise > 0n);
+    const totalPaise = investmentPaise.reduce((sum, x) => sum + x.paise, 0n);
+    if (totalPaise <= 0n) continue;
+    const grossPaise = parseMoneyPaise(purchase.amount, { allowZero: true });
+    if (grossPaise <= 0n) continue;
+    const gross = paiseToMoney(grossPaise);
+    for (const investment of investmentPaise) {
+      const allocatedPaise = allocatePaise(grossPaise, share, investment.paise, totalPaise);
+      if (allocatedPaise <= 0n) continue;
+      const allocated = paiseToMoney(allocatedPaise);
       await client.query(`
         INSERT INTO investment_revenue_allocations
           (investment_id,lead_purchase_id,industry_id,gross_sale_amount,investor_share_percent,allocated_amount)
