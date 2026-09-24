@@ -171,9 +171,31 @@ async function resetPassword(req, res) {
 }
 
 async function logout(req, res) {
-  clearAuthCookie(res);
+  try {
+    const header = req.headers.authorization || '';
+    const cookieHeader = String(req.headers.cookie || '');
+    const cookieToken = cookieHeader
+      .split(';')
+      .map(part => part.trim())
+      .find(part => part.startsWith(`${AUTH_COOKIE}=`))
+      ?.slice(AUTH_COOKIE.length + 1);
+    const encodedToken = header.startsWith('Bearer ') ? header.slice(7) : cookieToken;
+
+    if (encodedToken) {
+      try {
+        const token = decodeURIComponent(encodedToken);
+        const tokenUser = authService.verifyToken(token);
+        await authService.revokeAuthSessions(tokenUser.id);
+      } catch {
+        // Always clear the browser cookie even when the token is already invalid.
+      }
+    }
+  } finally {
+    clearAuthCookie(res);
+  }
   return res.status(204).send();
 }
+
 
 async function me(req, res) {
   try {
