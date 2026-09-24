@@ -7,8 +7,7 @@ SET
   billing_note='Scope-based pricing',
   features='["Website design & development","Web apps, portals & business software","Mobile app development","SEO, social media & performance marketing","Branding, creatives, photo & video support"]'::jsonb,
   cta_label='Talk to Marketing',
-  cta_url='/contact',
-  image_url='https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=1400&q=85'
+  cta_url='/contact'
 WHERE slug='marketing-growth';
 
 UPDATE service_pricing
@@ -21,8 +20,7 @@ SET
   features='["Location-based lead discovery","Protected customer contact data","Configured lead pricing","Purchased-lead management"]'::jsonb,
   cta_label='Explore Leads',
   cta_url='/leads',
-  highlighted=TRUE,
-  image_url='https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=1400&q=85'
+  highlighted=TRUE
 WHERE slug='lead-marketplace';
 
 UPDATE service_pricing
