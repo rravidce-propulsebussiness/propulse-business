@@ -264,7 +264,7 @@ async function resetPassword({ token, password }) {
 
 function verifyToken(token) { return jwt.verify(token, EFFECTIVE_JWT_SECRET); }
 
-async function getAuthenticatedUser(id, authVersion) {
+async function revokeAuthSessions(userId) {\n  await pool.query('UPDATE users SET auth_version = auth_version + 1, updated_at = CURRENT_TIMESTAMP WHERE id=$1', [userId]);\n}\n\nasync function getAuthenticatedUser(id, authVersion) {
   const result = await pool.query(`SELECT id,name,email,role,auth_version FROM users WHERE id=$1 AND is_active=TRUE`, [id]);
   const user = result.rows[0];
   if (!user) return null;
@@ -292,4 +292,4 @@ async function getCompanyProofDocument({ documentId, userId, isAdmin = false }) 
   return result.rows[0] || null;
 }
 
-module.exports = { signup, saveCompanyProofDocuments, getCompanyProofDocument, login, googleLogin, createPasswordReset, resetPassword, verifyToken, getUserById, getAuthenticatedUser };
+module.exports = { signup, saveCompanyProofDocuments, getCompanyProofDocument, login, googleLogin, createPasswordReset, resetPassword, verifyToken, getUserById, getAuthenticatedUser, revokeAuthSessions };
