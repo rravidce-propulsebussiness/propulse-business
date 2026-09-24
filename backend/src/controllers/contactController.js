@@ -13,7 +13,7 @@ async function getAdmin(req,res){
 async function updateAdmin(req,res){
   try{return res.json(await contactService.update(req.body||{},audience(req)))}
   catch(error){
-    const status=['INVALID_COMPANY','INVALID_AUDIENCE'].includes(error.code)?400:500;
+    const status=error.code==='INVALID_CONTACT_URL'||error.code==='INVALID_COMPANY'||error.code==='INVALID_AUDIENCE'?400:500;
     return res.status(status).json({error:error.message||'Failed to save contact settings',code:error.code});
   }
 }
