@@ -15,7 +15,8 @@ function getIdentity(req) {
   return req.user?.id ? `user:${req.user.id}` : `ip:${req.ip}`;
 }
 
-function getRouteKey(req) {
+function getRouteKey(req, scope = 'route') {
+  if (scope === 'global') return `global:${getIdentity(req)}`;
   const routeKey = req.route?.path || req.path;
   return `${getIdentity(req)}:${req.baseUrl}${routeKey}`;
 }
@@ -54,12 +55,12 @@ async function consumeSharedBucket(key, windowMs) {
   return result.rows[0];
 }
 
-function rateLimit({ windowMs = 15 * 60 * 1000, max = 100 } = {}) {
+function rateLimit({ windowMs = 15 * 60 * 1000, max = 100, scope = 'route' } = {}) {
   const safeWindowMs = Math.max(1000, Number(windowMs) || 15 * 60 * 1000);
   const safeMax = Math.max(1, Math.floor(Number(max) || 100));
 
   return async (req, res, next) => {
-    const key = getRouteKey(req);
+    const key = getRouteKey(req, scope);
     let bucket;
 
     if (process.env.NODE_ENV === 'production') {
