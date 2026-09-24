@@ -13,6 +13,7 @@ function normalizeHttpsUrl(value,field){
   const raw=clean(value);
   if(!raw) return '';
   if(raw.length>MAX_URL_LENGTH){const e=new Error(field+' URL is too long');e.code='INVALID_CONTACT_URL';throw e}
+  if(/[\\\r\n]/.test(raw)){const e=new Error(field+' must be a valid HTTPS URL');e.code='INVALID_CONTACT_URL';throw e}
   let url;
   try{url=new URL(raw)}catch{const e=new Error(field+' must be a valid HTTPS URL');e.code='INVALID_CONTACT_URL';throw e}
   if(url.protocol!=='https:'||url.username||url.password){const e=new Error(field+' must be a valid HTTPS URL');e.code='INVALID_CONTACT_URL';throw e}
