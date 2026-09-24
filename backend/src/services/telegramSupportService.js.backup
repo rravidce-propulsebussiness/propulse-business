@@ -1,0 +1,84 @@
+﻿const TELEGRAM_API = 'https://api.telegram.org';
+
+function getConfig() {
+  const token = String(process.env.TELEGRAM_BOT_TOKEN || '').trim();
+  const adminChatId = String(process.env.TELEGRAM_SUPPORT_CHAT_ID || '').trim();
+
+  return {
+    configured: Boolean(token && adminChatId),
+    token,
+    adminChatId,
+  };
+}
+
+async function telegramRequest(method, body) {
+  const config = getConfig();
+
+  if (!config.configured) {
+    return { configured: false, data: null };
+  }
+
+  const response = await fetch(
+    ${TELEGRAM_API}/bot/,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+    }
+  );
+
+  const data = await response.json().catch(() => ({}));
+
+  if (!response.ok || data.ok !== true) {
+    throw new Error(
+      data.description || Telegram request failed with status 
+    );
+  }
+
+  return {
+    configured: true,
+    data: data.result,
+  };
+}
+
+async function sendSupportMessage(text) {
+  const config = getConfig();
+
+  if (!config.configured) {
+    return { configured: false, data: null };
+  }
+
+  return telegramRequest('sendMessage', {
+    chat_id: config.adminChatId,
+    text: String(text || '').slice(0, 4096),
+  });
+}
+
+async function setWebhook(url) {
+  const config = getConfig();
+
+  if (!config.configured) {
+    return { configured: false, data: null };
+  }
+
+  const secret = String(
+    process.env.TELEGRAM_WEBHOOK_SECRET || ''
+  ).trim();
+
+  const body = { url };
+
+  if (secret) {
+    body.secret_token = secret;
+  }
+
+  return telegramRequest('setWebhook', body);
+}
+
+module.exports = {
+  getConfig,
+  telegramRequest,
+  sendSupportMessage,
+  setWebhook,
+};

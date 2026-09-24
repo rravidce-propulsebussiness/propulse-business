@@ -1,0 +1,22 @@
+﻿.support-chat{position:fixed;right:20px;bottom:20px;z-index:2147483000;font-family:inherit}
+.support-chat-launcher{width:58px;height:58px;border:0;border-radius:50%;background:#111827;color:#fff;font-size:24px;box-shadow:0 10px 30px #0003;cursor:pointer;display:flex;align-items:center;justify-content:center;position:relative;z-index:2147483001}
+.support-chat-panel{position:absolute;right:0;bottom:72px;width:min(360px,calc(100vw - 32px));height:520px;background:#fff;border:1px solid #e5e7eb;border-radius:18px;box-shadow:0 20px 60px #0002;display:flex;flex-direction:column;overflow:hidden}
+.support-chat-panel header{padding:16px;background:#111827;color:#fff;display:flex;justify-content:space-between;align-items:flex-start}
+.support-chat-panel header strong{display:block;font-size:16px}
+.support-chat-panel header span{display:block;font-size:12px;opacity:.75;margin-top:4px}
+.support-chat-panel header button{border:0;background:transparent;color:#fff;font-size:24px;cursor:pointer}
+.support-chat-messages{flex:1;overflow:auto;padding:14px;background:#f8fafc}
+.support-chat-empty{text-align:center;color:#64748b;font-size:13px;margin-top:40px}
+.support-chat-bubble{max-width:82%;padding:10px 12px;border-radius:14px;margin:7px 0;font-size:13px;line-height:1.4;white-space:pre-wrap;overflow-wrap:anywhere}
+.support-chat-bubble.mine{margin-left:auto;background:#111827;color:#fff;border-bottom-right-radius:4px}
+.support-chat-bubble.theirs{background:#fff;border:1px solid #e2e8f0;color:#0f172a;border-bottom-left-radius:4px}
+.support-chat-bubble small{display:block;margin-top:5px;opacity:.65;font-size:10px}
+.support-chat-compose{display:flex;gap:8px;padding:10px;border-top:1px solid #e5e7eb;background:#fff}
+.support-chat-compose textarea{flex:1;resize:none;border:1px solid #d1d5db;border-radius:10px;padding:9px;font:inherit;outline:none}
+.support-chat-compose button{align-self:flex-end;border:0;border-radius:10px;padding:9px 13px;background:#111827;color:#fff;cursor:pointer}
+.support-chat-compose button:disabled{opacity:.5;cursor:not-allowed}
+@media(max-width:600px){
+  .support-chat{right:14px;bottom:14px}
+  .support-chat-panel{height:70vh}
+  .support-chat-launcher{width:54px;height:54px}
+}
