@@ -27,7 +27,7 @@ function normalizeWebsiteUrl(value){
 function normalizeSocials(value){
   if(!Array.isArray(value)) return [];
   return value.map((item,index)=>({
-    id:clean(item?.id)||'social-'+(index+1),
+    id:clean(item?.id)||`social-${index+1}`,
     platform:clean(item?.platform)||'Social',
     url:normalizeHttpsUrl(item?.url,'Social'),
     enabled:item?.enabled!==false
@@ -68,4 +68,4 @@ async function update(input,audience='website'){
   );
   return result.rows[0];
 }
-module.exports={AUDIENCES,get,update};
+module.exports={AUDIENCES,get,update,normalize};
