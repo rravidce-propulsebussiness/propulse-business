@@ -8,7 +8,7 @@ if(/response\.text\(\).*details|details\.slice\(0,\s*300\)|response\.text\(\)\.c
 if(!/Email provider rejected the reset email \(HTTP \$\{response\.status\}\)/.test(source)){
   throw new Error('Email provider security regression: generic provider error missing');
 }
-if(!/response\.text\(\)\.catch/.test(source)){
-  throw new Error('Email provider security regression: provider response should be consumed before throwing');
+if(!/readResponseTextLimited\(response, 64 \* 1024\)/.test(source)){
+  throw new Error('Email provider security regression: provider response should be bounded before throwing');
 }
 console.log('Email provider error security regression test passed.');
