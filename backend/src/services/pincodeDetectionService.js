@@ -1,6 +1,7 @@
 const pool = require('../config/database');
 
 const INDIA_POST_LOOKUP = 'https://api.postalpincode.in/pincode/';
+const MAX_INDIA_POST_BYTES = 256 * 1024;
 
 function normalizeText(value) {
   return String(value || '')
@@ -14,6 +15,28 @@ function normalizePincode(value) {
   return /^\d{6}$/.test(pin) ? pin : null;
 }
 
+async function readResponseTextLimited(response, maxBytes) {
+  if (!response.body) return '';
+  const reader = response.body.getReader();
+  const chunks = [];
+  let total = 0;
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) return Buffer.concat(chunks, total).toString('utf8');
+      const chunk = Buffer.from(value);
+      total += chunk.length;
+      if (total > maxBytes) {
+        await reader.cancel().catch(() => {});
+        return null;
+      }
+      chunks.push(chunk);
+    }
+  } finally {
+    reader.releaseLock();
+  }
+}
+
 async function fetchIndiaPost(pincode) {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 10000);
@@ -22,8 +45,19 @@ async function fetchIndiaPost(pincode) {
       headers: { Accept: 'application/json' },
       signal: controller.signal,
     });
+    const contentLength = Number(response.headers.get('content-length') || 0);
+    if (contentLength > MAX_INDIA_POST_BYTES) {
+      throw new Error('India Post returned an unexpectedly large response');
+    }
     if (!response.ok) throw new Error(`India Post lookup failed (HTTP ${response.status})`);
-    const payload = await response.json();
+    const body = await readResponseTextLimited(response, MAX_INDIA_POST_BYTES);
+    if (body === null) throw new Error('India Post returned an unexpectedly large response');
+    let payload;
+    try {
+      payload = JSON.parse(body);
+    } catch {
+      throw new Error('India Post returned an invalid response');
+    }
     const first = Array.isArray(payload) ? payload[0] : payload;
     const offices = Array.isArray(first?.PostOffice) ? first.PostOffice : [];
     if (!offices.length) {
