@@ -29,8 +29,8 @@ async function sendPasswordResetEmail({ to, name, resetUrl }) {
     }
 
     if (!response.ok) {
-      const body = await response.text();
-      if (Buffer.byteLength(body, 'utf8') > 64 * 1024) {
+      const body = await readResponseTextLimited(response, 64 * 1024);
+      if (body === null) {
         throw new Error(`Email provider rejected the reset email (HTTP ${response.status})`);
       }
       throw new Error(`Email provider rejected the reset email (HTTP ${response.status})`);
@@ -42,6 +42,28 @@ async function sendPasswordResetEmail({ to, name, resetUrl }) {
     throw error;
   } finally {
     clearTimeout(timeout);
+  }
+}
+
+async function readResponseTextLimited(response, maxBytes) {
+  if (!response.body) return '';
+  const reader = response.body.getReader();
+  const chunks = [];
+  let total = 0;
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) return Buffer.concat(chunks, total).toString('utf8');
+      const chunk = Buffer.from(value);
+      total += chunk.length;
+      if (total > maxBytes) {
+        await reader.cancel().catch(() => {});
+        return null;
+      }
+      chunks.push(chunk);
+    }
+  } finally {
+    reader.releaseLock();
   }
 }
 
