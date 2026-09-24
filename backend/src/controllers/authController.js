@@ -131,6 +131,7 @@ async function googleLogin(req, res) {
     return publicAuthResult(res, await authService.googleLogin({ idToken: credential }));
   } catch (error) {
     if (['GOOGLE_NOT_CONFIGURED', 'INVALID_GOOGLE_TOKEN', 'INVALID_SIGNUP_ROLE'].includes(error.code)) return res.status(400).json({ error: error.message });
+    if (['GOOGLE_TOKEN_TIMEOUT', 'GOOGLE_TOKEN_VERIFICATION_FAILED'].includes(error.code)) return res.status(503).json({ error: 'Google sign-in verification is temporarily unavailable. Please try again.' });
     if (error.code === 'GOOGLE_ACCOUNT_NOT_FOUND') return res.status(404).json({ error: error.message });
     if (error.code === 'EMAIL_EXISTS') return res.status(409).json({ error: error.message });
     console.error('Google login failed:', error.message);
