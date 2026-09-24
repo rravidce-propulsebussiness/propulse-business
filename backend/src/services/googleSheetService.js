@@ -18,7 +18,7 @@ function parseGoogleSheetUrl(value){
 function validateGoogleSheetTarget(value){
   let url;
   try{url=new URL(String(value||''))}catch{throw new Error('Google Sheet redirect target is invalid')}
-  if(url.protocol!=='https:'||!SHEET_HOSTS.has(url.hostname))throw new Error('Google Sheet redirect target is not allowed');
+  if(url.protocol!=='https:'||!SHEET_HOSTS.has(url.hostname)||url.username||url.password)throw new Error('Google Sheet redirect target is not allowed');
   const match=url.pathname.match(/\/spreadsheets\/(?:u\/\d+\/)?d\/([a-zA-Z0-9_-]+)/);
   if(!match)throw new Error('Google Sheet redirect target is not allowed');
   return url;
