@@ -207,10 +207,28 @@ async function login({ email, password }) {
 async function verifyGoogleIdToken(idToken) {
   if (!process.env.GOOGLE_CLIENT_ID) throw Object.assign(new Error('Google sign-in is not configured'), { code: 'GOOGLE_NOT_CONFIGURED' });
   if (!idToken || typeof idToken !== 'string') throw Object.assign(new Error('Google credential is required'), { code: 'INVALID_GOOGLE_TOKEN' });
-  const response = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(idToken)}`);
-  const payload = await response.json().catch(() => ({}));
-  if (!response.ok || payload.aud !== process.env.GOOGLE_CLIENT_ID || !['https://accounts.google.com', 'accounts.google.com'].includes(payload.iss) || payload.email_verified !== 'true' || !payload.email || !payload.sub) throw Object.assign(new Error('Invalid Google sign-in credential'), { code: 'INVALID_GOOGLE_TOKEN' });
-  return payload;
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 10000);
+  try {
+    const response = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(idToken)}`, {
+      headers: { Accept: 'application/json' },
+      signal: controller.signal,
+    });
+    const contentLength = Number(response.headers.get('content-length') || 0);
+    if (contentLength > 64 * 1024) throw Object.assign(new Error('Invalid Google sign-in credential'), { code: 'INVALID_GOOGLE_TOKEN' });
+    const body = await response.text();
+    if (Buffer.byteLength(body, 'utf8') > 64 * 1024) throw Object.assign(new Error('Invalid Google sign-in credential'), { code: 'INVALID_GOOGLE_TOKEN' });
+    let payload = {};
+    try { payload = JSON.parse(body); } catch (_) { payload = {}; }
+    if (!response.ok || payload.aud !== process.env.GOOGLE_CLIENT_ID || !['https://accounts.google.com', 'accounts.google.com'].includes(payload.iss) || payload.email_verified !== 'true' || !payload.email || !payload.sub) throw Object.assign(new Error('Invalid Google sign-in credential'), { code: 'INVALID_GOOGLE_TOKEN' });
+    return payload;
+  } catch (error) {
+    if (error.name === 'AbortError') throw Object.assign(new Error('Google sign-in verification timed out'), { code: 'GOOGLE_TOKEN_TIMEOUT' });
+    if (error.code === 'INVALID_GOOGLE_TOKEN') throw error;
+    throw Object.assign(new Error('Google sign-in verification failed'), { code: 'GOOGLE_TOKEN_VERIFICATION_FAILED' });
+  } finally {
+    clearTimeout(timeout);
+  }
 }
 
 async function googleLogin({ idToken }) {
