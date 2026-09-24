@@ -1,6 +1,5 @@
 import { API_BASE_URL, apiRequest } from './api'
 
-const TOKEN_KEY = 'propulse_auth_token'
 const USER_KEY = 'propulse_auth_user'
 const PRO_MEMBER_KEY = 'propulse_is_pro_member'
 
@@ -21,13 +20,11 @@ export const getUser = () => {
 }
 
 export function saveSession({ user }) {
-  localStorage.removeItem(TOKEN_KEY)
   localStorage.setItem(USER_KEY, JSON.stringify(user))
   if (user?.is_pro_member !== undefined) localStorage.setItem(PRO_MEMBER_KEY, String(Boolean(user.is_pro_member)))
 }
 
 export async function clearSession({ revoke = true } = {}) {
-  localStorage.removeItem(TOKEN_KEY)
   localStorage.removeItem(USER_KEY)
   localStorage.removeItem(PRO_MEMBER_KEY)
   if (revoke) {
