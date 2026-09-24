@@ -22,7 +22,7 @@ assert(controller.includes("'HttpOnly'"), 'Auth cookie must be HttpOnly');
 assert(controller.includes("'SameSite=Lax'"), 'Auth cookie must use SameSite=Lax');
 assert(controller.includes("parts.push('Secure')"), 'Auth cookie must be Secure in production');
 assert(controller.includes('const { token, ...safeResult } = result;'), 'JWT must not be returned in the auth response body');
-assert(controller.includes('revokeAuthSessions(tokenUser.id)'), 'Logout must revoke the server-side auth session');
+assert(controller.includes('await authService.revokeAuthSessions(tokenUser.id);') || controller.includes('authService.revokeAuthSessions(tokenUser.id)'), 'Logout must revoke the server-side auth session');
 assert(middleware.includes("part.startsWith('propulse_auth=')"), 'Auth middleware must read the auth cookie');
 assert(service.includes('async function revokeAuthSessions(userId)'), 'Auth service must expose server-side session revocation');
 assert(frontendAuth.includes("credentials: 'include'"), 'Frontend logout must send credentials');
