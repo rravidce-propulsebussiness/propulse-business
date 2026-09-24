@@ -149,3 +149,7 @@ backend/uploads/homepage/*
 # Runtime-uploaded service pricing media
 backend/uploads/service-pricing/*
 !backend/uploads/service-pricing/.gitkeep
+
+# Runtime-uploaded company proof documents
+backend/uploads/company-proofs/*
+!backend/uploads/company-proofs/.gitkeep
