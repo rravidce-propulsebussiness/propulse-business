@@ -17,6 +17,13 @@ for(const marker of required){
   }
 }
 
+const controllerFile=path.join(__dirname,'../src/controllers/servicePricingController.js');
+const controllerSource=fs.readFileSync(controllerFile,'utf8');
+if(!controllerSource.includes("['INVALID_PRICING','INVALID_CTA_URL'].includes(e.code)?400")){
+  console.error('FAIL: service pricing update controller does not map INVALID_CTA_URL to 400');
+  process.exit(1);
+}
+
 function validate(value){
   const url=String(value??'').trim()||'/contact';
   return url.startsWith('/')&&!url.startsWith('//')&&!/[\\\r\n]/.test(url);
