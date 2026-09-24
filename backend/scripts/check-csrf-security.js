@@ -17,16 +17,16 @@ result=run({method:'POST',headers:{cookie:'propulse_auth=token'}});
 assert.equal(result.response.statusCode,403,'cookie-auth write without origin must be rejected');
 assert.equal(result.response.body.error,'CSRF validation failed');
 
-result=run({method:'POST',headers:{cookie:'propulse_auth=token'},origin:'http://localhost:5173'});
+result=run({method:'POST',headers:{cookie:'propulse_auth=token',origin:'http://localhost:5173'}});
 assert.equal(result.nextCalled,true,'allowed configured origin must pass');
 
-result=run({method:'POST',headers:{cookie:'propulse_auth=token'},origin:'https://evil.example'});
+result=run({method:'POST',headers:{cookie:'propulse_auth=token',origin:'https://evil.example'}});
 assert.equal(result.response.statusCode,403,'untrusted origin must be rejected');
 
-result=run({method:'POST',headers:{cookie:'propulse_auth=token'},referer:'http://localhost:5173/account'});
+result=run({method:'POST',headers:{cookie:'propulse_auth=token',referer:'http://localhost:5173/account'}});
 assert.equal(result.nextCalled,true,'allowed Referer origin must pass when Origin is absent');
 
-result=run({method:'POST',headers:{cookie:'propulse_auth=token'},referer:'https://evil.example/account'});
+result=run({method:'POST',headers:{cookie:'propulse_auth=token',referer:'https://evil.example/account'}});
 assert.equal(result.response.statusCode,403,'untrusted Referer origin must be rejected');
 
 result=run({method:'POST',headers:{authorization:'Bearer test-token'}});
