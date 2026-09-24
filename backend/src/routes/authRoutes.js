@@ -14,6 +14,7 @@ router.post('/login', authWriteLimit, authController.login);
 router.post('/google', authWriteLimit, authController.googleLogin);
 router.post('/forgot-password', recoveryLimit, authController.forgotPassword);
 router.post('/reset-password', recoveryLimit, authController.resetPassword);
+router.post('/logout', authController.logout);
 router.get('/me', requireAuth, authController.me);
 
 module.exports = router;

@@ -3,6 +3,27 @@ const path = require('path');
 const authService = require('../services/authService');
 const { sendPasswordResetEmail } = require('../services/emailService');
 
+const AUTH_COOKIE = 'propulse_auth';
+const AUTH_COOKIE_MAX_AGE = 7 * 24 * 60 * 60 * 1000;
+
+function setAuthCookie(res, token) {
+  const parts = [`${AUTH_COOKIE}=${encodeURIComponent(token)}`, 'HttpOnly', 'Path=/', 'SameSite=Lax', `Max-Age=${Math.floor(AUTH_COOKIE_MAX_AGE / 1000)}`];
+  if (process.env.NODE_ENV === 'production') parts.push('Secure');
+  res.setHeader('Set-Cookie', parts.join('; '));
+}
+
+function clearAuthCookie(res) {
+  const parts = [`${AUTH_COOKIE}=`, 'HttpOnly', 'Path=/', 'SameSite=Lax', 'Max-Age=0'];
+  if (process.env.NODE_ENV === 'production') parts.push('Secure');
+  res.setHeader('Set-Cookie', parts.join('; '));
+}
+
+function publicAuthResult(res, result, status = 200) {
+  setAuthCookie(res, result.token);
+  const { token, ...safeResult } = result;
+  return res.status(status).json(safeResult);
+}
+
 function validatePassword(password) {
   return typeof password === 'string' && password.length >= 8;
 }
@@ -43,7 +64,7 @@ async function signup(req, res) {
     const result = await authService.signup({
       name, email, password, phone, businessName, businessDetails, services, locations, role, googleCredential,
     });
-    return res.status(201).json(result);
+    return publicAuthResult(res, result, 201);
   } catch (error) {
     if (error.code === 'EMAIL_EXISTS') return res.status(409).json({ error: error.message });
     if (error.code === 'INVALID_BUSINESS_SELECTION') return res.status(400).json({ error: error.message });
@@ -94,7 +115,7 @@ async function login(req, res) {
   try {
     const { email, password } = req.body;
     if (!email?.trim() || !password) return res.status(400).json({ error: 'Email and password are required' });
-    return res.json(await authService.login({ email, password }));
+    return publicAuthResult(res, await authService.login({ email, password }));
   } catch (error) {
     if (error.code === 'INVALID_CREDENTIALS') return res.status(401).json({ error: error.message });
     console.error('Login failed:', error.message);
@@ -107,7 +128,7 @@ async function googleLogin(req, res) {
     const { credential } = req.body || {};
     // Google sign-in is an authentication flow, not account creation.
     // The verified Google email determines the existing Propulse account.
-    return res.json(await authService.googleLogin({ idToken: credential }));
+    return publicAuthResult(res, await authService.googleLogin({ idToken: credential }));
   } catch (error) {
     if (['GOOGLE_NOT_CONFIGURED', 'INVALID_GOOGLE_TOKEN', 'INVALID_SIGNUP_ROLE'].includes(error.code)) return res.status(400).json({ error: error.message });
     if (error.code === 'GOOGLE_ACCOUNT_NOT_FOUND') return res.status(404).json({ error: error.message });
@@ -127,7 +148,7 @@ async function forgotPassword(req, res) {
 
     const baseUrl = String(process.env.PUBLIC_APP_URL || process.env.CORS_ORIGIN || '').split(',')[0].replace(/\/$/, '');
     if (!baseUrl) throw new Error('PUBLIC_APP_URL is not configured');
-    const resetUrl = `${baseUrl}/reset-password?token=${encodeURIComponent(reset.token)}`;
+    const resetUrl = `${baseUrl}/reset-password#token=${encodeURIComponent(reset.token)}`;
     await sendPasswordResetEmail({ to: reset.user.email, name: reset.user.name, resetUrl });
     return res.json({ message: 'If an account exists for that email, a password reset link has been sent.' });
   } catch (error) {
@@ -149,6 +170,33 @@ async function resetPassword(req, res) {
   }
 }
 
+async function logout(req, res) {
+  try {
+    const header = req.headers.authorization || '';
+    const cookieHeader = String(req.headers.cookie || '');
+    const cookieToken = cookieHeader
+      .split(';')
+      .map(part => part.trim())
+      .find(part => part.startsWith(`${AUTH_COOKIE}=`))
+      ?.slice(AUTH_COOKIE.length + 1);
+    const encodedToken = header.startsWith('Bearer ') ? header.slice(7) : cookieToken;
+
+    if (encodedToken) {
+      try {
+        const token = decodeURIComponent(encodedToken);
+        const tokenUser = authService.verifyToken(token);
+        await authService.revokeAuthSessions(tokenUser.id);
+      } catch {
+        // Always clear the browser cookie even when the token is already invalid.
+      }
+    }
+  } finally {
+    clearAuthCookie(res);
+  }
+  return res.status(204).send();
+}
+
+
 async function me(req, res) {
   try {
     const user = await authService.getUserById(req.user.id);
@@ -160,4 +208,4 @@ async function me(req, res) {
   }
 }
 
-module.exports = { signup, uploadCompanyProofs, downloadCompanyProof, login, googleLogin, forgotPassword, resetPassword, me };
+module.exports = { signup, uploadCompanyProofs, downloadCompanyProof, login, googleLogin, forgotPassword, resetPassword, logout, me };

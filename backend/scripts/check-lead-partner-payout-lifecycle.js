@@ -176,6 +176,7 @@ async function main() {
     throw error;
   } finally {
     await c.query('ROLLBACK').catch(() => {});
+    c.release();
     if (cleanupNeeded) {
       const cleanup = await pool.connect();
       try {

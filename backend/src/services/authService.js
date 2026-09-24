@@ -2,6 +2,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const fs = require('fs');
+const fsp = fs.promises;
 const path = require('path');
 const pool = require('../config/database');
 const { getMembershipAccess } = require('./membershipAccessService');
@@ -117,18 +118,27 @@ async function saveCompanyProofDocuments(userId, documents = []) {
 
   const allowedTypes = new Set(['application/pdf', 'image/jpeg', 'image/png']);
   const uploadDir = path.join(__dirname, '../../uploads/company-proofs');
-  fs.mkdirSync(uploadDir, { recursive: true });
+  await fsp.mkdir(uploadDir, { recursive: true });
 
   // Validate and prepare every document before creating any file or database row.
   const preparedDocuments = documents.map((document) => {
     const mimeType = String(document?.type || '').toLowerCase();
     const originalName = String(document?.name || 'document').replace(/[^a-zA-Z0-9._-]/g, '_').slice(0, 180);
     const raw = String(document?.data || '');
-    if (!allowedTypes.has(mimeType) || !raw.startsWith('data:')) throw new Error('Only PDF, JPG and PNG company proof documents are allowed');
+    const expectedPrefix = `data:${mimeType};base64,`;
+    if (!allowedTypes.has(mimeType) || !raw.startsWith(expectedPrefix)) throw new Error('Only PDF, JPG and PNG company proof documents are allowed');
 
-    const base64 = raw.replace(/^data:[^;]+;base64,/, '');
+    const base64 = raw.slice(expectedPrefix.length).replace(/\s/g, '');
+    if (!base64 || !/^[A-Za-z0-9+/]*={0,2}$/.test(base64) || base64.length % 4 !== 0) throw new Error('Invalid company proof document encoding');
     const buffer = Buffer.from(base64, 'base64');
     if (!buffer.length || buffer.length > 5 * 1024 * 1024) throw new Error('Each company proof document must be 5 MB or smaller');
+
+    const signature = buffer.subarray(0, 8);
+    const validSignature =
+      (mimeType === 'application/pdf' && buffer.subarray(0, 5).toString('ascii') === '%PDF-') ||
+      (mimeType === 'image/png' && signature.equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]))) ||
+      (mimeType === 'image/jpeg' && buffer.length >= 3 && buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff);
+    if (!validSignature) throw new Error('Company proof document content does not match its file type');
 
     const extension = mimeType === 'application/pdf' ? '.pdf' : mimeType === 'image/png' ? '.png' : '.jpg';
     return { mimeType, originalName, buffer, extension };
@@ -144,7 +154,7 @@ async function saveCompanyProofDocuments(userId, documents = []) {
       const storedName = `${userId}-${Date.now()}-${crypto.randomBytes(8).toString('hex')}${document.extension}`;
       const filePath = path.join(uploadDir, storedName);
 
-      fs.writeFileSync(filePath, document.buffer, { flag: 'wx' });
+      await fsp.writeFile(filePath, document.buffer, { flag: 'wx' });
       createdFiles.push(filePath);
 
       const fileUrl = `/uploads/company-proofs/${storedName}`;
@@ -174,7 +184,7 @@ async function saveCompanyProofDocuments(userId, documents = []) {
 
     for (const filePath of createdFiles) {
       try {
-        fs.rmSync(filePath, { force: true });
+        await fsp.rm(filePath, { force: true });
       } catch (cleanupError) {
         console.error('Company proof orphan cleanup failed:', cleanupError.message);
       }
@@ -254,6 +264,13 @@ async function resetPassword({ token, password }) {
 
 function verifyToken(token) { return jwt.verify(token, EFFECTIVE_JWT_SECRET); }
 
+async function revokeAuthSessions(userId) {
+  await pool.query(
+    'UPDATE users SET auth_version = auth_version + 1, updated_at = CURRENT_TIMESTAMP WHERE id=$1',
+    [userId],
+  );
+}
+
 async function getAuthenticatedUser(id, authVersion) {
   const result = await pool.query(`SELECT id,name,email,role,auth_version FROM users WHERE id=$1 AND is_active=TRUE`, [id]);
   const user = result.rows[0];
@@ -282,4 +299,4 @@ async function getCompanyProofDocument({ documentId, userId, isAdmin = false }) 
   return result.rows[0] || null;
 }
 
-module.exports = { signup, saveCompanyProofDocuments, getCompanyProofDocument, login, googleLogin, createPasswordReset, resetPassword, verifyToken, getUserById, getAuthenticatedUser };
+module.exports = { signup, saveCompanyProofDocuments, getCompanyProofDocument, login, googleLogin, createPasswordReset, resetPassword, verifyToken, getUserById, getAuthenticatedUser, revokeAuthSessions };

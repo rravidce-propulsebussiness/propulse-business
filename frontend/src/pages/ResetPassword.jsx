@@ -1,13 +1,12 @@
 import { useState } from 'react'
-import { Link, useSearchParams, useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { publicRequest } from '../utils/auth'
 import './Auth.css'
 import './AuthExtras.css'
 
 function ResetPassword() {
-  const [searchParams] = useSearchParams()
   const navigate = useNavigate()
-  const token = searchParams.get('token') || ''
+  const token = new URLSearchParams(window.location.hash.replace(/^#/, '')).get('token') || ''
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
   const [showPassword, setShowPassword] = useState(false)

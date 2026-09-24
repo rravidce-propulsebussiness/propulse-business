@@ -12,7 +12,7 @@ const checks = [
   ['GoogleButton initializes GIS', button.includes('googleId.initialize')],
   ['GoogleButton renders GIS button', button.includes('googleId.renderButton')],
   ['Google client ID comes from Vite env', button.includes('VITE_GOOGLE_CLIENT_ID') || loader.includes('VITE_GOOGLE_CLIENT_ID')],
-  ['GIS is not statically duplicated in index.html', !index.includes('accounts.google.com/gsi/client')],
+  ['GIS is not statically loaded in index.html', !/<script\b[^>]*\bsrc=["']https:\/\/accounts\.google\.com\/gsi\/client["'][^>]*>/i.test(index)],
   ['FedCM button behavior is explicit', button.includes('use_fedcm_for_button: false')],
 ]
 

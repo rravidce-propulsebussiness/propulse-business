@@ -1,5 +1,7 @@
 const fs=require('fs');
 const path=require('path');
+const crypto=require('crypto');
+const {validateDataUrlSignature}=require('../utils/fileValidation');
 const pool=require('../config/database');
 
 const CATEGORIES=['Marketing','Lead Sales','Government Compliance','Grow','Scale'];
@@ -7,6 +9,13 @@ const MAX_IMAGE_BYTES=7*1024*1024;
 const MIME_EXTENSIONS={'image/jpeg':'jpg','image/png':'png','image/webp':'webp'};
 const UPLOAD_ROOT=path.join(__dirname,'../../uploads/service-pricing');
 function clean(v){return String(v??'').trim()}
+function normalizeCtaUrl(value){
+  const url=clean(value)||'/contact';
+  if(!url.startsWith('/')||url.startsWith('//')||/[\\\r\n]/.test(url)){
+    const e=new Error('CTA URL must be an internal application path');e.code='INVALID_CTA_URL';throw e
+  }
+  return url
+}
 function safeJson(v){if(Array.isArray(v))return v;try{const parsed=typeof v==='string'?JSON.parse(v):v;return Array.isArray(parsed)?parsed:[]}catch{return[]}}
 function normalize(input={}){
   const features=safeJson(input.features).map(x=>clean(x)).filter(Boolean).slice(0,20);
@@ -21,7 +30,7 @@ function normalize(input={}){
     image_url:clean(input.image_url),
     features,
     cta_label:clean(input.cta_label)||'Get Started',
-    cta_url:clean(input.cta_url)||'/contact',
+    cta_url:normalizeCtaUrl(input.cta_url),
     highlighted:Boolean(input.highlighted),
     sort_order:Number.isFinite(Number(input.sort_order))?Number(input.sort_order):0,
     is_active:input.is_active!==false
@@ -56,6 +65,7 @@ function parseImage(dataUrl){
   const match=value.match(/^data:(image\/(?:jpeg|png|webp));base64,([A-Za-z0-9+/=\s]+)$/i);
   if(!match){const e=new Error('Only JPG, PNG or WebP images are allowed');e.code='INVALID_IMAGE';throw e}
   const mime=match[1].toLowerCase();
+  if(!validateDataUrlSignature(value,['image/jpeg','image/png','image/webp'])){const e=new Error('Image content does not match its declared type');e.code='INVALID_IMAGE';throw e}
   const buffer=Buffer.from(match[2].replace(/\s/g,''),'base64');
   if(!buffer.length){const e=new Error('Image file is empty');e.code='INVALID_IMAGE';throw e}
   if(buffer.length>MAX_IMAGE_BYTES){const e=new Error('Image must be 7 MB or smaller');e.code='IMAGE_TOO_LARGE';throw e}
@@ -65,7 +75,7 @@ async function replaceImage(id,dataUrl){
   const current=await get(id); if(!current)return null;
   const parsed=parseImage(dataUrl);
   await fs.promises.mkdir(UPLOAD_ROOT,{recursive:true});
-  const filename=`pricing-${id}-${Date.now()}-${Math.random().toString(36).slice(2,8)}.${parsed.extension}`;
+  const filename=`pricing-${id}-${Date.now()}-${crypto.randomBytes(12).toString('hex')}.${parsed.extension}`;
   const destination=path.join(UPLOAD_ROOT,filename);
   await fs.promises.writeFile(destination,parsed.buffer,{flag:'wx'});
   const url=`/uploads/service-pricing/${filename}`;

@@ -16,6 +16,11 @@ function validatePaymentProof(proofUrl){
   const padding = payload.endsWith('==') ? 2 : payload.endsWith('=') ? 1 : 0;
   const bytes = Math.floor(payload.length * 3 / 4) - padding;
   if(bytes <= 0 || bytes > MAX_PROOF_BYTES) return { valid:false, code:'PROOF_TOO_LARGE', message:'Payment proof must be 5 MB or smaller' };
+  let data;
+  try { data = Buffer.from(payload, 'base64'); } catch { return { valid:false, code:'INVALID_PROOF', message:'Payment proof is not valid base64 data' }; }
+  const mime = match[1].toLowerCase();
+  const validSignature = mime==='application/pdf' ? data.subarray(0,5).toString('ascii')==='%PDF-' : mime==='image/png' ? data.subarray(0,8).equals(Buffer.from([137,80,78,71,13,10,26,10])) : mime==='image/jpeg' ? data.subarray(0,3).equals(Buffer.from([255,216,255])) : mime==='image/webp' ? data.subarray(0,4).toString('ascii')==='RIFF' && data.subarray(8,12).toString('ascii')==='WEBP' : false;
+  if(!validSignature) return { valid:false, code:'INVALID_PROOF', message:'Payment proof content does not match its declared file type' };
   return { valid:true };
 }
 
