@@ -6,9 +6,10 @@ const rateLimit = require('../middleware/rateLimitMiddleware');
 const router = express.Router();
 const authWriteLimit = rateLimit({ windowMs: 15 * 60 * 1000, max: 10 });
 const recoveryLimit = rateLimit({ windowMs: 15 * 60 * 1000, max: 5 });
+const companyProofUploadLimit = rateLimit({ windowMs: 15 * 60 * 1000, max: 10 });
 
 router.post('/signup', authWriteLimit, authController.signup);
-router.post('/company-proofs', requireAuth, authController.uploadCompanyProofs);
+router.post('/company-proofs', requireAuth, companyProofUploadLimit, authController.uploadCompanyProofs);
 router.get('/company-proofs/:documentId', requireAuth, authController.downloadCompanyProof);
 router.post('/login', authWriteLimit, authController.login);
 router.post('/google', authWriteLimit, authController.googleLogin);
