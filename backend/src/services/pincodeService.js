@@ -1,5 +1,29 @@
 const pool = require('../config/database');
 
+const MAX_POSTAL_PINCODE_BYTES = 256 * 1024;
+
+async function readResponseTextLimited(response, maxBytes) {
+  if (!response.body) return '';
+  const reader = response.body.getReader();
+  const chunks = [];
+  let total = 0;
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) return Buffer.concat(chunks, total).toString('utf8');
+      const chunk = Buffer.from(value);
+      total += chunk.length;
+      if (total > maxBytes) {
+        await reader.cancel().catch(() => {});
+        return null;
+      }
+      chunks.push(chunk);
+    }
+  } finally {
+    reader.releaseLock();
+  }
+}
+
 async function searchPincodes({ query = '', stateId, limit = 50 } = {}) {
   const values = [], conditions = ['is_active=TRUE'];
   if (stateId) {
@@ -28,9 +52,21 @@ async function fetchPostalPincode(pincode) {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 8000);
   try {
-    const response = await fetch(`https://api.postalpincode.in/pincode/${value}`, { signal: controller.signal });
+    const response = await fetch(`https://api.postalpincode.in/pincode/${value}`, {
+      headers: { Accept: 'application/json' },
+      signal: controller.signal,
+    });
+    const contentLength = Number(response.headers.get('content-length') || 0);
+    if (contentLength > MAX_POSTAL_PINCODE_BYTES) return null;
     if (!response.ok) return null;
-    const payload = await response.json();
+    const body = await readResponseTextLimited(response, MAX_POSTAL_PINCODE_BYTES);
+    if (body === null) return null;
+    let payload;
+    try {
+      payload = JSON.parse(body);
+    } catch {
+      return null;
+    }
     const offices = payload?.[0]?.Status === 'Success' && Array.isArray(payload?.[0]?.PostOffice)
       ? payload[0].PostOffice
       : [];
