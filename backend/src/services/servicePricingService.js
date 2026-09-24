@@ -1,5 +1,7 @@
 const fs=require('fs');
 const path=require('path');
+const crypto=require('crypto');
+const {validateDataUrlSignature}=require('../utils/fileValidation');
 const pool=require('../config/database');
 
 const CATEGORIES=['Marketing','Lead Sales','Government Compliance','Grow','Scale'];
@@ -56,6 +58,7 @@ function parseImage(dataUrl){
   const match=value.match(/^data:(image\/(?:jpeg|png|webp));base64,([A-Za-z0-9+/=\s]+)$/i);
   if(!match){const e=new Error('Only JPG, PNG or WebP images are allowed');e.code='INVALID_IMAGE';throw e}
   const mime=match[1].toLowerCase();
+  if(!validateDataUrlSignature(value,['image/jpeg','image/png','image/webp'])){const e=new Error('Image content does not match its declared type');e.code='INVALID_IMAGE';throw e}
   const buffer=Buffer.from(match[2].replace(/\s/g,''),'base64');
   if(!buffer.length){const e=new Error('Image file is empty');e.code='INVALID_IMAGE';throw e}
   if(buffer.length>MAX_IMAGE_BYTES){const e=new Error('Image must be 7 MB or smaller');e.code='IMAGE_TOO_LARGE';throw e}
@@ -65,7 +68,7 @@ async function replaceImage(id,dataUrl){
   const current=await get(id); if(!current)return null;
   const parsed=parseImage(dataUrl);
   await fs.promises.mkdir(UPLOAD_ROOT,{recursive:true});
-  const filename=`pricing-${id}-${Date.now()}-${Math.random().toString(36).slice(2,8)}.${parsed.extension}`;
+  const filename=`pricing-${id}-${Date.now()}-${crypto.randomBytes(12).toString('hex')}.${parsed.extension}`;
   const destination=path.join(UPLOAD_ROOT,filename);
   await fs.promises.writeFile(destination,parsed.buffer,{flag:'wx'});
   const url=`/uploads/service-pricing/${filename}`;
