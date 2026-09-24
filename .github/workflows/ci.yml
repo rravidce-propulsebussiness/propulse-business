@@ -30,6 +30,8 @@ jobs:
         run: npm run lint
       - name: Build
         run: npm run build
+      - name: Google GIS regression checks
+        run: npm run test:google-gis
 
   backend:
     name: Backend install and syntax check
