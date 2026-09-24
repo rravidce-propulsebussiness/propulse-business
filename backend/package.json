@@ -10,7 +10,7 @@
     "db:bootstrap": "node src/database/bootstrapDatabase.js",
     "db:migrate": "node src/database/runMigrations.js",
     "migrate:lead-access": "node src/database/runLeadAccessMigrations.js",
-    "test": "node scripts/check-syntax.js && node scripts/check-migration-runner.js && node scripts/check-company-proof-security.js && node scripts/check-auth-cookie-security.js && node scripts/check-upload-security.js && node scripts/check-api-hardening.js && node scripts/check-csp-security.js && node scripts/check-csrf-security.js && node scripts/check-service-pricing-security.js && node scripts/check-contact-url-security.js && node scripts/check-google-sheet-security.js",
+    "test": "node scripts/check-syntax.js && node scripts/check-migration-runner.js && node scripts/check-company-proof-security.js && node scripts/check-auth-cookie-security.js && node scripts/check-upload-security.js && node scripts/check-api-hardening.js && node scripts/check-csp-security.js && node scripts/check-csrf-security.js && node scripts/check-service-pricing-security.js && node scripts/check-contact-url-security.js && node scripts/check-google-sheet-security.js && node scripts/check-email-provider-security.js",
     "test:ledger": "node scripts/check-lead-partner-ledger.js",
     "test:payout": "node scripts/check-lead-partner-payout-lifecycle.js",
     "test:investor-payout": "node scripts/check-investor-payout-integrity.js",

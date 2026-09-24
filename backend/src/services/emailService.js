@@ -18,8 +18,8 @@ async function sendPasswordResetEmail({ to, name, resetUrl }) {
   });
 
   if (!response.ok) {
-    const details = await response.text().catch(() => '');
-    throw new Error(`Email provider rejected the reset email (${response.status}): ${details.slice(0, 300)}`);
+    await response.text().catch(() => '');
+    throw new Error(`Email provider rejected the reset email (HTTP ${response.status})`);
   }
 }
 
