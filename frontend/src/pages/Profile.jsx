@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { authRequest, saveSession, getUser } from '../utils/auth'
+import UserHeader from '../components/UserHeader'
 import './Profile.css'
 
 const emptyService = () => ({ industryId: '', serviceId: '', subserviceId: '' })
@@ -96,7 +97,9 @@ function Profile() {
   if (loading) return <div className="profile-page"><div className="profile-loading">Loading your business profile…</div></div>
 
   return (
-    <div className="profile-page">
+    <>
+      <UserHeader />
+      <div className="profile-page">
       <section className="profile-hero">
         <div className="profile-hero-glow" />
         <div className="profile-avatar">{initials}</div>
@@ -208,7 +211,8 @@ function Profile() {
         </section>
         <div className="profile-save"><button type="submit" disabled={saving}>{saving ? 'Saving…' : 'Save changes'} <span>→</span></button></div>
       </form>
-    </div>
+      </div>
+    </>
   )
 }
 
