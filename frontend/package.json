@@ -15,7 +15,8 @@
     "test:lead-marketplace-display": "node scripts/check-lead-marketplace-display.mjs",
     "test:payment-proof-preview": "node scripts/check-payment-proof-preview.mjs",
     "test:wallet-history": "node scripts/check-wallet-history.mjs",
-    "test:wallet-membership-tab": "node scripts/check-wallet-membership-tab.mjs"
+    "test:wallet-membership-tab": "node scripts/check-wallet-membership-tab.mjs",
+    "test:investor-faq-layout": "node scripts/check-investor-faq-layout.mjs"
   },
   "dependencies": {
     "react": "^19.2.8",
