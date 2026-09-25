@@ -27,6 +27,8 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
       - name: Install dependencies
         run: npm ci
+      - name: Audit runtime dependencies
+        run: npm audit --omit=dev --audit-level=high
       - name: Lint
         run: npm run lint
       - name: Build
@@ -51,6 +53,8 @@ jobs:
           cache-dependency-path: backend/package-lock.json
       - name: Install dependencies
         run: npm ci
+      - name: Audit runtime dependencies
+        run: npm audit --omit=dev --audit-level=high
       - name: Syntax check
         run: npm test
 
@@ -236,3 +240,15 @@ jobs:
             echo "Potential hardcoded secret detected. Review the matches before merging."
             exit 1
           fi
+
+      - name: Block runtime fetch monkey patches
+        shell: bash
+        run: |
+          set -euo pipefail
+          matches=$(git grep -nE 'window\.fetch[[:space:]]*=' -- frontend/src || true)
+          if [ -n "$matches" ]; then
+            echo "Global window.fetch monkey patch detected:"
+            echo "$matches"
+            exit 1
+          fi
+          echo "No global fetch monkey patches found."
