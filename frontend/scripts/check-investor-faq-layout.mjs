@@ -4,13 +4,19 @@ import { fileURLToPath } from 'node:url'
 
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..')
 const source=fs.readFileSync(path.join(root,'src/pages/InvestorFAQ.jsx'),'utf8')
+const css=fs.readFileSync(path.join(root,'src/pages/InvestorFAQ.css'),'utf8')
 const assert=(condition,message)=>{if(!condition)throw new Error(message)}
 
-assert(source.includes("fontSize:'clamp(38px,5vw,64px)'"),'Investor FAQ title must define its own responsive font size')
-assert(source.includes("lineHeight:1.05"),'Investor FAQ title must define a safe line height')
-assert(source.includes("margin:'8px 0 14px'"),'Investor FAQ title must reserve space below the heading')
-assert(source.includes("lineHeight:1.6"),'Investor FAQ subtitle must define readable line height')
-assert(source.includes("margin:'0 0 28px'"),'Investor FAQ subtitle must use normal-flow spacing')
-assert(!source.includes("position:'absolute'"),'Investor FAQ hero text must remain in normal document flow')
+assert(source.includes("import './InvestorFAQ.css'"),'Investor FAQ must use its dedicated stylesheet')
+assert(!source.includes('style={{'),'Investor FAQ should not rely on duplicated inline style objects')
+assert(source.includes('investor-faq-hero'),'Investor FAQ must expose the premium hero structure')
+assert(source.includes('investor-faq-number'),'FAQ rows must use the numbered visual hierarchy')
+assert(source.includes('aria-expanded={expanded}'),'FAQ accordion buttons must expose expanded state')
+assert(source.includes('aria-controls={answerId}'),'FAQ accordion buttons must link to their answer region')
+assert(css.includes("font-size:clamp(42px,4.8vw,68px)"),'Investor FAQ title must stay responsive')
+assert(css.includes('line-height:1.02'),'Investor FAQ title must keep a safe line height')
+assert(css.includes('.investor-faq-card.open'),'Open FAQ state must have dedicated styling')
+assert(css.includes('@media(max-width:520px)'),'Investor FAQ must include mobile layout rules')
+assert(!css.includes('position:absolute') || css.includes('.investor-faq-hero-mark small{position:absolute'),'Only decorative FAQ elements may use absolute positioning')
 
-console.log('Investor FAQ layout regression test passed.')
+console.log('Investor FAQ premium layout regression test passed.')
