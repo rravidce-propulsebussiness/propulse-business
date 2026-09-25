@@ -105,7 +105,10 @@ export default function LeadsV2() {
 
   useEffect(() => {
     let live = true
-    if (!token) { setCurrentMembership(null); return undefined }
+    if (!token) {
+      queueMicrotask(() => { if (live) setCurrentMembership(null) })
+      return () => { live = false }
+    }
     authRequest('/payments/membership/current')
       .then(data => { if (live) setCurrentMembership(data || null) })
       .catch(() => { if (live) setCurrentMembership(null) })
@@ -114,16 +117,22 @@ export default function LeadsV2() {
 
   useEffect(() => {
     let live = true
-    if (!buyModal && !payment) { setPaymentReceiving([]); return undefined }
+    if (!buyModal && !payment) {
+      queueMicrotask(() => { if (live) setPaymentReceiving([]) })
+      return () => { live = false }
+    }
     authRequest('/payment-receiving-details')
       .then(data => { if (live) setPaymentReceiving(Array.isArray(data) ? data.filter(item => item?.is_active !== false) : []) })
       .catch(() => { if (live) setPaymentReceiving([]) })
     return () => { live = false }
   }, [buyModal, payment])
-  useEffect(() => { setPage(1) }, [search, category, industryFilter, cityFilter])
+  useEffect(() => { let live=true; queueMicrotask(()=>{if(live)setPage(1)}); return()=>{live=false} }, [search, category, industryFilter, cityFilter])
   useEffect(() => {
     let live = true
-    if (logged) { setFilterCatalog({ industries: [], cities: [] }); return undefined }
+    if (logged) {
+      queueMicrotask(() => { if (live) setFilterCatalog({ industries: [], cities: [] }) })
+      return () => { live = false }
+    }
     Promise.all([
       publicRequest('/industries'),
       publicRequest('/cities')
