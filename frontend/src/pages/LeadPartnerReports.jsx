@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import LeadPartnerSidebar from '../components/LeadPartnerSidebar';
 import { useNavigate } from 'react-router-dom';
 import { authRequest, clearSession, getUser } from '../utils/auth';
+import { downloadCsv } from '../utils/csv';
 import './LeadPartnerReports.css';
 
 const REASONS={fake:'Fake / invalid lead',wrong_number:'Wrong number',not_interested:'Customer not interested',duplicate:'Duplicate lead',other:'Other'};
