@@ -24,7 +24,8 @@ function makeHarness({activeUses=0}={}){
     if(sql.includes('FROM payments WHERE user_id=$1'))return{rows:[]};
     if(sql.startsWith('INSERT INTO payments'))return{rows:[{id:77,user_id:12,membership_plan_id:3,amount:900,payment_method:'manual',status:'pending',wallet_amount:0,external_amount:900,purchase_type:'membership',purchase_id:3,coupon_id:9,coupon_code:'SAVE10',subtotal_amount:1000,discount_amount:100}]};
     if(sql.startsWith('UPDATE payments SET payment_method'))return{rows:[{id:77,user_id:12,membership_plan_id:3,amount:900,payment_method:'wallet',status:'paid',wallet_amount:900,external_amount:0,coupon_id:9,coupon_code:'SAVE10',subtotal_amount:1000,discount_amount:100}]};
-    if(sql.includes('FROM membership_plans WHERE id=$1'))return{rows:[{id:3,name:'Pro',plan_type:'pro',duration_days:30,price:'1000',is_active:true}]};
+    if(sql.includes('FROM membership_plans WHERE id=$1'))return{rows:[{id:3,name:'Pro',plan_group:'grow',plan_type:'pro',duration_days:30,price:'1000',is_active:true}]};
+    if(sql.includes('FROM memberships m JOIN membership_plans p ON'))return{rows:[]};
     if(sql.includes("FROM memberships m JOIN membership_plans mp")&&sql.includes('LIMIT 1 FOR UPDATE OF m'))return{rows:[]};
     if(sql.startsWith('INSERT INTO memberships'))return{rows:[{id:801}]};
     if(sql.startsWith('INSERT INTO membership_admin_history'))return{rows:[]};
@@ -36,11 +37,11 @@ function makeHarness({activeUses=0}={}){
   const fakeMembership={isProMember:async()=>true};
   const original=Module._load;
   Module._load=function(request,parent,isMain){
-    if(request==='../config/database'&&parent.filename.endsWith('/services/couponService.js'))return fakePool;
-    if(request==='../config/database'&&parent.filename.endsWith('/services/paymentService.js'))return fakePool;
-    if(request==='./couponService'&&parent.filename.endsWith('/services/paymentService.js'))return require(path.join(__dirname,'../src/services/couponService'));
-    if(request==='./walletService'&&parent.filename.endsWith('/services/paymentService.js'))return fakeWallet;
-    if(request==='./membershipAccessService'&&parent.filename.endsWith('/services/paymentService.js'))return fakeMembership;
+    if(request==='../config/database'&&parent.filename.replace(/\\/g,'/').endsWith('/services/couponService.js'))return fakePool;
+    if(request==='../config/database'&&parent.filename.replace(/\\/g,'/').endsWith('/services/paymentService.js'))return fakePool;
+    if(request==='./couponService'&&parent.filename.replace(/\\/g,'/').endsWith('/services/paymentService.js'))return require(path.join(__dirname,'../src/services/couponService'));
+    if(request==='./walletService'&&parent.filename.replace(/\\/g,'/').endsWith('/services/paymentService.js'))return fakeWallet;
+    if(request==='./membershipAccessService'&&parent.filename.replace(/\\/g,'/').endsWith('/services/paymentService.js'))return fakeMembership;
     return original.apply(this,arguments);
   };
   delete require.cache[require.resolve('../src/services/couponService')];delete require.cache[require.resolve('../src/services/paymentService')];

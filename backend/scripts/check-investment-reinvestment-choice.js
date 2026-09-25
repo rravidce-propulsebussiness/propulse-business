@@ -15,7 +15,7 @@ assert(/async function reinvestInvestment\(\{\s*userId,\s*investmentId\s*\}\)/.t
 assert(reinvestBlock.includes("String(inv.status).toLowerCase()!=='paid'"), 'Reinvestment must require a settled cycle');
 assert(reinvestBlock.includes('parent_investment_id=$1'), 'Reinvestment must link the child to its parent');
 assert(reinvestBlock.includes('REINVESTMENT_EXISTS'), 'Duplicate reinvestment must be rejected');
-assert(reinvestBlock.includes('reinvestAmount>Number(rule.maximum_amount)'), 'Reinvestment maximum must remain protected');
+assert(reinvestBlock.includes('reinvestPaise>moneyPaise(rule.maximum_amount)'), 'Reinvestment maximum must remain protected');
 assert(reinvestBlock.includes('expected_return'), 'Reinvestment must create a new cycle from the realized amount');
 assert(!reinvestBlock.includes('walletService'), 'Reinvestment must not use wallet funds');
 assert(!reinvestBlock.includes('wallet_transactions'), 'Reinvestment must not debit the wallet');
