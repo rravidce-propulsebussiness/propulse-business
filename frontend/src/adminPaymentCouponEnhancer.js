@@ -81,13 +81,6 @@ style.textContent = `
 `
 document.head.appendChild(style)
 
-const observer = new MutationObserver(() => decorateRows())
+const observer = new MutationObserver(() => { run() })
 observer.observe(document.body, { childList: true, subtree: true })
-
-setInterval(() => {
-  if (isAdminPaymentsPage()) {
-    loadPaymentMap(true).then(decorateRows)
-  }
-}, 15000)
-
 run()
