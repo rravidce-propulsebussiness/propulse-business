@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import './InvestorFAQ.css'
 
 const faqs=[
   ['What is an investment cycle?','Each investment cycle is a separate accounting period. New funds added while a cycle is open stay in that cycle. When the cycle closes, the next real investment starts a fresh cycle.'],
@@ -11,5 +12,57 @@ const faqs=[
 
 export default function InvestorFAQ(){
   const [open,setOpen]=useState(0)
-  return <main style={{minHeight:'calc(100vh - 74px)',background:'#f6f8fb',padding:'34px 5% 60px'}}><div style={{maxWidth:1000,margin:'0 auto'}}><span style={{fontSize:10,fontWeight:900,letterSpacing:1,color:'#f15a24'}}>INVESTOR FAQ</span><h1 style={{margin:'8px 0 14px',color:'#102f58',fontSize:'clamp(38px,5vw,64px)',lineHeight:1.05,letterSpacing:'-0.035em',maxWidth:900}}>Frequently asked questions</h1><p style={{color:'#71839b',fontSize:14,lineHeight:1.6,margin:'0 0 28px',maxWidth:760}}>Understand cycles, earnings, advertising usage, shared lead sales and withdrawals.</p><div style={{display:'grid',gap:10}}>{faqs.map(([q,a],i)=><article key={q} style={{background:'#fff',border:'1px solid #dfe6ef',borderRadius:12,overflow:'hidden'}}><button type="button" onClick={()=>setOpen(open===i?-1:i)} style={{width:'100%',border:0,background:'#fff',padding:'16px 18px',display:'flex',justifyContent:'space-between',textAlign:'left',color:'#17395f',fontSize:12,fontWeight:900,cursor:'pointer'}}><span>{q}</span><span>{open===i?'−':'+'}</span></button>{open===i&&<div style={{padding:'0 18px 18px',color:'#61748c',fontSize:10,lineHeight:1.7}}>{a}</div>}</article>)}</div></div></main>
+
+  return <main className="investor-faq-page">
+    <div className="investor-faq-shell">
+      <section className="investor-faq-hero">
+        <div className="investor-faq-hero-copy">
+          <span className="investor-faq-eyebrow"><i aria-hidden="true" /> Investor FAQ</span>
+          <h1>Frequently asked questions</h1>
+          <p>Understand cycles, earnings, advertising usage, shared lead sales and withdrawals.</p>
+          <div className="investor-faq-meta" aria-label="FAQ overview">
+            <span><strong>{faqs.length}</strong> essential topics</span>
+            <span>Cycles · Earnings · Leads · Withdrawals</span>
+          </div>
+        </div>
+        <div className="investor-faq-hero-mark" aria-hidden="true">
+          <span>?</span>
+          <small>Investor guide</small>
+        </div>
+      </section>
+
+      <section className="investor-faq-content" aria-labelledby="investor-faq-list-title">
+        <div className="investor-faq-intro">
+          <div>
+            <span>HELP CENTRE</span>
+            <h2 id="investor-faq-list-title">Everything you need, in one place</h2>
+          </div>
+          <p>Open any question to view the answer.</p>
+        </div>
+
+        <div className="investor-faq-list">
+          {faqs.map(([q,a],i)=>{
+            const expanded=open===i
+            const answerId=`investor-faq-answer-${i}`
+            return <article className={`investor-faq-card${expanded?' open':''}`} key={q}>
+              <button
+                className="investor-faq-question"
+                type="button"
+                onClick={()=>setOpen(expanded?-1:i)}
+                aria-expanded={expanded}
+                aria-controls={answerId}
+              >
+                <span className="investor-faq-number">{String(i+1).padStart(2,'0')}</span>
+                <span className="investor-faq-question-text">{q}</span>
+                <span className="investor-faq-toggle" aria-hidden="true">{expanded?'−':'+'}</span>
+              </button>
+              {expanded&&<div className="investor-faq-answer" id={answerId}>
+                <div>{a}</div>
+              </div>}
+            </article>
+          })}
+        </div>
+      </section>
+    </div>
+  </main>
 }
