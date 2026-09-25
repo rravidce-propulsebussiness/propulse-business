@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { downloadCsv } from '../utils/csv'
 import { authRequest } from '../utils/auth'
 import './Industries.css'
 
@@ -22,15 +23,6 @@ const collection = value => {
 const request = (path, options = {}) => authRequest(path, options)
 const jsonOptions = (method, body) => ({ method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
 
-function downloadCsv(filename, headers, row) {
-  const csv = [headers.join(','), row.map(value => `"${String(value ?? '').replaceAll('"', '""')}"`).join(',')].join('\n')
-  const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }))
-  const link = document.createElement('a')
-  link.href = url
-  link.download = filename
-  link.click()
-  URL.revokeObjectURL(url)
-}
 
 function parseCsv(text) {
   const rows = []
@@ -375,8 +367,8 @@ export default function Industries() {
   }
 
   const template = tab === 'industries'
-    ? () => downloadCsv('propulse-industry-master-template.csv', ['industry_name', 'service_name', 'subservice_name'], ['Interior Design', 'Residential Interior Design', '2BHK Interior Design'])
-    : () => downloadCsv('propulse-location-master-template.csv', ['state_name', 'city_name', 'subcity_name', 'pincode'], ['Telangana', 'Hyderabad', 'Gachibowli', '500032'])
+    ? () => downloadCsv('propulse-industry-master-template.csv', [['industry_name', 'service_name', 'subservice_name'], ['Interior Design', 'Residential Interior Design', '2BHK Interior Design']])
+    : () => downloadCsv('propulse-location-master-template.csv', [['state_name', 'city_name', 'subcity_name', 'pincode'], ['Telangana', 'Hyderabad', 'Gachibowli', '500032']])
 
   return (
     <div className="master-page">
