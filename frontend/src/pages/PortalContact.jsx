@@ -16,7 +16,7 @@ export default function PortalContact({audience='lead_partners'}){
   const copy=audienceCopy[audience]||audienceCopy.lead_partners;
   const [data,setData]=useState(empty),[loading,setLoading]=useState(true),[error,setError]=useState('');
   const user=getUser(), navigate=useNavigate();
-  useEffect(()=>{let active=true;setLoading(true);setError('');apiRequest('/contact?audience='+encodeURIComponent(audience),{},false).then(v=>active&&setData({...empty,...v})).catch(e=>active&&setError(e.message||'Unable to load contact details')).finally(()=>active&&setLoading(false));return()=>{active=false}},[audience]);
+  useEffect(()=>{let active=true;queueMicrotask(()=>{if(!active)return;setLoading(true);setError('');apiRequest('/contact?audience='+encodeURIComponent(audience),{},false).then(v=>active&&setData({...empty,...v})).catch(e=>active&&setError(e.message||'Unable to load contact details')).finally(()=>active&&setLoading(false))});return()=>{active=false}},[audience]);
   const socials=useMemo(()=>Array.isArray(data.social_handles)?data.social_handles.filter(s=>s.enabled&&s.url):[],[data]);
   const wa=data.whatsapp?String(data.whatsapp).replace(/\D/g,''):'';
   function signOut(){clearSession();localStorage.removeItem('propulse_session_mode');navigate('/login',{replace:true})}
