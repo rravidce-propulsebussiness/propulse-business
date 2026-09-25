@@ -108,28 +108,8 @@ function enhanceWalletCoupon(modal) {
   render()
 }
 
-function patchWalletTopupRequest() {
-  if (window.__propulseWalletCouponFetchPatched) return
-  window.__propulseWalletCouponFetchPatched = true
-  const originalFetch = window.fetch.bind(window)
-  window.fetch = (input, init = {}) => {
-    try {
-      const url = typeof input === 'string' ? input : (input?.url || '')
-      if (/\/api\/wallet\/topups(?:\?|$)/.test(url) && init?.body) {
-        const coupon = String(document.querySelector('#wallet-coupon-code')?.value || '').trim().toUpperCase()
-        if (coupon) {
-          const body = JSON.parse(init.body)
-          if (body && !body.couponCode) init = { ...init, body: JSON.stringify({ ...body, couponCode: coupon }) }
-        }
-      }
-    } catch {}
-    return originalFetch(input, init)
-  }
-}
-
 function scan() {
   document.querySelectorAll('.wallet-add-modal').forEach(enhanceWalletCoupon)
-  patchWalletTopupRequest()
 }
 
 const style = document.createElement('style')
