@@ -35,6 +35,8 @@ jobs:
         run: npm run test:source-graph
       - name: CSV export security
         run: npm run test:csv-security
+      - name: User header layout
+        run: npm run test:user-header-layout
       - name: Build
         run: npm run build
       - name: Google GIS regression checks
