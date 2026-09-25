@@ -25,11 +25,15 @@ versions, rather than trusting the role claimed in a JWT.
 3. Use `TRUST_PROXY=false` for direct connections. Behind a reverse proxy, configure
    the actual trusted proxy address or hop count and prevent direct public access
    to the backend. Do not trust arbitrary forwarded client addresses.
-4. Run `npm ci` in backend and frontend. Build with `npm run build` in frontend,
+4. Run `npm ci` in backend and frontend. Before starting the production backend,
+   run `npm run check:production-env` from `backend`; treat any failure as a deploy
+   blocker and review warnings deliberately. Build with `npm run build` in frontend,
    with `VITE_API_URL=/api`. Serve `frontend/dist` over HTTPS, use SPA fallback for
-   frontend routes, and forward `/api`, `/health`, and `/uploads` to the backend.
-   Allow the API's 10 MB request body limit through the proxy; individual payment
-   proof files are limited to 5 MB.
+   frontend routes, and forward `/api`, `/health`, `/health/live`,
+   `/health/ready`, and `/uploads` to the backend. Keep browser/API requests
+   same-origin through `/api`; the current HttpOnly cookie and CSRF model is designed
+   for that topology. Allow the API's 10 MB request body limit through the proxy;
+   individual payment proof files are limited to 5 MB.
 5. For a **new empty database**, run `npm run db:bootstrap` in backend. For an
    existing installation, take and verify a backup, then run `npm run db:migrate`.
    The server also runs pending migrations at startup. This release adds
@@ -38,9 +42,13 @@ versions, rather than trusting the role claimed in a JWT.
    `ADMIN_NAME`. Re-running this command resets that account's password. Remove
    bootstrap admin credentials from the long-running service environment afterward.
 7. Run `npm start` in backend under a supervised service with automatic restart.
-   Monitor `/health` for HTTP 200 and `database: connected`. Back up PostgreSQL
-   and persist `backend/uploads`, including private company proofs. Multiple backend
-   instances need shared upload storage; payment drafts themselves are database-backed.
+   Use `/health/live` as the process liveness probe and `/health/ready` as the
+   readiness/database probe. `/health` remains an alias of readiness for compatibility.
+   All health responses are non-cacheable. Do not use database readiness as an
+   orchestrator liveness probe, otherwise a temporary PostgreSQL outage can cause a
+   restart loop. Back up PostgreSQL and persist `backend/uploads`, including private
+   company proofs. Multiple backend instances need shared upload storage; payment
+   drafts themselves are database-backed.
 
 ## Manual payment operations
 
@@ -60,8 +68,23 @@ cannot be migrated; customers must restart those unsubmitted checkouts after dep
 
 ## Verification
 
-Run `npm test` in backend, and `npm run lint`, `npm run build`, and
-`npm run test:google-gis` in frontend. Audit dependencies with `npm audit`.
+Run `npm test` in backend, and `npm run lint`, `npm run test:source-graph`,
+`npm run test:csv-security`, `npm run build`, and `npm run test:google-gis`
+in frontend. Audit dependencies with `npm audit`.
+
+Before promotion from staging, run the non-destructive deployed smoke test from
+`backend`:
+
+```sh
+DEPLOY_BASE_URL=https://staging.example.com \
+DEPLOY_APP_ORIGIN=https://staging.example.com \
+npm run test:deployed
+```
+
+The smoke test checks HTTPS liveness/readiness, database connectivity, security
+headers, the configured CORS origin, an authentication boundary, rejection of an
+untrusted origin, and normal 404 handling. It does not create customer, payment or
+investment records.
 
 For database verification, create a **disposable** PostgreSQL database whose name
 starts with `propulse_verify_` or `ci_`, set `DB_NAME` to it in the test process,
@@ -85,7 +108,7 @@ Release verification on 2026-09-25 covered fresh migrations, backend regressions
 actual PostgreSQL payment concurrency and rollback, role restrictions, Lead Partner
 payout lifecycle, production-mode HTTP startup/security checks, frontend build and
 Google GIS checks. Dependency audits returned no known vulnerabilities. Frontend
-lint still reports existing warnings, with no lint errors.
+lint is clean with zero warnings and zero errors.
 
 Before accepting live payments, verify the deployed HTTPS domain, email delivery,
 backup restoration and the complete browser journey using your configured bank
