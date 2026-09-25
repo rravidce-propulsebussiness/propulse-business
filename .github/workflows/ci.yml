@@ -276,3 +276,15 @@ jobs:
             exit 1
           fi
           echo "No document.write usage found."
+
+      - name: Block frontend Authorization headers
+        shell: bash
+        run: |
+          set -euo pipefail
+          matches=$(git grep -n 'Authorization' -- frontend/src || true)
+          if [ -n "$matches" ]; then
+            echo "Frontend Authorization header detected; browser auth must use HttpOnly cookies:"
+            echo "$matches"
+            exit 1
+          fi
+          echo "No frontend Authorization headers found."
