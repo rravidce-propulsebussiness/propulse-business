@@ -78,7 +78,7 @@ export default function AdminMembershipPlansConfig() {
       setError('');
     } catch (e) { setError(e.message); } finally { setLoading(false); }
   }
-  useEffect(() => { load(); }, []);
+  useEffect(() => { let active=true; queueMicrotask(()=>{if(active)load()}); return()=>{active=false}; }, []);
 
   const groups = useMemo(() => {
     const map = {};
