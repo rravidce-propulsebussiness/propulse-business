@@ -44,7 +44,7 @@ export default function LeadPartnerAccount(){
     finally{setLoading(false)}
   },[]);
 
-  useEffect(()=>{loadAccount()},[loadAccount]);
+  useEffect(()=>{let active=true;queueMicrotask(()=>{if(active)loadAccount()});return()=>{active=false}},[loadAccount]);
 
   const loadTransactions = useCallback(async()=>{
     try{
