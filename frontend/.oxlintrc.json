@@ -20,7 +20,8 @@
   "overrides": [
     {
       "files": [
-        "scripts/**/*.mjs"
+        "scripts/**/*.mjs",
+        "vite.config.js"
       ],
       "env": {
         "node": true
