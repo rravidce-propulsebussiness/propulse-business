@@ -39,6 +39,8 @@ jobs:
         run: npm run test:user-header-layout
       - name: Lead marketplace display
         run: npm run test:lead-marketplace-display
+      - name: Payment proof preview
+        run: npm run test:payment-proof-preview
       - name: Build
         run: npm run build
       - name: Google GIS regression checks
