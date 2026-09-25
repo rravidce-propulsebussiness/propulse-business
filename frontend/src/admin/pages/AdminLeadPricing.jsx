@@ -12,7 +12,7 @@ export default function AdminLeadPricing(){
  const [industries,setIndustries]=useState([]),[cities,setCities]=useState([]),[rules,setRules]=useState([]),[form,setForm]=useState(emptyForm()),[editId,setEditId]=useState(null),[loading,setLoading]=useState(true),[saving,setSaving]=useState(false),[partnerSaving,setPartnerSaving]=useState(false),[partnerSettings,setPartnerSettings]=useState({commissionPercent:5,normalPriceUplift:100}),[partnerDirty,setPartnerDirty]=useState(false),[error,setError]=useState(''),[ok,setOk]=useState('');
  const req=(p,o={})=>apiRequest(p,o);
  const load=async()=>{try{setLoading(true);setError('');const [a,b,c,d]=await Promise.all([req('/industries'),req('/cities'),req('/leads/pricing/rules'),req('/leads/pricing/partner-settings')]);setIndustries(Array.isArray(a)?a:[]);setCities(Array.isArray(b)?b:[]);setRules(dedupeRules(c));setPartnerSettings({commissionPercent:Number(d?.commissionPercent??5),normalPriceUplift:Number(d?.normalPriceUplift??100)});setPartnerDirty(false)}catch(e){setError(e.message)}finally{setLoading(false)}};
- useEffect(()=>{load()},[]);
+ useEffect(()=>{let active=true;queueMicrotask(()=>{if(active)load()});return()=>{active=false}},[]);
  const setTier=(i,k,v)=>setForm(f=>({...f,pricing:{...f.pricing,shares:f.pricing.shares.map((x,n)=>n===i?{...x,[k]:v}:x)}}));
  const reset=()=>{setEditId(null);setForm(emptyForm())};
  const edit=r=>{setEditId(r.id);setForm({industryId:r.industry_id??'',cityId:r.city_id??'',leadType:r.lead_type||'basic',pricing:{shares:dedupeTiers(Array.isArray(r.pricing?.shares)?r.pricing.shares:emptyPricing().shares)},isActive:r.is_active});setOk('');setError('');window.scrollTo({top:0,behavior:'smooth'})};
