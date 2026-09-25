@@ -252,3 +252,27 @@ jobs:
             exit 1
           fi
           echo "No global fetch monkey patches found."
+
+      - name: Block legacy browser auth token storage
+        shell: bash
+        run: |
+          set -euo pipefail
+          matches=$(git grep -n 'propulse_auth_token' -- frontend/src || true)
+          if [ -n "$matches" ]; then
+            echo "Legacy browser JWT storage reference detected:"
+            echo "$matches"
+            exit 1
+          fi
+          echo "No legacy browser JWT storage references found."
+
+      - name: Block document.write
+        shell: bash
+        run: |
+          set -euo pipefail
+          matches=$(git grep -nE 'document\.write[[:space:]]*\(' -- frontend/src || true)
+          if [ -n "$matches" ]; then
+            echo "document.write usage detected:"
+            echo "$matches"
+            exit 1
+          fi
+          echo "No document.write usage found."
