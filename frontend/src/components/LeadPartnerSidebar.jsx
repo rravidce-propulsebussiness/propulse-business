@@ -1,4 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
+import '../pages/LeadPartnerShared.css';
 
 export default function LeadPartnerSidebar({user,onSignOut}){
   const location=useLocation();
