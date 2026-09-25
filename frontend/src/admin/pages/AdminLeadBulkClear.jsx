@@ -23,14 +23,25 @@ function visibleLeadIds(){return[...document.querySelectorAll('.v9-grid .v9-card
 
 export default function AdminLeadBulkClear(){
  useEffect(()=>{
-  let disposed=false,button=null,timer=null;
+  let disposed=false,button=null,observer=null,frame=0;
   const update=()=>{if(!button)return;const scope=currentScope();button.hidden=scope.count===0;button.disabled=scope.count===0||button.dataset.busy==='true';const nextText=scope.filtered?`Clear ${scope.count} matching leads`:`Clear all ${scope.count} leads`;if(button.textContent!==nextText)button.textContent=nextText;button.title=scope.filtered?`Permanently delete the ${scope.count} leads currently matching: ${scope.description}`:'Permanently delete every lead in the inventory'};
   const refreshLeads=()=>{const refresh=[...document.querySelectorAll('.v9-panel-head button')].find(x=>/refresh/i.test(x.textContent));if(refresh&&!refresh.disabled)refresh.click()};
-  const setup=()=>{if(disposed)return;const bar=document.querySelector('.v9-filterbar');if(!bar)return;if(!button||!bar.contains(button)){button=document.createElement('button');button.type='button';button.className='v9-filter-clear v9-bulk-clear';button.setAttribute('data-v9-bulk-clear','true');button.addEventListener('click',async()=>{if(button.dataset.busy==='true')return;const scope=currentScope(),ids=visibleLeadIds();if(!ids.length)return;const action=scope.filtered?`matching ${scope.description}`:'ALL leads';if(!window.confirm(`Permanently delete ${ids.length} ${action}?\n\nThis cannot be undone.`))return;button.dataset.busy='true';update();let deleted=0;const failed=[];try{for(const id of ids){try{await authRequest(`/leads/${id}`,{method:'DELETE'});deleted++}catch(error){failed.push(`${id}: ${error.message}`)}}refreshLeads();if(failed.length)window.alert(`${deleted} lead(s) deleted. ${failed.length} failed.\n\n${failed.join('\n')}`);else window.alert(`${deleted} lead(s) deleted successfully.`)}finally{button.dataset.busy='false';update()}});bar.appendChild(button)}update();if(!bar.dataset.bulkClearListeners){bar.addEventListener('input',update);bar.addEventListener('change',update);bar.addEventListener('click',()=>setTimeout(update,0));bar.dataset.bulkClearListeners='true'}};
-  const onSync=()=>setTimeout(refreshLeads,250);
+  const setup=()=>{if(disposed)return;const bar=document.querySelector('.v9-filterbar');if(!bar)return;if(!button||!bar.contains(button)){button=document.createElement('button');button.type='button';button.className='v9-filter-clear v9-bulk-clear';button.setAttribute('data-v9-bulk-clear','true');button.addEventListener('click',async()=>{if(button.dataset.busy==='true')return;const scope=currentScope(),ids=visibleLeadIds();if(!ids.length)return;const action=scope.filtered?`matching ${scope.description}`:'ALL leads';if(!window.confirm(`Permanently delete ${ids.length} ${action}?\n\nThis cannot be undone.`))return;button.dataset.busy='true';update();let deleted=0;const failed=[];try{for(const id of ids){try{await authRequest(`/leads/${id}`,{method:'DELETE'});deleted++}catch(error){failed.push(`${id}: ${error.message}`)}}refreshLeads();if(failed.length)window.alert(`${deleted} lead(s) deleted. ${failed.length} failed.\n\n${failed.join('\n')}`);else window.alert(`${deleted} lead(s) deleted successfully.`)}finally{button.dataset.busy='false';update()}});bar.appendChild(button)}update()};
+  const schedule=()=>{if(disposed||frame)return;frame=window.requestAnimationFrame(()=>{frame=0;setup()})};
+  const onFilterEvent=event=>{if(event.target?.closest?.('.v9-filterbar'))schedule()};
+  const onSync=()=>window.setTimeout(refreshLeads,250);
+  document.addEventListener('input',onFilterEvent);
+  document.addEventListener('change',onFilterEvent);
+  document.addEventListener('click',onFilterEvent);
   window.addEventListener('propulse:leads-refresh',onSync);
-  setup();timer=setInterval(setup,500);
-  return()=>{disposed=true;window.removeEventListener('propulse:leads-refresh',onSync);if(timer)clearInterval(timer);if(button?.parentNode)button.parentNode.removeChild(button)};
+  observer=new MutationObserver(schedule);
+  observer.observe(document.body,{childList:true,subtree:true});
+  setup();
+  return()=>{disposed=true;window.removeEventListener('propulse:leads-refresh',onSync);document.removeEventListener('input',onFilterEvent);document.removeEventListener('change',onFilterEvent);document.removeEventListener('click',onFilterEvent);observer?.disconnect();if(frame)window.cancelAnimationFrame(frame);if(button?.parentNode)button.parentNode.removeChild(button)};
+
+ return null;
+}
+
  },[]);
  return null;
 }
