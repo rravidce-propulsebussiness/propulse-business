@@ -701,36 +701,6 @@
   font-weight:600;
   outline:0;
 }
-.lv2-buy-proof{
-  display:flex;
-  align-items:center;
-  gap:7px;
-  min-height:38px;
-  padding:5px 7px;
-  box-sizing:border-box;
-  border:1px dashed #b9cee7;
-  border-radius:8px;
-  background:#f8fbff;
-}
-.lv2-buy-proof>span{
-  width:27px;height:27px;
-  display:grid;place-items:center;
-  flex:0 0 27px;
-  border-radius:7px;
-  background:#eaf2ff;
-  color:#1652a0;
-}
-.lv2-buy-proof div{min-width:0;flex:1}
-.lv2-buy-proof b{display:block;color:#173b70;font-size:9px}
-.lv2-buy-proof small{display:block;margin-top:1px;color:#7a8da5;font-size:7px}
-.lv2-buy-proof input[type=file]{
-  width:105px;
-  min-width:0;
-  padding:2px;
-  border:0;
-  background:transparent;
-  font-size:7px;
-}
 .lv2-buy-submit-payment{
   display:flex;
   align-items:center;
