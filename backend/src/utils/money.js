@@ -30,6 +30,19 @@ function parseMoneyPaise(value, { allowZero = false, code = 'INVALID_AMOUNT' } =
   return paise;
 }
 
+function allocatePaise(totalPaise, sharePercent, partPaise, denominatorPaise) {
+  if (typeof totalPaise !== 'bigint' || typeof partPaise !== 'bigint' || typeof denominatorPaise !== 'bigint') throw new Error('Invalid money allocation values');
+  const rawShare = String(sharePercent ?? '').trim();
+  if (!/^\d+(?:\.\d+)?$/.test(rawShare)) throw new Error('Invalid percentage value');
+  const [whole, fraction=''] = rawShare.split('.');
+  const shareBps = BigInt(whole) * 100n + BigInt(fraction.padEnd(2, '0').slice(0, 2));
+  if (shareBps < 0n || shareBps > 10000n) throw new Error('Invalid percentage value');
+  if (totalPaise <= 0n || partPaise <= 0n) return 0n;
+  const numerator = totalPaise * shareBps * partPaise;
+  const denominator = 10000n * denominatorPaise;
+  return (numerator + denominator / 2n) / denominator;
+}
+
 function paiseToMoney(paise) {
   if (typeof paise === 'number') {
     if (!Number.isSafeInteger(paise)) throw new Error('Money value is outside the safe integer range');
@@ -47,4 +60,4 @@ function paiseToMoney(paise) {
   return negative ? -result : result;
 }
 
-module.exports = { MONEY_SCALE, parseMoneyPaise, paiseToMoney };
+module.exports = { MONEY_SCALE, parseMoneyPaise, paiseToMoney, allocatePaise };
