@@ -12,6 +12,9 @@ const poolMax = Number.isFinite(configuredPoolMax) && configuredPoolMax > 0
   ? Math.min(10, Math.max(2, configuredPoolMax))
   : 5;
 
+const dbSslEnabled = /^(1|true|require)$/i.test(String(process.env.DB_SSL || '').trim());
+const dbSslRejectUnauthorized = !/^(0|false)$/i.test(String(process.env.DB_SSL_REJECT_UNAUTHORIZED || '').trim());
+
 const pool = new Pool({
   host: process.env.DB_HOST,
   port: Number(process.env.DB_PORT) || 5432,
@@ -24,6 +27,7 @@ const pool = new Pool({
   statement_timeout: Math.max(1000, Number(process.env.DB_STATEMENT_TIMEOUT_MS) || 30000),
   idle_in_transaction_session_timeout: Math.max(1000, Number(process.env.DB_IDLE_IN_TX_TIMEOUT_MS) || 60000),
   application_name: process.env.DB_APPLICATION_NAME || 'propulse-backend',
+  ssl: dbSslEnabled ? { rejectUnauthorized: dbSslRejectUnauthorized } : false,
 });
 
 pool.on('error', error => {
