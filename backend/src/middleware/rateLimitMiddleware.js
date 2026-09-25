@@ -11,6 +11,17 @@ const cleanupTimer = setInterval(() => {
 }, CLEANUP_INTERVAL_MS);
 cleanupTimer.unref?.();
 
+const SHARED_CLEANUP_INTERVAL_MS = 60 * 60 * 1000;
+const sharedCleanupTimer = setInterval(async () => {
+  if (process.env.NODE_ENV !== 'production') return;
+  try {
+    await pool.query("DELETE FROM rate_limit_buckets WHERE updated_at < CURRENT_TIMESTAMP - INTERVAL '24 hours'");
+  } catch (error) {
+    console.error('Rate-limit bucket cleanup failed:', error.message);
+  }
+}, SHARED_CLEANUP_INTERVAL_MS);
+sharedCleanupTimer.unref?.();
+
 function getIdentity(req) {
   return req.user?.id ? `user:${req.user.id}` : `ip:${req.ip}`;
 }
