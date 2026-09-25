@@ -50,10 +50,35 @@ const apiRateLimit=rateLimit({windowMs:15*60*1000,max:600,scope:'global'});
 app.use('/api',apiRateLimit);
 app.use('/uploads',(req,res,next)=>{if(req.path==='/company-proofs'||req.path.startsWith('/company-proofs/'))return res.status(404).json({error:'Not found'});return next();});
 app.use('/uploads',express.static(path.join(__dirname,'../uploads'),{fallthrough:true,maxAge:'7d'}));
-app.get('/health',async(req,res)=>{try{await pool.query('SELECT 1');res.json({status:'ok',database:'connected'});}catch(e){console.error(e.message);res.status(500).json({status:'error',database:'disconnected'});}});
+function setHealthHeaders(res){res.setHeader('Cache-Control','no-store');}
+app.get('/health/live',(req,res)=>{setHealthHeaders(res);res.json({status:'ok'});});
+async function readiness(req,res){setHealthHeaders(res);try{await pool.query('SELECT 1');return res.json({status:'ok',database:'connected'});}catch(e){console.error('Readiness check failed:',e.message);return res.status(503).json({status:'error',database:'disconnected'});}}
+app.get('/health/ready',readiness);
+app.get('/health',readiness);
 app.use('/api/auth',authRoutes);app.use('/api/profile',profileRoutes);app.use('/api/admin',adminRoutes);app.use('/api/lead-partner',leadPartnerRoutes);app.use('/api/lead-reports',leadReportRoutes);app.use('/api/lead-partner/faqs',faqRoutes);app.use('/api/faqs',publicFaqRoutes);app.use('/api/upcoming-features',upcomingFeatureRoutes);app.use('/api/contact',contactRoutes);app.use('/api/service-pricing',servicePricingRoutes);app.use('/api/homepage-media',homepageMediaRoutes);app.use('/api/admin/faqs',adminFaqRoutes);app.use('/api/leads',leadRoutes);app.use('/api/payments',paymentRoutes);app.use('/api/payment-receiving-details',paymentReceivingDetailsRoutes);app.use('/api/coupons',couponRoutes);app.use('/api/membership-plans',membershipPlanRoutes);app.use('/api/admin/commercial',adminCommercialRoutes);app.use('/api/wallet',walletRoutes);app.use('/api/investments',investmentRoutes);app.use('/api/investor/payout-account',investorPayoutAccountRoutes);app.use('/api/industries',industryRoutes);app.use('/api/services',serviceRoutes);app.use('/api/subservices',subserviceRoutes);app.use('/api/states',stateRoutes);app.use('/api/cities',cityRoutes);app.use('/api/subcities',subcityRoutes);app.use('/api/pincodes',pincodeRoutes);
 app.use((req,res)=>res.status(404).json({error:'Not found'}));
 app.use((err,req,res,next)=>{if(err.message==='CORS origin not allowed')return res.status(403).json({error:'Origin not allowed'});if(err.type==='entity.parse.failed')return res.status(400).json({error:'Invalid JSON body'});if(err.type==='entity.too.large')return res.status(413).json({error:'Request body is too large'});console.error('Unhandled server error:',err.stack||err);return res.status(500).json({error:'Internal server error'});});
-let server;let stopLeadPartnerSheetAutoSync=()=>{};async function shutdown(signal){console.log(`${signal} received; shutting down gracefully.`);if(server)await new Promise(resolve=>server.close(resolve));stopLeadPartnerSheetAutoSync();await pool.end();process.exit(0)}
+let server;let stopLeadPartnerSheetAutoSync=()=>{};let shuttingDown=false;
+async function shutdown(signal){
+  if(shuttingDown)return;
+  shuttingDown=true;
+  console.log(`${signal} received; shutting down gracefully.`);
+  const forceTimer=setTimeout(()=>{console.error('Graceful shutdown timed out; forcing exit.');process.exit(1);},10000);
+  forceTimer.unref?.();
+  try{
+    stopLeadPartnerSheetAutoSync();
+    if(server){
+      server.closeIdleConnections?.();
+      await new Promise((resolve,reject)=>server.close(error=>error?reject(error):resolve()));
+    }
+    await pool.end();
+    clearTimeout(forceTimer);
+    process.exit(0);
+  }catch(error){
+    clearTimeout(forceTimer);
+    console.error('Graceful shutdown failed:',error?.stack||error);
+    process.exit(1);
+  }
+}
 async function start(){try{await runMigrations();server=app.listen(PORT,'0.0.0.0',()=>{console.log(`Server running on port ${PORT}`);stopLeadPartnerSheetAutoSync=startLeadPartnerSheetAutoSync();});process.once('SIGTERM',()=>shutdown('SIGTERM'));process.once('SIGINT',()=>shutdown('SIGINT'));}catch(error){console.error('Backend startup failed:');console.error(error?.stack||error||'Unknown error');await pool.end();process.exitCode=1;}}
 start();
