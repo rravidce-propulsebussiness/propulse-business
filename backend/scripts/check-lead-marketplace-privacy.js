@@ -38,6 +38,7 @@ assert(masked.customer_name === 'Alice Smith', 'Marketplace must expose the cust
 assert(masked.customer_phone !== '+91 98765 43210', 'Marketplace must mask customer phones');
 assert(masked.customer_email !== 'alice@example.com', 'Marketplace must mask customer emails');
 assert(masked.pincode === '500001', 'Marketplace must expose the canonical 6-digit pincode');
+assert(maskLead({ customer_name: 'Bob', pincode: '500001<script>' }).pincode === null, 'Malformed pincodes must not be exposed');
 assert(!('notes' in masked), 'Marketplace must not expose internal notes');
 assert(!('created_by' in masked), 'Marketplace must not expose internal creator IDs');
 assert(!('investor_user_id' in masked) && !('investor_email' in masked) && !('investor_name' in masked), 'Marketplace must not expose investor identity');
