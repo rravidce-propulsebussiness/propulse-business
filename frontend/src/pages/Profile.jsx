@@ -87,12 +87,10 @@ function Profile() {
       const result = await authRequest('/profile', {
         method: 'PUT', body: JSON.stringify({ ...form, services: serviceSelections.map((x) => ({ industryId: Number(x.industryId), serviceId: Number(x.serviceId), subserviceId: x.subserviceId ? Number(x.subserviceId) : null })), locations: locationSelections.map((x) => ({ stateId: Number(x.stateId), cityId: Number(x.cityId) })) }),
       })
-      saveSession({ token: getTokenSafe(), user: result.user })
+      saveSession({ user: result.user })
       setMessage('Profile saved successfully.')
     } catch (err) { setError(err.message) } finally { setSaving(false) }
   }
-
-  function getTokenSafe() { return localStorage.getItem('propulse_auth_token') }
 
   if (loading) return <><UserHeader/><div className="profile-page"><div className="profile-loading">Loading your business profile…</div></div></>
 
