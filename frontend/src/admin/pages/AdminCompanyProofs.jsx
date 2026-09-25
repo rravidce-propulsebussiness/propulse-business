@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { API_BASE_URL } from '../../utils/api';
-import { authRequest, getToken } from '../../utils/auth';
+import { authRequest } from '../../utils/auth';
 import './AdminCompanyProofs.css';
 
 const dateTime = value => value ? new Date(value).toLocaleString() : '—';
