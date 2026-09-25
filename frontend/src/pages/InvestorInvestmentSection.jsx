@@ -94,7 +94,7 @@ function LeadDetails({ item, sold }) {
 
 export default function InvestorInvestmentSection({ type }) {
   const [investments,setInvestments]=useState([]),[leads,setLeads]=useState([]),[loading,setLoading]=useState(true),[error,setError]=useState('')
-  useEffect(()=>{let active=true;setLoading(true);setError('');const endpoint=type==='leads'?'/investments/assigned-leads':type==='sold'?'/investments/sold-leads':'/investments';authRequest(endpoint).then(result=>{if(!active)return;if(type==='leads'||type==='sold')setLeads(rows(result));else setInvestments(rows(result))}).catch(e=>{if(active)setError(e.message||'Unable to load investor data')}).finally(()=>{if(active)setLoading(false)});return()=>{active=false}},[type])
+  useEffect(()=>{let active=true;queueMicrotask(()=>{if(!active)return;setLoading(true);setError('');const endpoint=type==='leads'?'/investments/assigned-leads':type==='sold'?'/investments/sold-leads':'/investments';authRequest(endpoint).then(result=>{if(!active)return;if(type==='leads'||type==='sold')setLeads(rows(result));else setInvestments(rows(result))}).catch(e=>{if(active)setError(e.message||'Unable to load investor data')}).finally(()=>{if(active)setLoading(false)})});return()=>{active=false}},[type])
   const available=leads.filter(item=>!isSold(item))
   const sold=leads.filter(isSold)
   const visibleLeads=type==='leads'?available:sold
