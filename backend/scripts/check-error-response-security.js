@@ -10,11 +10,14 @@ const files = [
   'src/controllers/investmentCycleController.js',
   'src/controllers/paymentController.js',
   'src/controllers/walletController.js',
+  'src/controllers/leadController.js',
+  'src/routes/investmentRoutes.js',
 ];
 
 const rawInternalErrorPatterns = [
   /status\(500\)\.json\(\{\s*error:\s*(?:e|error)\.message/,
   /status\([^)]*500[^)]*\)\.json\(\{\s*error:\s*(?:e|error)\.message/,
+  /status\(map\[(?:e|error)\.code\]\|\|500\)\.json\(\{\s*error:/,
 ];
 
 for (const relative of files) {
