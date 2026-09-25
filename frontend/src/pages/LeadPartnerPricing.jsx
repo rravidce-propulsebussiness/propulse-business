@@ -35,7 +35,7 @@ export default function LeadPartnerPricing() {
   const [status] = useState('all');
   const [loading, setLoading] = useState(true);
   const [savingId, setSavingId] = useState(null);
-  const [savingRule] = useState(false);
+  const [savingRule, setSavingRule] = useState(false);
   const [drafts, setDrafts] = useState({});
   const [ruleForm, setRuleForm] = useState({ id: null, industryId: '', cityId: '', leadType: 'basic', pricing: defaultTiers(), isActive: true });
   const [error, setError] = useState('');
@@ -88,6 +88,34 @@ export default function LeadPartnerPricing() {
 
   function resetRule() { setRuleForm({ id: null, industryId: '', cityId: '', leadType: 'basic', pricing: defaultTiers(), isActive: true }); }
 
+  function setRulePro(index, value) {
+    if (index !== 0) return;
+    setRuleForm(current => ({ ...current, pricing: { shares: buildFixedPartnerTiers(value) } }));
+    setSuccess('');
+    setError('');
+  }
+
+  async function saveRule() {
+    const oneShare = ruleForm.pricing?.shares?.find(tier => Number(tier.shares) === 1)?.pro ?? 0;
+    const pricing = { shares: buildFixedPartnerTiers(oneShare) };
+    const path = ruleForm.id ? `/lead-partner/pricing/config/${ruleForm.id}` : '/lead-partner/pricing/config';
+    try {
+      setSavingRule(true);
+      setError('');
+      setSuccess('');
+      await authRequest(path, {
+        method: ruleForm.id ? 'PUT' : 'POST',
+        body: JSON.stringify({ ...ruleForm, pricing }),
+      });
+      setSuccess(ruleForm.id ? 'Pricing configuration updated.' : 'Pricing configuration saved.');
+      resetRule();
+      await load();
+    } catch (e) {
+      setError(e.message || 'Unable to save pricing configuration');
+    } finally {
+      setSavingRule(false);
+    }
+  }
 
   function signOut() { clearSession(); localStorage.removeItem('propulse_session_mode'); navigate('/login', { replace: true }); }
 

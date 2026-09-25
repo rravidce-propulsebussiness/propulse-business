@@ -2,6 +2,7 @@ import { Fragment, useCallback, useEffect, useRef, useState } from 'react';
 import LeadPartnerSidebar from '../components/LeadPartnerSidebar';
 import { useNavigate } from 'react-router-dom';
 import { authRequest, clearSession, getUser } from '../utils/auth';
+import { downloadCsv } from '../utils/csv';
 import './LeadPartnerHome.css';
 import './LeadPartnerInventory.css';
 
@@ -31,7 +32,7 @@ export default function LeadPartnerInventory() {
   const rows=data.data||[];
 
   function signOut(){clearSession();localStorage.removeItem('propulse_session_mode');navigate('/login',{replace:true});}
-  const activeConnections=connections.filter(x=>x.status==='active'); const money=v=>Number(v||0)>0?`₹${Number(v).toLocaleString('en-IN',{maximumFractionDigits:2})}`:'—'; const getPrice=lead=>lead.partner_base_pricing?.shares?.[0]?.price??lead.pricing?.shares?.[0]?.price??lead.price; const getBuyerCount=lead=>lead.buyer_count??lead.buyers_count??0; function exportCsv(){const h=['ID','Name','Phone','Service','Location','Price','Buyers','Status','Added On'];const csv=[h,...rows.map(l=>[l.id,l.customer_name||'',l.customer_phone||'',l.service_name||l.industry_name||'',l.city_name||'',getPrice(l)||'',getBuyerCount(l),l.status||'',l.created_at||''])].map(r=>r.map(v=>`"${String(v??'').replace(/"/g,'""')}"`).join(',')).join('\\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download='propulse-lead-inventory.csv';a.click();URL.revokeObjectURL(a.href);}
+  const activeConnections=connections.filter(x=>x.status==='active'); const money=v=>Number(v||0)>0?`₹${Number(v).toLocaleString('en-IN',{maximumFractionDigits:2})}`:'—'; const getPrice=lead=>lead.partner_base_pricing?.shares?.[0]?.price??lead.pricing?.shares?.[0]?.price??lead.price; const getBuyerCount=lead=>lead.buyer_count??lead.buyers_count??0; function exportCsv(){const h=['ID','Name','Phone','Service','Location','Price','Buyers','Status','Added On'];downloadCsv('propulse-lead-inventory.csv',[h,...rows.map(l=>[l.id,l.customer_name||'',l.customer_phone||'',l.service_name||l.industry_name||'',l.city_name||'',getPrice(l)||'',getBuyerCount(l),l.status||'',l.created_at||''])]);}
   return <div className="partner-shell">
     <LeadPartnerSidebar user={user} onSignOut={signOut} />
     <main className="partner-main"><header className="partner-topbar"><div className="partner-breadcrumb"><span>Lead Partner</span><b>/</b><strong>Lead Inventory</strong></div><div className="partner-top-status"><i/> Partner account</div></header>

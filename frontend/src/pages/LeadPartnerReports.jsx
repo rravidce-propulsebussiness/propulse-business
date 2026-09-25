@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import LeadPartnerSidebar from '../components/LeadPartnerSidebar';
 import { useNavigate } from 'react-router-dom';
 import { authRequest, clearSession, getUser } from '../utils/auth';
+import { downloadCsv } from '../utils/csv';
 import './LeadPartnerReports.css';
 
 const REASONS={fake:'Fake / invalid lead',wrong_number:'Wrong number',not_interested:'Customer not interested',duplicate:'Duplicate lead',other:'Other'};
@@ -36,8 +37,7 @@ export default function LeadPartnerReports(){
   function exportReport(){
     const headers=['Report ID','Lead ID','Customer','Phone','Industry','Service','Location','Reason','Report status','Lead status','Reported on','Reviewed on'];
     const rows=filtered.map(r=>[r.id,r.lead_id,r.customer_name||'',r.customer_phone||'',r.industry_name||'',r.service_name||'',[r.city_name,r.state_name].filter(Boolean).join(', '),REASONS[r.reason]||r.reason,STATUS[r.status]||r.status,r.lead_status||'',r.created_at||'',r.reviewed_at||'']);
-    const csv=[headers,...rows].map(row=>row.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\n');
-    const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download='propulse-lead-reports.csv';a.click();URL.revokeObjectURL(a.href);
+    downloadCsv('propulse-lead-reports.csv',[headers,...rows]);
   }
 
   return <div className="reports-shell">

@@ -8,7 +8,9 @@
     "build": "vite build",
     "lint": "oxlint",
     "preview": "vite preview",
-    "test:google-gis": "node scripts/check-google-gis.mjs"
+    "test:google-gis": "node scripts/check-google-gis.mjs",
+    "test:source-graph": "node scripts/check-source-graph.mjs",
+    "test:csv-security": "node scripts/check-csv-security.mjs"
   },
   "dependencies": {
     "react": "^19.2.8",

@@ -177,19 +177,32 @@ async function getDashboard({ search = '', status = 'all', industryId = '' } = {
     ad_spent: Number(item.ad_spent.toFixed(2)),
     ad_remaining: Number(item.ad_remaining.toFixed(2)),
     funds_available_for_ads: Number(item.funds_available_for_ads.toFixed(2)),
+    _leadIds: [...item.leadIds],
     leadIds: undefined,
   })).sort((a, b) => b.total_invested - a.total_invested || String(a.user_name || '').localeCompare(String(b.user_name || '')));
 
-  for (const investor of investors) {
-    const ids = new Set();
-    for (const cycle of investor.cycles) for (const id of cycle.linked_lead_ids) ids.add(id);
-    investor.sold_linked_leads = ids.size
-      ? Number((await pool.query(`SELECT COUNT(DISTINCT l.id)::int AS total FROM leads l WHERE l.id=ANY($1::int[]) AND EXISTS (SELECT 1 FROM lead_purchases lp WHERE lp.lead_id=l.id AND lp.status='paid')`, [[...ids]])).rows[0].total || 0)
-      : 0;
-    investor.linked_gross_sales = ids.size
-      ? Number((await pool.query(`SELECT COALESCE(SUM(t.gross),0) AS total FROM (SELECT l.id,COALESCE(SUM(lp.amount) FILTER (WHERE lp.status='paid'),0) AS gross FROM leads l LEFT JOIN lead_purchases lp ON lp.lead_id=l.id WHERE l.id=ANY($1::int[]) GROUP BY l.id) t`, [[...ids]])).rows[0].total || 0)
-      : 0;
+  const allLeadIds = [...new Set(investors.flatMap(investor => investor._leadIds))];
+  if (allLeadIds.length) {
+    const metricRows = (await pool.query(`
+      SELECT
+        l.investor_user_id AS user_id,
+        COUNT(DISTINCT l.id) FILTER (WHERE EXISTS (
+          SELECT 1 FROM lead_purchases paid WHERE paid.lead_id=l.id AND paid.status='paid'
+        ))::int AS sold_linked_leads,
+        COALESCE(SUM(lp.amount) FILTER (WHERE lp.status='paid'),0)::numeric AS linked_gross_sales
+      FROM leads l
+      LEFT JOIN lead_purchases lp ON lp.lead_id=l.id
+      WHERE l.id=ANY($1::int[])
+      GROUP BY l.investor_user_id
+    `, [allLeadIds])).rows;
+    const metrics = new Map(metricRows.map(row => [Number(row.user_id), row]));
+    for (const investor of investors) {
+      const metric = metrics.get(Number(investor.user_id));
+      investor.sold_linked_leads = Number(metric?.sold_linked_leads || 0);
+      investor.linked_gross_sales = Number(metric?.linked_gross_sales || 0);
+    }
   }
+  for (const investor of investors) delete investor._leadIds;
 
   const stats = {
     investors: investors.length,
