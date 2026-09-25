@@ -98,7 +98,7 @@ export default function Industries() {
     setLoading(false)
   }
 
-  useEffect(() => { loadAll() }, [])
+  useEffect(() => { let active=true; queueMicrotask(()=>{if(active)loadAll()}); return()=>{active=false}; }, [])
 
   const filteredIndustries = useMemo(() => {
     const query = search.trim().toLowerCase()
