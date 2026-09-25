@@ -6,7 +6,7 @@ import './UserHeader.css'
 export default function UserHeader() {
   const navigate = useNavigate(); const location = useLocation(); const user = getUser(); const token = getToken(); const loggedIn = Boolean(token && user)
   const [open,setOpen]=useState(false); const [businessName,setBusinessName]=useState(user?.business_name||user?.businessName||''); const [isPro,setIsPro]=useState(false)
-  useEffect(()=>{if(!loggedIn||user?.role==='admin')return;let active=true;authRequest('/profile').then(p=>{if(active&&p?.business_name)setBusinessName(p.business_name)}).catch(()=>{});if(user?.role!=='lead_partner')authRequest('/investments/access').then(access=>{if(active)setIsPro(Boolean(access?.isPro))}).catch(()=>{if(active)setIsPro(false)});return()=>{active=false}},[loggedIn,user?.role])
+  useEffect(()=>{if(!loggedIn||user?.role==='admin')return;let active=true;authRequest('/auth/me').then(account=>{if(!active)return;const name=account?.profile?.business_name||account?.business_name;if(name)setBusinessName(name);setIsPro(user?.role!=='lead_partner'&&Boolean(account?.is_pro_member))}).catch(()=>{if(active)setIsPro(false)});return()=>{active=false}},[loggedIn,user?.role])
   async function logout(){await clearSession();setOpen(false);navigate('/')}
   const active=p=>{
     const [pathname,query]=p.split('?')
