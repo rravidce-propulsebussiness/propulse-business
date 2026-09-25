@@ -898,80 +898,13 @@
   border:1px solid #ffd1b9!important;
   color:#e45a21!important;
 }
-.lv2-buy-proof{
-  position:relative;
-  min-height:44px!important;
-  padding:6px 8px!important;
-  border:1px dashed #b8cfe9!important;
-  border-radius:10px!important;
-  background:linear-gradient(135deg,#f8fbff,#f2f7ff)!important;
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.9);
-}
-.lv2-buy-proof>span{
-  width:30px!important;
-  height:30px!important;
-  flex:0 0 30px!important;
-  border-radius:8px!important;
-  background:#e7f0ff!important;
-  color:#1554a4!important;
-  font-size:15px!important;
-}
-.lv2-buy-proof b{
-  font-size:9px!important;
-  color:#173b70!important;
-}
-.lv2-buy-proof small{
-  font-size:7px!important;
-  color:#7a8da5!important;
-}
-.lv2-buy-proof input[type=file]{
-  width:auto!important;
-  max-width:126px!important;
-  min-width:92px!important;
-  height:30px!important;
-  padding:0!important;
-  border:0!important;
-  background:transparent!important;
-  color:#71839b!important;
-  font-size:0!important;
-  cursor:pointer!important;
-}
-.lv2-buy-proof input[type=file]::file-selector-button{
-  height:30px;
-  margin-right:7px;
-  padding:0 11px;
-  border:1px solid #f06a35;
-  border-radius:8px;
-  background:linear-gradient(135deg,#ff6a2e,#f4511e);
-  color:#fff;
-  font-family:inherit;
-  font-size:8px;
-  font-weight:950;
-  cursor:pointer;
-  box-shadow:0 5px 12px rgba(244,81,30,.18);
-}
-.lv2-buy-proof input[type=file]::file-selector-button:hover{
-  background:linear-gradient(135deg,#ff783f,#f4511e);
-  box-shadow:0 7px 15px rgba(244,81,30,.24);
-}
-.lv2-buy-proof input[type=file]:focus-visible{
-  outline:2px solid #8ab5eb;
-  outline-offset:2px;
-}
 @media(max-width:600px){
   .lv2-pack-card em.lv2-pack-saving-member,
   .lv2-pack-card em.lv2-pack-saving-growth{
     font-size:7px!important;
     padding:4px 6px!important;
   }
-  .lv2-buy-proof{
-    min-height:42px!important;
-  }
-  .lv2-buy-proof input[type=file]{
-    max-width:116px!important;
-    min-width:82px!important;
-  }
-}
+    }
 
 /* Restore premium View Plans link styling */
 .lv2-pro-hint .lv2-view-plans-link{
