@@ -43,6 +43,8 @@ jobs:
         run: npm run test:payment-proof-preview
       - name: Wallet history clarity
         run: npm run test:wallet-history
+      - name: Wallet membership tab
+        run: npm run test:wallet-membership-tab
       - name: Build
         run: npm run build
       - name: Google GIS regression checks
