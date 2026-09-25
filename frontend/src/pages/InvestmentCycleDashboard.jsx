@@ -44,9 +44,14 @@ export default function InvestmentCycleDashboard() {
 
   useEffect(() => {
     const shouldOpen = new URLSearchParams(location.search).get('new') === '1'
-    if (!shouldOpen) return
-    setShowInvest(true)
-    window.history.replaceState({}, '', location.pathname)
+    if (!shouldOpen) return undefined
+    let active = true
+    queueMicrotask(() => {
+      if (!active) return
+      setShowInvest(true)
+      window.history.replaceState({}, '', location.pathname)
+    })
+    return () => { active = false }
   }, [location.search, location.pathname])
 
   const config = useMemo(() => {
