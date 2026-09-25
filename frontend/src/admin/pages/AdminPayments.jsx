@@ -90,7 +90,7 @@ export default function AdminPayments() {
     }
   }, [tab, status, fetchPayments, fetchTopups, fetchCustomers, fetchWalletCustomers])
 
-  useEffect(() => { load(1) }, [load])
+  useEffect(() => { let active=true; queueMicrotask(()=>{if(active)load(1)}); return()=>{active=false}; }, [load])
   useEffect(() => {
     const refresh = () => { if (document.visibilityState === 'visible') load(1, true) }
     const timer = window.setInterval(refresh, 60000)
@@ -206,10 +206,14 @@ export default function AdminPayments() {
   }
 
   useEffect(() => {
-    if (selectedPlan) {
+    if (!selectedPlan) return undefined
+    let active = true
+    queueMicrotask(() => {
+      if (!active) return
       setSelectedMembershipId(selectedPlan.membership_id)
       setExpiry(selectedPlan.expires_at ? new Date(selectedPlan.expires_at).toISOString().slice(0, 10) : '')
-    }
+    })
+    return () => { active = false }
   }, [selectedPlan])
 
   const pstats = paymentMeta.stats || {}
