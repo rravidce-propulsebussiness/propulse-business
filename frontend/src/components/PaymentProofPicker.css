@@ -1,3 +1,5 @@
+.lv2-proof-field{display:block;min-width:0;color:#173b70;font-size:9px;font-weight:900}
+.lv2-proof-field-label{display:block;margin-bottom:4px}
 .payment-proof-picker{min-width:0}
 .payment-proof-input{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
 .payment-proof-empty{display:flex!important;align-items:center;gap:9px;min-height:52px;margin:0!important;padding:7px 9px!important;box-sizing:border-box;border:1.5px dashed #b9cee7;border-radius:9px;background:#f8fbff;cursor:pointer}
