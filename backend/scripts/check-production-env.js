@@ -20,7 +20,7 @@ function parseOrigin(raw, key) {
   }
 }
 
-if (value('NODE_ENV') !== 'production') fail('NODE_ENV must be production');
+if (value('NODE_ENV') !== 'production') fail('NODE_ENV must be production (this command is intended for the deployed staging/production environment, not your normal local development .env)');
 
 for (const key of ['DB_HOST', 'DB_PORT', 'DB_NAME', 'DB_USER', 'DB_PASSWORD']) {
   if (!value(key)) fail(`${key} is required`);
