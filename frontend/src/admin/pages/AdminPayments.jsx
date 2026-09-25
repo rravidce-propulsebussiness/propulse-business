@@ -4,6 +4,7 @@ import { getToken, clearSession } from '../../utils/auth'
 import { useNavigate } from 'react-router-dom'
 import './AdminTable.css'
 import './AdminPayments.css'
+import '../../adminPaymentCouponEnhancer.js'
 
 export default function AdminPayments() {
   const navigate = useNavigate()
@@ -91,8 +92,15 @@ export default function AdminPayments() {
 
   useEffect(() => { load(1) }, [load])
   useEffect(() => {
-    const timer = window.setInterval(() => load(1, true), 15000)
-    return () => window.clearInterval(timer)
+    const refresh = () => { if (document.visibilityState === 'visible') load(1, true) }
+    const timer = window.setInterval(refresh, 60000)
+    document.addEventListener('visibilitychange', refresh)
+    window.addEventListener('focus', refresh)
+    return () => {
+      window.clearInterval(timer)
+      document.removeEventListener('visibilitychange', refresh)
+      window.removeEventListener('focus', refresh)
+    }
   }, [load])
 
   async function updatePayment(id, next) {
