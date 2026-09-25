@@ -65,7 +65,7 @@ export default function LeadPartnerPricing() {
     } catch (e) { setError(e.message); }
   }, [])
 
-  useEffect(() => { load(); loadCatalogs(); }, [load, loadCatalogs]);
+  useEffect(() => { let active=true; queueMicrotask(()=>{if(active){load();loadCatalogs()}}); return()=>{active=false}; }, [load, loadCatalogs]);
 
   function changeDraft(leadId, shares, value) {
     if (Number(shares) !== 1) return;
