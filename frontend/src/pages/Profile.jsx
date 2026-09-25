@@ -94,7 +94,7 @@ function Profile() {
 
   function getTokenSafe() { return localStorage.getItem('propulse_auth_token') }
 
-  if (loading) return <div className="profile-page"><div className="profile-loading">Loading your business profile…</div></div>
+  if (loading) return <><UserHeader/><div className="profile-page"><div className="profile-loading">Loading your business profile…</div></div></>
 
   return (
     <>
