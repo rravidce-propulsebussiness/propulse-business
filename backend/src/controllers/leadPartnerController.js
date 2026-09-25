@@ -5,10 +5,23 @@ const payoutAccountService = require('../services/leadPartnerPayoutAccountServic
 const earningsService = require('../services/leadPartnerEarningsService');
 const payoutService = require('../services/leadPartnerPayoutService');
 const leadReportService = require('../services/leadReportService');
+const { resolvePincode } = require('../services/pincodeService');
+
+async function requirePincode(body) {
+  const value = String(body?.pincode ?? body?.zipcode ?? '').trim();
+  if (/^\d{6}$/.test(value)) return value;
+  const custom = body?.customFields && typeof body.customFields === 'object' ? body.customFields : {};
+  const location = body?.location ?? body?.Location ?? custom.location ?? custom.Location ?? custom.area ?? custom.Area ?? custom.locality ?? custom.Locality ?? custom.postOffice ?? custom['Post Office'] ?? '';
+  const district = body?.district ?? body?.District ?? custom.district ?? custom.District ?? '';
+  const resolved = await resolvePincode({ stateId: body?.stateId, cityId: body?.cityId, district, location });
+  if (resolved?.pincode) return resolved.pincode;
+  throw new Error('Pincode is required and must be a valid 6-digit Indian PIN, or a matching location must be provided');
+}
+
 async function dashboard(req,res){try{return res.json(await leadPartnerService.getDashboard(req.user.id,req.query?.period));}catch(e){return res.status(500).json({error:'Failed to load Lead Partner dashboard'});}}
 async function apply(req,res){try{return res.status(201).json(await leadPartnerService.apply(req.user.id));}catch(e){return sendError(res,500,e,'Failed to process Lead Partner request');}}
-async function me(req,res){try{return res.json(await leadPartnerService.getPartnerByUserId(req.user.id));}catch(e){return res.status(500).json({error:'Failed to load Lead Partner profile'});}}
-async function createLead(req,res){try{return res.status(201).json(await leadPartnerService.createLead({userId:req.user.id,...(req.body||{})}));}catch(e){const s=['PARTNER_NOT_FOUND','PARTNER_NOT_ACTIVE'].includes(e.code)?403:400;return sendError(res,s,e,'Lead Partner request failed',{code:e.code});}}
+async function me(req,res){try{const partner=await leadPartnerService.getPartnerByUserId(req.user.id);return res.json(partner||{status:'not_applied'});}catch(e){return res.status(500).json({error:'Failed to load Lead Partner profile'});}}
+async function createLead(req,res){try{const pincode=await requirePincode(req.body||{});return res.status(201).json(await leadPartnerService.createLead({userId:req.user.id,...(req.body||{}),pincode}));}catch(e){if(e.code==='DUPLICATE_LEAD'||e.code==='23505')return sendError(res,409,e,'Duplicate lead',{code:'DUPLICATE_LEAD',leadId:e.leadId});const s=['PARTNER_NOT_FOUND','PARTNER_NOT_ACTIVE'].includes(e.code)?403:400;return sendError(res,s,e,'Lead Partner request failed',{code:e.code});}}
 async function myLeads(req,res){try{return res.json(await leadPartnerService.getMyLeads(req.user.id,req.query||{}));}catch(e){const s=['PARTNER_NOT_FOUND','PARTNER_NOT_ACTIVE'].includes(e.code)?403:500;return sendError(res,s,e,'Lead Partner request failed',{code:e.code});}}
 async function adminPartners(req,res){try{return res.json(await leadPartnerService.getAdminPartners(req.query||{}));}catch(e){return res.status(500).json({error:'Failed to load Lead Partners'});}}
 async function adminPartnerFinancials(req,res){try{return res.json(await earningsService.getAdminPartnerFinancials(req.params.partnerId));}catch(e){return sendError(res,e.code==='PARTNER_NOT_FOUND'?404:500,e,'Failed to load Lead Partner financials',{code:e.code});}}

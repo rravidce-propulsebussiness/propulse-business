@@ -69,7 +69,7 @@ async function getMyLeads(userId, { status, page = 1, limit = 50 } = {}) {
   const offset = (currentPage - 1) * pageSize;
   const values = [partner.id];
   let filter = 'l.lead_partner_id=$1';
-  if (status) {
+  if (status && status !== 'all') {
     values.push(String(status));
     filter += ` AND l.status=$${values.length}`;
   }
