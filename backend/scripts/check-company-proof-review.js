@@ -32,7 +32,7 @@ assert(authService.includes('const createdFiles = [];'), 'Company proof upload m
 assert(authService.includes("await client.query('BEGIN');"), 'Company proof upload must use a database transaction');
 assert(authService.includes("await client.query('COMMIT');"), 'Company proof upload must commit the database transaction');
 assert(authService.includes("await client.query('ROLLBACK');"), 'Company proof upload must rollback the database transaction on failure');
-assert(authService.includes('fs.rmSync(filePath, { force: true });'), 'Company proof upload must remove created files after rollback');
+assert(authService.includes('await fsp.rm(filePath, { force: true });'), 'Company proof upload must remove created files after rollback');
 assert(authService.includes('preparedDocuments'), 'Company proof upload must validate all documents before writing files');
 
 console.log('Company proof review and upload atomicity regression test passed.');
