@@ -13,7 +13,7 @@ export default function LeadPartnerFaq(){
   const [faqs,setFaqs]=useState([]),[loading,setLoading]=useState(true),[error,setError]=useState('');
   const [category,setCategory]=useState('all'),[search,setSearch]=useState(''),[open,setOpen]=useState(null);
   const load=async()=>{try{setLoading(true);setError('');setFaqs(await authRequest('/lead-partner/faqs'))}catch(e){setError(e.message||'Unable to load FAQs')}finally{setLoading(false)}};
-  useEffect(()=>{load()},[]);
+  useEffect(()=>{let active=true;queueMicrotask(()=>{if(active)load()});return()=>{active=false}},[]);
   const visible=useMemo(()=>faqs.filter(f=>{
     const q=search.trim().toLowerCase();
     return (category==='all'||f.category===category)&&(!q||[f.question,f.answer,f.category].join(' ').toLowerCase().includes(q));
