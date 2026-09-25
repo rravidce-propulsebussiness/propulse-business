@@ -7,7 +7,7 @@ async function getMarketplacePage({industryId,serviceId,subserviceId,stateId,cit
  if(industryId&&String(industryId).toLowerCase()!=='all')add(industryId,'l.industry_id=?');
  if(serviceId)add(serviceId,'l.service_id=?');if(subserviceId)add(subserviceId,'l.subservice_id=?');if(stateId)add(stateId,'l.state_id=?');if(cityId)add(cityId,'l.city_id=?');
  const q=String(search||'').trim().toLowerCase();if(q){values.push(`%${q}%`);const p=`$${values.length}`;conditions.push(`(LOWER(COALESCE(i.name,'')) LIKE ${p} OR LOWER(COALESCE(s.name,'')) LIKE ${p} OR LOWER(COALESCE(ss.name,'')) LIKE ${p} OR LOWER(COALESCE(c.name,'')) LIKE ${p} OR LOWER(COALESCE(st.name,'')) LIKE ${p} OR LOWER(COALESCE(l.requirement,'')) LIKE ${p})`)}
- if(role!=='admin'&&userId&&!String(allIndustries||'').match(/^(1|true)$/i)&&!String(allLocations||'').match(/^(1|true)$/i)){
+ if(role!=='admin'&&userId){
    values.push(userId);const p=`$${values.length}`;
    conditions.push(`EXISTS (
      SELECT 1 FROM business_profiles bp
