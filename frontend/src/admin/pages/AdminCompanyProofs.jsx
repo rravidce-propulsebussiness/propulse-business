@@ -62,7 +62,7 @@ export default function AdminCompanyProofs() {
     try {
       setError('');
       const response = await fetch(`${API_BASE_URL}/auth/company-proofs/${documentId}`, {
-        headers: { Authorization: `Bearer ${getToken()}` },
+        credentials: 'include',
       });
       if (!response.ok) {
         const data = await response.json().catch(() => ({}));
