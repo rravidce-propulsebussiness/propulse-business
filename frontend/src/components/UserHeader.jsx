@@ -6,7 +6,7 @@ import './UserHeader.css'
 export default function UserHeader() {
   const navigate = useNavigate(); const location = useLocation(); const user = getUser(); const token = getToken(); const loggedIn = Boolean(token && user)
   const [open,setOpen]=useState(false); const [businessName,setBusinessName]=useState(user?.business_name||user?.businessName||''); const [isPro,setIsPro]=useState(false)
-  useEffect(()=>{if(!loggedIn||user?.role==='admin')return;let active=true;authRequest('/profile').then(p=>{if(active&&p?.business_name)setBusinessName(p.business_name)}).catch(()=>{});if(user?.role!=='lead_partner' && user?.is_pro_member === true) authRequest('/investments/access').then(access=>{if(active)setIsPro(Boolean(access?.isPro))}).catch(()=>{if(active)setIsPro(false)});return()=>{active=false}},[loggedIn,user?.role,user?.is_pro_member])
+  useEffect(()=>{if(!loggedIn||user?.role==='admin')return;let active=true;authRequest('/profile').then(p=>{if(active&&p?.business_name)setBusinessName(p.business_name)}).catch(()=>{});if(user?.role!=='lead_partner')authRequest('/investments/access').then(access=>{if(active)setIsPro(Boolean(access?.isPro))}).catch(()=>{if(active)setIsPro(false)});return()=>{active=false}},[loggedIn,user?.role])
   async function logout(){await clearSession();setOpen(false);navigate('/')}
   const active=p=>{
     const [pathname,query]=p.split('?')
@@ -43,7 +43,7 @@ export default function UserHeader() {
       <Link className={active("/purchased-leads")} to="/purchased-leads" onClick={()=>setOpen(false)}>Purchased Leads</Link>
       <Link className={active("/wallet")} to="/wallet" onClick={()=>setOpen(false)}>Wallet</Link>
       <Link className={active("/membership")} to="/membership" onClick={()=>setOpen(false)}>Membership</Link>
-      {isPro && <Link className={active("/investment")} to="/investment" onClick={()=>setOpen(false)}>Investment</Link>}
+      {isPro && <Link className={active("/investment")} to="/investment" onClick={()=>setOpen(false)}>Investor</Link>}
       {!location.pathname.startsWith("/investment") && <Link className={active("/contact?audience=users")} to="/contact?audience=users" onClick={()=>setOpen(false)}>Contact</Link>}
       <button className="user-header-mobile-logout" onClick={logout}>Logout</button>
     </nav>
