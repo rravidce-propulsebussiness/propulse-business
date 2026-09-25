@@ -11,7 +11,8 @@
     "test:google-gis": "node scripts/check-google-gis.mjs",
     "test:source-graph": "node scripts/check-source-graph.mjs",
     "test:csv-security": "node scripts/check-csv-security.mjs",
-    "test:user-header-layout": "node scripts/check-user-header-layout.mjs"
+    "test:user-header-layout": "node scripts/check-user-header-layout.mjs",
+    "test:lead-marketplace-display": "node scripts/check-lead-marketplace-display.mjs"
   },
   "dependencies": {
     "react": "^19.2.8",
