@@ -25,7 +25,7 @@ export default function AdminContactSocial(){
     }catch(e){setError(e.message||'Unable to load contact settings')}
     finally{setLoading(false)}
   }
-  useEffect(()=>{loadAudience('website')},[]);
+  useEffect(()=>{let active=true;queueMicrotask(()=>{if(active)loadAudience('website')});return()=>{active=false}},[]);
   function switchAudience(key){
     setAudience(key);setError('');setOk('');
     if(loaded[key]) setForm({...loaded[key],audience:key});
