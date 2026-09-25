@@ -31,6 +31,10 @@ jobs:
         run: npm audit --omit=dev --audit-level=high
       - name: Lint
         run: npm run lint
+      - name: Frontend source graph
+        run: npm run test:source-graph
+      - name: CSV export security
+        run: npm run test:csv-security
       - name: Build
         run: npm run build
       - name: Google GIS regression checks
@@ -218,10 +222,219 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          if git ls-files | grep -E '(^|/)(\.env|\.env\.[^.]*)$' | grep -vE '(^|/)(\.env\.example|\.env\.sample)$'; then
+          if git ls-files | grep -E '(^|/)(\.env|\.env\.[^.]*)      - name: Block hardcoded production localhost API URLs
+        shell: bash
+        run: |
+          set -euo pipefail
+          matches=$(git grep -nE "https?://localhost:[0-9]+/api" -- frontend/src ':!frontend/src/utils/api.js' || true)
+          if [ -n "$matches" ]; then
+            echo "Hardcoded localhost API URL found outside the shared API client:"
+            echo "$matches"
+            exit 1
+          fi
+      - name: Block common committed secrets
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git grep -nEI '(password|secret|access[_-]?token|private[_-]?key)[[:space:]]*[:=][[:space:]]*["'"'"'][^"'"'"']{12,}["'"'"']' -- ':!*.lock' ':!*.example' ':!*.sample' ':!backend/src/database/schema.sql'; then
+            echo "Potential hardcoded secret detected. Review the matches before merging."
+            exit 1
+          fi
+
+      - name: Block runtime fetch monkey patches
+        shell: bash
+        run: |
+          set -euo pipefail
+          matches=$(git grep -nE 'window\.fetch[[:space:]]*=' -- frontend/src || true)
+          if [ -n "$matches" ]; then
+            echo "Global window.fetch monkey patch detected:"
+            echo "$matches"
+            exit 1
+          fi
+          echo "No global fetch monkey patches found."
+
+      - name: Block legacy browser auth token storage
+        shell: bash
+        run: |
+          set -euo pipefail
+          matches=$(git grep -n 'propulse_auth_token' -- frontend/src || true)
+          if [ -n "$matches" ]; then
+            echo "Legacy browser JWT storage reference detected:"
+            echo "$matches"
+            exit 1
+          fi
+          echo "No legacy browser JWT storage references found."
+
+      - name: Block document.write
+        shell: bash
+        run: |
+          set -euo pipefail
+          matches=$(git grep -nE 'document\.write[[:space:]]*\(' -- frontend/src || true)
+          if [ -n "$matches" ]; then
+            echo "document.write usage detected:"
+            echo "$matches"
+            exit 1
+          fi
+          echo "No document.write usage found."
+
+      - name: Block frontend Authorization headers
+        shell: bash
+        run: |
+          set -euo pipefail
+          matches=$(git grep -n 'Authorization' -- frontend/src || true)
+          if [ -n "$matches" ]; then
+            echo "Frontend Authorization header detected; browser auth must use HttpOnly cookies:"
+            echo "$matches"
+            exit 1
+          fi
+          echo "No frontend Authorization headers found."
+ | grep -vE '(^|/)(\.env\.example|\.env\.sample)      - name: Block hardcoded production localhost API URLs
+        shell: bash
+        run: |
+          set -euo pipefail
+          matches=$(git grep -nE "https?://localhost:[0-9]+/api" -- frontend/src ':!frontend/src/utils/api.js' || true)
+          if [ -n "$matches" ]; then
+            echo "Hardcoded localhost API URL found outside the shared API client:"
+            echo "$matches"
+            exit 1
+          fi
+      - name: Block common committed secrets
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git grep -nEI '(password|secret|access[_-]?token|private[_-]?key)[[:space:]]*[:=][[:space:]]*["'"'"'][^"'"'"']{12,}["'"'"']' -- ':!*.lock' ':!*.example' ':!*.sample' ':!backend/src/database/schema.sql'; then
+            echo "Potential hardcoded secret detected. Review the matches before merging."
+            exit 1
+          fi
+
+      - name: Block runtime fetch monkey patches
+        shell: bash
+        run: |
+          set -euo pipefail
+          matches=$(git grep -nE 'window\.fetch[[:space:]]*=' -- frontend/src || true)
+          if [ -n "$matches" ]; then
+            echo "Global window.fetch monkey patch detected:"
+            echo "$matches"
+            exit 1
+          fi
+          echo "No global fetch monkey patches found."
+
+      - name: Block legacy browser auth token storage
+        shell: bash
+        run: |
+          set -euo pipefail
+          matches=$(git grep -n 'propulse_auth_token' -- frontend/src || true)
+          if [ -n "$matches" ]; then
+            echo "Legacy browser JWT storage reference detected:"
+            echo "$matches"
+            exit 1
+          fi
+          echo "No legacy browser JWT storage references found."
+
+      - name: Block document.write
+        shell: bash
+        run: |
+          set -euo pipefail
+          matches=$(git grep -nE 'document\.write[[:space:]]*\(' -- frontend/src || true)
+          if [ -n "$matches" ]; then
+            echo "document.write usage detected:"
+            echo "$matches"
+            exit 1
+          fi
+          echo "No document.write usage found."
+
+      - name: Block frontend Authorization headers
+        shell: bash
+        run: |
+          set -euo pipefail
+          matches=$(git grep -n 'Authorization' -- frontend/src || true)
+          if [ -n "$matches" ]; then
+            echo "Frontend Authorization header detected; browser auth must use HttpOnly cookies:"
+            echo "$matches"
+            exit 1
+          fi
+          echo "No frontend Authorization headers found."
+; then
             echo "A real environment file is tracked. Remove it and rotate any exposed credentials."
             exit 1
           fi
+      - name: Block tracked runtime uploads
+        shell: bash
+        run: |
+          set -euo pipefail
+          matches=$(git ls-files 'backend/uploads/**' | grep -vE '/\.gitkeep      - name: Block hardcoded production localhost API URLs
+        shell: bash
+        run: |
+          set -euo pipefail
+          matches=$(git grep -nE "https?://localhost:[0-9]+/api" -- frontend/src ':!frontend/src/utils/api.js' || true)
+          if [ -n "$matches" ]; then
+            echo "Hardcoded localhost API URL found outside the shared API client:"
+            echo "$matches"
+            exit 1
+          fi
+      - name: Block common committed secrets
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git grep -nEI '(password|secret|access[_-]?token|private[_-]?key)[[:space:]]*[:=][[:space:]]*["'"'"'][^"'"'"']{12,}["'"'"']' -- ':!*.lock' ':!*.example' ':!*.sample' ':!backend/src/database/schema.sql'; then
+            echo "Potential hardcoded secret detected. Review the matches before merging."
+            exit 1
+          fi
+
+      - name: Block runtime fetch monkey patches
+        shell: bash
+        run: |
+          set -euo pipefail
+          matches=$(git grep -nE 'window\.fetch[[:space:]]*=' -- frontend/src || true)
+          if [ -n "$matches" ]; then
+            echo "Global window.fetch monkey patch detected:"
+            echo "$matches"
+            exit 1
+          fi
+          echo "No global fetch monkey patches found."
+
+      - name: Block legacy browser auth token storage
+        shell: bash
+        run: |
+          set -euo pipefail
+          matches=$(git grep -n 'propulse_auth_token' -- frontend/src || true)
+          if [ -n "$matches" ]; then
+            echo "Legacy browser JWT storage reference detected:"
+            echo "$matches"
+            exit 1
+          fi
+          echo "No legacy browser JWT storage references found."
+
+      - name: Block document.write
+        shell: bash
+        run: |
+          set -euo pipefail
+          matches=$(git grep -nE 'document\.write[[:space:]]*\(' -- frontend/src || true)
+          if [ -n "$matches" ]; then
+            echo "document.write usage detected:"
+            echo "$matches"
+            exit 1
+          fi
+          echo "No document.write usage found."
+
+      - name: Block frontend Authorization headers
+        shell: bash
+        run: |
+          set -euo pipefail
+          matches=$(git grep -n 'Authorization' -- frontend/src || true)
+          if [ -n "$matches" ]; then
+            echo "Frontend Authorization header detected; browser auth must use HttpOnly cookies:"
+            echo "$matches"
+            exit 1
+          fi
+          echo "No frontend Authorization headers found."
+ || true)
+          if [ -n "$matches" ]; then
+            echo "Runtime upload files must not be committed:"
+            echo "$matches"
+            exit 1
+          fi
+          echo "No runtime uploads are tracked."
       - name: Block hardcoded production localhost API URLs
         shell: bash
         run: |
