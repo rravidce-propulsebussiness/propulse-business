@@ -8,7 +8,7 @@ const pool = require('../config/database');
 const { getMembershipAccess } = require('./membershipAccessService');
 
 const JWT_SECRET = process.env.JWT_SECRET;
-if (!JWT_SECRET && process.env.NODE_ENV === 'production') throw new Error('JWT_SECRET must be configured in production');
+if (process.env.NODE_ENV === 'production' && (!JWT_SECRET || JWT_SECRET.length < 32)) throw new Error('JWT_SECRET must be at least 32 characters in production');
 const EFFECTIVE_JWT_SECRET = JWT_SECRET || 'change-this-secret-in-development-only';
 
 const PUBLIC_SIGNUP_ROLES = new Set(['business', 'lead_partner']);
@@ -263,7 +263,7 @@ async function createPasswordReset(email) {
 }
 
 async function resetPassword({ token, password }) {
-  if (!token || typeof token !== 'string' || password.length < 8) throw Object.assign(new Error('A valid reset token and a password of at least 8 characters are required'), { code: 'INVALID_RESET_REQUEST' });
+  if (!token || typeof token !== 'string' || !/^(?=.*[A-Za-z])(?=.*\d).{8,}$/.test(String(password || ''))) throw Object.assign(new Error('A valid reset token and a password of at least 8 characters with a letter and number are required'), { code: 'INVALID_RESET_REQUEST' });
   const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
   const client = await pool.connect();
   try {

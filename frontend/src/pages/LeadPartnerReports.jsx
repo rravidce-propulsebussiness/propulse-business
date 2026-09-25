@@ -15,7 +15,7 @@ export default function LeadPartnerReports(){
   const [filter,setFilter]=useState('all'); const [search,setSearch]=useState(''); const [selected,setSelected]=useState(null); const [refreshing,setRefreshing]=useState(false);
 
   async function load(){try{setLoading(true);setError('');const data=await authRequest('/lead-partner/reports');setReports(Array.isArray(data?.data)?data.data:[]);setReportSummary(data?.summary||{total_reports:0,reported_leads:0,pending:0,verified_fake:0,verified_genuine:0,rejected:0})}catch(e){setError(e.message||'Unable to load reported leads')}finally{setLoading(false)}}
-  useEffect(()=>{load()},[]);
+  useEffect(()=>{let active=true;queueMicrotask(()=>{if(active)load()});return()=>{active=false}},[]);
   async function refresh(){try{setRefreshing(true);await load()}finally{setRefreshing(false)}}
   function signOut(){clearSession();localStorage.removeItem('propulse_session_mode');navigate('/login',{replace:true})}
 

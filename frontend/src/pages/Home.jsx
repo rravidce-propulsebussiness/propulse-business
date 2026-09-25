@@ -134,15 +134,22 @@ function Home() {
   useEffect(() => {
     document.documentElement.classList.add('home-scroll')
     const hash = window.location.hash.replace('#', '')
-    if (hash === 'how-it-works' || hash === 'pricing' || hash === 'about' || hash === 'contact' || hash === 'upcoming-features' || hash === 'faq') {
-      setActiveNav(hash)
-      requestAnimationFrame(() => requestAnimationFrame(() => {
-        document.getElementById(hash)?.scrollIntoView({ behavior: 'auto', block: 'start' })
-      }))
-    } else {
-      setActiveNav('home')
+    let active = true
+    queueMicrotask(() => {
+      if (!active) return
+      if (hash === 'how-it-works' || hash === 'pricing' || hash === 'about' || hash === 'contact' || hash === 'upcoming-features' || hash === 'faq') {
+        setActiveNav(hash)
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+          document.getElementById(hash)?.scrollIntoView({ behavior: 'auto', block: 'start' })
+        }))
+      } else {
+        setActiveNav('home')
+      }
+    })
+    return () => {
+      active = false
+      document.documentElement.classList.remove('home-scroll')
     }
-    return () => document.documentElement.classList.remove('home-scroll')
   }, [])
 
   useEffect(() => {

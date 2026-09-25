@@ -38,12 +38,17 @@ function decorateRows() {
 
     const rechargeCell = row.querySelector('td:nth-child(3)')
     if (rechargeCell && !rechargeCell.querySelector('.admin-coupon-summary')) {
-      rechargeCell.innerHTML = `
-        <div class="admin-coupon-summary">
-          <strong>${money(payment.subtotal_amount ?? payment.amount)}</strong>
-          <small>Coupon: ${payment.coupon_code} −${money(payment.discount_amount)}</small>
-          <small class="admin-coupon-paid">Actual paid: ${money(payment.amount)}</small>
-        </div>`
+      const summary = document.createElement('div')
+      summary.className = 'admin-coupon-summary'
+      const credit = document.createElement('strong')
+      credit.textContent = money(payment.subtotal_amount ?? payment.amount)
+      const coupon = document.createElement('small')
+      coupon.textContent = `Coupon: ${String(payment.coupon_code || '')} −${money(payment.discount_amount)}`
+      const paid = document.createElement('small')
+      paid.className = 'admin-coupon-paid'
+      paid.textContent = `Actual paid: ${money(payment.amount)}`
+      summary.append(credit, coupon, paid)
+      rechargeCell.replaceChildren(summary)
     }
 
     const detailsRow = row.nextElementSibling
@@ -51,11 +56,15 @@ function decorateRows() {
     if (grid && !grid.querySelector('.admin-coupon-details')) {
       const box = document.createElement('div')
       box.className = 'admin-coupon-details'
-      box.innerHTML = `
-        <span>PAYMENT BREAKDOWN</span>
-        <b>Wallet credit: ${money(payment.subtotal_amount ?? payment.amount)}</b>
-        <small>Coupon ${payment.coupon_code}: −${money(payment.discount_amount)}</small>
-        <strong>Actual paid: ${money(payment.amount)}</strong>`
+      const heading = document.createElement('span')
+      heading.textContent = 'PAYMENT BREAKDOWN'
+      const credit = document.createElement('b')
+      credit.textContent = `Wallet credit: ${money(payment.subtotal_amount ?? payment.amount)}`
+      const coupon = document.createElement('small')
+      coupon.textContent = `Coupon ${String(payment.coupon_code || '')}: −${money(payment.discount_amount)}`
+      const paid = document.createElement('strong')
+      paid.textContent = `Actual paid: ${money(payment.amount)}`
+      box.append(heading, credit, coupon, paid)
       grid.prepend(box)
     }
   })
@@ -81,13 +90,6 @@ style.textContent = `
 `
 document.head.appendChild(style)
 
-const observer = new MutationObserver(() => decorateRows())
+const observer = new MutationObserver(() => { run() })
 observer.observe(document.body, { childList: true, subtree: true })
-
-setInterval(() => {
-  if (isAdminPaymentsPage()) {
-    loadPaymentMap(true).then(decorateRows)
-  }
-}, 15000)
-
 run()

@@ -31,7 +31,7 @@ export default function LeadPartnerWithdrawals() {
     }
   }, []);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => { let active=true; queueMicrotask(()=>{if(active)load()}); return()=>{active=false}; }, [load]);
 
   async function submit(event) {
     event.preventDefault();

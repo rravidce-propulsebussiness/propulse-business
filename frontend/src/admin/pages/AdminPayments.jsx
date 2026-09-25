@@ -4,6 +4,7 @@ import { getToken, clearSession } from '../../utils/auth'
 import { useNavigate } from 'react-router-dom'
 import './AdminTable.css'
 import './AdminPayments.css'
+import '../../adminPaymentCouponEnhancer.js'
 
 export default function AdminPayments() {
   const navigate = useNavigate()
@@ -89,10 +90,17 @@ export default function AdminPayments() {
     }
   }, [tab, status, fetchPayments, fetchTopups, fetchCustomers, fetchWalletCustomers])
 
-  useEffect(() => { load(1) }, [load])
+  useEffect(() => { let active=true; queueMicrotask(()=>{if(active)load(1)}); return()=>{active=false}; }, [load])
   useEffect(() => {
-    const timer = window.setInterval(() => load(1, true), 15000)
-    return () => window.clearInterval(timer)
+    const refresh = () => { if (document.visibilityState === 'visible') load(1, true) }
+    const timer = window.setInterval(refresh, 60000)
+    document.addEventListener('visibilitychange', refresh)
+    window.addEventListener('focus', refresh)
+    return () => {
+      window.clearInterval(timer)
+      document.removeEventListener('visibilitychange', refresh)
+      window.removeEventListener('focus', refresh)
+    }
   }, [load])
 
   async function updatePayment(id, next) {
@@ -198,10 +206,14 @@ export default function AdminPayments() {
   }
 
   useEffect(() => {
-    if (selectedPlan) {
+    if (!selectedPlan) return undefined
+    let active = true
+    queueMicrotask(() => {
+      if (!active) return
       setSelectedMembershipId(selectedPlan.membership_id)
       setExpiry(selectedPlan.expires_at ? new Date(selectedPlan.expires_at).toISOString().slice(0, 10) : '')
-    }
+    })
+    return () => { active = false }
   }, [selectedPlan])
 
   const pstats = paymentMeta.stats || {}
@@ -259,13 +271,22 @@ export default function AdminPayments() {
   const transactionTypeLabel = (t) => t.reference_type === 'wallet_topup' ? 'Recharge' : t.type === 'refund' ? 'Refund' : t.type === 'debit' ? 'Purchase debit' : t.reference_type ? `${t.reference_type}${t.reference_id ? ` #${t.reference_id}` : ''}` : 'Wallet credit'
 
   const openProof = (proof) => {
-    if (!proof) return
-    const win = window.open()
-    if (win) {
-      const safe = String(proof).replaceAll('"', '&quot;')
-      win.document.write(`<title>Payment Proof</title><style>body{margin:0;background:#111;display:flex;align-items:center;justify-content:center;min-height:100vh}img{max-width:95vw;max-height:95vh;object-fit:contain}iframe{width:95vw;height:95vh;border:0;background:#fff}</style>${String(proof).startsWith('data:application/pdf') ? `<iframe src="${safe}"></iframe>` : `<img src="${safe}" alt="Payment proof"/>`}`)
-      win.document.close()
-    }
+    const source = String(proof || '').trim()
+    if (!source) return
+    const win = window.open('', '_blank')
+    if (!win) return
+
+    const doc = win.document
+    doc.title = 'Payment Proof'
+    const style = doc.createElement('style')
+    style.textContent = 'body{margin:0;background:#111;display:flex;align-items:center;justify-content:center;min-height:100vh}img{max-width:95vw;max-height:95vh;object-fit:contain}iframe{width:95vw;height:95vh;border:0;background:#fff}'
+    doc.head.appendChild(style)
+
+    const isPdf = /^data:application\/pdf(?:;|,)/i.test(source)
+    const viewer = doc.createElement(isPdf ? 'iframe' : 'img')
+    viewer.src = source
+    if (!isPdf) viewer.alt = 'Payment proof'
+    doc.body.replaceChildren(viewer)
   }
 
   return (

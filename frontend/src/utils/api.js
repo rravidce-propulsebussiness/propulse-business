@@ -2,7 +2,9 @@ export const API_BASE_URL = import.meta.env.VITE_API_URL || '/api'
 
 export async function apiRequest(path, options = {}, includeToken = true) {
   const requestOptions = options
-  const headers = { 'Content-Type': 'application/json', ...(requestOptions.headers || {}) }
+  const headers = { ...(requestOptions.headers || {}) }
+  const hasBody = requestOptions.body !== undefined && requestOptions.body !== null
+  if (hasBody && !Object.keys(headers).some(key => key.toLowerCase() === 'content-type')) headers['Content-Type'] = 'application/json'
   const response = await fetch(`${API_BASE_URL}${path}`, { ...requestOptions, headers, credentials: 'include' })
   const data = await response.json().catch(() => ({}))
 

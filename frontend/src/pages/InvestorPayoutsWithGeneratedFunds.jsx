@@ -9,7 +9,7 @@ const dt=v=>v?new Date(v).toLocaleString('en-IN',{day:'2-digit',month:'short',ye
 export default function InvestorPayoutsWithGeneratedFunds(){
  const [funds,setFunds]=useState(null),[cycle,setCycle]=useState(null),[account,setAccount]=useState(null),[loading,setLoading]=useState(true),[open,setOpen]=useState(false),[amount,setAmount]=useState(''),[notes,setNotes]=useState(''),[busy,setBusy]=useState(false),[error,setError]=useState(''),[message,setMessage]=useState('')
  const load=async()=>{setLoading(true);setError('');try{const [f,a,c]=await Promise.all([authRequest('/investments/funds'),authRequest('/investor/payout-account'),authRequest('/investments/cycle')]);setFunds(f);setAccount(a);setCycle(c?.cycle||c||null)}catch(e){setError(e.message||'Unable to load payout balance')}finally{setLoading(false)}}
- useEffect(()=>{load()},[])
+ useEffect(()=>{let active=true;queueMicrotask(()=>{if(active)load()});return()=>{active=false}},[])
  const available=Number(funds?.transferable??funds?.withdrawable_earnings??0),reserved=Number(funds?.payout_reserved??funds?.reserved??0),generated=Number(funds?.generated??0)
  const closing=['EXIT_REQUESTED','WAITING_FOR_LEADS'].includes(String(cycle?.status||'').toUpperCase())
  const openTransfer=()=>{setError('');if(!account)return setError('Add a Bank Account or UPI before requesting a transfer.');if(!available)return setError('No eligible earnings are currently available for transfer.');if(closing)return setError('Your current investment cycle is closing. Wait until it is closed before requesting a withdrawal.');setAmount(available.toFixed(2));setOpen(true)}

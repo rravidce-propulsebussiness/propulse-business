@@ -30,8 +30,8 @@ export default function AdminUsers() {
     setCatalogs(value); setSubcitiesByCity((value.subcities || []).reduce((map, item) => { (map[item.city_id] ||= []).push(item); return map; }, {}));
     return value;
   }
-  useEffect(() => { setUserPage(1); }, [query, role, status]);
-  useEffect(() => { loadUsers(); }, [loadUsers]);
+  useEffect(() => { let active=true; queueMicrotask(()=>{if(active)setUserPage(1)}); return()=>{active=false}; }, [query, role, status]);
+  useEffect(() => { let active=true; queueMicrotask(()=>{if(active)loadUsers()}); return()=>{active=false}; }, [loadUsers]);
 
   const active = users.filter(u => u.is_active).length, businesses = users.filter(u => u.role === 'business').length, admins = users.filter(u => u.role === 'admin').length;
   const leadPartners = users.filter(u => u.role === 'lead_partner').length;

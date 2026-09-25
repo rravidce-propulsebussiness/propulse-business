@@ -20,11 +20,15 @@ export default function LeadPartnerHome(){
 
   useEffect(()=>{
     let mounted=true
-    setLoading(true)
-    authRequest(`/lead-partner/dashboard?period=${period}`)
-      .then(v=>mounted&&setData(v))
-      .catch(e=>mounted&&setError(e.message||'Unable to load dashboard'))
-      .finally(()=>mounted&&setLoading(false))
+    queueMicrotask(()=>{
+      if(!mounted)return
+      setLoading(true)
+      setError('')
+      authRequest(`/lead-partner/dashboard?period=${period}`)
+        .then(v=>mounted&&setData(v))
+        .catch(e=>mounted&&setError(e.message||'Unable to load dashboard'))
+        .finally(()=>mounted&&setLoading(false))
+    })
     return()=>{mounted=false}
   },[period])
   const stats=data?.stats||{}

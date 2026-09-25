@@ -72,14 +72,20 @@ export default function AdminInvestorWithdrawals() {
     }
   }, [request, status, search])
 
-  useEffect(() => { load() }, [load])
   useEffect(() => {
-    const timer = window.setTimeout(() => load(), 250)
+    const timer = window.setTimeout(() => load(), search.trim() ? 250 : 0)
     return () => window.clearTimeout(timer)
-  }, [load])
+  }, [load, search])
   useEffect(() => {
-    const timer = window.setInterval(() => load(true), 15000)
-    return () => window.clearInterval(timer)
+    const refresh = () => { if (document.visibilityState === 'visible') load(true) }
+    const timer = window.setInterval(refresh, 60000)
+    document.addEventListener('visibilitychange', refresh)
+    window.addEventListener('focus', refresh)
+    return () => {
+      window.clearInterval(timer)
+      document.removeEventListener('visibilitychange', refresh)
+      window.removeEventListener('focus', refresh)
+    }
   }, [load])
 
   const counts = useMemo(() => ({

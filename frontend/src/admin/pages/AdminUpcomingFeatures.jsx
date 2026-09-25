@@ -9,7 +9,7 @@ export default function AdminUpcomingFeatures(){
   const [items,setItems]=useState([]),[form,setForm]=useState(blank),[editId,setEditId]=useState(null)
   const [loading,setLoading]=useState(true),[saving,setSaving]=useState(false),[error,setError]=useState(''),[ok,setOk]=useState('')
   async function load(){try{setLoading(true);setError('');const d=await apiRequest('/admin/upcoming-features');setItems(Array.isArray(d)?d:[])}catch(e){setError(e.message||'Unable to load upcoming features')}finally{setLoading(false)}}
-  useEffect(()=>{load()},[])
+  useEffect(()=>{let active=true;queueMicrotask(()=>{if(active)load()});return()=>{active=false}},[])
   const update=(k,v)=>setForm(x=>({...x,[k]:v}))
   const edit=item=>{setEditId(item.id);setForm({...blank,...item});setError('');setOk('');window.scrollTo({top:0,behavior:'smooth'})}
   const reset=()=>{setEditId(null);setForm({...blank,sort_order:(items.length+1)*10})}

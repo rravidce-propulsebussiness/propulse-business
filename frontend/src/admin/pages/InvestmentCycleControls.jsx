@@ -4,6 +4,7 @@ import { apiRequest } from '../../utils/api'
 const money = value => `₹${Number(value || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}`
 const dateTime = value => value ? new Date(value).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—'
 const OPEN = ['ACTIVE', 'EXIT_REQUESTED', 'WAITING_FOR_LEADS']
+const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char])
 
 export default function InvestmentCycleControls() {
   useEffect(() => {
@@ -93,7 +94,7 @@ export default function InvestmentCycleControls() {
         const saleRows = sales.map(sale => `<div class="cycle-sale-row"><strong>Lead #${sale.lead_id}</strong><span>${Number(sale.shares || 1)} ${Number(sale.shares || 1) === 1 ? 'share · Single' : 'shares · Shared'}</span><span class="sale-amount">${money(sale.amount)} gross</span><span class="sale-earnings">+${money(sale.investor_earnings)} investor</span></div>`).join('')
 
         box.innerHTML = `<div class="cycle-statement">
-          <div class="cycle-statement-title"><span>Cycle #${cycleId} Complete Statement</span><span>${String(cycle.status || '').toUpperCase()}</span></div>
+          <div class="cycle-statement-title"><span>Cycle #${cycleId} Complete Statement</span><span>${escapeHtml(String(cycle.status || '').toUpperCase())}</span></div>
           <div class="cycle-statement-grid">
             <div class="cycle-stat"><span>Total Invested</span><strong>${money(investment.principal)}</strong></div>
             <div class="cycle-stat blue"><span>Ad Spend</span><strong>${money(ads.spent)}</strong></div>
@@ -115,7 +116,7 @@ export default function InvestmentCycleControls() {
 
           <div class="cycle-section"><div class="cycle-section-title"><strong>Cycle Timeline</strong><span>${cycle.auto_invest ? 'Auto-Invest' : 'Non-Auto'}</span></div><div class="cycle-sale-list"><div class="cycle-sale-row"><strong>Started</strong><span>${dateTime(cycle.started_at)}</span><span>Maturity</span><span>${dateTime(cycle.maturity_at)}</span></div><div class="cycle-sale-row"><strong>Exit</strong><span>${dateTime(cycle.exit_requested_at)}</span><span>Closed</span><span>${dateTime(cycle.closed_at)}</span></div></div></div>
 
-          ${cycle.admin_closed_reason || cycle.exit_reason ? `<div class="cycle-closure"><strong>Closure reason:</strong> ${cycle.admin_closed_reason || cycle.exit_reason}</div>` : ''}
+          ${cycle.admin_closed_reason || cycle.exit_reason ? `<div class="cycle-closure"><strong>Closure reason:</strong> ${escapeHtml(cycle.admin_closed_reason || cycle.exit_reason)}</div>` : ''}
           <div class="cycle-section"><div class="cycle-section-title"><strong>Other Financial Activity</strong><span>${Number(ads.transactions || 0)} ad-spend transaction(s) · ${Number(investment.count || 0)} investment row(s) · ${Number(payouts.requests || 0)} withdrawal request(s)</span></div></div>
         </div>`
         box.dataset.loaded = 'true'
@@ -145,7 +146,7 @@ export default function InvestmentCycleControls() {
         const previous = cycles.filter(cycle => !current || Number(cycle.id) !== Number(current.id))
         const renderCycle = (cycle, isCurrent) => {
           const closed = String(cycle.status || '').toUpperCase() === 'CLOSED'
-          return `<div class="investor-cycle-row"><div class="investor-cycle-main"><div class="investor-cycle-info"><strong>${isCurrent ? 'Current Active Cycle' : `Cycle #${cycle.id}`} · ${cycle.auto_invest ? 'Auto-Invest' : 'Non-Auto'}</strong><small>${money(cycle.principal)} invested · ${Number(cycle.total_leads || 0)} linked leads · ${Number(cycle.final_leads || 0)} final · ${Number(cycle.pending_leads || 0)} pending</small></div><span class="investor-cycle-status ${closed ? 'closed' : ''}">${cycle.status || '—'}</span><div class="investor-cycle-actions"><button class="investor-cycle-history-toggle" data-cycle-id="${cycle.id}">View Full History</button>${closed ? '' : `<button class="close-cycle" data-cycle-id="${cycle.id}">Close Cycle</button><button class="finish-cycle" data-cycle-id="${cycle.id}">Finish</button>`}</div></div><div class="investor-cycle-history" data-history-cycle-id="${cycle.id}" hidden></div></div>`
+          return `<div class="investor-cycle-row"><div class="investor-cycle-main"><div class="investor-cycle-info"><strong>${isCurrent ? 'Current Active Cycle' : `Cycle #${cycle.id}`} · ${cycle.auto_invest ? 'Auto-Invest' : 'Non-Auto'}</strong><small>${money(cycle.principal)} invested · ${Number(cycle.total_leads || 0)} linked leads · ${Number(cycle.final_leads || 0)} final · ${Number(cycle.pending_leads || 0)} pending</small></div><span class="investor-cycle-status ${closed ? 'closed' : ''}">${escapeHtml(cycle.status || '—')}</span><div class="investor-cycle-actions"><button class="investor-cycle-history-toggle" data-cycle-id="${cycle.id}">View Full History</button>${closed ? '' : `<button class="close-cycle" data-cycle-id="${cycle.id}">Close Cycle</button><button class="finish-cycle" data-cycle-id="${cycle.id}">Finish</button>`}</div></div><div class="investor-cycle-history" data-history-cycle-id="${cycle.id}" hidden></div></div>`
         }
         const panel = document.createElement('div')
         panel.className = 'investor-cycle-panel'

@@ -21,7 +21,7 @@ export default function AdminLeadPartners(){
     catch(e){setError(e.message||'Failed to load Lead Partners')}
     finally{setLoading(false)}
   },[status])
-  useEffect(()=>{load()},[load])
+  useEffect(()=>{let active=true;queueMicrotask(()=>{if(active)load()});return()=>{active=false}},[load])
 
   async function changeStatus(partnerId,nextStatus){
     try{setBusy(partnerId);setError('');setMessage('');await authRequest(`/admin/lead-partners/${partnerId}/status`,{method:'PATCH',body:JSON.stringify({status:nextStatus})});setMessage(`Lead Partner #${partnerId} is now ${nextStatus}.`);await load()}

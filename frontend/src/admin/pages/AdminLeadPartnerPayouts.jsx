@@ -7,7 +7,7 @@ export default function AdminLeadPartnerPayouts(){
   const [rows,setRows]=useState([]),[status,setStatus]=useState('pending'),[search,setSearch]=useState(''),[busy,setBusy]=useState(null),[selected,setSelected]=useState(null),[reference,setReference]=useState(''),[proof,setProof]=useState(''),[proofName,setProofName]=useState(''),[reason,setReason]=useState(''),[error,setError]=useState('');
 
   const load=useCallback(async()=>{setError('');try{const data=await authRequest(`/admin/lead-partner-payouts?status=${encodeURIComponent(status)}&search=${encodeURIComponent(search)}`);setRows(Array.isArray(data)?data:[]);}catch(e){setError(e.message||'Failed to load payouts')}},[status,search]);
-  useEffect(()=>{load()},[load]);
+  useEffect(()=>{let active=true;queueMicrotask(()=>{if(active)load()});return()=>{active=false}},[load]);
 
   const chooseProof=async e=>{
     const file=e.target.files?.[0];

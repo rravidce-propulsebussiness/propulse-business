@@ -8,7 +8,7 @@ const empty={label:'',methodType:'upi',accountName:'',upiId:'',bankName:'',accou
 export default function AdminPaymentDetails(){
  const [items,setItems]=useState([]),[form,setForm]=useState(empty),[editing,setEditing]=useState(null),[open,setOpen]=useState(false),[loading,setLoading]=useState(true),[busy,setBusy]=useState(false),[error,setError]=useState(''),[message,setMessage]=useState('')
  const load=async()=>{try{setLoading(true);setError('');const data=await apiRequest('/payment-receiving-details/admin');setItems(Array.isArray(data)?data:[])}catch(e){setError(e.message||'Failed to load receiving details')}finally{setLoading(false)}}
- useEffect(()=>{if(getToken())load()},[])
+ useEffect(()=>{let active=true;queueMicrotask(()=>{if(active&&getToken())load()});return()=>{active=false}},[])
  const set=(key,value)=>setForm(f=>({...f,[key]:value}))
  const edit=item=>{setEditing(item.id);setForm({...empty,...item});setOpen(true);setMessage('');setError('')}
  const add=()=>{setEditing(null);setForm(empty);setOpen(true);setMessage('');setError('')}

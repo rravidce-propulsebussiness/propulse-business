@@ -35,7 +35,7 @@ export default function AdminHomepageMedia(){
     }catch(e){setError(e.message||'Unable to load homepage media')}
     finally{setLoading(false)}
   }
-  useEffect(()=>{load()},[])
+  useEffect(()=>{let active=true;queueMicrotask(()=>{if(active)load()});return()=>{active=false}},[])
 
   async function upload(slot,file){
     if(!file)return
