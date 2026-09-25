@@ -20,7 +20,7 @@ export default function AdminPincodeMapping() {
     } catch (e) { setError(e.message); } finally { setLoading(false); }
   }
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { let active=true; queueMicrotask(()=>{if(active)load()}); return()=>{active=false}; }, []);
 
   async function detect(pin) {
     try {
