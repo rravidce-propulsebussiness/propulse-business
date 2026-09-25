@@ -6,6 +6,14 @@ $ErrorActionPreference = "Stop"
 $repoRoot = (git rev-parse --show-toplevel).Trim()
 if (-not $repoRoot) { throw "Run this script inside the Propulse Git repository." }
 
+git -C $repoRoot diff --quiet
+$workingTreeDirty = $LASTEXITCODE -ne 0
+git -C $repoRoot diff --cached --quiet
+$indexDirty = $LASTEXITCODE -ne 0
+if ($workingTreeDirty -or $indexDirty) {
+  throw "Commit or stash tracked changes before creating a source backup. The backup archives HEAD only."
+}
+
 $timestamp = Get-Date -Format "yyyy-MM-dd-HHmmss"
 $commit = (git -C $repoRoot rev-parse --short HEAD).Trim()
 $outputDir = [System.IO.Path]::GetFullPath((Join-Path $repoRoot $OutputDirectory))
