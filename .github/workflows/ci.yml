@@ -218,6 +218,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+      - name: Repository whitespace check
+        run: git diff --check HEAD^ HEAD
       - name: Block committed environment files
         shell: bash
         run: |
