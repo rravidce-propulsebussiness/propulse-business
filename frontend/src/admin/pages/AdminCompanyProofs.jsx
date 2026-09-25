@@ -37,8 +37,8 @@ export default function AdminCompanyProofs() {
     }
   }, [page, status]);
 
-  useEffect(() => { load(); }, [load]);
-  useEffect(() => { setPage(1); }, [status]);
+  useEffect(() => { let active=true; queueMicrotask(()=>{if(active)load()}); return()=>{active=false}; }, [load]);
+  useEffect(() => { let active=true; queueMicrotask(()=>{if(active)setPage(1)}); return()=>{active=false}; }, [status]);
 
   async function review(documentId, nextStatus, reviewReason = '') {
     try {
