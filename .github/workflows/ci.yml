@@ -102,6 +102,24 @@ jobs:
           DB_USER: ci_smoke
           DB_PASSWORD: ci_smoke
         run: npm run db:bootstrap
+      - name: Refuse bootstrap on populated database
+        env:
+          DB_HOST: 127.0.0.1
+          DB_PORT: 5432
+          DB_NAME: ci_smoke
+          DB_USER: ci_smoke
+          DB_PASSWORD: ci_smoke
+        shell: bash
+        run: |
+          set -euo pipefail
+          if npm run db:bootstrap > /tmp/bootstrap-second.log 2>&1; then
+            echo "db:bootstrap unexpectedly succeeded on a populated database."
+            cat /tmp/bootstrap-second.log
+            exit 1
+          fi
+          grep -q "requires an empty database" /tmp/bootstrap-second.log
+          grep -q "db:migrate" /tmp/bootstrap-second.log
+          echo "Populated-database bootstrap refusal passed."
       - name: Verify lead PIN location mapping
         env:
           DB_HOST: 127.0.0.1
@@ -191,8 +209,22 @@ jobs:
           exit 1
       - name: Stop backend
         if: always()
+        shell: bash
         run: |
-          if [ -f /tmp/backend.pid ]; then kill "$(cat /tmp/backend.pid)" 2>/dev/null || true; fi
+          set -euo pipefail
+          if [ -f /tmp/backend.pid ]; then
+            pid="$(cat /tmp/backend.pid)"
+            kill "$pid" 2>/dev/null || true
+            for i in {1..20}; do
+              if ! kill -0 "$pid" 2>/dev/null; then break; fi
+              sleep 0.25
+            done
+          fi
+          if grep -q "Graceful shutdown failed" /tmp/backend.log 2>/dev/null; then
+            echo "Backend logged a graceful shutdown failure:"
+            cat /tmp/backend.log
+            exit 1
+          fi
 
   duplicate-scan:
     name: Duplicate code scan

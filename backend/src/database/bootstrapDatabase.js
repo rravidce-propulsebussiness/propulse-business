@@ -10,13 +10,28 @@ const catalogSeedPath = path.join(__dirname, 'catalogSeed.sql');
 async function bootstrapDatabase() {
   const client = await pool.connect();
   try {
+    const existingTables = await client.query(`
+      SELECT tablename
+        FROM pg_catalog.pg_tables
+       WHERE schemaname='public'
+       ORDER BY tablename
+       LIMIT 5
+    `);
+    if (existingTables.rowCount) {
+      const names = existingTables.rows.map(row => row.tablename).join(', ');
+      throw Object.assign(
+        new Error(`db:bootstrap requires an empty database. Found existing public tables: ${names}. Use npm run db:migrate for an existing installation.`),
+        { code: 'DATABASE_NOT_EMPTY' }
+      );
+    }
+
     await client.query('BEGIN');
     await client.query(fs.readFileSync(schemaPath, 'utf8'));
     await client.query(fs.readFileSync(catalogSeedPath, 'utf8'));
     await client.query('COMMIT');
     console.log('Base database bootstrap completed successfully.');
   } catch (error) {
-    await client.query('ROLLBACK');
+    if (error.code !== 'DATABASE_NOT_EMPTY') await client.query('ROLLBACK').catch(() => {});
     console.error(`Database bootstrap failed: ${error.message}`);
     process.exitCode = 1;
     return;

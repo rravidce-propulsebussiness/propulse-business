@@ -67,9 +67,12 @@ async function shutdown(signal){
   forceTimer.unref?.();
   try{
     stopLeadPartnerSheetAutoSync();
-    if(server){
+    if(server?.listening){
+      await new Promise((resolve,reject)=>server.close(error=>{
+        if(!error||error.code==='ERR_SERVER_NOT_RUNNING')return resolve();
+        return reject(error);
+      }));
       server.closeIdleConnections?.();
-      await new Promise((resolve,reject)=>server.close(error=>error?reject(error):resolve()));
     }
     await pool.end();
     clearTimeout(forceTimer);

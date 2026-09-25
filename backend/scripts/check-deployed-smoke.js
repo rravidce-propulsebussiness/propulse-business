@@ -7,6 +7,11 @@ if (!baseUrl) throw new Error('Set DEPLOY_BASE_URL to the deployed backend/publi
 if (!appOrigin) throw new Error('Set DEPLOY_APP_ORIGIN to the deployed frontend origin');
 
 const base = new URL(baseUrl);
+const app = new URL(appOrigin);
+const placeholderHost = hostname => /(^|\.)(example\.(com|test)|yourdomain\.com)$/i.test(hostname);
+if (placeholderHost(base.hostname) || placeholderHost(app.hostname)) {
+  throw new Error('Replace the example/yourdomain placeholder with a real deployed staging or production hostname before running test:deployed');
+}
 if (base.protocol !== 'https:' && !['localhost', '127.0.0.1'].includes(base.hostname)) {
   throw new Error('DEPLOY_BASE_URL must use HTTPS outside localhost');
 }
