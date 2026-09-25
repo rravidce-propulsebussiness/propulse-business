@@ -35,6 +35,7 @@ export default function Membership() {
   const token = getToken()
   const [plans, setPlans] = useState([])
   const [currentMembership, setCurrentMembership] = useState(null)
+  const [investmentAccess, setInvestmentAccess] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [selectedGrowCycleId, setSelectedGrowCycleId] = useState(null)
@@ -58,13 +59,15 @@ export default function Membership() {
         return
       }
       try {
-        const [planData, membership] = await Promise.all([
+        const [planData, membership, access] = await Promise.all([
           apiRequest('/membership-plans'),
-          authRequest('/payments/membership/current').catch(() => null)
+          authRequest('/payments/membership/current').catch(() => null),
+          authRequest('/investments/access').catch(() => null)
         ])
         if (!active) return
         setPlans(asArray(planData).filter((item) => item?.is_active !== false))
         setCurrentMembership(membership || null)
+        setInvestmentAccess(access || null)
       } catch (err) {
         if (active) setError(err?.message || 'Unable to load membership options.')
       } finally {
@@ -82,7 +85,8 @@ export default function Membership() {
   const selectedProration = useMemo(() => localProration(currentMembership, selectedPlan), [currentMembership, selectedPlan])
 
   const currentRaw = String(currentMembership?.plan_type || currentMembership?.plan?.plan_type || user?.membership_type || '').toLowerCase()
-  const currentGroup = String(currentMembership?.plan_group || currentMembership?.plan?.plan_group || (currentMembership?.isPro || currentRaw === 'pro' ? 'grow' : '')).toLowerCase()
+  const isProMember = Boolean(investmentAccess?.isPro || currentMembership?.isPro || currentRaw === 'pro')
+  const currentGroup = String(currentMembership?.plan_group || currentMembership?.plan?.plan_group || (isProMember ? 'grow' : '')).toLowerCase()
 
   const openPlan = (plan) => {
     if (!plan?.id) {
@@ -243,6 +247,36 @@ export default function Membership() {
                       : <button className="membership-primary" onClick={() => openPlan(level.selected)} disabled={submitting}>{canUpgrade ? 'Upgrade to SCALE' : level.action} <span>→</span></button>}
               </article>
             })}
+        </section>
+
+        <section className="membership-plans membership-investor-access">
+          <article className="membership-plan investor-plan investment-access-card">
+            <div className="membership-plan-top">
+              <div>
+                <span className="membership-stage">INVESTOR</span>
+                <h2>Investor</h2>
+                <p>Put capital behind lead generation, track your investment cycle, generated funds, linked leads and payouts from one workspace.</p>
+              </div>
+              {isProMember ? <span className="popular-badge">UNLOCKED WITH PRO</span> : <span className="current-badge">PRO REQUIRED</span>}
+            </div>
+
+            <div className="investor-model">
+              <div><b>INVEST</b><span>Deploy capital within the investment limits configured by Propulse.</span></div>
+              <div><b>TRACK LEADS</b><span>Follow assigned and sold leads linked to your investor activity.</span></div>
+              <div><b>MANAGE EARNINGS</b><span>Review generated funds, cycle history and eligible payout requests.</span></div>
+            </div>
+
+            <div className="membership-divider" />
+            <ul>
+              <li><b>01</b><span>Active Pro membership unlocks the Investor workspace.</span></li>
+              <li><b>02</b><span>Investment availability still follows admin limits, industries and locations.</span></li>
+              <li><b>03</b><span>Returns depend on realized lead-sale activity and are not fixed or guaranteed.</span></li>
+            </ul>
+
+            {isProMember
+              ? <a className="membership-primary" href="/investment">Open Investor <span>→</span></a>
+              : <button className="membership-primary current" disabled>🔒 Activate Pro first</button>}
+          </article>
         </section>
 
       </>}
