@@ -3,6 +3,7 @@ const grantService=require('../services/leadEntitlementGrantService');
 function statusFor(error){
   const map={
     INVALID_ENTITLEMENT_SETTINGS:400,
+    INVALID_ENTITLEMENT_ACCESS:400,
     INVALID_GRANT_USER:400,
     INVALID_GRANT_QUANTITY:400,
     BUSINESS_NOT_VERIFIED:403,
