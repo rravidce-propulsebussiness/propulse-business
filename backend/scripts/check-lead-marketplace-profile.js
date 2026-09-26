@@ -16,6 +16,10 @@ assert(!marketplace.includes("!String(allIndustries||'').match"),'allIndustries 
 assert(!marketplace.includes("!String(allLocations||'').match"),'allLocations must not bypass logged-in profile filtering');
 assert(marketplace.includes('business_profile_services'),'Marketplace must match business profile services');
 assert(marketplace.includes('business_profile_locations'),'Marketplace must match business profile locations');
+assert(marketplace.includes("const p3=`${values.length}`"),'Purchased-lead exclusion must use a PostgreSQL bind placeholder');
+assert(marketplace.includes("const pClaim=`${values.length}`"),'Claimed-lead exclusion must use a PostgreSQL bind placeholder');
+assert(marketplace.includes("const p4=`${values.length}`"),'Investor self-exclusion must use a PostgreSQL bind placeholder');
+assert(!marketplace.includes("const p3=`${values.length}`"),'Marketplace must not add unbound user parameters');
 assert(purchase.includes('matchesBusinessProfile'),'Lead purchase must keep server-side profile validation');
 
 console.log('Lead marketplace profile filtering regression test passed.');
