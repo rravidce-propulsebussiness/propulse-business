@@ -33,6 +33,9 @@ assert(app.includes('<Route path="/admin/industries" element={<Industries/>}/>')
 assert(industries.includes("const adminMode = location.pathname.startsWith('/admin/')"),'Industries premium redesign must stay scoped to Admin');
 assert(industries.includes('CATALOG / MASTER DATA'),'Admin Industries premium hero must remain');
 assert(industries.includes('admin-master-stats'),'Admin Industries KPI cards must remain');
+assert(industries.includes('master-tabs master-toolbar-tabs'),'Industries and Locations switch must stay inside the Admin toolbar');
+assert(!industries.includes('MASTER STRUCTURE'),'Redundant Admin master-structure label must stay removed');
+assert(!industries.includes('Organize industries, services and subservices used throughout Propulse.'),'Redundant Admin hierarchy explainer must stay removed');
 assert(industries.includes('↑ Upload bulk'),'Industries bulk upload action must remain');
 assert(industries.includes("+ Add {tab === 'industries' ? 'Industry' : 'State'}"),'Industries create action must remain');
 assert(industries.includes('renderIndustryTree()')&&industries.includes('renderLocationTree()'),'Industry and Location hierarchy trees must remain');
