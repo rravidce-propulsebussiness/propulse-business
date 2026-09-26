@@ -115,7 +115,7 @@ async function closeIfFull(client,leadId){
     (SELECT COUNT(DISTINCT u.user_id)::int FROM (
       SELECT user_id FROM lead_purchases WHERE lead_id=l.id AND status='paid'
       UNION
-      SELECT user_id FROM lead_entitlement_claims WHERE lead_id=l.id
+      SELECT user_id FROM lead_entitlement_claims WHERE lead_id=l.id AND (expires_at IS NULL OR expires_at>=CURRENT_TIMESTAMP)
     ) u) AS buyers
     FROM leads l WHERE l.id=$1 FOR UPDATE`,[leadId])).rows[0];
   if(row&&row.status==='available'&&Number(row.buyers)>=Number(row.capacity))await client.query(`UPDATE leads SET status='sold',updated_at=CURRENT_TIMESTAMP WHERE id=$1 AND status='available'`,[leadId]);
