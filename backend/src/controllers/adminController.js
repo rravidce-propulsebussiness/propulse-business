@@ -1,4 +1,5 @@
 const adminService = require('../services/adminService');
+const adminTestResetService = require('../services/adminTestResetService');
 
 async function getDashboardStats(req, res) {
   try { return res.json(await adminService.getDashboardStats()); }
@@ -81,5 +82,21 @@ async function rejectCompanyProof(req, res) {
   }
 }
 
-module.exports = { getDashboardStats, getUsers, createAdmin, setUserStatus, setUserRole, updateUserProfile, getCompanyProofs, verifyCompanyProof, rejectCompanyProof };
+
+async function getTestResetPreview(req,res){
+  try{return res.json(await adminTestResetService.preview())}
+  catch(error){console.error('Get test reset preview failed:',error.message);return res.status(500).json({error:'Failed to load test reset status'})}
+}
+
+async function resetTestData(req,res){
+  try{return res.json(await adminTestResetService.reset({confirmation:req.body?.confirmation,adminId:req.user?.id}))}
+  catch(error){
+    if(error.code==='RESET_DISABLED')return res.status(403).json({error:error.message,code:error.code});
+    if(error.code==='RESET_CONFIRMATION_REQUIRED')return res.status(400).json({error:error.message,code:error.code});
+    console.error('Reset test data failed:',error);
+    return res.status(500).json({error:'Failed to reset test data',code:error.code});
+  }
+}
+
+module.exports = { getDashboardStats, getUsers, createAdmin, setUserStatus, setUserRole, updateUserProfile, getCompanyProofs, verifyCompanyProof, rejectCompanyProof, getTestResetPreview, resetTestData };
 
