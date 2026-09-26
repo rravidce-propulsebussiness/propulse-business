@@ -136,13 +136,9 @@ export default function AdminLayout(){
       </nav>
 
       <div className="admin-sidebar-bottom">
-        <div className="admin-sidebar-status">
-          <span className="admin-sidebar-status-icon">✓</span>
-          <div><b>Platform operational</b><small>Core admin services healthy</small></div>
-        </div>
-        <div className="admin-sidebar-user">
-          <span>{initials||'A'}</span>
-          <div><b>{user?.name||'Admin'}</b><small>{user?.email||'Administrator'}</small></div>
+        <div className="admin-sidebar-signature">
+          <span>P</span>
+          <div><b>Propulse</b><small>Grow smarter. Close faster.</small></div>
         </div>
         <button className="admin-sidebar-logout" onClick={logout}>↪ <span>Log out</span></button>
       </div>
@@ -161,7 +157,7 @@ export default function AdminLayout(){
           <div className="admin-top-status"><i/> System healthy</div>
           <div className="admin-top-user">
             <span>{initials||'A'}</span>
-            <div><b>{user?.name||'Admin'}</b><small>{current.item.label}</small></div>
+            <div><b>{user?.name||'Admin'}</b><small>Administrator</small></div>
           </div>
         </div>
       </header>
