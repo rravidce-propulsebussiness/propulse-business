@@ -6,72 +6,72 @@ import './AdminDashboard.css'
 const money=value=>`₹${Number(value||0).toLocaleString('en-IN',{maximumFractionDigits:2})}`
 const count=value=>Number(value||0).toLocaleString('en-IN')
 
+function MiniBars({tone='blue'}){
+  return <span className={`admin-mini-bars ${tone}`} aria-hidden="true">
+    <i/><i/><i/><i/><i/><i/>
+  </span>
+}
+
 function OverviewCard({icon,label,value,note,tone='blue'}){
   return <article className={`admin-overview-card ${tone}`}>
     <span className="admin-overview-card-icon">{icon}</span>
     <div className="admin-overview-card-copy">
       <span>{label}</span>
       <strong>{value}</strong>
-      <small>{note}</small>
+      {note&&<small>{note}</small>}
     </div>
-    <span className="admin-overview-card-trend" aria-hidden="true"><i/><i/><i/><i/><i/></span>
+    <MiniBars tone={tone}/>
   </article>
 }
 
-function MetricCard({label,value,note,accent='navy'}){
-  return <article className={`admin-metric-card ${accent}`}>
-    <span>{label}</span>
-    <strong>{value}</strong>
-    {note&&<small>{note}</small>}
+function MetricCard({icon,label,value,tone='blue',note}){
+  return <article className={`admin-panel-metric ${tone}`}>
+    <span className="admin-panel-metric-icon">{icon}</span>
+    <div>
+      <span>{label}</span>
+      <strong>{value}</strong>
+      {note&&<small>{note}</small>}
+    </div>
   </article>
 }
 
-function ActionCard({to,label,value,amount}){
-  return <Link className="admin-action-card" to={to}>
-    <div><span>{label}</span>{amount!==undefined&&<small>{money(amount)}</small>}</div>
-    <strong>{count(value)}</strong>
-    <b>→</b>
-  </Link>
+function FinanceRow({items}){
+  return <div className="admin-finance-row">
+    {items.map(item=><div key={item.label}>
+      <span>{item.label}</span>
+      <strong>{money(item.value)}</strong>
+      {item.note&&<small>{item.note}</small>}
+    </div>)}
+  </div>
 }
 
-function StreamPanel({tone,eyebrow,title,description,to,linkLabel,metrics,revenue,flow}){
-  const badge=tone==='partner'?'LP':tone==='investor'?'IN':'P'
-  return <section className={`admin-stream-panel ${tone}`}>
-    <div className="admin-stream-head">
-      <div className="admin-stream-title-wrap">
-        <span className="admin-stream-badge">{badge}</span>
+function BusinessPanel({tone,badge,eyebrow,title,to,linkLabel,metrics,finance}){
+  return <section className={`admin-business-panel ${tone}`}>
+    <div className="admin-business-panel-head">
+      <div className="admin-business-title">
+        <span className="admin-business-badge">{badge}</span>
         <div>
-          <span className="admin-stream-eyebrow">{eyebrow}</span>
+          <span className="admin-business-eyebrow">{eyebrow}</span>
           <h2>{title}</h2>
-          <p>{description}</p>
         </div>
       </div>
-      <Link to={to}>{linkLabel} <b>→</b></Link>
+      <Link to={to}>{linkLabel}<b>→</b></Link>
     </div>
 
-    <div className="admin-stream-metrics">
+    <div className="admin-business-metrics">
       {metrics.map(item=><MetricCard key={item.label} {...item}/>)}
     </div>
 
-    <div className="admin-stream-finance">
-      <div className="admin-stream-revenue">
-        <span>PROPULSE REVENUE</span>
-        <div>
-          <small>Today<strong>{revenue.loading?'—':money(revenue.today)}</strong></small>
-          <small>This month<strong>{revenue.loading?'—':money(revenue.month)}</strong></small>
-          <small>All time<strong>{revenue.loading?'—':money(revenue.total)}</strong></small>
-        </div>
-      </div>
-      <div className="admin-stream-flow">
-        {flow.map((item,index)=><div className="admin-flow-step" key={item.label}>
-          <span>{item.label}</span>
-          <strong>{revenue.loading?'—':money(item.value)}</strong>
-          {item.note&&<small>{item.note}</small>}
-          {index<flow.length-1&&<b aria-hidden="true">→</b>}
-        </div>)}
-      </div>
-    </div>
+    <FinanceRow items={finance}/>
   </section>
+}
+
+function CompactAction({to,label,value}){
+  return <Link className="admin-compact-action" to={to}>
+    <span>{label}</span>
+    <strong>{count(value)}</strong>
+    <b>→</b>
+  </Link>
 }
 
 export default function AdminDashboard(){
@@ -111,9 +111,7 @@ export default function AdminDashboard(){
       <div>
         <span>LIVE BUSINESS SNAPSHOT</span>
         <h1>Overview</h1>
-        <p>Propulse-owned, Lead Partner and Investor activity are separated so revenue and operations stay easy to understand.</p>
       </div>
-      <div className="admin-dashboard-live"><i/> Live data</div>
     </section>
 
     {error&&<div className="admin-dashboard__error"><strong>Dashboard unavailable</strong><span>{error}</span></div>}
@@ -123,129 +121,117 @@ export default function AdminDashboard(){
         icon="₹"
         label="Propulse revenue"
         value={show(money(revenue.total))}
-        note="Our lead sales + partner commission + investor commission"
+        note="Lead sales + platform commission"
         tone="blue"
       />
       <OverviewCard
         icon="◈"
         label="Our leads"
         value={show(count(propulse.totalLeads))}
-        note={loading?'Loading inventory…':`${count(propulse.availableLeads)} available now`}
+        note={loading?'':`${count(propulse.availableLeads)} available now`}
         tone="orange"
       />
       <OverviewCard
         icon="♙"
         label="Active Lead Partners"
         value={show(count(leadPartner.activePartners))}
-        note={loading?'Loading partner activity…':`${count(leadPartner.totalLeads)} partner-originated leads`}
+        note={loading?'':`${count(leadPartner.totalLeads)} partner leads`}
         tone="green"
       />
       <OverviewCard
         icon="↗"
         label="Active investments"
         value={show(count(investor.activeInvestments))}
-        note={loading?'Loading investor activity…':`${count(investor.totalLeads)} investor-linked leads`}
+        note={loading?'':`${count(investor.totalLeads)} investor-linked leads`}
         tone="purple"
-      />
-      <OverviewCard
-        icon="!"
-        label="Action required"
-        value={show(count(actionTotal))}
-        note="Pending admin reviews and financial actions"
-        tone="red"
       />
     </section>
 
-    <div className="admin-stream-stack">
-      <StreamPanel
+    <section className="admin-business-grid">
+      <BusinessPanel
         tone="propulse"
+        badge="P"
         eyebrow="PROPULSE-OWNED BUSINESS"
         title="Our leads"
-        description="Leads owned directly by Propulse. The full paid sale amount is Propulse revenue."
         to="/admin/leads"
         linkLabel="Manage leads"
         metrics={[
-          {label:'Our leads',value:show(count(propulse.totalLeads))},
-          {label:'Available',value:show(count(propulse.availableLeads)),accent:'green'},
-          {label:'Sold leads',value:show(count(propulse.soldLeads)),accent:'orange'},
-          {label:'Sold shares',value:show(count(propulse.soldShares))}
+          {icon:'◇',label:'Total leads',value:show(count(propulse.totalLeads)),tone:'blue'},
+          {icon:'✓',label:'Sold leads',value:show(count(propulse.soldLeads)),tone:'green'},
+          {icon:'₹',label:'Revenue',value:show(money(propulse.revenueTotal)),tone:'purple'}
         ]}
-        revenue={{loading,today:propulse.revenueToday,month:propulse.revenueMonth,total:propulse.revenueTotal}}
-        flow={[
-          {label:'Gross lead sales',value:propulse.grossSales,note:'100% belongs to Propulse'}
-        ]}
+        finance={[
+          {label:'Available',value:propulse.availableLeads||0,note:'leads',raw:true},
+          {label:'Sold shares',value:propulse.soldShares||0,note:'shares',raw:true},
+          {label:'Gross sales',value:propulse.grossSales||0}
+        ].map(item=>item.raw?{...item,value:item.value,display:count(item.value)}:item)}
       />
 
-      <StreamPanel
+      <BusinessPanel
         tone="partner"
-        eyebrow="LEAD PARTNER BUSINESS"
-        title="Lead Partner performance"
-        description="Partner-originated lead sales. Propulse revenue is only the commission retained after the partner earning."
+        badge="LP"
+        eyebrow="LEAD PARTNER PERFORMANCE"
+        title="Lead Partners"
         to="/admin/lead-partners"
-        linkLabel="Lead Partners"
+        linkLabel="View partners"
         metrics={[
-          {label:'Active partners',value:show(count(leadPartner.activePartners))},
-          {label:'Partner leads',value:show(count(leadPartner.totalLeads))},
-          {label:'Available',value:show(count(leadPartner.availableLeads)),accent:'green'},
-          {label:'Sold leads',value:show(count(leadPartner.soldLeads)),accent:'orange'},
-          {label:'Sold shares',value:show(count(leadPartner.soldShares))},
-          {label:'Pending payouts',value:show(count(actions.pendingPartnerPayouts)),note:loading?'':money(actions.pendingPartnerPayoutAmount)}
+          {icon:'♙',label:'Active partners',value:show(count(leadPartner.activePartners)),tone:'blue'},
+          {icon:'◇',label:'Partner leads',value:show(count(leadPartner.totalLeads)),tone:'green'},
+          {icon:'₹',label:'Propulse revenue',value:show(money(leadPartner.revenueTotal)),tone:'purple'}
         ]}
-        revenue={{loading,today:leadPartner.revenueToday,month:leadPartner.revenueMonth,total:leadPartner.revenueTotal}}
-        flow={[
-          {label:'Gross partner sales',value:leadPartner.grossSales},
-          {label:'Partner earnings',value:leadPartner.partnerEarnings,note:'Belongs to Lead Partners'},
-          {label:'Propulse commission',value:leadPartner.revenueTotal,note:'Platform revenue'}
+        finance={[
+          {label:'Gross sales',value:leadPartner.grossSales||0},
+          {label:'Partner earnings',value:leadPartner.partnerEarnings||0},
+          {label:'Propulse commission',value:leadPartner.revenueTotal||0}
         ]}
       />
+    </section>
 
-      <StreamPanel
-        tone="investor"
-        eyebrow="INVESTOR BUSINESS"
-        title="Investor-linked performance"
-        description="Investor-linked lead sales. Propulse revenue is the sale amount remaining after the recorded investor allocation."
-        to="/admin/investments"
-        linkLabel="Investments"
-        metrics={[
-          {label:'Investors',value:show(count(investor.investors))},
-          {label:'Active investments',value:show(count(investor.activeInvestments)),accent:'green'},
-          {label:'Investor-linked leads',value:show(count(investor.totalLeads))},
-          {label:'Available',value:show(count(investor.availableLeads)),accent:'green'},
-          {label:'Sold leads',value:show(count(investor.soldLeads)),accent:'orange'},
-          {label:'Pending withdrawals',value:show(count(actions.pendingInvestorWithdrawals)),note:loading?'':money(actions.pendingInvestorWithdrawalAmount)}
-        ]}
-        revenue={{loading,today:investor.revenueToday,month:investor.revenueMonth,total:investor.revenueTotal}}
-        flow={[
-          {label:'Gross investor sales',value:investor.grossSales},
-          {label:'Investor allocation',value:investor.investorAllocated,note:'Belongs to investors'},
-          {label:'Propulse commission',value:investor.revenueTotal,note:'Platform revenue'}
-        ]}
-      />
-    </div>
-
-    <section className="admin-dashboard-section">
-      <div className="admin-dashboard-section-head compact">
-        <div><span>OPERATIONS</span><h2>Action required</h2></div>
-        <small>General admin work not already summarized inside the Partner or Investor sections.</small>
+    <section className="admin-investor-panel">
+      <div className="admin-business-panel-head">
+        <div className="admin-business-title">
+          <span className="admin-business-badge">IN</span>
+          <div>
+            <span className="admin-business-eyebrow">INVESTOR-LINKED PERFORMANCE</span>
+            <h2>Investor activity</h2>
+          </div>
+        </div>
+        <Link to="/admin/investments">View investments<b>→</b></Link>
       </div>
-      <div className="admin-actions-grid four">
-        <ActionCard to="/admin/payments" label="Pending payments" value={actions.pendingPayments}/>
-        <ActionCard to="/admin/payments" label="Wallet top-ups" value={actions.pendingWalletTopups}/>
-        <ActionCard to="/admin/company-proofs" label="Company proofs" value={actions.pendingCompanyProofs}/>
-        <ActionCard to="/admin/lead-reports" label="Lead reports" value={actions.pendingLeadReports}/>
+
+      <div className="admin-investor-content">
+        <div className="admin-business-metrics">
+          <MetricCard icon="↗" label="Active investments" value={show(count(investor.activeInvestments))} tone="purple"/>
+          <MetricCard icon="◇" label="Investor-linked leads" value={show(count(investor.totalLeads))} tone="blue"/>
+          <MetricCard icon="₹" label="Propulse revenue" value={show(money(investor.revenueTotal))} tone="green"/>
+        </div>
+        <FinanceRow items={[
+          {label:'Gross sales',value:investor.grossSales||0},
+          {label:'Investor allocation',value:investor.investorAllocated||0},
+          {label:'Propulse commission',value:investor.revenueTotal||0}
+        ]}/>
       </div>
     </section>
 
-    <section className="admin-dashboard-section">
-      <div className="admin-dashboard-section-head compact">
-        <div><span>CUSTOMERS</span><h2>Customer & membership health</h2></div>
-        <Link to="/admin/users">Users <b>→</b></Link>
+    <section className="admin-bottom-grid">
+      <div className="admin-compact-panel">
+        <div className="admin-compact-panel-head"><span>OPERATIONS</span><strong>Action required</strong><b>{show(count(actionTotal))}</b></div>
+        <div className="admin-compact-actions">
+          <CompactAction to="/admin/payments" label="Payments" value={actions.pendingPayments}/>
+          <CompactAction to="/admin/company-proofs" label="Company proofs" value={actions.pendingCompanyProofs}/>
+          <CompactAction to="/admin/lead-reports" label="Lead reports" value={actions.pendingLeadReports}/>
+          <CompactAction to="/admin/lead-partner-payouts" label="Partner payouts" value={actions.pendingPartnerPayouts}/>
+        </div>
       </div>
-      <div className="admin-customer-grid">
-        <MetricCard label="Active businesses" value={show(count(customers.activeBusinesses))}/>
-        <MetricCard label="Active memberships" value={show(count(customers.activeMemberships))} accent="green"/>
-        <MetricCard label="Pro members" value={show(count(customers.proMembers))} accent="orange"/>
-        <MetricCard label="New users this month" value={show(count(customers.newUsersMonth))}/>
+
+      <div className="admin-compact-panel">
+        <div className="admin-compact-panel-head"><span>CUSTOMERS</span><strong>Account health</strong></div>
+        <div className="admin-health-grid">
+          <div><span>Active businesses</span><strong>{show(count(customers.activeBusinesses))}</strong></div>
+          <div><span>Memberships</span><strong>{show(count(customers.activeMemberships))}</strong></div>
+          <div><span>Pro members</span><strong>{show(count(customers.proMembers))}</strong></div>
+          <div><span>New this month</span><strong>{show(count(customers.newUsersMonth))}</strong></div>
+        </div>
       </div>
     </section>
   </main>
