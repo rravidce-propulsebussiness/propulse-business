@@ -7,6 +7,7 @@ function fail(message,code){throw Object.assign(new Error(message),{code});}
 function parseEntitlements(value){if(Array.isArray(value))return value;try{const x=typeof value==='string'?JSON.parse(value):value;return Array.isArray(x)?x:[]}catch{return[]}}
 function entitlementTypeForLead(lead){return lead.lead_type==='premium'?'premium':'shared'}
 function entitlementForLead(entitlements,lead){const wanted=entitlementTypeForLead(lead);return entitlements.find(x=>String(x.type||'').toLowerCase()===wanted)||null}
+function claimIsActive(claim,now=new Date()){return Boolean(claim)&&(!claim.expires_at||new Date(claim.expires_at)>=now)}
 
 function monthsBetween(start,end){
   const months=(end.getUTCFullYear()-start.getUTCFullYear())*12+end.getUTCMonth()-start.getUTCMonth();
@@ -112,7 +113,10 @@ async function getLeadAccess(userId,leadId){
     FROM lead_entitlement_claims
     WHERE user_id=$1 AND lead_id=$2
   `,[userId,leadId]);
-  if(claimed.rows[0])return{authenticated:true,claimed:true,canClaim:false,claim:claimed.rows[0]};
+  if(claimed.rows[0]){
+    if(claimIsActive(claimed.rows[0]))return{authenticated:true,claimed:true,canClaim:false,claim:claimed.rows[0]};
+    return{authenticated:true,claimed:false,canClaim:false,expiredClaim:true,reason:'Previous complimentary lead access expired. You can purchase this lead if it is still available.'};
+  }
   if(lead.status!=='available')return{authenticated:true,claimed:false,canClaim:false,reason:'Lead is not available'};
 
   const capacity=accessService.effectiveCapacity(lead);
@@ -124,7 +128,7 @@ async function getLeadAccess(userId,leadId){
       LEFT JOIN payments p ON p.id=lp.payment_id
       WHERE lp.lead_id=$1 AND (lp.status='paid' OR (lp.status='pending_payment' AND p.status='pending'))
       UNION
-      SELECT ec.user_id FROM lead_entitlement_claims ec WHERE ec.lead_id=$1
+      SELECT ec.user_id FROM lead_entitlement_claims ec WHERE ec.lead_id=$1 AND (ec.expires_at IS NULL OR ec.expires_at>=CURRENT_TIMESTAMP)
     ) buyer
   `,[leadId])).rows[0]?.occupied||0);
   if(occupied>=capacity)return{authenticated:true,claimed:false,canClaim:false,reason:'Lead buyer capacity reached',buyerCapacity:capacity,buyersUsed:occupied};
@@ -193,7 +197,7 @@ async function getLeadAccessMap(userId,leadIds){
         UNION
         SELECT ec.lead_id,ec.user_id
         FROM lead_entitlement_claims ec
-        WHERE ec.lead_id=ANY($1::int[])
+        WHERE ec.lead_id=ANY($1::int[]) AND (ec.expires_at IS NULL OR ec.expires_at>=CURRENT_TIMESTAMP)
       ) buyers
       GROUP BY lead_id
     `,[ids]),
@@ -226,7 +230,11 @@ async function getLeadAccessMap(userId,leadIds){
 
   for(const lead of leadsResult.rows){
     const claimed=claims.get(Number(lead.id));
-    if(claimed){out[lead.id]={authenticated:true,claimed:true,canClaim:false,claim:claimed};continue;}
+    if(claimed){
+      if(claimIsActive(claimed,now)){out[lead.id]={authenticated:true,claimed:true,canClaim:false,claim:claimed};continue;}
+      out[lead.id]={authenticated:true,claimed:false,canClaim:false,expiredClaim:true,reason:'Previous complimentary lead access expired. You can purchase this lead if it is still available.'};
+      continue;
+    }
     if(lead.status!=='available'){out[lead.id]={authenticated:true,claimed:false,canClaim:false,reason:'Lead is not available'};continue;}
 
     const capacity=accessService.effectiveCapacity(lead);
@@ -336,7 +344,7 @@ async function claimLead(userId,leadId){
         LEFT JOIN payments p ON p.id=lp.payment_id
         WHERE lp.lead_id=$1 AND (lp.status='paid' OR (lp.status='pending_payment' AND p.status='pending'))
         UNION
-        SELECT ec.user_id FROM lead_entitlement_claims ec WHERE ec.lead_id=$1
+        SELECT ec.user_id FROM lead_entitlement_claims ec WHERE ec.lead_id=$1 AND (ec.expires_at IS NULL OR ec.expires_at>=CURRENT_TIMESTAMP)
       ) slot
     `,[leadId])).rows[0]?.occupied||0);
     if(occupied>=capacity)fail('Lead buyer capacity reached','CAPACITY_REACHED');
