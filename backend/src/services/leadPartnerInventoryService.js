@@ -392,7 +392,7 @@ async function listInventory({ userId, status = 'all', search = '', industryId =
       `SELECT l.id,l.customer_name,l.customer_phone,l.customer_email,l.requirement,l.status,l.lead_type,l.buyer_capacity,l.access_strategy,l.release_to_two_after_hours,l.release_to_three_after_hours,l.access_capacity_locked,lead_effective_buyer_capacity(l.access_strategy,l.buyer_capacity,l.release_to_two_after_hours,l.release_to_three_after_hours,l.created_at,l.access_capacity_locked) AS effective_buyer_capacity,l.is_exclusive,l.pincode,l.created_at,l.custom_fields,
               i.name AS industry_name,s.name AS service_name,ss.name AS subservice_name,st.name AS state_name,c.name AS city_name,
               (${outcomeSql}) AS outcome_status,
-              (SELECT COUNT(DISTINCT p.id)::int FROM lead_purchases p WHERE p.lead_id=l.id AND p.status='paid') AS buyer_count
+              (SELECT COUNT(DISTINCT acquired.user_id)::int FROM (SELECT p.user_id FROM lead_purchases p WHERE p.lead_id=l.id AND p.status='paid' UNION SELECT ec.user_id FROM lead_entitlement_claims ec WHERE ec.lead_id=l.id) acquired) AS buyer_count
          FROM leads l
          LEFT JOIN lead_partners lp ON lp.id=l.lead_partner_id
          JOIN industries i ON i.id=l.industry_id
