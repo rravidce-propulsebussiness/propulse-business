@@ -17,7 +17,7 @@ export default function UserHeader() {
     return [...params.entries()].every(([k,v])=>current.get(k)===v)?' active':''
   }
 
-  if(!loggedIn) return <header className="user-header public-leads-header">
+  if(!loggedIn) return <><header className="user-header public-leads-header">
     <Link className="user-header-brand" to="/" onClick={()=>setOpen(false)}><img src="/brand/propulse-logo.png" alt="Propulse Business"/></Link>
     <nav className={`user-header-nav${open?' open':''}`}>
       <Link to="/">Home</Link>
@@ -34,11 +34,11 @@ export default function UserHeader() {
       <Link className="public-signup-button" to="/signup">Sign up</Link>
       <button className="user-menu-toggle" aria-label="Open navigation" onClick={()=>setOpen(v=>!v)}>☰</button>
     </div>
-  </header>
+  </header><div className="user-header-spacer" aria-hidden="true"/></>
 
   if(user?.role==='admin') return null
   const displayName=businessName||'Your Business'; const avatarLetter=displayName.trim().charAt(0).toUpperCase()||'B'
-  return <header className="user-header"><Link className="user-header-brand" to="/" onClick={()=>setOpen(false)}><img src="/brand/propulse-logo.png" alt="Propulse Business"/></Link>
+  return <><header className="user-header"><Link className="user-header-brand" to="/" onClick={()=>setOpen(false)}><img src="/brand/propulse-logo.png" alt="Propulse Business"/></Link>
     <nav className={"user-header-nav" + (open ? " open" : "")}>
       <Link className={active("/")} to="/" onClick={()=>setOpen(false)}>Home</Link>
       <Link className={active("/purchased-leads")} to="/purchased-leads" onClick={()=>setOpen(false)}>Purchased Leads</Link>
@@ -50,5 +50,5 @@ export default function UserHeader() {
       <button className="user-header-mobile-logout" onClick={logout}>Logout</button>
     </nav>
     <div className="user-header-right"><Link className="user-profile-pill" to="/profile" aria-label="Open business profile"><span className="user-avatar">{avatarLetter}</span><span className="user-profile-name">{displayName}</span></Link><button className="user-logout" onClick={logout}>Logout</button><button className="user-menu-toggle" aria-label="Open navigation" onClick={()=>setOpen(v=>!v)}>☰</button></div>
-  </header>
+  </header><div className="user-header-spacer" aria-hidden="true"/></>
 }
