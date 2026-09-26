@@ -128,6 +128,14 @@
   color:#fff;
   box-shadow:0 7px 16px rgba(13,59,115,.17);
 }
+.admin-master-page .master-toolbar>.master-tabs{
+  flex:0 0 auto;
+  margin:0;
+  box-shadow:none;
+}
+.admin-master-page .master-toolbar>.master-tabs button{
+  min-width:118px;
+}
 
 .admin-master-stats{
   display:grid;
@@ -598,8 +606,16 @@
     box-sizing:border-box;
   }
   .admin-master-page .master-toolbar{
-    align-items:flex-start;
+    align-items:stretch;
     flex-direction:column;
+  }
+  .admin-master-page .master-toolbar>.master-tabs{
+    width:100%;
+    box-sizing:border-box;
+  }
+  .admin-master-page .master-toolbar>.master-tabs button{
+    flex:1;
+    min-width:0;
   }
   .admin-master-page .toolbar-actions{
     width:100%;
