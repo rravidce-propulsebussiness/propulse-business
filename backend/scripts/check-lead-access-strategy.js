@@ -25,6 +25,7 @@ assert(migration.includes("('premium','auto_release',3,48,96)"),'Premium default
 assert(migration.includes('lead_effective_buyer_capacity'),'Database must expose one effective-capacity function');
 
 assert(access.includes('permanent_single')&&access.includes('auto_release')&&access.includes('shared'),'Shared access service must own all access strategies');
+assert(access.includes('fallback.accessStrategy??fallback.defaultStrategy'),'Normalized Admin access settings must remain valid as lead defaults');
 assert(access.includes('access_capacity_locked=COALESCE(access_capacity_locked,$1)'),'First acquisition must lock the current capacity stage');
 assert(access.includes("UPDATE leads SET status='sold'"),'Lead must close when the locked capacity is filled');
 
