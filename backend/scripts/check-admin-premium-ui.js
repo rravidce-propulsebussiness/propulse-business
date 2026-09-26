@@ -12,6 +12,8 @@ const dashboardCss=read('../frontend/src/admin/pages/AdminDashboard.css');
 const app=read('../frontend/src/App.jsx');
 const upload=read('../frontend/src/admin/pages/AdminLeadUpload.jsx');
 const sheets=read('../frontend/src/admin/pages/AdminLeadSheets.jsx');
+const industries=read('../frontend/src/pages/Industries.jsx');
+const industriesCss=read('../frontend/src/pages/Industries.css');
 
 assert(layout.includes('admin-sidebar-signature')&&layout.includes('admin-top-user'),'Premium Admin shell controls must remain present');
 assert(!layout.includes('admin-sidebar-status'),'Duplicated sidebar health copy must stay removed');
@@ -26,6 +28,18 @@ assert(app.includes('<Route path="/admin/leads/upload" element={<AdminLeadUpload
 assert(app.includes('<Route path="/admin/leads/sheets" element={<AdminLeadSheets/>}/>'),'Google Sheets route must remain dedicated');
 assert(upload.includes('<AdminLeadsV9 mode="upload"/>'),'Upload Leads must reuse the shared lead import logic');
 assert(sheets.includes('<GoogleSheetAutoSync/>'),'Google Sheets page must reuse the shared sheet sync logic');
+
+assert(app.includes('<Route path="/admin/industries" element={<Industries/>}/>'),'Industries must remain available in Admin');
+assert(industries.includes("const adminMode = location.pathname.startsWith('/admin/')"),'Industries premium redesign must stay scoped to Admin');
+assert(industries.includes('CATALOG / MASTER DATA'),'Admin Industries premium hero must remain');
+assert(industries.includes('admin-master-stats'),'Admin Industries KPI cards must remain');
+assert(industries.includes('↑ Upload bulk'),'Industries bulk upload action must remain');
+assert(industries.includes("+ Add {tab === 'industries' ? 'Industry' : 'State'}"),'Industries create action must remain');
+assert(industries.includes('renderIndustryTree()')&&industries.includes('renderLocationTree()'),'Industry and Location hierarchy trees must remain');
+assert(industriesCss.includes('/* Premium Admin Industries workspace */'),'Premium Admin Industries styling must remain');
+assert(industriesCss.includes('.admin-master-page .tree-card'),'Admin hierarchy tree styling must remain scoped');
+assert(industriesCss.includes('.admin-master-page .modal-card'),'Admin master-data modal styling must remain');
+assert(industriesCss.includes('grid-template-columns:repeat(3,minmax(0,1fr))'),'Desktop master-data KPI layout must remain');
 
 assert(dashboard.includes('const revenue=stats?.revenue||{}'),'Overview must use the backend revenue summary');
 assert(dashboard.includes('value={show(money(revenue.total))}'),'Overview revenue KPI must use the backend Propulse revenue total');
