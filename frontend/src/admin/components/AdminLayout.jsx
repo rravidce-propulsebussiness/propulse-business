@@ -42,7 +42,7 @@ const navigation=[
 
 function routeMatches(item,pathname){
   const paths=[item.to,...(item.aliases||[])]
-  return paths.some(path=>pathname===path||pathname.startsWith(path+'/'))
+  return paths.some(path=>pathname===path||(!item.end&&pathname.startsWith(path+'/')))
 }
 
 function findCurrent(pathname){
