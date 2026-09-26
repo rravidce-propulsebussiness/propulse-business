@@ -49,7 +49,7 @@ assert(partnerInventory.includes('partnerProOnePrice'),'Lead Partner sheets must
 assert(partnerPricing.includes('buildFixedPartnerPricing'),'Lead Partner sheet pricing must reuse the existing partner pricing curve');
 
 assert(adminPricing.includes('BUYER_TIERS=[1,2,3]'),'Admin pricing UI must expose only 1/2/3 buyer tiers');
-assert(adminPricing.includes('Buyer Access Defaults'),'Admin pricing must manage Basic/Premium access defaults');
+assert(adminPricing.includes('BUYER ACCESS DEFAULTS'),'Admin pricing must manage Basic/Premium access defaults');
 assert(adminLeads.includes("'Access Strategy'")&&adminLeads.includes("'Release to 2 Hours'"),'Admin lead sample must include access strategy timing fields');
 assert(partnerUi.includes("'Access Strategy'")&&partnerUi.includes("'Pro 1 Buyer'"),'Lead Partner sample must include access strategy and partner base price');
 assert(marketplaceUi.includes('Current Buyer Access'),'Customer checkout must show system-selected buyer access');
