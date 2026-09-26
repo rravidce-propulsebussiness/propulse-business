@@ -44,12 +44,8 @@ export default function InvestorFAQ(){
         </div>
       </section>
 
-      <section className="investor-faq-content" aria-labelledby="investor-faq-list-title">
+      <section className="investor-faq-content" aria-label="Investor FAQ questions">
         <div className="investor-faq-intro">
-          <div>
-            <span>HELP CENTRE</span>
-            <h2 id="investor-faq-list-title">Everything you need, in one place</h2>
-          </div>
           <p>Open any question to view the answer.</p>
         </div>
 
