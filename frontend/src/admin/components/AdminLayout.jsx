@@ -9,6 +9,7 @@ const navigation=[
     {to:'/admin/leads',label:'Manage Leads',end:true},
     {to:'/admin/leads/upload',label:'Upload Leads'},
     {to:'/admin/leads/sheets',label:'Google Sheets'},
+    {to:'/admin/leads/entitlements',label:'Lead Entitlements'},
     {to:'/admin/lead-reports',label:'Lead Reports'},
     {to:'/admin/industries',label:'Industries & Locations',aliases:['/admin/pincodes']}
   ]},
