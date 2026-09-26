@@ -23,13 +23,16 @@ assert(leads.includes('<option value="investor">Investor</option>'),'Investor so
 assert(leads.includes("const id=setInterval(refresh,60000)"),'Manage Leads auto-refresh must remain');
 assert(!leads.includes('All Leads</'),'Duplicate All Leads heading must stay removed');
 assert(!leads.includes('Newest leads appear first'),'Redundant inventory explainer must stay removed');
+assert(leads.includes('v9-inventory-head'),'Premium inventory command bar must remain');
+assert(leads.includes('Auto-refresh every 60s'),'Inventory refresh status must remain visible');
+assert(leads.includes("refreshing?'Refreshing…':'Refresh data'"),'Manual refresh control must remain');
 
 assert(css.includes('/* Premium Manage Leads workspace */'),'Premium Manage Leads styling must remain');
 assert(css.includes('.v9-leads>.v9-stats'),'Premium KPI styling must remain scoped to Manage Leads');
 assert(css.includes('grid-template-columns:repeat(4,minmax(0,1fr))'),'Desktop Manage Leads must keep four KPI cards');
-assert(css.includes('position:sticky;')&&css.includes('top:84px;'),'Desktop lead filters must stay sticky below the fixed Admin header');
+assert(css.includes('position:sticky;')&&css.includes('top:64px;'),'Desktop lead filters must stay sticky below the fixed Admin header');
 assert(css.includes('.v9-leads>.v9-leads-panel>.v9-grid'),'Premium lead grid styling must remain');
-assert(css.includes('grid-template-columns:repeat(auto-fill,minmax(315px,1fr))'),'Lead cards must remain responsive and compact');
+assert(css.includes('grid-template-columns:repeat(auto-fill,minmax(350px,1fr))'),'Lead cards must remain responsive and readable');
 assert(css.includes('.v9-card.premium:before'),'Premium lead cards must retain their tier accent');
 assert(css.includes('.v9-card.exclusive:after'),'Exclusive lead cards must retain premium visual treatment');
 assert(css.includes('@media(max-width:700px)'),'Manage Leads must retain mobile layout rules');
