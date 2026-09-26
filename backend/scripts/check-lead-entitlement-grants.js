@@ -15,6 +15,10 @@ const app=read('../frontend/src/App.jsx');
 const layout=read('../frontend/src/admin/components/AdminLayout.jsx');
 const page=read('../frontend/src/admin/pages/AdminLeadEntitlements.jsx');
 const leads=read('../frontend/src/pages/LeadsV2.jsx');
+const purchase=read('src/services/leadPurchaseService.js');
+const marketplace=read('src/services/leadMarketplaceService.js');
+const readService=read('src/services/leadReadService.js');
+const accessStrategy=read('src/services/leadAccessStrategyService.js');
 
 assert(migration.includes('CREATE TABLE IF NOT EXISTS lead_entitlement_settings'),'Entitlement settings table must exist');
 assert(migration.includes('new_business_enabled BOOLEAN NOT NULL DEFAULT FALSE'),'New-business entitlement must be disabled by default');
@@ -54,5 +58,12 @@ assert(!resetArray.includes("'lead_entitlement_settings'"),'Test reset must pres
 
 assert(leads.includes("leadAccess.entitlementSource==='new_business'?'Welcome lead entitlement'"),'Marketplace must label welcome entitlements accurately');
 assert(leads.includes("leadAccess.entitlementSource==='admin'?'Propulse lead entitlement'"),'Marketplace must label manual entitlements accurately');
+assert(entitlement.includes("claimIsActive"),'Lead access must distinguish active and expired historical claims');
+assert(entitlement.includes('Previous complimentary lead access expired'),'Expired complimentary access must not be presented as active');
+assert(purchase.includes("AND (expires_at IS NULL OR expires_at>=CURRENT_TIMESTAMP) LIMIT 1 FOR UPDATE"),'Expired claims must not block a paid lead purchase');
+assert(purchase.includes("LEFT JOIN lead_entitlement_claims c ON c.lead_id=l.id AND c.user_id=$1 AND (c.expires_at IS NULL OR c.expires_at>=CURRENT_TIMESTAMP)"),'Expired claims must disappear from Purchased Leads');
+assert(marketplace.includes("ec.expires_at IS NULL OR ec.expires_at>=CURRENT_TIMESTAMP"),'Expired claims must not hide marketplace leads or occupy marketplace capacity');
+assert(readService.includes("ec.expires_at IS NULL OR ec.expires_at>=CURRENT_TIMESTAMP")&&readService.includes("ec2.expires_at IS NULL OR ec2.expires_at>=CURRENT_TIMESTAMP"),'Lead counters must ignore expired entitlement claims');
+assert(accessStrategy.includes("expires_at IS NULL OR expires_at>=CURRENT_TIMESTAMP"),'Buyer-capacity close checks must ignore expired entitlement claims');
 
 console.log('Verified business lead entitlement regression test passed.');
