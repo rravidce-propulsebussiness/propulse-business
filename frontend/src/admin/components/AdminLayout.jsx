@@ -34,6 +34,9 @@ const navigation=[
     {to:'/admin/investments',label:'Investments',section:'Investor management'},
     {to:'/admin/investor-withdrawals',label:'Investor Withdrawals'}
   ]},
+  {type:'group',key:'system',label:'System',icon:'⚙',children:[
+    {to:'/admin/test-reset',label:'Test Data Reset'}
+  ]},
   {type:'group',key:'website',label:'Website & Content',icon:'▧',children:[
     {to:'/admin/homepage-media',label:'Homepage Media'},
     {to:'/admin/upcoming-features',label:'Upcoming Features'},
