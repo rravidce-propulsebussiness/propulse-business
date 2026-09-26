@@ -70,9 +70,20 @@ async function updateSettings(req, res) {
             LIMIT 1
           ),0) AS base_pro
         FROM leads l
-        WHERE l.partner_pricing_overridden=TRUE
-          AND EXISTS (SELECT 1 FROM users u WHERE u.id=l.created_by AND u.role='lead_partner')
+        WHERE EXISTS (SELECT 1 FROM users u WHERE u.id=l.created_by AND u.role='lead_partner')
           AND l.status IN ('available','paused')
+          AND (
+            l.partner_pricing_overridden=TRUE
+            OR EXISTS (
+              SELECT 1
+              FROM lead_partner_pricing_rules r
+              WHERE r.partner_user_id=l.created_by
+                AND r.is_active=TRUE
+                AND r.lead_type=l.lead_type
+                AND (r.industry_id=l.industry_id OR r.industry_id IS NULL)
+                AND (r.city_id=l.city_id OR r.city_id IS NULL)
+            )
+          )
       )
       UPDATE leads l
       SET pricing=jsonb_build_object('shares',jsonb_build_array(
