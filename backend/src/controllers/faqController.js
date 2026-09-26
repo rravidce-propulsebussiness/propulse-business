@@ -2,11 +2,11 @@ const faqService=require('../services/faqService');
 
 async function list(req,res){
   try{return res.json(await faqService.list(String(req.query?.audience||'lead_partner'),false))}
-  catch(error){console.error('List Lead Partner FAQs failed:',error.message);return res.status(500).json({error:'Failed to load FAQs'})}
+  catch(error){const status=error.code==='INVALID_AUDIENCE'?400:500;console.error('List FAQs failed:',error.message);return res.status(status).json({error:error.message||'Failed to load FAQs',code:error.code})}
 }
 async function adminList(req,res){
   try{return res.json(await faqService.adminList(String(req.query?.audience||'lead_partner')))}
-  catch(error){console.error('List admin FAQs failed:',error.message);return res.status(500).json({error:'Failed to load FAQs'})}
+  catch(error){const status=error.code==='INVALID_AUDIENCE'?400:500;console.error('List admin FAQs failed:',error.message);return res.status(status).json({error:error.message||'Failed to load FAQs',code:error.code})}
 }
 async function create(req,res){
   try{return res.status(201).json(await faqService.create(req.body||{}))}

@@ -53,7 +53,7 @@ function Home() {
   const [activeNav, setActiveNav] = useState('home')
   const [servicePricing, setServicePricing] = useState(pricingFallback)
   const [contactData, setContactData] = useState({})
-  const [homepageFaqs, setHomepageFaqs] = useState([])
+  const [homepageFaqs, setHomepageFaqs] = useState(null)
   const [openFaq, setOpenFaq] = useState(null)
   const [upcomingFeatures, setUpcomingFeatures] = useState([])
   const [upcomingFilter, setUpcomingFilter] = useState('all')
@@ -89,7 +89,7 @@ function Home() {
     publicRequest('/faqs?audience=website').then(data => {
       if (!live) return
       const items = Array.isArray(data) ? data.filter(item => item?.is_active !== false) : []
-      if (items.length) setHomepageFaqs(items)
+      setHomepageFaqs(items)
     }).catch(() => {})
     return () => { live = false }
   }, [])
@@ -490,7 +490,7 @@ function Home() {
         <div className="section-heading centered"><span className="section-kicker">FAQ</span><h2>Questions, clearly answered.</h2><p>Everything you need to understand Propulse, its services and the lead marketplace before you get started.</p></div>
         <div className="faq-home-layout">
           <div className="faq-list">
-            {(homepageFaqs.length ? homepageFaqs : faqs.map(([question, answer], index) => ({ id: `fallback-${index}`, question, answer }))).map(item => (
+            {(homepageFaqs ?? faqs.map(([question, answer], index) => ({ id: `fallback-${index}`, question, answer }))).map(item => (
               <article className={openFaq === item.id ? 'faq-home-item open' : 'faq-home-item'} key={item.id}>
                 <button type="button" onClick={() => setOpenFaq(openFaq === item.id ? null : item.id)}>
                   <span>{item.question}</span><b>{openFaq === item.id ? '−' : '+'}</b>

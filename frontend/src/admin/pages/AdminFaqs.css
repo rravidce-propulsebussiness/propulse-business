@@ -2,7 +2,7 @@
 @media(max-width:1000px){.admin-faq-layout{grid-template-columns:1fr}.admin-faq-summary{display:grid;grid-template-columns:1fr 1fr;gap:12px}.admin-faq-summary>h2,.admin-faq-summary>p,.admin-faq-category-summary{grid-column:1/-1}}
 @media(max-width:700px){.admin-faq-page{padding:16px 14px 35px}.admin-faq-hero{padding:22px}.admin-faq-hero-mark{display:none}.admin-faq-form-grid,.admin-faq-summary{grid-template-columns:1fr}.admin-faq-list-tools{width:100%}.admin-faq-list-tools input{width:100%;box-sizing:border-box}.admin-faq-list-head{flex-direction:column}.admin-faq-list-tools{width:100%}}
 
-.admin-faq-audience-tabs{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:15px}
+.admin-faq-audience-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:15px}
 .admin-faq-audience-tabs button{padding:13px 15px;border:1px solid #dfe7ef;border-radius:11px;background:#fff;text-align:left;cursor:pointer;display:flex;flex-direction:column;gap:4px}
 .admin-faq-audience-tabs button strong{font-size:9px;color:#23476d}
 .admin-faq-audience-tabs button small{font-size:7px;color:#8796a8;line-height:1.4}
