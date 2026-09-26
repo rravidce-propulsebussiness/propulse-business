@@ -23,6 +23,12 @@ assert(page.includes("review(row.id,'verified_fake')")&&page.includes("review(ro
 assert(page.includes('setControl(row.reporter_user_id,!enabled)'), 'Existing reporter access control must remain wired');
 
 assert(service.includes("COUNT(*) FILTER(WHERE r.status='pending')"),'Lead Reports service must return real pending summary counts');
+assert(service.includes('const sqlBind=index=>String.fromCharCode(36)+String(index);'),'Lead Reports must build PostgreSQL bind placeholders explicitly');
+assert(service.includes("const where=filtered?'WHERE r.status='+sqlBind(1):'';"),'Filtered Lead Reports must bind status as parameter 1');
+assert(service.includes('const params=filtered?[normalized,safeLimit,offset]:[safeLimit,offset];'),'Lead Reports parameter arrays must match filtered/all query shapes');
+assert(service.includes('const limitIndex=filtered?2:1;')&&service.includes('const offsetIndex=filtered?3:2;'),'Lead Reports LIMIT/OFFSET placeholder indexes must match parameter arrays');
+assert(service.includes("' ORDER BY r.created_at DESC,r.id DESC LIMIT '+sqlBind(limitIndex)+' OFFSET '+sqlBind(offsetIndex)"),'Lead Reports list query must use real LIMIT/OFFSET bind placeholders');
+assert(!service.includes('LIMIT ${params.length-1} OFFSET ${params.length}'),'Lead Reports must never interpolate parameter counts as SQL literal limits');
 assert(service.includes("COALESCE(c.false_report_count,0)>=2"),'Lead Reports service must return repeat reporter count');
 assert(service.includes('return{data:result.rows,summary,pagination:'),'Lead Reports summary must be returned with existing data/pagination');
 
