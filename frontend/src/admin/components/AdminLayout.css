@@ -347,8 +347,10 @@
 }
 
 .admin-topbar{
-  position:sticky;
+  position:fixed;
   top:0;
+  left:264px;
+  right:0;
   z-index:30;
   height:70px;
   display:flex;
@@ -426,7 +428,7 @@
 .admin-content{
   width:100%;
   min-width:0;
-  padding:0 28px 42px;
+  padding:70px 28px 42px;
   box-sizing:border-box;
 }
 .admin-content>.admin-dashboard{background:transparent}
@@ -491,14 +493,14 @@
     font-size:15px;
     cursor:pointer;
   }
-  .admin-topbar{height:64px;padding:0 16px}
+  .admin-topbar{left:0;right:0;height:64px;padding:0 16px}
   .admin-top-status{margin-left:auto}
-  .admin-content{padding:0 16px 34px}
+  .admin-content{padding:64px 16px 34px}
 }
 
 @media(max-width:600px){
   .admin-top-status{display:none}
   .admin-top-user div{display:none}
   .admin-top-user{padding-left:0;border-left:0}
-  .admin-content{padding:0 12px 28px}
+  .admin-content{padding:64px 12px 28px}
 }
