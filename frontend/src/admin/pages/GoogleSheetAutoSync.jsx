@@ -61,12 +61,15 @@ export default function GoogleSheetAutoSync(){
     <span style={{fontSize:12,fontWeight:700,padding:'7px 10px',borderRadius:999,background:sources.length?'#ecfdf5':'#f1f5f9',color:sources.length?'#047857':'#64748b'}}>{sources.length?`● ${sources.length} Connected`:'○ No sheets connected'}</span>
   </div>
   <LeadImportDefaults value={linkDefaults} onChange={setLinkDefaults} disabled={busy}/>
-  <div style={{display:'flex',gap:10,marginTop:14,flexWrap:'wrap'}}>
-    <input value={input} onChange={e=>setInput(e.target.value)} placeholder="Paste another Google Sheets URL" style={{flex:'1 1 420px',minWidth:240,padding:'11px 13px',border:'1px solid #dbe1e8',borderRadius:10,outline:'none'}}/>
+  <div className="v9-sheet-connect-row">
+    <input value={input} onChange={e=>setInput(e.target.value)} placeholder="Paste another Google Sheets URL"/>
     <button className="v9-btn primary" onClick={connect} disabled={busy}>{busy?'Syncing…':'Connect Sheet'}</button>
     {sources.length>0&&<button className="v9-btn secondary" onClick={()=>syncAll(true)} disabled={busy}>{busy?'Checking…':'Check All Now'}</button>}
   </div>
-  <div style={{marginTop:8,fontSize:11,color:'#7b8ba0'}}>Optional defaults apply only when the corresponding sheet cell is blank. Sheet values always override them.</div>
+  <div className="v9-sheet-precedence">
+    <div><strong>Sharing</strong><span>Sheet Access Strategy / Max Buyers → Single Only override → Admin buyer-access configuration</span></div>
+    <div><strong>Pricing</strong><span>Sheet exact 1 / 2 / 3 buyer price → Admin exact-tier price</span></div>
+  </div>
   {sources.length>0&&<div style={{display:'grid',gap:8,marginTop:14}}>
     {sources.map((source,i)=>{const record=sourceRecord(source);return <div key={record.url} style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:12,padding:'10px 12px',border:'1px solid #edf0f4',borderRadius:10,background:'#fafbfc'}}>
       <div style={{minWidth:0}}>
