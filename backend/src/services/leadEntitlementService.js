@@ -134,10 +134,16 @@ async function getLeadAccess(userId,leadId){
   if(occupied>=capacity)return{authenticated:true,claimed:false,canClaim:false,reason:'Lead buyer capacity reached',buyerCapacity:capacity,buyersUsed:occupied};
 
   const exclusiveAt=new Date(new Date(lead.created_at).getTime()+Number(lead.exclusive_delay_days||0)*86400000);
-  if(lead.is_exclusive&&exclusiveAt>new Date()&&!await isProMember(userId))return{authenticated:true,claimed:false,canClaim:false,reason:'Pro Early Access is still active'};
+  const exclusiveActive=Boolean(lead.is_exclusive&&exclusiveAt>new Date());
+  const pro=exclusiveActive?await isProMember(userId):false;
 
   const entitlementType=entitlementTypeForLead(lead);
-  const grantAccess=await grantService.findAvailableGrant(userId,entitlementType,pool);
+  const grantAccess=await grantService.findAvailableGrant(userId,entitlementType,pool,{
+    lead,exclusiveActive,pro
+  });
+  if(exclusiveActive&&!pro&&!grantAccess){
+    return{authenticated:true,claimed:false,canClaim:false,reason:'Pro Early Access is still active'};
+  }
   if(grantAccess){
     return{
       authenticated:true,claimed:false,canClaim:true,
@@ -242,10 +248,17 @@ async function getLeadAccessMap(userId,leadIds){
     if(occupied>=capacity){out[lead.id]={authenticated:true,claimed:false,canClaim:false,reason:'Lead buyer capacity reached',buyerCapacity:capacity,buyersUsed:occupied};continue;}
 
     const exclusiveAt=new Date(new Date(lead.created_at).getTime()+Number(lead.exclusive_delay_days||0)*86400000);
-    if(lead.is_exclusive&&exclusiveAt>now&&!pro){out[lead.id]={authenticated:true,claimed:false,canClaim:false,reason:'Pro Early Access is still active'};continue;}
+    const exclusiveActive=Boolean(lead.is_exclusive&&exclusiveAt>now);
 
     const type=entitlementTypeForLead(lead);
-    const grant=grantState.grants.find(item=>grantService.remainingFor(item,type)>0);
+    const grant=grantState.grants.find(item=>
+      grantService.remainingFor(item,type)>0&&
+      grantService.grantAllowsLead(item,lead,{exclusiveActive,pro})
+    );
+    if(exclusiveActive&&!pro&&!grant){
+      out[lead.id]={authenticated:true,claimed:false,canClaim:false,reason:'Pro Early Access is still active'};
+      continue;
+    }
     if(grant){
       out[lead.id]={
         authenticated:true,claimed:false,canClaim:true,
@@ -350,13 +363,17 @@ async function claimLead(userId,leadId){
     if(occupied>=capacity)fail('Lead buyer capacity reached','CAPACITY_REACHED');
 
     const exclusiveAt=new Date(new Date(lead.created_at).getTime()+Number(lead.exclusive_delay_days||0)*86400000);
-    const pro=await isProMember(userId,client);
-    if(lead.is_exclusive&&exclusiveAt>new Date()&&!pro)fail('Pro Early Access is still active','EXCLUSIVE_LOCKED');
+    const exclusiveActive=Boolean(lead.is_exclusive&&exclusiveAt>new Date());
+    const pro=exclusiveActive?await isProMember(userId,client):false;
+
+    const type=entitlementTypeForLead(lead);
+    const grantAccess=await grantService.findAvailableGrant(userId,type,client,{
+      ensureWelcome:true,forUpdate:true,lead,exclusiveActive,pro
+    });
+    if(exclusiveActive&&!pro&&!grantAccess)fail('Pro Early Access is still active','EXCLUSIVE_LOCKED');
 
     await matchesBusinessProfile(client,lead,userId);
 
-    const type=entitlementTypeForLead(lead);
-    const grantAccess=await grantService.findAvailableGrant(userId,type,client,{ensureWelcome:true,forUpdate:true});
     if(grantAccess){
       const expiryDays=grantAccess.expiryDays;
       const inserted=await client.query(`
