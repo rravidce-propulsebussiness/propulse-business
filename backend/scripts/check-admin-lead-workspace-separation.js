@@ -11,6 +11,7 @@ const leads=read('../frontend/src/admin/pages/AdminLeads.jsx');
 const leadUi=read('../frontend/src/admin/pages/AdminLeadsV9.jsx');
 const upload=read('../frontend/src/admin/pages/AdminLeadUpload.jsx');
 const sheets=read('../frontend/src/admin/pages/AdminLeadSheets.jsx');
+const bulk=read('../frontend/src/admin/leadImportBulkEnhancer.js');
 
 assert(app.includes('/admin/leads/upload')&&app.includes('/admin/leads/sheets'),'Admin must have separate Upload Leads and Google Sheets routes');
 assert(layout.includes("{to:'/admin/leads',label:'Manage Leads',end:true}"),'Manage Leads navigation must not absorb nested lead routes');
@@ -19,8 +20,10 @@ assert(layout.includes("{to:'/admin/leads/sheets',label:'Google Sheets'}"),'Side
 assert(!leads.includes('GoogleSheetAutoSync'),'Manage Leads must not render Google Sheet connection UI');
 assert(leads.includes('AdminLeadsV9 mode="manage"'),'Manage Leads must reuse the canonical lead component in manage mode');
 assert(upload.includes('AdminLeadsV9 mode="upload"'),'Upload Leads must reuse the canonical importer instead of duplicating import logic');
+assert(upload.includes("../leadImportBulkEnhancer.js")&&!leads.includes('leadImportBulkEnhancer'),'CSV bulk enhancer must belong only to Upload Leads');
 assert(sheets.includes('GoogleSheetAutoSync'),'Google Sheets page must reuse the canonical sheet sync component');
 assert(leadUi.includes("mode==='upload'"),'Canonical Admin lead component must support the separated upload workspace');
 assert(!leadUi.includes('<h1>Lead Inventory</h1><p>Manage Basic/Premium grade'),'Old mixed lead inventory header must be removed');
+assert(bulk.includes("controlIn(row,'Buyer Strategy')")&&bulk.includes("controlIn(row,'Pro Early Access')")&&bulk.includes("controlIn(row,'Max Buyers')"),'CSV bulk editor must target current buyer-access field labels');
 
 console.log('Admin lead workspace separation regression test passed.');
