@@ -51,5 +51,32 @@ export default function GoogleSheetAutoSync(){
  useEffect(()=>{if(!sources.length)return undefined;const syncIfVisible=()=>{if(document.visibilityState==='visible')syncAllEvent()};syncIfVisible();timer.current=setInterval(syncIfVisible,300000);document.addEventListener('visibilitychange',syncIfVisible);window.addEventListener('focus',syncIfVisible);return()=>{if(timer.current)clearInterval(timer.current);document.removeEventListener('visibilitychange',syncIfVisible);window.removeEventListener('focus',syncIfVisible)}},[sources.length]);
  const connect=async()=>{const value=input.trim();if(!value){setStatus('Paste a Google Sheets URL first');return}if(sources.some(source=>sourceRecord(source).url===value)){setStatus('This Google Sheet is already connected');return}setBusy(true);setStatus('Connecting and syncing…');try{const defaults=normalizeImportDefaults(linkDefaults);const result=await authRequest('/leads/google-sheet/preview',{method:'POST',body:JSON.stringify({url:value})});const csv=canonicalizeCsv(result.csv||'');const[leadsResult,cat]=await Promise.all([authRequest('/leads?status=all'),loadCatalog()]);const leads=listData(leadsResult);const resultSet=await syncRows(csv,leads,cat,defaults);if(resultSet.failed===0)localStorage.setItem(fingerprintKey(value),await fingerprint(csv));else localStorage.removeItem(fingerprintKey(value));const next=[...sources,{url:value,defaults}];save(next);setInput('');setLinkDefaults(EMPTY_IMPORT_DEFAULTS);setStatus(`Connected · ${resultSet.created} new · ${resultSet.updated} updated · ${resultSet.unchanged} unchanged · ${resultSet.failed} failed`);window.dispatchEvent(new Event('propulse:leads-refresh'))}catch(e){setStatus(e.message||'Unable to connect Google Sheet')}finally{setBusy(false)}};
  const disconnect=url=>{localStorage.removeItem(fingerprintKey(url));const next=sources.filter(source=>sourceRecord(source).url!==url);save(next);setStatus(next.length?`Disconnected · ${next.length} sheet(s) still connected`:'All Google Sheets disconnected')};
- return <section style={{marginBottom:18,border:'1px solid #e6eaf0',borderRadius:18,padding:18,background:'#fff',boxShadow:'0 8px 28px rgba(15,23,42,.06)'}}><div style={{display:'flex',justifyContent:'space-between',gap:16,alignItems:'center',flexWrap:'wrap'}}><div><div style={{fontSize:11,fontWeight:800,letterSpacing:'.12em',color:'#64748b'}}>AUTOMATIC LEAD SOURCES</div><h3 style={{margin:'5px 0 3px',fontSize:18}}>Google Sheets</h3><div style={{fontSize:13,color:'#64748b'}}>New rows and edits are checked every 5 minutes while this page is active, or on demand.</div></div><span style={{fontSize:12,fontWeight:700,padding:'7px 10px',borderRadius:999,background:sources.length?'#ecfdf5':'#f1f5f9',color:sources.length?'#047857':'#64748b'}}>{sources.length?`● ${sources.length} Connected`:'○ No sheets connected'}</span></div><div style={{display:'flex',gap:10,marginTop:14,flexWrap:'wrap'}}><input value={input} onChange={e=>setInput(e.target.value)} placeholder="Paste another Google Sheets URL" style={{flex:'1 1 420px',minWidth:240,padding:'11px 13px',border:'1px solid #dbe1e8',borderRadius:10,outline:'none'}}/><button className="v9-btn primary" onClick={connect} disabled={busy}>{busy?'Syncing…':'Connect Sheet'}</button>{sources.length>0&&<button className="v9-btn secondary" onClick={()=>syncAll(true)} disabled={busy}>{busy?'Checking…':'Check All Now'}</button>}</div>{sources.length>0&&<div style={{display:'grid',gap:8,marginTop:14}}>{sources.map((url,i)=><div key={url} style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:12,padding:'10px 12px',border:'1px solid #edf0f4',borderRadius:10,background:'#fafbfc'}}><div style={{minWidth:0}}><div style={{fontSize:12,fontWeight:700}}>Sheet {i+1}</div><div style={{fontSize:11,color:'#64748b',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{url}</div></div><button className="v9-btn secondary" onClick={()=>disconnect(url)} disabled={busy}>Disconnect</button></div>)}</div>}{status&&<div style={{marginTop:10,fontSize:12,color:'#475569'}}>{status}</div>}</section>;
+ return <section style={{marginBottom:18,border:'1px solid #e6eaf0',borderRadius:18,padding:18,background:'#fff',boxShadow:'0 8px 28px rgba(15,23,42,.06)'}}>
+  <div style={{display:'flex',justifyContent:'space-between',gap:16,alignItems:'center',flexWrap:'wrap'}}>
+    <div>
+      <div style={{fontSize:11,fontWeight:800,letterSpacing:'.12em',color:'#64748b'}}>AUTOMATIC LEAD SOURCES</div>
+      <h3 style={{margin:'5px 0 3px',fontSize:18}}>Google Sheets</h3>
+      <div style={{fontSize:13,color:'#64748b'}}>New rows and edits are checked every 5 minutes while this page is active, or on demand.</div>
+    </div>
+    <span style={{fontSize:12,fontWeight:700,padding:'7px 10px',borderRadius:999,background:sources.length?'#ecfdf5':'#f1f5f9',color:sources.length?'#047857':'#64748b'}}>{sources.length?`● ${sources.length} Connected`:'○ No sheets connected'}</span>
+  </div>
+  <LeadImportDefaults value={linkDefaults} onChange={setLinkDefaults} disabled={busy}/>
+  <div style={{display:'flex',gap:10,marginTop:14,flexWrap:'wrap'}}>
+    <input value={input} onChange={e=>setInput(e.target.value)} placeholder="Paste another Google Sheets URL" style={{flex:'1 1 420px',minWidth:240,padding:'11px 13px',border:'1px solid #dbe1e8',borderRadius:10,outline:'none'}}/>
+    <button className="v9-btn primary" onClick={connect} disabled={busy}>{busy?'Syncing…':'Connect Sheet'}</button>
+    {sources.length>0&&<button className="v9-btn secondary" onClick={()=>syncAll(true)} disabled={busy}>{busy?'Checking…':'Check All Now'}</button>}
+  </div>
+  <div style={{marginTop:8,fontSize:11,color:'#7b8ba0'}}>Optional defaults apply only when the corresponding sheet cell is blank. Sheet values always override them.</div>
+  {sources.length>0&&<div style={{display:'grid',gap:8,marginTop:14}}>
+    {sources.map((source,i)=>{const record=sourceRecord(source);return <div key={record.url} style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:12,padding:'10px 12px',border:'1px solid #edf0f4',borderRadius:10,background:'#fafbfc'}}>
+      <div style={{minWidth:0}}>
+        <div style={{fontSize:12,fontWeight:700}}>Sheet {i+1}</div>
+        <div style={{fontSize:11,color:'#64748b',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{record.url}</div>
+        <div style={{marginTop:5,fontSize:10,fontWeight:800,color:'#365b86'}}>Defaults: {importDefaultsSummary(record.defaults)}</div>
+      </div>
+      <button className="v9-btn secondary" onClick={()=>disconnect(record.url)} disabled={busy}>Disconnect</button>
+    </div>})}
+  </div>}
+  {status&&<div style={{marginTop:10,fontSize:12,color:'#475569'}}>{status}</div>}
+ </section>;
 }
