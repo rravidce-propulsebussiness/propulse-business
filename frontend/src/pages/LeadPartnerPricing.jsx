@@ -124,7 +124,7 @@ export default function LeadPartnerPricing() {
       <LeadPartnerSidebar user={user} onSignOut={signOut} />
 
       <main className="pricing-main">
-        <header className="pricing-topbar"><div className="pricing-breadcrumb"><span>Lead Partner</span><b>/</b><strong>Pricing & Revenue</strong></div><div className="pricing-top-actions"><span><i /> Partner account</span><b>♧</b></div></header>
+        <header className="pricing-topbar"><div className="pricing-breadcrumb"><span>Lead Partner</span><b>/</b><strong>Pricing & Revenue</strong></div></header>
 
         <div className="pricing-content">
           <section className="pricing-hero"><div><h1>Pricing & Revenue</h1></div></section>
@@ -138,7 +138,7 @@ export default function LeadPartnerPricing() {
           </section>
 
           <section className="pricing-panel builder">
-            <div className="pricing-panel-title"><div><span className="pricing-kicker">PRICE CONFIGURATION</span><h2>{ruleForm.id ? 'Edit Pro pricing configuration' : 'Create Pro pricing configuration'}</h2><p>Choose Industry, City and Lead Type. Then enter the 1-share Pro price. Other share prices are calculated automatically.</p></div>{ruleForm.id && <button className="pricing-secondary" type="button" onClick={resetRule}>Reset</button>}</div>
+            <div className="pricing-panel-title"><div><h2>{ruleForm.id ? 'Edit Pro pricing configuration' : 'Create Pro pricing configuration'}</h2><p>Choose Industry, City and Lead Type. Then enter the 1-share Pro price. Other share prices are calculated automatically.</p></div>{ruleForm.id && <button className="pricing-secondary" type="button" onClick={resetRule}>Reset</button>}</div>
 
             <div className="pricing-scope">
               <label>INDUSTRY<select value={ruleForm.industryId} onChange={e => setRuleForm({ ...ruleForm, industryId:e.target.value })}><option value="">All industries</option>{industries.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
@@ -156,12 +156,12 @@ export default function LeadPartnerPricing() {
 
           <div className="pricing-bottom">
             <section className="pricing-panel rules-panel">
-              <div className="pricing-panel-title compact"><div><span className="pricing-kicker">YOUR CONFIGURATIONS</span><h2>Configured Pro pricing rules</h2><p>Only rules belonging to your Lead Partner account are shown.</p></div><input placeholder="⌕  Search industry, city or lead type..." /></div>
+              <div className="pricing-panel-title compact"><div><h2>Configured Pro pricing rules</h2><p>Only rules belonging to your Lead Partner account are shown.</p></div><input placeholder="⌕  Search industry, city or lead type..." /></div>
               {!rules.length ? <div className="pricing-empty">No Pro pricing configurations yet. Create one above.</div> : <div className="pricing-table-wrap"><table className="pricing-table"><thead><tr><th>#</th><th>Industry</th><th>City</th><th>Lead Type</th><th>1 Share (₹)</th><th>2 Shares (60%)</th><th>3 Shares (45%)</th><th>Status</th><th>Updated</th></tr></thead><tbody>{rules.map((rule,i)=><tr key={rule.id}><td>{i+1}</td><td>{rule.industryName||'All industries'}</td><td>{rule.cityName||'All cities'}</td><td>{cap(rule.leadType)}</td>{SHARE_TIERS.map(shares=>{const tier=(rule.pricing?.shares||[]).find(x=>Number(x.shares)===shares);return <td key={shares}>{money(tier?.pro)}</td>})}<td><span className="status-active">{rule.isActive?'Active':'Off'}</span></td><td>{rule.updatedAt?new Date(rule.updatedAt).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}):'—'}</td></tr>)}</tbody></table></div>}
             </section>
 
             <section className="pricing-panel overrides-panel">
-              <div className="pricing-panel-title compact"><div><span className="pricing-kicker">YOUR LEADS</span><h2>Lead-level Pro price overrides</h2><p>Set custom Pro prices for specific high-value leads.</p></div><button className="pricing-outline">＋ Add Override</button></div>
+              <div className="pricing-panel-title compact"><div><h2>Lead-level Pro price overrides</h2><p>Set custom Pro prices for specific high-value leads.</p></div><button className="pricing-outline">＋ Add Override</button></div>
               <div className="override-list">{loading ? <div className="pricing-empty">Loading…</div> : !leads.length ? <div className="pricing-empty">No uploaded leads are available for pricing yet.</div> : leads.slice(0,5).map(lead=>{const tiers=normalizePartnerTiers({shares:drafts[lead.id]||[]});const locked=['sold','closed','invalid'].includes(lead.status);return <article key={lead.id}><div><span>#{lead.id}</span><strong>{lead.customerName||'Customer'}</strong><small>{lead.phone||lead.email||'No contact'}</small></div><label>1-share Pro<input disabled={locked} type="number" value={tiers[0]?.pro||0} onChange={e=>changeDraft(lead.id,1,e.target.value)}/></label><span className={`override-status ${lead.status}`}>{cap(lead.status)}</span><button disabled={locked||savingId===lead.id} onClick={()=>save(lead)}>{savingId===lead.id?'…':'Save'}</button></article>})}</div>
               <div className="override-note">Only 1-share Pro can be changed. 2-share = 60% and 3-share = 45%.</div>
             </section>

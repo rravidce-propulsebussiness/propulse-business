@@ -108,7 +108,6 @@ export default function LeadPartnerAccount(){
     <main className="account-main">
       <header className="account-topbar">
         <div className="account-breadcrumb"><span>Lead Partner</span><b>/</b><strong>Account</strong></div>
-        <div className="account-top-right"><span className="account-live-dot"/> <b>Partner account</b><span className="account-bell">●</span></div>
       </header>
 
       <div className="account-content">
@@ -129,7 +128,7 @@ export default function LeadPartnerAccount(){
         {tab==='payout'&&<section className="account-main-grid">
           <div className="account-left-column">
             <article className="account-card current-card">
-              <div className="account-card-head"><div><span className="account-kicker">CURRENT PAYOUT CONFIGURATION</span><h2>Current payout account</h2></div><span className={account?(verified?'account-status verified':'account-status active'):'account-status idle'}>● {statusText}</span></div>
+              <div className="account-card-head"><div><h2>Current payout account</h2></div><span className={account?(verified?'account-status verified':'account-status active'):'account-status idle'}>● {statusText}</span></div>
               {loading?<div className="account-loading">Loading payout configuration…</div>:account?
                 <div className="account-current-box">
                   <div className="account-bank-symbol">{account.method==='upi'?'@':'▥'}</div>
@@ -141,7 +140,7 @@ export default function LeadPartnerAccount(){
             </article>
 
             <article className="account-card edit-card" id="payout-form">
-              <div className="account-card-head"><div><span className="account-kicker">ADD / UPDATE PAYOUT DETAILS</span><h2>{account?'Update payout details':'Add payout details'}</h2><p>Saving a new destination replaces the currently active payout account.</p></div></div>
+              <div className="account-card-head"><div><h2>{account?'Update payout details':'Add payout details'}</h2><p>Saving a new destination replaces the currently active payout account.</p></div></div>
               <div className="account-methods"><button type="button" className={method==='bank'?'active':''} onClick={()=>chooseMethod('bank')}><span>▥</span><div><strong>Bank Account</strong><small>Direct bank transfer</small></div></button><button type="button" className={method==='upi'?'active':''} onClick={()=>chooseMethod('upi')}><span>@</span><div><strong>UPI Account</strong><small>UPI transfer</small></div></button></div>
               <form onSubmit={save}>
                 {method==='bank'?<div className="account-form-grid"><label>Account holder name *<input value={form.accountHolderName} onChange={e=>update('accountHolderName',e.target.value)} placeholder="Enter account holder name" required/></label><label>Account number *<input inputMode="numeric" value={form.accountNumber} onChange={e=>update('accountNumber',e.target.value.replace(/\D/g,''))} placeholder={account?'Re-enter account number':'Enter account number'} required/></label><label>IFSC code *<input value={form.ifscCode} onChange={e=>update('ifscCode',e.target.value.toUpperCase())} maxLength="11" placeholder="Enter IFSC code" required/></label><label>Bank name *<input value={form.bankName} onChange={e=>update('bankName',e.target.value)} placeholder="Enter bank name" required/></label></div>:<label className="account-upi-field">UPI ID *<input placeholder="yourname@upi" value={form.upiId} onChange={e=>update('upiId',e.target.value)} required/><small>Example: name@okaxis or name@ybl</small></label>}
@@ -161,7 +160,7 @@ export default function LeadPartnerAccount(){
 
         {tab==='transactions'&&<section className="account-transaction-panel account-card">
           <div className="account-card-head history-head">
-            <div><span className="account-kicker">FINANCIAL ACTIVITY</span><h2>Transaction History</h2><p>Real earnings and withdrawal activity from your Lead Partner ledger.</p></div>
+            <div><h2>Transaction History</h2><p>Real earnings and withdrawal activity from your Lead Partner ledger.</p></div>
             <button type="button" className="account-refresh" onClick={loadTransactions} disabled={transactionsLoading}>{transactionsLoading?'Refreshing…':'↻ Refresh'}</button>
           </div>
                               <div className="transaction-balance-grid">
@@ -180,7 +179,7 @@ export default function LeadPartnerAccount(){
         {tab==='settings'&&<section className="account-main-grid">
           <div className="account-left-column">
             <article className="account-card">
-              <div className="account-card-head"><div><span className="account-kicker">ACCOUNT SETTINGS</span><h2>Account information</h2><p>Your authenticated ProPulse account details.</p></div></div>
+              <div className="account-card-head"><div><h2>Account information</h2><p>Your authenticated ProPulse account details.</p></div></div>
               {settingsError&&<div className="account-message error">{settingsError}</div>}
               {settingsLoading?<div className="account-loading">Loading account settings…</div>:<div className="settings-list">
                 <div><span>Full name</span><strong>{me?.name||user?.name||'—'}</strong></div>

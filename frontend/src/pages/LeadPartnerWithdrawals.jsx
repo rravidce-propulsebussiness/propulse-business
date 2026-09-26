@@ -76,7 +76,6 @@ export default function LeadPartnerWithdrawals() {
       <main className="withdrawals-main">
         <header className="withdrawals-topbar">
           <div className="withdrawals-breadcrumb"><span>Lead Partner</span><b>/</b><strong>Earnings & Withdrawals</strong></div>
-          <div className="withdrawals-top-status"><i /> Partner account</div>
         </header>
 
         <div className="withdrawals-content">
@@ -106,7 +105,7 @@ export default function LeadPartnerWithdrawals() {
               <section className="withdrawals-primary-grid">
                 <article className="withdrawals-card request-card">
                   <div className="withdrawals-card-head">
-                    <div><span className="withdrawals-kicker">WITHDRAW EARNINGS</span><h2>Request Withdrawal</h2><p>Withdraw from your currently available partner balance.</p></div>
+                    <div><h2>Request Withdrawal</h2></div>
                     <span className="request-lock">🔒 Secure</span>
                   </div>
                   <div className="available-strip"><span>Available balance</span><strong>{money(available)}</strong></div>
@@ -128,7 +127,7 @@ export default function LeadPartnerWithdrawals() {
                 <aside className="withdrawals-side-stack">
                   <article className="withdrawals-card account-card">
                     <div className="withdrawals-card-head compact">
-                      <div><span className="withdrawals-kicker">PAYOUT DESTINATION</span><h2>{account ? 'Linked bank account' : 'Payout account'}</h2></div>
+                      <div><h2>{account ? 'Linked bank account' : 'Payout account'}</h2></div>
                       {account ? <span className="verified-badge">✓ Verified</span> : <Link to="/lead-partner/account" className="manage-link">Add account →</Link>}
                     </div>
                     {account ? (
@@ -144,7 +143,7 @@ export default function LeadPartnerWithdrawals() {
                   </article>
 
                   <article className="withdrawals-card how-card">
-                    <div className="withdrawals-card-head compact"><div><span className="withdrawals-kicker">PROCESS</span><h2>How withdrawals work</h2></div></div>
+                    <div className="withdrawals-card-head compact"><div><h2>How withdrawals work</h2></div></div>
                     <div className="steps">
                       <div><b>1</b><span><strong>Submit Request</strong><small>Choose an amount from your available balance.</small></span></div>
                       <div><b>2</b><span><strong>Admin Review</strong><small>Your request is checked and approved.</small></span></div>
@@ -157,7 +156,7 @@ export default function LeadPartnerWithdrawals() {
 
               <section className="withdrawals-card history-card">
                 <div className="withdrawals-card-head history-head">
-                  <div><span className="withdrawals-kicker">PAYOUT HISTORY</span><h2>Withdrawal History</h2><p>All payout requests and processing references are retained here.</p></div>
+                  <div><h2>Withdrawal History</h2></div>
                   <span className="history-count">{requests.length} request{requests.length === 1 ? '' : 's'}</span>
                 </div>
                 <div className="withdrawals-table-wrap">
