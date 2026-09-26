@@ -58,14 +58,14 @@ async function getMembership(userId,client=pool,{lock=false}={}){
 
 async function membershipAccess(userId,lead,client=pool,{lock=false}={}){
   const membership=await getMembership(userId,client,{lock});
-  if(!membership)return null;
+  if(!membership)return{available:false,code:'NO_MEMBERSHIP_ENTITLEMENT',reason:'No active membership entitlement'};
   const entitlement=entitlementForLead(parseEntitlements(membership.lead_entitlements),lead);
-  if(!entitlement||entitlement.complimentary===false)return null;
+  if(!entitlement||entitlement.complimentary===false)return{available:false,code:'ENTITLEMENT_NOT_INCLUDED',reason:'This lead is not included in your membership'};
 
   const {billingMonths,periodStart,periodEnd,monthlyStart,monthlyEnd}=periodForMembership(membership);
   const monthly=Math.max(0,Number(entitlement.monthly_quantity??entitlement.quantity??0));
   const periodTotal=Math.max(monthly*billingMonths,Number(entitlement.period_total_quantity??monthly*billingMonths));
-  if(monthly<=0&&periodTotal<=0)return null;
+  if(monthly<=0&&periodTotal<=0)return{available:false,code:'ENTITLEMENT_EMPTY',reason:'No remaining entitlement configured'};
 
   const usageStart=membership.lead_rollover_enabled===false?monthlyStart:periodStart;
   const usageEnd=membership.lead_rollover_enabled===false?monthlyEnd:periodEnd;
@@ -79,6 +79,7 @@ async function membershipAccess(userId,lead,client=pool,{lock=false}={}){
   const allowance=membership.lead_rollover_enabled===false?Math.max(0,monthly):Math.max(0,periodTotal);
 
   return{
+    available:true,
     membership,
     entitlement,
     canClaim:used<allowance,
@@ -146,7 +147,7 @@ async function getLeadAccess(userId,leadId){
   }
 
   const membership=await membershipAccess(userId,lead,pool);
-  if(!membership)return{authenticated:true,claimed:false,canClaim:false,reason:'No active lead entitlement'};
+  if(!membership.available)return{authenticated:true,claimed:false,canClaim:false,reason:membership.reason};
   if(!membership.canClaim)return{authenticated:true,claimed:false,canClaim:false,reason:'Lead entitlement exhausted',remaining:0,entitlementType,membershipId:membership.membership.id};
 
   return{
@@ -371,7 +372,7 @@ async function claimLead(userId,leadId){
     }
 
     const membership=await membershipAccess(userId,lead,client,{lock:true});
-    if(!membership)fail('No active membership entitlement','NO_MEMBERSHIP_ENTITLEMENT');
+    if(!membership.available)fail(membership.reason,membership.code);
     if(!membership.canClaim)fail('Lead entitlement exhausted','ENTITLEMENT_EXHAUSTED');
 
     const inserted=await client.query(`
