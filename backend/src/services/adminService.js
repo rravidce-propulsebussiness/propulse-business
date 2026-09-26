@@ -1,6 +1,7 @@
 const bcrypt = require('bcryptjs');
 const pool = require('../config/database');
 const { validateSelections } = require('./profileService');
+const leadEntitlementGrantService = require('./leadEntitlementGrantService');
 
 const DEFAULT_PAGE_SIZE = 25;
 const MAX_PAGE_SIZE = 100;
@@ -480,6 +481,10 @@ async function reviewCompanyProof({ documentId, status, reviewReason = '', revie
                  created_at,updated_at,reviewed_by,reviewed_at,review_reason`,
       [normalizedStatus, normalizedReviewer, normalizedStatus === 'rejected' ? reason : null, normalizedDocumentId],
     )).rows[0];
+
+    if (normalizedStatus === 'verified') {
+      await leadEntitlementGrantService.ensureNewBusinessGrant(updated.user_id, client);
+    }
 
     await client.query('COMMIT');
     return updated;
