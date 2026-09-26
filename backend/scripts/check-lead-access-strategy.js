@@ -43,11 +43,15 @@ assert(entitlement.includes('lead-capacity:'),'Membership claims must use the sa
 assert(entitlement.includes('accessService.effectiveCapacity'),'Membership claims must enforce effective buyer capacity');
 assert(entitlement.includes('accessService.lockCapacity'),'Membership claims must lock the current stage');
 assert(entitlement.includes('accessService.closeIfFull'),'Membership claims must close a full lead');
+assert(entitlement.includes('const {isProMember}=require(\'./leadReadService\')'),'Membership access must reuse the shared Pro-membership check');
+assert(entitlement.includes('!await isProMember(userId)')&&entitlement.includes('!pro)fail(\'Pro Early Access is still active\''),'Pro Early Access must block non-Pro claims without blocking Pro members');
 
 assert(marketplace.includes('lead_effective_buyer_capacity'),'Marketplace must hide leads whose current buyer stage is full');
 assert(marketplace.includes("lp.status='pending_payment'")&&marketplace.includes("pcap.status='pending'"),'Marketplace availability must reserve pending-payment buyer slots');
 assert(leadRead.includes('occupied_buyer_count')&&leadRead.includes('effectiveBuyerCapacity-occupiedBuyerCount'),'Displayed remaining slots must include pending-payment reservations');
 assert(partnerInventory.includes('accessStrategy:strategy'),'Lead Partner imports must pass the same access strategy to lead creation');
+assert(partnerInventory.includes('lead_effective_buyer_capacity'),'Lead Partner inventory must expose the current buyer stage');
+assert(partnerInventory.includes('lead_entitlement_claims'),'Lead Partner buyer counts must include membership claims');
 assert(partnerInventory.includes('partnerProOnePrice'),'Lead Partner sheets must support an exact Pro 1 Buyer price');
 assert(partnerPricing.includes('buildFixedPartnerPricing'),'Lead Partner sheet pricing must reuse the existing partner pricing curve');
 
@@ -55,6 +59,7 @@ assert(adminPricing.includes('BUYER_TIERS=[1,2,3]'),'Admin pricing UI must expos
 assert(adminPricing.includes('BUYER ACCESS DEFAULTS'),'Admin pricing must manage Basic/Premium access defaults');
 assert(adminLeads.includes("'Access Strategy'")&&adminLeads.includes("'Release to 2 Hours'"),'Admin lead sample must include access strategy timing fields');
 assert(partnerUi.includes("'Access Strategy'")&&partnerUi.includes("'Pro 1 Buyer'"),'Lead Partner sample must include access strategy and partner base price');
+assert(partnerUi.includes('lead.effective_buyer_capacity||lead.buyer_capacity||3'),'Lead Partner UI must show the current buyer stage instead of only the configured maximum');
 assert(marketplaceUi.includes('Current Buyer Access'),'Customer checkout must show system-selected buyer access');
 assert(!marketplaceUi.includes('Select Number of Shares'),'Customer checkout must not ask the buyer to choose the sharing stage');
 assert(!marketplaceUi.includes('selectedSharePack')&&!marketplaceUi.includes('setSelectedSharePack'),'Customer checkout must not keep obsolete buyer-controlled share state');
