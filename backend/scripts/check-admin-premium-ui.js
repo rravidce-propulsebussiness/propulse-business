@@ -29,6 +29,10 @@ assert(dashboard.includes('Belongs to Lead Partners'),'Lead Partner earnings mus
 assert(dashboard.includes('Belongs to investors'),'Investor allocation must remain separate from Propulse commission');
 assert(dashboard.includes('investor.investorAllocated'),'Investor stream must use recorded investor allocation');
 assert(layoutCss.includes('.admin-sidebar-status')&&layoutCss.includes('backdrop-filter:blur(16px)'),'Premium Admin shell styling must remain active');
+assert(layoutCss.includes('position:fixed;')&&layoutCss.includes('left:264px;')&&layoutCss.includes('right:0;'),'Admin header must stay fixed beside the desktop sidebar');
+assert(layoutCss.includes('padding:70px 28px 42px;'),'Desktop Admin content must reserve space for the fixed header');
+assert(layoutCss.includes('.admin-topbar{left:0;right:0;height:64px;padding:0 16px}'),'Mobile Admin header must stay fixed full width');
+assert(layoutCss.includes('padding:64px 16px 34px'),'Mobile Admin content must reserve space for the fixed header');
 assert(dashboardCss.includes('.admin-overview-grid')&&dashboardCss.includes('.admin-stream-badge'),'Premium Admin Overview styling must remain active');
 
 console.log('Premium Admin overview and navigation regression test passed.');
