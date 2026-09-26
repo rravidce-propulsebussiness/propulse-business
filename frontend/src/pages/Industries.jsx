@@ -386,10 +386,10 @@ export default function Industries() {
           <div><strong>Central master data</strong><small>{industries.length+services.length+subservices.length+states.length+cities.length+subcities.length} records across 6 collections</small></div>
         </div>
       </section>}
-      <div className="master-tabs">
+      {!adminMode&&<div className="master-tabs">
         <button className={tab === 'industries' ? 'active' : ''} onClick={() => { setTab('industries'); setSearch(''); setUploadOpen(false) }}>Industries</button>
         <button className={tab === 'locations' ? 'active' : ''} onClick={() => { setTab('locations'); setSearch(''); setUploadOpen(false) }}>Locations</button>
-      </div>
+      </div>}
       {adminMode&&<section className="admin-master-stats">
         {tab==='industries'?<>
           <article><span className="admin-master-stat-icon">I</span><div><small>Industries</small><strong>{industries.length}</strong><em>Top-level business categories</em></div></article>
@@ -404,7 +404,10 @@ export default function Industries() {
       {error && <div className="toast error">{error}</div>}
       {success && <div className="toast success">✓ {success}</div>}
       <div className="master-toolbar">
-<div className="toolbar-copy">{adminMode&&<span>MASTER STRUCTURE</span>}<h2>{tab === 'industries' ? 'Industry hierarchy' : 'State · City · Sub-city · Pincode'}</h2>{adminMode&&<p>{tab==='industries'?'Organize industries, services and subservices used throughout Propulse.':'Maintain geographic coverage from state level down to local areas and PIN codes.'}</p>}</div>
+        {adminMode?<div className="master-tabs master-toolbar-tabs">
+          <button className={tab === 'industries' ? 'active' : ''} onClick={() => { setTab('industries'); setSearch(''); setUploadOpen(false) }}>Industries</button>
+          <button className={tab === 'locations' ? 'active' : ''} onClick={() => { setTab('locations'); setSearch(''); setUploadOpen(false) }}>Locations</button>
+        </div>:<div className="toolbar-copy"><h2>{tab === 'industries' ? 'Industry hierarchy' : 'State · City · Sub-city · Pincode'}</h2></div>}
         <div className="toolbar-actions">
           <div className="upload-wrap">
             <button className="secondary-action" onClick={() => setUploadOpen(value => !value)} disabled={saving}>↑ Upload bulk</button>
