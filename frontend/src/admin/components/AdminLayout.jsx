@@ -6,7 +6,9 @@ import './AdminLayout.css'
 const navigation=[
   {type:'link',to:'/admin',label:'Overview',icon:'⌂',end:true},
   {type:'group',key:'leads',label:'Leads',icon:'◈',children:[
-    {to:'/admin/leads',label:'Manage Leads'},
+    {to:'/admin/leads',label:'Manage Leads',end:true},
+    {to:'/admin/leads/upload',label:'Upload Leads'},
+    {to:'/admin/leads/sheets',label:'Google Sheets'},
     {to:'/admin/lead-reports',label:'Lead Reports'},
     {to:'/admin/industries',label:'Industries & Locations',aliases:['/admin/pincodes']}
   ]},
