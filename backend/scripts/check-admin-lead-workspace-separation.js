@@ -24,6 +24,11 @@ assert(upload.includes("../leadImportBulkEnhancer.js")&&!leads.includes('leadImp
 assert(sheets.includes('GoogleSheetAutoSync'),'Google Sheets page must reuse the canonical sheet sync component');
 assert(leadUi.includes("mode==='upload'"),'Canonical Admin lead component must support the separated upload workspace');
 assert(!leadUi.includes('<h1>Lead Inventory</h1><p>Manage Basic/Premium grade'),'Old mixed lead inventory header must be removed');
+assert(!leadUi.includes('<span>LEAD MARKETPLACE</span><h1>Lead Inventory</h1>'),'Manage Leads must not render the old inventory hero/header');
+assert(!leadUi.includes('onClick={()=>load()}>↻ Refresh'),'Manage Leads must rely on automatic refresh instead of a manual refresh CTA');
+assert(leadUi.includes('setInterval(refresh,60000)'),'Manage Leads must auto-refresh every 60 seconds');
+assert(leadUi.includes("const leadOrigin=l=>l.lead_partner_id?'lead_partner':l.investor_user_id?'investor':'ours'"),'Lead origin must classify Partner first, then Investor, then Propulse-owned');
+assert(leadUi.includes('<option value="ours">Our leads</option>')&&leadUi.includes('<option value="lead_partner">Lead Partner</option>')&&leadUi.includes('<option value="investor">Investor</option>'),'Manage Leads must expose origin filters');
 assert(bulk.includes("controlIn(row,'Buyer Strategy')")&&bulk.includes("controlIn(row,'Pro Early Access')")&&bulk.includes("controlIn(row,'Max Buyers')"),'CSV bulk editor must target current buyer-access field labels');
 
 console.log('Admin lead workspace separation regression test passed.');
