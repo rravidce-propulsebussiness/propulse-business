@@ -20,6 +20,8 @@ assert(marketplace.includes("const p3=String.fromCharCode(36)+values.length"),'P
 assert(marketplace.includes("const pClaim=String.fromCharCode(36)+values.length"),'Claimed-lead exclusion must build a PostgreSQL bind placeholder');
 assert(marketplace.includes("const p4=String.fromCharCode(36)+values.length"),'Investor self-exclusion must build a PostgreSQL bind placeholder');
 assert(!marketplace.includes("const p3=`${values.length}`"),'Marketplace must not add unbound user parameters');
+assert((marketplace.match(/module\.exports=\{getMarketplacePage\};/g)||[]).length===1,'Marketplace service must contain exactly one export block');
+assert(!/^\+values\.length/m.test(marketplace),'Marketplace service must not contain appended corruption fragments');
 assert(purchase.includes('matchesBusinessProfile'),'Lead purchase must keep server-side profile validation');
 
 console.log('Lead marketplace profile filtering regression test passed.');
