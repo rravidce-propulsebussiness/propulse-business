@@ -1,3 +1,4 @@
+import '../leadImportBulkEnhancer.js';
 import AdminLeadsV9 from './AdminLeadsV9';
 
 export default function AdminLeadUpload(){
