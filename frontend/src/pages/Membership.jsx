@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState } from 'react'
 import UserHeader from '../components/UserHeader'
-import { authRequest, getToken, getUser } from '../utils/auth'
+import { authRequest, getToken, getUser, saveSession } from '../utils/auth'
 import { apiRequest } from '../utils/api'
 import './Membership.css'
 import './CouponCheckout.css'
 
 const money = (value) => `₹${Number(value || 0).toLocaleString('en-IN', { maximumFractionDigits: 0 })}`
 const asArray = (value) => (Array.isArray(value) ? value : [])
+const membershipRecord = (value) => value?.membership_plan_id ? value : null
 const planType = (plan) => String(plan?.plan_type || '').toLowerCase()
 const normalizeLabel = (value) => String(value || '').trim().replace(/[-_]+/g, ' ').replace(/\s+/g, ' ')
 const dateLabel = (value) => value ? new Date(value).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'
@@ -66,8 +67,9 @@ export default function Membership() {
         ])
         if (!active) return
         setPlans(asArray(planData).filter((item) => item?.is_active !== false))
-        setCurrentMembership(membership || null)
+        setCurrentMembership(membershipRecord(membership))
         setInvestmentAccess(access || null)
+        if (user && access && typeof access.isPro === 'boolean') saveSession({ user: { ...user, is_pro_member: access.isPro } })
       } catch (err) {
         if (active) setError(err?.message || 'Unable to load membership options.')
       } finally {
@@ -84,9 +86,11 @@ export default function Membership() {
   const selectedScalePlan = useMemo(() => scalePlans.find((item) => String(item.id) === String(selectedScaleCycleId)) || scalePlans.find((item) => String(item.id) === String(currentMembership?.membership_plan_id)) || scalePlans[0] || null, [scalePlans, selectedScaleCycleId, currentMembership])
   const selectedProration = useMemo(() => localProration(currentMembership, selectedPlan), [currentMembership, selectedPlan])
 
-  const currentRaw = String(currentMembership?.plan_type || currentMembership?.plan?.plan_type || user?.membership_type || '').toLowerCase()
+  const currentRaw = String(currentMembership?.plan_type || currentMembership?.plan?.plan_type || '').toLowerCase()
   const isProMember = Boolean(investmentAccess?.isPro || currentMembership?.isPro || currentRaw === 'pro')
-  const currentGroup = String(currentMembership?.plan_group || currentMembership?.plan?.plan_group || (isProMember ? 'grow' : '')).toLowerCase()
+  const currentGroup = currentMembership?.membership_plan_id
+    ? String(currentMembership?.plan_group || currentMembership?.plan?.plan_group || '').toLowerCase()
+    : ''
 
   const openPlan = (plan) => {
     if (!plan?.id) {
@@ -161,7 +165,8 @@ export default function Membership() {
         setManualOpen(true)
       } else {
         setSubmitted(true)
-        setCurrentMembership(await authRequest('/payments/membership/current').catch(() => currentMembership))
+        const refreshedMembership = await authRequest('/payments/membership/current').catch(() => currentMembership)
+        setCurrentMembership(membershipRecord(refreshedMembership))
         setSelectedPlan(null)
       }
     } catch (err) {
@@ -215,8 +220,8 @@ export default function Membership() {
         <section className="membership-plans membership-plans-two">
           {[{ key: 'grow', label: 'GROW', plans: growPlans, selected: selectedGrowPlan, benefits: growBenefits, copy: 'Best Lead Pricing + Exclusive Leads + Investment Unlocked', action: 'Choose GROW' },
             { key: 'scale', label: 'SCALE', plans: scalePlans, selected: selectedScalePlan, benefits: scaleBenefits, copy: 'Everything in GROW + Website + SEO + Maintenance', action: 'Upgrade to SCALE' }].map((level) => {
-              const isCurrent = currentGroup === level.key;
-              const canUpgrade = level.key === 'scale' && currentGroup === 'grow';
+              const isCurrent = Boolean(currentMembership?.membership_plan_id) && currentGroup === level.key;
+              const canUpgrade = Boolean(currentMembership?.membership_plan_id) && level.key === 'scale' && currentGroup === 'grow';
               return <article className={`membership-plan ${level.key === 'grow' ? 'starter-plan grow-plan' : 'scale-membership-plan'}`} key={level.key}>
                 <div className="membership-plan-top">
                   <div><span className="membership-stage">{level.label}</span><h2>{level.label}</h2></div>
