@@ -15,9 +15,162 @@ function parsePagination(query = {}) {
 }
 
 async function getDashboardStats() {
-  const result = await pool.query(`SELECT (SELECT COUNT(*)::int FROM users) AS total_users,(SELECT COUNT(*)::int FROM users WHERE is_active = TRUE) AS active_users,(SELECT COUNT(*)::int FROM users WHERE role = 'business') AS businesses,(SELECT COUNT(*)::int FROM users WHERE role = 'business' AND is_active = TRUE) AS active_businesses,(SELECT COUNT(*)::int FROM users WHERE role = 'lead_partner') AS lead_partners,(SELECT COUNT(*)::int FROM users WHERE role = 'lead_partner' AND is_active = TRUE) AS active_lead_partners,(SELECT COUNT(*)::int FROM industries WHERE is_active = TRUE) AS industries,(SELECT COUNT(*)::int FROM services WHERE is_active = TRUE) AS services,(SELECT COUNT(*)::int FROM subservices WHERE is_active = TRUE) AS subservices,(SELECT COUNT(*)::int FROM states WHERE is_active = TRUE) AS states,(SELECT COUNT(*)::int FROM cities WHERE is_active = TRUE) AS cities`);
-  const row = result.rows[0];
-  return { totalUsers: row.total_users, activeUsers: row.active_users, businesses: row.businesses, activeBusinesses: row.active_businesses, leadPartners: row.lead_partners, activeLeadPartners: row.active_lead_partners, industries: row.industries, services: row.services, subservices: row.subservices, states: row.states, cities: row.cities };
+  const [platformResult,revenueResult,leadResult,actionResult,customerResult,ecosystemResult]=await Promise.all([
+    pool.query(`SELECT
+      (SELECT COUNT(*)::int FROM users) AS total_users,
+      (SELECT COUNT(*)::int FROM users WHERE is_active=TRUE) AS active_users,
+      (SELECT COUNT(*)::int FROM users WHERE role='business') AS businesses,
+      (SELECT COUNT(*)::int FROM users WHERE role='business' AND is_active=TRUE) AS active_businesses,
+      (SELECT COUNT(*)::int FROM users WHERE role='lead_partner') AS lead_partners,
+      (SELECT COUNT(*)::int FROM users WHERE role='lead_partner' AND is_active=TRUE) AS active_lead_partners,
+      (SELECT COUNT(*)::int FROM industries WHERE is_active=TRUE) AS industries,
+      (SELECT COUNT(*)::int FROM services WHERE is_active=TRUE) AS services,
+      (SELECT COUNT(*)::int FROM subservices WHERE is_active=TRUE) AS subservices,
+      (SELECT COUNT(*)::int FROM states WHERE is_active=TRUE) AS states,
+      (SELECT COUNT(*)::int FROM cities WHERE is_active=TRUE) AS cities
+    `),
+    pool.query(`WITH lead_sales AS (
+      SELECT
+        COALESCE(SUM(lp.amount),0)::numeric AS total,
+        COALESCE(SUM(lp.amount) FILTER (WHERE COALESCE(p.paid_at,lp.created_at)>=CURRENT_DATE),0)::numeric AS today,
+        COALESCE(SUM(lp.amount) FILTER (WHERE COALESCE(p.paid_at,lp.created_at)>=CURRENT_TIMESTAMP-INTERVAL '7 days'),0)::numeric AS last_7_days,
+        COALESCE(SUM(lp.amount) FILTER (WHERE COALESCE(p.paid_at,lp.created_at)>=date_trunc('month',CURRENT_DATE)),0)::numeric AS month
+      FROM lead_purchases lp
+      LEFT JOIN payments p ON p.id=lp.payment_id
+      WHERE lp.status='paid'
+    ), membership_sales AS (
+      SELECT
+        COALESCE(SUM(p.amount),0)::numeric AS total,
+        COALESCE(SUM(p.amount) FILTER (WHERE COALESCE(p.paid_at,p.created_at)>=CURRENT_DATE),0)::numeric AS today,
+        COALESCE(SUM(p.amount) FILTER (WHERE COALESCE(p.paid_at,p.created_at)>=CURRENT_TIMESTAMP-INTERVAL '7 days'),0)::numeric AS last_7_days,
+        COALESCE(SUM(p.amount) FILTER (WHERE COALESCE(p.paid_at,p.created_at)>=date_trunc('month',CURRENT_DATE)),0)::numeric AS month
+      FROM payments p
+      WHERE p.status='paid'
+        AND (p.purchase_type='membership' OR (p.purchase_type IS NULL AND p.membership_plan_id IS NOT NULL))
+    )
+    SELECT
+      (lead_sales.today+membership_sales.today)::numeric AS revenue_today,
+      (lead_sales.last_7_days+membership_sales.last_7_days)::numeric AS revenue_last_7_days,
+      (lead_sales.month+membership_sales.month)::numeric AS revenue_month,
+      (lead_sales.total+membership_sales.total)::numeric AS revenue_total,
+      lead_sales.total AS lead_revenue,
+      membership_sales.total AS membership_revenue
+    FROM lead_sales,membership_sales`),
+    pool.query(`SELECT
+      COUNT(*)::int AS total_leads,
+      COUNT(*) FILTER (WHERE l.status='available')::int AS available_leads,
+      COUNT(*) FILTER (WHERE l.created_at>=CURRENT_DATE)::int AS uploaded_today,
+      (SELECT COUNT(DISTINCT lp.lead_id)::int FROM lead_purchases lp WHERE lp.status='paid') AS purchased_leads,
+      (SELECT COUNT(*)::int FROM lead_purchases lp WHERE lp.status='paid') AS paid_purchases,
+      (SELECT COALESCE(SUM(lp.shares),0)::int FROM lead_purchases lp WHERE lp.status='paid') AS sold_shares,
+      (SELECT COUNT(*)::int
+         FROM lead_purchases lp
+         LEFT JOIN payments p ON p.id=lp.payment_id
+        WHERE lp.status='paid' AND COALESCE(p.paid_at,lp.created_at)>=CURRENT_DATE) AS purchases_today
+      FROM leads l`),
+    pool.query(`SELECT
+      (SELECT COUNT(*)::int FROM payments p
+        WHERE p.status='pending'
+          AND p.purchase_type IS DISTINCT FROM 'wallet_topup'
+          AND NOT (
+            COALESCE(p.purchase_type,'')='lead'
+            AND p.payment_method='manual'
+            AND COALESCE(BTRIM(p.manual_reference),'')=''
+            AND COALESCE(BTRIM(p.proof_url),'')=''
+          )) AS pending_payments,
+      (SELECT COUNT(*)::int FROM wallet_topups WHERE status='pending') AS pending_wallet_topups,
+      (SELECT COUNT(*)::int FROM company_proof_documents WHERE status='pending') AS pending_company_proofs,
+      (SELECT COUNT(*)::int FROM lead_reports WHERE status='pending') AS pending_lead_reports,
+      (SELECT COUNT(*)::int FROM lead_partner_payout_requests WHERE status='pending') AS pending_partner_payouts,
+      (SELECT COALESCE(SUM(amount),0)::numeric FROM lead_partner_payout_requests WHERE status='pending') AS pending_partner_payout_amount,
+      (SELECT COUNT(*)::int FROM investor_payout_requests WHERE status='pending') AS pending_investor_withdrawals,
+      (SELECT COALESCE(SUM(amount),0)::numeric FROM investor_payout_requests WHERE status='pending') AS pending_investor_withdrawal_amount
+    `),
+    pool.query(`SELECT
+      (SELECT COUNT(*)::int FROM users WHERE role='business' AND is_active=TRUE) AS active_businesses,
+      (SELECT COUNT(*)::int FROM memberships m
+        WHERE m.status='active' AND m.starts_at<=CURRENT_TIMESTAMP AND m.expires_at>CURRENT_TIMESTAMP) AS active_memberships,
+      (SELECT COUNT(DISTINCT m.user_id)::int
+         FROM memberships m
+         JOIN membership_plans mp ON mp.id=m.membership_plan_id
+        WHERE m.status='active'
+          AND m.starts_at<=CURRENT_TIMESTAMP
+          AND m.expires_at>CURRENT_TIMESTAMP
+          AND LOWER(REPLACE(COALESCE(mp.plan_type,''),'-','_'))='pro') AS pro_members,
+      (SELECT COUNT(*)::int FROM users WHERE created_at>=date_trunc('month',CURRENT_DATE)) AS new_users_month
+    `),
+    pool.query(`SELECT
+      (SELECT COUNT(*)::int FROM lead_partners WHERE status='active') AS active_partners,
+      (SELECT COUNT(*)::int FROM leads WHERE lead_partner_id IS NOT NULL) AS partner_leads,
+      (SELECT COUNT(DISTINCT user_id)::int FROM investments WHERE status<>'cancelled') AS investors,
+      (SELECT COUNT(*)::int FROM investments WHERE status='active') AS active_investments,
+      (SELECT COALESCE(SUM(earning_amount),0)::numeric FROM lead_partner_earnings WHERE status IN ('available','paid')) AS partner_earnings_generated,
+      (SELECT COALESCE(SUM(amount),0)::numeric FROM lead_partner_payout_requests WHERE status='paid') AS partner_payouts_paid
+    `)
+  ]);
+
+  const platform=platformResult.rows[0]||{};
+  const revenue=revenueResult.rows[0]||{};
+  const leads=leadResult.rows[0]||{};
+  const actions=actionResult.rows[0]||{};
+  const customers=customerResult.rows[0]||{};
+  const ecosystem=ecosystemResult.rows[0]||{};
+  const number=value=>Number(value||0);
+
+  return {
+    totalUsers:number(platform.total_users),
+    activeUsers:number(platform.active_users),
+    businesses:number(platform.businesses),
+    activeBusinesses:number(platform.active_businesses),
+    leadPartners:number(platform.lead_partners),
+    activeLeadPartners:number(platform.active_lead_partners),
+    industries:number(platform.industries),
+    services:number(platform.services),
+    subservices:number(platform.subservices),
+    states:number(platform.states),
+    cities:number(platform.cities),
+    revenue:{
+      today:number(revenue.revenue_today),
+      last7Days:number(revenue.revenue_last_7_days),
+      month:number(revenue.revenue_month),
+      total:number(revenue.revenue_total),
+      lead:number(revenue.lead_revenue),
+      membership:number(revenue.membership_revenue)
+    },
+    leads:{
+      total:number(leads.total_leads),
+      available:number(leads.available_leads),
+      purchased:number(leads.purchased_leads),
+      paidPurchases:number(leads.paid_purchases),
+      soldShares:number(leads.sold_shares),
+      uploadedToday:number(leads.uploaded_today),
+      purchasesToday:number(leads.purchases_today)
+    },
+    actions:{
+      pendingPayments:number(actions.pending_payments),
+      pendingWalletTopups:number(actions.pending_wallet_topups),
+      pendingCompanyProofs:number(actions.pending_company_proofs),
+      pendingLeadReports:number(actions.pending_lead_reports),
+      pendingPartnerPayouts:number(actions.pending_partner_payouts),
+      pendingPartnerPayoutAmount:number(actions.pending_partner_payout_amount),
+      pendingInvestorWithdrawals:number(actions.pending_investor_withdrawals),
+      pendingInvestorWithdrawalAmount:number(actions.pending_investor_withdrawal_amount)
+    },
+    customers:{
+      activeBusinesses:number(customers.active_businesses),
+      activeMemberships:number(customers.active_memberships),
+      proMembers:number(customers.pro_members),
+      newUsersMonth:number(customers.new_users_month)
+    },
+    ecosystem:{
+      activePartners:number(ecosystem.active_partners),
+      partnerLeads:number(ecosystem.partner_leads),
+      investors:number(ecosystem.investors),
+      activeInvestments:number(ecosystem.active_investments),
+      partnerEarningsGenerated:number(ecosystem.partner_earnings_generated),
+      partnerPayoutsPaid:number(ecosystem.partner_payouts_paid)
+    }
+  };
 }
 
 async function getUsers({ search = '', role = 'all', status = 'all', industryId = '', serviceId = '', stateId = '', cityId = '', page, pageSize, limit } = {}) {
