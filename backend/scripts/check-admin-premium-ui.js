@@ -16,6 +16,10 @@ const industries=read('../frontend/src/pages/Industries.jsx');
 const industriesCss=read('../frontend/src/pages/Industries.css');
 const leadPricing=read('../frontend/src/admin/pages/AdminLeadPricing.jsx');
 const leadPricingCss=read('../frontend/src/admin/pages/AdminLeadPricing.css');
+const partnerPricing=read('../frontend/src/pages/LeadPartnerPricing.jsx');
+const partnerPricingController=read('../backend/src/controllers/adminLeadPartnerPricingController.js');
+const partnerPricingService=read('../backend/src/services/leadPartnerPricingService.js');
+const partnerShareMigration=read('../backend/src/database/migrations/2026-09-26-lead-partner-share-ratios.sql');
 
 assert(layout.includes('admin-sidebar-signature')&&layout.includes('admin-top-user'),'Premium Admin shell controls must remain present');
 assert(!layout.includes('admin-sidebar-status'),'Duplicated sidebar health copy must stay removed');
@@ -59,6 +63,14 @@ assert(leadPricingCss.includes('/* Premium Lead Pricing workspace */'),'Premium 
 assert(leadPricingCss.includes('grid-template-columns:repeat(4,minmax(0,1fr))'),'Desktop Lead Pricing KPIs must keep four columns');
 assert(leadPricingCss.includes('.access-defaults-grid'),'Buyer-access premium card layout must remain');
 assert(leadPricingCss.includes('.rule-cards'),'Configured pricing rule cards must remain');
+assert(leadPricing.includes('2-share Pro price (%)'),'Admin must expose Partner 2-share pricing');
+assert(leadPricing.includes('3-share Pro price (%)'),'Admin must expose Partner 3-share pricing');
+assert(leadPricing.includes('twoSharePercent')&&leadPricing.includes('threeSharePercent'),'Admin Partner share settings must be persisted');
+assert(partnerPricingController.includes('two_share_percent')&&partnerPricingController.includes('three_share_percent'),'Partner share percentages must be stored by the backend');
+assert(partnerPricingService.includes('twoSharePercent')&&partnerPricingService.includes('threeSharePercent'),'Partner pricing calculations must use Admin share percentages');
+assert(partnerPricing.includes('ADMIN SHARE RATIOS'),'Lead Partner pricing UI must show Admin-configured share ratios');
+assert(partnerPricing.includes('sharePercent[2]')&&partnerPricing.includes('sharePercent[3]'),'Lead Partner 2-share and 3-share calculations must be dynamic');
+assert(partnerShareMigration.includes('two_share_percent')&&partnerShareMigration.includes('three_share_percent'),'Partner share-ratio migration must remain');
 
 assert(dashboard.includes('const revenue=stats?.revenue||{}'),'Overview must use the backend revenue summary');
 assert(dashboard.includes('value={show(money(revenue.total))}'),'Overview revenue KPI must use the backend Propulse revenue total');
