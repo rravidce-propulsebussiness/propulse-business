@@ -11,8 +11,10 @@ const normalizeStrategy=(value,fallback='shared')=>STRATEGIES.includes(String(va
 const optionalHours=value=>{if(value===undefined||value===null||value==='')return null;const n=Number(value);return Number.isFinite(n)&&n>=0?Math.floor(n):null};
 
 function normalizeConfig(input={},fallback=DEFAULTS.basic){
-  const strategy=normalizeStrategy(input.accessStrategy??input.defaultStrategy,fallback.defaultStrategy||'auto_release');
-  const maxBuyerCapacity=strategy==='permanent_single'?1:clampCapacity(input.buyerCapacity??input.maxBuyerCapacity??fallback.maxBuyerCapacity);
+  const fallbackStrategy=fallback.accessStrategy??fallback.defaultStrategy??'auto_release';
+  const fallbackCapacity=fallback.buyerCapacity??fallback.maxBuyerCapacity??3;
+  const strategy=normalizeStrategy(input.accessStrategy??input.defaultStrategy,fallbackStrategy);
+  const maxBuyerCapacity=strategy==='permanent_single'?1:clampCapacity(input.buyerCapacity??input.maxBuyerCapacity??fallbackCapacity);
   let releaseToTwoAfterHours=optionalHours(input.releaseToTwoAfterHours??fallback.releaseToTwoAfterHours);
   let releaseToThreeAfterHours=optionalHours(input.releaseToThreeAfterHours??fallback.releaseToThreeAfterHours);
   if(strategy!=='auto_release'){releaseToTwoAfterHours=null;releaseToThreeAfterHours=null}
