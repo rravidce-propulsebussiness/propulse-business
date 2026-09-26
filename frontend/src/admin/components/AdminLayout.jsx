@@ -1,4 +1,4 @@
-import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
+import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useEffect, useMemo, useState } from 'react'
 import { clearSession, getUser } from '../../utils/auth'
 import './AdminLayout.css'
@@ -84,15 +84,22 @@ export default function AdminLayout(){
     setOpenGroup(value=>value===key?null:key)
   }
 
+  function closeMobileNav(){
+    document.body.classList.remove('admin-nav-open')
+  }
+
   const breadcrumb=current.group
     ? ['Admin',current.group.label,current.item.label]
     : ['Admin',current.item.label]
 
   return <div className="admin-shell">
     <aside className="admin-sidebar">
-      <div className="admin-sidebar-brand">
-        <span className="admin-sidebar-mark">P</span>
-        <span><b>PRO<span>PULSE</span></b><small>ADMIN CONSOLE</small></span>
+      <div className="admin-sidebar-brand-row">
+        <Link className="admin-sidebar-brand" to="/admin" aria-label="Propulse Admin home" onClick={closeMobileNav}>
+          <span className="admin-sidebar-mark">P</span>
+          <span><b>PRO<span>PULSE</span></b><small>ADMIN CONSOLE</small></span>
+        </Link>
+        <button type="button" className="admin-sidebar-close" aria-label="Close navigation" onClick={closeMobileNav}>×</button>
       </div>
 
       <div className="admin-nav-label">WORKSPACE</div>
@@ -100,7 +107,7 @@ export default function AdminLayout(){
         {navigation.map(entry=>{
           if(entry.type==='link'){
             const active=routeMatches(entry,location.pathname)
-            return <NavLink key={entry.to} to={entry.to} end={entry.end} className={active?'active':''}>
+            return <NavLink key={entry.to} to={entry.to} end={entry.end} className={active?'active':''} onClick={closeMobileNav}>
               <i>{entry.icon}</i><span>{entry.label}</span>
             </NavLink>
           }
@@ -117,7 +124,7 @@ export default function AdminLayout(){
                 const showSection=child.section&&child.section!==previous?.section
                 return <div className="admin-nav-subitem" key={child.to}>
                   {showSection&&<small className="admin-nav-subsection">{child.section}</small>}
-                  <NavLink to={child.to} className={routeMatches(child,location.pathname)?'active':''}>
+                  <NavLink to={child.to} className={routeMatches(child,location.pathname)?'active':''} onClick={closeMobileNav}>
                     <span className="admin-nav-subdot"/><span>{child.label}</span>
                   </NavLink>
                 </div>
@@ -128,21 +135,34 @@ export default function AdminLayout(){
       </nav>
 
       <div className="admin-sidebar-bottom">
+        <div className="admin-sidebar-status">
+          <span className="admin-sidebar-status-icon">✓</span>
+          <div><b>Platform operational</b><small>Core admin services healthy</small></div>
+        </div>
         <div className="admin-sidebar-user">
           <span>{initials||'A'}</span>
           <div><b>{user?.name||'Admin'}</b><small>{user?.email||'Administrator'}</small></div>
         </div>
-        <button onClick={logout}>↪ <span>Log out</span></button>
+        <button className="admin-sidebar-logout" onClick={logout}>↪ <span>Log out</span></button>
       </div>
     </aside>
 
     <div className="admin-main">
       <header className="admin-topbar">
-        <button className="admin-mobile-menu" aria-label="Open navigation" onClick={()=>document.body.classList.toggle('admin-nav-open')}>☰</button>
-        <div className="admin-breadcrumb">
-          {breadcrumb.map((part,index)=><span className={index===breadcrumb.length-1?'current':''} key={part}>{index>0&&<b>/</b>}{part}</span>)}
+        <div className="admin-topbar-left">
+          <button className="admin-mobile-menu" aria-label="Open navigation" onClick={()=>document.body.classList.toggle('admin-nav-open')}>☰</button>
+          <div className="admin-breadcrumb">
+            {breadcrumb.map((part,index)=><span className={index===breadcrumb.length-1?'current':''} key={`${part}-${index}`}>{index>0&&<b>/</b>}{part}</span>)}
+          </div>
         </div>
-        <div className="admin-top-status"><i/> System healthy</div>
+
+        <div className="admin-topbar-right">
+          <div className="admin-top-status"><i/> System healthy</div>
+          <div className="admin-top-user">
+            <span>{initials||'A'}</span>
+            <div><b>{user?.name||'Admin'}</b><small>{current.item.label}</small></div>
+          </div>
+        </div>
       </header>
       <div className="admin-content"><Outlet/></div>
     </div>
