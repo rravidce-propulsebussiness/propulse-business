@@ -8,6 +8,7 @@ const assert=(condition,message)=>{if(!condition)throw new Error(message)};
 const migration=read('src/database/migrations/20260926_lead_access_strategy.sql');
 const access=read('src/services/leadAccessStrategyService.js');
 const leadService=read('src/services/leadService.js');
+const leadRead=read('src/services/leadReadService.js');
 const purchase=read('src/services/leadPurchaseService.js');
 const entitlement=read('src/services/leadEntitlementService.js');
 const marketplace=read('src/services/leadMarketplaceService.js');
@@ -44,6 +45,8 @@ assert(entitlement.includes('accessService.lockCapacity'),'Membership claims mus
 assert(entitlement.includes('accessService.closeIfFull'),'Membership claims must close a full lead');
 
 assert(marketplace.includes('lead_effective_buyer_capacity'),'Marketplace must hide leads whose current buyer stage is full');
+assert(marketplace.includes("lp.status='pending_payment'")&&marketplace.includes("pcap.status='pending'"),'Marketplace availability must reserve pending-payment buyer slots');
+assert(leadRead.includes('occupied_buyer_count')&&leadRead.includes('effectiveBuyerCapacity-occupiedBuyerCount'),'Displayed remaining slots must include pending-payment reservations');
 assert(partnerInventory.includes('accessStrategy:strategy'),'Lead Partner imports must pass the same access strategy to lead creation');
 assert(partnerInventory.includes('partnerProOnePrice'),'Lead Partner sheets must support an exact Pro 1 Buyer price');
 assert(partnerPricing.includes('buildFixedPartnerPricing'),'Lead Partner sheet pricing must reuse the existing partner pricing curve');
@@ -54,5 +57,7 @@ assert(adminLeads.includes("'Access Strategy'")&&adminLeads.includes("'Release t
 assert(partnerUi.includes("'Access Strategy'")&&partnerUi.includes("'Pro 1 Buyer'"),'Lead Partner sample must include access strategy and partner base price');
 assert(marketplaceUi.includes('Current Buyer Access'),'Customer checkout must show system-selected buyer access');
 assert(!marketplaceUi.includes('Select Number of Shares'),'Customer checkout must not ask the buyer to choose the sharing stage');
+assert(!marketplaceUi.includes('selectedSharePack')&&!marketplaceUi.includes('setSelectedSharePack'),'Customer checkout must not keep obsolete buyer-controlled share state');
+assert(marketplaceUi.includes('const currentPricingRow = buyModal?.pricing?.shares?.[0] || null'),'Checkout must use the one server-selected pricing stage');
 
 console.log('Lead access strategy regression test passed.');
