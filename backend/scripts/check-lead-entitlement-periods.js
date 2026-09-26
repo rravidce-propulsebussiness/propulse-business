@@ -51,8 +51,9 @@ withNow('2026-09-30T12:00:00Z',()=>{
   assertDate(period.monthlyEnd,2026,9,30,'Anniversary monthly end');
 });
 
-assert(source.includes("grantService.findAvailableGrant(userId,entitlementType,pool)"),'Lead access must check grant entitlements before membership');
-assert(source.includes("grantService.findAvailableGrant(userId,type,client,{ensureWelcome:true,forUpdate:true})"),'Lead claim must lock and consume a grant before membership');
+assert(source.includes("grantService.findAvailableGrant(userId,entitlementType,pool,{"),'Lead access must check grant entitlements before membership');
+assert(source.includes("grantService.findAvailableGrant(userId,type,client,{"),'Lead claim must lock and consume a grant before membership');
+assert(source.includes("ensureWelcome:true,forUpdate:true,lead,exclusiveActive,pro"),'Lead claim must pass strategy and exclusive eligibility into the grant lookup');
 assert(source.indexOf("grantService.findAvailableGrant(userId,type,client")<source.indexOf("membershipAccess(userId,lead,client,{lock:true})"),'Grant entitlement must be consumed before membership allowance');
 assert(source.includes("membership_id=$2 AND entitlement_type=$3"),'Membership usage must remain scoped to the membership');
 assert(source.includes("membership.lead_rollover_enabled===false?monthlyStart:periodStart"),'Non-rollover membership entitlements must reset monthly');
