@@ -11,6 +11,8 @@ const app=read('../frontend/src/App.jsx');
 const upload=read('../frontend/src/admin/pages/AdminLeadUpload.jsx');
 const sheets=read('../frontend/src/admin/pages/AdminLeadSheets.jsx');
 const sheetSync=read('../frontend/src/admin/pages/GoogleSheetAutoSync.jsx');
+const entitlements=read('../frontend/src/admin/pages/AdminLeadEntitlements.jsx');
+const entitlementsCss=read('../frontend/src/admin/pages/AdminLeadEntitlements.css');
 
 assert(leads.includes('<Stat label="Basic"'),'Basic KPI must remain');
 assert(leads.includes('<Stat label="Premium"'),'Premium KPI must remain');
@@ -64,5 +66,17 @@ assert(sheetSync.includes('Check All Now'),'Google Sheets manual sync action mus
 assert(sheetSync.includes('v9-sheet-source-card'),'Connected Google Sheet cards must remain');
 assert(sheetSync.includes('No Google Sheets connected yet'),'Google Sheets empty state must remain');
 assert(sheetSync.includes('Import precedence'),'Google Sheets precedence guidance must remain');
+
+assert(entitlements.includes('LEAD OPERATIONS / ACCESS CONTROL'),'Lead Entitlements premium hero must remain');
+assert(entitlements.includes('entitlement-policy-status'),'Lead Entitlements policy status must remain');
+assert(entitlements.includes('Registration entitlement'),'Registration entitlement controls must remain');
+assert(entitlements.includes('Grant leads to a verified business'),'Manual entitlement controls must remain');
+assert(entitlements.includes('allowExclusive'),'Exclusive entitlement access rule must remain');
+assert(entitlements.includes('claimExpiryDays'),'Claim expiry controls must remain');
+assert(entitlements.includes('Recent entitlements'),'Entitlement history must remain');
+assert(entitlementsCss.includes('/* Premium Lead Entitlements workspace */'),'Premium Lead Entitlements styling must remain');
+assert(entitlementsCss.includes('grid-template-columns:repeat(3,minmax(0,1fr))'),'Desktop entitlement KPIs must remain readable');
+assert(entitlementsCss.includes('.entitlement-access-options'),'Buyer-access controls must retain premium styling');
+assert(entitlementsCss.includes('.entitlement-table tbody tr:hover'),'Entitlement history table interaction styling must remain');
 
 console.log('Premium Manage Leads regression test passed.');
