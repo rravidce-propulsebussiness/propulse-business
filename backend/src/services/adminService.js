@@ -32,7 +32,8 @@ async function getDashboardStats() {
     pool.query(`WITH partner_commission AS (
       SELECT
         lead_purchase_id,
-        COALESCE(SUM(gross_sale_amount-earning_amount) FILTER (WHERE status IN ('available','paid')),0)::numeric AS platform_amount
+        COALESCE(SUM(gross_sale_amount-earning_amount) FILTER (WHERE status IN ('available','paid')),0)::numeric AS platform_amount,
+        COALESCE(SUM(earning_amount) FILTER (WHERE status IN ('available','paid')),0)::numeric AS partner_amount
       FROM lead_partner_earnings
       GROUP BY lead_purchase_id
     ), investor_allocation AS (
@@ -44,15 +45,22 @@ async function getDashboardStats() {
     ), classified_sales AS (
       SELECT
         lp.id,
+        lp.lead_id,
+        lp.shares,
+        lp.amount::numeric AS gross_amount,
         COALESCE(p.paid_at,lp.created_at) AS event_at,
+        CASE
+          WHEN l.lead_partner_id IS NOT NULL THEN 'lead_partner'
+          WHEN l.investor_user_id IS NOT NULL THEN 'investor'
+          ELSE 'propulse'
+        END AS origin,
         CASE
           WHEN l.lead_partner_id IS NOT NULL THEN GREATEST(0,COALESCE(pc.platform_amount,0))
           WHEN l.investor_user_id IS NOT NULL THEN GREATEST(0,lp.amount-COALESCE(ia.investor_amount,0))
           ELSE lp.amount
         END::numeric AS platform_amount,
-        CASE WHEN l.lead_partner_id IS NULL AND l.investor_user_id IS NULL THEN lp.amount ELSE 0 END::numeric AS own_lead_amount,
-        CASE WHEN l.lead_partner_id IS NOT NULL THEN GREATEST(0,COALESCE(pc.platform_amount,0)) ELSE 0 END::numeric AS lead_partner_commission,
-        CASE WHEN l.lead_partner_id IS NULL AND l.investor_user_id IS NOT NULL THEN GREATEST(0,lp.amount-COALESCE(ia.investor_amount,0)) ELSE 0 END::numeric AS investor_commission
+        CASE WHEN l.lead_partner_id IS NOT NULL THEN GREATEST(0,COALESCE(pc.partner_amount,0)) ELSE 0 END::numeric AS partner_amount,
+        CASE WHEN l.lead_partner_id IS NULL AND l.investor_user_id IS NOT NULL THEN GREATEST(0,COALESCE(ia.investor_amount,0)) ELSE 0 END::numeric AS investor_amount
       FROM lead_purchases lp
       JOIN leads l ON l.id=lp.lead_id
       LEFT JOIN payments p ON p.id=lp.payment_id
@@ -65,14 +73,42 @@ async function getDashboardStats() {
       COALESCE(SUM(platform_amount) FILTER (WHERE event_at>=CURRENT_DATE),0)::numeric AS revenue_today,
       COALESCE(SUM(platform_amount) FILTER (WHERE event_at>=CURRENT_TIMESTAMP-INTERVAL '7 days'),0)::numeric AS revenue_last_7_days,
       COALESCE(SUM(platform_amount) FILTER (WHERE event_at>=date_trunc('month',CURRENT_DATE)),0)::numeric AS revenue_month,
-      COALESCE(SUM(own_lead_amount),0)::numeric AS own_lead_revenue,
-      COALESCE(SUM(lead_partner_commission),0)::numeric AS lead_partner_commission,
-      COALESCE(SUM(investor_commission),0)::numeric AS investor_commission
+
+      COALESCE(SUM(platform_amount) FILTER (WHERE origin='propulse'),0)::numeric AS own_lead_revenue,
+      COALESCE(SUM(platform_amount) FILTER (WHERE origin='propulse' AND event_at>=CURRENT_DATE),0)::numeric AS own_revenue_today,
+      COALESCE(SUM(platform_amount) FILTER (WHERE origin='propulse' AND event_at>=date_trunc('month',CURRENT_DATE)),0)::numeric AS own_revenue_month,
+      COUNT(*) FILTER (WHERE origin='propulse')::int AS own_paid_purchases,
+      COUNT(DISTINCT lead_id) FILTER (WHERE origin='propulse')::int AS own_sold_leads,
+      COALESCE(SUM(shares) FILTER (WHERE origin='propulse'),0)::int AS own_sold_shares,
+
+      COALESCE(SUM(gross_amount) FILTER (WHERE origin='lead_partner'),0)::numeric AS partner_gross_sales,
+      COALESCE(SUM(partner_amount) FILTER (WHERE origin='lead_partner'),0)::numeric AS partner_earnings,
+      COALESCE(SUM(platform_amount) FILTER (WHERE origin='lead_partner'),0)::numeric AS lead_partner_commission,
+      COALESCE(SUM(platform_amount) FILTER (WHERE origin='lead_partner' AND event_at>=CURRENT_DATE),0)::numeric AS partner_commission_today,
+      COALESCE(SUM(platform_amount) FILTER (WHERE origin='lead_partner' AND event_at>=date_trunc('month',CURRENT_DATE)),0)::numeric AS partner_commission_month,
+      COUNT(*) FILTER (WHERE origin='lead_partner')::int AS partner_paid_purchases,
+      COUNT(DISTINCT lead_id) FILTER (WHERE origin='lead_partner')::int AS partner_sold_leads,
+      COALESCE(SUM(shares) FILTER (WHERE origin='lead_partner'),0)::int AS partner_sold_shares,
+
+      COALESCE(SUM(gross_amount) FILTER (WHERE origin='investor'),0)::numeric AS investor_gross_sales,
+      COALESCE(SUM(investor_amount) FILTER (WHERE origin='investor'),0)::numeric AS investor_allocated,
+      COALESCE(SUM(platform_amount) FILTER (WHERE origin='investor'),0)::numeric AS investor_commission,
+      COALESCE(SUM(platform_amount) FILTER (WHERE origin='investor' AND event_at>=CURRENT_DATE),0)::numeric AS investor_commission_today,
+      COALESCE(SUM(platform_amount) FILTER (WHERE origin='investor' AND event_at>=date_trunc('month',CURRENT_DATE)),0)::numeric AS investor_commission_month,
+      COUNT(*) FILTER (WHERE origin='investor')::int AS investor_paid_purchases,
+      COUNT(DISTINCT lead_id) FILTER (WHERE origin='investor')::int AS investor_sold_leads,
+      COALESCE(SUM(shares) FILTER (WHERE origin='investor'),0)::int AS investor_sold_shares
     FROM classified_sales`),
     pool.query(`SELECT
       COUNT(*)::int AS total_leads,
       COUNT(*) FILTER (WHERE l.status='available')::int AS available_leads,
       COUNT(*) FILTER (WHERE l.created_at>=CURRENT_DATE)::int AS uploaded_today,
+      COUNT(*) FILTER (WHERE l.lead_partner_id IS NULL AND l.investor_user_id IS NULL)::int AS own_total_leads,
+      COUNT(*) FILTER (WHERE l.status='available' AND l.lead_partner_id IS NULL AND l.investor_user_id IS NULL)::int AS own_available_leads,
+      COUNT(*) FILTER (WHERE l.lead_partner_id IS NOT NULL)::int AS partner_total_leads,
+      COUNT(*) FILTER (WHERE l.status='available' AND l.lead_partner_id IS NOT NULL)::int AS partner_available_leads,
+      COUNT(*) FILTER (WHERE l.lead_partner_id IS NULL AND l.investor_user_id IS NOT NULL)::int AS investor_total_leads,
+      COUNT(*) FILTER (WHERE l.status='available' AND l.lead_partner_id IS NULL AND l.investor_user_id IS NOT NULL)::int AS investor_available_leads,
       (SELECT COUNT(DISTINCT lp.lead_id)::int FROM lead_purchases lp WHERE lp.status='paid') AS purchased_leads,
       (SELECT COUNT(*)::int FROM lead_purchases lp WHERE lp.status='paid') AS paid_purchases,
       (SELECT COALESCE(SUM(lp.shares),0)::int FROM lead_purchases lp WHERE lp.status='paid') AS sold_shares,
@@ -150,6 +186,46 @@ async function getDashboardStats() {
       ownLeads:number(revenue.own_lead_revenue),
       leadPartnerCommission:number(revenue.lead_partner_commission),
       investorCommission:number(revenue.investor_commission)
+    },
+    streams:{
+      propulse:{
+        totalLeads:number(leads.own_total_leads),
+        availableLeads:number(leads.own_available_leads),
+        soldLeads:number(revenue.own_sold_leads),
+        paidPurchases:number(revenue.own_paid_purchases),
+        soldShares:number(revenue.own_sold_shares),
+        grossSales:number(revenue.own_lead_revenue),
+        revenueToday:number(revenue.own_revenue_today),
+        revenueMonth:number(revenue.own_revenue_month),
+        revenueTotal:number(revenue.own_lead_revenue)
+      },
+      leadPartner:{
+        activePartners:number(ecosystem.active_partners),
+        totalLeads:number(leads.partner_total_leads),
+        availableLeads:number(leads.partner_available_leads),
+        soldLeads:number(revenue.partner_sold_leads),
+        paidPurchases:number(revenue.partner_paid_purchases),
+        soldShares:number(revenue.partner_sold_shares),
+        grossSales:number(revenue.partner_gross_sales),
+        partnerEarnings:number(revenue.partner_earnings),
+        revenueToday:number(revenue.partner_commission_today),
+        revenueMonth:number(revenue.partner_commission_month),
+        revenueTotal:number(revenue.lead_partner_commission)
+      },
+      investor:{
+        investors:number(ecosystem.investors),
+        activeInvestments:number(ecosystem.active_investments),
+        totalLeads:number(leads.investor_total_leads),
+        availableLeads:number(leads.investor_available_leads),
+        soldLeads:number(revenue.investor_sold_leads),
+        paidPurchases:number(revenue.investor_paid_purchases),
+        soldShares:number(revenue.investor_sold_shares),
+        grossSales:number(revenue.investor_gross_sales),
+        investorAllocated:number(revenue.investor_allocated),
+        revenueToday:number(revenue.investor_commission_today),
+        revenueMonth:number(revenue.investor_commission_month),
+        revenueTotal:number(revenue.investor_commission)
+      }
     },
     leads:{
       total:number(leads.total_leads),
