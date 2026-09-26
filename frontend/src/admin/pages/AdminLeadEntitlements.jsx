@@ -192,6 +192,21 @@ export default function AdminLeadEntitlements(){
   },[settings.sharedQuantity,settings.premiumQuantity])
 
   return <main className="admin-lead-entitlements">
+    <section className="entitlement-hero">
+      <div className="entitlement-hero-copy">
+        <span>LEAD OPERATIONS / ACCESS CONTROL</span>
+        <h1>Lead Entitlements</h1>
+        <p>Control welcome credits, manual lead allowances, buyer-access eligibility and claim duration from one workspace.</p>
+      </div>
+      <div className={`entitlement-policy-status ${settings.newBusinessEnabled?'enabled':'disabled'}`}>
+        <span className="entitlement-policy-icon"><i/></span>
+        <div>
+          <strong>{settings.newBusinessEnabled?'Welcome grants enabled':'Welcome grants disabled'}</strong>
+          <small>Manual grants remain available to verified businesses</small>
+        </div>
+      </div>
+    </section>
+
     <section className="entitlement-summary-grid">
       <SummaryCard label="Active grants" value={summary.active_grants} note="Currently usable manual + welcome grants" tone="blue"/>
       <SummaryCard label="Welcome grants" value={summary.welcome_grants} note="Issued once to eligible verified businesses" tone="green"/>
@@ -252,7 +267,7 @@ export default function AdminLeadEntitlements(){
       <div className="entitlement-actions"><button className="primary" onClick={saveSettings} disabled={saving==='settings'}>{saving==='settings'?'Saving…':'Save registration entitlement'}</button></div>
     </section>
 
-    <section className="entitlement-panel">
+    <section className="entitlement-panel manual">
       <div className="entitlement-panel-head">
         <div>
           <span>MANUAL ENTITLEMENT</span>
