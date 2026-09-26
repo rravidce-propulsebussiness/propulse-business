@@ -1,10 +1,22 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { apiRequest } from '../../utils/api'
 import './AdminDashboard.css'
 
 const money=value=>`₹${Number(value||0).toLocaleString('en-IN',{maximumFractionDigits:2})}`
 const count=value=>Number(value||0).toLocaleString('en-IN')
+
+function OverviewCard({icon,label,value,note,tone='blue'}){
+  return <article className={`admin-overview-card ${tone}`}>
+    <span className="admin-overview-card-icon">{icon}</span>
+    <div className="admin-overview-card-copy">
+      <span>{label}</span>
+      <strong>{value}</strong>
+      <small>{note}</small>
+    </div>
+    <span className="admin-overview-card-trend" aria-hidden="true"><i/><i/><i/><i/><i/></span>
+  </article>
+}
 
 function MetricCard({label,value,note,accent='navy'}){
   return <article className={`admin-metric-card ${accent}`}>
@@ -23,9 +35,17 @@ function ActionCard({to,label,value,amount}){
 }
 
 function StreamPanel({tone,eyebrow,title,description,to,linkLabel,metrics,revenue,flow}){
+  const badge=tone==='partner'?'LP':tone==='investor'?'IN':'P'
   return <section className={`admin-stream-panel ${tone}`}>
     <div className="admin-stream-head">
-      <div><span>{eyebrow}</span><h2>{title}</h2><p>{description}</p></div>
+      <div className="admin-stream-title-wrap">
+        <span className="admin-stream-badge">{badge}</span>
+        <div>
+          <span className="admin-stream-eyebrow">{eyebrow}</span>
+          <h2>{title}</h2>
+          <p>{description}</p>
+        </div>
+      </div>
       <Link to={to}>{linkLabel} <b>→</b></Link>
     </div>
 
@@ -72,12 +92,69 @@ export default function AdminDashboard(){
   const propulse=streams.propulse||{}
   const leadPartner=streams.leadPartner||{}
   const investor=streams.investor||{}
+  const revenue=stats?.revenue||{}
   const actions=stats?.actions||{}
   const customers=stats?.customers||{}
   const show=value=>loading?'—':value
 
+  const actionTotal=useMemo(()=>[
+    actions.pendingPayments,
+    actions.pendingWalletTopups,
+    actions.pendingCompanyProofs,
+    actions.pendingLeadReports,
+    actions.pendingPartnerPayouts,
+    actions.pendingInvestorWithdrawals
+  ].reduce((sum,value)=>sum+Number(value||0),0),[actions])
+
   return <main className="admin-dashboard">
+    <section className="admin-dashboard-hero">
+      <div>
+        <span>LIVE BUSINESS SNAPSHOT</span>
+        <h1>Overview</h1>
+        <p>Propulse-owned, Lead Partner and Investor activity are separated so revenue and operations stay easy to understand.</p>
+      </div>
+      <div className="admin-dashboard-live"><i/> Live data</div>
+    </section>
+
     {error&&<div className="admin-dashboard__error"><strong>Dashboard unavailable</strong><span>{error}</span></div>}
+
+    <section className="admin-overview-grid">
+      <OverviewCard
+        icon="₹"
+        label="Propulse revenue"
+        value={show(money(revenue.total))}
+        note="Our lead sales + partner commission + investor commission"
+        tone="blue"
+      />
+      <OverviewCard
+        icon="◈"
+        label="Our leads"
+        value={show(count(propulse.totalLeads))}
+        note={loading?'Loading inventory…':`${count(propulse.availableLeads)} available now`}
+        tone="orange"
+      />
+      <OverviewCard
+        icon="♙"
+        label="Active Lead Partners"
+        value={show(count(leadPartner.activePartners))}
+        note={loading?'Loading partner activity…':`${count(leadPartner.totalLeads)} partner-originated leads`}
+        tone="green"
+      />
+      <OverviewCard
+        icon="↗"
+        label="Active investments"
+        value={show(count(investor.activeInvestments))}
+        note={loading?'Loading investor activity…':`${count(investor.totalLeads)} investor-linked leads`}
+        tone="purple"
+      />
+      <OverviewCard
+        icon="!"
+        label="Action required"
+        value={show(count(actionTotal))}
+        note="Pending admin reviews and financial actions"
+        tone="red"
+      />
+    </section>
 
     <div className="admin-stream-stack">
       <StreamPanel
@@ -149,7 +226,7 @@ export default function AdminDashboard(){
     <section className="admin-dashboard-section">
       <div className="admin-dashboard-section-head compact">
         <div><span>OPERATIONS</span><h2>Action required</h2></div>
-        <small>General admin work that is not already shown inside the Partner or Investor sections.</small>
+        <small>General admin work not already summarized inside the Partner or Investor sections.</small>
       </div>
       <div className="admin-actions-grid four">
         <ActionCard to="/admin/payments" label="Pending payments" value={actions.pendingPayments}/>
