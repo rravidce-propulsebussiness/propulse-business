@@ -27,6 +27,13 @@ assert(leads.includes('v9-inventory-head'),'Premium inventory command bar must r
 assert(leads.includes('Auto-refresh every 60s'),'Inventory refresh status must remain visible');
 assert(leads.includes("refreshing?'Refreshing…':'Refresh data'"),'Manual refresh control must remain');
 
+assert(leads.includes('v9-upload-workspace'),'Premium Upload Leads workspace must remain');
+assert(leads.includes('LEAD OPERATIONS / CSV IMPORT'),'Upload Leads hero must remain');
+assert(leads.includes('v9-upload-flow'),'Three-step upload workflow must remain visible');
+assert(leads.includes('Download Sample CSV'),'CSV template action must remain');
+assert(leads.includes('Choose CSV File'),'CSV upload action must remain');
+assert(leads.includes('PIN detection')&&leads.includes('Duplicate protection'),'Upload validation guidance must remain');
+
 assert(css.includes('/* Premium Manage Leads workspace */'),'Premium Manage Leads styling must remain');
 assert(css.includes('.v9-leads>.v9-stats'),'Premium KPI styling must remain scoped to Manage Leads');
 assert(css.includes('grid-template-columns:repeat(4,minmax(0,1fr))'),'Desktop Manage Leads must keep four KPI cards');
@@ -36,6 +43,10 @@ assert(css.includes('grid-template-columns:repeat(auto-fill,minmax(350px,1fr))')
 assert(css.includes('.v9-card.premium:before'),'Premium lead cards must retain their tier accent');
 assert(css.includes('.v9-card.exclusive:after'),'Exclusive lead cards must retain premium visual treatment');
 assert(css.includes('@media(max-width:700px)'),'Manage Leads must retain mobile layout rules');
+assert(css.includes('/* Premium Upload Leads workspace */'),'Premium Upload Leads styling must remain');
+assert(css.includes('.v9-upload-hero'),'Premium Upload Leads hero styling must remain');
+assert(css.includes('.v9-upload-flow'),'Upload workflow rail styling must remain');
+assert(css.includes('.v9-import-guidance'),'Upload import guidance styling must remain');
 
 assert(app.includes('<Route path="/admin/leads/upload" element={<AdminLeadUpload/>}/>'),'Upload Leads must stay on a dedicated route');
 assert(app.includes('<Route path="/admin/leads/sheets" element={<AdminLeadSheets/>}/>'),'Google Sheets must stay on a dedicated route');
