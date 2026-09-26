@@ -39,7 +39,7 @@ function FinanceRow({items}){
   return <div className="admin-finance-row">
     {items.map(item=><div key={item.label}>
       <span>{item.label}</span>
-      <strong>{money(item.value)}</strong>
+      <strong>{item.display??money(item.value)}</strong>
       {item.note&&<small>{item.note}</small>}
     </div>)}
   </div>
@@ -161,10 +161,10 @@ export default function AdminDashboard(){
           {icon:'₹',label:'Revenue',value:show(money(propulse.revenueTotal)),tone:'purple'}
         ]}
         finance={[
-          {label:'Available',value:propulse.availableLeads||0,note:'leads',raw:true},
-          {label:'Sold shares',value:propulse.soldShares||0,note:'shares',raw:true},
+          {label:'Available',value:propulse.availableLeads||0,display:show(count(propulse.availableLeads)),note:'leads'},
+          {label:'Sold shares',value:propulse.soldShares||0,display:show(count(propulse.soldShares)),note:'shares'},
           {label:'Gross sales',value:propulse.grossSales||0}
-        ].map(item=>item.raw?{...item,value:item.value,display:count(item.value)}:item)}
+        ]}
       />
 
       <BusinessPanel
