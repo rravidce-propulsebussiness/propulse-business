@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { useLocation } from 'react-router-dom'
 import { downloadCsv } from '../utils/csv'
 import { authRequest } from '../utils/auth'
 import './Industries.css'
@@ -49,6 +50,8 @@ function parseCsv(text) {
 }
 
 export default function Industries() {
+  const location = useLocation()
+  const adminMode = location.pathname.startsWith('/admin/')
   const [tab, setTab] = useState('industries')
   const [industries, setIndustries] = useState([])
   const [services, setServices] = useState([])
@@ -371,15 +374,37 @@ export default function Industries() {
     : () => downloadCsv('propulse-location-master-template.csv', [['state_name', 'city_name', 'subcity_name', 'pincode'], ['Telangana', 'Hyderabad', 'Gachibowli', '500032']])
 
   return (
-    <div className="master-page">
+    <div className={`master-page ${adminMode ? 'admin-master-page' : ''}`}>
+      {adminMode&&<section className="admin-master-hero">
+        <div className="admin-master-hero-copy">
+          <span>CATALOG / MASTER DATA</span>
+          <h1>Industries & Locations</h1>
+          <p>Manage the complete business-service hierarchy and location catalog used across leads, discovery, pricing and onboarding.</p>
+        </div>
+        <div className="admin-master-health">
+          <span className="admin-master-health-icon">◆</span>
+          <div><strong>Central master data</strong><small>{industries.length+services.length+subservices.length+states.length+cities.length+subcities.length} records across 6 collections</small></div>
+        </div>
+      </section>}
       <div className="master-tabs">
         <button className={tab === 'industries' ? 'active' : ''} onClick={() => { setTab('industries'); setSearch(''); setUploadOpen(false) }}>Industries</button>
         <button className={tab === 'locations' ? 'active' : ''} onClick={() => { setTab('locations'); setSearch(''); setUploadOpen(false) }}>Locations</button>
       </div>
+      {adminMode&&<section className="admin-master-stats">
+        {tab==='industries'?<>
+          <article><span className="admin-master-stat-icon">I</span><div><small>Industries</small><strong>{industries.length}</strong><em>Top-level business categories</em></div></article>
+          <article><span className="admin-master-stat-icon service">S</span><div><small>Services</small><strong>{services.length}</strong><em>Services linked to industries</em></div></article>
+          <article><span className="admin-master-stat-icon sub">↳</span><div><small>Subservices</small><strong>{subservices.length}</strong><em>Detailed service offerings</em></div></article>
+        </>:<>
+          <article><span className="admin-master-stat-icon state">ST</span><div><small>States</small><strong>{states.length}</strong><em>Configured states</em></div></article>
+          <article><span className="admin-master-stat-icon city">C</span><div><small>Cities</small><strong>{cities.length}</strong><em>Cities available for matching</em></div></article>
+          <article><span className="admin-master-stat-icon area">•</span><div><small>Areas</small><strong>{subcities.length}</strong><em>Sub-cities and PIN coverage</em></div></article>
+        </>}
+      </section>}
       {error && <div className="toast error">{error}</div>}
       {success && <div className="toast success">✓ {success}</div>}
       <div className="master-toolbar">
-        <div className="toolbar-copy"><h2>{tab === 'industries' ? 'Industry hierarchy' : 'State · City · Sub-city · Pincode'}</h2></div>
+<div className="toolbar-copy">{adminMode&&<span>MASTER STRUCTURE</span>}<h2>{tab === 'industries' ? 'Industry hierarchy' : 'State · City · Sub-city · Pincode'}</h2>{adminMode&&<p>{tab==='industries'?'Organize industries, services and subservices used throughout Propulse.':'Maintain geographic coverage from state level down to local areas and PIN codes.'}</p>}</div>
         <div className="toolbar-actions">
           <div className="upload-wrap">
             <button className="secondary-action" onClick={() => setUploadOpen(value => !value)} disabled={saving}>↑ Upload bulk</button>
