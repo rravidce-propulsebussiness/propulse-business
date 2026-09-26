@@ -11,10 +11,13 @@ const formatDate = value => value ? new Date(value).toLocaleString('en-IN', { da
 const detailLabel = key => String(key || '').replace(/[_-]+/g, ' ').replace(/\s+/g, ' ').replace(/\b\w/g, x => x.toUpperCase());
 
 function downloadCsvSample() {
-  const headers = ['Lead ID','Industry','Service','Subservice','Pincode','Customer Name','Customer Phone','Customer Email','Requirement','Property Type','Budget','Source','Notes','Buyer Capacity','Lead Type','Exclusive','WhatsApp Number','STATUS','Remarks','CONTACTED BY','NEXT FOLLOWUP','How soon do you want to buy?','Job title'];
-  const row = ['LP-001','REPLACE WITH ACTIVE INDUSTRY','','','500001','Example Customer','9876500000','customer@example.com','Example lead requirement','Residential','2500000','Website','Example note','3','basic','FALSE','9876500000','FOLLOW UP','Call tomorrow','Ravi','Tomorrow','Right away','Owner'];
+  const headers = ['Lead ID','Industry','Service','Subservice','Pincode','Customer Name','Customer Phone','Customer Email','Requirement','Property Type','Budget','Source','Notes','Lead Type','Access Strategy','Buyer Capacity','Release to 2 Hours','Release to 3 Hours','Pro Early Access','Exclusive Delay Days','Pro 1 Buyer','WhatsApp Number','STATUS','Remarks','CONTACTED BY','NEXT FOLLOWUP','How soon do you want to buy?','Job title'];
+  const rows = [
+    ['LP-001','REPLACE WITH ACTIVE INDUSTRY','','','500001','Config Example','9876500000','config@example.com','Blank access and price fields use configured Basic defaults','Residential','2500000','Website','Configuration fallback','basic','','','','','FALSE','','','9876500000','FOLLOW UP','Call tomorrow','Ravi','Tomorrow','Right away','Owner'],
+    ['LP-002','REPLACE WITH ACTIVE INDUSTRY','','','500001','Override Example','9876500001','override@example.com','Exact sheet access and Pro base price override configuration','Residential','3000000','Website','Sheet override','premium','auto_release','3','48','96','TRUE','1','1500','9876500001','NEW','','','','','Owner']
+  ];
   const esc = value => `"${String(value ?? '').replace(/"/g, '""')}"`;
-  const csv = [headers,row].map(values => values.map(esc).join(',')).join('\n');
+  const csv = [headers,...rows].map(values => values.map(esc).join(',')).join('\n');
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
   const url = URL.createObjectURL(blob); const link = document.createElement('a'); link.href = url; link.download = 'propulse-lead-partner-upload-sample.csv'; document.body.appendChild(link); link.click(); link.remove(); URL.revokeObjectURL(url);
 }
@@ -32,7 +35,7 @@ export default function LeadPartnerInventory() {
   const rows=data.data||[];
 
   function signOut(){clearSession();localStorage.removeItem('propulse_session_mode');navigate('/login',{replace:true});}
-  const activeConnections=connections.filter(x=>x.status==='active'); const money=v=>Number(v||0)>0?`₹${Number(v).toLocaleString('en-IN',{maximumFractionDigits:2})}`:'—'; const getPrice=lead=>lead.partner_base_pricing?.shares?.[0]?.price??lead.pricing?.shares?.[0]?.price??lead.price; const getBuyerCount=lead=>lead.buyer_count??lead.buyers_count??0; function exportCsv(){const h=['ID','Name','Phone','Service','Location','Price','Buyers','Status','Added On'];downloadCsv('propulse-lead-inventory.csv',[h,...rows.map(l=>[l.id,l.customer_name||'',l.customer_phone||'',l.service_name||l.industry_name||'',l.city_name||'',getPrice(l)||'',getBuyerCount(l),l.status||'',l.created_at||''])]);}
+  const activeConnections=connections.filter(x=>x.status==='active'); const money=v=>Number(v||0)>0?`₹${Number(v).toLocaleString('en-IN',{maximumFractionDigits:2})}`:'—'; const getPrice=lead=>lead.partner_base_pricing?.shares?.[0]?.price??lead.pricing?.shares?.[0]?.price??lead.price; const getBuyerCount=lead=>lead.buyer_count??lead.buyers_count??0; const buyerAccess=lead=>lead.access_strategy==='permanent_single'?'Single Buyer':lead.access_strategy==='auto_release'?`Auto · ${lead.effective_buyer_capacity||1} buyers`:`Shared · ${lead.effective_buyer_capacity||lead.buyer_capacity||3} buyers`; function exportCsv(){const h=['ID','Name','Phone','Service','Location','Price','Buyers','Buyer Access','Status','Added On'];downloadCsv('propulse-lead-inventory.csv',[h,...rows.map(l=>[l.id,l.customer_name||'',l.customer_phone||'',l.service_name||l.industry_name||'',l.city_name||'',getPrice(l)||'',getBuyerCount(l),buyerAccess(l),l.status||'',l.created_at||''])]);}
   return <div className="partner-shell">
     <LeadPartnerSidebar user={user} onSignOut={signOut} />
     <main className="partner-main"><header className="partner-topbar"><div className="partner-breadcrumb"><span>Lead Partner</span><b>/</b><strong>Lead Inventory</strong></div></header>

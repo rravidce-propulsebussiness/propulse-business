@@ -20,7 +20,7 @@ const aliases = {
   requirement: 'requirement', requirements: 'requirement', requirementdetails: 'requirement',
   propertytype: 'propertyType', budget: 'budget', source: 'source', notes: 'notes',
   buyercapacity: 'buyerCapacity', buyercapacitylimit: 'buyerCapacity', maxbuyers: 'buyerCapacity', capacity: 'buyerCapacity',
-  leadtype: 'leadType', exclusive: 'isExclusive', isexclusive: 'isExclusive',
+  leadtype: 'leadType', accessstrategy: 'accessStrategy', buyerstrategy: 'accessStrategy', releaseto2hours: 'releaseToTwoAfterHours', releasetotwohours: 'releaseToTwoAfterHours', releaseto3hours: 'releaseToThreeAfterHours', releasetothreehours: 'releaseToThreeAfterHours', proearlyaccess: 'isExclusive', earlyaccess: 'isExclusive', exclusive: 'isExclusive', isexclusive: 'isExclusive', exclusivedelaydays:'exclusiveDelayDays', earlyaccessdelaydays:'exclusiveDelayDays', proearlyaccessdelaydays:'exclusiveDelayDays',
 };
 
 function parseCsv(text) {
@@ -233,31 +233,43 @@ async function resolveLocationFromPincode(pincode, cat, suppliedState, suppliedC
 
 const CORE_SHEET_FIELDS = new Set([
   'id','industry','service','subservice','state','city','pincode','customerName','customerPhone','customerEmail',
-  'requirement','propertyType','budget','source','notes','buyerCapacity','leadType','isExclusive'
+  'requirement','propertyType','budget','source','notes','buyerCapacity','leadType','accessStrategy','releaseToTwoAfterHours','releaseToThreeAfterHours','isExclusive','exclusiveDelayDays','Pro 1 Buyer','Pro 1 Share'
 ]);
 
+const isPartnerPricingField=key=>['pro1buyer','pro1buyers','pro1share','pro1shares','pro1buyerprice','pro1shareprice'].includes(norm(key));
 function buildImportedCustomFields(row) {
   return Object.fromEntries(
     Object.entries(row)
-      .filter(([key, value]) => !CORE_SHEET_FIELDS.has(key) && clean(value))
+      .filter(([key, value]) => !CORE_SHEET_FIELDS.has(key) && !isPartnerPricingField(key) && clean(value))
       .map(([key, value]) => [key, value])
   );
 }
 
+function parseAccessStrategy(value){const n=norm(value);if(!n)return undefined;if(n.includes('permanent')||n==='single'||n==='singlebuyer')return'permanent_single';if(n.includes('auto'))return'auto_release';if(n.includes('shared'))return'shared';throw new Error('Access Strategy must be Permanent Single, Auto Release, or Shared from Start');}
+function partnerProOnePrice(row){for(const[key,value]of Object.entries(row||{})){const n=norm(key);if(!['pro1buyer','pro1buyers','pro1share','pro1shares','pro1buyerprice','pro1shareprice'].includes(n))continue;if(!clean(value))return null;const price=Number(value);if(!Number.isFinite(price)||price<0)throw new Error('Pro 1 Buyer price must be a non-negative number');return price}return null}
 async function buildLead(row, cat) {
   const { industry, service, subservice } = resolveClassification(row, cat);
   const location = await resolveLocationFromPincode(row.pincode, cat, row.state, row.city);
-  const capacity = Number(row.buyerCapacity);
+  const capacityRaw=clean(row.buyerCapacity);const capacity=capacityRaw===''?undefined:Number(capacityRaw);
+  if(capacityRaw!==''&&(!Number.isFinite(capacity)||capacity<1||capacity>3))throw new Error('Buyer Capacity must be between 1 and 3');
+  const strategy=parseAccessStrategy(row.accessStrategy);
+  const releaseTwo=clean(row.releaseToTwoAfterHours)===''?undefined:Number(row.releaseToTwoAfterHours);
+  const releaseThree=clean(row.releaseToThreeAfterHours)===''?undefined:Number(row.releaseToThreeAfterHours);
+  if(releaseTwo!==undefined&&(!Number.isFinite(releaseTwo)||releaseTwo<0))throw new Error('Release to 2 Hours must be zero or greater');
+  if(releaseThree!==undefined&&(!Number.isFinite(releaseThree)||releaseThree<0))throw new Error('Release to 3 Hours must be zero or greater');
+  if(releaseTwo!==undefined&&releaseThree!==undefined&&releaseThree<releaseTwo)throw new Error('Release to 3 Hours must be after Release to 2 Hours');
   return {
     industryId: industry.id, serviceId: service?.id || null, subserviceId: subservice?.id || null,
     stateId: location.state.id, cityId: location.city.id, customerName: row.customerName, customerPhone: row.customerPhone,
     customerEmail: row.customerEmail || '', requirement: row.requirement || 'Lead requirement not provided', propertyType: row.propertyType || '', budget: row.budget || '',
     source: row.source || 'lead-partner-upload', notes: row.notes || '', customFields: buildImportedCustomFields(row), pincode: location.pincode,
-    buyerCapacity: Number.isFinite(capacity) && capacity >= 2 ? Math.floor(capacity) : 3,
+    buyerCapacity: strategy==='permanent_single'?1:(capacity===undefined?undefined:Math.floor(capacity)),
+    accessStrategy:strategy,releaseToTwoAfterHours:releaseTwo,releaseToThreeAfterHours:releaseThree,
     leadType: norm(row.leadType) === 'premium' ? 'premium' : 'basic', isExclusive: ['true', 'yes', 'y', '1', 'exclusive'].includes(norm(row.isExclusive)),
+    exclusiveDelayDays:clean(row.exclusiveDelayDays)===''?undefined:Number(row.exclusiveDelayDays),
+    partnerProOnePrice:partnerProOnePrice(row),
   };
 }
-
 async function importCsv({ userId, csv }) {
   const rows = parseCsv(csv); if (!rows.length) throw new Error('CSV contains no data rows');
   const cat = await catalogs();
@@ -270,9 +282,13 @@ async function importCsv({ userId, csv }) {
       const createdLead = await leadService.createLead({ ...lead, createdBy: userId });
       await pool.query('UPDATE leads SET lead_partner_id=$1 WHERE id=$2 AND created_by=$3', [partner.id, createdLead.id, userId]);
       const configured = await partnerPricing.applyConfiguredPricingToLead(userId, createdLead.id, createdLead.pricing, lead.industryId, lead.cityId, lead.leadType);
+      const settings=await partnerPricing.getSettings();
+      const hasSheetPartnerPrice=lead.partnerProOnePrice!==null&&lead.partnerProOnePrice!==undefined&&lead.partnerProOnePrice!=='';const sheetPricing=hasSheetPartnerPrice&&Number.isFinite(Number(lead.partnerProOnePrice))?partnerPricing.buildFixedPartnerPricing(Number(lead.partnerProOnePrice),settings.normalPriceUplift):null;
+      const effectivePricing=sheetPricing||configured||createdLead.pricing||{shares:[]};
+      const overridden=JSON.stringify(effectivePricing)!==JSON.stringify(createdLead.pricing||{shares:[]});
       await pool.query(
         `UPDATE leads SET partner_base_pricing=$1::jsonb,partner_pricing_overridden=$2,partner_pricing_updated_at=$3,pricing=$4::jsonb,updated_at=CURRENT_TIMESTAMP WHERE id=$5 AND created_by=$6`,
-        [JSON.stringify(createdLead.pricing || { shares: [] }), Boolean(configured && JSON.stringify(configured) !== JSON.stringify(createdLead.pricing)), configured && JSON.stringify(configured) !== JSON.stringify(createdLead.pricing) ? new Date() : null, JSON.stringify(configured || createdLead.pricing || { shares: [] }), createdLead.id, userId]
+        [JSON.stringify(createdLead.pricing || { shares: [] }), overridden, overridden ? new Date() : null, JSON.stringify(effectivePricing), createdLead.id, userId]
       );
       created += 1;
     } catch (error) {
@@ -373,7 +389,7 @@ async function listInventory({ userId, status = 'all', search = '', industryId =
   const where = conditions.join(' AND ');
   const [data, stats, filters] = await Promise.all([
     pool.query(
-      `SELECT l.id,l.customer_name,l.customer_phone,l.customer_email,l.requirement,l.status,l.lead_type,l.buyer_capacity,l.is_exclusive,l.pincode,l.created_at,l.custom_fields,
+      `SELECT l.id,l.customer_name,l.customer_phone,l.customer_email,l.requirement,l.status,l.lead_type,l.buyer_capacity,l.access_strategy,l.release_to_two_after_hours,l.release_to_three_after_hours,l.access_capacity_locked,lead_effective_buyer_capacity(l.access_strategy,l.buyer_capacity,l.release_to_two_after_hours,l.release_to_three_after_hours,l.created_at,l.access_capacity_locked) AS effective_buyer_capacity,l.is_exclusive,l.pincode,l.created_at,l.custom_fields,
               i.name AS industry_name,s.name AS service_name,ss.name AS subservice_name,st.name AS state_name,c.name AS city_name,
               (${outcomeSql}) AS outcome_status,
               (SELECT COUNT(DISTINCT p.id)::int FROM lead_purchases p WHERE p.lead_id=l.id AND p.status='paid') AS buyer_count

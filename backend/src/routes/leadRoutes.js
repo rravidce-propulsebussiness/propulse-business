@@ -5,6 +5,8 @@ router.get('/',optionalAuth,leadController.getLeads);
 router.get('/investors',requireAdmin,leadController.getInvestors);
 router.get('/pricing',requireAdmin,leadController.getLeadPricing);
 router.put('/pricing',requireAdmin,leadController.updateLeadPricing);
+router.get('/access-settings',requireAdmin,leadController.getAccessSettings);
+router.put('/access-settings',requireAdmin,leadController.updateAccessSettings);
 router.get('/pricing/rules',requireAdmin,leadController.getPricingRules);
 router.post('/pricing/rules',requireAdmin,leadController.savePricingRule);
 router.put('/pricing/rules/:id',requireAdmin,leadController.savePricingRule);

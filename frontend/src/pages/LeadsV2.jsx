@@ -15,7 +15,7 @@ const hasValue = (v) => v !== null && v !== undefined && String(v).trim() !== ''
 const norm = (v) => String(v ?? '').toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]/g, '')
 const label = (k) => String(k).replace(/_/g, ' ').replace(/([a-z])([A-Z])/g, '$1 $2').replace(/\b\w/g, x => x.toUpperCase())
 const isContactKey = (k) => /(phone|mobile|whatsapp|contact|email|mail|tel|telephone|alternate|website|url|social|instagram|facebook|linkedin|address|pincode|zipcode|postal)/i.test(String(k || ''))
-const isPricingField = (k) => /^(normal|pro)\d+(share|shares)(price)?$/.test(norm(k)) || ['pricing', 'leadpricing', 'leadprice', 'price'].includes(norm(k))
+const isPricingField = (k) => /^(normal|pro)\d+(share|shares|buyer|buyers)(price)?$/.test(norm(k)) || ['pricing', 'leadpricing', 'leadprice', 'price'].includes(norm(k))
 const isCanonicalField = (k) => {
   const n = norm(k)
   return [
@@ -219,7 +219,7 @@ export default function LeadsV2() {
     const row = (buyModal?.pricing?.shares || []).find(p => Number(p.shares) === Number(shares))
     const subtotal = Number(row?.[isPro ? 'pro' : 'normal'] || 0)
     if (!subtotal) {
-      setCouponError('Select a share pack first.')
+      setCouponError('Lead price is unavailable.')
       return false
     }
     try {
@@ -367,7 +367,7 @@ export default function LeadsV2() {
           const workPhone = getCustom(lead.custom_fields, ['Work Phone Number', 'Work Phone', 'Office Phone Number', 'Office Phone', 'Business Phone', 'Business Phone Number', 'Alternate Work Phone', 'Alternate Phone'], ['workphone', 'officephone', 'businessphone'])
           const budgetRange = getCustom(lead.custom_fields, ['Budget', 'Budget Range', 'Project Budget', 'Project Budget Range', 'Budget From To', 'Expected Budget'], ['budget'])
           const budgetDisplay = budgetRange || (hasValue(lead.budget) ? money(lead.budget) : '')
-          const buyerCapacity = Math.max(2, Number(lead.buyer_capacity) || 3)
+          const buyerCapacity = Math.max(1, Math.min(3, Number(lead.effective_buyer_capacity || lead.buyer_capacity) || 3))
           const purchasedBuyers = Math.min(buyerCapacity, Math.max(0, Number(lead.purchased_buyer_count) || 0))
           const initials = String(lead.customer_name || lead.service_name || lead.industry_name || 'L').trim().charAt(0).toUpperCase()
           return <article className={`lv2-card ${lead.lead_type || 'basic'} ${exclusive ? 'has-exclusive' : ''}`} key={lead.id}>
@@ -389,7 +389,7 @@ export default function LeadsV2() {
             {logged && !claimed && leadAccess.canClaim && <div className="lv2-exclusive"><div><b>Membership access</b><span>Included in your current plan{leadAccess.remaining !== undefined ? ` · ${leadAccess.remaining} remaining` : ''}</span></div><button disabled={claiming === lead.id} onClick={() => claim(lead)}>{claiming === lead.id ? 'Claiming…' : 'Claim free →'}</button></div>}
             {logged && !claimed && leadAccess.reason && !leadAccess.canClaim && <div className="lv2-card-cta"><div><b>Membership access</b><span>{leadAccess.reason}</span></div></div>}
             {claimed && <div className="lv2-card-cta"><div><b>Lead access granted</b><span>You can use this lead from your account.</span></div><Link to="/dashboard">Open dashboard →</Link></div>}
-            {exclusive && logged && !claimed && <div className="lv2-exclusive"><div><b>Exclusive access</b><span>{lead.exclusive_action === 'upgrade_to_pro' ? 'Pro members get first access' : 'Available for purchase'}</span></div>{lead.exclusive_action === 'upgrade_to_pro' ? <button onClick={() => setUpgrade(true)}>Get Pro →</button> : <button onClick={() => openBuyModal(lead)}>Buy →</button>}</div>}
+            {exclusive && logged && !claimed && <div className="lv2-exclusive"><div><b>Pro Early Access</b><span>{lead.exclusive_action === 'upgrade_to_pro' ? 'Pro members get first access' : 'Available for purchase'}</span></div>{lead.exclusive_action === 'upgrade_to_pro' ? <button onClick={() => setUpgrade(true)}>Get Pro →</button> : <button onClick={() => openBuyModal(lead)}>Buy →</button>}</div>}
             {!logged && <div className="lv2-card-cta"><div><b>Interested in this lead?</b><span>Sign in to view purchase options.</span></div><button onClick={() => openBuyModal(lead)}>Login to buy →</button></div>}
           </article>
         })}
@@ -406,11 +406,11 @@ export default function LeadsV2() {
           <div className="lv2-wallet-choice"><label htmlFor="lv2-wallet-toggle"><span className="lv2-wallet-icon">▣</span><span><b>Use wallet balance</b><small>Available balance: {walletBalance > 0 ? money(walletBalance) : '₹0'}. You can pay the final amount directly.</small></span></label><strong>{walletBalance > 0 ? money(walletBalance) : '₹0'}</strong><input id="lv2-wallet-toggle" type="checkbox" checked={useWallet} onChange={e => setUseWallet(e.target.checked)} /></div>
           <div className="lv2-share-section">
             <div className="lv2-share-selection-title">
-              <strong>Select Number of Shares</strong>
-              <span>Price per share: <b>{selectedSharePack ? money((buyModal.pricing?.shares || []).find(p => Number(p.shares) === Number(selectedSharePack))?.[isPro ? 'pro' : 'normal']) : '—'}</b></span>
+              <strong>Current Buyer Access</strong>
+              <span>Lead price: <b>{selectedSharePack ? money((buyModal.pricing?.shares || []).find(p => Number(p.shares) === Number(selectedSharePack))?.[isPro ? 'pro' : 'normal']) : '—'}</b></span>
             </div>
             <div className="lv2-pack-grid">
-              {(buyModal.pricing?.shares || []).map(p => { const n = Number(p.shares); const normal = Number(p.normal); const pro = Number(p.pro); const price = isPro ? pro : normal; const saving = Number.isFinite(normal) && Number.isFinite(pro) && normal > pro ? normal - pro : 0; const selected = Number(selectedSharePack) === n; const key = buyModal.id + '-' + n + '-' + (isPro ? 'pro' : 'normal') + '-' + (useWallet ? 'wallet' : 'direct'); const growthSavings = saving; const savingText = growthSavings > 0 ? (isGrowthScaleMember ? `Saved ${money(growthSavings)} with ${memberSavingsLabel}` : `Save with Growth ${money(growthSavings)}`) : ''; return <button key={key} type="button" className={"lv2-pack-card" + (selected ? ' selected' : '')} onClick={() => { setSelectedSharePack(n); if (couponCode.trim()) validateCouponForSelection(couponCode, n) }} disabled={buyModalClaimed || Boolean(buying)}><span className="lv2-pack-check">{selected ? '✓' : ''}</span><strong>{n}</strong><small>{n === 1 ? 'Share' : 'Shares'}</small><b>{money(price)}</b>{savingText && <em className={isGrowthScaleMember ? 'lv2-pack-saving-member' : 'lv2-pack-saving-growth'}>{savingText}</em>}{buying === key && <i>Processing…</i>}</button> })}
+              {(buyModal.pricing?.shares || []).map(p => { const n = Number(p.shares); const normal = Number(p.normal); const pro = Number(p.pro); const price = isPro ? pro : normal; const saving = Number.isFinite(normal) && Number.isFinite(pro) && normal > pro ? normal - pro : 0; const selected = Number(selectedSharePack) === n; const key = buyModal.id + '-' + n + '-' + (isPro ? 'pro' : 'normal') + '-' + (useWallet ? 'wallet' : 'direct'); const growthSavings = saving; const savingText = growthSavings > 0 ? (isGrowthScaleMember ? `Saved ${money(growthSavings)} with ${memberSavingsLabel}` : `Save with Growth ${money(growthSavings)}`) : ''; return <button key={key} type="button" className={"lv2-pack-card" + (selected ? ' selected' : '')} onClick={() => { setSelectedSharePack(n); if (couponCode.trim()) validateCouponForSelection(couponCode, n) }} disabled={buyModalClaimed || Boolean(buying)}><span className="lv2-pack-check">{selected ? '✓' : ''}</span><strong>{n}</strong><small>{n === 1 ? 'Single Buyer' : `Max ${n} Buyers`}</small><b>{money(price)}</b>{savingText && <em className={isGrowthScaleMember ? 'lv2-pack-saving-member' : 'lv2-pack-saving-growth'}>{savingText}</em>}{buying === key && <i>Processing…</i>}</button> })}
             </div>
           </div>
           {!isGrowthScaleMember && <div className="lv2-pro-hint"><strong>Growth / Scale members save more</strong><span>Growth and Scale members get the configured member lead pricing.</span><Link to="/membership" onClick={() => setBuyModal(null)} className="lv2-view-plans-link">View Plans →</Link></div>}
@@ -426,8 +426,8 @@ export default function LeadsV2() {
             return <>
               <div className="lv2-summary-head"><div><strong>Order Summary</strong><small>Lead #${buyModal.id}</small></div><span>🛒</span></div>
               <div className="lv2-summary-body">
-                <div className="lv2-summary-row"><span>Selected Pack</span><strong>{selectedSharePack ? selectedSharePack + (selectedSharePack === 1 ? ' Share' : ' Shares') : 'Choose a pack'}</strong></div>
-                <div className="lv2-summary-row"><span>Price per Share</span><strong>{selectedSharePack ? money(selectedPrice) : '—'}</strong></div>
+                <div className="lv2-summary-row"><span>Buyer Access</span><strong>{selectedSharePack ? (selectedSharePack === 1 ? 'Single Buyer' : `Max ${selectedSharePack} Buyers`) : 'Current stage'}</strong></div>
+                <div className="lv2-summary-row"><span>Lead Price</span><strong>{selectedSharePack ? money(selectedPrice) : '—'}</strong></div>
                 <div className="lv2-summary-row"><span>Subtotal</span><strong>{selectedSharePack ? money(selectedPrice) : '₹0'}</strong></div>
                 <div className="lv2-summary-row"><span>Coupon Discount</span><strong className={couponDiscount > 0 ? 'lv2-discount-value' : ''}>− {money(couponDiscount)}</strong></div>
                 <div className="lv2-summary-row lv2-wallet-deduction"><span>Wallet Balance Used</span><strong>− {money(walletDeduction)}</strong></div>
@@ -529,6 +529,6 @@ export default function LeadsV2() {
       <div className="lv2-success-info"><span>◷</span><div><strong>We’ll verify your payment and update you soon.</strong><small>You’ll get a notification once it’s confirmed.</small></div></div>
       <button className="lv2-success-done" onClick={() => setPaymentSuccess('')}>Great!</button>
     </div></div>}
-    {upgrade && <div className="lv2-overlay"><div className="lv2-upgrade"><button onClick={() => setUpgrade(false)}>×</button><span>PRO ACCESS</span><h2>Unlock Exclusive access.</h2><p>Pro members get first access during the configured Pro-first period.</p><div><Link to="/dashboard">View Pro options →</Link><button onClick={() => setUpgrade(false)}>Not now</button></div></div></div>}
+    {upgrade && <div className="lv2-overlay"><div className="lv2-upgrade"><button onClick={() => setUpgrade(false)}>×</button><span>PRO ACCESS</span><h2>Unlock Pro Early Access.</h2><p>Pro members get first access during the configured early-access period.</p><div><Link to="/dashboard">View Pro options →</Link><button onClick={() => setUpgrade(false)}>Not now</button></div></div></div>}
   </div>
 }
