@@ -51,35 +51,88 @@ export default function GoogleSheetAutoSync(){
  useEffect(()=>{if(!sources.length)return undefined;const syncIfVisible=()=>{if(document.visibilityState==='visible')syncAllEvent()};syncIfVisible();timer.current=setInterval(syncIfVisible,300000);document.addEventListener('visibilitychange',syncIfVisible);window.addEventListener('focus',syncIfVisible);return()=>{if(timer.current)clearInterval(timer.current);document.removeEventListener('visibilitychange',syncIfVisible);window.removeEventListener('focus',syncIfVisible)}},[sources.length]);
  const connect=async()=>{const value=input.trim();if(!value){setStatus('Paste a Google Sheets URL first');return}if(sources.some(source=>sourceRecord(source).url===value)){setStatus('This Google Sheet is already connected');return}setBusy(true);setStatus('Connecting and syncing…');try{const defaults=normalizeImportDefaults(linkDefaults);const result=await authRequest('/leads/google-sheet/preview',{method:'POST',body:JSON.stringify({url:value})});const csv=canonicalizeCsv(result.csv||'');const[leadsResult,cat]=await Promise.all([authRequest('/leads?status=all'),loadCatalog()]);const leads=listData(leadsResult);const resultSet=await syncRows(csv,leads,cat,defaults);if(resultSet.failed===0)localStorage.setItem(fingerprintKey(value),await fingerprint(csv));else localStorage.removeItem(fingerprintKey(value));const next=[...sources,{url:value,defaults}];save(next);setInput('');setLinkDefaults(EMPTY_IMPORT_DEFAULTS);setStatus(`Connected · ${resultSet.created} new · ${resultSet.updated} updated · ${resultSet.unchanged} unchanged · ${resultSet.failed} failed`);window.dispatchEvent(new Event('propulse:leads-refresh'))}catch(e){setStatus(e.message||'Unable to connect Google Sheet')}finally{setBusy(false)}};
  const disconnect=url=>{localStorage.removeItem(fingerprintKey(url));const next=sources.filter(source=>sourceRecord(source).url!==url);save(next);setStatus(next.length?`Disconnected · ${next.length} sheet(s) still connected`:'All Google Sheets disconnected')};
- return <section style={{marginBottom:18,border:'1px solid #e6eaf0',borderRadius:18,padding:18,background:'#fff',boxShadow:'0 8px 28px rgba(15,23,42,.06)'}}>
-  <div style={{display:'flex',justifyContent:'space-between',gap:16,alignItems:'center',flexWrap:'wrap'}}>
-    <div>
-      <div style={{fontSize:11,fontWeight:800,letterSpacing:'.12em',color:'#64748b'}}>AUTOMATIC LEAD SOURCES</div>
-      <h3 style={{margin:'5px 0 3px',fontSize:18}}>Google Sheets</h3>
-      <div style={{fontSize:13,color:'#64748b'}}>New rows and edits are checked every 5 minutes while this page is active, or on demand.</div>
+ return <section className="v9-sheet-console">
+  <header className="v9-sheet-console-head">
+    <div className="v9-sheet-console-title">
+      <span>AUTOMATIC LEAD SOURCES</span>
+      <h2>Connected Google Sheets</h2>
+      <p>New rows and edits are checked every 5 minutes while this page is active, and you can run a full check at any time.</p>
     </div>
-    <span style={{fontSize:12,fontWeight:700,padding:'7px 10px',borderRadius:999,background:sources.length?'#ecfdf5':'#f1f5f9',color:sources.length?'#047857':'#64748b'}}>{sources.length?`● ${sources.length} Connected`:'○ No sheets connected'}</span>
-  </div>
-  <LeadImportDefaults value={linkDefaults} onChange={setLinkDefaults} disabled={busy}/>
-  <div className="v9-sheet-connect-row">
-    <input value={input} onChange={e=>setInput(e.target.value)} placeholder="Paste another Google Sheets URL"/>
-    <button className="v9-btn primary" onClick={connect} disabled={busy}>{busy?'Syncing…':'Connect Sheet'}</button>
-    {sources.length>0&&<button className="v9-btn secondary" onClick={()=>syncAll(true)} disabled={busy}>{busy?'Checking…':'Check All Now'}</button>}
-  </div>
-  <div className="v9-sheet-precedence">
-    <div><strong>Sharing</strong><span>Sheet Access Strategy / Max Buyers → Single Only override → Admin buyer-access configuration</span></div>
-    <div><strong>Pricing</strong><span>Sheet exact 1 / 2 / 3 buyer price → Admin exact-tier price</span></div>
-  </div>
-  {sources.length>0&&<div style={{display:'grid',gap:8,marginTop:14}}>
-    {sources.map((source,i)=>{const record=sourceRecord(source);return <div key={record.url} style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:12,padding:'10px 12px',border:'1px solid #edf0f4',borderRadius:10,background:'#fafbfc'}}>
-      <div style={{minWidth:0}}>
-        <div style={{fontSize:12,fontWeight:700}}>Sheet {i+1}</div>
-        <div style={{fontSize:11,color:'#64748b',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{record.url}</div>
-        <div style={{marginTop:5,fontSize:10,fontWeight:800,color:'#365b86'}}>Defaults: {importDefaultsSummary(record.defaults)}</div>
+    <span className={'v9-sheet-status-pill '+(sources.length?'connected':'empty')}>
+      <i/>
+      {sources.length?(sources.length+' Connected'):'No sheets connected'}
+    </span>
+  </header>
+
+  <div className="v9-sheet-console-body">
+    <section className="v9-sheet-connect-card">
+      <div className="v9-sheet-section-title">
+        <span>01</span>
+        <div>
+          <strong>Connect a lead source</strong>
+          <small>Paste a shareable Google Sheets URL and choose optional defaults for blank row values.</small>
+        </div>
       </div>
-      <button className="v9-btn secondary" onClick={()=>disconnect(record.url)} disabled={busy}>Disconnect</button>
-    </div>})}
-  </div>}
-  {status&&<div style={{marginTop:10,fontSize:12,color:'#475569'}}>{status}</div>}
+
+      <LeadImportDefaults value={linkDefaults} onChange={setLinkDefaults} disabled={busy}/>
+
+      <div className="v9-sheet-connect-row">
+        <div className="v9-sheet-url-field">
+          <span>Google Sheets URL</span>
+          <input value={input} onChange={e=>setInput(e.target.value)} placeholder="https://docs.google.com/spreadsheets/d/..."/>
+        </div>
+        <button className="v9-btn primary v9-sheet-primary-action" onClick={connect} disabled={busy}>{busy?'Syncing…':'Connect Sheet'}</button>
+        {sources.length>0&&<button className="v9-btn secondary v9-sheet-check-action" onClick={()=>syncAll(true)} disabled={busy}>{busy?'Checking…':'Check All Now'}</button>}
+      </div>
+    </section>
+
+    <section className="v9-sheet-rules">
+      <div className="v9-sheet-section-title">
+        <span>02</span>
+        <div>
+          <strong>Import precedence</strong>
+          <small>Exact sheet values win first; configured fallbacks only fill what the source leaves blank.</small>
+        </div>
+      </div>
+      <div className="v9-sheet-precedence">
+        <div>
+          <span className="v9-rule-icon">↔</span>
+          <div><strong>Sharing</strong><span>Sheet Access Strategy / Max Buyers → Single Only override → Admin buyer-access configuration</span></div>
+        </div>
+        <div>
+          <span className="v9-rule-icon">₹</span>
+          <div><strong>Pricing</strong><span>Sheet exact 1 / 2 / 3 buyer price → Admin exact-tier price</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section className="v9-sheet-sources">
+      <div className="v9-sheet-section-title">
+        <span>03</span>
+        <div>
+          <strong>Active sources</strong>
+          <small>{sources.length?(sources.length+' sheet'+(sources.length===1?'':'s')+' connected to lead inventory.'):'Connect your first sheet to start automatic lead synchronization.'}</small>
+        </div>
+      </div>
+
+      {sources.length>0?<div className="v9-sheet-source-list">
+        {sources.map((source,i)=>{const record=sourceRecord(source);return <article className="v9-sheet-source-card" key={record.url}>
+          <div className="v9-sheet-source-index">{String(i+1).padStart(2,'0')}</div>
+          <div className="v9-sheet-source-copy">
+            <div className="v9-sheet-source-name"><strong>{'Sheet '+(i+1)}</strong><span>Connected</span></div>
+            <div className="v9-sheet-source-url" title={record.url}>{record.url}</div>
+            <div className="v9-sheet-source-defaults"><span>Defaults</span><strong>{importDefaultsSummary(record.defaults)}</strong></div>
+          </div>
+          <button className="v9-btn secondary v9-sheet-disconnect" onClick={()=>disconnect(record.url)} disabled={busy}>Disconnect</button>
+        </article>})}
+      </div>:<div className="v9-sheet-empty-state">
+        <span>↗</span>
+        <strong>No Google Sheets connected yet</strong>
+        <small>Paste a Google Sheets URL above to create your first automated lead source.</small>
+      </div>}
+    </section>
+  </div>
+
+  {status&&<div className="v9-sheet-sync-status"><span>{busy?'↻':'✓'}</span><p>{status}</p></div>}
  </section>;
 }
