@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { useEffect, useMemo, useState } from 'react'
 import { getUser, getToken, publicRequest } from '../utils/auth'
 import { listLeads } from '../api/leads'
+import WebsiteFaqSection from '../components/WebsiteFaqSection'
 import './Home.css'
 
 const money = value => {
@@ -28,14 +29,6 @@ const categories = [
   { name: 'Plot & Land Leads', query: 'plot land', icon: '⌖', text: 'Land purchase, gated communities' },
 ]
 
-const faqs = [
-  ['What is Propulse?', 'Propulse is a lead marketplace where businesses can discover relevant project enquiries, review lead details and purchase access to customer contact information.'],
-  ['Who can buy leads?', 'Businesses looking for new project enquiries can create an account, add wallet funds when needed and purchase eligible leads from the marketplace.'],
-  ['Are customer contact details visible before purchase?', 'No. Contact information is protected in the marketplace. Eligible buyers get access according to the lead purchase and entitlement rules.'],
-  ['Can I search leads by location?', 'Yes. The marketplace supports location-based discovery along with industry, service and other lead fields.'],
-  ['How does lead pricing work?', 'Pricing is configured by Propulse and can vary by lead, share package and eligible membership pricing. The exact price is shown before purchase.'],
-]
-
 const pricingFallback = [
   { category: 'Marketing', name: 'Marketing & Technology', tagline: 'Websites, apps, marketing & creative.', description: 'Websites, web apps, mobile apps, SEO, social media, performance marketing, branding, photography and video.', price_label: 'Custom quote', billing_note: 'Scope-based pricing', features: ['Website & web app development', 'Mobile app development', 'SEO, social media & performance marketing', 'Branding, photography & video'], cta_label: 'Talk to Marketing', cta_url: '/contact', highlighted: false, image_url: '/homepage/default-marketing.svg' },
   { category: 'Lead Sales', name: 'Lead Marketplace', tagline: 'Buy leads. Reach real opportunities.', description: 'Discover relevant customer enquiries by service and location, review the opportunity and buy eligible access.', price_label: 'Pay per lead', billing_note: 'Exact price shown before purchase', features: ['Location-based lead discovery', 'Protected customer contact data', 'Configured lead pricing', 'Purchased-lead management'], cta_label: 'Explore Leads', cta_url: '/leads', highlighted: true, image_url: '/homepage/default-hero.svg' },
@@ -53,8 +46,6 @@ function Home() {
   const [activeNav, setActiveNav] = useState('home')
   const [servicePricing, setServicePricing] = useState(pricingFallback)
   const [contactData, setContactData] = useState({})
-  const [homepageFaqs, setHomepageFaqs] = useState(null)
-  const [openFaq, setOpenFaq] = useState(null)
   const [upcomingFeatures, setUpcomingFeatures] = useState([])
   const [upcomingFilter, setUpcomingFilter] = useState('all')
 
@@ -80,16 +71,6 @@ function Home() {
     let live = true
     publicRequest('/contact?audience=website').then(data => {
       if (live) setContactData(data || {})
-    }).catch(() => {})
-    return () => { live = false }
-  }, [])
-
-  useEffect(() => {
-    let live = true
-    publicRequest('/faqs?audience=website').then(data => {
-      if (!live) return
-      const items = Array.isArray(data) ? data.filter(item => item?.is_active !== false) : []
-      setHomepageFaqs(items)
     }).catch(() => {})
     return () => { live = false }
   }, [])
@@ -486,27 +467,7 @@ function Home() {
           <a href="#contact" onClick={event => scrollToSection(event, 'contact')}>Talk to Propulse <span>→</span></a>
         </div>
       </section>
-      <section className="faq-section home-reveal premium-home-faq" id="faq">
-        <div className="section-heading centered"><span className="section-kicker">FAQ</span><h2>Questions, clearly answered.</h2><p>Everything you need to understand Propulse, its services and the lead marketplace before you get started.</p></div>
-        <div className="faq-home-layout">
-          <div className="faq-list">
-            {(homepageFaqs ?? faqs.map(([question, answer], index) => ({ id: `fallback-${index}`, question, answer }))).map(item => (
-              <article className={openFaq === item.id ? 'faq-home-item open' : 'faq-home-item'} key={item.id}>
-                <button type="button" onClick={() => setOpenFaq(openFaq === item.id ? null : item.id)}>
-                  <span>{item.question}</span><b>{openFaq === item.id ? '−' : '+'}</b>
-                </button>
-                {openFaq === item.id && <div className="faq-home-answer"><p>{item.answer}</p></div>}
-              </article>
-            ))}
-          </div>
-          <aside className="faq-home-aside">
-            <span className="section-kicker">NEED MORE HELP?</span>
-            <h3>Talk to Propulse.</h3>
-            <p>Have a technology, digital marketing, lead or business-support requirement? Start a conversation with the team.</p>
-            <a href="#contact" onClick={event => scrollToSection(event, 'contact')}>Contact Propulse <span>→</span></a>
-          </aside>
-        </div>
-      </section>
+      <WebsiteFaqSection variant="home" />
 
       <footer className="public-footer">
         <div className="footer-brand"><Link to="/"><img src="/brand/propulse-logo.png" alt="Propulse" /></Link><p>Quality Leads. Real Growth.</p></div>
