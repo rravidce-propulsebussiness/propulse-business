@@ -47,10 +47,15 @@ assert(css.includes('/* Premium Upload Leads workspace */'),'Premium Upload Lead
 assert(css.includes('.v9-upload-hero'),'Premium Upload Leads hero styling must remain');
 assert(css.includes('.v9-upload-flow'),'Upload workflow rail styling must remain');
 assert(css.includes('.v9-import-guidance'),'Upload import guidance styling must remain');
+assert(css.includes('/* Premium Google Sheets workspace */'),'Premium Google Sheets styling must remain');
+assert(css.includes('.v9-sheet-console'),'Google Sheets sync console styling must remain');
+assert(css.includes('.v9-sheet-source-card'),'Connected sheet cards must retain premium styling');
 
 assert(app.includes('<Route path="/admin/leads/upload" element={<AdminLeadUpload/>}/>'),'Upload Leads must stay on a dedicated route');
 assert(app.includes('<Route path="/admin/leads/sheets" element={<AdminLeadSheets/>}/>'),'Google Sheets must stay on a dedicated route');
 assert(upload.includes('<AdminLeadsV9 mode="upload"/>'),'Upload page must keep shared lead import logic');
 assert(sheets.includes('<GoogleSheetAutoSync/>'),'Google Sheets page must keep shared sync logic');
+assert(sheets.includes('v9-sheet-workspace'),'Premium Google Sheets page shell must remain');
+assert(sheets.includes('LEAD OPERATIONS / AUTOMATION'),'Google Sheets premium hero must remain');
 
 console.log('Premium Manage Leads regression test passed.');
