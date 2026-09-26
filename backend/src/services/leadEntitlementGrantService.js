@@ -67,7 +67,17 @@ function allowanceFor(grant,type){
 
 async function getActiveGrants(userId,client=pool,{ensureWelcome=true,forUpdate=false}={}){
   if(ensureWelcome)await ensureNewBusinessGrant(userId,client);
-  const lock=forUpdate?' FOR UPDATE OF g':'';
+  if(forUpdate){
+    await client.query(`
+      SELECT id FROM lead_entitlement_grants
+      WHERE user_id=$1
+        AND revoked_at IS NULL
+        AND starts_at<=CURRENT_TIMESTAMP
+        AND (expires_at IS NULL OR expires_at>CURRENT_TIMESTAMP)
+      ORDER BY expires_at ASC NULLS LAST,id ASC
+      FOR UPDATE
+    `,[userId]);
+  }
   const result=await client.query(`
     SELECT g.*,
            COUNT(c.id) FILTER(WHERE c.entitlement_type='shared')::int AS used_shared,
@@ -80,7 +90,6 @@ async function getActiveGrants(userId,client=pool,{ensureWelcome=true,forUpdate=
       AND (g.expires_at IS NULL OR g.expires_at>CURRENT_TIMESTAMP)
     GROUP BY g.id
     ORDER BY g.expires_at ASC NULLS LAST,g.id ASC
-    ${lock}
   `,[userId]);
   return result.rows;
 }
