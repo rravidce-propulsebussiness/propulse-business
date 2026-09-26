@@ -85,15 +85,12 @@ export default function LeadPartnerHome(){
     <main className="lp-main">
       <header className="lp-topbar">
         <div className="lp-breadcrumb"><span>Lead Partner</span><b>/</b><strong>Overview</strong></div>
-        <div className="lp-top-status"><i/> Partner account</div>
       </header>
 
       <div className="lp-content">
         <section className="lp-hero lp-hero-premium">
           <div className="lp-hero-copy">
-            <span className="lp-eyebrow">LEAD PARTNER WORKSPACE</span>
             <div className="lp-title-row"><h1>Good afternoon, {user?.name?.split(' ')[0]||'Partner'}</h1><span className="lp-live-chip"><i/> Active</span></div>
-            <p>Your business performance, earnings and lead quality — in one place.</p>
           </div>
           <div className="lp-period-wrap"><button className={`lp-period ${periodOpen?'open':''}`} type="button" onClick={()=>setPeriodOpen(v=>!v)} aria-expanded={periodOpen}><span>▣</span> {periodLabels[period]} <b>⌄</b></button>{periodOpen&&<div className="lp-period-menu">{Object.entries(periodLabels).map(([key,label])=><button key={key} type="button" className={period===key?'selected':''} onClick={()=>{setPeriod(key);setPeriodOpen(false)}}>{label}{period===key&&<span>✓</span>}</button>)}</div>}</div>
         </section>
@@ -102,29 +99,29 @@ export default function LeadPartnerHome(){
 
         <section className="lp-finance-hero">
           <div className="lp-balance-card">
-            <div className="lp-balance-top"><div><span className="lp-card-overline">AVAILABLE TO WITHDRAW</span><small>Eligible partner earnings</small></div><Link to="/lead-partner/withdrawals">Withdraw →</Link></div>
+            <div className="lp-balance-top"><div><span className="lp-card-overline">AVAILABLE TO WITHDRAW</span></div><Link to="/lead-partner/withdrawals">Withdraw →</Link></div>
             <strong>{loading?'—':money(stats.availableEarnings)}</strong>
             <div className="lp-balance-foot"><span>Earnings {loading?'—':money(stats.earningsGenerated)}</span><span>Recovery {loading?'—':money(stats.recoveryOutstanding)}</span></div>
           </div>
           <div className="lp-finance-mini-grid">
-            <article><span>Gross sales</span><strong>{loading?'—':money(stats.grossSales)}</strong><small>Paid lead value</small></article>
-            <article><span>Amount received</span><strong>{loading?'—':money(stats.amountReceived)}</strong><small>Successful payouts</small></article>
-            <article><span>Pending payout</span><strong>{loading?'—':money(stats.pendingWithdrawals)}</strong><small>Awaiting processing</small></article>
-            <article><span>Recovery outstanding</span><strong className={Number(stats.recoveryOutstanding||0)>0?'warning-value':''}>{loading?'—':money(stats.recoveryOutstanding)}</strong><small>From invalidated leads</small></article>
+            <article><span>Gross sales</span><strong>{loading?'—':money(stats.grossSales)}</strong></article>
+            <article><span>Amount received</span><strong>{loading?'—':money(stats.amountReceived)}</strong></article>
+            <article><span>Pending payout</span><strong>{loading?'—':money(stats.pendingWithdrawals)}</strong></article>
+            <article><span>Recovery outstanding</span><strong className={Number(stats.recoveryOutstanding||0)>0?'warning-value':''}>{loading?'—':money(stats.recoveryOutstanding)}</strong></article>
           </div>
         </section>
 
         <section className="lp-metric-strip">
           <article><span className="lp-metric-icon">♙</span><div><small>Leads uploaded</small><strong>{loading?'—':stats.totalLeads??0}</strong><em>{loading?'—':stats.activeLeads??0} active</em></div></article>
-          <article><span className="lp-metric-icon green">↗</span><div><small>Leads sold</small><strong>{loading?'—':stats.soldLeads??0}</strong><em>Completed purchases</em></div></article>
-          <article><span className="lp-metric-icon red">!</span><div><small>Verified fake</small><strong>{loading?'—':stats.verifiedFakeLeads??0}</strong><em>Admin confirmed</em></div></article>
-          <article><span className="lp-metric-icon orange">↩</span><div><small>Refunded leads</small><strong>{loading?'—':stats.refundedLeads??0}</strong><em>Purchases refunded</em></div></article>
-          <article><span className="lp-metric-icon yellow">◷</span><div><small>Expired access</small><strong>{loading?'—':stats.expiredAccessLeads??0}</strong><em>Buyer access expired</em></div></article>
+          <article><span className="lp-metric-icon green">↗</span><div><small>Leads sold</small><strong>{loading?'—':stats.soldLeads??0}</strong></div></article>
+          <article><span className="lp-metric-icon red">!</span><div><small>Verified fake</small><strong>{loading?'—':stats.verifiedFakeLeads??0}</strong></div></article>
+          <article><span className="lp-metric-icon orange">↩</span><div><small>Refunded leads</small><strong>{loading?'—':stats.refundedLeads??0}</strong></div></article>
+          <article><span className="lp-metric-icon yellow">◷</span><div><small>Expired access</small><strong>{loading?'—':stats.expiredAccessLeads??0}</strong></div></article>
         </section>
 
         <section className="lp-chart-grid lp-chart-grid-premium">
           <article className="lp-card lp-earnings-card">
-            <div className="lp-card-head"><div><span className="lp-card-overline dark">FINANCIAL PERFORMANCE</span><h2>Earnings performance</h2><p>Generated earnings compared with completed payouts.</p></div><div className="lp-legend"><span><i className="earnings"/> Earnings</span><span><i className="received"/> Received</span></div></div>
+            <div className="lp-card-head"><div><h2>Earnings performance</h2></div><div className="lp-legend"><span><i className="earnings"/> Earnings</span><span><i className="received"/> Received</span></div></div>
             <div className="lp-line-chart">
               <div className="lp-y-axis"><span>{money(chartMax)}</span><span>{money(chartMax*.75)}</span><span>{money(chartMax*.5)}</span><span>{money(chartMax*.25)}</span><span>₹0</span></div>
               <svg viewBox="0 0 650 190" preserveAspectRatio="none" aria-label="Earnings and received trend">
@@ -138,7 +135,7 @@ export default function LeadPartnerHome(){
           </article>
 
           <article className="lp-card lp-status-card">
-            <div className="lp-card-head"><div><span className="lp-card-overline dark">INVENTORY MIX</span><h2>Lead status</h2><p>Current distribution of uploaded leads.</p></div></div>
+            <div className="lp-card-head"><div><h2>Lead status</h2></div></div>
             <div className="lp-donut-wrap lp-donut-wrap-premium">
               <div className="lp-donut" style={{background:statusGradient}}><div><strong>{loading?'—':totalStatus}</strong><span>Total leads</span></div></div>
               <div className="lp-status-list">{statusSegments.map(x=><div key={x.key}><i className={x.key}/><span>{x.label}</span><b>{x.value}</b></div>)}{!statusSegments.length&&<div className="lp-empty-mini">No lead status data yet.</div>}</div>
@@ -148,7 +145,7 @@ export default function LeadPartnerHome(){
 
         <section className="lp-insight-grid">
           <article className="lp-card lp-quality-card">
-            <div className="lp-card-head"><div><span className="lp-card-overline dark">LEAD QUALITY</span><h2>Reported lead outcomes</h2><p>Quality signals from purchased partner leads.</p></div><Link to="/lead-partner/reports">Open reports →</Link></div>
+            <div className="lp-card-head"><div><h2>Reported lead outcomes</h2></div><Link to="/lead-partner/reports">Open reports →</Link></div>
             <div className="lp-quality-grid">
               <div><span>Purchased leads</span><strong>{loading?'—':quality.purchasedLeads??0}</strong></div>
               <div><span>Verified genuine</span><strong>{loading?'—':quality.verifiedGenuineReports??0}</strong></div>
@@ -158,7 +155,7 @@ export default function LeadPartnerHome(){
             <div className="lp-quality-note">Verified fake leads are handled through the existing refund and earnings-reversal workflow.</div>
           </article>
           <article className="lp-card lp-health-card">
-            <div className="lp-card-head"><div><span className="lp-card-overline dark">FINANCIAL POSITION</span><h2>Balance breakdown</h2><p>Understand how the current balance is composed.</p></div><Link to="/lead-partner/account">Account →</Link></div>
+            <div className="lp-card-head"><div><h2>Balance breakdown</h2></div><Link to="/lead-partner/account">Account →</Link></div>
             <div className="lp-health-list">
               <div><span>Gross sales</span><b>{loading?'—':money(stats.grossSales)}</b></div>
               <div><span>Earnings</span><b>{loading?'—':money(stats.earningsGenerated)}</b></div>
@@ -172,7 +169,7 @@ export default function LeadPartnerHome(){
 
         <section className="lp-bottom-grid lp-bottom-grid-premium">
           <article className="lp-card lp-activity-card">
-            <div className="lp-card-head"><div><span className="lp-card-overline dark">RECENT ACTIVITY</span><h2>Latest business activity</h2><p>Recent lead and payout events.</p></div><Link to="/lead-partner/withdrawals">View funds →</Link></div>
+            <div className="lp-card-head"><div><h2>Latest business activity</h2></div><Link to="/lead-partner/withdrawals">View funds →</Link></div>
             <div className="lp-activity-list">
               {activity.map(item=><div key={item.id} className="lp-activity-item">
                 <span className={`lp-activity-icon ${item.type} ${item.status||''}`}>{item.type==='payout'?'₹':item.status==='invalid'?'!':'•'}</span>
@@ -183,7 +180,7 @@ export default function LeadPartnerHome(){
             </div>
           </article>
           <article className="lp-card lp-table-card">
-            <div className="lp-card-head"><div><span className="lp-card-overline dark">RECENT LEADS</span><h2>Lead inventory</h2><p>Your latest uploaded leads.</p></div><Link to="/lead-partner/inventory">View all →</Link></div>
+            <div className="lp-card-head"><div><h2>Lead inventory</h2></div><Link to="/lead-partner/inventory">View all →</Link></div>
             <div className="lp-table-wrap"><table className="lp-table"><thead><tr><th>ID</th><th>LEAD</th><th>SERVICE</th><th>LOCATION</th><th>STATUS</th></tr></thead><tbody>
               {recentLeads.slice(0,5).map(lead=><tr key={lead.id}><td>#{lead.id}</td><td><b>{lead.customer_name||'—'}</b></td><td>{lead.service_name||'—'}</td><td>{lead.city_name||'—'}</td><td><span className={`lp-status-pill ${lead.status||''}`}>{lead.status||'—'}</span></td></tr>)}
             </tbody></table>{!recentLeads.length&&<div className="lp-empty">No leads uploaded yet.</div>}</div>

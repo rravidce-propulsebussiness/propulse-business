@@ -24,10 +24,10 @@ export default function LeadPartnerFaq(){
   return <div className="faq-shell">
     <LeadPartnerSidebar user={user} onSignOut={signOut} />
     <main className="faq-main">
-      <header className="faq-topbar"><div className="faq-breadcrumb"><span>Lead Partner</span><b>/</b><strong>FAQs</strong></div><div className="faq-top-status"><i/> Partner account</div></header>
+      <header className="faq-topbar"><div className="faq-breadcrumb"><span>Lead Partner</span><b>/</b><strong>FAQs</strong></div></header>
       <div className="faq-content">
         <section className="faq-hero">
-          <div className="faq-hero-copy"><span className="faq-eyebrow">HELP CENTER</span><h1>How can we help you?</h1><p>Find quick answers about leads, earnings, payments, withdrawals and your Lead Partner account.</p>
+          <div className="faq-hero-copy"><h1>How can we help you?</h1>
             <div className="faq-search"><span>⌕</span><input value={search} onChange={e=>{setSearch(e.target.value);setOpen(null)}} placeholder="Search FAQs… e.g. payment, lead validity, withdrawal"/><button type="button">Search</button></div>
             <div className="faq-popular"><span>Popular:</span>{['lead validity','payment','withdrawal','refund','lead quality','account','reports'].map(x=><button type="button" key={x} onClick={()=>setSearch(x)}>{x}</button>)}</div>
           </div>
@@ -42,18 +42,18 @@ export default function LeadPartnerFaq(){
 
         <div className="faq-main-grid">
           <section className="faq-card faq-list-card">
-            <div className="faq-card-head"><div><span className="faq-kicker">{category==='all'?'FREQUENTLY ASKED QUESTIONS':CATEGORIES.find(x=>x[0]===category)?.[1]?.toUpperCase()}</span><h2>{category==='all'?'Frequently Asked Questions':CATEGORIES.find(x=>x[0]===category)?.[1]+' Questions'}</h2><p>{CATEGORIES.find(x=>x[0]===category)?.[2]}</p></div><span className="faq-count">{visible.length} question{visible.length===1?'':'s'}</span></div>
+            <div className="faq-card-head"><div><h2>{category==='all'?'Frequently Asked Questions':CATEGORIES.find(x=>x[0]===category)?.[1]+' Questions'}</h2></div><span className="faq-count">{visible.length} question{visible.length===1?'':'s'}</span></div>
             {loading?<div className="faq-loading">Loading FAQs…</div>:!visible.length?<div className="faq-empty"><span>?</span><strong>No matching questions</strong><p>Try another search or category.</p></div>:<div className="faq-questions">{visible.map((item)=><article key={item.id} className={open===item.id?'open':''}><button type="button" onClick={()=>setOpen(open===item.id?null:item.id)}><span className="faq-q-icon">{open===item.id?'−':'+'}</span><strong>{item.question}</strong><span className="faq-chevron">{open===item.id?'⌃':'⌄'}</span></button>{open===item.id&&<div className="faq-answer"><p>{item.answer}</p></div>}</article>)}</div>}
           </section>
 
           <aside className="faq-side">
-            <section className="faq-card quick-help"><div className="faq-card-head"><div><span className="faq-kicker">QUICK HELP</span><h2>Common guides</h2><p>Jump directly to useful answers.</p></div></div>{QUICK.map(([q,cat])=><button type="button" key={q} onClick={()=>{setCategory(cat);setSearch('')}}><span>↗</span><div><strong>{q}</strong><small>{CATEGORIES.find(x=>x[0]===cat)?.[2]}</small></div><b>›</b></button>)}</section>
+            <section className="faq-card quick-help"><div className="faq-card-head"><div><h2>Common guides</h2></div></div>{QUICK.map(([q,cat])=><button type="button" key={q} onClick={()=>{setCategory(cat);setSearch('')}}><span>↗</span><div><strong>{q}</strong><small>{CATEGORIES.find(x=>x[0]===cat)?.[2]}</small></div><b>›</b></button>)}</section>
             <section className="faq-support"><div className="faq-support-icon">◉</div><div><span>STILL NEED HELP?</span><h3>We're here to help.</h3><p>Contact your ProPulse administrator with your lead, report or withdrawal reference.</p></div><Link to="/lead-partner/reports">Open Reports →</Link></section>
-            <section className="faq-card resources"><div className="faq-card-head"><div><span className="faq-kicker">USEFUL RESOURCES</span><h2>Lead Partner tools</h2></div></div><Link to="/lead-partner/inventory">Lead Inventory <b>›</b></Link><Link to="/lead-partner/pricing">Pricing &amp; Revenue <b>›</b></Link><Link to="/lead-partner/withdrawals">Earnings &amp; Withdrawals <b>›</b></Link><Link to="/lead-partner/account">Account &amp; Payout <b>›</b></Link></section>
+            <section className="faq-card resources"><div className="faq-card-head"><div><h2>Lead Partner tools</h2></div></div><Link to="/lead-partner/inventory">Lead Inventory <b>›</b></Link><Link to="/lead-partner/pricing">Pricing &amp; Revenue <b>›</b></Link><Link to="/lead-partner/withdrawals">Earnings &amp; Withdrawals <b>›</b></Link><Link to="/lead-partner/account">Account &amp; Payout <b>›</b></Link></section>
           </aside>
         </div>
 
-        <section className="faq-bottom-help"><div><span className="faq-kicker">NEED MORE HELP?</span><h2>Can't find what you're looking for?</h2><p>Use the relevant Lead Partner page or contact your ProPulse administrator with the reference number involved.</p></div><Link to="/lead-partner/account">Account &amp; payout settings →</Link></section>
+        <section className="faq-bottom-help"><div><h2>Can't find what you're looking for?</h2></div><Link to="/lead-partner/account">Account &amp; payout settings →</Link></section>
       </div>
     </main>
   </div>
