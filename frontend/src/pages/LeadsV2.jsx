@@ -80,7 +80,6 @@ export default function LeadsV2() {
   const [buyModal, setBuyModal] = useState(null)
   const [walletBalance, setWalletBalance] = useState(0)
   const [useWallet, setUseWallet] = useState(true)
-  const [selectedSharePack, setSelectedSharePack] = useState(null)
   const [search, setSearch] = useState('')
   const [industryFilter, setIndustryFilter] = useState('')
   const [cityFilter, setCityFilter] = useState('')
@@ -92,7 +91,6 @@ export default function LeadsV2() {
   const [notice, setNotice] = useState('')
   const [payment, setPayment] = useState(null)
   const [paymentLead, setPaymentLead] = useState(null)
-  const [, setPaymentShares] = useState(0)
   const [directSubmitting, setDirectSubmitting] = useState(false)
   const [paymentProof, setPaymentProof] = useState(null)
   const [paymentError, setPaymentError] = useState('')
@@ -191,6 +189,8 @@ export default function LeadsV2() {
   const memberPeriodLabel = memberBillingMonths === 12 || /year/i.test(memberBillingPeriod) ? 'Year' : memberBillingMonths === 6 || /half/i.test(memberBillingPeriod) ? 'Half-Year' : memberBillingMonths === 3 || /quarter/i.test(memberBillingPeriod) ? 'Quarter' : 'Month'
   const memberSavingsLabel = activeMembershipGroup === 'scale' ? `Scale (${memberPeriodLabel})` : activeMembershipGroup === 'growth' ? `Growth (${memberPeriodLabel})` : 'Growth / Scale'
   const buyModalClaimed = Boolean(buyModal?.access?.claimed || buyModal?.access?.purchased)
+  const currentPricingRow = buyModal?.pricing?.shares?.[0] || null
+  const currentBuyerAccess = Number(currentPricingRow?.shares || buyModal?.effective_buyer_capacity || 0) || null
   const title = category ? `${category.replaceAll('-', ' ')} leads` : 'Available Leads'
   const visibleLeads = useMemo(() => leads, [leads])
 
@@ -204,10 +204,10 @@ export default function LeadsV2() {
   const openBuyModal = (lead) => {
     if (!logged) { navigate('/login'); return }
     if (!lead.pricing?.shares?.length) { setError('Pricing is not available for this lead.'); return }
-    setError(''); setNotice(''); setPaymentError(''); setCouponCode(''); setCouponStatus(''); setCouponError(''); setCouponDiscount(0); setCouponFinalAmount(null); setUseWallet(true); setWalletBalance(0); setPaymentProof(null); setSelectedSharePack(Number(lead.pricing.shares[0]?.shares) || null); setBuyModal(lead)
+    setError(''); setNotice(''); setPaymentError(''); setCouponCode(''); setCouponStatus(''); setCouponError(''); setCouponDiscount(0); setCouponFinalAmount(null); setUseWallet(true); setWalletBalance(0); setPaymentProof(null); setBuyModal(lead)
     authRequest('/wallet').then(data => setWalletBalance(Number(data?.balance ?? data?.wallet?.balance ?? 0))).catch(() => {})
   }
-  const validateCouponForSelection = async (code = couponCode, shares = selectedSharePack) => {
+  const validateCouponForCurrentAccess = async (code = couponCode) => {
     const normalized = String(code || '').trim().toUpperCase()
     setCouponError('')
     if (!normalized) {
@@ -216,8 +216,7 @@ export default function LeadsV2() {
       setCouponFinalAmount(null)
       return false
     }
-    const row = (buyModal?.pricing?.shares || []).find(p => Number(p.shares) === Number(shares))
-    const subtotal = Number(row?.[isPro ? 'pro' : 'normal'] || 0)
+    const subtotal = Number(currentPricingRow?.[isPro ? 'pro' : 'normal'] || 0)
     if (!subtotal) {
       setCouponError('Lead price is unavailable.')
       return false
@@ -247,7 +246,7 @@ export default function LeadsV2() {
       return false
     }
   }
-  const applyCoupon = () => validateCouponForSelection()
+  const applyCoupon = () => validateCouponForCurrentAccess()
   const claim = async (lead) => {
     if (!logged) { navigate('/login'); return }
     setClaiming(lead.id); setNotice(''); setError('')
@@ -259,11 +258,13 @@ export default function LeadsV2() {
     } catch (e) { setError(e.message) }
     finally { setClaiming(null) }
   }
-  const submitLeadCheckout = async (lead, shares, plan = 'normal') => {
+  const submitLeadCheckout = async (lead, plan = 'normal') => {
     if (!logged) { navigate('/login'); return }
     if (plan === 'pro' && !isPro) { setBuyModal(null); setUpgrade(true); return }
-    const row = (lead?.pricing?.shares || []).find(p => Number(p.shares) === Number(shares))
+    const row = lead?.pricing?.shares?.[0] || null
+    const shares = Number(row?.shares || lead?.effective_buyer_capacity || 0)
     const selectedPrice = Number(row?.[isPro ? 'pro' : 'normal'] || 0)
+    if (!shares || !selectedPrice) return setPaymentError('Current buyer access pricing is unavailable.')
     const discountedTotal = Math.max(0, Number(couponFinalAmount != null ? couponFinalAmount : selectedPrice))
     const walletDeduction = useWallet ? Math.min(Math.max(0, Number(walletBalance || 0)), discountedTotal) : 0
     const estimatedExternal = Math.max(0, discountedTotal - walletDeduction)
@@ -281,7 +282,6 @@ export default function LeadsV2() {
       if (needsExternalPayment) {
         setPayment(d)
         setPaymentLead(lead)
-        setPaymentShares(shares)
         const reference = document.getElementById('lead-payment-utr')?.value?.trim()
         const proofValidation = paymentProofError(paymentProof?.file)
         if (!reference || proofValidation) {
@@ -299,7 +299,7 @@ export default function LeadsV2() {
           })
         })
         const submittedMessage = `${Number(d.walletAmount) > 0 ? `Wallet payment of ${money(d.walletAmount)} applied. ` : ''}Remaining ${money(d.externalAmount)} submitted for verification.`
-        setPayment(null); setPaymentLead(null); setPaymentShares(0); setPaymentProof(null); setPaymentError(''); setPaymentSuccess(submittedMessage); setBuyModal(null)
+        setPayment(null); setPaymentLead(null);  setPaymentProof(null); setPaymentError(''); setPaymentSuccess(submittedMessage); setBuyModal(null)
         setBuying(null)
         return
       }
@@ -339,7 +339,7 @@ export default function LeadsV2() {
         body: JSON.stringify({ manualReference: reference, proofUrl, notes: `Lead #${paymentLead?.id} direct payment${Number(payment.walletAmount) > 0 ? ` after wallet payment of ${money(payment.walletAmount)}` : ''}` })
       })
       const submittedMessage = `${Number(payment.walletAmount) > 0 ? `Wallet payment of ${money(payment.walletAmount)} applied. ` : ''}Remaining ${money(payment.externalAmount)} submitted for verification.`
-      setPayment(null); setPaymentLead(null); setPaymentShares(0); setPaymentProof(null); setPaymentError(''); setPaymentSuccess(submittedMessage)
+      setPayment(null); setPaymentLead(null);  setPaymentProof(null); setPaymentError(''); setPaymentSuccess(submittedMessage)
     } catch (e) { setPaymentError(e.message || 'Unable to submit payment. Please try again.') }
     finally { setDirectSubmitting(false) }
   }
@@ -407,10 +407,10 @@ export default function LeadsV2() {
           <div className="lv2-share-section">
             <div className="lv2-share-selection-title">
               <strong>Current Buyer Access</strong>
-              <span>Lead price: <b>{selectedSharePack ? money((buyModal.pricing?.shares || []).find(p => Number(p.shares) === Number(selectedSharePack))?.[isPro ? 'pro' : 'normal']) : '—'}</b></span>
+              <span>Lead price: <b>{currentBuyerAccess ? money((buyModal.pricing?.shares || []).find(p => Number(p.shares) === Number(currentBuyerAccess))?.[isPro ? 'pro' : 'normal']) : '—'}</b></span>
             </div>
             <div className="lv2-pack-grid">
-              {(buyModal.pricing?.shares || []).map(p => { const n = Number(p.shares); const normal = Number(p.normal); const pro = Number(p.pro); const price = isPro ? pro : normal; const saving = Number.isFinite(normal) && Number.isFinite(pro) && normal > pro ? normal - pro : 0; const selected = Number(selectedSharePack) === n; const key = buyModal.id + '-' + n + '-' + (isPro ? 'pro' : 'normal') + '-' + (useWallet ? 'wallet' : 'direct'); const growthSavings = saving; const savingText = growthSavings > 0 ? (isGrowthScaleMember ? `Saved ${money(growthSavings)} with ${memberSavingsLabel}` : `Save with Growth ${money(growthSavings)}`) : ''; return <button key={key} type="button" className={"lv2-pack-card" + (selected ? ' selected' : '')} onClick={() => { setSelectedSharePack(n); if (couponCode.trim()) validateCouponForSelection(couponCode, n) }} disabled={buyModalClaimed || Boolean(buying)}><span className="lv2-pack-check">{selected ? '✓' : ''}</span><strong>{n}</strong><small>{n === 1 ? 'Single Buyer' : `Max ${n} Buyers`}</small><b>{money(price)}</b>{savingText && <em className={isGrowthScaleMember ? 'lv2-pack-saving-member' : 'lv2-pack-saving-growth'}>{savingText}</em>}{buying === key && <i>Processing…</i>}</button> })}
+              {(buyModal.pricing?.shares || []).map(p => { const n = Number(p.shares); const normal = Number(p.normal); const pro = Number(p.pro); const price = isPro ? pro : normal; const saving = Number.isFinite(normal) && Number.isFinite(pro) && normal > pro ? normal - pro : 0; const key = buyModal.id + '-' + n + '-' + (isPro ? 'pro' : 'normal') + '-' + (useWallet ? 'wallet' : 'direct'); const growthSavings = saving; const savingText = growthSavings > 0 ? (isGrowthScaleMember ? `Saved ${money(growthSavings)} with ${memberSavingsLabel}` : `Save with Growth ${money(growthSavings)}`) : ''; return <div key={key} className="lv2-pack-card selected"><span className="lv2-pack-check">✓</span><strong>{n}</strong><small>{n === 1 ? 'Single Buyer' : `Max ${n} Buyers`}</small><b>{money(price)}</b>{savingText && <em className={isGrowthScaleMember ? 'lv2-pack-saving-member' : 'lv2-pack-saving-growth'}>{savingText}</em>}{buying === key && <i>Processing…</i>}</div> })}
             </div>
           </div>
           {!isGrowthScaleMember && <div className="lv2-pro-hint"><strong>Growth / Scale members save more</strong><span>Growth and Scale members get the configured member lead pricing.</span><Link to="/membership" onClick={() => setBuyModal(null)} className="lv2-view-plans-link">View Plans →</Link></div>}
@@ -418,7 +418,7 @@ export default function LeadsV2() {
         </section>
         <aside className={`lv2-purchase-summary${payment && paymentLead && paymentLead.id === buyModal.id ? " payment-ready" : ""}`}>
           {(() => {
-            const selectedRow = (buyModal.pricing?.shares || []).find(p => Number(p.shares) === Number(selectedSharePack))
+            const selectedRow = currentPricingRow
             const selectedPrice = Number(selectedRow?.[isPro ? 'pro' : 'normal'] || 0)
             const discountedTotal = Math.max(0, Number(couponFinalAmount != null ? couponFinalAmount : selectedPrice))
             const walletDeduction = useWallet ? Math.min(Math.max(0, Number(walletBalance || 0)), discountedTotal) : 0
@@ -426,9 +426,9 @@ export default function LeadsV2() {
             return <>
               <div className="lv2-summary-head"><div><strong>Order Summary</strong><small>Lead #${buyModal.id}</small></div><span>🛒</span></div>
               <div className="lv2-summary-body">
-                <div className="lv2-summary-row"><span>Buyer Access</span><strong>{selectedSharePack ? (selectedSharePack === 1 ? 'Single Buyer' : `Max ${selectedSharePack} Buyers`) : 'Current stage'}</strong></div>
-                <div className="lv2-summary-row"><span>Lead Price</span><strong>{selectedSharePack ? money(selectedPrice) : '—'}</strong></div>
-                <div className="lv2-summary-row"><span>Subtotal</span><strong>{selectedSharePack ? money(selectedPrice) : '₹0'}</strong></div>
+                <div className="lv2-summary-row"><span>Buyer Access</span><strong>{currentBuyerAccess ? (currentBuyerAccess === 1 ? 'Single Buyer' : `Max ${currentBuyerAccess} Buyers`) : 'Current stage'}</strong></div>
+                <div className="lv2-summary-row"><span>Lead Price</span><strong>{currentBuyerAccess ? money(selectedPrice) : '—'}</strong></div>
+                <div className="lv2-summary-row"><span>Subtotal</span><strong>{currentBuyerAccess ? money(selectedPrice) : '₹0'}</strong></div>
                 <div className="lv2-summary-row"><span>Coupon Discount</span><strong className={couponDiscount > 0 ? 'lv2-discount-value' : ''}>− {money(couponDiscount)}</strong></div>
                 <div className="lv2-summary-row lv2-wallet-deduction"><span>Wallet Balance Used</span><strong>− {money(walletDeduction)}</strong></div>
                 <div className="lv2-summary-total"><span>Amount to Pay</span><strong>{money(amountToPay)}</strong></div>
@@ -440,7 +440,7 @@ export default function LeadsV2() {
       </div>
 
       {(() => {
-        const selectedRow = (buyModal.pricing?.shares || []).find(p => Number(p.shares) === Number(selectedSharePack))
+        const selectedRow = currentPricingRow
         const selectedPrice = Number(selectedRow?.[isPro ? 'pro' : 'normal'] || 0)
         const discountedTotal = Math.max(0, Number(couponFinalAmount != null ? couponFinalAmount : selectedPrice))
         const walletDeduction = useWallet ? Math.min(Math.max(0, Number(walletBalance || 0)), discountedTotal) : 0
@@ -467,7 +467,7 @@ export default function LeadsV2() {
           </div>}
           {paymentError && <div className="lv2-payment-error" role="alert">{paymentError}</div>}
           <div className="lv2-buy-checkout-note"><strong>🔒 Secure & Safe Transaction</strong><small>Wallet deduction and coupon discount are applied automatically.</small></div>
-          <button type="button" className="lv2-buy-final-submit" disabled={!selectedSharePack || buyModalClaimed || Boolean(buying) || directSubmitting} onClick={() => { const plan = isPro ? 'pro' : 'normal'; submitLeadCheckout(buyModal, Number(selectedSharePack), plan) }}>
+          <button type="button" className="lv2-buy-final-submit" disabled={!currentBuyerAccess || buyModalClaimed || Boolean(buying) || directSubmitting} onClick={() => { const plan = isPro ? 'pro' : 'normal'; submitLeadCheckout(buyModal, plan) }}>
             {buying || directSubmitting ? 'Submitting…' : 'Submit Purchase'}
           </button>
 
