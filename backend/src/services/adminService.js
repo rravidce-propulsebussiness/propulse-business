@@ -29,33 +29,46 @@ async function getDashboardStats() {
       (SELECT COUNT(*)::int FROM states WHERE is_active=TRUE) AS states,
       (SELECT COUNT(*)::int FROM cities WHERE is_active=TRUE) AS cities
     `),
-    pool.query(`WITH lead_sales AS (
+    pool.query(`WITH partner_commission AS (
       SELECT
-        COALESCE(SUM(lp.amount),0)::numeric AS total,
-        COALESCE(SUM(lp.amount) FILTER (WHERE COALESCE(p.paid_at,lp.created_at)>=CURRENT_DATE),0)::numeric AS today,
-        COALESCE(SUM(lp.amount) FILTER (WHERE COALESCE(p.paid_at,lp.created_at)>=CURRENT_TIMESTAMP-INTERVAL '7 days'),0)::numeric AS last_7_days,
-        COALESCE(SUM(lp.amount) FILTER (WHERE COALESCE(p.paid_at,lp.created_at)>=date_trunc('month',CURRENT_DATE)),0)::numeric AS month
+        lead_purchase_id,
+        COALESCE(SUM(gross_sale_amount-earning_amount) FILTER (WHERE status IN ('available','paid')),0)::numeric AS platform_amount
+      FROM lead_partner_earnings
+      GROUP BY lead_purchase_id
+    ), investor_allocation AS (
+      SELECT
+        lead_purchase_id,
+        COALESCE(SUM(allocated_amount),0)::numeric AS investor_amount
+      FROM investment_revenue_allocations
+      GROUP BY lead_purchase_id
+    ), classified_sales AS (
+      SELECT
+        lp.id,
+        COALESCE(p.paid_at,lp.created_at) AS event_at,
+        CASE
+          WHEN l.lead_partner_id IS NOT NULL THEN GREATEST(0,COALESCE(pc.platform_amount,0))
+          WHEN l.investor_user_id IS NOT NULL THEN GREATEST(0,lp.amount-COALESCE(ia.investor_amount,0))
+          ELSE lp.amount
+        END::numeric AS platform_amount,
+        CASE WHEN l.lead_partner_id IS NULL AND l.investor_user_id IS NULL THEN lp.amount ELSE 0 END::numeric AS own_lead_amount,
+        CASE WHEN l.lead_partner_id IS NOT NULL THEN GREATEST(0,COALESCE(pc.platform_amount,0)) ELSE 0 END::numeric AS lead_partner_commission,
+        CASE WHEN l.lead_partner_id IS NULL AND l.investor_user_id IS NOT NULL THEN GREATEST(0,lp.amount-COALESCE(ia.investor_amount,0)) ELSE 0 END::numeric AS investor_commission
       FROM lead_purchases lp
+      JOIN leads l ON l.id=lp.lead_id
       LEFT JOIN payments p ON p.id=lp.payment_id
+      LEFT JOIN partner_commission pc ON pc.lead_purchase_id=lp.id
+      LEFT JOIN investor_allocation ia ON ia.lead_purchase_id=lp.id
       WHERE lp.status='paid'
-    ), membership_sales AS (
-      SELECT
-        COALESCE(SUM(p.amount),0)::numeric AS total,
-        COALESCE(SUM(p.amount) FILTER (WHERE COALESCE(p.paid_at,p.created_at)>=CURRENT_DATE),0)::numeric AS today,
-        COALESCE(SUM(p.amount) FILTER (WHERE COALESCE(p.paid_at,p.created_at)>=CURRENT_TIMESTAMP-INTERVAL '7 days'),0)::numeric AS last_7_days,
-        COALESCE(SUM(p.amount) FILTER (WHERE COALESCE(p.paid_at,p.created_at)>=date_trunc('month',CURRENT_DATE)),0)::numeric AS month
-      FROM payments p
-      WHERE p.status='paid'
-        AND (p.purchase_type='membership' OR (p.purchase_type IS NULL AND p.membership_plan_id IS NOT NULL))
     )
     SELECT
-      (lead_sales.today+membership_sales.today)::numeric AS revenue_today,
-      (lead_sales.last_7_days+membership_sales.last_7_days)::numeric AS revenue_last_7_days,
-      (lead_sales.month+membership_sales.month)::numeric AS revenue_month,
-      (lead_sales.total+membership_sales.total)::numeric AS revenue_total,
-      lead_sales.total AS lead_revenue,
-      membership_sales.total AS membership_revenue
-    FROM lead_sales,membership_sales`),
+      COALESCE(SUM(platform_amount),0)::numeric AS revenue_total,
+      COALESCE(SUM(platform_amount) FILTER (WHERE event_at>=CURRENT_DATE),0)::numeric AS revenue_today,
+      COALESCE(SUM(platform_amount) FILTER (WHERE event_at>=CURRENT_TIMESTAMP-INTERVAL '7 days'),0)::numeric AS revenue_last_7_days,
+      COALESCE(SUM(platform_amount) FILTER (WHERE event_at>=date_trunc('month',CURRENT_DATE)),0)::numeric AS revenue_month,
+      COALESCE(SUM(own_lead_amount),0)::numeric AS own_lead_revenue,
+      COALESCE(SUM(lead_partner_commission),0)::numeric AS lead_partner_commission,
+      COALESCE(SUM(investor_commission),0)::numeric AS investor_commission
+    FROM classified_sales`),
     pool.query(`SELECT
       COUNT(*)::int AS total_leads,
       COUNT(*) FILTER (WHERE l.status='available')::int AS available_leads,
@@ -134,8 +147,9 @@ async function getDashboardStats() {
       last7Days:number(revenue.revenue_last_7_days),
       month:number(revenue.revenue_month),
       total:number(revenue.revenue_total),
-      lead:number(revenue.lead_revenue),
-      membership:number(revenue.membership_revenue)
+      ownLeads:number(revenue.own_lead_revenue),
+      leadPartnerCommission:number(revenue.lead_partner_commission),
+      investorCommission:number(revenue.investor_commission)
     },
     leads:{
       total:number(leads.total_leads),

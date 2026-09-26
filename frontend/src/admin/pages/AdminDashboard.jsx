@@ -43,16 +43,20 @@ export default function AdminDashboard(){
   const ecosystem=stats?.ecosystem||{}
 
   const revenueMix=useMemo(()=>{
-    const lead=Number(revenue.lead||0)
-    const membership=Number(revenue.membership||0)
-    const total=lead+membership
+    const ownLeads=Number(revenue.ownLeads||0)
+    const leadPartnerCommission=Number(revenue.leadPartnerCommission||0)
+    const investorCommission=Number(revenue.investorCommission||0)
+    const total=ownLeads+leadPartnerCommission+investorCommission
+    const percent=value=>total?Math.round((value/total)*100):0
     return {
-      lead,
-      membership,
-      leadPercent:total?Math.round((lead/total)*100):0,
-      membershipPercent:total?Math.round((membership/total)*100):0
+      ownLeads,
+      leadPartnerCommission,
+      investorCommission,
+      ownLeadsPercent:percent(ownLeads),
+      leadPartnerPercent:percent(leadPartnerCommission),
+      investorPercent:percent(investorCommission)
     }
-  },[revenue.lead,revenue.membership])
+  },[revenue.ownLeads,revenue.leadPartnerCommission,revenue.investorCommission])
 
   const show=value=>loading?'—':value
 
@@ -61,31 +65,35 @@ export default function AdminDashboard(){
 
     <section className="admin-dashboard-section">
       <div className="admin-dashboard-section-head">
-        <div><span>FINANCIAL PERFORMANCE</span><h1>Revenue & sales</h1></div>
-        <small>Gross paid lead + membership sales. Wallet top-ups and investment principal are excluded.</small>
+        <div><span>FINANCIAL PERFORMANCE</span><h1>Platform revenue</h1></div>
+        <small>Propulse-owned lead sales + Lead Partner commission + Investor commission. Partner/investor shares, memberships, wallet top-ups and investment principal are excluded.</small>
       </div>
 
       <div className="admin-revenue-grid">
-        <MetricCard label="Revenue today" value={show(money(revenue.today))} note="Paid sales today" accent="orange"/>
-        <MetricCard label="Last 7 days" value={show(money(revenue.last7Days))} note="Rolling seven-day gross sales"/>
+        <MetricCard label="Revenue today" value={show(money(revenue.today))} note="Platform revenue earned today" accent="orange"/>
+        <MetricCard label="Last 7 days" value={show(money(revenue.last7Days))} note="Rolling seven-day platform revenue"/>
         <MetricCard label="This month" value={show(money(revenue.month))} note="Current calendar month"/>
-        <MetricCard label="All-time revenue" value={show(money(revenue.total))} note="Current paid sales after refunds" accent="dark"/>
+        <MetricCard label="All-time revenue" value={show(money(revenue.total))} note="Current platform revenue after reversals/refunds" accent="dark"/>
       </div>
 
       <div className="admin-revenue-breakdown">
-        <div className="admin-breakdown-copy"><span>REVENUE MIX</span><h2>Where paid sales come from</h2></div>
+        <div className="admin-breakdown-copy"><span>REVENUE MIX</span><h2>What Propulse actually earns</h2></div>
         <div className="admin-breakdown-item">
-          <div><span>Lead sales</span><strong>{show(money(revenueMix.lead))}</strong></div>
-          <div className="admin-breakdown-track"><i style={{width:`${revenueMix.leadPercent}%`}}/></div>
-          <small>{revenueMix.leadPercent}% of gross revenue</small>
+          <div><span>Our lead sales</span><strong>{show(money(revenueMix.ownLeads))}</strong></div>
+          <div className="admin-breakdown-track"><i style={{width:`${revenueMix.ownLeadsPercent}%`}}/></div>
+          <small>{revenueMix.ownLeadsPercent}% of platform revenue</small>
         </div>
-        <div className="admin-breakdown-item membership">
-          <div><span>Membership sales</span><strong>{show(money(revenueMix.membership))}</strong></div>
-          <div className="admin-breakdown-track"><i style={{width:`${revenueMix.membershipPercent}%`}}/></div>
-          <small>{revenueMix.membershipPercent}% of gross revenue</small>
+        <div className="admin-breakdown-item partner">
+          <div><span>Lead Partner commission</span><strong>{show(money(revenueMix.leadPartnerCommission))}</strong></div>
+          <div className="admin-breakdown-track"><i style={{width:`${revenueMix.leadPartnerPercent}%`}}/></div>
+          <small>{revenueMix.leadPartnerPercent}% of platform revenue</small>
         </div>
-      </div>
-    </section>
+        <div className="admin-breakdown-item investor">
+          <div><span>Investor commission</span><strong>{show(money(revenueMix.investorCommission))}</strong></div>
+          <div className="admin-breakdown-track"><i style={{width:`${revenueMix.investorPercent}%`}}/></div>
+          <small>{revenueMix.investorPercent}% of platform revenue</small>
+        </div>
+      </div>    </section>
 
     <section className="admin-dashboard-section">
       <div className="admin-dashboard-section-head compact">
