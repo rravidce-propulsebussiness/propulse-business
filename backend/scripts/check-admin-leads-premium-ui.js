@@ -10,6 +10,7 @@ const css=read('../frontend/src/admin/pages/AdminLeadsV9.css');
 const app=read('../frontend/src/App.jsx');
 const upload=read('../frontend/src/admin/pages/AdminLeadUpload.jsx');
 const sheets=read('../frontend/src/admin/pages/AdminLeadSheets.jsx');
+const sheetSync=read('../frontend/src/admin/pages/GoogleSheetAutoSync.jsx');
 
 assert(leads.includes('<Stat label="Basic"'),'Basic KPI must remain');
 assert(leads.includes('<Stat label="Premium"'),'Premium KPI must remain');
@@ -57,5 +58,11 @@ assert(upload.includes('<AdminLeadsV9 mode="upload"/>'),'Upload page must keep s
 assert(sheets.includes('<GoogleSheetAutoSync/>'),'Google Sheets page must keep shared sync logic');
 assert(sheets.includes('v9-sheet-workspace'),'Premium Google Sheets page shell must remain');
 assert(sheets.includes('LEAD OPERATIONS / AUTOMATION'),'Google Sheets premium hero must remain');
+assert(sheetSync.includes('v9-sheet-console'),'Premium Google Sheets sync console must remain');
+assert(sheetSync.includes('Connect Sheet'),'Google Sheets connect action must remain');
+assert(sheetSync.includes('Check All Now'),'Google Sheets manual sync action must remain');
+assert(sheetSync.includes('v9-sheet-source-card'),'Connected Google Sheet cards must remain');
+assert(sheetSync.includes('No Google Sheets connected yet'),'Google Sheets empty state must remain');
+assert(sheetSync.includes('Import precedence'),'Google Sheets precedence guidance must remain');
 
 console.log('Premium Manage Leads regression test passed.');
