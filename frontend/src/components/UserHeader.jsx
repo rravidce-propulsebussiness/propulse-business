@@ -24,6 +24,7 @@ export default function UserHeader() {
       <Link to="/industries">Industries</Link>
       <Link to="/#pricing" onClick={()=>setOpen(false)}>Pricing</Link>
       <Link to="/#upcoming-features" onClick={()=>setOpen(false)}>Upcoming Features</Link>
+      <Link to="/#faq" onClick={()=>setOpen(false)}>FAQ</Link>
       {location.pathname !== '/leads' && <Link className="leads-active" to="/leads" onClick={()=>setOpen(false)}>Explore Leads</Link>}
       <Link className="public-nav-auth" to="/login" onClick={()=>setOpen(false)}>Login</Link>
       <Link className="public-nav-auth" to="/signup" onClick={()=>setOpen(false)}>Sign up</Link>
@@ -45,6 +46,7 @@ export default function UserHeader() {
       <Link className={active("/membership")} to="/membership" onClick={()=>setOpen(false)}>Membership</Link>
       {isPro && <Link className={active("/investment")} to="/investment" onClick={()=>setOpen(false)}>Investor</Link>}
       {!location.pathname.startsWith("/investment") && <Link className={active("/contact?audience=users")} to="/contact?audience=users" onClick={()=>setOpen(false)}>Contact</Link>}
+      <Link className={location.pathname==='/'&&location.hash==='#faq'?' active':''} to="/#faq" onClick={()=>setOpen(false)}>FAQ</Link>
       <button className="user-header-mobile-logout" onClick={logout}>Logout</button>
     </nav>
     <div className="user-header-right"><Link className="user-profile-pill" to="/profile" aria-label="Open business profile"><span className="user-avatar">{avatarLetter}</span><span className="user-profile-name">{displayName}</span></Link><button className="user-logout" onClick={logout}>Logout</button><button className="user-menu-toggle" aria-label="Open navigation" onClick={()=>setOpen(v=>!v)}>☰</button></div>
