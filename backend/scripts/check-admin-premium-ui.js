@@ -14,6 +14,8 @@ const upload=read('../frontend/src/admin/pages/AdminLeadUpload.jsx');
 const sheets=read('../frontend/src/admin/pages/AdminLeadSheets.jsx');
 const industries=read('../frontend/src/pages/Industries.jsx');
 const industriesCss=read('../frontend/src/pages/Industries.css');
+const leadPricing=read('../frontend/src/admin/pages/AdminLeadPricing.jsx');
+const leadPricingCss=read('../frontend/src/admin/pages/AdminLeadPricing.css');
 
 assert(layout.includes('admin-sidebar-signature')&&layout.includes('admin-top-user'),'Premium Admin shell controls must remain present');
 assert(!layout.includes('admin-sidebar-status'),'Duplicated sidebar health copy must stay removed');
@@ -43,6 +45,20 @@ assert(industriesCss.includes('/* Premium Admin Industries workspace */'),'Premi
 assert(industriesCss.includes('.admin-master-page .tree-card'),'Admin hierarchy tree styling must remain scoped');
 assert(industriesCss.includes('.admin-master-page .modal-card'),'Admin master-data modal styling must remain');
 assert(industriesCss.includes('grid-template-columns:repeat(3,minmax(0,1fr))'),'Desktop master-data KPI layout must remain');
+
+assert(app.includes('<Route path="/admin/lead-pricing" element={<AdminLeadPricing/>}/>'),'Lead Pricing must remain available in Admin');
+assert(leadPricing.includes('REVENUE CONTROL / LEAD MARKETPLACE'),'Lead Pricing premium hero must remain');
+assert(leadPricing.includes('pricing-summary-grid'),'Lead Pricing summary KPIs must remain');
+assert(leadPricing.includes('Freshness & sharing strategy'),'Buyer-access defaults must remain');
+assert(leadPricing.includes('Partner pricing rules'),'Lead Partner pricing controls must remain');
+assert(leadPricing.includes('Create pricing rule')&&leadPricing.includes('Configured rules'),'Pricing rule editor and matrix must remain');
+assert(leadPricing.includes('Save access defaults'),'Buyer-access save action must remain');
+assert(leadPricing.includes('Save partner settings'),'Lead Partner pricing save action must remain');
+assert(!leadPricing.includes('<style>{`'),'Lead Pricing must not regress to page-level inline style injection');
+assert(leadPricingCss.includes('/* Premium Lead Pricing workspace */'),'Premium Lead Pricing styling must remain');
+assert(leadPricingCss.includes('grid-template-columns:repeat(4,minmax(0,1fr))'),'Desktop Lead Pricing KPIs must keep four columns');
+assert(leadPricingCss.includes('.access-defaults-grid'),'Buyer-access premium card layout must remain');
+assert(leadPricingCss.includes('.rule-cards'),'Configured pricing rule cards must remain');
 
 assert(dashboard.includes('const revenue=stats?.revenue||{}'),'Overview must use the backend revenue summary');
 assert(dashboard.includes('value={show(money(revenue.total))}'),'Overview revenue KPI must use the backend Propulse revenue total');
