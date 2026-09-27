@@ -131,4 +131,70 @@ async function getInvestorFinancialSummary(userId, client = pool, cycleId = null
   };
 }
 
-module.exports = { getInvestorFinancialSummary, lockInvestorFinancials };
+
+function buildSummaryFromRow(row = {}) {
+  const capital = Math.max(0, Number(row.contributed_capital || 0));
+  const adSpent = Math.max(0, Number(row.ad_spent || 0));
+  const autoInvestEarnings = Math.max(0, Number(row.auto_invest_earnings || 0));
+  const nonAutoEarnings = Math.max(0, Number(row.non_auto_earnings || 0));
+  const settledNonAuto = Math.max(0, Number(row.settled_non_auto_earnings || 0));
+  const payoutTransferred = Math.max(0, Number(row.payout_transferred || 0));
+  const payoutReserved = Math.max(0, Number(row.payout_reserved || 0));
+  const autoInvestEarningsConsumed = Math.min(autoInvestEarnings, Math.max(0, adSpent - capital));
+  const autoInvestEarningsRemaining = Math.max(0, autoInvestEarnings - autoInvestEarningsConsumed);
+  const nonAutoEarningsRemaining = Math.max(0, nonAutoEarnings - settledNonAuto);
+  const paidFromNonAuto = Math.min(payoutTransferred, nonAutoEarningsRemaining);
+  const autoInvestEarningsPaid = Math.min(autoInvestEarningsRemaining, Math.max(0, payoutTransferred - paidFromNonAuto));
+  const nonAutoAfterPaid = Math.max(0, nonAutoEarningsRemaining - paidFromNonAuto);
+  const pendingFromNonAuto = Math.min(payoutReserved, nonAutoAfterPaid);
+  const autoInvestEarningsReserved = Math.min(autoInvestEarningsRemaining - autoInvestEarningsPaid, Math.max(0, payoutReserved - pendingFromNonAuto));
+  const autoInvestEarningsWithdrawable = Math.max(0, autoInvestEarningsRemaining - autoInvestEarningsPaid - autoInvestEarningsReserved);
+  const nonAutoEarningsWithdrawable = Math.max(0, nonAutoAfterPaid - pendingFromNonAuto);
+  const withdrawableEarnings = Math.max(0, autoInvestEarningsWithdrawable + nonAutoEarningsWithdrawable);
+  return {
+    contributed_capital: capital,
+    capital,
+    total_invested: Math.max(0, Number(row.total_invested || 0)),
+    ad_spent: adSpent,
+    auto_invest_earnings: autoInvestEarnings,
+    auto_invest_earnings_consumed: autoInvestEarningsConsumed,
+    auto_invest_earnings_withdrawable: autoInvestEarningsWithdrawable,
+    auto_invest_earnings_paid: autoInvestEarningsPaid,
+    auto_invest_earnings_reserved: autoInvestEarningsReserved,
+    non_auto_earnings: nonAutoEarnings,
+    non_auto_earnings_withdrawable: nonAutoEarningsWithdrawable,
+    settled_non_auto_earnings: settledNonAuto,
+    withdrawable_earnings: withdrawableEarnings,
+    payout_transferred: payoutTransferred,
+    payout_reserved: payoutReserved,
+    available_for_ads: Math.max(0, capital + autoInvestEarnings - adSpent - autoInvestEarningsPaid - autoInvestEarningsReserved),
+    transferable: withdrawableEarnings,
+  };
+}
+
+async function getInvestorFinancialSummaries(scopes, client = pool) {
+  const normalized = (Array.isArray(scopes) ? scopes : [])
+    .map(item => ({ userId: Number(item?.userId), cycleId: item?.cycleId == null ? null : Number(item.cycleId) }))
+    .filter(item => Number.isInteger(item.userId) && item.userId > 0);
+  if (!normalized.length) return new Map();
+  const userIds = normalized.map(item => item.userId);
+  const cycleIds = normalized.map(item => Number.isInteger(item.cycleId) && item.cycleId > 0 ? item.cycleId : null);
+  const rows = (await client.query(`
+    WITH scope AS (
+      SELECT * FROM UNNEST($1::int[], $2::int[]) AS s(user_id, cycle_id)
+    )
+    SELECT s.user_id,s.cycle_id,
+      COALESCE((SELECT SUM(i.amount) FROM investments i WHERE i.user_id=s.user_id AND i.cycle_id=s.cycle_id AND i.status IN ('active','matured','paid') AND i.parent_investment_id IS NULL),0) AS contributed_capital,
+      COALESCE((SELECT SUM(i.amount) FROM investments i WHERE i.user_id=s.user_id AND i.cycle_id=s.cycle_id AND i.status<>'cancelled' AND i.parent_investment_id IS NULL),0) AS total_invested,
+      COALESCE((SELECT SUM(sp.amount) FROM investment_ad_spends sp JOIN investments i ON i.id=sp.investment_id WHERE i.user_id=s.user_id AND i.cycle_id=s.cycle_id AND i.status<>'cancelled'),0) AS ad_spent,
+      COALESCE((SELECT SUM(a.allocated_amount) FROM investment_revenue_allocations a JOIN investments i ON i.id=a.investment_id WHERE i.user_id=s.user_id AND i.cycle_id=s.cycle_id AND i.status<>'cancelled' AND COALESCE(i.reinvestment_enabled,FALSE)=TRUE),0) AS auto_invest_earnings,
+      COALESCE((SELECT SUM(a.allocated_amount) FROM investment_revenue_allocations a JOIN investments i ON i.id=a.investment_id WHERE i.user_id=s.user_id AND i.cycle_id=s.cycle_id AND i.status<>'cancelled' AND COALESCE(i.reinvestment_enabled,FALSE)=FALSE),0) AS non_auto_earnings,
+      COALESCE((SELECT SUM(i.payout_amount) FROM investments i WHERE i.user_id=s.user_id AND i.cycle_id=s.cycle_id AND i.status='paid' AND COALESCE(i.reinvestment_enabled,FALSE)=FALSE),0) AS settled_non_auto_earnings,
+      COALESCE((SELECT SUM(r.amount) FROM investor_payout_requests r WHERE r.user_id=s.user_id AND r.cycle_id=s.cycle_id AND r.status='paid'),0) AS payout_transferred,
+      COALESCE((SELECT SUM(r.amount) FROM investor_payout_requests r WHERE r.user_id=s.user_id AND r.cycle_id=s.cycle_id AND r.status='pending'),0) AS payout_reserved
+    FROM scope s
+  `, [userIds, cycleIds])).rows;
+  return new Map(rows.map(row => [Number(row.user_id), { cycleId: row.cycle_id == null ? null : Number(row.cycle_id), ...buildSummaryFromRow(row) }]));
+}
+
+module.exports = { getInvestorFinancialSummary, getInvestorFinancialSummaries, lockInvestorFinancials };
