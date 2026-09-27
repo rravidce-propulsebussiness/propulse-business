@@ -15,6 +15,9 @@ const read=relative=>fs.readFileSync(path.join(root,relative),'utf8');
   const investorPayout=read('src/services/investorPayoutRequestService.js');
   const wallet=read('src/services/walletService.js');
   const walletCoupon=read('src/services/walletCouponService.js');
+  const investorTransfer=read('src/services/adminInvestorTransferService.js');
+  const investorAdminOps=read('src/services/investorAdminOperationsService.js');
+  const investmentRoutes=read('src/routes/investmentRoutes.js');
 
   assert(server.includes("if(req.path==='/company-proofs'||req.path.startsWith('/company-proofs/'))return res.status(404).json({error:'Not found'});"),'Existing company-proof public-file protection must remain intact');
   assert(server.includes("if(req.path==='/private-proofs'||req.path.startsWith('/private-proofs/'))return res.status(404).json({error:'Not found'});"),'Private proof files must never be exposed by /uploads static hosting');
@@ -28,6 +31,10 @@ const read=relative=>fs.readFileSync(path.join(root,relative),'utf8');
   assert(wallet.includes("category:'wallet-topups'"),'Wallet top-up proofs must use private file storage');
   assert(wallet.includes('materializeProof(row.proof_url'),'Wallet proof viewing must materialize private references');
   assert(walletCoupon.includes("category:'wallet-topups'"),'Coupon wallet top-ups with external payment must use private file storage');
+  assert(investorTransfer.includes("category:'investor-settlements'"),'Transfer-all investor proofs must use private file storage');
+  assert(investorAdminOps.includes("category:'investor-settlements'"),'Per-investment settlement proofs must use private file storage');
+  assert(investorAdminOps.includes('materializeProof(row.payout_proof_url'),'Stored investor settlement proofs must be materialized through an authorized service');
+  assert(investmentRoutes.includes("router.get('/admin/:id/payout-proof',admin,c.getPayoutProof)"),'Investor settlement proof reads must require admin access');
 
   const tinyPng=Buffer.from([137,80,78,71,13,10,26,10,0,0,0,0]);
   const dataUrl='data:image/png;base64,'+tinyPng.toString('base64');
