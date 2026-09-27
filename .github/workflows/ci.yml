@@ -6,6 +6,7 @@ on:
       - main
       - 'security/**'
       - 'fix/**'
+      - 'feature/**'
   pull_request:
   workflow_dispatch:
 
