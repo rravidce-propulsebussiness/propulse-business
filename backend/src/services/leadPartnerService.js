@@ -158,22 +158,44 @@ async function updateStatus(partnerId, status) {
   return row;
 }
 
-async function getAdminPartners({ status, page = 1, limit = 50 } = {}) {
+async function getAdminPartners({ status, search = '', page = 1, limit = 50 } = {}) {
   const currentPage = Math.max(1, Number(page) || 1);
   const pageSize = Math.min(100, Math.max(1, Number(limit) || 50));
   const offset = (currentPage - 1) * pageSize;
   const values = [];
-  let filter = '1=1';
+  const filters = ['1=1'];
+
   if (status) {
     values.push(String(status));
-    filter += ` AND lp.status=$${values.length}`;
+    filters.push(`lp.status=$${values.length}`);
   }
-  const count = (await pool.query(`SELECT COUNT(*)::int AS total FROM lead_partners lp WHERE ${filter}`, values)).rows[0];
+  if (String(search || '').trim()) {
+    values.push(`%${String(search).trim()}%`);
+    filters.push(`(
+      u.name ILIKE $${values.length}
+      OR u.email ILIKE $${values.length}
+      OR COALESCE(bp.business_name,'') ILIKE $${values.length}
+      OR COALESCE(bp.phone,'') ILIKE $${values.length}
+      OR CAST(lp.id AS TEXT) ILIKE $${values.length}
+    )`);
+  }
+
+  const where = filters.join(' AND ');
+  const count = (await pool.query(
+    `SELECT COUNT(*)::int AS total
+     FROM lead_partners lp
+     JOIN users u ON u.id=lp.user_id
+     LEFT JOIN business_profiles bp ON bp.user_id=lp.user_id
+     WHERE ${where}`,
+    values
+  )).rows[0];
+
   const rows = (await pool.query(
     `WITH lead_stats AS (
        SELECT lead_partner_id,
               COUNT(*)::int AS total_leads,
-              COUNT(*) FILTER (WHERE status='invalid')::int AS invalid_leads
+              COUNT(*) FILTER (WHERE status='invalid')::int AS invalid_leads,
+              COUNT(*) FILTER (WHERE status IN ('available','paused'))::int AS active_leads
        FROM leads
        WHERE lead_partner_id IS NOT NULL
        GROUP BY lead_partner_id
@@ -194,37 +216,130 @@ async function getAdminPartners({ status, page = 1, limit = 50 } = {}) {
        JOIN leads l ON l.id=r.lead_id
        WHERE l.lead_partner_id IS NOT NULL
        GROUP BY l.lead_partner_id
+     ),
+     earning_calc AS (
+       SELECT e.partner_id,e.status,e.gross_sale_amount,e.earning_amount,
+              COALESCE((SELECT SUM(a.amount) FROM lead_partner_earning_adjustment_allocations a WHERE a.earning_id=e.id),0)::numeric AS adjusted,
+              COALESCE((SELECT SUM(i.amount)
+                        FROM lead_partner_payout_items i
+                        JOIN lead_partner_payout_requests r ON r.id=i.payout_id
+                        WHERE i.earning_id=e.id AND i.status='reserved' AND r.status='pending'),0)::numeric AS reserved,
+              COALESCE((SELECT SUM(i.amount)
+                        FROM lead_partner_payout_items i
+                        JOIN lead_partner_payout_requests r ON r.id=i.payout_id
+                        WHERE i.earning_id=e.id AND i.status='paid' AND r.status='paid'),0)::numeric AS paid
+       FROM lead_partner_earnings e
+     ),
+     earning_stats AS (
+       SELECT partner_id,
+              COALESCE(SUM(gross_sale_amount) FILTER (WHERE status<>'reversed'),0)::numeric AS gross_sales,
+              COALESCE(SUM(earning_amount) FILTER (WHERE status<>'reversed'),0)::numeric AS generated_earnings,
+              COALESCE(SUM(
+                GREATEST(0,earning_amount-adjusted-reserved-paid)
+              ) FILTER (WHERE status='available'),0)::numeric AS available_earnings,
+              COALESCE(SUM(reserved) FILTER (WHERE status='available'),0)::numeric AS reserved_earnings,
+              COALESCE(SUM(paid),0)::numeric AS paid_earnings,
+              COALESCE(SUM(earning_amount) FILTER (WHERE status='reversed'),0)::numeric AS reversed_earnings
+       FROM earning_calc
+       GROUP BY partner_id
+     ),
+     payout_stats AS (
+       SELECT partner_id,
+              COALESCE(SUM(amount) FILTER (WHERE status='pending'),0)::numeric AS pending_transfer,
+              COALESCE(SUM(amount) FILTER (WHERE status='paid'),0)::numeric AS transferred_amount,
+              COUNT(*) FILTER (WHERE status='pending')::int AS pending_payout_count
+       FROM lead_partner_payout_requests
+       GROUP BY partner_id
+     ),
+     recovery_stats AS (
+       SELECT a.partner_id,
+              COALESCE(SUM(
+                CASE WHEN a.status='outstanding'
+                  THEN a.amount-COALESCE((SELECT SUM(x.amount) FROM lead_partner_earning_adjustment_allocations x WHERE x.adjustment_id=a.id),0)
+                  ELSE 0 END
+              ),0)::numeric AS recovery_outstanding
+       FROM lead_partner_earning_adjustments a
+       GROUP BY a.partner_id
      )
      SELECT lp.*,u.name AS user_name,u.email AS user_email,
+            bp.business_name,bp.phone AS business_phone,
             COALESCE(ls.total_leads,0)::int AS total_leads,
+            COALESCE(ls.active_leads,0)::int AS active_leads,
             COALESCE(ls.invalid_leads,0)::int AS invalid_leads,
             COALESCE(ps.purchased_leads,0)::int AS purchased_leads,
             COALESCE(rs.verified_fake_leads,0)::int AS verified_fake_leads,
             COALESCE(rs.verified_genuine_reports,0)::int AS verified_genuine_reports,
             CASE WHEN COALESCE(ps.purchased_leads,0)=0 THEN 0
                  ELSE ROUND(COALESCE(rs.verified_fake_leads,0)::numeric * 100.0 / ps.purchased_leads, 2)
-            END AS verified_fake_rate_pct
+            END AS verified_fake_rate_pct,
+            COALESCE(es.gross_sales,0)::numeric AS gross_sales,
+            COALESCE(es.generated_earnings,0)::numeric AS generated_earnings,
+            COALESCE(es.available_earnings,0)::numeric AS available_earnings,
+            COALESCE(es.reserved_earnings,0)::numeric AS reserved_earnings,
+            COALESCE(es.paid_earnings,0)::numeric AS paid_earnings,
+            COALESCE(es.reversed_earnings,0)::numeric AS reversed_earnings,
+            COALESCE(pos.pending_transfer,0)::numeric AS pending_transfer,
+            COALESCE(pos.transferred_amount,0)::numeric AS transferred_amount,
+            COALESCE(pos.pending_payout_count,0)::int AS pending_payout_count,
+            COALESCE(rec.recovery_outstanding,0)::numeric AS recovery_outstanding
      FROM lead_partners lp
      JOIN users u ON u.id=lp.user_id
+     LEFT JOIN business_profiles bp ON bp.user_id=lp.user_id
      LEFT JOIN lead_stats ls ON ls.lead_partner_id=lp.id
      LEFT JOIN purchase_stats ps ON ps.lead_partner_id=lp.id
      LEFT JOIN report_stats rs ON rs.lead_partner_id=lp.id
-     WHERE ${filter}
-     ORDER BY lp.created_at DESC,lp.id DESC
+     LEFT JOIN earning_stats es ON es.partner_id=lp.id
+     LEFT JOIN payout_stats pos ON pos.partner_id=lp.id
+     LEFT JOIN recovery_stats rec ON rec.partner_id=lp.id
+     WHERE ${where}
+     ORDER BY
+       CASE WHEN COALESCE(pos.pending_transfer,0)>0 THEN 0 ELSE 1 END,
+       lp.created_at DESC,lp.id DESC
      LIMIT $${values.length + 1} OFFSET $${values.length + 2}`,
     [...values, pageSize, offset]
   )).rows;
+
   const partners = rows.map(row => ({
     ...row,
     total_leads: Number(row.total_leads || 0),
+    active_leads: Number(row.active_leads || 0),
     invalid_leads: Number(row.invalid_leads || 0),
     purchased_leads: Number(row.purchased_leads || 0),
     verified_fake_leads: Number(row.verified_fake_leads || 0),
     verified_genuine_reports: Number(row.verified_genuine_reports || 0),
     verified_fake_rate_pct: Number(row.verified_fake_rate_pct || 0),
+    gross_sales: Number(row.gross_sales || 0),
+    generated_earnings: Number(row.generated_earnings || 0),
+    available_earnings: Number(row.available_earnings || 0),
+    reserved_earnings: Number(row.reserved_earnings || 0),
+    paid_earnings: Number(row.paid_earnings || 0),
+    reversed_earnings: Number(row.reversed_earnings || 0),
+    pending_transfer: Number(row.pending_transfer || 0),
+    transferred_amount: Number(row.transferred_amount || 0),
+    pending_payout_count: Number(row.pending_payout_count || 0),
+    recovery_outstanding: Number(row.recovery_outstanding || 0),
     quality_metric_definition: 'Verified fake partner leads divided by distinct partner leads with at least one completed purchase, including purchases later refunded after an Admin-verified fake decision.',
   }));
-  return { partners, pagination: { page: currentPage, limit: pageSize, total: Number(count.total || 0), totalPages: Math.ceil(Number(count.total || 0) / pageSize) } };
+
+  const totals = partners.reduce((acc,row) => {
+    acc.totalLeads += row.total_leads;
+    acc.purchasedLeads += row.purchased_leads;
+    acc.generatedEarnings += row.generated_earnings;
+    acc.pendingTransfer += row.pending_transfer;
+    acc.transferredAmount += row.transferred_amount;
+    return acc;
+  }, { totalLeads:0,purchasedLeads:0,generatedEarnings:0,pendingTransfer:0,transferredAmount:0 });
+
+  return {
+    partners,
+    totals,
+    pagination: {
+      page: currentPage,
+      limit: pageSize,
+      total: Number(count.total || 0),
+      totalPages: Math.ceil(Number(count.total || 0) / pageSize)
+    }
+  };
 }
 
 async function getDashboard(userId, period='month') {
