@@ -12,6 +12,15 @@ if (process.env.NODE_ENV === 'production' && (!JWT_SECRET || JWT_SECRET.length <
 const EFFECTIVE_JWT_SECRET = JWT_SECRET || 'change-this-secret-in-development-only';
 
 const PUBLIC_SIGNUP_ROLES = new Set(['business', 'lead_partner']);
+const MAX_PASSWORD_CHARS = 64;
+const MAX_BCRYPT_BYTES = 72;
+
+function isValidPassword(password) {
+  if (typeof password !== 'string') return false;
+  if (password.length < 8 || password.length > MAX_PASSWORD_CHARS) return false;
+  if (Buffer.byteLength(password, 'utf8') > MAX_BCRYPT_BYTES) return false;
+  return /[A-Za-z]/.test(password) && /\d/.test(password);
+}
 
 function normalizePublicSignupRole(value) {
   const role = String(value || 'business').trim().toLowerCase();
@@ -78,8 +87,8 @@ async function signup({ name, email, password, phone, businessName, businessDeta
   if (!signupRole) throw Object.assign(new Error('Only User or Lead Partner accounts can be created through public signup'), { code: 'INVALID_SIGNUP_ROLE' });
   const normalizedPhone = String(phone || '').replace(/\D/g, '');
   if (!/^\d{10}$/.test(normalizedPhone)) throw Object.assign(new Error('Mobile number must be exactly 10 digits'), { code: 'INVALID_PHONE' });
-  if (!googleCredential && !/^(?=.*[A-Za-z])(?=.*\d).{8,}$/.test(String(password || ''))) {
-    throw Object.assign(new Error('Password must contain letters and numbers, for example Ravi143'), { code: 'INVALID_PASSWORD' });
+  if (!googleCredential && !isValidPassword(password)) {
+    throw Object.assign(new Error('Password must be 8-64 characters, contain at least one letter and one number, and stay within bcrypt limits'), { code: 'INVALID_PASSWORD' });
   }
   let normalizedEmail = email.trim().toLowerCase();
   let signupName = name.trim();
@@ -100,7 +109,7 @@ async function signup({ name, email, password, phone, businessName, businessDeta
     const passwordHash = await bcrypt.hash(passwordValue, 12);
     const user = (await client.query(`INSERT INTO users (name,email,password_hash,role) VALUES ($1,$2,$3,$4) RETURNING id,name,email,role,auth_version`, [signupName, normalizedEmail, passwordHash, signupRole])).rows[0];
     if (signupRole === 'lead_partner') {
-      await client.query(`INSERT INTO lead_partners (user_id,status) VALUES ($1,'active') ON CONFLICT (user_id) DO NOTHING`, [user.id]);
+      await client.query(`INSERT INTO lead_partners (user_id,status) VALUES ($1,'pending') ON CONFLICT (user_id) DO NOTHING`, [user.id]);
     }
     const profileId = (await client.query(`INSERT INTO business_profiles (user_id,phone,business_name,business_details) VALUES ($1,$2,$3,$4) RETURNING id`, [user.id, phone.trim(), businessName.trim(), businessDetails.trim()])).rows[0].id;
     for (const selection of services) await client.query(`INSERT INTO business_profile_services (business_profile_id,industry_id,service_id,subservice_id) VALUES ($1,$2,$3,$4) ON CONFLICT DO NOTHING`, [profileId, selection.industryId, selection.serviceId, selection.subserviceId || null]);
@@ -263,7 +272,7 @@ async function createPasswordReset(email) {
 }
 
 async function resetPassword({ token, password }) {
-  if (!token || typeof token !== 'string' || !/^(?=.*[A-Za-z])(?=.*\d).{8,}$/.test(String(password || ''))) throw Object.assign(new Error('A valid reset token and a password of at least 8 characters with a letter and number are required'), { code: 'INVALID_RESET_REQUEST' });
+  if (!token || typeof token !== 'string' || !isValidPassword(password)) throw Object.assign(new Error('A valid reset token and a password of 8-64 characters with a letter and number are required'), { code: 'INVALID_RESET_REQUEST' });
   const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
   const client = await pool.connect();
   try {
