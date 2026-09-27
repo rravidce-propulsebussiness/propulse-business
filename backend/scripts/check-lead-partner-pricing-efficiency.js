@@ -16,4 +16,16 @@ assert(block.includes("status IN ('available','paused')"),'Set-wise update must 
 assert(/industry_id=\$\$\{params\.length\}/.test(block),'Industry scope must remain parameterized');
 assert(/city_id=\$\$\{params\.length\}/.test(block),'City scope must remain parameterized');
 
-console.log('Lead Partner pricing set-based efficiency regression test passed.');
+const listStart=source.indexOf('async function list(userId,');
+const listEnd=source.indexOf('function validateRuleInput',listStart);
+assert(listStart>=0&&listEnd>listStart,'Lead Partner pricing workspace list function must exist');
+const listBlock=source.slice(listStart,listEnd);
+assert(!listBlock.includes('LIMIT 500'),'Pricing workspace must not load a fixed 500-lead snapshot');
+assert(listBlock.includes('safeLimit=Math.min(100'),'Pricing workspace page size must be bounded');
+assert(listBlock.includes('SELECT COUNT(*)::int total FROM leads'),'Pricing workspace must return a database total for pagination');
+assert(listBlock.includes('LIMIT 
+)&&listBlock.includes('OFFSET 
+),'Pricing workspace must use SQL pagination');
+assert(listBlock.includes("CAST(l.id AS TEXT)"),'Pricing workspace search must support lead ID');
+
+console.log('Lead Partner pricing set-based and pagination efficiency regression test passed.');
