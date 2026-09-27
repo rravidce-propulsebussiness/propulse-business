@@ -252,6 +252,15 @@ export default function AdminUsers() {
               <div><span>Phone</span><strong>{u.phone||'—'}</strong></div>
             </div>
 
+            {u.role==='business' && <div className="premium-user-commercial">
+              <div className={`user-plan-pill ${u.membership_plan_group||'none'}`}>
+                <span>Membership</span>
+                <strong>{u.membership_plan_group ? String(u.membership_plan_group).toUpperCase() : 'NO PLAN'}</strong>
+                <small>{u.membership_expires_at ? `until ${dateOnly(u.membership_expires_at)}` : 'No active membership'}</small>
+              </div>
+              <div className="user-wallet-pill"><span>Wallet</span><strong>{money(u.wallet_balance)}</strong><small>{u.is_verified?'Verified business':'Not verified'}</small></div>
+            </div>}
+
             {['business','lead_partner'].includes(u.role) ? <div className="premium-user-scope">
               <div><span>Services</span><strong>{u.service_count||0}</strong></div>
               <i/>
