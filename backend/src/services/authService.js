@@ -6,6 +6,7 @@ const fsp = fs.promises;
 const path = require('path');
 const pool = require('../config/database');
 const { getMembershipAccess } = require('./membershipAccessService');
+const { companyProofRoot } = require('../config/uploadStorage');
 
 const JWT_SECRET = process.env.JWT_SECRET;
 if (process.env.NODE_ENV === 'production' && (!JWT_SECRET || JWT_SECRET.length < 32)) throw new Error('JWT_SECRET must be at least 32 characters in production');
@@ -183,7 +184,7 @@ async function saveCompanyProofDocuments(userId, documents = []) {
   if (documents.length > 8) throw new Error('You can upload up to 8 company proof documents');
 
   const allowedTypes = new Set(['application/pdf', 'image/jpeg', 'image/png']);
-  const uploadDir = path.join(__dirname, '../../uploads/company-proofs');
+  const uploadDir = companyProofRoot;
   await fsp.mkdir(uploadDir, { recursive: true });
 
   // Validate and prepare every document before creating any file or database row.
