@@ -41,8 +41,9 @@ function periodForMembership(membership){
 async function getMembership(userId,client=pool,{lock=false}={}){
   const lockSql=lock?' FOR UPDATE OF m':'';
   const result=await client.query(`
-    SELECT m.id,m.starts_at,m.expires_at,m.membership_plan_id,
-           mp.billing_months,mp.lead_entitlements,mp.lead_rollover_enabled,mp.lead_expiry_days
+    SELECT m.id,m.starts_at,m.expires_at,m.membership_plan_id,m.pricing_rule_id,
+           mp.billing_months,COALESCE(m.lead_entitlements_snapshot,mp.lead_entitlements) AS lead_entitlements,
+           mp.lead_rollover_enabled,mp.lead_expiry_days
     FROM memberships m
     JOIN membership_plans mp ON mp.id=m.membership_plan_id
     WHERE m.user_id=$1
