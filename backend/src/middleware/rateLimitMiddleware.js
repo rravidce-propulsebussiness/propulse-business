@@ -66,7 +66,7 @@ async function consumeSharedBucket(key, windowMs) {
   return result.rows[0];
 }
 
-function rateLimit({ windowMs = 15 * 60 * 1000, max = 100, scope = 'route' } = {}) {
+function rateLimit({ windowMs = 15 * 60 * 1000, max = 100, scope = 'route', shared = true } = {}) {
   const safeWindowMs = Math.max(1000, Number(windowMs) || 15 * 60 * 1000);
   const safeMax = Math.max(1, Math.floor(Number(max) || 100));
 
@@ -74,7 +74,7 @@ function rateLimit({ windowMs = 15 * 60 * 1000, max = 100, scope = 'route' } = {
     const key = getRouteKey(req, scope);
     let bucket;
 
-    if (process.env.NODE_ENV === 'production') {
+    if (process.env.NODE_ENV === 'production' && shared) {
       try {
         bucket = await consumeSharedBucket(key, safeWindowMs);
       } catch (error) {
