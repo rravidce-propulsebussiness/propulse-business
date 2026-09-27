@@ -45,13 +45,30 @@ async function createGrant(req,res){
   }
 }
 
-async function revokeGrant(req,res){
-  try{return res.json(await grantService.revokeGrant(req.params.grantId,req.user?.id))}
+async function updateGrant(req,res){
+  try{return res.json(await grantService.updateGrant(req.params.grantId,req.body||{},req.user?.id))}
   catch(error){
     const status=statusFor(error);
-    if(status===500)console.error('Lead entitlement revoke failed:',error);
-    return res.status(status).json({error:error.message||'Failed to revoke lead entitlement grant',code:error.code});
+    if(status===500)console.error('Lead entitlement grant update failed:',error);
+    return res.status(status).json({error:error.message||'Failed to update entitlement grant',code:error.code});
   }
 }
 
-module.exports={overview,businesses,updateSettings,createGrant,revokeGrant};
+async function deleteGrant(req,res){
+  try{return res.json(await grantService.deleteGrant(req.params.grantId,req.user?.id))}
+  catch(error){
+    const status=statusFor(error);
+    if(status===500)console.error('Lead entitlement grant delete failed:',error);
+    return res.status(status).json({error:error.message||'Failed to delete entitlement grant',code:error.code});
+  }
+}
+
+async function deleteSettings(req,res){
+  try{return res.json(await grantService.deleteSettings(req.user?.id))}
+  catch(error){
+    console.error('Lead entitlement settings delete failed:',error);
+    return res.status(500).json({error:'Failed to delete registration entitlement'});
+  }
+}
+
+module.exports={overview,businesses,updateSettings,deleteSettings,createGrant,updateGrant,deleteGrant};
