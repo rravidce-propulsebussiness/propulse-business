@@ -226,6 +226,8 @@ assert(membershipConfigCss.includes('.membership-scope-picker')&&membershipConfi
 assert(membershipConfigCss.includes('.membership-offer-config')&&membershipConfigCss.includes('.membership-validity-presets'),'Premium Membership offer scheduling controls must remain styled');
 assert(customerMembership.includes('membership-offer-price-block')&&customerMembership.includes('offer_discount_percent')&&customerMembership.includes('offer_valid_until'),'Customer Membership page must visibly show targeted offer savings and validity');
 assert(customerMembership.includes("label: 'Billing discount'")&&customerMembership.includes('discount_percent'),'Base billing-cycle discounts must also be visible to customers');
+assert(customerMembership.includes('function OfferCountdown')&&customerMembership.includes('window.setInterval')&&customerMembership.includes('<small>S</small>'),'Timed membership offers must show a live countdown including seconds');
+assert(customerMembershipCss.includes('.membership-offer-countdown')&&customerMembershipCss.includes('.membership-countdown-time'),'Membership offer countdown styling must remain');
 assert(customerMembershipCss.includes('.membership-offer-badge')&&customerMembershipCss.includes('.membership-offer-saving')&&customerMembershipCss.includes('.membership-checkout-offer'),'Customer membership offer styling must remain');
 assert(membershipConfigCss.includes('grid-template-columns:repeat(4,minmax(0,1fr))'),'Desktop Membership KPI layout must remain compact');
 assert(!server.includes("servicePricingRoutes")&&!server.includes("'/api/service-pricing'"),'Legacy Service Pricing API must stay unmounted');
