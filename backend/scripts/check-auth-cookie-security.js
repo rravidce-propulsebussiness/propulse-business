@@ -15,6 +15,7 @@ const controller = read('src/controllers/authController.js');
 const middleware = read('src/middleware/authMiddleware.js');
 const partnerMiddleware = read('src/middleware/leadPartnerMiddleware.js');
 const service = read('src/services/authService.js');
+const authController = read('src/controllers/authController.js');
 const frontendAuth = fs.readFileSync(path.join(root, '../frontend/src/utils/auth.js'), 'utf8');
 const frontendApi = fs.readFileSync(path.join(root, '../frontend/src/utils/api.js'), 'utf8');
 
@@ -26,6 +27,8 @@ assert(controller.includes('const { token, ...safeResult } = result;'), 'JWT mus
 assert(controller.includes('await authService.revokeAuthSessions(tokenUser.id);') || controller.includes('authService.revokeAuthSessions(tokenUser.id)'), 'Logout must revoke the server-side auth session');
 assert(middleware.includes("part.startsWith('propulse_auth=')"), 'Auth middleware must read the auth cookie');
 assert(service.includes('async function revokeAuthSessions(userId)'), 'Auth service must expose server-side session revocation');
+assert(service.includes('async function getPublicAuthenticatedUser(user)'), '/auth/me must be able to reuse the already verified user');
+assert(authController.includes('getPublicAuthenticatedUser(req.user)'), '/auth/me must not query the users table a second time after auth middleware');
 assert(service.includes("INSERT INTO lead_partners (user_id,status) VALUES ($1,'pending')"), 'Public Lead Partner signup must require Admin approval');
 assert(partnerMiddleware.includes('leadPartnerService.assertActivePartner(req.user.id)'), 'Lead Partner workspace must enforce active approval server-side');
 assert(partnerMiddleware.includes("'PARTNER_NOT_ACTIVE'"), 'Lead Partner middleware must reject pending/suspended partners');
