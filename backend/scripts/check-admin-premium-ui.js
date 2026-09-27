@@ -18,6 +18,13 @@ const adminPaymentReceivingCss=read('../frontend/src/admin/components/AdminPayme
 const adminCoupons=read('../frontend/src/admin/pages/AdminCoupons.jsx');
 const adminCouponsCss=read('../frontend/src/admin/pages/AdminCoupons.css');
 const couponService=read('../backend/src/services/couponService.js');
+const couponRoutes=read('../backend/src/routes/couponRoutes.js');
+const couponPromotionMigration=read('../backend/src/database/migrations/2026-09-27-zzzz-coupon-promotion-rewards.sql');
+const walletCouponEnhancer=read('../frontend/src/walletCouponEnhancer.js');
+const customerLeads=read('../frontend/src/pages/LeadsV2.jsx');
+const customerLeadsCss=read('../frontend/src/pages/LeadsV2.css');
+const walletCouponService=read('../backend/src/services/walletCouponService.js');
+const leadPurchaseService=read('../backend/src/services/leadPurchaseService.js');
 const adminUser360Service=read('../backend/src/services/adminUser360Service.js');
 const adminService=read('../backend/src/services/adminService.js');
 const adminController=read('../backend/src/controllers/adminController.js');
@@ -136,6 +143,21 @@ assert(adminCouponsCss.includes('/* Premium Coupons workspace */'),'Unified prem
 assert(adminCouponsCss.includes('.coupon-premium-hero')&&adminCouponsCss.includes('.coupon-card-grid')&&adminCouponsCss.includes('.coupon-modal'),'Premium Coupons hero, card grid and editor modal styling must remain');
 assert(adminCouponsCss.includes('grid-template-columns:repeat(4,minmax(0,1fr))'),'Desktop Coupons KPI layout must remain four columns');
 assert(couponService.includes('JOIN business_profile_services bps')&&couponService.includes('ci.industry_id=bps.industry_id'),'Industry-targeted coupons must resolve the business industry when checkout does not pass one explicitly');
+assert(adminCoupons.includes('Bonus wallet balance')&&adminCoupons.includes('Bonus lead credit')&&adminCoupons.includes('Checkout discount'),'Admin Promotions must support discounts, wallet bonuses and lead bonuses in the canonical coupon editor');
+assert(adminCoupons.includes('All purchases')&&adminCoupons.includes('Membership only')&&adminCoupons.includes('Lead only')&&adminCoupons.includes('Wallet only'),'Promotion purchase-scope shortcuts must support all, membership-only, lead-only and wallet-only campaigns');
+assert(adminCoupons.includes('is_public_offer')&&adminCoupons.includes('Show this offer to customers'),'Admin Promotions must allow customer-visible public offers without a second offer system');
+assert(adminCouponsCss.includes('.coupon-benefit-picker')&&adminCouponsCss.includes('.coupon-scope-shortcuts'),'Promotion benefit and purchase-scope controls must remain styled');
+assert(couponPromotionMigration.includes("benefit_type IN ('discount','wallet_bonus','lead_bonus')")&&couponPromotionMigration.includes('CREATE TABLE IF NOT EXISTS coupon_rewards'),'Promotion rewards must extend the canonical coupons schema with an idempotent reward ledger');
+assert(couponPromotionMigration.includes("source IN ('admin','new_business','campaign','promotion')"),'Bonus lead campaigns must reuse canonical lead entitlement grants');
+assert(couponService.includes('async function getPublicOffersForUser')&&couponRoutes.includes("router.get('/offers'"),'Eligible public promotions must be available to authenticated customer checkout screens');
+assert(couponService.includes('async function applyRewardForPayment')&&couponService.includes("reference_type,reference_id,payment_id,description")&&couponService.includes("'promotion'"),'Wallet promotion rewards must be recorded as canonical wallet transactions');
+assert(couponService.includes("INSERT INTO lead_entitlement_grants")&&couponService.includes("VALUES($1,'promotion'"),'Lead bonus promotions must create canonical lead entitlement grants');
+assert(walletCouponService.includes('applyRewardForPayment')&&paymentService.includes('applyRewardForPayment')&&leadPurchaseService.includes('applyRewardForPayment'),'Promotion rewards must only be granted from successful wallet, membership or lead payment completion paths');
+assert(walletCouponEnhancer.includes("/coupons/offers?purchaseType=wallet_topup")&&walletCouponEnhancer.includes('receive'),'Add Balance must surface eligible wallet offers such as add ₹5,000 and receive ₹6,000');
+assert(walletCouponEnhancer.includes('walletCredit = validAmount ? amount + bonus : 0'),'Wallet offer preview must show the full credited balance including promotion bonus');
+assert(customerLeads.includes("/coupons/offers?purchaseType=lead")&&customerLeads.includes('publicLeadOffers'),'Lead checkout must surface eligible public lead promotions');
+assert(customerLeads.includes('Reward after payment')&&customerLeads.includes('couponReward'),'Lead checkout must explain bonus lead or wallet rewards before purchase');
+assert(customerLeadsCss.includes('.lv2-public-offers')&&customerLeadsCss.includes('.lv2-promotion-reward'),'Lead promotion offer and reward-summary styling must remain');
 
 assert(layout.includes('admin-sidebar-signature')&&layout.includes('admin-top-user'),'Premium Admin shell controls must remain present');
 assert(!layout.includes('admin-sidebar-status'),'Duplicated sidebar health copy must stay removed');
