@@ -16,8 +16,6 @@ function Login() {
 
   const finishLogin = useCallback(async (result) => {
     saveSession(result)
-    if (!remember) localStorage.setItem('propulse_session_mode', 'session')
-
     if (result.user?.role === 'admin') {
       navigate('/admin', { replace: true })
       return
@@ -39,7 +37,7 @@ function Login() {
     if (!form.email || !form.password) return setError('Enter your email and password.')
     try {
       setLoading(true)
-      const result = await authRequest('/auth/login', { method: 'POST', body: JSON.stringify(form) })
+      const result = await authRequest('/auth/login', { method: 'POST', body: JSON.stringify({ ...form, remember }) })
       await finishLogin(result)
     } catch (err) {
       setError(err.message)
@@ -54,7 +52,7 @@ function Login() {
       setGoogleLoading(true)
       const result = await authRequest('/auth/google', {
         method: 'POST',
-        body: JSON.stringify({ credential }),
+        body: JSON.stringify({ credential, remember }),
       })
       await finishLogin(result)
     } catch (err) {
