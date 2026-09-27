@@ -176,8 +176,8 @@ export default function AdminLeadEntitlements(){
 
   async function saveRule(){
     if(!rule.name.trim())return setError('Give this registration rule a name.')
-    if(!hasBuyerAccess(rule))return setError('Enable at least one buyer-access type.')
-    if(Number(rule.sharedQuantity)<=0&&Number(rule.premiumQuantity)<=0)return setError('Set at least one Basic or Premium lead.')
+    if(rule.isActive&&!hasBuyerAccess(rule))return setError('Enable at least one buyer-access type.')
+    if(rule.isActive&&Number(rule.sharedQuantity)<=0&&Number(rule.premiumQuantity)<=0)return setError('Set at least one Basic or Premium lead.')
     try{
       const action=editingRule?`rule-update-${editingRule.id}`:'rule-create'
       setSaving(action);setError('');setMessage('')
