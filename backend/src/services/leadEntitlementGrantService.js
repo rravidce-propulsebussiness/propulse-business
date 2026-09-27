@@ -573,6 +573,7 @@ async function syncBusinessCampaign(client,campaignId){
 
   const targetIds=await campaignAudienceUserIds(client,campaign);
   const targetSet=new Set(targetIds);
+  await client.query('SELECT id FROM lead_entitlement_grants WHERE campaign_id=$1 FOR UPDATE',[campaignId]);
   const existing=(await client.query(`
     SELECT g.*,
            COUNT(c.id) FILTER(WHERE c.entitlement_type='shared')::int AS used_shared,
@@ -581,7 +582,6 @@ async function syncBusinessCampaign(client,campaignId){
     LEFT JOIN lead_entitlement_claims c ON c.grant_id=g.id
     WHERE g.campaign_id=$1
     GROUP BY g.id
-    FOR UPDATE OF g
   `,[campaignId])).rows;
   const byUser=new Map(existing.map(row=>[Number(row.user_id),row]));
 
@@ -732,13 +732,13 @@ async function deleteBusinessCampaign(campaignId,adminId){
     await client.query('BEGIN');
     const campaign=(await client.query('SELECT * FROM lead_entitlement_business_campaigns WHERE id=$1 FOR UPDATE',[id])).rows[0];
     if(!campaign)fail('Business entitlement not found','BUSINESS_CAMPAIGN_NOT_FOUND');
+    await client.query('SELECT id FROM lead_entitlement_grants WHERE campaign_id=$1 FOR UPDATE',[id]);
     const grants=(await client.query(`
       SELECT g.id,COUNT(c.id)::int AS claim_count
       FROM lead_entitlement_grants g
       LEFT JOIN lead_entitlement_claims c ON c.grant_id=g.id
       WHERE g.campaign_id=$1
       GROUP BY g.id
-      FOR UPDATE OF g
     `,[id])).rows;
     for(const grant of grants){
       if(number(grant.claim_count)===0){
