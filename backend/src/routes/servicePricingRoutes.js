@@ -1,1 +1,0 @@
-const express=require('express');const controller=require('../controllers/servicePricingController');const router=express.Router();router.get('/',controller.getPublic);module.exports=router;
