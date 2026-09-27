@@ -12,6 +12,38 @@ const planType = (plan) => String(plan?.plan_type || '').toLowerCase()
 const normalizeLabel = (value) => String(value || '').trim().replace(/[-_]+/g, ' ').replace(/\s+/g, ' ')
 const dateLabel = (value) => value ? new Date(value).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'
 const offerDateLabel = (value) => value ? new Date(value).toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : ''
+const pad2 = (value) => String(Math.max(0, Number(value) || 0)).padStart(2, '0')
+function OfferCountdown({ until, compact = false }) {
+  const [now, setNow] = useState(() => Date.now())
+  useEffect(() => {
+    if (!until) return undefined
+    const end = new Date(until).getTime()
+    if (!Number.isFinite(end) || end <= Date.now()) return undefined
+    const timer = window.setInterval(() => setNow(Date.now()), 1000)
+    return () => window.clearInterval(timer)
+  }, [until])
+  if (!until) return null
+  const end = new Date(until).getTime()
+  if (!Number.isFinite(end)) return null
+  const remaining = Math.max(0, end - now)
+  const totalSeconds = Math.floor(remaining / 1000)
+  const days = Math.floor(totalSeconds / 86400)
+  const hours = Math.floor((totalSeconds % 86400) / 3600)
+  const minutes = Math.floor((totalSeconds % 3600) / 60)
+  const seconds = totalSeconds % 60
+  if (remaining <= 0) return <div className={`membership-offer-countdown ${compact ? 'compact' : ''} expired`}><span>Offer expired</span></div>
+  return <div className={`membership-offer-countdown ${compact ? 'compact' : ''}`}>
+    <span className="membership-countdown-label">Offer ends in</span>
+    <div className="membership-countdown-time">
+      {days > 0 && <span><b>{pad2(days)}</b><small>D</small></span>}
+      <span><b>{pad2(hours)}</b><small>H</small></span>
+      <i>:</i>
+      <span><b>{pad2(minutes)}</b><small>M</small></span>
+      <i>:</i>
+      <span><b>{pad2(seconds)}</b><small>S</small></span>
+    </div>
+  </div>
+}
 const offerMeta = (plan) => {
   if (!plan) return null
   const price = Number(plan.price || 0)
@@ -19,11 +51,18 @@ const offerMeta = (plan) => {
     const base = Number(plan.base_price || 0)
     const savings = Math.max(0, Number(plan.offer_savings ?? (base - price)) || 0)
     const discount = Math.max(0, Number(plan.offer_discount_percent || (base > 0 ? savings / base * 100 : 0)) || 0)
-    const validityParts = []
-    if (plan.offer_new_customer_days) validityParts.push(`First membership within ${plan.offer_new_customer_days} day${Number(plan.offer_new_customer_days) === 1 ? '' : 's'} of registration`)
-    if (plan.offer_valid_until) validityParts.push(`Offer ends ${offerDateLabel(plan.offer_valid_until)}`)
-    const validity = validityParts.join(' · ') || null
-    return { base, price, savings, discount, label: plan.offer_label || plan.pricing_rule_name || 'Special offer', validity }
+    const eligibility = plan.offer_new_customer_days
+      ? `First membership within ${plan.offer_new_customer_days} day${Number(plan.offer_new_customer_days) === 1 ? '' : 's'} of registration`
+      : null
+    return {
+      base,
+      price,
+      savings,
+      discount,
+      label: plan.offer_label || plan.pricing_rule_name || 'Special offer',
+      eligibility,
+      validUntil: plan.offer_valid_until || null
+    }
   }
   const billingDiscount = Math.max(0, Number(plan.discount_percent || 0))
   const billingMonths = Math.max(1, Number(plan.billing_months || 1))
@@ -31,7 +70,7 @@ const offerMeta = (plan) => {
   const base = monthlyBase * billingMonths
   const savings = Math.max(0, base - price)
   if (billingDiscount <= 0 || savings <= 0) return null
-  return { base, price, savings, discount: billingDiscount, label: 'Billing discount', validity: null }
+  return { base, price, savings, discount: billingDiscount, label: 'Billing discount', eligibility: null, validUntil: null }
 }
 const daysLeft = (value) => value ? Math.max(0, Math.ceil((new Date(value).getTime() - Date.now()) / 86400000)) : null
 const localProration = (current, target) => {
@@ -263,7 +302,8 @@ export default function Membership() {
                     <div className="membership-offer-badge"><span>{offer.label}</span>{offer.discount > 0 && <b>{Math.round(offer.discount)}% OFF</b>}</div>
                     <div className="membership-price">{money(level.selected.price)}<small>{' / ' + period(level.selected).toLowerCase()}</small></div>
                     {offer.savings > 0 && <div className="membership-offer-saving"><del>{money(offer.base)}</del><strong>Save {money(offer.savings)}</strong></div>}
-                    {offer.validity && <div className="membership-offer-validity">{offer.validity}</div>}
+                    {offer.eligibility && <div className="membership-offer-validity">{offer.eligibility}</div>}
+                    {offer.validUntil && <OfferCountdown until={offer.validUntil} />}
                   </div>
                 })() : <div className="membership-price">{level.selected ? money(level.selected.price) : '—'}<small>{level.selected ? ' / ' + period(level.selected).toLowerCase() : ''}</small></div>}
                 {isCurrent && level.selected && String(currentMembership?.membership_plan_id) !== String(level.selected.id) && (() => { const p = localProration(currentMembership, level.selected); return p ? <div className="membership-proration-preview"><span>Unused current-plan credit</span><strong>− {money(p.credit)}</strong><span>You pay to change</span><strong>{money(p.payable)}</strong><small>New validity ends {dateLabel(p.targetExpiry)}</small></div> : null })()}
@@ -326,7 +366,8 @@ export default function Membership() {
         {selectedOffer && <div className="membership-checkout-offer">
           <div><span>{selectedOffer.label}</span>{selectedOffer.discount>0&&<b>{Math.round(selectedOffer.discount)}% OFF</b>}</div>
           <div><del>{money(selectedOffer.base)}</del><strong>{money(selectedOffer.price)}</strong>{selectedOffer.savings>0&&<small>You save {money(selectedOffer.savings)}</small>}</div>
-          {selectedOffer.validity&&<p>{selectedOffer.validity}</p>}
+          {selectedOffer.eligibility&&<p>{selectedOffer.eligibility}</p>}
+          {selectedOffer.validUntil&&<OfferCountdown until={selectedOffer.validUntil} compact/>}
         </div>}
         {selectedProration && <div className="coupon-proration-summary"><div><span>New plan price</span><strong>{money(selectedPlan.price)}</strong></div><div><span>Unused current-plan credit</span><strong>− {money(selectedProration.credit)}</strong></div><div className="total"><span>Upgrade payable</span><strong>{money(selectedProration.payable)}</strong></div><small>New validity starts today and runs through {dateLabel(selectedProration.targetExpiry)}.</small></div>}
         <div className="coupon-code-row">
