@@ -28,12 +28,13 @@ const toIso=value=>{
   return Number.isNaN(date.getTime())?null:date.toISOString()
 }
 const offerWindowLabel=item=>{
-  if(item?.new_customer_days)return `New customer · first ${item.new_customer_days} day${Number(item.new_customer_days)===1?'':'s'}`
+  const parts=[]
+  if(item?.new_customer_days)parts.push(`New customer · first ${item.new_customer_days} day${Number(item.new_customer_days)===1?'':'s'}`)
   if(item?.valid_until){
     const end=new Date(item.valid_until)
-    return `Offer until ${end.toLocaleString('en-IN',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}`
+    parts.push(`until ${end.toLocaleString('en-IN',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}`)
   }
-  return 'Ongoing pricing'
+  return parts.join(' · ')||'Ongoing pricing'
 }
 
 function allowanceFromEntitlements(items=[],months=1){
@@ -714,6 +715,7 @@ export default function AdminMembershipPlansConfig(){
             </div>
             <div className="membership-target-tags">
               <span className="membership-scope-tag">{pricingScopeLabel(item)}</span>
+              {item.offer_label&&<span className="membership-offer-label-tag">{item.offer_label}</span>}
               <span>{ruleAudienceLabel(item)}</span>
               <span>{verifyLabel(item.verification_scope)}</span>
               <span>{item.industry_name||'All industries'}</span>
