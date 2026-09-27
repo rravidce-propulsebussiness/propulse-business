@@ -79,12 +79,13 @@ async function runAutoSync() {
   }
 }
 
-function startLeadPartnerSheetAutoSync() {
+function startLeadPartnerSheetAutoSync({ unref = true, runImmediately = false } = {}) {
   if (timer) return () => {};
 
   console.log('Lead Partner Google Sheet auto-sync enabled: every 5 minutes.');
+  if (runImmediately) void runAutoSync();
   timer = setInterval(runAutoSync, AUTO_SYNC_INTERVAL_MS);
-  timer.unref?.();
+  if (unref) timer.unref?.();
 
   return () => {
     if (timer) {

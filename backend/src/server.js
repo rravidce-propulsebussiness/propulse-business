@@ -33,12 +33,15 @@ const { startLeadPartnerSheetAutoSync }=require('./services/leadPartnerSheetSync
 const rateLimit=require('./middleware/rateLimitMiddleware');
 const csrfProtection=require('./middleware/csrfMiddleware');
 const {getConfiguredOrigins}=require('./config/httpOrigins');
+const {envFlag}=require('./config/runtimeFlags');
 const app=express();
 const isProduction=process.env.NODE_ENV==='production';
 const PORT=Number(process.env.PORT)||5000;
 const configuredOrigins=getConfiguredOrigins({isProduction});
 const DEFAULT_JSON_BYTES='1mb';
 const LARGE_JSON_BYTES='9mb';
+const runMigrationsOnStartup=envFlag('RUN_MIGRATIONS_ON_STARTUP',true);
+const runBackgroundJobsInWeb=envFlag('RUN_BACKGROUND_JOBS_IN_WEB',true);
 const trustProxy=String(process.env.TRUST_PROXY||'').trim();
 if(trustProxy) app.set('trust proxy',trustProxy==='false'?false:trustProxy==='true'?true:Number.isNaN(Number(trustProxy))?trustProxy:Number(trustProxy));
 app.disable('x-powered-by');
@@ -51,7 +54,7 @@ app.use('/api/investments',express.json({limit:LARGE_JSON_BYTES}));
 app.use('/api/lead-partner',express.json({limit:LARGE_JSON_BYTES}));
 app.use(express.json({limit:DEFAULT_JSON_BYTES}));
 app.use('/api',csrfProtection);
-const apiRateLimit=rateLimit({windowMs:15*60*1000,max:600,scope:'global',shared:false});
+const apiRateLimit=rateLimit({windowMs:15*60*1000,max:600,scope:'global',shared:true});
 app.use('/api',apiRateLimit);
 app.use('/uploads',(req,res,next)=>{if(req.path==='/company-proofs'||req.path.startsWith('/company-proofs/'))return res.status(404).json({error:'Not found'});return next();});
 app.use('/uploads',express.static(path.join(__dirname,'../uploads'),{fallthrough:true,maxAge:'7d'}));
@@ -88,5 +91,22 @@ async function shutdown(signal){
     process.exit(1);
   }
 }
-async function start(){try{await runMigrations();server=app.listen(PORT,'0.0.0.0',()=>{console.log(`Server running on port ${PORT}`);stopLeadPartnerSheetAutoSync=startLeadPartnerSheetAutoSync();});process.once('SIGTERM',()=>shutdown('SIGTERM'));process.once('SIGINT',()=>shutdown('SIGINT'));}catch(error){console.error('Backend startup failed:');console.error(error?.stack||error||'Unknown error');await pool.end();process.exitCode=1;}}
+async function start(){
+  try{
+    if(runMigrationsOnStartup)await runMigrations();
+    else console.log('Database migrations skipped on web startup (RUN_MIGRATIONS_ON_STARTUP=false).');
+    server=app.listen(PORT,'0.0.0.0',()=>{
+      console.log(`Server running on port ${PORT}`);
+      if(runBackgroundJobsInWeb)stopLeadPartnerSheetAutoSync=startLeadPartnerSheetAutoSync();
+      else console.log('Background jobs disabled in web process (RUN_BACKGROUND_JOBS_IN_WEB=false).');
+    });
+    process.once('SIGTERM',()=>shutdown('SIGTERM'));
+    process.once('SIGINT',()=>shutdown('SIGINT'));
+  }catch(error){
+    console.error('Backend startup failed:');
+    console.error(error?.stack||error||'Unknown error');
+    await pool.end();
+    process.exitCode=1;
+  }
+}
 start();

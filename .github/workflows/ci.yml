@@ -212,6 +212,8 @@ jobs:
           DB_USER: ci_smoke
           DB_PASSWORD: ci_smoke
           JWT_SECRET: ci-smoke-secret
+          RUN_MIGRATIONS_ON_STARTUP: 'false'
+          RUN_BACKGROUND_JOBS_IN_WEB: 'false'
         run: |
           node src/server.js > /tmp/backend.log 2>&1 &
           echo $! > /tmp/backend.pid

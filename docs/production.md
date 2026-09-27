@@ -32,23 +32,30 @@ versions, rather than trusting the role claimed in a JWT.
    frontend routes, and forward `/api`, `/health`, `/health/live`,
    `/health/ready`, and `/uploads` to the backend. Keep browser/API requests
    same-origin through `/api`; the current HttpOnly cookie and CSRF model is designed
-   for that topology. Allow the API's 10 MB request body limit through the proxy;
-   individual payment proof files are limited to 5 MB.
+   for that topology. Normal JSON APIs are capped at 1 MB. Routes that accept payment,
+   wallet, investment, company-proof or Lead Partner proof payloads use an explicit
+   9 MB parser limit, while individual proof files remain limited to 5 MB.
 5. For a **new empty database**, run `npm run db:bootstrap` in backend. For an
-   existing installation, take and verify a backup, then run `npm run db:migrate`.
-   The server also runs pending migrations at startup. This release adds
-   `investment_payment_drafts`; deploy its migration before sending checkout traffic.
+   existing installation, take and verify a backup, then run `npm run db:migrate`
+   as a release step before new web instances receive traffic. Web startup still runs
+   pending migrations by default for backward compatibility; after adding a dedicated
+   release migration step, set `RUN_MIGRATIONS_ON_STARTUP=false` on every web/worker
+   instance so rolling deploys do not make each instance wait on the migration lock.
 6. Run `npm run create-admin` once with `ADMIN_EMAIL`, `ADMIN_PASSWORD`, and
    `ADMIN_NAME`. Re-running this command resets that account's password. Remove
    bootstrap admin credentials from the long-running service environment afterward.
-7. Run `npm start` in backend under a supervised service with automatic restart.
+7. Run `npm start` in backend under a supervised web service with automatic restart.
    Use `/health/live` as the process liveness probe and `/health/ready` as the
    readiness/database probe. `/health` remains an alias of readiness for compatibility.
    All health responses are non-cacheable. Do not use database readiness as an
    orchestrator liveness probe, otherwise a temporary PostgreSQL outage can cause a
-   restart loop. Back up PostgreSQL and persist `backend/uploads`, including private
-   company proofs. Multiple backend instances need shared upload storage; payment
-   drafts themselves are database-backed.
+   restart loop. For a dedicated background process, set
+   `RUN_BACKGROUND_JOBS_IN_WEB=false` on web instances and run `npm run worker` as a
+   supervised worker service. The worker runs Lead Partner Google Sheet sync immediately
+   and every five minutes; PostgreSQL advisory locking makes multiple worker replicas
+   safe, although one worker is normally enough. Back up PostgreSQL and persist
+   `backend/uploads`, including private company proofs. Multiple backend instances need
+   shared upload storage; payment drafts themselves are database-backed.
 
 ## Manual payment operations
 
