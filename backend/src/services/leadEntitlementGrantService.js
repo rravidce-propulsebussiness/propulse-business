@@ -602,7 +602,7 @@ async function syncBusinessCampaign(client,campaignId){
     if(campaign.shared_quantity<usedShared||campaign.premium_quantity<usedPremium){
       fail('Campaign allowance cannot be lower than credits already used by a recipient','CAMPAIGN_ALLOWANCE_BELOW_USAGE');
     }
-    const startsAt=row?.starts_at?new Date(row.starts_at):new Date();
+    const startsAt=row?.revoked_at?new Date():(row?.starts_at?new Date(row.starts_at):new Date());
     const expiresAt=Number(campaign.valid_days)>0
       ?new Date(startsAt.getTime()+Number(campaign.valid_days)*86400000)
       :null;
@@ -610,14 +610,14 @@ async function syncBusinessCampaign(client,campaignId){
     if(row){
       await client.query(`
         UPDATE lead_entitlement_grants
-        SET source='campaign',
-            shared_quantity=$2,premium_quantity=$3,
-            expires_at=$4,claim_expiry_days=$5,
-            allow_single=$6,allow_shared=$7,allow_auto_release=$8,allow_exclusive=$9,
-            notes=$10,revoked_at=NULL,updated_at=CURRENT_TIMESTAMP
+        SET source='campaign',starts_at=$2,
+            shared_quantity=$3,premium_quantity=$4,
+            expires_at=$5,claim_expiry_days=$6,
+            allow_single=$7,allow_shared=$8,allow_auto_release=$9,allow_exclusive=$10,
+            notes=$11,revoked_at=NULL,updated_at=CURRENT_TIMESTAMP
         WHERE id=$1
       `,[
-        row.id,campaign.shared_quantity,campaign.premium_quantity,expiresAt,campaign.claim_expiry_days,
+        row.id,startsAt,campaign.shared_quantity,campaign.premium_quantity,expiresAt,campaign.claim_expiry_days,
         campaign.allow_single,campaign.allow_shared,campaign.allow_auto_release,campaign.allow_exclusive,
         campaign.notes||`Business entitlement campaign #${campaign.id}: ${campaign.name}`
       ]);
