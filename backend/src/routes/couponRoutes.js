@@ -7,6 +7,7 @@ const router=express.Router();
 const couponValidationLimit=rateLimit({windowMs:60*1000,max:30});
 router.use(requireAuth);
 router.post('/validate',couponValidationLimit,controller.validate);
+router.get('/offers',couponValidationLimit,controller.offers);
 router.get('/',requireAdmin,controller.list);
 router.get('/:id',requireAdmin,controller.details);
 router.post('/',requireAdmin,controller.create);
