@@ -72,11 +72,13 @@ async function getDashboardStats() {
     SELECT
       COALESCE(SUM(platform_amount),0)::numeric AS revenue_total,
       COALESCE(SUM(platform_amount) FILTER (WHERE event_at>=CURRENT_DATE),0)::numeric AS revenue_today,
+      COALESCE(SUM(platform_amount) FILTER (WHERE event_at>=date_trunc('week',CURRENT_DATE)),0)::numeric AS revenue_week,
       COALESCE(SUM(platform_amount) FILTER (WHERE event_at>=CURRENT_TIMESTAMP-INTERVAL '7 days'),0)::numeric AS revenue_last_7_days,
       COALESCE(SUM(platform_amount) FILTER (WHERE event_at>=date_trunc('month',CURRENT_DATE)),0)::numeric AS revenue_month,
 
       COALESCE(SUM(platform_amount) FILTER (WHERE origin='propulse'),0)::numeric AS own_lead_revenue,
       COALESCE(SUM(platform_amount) FILTER (WHERE origin='propulse' AND event_at>=CURRENT_DATE),0)::numeric AS own_revenue_today,
+      COALESCE(SUM(platform_amount) FILTER (WHERE origin='propulse' AND event_at>=date_trunc('week',CURRENT_DATE)),0)::numeric AS own_revenue_week,
       COALESCE(SUM(platform_amount) FILTER (WHERE origin='propulse' AND event_at>=date_trunc('month',CURRENT_DATE)),0)::numeric AS own_revenue_month,
       COUNT(*) FILTER (WHERE origin='propulse')::int AS own_paid_purchases,
       COUNT(DISTINCT lead_id) FILTER (WHERE origin='propulse')::int AS own_sold_leads,
@@ -86,6 +88,7 @@ async function getDashboardStats() {
       COALESCE(SUM(partner_amount) FILTER (WHERE origin='lead_partner'),0)::numeric AS partner_earnings,
       COALESCE(SUM(platform_amount) FILTER (WHERE origin='lead_partner'),0)::numeric AS lead_partner_commission,
       COALESCE(SUM(platform_amount) FILTER (WHERE origin='lead_partner' AND event_at>=CURRENT_DATE),0)::numeric AS partner_commission_today,
+      COALESCE(SUM(platform_amount) FILTER (WHERE origin='lead_partner' AND event_at>=date_trunc('week',CURRENT_DATE)),0)::numeric AS partner_commission_week,
       COALESCE(SUM(platform_amount) FILTER (WHERE origin='lead_partner' AND event_at>=date_trunc('month',CURRENT_DATE)),0)::numeric AS partner_commission_month,
       COUNT(*) FILTER (WHERE origin='lead_partner')::int AS partner_paid_purchases,
       COUNT(DISTINCT lead_id) FILTER (WHERE origin='lead_partner')::int AS partner_sold_leads,
@@ -95,6 +98,7 @@ async function getDashboardStats() {
       COALESCE(SUM(investor_amount) FILTER (WHERE origin='investor'),0)::numeric AS investor_allocated,
       COALESCE(SUM(platform_amount) FILTER (WHERE origin='investor'),0)::numeric AS investor_commission,
       COALESCE(SUM(platform_amount) FILTER (WHERE origin='investor' AND event_at>=CURRENT_DATE),0)::numeric AS investor_commission_today,
+      COALESCE(SUM(platform_amount) FILTER (WHERE origin='investor' AND event_at>=date_trunc('week',CURRENT_DATE)),0)::numeric AS investor_commission_week,
       COALESCE(SUM(platform_amount) FILTER (WHERE origin='investor' AND event_at>=date_trunc('month',CURRENT_DATE)),0)::numeric AS investor_commission_month,
       COUNT(*) FILTER (WHERE origin='investor')::int AS investor_paid_purchases,
       COUNT(DISTINCT lead_id) FILTER (WHERE origin='investor')::int AS investor_sold_leads,
@@ -181,6 +185,7 @@ async function getDashboardStats() {
     cities:number(platform.cities),
     revenue:{
       today:number(revenue.revenue_today),
+      week:number(revenue.revenue_week),
       last7Days:number(revenue.revenue_last_7_days),
       month:number(revenue.revenue_month),
       total:number(revenue.revenue_total),
@@ -197,6 +202,7 @@ async function getDashboardStats() {
         soldShares:number(revenue.own_sold_shares),
         grossSales:number(revenue.own_lead_revenue),
         revenueToday:number(revenue.own_revenue_today),
+        revenueWeek:number(revenue.own_revenue_week),
         revenueMonth:number(revenue.own_revenue_month),
         revenueTotal:number(revenue.own_lead_revenue)
       },
@@ -210,6 +216,7 @@ async function getDashboardStats() {
         grossSales:number(revenue.partner_gross_sales),
         partnerEarnings:number(revenue.partner_earnings),
         revenueToday:number(revenue.partner_commission_today),
+        revenueWeek:number(revenue.partner_commission_week),
         revenueMonth:number(revenue.partner_commission_month),
         revenueTotal:number(revenue.lead_partner_commission)
       },
@@ -224,6 +231,7 @@ async function getDashboardStats() {
         grossSales:number(revenue.investor_gross_sales),
         investorAllocated:number(revenue.investor_allocated),
         revenueToday:number(revenue.investor_commission_today),
+        revenueWeek:number(revenue.investor_commission_week),
         revenueMonth:number(revenue.investor_commission_month),
         revenueTotal:number(revenue.investor_commission)
       }
