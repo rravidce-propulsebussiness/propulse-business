@@ -17,7 +17,8 @@
     "test:wallet-history": "node scripts/check-wallet-history.mjs",
     "test:wallet-membership-tab": "node scripts/check-wallet-membership-tab.mjs",
     "test:investor-faq-layout": "node scripts/check-investor-faq-layout.mjs",
-    "test:auth-bootstrap": "node scripts/check-auth-session-bootstrap.mjs"
+    "test:auth-bootstrap": "node scripts/check-auth-session-bootstrap.mjs",
+    "test:lead-partner-reports": "node scripts/check-lead-partner-reports.mjs"
   },
   "dependencies": {
     "react": "^19.2.8",
