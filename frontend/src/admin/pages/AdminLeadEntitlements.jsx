@@ -250,7 +250,7 @@ export default function AdminLeadEntitlements(){
           <p>One-time lead credits for newly verified businesses during the configured registration window.</p>
         </div>
         <button className="entitlement-create-btn" type="button" onClick={()=>setRegistrationEditorOpen(v=>!v)}>
-          {registrationEditorOpen?'Close':'Edit entitlement'}
+          {registrationEditorOpen?'Close':savedRegistration?.updated_at?'Edit entitlement':'Create entitlement'}
         </button>
       </div>
 
