@@ -1,8 +1,9 @@
 const crypto=require('crypto');
 const path=require('path');
 const fsp=require('fs/promises');
+const {privateProofRoot}=require('../config/uploadStorage');
 
-const ROOT=path.resolve(__dirname,'../../uploads/private-proofs');
+const ROOT=privateProofRoot;
 const PREFIX='private-proof:';
 const DEFAULT_MAX_BYTES=6*1024*1024;
 const DATA_URL=/^data:(image\/(?:png|jpeg|jpg|webp)|application\/pdf);base64,([A-Za-z0-9+/]+={0,2})$/i;
