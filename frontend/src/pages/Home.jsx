@@ -30,9 +30,12 @@ const categories = [
 ]
 
 const pricingFallback = [
-  { category: 'Marketing', name: 'Marketing & Technology', tagline: 'Websites, apps, marketing & creative.', description: 'Websites, web apps, mobile apps, SEO, social media, performance marketing, branding, photography and video.', price_label: 'Custom quote', billing_note: 'Scope-based pricing', features: ['Website & web app development', 'Mobile app development', 'SEO, social media & performance marketing', 'Branding, photography & video'], cta_label: 'Talk to Marketing', cta_url: '/contact', highlighted: false, image_url: '/homepage/default-marketing.svg' },
-  { category: 'Lead Sales', name: 'Lead Marketplace', tagline: 'Buy leads. Reach real opportunities.', description: 'Discover relevant customer enquiries by service and location, review the opportunity and buy eligible access.', price_label: 'Pay per lead', billing_note: 'Exact price shown before purchase', features: ['Location-based lead discovery', 'Protected customer contact data', 'Configured lead pricing', 'Purchased-lead management'], cta_label: 'Explore Leads', cta_url: '/leads', highlighted: true, image_url: '/homepage/default-hero.svg' },
-  { category: 'Government Compliance', name: 'Business & Tax Compliance', tagline: 'Registration, GST, ITR & filing support.', description: 'Support for company registration, GST workflows, ITR preparation and filing, documentation and selected statutory compliance workflows.', price_label: 'Custom quote', billing_note: 'Scope and authority dependent', features: ['Company / business registration support', 'GST registration & workflow support', 'ITR preparation & filing support', 'Statutory document coordination'], cta_label: 'Talk to Compliance', cta_url: '/contact', highlighted: false, image_url: '/homepage/default-compliance.svg' }
+  { category: 'Grow', name: 'Website Development', tagline: 'A professional website for your business.', description: 'Website design and development as an optional Propulse growth service.', price_label: 'Custom quote', billing_note: 'Project scope dependent', features: ['Website design & development', 'Mobile-responsive pages', 'Business enquiry integration'], cta_label: 'Explore Services', cta_url: '/contact', highlighted: false, image_url: '/homepage/default-marketing.svg' },
+  { category: 'Grow', name: 'SEO Services', tagline: 'Improve search visibility and discoverability.', description: 'SEO services as an optional Propulse growth service.', price_label: 'Custom quote', billing_note: 'Monthly / scope-based', features: ['SEO strategy', 'On-page optimisation', 'Local visibility support'], cta_label: 'Explore Services', cta_url: '/contact', highlighted: false, image_url: '/homepage/default-marketing.svg' },
+  { category: 'Grow', name: 'Website Maintenance', tagline: 'Keep your website secure and up to date.', description: 'Ongoing website maintenance as an optional Propulse growth service.', price_label: 'Custom quote', billing_note: 'Monthly / scope-based', features: ['Content updates', 'Maintenance support', 'Performance checks'], cta_label: 'Explore Services', cta_url: '/contact', highlighted: false, image_url: '/homepage/default-marketing.svg' },
+  { category: 'Scale', name: 'Business Profile Promotion', tagline: 'Put your business in front of more relevant opportunities.', description: 'Business profile promotion as part of Propulse Scale services.', price_label: 'Custom quote', billing_note: 'Campaign / scope-based', features: ['Business profile promotion', 'Visibility support', 'Campaign coordination'], cta_label: 'Learn More', cta_url: '/investment', highlighted: false, image_url: '/homepage/default-hero.svg' },
+  { category: 'Scale', name: 'Lead Generation', tagline: 'Create broader reach and more business opportunities.', description: 'Lead generation services as part of Propulse Scale.', price_label: 'Custom quote', billing_note: 'Campaign / scope-based', features: ['Lead generation', 'Audience targeting', 'Opportunity tracking'], cta_label: 'Learn More', cta_url: '/investment', highlighted: false, image_url: '/homepage/default-hero.svg' },
+  { category: 'Scale', name: 'Eligible Earnings Program', tagline: 'Access eligible earning programs subject to their terms.', description: 'Access to eligible Propulse earning or investment programs is governed by the applicable program terms.', price_label: 'Program terms apply', billing_note: 'Eligibility and program terms apply', features: ['Eligible program access', 'Program-specific terms', 'Separate program administration'], cta_label: 'Learn More', cta_url: '/investment', highlighted: false, image_url: '/homepage/default-hero.svg' }
 ]
 
 function Home() {
@@ -61,7 +64,7 @@ function Home() {
     let live = true
     publicRequest('/service-pricing').then(data => {
       if (!live) return
-      const items = Array.isArray(data) ? data.filter(item => item?.is_active !== false).slice(0, 3) : []
+      const items = Array.isArray(data) ? data.filter(item => item?.is_active !== false && ['Grow','Scale'].includes(item?.category)).slice(0, 6) : []
       if (items.length) setServicePricing(items)
     }).catch(() => {})
     return () => { live = false }
@@ -262,10 +265,10 @@ function Home() {
           <div className="pricing-home-head">
             <div>
               <span className="section-kicker">SERVICES &amp; PRICING</span>
-              <h2>Everything your business needs to grow.</h2>
-              <p>Choose the service that matches your next business goal — digital growth, lead acquisition, or business and tax compliance support.</p>
+              <h2>Choose how you want to grow.</h2>
+              <p>Use Grow services to strengthen your digital foundation, or Scale services to expand visibility, opportunities and eligible growth programs.</p>
             </div>
-            <Link className="pricing-home-action" to="/leads">Browse Live Leads <span>→</span></Link>
+            <a className="pricing-home-action" href="#contact" onClick={event => scrollToSection(event, 'contact')}>Talk to Propulse <span>→</span></a>
           </div>
 
           <div className="pricing-home-grid">
@@ -273,10 +276,10 @@ function Home() {
               <article className={item.highlighted ? 'pricing-home-card featured' : 'pricing-home-card'} key={item.id || item.slug || item.name}>
                 <div className="pricing-home-image">
                   <img src={item.image_url || pricingFallback[index]?.image_url || '/homepage/default-hero.svg'} alt="" />
-                  {item.highlighted && <span className="pricing-home-badge">LEAD MARKETPLACE</span>}
+                  {item.highlighted && <span className="pricing-home-badge">FEATURED</span>}
                 </div>
                 <div className="pricing-home-card-body">
-                  <div className="pricing-home-meta"><span>{item.category}</span><small>{item.highlighted ? 'Core marketplace' : 'Business service'}</small></div>
+                  <div className="pricing-home-meta"><span>{item.category}</span><small>{item.category === 'Grow' ? 'Build & improve' : 'Expand & accelerate'}</small></div>
                   <h3>{item.name}</h3>
                   <strong>{item.tagline}</strong>
                   <p>{item.description}</p>
