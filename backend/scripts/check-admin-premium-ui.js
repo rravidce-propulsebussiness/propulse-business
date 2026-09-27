@@ -27,6 +27,7 @@ const home=read('../frontend/src/pages/Home.jsx');
 const server=read('../backend/src/server.js');
 const membershipRoutes=read('../backend/src/routes/membershipPlanRoutes.js');
 const membershipController=read('../backend/src/controllers/membershipPlanController.js');
+const adminRoutes=read('../backend/src/routes/adminRoutes.js');
 const servicePricingRemoval=read('../backend/src/database/migrations/20260927_zz_remove_legacy_service_pricing.sql');
 
 assert(layout.includes('admin-sidebar-signature')&&layout.includes('admin-top-user'),'Premium Admin shell controls must remain present');
@@ -102,6 +103,7 @@ assert(membershipPlanService.includes("is_active=TRUE,updated_at=CURRENT_TIMESTA
 assert(membershipConfigCss.includes('/* Single compact GROW / SCALE membership editor */'),'Compact Membership package styling must remain');
 assert(membershipConfigCss.includes('.membership-cycle-grid'),'Compact billing-cycle layout must remain');
 assert(!server.includes("servicePricingRoutes")&&!server.includes("'/api/service-pricing'"),'Legacy Service Pricing API must stay unmounted');
+assert(!adminRoutes.includes('servicePricingController')&&!adminRoutes.includes("'/service-pricing'"),'Admin routes must not retain deleted Service Pricing controller references');
 assert(home.includes("publicRequest('/membership-plans/public')"),'Homepage pricing must come from Membership packages');
 assert(!home.includes("publicRequest('/service-pricing')")&&!home.includes('servicePricing'),'Homepage must not use the legacy Service Pricing source');
 assert(home.includes('MEMBERSHIP &amp; PRICING'),'Homepage pricing section must present Membership packages');
