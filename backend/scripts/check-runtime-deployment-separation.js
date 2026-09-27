@@ -6,6 +6,7 @@ const assert=(condition,message)=>{if(!condition)throw new Error(message)};
 
 const server=read('src/server.js');
 const scheduler=read('src/services/leadPartnerSheetSyncScheduler.js');
+const partnerInventory=read('src/services/leadPartnerInventoryCompatService.js');
 const worker=read('src/worker.js');
 const runtimeFlags=read('src/config/runtimeFlags.js');
 const pkg=JSON.parse(read('package.json'));
@@ -20,6 +21,9 @@ assert(runtimeFlags.includes("['0', 'false', 'no', 'off']"),'Runtime flag parser
 assert(scheduler.includes("unref = true")&&scheduler.includes("runImmediately = false"),'Sheet scheduler must support web and worker modes');
 assert(scheduler.includes("if (runImmediately) void runAutoSync()"),'Dedicated worker must be able to sync immediately');
 assert(scheduler.includes("if (unref) timer.unref?.()"),'Web scheduler timer must remain non-blocking');
+assert(!scheduler.includes('pg_try_advisory_lock'),'Lead Partner scheduler must not hold a process-wide DB advisory-lock connection');
+assert(partnerInventory.includes("pg_try_advisory_lock($1,$2)")&&partnerInventory.includes("pg_advisory_unlock($1,$2)"),'Lead Partner sheet sync must serialize per connection across replicas');
+assert(scheduler.includes("error?.code === 'SYNC_IN_PROGRESS'"),'Lead Partner scheduler must treat per-connection lock contention as a normal skip');
 assert(worker.includes("startLeadPartnerSheetAutoSync({ unref: false, runImmediately: true })")&&worker.includes("startAdminGoogleSheetAutoSync({ unref: false, runImmediately: true })"),'Worker must keep both sheet schedulers alive and run an initial cycle');
 assert(worker.includes("RUN_MIGRATIONS_ON_WORKER_STARTUP"),'Worker migration behavior must be explicit');
 assert(pkg.scripts.worker==='node src/worker.js','Backend must expose a supervised worker command');
