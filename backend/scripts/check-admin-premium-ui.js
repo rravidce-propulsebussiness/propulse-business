@@ -13,6 +13,8 @@ const adminUsers=read('../frontend/src/admin/pages/AdminUsers.jsx');
 const adminUsersCss=read('../frontend/src/admin/pages/AdminUsers.css');
 const adminPayments=read('../frontend/src/admin/pages/AdminPayments.jsx');
 const adminPaymentsCss=read('../frontend/src/admin/pages/AdminPayments.css');
+const adminPaymentReceiving=read('../frontend/src/admin/components/AdminPaymentDetails.jsx');
+const adminPaymentReceivingCss=read('../frontend/src/admin/components/AdminPaymentDetails.css');
 const adminUser360Service=read('../backend/src/services/adminUser360Service.js');
 const adminService=read('../backend/src/services/adminService.js');
 const adminController=read('../backend/src/controllers/adminController.js');
@@ -93,6 +95,18 @@ assert(!adminPayments.includes('/wallet/admin/history/customers'),'Payments must
 assert(adminPaymentsCss.includes('/* Premium Payments approval workspace */'),'Premium Payments styling must remain');
 assert(adminPaymentsCss.includes('.payments-premium-hero')&&adminPaymentsCss.includes('.payment-approval-card'),'Premium Payments hero and transaction card styling must remain');
 assert(adminPaymentsCss.includes('grid-template-columns:repeat(4,minmax(0,1fr))'),'Desktop Payments KPI and queue layouts must remain compact');
+assert(adminPaymentReceiving.includes('FINANCE SETUP / CUSTOMER PAYMENT DESTINATIONS'),'Premium Payment Receiving hero must remain');
+assert(adminPaymentReceiving.includes('receiving-kpi-grid'),'Payment Receiving KPI strip must remain');
+assert(adminPaymentReceiving.includes('Customer payment destinations'),'Payment Receiving account workspace must remain');
+assert(adminPaymentReceiving.includes('Display priority')&&adminPaymentReceiving.includes('sortOrder'),'Payment Receiving must expose account priority ordering');
+assert(adminPaymentReceiving.includes('Customer QR')&&adminPaymentReceiving.includes('Customer instructions'),'Payment Receiving customer preview must remain');
+assert(adminPaymentReceiving.includes("['upi','both'].includes(form.methodType)")&&adminPaymentReceiving.includes("['bank','both'].includes(form.methodType)"),'Payment Receiving form must keep method-specific UPI and bank sections');
+assert(adminPaymentReceiving.includes('Show this account to customers'),'Payment Receiving visibility control must remain');
+assert(adminPaymentReceiving.includes('navigator.clipboard.writeText'),'Payment account copy actions must remain');
+assert(adminPaymentReceivingCss.includes('/* Premium Payment Receiving workspace */'),'Premium Payment Receiving styling must remain');
+assert(adminPaymentReceivingCss.includes('.receiving-premium-hero')&&adminPaymentReceivingCss.includes('.premium-receiving-card'),'Premium Payment Receiving hero and account cards must remain');
+assert(adminPaymentReceivingCss.includes('grid-template-columns:repeat(4,minmax(0,1fr))'),'Desktop Payment Receiving KPIs must remain four columns');
+assert(adminPaymentReceivingCss.includes('.premium-receiving-modal'),'Premium Payment Receiving editor modal must remain');
 
 assert(layout.includes('admin-sidebar-signature')&&layout.includes('admin-top-user'),'Premium Admin shell controls must remain present');
 assert(!layout.includes('admin-sidebar-status'),'Duplicated sidebar health copy must stay removed');
