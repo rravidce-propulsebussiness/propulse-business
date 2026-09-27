@@ -235,6 +235,7 @@ export default function AdminMembershipPlansConfig(){
   const [ruleEditorOpen,setRuleEditorOpen]=useState(false)
   const [editingRule,setEditingRule]=useState(null)
   const [rule,setRule]=useState(defaultRule('grow',[]))
+  const [ruleTargetMode,setRuleTargetMode]=useState('all')
   const [businessSearch,setBusinessSearch]=useState('')
   const [businessResults,setBusinessResults]=useState([])
   const [selectedBusinesses,setSelectedBusinesses]=useState([])
@@ -394,6 +395,7 @@ export default function AdminMembershipPlansConfig(){
 
   function openCreateRule(group='grow'){
     setEditingRule(null)
+    setRuleTargetMode('all')
     setRule(defaultRule(group,plans))
     setSelectedBusinesses([])
     setBusinessSearch('')
@@ -405,6 +407,7 @@ export default function AdminMembershipPlansConfig(){
   function openEditRule(item){
     const selected=Array.isArray(item.selected_users)?item.selected_users:[]
     setEditingRule(item)
+    setRuleTargetMode(pricingScopeForRule(item))
     setRule(ruleFromItem(item,plans))
     setSelectedBusinesses(selected)
     setBusinessSearch('')
@@ -417,6 +420,7 @@ export default function AdminMembershipPlansConfig(){
     if(saving)return
     setRuleEditorOpen(false)
     setEditingRule(null)
+    setRuleTargetMode('all')
     setSelectedBusinesses([])
     setBusinessSearch('')
     setBusinessResults([])
@@ -440,8 +444,8 @@ export default function AdminMembershipPlansConfig(){
   async function saveRule(){
     if(!rule.name.trim())return setError('Give this pricing rule a name.')
     if(rule.audienceScope==='specific_users'&&!rule.userIds.length)return setError('Choose at least one business.')
-    if(['industry','industry_location'].includes(pricingScopeForRule(rule))&&!rule.industryId)return setError('Choose an industry for this pricing rule.')
-    if(['location','industry_location'].includes(pricingScopeForRule(rule))&&!rule.stateId)return setError('Choose a state for this pricing rule.')
+    if(['industry','industry_location'].includes(ruleTargetMode)&&!rule.industryId)return setError('Choose an industry for this pricing rule.')
+    if(['location','industry_location'].includes(ruleTargetMode)&&!rule.stateId)return setError('Choose a state for this pricing rule.')
     if(!rule.periodOverrides.some(period=>period.enabled!==false))return setError('Enable at least one billing cycle.')
     try{
       setSaving(editingRule?`rule-${editingRule.id}`:'rule-create')
@@ -466,6 +470,7 @@ export default function AdminMembershipPlansConfig(){
       }
       setRuleEditorOpen(false)
       setEditingRule(null)
+      setRuleTargetMode('all')
       setSelectedBusinesses([])
       setBusinessSearch('')
       setBusinessResults([])
@@ -497,8 +502,9 @@ export default function AdminMembershipPlansConfig(){
     return cities.filter(city=>Number(city.state_id)===Number(rule.stateId))
   },[cities,rule.stateId])
 
-  const ruleScope=pricingScopeForRule(rule)
+  const ruleScope=ruleTargetMode
   function changeRuleScope(scope){
+    setRuleTargetMode(scope)
     setRule(current=>({
       ...current,
       industryId:['industry','industry_location'].includes(scope)?current.industryId:'',
