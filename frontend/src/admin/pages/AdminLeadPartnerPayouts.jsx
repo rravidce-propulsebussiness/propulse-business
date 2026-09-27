@@ -38,8 +38,8 @@ export default function AdminLeadPartnerPayouts(){
   };
 
   return <div style={{padding:24,maxWidth:1250,margin:'0 auto'}}>
-    <h1>Lead Partner Payouts</h1>
-    <p style={{color:'#667085'}}>Review withdrawal requests and record completed transfers.</p>
+    <h1>Partner Transfer Queue</h1>
+    <p style={{color:'#667085'}}>Action-only queue for partner withdrawal requests. Partner leads, earnings and full payout history remain in Partner Master.</p>
     {error&&<div style={{padding:12,background:'#fff1f0',color:'#b42318',borderRadius:9,marginBottom:15}}>{error}</div>}
     <div style={{display:'flex',gap:10,marginBottom:18}}>
       <select value={status} onChange={e=>setStatus(e.target.value)}><option value="pending">Pending</option><option value="paid">Paid</option><option value="rejected">Rejected</option><option value="all">All</option></select>
