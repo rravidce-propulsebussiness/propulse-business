@@ -62,6 +62,11 @@ assert(adminUsers.includes('Verification documents'),'Customer 360 must expose v
 assert(adminUsers.includes('user ID, payment ID, UTR or lead ID'),'Users support search must expose operational identifiers');
 assert(adminUsersCss.includes('/* Customer 360 account console */'),'Customer 360 styling must remain');
 assert(adminUsersCss.includes('.user-360-tabs')&&adminUsersCss.includes('.user-360-snapshot'),'Customer 360 navigation and support snapshot styling must remain');
+assert(adminUsers.includes('user360BodyRef')&&adminUsers.includes("document.body.style.overflow='hidden'"),'Customer 360 must lock background scrolling and reset tab content scroll');
+assert(adminUsersCss.includes('/* Customer 360 fixed chrome + hidden scrollbars */'),'Customer 360 fixed chrome must remain');
+assert(adminUsersCss.includes('.users-360-backdrop')&&adminUsersCss.includes('overflow:hidden!important'),'Customer 360 backdrop must not become a second scroll container');
+assert(adminUsersCss.includes('scrollbar-width:none')&&adminUsersCss.includes('.user-360-body::-webkit-scrollbar'),'Customer 360 visible scrollbars must remain hidden');
+assert(adminUsersCss.includes('justify-content:center')&&adminUsersCss.includes('flex-wrap:wrap'),'Desktop Customer 360 tabs must fit without a horizontal slider');
 assert(adminUser360Service.includes('async function getUser360'),'Backend Customer 360 aggregator must remain');
 assert(adminUser360Service.includes('paymentService.getMembershipCustomerDetails')&&adminUser360Service.includes('walletService.getAdminWalletCustomerDetails')&&adminUser360Service.includes('leadCrmPurchaseService.getHistory'),'Customer 360 must reuse canonical membership, wallet and full lead-history services');
 assert(adminUser360Service.includes('getActiveGrants(userId,pool,{ensureWelcome:false})'),'Opening User 360 must never auto-issue an entitlement');
