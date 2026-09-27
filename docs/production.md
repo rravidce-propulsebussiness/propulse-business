@@ -51,9 +51,9 @@ versions, rather than trusting the role claimed in a JWT.
    orchestrator liveness probe, otherwise a temporary PostgreSQL outage can cause a
    restart loop. For a dedicated background process, set
    `RUN_BACKGROUND_JOBS_IN_WEB=false` on web instances and run `npm run worker` as a
-   supervised worker service. The worker runs Lead Partner Google Sheet sync immediately
-   and every five minutes; PostgreSQL advisory locking makes multiple worker replicas
-   safe, although one worker is normally enough. Back up PostgreSQL and persist
+   supervised worker service. The worker runs both Lead Partner and Admin Google Sheet
+   sync immediately and every five minutes; PostgreSQL advisory locking makes multiple
+   worker replicas safe, although one worker is normally enough. Back up PostgreSQL and persist
    `backend/uploads`, including private company proofs. Multiple backend instances need
    shared upload storage; payment drafts themselves are database-backed.
 

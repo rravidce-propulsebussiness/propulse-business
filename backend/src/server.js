@@ -30,6 +30,7 @@ const path=require('path');
 const contactRoutes=require('./routes/contactRoutes');
 const adminFaqRoutes=require('./routes/adminFaqRoutes');
 const { startLeadPartnerSheetAutoSync }=require('./services/leadPartnerSheetSyncScheduler');
+const { startAdminGoogleSheetAutoSync }=require('./services/adminGoogleSheetSyncScheduler');
 const rateLimit=require('./middleware/rateLimitMiddleware');
 const csrfProtection=require('./middleware/csrfMiddleware');
 const {getConfiguredOrigins}=require('./config/httpOrigins');
@@ -66,7 +67,7 @@ app.get('/health',readiness);
 app.use('/api/auth',authRoutes);app.use('/api/profile',profileRoutes);app.use('/api/admin',adminRoutes);app.use('/api/lead-partner',leadPartnerRoutes);app.use('/api/lead-reports',leadReportRoutes);app.use('/api/lead-partner/faqs',faqRoutes);app.use('/api/faqs',publicFaqRoutes);app.use('/api/upcoming-features',upcomingFeatureRoutes);app.use('/api/contact',contactRoutes);app.use('/api/homepage-media',homepageMediaRoutes);app.use('/api/admin/faqs',adminFaqRoutes);app.use('/api/leads',leadRoutes);app.use('/api/payments',paymentRoutes);app.use('/api/payment-receiving-details',paymentReceivingDetailsRoutes);app.use('/api/coupons',couponRoutes);app.use('/api/membership-plans',membershipPlanRoutes);app.use('/api/admin/commercial',adminCommercialRoutes);app.use('/api/wallet',walletRoutes);app.use('/api/investments',investmentRoutes);app.use('/api/investor/payout-account',investorPayoutAccountRoutes);app.use('/api/industries',industryRoutes);app.use('/api/services',serviceRoutes);app.use('/api/subservices',subserviceRoutes);app.use('/api/states',stateRoutes);app.use('/api/cities',cityRoutes);app.use('/api/subcities',subcityRoutes);app.use('/api/pincodes',pincodeRoutes);
 app.use((req,res)=>res.status(404).json({error:'Not found'}));
 app.use((err,req,res,next)=>{if(err.message==='CORS origin not allowed')return res.status(403).json({error:'Origin not allowed'});if(err.type==='entity.parse.failed')return res.status(400).json({error:'Invalid JSON body'});if(err.type==='entity.too.large')return res.status(413).json({error:'Request body is too large'});console.error('Unhandled server error:',err.stack||err);return res.status(500).json({error:'Internal server error'});});
-let server;let stopLeadPartnerSheetAutoSync=()=>{};let shuttingDown=false;
+let server;let stopLeadPartnerSheetAutoSync=()=>{};let stopAdminGoogleSheetAutoSync=()=>{};let shuttingDown=false;
 async function shutdown(signal){
   if(shuttingDown)return;
   shuttingDown=true;
@@ -75,6 +76,7 @@ async function shutdown(signal){
   forceTimer.unref?.();
   try{
     stopLeadPartnerSheetAutoSync();
+    stopAdminGoogleSheetAutoSync();
     if(server?.listening){
       await new Promise((resolve,reject)=>server.close(error=>{
         if(!error||error.code==='ERR_SERVER_NOT_RUNNING')return resolve();
@@ -97,8 +99,10 @@ async function start(){
     else console.log('Database migrations skipped on web startup (RUN_MIGRATIONS_ON_STARTUP=false).');
     server=app.listen(PORT,'0.0.0.0',()=>{
       console.log(`Server running on port ${PORT}`);
-      if(runBackgroundJobsInWeb)stopLeadPartnerSheetAutoSync=startLeadPartnerSheetAutoSync();
-      else console.log('Background jobs disabled in web process (RUN_BACKGROUND_JOBS_IN_WEB=false).');
+      if(runBackgroundJobsInWeb){
+        stopLeadPartnerSheetAutoSync=startLeadPartnerSheetAutoSync();
+        stopAdminGoogleSheetAutoSync=startAdminGoogleSheetAutoSync();
+      }else console.log('Background jobs disabled in web process (RUN_BACKGROUND_JOBS_IN_WEB=false).');
     });
     process.once('SIGTERM',()=>shutdown('SIGTERM'));
     process.once('SIGINT',()=>shutdown('SIGINT'));

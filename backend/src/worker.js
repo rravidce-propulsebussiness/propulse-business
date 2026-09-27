@@ -2,9 +2,11 @@ require('dotenv').config();
 const pool = require('./config/database');
 const { runMigrations } = require('./database/runMigrations');
 const { startLeadPartnerSheetAutoSync } = require('./services/leadPartnerSheetSyncScheduler');
+const { startAdminGoogleSheetAutoSync } = require('./services/adminGoogleSheetSyncScheduler');
 const { envFlag } = require('./config/runtimeFlags');
 
-let stopAutoSync = () => {};
+let stopLeadPartnerAutoSync = () => {};
+let stopAdminAutoSync = () => {};
 let shuttingDown = false;
 
 async function shutdown(signal) {
@@ -18,7 +20,8 @@ async function shutdown(signal) {
   forceTimer.unref?.();
 
   try {
-    stopAutoSync();
+    stopLeadPartnerAutoSync();
+    stopAdminAutoSync();
     await pool.end();
     clearTimeout(forceTimer);
     process.exit(0);
@@ -36,7 +39,8 @@ async function start() {
     console.log('Database migrations skipped on worker startup.');
   }
 
-  stopAutoSync = startLeadPartnerSheetAutoSync({ unref: false, runImmediately: true });
+  stopLeadPartnerAutoSync = startLeadPartnerSheetAutoSync({ unref: false, runImmediately: true });
+  stopAdminAutoSync = startAdminGoogleSheetAutoSync({ unref: false, runImmediately: true });
   process.once('SIGTERM', () => shutdown('SIGTERM'));
   process.once('SIGINT', () => shutdown('SIGINT'));
   console.log('Background worker running.');
