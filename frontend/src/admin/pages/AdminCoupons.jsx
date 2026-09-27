@@ -34,6 +34,11 @@ const toLocalInput=value=>{
   if(Number.isNaN(date.getTime()))return''
   return `${date.getFullYear()}-${pad(date.getMonth()+1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`
 }
+const toIso=value=>{
+  if(!value)return null
+  const date=new Date(value)
+  return Number.isNaN(date.getTime())?null:date.toISOString()
+}
 const validityLabel=item=>{
   if(!item.starts_at&&!item.expires_at)return'Always available'
   const start=item.starts_at?new Date(item.starts_at).toLocaleString('en-IN',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}):'Now'
@@ -249,8 +254,8 @@ export default function AdminCoupons(){
         min_order_amount:Number(form.min_order_amount||0),
         usage_limit:form.usage_limit===''?null:Number(form.usage_limit),
         per_user_limit:form.per_user_limit===''?null:Number(form.per_user_limit),
-        starts_at:validityMode==='always'?null:(form.starts_at||null),
-        expires_at:validityMode==='always'?null:(form.expires_at||null),
+        starts_at:validityMode==='always'?null:toIso(form.starts_at),
+        expires_at:validityMode==='always'?null:toIso(form.expires_at),
         membership_plan_ids:form.purchase_types.includes('membership')?form.membership_plan_ids:[]
       }
       await request(editing?`/coupons/${editing}`:'/coupons',{method:editing?'PATCH':'POST',body:JSON.stringify(body)})
