@@ -389,8 +389,11 @@ async function deleteGrant(grantId,adminId,client=pool){
   const id=int(grantId,1,2147483647,0);
   if(!id)fail('Invalid entitlement grant','INVALID_GRANT');
 
+  const grant=(await client.query('SELECT id,source,revoked_at FROM lead_entitlement_grants WHERE id=$1',[id])).rows[0];
+  if(!grant||grant.revoked_at)fail('Entitlement grant not found or already deleted','GRANT_NOT_FOUND');
+
   const claimCount=number((await client.query('SELECT COUNT(*)::int AS count FROM lead_entitlement_claims WHERE grant_id=$1',[id])).rows[0]?.count);
-  if(claimCount===0){
+  if(grant.source==='admin'&&claimCount===0){
     const deleted=(await client.query('DELETE FROM lead_entitlement_grants WHERE id=$1 RETURNING *',[id])).rows[0];
     if(!deleted)fail('Entitlement grant not found','GRANT_NOT_FOUND');
     return{...deleted,deleted:true};
