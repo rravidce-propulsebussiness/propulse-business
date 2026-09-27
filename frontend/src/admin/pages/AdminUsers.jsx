@@ -96,6 +96,7 @@ export default function AdminUsers() {
       setUsers(current => current.map(item => item.id === selected.id ? { ...item, ...updated } : item));
       setSelected(current => current ? { ...current, ...updated } : current);
       setRoleDraft(updated.role);
+      await loadUser360(selected.id,true);
     } catch (e) { setError(e.message); setRoleDraft(selected.role); }
     finally { setRoleSaving(false); }
   }
