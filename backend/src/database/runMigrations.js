@@ -77,15 +77,19 @@ function hasTransactionControl(sql) {
   return /(^|;)\s*(BEGIN|COMMIT|ROLLBACK)\s*;?/im.test(surface);
 }
 
-async function applyFile(client, filePath) {
+async function applyFile(client, filePath, appliedFilenames = null) {
   const filename = path.relative(__dirname, filePath).replace(/\\/g, '/');
-  const existing = await client.query('SELECT 1 FROM schema_migrations WHERE filename=$1', [filename]);
-  if (existing.rowCount) return false;
+  if (appliedFilenames?.has(filename)) return false;
+  if (!appliedFilenames) {
+    const existing = await client.query('SELECT 1 FROM schema_migrations WHERE filename=$1', [filename]);
+    if (existing.rowCount) return false;
+  }
 
   const sql = fs.readFileSync(filePath, 'utf8');
   if (hasTransactionControl(sql)) {
     await client.query(sql);
     await client.query('INSERT INTO schema_migrations(filename) VALUES($1)', [filename]);
+    appliedFilenames?.add(filename);
     return true;
   }
 
@@ -94,6 +98,7 @@ async function applyFile(client, filePath) {
     await client.query(sql);
     await client.query('INSERT INTO schema_migrations(filename) VALUES($1)', [filename]);
     await client.query('COMMIT');
+    appliedFilenames?.add(filename);
     return true;
   } catch (error) {
     await client.query('ROLLBACK');
@@ -114,9 +119,11 @@ async function runMigrations() {
           .sort()
           .map(f => path.join(migrationsDir, f))
       : [];
+    const appliedRows = await client.query('SELECT filename FROM schema_migrations');
+    const appliedFilenames = new Set(appliedRows.rows.map(row => String(row.filename)));
     let applied = 0;
     for (const file of files) {
-      if (await applyFile(client, file)) applied += 1;
+      if (await applyFile(client, file, appliedFilenames)) applied += 1;
     }
     console.log(`Database migrations completed (${applied} applied, ${files.length} checked).`);
     return { applied, checked: files.length };
