@@ -107,6 +107,9 @@ async function main() {
     });
     const scopedPricing=(await q('SELECT pricing FROM leads WHERE id=$1',[ids.first.leadId]))[0]?.pricing;
     assert.strictEqual(Number(scopedPricing?.shares?.find(row=>Number(row.shares)===1)?.pro),123,'Scoped Lead Partner pricing must update matching leads through parameterized filters');
+    const pricingPage=await leadPartnerPricingService.list(ids.user,{search:tag,status:'all',page:1,limit:2});
+    assert.strictEqual(pricingPage.leads.length,2,'Lead Partner pricing workspace must respect its page limit');
+    assert(pricingPage.pagination.total>=3&&pricingPage.pagination.totalPages>=2,'Lead Partner pricing pagination must retain filtered totals');
 
     console.log('test: concurrent withdrawals');
     const concurrent = await Promise.allSettled([
