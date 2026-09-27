@@ -55,7 +55,10 @@ versions, rather than trusting the role claimed in a JWT.
    sync immediately and every five minutes; PostgreSQL advisory locking makes multiple
    worker replicas safe, although one worker is normally enough. Back up PostgreSQL and persist
    `backend/uploads`, including private company proofs. Multiple backend instances need
-   shared upload storage; payment drafts themselves are database-backed.
+   shared upload storage. Private payment and payout proof files are stored under
+   `backend/uploads/private-proofs` while PostgreSQL keeps only short internal
+   references; existing legacy data-URL proof rows remain readable. Payment drafts
+   themselves are database-backed.
 
 ## Manual payment operations
 

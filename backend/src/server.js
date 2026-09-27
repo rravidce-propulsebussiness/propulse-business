@@ -57,7 +57,7 @@ app.use(express.json({limit:DEFAULT_JSON_BYTES}));
 app.use('/api',csrfProtection);
 const apiRateLimit=rateLimit({windowMs:15*60*1000,max:600,scope:'global',shared:true});
 app.use('/api',apiRateLimit);
-app.use('/uploads',(req,res,next)=>{if(req.path==='/company-proofs'||req.path.startsWith('/company-proofs/'))return res.status(404).json({error:'Not found'});return next();});
+app.use('/uploads',(req,res,next)=>{if(req.path==='/company-proofs'||req.path.startsWith('/company-proofs/'))return res.status(404).json({error:'Not found'});if(req.path==='/private-proofs'||req.path.startsWith('/private-proofs/'))return res.status(404).json({error:'Not found'});return next();});
 app.use('/uploads',express.static(path.join(__dirname,'../uploads'),{fallthrough:true,maxAge:'7d'}));
 function setHealthHeaders(res){res.setHeader('Cache-Control','no-store');}
 app.get('/health/live',(req,res)=>{setHealthHeaders(res);res.json({status:'ok'});});

@@ -2,6 +2,7 @@ const { sendError } = require('../utils/errorResponse');
 const pool = require('../config/database');
 const paymentService = require('../services/paymentService');
 const investmentPaymentDraftService = require('../services/investmentPaymentDraftService');
+const privateProofStorage = require('../services/privateProofStorageService');
 const membershipCustomerAdminService = require('../services/membershipCustomerAdminService');
 const { getMembershipAccess, getCurrentProMembership } = require('../services/membershipAccessService');
 
@@ -33,11 +34,18 @@ async function submitPaymentReference(req,res){
     if(!manualReference)return res.status(400).json({error:'Payment reference / UTR is required',code:'REFERENCE_REQUIRED'});
     const proofValidation=validatePaymentProof(proofUrl);
     if(!proofValidation.valid)return res.status(400).json({error:proofValidation.message,code:proofValidation.code});
-    if(draftId.startsWith('draft_')){
-      const updated=await investmentPaymentDraftService.submit({id:draftId,userId:req.user.id,manualReference,proofUrl,notes:req.body.notes});
-      return res.json(updated);
+    const storedProof=await privateProofStorage.storeDataUrl(proofUrl,{category:'payments',maxBytes:MAX_PROOF_BYTES});
+    try{
+      if(draftId.startsWith('draft_')){
+        const updated=await investmentPaymentDraftService.submit({id:draftId,userId:req.user.id,manualReference,proofUrl:storedProof,notes:req.body.notes});
+        return res.json(updated);
+      }
+      const result=await paymentService.submitPaymentReference({userId:req.user.id,paymentId:req.params.id,manualReference,proofUrl:storedProof,notes:req.body.notes});
+      return res.json(result);
+    }catch(error){
+      await privateProofStorage.removeStoredProof(storedProof).catch(cleanupError=>console.error('Payment proof cleanup failed:',cleanupError.message));
+      throw error;
     }
-    const result=await paymentService.submitPaymentReference({userId:req.user.id,paymentId:req.params.id,manualReference,proofUrl,notes:req.body.notes});res.json(result)
   }catch(error){console.error('Submit payment reference failed:',error.message);const status=error.code==='PRO_REQUIRED'?403:error.code==='DUPLICATE_REFERENCE'?409:['REFERENCE_REQUIRED','PROOF_REQUIRED','INVALID_PROOF','PROOF_TOO_LARGE','PAYMENT_NOT_PENDING','INVALID_AMOUNT','INVESTMENT_DISABLED','AMOUNT_OUT_OF_RANGE','MAXIMUM_CAPITAL_REACHED','INDUSTRY_UNAVAILABLE','INDUSTRY_LIMIT_REACHED','LOCATION_REQUIRED','LOCATION_UNAVAILABLE','CYCLE_MODE_MISMATCH'].includes(error.code)?400:error.code==='NOT_FOUND'||error.code==='DRAFT_NOT_FOUND'?404:['PAYMENT_PENDING','LOCATION_CAPACITY_REACHED','ACTIVE_CYCLE_EXISTS','CYCLE_CLOSING'].includes(error.code)?409:500;sendError(res,status,error,'Failed to submit payment reference',{code:error.code})}
 }
 async function getCurrentMembership(req,res){try{const [membership,access]=await Promise.all([getCurrentProMembership(req.user.id),getMembershipAccess(req.user.id)]);res.json(membership?{...membership,...access}:access)}catch(error){console.error('Get membership access failed:',error.message);res.status(500).json({error:'Failed to fetch membership'})}}
