@@ -119,6 +119,25 @@ export default function AdminCoupons(){
   useEffect(()=>{let active=true;queueMicrotask(()=>{if(active)load()});return()=>{active=false}},[load])
 
   useEffect(()=>{
+    if(!modalOpen||userSearch.trim().length<2)return undefined
+    let active=true
+    const timer=window.setTimeout(async()=>{
+      try{
+        const params=new URLSearchParams({role:'business',status:'active',pageSize:'30',search:userSearch.trim()})
+        const data=await request(`/admin/users?${params}`)
+        const results=Array.isArray(data)?data:Array.isArray(data?.data)?data.data:[]
+        if(!active)return
+        setUsers(current=>{
+          const map=new Map(current.map(item=>[Number(item.id),item]))
+          results.forEach(item=>map.set(Number(item.id),item))
+          return [...map.values()]
+        })
+      }catch{}
+    },220)
+    return()=>{active=false;window.clearTimeout(timer)}
+  },[modalOpen,userSearch,request])
+
+  useEffect(()=>{
     if(!modalOpen)return undefined
     const previous=document.body.style.overflow
     document.body.style.overflow='hidden'
@@ -194,6 +213,11 @@ export default function AdminCoupons(){
       const purchaseTypes=Array.isArray(detail.purchase_types)?detail.purchase_types:JSON.parse(detail.purchase_types||'[]')
       const planIds=Array.isArray(detail.membership_plan_ids)?detail.membership_plan_ids:JSON.parse(detail.membership_plan_ids||'[]')
       setEditing(detail.id)
+      setUsers(current=>{
+        const map=new Map(current.map(user=>[Number(user.id),user]))
+        ;(detail.users||[]).forEach(user=>{if(!map.has(Number(user.id)))map.set(Number(user.id),user)})
+        return [...map.values()]
+      })
       setForm({
         ...emptyCoupon(),
         ...detail,
