@@ -3,6 +3,7 @@ const {sendError}=require('../utils/errorResponse');
 
 function importStatus(error){
   if(error?.code==='SHEET_CONNECTION_NOT_FOUND')return 404;
+  if(error?.code==='SYNC_IN_PROGRESS')return 409;
   return /Google Sheet|CSV|Industry|Service|State|City|Pincode|Maximum|active/i.test(String(error?.message||'')) ? 400 : 500;
 }
 
