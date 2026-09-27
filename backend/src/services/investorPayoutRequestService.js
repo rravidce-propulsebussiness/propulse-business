@@ -42,7 +42,7 @@ async function adminList({status='all',search='',page=1,limit=50}={}){
       COUNT(*) FILTER(WHERE r.status='rejected')::int rejected_count,
       COALESCE(SUM(r.amount) FILTER(WHERE r.status='rejected'),0)::numeric rejected_amount
       FROM ${dataFrom} ${searchWhereSql}`,searchValues),
-    pool.query(`SELECT r.id,r.user_id,r.amount,r.status,r.transfer_reference,r.notes,r.requested_at,r.processed_at,r.processed_by,r.payout_method,r.payout_account_snapshot,r.cycle_id,r.withdrawal_type,u.name AS user_name,u.email AS user_email
+    pool.query(`SELECT r.id,r.user_id,r.amount,r.status,r.transfer_reference,r.notes,r.requested_at,r.processed_at,r.processed_by,r.payout_method,r.payout_account_snapshot,r.cycle_id,r.withdrawal_type,(COALESCE(BTRIM(r.proof_url),'')<>'') AS has_proof,u.name AS user_name,u.email AS user_email
       FROM ${dataFrom} ${dataWhereSql}
       ORDER BY r.requested_at DESC,r.id DESC
       LIMIT $${rowValues.length-1} OFFSET $${rowValues.length}`,rowValues)
