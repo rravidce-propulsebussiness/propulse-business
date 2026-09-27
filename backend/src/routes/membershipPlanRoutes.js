@@ -9,7 +9,8 @@ function requireAdmin(req, res, next) {
   return next();
 }
 
-router.get('/', membershipPlanController.getPlans);
+router.get('/public', membershipPlanController.getPublicPlans);
+router.get('/', requireAuth, membershipPlanController.getPlans);
 router.post('/', requireAuth, requireAdmin, membershipPlanController.createPlan);
 router.put('/:id', requireAuth, requireAdmin, membershipPlanController.updatePlan);
 router.patch('/:id/status', requireAuth, requireAdmin, membershipPlanController.setPlanStatus);
