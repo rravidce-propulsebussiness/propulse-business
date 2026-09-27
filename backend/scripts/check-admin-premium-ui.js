@@ -63,7 +63,7 @@ assert(adminUsers.includes('user ID, payment ID, UTR or lead ID'),'Users support
 assert(adminUsersCss.includes('/* Customer 360 account console */'),'Customer 360 styling must remain');
 assert(adminUsersCss.includes('.user-360-tabs')&&adminUsersCss.includes('.user-360-snapshot'),'Customer 360 navigation and support snapshot styling must remain');
 assert(adminUser360Service.includes('async function getUser360'),'Backend Customer 360 aggregator must remain');
-assert(adminUser360Service.includes('paymentService.getMembershipCustomerDetails')&&adminUser360Service.includes('walletService.getAdminWalletCustomerDetails')&&adminUser360Service.includes('leadCrmPurchaseService.getPurchases'),'Customer 360 must reuse canonical membership, wallet and lead services');
+assert(adminUser360Service.includes('paymentService.getMembershipCustomerDetails')&&adminUser360Service.includes('walletService.getAdminWalletCustomerDetails')&&adminUser360Service.includes('leadCrmPurchaseService.getHistory'),'Customer 360 must reuse canonical membership, wallet and full lead-history services');
 assert(adminUser360Service.includes('getActiveGrants(userId,pool,{ensureWelcome:false})'),'Opening User 360 must never auto-issue an entitlement');
 assert(adminUser360Service.includes('async function setMembershipPlan'),'Admin membership assignment/change service must remain');
 assert(adminUser360Service.includes('Reason is required'),'Manual membership changes must require an audit reason');
