@@ -19,6 +19,9 @@ for(const marker of required){
 
 const controllerFile=path.join(__dirname,'../src/controllers/servicePricingController.js');
 const controllerSource=fs.readFileSync(controllerFile,'utf8');
+const adminSource=fs.readFileSync(path.join(__dirname,'../../frontend/src/admin/pages/AdminServicePricing.jsx'),'utf8');
+const homeSource=fs.readFileSync(path.join(__dirname,'../../frontend/src/pages/Home.jsx'),'utf8');
+const growScaleMigration=fs.readFileSync(path.join(__dirname,'../src/database/migrations/20260927_service_pricing_grow_scale_only.sql'),'utf8');
 if(!controllerSource.includes("['INVALID_PRICING','INVALID_CTA_URL'].includes(e.code)?400")){
   console.error('FAIL: service pricing update controller does not map INVALID_CTA_URL to 400');
   process.exit(1);
@@ -39,4 +42,26 @@ for(const value of invalid){
   if(validate(value)){console.error("FAIL: unsafe CTA accepted:",value);process.exit(1)}
 }
 
-console.log('Service pricing CTA URL security regression test passed.');
+
+if(!source.includes("const CATEGORIES=['Grow','Scale'];")){
+  console.error('FAIL: backend Service Pricing categories must be Grow and Scale only');
+  process.exit(1);
+}
+if(!source.includes("WHERE category = ANY($1::text[])")){
+  console.error('FAIL: Service Pricing list must filter out legacy categories');
+  process.exit(1);
+}
+if(!adminSource.includes("const categories=['Grow','Scale']")||adminSource.includes("'Marketing','Lead Sales','Government Compliance'")){
+  console.error('FAIL: Admin Service Pricing must expose only Grow and Scale');
+  process.exit(1);
+}
+if(!homeSource.includes("['Grow','Scale'].includes(item?.category)")||homeSource.includes("category: 'Marketing'")||homeSource.includes("category: 'Lead Sales'")||homeSource.includes("category: 'Government Compliance'")){
+  console.error('FAIL: public Service Pricing must use only Grow and Scale');
+  process.exit(1);
+}
+if(!growScaleMigration.includes("DELETE FROM service_pricing")||!growScaleMigration.includes("CHECK (category IN ('Grow','Scale'))")){
+  console.error('FAIL: database migration must remove and block legacy Service Pricing categories');
+  process.exit(1);
+}
+
+console.log('Service pricing security and Grow/Scale regression test passed.');
