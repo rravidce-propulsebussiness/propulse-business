@@ -49,12 +49,13 @@ export default function AdminContactSocial(){
   const publishedCount=useMemo(()=>form.social_handles.filter(s=>s.enabled&&s.url).length,[form.social_handles]);
   const hiddenCount=useMemo(()=>form.social_handles.filter(s=>!s.enabled).length,[form.social_handles]);
   const current= AUDIENCES.find(x=>x.key===audience);
-  if(loading&&!form.company_name&&!loaded[audience]) return <main className="admin-contact-page"><div className="admin-contact-empty">Loading contact settings…</div></main>;
+  const contactChannels=[form.email,form.phone,form.whatsapp,form.support_email].filter(Boolean).length;
+  if(loading&&!form.company_name&&!loaded[audience]) return <main className="admin-contact-page"><div className="admin-contact-empty admin-contact-loading"><div className="admin-contact-spinner"/>Loading contact settings…</div></main>;
 
   return <main className="admin-contact-page">
     <section className="admin-contact-hero">
-      <div><span className="admin-contact-kicker">CONTENT CONTROL</span><h1>Contact &amp; Social Management</h1><p>Manage contact information and social media handles for each audience of the platform.</p></div>
-      <div className="admin-contact-hero-mark">↗</div>
+      <div className="admin-contact-hero-copy"><span className="admin-contact-kicker">CONTENT / CONTACT &amp; SOCIAL</span><h1>Contact &amp; social</h1><p>Manage contact information, destinations and social media handles for each platform audience.</p><div className="admin-contact-hero-meta"><span><b>{current?.label}</b> selected</span><span><b>{contactChannels}</b> contact channels</span><span><b>{publishedCount}</b> social links live</span></div></div>
+      <div className="admin-contact-hero-actions"><a href={audience==='website'?'/contact':'/'} target="_blank" rel="noreferrer"><span>↗</span><div><b>Preview</b><small>{audience==='website'?'Open contact page':'Open website'}</small></div></a><button type="button" onClick={()=>loadAudience(audience)} disabled={loading}><span>↻</span><div><b>{loading?'Refreshing…':'Refresh'}</b><small>Reload saved settings</small></div></button></div>
     </section>
     {error&&<div className="admin-contact-alert error">{error}</div>}
     {ok&&<div className="admin-contact-alert success">{ok}</div>}
@@ -64,7 +65,7 @@ export default function AdminContactSocial(){
     </section>
 
     <form onSubmit={save}>
-      <div className="admin-contact-audience-note"><div><strong>{current?.label}</strong><span>{current?.sub}</span></div><span className="admin-contact-audience-badge">{audience==='common'?'Shared':'Audience specific'}</span></div>
+      <div className="admin-contact-audience-note"><div><span className="admin-contact-kicker">EDITING AUDIENCE</span><strong>{current?.label}</strong><span>{current?.sub}</span></div><span className="admin-contact-audience-badge">{audience==='common'?'Shared settings':'Audience specific'}</span></div>
       <div className="admin-contact-layout">
         <div className="admin-contact-left">
           <section className="admin-contact-card"><div className="admin-contact-card-head"><div><span className="admin-contact-kicker">BUSINESS INFORMATION</span><h2>Contact details</h2><p>These values are stored separately for the selected audience.</p></div></div>
@@ -90,7 +91,7 @@ export default function AdminContactSocial(){
           <section className="admin-contact-card"><div className="admin-contact-card-head"><div><span className="admin-contact-kicker">LIVE CONTENT</span><h2>Publication status</h2><p>Only enabled links with a URL are visible to end users.</p></div></div><div className="admin-contact-status-grid"><div><strong>{form.social_handles.length}</strong><span>Total social links</span></div><div><strong>{publishedCount}</strong><span>Published links</span></div><div><strong>{hiddenCount}</strong><span>Hidden</span></div></div></section>
         </div>
       </div>
-      <div className="admin-contact-actions"><a href={audience==='website'?'/contact':'/'} target="_blank" rel="noreferrer" className="admin-contact-preview">{audience==='website'?'View Contact page':'View website ↗'}</a><button type="submit" className="admin-contact-save" disabled={saving}>{saving?'Saving…':'Save '+current?.label} <span>→</span></button></div>
+      <div className="admin-contact-actions"><div><span>Changes apply only to <b>{current?.label}</b>{audience==='common'?' and shared content.':'.'}</span></div><button type="submit" className="admin-contact-save" disabled={saving}>{saving?'Saving…':'Save '+current?.label} <span>→</span></button></div>
     </form>
   </main>
 }
