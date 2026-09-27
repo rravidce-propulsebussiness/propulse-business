@@ -24,9 +24,10 @@ async function runAutoSync() {
     }
 
     const connections = (await client.query(
-      `SELECT id,user_id,spreadsheet_id
+      `SELECT id,user_id,spreadsheet_id,sync_failure_count,next_retry_at
          FROM lead_partner_sheet_connections
         WHERE status='active'
+          AND (next_retry_at IS NULL OR next_retry_at <= CURRENT_TIMESTAMP)
         ORDER BY id ASC`
     )).rows;
 
@@ -44,8 +45,24 @@ async function runAutoSync() {
           `Google Sheet auto-sync completed: connection=${connection.id}, created=${result.import.created}, duplicates=${result.import.duplicate}, failed=${result.import.failed}`
         );
       } catch (error) {
+        const failureCount = Math.max(1, Number(connection.sync_failure_count || 0) + 1);
+        const retryMinutes = failureCount <= 1 ? 5 : failureCount === 2 ? 15 : failureCount === 3 ? 60 : 360;
+        try {
+          await client.query(
+            `UPDATE lead_partner_sheet_connections
+                SET sync_failure_count=$1,
+                    last_sync_error_at=CURRENT_TIMESTAMP,
+                    last_sync_error=$2,
+                    next_retry_at=CURRENT_TIMESTAMP + ($3 * INTERVAL '1 minute'),
+                    updated_at=CURRENT_TIMESTAMP
+              WHERE id=$4`,
+            [failureCount, String(error.message || 'Google Sheet sync failed').slice(0, 500), retryMinutes, connection.id]
+          );
+        } catch (healthError) {
+          console.error(`Google Sheet sync health update failed: connection=${connection.id}: ${healthError.message}`);
+        }
         console.error(
-          `Google Sheet auto-sync failed: connection=${connection.id}: ${error.message}`
+          `Google Sheet auto-sync failed: connection=${connection.id}: ${error.message}; retry in ${retryMinutes} minute(s)`
         );
       }
     }
