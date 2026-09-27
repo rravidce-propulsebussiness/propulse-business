@@ -86,10 +86,16 @@ async function createPlan(d) {
 
 async function createPlanBundle(d) {
   const periods = Array.isArray(d.periods) ? d.periods.filter(x => x && x.enabled !== false && Number(x.months) > 0) : [];
-  if (!periods.length) throw new Error('At least one billing cycle is required');
+  if (!periods.length) { const e=new Error('Enable at least one billing cycle'); e.code='INVALID_MEMBERSHIP_PLAN'; throw e; }
   const planType = normalizePlanType(d.planType, 'pro');
   const planName = normalizePlanName(d.name);
-  if (!planName) throw new Error('Plan name is required');
+  const groupKey = planName.toLowerCase();
+  if (!['grow','scale'].includes(groupKey) || planType !== 'pro') {
+    const e=new Error('Membership packages must be GROW or SCALE');
+    e.code='INVALID_MEMBERSHIP_PLAN';
+    throw e;
+  }
+  const canonicalName = groupKey === 'scale' ? 'Scale' : 'Grow';
   const rows = [];
   const client = await pool.connect();
   try {
@@ -99,30 +105,38 @@ async function createPlanBundle(d) {
       const label = String(period.label || `${months}-month`).trim().slice(0, 40);
       const p = d.pricing?.[period.key] || {};
       const entitlements = normalizeEntitlements(period.leadEntitlements ?? d.leadEntitlements, months);
-      const name = normalizePlanName(`${planName} ${label}`);
+      const name = normalizePlanName(`${canonicalName} ${label}`);
       const base = Math.max(0, toNumber(d.monthlyBasePrice));
       const discount = Math.min(100, Math.max(0, toNumber(p.discount)));
       const rawOverride = p.customPrice === true ? p.price : '';
       const priceOverride = rawOverride !== '' && Number.isFinite(Number(rawOverride)) ? Number(rawOverride) : '';
       const finalPrice = priceOverride === '' ? calculatePrice(base, months, discount) : Math.max(0, priceOverride);
       const result = await client.query(`
-        INSERT INTO membership_plans(name,plan_group,plan_type,description,price,duration_days,billing_period,billing_months,monthly_base_price,discount_percent,benefits,lead_entitlements,add_ons,lead_rollover_enabled,lead_expiry_days)
-        VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)
+        INSERT INTO membership_plans(name,plan_group,plan_type,description,price,duration_days,billing_period,billing_months,monthly_base_price,discount_percent,benefits,lead_entitlements,add_ons,lead_rollover_enabled,lead_expiry_days,is_active)
+        VALUES($1,$2,'pro',$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,TRUE)
         ON CONFLICT (name) DO UPDATE SET
-          plan_group=EXCLUDED.plan_group, plan_type=EXCLUDED.plan_type, description=EXCLUDED.description,
+          plan_group=EXCLUDED.plan_group, plan_type='pro', description=EXCLUDED.description,
           price=EXCLUDED.price, duration_days=EXCLUDED.duration_days, billing_period=EXCLUDED.billing_period,
           billing_months=EXCLUDED.billing_months, monthly_base_price=EXCLUDED.monthly_base_price,
           discount_percent=EXCLUDED.discount_percent, benefits=EXCLUDED.benefits,
           lead_entitlements=EXCLUDED.lead_entitlements, add_ons=EXCLUDED.add_ons,
           lead_rollover_enabled=EXCLUDED.lead_rollover_enabled, lead_expiry_days=EXCLUDED.lead_expiry_days,
-          updated_at=CURRENT_TIMESTAMP
+          is_active=TRUE, updated_at=CURRENT_TIMESTAMP
         RETURNING *
-      `, [name, planName, planType, d.description || null, finalPrice, Math.max(1, Math.round(months * 30.4375)), label,
+      `, [name, canonicalName, d.description || null, finalPrice, Math.max(1, Math.round(months * 30.4375)), label,
           months, base, discount, JSON.stringify(safeJson(d.benefits)), JSON.stringify(entitlements), JSON.stringify(safeJson(d.addOns)),
           d.leadRolloverEnabled !== false,
           d.leadExpiryDays === undefined || d.leadExpiryDays === '' || d.leadExpiryDays === null ? null : Math.max(1, Math.round(toNumber(d.leadExpiryDays)))]);
       rows.push(result.rows[0]);
     }
+    const activeIds=rows.map(row=>Number(row.id)).filter(Number.isInteger);
+    await client.query(`
+      UPDATE membership_plans
+      SET is_active=FALSE,updated_at=CURRENT_TIMESTAMP
+      WHERE LOWER(COALESCE(plan_group,''))=$1
+        AND plan_type='pro'
+        AND NOT (id = ANY($2::int[]))
+    `,[groupKey,activeIds]);
     await client.query('COMMIT');
     return rows;
   } catch (error) {
