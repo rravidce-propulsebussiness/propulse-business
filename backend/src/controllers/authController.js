@@ -6,8 +6,9 @@ const { sendPasswordResetEmail } = require('../services/emailService');
 const AUTH_COOKIE = 'propulse_auth';
 const AUTH_COOKIE_MAX_AGE = 7 * 24 * 60 * 60 * 1000;
 
-function setAuthCookie(res, token) {
-  const parts = [`${AUTH_COOKIE}=${encodeURIComponent(token)}`, 'HttpOnly', 'Path=/', 'SameSite=Lax', `Max-Age=${Math.floor(AUTH_COOKIE_MAX_AGE / 1000)}`];
+function setAuthCookie(res, token, { remember = true } = {}) {
+  const parts = [`${AUTH_COOKIE}=${encodeURIComponent(token)}`, 'HttpOnly', 'Path=/', 'SameSite=Lax'];
+  if (remember) parts.push(`Max-Age=${Math.floor(AUTH_COOKIE_MAX_AGE / 1000)}`);
   if (process.env.NODE_ENV === 'production') parts.push('Secure');
   res.setHeader('Set-Cookie', parts.join('; '));
 }
@@ -18,8 +19,8 @@ function clearAuthCookie(res) {
   res.setHeader('Set-Cookie', parts.join('; '));
 }
 
-function publicAuthResult(res, result, status = 200) {
-  setAuthCookie(res, result.token);
+function publicAuthResult(res, result, status = 200, { remember = true } = {}) {
+  setAuthCookie(res, result.token, { remember });
   const { token, ...safeResult } = result;
   return res.status(status).json(safeResult);
 }
@@ -118,7 +119,7 @@ async function login(req, res) {
   try {
     const { email, password } = req.body;
     if (!email?.trim() || !password) return res.status(400).json({ error: 'Email and password are required' });
-    return publicAuthResult(res, await authService.login({ email, password }));
+    return publicAuthResult(res, await authService.login({ email, password }), 200, { remember: req.body?.remember !== false });
   } catch (error) {
     if (error.code === 'INVALID_CREDENTIALS') return res.status(401).json({ error: error.message });
     console.error('Login failed:', error.message);
@@ -131,7 +132,7 @@ async function googleLogin(req, res) {
     const { credential } = req.body || {};
     // Google sign-in is an authentication flow, not account creation.
     // The verified Google email determines the existing Propulse account.
-    return publicAuthResult(res, await authService.googleLogin({ idToken: credential }));
+    return publicAuthResult(res, await authService.googleLogin({ idToken: credential }), 200, { remember: req.body?.remember !== false });
   } catch (error) {
     if (['GOOGLE_NOT_CONFIGURED', 'INVALID_GOOGLE_TOKEN', 'INVALID_SIGNUP_ROLE'].includes(error.code)) return res.status(400).json({ error: error.message });
     if (['GOOGLE_TOKEN_TIMEOUT', 'GOOGLE_TOKEN_VERIFICATION_FAILED'].includes(error.code)) return res.status(503).json({ error: 'Google sign-in verification is temporarily unavailable. Please try again.' });
