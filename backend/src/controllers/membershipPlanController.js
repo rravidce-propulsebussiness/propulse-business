@@ -9,6 +9,15 @@ async function getPlans(req,res){
   }
 }
 
+async function getPublicPlans(req,res){
+  try{
+    res.json(await s.getPlans(false))
+  }catch(e){
+    console.error('GET /membership-plans/public failed:',e);
+    res.status(500).json({error:'Failed to fetch membership plans',detail:process.env.NODE_ENV==='production'?undefined:e.message})
+  }
+}
+
 async function createPlan(req,res){
   try{
     const d=req.body;
@@ -55,4 +64,4 @@ async function deletePlan(req,res){
   }
 }
 
-module.exports={getPlans,createPlan,updatePlan,setPlanStatus,deletePlan};
+module.exports={getPlans,getPublicPlans,createPlan,updatePlan,setPlanStatus,deletePlan};
