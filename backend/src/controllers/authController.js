@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const { companyProofRoot } = require('../config/uploadStorage');
 const authService = require('../services/authService');
 const { sendPasswordResetEmail } = require('../services/emailService');
 
@@ -99,7 +100,7 @@ async function downloadCompanyProof(req, res) {
     });
     if (!document) return res.status(404).json({ error: 'Company proof document not found' });
 
-    const uploadDir = path.resolve(__dirname, '../../uploads/company-proofs');
+    const uploadDir = companyProofRoot;
     const filePath = path.resolve(uploadDir, path.basename(document.stored_name));
     if (!filePath.startsWith(path.resolve(uploadDir) + path.sep) || !fs.existsSync(filePath)) {
       return res.status(404).json({ error: 'Company proof document not found' });
