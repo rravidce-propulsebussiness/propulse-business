@@ -75,7 +75,7 @@ export default function AdminInvestmentsWallet() {
   useEffect(() => { let active=true; queueMicrotask(()=>{if(active)loadSettings()}); return()=>{active=false} }, [loadSettings])
 
   const investors = useMemo(() => data.investors.map(item => {
-    const records = Array.isArray(item.investments) ? item.investments : [];
+    const records = Array.isArray(item.investments) ? item.investments : Array.isArray(item.cycles) ? item.cycles : [];
     const contributedFallback = records.reduce((sum, row) => sum + Number(row.invested_amount || row.amount || 0), 0);
     const ledger = item.ledger || {};
     const statusRecord = records.find(row => ['active','exit_requested','waiting_for_leads'].includes(String(row.status || '').toLowerCase())) || records[0] || {};
@@ -86,7 +86,7 @@ export default function AdminInvestmentsWallet() {
     const transferable = Number(ledger.transferable ?? item.payable_now ?? item.transferable ?? 0);
     const payoutReserved = Number(ledger.payout_reserved ?? item.payout_reserved ?? 0);
     const payoutTransferred = Number(ledger.payout_transferred ?? item.payout_transferred ?? 0);
-    const cycleStatus = String(statusRecord.status || item.status || 'pending').toLowerCase();
+    const cycleStatus = String(statusRecord.status || item.current_cycle_status || item.status || 'pending').toLowerCase();
     const cycleId = statusRecord.cycle_id || item.current_cycle_id || null;
     return {
       ...item,
