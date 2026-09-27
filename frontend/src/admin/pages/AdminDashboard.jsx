@@ -78,6 +78,7 @@ export default function AdminDashboard(){
   const [stats,setStats]=useState(null)
   const [loading,setLoading]=useState(true)
   const [error,setError]=useState('')
+  const [revenuePeriod,setRevenuePeriod]=useState('month')
 
   useEffect(()=>{
     let mounted=true
@@ -96,6 +97,38 @@ export default function AdminDashboard(){
   const actions=stats?.actions||{}
   const customers=stats?.customers||{}
   const show=value=>loading?'—':value
+
+  const revenuePeriods=useMemo(()=>({
+    today:{
+      label:'Today',
+      total:revenue.today,
+      ownGross:propulse.revenueToday,
+      partnerCommission:leadPartner.revenueToday,
+      investorCommission:investor.revenueToday
+    },
+    week:{
+      label:'This Week',
+      total:revenue.week,
+      ownGross:propulse.revenueWeek,
+      partnerCommission:leadPartner.revenueWeek,
+      investorCommission:investor.revenueWeek
+    },
+    month:{
+      label:'This Month',
+      total:revenue.month,
+      ownGross:propulse.revenueMonth,
+      partnerCommission:leadPartner.revenueMonth,
+      investorCommission:investor.revenueMonth
+    },
+    all:{
+      label:'All Time',
+      total:revenue.total,
+      ownGross:propulse.revenueTotal,
+      partnerCommission:leadPartner.revenueTotal,
+      investorCommission:investor.revenueTotal
+    }
+  }),[revenue,propulse,leadPartner,investor])
+  const selectedRevenue=revenuePeriods[revenuePeriod]||revenuePeriods.month
 
   const actionTotal=useMemo(()=>[
     actions.pendingPayments,
@@ -116,12 +149,57 @@ export default function AdminDashboard(){
 
     {error&&<div className="admin-dashboard__error"><strong>Dashboard unavailable</strong><span>{error}</span></div>}
 
+    <section className="admin-revenue-command">
+      <div className="admin-revenue-command-head">
+        <div>
+          <span>REVENUE COMMAND CENTER</span>
+          <h2>Total earnings</h2>
+          <p>Propulse-owned lead gross + Lead Partner commission + Investor commission</p>
+        </div>
+        <div className="admin-revenue-periods" role="tablist" aria-label="Revenue period">
+          {[
+            ['today','Today'],
+            ['week','This Week'],
+            ['month','This Month'],
+            ['all','All Time']
+          ].map(([key,label])=><button type="button" key={key} className={revenuePeriod===key?'active':''} onClick={()=>setRevenuePeriod(key)}>{label}</button>)}
+        </div>
+      </div>
+
+      <div className="admin-revenue-command-body">
+        <div className="admin-total-earnings">
+          <span>{selectedRevenue.label}</span>
+          <strong>{show(money(selectedRevenue.total))}</strong>
+          <small>Platform earnings from lead marketplace activity</small>
+        </div>
+        <div className="admin-revenue-breakdown">
+          <article className="own">
+            <span>Our gross</span>
+            <strong>{show(money(selectedRevenue.ownGross))}</strong>
+            <small>Propulse-owned lead sales</small>
+          </article>
+          <div className="admin-revenue-plus">+</div>
+          <article className="partner">
+            <span>Partner commission</span>
+            <strong>{show(money(selectedRevenue.partnerCommission))}</strong>
+            <small>Propulse share from Lead Partners</small>
+          </article>
+          <div className="admin-revenue-plus">+</div>
+          <article className="investor">
+            <span>Investor commission</span>
+            <strong>{show(money(selectedRevenue.investorCommission))}</strong>
+            <small>Propulse share from investor-linked sales</small>
+          </article>
+        </div>
+      </div>
+    </section>
+
     <section className="admin-overview-grid">
       <OverviewCard
-        icon="₹"
-        label="Propulse revenue"
-        value={show(money(revenue.total))}
-        note="Lead sales + platform commission"
+        icon="◎"
+        label="Active businesses"
+        value={show(count(customers.activeBusinesses))}
+        note={loading?'':`${count(customers.activeMemberships)} active memberships`}
         tone="blue"
       />
       <OverviewCard
