@@ -366,6 +366,11 @@ export default function AdminUsers() {
                 <div><span>Remaining</span><strong>{userSnapshot.membershipRemainingDays===null?'—':userSnapshot.membershipRemainingDays+' days'}</strong></div>
               </div>
 
+              <div className="membership-360-reason">
+                <span>Admin reason</span>
+                <textarea rows="2" value={membershipReason} onChange={e=>setMembershipReason(e.target.value)} placeholder="Reason required for membership changes, extensions or status updates…"/>
+              </div>
+
               <div className="membership-360-actions">
                 <div className="membership-360-action-card">
                   <span>Assign / change plan</span>
@@ -376,7 +381,6 @@ export default function AdminUsers() {
                     </select>
                     {!currentMembership ? <input type="number" min="1" max="3650" value={membershipDays} onChange={e=>setMembershipDays(e.target.value)} placeholder="Initial days"/> : <div className="membership-preserve-expiry">Keeps current expiry</div>}
                   </div>
-                  <textarea rows="2" value={membershipReason} onChange={e=>setMembershipReason(e.target.value)} placeholder="Reason for manual membership change…"/>
                   <button type="button" className="admin-primary-btn" disabled={userBusy==='membership-plan'} onClick={assignMembershipPlan}>{userBusy==='membership-plan'?'Applying…':(currentMembership?'Change membership':'Activate membership')}</button>
                 </div>
 
