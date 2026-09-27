@@ -111,7 +111,7 @@ export default function LeadPartnerHome(){
 
     <main className="lp-main">
       <header className="lp-topbar">
-        <div className="lp-breadcrumb"><span>Lead Partner</span><b>/</b><strong>Overview</strong></div>
+        <div className="lp-breadcrumb"><span>Lead Partner</span><b>/</b><strong>Dashboard</strong></div>
         <div className="lp-topbar-actions">
           <Link to="/lead-partner/inventory">Lead inventory</Link>
           <button type="button" onClick={()=>setRefreshKey(v=>v+1)} disabled={loading}>↻ {loading?'Refreshing':'Refresh'}</button>
