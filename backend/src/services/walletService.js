@@ -28,7 +28,7 @@ async function getAdminWalletCustomerDetails(userId,{rechargePage=1,rechargeLimi
 
   const [walletResult,rechargeCountResult,rechargesResult,transactionCountResult,transactionsResult,totalsResult]=await Promise.all([
     pool.query(`SELECT id,COALESCE(balance,0)::numeric balance,created_at,updated_at FROM wallets WHERE user_id=$1`,[userId]),
-    pool.query(`SELECT COUNT(*)::int total FROM wallet_topups WHERE user_id=$1`,[userId]),
+    pool.query(`SELECT COUNT(*)::int total,COUNT(*) FILTER(WHERE status='pending')::int pending_count FROM wallet_topups WHERE user_id=$1`,[userId]),
     pool.query(`SELECT id,amount,payment_method,reference,(COALESCE(BTRIM(proof_url),'')<>'') AS has_proof,status,reviewed_by,reviewed_at,created_at,updated_at FROM wallet_topups WHERE user_id=$1 ORDER BY created_at DESC,id DESC LIMIT $2 OFFSET $3`,[userId,safeRechargeLimit,rechargeOffset]),
     pool.query(`SELECT COUNT(*)::int total FROM wallet_transactions WHERE user_id=$1`,[userId]),
     pool.query(`SELECT wt.id,wt.type,wt.amount,wt.balance_after,wt.reference_type,wt.reference_id,wt.payment_id,wt.status,wt.description,wt.created_at,p.status AS payment_status FROM wallet_transactions wt LEFT JOIN payments p ON p.id=wt.payment_id WHERE wt.user_id=$1 ORDER BY wt.created_at DESC,wt.id DESC LIMIT $2 OFFSET $3`,[userId,safeTransactionLimit,transactionOffset]),
@@ -37,6 +37,7 @@ async function getAdminWalletCustomerDetails(userId,{rechargePage=1,rechargeLimi
 
   const wallet=walletResult.rows[0]||{id:null,balance:0};
   const rechargeTotal=Number(rechargeCountResult.rows[0]?.total||0);
+  const pendingTopups=Number(rechargeCountResult.rows[0]?.pending_count||0);
   const transactionTotal=Number(transactionCountResult.rows[0]?.total||0);
   const recharges=rechargesResult.rows.map(x=>({...x,amount:Number(x.amount)}));
   const transactions=transactionsResult.rows.map(x=>({...x,amount:Number(x.amount),balance_after:Number(x.balance_after)}));
@@ -47,6 +48,7 @@ async function getAdminWalletCustomerDetails(userId,{rechargePage=1,rechargeLimi
     wallet:{...wallet,balance:Number(wallet.balance||0)},
     recharges,
     transactions,
+    stats:{pending_topups:pendingTopups},
     totals:{
       total_recharged:Number(totals.total_recharged||0),
       total_credits:Number(totals.total_credits||0),
