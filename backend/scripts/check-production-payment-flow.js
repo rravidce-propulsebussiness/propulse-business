@@ -18,6 +18,7 @@ async function main() {
   const standard = await user('business');
   const pro = await user('business');
   const partner = await user('lead_partner');
+  await q("INSERT INTO lead_partners(user_id,status) VALUES($1,'active')", [partner.id]);
   const industry = (await q('INSERT INTO industries(name,slug) VALUES($1,$1) RETURNING id', [tag]))[0].id;
   const state = (await q('SELECT id FROM states WHERE is_active=TRUE LIMIT 1'))[0].id;
   const existingPlan = (await q("SELECT id FROM membership_plans WHERE plan_type='pro' AND plan_group='grow' AND is_active=TRUE LIMIT 1"))[0];
