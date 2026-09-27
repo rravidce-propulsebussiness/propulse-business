@@ -133,6 +133,16 @@ export default function AdminCoupons(){
 
   useEffect(()=>{let active=true;queueMicrotask(()=>{if(active)load()});return()=>{active=false}},[load])
 
+  const closeModal=useCallback(()=>{
+    if(saving)return
+    setModalOpen(false)
+    setEditing(null)
+    setForm(emptyCoupon())
+    setValidityMode('always')
+    setUserSearch('')
+    setIndustrySearch('')
+  },[saving])
+
   useEffect(()=>{
     if(!modalOpen||userSearch.trim().length<2)return undefined
     let active=true
@@ -159,7 +169,7 @@ export default function AdminCoupons(){
     const onKey=event=>{if(event.key==='Escape'&&!saving)closeModal()}
     window.addEventListener('keydown',onKey)
     return()=>{document.body.style.overflow=previous;window.removeEventListener('keydown',onKey)}
-  },[modalOpen,saving])
+  },[modalOpen,saving,closeModal])
 
   const stats=useMemo(()=>{
     let active=0,scheduled=0,expired=0,redemptions=0
@@ -201,15 +211,6 @@ export default function AdminCoupons(){
     scale:membershipPlans.filter(plan=>String(plan.plan_group||'').toLowerCase()==='scale').sort((a,b)=>Number(a.billing_months||1)-Number(b.billing_months||1))
   }),[membershipPlans])
 
-  function closeModal(){
-    if(saving)return
-    setModalOpen(false)
-    setEditing(null)
-    setForm(emptyCoupon())
-    setValidityMode('always')
-    setUserSearch('')
-    setIndustrySearch('')
-  }
   function openCreate(){
     setEditing(null)
     setForm(emptyCoupon())
