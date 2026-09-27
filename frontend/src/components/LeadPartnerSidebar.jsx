@@ -8,6 +8,8 @@ const nav=[
   {to:'/lead-partner/withdrawals',label:'Earnings & Withdrawals',icon:'⇩'},
   {to:'/lead-partner/reports',label:'Reports',icon:'▥'},
   {to:'/lead-partner/account',label:'Account',icon:'◎'},
+  {to:'/lead-partner/faqs',label:'FAQs',icon:'?'},
+  {to:'/contact?audience=lead_partners',label:'Contact',icon:'☎',contact:true},
 ];
 
 export default function LeadPartnerSidebar({user,onSignOut}){
@@ -15,6 +17,7 @@ export default function LeadPartnerSidebar({user,onSignOut}){
   const initials=(user?.name||'Lead Partner').split(' ').filter(Boolean).slice(0,2).map(x=>x[0]).join('').toUpperCase()||'LP';
   const active=item=>{
     if(item.aliases?.includes(location.pathname)) return true;
+    if(item.contact) return location.pathname==='/contact'&&new URLSearchParams(location.search).get('audience')==='lead_partners';
     return item.exact?location.pathname===item.to:location.pathname.startsWith(item.to);
   };
 
@@ -33,12 +36,6 @@ export default function LeadPartnerSidebar({user,onSignOut}){
         <span>{item.label}</span>
       </Link>)}
     </nav>
-
-    <div className="lead-partner-help-block">
-      <span>?</span>
-      <div><b>Need help?</b><small>FAQs and support are available from your partner account.</small></div>
-      <Link to="/lead-partner/faqs">Open FAQs →</Link>
-    </div>
 
     <div className="lead-partner-sidebar-bottom">
       <div className="lead-partner-user">
