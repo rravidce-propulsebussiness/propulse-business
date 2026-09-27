@@ -723,7 +723,7 @@ export default function AdminMembershipPlansConfig(){
               {(Array.isArray(item.period_overrides)?item.period_overrides:[]).filter(period=>period.enabled!==false).map(period=><div key={period.billingMonths??period.months}>
                 <span>{period.label||`${period.billingMonths??period.months}-month`}</span>
                 <strong>{money(period.price)}</strong>
-                {Number(period.discountPercent??period.discount_percent||0)>0&&<em>{Number(period.discountPercent??period.discount_percent).toFixed(0)}% off</em>}
+                {Number(period.discountPercent??period.discount_percent??0)>0&&<em>{Number(period.discountPercent??period.discount_percent??0).toFixed(0)}% off</em>}
                 <small>{entitlementSummary(period.leadEntitlements??period.lead_entitlements)}</small>
               </div>)}
             </div>
