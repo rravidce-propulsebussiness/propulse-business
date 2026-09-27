@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { apiRequest } from '../../utils/api';
 import './AdminMembershipPlans.css';
 import './AdminMembershipPlansConfig.css';
@@ -31,16 +31,90 @@ const normalizeAddon = item => {
   };
 };
 
-function freshForm(planType = 'pro') {
+function freshForm(packageKey = 'grow') {
+  const isScale = packageKey === 'scale';
   const cycles = DEFAULT_CYCLES.map(c => ({
     ...c,
     enabled: true,
-    leadEntitlements: DEFAULT_LEADS.map(x => ({ ...x, period_total_quantity: x.monthly_quantity * c.months })),
+    leadEntitlements: DEFAULT_LEADS.map(item => ({ ...item, period_total_quantity: item.monthly_quantity * c.months })),
   }));
   return {
-    name: planType === 'scale' ? 'Scale' : 'Grow', planType: 'pro', monthlyBasePrice: '', periods: cycles,
+    name: isScale ? 'Scale' : 'Grow',
+    planType: 'pro',
+    monthlyBasePrice: '',
+    periods: cycles,
     pricing: Object.fromEntries(cycles.map(c => [c.key, { discount: 0, price: '', customPrice: false }])),
-    benefits: planType === 'scale' ? ['Everything in GROW', 'Website development', 'SEO services', 'Website maintenance'] : ['Best lead pricing', 'Exclusive Leads access', 'Investment access unlocked for eligible members'], addOns: [],
+    benefits: isScale
+      ? ['Everything in GROW', 'Website development', 'SEO services', 'Website maintenance']
+      : ['Best lead pricing', 'Exclusive Leads access', 'Investment access unlocked for eligible members'],
+    addOns: [],
+  };
+}
+
+function formFromPackage(packageKey, plans) {
+  const normalizedKey = packageKey === 'scale' ? 'scale' : 'grow';
+  const canonicalName = normalizedKey === 'scale' ? 'Scale' : 'Grow';
+  const group = (Array.isArray(plans) ? plans : [])
+    .filter(plan => String(plan?.plan_type || '').toLowerCase() === 'pro' && String(plan?.plan_group || '').toLowerCase() === normalizedKey)
+    .slice()
+    .sort((a,b)=>Number(a?.billing_months||1)-Number(b?.billing_months||1)||Number(a?.id||0)-Number(b?.id||0));
+  if (!group.length) return freshForm(normalizedKey);
+
+  const first=group[0];
+  const existingByMonths=new Map(group.map(plan=>[Number(plan.billing_months||1),plan]));
+  const periods=DEFAULT_CYCLES.map(cycle=>{
+    const plan=existingByMonths.get(cycle.months);
+    if(!plan) return {...cycle,enabled:false,leadEntitlements:[]};
+    const leads=Array.isArray(plan.lead_entitlements)?plan.lead_entitlements:[];
+    return {
+      ...cycle,
+      label:plan.billing_period||cycle.label,
+      months:Number(plan.billing_months||cycle.months),
+      enabled:plan.is_active!==false,
+      leadEntitlements:leads.map(item=>({
+        ...item,
+        monthly_quantity:Number(item.monthly_quantity??item.quantity??0),
+        period_total_quantity:Number(item.period_total_quantity??(Number(item.monthly_quantity??item.quantity??0)*Number(plan.billing_months||cycle.months))),
+      })),
+      sourceId:plan.id,
+    };
+  });
+  group.filter(plan=>!DEFAULT_CYCLES.some(c=>c.months===Number(plan.billing_months||1))).forEach(plan=>{
+    const months=Number(plan.billing_months||1);
+    periods.push({
+      key:`custom-${plan.id}`,
+      label:plan.billing_period||`${months}-month`,
+      months,
+      enabled:plan.is_active!==false,
+      sourceId:plan.id,
+      leadEntitlements:(Array.isArray(plan.lead_entitlements)?plan.lead_entitlements:[]).map(item=>({
+        ...item,
+        monthly_quantity:Number(item.monthly_quantity??item.quantity??0),
+        period_total_quantity:Number(item.period_total_quantity??(Number(item.monthly_quantity??item.quantity??0)*months)),
+      })),
+    });
+  });
+  periods.sort((a,b)=>Number(a.months)-Number(b.months));
+
+  const pricing={};
+  periods.forEach(period=>{
+    const plan=group.find(row=>Number(row.billing_months||1)===Number(period.months));
+    if(!plan){pricing[period.key]={discount:0,price:'',customPrice:false};return}
+    const base=Number(plan.monthly_base_price??first.monthly_base_price??0)*Number(period.months||1);
+    const discount=Number(plan.discount_percent||0);
+    const calculated=base*(1-discount/100);
+    const final=Number(plan.price||0);
+    pricing[period.key]={discount,price:final,customPrice:Math.abs(final-calculated)>0.01};
+  });
+
+  return {
+    name:canonicalName,
+    planType:'pro',
+    monthlyBasePrice:first.monthly_base_price??'',
+    periods,
+    pricing,
+    benefits:Array.isArray(first.benefits)?first.benefits:[],
+    addOns:Array.isArray(first.add_ons)?first.add_ons.map(normalizeAddon):[],
   };
 }
 
