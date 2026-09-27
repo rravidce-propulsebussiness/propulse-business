@@ -29,8 +29,8 @@ const navigation=[
     {to:'/admin/coupons',label:'Coupons'}
   ]},
   {type:'group',key:'lead-partners',label:'Lead Partners',icon:'♙',children:[
-    {to:'/admin/lead-partners',label:'Lead Partners',section:'Partner management'},
-    {to:'/admin/lead-partner-payouts',label:'Partner Payouts'},
+    {to:'/admin/lead-partners',label:'Partner Master',section:'Partner management'},
+    {to:'/admin/lead-partner-payouts',label:'Transfer Queue'},
     {to:'/admin/investments',label:'Investments',section:'Investor management'},
     {to:'/admin/investor-withdrawals',label:'Investor Withdrawals'}
   ]},
