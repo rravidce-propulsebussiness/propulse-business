@@ -179,6 +179,8 @@ async function main() {
     assert(Number(adminPage.stats.total_count) >= 4, 'Admin payout stats must cover all filtered statuses');
     assert(adminPage.items.every(row => !Object.prototype.hasOwnProperty.call(row, 'proof_url')), 'Admin payout list must not return proof blobs');
     assert(adminPage.items.some(row => row.has_proof === true) || adminPage.items.every(row => row.has_proof === false), 'Admin payout list must expose proof metadata only');
+    const paidProof = await payoutService.adminProof(secondPayout.id);
+    assert(paidProof?.proof_url === proof, 'Admin must be able to fetch a stored payout proof on demand');
 
     console.log('Lead Partner payout lifecycle tests passed.');
   } catch (error) {
