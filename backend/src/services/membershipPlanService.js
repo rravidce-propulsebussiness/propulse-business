@@ -444,13 +444,13 @@ async function matchingPricingRulesForUser(userId,client=pool){
   const rows=(await client.query(`
     SELECT r.*,
       (
-        CASE WHEN r.audience_scope='specific_users' THEN 160 ELSE 0 END +
-        CASE WHEN r.new_customer_days IS NOT NULL THEN 80 ELSE 0 END +
-        CASE WHEN r.city_id IS NOT NULL THEN 40 ELSE 0 END +
-        CASE WHEN r.state_id IS NOT NULL THEN 20 ELSE 0 END +
-        CASE WHEN r.industry_id IS NOT NULL THEN 10 ELSE 0 END +
-        CASE WHEN r.verification_scope<>'any' THEN 4 ELSE 0 END +
-        CASE WHEN r.valid_from IS NOT NULL OR r.valid_until IS NOT NULL THEN 2 ELSE 0 END
+        CASE WHEN r.audience_scope='specific_users' THEN 256 ELSE 0 END +
+        CASE WHEN r.new_customer_days IS NOT NULL THEN 128 ELSE 0 END +
+        CASE WHEN r.valid_from IS NOT NULL OR r.valid_until IS NOT NULL THEN 64 ELSE 0 END +
+        CASE WHEN r.city_id IS NOT NULL THEN 32 ELSE 0 END +
+        CASE WHEN r.state_id IS NOT NULL THEN 16 ELSE 0 END +
+        CASE WHEN r.industry_id IS NOT NULL THEN 8 ELSE 0 END +
+        CASE WHEN r.verification_scope<>'any' THEN 4 ELSE 0 END
       )::int AS specificity
     FROM membership_pricing_rules r
     WHERE r.is_active=TRUE
@@ -530,7 +530,7 @@ function applyPricingRule(plan,rule){
   const offerPrice=Number(override.price);
   const savings=Math.max(0,Number((basePrice-offerPrice).toFixed(2)));
   const derivedDiscount=basePrice>0?Math.max(0,Math.min(100,Number(((savings/basePrice)*100).toFixed(2)))):0;
-  const discountPercent=Math.max(derivedDiscount,Math.max(0,Number(override.discountPercent??override.discount_percent??0)||0));
+  const discountPercent=derivedDiscount;
   return{
     ...plan,
     base_price:basePrice,
