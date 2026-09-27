@@ -54,6 +54,18 @@ async function getUserBase(userId){
   `,[userId])).rows[0]||null;
 }
 
+async function getProofs(userId){
+  return (await pool.query(`
+    SELECT cpd.id,cpd.original_name,cpd.mime_type,cpd.file_size,cpd.file_url,
+           cpd.status,cpd.reviewed_at,cpd.review_reason,cpd.created_at,cpd.updated_at,
+           reviewer.name AS reviewer_name
+    FROM company_proof_documents cpd
+    LEFT JOIN users reviewer ON reviewer.id=cpd.reviewed_by
+    WHERE cpd.user_id=$1
+    ORDER BY cpd.created_at DESC,cpd.id DESC
+  `,[userId])).rows;
+}
+
 async function getPayments(userId){
   return (await pool.query(`
     SELECT p.id,p.amount,p.status,p.payment_method,p.manual_reference,p.gateway_payment_id,
@@ -131,14 +143,15 @@ async function getUser360(userId){
   const user=await getUserBase(userId);
   if(!user)return null;
 
-  const [membership,wallet,leads,activeEntitlements,entitlements,payments,availablePlans]=await Promise.all([
+  const [membership,wallet,leads,activeEntitlements,entitlements,payments,availablePlans,proofs]=await Promise.all([
     paymentService.getMembershipCustomerDetails(userId),
     walletService.getAdminWalletCustomerDetails(userId),
     leadCrmPurchaseService.getPurchases(userId),
     leadEntitlementGrantService.getUserGrantSummary(userId),
     getEntitlementHistory(userId),
     getPayments(userId),
-    membershipPlanService.getPlans(false)
+    membershipPlanService.getPlans(false),
+    getProofs(userId)
   ]);
 
   const current=activeMembership(membership?.plans||[]);
@@ -172,6 +185,7 @@ async function getUser360(userId){
     leads:leads||[],
     payments,
     entitlements,
+    proofs,
     entitlementSummary:activeEntitlements?.summary||{shared:{},premium:{}},
     activity:activityFrom({membership,wallet,payments,leads,entitlements})
   };
