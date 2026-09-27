@@ -218,6 +218,81 @@
   font-size:8px;
   font-weight:800;
 }
+.membership-offer-countdown{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-top:10px;
+  padding:9px 10px;
+  border:1px solid #cfe7d9;
+  border-radius:11px;
+  background:rgba(255,255,255,.74);
+}
+.membership-countdown-label{
+  color:#39725a!important;
+  font-size:8px!important;
+  font-weight:950!important;
+  letter-spacing:.04em!important;
+  white-space:nowrap;
+}
+.membership-countdown-time{
+  display:flex;
+  align-items:center;
+  gap:4px;
+  font-variant-numeric:tabular-nums;
+}
+.membership-countdown-time>span{
+  display:flex!important;
+  align-items:baseline;
+  gap:2px;
+  min-width:31px;
+  padding:5px 6px;
+  border:1px solid #d8ebe0;
+  border-radius:8px;
+  background:#fff;
+  box-shadow:0 3px 10px rgba(18,94,61,.06);
+}
+.membership-countdown-time b{
+  padding:0!important;
+  background:transparent!important;
+  color:#125c3d!important;
+  font-size:12px!important;
+  line-height:1!important;
+  letter-spacing:.01em!important;
+}
+.membership-countdown-time small{
+  color:#6f8a7d!important;
+  font-size:6px!important;
+  font-weight:950!important;
+  line-height:1!important;
+}
+.membership-countdown-time i{
+  color:#4d7c66;
+  font-size:11px;
+  font-style:normal;
+  font-weight:950;
+}
+.membership-offer-countdown.compact{
+  margin-top:8px;
+  padding:7px 8px;
+}
+.membership-offer-countdown.compact .membership-countdown-time>span{
+  min-width:27px;
+  padding:4px 5px;
+}
+.membership-offer-countdown.compact .membership-countdown-time b{
+  font-size:10px!important;
+}
+.membership-offer-countdown.expired{
+  justify-content:flex-start;
+  border-color:#f2d5cc;
+  background:#fff6f3;
+}
+.membership-offer-countdown.expired>span{
+  color:#a24a32!important;
+}
+
 .membership-checkout-offer{
   margin:14px 0 4px;
   padding:11px 12px;
