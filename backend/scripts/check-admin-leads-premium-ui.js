@@ -68,24 +68,26 @@ assert(sheetSync.includes('No Google Sheets connected yet'),'Google Sheets empty
 assert(sheetSync.includes('Import precedence'),'Google Sheets precedence guidance must remain');
 
 assert(entitlements.includes('LEAD OPERATIONS / ACCESS CONTROL'),'Lead Entitlements premium hero must remain');
-assert(entitlements.includes('entitlement-policy-status'),'Lead Entitlements policy status must remain');
-assert(entitlements.includes('Create registration rule'),'Registration rule must be created from a compact action');
-assert(entitlements.includes('Create entitlement'),'Manual entitlements must support repeated creation');
-assert(entitlements.includes('recentEntitlements'),'Saved registration policy and grants must share the recent history feed');
-assert(entitlements.includes('openEditGrant(item)'),'Recent grants must support editing');
-assert(entitlements.includes('deleteGrant(item)'),'Recent grants must support deletion');
-assert(entitlements.includes('deleteSettings'),'Registration rule must support deletion');
-assert(entitlements.includes('history-edit')&&entitlements.includes('history-delete'),'Recent rows must expose Edit and Delete actions');
-assert(entitlements.includes('entitlement-modal-backdrop'),'Entitlement forms must stay out of the main page until an action is opened');
+assert(entitlements.includes('entitlement-policy-status'),'Lead Entitlements active-rule status must remain');
+assert(entitlements.includes('＋ Registration rule'),'Registration rules must support repeated creation');
+assert(entitlements.includes('＋ Business entitlement'),'Manual business entitlements must support repeated creation');
+assert(entitlements.includes('registrationRules'),'Multiple registration rules must remain in the Admin workflow');
+assert(entitlements.includes('recentItems'),'Registration rules and grants must share the recent card feed');
+assert(entitlements.includes('openEditRule(item)')&&entitlements.includes('deleteRule(item)'),'Registration rule cards must support edit and delete');
+assert(entitlements.includes('openEditGrant(item)')&&entitlements.includes('deleteGrant(item)'),'Grant cards must support edit and delete');
+assert(entitlements.includes('verificationScope'),'Registration-rule verification targeting must remain');
+assert(entitlements.includes('All industries')&&entitlements.includes('All states')&&entitlements.includes('All cities'),'Registration-rule industry/location targeting must remain');
+assert(entitlements.includes('entitlement-modal-backdrop'),'Entitlement editors must stay modal and off the main page');
 assert(entitlements.includes('allowExclusive'),'Exclusive entitlement access rule must remain');
 assert(entitlements.includes('claimExpiryDays'),'Claim expiry controls must remain');
 assert(entitlements.includes('Recent entitlements'),'Entitlement history must remain');
 assert(entitlementsCss.includes('/* Premium Lead Entitlements workspace */'),'Premium Lead Entitlements styling must remain');
 assert(entitlementsCss.includes('grid-template-columns:repeat(3,minmax(0,1fr))'),'Desktop entitlement KPIs must remain readable');
 assert(entitlementsCss.includes('.entitlement-access-options'),'Buyer-access controls must retain premium styling');
-assert(entitlementsCss.includes('.entitlement-table tbody tr:hover'),'Entitlement history table interaction styling must remain');
 assert(entitlementsCss.includes('/* Entitlement action + multi-record manager */'),'Multi-entitlement action styling must remain');
-assert(entitlementsCss.includes('.entitlement-action-bar'),'Compact entitlement action bar must remain');
+assert(entitlementsCss.includes('/* Flexible entitlement history cards + registration rule targeting */'),'Flexible entitlement-card styling must remain');
+assert(entitlementsCss.includes('.entitlement-card-grid'),'Recent entitlements must remain a flexible card grid');
+assert(entitlementsCss.includes('.entitlement-history-card'),'Recent entitlement card styling must remain');
 assert(entitlementsCss.includes('.entitlement-modal-backdrop'),'Entitlement editor modal styling must remain');
 assert(entitlementsCss.includes('.entitlement-row-actions'),'Recent entitlement action styling must remain');
 
