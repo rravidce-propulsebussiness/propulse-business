@@ -277,8 +277,8 @@ function normalizeRegistrationRule(input){
     allowExclusive:bool(input?.allowExclusive,false)
   };
   if(!normalized.name)fail('Give this registration rule a name','INVALID_ENTITLEMENT_RULE');
-  if(normalized.sharedQuantity<=0&&normalized.premiumQuantity<=0)fail('Configure at least one Basic or Premium entitlement','INVALID_ENTITLEMENT_SETTINGS');
-  if(!normalized.allowSingle&&!normalized.allowShared&&!normalized.allowAutoRelease)fail('Enable at least one buyer-access type','INVALID_ENTITLEMENT_ACCESS');
+  if(normalized.isActive&&normalized.sharedQuantity<=0&&normalized.premiumQuantity<=0)fail('Configure at least one Basic or Premium entitlement','INVALID_ENTITLEMENT_SETTINGS');
+  if(normalized.isActive&&!normalized.allowSingle&&!normalized.allowShared&&!normalized.allowAutoRelease)fail('Enable at least one buyer-access type','INVALID_ENTITLEMENT_ACCESS');
   return normalized;
 }
 
