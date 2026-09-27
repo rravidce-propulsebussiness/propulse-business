@@ -5,6 +5,7 @@ const read=p=>fs.readFileSync(path.join(__dirname,'..',p),'utf8');
 
 const auth=read('src/services/authService.js');
 const coupon=read('src/services/couponService.js');
+const profile=read('src/services/profileService.js');
 
 assert(auth.includes('WITH requested AS')&&auth.includes('UNNEST($1::int[],$2::int[],$3::int[])'),'Signup service validation must be set-based');
 assert(auth.includes('INSERT INTO business_profile_services')&&auth.includes('FROM UNNEST($2::int[],$3::int[],$4::int[])'),'Signup service relationships must be inserted in one set-based statement');
@@ -21,5 +22,11 @@ assert(publicOffers.includes('NOT EXISTS(SELECT 1 FROM coupon_users'), 'Public c
 assert(publicOffers.includes("cr.status IN ('reserved','redeemed')"), 'Public coupon offers must evaluate usage limits in the main SQL query');
 assert(!publicOffers.includes('audienceEligible('), 'Public coupon offer listing must not query audience eligibility per coupon');
 assert(!publicOffers.includes('usageEligible('), 'Public coupon offer listing must not query usage limits per coupon');
+
+assert(profile.includes('WITH requested AS')&&profile.includes('UNNEST($1::int[],$2::int[],$3::int[])'),'Profile service/location validation must be set-based');
+assert(profile.includes('INSERT INTO business_profile_services')&&profile.includes('FROM UNNEST($2::int[],$3::int[],$4::int[])'),'Profile service relationships must be inserted in one statement');
+assert(profile.includes('INSERT INTO business_profile_locations')&&profile.includes('FROM UNNEST($2::int[],$3::int[],$4::int[],$5::text[])'),'Profile locations must be inserted in one statement');
+assert(!profile.includes('for (const item of services)'),'Profile update must not query once per service selection');
+assert(!profile.includes('for (const item of locations)'),'Profile update must not query once per location selection');
 
 console.log('Set-based write efficiency checks passed.');
