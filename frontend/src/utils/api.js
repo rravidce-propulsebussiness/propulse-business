@@ -58,3 +58,41 @@ export async function apiRequest(path, options = {}, includeToken = true) {
 
   return data
 }
+
+
+export async function apiRequestBlob(path, options = {}, includeToken = true) {
+  const requestOptions = options
+  const headers = { ...(requestOptions.headers || {}) }
+  const { timeoutMs, signal: callerSignal, ...fetchOptions } = requestOptions
+  const timed = requestSignal(callerSignal, timeoutMs)
+  let response
+  try {
+    response = await fetch(`${API_BASE_URL}${path}`, { ...fetchOptions, signal: timed.signal, headers, credentials: 'include' })
+  } catch (error) {
+    if (timed.signal.aborted && !callerSignal?.aborted) {
+      const timeoutError = new Error('Request timed out. Please try again.')
+      timeoutError.code = 'REQUEST_TIMEOUT'
+      throw timeoutError
+    }
+    throw error
+  } finally {
+    timed.cleanup()
+  }
+
+  if (response.status === 401 && includeToken) {
+    localStorage.removeItem('propulse_auth_user')
+    localStorage.removeItem('propulse_is_pro_member')
+    localStorage.removeItem('propulse_session_mode')
+    if (window.location.pathname !== '/login') window.location.assign('/login')
+  }
+
+  if (!response.ok) {
+    const data = await response.json().catch(() => ({}))
+    const error = new Error(data.error || 'Request failed')
+    error.status = response.status
+    error.code = data.code
+    throw error
+  }
+
+  return response.blob()
+}
