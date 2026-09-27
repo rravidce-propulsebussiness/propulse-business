@@ -85,7 +85,7 @@ assert(!membershipConfig.includes('Plan name<input'),'GROW/SCALE package names m
 assert(membershipConfig.includes('Save ${form.name} package'),'Membership packages must save from the single editor');
 assert(membershipPlanService.includes("Membership packages must be GROW or SCALE"),'Backend must reject arbitrary package groups');
 assert(membershipPlanService.includes("SET is_active=FALSE,updated_at=CURRENT_TIMESTAMP"),'Bundle save must disable removed billing cycles');
-assert(membershipPlanService.includes("is_active=TRUE, updated_at=CURRENT_TIMESTAMP"),'Bundle save must reactivate saved billing cycles');
+assert(membershipPlanService.includes("is_active=TRUE,updated_at=CURRENT_TIMESTAMP"),'Bundle save must reactivate saved billing cycles');
 assert(membershipConfigCss.includes('/* Single compact GROW / SCALE membership editor */'),'Compact Membership package styling must remain');
 assert(membershipConfigCss.includes('.membership-cycle-grid'),'Compact billing-cycle layout must remain');
 
