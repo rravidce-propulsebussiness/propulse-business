@@ -277,7 +277,57 @@ async function getUsers({ search = '', role = 'all', status = 'all', industryId 
   const whereClause = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
   const countResult = await pool.query(`SELECT COUNT(*)::int AS total FROM users u LEFT JOIN business_profiles bp ON bp.user_id = u.id ${whereClause}`, params);
   const total = countResult.rows[0]?.total || 0, dataParams = [...params, currentPageSize, offset];
-  const result = await pool.query(`SELECT u.id,u.name,u.email,u.role,u.is_active,u.created_at,bp.id AS business_profile_id,bp.business_name,bp.phone,bp.business_details,COALESCE((SELECT COUNT(*)::int FROM business_profile_services x WHERE x.business_profile_id=bp.id AND x.is_active=TRUE),0) AS service_count,COALESCE((SELECT COUNT(*)::int FROM business_profile_locations x WHERE x.business_profile_id=bp.id AND x.is_active=TRUE),0) AS location_count,COALESCE((SELECT json_agg(json_build_object('industryId',x.industry_id,'industryName',i.name,'serviceId',x.service_id,'serviceName',s.name,'subserviceId',x.subservice_id,'subserviceName',ss.name) ORDER BY i.name,s.name,ss.name) FROM business_profile_services x JOIN industries i ON i.id=x.industry_id JOIN services s ON s.id=x.service_id LEFT JOIN subservices ss ON ss.id=x.subservice_id WHERE x.business_profile_id=bp.id AND x.is_active=TRUE),'[]'::json) AS services,COALESCE((SELECT json_agg(json_build_object('stateId',x.state_id,'stateName',st.name,'cityId',x.city_id,'cityName',c.name,'subcityId',x.subcity_id,'subcityName',sc.name,'pincode',x.pincode) ORDER BY st.name,c.name) FROM business_profile_locations x JOIN states st ON st.id=x.state_id JOIN cities c ON c.id=x.city_id LEFT JOIN subcities sc ON sc.id=x.subcity_id WHERE x.business_profile_id=bp.id AND x.is_active=TRUE),'[]'::json) AS locations FROM users u LEFT JOIN business_profiles bp ON bp.user_id=u.id ${whereClause} ORDER BY u.created_at DESC,u.id DESC LIMIT $${dataParams.length-1} OFFSET $${dataParams.length}`, dataParams);
+  const result = await pool.query(`SELECT
+    u.id,u.name,u.email,u.role,u.is_active,u.created_at,
+    bp.id AS business_profile_id,bp.business_name,bp.phone,bp.business_details,
+    EXISTS(SELECT 1 FROM company_proof_documents cpd WHERE cpd.user_id=u.id AND cpd.status='verified') AS is_verified,
+    COALESCE((SELECT w.balance::numeric FROM wallets w WHERE w.user_id=u.id),0)::numeric AS wallet_balance,
+    (
+      SELECT mp.plan_group
+      FROM memberships m
+      JOIN membership_plans mp ON mp.id=m.membership_plan_id
+      WHERE m.user_id=u.id
+        AND m.status='active'
+        AND m.starts_at<=CURRENT_TIMESTAMP
+        AND m.expires_at>CURRENT_TIMESTAMP
+        AND LOWER(REPLACE(COALESCE(mp.plan_type,''),'-','_'))='pro'
+      ORDER BY m.expires_at DESC,m.id DESC
+      LIMIT 1
+    ) AS membership_plan_group,
+    (
+      SELECT mp.name
+      FROM memberships m
+      JOIN membership_plans mp ON mp.id=m.membership_plan_id
+      WHERE m.user_id=u.id
+        AND m.status='active'
+        AND m.starts_at<=CURRENT_TIMESTAMP
+        AND m.expires_at>CURRENT_TIMESTAMP
+        AND LOWER(REPLACE(COALESCE(mp.plan_type,''),'-','_'))='pro'
+      ORDER BY m.expires_at DESC,m.id DESC
+      LIMIT 1
+    ) AS membership_plan_name,
+    (
+      SELECT m.expires_at
+      FROM memberships m
+      JOIN membership_plans mp ON mp.id=m.membership_plan_id
+      WHERE m.user_id=u.id
+        AND m.status='active'
+        AND m.starts_at<=CURRENT_TIMESTAMP
+        AND m.expires_at>CURRENT_TIMESTAMP
+        AND LOWER(REPLACE(COALESCE(mp.plan_type,''),'-','_'))='pro'
+      ORDER BY m.expires_at DESC,m.id DESC
+      LIMIT 1
+    ) AS membership_expires_at,
+    COALESCE((SELECT COUNT(*)::int FROM business_profile_services x WHERE x.business_profile_id=bp.id AND x.is_active=TRUE),0) AS service_count,
+    COALESCE((SELECT COUNT(*)::int FROM business_profile_locations x WHERE x.business_profile_id=bp.id AND x.is_active=TRUE),0) AS location_count,
+    COALESCE((SELECT json_agg(json_build_object('industryId',x.industry_id,'industryName',i.name,'serviceId',x.service_id,'serviceName',s.name,'subserviceId',x.subservice_id,'subserviceName',ss.name) ORDER BY i.name,s.name,ss.name) FROM business_profile_services x JOIN industries i ON i.id=x.industry_id JOIN services s ON s.id=x.service_id LEFT JOIN subservices ss ON ss.id=x.subservice_id WHERE x.business_profile_id=bp.id AND x.is_active=TRUE),'[]'::json) AS services,
+    COALESCE((SELECT json_agg(json_build_object('stateId',x.state_id,'stateName',st.name,'cityId',x.city_id,'cityName',c.name,'subcityId',x.subcity_id,'subcityName',sc.name,'pincode',x.pincode) ORDER BY st.name,c.name) FROM business_profile_locations x JOIN states st ON st.id=x.state_id JOIN cities c ON c.id=x.city_id LEFT JOIN subcities sc ON sc.id=x.subcity_id WHERE x.business_profile_id=bp.id AND x.is_active=TRUE),'[]'::json) AS locations
+    FROM users u
+    LEFT JOIN business_profiles bp ON bp.user_id=u.id
+    ${whereClause}
+    ORDER BY u.created_at DESC,u.id DESC
+    LIMIT $${dataParams.length-1} OFFSET $${dataParams.length}`, dataParams);
+  result.rows=result.rows.map(row=>({...row,wallet_balance:Number(row.wallet_balance||0)}));
   return { data: result.rows, pagination: { page: currentPage, pageSize: currentPageSize, total, totalPages: total === 0 ? 0 : Math.ceil(total / currentPageSize), hasNextPage: currentPage * currentPageSize < total, hasPreviousPage: currentPage > 1 && total > 0 } };
 }
 
