@@ -72,6 +72,10 @@ assert(entitlements.includes('entitlement-policy-status'),'Lead Entitlements act
 assert(entitlements.includes('＋ Registration rule'),'Registration rules must support repeated creation');
 assert(entitlements.includes('＋ Business entitlement'),'Manual business entitlements must support repeated creation');
 assert(entitlements.includes('registrationRules'),'Multiple registration rules must remain in the Admin workflow');
+assert(entitlements.includes('businessCampaigns'),'Multiple business entitlement campaigns must remain in the Admin workflow');
+assert(entitlements.includes('All business users')&&entitlements.includes('Specific business users'),'Business entitlement audience selection must remain');
+assert(entitlements.includes('campaign.userIds.includes'),'Specific-business multi-select must remain');
+assert(entitlements.includes('openEditCampaign(item)')&&entitlements.includes('deleteCampaign(item)'),'Business entitlement campaign cards must retain edit/delete actions');
 assert(entitlements.includes('recentItems'),'Registration rules and grants must share the recent card feed');
 assert(entitlements.includes('openEditRule(item)')&&entitlements.includes('deleteRule(item)'),'Registration rule cards must support edit and delete');
 assert(entitlements.includes('openEditGrant(item)')&&entitlements.includes('deleteGrant(item)'),'Grant cards must support edit and delete');
@@ -90,5 +94,8 @@ assert(entitlementsCss.includes('.entitlement-card-grid'),'Recent entitlements m
 assert(entitlementsCss.includes('.entitlement-history-card'),'Recent entitlement card styling must remain');
 assert(entitlementsCss.includes('.entitlement-modal-backdrop'),'Entitlement editor modal styling must remain');
 assert(entitlementsCss.includes('.entitlement-row-actions'),'Recent entitlement action styling must remain');
+assert(entitlementsCss.includes('/* Business entitlement audience campaigns */'),'Business entitlement audience styling must remain');
+assert(entitlementsCss.includes('.campaign-user-results'),'Specific-business picker styling must remain');
+assert(entitlementsCss.includes('.campaign-history-card'),'Business entitlement campaign card styling must remain');
 
 console.log('Premium Manage Leads regression test passed.');
