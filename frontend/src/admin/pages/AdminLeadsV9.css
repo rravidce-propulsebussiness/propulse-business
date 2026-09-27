@@ -1892,3 +1892,12 @@
     margin:0 10px 10px;
   }
 }
+
+/* Server-side lead pagination */
+.v9-pagination{display:flex;align-items:center;justify-content:center;gap:14px;padding:22px 10px 6px;border-top:1px solid #e7edf5;margin-top:22px}
+.v9-pagination button{min-width:110px;height:38px;padding:0 14px;border:1px solid #cdd9e8;border-radius:9px;background:#fff;color:#173b70;font-size:11px;font-weight:900;cursor:pointer;box-shadow:0 3px 10px rgba(23,59,112,.05)}
+.v9-pagination button:hover:not(:disabled){border-color:#8fa9ca;background:#f7faff}
+.v9-pagination button:disabled{opacity:.45;cursor:not-allowed}
+.v9-pagination span{color:#60738d;font-size:11px;font-weight:750}
+.v9-pagination span b{color:#173b70}
+@media(max-width:600px){.v9-pagination{gap:8px;flex-wrap:wrap}.v9-pagination button{min-width:100px}.v9-pagination span{order:-1;width:100%;text-align:center}}

@@ -2,6 +2,7 @@ const express=require('express');const leadController=require('../controllers/le
 const leadActionLimit=rateLimit({windowMs:60*1000,max:30});
 const leadAccessLimit=rateLimit({windowMs:60*1000,max:60});
 router.get('/',optionalAuth,leadController.getLeads);
+router.get('/admin-page',requireAdmin,leadController.getAdminLeadsPage);
 router.get('/investors',requireAdmin,leadController.getInvestors);
 router.get('/pricing',requireAdmin,leadController.getLeadPricing);
 router.put('/pricing',requireAdmin,leadController.updateLeadPricing);
