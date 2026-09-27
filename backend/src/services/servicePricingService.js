@@ -4,7 +4,7 @@ const crypto=require('crypto');
 const {validateDataUrlSignature}=require('../utils/fileValidation');
 const pool=require('../config/database');
 
-const CATEGORIES=['Marketing','Lead Sales','Government Compliance','Grow','Scale'];
+const CATEGORIES=['Grow','Scale'];
 const MAX_IMAGE_BYTES=7*1024*1024;
 const MIME_EXTENSIONS={'image/jpeg':'jpg','image/png':'png','image/webp':'webp'};
 const UPLOAD_ROOT=path.join(__dirname,'../../uploads/service-pricing');
@@ -20,7 +20,7 @@ function safeJson(v){if(Array.isArray(v))return v;try{const parsed=typeof v==='s
 function normalize(input={}){
   const features=safeJson(input.features).map(x=>clean(x)).filter(Boolean).slice(0,20);
   return {
-    category:CATEGORIES.includes(clean(input.category))?clean(input.category):'Marketing',
+    category:CATEGORIES.includes(clean(input.category))?clean(input.category):'Grow',
     name:clean(input.name),
     slug:clean(input.slug).toLowerCase().replace(/[^a-z0-9-]+/g,'-').replace(/^-|-$/g,''),
     tagline:clean(input.tagline),
@@ -38,11 +38,12 @@ function normalize(input={}){
 }
 async function list(activeOnly=true){
   const r=await pool.query(`SELECT id,category,name,slug,tagline,description,price_label,billing_note,features,cta_label,cta_url,image_url,highlighted,sort_order,is_active,updated_at
-    FROM service_pricing ${activeOnly?'WHERE is_active=TRUE':''} ORDER BY sort_order ASC,id ASC`);
+    FROM service_pricing WHERE category = ANY($1::text[])${activeOnly?' AND is_active=TRUE':''} ORDER BY sort_order ASC,id ASC`,[CATEGORIES]);
   return r.rows
 }
 async function get(id){return (await pool.query('SELECT * FROM service_pricing WHERE id=$1',[id])).rows[0]||null}
 async function create(input){
+  if(!CATEGORIES.includes(clean(input?.category))){const e=new Error('Service Pricing category must be Grow or Scale');e.code='INVALID_PRICING';throw e}
   const value=normalize(input);
   if(value.name.length<2) {const e=new Error('Pricing item name is required');e.code='INVALID_PRICING';throw e}
   if(!value.slug){const e=new Error('Pricing item slug is required');e.code='INVALID_PRICING';throw e}
@@ -54,6 +55,7 @@ async function create(input){
 async function update(id,input){
   const current=await get(id); if(!current)return null;
   const merged={...current,...input};
+  if(!CATEGORIES.includes(clean(merged?.category))){const e=new Error('Service Pricing category must be Grow or Scale');e.code='INVALID_PRICING';throw e}
   const value=normalize(merged);
   if(value.name.length<2){const e=new Error('Pricing item name is required');e.code='INVALID_PRICING';throw e}
   const r=await pool.query(`UPDATE service_pricing SET category=$1,name=$2,slug=$3,tagline=$4,description=$5,price_label=$6,billing_note=$7,features=$8,cta_label=$9,cta_url=$10,image_url=$11,highlighted=$12,sort_order=$13,is_active=$14,updated_at=CURRENT_TIMESTAMP WHERE id=$15 RETURNING *`,
