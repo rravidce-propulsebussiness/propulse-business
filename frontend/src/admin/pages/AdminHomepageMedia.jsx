@@ -80,19 +80,21 @@ export default function AdminHomepageMedia(){
     finally{setBusy('')}
   }
 
-  if(loading)return <main className="admin-home-media-page"><div className="admin-home-media-loading">Loading homepage media…</div></main>
+  if(loading)return <main className="admin-home-media-page"><div className="admin-home-media-loading"><div className="admin-home-media-spinner"/>Loading homepage media…</div></main>
+
+  const customCount=(settings.hero_image_url?1:0)+slots.filter(slot=>slot.key!=='hero'&&settings.category_images?.[slot.key]).length
+  const defaultCount=slots.length-customCount
 
   return <main className="admin-home-media-page">
     <section className="admin-home-media-hero">
-      <div><span>HOMEPAGE CONTENT</span><h1>Homepage Images</h1><p>Replace the lead-sales homepage visuals without changing code. Uploaded images are stored as files on the backend server.</p></div>
-      <div className="admin-home-media-mark">P</div>
+      <div className="admin-home-media-hero-copy"><span>CONTENT / HOMEPAGE MEDIA</span><h1>Homepage media</h1><p>Manage the visual assets used across the public lead-sales homepage without changing application code.</p><div className="admin-home-media-hero-meta"><span><b>{slots.length}</b> media slots</span><span><b>{customCount}</b> custom images</span><span><b>{defaultCount}</b> defaults active</span></div></div>
+      <div className="admin-home-media-hero-actions"><a href="/" target="_blank" rel="noreferrer"><span>↗</span><div><b>Open homepage</b><small>Preview public media</small></div></a><button type="button" onClick={load}><span>↻</span><div><b>Refresh media</b><small>Reload saved settings</small></div></button></div>
     </section>
     {error&&<div className="admin-home-media-alert error">{error}</div>}
     {ok&&<div className="admin-home-media-alert success">{ok}</div>}
 
     <section className="admin-home-media-note">
-      <strong>Production media storage</strong>
-      <span>Images are saved under <code>backend/uploads/homepage</code>. The database stores only the file URL. Keep this folder on persistent VPS storage and include it in your backup plan.</span>
+      <div className="admin-home-media-note-icon">i</div><div><strong>Production media storage</strong><span>Uploads are stored under <code>backend/uploads/homepage</code> while the database keeps the file URL. Keep this folder on persistent storage and include it in backups.</span></div>
     </section>
 
     <section className="admin-home-media-grid">
@@ -112,8 +114,8 @@ export default function AdminHomepageMedia(){
     </section>
 
     <div className="admin-home-media-footer">
-      <a href="/" target="_blank" rel="noreferrer">Open homepage ↗</a>
-      <span>Recommended: WebP or optimized JPG/PNG, up to 7 MB.</span>
+      <span><b>Recommended:</b> WebP or optimized JPG/PNG, up to 7 MB.</span>
+      <span>Changes become available to the homepage after the upload completes.</span>
     </div>
   </main>
 }
