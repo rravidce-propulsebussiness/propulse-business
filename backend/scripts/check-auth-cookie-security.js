@@ -22,8 +22,10 @@ const frontendApi = fs.readFileSync(path.join(root, '../frontend/src/utils/api.j
 assert(controller.includes("const AUTH_COOKIE = 'propulse_auth';"), 'Auth cookie name missing');
 assert(controller.includes("'HttpOnly'"), 'Auth cookie must be HttpOnly');
 assert(controller.includes("'SameSite=Lax'"), 'Auth cookie must use SameSite=Lax');
+assert(controller.includes('if (remember) parts.push(`Max-Age='), 'Remembered sessions must use a persistent cookie while unchecked sessions remain browser-session cookies');
 assert(controller.includes("parts.push('Secure')"), 'Auth cookie must be Secure in production');
 assert(controller.includes('const { token, ...safeResult } = result;'), 'JWT must not be returned in the auth response body');
+assert(controller.includes("remember: req.body?.remember !== false"), 'Login endpoints must pass the remember preference to cookie creation');
 assert(controller.includes('await authService.revokeAuthSessions(tokenUser.id);') || controller.includes('authService.revokeAuthSessions(tokenUser.id)'), 'Logout must revoke the server-side auth session');
 assert(middleware.includes("part.startsWith('propulse_auth=')"), 'Auth middleware must read the auth cookie');
 assert(service.includes('async function revokeAuthSessions(userId)'), 'Auth service must expose server-side session revocation');
