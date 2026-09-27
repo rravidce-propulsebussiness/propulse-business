@@ -56,6 +56,11 @@ const membershipRoutes=read('../backend/src/routes/membershipPlanRoutes.js');
 const membershipController=read('../backend/src/controllers/membershipPlanController.js');
 const adminRoutes=read('../backend/src/routes/adminRoutes.js');
 const servicePricingRemoval=read('../backend/src/database/migrations/20260927_zz_remove_legacy_service_pricing.sql');
+const adminLeadPartners=read('../frontend/src/admin/pages/AdminLeadPartners.jsx');
+const adminLeadPartnersCss=read('../frontend/src/admin/pages/AdminLeadPartners.css');
+const leadPartnerService=read('../backend/src/services/leadPartnerService.js');
+const leadPartnerEarningsService=read('../backend/src/services/leadPartnerEarningsService.js');
+const adminLeadPartnerPayouts=read('../frontend/src/admin/pages/AdminLeadPartnerPayouts.jsx');
 
 assert(adminUsers.includes('ACCOUNT OPERATIONS / DIRECTORY'),'Premium Users hero must remain');
 assert(adminUsers.includes('users-premium-stats'),'Users KPI strip must remain');
@@ -302,6 +307,16 @@ assert(dashboard.includes("label:'Propulse commission',value:investor.revenueTot
 assert(!dashboard.includes('Propulse-owned, Lead Partner and Investor activity are separated so revenue and operations stay easy to understand.'),'Long Overview explainer must stay removed');
 assert(!dashboard.includes('General admin work not already summarized'),'Redundant operations explainer must stay removed');
 assert(!dashboard.includes('Live data'),'Redundant live-data pill must stay removed');
+
+assert(adminLeadPartners.includes('Lead Partner master')&&adminLeadPartners.includes('PARTNER OPERATIONS / FINANCE'),'Lead Partners must remain a single master operations and finance view');
+assert(adminLeadPartners.includes('Related leads')&&adminLeadPartners.includes('Earnings')&&adminLeadPartners.includes('Payouts'),'Partner detail must keep related leads, earnings and payout history together');
+assert(adminLeadPartners.includes('TRANSFER DUE')&&adminLeadPartners.includes('EARNINGS GENERATED')&&adminLeadPartners.includes('TRANSFERRED'),'Partner list must expose generated earnings, transfer due and completed transfers');
+assert(adminLeadPartners.includes('/admin/lead-partners/')&&adminLeadPartners.includes('/financials'),'Partner master must reuse the canonical partner financial-detail endpoint');
+assert(adminLeadPartners.includes('/admin/lead-partner-payouts?search=')&&adminLeadPartnerPayouts.includes("params.get('search')"),'Partner detail must reuse the existing payout queue instead of duplicating payout processing');
+assert(adminLeadPartnersCss.includes('.alp-detail-tabs')&&adminLeadPartnersCss.includes('.alp-detail-table'),'Lead Partner master detail tabs and tables must remain styled');
+assert(leadPartnerService.includes('generated_earnings')&&leadPartnerService.includes('pending_transfer')&&leadPartnerService.includes('transferred_amount'),'Admin partner directory must derive finance columns from existing earning and payout ledgers');
+assert(leadPartnerEarningsService.includes('leads:leadsResult.rows.map')&&leadPartnerEarningsService.includes('payouts:payoutRows.map'),'Partner financial detail must include canonical related leads and payout history');
+assert(leadPartnerEarningsService.includes('lead_partner_payout_accounts')&&leadPartnerEarningsService.includes('lead_partner_payout_requests'),'Partner detail must reuse canonical payout account and request tables');
 
 assert(layoutCss.includes('linear-gradient(180deg,#0d2d55 0%,#092541 48%,#071f38 100%)'),'Admin sidebar must keep the dark premium shell');
 assert(layoutCss.includes('.admin-sidebar-signature'),'Premium sidebar signature card must remain active');
