@@ -23,6 +23,10 @@ const partnerShareMigration=read('../backend/src/database/migrations/2026-09-26-
 const membershipConfig=read('../frontend/src/admin/pages/AdminMembershipPlansConfig.jsx');
 const membershipConfigCss=read('../frontend/src/admin/pages/AdminMembershipPlansConfig.css');
 const membershipPlanService=read('../backend/src/services/membershipPlanService.js');
+const home=read('../frontend/src/pages/Home.jsx');
+const server=read('../backend/src/server.js');
+const membershipRoutes=read('../backend/src/routes/membershipPlanRoutes.js');
+const membershipController=read('../backend/src/controllers/membershipPlanController.js');
 
 assert(layout.includes('admin-sidebar-signature')&&layout.includes('admin-top-user'),'Premium Admin shell controls must remain present');
 assert(!layout.includes('admin-sidebar-status'),'Duplicated sidebar health copy must stay removed');
@@ -96,6 +100,13 @@ assert(membershipPlanService.includes("SET is_active=FALSE,updated_at=CURRENT_TI
 assert(membershipPlanService.includes("is_active=TRUE,updated_at=CURRENT_TIMESTAMP"),'Bundle save must reactivate saved billing cycles');
 assert(membershipConfigCss.includes('/* Single compact GROW / SCALE membership editor */'),'Compact Membership package styling must remain');
 assert(membershipConfigCss.includes('.membership-cycle-grid'),'Compact billing-cycle layout must remain');
+assert(!server.includes("servicePricingRoutes")&&!server.includes("'/api/service-pricing'"),'Legacy Service Pricing API must stay unmounted');
+assert(home.includes("publicRequest('/membership-plans/public')"),'Homepage pricing must come from Membership packages');
+assert(!home.includes("publicRequest('/service-pricing')")&&!home.includes('servicePricing'),'Homepage must not use the legacy Service Pricing source');
+assert(home.includes('MEMBERSHIP &amp; PRICING'),'Homepage pricing section must present Membership packages');
+assert(membershipRoutes.includes("router.get('/public', membershipPlanController.getPublicPlans)"),'Public active-only Membership pricing endpoint must remain');
+assert(membershipRoutes.includes("router.get('/', requireAuth, membershipPlanController.getPlans)"),'Admin Membership configuration must keep authenticated full-plan access');
+assert(membershipController.includes('res.json(await s.getPlans(false))'),'Public Membership endpoint must return active plans only');
 
 
 assert(dashboard.includes('const revenue=stats?.revenue||{}'),'Overview must use the backend revenue summary');
