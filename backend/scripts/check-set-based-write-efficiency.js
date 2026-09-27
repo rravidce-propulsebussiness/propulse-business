@@ -7,6 +7,7 @@ const auth=read('src/services/authService.js');
 const coupon=read('src/services/couponService.js');
 const profile=read('src/services/profileService.js');
 const sheetCompat=read('src/services/leadPartnerInventoryCompatService.js');
+const grantService=read('src/services/leadEntitlementGrantService.js');
 
 assert(auth.includes('WITH requested AS')&&auth.includes('UNNEST($1::int[],$2::int[],$3::int[])'),'Signup service validation must be set-based');
 assert(auth.includes('INSERT INTO business_profile_services')&&auth.includes('FROM UNNEST($2::int[],$3::int[],$4::int[])'),'Signup service relationships must be inserted in one set-based statement');
@@ -34,5 +35,9 @@ const persistDetails=sheetCompat.slice(sheetCompat.indexOf('async function persi
 assert(persistDetails.includes('=ANY($2::text[])')&&persistDetails.includes('=ANY($3::text[])'),'Sheet custom-field persistence must batch candidate lead matching');
 assert(persistDetails.includes('jsonb_to_recordset($2::jsonb)'),'Sheet custom-field persistence must batch custom-field updates');
 assert(!persistDetails.includes('ORDER BY l.id DESC LIMIT 1'),'Sheet custom-field persistence must not query once per imported row');
+
+const campaignSync=grantService.slice(grantService.indexOf('async function syncBusinessCampaign'),grantService.indexOf('async function createBusinessCampaign'));
+assert(campaignSync.includes('jsonb_to_recordset($1::jsonb)'),'Business entitlement campaign sync must batch recipient updates/inserts');
+assert(campaignSync.includes('id=ANY($1::int[])'),'Business entitlement campaign sync must batch deletes/revokes');
 
 console.log('Set-based write efficiency checks passed.');
