@@ -29,15 +29,6 @@ const categories = [
   { name: 'Plot & Land Leads', query: 'plot land', icon: '⌖', text: 'Land purchase, gated communities' },
 ]
 
-const pricingFallback = [
-  { category: 'Grow', name: 'Website Development', tagline: 'A professional website for your business.', description: 'Website design and development as an optional Propulse growth service.', price_label: 'Custom quote', billing_note: 'Project scope dependent', features: ['Website design & development', 'Mobile-responsive pages', 'Business enquiry integration'], cta_label: 'Explore Services', cta_url: '/contact', highlighted: false, image_url: '/homepage/default-marketing.svg' },
-  { category: 'Grow', name: 'SEO Services', tagline: 'Improve search visibility and discoverability.', description: 'SEO services as an optional Propulse growth service.', price_label: 'Custom quote', billing_note: 'Monthly / scope-based', features: ['SEO strategy', 'On-page optimisation', 'Local visibility support'], cta_label: 'Explore Services', cta_url: '/contact', highlighted: false, image_url: '/homepage/default-marketing.svg' },
-  { category: 'Grow', name: 'Website Maintenance', tagline: 'Keep your website secure and up to date.', description: 'Ongoing website maintenance as an optional Propulse growth service.', price_label: 'Custom quote', billing_note: 'Monthly / scope-based', features: ['Content updates', 'Maintenance support', 'Performance checks'], cta_label: 'Explore Services', cta_url: '/contact', highlighted: false, image_url: '/homepage/default-marketing.svg' },
-  { category: 'Scale', name: 'Business Profile Promotion', tagline: 'Put your business in front of more relevant opportunities.', description: 'Business profile promotion as part of Propulse Scale services.', price_label: 'Custom quote', billing_note: 'Campaign / scope-based', features: ['Business profile promotion', 'Visibility support', 'Campaign coordination'], cta_label: 'Learn More', cta_url: '/investment', highlighted: false, image_url: '/homepage/default-hero.svg' },
-  { category: 'Scale', name: 'Lead Generation', tagline: 'Create broader reach and more business opportunities.', description: 'Lead generation services as part of Propulse Scale.', price_label: 'Custom quote', billing_note: 'Campaign / scope-based', features: ['Lead generation', 'Audience targeting', 'Opportunity tracking'], cta_label: 'Learn More', cta_url: '/investment', highlighted: false, image_url: '/homepage/default-hero.svg' },
-  { category: 'Scale', name: 'Eligible Earnings Program', tagline: 'Access eligible earning programs subject to their terms.', description: 'Access to eligible Propulse earning or investment programs is governed by the applicable program terms.', price_label: 'Program terms apply', billing_note: 'Eligibility and program terms apply', features: ['Eligible program access', 'Program-specific terms', 'Separate program administration'], cta_label: 'Learn More', cta_url: '/investment', highlighted: false, image_url: '/homepage/default-hero.svg' }
-]
-
 function Home() {
   const token = getToken()
   const user = getUser()
@@ -47,10 +38,33 @@ function Home() {
   const [loadingLeads, setLoadingLeads] = useState(true)
   const [media, setMedia] = useState({ hero_image_url: '', category_images: {} })
   const [activeNav, setActiveNav] = useState('home')
-  const [servicePricing, setServicePricing] = useState(pricingFallback)
+  const [membershipPlans, setMembershipPlans] = useState([])
+  const [membershipPricingLoading, setMembershipPricingLoading] = useState(true)
   const [contactData, setContactData] = useState({})
   const [upcomingFeatures, setUpcomingFeatures] = useState([])
   const [upcomingFilter, setUpcomingFilter] = useState('all')
+
+  const membershipCards = useMemo(() => ['grow','scale'].map(groupKey => {
+    const group = membershipPlans
+      .filter(plan => String(plan?.plan_type || '').toLowerCase() === 'pro' && String(plan?.plan_group || '').toLowerCase() === groupKey)
+      .slice()
+      .sort((a,b) => Number(a?.billing_months || 1) - Number(b?.billing_months || 1) || Number(a?.price || 0) - Number(b?.price || 0))
+    if (!group.length) return null
+    const monthly = group.find(plan => Number(plan?.billing_months || 1) === 1) || group[0]
+    const monthlyPrice = Number(monthly?.monthly_base_price || 0) > 0
+      ? Number(monthly.monthly_base_price)
+      : Number(monthly?.price || 0) / Math.max(1, Number(monthly?.billing_months || 1))
+    return {
+      key: groupKey,
+      label: groupKey === 'scale' ? 'SCALE' : 'GROW',
+      description: monthly?.description || (groupKey === 'scale' ? 'Everything in GROW plus the additional SCALE package benefits configured by Propulse.' : 'Core Propulse growth membership with the benefits configured for GROW.'),
+      monthlyPrice,
+      billing: group.map(plan => plan?.billing_period || `${plan?.billing_months || 1} month`).join(' · '),
+      features: Array.isArray(monthly?.benefits) ? monthly.benefits : [],
+      cycleCount: group.length,
+      image: groupKey === 'scale' ? '/homepage/default-hero.svg' : '/homepage/default-marketing.svg',
+    }
+  }).filter(Boolean), [membershipPlans])
 
   useEffect(() => {
     let live = true
@@ -62,11 +76,14 @@ function Home() {
 
   useEffect(() => {
     let live = true
-    publicRequest('/service-pricing').then(data => {
+    publicRequest('/membership-plans').then(data => {
       if (!live) return
-      const items = Array.isArray(data) ? data.filter(item => item?.is_active !== false && ['Grow','Scale'].includes(item?.category)).slice(0, 6) : []
-      if (items.length) setServicePricing(items)
-    }).catch(() => {})
+      setMembershipPlans(Array.isArray(data) ? data.filter(item => item?.is_active !== false) : [])
+    }).catch(() => {
+      if (live) setMembershipPlans([])
+    }).finally(() => {
+      if (live) setMembershipPricingLoading(false)
+    })
     return () => { live = false }
   }, [])
 
@@ -264,38 +281,38 @@ function Home() {
         <section className="pricing-section-home home-reveal" id="pricing">
           <div className="pricing-home-head">
             <div>
-              <span className="section-kicker">SERVICES &amp; PRICING</span>
-              <h2>Choose how you want to grow.</h2>
-              <p>Use Grow services to strengthen your digital foundation, or Scale services to expand visibility, opportunities and eligible growth programs.</p>
+              <span className="section-kicker">MEMBERSHIP &amp; PRICING</span>
+              <h2>Choose GROW or SCALE.</h2>
+              <p>One membership package controls your price, billing cycle, lead allowance and included benefits.</p>
             </div>
-            <a className="pricing-home-action" href="#contact" onClick={event => scrollToSection(event, 'contact')}>Talk to Propulse <span>→</span></a>
+            <Link className="pricing-home-action" to={loggedIn ? '/membership' : '/signup'}>{loggedIn ? 'View Memberships' : 'Get Started'} <span>→</span></Link>
           </div>
 
-          <div className="pricing-home-grid">
-            {servicePricing.map((item, index) => (
-              <article className={item.highlighted ? 'pricing-home-card featured' : 'pricing-home-card'} key={item.id || item.slug || item.name}>
+          {membershipPricingLoading ? <div className="pricing-home-empty">Loading membership packages…</div> : membershipCards.length ? <div className="pricing-home-grid">
+            {membershipCards.map(card => (
+              <article className={card.key === 'scale' ? 'pricing-home-card featured' : 'pricing-home-card'} key={card.key}>
                 <div className="pricing-home-image">
-                  <img src={item.image_url || pricingFallback[index]?.image_url || '/homepage/default-hero.svg'} alt="" />
-                  {item.highlighted && <span className="pricing-home-badge">FEATURED</span>}
+                  <img src={card.image} alt="" />
+                  {card.key === 'scale' && <span className="pricing-home-badge">NEXT LEVEL</span>}
                 </div>
                 <div className="pricing-home-card-body">
-                  <div className="pricing-home-meta"><span>{item.category}</span><small>{item.category === 'Grow' ? 'Build & improve' : 'Expand & accelerate'}</small></div>
-                  <h3>{item.name}</h3>
-                  <strong>{item.tagline}</strong>
-                  <p>{item.description}</p>
-                  <div className="pricing-home-price"><b>{item.price_label}</b><span>{item.billing_note}</span></div>
+                  <div className="pricing-home-meta"><span>{card.label}</span><small>{card.cycleCount} billing cycle{card.cycleCount === 1 ? '' : 's'}</small></div>
+                  <h3>{card.label}</h3>
+                  <strong>{card.key === 'scale' ? 'Expand & accelerate' : 'Build & grow'}</strong>
+                  <p>{card.description}</p>
+                  <div className="pricing-home-price"><b>{money(card.monthlyPrice)} / month</b><span>{card.billing}</span></div>
                   <ul>
-                    {(Array.isArray(item.features) ? item.features : []).slice(0, 5).map((feature, featureIndex) => (
+                    {card.features.slice(0, 6).map((feature, featureIndex) => (
                       <li key={featureIndex}><i>✓</i><span>{feature}</span></li>
                     ))}
                   </ul>
-                  <Link className={item.highlighted ? 'pricing-home-cta primary' : 'pricing-home-cta'} to={item.cta_url || '/contact'}>{item.cta_label || 'Get Started'} <span>→</span></Link>
+                  <Link className={card.key === 'scale' ? 'pricing-home-cta primary' : 'pricing-home-cta'} to={loggedIn ? '/membership' : '/signup'}>{loggedIn ? `Choose ${card.label}` : 'Create Account'} <span>→</span></Link>
                 </div>
               </article>
             ))}
-          </div>
+          </div> : <div className="pricing-home-empty">Membership packages are being configured.</div>}
 
-          <div className="pricing-home-footer"><span>Pricing, features, images and service descriptions are managed from Admin.</span><span>Choose a service and contact Propulse to get started.</span></div>
+          <div className="pricing-home-footer"><span>GROW and SCALE pricing, billing cycles and features come directly from Membership configuration.</span><span>There is no separate Service Pricing source.</span></div>
         </section>
 
         <section className="benefit-band">
