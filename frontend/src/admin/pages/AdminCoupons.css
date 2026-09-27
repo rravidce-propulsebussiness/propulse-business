@@ -753,6 +753,119 @@
   box-shadow:0 0 0 3px rgba(24,89,157,.06);
 }
 
+/* Promotion benefit */
+.coupon-benefit-picker{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:7px;
+  margin-bottom:9px;
+}
+.coupon-benefit-picker>button{
+  min-width:0;
+  min-height:62px;
+  display:grid;
+  grid-template-columns:auto minmax(0,1fr);
+  gap:8px;
+  align-items:center;
+  padding:9px;
+  border:1px solid #dfe7ef;
+  border-radius:10px;
+  background:#f8fafc;
+  text-align:left;
+  cursor:pointer;
+}
+.coupon-benefit-picker>button.selected{
+  border-color:#6f98c2;
+  background:linear-gradient(135deg,#eef6ff,#f8fbff);
+  box-shadow:0 0 0 2px rgba(40,100,164,.05);
+}
+.coupon-benefit-picker>button>span{
+  width:32px;
+  height:32px;
+  display:grid;
+  place-items:center;
+  border-radius:9px;
+  background:#eaf2fb;
+  color:#2d659d;
+  font-size:8px;
+  font-weight:950;
+}
+.coupon-benefit-picker strong,
+.coupon-benefit-picker small{
+  display:block;
+}
+.coupon-benefit-picker strong{
+  color:#355674;
+  font-size:7.4px;
+}
+.coupon-benefit-picker small{
+  margin-top:2px;
+  color:#8b99a9;
+  font-size:6px;
+  line-height:1.35;
+}
+.coupon-benefit-fields label>small{
+  display:block;
+  margin-top:4px;
+  color:#8e9baa;
+  font-size:5.8px;
+  font-weight:650;
+  line-height:1.4;
+}
+.coupon-public-control{
+  min-height:36px;
+  display:flex!important;
+  align-items:center;
+  gap:8px;
+  box-sizing:border-box;
+  margin-top:16px;
+  padding:0 9px;
+  border:1px solid #dbe7df;
+  border-radius:8px;
+  background:#f4fbf7;
+}
+.coupon-public-control>input{
+  width:15px!important;
+  height:15px!important;
+  flex:0 0 auto;
+  margin:0!important;
+}
+.coupon-public-control span strong,
+.coupon-public-control span small{
+  display:block;
+}
+.coupon-public-control span strong{
+  color:#356b52;
+  font-size:7px;
+}
+.coupon-public-control span small{
+  margin-top:2px;
+  color:#80958a;
+  font-size:5.8px;
+}
+.coupon-scope-shortcuts{
+  display:flex;
+  flex-wrap:wrap;
+  gap:5px;
+  margin-bottom:8px;
+}
+.coupon-scope-shortcuts button{
+  min-height:28px;
+  padding:0 8px;
+  border:1px solid #d9e3ed;
+  border-radius:999px;
+  background:#fff;
+  color:#60778e;
+  font-size:6.2px;
+  font-weight:900;
+  cursor:pointer;
+}
+.coupon-scope-shortcuts button.active{
+  border-color:#6f98c2;
+  background:#edf6ff;
+  color:#1d568f;
+}
+
 /* Purchase scope */
 .coupon-purchase-types{
   display:grid;
@@ -1145,6 +1258,9 @@
   }
 }
 @media(max-width:850px){
+  .coupon-benefit-picker{
+    grid-template-columns:1fr;
+  }
   .coupon-kpi-grid{
     grid-template-columns:repeat(2,minmax(0,1fr));
   }
