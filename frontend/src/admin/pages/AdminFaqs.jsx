@@ -74,15 +74,17 @@ export default function AdminFaqs(){
 
   const audienceMeta=audiences.find(x=>x[0]===audience)||audiences[0];
   const filtered=rows.filter(r=>[r.question,r.answer,r.category].join(' ').toLowerCase().includes(search.trim().toLowerCase()));
+  const publishedFaqs=rows.filter(r=>r.is_active).length;
+  const draftFaqs=rows.length-publishedFaqs;
 
   return <main className="admin-faq-page">
     <section className="admin-faq-hero">
-      <div><span className="admin-faq-kicker">CONTENT CONTROL</span><h1>User, Investor &amp; Lead Partner FAQs</h1><p>Manage all three FAQ experiences from one admin page.</p></div>
-      <div className="admin-faq-hero-mark">?</div>
+      <div className="admin-faq-hero-copy"><span className="admin-faq-kicker">CONTENT / FAQ MANAGEMENT</span><h1>FAQ management</h1><p>Manage website, investor and lead-partner FAQ experiences from one content workspace.</p><div className="admin-faq-hero-meta"><span><b>{audienceMeta[1]}</b> selected</span><span><b>{publishedFaqs}</b> published</span><span><b>{draftFaqs}</b> drafts</span></div></div>
+      <div className="admin-faq-hero-actions"><button type="button" onClick={()=>load(audience)} disabled={loading}><span>↻</span><div><b>{loading?'Refreshing…':'Refresh FAQs'}</b><small>Reload selected audience</small></div></button></div>
     </section>
 
     <section className="admin-faq-audience-tabs" aria-label="FAQ audience">
-      {audiences.map(([key,title,description])=><button type="button" key={key} className={audience===key?'active':''} onClick={()=>switchAudience(key)}><strong>{title}</strong><small>{description}</small></button>)}
+      {audiences.map(([key,title,description],index)=><button type="button" key={key} className={audience===key?'active':''} onClick={()=>switchAudience(key)}><span>{index===0?'◎':index===1?'₹':'◆'}</span><div><strong>{title}</strong><small>{description}</small></div></button>)}
     </section>
 
     {error&&<div className="admin-faq-alert error">{error}</div>}
@@ -107,7 +109,7 @@ export default function AdminFaqs(){
       </article>
 
       <aside className="admin-faq-panel admin-faq-summary">
-        <span className="admin-faq-kicker">CURRENT AUDIENCE</span><h2>{audienceMeta[1]}</h2><p>{audienceMeta[2]}</p>
+        <span className="admin-faq-kicker">CURRENT AUDIENCE</span><h2>{audienceMeta[1]}</h2><p>{audienceMeta[2]}</p><div className="admin-faq-audience-state"><span>{publishedFaqs} published</span><span>{draftFaqs} drafts</span></div>
         <div className="admin-faq-summary-stats"><div><strong>{rows.length}</strong><span>Total</span></div><div><strong>{rows.filter(r=>r.is_active).length}</strong><span>Published</span></div><div><strong>{rows.filter(r=>!r.is_active).length}</strong><span>Drafts</span></div></div>
         <div className="admin-faq-category-summary">{categories.map(c=><div key={c[0]}><span>{c[1]}</span><b>{rows.filter(r=>r.category===c[0]).length}</b></div>)}</div>
       </aside>
