@@ -93,7 +93,6 @@ export default function LeadPartnerHome(){
   const uploaded=Number(stats.totalLeads||0)
   const sold=Number(stats.soldLeads||0)
   const conversionRate=uploaded>0?Math.min(100,(sold/uploaded)*100):0
-  const genuine=Number(quality.verifiedGenuineReports||0)
   const fake=Number(quality.verifiedFakeLeads||0)
   const fakeRate=Number(quality.verifiedFakeRatePct||0)
   const firstName=user?.name?.split(' ')?.[0]||'Partner'
@@ -102,7 +101,6 @@ export default function LeadPartnerHome(){
 
   function signOut(){
     clearSession()
-    localStorage.removeItem('propulse_session_mode')
     navigate('/login',{replace:true})
   }
 
