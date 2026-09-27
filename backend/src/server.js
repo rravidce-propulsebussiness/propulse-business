@@ -46,7 +46,7 @@ app.use(cors({origin(origin,callback){if(!origin||configuredOrigins.includes(ori
 app.use((req,res,next)=>{res.setHeader('X-Content-Type-Options','nosniff');res.setHeader('X-Frame-Options','DENY');res.setHeader('Referrer-Policy','strict-origin-when-cross-origin');res.setHeader('Permissions-Policy','camera=(),microphone=(),geolocation=()');res.setHeader('Content-Security-Policy',"default-src 'none'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'; form-action 'none'");if(isProduction)res.setHeader('Strict-Transport-Security','max-age=31536000; includeSubDomains');next();});
 app.use(express.json({limit:MAX_JSON_BYTES}));
 app.use('/api',csrfProtection);
-const apiRateLimit=rateLimit({windowMs:15*60*1000,max:600,scope:'global'});
+const apiRateLimit=rateLimit({windowMs:15*60*1000,max:600,scope:'global',shared:false});
 app.use('/api',apiRateLimit);
 app.use('/uploads',(req,res,next)=>{if(req.path==='/company-proofs'||req.path.startsWith('/company-proofs/'))return res.status(404).json({error:'Not found'});return next();});
 app.use('/uploads',express.static(path.join(__dirname,'../uploads'),{fallthrough:true,maxAge:'7d'}));
