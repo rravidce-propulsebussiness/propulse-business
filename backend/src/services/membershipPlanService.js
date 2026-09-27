@@ -196,4 +196,337 @@ async function deletePlan(id) {
   return (await pool.query('DELETE FROM membership_plans WHERE id=$1 RETURNING id',[id])).rows[0] || null;
 }
 
-module.exports = { getPlans, createPlan, createPlanBundle, updatePlan, setPlanStatus, deletePlan, calculatePrice };
+
+function cleanText(value,max=1000){
+  const text=String(value??'').trim();
+  return text?text.slice(0,max):null;
+}
+
+function positiveId(value){
+  const n=Number(value);
+  return Number.isInteger(n)&&n>0?n:null;
+}
+
+function normalizePricingRuleInput(input={}){
+  const planGroup=String(input.planGroup||input.plan_group||'').trim().toLowerCase();
+  if(!['grow','scale'].includes(planGroup))throw Object.assign(new Error('Choose GROW or SCALE'),{code:'INVALID_MEMBERSHIP_PRICING_RULE'});
+  const audienceScope=String(input.audienceScope||input.audience_scope||'all').trim().toLowerCase();
+  if(!['all','specific_users'].includes(audienceScope))throw Object.assign(new Error('Invalid membership audience'),{code:'INVALID_MEMBERSHIP_PRICING_RULE'});
+  const verificationScope=String(input.verificationScope||input.verification_scope||'any').trim().toLowerCase();
+  if(!['any','verified','unverified'].includes(verificationScope))throw Object.assign(new Error('Invalid verification filter'),{code:'INVALID_MEMBERSHIP_PRICING_RULE'});
+  const name=cleanText(input.name,140);
+  if(!name)throw Object.assign(new Error('Pricing rule name is required'),{code:'INVALID_MEMBERSHIP_PRICING_RULE'});
+  const rawPeriods=Array.isArray(input.periodOverrides)?input.periodOverrides:Array.isArray(input.period_overrides)?input.period_overrides:[];
+  const seen=new Set();
+  const periodOverrides=rawPeriods.map(item=>{
+    const billingMonths=Math.max(1,Math.round(toNumber(item.billingMonths??item.billing_months??item.months,0)));
+    if(!billingMonths||seen.has(billingMonths))return null;
+    seen.add(billingMonths);
+    const price=Number(item.price);
+    if(!Number.isFinite(price)||price<0)throw Object.assign(new Error('Each targeted billing cycle needs a valid price'),{code:'INVALID_MEMBERSHIP_PRICING_RULE'});
+    return{
+      billingMonths,
+      label:cleanText(item.label,40)||`${billingMonths}-month`,
+      enabled:item.enabled!==false,
+      price:Number(price.toFixed(2)),
+      leadEntitlements:normalizeEntitlements(item.leadEntitlements??item.lead_entitlements,billingMonths)
+    };
+  }).filter(Boolean);
+  if(!periodOverrides.some(item=>item.enabled!==false))throw Object.assign(new Error('Configure at least one targeted billing cycle'),{code:'INVALID_MEMBERSHIP_PRICING_RULE'});
+  const userIds=[...new Set((Array.isArray(input.userIds)?input.userIds:[]).map(Number).filter(id=>Number.isInteger(id)&&id>0))];
+  if(audienceScope==='specific_users'&&!userIds.length)throw Object.assign(new Error('Choose at least one business user'),{code:'INVALID_MEMBERSHIP_PRICING_RULE'});
+  return{
+    name,
+    planGroup,
+    audienceScope,
+    verificationScope,
+    userIds,
+    industryId:positiveId(input.industryId??input.industry_id),
+    stateId:positiveId(input.stateId??input.state_id),
+    cityId:positiveId(input.cityId??input.city_id),
+    priority:Math.min(10000,Math.max(0,Math.round(toNumber(input.priority,100)))),
+    periodOverrides,
+    notes:cleanText(input.notes,3000),
+    isActive:input.isActive===undefined?input.is_active!==false:Boolean(input.isActive)
+  };
+}
+
+async function validatePricingRule(rule,client=pool){
+  if(rule.industryId){
+    const row=(await client.query('SELECT id FROM industries WHERE id=$1',[rule.industryId])).rows[0];
+    if(!row)throw Object.assign(new Error('Selected industry no longer exists'),{code:'INVALID_MEMBERSHIP_PRICING_RULE'});
+  }
+  if(rule.stateId){
+    const row=(await client.query('SELECT id FROM states WHERE id=$1',[rule.stateId])).rows[0];
+    if(!row)throw Object.assign(new Error('Selected state no longer exists'),{code:'INVALID_MEMBERSHIP_PRICING_RULE'});
+  }
+  if(rule.cityId){
+    const row=(await client.query('SELECT id,state_id FROM cities WHERE id=$1',[rule.cityId])).rows[0];
+    if(!row)throw Object.assign(new Error('Selected city no longer exists'),{code:'INVALID_MEMBERSHIP_PRICING_RULE'});
+    if(rule.stateId&&Number(row.state_id)!==Number(rule.stateId))throw Object.assign(new Error('Selected city does not belong to the selected state'),{code:'INVALID_MEMBERSHIP_PRICING_RULE'});
+  }
+  if(rule.audienceScope==='specific_users'){
+    const rows=(await client.query("SELECT id FROM users WHERE id=ANY($1::int[]) AND role='business'",[rule.userIds])).rows.map(row=>Number(row.id));
+    if(rows.length!==rule.userIds.length)throw Object.assign(new Error('One or more selected businesses are unavailable'),{code:'INVALID_MEMBERSHIP_PRICING_RULE'});
+  }
+  const groupPlans=(await client.query(`
+    SELECT billing_months FROM membership_plans
+    WHERE LOWER(COALESCE(plan_group,''))=$1 AND plan_type='pro'
+  `,[rule.planGroup])).rows;
+  const allowed=new Set(groupPlans.map(row=>Number(row.billing_months||1)));
+  if(!allowed.size)throw Object.assign(new Error(`${rule.planGroup.toUpperCase()} package has no billing cycles yet`),{code:'INVALID_MEMBERSHIP_PRICING_RULE'});
+  if(rule.periodOverrides.some(item=>!allowed.has(Number(item.billingMonths)))){
+    throw Object.assign(new Error('A targeted cycle no longer exists in this membership package'),{code:'INVALID_MEMBERSHIP_PRICING_RULE'});
+  }
+  return rule;
+}
+
+async function replacePricingRuleUsers(client,ruleId,userIds=[]){
+  await client.query('DELETE FROM membership_pricing_rule_users WHERE rule_id=$1',[ruleId]);
+  if(!userIds.length)return;
+  await client.query(`
+    INSERT INTO membership_pricing_rule_users(rule_id,user_id)
+    SELECT $1,UNNEST($2::int[])
+    ON CONFLICT DO NOTHING
+  `,[ruleId,userIds]);
+}
+
+async function listPricingRules(){
+  const rows=(await pool.query(`
+    SELECT r.*,
+           i.name AS industry_name,st.name AS state_name,c.name AS city_name,
+           COALESCE((
+             SELECT json_agg(json_build_object(
+               'id',u.id,'name',u.name,'email',u.email,'business_name',bp.business_name,'phone',bp.phone
+             ) ORDER BY COALESCE(bp.business_name,u.name),u.id)
+             FROM membership_pricing_rule_users ru
+             JOIN users u ON u.id=ru.user_id
+             LEFT JOIN business_profiles bp ON bp.user_id=u.id
+             WHERE ru.rule_id=r.id
+           ),'[]'::json) AS selected_users
+    FROM membership_pricing_rules r
+    LEFT JOIN industries i ON i.id=r.industry_id
+    LEFT JOIN states st ON st.id=r.state_id
+    LEFT JOIN cities c ON c.id=r.city_id
+    ORDER BY r.priority DESC,r.updated_at DESC,r.id DESC
+  `)).rows;
+  return rows.map(row=>({...row,period_overrides:safeJson(row.period_overrides)}));
+}
+
+async function createPricingRule(input,adminId){
+  const client=await pool.connect();
+  try{
+    await client.query('BEGIN');
+    const rule=await validatePricingRule(normalizePricingRuleInput(input),client);
+    const inserted=(await client.query(`
+      INSERT INTO membership_pricing_rules(
+        name,plan_group,audience_scope,verification_scope,industry_id,state_id,city_id,
+        priority,period_overrides,notes,is_active,created_by,updated_by
+      ) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$12)
+      RETURNING *
+    `,[
+      rule.name,rule.planGroup,rule.audienceScope,rule.verificationScope,
+      rule.industryId,rule.stateId,rule.cityId,rule.priority,JSON.stringify(rule.periodOverrides),
+      rule.notes,rule.isActive,adminId||null
+    ])).rows[0];
+    await replacePricingRuleUsers(client,inserted.id,rule.audienceScope==='specific_users'?rule.userIds:[]);
+    await client.query('COMMIT');
+    return inserted;
+  }catch(error){
+    try{await client.query('ROLLBACK')}catch{}
+    throw error;
+  }finally{client.release()}
+}
+
+async function updatePricingRule(ruleId,input,adminId){
+  const id=positiveId(ruleId);
+  if(!id)throw Object.assign(new Error('Invalid membership pricing rule'),{code:'INVALID_MEMBERSHIP_PRICING_RULE'});
+  const client=await pool.connect();
+  try{
+    await client.query('BEGIN');
+    const existing=(await client.query('SELECT * FROM membership_pricing_rules WHERE id=$1 FOR UPDATE',[id])).rows[0];
+    if(!existing)throw Object.assign(new Error('Membership pricing rule not found'),{code:'MEMBERSHIP_PRICING_RULE_NOT_FOUND'});
+    const selected=(await client.query('SELECT user_id FROM membership_pricing_rule_users WHERE rule_id=$1 ORDER BY user_id',[id])).rows.map(row=>row.user_id);
+    const rule=await validatePricingRule(normalizePricingRuleInput({
+      name:input?.name??existing.name,
+      planGroup:input?.planGroup??existing.plan_group,
+      audienceScope:input?.audienceScope??existing.audience_scope,
+      verificationScope:input?.verificationScope??existing.verification_scope,
+      userIds:input?.userIds??selected,
+      industryId:input?.industryId===undefined?existing.industry_id:input.industryId,
+      stateId:input?.stateId===undefined?existing.state_id:input.stateId,
+      cityId:input?.cityId===undefined?existing.city_id:input.cityId,
+      priority:input?.priority??existing.priority,
+      periodOverrides:input?.periodOverrides??existing.period_overrides,
+      notes:input?.notes??existing.notes,
+      isActive:input?.isActive===undefined?existing.is_active:input.isActive
+    }),client);
+    const updated=(await client.query(`
+      UPDATE membership_pricing_rules
+      SET name=$2,plan_group=$3,audience_scope=$4,verification_scope=$5,
+          industry_id=$6,state_id=$7,city_id=$8,priority=$9,period_overrides=$10,
+          notes=$11,is_active=$12,updated_by=$13,updated_at=CURRENT_TIMESTAMP
+      WHERE id=$1 RETURNING *
+    `,[
+      id,rule.name,rule.planGroup,rule.audienceScope,rule.verificationScope,
+      rule.industryId,rule.stateId,rule.cityId,rule.priority,JSON.stringify(rule.periodOverrides),
+      rule.notes,rule.isActive,adminId||null
+    ])).rows[0];
+    await replacePricingRuleUsers(client,id,rule.audienceScope==='specific_users'?rule.userIds:[]);
+    await client.query('COMMIT');
+    return updated;
+  }catch(error){
+    try{await client.query('ROLLBACK')}catch{}
+    throw error;
+  }finally{client.release()}
+}
+
+async function deletePricingRule(ruleId){
+  const id=positiveId(ruleId);
+  if(!id)return null;
+  return (await pool.query('DELETE FROM membership_pricing_rules WHERE id=$1 RETURNING id',[id])).rows[0]||null;
+}
+
+async function listPricingRuleBusinesses(search=''){
+  const values=[];
+  const where=["u.role='business'","u.is_active=TRUE"];
+  if(String(search).trim()){
+    values.push(`%${String(search).trim()}%`);
+    where.push(`(u.name ILIKE ${values.length} OR u.email ILIKE ${values.length} OR COALESCE(bp.business_name,'') ILIKE ${values.length} OR COALESCE(bp.phone,'') ILIKE ${values.length})`);
+  }
+  return (await pool.query(`
+    SELECT u.id,u.name,u.email,u.is_active,bp.business_name,bp.phone,
+           EXISTS(
+             SELECT 1 FROM company_proof_documents cpd
+             WHERE cpd.user_id=u.id AND cpd.status='verified'
+           ) AS is_verified
+    FROM users u
+    LEFT JOIN business_profiles bp ON bp.user_id=u.id
+    WHERE ${where.join(' AND ')}
+    ORDER BY COALESCE(bp.business_name,u.name),u.id
+    LIMIT 50
+  `,values)).rows;
+}
+
+async function matchingPricingRulesForUser(userId,client=pool){
+  if(!positiveId(userId))return[];
+  const rows=(await client.query(`
+    SELECT r.*,
+      (
+        CASE WHEN r.audience_scope='specific_users' THEN 16 ELSE 0 END +
+        CASE WHEN r.city_id IS NOT NULL THEN 8 ELSE 0 END +
+        CASE WHEN r.state_id IS NOT NULL THEN 4 ELSE 0 END +
+        CASE WHEN r.industry_id IS NOT NULL THEN 2 ELSE 0 END +
+        CASE WHEN r.verification_scope<>'any' THEN 1 ELSE 0 END
+      )::int AS specificity
+    FROM membership_pricing_rules r
+    WHERE r.is_active=TRUE
+      AND (
+        r.audience_scope='all'
+        OR EXISTS(
+          SELECT 1 FROM membership_pricing_rule_users ru
+          WHERE ru.rule_id=r.id AND ru.user_id=$1
+        )
+      )
+      AND (
+        r.verification_scope='any'
+        OR (r.verification_scope='verified' AND EXISTS(
+          SELECT 1 FROM company_proof_documents cpd
+          WHERE cpd.user_id=$1 AND cpd.status='verified'
+        ))
+        OR (r.verification_scope='unverified' AND NOT EXISTS(
+          SELECT 1 FROM company_proof_documents cpd
+          WHERE cpd.user_id=$1 AND cpd.status='verified'
+        ))
+      )
+      AND (
+        r.industry_id IS NULL OR EXISTS(
+          SELECT 1 FROM business_profiles bp
+          JOIN business_profile_services bps ON bps.business_profile_id=bp.id
+          WHERE bp.user_id=$1 AND bps.is_active=TRUE AND bps.industry_id=r.industry_id
+        )
+      )
+      AND (
+        r.state_id IS NULL OR EXISTS(
+          SELECT 1 FROM business_profiles bp
+          JOIN business_profile_locations bpl ON bpl.business_profile_id=bp.id
+          WHERE bp.user_id=$1 AND bpl.is_active=TRUE AND bpl.state_id=r.state_id
+        )
+      )
+      AND (
+        r.city_id IS NULL OR EXISTS(
+          SELECT 1 FROM business_profiles bp
+          JOIN business_profile_locations bpl ON bpl.business_profile_id=bp.id
+          WHERE bp.user_id=$1 AND bpl.is_active=TRUE AND bpl.city_id=r.city_id
+        )
+      )
+    ORDER BY r.priority DESC,specificity DESC,r.updated_at DESC,r.id DESC
+  `,[userId])).rows;
+  return rows.map(row=>({...row,period_overrides:safeJson(row.period_overrides)}));
+}
+
+function periodOverrideFor(rule,billingMonths){
+  return safeJson(rule?.period_overrides).find(item=>Number(item.billingMonths??item.billing_months??item.months)===Number(billingMonths)&&item.enabled!==false)||null;
+}
+
+function applyPricingRule(plan,rule){
+  const override=periodOverrideFor(rule,plan.billing_months);
+  if(!override)return null;
+  const leadEntitlements=Array.isArray(override.leadEntitlements)
+    ?normalizeEntitlements(override.leadEntitlements,plan.billing_months)
+    :Array.isArray(override.lead_entitlements)
+      ?normalizeEntitlements(override.lead_entitlements,plan.billing_months)
+      :normalizeEntitlements(plan.lead_entitlements,plan.billing_months);
+  return{
+    ...plan,
+    base_price:Number(plan.price||0),
+    price:Number(override.price),
+    lead_entitlements:leadEntitlements,
+    pricing_rule_id:rule.id,
+    pricing_rule_name:rule.name,
+    pricing_rule_priority:Number(rule.priority||0),
+    targeted_pricing:true
+  };
+}
+
+async function getPlansForUser(userId,client=pool){
+  const result=await client.query(`
+    SELECT id,name,plan_group,plan_type,description,price,duration_days,billing_period,
+           billing_months,monthly_base_price,discount_percent,benefits,lead_entitlements,
+           add_ons,lead_rollover_enabled,lead_expiry_days,is_active,created_at,updated_at
+    FROM membership_plans
+    WHERE is_active=TRUE
+    ORDER BY COALESCE(plan_group,name),plan_type,billing_months ASC,id
+  `);
+  const rules=await matchingPricingRulesForUser(userId,client);
+  return result.rows.map(plan=>{
+    const group=String(plan.plan_group||'').toLowerCase();
+    if(!['grow','scale'].includes(group)||String(plan.plan_type||'').toLowerCase()!=='pro')return plan;
+    const rule=rules.find(item=>String(item.plan_group||'').toLowerCase()===group&&periodOverrideFor(item,plan.billing_months));
+    return rule?applyPricingRule(plan,rule):{...plan,base_price:Number(plan.price||0),targeted_pricing:false};
+  });
+}
+
+async function resolvePlanForUser(userId,planId,client=pool){
+  const plan=(await client.query(`
+    SELECT id,name,plan_group,plan_type,description,price,duration_days,billing_period,
+           billing_months,monthly_base_price,discount_percent,benefits,lead_entitlements,
+           add_ons,lead_rollover_enabled,lead_expiry_days,is_active
+    FROM membership_plans WHERE id=$1
+  `,[planId])).rows[0];
+  if(!plan||!plan.is_active)return null;
+  const group=String(plan.plan_group||'').toLowerCase();
+  if(!positiveId(userId)||!['grow','scale'].includes(group)||String(plan.plan_type||'').toLowerCase()!=='pro'){
+    return{...plan,base_price:Number(plan.price||0),targeted_pricing:false};
+  }
+  const rules=await matchingPricingRulesForUser(userId,client);
+  const rule=rules.find(item=>String(item.plan_group||'').toLowerCase()===group&&periodOverrideFor(item,plan.billing_months));
+  return rule?applyPricingRule(plan,rule):{...plan,base_price:Number(plan.price||0),targeted_pricing:false};
+}
+
+module.exports = {
+  getPlans,getPlansForUser,resolvePlanForUser,
+  createPlan,createPlanBundle,updatePlan,setPlanStatus,deletePlan,calculatePrice,
+  listPricingRules,createPricingRule,updatePricingRule,deletePricingRule,listPricingRuleBusinesses,
+  normalizePricingRuleInput,matchingPricingRulesForUser
+};
