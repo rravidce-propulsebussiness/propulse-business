@@ -442,7 +442,7 @@ async function getAdminOverview(client=pool){
       SELECT g.id,g.user_id,g.source,g.shared_quantity,g.premium_quantity,
              g.starts_at,g.expires_at,g.claim_expiry_days,
              g.allow_single,g.allow_shared,g.allow_auto_release,g.allow_exclusive,
-             g.notes,g.revoked_at,g.created_at,
+             g.notes,g.revoked_at,g.created_at,g.updated_at,
              u.name,u.email,bp.business_name,
              COUNT(c.id) FILTER(WHERE c.entitlement_type='shared')::int AS used_shared,
              COUNT(c.id) FILTER(WHERE c.entitlement_type='premium')::int AS used_premium
