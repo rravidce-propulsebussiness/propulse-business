@@ -224,7 +224,7 @@ export default function LeadsV2() {
     if (!logged) { navigate('/login'); return }
     if (!lead.pricing?.shares?.length) { setError('Pricing is not available for this lead.'); return }
     setError(''); setNotice(''); setPaymentError(''); setCouponCode(''); setCouponStatus(''); setCouponError(''); setCouponDiscount(0); setCouponFinalAmount(null); setCouponReward(null); setPublicLeadOffers([]); setUseWallet(true); setWalletBalance(0); setPaymentProof(null); setBuyModal(lead)
-    authRequest('/wallet').then(data => setWalletBalance(Number(data?.balance ?? data?.wallet?.balance ?? 0))).catch(() => {})
+    authRequest('/wallet?summary=1').then(data => setWalletBalance(Number(data?.balance ?? data?.wallet?.balance ?? 0))).catch(() => {})
     const industryId = lead?.industry_id ? `&industryId=${encodeURIComponent(lead.industry_id)}` : ''
     const leadRow = lead?.pricing?.shares?.[0] || null
     const offerSubtotal = Number(leadRow?.[isPro ? 'pro' : 'normal'] || 0)
