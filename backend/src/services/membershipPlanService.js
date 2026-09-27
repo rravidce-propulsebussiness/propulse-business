@@ -458,10 +458,16 @@ async function matchingPricingRulesForUser(userId,client=pool){
       AND (r.valid_until IS NULL OR r.valid_until>=CURRENT_TIMESTAMP)
       AND (
         r.new_customer_days IS NULL
-        OR EXISTS(
-          SELECT 1 FROM users offer_user
-          WHERE offer_user.id=$1
-            AND offer_user.created_at>=CURRENT_TIMESTAMP-(r.new_customer_days*INTERVAL '1 day')
+        OR (
+          EXISTS(
+            SELECT 1 FROM users offer_user
+            WHERE offer_user.id=$1
+              AND offer_user.created_at>=CURRENT_TIMESTAMP-(r.new_customer_days*INTERVAL '1 day')
+          )
+          AND NOT EXISTS(
+            SELECT 1 FROM memberships prior_membership
+            WHERE prior_membership.user_id=$1
+          )
         )
       )
       AND (
