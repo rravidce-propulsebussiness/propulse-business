@@ -5,7 +5,8 @@ const root=path.join(__dirname,'..');
 const read=relative=>fs.readFileSync(path.join(root,relative),'utf8');
 const assert=(condition,message)=>{if(!condition)throw new Error(message)};
 
-const defaults=read('../frontend/src/admin/pages/LeadImportDefaults.jsx');
+const defaultsUi=read('../frontend/src/admin/pages/LeadImportDefaults.jsx');
+const defaults=read('../frontend/src/admin/pages/leadImportDefaultsUtils.js');
 const upload=read('../frontend/src/admin/pages/AdminLeadsV9.jsx');
 const sheets=read('../frontend/src/admin/pages/GoogleSheetAutoSync.jsx');
 const pricingUi=read('../frontend/src/admin/pages/AdminLeadPricing.jsx');
