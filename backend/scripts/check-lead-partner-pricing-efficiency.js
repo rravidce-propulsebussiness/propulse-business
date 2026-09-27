@@ -13,7 +13,7 @@ assert(!block.includes('SELECT id FROM leads'),'Pricing rule application must no
 assert(!/for\s*\(const lead of rows\)/.test(block),'Pricing rule application must not issue one UPDATE per lead');
 assert(block.includes("COALESCE(partner_pricing_overridden,FALSE)=FALSE"),'Set-wise update must preserve partner override protection');
 assert(block.includes("status IN ('available','paused')"),'Set-wise update must preserve eligible lead statuses');
-assert(block.includes('industry_id=${params.length}'),'Industry scope must remain parameterized');
-assert(block.includes('city_id=${params.length}'),'City scope must remain parameterized');
+assert(/industry_id=\$\$\{params\.length\}/.test(block),'Industry scope must remain parameterized');
+assert(/city_id=\$\$\{params\.length\}/.test(block),'City scope must remain parameterized');
 
 console.log('Lead Partner pricing set-based efficiency regression test passed.');
