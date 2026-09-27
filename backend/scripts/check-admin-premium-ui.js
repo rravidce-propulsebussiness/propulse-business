@@ -183,7 +183,7 @@ assert(dashboard.includes('REVENUE COMMAND CENTER')&&dashboard.includes('Total e
 assert(dashboard.includes("['today','Today']")&&dashboard.includes("['week','This Week']")&&dashboard.includes("['month','This Month']")&&dashboard.includes("['all','All Time']"),'Overview revenue filters must keep Today, This Week, This Month and All Time');
 assert(dashboard.includes('ownGross:propulse.revenueWeek')&&dashboard.includes('partnerCommission:leadPartner.revenueWeek')&&dashboard.includes('investorCommission:investor.revenueWeek'),'Weekly earnings must preserve source-level breakdown');
 assert(dashboard.includes('Our gross')&&dashboard.includes('Partner commission')&&dashboard.includes('Investor commission'),'Total earnings must explain the Propulse revenue formula');
-assert(!dashboard.includes('label="Propulse revenue"'),'Overview KPI row must not duplicate the top total earnings panel');
+assert(!dashboard.includes('note="Lead sales + platform commission"')&&dashboard.includes('label="Active businesses"'),'Overview KPI row must not duplicate the old total revenue KPI');
 assert(dashboard.includes('title="Our leads"')&&dashboard.includes('title="Lead Partners"'),'Overview must keep Propulse and Lead Partner businesses visually separate');
 assert(dashboard.includes('Investor activity'),'Overview must keep Investor activity visually separate');
 assert(dashboard.includes('leadPartner.partnerEarnings'),'Lead Partner earnings must remain separate from Propulse commission');
