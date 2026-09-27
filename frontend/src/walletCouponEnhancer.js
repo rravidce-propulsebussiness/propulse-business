@@ -40,8 +40,9 @@ function enhanceWalletCoupon(modal) {
   const offers = document.createElement('section')
   offers.className = 'wallet-public-offers'
   offers.innerHTML = '<div class="wallet-public-offers-head"><div><span>AVAILABLE OFFERS</span><strong>Get more from your top-up</strong></div><small>Eligible offers for your account</small></div><div class="wallet-public-offer-list"><span class="wallet-offer-loading">Checking offers…</span></div>'
-  const firstLabel = form.querySelector('label')
-  if (firstLabel) form.before(offers)
+  const subtitle = modal.querySelector('.wallet-modal-subtitle')
+  if (subtitle) subtitle.after(offers)
+  else form.before(offers)
 
   const label = document.createElement('label')
   label.className = 'wallet-coupon-field'
