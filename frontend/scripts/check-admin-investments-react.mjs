@@ -18,6 +18,8 @@ for(const source of [page,wallet]){
 assert(wallet.includes('<InvestorActionModals'), 'Investor ad-spend actions must render through React')
 assert(wallet.includes('className="investor-history-actions"'), 'Investor history footer actions must render in JSX')
 assert(wallet.includes('/managed-ad-spend'), 'Native React spend action must use the managed ad-spend endpoint')
+assert(wallet.includes('/linked-leads?page=')&&wallet.includes('linked.leads || []'), 'Admin linked-leads modal must consume the paginated object contract')
+assert(wallet.includes('linked-leads-pagination'), 'Admin linked-leads modal must render pagination controls')
 assert(css.includes('.investor-history-actions{')&&css.includes('.investor-history-summary{'), 'Investor modal/action styles must live in the stylesheet')
 
 console.log('React Admin Investments regression checks passed.')
