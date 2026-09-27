@@ -64,7 +64,11 @@ async function adminList({status='all',search=''}={}){
     w.push(`(u.name ILIKE $${v.length} OR u.email ILIKE $${v.length} OR CAST(r.id AS TEXT) ILIKE $${v.length} OR COALESCE(r.transfer_reference,'') ILIKE $${v.length})`);
   }
   const rows=(await pool.query(
-    `SELECT r.*,u.name user_name,u.email user_email,lp.status partner_status
+    `SELECT r.id,r.partner_id,r.user_id,r.payout_account_id,r.payout_method,r.payout_account_snapshot,
+            r.amount,r.status,r.transfer_reference,(COALESCE(BTRIM(r.proof_url),'')<>'') AS has_proof,
+            r.notes,r.rejection_reason,r.requested_at,r.processed_at,r.processed_by,r.paid_at,
+            r.created_at,r.updated_at,r.request_source,
+            u.name user_name,u.email user_email,lp.status partner_status
      FROM lead_partner_payout_requests r
      JOIN users u ON u.id=r.user_id
      JOIN lead_partners lp ON lp.id=r.partner_id
