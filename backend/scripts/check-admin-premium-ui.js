@@ -53,6 +53,12 @@ assert(industriesCss.includes('.admin-master-page .tree-card'),'Admin hierarchy 
 assert(industriesCss.includes('.admin-master-page .modal-card'),'Admin master-data modal styling must remain');
 assert(industriesCss.includes('grid-template-columns:repeat(3,minmax(0,1fr))'),'Desktop master-data KPI layout must remain');
 
+assert(!layout.includes("{to:'/admin/service-pricing',label:'Service Pricing'}"),'Service Pricing must stay removed from Admin navigation');
+assert(layout.includes("{to:'/admin/memberships',label:'GROW & SCALE'"),'Membership navigation must point to the single GROW and SCALE editor');
+assert(app.includes('<Route path="/admin/service-pricing" element={<Navigate to="/admin/memberships" replace/>}/>'),'Legacy Service Pricing URL must redirect to Memberships');
+assert(app.includes('<Route path="/admin/membership-plans" element={<Navigate to="/admin/memberships" replace/>}/>'),'Legacy Membership Plans URL must redirect to canonical Memberships');
+assert(!app.includes("AdminServicePricing=lazy"),'Legacy Admin Service Pricing component must not be loaded');
+
 assert(app.includes('<Route path="/admin/lead-pricing" element={<AdminLeadPricing/>}/>'),'Lead Pricing must remain available in Admin');
 assert(leadPricing.includes('REVENUE CONTROL / LEAD MARKETPLACE'),'Lead Pricing premium hero must remain');
 assert(leadPricing.includes('pricing-summary-grid'),'Lead Pricing summary KPIs must remain');
@@ -79,6 +85,8 @@ assert(membershipConfig.includes('membership-single-card'),'Memberships must use
 assert(membershipConfig.includes('MEMBERSHIP / PACKAGES'),'Membership package premium header must remain');
 assert(membershipConfig.includes('GROW')&&membershipConfig.includes('SCALE'),'GROW and SCALE package controls must remain');
 assert(!membershipConfig.includes("req('/admin/service-pricing')"),'Memberships must not duplicate Service Pricing data loading');
+assert(!membershipConfig.includes('href="/admin/service-pricing"'),'Memberships must not link to a second Service Pricing editor');
+assert(membershipConfig.includes('price, billing cycles, lead allowances and customer-facing features are managed only here'),'Memberships must state the single-source package model');
 assert(!membershipConfig.includes('saveServicePricing')&&!membershipConfig.includes('growth-scale-admin-card'),'Memberships must not contain a second Service Pricing editor');
 assert(!membershipConfig.includes('plans-list'),'Memberships must not restore the second configured-plan editor');
 assert(!membershipConfig.includes('Plan name<input'),'GROW/SCALE package names must remain fixed');
