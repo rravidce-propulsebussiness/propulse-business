@@ -157,7 +157,7 @@ export default function AdminUsers() {
     if(!window.confirm(`Apply ${plan?.name||'this plan'} to ${selected.business_name||selected.name}?`))return;
     try{
       setUserBusy('membership-plan');setError('');
-      await authRequest(`/admin/users/${selected.id}/membership`,{method:'POST',body:JSON.stringify({planId:Number(membershipPlanId),days:Number(membershipDays)||undefined,reason:membershipReason.trim()})});
+      await authRequest(`/admin/users/${selected.id}/membership`,{method:'POST',body:JSON.stringify({planId:Number(membershipPlanId),days:currentMembership?undefined:(Number(membershipDays)||undefined),reason:membershipReason.trim()})});
       setMembershipReason('');
       await Promise.all([loadUser360(selected.id,true),loadUsers()]);
     }catch(e){setError(e.message||'Failed to apply membership')}
@@ -371,7 +371,7 @@ export default function AdminUsers() {
                       <option value="">Choose GROW / SCALE plan</option>
                       {(user360?.availablePlans||[]).map(plan=><option value={plan.id} key={plan.id}>{String(plan.plan_group||'').toUpperCase()} · {plan.billing_period||plan.name} · {money(plan.price)}</option>)}
                     </select>
-                    <input type="number" min="1" max="3650" value={membershipDays} onChange={e=>setMembershipDays(e.target.value)} placeholder="Days"/>
+                    {!currentMembership ? <input type="number" min="1" max="3650" value={membershipDays} onChange={e=>setMembershipDays(e.target.value)} placeholder="Initial days"/> : <div className="membership-preserve-expiry">Keeps current expiry</div>}
                   </div>
                   <textarea rows="2" value={membershipReason} onChange={e=>setMembershipReason(e.target.value)} placeholder="Reason for manual membership change…"/>
                   <button type="button" className="admin-primary-btn" disabled={userBusy==='membership-plan'} onClick={assignMembershipPlan}>{userBusy==='membership-plan'?'Applying…':(currentMembership?'Change membership':'Activate membership')}</button>
