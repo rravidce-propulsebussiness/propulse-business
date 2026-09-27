@@ -22,8 +22,9 @@ assert(routes.includes("router.get('/google-sheet/connections',requireAdmin,lead
 assert(routes.includes("router.post('/google-sheet/connections/:id/sync',requireAdmin,leadController.syncGoogleSheetConnection)"),'Stored Admin sheets must support manual backend sync');
 assert(service.includes('admin_google_sheet_connections'),'Admin sheet sync service must persist connections in PostgreSQL');
 assert(migration.includes('CREATE TABLE IF NOT EXISTS admin_google_sheet_connections'),'Admin sheet connection migration must exist');
-assert(scheduler.includes('pg_try_advisory_lock'),'Admin sheet background sync must coordinate across backend replicas');
+assert(!scheduler.includes('pg_try_advisory_lock'),'Admin sheet scheduler must not hold a process-wide DB advisory-lock connection');
 assert(service.includes("pg_try_advisory_lock($1,$2)")&&service.includes("pg_advisory_unlock($1,$2)"),'Each Admin sheet connection must serialize manual and worker sync across replicas');
+assert(scheduler.includes('another replica is syncing it'),'Scheduler must treat per-connection lock contention as a normal skip');
 assert(service.includes("if(!locked)return{busy:true,sync:{busy:true,skipped:true,reason:'SYNC_IN_PROGRESS'}}"),'Overlapping sheet sync must return a stable busy result');
 assert(service.includes('const saved=synced.skipped'),'Unchanged-sheet checks must preserve the previous sync metrics');
 assert(server.includes('startAdminGoogleSheetAutoSync'),'Web compatibility mode must start Admin sheet background sync');
