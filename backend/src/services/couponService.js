@@ -413,8 +413,6 @@ async function releaseForPayment(client,paymentId){
 }
 
 async function applyRewardForPayment(client,paymentId){
-  const existing=(await client.query('SELECT * FROM coupon_rewards WHERE payment_id=$1 FOR UPDATE',[paymentId])).rows[0];
-  if(existing)return existing;
   const row=(await client.query(`
     SELECT p.id AS payment_id,p.user_id,p.purchase_type,p.purchase_id,
            COALESCE(p.subtotal_amount,p.amount,0)::numeric AS subtotal_amount,
@@ -422,12 +420,15 @@ async function applyRewardForPayment(client,paymentId){
     FROM payments p
     JOIN coupons c ON c.id=p.coupon_id
     JOIN coupon_redemptions cr ON cr.payment_id=p.id AND cr.status='redeemed'
-    WHERE p.id=$1
+    WHERE p.id=$1 AND c.benefit_type IN ('wallet_bonus','lead_bonus')
     FOR UPDATE OF p,c
   `,[paymentId])).rows[0];
   if(!row)return null;
   const reward=rewardFor(row,Number(row.subtotal_amount||0));
   if(!reward||reward.type==='wallet_bonus'&&reward.amount<=0||reward.type==='lead_bonus'&&reward.quantity<=0)return null;
+
+  const existing=(await client.query('SELECT * FROM coupon_rewards WHERE payment_id=$1 FOR UPDATE',[paymentId])).rows[0];
+  if(existing)return existing;
 
   const inserted=(await client.query(`
     INSERT INTO coupon_rewards(coupon_id,user_id,payment_id,reward_type,reward_amount)
