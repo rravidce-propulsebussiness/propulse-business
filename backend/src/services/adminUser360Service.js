@@ -199,13 +199,13 @@ async function getUser360(userId){
   const remainingDays=daysRemaining(current?.expires_at);
   const paidPayments=payments.filter(item=>item.status==='paid');
   const pendingPayments=payments.filter(item=>item.status==='pending');
-  const pendingTopups=(wallet?.recharges||[]).filter(item=>item.status==='pending');
+  const pendingTopupCount=number(wallet?.stats?.pending_topups);
   const attention=[];
   if(!user.is_active)attention.push({level:'critical',code:'ACCOUNT_INACTIVE',text:'Account is inactive'});
   if(user.role==='business'&&!user.is_verified)attention.push({level:'warning',code:'UNVERIFIED',text:'Business is not verified'});
   if(current&&remainingDays!==null&&remainingDays<=7)attention.push({level:'warning',code:'MEMBERSHIP_EXPIRING',text:`${String(current.plan_group||current.plan_name||'Membership').toUpperCase()} expires in ${remainingDays} day${remainingDays===1?'':'s'}`});
   if(pendingPayments.length)attention.push({level:'warning',code:'PENDING_PAYMENT',text:`${pendingPayments.length} payment${pendingPayments.length===1?'':'s'} pending review`});
-  if(pendingTopups.length)attention.push({level:'warning',code:'PENDING_TOPUP',text:`${pendingTopups.length} wallet recharge${pendingTopups.length===1?'':'s'} pending review`});
+  if(pendingTopupCount)attention.push({level:'warning',code:'PENDING_TOPUP',text:`${pendingTopupCount} wallet recharge${pendingTopupCount===1?'':'s'} pending review`});
 
   return{
     user,
@@ -217,7 +217,7 @@ async function getUser360(userId){
       totalPaid:paidPayments.reduce((sum,item)=>sum+number(item.amount),0),
       activeEntitlements:activeEntitlements?.summary||{shared:{},premium:{}},
       pendingPayments:pendingPayments.length,
-      pendingTopups:pendingTopups.length
+      pendingTopups:pendingTopupCount
     },
     attention,
     membership:membership||{customer:null,plans:[],history:[]},
