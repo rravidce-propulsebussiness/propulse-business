@@ -127,6 +127,13 @@ async function adminProof(requestId){
   if(!row)return null;
   return{id:Number(row.id),proof_url:await privateProofStorage.materializeProof(row.proof_url,{maxBytes:MAX_PROOF_BYTES})};
 }
+async function adminProofDescriptor(requestId){
+  const id=Number(requestId);
+  if(!Number.isInteger(id)||id<=0)return null;
+  const row=(await pool.query(`SELECT id,proof_url FROM lead_partner_payout_requests WHERE id=$1`,[id])).rows[0];
+  if(!row)return null;
+  return privateProofStorage.getProofDescriptor(row.proof_url,{maxBytes:MAX_PROOF_BYTES});
+}
 
 async function markPaid({client,r,adminId,transferReference,proofUrl,notes}){
   const ref=String(transferReference||'').trim();
@@ -316,4 +323,4 @@ async function getTransactions(userId){
     transactions:[...chronological].reverse()
   };
 }
-module.exports={getFunds,getTransactions,requestWithdrawal,adminList,adminProof,adminProcess,adminDirectPayout};
+module.exports={getFunds,getTransactions,requestWithdrawal,adminList,adminProof,adminProofDescriptor,adminProcess,adminDirectPayout};
