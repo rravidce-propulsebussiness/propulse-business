@@ -61,6 +61,7 @@ async function adminList({status='all',search='',page=1,limit=50}={}){
   };
 }
 async function getAdminProof(requestId){const row=(await pool.query(`SELECT id,status,proof_url,transfer_reference,processed_at FROM investor_payout_requests WHERE id=$1`,[Number(requestId)])).rows[0];if(!row)throw Object.assign(new Error('Transfer request not found'),{code:'NOT_FOUND'});return{id:Number(row.id),status:row.status,proof_url:await privateProofStorage.materializeProof(row.proof_url,{maxBytes:6*1024*1024}),transfer_reference:row.transfer_reference||null,processed_at:row.processed_at};}
+async function getAdminProofDescriptor(requestId){const row=(await pool.query(`SELECT id,proof_url FROM investor_payout_requests WHERE id=$1`,[Number(requestId)])).rows[0];if(!row)throw Object.assign(new Error('Transfer request not found'),{code:'NOT_FOUND'});return privateProofStorage.getProofDescriptor(row.proof_url,{maxBytes:6*1024*1024});}
 function validateProof(proofUrl){const value=String(proofUrl||'').trim();if(!value)throw Object.assign(new Error('Transfer proof is required'),{code:'TRANSFER_PROOF_REQUIRED'});if(value.length>MAX_PROOF_DATA_URL_LENGTH)throw Object.assign(new Error('Transfer proof image is too large. Please use an image under 6 MB.'),{code:'TRANSFER_PROOF_TOO_LARGE'});if(value.startsWith('data:')){const match=value.match(/^data:(image\/(png|jpeg|jpg|webp));base64,([A-Za-z0-9+/=]+)$/i);if(!match)throw Object.assign(new Error('Transfer proof must be a PNG, JPG, or WebP screenshot.'),{code:'INVALID_TRANSFER_PROOF'});const data=Buffer.from(match[3],'base64');const mime=match[2].toLowerCase();const valid=mime==='png'?data.subarray(0,8).equals(Buffer.from([137,80,78,71,13,10,26,10])):mime==='jpeg'||mime==='jpg'?data.subarray(0,3).equals(Buffer.from([255,216,255])):data.subarray(0,4).toString('ascii')==='RIFF'&&data.subarray(8,12).toString('ascii')==='WEBP';if(!valid)throw Object.assign(new Error('Transfer proof content does not match its declared file type.'),{code:'INVALID_TRANSFER_PROOF'});}else if(!/^https?:\/\//i.test(value))throw Object.assign(new Error('Transfer proof must be an image screenshot or a valid proof URL.'),{code:'INVALID_TRANSFER_PROOF'});return value;}
 async function adminProcess({requestId,adminId,action,transferReference,proofUrl,notes}){
   const normalizedAction=String(action||'').trim().toLowerCase();
@@ -98,4 +99,4 @@ async function adminProcess({requestId,adminId,action,transferReference,proofUrl
   }finally{client.release()}
 }
 
-module.exports={getInvestorFunds,requestTransfer,adminList,getAdminProof,adminProcess};
+module.exports={getInvestorFunds,requestTransfer,adminList,getAdminProof,getAdminProofDescriptor,adminProcess};
