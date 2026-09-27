@@ -28,6 +28,18 @@
 .lv2-coupon-row button{border:1px solid #f15a24;border-radius:9px;background:#fff8f5;color:#e84e1d;font-size:10px;font-weight:900;cursor:pointer}
 .lv2-coupon-status,.lv2-coupon-error{display:block;margin-top:7px;font-size:9px;line-height:1.45}
 .lv2-coupon-status{color:#14805a}.lv2-coupon-error{color:#b52e24}
+.lv2-public-offers{display:grid;gap:6px;margin:0 0 9px}
+.lv2-public-offers>button{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:8px;width:100%;padding:8px 9px;border:1px solid #d9e6df;border-radius:9px;background:#f8fdf9;text-align:left;cursor:pointer}
+.lv2-public-offers>button:hover,.lv2-public-offers>button.selected{border-color:#84b49b;background:#f2fbf5;box-shadow:0 5px 13px rgba(32,111,75,.07)}
+.lv2-public-offers>button>span{display:grid;place-items:center;width:29px;height:29px;border-radius:8px;background:#e4f5ea;color:#27794f;font-size:9px;font-weight:950}
+.lv2-public-offers>button>div{min-width:0}
+.lv2-public-offers>button strong,.lv2-public-offers>button small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lv2-public-offers>button strong{color:#275c44;font-size:8px}
+.lv2-public-offers>button small{margin-top:2px;color:#7b8f84;font-size:7px}
+.lv2-public-offers>button>b{color:#246e4b;font-size:7px;white-space:nowrap}
+.lv2-summary-row.lv2-promotion-reward{margin:-2px 0 12px;padding:7px 8px;border:1px solid #d4e8dc;border-radius:8px;background:#f2faf5;color:#527765}
+.lv2-summary-row.lv2-promotion-reward strong{color:#21744e}
+
 .lv2-wallet-choice{position:relative;display:grid;grid-template-columns:1fr auto auto;align-items:center;gap:12px;margin:0 0 17px;padding:13px 14px;border:1px solid #cfe0f6;border-radius:15px;background:linear-gradient(135deg,#f2f7ff,#edf5ff)}
 .lv2-wallet-choice label{display:flex;align-items:center;gap:10px;margin:0;min-width:0;color:#173b70;font-size:11px;font-weight:900;cursor:pointer}
 .lv2-wallet-choice label>span:nth-child(2){display:flex;flex-direction:column;gap:3px}
@@ -86,6 +98,8 @@
   .lv2-lead-id-pill{display:none}
   .lv2-coupon-row{grid-template-columns:1fr}
   .lv2-coupon-row button{height:40px}
+  .lv2-public-offers>button{grid-template-columns:auto minmax(0,1fr)}
+  .lv2-public-offers>button>b{grid-column:2}
   .lv2-wallet-choice{grid-template-columns:1fr auto}
   .lv2-wallet-choice input{grid-column:2;grid-row:1}
   .lv2-wallet-choice>strong{grid-column:2;grid-row:1;margin-right:27px}
