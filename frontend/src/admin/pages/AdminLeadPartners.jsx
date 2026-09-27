@@ -241,7 +241,7 @@ export default function AdminLeadPartners(){
               <div><span>QUALITY</span><strong>{Number(detail.quality?.verifiedFakeRatePct||0).toFixed(2)}% fake rate</strong></div>
               <div><span>PAYOUT ACCOUNT</span><strong>{detail.partner?.payout_method==='upi'?(detail.partner?.upi_id||'UPI'):(detail.partner?.bank_name||detail.partner?.account_holder_name||'Not configured')}</strong></div>
               <div><span>JOINED</span><strong>{shortDate(detail.partner?.created_at)}</strong></div>
-              {Number(detail.pendingTransfer||0)>0&&<button type="button" onClick={()=>navigate('/admin/lead-partner-payouts')}>Review transfer due →</button>}
+              {Number(detail.pendingTransfer||0)>0&&<button type="button" onClick={()=>navigate(`/admin/lead-partner-payouts?search=${encodeURIComponent(detail.partner?.user_email||selected.user_email||'')}`)}>Review transfer due →</button>}
             </section>
 
             <nav className="alp-detail-tabs">
@@ -261,7 +261,7 @@ export default function AdminLeadPartners(){
             </section>}
 
             {detailTab==='payouts'&&<section className="alp-detail-section">
-              <div className="alp-section-head"><div><span>TRANSFER HISTORY</span><h3>Partner payouts</h3></div><button type="button" onClick={()=>navigate('/admin/lead-partner-payouts')}>Open payout queue →</button></div>
+              <div className="alp-section-head"><div><span>TRANSFER HISTORY</span><h3>Partner payouts</h3></div><button type="button" onClick={()=>navigate(`/admin/lead-partner-payouts?search=${encodeURIComponent(detail.partner?.user_email||selected.user_email||'')}`)}>Open this partner in payout queue →</button></div>
               {!detail.payouts?.length?<div className="alp-state">No withdrawal requests yet.</div>:<div className="alp-detail-table-wrap"><table className="alp-detail-table"><thead><tr><th>REQUEST</th><th>AMOUNT</th><th>METHOD</th><th>REQUESTED</th><th>STATUS</th><th>TRANSFER REFERENCE</th></tr></thead><tbody>{detail.payouts.map(item=><tr key={item.id}><td><b>#{item.id}</b></td><td><b>{money(item.amount)}</b></td><td>{String(item.payout_method||'—').toUpperCase()}</td><td>{date(item.requested_at)}</td><td><span className={`alp-ledger-status ${item.status}`}>{statusText(item.status)}</span>{item.rejection_reason&&<small>{item.rejection_reason}</small>}</td><td>{item.transfer_reference||'—'}{item.paid_at&&<small>Paid {date(item.paid_at)}</small>}</td></tr>)}</tbody></table></div>}
             </section>}
           </>}
