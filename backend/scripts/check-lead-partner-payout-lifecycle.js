@@ -3,6 +3,7 @@ const pool = require('../src/config/database');
 const payoutService = require('../src/services/leadPartnerPayoutService');
 const earningsService = require('../src/services/leadPartnerEarningsService');
 const leadReportService = require('../src/services/leadReportService');
+const leadPartnerPricingService = require('../src/services/leadPartnerPricingService');
 
 const tag = `payout-test-${Date.now()}-${process.pid}`;
 const email = `${tag}@example.test`;
@@ -95,6 +96,17 @@ async function main() {
     await c.query('COMMIT');
     cleanupNeeded = true;
     console.log('fixture: committed');
+
+    console.log('test: scoped Lead Partner pricing rule');
+    await leadPartnerPricingService.saveRule(ids.user,{
+      industryId:Number(industry.id),
+      cityId:Number(city.id),
+      leadType:'basic',
+      pricing:{shares:[{shares:1,pro:123},{shares:2,pro:73.8},{shares:3,pro:55.35}]},
+      isActive:true
+    });
+    const scopedPricing=(await q('SELECT pricing FROM leads WHERE id=$1',[ids.first.leadId]))[0]?.pricing;
+    assert.strictEqual(Number(scopedPricing?.shares?.find(row=>Number(row.shares)===1)?.pro),123,'Scoped Lead Partner pricing must update matching leads through parameterized filters');
 
     console.log('test: concurrent withdrawals');
     const concurrent = await Promise.allSettled([
@@ -217,6 +229,7 @@ async function main() {
         await cleanup.query('DELETE FROM lead_purchases WHERE user_id=$1', [ids.user || 0]);
         await cleanup.query('DELETE FROM payments WHERE user_id=$1', [ids.user || 0]);
         await cleanup.query('DELETE FROM lead_partner_payout_accounts WHERE user_id=$1', [ids.user || 0]);
+        await cleanup.query('DELETE FROM lead_partner_pricing_rules WHERE partner_user_id=$1', [ids.user || 0]);
         await cleanup.query('DELETE FROM leads WHERE created_by=$1', [ids.user || 0]);
         await cleanup.query('DELETE FROM lead_partners WHERE user_id=$1', [ids.user || 0]);
         await cleanup.query('DELETE FROM users WHERE id=$1', [ids.admin || 0]);
