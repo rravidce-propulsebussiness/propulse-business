@@ -1,269 +1,769 @@
-import { useEffect, useState } from 'react';
-import { apiRequest } from '../../utils/api';
-import './AdminMembershipPlans.css';
-import './AdminMembershipPlansConfig.css';
+import { useEffect, useMemo, useState } from 'react'
+import { apiRequest } from '../../utils/api'
+import './AdminMembershipPlansConfig.css'
 
-const DEFAULT_CYCLES = [
-  { key: 'monthly', label: 'Monthly', months: 1 },
-  { key: 'quarterly', label: 'Quarterly', months: 3 },
-  { key: 'yearly', label: 'Yearly', months: 12 },
-];
-const DEFAULT_LEADS = [];
-const money = value => `₹${Number(value || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}`;
-const slug = value => String(value || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
-const normalizeAddon = item => {
-  if (item?.cycles) return {
-    name: item.name || 'Add-on',
-    cycles: Object.fromEntries(DEFAULT_CYCLES.map(c => [c.key, {
-      price: Number(item.cycles?.[c.key]?.price ?? 0),
-      enabled: item.cycles?.[c.key]?.enabled !== false,
-      discount: Number(item.cycles?.[c.key]?.discount ?? 0),
-    }])),
-  };
-  const legacy = Number(item?.price || 0);
-  return {
-    name: item?.name || 'Add-on',
-    cycles: Object.fromEntries(DEFAULT_CYCLES.map(c => [c.key, {
-      price: legacy * c.months,
-      enabled: true,
-      discount: 0,
-    }])),
-  };
-};
+const DEFAULT_CYCLES=[
+  {key:'monthly',label:'Monthly',months:1},
+  {key:'quarterly',label:'Quarterly',months:3},
+  {key:'yearly',label:'Yearly',months:12}
+]
+const LEAD_TYPES=[
+  {key:'shared',label:'Basic'},
+  {key:'premium',label:'Premium'},
+  {key:'exclusive',label:'Exclusive'}
+]
+const money=value=>`₹${Number(value||0).toLocaleString('en-IN',{maximumFractionDigits:2})}`
+const slug=value=>String(value||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'')
+const verifyLabel=value=>value==='verified'?'Verified only':value==='unverified'?'Non-verified only':'Verified + Non-verified'
 
-function freshForm(packageKey = 'grow') {
-  const isScale = packageKey === 'scale';
-  const cycles = DEFAULT_CYCLES.map(c => ({
-    ...c,
-    enabled: true,
-    leadEntitlements: DEFAULT_LEADS.map(item => ({ ...item, period_total_quantity: item.monthly_quantity * c.months })),
-  }));
-  return {
-    name: isScale ? 'Scale' : 'Grow',
-    planType: 'pro',
-    monthlyBasePrice: '',
-    periods: cycles,
-    pricing: Object.fromEntries(cycles.map(c => [c.key, { discount: 0, price: '', customPrice: false }])),
-    benefits: isScale
-      ? ['Everything in GROW', 'Website development', 'SEO services', 'Website maintenance']
-      : ['Best lead pricing', 'Exclusive Leads access', 'Investment access unlocked for eligible members'],
-    addOns: [],
-  };
+function allowanceFromEntitlements(items=[],months=1){
+  const out=Object.fromEntries(LEAD_TYPES.map(type=>[type.key,{monthly:0,total:0}]))
+  for(const item of Array.isArray(items)?items:[]){
+    const key=String(item?.type||'').toLowerCase()
+    if(!out[key])continue
+    const monthly=Math.max(0,Number(item.monthly_quantity??item.quantity??0)||0)
+    const total=Math.max(0,Number(item.period_total_quantity??monthly*months)||0)
+    out[key]={monthly,total}
+  }
+  return out
 }
-
-function formFromPackage(packageKey, plans) {
-  const normalizedKey = packageKey === 'scale' ? 'scale' : 'grow';
-  const canonicalName = normalizedKey === 'scale' ? 'Scale' : 'Grow';
-  const group = (Array.isArray(plans) ? plans : [])
-    .filter(plan => String(plan?.plan_type || '').toLowerCase() === 'pro' && String(plan?.plan_group || '').toLowerCase() === normalizedKey)
+function entitlementsFromAllowance(allowance={},months=1){
+  return LEAD_TYPES.map(type=>{
+    const monthly=Math.max(0,Number(allowance?.[type.key]?.monthly||0))
+    const total=Math.max(monthly*Math.max(1,Number(months)||1),Number(allowance?.[type.key]?.total||0))
+    return{type:type.key,quantity:monthly,monthly_quantity:monthly,period_total_quantity:total,complimentary:true}
+  }).filter(item=>item.monthly_quantity>0||item.period_total_quantity>0)
+}
+function normalizeAddon(item){
+  if(item?.cycles)return item
+  const legacy=Number(item?.price||0)
+  return{
+    name:item?.name||'Add-on',
+    cycles:Object.fromEntries(DEFAULT_CYCLES.map(c=>[c.key,{price:legacy*c.months,enabled:true,discount:0}]))
+  }
+}
+function freshPackage(packageKey='grow'){
+  const scale=packageKey==='scale'
+  const periods=DEFAULT_CYCLES.map(c=>({...c,enabled:true,allowances:allowanceFromEntitlements([],c.months)}))
+  return{
+    name:scale?'Scale':'Grow',
+    monthlyBasePrice:'',
+    periods,
+    pricing:Object.fromEntries(periods.map(c=>[c.key,{discount:0,price:'',customPrice:false}])),
+    benefits:scale
+      ?['Everything in GROW','Website development','SEO services','Website maintenance']
+      :['Best lead pricing','Exclusive Leads access','Investment access unlocked for eligible members'],
+    addOns:[]
+  }
+}
+function formFromPackage(packageKey,plans){
+  const key=packageKey==='scale'?'scale':'grow'
+  const canonical=key==='scale'?'Scale':'Grow'
+  const group=(Array.isArray(plans)?plans:[])
+    .filter(plan=>String(plan?.plan_type||'').toLowerCase()==='pro'&&String(plan?.plan_group||'').toLowerCase()===key)
     .slice()
-    .sort((a,b)=>Number(a?.billing_months||1)-Number(b?.billing_months||1)||Number(a?.id||0)-Number(b?.id||0));
-  if (!group.length) return freshForm(normalizedKey);
-
-  const first=group[0];
-  const existingByMonths=new Map(group.map(plan=>[Number(plan.billing_months||1),plan]));
+    .sort((a,b)=>Number(a.billing_months||1)-Number(b.billing_months||1)||Number(a.id)-Number(b.id))
+  if(!group.length)return freshPackage(key)
+  const first=group[0]
+  const byMonths=new Map(group.map(plan=>[Number(plan.billing_months||1),plan]))
   const periods=DEFAULT_CYCLES.map(cycle=>{
-    const plan=existingByMonths.get(cycle.months);
-    if(!plan) return {...cycle,enabled:false,leadEntitlements:[]};
-    const leads=Array.isArray(plan.lead_entitlements)?plan.lead_entitlements:[];
-    return {
+    const plan=byMonths.get(cycle.months)
+    if(!plan)return{...cycle,enabled:false,allowances:allowanceFromEntitlements([],cycle.months)}
+    return{
       ...cycle,
       label:plan.billing_period||cycle.label,
       months:Number(plan.billing_months||cycle.months),
       enabled:plan.is_active!==false,
-      leadEntitlements:leads.map(item=>({
-        ...item,
-        monthly_quantity:Number(item.monthly_quantity??item.quantity??0),
-        period_total_quantity:Number(item.period_total_quantity??(Number(item.monthly_quantity??item.quantity??0)*Number(plan.billing_months||cycle.months))),
-      })),
       sourceId:plan.id,
-    };
-  });
+      allowances:allowanceFromEntitlements(plan.lead_entitlements,Number(plan.billing_months||cycle.months))
+    }
+  })
   group.filter(plan=>!DEFAULT_CYCLES.some(c=>c.months===Number(plan.billing_months||1))).forEach(plan=>{
-    const months=Number(plan.billing_months||1);
+    const months=Number(plan.billing_months||1)
     periods.push({
       key:`custom-${plan.id}`,
       label:plan.billing_period||`${months}-month`,
       months,
       enabled:plan.is_active!==false,
       sourceId:plan.id,
-      leadEntitlements:(Array.isArray(plan.lead_entitlements)?plan.lead_entitlements:[]).map(item=>({
-        ...item,
-        monthly_quantity:Number(item.monthly_quantity??item.quantity??0),
-        period_total_quantity:Number(item.period_total_quantity??(Number(item.monthly_quantity??item.quantity??0)*months)),
-      })),
-    });
-  });
-  periods.sort((a,b)=>Number(a.months)-Number(b.months));
-
-  const pricing={};
+      allowances:allowanceFromEntitlements(plan.lead_entitlements,months)
+    })
+  })
+  periods.sort((a,b)=>Number(a.months)-Number(b.months))
+  const pricing={}
   periods.forEach(period=>{
-    const plan=group.find(row=>Number(row.billing_months||1)===Number(period.months));
+    const plan=group.find(row=>Number(row.billing_months||1)===Number(period.months))
     if(!plan){pricing[period.key]={discount:0,price:'',customPrice:false};return}
-    const base=Number(plan.monthly_base_price??first.monthly_base_price??0)*Number(period.months||1);
-    const discount=Number(plan.discount_percent||0);
-    const calculated=base*(1-discount/100);
-    const final=Number(plan.price||0);
-    pricing[period.key]={discount,price:final,customPrice:Math.abs(final-calculated)>0.01};
-  });
-
-  return {
-    name:canonicalName,
-    planType:'pro',
+    const base=Number(plan.monthly_base_price??first.monthly_base_price??0)*Number(period.months||1)
+    const discount=Number(plan.discount_percent||0)
+    const calculated=base*(1-discount/100)
+    const final=Number(plan.price||0)
+    pricing[period.key]={discount,price:final,customPrice:Math.abs(final-calculated)>0.01}
+  })
+  return{
+    name:canonical,
     monthlyBasePrice:first.monthly_base_price??'',
     periods,
     pricing,
     benefits:Array.isArray(first.benefits)?first.benefits:[],
-    addOns:Array.isArray(first.add_ons)?first.add_ons.map(normalizeAddon):[],
-  };
+    addOns:Array.isArray(first.add_ons)?first.add_ons.map(normalizeAddon):[]
+  }
+}
+function planGroup(plans,key){
+  return (Array.isArray(plans)?plans:[])
+    .filter(plan=>String(plan?.plan_type||'').toLowerCase()==='pro'&&String(plan?.plan_group||'').toLowerCase()===key)
+    .slice()
+    .sort((a,b)=>Number(a.billing_months||1)-Number(b.billing_months||1))
+}
+function defaultRule(group='grow',plans=[]){
+  const groupPlans=planGroup(plans,group).filter(plan=>plan.is_active!==false)
+  return{
+    name:'',
+    planGroup:group,
+    audienceScope:'all',
+    verificationScope:'any',
+    userIds:[],
+    industryId:'',
+    stateId:'',
+    cityId:'',
+    priority:100,
+    isActive:true,
+    notes:'',
+    periodOverrides:groupPlans.map(plan=>({
+      billingMonths:Number(plan.billing_months||1),
+      label:plan.billing_period||`${plan.billing_months||1}-month`,
+      enabled:true,
+      price:Number(plan.price||0),
+      allowances:allowanceFromEntitlements(plan.lead_entitlements,Number(plan.billing_months||1))
+    }))
+  }
+}
+function ruleFromItem(item,plans){
+  const base=defaultRule(String(item.plan_group||'grow').toLowerCase(),plans)
+  const stored=Array.isArray(item.period_overrides)?item.period_overrides:[]
+  const byMonths=new Map(stored.map(period=>[Number(period.billingMonths??period.billing_months??period.months),period]))
+  return{
+    ...base,
+    name:item.name||'',
+    planGroup:String(item.plan_group||'grow').toLowerCase(),
+    audienceScope:item.audience_scope||'all',
+    verificationScope:item.verification_scope||'any',
+    userIds:(Array.isArray(item.selected_users)?item.selected_users:[]).map(user=>Number(user.id)),
+    industryId:item.industry_id||'',
+    stateId:item.state_id||'',
+    cityId:item.city_id||'',
+    priority:Number(item.priority||100),
+    isActive:item.is_active!==false,
+    notes:item.notes||'',
+    periodOverrides:base.periodOverrides.map(period=>{
+      const saved=byMonths.get(Number(period.billingMonths))
+      if(!saved)return period
+      return{
+        billingMonths:Number(period.billingMonths),
+        label:saved.label||period.label,
+        enabled:saved.enabled!==false,
+        price:Number(saved.price??period.price),
+        allowances:allowanceFromEntitlements(saved.leadEntitlements??saved.lead_entitlements,Number(period.billingMonths))
+      }
+    })
+  }
+}
+function locationLabel(item){
+  return item.city_name||item.state_name||'All locations'
+}
+function ruleAudienceLabel(item){
+  return item.audience_scope==='specific_users'
+    ?`${Array.isArray(item.selected_users)?item.selected_users.length:0} selected businesses`
+    :'All business users'
+}
+function entitlementSummary(items=[]){
+  const allowance=allowanceFromEntitlements(items,1)
+  const parts=[]
+  if(allowance.shared.monthly)parts.push(`${allowance.shared.monthly} Basic/mo`)
+  if(allowance.premium.monthly)parts.push(`${allowance.premium.monthly} Premium/mo`)
+  if(allowance.exclusive.monthly)parts.push(`${allowance.exclusive.monthly} Exclusive/mo`)
+  return parts.join(' · ')||'No leads'
 }
 
-export default function AdminMembershipPlansConfig() {
-  const [tab, setTab] = useState('grow');
-  const [plans, setPlans] = useState([]);
-  const [form, setForm] = useState(freshForm('grow'));
-  const [investor, setInvestor] = useState(null);
-  const [states, setStates] = useState([]);
-  const [cities, setCities] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-
-  async function req(path, options = {}) {
-    return apiRequest(path, options);
+function LeadAllowanceGrid({value,months,onChange}){
+  const setValue=(type,field,next)=>{
+    const current={...value,[type]:{...(value?.[type]||{monthly:0,total:0}),[field]:Math.max(0,Number(next)||0)}}
+    if(field==='monthly'){
+      current[type].total=Math.max(current[type].total,current[type].monthly*Math.max(1,Number(months)||1))
+    }
+    onChange(current)
   }
-  async function load() {
-    setLoading(true);
-    try {
-      const [membershipPlans, investorSettings, stateData, cityData] = await Promise.all([
+  return <div className="membership-lead-allowance-grid">
+    {LEAD_TYPES.map(type=><div className="membership-lead-allowance-row" key={type.key}>
+      <div><strong>{type.label}</strong><small>Complimentary leads</small></div>
+      <label>Monthly<input type="number" min="0" value={value?.[type.key]?.monthly??0} onChange={e=>setValue(type.key,'monthly',e.target.value)}/></label>
+      <label>Cycle total<input type="number" min="0" value={value?.[type.key]?.total??0} onChange={e=>setValue(type.key,'total',e.target.value)}/></label>
+    </div>)}
+  </div>
+}
+
+export default function AdminMembershipPlansConfig(){
+  const [plans,setPlans]=useState([])
+  const [pricingRules,setPricingRules]=useState([])
+  const [investor,setInvestor]=useState(null)
+  const [industries,setIndustries]=useState([])
+  const [states,setStates]=useState([])
+  const [cities,setCities]=useState([])
+  const [loading,setLoading]=useState(true)
+  const [saving,setSaving]=useState('')
+  const [error,setError]=useState('')
+  const [message,setMessage]=useState('')
+
+  const [packageEditor,setPackageEditor]=useState(null)
+  const [form,setForm]=useState(freshPackage('grow'))
+
+  const [ruleEditorOpen,setRuleEditorOpen]=useState(false)
+  const [editingRule,setEditingRule]=useState(null)
+  const [rule,setRule]=useState(defaultRule('grow',[]))
+  const [businessSearch,setBusinessSearch]=useState('')
+  const [businessResults,setBusinessResults]=useState([])
+  const [selectedBusinesses,setSelectedBusinesses]=useState([])
+
+  const [investorEditorOpen,setInvestorEditorOpen]=useState(false)
+
+  const req=(path,options={})=>apiRequest(path,options)
+
+  async function load(){
+    setLoading(true)
+    try{
+      const [membershipPlans,rules,investorSettings,industryData,stateData,cityData]=await Promise.all([
         req('/membership-plans'),
+        req('/membership-plans/rules'),
         req('/admin/commercial/investor-settings'),
+        req('/industries'),
         req('/states'),
-        req('/cities'),
-      ]);
-      setPlans(Array.isArray(membershipPlans) ? membershipPlans : []);
-      setInvestor(investorSettings);
-      setStates(Array.isArray(stateData) ? stateData : []);
-      setCities(Array.isArray(cityData) ? cityData : []);
-      setError('');
-    } catch (e) { setError(e.message); } finally { setLoading(false); }
+        req('/cities')
+      ])
+      setPlans(Array.isArray(membershipPlans)?membershipPlans:[])
+      setPricingRules(Array.isArray(rules)?rules:[])
+      setInvestor(investorSettings)
+      setIndustries(Array.isArray(industryData)?industryData:[])
+      setStates(Array.isArray(stateData)?stateData:[])
+      setCities(Array.isArray(cityData)?cityData:[])
+      setError('')
+    }catch(e){
+      setError(e.message||'Failed to load membership settings')
+    }finally{
+      setLoading(false)
+    }
   }
-  useEffect(() => { let active=true; queueMicrotask(()=>{if(active)load()}); return()=>{active=false}; }, []);
-  useEffect(() => { if (tab === 'grow' || tab === 'scale') setForm(formFromPackage(tab, plans)); }, [tab, plans]);
+  useEffect(()=>{let active=true;queueMicrotask(()=>{if(active)load()});return()=>{active=false}},[])
 
-  const setField = (key, value) => setForm(current => ({ ...current, [key]: value }));
-  const setPricing = (key, field, value) => setForm(current => ({ ...current, pricing: { ...current.pricing, [key]: { ...current.pricing[key], [field]: value } } }));
-  const setPeriod = (key, field, value) => setForm(current => ({ ...current, periods: current.periods.map(p => p.key === key ? { ...p, [field]: value } : p) }));
-  const setLead = (periodKey, index, field, value) => setForm(current => ({ ...current, periods: current.periods.map(p => p.key !== periodKey ? p : { ...p, leadEntitlements: p.leadEntitlements.map((x, i) => i === index ? { ...x, [field]: value } : x) }) }));
-  const syncLeadTotal = (period, lead) => Math.max(0, Number(lead?.monthly_quantity ?? lead?.quantity ?? 0)) * Math.max(1, Number(period.months || 1));
-  const updateLeadMonthly = (periodKey, index, value) => setForm(current => ({ ...current, periods: current.periods.map(p => p.key !== periodKey ? p : { ...p, leadEntitlements: p.leadEntitlements.map((x, i) => i === index ? { ...x, monthly_quantity: value, period_total_quantity: syncLeadTotal(p, { ...x, monthly_quantity: value }) } : x) }) }));
-  const addLead = periodKey => setForm(current => ({ ...current, periods: current.periods.map(p => p.key !== periodKey ? p : { ...p, leadEntitlements: [...p.leadEntitlements, { type: 'shared', monthly_quantity: 1, period_total_quantity: Number(p.months || 1), complimentary: true }] }) }));
-  const removeLead = (periodKey, index) => setForm(current => ({ ...current, periods: current.periods.map(p => p.key !== periodKey ? p : { ...p, leadEntitlements: p.leadEntitlements.filter((_, i) => i !== index) }) }));
-  function addCycle() {
-    const value = prompt('Cycle name');
-    if (!value?.trim()) return;
-    const months = Number(prompt('Number of months', '6'));
-    if (!Number.isFinite(months) || months <= 0) return;
-    const key = `${slug(value)}-${Date.now()}`;
-    setForm(current => ({ ...current, periods: [...current.periods, { key, label: value.trim(), months, enabled: true, leadEntitlements: DEFAULT_LEADS.map(x => ({ ...x, period_total_quantity: x.monthly_quantity * months })) }], pricing: { ...current.pricing, [key]: { discount: 0, price: '', customPrice: false } } }));
+  const anyModal=Boolean(packageEditor||ruleEditorOpen||investorEditorOpen)
+  useEffect(()=>{
+    if(!anyModal)return undefined
+    const previous=document.body.style.overflow
+    document.body.style.overflow='hidden'
+    const onKey=event=>{
+      if(event.key!=='Escape'||saving)return
+      setPackageEditor(null)
+      setRuleEditorOpen(false)
+      setInvestorEditorOpen(false)
+    }
+    window.addEventListener('keydown',onKey)
+    return()=>{document.body.style.overflow=previous;window.removeEventListener('keydown',onKey)}
+  },[anyModal,saving])
+
+  useEffect(()=>{
+    if(!ruleEditorOpen||rule.audienceScope!=='specific_users')return
+    let active=true
+    const timer=setTimeout(async()=>{
+      try{
+        const query=new URLSearchParams({search:businessSearch})
+        const response=await req(`/membership-plans/rules/businesses?${query}`)
+        if(active)setBusinessResults(Array.isArray(response)?response:Array.isArray(response?.data)?response.data:[])
+      }catch(e){
+        if(active)setError(e.message||'Failed to load businesses')
+      }
+    },220)
+    return()=>{active=false;clearTimeout(timer)}
+  },[ruleEditorOpen,rule.audienceScope,businessSearch])
+
+  const growPlans=useMemo(()=>planGroup(plans,'grow'),[plans])
+  const scalePlans=useMemo(()=>planGroup(plans,'scale'),[plans])
+  const activeRules=pricingRules.filter(item=>item.is_active!==false)
+  const targetedCycles=pricingRules.reduce((sum,item)=>sum+(Array.isArray(item.period_overrides)?item.period_overrides.filter(period=>period.enabled!==false).length:0),0)
+
+  const setField=(key,value)=>setForm(current=>({...current,[key]:value}))
+  const setPricing=(key,field,value)=>setForm(current=>({...current,pricing:{...current.pricing,[key]:{...current.pricing[key],[field]:value}}}))
+  const setPeriod=(key,field,value)=>setForm(current=>({...current,periods:current.periods.map(period=>period.key===key?{...period,[field]:value}:period)}))
+  const setPeriodAllowance=(key,value)=>setForm(current=>({...current,periods:current.periods.map(period=>period.key===key?{...period,allowances:value}:period)}))
+  const priceFor=period=>{
+    const base=Number(form.monthlyBasePrice||0)*Number(period.months||1)
+    const cfg=form.pricing[period.key]||{}
+    const discounted=base*(1-Number(cfg.discount||0)/100)
+    const final=cfg.customPrice&&cfg.price!==''?Number(cfg.price):discounted
+    return{base,final,saving:Math.max(0,base-final)}
   }
-  function removeCycle(key) { setForm(current => ({ ...current, periods: current.periods.filter(p => p.key !== key), pricing: Object.fromEntries(Object.entries(current.pricing).filter(([k]) => k !== key)) })); }
-  const priceFor = period => { const base = Number(form.monthlyBasePrice || 0) * Number(period.months || 1); const cfg = form.pricing[period.key] || {}; const discounted = base * (1 - Number(cfg.discount || 0) / 100); const final = cfg.customPrice && cfg.price !== '' ? Number(cfg.price) : discounted; return { final, saving: Math.max(0, base - final), base }; };
-  function switchPlanTab(next) { setTab(next); setError(''); }
-
-  async function create(e) {
-    e.preventDefault(); setError('');
-    try {
-      const activePeriods = form.periods.filter(p => p.enabled !== false && Number(p.months) > 0);
-      if (!activePeriods.length) { setError('Enable at least one billing cycle.'); return; }
-      const periods = activePeriods.map(p => ({ ...p, months: Number(p.months), leadEntitlements: p.leadEntitlements.map(x => ({ ...x, monthly_quantity: Number(x.monthly_quantity || 0), period_total_quantity: Number(x.period_total_quantity || 0), quantity: Number(x.monthly_quantity || 0) })) }));
-      await req('/membership-plans', { method: 'POST', body: JSON.stringify({ name: form.name.trim(), planGroup: form.name.trim(), planType: 'pro', bundle: true, monthlyBasePrice: Number(form.monthlyBasePrice || 0), benefits: form.benefits, addOns: form.addOns, leadRolloverEnabled: true, leadExpiryDays: null, periods, pricing: Object.fromEntries(periods.map(p => [p.key, { discount: Number(form.pricing[p.key]?.discount || 0), price: form.pricing[p.key]?.price || '', customPrice: Boolean(form.pricing[p.key]?.customPrice) }])) }) });
-      await load();
-    } catch (e) { setError(e.message); }
+  function addCycle(){
+    const label=window.prompt('Billing cycle name')
+    if(!label?.trim())return
+    const months=Number(window.prompt('Number of months','6'))
+    if(!Number.isFinite(months)||months<=0)return
+    const key=`${slug(label)}-${Date.now()}`
+    setForm(current=>({
+      ...current,
+      periods:[...current.periods,{key,label:label.trim(),months,enabled:true,allowances:allowanceFromEntitlements([],months)}],
+      pricing:{...current.pricing,[key]:{discount:0,price:'',customPrice:false}}
+    }))
+  }
+  function removeCycle(key){
+    setForm(current=>({
+      ...current,
+      periods:current.periods.filter(period=>period.key!==key),
+      pricing:Object.fromEntries(Object.entries(current.pricing).filter(([pricingKey])=>pricingKey!==key))
+    }))
+  }
+  function addFeature(){
+    const value=window.prompt('Feature name')
+    if(value?.trim())setField('benefits',[...form.benefits,value.trim()])
   }
 
-  async function saveInvestor(e) {
-    e.preventDefault(); setError('');
-    try {
-      await req('/admin/commercial/investor-settings', { method: 'PUT', body: JSON.stringify({
-        globalLimit: Number(investor.global_limit || 0),
-        defaultIndustryLimit: Number(investor.default_industry_limit || 0),
-        customerIndustryLimit: Number(investor.customer_industry_limit ?? 10),
-        minInvestment: Number(investor.min_investment || 0),
-        maxInvestment: investor.max_investment === '' ? null : investor.max_investment,
-        enabled: Boolean(investor.enabled),
-        requiresPro: true,
-        industryLimits: investor.industryLimits || [],
-      }) });
-      await load();
-    } catch (e) { setError(e.message); }
+  function openPackage(key){
+    setPackageEditor(key)
+    setForm(formFromPackage(key,plans))
+    setError('')
+    setMessage('')
+  }
+  function closePackage(){
+    if(saving)return
+    setPackageEditor(null)
+  }
+  async function savePackage(event){
+    event.preventDefault()
+    const activePeriods=form.periods.filter(period=>period.enabled!==false&&Number(period.months)>0)
+    if(!activePeriods.length)return setError('Enable at least one billing cycle.')
+    try{
+      setSaving('package')
+      setError('')
+      setMessage('')
+      const periods=activePeriods.map(period=>({
+        ...period,
+        months:Number(period.months),
+        leadEntitlements:entitlementsFromAllowance(period.allowances,period.months)
+      }))
+      await req('/membership-plans',{
+        method:'POST',
+        body:JSON.stringify({
+          name:form.name.trim(),
+          planGroup:form.name.trim(),
+          planType:'pro',
+          bundle:true,
+          monthlyBasePrice:Number(form.monthlyBasePrice||0),
+          benefits:form.benefits,
+          addOns:form.addOns,
+          leadRolloverEnabled:true,
+          leadExpiryDays:null,
+          periods,
+          pricing:Object.fromEntries(periods.map(period=>[period.key,{
+            discount:Number(form.pricing[period.key]?.discount||0),
+            price:form.pricing[period.key]?.price||'',
+            customPrice:Boolean(form.pricing[period.key]?.customPrice)
+          }]))
+        })
+      })
+      setMessage(`${form.name} package saved.`)
+      setPackageEditor(null)
+      await load()
+    }catch(e){
+      setError(e.message||'Failed to save membership package')
+    }finally{
+      setSaving('')
+    }
   }
 
-  const updateIndustry = (index, field, value) => setInvestor(current => ({
+  function openCreateRule(group='grow'){
+    setEditingRule(null)
+    setRule(defaultRule(group,plans))
+    setSelectedBusinesses([])
+    setBusinessSearch('')
+    setBusinessResults([])
+    setRuleEditorOpen(true)
+    setError('')
+    setMessage('')
+  }
+  function openEditRule(item){
+    const selected=Array.isArray(item.selected_users)?item.selected_users:[]
+    setEditingRule(item)
+    setRule(ruleFromItem(item,plans))
+    setSelectedBusinesses(selected)
+    setBusinessSearch('')
+    setBusinessResults([])
+    setRuleEditorOpen(true)
+    setError('')
+    setMessage('')
+  }
+  function closeRule(){
+    if(saving)return
+    setRuleEditorOpen(false)
+    setEditingRule(null)
+    setSelectedBusinesses([])
+    setBusinessSearch('')
+    setBusinessResults([])
+  }
+  function changeRuleGroup(group){
+    const next=defaultRule(group,plans)
+    setRule(current=>({...next,name:current.name,audienceScope:current.audienceScope,verificationScope:current.verificationScope,userIds:current.userIds,industryId:current.industryId,stateId:current.stateId,cityId:current.cityId,priority:current.priority,isActive:current.isActive,notes:current.notes}))
+  }
+  function setRulePeriod(index,field,value){
+    setRule(current=>({...current,periodOverrides:current.periodOverrides.map((period,i)=>i===index?{...period,[field]:value}:period)}))
+  }
+  function setRuleAllowance(index,value){
+    setRule(current=>({...current,periodOverrides:current.periodOverrides.map((period,i)=>i===index?{...period,allowances:value}:period)}))
+  }
+  function toggleBusiness(item){
+    const id=Number(item.id)
+    const exists=rule.userIds.includes(id)
+    setRule(current=>({...current,userIds:exists?current.userIds.filter(value=>value!==id):[...current.userIds,id]}))
+    setSelectedBusinesses(current=>exists?current.filter(user=>Number(user.id)!==id):[...current,item])
+  }
+  async function saveRule(){
+    if(!rule.name.trim())return setError('Give this pricing rule a name.')
+    if(rule.audienceScope==='specific_users'&&!rule.userIds.length)return setError('Choose at least one business.')
+    if(!rule.periodOverrides.some(period=>period.enabled!==false))return setError('Enable at least one billing cycle.')
+    try{
+      setSaving(editingRule?`rule-${editingRule.id}`:'rule-create')
+      setError('')
+      setMessage('')
+      const body={
+        ...rule,
+        periodOverrides:rule.periodOverrides.map(period=>({
+          billingMonths:Number(period.billingMonths),
+          label:period.label,
+          enabled:period.enabled!==false,
+          price:Number(period.price||0),
+          leadEntitlements:entitlementsFromAllowance(period.allowances,period.billingMonths)
+        }))
+      }
+      if(editingRule){
+        await req(`/membership-plans/rules/${editingRule.id}`,{method:'PUT',body:JSON.stringify(body)})
+        setMessage('Membership pricing rule updated.')
+      }else{
+        await req('/membership-plans/rules',{method:'POST',body:JSON.stringify(body)})
+        setMessage('Membership pricing rule created.')
+      }
+      closeRule()
+      await load()
+    }catch(e){
+      setError(e.message||'Failed to save membership pricing rule')
+    }finally{
+      setSaving('')
+    }
+  }
+  async function deleteRule(item){
+    if(!window.confirm(`Delete membership pricing rule “${item.name}”? Existing purchased memberships keep their snapshotted price and lead allowance.`))return
+    try{
+      setSaving(`delete-rule-${item.id}`)
+      setError('')
+      setMessage('')
+      await req(`/membership-plans/rules/${item.id}`,{method:'DELETE'})
+      setMessage('Membership pricing rule deleted.')
+      await load()
+    }catch(e){
+      setError(e.message||'Failed to delete membership pricing rule')
+    }finally{
+      setSaving('')
+    }
+  }
+
+  const ruleCities=useMemo(()=>{
+    if(!rule.stateId)return cities
+    return cities.filter(city=>Number(city.state_id)===Number(rule.stateId))
+  },[cities,rule.stateId])
+
+  const updateIndustry=(index,field,value)=>setInvestor(current=>({
     ...current,
-    industryLimits: (current.industryLimits || []).map((item, i) => i === index ? { ...item, [field]: value } : item),
-  }));
-  const updateIndustryLocation = (industryIndex, locationIndex, field, value) => setInvestor(current => ({
+    industryLimits:(current.industryLimits||[]).map((item,i)=>i===index?{...item,[field]:value}:item)
+  }))
+  const citiesForState=stateId=>cities.filter(city=>Number(city.state_id)===Number(stateId))
+  const updateIndustryLocation=(industryIndex,locationIndex,field,value)=>setInvestor(current=>({
     ...current,
-    industryLimits: (current.industryLimits || []).map((industry, i) => i !== industryIndex ? industry : {
+    industryLimits:(current.industryLimits||[]).map((industry,i)=>i!==industryIndex?industry:{
       ...industry,
-      locations: (industry.locations || []).map((location, j) => j === locationIndex
-        ? { ...location, [field]: value, ...(field === 'state_id' ? { city_id: null } : {}) }
-        : location),
-    }),
-  }));
-  const addIndustryLocation = industryIndex => setInvestor(current => ({
+      locations:(industry.locations||[]).map((location,j)=>j===locationIndex?{...location,[field]:value,...(field==='state_id'?{city_id:null}:{})}:location)
+    })
+  }))
+  const addIndustryLocation=industryIndex=>setInvestor(current=>({
     ...current,
-    industryLimits: (current.industryLimits || []).map((industry, i) => i !== industryIndex ? industry : {
+    industryLimits:(current.industryLimits||[]).map((industry,i)=>i!==industryIndex?industry:{
       ...industry,
-      locations: [...(industry.locations || []), {
-        id: `new-${Date.now()}-${industryIndex}`,
-        state_id: states[0]?.id || '',
-        city_id: null,
-        investor_limit: 0,
-        is_active: true,
-      }],
-    }),
-  }));
-  const removeIndustryLocation = (industryIndex, locationIndex) => setInvestor(current => ({
+      locations:[...(industry.locations||[]),{id:`new-${Date.now()}-${industryIndex}`,state_id:states[0]?.id||'',city_id:null,investor_limit:0,is_active:true}]
+    })
+  }))
+  const removeIndustryLocation=(industryIndex,locationIndex)=>setInvestor(current=>({
     ...current,
-    industryLimits: (current.industryLimits || []).map((industry, i) => i !== industryIndex ? industry : {
+    industryLimits:(current.industryLimits||[]).map((industry,i)=>i!==industryIndex?industry:{
       ...industry,
-      locations: (industry.locations || []).filter((_, j) => j !== locationIndex),
-    }),
-  }));
-  const citiesForState = stateId => cities.filter(city => Number(city.state_id) === Number(stateId));
-  return <main className="commercial-page membership-config-page compact-membership-page">
+      locations:(industry.locations||[]).filter((_,j)=>j!==locationIndex)
+    })
+  }))
+  async function saveInvestor(event){
+    event.preventDefault()
+    try{
+      setSaving('investor')
+      setError('')
+      await req('/admin/commercial/investor-settings',{method:'PUT',body:JSON.stringify({
+        globalLimit:Number(investor.global_limit||0),
+        defaultIndustryLimit:Number(investor.default_industry_limit||0),
+        customerIndustryLimit:Number(investor.customer_industry_limit??10),
+        minInvestment:Number(investor.min_investment||0),
+        maxInvestment:investor.max_investment===''?null:investor.max_investment,
+        enabled:Boolean(investor.enabled),
+        requiresPro:true,
+        industryLimits:investor.industryLimits||[]
+      })})
+      setMessage('Investor settings saved.')
+      setInvestorEditorOpen(false)
+      await load()
+    }catch(e){
+      setError(e.message||'Failed to save investor settings')
+    }finally{
+      setSaving('')
+    }
+  }
+
+  function PackageCard({groupKey,groupPlans}){
+    const first=groupPlans[0]
+    const active=groupPlans.filter(plan=>plan.is_active!==false)
+    return <article className={`membership-package-card ${groupKey}`}>
+      <div className="membership-package-card-head">
+        <div><span>MEMBERSHIP PACKAGE</span><h3>{groupKey.toUpperCase()}</h3><small>{active.length} active billing cycle{active.length===1?'':'s'}</small></div>
+        <button type="button" onClick={()=>openPackage(groupKey)}>{groupPlans.length?'Edit package':'Create package'}</button>
+      </div>
+      <div className="membership-package-card-summary">
+        <div><span>Base / month</span><strong>{money(first?.monthly_base_price||0)}</strong></div>
+        <div><span>Features</span><strong>{Array.isArray(first?.benefits)?first.benefits.length:0}</strong></div>
+        <div><span>Pricing rules</span><strong>{pricingRules.filter(rule=>String(rule.plan_group).toLowerCase()===groupKey).length}</strong></div>
+      </div>
+      <div className="membership-package-cycles">
+        {active.length?active.map(plan=><div className="membership-cycle-summary" key={plan.id}>
+          <div><strong>{plan.billing_period||`${plan.billing_months}-month`}</strong><small>{plan.billing_months} month{Number(plan.billing_months)===1?'':'s'}</small></div>
+          <div><span>{money(plan.price)}</span><small>{entitlementSummary(plan.lead_entitlements)}</small></div>
+        </div>):<div className="membership-empty-inline">No active billing cycles.</div>}
+      </div>
+    </article>
+  }
+
+  return <main className="membership-admin-page">
     <section className="membership-admin-hero">
-      <div><span>MEMBERSHIP / PACKAGES</span><h1>Membership Packages</h1><p>Manage GROW and SCALE from one compact package editor. Service pricing is managed separately under Pricing → Service Pricing.</p></div>
+      <div>
+        <span>MEMBERSHIPS / PRICING & ENTITLEMENTS</span>
+        <h1>GROW & SCALE</h1>
+        <p>Manage base packages and targeted membership pricing from one place.</p>
+      </div>
       <div className="membership-admin-state"><span>2</span><div><strong>Packages</strong><small>GROW + SCALE</small></div></div>
     </section>
-    {error && <div className="error">{error}</div>}
-    <nav className="tabs membership-package-tabs"><button className={tab === 'grow' ? 'selected' : ''} onClick={() => switchPlanTab('grow')}>GROW</button><button className={tab === 'scale' ? 'selected' : ''} onClick={() => switchPlanTab('scale')}>SCALE</button><button className={tab === 'investor' ? 'selected' : ''} onClick={() => { setTab('investor'); setError(''); }}>Investor</button></nav>
 
-    {(tab === 'grow' || tab === 'scale') && <section className="create-card hero-card membership-single-card">
-      <div className="card-heading membership-package-head">
-        <div><span className="membership-kicker">MEMBERSHIP PACKAGE</span><h2>{tab === 'scale' ? 'SCALE' : 'GROW'}</h2><small>One editor controls package price, billing cycles, lead allowances and features.</small></div>
-        <div className="membership-package-summary"><span>BASE / MONTH</span><strong>{money(form.monthlyBasePrice)}</strong><small>{form.periods.filter(period=>period.enabled!==false).length} active cycle{form.periods.filter(period=>period.enabled!==false).length===1?'':'s'}</small></div>
+    <section className="membership-summary-grid">
+      <article><span>Packages</span><strong>2</strong><small>GROW + SCALE</small></article>
+      <article className="green"><span>Active cycles</span><strong>{growPlans.filter(p=>p.is_active!==false).length+scalePlans.filter(p=>p.is_active!==false).length}</strong><small>Customer billing options</small></article>
+      <article className="orange"><span>Pricing rules</span><strong>{pricingRules.length}</strong><small>{activeRules.length} active</small></article>
+      <article className="purple"><span>Targeted cycles</span><strong>{targetedCycles}</strong><small>Price + lead overrides</small></article>
+    </section>
+
+    {error&&<div className="membership-alert error">{error}</div>}
+    {message&&<div className="membership-alert success">{message}</div>}
+
+    <section className="membership-action-bar">
+      <button type="button" className="secondary" onClick={()=>openPackage('grow')}>Edit GROW</button>
+      <button type="button" className="secondary" onClick={()=>openPackage('scale')}>Edit SCALE</button>
+      <button type="button" className="primary" onClick={()=>openCreateRule('grow')}>＋ Create pricing rule</button>
+    </section>
+
+    <section className="membership-panel">
+      <div className="membership-panel-head">
+        <div><span>BASE PACKAGES</span><h2>Membership packages</h2></div>
+        <small>Base price · billing cycles · lead allowance · features</small>
       </div>
-      <form onSubmit={create}>
-        <div className="membership-base-row">
-          <div className="package-name-lock"><span>PACKAGE</span><strong>{form.name}</strong><small>Package name is fixed.</small></div>
-          <label>Base price / month ₹<input type="number" min="0" step="0.01" value={form.monthlyBasePrice} onChange={e => setField('monthlyBasePrice', e.target.value)} required /></label>
-        </div>
+      {loading?<div className="membership-empty">Loading memberships…</div>:<div className="membership-package-grid">
+        <PackageCard groupKey="grow" groupPlans={growPlans}/>
+        <PackageCard groupKey="scale" groupPlans={scalePlans}/>
+      </div>}
+    </section>
 
-        <div className="section-label cycle-heading"><div><b>Billing cycles</b><small>Enable only the cycles customers can buy.</small></div><button type="button" className="mini-action" onClick={addCycle}>＋ Add cycle</button></div>
-        <div className="pricing-grid membership-cycle-grid">{form.periods.map(period => { const price = priceFor(period); const cfg = form.pricing[period.key] || {}; return <div className={`pricing-box membership-cycle-card ${period.enabled ? '' : 'muted-box'}`} key={period.key}>
-          <div className="period-editor"><input className="cycle-toggle" type="checkbox" checked={period.enabled !== false} onChange={e => setPeriod(period.key, 'enabled', e.target.checked)} /><input className="period-name" value={period.label} onChange={e => setPeriod(period.key, 'label', e.target.value)} /><input className="months-input" type="number" min="1" value={period.months} onChange={e => setPeriod(period.key, 'months', Number(e.target.value || 1))} /><span className="months-label">mo</span>{!['monthly', 'quarterly', 'yearly'].includes(period.key) && <button type="button" className="remove-period" onClick={() => removeCycle(period.key)}>×</button>}</div>
-          <div className="membership-cycle-pricing"><label>Discount %<input type="number" min="0" max="100" step="0.01" value={cfg.discount || 0} onChange={e => setPricing(period.key, 'discount', e.target.value)} /></label><label className="check-row"><input type="checkbox" checked={Boolean(cfg.customPrice)} onChange={e => setPricing(period.key, 'customPrice', e.target.checked)} /> Custom price</label>{cfg.customPrice && <label>Final price ₹<input type="number" min="0" step="0.01" value={cfg.price} onChange={e => setPricing(period.key, 'price', e.target.value)} /></label>}<div className="live-price"><span>Customer pays</span><strong>{money(price.final)}</strong>{price.saving > 0 && <small>Save {money(price.saving)}</small>}</div></div>
-          <div className="period-leads"><div className="benefit-head"><b>Lead allowance</b><button type="button" className="mini-action" onClick={() => addLead(period.key)}>＋ Add</button></div>{period.leadEntitlements.length===0?<div className="membership-no-leads">No complimentary leads in this cycle.</div>:period.leadEntitlements.map((lead, index) => <div className="lead-row" key={index}><select value={lead.type} onChange={e => setLead(period.key, index, 'type', e.target.value)}><option value="shared">Shared</option><option value="premium">Premium</option><option value="exclusive">Exclusive</option></select><label>Monthly<input type="number" min="0" value={lead.monthly_quantity ?? lead.quantity ?? 0} onChange={e => updateLeadMonthly(period.key, index, e.target.value)} /></label><label>Total<input type="number" min="0" value={lead.period_total_quantity ?? syncLeadTotal(period, lead)} onChange={e => setLead(period.key, index, 'period_total_quantity', e.target.value)} /></label><label className="check-row"><input type="checkbox" checked={lead.complimentary !== false} onChange={e => setLead(period.key, index, 'complimentary', e.target.checked)} /> Free</label><button type="button" className="remove-lead" onClick={() => removeLead(period.key, index)}>×</button></div>)}</div>
-        </div>; })}</div>
+    <section className="membership-panel membership-rules-panel">
+      <div className="membership-panel-head">
+        <div><span>TARGETED PRICING</span><h2>Pricing & lead entitlement rules</h2></div>
+        <button type="button" onClick={()=>openCreateRule('grow')}>＋ Create rule</button>
+      </div>
+      {!pricingRules.length?<div className="membership-empty">No targeted membership rules yet. Base GROW and SCALE pricing applies to everyone.</div>
+        :<div className="membership-rule-grid">
+          {pricingRules.map(item=><article className={`membership-rule-card ${item.is_active?'active':'inactive'}`} key={item.id}>
+            <div className="membership-rule-card-head">
+              <div><span className={`membership-plan-chip ${String(item.plan_group).toLowerCase()}`}>{String(item.plan_group).toUpperCase()}</span><h3>{item.name}</h3></div>
+              <span className={`membership-rule-status ${item.is_active?'active':'inactive'}`}>{item.is_active?'Active':'Disabled'}</span>
+            </div>
+            <div className="membership-target-tags">
+              <span>{ruleAudienceLabel(item)}</span>
+              <span>{verifyLabel(item.verification_scope)}</span>
+              <span>{item.industry_name||'All industries'}</span>
+              <span>{locationLabel(item)}</span>
+            </div>
+            <div className="membership-rule-periods">
+              {(Array.isArray(item.period_overrides)?item.period_overrides:[]).filter(period=>period.enabled!==false).map(period=><div key={period.billingMonths??period.months}>
+                <span>{period.label||`${period.billingMonths??period.months}-month`}</span>
+                <strong>{money(period.price)}</strong>
+                <small>{entitlementSummary(period.leadEntitlements??period.lead_entitlements)}</small>
+              </div>)}
+            </div>
+            <div className="membership-rule-foot">
+              <small>Priority {Number(item.priority||0)}{item.notes?` · ${item.notes}`:''}</small>
+              <div><button type="button" onClick={()=>openEditRule(item)}>Edit</button><button type="button" className="danger" disabled={saving===`delete-rule-${item.id}`} onClick={()=>deleteRule(item)}>Delete</button></div>
+            </div>
+          </article>)}
+        </div>}
+    </section>
 
-        <div className="editor-section membership-feature-section"><div className="benefit-head"><div><b>Package features</b><small>Shown on the customer membership page.</small></div><button type="button" className="mini-action" onClick={() => { const value = prompt('Feature name'); if (value?.trim()) setField('benefits', [...form.benefits, value.trim()]); }}>＋ Add</button></div><div className="chips">{form.benefits.map((item, i) => <span key={i}>{item}<button type="button" onClick={() => setField('benefits', form.benefits.filter((_, n) => n !== i))}>×</button></span>)}</div></div>
-        <div className="membership-source-note"><span>Single source</span><p>GROW and SCALE package price, billing cycles, lead allowances and customer-facing features are managed only here.</p></div>
-        <div className="form-footer membership-save-row"><button className="primary create-btn" disabled={loading}>{loading?'Loading…':`Save ${form.name} package`}</button></div>
-      </form>
+    {investor&&<section className="membership-panel membership-investor-card">
+      <div className="membership-panel-head">
+        <div><span>INVESTOR ACCESS</span><h2>Investor limits</h2></div>
+        <button type="button" onClick={()=>setInvestorEditorOpen(true)}>Edit investor settings</button>
+      </div>
+      <div className="membership-investor-summary">
+        <div><span>Status</span><strong>{investor.enabled?'Enabled':'Disabled'}</strong></div>
+        <div><span>Customer / industry</span><strong>{Number(investor.customer_industry_limit??10)}</strong></div>
+        <div><span>Minimum</span><strong>{money(investor.min_investment)}</strong></div>
+        <div><span>Industries</span><strong>{(investor.industryLimits||[]).length}</strong></div>
+      </div>
     </section>}
 
-    {tab === 'investor' && investor && <section className="create-card hero-card"><div className="card-heading"><div><h2>Investor</h2><small>Configure capacity as Industry → Location → Limit</small></div><label className="switch-label"><input type="checkbox" checked={Boolean(investor.enabled)} onChange={e => setInvestor({ ...investor, enabled: e.target.checked })} /> Enabled</label></div><form onSubmit={saveInvestor}><div className="two"><label>Customer limit / industry<input type="number" min="0" value={investor.customer_industry_limit ?? 10} onChange={e => setInvestor({ ...investor, customer_industry_limit: e.target.value })} /></label><label>Minimum investment ₹<input type="number" min="0" value={investor.min_investment} onChange={e => setInvestor({ ...investor, min_investment: e.target.value })} /></label><label>Maximum investment ₹<input type="number" min="0" value={investor.max_investment ?? ''} placeholder="No maximum" onChange={e => setInvestor({ ...investor, max_investment: e.target.value })} /></label></div><div className="editor-section investor-hierarchy-section"><div className="benefit-head"><div><b>Industry → Location → Limit</b><small>Each industry's capacity is configured only through its locations. A state row can cover all cities, or a specific city can have its own limit.</small></div></div><div className="investor-hierarchy">{(investor.industryLimits || []).map((industry, industryIndex) => <div className="investor-industry-card" key={industry.id}><div className="investor-industry-head"><div><strong>{industry.name}</strong><small>{(industry.locations || []).length} location {(industry.locations || []).length === 1 ? 'rule' : 'rules'}</small></div><label className="check-row"><input type="checkbox" checked={industry.is_active !== false} onChange={e => updateIndustry(industryIndex, 'is_active', e.target.checked)} /> Active</label></div><div className="investor-location-list">{(industry.locations || []).length === 0 && <div className="empty investor-empty">No locations configured for this industry.</div>}{(industry.locations || []).map((location, locationIndex) => <div className="investor-location-row" key={location.id || `${industry.id}-${locationIndex}`}><label>Location<select value={location.state_id || ''} onChange={e => updateIndustryLocation(industryIndex, locationIndex, 'state_id', e.target.value)}><option value="">Select state</option>{states.map(state => <option key={state.id} value={state.id}>{state.name}</option>)}</select></label><label>City<select value={location.city_id ?? ''} disabled={!location.state_id} onChange={e => updateIndustryLocation(industryIndex, locationIndex, 'city_id', e.target.value || null)}><option value="">All cities</option>{citiesForState(location.state_id).map(city => <option key={city.id} value={city.id}>{city.name}</option>)}</select></label><label>Limit ₹<input type="number" min="0" step="0.01" value={location.investor_limit ?? 0} onChange={e => updateIndustryLocation(industryIndex, locationIndex, 'investor_limit', e.target.value)} /></label><label className="check-row"><input type="checkbox" checked={location.is_active !== false} onChange={e => updateIndustryLocation(industryIndex, locationIndex, 'is_active', e.target.checked)} /> Active</label><button type="button" className="remove-lead" onClick={() => removeIndustryLocation(industryIndex, locationIndex)}>×</button></div>)}</div><button type="button" className="mini-action" onClick={() => addIndustryLocation(industryIndex)}>＋ Add location to {industry.name}</button></div>)}</div></div><div className="form-footer"><button className="primary create-btn">Save Investor limits</button></div></form></section>}
-  </main>;
+    {packageEditor&&<div className="membership-modal-backdrop" onClick={closePackage}>
+      <form className="membership-modal membership-package-modal" onSubmit={savePackage} onClick={e=>e.stopPropagation()}>
+        <div className="membership-modal-head">
+          <div><span>BASE MEMBERSHIP PACKAGE</span><h2>{form.name}</h2><p>Base pricing is used when no targeted rule matches the business.</p></div>
+          <button type="button" onClick={closePackage}>×</button>
+        </div>
+        <div className="membership-modal-body">
+          <section className="membership-editor-section">
+            <div className="membership-editor-title"><span>01</span><div><strong>Package pricing</strong><small>Monthly base and billing cycles</small></div></div>
+            <div className="membership-base-fields">
+              <div className="membership-package-lock"><span>Package</span><strong>{form.name}</strong></div>
+              <label>Base price / month ₹<input type="number" min="0" step="0.01" required value={form.monthlyBasePrice} onChange={e=>setField('monthlyBasePrice',e.target.value)}/></label>
+            </div>
+            <div className="membership-editor-subhead"><strong>Billing cycles</strong><button type="button" onClick={addCycle}>＋ Add cycle</button></div>
+            <div className="membership-cycle-editor-grid">
+              {form.periods.map(period=>{
+                const cfg=form.pricing[period.key]||{}
+                const price=priceFor(period)
+                return <article className={`membership-cycle-editor ${period.enabled!==false?'':'disabled'}`} key={period.key}>
+                  <div className="membership-cycle-editor-head">
+                    <label className="membership-toggle"><input type="checkbox" checked={period.enabled!==false} onChange={e=>setPeriod(period.key,'enabled',e.target.checked)}/><span/></label>
+                    <input className="cycle-name" value={period.label} onChange={e=>setPeriod(period.key,'label',e.target.value)}/>
+                    <input className="cycle-months" type="number" min="1" value={period.months} onChange={e=>setPeriod(period.key,'months',Number(e.target.value||1))}/>
+                    <small>months</small>
+                    {!['monthly','quarterly','yearly'].includes(period.key)&&<button type="button" className="cycle-remove" onClick={()=>removeCycle(period.key)}>×</button>}
+                  </div>
+                  <div className="membership-cycle-price-row">
+                    <label>Discount %<input type="number" min="0" max="100" step="0.01" value={cfg.discount||0} onChange={e=>setPricing(period.key,'discount',e.target.value)}/></label>
+                    <label className="membership-check"><input type="checkbox" checked={Boolean(cfg.customPrice)} onChange={e=>setPricing(period.key,'customPrice',e.target.checked)}/> Custom final price</label>
+                    {cfg.customPrice&&<label>Final price ₹<input type="number" min="0" step="0.01" value={cfg.price} onChange={e=>setPricing(period.key,'price',e.target.value)}/></label>}
+                    <div className="membership-live-price"><span>Customer pays</span><strong>{money(price.final)}</strong>{price.saving>0&&<small>Save {money(price.saving)}</small>}</div>
+                  </div>
+                  <div className="membership-cycle-leads">
+                    <span>Lead allowance</span>
+                    <LeadAllowanceGrid value={period.allowances} months={period.months} onChange={value=>setPeriodAllowance(period.key,value)}/>
+                  </div>
+                </article>
+              })}
+            </div>
+          </section>
+          <section className="membership-editor-section">
+            <div className="membership-editor-title"><span>02</span><div><strong>Customer features</strong><small>Benefits shown on the membership page</small></div></div>
+            <div className="membership-feature-head"><div className="membership-feature-chips">{form.benefits.map((item,index)=><span key={`${item}-${index}`}>{item}<button type="button" onClick={()=>setField('benefits',form.benefits.filter((_,i)=>i!==index))}>×</button></span>)}</div><button type="button" onClick={addFeature}>＋ Add feature</button></div>
+          </section>
+        </div>
+        <div className="membership-modal-actions"><button type="button" onClick={closePackage}>Cancel</button><button className="primary" disabled={saving==='package'}>{saving==='package'?'Saving…':`Save ${form.name}`}</button></div>
+      </form>
+    </div>}
+
+    {ruleEditorOpen&&<div className="membership-modal-backdrop" onClick={closeRule}>
+      <div className="membership-modal membership-rule-modal" onClick={e=>e.stopPropagation()}>
+        <div className="membership-modal-head">
+          <div><span>TARGETED MEMBERSHIP RULE</span><h2>{editingRule?'Edit pricing rule':'Create pricing rule'}</h2><p>Override membership price and complimentary leads for matching businesses.</p></div>
+          <button type="button" onClick={closeRule}>×</button>
+        </div>
+        <div className="membership-modal-body">
+          <section className="membership-editor-section">
+            <div className="membership-editor-title"><span>01</span><div><strong>Rule & audience</strong><small>Choose who receives this membership offer</small></div></div>
+            <div className="membership-rule-form-grid">
+              <label className="wide">Rule name<input value={rule.name} onChange={e=>setRule(current=>({...current,name:e.target.value}))} placeholder="Hyderabad Interior GROW"/></label>
+              <label>Package<select value={rule.planGroup} onChange={e=>changeRuleGroup(e.target.value)}><option value="grow">GROW</option><option value="scale">SCALE</option></select></label>
+              <label>Audience<select value={rule.audienceScope} onChange={e=>setRule(current=>({...current,audienceScope:e.target.value,userIds:e.target.value==='all'?[]:current.userIds}))}><option value="all">All business users</option><option value="specific_users">Specific business users</option></select></label>
+              <label>Verification<select value={rule.verificationScope} onChange={e=>setRule(current=>({...current,verificationScope:e.target.value}))}><option value="any">Verified + Non-verified</option><option value="verified">Verified only</option><option value="unverified">Non-verified only</option></select></label>
+              <label>Industry<select value={rule.industryId} onChange={e=>setRule(current=>({...current,industryId:e.target.value}))}><option value="">All industries</option>{industries.map(item=><option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
+              <label>State<select value={rule.stateId} onChange={e=>setRule(current=>({...current,stateId:e.target.value,cityId:''}))}><option value="">All states</option>{states.map(item=><option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
+              <label>City<select value={rule.cityId} disabled={!rule.stateId} onChange={e=>setRule(current=>({...current,cityId:e.target.value}))}><option value="">All cities</option>{ruleCities.map(item=><option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
+              <label>Priority<input type="number" min="0" max="10000" value={rule.priority} onChange={e=>setRule(current=>({...current,priority:e.target.value}))}/><small>Higher priority wins when multiple rules match.</small></label>
+              <label className="membership-rule-active"><input type="checkbox" checked={rule.isActive} onChange={e=>setRule(current=>({...current,isActive:e.target.checked}))}/><span><strong>Active</strong><small>Matching customers can use this offer.</small></span></label>
+            </div>
+
+            {rule.audienceScope==='specific_users'&&<div className="membership-business-picker">
+              <label>Find businesses<input value={businessSearch} onChange={e=>setBusinessSearch(e.target.value)} placeholder="Search name, business, email or phone…"/></label>
+              {selectedBusinesses.length>0&&<div className="membership-selected-businesses">{selectedBusinesses.map(item=><button type="button" key={item.id} onClick={()=>toggleBusiness(item)}>{item.business_name||item.name}<b>×</b></button>)}</div>}
+              <div className="membership-business-results">{businessResults.map(item=>{
+                const selected=rule.userIds.includes(Number(item.id))
+                return <button type="button" className={selected?'selected':''} key={item.id} onClick={()=>toggleBusiness(item)}><span><strong>{item.business_name||item.name}</strong><small>{item.email}</small></span><b className={item.is_verified?'verified':'unverified'}>{item.is_verified?'Verified':'Not verified'}</b></button>
+              })}</div>
+            </div>}
+          </section>
+
+          <section className="membership-editor-section">
+            <div className="membership-editor-title"><span>02</span><div><strong>Price & lead entitlement</strong><small>Set the offer for each billing cycle</small></div></div>
+            <div className="membership-rule-period-editor">
+              {rule.periodOverrides.map((period,index)=><article className={period.enabled!==false?'':'disabled'} key={period.billingMonths}>
+                <div className="membership-rule-period-head">
+                  <label className="membership-toggle"><input type="checkbox" checked={period.enabled!==false} onChange={e=>setRulePeriod(index,'enabled',e.target.checked)}/><span/></label>
+                  <div><strong>{period.label}</strong><small>{period.billingMonths} month{Number(period.billingMonths)===1?'':'s'}</small></div>
+                  <label>Target price ₹<input type="number" min="0" step="0.01" value={period.price} onChange={e=>setRulePeriod(index,'price',e.target.value)}/></label>
+                </div>
+                <LeadAllowanceGrid value={period.allowances} months={period.billingMonths} onChange={value=>setRuleAllowance(index,value)}/>
+              </article>)}
+            </div>
+          </section>
+
+          <section className="membership-editor-section">
+            <div className="membership-editor-title"><span>03</span><div><strong>Internal note</strong><small>Optional context for Admins</small></div></div>
+            <textarea className="membership-rule-notes" rows="3" value={rule.notes} onChange={e=>setRule(current=>({...current,notes:e.target.value}))} placeholder="Why this pricing exists, campaign details, approval notes…"/>
+          </section>
+        </div>
+        <div className="membership-modal-actions"><button type="button" onClick={closeRule}>Cancel</button><button className="primary" type="button" disabled={Boolean(saving)} onClick={saveRule}>{saving?'Saving…':editingRule?'Save rule':'Create rule'}</button></div>
+      </div>
+    </div>}
+
+    {investorEditorOpen&&investor&&<div className="membership-modal-backdrop" onClick={()=>!saving&&setInvestorEditorOpen(false)}>
+      <form className="membership-modal membership-investor-modal" onSubmit={saveInvestor} onClick={e=>e.stopPropagation()}>
+        <div className="membership-modal-head"><div><span>INVESTOR SETTINGS</span><h2>Investment limits</h2><p>Configure customer and industry/location investment capacity.</p></div><button type="button" onClick={()=>!saving&&setInvestorEditorOpen(false)}>×</button></div>
+        <div className="membership-modal-body">
+          <section className="membership-editor-section">
+            <div className="membership-rule-form-grid">
+              <label>Customer limit / industry<input type="number" min="0" value={investor.customer_industry_limit??10} onChange={e=>setInvestor({...investor,customer_industry_limit:e.target.value})}/></label>
+              <label>Minimum investment ₹<input type="number" min="0" value={investor.min_investment} onChange={e=>setInvestor({...investor,min_investment:e.target.value})}/></label>
+              <label>Maximum investment ₹<input type="number" min="0" value={investor.max_investment??''} placeholder="No maximum" onChange={e=>setInvestor({...investor,max_investment:e.target.value})}/></label>
+              <label className="membership-rule-active"><input type="checkbox" checked={Boolean(investor.enabled)} onChange={e=>setInvestor({...investor,enabled:e.target.checked})}/><span><strong>Investor enabled</strong><small>Allow eligible members to invest.</small></span></label>
+            </div>
+          </section>
+          <section className="membership-editor-section">
+            <div className="membership-editor-title"><span>02</span><div><strong>Industry → Location → Limit</strong><small>State-wide or city-specific capacity</small></div></div>
+            <div className="membership-investor-hierarchy">{(investor.industryLimits||[]).map((industry,industryIndex)=><article key={industry.id}>
+              <div className="membership-investor-industry-head"><div><strong>{industry.name}</strong><small>{(industry.locations||[]).length} location rules</small></div><label><input type="checkbox" checked={industry.is_active!==false} onChange={e=>updateIndustry(industryIndex,'is_active',e.target.checked)}/> Active</label></div>
+              <div className="membership-investor-locations">{(industry.locations||[]).map((location,locationIndex)=><div key={location.id||`${industry.id}-${locationIndex}`}>
+                <label>State<select value={location.state_id||''} onChange={e=>updateIndustryLocation(industryIndex,locationIndex,'state_id',e.target.value)}><option value="">Select state</option>{states.map(state=><option key={state.id} value={state.id}>{state.name}</option>)}</select></label>
+                <label>City<select value={location.city_id??''} disabled={!location.state_id} onChange={e=>updateIndustryLocation(industryIndex,locationIndex,'city_id',e.target.value||null)}><option value="">All cities</option>{citiesForState(location.state_id).map(city=><option key={city.id} value={city.id}>{city.name}</option>)}</select></label>
+                <label>Investor slots<input type="number" min="0" step="0.01" value={location.investor_limit??0} onChange={e=>updateIndustryLocation(industryIndex,locationIndex,'investor_limit',e.target.value)}/></label>
+                <label className="membership-check"><input type="checkbox" checked={location.is_active!==false} onChange={e=>updateIndustryLocation(industryIndex,locationIndex,'is_active',e.target.checked)}/> Active</label>
+                <button type="button" onClick={()=>removeIndustryLocation(industryIndex,locationIndex)}>×</button>
+              </div>)}</div>
+              <button type="button" className="membership-add-location" onClick={()=>addIndustryLocation(industryIndex)}>＋ Add location</button>
+            </article>)}</div>
+          </section>
+        </div>
+        <div className="membership-modal-actions"><button type="button" onClick={()=>!saving&&setInvestorEditorOpen(false)}>Cancel</button><button className="primary" disabled={saving==='investor'}>{saving==='investor'?'Saving…':'Save investor settings'}</button></div>
+      </form>
+    </div>}
+  </main>
 }
