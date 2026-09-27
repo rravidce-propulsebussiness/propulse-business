@@ -96,3 +96,24 @@ export async function apiRequestBlob(path, options = {}, includeToken = true) {
 
   return response.blob()
 }
+
+
+export async function openApiBlob(path, options = {}) {
+  const popup = window.open('', '_blank')
+  if (!popup) {
+    const error = new Error('Allow pop-ups to view this proof.')
+    error.code = 'POPUP_BLOCKED'
+    throw error
+  }
+  try {
+    const blob = await apiRequestBlob(path, { timeoutMs: 30000, ...options })
+    if (!blob.size) throw new Error('Proof file is empty.')
+    const url = URL.createObjectURL(blob)
+    popup.location.replace(url)
+    window.setTimeout(() => URL.revokeObjectURL(url), 60000)
+    return true
+  } catch (error) {
+    popup.close()
+    throw error
+  }
+}
