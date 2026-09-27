@@ -445,6 +445,14 @@
   background:#f0f2f5;
   color:#7c8997;
 }
+.membership-rule-status.scheduled{
+  background:#eef3ff;
+  color:#4868a4;
+}
+.membership-rule-status.expired{
+  background:#fff1ed;
+  color:#9b5a46;
+}
 .membership-target-tags{
   display:flex;
   flex-wrap:wrap;
@@ -1122,6 +1130,20 @@
 .membership-offer-config-head small{
   display:block;
 }
+.membership-offer-config-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:12px;
+}
+.membership-offer-config-head>span{
+  max-width:52%;
+  color:#8a98a9;
+  font-size:5.8px;
+  font-weight:750;
+  line-height:1.45;
+  text-align:right;
+}
 .membership-offer-config-head strong{
   color:#315575;
   font-size:8px;
@@ -1167,6 +1189,35 @@
   font-size:5.9px;
   font-weight:650;
   line-height:1.4;
+}
+.membership-welcome-presets{
+  display:flex;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:5px;
+  margin-top:7px;
+}
+.membership-welcome-presets>span{
+  margin-right:2px;
+  color:#8392a4;
+  font-size:6px;
+  font-weight:900;
+}
+.membership-welcome-presets button{
+  min-height:25px;
+  padding:0 7px;
+  border:1px solid #d9e3ed;
+  border-radius:999px;
+  background:#fff;
+  color:#60778e;
+  font-size:6px;
+  font-weight:900;
+  cursor:pointer;
+}
+.membership-welcome-presets button.active{
+  border-color:#80a3c8;
+  background:#eef6ff;
+  color:#225b92;
 }
 .membership-validity-presets{
   display:flex;
@@ -1557,6 +1608,13 @@
   .membership-offer-grid,
   .membership-offer-grid.dates{
     grid-template-columns:1fr;
+  }
+  .membership-offer-config-head{
+    flex-direction:column;
+  }
+  .membership-offer-config-head>span{
+    max-width:none;
+    text-align:left;
   }
   .membership-rule-period-head{
     grid-template-columns:auto minmax(0,1fr);
