@@ -1,6 +1,7 @@
 import {useEffect,useEffectEvent,useRef,useState} from 'react';
 import {authRequest} from '../../utils/auth';
-import LeadImportDefaults,{EMPTY_IMPORT_DEFAULTS,applyImportDefaults,importDefaultsSummary,normalizeImportDefaults} from './LeadImportDefaults';
+import LeadImportDefaults from './LeadImportDefaults';
+import {EMPTY_IMPORT_DEFAULTS,applyImportDefaults,importDefaultsSummary,normalizeImportDefaults} from './leadImportDefaultsUtils';
 
 const STORAGE_KEY='propulse.admin.googleSheet.sources';
 const legacyKey='propulse.admin.googleSheet.url';
