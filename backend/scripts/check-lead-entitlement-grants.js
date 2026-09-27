@@ -7,6 +7,7 @@ const assert=(condition,message)=>{if(!condition)throw new Error(message)};
 
 const migration=read('src/database/migrations/2026-09-26-lead-entitlement-grants.sql');
 const accessMigration=read('src/database/migrations/2026-09-26-lead-entitlement-z-access-rules.sql');
+const ruleMigration=read('src/database/migrations/2026-09-27-lead-entitlement-registration-rules.sql');
 const grants=read('src/services/leadEntitlementGrantService.js');
 const entitlement=read('src/services/leadEntitlementService.js');
 const adminService=read('src/services/adminService.js');
@@ -26,6 +27,11 @@ const grantService=require('../src/services/leadEntitlementGrantService');
 assert(migration.includes('CREATE TABLE IF NOT EXISTS lead_entitlement_settings'),'Entitlement settings table must exist');
 assert(migration.includes('new_business_enabled BOOLEAN NOT NULL DEFAULT FALSE'),'New-business entitlement must be disabled by default');
 assert(migration.includes('new_business_window_days INTEGER NOT NULL DEFAULT 7'),'Default registration window must be seven days');
+assert(ruleMigration.includes('CREATE TABLE IF NOT EXISTS lead_entitlement_registration_rules'),'Targeted registration-rule table must exist');
+assert(ruleMigration.includes("verification_scope IN ('any','verified','unverified')"),'Registration rules must support verified, non-verified and any verification targets');
+assert(ruleMigration.includes('industry_id INTEGER REFERENCES industries'),'Registration rules must support industry targeting');
+assert(ruleMigration.includes('state_id INTEGER REFERENCES states')&&ruleMigration.includes('city_id INTEGER REFERENCES cities'),'Registration rules must support location targeting');
+assert(ruleMigration.includes('registration_rule_id INTEGER'),'Issued registration grants must retain their source rule');
 assert(migration.includes('CREATE TABLE IF NOT EXISTS lead_entitlement_grants'),'Lead entitlement grants table must exist');
 assert(migration.includes("WHERE source='new_business'"),'A partial unique index must enforce one welcome grant per business');
 assert(migration.includes('ALTER COLUMN membership_id DROP NOT NULL'),'Claims must support non-membership grants');
@@ -46,7 +52,11 @@ for(const column of [
 assert(accessMigration.includes('new_business_allow_exclusive BOOLEAN NOT NULL DEFAULT FALSE'),'Exclusive welcome override must default off');
 assert(accessMigration.includes('allow_exclusive BOOLEAN NOT NULL DEFAULT FALSE'),'Exclusive manual grant override must default off');
 
-assert(grants.includes("cpd.status='verified'"),'Grant eligibility must require a verified company proof');
+assert(grants.includes("cpd.status='verified'"),'Business context must detect verification status');
+assert(grants.includes("rule.verification_scope==='verified'")&&grants.includes("rule.verification_scope==='unverified'"),'Registration-rule matching must support verified and non-verified businesses');
+assert(grants.includes('business.industry_ids.includes(Number(rule.industry_id))'),'Registration rules must match business industries');
+assert(grants.includes('business.state_ids.includes(Number(rule.state_id))')&&grants.includes('business.city_ids.includes(Number(rule.city_id))'),'Registration rules must match business locations');
+assert(grants.includes('ruleSpecificity'),'Most-specific matching registration rule must win');
 assert(grants.includes("business.role!=='business'"),'Automatic entitlement must be restricted to business accounts');
 assert(grants.includes('registeredAt.getTime()+windowDays'),'Welcome expiry must be measured from registration time');
 assert(grants.includes("source='new_business' DO NOTHING"),'Welcome grant issuance must be idempotent');
@@ -54,12 +64,13 @@ assert(grants.includes("VALUES($1,'admin'"),'Manual Admin grants must have an ex
 assert(grants.includes('BUSINESS_NOT_VERIFIED'),'Manual grants must reject unverified businesses');
 assert(grants.includes('INVALID_ENTITLEMENT_ACCESS'),'Grants must reject configurations with no buyer-access type');
 assert(grants.includes('FOR UPDATE'),'Grant usage must lock active grant rows before claim consumption');
-assert(grants.includes('new_business_allow_single')&&grants.includes('new_business_allow_shared')&&grants.includes('new_business_allow_auto_release'),'Welcome settings must persist buyer-access rules');
-assert(grants.includes('new_business_allow_exclusive'),'Welcome settings must persist Exclusive Early Access permission');
+assert(grants.includes('allow_single,allow_shared,allow_auto_release,allow_exclusive'),'Registration rules and issued grants must persist buyer-access rules');
 assert(grants.includes('allow_single,allow_shared,allow_auto_release,allow_exclusive'),'Issued grants must snapshot their access rules');
 assert(grants.includes('async function updateGrant'),'Grant service must support entitlement edits');
 assert(grants.includes('async function deleteGrant'),'Grant service must support entitlement deletes');
-assert(grants.includes('async function deleteSettings'),'Grant service must support registration-rule deletes');
+assert(grants.includes('async function createRegistrationRule'),'Grant service must support multiple registration-rule creation');
+assert(grants.includes('async function updateRegistrationRule'),'Grant service must support registration-rule edits');
+assert(grants.includes('async function deleteRegistrationRule'),'Grant service must support registration-rule deletes');
 assert(grants.includes("grant.source==='admin'&&claimCount===0"),'Unused manual grants should be hard-deletable');
 assert(grants.includes("WHERE g.revoked_at IS NULL"),'Deleted/revoked grants must stay out of Recent entitlements');
 
@@ -84,16 +95,20 @@ assert(entitlement.includes("entitlementSource:'membership'"),'Membership entitl
 
 assert(adminService.includes('leadEntitlementGrantService.ensureNewBusinessGrant(updated.user_id, client)'),'Verified company proof approval must immediately issue an eligible welcome grant');
 assert(adminRoutes.includes("router.get('/lead-entitlements'"),'Admin entitlement overview route must exist');
-assert(adminRoutes.includes("router.put('/lead-entitlements/settings'"),'Admin entitlement settings route must exist');
+assert(adminRoutes.includes("router.post('/lead-entitlements/rules'"),'Admin registration-rule create route must exist');
 assert(adminRoutes.includes("router.post('/lead-entitlements/grants'"),'Admin manual grant route must exist');
 assert(adminRoutes.includes("router.put('/lead-entitlements/grants/:grantId'"),'Admin entitlement edit route must exist');
 assert(adminRoutes.includes("router.delete('/lead-entitlements/grants/:grantId'"),'Admin entitlement delete route must exist');
-assert(adminRoutes.includes("router.delete('/lead-entitlements/settings'"),'Admin registration-rule delete route must exist');
+assert(adminRoutes.includes("router.put('/lead-entitlements/rules/:ruleId'"),'Admin registration-rule edit route must exist');
+assert(adminRoutes.includes("router.delete('/lead-entitlements/rules/:ruleId'"),'Admin registration-rule delete route must exist');
 assert(adminController.includes('INVALID_ENTITLEMENT_ACCESS:400'),'Invalid access-rule selections must return HTTP 400');
 
 assert(app.includes('/admin/leads/entitlements'),'Admin Lead Entitlements page route must exist');
 assert(layout.includes("{to:'/admin/leads/entitlements',label:'Lead Entitlements'}"),'Lead Entitlements must appear inside Leads navigation');
-assert(page.includes('Create registration rule')&&page.includes('Create entitlement'),'Admin UI must expose compact create actions');
+assert(page.includes('＋ Registration rule')&&page.includes('＋ Business entitlement'),'Admin UI must expose separate compact rule and entitlement create actions');
+assert(page.includes('verificationScope')&&page.includes('Verified + Non-verified')&&page.includes('Non-verified only'),'Admin UI must expose verification targeting');
+assert(page.includes('All industries')&&page.includes('All states')&&page.includes('All cities'),'Admin UI must expose industry and location targeting');
+assert(page.includes('entitlement-card-grid'),'Recent entitlements must use flexible cards instead of the wide table');
 assert(page.includes('Single Buyer')&&page.includes('Shared')&&page.includes('Auto Release'),'Admin UI must expose all buyer-access strategy toggles');
 assert(page.includes('Exclusive Early Access'),'Admin UI must expose Exclusive Early Access override');
 assert(page.includes('Claimed access'),'Admin UI must expose claimed-access duration');
@@ -104,7 +119,8 @@ assert(page.includes('grant-access-tags'),'Grant history must display saved acce
 
 const resetArray=reset.slice(reset.indexOf('const RESET_TABLES=['),reset.indexOf('];',reset.indexOf('const RESET_TABLES=['))+2);
 assert(resetArray.includes("'lead_entitlement_grants'"),'Test reset must clear issued grants');
-assert(!resetArray.includes("'lead_entitlement_settings'"),'Test reset must preserve entitlement configuration');
+assert(!resetArray.includes("'lead_entitlement_settings'"),'Test reset must preserve legacy entitlement configuration');
+assert(!resetArray.includes("'lead_entitlement_registration_rules'"),'Test reset must preserve registration rules');
 
 assert(leads.includes("leadAccess.entitlementSource==='new_business'?'Welcome lead entitlement'"),'Marketplace must label welcome entitlements accurately');
 assert(leads.includes("leadAccess.entitlementSource==='admin'?'Propulse lead entitlement'"),'Marketplace must label manual entitlements accurately');
@@ -116,4 +132,4 @@ assert(marketplace.includes("ec.expires_at IS NULL OR ec.expires_at>=CURRENT_TIM
 assert(readService.includes("ec.expires_at IS NULL OR ec.expires_at>=CURRENT_TIMESTAMP")&&readService.includes("ec2.expires_at IS NULL OR ec2.expires_at>=CURRENT_TIMESTAMP"),'Lead counters must ignore expired entitlement claims');
 assert(accessStrategy.includes("expires_at IS NULL OR expires_at>=CURRENT_TIMESTAMP"),'Buyer-capacity close checks must ignore expired entitlement claims');
 
-console.log('Verified business lead entitlement and access-rule regression test passed.');
+console.log('Targeted registration-rule and lead entitlement regression test passed.');
