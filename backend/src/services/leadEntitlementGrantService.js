@@ -334,9 +334,67 @@ async function createManualGrant(input,adminId,client=pool){
   return result.rows[0];
 }
 
-async function revokeGrant(grantId,adminId,client=pool){
+async function updateGrant(grantId,input,adminId,client=pool){
   const id=int(grantId,1,2147483647,0);
   if(!id)fail('Invalid entitlement grant','INVALID_GRANT');
+
+  const current=(await client.query(`
+    SELECT g.*,
+           COUNT(c.id) FILTER(WHERE c.entitlement_type='shared')::int AS used_shared,
+           COUNT(c.id) FILTER(WHERE c.entitlement_type='premium')::int AS used_premium
+    FROM lead_entitlement_grants g
+    LEFT JOIN lead_entitlement_claims c ON c.grant_id=g.id
+    WHERE g.id=$1 AND g.revoked_at IS NULL
+    GROUP BY g.id
+  `,[id])).rows[0];
+  if(!current)fail('Entitlement grant not found','GRANT_NOT_FOUND');
+
+  const shared=int(input?.sharedQuantity,0,1000,number(current.shared_quantity));
+  const premium=int(input?.premiumQuantity,0,1000,number(current.premium_quantity));
+  const usedShared=number(current.used_shared);
+  const usedPremium=number(current.used_premium);
+  const validDays=int(input?.validDays,0,3650,current.expires_at?Math.max(0,Math.ceil((new Date(current.expires_at)-Date.now())/86400000)):0);
+  const claimExpiryDays=int(input?.claimExpiryDays,0,3650,number(current.claim_expiry_days));
+  const allowSingle=bool(input?.allowSingle,bool(current.allow_single,true));
+  const allowShared=bool(input?.allowShared,bool(current.allow_shared,true));
+  const allowAutoRelease=bool(input?.allowAutoRelease,bool(current.allow_auto_release,true));
+  const allowExclusive=bool(input?.allowExclusive,bool(current.allow_exclusive,false));
+  const notes=String(input?.notes??current.notes??'').trim().slice(0,1000);
+
+  if(shared<=0&&premium<=0)fail('Grant at least one Basic or Premium lead','INVALID_GRANT_QUANTITY');
+  if(shared<usedShared||premium<usedPremium)fail('Lead allowance cannot be lower than leads already claimed from this grant','INVALID_GRANT_QUANTITY');
+  if(!allowSingle&&!allowShared&&!allowAutoRelease)fail('Enable at least one buyer-access type','INVALID_ENTITLEMENT_ACCESS');
+
+  const expiresAt=validDays>0?new Date(Date.now()+validDays*86400000):null;
+  const result=await client.query(`
+    UPDATE lead_entitlement_grants
+    SET shared_quantity=$2,
+        premium_quantity=$3,
+        expires_at=$4,
+        claim_expiry_days=$5,
+        allow_single=$6,
+        allow_shared=$7,
+        allow_auto_release=$8,
+        allow_exclusive=$9,
+        notes=$10,
+        updated_at=CURRENT_TIMESTAMP
+    WHERE id=$1 AND revoked_at IS NULL
+    RETURNING *
+  `,[id,shared,premium,expiresAt,claimExpiryDays,allowSingle,allowShared,allowAutoRelease,allowExclusive,notes||null]);
+  if(!result.rows[0])fail('Entitlement grant not found','GRANT_NOT_FOUND');
+  return result.rows[0];
+}
+
+async function deleteGrant(grantId,adminId,client=pool){
+  const id=int(grantId,1,2147483647,0);
+  if(!id)fail('Invalid entitlement grant','INVALID_GRANT');
+
+  const claimCount=number((await client.query('SELECT COUNT(*)::int AS count FROM lead_entitlement_claims WHERE grant_id=$1',[id])).rows[0]?.count);
+  if(claimCount===0){
+    const deleted=(await client.query('DELETE FROM lead_entitlement_grants WHERE id=$1 RETURNING *',[id])).rows[0];
+    if(!deleted)fail('Entitlement grant not found','GRANT_NOT_FOUND');
+    return{...deleted,deleted:true};
+  }
 
   const result=await client.query(`
     UPDATE lead_entitlement_grants
@@ -348,10 +406,15 @@ async function revokeGrant(grantId,adminId,client=pool){
         END
     WHERE id=$1 AND revoked_at IS NULL
     RETURNING *
-  `,[id,`Revoked by admin #${adminId}`]);
+  `,[id,`Deleted by admin #${adminId}`]);
 
-  if(!result.rows[0])fail('Entitlement grant not found or already revoked','GRANT_NOT_FOUND');
-  return result.rows[0];
+  if(!result.rows[0])fail('Entitlement grant not found or already deleted','GRANT_NOT_FOUND');
+  return{...result.rows[0],deleted:true,retained_for_claim_history:true};
+}
+
+async function deleteSettings(adminId,client=pool){
+  const deleted=(await client.query('DELETE FROM lead_entitlement_settings WHERE id=1 RETURNING *')).rows[0]||null;
+  return{deleted:Boolean(deleted),previous:deleted,deleted_by:adminId||null};
 }
 
 async function getAdminOverview(client=pool){
@@ -364,10 +427,10 @@ async function getAdminOverview(client=pool){
             AND g.starts_at<=CURRENT_TIMESTAMP
             AND (g.expires_at IS NULL OR g.expires_at>CURRENT_TIMESTAMP)
         )::int AS active_grants,
-        COUNT(*) FILTER(WHERE g.source='new_business')::int AS welcome_grants,
-        COUNT(*) FILTER(WHERE g.source='admin')::int AS manual_grants,
-        COALESCE(SUM(g.shared_quantity),0)::int AS shared_granted,
-        COALESCE(SUM(g.premium_quantity),0)::int AS premium_granted,
+        COUNT(*) FILTER(WHERE g.source='new_business' AND g.revoked_at IS NULL)::int AS welcome_grants,
+        COUNT(*) FILTER(WHERE g.source='admin' AND g.revoked_at IS NULL)::int AS manual_grants,
+        COALESCE(SUM(g.shared_quantity) FILTER(WHERE g.revoked_at IS NULL),0)::int AS shared_granted,
+        COALESCE(SUM(g.premium_quantity) FILTER(WHERE g.revoked_at IS NULL),0)::int AS premium_granted,
         (
           SELECT COUNT(*)::int
           FROM lead_entitlement_claims c
@@ -387,8 +450,9 @@ async function getAdminOverview(client=pool){
       JOIN users u ON u.id=g.user_id
       LEFT JOIN business_profiles bp ON bp.user_id=u.id
       LEFT JOIN lead_entitlement_claims c ON c.grant_id=g.id
+      WHERE g.revoked_at IS NULL
       GROUP BY g.id,u.name,u.email,bp.business_name
-      ORDER BY g.created_at DESC,g.id DESC
+      ORDER BY COALESCE(g.updated_at,g.created_at) DESC,g.id DESC
       LIMIT 100
     `)
   ]);
@@ -398,5 +462,5 @@ async function getAdminOverview(client=pool){
 module.exports={
   getSettings,getVerifiedBusiness,ensureNewBusinessGrant,getActiveGrants,
   findAvailableGrant,getUserGrantSummary,updateSettings,listVerifiedBusinesses,
-  createManualGrant,revokeGrant,getAdminOverview,remainingFor,grantAllowsLead
+  createManualGrant,updateGrant,deleteGrant,deleteSettings,getAdminOverview,remainingFor,grantAllowsLead
 };
