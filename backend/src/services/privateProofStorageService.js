@@ -49,6 +49,30 @@ function resolveReference(reference){
   return filePath;
 }
 
+async function getProofDescriptor(reference,{maxBytes=DEFAULT_MAX_BYTES}={}){
+  const value=String(reference||'').trim();
+  if(!value)return null;
+  if(/^https?:\/\//i.test(value))return{externalUrl:value};
+  if(value.startsWith('data:')){
+    const match=value.match(DATA_URL);
+    if(!match)throw new Error('Stored proof data is unsupported');
+    const mime=match[1].toLowerCase()==='image/jpg'?'image/jpeg':match[1].toLowerCase();
+    const payload=match[2];
+    const bytes=byteLength(payload);
+    if(bytes<=0||bytes>Number(maxBytes||DEFAULT_MAX_BYTES))throw new Error('Stored proof file is invalid');
+    const buffer=Buffer.from(payload,'base64');
+    if(buffer.length!==bytes||!buffer.length)throw new Error('Stored proof data is invalid');
+    return{buffer,mime,size:buffer.length};
+  }
+  const filePath=resolveReference(value);
+  if(!filePath)throw new Error('Stored proof reference is unsupported');
+  const stat=await fsp.stat(filePath);
+  if(!stat.isFile()||stat.size<=0||stat.size>Number(maxBytes||DEFAULT_MAX_BYTES))throw new Error('Private proof file is invalid');
+  const mime=EXT_MIME[path.extname(filePath).toLowerCase()];
+  if(!mime)throw new Error('Private proof file type is unsupported');
+  return{filePath,mime,size:stat.size};
+}
+
 async function materializeProof(reference,{maxBytes=DEFAULT_MAX_BYTES}={}){
   const value=String(reference||'').trim();
   if(!value||value.startsWith('data:')||/^https?:\/\//i.test(value))return value||null;
@@ -69,4 +93,4 @@ async function removeStoredProof(reference){
   await fsp.unlink(filePath).catch(error=>{if(error?.code!=='ENOENT')throw error});
 }
 
-module.exports={storeDataUrl,materializeProof,removeStoredProof,privateReference,PREFIX};
+module.exports={storeDataUrl,materializeProof,getProofDescriptor,removeStoredProof,privateReference,PREFIX};
