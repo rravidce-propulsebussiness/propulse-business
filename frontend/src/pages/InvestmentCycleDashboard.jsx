@@ -21,13 +21,15 @@ export default function InvestmentCycleDashboard() {
   const load = async (initial = false) => {
     if (initial) setLoading(true)
     try {
-      const [cycleResult, investmentResult, rulesResult, accessResult, walletResult, accountResult] = await Promise.all([authRequest('/investments/cycle'), authRequest('/investments'), authRequest('/investments/rules'), authRequest('/investments/access'), authRequest('/wallet'), authRequest('/investor/payout-account')])
+      const [cycleResult, rulesResult, accessResult, walletResult, accountResult] = await Promise.all([authRequest('/investments/cycle'), authRequest('/investments/rules'), authRequest('/investments/access'), authRequest('/wallet'), authRequest('/investor/payout-account')])
       const candidate = cycleResult?.cycle || null
       const activeCycle = candidate && OPEN.has(st(candidate.status)) ? candidate : null
-      const fundsResult = activeCycle ? await authRequest(`/investments/funds?cycleId=${Number(activeCycle.id)}`) : null
+      const [investmentResult,fundsResult] = activeCycle
+        ? await Promise.all([authRequest(`/investments?cycleId=${Number(activeCycle.id)}`),authRequest(`/investments/funds?cycleId=${Number(activeCycle.id)}`)])
+        : [[],null]
       const investmentRows = list(investmentResult)
       setCycle(activeCycle)
-      setRows(activeCycle ? investmentRows.filter(r => Number(r?.cycle_id) === Number(activeCycle.id) && INVESTED.has(st(r?.status))) : [])
+      setRows(activeCycle ? investmentRows.filter(r => INVESTED.has(st(r?.status))) : [])
       setRules(list(rulesResult)); setAccess(accessResult || null); setWallet(walletResult || null); setFunds(fundsResult || null); setPayoutAccount(accountResult || null)
       if (activeCycle) setAutoInvestChoice(Boolean(activeCycle.auto_invest))
       setError('')
