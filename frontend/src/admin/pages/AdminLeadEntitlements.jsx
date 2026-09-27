@@ -10,6 +10,14 @@ const defaultAccessRules={
   allowAutoRelease:true,
   allowExclusive:false
 }
+const defaultGrant=()=>({
+  sharedQuantity:1,
+  premiumQuantity:0,
+  validDays:30,
+  claimExpiryDays:0,
+  notes:'',
+  ...defaultAccessRules
+})
 const hasBuyerAccess=value=>Boolean(value?.allowSingle||value?.allowShared||value?.allowAutoRelease)
 
 function SummaryCard({label,value,note,tone=''}) {
@@ -27,9 +35,7 @@ function AccessRules({value,onChange}){
     ['allowAutoRelease','Auto Release','1 → 2 → 3 buyer release leads']
   ]
   return <div className="entitlement-access-block">
-    <div className="entitlement-access-head">
-      <div><strong>Eligible buyer access</strong><span>Choose which lead access strategies these credits can claim.</span></div>
-    </div>
+    <div className="entitlement-access-head"><div><strong>Eligible buyer access</strong></div></div>
     <div className="entitlement-access-options">
       {options.map(([key,label,note])=><label className={value[key]?'active':''} key={key}>
         <input type="checkbox" checked={Boolean(value[key])} onChange={e=>onChange({...value,[key]:e.target.checked})}/>
@@ -38,10 +44,7 @@ function AccessRules({value,onChange}){
     </div>
     <label className={`entitlement-exclusive-option ${value.allowExclusive?'active':''}`}>
       <input type="checkbox" checked={Boolean(value.allowExclusive)} onChange={e=>onChange({...value,allowExclusive:e.target.checked})}/>
-      <span>
-        <strong>Allow Exclusive Early Access</strong>
-        <small>On: this entitlement can claim during the exclusive window even without Pro. Off: normal Pro Early Access rules apply.</small>
-      </span>
+      <span><strong>Exclusive Early Access</strong><small>Allow this entitlement during the exclusive window without Pro.</small></span>
     </label>
   </div>
 }
@@ -52,6 +55,12 @@ function grantAccessLabels(item){
   if(item.allow_shared!==false)labels.push('Shared')
   if(item.allow_auto_release!==false)labels.push('Auto Release')
   return labels
+}
+
+function remainingGrantDays(item){
+  if(!item?.expires_at)return 0
+  const days=Math.ceil((new Date(item.expires_at).getTime()-Date.now())/86400000)
+  return Math.max(1,Number.isFinite(days)?days:1)
 }
 
 export default function AdminLeadEntitlements(){
@@ -67,14 +76,8 @@ export default function AdminLeadEntitlements(){
   const [search,setSearch]=useState('')
   const [businesses,setBusinesses]=useState([])
   const [selectedBusiness,setSelectedBusiness]=useState(null)
-  const [grant,setGrant]=useState({
-    sharedQuantity:1,
-    premiumQuantity:0,
-    validDays:30,
-    claimExpiryDays:0,
-    notes:'',
-    ...defaultAccessRules
-  })
+  const [grant,setGrant]=useState(defaultGrant)
+  const [editingGrant,setEditingGrant]=useState(null)
   const [loading,setLoading]=useState(true)
   const [saving,setSaving]=useState('')
   const [message,setMessage]=useState('')
@@ -106,6 +109,7 @@ export default function AdminLeadEntitlements(){
   useEffect(()=>{load()},[])
 
   useEffect(()=>{
+    if(!manualEditorOpen||editingGrant)return
     let active=true
     const timer=setTimeout(async()=>{
       try{
@@ -115,7 +119,7 @@ export default function AdminLeadEntitlements(){
       }catch(e){if(active)setError(e.message||'Failed to search verified businesses')}
     },250)
     return()=>{active=false;clearTimeout(timer)}
-  },[search])
+  },[search,manualEditorOpen,editingGrant])
 
   async function saveSettings(){
     if(settings.newBusinessEnabled&&!hasBuyerAccess(settings)){
@@ -124,69 +128,107 @@ export default function AdminLeadEntitlements(){
     }
     try{
       setSaving('settings');setError('');setMessage('')
-      const saved=await authRequest('/admin/lead-entitlements/settings',{
-        method:'PUT',
-        body:JSON.stringify(settings)
-      })
-      setSettings({
-        newBusinessEnabled:Boolean(saved.new_business_enabled),
-        windowDays:Number(saved.new_business_window_days||7),
-        sharedQuantity:Number(saved.new_business_shared_quantity||0),
-        premiumQuantity:Number(saved.new_business_premium_quantity||0),
-        claimExpiryDays:Number(saved.claim_expiry_days||0),
-        allowSingle:saved.new_business_allow_single!==false,
-        allowShared:saved.new_business_allow_shared!==false,
-        allowAutoRelease:saved.new_business_allow_auto_release!==false,
-        allowExclusive:Boolean(saved.new_business_allow_exclusive)
-      })
-      setMessage('New verified business entitlement settings saved.')
+      await authRequest('/admin/lead-entitlements/settings',{method:'PUT',body:JSON.stringify(settings)})
+      setMessage('Registration entitlement saved.')
       await load()
       setRegistrationEditorOpen(false)
     }catch(e){setError(e.message||'Failed to save entitlement settings')}
     finally{setSaving('')}
   }
 
-  async function createGrant(){
-    if(!selectedBusiness)return setError('Choose a verified business first.')
-    if(!hasBuyerAccess(grant))return setError('Enable at least one buyer-access type: Single Buyer, Shared or Auto Release.')
+  async function deleteSettings(){
+    if(!window.confirm('Delete the registration entitlement rule? Existing grants already issued to businesses will remain.'))return
     try{
-      setSaving('grant');setError('');setMessage('')
-      await authRequest('/admin/lead-entitlements/grants',{
-        method:'POST',
-        body:JSON.stringify({...grant,userId:selectedBusiness.id})
-      })
-      setMessage(`Lead entitlement granted to ${selectedBusiness.business_name||selectedBusiness.name}.`)
-      setSelectedBusiness(null)
-      setSearch('')
-      setGrant({
-        sharedQuantity:1,
-        premiumQuantity:0,
-        validDays:30,
-        claimExpiryDays:0,
-        notes:'',
-        ...defaultAccessRules
-      })
+      setSaving('delete-settings');setError('');setMessage('')
+      await authRequest('/admin/lead-entitlements/settings',{method:'DELETE'})
+      setMessage('Registration entitlement deleted.')
+      setRegistrationEditorOpen(false)
       await load()
-      setManualEditorOpen(false)
-    }catch(e){setError(e.message||'Failed to grant lead entitlement')}
+    }catch(e){setError(e.message||'Failed to delete registration entitlement')}
     finally{setSaving('')}
   }
 
-  async function revoke(id){
-    if(!window.confirm('Revoke this entitlement grant? Already claimed leads will remain in the business account.'))return
+  function openCreateGrant(){
+    setEditingGrant(null)
+    setSelectedBusiness(null)
+    setSearch('')
+    setGrant(defaultGrant())
+    setError('')
+    setManualEditorOpen(true)
+  }
+
+  function openEditGrant(item){
+    setEditingGrant(item)
+    setSelectedBusiness({
+      id:item.user_id,
+      name:item.name,
+      business_name:item.business_name,
+      email:item.email
+    })
+    setSearch(item.business_name||item.name||'')
+    setGrant({
+      sharedQuantity:Number(item.shared_quantity||0),
+      premiumQuantity:Number(item.premium_quantity||0),
+      validDays:remainingGrantDays(item),
+      claimExpiryDays:Number(item.claim_expiry_days||0),
+      notes:item.notes||'',
+      allowSingle:item.allow_single!==false,
+      allowShared:item.allow_shared!==false,
+      allowAutoRelease:item.allow_auto_release!==false,
+      allowExclusive:Boolean(item.allow_exclusive)
+    })
+    setError('')
+    setManualEditorOpen(true)
+  }
+
+  function closeGrantEditor(){
+    setManualEditorOpen(false)
+    setEditingGrant(null)
+    setSelectedBusiness(null)
+    setSearch('')
+    setGrant(defaultGrant())
+  }
+
+  async function saveGrant(){
+    if(!editingGrant&&!selectedBusiness)return setError('Choose a verified business first.')
+    if(!hasBuyerAccess(grant))return setError('Enable at least one buyer-access type: Single Buyer, Shared or Auto Release.')
     try{
-      setSaving(`revoke-${id}`);setError('');setMessage('')
-      await authRequest(`/admin/lead-entitlements/grants/${id}/revoke`,{method:'PATCH',body:'{}'})
-      setMessage('Entitlement grant revoked.')
+      const action=editingGrant?`update-${editingGrant.id}`:'grant'
+      setSaving(action);setError('');setMessage('')
+      if(editingGrant){
+        await authRequest(`/admin/lead-entitlements/grants/${editingGrant.id}`,{
+          method:'PUT',
+          body:JSON.stringify(grant)
+        })
+        setMessage('Entitlement updated.')
+      }else{
+        await authRequest('/admin/lead-entitlements/grants',{
+          method:'POST',
+          body:JSON.stringify({...grant,userId:selectedBusiness.id})
+        })
+        setMessage('Entitlement created.')
+      }
+      closeGrantEditor()
       await load()
-    }catch(e){setError(e.message||'Failed to revoke entitlement grant')}
+    }catch(e){setError(e.message||'Failed to save lead entitlement')}
+    finally{setSaving('')}
+  }
+
+  async function deleteGrant(item){
+    if(!window.confirm(`Delete this entitlement for ${item.business_name||item.name}?`))return
+    try{
+      setSaving(`delete-${item.id}`);setError('');setMessage('')
+      await authRequest(`/admin/lead-entitlements/grants/${item.id}`,{method:'DELETE'})
+      setMessage('Entitlement deleted.')
+      if(editingGrant?.id===item.id)closeGrantEditor()
+      await load()
+    }catch(e){setError(e.message||'Failed to delete entitlement')}
     finally{setSaving('')}
   }
 
   const summary=data?.summary||{}
   const grants=Array.isArray(data?.grants)?data.grants:[]
   const savedRegistration=data?.settings||null
-  const selectedLabel=selectedBusiness?(selectedBusiness.business_name||selectedBusiness.name):''
   const registrationAccess=useMemo(()=>{
     if(!savedRegistration)return []
     const labels=[]
@@ -196,207 +238,165 @@ export default function AdminLeadEntitlements(){
     return labels
   },[savedRegistration])
   const recentEntitlements=useMemo(()=>{
-    const rows=grants.map(item=>({...item,kind:'grant',sort_at:item.created_at}))
+    const rows=grants.map(item=>({...item,kind:'grant',sort_at:item.updated_at||item.created_at}))
     if(savedRegistration?.updated_at)rows.push({
       id:'registration-policy',
       kind:'policy',
-      sort_at:savedRegistration.updated_at,
-      created_at:savedRegistration.updated_at
+      sort_at:savedRegistration.updated_at
     })
     return rows.sort((a,b)=>new Date(b.sort_at||0)-new Date(a.sort_at||0))
   },[grants,savedRegistration])
-  const welcomeDescription=useMemo(()=>{
-    const basic=Number(settings.sharedQuantity||0)
-    const premium=Number(settings.premiumQuantity||0)
-    const parts=[]
-    if(basic)parts.push(`${basic} Basic`)
-    if(premium)parts.push(`${premium} Premium`)
-    return parts.length?parts.join(' + '):'No lead quantity'
-  },[settings.sharedQuantity,settings.premiumQuantity])
+
+  const selectedLabel=selectedBusiness?(selectedBusiness.business_name||selectedBusiness.name):''
 
   return <main className="admin-lead-entitlements">
     <section className="entitlement-hero">
       <div className="entitlement-hero-copy">
         <span>LEAD OPERATIONS / ACCESS CONTROL</span>
         <h1>Lead Entitlements</h1>
-        <p>Control welcome credits, manual lead allowances, buyer-access eligibility and claim duration from one workspace.</p>
       </div>
       <div className={`entitlement-policy-status ${settings.newBusinessEnabled?'enabled':'disabled'}`}>
         <span className="entitlement-policy-icon"><i/></span>
-        <div>
-          <strong>{settings.newBusinessEnabled?'Welcome grants enabled':'Welcome grants disabled'}</strong>
-          <small>Manual grants remain available to verified businesses</small>
-        </div>
+        <div><strong>{settings.newBusinessEnabled?'Registration rule active':'Registration rule off'}</strong></div>
       </div>
     </section>
 
     <section className="entitlement-summary-grid">
-      <SummaryCard label="Active grants" value={summary.active_grants} note="Currently usable manual + welcome grants" tone="blue"/>
-      <SummaryCard label="Welcome grants" value={summary.welcome_grants} note="Issued once to eligible verified businesses" tone="green"/>
-      <SummaryCard label="Manual grants" value={summary.manual_grants} note="Entitlements issued directly by Admin" tone="orange"/>
-      <SummaryCard label="Basic granted" value={summary.shared_granted} note="Total Basic lead allowance"/>
-      <SummaryCard label="Premium granted" value={summary.premium_granted} note="Total Premium lead allowance" tone="purple"/>
-      <SummaryCard label="Claims used" value={summary.grant_claims} note="Leads claimed using these grants"/>
+      <SummaryCard label="Active grants" value={summary.active_grants} note="Currently usable" tone="blue"/>
+      <SummaryCard label="Welcome grants" value={summary.welcome_grants} note="Registration grants" tone="green"/>
+      <SummaryCard label="Manual grants" value={summary.manual_grants} note="Admin-created grants" tone="orange"/>
+      <SummaryCard label="Basic granted" value={summary.shared_granted} note="Basic allowance"/>
+      <SummaryCard label="Premium granted" value={summary.premium_granted} note="Premium allowance" tone="purple"/>
+      <SummaryCard label="Claims used" value={summary.grant_claims} note="Claims from grants"/>
     </section>
 
     {error&&<div className="entitlement-alert error">{error}</div>}
     {message&&<div className="entitlement-alert success">{message}</div>}
 
-    <section className="entitlement-panel welcome compact-entitlement-card">
-      <div className="entitlement-panel-head compact-entitlement-head">
-        <div>
-          <span>NEW VERIFIED BUSINESS</span>
-          <h2>Registration entitlement</h2>
-          <p>One-time lead credits for newly verified businesses during the configured registration window.</p>
-        </div>
-        <button className="entitlement-create-btn" type="button" onClick={()=>setRegistrationEditorOpen(v=>!v)}>
-          {registrationEditorOpen?'Close':savedRegistration?.updated_at?'Edit entitlement':'Create entitlement'}
-        </button>
-      </div>
-
-      <div className="entitlement-saved-summary">
-        <div className="saved-summary-main">
-          <span className={`saved-status-dot ${settings.newBusinessEnabled?'enabled':'disabled'}`}/>
-          <div>
-            <strong>{settings.newBusinessEnabled?'Registration entitlement enabled':'Registration entitlement disabled'}</strong>
-            <small>{welcomeDescription} · first {settings.windowDays} day{Number(settings.windowDays)===1?'':'s'} · claimed access {Number(settings.claimExpiryDays)===0?'lifetime':`${settings.claimExpiryDays} days`}</small>
-          </div>
-        </div>
-        <div className="saved-summary-meta">
-          <span>{savedRegistration?.updated_at?'Last saved':'Not saved yet'}</span>
-          <strong>{savedRegistration?.updated_at?formatDate(savedRegistration.updated_at):'—'}</strong>
-        </div>
-      </div>
-
-      {registrationEditorOpen&&<div className="entitlement-editor-shell">
-        <div className="entitlement-editor-top">
-          <label className="entitlement-toggle">
-            <input type="checkbox" checked={settings.newBusinessEnabled} onChange={e=>setSettings(v=>({...v,newBusinessEnabled:e.target.checked}))}/>
-            <span>{settings.newBusinessEnabled?'Enabled':'Disabled'}</span>
-          </label>
-        </div>
-
-        <div className="entitlement-form-grid welcome-grid">
-          <label>Registration window
-            <div className="entitlement-input-suffix"><input type="number" min="1" max="365" value={settings.windowDays} onChange={e=>setSettings(v=>({...v,windowDays:clamp(e.target.value,1,365)}))}/><span>days</span></div>
-          </label>
-          <label>Basic leads
-            <input type="number" min="0" max="1000" value={settings.sharedQuantity} onChange={e=>setSettings(v=>({...v,sharedQuantity:clamp(e.target.value,0,1000)}))}/>
-          </label>
-          <label>Premium leads
-            <input type="number" min="0" max="1000" value={settings.premiumQuantity} onChange={e=>setSettings(v=>({...v,premiumQuantity:clamp(e.target.value,0,1000)}))}/>
-          </label>
-          <label>Claimed lead access duration
-            <div className="entitlement-input-suffix"><input type="number" min="0" max="3650" value={settings.claimExpiryDays} onChange={e=>setSettings(v=>({...v,claimExpiryDays:clamp(e.target.value,0,3650)}))}/><span>{Number(settings.claimExpiryDays)===0?'Lifetime':'days'}</span></div>
-          </label>
-        </div>
-
-        <AccessRules value={settings} onChange={setSettings}/>
-
-        <div className="entitlement-info-strip">
-          <span>Verified only</span>
-          <span>One-time only</span>
-          <span>Window starts at registration</span>
-          <span>Buyer capacity and business profile matching still apply</span>
-        </div>
-
-        <div className="entitlement-actions editor-actions">
-          <button className="secondary" type="button" onClick={()=>setRegistrationEditorOpen(false)}>Cancel</button>
-          <button className="primary" onClick={saveSettings} disabled={saving==='settings'}>{saving==='settings'?'Saving…':'Save entitlement'}</button>
-        </div>
-      </div>}
+    <section className="entitlement-action-bar">
+      <button className="entitlement-action secondary" type="button" onClick={()=>setRegistrationEditorOpen(true)}>
+        {savedRegistration?.updated_at?'Edit registration rule':'Create registration rule'}
+      </button>
+      <button className="entitlement-action primary" type="button" onClick={openCreateGrant}>＋ Create entitlement</button>
     </section>
 
-    <section className="entitlement-panel manual compact-entitlement-card">
-      <div className="entitlement-panel-head compact-entitlement-head">
-        <div>
-          <span>MANUAL ENTITLEMENT</span>
-          <h2>Grant leads to a verified business</h2>
-          <p>Create an extra Basic or Premium entitlement only when a business needs one.</p>
-        </div>
-        <button className="entitlement-create-btn primary-create" type="button" onClick={()=>setManualEditorOpen(v=>!v)}>
-          {manualEditorOpen?'Close':'Create new grant'}
-        </button>
-      </div>
-
-      {!manualEditorOpen&&<div className="manual-entitlement-placeholder">
-        <div><span>＋</span><strong>No form open</strong><small>Use “Create new grant” when you want to issue an entitlement. Existing grants stay visible in Recent entitlements below.</small></div>
-      </div>}
-
-      {manualEditorOpen&&<div className="entitlement-editor-shell">
-        <div className="entitlement-business-picker">
-          <label>Find verified business
-            <input value={search} onChange={e=>{setSearch(e.target.value);setSelectedBusiness(null)}} placeholder="Search business name, user name or email…"/>
-          </label>
-          <div className="entitlement-business-results">
-            {businesses.slice(0,8).map(item=><button type="button" className={selectedBusiness?.id===item.id?'selected':''} onClick={()=>{setSelectedBusiness(item);setSearch(item.business_name||item.name)}} key={item.id}>
-              <span><strong>{item.business_name||item.name}</strong><small>{item.email}</small></span>
-              <b>{item.welcome_issued?'Welcome issued':'Verified'}</b>
-            </button>)}
-            {!businesses.length&&!loading&&<div className="entitlement-empty-search">No verified businesses match this search.</div>}
-          </div>
-        </div>
-
-        {selectedBusiness&&<div className="entitlement-selected-business"><span>Selected</span><strong>{selectedLabel}</strong><small>#{selectedBusiness.id} · {selectedBusiness.email}</small></div>}
-
-        <div className="entitlement-form-grid grant-grid">
-          <label>Basic leads<input type="number" min="0" max="1000" value={grant.sharedQuantity} onChange={e=>setGrant(v=>({...v,sharedQuantity:clamp(e.target.value,0,1000)}))}/></label>
-          <label>Premium leads<input type="number" min="0" max="1000" value={grant.premiumQuantity} onChange={e=>setGrant(v=>({...v,premiumQuantity:clamp(e.target.value,0,1000)}))}/></label>
-          <label>Grant valid for<div className="entitlement-input-suffix"><input type="number" min="0" max="3650" value={grant.validDays} onChange={e=>setGrant(v=>({...v,validDays:clamp(e.target.value,0,3650)}))}/><span>{Number(grant.validDays)===0?'No expiry':'days'}</span></div></label>
-          <label>Claimed lead access duration<div className="entitlement-input-suffix"><input type="number" min="0" max="3650" value={grant.claimExpiryDays} onChange={e=>setGrant(v=>({...v,claimExpiryDays:clamp(e.target.value,0,3650)}))}/><span>{Number(grant.claimExpiryDays)===0?'Lifetime':'days'}</span></div></label>
-          <label className="notes">Admin note<textarea rows="2" value={grant.notes} maxLength="1000" onChange={e=>setGrant(v=>({...v,notes:e.target.value}))} placeholder="Optional reason or campaign note"/></label>
-        </div>
-
-        <AccessRules value={grant} onChange={setGrant}/>
-
-        <div className="entitlement-actions editor-actions">
-          <button className="secondary" type="button" onClick={()=>setManualEditorOpen(false)}>Cancel</button>
-          <button className="primary" onClick={createGrant} disabled={!selectedBusiness||saving==='grant'}>{saving==='grant'?'Granting…':'Grant entitlement'}</button>
-        </div>
-      </div>}
-    </section>
-
-    <section className="entitlement-panel history">
+    <section className="entitlement-panel history entitlement-history-clean">
       <div className="entitlement-panel-head">
-        <div><span>ENTITLEMENT HISTORY</span><h2>Recent entitlements</h2><p>Saved registration policy changes and issued business grants are shown together here.</p></div>
+        <div><span>ENTITLEMENT HISTORY</span><h2>Recent entitlements</h2></div>
         <small>{recentEntitlements.length} shown</small>
       </div>
 
-      {loading?<div className="entitlement-empty">Loading entitlements…</div>:!recentEntitlements.length?<div className="entitlement-empty">No entitlement configuration or grants have been saved yet.</div>:<div className="entitlement-table-wrap">
+      {loading?<div className="entitlement-empty">Loading…</div>:!recentEntitlements.length?<div className="entitlement-empty">No entitlements yet.</div>:<div className="entitlement-table-wrap">
         <table className="entitlement-table">
-          <thead><tr><th>BUSINESS / RULE</th><th>SOURCE</th><th>BASIC</th><th>PREMIUM</th><th>ACCESS</th><th>VALIDITY</th><th>STATUS</th><th/></tr></thead>
+          <thead><tr><th>BUSINESS / RULE</th><th>SOURCE</th><th>BASIC</th><th>PREMIUM</th><th>ACCESS</th><th>VALIDITY</th><th>STATUS</th><th>ACTIONS</th></tr></thead>
           <tbody>{recentEntitlements.map(item=>{
             if(item.kind==='policy'){
               const enabled=Boolean(savedRegistration?.new_business_enabled)
               return <tr key="registration-policy" className="entitlement-policy-row">
-                <td><strong>All new verified businesses</strong><small>Registration entitlement · saved {formatDate(savedRegistration.updated_at)}</small></td>
-                <td><span className="grant-source policy">Policy</span></td>
-                <td><strong>{savedRegistration.new_business_shared_quantity||0}</strong><small>Configured Basic allowance</small></td>
-                <td><strong>{savedRegistration.new_business_premium_quantity||0}</strong><small>Configured Premium allowance</small></td>
+                <td><strong>New verified businesses</strong><small>Saved {formatDate(savedRegistration.updated_at)}</small></td>
+                <td><span className="grant-source policy">Registration</span></td>
+                <td><strong>{savedRegistration.new_business_shared_quantity||0}</strong></td>
+                <td><strong>{savedRegistration.new_business_premium_quantity||0}</strong></td>
                 <td><div className="grant-access-tags">{registrationAccess.map(label=><span key={label}>{label}</span>)}{savedRegistration.new_business_allow_exclusive&&<span className="exclusive">Exclusive</span>}</div></td>
-                <td><strong>{savedRegistration.new_business_window_days||0} registration days</strong><small>Claimed access: {Number(savedRegistration.claim_expiry_days||0)===0?'Lifetime':`${savedRegistration.claim_expiry_days} days`}</small></td>
+                <td><strong>{savedRegistration.new_business_window_days||0} days</strong><small>{Number(savedRegistration.claim_expiry_days||0)===0?'Lifetime claimed access':`${savedRegistration.claim_expiry_days} days claimed access`}</small></td>
                 <td><span className={`grant-status ${enabled?'active':'disabled'}`}>{enabled?'Enabled':'Disabled'}</span></td>
-                <td><button className="history-edit" type="button" onClick={()=>{setRegistrationEditorOpen(true);window.scrollTo({top:0,behavior:'smooth'})}}>Edit</button></td>
+                <td><div className="entitlement-row-actions">
+                  <button className="history-edit" type="button" onClick={()=>setRegistrationEditorOpen(true)}>Edit</button>
+                  <button className="history-delete" type="button" onClick={deleteSettings} disabled={saving==='delete-settings'}>{saving==='delete-settings'?'…':'Delete'}</button>
+                </div></td>
               </tr>
             }
+
             const sharedRemaining=Math.max(0,Number(item.shared_quantity||0)-Number(item.used_shared||0))
             const premiumRemaining=Math.max(0,Number(item.premium_quantity||0)-Number(item.used_premium||0))
             const expired=item.expires_at&&new Date(item.expires_at)<=new Date()
-            const status=item.revoked_at?'Revoked':expired?'Expired':'Active'
+            const status=expired?'Expired':'Active'
             const access=grantAccessLabels(item)
             return <tr key={`grant-${item.id}`}>
               <td><strong>{item.business_name||item.name}</strong><small>#{item.user_id} · {item.email}</small></td>
-              <td><span className={`grant-source ${item.source}`}>{item.source==='new_business'?'New business':'Admin'}</span></td>
-              <td><strong>{sharedRemaining}</strong><small>{item.used_shared||0} used / {item.shared_quantity} granted</small></td>
-              <td><strong>{premiumRemaining}</strong><small>{item.used_premium||0} used / {item.premium_quantity} granted</small></td>
+              <td><span className={`grant-source ${item.source}`}>{item.source==='new_business'?'Welcome':'Admin'}</span></td>
+              <td><strong>{sharedRemaining}</strong><small>{item.used_shared||0}/{item.shared_quantity} used</small></td>
+              <td><strong>{premiumRemaining}</strong><small>{item.used_premium||0}/{item.premium_quantity} used</small></td>
               <td><div className="grant-access-tags">{access.map(label=><span key={label}>{label}</span>)}{item.allow_exclusive&&<span className="exclusive">Exclusive</span>}</div></td>
-              <td><strong>{formatDate(item.expires_at)}</strong><small>Claimed access: {Number(item.claim_expiry_days||0)===0?'Lifetime':`${item.claim_expiry_days} days`}</small></td>
+              <td><strong>{formatDate(item.expires_at)}</strong><small>{Number(item.claim_expiry_days||0)===0?'Lifetime claimed access':`${item.claim_expiry_days} days claimed access`}</small></td>
               <td><span className={`grant-status ${status.toLowerCase()}`}>{status}</span></td>
-              <td>{!item.revoked_at&&!expired&&<button className="revoke" onClick={()=>revoke(item.id)} disabled={saving===`revoke-${item.id}`}>{saving===`revoke-${item.id}`?'…':'Revoke'}</button>}</td>
+              <td><div className="entitlement-row-actions">
+                <button className="history-edit" type="button" onClick={()=>openEditGrant(item)}>Edit</button>
+                <button className="history-delete" type="button" onClick={()=>deleteGrant(item)} disabled={saving===`delete-${item.id}`}>{saving===`delete-${item.id}`?'…':'Delete'}</button>
+              </div></td>
             </tr>
           })}</tbody>
         </table>
       </div>}
     </section>
+
+    {registrationEditorOpen&&<div className="entitlement-modal-backdrop" onMouseDown={e=>{if(e.target===e.currentTarget)setRegistrationEditorOpen(false)}}>
+      <section className="entitlement-modal" role="dialog" aria-modal="true" aria-label="Registration entitlement">
+        <div className="entitlement-modal-head">
+          <div><span>REGISTRATION RULE</span><h2>{savedRegistration?.updated_at?'Edit registration rule':'Create registration rule'}</h2></div>
+          <button type="button" onClick={()=>setRegistrationEditorOpen(false)}>×</button>
+        </div>
+        <div className="entitlement-modal-body">
+          <label className="entitlement-toggle modal-toggle">
+            <input type="checkbox" checked={settings.newBusinessEnabled} onChange={e=>setSettings(v=>({...v,newBusinessEnabled:e.target.checked}))}/>
+            <span>{settings.newBusinessEnabled?'Enabled':'Disabled'}</span>
+          </label>
+
+          <div className="entitlement-form-grid welcome-grid">
+            <label>Registration window<div className="entitlement-input-suffix"><input type="number" min="1" max="365" value={settings.windowDays} onChange={e=>setSettings(v=>({...v,windowDays:clamp(e.target.value,1,365)}))}/><span>days</span></div></label>
+            <label>Basic leads<input type="number" min="0" max="1000" value={settings.sharedQuantity} onChange={e=>setSettings(v=>({...v,sharedQuantity:clamp(e.target.value,0,1000)}))}/></label>
+            <label>Premium leads<input type="number" min="0" max="1000" value={settings.premiumQuantity} onChange={e=>setSettings(v=>({...v,premiumQuantity:clamp(e.target.value,0,1000)}))}/></label>
+            <label>Claimed access<div className="entitlement-input-suffix"><input type="number" min="0" max="3650" value={settings.claimExpiryDays} onChange={e=>setSettings(v=>({...v,claimExpiryDays:clamp(e.target.value,0,3650)}))}/><span>{Number(settings.claimExpiryDays)===0?'Lifetime':'days'}</span></div></label>
+          </div>
+
+          <AccessRules value={settings} onChange={setSettings}/>
+        </div>
+        <div className="entitlement-modal-actions">
+          {savedRegistration?.updated_at&&<button className="danger" type="button" onClick={deleteSettings} disabled={saving==='delete-settings'}>Delete</button>}
+          <span/>
+          <button className="secondary" type="button" onClick={()=>setRegistrationEditorOpen(false)}>Cancel</button>
+          <button className="primary" type="button" onClick={saveSettings} disabled={saving==='settings'}>{saving==='settings'?'Saving…':'Save'}</button>
+        </div>
+      </section>
+    </div>}
+
+    {manualEditorOpen&&<div className="entitlement-modal-backdrop" onMouseDown={e=>{if(e.target===e.currentTarget)closeGrantEditor()}}>
+      <section className="entitlement-modal entitlement-grant-modal" role="dialog" aria-modal="true" aria-label={editingGrant?'Edit entitlement':'Create entitlement'}>
+        <div className="entitlement-modal-head">
+          <div><span>{editingGrant?'EDIT ENTITLEMENT':'NEW ENTITLEMENT'}</span><h2>{editingGrant?'Edit entitlement':'Create entitlement'}</h2></div>
+          <button type="button" onClick={closeGrantEditor}>×</button>
+        </div>
+        <div className="entitlement-modal-body">
+          {editingGrant?<div className="entitlement-selected-business compact"><span>Business</span><strong>{selectedLabel}</strong><small>#{selectedBusiness?.id} · {selectedBusiness?.email}</small></div>:<div className="entitlement-business-picker">
+            <label>Verified business<input value={search} onChange={e=>{setSearch(e.target.value);setSelectedBusiness(null)}} placeholder="Search business, name or email…"/></label>
+            <div className="entitlement-business-results">
+              {businesses.slice(0,8).map(item=><button type="button" className={selectedBusiness?.id===item.id?'selected':''} onClick={()=>{setSelectedBusiness(item);setSearch(item.business_name||item.name)}} key={item.id}>
+                <span><strong>{item.business_name||item.name}</strong><small>{item.email}</small></span>
+                <b>Verified</b>
+              </button>)}
+              {!businesses.length&&!loading&&<div className="entitlement-empty-search">No verified businesses found.</div>}
+            </div>
+          </div>}
+
+          {!editingGrant&&selectedBusiness&&<div className="entitlement-selected-business compact"><span>Selected</span><strong>{selectedLabel}</strong><small>#{selectedBusiness.id} · {selectedBusiness.email}</small></div>}
+
+          <div className="entitlement-form-grid grant-grid">
+            <label>Basic leads<input type="number" min="0" max="1000" value={grant.sharedQuantity} onChange={e=>setGrant(v=>({...v,sharedQuantity:clamp(e.target.value,0,1000)}))}/></label>
+            <label>Premium leads<input type="number" min="0" max="1000" value={grant.premiumQuantity} onChange={e=>setGrant(v=>({...v,premiumQuantity:clamp(e.target.value,0,1000)}))}/></label>
+            <label>Valid for<div className="entitlement-input-suffix"><input type="number" min="0" max="3650" value={grant.validDays} onChange={e=>setGrant(v=>({...v,validDays:clamp(e.target.value,0,3650)}))}/><span>{Number(grant.validDays)===0?'No expiry':'days'}</span></div></label>
+            <label>Claimed access<div className="entitlement-input-suffix"><input type="number" min="0" max="3650" value={grant.claimExpiryDays} onChange={e=>setGrant(v=>({...v,claimExpiryDays:clamp(e.target.value,0,3650)}))}/><span>{Number(grant.claimExpiryDays)===0?'Lifetime':'days'}</span></div></label>
+            <label className="notes">Admin note<textarea rows="2" value={grant.notes} maxLength="1000" onChange={e=>setGrant(v=>({...v,notes:e.target.value}))} placeholder="Optional note"/></label>
+          </div>
+
+          <AccessRules value={grant} onChange={setGrant}/>
+        </div>
+        <div className="entitlement-modal-actions">
+          {editingGrant&&<button className="danger" type="button" onClick={()=>deleteGrant(editingGrant)} disabled={saving===`delete-${editingGrant.id}`}>Delete</button>}
+          <span/>
+          <button className="secondary" type="button" onClick={closeGrantEditor}>Cancel</button>
+          <button className="primary" type="button" onClick={saveGrant} disabled={(!editingGrant&&!selectedBusiness)||saving==='grant'||String(saving).startsWith('update-')}>{saving?'Saving…':editingGrant?'Save changes':'Create'}</button>
+        </div>
+      </section>
+    </div>}
   </main>
 }
