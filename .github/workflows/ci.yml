@@ -38,6 +38,8 @@ jobs:
         run: npm run lint
       - name: Frontend source graph
         run: npm run test:source-graph
+      - name: Authoritative auth bootstrap
+        run: npm run test:auth-bootstrap
       - name: CSV export security
         run: npm run test:csv-security
       - name: User header layout
