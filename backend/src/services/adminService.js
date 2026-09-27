@@ -369,7 +369,14 @@ async function lockAdminMutations(client) {
   await client.query('SELECT pg_advisory_xact_lock($1)', [ADMIN_MUTATION_LOCK_NAMESPACE]);
 }
 
-async function setUserStatus(userId,isActive) {
+async function recordUserAudit(client,{userId,adminId,action,beforeData=null,afterData=null,reason=null}){
+  await client.query(`
+    INSERT INTO admin_user_audit(user_id,admin_id,action,before_data,after_data,reason)
+    VALUES($1,$2,$3,$4,$5,$6)
+  `,[userId,adminId||null,action,beforeData?JSON.stringify(beforeData):null,afterData?JSON.stringify(afterData):null,reason||null]);
+}
+
+async function setUserStatus(userId,isActive,actingAdminId=null) {
   const targetUserId=Number(userId);
   const client=await pool.connect();
   try{
@@ -386,6 +393,7 @@ async function setUserStatus(userId,isActive) {
       }
     }
     const updated=(await client.query(`UPDATE users SET is_active=$1,updated_at=CURRENT_TIMESTAMP WHERE id=$2 RETURNING id,name,email,role,is_active`,[Boolean(isActive),targetUserId])).rows[0]||null;
+    await recordUserAudit(client,{userId:targetUserId,adminId:actingAdminId,action:Boolean(isActive)?'activate_account':'deactivate_account',beforeData:current,afterData:updated});
     await client.query('COMMIT');
     return updated;
   }catch(error){await client.query('ROLLBACK');throw error;}finally{client.release();}
@@ -414,16 +422,18 @@ async function setUserRole({ userId, role, actingAdminId }) {
     if(normalizedRole==='lead_partner')await ensureLeadPartnerProfile(client,targetUserId);
     if(current.role===normalizedRole){await client.query('COMMIT');return current;}
     const updated=(await client.query(`UPDATE users SET role=$1,auth_version=auth_version+1,updated_at=CURRENT_TIMESTAMP WHERE id=$2 RETURNING id,name,email,role,is_active,created_at`,[normalizedRole,targetUserId])).rows[0];
+    await recordUserAudit(client,{userId:targetUserId,adminId:actorId,action:'change_role',beforeData:current,afterData:updated});
     await client.query('COMMIT');
     return updated;
   }catch(error){await client.query('ROLLBACK');throw error;}finally{client.release();}
 }
 
-async function updateUserProfile(userId,{ name,email,phone,businessName,businessDetails,services,locations }) {
+async function updateUserProfile(userId,{ name,email,phone,businessName,businessDetails,services,locations },actingAdminId=null) {
   const client=await pool.connect();
   try{
     await client.query('BEGIN');
     const user=(await client.query('SELECT id,name,email,role FROM users WHERE id=$1 FOR UPDATE',[userId])).rows[0];
+    const beforeProfile=(await client.query('SELECT phone,business_name,business_details FROM business_profiles WHERE user_id=$1',[userId])).rows[0]||null;
     if(!user){const e=new Error('User not found');e.code='NOT_FOUND';throw e;}
     const cleanName=String(name??user.name).trim(),normalizedEmail=String(email??user.email).trim().toLowerCase();
     if(!cleanName||!normalizedEmail){const e=new Error('Name and email are required');e.code='INVALID_USER';throw e;}
@@ -451,6 +461,8 @@ async function updateUserProfile(userId,{ name,email,phone,businessName,business
         }
       }
     }
+    const afterProfile=(await client.query('SELECT phone,business_name,business_details FROM business_profiles WHERE user_id=$1',[userId])).rows[0]||null;
+    await recordUserAudit(client,{userId:Number(userId),adminId:actingAdminId,action:'update_profile',beforeData:{user,businessProfile:beforeProfile},afterData:{user:updatedUser,businessProfile:afterProfile,servicesCount:Array.isArray(services)?services.length:null,locationsCount:Array.isArray(locations)?locations.length:null}});
     await client.query('COMMIT');return updatedUser;
   }catch(error){await client.query('ROLLBACK');throw error;}finally{client.release();}
 }
