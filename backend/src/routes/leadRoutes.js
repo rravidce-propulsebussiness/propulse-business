@@ -15,6 +15,7 @@ router.delete('/pricing/rules/:id',requireAdmin,leadController.deletePricingRule
 router.get('/pricing/partner-settings',requireAdmin,adminLeadPartnerPricingController.getSettings);
 router.put('/pricing/partner-settings',requireAdmin,adminLeadPartnerPricingController.updateSettings);
 router.post('/google-sheet/preview',requireAdmin,leadController.previewGoogleSheet);
+router.post('/google-sheet/sync',requireAdmin,leadController.syncGoogleSheet);
 router.get('/purchased',requireAuth,leadPurchaseController.purchases);
 router.get('/purchased/export',requireAuth,leadPurchaseController.exportPurchases);
 router.patch('/:id/crm',requireAuth,leadCrmController.update);
