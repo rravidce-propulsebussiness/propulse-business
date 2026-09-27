@@ -49,7 +49,7 @@ async function syncConnection({connectionId,adminId,force=false}){
   try{
     const lock=(await lockClient.query('SELECT pg_try_advisory_lock($1,$2) AS acquired',[73190520,id])).rows[0];
     locked=Boolean(lock?.acquired);
-    if(!locked)return{busy:true,skipped:true,reason:'SYNC_IN_PROGRESS'};
+    if(!locked)return{busy:true,sync:{busy:true,skipped:true,reason:'SYNC_IN_PROGRESS'}};
     const connection=await getConnection(id);
     if(!connection){const e=new Error('Active Google Sheet connection not found');e.code='SHEET_CONNECTION_NOT_FOUND';throw e}
     const synced=await syncGoogleSheet({adminId:adminId||connection.created_by||null,url:connection.source_url,defaults:connection.defaults||{},previousFingerprint:connection.fingerprint,force});
