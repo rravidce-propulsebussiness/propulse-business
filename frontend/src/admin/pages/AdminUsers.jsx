@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { authRequest, getUser } from '../../utils/auth';
 import './AdminUsers.css';
 
@@ -20,6 +20,7 @@ export default function AdminUsers() {
   const [user360,setUser360]=useState(null), [user360Loading,setUser360Loading]=useState(false), [userTab,setUserTab]=useState('overview'), [userBusy,setUserBusy]=useState('');
   const [membershipDays,setMembershipDays]=useState(30), [membershipExpiry,setMembershipExpiry]=useState(''), [membershipPlanId,setMembershipPlanId]=useState(''), [membershipReason,setMembershipReason]=useState('');
   const [walletAmount,setWalletAmount]=useState(''), [walletReason,setWalletReason]=useState('');
+  const user360BodyRef=useRef(null);
   const currentUser = getUser();
 
   const loadUsers = useCallback(async () => {
@@ -37,6 +38,18 @@ export default function AdminUsers() {
   }
   useEffect(() => { let active=true; queueMicrotask(()=>{if(active)setUserPage(1)}); return()=>{active=false}; }, [query, role, status]);
   useEffect(() => { let active=true; queueMicrotask(()=>{if(active)loadUsers()}); return()=>{active=false}; }, [loadUsers]);
+  useEffect(() => {
+    if(!selected)return undefined;
+    const previousOverflow=document.body.style.overflow;
+    document.body.style.overflow='hidden';
+    const onKeyDown=event=>{if(event.key==='Escape')setSelected(null)};
+    window.addEventListener('keydown',onKeyDown);
+    return()=>{document.body.style.overflow=previousOverflow;window.removeEventListener('keydown',onKeyDown)};
+  }, [selected]);
+  useEffect(() => {
+    if(!selected)return;
+    user360BodyRef.current?.scrollTo({top:0,behavior:'auto'});
+  }, [userTab,selected]);
 
   const active = users.filter(u => u.is_active).length, businesses = users.filter(u => u.role === 'business').length, admins = users.filter(u => u.role === 'admin').length;
   const leadPartners = users.filter(u => u.role === 'lead_partner').length;
@@ -335,7 +348,7 @@ export default function AdminUsers() {
             ].map(([key,label])=><button type="button" className={userTab===key?'active':''} onClick={()=>setUserTab(key)} key={key}>{label}</button>)}
           </nav>
 
-          <div className="user-360-body">
+          <div className="user-360-body" ref={user360BodyRef}>
             {userTab==='overview' && <div className="user-360-pane">
               <div className="user-360-section-head"><div><span>SUPPORT SNAPSHOT</span><h3>Account overview</h3></div><button type="button" className={selected.is_active?'danger-lite':'success-lite'} onClick={()=>toggleStatus(selected)}>{selected.is_active?'Deactivate account':'Activate account'}</button></div>
               <div className="overview-360-grid">
