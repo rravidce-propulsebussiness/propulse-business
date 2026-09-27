@@ -77,6 +77,18 @@ async function getUserBase(userId){
   `,[userId])).rows[0]||null;
 }
 
+async function getAccountAudit(userId){
+  return (await pool.query(`
+    SELECT a.id,a.action,a.before_data,a.after_data,a.reason,a.created_at,
+           admin.name AS admin_name,admin.email AS admin_email
+    FROM admin_user_audit a
+    LEFT JOIN users admin ON admin.id=a.admin_id
+    WHERE a.user_id=$1
+    ORDER BY a.created_at DESC,a.id DESC
+    LIMIT 150
+  `,[userId])).rows;
+}
+
 async function getProofs(userId){
   return (await pool.query(`
     SELECT cpd.id,cpd.original_name,cpd.mime_type,cpd.file_size,cpd.file_url,
@@ -131,7 +143,7 @@ async function getEntitlementHistory(userId){
   `,[userId])).rows;
 }
 
-function activityFrom({membership,wallet,payments,leads,entitlements}){
+function activityFrom({membership,wallet,payments,leads,entitlements,audit}){
   const rows=[];
   for(const h of membership?.history||[])rows.push({
     type:'membership',at:h.event_at,title:h.plan_name||'Membership',
@@ -159,6 +171,11 @@ function activityFrom({membership,wallet,payments,leads,entitlements}){
     detail:`${grant.shared_quantity||0} Basic · ${grant.premium_quantity||0} Premium`,
     status:grant.revoked_at?'revoked':'active'
   });
+  for(const item of audit||[])rows.push({
+    type:'account',at:item.created_at,title:String(item.action||'Account update').replace(/_/g,' '),
+    detail:(item.admin_name?`Admin: ${item.admin_name}`:'Admin action')+(item.reason?` · ${item.reason}`:''),
+    status:'admin'
+  });
   return rows.filter(row=>row.at).sort((a,b)=>new Date(b.at)-new Date(a.at)).slice(0,150);
 }
 
@@ -166,7 +183,7 @@ async function getUser360(userId){
   const user=await getUserBase(userId);
   if(!user)return null;
 
-  const [membership,wallet,leads,activeEntitlements,entitlements,payments,availablePlans,proofs]=await Promise.all([
+  const [membership,wallet,leads,activeEntitlements,entitlements,payments,availablePlans,proofs,audit]=await Promise.all([
     paymentService.getMembershipCustomerDetails(userId),
     walletService.getAdminWalletCustomerDetails(userId),
     leadCrmPurchaseService.getPurchases(userId),
@@ -174,7 +191,8 @@ async function getUser360(userId){
     getEntitlementHistory(userId),
     getPayments(userId),
     membershipPlanService.getPlans(false),
-    getProofs(userId)
+    getProofs(userId),
+    getAccountAudit(userId)
   ]);
 
   const current=activeMembership(membership?.plans||[]);
@@ -209,8 +227,9 @@ async function getUser360(userId){
     payments,
     entitlements,
     proofs,
+    audit,
     entitlementSummary:activeEntitlements?.summary||{shared:{},premium:{}},
-    activity:activityFrom({membership,wallet,payments,leads,entitlements})
+    activity:activityFrom({membership,wallet,payments,leads,entitlements,audit})
   };
 }
 
