@@ -8,7 +8,9 @@ function statusFor(error){
     INVALID_GRANT_QUANTITY:400,
     BUSINESS_NOT_VERIFIED:403,
     INVALID_GRANT:400,
-    GRANT_NOT_FOUND:404
+    GRANT_NOT_FOUND:404,
+    INVALID_ENTITLEMENT_RULE:400,
+    ENTITLEMENT_RULE_NOT_FOUND:404
   };
   return map[error.code]||500;
 }
@@ -27,12 +29,30 @@ async function businesses(req,res){
   }catch(error){console.error('Verified business lookup failed:',error);return res.status(500).json({error:'Failed to load verified businesses'})}
 }
 
-async function updateSettings(req,res){
-  try{return res.json(await grantService.updateSettings(req.body||{},req.user?.id))}
+async function createRule(req,res){
+  try{return res.status(201).json(await grantService.createRegistrationRule(req.body||{},req.user?.id))}
   catch(error){
     const status=statusFor(error);
-    if(status===500)console.error('Lead entitlement settings update failed:',error);
-    return res.status(status).json({error:error.message||'Failed to update lead entitlement settings',code:error.code});
+    if(status===500)console.error('Registration entitlement rule create failed:',error);
+    return res.status(status).json({error:error.message||'Failed to create registration entitlement rule',code:error.code});
+  }
+}
+
+async function updateRule(req,res){
+  try{return res.json(await grantService.updateRegistrationRule(req.params.ruleId,req.body||{},req.user?.id))}
+  catch(error){
+    const status=statusFor(error);
+    if(status===500)console.error('Registration entitlement rule update failed:',error);
+    return res.status(status).json({error:error.message||'Failed to update registration entitlement rule',code:error.code});
+  }
+}
+
+async function deleteRule(req,res){
+  try{return res.json(await grantService.deleteRegistrationRule(req.params.ruleId))}
+  catch(error){
+    const status=statusFor(error);
+    if(status===500)console.error('Registration entitlement rule delete failed:',error);
+    return res.status(status).json({error:error.message||'Failed to delete registration entitlement rule',code:error.code});
   }
 }
 
@@ -63,12 +83,4 @@ async function deleteGrant(req,res){
   }
 }
 
-async function deleteSettings(req,res){
-  try{return res.json(await grantService.deleteSettings(req.user?.id))}
-  catch(error){
-    console.error('Lead entitlement settings delete failed:',error);
-    return res.status(500).json({error:'Failed to delete registration entitlement'});
-  }
-}
-
-module.exports={overview,businesses,updateSettings,deleteSettings,createGrant,updateGrant,deleteGrant};
+module.exports={overview,businesses,createRule,updateRule,deleteRule,createGrant,updateGrant,deleteGrant};
