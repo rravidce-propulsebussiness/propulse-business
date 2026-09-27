@@ -130,7 +130,7 @@ export default function LeadPartnerPricing() {
         <header className="pricing-topbar"><div className="pricing-breadcrumb"><span>Lead Partner</span><b>/</b><strong>Pricing & Revenue</strong></div></header>
 
         <div className="pricing-content">
-          <section className="pricing-hero"><div><h1>Pricing & Revenue</h1></div></section>
+          <section className="pricing-hero premium-page-hero"><div className="pricing-hero-copy"><span>LEAD PARTNER / PRICING</span><h1>Pricing &amp; revenue</h1><p>Configure Pro pricing rules and lead-level overrides while keeping Admin-controlled commission, uplift and sharing ratios visible.</p><div className="pricing-hero-meta"><span><b>{rules.length}</b> pricing rules</span><span><b>{leads.length}</b> leads available</span><span><b>{settings.commissionPercent??5}%</b> commission</span></div></div><button className="pricing-hero-refresh" type="button" onClick={load} disabled={loading}><span>↻</span><div><b>{loading?'Refreshing…':'Refresh pricing'}</b><small>Reload rules and lead prices</small></div></button></section>
 
           {(error || success) && <div className={`pricing-message ${error ? 'error' : 'success'}`}>{error || success}</div>}
 
