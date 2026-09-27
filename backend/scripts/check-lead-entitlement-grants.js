@@ -8,6 +8,7 @@ const assert=(condition,message)=>{if(!condition)throw new Error(message)};
 const migration=read('src/database/migrations/2026-09-26-lead-entitlement-grants.sql');
 const accessMigration=read('src/database/migrations/2026-09-26-lead-entitlement-z-access-rules.sql');
 const ruleMigration=read('src/database/migrations/2026-09-27-lead-entitlement-registration-rules.sql');
+const campaignMigration=read('src/database/migrations/2026-09-27-z-business-entitlement-campaigns.sql');
 const grants=read('src/services/leadEntitlementGrantService.js');
 const entitlement=read('src/services/leadEntitlementService.js');
 const adminService=read('src/services/adminService.js');
@@ -32,6 +33,13 @@ assert(ruleMigration.includes("verification_scope IN ('any','verified','unverifi
 assert(ruleMigration.includes('industry_id INTEGER REFERENCES industries'),'Registration rules must support industry targeting');
 assert(ruleMigration.includes('state_id INTEGER REFERENCES states')&&ruleMigration.includes('city_id INTEGER REFERENCES cities'),'Registration rules must support location targeting');
 assert(ruleMigration.includes('registration_rule_id INTEGER'),'Issued registration grants must retain their source rule');
+assert(campaignMigration.includes('CREATE TABLE IF NOT EXISTS lead_entitlement_business_campaigns'),'Business entitlement campaign table must exist');
+assert(campaignMigration.includes("audience_scope IN ('all','specific_users')"),'Business entitlements must support all or specific-user audiences');
+assert(campaignMigration.includes("verification_scope IN ('any','verified','unverified')"),'Business entitlements must support verification targeting');
+assert(campaignMigration.includes('industry_id INTEGER REFERENCES industries')&&campaignMigration.includes('state_id INTEGER REFERENCES states')&&campaignMigration.includes('city_id INTEGER REFERENCES cities'),'Business entitlements must support industry and location targeting');
+assert(campaignMigration.includes("source IN ('admin','new_business','campaign')"),'Campaign grants must be a supported entitlement source');
+assert(campaignMigration.includes('campaign_id INTEGER'),'Campaign-issued grants must retain campaign traceability');
+assert(campaignMigration.includes('uq_lead_entitlement_campaign_user'),'Campaign issuance must be idempotent per user');
 assert(migration.includes('CREATE TABLE IF NOT EXISTS lead_entitlement_grants'),'Lead entitlement grants table must exist');
 assert(migration.includes("WHERE source='new_business'"),'A partial unique index must enforce one welcome grant per business');
 assert(migration.includes('ALTER COLUMN membership_id DROP NOT NULL'),'Claims must support non-membership grants');
@@ -71,6 +79,14 @@ assert(grants.includes('async function deleteGrant'),'Grant service must support
 assert(grants.includes('async function createRegistrationRule'),'Grant service must support multiple registration-rule creation');
 assert(grants.includes('async function updateRegistrationRule'),'Grant service must support registration-rule edits');
 assert(grants.includes('async function deleteRegistrationRule'),'Grant service must support registration-rule deletes');
+assert(grants.includes('async function createBusinessCampaign'),'Grant service must create audience-targeted business entitlements');
+assert(grants.includes('async function updateBusinessCampaign'),'Business entitlement campaigns must be editable');
+assert(grants.includes('async function deleteBusinessCampaign'),'Business entitlement campaigns must be deletable');
+assert(grants.includes("campaign.audience_scope==='specific_users'"),'Campaign matching must support selected business users');
+assert(grants.includes("campaign.verification_scope==='verified'")&&grants.includes("campaign.verification_scope==='unverified'"),'Campaign matching must support verification filters');
+assert(grants.includes('bps.industry_id=')&&grants.includes('bpl.state_id=')&&grants.includes('bpl2.city_id='),'Campaign matching must enforce industry/state/city filters');
+assert(grants.includes("VALUES($1,'campaign'"),'Matching businesses must receive campaign grants');
+assert(grants.includes('CAMPAIGN_ALLOWANCE_BELOW_USAGE'),'Campaign edits must protect already-used credits');
 assert(grants.includes("grant.source==='admin'&&claimCount===0"),'Unused manual grants should be hard-deletable');
 assert(grants.includes("WHERE g.revoked_at IS NULL"),'Deleted/revoked grants must stay out of Recent entitlements');
 
@@ -101,6 +117,9 @@ assert(adminRoutes.includes("router.put('/lead-entitlements/grants/:grantId'"),'
 assert(adminRoutes.includes("router.delete('/lead-entitlements/grants/:grantId'"),'Admin entitlement delete route must exist');
 assert(adminRoutes.includes("router.put('/lead-entitlements/rules/:ruleId'"),'Admin registration-rule edit route must exist');
 assert(adminRoutes.includes("router.delete('/lead-entitlements/rules/:ruleId'"),'Admin registration-rule delete route must exist');
+assert(adminRoutes.includes("router.post('/lead-entitlements/campaigns'"),'Admin business entitlement create route must exist');
+assert(adminRoutes.includes("router.put('/lead-entitlements/campaigns/:campaignId'"),'Admin business entitlement edit route must exist');
+assert(adminRoutes.includes("router.delete('/lead-entitlements/campaigns/:campaignId'"),'Admin business entitlement delete route must exist');
 assert(adminController.includes('INVALID_ENTITLEMENT_ACCESS:400'),'Invalid access-rule selections must return HTTP 400');
 
 assert(app.includes('/admin/leads/entitlements'),'Admin Lead Entitlements page route must exist');
@@ -109,6 +128,11 @@ assert(page.includes('＋ Registration rule')&&page.includes('＋ Business entit
 assert(page.includes('verificationScope')&&page.includes('Verified + Non-verified')&&page.includes('Non-verified only'),'Admin UI must expose verification targeting');
 assert(page.includes('All industries')&&page.includes('All states')&&page.includes('All cities'),'Admin UI must expose industry and location targeting');
 assert(page.includes('entitlement-card-grid'),'Recent entitlements must use flexible cards instead of the wide table');
+assert(page.includes("audienceScope:'all'")&&page.includes('All business users')&&page.includes('Specific business users'),'Business entitlement UI must support all or selected businesses');
+assert(page.includes('businessCampaigns')&&page.includes("kind:'campaign'"),'Business entitlement campaigns must appear as recent cards');
+assert(page.includes('openEditCampaign(item)')&&page.includes('deleteCampaign(item)'),'Business entitlement cards must support edit and delete');
+assert(page.includes('campaign.userIds.includes'),'Specific-business targeting must support multi-select');
+assert(page.includes('Verified + Non-verified')&&page.includes('Verified only')&&page.includes('Non-verified only'),'Business entitlement UI must support verification filters');
 assert(page.includes('Single Buyer')&&page.includes('Shared')&&page.includes('Auto Release'),'Admin UI must expose all buyer-access strategy toggles');
 assert(page.includes('Exclusive Early Access'),'Admin UI must expose Exclusive Early Access override');
 assert(page.includes('Claimed access'),'Admin UI must expose claimed-access duration');
@@ -121,9 +145,11 @@ const resetArray=reset.slice(reset.indexOf('const RESET_TABLES=['),reset.indexOf
 assert(resetArray.includes("'lead_entitlement_grants'"),'Test reset must clear issued grants');
 assert(!resetArray.includes("'lead_entitlement_settings'"),'Test reset must preserve legacy entitlement configuration');
 assert(!resetArray.includes("'lead_entitlement_registration_rules'"),'Test reset must preserve registration rules');
+assert(resetArray.includes("'lead_entitlement_business_campaigns'")&&resetArray.includes("'lead_entitlement_business_campaign_users'"),'Test reset must clear operational business entitlement campaigns');
 
 assert(leads.includes("leadAccess.entitlementSource==='new_business'?'Welcome lead entitlement'"),'Marketplace must label welcome entitlements accurately');
 assert(leads.includes("leadAccess.entitlementSource==='admin'?'Propulse lead entitlement'"),'Marketplace must label manual entitlements accurately');
+assert(leads.includes("leadAccess.entitlementSource==='campaign'?'Business entitlement'"),'Marketplace must label campaign business entitlements accurately');
 assert(entitlement.includes("claimIsActive"),'Lead access must distinguish active and expired historical claims');
 assert(entitlement.includes('Previous complimentary lead access expired'),'Expired complimentary access must not be presented as active');
 assert(purchase.includes("AND (expires_at IS NULL OR expires_at>=CURRENT_TIMESTAMP) LIMIT 1 FOR UPDATE"),'Expired claims must not block a paid lead purchase');
@@ -132,4 +158,4 @@ assert(marketplace.includes("ec.expires_at IS NULL OR ec.expires_at>=CURRENT_TIM
 assert(readService.includes("ec.expires_at IS NULL OR ec.expires_at>=CURRENT_TIMESTAMP")&&readService.includes("ec2.expires_at IS NULL OR ec2.expires_at>=CURRENT_TIMESTAMP"),'Lead counters must ignore expired entitlement claims');
 assert(accessStrategy.includes("expires_at IS NULL OR expires_at>=CURRENT_TIMESTAMP"),'Buyer-capacity close checks must ignore expired entitlement claims');
 
-console.log('Targeted registration-rule and lead entitlement regression test passed.');
+console.log('Targeted registration and business entitlement regression test passed.');
