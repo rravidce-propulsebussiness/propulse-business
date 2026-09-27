@@ -15,5 +15,9 @@ assert(walletService.includes('if(!includeTransactions){'), 'Wallet summary mode
 assert(walletService.includes("COUNT(*) FILTER(WHERE status='pending')::int AS pending_count"), 'Wallet top-up summary must count pending requests without loading rows');
 assert(walletController.includes("includeTransactions:req.query?.summary!=='1'"), 'Wallet controller must expose the lightweight balance summary mode');
 assert(walletController.includes("summary:req.query?.summary==='1'"), 'Wallet controller must expose the lightweight top-up summary mode');
+assert(walletService.includes('rechargeLimit=50,transactionPage=1,transactionLimit=100'), 'Admin wallet details must use bounded first pages');
+assert(walletService.includes('safeRechargeLimit=Math.min') && walletService.includes('safeTransactionLimit=Math.min'), 'Admin wallet detail page sizes must be capped');
+assert(walletService.includes("COUNT(*) FILTER(WHERE status='pending')::int pending_count"), 'Admin wallet detail pagination must preserve the true pending top-up count');
+assert(walletController.includes('rechargePage:req.query?.rechargePage') && walletController.includes('transactionPage:req.query?.transactionPage'), 'Admin wallet detail pagination must be exposed by the controller');
 
 console.log('Wallet history backend contract regression test passed.');
