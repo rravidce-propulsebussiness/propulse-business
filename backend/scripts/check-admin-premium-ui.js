@@ -75,6 +75,8 @@ assert(adminUser360Service.includes('getActiveGrants(userId,pool,{ensureWelcome:
 assert(adminUser360Service.includes('async function setMembershipPlan'),'Admin membership assignment/change service must remain');
 assert(adminUser360Service.includes('Reason is required'),'Manual membership changes must require an audit reason');
 assert(adminService.includes('gateway_payment_id')&&adminService.includes('lead_purchases lp'),'Users search must resolve payment references and lead IDs');
+assert(adminService.includes('AS revenue_week')&&adminService.includes('AS own_revenue_week')&&adminService.includes('AS partner_commission_week')&&adminService.includes('AS investor_commission_week'),'Backend dashboard must calculate this-week total earnings and source breakdown');
+assert(adminService.includes('week:number(revenue.revenue_week)')&&adminService.includes('revenueWeek:number(revenue.own_revenue_week)'),'Backend dashboard response must expose weekly earnings');
 assert(adminRoutes.includes("router.get('/users/:id/360'")&&adminRoutes.includes("router.post('/users/:id/membership'"),'Admin User 360 routes must remain');
 assert(adminUserAuditMigration.includes('CREATE TABLE IF NOT EXISTS admin_user_audit'),'Admin user audit table must remain');
 assert(adminService.includes('recordUserAudit')&&adminService.includes("'change_role'")&&adminService.includes("'update_profile'"),'Status, role and profile changes must be audited');
@@ -176,7 +178,12 @@ assert(servicePricingRemoval.includes('DROP TABLE IF EXISTS service_pricing'),'F
 
 
 assert(dashboard.includes('const revenue=stats?.revenue||{}'),'Overview must use the backend revenue summary');
-assert(dashboard.includes('value={show(money(revenue.total))}'),'Overview revenue KPI must use the backend Propulse revenue total');
+assert(dashboard.includes("const [revenuePeriod,setRevenuePeriod]=useState('month')"),'Overview must keep the revenue period filter');
+assert(dashboard.includes('REVENUE COMMAND CENTER')&&dashboard.includes('Total earnings'),'Overview must keep the top earnings command center');
+assert(dashboard.includes("['today','Today']")&&dashboard.includes("['week','This Week']")&&dashboard.includes("['month','This Month']")&&dashboard.includes("['all','All Time']"),'Overview revenue filters must keep Today, This Week, This Month and All Time');
+assert(dashboard.includes('ownGross:propulse.revenueWeek')&&dashboard.includes('partnerCommission:leadPartner.revenueWeek')&&dashboard.includes('investorCommission:investor.revenueWeek'),'Weekly earnings must preserve source-level breakdown');
+assert(dashboard.includes('Our gross')&&dashboard.includes('Partner commission')&&dashboard.includes('Investor commission'),'Total earnings must explain the Propulse revenue formula');
+assert(!dashboard.includes('label="Propulse revenue"'),'Overview KPI row must not duplicate the top total earnings panel');
 assert(dashboard.includes('title="Our leads"')&&dashboard.includes('title="Lead Partners"'),'Overview must keep Propulse and Lead Partner businesses visually separate');
 assert(dashboard.includes('Investor activity'),'Overview must keep Investor activity visually separate');
 assert(dashboard.includes('leadPartner.partnerEarnings'),'Lead Partner earnings must remain separate from Propulse commission');
@@ -199,6 +206,8 @@ assert(dashboardCss.includes('.admin-overview-grid'),'Premium KPI grid styling m
 assert(dashboardCss.includes('.admin-business-grid'),'Premium two-column business layout must remain active');
 assert(dashboardCss.includes('.admin-investor-panel'),'Premium Investor panel styling must remain active');
 assert(dashboardCss.includes('.admin-dashboard-hero:before')&&dashboardCss.includes('.admin-dashboard-hero:after'),'Premium analytics hero decoration must remain active');
+assert(dashboardCss.includes('/* Filterable revenue command center */'),'Filterable Overview revenue styling must remain');
+assert(dashboardCss.includes('.admin-revenue-periods')&&dashboardCss.includes('.admin-total-earnings')&&dashboardCss.includes('.admin-revenue-breakdown'),'Revenue period controls, total and source breakdown styling must remain');
 assert(dashboardCss.includes('grid-template-columns:repeat(4,minmax(0,1fr))'),'Desktop Overview must keep four primary KPI cards');
 
 console.log('Premium Admin overview and navigation regression test passed.');
