@@ -1098,6 +1098,10 @@
   background:#eaf3fc;
   color:#285d91;
 }
+.membership-target-tags .membership-offer-label-tag{
+  background:#e9f8ef;
+  color:#277b55;
+}
 .membership-panel-head>div>small{
   display:block;
   margin-top:4px;
