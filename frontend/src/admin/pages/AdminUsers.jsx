@@ -187,6 +187,7 @@ export default function AdminUsers() {
 
   const currentMembership=user360?.snapshot?.currentMembership||null;
   const manageableMembership=currentMembership||user360?.membership?.plans?.[0]||null;
+  const manageableMembershipActive=Boolean(manageableMembership&&manageableMembership.status==='active'&&new Date(manageableMembership.expires_at).getTime()>Date.now());
   const userSnapshot=user360?.snapshot||{};
   const wallet360=user360?.wallet||{wallet:{balance:0},recharges:[],transactions:[],totals:{}};
   const membership360=user360?.membership||{plans:[],history:[]};
@@ -388,7 +389,7 @@ export default function AdminUsers() {
                   <span>Existing membership controls</span>
                   <div className="membership-inline-control"><input type="number" min="1" max="3650" value={membershipDays} onChange={e=>setMembershipDays(e.target.value)}/><button type="button" onClick={()=>manageMembership('extend',manageableMembership)}>Extend</button><button type="button" onClick={()=>manageMembership('reduce',manageableMembership)}>Reduce</button></div>
                   <div className="membership-inline-control"><input type="date" value={membershipExpiry} onChange={e=>setMembershipExpiry(e.target.value)}/><button type="button" onClick={()=>manageMembership('set_expiry',manageableMembership)}>Set expiry</button></div>
-                  <button type="button" className={manageableMembership.status==='active'?'danger-lite':'success-lite'} onClick={()=>manageMembership(manageableMembership.status==='active'?'deactivate':'activate',manageableMembership)}>{manageableMembership.status==='active'?'Deactivate membership':'Activate membership'}</button>
+                  <button type="button" className={manageableMembershipActive?'danger-lite':'success-lite'} onClick={()=>manageMembership(manageableMembershipActive?'deactivate':'activate',manageableMembership)}>{manageableMembershipActive?'Deactivate membership':'Activate membership'}</button>
                 </div>}
               </div>
 
