@@ -40,7 +40,7 @@ async function createTopupWithCoupon({userId,amount,reference,proofUrl,couponCod
     const payment=(await client.query(`INSERT INTO payments(user_id,amount,payment_method,status,wallet_amount,external_amount,purchase_type,purchase_id,notes,coupon_id,coupon_code,subtotal_amount,discount_amount) VALUES($1,$2,'manual','pending',0,$2,'wallet_topup',$3,$4,$5,$6,$7,$8) RETURNING *`,[userId,payable,topup.id,`Wallet top-up #${topup.id}`,coupon?.coupon?.id||null,coupon?.coupon?.code||null,value,coupon?.discountAmount||0])).rows[0]
     if(coupon)await couponService.reserveRedemption(client,{couponId:coupon.coupon.id,userId,paymentId:payment.id,purchaseType:'wallet_topup',purchaseId:topup.id,discountAmount:coupon.discountAmount})
     await client.query('COMMIT')
-    return {...topup,payment_id:payment.id,subtotal_amount:value,discount_amount:coupon?.discountAmount||0,payable_amount:payable,coupon:coupon?{code:coupon.coupon.code,discountAmount:coupon.discountAmount,subtotalAmount:value,finalAmount:payable}:null}
+    return {...topup,payment_id:payment.id,subtotal_amount:value,discount_amount:coupon?.discountAmount||0,payable_amount:payable,coupon:coupon?{code:coupon.coupon.code,discountAmount:coupon.discountAmount,subtotalAmount:value,finalAmount:payable,reward:coupon.reward||null,benefit:coupon.benefit||null}:null}
   }catch(e){await client.query('ROLLBACK');throw e}finally{client.release()}
 }
 
