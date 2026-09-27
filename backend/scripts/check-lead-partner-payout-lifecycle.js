@@ -2,6 +2,7 @@ const assert = require('assert');
 const pool = require('../src/config/database');
 const payoutService = require('../src/services/leadPartnerPayoutService');
 const earningsService = require('../src/services/leadPartnerEarningsService');
+const leadReportService = require('../src/services/leadReportService');
 
 const tag = `payout-test-${Date.now()}-${process.pid}`;
 const email = `${tag}@example.test`;
@@ -182,6 +183,19 @@ async function main() {
     const paidProof = await payoutService.adminProof(secondPayout.id);
     assert(paidProof?.proof_url === proof, 'Admin must be able to fetch a stored payout proof on demand');
 
+    console.log('test: paginated Lead Partner reports');
+    await q(`INSERT INTO lead_reports(lead_id,reporter_user_id,reason,details,status)
+      VALUES($1,$4,'fake',$5,'pending'),($2,$4,'wrong_number',$5,'verified_fake'),($3,$4,'other',$5,'verified_genuine')`,
+      [ids.first.leadId,ids.second.leadId,ids.third.leadId,ids.admin,tag]);
+    const reportPage=await leadReportService.getLeadPartnerReports(ids.user,{status:'all',search:tag,page:1,limit:2});
+    assert.strictEqual(reportPage.data.length,2,'Lead Partner report page must respect its limit');
+    assert(reportPage.pagination.total>=3&&reportPage.pagination.totalPages>=2,'Lead Partner report pagination must retain filtered totals');
+    assert(reportPage.summary.total_reports>=3,'Lead Partner report summary must cover all partner reports');
+    assert(reportPage.summary.reported_leads>=3,'Lead Partner report summary must count distinct reported leads');
+    assert(Number(reportPage.summary.reason_counts.fake||0)>=1,'Lead Partner report summary must include reason counts');
+    const fakeReportPage=await leadReportService.getLeadPartnerReports(ids.user,{status:'verified_fake',search:tag,page:1,limit:10});
+    assert(fakeReportPage.data.every(row=>row.status==='verified_fake'),'Lead Partner report status filter must be server-side');
+
     console.log('Lead Partner payout lifecycle tests passed.');
   } catch (error) {
     console.error(`Lead Partner payout lifecycle tests failed: ${error.message}`);
@@ -199,6 +213,7 @@ async function main() {
         await cleanup.query('DELETE FROM lead_partner_earning_adjustment_allocations WHERE earning_id IN (SELECT id FROM lead_partner_earnings WHERE user_id=$1)', [ids.user || 0]);
         await cleanup.query('DELETE FROM lead_partner_earning_adjustments WHERE user_id=$1', [ids.user || 0]);
         await cleanup.query('DELETE FROM lead_partner_earnings WHERE user_id=$1', [ids.user || 0]);
+        await cleanup.query('DELETE FROM lead_reports WHERE lead_id IN (SELECT id FROM leads WHERE created_by=$1)', [ids.user || 0]);
         await cleanup.query('DELETE FROM lead_purchases WHERE user_id=$1', [ids.user || 0]);
         await cleanup.query('DELETE FROM payments WHERE user_id=$1', [ids.user || 0]);
         await cleanup.query('DELETE FROM lead_partner_payout_accounts WHERE user_id=$1', [ids.user || 0]);
