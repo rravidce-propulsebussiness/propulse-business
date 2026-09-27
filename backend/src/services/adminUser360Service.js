@@ -15,6 +15,29 @@ function daysRemaining(value){
   return Math.max(0,Math.ceil((new Date(value).getTime()-Date.now())/86400000));
 }
 
+function summarizeEntitlementGrants(grants=[]){
+  const summary={shared:{allowance:0,used:0,remaining:0},premium:{allowance:0,used:0,remaining:0}};
+  for(const grant of grants){
+    const sharedAllowance=number(grant.shared_quantity);
+    const premiumAllowance=number(grant.premium_quantity);
+    const sharedUsed=Math.min(sharedAllowance,number(grant.used_shared));
+    const premiumUsed=Math.min(premiumAllowance,number(grant.used_premium));
+    summary.shared.allowance+=sharedAllowance;
+    summary.shared.used+=sharedUsed;
+    summary.shared.remaining+=Math.max(0,sharedAllowance-sharedUsed);
+    summary.premium.allowance+=premiumAllowance;
+    summary.premium.used+=premiumUsed;
+    summary.premium.remaining+=Math.max(0,premiumAllowance-premiumUsed);
+  }
+  return summary;
+}
+
+async function getActiveEntitlementSummary(userId){
+  const grants=await leadEntitlementGrantService.getActiveGrants(userId,pool,{ensureWelcome:false});
+  return{grants,summary:summarizeEntitlementGrants(grants)};
+}
+
+
 async function getUserBase(userId){
   return (await pool.query(`
     SELECT u.id,u.name,u.email,u.role,u.is_active,u.created_at,u.updated_at,
@@ -147,7 +170,7 @@ async function getUser360(userId){
     paymentService.getMembershipCustomerDetails(userId),
     walletService.getAdminWalletCustomerDetails(userId),
     leadCrmPurchaseService.getPurchases(userId),
-    leadEntitlementGrantService.getUserGrantSummary(userId),
+    getActiveEntitlementSummary(userId),
     getEntitlementHistory(userId),
     getPayments(userId),
     membershipPlanService.getPlans(false),
