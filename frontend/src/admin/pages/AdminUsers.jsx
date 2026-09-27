@@ -182,6 +182,12 @@ export default function AdminUsers() {
 
   async function createAdmin(e) { e.preventDefault(); try { setSaving(true); setError(''); await authRequest('/admin/users/admin', { method: 'POST', body: JSON.stringify(form) }); setShowCreate(false); setForm({ name: '', email: '', password: '' }); await loadUsers(); } catch (e) { setError(e.message); } finally { setSaving(false); } }
 
+  const currentMembership=user360?.snapshot?.currentMembership||null;
+  const manageableMembership=currentMembership||user360?.membership?.plans?.[0]||null;
+  const userSnapshot=user360?.snapshot||{};
+  const wallet360=user360?.wallet||{wallet:{balance:0},recharges:[],transactions:[],totals:{}};
+  const membership360=user360?.membership||{plans:[],history:[]};
+
   return <section className="admin-users-page premium-users-page">
     <section className="users-premium-hero">
       <div className="users-premium-hero-copy">
