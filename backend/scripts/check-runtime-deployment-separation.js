@@ -15,12 +15,12 @@ assert(!server.includes("scope:'global',shared:false"),'Global API limiter must 
 assert(server.includes("envFlag('RUN_MIGRATIONS_ON_STARTUP',true)"),'Web migration startup must be explicitly configurable');
 assert(server.includes("envFlag('RUN_BACKGROUND_JOBS_IN_WEB',true)"),'Web background jobs must be explicitly configurable');
 assert(server.includes("if(runMigrationsOnStartup)await runMigrations()"),'Web process must honor migration startup control');
-assert(server.includes("if(runBackgroundJobsInWeb)stopLeadPartnerSheetAutoSync=startLeadPartnerSheetAutoSync()"),'Web process must honor background-job control');
+assert(server.includes('if(runBackgroundJobsInWeb){')&&server.includes('stopLeadPartnerSheetAutoSync=startLeadPartnerSheetAutoSync()')&&server.includes('stopAdminGoogleSheetAutoSync=startAdminGoogleSheetAutoSync()'),'Web process must honor background-job control for Lead Partner and Admin sheet schedulers');
 assert(runtimeFlags.includes("['0', 'false', 'no', 'off']"),'Runtime flag parser must support explicit false values');
 assert(scheduler.includes("unref = true")&&scheduler.includes("runImmediately = false"),'Sheet scheduler must support web and worker modes');
 assert(scheduler.includes("if (runImmediately) void runAutoSync()"),'Dedicated worker must be able to sync immediately');
 assert(scheduler.includes("if (unref) timer.unref?.()"),'Web scheduler timer must remain non-blocking');
-assert(worker.includes("startLeadPartnerSheetAutoSync({ unref: false, runImmediately: true })"),'Worker must keep the scheduler alive and run an initial cycle');
+assert(worker.includes("startLeadPartnerSheetAutoSync({ unref: false, runImmediately: true })")&&worker.includes("startAdminGoogleSheetAutoSync({ unref: false, runImmediately: true })"),'Worker must keep both sheet schedulers alive and run an initial cycle');
 assert(worker.includes("RUN_MIGRATIONS_ON_WORKER_STARTUP"),'Worker migration behavior must be explicit');
 assert(pkg.scripts.worker==='node src/worker.js','Backend must expose a supervised worker command');
 console.log('Runtime deployment separation regression test passed.');
