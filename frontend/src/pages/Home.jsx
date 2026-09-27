@@ -76,7 +76,7 @@ function Home() {
 
   useEffect(() => {
     let live = true
-    publicRequest('/membership-plans').then(data => {
+    publicRequest('/membership-plans/public').then(data => {
       if (!live) return
       setMembershipPlans(Array.isArray(data) ? data.filter(item => item?.is_active !== false) : [])
     }).catch(() => {
