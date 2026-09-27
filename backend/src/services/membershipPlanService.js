@@ -207,6 +207,13 @@ function positiveId(value){
   return Number.isInteger(n)&&n>0?n:null;
 }
 
+function normalizeOfferDate(value){
+  if(value===null||value===undefined||String(value).trim()==='')return null;
+  const date=new Date(value);
+  if(Number.isNaN(date.getTime()))throw Object.assign(new Error('Offer date/time is invalid'),{code:'INVALID_MEMBERSHIP_PRICING_RULE'});
+  return date.toISOString();
+}
+
 function normalizePricingRuleInput(input={}){
   const planGroup=String(input.planGroup||input.plan_group||'').trim().toLowerCase();
   if(!['grow','scale'].includes(planGroup))throw Object.assign(new Error('Choose GROW or SCALE'),{code:'INVALID_MEMBERSHIP_PRICING_RULE'});
@@ -224,17 +231,31 @@ function normalizePricingRuleInput(input={}){
     seen.add(billingMonths);
     const price=Number(item.price);
     if(!Number.isFinite(price)||price<0)throw Object.assign(new Error('Each targeted billing cycle needs a valid price'),{code:'INVALID_MEMBERSHIP_PRICING_RULE'});
+    const discountPercent=Math.min(100,Math.max(0,toNumber(item.discountPercent??item.discount_percent,0)));
     return{
       billingMonths,
       label:cleanText(item.label,40)||`${billingMonths}-month`,
       enabled:item.enabled!==false,
       price:Number(price.toFixed(2)),
+      discountPercent:Number(discountPercent.toFixed(2)),
       leadEntitlements:normalizeEntitlements(item.leadEntitlements??item.lead_entitlements,billingMonths)
     };
   }).filter(Boolean);
   if(!periodOverrides.some(item=>item.enabled!==false))throw Object.assign(new Error('Configure at least one targeted billing cycle'),{code:'INVALID_MEMBERSHIP_PRICING_RULE'});
   const userIds=[...new Set((Array.isArray(input.userIds)?input.userIds:[]).map(Number).filter(id=>Number.isInteger(id)&&id>0))];
   if(audienceScope==='specific_users'&&!userIds.length)throw Object.assign(new Error('Choose at least one business user'),{code:'INVALID_MEMBERSHIP_PRICING_RULE'});
+  const validFrom=normalizeOfferDate(input.validFrom??input.valid_from);
+  const validUntil=normalizeOfferDate(input.validUntil??input.valid_until);
+  if(validFrom&&validUntil&&new Date(validUntil)<=new Date(validFrom)){
+    throw Object.assign(new Error('Offer end time must be after the start time'),{code:'INVALID_MEMBERSHIP_PRICING_RULE'});
+  }
+  const rawNewCustomerDays=input.newCustomerDays??input.new_customer_days;
+  const newCustomerDays=rawNewCustomerDays===null||rawNewCustomerDays===undefined||String(rawNewCustomerDays).trim()===''
+    ?null
+    :Math.round(Number(rawNewCustomerDays));
+  if(newCustomerDays!==null&&(!Number.isInteger(newCustomerDays)||newCustomerDays<1||newCustomerDays>365)){
+    throw Object.assign(new Error('New-customer eligibility must be between 1 and 365 days'),{code:'INVALID_MEMBERSHIP_PRICING_RULE'});
+  }
   return{
     name,
     planGroup,
@@ -244,8 +265,11 @@ function normalizePricingRuleInput(input={}){
     industryId:positiveId(input.industryId??input.industry_id),
     stateId:positiveId(input.stateId??input.state_id),
     cityId:positiveId(input.cityId??input.city_id),
-    priority:Math.min(10000,Math.max(0,Math.round(toNumber(input.priority,100)))),
     periodOverrides,
+    offerLabel:cleanText(input.offerLabel??input.offer_label,80),
+    validFrom,
+    validUntil,
+    newCustomerDays,
     notes:cleanText(input.notes,3000),
     isActive:input.isActive===undefined?input.is_active!==false:Boolean(input.isActive)
   };
@@ -308,7 +332,7 @@ async function listPricingRules(){
     LEFT JOIN industries i ON i.id=r.industry_id
     LEFT JOIN states st ON st.id=r.state_id
     LEFT JOIN cities c ON c.id=r.city_id
-    ORDER BY r.priority DESC,r.updated_at DESC,r.id DESC
+    ORDER BY r.updated_at DESC,r.id DESC
   `)).rows;
   return rows.map(row=>({...row,period_overrides:safeJson(row.period_overrides)}));
 }
@@ -321,12 +345,14 @@ async function createPricingRule(input,adminId){
     const inserted=(await client.query(`
       INSERT INTO membership_pricing_rules(
         name,plan_group,audience_scope,verification_scope,industry_id,state_id,city_id,
-        priority,period_overrides,notes,is_active,created_by,updated_by
-      ) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$12)
+        period_overrides,offer_label,valid_from,valid_until,new_customer_days,
+        notes,is_active,created_by,updated_by
+      ) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$15)
       RETURNING *
     `,[
       rule.name,rule.planGroup,rule.audienceScope,rule.verificationScope,
-      rule.industryId,rule.stateId,rule.cityId,rule.priority,JSON.stringify(rule.periodOverrides),
+      rule.industryId,rule.stateId,rule.cityId,JSON.stringify(rule.periodOverrides),
+      rule.offerLabel,rule.validFrom,rule.validUntil,rule.newCustomerDays,
       rule.notes,rule.isActive,adminId||null
     ])).rows[0];
     await replacePricingRuleUsers(client,inserted.id,rule.audienceScope==='specific_users'?rule.userIds:[]);
@@ -356,20 +382,25 @@ async function updatePricingRule(ruleId,input,adminId){
       industryId:input?.industryId===undefined?existing.industry_id:input.industryId,
       stateId:input?.stateId===undefined?existing.state_id:input.stateId,
       cityId:input?.cityId===undefined?existing.city_id:input.cityId,
-      priority:input?.priority??existing.priority,
       periodOverrides:input?.periodOverrides??existing.period_overrides,
+      offerLabel:input?.offerLabel===undefined?existing.offer_label:input.offerLabel,
+      validFrom:input?.validFrom===undefined?existing.valid_from:input.validFrom,
+      validUntil:input?.validUntil===undefined?existing.valid_until:input.validUntil,
+      newCustomerDays:input?.newCustomerDays===undefined?existing.new_customer_days:input.newCustomerDays,
       notes:input?.notes??existing.notes,
       isActive:input?.isActive===undefined?existing.is_active:input.isActive
     }),client);
     const updated=(await client.query(`
       UPDATE membership_pricing_rules
       SET name=$2,plan_group=$3,audience_scope=$4,verification_scope=$5,
-          industry_id=$6,state_id=$7,city_id=$8,priority=$9,period_overrides=$10,
-          notes=$11,is_active=$12,updated_by=$13,updated_at=CURRENT_TIMESTAMP
+          industry_id=$6,state_id=$7,city_id=$8,period_overrides=$9,
+          offer_label=$10,valid_from=$11,valid_until=$12,new_customer_days=$13,
+          notes=$14,is_active=$15,updated_by=$16,updated_at=CURRENT_TIMESTAMP
       WHERE id=$1 RETURNING *
     `,[
       id,rule.name,rule.planGroup,rule.audienceScope,rule.verificationScope,
-      rule.industryId,rule.stateId,rule.cityId,rule.priority,JSON.stringify(rule.periodOverrides),
+      rule.industryId,rule.stateId,rule.cityId,JSON.stringify(rule.periodOverrides),
+      rule.offerLabel,rule.validFrom,rule.validUntil,rule.newCustomerDays,
       rule.notes,rule.isActive,adminId||null
     ])).rows[0];
     await replacePricingRuleUsers(client,id,rule.audienceScope==='specific_users'?rule.userIds:[]);
@@ -413,14 +444,26 @@ async function matchingPricingRulesForUser(userId,client=pool){
   const rows=(await client.query(`
     SELECT r.*,
       (
-        CASE WHEN r.audience_scope='specific_users' THEN 16 ELSE 0 END +
-        CASE WHEN r.city_id IS NOT NULL THEN 8 ELSE 0 END +
-        CASE WHEN r.state_id IS NOT NULL THEN 4 ELSE 0 END +
-        CASE WHEN r.industry_id IS NOT NULL THEN 2 ELSE 0 END +
-        CASE WHEN r.verification_scope<>'any' THEN 1 ELSE 0 END
+        CASE WHEN r.audience_scope='specific_users' THEN 160 ELSE 0 END +
+        CASE WHEN r.new_customer_days IS NOT NULL THEN 80 ELSE 0 END +
+        CASE WHEN r.city_id IS NOT NULL THEN 40 ELSE 0 END +
+        CASE WHEN r.state_id IS NOT NULL THEN 20 ELSE 0 END +
+        CASE WHEN r.industry_id IS NOT NULL THEN 10 ELSE 0 END +
+        CASE WHEN r.verification_scope<>'any' THEN 4 ELSE 0 END +
+        CASE WHEN r.valid_from IS NOT NULL OR r.valid_until IS NOT NULL THEN 2 ELSE 0 END
       )::int AS specificity
     FROM membership_pricing_rules r
     WHERE r.is_active=TRUE
+      AND (r.valid_from IS NULL OR r.valid_from<=CURRENT_TIMESTAMP)
+      AND (r.valid_until IS NULL OR r.valid_until>=CURRENT_TIMESTAMP)
+      AND (
+        r.new_customer_days IS NULL
+        OR EXISTS(
+          SELECT 1 FROM users offer_user
+          WHERE offer_user.id=$1
+            AND offer_user.created_at>=CURRENT_TIMESTAMP-(r.new_customer_days*INTERVAL '1 day')
+        )
+      )
       AND (
         r.audience_scope='all'
         OR EXISTS(
@@ -460,7 +503,7 @@ async function matchingPricingRulesForUser(userId,client=pool){
           WHERE bp.user_id=$1 AND bpl.is_active=TRUE AND bpl.city_id=r.city_id
         )
       )
-    ORDER BY r.priority DESC,specificity DESC,r.updated_at DESC,r.id DESC
+    ORDER BY specificity DESC,r.updated_at DESC,r.id DESC
   `,[userId])).rows;
   return rows.map(row=>({...row,period_overrides:safeJson(row.period_overrides)}));
 }
@@ -477,15 +520,25 @@ function applyPricingRule(plan,rule){
     :Array.isArray(override.lead_entitlements)
       ?normalizeEntitlements(override.lead_entitlements,plan.billing_months)
       :normalizeEntitlements(plan.lead_entitlements,plan.billing_months);
+  const basePrice=Number(plan.price||0);
+  const offerPrice=Number(override.price);
+  const savings=Math.max(0,Number((basePrice-offerPrice).toFixed(2)));
+  const derivedDiscount=basePrice>0?Math.max(0,Math.min(100,Number(((savings/basePrice)*100).toFixed(2)))):0;
+  const discountPercent=Math.max(derivedDiscount,Math.max(0,Number(override.discountPercent??override.discount_percent??0)||0));
   return{
     ...plan,
-    base_price:Number(plan.price||0),
-    price:Number(override.price),
+    base_price:basePrice,
+    price:offerPrice,
     lead_entitlements:leadEntitlements,
     pricing_rule_id:rule.id,
     pricing_rule_name:rule.name,
-    pricing_rule_priority:Number(rule.priority||0),
-    targeted_pricing:true
+    targeted_pricing:true,
+    offer_label:rule.offer_label||rule.name,
+    offer_discount_percent:discountPercent,
+    offer_savings:savings,
+    offer_valid_from:rule.valid_from||null,
+    offer_valid_until:rule.valid_until||null,
+    offer_new_customer_days:rule.new_customer_days||null
   };
 }
 
