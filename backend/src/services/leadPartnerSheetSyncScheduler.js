@@ -2,28 +2,18 @@ const pool = require('../config/database');
 const inventoryService = require('./leadPartnerInventoryCompatService');
 
 const AUTO_SYNC_INTERVAL_MS = 5 * 60 * 1000;
-const ADVISORY_LOCK_KEY = 73190518;
-
 let timer = null;
 let running = false;
 
 async function runAutoSync() {
   if (running) {
-    console.log('Lead Partner Google Sheet auto-sync skipped: previous cycle is still running.');
+    console.log('Lead Partner Google Sheet auto-sync skipped: previous cycle is still running in this process.');
     return;
   }
 
   running = true;
-  let client = null;
   try {
-    client = await pool.connect();
-    const lock = await client.query('SELECT pg_try_advisory_lock($1) AS acquired', [ADVISORY_LOCK_KEY]);
-    if (!lock.rows[0]?.acquired) {
-      console.log('Lead Partner Google Sheet auto-sync skipped: another backend instance is syncing.');
-      return;
-    }
-
-    const connections = (await client.query(
+    const connections = (await pool.query(
       `SELECT id,user_id,spreadsheet_id,sync_failure_count,next_retry_at
          FROM lead_partner_sheet_connections
         WHERE status='active'
@@ -45,10 +35,14 @@ async function runAutoSync() {
           `Google Sheet auto-sync completed: connection=${connection.id}, created=${result.import.created}, duplicates=${result.import.duplicate}, failed=${result.import.failed}`
         );
       } catch (error) {
+        if (error?.code === 'SYNC_IN_PROGRESS') {
+          console.log(`Google Sheet auto-sync skipped busy connection=${connection.id}; another replica is syncing it.`);
+          continue;
+        }
         const failureCount = Math.max(1, Number(connection.sync_failure_count || 0) + 1);
         const retryMinutes = failureCount <= 1 ? 5 : failureCount === 2 ? 15 : failureCount === 3 ? 60 : 360;
         try {
-          await client.query(
+          await pool.query(
             `UPDATE lead_partner_sheet_connections
                 SET sync_failure_count=$1,
                     last_sync_error_at=CURRENT_TIMESTAMP,
@@ -69,16 +63,9 @@ async function runAutoSync() {
   } catch (error) {
     console.error('Lead Partner Google Sheet auto-sync cycle failed:', error.message);
   } finally {
-    if (client) {
-      try {
-        await client.query('SELECT pg_advisory_unlock($1)', [ADVISORY_LOCK_KEY]);
-      } catch (_) {}
-      client.release();
-    }
     running = false;
   }
 }
-
 function startLeadPartnerSheetAutoSync({ unref = true, runImmediately = false } = {}) {
   if (timer) return () => {};
 
