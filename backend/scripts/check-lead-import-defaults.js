@@ -11,6 +11,7 @@ const upload=read('../frontend/src/admin/pages/AdminLeadsV9.jsx');
 const sheets=read('../frontend/src/admin/pages/GoogleSheetAutoSync.jsx');
 const pricingUi=read('../frontend/src/admin/pages/AdminLeadPricing.jsx');
 const leadService=read('src/services/leadService.js');
+const adminSheetService=read('src/services/adminGoogleSheetSyncService.js');
 
 assert(defaults.includes("EMPTY_IMPORT_DEFAULTS=Object.freeze({leadType:'',exclusive:false,singleOnly:false})"),'Google Sheet defaults must include Single Only');
 assert(defaults.includes("singleOnly:value?.singleOnly===true"),'Single Only must normalize as an independent optional override');
@@ -29,12 +30,12 @@ assert(upload.includes('Blank pricing and buyer-access fields use your Admin Lea
 assert(upload.includes("strategyRaw==='singleonly'"),'Manual CSV must accept Single Only as an explicit sheet strategy');
 
 assert(sheets.includes("LeadImportDefaults value={linkDefaults}"),'Google Sheet linking must expose optional connection defaults');
-assert(sheets.includes("syncRows(csv,leads,cat,record.defaults)"),'Recurring Google Sheet sync must reuse each connection\'s saved defaults');
-assert(sheets.includes("const next=[...sources,{url:value,defaults}]"),'Google Sheet defaults must persist with the linked source');
-assert(sheets.includes("applyImportDefaults(original,defaults)"),'Google Sheet rows must pass through the shared precedence helper');
+assert(adminSheetService.includes("defaults:connection.defaults||{}"),'Recurring Google Sheet sync must reuse each connection\'s saved defaults');
+assert(adminSheetService.includes("defaults=EXCLUDED.defaults")&&adminSheetService.includes("JSON.stringify(normalized)"),'Google Sheet defaults must persist with the linked source');
+assert(adminSheetService.includes("applyDefaults(original,defaults)"),'Google Sheet rows must pass through the backend precedence helper');
 assert(sheets.includes("importDefaultsSummary(record.defaults)"),'Connected sheets must show their saved defaults');
 assert(sheets.includes("typeof value==='string'"),'Existing URL-only Google Sheet connections must remain backward compatible');
-assert(sheets.includes("n==='singleonly'"),'Google Sheet Access Strategy must accept Single Only wording');
+assert(adminSheetService.includes("n==='singleonly'"),'Google Sheet Access Strategy must accept Single Only wording');
 assert(sheets.includes('Sheet Access Strategy / Max Buyers → Single Only override → Admin buyer-access configuration'),'Google Sheet UI must explain sharing precedence');
 assert(sheets.includes('Sheet exact 1 / 2 / 3 buyer price → Admin exact-tier price'),'Google Sheet UI must explain pricing precedence');
 
