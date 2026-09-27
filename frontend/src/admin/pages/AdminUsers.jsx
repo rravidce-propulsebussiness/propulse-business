@@ -226,7 +226,7 @@ export default function AdminUsers() {
 
   const currentMembership=user360?.snapshot?.currentMembership||null;
   const manageableMembership=currentMembership||user360?.membership?.plans?.[0]||null;
-  const manageableMembershipActive=Boolean(manageableMembership&&manageableMembership.status==='active'&&new Date(manageableMembership.expires_at).getTime()>Date.now());
+  const manageableMembershipActive=Boolean(manageableMembership&&manageableMembership.status==='active');
   const userSnapshot=user360?.snapshot||{};
   const wallet360=user360?.wallet||{wallet:{balance:0},recharges:[],transactions:[],totals:{}};
   const membership360=user360?.membership||{plans:[],history:[]};
