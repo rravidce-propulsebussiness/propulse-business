@@ -163,6 +163,110 @@
   font-weight:800;
   letter-spacing:0;
 }
+.membership-offer-price-block{
+  margin-top:16px;
+  padding:12px 13px;
+  border:1px solid #d6eadf;
+  border-radius:14px;
+  background:linear-gradient(180deg,#f8fffb,#f1fbf5);
+}
+.membership-offer-price-block .membership-price{
+  margin-top:8px;
+}
+.membership-offer-badge{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+}
+.membership-offer-badge span{
+  overflow:hidden;
+  color:#277a55;
+  font-size:9px;
+  font-weight:950;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.membership-offer-badge b{
+  flex:0 0 auto;
+  padding:5px 7px;
+  border-radius:999px;
+  background:#daf3e4;
+  color:#1f6d49;
+  font-size:8px;
+  font-weight:950;
+}
+.membership-offer-saving{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin-top:7px;
+}
+.membership-offer-saving del{
+  color:#8b98a9;
+  font-size:11px;
+  font-weight:800;
+}
+.membership-offer-saving strong{
+  color:#197345;
+  font-size:9px;
+  font-weight:950;
+}
+.membership-offer-validity{
+  margin-top:7px;
+  color:#687d92;
+  font-size:8px;
+  font-weight:800;
+}
+.membership-checkout-offer{
+  margin:14px 0 4px;
+  padding:11px 12px;
+  border:1px solid #d6eadf;
+  border-radius:11px;
+  background:#f3fbf6;
+}
+.membership-checkout-offer>div:first-child,
+.membership-checkout-offer>div:nth-child(2){
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+}
+.membership-checkout-offer span{
+  color:#277a55;
+  font-size:9px;
+  font-weight:950;
+}
+.membership-checkout-offer b{
+  padding:4px 6px;
+  border-radius:999px;
+  background:#d9f1e2;
+  color:#1f6e49;
+  font-size:8px;
+}
+.membership-checkout-offer>div:nth-child(2){
+  justify-content:flex-start;
+  margin-top:8px;
+}
+.membership-checkout-offer del{
+  color:#8c98a8;
+  font-size:11px;
+}
+.membership-checkout-offer strong{
+  color:#153c68;
+  font-size:14px;
+}
+.membership-checkout-offer small{
+  color:#197345;
+  font-size:8px;
+  font-weight:900;
+}
+.membership-checkout-offer p{
+  margin:7px 0 0!important;
+  color:#718399!important;
+  font-size:8px!important;
+}
+
 .saving-note{
   width:max-content;
   max-width:100%;
