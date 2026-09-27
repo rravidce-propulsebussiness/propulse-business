@@ -88,33 +88,96 @@ function buildCustomFields(raw){
   return fields;
 }
 
+function normalizedPhone(value){return clean(value).replace(/\D/g,'')}
+function normalizedText(value){return clean(value).toLowerCase()}
+
 async function persistDetails({userId,rows}){
   const normalized=buildCanonicalRows(rows);
-  for(const raw of normalized){
+  if(!normalized.length)return;
+
+  const descriptors=normalized.map(raw=>{
     const phone=first(raw,['Customer Phone']);
     const email=first(raw,['Customer Email']);
     const name=first(raw,['Customer Name']);
     const requirement=first(raw,['Requirement']);
-    const industry=first(raw,['Industry']);
-    const matches=[];
-    if(phone){
-      const r=await pool.query(`SELECT l.id,l.custom_fields FROM leads l WHERE l.created_by=$1 AND regexp_replace(COALESCE(l.customer_phone,''),'[^0-9]','','g')=regexp_replace($2,'[^0-9]','','g') AND ($3='' OR l.customer_name=$3) ORDER BY l.id DESC LIMIT 1`,[userId,phone,name||'']);
-      matches.push(...r.rows);
+    return{
+      raw,
+      phone,
+      phoneKey:normalizedPhone(phone),
+      emailKey:normalizedText(email),
+      name,
+      nameKey:normalizedText(name),
+      requirementKey:normalizedText(requirement)
+    };
+  });
+
+  const phones=[...new Set(descriptors.map(x=>x.phoneKey).filter(Boolean))];
+  const emails=[...new Set(descriptors.map(x=>x.emailKey).filter(Boolean))];
+  const names=[...new Set(descriptors.map(x=>x.nameKey).filter(Boolean))];
+  const requirements=[...new Set(descriptors.map(x=>x.requirementKey).filter(Boolean))];
+
+  const candidates=(await pool.query(`
+    SELECT id,customer_phone,customer_email,customer_name,requirement,custom_fields
+    FROM leads
+    WHERE created_by=$1
+      AND (
+        regexp_replace(COALESCE(customer_phone,''),'[^0-9]','','g')=ANY($2::text[])
+        OR LOWER(TRIM(COALESCE(customer_email,'')))=ANY($3::text[])
+        OR (
+          LOWER(TRIM(COALESCE(customer_name,'')))=ANY($4::text[])
+          AND LOWER(TRIM(COALESCE(requirement,'')))=ANY($5::text[])
+        )
+      )
+    ORDER BY id DESC
+  `,[userId,phones,emails,names,requirements])).rows;
+
+  const byPhone=new Map();
+  const byPhoneAndExactName=new Map();
+  const byEmail=new Map();
+  const byNameRequirement=new Map();
+
+  for(const lead of candidates){
+    const phoneKey=normalizedPhone(lead.customer_phone);
+    const emailKey=normalizedText(lead.customer_email);
+    const nameKey=normalizedText(lead.customer_name);
+    const requirementKey=normalizedText(lead.requirement);
+    if(phoneKey&&!byPhone.has(phoneKey))byPhone.set(phoneKey,lead);
+    if(phoneKey&&!byPhoneAndExactName.has(`${phoneKey}\u0000${String(lead.customer_name||'')}`)){
+      byPhoneAndExactName.set(`${phoneKey}\u0000${String(lead.customer_name||'')}`,lead);
     }
-    if(!matches.length&&email){
-      const r=await pool.query(`SELECT l.id,l.custom_fields FROM leads l WHERE l.created_by=$1 AND LOWER(TRIM(COALESCE(l.customer_email,'')))=LOWER(TRIM($2)) ORDER BY l.id DESC LIMIT 1`,[userId,email]);
-      matches.push(...r.rows);
+    if(emailKey&&!byEmail.has(emailKey))byEmail.set(emailKey,lead);
+    if(nameKey&&requirementKey&&!byNameRequirement.has(`${nameKey}\u0000${requirementKey}`)){
+      byNameRequirement.set(`${nameKey}\u0000${requirementKey}`,lead);
     }
-    if(!matches.length&&name&&requirement){
-      const r=await pool.query(`SELECT l.id,l.custom_fields FROM leads l WHERE l.created_by=$1 AND LOWER(TRIM(COALESCE(l.customer_name,'')))=LOWER(TRIM($2)) AND LOWER(TRIM(COALESCE(l.requirement,'')))=LOWER(TRIM($3)) ORDER BY l.id DESC LIMIT 1`,[userId,name,requirement]);
-      matches.push(...r.rows);
-    }
-    const lead=matches[0];
-    if(!lead)continue;
-    const existing=lead.custom_fields&&typeof lead.custom_fields==='object'&&!Array.isArray(lead.custom_fields)?lead.custom_fields:{};
-    const merged={...existing,...buildCustomFields(raw)};
-    await pool.query('UPDATE leads SET custom_fields=$1::jsonb,updated_at=CURRENT_TIMESTAMP WHERE id=$2 AND created_by=$3',[JSON.stringify(merged),lead.id,userId]);
   }
+
+  const mergedByLead=new Map();
+  for(const descriptor of descriptors){
+    let lead=null;
+    if(descriptor.phoneKey){
+      lead=descriptor.name
+        ?byPhoneAndExactName.get(`${descriptor.phoneKey}\u0000${descriptor.name}`)||null
+        :byPhone.get(descriptor.phoneKey)||null;
+    }
+    if(!lead&&descriptor.emailKey)lead=byEmail.get(descriptor.emailKey)||null;
+    if(!lead&&descriptor.nameKey&&descriptor.requirementKey){
+      lead=byNameRequirement.get(`${descriptor.nameKey}\u0000${descriptor.requirementKey}`)||null;
+    }
+    if(!lead)continue;
+
+    const current=mergedByLead.get(Number(lead.id))
+      ||(lead.custom_fields&&typeof lead.custom_fields==='object'&&!Array.isArray(lead.custom_fields)?lead.custom_fields:{});
+    mergedByLead.set(Number(lead.id),{...current,...buildCustomFields(descriptor.raw)});
+  }
+
+  if(!mergedByLead.size)return;
+  const payload=[...mergedByLead.entries()].map(([id,custom_fields])=>({id,custom_fields}));
+  await pool.query(`
+    UPDATE leads l
+    SET custom_fields=u.custom_fields,updated_at=CURRENT_TIMESTAMP
+    FROM jsonb_to_recordset($2::jsonb) AS u(id int,custom_fields jsonb)
+    WHERE l.created_by=$1 AND l.id=u.id
+  `,[userId,JSON.stringify(payload)]);
 }
 
 async function importCsv({userId,csv}){
