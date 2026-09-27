@@ -11,6 +11,8 @@ const dashboard=read('../frontend/src/admin/pages/AdminDashboard.jsx');
 const dashboardCss=read('../frontend/src/admin/pages/AdminDashboard.css');
 const adminUsers=read('../frontend/src/admin/pages/AdminUsers.jsx');
 const adminUsersCss=read('../frontend/src/admin/pages/AdminUsers.css');
+const adminPayments=read('../frontend/src/admin/pages/AdminPayments.jsx');
+const adminPaymentsCss=read('../frontend/src/admin/pages/AdminPayments.css');
 const adminUser360Service=read('../backend/src/services/adminUser360Service.js');
 const adminService=read('../backend/src/services/adminService.js');
 const adminController=read('../backend/src/controllers/adminController.js');
@@ -78,6 +80,17 @@ assert(adminUserAuditMigration.includes('CREATE TABLE IF NOT EXISTS admin_user_a
 assert(adminService.includes('recordUserAudit')&&adminService.includes("'change_role'")&&adminService.includes("'update_profile'"),'Status, role and profile changes must be audited');
 assert(adminController.includes('req.user?.id'),'Admin controller must pass acting administrator IDs into audited user changes');
 assert(adminUser360Service.includes('getAccountAudit')&&adminUser360Service.includes("type:'account'"),'Account audit events must appear in Customer 360 activity');
+assert(adminPayments.includes('FINANCE OPERATIONS / APPROVALS'),'Premium Payments approval hero must remain');
+assert(adminPayments.includes('premium-approval-switcher'),'Payments approval queue switcher must remain');
+assert(adminPayments.includes("label: 'Wallet'")&&adminPayments.includes("label: 'Leads'")&&adminPayments.includes("label: 'Membership'")&&adminPayments.includes("label: 'Investment'"),'Payments must keep Wallet, Lead, Membership and Investment approval queues');
+assert(adminPayments.includes('payment-approval-card'),'Payments must use premium approval cards');
+assert(!adminPayments.includes('Membership Payments'),'Duplicate Membership Payments history tab must stay removed');
+assert(!adminPayments.includes('Wallet History'),'Duplicate Wallet History tab must stay removed');
+assert(!adminPayments.includes('/payments/memberships/customers'),'Payments must not duplicate per-user membership history from Customer 360');
+assert(!adminPayments.includes('/wallet/admin/history/customers'),'Payments must not duplicate per-user wallet history from Customer 360');
+assert(adminPaymentsCss.includes('/* Premium Payments approval workspace */'),'Premium Payments styling must remain');
+assert(adminPaymentsCss.includes('.payments-premium-hero')&&adminPaymentsCss.includes('.payment-approval-card'),'Premium Payments hero and transaction card styling must remain');
+assert(adminPaymentsCss.includes('grid-template-columns:repeat(4,minmax(0,1fr))'),'Desktop Payments KPI and queue layouts must remain compact');
 
 assert(layout.includes('admin-sidebar-signature')&&layout.includes('admin-top-user'),'Premium Admin shell controls must remain present');
 assert(!layout.includes('admin-sidebar-status'),'Duplicated sidebar health copy must stay removed');
