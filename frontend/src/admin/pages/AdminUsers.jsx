@@ -2,7 +2,9 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { authRequest, getUser } from '../../utils/auth';
 import './AdminUsers.css';
 
-const dateOnly = value => value ? new Date(value).toLocaleDateString() : '—';
+const dateOnly = value => value ? new Date(value).toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' }) : '—';
+const dateTime = value => value ? new Date(value).toLocaleString('en-IN', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' }) : '—';
+const money = value => `₹${Number(value || 0).toLocaleString('en-IN', { maximumFractionDigits:2 })}`;
 const emptyService = () => ({ industryId: '', serviceId: '', subserviceId: '' });
 const emptyLocation = () => ({ stateId: '', cityId: '', subcityId: '', pincode: '' });
 const listData = value => Array.isArray(value) ? value : (Array.isArray(value?.data) ? value.data : []);
@@ -15,6 +17,9 @@ export default function AdminUsers() {
   const [editing, setEditing] = useState(false), [saving, setSaving] = useState(false), [roleSaving, setRoleSaving] = useState(false), [roleDraft, setRoleDraft] = useState('business');
   const [showCreate, setShowCreate] = useState(false), [form, setForm] = useState({ name: '', email: '', password: '' });
   const [editForm, setEditForm] = useState(null);
+  const [user360,setUser360]=useState(null), [user360Loading,setUser360Loading]=useState(false), [userTab,setUserTab]=useState('overview'), [userBusy,setUserBusy]=useState('');
+  const [membershipDays,setMembershipDays]=useState(30), [membershipExpiry,setMembershipExpiry]=useState(''), [membershipPlanId,setMembershipPlanId]=useState(''), [membershipReason,setMembershipReason]=useState('');
+  const [walletAmount,setWalletAmount]=useState(''), [walletReason,setWalletReason]=useState('');
   const currentUser = getUser();
 
   const loadUsers = useCallback(async () => {
@@ -44,20 +49,42 @@ export default function AdminUsers() {
   const cityOptions = useMemo(() => editForm && catalogs ? editForm.locations.map(x => catalogs.cities.filter(c => String(c.state_id) === String(x.stateId))) : [], [editForm, catalogs]);
   const subcityOptions = useMemo(() => editForm ? editForm.locations.map(x => subcitiesByCity[x.cityId] || []) : [], [editForm, subcitiesByCity]);
 
-  function openUser(u) {
-    setSelected(u); setEditing(false); setError(''); setRoleDraft(u.role || 'business');
+  async function loadUser360(userId, silent=false) {
+    try {
+      if(!silent)setUser360Loading(true);
+      const data=await authRequest(`/admin/users/${userId}/360`);
+      setUser360(data);
+      const current=data?.snapshot?.currentMembership;
+      setMembershipExpiry(current?.expires_at ? new Date(current.expires_at).toISOString().slice(0,10) : '');
+      setMembershipPlanId(current?.plan_id ? String(current.plan_id) : '');
+      return data;
+    } catch(e) {
+      setError(e.message||'Failed to load account workspace');
+      return null;
+    } finally {
+      if(!silent)setUser360Loading(false);
+    }
+  }
+  async function openUser(u) {
+    setSelected(u); setEditing(false); setError(''); setRoleDraft(u.role || 'business'); setUserTab('overview'); setUser360(null);
+    setMembershipDays(30); setMembershipReason(''); setWalletAmount(''); setWalletReason('');
     setEditForm({
       name: u.name || '', email: u.email || '', phone: u.phone || '', businessName: u.business_name || '', businessDetails: u.business_details || '',
       services: (u.services || []).map(x => ({ industryId: String(x.industryId), serviceId: String(x.serviceId), subserviceId: x.subserviceId ? String(x.subserviceId) : '' })),
       locations: (u.locations || []).map(x => ({ stateId: String(x.stateId), cityId: String(x.cityId), subcityId: x.subcityId ? String(x.subcityId) : '', pincode: x.pincode || '' })),
     });
+    const data=await loadUser360(u.id);
+    if(data?.user){
+      setSelected(v=>v?{...v,...data.user}:v);
+      setRoleDraft(data.user.role||u.role||'business');
+    }
   }
   async function startBusinessEdit() {
     setEditing(true); setCatalogLoading(true); setError('');
     try { await loadCatalogs(); } catch (e) { setError(e.message); } finally { setCatalogLoading(false); }
   }
   async function toggleStatus(u) {
-    try { setError(''); const x = await authRequest(`/admin/users/${u.id}/status`, { method: 'PATCH', body: JSON.stringify({ isActive: !u.is_active }) }); setUsers(c => c.map(v => v.id === u.id ? { ...v, ...x } : v)); setSelected(v => v && v.id === u.id ? { ...v, ...x } : v); }
+    try { setError(''); const x = await authRequest(`/admin/users/${u.id}/status`, { method: 'PATCH', body: JSON.stringify({ isActive: !u.is_active }) }); setUsers(c => c.map(v => v.id === u.id ? { ...v, ...x } : v)); setSelected(v => v && v.id === u.id ? { ...v, ...x } : v); if(selected?.id===u.id)await loadUser360(u.id,true); }
     catch (e) { setError(e.message); }
   }
   async function changeRole() {
@@ -105,9 +132,54 @@ export default function AdminUsers() {
       const saved = await authRequest(`/admin/users/${selected.id}`, { method: 'PATCH', body: JSON.stringify(payload) });
       setEditing(false); await loadUsers();
       const freshResponse = await authRequest(`/admin/users?search=${encodeURIComponent(payload.email)}&page=1&pageSize=100`); const fresh = listData(freshResponse).find(v => v.id === selected.id);
-      if (fresh) openUser(fresh); else setSelected(v => v ? { ...v, ...saved } : v);
+      if (fresh) await openUser(fresh); else { setSelected(v => v ? { ...v, ...saved } : v); await loadUser360(selected.id,true); }
     } catch (e) { setError(e.message); } finally { setSaving(false); }
   }
+  async function manageMembership(action, membership=user360?.snapshot?.currentMembership) {
+    if(!selected||!membership)return;
+    const body={action};
+    if(action==='extend'||action==='reduce')body.days=Number(membershipDays);
+    if(action==='set_expiry')body.expiresAt=membershipExpiry;
+    const label=action.replace('_',' ');
+    if(!window.confirm(`${label} ${membership.plan_name||'membership'} for ${selected.business_name||selected.name}?`))return;
+    try{
+      setUserBusy(`membership-${action}`);setError('');
+      await authRequest(`/payments/memberships/${membership.membership_id}`,{method:'PATCH',body:JSON.stringify(body)});
+      await Promise.all([loadUser360(selected.id,true),loadUsers()]);
+    }catch(e){setError(e.message||'Failed to update membership')}
+    finally{setUserBusy('')}
+  }
+
+  async function assignMembershipPlan(){
+    if(!selected||!membershipPlanId)return setError('Choose a GROW or SCALE plan.');
+    if(!membershipReason.trim())return setError('Enter a reason for this membership change.');
+    const plan=user360?.availablePlans?.find(item=>String(item.id)===String(membershipPlanId));
+    if(!window.confirm(`Apply ${plan?.name||'this plan'} to ${selected.business_name||selected.name}?`))return;
+    try{
+      setUserBusy('membership-plan');setError('');
+      await authRequest(`/admin/users/${selected.id}/membership`,{method:'POST',body:JSON.stringify({planId:Number(membershipPlanId),days:Number(membershipDays)||undefined,reason:membershipReason.trim()})});
+      setMembershipReason('');
+      await Promise.all([loadUser360(selected.id,true),loadUsers()]);
+    }catch(e){setError(e.message||'Failed to apply membership')}
+    finally{setUserBusy('')}
+  }
+
+  async function adjustUserWallet(action){
+    if(!selected)return;
+    const amount=Number(walletAmount);
+    if(!Number.isFinite(amount)||amount<=0)return setError('Enter a valid wallet amount.');
+    if(!walletReason.trim())return setError('Enter a reason for the wallet adjustment.');
+    if(action==='debit'&&amount>Number(user360?.snapshot?.walletBalance||0))return setError('Debit cannot exceed the current wallet balance.');
+    if(!window.confirm(`${action==='debit'?'Deduct':'Add'} ${money(amount)} ${action==='debit'?'from':'to'} this wallet?`))return;
+    try{
+      setUserBusy(`wallet-${action}`);setError('');
+      await authRequest(`/wallet/admin/history/customers/${selected.id}/adjust`,{method:'POST',body:JSON.stringify({action,amount,reason:walletReason.trim()})});
+      setWalletAmount('');setWalletReason('');
+      await Promise.all([loadUser360(selected.id,true),loadUsers()]);
+    }catch(e){setError(e.message||'Failed to adjust wallet')}
+    finally{setUserBusy('')}
+  }
+
   async function createAdmin(e) { e.preventDefault(); try { setSaving(true); setError(''); await authRequest('/admin/users/admin', { method: 'POST', body: JSON.stringify(form) }); setShowCreate(false); setForm({ name: '', email: '', password: '' }); await loadUsers(); } catch (e) { setError(e.message); } finally { setSaving(false); } }
 
   return <section className="admin-users-page premium-users-page">
