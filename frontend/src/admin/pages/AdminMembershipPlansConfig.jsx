@@ -36,6 +36,15 @@ const offerWindowLabel=item=>{
   }
   return parts.join(' · ')||'Ongoing pricing'
 }
+const pricingRuleStatus=item=>{
+  if(item?.is_active===false)return{key:'inactive',label:'Disabled'}
+  const now=Date.now()
+  const start=item?.valid_from?new Date(item.valid_from).getTime():null
+  const end=item?.valid_until?new Date(item.valid_until).getTime():null
+  if(start&&start>now)return{key:'scheduled',label:'Scheduled'}
+  if(end&&end<now)return{key:'expired',label:'Expired'}
+  return{key:'active',label:'Active'}
+}
 
 function allowanceFromEntitlements(items=[],months=1){
   const out=Object.fromEntries(LEAD_TYPES.map(type=>[type.key,{monthly:0,total:0}]))
@@ -708,10 +717,12 @@ export default function AdminMembershipPlansConfig(){
       </div>
       {!pricingRules.length?<div className="membership-empty">No targeted membership rules yet. Base GROW and SCALE pricing applies to everyone.</div>
         :<div className="membership-rule-grid">
-          {pricingRules.map(item=><article className={`membership-rule-card ${item.is_active?'active':'inactive'}`} key={item.id}>
+          {pricingRules.map(item=>{
+            const status=pricingRuleStatus(item)
+            return <article className={`membership-rule-card ${status.key}`} key={item.id}>
             <div className="membership-rule-card-head">
               <div><span className={`membership-plan-chip ${String(item.plan_group).toLowerCase()}`}>{String(item.plan_group).toUpperCase()}</span><h3>{item.name}</h3></div>
-              <span className={`membership-rule-status ${item.is_active?'active':'inactive'}`}>{item.is_active?'Active':'Disabled'}</span>
+              <span className={`membership-rule-status ${status.key}`}>{status.label}</span>
             </div>
             <div className="membership-target-tags">
               <span className="membership-scope-tag">{pricingScopeLabel(item)}</span>
@@ -733,7 +744,7 @@ export default function AdminMembershipPlansConfig(){
               <small>{offerWindowLabel(item)}{item.notes?` · ${item.notes}`:''}</small>
               <div><button type="button" onClick={()=>openEditRule(item)}>Edit</button><button type="button" className="danger" disabled={saving===`delete-rule-${item.id}`} onClick={()=>deleteRule(item)}>Delete</button></div>
             </div>
-          </article>)}
+          </article>})}
         </div>}
     </section>
 
@@ -840,11 +851,17 @@ export default function AdminMembershipPlansConfig(){
               })}</div>
             </div>}
             <div className="membership-offer-config">
-              <div className="membership-offer-config-head"><div><strong>Special offer</strong><small>Optional time-limited or new-customer pricing</small></div></div>
+              <div className="membership-offer-config-head"><div><strong>Special offer</strong><small>Optional time-limited or first-membership pricing</small></div><span>Automatic order: specific user → new customer → timed offer → industry + city → city/state → industry → all</span></div>
               <div className="membership-offer-grid">
                 <label>Offer badge<input value={rule.offerLabel} onChange={e=>setRule(current=>({...current,offerLabel:e.target.value}))} placeholder="Welcome offer / Hyderabad special"/></label>
                 <label>Customer eligibility<select value={rule.customerEligibility} onChange={e=>setRule(current=>({...current,customerEligibility:e.target.value}))}><option value="any">Any matching customer</option><option value="new">New customers only</option></select></label>
-                {rule.customerEligibility==='new'&&<label>Registration window<input type="number" min="1" max="365" value={rule.newCustomerDays} onChange={e=>setRule(current=>({...current,newCustomerDays:e.target.value}))}/><small>Offer applies only within the first N days after registration.</small></label>}
+                {rule.customerEligibility==='new'&&<label>Registration window<input type="number" min="1" max="365" value={rule.newCustomerDays} onChange={e=>setRule(current=>({...current,newCustomerDays:e.target.value}))}/><small>First membership only, within N days after registration.</small></label>}
+              </div>
+              {rule.customerEligibility==='new'&&<div className="membership-welcome-presets">
+                <span>Quick window</span>
+                {[1,3,7,14].map(days=><button type="button" className={Number(rule.newCustomerDays)===days?'active':''} key={days} onClick={()=>setRule(current=>({...current,newCustomerDays:days}))}>{days} day{days===1?'':'s'}</button>)}
+              </div>
+              <div className="membership-offer-grid membership-offer-grid-placeholder">
               </div>
               <div className="membership-validity-presets">
                 <button type="button" className={rule.validityMode==='always'?'active':''} onClick={()=>applyOfferWindow('always')}>Always</button>
