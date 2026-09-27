@@ -1,6 +1,7 @@
 import {useCallback,useEffect,useMemo,useState} from 'react';
 import {useSearchParams} from 'react-router-dom';
 import {authRequest} from '../../utils/auth';
+import {openApiBlob} from '../../utils/api';
 import './AdminLeadPartnerPayouts.css';
 
 const money=v=>`₹${Number(v||0).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2})}`;
@@ -64,22 +65,27 @@ export default function AdminLeadPartnerPayouts(){
 
   async function openStoredProof(payout){
     setError('');
+    const basePath=`/admin/lead-partner-payouts/${payout.id}/proof`;
     try{
-      const data=await authRequest(`/admin/lead-partner-payouts/${payout.id}/proof`);
-      const source=String(data?.proof_url||'').trim();
-      if(!source){setError('No payment proof is available for this payout.');return}
-      const win=window.open('','_blank');
-      if(!win){setError('Allow pop-ups to view the payment proof.');return}
-      const doc=win.document;
-      doc.title=`Payout #${payout.id} proof`;
-      const style=doc.createElement('style');
-      style.textContent='body{margin:0;background:#111;display:flex;align-items:center;justify-content:center;min-height:100vh}img{max-width:95vw;max-height:95vh;object-fit:contain}';
-      doc.head.appendChild(style);
-      const image=doc.createElement('img');
-      image.src=source;
-      image.alt=`Payout #${payout.id} payment proof`;
-      doc.body.replaceChildren(image);
-    }catch(e){setError(e.message||'Unable to load payout proof')}
+      await openApiBlob(`${basePath}/file`);
+    }catch(streamError){
+      try{
+        const data=await authRequest(basePath);
+        const source=String(data?.proof_url||'').trim();
+        if(!source){setError('No payment proof is available for this payout.');return}
+        const win=window.open('','_blank');
+        if(!win){setError('Allow pop-ups to view the payment proof.');return}
+        const doc=win.document;
+        doc.title=`Payout #${payout.id} proof`;
+        const style=doc.createElement('style');
+        style.textContent='body{margin:0;background:#111;display:flex;align-items:center;justify-content:center;min-height:100vh}img{max-width:95vw;max-height:95vh;object-fit:contain}';
+        doc.head.appendChild(style);
+        const image=doc.createElement('img');
+        image.src=source;
+        image.alt=`Payout #${payout.id} payment proof`;
+        doc.body.replaceChildren(image);
+      }catch(e){setError(e.message||streamError.message||'Unable to load payout proof')}
+    }
   }
 
   async function readProof(event,setter){
