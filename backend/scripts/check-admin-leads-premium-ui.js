@@ -74,9 +74,19 @@ assert(entitlements.includes('Grant leads to a verified business'),'Manual entit
 assert(entitlements.includes('allowExclusive'),'Exclusive entitlement access rule must remain');
 assert(entitlements.includes('claimExpiryDays'),'Claim expiry controls must remain');
 assert(entitlements.includes('Recent entitlements'),'Entitlement history must remain');
+assert(entitlements.includes('Edit entitlement'),'Registration entitlement must stay collapsed behind an edit action');
+assert(entitlements.includes('Create new grant'),'Manual entitlement must stay collapsed behind a create action');
+assert(entitlements.includes('recentEntitlements'),'Saved registration policy and grants must share the recent history feed');
+assert(entitlements.includes('Registration entitlement · saved'),'Saved registration policy must appear in Recent entitlements');
+assert(entitlements.includes('setRegistrationEditorOpen(false)'),'Registration editor must close after save');
+assert(entitlements.includes('setManualEditorOpen(false)'),'Manual grant editor must close after successful grant');
 assert(entitlementsCss.includes('/* Premium Lead Entitlements workspace */'),'Premium Lead Entitlements styling must remain');
 assert(entitlementsCss.includes('grid-template-columns:repeat(3,minmax(0,1fr))'),'Desktop entitlement KPIs must remain readable');
 assert(entitlementsCss.includes('.entitlement-access-options'),'Buyer-access controls must retain premium styling');
 assert(entitlementsCss.includes('.entitlement-table tbody tr:hover'),'Entitlement history table interaction styling must remain');
+assert(entitlementsCss.includes('/* Compact entitlement create/edit workflow */'),'Compact entitlement workflow styling must remain');
+assert(entitlementsCss.includes('.entitlement-saved-summary'),'Saved entitlement summary styling must remain');
+assert(entitlementsCss.includes('.manual-entitlement-placeholder'),'Collapsed manual grant state must remain');
+assert(entitlementsCss.includes('.entitlement-policy-row'),'Saved registration policy history styling must remain');
 
 console.log('Premium Manage Leads regression test passed.');
