@@ -16,5 +16,10 @@ assert(coupon.includes("INSERT INTO coupon_users(coupon_id,user_id) SELECT $1,x 
 assert(coupon.includes("INSERT INTO coupon_industries(coupon_id,industry_id) SELECT $1,x FROM UNNEST($2::int[]) AS x"),'Coupon industry targeting must use a set-based insert');
 assert(!coupon.includes('for(const userId of userIds)await client.query'),'Coupon user targeting must not insert one row per query');
 assert(!coupon.includes('for(const industryId of industryIds)await client.query'),'Coupon industry targeting must not insert one row per query');
+const publicOffers=coupon.slice(coupon.indexOf('async function getPublicOffersForUser'),coupon.indexOf('async function reserveRedemption'));
+assert(publicOffers.includes('NOT EXISTS(SELECT 1 FROM coupon_users'), 'Public coupon offers must evaluate audience eligibility in the main SQL query');
+assert(publicOffers.includes("cr.status IN ('reserved','redeemed')"), 'Public coupon offers must evaluate usage limits in the main SQL query');
+assert(!publicOffers.includes('audienceEligible('), 'Public coupon offer listing must not query audience eligibility per coupon');
+assert(!publicOffers.includes('usageEligible('), 'Public coupon offer listing must not query usage limits per coupon');
 
 console.log('Set-based write efficiency checks passed.');
