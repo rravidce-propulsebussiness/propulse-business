@@ -16,6 +16,8 @@ assert(auth.includes('export const getUser = () => (sessionKnown ? currentUser :
 assert(!auth.includes('JSON.parse(localStorage.getItem(USER_KEY)'), 'Browser auth cache must not be parsed as routing authority')
 assert(app.includes('function SessionBootstrap'), 'App must gate routing on session bootstrap')
 assert(app.includes('<SessionBootstrap><BrowserRouter>'), 'BrowserRouter must render only after session verification')
+assert(app.includes("authRequest('/lead-partner/me')"), 'Lead Partner routes must verify the server-side approval record')
+assert(app.includes('LeadPartnerApprovalPending'), 'Pending Lead Partners must receive an approval-status screen instead of the active workspace')
 assert(signup.includes('maxLength={64}'), 'Signup password controls must enforce the backend character limit')
 assert(signup.includes('new TextEncoder().encode(form.password).length > 72'), 'Signup validation must enforce bcrypt UTF-8 byte bounds')
 
