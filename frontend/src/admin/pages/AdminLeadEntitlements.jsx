@@ -358,20 +358,33 @@ export default function AdminLeadEntitlements(){
 
     <section className="entitlement-panel history">
       <div className="entitlement-panel-head">
-        <div><span>GRANT HISTORY</span><h2>Recent entitlements</h2><p>Usage is counted only for claims made through the specific grant.</p></div>
-        <small>{grants.length} shown</small>
+        <div><span>ENTITLEMENT HISTORY</span><h2>Recent entitlements</h2><p>Saved registration policy changes and issued business grants are shown together here.</p></div>
+        <small>{recentEntitlements.length} shown</small>
       </div>
 
-      {loading?<div className="entitlement-empty">Loading entitlements…</div>:!grants.length?<div className="entitlement-empty">No manual or welcome entitlements have been issued yet.</div>:<div className="entitlement-table-wrap">
+      {loading?<div className="entitlement-empty">Loading entitlements…</div>:!recentEntitlements.length?<div className="entitlement-empty">No entitlement configuration or grants have been saved yet.</div>:<div className="entitlement-table-wrap">
         <table className="entitlement-table">
-          <thead><tr><th>BUSINESS</th><th>SOURCE</th><th>BASIC</th><th>PREMIUM</th><th>ACCESS</th><th>VALIDITY</th><th>STATUS</th><th/></tr></thead>
-          <tbody>{grants.map(item=>{
+          <thead><tr><th>BUSINESS / RULE</th><th>SOURCE</th><th>BASIC</th><th>PREMIUM</th><th>ACCESS</th><th>VALIDITY</th><th>STATUS</th><th/></tr></thead>
+          <tbody>{recentEntitlements.map(item=>{
+            if(item.kind==='policy'){
+              const enabled=Boolean(savedRegistration?.new_business_enabled)
+              return <tr key="registration-policy" className="entitlement-policy-row">
+                <td><strong>All new verified businesses</strong><small>Registration entitlement · saved {formatDate(savedRegistration.updated_at)}</small></td>
+                <td><span className="grant-source policy">Policy</span></td>
+                <td><strong>{savedRegistration.new_business_shared_quantity||0}</strong><small>Configured Basic allowance</small></td>
+                <td><strong>{savedRegistration.new_business_premium_quantity||0}</strong><small>Configured Premium allowance</small></td>
+                <td><div className="grant-access-tags">{registrationAccess.map(label=><span key={label}>{label}</span>)}{savedRegistration.new_business_allow_exclusive&&<span className="exclusive">Exclusive</span>}</div></td>
+                <td><strong>{savedRegistration.new_business_window_days||0} registration days</strong><small>Claimed access: {Number(savedRegistration.claim_expiry_days||0)===0?'Lifetime':`${savedRegistration.claim_expiry_days} days`}</small></td>
+                <td><span className={`grant-status ${enabled?'active':'disabled'}`}>{enabled?'Enabled':'Disabled'}</span></td>
+                <td><button className="history-edit" type="button" onClick={()=>{setRegistrationEditorOpen(true);window.scrollTo({top:0,behavior:'smooth'})}}>Edit</button></td>
+              </tr>
+            }
             const sharedRemaining=Math.max(0,Number(item.shared_quantity||0)-Number(item.used_shared||0))
             const premiumRemaining=Math.max(0,Number(item.premium_quantity||0)-Number(item.used_premium||0))
             const expired=item.expires_at&&new Date(item.expires_at)<=new Date()
             const status=item.revoked_at?'Revoked':expired?'Expired':'Active'
             const access=grantAccessLabels(item)
-            return <tr key={item.id}>
+            return <tr key={`grant-${item.id}`}>
               <td><strong>{item.business_name||item.name}</strong><small>#{item.user_id} · {item.email}</small></td>
               <td><span className={`grant-source ${item.source}`}>{item.source==='new_business'?'New business':'Admin'}</span></td>
               <td><strong>{sharedRemaining}</strong><small>{item.used_shared||0} used / {item.shared_quantity} granted</small></td>
