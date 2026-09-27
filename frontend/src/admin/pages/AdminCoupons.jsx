@@ -12,9 +12,16 @@ const PURCHASE_TYPES=[
 const emptyCoupon=()=>({
   code:'',
   description:'',
+  benefit_type:'discount',
   discount_type:'percent',
   discount_value:'',
   max_discount:'',
+  reward_value_type:'fixed',
+  reward_value:'',
+  bonus_lead_type:'shared',
+  bonus_lead_quantity:1,
+  bonus_valid_days:30,
+  is_public_offer:false,
   min_order_amount:'',
   usage_limit:'',
   per_user_limit:'',
@@ -63,6 +70,19 @@ const purchaseLabel=types=>{
   const values=Array.isArray(types)?types:[]
   if(!values.length)return'No purchase type'
   return values.map(type=>PURCHASE_TYPES.find(item=>item.key===type)?.label||type).join(' · ')
+}
+const benefitLabel=item=>{
+  const type=String(item?.benefit_type||'discount')
+  if(type==='wallet_bonus'){
+    return item.reward_value_type==='percent'
+      ?`${Number(item.reward_value||0)}% extra wallet balance`
+      :`${money(item.reward_value)} bonus wallet balance`
+  }
+  if(type==='lead_bonus'){
+    const qty=Number(item.bonus_lead_quantity||0)
+    return `+${qty} ${String(item.bonus_lead_type||'shared')==='premium'?'Premium':'Basic'} lead${qty===1?'':'s'}`
+  }
+  return item.discount_type==='percent'?`${Number(item.discount_value||0)}% discount`:`${money(item.discount_value)} discount`
 }
 
 export default function AdminCoupons(){
@@ -273,8 +293,11 @@ export default function AdminCoupons(){
       const body={
         ...form,
         code:String(form.code||'').trim().toUpperCase(),
-        discount_value:Number(form.discount_value),
-        max_discount:form.max_discount===''?null:Number(form.max_discount),
+        discount_value:form.benefit_type==='discount'?Number(form.discount_value):0,
+        max_discount:form.benefit_type==='discount'&&form.max_discount!==''?Number(form.max_discount):null,
+        reward_value:form.benefit_type==='wallet_bonus'?Number(form.reward_value):0,
+        bonus_lead_quantity:form.benefit_type==='lead_bonus'?Number(form.bonus_lead_quantity):0,
+        bonus_valid_days:Number(form.bonus_valid_days||0),
         min_order_amount:Number(form.min_order_amount||0),
         usage_limit:form.usage_limit===''?null:Number(form.usage_limit),
         per_user_limit:form.per_user_limit===''?null:Number(form.per_user_limit),
@@ -330,8 +353,8 @@ export default function AdminCoupons(){
     <section className="coupon-premium-hero">
       <div className="coupon-hero-copy">
         <span>PROMOTIONS / COUPONS</span>
-        <h1>Coupon campaigns</h1>
-        <p>Create one coupon rule and control where it works: memberships, leads, wallet top-ups, selected industries, selected businesses or specific GROW/SCALE billing cycles.</p>
+        <h1>Promotions & coupons</h1>
+        <p>Create discounts, bonus wallet balance and bonus lead rewards from the same campaign engine. Scope each offer to Memberships, Leads, Wallet top-ups or all purchases.</p>
       </div>
       <div className="coupon-hero-actions">
         <div className="coupon-hero-live"><i/><div><strong>{stats.active}</strong><span>active now</span></div></div>
@@ -351,8 +374,8 @@ export default function AdminCoupons(){
 
     <section className="coupon-action-bar">
       <div>
-        <strong>Coupon workspace</strong>
-        <small>Create at the top; manage existing campaigns below.</small>
+        <strong>Promotion workspace</strong>
+        <small>Discounts and rewards use the same targeting, validity and usage rules.</small>
       </div>
       <button type="button" onClick={openCreate}>＋ Create coupon</button>
     </section>
@@ -397,8 +420,8 @@ export default function AdminCoupons(){
               <p className="coupon-description">{item.description||'No campaign description'}</p>
 
               <div className="coupon-discount-block">
-                <div><span>Discount</span><strong>{item.discount_type==='percent'?`${Number(item.discount_value)}%`:money(item.discount_value)}</strong>{item.max_discount!=null&&<small>Max {money(item.max_discount)}</small>}</div>
-                <div><span>Minimum order</span><strong>{Number(item.min_order_amount)>0?money(item.min_order_amount):'None'}</strong></div>
+                <div><span>{String(item.benefit_type||'discount')==='discount'?'Discount':'Reward'}</span><strong>{benefitLabel(item)}</strong>{String(item.benefit_type||'discount')==='discount'&&item.max_discount!=null&&<small>Max {money(item.max_discount)}</small>}{item.is_public_offer&&<small>Shown to eligible customers</small>}</div>
+                <div><span>Minimum purchase</span><strong>{Number(item.min_order_amount)>0?money(item.min_order_amount):'None'}</strong></div>
               </div>
 
               <div className="coupon-card-tags">
@@ -429,25 +452,48 @@ export default function AdminCoupons(){
     {modalOpen&&<div className="coupon-modal-backdrop" onClick={closeModal}>
       <form className="coupon-modal" onSubmit={save} onClick={e=>e.stopPropagation()}>
         <div className="coupon-modal-head">
-          <div><span>COUPON CAMPAIGN</span><h2>{editing?'Edit coupon':'Create coupon'}</h2><p>Configure discount, purchase scope, audience, validity and usage limits in one rule.</p></div>
+          <div><span>PROMOTION CAMPAIGN</span><h2>{editing?'Edit promotion':'Create promotion'}</h2><p>Configure the benefit, purchase scope, audience, visibility, validity and usage limits in one rule.</p></div>
           <button type="button" onClick={closeModal}>×</button>
         </div>
 
         <div className="coupon-modal-body">
           <section className="coupon-editor-section">
-            <div className="coupon-editor-title"><span>01</span><div><strong>Coupon & discount</strong><small>Code, discount value and checkout conditions</small></div></div>
-            <div className="coupon-form-grid">
-              <label>Coupon code<input required maxLength="50" value={form.code} onChange={e=>setForm(current=>({...current,code:e.target.value.toUpperCase()}))} placeholder="WELCOME20"/></label>
-              <label>Discount type<select value={form.discount_type} onChange={e=>setForm(current=>({...current,discount_type:e.target.value}))}><option value="percent">Percentage</option><option value="fixed">Fixed amount</option></select></label>
-              <label>{form.discount_type==='percent'?'Discount %':'Discount amount ₹'}<input required type="number" min="0.01" max={form.discount_type==='percent'?100:undefined} step="0.01" value={form.discount_value} onChange={e=>setForm(current=>({...current,discount_value:e.target.value}))}/></label>
-              <label>Maximum discount ₹<input type="number" min="0" step="0.01" value={form.max_discount??''} onChange={e=>setForm(current=>({...current,max_discount:e.target.value}))} placeholder="No cap"/></label>
-              <label>Minimum order ₹<input type="number" min="0" step="0.01" value={form.min_order_amount??''} onChange={e=>setForm(current=>({...current,min_order_amount:e.target.value}))} placeholder="0"/></label>
-              <label className="wide">Description<input value={form.description||''} onChange={e=>setForm(current=>({...current,description:e.target.value}))} placeholder="Welcome discount for selected customers"/></label>
+            <div className="coupon-editor-title"><span>01</span><div><strong>Campaign benefit</strong><small>Choose what the customer receives after a successful purchase</small></div></div>
+            <div className="coupon-benefit-picker">
+              <button type="button" className={form.benefit_type==='discount'?'selected':''} onClick={()=>setForm(current=>({...current,benefit_type:'discount'}))}><span>%</span><div><strong>Checkout discount</strong><small>Reduce the amount the customer pays</small></div></button>
+              <button type="button" className={form.benefit_type==='wallet_bonus'?'selected':''} onClick={()=>setForm(current=>({...current,benefit_type:'wallet_bonus'}))}><span>₹+</span><div><strong>Bonus wallet balance</strong><small>Example: add ₹5,000 and receive ₹6,000</small></div></button>
+              <button type="button" className={form.benefit_type==='lead_bonus'?'selected':''} onClick={()=>setForm(current=>({...current,benefit_type:'lead_bonus'}))}><span>◈+</span><div><strong>Bonus lead credit</strong><small>Example: buy a lead and get another lead credit</small></div></button>
+            </div>
+            <div className="coupon-form-grid coupon-benefit-fields">
+              <label>Campaign code<input required maxLength="50" value={form.code} onChange={e=>setForm(current=>({...current,code:e.target.value.toUpperCase()}))} placeholder="WELCOME20"/></label>
+              {form.benefit_type==='discount'&&<>
+                <label>Discount type<select value={form.discount_type} onChange={e=>setForm(current=>({...current,discount_type:e.target.value}))}><option value="percent">Percentage</option><option value="fixed">Fixed amount</option></select></label>
+                <label>{form.discount_type==='percent'?'Discount %':'Discount amount ₹'}<input required type="number" min="0.01" max={form.discount_type==='percent'?100:undefined} step="0.01" value={form.discount_value} onChange={e=>setForm(current=>({...current,discount_value:e.target.value}))}/></label>
+                <label>Maximum discount ₹<input type="number" min="0" step="0.01" value={form.max_discount??''} onChange={e=>setForm(current=>({...current,max_discount:e.target.value}))} placeholder="No cap"/></label>
+              </>}
+              {form.benefit_type==='wallet_bonus'&&<>
+                <label>Bonus type<select value={form.reward_value_type} onChange={e=>setForm(current=>({...current,reward_value_type:e.target.value}))}><option value="fixed">Fixed bonus ₹</option><option value="percent">Percentage extra</option></select></label>
+                <label>{form.reward_value_type==='percent'?'Extra balance %':'Bonus balance ₹'}<input required type="number" min="0.01" step="0.01" value={form.reward_value} onChange={e=>setForm(current=>({...current,reward_value:e.target.value}))}/></label>
+              </>}
+              {form.benefit_type==='lead_bonus'&&<>
+                <label>Bonus lead type<select value={form.bonus_lead_type} onChange={e=>setForm(current=>({...current,bonus_lead_type:e.target.value}))}><option value="shared">Basic lead</option><option value="premium">Premium lead</option></select></label>
+                <label>Bonus lead quantity<input required type="number" min="1" max="1000" step="1" value={form.bonus_lead_quantity} onChange={e=>setForm(current=>({...current,bonus_lead_quantity:e.target.value}))}/></label>
+                <label>Bonus valid for days<input type="number" min="0" max="3650" step="1" value={form.bonus_valid_days} onChange={e=>setForm(current=>({...current,bonus_valid_days:e.target.value}))}/><small>0 = no expiry for the bonus lead credit.</small></label>
+              </>}
+              <label>Minimum purchase ₹<input type="number" min="0" step="0.01" value={form.min_order_amount??''} onChange={e=>setForm(current=>({...current,min_order_amount:e.target.value}))} placeholder={form.benefit_type==='wallet_bonus'?'5000':'0'}/></label>
+              <label className="wide">Description<input value={form.description||''} onChange={e=>setForm(current=>({...current,description:e.target.value}))} placeholder={form.benefit_type==='wallet_bonus'?'Add ₹5,000 and get ₹6,000 in wallet':form.benefit_type==='lead_bonus'?'Buy a lead and get 1 bonus Basic lead':'Welcome discount for selected customers'}/></label>
+              <label className="coupon-public-control"><input type="checkbox" checked={form.is_public_offer===true} onChange={e=>setForm(current=>({...current,is_public_offer:e.target.checked}))}/><span><strong>Show this offer to customers</strong><small>Eligible public offers appear in supported checkout screens such as Add Balance.</small></span></label>
             </div>
           </section>
 
           <section className="coupon-editor-section">
-            <div className="coupon-editor-title"><span>02</span><div><strong>Purchase scope</strong><small>Choose where the code can be redeemed</small></div></div>
+            <div className="coupon-editor-title"><span>02</span><div><strong>Purchase scope</strong><small>Choose Membership-only, Lead-only, Wallet-only, All purchases or any combination</small></div></div>
+            <div className="coupon-scope-shortcuts">
+              <button type="button" className={form.purchase_types.length===PURCHASE_TYPES.length?'active':''} onClick={()=>setForm(current=>({...current,purchase_types:PURCHASE_TYPES.map(item=>item.key)}))}>All purchases</button>
+              <button type="button" className={form.purchase_types.length===1&&form.purchase_types[0]==='membership'?'active':''} onClick={()=>setForm(current=>({...current,purchase_types:['membership']}))}>Membership only</button>
+              <button type="button" className={form.purchase_types.length===1&&form.purchase_types[0]==='lead'?'active':''} onClick={()=>setForm(current=>({...current,purchase_types:['lead']}))}>Lead only</button>
+              <button type="button" className={form.purchase_types.length===1&&form.purchase_types[0]==='wallet_topup'?'active':''} onClick={()=>setForm(current=>({...current,purchase_types:['wallet_topup']}))}>Wallet only</button>
+            </div>
             <div className="coupon-purchase-types">
               {PURCHASE_TYPES.map(item=><button type="button" key={item.key} className={form.purchase_types.includes(item.key)?'selected':''} onClick={()=>toggle('purchase_types',item.key)}><span>{item.key==='membership'?'★':item.key==='lead'?'◈':'₹'}</span><div><strong>{item.label}</strong><small>{item.note}</small></div><b>{form.purchase_types.includes(item.key)?'✓':'+'}</b></button>)}
             </div>
@@ -490,14 +536,14 @@ export default function AdminCoupons(){
               {validityMode!=='always'&&<><label>Starts<input type="datetime-local" value={form.starts_at||''} onChange={e=>{setValidityMode('custom');setForm(current=>({...current,starts_at:e.target.value}))}}/></label><label>Ends<input type="datetime-local" value={form.expires_at||''} onChange={e=>{setValidityMode('custom');setForm(current=>({...current,expires_at:e.target.value}))}}/></label></>}
               <label>Total usage limit<input type="number" min="1" step="1" value={form.usage_limit??''} onChange={e=>setForm(current=>({...current,usage_limit:e.target.value}))} placeholder="Unlimited"/></label>
               <label>Per-user limit<input type="number" min="1" step="1" value={form.per_user_limit??''} onChange={e=>setForm(current=>({...current,per_user_limit:e.target.value}))} placeholder="Unlimited"/></label>
-              <label className="coupon-active-control"><input type="checkbox" checked={form.is_active!==false} onChange={e=>setForm(current=>({...current,is_active:e.target.checked}))}/><span><strong>Coupon enabled</strong><small>Customers can redeem it when all rules match.</small></span></label>
+              <label className="coupon-active-control"><input type="checkbox" checked={form.is_active!==false} onChange={e=>setForm(current=>({...current,is_active:e.target.checked}))}/><span><strong>Promotion enabled</strong><small>Customers can use it when all rules match.</small></span></label>
             </div>
           </section>
         </div>
 
         <div className="coupon-modal-actions">
           <button type="button" onClick={closeModal}>Cancel</button>
-          <button className="primary" disabled={saving}>{saving?'Saving…':editing?'Save coupon':'Create coupon'}</button>
+          <button className="primary" disabled={saving}>{saving?'Saving…':editing?'Save promotion':'Create promotion'}</button>
         </div>
       </form>
     </div>}
