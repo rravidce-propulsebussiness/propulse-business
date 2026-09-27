@@ -45,7 +45,7 @@ export default function LeadPartnerReports(){
     <main className="reports-main">
       <header className="reports-topbar"><div className="reports-breadcrumb"><span>Lead Partner</span><b>/</b><strong>Reports</strong></div></header>
       <div className="reports-content">
-        <section className="reports-heading"><div><h1>Lead &amp; Earnings Reports</h1></div><button className="reports-export" type="button" onClick={exportReport}>⇩ Export Report</button></section>
+        <section className="reports-heading premium-page-hero"><div className="reports-hero-copy"><span>LEAD PARTNER / REPORTS</span><h1>Lead reports</h1><p>Track buyer-submitted lead reports, Admin review outcomes and verified lead-quality signals.</p><div className="reports-hero-meta"><span><b>{counts.reported_leads}</b> reported leads</span><span><b>{counts.pending}</b> pending</span><span><b>{counts.verified_fake}</b> verified fake</span></div></div><div className="reports-hero-actions"><button type="button" onClick={refresh} disabled={refreshing}><span>↻</span><div><b>{refreshing?'Refreshing…':'Refresh'}</b><small>Reload report outcomes</small></div></button><button className="reports-export" type="button" onClick={exportReport}><span>⇩</span><div><b>Export report</b><small>Download filtered CSV</small></div></button></div></section>
         {error&&<div className="reports-alert">{error}<button onClick={load}>Retry</button></div>}
         <section className="reports-kpi-grid">
           <article><div className="reports-kpi-icon blue">▤</div><div><span>Reported Leads</span><strong>{loading?'—':counts.reported_leads}</strong></div></article>
