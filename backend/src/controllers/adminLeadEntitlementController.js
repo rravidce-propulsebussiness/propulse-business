@@ -10,7 +10,10 @@ function statusFor(error){
     INVALID_GRANT:400,
     GRANT_NOT_FOUND:404,
     INVALID_ENTITLEMENT_RULE:400,
-    ENTITLEMENT_RULE_NOT_FOUND:404
+    ENTITLEMENT_RULE_NOT_FOUND:404,
+    INVALID_BUSINESS_CAMPAIGN:400,
+    BUSINESS_CAMPAIGN_NOT_FOUND:404,
+    CAMPAIGN_ALLOWANCE_BELOW_USAGE:400
   };
   return map[error.code]||500;
 }
@@ -22,11 +25,12 @@ async function overview(req,res){
 
 async function businesses(req,res){
   try{
-    return res.json({data:await grantService.listVerifiedBusinesses({
+    return res.json({data:await grantService.listBusinesses({
       search:req.query.search||'',
-      limit:req.query.limit||30
+      limit:req.query.limit||30,
+      verification:req.query.verification||'any'
     })});
-  }catch(error){console.error('Verified business lookup failed:',error);return res.status(500).json({error:'Failed to load verified businesses'})}
+  }catch(error){console.error('Business lookup failed:',error);return res.status(500).json({error:'Failed to load businesses'})}
 }
 
 async function createRule(req,res){
@@ -53,6 +57,33 @@ async function deleteRule(req,res){
     const status=statusFor(error);
     if(status===500)console.error('Registration entitlement rule delete failed:',error);
     return res.status(status).json({error:error.message||'Failed to delete registration entitlement rule',code:error.code});
+  }
+}
+
+async function createCampaign(req,res){
+  try{return res.status(201).json(await grantService.createBusinessCampaign(req.body||{},req.user?.id))}
+  catch(error){
+    const status=statusFor(error);
+    if(status===500)console.error('Business entitlement campaign create failed:',error);
+    return res.status(status).json({error:error.message||'Failed to create business entitlement',code:error.code});
+  }
+}
+
+async function updateCampaign(req,res){
+  try{return res.json(await grantService.updateBusinessCampaign(req.params.campaignId,req.body||{},req.user?.id))}
+  catch(error){
+    const status=statusFor(error);
+    if(status===500)console.error('Business entitlement campaign update failed:',error);
+    return res.status(status).json({error:error.message||'Failed to update business entitlement',code:error.code});
+  }
+}
+
+async function deleteCampaign(req,res){
+  try{return res.json(await grantService.deleteBusinessCampaign(req.params.campaignId,req.user?.id))}
+  catch(error){
+    const status=statusFor(error);
+    if(status===500)console.error('Business entitlement campaign delete failed:',error);
+    return res.status(status).json({error:error.message||'Failed to delete business entitlement',code:error.code});
   }
 }
 
@@ -83,4 +114,4 @@ async function deleteGrant(req,res){
   }
 }
 
-module.exports={overview,businesses,createRule,updateRule,deleteRule,createGrant,updateGrant,deleteGrant};
+module.exports={overview,businesses,createRule,updateRule,deleteRule,createCampaign,updateCampaign,deleteCampaign,createGrant,updateGrant,deleteGrant};
