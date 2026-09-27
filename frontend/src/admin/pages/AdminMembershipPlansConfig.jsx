@@ -259,7 +259,7 @@ export default function AdminMembershipPlansConfig() {
         </div>; })}</div>
 
         <div className="editor-section membership-feature-section"><div className="benefit-head"><div><b>Package features</b><small>Shown on the customer membership page.</small></div><button type="button" className="mini-action" onClick={() => { const value = prompt('Feature name'); if (value?.trim()) setField('benefits', [...form.benefits, value.trim()]); }}>＋ Add</button></div><div className="chips">{form.benefits.map((item, i) => <span key={i}>{item}<button type="button" onClick={() => setField('benefits', form.benefits.filter((_, n) => n !== i))}>×</button></span>)}</div></div>
-        <div className="membership-source-note"><span>Single source</span><p>Membership package settings live here. GROW/SCALE service cards and public service pricing live only in <a href="/admin/service-pricing">Service Pricing</a>.</p></div>
+        <div className="membership-source-note"><span>Single source</span><p>GROW and SCALE package price, billing cycles, lead allowances and customer-facing features are managed only here.</p></div>
         <div className="form-footer membership-save-row"><button className="primary create-btn" disabled={loading}>{loading?'Loading…':`Save ${form.name} package`}</button></div>
       </form>
     </section>}
