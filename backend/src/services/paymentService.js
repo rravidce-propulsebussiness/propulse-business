@@ -74,7 +74,7 @@ async function createMembershipCheckout({userId,membershipPlanId,couponCode}) {
       coupon,subtotalAmount:subtotal,membershipChangeType:changeType,membershipPreviousPlanId:previousPlanId,membershipCredit,membershipTargetStartsAt:targetStartsAt,membershipTargetExpiresAt:targetExpiresAt,
       membershipPricingRuleId:plan.pricing_rule_id||null,membershipLeadEntitlements:plan.lead_entitlements||[],membershipEffectivePrice:grossPlanPrice});
     let activation=null;
-    if(result.externalAmount<=0){activation=await activateMembership(client,result.payment);if(coupon)await couponService.redeemForPayment(client,result.payment.id);}
+    if(result.externalAmount<=0){activation=await activateMembership(client,result.payment);if(coupon){await couponService.redeemForPayment(client,result.payment.id);await couponService.applyRewardForPayment(client,result.payment.id)}}
     await client.query('COMMIT');
     return {...result,plan,proration:changeType&&changeType!=='renew'?{changeType,previousPlanName:currentMembership?.plan_name||null,previousPlanPrice:Number(currentMembership?.price||0),credit:Number(membershipCredit.toFixed(2)),grossPrice:grossPlanPrice,payableBeforeCoupon:subtotal,targetStartsAt,targetExpiresAt}:null,coupon:coupon?{code:coupon.coupon.code,discountAmount:coupon.discountAmount,subtotalAmount:subtotal,finalAmount:coupon.finalAmount}:null};
   }catch(e){await client.query('ROLLBACK');throw e}finally{client.release()}
@@ -125,7 +125,7 @@ async function updatePaymentStatus(id,status,adminId,notes) {
     if(status!=='paid'&&payment.purchase_type==='lead')await client.query(`UPDATE lead_purchases SET status='cancelled',updated_at=CURRENT_TIMESTAMP WHERE payment_id=$1 AND status='pending_payment'`,[payment.id]);
 
     if(status!=='paid'&&payment.purchase_type==='investment')await client.query(`UPDATE investments SET status='cancelled',updated_at=CURRENT_TIMESTAMP WHERE payment_id=$1 AND status='pending'`,[payment.id]);
-    const updated=(await client.query(`UPDATE payments SET status=$1::varchar,reviewed_by=$2,reviewed_at=CURRENT_TIMESTAMP,paid_at=CASE WHEN $1::varchar='paid' THEN CURRENT_TIMESTAMP ELSE paid_at END,notes=COALESCE($3::text,notes),updated_at=CURRENT_TIMESTAMP WHERE id=$4 RETURNING *`,[status,adminId,notes||null,id])).rows[0]; await client.query('COMMIT'); return{...updated,membership_activation:membership,lead_purchase:leadPurchase,investment_activation:investment};
+    const updated=(await client.query(`UPDATE payments SET status=$1::varchar,reviewed_by=$2,reviewed_at=CURRENT_TIMESTAMP,paid_at=CASE WHEN $1::varchar='paid' THEN CURRENT_TIMESTAMP ELSE paid_at END,notes=COALESCE($3::text,notes),updated_at=CURRENT_TIMESTAMP WHERE id=$4 RETURNING *`,[status,adminId,notes||null,id])).rows[0]; const promotionReward=status==='paid'&&payment.coupon_id?await couponService.applyRewardForPayment(client,payment.id):null; await client.query('COMMIT'); return{...updated,membership_activation:membership,lead_purchase:leadPurchase,investment_activation:investment,promotion_reward:promotionReward};
   }catch(error){await client.query('ROLLBACK');throw error;}finally{client.release()}
 }
 
