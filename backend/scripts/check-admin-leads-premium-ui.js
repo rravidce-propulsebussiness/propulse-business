@@ -69,24 +69,24 @@ assert(sheetSync.includes('Import precedence'),'Google Sheets precedence guidanc
 
 assert(entitlements.includes('LEAD OPERATIONS / ACCESS CONTROL'),'Lead Entitlements premium hero must remain');
 assert(entitlements.includes('entitlement-policy-status'),'Lead Entitlements policy status must remain');
-assert(entitlements.includes('Registration entitlement'),'Registration entitlement controls must remain');
-assert(entitlements.includes('Grant leads to a verified business'),'Manual entitlement controls must remain');
+assert(entitlements.includes('Create registration rule'),'Registration rule must be created from a compact action');
+assert(entitlements.includes('Create entitlement'),'Manual entitlements must support repeated creation');
+assert(entitlements.includes('recentEntitlements'),'Saved registration policy and grants must share the recent history feed');
+assert(entitlements.includes('openEditGrant(item)'),'Recent grants must support editing');
+assert(entitlements.includes('deleteGrant(item)'),'Recent grants must support deletion');
+assert(entitlements.includes('deleteSettings'),'Registration rule must support deletion');
+assert(entitlements.includes('history-edit')&&entitlements.includes('history-delete'),'Recent rows must expose Edit and Delete actions');
+assert(entitlements.includes('entitlement-modal-backdrop'),'Entitlement forms must stay out of the main page until an action is opened');
 assert(entitlements.includes('allowExclusive'),'Exclusive entitlement access rule must remain');
 assert(entitlements.includes('claimExpiryDays'),'Claim expiry controls must remain');
 assert(entitlements.includes('Recent entitlements'),'Entitlement history must remain');
-assert(entitlements.includes('Edit entitlement'),'Registration entitlement must stay collapsed behind an edit action');
-assert(entitlements.includes('Create new grant'),'Manual entitlement must stay collapsed behind a create action');
-assert(entitlements.includes('recentEntitlements'),'Saved registration policy and grants must share the recent history feed');
-assert(entitlements.includes('Registration entitlement · saved'),'Saved registration policy must appear in Recent entitlements');
-assert(entitlements.includes('setRegistrationEditorOpen(false)'),'Registration editor must close after save');
-assert(entitlements.includes('setManualEditorOpen(false)'),'Manual grant editor must close after successful grant');
 assert(entitlementsCss.includes('/* Premium Lead Entitlements workspace */'),'Premium Lead Entitlements styling must remain');
 assert(entitlementsCss.includes('grid-template-columns:repeat(3,minmax(0,1fr))'),'Desktop entitlement KPIs must remain readable');
 assert(entitlementsCss.includes('.entitlement-access-options'),'Buyer-access controls must retain premium styling');
 assert(entitlementsCss.includes('.entitlement-table tbody tr:hover'),'Entitlement history table interaction styling must remain');
-assert(entitlementsCss.includes('/* Compact entitlement create/edit workflow */'),'Compact entitlement workflow styling must remain');
-assert(entitlementsCss.includes('.entitlement-saved-summary'),'Saved entitlement summary styling must remain');
-assert(entitlementsCss.includes('.manual-entitlement-placeholder'),'Collapsed manual grant state must remain');
-assert(entitlementsCss.includes('.entitlement-policy-row'),'Saved registration policy history styling must remain');
+assert(entitlementsCss.includes('/* Entitlement action + multi-record manager */'),'Multi-entitlement action styling must remain');
+assert(entitlementsCss.includes('.entitlement-action-bar'),'Compact entitlement action bar must remain');
+assert(entitlementsCss.includes('.entitlement-modal-backdrop'),'Entitlement editor modal styling must remain');
+assert(entitlementsCss.includes('.entitlement-row-actions'),'Recent entitlement action styling must remain');
 
 console.log('Premium Manage Leads regression test passed.');
