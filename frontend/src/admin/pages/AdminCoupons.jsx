@@ -61,11 +61,6 @@ const couponStatus=item=>{
   if(end&&end<=now)return{key:'expired',label:'Expired'}
   return{key:'active',label:'Active'}
 }
-const planLabel=plan=>{
-  const group=String(plan.plan_group||plan.name||'').toUpperCase()
-  const cycle=plan.billing_period||`${plan.billing_months||1} month`
-  return `${group} · ${cycle}`
-}
 const purchaseLabel=types=>{
   const values=Array.isArray(types)?types:[]
   if(!values.length)return'No purchase type'
