@@ -291,15 +291,188 @@ export default function AdminUsers() {
       </div>}
     </section>
 
-    {selected && <div className="modal-backdrop" onClick={() => setSelected(null)}><div className="user-modal user-management-modal premium-user-modal" onClick={e => e.stopPropagation()}><div className="modal-head premium-user-modal-head"><div><span className="eyebrow">ACCOUNT MANAGEMENT</span><h2>{selected.business_name || selected.name}</h2><small className="management-subtitle">#{selected.id} · {accountTypeLabel(selected.role)} account · {selected.is_active?'Active':'Inactive'}</small></div><button onClick={() => setSelected(null)}>×</button></div>{error && <div className="users-error">{error}</div>}
-      <div className="management-section role-management-section"><div className="management-section-head"><div><b>Account type</b><small>Change this account between User, Lead Partner, and Admin.</small></div></div><div className="role-management-controls"><select value={roleDraft} onChange={e => setRoleDraft(e.target.value)} disabled={roleSaving || Number(currentUser?.id) === Number(selected.id)}><option value="business">User</option><option value="lead_partner">Lead Partner</option><option value="admin">Admin</option></select><button type="button" className="admin-primary-btn" onClick={changeRole} disabled={roleSaving || roleDraft === selected.role || Number(currentUser?.id) === Number(selected.id)}>{roleSaving ? 'Updating...' : 'Change account type'}</button></div>{Number(currentUser?.id) === Number(selected.id) && <div className="role-management-note">You cannot change your own administrator role.</div>}</div>
-      <form onSubmit={saveProfile}>{editing && <div className="inline-actions"><button type="button" onClick={() => setEditing(false)}>Cancel</button><button className="admin-primary-btn" type="submit" disabled={saving || catalogLoading}>{saving ? 'Saving...' : 'Save all business changes'}</button></div>}<div className="management-section"><div className="management-section-head"><div><b>User & business details</b></div>{!editing && <button type="button" onClick={() => ['business', 'lead_partner'].includes(selected.role) ? startBusinessEdit() : setEditing(true)}>Edit</button>}</div>
-      {editing ? <div className="management-grid"><label>Name<input required value={editForm.name} onChange={e => setEditForm({ ...editForm, name: e.target.value })} /></label><label>Email<input required type="email" value={editForm.email} onChange={e => setEditForm({ ...editForm, email: e.target.value })} /></label>{['business', 'lead_partner'].includes(selected.role) && <><label>Phone<input required value={editForm.phone} onChange={e => setEditForm({ ...editForm, phone: e.target.value })} /></label><label>Business name<input required value={editForm.businessName} onChange={e => setEditForm({ ...editForm, businessName: e.target.value })} /></label><label className="management-wide">Business details<textarea required rows="3" value={editForm.businessDetails} onChange={e => setEditForm({ ...editForm, businessDetails: e.target.value })} /></label><div className="management-wide configuration-editor">{catalogLoading && <div className="configuration-loading">Loading configuration options…</div>}<div className="configuration-title"><b>Services</b><button type="button" onClick={() => setEditForm({ ...editForm, services: [...editForm.services, emptyService()] })}>+ Add service</button></div>{editForm.services.map((x, i) => <div className="configuration-row" key={`service-${i}`}><span>{String(i + 1).padStart(2, '0')}</span><select required value={x.industryId} onChange={e => updateService(i, 'industryId', e.target.value)}><option value="">Industry</option>{(catalogs?.industries || []).map(v => <option key={v.id} value={v.id}>{v.name}</option>)}</select><select required disabled={!x.industryId} value={x.serviceId} onChange={e => updateService(i, 'serviceId', e.target.value)}><option value="">Service</option>{serviceOptions[i]?.map(v => <option key={v.id} value={v.id}>{v.name}</option>)}</select><select disabled={!x.serviceId} value={x.subserviceId} onChange={e => updateService(i, 'subserviceId', e.target.value)}><option value="">All subservices</option>{subserviceOptions[i]?.map(v => <option key={v.id} value={v.id}>{v.name}</option>)}</select><button type="button" className="add-all-services" onClick={() => addAllServicesForIndustry(i)} disabled={!x.industryId}>Add all services</button><button type="button" onClick={() => setEditForm({ ...editForm, services: editForm.services.filter((_, n) => n !== i) })}>Remove</button></div>)}</div><div className="management-wide configuration-editor"><div className="configuration-title"><b>Locations</b><button type="button" onClick={() => setEditForm({ ...editForm, locations: [...editForm.locations, emptyLocation()] })}>+ Add location</button></div>{editForm.locations.map((x, i) => <div className="configuration-row location-config" key={`location-${i}`}><span>{String(i + 1).padStart(2, '0')}</span><select required value={x.stateId} onChange={e => updateLocation(i, 'stateId', e.target.value)}><option value="">State / UT</option>{(catalogs?.states || []).map(v => <option key={v.id} value={v.id}>{v.name}</option>)}</select><select required disabled={!x.stateId} value={x.cityId} onChange={e => updateLocation(i, 'cityId', e.target.value)}><option value="">City</option>{cityOptions[i]?.map(v => <option key={v.id} value={v.id}>{v.name}</option>)}</select><select disabled={!x.cityId} value={x.subcityId} onChange={e => updateLocation(i, 'subcityId', e.target.value)}><option value="">All areas</option>{subcityOptions[i]?.map(v => <option key={v.id} value={v.id}>{v.name}</option>)}</select><select disabled={!x.cityId} value={x.pincode} onChange={e => updateLocation(i, 'pincode', e.target.value)}><option value="">Pincode</option>{((catalogs?.cities || []).find(v => String(v.id) === String(x.cityId))?.pincodes || []).map(v => <option key={v.id} value={v.pincode}>{v.pincode}{v.officeName ? ` · ${v.officeName}` : ''}</option>)}</select><button type="button" onClick={() => setEditForm({ ...editForm, locations: editForm.locations.filter((_, n) => n !== i) })}>Remove</button></div>)}</div></>}</div> : <div className="detail-list"><div><span>Name</span><b>{selected.name}</b></div><div><span>Email</span><b>{selected.email}</b></div><div><span>Phone</span><b>{selected.phone || '—'}</b></div><div><span>Business</span><b>{selected.business_name || '—'}</b></div>{['business', 'lead_partner'].includes(selected.role) && <div className="management-wide"><span>Business details</span><b>{selected.business_details || '—'}</b></div>}</div>}</div>
+    {selected && <div className="modal-backdrop users-360-backdrop" onClick={() => setSelected(null)}>
+      <div className="user-modal user-360-modal" onClick={e => e.stopPropagation()}>
+        <div className="user-360-head">
+          <div className="user-360-identity">
+            <div className={'user-360-avatar ' + selected.role}>{(selected.name||selected.business_name||'?').trim().split(/\s+/).slice(0,2).map(part=>part.charAt(0).toUpperCase()).join('')}</div>
+            <div>
+              <span>ACCOUNT 360</span>
+              <h2>{selected.business_name||selected.name}</h2>
+              <p>#{selected.id} · {selected.email} · {accountTypeLabel(selected.role)}</p>
+            </div>
+          </div>
+          <div className="user-360-head-summary">
+            {selected.role==='business' && <span className={'user-360-plan ' + (currentMembership?.plan_group||'none')}>{currentMembership?.plan_group?String(currentMembership.plan_group).toUpperCase():'NO PLAN'}</span>}
+            <span className={'user-360-status ' + (selected.is_active?'active':'inactive')}>{selected.is_active?'Active':'Inactive'}</span>
+            <button className="user-360-close" type="button" onClick={() => setSelected(null)}>×</button>
+          </div>
+        </div>
 
-      {['business', 'lead_partner'].includes(selected.role) && <div className="management-section"><div className="management-section-head"><div><b>Business configuration</b><small>Live service and location coverage.</small></div><button type="button" onClick={startBusinessEdit}>Edit configuration</button></div><div className="detail-list"><div className="management-wide"><span>Services</span><div className="account-tags">{selected.services?.length ? selected.services.map((s, i) => <span key={i}>{s.industryName} · {s.serviceName}{s.subserviceName ? ` · ${s.subserviceName}` : ''}</span>) : <small>None configured</small>}</div></div><div className="management-wide"><span>Locations</span><div className="account-tags">{selected.locations?.length ? selected.locations.map((l, i) => <span key={i}>{l.subcityName ? `${l.subcityName}, ` : ''}{l.cityName}, {l.stateName}{l.pincode ? ` · ${l.pincode}` : ''}</span>) : <small>None configured</small>}</div></div></div></div>}
-      </form>
-      <div className="modal-actions"><button type="button" onClick={() => toggleStatus(selected)}>{selected.is_active ? 'Deactivate account' : 'Activate account'}</button><button type="button" onClick={() => setSelected(null)}>Close</button></div>
-    </div></div>}
+        {error && <div className="users-error user-360-error">{error}</div>}
+
+        {user360Loading ? <div className="user-360-loading"><span className="users-loading-ring"/><strong>Loading account workspace…</strong></div> : <>
+          <div className="user-360-snapshot">
+            <div><span>Membership</span><strong>{currentMembership?.plan_group?String(currentMembership.plan_group).toUpperCase():'No plan'}</strong><small>{currentMembership?.expires_at ? ('Expires ' + dateOnly(currentMembership.expires_at)) : 'No active membership'}</small></div>
+            <div><span>Wallet</span><strong>{money(userSnapshot.walletBalance)}</strong><small>{Number(wallet360?.recharges?.length||0)} recharge records</small></div>
+            <div><span>Leads</span><strong>{Number(userSnapshot.leadsAccessed||0)}</strong><small>Purchased / claimed</small></div>
+            <div><span>Total paid</span><strong>{money(userSnapshot.totalPaid)}</strong><small>Successful payments</small></div>
+            <div><span>Entitlements</span><strong>{Number(userSnapshot.activeEntitlements?.shared?.remaining||0)} / {Number(userSnapshot.activeEntitlements?.premium?.remaining||0)}</strong><small>Basic / Premium left</small></div>
+          </div>
+
+          {user360?.attention?.length>0 && <div className="user-360-attention">
+            {user360.attention.map(item=><div className={'attention-item ' + item.level} key={item.code}><span>!</span><strong>{item.text}</strong></div>)}
+          </div>}
+
+          <nav className="user-360-tabs">
+            {[
+              ['overview','Overview'],['membership','Membership'],['wallet','Wallet'],['leads','Leads'],
+              ['payments','Payments'],['entitlements','Entitlements'],['profile','Profile'],['activity','Activity']
+            ].map(([key,label])=><button type="button" className={userTab===key?'active':''} onClick={()=>setUserTab(key)} key={key}>{label}</button>)}
+          </nav>
+
+          <div className="user-360-body">
+            {userTab==='overview' && <div className="user-360-pane">
+              <div className="user-360-section-head"><div><span>SUPPORT SNAPSHOT</span><h3>Account overview</h3></div><button type="button" className={selected.is_active?'danger-lite':'success-lite'} onClick={()=>toggleStatus(selected)}>{selected.is_active?'Deactivate account':'Activate account'}</button></div>
+              <div className="overview-360-grid">
+                <article><span>Verification</span><strong>{user360?.user?.is_verified?'Verified':'Not verified'}</strong><small>{user360?.user?.phone||'No phone'}</small></article>
+                <article><span>Membership remaining</span><strong>{userSnapshot.membershipRemainingDays===null?'—':(userSnapshot.membershipRemainingDays+' days')}</strong><small>{currentMembership?.billing_period||'No billing cycle'}</small></article>
+                <article><span>Pending payments</span><strong>{userSnapshot.pendingPayments||0}</strong><small>{userSnapshot.pendingTopups||0} wallet top-ups pending</small></article>
+                <article><span>Joined</span><strong>{dateOnly(user360?.user?.created_at)}</strong><small>{user360?.user?.role==='business'?'Business account':'Platform account'}</small></article>
+              </div>
+              <div className="user-360-quick-actions">
+                <button type="button" onClick={()=>setUserTab('membership')}>Manage membership</button>
+                <button type="button" onClick={()=>setUserTab('wallet')}>Adjust wallet</button>
+                <button type="button" onClick={()=>setUserTab('leads')}>View lead history</button>
+                <button type="button" onClick={()=>setUserTab('entitlements')}>View entitlements</button>
+                <button type="button" onClick={()=>setUserTab('profile')}>Edit profile</button>
+              </div>
+              <div className="user-360-recent">
+                <div className="user-360-section-head"><div><span>RECENT</span><h3>Latest activity</h3></div></div>
+                {(user360?.activity||[]).slice(0,8).map((item,i)=><div className="activity-row" key={item.type+'-'+item.at+'-'+i}><span className={'activity-dot '+item.type}/><div><strong>{item.title}</strong><small>{item.detail}</small></div><div><b>{item.status||'—'}</b><small>{dateTime(item.at)}</small></div></div>)}
+                {!user360?.activity?.length && <div className="user-360-empty">No activity yet.</div>}
+              </div>
+            </div>}
+
+            {userTab==='membership' && <div className="user-360-pane">
+              <div className="user-360-section-head"><div><span>MEMBERSHIP</span><h3>GROW / SCALE management</h3></div></div>
+              <div className="membership-360-current">
+                <div className={'membership-360-badge '+(currentMembership?.plan_group||'none')}><span>Current</span><strong>{currentMembership?.plan_group?String(currentMembership.plan_group).toUpperCase():'NO ACTIVE PLAN'}</strong><small>{currentMembership?.plan_name||'Assign a membership below'}</small></div>
+                <div><span>Started</span><strong>{dateOnly(currentMembership?.starts_at)}</strong></div>
+                <div><span>Expires</span><strong>{dateOnly(currentMembership?.expires_at)}</strong></div>
+                <div><span>Remaining</span><strong>{userSnapshot.membershipRemainingDays===null?'—':userSnapshot.membershipRemainingDays+' days'}</strong></div>
+              </div>
+
+              <div className="membership-360-actions">
+                <div className="membership-360-action-card">
+                  <span>Assign / change plan</span>
+                  <div className="membership-plan-controls">
+                    <select value={membershipPlanId} onChange={e=>setMembershipPlanId(e.target.value)}>
+                      <option value="">Choose GROW / SCALE plan</option>
+                      {(user360?.availablePlans||[]).map(plan=><option value={plan.id} key={plan.id}>{String(plan.plan_group||'').toUpperCase()} · {plan.billing_period||plan.name} · {money(plan.price)}</option>)}
+                    </select>
+                    <input type="number" min="1" max="3650" value={membershipDays} onChange={e=>setMembershipDays(e.target.value)} placeholder="Days"/>
+                  </div>
+                  <textarea rows="2" value={membershipReason} onChange={e=>setMembershipReason(e.target.value)} placeholder="Reason for manual membership change…"/>
+                  <button type="button" className="admin-primary-btn" disabled={userBusy==='membership-plan'} onClick={assignMembershipPlan}>{userBusy==='membership-plan'?'Applying…':(currentMembership?'Change membership':'Activate membership')}</button>
+                </div>
+
+                {manageableMembership && <div className="membership-360-action-card">
+                  <span>Existing membership controls</span>
+                  <div className="membership-inline-control"><input type="number" min="1" max="3650" value={membershipDays} onChange={e=>setMembershipDays(e.target.value)}/><button type="button" onClick={()=>manageMembership('extend',manageableMembership)}>Extend</button><button type="button" onClick={()=>manageMembership('reduce',manageableMembership)}>Reduce</button></div>
+                  <div className="membership-inline-control"><input type="date" value={membershipExpiry} onChange={e=>setMembershipExpiry(e.target.value)}/><button type="button" onClick={()=>manageMembership('set_expiry',manageableMembership)}>Set expiry</button></div>
+                  <button type="button" className={manageableMembership.status==='active'?'danger-lite':'success-lite'} onClick={()=>manageMembership(manageableMembership.status==='active'?'deactivate':'activate',manageableMembership)}>{manageableMembership.status==='active'?'Deactivate membership':'Activate membership'}</button>
+                </div>}
+              </div>
+
+              <div className="user-360-section-head compact"><div><span>HISTORY</span><h3>Membership records</h3></div><small>{membership360.plans?.length||0} records</small></div>
+              <div className="user-360-card-list">
+                {(membership360.plans||[]).map(plan=><article className="history-360-card" key={plan.membership_id}><div><span>{String(plan.plan_group||plan.plan_type||'plan').toUpperCase()}</span><h4>{plan.plan_name}</h4><small>{dateOnly(plan.starts_at)} → {dateOnly(plan.expires_at)}</small></div><div><b className={'mini-status '+plan.status}>{plan.status}</b><strong>{plan.payment_amount!==null&&plan.payment_amount!==undefined?money(plan.payment_amount):'Admin / legacy'}</strong><small>{plan.billing_period||'—'}</small></div></article>)}
+                {!membership360.plans?.length && <div className="user-360-empty">No membership history.</div>}
+              </div>
+            </div>}
+
+            {userTab==='wallet' && <div className="user-360-pane">
+              <div className="user-360-section-head"><div><span>WALLET</span><h3>{money(wallet360?.wallet?.balance)} available</h3></div></div>
+              <div className="wallet-360-totals">
+                <div><span>Recharged</span><strong>{money(wallet360?.totals?.total_recharged)}</strong></div>
+                <div><span>Credits</span><strong>{money(wallet360?.totals?.total_credits)}</strong></div>
+                <div><span>Debits</span><strong>{money(wallet360?.totals?.total_debits)}</strong></div>
+                <div><span>Refunds</span><strong>{money(wallet360?.totals?.total_refunds)}</strong></div>
+              </div>
+              <div className="wallet-adjust-360">
+                <div><span>Admin adjustment</span><div className="wallet-adjust-inputs"><input type="number" min="0.01" step="0.01" value={walletAmount} onChange={e=>setWalletAmount(e.target.value)} placeholder="Amount"/><input value={walletReason} onChange={e=>setWalletReason(e.target.value)} placeholder="Reason required"/></div></div>
+                <div className="wallet-adjust-actions"><button type="button" onClick={()=>adjustUserWallet('credit')}>Credit</button><button type="button" onClick={()=>adjustUserWallet('refund')}>Refund</button><button type="button" className="danger-lite" onClick={()=>adjustUserWallet('debit')}>Debit</button></div>
+              </div>
+              <div className="user-360-section-head compact"><div><span>RECHARGES</span><h3>Recharge history</h3></div><small>{wallet360?.recharges?.length||0}</small></div>
+              <div className="user-360-card-list">
+                {(wallet360?.recharges||[]).map(item=><article className="history-360-card" key={'topup-'+item.id}><div><span>Recharge #{item.id}</span><h4>{money(item.amount)}</h4><small>{item.reference||'No reference'} · {dateTime(item.created_at)}</small></div><div><b className={'mini-status '+item.status}>{item.status}</b><small>{item.payment_method||'manual'}</small></div></article>)}
+                {!wallet360?.recharges?.length && <div className="user-360-empty">No wallet recharges.</div>}
+              </div>
+              <div className="user-360-section-head compact"><div><span>LEDGER</span><h3>Wallet transactions</h3></div></div>
+              <div className="user-360-card-list compact-list">
+                {(wallet360?.transactions||[]).slice(0,100).map(item=><article className="history-360-card" key={'wallet-'+item.id}><div><span>{item.type}</span><h4>{item.description||'Wallet transaction'}</h4><small>{dateTime(item.created_at)}</small></div><div><strong>{item.type==='debit'?'-':'+'}{money(item.amount)}</strong><small>Balance {money(item.balance_after)}</small></div></article>)}
+              </div>
+            </div>}
+
+            {userTab==='leads' && <div className="user-360-pane">
+              <div className="user-360-section-head"><div><span>LEAD HISTORY</span><h3>Purchased & claimed leads</h3></div><small>{user360?.leads?.length||0} leads</small></div>
+              <div className="leads-360-grid">
+                {(user360?.leads||[]).map(lead=><article className="lead-360-card" key={(lead.access_id||'lead')+'-'+lead.lead_id}><div className="lead-360-head"><div><span>#L-{String(lead.lead_id).padStart(6,'0')}</span><h4>{lead.requirement||lead.property_type||lead.industry_name||'Lead'}</h4></div><b>{lead.pricing_tier||lead.payment_method||'access'}</b></div><div className="lead-360-tags"><span>{lead.industry_name||'—'}</span><span>{lead.city_name||lead.state_name||'—'}</span><span>{lead.shares||1} share</span></div><div className="lead-360-meta"><div><span>Amount</span><strong>{money(lead.amount)}</strong></div><div><span>Accessed</span><strong>{dateOnly(lead.created_at)}</strong></div><div><span>CRM</span><strong>{lead.crm_status||'new'}</strong></div></div></article>)}
+                {!user360?.leads?.length && <div className="user-360-empty">No lead history.</div>}
+              </div>
+            </div>}
+
+            {userTab==='payments' && <div className="user-360-pane">
+              <div className="user-360-section-head"><div><span>PAYMENTS</span><h3>Payment history</h3></div><small>{user360?.payments?.length||0} records</small></div>
+              <div className="user-360-card-list">
+                {(user360?.payments||[]).map(item=><article className="history-360-card" key={'payment-'+item.id}><div><span>{item.purchase_type||'payment'} · #{item.id}</span><h4>{item.membership_plan_name||((item.purchase_type==='lead'&&item.lead_id)?('Lead #'+item.lead_id):'Payment')}</h4><small>{item.manual_reference||item.gateway_payment_id||'No reference'} · {dateTime(item.paid_at||item.created_at)}</small></div><div><b className={'mini-status '+item.status}>{item.status}</b><strong>{money(item.amount)}</strong><small>Wallet {money(item.wallet_amount)} · Direct {money(item.external_amount)}</small></div></article>)}
+                {!user360?.payments?.length && <div className="user-360-empty">No payment history.</div>}
+              </div>
+            </div>}
+
+            {userTab==='entitlements' && <div className="user-360-pane">
+              <div className="user-360-section-head"><div><span>ENTITLEMENTS</span><h3>Lead credits & grants</h3></div></div>
+              <div className="entitlement-360-summary">
+                <div><span>Basic</span><strong>{Number(user360?.entitlementSummary?.shared?.remaining||0)}</strong><small>{Number(user360?.entitlementSummary?.shared?.used||0)} used / {Number(user360?.entitlementSummary?.shared?.allowance||0)} total</small></div>
+                <div><span>Premium</span><strong>{Number(user360?.entitlementSummary?.premium?.remaining||0)}</strong><small>{Number(user360?.entitlementSummary?.premium?.used||0)} used / {Number(user360?.entitlementSummary?.premium?.allowance||0)} total</small></div>
+              </div>
+              <div className="user-360-card-list">
+                {(user360?.entitlements||[]).map(item=><article className="history-360-card" key={'entitlement-'+item.id}><div><span>{item.source}</span><h4>{item.campaign_name||item.registration_rule_name||('Entitlement #'+item.id)}</h4><small>{dateOnly(item.starts_at)} → {dateOnly(item.expires_at)}</small></div><div><b className={'mini-status '+(item.revoked_at?'cancelled':'active')}>{item.revoked_at?'revoked':'active'}</b><strong>{item.shared_quantity||0} Basic · {item.premium_quantity||0} Premium</strong><small>{item.used_shared||0} / {item.used_premium||0} used</small></div></article>)}
+                {!user360?.entitlements?.length && <div className="user-360-empty">No entitlement history.</div>}
+              </div>
+            </div>}
+
+            {userTab==='profile' && <div className="user-360-pane">
+              <div className="management-section role-management-section user-360-profile-section">
+                <div className="management-section-head"><div><b>Account type</b><small>User, Lead Partner or Admin</small></div></div>
+                <div className="role-management-controls"><select value={roleDraft} onChange={e => setRoleDraft(e.target.value)} disabled={roleSaving || Number(currentUser?.id) === Number(selected.id)}><option value="business">User</option><option value="lead_partner">Lead Partner</option><option value="admin">Admin</option></select><button type="button" className="admin-primary-btn" onClick={changeRole} disabled={roleSaving || roleDraft === selected.role || Number(currentUser?.id) === Number(selected.id)}>{roleSaving ? 'Updating...' : 'Change account type'}</button></div>
+                {Number(currentUser?.id) === Number(selected.id) && <div className="role-management-note">You cannot change your own administrator role.</div>}
+              </div>
+
+              <form onSubmit={saveProfile} className="user-360-profile-form">
+                {editing && <div className="inline-actions"><button type="button" onClick={() => setEditing(false)}>Cancel</button><button className="admin-primary-btn" type="submit" disabled={saving || catalogLoading}>{saving ? 'Saving...' : 'Save changes'}</button></div>}
+                <div className="management-section">
+                  <div className="management-section-head"><div><b>User & business details</b></div>{!editing && <button type="button" onClick={() => ['business','lead_partner'].includes(selected.role)?startBusinessEdit():setEditing(true)}>Edit</button>}</div>
+                  {editing ? <div className="management-grid"><label>Name<input required value={editForm.name} onChange={e=>setEditForm({...editForm,name:e.target.value})}/></label><label>Email<input required type="email" value={editForm.email} onChange={e=>setEditForm({...editForm,email:e.target.value})}/></label>{['business','lead_partner'].includes(selected.role)&&<><label>Phone<input required value={editForm.phone} onChange={e=>setEditForm({...editForm,phone:e.target.value})}/></label><label>Business name<input required value={editForm.businessName} onChange={e=>setEditForm({...editForm,businessName:e.target.value})}/></label><label className="management-wide">Business details<textarea required rows="3" value={editForm.businessDetails} onChange={e=>setEditForm({...editForm,businessDetails:e.target.value})}/></label>
+                    <div className="management-wide configuration-editor"><div className="configuration-title"><b>Services</b><button type="button" onClick={()=>setEditForm({...editForm,services:[...editForm.services,emptyService()]})}>+ Add service</button></div>{editForm.services.map((item,i)=><div className="configuration-row" key={'service-'+i}><span>{String(i+1).padStart(2,'0')}</span><select required value={item.industryId} onChange={e=>updateService(i,'industryId',e.target.value)}><option value="">Industry</option>{(catalogs?.industries||[]).map(v=><option key={v.id} value={v.id}>{v.name}</option>)}</select><select required disabled={!item.industryId} value={item.serviceId} onChange={e=>updateService(i,'serviceId',e.target.value)}><option value="">Service</option>{serviceOptions[i]?.map(v=><option key={v.id} value={v.id}>{v.name}</option>)}</select><select disabled={!item.serviceId} value={item.subserviceId} onChange={e=>updateService(i,'subserviceId',e.target.value)}><option value="">All subservices</option>{subserviceOptions[i]?.map(v=><option key={v.id} value={v.id}>{v.name}</option>)}</select><button type="button" className="add-all-services" onClick={()=>addAllServicesForIndustry(i)} disabled={!item.industryId}>Add all</button><button type="button" onClick={()=>setEditForm({...editForm,services:editForm.services.filter((_,n)=>n!==i)})}>Remove</button></div>)}</div>
+                    <div className="management-wide configuration-editor"><div className="configuration-title"><b>Locations</b><button type="button" onClick={()=>setEditForm({...editForm,locations:[...editForm.locations,emptyLocation()]})}>+ Add location</button></div>{editForm.locations.map((item,i)=><div className="configuration-row location-config" key={'location-'+i}><span>{String(i+1).padStart(2,'0')}</span><select required value={item.stateId} onChange={e=>updateLocation(i,'stateId',e.target.value)}><option value="">State / UT</option>{(catalogs?.states||[]).map(v=><option key={v.id} value={v.id}>{v.name}</option>)}</select><select required disabled={!item.stateId} value={item.cityId} onChange={e=>updateLocation(i,'cityId',e.target.value)}><option value="">City</option>{cityOptions[i]?.map(v=><option key={v.id} value={v.id}>{v.name}</option>)}</select><select disabled={!item.cityId} value={item.subcityId} onChange={e=>updateLocation(i,'subcityId',e.target.value)}><option value="">All areas</option>{subcityOptions[i]?.map(v=><option key={v.id} value={v.id}>{v.name}</option>)}</select><select disabled={!item.cityId} value={item.pincode} onChange={e=>updateLocation(i,'pincode',e.target.value)}><option value="">Pincode</option>{((catalogs?.cities||[]).find(v=>String(v.id)===String(item.cityId))?.pincodes||[]).map(v=><option key={v.id} value={v.pincode}>{v.pincode}</option>)}</select><button type="button" onClick={()=>setEditForm({...editForm,locations:editForm.locations.filter((_,n)=>n!==i)})}>Remove</button></div>)}</div>
+                  </>}</div> : <div className="detail-list"><div><span>Name</span><b>{selected.name}</b></div><div><span>Email</span><b>{selected.email}</b></div><div><span>Phone</span><b>{selected.phone||'—'}</b></div><div><span>Business</span><b>{selected.business_name||'—'}</b></div>{['business','lead_partner'].includes(selected.role)&&<div className="management-wide"><span>Business details</span><b>{selected.business_details||'—'}</b></div>}</div>}
+                </div>
+              </form>
+            </div>}
+
+            {userTab==='activity' && <div className="user-360-pane">
+              <div className="user-360-section-head"><div><span>ACTIVITY & AUDIT</span><h3>Account timeline</h3></div><small>{user360?.activity?.length||0} events</small></div>
+              <div className="user-360-timeline">
+                {(user360?.activity||[]).map((item,i)=><div className="timeline-row" key={item.type+'-'+item.at+'-'+i}><span className={'activity-dot '+item.type}/><div><strong>{item.title}</strong><small>{item.detail}</small></div><div><b>{item.status||'—'}</b><small>{dateTime(item.at)}</small></div></div>)}
+                {!user360?.activity?.length && <div className="user-360-empty">No activity yet.</div>}
+              </div>
+            </div>}
+          </div>
+        </>}
+      </div>
+    </div>}
 
     {showCreate && <div className="modal-backdrop" onClick={() => setShowCreate(false)}><form className="user-modal create-user-modal premium-create-admin-modal" onClick={e => e.stopPropagation()} onSubmit={createAdmin}><div className="modal-head"><div><span className="eyebrow">NEW ADMIN</span><h2>Create Administrator</h2></div><button type="button" onClick={() => setShowCreate(false)}>×</button></div><div className="create-grid"><label>Name<input required value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} /></label><label>Email<input required type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} /></label><label>Password<input required type="password" minLength="8" value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} /></label></div><div className="modal-actions"><button className="admin-primary-btn" type="submit" disabled={saving}>{saving ? 'Creating...' : 'Create administrator'}</button><button type="button" onClick={() => setShowCreate(false)}>Cancel</button></div></form></div>}
   </section>;
