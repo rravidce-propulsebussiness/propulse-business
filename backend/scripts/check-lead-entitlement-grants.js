@@ -57,6 +57,11 @@ assert(grants.includes('FOR UPDATE'),'Grant usage must lock active grant rows be
 assert(grants.includes('new_business_allow_single')&&grants.includes('new_business_allow_shared')&&grants.includes('new_business_allow_auto_release'),'Welcome settings must persist buyer-access rules');
 assert(grants.includes('new_business_allow_exclusive'),'Welcome settings must persist Exclusive Early Access permission');
 assert(grants.includes('allow_single,allow_shared,allow_auto_release,allow_exclusive'),'Issued grants must snapshot their access rules');
+assert(grants.includes('async function updateGrant'),'Grant service must support entitlement edits');
+assert(grants.includes('async function deleteGrant'),'Grant service must support entitlement deletes');
+assert(grants.includes('async function deleteSettings'),'Grant service must support registration-rule deletes');
+assert(grants.includes("grant.source==='admin'&&claimCount===0"),'Unused manual grants should be hard-deletable');
+assert(grants.includes("WHERE g.revoked_at IS NULL"),'Deleted/revoked grants must stay out of Recent entitlements');
 
 const baseGrant={allow_single:true,allow_shared:true,allow_auto_release:true,allow_exclusive:false};
 assert(grantService.grantAllowsLead(baseGrant,{access_strategy:'permanent_single'}),'Single Buyer must be allowed when enabled');
@@ -81,16 +86,19 @@ assert(adminService.includes('leadEntitlementGrantService.ensureNewBusinessGrant
 assert(adminRoutes.includes("router.get('/lead-entitlements'"),'Admin entitlement overview route must exist');
 assert(adminRoutes.includes("router.put('/lead-entitlements/settings'"),'Admin entitlement settings route must exist');
 assert(adminRoutes.includes("router.post('/lead-entitlements/grants'"),'Admin manual grant route must exist');
-assert(adminRoutes.includes("router.patch('/lead-entitlements/grants/:grantId/revoke'"),'Admin revoke route must exist');
+assert(adminRoutes.includes("router.put('/lead-entitlements/grants/:grantId'"),'Admin entitlement edit route must exist');
+assert(adminRoutes.includes("router.delete('/lead-entitlements/grants/:grantId'"),'Admin entitlement delete route must exist');
+assert(adminRoutes.includes("router.delete('/lead-entitlements/settings'"),'Admin registration-rule delete route must exist');
 assert(adminController.includes('INVALID_ENTITLEMENT_ACCESS:400'),'Invalid access-rule selections must return HTTP 400');
 
 assert(app.includes('/admin/leads/entitlements'),'Admin Lead Entitlements page route must exist');
 assert(layout.includes("{to:'/admin/leads/entitlements',label:'Lead Entitlements'}"),'Lead Entitlements must appear inside Leads navigation');
-assert(page.includes('Registration entitlement')&&page.includes('Grant leads to a verified business'),'Admin UI must expose welcome settings and manual grants');
-assert(page.includes('Once per verified business'),'Admin UI must explain one-time eligibility');
+assert(page.includes('Create registration rule')&&page.includes('Create entitlement'),'Admin UI must expose compact create actions');
 assert(page.includes('Single Buyer')&&page.includes('Shared')&&page.includes('Auto Release'),'Admin UI must expose all buyer-access strategy toggles');
-assert(page.includes('Allow Exclusive Early Access'),'Admin UI must expose Exclusive Early Access override');
-assert(page.includes('Claimed lead access duration'),'Admin UI must use a clear claimed-access duration label');
+assert(page.includes('Exclusive Early Access'),'Admin UI must expose Exclusive Early Access override');
+assert(page.includes('Claimed access'),'Admin UI must expose claimed-access duration');
+assert(page.includes('history-edit')&&page.includes('history-delete'),'Recent entitlement rows must support edit and delete');
+assert(page.includes('openEditGrant(item)'),'Saved grants must be editable from Recent entitlements');
 assert(page.includes("'Lifetime'"),'Zero claimed-access duration must be labeled Lifetime');
 assert(page.includes('grant-access-tags'),'Grant history must display saved access rules');
 
