@@ -14,8 +14,7 @@ const navigation=[
     {to:'/admin/industries',label:'Industries & Locations',aliases:['/admin/pincodes']}
   ]},
   {type:'group',key:'pricing',label:'Pricing',icon:'₹',children:[
-    {to:'/admin/lead-pricing',label:'Lead Pricing'},
-    {to:'/admin/service-pricing',label:'Service Pricing'}
+    {to:'/admin/lead-pricing',label:'Lead Pricing'}
   ]},
   {type:'group',key:'customers',label:'Customers',icon:'◎',children:[
     {to:'/admin/users',label:'Users',aliases:['/admin/businesses']},
@@ -26,7 +25,7 @@ const navigation=[
     {to:'/admin/payment-receiving',label:'Payment Receiving'}
   ]},
   {type:'group',key:'memberships',label:'Memberships',icon:'★',children:[
-    {to:'/admin/memberships',label:'Plans & Configuration',aliases:['/admin/membership-plans']},
+    {to:'/admin/memberships',label:'GROW & SCALE',aliases:['/admin/membership-plans','/admin/service-pricing']},
     {to:'/admin/coupons',label:'Coupons'}
   ]},
   {type:'group',key:'lead-partners',label:'Lead Partners',icon:'♙',children:[
