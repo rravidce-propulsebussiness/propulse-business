@@ -76,7 +76,6 @@ export default function AdminLayout(){
 
   async function logout(){
     await clearSession()
-    localStorage.removeItem('propulse_session_mode')
     navigate('/login',{replace:true})
   }
 
