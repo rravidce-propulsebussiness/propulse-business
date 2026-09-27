@@ -1,10 +1,12 @@
 import {useCallback,useEffect,useState} from 'react';
+import {useSearchParams} from 'react-router-dom';
 import {authRequest} from '../../utils/auth';
 
 const money=v=>`₹${Number(v||0).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2})}`;
 
 export default function AdminLeadPartnerPayouts(){
-  const [rows,setRows]=useState([]),[status,setStatus]=useState('pending'),[search,setSearch]=useState(''),[busy,setBusy]=useState(null),[selected,setSelected]=useState(null),[reference,setReference]=useState(''),[proof,setProof]=useState(''),[proofName,setProofName]=useState(''),[reason,setReason]=useState(''),[error,setError]=useState('');
+  const [params]=useSearchParams();
+  const [rows,setRows]=useState([]),[status,setStatus]=useState('pending'),[search,setSearch]=useState(()=>params.get('search')||''),[busy,setBusy]=useState(null),[selected,setSelected]=useState(null),[reference,setReference]=useState(''),[proof,setProof]=useState(''),[proofName,setProofName]=useState(''),[reason,setReason]=useState(''),[error,setError]=useState('');
 
   const load=useCallback(async()=>{setError('');try{const data=await authRequest(`/admin/lead-partner-payouts?status=${encodeURIComponent(status)}&search=${encodeURIComponent(search)}`);setRows(Array.isArray(data)?data:[]);}catch(e){setError(e.message||'Failed to load payouts')}},[status,search]);
   useEffect(()=>{let active=true;queueMicrotask(()=>{if(active)load()});return()=>{active=false}},[load]);
