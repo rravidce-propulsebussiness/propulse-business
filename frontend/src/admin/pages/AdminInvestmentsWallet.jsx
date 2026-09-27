@@ -99,12 +99,15 @@ export default function AdminInvestmentsWallet() {
       availableForAds,
       adSpent,
       generated,
+      gross: generated,
       transferable,
+      payable: transferable,
       payoutReserved,
       payoutTransferred,
       bankTransfer: transferable,
       adBalance: availableForAds,
       status: cycleStatus,
+      accountStatus: cycleStatus,
       cycleId,
       cycleStartedAt: statusRecord.started_at || statusRecord.created_at || item.created_at || null,
       active: ['active','exit_requested','waiting_for_leads'].includes(cycleStatus),
@@ -186,31 +189,31 @@ export default function AdminInvestmentsWallet() {
         <div className="investments-section-heading">
           <div><span>PORTFOLIO RULES</span><h2>Investment settings</h2><p>Configure the existing revenue share and settlement policy used by investor cycles.</p></div>
           <div className="rule-summary">
-            <span>ProPulse <b>{settings.platformCommissionPercent}%</b></span>
-            <span>Investor <b>{Math.max(0,100-Number(settings.platformCommissionPercent||0))}%</b></span>
-            <span>Settlement <b>{settings.maturityValue} {settings.maturityUnit}</b></span>
+            <span>ProPulse <b>{commissionPercent}%</b></span>
+            <span>Investor <b>{Math.max(0,100-Number(commissionPercent||0))}%</b></span>
+            <span>Settlement <b>{Number(maturityDays) === 0 ? 'Immediate' : maturityDays + ' days'}</b></span>
           </div>
         </div>
         <div className="admin-settings-grid">
           <article className="settings-card">
             <div className="settings-card-head"><div className="settings-icon">%</div><div><span>REVENUE SHARE</span><h3>ProPulse commission</h3><p>Platform share retained from eligible investment-generated revenue.</p></div></div>
-            <div className="settings-value-preview"><span>INVESTOR RECEIVES</span><strong>{Math.max(0,100-Number(settings.platformCommissionPercent||0))}%</strong></div>
+            <div className="settings-value-preview"><span>INVESTOR RECEIVES</span><strong>{Math.max(0,100-Number(commissionPercent||0))}%</strong></div>
             <div className="settings-bottom">
-              <label className="settings-field"><span>Commission percentage</span><div className="percent-input"><input type="number" min="0" max="100" step="0.01" value={settings.platformCommissionPercent} onChange={e=>setSettings(v=>({...v,platformCommissionPercent:e.target.value}))}/><b>%</b></div></label>
-              <button type="button" onClick={()=>saveSettings('commission')} disabled={settingsBusy==='commission'}>{settingsBusy==='commission'?'Saving…':'Save share'}</button>
+              <label className="settings-field"><span>Commission percentage</span><div className="percent-input"><input type="number" min="0" max="100" step="0.01" value={commissionPercent} onChange={e=>setCommissionPercent(e.target.value)}/><b>%</b></div></label>
+              <button type="button" onClick={saveCommission} disabled={settingsLoading || settingsBusy}>{settingsBusy?'Saving…':'Save share'}</button>
             </div>
-            {settingsMessage.commission && <div className="settings-success"><i>✓</i>{settingsMessage.commission}</div>}
+            {commissionMessage && <div className="settings-success"><i>✓</i>{commissionMessage}</div>}
           </article>
 
           <article className="settings-card">
             <div className="settings-card-head"><div className="settings-icon clock">◷</div><div><span>SETTLEMENT WINDOW</span><h3>Maturity period</h3><p>Controls the default maturity/settlement period for the existing investment cycle flow.</p></div></div>
             <div className="maturity-row">
-              <label className="settings-field"><span>Period unit</span><select value={settings.maturityUnit} onChange={e=>setSettings(v=>({...v,maturityUnit:e.target.value}))}><option value="days">Days</option><option value="months">Months</option></select></label>
-              <label className="settings-field days-field"><span>Value</span><input type="number" min="1" step="1" value={settings.maturityValue} onChange={e=>setSettings(v=>({...v,maturityValue:e.target.value}))}/></label>
-              <button type="button" onClick={()=>saveSettings('maturity')} disabled={settingsBusy==='maturity'}>{settingsBusy==='maturity'?'Saving…':'Save period'}</button>
+              <label className="settings-field"><span>Settlement period</span><select value={maturityPreset} onChange={e=>{setMaturityPreset(e.target.value);if(e.target.value!=='custom')setMaturityDays(e.target.value==='immediate'?'0':e.target.value)}}><option value="immediate">Immediate · testing</option><option value="7">7 days</option><option value="14">14 days</option><option value="30">30 days</option><option value="90">90 days</option><option value="180">180 days</option><option value="365">365 days</option><option value="custom">Custom</option></select></label>
+              {maturityPreset==='custom'&&<label className="settings-field days-field"><span>Days</span><input type="number" min="0" max="3650" step="1" value={maturityDays} onChange={e=>setMaturityDays(e.target.value)}/></label>}
+              <button type="button" onClick={saveMaturity} disabled={settingsLoading || settingsBusy}>{settingsBusy?'Saving…':'Save period'}</button>
             </div>
             <div className="settings-info"><i>i</i><span>This updates the existing investor cycle settings; it does not create a second maturity system.</span></div>
-            {settingsMessage.maturity && <div className="settings-success"><i>✓</i>{settingsMessage.maturity}</div>}
+            {settingsMessage && <div className="settings-success"><i>✓</i>{settingsMessage}</div>}
           </article>
         </div>
       </section>
@@ -219,10 +222,9 @@ export default function AdminInvestmentsWallet() {
         <div className="admin-list-head">
           <div className="investors-title"><span>INVESTOR LEDGER</span><h2>Investor accounts</h2><p>Open an account for cycle history, linked leads and existing investment actions.</p></div>
           <div className="admin-list-filters">
-            <input ref={searchRef} defaultValue={search} onChange={e=>setSearch(e.target.value)} placeholder="Search investor name or email"/>
+            <input value={search} onChange={e=>{setSearch(e.target.value);searchRef.current=e.target.value}} placeholder="Search investor name or email"/>
             <select value={status} onChange={e=>setStatus(e.target.value)}><option value="all">All statuses</option><option value="active">Active</option><option value="matured">Matured</option><option value="exit_requested">Exit requested</option><option value="waiting_for_leads">Waiting for leads</option><option value="paid">Paid</option><option value="cancelled">Cancelled</option></select>
-            <select value={industryId} onChange={e=>setIndustryId(e.target.value)}><option value="">All industries</option>{data.industries.map(industry=><option key={industry.id} value={industry.id}>{industry.name}</option>)}</select>
-            <select value={limit} onChange={e=>setLimit(Number(e.target.value))}><option value={25}>25 rows</option><option value={50}>50 rows</option><option value={100}>100 rows</option></select>
+            <select value={industryId} onChange={e=>setIndustryId(e.target.value)}><option value="">All industries</option>{industries.map(industry=><option key={industry.id} value={industry.id}>{industry.name}</option>)}</select>
             <button type="button" onClick={runSearch}>Search</button>
           </div>
         </div>
@@ -239,15 +241,10 @@ export default function AdminInvestmentsWallet() {
             <div className="row-money generated"><strong>{money(investor.generated)}</strong><small>Generated</small></div>
             <div className={['row-money','transferable',investor.transferable>0?'ready':''].filter(Boolean).join(' ')}><strong>{money(investor.transferable)}</strong><small>{investor.payoutReserved>0 ? money(investor.payoutReserved) + ' reserved' : 'Available to transfer'}</small></div>
             <div className="cycle-cell"><strong>{investor.cycleId ? '#' + investor.cycleId : '—'}</strong><small>{investor.cycleStartedAt ? date(investor.cycleStartedAt) : 'No active cycle'}</small></div>
-            <span className={'status-pill ' + investor.status}>{title(investor.status)}</span>
+            <span className={'status-pill ' + investor.status}>{String(investor.status||'pending').replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase())}</span>
             <div className="row-actions">
-              <button className="view-btn" type="button" onClick={()=>openHistory(investor)}><span>↗</span>Open account</button>
-              {menuUserId===investor.user_id && <div className="investment-actions-menu">
-                <button type="button" onClick={()=>openHistory(investor)}>Cycle history</button>
-                <button type="button" onClick={()=>openLinked(investor)}>Linked leads</button>
-                <button type="button" onClick={()=>addSpend(investor)}>Spend on ads</button>
-                <button type="button" onClick={()=>openPayout(investor)}>Record transfer</button>
-              </div>}
+              <button className="view-btn" type="button" onClick={()=>showAccount(investor)}><span>↗</span>Open account</button>
+              <div className="action-menu-wrap"><button className="more-btn" type="button" onClick={()=>setMenuUserId(current=>current===investor.user_id?null:investor.user_id)}>•••</button>{menuUserId===investor.user_id&&<div className="investment-actions-menu"><button type="button" onClick={()=>showAccount(investor)}>Cycle history</button><button type="button" onClick={()=>openLinked(investor)}>Linked leads</button><button type="button" onClick={()=>addSpend(investor)}>Spend on ads</button>{investor.bankTransfer>0&&<button type="button" onClick={()=>openPayout(investor)}>Record transfer</button>}</div>}</div>
             </div>
           </div>)}
           <div className="table-footer"><span>Showing <b>{investors.length}</b> investor accounts from the current dashboard view</span><span className="ledger-note">Balances shown from the existing investment ledger</span></div>
