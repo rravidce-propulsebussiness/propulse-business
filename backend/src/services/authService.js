@@ -58,28 +58,66 @@ async function getBusinessProfile(userId, client = pool) {
 async function validateBusinessSelections(client, services, locations) {
   if (!Array.isArray(services) || services.length === 0) throw Object.assign(new Error('At least one service selection is required'), { code: 'INVALID_BUSINESS_SELECTION' });
   if (!Array.isArray(locations) || locations.length === 0) throw Object.assign(new Error('At least one location selection is required'), { code: 'INVALID_BUSINESS_SELECTION' });
-  const serviceKeys = new Set();
-  for (const selection of services) {
-    const { industryId, serviceId, subserviceId } = selection || {};
-    const serviceResult = await client.query(`SELECT id FROM services WHERE id=$1 AND industry_id=$2 AND is_active=TRUE`, [serviceId, industryId]);
-    if (!serviceResult.rows.length) throw Object.assign(new Error('Selected service does not belong to the selected industry'), { code: 'INVALID_BUSINESS_SELECTION' });
-    if (subserviceId) {
-      const subserviceResult = await client.query(`SELECT id FROM subservices WHERE id=$1 AND service_id=$2 AND is_active=TRUE`, [subserviceId, serviceId]);
-      if (!subserviceResult.rows.length) throw Object.assign(new Error('Selected subservice does not belong to the selected service'), { code: 'INVALID_BUSINESS_SELECTION' });
+
+  const normalizedServices = services.map(selection => {
+    const industryId = Number(selection?.industryId);
+    const serviceId = Number(selection?.serviceId);
+    const subserviceId = selection?.subserviceId == null || selection.subserviceId === '' ? null : Number(selection.subserviceId);
+    if (!Number.isInteger(industryId) || industryId <= 0 || !Number.isInteger(serviceId) || serviceId <= 0 || (subserviceId !== null && (!Number.isInteger(subserviceId) || subserviceId <= 0))) {
+      throw Object.assign(new Error('Selected service configuration is invalid'), { code: 'INVALID_BUSINESS_SELECTION' });
     }
-    const key = `${industryId}:${serviceId}:${subserviceId || ''}`;
-    if (serviceKeys.has(key)) throw Object.assign(new Error('Duplicate service selections are not allowed'), { code: 'INVALID_BUSINESS_SELECTION' });
-    serviceKeys.add(key);
+    return { industryId, serviceId, subserviceId };
+  });
+  const serviceKeys = new Set(normalizedServices.map(x => `${x.industryId}:${x.serviceId}:${x.subserviceId || ''}`));
+  if (serviceKeys.size !== normalizedServices.length) throw Object.assign(new Error('Duplicate service selections are not allowed'), { code: 'INVALID_BUSINESS_SELECTION' });
+
+  const normalizedLocations = locations.map(selection => {
+    const stateId = Number(selection?.stateId);
+    const cityId = Number(selection?.cityId);
+    if (!Number.isInteger(stateId) || stateId <= 0 || !Number.isInteger(cityId) || cityId <= 0) {
+      throw Object.assign(new Error('Selected location configuration is invalid'), { code: 'INVALID_BUSINESS_SELECTION' });
+    }
+    return { stateId, cityId };
+  });
+  const locationKeys = new Set(normalizedLocations.map(x => `${x.stateId}:${x.cityId}`));
+  if (locationKeys.size !== normalizedLocations.length) throw Object.assign(new Error('Duplicate locations are not allowed'), { code: 'INVALID_BUSINESS_SELECTION' });
+
+  const [serviceResult, locationResult] = await Promise.all([
+    client.query(`
+      WITH requested AS (
+        SELECT * FROM UNNEST($1::int[],$2::int[],$3::int[]) AS x(industry_id,service_id,subservice_id)
+      )
+      SELECT COUNT(*)::int valid_count
+      FROM requested r
+      JOIN services s ON s.id=r.service_id AND s.industry_id=r.industry_id AND s.is_active=TRUE
+      LEFT JOIN subservices ss ON ss.id=r.subservice_id AND ss.service_id=r.service_id AND ss.is_active=TRUE
+      WHERE r.subservice_id IS NULL OR ss.id IS NOT NULL
+    `,[
+      normalizedServices.map(x=>x.industryId),
+      normalizedServices.map(x=>x.serviceId),
+      normalizedServices.map(x=>x.subserviceId)
+    ]),
+    client.query(`
+      WITH requested AS (
+        SELECT * FROM UNNEST($1::int[],$2::int[]) AS x(state_id,city_id)
+      )
+      SELECT COUNT(*)::int valid_count
+      FROM requested r
+      JOIN states st ON st.id=r.state_id AND st.is_active=TRUE
+      JOIN cities c ON c.id=r.city_id AND c.state_id=r.state_id AND c.is_active=TRUE
+    `,[
+      normalizedLocations.map(x=>x.stateId),
+      normalizedLocations.map(x=>x.cityId)
+    ])
+  ]);
+
+  if (Number(serviceResult.rows[0]?.valid_count || 0) !== normalizedServices.length) {
+    throw Object.assign(new Error('Selected service, industry or subservice relationship is invalid'), { code: 'INVALID_BUSINESS_SELECTION' });
   }
-  const locationKeys = new Set();
-  for (const selection of locations) {
-    const { stateId, cityId } = selection || {};
-    const locationResult = await client.query(`SELECT c.id FROM cities c INNER JOIN states st ON st.id=c.state_id WHERE c.id=$1 AND c.state_id=$2 AND c.is_active=TRUE AND st.is_active=TRUE`, [cityId, stateId]);
-    if (!locationResult.rows.length) throw Object.assign(new Error('Selected city does not belong to the selected state'), { code: 'INVALID_BUSINESS_SELECTION' });
-    const key = `${stateId}:${cityId}`;
-    if (locationKeys.has(key)) throw Object.assign(new Error('Duplicate locations are not allowed'), { code: 'INVALID_BUSINESS_SELECTION' });
-    locationKeys.add(key);
+  if (Number(locationResult.rows[0]?.valid_count || 0) !== normalizedLocations.length) {
+    throw Object.assign(new Error('Selected city does not belong to the selected state'), { code: 'INVALID_BUSINESS_SELECTION' });
   }
+  return { services: normalizedServices, locations: normalizedLocations };
 }
 
 async function signup({ name, email, password, phone, businessName, businessDetails, services, locations, role = 'business', googleCredential = null }) {
@@ -105,15 +143,34 @@ async function signup({ name, email, password, phone, businessName, businessDeta
     await client.query('BEGIN');
     const existing = await client.query('SELECT id FROM users WHERE LOWER(email)=$1', [normalizedEmail]);
     if (existing.rows.length) throw Object.assign(new Error('An account with this email already exists'), { code: 'EMAIL_EXISTS' });
-    await validateBusinessSelections(client, services, locations);
+    const validatedSelections = await validateBusinessSelections(client, services, locations);
     const passwordHash = await bcrypt.hash(passwordValue, 12);
     const user = (await client.query(`INSERT INTO users (name,email,password_hash,role) VALUES ($1,$2,$3,$4) RETURNING id,name,email,role,auth_version`, [signupName, normalizedEmail, passwordHash, signupRole])).rows[0];
     if (signupRole === 'lead_partner') {
       await client.query(`INSERT INTO lead_partners (user_id,status) VALUES ($1,'pending') ON CONFLICT (user_id) DO NOTHING`, [user.id]);
     }
     const profileId = (await client.query(`INSERT INTO business_profiles (user_id,phone,business_name,business_details) VALUES ($1,$2,$3,$4) RETURNING id`, [user.id, phone.trim(), businessName.trim(), businessDetails.trim()])).rows[0].id;
-    for (const selection of services) await client.query(`INSERT INTO business_profile_services (business_profile_id,industry_id,service_id,subservice_id) VALUES ($1,$2,$3,$4) ON CONFLICT DO NOTHING`, [profileId, selection.industryId, selection.serviceId, selection.subserviceId || null]);
-    for (const location of locations) await client.query(`INSERT INTO business_profile_locations (business_profile_id,state_id,city_id) VALUES ($1,$2,$3) ON CONFLICT DO NOTHING`, [profileId, location.stateId, location.cityId]);
+    await client.query(`
+      INSERT INTO business_profile_services (business_profile_id,industry_id,service_id,subservice_id)
+      SELECT $1,x.industry_id,x.service_id,x.subservice_id
+      FROM UNNEST($2::int[],$3::int[],$4::int[]) AS x(industry_id,service_id,subservice_id)
+      ON CONFLICT DO NOTHING
+    `,[
+      profileId,
+      validatedSelections.services.map(x=>x.industryId),
+      validatedSelections.services.map(x=>x.serviceId),
+      validatedSelections.services.map(x=>x.subserviceId)
+    ]);
+    await client.query(`
+      INSERT INTO business_profile_locations (business_profile_id,state_id,city_id)
+      SELECT $1,x.state_id,x.city_id
+      FROM UNNEST($2::int[],$3::int[]) AS x(state_id,city_id)
+      ON CONFLICT DO NOTHING
+    `,[
+      profileId,
+      validatedSelections.locations.map(x=>x.stateId),
+      validatedSelections.locations.map(x=>x.cityId)
+    ]);
     const profile = await getBusinessProfile(user.id, client);
     await client.query('COMMIT');
     return { user: await publicUser(user, profile), token: signToken(user) };
