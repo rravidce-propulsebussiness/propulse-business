@@ -20,6 +20,9 @@ const partnerPricing=read('../frontend/src/pages/LeadPartnerPricing.jsx');
 const partnerPricingController=read('../backend/src/controllers/adminLeadPartnerPricingController.js');
 const partnerPricingService=read('../backend/src/services/leadPartnerPricingService.js');
 const partnerShareMigration=read('../backend/src/database/migrations/2026-09-26-lead-partner-share-ratios.sql');
+const membershipConfig=read('../frontend/src/admin/pages/AdminMembershipPlansConfig.jsx');
+const membershipConfigCss=read('../frontend/src/admin/pages/AdminMembershipPlansConfig.css');
+const membershipPlanService=read('../backend/src/services/membershipPlanService.js');
 
 assert(layout.includes('admin-sidebar-signature')&&layout.includes('admin-top-user'),'Premium Admin shell controls must remain present');
 assert(!layout.includes('admin-sidebar-status'),'Duplicated sidebar health copy must stay removed');
@@ -71,6 +74,21 @@ assert(partnerPricingService.includes('twoSharePercent')&&partnerPricingService.
 assert(partnerPricing.includes('ADMIN SHARE RATIOS'),'Lead Partner pricing UI must show Admin-configured share ratios');
 assert(partnerPricing.includes('sharePercent[2]')&&partnerPricing.includes('sharePercent[3]'),'Lead Partner 2-share and 3-share calculations must be dynamic');
 assert(partnerShareMigration.includes('two_share_percent')&&partnerShareMigration.includes('three_share_percent'),'Partner share-ratio migration must remain');
+
+assert(membershipConfig.includes('membership-single-card'),'Memberships must use one compact package editor');
+assert(membershipConfig.includes('MEMBERSHIP / PACKAGES'),'Membership package premium header must remain');
+assert(membershipConfig.includes('GROW')&&membershipConfig.includes('SCALE'),'GROW and SCALE package controls must remain');
+assert(!membershipConfig.includes("req('/admin/service-pricing')"),'Memberships must not duplicate Service Pricing data loading');
+assert(!membershipConfig.includes('saveServicePricing')&&!membershipConfig.includes('growth-scale-admin-card'),'Memberships must not contain a second Service Pricing editor');
+assert(!membershipConfig.includes('plans-list'),'Memberships must not restore the second configured-plan editor');
+assert(!membershipConfig.includes('Plan name<input'),'GROW/SCALE package names must remain fixed');
+assert(membershipConfig.includes('Save ${form.name} package'),'Membership packages must save from the single editor');
+assert(membershipPlanService.includes("Membership packages must be GROW or SCALE"),'Backend must reject arbitrary package groups');
+assert(membershipPlanService.includes("SET is_active=FALSE,updated_at=CURRENT_TIMESTAMP"),'Bundle save must disable removed billing cycles');
+assert(membershipPlanService.includes("is_active=TRUE, updated_at=CURRENT_TIMESTAMP"),'Bundle save must reactivate saved billing cycles');
+assert(membershipConfigCss.includes('/* Single compact GROW / SCALE membership editor */'),'Compact Membership package styling must remain');
+assert(membershipConfigCss.includes('.membership-cycle-grid'),'Compact billing-cycle layout must remain');
+
 
 assert(dashboard.includes('const revenue=stats?.revenue||{}'),'Overview must use the backend revenue summary');
 assert(dashboard.includes('value={show(money(revenue.total))}'),'Overview revenue KPI must use the backend Propulse revenue total');
