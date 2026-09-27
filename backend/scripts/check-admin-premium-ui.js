@@ -70,8 +70,8 @@ assert(adminUsers.includes('premium-user-card'),'Premium user cards must remain'
 assert(!adminUsers.includes('<table>'),'Admin Users must not regress to the old wide table layout');
 assert(adminUsers.includes('Manage')&&adminUsers.includes('Deactivate')&&adminUsers.includes('Activate'),'User management actions must remain');
 assert(adminUsers.includes('＋ Create Admin'),'Create Admin action must remain');
-assert(adminUsers.includes("updateService(i, 'subserviceId', e.target.value)"),'Subservice editor must update the selected service row');
-assert(adminUsers.includes("updateLocation(i, 'subcityId', e.target.value)"),'Area editor must update the selected location row');
+assert(/updateService\(i\s*,\s*['"]subserviceId['"]\s*,\s*e\.target\.value\)/.test(adminUsers),'Subservice editor must update the selected service row');
+assert(/updateLocation\(i\s*,\s*['"]subcityId['"]\s*,\s*e\.target\.value\)/.test(adminUsers),'Area editor must update the selected location row');
 assert(adminUsersCss.includes('/* Premium Admin Users workspace */'),'Premium Users styling must remain');
 assert(adminUsersCss.includes('grid-template-columns:repeat(auto-fill,minmax(330px,1fr))'),'Desktop Users card grid must remain responsive');
 assert(adminUsersCss.includes('.premium-user-modal'),'Premium account management modal styling must remain');
