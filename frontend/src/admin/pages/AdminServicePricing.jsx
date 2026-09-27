@@ -2,8 +2,8 @@ import { useEffect, useRef, useState } from 'react'
 import { apiRequest } from '../../utils/api'
 import './AdminServicePricing.css'
 
-const blank={category:'Marketing',name:'',slug:'',tagline:'',description:'',price_label:'Custom quote',billing_note:'Scope-based pricing',features:[],cta_label:'Get Started',cta_url:'/contact',highlighted:false,sort_order:0,is_active:true}
-const categories=['Marketing','Lead Sales','Government Compliance','Grow','Scale']
+const blank={category:'Grow',name:'',slug:'',tagline:'',description:'',price_label:'Custom quote',billing_note:'Scope-based pricing',features:[],cta_label:'Get Started',cta_url:'/contact',highlighted:false,sort_order:0,is_active:true}
+const categories=['Grow','Scale']
 const slugify=v=>String(v||'').trim().toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')
 export default function AdminServicePricing(){
   const [items,setItems]=useState([]),[form,setForm]=useState(blank),[editing,setEditing]=useState(null)
@@ -33,16 +33,16 @@ export default function AdminServicePricing(){
   const remove=async item=>{if(!window.confirm(`Delete ${item.name}?`))return;try{await apiRequest('/admin/service-pricing/'+item.id,{method:'DELETE'});setOk('Pricing item deleted.');await load()}catch(e){setError(e.message||'Unable to delete pricing')}}
   const addFeature=()=>{const v=window.prompt('Feature name');if(v?.trim())update('features',[...form.features,v.trim()])}
   return <main className="admin-service-pricing-page">
-    <section className="asp-hero"><div><span>COMMERCIAL CONTENT</span><h1>Service Pricing</h1><p>Edit public service, GROW and SCALE pricing without changing code.</p></div><div className="asp-mark">₹</div></section>
+    <section className="asp-hero"><div><span>COMMERCIAL CONTENT</span><h1>Service Pricing</h1><p>Manage only GROW and SCALE service pricing without changing code.</p></div><div className="asp-mark">₹</div></section>
     {error&&<div className="asp-alert error">{error}</div>}{ok&&<div className="asp-alert success">{ok}</div>}
     <section className="asp-editor">
-      <div className="asp-editor-head"><div><span>{editing?'EDIT PRICING':'NEW PRICING'}</span><h2>{editing?'Update '+form.name:'Add a service or pricing card'}</h2></div>{editing&&<button type="button" onClick={reset}>Cancel edit</button>}</div>
+      <div className="asp-editor-head"><div><span>{editing?'EDIT PRICING':'NEW PRICING'}</span><h2>{editing?'Update '+form.name:'Add a Grow or Scale service'}</h2></div>{editing&&<button type="button" onClick={reset}>Cancel edit</button>}</div>
       <form onSubmit={save}>
         <div className="asp-grid">
           <label>Category<select value={form.category} onChange={e=>update('category',e.target.value)}>{categories.map(x=><option key={x}>{x}</option>)}</select></label>
           <label>Name<input value={form.name} onChange={e=>update('name',e.target.value)} required /></label>
           <label>Slug<input value={form.slug} onChange={e=>update('slug',e.target.value)} placeholder="auto-generated" /></label>
-          <label>Price display<input value={form.price_label} onChange={e=>update('price_label',e.target.value)} placeholder="Custom quote / ₹9,999 / Pay per lead" required /></label>
+          <label>Price display<input value={form.price_label} onChange={e=>update('price_label',e.target.value)} placeholder="Custom quote / ₹9,999" required /></label>
           <label>Billing note<input value={form.billing_note} onChange={e=>update('billing_note',e.target.value)} placeholder="Monthly / Scope-based pricing" /></label>
           <label>CTA label<input value={form.cta_label} onChange={e=>update('cta_label',e.target.value)} /></label>
           <label>CTA URL<input value={form.cta_url} onChange={e=>update('cta_url',e.target.value)} /></label>
