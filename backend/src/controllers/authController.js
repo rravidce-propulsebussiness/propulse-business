@@ -203,7 +203,7 @@ async function logout(req, res) {
 
 async function me(req, res) {
   try {
-    const user = await authService.getUserById(req.user.id);
+    const user = await authService.getPublicAuthenticatedUser(req.user);
     if (!user) return res.status(401).json({ error: 'Account not found' });
     return res.json(user);
   } catch (error) {
