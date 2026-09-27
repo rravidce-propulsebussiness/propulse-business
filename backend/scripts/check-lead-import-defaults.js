@@ -24,7 +24,7 @@ assert(defaults.includes("labels.push('Single Only')"),'Connected sheet summary 
 assert(!upload.includes('LeadImportDefaults'),'Manual CSV upload must not duplicate Google Sheet connection default buttons');
 assert(!upload.includes('uploadDefaults'),'Manual CSV upload must not keep hidden connection-default state');
 assert(upload.includes('const parsed=await enrichLocations(raw.map(make));'),'Manual CSV import must parse the uploaded row directly');
-assert(upload.includes('Blank pricing and buyer-access fields fall back to Admin Lead Pricing and buyer-access configuration'),'Manual CSV upload must explain Admin fallback for blank values');
+assert(upload.includes('Blank pricing and buyer-access fields use your Admin Lead Pricing configuration'),'Manual CSV upload must explain Admin fallback for blank values');
 assert(upload.includes("strategyRaw==='singleonly'"),'Manual CSV must accept Single Only as an explicit sheet strategy');
 
 assert(sheets.includes("LeadImportDefaults value={linkDefaults}"),'Google Sheet linking must expose optional connection defaults');
