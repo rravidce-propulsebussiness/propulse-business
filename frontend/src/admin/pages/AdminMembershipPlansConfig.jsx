@@ -861,8 +861,6 @@ export default function AdminMembershipPlansConfig(){
                 <span>Quick window</span>
                 {[1,3,7,14].map(days=><button type="button" className={Number(rule.newCustomerDays)===days?'active':''} key={days} onClick={()=>setRule(current=>({...current,newCustomerDays:days}))}>{days} day{days===1?'':'s'}</button>)}
               </div>
-              <div className="membership-offer-grid membership-offer-grid-placeholder">
-              </div>
               <div className="membership-validity-presets">
                 <button type="button" className={rule.validityMode==='always'?'active':''} onClick={()=>applyOfferWindow('always')}>Always</button>
                 <button type="button" className={rule.validityMode==='today'?'active':''} onClick={()=>applyOfferWindow('today')}>Today</button>
