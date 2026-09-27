@@ -95,8 +95,7 @@ export default function LeadPartnerHome(){
   const conversionRate=uploaded>0?Math.min(100,(sold/uploaded)*100):0
   const genuine=Number(quality.verifiedGenuineReports||0)
   const fake=Number(quality.verifiedFakeLeads||0)
-  const reportTotal=genuine+fake
-  const genuineRate=reportTotal>0?(genuine/reportTotal)*100:0
+  const fakeRate=Number(quality.verifiedFakeRatePct||0)
   const firstName=user?.name?.split(' ')?.[0]||'Partner'
   const hour=new Date().getHours()
   const greeting=hour<12?'Good morning':hour<17?'Good afternoon':'Good evening'
@@ -210,7 +209,7 @@ export default function LeadPartnerHome(){
           <article className="lp-card lp-quality-card">
             <div className="lp-card-head"><div><span className="lp-section-kicker">LEAD QUALITY</span><h2>Reported lead outcomes</h2><p>Verified outcomes from buyer reports.</p></div><Link to="/lead-partner/reports">Open reports →</Link></div>
             <div className="lp-quality-summary">
-              <div className="lp-quality-score"><span>VERIFIED GENUINE RATE</span><strong>{loading?'—':genuineRate.toFixed(1)+'%'}</strong><small>{genuine} genuine · {fake} fake</small></div>
+              <div className="lp-quality-score"><span>VERIFIED FAKE RATE</span><strong>{loading?'—':fakeRate.toFixed(2)+'%'}</strong><small>{fake} fake lead{fake===1?'':'s'} across {Number(quality.purchasedLeads||0)} purchased leads</small></div>
               <div className="lp-quality-grid">
                 <div><span>Purchased leads</span><strong>{loading?'—':quality.purchasedLeads??0}</strong></div>
                 <div><span>Verified genuine</span><strong>{loading?'—':quality.verifiedGenuineReports??0}</strong></div>
