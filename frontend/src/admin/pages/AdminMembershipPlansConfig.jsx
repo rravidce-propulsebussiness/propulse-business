@@ -171,6 +171,21 @@ function ruleFromItem(item,plans){
 function locationLabel(item){
   return item.city_name||item.state_name||'All locations'
 }
+function pricingScopeForRule(value={}){
+  const hasIndustry=Boolean(value.industryId??value.industry_id)
+  const hasLocation=Boolean(value.stateId??value.state_id??value.cityId??value.city_id)
+  if(hasIndustry&&hasLocation)return 'industry_location'
+  if(hasIndustry)return 'industry'
+  if(hasLocation)return 'location'
+  return 'all'
+}
+function pricingScopeLabel(value={}){
+  const scope=pricingScopeForRule(value)
+  if(scope==='industry_location')return 'Industry + City'
+  if(scope==='industry')return 'Industry pricing'
+  if(scope==='location')return 'City / State pricing'
+  return 'Default audience'
+}
 function ruleAudienceLabel(item){
   return item.audience_scope==='specific_users'
     ?`${Array.isArray(item.selected_users)?item.selected_users.length:0} selected businesses`
@@ -425,6 +440,8 @@ export default function AdminMembershipPlansConfig(){
   async function saveRule(){
     if(!rule.name.trim())return setError('Give this pricing rule a name.')
     if(rule.audienceScope==='specific_users'&&!rule.userIds.length)return setError('Choose at least one business.')
+    if(['industry','industry_location'].includes(pricingScopeForRule(rule))&&!rule.industryId)return setError('Choose an industry for this pricing rule.')
+    if(['location','industry_location'].includes(pricingScopeForRule(rule))&&!rule.stateId)return setError('Choose a state for this pricing rule.')
     if(!rule.periodOverrides.some(period=>period.enabled!==false))return setError('Enable at least one billing cycle.')
     try{
       setSaving(editingRule?`rule-${editingRule.id}`:'rule-create')
@@ -479,6 +496,16 @@ export default function AdminMembershipPlansConfig(){
     if(!rule.stateId)return cities
     return cities.filter(city=>Number(city.state_id)===Number(rule.stateId))
   },[cities,rule.stateId])
+
+  const ruleScope=pricingScopeForRule(rule)
+  function changeRuleScope(scope){
+    setRule(current=>({
+      ...current,
+      industryId:['industry','industry_location'].includes(scope)?current.industryId:'',
+      stateId:['location','industry_location'].includes(scope)?current.stateId:'',
+      cityId:['location','industry_location'].includes(scope)?current.cityId:''
+    }))
+  }
 
   const updateIndustry=(index,field,value)=>setInvestor(current=>({
     ...current,
@@ -558,7 +585,7 @@ export default function AdminMembershipPlansConfig(){
       <div>
         <span>MEMBERSHIPS / PRICING & ENTITLEMENTS</span>
         <h1>GROW & SCALE</h1>
-        <p>Manage base packages and targeted membership pricing from one place.</p>
+        <p>Set default GROW/SCALE packages, then override price and lead entitlement independently by industry, state, city or industry + city.</p>
       </div>
       <div className="membership-admin-state"><span>2</span><div><strong>Packages</strong><small>GROW + SCALE</small></div></div>
     </section>
@@ -592,7 +619,7 @@ export default function AdminMembershipPlansConfig(){
 
     <section className="membership-panel membership-rules-panel">
       <div className="membership-panel-head">
-        <div><span>TARGETED PRICING</span><h2>Pricing & lead entitlement rules</h2></div>
+        <div><span>TARGETED PRICING</span><h2>Pricing & lead entitlement rules</h2><small>Different industries and cities can each have their own GROW or SCALE price.</small></div>
         <button type="button" onClick={()=>openCreateRule('grow')}>＋ Create rule</button>
       </div>
       {!pricingRules.length?<div className="membership-empty">No targeted membership rules yet. Base GROW and SCALE pricing applies to everyone.</div>
@@ -603,6 +630,7 @@ export default function AdminMembershipPlansConfig(){
               <span className={`membership-rule-status ${item.is_active?'active':'inactive'}`}>{item.is_active?'Active':'Disabled'}</span>
             </div>
             <div className="membership-target-tags">
+              <span className="membership-scope-tag">{pricingScopeLabel(item)}</span>
               <span>{ruleAudienceLabel(item)}</span>
               <span>{verifyLabel(item.verification_scope)}</span>
               <span>{item.industry_name||'All industries'}</span>
@@ -693,15 +721,27 @@ export default function AdminMembershipPlansConfig(){
         </div>
         <div className="membership-modal-body">
           <section className="membership-editor-section">
-            <div className="membership-editor-title"><span>01</span><div><strong>Rule & audience</strong><small>Choose who receives this membership offer</small></div></div>
+            <div className="membership-editor-title"><span>01</span><div><strong>Rule & audience</strong><small>Choose whether this price varies by industry, city, or both</small></div></div>
+            <div className="membership-scope-picker">
+              <button type="button" className={ruleScope==='all'?'active':''} onClick={()=>changeRuleScope('all')}><strong>All</strong><small>Base targeted offer</small></button>
+              <button type="button" className={ruleScope==='industry'?'active':''} onClick={()=>changeRuleScope('industry')}><strong>Industry</strong><small>Different price by industry</small></button>
+              <button type="button" className={ruleScope==='location'?'active':''} onClick={()=>changeRuleScope('location')}><strong>State / City</strong><small>Different price by location</small></button>
+              <button type="button" className={ruleScope==='industry_location'?'active':''} onClick={()=>changeRuleScope('industry_location')}><strong>Industry + City</strong><small>Most specific price</small></button>
+            </div>
+            <div className="membership-pricing-scope-note">
+              {ruleScope==='industry'&&<span>Create separate rules for each industry that needs a different GROW or SCALE price.</span>}
+              {ruleScope==='location'&&<span>Create separate rules for Hyderabad, Bengaluru, Mumbai or any other state/city pricing.</span>}
+              {ruleScope==='industry_location'&&<span>This overrides broader industry or city rules when priority is the same because it is more specific.</span>}
+              {ruleScope==='all'&&<span>Use this when the offer is not limited to a particular industry or location.</span>}
+            </div>
             <div className="membership-rule-form-grid">
               <label className="wide">Rule name<input value={rule.name} onChange={e=>setRule(current=>({...current,name:e.target.value}))} placeholder="Hyderabad Interior GROW"/></label>
               <label>Package<select value={rule.planGroup} onChange={e=>changeRuleGroup(e.target.value)}><option value="grow">GROW</option><option value="scale">SCALE</option></select></label>
               <label>Audience<select value={rule.audienceScope} onChange={e=>setRule(current=>({...current,audienceScope:e.target.value,userIds:e.target.value==='all'?[]:current.userIds}))}><option value="all">All business users</option><option value="specific_users">Specific business users</option></select></label>
               <label>Verification<select value={rule.verificationScope} onChange={e=>setRule(current=>({...current,verificationScope:e.target.value}))}><option value="any">Verified + Non-verified</option><option value="verified">Verified only</option><option value="unverified">Non-verified only</option></select></label>
-              <label>Industry<select value={rule.industryId} onChange={e=>setRule(current=>({...current,industryId:e.target.value}))}><option value="">All industries</option>{industries.map(item=><option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
-              <label>State<select value={rule.stateId} onChange={e=>setRule(current=>({...current,stateId:e.target.value,cityId:''}))}><option value="">All states</option>{states.map(item=><option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
-              <label>City<select value={rule.cityId} disabled={!rule.stateId} onChange={e=>setRule(current=>({...current,cityId:e.target.value}))}><option value="">All cities</option>{ruleCities.map(item=><option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
+              {['industry','industry_location'].includes(ruleScope)&&<label>Industry<select value={rule.industryId} onChange={e=>setRule(current=>({...current,industryId:e.target.value}))}><option value="">Select industry</option>{industries.map(item=><option key={item.id} value={item.id}>{item.name}</option>)}</select></label>}
+              {['location','industry_location'].includes(ruleScope)&&<label>State<select value={rule.stateId} onChange={e=>setRule(current=>({...current,stateId:e.target.value,cityId:''}))}><option value="">Select state</option>{states.map(item=><option key={item.id} value={item.id}>{item.name}</option>)}</select></label>}
+              {['location','industry_location'].includes(ruleScope)&&<label>City<select value={rule.cityId} disabled={!rule.stateId} onChange={e=>setRule(current=>({...current,cityId:e.target.value}))}><option value="">All cities in state</option>{ruleCities.map(item=><option key={item.id} value={item.id}>{item.name}</option>)}</select></label>}
               <label>Priority<input type="number" min="0" max="10000" value={rule.priority} onChange={e=>setRule(current=>({...current,priority:e.target.value}))}/><small>Higher priority wins when multiple rules match.</small></label>
               <label className="membership-rule-active"><input type="checkbox" checked={rule.isActive} onChange={e=>setRule(current=>({...current,isActive:e.target.checked}))}/><span><strong>Active</strong><small>Matching customers can use this offer.</small></span></label>
             </div>
