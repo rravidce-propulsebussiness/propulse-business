@@ -1767,3 +1767,24 @@
   .activity-row>div:last-child,
   .timeline-row>div:last-child{grid-column:2;text-align:left}
 }
+
+
+/* User 360 finishing touches */
+.membership-preserve-expiry{
+  min-height:36px;
+  display:grid;
+  place-items:center;
+  padding:0 9px;
+  border:1px solid #dbe5ee;
+  border-radius:8px;
+  background:#f7f9fc;
+  color:#71849a;
+  font-size:7px;
+  font-weight:850;
+}
+.user-360-proof-section{
+  margin-top:10px!important;
+}
+.user-360-proof-section .history-360-card{
+  background:#fbfdff;
+}
