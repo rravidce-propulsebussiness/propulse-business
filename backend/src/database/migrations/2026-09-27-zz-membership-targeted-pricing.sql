@@ -43,6 +43,9 @@ ALTER TABLE payments
 ALTER TABLE payments
   ADD COLUMN IF NOT EXISTS membership_lead_entitlements JSONB;
 
+ALTER TABLE payments
+  ADD COLUMN IF NOT EXISTS membership_effective_price NUMERIC(12,2);
+
 ALTER TABLE memberships
   ADD COLUMN IF NOT EXISTS pricing_rule_id INTEGER
   REFERENCES membership_pricing_rules(id) ON DELETE SET NULL;
