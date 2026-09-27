@@ -1,5 +1,6 @@
 const adminService = require('../services/adminService');
 const adminTestResetService = require('../services/adminTestResetService');
+const adminUser360Service = require('../services/adminUser360Service');
 
 async function getDashboardStats(req, res) {
   try { return res.json(await adminService.getDashboardStats()); }
@@ -34,6 +35,34 @@ async function updateUserProfile(req, res) {
     return res.status(500).json({ error: 'Failed to update user profile' });
   }
 }
+async function getUser360(req,res){
+  try{
+    const data=await adminUser360Service.getUser360(req.params.id);
+    if(!data)return res.status(404).json({error:'User not found'});
+    return res.json(data);
+  }catch(error){
+    console.error('Get Admin User 360 failed:',error);
+    return res.status(500).json({error:'Failed to load account workspace'});
+  }
+}
+
+async function setUserMembershipPlan(req,res){
+  try{
+    return res.json(await adminUser360Service.setMembershipPlan({
+      userId:req.params.id,
+      planId:req.body?.planId,
+      days:req.body?.days,
+      reason:req.body?.reason,
+      adminId:req.user?.id
+    }));
+  }catch(error){
+    const map={NOT_FOUND:404,INVALID_PLAN:400,INVALID_MEMBERSHIP_DAYS:400,REASON_REQUIRED:400};
+    if(map[error.code])return res.status(map[error.code]).json({error:error.message,code:error.code});
+    console.error('Admin set user membership failed:',error);
+    return res.status(500).json({error:'Failed to update user membership'});
+  }
+}
+
 async function getCompanyProofs(req, res) {
   try { return res.json(await adminService.getCompanyProofs(req.query)); }
   catch (error) {
@@ -98,5 +127,5 @@ async function resetTestData(req,res){
   }
 }
 
-module.exports = { getDashboardStats, getUsers, createAdmin, setUserStatus, setUserRole, updateUserProfile, getCompanyProofs, verifyCompanyProof, rejectCompanyProof, getTestResetPreview, resetTestData };
+module.exports = { getDashboardStats, getUsers, getUser360, setUserMembershipPlan, createAdmin, setUserStatus, setUserRole, updateUserProfile, getCompanyProofs, verifyCompanyProof, rejectCompanyProof, getTestResetPreview, resetTestData };
 
