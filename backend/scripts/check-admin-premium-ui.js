@@ -178,6 +178,9 @@ assert(membershipConfig.includes('Pricing & lead entitlement rules'),'Existing t
 assert(membershipConfig.includes('All business users')&&membershipConfig.includes('Specific business users'),'Membership pricing rules must support all or selected business users');
 assert(membershipConfig.includes('Verified + Non-verified')&&membershipConfig.includes('Verified only')&&membershipConfig.includes('Non-verified only'),'Membership pricing rules must support verification targeting');
 assert(membershipConfig.includes('All industries')&&membershipConfig.includes('All states')&&membershipConfig.includes('All cities'),'Membership pricing rules must support industry, state and city targeting');
+assert(membershipConfig.includes('Different price by industry')&&membershipConfig.includes('Different price by location')&&membershipConfig.includes('Industry + City'),'Membership pricing UI must explicitly support separate industry, location and combined pricing modes');
+assert(membershipConfig.includes("setRuleTargetMode('all')")&&membershipConfig.includes("changeRuleScope('industry')")&&membershipConfig.includes("changeRuleScope('location')")&&membershipConfig.includes("changeRuleScope('industry_location')"),'Membership pricing target-mode controls must remain wired');
+assert(membershipConfig.includes('Create separate rules for each industry')&&membershipConfig.includes('Create separate rules for Hyderabad'),'Membership pricing editor must explain independent industry and city rules');
 assert(membershipConfig.includes('Target price ₹')&&membershipConfig.includes('Lead allowance'),'Membership rules must combine targeted price and lead entitlement overrides');
 assert(membershipConfig.includes('membership-business-picker')&&membershipConfig.includes('toggleBusiness'),'Specific-business membership targeting must keep its multi-select picker');
 assert(membershipConfig.includes('openEditRule(item)')&&membershipConfig.includes('deleteRule(item)'),'Existing membership pricing rules must retain edit/delete actions');
@@ -206,6 +209,7 @@ assert(leadEntitlementService.includes('COALESCE(m.lead_entitlements_snapshot,mp
 assert(membershipAccessService.includes('COALESCE(m.effective_price,p.price) AS price'),'Membership access and proration must use the purchased effective price');
 assert(membershipConfigCss.includes('/* Premium Memberships workspace */'),'Unified premium Memberships styling must remain');
 assert(membershipConfigCss.includes('.membership-package-grid')&&membershipConfigCss.includes('.membership-rule-grid')&&membershipConfigCss.includes('.membership-modal'),'Premium Membership package, targeted-rule and modal layouts must remain');
+assert(membershipConfigCss.includes('.membership-scope-picker')&&membershipConfigCss.includes('.membership-pricing-scope-note'),'Premium Membership industry/city pricing scope controls must remain styled');
 assert(membershipConfigCss.includes('grid-template-columns:repeat(4,minmax(0,1fr))'),'Desktop Membership KPI layout must remain compact');
 assert(!server.includes("servicePricingRoutes")&&!server.includes("'/api/service-pricing'"),'Legacy Service Pricing API must stay unmounted');
 assert(!adminRoutes.includes('servicePricingController')&&!adminRoutes.includes("'/service-pricing'"),'Admin routes must not retain deleted Service Pricing controller references');
