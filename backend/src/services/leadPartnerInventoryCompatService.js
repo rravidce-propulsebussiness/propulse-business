@@ -135,7 +135,7 @@ function toCsv(rows){
 async function connectGoogleSheet({userId,url}){
   const result=await fetchGoogleSheetCsv(url);
   const imported=await importCsv({userId,csv:result.csv});
-  const connection=(await pool.query(`INSERT INTO lead_partner_sheet_connections(user_id,spreadsheet_id,gid,source_url,last_synced_at,last_sync_created,last_sync_duplicate,last_sync_failed,last_sync_failures) VALUES($1,$2,$3,$4,CURRENT_TIMESTAMP,$5,$6,$7,$8::jsonb) ON CONFLICT(user_id,spreadsheet_id,gid) DO UPDATE SET source_url=EXCLUDED.source_url,status='active',last_synced_at=EXCLUDED.last_synced_at,last_sync_created=EXCLUDED.last_sync_created,last_sync_duplicate=EXCLUDED.last_sync_duplicate,last_sync_failed=EXCLUDED.last_sync_failed,last_sync_failures=EXCLUDED.last_sync_failures,updated_at=CURRENT_TIMESTAMP RETURNING *`,[userId,result.spreadsheetId,result.gid||'0',url,imported.created,imported.duplicate,imported.failed,JSON.stringify(imported.failures)])).rows[0];
+  const connection=(await pool.query(`INSERT INTO lead_partner_sheet_connections(user_id,spreadsheet_id,gid,source_url,last_synced_at,last_sync_created,last_sync_duplicate,last_sync_failed,last_sync_failures) VALUES($1,$2,$3,$4,CURRENT_TIMESTAMP,$5,$6,$7,$8::jsonb) ON CONFLICT(user_id,spreadsheet_id,gid) DO UPDATE SET source_url=EXCLUDED.source_url,status='active',last_synced_at=EXCLUDED.last_synced_at,last_sync_created=EXCLUDED.last_sync_created,last_sync_duplicate=EXCLUDED.last_sync_duplicate,last_sync_failed=EXCLUDED.last_sync_failed,last_sync_failures=EXCLUDED.last_sync_failures,sync_failure_count=0,last_sync_error_at=NULL,last_sync_error=NULL,next_retry_at=NULL,updated_at=CURRENT_TIMESTAMP RETURNING *`,[userId,result.spreadsheetId,result.gid||'0',url,imported.created,imported.duplicate,imported.failed,JSON.stringify(imported.failures)])).rows[0];
   return{connection,import:imported};
 }
 
@@ -145,7 +145,7 @@ async function syncGoogleSheet({userId,connectionId}){
   const result=await fetchGoogleSheetCsv(connection.source_url);
   if(result.spreadsheetId!==connection.spreadsheet_id||String(result.gid||'0')!==String(connection.gid||'0'))throw new Error('Google Sheet URL no longer matches the connected sheet');
   const imported=await importCsv({userId,csv:result.csv});
-  const saved=(await pool.query(`UPDATE lead_partner_sheet_connections SET last_synced_at=CURRENT_TIMESTAMP,last_sync_created=$1,last_sync_duplicate=$2,last_sync_failed=$3,last_sync_failures=$4::jsonb,updated_at=CURRENT_TIMESTAMP WHERE id=$5 AND user_id=$6 RETURNING *`,[imported.created,imported.duplicate,imported.failed,JSON.stringify(imported.failures),connectionId,userId])).rows[0];
+  const saved=(await pool.query(`UPDATE lead_partner_sheet_connections SET last_synced_at=CURRENT_TIMESTAMP,last_sync_created=$1,last_sync_duplicate=$2,last_sync_failed=$3,last_sync_failures=$4::jsonb,sync_failure_count=0,last_sync_error_at=NULL,last_sync_error=NULL,next_retry_at=NULL,updated_at=CURRENT_TIMESTAMP WHERE id=$5 AND user_id=$6 RETURNING *`,[imported.created,imported.duplicate,imported.failed,JSON.stringify(imported.failures),connectionId,userId])).rows[0];
   return{connection:saved,import:imported};
 }
 
