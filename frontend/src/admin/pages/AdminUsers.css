@@ -1432,6 +1432,36 @@
 .membership-360-badge.grow strong{color:#2c7c57}
 .membership-360-badge.scale{background:#f7f4fc;border-color:#e0d8ef}
 .membership-360-badge.scale strong{color:#694b90}
+.membership-360-reason{
+  margin-top:9px;
+  padding:10px;
+  border:1px solid #dde6ef;
+  border-radius:10px;
+  background:#fff;
+}
+.membership-360-reason>span{
+  display:block;
+  margin-bottom:6px;
+  color:#61778e;
+  font-size:7px;
+  font-weight:900;
+}
+.membership-360-reason textarea{
+  width:100%;
+  min-height:48px;
+  box-sizing:border-box;
+  padding:8px 9px;
+  border:1px solid #d8e3ed;
+  border-radius:8px;
+  color:#31506f;
+  font-size:8px;
+  resize:vertical;
+  outline:0;
+}
+.membership-360-reason textarea:focus{
+  border-color:#8faccc;
+  box-shadow:0 0 0 3px rgba(24,89,157,.06);
+}
 .membership-360-actions{
   display:grid;
   grid-template-columns:1.2fr 1fr;
