@@ -54,6 +54,8 @@ jobs:
         run: npm run test:wallet-membership-tab
       - name: React wallet coupon UI
         run: npm run test:wallet-coupon-react
+      - name: React Admin Investments UI
+        run: npm run test:admin-investments-react
       - name: Lead Partner reports pagination
         run: npm run test:lead-partner-reports
       - name: Lead Partner pricing workspace
