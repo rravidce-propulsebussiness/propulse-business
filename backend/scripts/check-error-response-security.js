@@ -11,6 +11,7 @@ const files = [
   'src/controllers/adminLeadEntitlementController.js',
   'src/controllers/investorPayoutAccountController.js',
   'src/controllers/subcityController.js',
+  'src/controllers/profileController.js',
 ];
 
 const rawInternalErrorPatterns = [
