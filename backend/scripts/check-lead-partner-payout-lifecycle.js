@@ -170,6 +170,16 @@ async function main() {
     ))[0];
     assert.strictEqual(reversedPayout.status, 'rejected', 'Payout emptied by earning reversal must be rejected');
 
+    console.log('test: paginated admin payout ledger');
+    const adminPage = await payoutService.adminList({ status:'all', search:tag, page:1, limit:2 });
+    assert(Array.isArray(adminPage.items), 'Admin payout ledger must return paginated items');
+    assert(adminPage.items.length <= 2, 'Admin payout page must respect the requested limit');
+    assert(adminPage.total >= 4, 'Admin payout pagination must retain the full filtered total');
+    assert(adminPage.pages >= 2, 'Admin payout pagination must expose total pages');
+    assert(Number(adminPage.stats.total_count) >= 4, 'Admin payout stats must cover all filtered statuses');
+    assert(adminPage.items.every(row => !Object.prototype.hasOwnProperty.call(row, 'proof_url')), 'Admin payout list must not return proof blobs');
+    assert(adminPage.items.some(row => row.has_proof === true) || adminPage.items.every(row => row.has_proof === false), 'Admin payout list must expose proof metadata only');
+
     console.log('Lead Partner payout lifecycle tests passed.');
   } catch (error) {
     console.error(`Lead Partner payout lifecycle tests failed: ${error.message}`);
