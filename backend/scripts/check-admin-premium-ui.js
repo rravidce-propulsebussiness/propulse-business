@@ -291,7 +291,7 @@ assert(membershipController.includes('res.json(await s.getPlans(false))'),'Publi
 assert(servicePricingRemoval.includes('DROP TABLE IF EXISTS service_pricing'),'Final schema must remove the redundant Service Pricing table');
 
 
-assert(dashboard.includes('const revenue=stats?.revenue||{}'),'Overview must use the backend revenue summary');
+assert(/const revenue=stats\?\.revenue\|\|(EMPTY_OBJECT|\{\})/.test(dashboard),'Overview must use the backend revenue summary');
 assert(dashboard.includes("const [revenuePeriod,setRevenuePeriod]=useState('month')"),'Overview must keep the revenue period filter');
 assert(dashboard.includes('REVENUE COMMAND CENTER')&&dashboard.includes('Total earnings'),'Overview must keep the top earnings command center');
 assert(dashboard.includes("['today','Today']")&&dashboard.includes("['week','This Week']")&&dashboard.includes("['month','This Month']")&&dashboard.includes("['all','All Time']"),'Overview revenue filters must keep Today, This Week, This Month and All Time');
