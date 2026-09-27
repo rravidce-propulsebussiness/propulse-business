@@ -10,8 +10,9 @@ const checks = [
   ['Global API limiter mounted', server.includes("app.use('/api',apiRateLimit)")],
   ['Global API limiter has finite limit', server.includes("max:600")],
   ['Global API limiter uses global scope', server.includes("scope:'global'")],
+  ['Global API limiter avoids a PostgreSQL write per request', server.includes("scope:'global',shared:false")],
   ['Rate limiter supports global scope', limiter.includes("scope = 'route'") && limiter.includes("scope === 'global'")],
-  ['Production uses shared bucket', limiter.includes("process.env.NODE_ENV === 'production'") && limiter.includes('consumeSharedBucket')],
+  ['Sensitive route limiters can still use shared production buckets', limiter.includes("shared = true") && limiter.includes("process.env.NODE_ENV === 'production' && shared") && limiter.includes('consumeSharedBucket')],
   ['429 response is implemented', limiter.includes("res.status(429)")],
   ['RateLimit-Remaining header is emitted', limiter.includes("RateLimit-Remaining")],
 ];
