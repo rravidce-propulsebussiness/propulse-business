@@ -23,9 +23,7 @@ const listBlock=source.slice(listStart,listEnd);
 assert(!listBlock.includes('LIMIT 500'),'Pricing workspace must not load a fixed 500-lead snapshot');
 assert(listBlock.includes('safeLimit=Math.min(100'),'Pricing workspace page size must be bounded');
 assert(listBlock.includes('SELECT COUNT(*)::int total FROM leads'),'Pricing workspace must return a database total for pagination');
-assert(listBlock.includes('LIMIT 
-)&&listBlock.includes('OFFSET 
-),'Pricing workspace must use SQL pagination');
+assert(listBlock.includes('rowParams.length-1')&&listBlock.includes('rowParams.length'),'Pricing workspace must use parameterized SQL pagination');
 assert(listBlock.includes("CAST(l.id AS TEXT)"),'Pricing workspace search must support lead ID');
 
 console.log('Lead Partner pricing set-based and pagination efficiency regression test passed.');
