@@ -19,7 +19,7 @@ async function getDashboard({ search = '', status = 'all', industryId = '' } = {
 
   const rows = (await pool.query(`
     SELECT
-      x.id,x.user_id,u.name AS user_name,u.email AS user_email,
+      x.id,x.user_id,x.cycle_id,u.name AS user_name,u.email AS user_email,
       x.industry_id,i.name AS industry_name,x.state_id,s.name AS state_name,
       x.city_id,c.name AS city_name,x.amount,x.amount_in_ads,x.ad_spend_status,
       x.status,x.starts_at,x.matures_at,x.maturity_days,x.created_at,x.updated_at,
@@ -126,6 +126,8 @@ async function getDashboard({ search = '', status = 'all', industryId = '' } = {
         user_id: row.user_id,
         user_name: row.user_name,
         user_email: row.user_email,
+        current_cycle_id: row.cycle_id ? Number(row.cycle_id) : null,
+        current_cycle_status: row.status,
         investment_count: 0,
         total_invested: 0,
         active_invested: 0,
@@ -177,6 +179,7 @@ async function getDashboard({ search = '', status = 'all', industryId = '' } = {
     ad_spent: Number(item.ad_spent.toFixed(2)),
     ad_remaining: Number(item.ad_remaining.toFixed(2)),
     funds_available_for_ads: Number(item.funds_available_for_ads.toFixed(2)),
+    investments: item.cycles,
     _leadIds: [...item.leadIds],
     leadIds: undefined,
   })).sort((a, b) => b.total_invested - a.total_invested || String(a.user_name || '').localeCompare(String(b.user_name || '')));
