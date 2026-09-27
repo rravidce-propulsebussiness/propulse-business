@@ -27,82 +27,133 @@ function grantAllowsLead(grant,lead,{exclusiveActive=false,pro=false}={}){
   return true;
 }
 
-async function getSettings(client=pool){
+async function listRegistrationRules(client=pool,{activeOnly=false}={}){
   const result=await client.query(`
-    SELECT id,new_business_enabled,new_business_window_days,
-           new_business_shared_quantity,new_business_premium_quantity,
-           claim_expiry_days,
-           new_business_allow_single,new_business_allow_shared,
-           new_business_allow_auto_release,new_business_allow_exclusive,
-           updated_by,created_at,updated_at
-    FROM lead_entitlement_settings
-    WHERE id=1
+    SELECT r.*,
+           i.name AS industry_name,
+           st.name AS state_name,
+           c.name AS city_name
+    FROM lead_entitlement_registration_rules r
+    LEFT JOIN industries i ON i.id=r.industry_id
+    LEFT JOIN states st ON st.id=r.state_id
+    LEFT JOIN cities c ON c.id=r.city_id
+    ${activeOnly?'WHERE r.is_active=TRUE':''}
+    ORDER BY r.updated_at DESC,r.id DESC
   `);
-  return result.rows[0]||{
-    id:1,new_business_enabled:false,new_business_window_days:7,
-    new_business_shared_quantity:1,new_business_premium_quantity:0,
-    claim_expiry_days:0,
-    new_business_allow_single:true,
-    new_business_allow_shared:true,
-    new_business_allow_auto_release:true,
-    new_business_allow_exclusive:false,
-    updated_by:null,created_at:null,updated_at:null
-  };
+  return result.rows;
 }
 
-async function getVerifiedBusiness(userId,client=pool){
+async function getBusinessContext(userId,client=pool){
   const result=await client.query(`
     SELECT u.id,u.name,u.email,u.role,u.is_active,u.created_at,
-           bp.business_name,
+           bp.id AS business_profile_id,bp.business_name,
            EXISTS(
              SELECT 1 FROM company_proof_documents cpd
              WHERE cpd.user_id=u.id AND cpd.status='verified'
-           ) AS is_verified
+           ) AS is_verified,
+           ARRAY(
+             SELECT DISTINCT bps.industry_id
+             FROM business_profile_services bps
+             WHERE bps.business_profile_id=bp.id AND bps.is_active=TRUE
+           ) AS industry_ids,
+           ARRAY(
+             SELECT DISTINCT bpl.state_id
+             FROM business_profile_locations bpl
+             WHERE bpl.business_profile_id=bp.id AND bpl.is_active=TRUE
+           ) AS state_ids,
+           ARRAY(
+             SELECT DISTINCT bpl.city_id
+             FROM business_profile_locations bpl
+             WHERE bpl.business_profile_id=bp.id AND bpl.is_active=TRUE
+           ) AS city_ids
     FROM users u
     LEFT JOIN business_profiles bp ON bp.user_id=u.id
     WHERE u.id=$1
   `,[userId]);
   const row=result.rows[0]||null;
   if(!row)return null;
-  return {...row,is_verified:Boolean(row.is_verified)};
+  return{
+    ...row,
+    is_verified:Boolean(row.is_verified),
+    industry_ids:(row.industry_ids||[]).map(Number),
+    state_ids:(row.state_ids||[]).map(Number),
+    city_ids:(row.city_ids||[]).map(Number)
+  };
+}
+
+async function getVerifiedBusiness(userId,client=pool){
+  return getBusinessContext(userId,client);
+}
+
+function ruleSpecificity(rule){
+  return (rule.city_id?8:0)+(rule.state_id?4:0)+(rule.industry_id?2:0)+(rule.verification_scope!=='any'?1:0);
+}
+
+function ruleMatchesBusiness(rule,business){
+  if(!rule?.is_active||!business)return false;
+  if(rule.verification_scope==='verified'&&!business.is_verified)return false;
+  if(rule.verification_scope==='unverified'&&business.is_verified)return false;
+  if(rule.industry_id&&!business.industry_ids.includes(Number(rule.industry_id)))return false;
+  if(rule.state_id&&!business.state_ids.includes(Number(rule.state_id)))return false;
+  if(rule.city_id&&!business.city_ids.includes(Number(rule.city_id)))return false;
+  return true;
+}
+
+async function findRegistrationRuleForBusiness(business,client=pool){
+  const rules=await listRegistrationRules(client,{activeOnly:true});
+  return rules
+    .filter(rule=>ruleMatchesBusiness(rule,business))
+    .sort((a,b)=>{
+      const specificity=ruleSpecificity(b)-ruleSpecificity(a);
+      if(specificity)return specificity;
+      const updated=new Date(b.updated_at||0)-new Date(a.updated_at||0);
+      return updated||Number(b.id)-Number(a.id);
+    })[0]||null;
 }
 
 async function ensureNewBusinessGrant(userId,client=pool){
-  const settings=await getSettings(client);
-  if(!settings.new_business_enabled)return null;
+  const existing=(await client.query(`
+    SELECT * FROM lead_entitlement_grants
+    WHERE user_id=$1 AND source='new_business'
+    LIMIT 1
+  `,[userId])).rows[0]||null;
+  if(existing)return existing;
 
-  const shared=int(settings.new_business_shared_quantity,0,1000,0);
-  const premium=int(settings.new_business_premium_quantity,0,1000,0);
+  const business=await getBusinessContext(userId,client);
+  if(!business||business.role!=='business'||business.is_active!==true)return null;
+
+  const rule=await findRegistrationRuleForBusiness(business,client);
+  if(!rule)return null;
+
+  const shared=int(rule.shared_quantity,0,1000,0);
+  const premium=int(rule.premium_quantity,0,1000,0);
   if(shared<=0&&premium<=0)return null;
 
-  const allowSingle=bool(settings.new_business_allow_single,true);
-  const allowShared=bool(settings.new_business_allow_shared,true);
-  const allowAutoRelease=bool(settings.new_business_allow_auto_release,true);
-  const allowExclusive=bool(settings.new_business_allow_exclusive,false);
+  const allowSingle=bool(rule.allow_single,true);
+  const allowShared=bool(rule.allow_shared,true);
+  const allowAutoRelease=bool(rule.allow_auto_release,true);
+  const allowExclusive=bool(rule.allow_exclusive,false);
   if(!allowSingle&&!allowShared&&!allowAutoRelease)return null;
 
-  const business=await getVerifiedBusiness(userId,client);
-  if(!business||business.role!=='business'||business.is_active!==true||!business.is_verified)return null;
-
   const registeredAt=new Date(business.created_at);
-  const windowDays=int(settings.new_business_window_days,1,365,7);
+  const windowDays=int(rule.window_days,1,365,7);
   const expiresAt=new Date(registeredAt.getTime()+windowDays*86400000);
   if(!Number.isFinite(expiresAt.getTime())||expiresAt<=new Date())return null;
 
   const result=await client.query(`
     INSERT INTO lead_entitlement_grants(
-      user_id,source,shared_quantity,premium_quantity,starts_at,expires_at,
+      user_id,source,registration_rule_id,shared_quantity,premium_quantity,starts_at,expires_at,
       claim_expiry_days,allow_single,allow_shared,allow_auto_release,allow_exclusive,
       created_by,notes
     )
-    VALUES($1,'new_business',$2,$3,CURRENT_TIMESTAMP,$4,$5,$6,$7,$8,$9,NULL,$10)
+    VALUES($1,'new_business',$2,$3,$4,CURRENT_TIMESTAMP,$5,$6,$7,$8,$9,$10,NULL,$11)
     ON CONFLICT (user_id) WHERE source='new_business' DO NOTHING
     RETURNING *
   `,[
-    business.id,shared,premium,expiresAt,
-    int(settings.claim_expiry_days,0,3650,0),
+    business.id,rule.id,shared,premium,expiresAt,
+    int(rule.claim_expiry_days,0,3650,0),
     allowSingle,allowShared,allowAutoRelease,allowExclusive,
-    `Verified new-business entitlement for first ${windowDays} registration days`
+    `Registration rule #${rule.id}: ${rule.name}`
   ]);
 
   if(result.rows[0])return result.rows[0];
@@ -205,52 +256,116 @@ async function getUserGrantSummary(userId,client=pool){
   return{grants,summary:summarizeGrants(grants)};
 }
 
-async function updateSettings(input,adminId,client=pool){
-  const enabled=bool(input?.newBusinessEnabled,false);
-  const windowDays=int(input?.windowDays,1,365,7);
-  const shared=int(input?.sharedQuantity,0,1000,0);
-  const premium=int(input?.premiumQuantity,0,1000,0);
-  const claimExpiryDays=int(input?.claimExpiryDays,0,3650,0);
-  const allowSingle=bool(input?.allowSingle,true);
-  const allowShared=bool(input?.allowShared,true);
-  const allowAutoRelease=bool(input?.allowAutoRelease,true);
-  const allowExclusive=bool(input?.allowExclusive,false);
+function normalizeRegistrationRule(input){
+  const verificationScope=['any','verified','unverified'].includes(String(input?.verificationScope||'').toLowerCase())
+    ?String(input.verificationScope).toLowerCase()
+    :'any';
+  const normalized={
+    name:String(input?.name||'').trim().slice(0,120),
+    isActive:bool(input?.isActive,true),
+    verificationScope,
+    industryId:int(input?.industryId,1,2147483647,0)||null,
+    stateId:int(input?.stateId,1,2147483647,0)||null,
+    cityId:int(input?.cityId,1,2147483647,0)||null,
+    windowDays:int(input?.windowDays,1,365,7),
+    sharedQuantity:int(input?.sharedQuantity,0,1000,0),
+    premiumQuantity:int(input?.premiumQuantity,0,1000,0),
+    claimExpiryDays:int(input?.claimExpiryDays,0,3650,0),
+    allowSingle:bool(input?.allowSingle,true),
+    allowShared:bool(input?.allowShared,true),
+    allowAutoRelease:bool(input?.allowAutoRelease,true),
+    allowExclusive:bool(input?.allowExclusive,false)
+  };
+  if(!normalized.name)fail('Give this registration rule a name','INVALID_ENTITLEMENT_RULE');
+  if(normalized.sharedQuantity<=0&&normalized.premiumQuantity<=0)fail('Configure at least one Basic or Premium entitlement','INVALID_ENTITLEMENT_SETTINGS');
+  if(!normalized.allowSingle&&!normalized.allowShared&&!normalized.allowAutoRelease)fail('Enable at least one buyer-access type','INVALID_ENTITLEMENT_ACCESS');
+  return normalized;
+}
 
-  if(enabled&&shared<=0&&premium<=0){
-    fail('Configure at least one Basic or Premium entitlement','INVALID_ENTITLEMENT_SETTINGS');
+async function validateRegistrationRuleTargets(rule,client=pool){
+  if(rule.industryId){
+    const found=(await client.query('SELECT id FROM industries WHERE id=$1 AND is_active=TRUE',[rule.industryId])).rows[0];
+    if(!found)fail('Choose a valid industry','INVALID_ENTITLEMENT_RULE');
   }
-  if(enabled&&!allowSingle&&!allowShared&&!allowAutoRelease){
-    fail('Enable at least one buyer-access type','INVALID_ENTITLEMENT_ACCESS');
+  if(rule.cityId){
+    const city=(await client.query('SELECT id,state_id FROM cities WHERE id=$1 AND is_active=TRUE',[rule.cityId])).rows[0];
+    if(!city)fail('Choose a valid city','INVALID_ENTITLEMENT_RULE');
+    if(rule.stateId&&Number(city.state_id)!==Number(rule.stateId))fail('Selected city does not belong to the selected state','INVALID_ENTITLEMENT_RULE');
+    if(!rule.stateId)rule.stateId=Number(city.state_id);
   }
+  if(rule.stateId){
+    const found=(await client.query('SELECT id FROM states WHERE id=$1 AND is_active=TRUE',[rule.stateId])).rows[0];
+    if(!found)fail('Choose a valid state','INVALID_ENTITLEMENT_RULE');
+  }
+  return rule;
+}
 
+async function createRegistrationRule(input,adminId,client=pool){
+  const rule=await validateRegistrationRuleTargets(normalizeRegistrationRule(input),client);
   const result=await client.query(`
-    INSERT INTO lead_entitlement_settings(
-      id,new_business_enabled,new_business_window_days,
-      new_business_shared_quantity,new_business_premium_quantity,claim_expiry_days,
-      new_business_allow_single,new_business_allow_shared,
-      new_business_allow_auto_release,new_business_allow_exclusive,
-      updated_by,updated_at
+    INSERT INTO lead_entitlement_registration_rules(
+      name,is_active,verification_scope,industry_id,state_id,city_id,
+      window_days,shared_quantity,premium_quantity,claim_expiry_days,
+      allow_single,allow_shared,allow_auto_release,allow_exclusive,
+      created_by,updated_by
     )
-    VALUES(1,$1,$2,$3,$4,$5,$6,$7,$8,$9,$10,CURRENT_TIMESTAMP)
-    ON CONFLICT(id) DO UPDATE SET
-      new_business_enabled=EXCLUDED.new_business_enabled,
-      new_business_window_days=EXCLUDED.new_business_window_days,
-      new_business_shared_quantity=EXCLUDED.new_business_shared_quantity,
-      new_business_premium_quantity=EXCLUDED.new_business_premium_quantity,
-      claim_expiry_days=EXCLUDED.claim_expiry_days,
-      new_business_allow_single=EXCLUDED.new_business_allow_single,
-      new_business_allow_shared=EXCLUDED.new_business_allow_shared,
-      new_business_allow_auto_release=EXCLUDED.new_business_allow_auto_release,
-      new_business_allow_exclusive=EXCLUDED.new_business_allow_exclusive,
-      updated_by=EXCLUDED.updated_by,
-      updated_at=CURRENT_TIMESTAMP
+    VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$15)
     RETURNING *
   `,[
-    enabled,windowDays,shared,premium,claimExpiryDays,
-    allowSingle,allowShared,allowAutoRelease,allowExclusive,
+    rule.name,rule.isActive,rule.verificationScope,rule.industryId,rule.stateId,rule.cityId,
+    rule.windowDays,rule.sharedQuantity,rule.premiumQuantity,rule.claimExpiryDays,
+    rule.allowSingle,rule.allowShared,rule.allowAutoRelease,rule.allowExclusive,
     adminId||null
   ]);
   return result.rows[0];
+}
+
+async function updateRegistrationRule(ruleId,input,adminId,client=pool){
+  const id=int(ruleId,1,2147483647,0);
+  if(!id)fail('Invalid registration rule','INVALID_ENTITLEMENT_RULE');
+  const existing=(await client.query('SELECT * FROM lead_entitlement_registration_rules WHERE id=$1',[id])).rows[0];
+  if(!existing)fail('Registration rule not found','ENTITLEMENT_RULE_NOT_FOUND');
+
+  const rule=await validateRegistrationRuleTargets(normalizeRegistrationRule({
+    name:input?.name??existing.name,
+    isActive:input?.isActive??existing.is_active,
+    verificationScope:input?.verificationScope??existing.verification_scope,
+    industryId:input?.industryId===undefined?existing.industry_id:input.industryId,
+    stateId:input?.stateId===undefined?existing.state_id:input.stateId,
+    cityId:input?.cityId===undefined?existing.city_id:input.cityId,
+    windowDays:input?.windowDays??existing.window_days,
+    sharedQuantity:input?.sharedQuantity??existing.shared_quantity,
+    premiumQuantity:input?.premiumQuantity??existing.premium_quantity,
+    claimExpiryDays:input?.claimExpiryDays??existing.claim_expiry_days,
+    allowSingle:input?.allowSingle??existing.allow_single,
+    allowShared:input?.allowShared??existing.allow_shared,
+    allowAutoRelease:input?.allowAutoRelease??existing.allow_auto_release,
+    allowExclusive:input?.allowExclusive??existing.allow_exclusive
+  }),client);
+
+  const result=await client.query(`
+    UPDATE lead_entitlement_registration_rules
+    SET name=$2,is_active=$3,verification_scope=$4,industry_id=$5,state_id=$6,city_id=$7,
+        window_days=$8,shared_quantity=$9,premium_quantity=$10,claim_expiry_days=$11,
+        allow_single=$12,allow_shared=$13,allow_auto_release=$14,allow_exclusive=$15,
+        updated_by=$16,updated_at=CURRENT_TIMESTAMP
+    WHERE id=$1
+    RETURNING *
+  `,[
+    id,rule.name,rule.isActive,rule.verificationScope,rule.industryId,rule.stateId,rule.cityId,
+    rule.windowDays,rule.sharedQuantity,rule.premiumQuantity,rule.claimExpiryDays,
+    rule.allowSingle,rule.allowShared,rule.allowAutoRelease,rule.allowExclusive,
+    adminId||null
+  ]);
+  return result.rows[0];
+}
+
+async function deleteRegistrationRule(ruleId,client=pool){
+  const id=int(ruleId,1,2147483647,0);
+  if(!id)fail('Invalid registration rule','INVALID_ENTITLEMENT_RULE');
+  const deleted=(await client.query('DELETE FROM lead_entitlement_registration_rules WHERE id=$1 RETURNING *',[id])).rows[0];
+  if(!deleted)fail('Registration rule not found','ENTITLEMENT_RULE_NOT_FOUND');
+  return{...deleted,deleted:true};
 }
 
 async function listVerifiedBusinesses({search='',limit=30}={},client=pool){
@@ -415,14 +530,9 @@ async function deleteGrant(grantId,adminId,client=pool){
   return{...result.rows[0],deleted:true,retained_for_claim_history:true};
 }
 
-async function deleteSettings(adminId,client=pool){
-  const deleted=(await client.query('DELETE FROM lead_entitlement_settings WHERE id=1 RETURNING *')).rows[0]||null;
-  return{deleted:Boolean(deleted),previous:deleted,deleted_by:adminId||null};
-}
-
 async function getAdminOverview(client=pool){
-  const [settings,summaryResult,grantsResult]=await Promise.all([
-    getSettings(client),
+  const [registrationRules,summaryResult,grantsResult]=await Promise.all([
+    listRegistrationRules(client),
     client.query(`
       SELECT
         COUNT(*) FILTER(
@@ -438,32 +548,46 @@ async function getAdminOverview(client=pool){
           SELECT COUNT(*)::int
           FROM lead_entitlement_claims c
           WHERE c.grant_id IS NOT NULL
-        ) AS grant_claims
+        ) AS grant_claims,
+        (
+          SELECT COUNT(*)::int
+          FROM lead_entitlement_registration_rules
+        ) AS registration_rules,
+        (
+          SELECT COUNT(*)::int
+          FROM lead_entitlement_registration_rules
+          WHERE is_active=TRUE
+        ) AS active_registration_rules
       FROM lead_entitlement_grants g
     `),
     client.query(`
-      SELECT g.id,g.user_id,g.source,g.shared_quantity,g.premium_quantity,
+      SELECT g.id,g.user_id,g.source,g.registration_rule_id,
+             g.shared_quantity,g.premium_quantity,
              g.starts_at,g.expires_at,g.claim_expiry_days,
              g.allow_single,g.allow_shared,g.allow_auto_release,g.allow_exclusive,
              g.notes,g.revoked_at,g.created_at,g.updated_at,
              u.name,u.email,bp.business_name,
+             rr.name AS registration_rule_name,
              COUNT(c.id) FILTER(WHERE c.entitlement_type='shared')::int AS used_shared,
              COUNT(c.id) FILTER(WHERE c.entitlement_type='premium')::int AS used_premium
       FROM lead_entitlement_grants g
       JOIN users u ON u.id=g.user_id
       LEFT JOIN business_profiles bp ON bp.user_id=u.id
+      LEFT JOIN lead_entitlement_registration_rules rr ON rr.id=g.registration_rule_id
       LEFT JOIN lead_entitlement_claims c ON c.grant_id=g.id
       WHERE g.revoked_at IS NULL
-      GROUP BY g.id,u.name,u.email,bp.business_name
+      GROUP BY g.id,u.name,u.email,bp.business_name,rr.name
       ORDER BY COALESCE(g.updated_at,g.created_at) DESC,g.id DESC
       LIMIT 100
     `)
   ]);
-  return{settings,summary:summaryResult.rows[0]||{},grants:grantsResult.rows};
+  return{registrationRules,summary:summaryResult.rows[0]||{},grants:grantsResult.rows};
 }
 
 module.exports={
-  getSettings,getVerifiedBusiness,ensureNewBusinessGrant,getActiveGrants,
-  findAvailableGrant,getUserGrantSummary,updateSettings,listVerifiedBusinesses,
-  createManualGrant,updateGrant,deleteGrant,deleteSettings,getAdminOverview,remainingFor,grantAllowsLead
+  getBusinessContext,getVerifiedBusiness,listRegistrationRules,findRegistrationRuleForBusiness,
+  ensureNewBusinessGrant,getActiveGrants,findAvailableGrant,getUserGrantSummary,
+  createRegistrationRule,updateRegistrationRule,deleteRegistrationRule,
+  listVerifiedBusinesses,createManualGrant,updateGrant,deleteGrant,
+  getAdminOverview,remainingFor,grantAllowsLead
 };
