@@ -219,7 +219,7 @@ export default function AdminUsers() {
       <div className="users-command-bar">
         <div className="users-search-box">
           <span>⌕</span>
-          <input value={query} onChange={e => setQuery(e.target.value)} placeholder="Search name, email, phone or business…" />
+          <input value={query} onChange={e => setQuery(e.target.value)} placeholder="Search name, email, phone, user ID, payment ID, UTR or lead ID…" />
         </div>
         <select value={role} onChange={e => setRole(e.target.value)}>
           <option value="all">All account types</option>
@@ -461,6 +461,13 @@ export default function AdminUsers() {
                   </>}</div> : <div className="detail-list"><div><span>Name</span><b>{selected.name}</b></div><div><span>Email</span><b>{selected.email}</b></div><div><span>Phone</span><b>{selected.phone||'—'}</b></div><div><span>Business</span><b>{selected.business_name||'—'}</b></div>{['business','lead_partner'].includes(selected.role)&&<div className="management-wide"><span>Business details</span><b>{selected.business_details||'—'}</b></div>}</div>}
                 </div>
               </form>
+              <div className="management-section user-360-proof-section">
+                <div className="management-section-head"><div><b>Verification documents</b><small>Company proof review history</small></div></div>
+                <div className="user-360-card-list">
+                  {(user360?.proofs||[]).map(item=><article className="history-360-card" key={'proof-'+item.id}><div><span>Proof #{item.id}</span><h4>{item.original_name}</h4><small>{dateTime(item.created_at)}{item.reviewer_name?(' · reviewed by '+item.reviewer_name):''}</small></div><div><b className={'mini-status '+item.status}>{item.status}</b>{item.review_reason&&<small>{item.review_reason}</small>}</div></article>)}
+                  {!user360?.proofs?.length && <div className="user-360-empty">No verification documents.</div>}
+                </div>
+              </div>
             </div>}
 
             {userTab==='activity' && <div className="user-360-pane">
