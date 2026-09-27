@@ -54,6 +54,8 @@ jobs:
         run: npm run test:wallet-membership-tab
       - name: Lead Partner reports pagination
         run: npm run test:lead-partner-reports
+      - name: Lead Partner pricing workspace
+        run: npm run test:lead-partner-pricing
       - name: Investor FAQ layout
         run: npm run test:investor-faq-layout
       - name: Build
