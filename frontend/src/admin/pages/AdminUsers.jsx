@@ -138,7 +138,8 @@ export default function AdminUsers() {
   }
   async function manageMembership(action, membership=user360?.snapshot?.currentMembership) {
     if(!selected||!membership)return;
-    const body={action};
+    if(!membershipReason.trim())return setError('Enter a reason for this membership action.');
+    const body={action,reason:membershipReason.trim()};
     if(action==='extend'||action==='reduce')body.days=Number(membershipDays);
     if(action==='set_expiry')body.expiresAt=membershipExpiry;
     const label=action.replace('_',' ');
@@ -146,6 +147,7 @@ export default function AdminUsers() {
     try{
       setUserBusy(`membership-${action}`);setError('');
       await authRequest(`/payments/memberships/${membership.membership_id}`,{method:'PATCH',body:JSON.stringify(body)});
+      setMembershipReason('');
       await Promise.all([loadUser360(selected.id,true),loadUsers()]);
     }catch(e){setError(e.message||'Failed to update membership')}
     finally{setUserBusy('')}
