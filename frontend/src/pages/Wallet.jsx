@@ -100,11 +100,14 @@ export default function Wallet(){
   useEffect(()=>{
     if(!showAdd)return
     let active=true
-    setOffersLoading(true)
-    authRequest('/coupons/offers?purchaseType=wallet_topup')
-      .then(data=>{if(active)setPublicOffers(Array.isArray(data)?data:[])})
-      .catch(()=>{if(active)setPublicOffers([])})
-      .finally(()=>{if(active)setOffersLoading(false)})
+    queueMicrotask(()=>{
+      if(!active)return
+      setOffersLoading(true)
+      authRequest('/coupons/offers?purchaseType=wallet_topup')
+        .then(data=>{if(active)setPublicOffers(Array.isArray(data)?data:[])})
+        .catch(()=>{if(active)setPublicOffers([])})
+        .finally(()=>{if(active)setOffersLoading(false)})
+    })
     return()=>{active=false}
   },[showAdd])
 
