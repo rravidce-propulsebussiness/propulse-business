@@ -1818,3 +1818,84 @@
 .user-360-proof-section .history-360-card{
   background:#fbfdff;
 }
+
+
+/* Customer 360 fixed chrome + hidden scrollbars */
+.users-360-backdrop{
+  align-items:center!important;
+  overflow:hidden!important;
+  overscroll-behavior:contain;
+}
+.user-360-modal{
+  height:min(94vh,900px)!important;
+  max-height:min(94vh,900px)!important;
+  margin:0!important;
+  overflow:hidden!important;
+}
+.user-360-head,
+.user-360-snapshot,
+.user-360-attention,
+.user-360-tabs{
+  flex:0 0 auto;
+}
+.user-360-head{
+  position:relative;
+  z-index:40;
+  box-shadow:0 1px 0 rgba(16,51,89,.04);
+}
+.user-360-snapshot{
+  position:relative;
+  z-index:35;
+}
+.user-360-attention{
+  position:relative;
+  z-index:34;
+}
+.user-360-tabs{
+  position:relative;
+  z-index:36;
+  justify-content:center;
+  flex-wrap:wrap;
+  overflow:visible;
+  scrollbar-width:none;
+  -ms-overflow-style:none;
+  box-shadow:0 8px 20px rgba(20,53,89,.045);
+}
+.user-360-tabs::-webkit-scrollbar{
+  display:none;
+}
+.user-360-body{
+  flex:1 1 auto;
+  min-height:0;
+  overflow-y:auto;
+  overflow-x:hidden;
+  overscroll-behavior:contain;
+  scrollbar-width:none;
+  -ms-overflow-style:none;
+  scroll-behavior:smooth;
+}
+.user-360-body::-webkit-scrollbar{
+  width:0;
+  height:0;
+  display:none;
+}
+.user-360-card-list.compact-list{
+  scrollbar-width:none;
+  -ms-overflow-style:none;
+}
+.user-360-card-list.compact-list::-webkit-scrollbar{
+  width:0;
+  height:0;
+  display:none;
+}
+@media(max-width:720px){
+  .user-360-modal{
+    height:94vh!important;
+    max-height:94vh!important;
+  }
+  .user-360-tabs{
+    justify-content:flex-start;
+    flex-wrap:nowrap;
+    overflow-x:auto;
+  }
+}
