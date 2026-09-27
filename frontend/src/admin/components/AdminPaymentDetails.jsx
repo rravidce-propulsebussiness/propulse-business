@@ -54,6 +54,24 @@ export default function AdminPaymentDetails(){
     return()=>{active=false}
   },[])
 
+  useEffect(()=>{
+    if(!open)return undefined
+    const previousOverflow=document.body.style.overflow
+    document.body.style.overflow='hidden'
+    const onKeyDown=event=>{
+      if(event.key==='Escape'&&!busy){
+        setOpen(false)
+        setEditing(null)
+        setForm(empty)
+      }
+    }
+    window.addEventListener('keydown',onKeyDown)
+    return()=>{
+      document.body.style.overflow=previousOverflow
+      window.removeEventListener('keydown',onKeyDown)
+    }
+  },[open,busy])
+
   const stats=useMemo(()=>({
     total:items.length,
     active:items.filter(item=>item.is_active).length,
@@ -109,7 +127,7 @@ export default function AdminPaymentDetails(){
       const data=editing
         ?await apiRequest(`/payment-receiving-details/admin/${editing}`,{method:'PATCH',body:JSON.stringify(body)})
         :await apiRequest('/payment-receiving-details/admin',{method:'POST',body:JSON.stringify(body)})
-      setItems(list=>editing?list.map(item=>item.id===editing?data:item):[...list,data].sort((a,b)=>Number(a.sort_order||0)-Number(b.sort_order||0)))
+      setItems(list=>(editing?list.map(item=>item.id===editing?data:item):[...list,data]).sort((a,b)=>Number(a.sort_order||0)-Number(b.sort_order||0)||Number(a.id||0)-Number(b.id||0)))
       setOpen(false)
       setMessage(editing?'Payment account updated.':'Payment account added.')
       setForm(empty)
