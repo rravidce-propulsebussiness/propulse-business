@@ -13,16 +13,25 @@ const normalizeLabel = (value) => String(value || '').trim().replace(/[-_]+/g, '
 const dateLabel = (value) => value ? new Date(value).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'
 const offerDateLabel = (value) => value ? new Date(value).toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : ''
 const offerMeta = (plan) => {
-  if (!plan?.targeted_pricing) return null
-  const base = Number(plan.base_price || 0)
+  if (!plan) return null
   const price = Number(plan.price || 0)
-  const savings = Math.max(0, Number(plan.offer_savings ?? (base - price)) || 0)
-  const discount = Math.max(0, Number(plan.offer_discount_percent || (base > 0 ? savings / base * 100 : 0)) || 0)
-  const validityParts = []
-  if (plan.offer_new_customer_days) validityParts.push(`First membership within ${plan.offer_new_customer_days} day${Number(plan.offer_new_customer_days) === 1 ? '' : 's'} of registration`)
-  if (plan.offer_valid_until) validityParts.push(`Offer ends ${offerDateLabel(plan.offer_valid_until)}`)
-  const validity = validityParts.join(' · ') || null
-  return { base, price, savings, discount, label: plan.offer_label || plan.pricing_rule_name || 'Special offer', validity }
+  if (plan.targeted_pricing) {
+    const base = Number(plan.base_price || 0)
+    const savings = Math.max(0, Number(plan.offer_savings ?? (base - price)) || 0)
+    const discount = Math.max(0, Number(plan.offer_discount_percent || (base > 0 ? savings / base * 100 : 0)) || 0)
+    const validityParts = []
+    if (plan.offer_new_customer_days) validityParts.push(`First membership within ${plan.offer_new_customer_days} day${Number(plan.offer_new_customer_days) === 1 ? '' : 's'} of registration`)
+    if (plan.offer_valid_until) validityParts.push(`Offer ends ${offerDateLabel(plan.offer_valid_until)}`)
+    const validity = validityParts.join(' · ') || null
+    return { base, price, savings, discount, label: plan.offer_label || plan.pricing_rule_name || 'Special offer', validity }
+  }
+  const billingDiscount = Math.max(0, Number(plan.discount_percent || 0))
+  const billingMonths = Math.max(1, Number(plan.billing_months || 1))
+  const monthlyBase = Math.max(0, Number(plan.monthly_base_price || 0))
+  const base = monthlyBase * billingMonths
+  const savings = Math.max(0, base - price)
+  if (billingDiscount <= 0 || savings <= 0) return null
+  return { base, price, savings, discount: billingDiscount, label: 'Billing discount', validity: null }
 }
 const daysLeft = (value) => value ? Math.max(0, Math.ceil((new Date(value).getTime() - Date.now()) / 86400000)) : null
 const localProration = (current, target) => {
