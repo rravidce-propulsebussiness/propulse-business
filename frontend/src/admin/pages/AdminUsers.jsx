@@ -357,7 +357,7 @@ export default function AdminUsers() {
         {user360Loading ? <div className="user-360-loading"><span className="users-loading-ring"/><strong>Loading account workspace…</strong></div> : <>
           <div className="user-360-snapshot">
             <div><span>Membership</span><strong>{currentMembership?.plan_group?String(currentMembership.plan_group).toUpperCase():'No plan'}</strong><small>{currentMembership?.expires_at ? ('Expires ' + dateOnly(currentMembership.expires_at)) : 'No active membership'}</small></div>
-            <div><span>Wallet</span><strong>{money(userSnapshot.walletBalance)}</strong><small>{Number(wallet360?.recharges?.length||0)} recharge records</small></div>
+            <div><span>Wallet</span><strong>{money(userSnapshot.walletBalance)}</strong><small>{Number(wallet360?.pagination?.recharges?.total??wallet360?.recharges?.length??0)} recharge records</small></div>
             <div><span>Leads</span><strong>{Number(userSnapshot.leadsAccessed||0)}</strong><small>Purchased / claimed</small></div>
             <div><span>Total paid</span><strong>{money(userSnapshot.totalPaid)}</strong><small>Successful payments</small></div>
             <div><span>Entitlements</span><strong>{Number(userSnapshot.activeEntitlements?.shared?.remaining||0)} / {Number(userSnapshot.activeEntitlements?.premium?.remaining||0)}</strong><small>Basic / Premium left</small></div>
