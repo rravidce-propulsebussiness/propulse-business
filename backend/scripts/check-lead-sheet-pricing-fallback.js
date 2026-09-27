@@ -7,7 +7,7 @@ const assert=(condition,message)=>{if(!condition)throw new Error(message)};
 
 const service=read('src/services/leadService.js');
 const adminImport=read('../frontend/src/admin/pages/AdminLeadsV9.jsx');
-const sheetSync=read('../frontend/src/admin/pages/GoogleSheetAutoSync.jsx');
+const sheetSync=read('src/services/adminGoogleSheetSyncService.js');
 
 assert(service.includes('function normalizeSheetPricingRows'),'Lead service must preserve partial sheet pricing rows');
 assert(service.includes('const next={...current,...row}'),'Sheet pricing must overlay Admin-configured pricing field by field');
@@ -22,7 +22,7 @@ assert(adminImport.includes('propulse-lead-upload-sample.csv'),'CSV sample must 
 assert(sheetSync.includes('function parsePricing(raw)'),'Connected Google Sheets must parse pricing columns');
 assert(sheetSync.includes("pricingSource:pricing?'sheet':'rule'"),'Google Sheet sync must choose sheet pricing or configured pricing');
 assert(sheetSync.includes("accessSource:hasAccessOverride?'sheet':'rule'"),'Google Sheet sync must choose sheet access values or configured access defaults');
-assert(!sheetSync.includes("if(capacityIndex<0)finalHeaders.push('Buyer Capacity')"),'Google Sheet canonicalization must not invent Buyer Capacity when the sheet omits it');
+assert(sheetSync.includes('const capacityIndex=finalHeaders.findIndex')&&!sheetSync.includes("finalHeaders.push('Buyer Capacity')"),'Google Sheet canonicalization must not invent Buyer Capacity when the sheet omits it');
 assert(sheetSync.includes('!isPricingColumn(key)'),'Pricing columns must not leak into custom fields');
 
 console.log('Lead sheet pricing fallback regression test passed.');
