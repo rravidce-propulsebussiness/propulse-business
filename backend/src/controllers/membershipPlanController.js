@@ -17,7 +17,8 @@ async function createPlan(req,res){
     res.status(201).json(await s.createPlan(d))
   }catch(e){
     console.error('POST /membership-plans failed:',e);
-    res.status(500).json({error:e.code==='23505'?'A plan with this name already exists':'Failed to create membership plan',detail:process.env.NODE_ENV==='production'?undefined:e.message})
+    const status=e.code==='INVALID_MEMBERSHIP_PLAN'?400:500;
+    res.status(status).json({error:e.code==='23505'?'A plan with this name already exists':e.code==='INVALID_MEMBERSHIP_PLAN'?e.message:'Failed to create membership plan',detail:process.env.NODE_ENV==='production'?undefined:e.message})
   }
 }
 
