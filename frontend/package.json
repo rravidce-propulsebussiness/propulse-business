@@ -19,7 +19,8 @@
     "test:investor-faq-layout": "node scripts/check-investor-faq-layout.mjs",
     "test:auth-bootstrap": "node scripts/check-auth-session-bootstrap.mjs",
     "test:lead-partner-reports": "node scripts/check-lead-partner-reports.mjs",
-    "test:lead-partner-pricing": "node scripts/check-lead-partner-pricing.mjs"
+    "test:lead-partner-pricing": "node scripts/check-lead-partner-pricing.mjs",
+    "test:wallet-coupon-react": "node scripts/check-wallet-coupon-react.mjs"
   },
   "dependencies": {
     "react": "^19.2.8",
