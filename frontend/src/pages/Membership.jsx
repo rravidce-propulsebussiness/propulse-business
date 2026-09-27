@@ -138,7 +138,7 @@ export default function Membership() {
     }
     load()
     return () => { active = false }
-  }, [token])
+  }, [token, user])
 
   const growPlans = useMemo(() => plans.filter((item) => planType(item) === 'pro' && String(item?.plan_group || '').toLowerCase() === 'grow').sort((a, b) => Number(a?.billing_months || 0) - Number(b?.billing_months || 0) || Number(a?.price || 0) - Number(b?.price || 0)), [plans])
   const scalePlans = useMemo(() => plans.filter((item) => planType(item) === 'pro' && String(item?.plan_group || '').toLowerCase() === 'scale').sort((a, b) => Number(a?.billing_months || 0) - Number(b?.billing_months || 0) || Number(a?.price || 0) - Number(b?.price || 0)), [plans])
