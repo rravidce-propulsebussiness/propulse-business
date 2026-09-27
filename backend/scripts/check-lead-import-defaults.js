@@ -18,8 +18,8 @@ assert(defaults.includes("if(normalized.leadType&&!valueFor(next,['Lead Type']))
 assert(defaults.includes("if(normalized.exclusive&&!valueFor(next,['Pro Early Access','Exclusive','Is Exclusive','Early Access']))"),'Exclusive default must apply only when the row has no explicit early-access value');
 assert(defaults.includes("if(normalized.singleOnly&&!valueFor(next,ACCESS_FIELDS))"),'Single Only must apply only when all sheet access/share fields are blank');
 assert(defaults.includes("next['Access Strategy']='Permanent Single'")&&defaults.includes("next['Buyer Capacity']='1'"),'Single Only must map to Permanent Single with one buyer');
-assert(defaults.includes("defaults.leadType===leadType?'':leadType"),'Basic/Premium defaults must remain mutually exclusive and toggle back to automatic');
-assert(defaults.includes(">Basic</button>")&&defaults.includes(">Premium</button>")&&defaults.includes(">Single Only</button>")&&defaults.includes(">Exclusive</button>"),'Google Sheet defaults UI must expose Basic, Premium, Single Only and Exclusive');
+assert(defaultsUi.includes("defaults.leadType===leadType?'':leadType"),'Basic/Premium defaults must remain mutually exclusive and toggle back to automatic');
+assert(defaultsUi.includes(">Basic</button>")&&defaultsUi.includes(">Premium</button>")&&defaultsUi.includes(">Single Only</button>")&&defaultsUi.includes(">Exclusive</button>"),'Google Sheet defaults UI must expose Basic, Premium, Single Only and Exclusive');
 assert(defaults.includes("labels.push('Single Only')"),'Connected sheet summary must display Single Only');
 
 assert(!upload.includes('LeadImportDefaults'),'Manual CSV upload must not duplicate Google Sheet connection default buttons');
