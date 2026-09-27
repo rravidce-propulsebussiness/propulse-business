@@ -64,7 +64,7 @@ function makeHarness({activeUses=0}={}){
     assert.deepStrictEqual(result.coupon,{code:'SAVE10',discountAmount:100,subtotalAmount:1000,finalAmount:900});
     assert.strictEqual(h.redemption().status,'redeemed','Wallet-paid coupon must be redeemed atomically');
     assert.strictEqual(h.wasRedeemed(),true,'Coupon redemption must be finalized');
-    assert.ok(h.calls.some(x=>x.q.startsWith('INSERT INTO coupon_redemptions')),'Checkout must create a coupon redemption ledger row');
+    assert.ok(h.calls.some(x=>String(x.sql).replace(/\s+/g,' ').trim().startsWith('INSERT INTO coupon_redemptions')),'Checkout must create a coupon redemption ledger row');
   }finally{h.restore();}
   const limited=makeHarness({activeUses:1});try{await assert.rejects(()=>limited.paymentService.createMembershipCheckout({userId:12,membershipPlanId:3,couponCode:'SAVE10'}),e=>e.code==='USAGE_LIMIT');}finally{limited.restore();}
   console.log('Coupon checkout integrity regression test passed.');
