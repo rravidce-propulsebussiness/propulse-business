@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { apiRequest } from '../../utils/api'
+import { apiRequest, openApiBlob } from '../../utils/api'
 import { clearSession, getToken } from '../../utils/auth'
 import { useNavigate } from 'react-router-dom'
 import './AdminPayments.css'
@@ -204,15 +204,20 @@ export default function AdminPayments() {
 
   const openStoredProof = async (kind, id) => {
     setError('')
+    const basePath = kind === 'topup' ? `/wallet/topups/${id}/proof` : `/payments/${id}/proof`
     try {
-      const data = await request(kind === 'topup' ? `/wallet/topups/${id}/proof` : `/payments/${id}/proof`)
-      if (!data?.proof_url) {
-        setError('No payment proof is available for this record.')
-        return
+      await openApiBlob(`${basePath}/file`)
+    } catch (streamError) {
+      try {
+        const data = await request(basePath)
+        if (!data?.proof_url) {
+          setError('No payment proof is available for this record.')
+          return
+        }
+        openProof(data.proof_url)
+      } catch (e) {
+        setError(e.message || streamError.message || 'Unable to load payment proof')
       }
-      openProof(data.proof_url)
-    } catch (e) {
-      setError(e.message || 'Unable to load payment proof')
     }
   }
 
