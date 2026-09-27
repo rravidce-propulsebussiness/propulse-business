@@ -1,8 +1,5 @@
 import { API_BASE_URL, apiRequest } from './api'
 
-const USER_KEY = 'propulse_auth_user'
-const PRO_MEMBER_KEY = 'propulse_is_pro_member'
-
 let currentUser = null
 let sessionKnown = false
 let bootstrapPromise = null
@@ -14,20 +11,15 @@ export const isSessionKnown = () => sessionKnown
 export function saveSession({ user }) {
   currentUser = user || null
   sessionKnown = true
-  if (currentUser) {
-    localStorage.setItem(USER_KEY, JSON.stringify(currentUser))
-    if (currentUser.is_pro_member !== undefined) localStorage.setItem(PRO_MEMBER_KEY, String(Boolean(currentUser.is_pro_member)))
-  } else {
-    localStorage.removeItem(USER_KEY)
-    localStorage.removeItem(PRO_MEMBER_KEY)
-  }
+  // The authenticated user lives in memory only. The HttpOnly cookie is the
+  // durable session and /auth/me repopulates this state after a reload.
 }
 
 export async function clearSession({ revoke = true } = {}) {
   currentUser = null
   sessionKnown = true
-  localStorage.removeItem(USER_KEY)
-  localStorage.removeItem(PRO_MEMBER_KEY)
+  localStorage.removeItem('propulse_auth_user')
+  localStorage.removeItem('propulse_is_pro_member')
   if (revoke) {
     try { await fetch(`${API_BASE_URL}/auth/logout`, { method: 'POST', credentials: 'include' }) } catch {}
   }
