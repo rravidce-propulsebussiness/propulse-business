@@ -186,7 +186,7 @@ async function getUser360(userId){
   const [membership,wallet,leads,activeEntitlements,entitlements,payments,availablePlans,proofs,audit]=await Promise.all([
     paymentService.getMembershipCustomerDetails(userId),
     walletService.getAdminWalletCustomerDetails(userId),
-    leadCrmPurchaseService.getPurchases(userId),
+    leadCrmPurchaseService.getHistory(userId),
     getActiveEntitlementSummary(userId),
     getEntitlementHistory(userId),
     getPayments(userId),
