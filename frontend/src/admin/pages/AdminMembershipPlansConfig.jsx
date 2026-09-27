@@ -15,6 +15,26 @@ const LEAD_TYPES=[
 const money=value=>`₹${Number(value||0).toLocaleString('en-IN',{maximumFractionDigits:2})}`
 const slug=value=>String(value||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'')
 const verifyLabel=value=>value==='verified'?'Verified only':value==='unverified'?'Non-verified only':'Verified + Non-verified'
+const toLocalInput=value=>{
+  if(!value)return''
+  const date=new Date(value)
+  if(Number.isNaN(date.getTime()))return''
+  const pad=n=>String(n).padStart(2,'0')
+  return `${date.getFullYear()}-${pad(date.getMonth()+1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`
+}
+const toIso=value=>{
+  if(!value)return null
+  const date=new Date(value)
+  return Number.isNaN(date.getTime())?null:date.toISOString()
+}
+const offerWindowLabel=item=>{
+  if(item?.new_customer_days)return `New customer · first ${item.new_customer_days} day${Number(item.new_customer_days)===1?'':'s'}`
+  if(item?.valid_until){
+    const end=new Date(item.valid_until)
+    return `Offer until ${end.toLocaleString('en-IN',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}`
+  }
+  return 'Ongoing pricing'
+}
 
 function allowanceFromEntitlements(items=[],months=1){
   const out=Object.fromEntries(LEAD_TYPES.map(type=>[type.key,{monthly:0,total:0}]))
@@ -126,13 +146,20 @@ function defaultRule(group='grow',plans=[]){
     industryId:'',
     stateId:'',
     cityId:'',
-    priority:100,
+    offerLabel:'',
+    validityMode:'always',
+    validFrom:'',
+    validUntil:'',
+    customerEligibility:'any',
+    newCustomerDays:1,
     isActive:true,
     notes:'',
     periodOverrides:groupPlans.map(plan=>({
       billingMonths:Number(plan.billing_months||1),
       label:plan.billing_period||`${plan.billing_months||1}-month`,
       enabled:true,
+      basePrice:Number(plan.price||0),
+      discountPercent:0,
       price:Number(plan.price||0),
       allowances:allowanceFromEntitlements(plan.lead_entitlements,Number(plan.billing_months||1))
     }))
@@ -152,17 +179,27 @@ function ruleFromItem(item,plans){
     industryId:item.industry_id||'',
     stateId:item.state_id||'',
     cityId:item.city_id||'',
-    priority:Number(item.priority||100),
+    offerLabel:item.offer_label||'',
+    validityMode:item.valid_from||item.valid_until?'custom':'always',
+    validFrom:toLocalInput(item.valid_from),
+    validUntil:toLocalInput(item.valid_until),
+    customerEligibility:item.new_customer_days?'new':'any',
+    newCustomerDays:Number(item.new_customer_days||1),
     isActive:item.is_active!==false,
     notes:item.notes||'',
     periodOverrides:base.periodOverrides.map(period=>{
       const saved=byMonths.get(Number(period.billingMonths))
       if(!saved)return period
+      const basePrice=Number(period.basePrice??period.price??0)
+      const savedPrice=Number(saved.price??period.price)
+      const derivedDiscount=basePrice>0?Math.max(0,Math.min(100,((basePrice-savedPrice)/basePrice)*100)):0
       return{
         billingMonths:Number(period.billingMonths),
         label:saved.label||period.label,
         enabled:saved.enabled!==false,
-        price:Number(saved.price??period.price),
+        basePrice,
+        discountPercent:Number(saved.discountPercent??saved.discount_percent??derivedDiscount),
+        price:savedPrice,
         allowances:allowanceFromEntitlements(saved.leadEntitlements??saved.lead_entitlements,Number(period.billingMonths))
       }
     })
@@ -427,10 +464,42 @@ export default function AdminMembershipPlansConfig(){
   }
   function changeRuleGroup(group){
     const next=defaultRule(group,plans)
-    setRule(current=>({...next,name:current.name,audienceScope:current.audienceScope,verificationScope:current.verificationScope,userIds:current.userIds,industryId:current.industryId,stateId:current.stateId,cityId:current.cityId,priority:current.priority,isActive:current.isActive,notes:current.notes}))
+    setRule(current=>({...next,name:current.name,audienceScope:current.audienceScope,verificationScope:current.verificationScope,userIds:current.userIds,industryId:current.industryId,stateId:current.stateId,cityId:current.cityId,offerLabel:current.offerLabel,validityMode:current.validityMode,validFrom:current.validFrom,validUntil:current.validUntil,customerEligibility:current.customerEligibility,newCustomerDays:current.newCustomerDays,isActive:current.isActive,notes:current.notes}))
   }
   function setRulePeriod(index,field,value){
     setRule(current=>({...current,periodOverrides:current.periodOverrides.map((period,i)=>i===index?{...period,[field]:value}:period)}))
+  }
+  function setRulePeriodPricing(index,field,value){
+    setRule(current=>({...current,periodOverrides:current.periodOverrides.map((period,i)=>{
+      if(i!==index)return period
+      const base=Math.max(0,Number(period.basePrice||0))
+      if(field==='discountPercent'){
+        const discount=Math.min(100,Math.max(0,Number(value)||0))
+        return{...period,discountPercent:discount,price:Number((base*(1-discount/100)).toFixed(2))}
+      }
+      const price=Math.max(0,Number(value)||0)
+      const discount=base>0?Math.min(100,Math.max(0,Number((((base-price)/base)*100).toFixed(2)))):0
+      return{...period,price,discountPercent:discount}
+    })}))
+  }
+  function applyOfferWindow(mode){
+    const now=new Date()
+    if(mode==='always'){
+      setRule(current=>({...current,validityMode:'always',validFrom:'',validUntil:''}))
+      return
+    }
+    const end=new Date(now)
+    if(mode==='today'){
+      end.setHours(23,59,59,999)
+    }else if(mode==='week'){
+      const daysUntilSunday=(7-now.getDay())%7
+      end.setDate(end.getDate()+daysUntilSunday)
+      end.setHours(23,59,59,999)
+    }else{
+      end.setDate(end.getDate()+7)
+      end.setHours(23,59,0,0)
+    }
+    setRule(current=>({...current,validityMode:mode,validFrom:toLocalInput(now),validUntil:toLocalInput(end)}))
   }
   function setRuleAllowance(index,value){
     setRule(current=>({...current,periodOverrides:current.periodOverrides.map((period,i)=>i===index?{...period,allowances:value}:period)}))
@@ -446,6 +515,9 @@ export default function AdminMembershipPlansConfig(){
     if(rule.audienceScope==='specific_users'&&!rule.userIds.length)return setError('Choose at least one business.')
     if(['industry','industry_location'].includes(ruleTargetMode)&&!rule.industryId)return setError('Choose an industry for this pricing rule.')
     if(['location','industry_location'].includes(ruleTargetMode)&&!rule.stateId)return setError('Choose a state for this pricing rule.')
+    if(rule.validityMode!=='always'&&(!rule.validFrom||!rule.validUntil))return setError('Choose the offer start and end time.')
+    if(rule.validityMode!=='always'&&new Date(rule.validUntil)<=new Date(rule.validFrom))return setError('Offer end time must be after the start time.')
+    if(rule.customerEligibility==='new'&&Number(rule.newCustomerDays||0)<1)return setError('New-customer window must be at least 1 day.')
     if(!rule.periodOverrides.some(period=>period.enabled!==false))return setError('Enable at least one billing cycle.')
     try{
       setSaving(editingRule?`rule-${editingRule.id}`:'rule-create')
@@ -453,11 +525,16 @@ export default function AdminMembershipPlansConfig(){
       setMessage('')
       const body={
         ...rule,
+        offerLabel:rule.offerLabel?.trim()||null,
+        validFrom:rule.validityMode==='always'?null:toIso(rule.validFrom),
+        validUntil:rule.validityMode==='always'?null:toIso(rule.validUntil),
+        newCustomerDays:rule.customerEligibility==='new'?Number(rule.newCustomerDays||1):null,
         periodOverrides:rule.periodOverrides.map(period=>({
           billingMonths:Number(period.billingMonths),
           label:period.label,
           enabled:period.enabled!==false,
           price:Number(period.price||0),
+          discountPercent:Number(period.discountPercent||0),
           leadEntitlements:entitlementsFromAllowance(period.allowances,period.billingMonths)
         }))
       }
@@ -646,11 +723,12 @@ export default function AdminMembershipPlansConfig(){
               {(Array.isArray(item.period_overrides)?item.period_overrides:[]).filter(period=>period.enabled!==false).map(period=><div key={period.billingMonths??period.months}>
                 <span>{period.label||`${period.billingMonths??period.months}-month`}</span>
                 <strong>{money(period.price)}</strong>
+                {Number(period.discountPercent??period.discount_percent||0)>0&&<em>{Number(period.discountPercent??period.discount_percent).toFixed(0)}% off</em>}
                 <small>{entitlementSummary(period.leadEntitlements??period.lead_entitlements)}</small>
               </div>)}
             </div>
             <div className="membership-rule-foot">
-              <small>Priority {Number(item.priority||0)}{item.notes?` · ${item.notes}`:''}</small>
+              <small>{offerWindowLabel(item)}{item.notes?` · ${item.notes}`:''}</small>
               <div><button type="button" onClick={()=>openEditRule(item)}>Edit</button><button type="button" className="danger" disabled={saving===`delete-rule-${item.id}`} onClick={()=>deleteRule(item)}>Delete</button></div>
             </div>
           </article>)}
@@ -737,7 +815,7 @@ export default function AdminMembershipPlansConfig(){
             <div className="membership-pricing-scope-note">
               {ruleScope==='industry'&&<span>Create separate rules for each industry that needs a different GROW or SCALE price.</span>}
               {ruleScope==='location'&&<span>Create separate rules for Hyderabad, Bengaluru, Mumbai or any other state/city pricing.</span>}
-              {ruleScope==='industry_location'&&<span>This overrides broader industry or city rules when priority is the same because it is more specific.</span>}
+              {ruleScope==='industry_location'&&<span>This automatically overrides broader industry or city rules because it is more specific.</span>}
               {ruleScope==='all'&&<span>Use this when the offer is not limited to a particular industry or location.</span>}
             </div>
             <div className="membership-rule-form-grid">
@@ -748,7 +826,6 @@ export default function AdminMembershipPlansConfig(){
               {['industry','industry_location'].includes(ruleScope)&&<label>Industry<select value={rule.industryId} onChange={e=>setRule(current=>({...current,industryId:e.target.value}))}><option value="">Select industry</option>{industries.map(item=><option key={item.id} value={item.id}>{item.name}</option>)}</select></label>}
               {['location','industry_location'].includes(ruleScope)&&<label>State<select value={rule.stateId} onChange={e=>setRule(current=>({...current,stateId:e.target.value,cityId:''}))}><option value="">Select state</option>{states.map(item=><option key={item.id} value={item.id}>{item.name}</option>)}</select></label>}
               {['location','industry_location'].includes(ruleScope)&&<label>City<select value={rule.cityId} disabled={!rule.stateId} onChange={e=>setRule(current=>({...current,cityId:e.target.value}))}><option value="">All cities in state</option>{ruleCities.map(item=><option key={item.id} value={item.id}>{item.name}</option>)}</select></label>}
-              <label>Priority<input type="number" min="0" max="10000" value={rule.priority} onChange={e=>setRule(current=>({...current,priority:e.target.value}))}/><small>Higher priority wins when multiple rules match.</small></label>
               <label className="membership-rule-active"><input type="checkbox" checked={rule.isActive} onChange={e=>setRule(current=>({...current,isActive:e.target.checked}))}/><span><strong>Active</strong><small>Matching customers can use this offer.</small></span></label>
             </div>
 
@@ -760,6 +837,24 @@ export default function AdminMembershipPlansConfig(){
                 return <button type="button" className={selected?'selected':''} key={item.id} onClick={()=>toggleBusiness(item)}><span><strong>{item.business_name||item.name}</strong><small>{item.email}</small></span><b className={item.is_verified?'verified':'unverified'}>{item.is_verified?'Verified':'Not verified'}</b></button>
               })}</div>
             </div>}
+            <div className="membership-offer-config">
+              <div className="membership-offer-config-head"><div><strong>Special offer</strong><small>Optional time-limited or new-customer pricing</small></div></div>
+              <div className="membership-offer-grid">
+                <label>Offer badge<input value={rule.offerLabel} onChange={e=>setRule(current=>({...current,offerLabel:e.target.value}))} placeholder="Welcome offer / Hyderabad special"/></label>
+                <label>Customer eligibility<select value={rule.customerEligibility} onChange={e=>setRule(current=>({...current,customerEligibility:e.target.value}))}><option value="any">Any matching customer</option><option value="new">New customers only</option></select></label>
+                {rule.customerEligibility==='new'&&<label>Registration window<input type="number" min="1" max="365" value={rule.newCustomerDays} onChange={e=>setRule(current=>({...current,newCustomerDays:e.target.value}))}/><small>Offer applies only within the first N days after registration.</small></label>}
+              </div>
+              <div className="membership-validity-presets">
+                <button type="button" className={rule.validityMode==='always'?'active':''} onClick={()=>applyOfferWindow('always')}>Always</button>
+                <button type="button" className={rule.validityMode==='today'?'active':''} onClick={()=>applyOfferWindow('today')}>Today</button>
+                <button type="button" className={rule.validityMode==='week'?'active':''} onClick={()=>applyOfferWindow('week')}>This week</button>
+                <button type="button" className={rule.validityMode==='custom'?'active':''} onClick={()=>applyOfferWindow('custom')}>Custom</button>
+              </div>
+              {rule.validityMode!=='always'&&<div className="membership-offer-grid dates">
+                <label>Starts<input type="datetime-local" value={rule.validFrom} onChange={e=>setRule(current=>({...current,validityMode:'custom',validFrom:e.target.value}))}/></label>
+                <label>Ends<input type="datetime-local" value={rule.validUntil} onChange={e=>setRule(current=>({...current,validityMode:'custom',validUntil:e.target.value}))}/></label>
+              </div>}
+            </div>
           </section>
 
           <section className="membership-editor-section">
@@ -768,8 +863,9 @@ export default function AdminMembershipPlansConfig(){
               {rule.periodOverrides.map((period,index)=><article className={period.enabled!==false?'':'disabled'} key={period.billingMonths}>
                 <div className="membership-rule-period-head">
                   <label className="membership-toggle"><input type="checkbox" checked={period.enabled!==false} onChange={e=>setRulePeriod(index,'enabled',e.target.checked)}/><span/></label>
-                  <div><strong>{period.label}</strong><small>{period.billingMonths} month{Number(period.billingMonths)===1?'':'s'}</small></div>
-                  <label>Target price ₹<input type="number" min="0" step="0.01" value={period.price} onChange={e=>setRulePeriod(index,'price',e.target.value)}/></label>
+                  <div><strong>{period.label}</strong><small>Base {money(period.basePrice)} · {period.billingMonths} month{Number(period.billingMonths)===1?'':'s'}</small></div>
+                  <label>Discount %<input type="number" min="0" max="100" step="0.01" value={period.discountPercent??0} onChange={e=>setRulePeriodPricing(index,'discountPercent',e.target.value)}/></label>
+                  <label>Offer price ₹<input type="number" min="0" step="0.01" value={period.price} onChange={e=>setRulePeriodPricing(index,'price',e.target.value)}/></label>
                 </div>
                 <LeadAllowanceGrid value={period.allowances} months={period.billingMonths} onChange={value=>setRuleAllowance(index,value)}/>
               </article>)}
