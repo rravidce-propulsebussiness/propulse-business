@@ -35,6 +35,11 @@ function makeHarness({activeUses=0}={}){
   const fakePool={query:client.query,connect:async()=>client};
   const fakeWallet={debitForPayment:async()=>({externalAmount:0,walletAmount:900,balanceAfter:0,walletTransactionId:123})};
   const fakeMembership={isProMember:async()=>true};
+  const fakeMembershipPlanService={resolvePlanForUser:async(userId,planId)=>({
+    id:Number(planId),name:'Grow Monthly',plan_group:'grow',plan_type:'pro',
+    duration_days:30,price:1000,is_active:true,lead_entitlements:[],
+    pricing_rule_id:null,targeted_pricing:false
+  })};
   const original=Module._load;
   Module._load=function(request,parent,isMain){
     if(request==='../config/database'&&parent.filename.replace(/\\/g,'/').endsWith('/services/couponService.js'))return fakePool;
@@ -42,6 +47,7 @@ function makeHarness({activeUses=0}={}){
     if(request==='./couponService'&&parent.filename.replace(/\\/g,'/').endsWith('/services/paymentService.js'))return require(path.join(__dirname,'../src/services/couponService'));
     if(request==='./walletService'&&parent.filename.replace(/\\/g,'/').endsWith('/services/paymentService.js'))return fakeWallet;
     if(request==='./membershipAccessService'&&parent.filename.replace(/\\/g,'/').endsWith('/services/paymentService.js'))return fakeMembership;
+    if(request==='./membershipPlanService'&&parent.filename.replace(/\\/g,'/').endsWith('/services/paymentService.js'))return fakeMembershipPlanService;
     return original.apply(this,arguments);
   };
   delete require.cache[require.resolve('../src/services/couponService')];delete require.cache[require.resolve('../src/services/paymentService')];
