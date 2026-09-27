@@ -267,7 +267,31 @@ async function getDashboardStats() {
 async function getUsers({ search = '', role = 'all', status = 'all', industryId = '', serviceId = '', stateId = '', cityId = '', page, pageSize, limit } = {}) {
   const { page: currentPage, pageSize: currentPageSize, offset } = parsePagination({ page, pageSize, limit });
   const params = [], conditions = [];
-  if (String(search).trim()) { params.push(`%${String(search).trim()}%`); conditions.push(`(u.name ILIKE $${params.length} OR u.email ILIKE $${params.length} OR bp.business_name ILIKE $${params.length} OR bp.phone ILIKE $${params.length})`); }
+  if (String(search).trim()) {
+    params.push(`%${String(search).trim()}%`);
+    const n=params.length;
+    conditions.push(`(
+      u.name ILIKE ${n}
+      OR u.email ILIKE ${n}
+      OR COALESCE(bp.business_name,'') ILIKE ${n}
+      OR COALESCE(bp.phone,'') ILIKE ${n}
+      OR CAST(u.id AS text) ILIKE ${n}
+      OR EXISTS(
+        SELECT 1 FROM payments p
+        WHERE p.user_id=u.id
+          AND (
+            CAST(p.id AS text) ILIKE ${n}
+            OR COALESCE(p.manual_reference,'') ILIKE ${n}
+            OR COALESCE(p.gateway_payment_id,'') ILIKE ${n}
+            OR COALESCE(p.gateway_order_id,'') ILIKE ${n}
+          )
+      )
+      OR EXISTS(
+        SELECT 1 FROM lead_purchases lp
+        WHERE lp.user_id=u.id AND CAST(lp.lead_id AS text) ILIKE ${n}
+      )
+    )`);
+  }
   if (['admin', 'business', 'lead_partner'].includes(role)) { params.push(role); conditions.push(`u.role = $${params.length}`); }
   if (status === 'active' || status === 'inactive') { params.push(status === 'active'); conditions.push(`u.is_active = $${params.length}`); }
   if (industryId) { params.push(industryId); conditions.push(`EXISTS (SELECT 1 FROM business_profile_services x WHERE x.business_profile_id=bp.id AND x.industry_id=$${params.length} AND x.is_active=TRUE)`); }
