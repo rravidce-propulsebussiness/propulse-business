@@ -109,7 +109,24 @@ function enhanceWalletCoupon(modal) {
       card.className = 'wallet-public-offer-card'
       card.dataset.code = offer.code
       const minimum = Math.max(0, Number(offer.min_order_amount || 0))
-      card.innerHTML = `<span class="wallet-public-offer-icon">${offer.benefit_type === 'wallet_bonus' ? '₹+' : '%'}</span><span class="wallet-public-offer-copy"><b>${walletOfferPreview(offer)}</b><small>${offer.description || offerTitle(offer)}</small>${minimum > 0 ? `<em>Minimum ${money(minimum)}</em>` : ''}</span><strong>Use offer</strong>`
+      const icon = document.createElement('span')
+      icon.className = 'wallet-public-offer-icon'
+      icon.textContent = offer.benefit_type === 'wallet_bonus' ? '₹+' : '%'
+      const copy = document.createElement('span')
+      copy.className = 'wallet-public-offer-copy'
+      const preview = document.createElement('b')
+      preview.textContent = walletOfferPreview(offer)
+      const description = document.createElement('small')
+      description.textContent = offer.description || offerTitle(offer)
+      copy.append(preview, description)
+      if (minimum > 0) {
+        const minimumText = document.createElement('em')
+        minimumText.textContent = `Minimum ${money(minimum)}`
+        copy.appendChild(minimumText)
+      }
+      const action = document.createElement('strong')
+      action.textContent = 'Use offer'
+      card.append(icon, copy, action)
       card.addEventListener('click', () => {
         input.value = offer.code
         applied = null
