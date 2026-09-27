@@ -62,6 +62,26 @@ export default function AdminLeadPartnerPayouts(){
 
   const selectedDirectPartner=useMemo(()=>partners.find(p=>String(p.id)===String(directPartnerId))||null,[partners,directPartnerId]);
 
+  async function openStoredProof(payout){
+    setError('');
+    try{
+      const data=await authRequest(`/admin/lead-partner-payouts/${payout.id}/proof`);
+      const source=String(data?.proof_url||'').trim();
+      if(!source){setError('No payment proof is available for this payout.');return}
+      const win=window.open('','_blank');
+      if(!win){setError('Allow pop-ups to view the payment proof.');return}
+      const doc=win.document;
+      doc.title=`Payout #${payout.id} proof`;
+      const style=doc.createElement('style');
+      style.textContent='body{margin:0;background:#111;display:flex;align-items:center;justify-content:center;min-height:100vh}img{max-width:95vw;max-height:95vh;object-fit:contain}';
+      doc.head.appendChild(style);
+      const image=doc.createElement('img');
+      image.src=source;
+      image.alt=`Payout #${payout.id} payment proof`;
+      doc.body.replaceChildren(image);
+    }catch(e){setError(e.message||'Unable to load payout proof')}
+  }
+
   async function readProof(event,setter){
     const file=event.target.files?.[0];
     if(!file)return;
@@ -175,7 +195,7 @@ export default function AdminLeadPartnerPayouts(){
             <td>{date(r.requested_at)}</td>
             <td><span className={`alpp-status ${r.status}`}>{title(r.status)}</span></td>
             <td><b>{r.transfer_reference||'—'}</b>{r.rejection_reason&&<small className="reason">{r.rejection_reason}</small>}</td>
-            <td>{r.status==='pending'?<button className="review" type="button" onClick={()=>{setSelected(r);setTransfer(emptyTransfer());setReason('')}}>Review & transfer</button>:<span className="processed">Completed</span>}</td>
+            <td>{r.status==='pending'?<button className="review" type="button" onClick={()=>{setSelected(r);setTransfer(emptyTransfer());setReason('')}}>Review & transfer</button>:<div className="alpp-processed-actions"><span className="processed">Completed</span>{r.status==='paid'&&r.has_proof&&<button className="proof-link" type="button" onClick={()=>openStoredProof(r)}>View proof</button>}</div>}</td>
           </tr>)}</tbody>
         </table>
         {meta.pages>1&&<div className="alpp-pagination"><button type="button" disabled={loading||page<=1} onClick={()=>load(page-1)}>← Previous</button><span>Page <b>{page}</b> of <b>{meta.pages}</b> · {meta.total} records</span><button type="button" disabled={loading||page>=meta.pages} onClick={()=>load(page+1)}>Next →</button></div>}
