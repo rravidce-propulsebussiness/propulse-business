@@ -447,7 +447,11 @@ export default function AdminMembershipPlansConfig(){
         await req('/membership-plans/rules',{method:'POST',body:JSON.stringify(body)})
         setMessage('Membership pricing rule created.')
       }
-      closeRule()
+      setRuleEditorOpen(false)
+      setEditingRule(null)
+      setSelectedBusinesses([])
+      setBusinessSearch('')
+      setBusinessResults([])
       await load()
     }catch(e){
       setError(e.message||'Failed to save membership pricing rule')
