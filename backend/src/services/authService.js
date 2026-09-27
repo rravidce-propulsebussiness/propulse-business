@@ -306,10 +306,15 @@ async function getAuthenticatedUser(id, authVersion) {
   return user;
 }
 
+async function getPublicAuthenticatedUser(user) {
+  if (!user?.id) return null;
+  return await publicUser(user, await getBusinessProfile(user.id));
+}
+
 async function getUserById(id) {
   const user = await getAuthenticatedUser(id);
   if (!user) return null;
-  return await publicUser(user, await getBusinessProfile(id));
+  return getPublicAuthenticatedUser(user);
 }
 
 async function getCompanyProofDocument({ documentId, userId, isAdmin = false }) {
@@ -326,4 +331,4 @@ async function getCompanyProofDocument({ documentId, userId, isAdmin = false }) 
   return result.rows[0] || null;
 }
 
-module.exports = { signup, saveCompanyProofDocuments, getCompanyProofDocument, login, googleLogin, createPasswordReset, resetPassword, verifyToken, getUserById, getAuthenticatedUser, revokeAuthSessions };
+module.exports = { signup, saveCompanyProofDocuments, getCompanyProofDocument, login, googleLogin, createPasswordReset, resetPassword, verifyToken, getUserById, getPublicAuthenticatedUser, getAuthenticatedUser, revokeAuthSessions };
