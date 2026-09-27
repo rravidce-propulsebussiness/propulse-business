@@ -174,8 +174,8 @@ async function createCoupon(input,adminId){
       benefit.rewardValueType,benefit.rewardValue,benefit.bonusLeadType,
       benefit.bonusLeadQuantity,benefit.bonusValidDays,input.is_public_offer===true
     ])).rows[0];
-    for(const userId of userIds)await client.query('INSERT INTO coupon_users(coupon_id,user_id) VALUES($1,$2) ON CONFLICT DO NOTHING',[row.id,userId]);
-    for(const industryId of industryIds)await client.query('INSERT INTO coupon_industries(coupon_id,industry_id) VALUES($1,$2) ON CONFLICT DO NOTHING',[row.id,industryId]);
+    if(userIds.length)await client.query('INSERT INTO coupon_users(coupon_id,user_id) SELECT $1,x FROM UNNEST($2::int[]) AS x ON CONFLICT DO NOTHING',[row.id,userIds]);
+    if(industryIds.length)await client.query('INSERT INTO coupon_industries(coupon_id,industry_id) SELECT $1,x FROM UNNEST($2::int[]) AS x ON CONFLICT DO NOTHING',[row.id,industryIds]);
     await client.query('COMMIT');
     return getAdminCoupon(row.id);
   }catch(e){
@@ -232,11 +232,11 @@ async function updateCoupon(id,input){
     ]);
     if(input.user_ids!==undefined){
       await client.query('DELETE FROM coupon_users WHERE coupon_id=$1',[id]);
-      for(const userId of userIds)await client.query('INSERT INTO coupon_users(coupon_id,user_id) VALUES($1,$2) ON CONFLICT DO NOTHING',[id,userId]);
+      if(userIds.length)await client.query('INSERT INTO coupon_users(coupon_id,user_id) SELECT $1,x FROM UNNEST($2::int[]) AS x ON CONFLICT DO NOTHING',[id,userIds]);
     }
     if(input.industry_ids!==undefined){
       await client.query('DELETE FROM coupon_industries WHERE coupon_id=$1',[id]);
-      for(const industryId of industryIds)await client.query('INSERT INTO coupon_industries(coupon_id,industry_id) VALUES($1,$2) ON CONFLICT DO NOTHING',[id,industryId]);
+      if(industryIds.length)await client.query('INSERT INTO coupon_industries(coupon_id,industry_id) SELECT $1,x FROM UNNEST($2::int[]) AS x ON CONFLICT DO NOTHING',[id,industryIds]);
     }
     await client.query('COMMIT');
     return getAdminCoupon(id);
