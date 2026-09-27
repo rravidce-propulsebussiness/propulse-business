@@ -70,8 +70,13 @@ export default function AdminLayout(){
   const initials=(user?.name||'Admin').split(' ').filter(Boolean).slice(0,2).map(x=>x[0]).join('').toUpperCase()
 
   useEffect(()=>{
-    if(current.group)setOpenGroup(current.group.key)
-    document.body.classList.remove('admin-nav-open')
+    let active=true
+    queueMicrotask(()=>{
+      if(!active)return
+      if(current.group)setOpenGroup(current.group.key)
+      document.body.classList.remove('admin-nav-open')
+    })
+    return()=>{active=false}
   },[current.group,location.pathname])
 
   async function logout(){
