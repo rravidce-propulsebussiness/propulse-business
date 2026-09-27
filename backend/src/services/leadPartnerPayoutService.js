@@ -56,26 +56,68 @@ async function requestWithdrawal({userId,amount:raw,notes}){
   }catch(e){await client.query('ROLLBACK');throw e}finally{client.release()}
 }
 
-async function adminList({status='all',search=''}={}){
-  const v=[],w=[];
-  if(status!=='all'){v.push(String(status));w.push(`r.status=$${v.length}`)}
-  if(String(search).trim()){
-    v.push(`%${String(search).trim()}%`);
-    w.push(`(u.name ILIKE $${v.length} OR u.email ILIKE $${v.length} OR CAST(r.id AS TEXT) ILIKE $${v.length} OR COALESCE(r.transfer_reference,'') ILIKE $${v.length})`);
+async function adminList({status='all',search='',page=1,limit=50}={}){
+  const normalizedStatus=String(status||'all').trim().toLowerCase();
+  if(!['all','pending','paid','rejected'].includes(normalizedStatus))throw err('Invalid payout status filter.','INVALID_STATUS');
+  const searchParams=[],searchWhere=[];
+  const searchValue=String(search||'').trim();
+  if(searchValue){
+    searchParams.push(`%${searchValue}%`);
+    searchWhere.push(`(u.name ILIKE $1 OR u.email ILIKE $1 OR CAST(r.id AS TEXT) ILIKE $1 OR COALESCE(r.transfer_reference,'') ILIKE $1)`);
   }
+  const safeLimit=Math.min(Math.max(Number(limit)||50,1),100);
+  const safePage=Math.max(Number(page)||1,1);
+  const baseFrom=`lead_partner_payout_requests r JOIN users u ON u.id=r.user_id JOIN lead_partners lp ON lp.id=r.partner_id`;
+  const baseWhere=searchWhere.length?`WHERE ${searchWhere.join(' AND ')}`:'';
+
+  const dataParams=[...searchParams];
+  const dataWhere=[...searchWhere];
+  if(normalizedStatus!=='all'){
+    dataParams.push(normalizedStatus);
+    dataWhere.push(`r.status=$${dataParams.length}`);
+  }
+  const scopedWhere=dataWhere.length?`WHERE ${dataWhere.join(' AND ')}`:'';
+  const total=Number((await pool.query(`SELECT COUNT(*)::int total FROM ${baseFrom} ${scopedWhere}`,dataParams)).rows[0]?.total||0);
+  const pages=Math.ceil(total/safeLimit);
+  const pageValue=pages>0?Math.min(safePage,pages):1;
+  const offset=(pageValue-1)*safeLimit;
+
+  const stats=(await pool.query(
+    `SELECT COUNT(*)::int total_count,
+            COUNT(*) FILTER(WHERE r.status='pending')::int pending_count,
+            COUNT(*) FILTER(WHERE r.status='paid')::int paid_count,
+            COUNT(*) FILTER(WHERE r.status='rejected')::int rejected_count,
+            COUNT(*) FILTER(WHERE COALESCE(r.request_source,'partner')='admin')::int direct_count,
+            COALESCE(SUM(r.amount) FILTER(WHERE r.status='pending'),0)::numeric pending_amount,
+            COALESCE(SUM(r.amount) FILTER(WHERE r.status='paid'),0)::numeric paid_amount
+       FROM ${baseFrom} ${baseWhere}`,searchParams
+  )).rows[0]||{};
+
+  const rowParams=[...dataParams,safeLimit,offset];
   const rows=(await pool.query(
     `SELECT r.id,r.partner_id,r.user_id,r.payout_account_id,r.payout_method,r.payout_account_snapshot,
             r.amount,r.status,r.transfer_reference,(COALESCE(BTRIM(r.proof_url),'')<>'') AS has_proof,
             r.notes,r.rejection_reason,r.requested_at,r.processed_at,r.processed_by,r.paid_at,
             r.created_at,r.updated_at,r.request_source,
             u.name user_name,u.email user_email,lp.status partner_status
-     FROM lead_partner_payout_requests r
-     JOIN users u ON u.id=r.user_id
-     JOIN lead_partners lp ON lp.id=r.partner_id
-     ${w.length?'WHERE '+w.join(' AND '):''}
-     ORDER BY CASE WHEN r.status='pending' THEN 0 ELSE 1 END,r.requested_at DESC,r.id DESC`,v
-  )).rows;
-  return rows.map(r=>({...r,id:Number(r.id),partner_id:Number(r.partner_id),user_id:Number(r.user_id),amount:money(r.amount),payout_account_id:r.payout_account_id?Number(r.payout_account_id):null,request_source:r.request_source||'partner'}));
+       FROM ${baseFrom}
+       ${scopedWhere}
+       ORDER BY CASE WHEN r.status='pending' THEN 0 ELSE 1 END,r.requested_at DESC,r.id DESC
+       LIMIT $${rowParams.length-1} OFFSET $${rowParams.length}`,rowParams
+  )).rows.map(r=>({...r,id:Number(r.id),partner_id:Number(r.partner_id),user_id:Number(r.user_id),amount:money(r.amount),payout_account_id:r.payout_account_id?Number(r.payout_account_id):null,request_source:r.request_source||'partner'}));
+
+  return{
+    items:rows,total,page:pageValue,limit:safeLimit,pages,
+    stats:{
+      total_count:Number(stats.total_count||0),
+      pending_count:Number(stats.pending_count||0),
+      paid_count:Number(stats.paid_count||0),
+      rejected_count:Number(stats.rejected_count||0),
+      direct_count:Number(stats.direct_count||0),
+      pending_amount:money(stats.pending_amount),
+      paid_amount:money(stats.paid_amount)
+    }
+  };
 }
 
 async function markPaid({client,r,adminId,transferReference,proofUrl,notes}){
