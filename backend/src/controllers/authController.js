@@ -25,7 +25,10 @@ function publicAuthResult(res, result, status = 200) {
 }
 
 function validatePassword(password) {
-  return typeof password === 'string' && /^(?=.*[A-Za-z])(?=.*\d).{8,}$/.test(password);
+  if (typeof password !== 'string') return false;
+  if (password.length < 8 || password.length > 64) return false;
+  if (Buffer.byteLength(password, 'utf8') > 72) return false;
+  return /[A-Za-z]/.test(password) && /\d/.test(password);
 }
 
 const PUBLIC_SIGNUP_ROLES = new Set(['business', 'lead_partner']);
@@ -49,7 +52,7 @@ async function signup(req, res) {
       return res.status(400).json({ error: 'Choose either User or Lead Partner as your account type' });
     }
     if (!googleCredential && (!name?.trim() || !email?.trim() || !validatePassword(password))) {
-      return res.status(400).json({ error: 'Name, email and a password of at least 8 characters with a letter and number are required' });
+      return res.status(400).json({ error: 'Name, email and a password of 8-64 characters with a letter and number are required' });
     }
     if (googleCredential && (!name?.trim() || !email?.trim())) {
       return res.status(400).json({ error: 'Google registration requires a verified Google account' });
@@ -161,7 +164,7 @@ async function forgotPassword(req, res) {
 async function resetPassword(req, res) {
   try {
     const { token, password } = req.body || {};
-    if (!token || !validatePassword(password)) return res.status(400).json({ error: 'Enter a password of at least 8 characters with a letter and number.' });
+    if (!token || !validatePassword(password)) return res.status(400).json({ error: 'Enter a password of 8-64 characters with a letter and number.' });
     await authService.resetPassword({ token, password });
     return res.json({ message: 'Password updated successfully. You can now sign in.' });
   } catch (error) {
