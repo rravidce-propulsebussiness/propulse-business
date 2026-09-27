@@ -11,7 +11,6 @@ const membershipRecord = (value) => value?.membership_plan_id ? value : null
 const planType = (plan) => String(plan?.plan_type || '').toLowerCase()
 const normalizeLabel = (value) => String(value || '').trim().replace(/[-_]+/g, ' ').replace(/\s+/g, ' ')
 const dateLabel = (value) => value ? new Date(value).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'
-const offerDateLabel = (value) => value ? new Date(value).toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : ''
 const pad2 = (value) => String(Math.max(0, Number(value) || 0)).padStart(2, '0')
 function OfferCountdown({ until, compact = false }) {
   const [now, setNow] = useState(() => Date.now())
