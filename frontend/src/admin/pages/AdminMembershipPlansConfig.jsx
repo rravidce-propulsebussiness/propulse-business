@@ -121,11 +121,8 @@ function formFromPackage(packageKey, plans) {
 export default function AdminMembershipPlansConfig() {
   const [tab, setTab] = useState('grow');
   const [plans, setPlans] = useState([]);
-  const [form, setForm] = useState(freshForm('pro'));
-  const [editing, setEditing] = useState(null);
+  const [form, setForm] = useState(freshForm('grow'));
   const [investor, setInvestor] = useState(null);
-  const [servicePricing, setServicePricing] = useState([]);
-  const [pricingSaving, setPricingSaving] = useState(null);
   const [states, setStates] = useState([]);
   const [cities, setCities] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -137,33 +134,21 @@ export default function AdminMembershipPlansConfig() {
   async function load() {
     setLoading(true);
     try {
-      const [membershipPlans, investorSettings, pricingData, stateData, cityData] = await Promise.all([
+      const [membershipPlans, investorSettings, stateData, cityData] = await Promise.all([
         req('/membership-plans'),
         req('/admin/commercial/investor-settings'),
-        req('/admin/service-pricing'),
         req('/states'),
         req('/cities'),
       ]);
-      setPlans(membershipPlans);
+      setPlans(Array.isArray(membershipPlans) ? membershipPlans : []);
       setInvestor(investorSettings);
-      setServicePricing(Array.isArray(pricingData) ? pricingData : []);
       setStates(Array.isArray(stateData) ? stateData : []);
       setCities(Array.isArray(cityData) ? cityData : []);
       setError('');
     } catch (e) { setError(e.message); } finally { setLoading(false); }
   }
   useEffect(() => { let active=true; queueMicrotask(()=>{if(active)load()}); return()=>{active=false}; }, []);
-
-  const groups = useMemo(() => {
-    const map = {};
-    plans.forEach(p => {
-      if (!['pro', 'non_pro'].includes(p.plan_type)) return;
-      const key = p.plan_group || p.name.replace(/\s+[^\s]+$/i, '');
-      (map[`${p.plan_type}:${key}`] ||= []).push(p);
-    });
-    return Object.values(map);
-  }, [plans]);
-  const visibleGroups = groups.filter(group => group[0]?.plan_type === 'pro' && String(group[0]?.plan_group || '').toLowerCase() === tab);
+  useEffect(() => { if (tab === 'grow' || tab === 'scale') setForm(formFromPackage(tab, plans)); }, [tab, plans]);
 
   const setField = (key, value) => setForm(current => ({ ...current, [key]: value }));
   const setPricing = (key, field, value) => setForm(current => ({ ...current, pricing: { ...current.pricing, [key]: { ...current.pricing[key], [field]: value } } }));
@@ -183,7 +168,7 @@ export default function AdminMembershipPlansConfig() {
   }
   function removeCycle(key) { setForm(current => ({ ...current, periods: current.periods.filter(p => p.key !== key), pricing: Object.fromEntries(Object.entries(current.pricing).filter(([k]) => k !== key)) })); }
   const priceFor = period => { const base = Number(form.monthlyBasePrice || 0) * Number(period.months || 1); const cfg = form.pricing[period.key] || {}; const discounted = base * (1 - Number(cfg.discount || 0) / 100); const final = cfg.customPrice && cfg.price !== '' ? Number(cfg.price) : discounted; return { final, saving: Math.max(0, base - final), base }; };
-  function switchPlanTab(next) { setTab(next); setEditing(null); setForm(next === 'grow' || next === 'scale' ? freshForm(next) : form); setError(''); }
+  function switchPlanTab(next) { setTab(next); setError(''); }
 
   async function create(e) {
     e.preventDefault(); setError('');
@@ -192,34 +177,9 @@ export default function AdminMembershipPlansConfig() {
       if (!activePeriods.length) { setError('Enable at least one billing cycle.'); return; }
       const periods = activePeriods.map(p => ({ ...p, months: Number(p.months), leadEntitlements: p.leadEntitlements.map(x => ({ ...x, monthly_quantity: Number(x.monthly_quantity || 0), period_total_quantity: Number(x.period_total_quantity || 0), quantity: Number(x.monthly_quantity || 0) })) }));
       await req('/membership-plans', { method: 'POST', body: JSON.stringify({ name: form.name.trim(), planGroup: form.name.trim(), planType: 'pro', bundle: true, monthlyBasePrice: Number(form.monthlyBasePrice || 0), benefits: form.benefits, addOns: form.addOns, leadRolloverEnabled: true, leadExpiryDays: null, periods, pricing: Object.fromEntries(periods.map(p => [p.key, { discount: Number(form.pricing[p.key]?.discount || 0), price: form.pricing[p.key]?.price || '', customPrice: Boolean(form.pricing[p.key]?.customPrice) }])) }) });
-      setForm(freshForm(tab)); await load();
+      await load();
     } catch (e) { setError(e.message); }
   }
-
-  function beginEdit(plan) {
-    setEditing(plan.id); setTab(String(plan.plan_group || '').toLowerCase() === 'scale' ? 'scale' : 'grow');
-    const leads = Array.isArray(plan.lead_entitlements) ? plan.lead_entitlements : []; const key = `edit-${plan.id}`; const months = Number(plan.billing_months || 1);
-    setForm({
-      name: plan.plan_group || plan.name.replace(/\s+[^\s]+$/i, ''),
-      planType: String(plan.plan_group || '').toLowerCase() === 'scale' ? 'scale' : 'grow', monthlyBasePrice: plan.monthly_base_price || '',
-      periods: [{ key, label: plan.billing_period || 'Monthly', months, enabled: true, leadEntitlements: leads.map(x => ({ ...x, monthly_quantity: Number(x.monthly_quantity ?? x.quantity ?? 0), period_total_quantity: Number(x.period_total_quantity ?? (Number(x.monthly_quantity ?? x.quantity ?? 0) * months)) })) }],
-      pricing: { [key]: { discount: Number(plan.discount_percent || 0), price: plan.price ?? '', customPrice: true } },
-      benefits: Array.isArray(plan.benefits) ? plan.benefits : [], addOns: Array.isArray(plan.add_ons) ? plan.add_ons.map(normalizeAddon) : [],
-    });
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }
-
-  async function saveEdit(e) {
-    e.preventDefault(); setError('');
-    try {
-      const p = form.periods[0]; const cfg = form.pricing[p.key] || {};
-      await req(`/membership-plans/${editing}`, { method: 'PUT', body: JSON.stringify({ name: `${form.name.trim()} ${p.label}`, planGroup: form.name.trim(), planType: 'pro', billingPeriod: p.label, billingMonths: Number(p.months), monthlyBasePrice: Number(form.monthlyBasePrice || 0), discountPercent: Number(cfg.discount || 0), priceOverride: cfg.customPrice ? Number(cfg.price || 0) : '', benefits: form.benefits, leadEntitlements: p.leadEntitlements, addOns: form.addOns, leadRolloverEnabled: true, leadExpiryDays: null }) });
-      setEditing(null); setForm(freshForm(form.planType)); await load();
-    } catch (e) { setError(e.message); }
-  }
-  async function toggle(plan) { try { await req(`/membership-plans/${plan.id}/status`, { method: 'PATCH', body: JSON.stringify({ isActive: !plan.is_active }) }); load(); } catch (e) { setError(e.message); } }
-  async function remove(plan) { if (!confirm(`Delete ${plan.name}?`)) return; try { await req(`/membership-plans/${plan.id}`, { method: 'DELETE' }); load(); } catch (e) { setError(e.message); } }
-
 
   async function saveInvestor(e) {
     e.preventDefault(); setError('');
