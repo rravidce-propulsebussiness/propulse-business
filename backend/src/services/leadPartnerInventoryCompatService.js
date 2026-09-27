@@ -203,15 +203,26 @@ async function connectGoogleSheet({userId,url}){
 }
 
 async function syncGoogleSheet({userId,connectionId}){
-  const connection=(await pool.query(`SELECT * FROM lead_partner_sheet_connections WHERE id=$1 AND user_id=$2 AND status='active'`,[connectionId,userId])).rows[0];
-  if(!connection){const e=new Error('Active Google Sheet connection not found');e.code='SHEET_CONNECTION_NOT_FOUND';throw e;}
-  const result=await fetchGoogleSheetCsv(connection.source_url);
-  if(result.spreadsheetId!==connection.spreadsheet_id||String(result.gid||'0')!==String(connection.gid||'0'))throw new Error('Google Sheet URL no longer matches the connected sheet');
-  const imported=await importCsv({userId,csv:result.csv});
-  const saved=(await pool.query(`UPDATE lead_partner_sheet_connections SET last_synced_at=CURRENT_TIMESTAMP,last_sync_created=$1,last_sync_duplicate=$2,last_sync_failed=$3,last_sync_failures=$4::jsonb,sync_failure_count=0,last_sync_error_at=NULL,last_sync_error=NULL,next_retry_at=NULL,updated_at=CURRENT_TIMESTAMP WHERE id=$5 AND user_id=$6 RETURNING *`,[imported.created,imported.duplicate,imported.failed,JSON.stringify(imported.failures),connectionId,userId])).rows[0];
-  return{connection:saved,import:imported};
+  const id=Number(connectionId);
+  if(!Number.isInteger(id)||id<=0){const e=new Error('Active Google Sheet connection not found');e.code='SHEET_CONNECTION_NOT_FOUND';throw e;}
+  const lockClient=await pool.connect();
+  let locked=false;
+  try{
+    const lock=(await lockClient.query('SELECT pg_try_advisory_lock($1,$2) AS acquired',[73190521,id])).rows[0];
+    locked=Boolean(lock?.acquired);
+    if(!locked){const e=new Error('Google Sheet sync is already in progress');e.code='SYNC_IN_PROGRESS';throw e;}
+    const connection=(await pool.query(`SELECT * FROM lead_partner_sheet_connections WHERE id=$1 AND user_id=$2 AND status='active'`,[id,userId])).rows[0];
+    if(!connection){const e=new Error('Active Google Sheet connection not found');e.code='SHEET_CONNECTION_NOT_FOUND';throw e;}
+    const result=await fetchGoogleSheetCsv(connection.source_url);
+    if(result.spreadsheetId!==connection.spreadsheet_id||String(result.gid||'0')!==String(connection.gid||'0'))throw new Error('Google Sheet URL no longer matches the connected sheet');
+    const imported=await importCsv({userId,csv:result.csv});
+    const saved=(await pool.query(`UPDATE lead_partner_sheet_connections SET last_synced_at=CURRENT_TIMESTAMP,last_sync_created=$1,last_sync_duplicate=$2,last_sync_failed=$3,last_sync_failures=$4::jsonb,sync_failure_count=0,last_sync_error_at=NULL,last_sync_error=NULL,next_retry_at=NULL,updated_at=CURRENT_TIMESTAMP WHERE id=$5 AND user_id=$6 RETURNING *`,[imported.created,imported.duplicate,imported.failed,JSON.stringify(imported.failures),id,userId])).rows[0];
+    return{connection:saved,import:imported};
+  }finally{
+    if(locked)await lockClient.query('SELECT pg_advisory_unlock($1,$2)',[73190521,id]).catch(()=>{});
+    lockClient.release();
+  }
 }
-
 async function listInventory(args){
   const result=await base.listInventory(args);
   const ids=(result.data||[]).map(x=>Number(x.id)).filter(Number.isInteger);
