@@ -210,7 +210,7 @@ async function login({ email, password }) {
   const result = await pool.query(`SELECT id,name,email,password_hash,role,auth_version FROM users WHERE LOWER(email)=$1 AND is_active=TRUE`, [normalizedEmail]);
   const user = result.rows[0];
   if (!user || !(await bcrypt.compare(password, user.password_hash))) throw Object.assign(new Error('Invalid email or password'), { code: 'INVALID_CREDENTIALS' });
-  return { user: await publicUser(user, await getBusinessProfile(user.id)), token: signToken(user) };
+  return { user: await getPublicAuthenticatedUser(user), token: signToken(user) };
 }
 
 async function verifyGoogleIdToken(idToken) {
@@ -251,7 +251,7 @@ async function googleLogin({ idToken }) {
       throw Object.assign(new Error('No Propulse account exists for this Google email. Please create an account first.'), { code: 'GOOGLE_ACCOUNT_NOT_FOUND' });
     }
     await client.query('COMMIT');
-    return { user: await publicUser(user, await getBusinessProfile(user.id)), token: signToken(user) };
+    return { user: await getPublicAuthenticatedUser(user), token: signToken(user) };
   } catch (error) {
     await client.query('ROLLBACK');
     if (error.code === '23505') throw Object.assign(new Error('An account with this email already exists. Sign in with your email and password.'), { code: 'EMAIL_EXISTS' });
@@ -308,7 +308,11 @@ async function getAuthenticatedUser(id, authVersion) {
 
 async function getPublicAuthenticatedUser(user) {
   if (!user?.id) return null;
-  return await publicUser(user, await getBusinessProfile(user.id));
+  const [profile, membership] = await Promise.all([
+    getBusinessProfile(user.id),
+    getMembershipSummary(user.id),
+  ]);
+  return { id: user.id, name: user.name, email: user.email, role: user.role, profile, ...membership };
 }
 
 async function getUserById(id) {
