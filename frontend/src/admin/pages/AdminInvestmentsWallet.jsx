@@ -74,8 +74,56 @@ export default function AdminInvestmentsWallet() {
   useEffect(() => { let active=true; queueMicrotask(()=>{if(active)loadIndustries()}); return()=>{active=false} }, [loadIndustries])
   useEffect(() => { let active=true; queueMicrotask(()=>{if(active)loadSettings()}); return()=>{active=false} }, [loadSettings])
 
-  const investors = useMemo(() => data.investors.map(item => { const records = Array.isArray(item.cycles) ? item.cycles.filter(x => x.status !== 'cancelled') : []; const contributed = records.filter(x => !x.is_reinvestment).reduce((s, x) => s + Number(x.amount || 0), 0); const totalFunding = records.reduce((s, x) => s + Number(x.amount || 0), 0); const adSpent = records.reduce((s, x) => s + Number(x.ad_spent || 0), 0); const gross = Number(item.linked_gross_sales || 0); const payable = Math.max(0, Number(item.payable_now || 0)); const autoInvestEarnings = records.reduce((s, x) => { const ref = String(x.payout_transfer_reference || '').trim().toUpperCase(); const alreadyReinvested = ref.startsWith('REINVESTMENT-'); return s + (x.reinvestment_enabled === true && !alreadyReinvested && x.status !== 'paid' ? Number(x.allocated_revenue || 0) : 0) }, 0); const bankTransfer = records.reduce((s, x) => { const ref = String(x.payout_transfer_reference || '').trim().toUpperCase(); return s + (x.reinvestment_enabled !== true && !ref.startsWith('REINVESTMENT-') && x.status !== 'paid' ? Number(x.payable_now || 0) : 0) }, 0); const statusRecord = records.find(x => x.status === 'active') || records.find(x => x.status === 'matured') || records.find(x => x.status === 'pending') || records[0]; const joinedAt = records.reduce((oldest, row) => !oldest || new Date(row.created_at) < new Date(oldest) ? row.created_at : oldest, null); return { ...item, records, contributed, adBalance: Math.max(0, totalFunding - adSpent), gross, payable, autoInvestEarnings, availableForAds: Math.max(0, totalFunding - adSpent) + autoInvestEarnings, bankTransfer, accountStatus: statusRecord?.status || 'active', joinedAt } }), [data.investors])
-  const totals = useMemo(() => investors.reduce((o, x) => { o.capital += x.contributed; o.adBalance += x.adBalance; o.gross += x.gross; o.payable += x.payable; o.availableForAds += x.availableForAds; o.bankTransfer += x.bankTransfer; return o }, { capital: 0, adBalance: 0, gross: 0, payable: 0, availableForAds: 0, bankTransfer: 0 }), [investors])
+  const investors = useMemo(() => data.investors.map(item => {
+    const records = Array.isArray(item.investments) ? item.investments : [];
+    const contributedFallback = records.reduce((sum, row) => sum + Number(row.invested_amount || row.amount || 0), 0);
+    const ledger = item.ledger || {};
+    const statusRecord = records.find(row => ['active','exit_requested','waiting_for_leads'].includes(String(row.status || '').toLowerCase())) || records[0] || {};
+    const contributed = Number(ledger.total_invested ?? item.total_invested ?? contributedFallback);
+    const availableForAds = Number(ledger.available_for_ads ?? item.ad_wallet_balance ?? item.ad_available ?? 0);
+    const adSpent = Number(ledger.ad_spent ?? item.ad_spent ?? 0);
+    const generated = Number(ledger.generated ?? item.total_generated ?? item.generated_amount ?? 0);
+    const transferable = Number(ledger.transferable ?? item.payable_now ?? item.transferable ?? 0);
+    const payoutReserved = Number(ledger.payout_reserved ?? item.payout_reserved ?? 0);
+    const payoutTransferred = Number(ledger.payout_transferred ?? item.payout_transferred ?? 0);
+    const cycleStatus = String(statusRecord.status || item.status || 'pending').toLowerCase();
+    const cycleId = statusRecord.cycle_id || item.current_cycle_id || null;
+    return {
+      ...item,
+      records,
+      user_id: Number(item.user_id || item.id || 0),
+      user_name: item.user_name || item.name || item.investor_name || 'Investor',
+      user_email: item.user_email || item.email || '',
+      industry_name: item.industry_name || statusRecord.industry_name || '',
+      contributed,
+      availableForAds,
+      adSpent,
+      generated,
+      transferable,
+      payoutReserved,
+      payoutTransferred,
+      bankTransfer: transferable,
+      adBalance: availableForAds,
+      status: cycleStatus,
+      cycleId,
+      cycleStartedAt: statusRecord.started_at || statusRecord.created_at || item.created_at || null,
+      active: ['active','exit_requested','waiting_for_leads'].includes(cycleStatus),
+      joinedAt: item.created_at || statusRecord.created_at || null
+    };
+  }), [data.investors]);
+
+  const totals = useMemo(() => investors.reduce((acc, investor) => {
+    acc.capital += investor.contributed;
+    acc.availableForAds += investor.availableForAds;
+    acc.generated += investor.generated;
+    acc.transferable += investor.transferable;
+    acc.reserved += investor.payoutReserved;
+    acc.transferred += investor.payoutTransferred;
+    acc.adSpent += investor.adSpent;
+    if (investor.active) acc.active += 1;
+    if (investor.transferable > 0) acc.ready += 1;
+    return acc;
+  }, {capital:0,availableForAds:0,generated:0,transferable:0,reserved:0,transferred:0,adSpent:0,active:0,ready:0}), [investors]);
 
   const saveSettings = async (days, commission) => { if (!settings) return; const d = Number(days), c = Number(commission); if (!Number.isInteger(d) || d < 0 || d > 3650) throw new Error('Settlement period must be between 0 and 3650 days.'); if (!Number.isFinite(c) || c < 0 || c > 100) throw new Error('Commission must be between 0% and 100%.'); return request('/admin/commercial/investor-settings', { method: 'PUT', body: JSON.stringify({ globalLimit: settings.global_limit, defaultIndustryLimit: settings.default_industry_limit, customerIndustryLimit: settings.customer_industry_limit, minInvestment: settings.min_investment, maxInvestment: settings.max_investment == null ? '' : settings.max_investment, enabled: Boolean(settings.is_enabled ?? settings.enabled), requiresPro: Boolean(settings.requires_pro), investmentCycleDays: d, autoReinvest: settings.auto_reinvest == null ? false : Boolean(settings.auto_reinvest), investorRevenueSharePercent: 100 - c }) }) }
   const saveCommission = async () => { setSettingsBusy(true); setCommissionMessage(''); setError(''); try { const updated = await saveSettings(Number(settings?.investment_cycle_days ?? maturityDays ?? 30), commissionPercent); setSettings(updated); setCommissionMessage('Saved'); await load(true) } catch (e) { setError(e.message || 'Unable to save commission.') } finally { setSettingsBusy(false) } }
@@ -103,19 +151,108 @@ export default function AdminInvestmentsWallet() {
   return <>
     <style>{historyStyles}</style>
     <main className="admin-investments-page">
-      <header className="admin-investments-head"><div className="admin-title-block"><div className="admin-breadcrumb"><span>Workspace</span><b>›</b><strong>Investments</strong></div><h1>Investments</h1></div><div className="system-health"><i /> System healthy</div></header>
-      {error && <div className="admin-investments-error">{error}</div>}
+      <section className="investments-hero">
+        <div className="investments-hero-copy">
+          <span>INVESTOR FINANCE / CYCLE MANAGEMENT</span>
+          <h1>Investments</h1>
+          <p>Monitor investor capital, ad allocation, generated earnings and transfer-ready balances from the existing investment ledger.</p>
+          <div className="investments-hero-meta">
+            <span><b>{investors.length}</b> investor accounts</span>
+            <span><b>{totals.active}</b> active cycles</span>
+            <span><b>{totals.ready}</b> ready for transfer</span>
+          </div>
+        </div>
+        <div className="investments-hero-actions">
+          <button type="button" className="secondary" onClick={() => navigate('/admin/investor-withdrawals')}>
+            <span>₹</span><div><b>Withdrawal queue</b><small>Review investor transfer requests</small></div>
+          </button>
+          <button type="button" className="primary" onClick={load} disabled={loading}>
+            <span>↻</span><div><b>{loading ? 'Refreshing…' : 'Refresh portfolio'}</b><small>Reload balances and cycles</small></div>
+          </button>
+        </div>
+      </section>
+
+      {error && <div className="admin-investments-error"><div><b>Action needed</b><span>{error}</span></div><button type="button" onClick={() => setError('')}>×</button></div>}
+
       <section className="admin-investment-stats">
-        <article><span>Investor Capital</span><strong>{money(totals.capital)}</strong><small>Total investor-contributed capital</small></article>
-        <article className="stat-balance"><span>Ad Balance</span><strong>{money(totals.adBalance)}</strong><small>Capital currently available for advertising</small></article>
-        <article className="stat-revenue"><span>Lead Revenue</span><strong>{money(totals.gross)}</strong><small>Gross revenue from linked lead sales</small></article>
-        <article className="stat-transfer"><span>Ready to Transfer</span><strong>{money(totals.payable)}</strong><small>Matured earnings eligible for payout</small></article>
+        <article><div className="stat-icon">₹</div><div><span>INVESTOR CAPITAL</span><strong>{money(totals.capital)}</strong><small>Capital recorded in the investor ledger</small></div></article>
+        <article className="stat-balance"><div className="stat-icon">A</div><div><span>AVAILABLE FOR ADS</span><strong>{money(totals.availableForAds)}</strong><small>{money(totals.adSpent)} already spent on ads</small></div></article>
+        <article className="stat-revenue"><div className="stat-icon">↗</div><div><span>GENERATED EARNINGS</span><strong>{money(totals.generated)}</strong><small>Earnings generated across investor accounts</small></div></article>
+        <article className="stat-transfer"><div className="stat-icon">→</div><div><span>READY TO TRANSFER</span><strong>{money(totals.transferable)}</strong><small>{money(totals.reserved)} currently reserved for payouts</small></div></article>
+        <article className="stat-paid"><div className="stat-icon">✓</div><div><span>TRANSFERRED</span><strong>{money(totals.transferred)}</strong><small>Completed investor payout value</small></div></article>
       </section>
-      <section className="admin-settings-grid">
-        <article className="settings-card"><div className="settings-card-head"><span className="settings-icon">%</span><div><h2>ProPulse Commission</h2><p>Set the platform commission on investor-generated lead revenue.</p></div></div><div className="settings-bottom"><label className="settings-field"><span>Commission charged to investors</span><div className="percent-input"><input value={commissionPercent} onChange={e => setCommissionPercent(e.target.value)} inputMode="decimal" /><b>%</b></div></label><button onClick={saveCommission} disabled={settingsLoading || settingsBusy}>{settingsBusy ? 'Saving…' : 'Save'}</button></div>{commissionMessage && <div className="settings-info" style={{ marginTop: 10 }}><i>✓</i><span><strong>{commissionMessage}</strong> Commission updated.</span></div>}</article>
-        <article className="settings-card"><div className="settings-card-head"><span className="settings-icon clock">◷</span><div><h2>Investment Maturity</h2><p>Choose when investor earnings become eligible for transfer.</p></div></div><div className="maturity-row"><label className="settings-field"><span>Settlement period</span><select value={maturityPreset} onChange={e => { setMaturityPreset(e.target.value); if (e.target.value !== 'custom') setMaturityDays(e.target.value === 'immediate' ? '0' : e.target.value) }}><option value="immediate">Immediate · testing</option><option value="7">7 days</option><option value="14">14 days</option><option value="30">30 days</option><option value="90">90 days</option><option value="180">180 days</option><option value="365">365 days</option><option value="custom">Custom</option></select></label>{maturityPreset === 'custom' && <label className="settings-field days-field"><span>Days</span><input value={maturityDays} onChange={e => setMaturityDays(e.target.value)} inputMode="numeric" /></label>}<button onClick={saveMaturity} disabled={settingsLoading || settingsBusy}>{settingsBusy ? 'Saving…' : 'Save'}</button></div><div className="settings-info maturity-info"><i>i</i><span><strong>Example:</strong> ₹5,000 invested → available to advertise immediately, but lead earnings settle after the selected period.</span></div>{settingsMessage && <div className="settings-info" style={{ marginTop: 10 }}><i>✓</i><span><strong>{settingsMessage}</strong> Settlement period updated.</span></div>}</article>
+
+      <section className="investments-rules-panel">
+        <div className="investments-section-heading">
+          <div><span>PORTFOLIO RULES</span><h2>Investment settings</h2><p>Configure the existing revenue share and settlement policy used by investor cycles.</p></div>
+          <div className="rule-summary">
+            <span>ProPulse <b>{settings.platformCommissionPercent}%</b></span>
+            <span>Investor <b>{Math.max(0,100-Number(settings.platformCommissionPercent||0))}%</b></span>
+            <span>Settlement <b>{settings.maturityValue} {settings.maturityUnit}</b></span>
+          </div>
+        </div>
+        <div className="admin-settings-grid">
+          <article className="settings-card">
+            <div className="settings-card-head"><div className="settings-icon">%</div><div><span>REVENUE SHARE</span><h3>ProPulse commission</h3><p>Platform share retained from eligible investment-generated revenue.</p></div></div>
+            <div className="settings-value-preview"><span>INVESTOR RECEIVES</span><strong>{Math.max(0,100-Number(settings.platformCommissionPercent||0))}%</strong></div>
+            <div className="settings-bottom">
+              <label className="settings-field"><span>Commission percentage</span><div className="percent-input"><input type="number" min="0" max="100" step="0.01" value={settings.platformCommissionPercent} onChange={e=>setSettings(v=>({...v,platformCommissionPercent:e.target.value}))}/><b>%</b></div></label>
+              <button type="button" onClick={()=>saveSettings('commission')} disabled={settingsBusy==='commission'}>{settingsBusy==='commission'?'Saving…':'Save share'}</button>
+            </div>
+            {settingsMessage.commission && <div className="settings-success"><i>✓</i>{settingsMessage.commission}</div>}
+          </article>
+
+          <article className="settings-card">
+            <div className="settings-card-head"><div className="settings-icon clock">◷</div><div><span>SETTLEMENT WINDOW</span><h3>Maturity period</h3><p>Controls the default maturity/settlement period for the existing investment cycle flow.</p></div></div>
+            <div className="maturity-row">
+              <label className="settings-field"><span>Period unit</span><select value={settings.maturityUnit} onChange={e=>setSettings(v=>({...v,maturityUnit:e.target.value}))}><option value="days">Days</option><option value="months">Months</option></select></label>
+              <label className="settings-field days-field"><span>Value</span><input type="number" min="1" step="1" value={settings.maturityValue} onChange={e=>setSettings(v=>({...v,maturityValue:e.target.value}))}/></label>
+              <button type="button" onClick={()=>saveSettings('maturity')} disabled={settingsBusy==='maturity'}>{settingsBusy==='maturity'?'Saving…':'Save period'}</button>
+            </div>
+            <div className="settings-info"><i>i</i><span>This updates the existing investor cycle settings; it does not create a second maturity system.</span></div>
+            {settingsMessage.maturity && <div className="settings-success"><i>✓</i>{settingsMessage.maturity}</div>}
+          </article>
+        </div>
       </section>
-      <section className="admin-investor-list"><div className="admin-list-head"><div className="investors-title"><span className="investors-icon">♢</span><h2>Investor Accounts</h2></div><div className="admin-list-filters"><input value={search} onChange={e => { setSearch(e.target.value); searchRef.current = e.target.value }} placeholder="Search investor name or email" /><select value={status} onChange={e => setStatus(e.target.value)}><option value="all">All statuses</option><option value="active">Active</option><option value="matured">Matured</option><option value="paid">Paid</option><option value="cancelled">Cancelled</option></select><select value={industryId} onChange={e => setIndustryId(e.target.value)}><option value="">All industries</option>{industries.map(i => <option key={i.id} value={i.id}>{i.name}</option>)}</select><button onClick={runSearch}>Search</button></div></div><div className="investor-table-wrap"><div className="investor-table-head"><span>#</span><span>Investor</span><span>Capital</span><span>Ad Balance</span><span>Lead Revenue</span><span>Ready to Transfer</span><span>Status</span><span>Joined</span><span>Actions</span></div><div className="investor-table-body">{loading ? <div className="admin-empty">Loading investor accounts…</div> : investors.length ? investors.map((investor, index) => { const investorName = investor.user_name || investor.name || investor.full_name || (investor.user_email ? investor.user_email.split('@')[0] : `Investor #${investor.user_id}`); const investorEmail = investor.user_email || investor.email || `Account ID ${investor.user_id}`; return <div className="investor-table-row" key={investor.user_id}><span className="row-number">{index + 1}</span><div className="row-investor"><span className="row-avatar">{String(investorName).slice(0, 1).toUpperCase()}</span><div><strong>{investorName}</strong><small>{investorEmail}</small></div></div><span className="row-money">{money(investor.contributed)}</span><span className="row-money">{money(investor.adBalance)}</span><span className="row-money">{money(investor.gross)}</span><span className="row-money">{money(investor.payable)}</span><span className={`status-pill ${investor.accountStatus}`}>{investor.accountStatus}</span><span className="joined-date">{date(investor.joinedAt)}</span><div className="row-actions"><button className="view-btn" onClick={() => showAccount(investor)}>View</button><div className="action-menu-wrap"><button className="more-btn" onClick={() => setMenuUserId(current => current === investor.user_id ? null : investor.user_id)}>•••</button>{menuUserId === investor.user_id && <div className="action-menu"><button onClick={() => addSpend(investor)}>Add ad spend</button>{investor.bankTransfer > 0 && <button onClick={() => openPayout(investor)}>Transfer investor money</button>}<button onClick={() => openLinked(investor)}>View linked leads</button></div>}</div></div></div> }) : <div className="admin-empty">No investor accounts found.</div>}</div></div><div className="table-footer"><span>{investors.length} investor{investors.length === 1 ? '' : 's'}</span><div><button disabled>‹</button><b>1</b><button disabled>›</button></div></div></section>
+
+      <section className="admin-investor-list">
+        <div className="admin-list-head">
+          <div className="investors-title"><span>INVESTOR LEDGER</span><h2>Investor accounts</h2><p>Open an account for cycle history, linked leads and existing investment actions.</p></div>
+          <div className="admin-list-filters">
+            <input ref={searchRef} defaultValue={search} onChange={e=>setSearch(e.target.value)} placeholder="Search investor name or email"/>
+            <select value={status} onChange={e=>setStatus(e.target.value)}><option value="all">All statuses</option><option value="active">Active</option><option value="matured">Matured</option><option value="exit_requested">Exit requested</option><option value="waiting_for_leads">Waiting for leads</option><option value="paid">Paid</option><option value="cancelled">Cancelled</option></select>
+            <select value={industryId} onChange={e=>setIndustryId(e.target.value)}><option value="">All industries</option>{data.industries.map(industry=><option key={industry.id} value={industry.id}>{industry.name}</option>)}</select>
+            <select value={limit} onChange={e=>setLimit(Number(e.target.value))}><option value={25}>25 rows</option><option value={50}>50 rows</option><option value={100}>100 rows</option></select>
+            <button type="button" onClick={runSearch}>Search</button>
+          </div>
+        </div>
+
+        {loading ? <div className="admin-empty"><div className="investment-loader"/>Loading investor ledger…</div> :
+        !investors.length ? <div className="admin-empty"><div className="empty-investments-icon">₹</div><div><strong>No investor accounts found</strong><span>Try another filter or search.</span></div></div> :
+        <div className="investor-table-wrap">
+          <div className="investor-table-head"><span>#</span><span>Investor</span><span>Capital</span><span>Ads available</span><span>Generated</span><span>Transferable</span><span>Cycle</span><span>Status</span><span>Action</span></div>
+          {investors.map((investor,index)=><div className={['investor-table-row',investor.transferable>0?'needs-transfer':''].filter(Boolean).join(' ')} key={investor.user_id || index}>
+            <span className="row-number">{String(index+1).padStart(2,'0')}</span>
+            <div className="row-investor"><span className="row-avatar">{String(investor.user_name||'?').charAt(0).toUpperCase()}</span><div><strong>{investor.user_name || ('Investor #' + investor.user_id)}</strong><small>{investor.user_email || '—'}</small><em>{investor.industry_name || 'No industry assigned'}</em></div></div>
+            <div className="row-money"><strong>{money(investor.contributed)}</strong><small>Total invested</small></div>
+            <div className="row-money ads"><strong>{money(investor.availableForAds)}</strong><small>{money(investor.adSpent)} spent</small></div>
+            <div className="row-money generated"><strong>{money(investor.generated)}</strong><small>Generated</small></div>
+            <div className={['row-money','transferable',investor.transferable>0?'ready':''].filter(Boolean).join(' ')}><strong>{money(investor.transferable)}</strong><small>{investor.payoutReserved>0 ? money(investor.payoutReserved) + ' reserved' : 'Available to transfer'}</small></div>
+            <div className="cycle-cell"><strong>{investor.cycleId ? '#' + investor.cycleId : '—'}</strong><small>{investor.cycleStartedAt ? date(investor.cycleStartedAt) : 'No active cycle'}</small></div>
+            <span className={'status-pill ' + investor.status}>{title(investor.status)}</span>
+            <div className="row-actions">
+              <button className="view-btn" type="button" onClick={()=>openHistory(investor)}><span>↗</span>Open account</button>
+              {menuUserId===investor.user_id && <div className="investment-actions-menu">
+                <button type="button" onClick={()=>openHistory(investor)}>Cycle history</button>
+                <button type="button" onClick={()=>openLinked(investor)}>Linked leads</button>
+                <button type="button" onClick={()=>addSpend(investor)}>Spend on ads</button>
+                <button type="button" onClick={()=>openPayout(investor)}>Record transfer</button>
+              </div>}
+            </div>
+          </div>)}
+          <div className="table-footer"><span>Showing <b>{investors.length}</b> investor accounts from the current dashboard view</span><span className="ledger-note">Balances shown from the existing investment ledger</span></div>
+        </div>}
+      </section>
     </main>
     {account && <div className="admin-modal-backdrop" onMouseDown={e => { if (e.target === e.currentTarget) closeAccount() }}><section className="admin-modal investor-history-modal" onMouseDown={e => e.stopPropagation()}>
       <div className="investor-history-head"><div className="investor-history-head-left"><span className="investor-history-avatar">{String(account.user_name || account.name || account.full_name || 'I').slice(0, 1).toUpperCase()}</span><div><h2>{account.user_name || account.name || account.full_name || `Investor #${account.user_id}`} · Transaction History</h2><p>{account.user_email || account.email || `Account ID ${account.user_id}`} · One running balance for all money movement</p></div></div><button className="investor-history-close" onClick={closeAccount}>×</button></div>
