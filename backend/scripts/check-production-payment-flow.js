@@ -110,7 +110,7 @@ async function main() {
   const walletSummary = await walletService.getWallet(standard.id,{includeTransactions:false});
   for(let i=1;i<=3;i+=1){
     await q("INSERT INTO wallet_topups(user_id,amount,reference,status) VALUES($1,$2,$3,$4)",[standard.id,100+i,`${tag}-wallet-${i}`,i===1?'pending':'approved']);
-    await q("INSERT INTO wallet_transactions(wallet_id,user_id,type,amount,balance_after,reference_type,description) VALUES($1,$2,'credit',$3,$4,'test',$5)",[walletSummary.id,10+i,10+i,`${tag}-wallet-tx-${i}`]);
+    await q("INSERT INTO wallet_transactions(wallet_id,user_id,type,amount,balance_after,reference_type,description) VALUES($1,$2,'credit',$3,$4,'test',$5)",[walletSummary.id,standard.id,10+i,10+i,`${tag}-wallet-tx-${i}`]);
   }
   const walletDetail=await walletService.getAdminWalletCustomerDetails(standard.id,{rechargePage:1,rechargeLimit:1,transactionPage:1,transactionLimit:1});
   assert.equal(walletDetail.recharges.length,1,'Customer 360 wallet recharge page must respect its limit');
