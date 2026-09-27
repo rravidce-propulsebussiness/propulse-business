@@ -124,3 +124,7 @@ Before accepting live payments, verify the deployed HTTPS domain, email delivery
 backup restoration and the complete browser journey using your configured bank
 details. Local tests do not verify hosting, live bank reconciliation, external
 service credentials, or every screen in the browser.
+
+
+### Persistent upload storage
+Set `UPLOAD_STORAGE_ROOT` to a durable shared volume in production. Homepage media, company proofs, and private payment/payout proof files all resolve beneath this root. Every web or worker replica that needs to read or write uploads must mount the same path. Leaving it unset uses `backend/uploads`, which is appropriate only for local development or a single instance with persistent disk.
