@@ -27,6 +27,7 @@ const home=read('../frontend/src/pages/Home.jsx');
 const server=read('../backend/src/server.js');
 const membershipRoutes=read('../backend/src/routes/membershipPlanRoutes.js');
 const membershipController=read('../backend/src/controllers/membershipPlanController.js');
+const servicePricingRemoval=read('../backend/src/database/migrations/20260927_zz_remove_legacy_service_pricing.sql');
 
 assert(layout.includes('admin-sidebar-signature')&&layout.includes('admin-top-user'),'Premium Admin shell controls must remain present');
 assert(!layout.includes('admin-sidebar-status'),'Duplicated sidebar health copy must stay removed');
@@ -107,6 +108,7 @@ assert(home.includes('MEMBERSHIP &amp; PRICING'),'Homepage pricing section must 
 assert(membershipRoutes.includes("router.get('/public', membershipPlanController.getPublicPlans)"),'Public active-only Membership pricing endpoint must remain');
 assert(membershipRoutes.includes("router.get('/', requireAuth, membershipPlanController.getPlans)"),'Admin Membership configuration must keep authenticated full-plan access');
 assert(membershipController.includes('res.json(await s.getPlans(false))'),'Public Membership endpoint must return active plans only');
+assert(servicePricingRemoval.includes('DROP TABLE IF EXISTS service_pricing'),'Final schema must remove the redundant Service Pricing table');
 
 
 assert(dashboard.includes('const revenue=stats?.revenue||{}'),'Overview must use the backend revenue summary');
