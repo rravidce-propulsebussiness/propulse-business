@@ -312,7 +312,7 @@ export default function AdminPayments() {
     <section className="payments-operations-panel">
       <div className="payments-panel-head">
         <div><span>APPROVAL QUEUES</span><h2>Review transactions</h2></div>
-        <div className="payments-panel-meta"><span>{activeTotal} records</span><span>{queues.find(item => item.key === approvalType)?.label}</span></div>
+        <div className="payments-panel-meta"><span>{activeTotal} shown</span><span>{queues.find(item => item.key === approvalType)?.label}</span></div>
       </div>
 
       <div className="payments-command-bar">
@@ -342,7 +342,7 @@ export default function AdminPayments() {
 
       <div className="payments-queue-head">
         <div>
-          <span>{approvalType === 'wallet' ? 'WALLET RECHARGES' : approvalType === 'leads' ? 'LEAD PAYMENTS' : approvalType === 'investment' ? 'INVESTMENT PAYMENTS' : 'MEMBERSHIP PAYMENTS'}</span>
+          <span>{approvalType === 'wallet' ? 'WALLET RECHARGES' : approvalType === 'leads' ? 'LEAD PAYMENTS' : approvalType === 'investment' ? 'INVESTMENT PAYMENTS' : 'MEMBERSHIP APPROVALS'}</span>
           <h3>{approvalType === 'wallet' ? 'Recharge approvals' : approvalType === 'leads' ? 'Lead purchase approvals' : approvalType === 'investment' ? 'Investment approvals' : 'GROW / SCALE payment approvals'}</h3>
         </div>
         <small>Auto refreshes every minute</small>
