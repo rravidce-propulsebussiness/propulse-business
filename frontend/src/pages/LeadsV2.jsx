@@ -11,6 +11,23 @@ const money = (v) => {
   if (v === null || v === undefined || v === '' || !Number.isFinite(Number(v))) return ''
   return `₹${Number(v).toLocaleString('en-IN')}`
 }
+const promotionBenefitText = (offer) => {
+  const type = String(offer?.benefit_type || offer?.reward?.type || 'discount')
+  if (type === 'lead_bonus') {
+    const qty = Number(offer?.bonus_lead_quantity ?? offer?.reward?.quantity ?? 0)
+    const leadType = String(offer?.bonus_lead_type ?? offer?.reward?.leadType ?? 'shared') === 'premium' ? 'Premium' : 'Basic'
+    return `Get ${qty} bonus ${leadType} lead${qty === 1 ? '' : 's'}`
+  }
+  if (type === 'wallet_bonus') {
+    const valueType = offer?.reward_value_type
+    if (valueType === 'percent') return `${Number(offer?.reward_value || 0)}% bonus wallet balance`
+    const amount = Number(offer?.reward_value ?? offer?.reward?.amount ?? 0)
+    return `Get ${money(amount)} bonus wallet balance`
+  }
+  return offer?.discount_type === 'percent'
+    ? `${Number(offer?.discount_value || 0)}% off`
+    : `${money(offer?.discount_value || 0)} off`
+}
 const hasValue = (v) => v !== null && v !== undefined && String(v).trim() !== '' && String(v).trim() !== '—'
 const norm = (v) => String(v ?? '').toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]/g, '')
 const label = (k) => String(k).replace(/_/g, ' ').replace(/([a-z])([A-Z])/g, '$1 $2').replace(/\b\w/g, x => x.toUpperCase())
@@ -101,6 +118,8 @@ export default function LeadsV2() {
   const [couponError, setCouponError] = useState('')
   const [couponDiscount, setCouponDiscount] = useState(0)
   const [couponFinalAmount, setCouponFinalAmount] = useState(null)
+  const [couponReward, setCouponReward] = useState(null)
+  const [publicLeadOffers, setPublicLeadOffers] = useState([])
   const [currentMembership, setCurrentMembership] = useState(null)
 
   useEffect(() => {
@@ -204,8 +223,10 @@ export default function LeadsV2() {
   const openBuyModal = (lead) => {
     if (!logged) { navigate('/login'); return }
     if (!lead.pricing?.shares?.length) { setError('Pricing is not available for this lead.'); return }
-    setError(''); setNotice(''); setPaymentError(''); setCouponCode(''); setCouponStatus(''); setCouponError(''); setCouponDiscount(0); setCouponFinalAmount(null); setUseWallet(true); setWalletBalance(0); setPaymentProof(null); setBuyModal(lead)
+    setError(''); setNotice(''); setPaymentError(''); setCouponCode(''); setCouponStatus(''); setCouponError(''); setCouponDiscount(0); setCouponFinalAmount(null); setCouponReward(null); setPublicLeadOffers([]); setUseWallet(true); setWalletBalance(0); setPaymentProof(null); setBuyModal(lead)
     authRequest('/wallet').then(data => setWalletBalance(Number(data?.balance ?? data?.wallet?.balance ?? 0))).catch(() => {})
+    const industryId = lead?.industry_id ? `&industryId=${encodeURIComponent(lead.industry_id)}` : ''
+    authRequest(`/coupons/offers?purchaseType=lead${industryId}`).then(data => setPublicLeadOffers(Array.isArray(data) ? data : [])).catch(() => setPublicLeadOffers([]))
   }
   const validateCouponForCurrentAccess = async (code = couponCode) => {
     const normalized = String(code || '').trim().toUpperCase()
@@ -214,6 +235,7 @@ export default function LeadsV2() {
       setCouponStatus('')
       setCouponDiscount(0)
       setCouponFinalAmount(null)
+      setCouponReward(null)
       return false
     }
     const subtotal = Number(currentPricingRow?.[isPro ? 'pro' : 'normal'] || 0)
@@ -233,14 +255,25 @@ export default function LeadsV2() {
       })
       const discount = Number(result?.discountAmount || 0)
       const finalAmount = Number(result?.finalAmount ?? Math.max(0, subtotal - discount))
+      const reward = result?.reward || null
       setCouponCode(normalized)
       setCouponDiscount(discount)
       setCouponFinalAmount(finalAmount)
-      setCouponStatus(discount > 0 ? `${normalized} applied · You save ${money(discount)}` : `${normalized} applied`)
+      setCouponReward(reward)
+      setCouponStatus(
+        reward?.type === 'lead_bonus'
+          ? `${normalized} applied · ${promotionBenefitText({ reward, benefit_type: 'lead_bonus' })} after successful payment`
+          : reward?.type === 'wallet_bonus'
+            ? `${normalized} applied · ${promotionBenefitText({ reward, benefit_type: 'wallet_bonus' })} after successful payment`
+            : discount > 0
+              ? `${normalized} applied · You save ${money(discount)}`
+              : `${normalized} applied`
+      )
       return true
     } catch (e) {
       setCouponDiscount(0)
       setCouponFinalAmount(null)
+      setCouponReward(null)
       setCouponStatus('')
       setCouponError(e.message || 'Unable to validate coupon')
       return false
@@ -402,7 +435,7 @@ export default function LeadsV2() {
       <div className="lv2-buy-layout">
         <section className="lv2-buy-main">
           <div className="lv2-modal-lead"><div className="lv2-avatar">{String(buyModal.customer_name || buyModal.service_name || buyModal.industry_name || 'L').trim().charAt(0).toUpperCase()}</div><div className="lv2-modal-lead-copy"><strong>{buyModal.customer_name || buyModal.service_name || buyModal.industry_name || 'Business opportunity'}</strong><small>⌖ {[buyModal.city_name, buyModal.state_name].filter(hasValue).join(' · ') || 'India'}</small>{hasValue(buyModal.service_name) && <small>⌂ {buyModal.service_name}</small>}</div><span className="lv2-lead-id-pill">Lead #${buyModal.id}</span></div>
-          <div className="lv2-coupon-box"><div className="lv2-coupon-title"><span>⌑</span><div><strong>COUPON CODE</strong><small>Optional · applied before wallet deduction</small></div></div><div className="lv2-coupon-row"><input value={couponCode} onChange={e => { setCouponCode(e.target.value.toUpperCase()); setCouponStatus(''); setCouponError(''); setCouponDiscount(0); setCouponFinalAmount(null) }} onKeyDown={e => { if (e.key === 'Enter') applyCoupon() }} maxLength={50} autoComplete="off" placeholder="Enter coupon code"/><button type="button" onClick={applyCoupon}>Apply</button></div>{couponStatus && <small className="lv2-coupon-status">{couponStatus}</small>}{couponError && <small className="lv2-coupon-error">{couponError}</small>}</div>
+          <div className="lv2-coupon-box"><div className="lv2-coupon-title"><span>⌑</span><div><strong>PROMOTION / COUPON</strong><small>Optional · discounts or rewards are confirmed before payment</small></div></div>{publicLeadOffers.length>0&&<div className="lv2-public-offers">{publicLeadOffers.map(offer=><button type="button" key={offer.id} className={String(couponCode).trim().toUpperCase()===String(offer.code).toUpperCase()?'selected':''} onClick={()=>{setCouponCode(offer.code);queueMicrotask(()=>validateCouponForCurrentAccess(offer.code))}}><span>{String(offer.benefit_type)==='lead_bonus'?'◈+':String(offer.benefit_type)==='wallet_bonus'?'₹+':'%'}</span><div><strong>{promotionBenefitText(offer)}</strong><small>{offer.description||`Use code ${offer.code}`}</small></div><b>Use offer</b></button>)}</div>}<div className="lv2-coupon-row"><input value={couponCode} onChange={e => { setCouponCode(e.target.value.toUpperCase()); setCouponStatus(''); setCouponError(''); setCouponDiscount(0); setCouponFinalAmount(null); setCouponReward(null) }} onKeyDown={e => { if (e.key === 'Enter') applyCoupon() }} maxLength={50} autoComplete="off" placeholder="Enter promotion code"/><button type="button" onClick={applyCoupon}>Apply</button></div>{couponStatus && <small className="lv2-coupon-status">{couponStatus}</small>}{couponError && <small className="lv2-coupon-error">{couponError}</small>}</div>
           <div className="lv2-wallet-choice"><label htmlFor="lv2-wallet-toggle"><span className="lv2-wallet-icon">▣</span><span><b>Use wallet balance</b><small>Available balance: {walletBalance > 0 ? money(walletBalance) : '₹0'}. You can pay the final amount directly.</small></span></label><strong>{walletBalance > 0 ? money(walletBalance) : '₹0'}</strong><input id="lv2-wallet-toggle" type="checkbox" checked={useWallet} onChange={e => setUseWallet(e.target.checked)} /></div>
           <div className="lv2-share-section">
             <div className="lv2-share-selection-title">
@@ -429,7 +462,8 @@ export default function LeadsV2() {
                 <div className="lv2-summary-row"><span>Buyer Access</span><strong>{currentBuyerAccess ? (currentBuyerAccess === 1 ? 'Single Buyer' : `Max ${currentBuyerAccess} Buyers`) : 'Current stage'}</strong></div>
                 <div className="lv2-summary-row"><span>Lead Price</span><strong>{currentBuyerAccess ? money(selectedPrice) : '—'}</strong></div>
                 <div className="lv2-summary-row"><span>Subtotal</span><strong>{currentBuyerAccess ? money(selectedPrice) : '₹0'}</strong></div>
-                <div className="lv2-summary-row"><span>Coupon Discount</span><strong className={couponDiscount > 0 ? 'lv2-discount-value' : ''}>− {money(couponDiscount)}</strong></div>
+                <div className="lv2-summary-row"><span>Promotion Discount</span><strong className={couponDiscount > 0 ? 'lv2-discount-value' : ''}>− {money(couponDiscount)}</strong></div>
+                {couponReward&&<div className="lv2-summary-row lv2-promotion-reward"><span>Reward after payment</span><strong>{promotionBenefitText({reward:couponReward,benefit_type:couponReward.type})}</strong></div>}
                 <div className="lv2-summary-row lv2-wallet-deduction"><span>Wallet Balance Used</span><strong>− {money(walletDeduction)}</strong></div>
                 <div className="lv2-summary-total"><span>Amount to Pay</span><strong>{money(amountToPay)}</strong></div>
                 <div className="lv2-summary-secure"><strong>🛡 Secure & Safe Transaction</strong></div>
