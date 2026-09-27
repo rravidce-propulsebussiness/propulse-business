@@ -34,7 +34,7 @@ const rateLimit=require('./middleware/rateLimitMiddleware');
 const csrfProtection=require('./middleware/csrfMiddleware');
 const {getConfiguredOrigins}=require('./config/httpOrigins');
 const {envFlag}=require('./config/runtimeFlags');
-const {uploadRoot}=require('./config/uploadStorage');
+const {uploadRoot,checkUploadStorage,ensureUploadStorage}=require('./config/uploadStorage');
 const app=express();
 const isProduction=process.env.NODE_ENV==='production';
 const PORT=Number(process.env.PORT)||5000;
@@ -61,7 +61,7 @@ app.use('/uploads',(req,res,next)=>{if(req.path==='/company-proofs'||req.path.st
 app.use('/uploads',express.static(uploadRoot,{fallthrough:true,maxAge:'7d',immutable:true}));
 function setHealthHeaders(res){res.setHeader('Cache-Control','no-store');}
 app.get('/health/live',(req,res)=>{setHealthHeaders(res);res.json({status:'ok'});});
-async function readiness(req,res){setHealthHeaders(res);try{await pool.query('SELECT 1');return res.json({status:'ok',database:'connected'});}catch(e){console.error('Readiness check failed:',e.message);return res.status(503).json({status:'error',database:'disconnected'});}}
+async function readiness(req,res){setHealthHeaders(res);try{await Promise.all([pool.query('SELECT 1'),checkUploadStorage()]);return res.json({status:'ok',database:'connected',storage:'ready'});}catch(e){console.error('Readiness check failed:',e.message);return res.status(503).json({status:'error',database:'unavailable_or_storage_unmounted',storage:'unavailable'});}}
 app.get('/health/ready',readiness);
 app.get('/health',readiness);
 app.use('/api/auth',authRoutes);app.use('/api/profile',profileRoutes);app.use('/api/admin',adminRoutes);app.use('/api/lead-partner',leadPartnerRoutes);app.use('/api/lead-reports',leadReportRoutes);app.use('/api/lead-partner/faqs',faqRoutes);app.use('/api/faqs',publicFaqRoutes);app.use('/api/upcoming-features',upcomingFeatureRoutes);app.use('/api/contact',contactRoutes);app.use('/api/homepage-media',homepageMediaRoutes);app.use('/api/admin/faqs',adminFaqRoutes);app.use('/api/leads',leadRoutes);app.use('/api/payments',paymentRoutes);app.use('/api/payment-receiving-details',paymentReceivingDetailsRoutes);app.use('/api/coupons',couponRoutes);app.use('/api/membership-plans',membershipPlanRoutes);app.use('/api/admin/commercial',adminCommercialRoutes);app.use('/api/wallet',walletRoutes);app.use('/api/investments',investmentRoutes);app.use('/api/investor/payout-account',investorPayoutAccountRoutes);app.use('/api/industries',industryRoutes);app.use('/api/services',serviceRoutes);app.use('/api/subservices',subserviceRoutes);app.use('/api/states',stateRoutes);app.use('/api/cities',cityRoutes);app.use('/api/subcities',subcityRoutes);app.use('/api/pincodes',pincodeRoutes);
@@ -95,6 +95,7 @@ async function shutdown(signal){
 }
 async function start(){
   try{
+    await ensureUploadStorage();
     if(runMigrationsOnStartup)await runMigrations();
     else console.log('Database migrations skipped on web startup (RUN_MIGRATIONS_ON_STARTUP=false).');
     server=app.listen(PORT,'0.0.0.0',()=>{
