@@ -18,11 +18,10 @@ const offerMeta = (plan) => {
   const price = Number(plan.price || 0)
   const savings = Math.max(0, Number(plan.offer_savings ?? (base - price)) || 0)
   const discount = Math.max(0, Number(plan.offer_discount_percent || (base > 0 ? savings / base * 100 : 0)) || 0)
-  const validity = plan.offer_new_customer_days
-    ? `New customer offer · first ${plan.offer_new_customer_days} day${Number(plan.offer_new_customer_days) === 1 ? '' : 's'} after registration`
-    : plan.offer_valid_until
-      ? `Offer ends ${offerDateLabel(plan.offer_valid_until)}`
-      : null
+  const validityParts = []
+  if (plan.offer_new_customer_days) validityParts.push(`First membership within ${plan.offer_new_customer_days} day${Number(plan.offer_new_customer_days) === 1 ? '' : 's'} of registration`)
+  if (plan.offer_valid_until) validityParts.push(`Offer ends ${offerDateLabel(plan.offer_valid_until)}`)
+  const validity = validityParts.join(' · ') || null
   return { base, price, savings, discount, label: plan.offer_label || plan.pricing_rule_name || 'Special offer', validity }
 }
 const daysLeft = (value) => value ? Math.max(0, Math.ceil((new Date(value).getTime() - Date.now()) / 86400000)) : null
