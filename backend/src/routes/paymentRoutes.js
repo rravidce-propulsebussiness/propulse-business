@@ -15,6 +15,7 @@ router.get('/membership/history', paymentController.getUserMembershipPayments);
 router.get('/memberships/customers', requireAdmin, paymentController.getMembershipCustomers);
 router.get('/memberships/customers/:userId', requireAdmin, paymentController.getMembershipCustomerDetails);
 router.get('/', requireAdmin, paymentController.getPayments);
+router.get('/:id/proof', requireAdmin, paymentController.getPaymentProof);
 router.patch('/:id/status', requireAdmin, adminPaymentWriteLimit, paymentController.updatePaymentStatus);
 router.patch('/memberships/:id', requireAdmin, adminPaymentWriteLimit, paymentController.updateMembership);
 module.exports = router;
