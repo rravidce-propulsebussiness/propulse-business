@@ -21,8 +21,8 @@ CREATE TABLE IF NOT EXISTS lead_entitlement_registration_rules (
   updated_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  CHECK (shared_quantity > 0 OR premium_quantity > 0),
-  CHECK (allow_single OR allow_shared OR allow_auto_release)
+  CHECK (NOT is_active OR shared_quantity > 0 OR premium_quantity > 0),
+  CHECK (NOT is_active OR allow_single OR allow_shared OR allow_auto_release)
 );
 
 CREATE INDEX IF NOT EXISTS idx_lead_entitlement_registration_rules_active
