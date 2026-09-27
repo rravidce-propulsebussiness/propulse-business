@@ -29,7 +29,7 @@ function Login() {
 
     const destination = location.state?.from?.pathname || '/leads'
     navigate(destination, { replace: true })
-  }, [location.state, navigate, remember])
+  }, [location.state, navigate])
 
   async function submit(e) {
     e.preventDefault()
@@ -60,7 +60,7 @@ function Login() {
     } finally {
       setGoogleLoading(false)
     }
-  }, [finishLogin])
+  }, [finishLogin, remember])
 
   return (
     <div className="auth-page login-premium">
