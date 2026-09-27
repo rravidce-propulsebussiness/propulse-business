@@ -111,23 +111,38 @@ async function createPlanBundle(d) {
       const rawOverride = p.customPrice === true ? p.price : '';
       const priceOverride = rawOverride !== '' && Number.isFinite(Number(rawOverride)) ? Number(rawOverride) : '';
       const finalPrice = priceOverride === '' ? calculatePrice(base, months, discount) : Math.max(0, priceOverride);
-      const result = await client.query(`
-        INSERT INTO membership_plans(name,plan_group,plan_type,description,price,duration_days,billing_period,billing_months,monthly_base_price,discount_percent,benefits,lead_entitlements,add_ons,lead_rollover_enabled,lead_expiry_days,is_active)
-        VALUES($1,$2,'pro',$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,TRUE)
-        ON CONFLICT (name) DO UPDATE SET
-          plan_group=EXCLUDED.plan_group, plan_type='pro', description=EXCLUDED.description,
-          price=EXCLUDED.price, duration_days=EXCLUDED.duration_days, billing_period=EXCLUDED.billing_period,
-          billing_months=EXCLUDED.billing_months, monthly_base_price=EXCLUDED.monthly_base_price,
-          discount_percent=EXCLUDED.discount_percent, benefits=EXCLUDED.benefits,
-          lead_entitlements=EXCLUDED.lead_entitlements, add_ons=EXCLUDED.add_ons,
-          lead_rollover_enabled=EXCLUDED.lead_rollover_enabled, lead_expiry_days=EXCLUDED.lead_expiry_days,
-          is_active=TRUE, updated_at=CURRENT_TIMESTAMP
-        RETURNING *
-      `, [name, canonicalName, d.description || null, finalPrice, Math.max(1, Math.round(months * 30.4375)), label,
-          months, base, discount, JSON.stringify(safeJson(d.benefits)), JSON.stringify(entitlements), JSON.stringify(safeJson(d.addOns)),
-          d.leadRolloverEnabled !== false,
-          d.leadExpiryDays === undefined || d.leadExpiryDays === '' || d.leadExpiryDays === null ? null : Math.max(1, Math.round(toNumber(d.leadExpiryDays)))]);
-      rows.push(result.rows[0]);
+      const existing=(await client.query(`
+        SELECT id
+        FROM membership_plans
+        WHERE LOWER(TRIM(COALESCE(plan_group,'')))=$1
+          AND plan_type='pro'
+          AND billing_months=$2
+        ORDER BY id
+        LIMIT 1
+        FOR UPDATE
+      `,[groupKey,months])).rows[0];
+      const values=[name,canonicalName,d.description||null,finalPrice,Math.max(1,Math.round(months*30.4375)),label,months,base,discount,
+        JSON.stringify(safeJson(d.benefits)),JSON.stringify(entitlements),JSON.stringify(safeJson(d.addOns)),
+        d.leadRolloverEnabled!==false,
+        d.leadExpiryDays===undefined||d.leadExpiryDays===''||d.leadExpiryDays===null?null:Math.max(1,Math.round(toNumber(d.leadExpiryDays)))];
+      let row;
+      if(existing){
+        row=(await client.query(`
+          UPDATE membership_plans
+          SET name=$1,plan_group=$2,plan_type='pro',description=$3,price=$4,duration_days=$5,billing_period=$6,billing_months=$7,
+              monthly_base_price=$8,discount_percent=$9,benefits=$10,lead_entitlements=$11,add_ons=$12,
+              lead_rollover_enabled=$13,lead_expiry_days=$14,is_active=TRUE,updated_at=CURRENT_TIMESTAMP
+          WHERE id=$15
+          RETURNING *
+        `,[...values,existing.id])).rows[0];
+      }else{
+        row=(await client.query(`
+          INSERT INTO membership_plans(name,plan_group,plan_type,description,price,duration_days,billing_period,billing_months,monthly_base_price,discount_percent,benefits,lead_entitlements,add_ons,lead_rollover_enabled,lead_expiry_days,is_active)
+          VALUES($1,$2,'pro',$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,TRUE)
+          RETURNING *
+        `,values)).rows[0];
+      }
+      rows.push(row);
     }
     const activeIds=rows.map(row=>Number(row.id)).filter(Number.isInteger);
     await client.query(`
