@@ -19,6 +19,7 @@ assert(service.includes('checkUploadStorage()'),'System Health must check privat
 assert(service.includes('workerHeartbeat.latestHeartbeat()'),'System Health must inspect the background worker heartbeat');
 assert(service.includes('schema_migrations'),'System Health must report migration state');
 assert(service.includes('lead_partner_sheet_connections')&&service.includes('admin_google_sheet_connections'),'System Health must report both sheet-sync systems');
+assert(service.includes('leadPartnerSheets.failing>0')&&service.includes('adminSheets.failing>0'),'Row-level sheet failures must degrade overall system health');
 assert(service.includes("Boolean(String(process.env.UPLOAD_STORAGE_ROOT||'').trim())"),'System Health may report whether persistent storage is configured without returning its path');
 for(const secret of ['DB_PASSWORD','JWT_SECRET','RESEND_API_KEY','GOOGLE_CLIENT_SECRET'])assert(!service.includes('process.env.'+secret),'System Health must not read or expose '+secret);
 assert(layout.includes("{to:'/admin/system-health',label:'System Health'}"),'Admin System navigation must include System Health');
