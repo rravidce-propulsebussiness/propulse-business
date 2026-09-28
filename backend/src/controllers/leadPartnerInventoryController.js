@@ -35,14 +35,30 @@ async function sheetConnections(req, res) {
   try { return res.json({ connections: await service.getSheetConnections({ userId: req.user.id }) }); }
   catch (error) { console.error('Lead Partner sheet connections failed:', error.message); return sendError(res,500,error,'Failed to load Google Sheet connections'); }
 }
+async function previewGoogleSheet(req,res){
+  try{
+    const url=String(req.body?.url||'').trim();
+    if(!url)return res.status(400).json({error:'Google Sheets URL is required'});
+    return res.json(await service.previewGoogleSheet({
+      userId:req.user.id,
+      url,
+      defaultIndustryId:req.body?.defaultIndustryId,
+      columnMappings:req.body?.columnMappings||{}
+    }));
+  }catch(error){
+    const status=['SHEET_MAPPING_COLUMN_MISSING','SHEET_MAPPING_CONFLICT'].includes(error.code)?400:importStatus(error);
+    if(status===500)console.error('Lead Partner Google Sheet preview failed:',error.message);
+    return sendError(res,status,error,'Failed to analyze Google Sheet',{code:error.code});
+  }
+}
 async function connectGoogleSheet(req, res) {
   try {
     const url = String(req.body?.url || '').trim();
     if (!url) return res.status(400).json({ error: 'Google Sheets URL is required' });
-    const result = await service.connectGoogleSheet({ userId: req.user.id, url, defaultIndustryId:req.body?.defaultIndustryId });
+    const result = await service.connectGoogleSheet({ userId: req.user.id, url, defaultIndustryId:req.body?.defaultIndustryId, columnMappings:req.body?.columnMappings||{}, previewToken:req.body?.previewToken });
     return res.status(201).json({ ...result.import, connection: result.connection });
   } catch (error) {
-    const status=importStatus(error); if(status===500)console.error('Lead Partner Google Sheet connect failed:', error.message);
+    const status=['SHEET_PREVIEW_REQUIRED','SHEET_PREVIEW_EXPIRED','SHEET_CHANGED_SINCE_PREVIEW','SHEET_PREVIEW_HAS_INVALID_ROWS','SHEET_MAPPING_COLUMN_MISSING','SHEET_MAPPING_CONFLICT'].includes(error.code)?400:importStatus(error); if(status===500)console.error('Lead Partner Google Sheet connect failed:', error.message);
     return sendError(res,status,error,'Failed to connect Google Sheet',{code:error.code});
   }
 }
@@ -73,4 +89,4 @@ async function disableSheetConnection(req, res) {
     return sendError(res,status,error,'Failed to disconnect Google Sheet',{code:error.code});
   }
 }
-module.exports = { inventory, importGoogleSheet, importCsv, sheetConnections, connectGoogleSheet, syncGoogleSheet, updateSheetDefaultIndustry, disableSheetConnection };
+module.exports = { inventory, importGoogleSheet, importCsv, sheetConnections, previewGoogleSheet, connectGoogleSheet, syncGoogleSheet, updateSheetDefaultIndustry, disableSheetConnection };

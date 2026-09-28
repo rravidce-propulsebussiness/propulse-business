@@ -1,0 +1,55 @@
+const fs=require('fs');
+const path=require('path');
+const root=path.join(__dirname,'..');
+const read=relative=>fs.readFileSync(path.join(root,relative),'utf8');
+const assert=(condition,message)=>{if(!condition)throw new Error(message)};
+const previewModule=require('../src/services/sheetImportPreviewService');
+
+const migration=read('src/database/migrations/20260928_google_sheet_preview_mapping.sql');
+const preview=read('src/services/sheetImportPreviewService.js');
+const admin=read('src/services/adminGoogleSheetSyncService.js');
+const partnerBase=read('src/services/leadPartnerInventoryService.js');
+const partnerCompat=read('src/services/leadPartnerInventoryCompatService.js');
+const leadController=read('src/controllers/leadController.js');
+const partnerController=read('src/controllers/leadPartnerInventoryController.js');
+const partnerRoutes=read('src/routes/leadPartnerRoutes.js');
+const adminUi=read('../frontend/src/admin/pages/GoogleSheetAutoSync.jsx');
+const partnerUi=read('../frontend/src/pages/LeadPartnerInventory.jsx');
+const previewUi=read('../frontend/src/components/SheetImportPreview.jsx');
+
+assert(migration.includes('google_sheet_import_previews'),'Google Sheet preview token table is missing');
+assert(migration.includes('column_mappings JSONB'),'Connection-level column mappings are missing');
+assert(migration.includes('last_preview_summary'),'Connection preview summary persistence is missing');
+assert(preview.includes('PREVIEW_TTL_MINUTES=30'),'Preview tokens must expire quickly');
+assert(preview.includes("actor_type")&&preview.includes("actor_user_id"),'Preview tokens must be bound to the authenticated actor');
+assert(preview.includes('SHEET_CHANGED_SINCE_PREVIEW'),'Activation must reject a changed sheet or changed import settings');
+assert(preview.includes('SHEET_PREVIEW_HAS_INVALID_ROWS'),'Activation must reject previews containing invalid rows');
+assert(preview.includes('consumePreview'),'Preview tokens must be consumed after successful activation');
+assert(preview.includes('fingerprint:crypto.createHash'),'Preview must fingerprint the raw sheet');
+assert(preview.includes('effectiveMappings'),'Column mapping must be normalized and deterministic');
+assert(admin.includes('async function previewGoogleSheet'),'Admin preview validator is missing');
+assert(admin.includes("sheetPreview.assertPreview"),'Admin connection activation must require a valid preview');
+assert(admin.includes("columnMappings:connection.column_mappings||{}"),'Admin scheduled sync must reuse the approved mapping');
+assert(partnerBase.includes('async function previewCsv'),'Lead Partner read-only row validation is missing');
+assert(partnerCompat.includes('async function previewGoogleSheet'),'Lead Partner Google Sheet preview is missing');
+assert(partnerCompat.includes("sheetPreview.assertPreview"),'Lead Partner activation must require a valid preview');
+assert(partnerCompat.includes("columnMappings:connection.column_mappings||{}"),'Lead Partner scheduled sync must reuse the approved mapping');
+assert(leadController.includes('columnMappings:req.body.columnMappings||{}')&&leadController.includes('previewToken:req.body.previewToken'),'Admin controller must pass mapping and preview token');
+assert(partnerController.includes('previewGoogleSheet')&&partnerController.includes('previewToken:req.body?.previewToken'),'Lead Partner controller preview/activation contract is missing');
+assert(partnerRoutes.includes("'/inventory/sheets/preview'"),'Lead Partner preview route is missing');
+assert(adminUi.includes('Analyze Sheet')&&adminUi.includes('Activate Sync'),'Admin UI must use Analyze → Activate');
+assert(partnerUi.includes('Analyze Sheet')&&partnerUi.includes('Activate Sync'),'Lead Partner UI must use Analyze → Activate');
+assert(previewUi.includes('VALIDATION PREVIEW')&&previewUi.includes('COLUMN MAPPING')&&previewUi.includes('ROW DIAGNOSTICS'),'Shared preview UI must expose validation, mapping and diagnostics');
+assert(previewUi.includes("summary.invalid"),'Shared preview UI must expose invalid-row count');
+assert(previewUi.includes("next[id]=value||null"),'Not mapped must be represented explicitly instead of being auto-guessed again');
+
+const sample='Industry,Customer Phone,Custom Source\nInterior Design & Home Interiors,9876543210,Referral';
+const guessed=previewModule.analyzeCsv(sample,{scope:'admin'});
+assert(guessed.effectiveMappings.industry==='Industry','Known headers must be auto-mapped on first analysis');
+const suppressed=previewModule.analyzeCsv(sample,{scope:'admin',columnMappings:{industry:null,customerPhone:'Customer Phone'}});
+assert(Object.prototype.hasOwnProperty.call(suppressed.effectiveMappings,'industry')&&suppressed.effectiveMappings.industry===null,'Explicit Not mapped choice must survive analysis');
+assert(suppressed.mappedCsv.split('\n')[0].includes('Unmapped Industry'),'Explicitly suppressed aliases must be renamed so importers cannot auto-detect them');
+const remapped=previewModule.analyzeCsv(sample,{scope:'admin',columnMappings:{source:'Custom Source'}});
+assert(remapped.mappedCsv.split('\n')[0].includes('Source'),'Explicit custom-column mapping must produce the canonical importer header');
+
+console.log('Google Sheet preview and mapping regression test passed.');

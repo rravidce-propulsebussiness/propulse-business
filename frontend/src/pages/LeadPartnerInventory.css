@@ -485,3 +485,5 @@
   .lp-sheet-connect-form button{grid-column:auto}
   .lp-sheets-workspace>.partner-sheets-panel{margin:0 10px 10px!important}
 }
+
+.lp-sheet-preview-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.lp-sheet-preview-actions button{flex:1 1 150px}.lp-sheet-preview-actions button.secondary{background:#fff;color:#24527f;border:1px solid #cfdce8}@media(max-width:640px){.lp-sheet-preview-actions{flex-direction:column;align-items:stretch}.lp-sheet-preview-actions button{width:100%}}

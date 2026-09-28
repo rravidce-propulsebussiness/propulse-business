@@ -279,6 +279,97 @@ async function buildLead(row, cat, locationCache=null) {
     partnerProOnePrice:partnerProOnePrice(row),
   };
 }
+async function previewPinReadOnly(row,cat){
+  const value=clean(row.pincode).replace(/\D/g,'');
+  if(!/^\d{6}$/.test(value))throw new Error('Pincode is required and must be a valid 6-digit Indian PIN');
+  const pin=(await pool.query(
+    `SELECT p.pincode,p.state_id,p.state_name,p.district_name,
+            COUNT(DISTINCT cp.city_id) FILTER(WHERE cp.is_active=TRUE)::int AS mapped_cities
+       FROM india_pincodes p
+       LEFT JOIN city_pincodes cp ON cp.pincode=p.pincode
+      WHERE p.pincode=$1 AND p.is_active=TRUE
+      GROUP BY p.pincode,p.state_id,p.state_name,p.district_name`,
+    [value]
+  )).rows[0];
+  if(!pin)return{warning:`PIN ${value} will be verified against India Post during activation`};
+  const state=cat.states.find(x=>Number(x.id)===Number(pin.state_id)||norm(x.name)===norm(pin.state_name));
+  if(!state)throw new Error(`State for pincode ${value} is not present in the catalog`);
+  if(row.state&&norm(row.state)!==norm(state.name))throw new Error(`Pincode ${value} belongs to ${state.name}, not ${row.state}`);
+  if(row.city){
+    const city=cat.cities.find(x=>Number(x.state_id)===Number(state.id)&&norm(x.name)===norm(row.city));
+    if(!city)return{warning:`City "${row.city}" is not in the ${state.name} catalog yet; activation will verify and create it when safe`};
+    const mapped=(await pool.query('SELECT 1 FROM city_pincodes WHERE pincode=$1 AND city_id=$2 AND is_active=TRUE LIMIT 1',[value,city.id])).rowCount>0;
+    if(!mapped)return{warning:`PIN ${value} is not currently mapped to ${city.name}; activation will verify the relationship`};
+    return{};
+  }
+  if(Number(pin.mapped_cities||0)===0)return{warning:`PIN ${value} has no City mapping yet; activation will resolve it`};
+  if(Number(pin.mapped_cities||0)>1)return{warning:`PIN ${value} maps to multiple Cities; add City to the sheet for deterministic import`};
+  return{};
+}
+async function previewCsv({userId,csv}){
+  const rows=parseCsv(csv);if(!rows.length)throw new Error('CSV contains no data rows');
+  const cat=await catalogs();
+  const partner=(await pool.query('SELECT id,status FROM lead_partners WHERE user_id=$1 LIMIT 1',[userId])).rows[0];
+  if(!partner)throw new Error('Lead Partner profile not found');
+  if(partner.status!=='active')throw new Error('Lead Partner account is not active');
+
+  const phones=[...new Set(rows.map(row=>clean(row.customerPhone).replace(/\D/g,'')).filter(value=>value.length>=7))];
+  const emails=[...new Set(rows.map(row=>clean(row.customerEmail).toLowerCase()).filter(Boolean))];
+  const existing=(phones.length||emails.length)?(await pool.query(
+    `SELECT regexp_replace(COALESCE(customer_phone,''),'[^0-9]','','g') AS phone_key,
+            LOWER(TRIM(COALESCE(customer_email,''))) AS email_key
+       FROM leads
+      WHERE regexp_replace(COALESCE(customer_phone,''),'[^0-9]','','g')=ANY($1::text[])
+         OR LOWER(TRIM(COALESCE(customer_email,'')))=ANY($2::text[])`,
+    [phones,emails]
+  )).rows:[];
+  const existingPhones=new Set(existing.map(row=>row.phone_key).filter(Boolean));
+  const existingEmails=new Set(existing.map(row=>row.email_key).filter(Boolean));
+
+  const seen=new Set(),previewRows=[];
+  let valid=0,warning=0,invalid=0,duplicates=0;
+  for(let index=0;index<rows.length;index+=1){
+    const row=rows[index];
+    const phone=clean(row.customerPhone).replace(/\D/g,'');
+    const email=clean(row.customerEmail).toLowerCase();
+    const rowKey=clean(row.id)||phone||email||`Row ${index+2}`;
+    const duplicateKey=clean(row.id)||phone||email||`${norm(row.customerName)}:${norm(row.requirement)}`;
+    if(duplicateKey&&seen.has(duplicateKey)){
+      duplicates+=1;warning+=1;
+      if(previewRows.length<60)previewRows.push({row:index+2,status:'warning',action:'skip',key:rowKey,messages:['Duplicate row in this sheet; the later copy will be skipped']});
+      continue;
+    }
+    if(duplicateKey)seen.add(duplicateKey);
+    const messages=[];
+    try{
+      resolveClassification(row,cat);
+      const capacityRaw=clean(row.buyerCapacity);const capacity=capacityRaw===''?undefined:Number(capacityRaw);
+      if(capacityRaw!==''&&(!Number.isFinite(capacity)||capacity<1||capacity>3))throw new Error('Buyer Capacity must be between 1 and 3');
+      parseAccessStrategy(row.accessStrategy);
+      const releaseTwo=clean(row.releaseToTwoAfterHours)===''?undefined:Number(row.releaseToTwoAfterHours);
+      const releaseThree=clean(row.releaseToThreeAfterHours)===''?undefined:Number(row.releaseToThreeAfterHours);
+      if(releaseTwo!==undefined&&(!Number.isFinite(releaseTwo)||releaseTwo<0))throw new Error('Release to 2 Hours must be zero or greater');
+      if(releaseThree!==undefined&&(!Number.isFinite(releaseThree)||releaseThree<0))throw new Error('Release to 3 Hours must be zero or greater');
+      if(releaseTwo!==undefined&&releaseThree!==undefined&&releaseThree<releaseTwo)throw new Error('Release to 3 Hours must be after Release to 2 Hours');
+      partnerProOnePrice(row);
+      const pinState=await previewPinReadOnly(row,cat);
+      if(pinState.warning)messages.push(pinState.warning);
+      if(!phone&&!email)messages.push('Customer phone and email are both blank');
+      if((phone&&existingPhones.has(phone))||(email&&existingEmails.has(email)))messages.push('A lead with this phone/email already exists; activation may count it as a duplicate');
+      const status=messages.length?'warning':'valid';
+      if(status==='warning')warning+=1;else valid+=1;
+      if(previewRows.length<60)previewRows.push({row:index+2,status,action:'create',key:rowKey,messages});
+    }catch(error){
+      invalid+=1;
+      if(previewRows.length<60)previewRows.push({row:index+2,status:'invalid',action:'create',key:rowKey,messages:[String(error.message||'Row is invalid')]});
+    }
+  }
+  return{
+    summary:{total:rows.length,valid,warning,invalid,duplicates,creates:Math.max(0,rows.length-duplicates)},
+    rows:previewRows
+  };
+}
+
 function failureCategory(message){
   const text=String(message||'').toLowerCase();
   if(text.includes('pincode')||text.includes('pin ')||text.includes('postal'))return'PIN / location';
@@ -472,4 +563,4 @@ async function listInventory({ userId, status = 'all', search = '', industryId =
   };
 }
 
-module.exports = { importCsv, importGoogleSheet, getSheetConnections, connectGoogleSheet, syncGoogleSheet, disableSheetConnection, listInventory, summarizeFailures };
+module.exports = { importCsv, previewCsv, importGoogleSheet, getSheetConnections, connectGoogleSheet, syncGoogleSheet, disableSheetConnection, listInventory, summarizeFailures };

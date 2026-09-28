@@ -17,7 +17,7 @@ assert(routes.includes("router.post('/google-sheet/sync',requireAdmin,leadContro
 assert(controller.includes('adminGoogleSheetSyncService.syncGoogleSheet'),'Google Sheet controller must delegate sync work to the backend service');
 assert(service.includes('fetchGoogleSheetCsv(url)'),'Backend sync must fetch the Google Sheet server-side');
 assert(service.includes('ANY($1::text[])')&&service.includes('ANY($2::text[])'),'Backend sync must batch-match existing leads instead of downloading all leads');
-assert(service.includes('crypto.createHash'),'Backend sync must fingerprint normalized sheet content');
+assert(service.includes('sheetPreview.analyzeCsv'),'Backend sync must use the shared raw-sheet fingerprint and approved column mapping path');
 assert(routes.includes("router.get('/google-sheet/connections',requireAdmin,leadController.listGoogleSheetConnections)"),'Admin sheet connections must be server-backed');
 assert(routes.includes("router.post('/google-sheet/connections/:id/sync',requireAdmin,leadController.syncGoogleSheetConnection)"),'Stored Admin sheets must support manual backend sync');
 assert(service.includes('admin_google_sheet_connections'),'Admin sheet sync service must persist connections in PostgreSQL');
