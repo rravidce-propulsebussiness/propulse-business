@@ -87,6 +87,7 @@ app.use('/api/admin/lead-partner-payouts/direct',largeJsonFor('POST'));
 app.use('/api/admin/lead-partner-payouts/:payoutId',largeJsonFor('PATCH'));
 app.use('/api/admin/homepage-media',largeJsonFor('POST'));
 app.use(express.json({limit:DEFAULT_JSON_BYTES}));
+app.use('/api',(req,res,next)=>{res.setHeader('Cache-Control','no-store, private');res.setHeader('Pragma','no-cache');res.setHeader('Expires','0');next();});
 app.use('/api',csrfProtection);
 const apiRateLimit=rateLimit({windowMs:15*60*1000,max:600,scope:'global',shared:true,sharedChunkSize:10});
 app.use('/api',apiRateLimit);
@@ -143,7 +144,7 @@ app.use('/api/auth',authRoutes);app.use('/api/profile',profileRoutes);app.use('/
 app.use((req,res)=>res.status(404).json({error:'Not found'}));
 app.use((err,req,res,next)=>{if(err.message==='CORS origin not allowed')return res.status(403).json({error:'Origin not allowed'});if(err.type==='entity.parse.failed')return res.status(400).json({error:'Invalid JSON body'});if(err.type==='entity.too.large')return res.status(413).json({error:'Request body is too large'});console.error(`[${req.requestId||'no-request-id'}] Unhandled server error:`,err.stack||err);return res.status(500).json({error:'Internal server error',requestId:req.requestId||undefined});});
 let server;let stopLeadPartnerSheetAutoSync=()=>{};let stopAdminGoogleSheetAutoSync=()=>{};let shuttingDown=false;
-async function shutdown(signal){
+async function shutdown(signal,exitCode=0){
   if(shuttingDown)return;
   shuttingDown=true;
   console.log(`${signal} received; shutting down gracefully.`);
@@ -161,7 +162,7 @@ async function shutdown(signal){
     }
     await pool.end();
     clearTimeout(forceTimer);
-    process.exit(0);
+    process.exit(exitCode);
   }catch(error){
     clearTimeout(forceTimer);
     console.error('Graceful shutdown failed:',error?.stack||error);
@@ -187,6 +188,8 @@ async function start(){
     server.maxHeadersCount=100;
     process.once('SIGTERM',()=>shutdown('SIGTERM'));
     process.once('SIGINT',()=>shutdown('SIGINT'));
+    process.once('uncaughtException',error=>{console.error('Uncaught exception:',error?.stack||error);void shutdown('uncaughtException',1);});
+    process.once('unhandledRejection',reason=>{console.error('Unhandled rejection:',reason?.stack||reason);void shutdown('unhandledRejection',1);});
   }catch(error){
     console.error('Backend startup failed:');
     console.error(error?.stack||error||'Unknown error');

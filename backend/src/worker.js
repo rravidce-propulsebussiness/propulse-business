@@ -11,7 +11,7 @@ let stopAdminAutoSync = () => {};
 let stopHeartbeat = async () => {};
 let shuttingDown = false;
 
-async function shutdown(signal) {
+async function shutdown(signal, exitCode = 0) {
   if (shuttingDown) return;
   shuttingDown = true;
   console.log(`${signal} received; stopping background worker.`);
@@ -27,7 +27,7 @@ async function shutdown(signal) {
     await stopHeartbeat();
     await pool.end();
     clearTimeout(forceTimer);
-    process.exit(0);
+    process.exit(exitCode);
   } catch (error) {
     clearTimeout(forceTimer);
     console.error('Background worker shutdown failed:', error?.stack || error);
@@ -50,6 +50,8 @@ async function start() {
   stopAdminAutoSync = startAdminGoogleSheetAutoSync({ unref: false, runImmediately: true });
   process.once('SIGTERM', () => shutdown('SIGTERM'));
   process.once('SIGINT', () => shutdown('SIGINT'));
+  process.once('uncaughtException', error => { console.error('Uncaught exception:', error?.stack || error); void shutdown('uncaughtException', 1); });
+  process.once('unhandledRejection', reason => { console.error('Unhandled rejection:', reason?.stack || reason); void shutdown('unhandledRejection', 1); });
   console.log('Background worker running.');
 }
 
