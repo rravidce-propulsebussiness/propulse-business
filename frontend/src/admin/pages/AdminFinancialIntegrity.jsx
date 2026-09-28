@@ -45,7 +45,7 @@ export default function AdminFinancialIntegrity(){
     finally{setLoading(false)}
   },[])
 
-  useEffect(()=>{load(false)},[load])
+  useEffect(()=>{let active=true;queueMicrotask(()=>{if(active)load(false)});return()=>{active=false}},[load])
 
   const groups=useMemo(()=>{
     const checks=data?.checks||[]
