@@ -3,6 +3,7 @@ const pool=require('../config/database');
 const TYPES=new Set(['single_select','multi_select','text','number','area','budget','timeline','boolean','location']);
 const VIS=new Set(['marketplace','protected','internal']);
 const LEAD_FIELDS=new Set(['','requirement','property_type','budget']);
+const FLOW_TYPES=new Set(['requirement','estimator']);
 const SECRET=process.env.FLOW_TOKEN_SECRET||process.env.JWT_SECRET||'development-flow-secret-only';
 if(process.env.NODE_ENV==='production'&&!process.env.FLOW_TOKEN_SECRET&&!process.env.JWT_SECRET)throw new Error('FLOW_TOKEN_SECRET or JWT_SECRET must be configured in production');
 const fail=(message,code,status=400)=>{throw Object.assign(new Error(message),{code,status})};
@@ -43,8 +44,8 @@ async function getAdminDefinition(flowId){
  return{...definition,versions,editingVersion:editingVersion?{...editingVersion,questions:await questions(pool,editingVersion.id)}:null};
 }
 async function createDefinition(data){
- const client=await pool.connect();try{await client.query('BEGIN');const scope=await validateScope(client,data),key=flowKey(data.key),name=String(data.name||'').trim();if(!name)fail('Flow name is required','INVALID_FLOW_NAME');
- const d=(await client.query(`INSERT INTO customer_flow_definitions(key,name,flow_type,industry_id,service_id,subservice_id,created_by,updated_by) VALUES($1,$2,'requirement',$3,$4,$5,$6,$6) RETURNING id`,[key,name.slice(0,160),scope.industryId,scope.serviceId,scope.subserviceId,data.createdBy||null])).rows[0];
+ const client=await pool.connect();try{await client.query('BEGIN');const scope=await validateScope(client,data),key=flowKey(data.key),name=String(data.name||'').trim(),flowType=String(data.flowType||'requirement').trim().toLowerCase();if(!name)fail('Flow name is required','INVALID_FLOW_NAME');if(!FLOW_TYPES.has(flowType))fail('Flow type must be requirement or estimator','INVALID_FLOW_TYPE');
+ const d=(await client.query(`INSERT INTO customer_flow_definitions(key,name,flow_type,industry_id,service_id,subservice_id,created_by,updated_by) VALUES($1,$2,$3,$4,$5,$6,$7,$7) RETURNING id`,[key,name.slice(0,160),flowType,scope.industryId,scope.serviceId,scope.subserviceId,data.createdBy||null])).rows[0];
  await client.query(`INSERT INTO customer_flow_versions(definition_id,version_no,status,config,created_by) VALUES($1,1,'draft','{}'::jsonb,$2)`,[d.id,data.createdBy||null]);await client.query('COMMIT');return getAdminDefinition(d.id);
  }catch(e){await client.query('ROLLBACK').catch(()=>{});if(e.code==='23505')fail('A customer flow with this key already exists','FLOW_KEY_EXISTS',409);throw e}finally{client.release()}
 }
@@ -53,7 +54,17 @@ async function saveDraft(flowId,data,userId){
  const scope=await validateScope(client,{industryId:data.industryId??d.industry_id,serviceId:data.serviceId??d.service_id,subserviceId:data.subserviceId??d.subservice_id}),name=String(data.name??d.name).trim();if(!name)fail('Flow name is required','INVALID_FLOW_NAME');
  await client.query('UPDATE customer_flow_definitions SET name=$1,industry_id=$2,service_id=$3,subservice_id=$4,is_active=$5,updated_by=$6,updated_at=CURRENT_TIMESTAMP WHERE id=$7',[name.slice(0,160),scope.industryId,scope.serviceId,scope.subserviceId,data.isActive!==false,userId||null,d.id]);
  let draft=(await client.query(`SELECT * FROM customer_flow_versions WHERE definition_id=$1 AND status='draft' ORDER BY version_no DESC LIMIT 1 FOR UPDATE`,[d.id])).rows[0];
- if(!draft){const next=Number((await client.query('SELECT COALESCE(MAX(version_no),0)+1 n FROM customer_flow_versions WHERE definition_id=$1',[d.id])).rows[0].n);draft=(await client.query(`INSERT INTO customer_flow_versions(definition_id,version_no,status,config,created_by) VALUES($1,$2,'draft',$3::jsonb,$4) RETURNING *`,[d.id,next,JSON.stringify(data.config||{}),userId||null])).rows[0]}else await client.query('UPDATE customer_flow_versions SET config=$1::jsonb,updated_at=CURRENT_TIMESTAMP WHERE id=$2',[JSON.stringify(data.config||draft.config||{}),draft.id]);
+ if(!draft){
+   const next=Number((await client.query('SELECT COALESCE(MAX(version_no),0)+1 n FROM customer_flow_versions WHERE definition_id=$1',[d.id])).rows[0].n);
+   const source=(await client.query("SELECT id,config FROM customer_flow_versions WHERE definition_id=$1 AND status='published' ORDER BY version_no DESC LIMIT 1",[d.id])).rows[0]||null;
+   draft=(await client.query(`INSERT INTO customer_flow_versions(definition_id,version_no,status,config,created_by) VALUES($1,$2,'draft',$3::jsonb,$4) RETURNING *`,[d.id,next,JSON.stringify(data.config||source?.config||{}),userId||null])).rows[0];
+   if(d.flow_type==='estimator'&&source){
+     await client.query(`INSERT INTO estimator_rate_items(version_id,rate_key,label,calculation_type,unit_question_key,amount_min,amount_max,show_when,display_order,metadata,is_active)
+       SELECT $1,rate_key,label,calculation_type,unit_question_key,amount_min,amount_max,show_when,display_order,metadata,is_active FROM estimator_rate_items WHERE version_id=$2`,[draft.id,source.id]);
+     await client.query(`INSERT INTO estimator_adjustments(version_id,adjustment_key,label,adjustment_type,value_min,value_max,city_id,show_when,display_order,metadata,is_active)
+       SELECT $1,adjustment_key,label,adjustment_type,value_min,value_max,city_id,show_when,display_order,metadata,is_active FROM estimator_adjustments WHERE version_id=$2`,[draft.id,source.id]);
+   }
+ }else await client.query('UPDATE customer_flow_versions SET config=$1::jsonb,updated_at=CURRENT_TIMESTAMP WHERE id=$2',[JSON.stringify(data.config||draft.config||{}),draft.id]);
  if(!Array.isArray(data.questions)||!data.questions.length)fail('At least one question is required','INVALID_QUESTION');const qs=data.questions.map(cleanQuestion),keys=new Set(qs.map(q=>q.questionKey));if(keys.size!==qs.length)fail('Question keys must be unique','INVALID_QUESTION');
  for(const q of qs){const dep=String(q.showWhen?.questionKey||'').trim();if(dep&&(!keys.has(dep)||dep===q.questionKey))fail(`Question "${q.label}" has an invalid dependency`,'INVALID_DEPENDENCY')}
  await client.query('DELETE FROM customer_flow_questions WHERE version_id=$1',[draft.id]);
@@ -62,8 +73,8 @@ async function saveDraft(flowId,data,userId){
  }catch(e){await client.query('ROLLBACK').catch(()=>{});throw e}finally{client.release()}
 }
 async function publish(flowId,userId){
- const client=await pool.connect();try{await client.query('BEGIN');const d=(await client.query('SELECT id,is_active FROM customer_flow_definitions WHERE id=$1 FOR UPDATE',[id(flowId)])).rows[0];if(!d)fail('Customer flow not found','FLOW_NOT_FOUND',404);if(!d.is_active)fail('Activate the flow before publishing it','FLOW_INACTIVE');
- const v=(await client.query(`SELECT * FROM customer_flow_versions WHERE definition_id=$1 AND status='draft' ORDER BY version_no DESC LIMIT 1 FOR UPDATE`,[d.id])).rows[0];if(!v)fail('No draft is available to publish','NO_DRAFT');if(!(await client.query('SELECT 1 FROM customer_flow_questions WHERE version_id=$1 AND is_active=TRUE LIMIT 1',[v.id])).rows.length)fail('Add at least one active question before publishing','EMPTY_FLOW');
+ const client=await pool.connect();try{await client.query('BEGIN');const d=(await client.query('SELECT id,is_active,flow_type FROM customer_flow_definitions WHERE id=$1 FOR UPDATE',[id(flowId)])).rows[0];if(!d)fail('Customer flow not found','FLOW_NOT_FOUND',404);if(!d.is_active)fail('Activate the flow before publishing it','FLOW_INACTIVE');
+ const v=(await client.query(`SELECT * FROM customer_flow_versions WHERE definition_id=$1 AND status='draft' ORDER BY version_no DESC LIMIT 1 FOR UPDATE`,[d.id])).rows[0];if(!v)fail('No draft is available to publish','NO_DRAFT');if(!(await client.query('SELECT 1 FROM customer_flow_questions WHERE version_id=$1 AND is_active=TRUE LIMIT 1',[v.id])).rows.length)fail('Add at least one active question before publishing','EMPTY_FLOW');if(d.flow_type==='estimator'&&!(await client.query('SELECT 1 FROM estimator_rate_items WHERE version_id=$1 AND is_active=TRUE LIMIT 1',[v.id])).rows.length)fail('Configure at least one active estimator rate before publishing','ESTIMATOR_NOT_CONFIGURED');
  await client.query(`UPDATE customer_flow_versions SET status='retired',updated_at=CURRENT_TIMESTAMP WHERE definition_id=$1 AND status='published'`,[d.id]);await client.query(`UPDATE customer_flow_versions SET status='published',published_at=CURRENT_TIMESTAMP,published_by=$1,effective_from=COALESCE(effective_from,CURRENT_TIMESTAMP),updated_at=CURRENT_TIMESTAMP WHERE id=$2`,[userId||null,v.id]);await client.query('COMMIT');return getAdminDefinition(d.id);
  }catch(e){await client.query('ROLLBACK').catch(()=>{});throw e}finally{client.release()}
 }
