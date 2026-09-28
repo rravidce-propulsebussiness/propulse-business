@@ -8,6 +8,7 @@ const securityRiskService = require('../services/securityRiskService');
 const criticalActionAuditService = require('../services/criticalActionAuditService');
 const backgroundJobRegistryService = require('../services/backgroundJobRegistryService');
 const operationalMonitoringService = require('../services/operationalMonitoringService');
+const adminPerformanceService = require('../services/adminPerformanceService');
 
 async function getDashboardStats(req, res) {
   try { return res.json(await adminService.getDashboardStats()); }
@@ -47,6 +48,11 @@ async function getAuditTimeline(req,res){
 async function getBackgroundJobs(req,res){
   try{return res.json(await backgroundJobRegistryService.list({historyLimit:req.query?.historyLimit}))}
   catch(error){console.error('Get background jobs failed:',error);return res.status(500).json({error:'Failed to load background jobs'})}
+}
+
+async function getPerformance(req,res){
+  try{return res.json(await adminPerformanceService.getPerformanceOverview())}
+  catch(error){console.error('Get Admin performance center failed:',error);return res.status(500).json({error:'Failed to load database and API performance'})}
 }
 
 async function getOperationalEvents(req,res){
@@ -199,5 +205,5 @@ async function resetTestData(req,res){
   }
 }
 
-module.exports = { getDashboardStats, getSystemHealth, getFinancialIntegrity, getRiskCenter, reviewRiskEvent, getAuditTimeline, getBackgroundJobs, getOperationalEvents, reviewOperationalEvent, retryBackgroundJob, getUsers, getUser360, setUserMembershipPlan, createAdmin, setUserStatus, setUserRole, updateUserProfile, getCompanyProofs, verifyCompanyProof, rejectCompanyProof, getTestResetPreview, resetTestData };
+module.exports = { getDashboardStats, getSystemHealth, getPerformance, getFinancialIntegrity, getRiskCenter, reviewRiskEvent, getAuditTimeline, getBackgroundJobs, getOperationalEvents, reviewOperationalEvent, retryBackgroundJob, getUsers, getUser360, setUserMembershipPlan, createAdmin, setUserStatus, setUserRole, updateUserProfile, getCompanyProofs, verifyCompanyProof, rejectCompanyProof, getTestResetPreview, resetTestData };
 
