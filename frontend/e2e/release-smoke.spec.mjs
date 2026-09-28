@@ -30,7 +30,7 @@ test('business login survives reload and cannot access Admin APIs',async({page})
 
   await page.goto('/wallet')
   await expect(page.getByText('AVAILABLE BALANCE')).toBeVisible()
-  await expect(page.getByText('₹2,500.00')).toBeVisible()
+  await expect(page.locator('.wallet-summary-card.balance').getByText('₹2,500.00',{exact:true})).toBeVisible()
 
   const status=await page.evaluate(async()=>{
     const response=await fetch('/api/admin/system-health',{credentials:'include'})
