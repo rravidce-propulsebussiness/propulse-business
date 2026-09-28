@@ -120,7 +120,7 @@ async function login(req, res) {
   try {
     const { email, password } = req.body;
     if (!email?.trim() || !password) return res.status(400).json({ error: 'Email and password are required' });
-    return publicAuthResult(res, await authService.login({ email, password }), 200, { remember: req.body?.remember !== false });
+    return publicAuthResult(res, await authService.login({ email, password, source:req.ip||req.socket?.remoteAddress||null }), 200, { remember: req.body?.remember !== false });
   } catch (error) {
     if (error.code === 'INVALID_CREDENTIALS') return res.status(401).json({ error: error.message });
     console.error('Login failed:', error.message);

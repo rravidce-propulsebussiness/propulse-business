@@ -7,6 +7,7 @@ const path = require('path');
 const pool = require('../config/database');
 const { getMembershipAccess } = require('./membershipAccessService');
 const { companyProofRoot } = require('../config/uploadStorage');
+const securityRiskService = require('./securityRiskService');
 
 const JWT_SECRET = process.env.JWT_SECRET;
 if (process.env.NODE_ENV === 'production' && (!JWT_SECRET || JWT_SECRET.length < 32)) throw new Error('JWT_SECRET must be at least 32 characters in production');
@@ -263,11 +264,14 @@ async function saveCompanyProofDocuments(userId, documents = []) {
   }
 }
 
-async function login({ email, password }) {
+async function login({ email, password, source=null }) {
   const normalizedEmail = email.trim().toLowerCase();
   const result = await pool.query(`SELECT id,name,email,password_hash,role,auth_version FROM users WHERE LOWER(email)=$1 AND is_active=TRUE`, [normalizedEmail]);
   const user = result.rows[0];
-  if (!user || !(await bcrypt.compare(password, user.password_hash))) throw Object.assign(new Error('Invalid email or password'), { code: 'INVALID_CREDENTIALS' });
+  if (!user || !(await bcrypt.compare(password, user.password_hash))) {
+    await securityRiskService.recordFailedLogin({email:normalizedEmail,userId:user?.id||null,source}).catch(error=>console.error('Risk logging failed for invalid login:',error.message));
+    throw Object.assign(new Error('Invalid email or password'), { code: 'INVALID_CREDENTIALS' });
+  }
   return { user: await getPublicAuthenticatedUser(user), token: signToken(user) };
 }
 

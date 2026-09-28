@@ -4,6 +4,7 @@ const adminUser360Service = require('../services/adminUser360Service');
 const adminSystemHealthService = require('../services/adminSystemHealthService');
 const adminFinancialIntegrityService = require('../services/adminFinancialIntegrityService');
 const financialReconciliationMonitor = require('../services/financialReconciliationMonitorService');
+const securityRiskService = require('../services/securityRiskService');
 
 async function getDashboardStats(req, res) {
   try { return res.json(await adminService.getDashboardStats()); }
@@ -22,6 +23,19 @@ async function getFinancialIntegrity(req,res){
     return res.json({...integrity,monitoring});
   }
   catch(error){console.error('Get admin financial integrity failed:',error);return res.status(500).json({error:'Failed to run financial reconciliation'})}
+}
+async function getRiskCenter(req,res){
+  try{return res.json(await securityRiskService.listEvents(req.query||{}))}
+  catch(error){console.error('Get security risk center failed:',error);return res.status(500).json({error:'Failed to load security risk center'})}
+}
+async function reviewRiskEvent(req,res){
+  try{return res.json(await securityRiskService.reviewEvent({eventId:req.params.eventId,status:req.body?.status,note:req.body?.note,adminId:req.user?.id}))}
+  catch(error){
+    const map={INVALID_RISK_REVIEW:400,RISK_REVIEW_NOTE_REQUIRED:400,RISK_EVENT_NOT_OPEN:409};
+    if(map[error.code])return res.status(map[error.code]).json({error:error.message,code:error.code});
+    console.error('Review security risk event failed:',error);
+    return res.status(500).json({error:'Failed to review security risk event'});
+  }
 }
 async function getUsers(req, res) { try { return res.json(await adminService.getUsers(req.query)); } catch (error) { console.error('Get admin users failed:', error.message); return res.status(500).json({ error: 'Failed to load users' }); } }
 async function createAdmin(req, res) {
@@ -144,5 +158,5 @@ async function resetTestData(req,res){
   }
 }
 
-module.exports = { getDashboardStats, getSystemHealth, getFinancialIntegrity, getUsers, getUser360, setUserMembershipPlan, createAdmin, setUserStatus, setUserRole, updateUserProfile, getCompanyProofs, verifyCompanyProof, rejectCompanyProof, getTestResetPreview, resetTestData };
+module.exports = { getDashboardStats, getSystemHealth, getFinancialIntegrity, getRiskCenter, reviewRiskEvent, getUsers, getUser360, setUserMembershipPlan, createAdmin, setUserStatus, setUserRole, updateUserProfile, getCompanyProofs, verifyCompanyProof, rejectCompanyProof, getTestResetPreview, resetTestData };
 
