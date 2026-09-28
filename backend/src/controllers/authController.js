@@ -1,8 +1,7 @@
-const fs = require('fs');
-const path = require('path');
-const { companyProofRoot } = require('../config/uploadStorage');
 const authService = require('../services/authService');
 const { sendPasswordResetEmail } = require('../services/emailService');
+const companyProofStorage = require('../services/companyProofStorageService');
+const { sendProofDescriptor } = require('../utils/proofResponse');
 
 const AUTH_COOKIE = 'propulse_auth';
 const AUTH_COOKIE_MAX_AGE = 7 * 24 * 60 * 60 * 1000;
@@ -100,16 +99,9 @@ async function downloadCompanyProof(req, res) {
     });
     if (!document) return res.status(404).json({ error: 'Company proof document not found' });
 
-    const uploadDir = companyProofRoot;
-    const filePath = path.resolve(uploadDir, path.basename(document.stored_name));
-    if (!filePath.startsWith(path.resolve(uploadDir) + path.sep) || !fs.existsSync(filePath)) {
-      return res.status(404).json({ error: 'Company proof document not found' });
-    }
-
-    res.setHeader('Content-Type', document.mime_type);
-    const safeName = String(document.original_name || 'company-proof').replace(/["\\\r\n]/g, '_');
-    res.setHeader('Content-Disposition', 'inline; filename="' + safeName + '"');
-    return res.sendFile(filePath);
+    const descriptor=await companyProofStorage.descriptor(document.stored_name,{mimeType:document.mime_type,size:document.file_size});
+    if(!descriptor)return res.status(404).json({error:'Company proof document not found'});
+    return sendProofDescriptor(res,descriptor);
   } catch (error) {
     console.error('Company proof download failed:', error.message);
     return res.status(500).json({ error: 'Failed to load company proof document' });

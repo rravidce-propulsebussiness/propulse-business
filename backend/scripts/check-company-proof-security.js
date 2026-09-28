@@ -6,6 +6,7 @@ const server = fs.readFileSync(path.join(root, 'server.js'), 'utf8');
 const authService = fs.readFileSync(path.join(root, 'services', 'authService.js'), 'utf8');
 const authController = fs.readFileSync(path.join(root, 'controllers', 'authController.js'), 'utf8');
 const authRoutes = fs.readFileSync(path.join(root, 'routes', 'authRoutes.js'), 'utf8');
+const companyProofStorage = fs.readFileSync(path.join(root, 'services', 'companyProofStorageService.js'), 'utf8');
 
 function assert(condition, message) {
   if (!condition) throw new Error(message);
@@ -29,8 +30,10 @@ assert(
 
 assert(authService.includes("const expectedPrefix = `data:${mimeType};base64,`;"), 'Company-proof uploads must require a MIME-matching data URL prefix');
 assert(authService.includes("Company proof document content does not match its file type"), 'Company-proof uploads must validate file signatures');
-assert(authService.includes("await fsp.writeFile(filePath, document.buffer, { flag: 'wx' });"), 'Company-proof writes must not block the Node.js event loop');
-assert(authService.includes("await fsp.rm(filePath, { force: true });"), 'Company-proof cleanup must use asynchronous filesystem operations');
+assert(authService.includes('companyProofStorage.storeBuffer'), 'Company-proof writes must use the private storage abstraction');
+assert(authService.includes('companyProofStorage.remove(reference)'), 'Company-proof rollback cleanup must use the private storage abstraction');
+assert(companyProofStorage.includes("flag:'wx',mode:0o600"), 'Local company-proof fallback must create private files exclusively');
+assert(companyProofStorage.includes('s3.getSignedGetUrl(reference)'), 'S3 company-proof reads must use short-lived signed URLs');
 
 assert(
   authService.includes('WHERE id=$1 AND (user_id=$2 OR $3=TRUE)') &&
@@ -39,9 +42,9 @@ assert(
 );
 
 assert(
-  authController.includes('path.basename(document.stored_name)') &&
-  authController.includes('filePath.startsWith(path.resolve(uploadDir) + path.sep)'),
-  'Company-proof download must constrain the resolved file path to the proof directory',
+  authController.includes('companyProofStorage.descriptor(document.stored_name') && authController.includes('sendProofDescriptor(res,descriptor)') &&
+  companyProofStorage.includes('path.basename(String(value||\'\'))') && companyProofStorage.includes("filePath.startsWith(path.resolve(companyProofRoot)+path.sep)"),
+  'Company-proof download must use the authorized storage descriptor and constrain local fallback paths',
 );
 
 console.log('Company proof security regression test passed.');

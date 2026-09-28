@@ -2,6 +2,7 @@ const crypto=require('crypto');
 const path=require('path');
 const fsp=require('fs/promises');
 const {privateProofRoot}=require('../config/uploadStorage');
+const s3=require('./s3PrivateObjectStorageService');
 
 const ROOT=privateProofRoot;
 const PREFIX='private-proof:';
@@ -16,7 +17,7 @@ const MIME_EXT={
 };
 const EXT_MIME={'.png':'image/png','.jpg':'image/jpeg','.jpeg':'image/jpeg','.webp':'image/webp','.pdf':'application/pdf'};
 
-function privateReference(value){return typeof value==='string'&&value.startsWith(PREFIX)}
+function privateReference(value){return typeof value==='string'&&(value.startsWith(PREFIX)||s3.isReference(value))}
 function safeCategory(value){const category=String(value||'proof').trim().toLowerCase().replace(/[^a-z0-9_-]+/g,'-').replace(/^-+|-+$/g,'');return category||'proof'}
 function byteLength(payload){const padding=payload.endsWith('==')?2:payload.endsWith('=')?1:0;return Math.floor(payload.length*3/4)-padding}
 
@@ -32,9 +33,14 @@ async function storeDataUrl(value,{category='proof',maxBytes=DEFAULT_MAX_BYTES}=
   const data=Buffer.from(payload,'base64');
   if(data.length!==bytes||!data.length)throw Object.assign(new Error('Proof data is invalid'),{code:'INVALID_PRIVATE_PROOF'});
   const folder=safeCategory(category);
+  const filename=`${Date.now()}-${crypto.randomBytes(16).toString('hex')}${MIME_EXT[mime]}`;
+  if(s3.isEnabled()){
+    const key=`private-proofs/${folder}/${filename}`;
+    await s3.putObject(key,data,{contentType:mime});
+    return s3.makeReference(key);
+  }
   const directory=path.join(ROOT,folder);
   await fsp.mkdir(directory,{recursive:true,mode:0o700});
-  const filename=`${Date.now()}-${crypto.randomBytes(16).toString('hex')}${MIME_EXT[mime]}`;
   const filePath=path.join(directory,filename);
   await fsp.writeFile(filePath,data,{flag:'wx',mode:0o600});
   return `${PREFIX}${folder}/${filename}`;
@@ -64,6 +70,13 @@ async function getProofDescriptor(reference,{maxBytes=DEFAULT_MAX_BYTES}={}){
     if(buffer.length!==bytes||!buffer.length)throw new Error('Stored proof data is invalid');
     return{buffer,mime,size:buffer.length};
   }
+  if(s3.isReference(value)){
+    const key=s3.parseReference(value);
+    const ext=path.extname(key).toLowerCase();
+    const mime=EXT_MIME[ext];
+    if(!mime)throw new Error('Private proof file type is unsupported');
+    return{externalUrl:await s3.getSignedGetUrl(value),mime};
+  }
   const filePath=resolveReference(value);
   if(!filePath)throw new Error('Stored proof reference is unsupported');
   const stat=await fsp.stat(filePath);
@@ -76,6 +89,14 @@ async function getProofDescriptor(reference,{maxBytes=DEFAULT_MAX_BYTES}={}){
 async function materializeProof(reference,{maxBytes=DEFAULT_MAX_BYTES}={}){
   const value=String(reference||'').trim();
   if(!value||value.startsWith('data:')||/^https?:\/\//i.test(value))return value||null;
+  if(s3.isReference(value)){
+    const key=s3.parseReference(value);
+    const ext=path.extname(key).toLowerCase();
+    const mime=EXT_MIME[ext];
+    if(!mime)throw new Error('Private proof file type is unsupported');
+    const result=await s3.getObjectBuffer(key,{maxBytes});
+    return `data:${mime};base64,${result.buffer.toString('base64')}`;
+  }
   const filePath=resolveReference(value);
   if(!filePath)return value;
   const stat=await fsp.stat(filePath);
@@ -87,6 +108,7 @@ async function materializeProof(reference,{maxBytes=DEFAULT_MAX_BYTES}={}){
 }
 
 async function removeStoredProof(reference){
+  if(s3.isReference(reference)){await s3.deleteObject(s3.parseReference(reference));return}
   let filePath;
   try{filePath=resolveReference(reference)}catch{return}
   if(!filePath)return;

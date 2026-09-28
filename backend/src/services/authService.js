@@ -1,12 +1,9 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
-const fs = require('fs');
-const fsp = fs.promises;
-const path = require('path');
 const pool = require('../config/database');
 const { getMembershipAccess } = require('./membershipAccessService');
-const { companyProofRoot } = require('../config/uploadStorage');
+const companyProofStorage = require('./companyProofStorageService');
 const securityRiskService = require('./securityRiskService');
 
 const JWT_SECRET = process.env.JWT_SECRET;
@@ -185,9 +182,6 @@ async function saveCompanyProofDocuments(userId, documents = []) {
   if (documents.length > 8) throw new Error('You can upload up to 8 company proof documents');
 
   const allowedTypes = new Set(['application/pdf', 'image/jpeg', 'image/png']);
-  const uploadDir = companyProofRoot;
-  await fsp.mkdir(uploadDir, { recursive: true });
-
   // Validate and prepare every document before creating any file or database row.
   const preparedDocuments = documents.map((document) => {
     const mimeType = String(document?.type || '').toLowerCase();
@@ -219,17 +213,17 @@ async function saveCompanyProofDocuments(userId, documents = []) {
 
     const saved = [];
     for (const document of preparedDocuments) {
-      const storedName = `${userId}-${Date.now()}-${crypto.randomBytes(8).toString('hex')}${document.extension}`;
-      const filePath = path.join(uploadDir, storedName);
+      const storedName=await companyProofStorage.storeBuffer({
+        userId,buffer:document.buffer,mimeType:document.mimeType,extension:document.extension
+      });
+      createdFiles.push(storedName);
 
-      await fsp.writeFile(filePath, document.buffer, { flag: 'wx' });
-      createdFiles.push(filePath);
-
-      const fileUrl = `/uploads/company-proofs/${storedName}`;
+      const fileUrl='/api/auth/company-proofs/pending';
       const inserted = (await client.query(
         `INSERT INTO company_proof_documents (user_id,original_name,stored_name,mime_type,file_size,file_url) VALUES ($1,$2,$3,$4,$5,$6) RETURNING id`,
         [userId, document.originalName, storedName, document.mimeType, document.buffer.length, fileUrl],
       )).rows[0];
+      await client.query('UPDATE company_proof_documents SET file_url=$1 WHERE id=$2',[`/api/auth/company-proofs/${inserted.id}`,inserted.id]);
 
       saved.push({
         id: inserted.id,
@@ -250,9 +244,9 @@ async function saveCompanyProofDocuments(userId, documents = []) {
       console.error('Company proof upload rollback failed:', rollbackError.message);
     }
 
-    for (const filePath of createdFiles) {
+    for (const reference of createdFiles) {
       try {
-        await fsp.rm(filePath, { force: true });
+        await companyProofStorage.remove(reference);
       } catch (cleanupError) {
         console.error('Company proof orphan cleanup failed:', cleanupError.message);
       }

@@ -5,6 +5,7 @@ const {checkUploadStorage}=require('../config/uploadStorage');
 const workerHeartbeat=require('./backgroundWorkerHeartbeatService');
 const financialReconciliationMonitor=require('./financialReconciliationMonitorService');
 const backupVerificationService=require('./backupVerificationService');
+const privateObjectStorage=require('./s3PrivateObjectStorageService');
 
 const migrationsDir=path.join(__dirname,'../database/migrations');
 const workerHeartbeatMaxAgeSeconds=Math.min(600,Math.max(30,Math.floor(Number(process.env.WORKER_HEARTBEAT_MAX_AGE_SECONDS)||120)));
@@ -86,9 +87,10 @@ async function adminSheetHealth(){
   };
 }
 async function getSystemHealth(){
-  const [databaseProbe,storageProbe,heartbeatResult,migrationsResult,partnerSheetsResult,adminSheetsResult,financialResult,backupResult]=await Promise.allSettled([
+  const [databaseProbe,storageProbe,privateObjectProbe,heartbeatResult,migrationsResult,partnerSheetsResult,adminSheetsResult,financialResult,backupResult]=await Promise.allSettled([
     pool.query('SELECT NOW() AS now'),
     checkUploadStorage(),
+    privateObjectStorage.isEnabled()?privateObjectStorage.probe():Promise.resolve({provider:'local',configured:false,status:'ready'}),
     workerHeartbeat.latestHeartbeat(),
     migrationHealth(),
     leadPartnerSheetHealth(),
@@ -99,6 +101,8 @@ async function getSystemHealth(){
 
   const databaseOk=databaseProbe.status==='fulfilled';
   const storageOk=storageProbe.status==='fulfilled';
+  const privateObjectHealth=privateObjectProbe.status==='fulfilled'?privateObjectProbe.value:(privateObjectProbe.reason?.health||{provider:'s3',configured:true,status:'unavailable',error:String(privateObjectProbe.reason?.message||'Object storage unavailable').slice(0,240)});
+  const privateObjectOk=privateObjectHealth.status==='ready';
   const heartbeat=heartbeatResult.status==='fulfilled'?heartbeatResult.value:null;
   const workerAgeSeconds=heartbeat?safeNumber(heartbeat.age_seconds):null;
   const workerFresh=Boolean(heartbeat)&&workerAgeSeconds<=workerHeartbeatMaxAgeSeconds;
@@ -112,7 +116,7 @@ async function getSystemHealth(){
   const waiting=safeNumber(pool.waitingCount);
   const memory=process.memoryUsage();
 
-  const degraded=!databaseOk||!storageOk||!workerFresh||migrations.status!=='current'||leadPartnerSheets.failing>0||leadPartnerSheets.connectionErrors>0||adminSheets.failing>0||adminSheets.connectionErrors>0||financialIntegrity.status!=='healthy'||(backups.required&&backups.status!=='healthy');
+  const degraded=!databaseOk||!storageOk||!privateObjectOk||!workerFresh||migrations.status!=='current'||leadPartnerSheets.failing>0||leadPartnerSheets.connectionErrors>0||adminSheets.failing>0||adminSheets.connectionErrors>0||financialIntegrity.status!=='healthy'||(backups.required&&backups.status!=='healthy');
   return{
     status:degraded?'degraded':'healthy',
     checkedAt:new Date().toISOString(),
@@ -141,7 +145,14 @@ async function getSystemHealth(){
     },
     storage:{
       status:storageOk?'ready':'unavailable',
-      persistentConfigured:Boolean(String(process.env.UPLOAD_STORAGE_ROOT||'').trim())
+      persistentConfigured:Boolean(String(process.env.UPLOAD_STORAGE_ROOT||'').trim()),
+      privateObjects:{
+        driver:privateObjectStorage.driver(),
+        status:privateObjectHealth.status||'unavailable',
+        configured:Boolean(privateObjectHealth.configured),
+        provider:privateObjectHealth.provider||privateObjectStorage.driver(),
+        error:privateObjectHealth.error||null
+      }
     },
     worker:{
       status:workerFresh?'fresh':heartbeat?'stale':'unavailable',

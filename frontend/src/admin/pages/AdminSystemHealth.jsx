@@ -107,6 +107,7 @@ export default function AdminSystemHealth(){
       <HealthCard label="Overall" value={loading&&!data?'Checking…':data?.status||'Unavailable'} note={data?'Checked '+fmtDate(data.checkedAt):'Waiting for backend'} tone={overallTone}/>
       <HealthCard label="Database" value={data?.database?.status||'—'} note={poolNote} tone={stateTone(data?.database?.status)} metric={data?(pool.utilizationPercent||0)+'% pool use':null}/>
       <HealthCard label="Upload storage" value={data?.storage?.status||'—'} note={data?.storage?.persistentConfigured?'Persistent storage configured':'Using application-local storage'} tone={stateTone(data?.storage?.status)}/>
+      <HealthCard label="Private objects" value={data?.storage?.privateObjects?.status||'—'} note={data?.storage?.privateObjects?.driver==='s3'?(data?.storage?.privateObjects?.status==='ready'?'S3-compatible private storage ready':data?.storage?.privateObjects?.error||'S3-compatible storage unavailable'):'Private proofs currently use local durable storage'} tone={stateTone(data?.storage?.privateObjects?.status)} metric={data?.storage?.privateObjects?.driver?.toUpperCase()||null}/>
       <HealthCard label="Background worker" value={data?.worker?.status||'—'} note={data?.worker?.lastSeenAt?'Heartbeat '+fmtDate(data.worker.lastSeenAt):'No heartbeat available'} tone={stateTone(data?.worker?.status)} metric={data?.worker?.ageSeconds!=null?data.worker.ageSeconds+'s old':null}/>
       <HealthCard label="Migrations" value={data?.migrations?.status||'—'} note={data?(data.migrations?.applied||0)+' applied · '+(data.migrations?.pending??'—')+' pending':'Waiting for migration state'} tone={stateTone(data?.migrations?.status)}/>
       <HealthCard label="Financial reconciliation" value={financial.status||'—'} note={financial.lastCompletedAt?'Last automated run '+fmtDate(financial.lastCompletedAt):'No automated reconciliation recorded'} tone={stateTone(financial.status)} metric={data?(Number(financial.criticalAlerts||0)+Number(financial.warningAlerts||0))+' active alerts':null}/>
@@ -147,6 +148,7 @@ export default function AdminSystemHealth(){
       <div className="system-health-release-items">
         <span className={data?.database?.status==='connected'?'ok':'bad'}>Database</span>
         <span className={data?.storage?.status==='ready'?'ok':'bad'}>Storage</span>
+        <span className={data?.storage?.privateObjects?.status==='ready'?'ok':'bad'}>Private objects</span>
         <span className={data?.worker?.status==='fresh'?'ok':'bad'}>Worker</span>
         <span className={data?.migrations?.status==='current'?'ok':'bad'}>Migrations</span>
         <span className={!data?.sheets?.leadPartner?.connectionErrors&&!data?.sheets?.leadPartner?.failing&&!data?.sheets?.admin?.connectionErrors&&!data?.sheets?.admin?.failing?'ok':'warn'}>Sheet connections</span>
