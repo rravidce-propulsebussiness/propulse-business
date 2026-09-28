@@ -1,4 +1,5 @@
 import GoogleSheetAutoSync from './GoogleSheetAutoSync';
+import SheetAutomationControls from './SheetAutomationControls';
 import './AdminLeadsV9.css';
 
 export default function AdminLeadSheets(){
@@ -11,9 +12,10 @@ export default function AdminLeadSheets(){
       </div>
       <div className="v9-sheet-automation-badge">
         <span className="v9-sheet-pulse"><i/></span>
-        <div><strong>Automatic sync</strong><small>Checks every 5 minutes while active</small></div>
+        <div><strong>Automatic sync</strong><small>Schedule controlled from Admin</small></div>
       </div>
     </section>
+    <SheetAutomationControls/>
     <GoogleSheetAutoSync/>
   </main>;
 }
