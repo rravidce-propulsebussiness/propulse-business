@@ -195,6 +195,15 @@ jobs:
           DB_PASSWORD: ci_smoke
         timeout-minutes: 3
         run: npm run test:payout
+      - name: Verify financial reconciliation SQL
+        env:
+          DB_HOST: 127.0.0.1
+          DB_PORT: 5432
+          DB_NAME: ci_smoke
+          DB_USER: ci_smoke
+          DB_PASSWORD: ci_smoke
+        timeout-minutes: 2
+        run: npm run test:financial-integrity-runtime
       - name: Verify production payment flow and startup
         env:
           DB_HOST: 127.0.0.1

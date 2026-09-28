@@ -36,6 +36,7 @@ const navigation=[
   ]},
   {type:'group',key:'system',label:'System',icon:'⚙',children:[
     {to:'/admin/system-health',label:'System Health'},
+    {to:'/admin/financial-integrity',label:'Financial Integrity'},
     {to:'/admin/test-reset',label:'Test Data Reset'}
   ]},
   {type:'group',key:'website',label:'Website & Content',icon:'▧',children:[

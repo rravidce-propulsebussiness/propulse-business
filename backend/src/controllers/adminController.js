@@ -2,6 +2,7 @@ const adminService = require('../services/adminService');
 const adminTestResetService = require('../services/adminTestResetService');
 const adminUser360Service = require('../services/adminUser360Service');
 const adminSystemHealthService = require('../services/adminSystemHealthService');
+const adminFinancialIntegrityService = require('../services/adminFinancialIntegrityService');
 
 async function getDashboardStats(req, res) {
   try { return res.json(await adminService.getDashboardStats()); }
@@ -10,6 +11,10 @@ async function getDashboardStats(req, res) {
 async function getSystemHealth(req,res){
   try{return res.json(await adminSystemHealthService.getSystemHealth())}
   catch(error){console.error('Get admin system health failed:',error);return res.status(500).json({error:'Failed to load system health'})}
+}
+async function getFinancialIntegrity(req,res){
+  try{return res.json(await adminFinancialIntegrityService.getFinancialIntegrity({force:String(req.query?.refresh||'')==='1'}))}
+  catch(error){console.error('Get admin financial integrity failed:',error);return res.status(500).json({error:'Failed to run financial reconciliation'})}
 }
 async function getUsers(req, res) { try { return res.json(await adminService.getUsers(req.query)); } catch (error) { console.error('Get admin users failed:', error.message); return res.status(500).json({ error: 'Failed to load users' }); } }
 async function createAdmin(req, res) {
@@ -132,5 +137,5 @@ async function resetTestData(req,res){
   }
 }
 
-module.exports = { getDashboardStats, getSystemHealth, getUsers, getUser360, setUserMembershipPlan, createAdmin, setUserStatus, setUserRole, updateUserProfile, getCompanyProofs, verifyCompanyProof, rejectCompanyProof, getTestResetPreview, resetTestData };
+module.exports = { getDashboardStats, getSystemHealth, getFinancialIntegrity, getUsers, getUser360, setUserMembershipPlan, createAdmin, setUserStatus, setUserRole, updateUserProfile, getCompanyProofs, verifyCompanyProof, rejectCompanyProof, getTestResetPreview, resetTestData };
 
