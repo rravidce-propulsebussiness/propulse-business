@@ -8,6 +8,7 @@ const seed=read('scripts/seed-release-e2e.js');
 const workflow=read('../.github/workflows/ci.yml');
 const config=read('../frontend/e2e/playwright.config.mjs');
 const spec=read('../frontend/e2e/release-smoke.spec.mjs');
+const leadPurchaseService=read('src/services/leadPurchaseService.js');
 
 assert(seed.includes("E2E_SEED=true is required"),'E2E seed must require an explicit opt-in');
 assert(seed.includes("Refusing to seed E2E accounts in production"),'E2E seed must refuse production');
@@ -27,4 +28,7 @@ assert(spec.includes("expect(approveTopupAgain.status).toBe(409)"),'Release E2E 
 assert(spec.includes("expect(approveManualAgain.body?.code).toBe('PAYMENT_ALREADY_PAID')"),'Release E2E must prove manual payments cannot be approved twice');
 assert(spec.includes("'/api/admin/financial-integrity?refresh=1'"),'Release E2E must reconcile ledgers after money mutations');
 assert(spec.includes("test.describe.configure({retries:0})"),'Money-mutating browser tests must not auto-retry against the same database state');
+const paidPurchaseCheck=leadPurchaseService.indexOf("const existing=(await client.query(\`SELECT id,shares,amount,pricing_tier,status,payment_id FROM lead_purchases");
+const availabilityCheck=leadPurchaseService.indexOf("if(lead.status!=='available')");
+assert(paidPurchaseCheck>=0&&availabilityCheck>=0&&paidPurchaseCheck<availabilityCheck,'Paid-purchase idempotency check must run before lead availability rejection');
 console.log('Release browser E2E regression test passed.');
