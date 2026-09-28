@@ -41,7 +41,8 @@
     "test:estimator-schema": "node scripts/check-estimator-schema-integrity.js",
     "test:estimator-runtime": "node scripts/check-estimator-runtime.js",
     "test:interior-estimator": "node scripts/check-interior-estimator-seed.js",
-    "test:estimator-conversion": "node scripts/check-estimator-conversion-runtime.js"
+    "test:estimator-conversion": "node scripts/check-estimator-conversion-runtime.js",
+    "test:construction-estimator": "node scripts/check-construction-estimator-seed.js"
   },
   "keywords": [],
   "author": "",
