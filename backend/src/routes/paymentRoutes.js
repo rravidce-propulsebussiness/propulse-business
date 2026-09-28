@@ -3,12 +3,13 @@ const paymentController = require('../controllers/paymentController');
 const requireAuth = require('../middleware/authMiddleware');
 const requireAdmin = require('../middleware/adminMiddleware');
 const rateLimit = require('../middleware/rateLimitMiddleware');
+const idempotency = require('../middleware/idempotencyMiddleware');
 
 const router = express.Router();
 const paymentWriteLimit = rateLimit({ windowMs: 60 * 1000, max: 20 });
 const adminPaymentWriteLimit = rateLimit({ windowMs: 60 * 1000, max: 60 });
 router.use(requireAuth);
-router.post('/checkout/membership', paymentWriteLimit, paymentController.checkoutMembership);
+router.post('/checkout/membership', paymentWriteLimit, idempotency('membership.checkout'), paymentController.checkoutMembership);
 router.post('/:id/reference', paymentWriteLimit, paymentController.submitPaymentReference);
 router.get('/membership/current', paymentController.getCurrentMembership);
 router.get('/membership/history', paymentController.getUserMembershipPayments);

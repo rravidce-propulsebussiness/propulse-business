@@ -215,6 +215,7 @@ export default function Membership() {
       const code = withCoupon && couponResult ? couponCode.trim().toUpperCase() : ''
       const result = await authRequest('/payments/checkout/membership', {
         method: 'POST',
+        idempotency: true,
         body: JSON.stringify({
           membershipPlanId: selectedPlan.id,
           ...(code ? { couponCode: code } : {})

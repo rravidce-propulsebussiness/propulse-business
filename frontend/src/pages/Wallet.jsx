@@ -220,6 +220,7 @@ export default function Wallet(){
       })
       const result=await authRequest('/wallet/topups',{
         method:'POST',
+        idempotency:true,
         body:JSON.stringify({
           amount:numericAmount,
           reference:reference.trim()||null,

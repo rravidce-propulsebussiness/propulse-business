@@ -1,5 +1,23 @@
 export const API_BASE_URL = import.meta.env.VITE_API_URL || '/api'
 const DEFAULT_REQUEST_TIMEOUT_MS = 20000
+const pendingIdempotencyKeys = new Map()
+
+function createIdempotencyKey() {
+  const cryptoApi = globalThis.crypto
+  if (cryptoApi?.randomUUID) return cryptoApi.randomUUID()
+  if (cryptoApi?.getRandomValues) {
+    const bytes = new Uint8Array(16)
+    cryptoApi.getRandomValues(bytes)
+    return Array.from(bytes, value => value.toString(16).padStart(2, '0')).join('')
+  }
+  return `fallback-${Date.now()}-${Math.random().toString(16).slice(2)}`
+}
+
+function mutationFingerprint(path, options) {
+  const method = String(options.method || 'GET').toUpperCase()
+  const body = typeof options.body === 'string' ? options.body : JSON.stringify(options.body ?? null)
+  return `${method}\n${path}\n${body}`
+}
 
 function requestSignal(signal, timeoutMs) {
   const timeout = Number.isFinite(Number(timeoutMs)) ? Math.max(1000, Number(timeoutMs)) : DEFAULT_REQUEST_TIMEOUT_MS
@@ -18,7 +36,14 @@ export async function apiRequest(path, options = {}, includeToken = true) {
   const headers = { ...(requestOptions.headers || {}) }
   const hasBody = requestOptions.body !== undefined && requestOptions.body !== null
   if (hasBody && !Object.keys(headers).some(key => key.toLowerCase() === 'content-type')) headers['Content-Type'] = 'application/json'
-  const { timeoutMs, signal: callerSignal, ...fetchOptions } = requestOptions
+  const { timeoutMs, signal: callerSignal, idempotency = false, idempotencyKey, ...fetchOptions } = requestOptions
+  let idempotencyFingerprint = null
+  if (idempotency || idempotencyKey) {
+    idempotencyFingerprint = mutationFingerprint(path, fetchOptions)
+    const key = idempotencyKey || pendingIdempotencyKeys.get(idempotencyFingerprint) || createIdempotencyKey()
+    pendingIdempotencyKeys.set(idempotencyFingerprint, key)
+    if (!Object.keys(headers).some(name => name.toLowerCase() === 'idempotency-key')) headers['Idempotency-Key'] = key
+  }
   const timed = requestSignal(callerSignal, timeoutMs)
   let response
   try {
@@ -43,11 +68,14 @@ export async function apiRequest(path, options = {}, includeToken = true) {
   }
 
   if (!response.ok) {
+    if (idempotencyFingerprint && response.status < 500 && data.code !== 'IDEMPOTENCY_IN_PROGRESS') pendingIdempotencyKeys.delete(idempotencyFingerprint)
     const error = new Error(data.error || 'Request failed')
     error.status = response.status
     error.code = data.code
     throw error
   }
+
+  if (idempotencyFingerprint) pendingIdempotencyKeys.delete(idempotencyFingerprint)
 
   if (Array.isArray(data?.data)) {
     const collection = data.data

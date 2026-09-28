@@ -20,18 +20,21 @@ async function login(page,email){
   await page.waitForURL(url=>url.pathname!=='/login')
 }
 
-async function api(page,path,{method='GET',body}={}){
-  return page.evaluate(async({path,method,body})=>{
+async function api(page,path,{method='GET',body,idempotencyKey}={}){
+  return page.evaluate(async({path,method,body,idempotencyKey})=>{
+    const headers={}
+    if(body!==undefined)headers['Content-Type']='application/json'
+    if(idempotencyKey)headers['Idempotency-Key']=idempotencyKey
     const response=await fetch(path,{
       method,
       credentials:'include',
-      headers:body===undefined?undefined:{'Content-Type':'application/json'},
+      headers:Object.keys(headers).length?headers:undefined,
       body:body===undefined?undefined:JSON.stringify(body)
     })
     let payload=null
     try{payload=await response.json()}catch{}
     return{status:response.status,body:payload}
-  },{path,method,body})
+  },{path,method,body,idempotencyKey})
 }
 
 async function logout(page){
@@ -86,8 +89,10 @@ test.describe('financial mutation release gate',()=>{
     const walletLead=await findFixtureLead(page,'E2E Financial Wallet Purchase')
     expect(walletLead?.id).toBeTruthy()
 
+    const purchaseKey='e2e-lead-purchase-'+Date.now()
     const firstPurchase=await api(page,`/api/leads/${walletLead.id}/purchase`,{
       method:'POST',
+      idempotencyKey:purchaseKey,
       body:{shares:1,useWallet:true}
     })
     expect(firstPurchase.status).toBe(201)
@@ -96,8 +101,17 @@ test.describe('financial mutation release gate',()=>{
     expect(Number(firstPurchase.body?.external_amount)).toBe(0)
     expect(Number(firstPurchase.body?.balance_after)).toBe(2000)
 
+    const replayedPurchase=await api(page,`/api/leads/${walletLead.id}/purchase`,{
+      method:'POST',
+      idempotencyKey:purchaseKey,
+      body:{shares:1,useWallet:true}
+    })
+    expect(replayedPurchase.status).toBe(201)
+    expect(Number(replayedPurchase.body?.id)).toBe(Number(firstPurchase.body?.id))
+
     const duplicatePurchase=await api(page,`/api/leads/${walletLead.id}/purchase`,{
       method:'POST',
+      idempotencyKey:'e2e-lead-purchase-business-'+Date.now(),
       body:{shares:1,useWallet:true}
     })
     expect(duplicatePurchase.status).toBe(201)
@@ -113,15 +127,26 @@ test.describe('financial mutation release gate',()=>{
     expect(Number(walletDebits[0]?.amount)).toBe(500)
 
     const topupReference='E2E-TOPUP-'+Date.now()
+    const topupKey='e2e-wallet-topup-'+Date.now()
     const topup=await api(page,'/api/wallet/topups',{
       method:'POST',
+      idempotencyKey:topupKey,
       body:{amount:700,reference:topupReference}
     })
     expect(topup.status).toBe(201)
     expect(topup.body?.status).toBe('pending')
 
+    const replayedTopup=await api(page,'/api/wallet/topups',{
+      method:'POST',
+      idempotencyKey:topupKey,
+      body:{amount:700,reference:topupReference}
+    })
+    expect(replayedTopup.status).toBe(201)
+    expect(Number(replayedTopup.body?.id)).toBe(Number(topup.body?.id))
+
     const duplicateTopup=await api(page,'/api/wallet/topups',{
       method:'POST',
+      idempotencyKey:'e2e-wallet-topup-business-'+Date.now(),
       body:{amount:700,reference:topupReference}
     })
     expect(duplicateTopup.status).toBe(400)
@@ -132,6 +157,7 @@ test.describe('financial mutation release gate',()=>{
 
     const manualPurchase=await api(page,`/api/leads/${manualLead.id}/purchase`,{
       method:'POST',
+      idempotencyKey:'e2e-lead-manual-'+Date.now(),
       body:{shares:1,useWallet:false}
     })
     expect(manualPurchase.status).toBe(201)

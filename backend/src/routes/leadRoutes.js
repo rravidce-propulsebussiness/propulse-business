@@ -1,4 +1,4 @@
-const express=require('express');const leadController=require('../controllers/leadController');const leadPurchaseController=require('../controllers/leadPurchaseController');const leadEntitlementController=require('../controllers/leadEntitlementController');const leadCrmController=require('../controllers/leadCrmController');const adminLeadPartnerPricingController=require('../controllers/adminLeadPartnerPricingController');const requireAuth=require('../middleware/authMiddleware');const optionalAuth=require('../middleware/optionalAuthMiddleware');const requireAdmin=require('../middleware/adminMiddleware');const rateLimit=require('../middleware/rateLimitMiddleware');const router=express.Router();
+const express=require('express');const leadController=require('../controllers/leadController');const leadPurchaseController=require('../controllers/leadPurchaseController');const leadEntitlementController=require('../controllers/leadEntitlementController');const leadCrmController=require('../controllers/leadCrmController');const adminLeadPartnerPricingController=require('../controllers/adminLeadPartnerPricingController');const requireAuth=require('../middleware/authMiddleware');const optionalAuth=require('../middleware/optionalAuthMiddleware');const requireAdmin=require('../middleware/adminMiddleware');const rateLimit=require('../middleware/rateLimitMiddleware');const idempotency=require('../middleware/idempotencyMiddleware');const router=express.Router();
 const leadActionLimit=rateLimit({windowMs:60*1000,max:30});
 const leadAccessLimit=rateLimit({windowMs:60*1000,max:60});
 router.get('/',optionalAuth,leadController.getLeads);
@@ -25,7 +25,7 @@ router.get('/purchased/export',requireAuth,leadPurchaseController.exportPurchase
 router.patch('/:id/crm',requireAuth,leadCrmController.update);
 router.get('/:id/access',requireAuth,leadAccessLimit,leadEntitlementController.getAccess);
 router.post('/:id/claim',requireAuth,leadActionLimit,leadEntitlementController.claim);
-router.post('/:id/purchase',requireAuth,leadActionLimit,leadPurchaseController.purchase);
+router.post('/:id/purchase',requireAuth,leadActionLimit,idempotency('lead.purchase'),leadPurchaseController.purchase);
 router.get('/:id',requireAuth,leadController.getLeadById);
 router.post('/',requireAdmin,leadController.createLead);
 router.put('/:id',requireAdmin,leadController.updateLead);
