@@ -81,6 +81,15 @@ boundedInteger('HTTP_KEEP_ALIVE_TIMEOUT_MS',5000,1000,60000);
 boundedInteger('HTTP_MAX_REQUESTS_PER_SOCKET',1000,1,10000);
 if(headersTimeout>requestTimeout)fail('HTTP_HEADERS_TIMEOUT_MS must not exceed HTTP_REQUEST_TIMEOUT_MS');
 
+const dbPoolMax=boundedInteger('DB_POOL_MAX',5,2,10);
+boundedInteger('DB_IDLE_TIMEOUT_MS',30000,1000,300000);
+boundedInteger('DB_CONNECTION_TIMEOUT_MS',10000,1000,60000);
+const dbStatementTimeout=boundedInteger('DB_STATEMENT_TIMEOUT_MS',30000,1000,300000);
+boundedInteger('DB_IDLE_IN_TX_TIMEOUT_MS',60000,1000,600000);
+boundedInteger('SLOW_REQUEST_MS',2000,250,60000);
+if(dbStatementTimeout>requestTimeout)fail('DB_STATEMENT_TIMEOUT_MS must not exceed HTTP_REQUEST_TIMEOUT_MS');
+if(dbPoolMax>8)warn('DB_POOL_MAX above 8 per process requires capacity planning across all web and worker replicas');
+
 const migrationsOnStartup=value('RUN_MIGRATIONS_ON_STARTUP').toLowerCase();
 if(!migrationsOnStartup) warn('RUN_MIGRATIONS_ON_STARTUP is not explicit; use false when migrations run as a release step');
 else if(['1','true','yes','on'].includes(migrationsOnStartup)) warn('RUN_MIGRATIONS_ON_STARTUP is enabled; rolling web deploys may wait on the migration lock');

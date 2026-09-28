@@ -30,6 +30,12 @@ function run(overrides) {
       HTTP_HEADERS_TIMEOUT_MS: '15000',
       HTTP_KEEP_ALIVE_TIMEOUT_MS: '5000',
       HTTP_MAX_REQUESTS_PER_SOCKET: '1000',
+      SLOW_REQUEST_MS: '2000',
+      DB_POOL_MAX: '5',
+      DB_IDLE_TIMEOUT_MS: '30000',
+      DB_CONNECTION_TIMEOUT_MS: '10000',
+      DB_STATEMENT_TIMEOUT_MS: '30000',
+      DB_IDLE_IN_TX_TIMEOUT_MS: '60000',
       RUN_MIGRATIONS_ON_STARTUP: 'false',
       RUN_BACKGROUND_JOBS_IN_WEB: 'false',
       RUN_MIGRATIONS_ON_WORKER_STARTUP: 'false',
@@ -51,6 +57,9 @@ const unsafe = run({
   HEALTH_CHECK_TIMEOUT_MS: '20000',
   HTTP_REQUEST_TIMEOUT_MS: '4000',
   HTTP_HEADERS_TIMEOUT_MS: '90000',
+  DB_POOL_MAX: '99',
+  DB_STATEMENT_TIMEOUT_MS: '299999',
+  SLOW_REQUEST_MS: '100',
 });
 assert.notEqual(unsafe.status, 0);
 const output = `${unsafe.stdout}\n${unsafe.stderr}`;
@@ -62,5 +71,8 @@ assert.match(output, /UPLOAD_STORAGE_ROOT/);
 assert.match(output, /HEALTH_CHECK_TIMEOUT_MS/);
 assert.match(output, /HTTP_REQUEST_TIMEOUT_MS/);
 assert.match(output, /HTTP_HEADERS_TIMEOUT_MS/);
+assert.match(output, /DB_POOL_MAX/);
+assert.match(output, /DB_STATEMENT_TIMEOUT_MS/);
+assert.match(output, /SLOW_REQUEST_MS/);
 
 console.log('Production environment preflight regression test passed.');

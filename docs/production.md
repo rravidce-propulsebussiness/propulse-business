@@ -129,7 +129,9 @@ Google GIS checks. Dependency audits returned no known vulnerabilities. Frontend
 lint is clean with zero warnings and zero errors.
 
 Every response carries `X-Request-Id`; include that value in support/error reports so
-backend logs can be correlated to a specific failed request.
+backend logs can be correlated to a specific failed request. In production, 5xx responses
+and requests exceeding `SLOW_REQUEST_MS` are logged with method, path, status, duration,
+and request ID; query strings are intentionally omitted.
 
 Before accepting live payments, verify the deployed HTTPS domain, email delivery,
 backup restoration and the complete browser journey using your configured bank
