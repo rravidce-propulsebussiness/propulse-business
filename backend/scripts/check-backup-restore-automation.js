@@ -17,13 +17,17 @@ const gitignore=read('../.gitignore');
 
 assert(migration.includes('CREATE TABLE IF NOT EXISTS backup_verification_runs'),'Backup verification history table is missing');
 assert(common.includes('pg_export_snapshot')===false,'Snapshot export must remain owned by the database-backup operation');
+assert(common.includes('ensureBackupVerificationSchema'),'Backup verification must preflight its schema before expensive backup work');
+assert(common.includes('BACKUP_SCHEMA_NOT_READY')&&common.includes('npm run db:migrate'),'Missing backup schema must produce an actionable migration error');
 assert(dump.includes('pg_export_snapshot()'),'Database backup must export a PostgreSQL snapshot');
 assert(dump.includes("'--snapshot',snapshot"),'pg_dump must use the exact exported snapshot used for source metrics');
 assert(dump.includes("'--format=custom'")&&dump.includes("'--no-owner'")&&dump.includes("'--no-privileges'"),'Database dump must be portable and not restore owners/privileges');
 assert(restore.includes("propulse_restore_verify_"),'Restore verification must use the protected temporary database prefix');
+assert(restore.includes('await ensureBackupVerificationSchema()'),'Database restore verification must check schema before creating a dump');
 assert(restore.includes('compareMetrics'),'Restore verification must compare exact source/restored metrics');
 assert(restore.includes('DROP DATABASE')&&restore.includes('WITH (FORCE)'),'Restore verification must always target and clean up a disposable database');
 assert(storage.includes('isSymbolicLink()'),'Private-storage backups must reject symbolic links');
+assert(storage.includes('await ensureBackupVerificationSchema()'),'Private-storage verification must check schema before copying files');
 assert(storage.includes('verifySnapshot'),'Private-storage backups must verify copied file hashes');
 assert(storage.includes('PRIVATE_STORAGE_BACKUP_DIRECTORY must not be inside UPLOAD_STORAGE_ROOT'),'Storage backup destination must not recurse into live uploads');
 assert(packageJson.includes('"backup:verify"')&&packageJson.includes('"backup:storage"')&&packageJson.includes('"backup:all"'),'Operator backup commands must be exposed in package scripts');

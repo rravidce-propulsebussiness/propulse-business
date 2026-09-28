@@ -5,7 +5,7 @@ const {Client}=require('pg');
 const {createDatabaseBackup}=require('./database-backup');
 const {
   restoreDbConfig,nodeClientConfig,cliEnv,pgArgs,runCommand,sha256File,snapshotMetrics,
-  compareMetrics,recordVerification
+  compareMetrics,ensureBackupVerificationSchema,recordVerification
 }=require('./backup-common');
 
 function optionValue(name){
@@ -37,6 +37,7 @@ async function verifyDatabaseBackup(){
   let maintenance=null;
   let artifactName=null;
   try{
+    await ensureBackupVerificationSchema();
     backup=await loadBackup();
     artifactName=path.basename(backup.dumpPath);
     const stat=await fs.promises.stat(backup.dumpPath);

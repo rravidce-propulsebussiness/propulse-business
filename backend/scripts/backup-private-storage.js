@@ -4,7 +4,7 @@ const path=require('path');
 const crypto=require('crypto');
 const {uploadRoot,ensureUploadStorage}=require('../src/config/uploadStorage');
 const {
-  backupRoot,timestamp,buildCommit,ensurePrivateDirectory,sha256File,recordVerification
+  backupRoot,timestamp,buildCommit,ensurePrivateDirectory,sha256File,ensureBackupVerificationSchema,recordVerification
 }=require('./backup-common');
 
 function isWithin(parent,child){
@@ -53,6 +53,7 @@ async function backupPrivateStorage(){
   let finalRoot=null;
   let partialRoot=null;
   try{
+    await ensureBackupVerificationSchema();
     await ensureUploadStorage();
     const configured=String(process.env.PRIVATE_STORAGE_BACKUP_DIRECTORY||'').trim();
     const destinationBase=await ensurePrivateDirectory(path.resolve(configured||path.join(backupRoot(),'private-storage')));

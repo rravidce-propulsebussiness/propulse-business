@@ -129,6 +129,21 @@ function compareMetrics(expected,actual){
   }
   return mismatches;
 }
+async function ensureBackupVerificationSchema(){
+  const config=sourceDbConfig();
+  const client=new Client(nodeClientConfig(config));
+  await client.connect();
+  try{
+    const row=(await client.query("SELECT to_regclass('public.backup_verification_runs') AS table_name")).rows[0];
+    if(!row?.table_name){
+      const error=new Error('Backup verification schema is not ready. Run "npm run db:migrate" from backend before running backup verification.');
+      error.code='BACKUP_SCHEMA_NOT_READY';
+      throw error;
+    }
+  }finally{
+    await client.end();
+  }
+}
 async function recordVerification({backupType,status,artifactName=null,artifactSha256=null,artifactSizeBytes=null,metrics={},errorMessage=null,startedAt=null}){
   const config=sourceDbConfig();
   const client=new Client(nodeClientConfig(config));
@@ -142,6 +157,13 @@ async function recordVerification({backupType,status,artifactName=null,artifactS
       [backupType,status,artifactName,artifactSha256,artifactSizeBytes,buildCommit(),JSON.stringify(metrics||{}),errorMessage?String(errorMessage).slice(0,1000):null,startedAt]
     )).rows[0];
     return{id:Number(row.id),completedAt:row.completed_at};
+  }catch(error){
+    if(error?.code==='42P01'){
+      const schemaError=new Error('Backup verification schema is not ready. Run "npm run db:migrate" from backend before running backup verification.');
+      schemaError.code='BACKUP_SCHEMA_NOT_READY';
+      throw schemaError;
+    }
+    throw error;
   }finally{
     await client.end();
   }
@@ -152,5 +174,5 @@ function backupRoot(){
 
 module.exports={
   envFlag,sourceDbConfig,restoreDbConfig,nodeClientConfig,cliEnv,pgArgs,runCommand,timestamp,
-  buildCommit,ensurePrivateDirectory,sha256File,snapshotMetrics,compareMetrics,recordVerification,backupRoot
+  buildCommit,ensurePrivateDirectory,sha256File,snapshotMetrics,compareMetrics,ensureBackupVerificationSchema,recordVerification,backupRoot
 };
