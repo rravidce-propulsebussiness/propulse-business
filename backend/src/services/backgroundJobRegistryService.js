@@ -2,15 +2,16 @@ const pool=require('../config/database');
 const backupVerification=require('./backupVerificationService');
 const heartbeat=require('./backgroundWorkerHeartbeatService');
 const audit=require('./criticalActionAuditService');
+const sheetSyncSettings=require('./sheetSyncSettingsService');
 
-function defs(){
+function defs({sheetIntervalMs=5*60*1000,adminEnabled=true,partnerEnabled=true}={}){
   const adminSheets=require('./adminGoogleSheetSyncScheduler');
   const partnerSheets=require('./leadPartnerSheetSyncScheduler');
   const financial=require('./financialReconciliationScheduler');
   const notifications=require('./notificationScheduler');
   return[
-    {key:'admin_google_sheet_sync',name:'Admin Google Sheet Sync',group:'Google Sheets',description:'Imports and updates leads from Admin-managed Google Sheet connections.',intervalMs:adminSheets.AUTO_SYNC_INTERVAL_MS||300000,retrySupported:true},
-    {key:'lead_partner_google_sheet_sync',name:'Lead Partner Google Sheet Sync',group:'Google Sheets',description:'Imports Lead Partner inventory from connected Google Sheets.',intervalMs:partnerSheets.AUTO_SYNC_INTERVAL_MS||300000,retrySupported:true},
+    {key:'admin_google_sheet_sync',name:'Admin Google Sheet Sync',group:'Google Sheets',description:'Imports and updates leads from Admin-managed Google Sheet connections.',intervalMs:sheetIntervalMs||adminSheets.AUTO_SYNC_INTERVAL_MS||300000,retrySupported:true,scheduleEnabled:adminEnabled},
+    {key:'lead_partner_google_sheet_sync',name:'Lead Partner Google Sheet Sync',group:'Google Sheets',description:'Imports Lead Partner inventory from connected Google Sheets.',intervalMs:sheetIntervalMs||partnerSheets.AUTO_SYNC_INTERVAL_MS||300000,retrySupported:true,scheduleEnabled:partnerEnabled},
     {key:'notification_email_delivery',name:'Notification Email Delivery',group:'Notifications',description:'Delivers queued transactional notification emails with retry/backoff.',intervalMs:notifications.DELIVERY_INTERVAL_MS,retrySupported:true},
     {key:'membership_expiry_reminders',name:'Membership Expiry Reminders',group:'Notifications',description:'Creates deduplicated membership-expiry reminders for customers.',intervalMs:notifications.REMINDER_INTERVAL_MS,retrySupported:true},
     {key:'financial_reconciliation',name:'Financial Reconciliation',group:'Finance',description:'Reconciles wallet, payment, payout and investment financial integrity.',intervalMs:financial.configuredIntervalMs(),retrySupported:true}
@@ -30,7 +31,12 @@ function isoPlus(value,ms){
   return Number.isFinite(time)?new Date(time+ms).toISOString():null;
 }
 async function list({historyLimit=6}={}){
-  const definitions=defs();
+  const syncConfig=await sheetSyncSettings.getConfig().catch(()=>({autoSyncEnabled:true,adminSourcesEnabled:true,leadPartnerSourcesEnabled:true,intervalMinutes:5}));
+  const definitions=defs({
+    sheetIntervalMs:Math.max(60000,Number(syncConfig.intervalMinutes||5)*60*1000),
+    adminEnabled:Boolean(syncConfig.autoSyncEnabled&&syncConfig.adminSourcesEnabled),
+    partnerEnabled:Boolean(syncConfig.autoSyncEnabled&&syncConfig.leadPartnerSourcesEnabled)
+  });
   const keys=definitions.map(item=>item.key);
   const limit=Math.min(20,Math.max(1,Number(historyLimit)||6));
   const rows=(await pool.query(
@@ -64,8 +70,8 @@ async function list({historyLimit=6}={}){
     const latest=history[0]||null;
     const lastSuccess=history.find(run=>run.status==='succeeded')||null;
     const lastScheduled=scheduledByJob.get(def.key)||null;
-    const nextExpectedAt=lastScheduled?isoPlus(lastScheduled.started_at,def.intervalMs):null;
-    const overdue=Boolean(nextExpectedAt&&now>new Date(nextExpectedAt).getTime()+Math.max(60000,def.intervalMs*0.35));
+    const nextExpectedAt=def.scheduleEnabled===false?null:(lastScheduled?isoPlus(lastScheduled.started_at,def.intervalMs):null);
+    const overdue=Boolean(def.scheduleEnabled!==false&&nextExpectedAt&&now>new Date(nextExpectedAt).getTime()+Math.max(60000,def.intervalMs*0.35));
     const staleRunning=Boolean(latest?.status==='running'&&now-new Date(latest.startedAt).getTime()>Math.max(15*60*1000,def.intervalMs*3));
     return{...def,latestRun:latest,lastSuccess,lastScheduledRun:lastScheduled?{startedAt:lastScheduled.started_at,status:lastScheduled.status}:null,nextExpectedAt,overdue,staleRunning,recentRuns:history};
   });
