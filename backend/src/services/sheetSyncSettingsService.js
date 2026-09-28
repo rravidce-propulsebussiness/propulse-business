@@ -146,21 +146,6 @@ async function updateSettings(input={},adminId,requestContext={}){
       [next.autoSyncEnabled,next.adminSourcesEnabled,next.leadPartnerSourcesEnabled,next.intervalMinutes,adminId||null]
     );
 
-    if(!next.autoSyncEnabled||!next.adminSourcesEnabled){
-      await client.query(
-        `UPDATE admin_google_sheet_connections
-            SET sync_failure_count=0,last_sync_error_at=NULL,last_sync_error=NULL,next_retry_at=NULL,updated_at=CURRENT_TIMESTAMP
-          WHERE status='active' AND sync_failure_count>0`
-      );
-    }
-    if(!next.autoSyncEnabled||!next.leadPartnerSourcesEnabled){
-      await client.query(
-        `UPDATE lead_partner_sheet_connections
-            SET sync_failure_count=0,last_sync_error_at=NULL,last_sync_error=NULL,next_retry_at=NULL,updated_at=CURRENT_TIMESTAMP
-          WHERE status='active' AND sync_failure_count>0`
-      );
-    }
-
     await audit.record(client,{
       actorId:adminId,category:'system',action:'google_sheet_sync.settings_update',
       entityType:'google_sheet_sync_settings',entityId:'1',
@@ -168,11 +153,11 @@ async function updateSettings(input={},adminId,requestContext={}){
       requestContext
     });
     await client.query('COMMIT');
-    return getSettings();
   }catch(error){
     await client.query('ROLLBACK').catch(()=>{});
     throw error;
   }finally{client.release()}
+  return getSettings();
 }
 
 module.exports={
