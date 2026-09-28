@@ -71,7 +71,7 @@ export default function AdminSystemHealth(){
     }
   },[])
 
-  useEffect(()=>{load()},[load])
+  useEffect(()=>{let active=true;queueMicrotask(()=>{if(active)load()});return()=>{active=false}},[load])
   useEffect(()=>{
     if(!autoRefresh)return undefined
     const timer=setInterval(()=>load({silent:true}),30000)
