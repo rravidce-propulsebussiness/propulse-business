@@ -620,3 +620,27 @@ jobs:
             exit 1
           fi
           echo "No frontend Authorization headers found."
+
+  container-build:
+    name: Container deployment build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Build backend runtime image
+        run: docker build --pull -t propulse-backend-ci ./backend
+      - name: Build frontend edge image
+        run: docker build --pull --build-arg VITE_API_URL=/api --build-arg VITE_GOOGLE_CLIENT_ID=ci-client-id.apps.googleusercontent.com -t propulse-frontend-ci ./frontend
+      - name: Validate deployment Compose graph
+        env:
+          DEPLOY_ENVIRONMENT: staging
+          GIT_COMMIT_SHA: ${{ github.sha }}
+          BACKEND_ENV_FILE: ./env/staging.backend.env.example
+          RELEASE_ID: ci-${{ github.run_id }}
+        run: docker compose --env-file deploy/env/staging.backend.env.example -f deploy/compose.yml --profile release config >/tmp/propulse-compose.yml
+      - name: Verify non-root backend image
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(docker image inspect propulse-backend-ci --format '{{.Config.User}}')" = "node"

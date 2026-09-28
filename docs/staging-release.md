@@ -5,6 +5,10 @@ ProPulse uses a provider-neutral GitHub Actions release gate in
 staging before production can run. Configure required reviewers on the GitHub
 `production` Environment before live promotion.
 
+## Deployment topology
+
+A concrete provider-neutral Docker topology is available in `deploy/README.md` and `deploy/compose.yml`. It runs the static frontend/reverse proxy, backend web service and dedicated worker separately, keeps PostgreSQL external/managed, uses an explicit one-off migration service, and shares durable upload storage between web and worker. Use it directly on a Docker host or as the reference topology when mapping services to a managed platform.
+
 ## Isolated environments
 
 Create separate staging and production web/frontend, worker, PostgreSQL and storage

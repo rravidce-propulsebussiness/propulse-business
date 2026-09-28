@@ -165,3 +165,8 @@ backend/backups/
 # Runtime-uploaded private payment / payout proofs
 backend/uploads/private-proofs/*
 !backend/uploads/private-proofs/.gitkeep
+
+# Real deployment environment files must stay outside version control.
+deploy/env/*.env
+deploy/env/*.secret
+deploy/env/*.local
