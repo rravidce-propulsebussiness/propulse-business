@@ -14,6 +14,33 @@ async function login(page,email){
   await page.getByRole('button',{name:/sign in/i}).click()
 }
 
+async function api(page,path,{method='GET',body}={}){
+  return page.evaluate(async({path,method,body})=>{
+    const response=await fetch(path,{
+      method,
+      credentials:'include',
+      headers:body===undefined?undefined:{'Content-Type':'application/json'},
+      body:body===undefined?undefined:JSON.stringify(body)
+    })
+    let payload=null
+    try{payload=await response.json()}catch{}
+    return{status:response.status,body:payload}
+  },{path,method,body})
+}
+
+async function logout(page){
+  await api(page,'/api/auth/logout',{method:'POST'})
+}
+
+async function findFixtureLead(page,requirement){
+  const result=await api(page,`/api/leads?status=available&search=${encodeURIComponent(requirement)}&limit=20`)
+  expect(result.status).toBe(200)
+  const items=Array.isArray(result.body)?result.body:(result.body?.items||[])
+  return items.find(item=>String(item.requirement||'')===requirement)
+}
+
+const TINY_PNG='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Wl6S0sAAAAASUVORK5CYII='
+
 test('protected customer route redirects anonymous users to login',async({page})=>{
   await page.goto('/wallet')
   await expect(page).toHaveURL(/\/login$/)
@@ -37,6 +64,142 @@ test('business login survives reload and cannot access Admin APIs',async({page})
     return response.status
   })
   expect(status).toBe(403)
+})
+
+test.describe('financial mutation release gate',()=>{
+  test.describe.configure({retries:0})
+
+  test('financial mutations remain exactly-once across wallet and manual approvals',async({page})=>{
+    await login(page,accounts.business)
+    await expect(page).toHaveURL(/\/leads(?:\?|$)/)
+
+    const startingWallet=await api(page,'/api/wallet?summary=1')
+    expect(startingWallet.status).toBe(200)
+    expect(Number(startingWallet.body?.balance)).toBe(2500)
+
+    const walletLead=await findFixtureLead(page,'E2E Financial Wallet Purchase')
+    expect(walletLead?.id).toBeTruthy()
+
+    const firstPurchase=await api(page,`/api/leads/${walletLead.id}/purchase`,{
+      method:'POST',
+      body:{shares:1,useWallet:true}
+    })
+    expect(firstPurchase.status).toBe(201)
+    expect(firstPurchase.body?.status).toBe('paid')
+    expect(Number(firstPurchase.body?.wallet_amount)).toBe(500)
+    expect(Number(firstPurchase.body?.external_amount)).toBe(0)
+    expect(Number(firstPurchase.body?.balance_after)).toBe(2000)
+
+    const duplicatePurchase=await api(page,`/api/leads/${walletLead.id}/purchase`,{
+      method:'POST',
+      body:{shares:1,useWallet:true}
+    })
+    expect(duplicatePurchase.status).toBe(201)
+    expect(duplicatePurchase.body?.alreadyPurchased).toBe(true)
+
+    const afterPurchaseWallet=await api(page,'/api/wallet')
+    expect(afterPurchaseWallet.status).toBe(200)
+    expect(Number(afterPurchaseWallet.body?.balance)).toBe(2000)
+    const walletDebits=(afterPurchaseWallet.body?.transactions||[]).filter(item=>
+      item.type==='debit'&&Number(item.payment_id)===Number(firstPurchase.body?.payment_id)
+    )
+    expect(walletDebits).toHaveLength(1)
+    expect(Number(walletDebits[0]?.amount)).toBe(500)
+
+    const topupReference='E2E-TOPUP-'+Date.now()
+    const topup=await api(page,'/api/wallet/topups',{
+      method:'POST',
+      body:{amount:700,reference:topupReference}
+    })
+    expect(topup.status).toBe(201)
+    expect(topup.body?.status).toBe('pending')
+
+    const duplicateTopup=await api(page,'/api/wallet/topups',{
+      method:'POST',
+      body:{amount:700,reference:topupReference}
+    })
+    expect(duplicateTopup.status).toBe(400)
+    expect(duplicateTopup.body?.code).toBe('DUPLICATE_REFERENCE')
+
+    const manualLead=await findFixtureLead(page,'E2E Financial Manual Approval')
+    expect(manualLead?.id).toBeTruthy()
+
+    const manualPurchase=await api(page,`/api/leads/${manualLead.id}/purchase`,{
+      method:'POST',
+      body:{shares:1,useWallet:false}
+    })
+    expect(manualPurchase.status).toBe(201)
+    expect(manualPurchase.body?.status).toBe('pending_payment')
+    expect(manualPurchase.body?.requires_external_payment).toBe(true)
+    expect(Number(manualPurchase.body?.external_amount)).toBe(300)
+    const manualPaymentId=Number(manualPurchase.body?.payment_id)
+    expect(manualPaymentId).toBeGreaterThan(0)
+
+    const proofReference='E2E-MANUAL-'+Date.now()
+    const proof=await api(page,`/api/payments/${manualPaymentId}/reference`,{
+      method:'POST',
+      body:{manualReference:proofReference,proofUrl:TINY_PNG,notes:'Release E2E manual payment'}
+    })
+    expect(proof.status).toBe(200)
+    expect(proof.body?.manual_reference).toBe(proofReference)
+
+    await logout(page)
+    await login(page,accounts.admin)
+    await expect(page).toHaveURL(/\/admin$/)
+
+    const approveTopup=await api(page,`/api/wallet/topups/${topup.body.id}/approve`,{method:'PATCH',body:{}})
+    expect(approveTopup.status).toBe(200)
+    expect(approveTopup.body?.status).toBe('approved')
+
+    const approveTopupAgain=await api(page,`/api/wallet/topups/${topup.body.id}/approve`,{method:'PATCH',body:{}})
+    expect(approveTopupAgain.status).toBe(409)
+    expect(approveTopupAgain.body?.code).toBe('ALREADY_REVIEWED')
+
+    const approveManual=await api(page,`/api/payments/${manualPaymentId}/status`,{
+      method:'PATCH',
+      body:{status:'paid',notes:'Approved by release E2E'}
+    })
+    expect(approveManual.status).toBe(200)
+    expect(approveManual.body?.status).toBe('paid')
+    expect(approveManual.body?.lead_purchase?.status).toBe('paid')
+
+    const approveManualAgain=await api(page,`/api/payments/${manualPaymentId}/status`,{
+      method:'PATCH',
+      body:{status:'paid',notes:'Duplicate approval attempt'}
+    })
+    expect(approveManualAgain.status).toBe(400)
+    expect(approveManualAgain.body?.code).toBe('PAYMENT_ALREADY_PAID')
+
+    const integrity=await api(page,'/api/admin/financial-integrity?refresh=1')
+    expect(integrity.status).toBe(200)
+    for(const type of ['wallet_balance','approved_topup','payment_split','payment_wallet_debit']){
+      const check=(integrity.body?.checks||[]).find(item=>item.type===type)
+      expect(check?.count).toBe(0)
+    }
+
+    await logout(page)
+    await login(page,accounts.business)
+    const finalWallet=await api(page,'/api/wallet')
+    expect(finalWallet.status).toBe(200)
+    expect(Number(finalWallet.body?.balance)).toBe(2700)
+
+    const topupCredits=(finalWallet.body?.transactions||[]).filter(item=>
+      item.type==='credit'&&item.reference_type==='wallet_topup'&&Number(item.reference_id)===Number(topup.body.id)
+    )
+    expect(topupCredits).toHaveLength(1)
+    expect(Number(topupCredits[0]?.amount)).toBe(700)
+
+    const finalWalletDebits=(finalWallet.body?.transactions||[]).filter(item=>
+      item.type==='debit'&&Number(item.payment_id)===Number(firstPurchase.body?.payment_id)
+    )
+    expect(finalWalletDebits).toHaveLength(1)
+
+    const purchases=await api(page,'/api/leads/purchased')
+    expect(purchases.status).toBe(200)
+    const rows=Array.isArray(purchases.body)?purchases.body:(purchases.body?.items||[])
+    expect(rows.filter(item=>Number(item.lead_id)===Number(walletLead.id))).toHaveLength(1)
+    expect(rows.filter(item=>Number(item.lead_id)===Number(manualLead.id))).toHaveLength(1)
+  })
 })
 
 test('Admin login reaches operations consoles and session survives reload',async({page})=>{

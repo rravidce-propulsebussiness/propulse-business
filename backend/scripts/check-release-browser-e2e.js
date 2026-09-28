@@ -20,4 +20,11 @@ assert(config.includes("workers:1")&&config.includes("retries:1"),'Release E2E m
 assert(spec.includes("fetch('/api/admin/system-health'")&&spec.includes('expect(status).toBe(403)'),'Business role must be denied Admin APIs');
 assert(spec.includes("fetch('/api/admin/financial-integrity'")&&spec.includes('expect(status).toBe(403)'),'Lead Partner role must be denied Admin financial APIs');
 assert(spec.includes('page.reload()'),'E2E must verify HttpOnly cookie session survival across reload');
+assert(seed.includes('E2E Financial Wallet Purchase')&&seed.includes('E2E Financial Manual Approval'),'E2E seed must include wallet and manual-payment lead fixtures');
+assert(spec.includes('financial mutations remain exactly-once'),'Release E2E must cover financial mutation idempotency');
+assert(spec.includes("expect(duplicatePurchase.body?.alreadyPurchased).toBe(true)"),'Release E2E must reject duplicate lead debits through idempotent purchase reuse');
+assert(spec.includes("expect(approveTopupAgain.status).toBe(409)"),'Release E2E must prove wallet top-ups cannot be approved twice');
+assert(spec.includes("expect(approveManualAgain.body?.code).toBe('PAYMENT_ALREADY_PAID')"),'Release E2E must prove manual payments cannot be approved twice');
+assert(spec.includes("'/api/admin/financial-integrity?refresh=1'"),'Release E2E must reconcile ledgers after money mutations');
+assert(spec.includes("test.describe.configure({retries:0})"),'Money-mutating browser tests must not auto-retry against the same database state');
 console.log('Release browser E2E regression test passed.');

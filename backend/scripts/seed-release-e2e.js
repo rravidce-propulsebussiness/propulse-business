@@ -83,6 +83,50 @@ async function seed(){
       [partner.id]
     );
 
+    const leadFixtures=[
+      {requirement:'E2E Financial Wallet Purchase',phone:'9000000101',email:'e2e-wallet-lead@propulse.test',price:500},
+      {requirement:'E2E Financial Manual Approval',phone:'9000000102',email:'e2e-manual-lead@propulse.test',price:300}
+    ];
+    const seededLeads=[];
+    for(const fixture of leadFixtures){
+      const existing=(await client.query(
+        `SELECT id FROM leads WHERE source='e2e_release' AND customer_email=$1 ORDER BY id DESC LIMIT 1`,
+        [fixture.email]
+      )).rows[0];
+      const pricing={shares:[{shares:1,normal:fixture.price,pro:fixture.price}]};
+      const customFields={buyerCapacity:1,e2eFixture:true};
+      let lead;
+      if(existing){
+        lead=(await client.query(
+          `UPDATE leads
+              SET industry_id=$1,service_id=$2,state_id=$3,city_id=$4,
+                  customer_name='E2E Financial Fixture',customer_phone=$5,
+                  requirement=$6,property_type='Office',budget='E2E',
+                  status='available',created_by=$7,lead_type='basic',
+                  is_exclusive=FALSE,buyer_capacity=1,custom_fields=$8::jsonb,
+                  pricing=$9::jsonb,access_strategy='permanent_single',
+                  release_to_two_after_hours=NULL,release_to_three_after_hours=NULL,
+                  access_capacity_locked=NULL,updated_at=CURRENT_TIMESTAMP
+            WHERE id=$10
+            RETURNING id`,
+          [catalog.industry_id,catalog.service_id,catalog.state_id,catalog.city_id,fixture.phone,fixture.requirement,admin.id,JSON.stringify(customFields),JSON.stringify(pricing),existing.id]
+        )).rows[0];
+      }else{
+        lead=(await client.query(
+          `INSERT INTO leads(
+             industry_id,service_id,state_id,city_id,customer_name,customer_phone,customer_email,
+             requirement,property_type,budget,source,status,created_by,lead_type,is_exclusive,
+             buyer_capacity,custom_fields,pricing,access_strategy,release_to_two_after_hours,release_to_three_after_hours
+           ) VALUES(
+             $1,$2,$3,$4,'E2E Financial Fixture',$5,$6,$7,'Office','E2E','e2e_release','available',$8,
+             'basic',FALSE,1,$9::jsonb,$10::jsonb,'permanent_single',NULL,NULL
+           ) RETURNING id`,
+          [catalog.industry_id,catalog.service_id,catalog.state_id,catalog.city_id,fixture.phone,fixture.email,fixture.requirement,admin.id,JSON.stringify(customFields),JSON.stringify(pricing)]
+        )).rows[0];
+      }
+      seededLeads.push({id:Number(lead.id),requirement:fixture.requirement,price:fixture.price});
+    }
+
     const wallet=(await client.query(
       `INSERT INTO wallets(user_id,balance) VALUES($1,2500)
        ON CONFLICT(user_id) DO UPDATE SET balance=2500,updated_at=CURRENT_TIMESTAMP
@@ -99,7 +143,8 @@ async function seed(){
     await client.query('COMMIT');
     console.log(JSON.stringify({
       password:PASSWORD,
-      accounts:{admin:admin.email,business:business.email,partner:partner.email}
+      accounts:{admin:admin.email,business:business.email,partner:partner.email},
+      leads:seededLeads
     }));
   }catch(error){
     await client.query('ROLLBACK');
