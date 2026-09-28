@@ -32,7 +32,7 @@ versions, rather than trusting the role claimed in a JWT.
    `HEALTH_CHECK_TIMEOUT_MS` (500–10000 ms). Build with `npm run build` in frontend,
    with `VITE_API_URL=/api`. Serve `frontend/dist` over HTTPS, use SPA fallback for
    frontend routes, and forward `/api`, `/health`, `/health/live`,
-   `/health/ready`, and `/uploads` to the backend. Keep browser/API requests
+   `/health/ready`, `/health/worker`, and `/uploads` to the backend. Keep browser/API requests
    same-origin through `/api`; the current HttpOnly cookie and CSRF model is designed
    for that topology. Normal JSON APIs are capped at 1 MB. Routes that accept payment,
    wallet, investment, company-proof or Lead Partner proof payloads use an explicit
@@ -61,7 +61,12 @@ versions, rather than trusting the role claimed in a JWT.
    `RUN_BACKGROUND_JOBS_IN_WEB=false` on web instances and run `npm run worker` as a
    supervised worker service. The worker runs both Lead Partner and Admin Google Sheet
    sync immediately and every five minutes; PostgreSQL advisory locking makes multiple
-   worker replicas safe, although one worker is normally enough. Back up PostgreSQL and persist
+   worker replicas safe, although one worker is normally enough. In dedicated-worker
+   production, set `REQUIRE_BACKGROUND_WORKER=true` on web instances. The worker writes
+   a PostgreSQL heartbeat every `WORKER_HEARTBEAT_INTERVAL_MS` (default 30 seconds),
+   `/health/worker` reports its freshness, and `/health/ready` fails when no heartbeat is
+   newer than `WORKER_HEARTBEAT_MAX_AGE_SECONDS` (default 120 seconds). This makes a dead
+   worker visible to monitoring instead of silently stopping sheet synchronization. Back up PostgreSQL and persist
    `backend/uploads`, including private company proofs. Multiple backend instances need
    shared upload storage. Private payment and payout proof files are stored under
    `backend/uploads/private-proofs` (including wallet top-up proofs) while PostgreSQL keeps only short internal
@@ -127,6 +132,10 @@ actual PostgreSQL payment concurrency and rollback, role restrictions, Lead Part
 payout lifecycle, production-mode HTTP startup/security checks, frontend build and
 Google GIS checks. Dependency audits returned no known vulnerabilities. Frontend
 lint is clean with zero warnings and zero errors.
+
+During SIGTERM, `/health/ready` immediately switches to a 503 `draining` response before
+connections and the database pool are closed, allowing a load balancer to remove the
+instance cleanly.
 
 Every response carries `X-Request-Id`; include that value in support/error reports so
 backend logs can be correlated to a specific failed request. In production, 5xx responses

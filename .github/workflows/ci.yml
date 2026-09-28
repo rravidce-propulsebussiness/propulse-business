@@ -203,6 +203,15 @@ jobs:
           DB_USER: ci_smoke
           DB_PASSWORD: ci_smoke
         run: npm run test:production
+      - name: Verify background worker heartbeat
+        env:
+          DB_HOST: 127.0.0.1
+          DB_PORT: 5432
+          DB_NAME: ci_smoke
+          DB_USER: ci_smoke
+          DB_PASSWORD: ci_smoke
+        timeout-minutes: 2
+        run: npm run test:worker-runtime
       - name: Start backend
         env:
           PORT: 5000

@@ -39,6 +39,9 @@ function run(overrides) {
       RUN_MIGRATIONS_ON_STARTUP: 'false',
       RUN_BACKGROUND_JOBS_IN_WEB: 'false',
       RUN_MIGRATIONS_ON_WORKER_STARTUP: 'false',
+      REQUIRE_BACKGROUND_WORKER: 'true',
+      WORKER_HEARTBEAT_INTERVAL_MS: '30000',
+      WORKER_HEARTBEAT_MAX_AGE_SECONDS: '120',
       ...overrides,
     },
   });
@@ -60,6 +63,10 @@ const unsafe = run({
   DB_POOL_MAX: '99',
   DB_STATEMENT_TIMEOUT_MS: '299999',
   SLOW_REQUEST_MS: '100',
+  REQUIRE_BACKGROUND_WORKER: 'true',
+  RUN_BACKGROUND_JOBS_IN_WEB: 'true',
+  WORKER_HEARTBEAT_INTERVAL_MS: '120000',
+  WORKER_HEARTBEAT_MAX_AGE_SECONDS: '60',
 });
 assert.notEqual(unsafe.status, 0);
 const output = `${unsafe.stdout}\n${unsafe.stderr}`;
@@ -74,5 +81,7 @@ assert.match(output, /HTTP_HEADERS_TIMEOUT_MS/);
 assert.match(output, /DB_POOL_MAX/);
 assert.match(output, /DB_STATEMENT_TIMEOUT_MS/);
 assert.match(output, /SLOW_REQUEST_MS/);
+assert.match(output, /REQUIRE_BACKGROUND_WORKER/);
+assert.match(output, /WORKER_HEARTBEAT_MAX_AGE_SECONDS/);
 
 console.log('Production environment preflight regression test passed.');

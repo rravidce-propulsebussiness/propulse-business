@@ -36,6 +36,7 @@ const csrfProtection=require('./middleware/csrfMiddleware');
 const {getConfiguredOrigins}=require('./config/httpOrigins');
 const {envFlag}=require('./config/runtimeFlags');
 const {uploadRoot,checkUploadStorage,ensureUploadStorage}=require('./config/uploadStorage');
+const workerHeartbeat=require('./services/backgroundWorkerHeartbeatService');
 const app=express();
 const isProduction=process.env.NODE_ENV==='production';
 const PORT=Number(process.env.PORT)||5000;
@@ -50,6 +51,8 @@ const httpMaxRequestsPerSocket=Math.min(10000,Math.max(1,Math.floor(Number(proce
 const slowRequestMs=Math.min(60000,Math.max(250,Number(process.env.SLOW_REQUEST_MS)||2000));
 const runMigrationsOnStartup=envFlag('RUN_MIGRATIONS_ON_STARTUP',true);
 const runBackgroundJobsInWeb=envFlag('RUN_BACKGROUND_JOBS_IN_WEB',true);
+const requireBackgroundWorker=envFlag('REQUIRE_BACKGROUND_WORKER',false);
+const workerHeartbeatMaxAgeSeconds=Math.min(600,Math.max(30,Math.floor(Number(process.env.WORKER_HEARTBEAT_MAX_AGE_SECONDS)||120)));
 const trustProxy=String(process.env.TRUST_PROXY||'').trim();
 if(trustProxy) app.set('trust proxy',trustProxy==='false'?false:trustProxy==='true'?true:Number.isNaN(Number(trustProxy))?trustProxy:Number(trustProxy));
 app.disable('x-powered-by');
@@ -98,21 +101,40 @@ function withTimeout(promise,label){
   ]).finally(()=>clearTimeout(timer));
 }
 app.get('/health/live',(req,res)=>{setHealthHeaders(res);res.json({status:'ok'});});
+app.get('/health/worker',async(req,res)=>{
+  setHealthHeaders(res);
+  try{
+    const heartbeat=await withTimeout(workerHeartbeat.latestHeartbeat(),'Background worker');
+    const ageSeconds=heartbeat?Number(heartbeat.age_seconds):null;
+    const fresh=Boolean(heartbeat)&&Number.isFinite(ageSeconds)&&ageSeconds<=workerHeartbeatMaxAgeSeconds;
+    return res.status(fresh?200:503).json({status:fresh?'ok':'error',worker:fresh?'fresh':'unavailable',ageSeconds});
+  }catch(error){
+    console.error(`[${req.requestId}] Worker health check failed:`,error?.message||error);
+    return res.status(503).json({status:'error',worker:'unavailable'});
+  }
+});
 async function readiness(req,res){
   setHealthHeaders(res);
-  const [database,storage]=await Promise.allSettled([
+  if(shuttingDown)return res.status(503).json({status:'draining',database:'unknown',storage:'unknown',worker:requireBackgroundWorker?'unknown':'not-required'});
+  const [database,storage,worker]=await Promise.allSettled([
     withTimeout(pool.query('SELECT 1'),'Database'),
-    withTimeout(checkUploadStorage(),'Upload storage')
+    withTimeout(checkUploadStorage(),'Upload storage'),
+    requireBackgroundWorker?withTimeout(workerHeartbeat.latestHeartbeat(),'Background worker'):Promise.resolve(null)
   ]);
   const databaseReady=database.status==='fulfilled';
   const storageReady=storage.status==='fulfilled';
-  if(databaseReady&&storageReady)return res.json({status:'ok',database:'connected',storage:'ready'});
+  const heartbeat=worker.status==='fulfilled'?worker.value:null;
+  const workerAgeSeconds=heartbeat?Number(heartbeat.age_seconds):null;
+  const workerReady=!requireBackgroundWorker||(Boolean(heartbeat)&&Number.isFinite(workerAgeSeconds)&&workerAgeSeconds<=workerHeartbeatMaxAgeSeconds);
+  if(databaseReady&&storageReady&&workerReady)return res.json({status:'ok',database:'connected',storage:'ready',worker:requireBackgroundWorker?'fresh':'not-required'});
   if(!databaseReady)console.error(`[${req.requestId}] Readiness database check failed:`,database.reason?.message||database.reason);
   if(!storageReady)console.error(`[${req.requestId}] Readiness storage check failed:`,storage.reason?.message||storage.reason);
+  if(requireBackgroundWorker&&!workerReady)console.error(`[${req.requestId}] Readiness worker check failed: latest heartbeat age=${workerAgeSeconds??'missing'}s`);
   return res.status(503).json({
     status:'error',
     database:databaseReady?'connected':'unavailable',
-    storage:storageReady?'ready':'unavailable'
+    storage:storageReady?'ready':'unavailable',
+    worker:requireBackgroundWorker?(workerReady?'fresh':'unavailable'):'not-required'
   });
 }
 app.get('/health/ready',readiness);

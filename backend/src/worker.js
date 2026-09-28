@@ -4,9 +4,11 @@ const { runMigrations } = require('./database/runMigrations');
 const { startLeadPartnerSheetAutoSync } = require('./services/leadPartnerSheetSyncScheduler');
 const { startAdminGoogleSheetAutoSync } = require('./services/adminGoogleSheetSyncScheduler');
 const { envFlag } = require('./config/runtimeFlags');
+const workerHeartbeat = require('./services/backgroundWorkerHeartbeatService');
 
 let stopLeadPartnerAutoSync = () => {};
 let stopAdminAutoSync = () => {};
+let stopHeartbeat = async () => {};
 let shuttingDown = false;
 
 async function shutdown(signal) {
@@ -22,6 +24,7 @@ async function shutdown(signal) {
   try {
     stopLeadPartnerAutoSync();
     stopAdminAutoSync();
+    await stopHeartbeat();
     await pool.end();
     clearTimeout(forceTimer);
     process.exit(0);
@@ -38,6 +41,10 @@ async function start() {
   } else {
     console.log('Database migrations skipped on worker startup.');
   }
+
+  const heartbeatIntervalMs=Math.min(300000,Math.max(5000,Number(process.env.WORKER_HEARTBEAT_INTERVAL_MS)||30000));
+  await workerHeartbeat.beat();
+  stopHeartbeat = workerHeartbeat.startHeartbeat({ intervalMs:heartbeatIntervalMs, unref:false, runImmediately:false });
 
   stopLeadPartnerAutoSync = startLeadPartnerSheetAutoSync({ unref: false, runImmediately: true });
   stopAdminAutoSync = startAdminGoogleSheetAutoSync({ unref: false, runImmediately: true });

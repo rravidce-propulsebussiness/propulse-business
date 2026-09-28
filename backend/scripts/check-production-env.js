@@ -98,6 +98,15 @@ const backgroundInWeb=value('RUN_BACKGROUND_JOBS_IN_WEB').toLowerCase();
 if(!backgroundInWeb) warn('RUN_BACKGROUND_JOBS_IN_WEB is not explicit; use false when a supervised worker runs scheduled jobs');
 else if(['1','true','yes','on'].includes(backgroundInWeb)) warn('RUN_BACKGROUND_JOBS_IN_WEB is enabled; prefer a dedicated npm run worker process for multi-instance production');
 
+const requireWorker=value('REQUIRE_BACKGROUND_WORKER').toLowerCase();
+const workerRequired=['1','true','yes','on'].includes(requireWorker);
+const jobsInWeb=['1','true','yes','on'].includes(backgroundInWeb);
+const workerHeartbeatInterval=boundedInteger('WORKER_HEARTBEAT_INTERVAL_MS',30000,5000,300000);
+const workerMaxAge=boundedInteger('WORKER_HEARTBEAT_MAX_AGE_SECONDS',120,30,600);
+if(workerRequired&&jobsInWeb)fail('REQUIRE_BACKGROUND_WORKER=true requires RUN_BACKGROUND_JOBS_IN_WEB=false');
+if(!jobsInWeb&&!workerRequired)warn('Dedicated background jobs are configured but REQUIRE_BACKGROUND_WORKER is false; web readiness will not detect a dead worker');
+if(workerMaxAge*1000<=workerHeartbeatInterval)fail('WORKER_HEARTBEAT_MAX_AGE_SECONDS must be greater than WORKER_HEARTBEAT_INTERVAL_MS');
+
 const workerMigrations=value('RUN_MIGRATIONS_ON_WORKER_STARTUP').toLowerCase();
 if(['1','true','yes','on'].includes(workerMigrations)) warn('RUN_MIGRATIONS_ON_WORKER_STARTUP is enabled; migrations should normally run once as a release step');
 
