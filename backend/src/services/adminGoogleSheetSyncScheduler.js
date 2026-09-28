@@ -2,17 +2,39 @@ const pool=require('../config/database');
 const syncService=require('./adminGoogleSheetSyncService');
 const notificationService=require('./notificationService');
 const jobControl=require('./backgroundJobControlService');
+const sheetSyncSettings=require('./sheetSyncSettingsService');
 
 const AUTO_SYNC_INTERVAL_MS=5*60*1000;
+const SCHEDULER_TICK_MS=60*1000;
 let timer=null;
 let running=false;
 
-async function runAutoSyncCore(){
+async function dueConnections(config,{onlyOne=false}={}){
+  const interval=Math.max(1,Number(config?.intervalMinutes)||5);
+  return(await pool.query(
+    `SELECT id
+       FROM admin_google_sheet_connections
+      WHERE status='active'
+        AND (next_retry_at IS NULL OR next_retry_at<=CURRENT_TIMESTAMP)
+        AND (
+          (sync_failure_count>0 AND next_retry_at IS NOT NULL)
+          OR last_checked_at IS NULL
+          OR last_checked_at<=CURRENT_TIMESTAMP-($1*INTERVAL '1 minute')
+        )
+      ORDER BY COALESCE(next_retry_at,last_checked_at,created_at) ASC,id ASC
+      ${onlyOne?'LIMIT 1':''}`,
+    [interval]
+  )).rows;
+}
+
+async function runAutoSyncCore({automated=false,config=null}={}){
   if(running){console.log('Admin Google Sheet auto-sync skipped: previous cycle is still running in this process.');return{busy:true,skipped:true,reason:'process_busy'}}
   running=true;
   let created=0,updated=0,failedRows=0,connectionFailures=0,busyConnections=0,processedConnections=0;
   try{
-    const connections=(await pool.query(`SELECT id FROM admin_google_sheet_connections WHERE status='active' AND (next_retry_at IS NULL OR next_retry_at<=CURRENT_TIMESTAMP) ORDER BY id ASC`)).rows;
+    const connections=automated
+      ?await dueConnections(config)
+      :(await pool.query(`SELECT id FROM admin_google_sheet_connections WHERE status='active' ORDER BY id ASC`)).rows;
     if(!connections.length)return{connections:0,processedConnections:0,created:0,updated:0,failedRows:0,connectionFailures:0,busyConnections:0};
     console.log(`Admin Google Sheet auto-sync started: ${connections.length} active connection(s).`);
     for(const connection of connections){
@@ -45,15 +67,26 @@ async function runAutoSyncCore(){
   finally{running=false}
 }
 async function runAutoSync({source='scheduled',triggeredBy=null}={}){
-  return jobControl.execute({jobKey:'admin_google_sheet_sync',source,triggeredBy,task:runAutoSyncCore});
+  const automated=source!=='manual';
+  let config=null;
+  if(automated){
+    config=await sheetSyncSettings.getConfig();
+    if(!config.autoSyncEnabled||!config.adminSourcesEnabled)return{skipped:true,reason:'disabled',jobStatus:'skipped'};
+    const due=await dueConnections(config,{onlyOne:true});
+    if(!due.length)return{skipped:true,reason:'not_due',jobStatus:'skipped'};
+  }
+  return jobControl.execute({
+    jobKey:'admin_google_sheet_sync',source,triggeredBy,
+    task:()=>runAutoSyncCore({automated,config})
+  });
 }
 function startAdminGoogleSheetAutoSync({unref=true,runImmediately=false}={}){
   if(timer)return()=>{};
-  console.log('Admin Google Sheet auto-sync enabled: every 5 minutes.');
+  console.log('Admin Google Sheet scheduler enabled: Admin-controlled interval; worker checks once per minute.');
   if(runImmediately)void runAutoSync({source:'startup'});
-  timer=setInterval(()=>{void runAutoSync({source:'scheduled'})},AUTO_SYNC_INTERVAL_MS);
+  timer=setInterval(()=>{void runAutoSync({source:'scheduled'})},SCHEDULER_TICK_MS);
   if(unref)timer.unref?.();
   return()=>{if(timer){clearInterval(timer);timer=null}}
 }
 
-module.exports={startAdminGoogleSheetAutoSync,runAutoSync,runAutoSyncCore,AUTO_SYNC_INTERVAL_MS};
+module.exports={startAdminGoogleSheetAutoSync,runAutoSync,runAutoSyncCore,dueConnections,AUTO_SYNC_INTERVAL_MS,SCHEDULER_TICK_MS};
