@@ -1,10 +1,15 @@
 const adminService = require('../services/adminService');
 const adminTestResetService = require('../services/adminTestResetService');
 const adminUser360Service = require('../services/adminUser360Service');
+const adminSystemHealthService = require('../services/adminSystemHealthService');
 
 async function getDashboardStats(req, res) {
   try { return res.json(await adminService.getDashboardStats()); }
   catch (error) { console.error('Get admin dashboard stats failed:', error.message); return res.status(500).json({ error: 'Failed to load dashboard statistics' }); }
+}
+async function getSystemHealth(req,res){
+  try{return res.json(await adminSystemHealthService.getSystemHealth())}
+  catch(error){console.error('Get admin system health failed:',error);return res.status(500).json({error:'Failed to load system health'})}
 }
 async function getUsers(req, res) { try { return res.json(await adminService.getUsers(req.query)); } catch (error) { console.error('Get admin users failed:', error.message); return res.status(500).json({ error: 'Failed to load users' }); } }
 async function createAdmin(req, res) {
@@ -127,5 +132,5 @@ async function resetTestData(req,res){
   }
 }
 
-module.exports = { getDashboardStats, getUsers, getUser360, setUserMembershipPlan, createAdmin, setUserStatus, setUserRole, updateUserProfile, getCompanyProofs, verifyCompanyProof, rejectCompanyProof, getTestResetPreview, resetTestData };
+module.exports = { getDashboardStats, getSystemHealth, getUsers, getUser360, setUserMembershipPlan, createAdmin, setUserStatus, setUserRole, updateUserProfile, getCompanyProofs, verifyCompanyProof, rejectCompanyProof, getTestResetPreview, resetTestData };
 

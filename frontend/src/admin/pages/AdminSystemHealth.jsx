@@ -1,0 +1,152 @@
+import {useCallback,useEffect,useMemo,useState} from 'react'
+import {authRequest} from '../../utils/auth'
+import './AdminSystemHealth.css'
+
+const fmtDate=value=>{
+  if(!value)return '—'
+  const date=new Date(value)
+  return Number.isNaN(date.getTime())?'—':date.toLocaleString()
+}
+const fmtDuration=seconds=>{
+  const value=Math.max(0,Number(seconds)||0)
+  const days=Math.floor(value/86400)
+  const hours=Math.floor((value%86400)/3600)
+  const minutes=Math.floor((value%3600)/60)
+  if(days)return days+'d '+hours+'h'
+  if(hours)return hours+'h '+minutes+'m'
+  return minutes+'m'
+}
+const stateTone=value=>['healthy','connected','ready','fresh','current'].includes(String(value||'').toLowerCase())?'good':['degraded','pending','stale'].includes(String(value||'').toLowerCase())?'warn':'bad'
+
+function HealthCard({label,value,note,tone='good',metric}){
+  return <article className={'system-health-card '+tone}>
+    <div className="system-health-card-top"><span>{label}</span><i/></div>
+    <strong>{value}</strong>
+    {metric&&<b>{metric}</b>}
+    <small>{note}</small>
+  </article>
+}
+
+function SheetHealth({title,subtitle,data}){
+  const problems=Array.isArray(data?.recentProblems)?data.recentProblems:[]
+  const issueCount=(Number(data?.failing)||0)+(Number(data?.connectionErrors)||0)
+  return <section className="system-health-panel sheet-health-panel">
+    <header>
+      <div><span>SHEET AUTOMATION</span><h2>{title}</h2><p>{subtitle}</p></div>
+      <span className={'system-health-pill '+(issueCount?'warn':'good')}>{issueCount?issueCount+' needs attention':'Healthy'}</span>
+    </header>
+    <div className="sheet-health-metrics">
+      <div><span>Active connections</span><strong>{Number(data?.active)||0}</strong></div>
+      <div><span>Rows failing</span><strong>{Number(data?.failing)||0}</strong></div>
+      <div><span>Connection errors</span><strong>{Number(data?.connectionErrors)||0}</strong></div>
+      <div><span>Last successful sync</span><strong>{fmtDate(data?.lastSyncedAt)}</strong></div>
+    </div>
+    {problems.length>0?<div className="system-health-problems">
+      {problems.map(item=><article key={item.id}>
+        <span>Connection #{item.id}</span>
+        <strong>{item.failedRows?item.failedRows+' failed row'+(item.failedRows===1?'':'s'):item.failureCount+' connection error'+(item.failureCount===1?'':'s')}</strong>
+        <small>{item.error||'Row-level validation failures need review.'}</small>
+        <b>{fmtDate(item.lastSyncedAt)}</b>
+      </article>)}
+    </div>:<div className="system-health-empty">No active sync problems reported.</div>}
+  </section>
+}
+
+export default function AdminSystemHealth(){
+  const[data,setData]=useState(null)
+  const[loading,setLoading]=useState(true)
+  const[error,setError]=useState('')
+  const[autoRefresh,setAutoRefresh]=useState(true)
+
+  const load=useCallback(async({silent=false}={})=>{
+    if(!silent)setLoading(true)
+    try{
+      const result=await authRequest('/admin/system-health')
+      setData(result)
+      setError('')
+    }catch(err){
+      setError(err.message||'Unable to load system health')
+    }finally{
+      if(!silent)setLoading(false)
+    }
+  },[])
+
+  useEffect(()=>{load()},[load])
+  useEffect(()=>{
+    if(!autoRefresh)return undefined
+    const timer=setInterval(()=>load({silent:true}),30000)
+    return()=>clearInterval(timer)
+  },[autoRefresh,load])
+
+  const overallTone=stateTone(data?.status)
+  const pool=data?.database?.pool||{}
+  const poolNote=useMemo(()=>{
+    if(!data)return 'Waiting for runtime metrics'
+    if(Number(pool.waiting)>0)return pool.waiting+' request'+(pool.waiting===1?' is':'s are')+' waiting for a DB connection'
+    return (pool.idle||0)+' idle of '+(pool.total||0)+' open connections'
+  },[data,pool.idle,pool.total,pool.waiting])
+
+  return <main className="admin-system-health">
+    <section className="system-health-hero">
+      <div>
+        <span>SYSTEM / PRODUCTION OPERATIONS</span>
+        <h1>System health</h1>
+        <p>One operational view for runtime, PostgreSQL, persistent storage, workers, migrations and automated lead sources.</p>
+      </div>
+      <div className="system-health-hero-actions">
+        <label><input type="checkbox" checked={autoRefresh} onChange={e=>setAutoRefresh(e.target.checked)}/> Auto refresh · 30s</label>
+        <button type="button" onClick={()=>load()} disabled={loading}>{loading?'Refreshing…':'Refresh now'}</button>
+      </div>
+    </section>
+
+    {error&&<div className="system-health-error"><strong>Health data unavailable</strong><span>{error}</span></div>}
+
+    <section className="system-health-overview">
+      <HealthCard label="Overall" value={loading&&!data?'Checking…':data?.status||'Unavailable'} note={data?'Checked '+fmtDate(data.checkedAt):'Waiting for backend'} tone={overallTone}/>
+      <HealthCard label="Database" value={data?.database?.status||'—'} note={poolNote} tone={stateTone(data?.database?.status)} metric={data?(pool.utilizationPercent||0)+'% pool use':null}/>
+      <HealthCard label="Upload storage" value={data?.storage?.status||'—'} note={data?.storage?.persistentConfigured?'Persistent storage configured':'Using application-local storage'} tone={stateTone(data?.storage?.status)}/>
+      <HealthCard label="Background worker" value={data?.worker?.status||'—'} note={data?.worker?.lastSeenAt?'Heartbeat '+fmtDate(data.worker.lastSeenAt):'No heartbeat available'} tone={stateTone(data?.worker?.status)} metric={data?.worker?.ageSeconds!=null?data.worker.ageSeconds+'s old':null}/>
+      <HealthCard label="Migrations" value={data?.migrations?.status||'—'} note={data?(data.migrations?.applied||0)+' applied · '+(data.migrations?.pending??'—')+' pending':'Waiting for migration state'} tone={stateTone(data?.migrations?.status)}/>
+    </section>
+
+    <section className="system-health-grid">
+      <section className="system-health-panel runtime-panel">
+        <header><div><span>RUNTIME</span><h2>Application process</h2><p>Current deployed process metrics. No secrets or environment values are exposed.</p></div><span className={'system-health-pill '+overallTone}>{data?.build?.environment||'—'}</span></header>
+        <div className="runtime-health-grid">
+          <div><span>Build</span><strong>{data?.build?.commit||'—'}</strong><small>Git commit / deployment identity</small></div>
+          <div><span>Node</span><strong>{data?.build?.node||'—'}</strong><small>Runtime version</small></div>
+          <div><span>Uptime</span><strong>{data?fmtDuration(data.runtime?.uptimeSeconds):'—'}</strong><small>Current web process</small></div>
+          <div><span>RSS memory</span><strong>{data?.runtime?.memoryMb?.rss??'—'}{data?' MB':''}</strong><small>Resident process memory</small></div>
+          <div><span>Heap</span><strong>{data?.runtime?.memoryMb?.heapUsed??'—'}{data?' MB':''}</strong><small>of {data?.runtime?.memoryMb?.heapTotal??'—'} MB allocated</small></div>
+          <div><span>DB waiting</span><strong>{pool.waiting??'—'}</strong><small>Requests waiting for a connection</small></div>
+        </div>
+      </section>
+
+      <section className="system-health-panel worker-panel">
+        <header><div><span>BACKGROUND AUTOMATION</span><h2>Worker heartbeat</h2><p>The sheet-sync worker must remain fresh in dedicated-worker production.</p></div><span className={'system-health-pill '+stateTone(data?.worker?.status)}>{data?.worker?.status||'—'}</span></header>
+        <div className="worker-health-timeline">
+          <div><span>Last heartbeat</span><strong>{fmtDate(data?.worker?.lastSeenAt)}</strong></div>
+          <div><span>Heartbeat age</span><strong>{data?.worker?.ageSeconds!=null?data.worker.ageSeconds+' seconds':'—'}</strong></div>
+          <div><span>Freshness limit</span><strong>{data?.worker?.maxAgeSeconds!=null?data.worker.maxAgeSeconds+' seconds':'—'}</strong></div>
+          <div><span>Worker started</span><strong>{fmtDate(data?.worker?.startedAt)}</strong></div>
+        </div>
+      </section>
+    </section>
+
+    <section className="system-health-sheets-grid">
+      <SheetHealth title="Lead Partner sheets" subtitle="Live Lead Partner inventory sources and import validation health." data={data?.sheets?.leadPartner}/>
+      <SheetHealth title="Admin sheets" subtitle="Admin-managed lead sources and automatic sync health." data={data?.sheets?.admin}/>
+    </section>
+
+    <section className="system-health-release">
+      <div><span>RELEASE CHECK</span><h2>Deployment signals</h2></div>
+      <div className="system-health-release-items">
+        <span className={data?.database?.status==='connected'?'ok':'bad'}>Database</span>
+        <span className={data?.storage?.status==='ready'?'ok':'bad'}>Storage</span>
+        <span className={data?.worker?.status==='fresh'?'ok':'bad'}>Worker</span>
+        <span className={data?.migrations?.status==='current'?'ok':'bad'}>Migrations</span>
+        <span className={!data?.sheets?.leadPartner?.connectionErrors&&!data?.sheets?.admin?.connectionErrors?'ok':'warn'}>Sheet connections</span>
+      </div>
+    </section>
+  </main>
+}

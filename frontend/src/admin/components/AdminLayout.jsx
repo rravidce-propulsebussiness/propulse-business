@@ -1,6 +1,6 @@
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useEffect, useMemo, useState } from 'react'
-import { clearSession, getUser } from '../../utils/auth'
+import { authRequest, clearSession, getUser } from '../../utils/auth'
 import './AdminLayout.css'
 
 const navigation=[
@@ -35,6 +35,7 @@ const navigation=[
     {to:'/admin/investor-withdrawals',label:'Investor Withdrawals'}
   ]},
   {type:'group',key:'system',label:'System',icon:'⚙',children:[
+    {to:'/admin/system-health',label:'System Health'},
     {to:'/admin/test-reset',label:'Test Data Reset'}
   ]},
   {type:'group',key:'website',label:'Website & Content',icon:'▧',children:[
@@ -67,6 +68,7 @@ export default function AdminLayout(){
   const user=getUser()
   const current=useMemo(()=>findCurrent(location.pathname),[location.pathname])
   const [openGroup,setOpenGroup]=useState(current.group?.key||null)
+  const [systemStatus,setSystemStatus]=useState('checking')
   const initials=(user?.name||'Admin').split(' ').filter(Boolean).slice(0,2).map(x=>x[0]).join('').toUpperCase()
 
   useEffect(()=>{
@@ -78,6 +80,18 @@ export default function AdminLayout(){
     })
     return()=>{active=false}
   },[current.group,location.pathname])
+
+  useEffect(()=>{
+    let active=true
+    const refresh=()=>{
+      authRequest('/admin/system-health')
+        .then(value=>{if(active)setSystemStatus(value?.status==='healthy'?'healthy':'degraded')})
+        .catch(()=>{if(active)setSystemStatus('degraded')})
+    }
+    refresh()
+    const timer=setInterval(refresh,60000)
+    return()=>{active=false;clearInterval(timer)}
+  },[])
 
   async function logout(){
     await clearSession()
@@ -157,7 +171,7 @@ export default function AdminLayout(){
         </div>
 
         <div className="admin-topbar-right">
-          <div className="admin-top-status"><i/> System healthy</div>
+          <Link to="/admin/system-health" className={"admin-top-status "+systemStatus}><i/> {systemStatus==="healthy"?"System healthy":systemStatus==="checking"?"Checking system":"System degraded"}</Link>
           <div className="admin-top-user">
             <span>{initials||'A'}</span>
             <div><b>{user?.name||'Admin'}</b><small>Administrator</small></div>
