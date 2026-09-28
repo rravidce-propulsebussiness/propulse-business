@@ -1,57 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { publicRequest } from '../utils/auth'
+import CustomerFlowQuestion, { isEmptyAnswer, isQuestionVisible } from '../components/CustomerFlowQuestion'
 import './RequirementWizard.css'
 
 const emptyContact = { name: '', phone: '', email: '' }
-const isEmpty = (value) => value === undefined || value === null || value === '' || (Array.isArray(value) && !value.length)
-
-function visible(question, answers) {
-  const rule = question?.showWhen || {}
-  if (!rule.questionKey) return true
-  const actual = answers[rule.questionKey]
-  if (Object.prototype.hasOwnProperty.call(rule, 'equals')) return actual === rule.equals
-  if (Array.isArray(rule.in)) return rule.in.includes(actual)
-  if (Object.prototype.hasOwnProperty.call(rule, 'notEquals')) return actual !== rule.notEquals
-  return true
-}
 
 function makeSubmissionKey() {
   if (globalThis.crypto?.randomUUID) return globalThis.crypto.randomUUID()
   return 'req_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 12)
-}
-
-function ChoiceButtons({ question, value, onChange, multiple = false }) {
-  const selected = multiple ? (Array.isArray(value) ? value : []) : []
-  return <div className="rq-options">{(question.options || []).map(option => {
-    const active = multiple ? selected.includes(option.value) : value === option.value
-    return <button key={option.value} type="button" className={active ? 'active' : ''} onClick={() => {
-      if (!multiple) return onChange(option.value)
-      onChange(active ? selected.filter(item => item !== option.value) : [...selected, option.value])
-    }}><span>{active ? '✓' : ''}</span><b>{option.label}</b></button>
-  })}</div>
-}
-
-function QuestionInput({ question, value, onChange }) {
-  if (question.questionType === 'single_select' || question.questionType === 'timeline') {
-    return <ChoiceButtons question={question} value={value} onChange={onChange} />
-  }
-  if (question.questionType === 'multi_select') {
-    return <ChoiceButtons question={question} value={value} onChange={onChange} multiple />
-  }
-  if (question.questionType === 'boolean') {
-    return <div className="rq-options two"><button type="button" className={value === true ? 'active' : ''} onClick={() => onChange(true)}><span>{value === true ? '✓' : ''}</span><b>Yes</b></button><button type="button" className={value === false ? 'active' : ''} onClick={() => onChange(false)}><span>{value === false ? '✓' : ''}</span><b>No</b></button></div>
-  }
-  if (question.questionType === 'text') {
-    return <textarea rows="5" value={value || ''} maxLength={Number(question.validation?.maxLength || 2000)} onChange={event => onChange(event.target.value)} placeholder="Share useful details..." />
-  }
-  if (question.questionType === 'location') {
-    return <div className="rq-input-suffix"><input inputMode="numeric" maxLength="6" value={value || ''} onChange={event => onChange(event.target.value.replace(/\D/g, '').slice(0, 6))} placeholder="6-digit PIN code" /><span>PIN</span></div>
-  }
-  if (question.questionType === 'number' || question.questionType === 'area') {
-    return <div className="rq-input-suffix"><input type="number" min={question.validation?.min} max={question.validation?.max} value={value ?? ''} onChange={event => onChange(event.target.value)} placeholder="Enter number" />{question.questionType === 'area' && <span>sq ft</span>}</div>
-  }
-  return <input value={value || ''} maxLength={Number(question.validation?.maxLength || 240)} onChange={event => onChange(event.target.value)} placeholder={question.questionType === 'budget' ? 'Example: ₹10–15 lakh' : 'Enter your answer'} />
 }
 
 export default function RequirementWizard({ flowKey }) {
@@ -70,6 +27,7 @@ export default function RequirementWizard({ flowKey }) {
     mounted.current = true
     setState({ loading: true, saving: false, error: '', success: false })
     publicRequest('/customer-flows/' + flowKey).then(data => {
+      if (data?.flowType !== 'requirement') throw new Error('This requirement form is not available.')
       if (!mounted.current) return
       setFlow(data)
       setAnswers({})
@@ -81,7 +39,7 @@ export default function RequirementWizard({ flowKey }) {
     return () => { mounted.current = false }
   }, [flowKey])
 
-  const questions = useMemo(() => (flow?.questions || []).filter(question => visible(question, answers)), [flow, answers])
+  const questions = useMemo(() => (flow?.questions || []).filter(question => isQuestionVisible(question, answers)), [flow, answers])
   useEffect(() => { if (step >= questions.length && questions.length) setStep(questions.length - 1) }, [questions.length, step])
   const question = questions[step]
   const progress = contactMode ? 100 : questions.length ? Math.round(((step + 1) / questions.length) * 88) : 0
@@ -93,7 +51,7 @@ export default function RequirementWizard({ flowKey }) {
 
   function next() {
     if (!question) return
-    if (question.isRequired && isEmpty(answers[question.questionKey])) {
+    if (question.isRequired && isEmptyAnswer(answers[question.questionKey])) {
       setState(current => ({ ...current, error: 'Please answer this question to continue.' }))
       return
     }
@@ -132,7 +90,7 @@ export default function RequirementWizard({ flowKey }) {
         <div className="rq-progress"><div style={{ width: progress + '%' }} /></div>
         {!contactMode ? <>
           <div className="rq-step"><span>QUESTION {String(step + 1).padStart(2, '0')} / {String(questions.length).padStart(2, '0')}</span><h2>{question?.label}</h2>{question?.helpText && <p>{question.helpText}</p>}</div>
-          <div className="rq-control"><QuestionInput question={question} value={answers[question.questionKey]} onChange={value => setAnswer(question.questionKey, value)} /></div>
+          <div className="rq-control"><CustomerFlowQuestion question={question} value={answers[question.questionKey]} onChange={value => setAnswer(question.questionKey, value)} /></div>
           {state.error && <div className="rq-error">{state.error}</div>}
           <div className="rq-actions"><button type="button" className="secondary" disabled={step === 0} onClick={() => setStep(Math.max(0, step - 1))}>← Back</button><button type="button" className="primary" onClick={next}>{step === questions.length - 1 ? 'Continue to contact' : 'Next'} →</button></div>
         </> : <form onSubmit={submit}>
