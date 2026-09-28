@@ -60,7 +60,7 @@ versions, rather than trusting the role claimed in a JWT.
    restart loop. For a dedicated background process, set
    `RUN_BACKGROUND_JOBS_IN_WEB=false` on web instances and run `npm run worker` as a
    supervised worker service. The worker runs both Lead Partner and Admin Google Sheet
-   sync immediately and every five minutes; PostgreSQL advisory locking makes multiple
+   sync on the Admin-controlled schedule; PostgreSQL advisory locking makes multiple
    worker replicas safe, although one worker is normally enough. In dedicated-worker
    production, set `REQUIRE_BACKGROUND_WORKER=true` on web instances. The worker writes
    a PostgreSQL heartbeat every `WORKER_HEARTBEAT_INTERVAL_MS` (default 30 seconds),
@@ -178,6 +178,10 @@ Repeated occurrences reopen a previously resolved fingerprint so recurring failu
 not disappear silently. Resolved fingerprints older than the retention window are
 pruned on web startup. Browser telemetry is rate-limited and accepts anonymous errors so
 login/signup failures can still be diagnosed.
+
+## Staging and release promotion
+
+Use the controlled staging → production gate documented in `docs/staging-release.md`. The gate verifies the exact Git commit through `/health/version`, requires staging readiness and smoke checks first, and uses the GitHub `production` Environment as the approval boundary before production deployment.
 
 ## Verification
 

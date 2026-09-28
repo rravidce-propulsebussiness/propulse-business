@@ -6,6 +6,7 @@ const workerHeartbeat=require('./backgroundWorkerHeartbeatService');
 const financialReconciliationMonitor=require('./financialReconciliationMonitorService');
 const backupVerificationService=require('./backupVerificationService');
 const privateObjectStorage=require('./s3PrivateObjectStorageService');
+const releaseIdentity=require('./releaseIdentityService');
 
 const migrationsDir=path.join(__dirname,'../database/migrations');
 const workerHeartbeatMaxAgeSeconds=Math.min(600,Math.max(30,Math.floor(Number(process.env.WORKER_HEARTBEAT_MAX_AGE_SECONDS)||120)));
@@ -14,10 +15,6 @@ const backupVerificationMaxAgeHours=Math.min(720,Math.max(1,Number(process.env.B
 const backupVerificationRequired=/^(1|true|yes|on)$/i.test(String(process.env.REQUIRE_BACKUP_VERIFICATION||'').trim());
 const persistentSheetFailureThreshold=Math.min(20,Math.max(2,Math.floor(Number(process.env.SYSTEM_HEALTH_SHEET_FAILURE_THRESHOLD)||3)));
 
-function buildVersion(){
-  const raw=String(process.env.GIT_COMMIT_SHA||process.env.RENDER_GIT_COMMIT||process.env.VERCEL_GIT_COMMIT_SHA||process.env.COMMIT_SHA||'').trim();
-  return raw?raw.slice(0,12):'local';
-}
 function safeNumber(value){const n=Number(value);return Number.isFinite(n)?n:0}
 function safeMessage(value,fallback){return String(value||fallback||'Operational check failed').replace(/\s+/g,' ').slice(0,240)}
 function maxStatus(left,right){
@@ -195,8 +192,10 @@ async function getSystemHealth(){
     },
     issues:sortedIssues,
     build:{
-      commit:buildVersion(),
-      environment:String(process.env.NODE_ENV||'development'),
+      commit:releaseIdentity.shortCommit(),
+      environment:releaseIdentity.deploymentEnvironment(),
+      nodeEnvironment:releaseIdentity.nodeEnvironment(),
+      releaseId:releaseIdentity.releaseId(),
       node:process.version
     },
     runtime:{

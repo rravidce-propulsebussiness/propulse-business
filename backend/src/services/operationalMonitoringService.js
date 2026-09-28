@@ -1,14 +1,12 @@
 const crypto=require('crypto');
 const pool=require('../config/database');
+const releaseIdentity=require('./releaseIdentityService');
 
 const SOURCES=new Set(['backend','frontend','worker']);
 const SEVERITIES=new Set(['warning','error']);
 const SECRET_KEY=/(password|token|secret|cookie|authorization|credential|proof|account[_-]?number|utr|reference)/i;
 
-function buildVersion(){
-  const raw=String(process.env.GIT_COMMIT_SHA||process.env.RENDER_GIT_COMMIT||process.env.VERCEL_GIT_COMMIT_SHA||process.env.COMMIT_SHA||'').trim();
-  return raw?raw.slice(0,40):'local';
-}
+function buildVersion(){return releaseIdentity.commit()}
 function sanitizeText(value,max=500){
   let text=String(value||'').replace(/\r/g,' ').trim();
   text=text.replace(/Bearer\s+[A-Za-z0-9._~+\/-]+=*/gi,'Bearer [redacted]');
@@ -118,7 +116,7 @@ async function recordEvent(input={}){
        resolved_by=NULL,
        resolution_note=NULL
      RETURNING *`,
-    [fingerprint,source,eventType,severity,message,route,method,statusCode,durationMs,requestId,userId,userRole,buildVersion(),String(process.env.NODE_ENV||'development').slice(0,30),JSON.stringify(metadata||{})]
+    [fingerprint,source,eventType,severity,message,route,method,statusCode,durationMs,requestId,userId,userRole,buildVersion(),releaseIdentity.deploymentEnvironment().slice(0,30),JSON.stringify(metadata||{})]
   )).rows[0];
   return mapRow(row);
 }
