@@ -16,6 +16,8 @@ router.put('/pricing/rules/:id',requireAdmin,leadController.savePricingRule);
 router.delete('/pricing/rules/:id',requireAdmin,leadController.deletePricingRule);
 router.get('/pricing/partner-settings',requireAdmin,adminLeadPartnerPricingController.getSettings);
 router.put('/pricing/partner-settings',requireAdmin,adminLeadPartnerPricingController.updateSettings);
+router.get('/google-sheet/settings',requireAdmin,leadController.getGoogleSheetSyncSettings);
+router.put('/google-sheet/settings',requireAdmin,leadController.updateGoogleSheetSyncSettings);
 router.post('/google-sheet/preview',requireAdmin,leadController.previewGoogleSheet);
 router.post('/google-sheet/sync',requireAdmin,leadController.syncGoogleSheet);
 router.get('/google-sheet/connections',requireAdmin,leadController.listGoogleSheetConnections);
