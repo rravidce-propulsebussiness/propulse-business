@@ -103,7 +103,7 @@ async function getSystemHealth(){
   const waiting=safeNumber(pool.waitingCount);
   const memory=process.memoryUsage();
 
-  const degraded=!databaseOk||!storageOk||!workerFresh||migrations.status!=='current'||leadPartnerSheets.connectionErrors>0||adminSheets.connectionErrors>0;
+  const degraded=!databaseOk||!storageOk||!workerFresh||migrations.status!=='current'||leadPartnerSheets.failing>0||leadPartnerSheets.connectionErrors>0||adminSheets.failing>0||adminSheets.connectionErrors>0;
   return{
     status:degraded?'degraded':'healthy',
     checkedAt:new Date().toISOString(),
