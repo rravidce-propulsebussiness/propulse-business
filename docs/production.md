@@ -73,6 +73,68 @@ versions, rather than trusting the role claimed in a JWT.
    references; existing legacy data-URL proof rows remain readable. Payment drafts
    themselves are database-backed.
 
+## Backup and restore verification
+
+Production backups are considered healthy only after they can be restored and checked.
+The backend now provides three operator commands:
+
+```sh
+npm run backup:database
+npm run backup:verify
+npm run backup:storage
+```
+
+`backup:database` creates a PostgreSQL custom-format dump plus a SHA-256 manifest.
+It exports a PostgreSQL snapshot and computes row counts and financial totals from the
+same snapshot used by `pg_dump`, so later restore comparisons are exact even while the
+live database is receiving writes.
+
+`backup:verify` creates a fresh database backup unless `--manifest=<path>` is supplied,
+verifies the dump checksum, restores it only into a randomly named database beginning
+with `propulse_restore_verify_`, compares schema/user/wallet/payment/lead/membership/
+partner/investor counts and financial totals, then drops the temporary database. It
+never restores over the configured production database. `pg_dump` and `pg_restore`
+must be installed; use `PG_DUMP_BIN` and `PG_RESTORE_BIN` when they are not on PATH.
+
+For production, configure `RESTORE_VERIFY_DB_*` to a separate PostgreSQL verification
+server/user with `CREATEDB` permission. Do not grant the normal web application user
+superuser or database-creation privileges merely to run restore drills. Local and CI
+verification may fall back to the normal `DB_*` connection.
+
+`backup:storage` snapshots the complete configured `UPLOAD_STORAGE_ROOT` (homepage
+media, company proofs, and private payment/payout proofs), rejects symbolic links,
+hashes every copied file, verifies the copy, and records the verification. Set
+`PRIVATE_STORAGE_BACKUP_DIRECTORY` to durable storage outside `UPLOAD_STORAGE_ROOT`.
+A local snapshot on the same disk is not an off-site backup; replicate the verified
+backup directory to separate durable/off-site storage.
+
+Run both checks together with:
+
+```sh
+npm run backup:all
+```
+
+On Windows you can use the repository wrapper:
+
+```powershell
+cd C:\propulse-business
+.\scripts\run-production-backup.ps1 -BackupDirectory D:\propulse-backups
+```
+
+Schedule that wrapper (or `npm run backup:all`) at least daily using Task Scheduler,
+cron, or the hosting platform's scheduled-job facility. After a reliable schedule is
+running, set:
+
+```env
+REQUIRE_BACKUP_VERIFICATION=true
+BACKUP_VERIFICATION_MAX_AGE_HOURS=30
+```
+
+Admin → System Health then degrades when the latest verified database restore or private
+storage snapshot is missing, failed, or older than the configured maximum age. Backup
+verification results are stored in `backup_verification_runs`; generated dump/snapshot
+artifacts are gitignored and must never be committed.
+
 ## Manual payment operations
 
 Configure and verify the receiving bank/UPI details in the admin portal before

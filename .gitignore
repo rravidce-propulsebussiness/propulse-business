@@ -157,3 +157,11 @@ backend/uploads/company-proofs/*
 # Browser E2E artifacts
 playwright-report/
 test-results/
+
+# Generated backup artifacts (database dumps, manifests, upload snapshots)
+/backups/
+backend/backups/
+
+# Runtime-uploaded private payment / payout proofs
+backend/uploads/private-proofs/*
+!backend/uploads/private-proofs/.gitkeep

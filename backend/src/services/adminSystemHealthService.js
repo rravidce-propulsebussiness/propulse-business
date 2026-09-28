@@ -4,10 +4,13 @@ const pool=require('../config/database');
 const {checkUploadStorage}=require('../config/uploadStorage');
 const workerHeartbeat=require('./backgroundWorkerHeartbeatService');
 const financialReconciliationMonitor=require('./financialReconciliationMonitorService');
+const backupVerificationService=require('./backupVerificationService');
 
 const migrationsDir=path.join(__dirname,'../database/migrations');
 const workerHeartbeatMaxAgeSeconds=Math.min(600,Math.max(30,Math.floor(Number(process.env.WORKER_HEARTBEAT_MAX_AGE_SECONDS)||120)));
 const financialReconciliationMaxAgeHours=Math.min(168,Math.max(2,Number(process.env.FINANCIAL_RECONCILIATION_MAX_AGE_HOURS)||30));
+const backupVerificationMaxAgeHours=Math.min(720,Math.max(1,Number(process.env.BACKUP_VERIFICATION_MAX_AGE_HOURS)||30));
+const backupVerificationRequired=/^(1|true|yes|on)$/i.test(String(process.env.REQUIRE_BACKUP_VERIFICATION||'').trim());
 
 function buildVersion(){
   const raw=String(process.env.GIT_COMMIT_SHA||process.env.RENDER_GIT_COMMIT||process.env.VERCEL_GIT_COMMIT_SHA||process.env.COMMIT_SHA||'').trim();
@@ -83,14 +86,15 @@ async function adminSheetHealth(){
   };
 }
 async function getSystemHealth(){
-  const [databaseProbe,storageProbe,heartbeatResult,migrationsResult,partnerSheetsResult,adminSheetsResult,financialResult]=await Promise.allSettled([
+  const [databaseProbe,storageProbe,heartbeatResult,migrationsResult,partnerSheetsResult,adminSheetsResult,financialResult,backupResult]=await Promise.allSettled([
     pool.query('SELECT NOW() AS now'),
     checkUploadStorage(),
     workerHeartbeat.latestHeartbeat(),
     migrationHealth(),
     leadPartnerSheetHealth(),
     adminSheetHealth(),
-    financialReconciliationMonitor.getHealthSummary({maxAgeHours:financialReconciliationMaxAgeHours})
+    financialReconciliationMonitor.getHealthSummary({maxAgeHours:financialReconciliationMaxAgeHours}),
+    backupVerificationService.getHealthSummary({maxAgeHours:backupVerificationMaxAgeHours,required:backupVerificationRequired})
   ]);
 
   const databaseOk=databaseProbe.status==='fulfilled';
@@ -102,12 +106,13 @@ async function getSystemHealth(){
   const leadPartnerSheets=partnerSheetsResult.status==='fulfilled'?partnerSheetsResult.value:{active:0,failing:0,connectionErrors:0,lastSyncedAt:null,recentProblems:[],unavailable:true};
   const adminSheets=adminSheetsResult.status==='fulfilled'?adminSheetsResult.value:{active:0,failing:0,connectionErrors:0,lastSyncedAt:null,recentProblems:[],unavailable:true};
   const financialIntegrity=financialResult.status==='fulfilled'?financialResult.value:{status:'unavailable',latestRunId:null,lastCompletedAt:null,ageHours:null,maxAgeHours:financialReconciliationMaxAgeHours,criticalAlerts:0,warningAlerts:0,totalIssues:null};
+  const backups=backupResult.status==='fulfilled'?backupResult.value:{status:'unavailable',required:backupVerificationRequired,maxAgeHours:backupVerificationMaxAgeHours,database:{status:'unavailable'},privateStorage:{status:'unavailable'},verifiedCount:0};
   const poolMax=Math.max(1,Number(pool.options?.max)||5);
   const totalConnections=safeNumber(pool.totalCount);
   const waiting=safeNumber(pool.waitingCount);
   const memory=process.memoryUsage();
 
-  const degraded=!databaseOk||!storageOk||!workerFresh||migrations.status!=='current'||leadPartnerSheets.failing>0||leadPartnerSheets.connectionErrors>0||adminSheets.failing>0||adminSheets.connectionErrors>0||financialIntegrity.status!=='healthy';
+  const degraded=!databaseOk||!storageOk||!workerFresh||migrations.status!=='current'||leadPartnerSheets.failing>0||leadPartnerSheets.connectionErrors>0||adminSheets.failing>0||adminSheets.connectionErrors>0||financialIntegrity.status!=='healthy'||(backups.required&&backups.status!=='healthy');
   return{
     status:degraded?'degraded':'healthy',
     checkedAt:new Date().toISOString(),
@@ -147,6 +152,7 @@ async function getSystemHealth(){
     },
     migrations,
     financialIntegrity,
+    backups,
     sheets:{
       leadPartner:leadPartnerSheets,
       admin:adminSheets

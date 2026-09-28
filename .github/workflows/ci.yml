@@ -204,6 +204,30 @@ jobs:
           DB_PASSWORD: ci_smoke
         timeout-minutes: 2
         run: npm run test:financial-integrity-runtime
+      - name: Verify database backup restore drill
+        env:
+          DB_HOST: 127.0.0.1
+          DB_PORT: 5432
+          DB_NAME: ci_smoke
+          DB_USER: ci_smoke
+          DB_PASSWORD: ci_smoke
+          BACKUP_DIRECTORY: ${{ runner.temp }}/propulse-backups
+        timeout-minutes: 4
+        run: npm run backup:verify
+      - name: Verify private upload storage backup
+        env:
+          DB_HOST: 127.0.0.1
+          DB_PORT: 5432
+          DB_NAME: ci_smoke
+          DB_USER: ci_smoke
+          DB_PASSWORD: ci_smoke
+          UPLOAD_STORAGE_ROOT: ${{ runner.temp }}/propulse-uploads
+          PRIVATE_STORAGE_BACKUP_DIRECTORY: ${{ runner.temp }}/propulse-upload-backups
+        timeout-minutes: 2
+        run: |
+          mkdir -p "$UPLOAD_STORAGE_ROOT/private-proofs"
+          printf 'ci-private-proof' > "$UPLOAD_STORAGE_ROOT/private-proofs/restore-check.txt"
+          npm run backup:storage
       - name: Verify production payment flow and startup
         env:
           DB_HOST: 127.0.0.1

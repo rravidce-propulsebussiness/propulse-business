@@ -16,7 +16,7 @@ const fmtDuration=seconds=>{
   if(hours)return hours+'h '+minutes+'m'
   return minutes+'m'
 }
-const stateTone=value=>['healthy','connected','ready','fresh','current'].includes(String(value||'').toLowerCase())?'good':['degraded','pending','stale'].includes(String(value||'').toLowerCase())?'warn':'bad'
+const stateTone=value=>['healthy','connected','ready','fresh','current','verified'].includes(String(value||'').toLowerCase())?'good':['degraded','pending','stale','not_run'].includes(String(value||'').toLowerCase())?'warn':'bad'
 
 function HealthCard({label,value,note,tone='good',metric}){
   return <article className={'system-health-card '+tone}>
@@ -81,6 +81,7 @@ export default function AdminSystemHealth(){
   const overallTone=stateTone(data?.status)
   const pool=data?.database?.pool||{}
   const financial=data?.financialIntegrity||{}
+  const backups=data?.backups||{}
   const poolNote=useMemo(()=>{
     if(!data)return 'Waiting for runtime metrics'
     if(Number(pool.waiting)>0)return pool.waiting+' request'+(pool.waiting===1?' is':'s are')+' waiting for a DB connection'
@@ -109,6 +110,7 @@ export default function AdminSystemHealth(){
       <HealthCard label="Background worker" value={data?.worker?.status||'—'} note={data?.worker?.lastSeenAt?'Heartbeat '+fmtDate(data.worker.lastSeenAt):'No heartbeat available'} tone={stateTone(data?.worker?.status)} metric={data?.worker?.ageSeconds!=null?data.worker.ageSeconds+'s old':null}/>
       <HealthCard label="Migrations" value={data?.migrations?.status||'—'} note={data?(data.migrations?.applied||0)+' applied · '+(data.migrations?.pending??'—')+' pending':'Waiting for migration state'} tone={stateTone(data?.migrations?.status)}/>
       <HealthCard label="Financial reconciliation" value={financial.status||'—'} note={financial.lastCompletedAt?'Last automated run '+fmtDate(financial.lastCompletedAt):'No automated reconciliation recorded'} tone={stateTone(financial.status)} metric={data?(Number(financial.criticalAlerts||0)+Number(financial.warningAlerts||0))+' active alerts':null}/>
+      <HealthCard label="Backup verification" value={backups.status||'—'} note={backups.database?.lastVerifiedAt?'DB restore verified '+fmtDate(backups.database.lastVerifiedAt):(backups.required?'Production verification required':'Verification not required locally')} tone={stateTone(backups.status)} metric={data?(backups.verifiedCount||0)+'/2 verified':null}/>
     </section>
 
     <section className="system-health-grid">
@@ -149,6 +151,7 @@ export default function AdminSystemHealth(){
         <span className={data?.migrations?.status==='current'?'ok':'bad'}>Migrations</span>
         <span className={!data?.sheets?.leadPartner?.connectionErrors&&!data?.sheets?.leadPartner?.failing&&!data?.sheets?.admin?.connectionErrors&&!data?.sheets?.admin?.failing?'ok':'warn'}>Sheet connections</span>
         <span className={financial.status==='healthy'?'ok':['warning','stale'].includes(financial.status)?'warn':'bad'}>Financial reconciliation</span>
+        <span className={backups.status==='healthy'?'ok':['not_run','stale'].includes(backups.status)?'warn':'bad'}>Backup verification</span>
       </div>
     </section>
   </main>
