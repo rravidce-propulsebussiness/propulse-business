@@ -6,7 +6,7 @@ const fmtDate=value=>{if(!value)return '—';const d=new Date(value);return Numb
 const fmtBytes=value=>{let n=Number(value)||0;const units=['B','KB','MB','GB','TB'];let i=0;while(n>=1024&&i<units.length-1){n/=1024;i++}return (i? n.toFixed(n>=100?0:n>=10?1:2):Math.round(n))+' '+units[i]}
 const fmtNumber=value=>new Intl.NumberFormat().format(Number(value)||0)
 const fmtMs=value=>{const n=Number(value)||0;return n>=1000?(n/1000).toFixed(n>=10000?1:2)+'s':Math.round(n)+'ms'}
-const tone=value=>value==='healthy'?'good':value==='attention'?'warn':'bad'
+const tone=value=>!value?'good':value==='healthy'?'good':value==='attention'?'warn':'bad'
 
 function Metric({label,value,note,state='good'}){return <article className={'perf-metric '+state}><span>{label}</span><strong>{value}</strong><small>{note}</small></article>}
 

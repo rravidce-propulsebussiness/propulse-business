@@ -210,7 +210,7 @@ function performanceSignals({database,activity,tables,slowApis,poolState}){
   const push=(severity,code,title,message)=>signals.push({severity,code,title,message});
   if(poolState.waiting>0)push('attention','pool_waiting','Database pool has waiting requests',`${poolState.waiting} request(s) are waiting for a PostgreSQL connection.`);
   else if(poolState.utilizationPercent>=80)push('attention','pool_high_utilization','Database pool utilization is high',`${poolState.utilizationPercent}% of the configured pool is actively busy.`);
-  if(!activity.unavailable&&activity.longRunning>0)push('attention','long_queries','Long-running queries detected',`${activity.longRunning} active query/queryies exceed the ${longQuerySeconds}s threshold.`);
+  if(!activity.unavailable&&activity.longRunning>0)push('attention','long_queries','Long-running queries detected',`${activity.longRunning} active quer${activity.longRunning===1?'y':'ies'} exceed the ${longQuerySeconds}s threshold.`);
   if(!activity.unavailable&&activity.idleTransactions?.length>0)push('attention','idle_transactions','Idle transactions detected',`${activity.idleTransactions.length} transaction(s) have remained idle longer than ${idleTransactionSeconds}s.`);
   if(!database.unavailable&&database.cacheHitPercent<95&&(number(database.transactions?.committed)+number(database.transactions?.rolledBack))>1000)push('attention','cache_hit','Database cache hit ratio is low',`Current PostgreSQL block cache hit ratio is ${database.cacheHitPercent}%.`);
   if(!database.unavailable&&database.deadlocks>0)push('attention','deadlocks','PostgreSQL has recorded deadlocks',`${database.deadlocks} deadlock(s) have been recorded since statistics were reset.`);
