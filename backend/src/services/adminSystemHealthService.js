@@ -3,9 +3,11 @@ const path=require('path');
 const pool=require('../config/database');
 const {checkUploadStorage}=require('../config/uploadStorage');
 const workerHeartbeat=require('./backgroundWorkerHeartbeatService');
+const financialReconciliationMonitor=require('./financialReconciliationMonitorService');
 
 const migrationsDir=path.join(__dirname,'../database/migrations');
 const workerHeartbeatMaxAgeSeconds=Math.min(600,Math.max(30,Math.floor(Number(process.env.WORKER_HEARTBEAT_MAX_AGE_SECONDS)||120)));
+const financialReconciliationMaxAgeHours=Math.min(168,Math.max(2,Number(process.env.FINANCIAL_RECONCILIATION_MAX_AGE_HOURS)||30));
 
 function buildVersion(){
   const raw=String(process.env.GIT_COMMIT_SHA||process.env.RENDER_GIT_COMMIT||process.env.VERCEL_GIT_COMMIT_SHA||process.env.COMMIT_SHA||'').trim();
@@ -81,13 +83,14 @@ async function adminSheetHealth(){
   };
 }
 async function getSystemHealth(){
-  const [databaseProbe,storageProbe,heartbeatResult,migrationsResult,partnerSheetsResult,adminSheetsResult]=await Promise.allSettled([
+  const [databaseProbe,storageProbe,heartbeatResult,migrationsResult,partnerSheetsResult,adminSheetsResult,financialResult]=await Promise.allSettled([
     pool.query('SELECT NOW() AS now'),
     checkUploadStorage(),
     workerHeartbeat.latestHeartbeat(),
     migrationHealth(),
     leadPartnerSheetHealth(),
-    adminSheetHealth()
+    adminSheetHealth(),
+    financialReconciliationMonitor.getHealthSummary({maxAgeHours:financialReconciliationMaxAgeHours})
   ]);
 
   const databaseOk=databaseProbe.status==='fulfilled';
@@ -98,12 +101,13 @@ async function getSystemHealth(){
   const migrations=migrationsResult.status==='fulfilled'?migrationsResult.value:{status:'unavailable',checked:0,applied:0,pending:null};
   const leadPartnerSheets=partnerSheetsResult.status==='fulfilled'?partnerSheetsResult.value:{active:0,failing:0,connectionErrors:0,lastSyncedAt:null,recentProblems:[],unavailable:true};
   const adminSheets=adminSheetsResult.status==='fulfilled'?adminSheetsResult.value:{active:0,failing:0,connectionErrors:0,lastSyncedAt:null,recentProblems:[],unavailable:true};
+  const financialIntegrity=financialResult.status==='fulfilled'?financialResult.value:{status:'unavailable',latestRunId:null,lastCompletedAt:null,ageHours:null,maxAgeHours:financialReconciliationMaxAgeHours,criticalAlerts:0,warningAlerts:0,totalIssues:null};
   const poolMax=Math.max(1,Number(pool.options?.max)||5);
   const totalConnections=safeNumber(pool.totalCount);
   const waiting=safeNumber(pool.waitingCount);
   const memory=process.memoryUsage();
 
-  const degraded=!databaseOk||!storageOk||!workerFresh||migrations.status!=='current'||leadPartnerSheets.failing>0||leadPartnerSheets.connectionErrors>0||adminSheets.failing>0||adminSheets.connectionErrors>0;
+  const degraded=!databaseOk||!storageOk||!workerFresh||migrations.status!=='current'||leadPartnerSheets.failing>0||leadPartnerSheets.connectionErrors>0||adminSheets.failing>0||adminSheets.connectionErrors>0||financialIntegrity.status!=='healthy';
   return{
     status:degraded?'degraded':'healthy',
     checkedAt:new Date().toISOString(),
@@ -142,6 +146,7 @@ async function getSystemHealth(){
       startedAt:heartbeat?.started_at||null
     },
     migrations,
+    financialIntegrity,
     sheets:{
       leadPartner:leadPartnerSheets,
       admin:adminSheets

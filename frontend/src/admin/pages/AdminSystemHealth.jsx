@@ -80,6 +80,7 @@ export default function AdminSystemHealth(){
 
   const overallTone=stateTone(data?.status)
   const pool=data?.database?.pool||{}
+  const financial=data?.financialIntegrity||{}
   const poolNote=useMemo(()=>{
     if(!data)return 'Waiting for runtime metrics'
     if(Number(pool.waiting)>0)return pool.waiting+' request'+(pool.waiting===1?' is':'s are')+' waiting for a DB connection'
@@ -107,6 +108,7 @@ export default function AdminSystemHealth(){
       <HealthCard label="Upload storage" value={data?.storage?.status||'—'} note={data?.storage?.persistentConfigured?'Persistent storage configured':'Using application-local storage'} tone={stateTone(data?.storage?.status)}/>
       <HealthCard label="Background worker" value={data?.worker?.status||'—'} note={data?.worker?.lastSeenAt?'Heartbeat '+fmtDate(data.worker.lastSeenAt):'No heartbeat available'} tone={stateTone(data?.worker?.status)} metric={data?.worker?.ageSeconds!=null?data.worker.ageSeconds+'s old':null}/>
       <HealthCard label="Migrations" value={data?.migrations?.status||'—'} note={data?(data.migrations?.applied||0)+' applied · '+(data.migrations?.pending??'—')+' pending':'Waiting for migration state'} tone={stateTone(data?.migrations?.status)}/>
+      <HealthCard label="Financial reconciliation" value={financial.status||'—'} note={financial.lastCompletedAt?'Last automated run '+fmtDate(financial.lastCompletedAt):'No automated reconciliation recorded'} tone={stateTone(financial.status)} metric={data?(Number(financial.criticalAlerts||0)+Number(financial.warningAlerts||0))+' active alerts':null}/>
     </section>
 
     <section className="system-health-grid">
@@ -146,6 +148,7 @@ export default function AdminSystemHealth(){
         <span className={data?.worker?.status==='fresh'?'ok':'bad'}>Worker</span>
         <span className={data?.migrations?.status==='current'?'ok':'bad'}>Migrations</span>
         <span className={!data?.sheets?.leadPartner?.connectionErrors&&!data?.sheets?.leadPartner?.failing&&!data?.sheets?.admin?.connectionErrors&&!data?.sheets?.admin?.failing?'ok':'warn'}>Sheet connections</span>
+        <span className={financial.status==='healthy'?'ok':['warning','stale'].includes(financial.status)?'warn':'bad'}>Financial reconciliation</span>
       </div>
     </section>
   </main>

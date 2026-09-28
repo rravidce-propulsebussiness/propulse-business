@@ -59,6 +59,10 @@ export default function AdminFinancialIntegrity(){
 
   const status=data?.status||'checking'
   const overview=data?.overview||{}
+  const monitoring=data?.monitoring||{}
+  const latestAutomatedRun=monitoring.latestRun||null
+  const activeAlerts=Array.isArray(monitoring.activeAlerts)?monitoring.activeAlerts:[]
+  const recentRuns=Array.isArray(monitoring.recentRuns)?monitoring.recentRuns:[]
 
   return <main className="admin-financial-integrity">
     <section className="integrity-hero">
@@ -76,6 +80,29 @@ export default function AdminFinancialIntegrity(){
       <article className="critical"><span>Critical</span><strong>{data?.critical??'—'}</strong><small>Ledger or allocation mismatches</small></article>
       <article className="warning"><span>Warnings</span><strong>{data?.warnings??'—'}</strong><small>Missing payout evidence / metadata</small></article>
       <article><span>Last reconciliation</span><strong className="small">{date(data?.checkedAt)}</strong><small>Manual refresh bypasses the 60s cache</small></article>
+    </section>
+
+    <section className="integrity-automation">
+      <header>
+        <div><span>AUTOMATION</span><h2>Automated reconciliation</h2><p>Persistent run history and Admin alerts from the scheduled production reconciliation worker.</p></div>
+        <b className={(monitoring.criticalAlertCount||monitoring.warningAlertCount)?'attention':'clean'}>{monitoring.activeAlertCount||0} active alert{Number(monitoring.activeAlertCount||0)===1?'':'s'}</b>
+      </header>
+      <div className="integrity-automation-metrics">
+        <div><span>Latest automated run</span><strong>{latestAutomatedRun?('#'+latestAutomatedRun.id+' · '+latestAutomatedRun.status):'Not run yet'}</strong><small>{latestAutomatedRun?.completedAt?date(latestAutomatedRun.completedAt):'Worker will run when the schedule is due.'}</small></div>
+        <div><span>Critical Admin alerts</span><strong>{monitoring.criticalAlertCount||0}</strong><small>Financial mismatches or failed automated scans</small></div>
+        <div><span>Warning Admin alerts</span><strong>{monitoring.warningAlertCount||0}</strong><small>Operational evidence or metadata issues</small></div>
+        <div><span>Build checked</span><strong>{latestAutomatedRun?.buildCommit||'—'}</strong><small>Deployment commit recorded with the run</small></div>
+      </div>
+      <div className="integrity-automation-lists">
+        <div>
+          <h3>Active Admin alerts</h3>
+          {activeAlerts.length?<div className="integrity-alert-list">{activeAlerts.map(alert=><article key={alert.id} className={alert.severity}><span>{alert.severity}</span><div><strong>{alert.title}</strong><small>{alert.message}</small></div><b>{date(alert.lastSeenAt)}</b></article>)}</div>:<div className="integrity-automation-empty">No active financial alerts.</div>}
+        </div>
+        <div>
+          <h3>Recent automated runs</h3>
+          {recentRuns.length?<div className="integrity-run-list">{recentRuns.slice(0,6).map(run=><article key={run.id}><span>#{run.id}</span><strong className={run.status}>{run.status}</strong><small>{run.critical} critical · {run.warnings} warnings</small><b>{date(run.completedAt||run.startedAt)}</b></article>)}</div>:<div className="integrity-automation-empty">No automated reconciliation history yet.</div>}
+        </div>
+      </div>
     </section>
 
     <section className="integrity-money-grid">

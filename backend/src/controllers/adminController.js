@@ -3,6 +3,7 @@ const adminTestResetService = require('../services/adminTestResetService');
 const adminUser360Service = require('../services/adminUser360Service');
 const adminSystemHealthService = require('../services/adminSystemHealthService');
 const adminFinancialIntegrityService = require('../services/adminFinancialIntegrityService');
+const financialReconciliationMonitor = require('../services/financialReconciliationMonitorService');
 
 async function getDashboardStats(req, res) {
   try { return res.json(await adminService.getDashboardStats()); }
@@ -13,7 +14,13 @@ async function getSystemHealth(req,res){
   catch(error){console.error('Get admin system health failed:',error);return res.status(500).json({error:'Failed to load system health'})}
 }
 async function getFinancialIntegrity(req,res){
-  try{return res.json(await adminFinancialIntegrityService.getFinancialIntegrity({force:String(req.query?.refresh||'')==='1'}))}
+  try{
+    const [integrity,monitoring]=await Promise.all([
+      adminFinancialIntegrityService.getFinancialIntegrity({force:String(req.query?.refresh||'')==='1'}),
+      financialReconciliationMonitor.getMonitoringSummary()
+    ]);
+    return res.json({...integrity,monitoring});
+  }
   catch(error){console.error('Get admin financial integrity failed:',error);return res.status(500).json({error:'Failed to run financial reconciliation'})}
 }
 async function getUsers(req, res) { try { return res.json(await adminService.getUsers(req.query)); } catch (error) { console.error('Get admin users failed:', error.message); return res.status(500).json({ error: 'Failed to load users' }); } }
