@@ -1,3 +1,4 @@
+const criticalActionAudit=require('./criticalActionAuditService');
 const pool=require('../config/database');const payoutAccounts=require('./leadPartnerPayoutAccountService');const privateProofStorage=require('./privateProofStorageService');
 const money=v=>Number(Number(v||0).toFixed(2));
 const MAX_PROOF_BYTES=6*1024*1024;
@@ -181,11 +182,13 @@ async function adminProcess({requestId,adminId,action,transferReference,proofUrl
         [rejection,String(notes||'').trim()||null,Number(adminId),Number(requestId)]
       )).rows[0];
       await c.query(`UPDATE lead_partner_payout_items SET status='released',updated_at=CURRENT_TIMESTAMP WHERE payout_id=$1 AND status='reserved'`,[r.id]);
+      await criticalActionAudit.record(c,{actorId:adminId,category:'payout',action:'payout.lead_partner_process',entityType:'lead_partner_payout',entityId:r.id,beforeData:{status:r.status,amount:money(r.amount),partnerId:r.partner_id},afterData:{status:u.status,amount:money(u.amount),partnerId:u.partner_id},reason:rejection,metadata:{action:'reject'},source:'lead_partner_payout_service'});
       await c.query('COMMIT');
       return{...u,id:Number(u.id),amount:money(u.amount)};
     }
     const paid=await markPaid({client:c,r,adminId,transferReference,proofUrl,notes});
     storedProof=paid.storedProof;
+    await criticalActionAudit.record(c,{actorId:adminId,category:'payout',action:'payout.lead_partner_process',entityType:'lead_partner_payout',entityId:r.id,beforeData:{status:r.status,amount:money(r.amount),partnerId:r.partner_id},afterData:{status:paid.payout.status,amount:paid.payout.amount,partnerId:r.partner_id},reason:notes,metadata:{action:'paid'},source:'lead_partner_payout_service'});
     await c.query('COMMIT');
     return paid.payout;
   }catch(e){
@@ -213,6 +216,7 @@ async function adminDirectPayout({partnerId,userId,adminId,amount:raw,transferRe
     const r=(await c.query('SELECT * FROM lead_partner_payout_requests WHERE id=$1 FOR UPDATE',[payout.id])).rows[0];
     const paid=await markPaid({client:c,r,adminId,transferReference,proofUrl,notes});
     storedProof=paid.storedProof;
+    await criticalActionAudit.record(c,{actorId:adminId,category:'payout',action:'payout.lead_partner_direct',entityType:'lead_partner_payout',entityId:r.id,beforeData:null,afterData:{status:paid.payout.status,amount:paid.payout.amount,partnerId:r.partner_id,userId:targetUserId},reason:notes,source:'lead_partner_payout_service'});
     await c.query('COMMIT');
     return paid.payout;
   }catch(e){

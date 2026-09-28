@@ -1,4 +1,4 @@
-const pool=require('../config/database');const {leadSelect,maskLead,stripQualityGate,normalizeLeadRow,normalizeLeadType,isProMember}=require('./leadReadService');const accessService=require('./leadAccessStrategyService');const leadQualityGateService=require('./leadQualityGateService');
+const pool=require('../config/database');const criticalActionAudit=require('./criticalActionAuditService');const {leadSelect,maskLead,stripQualityGate,normalizeLeadRow,normalizeLeadType,isProMember}=require('./leadReadService');const accessService=require('./leadAccessStrategyService');const leadQualityGateService=require('./leadQualityGateService');
 const DEFAULT_PRICING={shares:[{shares:1,normal:0,pro:0},{shares:2,normal:0,pro:0},{shares:3,normal:0,pro:0}]};
 const cleanJson=(v,fallback={})=>v&&typeof v==='object'&&!Array.isArray(v)?v:fallback;
 const isPricingField=k=>{const n=String(k||'').toLowerCase().replace(/&/g,'and').replace(/[^a-z0-9]/g,'');return /^(normal|pro)\d+(share|shares|buyer|buyers)(price)?$/.test(n)};
@@ -103,10 +103,55 @@ async function updateLeadStatus(id,status){
 }
 async function deleteLead(id){return(await pool.query('DELETE FROM leads WHERE id=$1 RETURNING *',[id])).rows[0]||null}
 async function getLeadPricing(){return(await pool.query('SELECT * FROM lead_pricing WHERE id=1')).rows[0]||null}
-async function updateLeadPricing(data){const values=[Number(data.normal?.oneShare||0),Number(data.normal?.threeShares||0),Number(data.normal?.fiveShares||0),Number(data.pro?.oneShare||0),Number(data.pro?.threeShares||0),Number(data.pro?.fiveShares||0)];if(values.some(v=>!Number.isFinite(v)||v<0))throw Error('Pricing values must be non-negative numbers');return(await pool.query(`INSERT INTO lead_pricing (id,normal_one_share,normal_three_shares,normal_five_shares,pro_one_share,pro_three_shares,pro_five_shares,updated_at) VALUES (1,$1,$2,$3,$4,$5,$6,CURRENT_TIMESTAMP) ON CONFLICT (id) DO UPDATE SET normal_one_share=EXCLUDED.normal_one_share,normal_three_shares=EXCLUDED.normal_three_shares,normal_five_shares=EXCLUDED.normal_five_shares,pro_one_share=EXCLUDED.pro_one_share,pro_three_shares=EXCLUDED.pro_three_shares,pro_five_shares=EXCLUDED.pro_five_shares,updated_at=CURRENT_TIMESTAMP RETURNING *`,values)).rows[0]}
+async function updateLeadPricing(data,adminUserId=null){
+  const values=[Number(data.normal?.oneShare||0),Number(data.normal?.threeShares||0),Number(data.normal?.fiveShares||0),Number(data.pro?.oneShare||0),Number(data.pro?.threeShares||0),Number(data.pro?.fiveShares||0)];
+  if(values.some(v=>!Number.isFinite(v)||v<0))throw Error('Pricing values must be non-negative numbers');
+  const client=await pool.connect();
+  try{
+    await client.query('BEGIN');
+    const before=(await client.query('SELECT * FROM lead_pricing WHERE id=1 FOR UPDATE')).rows[0]||null;
+    const updated=(await client.query(`INSERT INTO lead_pricing (id,normal_one_share,normal_three_shares,normal_five_shares,pro_one_share,pro_three_shares,pro_five_shares,updated_at) VALUES (1,$1,$2,$3,$4,$5,$6,CURRENT_TIMESTAMP) ON CONFLICT (id) DO UPDATE SET normal_one_share=EXCLUDED.normal_one_share,normal_three_shares=EXCLUDED.normal_three_shares,normal_five_shares=EXCLUDED.normal_five_shares,pro_one_share=EXCLUDED.pro_one_share,pro_three_shares=EXCLUDED.pro_three_shares,pro_five_shares=EXCLUDED.pro_five_shares,updated_at=CURRENT_TIMESTAMP RETURNING *`,values)).rows[0];
+    await criticalActionAudit.record(client,{actorId:adminUserId,category:'pricing',action:'pricing.legacy_settings',entityType:'lead_pricing',entityId:1,beforeData:before,afterData:updated,source:'lead_service'});
+    await client.query('COMMIT');return updated;
+  }catch(error){await client.query('ROLLBACK');throw error}finally{client.release()}
+}
 const parseOptionalId=v=>{if(v===undefined||v===null||v==='')return null;const n=Number(v);if(!Number.isInteger(n)||n<=0)throw new Error('Industry and City must be valid IDs');return n};
 const normalizePricingRuleInput=data=>{const industryId=parseOptionalId(data?.industryId);const cityId=parseOptionalId(data?.cityId);const leadType=String(data?.leadType||'basic').trim().toLowerCase();if(!['basic','premium'].includes(leadType))throw new Error('Lead Type must be basic or premium');const shares=normalizePricingRows(data?.pricing?.shares);const tiers=shares.map(x=>x.shares);if(shares.length!==3||tiers.some((value,index)=>value!==[1,2,3][index]))throw new Error('Lead pricing must include exactly 1, 2 and 3 buyer tiers');return{industryId,cityId,leadType,pricing:{shares},isActive:data?.isActive!==false};};
 async function getPricingRules(){const result=await pool.query(`SELECT r.id,r.industry_id,r.city_id,r.lead_type,r.pricing,r.is_active,r.created_at,r.updated_at,i.name AS industry_name,c.name AS city_name FROM lead_pricing_rules r LEFT JOIN industries i ON i.id=r.industry_id LEFT JOIN cities c ON c.id=r.city_id ORDER BY CASE WHEN r.industry_id IS NULL THEN 0 ELSE 1 END,r.industry_id NULLS FIRST,CASE WHEN r.city_id IS NULL THEN 0 ELSE 1 END,r.city_id NULLS FIRST,r.lead_type,r.id`);return result.rows;}
-async function savePricingRule(data){const normalized=normalizePricingRuleInput(data);const id=data?.id===undefined||data?.id===null||data?.id===''?null:Number(data.id);if(id!==null&&(!Number.isInteger(id)||id<=0)){const error=new Error('Pricing rule ID must be valid');error.code='INVALID_PRICING_RULE_ID';throw error;}if(id!==null){const existing=(await pool.query('SELECT id FROM lead_pricing_rules WHERE id=$1',[id])).rows[0];if(!existing){const error=new Error('Pricing rule not found');error.code='PRICING_RULE_NOT_FOUND';throw error;}try{return(await pool.query(`UPDATE lead_pricing_rules SET industry_id=$1,city_id=$2,lead_type=$3,pricing=$4::jsonb,is_active=$5,updated_at=CURRENT_TIMESTAMP WHERE id=$6 RETURNING *`,[normalized.industryId,normalized.cityId,normalized.leadType,JSON.stringify(normalized.pricing),normalized.isActive,id])).rows[0]}catch(error){if(error.code==='23505'){const e=new Error('A pricing rule already exists for this Industry, City and Lead Type');e.code='PRICING_RULE_SCOPE_EXISTS';throw e}throw error;}}try{return(await pool.query(`INSERT INTO lead_pricing_rules(industry_id,city_id,lead_type,pricing,is_active) VALUES($1,$2,$3,$4::jsonb,$5) ON CONFLICT ((COALESCE(industry_id,0)),(COALESCE(city_id,0)),lead_type) DO UPDATE SET pricing=EXCLUDED.pricing,is_active=EXCLUDED.is_active,updated_at=CURRENT_TIMESTAMP RETURNING *`,[normalized.industryId,normalized.cityId,normalized.leadType,JSON.stringify(normalized.pricing),normalized.isActive])).rows[0]}catch(error){if(error.code==='23505'){const e=new Error('A pricing rule already exists for this Industry, City and Lead Type');e.code='PRICING_RULE_SCOPE_EXISTS';throw e}throw error;}}
-async function deletePricingRule(id){const ruleId=Number(id);if(!Number.isInteger(ruleId)||ruleId<=0){const error=new Error('Pricing rule ID must be valid');error.code='INVALID_PRICING_RULE_ID';throw error;}return(await pool.query('DELETE FROM lead_pricing_rules WHERE id=$1 RETURNING *',[ruleId])).rows[0]||null;}
+async function savePricingRule(data,adminUserId=null){
+  const normalized=normalizePricingRuleInput(data);
+  const id=data?.id===undefined||data?.id===null||data?.id===''?null:Number(data.id);
+  if(id!==null&&(!Number.isInteger(id)||id<=0)){const error=new Error('Pricing rule ID must be valid');error.code='INVALID_PRICING_RULE_ID';throw error;}
+  const client=await pool.connect();
+  try{
+    await client.query('BEGIN');
+    let before=null,row,action;
+    if(id!==null){
+      before=(await client.query('SELECT * FROM lead_pricing_rules WHERE id=$1 FOR UPDATE',[id])).rows[0];
+      if(!before){const error=new Error('Pricing rule not found');error.code='PRICING_RULE_NOT_FOUND';throw error;}
+      try{row=(await client.query(`UPDATE lead_pricing_rules SET industry_id=$1,city_id=$2,lead_type=$3,pricing=$4::jsonb,is_active=$5,updated_at=CURRENT_TIMESTAMP WHERE id=$6 RETURNING *`,[normalized.industryId,normalized.cityId,normalized.leadType,JSON.stringify(normalized.pricing),normalized.isActive,id])).rows[0]}
+      catch(error){if(error.code==='23505'){const e=new Error('A pricing rule already exists for this Industry, City and Lead Type');e.code='PRICING_RULE_SCOPE_EXISTS';throw e}throw error}
+      action='pricing.rule_update';
+    }else{
+      before=(await client.query(`SELECT * FROM lead_pricing_rules WHERE COALESCE(industry_id,0)=COALESCE($1::int,0) AND COALESCE(city_id,0)=COALESCE($2::int,0) AND lead_type=$3 FOR UPDATE`,[normalized.industryId,normalized.cityId,normalized.leadType])).rows[0]||null;
+      try{row=(await client.query(`INSERT INTO lead_pricing_rules(industry_id,city_id,lead_type,pricing,is_active) VALUES($1,$2,$3,$4::jsonb,$5) ON CONFLICT ((COALESCE(industry_id,0)),(COALESCE(city_id,0)),lead_type) DO UPDATE SET pricing=EXCLUDED.pricing,is_active=EXCLUDED.is_active,updated_at=CURRENT_TIMESTAMP RETURNING *`,[normalized.industryId,normalized.cityId,normalized.leadType,JSON.stringify(normalized.pricing),normalized.isActive])).rows[0]}
+      catch(error){if(error.code==='23505'){const e=new Error('A pricing rule already exists for this Industry, City and Lead Type');e.code='PRICING_RULE_SCOPE_EXISTS';throw e}throw error}
+      action=before?'pricing.rule_update':'pricing.rule_create';
+    }
+    await criticalActionAudit.record(client,{actorId:adminUserId,category:'pricing',action,entityType:'lead_pricing_rule',entityId:row.id,beforeData:before,afterData:row,source:'lead_service'});
+    await client.query('COMMIT');return row;
+  }catch(error){await client.query('ROLLBACK');throw error}finally{client.release()}
+}
+async function deletePricingRule(id,adminUserId=null){
+  const ruleId=Number(id);if(!Number.isInteger(ruleId)||ruleId<=0){const error=new Error('Pricing rule ID must be valid');error.code='INVALID_PRICING_RULE_ID';throw error;}
+  const client=await pool.connect();
+  try{
+    await client.query('BEGIN');
+    const before=(await client.query('SELECT * FROM lead_pricing_rules WHERE id=$1 FOR UPDATE',[ruleId])).rows[0]||null;
+    if(!before){await client.query('COMMIT');return null}
+    const deleted=(await client.query('DELETE FROM lead_pricing_rules WHERE id=$1 RETURNING *',[ruleId])).rows[0]||null;
+    await criticalActionAudit.record(client,{actorId:adminUserId,category:'pricing',action:'pricing.rule_delete',entityType:'lead_pricing_rule',entityId:ruleId,beforeData:before,afterData:null,source:'lead_service'});
+    await client.query('COMMIT');return deleted;
+  }catch(error){await client.query('ROLLBACK');throw error}finally{client.release()}
+}
 module.exports={getLeads,getAdminLeadsPage,getLeadById,createLead,updateLead,updateLeadStatus,deleteLead,getLeadPricing,updateLeadPricing,getConfiguredPricing,findDuplicateLead,getPricingRules,savePricingRule,deletePricingRule,getAccessSettings:accessService.getSettings,updateAccessSettings:accessService.updateSettings};

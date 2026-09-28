@@ -37,6 +37,7 @@ const navigation=[
   {type:'group',key:'system',label:'System',icon:'⚙',children:[
     {to:'/admin/system-health',label:'System Health'},
     {to:'/admin/risk-center',label:'Risk Center'},
+    {to:'/admin/audit-timeline',label:'Audit Timeline'},
     {to:'/admin/financial-integrity',label:'Financial Integrity'},
     {to:'/admin/test-reset',label:'Test Data Reset'}
   ]},

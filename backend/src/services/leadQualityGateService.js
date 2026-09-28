@@ -1,5 +1,6 @@
 const pool=require('../config/database');
 const leadQualityService=require('./leadQualityService');
+const criticalActionAudit=require('./criticalActionAuditService');
 
 const humanize=flag=>({
   score_below_threshold:'Quality score is below the configured release threshold',
@@ -27,6 +28,11 @@ async function getSettings(client=pool){
   return normalizeSettings(row);
 }
 async function updateSettings(data={},adminUserId,client=pool){
+  if(client===pool){
+    const tx=await pool.connect();
+    try{await tx.query('BEGIN');const result=await updateSettings(data,adminUserId,tx);await tx.query('COMMIT');return result}
+    catch(error){await tx.query('ROLLBACK');throw error}finally{tx.release()}
+  }
   const current=await getSettings(client);
   const minimumScore=Number(data.minimumScore??current.minimumScore);
   if(!Number.isFinite(minimumScore)||minimumScore<0||minimumScore>100){
@@ -57,7 +63,9 @@ async function updateSettings(data={},adminUserId,client=pool){
     [values.enabled,values.minimumScore,values.requireContact,values.requireValidContact,values.requireValidPincode,
       values.requirePincodeCityMatch,values.requireClassificationValid,adminUserId||null]
   )).rows[0];
-  return normalizeSettings(row);
+  const after=normalizeSettings(row);
+  await criticalActionAudit.record(client,{actorId:adminUserId,category:'lead',action:'lead.quality_gate_settings',entityType:'lead_quality_gate_settings',entityId:1,beforeData:current,afterData:after,source:'lead_quality_gate'});
+  return after;
 }
 
 async function getFeatureRow(leadId,client=pool){
@@ -141,6 +149,11 @@ async function evaluateLead(leadId,client=pool){
   return{settings,feature,evaluation:decide(feature,settings)};
 }
 async function evaluateAndApply(leadId,{context='system',autoRelease=true,reviewedBy=null,reviewNote=null}={},client=pool){
+  if(reviewedBy&&client===pool){
+    const tx=await pool.connect();
+    try{await tx.query('BEGIN');const result=await evaluateAndApply(leadId,{context,autoRelease,reviewedBy,reviewNote},tx);await tx.query('COMMIT');return result}
+    catch(error){await tx.query('ROLLBACK');throw error}finally{tx.release()}
+  }
   const {settings,evaluation}=await evaluateLead(leadId,client);
   const current=(await client.query('SELECT id,status FROM leads WHERE id=$1',[Number(leadId)])).rows[0];
   if(!current)throw Object.assign(new Error('Lead not found'),{code:'LEAD_NOT_FOUND'});
@@ -160,20 +173,30 @@ async function evaluateAndApply(leadId,{context='system',autoRelease=true,review
      WHERE id=$8 RETURNING *`,
     [nextStatus,evaluation.score,gateStatus,JSON.stringify(evaluation.reasons),String(context||'system').slice(0,32),reviewer,String(reviewNote||'').trim().slice(0,1000),Number(leadId)]
   )).rows[0];
+  if(reviewer){
+    await criticalActionAudit.record(client,{actorId:reviewer,category:'lead',action:'lead.quality_recheck',entityType:'lead',entityId:leadId,beforeData:{status:current.status},afterData:{status:lead.status,qualityGateStatus:lead.quality_gate_status,qualityScore:lead.quality_gate_score},reason:reviewNote,metadata:{context,evaluationScore:evaluation.score,gateFlags:evaluation.gateFlags},source:'lead_quality_gate'});
+  }
   return{lead,settings,evaluation};
 }
 async function overrideQuarantine({leadId,adminUserId,note=''}) {
-  const id=Number(leadId);
-  const row=(await pool.query(
-    `UPDATE leads SET status='available',quality_gate_status='overridden',
-       quality_gate_reviewed_by=$2,quality_gate_reviewed_at=CURRENT_TIMESTAMP,quality_gate_note=$3,updated_at=CURRENT_TIMESTAMP
-     WHERE id=$1 AND status='quarantined'
-       AND NOT EXISTS(SELECT 1 FROM lead_purchases p WHERE p.lead_id=leads.id AND p.status IN ('paid','pending_payment'))
-     RETURNING *`,
-    [id,adminUserId||null,String(note||'').trim().slice(0,1000)||null]
-  )).rows[0];
-  if(!row)throw Object.assign(new Error('Lead is not eligible for quarantine override'),{code:'QUALITY_OVERRIDE_NOT_ALLOWED'});
-  return row;
+  const id=Number(leadId),client=await pool.connect();
+  try{
+    await client.query('BEGIN');
+    const before=(await client.query('SELECT id,status,quality_gate_status,quality_gate_score,quality_gate_reasons FROM leads WHERE id=$1 FOR UPDATE',[id])).rows[0];
+    if(!before)throw Object.assign(new Error('Lead is not eligible for quarantine override'),{code:'QUALITY_OVERRIDE_NOT_ALLOWED'});
+    const row=(await client.query(
+      `UPDATE leads SET status='available',quality_gate_status='overridden',
+         quality_gate_reviewed_by=$2,quality_gate_reviewed_at=CURRENT_TIMESTAMP,quality_gate_note=$3,updated_at=CURRENT_TIMESTAMP
+       WHERE id=$1 AND status='quarantined'
+         AND NOT EXISTS(SELECT 1 FROM lead_purchases p WHERE p.lead_id=leads.id AND p.status IN ('paid','pending_payment'))
+       RETURNING *`,
+      [id,adminUserId||null,String(note||'').trim().slice(0,1000)||null]
+    )).rows[0];
+    if(!row)throw Object.assign(new Error('Lead is not eligible for quarantine override'),{code:'QUALITY_OVERRIDE_NOT_ALLOWED'});
+    await criticalActionAudit.record(client,{actorId:adminUserId,category:'lead',action:'lead.quarantine_override',entityType:'lead',entityId:id,beforeData:before,afterData:{status:row.status,qualityGateStatus:row.quality_gate_status,qualityScore:row.quality_gate_score},reason:note,source:'lead_quality_gate'});
+    await client.query('COMMIT');
+    return row;
+  }catch(error){await client.query('ROLLBACK');throw error}finally{client.release()}
 }
 
 module.exports={getSettings,updateSettings,getFeatureRow,decide,evaluateLead,evaluateAndApply,overrideQuarantine};

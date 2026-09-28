@@ -5,6 +5,7 @@ const adminSystemHealthService = require('../services/adminSystemHealthService')
 const adminFinancialIntegrityService = require('../services/adminFinancialIntegrityService');
 const financialReconciliationMonitor = require('../services/financialReconciliationMonitorService');
 const securityRiskService = require('../services/securityRiskService');
+const criticalActionAuditService = require('../services/criticalActionAuditService');
 
 async function getDashboardStats(req, res) {
   try { return res.json(await adminService.getDashboardStats()); }
@@ -37,9 +38,13 @@ async function reviewRiskEvent(req,res){
     return res.status(500).json({error:'Failed to review security risk event'});
   }
 }
+async function getAuditTimeline(req,res){
+  try{return res.json(await criticalActionAuditService.list(req.query||{}))}
+  catch(error){console.error('Get critical action audit timeline failed:',error);return res.status(500).json({error:'Failed to load audit timeline'})}
+}
 async function getUsers(req, res) { try { return res.json(await adminService.getUsers(req.query)); } catch (error) { console.error('Get admin users failed:', error.message); return res.status(500).json({ error: 'Failed to load users' }); } }
 async function createAdmin(req, res) {
-  try { return res.status(201).json(await adminService.createAdmin(req.body || {})); }
+  try { return res.status(201).json(await adminService.createAdmin({...(req.body||{}),actingAdminId:req.user?.id})); }
   catch (error) {
     if (error.code === 'EMAIL_EXISTS') return res.status(409).json({ error: error.message });
     if (error.code === 'INVALID_ADMIN') return res.status(400).json({ error: error.message });
@@ -158,5 +163,5 @@ async function resetTestData(req,res){
   }
 }
 
-module.exports = { getDashboardStats, getSystemHealth, getFinancialIntegrity, getRiskCenter, reviewRiskEvent, getUsers, getUser360, setUserMembershipPlan, createAdmin, setUserStatus, setUserRole, updateUserProfile, getCompanyProofs, verifyCompanyProof, rejectCompanyProof, getTestResetPreview, resetTestData };
+module.exports = { getDashboardStats, getSystemHealth, getFinancialIntegrity, getRiskCenter, reviewRiskEvent, getAuditTimeline, getUsers, getUser360, setUserMembershipPlan, createAdmin, setUserStatus, setUserRole, updateUserProfile, getCompanyProofs, verifyCompanyProof, rejectCompanyProof, getTestResetPreview, resetTestData };
 

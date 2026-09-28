@@ -1,3 +1,4 @@
+const criticalActionAudit=require('./criticalActionAuditService');
 const bcrypt = require('bcryptjs');
 const pool = require('../config/database');
 const { validateSelections } = require('./profileService');
@@ -363,12 +364,19 @@ async function getUsers({ search = '', role = 'all', status = 'all', industryId 
   return { data: result.rows, pagination: { page: currentPage, pageSize: currentPageSize, total, totalPages: total === 0 ? 0 : Math.ceil(total / currentPageSize), hasNextPage: currentPage * currentPageSize < total, hasPreviousPage: currentPage > 1 && total > 0 } };
 }
 
-async function createAdmin({ name, email, password }) {
+async function createAdmin({ name, email, password, actingAdminId=null }) {
   const cleanName = String(name || '').trim(), normalizedEmail = String(email || '').trim().toLowerCase();
   if (!cleanName || !normalizedEmail || String(password || '').length < 8) { const error = new Error('Name, valid email and password of at least 8 characters are required'); error.code='INVALID_ADMIN'; throw error; }
-  if ((await pool.query('SELECT id FROM users WHERE LOWER(email)=$1',[normalizedEmail])).rowCount) { const error=new Error('An account with this email already exists'); error.code='EMAIL_EXISTS'; throw error; }
-  const passwordHash=await bcrypt.hash(password,12);
-  return (await pool.query(`INSERT INTO users (name,email,password_hash,role) VALUES ($1,$2,$3,'admin') RETURNING id,name,email,role,is_active,created_at`,[cleanName,normalizedEmail,passwordHash])).rows[0];
+  const client=await pool.connect();
+  try{
+    await client.query('BEGIN');
+    if ((await client.query('SELECT id FROM users WHERE LOWER(email)=$1',[normalizedEmail])).rowCount) { const error=new Error('An account with this email already exists'); error.code='EMAIL_EXISTS'; throw error; }
+    const passwordHash=await bcrypt.hash(password,12);
+    const created=(await client.query(`INSERT INTO users (name,email,password_hash,role) VALUES ($1,$2,$3,'admin') RETURNING id,name,email,role,is_active,created_at`,[cleanName,normalizedEmail,passwordHash])).rows[0];
+    await criticalActionAudit.record(client,{actorId:actingAdminId,category:'account',action:'user.create_admin',entityType:'user',entityId:created.id,afterData:created,source:'admin_user_service'});
+    await client.query('COMMIT');
+    return created;
+  }catch(error){await client.query('ROLLBACK');throw error}finally{client.release()}
 }
 
 const ADMIN_MUTATION_LOCK_NAMESPACE = 2147482999;
@@ -382,6 +390,13 @@ async function recordUserAudit(client,{userId,adminId,action,beforeData=null,aft
     INSERT INTO admin_user_audit(user_id,admin_id,action,before_data,after_data,reason)
     VALUES($1,$2,$3,$4,$5,$6)
   `,[userId,adminId||null,action,beforeData?JSON.stringify(beforeData):null,afterData?JSON.stringify(afterData):null,reason||null]);
+  const mapped={
+    activate_account:'user.activate',
+    deactivate_account:'user.deactivate',
+    change_role:'user.change_role',
+    update_profile:'user.update_profile'
+  }[action]||('user.'+String(action||'update'));
+  await criticalActionAudit.record(client,{actorId:adminId,category:'account',action:mapped,entityType:'user',entityId:userId,beforeData,afterData,reason,source:'admin_user_service'});
 }
 
 async function setUserStatus(userId,isActive,actingAdminId=null) {
@@ -580,6 +595,7 @@ async function reviewCompanyProof({ documentId, status, reviewReason = '', revie
       await leadEntitlementGrantService.ensureNewBusinessGrant(updated.user_id, client);
     }
 
+    await criticalActionAudit.record(client,{actorId:normalizedReviewer,category:'account',action:'company_proof.review',entityType:'company_proof',entityId:normalizedDocumentId,beforeData:{status:current.status},afterData:{status:updated.status,userId:updated.user_id,fileName:updated.original_name,mimeType:updated.mime_type,fileSize:updated.file_size},reason:normalizedStatus==='rejected'?reason:null,metadata:{reviewOutcome:normalizedStatus},source:'admin_user_service'});
     await client.query('COMMIT');
     return updated;
   } catch (error) {

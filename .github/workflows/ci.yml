@@ -214,6 +214,15 @@ jobs:
           JWT_SECRET: ci-risk-center-secret-32-characters-minimum
         timeout-minutes: 2
         run: npm run test:risk-center-runtime
+      - name: Verify critical action audit runtime
+        env:
+          DB_HOST: 127.0.0.1
+          DB_PORT: 5432
+          DB_NAME: ci_smoke
+          DB_USER: ci_smoke
+          DB_PASSWORD: ci_smoke
+        timeout-minutes: 2
+        run: npm run test:critical-audit-runtime
       - name: Verify database backup restore drill
         env:
           DB_HOST: 127.0.0.1

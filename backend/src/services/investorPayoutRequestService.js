@@ -1,3 +1,4 @@
+const criticalActionAudit=require('./criticalActionAuditService');
 const pool = require('../config/database');
 const privateProofStorage = require('./privateProofStorageService');
 const payoutAccounts = require('./investorPayoutAccountService');
@@ -90,6 +91,7 @@ async function adminProcess({requestId,adminId,action,transferReference,proofUrl
     await ledger.lockInvestorFinancials(client,row.user_id);
     if(normalizedAction==='reject'){
       const updated=(await client.query(`UPDATE investor_payout_requests SET status='rejected',notes=COALESCE($1,notes),processed_at=CURRENT_TIMESTAMP,processed_by=$2,updated_at=CURRENT_TIMESTAMP WHERE id=$3 RETURNING *`,[String(notes||'').trim()||null,Number(adminId),Number(requestId)])).rows[0];
+      await criticalActionAudit.record(client,{actorId:adminId,category:'payout',action:'payout.investor_process',entityType:'investor_payout',entityId:row.id,beforeData:{status:row.status,amount:Number(row.amount),userId:row.user_id},afterData:{status:updated.status,amount:Number(updated.amount),userId:updated.user_id},reason:notes,metadata:{action:'reject'},source:'investor_payout_service'});
       await client.query('COMMIT');
       return{...updated,amount:Number(updated.amount)};
     }
@@ -104,6 +106,7 @@ async function adminProcess({requestId,adminId,action,transferReference,proofUrl
     if(Number(row.amount)>earningsAvailableBeforePending+1e-6)throw Object.assign(new Error('Withdrawal amount is no longer available.'),{code:'INSUFFICIENT_GENERATED_FUNDS'});
     storedProof=await privateProofStorage.storeDataUrl(validatedProof,{category:'investor-payouts',maxBytes:6*1024*1024});
     const updated=(await client.query(`UPDATE investor_payout_requests SET status='paid',transfer_reference=$1,proof_url=$2,notes=COALESCE($3,notes),processed_at=CURRENT_TIMESTAMP,processed_by=$4,updated_at=CURRENT_TIMESTAMP WHERE id=$5 RETURNING *`,[reference,storedProof,String(notes||'').trim()||null,Number(adminId),Number(requestId)])).rows[0];
+    await criticalActionAudit.record(client,{actorId:adminId,category:'payout',action:'payout.investor_process',entityType:'investor_payout',entityId:row.id,beforeData:{status:row.status,amount:Number(row.amount),userId:row.user_id},afterData:{status:updated.status,amount:Number(updated.amount),userId:updated.user_id},reason:notes,metadata:{action:'paid'},source:'investor_payout_service'});
     await client.query('COMMIT');
     return{...updated,amount:Number(updated.amount)};
   }catch(error){

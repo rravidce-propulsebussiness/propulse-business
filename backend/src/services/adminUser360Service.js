@@ -1,3 +1,4 @@
+const criticalActionAudit=require('./criticalActionAuditService');
 const pool=require('../config/database');
 const paymentService=require('./paymentService');
 const walletService=require('./walletService');
@@ -298,6 +299,14 @@ async function setMembershipPlan({userId,planId,adminId,days,reason}){
         ) VALUES($1,$2,$3,'assign_plan',NULL,'active',NULL,$4,NULL,$5)
       `,[membership.id,userId,adminId||null,membership.expires_at,`Assigned ${plan.name}. ${cleanReason}`]);
     }
+    await criticalActionAudit.record(client,{
+      actorId:adminId,category:'membership',
+      action:current?'membership.change_plan':'membership.assign_plan',
+      entityType:'membership',entityId:membership.id,
+      beforeData:current?{membershipId:current.id,planId:current.membership_plan_id,planName:current.old_plan_name,status:current.status,expiresAt:current.expires_at}:null,
+      afterData:{membershipId:membership.id,planId:plan.id,planName:plan.name,status:membership.status,expiresAt:membership.expires_at},
+      reason:cleanReason,metadata:{userId:Number(userId)},source:'admin_user_360'
+    });
     await client.query('COMMIT');
     return membership;
   }catch(error){

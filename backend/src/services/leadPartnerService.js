@@ -1,3 +1,4 @@
+const criticalActionAudit=require('./criticalActionAuditService');
 const pool = require('../config/database');
 const leadService = require('./leadService');
 const pincodeService = require('./pincodeService');
@@ -90,7 +91,7 @@ async function getQualityMetrics(partnerId, client = pool) {
   return leadQualityService.getPartnerQuality(partnerId, client);
 }
 
-async function updateStatus(partnerId, status) {
+async function updateStatus(partnerId, status, adminUserId=null) {
   const id = Number(partnerId);
   const nextStatus = String(status || '').trim().toLowerCase();
   if (!Number.isInteger(id) || id <= 0 || !PARTNER_STATUSES.includes(nextStatus)) {
@@ -98,16 +99,15 @@ async function updateStatus(partnerId, status) {
     error.code = 'INVALID_PARTNER_STATUS';
     throw error;
   }
-  const row = (await pool.query(
-    `UPDATE lead_partners SET status=$1,updated_at=CURRENT_TIMESTAMP WHERE id=$2 RETURNING *`,
-    [nextStatus, id]
-  )).rows[0];
-  if (!row) {
-    const error = new Error('Lead Partner not found');
-    error.code = 'PARTNER_NOT_FOUND';
-    throw error;
-  }
-  return row;
+  const client=await pool.connect();
+  try{
+    await client.query('BEGIN');
+    const before=(await client.query('SELECT * FROM lead_partners WHERE id=$1 FOR UPDATE',[id])).rows[0];
+    if(!before){const error=new Error('Lead Partner not found');error.code='PARTNER_NOT_FOUND';throw error}
+    const row=(await client.query(`UPDATE lead_partners SET status=$1,updated_at=CURRENT_TIMESTAMP WHERE id=$2 RETURNING *`,[nextStatus,id])).rows[0];
+    await criticalActionAudit.record(client,{actorId:adminUserId,category:'account',action:'partner.status_change',entityType:'lead_partner',entityId:id,beforeData:{status:before.status,userId:before.user_id},afterData:{status:row.status,userId:row.user_id},source:'lead_partner_service'});
+    await client.query('COMMIT');return row;
+  }catch(error){await client.query('ROLLBACK');throw error}finally{client.release()}
 }
 
 async function getAdminPartners({ status, search = '', page = 1, limit = 50 } = {}) {

@@ -1,5 +1,6 @@
 const crypto=require('crypto');
 const pool=require('../config/database');
+const criticalActionAudit=require('./criticalActionAuditService');
 
 const secret=String(process.env.RISK_EVENT_HASH_SECRET||process.env.JWT_SECRET||'propulse-development-risk-secret');
 
@@ -224,14 +225,20 @@ async function reviewEvent({eventId,status,note,adminId}){
   if(!['resolved','dismissed'].includes(status))throw Object.assign(new Error('Select resolved or dismissed'),{code:'INVALID_RISK_REVIEW'});
   const reviewNote=String(note||'').trim();
   if(!reviewNote)throw Object.assign(new Error('A review note is required'),{code:'RISK_REVIEW_NOTE_REQUIRED'});
-  const row=(await pool.query(
-    `UPDATE security_risk_events SET status=$1,reviewed_by=$2,reviewed_at=CURRENT_TIMESTAMP,
-        review_note=$3,updated_at=CURRENT_TIMESTAMP
-      WHERE id=$4 AND status='open' RETURNING *`,
-    [status,adminId||null,reviewNote.slice(0,1000),Number(eventId)]
-  )).rows[0];
-  if(!row)throw Object.assign(new Error('Risk event was not found or already reviewed'),{code:'RISK_EVENT_NOT_OPEN'});
-  return row;
+  const client=await pool.connect();
+  try{
+    await client.query('BEGIN');
+    const before=(await client.query('SELECT id,event_type,severity,status,user_id,related_type,related_id,title,occurrence_count FROM security_risk_events WHERE id=$1 FOR UPDATE',[Number(eventId)])).rows[0];
+    if(!before||before.status!=='open')throw Object.assign(new Error('Risk event was not found or already reviewed'),{code:'RISK_EVENT_NOT_OPEN'});
+    const row=(await client.query(
+      `UPDATE security_risk_events SET status=$1,reviewed_by=$2,reviewed_at=CURRENT_TIMESTAMP,
+          review_note=$3,updated_at=CURRENT_TIMESTAMP
+        WHERE id=$4 AND status='open' RETURNING *`,
+      [status,adminId||null,reviewNote.slice(0,1000),Number(eventId)]
+    )).rows[0];
+    await criticalActionAudit.record(client,{actorId:adminId,category:'security',action:'security.risk_review',entityType:'security_risk_event',entityId:eventId,beforeData:before,afterData:{id:row.id,eventType:row.event_type,severity:row.severity,status:row.status,userId:row.user_id,relatedType:row.related_type,relatedId:row.related_id,occurrenceCount:row.occurrence_count},reason:reviewNote,source:'security_risk_service'});
+    await client.query('COMMIT');return row;
+  }catch(error){await client.query('ROLLBACK');throw error}finally{client.release()}
 }
 
 module.exports={
