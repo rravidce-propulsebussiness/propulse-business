@@ -269,4 +269,3 @@ async function updateSheetDefaultIndustry({userId,connectionId,defaultIndustryId
 }
 
 module.exports={...base,importCsv,connectGoogleSheet,syncGoogleSheet,listInventory,getSheetConnections,updateSheetDefaultIndustry};
-
