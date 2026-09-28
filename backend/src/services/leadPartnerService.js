@@ -1,6 +1,7 @@
 const pool = require('../config/database');
 const leadService = require('./leadService');
 const pincodeService = require('./pincodeService');
+const leadQualityService = require('./leadQualityService');
 
 const PARTNER_STATUSES = ['pending', 'active', 'suspended', 'rejected'];
 
@@ -93,49 +94,7 @@ async function getMyLeads(userId, { status, page = 1, limit = 50 } = {}) {
 }
 
 async function getQualityMetrics(partnerId, client = pool) {
-  const id = Number(partnerId);
-  if (!Number.isInteger(id) || id <= 0) throw new Error('Invalid Lead Partner ID');
-  const result = await client.query(
-    `WITH partner_leads AS (
-       SELECT id FROM leads WHERE lead_partner_id=$1
-     ),
-     purchased AS (
-       SELECT DISTINCT lp.lead_id
-       FROM lead_purchases lp
-       JOIN partner_leads pl ON pl.id=lp.lead_id
-       WHERE lp.status IN ('paid','refunded')
-     ),
-     fake AS (
-       SELECT DISTINCT r.lead_id
-       FROM lead_reports r
-       JOIN partner_leads pl ON pl.id=r.lead_id
-       WHERE r.status='verified_fake'
-     ),
-     genuine AS (
-       SELECT DISTINCT r.id
-       FROM lead_reports r
-       JOIN partner_leads pl ON pl.id=r.lead_id
-       WHERE r.status='verified_genuine'
-     )
-     SELECT
-       (SELECT COUNT(*) FROM partner_leads)::int AS total_leads,
-       (SELECT COUNT(*) FROM purchased)::int AS purchased_leads,
-       (SELECT COUNT(*) FROM fake)::int AS verified_fake_leads,
-       (SELECT COUNT(*) FROM genuine)::int AS verified_genuine_reports,
-       CASE WHEN (SELECT COUNT(*) FROM purchased)=0 THEN 0
-            ELSE ROUND((SELECT COUNT(*) FROM fake)::numeric * 100.0 / (SELECT COUNT(*) FROM purchased), 2)
-       END AS verified_fake_rate_pct`,
-    [id]
-  );
-  const row = result.rows[0] || {};
-  return {
-    totalLeads: Number(row.total_leads || 0),
-    purchasedLeads: Number(row.purchased_leads || 0),
-    verifiedFakeLeads: Number(row.verified_fake_leads || 0),
-    verifiedGenuineReports: Number(row.verified_genuine_reports || 0),
-    verifiedFakeRatePct: Number(row.verified_fake_rate_pct || 0),
-    fakeRateDefinition: 'Verified fake partner leads divided by distinct partner leads with at least one completed purchase, including purchases later refunded after an Admin-verified fake decision.',
-  };
+  return leadQualityService.getPartnerQuality(partnerId, client);
 }
 
 async function updateStatus(partnerId, status) {
@@ -299,7 +258,10 @@ async function getAdminPartners({ status, search = '', page = 1, limit = 50 } = 
     [...values, pageSize, offset]
   )).rows;
 
+  const qualityByPartner=await leadQualityService.getPartnerQualityBatch(rows.map(row=>Number(row.id)),pool);
+
   const partners = rows.map(row => ({
+
     ...row,
     total_leads: Number(row.total_leads || 0),
     active_leads: Number(row.active_leads || 0),
@@ -318,7 +280,12 @@ async function getAdminPartners({ status, search = '', page = 1, limit = 50 } = 
     transferred_amount: Number(row.transferred_amount || 0),
     pending_payout_count: Number(row.pending_payout_count || 0),
     recovery_outstanding: Number(row.recovery_outstanding || 0),
-    quality_metric_definition: 'Verified fake partner leads divided by distinct partner leads with at least one completed purchase, including purchases later refunded after an Admin-verified fake decision.',
+    quality_score: qualityByPartner.get(Number(row.id))?.score ?? null,
+    quality_band: qualityByPartner.get(Number(row.id))?.band || 'no_data',
+    quality_confidence: qualityByPartner.get(Number(row.id))?.confidence || 'none',
+    quality_breakdown: qualityByPartner.get(Number(row.id))?.breakdown || null,
+    quality_top_issues: qualityByPartner.get(Number(row.id))?.topIssues || [],
+    quality_metric_definition: 'Average per-lead score: completeness 45, validity 25, uniqueness 15 and verified buyer outcome 15.',
   }));
 
   const totals = partners.reduce((acc,row) => {
