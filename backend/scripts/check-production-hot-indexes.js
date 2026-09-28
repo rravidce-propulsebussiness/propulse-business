@@ -2,6 +2,7 @@ const fs=require('fs');
 const path=require('path');
 
 const migration=fs.readFileSync(path.join(__dirname,'../src/database/migrations/20260928_production_hot_path_indexes.sql'),'utf8');
+const latestCycleMigration=fs.readFileSync(path.join(__dirname,'../src/database/migrations/20260928_investment_cycle_latest_index.sql'),'utf8');
 const assert=(condition,message)=>{if(!condition)throw new Error(message)};
 
 assert(migration.includes('idx_wallet_topups_status_created_id'),'Wallet top-up review queue needs status/time index');
