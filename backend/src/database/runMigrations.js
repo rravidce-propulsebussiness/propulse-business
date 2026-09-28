@@ -77,6 +77,25 @@ function hasTransactionControl(sql) {
   return /(^|;)\s*(BEGIN|COMMIT|ROLLBACK)\s*;?/im.test(surface);
 }
 
+function isNoTransactionMigration(sql) {
+  return /^\s*--\s*propulse:no-transaction\b/im.test(String(sql || ''));
+}
+
+function splitTopLevelStatements(sql) {
+  const surface = migrationControlSurface(sql);
+  const statements = [];
+  let start = 0;
+  for (let i = 0; i < surface.length; i += 1) {
+    if (surface[i] !== ';') continue;
+    const statement = sql.slice(start, i + 1).trim();
+    if (migrationControlSurface(statement).trim()) statements.push(statement);
+    start = i + 1;
+  }
+  const tail = sql.slice(start).trim();
+  if (migrationControlSurface(tail).trim()) statements.push(tail);
+  return statements;
+}
+
 async function applyFile(client, filePath, appliedFilenames = null) {
   const filename = path.relative(__dirname, filePath).replace(/\\/g, '/');
   if (appliedFilenames?.has(filename)) return false;
@@ -86,6 +105,13 @@ async function applyFile(client, filePath, appliedFilenames = null) {
   }
 
   const sql = fs.readFileSync(filePath, 'utf8');
+  if (isNoTransactionMigration(sql)) {
+    for (const statement of splitTopLevelStatements(sql)) await client.query(statement);
+    await client.query('INSERT INTO schema_migrations(filename) VALUES($1)', [filename]);
+    appliedFilenames?.add(filename);
+    return true;
+  }
+
   if (hasTransactionControl(sql)) {
     await client.query(sql);
     await client.query('INSERT INTO schema_migrations(filename) VALUES($1)', [filename]);
@@ -142,4 +168,4 @@ if (require.main === module) {
     .finally(() => pool.end());
 }
 
-module.exports = { runMigrations, hasTransactionControl, migrationControlSurface };
+module.exports = { runMigrations, hasTransactionControl, migrationControlSurface, isNoTransactionMigration, splitTopLevelStatements };

@@ -39,7 +39,7 @@ versions, rather than trusting the role claimed in a JWT.
    9 MB parser limit, while individual proof files remain limited to 5 MB.
 5. For a **new empty database**, run `npm run db:bootstrap` in backend. For an
    existing installation, take and verify a backup, then run `npm run db:migrate`
-   as a release step before new web instances receive traffic. Web startup still runs
+   as a release step before new web instances receive traffic. Production hot-path\n   indexes use explicit non-transactional migrations with concurrent index creation,\n   reducing write blocking while indexes are built on populated tables. Web startup still runs
    pending migrations by default for backward compatibility; after adding a dedicated
    release migration step, set `RUN_MIGRATIONS_ON_STARTUP=false` on every web/worker
    instance so rolling deploys do not make each instance wait on the migration lock.
