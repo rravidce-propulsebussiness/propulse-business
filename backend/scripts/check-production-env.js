@@ -69,6 +69,18 @@ else if(!path.isAbsolute(uploadRoot)) fail('UPLOAD_STORAGE_ROOT must be an absol
 const healthTimeout=Number(value('HEALTH_CHECK_TIMEOUT_MS')||2500);
 if(!Number.isInteger(healthTimeout)||healthTimeout<500||healthTimeout>10000) fail('HEALTH_CHECK_TIMEOUT_MS must be an integer between 500 and 10000 milliseconds');
 
+function boundedInteger(key,fallback,min,max){
+  const raw=value(key);
+  const number=Number(raw||fallback);
+  if(!Number.isInteger(number)||number<min||number>max)fail(`${key} must be an integer between ${min} and ${max}`);
+  return number;
+}
+const requestTimeout=boundedInteger('HTTP_REQUEST_TIMEOUT_MS',60000,5000,300000);
+const headersTimeout=boundedInteger('HTTP_HEADERS_TIMEOUT_MS',15000,5000,300000);
+boundedInteger('HTTP_KEEP_ALIVE_TIMEOUT_MS',5000,1000,60000);
+boundedInteger('HTTP_MAX_REQUESTS_PER_SOCKET',1000,1,10000);
+if(headersTimeout>requestTimeout)fail('HTTP_HEADERS_TIMEOUT_MS must not exceed HTTP_REQUEST_TIMEOUT_MS');
+
 const migrationsOnStartup=value('RUN_MIGRATIONS_ON_STARTUP').toLowerCase();
 if(!migrationsOnStartup) warn('RUN_MIGRATIONS_ON_STARTUP is not explicit; use false when migrations run as a release step');
 else if(['1','true','yes','on'].includes(migrationsOnStartup)) warn('RUN_MIGRATIONS_ON_STARTUP is enabled; rolling web deploys may wait on the migration lock');

@@ -1,5 +1,6 @@
 require('dotenv').config();
 const express=require('express');
+const crypto=require('crypto');
 const cors=require('cors');
 const pool=require('./config/database');
 const {runMigrations}=require('./database/runMigrations');
@@ -42,11 +43,21 @@ const configuredOrigins=getConfiguredOrigins({isProduction});
 const DEFAULT_JSON_BYTES='1mb';
 const LARGE_JSON_BYTES='9mb';
 const healthCheckTimeoutMs=Math.min(10000,Math.max(500,Number(process.env.HEALTH_CHECK_TIMEOUT_MS)||2500));
+const httpRequestTimeoutMs=Math.min(300000,Math.max(5000,Number(process.env.HTTP_REQUEST_TIMEOUT_MS)||60000));
+const httpHeadersTimeoutMs=Math.min(httpRequestTimeoutMs,Math.max(5000,Number(process.env.HTTP_HEADERS_TIMEOUT_MS)||15000));
+const httpKeepAliveTimeoutMs=Math.min(60000,Math.max(1000,Number(process.env.HTTP_KEEP_ALIVE_TIMEOUT_MS)||5000));
+const httpMaxRequestsPerSocket=Math.min(10000,Math.max(1,Math.floor(Number(process.env.HTTP_MAX_REQUESTS_PER_SOCKET)||1000)));
 const runMigrationsOnStartup=envFlag('RUN_MIGRATIONS_ON_STARTUP',true);
 const runBackgroundJobsInWeb=envFlag('RUN_BACKGROUND_JOBS_IN_WEB',true);
 const trustProxy=String(process.env.TRUST_PROXY||'').trim();
 if(trustProxy) app.set('trust proxy',trustProxy==='false'?false:trustProxy==='true'?true:Number.isNaN(Number(trustProxy))?trustProxy:Number(trustProxy));
 app.disable('x-powered-by');
+app.use((req,res,next)=>{
+  const incoming=String(req.get('x-request-id')||'').trim();
+  req.requestId=/^[A-Za-z0-9._:-]{1,100}$/.test(incoming)?incoming:crypto.randomUUID();
+  res.setHeader('X-Request-Id',req.requestId);
+  next();
+});
 app.use(cors({origin(origin,callback){if(!origin||configuredOrigins.includes(origin))return callback(null,true);return callback(new Error('CORS origin not allowed'));},credentials:true}));
 app.use((req,res,next)=>{res.setHeader('X-Content-Type-Options','nosniff');res.setHeader('X-Frame-Options','DENY');res.setHeader('Referrer-Policy','strict-origin-when-cross-origin');res.setHeader('Permissions-Policy','camera=(),microphone=(),geolocation=()');res.setHeader('Content-Security-Policy',"default-src 'none'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'; form-action 'none'");if(isProduction)res.setHeader('Strict-Transport-Security','max-age=31536000; includeSubDomains');next();});
 const largeJsonParser=express.json({limit:LARGE_JSON_BYTES});
@@ -83,8 +94,8 @@ async function readiness(req,res){
   const databaseReady=database.status==='fulfilled';
   const storageReady=storage.status==='fulfilled';
   if(databaseReady&&storageReady)return res.json({status:'ok',database:'connected',storage:'ready'});
-  if(!databaseReady)console.error('Readiness database check failed:',database.reason?.message||database.reason);
-  if(!storageReady)console.error('Readiness storage check failed:',storage.reason?.message||storage.reason);
+  if(!databaseReady)console.error(`[${req.requestId}] Readiness database check failed:`,database.reason?.message||database.reason);
+  if(!storageReady)console.error(`[${req.requestId}] Readiness storage check failed:`,storage.reason?.message||storage.reason);
   return res.status(503).json({
     status:'error',
     database:databaseReady?'connected':'unavailable',
@@ -95,7 +106,7 @@ app.get('/health/ready',readiness);
 app.get('/health',readiness);
 app.use('/api/auth',authRoutes);app.use('/api/profile',profileRoutes);app.use('/api/admin',adminRoutes);app.use('/api/lead-partner',leadPartnerRoutes);app.use('/api/lead-reports',leadReportRoutes);app.use('/api/lead-partner/faqs',faqRoutes);app.use('/api/faqs',publicFaqRoutes);app.use('/api/upcoming-features',upcomingFeatureRoutes);app.use('/api/contact',contactRoutes);app.use('/api/homepage-media',homepageMediaRoutes);app.use('/api/admin/faqs',adminFaqRoutes);app.use('/api/leads',leadRoutes);app.use('/api/payments',paymentRoutes);app.use('/api/payment-receiving-details',paymentReceivingDetailsRoutes);app.use('/api/coupons',couponRoutes);app.use('/api/membership-plans',membershipPlanRoutes);app.use('/api/admin/commercial',adminCommercialRoutes);app.use('/api/wallet',walletRoutes);app.use('/api/investments',investmentRoutes);app.use('/api/investor/payout-account',investorPayoutAccountRoutes);app.use('/api/industries',industryRoutes);app.use('/api/services',serviceRoutes);app.use('/api/subservices',subserviceRoutes);app.use('/api/states',stateRoutes);app.use('/api/cities',cityRoutes);app.use('/api/subcities',subcityRoutes);app.use('/api/pincodes',pincodeRoutes);
 app.use((req,res)=>res.status(404).json({error:'Not found'}));
-app.use((err,req,res,next)=>{if(err.message==='CORS origin not allowed')return res.status(403).json({error:'Origin not allowed'});if(err.type==='entity.parse.failed')return res.status(400).json({error:'Invalid JSON body'});if(err.type==='entity.too.large')return res.status(413).json({error:'Request body is too large'});console.error('Unhandled server error:',err.stack||err);return res.status(500).json({error:'Internal server error'});});
+app.use((err,req,res,next)=>{if(err.message==='CORS origin not allowed')return res.status(403).json({error:'Origin not allowed'});if(err.type==='entity.parse.failed')return res.status(400).json({error:'Invalid JSON body'});if(err.type==='entity.too.large')return res.status(413).json({error:'Request body is too large'});console.error(`[${req.requestId||'no-request-id'}] Unhandled server error:`,err.stack||err);return res.status(500).json({error:'Internal server error',requestId:req.requestId||undefined});});
 let server;let stopLeadPartnerSheetAutoSync=()=>{};let stopAdminGoogleSheetAutoSync=()=>{};let shuttingDown=false;
 async function shutdown(signal){
   if(shuttingDown)return;
@@ -134,6 +145,11 @@ async function start(){
         stopAdminGoogleSheetAutoSync=startAdminGoogleSheetAutoSync();
       }else console.log('Background jobs disabled in web process (RUN_BACKGROUND_JOBS_IN_WEB=false).');
     });
+    server.requestTimeout=httpRequestTimeoutMs;
+    server.headersTimeout=httpHeadersTimeoutMs;
+    server.keepAliveTimeout=httpKeepAliveTimeoutMs;
+    server.maxRequestsPerSocket=httpMaxRequestsPerSocket;
+    server.maxHeadersCount=100;
     process.once('SIGTERM',()=>shutdown('SIGTERM'));
     process.once('SIGINT',()=>shutdown('SIGINT'));
   }catch(error){

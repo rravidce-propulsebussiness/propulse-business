@@ -51,7 +51,9 @@ versions, rather than trusting the role claimed in a JWT.
    readiness/database probe. `/health` remains an alias of readiness for compatibility.
    All health responses are non-cacheable. Readiness checks database and upload
    storage independently and are bounded by `HEALTH_CHECK_TIMEOUT_MS` (default 2500 ms),
-   so dependency failures do not leave load-balancer probes hanging. Do not use database readiness as an
+   so dependency failures do not leave load-balancer probes hanging. The backend also
+   enforces explicit request/header/keep-alive timeouts and a per-socket request cap;
+   align reverse-proxy/load-balancer idle timeouts with these values. Do not use database readiness as an
    orchestrator liveness probe, otherwise a temporary PostgreSQL outage can cause a
    restart loop. For a dedicated background process, set
    `RUN_BACKGROUND_JOBS_IN_WEB=false` on web instances and run `npm run worker` as a
@@ -123,6 +125,9 @@ actual PostgreSQL payment concurrency and rollback, role restrictions, Lead Part
 payout lifecycle, production-mode HTTP startup/security checks, frontend build and
 Google GIS checks. Dependency audits returned no known vulnerabilities. Frontend
 lint is clean with zero warnings and zero errors.
+
+Every response carries `X-Request-Id`; include that value in support/error reports so
+backend logs can be correlated to a specific failed request.
 
 Before accepting live payments, verify the deployed HTTPS domain, email delivery,
 backup restoration and the complete browser journey using your configured bank
