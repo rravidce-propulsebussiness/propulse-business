@@ -14,9 +14,9 @@ function isVisible(question, answers) {
   const dependency = String(rule.questionKey || '').trim();
   if (!dependency) return true;
   const actual = answers?.[dependency];
-  if (Object.prototype.hasOwnProperty.call(rule, 'equals')) return actual === rule.equals;
-  if (Array.isArray(rule.in)) return rule.in.includes(actual);
-  if (Object.prototype.hasOwnProperty.call(rule, 'notEquals')) return actual !== rule.notEquals;
+  if (Object.prototype.hasOwnProperty.call(rule, 'equals')) return Array.isArray(actual) ? actual.includes(rule.equals) : actual === rule.equals;
+  if (Array.isArray(rule.in)) return Array.isArray(actual) ? actual.some(value => rule.in.includes(value)) : rule.in.includes(actual);
+  if (Object.prototype.hasOwnProperty.call(rule, 'notEquals')) return Array.isArray(actual) ? !actual.includes(rule.notEquals) : actual !== rule.notEquals;
   return true;
 }
 

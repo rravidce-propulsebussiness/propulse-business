@@ -20,6 +20,7 @@ router.post('/admin/:id/publish', requireAdmin, adminWriteLimit, customerFlowCon
 router.patch('/admin/:id/status', requireAdmin, adminWriteLimit, customerFlowController.setStatus);
 
 router.get('/estimates/:publicId', publicReadLimit, estimatorController.getCalculation);
+router.post('/estimates/:publicId/convert', publicSubmitLimit, estimatorController.convertCalculation);
 router.get('/:key', publicReadLimit, customerFlowController.getPublic);
 router.post('/:key/calculate', publicCalculateLimit, estimatorController.calculate);
 router.post('/:key/submit', publicSubmitLimit, customerFlowController.submitPublic);

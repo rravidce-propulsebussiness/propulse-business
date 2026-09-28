@@ -39,7 +39,9 @@
     "wait:deployment": "node scripts/wait-for-deployment.js",
     "test:customer-flow": "node scripts/check-customer-flow-integrity.js",
     "test:estimator-schema": "node scripts/check-estimator-schema-integrity.js",
-    "test:estimator-runtime": "node scripts/check-estimator-runtime.js"
+    "test:estimator-runtime": "node scripts/check-estimator-runtime.js",
+    "test:interior-estimator": "node scripts/check-interior-estimator-seed.js",
+    "test:estimator-conversion": "node scripts/check-estimator-conversion-runtime.js"
   },
   "keywords": [],
   "author": "",

@@ -83,4 +83,17 @@ async function getPublishedFlow(key){
  const r=(await pool.query(`SELECT d.id definition_id,d.key,d.name,d.flow_type,d.industry_id,d.service_id,d.subservice_id,i.name industry_name,s.name service_name,ss.name subservice_name,v.id version_id,v.version_no,v.config FROM customer_flow_definitions d JOIN industries i ON i.id=d.industry_id AND i.is_active=TRUE LEFT JOIN services s ON s.id=d.service_id AND s.is_active=TRUE LEFT JOIN subservices ss ON ss.id=d.subservice_id AND ss.is_active=TRUE JOIN customer_flow_versions v ON v.definition_id=d.id AND v.status='published' WHERE d.key=$1 AND d.is_active=TRUE AND (d.service_id IS NULL OR s.id IS NOT NULL) AND (d.subservice_id IS NULL OR ss.id IS NOT NULL) AND (v.effective_from IS NULL OR v.effective_from<=CURRENT_TIMESTAMP) LIMIT 1`,[flowKey(key)])).rows[0];if(!r)fail('This customer flow is not available','FLOW_NOT_FOUND',404);
  const qs=(await questions(pool,r.version_id)).filter(q=>q.isActive).map(q=>({...q,options:q.options.filter(o=>o.isActive)}));return{definitionId:r.definition_id,key:r.key,name:r.name,flowType:r.flow_type,industryId:r.industry_id,serviceId:r.service_id,subserviceId:r.subservice_id,industryName:r.industry_name,serviceName:r.service_name,subserviceName:r.subservice_name,versionId:r.version_id,versionNo:r.version_no,config:r.config||{},questions:qs,flowToken:signFlowToken(r.version_id)};
 }
-module.exports={listDefinitions,getAdminDefinition,createDefinition,saveDraft,publish,setDefinitionStatus,getPublishedFlow,verifyFlowToken};
+async function getVersionFlow(versionId){
+ const version=id(versionId);if(!version)fail('Customer flow version not found','FLOW_VERSION_NOT_FOUND',404);
+ const r=(await pool.query(`SELECT d.id definition_id,d.key,d.name,d.flow_type,d.industry_id,d.service_id,d.subservice_id,i.name industry_name,s.name service_name,ss.name subservice_name,v.id version_id,v.version_no,v.status,v.config
+   FROM customer_flow_versions v
+   JOIN customer_flow_definitions d ON d.id=v.definition_id AND d.is_active=TRUE
+   JOIN industries i ON i.id=d.industry_id AND i.is_active=TRUE
+   LEFT JOIN services s ON s.id=d.service_id AND s.is_active=TRUE
+   LEFT JOIN subservices ss ON ss.id=d.subservice_id AND ss.is_active=TRUE
+   WHERE v.id=$1 AND (d.service_id IS NULL OR s.id IS NOT NULL) AND (d.subservice_id IS NULL OR ss.id IS NOT NULL)
+   LIMIT 1`,[version])).rows[0];if(!r)fail('Customer flow version not found','FLOW_VERSION_NOT_FOUND',404);
+ const qs=(await questions(pool,r.version_id)).filter(q=>q.isActive).map(q=>({...q,options:q.options.filter(o=>o.isActive)}));
+ return{definitionId:r.definition_id,key:r.key,name:r.name,flowType:r.flow_type,industryId:r.industry_id,serviceId:r.service_id,subserviceId:r.subservice_id,industryName:r.industry_name,serviceName:r.service_name,subserviceName:r.subservice_name,versionId:r.version_id,versionNo:r.version_no,status:r.status,config:r.config||{},questions:qs};
+}
+module.exports={listDefinitions,getAdminDefinition,createDefinition,saveDraft,publish,setDefinitionStatus,getPublishedFlow,getVersionFlow,verifyFlowToken};
