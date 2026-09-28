@@ -2,6 +2,7 @@ const pool = require('../config/database');
 const walletCouponService = require('./walletCouponService');
 const privateProofStorage = require('./privateProofStorageService');
 const notificationService = require('./notificationService');
+const paymentAvailability = require('./paymentAvailabilityService');
 const { decodeBase64Payload, validateDataUrlSignature } = require('../utils/fileValidation');
 const { parseMoneyPaise, paiseToMoney } = require('../utils/money');
 const MAX_TOPUP_PROOF_BYTES = 5 * 1024 * 1024;
@@ -18,7 +19,7 @@ async function createTopup({userId,amount,reference,proofUrl}) {
   const client=await pool.connect();
   let storedProof=null;
   try{
-    await client.query('BEGIN');
+    await client.query('BEGIN');await paymentAvailability.requireOffline(client);
     await client.query('SELECT pg_advisory_xact_lock(hashtext($1))',[`wallet-topup-reference:${normalizedReference.toLowerCase()}`]);
     storedProof=await privateProofStorage.storeDataUrl(proofUrl,{category:'wallet-topups',maxBytes:MAX_TOPUP_PROOF_BYTES});
     const r=await client.query(`INSERT INTO wallet_topups(user_id,amount,reference,proof_url) VALUES($1,$2,$3,$4) RETURNING *`,[userId,value,normalizedReference,storedProof||null]);

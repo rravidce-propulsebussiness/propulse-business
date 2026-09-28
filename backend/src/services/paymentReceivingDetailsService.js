@@ -31,6 +31,8 @@ async function list({ includeInactive = false } = {}) {
 }
 
 async function getPublic() {
+  const availability=await require('./paymentAvailabilityService').get();
+  if(!availability.offlineEnabled)return [];
   return list({ includeInactive: false });
 }
 

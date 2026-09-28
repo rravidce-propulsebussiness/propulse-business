@@ -2,6 +2,7 @@ const crypto=require('crypto');
 const pool=require('../config/database');
 const razorpay=require('./razorpayGatewayService');
 const notificationService=require('./notificationService');
+const paymentAvailability=require('./paymentAvailabilityService');
 
 function gatewayError(message,code){return Object.assign(new Error(message),{code})}
 function expectedMinor(payment){return razorpay.amountMinor(payment.external_amount)}
@@ -11,7 +12,7 @@ function assertCapturedEntity(payment,entity){
   if(Number(entity.amount)!==expectedMinor(payment))throw gatewayError('Payment provider amount does not match this checkout','GATEWAY_AMOUNT_MISMATCH');
   if(String(entity.currency||'').toUpperCase()!==String(payment.currency||'INR').toUpperCase())throw gatewayError('Payment provider currency does not match this checkout','GATEWAY_CURRENCY_MISMATCH');
 }
-async function gateways(){return[razorpay.publicConfig()]}
+async function gateways(){const availability=await paymentAvailability.get();return{availability,providers:[{...razorpay.publicConfig(),enabled:availability.onlineEnabled&&availability.onlineDisplayMode==='live'&&razorpay.isCheckoutConfigured()}]}}
 async function getOwnedPayment(client,{userId,paymentId}){
   const row=(await client.query('SELECT * FROM payments WHERE id=$1 AND user_id=$2 FOR UPDATE',[Number(paymentId),Number(userId)])).rows[0];
   if(!row)throw gatewayError('Payment not found','NOT_FOUND');
@@ -22,6 +23,7 @@ async function createOrderForPayment({userId,paymentId}){
   try{
     await client.query('BEGIN');
     const payment=await getOwnedPayment(client,{userId,paymentId});
+    await paymentAvailability.requireOnline(client);
     if(payment.status!=='pending')throw gatewayError('This payment is not awaiting payment','PAYMENT_NOT_PENDING');
     if(Number(payment.external_amount||0)<=0)throw gatewayError('This payment does not require an external payment','GATEWAY_NOT_REQUIRED');
     if(String(payment.manual_reference||'').trim()||String(payment.proof_url||'').trim())throw gatewayError('A manual payment proof has already been submitted for this payment','MANUAL_PAYMENT_ALREADY_SUBMITTED');

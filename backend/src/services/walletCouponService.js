@@ -3,6 +3,7 @@ const couponService=require('./couponService')
 const privateProofStorage=require('./privateProofStorageService')
 const { decodeBase64Payload, validateDataUrlSignature } = require('../utils/fileValidation');
 const { parseMoneyPaise, paiseToMoney } = require('../utils/money');
+const paymentAvailability=require('./paymentAvailabilityService');
 const MAX_TOPUP_PROOF_BYTES = 5 * 1024 * 1024;
 function validateTopupProof(proofUrl){ const value=String(proofUrl||'').trim(); if(!value) return; const parsed=decodeBase64Payload(value); if(!parsed || parsed.data.length<=0 || parsed.data.length>MAX_TOPUP_PROOF_BYTES || !validateDataUrlSignature(value,['image/png','image/jpeg','image/webp','application/pdf'])) throw Object.assign(new Error('Top-up proof must be a valid PNG, JPEG, WebP, or PDF file under 5 MB.'),{code:'INVALID_PROOF'}); }
 
@@ -38,6 +39,7 @@ async function createTopupWithCoupon({userId,amount,reference,proofUrl,couponCod
       await client.query('COMMIT')
       return {...topup,payment_id:payment.id,subtotal_amount:value,discount_amount:coupon.discountAmount,payable_amount:0,wallet_credited_amount:value+(promotionReward?.reward_amount||0),promotion_reward:promotionReward||null,auto_approved:true,coupon:{code:coupon.coupon.code,discountAmount:coupon.discountAmount,subtotalAmount:value,finalAmount:0,reward:coupon.reward||null},redemption_id:redemption?.id||null}
     }
+    await paymentAvailability.requireOffline(client);
     if(!normalizedReference)throw Object.assign(new Error('Payment reference / UTR is required for a discounted top-up with an amount to pay'),{code:'REFERENCE_REQUIRED'})
     storedProof=await privateProofStorage.storeDataUrl(proofUrl,{category:'wallet-topups',maxBytes:MAX_TOPUP_PROOF_BYTES})
     const topup=(await client.query(`INSERT INTO wallet_topups(user_id,amount,reference,proof_url) VALUES($1,$2,$3,$4) RETURNING *`,[userId,value,normalizedReference,storedProof||null])).rows[0]
@@ -58,6 +60,7 @@ async function createGatewayTopup({userId,amount,couponCode}){
   const client=await pool.connect();
   try{
     await client.query('BEGIN');
+    await paymentAvailability.requireOnline(client);
     const coupon=code?await couponService.validateForUser({client,userId,code,subtotal:value,purchaseType:'wallet_topup'}):null;
     const payable=Number((coupon?coupon.finalAmount:value).toFixed(2));
     if(payable===0&&coupon){

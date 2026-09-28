@@ -7,6 +7,7 @@ const privateProofStorage = require('./privateProofStorageService');
 const securityRiskService = require('./securityRiskService');
 const criticalActionAudit = require('./criticalActionAuditService');
 const notificationService = require('./notificationService');
+const paymentAvailability = require('./paymentAvailabilityService');
 
 async function createWalletFirstPayment(client,{userId,totalAmount,purchaseType,purchaseId,membershipPlanId=null,notes,coupon=null,subtotalAmount=null,useWallet=true,membershipChangeType=null,membershipPreviousPlanId=null,membershipCredit=0,membershipTargetStartsAt=null,membershipTargetExpiresAt=null,membershipPricingRuleId=null,membershipLeadEntitlements=null,membershipEffectivePrice=null}) {
   const total=Number(totalAmount); if(!Number.isFinite(total)||total<=0) throw Object.assign(new Error('Amount must be greater than zero'),{code:'INVALID_AMOUNT'});
@@ -84,6 +85,7 @@ async function createMembershipCheckout({userId,membershipPlanId,couponCode}) {
   }catch(e){await client.query('ROLLBACK');throw e}finally{client.release()}
 }
 async function submitPaymentReference({userId,paymentId,manualReference,proofUrl,notes}, transactionClient=null) {
+  await paymentAvailability.requireOffline(transactionClient||pool);
   const reference=String(manualReference||'').trim(); if(!reference) throw Object.assign(new Error('Payment reference / UTR is required'),{code:'REFERENCE_REQUIRED'});
   const client=transactionClient||await pool.connect(); try{if(!transactionClient)await client.query('BEGIN'); await client.query('SELECT pg_advisory_xact_lock(hashtext($1))',[`payment-reference:${reference.toLowerCase()}`]); const duplicate=(await client.query(`SELECT id FROM payments WHERE LOWER(BTRIM(manual_reference))=LOWER(BTRIM($1)) AND id<>$2 LIMIT 1`,[reference,paymentId])).rows[0]; if(duplicate){await securityRiskService.recordDuplicatePaymentReference({userId,paymentId,reference,existingPaymentId:duplicate.id}).catch(error=>console.error('Risk logging failed for duplicate payment reference:',error.message));throw Object.assign(new Error('This payment reference / UTR has already been submitted'),{code:'DUPLICATE_REFERENCE'});} const row=(await client.query(`SELECT * FROM payments WHERE id=$1 AND user_id=$2 FOR UPDATE`,[paymentId,userId])).rows[0]; if(!row)throw Object.assign(new Error('Payment not found'),{code:'NOT_FOUND'}); if(row.payment_method==='gateway'||String(row.gateway_order_id||'').trim())throw Object.assign(new Error('This payment is already linked to an online checkout'),{code:'GATEWAY_PAYMENT_ACTIVE'}); if(row.status!=='pending'||Number(row.external_amount)<=0)throw Object.assign(new Error('This payment is not awaiting direct payment'),{code:'PAYMENT_NOT_PENDING'}); const updated=(await client.query(`UPDATE payments SET manual_reference=$1,proof_url=COALESCE($2,proof_url),notes=COALESCE($3,notes),updated_at=CURRENT_TIMESTAMP WHERE id=$4 RETURNING *`,[reference,proofUrl||null,notes||null,paymentId])).rows[0]; if(!transactionClient)await client.query('COMMIT'); return updated;}catch(e){if(!transactionClient)await client.query('ROLLBACK');throw e}finally{if(!transactionClient)client.release()}
 }

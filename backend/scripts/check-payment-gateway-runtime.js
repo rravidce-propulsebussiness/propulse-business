@@ -26,6 +26,8 @@ global.fetch=async(url,options={})=>{
 
 (async()=>{
   const suffix=Date.now();
+  const originalAvailability=(await pool.query('SELECT * FROM payment_availability_settings WHERE id=1')).rows[0];
+  await pool.query("UPDATE payment_availability_settings SET online_enabled=TRUE,online_display_mode='live',updated_at=CURRENT_TIMESTAMP WHERE id=1");
   const user=(await pool.query("INSERT INTO users(name,email,password_hash,role,is_active) VALUES($1,$2,'x','business',TRUE) RETURNING id",['Gateway CI','gateway-ci-'+suffix+'@example.test'])).rows[0];
 
   async function payment(amount){
@@ -81,5 +83,8 @@ global.fetch=async(url,options={})=>{
   await pool.query("DELETE FROM critical_action_audit WHERE entity_type='payment' AND entity_id IN (SELECT id::text FROM payments WHERE user_id=$1)",[user.id]);
   await pool.query('DELETE FROM payments WHERE user_id=$1',[user.id]);
   await pool.query('DELETE FROM users WHERE id=$1',[user.id]);
+  await pool.query('UPDATE payment_availability_settings SET offline_enabled=$1,online_enabled=$2,online_display_mode=$3,online_label=$4,online_coming_soon_message=$5,offline_label=$6,updated_by=$7,updated_at=$8 WHERE id=1',[
+    originalAvailability.offline_enabled,originalAvailability.online_enabled,originalAvailability.online_display_mode,originalAvailability.online_label,originalAvailability.online_coming_soon_message,originalAvailability.offline_label,originalAvailability.updated_by,originalAvailability.updated_at
+  ]);
   console.log('Payment gateway PostgreSQL runtime smoke passed.');
 })().catch(error=>{console.error(error.stack||error);process.exitCode=1}).finally(()=>pool.end());

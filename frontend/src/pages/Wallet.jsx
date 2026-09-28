@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import UserHeader from '../components/UserHeader'
 import MembershipPayments from '../components/MembershipPayments'
+import PaymentMethodSelector from '../components/PaymentMethodSelector'
+import { loadPaymentOptions, runRazorpayCheckout } from '../utils/paymentGateway'
 import { authRequest } from '../utils/auth'
 import { downloadCsv } from '../utils/csv'
 import { buildWalletHistory, leadPaymentSplit, transactionTitle } from '../utils/walletHistory'
@@ -64,16 +66,19 @@ export default function Wallet(){
   const [couponStatus,setCouponStatus]=useState({type:'',text:''})
   const [appliedCoupon,setAppliedCoupon]=useState(null)
   const [couponChecking,setCouponChecking]=useState(false)
+  const [paymentOptions,setPaymentOptions]=useState({offlineEnabled:true,onlineEnabled:false,onlineDisplayMode:'coming_soon'})
+  const [paymentMode,setPaymentMode]=useState('offline')
 
   const load=async({silent=false}={})=>{
     if(!silent)setLoading(true)
     setError('')
     try{
-      const [w,h,t,r]=await Promise.all([
+      const [w,h,t,r,options]=await Promise.all([
         authRequest('/wallet?summary=1'),
         authRequest('/wallet/history?page=1&limit=50'),
         authRequest('/wallet/topups/history?summary=1'),
-        authRequest('/payment-receiving-details')
+        authRequest('/payment-receiving-details'),
+        loadPaymentOptions().catch(()=>({offlineEnabled:true,onlineEnabled:false,onlineDisplayMode:'coming_soon'}))
       ])
       setWallet(w)
       setHistory({combined:Array.isArray(h?.combined)?h.combined:[],leadPurchases:Array.isArray(h?.leadPurchases)?h.leadPurchases:[]})
@@ -81,6 +86,8 @@ export default function Wallet(){
       setHistoryHasMore(Boolean(h?.has_more))
       setPendingTopupCount(Number(t?.pending_count||0))
       setReceiving(Array.isArray(r)?r:[])
+      setPaymentOptions(options||{})
+      setPaymentMode(current=>current||(options?.onlineEnabled&&options?.onlineDisplayMode==='live'?'online':options?.offlineEnabled!==false?'offline':''))
     }catch(e){
       if(!silent)setError(e.message||'Failed to load wallet')
     }finally{
@@ -207,27 +214,33 @@ export default function Wallet(){
     setMessage('')
     if(!validAmount)return setError('Enter a valid top-up amount.')
     const code=String(couponCode||'').trim()
-    if(!fullyDiscounted&&!reference.trim())return setError('Enter your payment reference / UTR.')
-    if(proof&&proof.size>5*1024*1024)return setError('Payment proof must be 5 MB or smaller.')
+    if(!fullyDiscounted&&paymentMode==='offline'&&!reference.trim())return setError('Enter your payment reference / UTR.')
+    if(!fullyDiscounted&&!paymentMode)return setError('No payment method is currently available.')
+    if(paymentMode==='offline'&&proof&&proof.size>5*1024*1024)return setError('Payment proof must be 5 MB or smaller.')
     try{
       setSubmitting(true)
       let proofUrl=null
-      if(proof)proofUrl=await new Promise((resolve,reject)=>{
+      if(paymentMode==='offline'&&proof)proofUrl=await new Promise((resolve,reject)=>{
         const reader=new FileReader()
         reader.onload=()=>resolve(String(reader.result))
         reader.onerror=()=>reject(new Error('Unable to read proof'))
         reader.readAsDataURL(proof)
       })
-      const result=await authRequest('/wallet/topups',{
-        method:'POST',
-        idempotency:true,
-        body:JSON.stringify({
-          amount:numericAmount,
-          reference:reference.trim()||null,
-          proof_url:proofUrl,
-          ...(code?{couponCode:code}:{})
+      const result=paymentMode==='online'&&!fullyDiscounted
+        ?await authRequest('/wallet/topups/gateway',{method:'POST',idempotency:true,body:JSON.stringify({amount:numericAmount,...(code?{couponCode:code}:{})})})
+        :await authRequest('/wallet/topups',{
+          method:'POST',
+          idempotency:true,
+          body:JSON.stringify({
+            amount:numericAmount,
+            reference:reference.trim()||null,
+            proof_url:proofUrl,
+            ...(code?{couponCode:code}:{})
+          })
         })
-      })
+      if(paymentMode==='online'&&result?.checkout){
+        await runRazorpayCheckout({paymentId:result.payment_id,checkout:result.checkout,description:'ProPulse wallet top-up'})
+      }
       setAmount('')
       setReference('')
       setProof(null)
@@ -239,7 +252,7 @@ export default function Wallet(){
       setShowAdd(false)
       const reward=result?.coupon?.reward
       const rewardMessage=reward?.type==='wallet_bonus'? ` After approval, your wallet will also receive a ${money(reward.amount)} promotional bonus.`:''
-      setMessage(fullyDiscounted?'100% coupon applied. Wallet balance was credited immediately.':`Balance request submitted. Your wallet will update after approval.${rewardMessage}`)
+      setMessage(fullyDiscounted?'100% coupon applied. Wallet balance was credited immediately.':paymentMode==='online'?`Online payment completed. ${money(walletCredit)} was added to your wallet.`:`Balance request submitted. Your wallet will update after approval.${rewardMessage}`)
       await load()
     }catch(e){
       setError(e.message||'Failed to submit top-up')
@@ -306,7 +319,7 @@ export default function Wallet(){
       <button className="wallet-modal-close" onClick={closeAdd}>×</button>
       <span className="wallet-modal-kicker">ADD BALANCE</span>
       <h2>Fund your Propulse wallet</h2>
-      <p className="wallet-modal-subtitle">Make the payment to one of the configured accounts, then enter the UTR so the payment can be verified.</p>
+      <p className="wallet-modal-subtitle">Choose an available payment method. Online payments credit automatically after verification; manual payments use UTR review.</p>
 
       <section className="wallet-public-offers">
         <div className="wallet-public-offers-head"><div><span>AVAILABLE OFFERS</span><strong>Get more from your top-up</strong></div><small>Eligible offers for your account</small></div>
@@ -322,7 +335,7 @@ export default function Wallet(){
         </div>
       </section>
 
-      {receiving.length>0?<div className="wallet-receiving-list">{receiving.map(x=><div className="wallet-receiving-card" key={x.id}><div className="wallet-receiving-head"><b>{x.label}</b><span>{x.method_type==='both'?'UPI + BANK':x.method_type.toUpperCase()}</span></div><div className="wallet-receiving-grid">{x.account_name&&<div><small>ACCOUNT NAME</small><strong>{x.account_name}</strong></div>}{x.upi_id&&<div><small>UPI ID</small><strong>{x.upi_id}</strong></div>}{x.bank_name&&<div><small>BANK</small><strong>{x.bank_name}</strong></div>}{x.account_number&&<div><small>ACCOUNT NUMBER</small><strong>{x.account_number}</strong></div>}{x.ifsc_code&&<div><small>IFSC</small><strong>{x.ifsc_code}</strong></div>}{x.branch_name&&<div><small>BRANCH</small><strong>{x.branch_name}</strong></div>}</div>{x.qr_code&&<img className="wallet-receiving-qr" src={x.qr_code} alt="Payment QR code"/>}{x.instructions&&<p>{x.instructions}</p>}</div>)}</div>:<div className="wallet-method"><b>UPI / BANK TRANSFER</b><span>Payment details are not configured yet. Please contact Propulse support.</span></div>}
+      {!fullyDiscounted&&<PaymentMethodSelector options={paymentOptions} value={paymentMode} onChange={setPaymentMode} disabled={submitting}/>}\n      {paymentMode==='offline'&&receiving.length>0?<div className="wallet-receiving-list">{receiving.map(x=><div className="wallet-receiving-card" key={x.id}><div className="wallet-receiving-head"><b>{x.label}</b><span>{x.method_type==='both'?'UPI + BANK':x.method_type.toUpperCase()}</span></div><div className="wallet-receiving-grid">{x.account_name&&<div><small>ACCOUNT NAME</small><strong>{x.account_name}</strong></div>}{x.upi_id&&<div><small>UPI ID</small><strong>{x.upi_id}</strong></div>}{x.bank_name&&<div><small>BANK</small><strong>{x.bank_name}</strong></div>}{x.account_number&&<div><small>ACCOUNT NUMBER</small><strong>{x.account_number}</strong></div>}{x.ifsc_code&&<div><small>IFSC</small><strong>{x.ifsc_code}</strong></div>}{x.branch_name&&<div><small>BRANCH</small><strong>{x.branch_name}</strong></div>}</div>{x.qr_code&&<img className="wallet-receiving-qr" src={x.qr_code} alt="Payment QR code"/>}{x.instructions&&<p>{x.instructions}</p>}</div>)}</div>:paymentMode==='offline'?<div className="wallet-method"><b>UPI / BANK TRANSFER</b><span>Payment details are not configured yet. Please contact Propulse support.</span></div>:null}
 
       <form onSubmit={submit}>
         <label>Amount<input type="number" min="1" step="0.01" value={amount} onChange={e=>{setAmount(e.target.value);resetAppliedCoupon()}} placeholder="e.g. 1000" autoFocus/></label>
@@ -335,9 +348,9 @@ export default function Wallet(){
           <small>{fullyDiscounted?`100% discount applied. ${money(walletCredit)} will be credited immediately; no UTR or proof is required.`:bonus>0?`Pay ${money(payable)}. After approval, ${money(walletCredit)} will be credited including ${money(bonus)} promotional balance.`:'After approval, the wallet amount shown above will be credited to your balance.'}</small>
         </div>
 
-        {!fullyDiscounted&&<label>Payment reference / UTR<input value={reference} onChange={e=>setReference(e.target.value)} placeholder="Enter transaction ID / UTR"/></label>}
-        {!fullyDiscounted&&<label>Payment proof <small>Optional, max 5 MB</small><input id="wallet-proof" type="file" accept="image/*,.pdf" onChange={e=>setProof(e.target.files?.[0]||null)}/></label>}
-        <button className="wallet-primary" disabled={submitting}>{submitting?'Submitting…':fullyDiscounted?'Add to wallet for ₹0':'Submit balance request'} <span>→</span></button>
+        {!fullyDiscounted&&paymentMode==='offline'&&<label>Payment reference / UTR<input value={reference} onChange={e=>setReference(e.target.value)} placeholder="Enter transaction ID / UTR"/></label>}
+        {!fullyDiscounted&&paymentMode==='offline'&&<label>Payment proof <small>Optional, max 5 MB</small><input id="wallet-proof" type="file" accept="image/*,.pdf" onChange={e=>setProof(e.target.files?.[0]||null)}/></label>}
+        <button className="wallet-primary" disabled={submitting||(!fullyDiscounted&&!paymentMode)}>{submitting?'Processing…':fullyDiscounted?'Add to wallet for ₹0':paymentMode==='online'?`Pay ${money(payable)} Online`:'Submit balance request'} <span>→</span></button>
       </form>
     </section></div>}
 
