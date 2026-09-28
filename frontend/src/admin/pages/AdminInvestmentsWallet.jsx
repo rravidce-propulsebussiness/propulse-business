@@ -16,7 +16,8 @@ const MATURITY_OPTIONS = [
 
 export default function AdminInvestmentsWallet() {
   const navigate = useNavigate()
-  const [data, setData] = useState({ investors: [] })
+  const [data, setData] = useState({ investors: [], portfolio: {}, pagination: {page:1,pages:1,total:0,limit:30} })
+  const [page,setPage]=useState(1)
   const [search, setSearch] = useState(''); const [status, setStatus] = useState('all'); const [industryId, setIndustryId] = useState(''); const searchRef = useRef('')
   const [industries, setIndustries] = useState([]); const [loading, setLoading] = useState(true); const [error, setError] = useState('')
   const [account, setAccount] = useState(null); const [linked, setLinked] = useState(null); const [linkedLoading, setLinkedLoading] = useState(false); const [linkedInvestor,setLinkedInvestor]=useState(null); const [menuUserId, setMenuUserId] = useState(null)
@@ -36,15 +37,15 @@ export default function AdminInvestmentsWallet() {
     if (!silent) setLoading(true)
     setError('')
     try {
-      const params = new URLSearchParams({ search: searchRef.current.trim(), status, industryId })
+      const params = new URLSearchParams({ search: searchRef.current.trim(), status, industryId, page:String(page), limit:'30' })
       const dashboard = await request(`/admin/commercial/investment-dashboard?${params}`)
-      setData({ investors: dashboard.investors || [] })
+      setData({ investors: dashboard.investors || [], portfolio: dashboard.portfolio || {}, pagination: dashboard.pagination || {page:1,pages:1,total:0,limit:30} })
     } catch (e) {
       if (!silent) setError(e.message || 'Unable to load investor accounts.')
     } finally {
       if (!silent) setLoading(false)
     }
-  }, [request, status, industryId])
+  }, [request, status, industryId, page])
   const loadIndustries = useCallback(async () => {
     try {
       const industryData = await request('/industries')
@@ -115,18 +116,20 @@ export default function AdminInvestmentsWallet() {
     };
   }), [data.investors]);
 
-  const totals = useMemo(() => investors.reduce((acc, investor) => {
-    acc.capital += investor.contributed;
-    acc.availableForAds += investor.availableForAds;
-    acc.generated += investor.generated;
-    acc.transferable += investor.transferable;
-    acc.reserved += investor.payoutReserved;
-    acc.transferred += investor.payoutTransferred;
-    acc.adSpent += investor.adSpent;
-    if (investor.active) acc.active += 1;
-    if (investor.transferable > 0) acc.ready += 1;
-    return acc;
-  }, {capital:0,availableForAds:0,generated:0,transferable:0,reserved:0,transferred:0,adSpent:0,active:0,ready:0}), [investors]);
+  const totals = useMemo(() => {
+    const portfolio=data.portfolio||{}
+    return {
+      capital:Number(portfolio.capital||0),
+      availableForAds:Number(portfolio.availableForAds||0),
+      generated:Number(portfolio.generated||0),
+      transferable:Number(portfolio.transferable||0),
+      reserved:Number(portfolio.reserved||0),
+      transferred:Number(portfolio.transferred||0),
+      adSpent:Number(portfolio.adSpent||0),
+      ready:Number(portfolio.ready||0),
+      active:investors.filter(investor=>investor.active).length
+    }
+  }, [data.portfolio, investors])
 
   const saveSettings = async (days, commission) => { if (!settings) return; const d = Number(days), c = Number(commission); if (!Number.isInteger(d) || d < 0 || d > 3650) throw new Error('Settlement period must be between 0 and 3650 days.'); if (!Number.isFinite(c) || c < 0 || c > 100) throw new Error('Commission must be between 0% and 100%.'); return request('/admin/commercial/investor-settings', { method: 'PUT', body: JSON.stringify({ globalLimit: settings.global_limit, defaultIndustryLimit: settings.default_industry_limit, customerIndustryLimit: settings.customer_industry_limit, minInvestment: settings.min_investment, maxInvestment: settings.max_investment == null ? '' : settings.max_investment, enabled: Boolean(settings.is_enabled ?? settings.enabled), requiresPro: Boolean(settings.requires_pro), investmentCycleDays: d, autoReinvest: settings.auto_reinvest == null ? false : Boolean(settings.auto_reinvest), investorRevenueSharePercent: 100 - c }) }) }
   const saveCommission = async () => { setSettingsBusy(true); setCommissionMessage(''); setError(''); try { const updated = await saveSettings(Number(settings?.investment_cycle_days ?? maturityDays ?? 30), commissionPercent); setSettings(updated); setCommissionMessage('Saved'); await load(true) } catch (e) { setError(e.message || 'Unable to save commission.') } finally { setSettingsBusy(false) } }
@@ -167,7 +170,7 @@ export default function AdminInvestmentsWallet() {
   }
   const loadLinkedPage = async (investor,page=1) => { setLinkedLoading(true); try { const result=await request(`/investments/admin/investor/${investor.user_id}/linked-leads?page=${page}&limit=50`); setLinked(result); setLinkedInvestor(investor) } catch (e) { setError(e.message || 'Unable to load linked leads.') } finally { setLinkedLoading(false) } }
   const openLinked = investor => loadLinkedPage(investor,1)
-  const runSearch = () => load()
+  const runSearch = () => { if(page!==1)setPage(1); else load() }
 
   return <>
     <main className="admin-investments-page">
@@ -177,7 +180,7 @@ export default function AdminInvestmentsWallet() {
           <h1>Investments</h1>
           <p>Monitor investor capital, ad allocation, generated earnings and transfer-ready balances from the existing investment ledger.</p>
           <div className="investments-hero-meta">
-            <span><b>{investors.length}</b> investor accounts</span>
+            <span><b>{Number(data.pagination?.total||0)}</b> investor accounts</span>
             <span><b>{totals.active}</b> active cycles</span>
             <span><b>{totals.ready}</b> ready for transfer</span>
           </div>
@@ -240,8 +243,8 @@ export default function AdminInvestmentsWallet() {
           <div className="investors-title"><span>INVESTOR LEDGER</span><h2>Investor accounts</h2><p>Open an account for cycle history, linked leads and existing investment actions.</p></div>
           <div className="admin-list-filters">
             <input value={search} onChange={e=>{setSearch(e.target.value);searchRef.current=e.target.value}} placeholder="Search investor name or email"/>
-            <select value={status} onChange={e=>setStatus(e.target.value)}><option value="all">All statuses</option><option value="active">Active</option><option value="matured">Matured</option><option value="exit_requested">Exit requested</option><option value="waiting_for_leads">Waiting for leads</option><option value="paid">Paid</option><option value="cancelled">Cancelled</option></select>
-            <select value={industryId} onChange={e=>setIndustryId(e.target.value)}><option value="">All industries</option>{industries.map(industry=><option key={industry.id} value={industry.id}>{industry.name}</option>)}</select>
+            <select value={status} onChange={e=>{setPage(1);setStatus(e.target.value)}}><option value="all">All statuses</option><option value="active">Active</option><option value="matured">Matured</option><option value="exit_requested">Exit requested</option><option value="waiting_for_leads">Waiting for leads</option><option value="paid">Paid</option><option value="cancelled">Cancelled</option></select>
+            <select value={industryId} onChange={e=>{setPage(1);setIndustryId(e.target.value)}}><option value="">All industries</option>{industries.map(industry=><option key={industry.id} value={industry.id}>{industry.name}</option>)}</select>
             <button type="button" onClick={runSearch}>Search</button>
           </div>
         </div>
@@ -251,7 +254,7 @@ export default function AdminInvestmentsWallet() {
         <div className="investor-table-wrap">
           <div className="investor-table-head"><span>#</span><span>Investor</span><span>Capital</span><span>Ads available</span><span>Generated</span><span>Transferable</span><span>Cycle</span><span>Status</span><span>Action</span></div>
           {investors.map((investor,index)=><div className={['investor-table-row',investor.transferable>0?'needs-transfer':''].filter(Boolean).join(' ')} key={investor.user_id || index}>
-            <span className="row-number">{String(index+1).padStart(2,'0')}</span>
+            <span className="row-number">{String(((Number(data.pagination?.page||1)-1)*Number(data.pagination?.limit||30))+index+1).padStart(2,'0')}</span>
             <div className="row-investor"><span className="row-avatar">{String(investor.user_name||'?').charAt(0).toUpperCase()}</span><div><strong>{investor.user_name || ('Investor #' + investor.user_id)}</strong><small>{investor.user_email || '—'}</small><em>{investor.industry_name || 'No industry assigned'}</em></div></div>
             <div className="row-money"><strong>{money(investor.contributed)}</strong><small>Total invested</small></div>
             <div className="row-money ads"><strong>{money(investor.availableForAds)}</strong><small>{money(investor.adSpent)} spent</small></div>
@@ -264,7 +267,7 @@ export default function AdminInvestmentsWallet() {
               <div className="action-menu-wrap"><button className="more-btn" type="button" onClick={()=>setMenuUserId(current=>current===investor.user_id?null:investor.user_id)}>•••</button>{menuUserId===investor.user_id&&<div className="investment-actions-menu"><button type="button" onClick={()=>showAccount(investor)}>Cycle history</button><button type="button" onClick={()=>openLinked(investor)}>Linked leads</button><button type="button" onClick={()=>openSpend(investor)}>Spend on ads</button>{investor.bankTransfer>0&&<button type="button" onClick={()=>openPayout(investor)}>Record transfer</button>}</div>}</div>
             </div>
           </div>)}
-          <div className="table-footer"><span>Showing <b>{investors.length}</b> investor accounts from the current dashboard view</span><span className="ledger-note">Balances shown from the existing investment ledger</span></div>
+          <div className="table-footer"><span>Showing <b>{investors.length}</b> of <b>{Number(data.pagination?.total||0)}</b> investor accounts</span><div className="ledger-note">{Number(data.pagination?.pages||1)>1&&<><button type="button" disabled={Number(data.pagination?.page||1)<=1||loading} onClick={()=>setPage(value=>Math.max(1,value-1))}>← Previous</button><span>Page {Number(data.pagination?.page||1)} of {Number(data.pagination?.pages||1)}</span><button type="button" disabled={Number(data.pagination?.page||1)>=Number(data.pagination?.pages||1)||loading} onClick={()=>setPage(value=>Math.min(Number(data.pagination?.pages||1),value+1))}>Next →</button></>}</div></div>
         </div>}
       </section>
     </main>
