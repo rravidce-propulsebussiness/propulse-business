@@ -23,7 +23,6 @@ const contactHref = (kind, value) => kind === 'phone' ? `tel:${String(value).rep
 const buyerCapacity = item => Math.max(1, Number(item.buyer_capacity ?? 1))
 const buyerCount = item => Math.max(0, Number(item.purchased_buyer_count ?? item.paid_sale_count ?? 0))
 const remainingCapacity = item => Math.max(0, buyerCapacity(item) - buyerCount(item))
-const isSold = item => buyerCount(item) >= buyerCapacity(item)
 
 const pageMeta = {
   leads: { kicker:'AVAILABLE LEADS', title:'Leads from your investment', text:'Open any assigned lead to view the complete marketplace information. All details are read-only.' },

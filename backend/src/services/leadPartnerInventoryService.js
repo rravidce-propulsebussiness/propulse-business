@@ -245,11 +245,14 @@ function buildImportedCustomFields(row) {
   );
 }
 
-function parseAccessStrategy(value){const n=norm(value);if(!n)return undefined;if(n.includes('permanent')||n==='single'||n==='singlebuyer')return'permanent_single';if(n.includes('auto'))return'auto_release';if(n.includes('shared'))return'shared';throw new Error('Access Strategy must be Permanent Single, Auto Release, or Shared from Start');}
+function parseAccessStrategy(value){const n=norm(value);if(!n)return undefined;if(n.includes('permanent')||n==='single'||n==='singlebuyer'||n==='singleonly')return'permanent_single';if(n.includes('auto'))return'auto_release';if(n.includes('shared'))return'shared';throw new Error('Access Strategy must be Single Only, Permanent Single, Auto Release, or Shared from Start');}
 function partnerProOnePrice(row){for(const[key,value]of Object.entries(row||{})){const n=norm(key);if(!['pro1buyer','pro1buyers','pro1share','pro1shares','pro1buyerprice','pro1shareprice'].includes(n))continue;if(!clean(value))return null;const price=Number(value);if(!Number.isFinite(price)||price<0)throw new Error('Pro 1 Buyer price must be a non-negative number');return price}return null}
-async function buildLead(row, cat) {
+async function buildLead(row, cat, locationCache=null) {
   const { industry, service, subservice } = resolveClassification(row, cat);
-  const location = await resolveLocationFromPincode(row.pincode, cat, row.state, row.city);
+  const locationKey=`${clean(row.pincode).replace(/\D/g,'')}\u0000${norm(row.state)}\u0000${norm(row.city)}`;
+  let locationPromise=locationCache?.get(locationKey);
+  if(!locationPromise){locationPromise=resolveLocationFromPincode(row.pincode,cat,row.state,row.city);if(locationCache)locationCache.set(locationKey,locationPromise)}
+  const location = await locationPromise;
   const capacityRaw=clean(row.buyerCapacity);const capacity=capacityRaw===''?undefined:Number(capacityRaw);
   if(capacityRaw!==''&&(!Number.isFinite(capacity)||capacity<1||capacity>3))throw new Error('Buyer Capacity must be between 1 and 3');
   const strategy=parseAccessStrategy(row.accessStrategy);
@@ -270,19 +273,34 @@ async function buildLead(row, cat) {
     partnerProOnePrice:partnerProOnePrice(row),
   };
 }
+function failureCategory(message){
+  const text=String(message||'').toLowerCase();
+  if(text.includes('pincode')||text.includes('pin ')||text.includes('postal'))return'PIN / location';
+  if(text.includes('industry')||text.includes('service')||text.includes('subservice'))return'Industry / service';
+  if(text.includes('access strategy')||text.includes('buyer capacity')||text.includes('release to'))return'Buyer access';
+  if(text.includes('price')||text.includes('pricing'))return'Pricing';
+  if(text.includes('customer')||text.includes('phone')||text.includes('email'))return'Customer data';
+  return'Other';
+}
+function summarizeFailures(failures){
+  const counts={};
+  for(const failure of failures||[]){const category=failureCategory(failure);counts[category]=(counts[category]||0)+1}
+  return Object.entries(counts).sort((a,b)=>b[1]-a[1]).map(([category,count])=>({category,count}));
+}
 async function importCsv({ userId, csv }) {
   const rows = parseCsv(csv); if (!rows.length) throw new Error('CSV contains no data rows');
   const cat = await catalogs();
   const partner = (await pool.query('SELECT id,status FROM lead_partners WHERE user_id=$1 LIMIT 1', [userId])).rows[0];
   if (!partner) throw new Error('Lead Partner profile not found'); if (partner.status !== 'active') throw new Error('Lead Partner account is not active');
+  const settings=await partnerPricing.getSettings();
+  const locationCache=new Map();
   let created = 0; let failed = 0; let duplicate = 0; const failures = [];
   for (const row of rows) {
     try {
-      const lead = await buildLead(row, cat);
+      const lead = await buildLead(row, cat, locationCache);
       const createdLead = await leadService.createLead({ ...lead, createdBy: userId });
       await pool.query('UPDATE leads SET lead_partner_id=$1 WHERE id=$2 AND created_by=$3', [partner.id, createdLead.id, userId]);
       const configured = await partnerPricing.applyConfiguredPricingToLead(userId, createdLead.id, createdLead.pricing, lead.industryId, lead.cityId, lead.leadType);
-      const settings=await partnerPricing.getSettings();
       const hasSheetPartnerPrice=lead.partnerProOnePrice!==null&&lead.partnerProOnePrice!==undefined&&lead.partnerProOnePrice!=='';const sheetPricing=hasSheetPartnerPrice&&Number.isFinite(Number(lead.partnerProOnePrice))?partnerPricing.buildFixedPartnerPricing(Number(lead.partnerProOnePrice),settings.normalPriceUplift):null;
       const effectivePricing=sheetPricing||configured||createdLead.pricing||{shares:[]};
       const overridden=JSON.stringify(effectivePricing)!==JSON.stringify(createdLead.pricing||{shares:[]});
@@ -296,7 +314,7 @@ async function importCsv({ userId, csv }) {
       failures.push(`${row.id || row.customerPhone || row.customerEmail || created + failed + duplicate}: ${error.message}`);
     }
   }
-  return { total: rows.length, created, duplicate, failed, failures };
+  return { total: rows.length, created, duplicate, failed, failures, failureSummary:summarizeFailures(failures) };
 }
 
 async function importGoogleSheet({ userId, url }) {
@@ -306,13 +324,14 @@ async function importGoogleSheet({ userId, url }) {
 }
 
 async function getSheetConnections({ userId }) {
-  return (await pool.query(
+  const rows=(await pool.query(
     `SELECT id,spreadsheet_id,gid,source_url,status,last_synced_at,last_sync_created,last_sync_duplicate,last_sync_failed,last_sync_failures,created_at,updated_at
        FROM lead_partner_sheet_connections
       WHERE user_id=$1
       ORDER BY updated_at DESC,id DESC`,
     [userId]
   )).rows;
+  return rows.map(row=>({...row,last_sync_failure_summary:summarizeFailures(Array.isArray(row.last_sync_failures)?row.last_sync_failures:[])}));
 }
 
 async function connectGoogleSheet({ userId, url }) {
@@ -438,4 +457,4 @@ async function listInventory({ userId, status = 'all', search = '', industryId =
   };
 }
 
-module.exports = { importCsv, importGoogleSheet, getSheetConnections, connectGoogleSheet, syncGoogleSheet, disableSheetConnection, listInventory };
+module.exports = { importCsv, importGoogleSheet, getSheetConnections, connectGoogleSheet, syncGoogleSheet, disableSheetConnection, listInventory, summarizeFailures };
