@@ -153,3 +153,7 @@ backend/uploads/service-pricing/*
 # Runtime-uploaded company proof documents
 backend/uploads/company-proofs/*
 !backend/uploads/company-proofs/.gitkeep
+
+# Browser E2E artifacts
+playwright-report/
+test-results/
