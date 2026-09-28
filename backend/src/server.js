@@ -30,6 +30,7 @@ const homepageMediaRoutes=require('./routes/homepageMediaRoutes');
 const contactRoutes=require('./routes/contactRoutes');
 const notificationRoutes=require('./routes/notificationRoutes');
 const paymentWebhookRoutes=require('./routes/paymentWebhookRoutes');
+const observabilityRoutes=require('./routes/observabilityRoutes');
 const adminFaqRoutes=require('./routes/adminFaqRoutes');
 const { startLeadPartnerSheetAutoSync }=require('./services/leadPartnerSheetSyncScheduler');
 const { startAdminGoogleSheetAutoSync }=require('./services/adminGoogleSheetSyncScheduler');
@@ -41,6 +42,7 @@ const {getConfiguredOrigins}=require('./config/httpOrigins');
 const {envFlag}=require('./config/runtimeFlags');
 const {uploadRoot,checkUploadStorage,ensureUploadStorage}=require('./config/uploadStorage');
 const workerHeartbeat=require('./services/backgroundWorkerHeartbeatService');
+const operationalMonitoringService=require('./services/operationalMonitoringService');
 const app=express();
 const isProduction=process.env.NODE_ENV==='production';
 const PORT=Number(process.env.PORT)||5000;
@@ -53,6 +55,7 @@ const httpHeadersTimeoutMs=Math.min(httpRequestTimeoutMs,Math.max(5000,Number(pr
 const httpKeepAliveTimeoutMs=Math.min(60000,Math.max(1000,Number(process.env.HTTP_KEEP_ALIVE_TIMEOUT_MS)||5000));
 const httpMaxRequestsPerSocket=Math.min(10000,Math.max(1,Math.floor(Number(process.env.HTTP_MAX_REQUESTS_PER_SOCKET)||1000)));
 const slowRequestMs=Math.min(60000,Math.max(250,Number(process.env.SLOW_REQUEST_MS)||2000));
+const operationalMonitoringEnabled=envFlag('OPERATIONAL_MONITORING_ENABLED',true);
 const runMigrationsOnStartup=envFlag('RUN_MIGRATIONS_ON_STARTUP',true);
 const runBackgroundJobsInWeb=envFlag('RUN_BACKGROUND_JOBS_IN_WEB',true);
 const requireBackgroundWorker=envFlag('REQUIRE_BACKGROUND_WORKER',false);
@@ -67,13 +70,19 @@ app.use((req,res,next)=>{
   next();
 });
 app.use((req,res,next)=>{
-  if(!isProduction)return next();
   const started=process.hrtime.bigint();
   res.once('finish',()=>{
     const durationMs=Number(process.hrtime.bigint()-started)/1e6;
     if(res.statusCode>=500||durationMs>=slowRequestMs){
-      const level=res.statusCode>=500?'error':'warn';
-      console[level](`[${req.requestId}] ${req.method} ${req.path} -> ${res.statusCode} in ${durationMs.toFixed(1)}ms`);
+      if(isProduction){
+        const level=res.statusCode>=500?'error':'warn';
+        console[level](`[${req.requestId}] ${req.method} ${req.path} -> ${res.statusCode} in ${durationMs.toFixed(1)}ms`);
+      }
+      if(operationalMonitoringEnabled){
+        operationalMonitoringService.recordHttpRequest({
+          req,res,durationMs,error:res.locals?.operationalError||null,slowRequestMs
+        }).catch(error=>console.error(`[${req.requestId}] Operational request capture failed:`,error?.message||error));
+      }
     }
   });
   next();
@@ -145,9 +154,9 @@ async function readiness(req,res){
 }
 app.get('/health/ready',readiness);
 app.get('/health',readiness);
-app.use('/api/auth',authRoutes);app.use('/api/notifications',notificationRoutes);app.use('/api/profile',profileRoutes);app.use('/api/admin',adminRoutes);app.use('/api/lead-partner',leadPartnerRoutes);app.use('/api/lead-reports',leadReportRoutes);app.use('/api/lead-partner/faqs',faqRoutes);app.use('/api/faqs',publicFaqRoutes);app.use('/api/upcoming-features',upcomingFeatureRoutes);app.use('/api/contact',contactRoutes);app.use('/api/homepage-media',homepageMediaRoutes);app.use('/api/admin/faqs',adminFaqRoutes);app.use('/api/leads',leadRoutes);app.use('/api/payments',paymentRoutes);app.use('/api/payment-receiving-details',paymentReceivingDetailsRoutes);app.use('/api/coupons',couponRoutes);app.use('/api/membership-plans',membershipPlanRoutes);app.use('/api/admin/commercial',adminCommercialRoutes);app.use('/api/wallet',walletRoutes);app.use('/api/investments',investmentRoutes);app.use('/api/investor/payout-account',investorPayoutAccountRoutes);app.use('/api/industries',industryRoutes);app.use('/api/services',serviceRoutes);app.use('/api/subservices',subserviceRoutes);app.use('/api/states',stateRoutes);app.use('/api/cities',cityRoutes);app.use('/api/subcities',subcityRoutes);app.use('/api/pincodes',pincodeRoutes);
+app.use('/api/observability',observabilityRoutes);app.use('/api/auth',authRoutes);app.use('/api/notifications',notificationRoutes);app.use('/api/profile',profileRoutes);app.use('/api/admin',adminRoutes);app.use('/api/lead-partner',leadPartnerRoutes);app.use('/api/lead-reports',leadReportRoutes);app.use('/api/lead-partner/faqs',faqRoutes);app.use('/api/faqs',publicFaqRoutes);app.use('/api/upcoming-features',upcomingFeatureRoutes);app.use('/api/contact',contactRoutes);app.use('/api/homepage-media',homepageMediaRoutes);app.use('/api/admin/faqs',adminFaqRoutes);app.use('/api/leads',leadRoutes);app.use('/api/payments',paymentRoutes);app.use('/api/payment-receiving-details',paymentReceivingDetailsRoutes);app.use('/api/coupons',couponRoutes);app.use('/api/membership-plans',membershipPlanRoutes);app.use('/api/admin/commercial',adminCommercialRoutes);app.use('/api/wallet',walletRoutes);app.use('/api/investments',investmentRoutes);app.use('/api/investor/payout-account',investorPayoutAccountRoutes);app.use('/api/industries',industryRoutes);app.use('/api/services',serviceRoutes);app.use('/api/subservices',subserviceRoutes);app.use('/api/states',stateRoutes);app.use('/api/cities',cityRoutes);app.use('/api/subcities',subcityRoutes);app.use('/api/pincodes',pincodeRoutes);
 app.use((req,res)=>res.status(404).json({error:'Not found'}));
-app.use((err,req,res,next)=>{if(err.message==='CORS origin not allowed')return res.status(403).json({error:'Origin not allowed'});if(err.type==='entity.parse.failed')return res.status(400).json({error:'Invalid JSON body'});if(err.type==='entity.too.large')return res.status(413).json({error:'Request body is too large'});console.error(`[${req.requestId||'no-request-id'}] Unhandled server error:`,err.stack||err);return res.status(500).json({error:'Internal server error',requestId:req.requestId||undefined});});
+app.use((err,req,res,next)=>{if(err.message==='CORS origin not allowed')return res.status(403).json({error:'Origin not allowed'});if(err.type==='entity.parse.failed')return res.status(400).json({error:'Invalid JSON body'});if(err.type==='entity.too.large')return res.status(413).json({error:'Request body is too large'});res.locals.operationalError=err;console.error(`[${req.requestId||'no-request-id'}] Unhandled server error:`,err.stack||err);return res.status(500).json({error:'Internal server error',requestId:req.requestId||undefined});});
 let server;let stopLeadPartnerSheetAutoSync=()=>{};let stopAdminGoogleSheetAutoSync=()=>{};let stopFinancialReconciliation=async()=>{};let stopNotifications=async()=>{};let shuttingDown=false;
 async function shutdown(signal,exitCode=0){
   if(shuttingDown)return;
@@ -176,11 +185,24 @@ async function shutdown(signal,exitCode=0){
     process.exit(1);
   }
 }
+async function recordFatalProcessError(kind,error){
+  if(!operationalMonitoringEnabled)return;
+  const capture=operationalMonitoringService.recordEvent({
+    source:'backend',
+    eventType:kind,
+    severity:'error',
+    message:error?.message||String(error||kind),
+    stack:error?.stack||null,
+    metadata:{fatal:true}
+  }).catch(()=>{});
+  await Promise.race([capture,new Promise(resolve=>setTimeout(resolve,750))]);
+}
 async function start(){
   try{
     await ensureUploadStorage();
     if(runMigrationsOnStartup)await runMigrations();
     else console.log('Database migrations skipped on web startup (RUN_MIGRATIONS_ON_STARTUP=false).');
+    if(operationalMonitoringEnabled)await operationalMonitoringService.pruneResolved().catch(error=>console.error('Operational-event retention cleanup failed:',error.message));
     server=app.listen(PORT,'0.0.0.0',()=>{
       console.log(`Server running on port ${PORT}`);
       if(runBackgroundJobsInWeb){
@@ -197,11 +219,12 @@ async function start(){
     server.maxHeadersCount=100;
     process.once('SIGTERM',()=>shutdown('SIGTERM'));
     process.once('SIGINT',()=>shutdown('SIGINT'));
-    process.once('uncaughtException',error=>{console.error('Uncaught exception:',error?.stack||error);void shutdown('uncaughtException',1);});
-    process.once('unhandledRejection',reason=>{console.error('Unhandled rejection:',reason?.stack||reason);void shutdown('unhandledRejection',1);});
+    process.once('uncaughtException',error=>{console.error('Uncaught exception:',error?.stack||error);void recordFatalProcessError('uncaught_exception',error).finally(()=>shutdown('uncaughtException',1));});
+    process.once('unhandledRejection',reason=>{console.error('Unhandled rejection:',reason?.stack||reason);void recordFatalProcessError('unhandled_rejection',reason).finally(()=>shutdown('unhandledRejection',1));});
   }catch(error){
     console.error('Backend startup failed:');
     console.error(error?.stack||error||'Unknown error');
+    await recordFatalProcessError('startup_failure',error).catch(()=>{});
     await pool.end();
     process.exitCode=1;
   }

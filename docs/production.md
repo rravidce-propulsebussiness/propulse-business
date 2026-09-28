@@ -154,6 +154,31 @@ Submitted payments remain pending until review. Paid and rejected payments canno
 be approved again. Existing in-memory drafts from the previous application version
 cannot be migrated; customers must restart those unsubmitted checkouts after deployment.
 
+## Operational error monitoring
+
+The application keeps a deduplicated operational-error ledger in PostgreSQL and exposes
+it at Admin → System → Error Monitor. It records backend 5xx responses, slow requests,
+browser crashes/unhandled rejections, React render failures, and fatal web/worker process
+errors when the database is still reachable.
+
+Each fingerprint keeps request ID, route, HTTP method/status, duration, build commit,
+environment, source, occurrence count, first/last seen time, and limited sanitized
+technical metadata. Request bodies and query objects are never persisted. Common secret
+keys, bearer tokens, email addresses and phone numbers are redacted before storage.
+
+Configure:
+
+```env
+OPERATIONAL_MONITORING_ENABLED=true
+OPERATIONAL_EVENT_RETENTION_DAYS=90
+SLOW_REQUEST_MS=2000
+```
+
+Repeated occurrences reopen a previously resolved fingerprint so recurring failures do
+not disappear silently. Resolved fingerprints older than the retention window are
+pruned on web startup. Browser telemetry is rate-limited and accepts anonymous errors so
+login/signup failures can still be diagnosed.
+
 ## Verification
 
 Run `npm test` in backend, and `npm run lint`, `npm run test:source-graph`,
@@ -205,7 +230,8 @@ instance cleanly.
 Every response carries `X-Request-Id`; include that value in support/error reports so
 backend logs can be correlated to a specific failed request. In production, 5xx responses
 and requests exceeding `SLOW_REQUEST_MS` are logged with method, path, status, duration,
-and request ID; query strings are intentionally omitted.
+and request ID; query strings are intentionally omitted. The same signals are aggregated
+in Admin → Error Monitor when operational monitoring is enabled.
 
 Before accepting live payments, verify the deployed HTTPS domain, email delivery,
 backup restoration and the complete browser journey using your configured bank

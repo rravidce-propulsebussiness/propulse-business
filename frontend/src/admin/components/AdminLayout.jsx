@@ -37,6 +37,7 @@ const navigation=[
   ]},
   {type:'group',key:'system',label:'System',icon:'⚙',children:[
     {to:'/admin/system-health',label:'System Health'},
+    {to:'/admin/error-monitor',label:'Error Monitor'},
     {to:'/admin/jobs',label:'Background Jobs'},
     {to:'/admin/risk-center',label:'Risk Center'},
     {to:'/admin/notifications',label:'Notifications'},

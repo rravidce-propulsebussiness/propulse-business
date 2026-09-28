@@ -7,6 +7,7 @@ const financialReconciliationMonitor = require('../services/financialReconciliat
 const securityRiskService = require('../services/securityRiskService');
 const criticalActionAuditService = require('../services/criticalActionAuditService');
 const backgroundJobRegistryService = require('../services/backgroundJobRegistryService');
+const operationalMonitoringService = require('../services/operationalMonitoringService');
 
 async function getDashboardStats(req, res) {
   try { return res.json(await adminService.getDashboardStats()); }
@@ -46,6 +47,26 @@ async function getAuditTimeline(req,res){
 async function getBackgroundJobs(req,res){
   try{return res.json(await backgroundJobRegistryService.list({historyLimit:req.query?.historyLimit}))}
   catch(error){console.error('Get background jobs failed:',error);return res.status(500).json({error:'Failed to load background jobs'})}
+}
+
+async function getOperationalEvents(req,res){
+  try{return res.json(await operationalMonitoringService.listEvents(req.query||{}))}
+  catch(error){console.error('Get operational events failed:',error);return res.status(500).json({error:'Failed to load operational errors'})}
+}
+async function reviewOperationalEvent(req,res){
+  try{
+    return res.json(await operationalMonitoringService.setStatus({
+      eventId:req.params.eventId,
+      status:req.body?.status,
+      note:req.body?.note,
+      adminId:req.user?.id
+    }));
+  }catch(error){
+    const map={INVALID_OPERATIONAL_EVENT:400,INVALID_OPERATIONAL_STATUS:400,OPERATIONAL_EVENT_NOT_FOUND:404};
+    if(map[error.code])return res.status(map[error.code]).json({error:error.message,code:error.code});
+    console.error('Review operational event failed:',error);
+    return res.status(500).json({error:'Failed to update operational error'});
+  }
 }
 async function retryBackgroundJob(req,res){
   try{return res.json(await backgroundJobRegistryService.retry(req.params.jobKey,{adminId:req.user?.id}))}
@@ -178,5 +199,5 @@ async function resetTestData(req,res){
   }
 }
 
-module.exports = { getDashboardStats, getSystemHealth, getFinancialIntegrity, getRiskCenter, reviewRiskEvent, getAuditTimeline, getBackgroundJobs, retryBackgroundJob, getUsers, getUser360, setUserMembershipPlan, createAdmin, setUserStatus, setUserRole, updateUserProfile, getCompanyProofs, verifyCompanyProof, rejectCompanyProof, getTestResetPreview, resetTestData };
+module.exports = { getDashboardStats, getSystemHealth, getFinancialIntegrity, getRiskCenter, reviewRiskEvent, getAuditTimeline, getBackgroundJobs, getOperationalEvents, reviewOperationalEvent, retryBackgroundJob, getUsers, getUser360, setUserMembershipPlan, createAdmin, setUserStatus, setUserRole, updateUserProfile, getCompanyProofs, verifyCompanyProof, rejectCompanyProof, getTestResetPreview, resetTestData };
 

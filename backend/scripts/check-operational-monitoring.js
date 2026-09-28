@@ -1,0 +1,45 @@
+const fs=require('fs');
+const path=require('path');
+const root=path.join(__dirname,'..');
+const read=relative=>fs.readFileSync(path.join(root,relative),'utf8');
+const assert=(value,message)=>{if(!value)throw new Error(message)};
+
+const migration=read('src/database/migrations/20260928_operational_events.sql');
+const service=read('src/services/operationalMonitoringService.js');
+const server=read('src/server.js');
+const worker=read('src/worker.js');
+const route=read('src/routes/observabilityRoutes.js');
+const adminRoutes=read('src/routes/adminRoutes.js');
+const adminController=read('src/controllers/adminController.js');
+const main=read('../frontend/src/main.jsx');
+const app=read('../frontend/src/App.jsx');
+const layout=read('../frontend/src/admin/components/AdminLayout.jsx');
+const page=read('../frontend/src/admin/pages/AdminOperationalErrors.jsx');
+
+assert(migration.includes('CREATE TABLE IF NOT EXISTS operational_events'),'Operational event migration is missing');
+assert(migration.includes('fingerprint VARCHAR(64) NOT NULL UNIQUE'),'Operational events must deduplicate by fingerprint');
+assert(migration.includes("source IN ('backend','frontend','worker')"),'Operational event sources must be constrained');
+assert(service.includes("crypto.createHash('sha256')"),'Operational fingerprints must be stable hashes');
+assert(service.includes("ON CONFLICT(fingerprint) DO UPDATE"),'Operational events must aggregate repeated fingerprints');
+assert(service.includes("occurrence_count=operational_events.occurrence_count+1"),'Repeated operational events must increment occurrence count');
+assert(service.includes("resolved_at=NULL"),'Recurring resolved fingerprints must reopen');
+assert(service.includes("SECRET_KEY=/(password|token|secret"),'Operational metadata must redact secret-like keys');
+assert(service.includes("'[email]'")&&service.includes("'[phone]'"),'Operational error text must redact common personal identifiers');
+assert(!service.includes('req.body'),'HTTP operational capture must never persist request bodies');
+assert(!service.includes('req.query'),'HTTP operational capture must never persist query objects');
+assert(server.includes('operationalMonitoringService.recordHttpRequest'),'Server must persist 5xx and slow-request telemetry');
+assert(server.includes('res.locals.operationalError=err'),'Unhandled request errors must flow into operational telemetry');
+assert(server.includes("app.use('/api/observability',observabilityRoutes)"),'Client observability route must be mounted');
+assert(server.includes("recordFatalProcessError('uncaught_exception'"),'Fatal backend exceptions must be captured');
+assert(worker.includes("recordFatalWorkerError('uncaught_exception'"),'Fatal worker exceptions must be captured');
+assert(route.includes("rateLimit({windowMs:60*1000,max:30"),'Anonymous browser telemetry must be rate limited');
+assert(route.includes('optionalAuth'),'Browser telemetry may enrich authenticated sessions without requiring login');
+assert(adminRoutes.includes("router.get('/operational-events'")&&adminRoutes.includes("router.patch('/operational-events/:eventId'"),'Admin operational event routes are missing');
+assert(adminController.includes('operationalMonitoringService.listEvents'),'Admin Error Monitor must use the operational monitoring service');
+assert(main.includes('installClientObservability()')&&main.includes('<AppErrorBoundary>'),'Global browser errors and React render crashes must be captured');
+assert(app.includes('AdminOperationalErrors')&&app.includes('path="/admin/error-monitor"'),'Admin Error Monitor page must be routed');
+assert(layout.includes("{to:'/admin/error-monitor',label:'Error Monitor'}"),'Admin System navigation must expose Error Monitor');
+assert(page.includes("authRequest('/admin/operational-events?'+params)"),'Error Monitor must load authenticated operational telemetry');
+assert(page.includes("Request <code>{item.requestId}</code>"),'Error Monitor must expose request IDs for support correlation');
+
+console.log('Operational error monitoring regression test passed.');
