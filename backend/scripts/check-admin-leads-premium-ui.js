@@ -61,7 +61,7 @@ assert(sheets.includes('<GoogleSheetAutoSync/>'),'Google Sheets page must keep s
 assert(sheets.includes('v9-sheet-workspace'),'Premium Google Sheets page shell must remain');
 assert(sheets.includes('LEAD OPERATIONS / AUTOMATION'),'Google Sheets premium hero must remain');
 assert(sheetSync.includes('v9-sheet-console'),'Premium Google Sheets sync console must remain');
-assert(sheetSync.includes('Connect Sheet'),'Google Sheets connect action must remain');
+assert(sheetSync.includes('Analyze Sheet')&&sheetSync.includes('Activate Sync'),'Google Sheets must require Analyze → Activate before creating a connection');
 assert(sheetSync.includes('Check All Now'),'Google Sheets manual sync action must remain');
 assert(sheetSync.includes('v9-sheet-source-card'),'Connected Google Sheet cards must remain');
 assert(sheetSync.includes('No Google Sheets connected yet'),'Google Sheets empty state must remain');
