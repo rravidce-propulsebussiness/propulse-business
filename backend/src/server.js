@@ -29,6 +29,7 @@ const faqRoutes=require('./routes/faqRoutes');const upcomingFeatureRoutes=requir
 const homepageMediaRoutes=require('./routes/homepageMediaRoutes');
 const contactRoutes=require('./routes/contactRoutes');
 const notificationRoutes=require('./routes/notificationRoutes');
+const paymentWebhookRoutes=require('./routes/paymentWebhookRoutes');
 const adminFaqRoutes=require('./routes/adminFaqRoutes');
 const { startLeadPartnerSheetAutoSync }=require('./services/leadPartnerSheetSyncScheduler');
 const { startAdminGoogleSheetAutoSync }=require('./services/adminGoogleSheetSyncScheduler');
@@ -79,6 +80,7 @@ app.use((req,res,next)=>{
 });
 app.use(cors({origin(origin,callback){if(!origin||configuredOrigins.includes(origin))return callback(null,true);return callback(new Error('CORS origin not allowed'));},credentials:true}));
 app.use((req,res,next)=>{res.setHeader('X-Content-Type-Options','nosniff');res.setHeader('X-Frame-Options','DENY');res.setHeader('Referrer-Policy','strict-origin-when-cross-origin');res.setHeader('Permissions-Policy','camera=(),microphone=(),geolocation=()');res.setHeader('Content-Security-Policy',"default-src 'none'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'; form-action 'none'");if(isProduction)res.setHeader('Strict-Transport-Security','max-age=31536000; includeSubDomains');next();});
+app.use('/api/payment-webhooks/razorpay',express.raw({type:'application/json',limit:'256kb'}),paymentWebhookRoutes);
 const largeJsonParser=express.json({limit:LARGE_JSON_BYTES});
 const largeJsonFor=method=>(req,res,next)=>req.method===method?largeJsonParser(req,res,next):next();
 app.use('/api/auth/company-proofs',largeJsonFor('POST'));

@@ -13,6 +13,41 @@ async function create({ userId, industryId, stateId, cityId, amount, reinvestmen
   return id;
 }
 
+async function prepare({ id, userId }) {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const draft = (await client.query('SELECT * FROM investment_payment_drafts WHERE id=$1 AND user_id=$2 FOR UPDATE', [id, userId])).rows[0];
+    if (!draft || (!draft.payment_id && new Date(draft.expires_at) <= new Date())) {
+      throw Object.assign(new Error('Payment session expired. Please start the payment again.'), { code: 'DRAFT_NOT_FOUND' });
+    }
+    let payment;
+    if (!draft.payment_id) {
+      const user = (await client.query('SELECT role,is_active FROM users WHERE id=$1 FOR SHARE', [userId])).rows[0];
+      if (!user?.is_active || user.role !== 'business' || !(await isProMember(userId, client))) {
+        throw Object.assign(new Error('Active Pro membership is required to invest'), { code: 'PRO_REQUIRED' });
+      }
+      const result = await require('./investmentService').createInvestmentCheckout({
+        userId, industryId: draft.industry_id, stateId: draft.state_id,
+        cityId: draft.city_id, amount: draft.amount, useWallet: false,
+        reinvestmentEnabled: draft.reinvestment_enabled,
+      }, client);
+      payment = result.payment;
+      await client.query('UPDATE investment_payment_drafts SET payment_id=$1 WHERE id=$2', [payment.id, id]);
+    } else {
+      payment = (await client.query('SELECT * FROM payments WHERE id=$1 AND user_id=$2 FOR UPDATE', [draft.payment_id, userId])).rows[0];
+      if (!payment) throw Object.assign(new Error('Payment session is no longer available.'), { code: 'DRAFT_NOT_FOUND' });
+    }
+    await client.query('COMMIT');
+    return { draft: { ...draft, payment_id: payment.id }, payment };
+  } catch (error) {
+    await client.query('ROLLBACK');
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
 // Lock, checkout, proof and payment link commit together. Retries reuse the
 // same payment, including after a restart or on another server instance.
 async function submit({ id, userId, manualReference, proofUrl, notes }) {
@@ -50,4 +85,4 @@ async function submit({ id, userId, manualReference, proofUrl, notes }) {
   }
 }
 
-module.exports = { create, submit };
+module.exports = { create, prepare, submit };
