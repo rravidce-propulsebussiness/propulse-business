@@ -46,6 +46,7 @@ const normalizeLeadRow=row=>{
     customValueContains(custom,['requirement','requirements']);
 
   const budgetCustom=customValue(custom,['Budget','Budget Range','Project Budget','Project Budget Range','Budget From To','Expected Budget','Approx Budget','Approximate Budget','Investment Budget','Estimated Budget'])||customValueContains(custom,['budget']);
+  const normalizedBudget=String(row.budget??'').trim()||budgetCustom||null;
   if(!hasCustomKeyMatching(custom,['budget'])){
     if(budgetCustom)custom.Budget=budgetCustom;
     else if(String(row.budget??'').trim())custom.Budget=String(row.budget).trim();
@@ -83,10 +84,17 @@ const normalizeLeadRow=row=>{
   };
 };
 const dynamicLabel=k=>String(k??'').trim().replace(/[_-]+/g,' ').replace(/\s+/g,' ').replace(/\b\w/g,m=>m.toUpperCase());
+const businessCustomFields=custom=>{
+  const source=custom&&typeof custom==='object'&&!Array.isArray(custom)?custom:{};
+  const protectedFields=source._protected_answers&&typeof source._protected_answers==='object'&&!Array.isArray(source._protected_answers)?source._protected_answers:{};
+  const out={...source,...protectedFields};
+  Object.keys(out).forEach(key=>{if(String(key).startsWith('_'))delete out[key]});
+  return out;
+};
 const buildDynamicDetails=row=>{
-  const custom=row?.custom_fields&&typeof row.custom_fields==='object'&&!Array.isArray(row.custom_fields)?row.custom_fields:{};
+  const custom=businessCustomFields(row?.custom_fields);
   const excluded=new Set(['buyerCapacity','pricing','leadPricing','leadPrice','price','exclusivePricing','exclusivePrice']);
-  return Object.entries(custom).filter(([key,value])=>!excluded.has(key)&&String(value??'').trim()).map(([key,value])=>({key,label:dynamicLabel(key),value:String(value).trim()}));
+  return Object.entries(custom).filter(([key,value])=>!excluded.has(key)&&String(value??'').trim()).map(([key,value])=>({key,label:dynamicLabel(key),value:Array.isArray(value)?value.join(', '):String(value).trim()}));
 };
 const appendAdminDynamicDetails=row=>{
   const normalized=normalizeLeadRow(row);
@@ -136,11 +144,12 @@ const maskLead=row=>{
   const custom=normalized?.custom_fields&&typeof normalized.custom_fields==='object'&&!Array.isArray(normalized.custom_fields)?normalized.custom_fields:{};
   const publicCustom={};
   Object.entries(custom).forEach(([key,value])=>{
+    if(String(key).startsWith('_'))return;
     if(!isMarketplaceCanonicalField(key)&&String(value??'').trim())publicCustom[key]=maskPublicValue(key,value);
   });
   return{
     ...normalized,
-    customer_name:normalized.customer_name||null,
+    customer_name:normalized.source==='public_requirement'?'Customer':(normalized.customer_name||null),
     customer_phone:normalized.customer_phone?maskContactText(normalized.customer_phone):null,
     customer_email:normalized.customer_email?maskContactText(normalized.customer_email):null,
     notes:normalized.notes?maskContactText(normalized.notes):null,
@@ -157,4 +166,4 @@ async function isProMember(userId){
   return r.rows.length>0;
 }
 
-module.exports={leadSelect,maskLead,normalizeLeadRow,normalizeLeadPricing,normalizeLeadType,isProMember,appendAdminDynamicDetails,buildDynamicDetails};
+module.exports={leadSelect,maskLead,normalizeLeadRow,normalizeLeadPricing,normalizeLeadType,isProMember,appendAdminDynamicDetails,buildDynamicDetails,businessCustomFields};

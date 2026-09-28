@@ -10,6 +10,7 @@ const stateRoutes=require('./routes/stateRoutes');
 const cityRoutes=require('./routes/cityRoutes');
 const subcityRoutes=require('./routes/subcityRoutes');
 const pincodeRoutes=require('./routes/pincodeRoutes');
+const customerFlowRoutes=require('./routes/customerFlowRoutes');
 const authRoutes=require('./routes/authRoutes');
 const profileRoutes=require('./routes/profileRoutes');
 const adminRoutes=require('./routes/adminRoutes');
@@ -36,6 +37,7 @@ if(trustProxy) app.set('trust proxy',trustProxy==='true'?true:Number.isNaN(Numbe
 app.disable('x-powered-by');
 app.use(cors({origin(origin,callback){if(!origin||configuredOrigins.includes(origin))return callback(null,true);return callback(new Error('CORS origin not allowed'));}}));
 app.use((req,res,next)=>{res.setHeader('X-Content-Type-Options','nosniff');res.setHeader('X-Frame-Options','DENY');res.setHeader('Referrer-Policy','strict-origin-when-cross-origin');res.setHeader('Permissions-Policy','camera=(),microphone=(),geolocation=()');if(isProduction)res.setHeader('Strict-Transport-Security','max-age=31536000; includeSubDomains');next();});
+app.use('/api/customer-flows',express.json({limit:'64kb'}),customerFlowRoutes);
 app.use(express.json({limit:MAX_JSON_BYTES}));
 app.get('/health',async(req,res)=>{try{await pool.query('SELECT 1');res.json({status:'ok',database:'connected'});}catch(e){console.error(e.message);res.status(500).json({status:'error',database:'disconnected'});}});
 app.use('/api/auth',authRoutes);app.use('/api/profile',profileRoutes);app.use('/api/admin',adminRoutes);app.use('/api/leads',leadRoutes);app.use('/api/lead-partner',leadPartnerRoutes);app.use('/api/lead-reports',leadReportRoutes);app.use('/api/payments',paymentRoutes);app.use('/api/payment-receiving-details',paymentReceivingDetailsRoutes);app.use('/api/coupons',couponRoutes);app.use('/api/membership-plans',membershipPlanRoutes);app.use('/api/admin/commercial',adminCommercialRoutes);app.use('/api/wallet',walletRoutes);app.use('/api/investments',investmentRoutes);app.use('/api/investor/payout-account',investorPayoutAccountRoutes);app.use('/api/industries',industryRoutes);app.use('/api/services',serviceRoutes);app.use('/api/subservices',subserviceRoutes);app.use('/api/states',stateRoutes);app.use('/api/cities',cityRoutes);app.use('/api/subcities',subcityRoutes);app.use('/api/pincodes',pincodeRoutes);
