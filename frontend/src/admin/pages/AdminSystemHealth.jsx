@@ -103,6 +103,7 @@ export default function AdminSystemHealth(){
     try{
       const result=await authRequest('/admin/system-health')
       setData(result)
+      window.dispatchEvent(new CustomEvent('propulse:system-health',{detail:{status:result?.status}}))
       setError('')
     }catch(err){
       setError(err.message||'Unable to load system health')

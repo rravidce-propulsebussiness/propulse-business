@@ -90,14 +90,20 @@ export default function AdminLayout(){
 
   useEffect(()=>{
     let active=true
+    const applyStatus=value=>{
+      if(!active)return
+      setSystemStatus(['healthy','attention','degraded'].includes(value)?value:'degraded')
+    }
     const refresh=()=>{
       authRequest('/admin/system-health')
-        .then(value=>{if(active)setSystemStatus(['healthy','attention','degraded'].includes(value?.status)?value.status:'degraded')})
-        .catch(()=>{if(active)setSystemStatus('degraded')})
+        .then(value=>applyStatus(value?.status))
+        .catch(()=>applyStatus('degraded'))
     }
+    const onHealth=event=>applyStatus(event?.detail?.status)
+    window.addEventListener('propulse:system-health',onHealth)
     refresh()
-    const timer=setInterval(refresh,60000)
-    return()=>{active=false;clearInterval(timer)}
+    const timer=setInterval(refresh,30000)
+    return()=>{active=false;clearInterval(timer);window.removeEventListener('propulse:system-health',onHealth)}
   },[])
 
   async function logout(){
