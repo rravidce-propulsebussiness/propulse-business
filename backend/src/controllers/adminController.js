@@ -6,6 +6,7 @@ const adminFinancialIntegrityService = require('../services/adminFinancialIntegr
 const financialReconciliationMonitor = require('../services/financialReconciliationMonitorService');
 const securityRiskService = require('../services/securityRiskService');
 const criticalActionAuditService = require('../services/criticalActionAuditService');
+const backgroundJobRegistryService = require('../services/backgroundJobRegistryService');
 
 async function getDashboardStats(req, res) {
   try { return res.json(await adminService.getDashboardStats()); }
@@ -42,6 +43,20 @@ async function getAuditTimeline(req,res){
   try{return res.json(await criticalActionAuditService.list(req.query||{}))}
   catch(error){console.error('Get critical action audit timeline failed:',error);return res.status(500).json({error:'Failed to load audit timeline'})}
 }
+async function getBackgroundJobs(req,res){
+  try{return res.json(await backgroundJobRegistryService.list({historyLimit:req.query?.historyLimit}))}
+  catch(error){console.error('Get background jobs failed:',error);return res.status(500).json({error:'Failed to load background jobs'})}
+}
+async function retryBackgroundJob(req,res){
+  try{return res.json(await backgroundJobRegistryService.retry(req.params.jobKey,{adminId:req.user?.id}))}
+  catch(error){
+    const map={JOB_NOT_FOUND:404,JOB_RETRY_UNSUPPORTED:409};
+    if(map[error.code])return res.status(map[error.code]).json({error:error.message,code:error.code});
+    console.error('Retry background job failed:',error);
+    return res.status(500).json({error:'Failed to run background job',code:error.code});
+  }
+}
+
 async function getUsers(req, res) { try { return res.json(await adminService.getUsers(req.query)); } catch (error) { console.error('Get admin users failed:', error.message); return res.status(500).json({ error: 'Failed to load users' }); } }
 async function createAdmin(req, res) {
   try { return res.status(201).json(await adminService.createAdmin({...(req.body||{}),actingAdminId:req.user?.id})); }
@@ -163,5 +178,5 @@ async function resetTestData(req,res){
   }
 }
 
-module.exports = { getDashboardStats, getSystemHealth, getFinancialIntegrity, getRiskCenter, reviewRiskEvent, getAuditTimeline, getUsers, getUser360, setUserMembershipPlan, createAdmin, setUserStatus, setUserRole, updateUserProfile, getCompanyProofs, verifyCompanyProof, rejectCompanyProof, getTestResetPreview, resetTestData };
+module.exports = { getDashboardStats, getSystemHealth, getFinancialIntegrity, getRiskCenter, reviewRiskEvent, getAuditTimeline, getBackgroundJobs, retryBackgroundJob, getUsers, getUser360, setUserMembershipPlan, createAdmin, setUserStatus, setUserRole, updateUserProfile, getCompanyProofs, verifyCompanyProof, rejectCompanyProof, getTestResetPreview, resetTestData };
 
