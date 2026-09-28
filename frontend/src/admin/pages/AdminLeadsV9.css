@@ -1759,14 +1759,29 @@
   color:#3f6286;
   font-size:8px;
 }
-.v9-sheet-disconnect{
-  min-height:36px!important;
-  padding:0 12px!important;
-  border-color:#ead8d2!important;
-  background:#fff9f7!important;
-  color:#a94d37!important;
+.v9-sheet-delete{
+  min-height:38px!important;
+  display:inline-flex!important;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  padding:0 13px!important;
+  border:1px solid #efc7bf!important;
+  border-radius:10px!important;
+  background:#fff5f2!important;
+  color:#b34d39!important;
+  box-shadow:none!important;
   font-size:8.5px!important;
+  font-weight:900!important;
+  white-space:nowrap;
 }
+.v9-sheet-delete:hover:not(:disabled){
+  border-color:#e5a99d!important;
+  background:#ffebe6!important;
+  color:#963a29!important;
+}
+.v9-sheet-delete:disabled{opacity:.55;cursor:not-allowed}
+.v9-sheet-delete span{font:inherit;color:inherit}
 
 .v9-sheet-empty-state{
   min-height:155px;
