@@ -1,7 +1,17 @@
 const assert = require('assert');
+const fs = require('fs');
+const path = require('path');
 const pool = require('../src/config/database');
 
 async function main() {
+  const compatSeed = fs.readFileSync(path.join(__dirname,'../src/database/migrations/20260928_customer_flow_04_existing_catalog_compat.sql'),'utf8');
+  assert.match(compatSeed, /LOWER\(COALESCE\(i\.slug,''\)\)/);
+  assert.match(compatSeed, /LOWER\(i\.name\) LIKE '%construction%'/);
+  assert.match(compatSeed, /LOWER\(i\.name\) LIKE '%interior%'/);
+  assert.match(compatSeed, /AS service_id/);
+  assert.doesNotMatch(compatSeed, /INSERT\s+INTO\s+industries/i);
+  assert.doesNotMatch(compatSeed, /INSERT\s+INTO\s+services/i);
+
   const columns = (await pool.query(
     "SELECT column_name FROM information_schema.columns WHERE table_schema='public' AND table_name='leads' AND column_name IN ('contact_consent_at','contact_consent_version','intake_submission_key')"
   )).rows.map(row => row.column_name);
