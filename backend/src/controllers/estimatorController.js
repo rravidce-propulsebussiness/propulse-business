@@ -38,4 +38,19 @@ async function getCalculation(req, res) {
   catch (error) { return sendError(res,error,'Failed to load estimate'); }
 }
 
-module.exports = { getAdminConfig,saveAdminConfig,calculate,getCalculation };
+async function convertCalculation(req, res) {
+  try {
+    const result = await estimatorService.convertCalculation({
+      publicId:req.params.publicId,
+      contact:req.body?.contact,
+      consent:req.body?.consent,
+      submissionKey:req.body?.submissionKey,
+      website:req.body?.website,
+    });
+    return res.status(result.duplicate ? 200 : 201).json(result);
+  } catch (error) {
+    return sendError(res,error,'Failed to request quotations');
+  }
+}
+
+module.exports = { getAdminConfig,saveAdminConfig,calculate,getCalculation,convertCalculation };
