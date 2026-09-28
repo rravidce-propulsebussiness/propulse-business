@@ -145,7 +145,7 @@ export default function AdminSystemHealth(){
         <span className={data?.storage?.status==='ready'?'ok':'bad'}>Storage</span>
         <span className={data?.worker?.status==='fresh'?'ok':'bad'}>Worker</span>
         <span className={data?.migrations?.status==='current'?'ok':'bad'}>Migrations</span>
-        <span className={!data?.sheets?.leadPartner?.connectionErrors&&!data?.sheets?.admin?.connectionErrors?'ok':'warn'}>Sheet connections</span>
+        <span className={!data?.sheets?.leadPartner?.connectionErrors&&!data?.sheets?.leadPartner?.failing&&!data?.sheets?.admin?.connectionErrors&&!data?.sheets?.admin?.failing?'ok':'warn'}>Sheet connections</span>
       </div>
     </section>
   </main>
