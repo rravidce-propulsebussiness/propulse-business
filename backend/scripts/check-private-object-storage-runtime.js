@@ -28,7 +28,7 @@ global.fetch=async(input,options={})=>{
   }
   if(method==='DELETE'){
     objects.delete(key);types.delete(key);
-    return new Response('',{status:204});
+    return new Response(null,{status:204});
   }
   if(method==='GET'){
     const body=objects.get(key);
