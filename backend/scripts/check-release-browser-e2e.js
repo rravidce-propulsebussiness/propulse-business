@@ -21,6 +21,7 @@ assert(config.includes("workers:1")&&config.includes("retries:1"),'Release E2E m
 assert(spec.includes("fetch('/api/admin/system-health'")&&spec.includes('expect(status).toBe(403)'),'Business role must be denied Admin APIs');
 assert(spec.includes("fetch('/api/admin/financial-integrity'")&&spec.includes('expect(status).toBe(403)'),'Lead Partner role must be denied Admin financial APIs');
 assert(spec.includes('page.reload()'),'E2E must verify HttpOnly cookie session survival across reload');
+assert(spec.includes("loginResponse=page.waitForResponse")&&spec.includes("page.waitForURL(url=>url.pathname!=='/login')"),'E2E login helper must wait for the real auth response and completed SPA redirect');
 assert(seed.includes('E2E Financial Wallet Purchase')&&seed.includes('E2E Financial Manual Approval'),'E2E seed must include wallet and manual-payment lead fixtures');
 assert(spec.includes('financial mutations remain exactly-once'),'Release E2E must cover financial mutation idempotency');
 assert(spec.includes("expect(duplicatePurchase.body?.alreadyPurchased).toBe(true)"),'Release E2E must reject duplicate lead debits through idempotent purchase reuse');

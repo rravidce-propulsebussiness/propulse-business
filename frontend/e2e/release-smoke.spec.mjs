@@ -11,7 +11,13 @@ async function login(page,email){
   await page.goto('/login')
   await page.getByLabel('Email address').fill(email)
   await page.getByLabel('Password').fill(PASSWORD)
+  const loginResponse=page.waitForResponse(response=>
+    response.url().includes('/api/auth/login')&&response.request().method()==='POST'
+  )
   await page.getByRole('button',{name:/sign in/i}).click()
+  const response=await loginResponse
+  expect(response.ok()).toBe(true)
+  await page.waitForURL(url=>url.pathname!=='/login')
 }
 
 async function api(page,path,{method='GET',body}={}){
