@@ -35,8 +35,11 @@ function parseCsv(text) {
   row.push(cell); if (row.some(v => clean(v))) rows.push(row);
   if (!rows.length) return [];
   const headers = rows[0].map(h => aliases[norm(h)] || clean(h));
-  return rows.slice(1).map(source => Object.fromEntries(headers.map((h, i) => [h, clean(source[i])])))
-    .filter(r => Object.values(r).some(Boolean));
+  return rows.slice(1).map(source => {
+    const row=Object.fromEntries(headers.map((h, i) => [h, clean(source[i])]));
+    if(norm(row.industry)==='intriordesignandhomeinteriors')row.industry='Interior Design & Home Interiors';
+    return row;
+  }).filter(r => Object.values(r).some(Boolean));
 }
 
 async function catalogs() {
@@ -75,7 +78,10 @@ function resolveClassification(row, cat) {
   if (row.subservice && !subservice) { const matches = candidateMatches(cat.subservices, row.subservice); throw new Error(matches.length > 1 ? 'Subservice is ambiguous; include Service' : 'Subservice could not be resolved'); }
   if (service && industry && Number(service.industry_id) !== Number(industry.id)) throw new Error('Service does not belong to the selected Industry');
   if (subservice && service && Number(subservice.service_id) !== Number(service.id)) throw new Error('Subservice does not belong to the selected Service');
-  if (!industry) throw new Error('Industry is required or must be derivable from Service/Subservice');
+  if (!industry) {
+    if(!clean(row.industry)&&!clean(row.service)&&!clean(row.subservice))throw new Error('Industry, Service and Subservice are all blank; provide at least one classification value');
+    throw new Error('Industry is required or must be derivable from Service/Subservice');
+  }
   return { industry, service, subservice };
 }
 

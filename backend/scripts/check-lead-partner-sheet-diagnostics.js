@@ -10,6 +10,8 @@ const ui=read('../frontend/src/pages/LeadPartnerInventory.jsx');
 const investor=read('../frontend/src/pages/InvestorInvestmentSection.jsx');
 
 assert(inventory.includes("n==='singleonly'"),'Lead Partner Google Sheet import must accept Single Only wording');
+assert(inventory.includes("intriordesignandhomeinteriors")&&inventory.includes("Interior Design & Home Interiors"),'Lead Partner sheet import must normalize the same known Interior Design industry typo as Admin import');
+assert(inventory.includes('Industry, Service and Subservice are all blank'),'Blank classification rows must report a precise actionable reason');
 assert(inventory.includes('const locationCache=new Map()'),'Lead Partner sheet import must cache repeated PIN/location resolution within one file');
 assert(inventory.includes('const settings=await partnerPricing.getSettings()'),'Partner pricing settings must be loaded once per import rather than per row');
 assert(inventory.includes('failureSummary:summarizeFailures(failures)'),'Lead Partner import must return categorized failure diagnostics');
