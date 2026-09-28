@@ -109,7 +109,7 @@ export default function LeadPartnerInventory() {
           </button>
           <button type="button" className={workspace==='sheets'?'active':''} onClick={()=>setWorkspace('sheets')}>
             <span className="lp-workspace-icon">▣</span>
-            <div><strong>Google Sheets</strong><small>Automatic sync every 5 minutes</small></div>
+            <div><strong>Google Sheets</strong><small>Automatic sync schedule managed by Admin</small></div>
             <b>{activeConnections.length}</b>
           </button>
         </nav>
@@ -160,7 +160,7 @@ export default function LeadPartnerInventory() {
         {workspace==='sheets'&&<section className="lp-inventory-workspace lp-sheets-workspace">
           <header className="lp-workspace-head">
             <div><span>GOOGLE SHEETS</span><h2>Automatic lead sources</h2><p>Connect live sources here. Sheet connections, defaults and sync failures stay separate from your lead inventory.</p></div>
-            <span className="lp-workspace-badge live"><i/> AUTO SYNC</span>
+            <span className="lp-workspace-badge live"><i/> MANAGED SYNC</span>
           </header>
 
           <div className="lp-sheet-connect-card">
