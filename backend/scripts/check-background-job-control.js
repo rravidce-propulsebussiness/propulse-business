@@ -5,6 +5,7 @@ const read=p=>fs.readFileSync(path.join(root,p),'utf8');
 const assert=(v,m)=>{if(!v)throw new Error(m)};
 
 const migration=read('src/database/migrations/20260928_background_job_runs.sql');
+const leaseMigration=read('src/database/migrations/20260928_background_job_leases.sql');
 const control=read('src/services/backgroundJobControlService.js');
 const registry=read('src/services/backgroundJobRegistryService.js');
 const adminSheets=read('src/services/adminGoogleSheetSyncScheduler.js');
@@ -19,7 +20,9 @@ const page=read('../frontend/src/admin/pages/AdminBackgroundJobs.jsx');
 
 assert(migration.includes('CREATE TABLE IF NOT EXISTS background_job_runs'),'Background job run ledger is missing');
 assert(migration.includes("trigger_source IN ('scheduled','manual','startup')"),'Background job trigger source constraint is missing');
-assert(control.includes('pg_try_advisory_lock(hashtext($1))'),'Background jobs must use a cross-process PostgreSQL advisory lock');
+assert(leaseMigration.includes('CREATE TABLE IF NOT EXISTS background_job_leases'),'Background job lease table is missing');
+assert(control.includes('INSERT INTO background_job_leases')&&control.includes('locked_until<=CURRENT_TIMESTAMP'),'Background jobs must use an expiring cross-process database lease');
+assert(control.includes('releaseLease(jobKey,ownerToken)'),'Background job leases must be released after execution');
 assert(control.includes("SECRET_KEY=/(password|token|secret"),'Background job summaries must redact secret-like fields');
 assert(control.includes("status:'failed'")&&control.includes("status:'skipped'"),'Background job recorder must preserve failed/skipped states');
 

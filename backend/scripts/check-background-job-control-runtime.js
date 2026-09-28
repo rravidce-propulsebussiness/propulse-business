@@ -19,17 +19,16 @@ const assert=(v,m)=>{if(!v)throw new Error(m)};
   assert(row.status==='succeeded'&&row.summary.token==='[redacted]'&&row.summary.nested.password==='[redacted]'&&row.summary.nested.safe==='ok','Job summary redaction failed');
   assert(Number(row.duration_ms)>=0,'Completed job must record duration');
 
-  const lockClient=await pool.connect();
-  try{
-    await lockClient.query('SELECT pg_advisory_lock(hashtext($1))',['propulse:background-job:ci_locked_job']);
-    const busy=await control.execute({jobKey:'ci_locked_job',source:'manual',triggeredBy:admin.id,task:async()=>({unexpected:true})});
-    assert(busy.busy===true&&busy.skipped===true,'Concurrent job must be skipped when advisory lock is held');
-    const busyRow=(await pool.query('SELECT status,summary FROM background_job_runs WHERE id=$1',[busy.runId])).rows[0];
-    assert(busyRow.status==='skipped'&&busyRow.summary.reason==='busy','Busy run must be persisted as skipped');
-  }finally{
-    await lockClient.query('SELECT pg_advisory_unlock(hashtext($1))',['propulse:background-job:ci_locked_job']).catch(()=>{});
-    lockClient.release();
-  }
+  await pool.query(
+    `INSERT INTO background_job_leases(job_key,owner_token,locked_until)
+     VALUES('ci_locked_job','00000000-0000-4000-8000-000000000001',CURRENT_TIMESTAMP+INTERVAL '10 minutes')
+     ON CONFLICT(job_key) DO UPDATE SET owner_token=EXCLUDED.owner_token,locked_until=EXCLUDED.locked_until,updated_at=CURRENT_TIMESTAMP`
+  );
+  const busy=await control.execute({jobKey:'ci_locked_job',source:'manual',triggeredBy:admin.id,task:async()=>({unexpected:true})});
+  assert(busy.busy===true&&busy.skipped===true,'Concurrent job must be skipped while an unexpired database lease is held');
+  const busyRow=(await pool.query('SELECT status,summary FROM background_job_runs WHERE id=$1',[busy.runId])).rows[0];
+  assert(busyRow.status==='skipped'&&busyRow.summary.reason==='busy','Busy run must be persisted as skipped');
+  await pool.query("DELETE FROM background_job_leases WHERE job_key='ci_locked_job'");
 
   const manual=await registry.retry('notification_email_delivery',{adminId:admin.id});
   assert(manual.runId&&['succeeded','skipped'].includes(manual.jobStatus),'Manual notification retry must create a recorded run');
@@ -48,6 +47,7 @@ const assert=(v,m)=>{if(!v)throw new Error(m)};
   assert(listed.externalJobs.some(job=>job.key==='database_backup_verification'&&job.retrySupported===false),'Backup verification must be monitor-only');
 
   await pool.query("DELETE FROM critical_action_audit WHERE actor_user_id=$1",[admin.id]);
+  await pool.query("DELETE FROM background_job_leases WHERE job_key IN ('ci_secret_job','ci_locked_job','notification_email_delivery')");
   await pool.query("DELETE FROM background_job_runs WHERE triggered_by=$1 OR job_key IN ('ci_secret_job','ci_locked_job')",[admin.id]);
   await pool.query('DELETE FROM users WHERE id=$1',[admin.id]);
   console.log('Background job control center PostgreSQL runtime smoke passed.');
