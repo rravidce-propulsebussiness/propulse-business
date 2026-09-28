@@ -35,6 +35,7 @@ async function runAutoSync() {
           `Google Sheet auto-sync completed: connection=${connection.id}, created=${result.import.created}, duplicates=${result.import.duplicate}, failed=${result.import.failed}${result.import.failureSummary?.length?`, failureSummary=${result.import.failureSummary.map(x=>`${x.category}:${x.count}`).join('|')}`:''}`
         );
         if(result.import.failed>0&&result.import.failures?.length)console.warn(`Google Sheet row failures: connection=${connection.id}; ${result.import.failures.slice(0,3).join(' | ')}`);
+        if(result.import.duplicate>0&&result.import.duplicateSamples?.length)console.log(`Google Sheet duplicate samples: connection=${connection.id}; ${result.import.duplicateSamples.slice(0,3).join(' | ')}`);
       } catch (error) {
         if (error?.code === 'SYNC_IN_PROGRESS') {
           console.log(`Google Sheet auto-sync skipped busy connection=${connection.id}; another replica is syncing it.`);

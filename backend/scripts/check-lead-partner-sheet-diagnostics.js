@@ -13,9 +13,12 @@ assert(inventory.includes("n==='singleonly'"),'Lead Partner Google Sheet import 
 assert(inventory.includes('const locationCache=new Map()'),'Lead Partner sheet import must cache repeated PIN/location resolution within one file');
 assert(inventory.includes('const settings=await partnerPricing.getSettings()'),'Partner pricing settings must be loaded once per import rather than per row');
 assert(inventory.includes('failureSummary:summarizeFailures(failures)'),'Lead Partner import must return categorized failure diagnostics');
+assert(inventory.includes("if (error.code === 'DUPLICATE_LEAD')")&&inventory.includes('duplicateSamples.push(detail)'),'Duplicate rows must be counted separately from genuine failures');
+assert(inventory.includes('failures.push(detail)'),'Only genuine import errors must populate the failure list');
 assert(inventory.includes('last_sync_failure_summary:summarizeFailures'),'Stored sheet connections must expose failure-category summaries');
 assert(scheduler.includes('failureSummary='),'Worker logs must include failure category counts');
 assert(scheduler.includes('Google Sheet row failures:'),'Worker logs must include sample row-level failures');
+assert(scheduler.includes('Google Sheet duplicate samples:'),'Worker logs may show duplicates separately without polluting failure diagnostics');
 assert(ui.includes('partner-sheet-failure-summary'),'Lead Partner inventory must show failure categories');
 assert(!investor.includes('const isSold ='),'Unused investor isSold helper must remain removed');
 console.log('Lead Partner sheet diagnostics/efficiency regression test passed.');

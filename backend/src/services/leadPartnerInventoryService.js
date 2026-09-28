@@ -294,7 +294,9 @@ async function importCsv({ userId, csv }) {
   if (!partner) throw new Error('Lead Partner profile not found'); if (partner.status !== 'active') throw new Error('Lead Partner account is not active');
   const settings=await partnerPricing.getSettings();
   const locationCache=new Map();
-  let created = 0; let failed = 0; let duplicate = 0; const failures = [];
+  let created = 0; let failed = 0; let duplicate = 0;
+  const failures = [];
+  const duplicateSamples = [];
   for (const row of rows) {
     try {
       const lead = await buildLead(row, cat, locationCache);
@@ -310,11 +312,18 @@ async function importCsv({ userId, csv }) {
       );
       created += 1;
     } catch (error) {
-      if (error.code === 'DUPLICATE_LEAD') duplicate += 1; else failed += 1;
-      failures.push(`${row.id || row.customerPhone || row.customerEmail || created + failed + duplicate}: ${error.message}`);
+      const rowKey=row.id || row.customerPhone || row.customerEmail || created + failed + duplicate + 1;
+      const detail=`${rowKey}: ${error.message}`;
+      if (error.code === 'DUPLICATE_LEAD') {
+        duplicate += 1;
+        if(duplicateSamples.length<5)duplicateSamples.push(detail);
+      } else {
+        failed += 1;
+        failures.push(detail);
+      }
     }
   }
-  return { total: rows.length, created, duplicate, failed, failures, failureSummary:summarizeFailures(failures) };
+  return { total: rows.length, created, duplicate, failed, failures, duplicateSamples, failureSummary:summarizeFailures(failures) };
 }
 
 async function importGoogleSheet({ userId, url }) {
