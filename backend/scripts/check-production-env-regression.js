@@ -24,6 +24,11 @@ function run(overrides) {
       RESEND_FROM_EMAIL: '',
       GOOGLE_CLIENT_ID: '',
       ADMIN_PASSWORD: '',
+      UPLOAD_STORAGE_ROOT: '/var/lib/propulse/uploads',
+      HEALTH_CHECK_TIMEOUT_MS: '2500',
+      RUN_MIGRATIONS_ON_STARTUP: 'false',
+      RUN_BACKGROUND_JOBS_IN_WEB: 'false',
+      RUN_MIGRATIONS_ON_WORKER_STARTUP: 'false',
       ...overrides,
     },
   });
@@ -38,6 +43,8 @@ const unsafe = run({
   CORS_ORIGIN: '*',
   PUBLIC_APP_URL: 'http://app.example.com/path',
   TRUST_PROXY: 'true',
+  UPLOAD_STORAGE_ROOT: '',
+  HEALTH_CHECK_TIMEOUT_MS: '20000',
 });
 assert.notEqual(unsafe.status, 0);
 const output = `${unsafe.stdout}\n${unsafe.stderr}`;
@@ -45,5 +52,7 @@ assert.match(output, /JWT_SECRET/);
 assert.match(output, /CORS_ORIGIN/);
 assert.match(output, /PUBLIC_APP_URL/);
 assert.match(output, /TRUST_PROXY=true/);
+assert.match(output, /UPLOAD_STORAGE_ROOT/);
+assert.match(output, /HEALTH_CHECK_TIMEOUT_MS/);
 
 console.log('Production environment preflight regression test passed.');

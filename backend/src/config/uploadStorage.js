@@ -15,9 +15,23 @@ async function checkUploadStorage(){
   return true;
 }
 
-async function ensureUploadStorage(){
+async function probeUploadStorage(){
   await fs.promises.mkdir(uploadRoot,{recursive:true,mode:0o700});
-  return checkUploadStorage();
+  const probe=path.join(uploadRoot,`.propulse-storage-probe-${process.pid}-${Date.now()}`);
+  try{
+    await fs.promises.writeFile(probe,'ok',{flag:'wx',mode:0o600});
+    const value=await fs.promises.readFile(probe,'utf8');
+    if(value!=='ok')throw new Error('Upload storage probe returned unexpected content');
+  }finally{
+    await fs.promises.unlink(probe).catch(error=>{if(error?.code!=='ENOENT')throw error});
+  }
+  return true;
 }
 
-module.exports={uploadRoot,homepageUploadRoot,companyProofRoot,privateProofRoot,checkUploadStorage,ensureUploadStorage};
+async function ensureUploadStorage(){
+  await fs.promises.mkdir(uploadRoot,{recursive:true,mode:0o700});
+  await checkUploadStorage();
+  return probeUploadStorage();
+}
+
+module.exports={uploadRoot,homepageUploadRoot,companyProofRoot,privateProofRoot,checkUploadStorage,probeUploadStorage,ensureUploadStorage};

@@ -23,7 +23,9 @@ function loadStorage(value){
     assert.strictEqual(configured.privateProofRoot,path.join(configured.uploadRoot,'private-proofs'));
     await configured.ensureUploadStorage();
     await configured.checkUploadStorage();
+    await configured.probeUploadStorage();
     assert(fs.existsSync(configured.uploadRoot),'Startup storage check must create the configured root when the mount is writable');
+    assert(!fs.readdirSync(configured.uploadRoot).some(name=>name.startsWith('.propulse-storage-probe-')),'Storage probe must clean up its temporary file');
     console.log('Upload storage root regression test passed.');
   }finally{
     await fs.promises.rm(tempRoot,{recursive:true,force:true}).catch(()=>{});

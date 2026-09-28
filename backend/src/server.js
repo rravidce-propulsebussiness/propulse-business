@@ -41,6 +41,7 @@ const PORT=Number(process.env.PORT)||5000;
 const configuredOrigins=getConfiguredOrigins({isProduction});
 const DEFAULT_JSON_BYTES='1mb';
 const LARGE_JSON_BYTES='9mb';
+const healthCheckTimeoutMs=Math.min(10000,Math.max(500,Number(process.env.HEALTH_CHECK_TIMEOUT_MS)||2500));
 const runMigrationsOnStartup=envFlag('RUN_MIGRATIONS_ON_STARTUP',true);
 const runBackgroundJobsInWeb=envFlag('RUN_BACKGROUND_JOBS_IN_WEB',true);
 const trustProxy=String(process.env.TRUST_PROXY||'').trim();
@@ -65,8 +66,31 @@ app.use('/api',apiRateLimit);
 app.use('/uploads',(req,res,next)=>{if(req.path==='/company-proofs'||req.path.startsWith('/company-proofs/'))return res.status(404).json({error:'Not found'});if(req.path==='/private-proofs'||req.path.startsWith('/private-proofs/'))return res.status(404).json({error:'Not found'});return next();});
 app.use('/uploads',express.static(uploadRoot,{fallthrough:true,maxAge:'7d',immutable:true}));
 function setHealthHeaders(res){res.setHeader('Cache-Control','no-store');}
+function withTimeout(promise,label){
+  let timer;
+  return Promise.race([
+    Promise.resolve(promise),
+    new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error(`${label} readiness check timed out`)),healthCheckTimeoutMs);timer.unref?.();})
+  ]).finally(()=>clearTimeout(timer));
+}
 app.get('/health/live',(req,res)=>{setHealthHeaders(res);res.json({status:'ok'});});
-async function readiness(req,res){setHealthHeaders(res);try{await Promise.all([pool.query('SELECT 1'),checkUploadStorage()]);return res.json({status:'ok',database:'connected',storage:'ready'});}catch(e){console.error('Readiness check failed:',e.message);return res.status(503).json({status:'error',database:'unavailable_or_storage_unmounted',storage:'unavailable'});}}
+async function readiness(req,res){
+  setHealthHeaders(res);
+  const [database,storage]=await Promise.allSettled([
+    withTimeout(pool.query('SELECT 1'),'Database'),
+    withTimeout(checkUploadStorage(),'Upload storage')
+  ]);
+  const databaseReady=database.status==='fulfilled';
+  const storageReady=storage.status==='fulfilled';
+  if(databaseReady&&storageReady)return res.json({status:'ok',database:'connected',storage:'ready'});
+  if(!databaseReady)console.error('Readiness database check failed:',database.reason?.message||database.reason);
+  if(!storageReady)console.error('Readiness storage check failed:',storage.reason?.message||storage.reason);
+  return res.status(503).json({
+    status:'error',
+    database:databaseReady?'connected':'unavailable',
+    storage:storageReady?'ready':'unavailable'
+  });
+}
 app.get('/health/ready',readiness);
 app.get('/health',readiness);
 app.use('/api/auth',authRoutes);app.use('/api/profile',profileRoutes);app.use('/api/admin',adminRoutes);app.use('/api/lead-partner',leadPartnerRoutes);app.use('/api/lead-reports',leadReportRoutes);app.use('/api/lead-partner/faqs',faqRoutes);app.use('/api/faqs',publicFaqRoutes);app.use('/api/upcoming-features',upcomingFeatureRoutes);app.use('/api/contact',contactRoutes);app.use('/api/homepage-media',homepageMediaRoutes);app.use('/api/admin/faqs',adminFaqRoutes);app.use('/api/leads',leadRoutes);app.use('/api/payments',paymentRoutes);app.use('/api/payment-receiving-details',paymentReceivingDetailsRoutes);app.use('/api/coupons',couponRoutes);app.use('/api/membership-plans',membershipPlanRoutes);app.use('/api/admin/commercial',adminCommercialRoutes);app.use('/api/wallet',walletRoutes);app.use('/api/investments',investmentRoutes);app.use('/api/investor/payout-account',investorPayoutAccountRoutes);app.use('/api/industries',industryRoutes);app.use('/api/services',serviceRoutes);app.use('/api/subservices',subserviceRoutes);app.use('/api/states',stateRoutes);app.use('/api/cities',cityRoutes);app.use('/api/subcities',subcityRoutes);app.use('/api/pincodes',pincodeRoutes);

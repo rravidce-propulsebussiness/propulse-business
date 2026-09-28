@@ -27,7 +27,9 @@ versions, rather than trusting the role claimed in a JWT.
    to the backend. Do not trust arbitrary forwarded client addresses.
 4. Run `npm ci` in backend and frontend. Before starting the production backend,
    run `npm run check:production-env` from `backend`; treat any failure as a deploy
-   blocker and review warnings deliberately. Build with `npm run build` in frontend,
+   blocker and review warnings deliberately. Production preflight requires
+   `UPLOAD_STORAGE_ROOT` to be an absolute durable mount and validates
+   `HEALTH_CHECK_TIMEOUT_MS` (500–10000 ms). Build with `npm run build` in frontend,
    with `VITE_API_URL=/api`. Serve `frontend/dist` over HTTPS, use SPA fallback for
    frontend routes, and forward `/api`, `/health`, `/health/live`,
    `/health/ready`, and `/uploads` to the backend. Keep browser/API requests
@@ -47,7 +49,9 @@ versions, rather than trusting the role claimed in a JWT.
 7. Run `npm start` in backend under a supervised web service with automatic restart.
    Use `/health/live` as the process liveness probe and `/health/ready` as the
    readiness/database probe. `/health` remains an alias of readiness for compatibility.
-   All health responses are non-cacheable. Do not use database readiness as an
+   All health responses are non-cacheable. Readiness checks database and upload
+   storage independently and are bounded by `HEALTH_CHECK_TIMEOUT_MS` (default 2500 ms),
+   so dependency failures do not leave load-balancer probes hanging. Do not use database readiness as an
    orchestrator liveness probe, otherwise a temporary PostgreSQL outage can cause a
    restart loop. For a dedicated background process, set
    `RUN_BACKGROUND_JOBS_IN_WEB=false` on web instances and run `npm run worker` as a
@@ -127,4 +131,4 @@ service credentials, or every screen in the browser.
 
 
 ### Persistent upload storage
-Set `UPLOAD_STORAGE_ROOT` to a durable shared volume in production. Homepage media, company proofs, and private payment/payout proof files all resolve beneath this root. Every web or worker replica that needs to read or write uploads must mount the same path. Leaving it unset uses `backend/uploads`, which is appropriate only for local development or a single instance with persistent disk.
+Set `UPLOAD_STORAGE_ROOT` to an absolute durable shared volume in production. Backend startup performs a write/read/delete probe and refuses to start if that storage is not actually writable. Homepage media, company proofs, and private payment/payout proof files all resolve beneath this root. Every web or worker replica that needs to read or write uploads must mount the same path. Leaving it unset uses `backend/uploads`, which is appropriate only for local development or a single instance with persistent disk.

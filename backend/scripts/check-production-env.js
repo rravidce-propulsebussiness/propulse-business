@@ -1,4 +1,5 @@
 require('dotenv').config({ quiet: true });
+const path = require('node:path');
 
 const errors = [];
 const warnings = [];
@@ -60,6 +61,24 @@ if (!resendKey) warn('Password-reset email delivery is not configured (RESEND_AP
 if (!value('GOOGLE_CLIENT_ID')) warn('Google sign-in is not configured (GOOGLE_CLIENT_ID missing)');
 
 if (value('ADMIN_PASSWORD')) warn('ADMIN_PASSWORD is present in the long-running environment; remove bootstrap admin credentials after creating the admin account');
+
+const uploadRoot=value('UPLOAD_STORAGE_ROOT');
+if(!uploadRoot) fail('UPLOAD_STORAGE_ROOT is required in production and must point to a durable mounted volume');
+else if(!path.isAbsolute(uploadRoot)) fail('UPLOAD_STORAGE_ROOT must be an absolute path in production');
+
+const healthTimeout=Number(value('HEALTH_CHECK_TIMEOUT_MS')||2500);
+if(!Number.isInteger(healthTimeout)||healthTimeout<500||healthTimeout>10000) fail('HEALTH_CHECK_TIMEOUT_MS must be an integer between 500 and 10000 milliseconds');
+
+const migrationsOnStartup=value('RUN_MIGRATIONS_ON_STARTUP').toLowerCase();
+if(!migrationsOnStartup) warn('RUN_MIGRATIONS_ON_STARTUP is not explicit; use false when migrations run as a release step');
+else if(['1','true','yes','on'].includes(migrationsOnStartup)) warn('RUN_MIGRATIONS_ON_STARTUP is enabled; rolling web deploys may wait on the migration lock');
+
+const backgroundInWeb=value('RUN_BACKGROUND_JOBS_IN_WEB').toLowerCase();
+if(!backgroundInWeb) warn('RUN_BACKGROUND_JOBS_IN_WEB is not explicit; use false when a supervised worker runs scheduled jobs');
+else if(['1','true','yes','on'].includes(backgroundInWeb)) warn('RUN_BACKGROUND_JOBS_IN_WEB is enabled; prefer a dedicated npm run worker process for multi-instance production');
+
+const workerMigrations=value('RUN_MIGRATIONS_ON_WORKER_STARTUP').toLowerCase();
+if(['1','true','yes','on'].includes(workerMigrations)) warn('RUN_MIGRATIONS_ON_WORKER_STARTUP is enabled; migrations should normally run once as a release step');
 
 if (errors.length) {
   console.error('Production environment check failed:');
