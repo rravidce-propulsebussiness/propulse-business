@@ -1,4 +1,5 @@
 const pool = require('../config/database');
+const criticalActionAudit = require('../services/criticalActionAuditService');
 
 const settingsPayload=row=>({
   commissionPercent:Number(row?.commission_percent??5),
@@ -96,6 +97,7 @@ async function updateSettings(req, res) {
       WHERE l.id=b.id
     `,[normalPriceUplift,twoSharePercent,threeSharePercent]);
 
+    await criticalActionAudit.record(client,{actorId:req.user?.id,category:'pricing',action:'pricing.partner_settings',entityType:'lead_partner_settings',entityId:1,beforeData:settingsPayload(current),afterData:settingsPayload(row),source:'admin_lead_partner_pricing'});
     await client.query('COMMIT');
     return res.json(settingsPayload(row));
   } catch (error) {

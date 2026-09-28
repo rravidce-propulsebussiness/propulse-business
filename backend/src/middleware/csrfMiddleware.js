@@ -1,9 +1,4 @@
-function getConfiguredOrigins() {
-  return String(process.env.CORS_ORIGIN || '')
-    .split(',')
-    .map(value => value.trim())
-    .filter(Boolean);
-}
+const { getConfiguredOrigins } = require('../config/httpOrigins');
 
 function hasAuthCookie(req) {
   return String(req.headers.cookie || '')
@@ -28,7 +23,6 @@ function csrfProtection(req, res, next) {
   const method = String(req.method || 'GET').toUpperCase();
   if (['GET', 'HEAD', 'OPTIONS'].includes(method)) return next();
 
-  // Bearer-authenticated API clients are not exposed to cookie CSRF.
   if (hasBearerToken(req) || !hasAuthCookie(req)) return next();
 
   const allowedOrigins = getConfiguredOrigins();

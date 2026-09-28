@@ -1,0 +1,35 @@
+const fs=require('fs');
+const path=require('path');
+const root=path.join(__dirname,'..');
+const read=relative=>fs.readFileSync(path.join(root,relative),'utf8');
+const assert=(condition,message)=>{if(!condition)throw new Error(message)};
+
+const seed=read('scripts/seed-release-e2e.js');
+const workflow=read('../.github/workflows/ci.yml');
+const config=read('../frontend/e2e/playwright.config.mjs');
+const spec=read('../frontend/e2e/release-smoke.spec.mjs');
+const leadPurchaseService=read('src/services/leadPurchaseService.js');
+
+assert(seed.includes("E2E_SEED=true is required"),'E2E seed must require an explicit opt-in');
+assert(seed.includes("Refusing to seed E2E accounts in production"),'E2E seed must refuse production');
+assert(seed.includes("reference_type='e2e_seed'"),'Business E2E wallet balance must have a matching ledger entry');
+assert(workflow.includes('Release browser E2E'),'CI must run the browser release gate');
+assert(workflow.includes('@playwright/test@1.55.0'),'Playwright CI dependency must be pinned');
+assert(workflow.includes('npm run db:bootstrap')&&workflow.includes('seed-release-e2e.js'),'E2E must use a disposable bootstrapped PostgreSQL database');
+assert(workflow.includes('npm run worker'),'E2E must verify the dedicated background worker alongside the web process');
+assert(config.includes("workers:1")&&config.includes("retries:1"),'Release E2E must stay deterministic and bounded');
+assert(spec.includes("fetch('/api/admin/system-health'")&&spec.includes('expect(status).toBe(403)'),'Business role must be denied Admin APIs');
+assert(spec.includes("fetch('/api/admin/financial-integrity'")&&spec.includes('expect(status).toBe(403)'),'Lead Partner role must be denied Admin financial APIs');
+assert(spec.includes('page.reload()'),'E2E must verify HttpOnly cookie session survival across reload');
+assert(spec.includes("loginResponse=page.waitForResponse")&&spec.includes("page.waitForURL(url=>url.pathname!=='/login')"),'E2E login helper must wait for the real auth response and completed SPA redirect');
+assert(seed.includes('E2E Financial Wallet Purchase')&&seed.includes('E2E Financial Manual Approval'),'E2E seed must include wallet and manual-payment lead fixtures');
+assert(spec.includes('financial mutations remain exactly-once'),'Release E2E must cover financial mutation idempotency');
+assert(spec.includes("expect(duplicatePurchase.body?.alreadyPurchased).toBe(true)"),'Release E2E must reject duplicate lead debits through idempotent purchase reuse');
+assert(spec.includes("expect(approveTopupAgain.status).toBe(409)"),'Release E2E must prove wallet top-ups cannot be approved twice');
+assert(spec.includes("expect(approveManualAgain.body?.code).toBe('PAYMENT_ALREADY_PAID')"),'Release E2E must prove manual payments cannot be approved twice');
+assert(spec.includes("'/api/admin/financial-integrity?refresh=1'"),'Release E2E must reconcile ledgers after money mutations');
+assert(spec.includes("test.describe.configure({retries:0})"),'Money-mutating browser tests must not auto-retry against the same database state');
+const paidPurchaseCheck=leadPurchaseService.indexOf("const existing=(await client.query(\`SELECT id,shares,amount,pricing_tier,status,payment_id FROM lead_purchases");
+const availabilityCheck=leadPurchaseService.indexOf("if(lead.status!=='available')");
+assert(paidPurchaseCheck>=0&&availabilityCheck>=0&&paidPurchaseCheck<availabilityCheck,'Paid-purchase idempotency check must run before lead availability rejection');
+console.log('Release browser E2E regression test passed.');

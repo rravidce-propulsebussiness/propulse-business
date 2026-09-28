@@ -1,5 +1,6 @@
 const assert=require('assert');
 const csrfProtection=require('../src/middleware/csrfMiddleware');
+const {getConfiguredOrigins,parseOrigin}=require('../src/config/httpOrigins');
 
 function run(req){
   const response={statusCode:200,body:null,status(code){this.statusCode=code;return this;},json(body){this.body=body;return this;}};
@@ -9,6 +10,9 @@ function run(req){
 }
 
 process.env.CORS_ORIGIN='http://localhost:5173,https://app.propulse.example';
+assert.equal(parseOrigin('https://app.propulse.example/'),'https://app.propulse.example','origin parser must normalize a trailing slash');
+assert.deepEqual(getConfiguredOrigins({isProduction:true}),['http://localhost:5173','https://app.propulse.example'],'CORS and CSRF must share normalized origins');
+assert.throws(()=>parseOrigin('https://app.propulse.example/path'),/origins only/,'origin parser must reject paths');
 
 let result=run({method:'GET',headers:{cookie:'propulse_auth=token'}});
 assert.equal(result.nextCalled,true,'safe methods must bypass CSRF checks');

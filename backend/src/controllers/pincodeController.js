@@ -1,5 +1,6 @@
 const pincodeService = require('../services/pincodeService');
 const detectionService = require('../services/pincodeDetectionService');
+const {sendError}=require('../utils/errorResponse');
 
 async function search(req, res) {
   try {
@@ -46,7 +47,7 @@ async function detect(req, res) {
     return res.json(result);
   } catch (error) {
     const bad = ['INVALID_PINCODE', 'PIN_NOT_FOUND', 'PIN_LOOKUP_TIMEOUT'];
-    return res.status(bad.includes(error.code) ? 400 : 502).json({ error: error.message || 'Failed to detect PIN', code: error.code });
+    const status=bad.includes(error.code)?400:502;if(status===502)console.error('Detect pincode failed:',error.message);return sendError(res,status,error,'Failed to detect PIN',{code:error.code});
   }
 }
 
@@ -65,7 +66,7 @@ async function mapToCity(req, res) {
     return res.json(result);
   } catch (error) {
     const bad = ['INVALID_PINCODE', 'INVALID_CITY', 'PIN_NOT_DETECTED', 'CITY_NOT_FOUND', 'CITY_STATE_MISMATCH'];
-    return res.status(bad.includes(error.code) ? 400 : 500).json({ error: error.message || 'Failed to map PIN', code: error.code });
+    const status=bad.includes(error.code)?400:500;if(status===500)console.error('Map pincode failed:',error.message);return sendError(res,status,error,'Failed to map PIN',{code:error.code});
   }
 }
 

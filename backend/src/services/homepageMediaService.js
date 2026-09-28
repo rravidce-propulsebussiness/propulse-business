@@ -3,11 +3,12 @@ const path=require('path');
 const crypto=require('crypto');
 const {validateDataUrlSignature}=require('../utils/fileValidation');
 const pool=require('../config/database');
+const {homepageUploadRoot}=require('../config/uploadStorage');
 
 const SLOT_NAMES=['hero','residential','interior','commercial','turnkey','plot_land'];
 const MAX_BYTES=7*1024*1024;
 const MIME_EXTENSIONS={'image/jpeg':'jpg','image/png':'png','image/webp':'webp'};
-const UPLOAD_ROOT=path.join(__dirname,'../../uploads/homepage');
+const UPLOAD_ROOT=homepageUploadRoot;
 
 function clean(value){return String(value??'').trim()}
 function normalizeImages(value){
@@ -64,7 +65,7 @@ async function replace(slot,dataUrl){
   );
   const oldUrl=key==='hero'?current.hero_image_url:current.category_images?.[key];
   if(oldUrl&&oldUrl.startsWith('/uploads/homepage/')){
-    const oldPath=path.resolve(__dirname,'../..',oldUrl.replace(/^\//,''));
+    const oldPath=path.join(UPLOAD_ROOT,path.basename(oldUrl));
     if(oldPath!==path.resolve(destination)) await fs.promises.unlink(oldPath).catch(()=>{});
   }
   return normalize(result.rows[0]);
@@ -81,7 +82,7 @@ async function remove(slot){
     [hero,JSON.stringify(images)]
   );
   if(oldUrl&&oldUrl.startsWith('/uploads/homepage/')){
-    const oldPath=path.resolve(__dirname,'../..',oldUrl.replace(/^\//,''));
+    const oldPath=path.join(UPLOAD_ROOT,path.basename(oldUrl));
     await fs.promises.unlink(oldPath).catch(()=>{});
   }
   return normalize(result.rows[0]);

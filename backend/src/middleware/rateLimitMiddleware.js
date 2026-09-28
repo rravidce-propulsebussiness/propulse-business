@@ -1,6 +1,8 @@
 const pool = require('../config/database');
 
 const buckets = new Map();
+const sharedLeases = new Map();
+const sharedLeasePromises = new Map();
 const CLEANUP_INTERVAL_MS = 60 * 1000;
 
 const cleanupTimer = setInterval(() => {
@@ -43,15 +45,15 @@ function getLocalBucket(key, windowMs) {
   return { count: bucket.count, retryAfter: Math.max(1, Math.ceil((bucket.startedAt + windowMs - now) / 1000)) };
 }
 
-async function consumeSharedBucket(key, windowMs) {
+async function consumeSharedBucket(key, windowMs, increment = 1) {
   const result = await pool.query(
     `INSERT INTO rate_limit_buckets (bucket_key, window_started_at, request_count)
-     VALUES ($1, CURRENT_TIMESTAMP, 1)
+     VALUES ($1, CURRENT_TIMESTAMP, $3)
      ON CONFLICT (bucket_key) DO UPDATE
        SET request_count = CASE
              WHEN rate_limit_buckets.window_started_at + ($2 * INTERVAL '1 millisecond') <= CURRENT_TIMESTAMP
-               THEN 1
-             ELSE rate_limit_buckets.request_count + 1
+               THEN $3
+             ELSE rate_limit_buckets.request_count + $3
            END,
            window_started_at = CASE
              WHEN rate_limit_buckets.window_started_at + ($2 * INTERVAL '1 millisecond') <= CURRENT_TIMESTAMP
@@ -61,22 +63,55 @@ async function consumeSharedBucket(key, windowMs) {
            updated_at = CURRENT_TIMESTAMP
      RETURNING request_count,
                GREATEST(1, CEIL(EXTRACT(EPOCH FROM ((window_started_at + ($2 * INTERVAL '1 millisecond')) - CURRENT_TIMESTAMP))))::int AS retry_after`,
-    [key, windowMs]
+    [key, windowMs, Math.max(1, Math.floor(Number(increment) || 1))]
   );
   return result.rows[0];
 }
 
-function rateLimit({ windowMs = 15 * 60 * 1000, max = 100, scope = 'route' } = {}) {
+async function consumeSharedLeasedBucket(key, windowMs, chunkSize) {
+  const now = Date.now();
+  const existing = sharedLeases.get(key);
+  if (existing && existing.expiresAt > now && existing.nextCount <= existing.endCount) {
+    const count = existing.nextCount++;
+    return { request_count: count, retry_after: Math.max(1, Math.ceil((existing.expiresAt - now) / 1000)) };
+  }
+
+  let reservation = sharedLeasePromises.get(key);
+  if (!reservation) {
+    reservation = (async () => {
+      const bucket = await consumeSharedBucket(key, windowMs, chunkSize);
+      const endCount = Number(bucket.request_count);
+      const retryAfter = Number(bucket.retry_after);
+      const lease = {
+        nextCount: Math.max(1, endCount - chunkSize + 1),
+        endCount,
+        expiresAt: Date.now() + Math.max(1, retryAfter) * 1000,
+      };
+      sharedLeases.set(key, lease);
+      return lease;
+    })().finally(() => sharedLeasePromises.delete(key));
+    sharedLeasePromises.set(key, reservation);
+  }
+
+  const lease = await reservation;
+  const count = lease.nextCount++;
+  return { request_count: count, retry_after: Math.max(1, Math.ceil((lease.expiresAt - Date.now()) / 1000)) };
+}
+
+function rateLimit({ windowMs = 15 * 60 * 1000, max = 100, scope = 'route', shared = true, sharedChunkSize = 1 } = {}) {
   const safeWindowMs = Math.max(1000, Number(windowMs) || 15 * 60 * 1000);
   const safeMax = Math.max(1, Math.floor(Number(max) || 100));
+  const safeSharedChunkSize = Math.min(safeMax, Math.max(1, Math.floor(Number(sharedChunkSize) || 1)));
 
   return async (req, res, next) => {
     const key = getRouteKey(req, scope);
     let bucket;
 
-    if (process.env.NODE_ENV === 'production') {
+    if (process.env.NODE_ENV === 'production' && shared) {
       try {
-        bucket = await consumeSharedBucket(key, safeWindowMs);
+        bucket = safeSharedChunkSize > 1
+          ? await consumeSharedLeasedBucket(key, safeWindowMs, safeSharedChunkSize)
+          : await consumeSharedBucket(key, safeWindowMs);
       } catch (error) {
         console.error('Shared rate limiter failed:', error.message);
         return res.status(503).json({ error: 'Request protection is temporarily unavailable. Please try again.' });

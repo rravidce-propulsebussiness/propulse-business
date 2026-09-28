@@ -1,4 +1,5 @@
 const pool = require('../config/database');
+const securityRiskService = require('./securityRiskService');
 
 function clean(value){ return value == null ? null : String(value).trim() || null }
 
@@ -62,9 +63,11 @@ async function save({userId, method, accountHolderName, accountNumber, ifscCode,
   try {
     await client.query('BEGIN')
     await client.query('SELECT pg_advisory_xact_lock(hashtext($1))',[`lead-partner-payout-account:${Number(userId)}`])
+    const previous=(await client.query(`SELECT * FROM lead_partner_payout_accounts WHERE user_id=$1 AND is_active=TRUE ORDER BY id DESC LIMIT 1 FOR UPDATE`,[Number(userId)])).rows[0]||null
     await client.query(`UPDATE lead_partner_payout_accounts SET is_active=FALSE,updated_at=CURRENT_TIMESTAMP WHERE user_id=$1 AND is_active=TRUE`, [Number(userId)])
     const result = await client.query(`INSERT INTO lead_partner_payout_accounts (user_id,method,account_holder_name,account_number,ifsc_code,bank_name,upi_id,is_verified,is_active) VALUES ($1,$2,$3,$4,$5,$6,$7,TRUE,TRUE) RETURNING *`, [Number(userId),details.method,details.accountHolderName || null,details.accountNumber || null,details.ifscCode || null,details.bankName || null,details.upiId || null])
     await client.query('COMMIT')
+    await securityRiskService.evaluatePayoutAccountChange(pool,{userId,accountType:'lead_partner',newAccount:result.rows[0],previousAccount:previous}).catch(error=>console.error('Risk logging failed for Lead Partner payout account:',error.message))
     return publicAccount(result.rows[0])
   } catch(e){
     await client.query('ROLLBACK')

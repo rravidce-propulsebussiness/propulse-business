@@ -1,0 +1,139 @@
+name: Release Promotion
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: Promotion target. Production always re-verifies staging first.
+        required: true
+        type: choice
+        default: staging
+        options:
+          - staging
+          - production
+
+concurrency:
+  group: release-promotion
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  staging:
+    name: Deploy and verify staging
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    environment:
+      name: staging
+      url: ${{ vars.APP_URL }}
+    steps:
+      - name: Checkout exact release commit
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.sha }}
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+      - name: Install smoke-test dependencies
+        working-directory: backend
+        run: npm ci --omit=dev
+      - name: Validate staging environment configuration
+        env:
+          APP_URL: ${{ vars.APP_URL }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$APP_URL" || { echo "Configure staging environment variable APP_URL."; exit 1; }
+          case "$APP_URL" in https://*) ;; *) echo "staging APP_URL must use HTTPS."; exit 1 ;; esac
+          if echo "$APP_URL" | grep -Eq 'example\.(com|test)|yourdomain\.com'; then echo "Replace the staging placeholder APP_URL."; exit 1; fi
+      - name: Trigger staging deployment
+        env:
+          DEPLOY_HOOK_URL: ${{ secrets.DEPLOY_HOOK_URL }}
+          DEPLOY_HOOK_METHOD: ${{ vars.DEPLOY_HOOK_METHOD }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -z "$DEPLOY_HOOK_URL" ]; then echo "No staging DEPLOY_HOOK_URL configured; expecting external deployment of this commit."; exit 0; fi
+          method="${DEPLOY_HOOK_METHOD:-POST}"
+          curl --fail --silent --show-error --request "$method" "$DEPLOY_HOOK_URL" --output /dev/null
+          echo "Staging deploy hook accepted."
+      - name: Wait for exact staging commit
+        working-directory: backend
+        env:
+          DEPLOY_BASE_URL: ${{ vars.APP_URL }}
+          DEPLOY_EXPECTED_COMMIT: ${{ github.sha }}
+          DEPLOY_EXPECTED_ENVIRONMENT: staging
+          DEPLOY_WAIT_SECONDS: ${{ vars.DEPLOY_WAIT_SECONDS }}
+        run: npm run wait:deployment
+      - name: Run non-destructive staging smoke
+        working-directory: backend
+        env:
+          DEPLOY_BASE_URL: ${{ vars.APP_URL }}
+          DEPLOY_APP_ORIGIN: ${{ vars.APP_URL }}
+          DEPLOY_EXPECTED_COMMIT: ${{ github.sha }}
+          DEPLOY_EXPECTED_ENVIRONMENT: staging
+        run: npm run test:deployed
+
+  production:
+    name: Approve, deploy and verify production
+    if: ${{ inputs.target == 'production' }}
+    needs: staging
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    environment:
+      name: production
+      url: ${{ vars.APP_URL }}
+    steps:
+      - name: Checkout exact release commit
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.sha }}
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+      - name: Install smoke-test dependencies
+        working-directory: backend
+        run: npm ci --omit=dev
+      - name: Validate production environment configuration
+        env:
+          APP_URL: ${{ vars.APP_URL }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$APP_URL" || { echo "Configure production environment variable APP_URL."; exit 1; }
+          case "$APP_URL" in https://*) ;; *) echo "production APP_URL must use HTTPS."; exit 1 ;; esac
+          if echo "$APP_URL" | grep -Eq 'example\.(com|test)|yourdomain\.com'; then echo "Replace the production placeholder APP_URL."; exit 1; fi
+      - name: Trigger production deployment
+        env:
+          DEPLOY_HOOK_URL: ${{ secrets.DEPLOY_HOOK_URL }}
+          DEPLOY_HOOK_METHOD: ${{ vars.DEPLOY_HOOK_METHOD }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -z "$DEPLOY_HOOK_URL" ]; then echo "No production DEPLOY_HOOK_URL configured; expecting external deployment of this commit."; exit 0; fi
+          method="${DEPLOY_HOOK_METHOD:-POST}"
+          curl --fail --silent --show-error --request "$method" "$DEPLOY_HOOK_URL" --output /dev/null
+          echo "Production deploy hook accepted."
+      - name: Wait for exact production commit
+        working-directory: backend
+        env:
+          DEPLOY_BASE_URL: ${{ vars.APP_URL }}
+          DEPLOY_EXPECTED_COMMIT: ${{ github.sha }}
+          DEPLOY_EXPECTED_ENVIRONMENT: production
+          DEPLOY_WAIT_SECONDS: ${{ vars.DEPLOY_WAIT_SECONDS }}
+        run: npm run wait:deployment
+      - name: Run non-destructive production smoke
+        working-directory: backend
+        env:
+          DEPLOY_BASE_URL: ${{ vars.APP_URL }}
+          DEPLOY_APP_ORIGIN: ${{ vars.APP_URL }}
+          DEPLOY_EXPECTED_COMMIT: ${{ github.sha }}
+          DEPLOY_EXPECTED_ENVIRONMENT: production
+        run: npm run test:deployed

@@ -4,9 +4,15 @@ import './index.css'
 import './leadPaymentFix.css'
 import './homeLeadHighlight.css'
 import App from './App.jsx'
+import AppErrorBoundary from './components/AppErrorBoundary.jsx'
+import {installClientObservability} from './utils/clientObservability.js'
+
+installClientObservability()
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <App />
+    <AppErrorBoundary>
+      <App />
+    </AppErrorBoundary>
   </StrictMode>,
 )

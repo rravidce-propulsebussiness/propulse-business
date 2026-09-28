@@ -19,7 +19,7 @@ export default function AdminUsers() {
   const [editForm, setEditForm] = useState(null);
   const [user360,setUser360]=useState(null), [user360Loading,setUser360Loading]=useState(false), [userTab,setUserTab]=useState('overview'), [userBusy,setUserBusy]=useState('');
   const [membershipDays,setMembershipDays]=useState(30), [membershipExpiry,setMembershipExpiry]=useState(''), [membershipPlanId,setMembershipPlanId]=useState(''), [membershipReason,setMembershipReason]=useState('');
-  const [walletAmount,setWalletAmount]=useState(''), [walletReason,setWalletReason]=useState('');
+  const [walletAmount,setWalletAmount]=useState(''), [walletReason,setWalletReason]=useState(''), [walletPageBusy,setWalletPageBusy]=useState('');
   const user360BodyRef=useRef(null);
   const currentUser = getUser();
 
@@ -196,11 +196,37 @@ export default function AdminUsers() {
     finally{setUserBusy('')}
   }
 
+  async function loadMoreWallet(kind){
+    if(!selected||!user360?.wallet)return;
+    const pageInfo=user360.wallet.pagination?.[kind];
+    if(!pageInfo||Number(pageInfo.page||1)>=Number(pageInfo.pages||1))return;
+    const nextPage=Number(pageInfo.page||1)+1;
+    const params=new URLSearchParams({
+      rechargePage:String(kind==='recharges'?nextPage:Number(user360.wallet.pagination?.recharges?.page||1)),
+      rechargeLimit:'50',
+      transactionPage:String(kind==='transactions'?nextPage:Number(user360.wallet.pagination?.transactions?.page||1)),
+      transactionLimit:'100'
+    });
+    try{
+      setWalletPageBusy(kind);setError('');
+      const data=await authRequest(`/wallet/admin/history/customers/${selected.id}?${params}`);
+      setUser360(prev=>{
+        if(!prev)return prev;
+        const currentWallet=prev.wallet||{};
+        const existing=Array.isArray(currentWallet[kind])?currentWallet[kind]:[];
+        const incoming=Array.isArray(data?.[kind])?data[kind]:[];
+        const seen=new Set(existing.map(item=>String(item.id)));
+        return{...prev,wallet:{...currentWallet,[kind]:[...existing,...incoming.filter(item=>!seen.has(String(item.id)))],pagination:{...(currentWallet.pagination||{}),[kind]:data?.pagination?.[kind]||pageInfo}}};
+      });
+    }catch(e){setError(e.message||'Failed to load more wallet history')}
+    finally{setWalletPageBusy('')}
+  }
+
   async function createAdmin(e) { e.preventDefault(); try { setSaving(true); setError(''); await authRequest('/admin/users/admin', { method: 'POST', body: JSON.stringify(form) }); setShowCreate(false); setForm({ name: '', email: '', password: '' }); await loadUsers(); } catch (e) { setError(e.message); } finally { setSaving(false); } }
 
   const currentMembership=user360?.snapshot?.currentMembership||null;
   const manageableMembership=currentMembership||user360?.membership?.plans?.[0]||null;
-  const manageableMembershipActive=Boolean(manageableMembership&&manageableMembership.status==='active'&&new Date(manageableMembership.expires_at).getTime()>Date.now());
+  const manageableMembershipActive=Boolean(manageableMembership&&manageableMembership.status==='active');
   const userSnapshot=user360?.snapshot||{};
   const wallet360=user360?.wallet||{wallet:{balance:0},recharges:[],transactions:[],totals:{}};
   const membership360=user360?.membership||{plans:[],history:[]};
@@ -331,7 +357,7 @@ export default function AdminUsers() {
         {user360Loading ? <div className="user-360-loading"><span className="users-loading-ring"/><strong>Loading account workspace…</strong></div> : <>
           <div className="user-360-snapshot">
             <div><span>Membership</span><strong>{currentMembership?.plan_group?String(currentMembership.plan_group).toUpperCase():'No plan'}</strong><small>{currentMembership?.expires_at ? ('Expires ' + dateOnly(currentMembership.expires_at)) : 'No active membership'}</small></div>
-            <div><span>Wallet</span><strong>{money(userSnapshot.walletBalance)}</strong><small>{Number(wallet360?.recharges?.length||0)} recharge records</small></div>
+            <div><span>Wallet</span><strong>{money(userSnapshot.walletBalance)}</strong><small>{Number(wallet360?.pagination?.recharges?.total??wallet360?.recharges?.length??0)} recharge records</small></div>
             <div><span>Leads</span><strong>{Number(userSnapshot.leadsAccessed||0)}</strong><small>Purchased / claimed</small></div>
             <div><span>Total paid</span><strong>{money(userSnapshot.totalPaid)}</strong><small>Successful payments</small></div>
             <div><span>Entitlements</span><strong>{Number(userSnapshot.activeEntitlements?.shared?.remaining||0)} / {Number(userSnapshot.activeEntitlements?.premium?.remaining||0)}</strong><small>Basic / Premium left</small></div>
@@ -425,15 +451,18 @@ export default function AdminUsers() {
                 <div><span>Admin adjustment</span><div className="wallet-adjust-inputs"><input type="number" min="0.01" step="0.01" value={walletAmount} onChange={e=>setWalletAmount(e.target.value)} placeholder="Amount"/><input value={walletReason} onChange={e=>setWalletReason(e.target.value)} placeholder="Reason required"/></div></div>
                 <div className="wallet-adjust-actions"><button type="button" onClick={()=>adjustUserWallet('credit')}>Credit</button><button type="button" onClick={()=>adjustUserWallet('refund')}>Refund</button><button type="button" className="danger-lite" onClick={()=>adjustUserWallet('debit')}>Debit</button></div>
               </div>
-              <div className="user-360-section-head compact"><div><span>RECHARGES</span><h3>Recharge history</h3></div><small>{wallet360?.recharges?.length||0}</small></div>
+              <div className="user-360-section-head compact"><div><span>RECHARGES</span><h3>Recharge history</h3></div><small>{wallet360?.recharges?.length||0} of {wallet360?.pagination?.recharges?.total??wallet360?.recharges?.length??0}</small></div>
               <div className="user-360-card-list">
                 {(wallet360?.recharges||[]).map(item=><article className="history-360-card" key={'topup-'+item.id}><div><span>Recharge #{item.id}</span><h4>{money(item.amount)}</h4><small>{item.reference||'No reference'} · {dateTime(item.created_at)}</small></div><div><b className={'mini-status '+item.status}>{item.status}</b><small>{item.payment_method||'manual'}</small></div></article>)}
                 {!wallet360?.recharges?.length && <div className="user-360-empty">No wallet recharges.</div>}
               </div>
-              <div className="user-360-section-head compact"><div><span>LEDGER</span><h3>Wallet transactions</h3></div></div>
+              {Number(wallet360?.pagination?.recharges?.page||1)<Number(wallet360?.pagination?.recharges?.pages||1)&&<button type="button" className="wallet-360-load-more" disabled={walletPageBusy==='recharges'} onClick={()=>loadMoreWallet('recharges')}>{walletPageBusy==='recharges'?'Loading…':'Load older recharges'}</button>}
+              <div className="user-360-section-head compact"><div><span>LEDGER</span><h3>Wallet transactions</h3></div><small>{wallet360?.transactions?.length||0} of {wallet360?.pagination?.transactions?.total??wallet360?.transactions?.length??0}</small></div>
               <div className="user-360-card-list compact-list">
-                {(wallet360?.transactions||[]).slice(0,100).map(item=><article className="history-360-card" key={'wallet-'+item.id}><div><span>{item.type}</span><h4>{item.description||'Wallet transaction'}</h4><small>{dateTime(item.created_at)}</small></div><div><strong>{item.type==='debit'?'-':'+'}{money(item.amount)}</strong><small>Balance {money(item.balance_after)}</small></div></article>)}
+                {(wallet360?.transactions||[]).map(item=><article className="history-360-card" key={'wallet-'+item.id}><div><span>{item.type}</span><h4>{item.description||'Wallet transaction'}</h4><small>{dateTime(item.created_at)}</small></div><div><strong>{item.type==='debit'?'-':'+'}{money(item.amount)}</strong><small>Balance {money(item.balance_after)}</small></div></article>)}
+                {!wallet360?.transactions?.length && <div className="user-360-empty">No wallet transactions.</div>}
               </div>
+              {Number(wallet360?.pagination?.transactions?.page||1)<Number(wallet360?.pagination?.transactions?.pages||1)&&<button type="button" className="wallet-360-load-more" disabled={walletPageBusy==='transactions'} onClick={()=>loadMoreWallet('transactions')}>{walletPageBusy==='transactions'?'Loading…':'Load older transactions'}</button>}
             </div>}
 
             {userTab==='leads' && <div className="user-360-pane">

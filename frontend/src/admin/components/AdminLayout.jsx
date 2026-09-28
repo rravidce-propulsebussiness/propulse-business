@@ -1,7 +1,8 @@
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useEffect, useMemo, useState } from 'react'
-import { clearSession, getUser } from '../../utils/auth'
+import { authRequest, clearSession, getUser } from '../../utils/auth'
 import './AdminLayout.css'
+import NotificationBell from '../../components/NotificationBell'
 
 const navigation=[
   {type:'link',to:'/admin',label:'Overview',icon:'⌂',end:true},
@@ -35,6 +36,14 @@ const navigation=[
     {to:'/admin/investor-withdrawals',label:'Investor Withdrawals'}
   ]},
   {type:'group',key:'system',label:'System',icon:'⚙',children:[
+    {to:'/admin/system-health',label:'System Health'},
+    {to:'/admin/performance',label:'Performance'},
+    {to:'/admin/error-monitor',label:'Error Monitor'},
+    {to:'/admin/jobs',label:'Background Jobs'},
+    {to:'/admin/risk-center',label:'Risk Center'},
+    {to:'/admin/notifications',label:'Notifications'},
+    {to:'/admin/audit-timeline',label:'Audit Timeline'},
+    {to:'/admin/financial-integrity',label:'Financial Integrity'},
     {to:'/admin/test-reset',label:'Test Data Reset'}
   ]},
   {type:'group',key:'website',label:'Website & Content',icon:'▧',children:[
@@ -67,16 +76,39 @@ export default function AdminLayout(){
   const user=getUser()
   const current=useMemo(()=>findCurrent(location.pathname),[location.pathname])
   const [openGroup,setOpenGroup]=useState(current.group?.key||null)
+  const [systemStatus,setSystemStatus]=useState('checking')
   const initials=(user?.name||'Admin').split(' ').filter(Boolean).slice(0,2).map(x=>x[0]).join('').toUpperCase()
 
   useEffect(()=>{
-    if(current.group)setOpenGroup(current.group.key)
-    document.body.classList.remove('admin-nav-open')
+    let active=true
+    queueMicrotask(()=>{
+      if(!active)return
+      if(current.group)setOpenGroup(current.group.key)
+      document.body.classList.remove('admin-nav-open')
+    })
+    return()=>{active=false}
   },[current.group,location.pathname])
+
+  useEffect(()=>{
+    let active=true
+    const applyStatus=value=>{
+      if(!active)return
+      setSystemStatus(['healthy','attention','degraded'].includes(value)?value:'degraded')
+    }
+    const refresh=()=>{
+      authRequest('/admin/system-health')
+        .then(value=>applyStatus(value?.status))
+        .catch(()=>applyStatus('degraded'))
+    }
+    const onHealth=event=>applyStatus(event?.detail?.status)
+    window.addEventListener('propulse:system-health',onHealth)
+    refresh()
+    const timer=setInterval(refresh,30000)
+    return()=>{active=false;clearInterval(timer);window.removeEventListener('propulse:system-health',onHealth)}
+  },[])
 
   async function logout(){
     await clearSession()
-    localStorage.removeItem('propulse_session_mode')
     navigate('/login',{replace:true})
   }
 
@@ -153,7 +185,8 @@ export default function AdminLayout(){
         </div>
 
         <div className="admin-topbar-right">
-          <div className="admin-top-status"><i/> System healthy</div>
+          <NotificationBell/>
+          <Link to="/admin/system-health" className={"admin-top-status "+systemStatus}><i/> {systemStatus==="healthy"?"System healthy":systemStatus==="attention"?"System attention":systemStatus==="checking"?"Checking system":"System degraded"}</Link>
           <div className="admin-top-user">
             <span>{initials||'A'}</span>
             <div><b>{user?.name||'Admin'}</b><small>Administrator</small></div>

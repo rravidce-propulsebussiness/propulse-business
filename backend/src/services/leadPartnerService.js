@@ -1,6 +1,9 @@
+const criticalActionAudit=require('./criticalActionAuditService');
+const notificationService=require('./notificationService');
 const pool = require('../config/database');
 const leadService = require('./leadService');
 const pincodeService = require('./pincodeService');
+const leadQualityService = require('./leadQualityService');
 
 const PARTNER_STATUSES = ['pending', 'active', 'suspended', 'rejected'];
 
@@ -49,17 +52,10 @@ async function createLead({ userId, ...data }) {
     ...data,
     source: data.source || 'lead_partner',
     createdBy: Number(userId),
+    leadPartnerId: partner.id,
+    qualityGateContext: 'lead_partner',
   });
-  try {
-    await pool.query(
-      `UPDATE leads SET lead_partner_id=$1, updated_at=CURRENT_TIMESTAMP WHERE id=$2`,
-      [partner.id, created.id]
-    );
-  } catch (error) {
-    console.error('Lead Partner lead linkage failed:', error.message);
-    throw error;
-  }
-  return { ...created, lead_partner_id: partner.id };
+  return created;
 }
 
 async function getMyLeads(userId, { status, page = 1, limit = 50 } = {}) {
@@ -93,52 +89,10 @@ async function getMyLeads(userId, { status, page = 1, limit = 50 } = {}) {
 }
 
 async function getQualityMetrics(partnerId, client = pool) {
-  const id = Number(partnerId);
-  if (!Number.isInteger(id) || id <= 0) throw new Error('Invalid Lead Partner ID');
-  const result = await client.query(
-    `WITH partner_leads AS (
-       SELECT id FROM leads WHERE lead_partner_id=$1
-     ),
-     purchased AS (
-       SELECT DISTINCT lp.lead_id
-       FROM lead_purchases lp
-       JOIN partner_leads pl ON pl.id=lp.lead_id
-       WHERE lp.status IN ('paid','refunded')
-     ),
-     fake AS (
-       SELECT DISTINCT r.lead_id
-       FROM lead_reports r
-       JOIN partner_leads pl ON pl.id=r.lead_id
-       WHERE r.status='verified_fake'
-     ),
-     genuine AS (
-       SELECT DISTINCT r.id
-       FROM lead_reports r
-       JOIN partner_leads pl ON pl.id=r.lead_id
-       WHERE r.status='verified_genuine'
-     )
-     SELECT
-       (SELECT COUNT(*) FROM partner_leads)::int AS total_leads,
-       (SELECT COUNT(*) FROM purchased)::int AS purchased_leads,
-       (SELECT COUNT(*) FROM fake)::int AS verified_fake_leads,
-       (SELECT COUNT(*) FROM genuine)::int AS verified_genuine_reports,
-       CASE WHEN (SELECT COUNT(*) FROM purchased)=0 THEN 0
-            ELSE ROUND((SELECT COUNT(*) FROM fake)::numeric * 100.0 / (SELECT COUNT(*) FROM purchased), 2)
-       END AS verified_fake_rate_pct`,
-    [id]
-  );
-  const row = result.rows[0] || {};
-  return {
-    totalLeads: Number(row.total_leads || 0),
-    purchasedLeads: Number(row.purchased_leads || 0),
-    verifiedFakeLeads: Number(row.verified_fake_leads || 0),
-    verifiedGenuineReports: Number(row.verified_genuine_reports || 0),
-    verifiedFakeRatePct: Number(row.verified_fake_rate_pct || 0),
-    fakeRateDefinition: 'Verified fake partner leads divided by distinct partner leads with at least one completed purchase, including purchases later refunded after an Admin-verified fake decision.',
-  };
+  return leadQualityService.getPartnerQuality(partnerId, client);
 }
 
-async function updateStatus(partnerId, status) {
+async function updateStatus(partnerId, status, adminUserId=null) {
   const id = Number(partnerId);
   const nextStatus = String(status || '').trim().toLowerCase();
   if (!Number.isInteger(id) || id <= 0 || !PARTNER_STATUSES.includes(nextStatus)) {
@@ -146,16 +100,24 @@ async function updateStatus(partnerId, status) {
     error.code = 'INVALID_PARTNER_STATUS';
     throw error;
   }
-  const row = (await pool.query(
-    `UPDATE lead_partners SET status=$1,updated_at=CURRENT_TIMESTAMP WHERE id=$2 RETURNING *`,
-    [nextStatus, id]
-  )).rows[0];
-  if (!row) {
-    const error = new Error('Lead Partner not found');
-    error.code = 'PARTNER_NOT_FOUND';
-    throw error;
-  }
-  return row;
+  const client=await pool.connect();
+  try{
+    await client.query('BEGIN');
+    const before=(await client.query('SELECT * FROM lead_partners WHERE id=$1 FOR UPDATE',[id])).rows[0];
+    if(!before){const error=new Error('Lead Partner not found');error.code='PARTNER_NOT_FOUND';throw error}
+    const row=(await client.query(`UPDATE lead_partners SET status=$1,updated_at=CURRENT_TIMESTAMP WHERE id=$2 RETURNING *`,[nextStatus,id])).rows[0];
+    await criticalActionAudit.record(client,{actorId:adminUserId,category:'account',action:'partner.status_change',entityType:'lead_partner',entityId:id,beforeData:{status:before.status,userId:before.user_id},afterData:{status:row.status,userId:row.user_id},source:'lead_partner_service'});
+    await notificationService.notifyUser({
+      userId:row.user_id,type:'lead_partner_status_changed',category:'system',
+      severity:row.status==='active'?'success':row.status==='rejected'||row.status==='suspended'?'warning':'info',
+      title:row.status==='active'?'Lead Partner account approved':'Lead Partner status updated',
+      message:`Your Lead Partner account status is now ${String(row.status).replace(/_/g,' ')}.`,
+      actionUrl:'/lead-partner/dashboard',relatedType:'lead_partner',relatedId:id,
+      dedupeKey:`lead-partner-status:${id}:${row.status}:${new Date(row.updated_at||Date.now()).toISOString()}`,
+      metadata:{status:row.status}
+    },client);
+    await client.query('COMMIT');return row;
+  }catch(error){await client.query('ROLLBACK');throw error}finally{client.release()}
 }
 
 async function getAdminPartners({ status, search = '', page = 1, limit = 50 } = {}) {
@@ -299,7 +261,10 @@ async function getAdminPartners({ status, search = '', page = 1, limit = 50 } = 
     [...values, pageSize, offset]
   )).rows;
 
+  const qualityByPartner=await leadQualityService.getPartnerQualityBatch(rows.map(row=>Number(row.id)),pool);
+
   const partners = rows.map(row => ({
+
     ...row,
     total_leads: Number(row.total_leads || 0),
     active_leads: Number(row.active_leads || 0),
@@ -318,7 +283,12 @@ async function getAdminPartners({ status, search = '', page = 1, limit = 50 } = 
     transferred_amount: Number(row.transferred_amount || 0),
     pending_payout_count: Number(row.pending_payout_count || 0),
     recovery_outstanding: Number(row.recovery_outstanding || 0),
-    quality_metric_definition: 'Verified fake partner leads divided by distinct partner leads with at least one completed purchase, including purchases later refunded after an Admin-verified fake decision.',
+    quality_score: qualityByPartner.get(Number(row.id))?.score ?? null,
+    quality_band: qualityByPartner.get(Number(row.id))?.band || 'no_data',
+    quality_confidence: qualityByPartner.get(Number(row.id))?.confidence || 'none',
+    quality_breakdown: qualityByPartner.get(Number(row.id))?.breakdown || null,
+    quality_top_issues: qualityByPartner.get(Number(row.id))?.topIssues || [],
+    quality_metric_definition: 'Average per-lead score: completeness 45, validity 25, uniqueness 15 and verified buyer outcome 15.',
   }));
 
   const totals = partners.reduce((acc,row) => {
@@ -402,6 +372,7 @@ async function getDashboard(userId, period='month') {
           WHEN EXISTS (SELECT 1 FROM lead_purchases p WHERE p.lead_id=l.id AND p.status='paid') THEN 'sold'
           WHEN l.status='closed' THEN 'closed'
           WHEN l.status='paused' THEN 'paused'
+          WHEN l.status='quarantined' THEN 'quarantined'
           ELSE 'available'
         END AS status
       FROM leads l
@@ -437,6 +408,7 @@ async function getDashboard(userId, period='month') {
         fake:Number(leadStatus.fake||0),
         closed:Number(leadStatus.closed||0),
         paused:Number(leadStatus.paused||0),
+        quarantined:Number(leadStatus.quarantined||0),
       },
     },
     quality,

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { apiRequest } from '../../utils/api'
+import { apiRequest, openApiBlob } from '../../utils/api'
 import { clearSession, getToken } from '../../utils/auth'
 import { useNavigate } from 'react-router-dom'
 import './AdminPayments.css'
@@ -202,6 +202,25 @@ export default function AdminPayments() {
     doc.body.replaceChildren(viewer)
   }
 
+  const openStoredProof = async (kind, id) => {
+    setError('')
+    const basePath = kind === 'topup' ? `/wallet/topups/${id}/proof` : `/payments/${id}/proof`
+    try {
+      await openApiBlob(`${basePath}/file`)
+    } catch (streamError) {
+      try {
+        const data = await request(basePath)
+        if (!data?.proof_url) {
+          setError('No payment proof is available for this record.')
+          return
+        }
+        openProof(data.proof_url)
+      } catch (e) {
+        setError(e.message || streamError.message || 'Unable to load payment proof')
+      }
+    }
+  }
+
   const PaymentCard = ({ payment }) => {
     const open = isApprovalOpen('payment', payment.id)
     return <article className={`payment-approval-card ${open ? 'is-expanded' : ''}`}>
@@ -241,7 +260,7 @@ export default function AdminPayments() {
         <div><span>Reference / UTR</span><strong>{payment.manual_reference || payment.gateway_payment_id || '—'}</strong></div>
         <div><span>Created</span><strong>{dateTime(payment.created_at)}</strong></div>
         {payment.membership_plan_name && <div><span>Membership</span><strong>{payment.membership_status || '—'}</strong><small>{payment.membership_expires_at ? `Expires ${dateOnly(payment.membership_expires_at)}` : 'No membership expiry'}</small></div>}
-        <div className="payment-proof-detail"><span>Payment proof</span>{payment.proof_url ? <button type="button" onClick={() => openProof(payment.proof_url)}>View proof</button> : <strong>—</strong>}</div>
+        <div className="payment-proof-detail"><span>Payment proof</span>{payment.proof_url || payment.has_proof ? <button type="button" onClick={() => payment.proof_url ? openProof(payment.proof_url) : openStoredProof('payment', payment.id)}>View proof</button> : <strong>—</strong>}</div>
       </div>}
     </article>
   }
@@ -284,7 +303,7 @@ export default function AdminPayments() {
         <div><span>Reference / UTR</span><strong>{topup.reference || '—'}</strong></div>
         <div><span>Submitted</span><strong>{dateTime(topup.created_at)}</strong></div>
         <div><span>Reviewed by</span><strong>{topup.reviewer_name || '—'}</strong></div>
-        <div className="payment-proof-detail"><span>Payment proof</span>{topup.proof_url ? <button type="button" onClick={() => openProof(topup.proof_url)}>View proof</button> : <strong>—</strong>}</div>
+        <div className="payment-proof-detail"><span>Payment proof</span>{topup.proof_url || topup.has_proof ? <button type="button" onClick={() => topup.proof_url ? openProof(topup.proof_url) : openStoredProof('topup', topup.id)}>View proof</button> : <strong>—</strong>}</div>
       </div>}
     </article>
   }

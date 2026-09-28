@@ -153,3 +153,20 @@ backend/uploads/service-pricing/*
 # Runtime-uploaded company proof documents
 backend/uploads/company-proofs/*
 !backend/uploads/company-proofs/.gitkeep
+
+# Browser E2E artifacts
+playwright-report/
+test-results/
+
+# Generated backup artifacts (database dumps, manifests, upload snapshots)
+/backups/
+backend/backups/
+
+# Runtime-uploaded private payment / payout proofs
+backend/uploads/private-proofs/*
+!backend/uploads/private-proofs/.gitkeep
+
+# Real deployment environment files must stay outside version control.
+deploy/env/*.env
+deploy/env/*.secret
+deploy/env/*.local

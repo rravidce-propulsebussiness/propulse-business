@@ -64,21 +64,20 @@ export default function InvestmentCycleControls() {
         const sales = Array.isArray(statement?.sales_detail) ? statement.sales_detail : []
         const investments = Array.isArray(history?.investments) ? history.investments : []
 
-        const spendGroups = await Promise.all(investments.map(async inv => {
-          try {
-            const result = await apiRequest(`/investments/admin/${inv.id}/ad-spend`)
-            return { id: Number(inv.id), spends: Array.isArray(result?.spends) ? result.spends : [] }
-          } catch {
-            return { id: Number(inv.id), spends: [] }
-          }
-        }))
-        const spendMap = new Map(spendGroups.map(item => [item.id, item.spends]))
+        const adSpends = Array.isArray(history?.ad_spends) ? history.ad_spends : []
+        const spendsByInvestment = new Map()
+        adSpends.forEach(spend => {
+          const id = Number(spend.investment_id)
+          const group = spendsByInvestment.get(id) || []
+          group.push(spend)
+          spendsByInvestment.set(id, group)
+        })
 
         const events = []
         investments.forEach(inv => {
           events.push({ type: 'investment', label: `Investment #${inv.id} added`, amount: Number(inv.amount || 0), date: inv.created_at })
-          const spends = spendMap.get(Number(inv.id)) || []
-          spends.forEach(spend => events.push({ type: 'ad', label: `Ads spent · Investment #${inv.id}`, amount: -Math.abs(Number(spend.amount || 0)), date: spend.created_at || spend.spend_date }))
+          const spends = spendsByInvestment.get(Number(inv.id)) || []
+          spends.forEach(spend => events.push({ type: 'ad', label: `Ads spent · Investment #${inv.id}`, amount: -Math.abs(Number(spend.amount || 0)), date: spend.occurred_at || spend.created_at || spend.spend_date }))
         })
         sales.forEach(sale => events.push({ type: 'revenue', label: `Lead #${sale.lead_id} sold · ${Number(sale.shares || 1)} ${Number(sale.shares || 1) === 1 ? 'single share' : 'shared shares'}`, amount: Number(sale.investor_earnings || 0), gross: Number(sale.amount || 0), date: sale.sold_at }))
         events.sort((a, b) => new Date(a.date || 0) - new Date(b.date || 0))
@@ -135,9 +134,9 @@ export default function InvestmentCycleControls() {
       try {
         const userId = await investorIdForModal(modal)
         if (!userId || stopped || !modal.isConnected) return
-        const result = await apiRequest('/investments/admin/cycles')
+        const result = await apiRequest(`/investments/admin/investor/${userId}/cycles?page=1&limit=50`)
         const all = Array.isArray(result) ? result : (Array.isArray(result?.cycles) ? result.cycles : [])
-        const cycles = all.filter(cycle => Number(cycle.user_id) === Number(userId)).sort((a, b) => {
+        const cycles = all.sort((a, b) => {
           const aOpen = OPEN.includes(String(a.status || '').toUpperCase())
           const bOpen = OPEN.includes(String(b.status || '').toUpperCase())
           return Number(bOpen) - Number(aOpen) || Number(b.id || 0) - Number(a.id || 0)

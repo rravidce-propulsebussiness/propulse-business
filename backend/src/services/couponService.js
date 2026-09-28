@@ -174,8 +174,8 @@ async function createCoupon(input,adminId){
       benefit.rewardValueType,benefit.rewardValue,benefit.bonusLeadType,
       benefit.bonusLeadQuantity,benefit.bonusValidDays,input.is_public_offer===true
     ])).rows[0];
-    for(const userId of userIds)await client.query('INSERT INTO coupon_users(coupon_id,user_id) VALUES($1,$2) ON CONFLICT DO NOTHING',[row.id,userId]);
-    for(const industryId of industryIds)await client.query('INSERT INTO coupon_industries(coupon_id,industry_id) VALUES($1,$2) ON CONFLICT DO NOTHING',[row.id,industryId]);
+    if(userIds.length)await client.query('INSERT INTO coupon_users(coupon_id,user_id) SELECT $1,x FROM UNNEST($2::int[]) AS x ON CONFLICT DO NOTHING',[row.id,userIds]);
+    if(industryIds.length)await client.query('INSERT INTO coupon_industries(coupon_id,industry_id) SELECT $1,x FROM UNNEST($2::int[]) AS x ON CONFLICT DO NOTHING',[row.id,industryIds]);
     await client.query('COMMIT');
     return getAdminCoupon(row.id);
   }catch(e){
@@ -232,11 +232,11 @@ async function updateCoupon(id,input){
     ]);
     if(input.user_ids!==undefined){
       await client.query('DELETE FROM coupon_users WHERE coupon_id=$1',[id]);
-      for(const userId of userIds)await client.query('INSERT INTO coupon_users(coupon_id,user_id) VALUES($1,$2) ON CONFLICT DO NOTHING',[id,userId]);
+      if(userIds.length)await client.query('INSERT INTO coupon_users(coupon_id,user_id) SELECT $1,x FROM UNNEST($2::int[]) AS x ON CONFLICT DO NOTHING',[id,userIds]);
     }
     if(input.industry_ids!==undefined){
       await client.query('DELETE FROM coupon_industries WHERE coupon_id=$1',[id]);
-      for(const industryId of industryIds)await client.query('INSERT INTO coupon_industries(coupon_id,industry_id) VALUES($1,$2) ON CONFLICT DO NOTHING',[id,industryId]);
+      if(industryIds.length)await client.query('INSERT INTO coupon_industries(coupon_id,industry_id) SELECT $1,x FROM UNNEST($2::int[]) AS x ON CONFLICT DO NOTHING',[id,industryIds]);
     }
     await client.query('COMMIT');
     return getAdminCoupon(id);
@@ -344,15 +344,45 @@ async function validateForUser({client=pool,userId,code,subtotal,purchaseType,in
 
 async function getPublicOffersForUser({userId,purchaseType,subtotal=null,membershipPlanId=null,industryId=null}){
   if(!['membership','lead','wallet_topup'].includes(purchaseType))return[];
+  const normalizedIndustryId=industryId==null||industryId===''?null:Number(industryId);
   const rows=(await pool.query(`
-    SELECT *
-    FROM coupons
-    WHERE is_public_offer=TRUE
-      AND is_active=TRUE
-      AND (starts_at IS NULL OR starts_at<=CURRENT_TIMESTAMP)
-      AND (expires_at IS NULL OR expires_at>CURRENT_TIMESTAMP)
-    ORDER BY COALESCE(min_order_amount,0) ASC,created_at DESC,id DESC
-  `)).rows;
+    SELECT c.*
+    FROM coupons c
+    WHERE c.is_public_offer=TRUE
+      AND c.is_active=TRUE
+      AND (c.starts_at IS NULL OR c.starts_at<=CURRENT_TIMESTAMP)
+      AND (c.expires_at IS NULL OR c.expires_at>CURRENT_TIMESTAMP)
+      AND (
+        NOT EXISTS(SELECT 1 FROM coupon_users cu WHERE cu.coupon_id=c.id)
+        OR EXISTS(SELECT 1 FROM coupon_users cu WHERE cu.coupon_id=c.id AND cu.user_id=$1)
+      )
+      AND (
+        NOT EXISTS(SELECT 1 FROM coupon_industries ci WHERE ci.coupon_id=c.id)
+        OR (
+          $2::int IS NOT NULL
+          AND EXISTS(SELECT 1 FROM coupon_industries ci WHERE ci.coupon_id=c.id AND ci.industry_id=$2)
+        )
+        OR (
+          $2::int IS NULL
+          AND EXISTS(
+            SELECT 1
+            FROM coupon_industries ci
+            JOIN business_profiles bp ON bp.user_id=$1
+            JOIN business_profile_services bps ON bps.business_profile_id=bp.id AND bps.is_active=TRUE
+            WHERE ci.coupon_id=c.id AND ci.industry_id=bps.industry_id
+          )
+        )
+      )
+      AND (
+        c.usage_limit IS NULL
+        OR (SELECT COUNT(*) FROM coupon_redemptions cr WHERE cr.coupon_id=c.id AND cr.status IN ('reserved','redeemed')) < c.usage_limit
+      )
+      AND (
+        c.per_user_limit IS NULL
+        OR (SELECT COUNT(*) FROM coupon_redemptions cr WHERE cr.coupon_id=c.id AND cr.user_id=$1 AND cr.status IN ('reserved','redeemed')) < c.per_user_limit
+      )
+    ORDER BY COALESCE(c.min_order_amount,0) ASC,c.created_at DESC,c.id DESC
+  `,[userId,Number.isInteger(normalizedIndustryId)&&normalizedIndustryId>0?normalizedIndustryId:null])).rows;
   const amount=subtotal==null?null:Number(subtotal);
   const offers=[];
   for(const coupon of rows){
@@ -360,8 +390,6 @@ async function getPublicOffersForUser({userId,purchaseType,subtotal=null,members
     if(!purchaseTypes.includes(purchaseType))continue;
     const planIds=jsonArray(coupon.membership_plan_ids).map(Number);
     if(membershipPlanId&&planIds.length&&!planIds.includes(Number(membershipPlanId)))continue;
-    if(!(await audienceEligible(pool,coupon,userId,{industryId})))continue;
-    if(!(await usageEligible(pool,coupon,userId)))continue;
     const previewBase=amount!=null&&Number.isFinite(amount)?amount:Number(coupon.min_order_amount||0);
     offers.push({
       id:coupon.id,

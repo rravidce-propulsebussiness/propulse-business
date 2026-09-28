@@ -1,4 +1,6 @@
-const pool=require('../config/database');const payoutAccounts=require('./leadPartnerPayoutAccountService');
+const criticalActionAudit=require('./criticalActionAuditService');
+const notificationService=require('./notificationService');
+const pool=require('../config/database');const payoutAccounts=require('./leadPartnerPayoutAccountService');const privateProofStorage=require('./privateProofStorageService');
 const money=v=>Number(Number(v||0).toFixed(2));
 const MAX_PROOF_BYTES=6*1024*1024;
 const err=(m,c)=>Object.assign(new Error(m),{code:c});
@@ -56,49 +58,117 @@ async function requestWithdrawal({userId,amount:raw,notes}){
   }catch(e){await client.query('ROLLBACK');throw e}finally{client.release()}
 }
 
-async function adminList({status='all',search=''}={}){
-  const v=[],w=[];
-  if(status!=='all'){v.push(String(status));w.push(`r.status=$${v.length}`)}
-  if(String(search).trim()){
-    v.push(`%${String(search).trim()}%`);
-    w.push(`(u.name ILIKE $${v.length} OR u.email ILIKE $${v.length} OR CAST(r.id AS TEXT) ILIKE $${v.length} OR COALESCE(r.transfer_reference,'') ILIKE $${v.length})`);
+async function adminList({status='all',search='',page=1,limit=50}={}){
+  const normalizedStatus=String(status||'all').trim().toLowerCase();
+  if(!['all','pending','paid','rejected'].includes(normalizedStatus))throw err('Invalid payout status filter.','INVALID_STATUS');
+  const searchParams=[],searchWhere=[];
+  const searchValue=String(search||'').trim();
+  if(searchValue){
+    searchParams.push(`%${searchValue}%`);
+    searchWhere.push(`(u.name ILIKE $1 OR u.email ILIKE $1 OR CAST(r.id AS TEXT) ILIKE $1 OR COALESCE(r.transfer_reference,'') ILIKE $1)`);
   }
+  const safeLimit=Math.min(Math.max(Number(limit)||50,1),100);
+  const safePage=Math.max(Number(page)||1,1);
+  const baseFrom=`lead_partner_payout_requests r JOIN users u ON u.id=r.user_id JOIN lead_partners lp ON lp.id=r.partner_id`;
+  const baseWhere=searchWhere.length?`WHERE ${searchWhere.join(' AND ')}`:'';
+
+  const dataParams=[...searchParams];
+  const dataWhere=[...searchWhere];
+  if(normalizedStatus!=='all'){
+    dataParams.push(normalizedStatus);
+    dataWhere.push(`r.status=$${dataParams.length}`);
+  }
+  const scopedWhere=dataWhere.length?`WHERE ${dataWhere.join(' AND ')}`:'';
+  const total=Number((await pool.query(`SELECT COUNT(*)::int total FROM ${baseFrom} ${scopedWhere}`,dataParams)).rows[0]?.total||0);
+  const pages=Math.ceil(total/safeLimit);
+  const pageValue=pages>0?Math.min(safePage,pages):1;
+  const offset=(pageValue-1)*safeLimit;
+
+  const stats=(await pool.query(
+    `SELECT COUNT(*)::int total_count,
+            COUNT(*) FILTER(WHERE r.status='pending')::int pending_count,
+            COUNT(*) FILTER(WHERE r.status='paid')::int paid_count,
+            COUNT(*) FILTER(WHERE r.status='rejected')::int rejected_count,
+            COUNT(*) FILTER(WHERE COALESCE(r.request_source,'partner')='admin')::int direct_count,
+            COALESCE(SUM(r.amount) FILTER(WHERE r.status='pending'),0)::numeric pending_amount,
+            COALESCE(SUM(r.amount) FILTER(WHERE r.status='paid'),0)::numeric paid_amount
+       FROM ${baseFrom} ${baseWhere}`,searchParams
+  )).rows[0]||{};
+
+  const rowParams=[...dataParams,safeLimit,offset];
   const rows=(await pool.query(
-    `SELECT r.*,u.name user_name,u.email user_email,lp.status partner_status
-     FROM lead_partner_payout_requests r
-     JOIN users u ON u.id=r.user_id
-     JOIN lead_partners lp ON lp.id=r.partner_id
-     ${w.length?'WHERE '+w.join(' AND '):''}
-     ORDER BY CASE WHEN r.status='pending' THEN 0 ELSE 1 END,r.requested_at DESC,r.id DESC`,v
-  )).rows;
-  return rows.map(r=>({...r,id:Number(r.id),partner_id:Number(r.partner_id),user_id:Number(r.user_id),amount:money(r.amount),payout_account_id:r.payout_account_id?Number(r.payout_account_id):null,request_source:r.request_source||'partner'}));
+    `SELECT r.id,r.partner_id,r.user_id,r.payout_account_id,r.payout_method,r.payout_account_snapshot,
+            r.amount,r.status,r.transfer_reference,(COALESCE(BTRIM(r.proof_url),'')<>'') AS has_proof,
+            r.notes,r.rejection_reason,r.requested_at,r.processed_at,r.processed_by,r.paid_at,
+            r.created_at,r.updated_at,r.request_source,
+            u.name user_name,u.email user_email,lp.status partner_status
+       FROM ${baseFrom}
+       ${scopedWhere}
+       ORDER BY CASE WHEN r.status='pending' THEN 0 ELSE 1 END,r.requested_at DESC,r.id DESC
+       LIMIT $${rowParams.length-1} OFFSET $${rowParams.length}`,rowParams
+  )).rows.map(r=>({...r,id:Number(r.id),partner_id:Number(r.partner_id),user_id:Number(r.user_id),amount:money(r.amount),payout_account_id:r.payout_account_id?Number(r.payout_account_id):null,request_source:r.request_source||'partner'}));
+
+  return{
+    items:rows,total,page:pageValue,limit:safeLimit,pages,
+    stats:{
+      total_count:Number(stats.total_count||0),
+      pending_count:Number(stats.pending_count||0),
+      paid_count:Number(stats.paid_count||0),
+      rejected_count:Number(stats.rejected_count||0),
+      direct_count:Number(stats.direct_count||0),
+      pending_amount:money(stats.pending_amount),
+      paid_amount:money(stats.paid_amount)
+    }
+  };
+}
+
+async function adminProof(requestId){
+  const id=Number(requestId);
+  if(!Number.isInteger(id)||id<=0)return null;
+  const row=(await pool.query(`SELECT id,proof_url FROM lead_partner_payout_requests WHERE id=$1`,[id])).rows[0];
+  if(!row)return null;
+  return{id:Number(row.id),proof_url:await privateProofStorage.materializeProof(row.proof_url,{maxBytes:MAX_PROOF_BYTES})};
+}
+async function adminProofDescriptor(requestId){
+  const id=Number(requestId);
+  if(!Number.isInteger(id)||id<=0)return null;
+  const row=(await pool.query(`SELECT id,proof_url FROM lead_partner_payout_requests WHERE id=$1`,[id])).rows[0];
+  if(!row)return null;
+  return privateProofStorage.getProofDescriptor(row.proof_url,{maxBytes:MAX_PROOF_BYTES});
 }
 
 async function markPaid({client,r,adminId,transferReference,proofUrl,notes}){
   const ref=String(transferReference||'').trim();
   if(!ref)throw err('Transfer reference / UTR is required.','TRANSFER_REFERENCE_REQUIRED');
-  const p=proof(proofUrl);
+  const validatedProof=proof(proofUrl);
   if((await client.query(`SELECT id FROM lead_partner_payout_requests WHERE transfer_reference=$1 AND id<>$2`,[ref,r.id])).rows[0])throw err('This transfer reference has already been used.','DUPLICATE_REFERENCE');
   const allocated=money((await client.query(`SELECT COALESCE(SUM(amount),0) total FROM lead_partner_payout_items WHERE payout_id=$1 AND status='reserved'`,[r.id])).rows[0].total);
   if(allocated!==money(r.amount))throw err('Payout allocation does not match the requested amount.','PAYOUT_ALLOCATION_MISMATCH');
-  const u=(await client.query(
-    `UPDATE lead_partner_payout_requests
-     SET status='paid',transfer_reference=$1,proof_url=$2,notes=COALESCE($3,notes),processed_at=CURRENT_TIMESTAMP,processed_by=$4,paid_at=CURRENT_TIMESTAMP,updated_at=CURRENT_TIMESTAMP
-     WHERE id=$5 RETURNING *`,[ref,p,String(notes||'').trim()||null,Number(adminId),r.id]
-  )).rows[0];
-  await client.query(`UPDATE lead_partner_payout_items SET status='paid',updated_at=CURRENT_TIMESTAMP WHERE payout_id=$1 AND status='reserved'`,[r.id]);
-  await client.query(
-    `UPDATE lead_partner_earnings e
-     SET status=CASE WHEN COALESCE((SELECT SUM(i.amount) FROM lead_partner_payout_items i WHERE i.earning_id=e.id AND i.status='paid'),0)+COALESCE((SELECT SUM(a.amount) FROM lead_partner_earning_adjustment_allocations a WHERE a.earning_id=e.id),0)>=e.earning_amount THEN 'paid' ELSE 'available' END,updated_at=CURRENT_TIMESTAMP
-     WHERE e.id IN (SELECT earning_id FROM lead_partner_payout_items WHERE payout_id=$1)`,[r.id]
-  );
-  return{...u,id:Number(u.id),amount:money(u.amount)};
+  const storedProof=await privateProofStorage.storeDataUrl(validatedProof,{category:'lead-partner-payouts',maxBytes:MAX_PROOF_BYTES});
+  try{
+    const u=(await client.query(
+      `UPDATE lead_partner_payout_requests
+       SET status='paid',transfer_reference=$1,proof_url=$2,notes=COALESCE($3,notes),processed_at=CURRENT_TIMESTAMP,processed_by=$4,paid_at=CURRENT_TIMESTAMP,updated_at=CURRENT_TIMESTAMP
+       WHERE id=$5 RETURNING *`,[ref,storedProof,String(notes||'').trim()||null,Number(adminId),r.id]
+    )).rows[0];
+    await client.query(`UPDATE lead_partner_payout_items SET status='paid',updated_at=CURRENT_TIMESTAMP WHERE payout_id=$1 AND status='reserved'`,[r.id]);
+    await client.query(
+      `UPDATE lead_partner_earnings e
+       SET status=CASE WHEN COALESCE((SELECT SUM(i.amount) FROM lead_partner_payout_items i WHERE i.earning_id=e.id AND i.status='paid'),0)+COALESCE((SELECT SUM(a.amount) FROM lead_partner_earning_adjustment_allocations a WHERE a.earning_id=e.id),0)>=e.earning_amount THEN 'paid' ELSE 'available' END,updated_at=CURRENT_TIMESTAMP
+       WHERE e.id IN (SELECT earning_id FROM lead_partner_payout_items WHERE payout_id=$1)`,[r.id]
+    );
+    return{payout:{...u,id:Number(u.id),amount:money(u.amount)},storedProof};
+  }catch(error){
+    await privateProofStorage.removeStoredProof(storedProof).catch(cleanupError=>console.error('Lead Partner payout proof cleanup failed:',cleanupError.message));
+    throw error;
+  }
 }
 
 async function adminProcess({requestId,adminId,action,transferReference,proofUrl,rejectionReason,notes}){
   const a=String(action||'').trim().toLowerCase();
   if(!['paid','reject'].includes(a))throw err('Invalid payout action.','INVALID_ACTION');
   const c=await pool.connect();
+  let storedProof=null;
   try{
     await c.query('BEGIN');
     const r=(await c.query('SELECT * FROM lead_partner_payout_requests WHERE id=$1 FOR UPDATE',[Number(requestId)])).rows[0];
@@ -113,14 +183,20 @@ async function adminProcess({requestId,adminId,action,transferReference,proofUrl
         [rejection,String(notes||'').trim()||null,Number(adminId),Number(requestId)]
       )).rows[0];
       await c.query(`UPDATE lead_partner_payout_items SET status='released',updated_at=CURRENT_TIMESTAMP WHERE payout_id=$1 AND status='reserved'`,[r.id]);
+      await criticalActionAudit.record(c,{actorId:adminId,category:'payout',action:'payout.lead_partner_process',entityType:'lead_partner_payout',entityId:r.id,beforeData:{status:r.status,amount:money(r.amount),partnerId:r.partner_id},afterData:{status:u.status,amount:money(u.amount),partnerId:u.partner_id},reason:rejection,metadata:{action:'reject'},source:'lead_partner_payout_service'});
+      await notificationService.notifyUser({userId:r.user_id,type:'payout_rejected',category:'payout',severity:'warning',title:'Withdrawal not approved',message:`Your withdrawal request of ₹${money(r.amount).toLocaleString('en-IN')} was not approved. Reason: ${rejection}`,actionUrl:'/lead-partner/withdrawals',relatedType:'lead_partner_payout',relatedId:r.id,dedupeKey:`lead-partner-payout:${r.id}:rejected`,metadata:{amount:money(r.amount),status:'rejected'}},c);
       await c.query('COMMIT');
       return{...u,id:Number(u.id),amount:money(u.amount)};
     }
-    const u=await markPaid({client:c,r,adminId,transferReference,proofUrl,notes});
+    const paid=await markPaid({client:c,r,adminId,transferReference,proofUrl,notes});
+    storedProof=paid.storedProof;
+    await criticalActionAudit.record(c,{actorId:adminId,category:'payout',action:'payout.lead_partner_process',entityType:'lead_partner_payout',entityId:r.id,beforeData:{status:r.status,amount:money(r.amount),partnerId:r.partner_id},afterData:{status:paid.payout.status,amount:paid.payout.amount,partnerId:r.partner_id},reason:notes,metadata:{action:'paid'},source:'lead_partner_payout_service'});
+    await notificationService.notifyUser({userId:r.user_id,type:'payout_paid',category:'payout',severity:'success',title:'Withdrawal paid',message:`Your withdrawal of ₹${money(r.amount).toLocaleString('en-IN')} has been processed.`,actionUrl:'/lead-partner/withdrawals',relatedType:'lead_partner_payout',relatedId:r.id,dedupeKey:`lead-partner-payout:${r.id}:paid`,metadata:{amount:money(r.amount),status:'paid'}},c);
     await c.query('COMMIT');
-    return u;
+    return paid.payout;
   }catch(e){
     await c.query('ROLLBACK');
+    if(storedProof)await privateProofStorage.removeStoredProof(storedProof).catch(cleanupError=>console.error('Lead Partner payout proof cleanup failed:',cleanupError.message));
     if(e?.code==='23505' && e?.constraint==='uq_lp_payout_transfer_reference')throw err('This transfer reference has already been used.','DUPLICATE_REFERENCE');
     throw e;
   }finally{c.release()}
@@ -128,6 +204,7 @@ async function adminProcess({requestId,adminId,action,transferReference,proofUrl
 
 async function adminDirectPayout({partnerId,userId,adminId,amount:raw,transferReference,proofUrl,notes}){
   const c=await pool.connect();
+  let storedProof=null;
   try{
     await c.query('BEGIN');
     let targetUserId=Number(userId)||0;
@@ -141,10 +218,14 @@ async function adminDirectPayout({partnerId,userId,adminId,amount:raw,transferRe
     const payout=await createPayoutRequest({userId:targetUserId,rawAmount:raw,notes,client:c,source:'admin'});
     const r=(await c.query('SELECT * FROM lead_partner_payout_requests WHERE id=$1 FOR UPDATE',[payout.id])).rows[0];
     const paid=await markPaid({client:c,r,adminId,transferReference,proofUrl,notes});
+    storedProof=paid.storedProof;
+    await criticalActionAudit.record(c,{actorId:adminId,category:'payout',action:'payout.lead_partner_direct',entityType:'lead_partner_payout',entityId:r.id,beforeData:null,afterData:{status:paid.payout.status,amount:paid.payout.amount,partnerId:r.partner_id,userId:targetUserId},reason:notes,source:'lead_partner_payout_service'});
+    await notificationService.notifyUser({userId:targetUserId,type:'payout_paid',category:'payout',severity:'success',title:'Partner payout sent',message:`ProPulse processed a payout of ₹${money(r.amount).toLocaleString('en-IN')} to your payout account.`,actionUrl:'/lead-partner/withdrawals',relatedType:'lead_partner_payout',relatedId:r.id,dedupeKey:`lead-partner-payout:${r.id}:paid`,metadata:{amount:money(r.amount),status:'paid'}},c);
     await c.query('COMMIT');
-    return paid;
+    return paid.payout;
   }catch(e){
     await c.query('ROLLBACK');
+    if(storedProof)await privateProofStorage.removeStoredProof(storedProof).catch(cleanupError=>console.error('Lead Partner payout proof cleanup failed:',cleanupError.message));
     if(e?.code==='23505' && e?.constraint==='uq_lp_payout_transfer_reference')throw err('This transfer reference has already been used.','DUPLICATE_REFERENCE');
     throw e;
   }finally{c.release()}
@@ -250,4 +331,4 @@ async function getTransactions(userId){
     transactions:[...chronological].reverse()
   };
 }
-module.exports={getFunds,getTransactions,requestWithdrawal,adminList,adminProcess,adminDirectPayout};
+module.exports={getFunds,getTransactions,requestWithdrawal,adminList,adminProof,adminProofDescriptor,adminProcess,adminDirectPayout};

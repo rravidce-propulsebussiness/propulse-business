@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { authRequest } from '../utils/auth'
+import PaymentMethodSelector from '../components/PaymentMethodSelector'
+import { loadPaymentOptions, runRazorpayCheckout } from '../utils/paymentGateway'
 import './InvestmentWithGeneratedFunds.css'
 
 const money = v => `₹${Number(v || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}`
@@ -17,18 +19,21 @@ export default function InvestmentCycleDashboard() {
   const [showInvest, setShowInvest] = useState(() => new URLSearchParams(window.location.search).get('new') === '1'), [showWithdraw, setShowWithdraw] = useState(false)
   const [amount, setAmount] = useState(''), [withdrawAmount, setWithdrawAmount] = useState(''), [autoInvestChoice, setAutoInvestChoice] = useState(true), [busy, setBusy] = useState(false), [withdrawBusy, setWithdrawBusy] = useState(false)
   const [message, setMessage] = useState(''), [actionError, setActionError] = useState(''), [directPayment, setDirectPayment] = useState(null), [receiving, setReceiving] = useState([]), [paymentReference, setPaymentReference] = useState(''), [paymentProof, setPaymentProof] = useState(null), [paymentBusy, setPaymentBusy] = useState(false)
+  const [paymentOptions,setPaymentOptions]=useState({offlineEnabled:true,onlineEnabled:false,onlineDisplayMode:'coming_soon'}),[paymentMode,setPaymentMode]=useState('offline')
 
   const load = async (initial = false) => {
     if (initial) setLoading(true)
     try {
-      const [cycleResult, investmentResult, rulesResult, accessResult, walletResult, accountResult] = await Promise.all([authRequest('/investments/cycle'), authRequest('/investments'), authRequest('/investments/rules'), authRequest('/investments/access'), authRequest('/wallet'), authRequest('/investor/payout-account')])
+      const [cycleResult, rulesResult, accessResult, walletResult, accountResult, options] = await Promise.all([authRequest('/investments/cycle'), authRequest('/investments/rules'), authRequest('/investments/access'), authRequest('/wallet'), authRequest('/investor/payout-account'), loadPaymentOptions().catch(()=>({offlineEnabled:true,onlineEnabled:false,onlineDisplayMode:'coming_soon'}))])
       const candidate = cycleResult?.cycle || null
       const activeCycle = candidate && OPEN.has(st(candidate.status)) ? candidate : null
-      const fundsResult = activeCycle ? await authRequest(`/investments/funds?cycleId=${Number(activeCycle.id)}`) : null
+      const [investmentResult,fundsResult] = activeCycle
+        ? await Promise.all([authRequest(`/investments?cycleId=${Number(activeCycle.id)}`),authRequest(`/investments/funds?cycleId=${Number(activeCycle.id)}`)])
+        : [[],null]
       const investmentRows = list(investmentResult)
       setCycle(activeCycle)
-      setRows(activeCycle ? investmentRows.filter(r => Number(r?.cycle_id) === Number(activeCycle.id) && INVESTED.has(st(r?.status))) : [])
-      setRules(list(rulesResult)); setAccess(accessResult || null); setWallet(walletResult || null); setFunds(fundsResult || null); setPayoutAccount(accountResult || null)
+      setRows(activeCycle ? investmentRows.filter(r => INVESTED.has(st(r?.status))) : [])
+      setRules(list(rulesResult)); setAccess(accessResult || null); setWallet(walletResult || null); setFunds(fundsResult || null); setPayoutAccount(accountResult || null); setPaymentOptions(options||{}); setPaymentMode(options?.onlineEnabled&&options?.onlineDisplayMode==='live'?'online':options?.offlineEnabled!==false?'offline':'')
       if (activeCycle) setAutoInvestChoice(Boolean(activeCycle.auto_invest))
       setError('')
     } catch (e) { if (initial) setError(e?.message || 'Unable to load the current investment cycle') }
@@ -94,8 +99,21 @@ export default function InvestmentCycleDashboard() {
   }
   const startDirectPayment = async value => {
     setActionError(''); const amountValue = Number(value)
-    try { setBusy(true); const details = list(await authRequest('/payment-receiving-details')); if (!details.length) throw new Error('Direct payment is not configured yet. Please contact Propulse support.'); const draft = await authRequest('/investments/checkout', { method: 'POST', body: JSON.stringify({ amount: amountValue, useWallet: false, reinvestmentEnabled: active ? auto : autoInvestChoice }) }); setReceiving(details); setDirectPayment(draft); setShowInvest(false); setActionError('') }
-    catch (e) { setActionError(e?.message || 'Unable to prepare direct payment.') } finally { setBusy(false) }
+    if(!paymentMode)return setActionError('No external payment method is currently available.')
+    try {
+      setBusy(true)
+      if(paymentMode==='online'){
+        const draft=await authRequest('/investments/checkout',{method:'POST',body:JSON.stringify({amount:amountValue,useWallet:false,reinvestmentEnabled:active?auto:autoInvestChoice})})
+        await runRazorpayCheckout({investmentDraftId:draft?.payment?.id,description:'ProPulse investment'})
+        setShowInvest(false);setAmount('');setMessage(active?'Investment added to your current cycle.':'Investment cycle started successfully.');await load(false);return
+      }
+      const details=list(await authRequest('/payment-receiving-details'))
+      if(!details.length)throw new Error('Direct payment is not configured yet. Please contact Propulse support.')
+      const draft=await authRequest('/investments/checkout',{method:'POST',body:JSON.stringify({amount:amountValue,useWallet:false,reinvestmentEnabled:active?auto:autoInvestChoice})})
+      setReceiving(details);setDirectPayment(draft);setShowInvest(false);setActionError('')
+    } catch (e) {
+      if(e?.code!=='PAYMENT_CANCELLED')setActionError(e?.message||'Unable to prepare payment.')
+    } finally { setBusy(false) }
   }
   const submitPaymentProof = async () => {
     if (!directPayment?.payment?.id) return setActionError('Payment session is unavailable.')
@@ -120,7 +138,7 @@ export default function InvestmentCycleDashboard() {
     <div className="cycle-dashboard-nav"><Link to="/investment/leads">Linked Leads</Link><Link to="/investment/history">History</Link><Link to="/investment/payouts">Withdrawals</Link><Link to="/investment/faq">FAQ</Link></div>
     <div className="cycle-dashboard-note">{active ? <><b>Current Cycle Only</b><span>{auto ? 'Auto-Invest eligible earnings can be used for advertising; bank transfer shows only transferable earnings.' : 'This dashboard shows only this active cycle. Previous cycles remain under History.'}</span></> : <><b>Previous Cycle Closed</b><span>All current-cycle balances are ₹0. Previous investment, advertising, lead sales and withdrawals remain available under History.</span></>}</div>
 
-    {showInvest && <div className="investor-action-overlay" onMouseDown={e => e.target === e.currentTarget && !busy && setShowInvest(false)}><section className="investor-action-modal"><button className="investor-action-close" type="button" disabled={busy} onClick={() => !busy && setShowInvest(false)}>×</button><span className="cycle-kicker">{active ? 'ADD TO CURRENT CYCLE' : 'INVEST'}</span><h2>{active ? 'Add investment' : 'Start your investment'}</h2><p>Choose the amount. Propulse manages targeting and advertising internally.</p>{!active && <div className="investor-mode-toggle"><button type="button" className={autoInvestChoice ? 'selected' : ''} onClick={() => setAutoInvestChoice(true)}><b>Auto-Invest ON</b><small>Earnings can fund future ads.</small></button><button type="button" className={!autoInvestChoice ? 'selected' : ''} onClick={() => setAutoInvestChoice(false)}><b>Auto-Invest OFF</b><small>Earnings become transferable.</small></button></div>}{active && <div className="investor-mode-lock">Current cycle: <b>{auto ? 'Auto-Invest ON' : 'Auto-Invest OFF'}</b></div>}<label>Investment amount<input type="number" min={config?.minimum || 1} max={config?.maximum || undefined} step="0.01" value={amount} onChange={e => setAmount(e.target.value)} placeholder="Enter amount" /></label><div className="investor-wallet-row"><span>Wallet balance</span><b>{money(walletBalance)}</b></div><button type="button" className="dashboard-primary-link investor-modal-primary" disabled={busy || !amount} onClick={submitWalletInvestment}>{busy ? 'Processing…' : walletBalance >= Number(amount || 0) ? 'Invest from Wallet →' : 'Continue to Direct Payment →'}</button></section></div>}
+    {showInvest && <div className="investor-action-overlay" onMouseDown={e => e.target === e.currentTarget && !busy && setShowInvest(false)}><section className="investor-action-modal"><button className="investor-action-close" type="button" disabled={busy} onClick={() => !busy && setShowInvest(false)}>×</button><span className="cycle-kicker">{active ? 'ADD TO CURRENT CYCLE' : 'INVEST'}</span><h2>{active ? 'Add investment' : 'Start your investment'}</h2><p>Choose the amount. Propulse manages targeting and advertising internally.</p>{!active && <div className="investor-mode-toggle"><button type="button" className={autoInvestChoice ? 'selected' : ''} onClick={() => setAutoInvestChoice(true)}><b>Auto-Invest ON</b><small>Earnings can fund future ads.</small></button><button type="button" className={!autoInvestChoice ? 'selected' : ''} onClick={() => setAutoInvestChoice(false)}><b>Auto-Invest OFF</b><small>Earnings become transferable.</small></button></div>}{active && <div className="investor-mode-lock">Current cycle: <b>{auto ? 'Auto-Invest ON' : 'Auto-Invest OFF'}</b></div>}<label>Investment amount<input type="number" min={config?.minimum || 1} max={config?.maximum || undefined} step="0.01" value={amount} onChange={e => setAmount(e.target.value)} placeholder="Enter amount" /></label><div className="investor-wallet-row"><span>Wallet balance</span><b>{money(walletBalance)}</b></div>{walletBalance<Number(amount||0)&&Number(amount||0)>0&&<PaymentMethodSelector options={paymentOptions} value={paymentMode} onChange={setPaymentMode} disabled={busy} compact/>}<button type="button" className="dashboard-primary-link investor-modal-primary" disabled={busy || !amount || (walletBalance<Number(amount||0)&&!paymentMode)} onClick={submitWalletInvestment}>{busy ? 'Processing…' : walletBalance >= Number(amount || 0) ? 'Invest from Wallet →' : paymentMode==='online' ? 'Pay Online & Invest →' : 'Continue to Direct Payment →'}</button></section></div>}
 
     {directPayment && <div className="investor-action-overlay"><section className="investor-action-modal"><button className="investor-action-close" type="button" disabled={paymentBusy} onClick={() => !paymentBusy && setDirectPayment(null)}>×</button><span className="cycle-kicker">DIRECT PAYMENT</span><h2>Complete your investment payment</h2><p>Transfer the investment amount to a Propulse receiving account below, then submit the reference and proof. Admin will verify it manually.</p><div className="receiving-list">{receiving.map((item, index) => <div className="receiving-card" key={item.id || index}><b>{item.bank_name || item.account_name || 'Propulse Account'}</b><span>{item.account_number || item.upi_id || item.account_no || ''}</span><small>{item.ifsc_code || item.branch_name || item.note || ''}</small></div>)}</div><div className="investor-payment-amount">Investment amount <b>{money(directPayment?.payment?.amount ?? directPayment?.payment?.external_amount ?? directPayment?.investment?.amount)}</b></div><label>Payment reference / UTR<input type="text" value={paymentReference} onChange={e => setPaymentReference(e.target.value)} /></label><label>Payment screenshot / PDF<input type="file" accept="image/*,.pdf" onChange={e => setPaymentProof(e.target.files?.[0] || null)} /></label><button type="button" className="dashboard-primary-link investor-modal-primary" disabled={paymentBusy} onClick={submitPaymentProof}>{paymentBusy ? 'Submitting…' : 'Submit Payment for Verification →'}</button></section></div>}
 

@@ -1,5 +1,13 @@
+import fs from 'node:fs'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 import assert from 'node:assert/strict'
 import { buildWalletHistory, transactionTitle } from '../src/utils/walletHistory.js'
+
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
+const walletPage = fs.readFileSync(path.join(root, 'src/pages/Wallet.jsx'), 'utf8')
+const leadsPage = fs.readFileSync(path.join(root, 'src/pages/LeadsV2.jsx'), 'utf8')
+const adminUsers = fs.readFileSync(path.join(root, 'src/admin/pages/AdminUsers.jsx'), 'utf8')
 
 const history={
   combined:[
@@ -30,4 +38,10 @@ assert.equal(transactionTitle(rejected379[0]),'Lead payment rejected · Lead #37
 assert(!views.all.some(row=>row.displayTitle==='we xan dicuss'),'Free-text lead requirements must never become transaction titles')
 assert.equal(transactionTitle(views.all.find(row=>row.id==='wallet-refund')),'Membership refund')
 
-console.log('Wallet history paid-purchase, attempt-collapse and balance regression test passed.')
+assert(walletPage.includes("authRequest('/wallet?summary=1')"), 'Wallet page must not fetch unused wallet transaction rows for the balance card')
+assert(walletPage.includes("authRequest('/wallet/topups/history?summary=1')"), 'Wallet page must fetch only the top-up summary for pending request count')
+assert(leadsPage.includes("authRequest('/wallet?summary=1')"), 'Lead marketplace must fetch only wallet balance data')
+assert(adminUsers.includes("loadMoreWallet('recharges')") && adminUsers.includes("loadMoreWallet('transactions')"), 'Customer 360 must load older wallet history on demand')
+assert(!adminUsers.includes("(wallet360?.transactions||[]).slice(0,100)"), 'Customer 360 must not fetch a larger ledger and silently hide rows client-side')
+
+console.log('Wallet history paid-purchase, attempt-collapse, balance and summary-efficiency regression test passed.')

@@ -1,13 +1,14 @@
-const fs = require('fs');
-const path = require('path');
 const authService = require('../services/authService');
 const { sendPasswordResetEmail } = require('../services/emailService');
+const companyProofStorage = require('../services/companyProofStorageService');
+const { sendProofDescriptor } = require('../utils/proofResponse');
 
 const AUTH_COOKIE = 'propulse_auth';
 const AUTH_COOKIE_MAX_AGE = 7 * 24 * 60 * 60 * 1000;
 
-function setAuthCookie(res, token) {
-  const parts = [`${AUTH_COOKIE}=${encodeURIComponent(token)}`, 'HttpOnly', 'Path=/', 'SameSite=Lax', `Max-Age=${Math.floor(AUTH_COOKIE_MAX_AGE / 1000)}`];
+function setAuthCookie(res, token, { remember = true } = {}) {
+  const parts = [`${AUTH_COOKIE}=${encodeURIComponent(token)}`, 'HttpOnly', 'Path=/', 'SameSite=Lax'];
+  if (remember) parts.push(`Max-Age=${Math.floor(AUTH_COOKIE_MAX_AGE / 1000)}`);
   if (process.env.NODE_ENV === 'production') parts.push('Secure');
   res.setHeader('Set-Cookie', parts.join('; '));
 }
@@ -18,14 +19,17 @@ function clearAuthCookie(res) {
   res.setHeader('Set-Cookie', parts.join('; '));
 }
 
-function publicAuthResult(res, result, status = 200) {
-  setAuthCookie(res, result.token);
+function publicAuthResult(res, result, status = 200, { remember = true } = {}) {
+  setAuthCookie(res, result.token, { remember });
   const { token, ...safeResult } = result;
   return res.status(status).json(safeResult);
 }
 
 function validatePassword(password) {
-  return typeof password === 'string' && /^(?=.*[A-Za-z])(?=.*\d).{8,}$/.test(password);
+  if (typeof password !== 'string') return false;
+  if (password.length < 8 || password.length > 64) return false;
+  if (Buffer.byteLength(password, 'utf8') > 72) return false;
+  return /[A-Za-z]/.test(password) && /\d/.test(password);
 }
 
 const PUBLIC_SIGNUP_ROLES = new Set(['business', 'lead_partner']);
@@ -49,7 +53,7 @@ async function signup(req, res) {
       return res.status(400).json({ error: 'Choose either User or Lead Partner as your account type' });
     }
     if (!googleCredential && (!name?.trim() || !email?.trim() || !validatePassword(password))) {
-      return res.status(400).json({ error: 'Name, email and a password of at least 8 characters with a letter and number are required' });
+      return res.status(400).json({ error: 'Name, email and a password of 8-64 characters with a letter and number are required' });
     }
     if (googleCredential && (!name?.trim() || !email?.trim())) {
       return res.status(400).json({ error: 'Google registration requires a verified Google account' });
@@ -95,16 +99,9 @@ async function downloadCompanyProof(req, res) {
     });
     if (!document) return res.status(404).json({ error: 'Company proof document not found' });
 
-    const uploadDir = path.resolve(__dirname, '../../uploads/company-proofs');
-    const filePath = path.resolve(uploadDir, path.basename(document.stored_name));
-    if (!filePath.startsWith(path.resolve(uploadDir) + path.sep) || !fs.existsSync(filePath)) {
-      return res.status(404).json({ error: 'Company proof document not found' });
-    }
-
-    res.setHeader('Content-Type', document.mime_type);
-    const safeName = String(document.original_name || 'company-proof').replace(/["\\\r\n]/g, '_');
-    res.setHeader('Content-Disposition', 'inline; filename="' + safeName + '"');
-    return res.sendFile(filePath);
+    const descriptor=await companyProofStorage.descriptor(document.stored_name,{mimeType:document.mime_type,size:document.file_size});
+    if(!descriptor)return res.status(404).json({error:'Company proof document not found'});
+    return sendProofDescriptor(res,descriptor);
   } catch (error) {
     console.error('Company proof download failed:', error.message);
     return res.status(500).json({ error: 'Failed to load company proof document' });
@@ -115,7 +112,7 @@ async function login(req, res) {
   try {
     const { email, password } = req.body;
     if (!email?.trim() || !password) return res.status(400).json({ error: 'Email and password are required' });
-    return publicAuthResult(res, await authService.login({ email, password }));
+    return publicAuthResult(res, await authService.login({ email, password, source:req.ip||req.socket?.remoteAddress||null }), 200, { remember: req.body?.remember !== false });
   } catch (error) {
     if (error.code === 'INVALID_CREDENTIALS') return res.status(401).json({ error: error.message });
     console.error('Login failed:', error.message);
@@ -128,7 +125,7 @@ async function googleLogin(req, res) {
     const { credential } = req.body || {};
     // Google sign-in is an authentication flow, not account creation.
     // The verified Google email determines the existing Propulse account.
-    return publicAuthResult(res, await authService.googleLogin({ idToken: credential }));
+    return publicAuthResult(res, await authService.googleLogin({ idToken: credential }), 200, { remember: req.body?.remember !== false });
   } catch (error) {
     if (['GOOGLE_NOT_CONFIGURED', 'INVALID_GOOGLE_TOKEN', 'INVALID_SIGNUP_ROLE'].includes(error.code)) return res.status(400).json({ error: error.message });
     if (['GOOGLE_TOKEN_TIMEOUT', 'GOOGLE_TOKEN_VERIFICATION_FAILED'].includes(error.code)) return res.status(503).json({ error: 'Google sign-in verification is temporarily unavailable. Please try again.' });
@@ -161,7 +158,7 @@ async function forgotPassword(req, res) {
 async function resetPassword(req, res) {
   try {
     const { token, password } = req.body || {};
-    if (!token || !validatePassword(password)) return res.status(400).json({ error: 'Enter a password of at least 8 characters with a letter and number.' });
+    if (!token || !validatePassword(password)) return res.status(400).json({ error: 'Enter a password of 8-64 characters with a letter and number.' });
     await authService.resetPassword({ token, password });
     return res.json({ message: 'Password updated successfully. You can now sign in.' });
   } catch (error) {
@@ -200,7 +197,7 @@ async function logout(req, res) {
 
 async function me(req, res) {
   try {
-    const user = await authService.getUserById(req.user.id);
+    const user = await authService.getPublicAuthenticatedUser(req.user);
     if (!user) return res.status(401).json({ error: 'Account not found' });
     return res.json(user);
   } catch (error) {
