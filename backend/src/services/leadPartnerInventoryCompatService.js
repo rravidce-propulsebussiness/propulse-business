@@ -91,6 +91,22 @@ function buildCustomFields(raw){
 function normalizedPhone(value){return clean(value).replace(/\D/g,'')}
 function normalizedText(value){return clean(value).toLowerCase()}
 
+async function resolveDefaultIndustry(defaultIndustryId){
+  if(defaultIndustryId===undefined||defaultIndustryId===null||defaultIndustryId==='')return null;
+  const id=Number(defaultIndustryId);
+  if(!Number.isInteger(id)||id<=0)throw Object.assign(new Error('Default Industry must be a valid active Industry'),{code:'INVALID_DEFAULT_INDUSTRY'});
+  const row=(await pool.query('SELECT id,name FROM industries WHERE id=$1 AND is_active=TRUE',[id])).rows[0];
+  if(!row)throw Object.assign(new Error('Default Industry must be a valid active Industry'),{code:'INVALID_DEFAULT_INDUSTRY'});
+  return{id:Number(row.id),name:row.name};
+}
+function applyDefaultIndustry(rows,industry){
+  if(!industry)return rows;
+  return rows.map(row=>{
+    const hasClassification=Boolean(first(row,['Industry','Industry Name','Category'])||first(row,['Service','Service Name'])||first(row,['Subservice','Subservice Name']));
+    return hasClassification?row:{...row,Industry:industry.name};
+  });
+}
+
 async function persistDetails({userId,rows}){
   const normalized=buildCanonicalRows(rows);
   if(!normalized.length)return;
@@ -180,9 +196,10 @@ async function persistDetails({userId,rows}){
   `,[userId,JSON.stringify(payload)]);
 }
 
-async function importCsv({userId,csv}){
+async function importCsv({userId,csv,defaultIndustryId=null}){
   const rows=parseCsv(csv);
-  const prepared=buildCanonicalRows(rows);
+  const defaultIndustry=await resolveDefaultIndustry(defaultIndustryId);
+  const prepared=applyDefaultIndustry(buildCanonicalRows(rows),defaultIndustry);
   const result=await base.importCsv({userId,csv:toCsv(prepared)});
   if(rows.length)await persistDetails({userId,rows});
   return result;
@@ -195,10 +212,11 @@ function toCsv(rows){
   return [keys.map(csvEscape).join(','),...rows.map(r=>keys.map(k=>csvEscape(r[k])).join(','))].join('\n');
 }
 
-async function connectGoogleSheet({userId,url}){
+async function connectGoogleSheet({userId,url,defaultIndustryId=null}){
+  const defaultIndustry=await resolveDefaultIndustry(defaultIndustryId);
   const result=await fetchGoogleSheetCsv(url);
-  const imported=await importCsv({userId,csv:result.csv});
-  const connection=(await pool.query(`INSERT INTO lead_partner_sheet_connections(user_id,spreadsheet_id,gid,source_url,last_synced_at,last_sync_created,last_sync_duplicate,last_sync_failed,last_sync_failures) VALUES($1,$2,$3,$4,CURRENT_TIMESTAMP,$5,$6,$7,$8::jsonb) ON CONFLICT(user_id,spreadsheet_id,gid) DO UPDATE SET source_url=EXCLUDED.source_url,status='active',last_synced_at=EXCLUDED.last_synced_at,last_sync_created=EXCLUDED.last_sync_created,last_sync_duplicate=EXCLUDED.last_sync_duplicate,last_sync_failed=EXCLUDED.last_sync_failed,last_sync_failures=EXCLUDED.last_sync_failures,sync_failure_count=0,last_sync_error_at=NULL,last_sync_error=NULL,next_retry_at=NULL,updated_at=CURRENT_TIMESTAMP RETURNING *`,[userId,result.spreadsheetId,result.gid||'0',url,imported.created,imported.duplicate,imported.failed,JSON.stringify(imported.failures)])).rows[0];
+  const imported=await importCsv({userId,csv:result.csv,defaultIndustryId:defaultIndustry?.id||null});
+  const connection=(await pool.query(`INSERT INTO lead_partner_sheet_connections(user_id,spreadsheet_id,gid,source_url,default_industry_id,last_synced_at,last_sync_created,last_sync_duplicate,last_sync_failed,last_sync_failures) VALUES($1,$2,$3,$4,$5,CURRENT_TIMESTAMP,$6,$7,$8,$9::jsonb) ON CONFLICT(user_id,spreadsheet_id,gid) DO UPDATE SET source_url=EXCLUDED.source_url,default_industry_id=EXCLUDED.default_industry_id,status='active',last_synced_at=EXCLUDED.last_synced_at,last_sync_created=EXCLUDED.last_sync_created,last_sync_duplicate=EXCLUDED.last_sync_duplicate,last_sync_failed=EXCLUDED.last_sync_failed,last_sync_failures=EXCLUDED.last_sync_failures,sync_failure_count=0,last_sync_error_at=NULL,last_sync_error=NULL,next_retry_at=NULL,updated_at=CURRENT_TIMESTAMP RETURNING *`,[userId,result.spreadsheetId,result.gid||'0',url,defaultIndustry?.id||null,imported.created,imported.duplicate,imported.failed,JSON.stringify(imported.failures)])).rows[0];
   return{connection,import:imported};
 }
 
@@ -215,7 +233,7 @@ async function syncGoogleSheet({userId,connectionId}){
     if(!connection){const e=new Error('Active Google Sheet connection not found');e.code='SHEET_CONNECTION_NOT_FOUND';throw e;}
     const result=await fetchGoogleSheetCsv(connection.source_url);
     if(result.spreadsheetId!==connection.spreadsheet_id||String(result.gid||'0')!==String(connection.gid||'0'))throw new Error('Google Sheet URL no longer matches the connected sheet');
-    const imported=await importCsv({userId,csv:result.csv});
+    const imported=await importCsv({userId,csv:result.csv,defaultIndustryId:connection.default_industry_id});
     const saved=(await pool.query(`UPDATE lead_partner_sheet_connections SET last_synced_at=CURRENT_TIMESTAMP,last_sync_created=$1,last_sync_duplicate=$2,last_sync_failed=$3,last_sync_failures=$4::jsonb,sync_failure_count=0,last_sync_error_at=NULL,last_sync_error=NULL,next_retry_at=NULL,updated_at=CURRENT_TIMESTAMP WHERE id=$5 AND user_id=$6 RETURNING *`,[imported.created,imported.duplicate,imported.failed,JSON.stringify(imported.failures),id,userId])).rows[0];
     return{connection:saved,import:imported};
   }finally{
@@ -232,4 +250,23 @@ async function listInventory(args){
   return{...result,data:(result.data||[]).map(row=>({...row,custom_fields:map.get(Number(row.id))||{}}))};
 }
 
-module.exports={...base,importCsv,connectGoogleSheet,syncGoogleSheet,listInventory};
+
+async function getSheetConnections({userId}){
+  const rows=(await pool.query(`SELECT c.id,c.spreadsheet_id,c.gid,c.source_url,c.status,c.default_industry_id,i.name AS default_industry_name,c.last_synced_at,c.last_sync_created,c.last_sync_duplicate,c.last_sync_failed,c.last_sync_failures,c.created_at,c.updated_at
+    FROM lead_partner_sheet_connections c
+    LEFT JOIN industries i ON i.id=c.default_industry_id
+    WHERE c.user_id=$1
+    ORDER BY c.updated_at DESC,c.id DESC`,[userId])).rows;
+  return rows.map(row=>({...row,last_sync_failure_summary:base.summarizeFailures(Array.isArray(row.last_sync_failures)?row.last_sync_failures:[])}));
+}
+async function updateSheetDefaultIndustry({userId,connectionId,defaultIndustryId=null}){
+  const id=Number(connectionId);
+  if(!Number.isInteger(id)||id<=0)throw Object.assign(new Error('Sheet connection not found'),{code:'SHEET_CONNECTION_NOT_FOUND'});
+  const industry=await resolveDefaultIndustry(defaultIndustryId);
+  const row=(await pool.query(`UPDATE lead_partner_sheet_connections SET default_industry_id=$1,updated_at=CURRENT_TIMESTAMP WHERE id=$2 AND user_id=$3 RETURNING *`,[industry?.id||null,id,userId])).rows[0];
+  if(!row)throw Object.assign(new Error('Sheet connection not found'),{code:'SHEET_CONNECTION_NOT_FOUND'});
+  return{...row,default_industry_name:industry?.name||null};
+}
+
+module.exports={...base,importCsv,connectGoogleSheet,syncGoogleSheet,listInventory,getSheetConnections,updateSheetDefaultIndustry};
+

@@ -39,7 +39,7 @@ async function connectGoogleSheet(req, res) {
   try {
     const url = String(req.body?.url || '').trim();
     if (!url) return res.status(400).json({ error: 'Google Sheets URL is required' });
-    const result = await service.connectGoogleSheet({ userId: req.user.id, url });
+    const result = await service.connectGoogleSheet({ userId: req.user.id, url, defaultIndustryId:req.body?.defaultIndustryId });
     return res.status(201).json({ ...result.import, connection: result.connection });
   } catch (error) {
     const status=importStatus(error); if(status===500)console.error('Lead Partner Google Sheet connect failed:', error.message);
@@ -55,6 +55,17 @@ async function syncGoogleSheet(req, res) {
     return sendError(res,status,error,'Failed to sync Google Sheet',{code:error.code});
   }
 }
+async function updateSheetDefaultIndustry(req,res){
+  try{
+    const connection=await service.updateSheetDefaultIndustry({userId:req.user.id,connectionId:Number(req.params.connectionId),defaultIndustryId:req.body?.defaultIndustryId});
+    const synced=await service.syncGoogleSheet({userId:req.user.id,connectionId:Number(req.params.connectionId)});
+    return res.json({...synced.import,connection:{...synced.connection,default_industry_name:connection.default_industry_name}});
+  }catch(error){
+    const status=error.code==='SHEET_CONNECTION_NOT_FOUND'?404:error.code==='INVALID_DEFAULT_INDUSTRY'?400:importStatus(error);
+    if(status===500)console.error('Lead Partner Google Sheet default Industry update failed:',error.message);
+    return sendError(res,status,error,'Failed to update Google Sheet default Industry',{code:error.code});
+  }
+}
 async function disableSheetConnection(req, res) {
   try { return res.json({ connection: await service.disableSheetConnection({ userId: req.user.id, connectionId: Number(req.params.connectionId) }) }); }
   catch (error) {
@@ -62,4 +73,4 @@ async function disableSheetConnection(req, res) {
     return sendError(res,status,error,'Failed to disconnect Google Sheet',{code:error.code});
   }
 }
-module.exports = { inventory, importGoogleSheet, importCsv, sheetConnections, connectGoogleSheet, syncGoogleSheet, disableSheetConnection };
+module.exports = { inventory, importGoogleSheet, importCsv, sheetConnections, connectGoogleSheet, syncGoogleSheet, updateSheetDefaultIndustry, disableSheetConnection };

@@ -8,6 +8,9 @@ const inventory=read('src/services/leadPartnerInventoryService.js');
 const scheduler=read('src/services/leadPartnerSheetSyncScheduler.js');
 const ui=read('../frontend/src/pages/LeadPartnerInventory.jsx');
 const investor=read('../frontend/src/pages/InvestorInvestmentSection.jsx');
+const compat=read('src/services/leadPartnerInventoryCompatService.js');
+const routes=read('src/routes/leadPartnerRoutes.js');
+const migration=read('src/database/migrations/20260928_lead_partner_sheet_default_industry.sql');
 
 assert(inventory.includes("n==='singleonly'"),'Lead Partner Google Sheet import must accept Single Only wording');
 assert(inventory.includes("intriordesignandhomeinteriors")&&inventory.includes("Interior Design & Home Interiors"),'Lead Partner sheet import must normalize the same known Interior Design industry typo as Admin import');
@@ -22,5 +25,10 @@ assert(scheduler.includes('failureSummary='),'Worker logs must include failure c
 assert(scheduler.includes('Google Sheet row failures:'),'Worker logs must include sample row-level failures');
 assert(scheduler.includes('Google Sheet duplicate samples:'),'Worker logs may show duplicates separately without polluting failure diagnostics');
 assert(ui.includes('partner-sheet-failure-summary'),'Lead Partner inventory must show failure categories');
+assert(migration.includes('default_industry_id'),'Lead Partner sheet connections must persist an optional default Industry');
+assert(compat.includes('applyDefaultIndustry')&&compat.includes('hasClassification'),'Default Industry must apply only when the row has no classification fields');
+assert(compat.includes('defaultIndustryId:connection.default_industry_id'),'Recurring sheet sync must reuse the stored default Industry');
+assert(routes.includes("/inventory/sheets/:connectionId/default-industry"),'Lead Partners must be able to update a connected sheet default Industry');
+assert(ui.includes('Default Industry for blank rows'),'Lead Partner UI must expose the per-sheet default Industry explicitly');
 assert(!investor.includes('const isSold ='),'Unused investor isSold helper must remain removed');
 console.log('Lead Partner sheet diagnostics/efficiency regression test passed.');
