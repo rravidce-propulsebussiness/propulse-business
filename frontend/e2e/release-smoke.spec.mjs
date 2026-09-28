@@ -23,7 +23,7 @@ test('protected customer route redirects anonymous users to login',async({page})
 test('business login survives reload and cannot access Admin APIs',async({page})=>{
   await login(page,accounts.business)
   await expect(page).toHaveURL(/\/leads(?:\?|$)/)
-  await expect(page.getByRole('heading',{name:/available leads/i})).toBeVisible()
+  await expect(page.getByRole('heading',{name:'Find the right opportunity for your business.'})).toBeVisible()
 
   await page.reload()
   await expect(page).toHaveURL(/\/leads(?:\?|$)/)
