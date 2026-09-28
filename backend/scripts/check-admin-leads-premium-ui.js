@@ -17,6 +17,7 @@ const entitlementsCss=read('../frontend/src/admin/pages/AdminLeadEntitlements.cs
 assert(leads.includes('<Stat label="Basic"'),'Basic KPI must remain');
 assert(leads.includes('<Stat label="Premium"'),'Premium KPI must remain');
 assert(leads.includes('<Stat label="Exclusive"'),'Exclusive KPI must use compact premium copy');
+assert(leads.includes('<Stat label="Quarantined"'),'Quarantined quality-hold KPI must remain');
 assert(leads.includes('<Stat label="Total"'),'Total KPI must remain');
 
 assert(leads.includes("leadOrigin=l=>l.lead_partner_id?'lead_partner':l.investor_user_id?'investor':'ours'"),'Lead origin logic must remain intact');
@@ -39,7 +40,7 @@ assert(leads.includes('PIN detection')&&leads.includes('Duplicate protection'),'
 
 assert(css.includes('/* Premium Manage Leads workspace */'),'Premium Manage Leads styling must remain');
 assert(css.includes('.v9-leads>.v9-stats'),'Premium KPI styling must remain scoped to Manage Leads');
-assert(css.includes('grid-template-columns:repeat(4,minmax(0,1fr))'),'Desktop Manage Leads must keep four KPI cards');
+assert(css.includes('.v9-leads>.v9-stats{grid-template-columns:repeat(5,minmax(0,1fr))}'),'Desktop Manage Leads must fit the five KPI cards including Quarantined');
 assert(css.includes('position:sticky;')&&css.includes('top:64px;'),'Desktop lead filters must stay sticky below the fixed Admin header');
 assert(css.includes('.v9-leads>.v9-leads-panel>.v9-grid'),'Premium lead grid styling must remain');
 assert(css.includes('grid-template-columns:repeat(auto-fill,minmax(350px,1fr))'),'Lead cards must remain responsive and readable');

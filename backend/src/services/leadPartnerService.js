@@ -50,17 +50,10 @@ async function createLead({ userId, ...data }) {
     ...data,
     source: data.source || 'lead_partner',
     createdBy: Number(userId),
+    leadPartnerId: partner.id,
+    qualityGateContext: 'lead_partner',
   });
-  try {
-    await pool.query(
-      `UPDATE leads SET lead_partner_id=$1, updated_at=CURRENT_TIMESTAMP WHERE id=$2`,
-      [partner.id, created.id]
-    );
-  } catch (error) {
-    console.error('Lead Partner lead linkage failed:', error.message);
-    throw error;
-  }
-  return { ...created, lead_partner_id: partner.id };
+  return created;
 }
 
 async function getMyLeads(userId, { status, page = 1, limit = 50 } = {}) {
@@ -369,6 +362,7 @@ async function getDashboard(userId, period='month') {
           WHEN EXISTS (SELECT 1 FROM lead_purchases p WHERE p.lead_id=l.id AND p.status='paid') THEN 'sold'
           WHEN l.status='closed' THEN 'closed'
           WHEN l.status='paused' THEN 'paused'
+          WHEN l.status='quarantined' THEN 'quarantined'
           ELSE 'available'
         END AS status
       FROM leads l
@@ -404,6 +398,7 @@ async function getDashboard(userId, period='month') {
         fake:Number(leadStatus.fake||0),
         closed:Number(leadStatus.closed||0),
         paused:Number(leadStatus.paused||0),
+        quarantined:Number(leadStatus.quarantined||0),
       },
     },
     quality,

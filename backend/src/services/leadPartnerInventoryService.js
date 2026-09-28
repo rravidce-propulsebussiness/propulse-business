@@ -1,6 +1,7 @@
 const pool = require('../config/database');
 const leadService = require('./leadService');
 const partnerPricing = require('./leadPartnerPricingService');
+const leadQualityGateService = require('./leadQualityGateService');
 const { fetchGoogleSheetCsv } = require('./googleSheetService');
 const { detectPincode } = require('./pincodeDetectionService');
 const cityService = require('./cityService');
@@ -391,14 +392,14 @@ async function importCsv({ userId, csv }) {
   if (!partner) throw new Error('Lead Partner profile not found'); if (partner.status !== 'active') throw new Error('Lead Partner account is not active');
   const settings=await partnerPricing.getSettings();
   const locationCache=new Map();
-  let created = 0; let failed = 0; let duplicate = 0;
+  let created = 0; let failed = 0; let duplicate = 0; let quarantined = 0;
   const failures = [];
   const duplicateSamples = [];
   for (const row of rows) {
+    let createdLead=null;
     try {
       const lead = await buildLead(row, cat, locationCache);
-      const createdLead = await leadService.createLead({ ...lead, createdBy: userId });
-      await pool.query('UPDATE leads SET lead_partner_id=$1 WHERE id=$2 AND created_by=$3', [partner.id, createdLead.id, userId]);
+      createdLead = await leadService.createLead({ ...lead, createdBy: userId, leadPartnerId:partner.id, qualityGateContext:'lead_partner', deferQualityGate:true });
       const configured = await partnerPricing.applyConfiguredPricingToLead(userId, createdLead.id, createdLead.pricing, lead.industryId, lead.cityId, lead.leadType);
       const hasSheetPartnerPrice=lead.partnerProOnePrice!==null&&lead.partnerProOnePrice!==undefined&&lead.partnerProOnePrice!=='';const sheetPricing=hasSheetPartnerPrice&&Number.isFinite(Number(lead.partnerProOnePrice))?partnerPricing.buildFixedPartnerPricing(Number(lead.partnerProOnePrice),settings.normalPriceUplift):null;
       const effectivePricing=sheetPricing||configured||createdLead.pricing||{shares:[]};
@@ -407,8 +408,18 @@ async function importCsv({ userId, csv }) {
         `UPDATE leads SET partner_base_pricing=$1::jsonb,partner_pricing_overridden=$2,partner_pricing_updated_at=$3,pricing=$4::jsonb,updated_at=CURRENT_TIMESTAMP WHERE id=$5 AND created_by=$6`,
         [JSON.stringify(createdLead.pricing || { shares: [] }), overridden, overridden ? new Date() : null, JSON.stringify(effectivePricing), createdLead.id, userId]
       );
+      const gated=await leadQualityGateService.evaluateAndApply(createdLead.id,{context:'lead_partner',autoRelease:true});
+      createdLead=gated.lead||createdLead;
       created += 1;
+      if(createdLead.status==='quarantined')quarantined += 1;
     } catch (error) {
+      if(createdLead?.id){
+        await pool.query(
+          `DELETE FROM leads WHERE id=$1 AND created_by=$2 AND status='quarantined'
+             AND NOT EXISTS(SELECT 1 FROM lead_purchases p WHERE p.lead_id=leads.id)`,
+          [createdLead.id,userId]
+        ).catch(()=>{});
+      }
       const rowKey=row.id || row.customerPhone || row.customerEmail || created + failed + duplicate + 1;
       const detail=`${rowKey}: ${error.message}`;
       if (error.code === 'DUPLICATE_LEAD') {
@@ -420,7 +431,7 @@ async function importCsv({ userId, csv }) {
       }
     }
   }
-  return { total: rows.length, created, duplicate, failed, failures, duplicateSamples, failureSummary:summarizeFailures(failures) };
+  return { total: rows.length, created, quarantined, duplicate, failed, failures, duplicateSamples, failureSummary:summarizeFailures(failures) };
 }
 
 async function importGoogleSheet({ userId, url }) {
@@ -514,7 +525,7 @@ async function listInventory({ userId, status = 'all', search = '', industryId =
   const where = conditions.join(' AND ');
   const [data, stats, filters] = await Promise.all([
     pool.query(
-      `SELECT l.id,l.customer_name,l.customer_phone,l.customer_email,l.requirement,l.status,l.lead_type,l.buyer_capacity,l.access_strategy,l.release_to_two_after_hours,l.release_to_three_after_hours,l.access_capacity_locked,lead_effective_buyer_capacity(l.access_strategy,l.buyer_capacity,l.release_to_two_after_hours,l.release_to_three_after_hours,l.created_at,l.access_capacity_locked) AS effective_buyer_capacity,l.is_exclusive,l.pincode,l.created_at,l.custom_fields,
+      `SELECT l.id,l.customer_name,l.customer_phone,l.customer_email,l.requirement,l.status,l.lead_type,l.buyer_capacity,l.access_strategy,l.release_to_two_after_hours,l.release_to_three_after_hours,l.access_capacity_locked,lead_effective_buyer_capacity(l.access_strategy,l.buyer_capacity,l.release_to_two_after_hours,l.release_to_three_after_hours,l.created_at,l.access_capacity_locked) AS effective_buyer_capacity,l.is_exclusive,l.pincode,l.created_at,l.custom_fields,l.quality_gate_score,l.quality_gate_status,l.quality_gate_reasons,l.quality_gate_checked_at,
               i.name AS industry_name,s.name AS service_name,ss.name AS subservice_name,st.name AS state_name,c.name AS city_name,
               (${outcomeSql}) AS outcome_status,
               (SELECT COUNT(DISTINCT acquired.user_id)::int FROM (SELECT p.user_id FROM lead_purchases p WHERE p.lead_id=l.id AND p.status='paid' UNION SELECT ec.user_id FROM lead_entitlement_claims ec WHERE ec.lead_id=l.id) acquired) AS buyer_count
@@ -547,7 +558,8 @@ async function listInventory({ userId, status = 'all', search = '', industryId =
              COUNT(*) FILTER (WHERE outcome_status='fake')::int AS fake,
              COUNT(*) FILTER (WHERE outcome_status='expired')::int AS expired,
              COUNT(*) FILTER (WHERE outcome_status='closed')::int AS closed,
-             COUNT(*) FILTER (WHERE outcome_status='invalid')::int AS invalid
+             COUNT(*) FILTER (WHERE outcome_status='invalid')::int AS invalid,
+              COUNT(*) FILTER (WHERE outcome_status='quarantined')::int AS quarantined
         FROM base`,
       [userId]
     ),
@@ -558,7 +570,7 @@ async function listInventory({ userId, status = 'all', search = '', industryId =
   ]);
   return {
     data: data.rows,
-    stats: stats.rows[0] || { total:0,active:0,available:0,paused:0,sold:0,refunded:0,fake:0,expired:0,closed:0,invalid:0 },
+    stats: stats.rows[0] || { total:0,active:0,available:0,paused:0,sold:0,refunded:0,fake:0,expired:0,closed:0,invalid:0,quarantined:0 },
     filters: { industries: filters[0].rows, cities: filters[1].rows }
   };
 }

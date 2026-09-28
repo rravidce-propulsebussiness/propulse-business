@@ -153,7 +153,7 @@ async function syncGoogleSheet({adminId,url,defaults,columnMappings={},previousF
   }
   const[cat,candidates]=await Promise.all([catalogs(),findCandidates(unique)]);
   const maps=candidateMaps(candidates),pinCache=new Map();
-  let updated=0,created=0,unchanged=0,failed=0;const failures=[];
+  let updated=0,created=0,quarantined=0,unchanged=0,failed=0;const failures=[];
   for(const originalRow of unique){
     let row=originalRow;const lead=matchLead(row,maps);const rawPin=get(row,['Pincode']);let locationInfo=null;
     if(isValidPincode(rawPin)){if(!pinCache.has(rawPin))pinCache.set(rawPin,pincodeDetectionService.detectPincode(rawPin).catch(()=>null));locationInfo=await pinCache.get(rawPin)}
@@ -173,10 +173,10 @@ async function syncGoogleSheet({adminId,url,defaults,columnMappings={},previousF
       const next=buildPayload(row,lead,cat,locationInfo);
       if(!next.pincode)throw new Error('Pincode is missing and could not be resolved from the supplied location');
       if(lead){await ensurePincode(next.pincode,next.cityId);if(needsUpdate(next,lead)){await leadService.updateLead(lead.id,next);updated++}else unchanged++}
-      else{if(!next.industryId)throw new Error('Industry not found');await ensurePincode(next.pincode,next.cityId,{forCreate:true});await leadService.createLead({...next,createdBy:adminId});created++}
+      else{if(!next.industryId)throw new Error('Industry not found');await ensurePincode(next.pincode,next.cityId,{forCreate:true});const createdLead=await leadService.createLead({...next,createdBy:adminId,qualityGateContext:'admin_sheet'});created++;if(createdLead.status==='quarantined')quarantined++}
     }catch(error){failed++;failures.push(`${sourceId(row)||get(row,['Customer Phone'])||'row'}: ${error.message||'sync failed'}`)}
   }
-  return{skipped:false,fingerprint,total:unique.length,updated,created,unchanged,failed,failures,spreadsheetId:sheet.spreadsheetId,gid:sheet.gid};
+  return{skipped:false,fingerprint,total:unique.length,updated,created,quarantined,unchanged,failed,failures,spreadsheetId:sheet.spreadsheetId,gid:sheet.gid};
 }
 
 async function listConnections(){return(await pool.query(`SELECT id,spreadsheet_id,gid,source_url,defaults,column_mappings,last_preview_summary,last_previewed_at,status,created_by,last_synced_at,last_checked_at,fingerprint,last_sync_created,last_sync_updated,last_sync_unchanged,last_sync_failed,last_sync_failures,sync_failure_count,last_sync_error_at,last_sync_error,next_retry_at,created_at,updated_at FROM admin_google_sheet_connections WHERE status='active' ORDER BY updated_at DESC,id DESC`)).rows}

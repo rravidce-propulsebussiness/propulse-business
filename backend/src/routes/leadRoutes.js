@@ -7,6 +7,8 @@ router.get('/investors',requireAdmin,leadController.getInvestors);
 router.get('/pricing',requireAdmin,leadController.getLeadPricing);
 router.put('/pricing',requireAdmin,leadController.updateLeadPricing);
 router.get('/access-settings',requireAdmin,leadController.getAccessSettings);
+router.get('/quality-gate/settings',requireAdmin,leadController.getQualityGateSettings);
+router.put('/quality-gate/settings',requireAdmin,leadController.updateQualityGateSettings);
 router.put('/access-settings',requireAdmin,leadController.updateAccessSettings);
 router.get('/pricing/rules',requireAdmin,leadController.getPricingRules);
 router.post('/pricing/rules',requireAdmin,leadController.savePricingRule);
@@ -28,6 +30,8 @@ router.post('/:id/claim',requireAuth,leadActionLimit,leadEntitlementController.c
 router.post('/:id/purchase',requireAuth,leadActionLimit,idempotency('lead.purchase'),leadPurchaseController.purchase);
 router.get('/:id',requireAuth,leadController.getLeadById);
 router.post('/',requireAdmin,leadController.createLead);
+router.post('/:id/quality-gate/recheck',requireAdmin,leadController.recheckLeadQuality);
+router.post('/:id/quality-gate/override',requireAdmin,leadController.overrideLeadQuarantine);
 router.put('/:id',requireAdmin,leadController.updateLead);
 router.patch('/:id/status',requireAdmin,leadController.updateLeadStatus);
 router.delete('/:id',requireAdmin,leadController.deleteLead);

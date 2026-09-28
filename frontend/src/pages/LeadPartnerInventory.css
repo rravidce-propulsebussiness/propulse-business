@@ -487,3 +487,5 @@
 }
 
 .lp-sheet-preview-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.lp-sheet-preview-actions button{flex:1 1 150px}.lp-sheet-preview-actions button.secondary{background:#fff;color:#24527f;border:1px solid #cfdce8}@media(max-width:640px){.lp-sheet-preview-actions{flex-direction:column;align-items:stretch}.lp-sheet-preview-actions button{width:100%}}
+
+.partner-status.quarantined{background:#fff3dc!important;color:#93610d!important}.inventory-grid-card.quarantined{border-color:#e9cf9b!important;background:linear-gradient(180deg,#fffdf8,#fff)!important}.inventory-quality-hold{margin:0 0 10px;padding:9px 10px;border:1px solid #ecd6aa;border-radius:9px;background:#fff9ed}.inventory-quality-hold span,.inventory-quality-hold small{display:block}.inventory-quality-hold span{color:#8f6114;font-size:7px;font-weight:950}.inventory-quality-hold small{margin-top:4px;color:#846f4b;font-size:6.5px;line-height:1.45}

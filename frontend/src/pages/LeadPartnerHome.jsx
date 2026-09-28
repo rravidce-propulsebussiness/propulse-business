@@ -58,7 +58,8 @@ export default function LeadPartnerHome(){
     ['refunded','Refunded'],
     ['fake','Verified fake'],
     ['closed','Closed'],
-    ['paused','Paused']
+    ['paused','Paused'],
+    ['quarantined','Quarantined']
   ].map(([key,label])=>({key,label,value:Number(status[key]||0)})).filter(x=>x.value>0)
 
   const activity=useMemo(()=>{
@@ -86,7 +87,7 @@ export default function LeadPartnerHome(){
   const statusGradient=useMemo(()=>{
     if(!totalStatus)return 'conic-gradient(#dfe6ef 0 100%)'
     let cursor=0
-    const colorMap={available:'#1c9b68',sold:'#2d6fd1',refunded:'#d98a2d',fake:'#d65349',closed:'#d0a328',paused:'#7f8da0'}
+    const colorMap={available:'#1c9b68',sold:'#2d6fd1',refunded:'#d98a2d',fake:'#d65349',closed:'#d0a328',paused:'#7f8da0',quarantined:'#b67a19'}
     return `conic-gradient(${statusSegments.map(x=>{const start=cursor;cursor+=(x.value/totalStatus)*100;return `${colorMap[x.key]||'#7f8da0'} ${start}% ${cursor}%`}).join(',')})`
   },[statusSegments,totalStatus])
 
