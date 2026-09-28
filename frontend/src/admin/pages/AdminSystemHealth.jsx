@@ -1,4 +1,5 @@
 import {useCallback,useEffect,useMemo,useState} from 'react'
+import {Link} from 'react-router-dom'
 import {authRequest} from '../../utils/auth'
 import './AdminSystemHealth.css'
 
@@ -16,7 +17,8 @@ const fmtDuration=seconds=>{
   if(hours)return hours+'h '+minutes+'m'
   return minutes+'m'
 }
-const stateTone=value=>['healthy','connected','ready','fresh','current','verified'].includes(String(value||'').toLowerCase())?'good':['degraded','pending','stale','not_run'].includes(String(value||'').toLowerCase())?'warn':'bad'
+const stateTone=value=>['healthy','connected','ready','fresh','current','verified'].includes(String(value||'').toLowerCase())?'good':['attention','warning','degraded','pending','stale','not_run'].includes(String(value||'').toLowerCase())?'warn':'bad'
+const statusLabel=value=>value==='healthy'?'Healthy':value==='attention'?'Needs attention':value==='degraded'?'Degraded':value||'Unavailable'
 
 function HealthCard({label,value,note,tone='good',metric}){
   return <article className={'system-health-card '+tone}>
@@ -27,13 +29,50 @@ function HealthCard({label,value,note,tone='good',metric}){
   </article>
 }
 
+function ActiveIssues({data}){
+  const issues=Array.isArray(data?.issues)?data.issues:[]
+  const degraded=Number(data?.summary?.degradedCount)||0
+  const attention=Number(data?.summary?.attentionCount)||0
+  if(!data||issues.length===0)return <section className="system-health-issue-summary healthy">
+    <div className="system-health-issue-heading">
+      <span className="system-health-issue-icon">✓</span>
+      <div><small>OPERATIONAL STATUS</small><h2>All monitored systems are healthy</h2><p>No active operational issues were detected in the latest check.</p></div>
+    </div>
+  </section>
+  return <section className={'system-health-issue-summary '+(degraded?'degraded':'attention')}>
+    <div className="system-health-issue-heading">
+      <span className="system-health-issue-icon">{degraded?'!':'i'}</span>
+      <div>
+        <small>{degraded?'WHY THE SYSTEM IS DEGRADED':'OPERATIONAL ATTENTION'}</small>
+        <h2>{issues.length} active issue{issues.length===1?'':'s'}</h2>
+        <p>{degraded?`${degraded} critical operational signal${degraded===1?' is':'s are'} affecting overall health.`:`${attention} non-critical signal${attention===1?' needs':'s need'} review; core platform health remains available.`}</p>
+      </div>
+      <div className="system-health-issue-counts">
+        {degraded>0&&<span className="bad">{degraded} degraded</span>}
+        {attention>0&&<span className="warn">{attention} attention</span>}
+      </div>
+    </div>
+    <div className="system-health-issue-list">
+      {issues.slice(0,8).map((issue,index)=><article key={issue.code||index} className={issue.severity==='degraded'?'bad':'warn'}>
+        <i/>
+        <div>
+          <strong>{issue.title}</strong>
+          <p>{issue.message}</p>
+        </div>
+        {issue.actionUrl&&<Link to={issue.actionUrl}>{issue.actionLabel||'Review'} <span>→</span></Link>}
+      </article>)}
+    </div>
+  </section>
+}
+
 function SheetHealth({title,subtitle,data}){
   const problems=Array.isArray(data?.recentProblems)?data.recentProblems:[]
   const issueCount=(Number(data?.failing)||0)+(Number(data?.connectionErrors)||0)
+  const tone=stateTone(data?.status||'healthy')
   return <section className="system-health-panel sheet-health-panel">
     <header>
       <div><span>SHEET AUTOMATION</span><h2>{title}</h2><p>{subtitle}</p></div>
-      <span className={'system-health-pill '+(issueCount?'warn':'good')}>{issueCount?issueCount+' needs attention':'Healthy'}</span>
+      <span className={'system-health-pill '+tone}>{statusLabel(data?.status||'healthy')}</span>
     </header>
     <div className="sheet-health-metrics">
       <div><span>Active connections</span><strong>{Number(data?.active)||0}</strong></div>
@@ -42,13 +81,14 @@ function SheetHealth({title,subtitle,data}){
       <div><span>Last successful sync</span><strong>{fmtDate(data?.lastSyncedAt)}</strong></div>
     </div>
     {problems.length>0?<div className="system-health-problems">
-      {problems.map(item=><article key={item.id}>
+      {problems.map(item=><article key={item.id} className={item.persistent?'persistent':''}>
         <span>Connection #{item.id}</span>
-        <strong>{item.failedRows?item.failedRows+' failed row'+(item.failedRows===1?'':'s'):item.failureCount+' connection error'+(item.failureCount===1?'':'s')}</strong>
+        <strong>{item.failureCount?item.failureCount+' failed attempt'+(item.failureCount===1?'':'s'):item.failedRows+' invalid row'+(item.failedRows===1?'':'s')}</strong>
         <small>{item.error||'Row-level validation failures need review.'}</small>
-        <b>{fmtDate(item.lastSyncedAt)}</b>
+        <b>{item.nextRetryAt?'Retry '+fmtDate(item.nextRetryAt):fmtDate(item.errorAt||item.lastSyncedAt)}</b>
       </article>)}
     </div>:<div className="system-health-empty">No active sync problems reported.</div>}
+    {issueCount>0&&<div className="system-health-sheet-note">Temporary connection errors and invalid rows are shown as attention. A connection becomes platform-degrading after {Number(data?.persistentFailureThreshold)||3} consecutive sync failures.</div>}
   </section>
 }
 
@@ -85,15 +125,15 @@ export default function AdminSystemHealth(){
   const poolNote=useMemo(()=>{
     if(!data)return 'Waiting for runtime metrics'
     if(Number(pool.waiting)>0)return pool.waiting+' request'+(pool.waiting===1?' is':'s are')+' waiting for a DB connection'
-    return (pool.idle||0)+' idle of '+(pool.total||0)+' open connections'
-  },[data,pool.idle,pool.total,pool.waiting])
+    return `${pool.busy||0} busy · ${pool.idle||0} idle · ${pool.total||0} open · max ${pool.max||0}`
+  },[data,pool.busy,pool.idle,pool.max,pool.total,pool.waiting])
 
   return <main className="admin-system-health">
     <section className="system-health-hero">
       <div>
         <span>SYSTEM / PRODUCTION OPERATIONS</span>
         <h1>System health</h1>
-        <p>One operational view for runtime, PostgreSQL, persistent storage, workers, migrations and automated lead sources.</p>
+        <p>One operational view for runtime, PostgreSQL, persistent storage, workers, migrations, financial controls and automated lead sources.</p>
       </div>
       <div className="system-health-hero-actions">
         <label><input type="checkbox" checked={autoRefresh} onChange={e=>setAutoRefresh(e.target.checked)}/> Auto refresh · 30s</label>
@@ -102,10 +142,11 @@ export default function AdminSystemHealth(){
     </section>
 
     {error&&<div className="system-health-error"><strong>Health data unavailable</strong><span>{error}</span></div>}
+    <ActiveIssues data={data}/>
 
     <section className="system-health-overview">
-      <HealthCard label="Overall" value={loading&&!data?'Checking…':data?.status||'Unavailable'} note={data?'Checked '+fmtDate(data.checkedAt):'Waiting for backend'} tone={overallTone}/>
-      <HealthCard label="Database" value={data?.database?.status||'—'} note={poolNote} tone={stateTone(data?.database?.status)} metric={data?(pool.utilizationPercent||0)+'% pool use':null}/>
+      <HealthCard label="Overall" value={loading&&!data?'Checking…':statusLabel(data?.status)} note={data?'Checked '+fmtDate(data.checkedAt):'Waiting for backend'} tone={overallTone} metric={data?.summary?.issueCount?data.summary.issueCount+' active issue'+(data.summary.issueCount===1?'':'s'):null}/>
+      <HealthCard label="Database" value={data?.database?.status||'—'} note={poolNote} tone={stateTone(data?.database?.status)} metric={data?(pool.utilizationPercent||0)+'% active utilization':null}/>
       <HealthCard label="Upload storage" value={data?.storage?.status||'—'} note={data?.storage?.persistentConfigured?'Persistent storage configured':'Using application-local storage'} tone={stateTone(data?.storage?.status)}/>
       <HealthCard label="Private objects" value={data?.storage?.privateObjects?.status||'—'} note={data?.storage?.privateObjects?.driver==='s3'?(data?.storage?.privateObjects?.status==='ready'?'S3-compatible private storage ready':data?.storage?.privateObjects?.error||'S3-compatible storage unavailable'):'Private proofs currently use local durable storage'} tone={stateTone(data?.storage?.privateObjects?.status)} metric={data?.storage?.privateObjects?.driver?.toUpperCase()||null}/>
       <HealthCard label="Background worker" value={data?.worker?.status||'—'} note={data?.worker?.lastSeenAt?'Heartbeat '+fmtDate(data.worker.lastSeenAt):'No heartbeat available'} tone={stateTone(data?.worker?.status)} metric={data?.worker?.ageSeconds!=null?data.worker.ageSeconds+'s old':null}/>
@@ -123,7 +164,7 @@ export default function AdminSystemHealth(){
           <div><span>Uptime</span><strong>{data?fmtDuration(data.runtime?.uptimeSeconds):'—'}</strong><small>Current web process</small></div>
           <div><span>RSS memory</span><strong>{data?.runtime?.memoryMb?.rss??'—'}{data?' MB':''}</strong><small>Resident process memory</small></div>
           <div><span>Heap</span><strong>{data?.runtime?.memoryMb?.heapUsed??'—'}{data?' MB':''}</strong><small>of {data?.runtime?.memoryMb?.heapTotal??'—'} MB allocated</small></div>
-          <div><span>DB waiting</span><strong>{pool.waiting??'—'}</strong><small>Requests waiting for a connection</small></div>
+          <div><span>DB connections</span><strong>{pool.busy??'—'} busy</strong><small>{pool.idle??'—'} idle · {pool.waiting??'—'} waiting · {pool.max??'—'} max</small></div>
         </div>
       </section>
 
@@ -151,8 +192,8 @@ export default function AdminSystemHealth(){
         <span className={data?.storage?.privateObjects?.status==='ready'?'ok':'bad'}>Private objects</span>
         <span className={data?.worker?.status==='fresh'?'ok':'bad'}>Worker</span>
         <span className={data?.migrations?.status==='current'?'ok':'bad'}>Migrations</span>
-        <span className={!data?.sheets?.leadPartner?.connectionErrors&&!data?.sheets?.leadPartner?.failing&&!data?.sheets?.admin?.connectionErrors&&!data?.sheets?.admin?.failing?'ok':'warn'}>Sheet connections</span>
-        <span className={financial.status==='healthy'?'ok':['warning','stale'].includes(financial.status)?'warn':'bad'}>Financial reconciliation</span>
+        <span className={data?.sheets?.leadPartner?.status==='healthy'&&data?.sheets?.admin?.status==='healthy'?'ok':data?.sheets?.leadPartner?.status==='degraded'||data?.sheets?.admin?.status==='degraded'?'bad':'warn'}>Sheet connections</span>
+        <span className={financial.status==='healthy'?'ok':['warning','stale','not_run'].includes(financial.status)?'warn':'bad'}>Financial reconciliation</span>
         <span className={backups.status==='healthy'?'ok':['not_run','stale'].includes(backups.status)?'warn':'bad'}>Backup verification</span>
       </div>
     </section>

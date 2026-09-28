@@ -66,7 +66,10 @@ versions, rather than trusting the role claimed in a JWT.
    a PostgreSQL heartbeat every `WORKER_HEARTBEAT_INTERVAL_MS` (default 30 seconds),
    `/health/worker` reports its freshness, and `/health/ready` fails when no heartbeat is
    newer than `WORKER_HEARTBEAT_MAX_AGE_SECONDS` (default 120 seconds). This makes a dead
-   worker visible to monitoring instead of silently stopping sheet synchronization. Back up PostgreSQL and persist
+   worker visible to monitoring instead of silently stopping sheet synchronization. Admin System Health uses three
+   overall states: `healthy`, `attention`, and `degraded`. Invalid sheet rows and short-lived sheet connection failures
+   remain `attention`; a sheet connection becomes `degraded` after `SYSTEM_HEALTH_SHEET_FAILURE_THRESHOLD`
+   consecutive connection failures (default 3). Back up PostgreSQL and persist
    `backend/uploads`, including private company proofs. Multiple backend instances need
    shared upload storage. Private payment and payout proof files are stored under
    `backend/uploads/private-proofs` (including wallet top-up proofs) while PostgreSQL keeps only short internal
@@ -130,8 +133,8 @@ REQUIRE_BACKUP_VERIFICATION=true
 BACKUP_VERIFICATION_MAX_AGE_HOURS=30
 ```
 
-Admin → System Health then degrades when the latest verified database restore or private
-storage snapshot is missing, failed, or older than the configured maximum age. Backup
+Admin → System Health treats a failed required database/private-storage verification as
+`degraded`, while a missing or stale required verification is shown as `attention`. Backup
 verification results are stored in `backup_verification_runs`; generated dump/snapshot
 artifacts are gitignored and must never be committed.
 

@@ -91,7 +91,7 @@ export default function AdminLayout(){
     let active=true
     const refresh=()=>{
       authRequest('/admin/system-health')
-        .then(value=>{if(active)setSystemStatus(value?.status==='healthy'?'healthy':'degraded')})
+        .then(value=>{if(active)setSystemStatus(['healthy','attention','degraded'].includes(value?.status)?value.status:'degraded')})
         .catch(()=>{if(active)setSystemStatus('degraded')})
     }
     refresh()
@@ -178,7 +178,7 @@ export default function AdminLayout(){
 
         <div className="admin-topbar-right">
           <NotificationBell/>
-          <Link to="/admin/system-health" className={"admin-top-status "+systemStatus}><i/> {systemStatus==="healthy"?"System healthy":systemStatus==="checking"?"Checking system":"System degraded"}</Link>
+          <Link to="/admin/system-health" className={"admin-top-status "+systemStatus}><i/> {systemStatus==="healthy"?"System healthy":systemStatus==="attention"?"System attention":systemStatus==="checking"?"Checking system":"System degraded"}</Link>
           <div className="admin-top-user">
             <span>{initials||'A'}</span>
             <div><b>{user?.name||'Admin'}</b><small>Administrator</small></div>

@@ -24,10 +24,30 @@ function validateGoogleSheetTarget(value){
   return url;
 }
 
+function networkErrorMessage(error){
+  if(error?.name==='AbortError')return 'Google Sheet request timed out';
+  const code=String(error?.cause?.code||error?.code||'').toUpperCase();
+  if(code==='ENOTFOUND'||code==='EAI_AGAIN')return 'Google Sheets DNS lookup failed';
+  if(code==='ECONNREFUSED')return 'Google Sheets connection was refused';
+  if(code==='ECONNRESET')return 'Google Sheets connection was reset';
+  if(code==='ETIMEDOUT'||code==='UND_ERR_CONNECT_TIMEOUT')return 'Google Sheets connection timed out';
+  if(code==='CERT_HAS_EXPIRED'||code==='UNABLE_TO_VERIFY_LEAF_SIGNATURE'||code==='SELF_SIGNED_CERT_IN_CHAIN')return 'Google Sheets TLS certificate verification failed';
+  if(code)return `Google Sheets network request failed (${code})`;
+  if(String(error?.message||'').toLowerCase()==='fetch failed')return 'Google Sheets network request failed';
+  return String(error?.message||'Google Sheet request failed').slice(0,240);
+}
+
 async function fetchWithSafeRedirects(target,options={}){
   let current=validateGoogleSheetTarget(target);
   for(let redirects=0;redirects<=MAX_REDIRECTS;redirects+=1){
-    const response=await fetch(current,{...options,redirect:'manual'});
+    let response;
+    try{
+      response=await fetch(current,{...options,redirect:'manual'});
+    }catch(error){
+      const wrapped=new Error(networkErrorMessage(error));
+      wrapped.code=error?.cause?.code||error?.code||'GOOGLE_SHEET_NETWORK_ERROR';
+      throw wrapped;
+    }
     if(response.status<300||response.status>=400)return response;
     const location=response.headers.get('location');
     if(!location)throw new Error('Google Sheet redirect did not provide a destination');
@@ -78,4 +98,4 @@ async function fetchGoogleSheetCsv(sheetUrl){
   }finally{clearTimeout(timeout)}
 }
 
-module.exports={parseGoogleSheetUrl,fetchGoogleSheetCsv,validateGoogleSheetTarget,fetchWithSafeRedirects};
+module.exports={parseGoogleSheetUrl,fetchGoogleSheetCsv,validateGoogleSheetTarget,fetchWithSafeRedirects,networkErrorMessage};
