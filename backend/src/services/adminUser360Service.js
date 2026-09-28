@@ -1,4 +1,5 @@
 const criticalActionAudit=require('./criticalActionAuditService');
+const notificationService=require('./notificationService');
 const pool=require('../config/database');
 const paymentService=require('./paymentService');
 const walletService=require('./walletService');
@@ -307,6 +308,14 @@ async function setMembershipPlan({userId,planId,adminId,days,reason}){
       afterData:{membershipId:membership.id,planId:plan.id,planName:plan.name,status:membership.status,expiresAt:membership.expires_at},
       reason:cleanReason,metadata:{userId:Number(userId)},source:'admin_user_360'
     });
+    await notificationService.notifyUser({
+      userId,type:current?'membership_plan_changed':'membership_assigned',category:'membership',severity:'success',
+      title:current?'Membership plan changed':'Membership activated',
+      message:current?`Your membership was changed to ${plan.name} by ProPulse.`:`${plan.name} membership was activated for your account.`,
+      actionUrl:'/membership',relatedType:'membership',relatedId:membership.id,
+      dedupeKey:`membership-plan:${membership.id}:${plan.id}:${new Date(membership.expires_at).toISOString()}`,
+      metadata:{planId:plan.id,planName:plan.name,expiresAt:membership.expires_at}
+    },client);
     await client.query('COMMIT');
     return membership;
   }catch(error){

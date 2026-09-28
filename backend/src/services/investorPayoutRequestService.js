@@ -1,4 +1,5 @@
 const criticalActionAudit=require('./criticalActionAuditService');
+const notificationService=require('./notificationService');
 const pool = require('../config/database');
 const privateProofStorage = require('./privateProofStorageService');
 const payoutAccounts = require('./investorPayoutAccountService');
@@ -92,6 +93,7 @@ async function adminProcess({requestId,adminId,action,transferReference,proofUrl
     if(normalizedAction==='reject'){
       const updated=(await client.query(`UPDATE investor_payout_requests SET status='rejected',notes=COALESCE($1,notes),processed_at=CURRENT_TIMESTAMP,processed_by=$2,updated_at=CURRENT_TIMESTAMP WHERE id=$3 RETURNING *`,[String(notes||'').trim()||null,Number(adminId),Number(requestId)])).rows[0];
       await criticalActionAudit.record(client,{actorId:adminId,category:'payout',action:'payout.investor_process',entityType:'investor_payout',entityId:row.id,beforeData:{status:row.status,amount:Number(row.amount),userId:row.user_id},afterData:{status:updated.status,amount:Number(updated.amount),userId:updated.user_id},reason:notes,metadata:{action:'reject'},source:'investor_payout_service'});
+      await notificationService.notifyUser({userId:row.user_id,type:'investor_payout_rejected',category:'payout',severity:'warning',title:'Investor withdrawal not approved',message:`Your investor withdrawal request of ₹${Number(row.amount).toLocaleString('en-IN')} was not approved.`,actionUrl:'/investment/payouts',relatedType:'investor_payout',relatedId:row.id,dedupeKey:`investor-payout:${row.id}:rejected`,metadata:{amount:Number(row.amount),status:'rejected'}},client);
       await client.query('COMMIT');
       return{...updated,amount:Number(updated.amount)};
     }
@@ -107,6 +109,7 @@ async function adminProcess({requestId,adminId,action,transferReference,proofUrl
     storedProof=await privateProofStorage.storeDataUrl(validatedProof,{category:'investor-payouts',maxBytes:6*1024*1024});
     const updated=(await client.query(`UPDATE investor_payout_requests SET status='paid',transfer_reference=$1,proof_url=$2,notes=COALESCE($3,notes),processed_at=CURRENT_TIMESTAMP,processed_by=$4,updated_at=CURRENT_TIMESTAMP WHERE id=$5 RETURNING *`,[reference,storedProof,String(notes||'').trim()||null,Number(adminId),Number(requestId)])).rows[0];
     await criticalActionAudit.record(client,{actorId:adminId,category:'payout',action:'payout.investor_process',entityType:'investor_payout',entityId:row.id,beforeData:{status:row.status,amount:Number(row.amount),userId:row.user_id},afterData:{status:updated.status,amount:Number(updated.amount),userId:updated.user_id},reason:notes,metadata:{action:'paid'},source:'investor_payout_service'});
+    await notificationService.notifyUser({userId:row.user_id,type:'investor_payout_paid',category:'payout',severity:'success',title:'Investor withdrawal paid',message:`Your investor withdrawal of ₹${Number(row.amount).toLocaleString('en-IN')} has been processed.`,actionUrl:'/investment/payouts',relatedType:'investor_payout',relatedId:row.id,dedupeKey:`investor-payout:${row.id}:paid`,metadata:{amount:Number(row.amount),status:'paid'}},client);
     await client.query('COMMIT');
     return{...updated,amount:Number(updated.amount)};
   }catch(error){

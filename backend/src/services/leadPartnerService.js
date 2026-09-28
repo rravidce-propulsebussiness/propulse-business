@@ -1,4 +1,5 @@
 const criticalActionAudit=require('./criticalActionAuditService');
+const notificationService=require('./notificationService');
 const pool = require('../config/database');
 const leadService = require('./leadService');
 const pincodeService = require('./pincodeService');
@@ -106,6 +107,15 @@ async function updateStatus(partnerId, status, adminUserId=null) {
     if(!before){const error=new Error('Lead Partner not found');error.code='PARTNER_NOT_FOUND';throw error}
     const row=(await client.query(`UPDATE lead_partners SET status=$1,updated_at=CURRENT_TIMESTAMP WHERE id=$2 RETURNING *`,[nextStatus,id])).rows[0];
     await criticalActionAudit.record(client,{actorId:adminUserId,category:'account',action:'partner.status_change',entityType:'lead_partner',entityId:id,beforeData:{status:before.status,userId:before.user_id},afterData:{status:row.status,userId:row.user_id},source:'lead_partner_service'});
+    await notificationService.notifyUser({
+      userId:row.user_id,type:'lead_partner_status_changed',category:'system',
+      severity:row.status==='active'?'success':row.status==='rejected'||row.status==='suspended'?'warning':'info',
+      title:row.status==='active'?'Lead Partner account approved':'Lead Partner status updated',
+      message:`Your Lead Partner account status is now ${String(row.status).replace(/_/g,' ')}.`,
+      actionUrl:'/lead-partner/dashboard',relatedType:'lead_partner',relatedId:id,
+      dedupeKey:`lead-partner-status:${id}:${row.status}:${new Date(row.updated_at||Date.now()).toISOString()}`,
+      metadata:{status:row.status}
+    },client);
     await client.query('COMMIT');return row;
   }catch(error){await client.query('ROLLBACK');throw error}finally{client.release()}
 }

@@ -2,6 +2,7 @@ import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-do
 import { useEffect, useMemo, useState } from 'react'
 import { authRequest, clearSession, getUser } from '../../utils/auth'
 import './AdminLayout.css'
+import NotificationBell from '../../components/NotificationBell'
 
 const navigation=[
   {type:'link',to:'/admin',label:'Overview',icon:'⌂',end:true},
@@ -37,6 +38,7 @@ const navigation=[
   {type:'group',key:'system',label:'System',icon:'⚙',children:[
     {to:'/admin/system-health',label:'System Health'},
     {to:'/admin/risk-center',label:'Risk Center'},
+    {to:'/admin/notifications',label:'Notifications'},
     {to:'/admin/audit-timeline',label:'Audit Timeline'},
     {to:'/admin/financial-integrity',label:'Financial Integrity'},
     {to:'/admin/test-reset',label:'Test Data Reset'}
@@ -174,6 +176,7 @@ export default function AdminLayout(){
         </div>
 
         <div className="admin-topbar-right">
+          <NotificationBell/>
           <Link to="/admin/system-health" className={"admin-top-status "+systemStatus}><i/> {systemStatus==="healthy"?"System healthy":systemStatus==="checking"?"Checking system":"System degraded"}</Link>
           <div className="admin-top-user">
             <span>{initials||'A'}</span>

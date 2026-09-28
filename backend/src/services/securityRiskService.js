@@ -1,6 +1,7 @@
 const crypto=require('crypto');
 const pool=require('../config/database');
 const criticalActionAudit=require('./criticalActionAuditService');
+const notificationService=require('./notificationService');
 
 const secret=String(process.env.RISK_EVENT_HASH_SECRET||process.env.JWT_SECRET||'propulse-development-risk-secret');
 
@@ -29,7 +30,7 @@ async function upsertEvent({
 },client=pool){
   const key=String(eventKey||'').slice(0,180);
   if(!eventType||!key||!title||!summary)return null;
-  return (await client.query(
+  const row=(await client.query(
     `INSERT INTO security_risk_events(
        event_type,event_key,severity,user_id,related_type,related_id,title,summary,metadata
      ) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9::jsonb)
@@ -47,6 +48,16 @@ async function upsertEvent({
      RETURNING *`,
     [eventType,key,severity,userId||null,relatedType||null,relatedId||null,title,summary,JSON.stringify(metadata||{})]
   )).rows[0];
+  if(row&&['high','critical'].includes(String(row.severity))){
+    await notificationService.notifyAdmins({
+      type:'security_risk_event',category:'security',severity:row.severity==='critical'?'critical':'warning',
+      title:row.title,message:row.summary,actionUrl:'/admin/risk-center',
+      relatedType:'security_risk_event',relatedId:row.id,
+      dedupeKey:`security-risk-event:${row.id}`,
+      metadata:{eventType:row.event_type,severity:row.severity,occurrenceCount:Number(row.occurrence_count||1)}
+    },client);
+  }
+  return row;
 }
 
 async function recordFailedLogin({email,userId=null,source=null}){

@@ -1,4 +1,5 @@
 const criticalActionAudit=require('./criticalActionAuditService');
+const notificationService=require('./notificationService');
 const pool=require('../config/database');const payoutAccounts=require('./leadPartnerPayoutAccountService');const privateProofStorage=require('./privateProofStorageService');
 const money=v=>Number(Number(v||0).toFixed(2));
 const MAX_PROOF_BYTES=6*1024*1024;
@@ -183,12 +184,14 @@ async function adminProcess({requestId,adminId,action,transferReference,proofUrl
       )).rows[0];
       await c.query(`UPDATE lead_partner_payout_items SET status='released',updated_at=CURRENT_TIMESTAMP WHERE payout_id=$1 AND status='reserved'`,[r.id]);
       await criticalActionAudit.record(c,{actorId:adminId,category:'payout',action:'payout.lead_partner_process',entityType:'lead_partner_payout',entityId:r.id,beforeData:{status:r.status,amount:money(r.amount),partnerId:r.partner_id},afterData:{status:u.status,amount:money(u.amount),partnerId:u.partner_id},reason:rejection,metadata:{action:'reject'},source:'lead_partner_payout_service'});
+      await notificationService.notifyUser({userId:r.user_id,type:'payout_rejected',category:'payout',severity:'warning',title:'Withdrawal not approved',message:`Your withdrawal request of ₹${money(r.amount).toLocaleString('en-IN')} was not approved. Reason: ${rejection}`,actionUrl:'/lead-partner/withdrawals',relatedType:'lead_partner_payout',relatedId:r.id,dedupeKey:`lead-partner-payout:${r.id}:rejected`,metadata:{amount:money(r.amount),status:'rejected'}},c);
       await c.query('COMMIT');
       return{...u,id:Number(u.id),amount:money(u.amount)};
     }
     const paid=await markPaid({client:c,r,adminId,transferReference,proofUrl,notes});
     storedProof=paid.storedProof;
     await criticalActionAudit.record(c,{actorId:adminId,category:'payout',action:'payout.lead_partner_process',entityType:'lead_partner_payout',entityId:r.id,beforeData:{status:r.status,amount:money(r.amount),partnerId:r.partner_id},afterData:{status:paid.payout.status,amount:paid.payout.amount,partnerId:r.partner_id},reason:notes,metadata:{action:'paid'},source:'lead_partner_payout_service'});
+    await notificationService.notifyUser({userId:r.user_id,type:'payout_paid',category:'payout',severity:'success',title:'Withdrawal paid',message:`Your withdrawal of ₹${money(r.amount).toLocaleString('en-IN')} has been processed.`,actionUrl:'/lead-partner/withdrawals',relatedType:'lead_partner_payout',relatedId:r.id,dedupeKey:`lead-partner-payout:${r.id}:paid`,metadata:{amount:money(r.amount),status:'paid'}},c);
     await c.query('COMMIT');
     return paid.payout;
   }catch(e){
@@ -217,6 +220,7 @@ async function adminDirectPayout({partnerId,userId,adminId,amount:raw,transferRe
     const paid=await markPaid({client:c,r,adminId,transferReference,proofUrl,notes});
     storedProof=paid.storedProof;
     await criticalActionAudit.record(c,{actorId:adminId,category:'payout',action:'payout.lead_partner_direct',entityType:'lead_partner_payout',entityId:r.id,beforeData:null,afterData:{status:paid.payout.status,amount:paid.payout.amount,partnerId:r.partner_id,userId:targetUserId},reason:notes,source:'lead_partner_payout_service'});
+    await notificationService.notifyUser({userId:targetUserId,type:'payout_paid',category:'payout',severity:'success',title:'Partner payout sent',message:`ProPulse processed a payout of ₹${money(r.amount).toLocaleString('en-IN')} to your payout account.`,actionUrl:'/lead-partner/withdrawals',relatedType:'lead_partner_payout',relatedId:r.id,dedupeKey:`lead-partner-payout:${r.id}:paid`,metadata:{amount:money(r.amount),status:'paid'}},c);
     await c.query('COMMIT');
     return paid.payout;
   }catch(e){

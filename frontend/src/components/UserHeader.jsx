@@ -2,6 +2,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { clearSession, getUser, getToken, authRequest } from '../utils/auth'
 import './UserHeader.css'
+import NotificationBell from './NotificationBell'
 
 export default function UserHeader() {
   const navigate = useNavigate(); const location = useLocation(); const user = getUser(); const token = getToken(); const loggedIn = Boolean(token && user)
@@ -49,6 +50,6 @@ export default function UserHeader() {
       <Link className={(location.pathname==='/'&&location.hash==='#faq')||location.pathname==='/faq'?' active':''} to="/#faq" onClick={()=>setOpen(false)}>FAQ</Link>
       <button className="user-header-mobile-logout" onClick={logout}>Logout</button>
     </nav>
-    <div className="user-header-right"><Link className="user-profile-pill" to="/profile" aria-label="Open business profile"><span className="user-avatar">{avatarLetter}</span><span className="user-profile-name">{displayName}</span></Link><button className="user-logout" onClick={logout}>Logout</button><button className="user-menu-toggle" aria-label="Open navigation" onClick={()=>setOpen(v=>!v)}>☰</button></div>
+    <div className="user-header-right"><NotificationBell/><Link className="user-profile-pill" to="/profile" aria-label="Open business profile"><span className="user-avatar">{avatarLetter}</span><span className="user-profile-name">{displayName}</span></Link><button className="user-logout" onClick={logout}>Logout</button><button className="user-menu-toggle" aria-label="Open navigation" onClick={()=>setOpen(v=>!v)}>☰</button></div>
   </header><div className="user-header-spacer" aria-hidden="true"/></>
 }

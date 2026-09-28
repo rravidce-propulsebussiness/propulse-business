@@ -1,4 +1,5 @@
 const criticalActionAudit=require('./criticalActionAuditService');
+const notificationService=require('./notificationService');
 const bcrypt = require('bcryptjs');
 const pool = require('../config/database');
 const { validateSelections } = require('./profileService');
@@ -596,6 +597,17 @@ async function reviewCompanyProof({ documentId, status, reviewReason = '', revie
     }
 
     await criticalActionAudit.record(client,{actorId:normalizedReviewer,category:'account',action:'company_proof.review',entityType:'company_proof',entityId:normalizedDocumentId,beforeData:{status:current.status},afterData:{status:updated.status,userId:updated.user_id,fileName:updated.original_name,mimeType:updated.mime_type,fileSize:updated.file_size},reason:normalizedStatus==='rejected'?reason:null,metadata:{reviewOutcome:normalizedStatus},source:'admin_user_service'});
+    await notificationService.notifyUser({
+      userId:updated.user_id,type:'company_verification_updated',category:'system',
+      severity:normalizedStatus==='verified'?'success':'warning',
+      title:normalizedStatus==='verified'?'Business verification approved':'Business verification needs attention',
+      message:normalizedStatus==='verified'
+        ?'Your business verification was approved by ProPulse.'
+        :`Your business verification was rejected. ${reason||'Review your proof and submit a valid document.'}`,
+      actionUrl:'/profile',relatedType:'company_proof',relatedId:normalizedDocumentId,
+      dedupeKey:`company-proof:${normalizedDocumentId}:${normalizedStatus}`,
+      metadata:{status:normalizedStatus}
+    },client);
     await client.query('COMMIT');
     return updated;
   } catch (error) {

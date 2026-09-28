@@ -1,5 +1,6 @@
 const pool=require('../config/database');
 const syncService=require('./adminGoogleSheetSyncService');
+const notificationService=require('./notificationService');
 
 const AUTO_SYNC_INTERVAL_MS=5*60*1000;
 let timer=null;
@@ -22,7 +23,15 @@ async function runAutoSync(){
         }
         console.log(`Admin Google Sheet auto-sync completed: connection=${connection.id}, created=${sync.created||0}, updated=${sync.updated||0}, failed=${sync.failed||0}, skipped=${Boolean(sync.skipped)}`);
       }catch(error){
-        await syncService.recordConnectionFailure(connection.id,error).catch(healthError=>console.error(`Admin Google Sheet sync health update failed: connection=${connection.id}: ${healthError.message}`));
+        const failure=await syncService.recordConnectionFailure(connection.id,error).catch(healthError=>{console.error(`Admin Google Sheet sync health update failed: connection=${connection.id}: ${healthError.message}`);return null});
+        await notificationService.notifyAdmins({
+          type:'admin_sheet_sync_failed',category:'sheet',severity:Number(failure?.sync_failure_count||1)>=3?'critical':'warning',
+          title:'Admin Google Sheet sync failed',
+          message:`Google Sheet connection #${connection.id} failed to sync. ${String(error.message||'Review the connection and retry.').slice(0,220)}`,
+          actionUrl:'/admin/leads/sheets',relatedType:'admin_google_sheet_connection',relatedId:connection.id,
+          dedupeKey:`admin-sheet-failure:${connection.id}:${new Date().toISOString().slice(0,10)}`,
+          metadata:{failureCount:Number(failure?.sync_failure_count||1)}
+        }).catch(notifyError=>console.error('Admin sheet failure notification failed:',notifyError.message));
         console.error(`Admin Google Sheet auto-sync failed: connection=${connection.id}: ${error.message}`);
       }
     }

@@ -4,6 +4,7 @@ const { runMigrations } = require('./database/runMigrations');
 const { startLeadPartnerSheetAutoSync } = require('./services/leadPartnerSheetSyncScheduler');
 const { startAdminGoogleSheetAutoSync } = require('./services/adminGoogleSheetSyncScheduler');
 const { startFinancialReconciliationScheduler } = require('./services/financialReconciliationScheduler');
+const { startNotificationScheduler } = require('./services/notificationScheduler');
 const { envFlag } = require('./config/runtimeFlags');
 const workerHeartbeat = require('./services/backgroundWorkerHeartbeatService');
 
@@ -11,6 +12,7 @@ let stopLeadPartnerAutoSync = () => {};
 let stopAdminAutoSync = () => {};
 let stopHeartbeat = async () => {};
 let stopFinancialReconciliation = async () => {};
+let stopNotifications = async () => {};
 let shuttingDown = false;
 
 async function shutdown(signal, exitCode = 0) {
@@ -27,6 +29,7 @@ async function shutdown(signal, exitCode = 0) {
     stopLeadPartnerAutoSync();
     stopAdminAutoSync();
     await stopFinancialReconciliation();
+    await stopNotifications();
     await stopHeartbeat();
     await pool.end();
     clearTimeout(forceTimer);
@@ -52,6 +55,7 @@ async function start() {
   stopLeadPartnerAutoSync = startLeadPartnerSheetAutoSync({ unref: false, runImmediately: true });
   stopAdminAutoSync = startAdminGoogleSheetAutoSync({ unref: false, runImmediately: true });
   stopFinancialReconciliation = startFinancialReconciliationScheduler({ unref: false, runImmediately: true });
+  stopNotifications = startNotificationScheduler({ unref:false, runImmediately:true });
   process.once('SIGTERM', () => shutdown('SIGTERM'));
   process.once('SIGINT', () => shutdown('SIGINT'));
   process.once('uncaughtException', error => { console.error('Uncaught exception:', error?.stack || error); void shutdown('uncaughtException', 1); });

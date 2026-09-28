@@ -1,5 +1,6 @@
 const pool = require('../config/database');
 const inventoryService = require('./leadPartnerInventoryCompatService');
+const notificationService = require('./notificationService');
 
 const AUTO_SYNC_INTERVAL_MS = 5 * 60 * 1000;
 let timer = null;
@@ -57,6 +58,14 @@ async function runAutoSync() {
         } catch (healthError) {
           console.error(`Google Sheet sync health update failed: connection=${connection.id}: ${healthError.message}`);
         }
+        await notificationService.notifyUser({
+          userId:connection.user_id,type:'lead_partner_sheet_sync_failed',category:'sheet',severity:failureCount>=3?'critical':'warning',
+          title:'Google Sheet sync failed',
+          message:`Your connected Google Sheet could not sync. Retry is scheduled in ${retryMinutes} minute(s).`,
+          actionUrl:'/lead-partner/inventory',relatedType:'lead_partner_sheet_connection',relatedId:connection.id,
+          dedupeKey:`partner-sheet-failure:${connection.id}:${new Date().toISOString().slice(0,10)}`,
+          metadata:{failureCount,retryMinutes}
+        }).catch(notifyError=>console.error('Lead Partner sheet failure notification failed:',notifyError.message));
         console.error(
           `Google Sheet auto-sync failed: connection=${connection.id}: ${error.message}; retry in ${retryMinutes} minute(s)`
         );
