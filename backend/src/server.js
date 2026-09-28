@@ -70,19 +70,26 @@ app.use((req,res,next)=>{
   next();
 });
 app.use((req,res,next)=>{
+  if(!isProduction)return next();
   const started=process.hrtime.bigint();
   res.once('finish',()=>{
     const durationMs=Number(process.hrtime.bigint()-started)/1e6;
     if(res.statusCode>=500||durationMs>=slowRequestMs){
-      if(isProduction){
-        const level=res.statusCode>=500?'error':'warn';
-        console[level](`[${req.requestId}] ${req.method} ${req.path} -> ${res.statusCode} in ${durationMs.toFixed(1)}ms`);
-      }
-      if(operationalMonitoringEnabled){
-        operationalMonitoringService.recordHttpRequest({
-          req,res,durationMs,error:res.locals?.operationalError||null,slowRequestMs
-        }).catch(error=>console.error(`[${req.requestId}] Operational request capture failed:`,error?.message||error));
-      }
+      const level=res.statusCode>=500?'error':'warn';
+      console[level](`[${req.requestId}] ${req.method} ${req.path} -> ${res.statusCode} in ${durationMs.toFixed(1)}ms`);
+    }
+  });
+  next();
+});
+app.use((req,res,next)=>{
+  if(!operationalMonitoringEnabled)return next();
+  const started=process.hrtime.bigint();
+  res.once('finish',()=>{
+    const durationMs=Number(process.hrtime.bigint()-started)/1e6;
+    if(res.statusCode>=500||durationMs>=slowRequestMs){
+      operationalMonitoringService.recordHttpRequest({
+        req,res,durationMs,error:res.locals?.operationalError||null,slowRequestMs
+      }).catch(error=>console.error(`[${req.requestId}] Operational request capture failed:`,error?.message||error));
     }
   });
   next();
