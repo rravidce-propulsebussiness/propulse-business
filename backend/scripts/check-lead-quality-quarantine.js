@@ -33,7 +33,7 @@ assert(leadService.includes("status='quarantined'")&&leadService.includes('gate_
 assert(leadService.includes("QUALITY_OVERRIDE_REQUIRED"),'Generic status updates must not bypass quarantine review');
 assert(marketplace.includes("status='available'"),'Marketplace must default to available leads so quarantined inventory stays hidden');
 assert(controller.includes("'quarantined'")&&controller.includes('overrideLeadQuarantine'),'Admin controller must support quarantine status and audited override');
-assert(routes.includes("'/quality-gate/settings'")&&routes.includes("'/quality-gate/recheck'")&&routes.includes("'/quality-gate/override'"),'Quality gate settings/review routes are missing');
+assert(routes.includes("'/quality-gate/settings'")&&routes.includes("'/:id/quality-gate/recheck'")&&routes.includes("'/:id/quality-gate/override'"),'Quality gate settings/review routes are missing');
 assert(partnerInventory.includes("quality_gate_score")&&partnerInventory.includes("AS quarantined"),'Lead Partner inventory must expose quarantine state and count');
 assert(partnerDashboard.includes("l.status='quarantined' THEN 'quarantined'"),'Lead Partner dashboard must not count quarantined leads as available');
 assert(adminUi.includes('QUALITY GATE')&&adminUi.includes('Release anyway')&&adminUi.includes('Recheck'),'Admin UI must expose gate settings and explicit review actions');
