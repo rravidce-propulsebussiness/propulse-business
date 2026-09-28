@@ -2,6 +2,7 @@ require('dotenv').config();
 const express=require('express');
 const cors=require('cors');
 const pool=require('./config/database');
+const {parseTrustProxySetting}=require('./config/trustProxy');
 const {runMigrations}=require('./database/runMigrations');
 const industryRoutes=require('./routes/industryRoutes');
 const serviceRoutes=require('./routes/serviceRoutes');
@@ -32,8 +33,7 @@ const rawOrigins=String(process.env.CORS_ORIGIN||'').split(',').map(x=>x.trim())
 if(isProduction&&!rawOrigins.length) throw new Error('CORS_ORIGIN must be configured in production');
 const configuredOrigins=rawOrigins.length?rawOrigins:['http://localhost:5173'];
 const MAX_JSON_BYTES='10mb';
-const trustProxy=String(process.env.TRUST_PROXY||'').trim();
-if(trustProxy) app.set('trust proxy',trustProxy==='true'?true:Number.isNaN(Number(trustProxy))?trustProxy:Number(trustProxy));
+app.set('trust proxy',parseTrustProxySetting(process.env.TRUST_PROXY));
 app.disable('x-powered-by');
 app.use(cors({origin(origin,callback){if(!origin||configuredOrigins.includes(origin))return callback(null,true);return callback(new Error('CORS origin not allowed'));}}));
 app.use((req,res,next)=>{res.setHeader('X-Content-Type-Options','nosniff');res.setHeader('X-Frame-Options','DENY');res.setHeader('Referrer-Policy','strict-origin-when-cross-origin');res.setHeader('Permissions-Policy','camera=(),microphone=(),geolocation=()');if(isProduction)res.setHeader('Strict-Transport-Security','max-age=31536000; includeSubDomains');next();});
