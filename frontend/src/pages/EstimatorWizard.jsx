@@ -188,6 +188,11 @@ export default function EstimatorWizard({ flowKey }) {
   const activePackage = useMemo(() => (flow?.packages || []).find(item=>packageMatches(item,answers)) || null,[flow,answers])
   const completedCount=questions.filter(question=>!isEmptyAnswer(answers[question.questionKey])).length
   const progress=result?100:questions.length?Math.round((completedCount/questions.length)*100):0
+  const estimateArea=Number(answers.built_up_area||answers.area||0)
+  const constructionPerSqft=result&&Number(answers.built_up_area)>0?{
+    minimum:Number(result.minimum)/Number(answers.built_up_area),
+    maximum:Number(result.maximum)/Number(answers.built_up_area),
+  }:null
 
   useEffect(()=>{
     if(!flow||result)return
@@ -310,6 +315,12 @@ export default function EstimatorWizard({ flowKey }) {
         <h2>{flow.config?.resultTitle || 'Estimated project cost'}</h2>
         <div className="est-range"><strong>{money(result.minimum)}</strong><i>to</i><strong>{money(result.maximum)}</strong></div>
         {result.cityName && <p className="est-city">Adjusted for {result.cityName}</p>}
+        <div className="est-result-meta-grid">
+          <div><small>Estimate type</small><b>{answers.estimate_mode==='detailed'?'Detailed':'Rough'}</b></div>
+          {estimateArea>0&&<div><small>{answers.built_up_area?'Built-up area':'Home area'}</small><b>{new Intl.NumberFormat('en-IN').format(estimateArea)} sq ft</b></div>}
+          {(result.package||activePackage)&&<div><small>Package</small><b>{(result.package||activePackage).label}</b></div>}
+          {constructionPerSqft&&<div><small>Average estimate / sq ft</small><b>{money(constructionPerSqft.minimum)} – {money(constructionPerSqft.maximum)}</b></div>}
+        </div>
         {(result.package||activePackage)&&<PackagePreview item={result.package||activePackage} compact/>}
         {Array.isArray(result.breakdown) && result.breakdown.length > 0 && <div className="est-breakdown"><b>What shaped this range</b>{result.breakdown.map(item=><div key={item.kind+':'+item.key}><span>{item.label}</span><em>{item.minimum===item.maximum?money(item.minimum):money(item.minimum)+' – '+money(item.maximum)}</em></div>)}</div>}
         <div className="est-lead-confirm"><b>Project enquiry saved</b><span>Your name, mobile number, selected package, detailed choices and estimate are attached to one customer lead for follow-up.</span></div>
