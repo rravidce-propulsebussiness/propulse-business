@@ -261,6 +261,12 @@ test('Admin login reaches operations consoles and session survives reload',async
   await expect(page.getByRole('heading',{name:'Financial integrity'})).toBeVisible()
   await expect(page.getByRole('button',{name:/run fresh reconciliation/i})).toBeVisible()
 
+  await page.goto('/admin/customer-funnel')
+  await expect(page.getByRole('heading',{name:'Estimator & customer funnel'})).toBeVisible()
+  await expect(page.getByText('Calculation → quote conversion')).toBeVisible()
+  await expect(page.getByText('Which customer path produces leads?')).toBeVisible()
+
+  await page.goto('/admin/financial-integrity')
   await page.reload()
   await expect(page).toHaveURL(/\/admin\/financial-integrity$/)
   await expect(page.getByRole('heading',{name:'Financial integrity'})).toBeVisible()

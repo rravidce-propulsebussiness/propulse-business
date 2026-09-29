@@ -42,7 +42,8 @@
     "test:estimator-runtime": "node scripts/check-estimator-runtime.js",
     "test:interior-estimator": "node scripts/check-interior-estimator-seed.js",
     "test:estimator-conversion": "node scripts/check-estimator-conversion-runtime.js",
-    "test:construction-estimator": "node scripts/check-construction-estimator-seed.js"
+    "test:construction-estimator": "node scripts/check-construction-estimator-seed.js",
+    "test:customer-funnel-analytics": "node scripts/check-customer-funnel-analytics-runtime.js"
   },
   "keywords": [],
   "author": "",

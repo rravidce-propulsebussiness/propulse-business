@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { apiRequest } from '../../utils/api'
 import AdminEstimatorConfig from '../components/AdminEstimatorConfig'
 import './AdminCustomerFlows.css'
@@ -61,7 +62,7 @@ export default function AdminCustomerFlows(){
  }
 
  return <main className="flow-admin">
-  <section className="flow-hero"><div><span>CUSTOMER DEMAND</span><h1>Customer Flows</h1><p>Configure requirement journeys and estimator calculators on one versioned question engine.</p></div><button type="button" onClick={()=>setShowCreate(x=>!x)}>+ New flow</button></section>
+  <section className="flow-hero"><div><span>CUSTOMER DEMAND</span><h1>Customer Flows</h1><p>Configure requirement journeys and estimator calculators on one versioned question engine.</p></div><div className="flow-hero-actions"><Link to="/admin/customer-funnel">View Funnel Analytics</Link><button type="button" onClick={()=>setShowCreate(x=>!x)}>+ New flow</button></div></section>
   {error&&<div className="flow-alert error">{error}</div>}{message&&<div className="flow-alert success">{message}</div>}
   {showCreate&&<form className="flow-create" onSubmit={create}><div className="flow-panel-head"><div><span>NEW FLOW</span><h3>Create customer flow</h3></div></div><div className="flow-grid"><label>Type<select value={createForm.flowType} onChange={e=>setCreateForm({...createForm,flowType:e.target.value})}><option value="requirement">Requirement</option><option value="estimator">Estimator</option></select></label><label>Key<input value={createForm.key} onChange={e=>setCreateForm({...createForm,key:e.target.value.toLowerCase().replace(/[^a-z0-9-]/g,'')})} placeholder="example-flow" required/></label><label>Name<input value={createForm.name} onChange={e=>setCreateForm({...createForm,name:e.target.value})} required/></label><label>Industry<select value={createForm.industryId} onChange={e=>setCreateForm({...createForm,industryId:e.target.value,serviceId:'',subserviceId:''})} required><option value="">Select industry</option>{industries.map(x=><option key={x.id} value={x.id}>{x.name}</option>)}</select></label><label>Service <small>Optional</small><select value={createForm.serviceId} onChange={e=>setCreateForm({...createForm,serviceId:e.target.value,subserviceId:''})}><option value="">All services</option>{createServices.map(x=><option key={x.id} value={x.id}>{x.name}</option>)}</select></label><label>Subservice <small>Optional</small><select value={createForm.subserviceId} onChange={e=>setCreateForm({...createForm,subserviceId:e.target.value})}><option value="">All subservices</option>{createSubs.map(x=><option key={x.id} value={x.id}>{x.name}</option>)}</select></label></div><div className="flow-form-actions"><button type="button" onClick={()=>setShowCreate(false)}>Cancel</button><button className="primary" disabled={busy}>Create</button></div></form>}
   <div className="flow-layout">
