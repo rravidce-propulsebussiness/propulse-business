@@ -13,7 +13,42 @@ const slots=[
   {key:'showcase_interior_2',label:'Interior showcase 02',description:'Second Interior project showcase visual.',defaultPath:'/homepage/default-interior.svg'}
 ]
 
-const initial={hero_image_url:'',category_images:{}}
+const defaultContent={
+  home:{
+    heroKicker:'CONSTRUCTION · INTERIORS · PROJECT ESTIMATES',
+    heroTitle:'Build and design your home with',
+    heroAccent:'clarity before work begins.',
+    heroText:'Explore Construction and Interiors, compare package specifications, get a practical project estimate and speak with our team through a free consultation.',
+    servicesHeading:'Construction and Interiors under one roof.',
+    servicesText:'Start with the service you need, understand the package and budget, then continue with our project team for planning and execution.',
+    showcaseHeading:'See how Construction and Interiors come together.',
+    showcaseText:'Explore how structure, services, storage, materials and finishes come together across Construction and complete-home Interiors.',
+    estimatorHeading:'Get a useful estimate without a long questionnaire.',
+    estimatorText:'Enter the main project details, choose a package and receive an indicative range. Material or finish refinements remain optional.',
+    trustHeading:'Professional planning without making the first step complicated.',
+    trustText:'You do not need a complete BOQ or technical specification sheet to begin. Start with what you know, then refine the project with our team.',
+    consultationHeading:'Prefer to speak with a project expert?',
+    consultationText:'Request a free Construction or Interior consultation. The form is short, and our team can continue with your basic project details already available.'
+  },
+  construction:{
+    heroTitle:'Home construction, planned from foundation to finish.',
+    heroText:'Compare construction packages, get a practical project estimate and continue with a free construction consultation when you are ready.',
+    showcaseHeading:'Visualise the construction journey before you commit.',
+    showcaseText:'Project visuals help connect the estimate with the structure, services and finishing decisions that follow.'
+  },
+  interiors:{
+    heroTitle:'Complete home interiors, planned around your space and budget.',
+    heroText:'Plan kitchens, wardrobes, finishes and full-home interiors with clear package choices, a practical estimate and a free design consultation.',
+    showcaseHeading:'See how complete-home interiors can come together.',
+    showcaseText:'Use the showcase as inspiration while the estimate and consultation keep your actual home scope practical.'
+  }
+}
+const mergeContent=value=>({
+  home:{...defaultContent.home,...(value?.home||{})},
+  construction:{...defaultContent.construction,...(value?.construction||{})},
+  interiors:{...defaultContent.interiors,...(value?.interiors||{})},
+})
+const initial={hero_image_url:'',category_images:{},content:mergeContent({})}
 
 function urlFor(settings,slot){
   return slot.key==='hero'
@@ -25,6 +60,7 @@ export default function AdminHomepageMedia(){
   const [settings,setSettings]=useState(initial)
   const [loading,setLoading]=useState(true)
   const [busy,setBusy]=useState('')
+  const [contentSaving,setContentSaving]=useState(false)
   const [error,setError]=useState('')
   const [ok,setOk]=useState('')
   const refs=useRef({})
@@ -33,7 +69,7 @@ export default function AdminHomepageMedia(){
     try{
       setLoading(true);setError('')
       const data=await apiRequest('/admin/homepage-media')
-      setSettings({hero_image_url:data?.hero_image_url||'',category_images:data?.category_images||{}})
+      setSettings({hero_image_url:data?.hero_image_url||'',category_images:data?.category_images||{},content:mergeContent(data?.content)})
     }catch(e){setError(e.message||'Unable to load homepage media')}
     finally{setLoading(false)}
   }
@@ -61,7 +97,7 @@ export default function AdminHomepageMedia(){
         method:'POST',
         body:JSON.stringify({slot:slot.key,dataUrl})
       })
-      setSettings({hero_image_url:data?.hero_image_url||'',category_images:data?.category_images||{}})
+      setSettings({hero_image_url:data?.hero_image_url||'',category_images:data?.category_images||{},content:mergeContent(data?.content)})
       setOk(`${slot.label} updated successfully.`)
     }catch(e){setError(e.message||'Unable to upload image')}
     finally{
@@ -76,10 +112,24 @@ export default function AdminHomepageMedia(){
     try{
       setBusy(slot.key);setError('');setOk('')
       const data=await apiRequest('/admin/homepage-media/'+encodeURIComponent(slot.key),{method:'DELETE'})
-      setSettings({hero_image_url:data?.hero_image_url||'',category_images:data?.category_images||{}})
+      setSettings({hero_image_url:data?.hero_image_url||'',category_images:data?.category_images||{},content:mergeContent(data?.content)})
       setOk(`${slot.label} reverted to the default image.`)
     }catch(e){setError(e.message||'Unable to remove image')}
     finally{setBusy('')}
+  }
+
+  function updateCopy(section,key,value){
+    setSettings(current=>({...current,content:{...current.content,[section]:{...current.content[section],[key]:value}}}))
+  }
+
+  async function saveContent(){
+    try{
+      setContentSaving(true);setError('');setOk('')
+      const data=await apiRequest('/admin/homepage-media/content',{method:'PATCH',body:JSON.stringify({content:settings.content})})
+      setSettings({hero_image_url:data?.hero_image_url||'',category_images:data?.category_images||{},content:mergeContent(data?.content)})
+      setOk('Public website copy updated successfully.')
+    }catch(e){setError(e.message||'Unable to save public website copy')}
+    finally{setContentSaving(false)}
   }
 
   if(loading)return <main className="admin-home-media-page"><div className="admin-home-media-loading"><div className="admin-home-media-spinner"/>Loading homepage media…</div></main>
@@ -113,6 +163,16 @@ export default function AdminHomepageMedia(){
           </div>
         </article>
       })}
+    </section>
+
+    <section className="admin-home-copy">
+      <div className="admin-home-copy-head"><div><span className="admin-home-media-kicker">WEBSITE COPY</span><h2>Public Construction &amp; Interior content</h2><p>Edit the main customer-facing headings and descriptions without changing frontend code. Package, price and estimator text still comes from the estimator configuration.</p></div><button type="button" onClick={saveContent} disabled={contentSaving}>{contentSaving?'Saving…':'Save website copy'}</button></div>
+      <div className="admin-home-copy-grid">
+        <article className="wide"><h3>Homepage hero</h3><div className="admin-home-copy-fields"><label>Eyebrow<input value={settings.content.home.heroKicker} onChange={e=>updateCopy('home','heroKicker',e.target.value)}/></label><label>Headline<input value={settings.content.home.heroTitle} onChange={e=>updateCopy('home','heroTitle',e.target.value)}/></label><label>Highlighted words<input value={settings.content.home.heroAccent} onChange={e=>updateCopy('home','heroAccent',e.target.value)}/></label><label className="wide">Intro<textarea rows="3" value={settings.content.home.heroText} onChange={e=>updateCopy('home','heroText',e.target.value)}/></label></div></article>
+        <article><h3>Homepage sections</h3><div className="admin-home-copy-fields"><label>Services heading<input value={settings.content.home.servicesHeading} onChange={e=>updateCopy('home','servicesHeading',e.target.value)}/></label><label>Services description<textarea rows="3" value={settings.content.home.servicesText} onChange={e=>updateCopy('home','servicesText',e.target.value)}/></label><label>Showcase heading<input value={settings.content.home.showcaseHeading} onChange={e=>updateCopy('home','showcaseHeading',e.target.value)}/></label><label>Showcase description<textarea rows="3" value={settings.content.home.showcaseText} onChange={e=>updateCopy('home','showcaseText',e.target.value)}/></label><label>Estimator heading<input value={settings.content.home.estimatorHeading} onChange={e=>updateCopy('home','estimatorHeading',e.target.value)}/></label><label>Estimator description<textarea rows="3" value={settings.content.home.estimatorText} onChange={e=>updateCopy('home','estimatorText',e.target.value)}/></label></div></article>
+        <article><h3>Trust &amp; consultation</h3><div className="admin-home-copy-fields"><label>Trust heading<input value={settings.content.home.trustHeading} onChange={e=>updateCopy('home','trustHeading',e.target.value)}/></label><label>Trust description<textarea rows="3" value={settings.content.home.trustText} onChange={e=>updateCopy('home','trustText',e.target.value)}/></label><label>Consultation heading<input value={settings.content.home.consultationHeading} onChange={e=>updateCopy('home','consultationHeading',e.target.value)}/></label><label>Consultation description<textarea rows="3" value={settings.content.home.consultationText} onChange={e=>updateCopy('home','consultationText',e.target.value)}/></label></div></article>
+        {['construction','interiors'].map(section=><article key={section}><h3>{section==='construction'?'Construction page':'Interior page'}</h3><div className="admin-home-copy-fields"><label>Hero heading<input value={settings.content[section].heroTitle} onChange={e=>updateCopy(section,'heroTitle',e.target.value)}/></label><label>Hero description<textarea rows="3" value={settings.content[section].heroText} onChange={e=>updateCopy(section,'heroText',e.target.value)}/></label><label>Showcase heading<input value={settings.content[section].showcaseHeading} onChange={e=>updateCopy(section,'showcaseHeading',e.target.value)}/></label><label>Showcase description<textarea rows="3" value={settings.content[section].showcaseText} onChange={e=>updateCopy(section,'showcaseText',e.target.value)}/></label></div></article>)}
+      </div>
     </section>
 
     <div className="admin-home-media-footer">
