@@ -12,11 +12,20 @@ function makeSubmissionKey() {
   return 'req_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 12)
 }
 
+function requirementSection(question){
+  const configured=String(question?.validation?.section||'').trim()
+  if(configured)return configured
+  if(question?.questionType==='location')return 'Project location'
+  if(['budget','timeline'].includes(question?.questionType))return 'Budget & timeline'
+  if(question?.leadField==='requirement'||question?.questionType==='text')return 'Project requirement'
+  return 'Project details'
+}
+
 function groupQuestions(questions){
   const groups=[]
   const byName=new Map()
   for(const question of questions){
-    const name=String(question?.validation?.section || 'Project details').trim() || 'Project details'
+    const name=requirementSection(question)
     if(!byName.has(name)){
       const group={name,questions:[]}
       groups.push(group)
