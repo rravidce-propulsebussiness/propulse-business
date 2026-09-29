@@ -27,7 +27,7 @@ async function main() {
     assert.strictEqual(flow.config?.experience,'free_consultation');
     assert.strictEqual(flow.config?.submitLabel,'Get Free Consultation');
     assert.match(String(flow.config?.subheadline||''),/project|home|consultation|team/i);
-    assert.ok(Number(flow.question_count) >= 5 && Number(flow.question_count) <= 6);
+    assert.strictEqual(Number(flow.question_count),4);
   }
 
   const functionDef = (await pool.query(
