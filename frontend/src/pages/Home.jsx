@@ -124,7 +124,7 @@ function Home(){
           <h2>Get a useful estimate without a long questionnaire.</h2>
           <p>Enter the main project details, choose a package and receive an indicative range. If you want to refine materials or finishes, those choices remain optional instead of blocking the estimate.</p>
           <div className="estimate-feature-grid">
-            <div><b>One project estimate</b><span>No Rough vs Detailed decision. Start with the information customers normally know.</span></div>
+            <div><b>One straightforward estimate</b><span>Start with the information customers normally know at the planning stage.</span></div>
             <div><b>Package-based planning</b><span>See the specification package connected to the estimate before the consultation.</span></div>
             <div><b>Optional customisation</b><span>Refine materials and finishes only when those decisions are already known.</span></div>
             <div><b>Consultation ready</b><span>The same estimate can be discussed with our team without filling another long form.</span></div>
