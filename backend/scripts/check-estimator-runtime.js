@@ -67,6 +67,21 @@ async function main(){
   const flow=await customerFlowService.getPublishedFlow(KEY);
   assert.equal(flow.flowType,'estimator');
 
+  await assert.rejects(
+    ()=>estimatorService.calculate({
+      key:KEY,flowToken:flow.flowToken,answers:{area:'100',quality:'premium'},submissionKey:'ci_estimator_missing_contact_001',
+      contact:{name:'',phone:'',email:''},consent:true,website:'',
+    }),
+    error=>['NAME_REQUIRED','PHONE_REQUIRED'].includes(error.code)
+  );
+  await assert.rejects(
+    ()=>estimatorService.calculate({
+      key:KEY,flowToken:flow.flowToken,answers:{area:'100',quality:'premium'},submissionKey:'ci_estimator_missing_consent_001',
+      contact:{name:'CI Customer',phone:'9345678901',email:''},consent:false,website:'',
+    }),
+    error=>error.code==='CONSENT_REQUIRED'
+  );
+
   const submissionKey='ci_estimator_runtime_submission_001';
   const result=await estimatorService.calculate({
     key:KEY,flowToken:flow.flowToken,answers:{area:'100',quality:'premium'},submissionKey,
