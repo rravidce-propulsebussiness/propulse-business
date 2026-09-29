@@ -59,7 +59,7 @@ export default function RequirementWizard({ flowKey }) {
     startedTracked.current = false
     setState({ loading: true, saving: false, error: '', success: false, errorQuestionKey:'' })
     publicRequest('/customer-flows/' + flowKey).then(data => {
-      if (data?.flowType !== 'requirement') throw new Error('This requirement form is not available.')
+      if (data?.flowType !== 'requirement') throw new Error('This consultation form is not available.')
       if (!mounted.current) return
       setFlow(data)
       setAnswers({})
@@ -138,8 +138,8 @@ export default function RequirementWizard({ flowKey }) {
     }
   }
 
-  if (state.loading) return <main className="rq-page"><div className="rq-shell rq-status">Loading your requirement form…</div></main>
-  if (!flow) return <main className="rq-page"><div className="rq-shell rq-status error">{state.error || 'This requirement form is unavailable.'}<Link to="/">Back home</Link></div></main>
+  if (state.loading) return <main className="rq-page"><div className="rq-shell rq-status">Loading your consultation form…</div></main>
+  if (!flow) return <main className="rq-page"><div className="rq-shell rq-status error">{state.error || 'This consultation form is unavailable.'}<Link to="/">Back home</Link></div></main>
   if (state.success) return <main className="rq-page"><div className="rq-shell rq-success"><div className="rq-success-mark">✓</div><span>CALLBACK REQUESTED</span><h1>{flow.config?.consultationTitle || 'Your project brief is ready.'}</h1><p>{flow.config?.consultationText || 'Your project basics and contact details are saved together so our team can continue from the same information when we call you.'}</p><div><Link to="/">Back home</Link><Link className="rq-success-secondary" to="/contact">Contact project team</Link><button type="button" onClick={() => window.location.reload()}>Request another consultation</button></div></div></main>
 
   return <main className="rq-page">
