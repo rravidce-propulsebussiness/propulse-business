@@ -20,8 +20,8 @@ async function main(){
   assert.ok(flow,'Interior estimator must be seeded');
   assert.equal(flow.flow_type,'estimator');
   assert.equal(flow.status,'published');
-  assert.equal(flow.version_no,1);
-  assert.equal(flow.config.seedKey,'interior-cost-estimator-v1');
+  assert.ok(Number(flow.version_no)>=2);
+  assert.equal(flow.config.seedKey,'interior-cost-estimator-v2-modes');
   assert.match(String(flow.industry_name),/interior/i);
   assert.match(String(flow.service_name),/interior/i);
 
@@ -31,12 +31,13 @@ async function main(){
     [flow.version_id]
   )).rows;
   const keys=new Set(questions.map(q=>q.question_key));
-  for(const key of ['project_location','property_type','bhk','area','property_status','scope_mode','selected_work','kitchen_package','wardrobe_units','false_ceiling_area','furniture_package','finish_quality','timeline','additional_requirement']){
+  for(const key of ['estimate_mode','project_location','property_type','bhk','area','property_status','scope_mode','selected_work','kitchen_package','wardrobe_units','false_ceiling_area','furniture_package','finish_quality','plywood_spec','internal_laminate_spec','external_laminate_spec','hardware_spec','modular_finish_spec','timeline','additional_requirement']){
     assert.ok(keys.has(key),`Missing Interior estimator question: ${key}`);
   }
   assert.equal(questions.find(q=>q.question_key==='project_location').question_type,'location');
   assert.equal(questions.find(q=>q.question_key==='property_type').lead_field,'property_type');
   assert.equal(questions.find(q=>q.question_key==='additional_requirement').visibility,'protected');
+  assert.deepEqual(questions.find(q=>q.question_key==='plywood_spec').show_when,{questionKey:'estimate_mode',equals:'detailed'});
 
   const options=(await pool.query(
     `SELECT q.question_key,o.value,o.label
@@ -46,7 +47,7 @@ async function main(){
     [flow.version_id]
   )).rows;
   const optionKey=new Set(options.map(o=>o.question_key+':'+o.value));
-  for(const expected of ['property_type:apartment','property_type:villa','bhk:3bhk','scope_mode:full_home','scope_mode:selected_work','selected_work:kitchen','selected_work:wardrobes','finish_quality:premium','finish_quality:luxury']){
+  for(const expected of ['estimate_mode:rough','estimate_mode:detailed','property_type:apartment','property_type:villa','bhk:3bhk','scope_mode:full_home','scope_mode:selected_work','selected_work:kitchen','selected_work:wardrobes','finish_quality:premium','finish_quality:luxury','plywood_spec:package_default','plywood_spec:hdhmr_action_tesa','hardware_spec:hettich_hafele','modular_finish_spec:full_modular']){
     assert.ok(optionKey.has(expected),`Missing Interior estimator option: ${expected}`);
   }
 
