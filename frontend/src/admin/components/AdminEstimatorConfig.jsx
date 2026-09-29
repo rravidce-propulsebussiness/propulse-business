@@ -105,7 +105,7 @@ export default function AdminEstimatorConfig({flowId,versionId,questions=[]}){
    </article>
   })}</div>
 
-  <div className="est-admin-section-head material-pricing-head"><div><b>Detailed option pricing</b><small>Set a fixed or percentage cost adjustment for a material/specification option. This is the simple pricing editor for detailed estimates; use Advanced adjustments below for city-specific or complex rules.</small></div><button type="button" disabled={!config.editable} onClick={()=>setConfig(current=>({...current,adjustments:[...current.adjustments,blankMaterialAdjustment(current.adjustments.length)]}))}>+ Option price</button></div>
+  <div className="est-admin-section-head material-pricing-head"><div><b>Detailed option pricing</b><small>Set a fixed, percentage or rate × quantity adjustment for a material/specification option. Brochure-based starter rates can be edited here before publishing; use Advanced adjustments below for city-specific or complex rules.</small></div><button type="button" disabled={!config.editable} onClick={()=>setConfig(current=>({...current,adjustments:[...current.adjustments,blankMaterialAdjustment(current.adjustments.length)]}))}>+ Option price</button></div>
   <div className="material-price-list">{adjustments.map((item,index)=>{
    if(item?.metadata?.kind!=='material_option')return null
    const q=questions.find(question=>question.questionKey===item.showWhen?.questionKey)
