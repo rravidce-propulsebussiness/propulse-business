@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { API_BASE_URL, publicRequest } from '../utils/auth'
 import { trackFunnelEvent, trackFunnelEventOnce } from '../utils/funnelTracking'
 import CustomerFlowQuestion, { isEmptyAnswer, isQuestionVisible } from '../components/CustomerFlowQuestion'
@@ -68,7 +68,33 @@ function makeSubmissionKey(){
   return 'est_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,12)
 }
 
+function initialEstimatorAnswers(flow,modeParam,packageParam){
+  const seeded={}
+  const activeQuestions=(flow?.questions||[]).filter(question=>question?.isActive!==false)
+  const questionByKey=new Map(activeQuestions.map(question=>[question.questionKey,question]))
+
+  if(modeParam==='rough'||modeParam==='detailed'){
+    const modeQuestion=questionByKey.get('estimate_mode')
+    const allowed=(modeQuestion?.options||[]).some(option=>option?.isActive!==false&&String(option.value)===modeParam)
+    if(allowed)seeded.estimate_mode=modeParam
+  }
+
+  if(packageParam){
+    const pkg=(flow?.packages||[]).find(item=>item?.isActive!==false&&String(item.packageKey||'')===String(packageParam))
+    if(pkg?.selectorQuestionKey){
+      const selectorQuestion=questionByKey.get(pkg.selectorQuestionKey)
+      const optionAllowed=(selectorQuestion?.options||[]).some(option=>option?.isActive!==false&&String(option.value)===String(pkg.selectorValue))
+      if(optionAllowed)seeded[pkg.selectorQuestionKey]=pkg.selectorValue
+    }
+  }
+
+  return seeded
+}
+
 export default function EstimatorWizard({ flowKey }) {
+  const [searchParams] = useSearchParams()
+  const modeParam=searchParams.get('mode')
+  const packageParam=searchParams.get('package')
   const [flow,setFlow] = useState(null)
   const [answers,setAnswers] = useState({})
   const [step,setStep] = useState(0)
@@ -90,7 +116,7 @@ export default function EstimatorWizard({ flowKey }) {
       if (!mounted.current) return
       if (data?.flowType !== 'estimator') throw new Error('This calculator is not available.')
       setFlow(data)
-      setAnswers({})
+      setAnswers(initialEstimatorAnswers(data,modeParam,packageParam))
       setStep(0)
       setContactMode(false)
       setResult(null)
@@ -102,7 +128,7 @@ export default function EstimatorWizard({ flowKey }) {
       trackFunnelEvent('flow_opened',{flowKey,flowType:'estimator',source:'wizard'})
     }).catch(error => mounted.current && setState({loading:false,saving:false,error:error.message}))
     return () => { mounted.current = false }
-  },[flowKey])
+  },[flowKey,modeParam,packageParam])
 
   const questions = useMemo(() => (flow?.questions || []).filter(question => isQuestionVisible(question,answers)),[flow,answers])
   const activePackage = useMemo(() => (flow?.packages || []).find(item=>packageMatches(item,answers)) || null,[flow,answers])
@@ -168,7 +194,7 @@ export default function EstimatorWizard({ flowKey }) {
   }
 
   function restart() {
-    setAnswers({})
+    setAnswers(initialEstimatorAnswers(flow,modeParam,packageParam))
     setStep(0)
     setContactMode(false)
     setResult(null)
