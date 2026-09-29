@@ -19,8 +19,8 @@ BEGIN
   LOOP
     seed_key:=flow_key||'-free-consultation-v3';
     keys:=CASE flow_key
-      WHEN 'build' THEN ARRAY['project_type','project_location','plot_area','budget','timeline','additional_requirement']
-      ELSE ARRAY['project_location','property_type','bhk','interior_scope','timeline','additional_requirement']
+      WHEN 'build' THEN ARRAY['project_type','project_location','timeline','additional_requirement']
+      ELSE ARRAY['project_location','property_type','timeline','additional_requirement']
     END;
     headline:=CASE flow_key
       WHEN 'build' THEN 'Get a free construction consultation'
