@@ -46,6 +46,12 @@ async function main(){
   )).rowCount;
   assert.equal(intakeIndex,1);
 
+  const breakdownColumn=(await pool.query(
+    "SELECT data_type FROM information_schema.columns WHERE table_schema='public' AND table_name='estimator_calculations' AND column_name='breakdown'"
+  )).rows[0];
+  assert.equal(breakdownColumn?.data_type,'jsonb');
+  assert.match(constraints,/jsonb_typeof\(breakdown\).*array/i);
+
 
   console.log('Estimator schema integrity checks passed.');
 }
