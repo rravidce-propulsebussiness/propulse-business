@@ -4,15 +4,15 @@ import { publicRequest } from '../utils/auth'
 import './Home.css'
 
 const IMAGES = {
-  hero: '/homepage/premium-hero.svg',
-  construction: '/homepage/premium-construction.svg',
-  interior: '/homepage/premium-interior.svg',
-  realEstate: '/homepage/premium-realestate.svg',
-  project1: '/homepage/premium-hero.svg',
-  project2: '/homepage/premium-interior.svg',
-  project3: '/homepage/premium-construction.svg',
-  project4: '/homepage/premium-interior.svg',
-  project5: '/homepage/premium-hero.svg',
+  hero: 'https://images.unsplash.com/photo-1767950470198-c9cd97f8ed87?auto=format&fit=crop&w=1800&q=88',
+  construction: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=86',
+  interior: 'https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?auto=format&fit=crop&w=1200&q=86',
+  realEstate: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1200&q=86',
+  project1: 'https://images.unsplash.com/photo-1600585152915-d208bec867a1?auto=format&fit=crop&w=1000&q=84',
+  project2: 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=1000&q=84',
+  project3: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1000&q=84',
+  project4: 'https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?auto=format&fit=crop&w=1000&q=84',
+  project5: 'https://images.unsplash.com/photo-1600573472591-ee6b68d14c68?auto=format&fit=crop&w=1000&q=84',
 }
 
 const SERVICES = [
@@ -175,6 +175,23 @@ function Home() {
         <div className="pp-hero-media">
           <img src={IMAGES.hero} alt="Premium modern villa" fetchPriority="high" onError={event => { event.currentTarget.src = '/homepage/default-residential.svg' }} />
           <div className="pp-hero-fade" />
+          <div className="pp-script">From<br /><strong>Your Ideas</strong><br />to Reality</div>
+          <div className="pp-journey">
+            <div className="pp-journey-card plan">
+              <div className="pp-blueprint"><i /><i /><i /><i /></div>
+              <b>Plan</b>
+            </div>
+            <span>→</span>
+            <div className="pp-journey-card">
+              <img src={IMAGES.construction} alt="" />
+              <b>Build</b>
+            </div>
+            <span>→</span>
+            <div className="pp-journey-card">
+              <img src={IMAGES.hero} alt="" />
+              <b>Your Dream Home</b>
+            </div>
+          </div>
         </div>
       </section>
 
