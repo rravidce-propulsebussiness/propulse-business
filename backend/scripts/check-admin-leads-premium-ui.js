@@ -30,6 +30,9 @@ assert(!leads.includes('Newest leads appear first'),'Redundant inventory explain
 assert(leads.includes('v9-inventory-head'),'Premium inventory command bar must remain');
 assert(leads.includes('Auto-refresh every 60s'),'Inventory refresh status must remain visible');
 assert(leads.includes("refreshing?'Refreshing…':'Refresh data'"),'Manual refresh control must remain');
+assert(leads.includes('ESTIMATE · AWAITING CONTACT'),'Automatic estimator leads must be labelled before contact is supplied');
+assert(leads.includes('Waiting for customer contact')&&leads.includes('SAFE HOLD'),'Contact-pending estimator leads must show a safe-hold state');
+assert(css.includes('.v9-estimator-pending'),'Contact-pending estimator leads must retain dedicated premium styling');
 
 assert(leads.includes('v9-upload-workspace'),'Premium Upload Leads workspace must remain');
 assert(leads.includes('LEAD OPERATIONS / CSV IMPORT'),'Upload Leads hero must remain');

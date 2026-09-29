@@ -3,6 +3,7 @@ const crypto = require('crypto');
 const pool = require('../src/config/database');
 const customerFlowService = require('../src/services/customerFlowService');
 const estimatorService = require('../src/services/estimatorService');
+const leadService = require('../src/services/leadService');
 
 const KEY='ci-estimator-conversion';
 let definitionId=null;
@@ -74,23 +75,38 @@ async function main(){
   const snapshot={flow:{definitionId:flow.definitionId,key:flow.key,versionId:flow.versionId,versionNo:flow.versionNo},rates:[],adjustments:[]};
   const snapshotJson=JSON.stringify(snapshot);
   const hash=crypto.createHash('sha256').update(snapshotJson).digest('hex');
-  await pool.query(
-    `INSERT INTO estimator_calculations(public_id,definition_id,version_id,city_id,pincode,answers,config_snapshot,config_hash,result_min,result_max,currency)
-     VALUES($1,$2,$3,$4,$5,$6::jsonb,$7::jsonb,$8,100000.00,120000.00,'INR')`,
-    [publicId,flow.definitionId,flow.versionId,location.city_id,'500001',JSON.stringify(answers),snapshotJson,hash]
-  );
+  const submissionKey='ci_estimator_conversion_001';
+  const calculation=(await pool.query(
+    `INSERT INTO estimator_calculations(public_id,definition_id,version_id,city_id,pincode,answers,config_snapshot,config_hash,result_min,result_max,currency,intake_submission_key)
+     VALUES($1,$2,$3,$4,$5,$6::jsonb,$7::jsonb,$8,100000.00,120000.00,'INR',$9)
+     RETURNING *`,
+    [publicId,flow.definitionId,flow.versionId,location.city_id,'500001',JSON.stringify(answers),snapshotJson,hash,submissionKey]
+  )).rows[0];
+
+  const pendingDetails=estimatorService.buildEstimatorLeadPayload(flow,calculation,{source:'estimator_calculation',contactPending:true});
+  const pendingLead=await leadService.createLead({
+    industryId:flow.industryId,serviceId:flow.serviceId,subserviceId:flow.subserviceId,
+    stateId:location.state_id,cityId:location.city_id,customerName:null,customerPhone:null,customerEmail:null,
+    requirement:pendingDetails.requirement,propertyType:pendingDetails.propertyType,budget:pendingDetails.budget,
+    source:'public_estimator',notes:null,customFields:pendingDetails.customFields,pincode:'500001',
+    intakeSubmissionKey:submissionKey,qualityGateContext:'public_estimator_intent',deferQualityGate:true,createdBy:null,
+  });
+  leadId=Number(pendingLead.id);
+  await pool.query('UPDATE estimator_calculations SET lead_id=$1 WHERE public_id=$2',[leadId,publicId]);
+  assert.equal(pendingLead.status,'quarantined');
+  assert.equal(pendingLead.custom_fields?._estimator?.contactPending,true);
 
   const first=await estimatorService.convertCalculation({
     publicId,
     contact:{name:'CI Estimator Customer',phone:'9123456789',email:'ci-estimator@example.com'},
     consent:true,
-    submissionKey:'ci_estimator_conversion_001',
+    submissionKey,
     website:''
   });
   assert.equal(first.accepted,true);
   assert.equal(first.duplicate,false);
   assert.ok(first.leadId);
-  leadId=Number(first.leadId);
+  assert.equal(Number(first.leadId),leadId,'Quote request must enrich the estimator lead instead of creating another lead');
 
   const lead=(await pool.query(
     `SELECT * FROM leads WHERE id=$1`,
@@ -107,6 +123,9 @@ async function main(){
   assert.equal(lead.contact_consent_version,'estimator-quote-contact-v1');
   assert.equal(lead.custom_fields?._estimator?.calculationId,publicId);
   assert.equal(lead.custom_fields?._estimator?.minimum,100000);
+  assert.equal(lead.custom_fields?._estimator?.contactPending,false);
+  assert.equal(lead.custom_fields?._estimator?.lifecycle,'quote_requested');
+  assert.ok(lead.quality_gate_checked_at,'Enriched estimator lead must be re-evaluated by the quality gate');
   assert.match(String(lead.requirement),/Indicative estimate/);
 
   const linked=(await pool.query(
@@ -120,7 +139,7 @@ async function main(){
     publicId,
     contact:{name:'Different Name',phone:'9876543210',email:''},
     consent:true,
-    submissionKey:'ci_estimator_conversion_002',
+    submissionKey:'ci_estimator_conversion_retry_002',
     website:''
   });
   assert.equal(second.accepted,true);

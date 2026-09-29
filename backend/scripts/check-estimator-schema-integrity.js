@@ -30,6 +30,17 @@ async function main(){
   )).rowCount;
   assert.equal(publicIdIndex,1);
 
+  const intakeColumn=(await pool.query(
+    "SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='estimator_calculations' AND column_name='intake_submission_key'"
+  )).rowCount;
+  assert.equal(intakeColumn,1);
+
+  const intakeIndex=(await pool.query(
+    "SELECT 1 FROM pg_indexes WHERE schemaname='public' AND tablename='estimator_calculations' AND indexdef ILIKE '%UNIQUE%' AND indexdef ILIKE '%intake_submission_key%'"
+  )).rowCount;
+  assert.equal(intakeIndex,1);
+
+
   console.log('Estimator schema integrity checks passed.');
 }
 main().catch(error=>{console.error(error);process.exitCode=1}).finally(()=>pool.end());

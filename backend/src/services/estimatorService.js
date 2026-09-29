@@ -3,6 +3,7 @@ const pool = require('../config/database');
 const customerFlowService = require('./customerFlowService');
 const pincodeDetectionService = require('./pincodeDetectionService');
 const leadService = require('./leadService');
+const leadQualityGateService = require('./leadQualityGateService');
 const { normalizePhone, normalizeEmail, normalizeName, validateSubmissionKey } = require('./publicContactValidationService');
 const { parseMoneyPaise, paiseToMoney } = require('../utils/money');
 const { fail, isEmpty, isVisible, formatAnswer, validateAnswers } = require('./customerFlowValidationService');
@@ -296,7 +297,7 @@ async function saveAdminConfig(flowId, payload) {
 
 async function resolveLocation(flow, answers) {
   const question = flow.questions.find(item => item.questionType === 'location' && isVisible(item,answers) && !isEmpty(answers[item.questionKey]));
-  if (!question) return { cityId:null,pincode:null,cityName:null };
+  if (!question) return { cityId:null,stateId:null,pincode:null,cityName:null };
   const pincode = String(answers[question.questionKey]).trim();
   let detected;
   try {
@@ -306,19 +307,116 @@ async function resolveLocation(flow, answers) {
     throw error;
   }
   if (!detected?.city?.id || ['NEEDS_MAPPING','NO_MATCH'].includes(detected.status)) fail('This PIN code is not mapped to a supported city yet.', 'PIN_CITY_MAPPING_REQUIRED');
-  return { cityId:Number(detected.city.id),pincode,cityName:detected.city.name || null };
+  return {
+    cityId:Number(detected.city.id),
+    stateId:Number(detected.city.state_id) || null,
+    pincode,
+    cityName:detected.city.name || null,
+  };
 }
 
-async function calculate({ key, flowToken, answers }) {
+function calculationResponse({ flow, calculation, location, result, leadId=null, leadStatus=null, duplicate=false }) {
+  return {
+    calculationId:calculation.public_id,
+    createdAt:calculation.created_at,
+    flowKey:flow.key,
+    versionNo:flow.versionNo,
+    currency:calculation.currency || 'INR',
+    minimum:Number(calculation.result_min),
+    maximum:Number(calculation.result_max),
+    cityId:calculation.city_id || location?.cityId || null,
+    cityName:location?.cityName || null,
+    breakdown:result.breakdown,
+    quoteEligible:Boolean((calculation.city_id || location?.cityId) && (calculation.pincode || location?.pincode)),
+    leadId:leadId ? Number(leadId) : null,
+    leadStatus:leadStatus || null,
+    duplicate:Boolean(duplicate),
+    disclaimer:String(flow.config?.estimatorDisclaimer || 'This is an indicative estimate based on the information provided. Final pricing may change after site inspection, measurements, specifications and professional review.'),
+  };
+}
+
+async function ensureEstimatorIntentLead({flow,calculation,location,intakeKey}) {
+  if (calculation.lead_id) {
+    const lead=(await pool.query('SELECT id,status FROM leads WHERE id=$1',[Number(calculation.lead_id)])).rows[0];
+    if (lead) return {leadId:Number(lead.id),leadStatus:lead.status};
+  }
+  const details=buildEstimatorLeadPayload(flow,calculation,{source:'estimator_calculation',contactPending:true});
+  let lead;
+  let createdHere=false;
+  try {
+    lead=await leadService.createLead({
+      industryId:flow.industryId,serviceId:flow.serviceId,subserviceId:flow.subserviceId,
+      stateId:location?.stateId || null,cityId:calculation.city_id || location?.cityId || null,
+      customerName:null,customerPhone:null,customerEmail:null,
+      requirement:details.requirement,propertyType:details.propertyType,budget:details.budget,
+      source:'public_estimator',notes:null,customFields:details.customFields,pincode:calculation.pincode || location?.pincode || null,
+      intakeSubmissionKey:intakeKey,qualityGateContext:'public_estimator_intent',deferQualityGate:true,createdBy:null,
+    });
+    createdHere=true;
+  } catch (error) {
+    if (error.code !== '23505') throw error;
+    lead=(await pool.query(
+      `SELECT id,status,custom_fields FROM leads WHERE intake_submission_key=$1 LIMIT 1`,
+      [intakeKey]
+    )).rows[0];
+    if (!lead) throw error;
+    const existingFlow=String(lead.custom_fields?._intake?.flowKey || '');
+    if (existingFlow && existingFlow !== flow.key) fail('Submission session belongs to a different customer flow','INVALID_SUBMISSION_KEY',409);
+  }
+  const leadId=Number(lead.id);
+  try {
+    const linked=(await pool.query(
+      `UPDATE estimator_calculations SET lead_id=$1 WHERE id=$2 AND lead_id IS NULL RETURNING lead_id`,
+      [leadId,calculation.id]
+    )).rows[0];
+    if (!linked) {
+      const current=(await pool.query('SELECT lead_id FROM estimator_calculations WHERE id=$1',[calculation.id])).rows[0];
+      if (!current?.lead_id) fail('Unable to link the estimate to its customer lead','ESTIMATOR_LEAD_LINK_FAILED',409);
+      if (Number(current.lead_id) !== leadId) {
+        if (createdHere) await pool.query('DELETE FROM leads WHERE id=$1 AND NOT EXISTS(SELECT 1 FROM estimator_calculations WHERE lead_id=$1)',[leadId]).catch(()=>{});
+        const currentLead=(await pool.query('SELECT id,status FROM leads WHERE id=$1',[Number(current.lead_id)])).rows[0];
+        return {leadId:Number(current.lead_id),leadStatus:currentLead?.status || 'quarantined'};
+      }
+    }
+    return {leadId,leadStatus:lead.status || 'quarantined'};
+  } catch (error) {
+    if (createdHere) await pool.query(
+      'DELETE FROM leads WHERE id=$1 AND NOT EXISTS(SELECT 1 FROM estimator_calculations WHERE lead_id=$1)',
+      [leadId]
+    ).catch(()=>{});
+    throw error;
+  }
+}
+async function calculate({ key, flowToken, answers, submissionKey }) {
   const flow = await customerFlowService.getPublishedFlow(key);
   if (flow.flowType !== 'estimator') fail('This flow is not an estimator', 'NOT_ESTIMATOR', 404);
   customerFlowService.verifyFlowToken(flowToken, flow.versionId);
   const safeAnswers = validateAnswers(flow,answers);
+  const intakeKey = String(submissionKey || '').trim() ? validateSubmissionKey(submissionKey) : `estcalc_${crypto.randomBytes(18).toString('base64url')}`;
   const { rates, adjustments } = await getEstimatorConfigForVersion(pool,flow.versionId);
   if (!rates.some(item => item.isActive !== false)) fail('This estimator is not configured yet', 'ESTIMATOR_NOT_CONFIGURED', 409);
+
+  const existing = (await pool.query(
+    `SELECT ec.*,c.state_id,c.name city_name,l.status lead_status
+       FROM estimator_calculations ec
+       LEFT JOIN cities c ON c.id=ec.city_id
+       LEFT JOIN leads l ON l.id=ec.lead_id
+      WHERE ec.intake_submission_key=$1
+      LIMIT 1`,
+    [intakeKey]
+  )).rows[0];
+  if (existing) {
+    if (Number(existing.definition_id) !== Number(flow.definitionId)) fail('Submission session belongs to a different estimator', 'INVALID_SUBMISSION_KEY', 409);
+    const existingAnswers=existing.answers && typeof existing.answers === 'object' && !Array.isArray(existing.answers) ? existing.answers : safeAnswers;
+    const existingResult=calculateEstimateFromConfig({ answers:existingAnswers,rateItems:rates,adjustments,cityId:existing.city_id });
+    const location={cityId:existing.city_id,stateId:existing.state_id,pincode:existing.pincode,cityName:existing.city_name};
+    const intent=await ensureEstimatorIntentLead({flow,calculation:existing,location,intakeKey});
+    existing.lead_id=intent.leadId;
+    return calculationResponse({flow,calculation:existing,location,result:existingResult,leadId:intent.leadId,leadStatus:intent.leadStatus,duplicate:true});
+  }
+
   const location = await resolveLocation(flow,safeAnswers);
   const result = calculateEstimateFromConfig({ answers:safeAnswers,rateItems:rates,adjustments,cityId:location.cityId });
-
   const snapshot = {
     flow:{definitionId:flow.definitionId,key:flow.key,versionId:flow.versionId,versionNo:flow.versionNo},
     rates,
@@ -327,31 +425,43 @@ async function calculate({ key, flowToken, answers }) {
   const snapshotJson = JSON.stringify(snapshot);
   const configHash = crypto.createHash('sha256').update(snapshotJson).digest('hex');
   const publicId = crypto.randomBytes(18).toString('base64url');
-  const inserted = (await pool.query(
-    `INSERT INTO estimator_calculations(public_id,definition_id,version_id,city_id,pincode,answers,config_snapshot,config_hash,result_min,result_max,currency)
-     VALUES($1,$2,$3,$4,$5,$6::jsonb,$7::jsonb,$8,$9,$10,'INR')
-     RETURNING public_id,created_at`,
-    [publicId,flow.definitionId,flow.versionId,location.cityId,location.pincode,JSON.stringify(safeAnswers),snapshotJson,configHash,result.minimum,result.maximum]
-  )).rows[0];
+  let inserted;
+  try {
+    inserted = (await pool.query(
+      `INSERT INTO estimator_calculations(public_id,definition_id,version_id,city_id,pincode,answers,config_snapshot,config_hash,result_min,result_max,currency,intake_submission_key)
+       VALUES($1,$2,$3,$4,$5,$6::jsonb,$7::jsonb,$8,$9,$10,'INR',$11)
+       RETURNING *`,
+      [publicId,flow.definitionId,flow.versionId,location.cityId,location.pincode,JSON.stringify(safeAnswers),snapshotJson,configHash,result.minimum,result.maximum,intakeKey]
+    )).rows[0];
+  } catch (error) {
+    if (error.code !== '23505') throw error;
+    const raced=(await pool.query(
+      `SELECT ec.*,c.state_id,c.name city_name,l.status lead_status
+         FROM estimator_calculations ec
+         LEFT JOIN cities c ON c.id=ec.city_id
+         LEFT JOIN leads l ON l.id=ec.lead_id
+        WHERE ec.intake_submission_key=$1 LIMIT 1`,
+      [intakeKey]
+    )).rows[0];
+    if (!raced) throw error;
+    const racedResult=calculateEstimateFromConfig({ answers:raced.answers || safeAnswers,rateItems:rates,adjustments,cityId:raced.city_id });
+    const racedLocation={cityId:raced.city_id,stateId:raced.state_id,pincode:raced.pincode,cityName:raced.city_name};
+    const intent=await ensureEstimatorIntentLead({flow,calculation:raced,location:racedLocation,intakeKey});
+    raced.lead_id=intent.leadId;
+    return calculationResponse({flow,calculation:raced,location:racedLocation,result:racedResult,leadId:intent.leadId,leadStatus:intent.leadStatus,duplicate:true});
+  }
 
-  return {
-    calculationId:inserted.public_id,
-    createdAt:inserted.created_at,
-    flowKey:flow.key,
-    versionNo:flow.versionNo,
-    currency:'INR',
-    minimum:result.minimum,
-    maximum:result.maximum,
-    cityId:location.cityId,
-    cityName:location.cityName,
-    breakdown:result.breakdown,
-    quoteEligible:Boolean(location.cityId && location.pincode),
-    disclaimer:String(flow.config?.estimatorDisclaimer || 'This is an indicative estimate based on the information provided. Final pricing may change after site inspection, measurements, specifications and professional review.'),
-  };
+  try {
+    const intent=await ensureEstimatorIntentLead({flow,calculation:inserted,location,intakeKey});
+    inserted.lead_id=intent.leadId;
+    return calculationResponse({flow,calculation:inserted,location,result,leadId:intent.leadId,leadStatus:intent.leadStatus});
+  } catch (error) {
+    await pool.query('DELETE FROM estimator_calculations WHERE id=$1 AND lead_id IS NULL',[inserted.id]).catch(()=>{});
+    throw error;
+  }
 }
 
-
-function buildEstimatorLeadPayload(flow, calculation) {
+function buildEstimatorLeadPayload(flow, calculation, {source='estimator_quote_request',contactPending=false}={}) {
   const answers = calculation.answers && typeof calculation.answers === 'object' && !Array.isArray(calculation.answers) ? calculation.answers : {};
   const custom = {};
   const marketplaceAnswers = {};
@@ -379,39 +489,25 @@ function buildEstimatorLeadPayload(flow, calculation) {
 
   const estimateText = `Indicative estimate ₹${Number(calculation.result_min).toLocaleString('en-IN')} – ₹${Number(calculation.result_max).toLocaleString('en-IN')}`;
   custom._estimator = {
-    calculationId: calculation.public_id,
-    flowKey: flow.key,
-    definitionId: flow.definitionId,
-    versionId: flow.versionId,
-    versionNo: flow.versionNo,
-    minimum: Number(calculation.result_min),
-    maximum: Number(calculation.result_max),
-    currency: calculation.currency,
-    calculatedAt: calculation.created_at,
-    configHash: calculation.config_hash,
-    answers,
+    calculationId: calculation.public_id,flowKey: flow.key,definitionId: flow.definitionId,versionId: flow.versionId,versionNo: flow.versionNo,
+    minimum:Number(calculation.result_min),maximum:Number(calculation.result_max),currency:calculation.currency,calculatedAt:calculation.created_at,
+    configHash:calculation.config_hash,contactPending:Boolean(contactPending),lifecycle:contactPending?'estimate_completed':'quote_requested',answers,
   };
   custom._intake = {
-    flowKey: flow.key,
-    definitionId: flow.definitionId,
-    versionId: flow.versionId,
-    versionNo: flow.versionNo,
-    source: 'estimator_quote_request',
-    answers,
+    flowKey:flow.key,definitionId:flow.definitionId,versionId:flow.versionId,versionNo:flow.versionNo,source,answers,
   };
   custom._qualification = {
-    detailedRequirementCompleted: true,
-    budgetProvided: Boolean(budget),
-    timelineProvided: Boolean((flow.questions || []).some(q => q.questionType === 'timeline' && !isEmpty(answers[q.questionKey]))),
-    projectSizeKnown: Boolean((flow.questions || []).some(q => ['area','number'].includes(q.questionType) && !isEmpty(answers[q.questionKey]))),
-    estimatorCompleted: true,
-    marketplaceAnswers,
+    detailedRequirementCompleted:true,budgetProvided:Boolean(budget),
+    timelineProvided:Boolean((flow.questions || []).some(q => q.questionType === 'timeline' && !isEmpty(answers[q.questionKey]))),
+    projectSizeKnown:Boolean((flow.questions || []).some(q => ['area','number'].includes(q.questionType) && !isEmpty(answers[q.questionKey]))),
+    estimatorCompleted:true,marketplaceAnswers,
   };
   if (Object.keys(protectedAnswers).length) custom._protected_answers = protectedAnswers;
 
   const summary = summaryParts.join(' · ').slice(0, 3200);
-  const requirement = (explicitRequirement ? `${explicitRequirement} · ${estimateText}` : `${flow.name}: ${summary || 'Customer requested actual quotations'} · ${estimateText}`).slice(0, 4000);
-  return { customFields: custom, propertyType, budget, requirement };
+  const fallback=contactPending?'Customer completed estimator':'Customer requested actual quotations';
+  const requirement = (explicitRequirement ? `${explicitRequirement} · ${estimateText}` : `${flow.name}: ${summary || fallback} · ${estimateText}`).slice(0, 4000);
+  return { customFields:custom,propertyType,budget,requirement };
 }
 
 async function convertCalculation({ publicId, contact, consent, submissionKey, website }) {
@@ -427,6 +523,7 @@ async function convertCalculation({ publicId, contact, consent, submissionKey, w
   const lockKey = `estimator:convert:${id}`;
   const client = await pool.connect();
   let locked = false;
+  let inTransaction = false;
   try {
     await client.query('SELECT pg_advisory_lock(hashtext($1))',[lockKey]);
     locked = true;
@@ -440,50 +537,59 @@ async function convertCalculation({ publicId, contact, consent, submissionKey, w
     )).rows[0];
     if (!calculation) fail('Estimate not found','ESTIMATE_NOT_FOUND',404);
     if (!calculation.city_id || !calculation.state_id || !calculation.pincode) fail('A verified project location is required before requesting quotations','ESTIMATOR_LOCATION_REQUIRED',409);
-    if (calculation.lead_id) return { accepted:true,leadId:Number(calculation.lead_id),duplicate:true,calculationId:id };
+    if (calculation.lead_id && calculation.converted_at) return { accepted:true,leadId:Number(calculation.lead_id),duplicate:true,calculationId:id };
 
     const flow = await customerFlowService.getVersionFlow(calculation.version_id);
     if (flow.flowType !== 'estimator') fail('This estimate is no longer available for quote requests','NOT_ESTIMATOR',404);
-    const details = buildEstimatorLeadPayload(flow,calculation);
+    const details = buildEstimatorLeadPayload(flow,calculation,{source:'estimator_quote_request',contactPending:false});
+
+    if (calculation.lead_id) {
+      const leadId=Number(calculation.lead_id);
+      await client.query('BEGIN');
+      inTransaction=true;
+      const updated=(await client.query(
+        `UPDATE leads SET
+           customer_name=$1,customer_phone=$2,customer_email=$3,requirement=$4,property_type=$5,budget=$6,
+           source='public_estimator',state_id=$7,city_id=$8,pincode=$9,
+           custom_fields=COALESCE(custom_fields,'{}'::jsonb) || $10::jsonb,
+           contact_consent_at=CURRENT_TIMESTAMP,contact_consent_version='estimator-quote-contact-v1',
+           intake_submission_key=COALESCE(intake_submission_key,$11),updated_at=CURRENT_TIMESTAMP
+         WHERE id=$12
+         RETURNING id,status`,
+        [name,phone,email,details.requirement,details.propertyType,details.budget,calculation.state_id,calculation.city_id,calculation.pincode,JSON.stringify(details.customFields),intakeKey,leadId]
+      )).rows[0];
+      if (!updated) fail('Estimator lead is missing','LEAD_NOT_FOUND',409);
+      const gated=await leadQualityGateService.evaluateAndApply(leadId,{context:'public_estimator',autoRelease:true},client);
+      await client.query(
+        `UPDATE estimator_calculations SET converted_at=COALESCE(converted_at,CURRENT_TIMESTAMP) WHERE id=$1`,
+        [calculation.id]
+      );
+      await client.query('COMMIT');
+      inTransaction=false;
+      return {accepted:true,leadId,duplicate:false,calculationId:id,leadStatus:gated.lead?.status || updated.status};
+    }
 
     let leadId = null;
     let duplicate = false;
     try {
       const lead = await leadService.createLead({
-        industryId:flow.industryId,
-        serviceId:flow.serviceId,
-        subserviceId:flow.subserviceId,
-        stateId:calculation.state_id || null,
-        cityId:calculation.city_id || null,
-        customerName:name,
-        customerPhone:phone,
-        customerEmail:email,
-        requirement:details.requirement,
-        propertyType:details.propertyType,
-        budget:details.budget,
-        source:'public_estimator',
-        notes:null,
-        customFields:details.customFields,
-        pincode:calculation.pincode || null,
-        contactConsentAt:new Date(),
-        contactConsentVersion:'estimator-quote-contact-v1',
-        intakeSubmissionKey:intakeKey,
-        qualityGateContext:'public_estimator',
-        createdBy:null,
+        industryId:flow.industryId,serviceId:flow.serviceId,subserviceId:flow.subserviceId,
+        stateId:calculation.state_id || null,cityId:calculation.city_id || null,
+        customerName:name,customerPhone:phone,customerEmail:email,requirement:details.requirement,
+        propertyType:details.propertyType,budget:details.budget,source:'public_estimator',notes:null,
+        customFields:details.customFields,pincode:calculation.pincode || null,contactConsentAt:new Date(),
+        contactConsentVersion:'estimator-quote-contact-v1',intakeSubmissionKey:intakeKey,
+        qualityGateContext:'public_estimator',createdBy:null,
       });
       leadId = Number(lead.id);
     } catch (error) {
       if (error.code === 'DUPLICATE_LEAD' && error.leadId) {
-        leadId = Number(error.leadId);
-        duplicate = true;
+        leadId = Number(error.leadId);duplicate = true;
       } else if (error.code === '23505') {
-        const existing = (await client.query('SELECT id FROM leads WHERE intake_submission_key=$1 LIMIT 1',[intakeKey])).rows[0];
-        if (!existing) throw error;
-        leadId = Number(existing.id);
-        duplicate = true;
-      } else {
-        throw error;
-      }
+        const existingLead = (await client.query('SELECT id FROM leads WHERE intake_submission_key=$1 LIMIT 1',[intakeKey])).rows[0];
+        if (!existingLead) throw error;
+        leadId = Number(existingLead.id);duplicate = true;
+      } else throw error;
     }
 
     const linked = (await client.query(
@@ -494,11 +600,14 @@ async function convertCalculation({ publicId, contact, consent, submissionKey, w
       [leadId,calculation.id]
     )).rows[0];
     if (!linked) {
-      const current = (await client.query('SELECT lead_id FROM estimator_calculations WHERE id=$1',[calculation.id])).rows[0];
-      if (current?.lead_id) return { accepted:true,leadId:Number(current.lead_id),duplicate:true,calculationId:id };
+      const current = (await client.query('SELECT lead_id,converted_at FROM estimator_calculations WHERE id=$1',[calculation.id])).rows[0];
+      if (current?.lead_id) return {accepted:true,leadId:Number(current.lead_id),duplicate:true,calculationId:id};
       fail('Unable to link this estimate to a quote request','ESTIMATOR_CONVERSION_FAILED',409);
     }
-    return { accepted:true,leadId,duplicate,calculationId:id };
+    return {accepted:true,leadId,duplicate,calculationId:id};
+  } catch (error) {
+    if (inTransaction) await client.query('ROLLBACK').catch(()=>{});
+    throw error;
   } finally {
     if (locked) await client.query('SELECT pg_advisory_unlock(hashtext($1))',[lockKey]).catch(()=>{});
     client.release();

@@ -26,6 +26,7 @@ async function calculate(req, res) {
       key:req.params.key,
       flowToken:req.body?.flowToken,
       answers:req.body?.answers,
+      submissionKey:req.body?.submissionKey,
     });
     return res.status(201).json(result);
   } catch (error) {

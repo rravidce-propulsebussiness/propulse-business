@@ -8,7 +8,9 @@ const KEY='ci-estimator-runtime';
 async function cleanup(){
   const existing=(await pool.query('SELECT id FROM customer_flow_definitions WHERE key=$1',[KEY])).rows[0];
   if(!existing)return;
+  const leadIds=(await pool.query('SELECT DISTINCT lead_id FROM estimator_calculations WHERE definition_id=$1 AND lead_id IS NOT NULL',[existing.id])).rows.map(row=>Number(row.lead_id)).filter(Boolean);
   await pool.query('DELETE FROM estimator_calculations WHERE definition_id=$1',[existing.id]);
+  for(const leadId of leadIds)await pool.query('DELETE FROM leads WHERE id=$1',[leadId]).catch(()=>{});
   await pool.query('DELETE FROM customer_flow_definitions WHERE id=$1',[existing.id]);
 }
 
@@ -65,13 +67,28 @@ async function main(){
   const flow=await customerFlowService.getPublishedFlow(KEY);
   assert.equal(flow.flowType,'estimator');
 
+  const submissionKey='ci_estimator_runtime_submission_001';
   const result=await estimatorService.calculate({
-    key:KEY,flowToken:flow.flowToken,answers:{area:'100',quality:'premium'},
+    key:KEY,flowToken:flow.flowToken,answers:{area:'100',quality:'premium'},submissionKey,
   });
   assert.equal(result.minimum,11000);
   assert.equal(result.maximum,13200);
   assert.equal(result.currency,'INR');
   assert.ok(result.calculationId);
+  assert.ok(result.leadId,'Completing an estimate must immediately create a canonical lead');
+  assert.equal(result.leadStatus,'quarantined','Contactless estimator leads must stay out of marketplace inventory');
+
+  const intentLead=(await pool.query('SELECT * FROM leads WHERE id=$1',[result.leadId])).rows[0];
+  assert.ok(intentLead);
+  assert.equal(intentLead.source,'public_estimator');
+  assert.equal(intentLead.status,'quarantined');
+  assert.equal(intentLead.customer_name,null);
+  assert.equal(intentLead.customer_phone,null);
+  assert.equal(intentLead.intake_submission_key,submissionKey);
+  assert.equal(intentLead.custom_fields?._estimator?.calculationId,result.calculationId);
+  assert.equal(intentLead.custom_fields?._estimator?.contactPending,true);
+  assert.equal(intentLead.custom_fields?._estimator?.lifecycle,'estimate_completed');
+
 
   const saved=await estimatorService.getCalculation(result.calculationId);
   assert.equal(saved.minimum,11000);
@@ -79,7 +96,7 @@ async function main(){
   assert.equal(saved.flowKey,KEY);
 
   const row=(await pool.query(
-    'SELECT config_hash,config_snapshot,answers,result_min,result_max FROM estimator_calculations WHERE public_id=$1',
+    'SELECT config_hash,config_snapshot,answers,result_min,result_max,lead_id,intake_submission_key FROM estimator_calculations WHERE public_id=$1',
     [result.calculationId]
   )).rows[0];
   assert.equal(String(row.config_hash).length,64);
@@ -87,6 +104,24 @@ async function main(){
   assert.equal(row.answers.area,'100');
   assert.equal(Number(row.result_min),11000);
   assert.equal(Number(row.result_max),13200);
+  assert.equal(Number(row.lead_id),Number(result.leadId));
+  assert.equal(row.intake_submission_key,submissionKey);
+
+  const retry=await estimatorService.calculate({
+    key:KEY,flowToken:flow.flowToken,answers:{area:'100',quality:'premium'},submissionKey,
+  });
+  assert.equal(retry.duplicate,true);
+  assert.equal(retry.calculationId,result.calculationId);
+  assert.equal(Number(retry.leadId),Number(result.leadId));
+  const counts=(await pool.query(
+    `SELECT
+       (SELECT COUNT(*)::int FROM estimator_calculations WHERE intake_submission_key=$1) calculations,
+       (SELECT COUNT(*)::int FROM leads WHERE intake_submission_key=$1) leads`,
+    [submissionKey]
+  )).rows[0];
+  assert.equal(Number(counts.calculations),1);
+  assert.equal(Number(counts.leads),1);
+
 
   console.log('Estimator runtime lifecycle checks passed.');
 }
