@@ -33,13 +33,17 @@ async function main(){
   assert.equal(byKey.get('royal').selector_question_key,'quality');
   assert.equal(byKey.get('royal').selector_value,'luxury');
   const royalDetails=new Set(byKey.get('royal').details.map(item=>item.detailKey));
-  for(const key of ['steel','cement','bricks','wire','switches'])assert.ok(royalDetails.has(key),`Royal package missing ${key}`);
+  for(const key of ['steel','cement','bricks','wire','switches','architecture_scope','aggregate','kitchen_platform','windows','bathroom_wall_tiles','stair_flooring','electrical_pipes','railings','warranty'])assert.ok(royalDetails.has(key),`Royal package missing ${key}`);
 
   const interior=await packagesFor('interior-cost-estimator');
   assert.ok(interior.length>=2,'Interior estimator must expose configurable Standard and Premium package catalogues');
   const interiorKeys=new Set(interior.map(item=>item.package_key));
   assert.ok(interiorKeys.has('standard')&&interiorKeys.has('premium'));
   assert.ok(interior.every(item=>item.selector_question_key==='finish_quality'));
+  for(const item of interior){
+    const details=new Set(item.details.map(detail=>detail.detailKey));
+    for(const key of ['ply_warranty','service_warranty','payment_method']) assert.ok(details.has(key),`Interior package ${item.package_key} missing brochure detail ${key}`);
+  }
 
   console.log('Estimator package catalogue checks passed.');
 }
