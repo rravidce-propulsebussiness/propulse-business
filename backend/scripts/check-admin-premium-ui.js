@@ -322,6 +322,8 @@ assert(adminEstimatorConfig.includes('Advanced adjustments below')&&adminEstimat
 assert(adminEstimatorConfigCss.includes('.material-price-card')&&adminEstimatorConfigCss.includes('.material-price-grid'),'Detailed option pricing must retain premium responsive styling');
 assert(websiteFaqSection.includes("BUSINESS_ONLY_CATEGORIES=new Set(['leads','payments','withdrawals','account','reports'])"),'Homepage FAQ must filter business-marketplace categories from the customer company site');
 assert(websiteFaqSection.includes('Construction, Interiors, packages, project estimates and free consultations.')&&websiteFaqSection.includes('<Link to="/contact">Need more help?'),'Homepage FAQ copy and support link must stay customer-project focused');
+assert(websiteFaqSection.includes('allowedCategories')&&companySitePage.includes("['general','construction','estimates','consultation','packages']"),'Construction and Interior service pages must scope public FAQs to relevant customer topics');
+assert(companySitePage.includes('csp-menu')&&companySiteCss.includes('.csp-header nav.open'),'Public company pages must retain a responsive mobile navigation menu');
 assert(membershipRoutes.includes("router.get('/public', membershipPlanController.getPublicPlans)"),'Public active-only Membership pricing endpoint must remain');
 assert(membershipRoutes.includes("router.get('/', requireAuth, membershipPlanController.getPlans)"),'Admin Membership configuration must keep authenticated full-plan access');
 assert(membershipController.includes('res.json(await s.getPlans(false))'),'Public Membership endpoint must return active plans only');
