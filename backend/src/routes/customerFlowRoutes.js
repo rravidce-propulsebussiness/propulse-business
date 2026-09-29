@@ -22,6 +22,7 @@ router.post('/admin/:id/publish', requireAdmin, adminWriteLimit, customerFlowCon
 router.patch('/admin/:id/status', requireAdmin, adminWriteLimit, customerFlowController.setStatus);
 
 router.post('/events', publicEventLimit, customerFunnelEventController.record);
+router.get('/estimates/:publicId/pdf', publicReadLimit, estimatorController.downloadPdf);
 router.get('/estimates/:publicId', publicReadLimit, estimatorController.getCalculation);
 router.post('/estimates/:publicId/convert', publicSubmitLimit, estimatorController.convertCalculation);
 router.get('/:key', publicReadLimit, customerFlowController.getPublic);
