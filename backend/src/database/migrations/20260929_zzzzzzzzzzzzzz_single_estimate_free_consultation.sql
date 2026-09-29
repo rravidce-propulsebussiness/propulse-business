@@ -228,7 +228,8 @@ BEGIN
 
     UPDATE customer_flow_questions
        SET validation=COALESCE(validation,'{}'::jsonb)
-          || '{"systemHidden":true,"systemDefault":"detailed"}'::jsonb
+          || '{"systemHidden":true,"systemDefault":"detailed"}'::jsonb,
+           visibility='internal'
      WHERE version_id=target_version_id AND question_key='estimate_mode';
 
     UPDATE customer_flow_questions
