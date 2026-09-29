@@ -68,8 +68,8 @@ async function saveDraft(flowId,data,userId){
    if(d.flow_type==='estimator'&&source){
      await client.query(`INSERT INTO estimator_rate_items(version_id,rate_key,label,calculation_type,unit_question_key,amount_min,amount_max,show_when,display_order,metadata,is_active)
        SELECT $1,rate_key,label,calculation_type,unit_question_key,amount_min,amount_max,show_when,display_order,metadata,is_active FROM estimator_rate_items WHERE version_id=$2`,[draft.id,source.id]);
-     await client.query(`INSERT INTO estimator_adjustments(version_id,adjustment_key,label,adjustment_type,value_min,value_max,city_id,show_when,display_order,metadata,is_active)
-       SELECT $1,adjustment_key,label,adjustment_type,value_min,value_max,city_id,show_when,display_order,metadata,is_active FROM estimator_adjustments WHERE version_id=$2`,[draft.id,source.id]);
+     await client.query(`INSERT INTO estimator_adjustments(version_id,adjustment_key,label,adjustment_type,unit_question_key,value_min,value_max,city_id,show_when,display_order,metadata,is_active)
+       SELECT $1,adjustment_key,label,adjustment_type,unit_question_key,value_min,value_max,city_id,show_when,display_order,metadata,is_active FROM estimator_adjustments WHERE version_id=$2`,[draft.id,source.id]);
      await client.query(`INSERT INTO estimator_packages(version_id,package_key,label,badge,selector_question_key,selector_value,summary,price_note,display_order,metadata,is_active)
        SELECT $1,package_key,label,badge,selector_question_key,selector_value,summary,price_note,display_order,metadata,is_active FROM estimator_packages WHERE version_id=$2`,[draft.id,source.id]);
      await client.query(`INSERT INTO estimator_package_details(package_id,detail_key,section,label,value,note,display_order,is_active)
