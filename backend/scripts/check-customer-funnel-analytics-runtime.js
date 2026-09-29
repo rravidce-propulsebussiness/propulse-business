@@ -72,7 +72,7 @@ async function main(){
     budget:null,
     source:'public_estimator',
     notes:null,
-    customFields:{_estimator:{calculationId:'fixture',lifecycle:'estimate_completed_with_contact'},_intake:{flowKey:scope.key,definitionId:scope.definition_id,versionId:scope.version_id,versionNo:1,answers:{}}},
+    customFields:{_estimator:{calculationId:'fixture',lifecycle:'estimate_completed'},_intake:{flowKey:scope.key,definitionId:scope.definition_id,versionId:scope.version_id,versionNo:1,answers:{}}},
     pincode:'500001',
     createdBy:null,
     deferQualityGate:true,
