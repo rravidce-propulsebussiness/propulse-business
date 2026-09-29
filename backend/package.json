@@ -41,7 +41,6 @@
     "test:estimator-schema": "node scripts/check-estimator-schema-integrity.js",
     "test:estimator-runtime": "node scripts/check-estimator-runtime.js",
     "test:interior-estimator": "node scripts/check-interior-estimator-seed.js",
-    "test:estimator-conversion": "node scripts/check-estimator-conversion-runtime.js",
     "test:construction-estimator": "node scripts/check-construction-estimator-seed.js",
     "test:customer-funnel-analytics": "node scripts/check-customer-funnel-analytics-runtime.js",
     "test:customer-funnel-events": "node scripts/check-customer-funnel-events-runtime.js",
@@ -49,7 +48,8 @@
     "test:estimator-packages": "node scripts/check-estimator-package-catalogue.js",
     "test:estimate-pdf": "node scripts/check-estimate-pdf.js",
     "test:lead-private-metadata": "node scripts/check-lead-private-metadata.js",
-    "test:estimator-customer-only": "node scripts/check-estimator-customer-only.js"
+    "test:estimator-customer-only": "node scripts/check-estimator-customer-only.js",
+    "test:estimator-lead-capture": "node scripts/check-estimator-lead-capture.js"
   },
   "keywords": [],
   "author": "",
