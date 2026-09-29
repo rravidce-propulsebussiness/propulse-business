@@ -17,6 +17,8 @@ const requirementCss=read('../frontend/src/pages/RequirementWizard.css');
 const questionControl=read('../frontend/src/components/CustomerFlowQuestion.jsx');
 const adminFlows=read('../frontend/src/admin/pages/AdminCustomerFlows.jsx');
 const adminFlowsCss=read('../frontend/src/admin/pages/AdminCustomerFlows.css');
+const adminEstimator=read('../frontend/src/admin/components/AdminEstimatorConfig.jsx');
+const adminEstimatorCss=read('../frontend/src/admin/components/AdminEstimatorConfig.css');
 const companySite=read('../frontend/src/pages/CompanySitePage.jsx');
 const companySiteCss=read('../frontend/src/pages/CompanySitePage.css');
 
@@ -59,6 +61,9 @@ assert.match(wizardCss,/\.est-package-more/,'Estimator package disclosure needs 
 assert.match(requirementCss,/\.rq-form-section-head>em/,'Section completion indicators need dedicated styling');
 assert.match(wizard,/isValidIndianMobile/,'Estimator must validate customer mobile before calculation');
 assert.match(requirement,/isValidIndianMobile/,'Consultation form must validate customer mobile before lead submission');
+assert.match(adminEstimator,/est-admin-tabs/,'Estimator Admin must separate packages, detailed pricing, base rates and advanced adjustments');
+assert.match(adminEstimator,/Detailed pricing/,'Estimator Admin must expose focused detailed material pricing');
+assert.match(adminEstimatorCss,/\.est-admin-tabs/,'Estimator Admin tabs need dedicated responsive styling');
 assert.match(wizard,/useSearchParams/,'Estimator must support validated customer deep-link preselection');
 assert.match(wizard,/initialEstimatorAnswers/,'Estimator deep links must be validated against the published flow');
 assert.match(companySite,/\?mode=rough/,'Company service pages must deep-link directly to rough estimate mode');
