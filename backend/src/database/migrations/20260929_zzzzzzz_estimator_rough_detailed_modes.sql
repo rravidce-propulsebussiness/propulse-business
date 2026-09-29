@@ -4,34 +4,34 @@
 
 DO $$
 DECLARE
-  definition_id INTEGER;
+  def_id INTEGER;
   source_version_id INTEGER;
   target_version_id INTEGER;
   next_version INTEGER;
 BEGIN
-  SELECT d.id INTO definition_id
+  SELECT d.id INTO def_id
     FROM customer_flow_definitions d
    WHERE d.key='construction-cost-estimator' AND d.flow_type='estimator'
    LIMIT 1;
-  IF definition_id IS NULL THEN RETURN; END IF;
+  IF def_id IS NULL THEN RETURN; END IF;
 
   IF EXISTS (
     SELECT 1 FROM customer_flow_versions
-     WHERE definition_id=definition_id
+     WHERE v.definition_id=def_id
        AND config->>'seedKey'='construction-cost-estimator-v2-modes'
   ) THEN RETURN; END IF;
 
   SELECT v.id INTO source_version_id
     FROM customer_flow_versions v
-   WHERE v.definition_id=definition_id AND v.status='published'
+   WHERE v.definition_id=def_id AND v.status='published'
    ORDER BY v.version_no DESC LIMIT 1;
   IF source_version_id IS NULL THEN RETURN; END IF;
 
   SELECT COALESCE(MAX(version_no),0)+1 INTO next_version
-    FROM customer_flow_versions WHERE definition_id=definition_id;
+    FROM customer_flow_versions WHERE v.definition_id=def_id;
 
   INSERT INTO customer_flow_versions(definition_id,version_no,status,config,effective_from,created_at,updated_at)
-  SELECT definition_id,next_version,'draft',
+  SELECT def_id,next_version,'draft',
          COALESCE(config,'{}'::jsonb)
          || jsonb_build_object(
               'seedKey','construction-cost-estimator-v2-modes',
@@ -136,7 +136,7 @@ BEGIN
     JOIN estimator_packages np ON np.version_id=target_version_id AND np.package_key=op.package_key;
 
   UPDATE customer_flow_versions SET status='retired',updated_at=CURRENT_TIMESTAMP
-   WHERE definition_id=definition_id AND status='published';
+   WHERE v.definition_id=def_id AND status='published';
   UPDATE customer_flow_versions
      SET status='published',published_at=CURRENT_TIMESTAMP,effective_from=CURRENT_TIMESTAMP,updated_at=CURRENT_TIMESTAMP
    WHERE id=target_version_id;
@@ -144,34 +144,34 @@ END $$;
 
 DO $$
 DECLARE
-  definition_id INTEGER;
+  def_id INTEGER;
   source_version_id INTEGER;
   target_version_id INTEGER;
   next_version INTEGER;
 BEGIN
-  SELECT d.id INTO definition_id
+  SELECT d.id INTO def_id
     FROM customer_flow_definitions d
    WHERE d.key='interior-cost-estimator' AND d.flow_type='estimator'
    LIMIT 1;
-  IF definition_id IS NULL THEN RETURN; END IF;
+  IF def_id IS NULL THEN RETURN; END IF;
 
   IF EXISTS (
     SELECT 1 FROM customer_flow_versions
-     WHERE definition_id=definition_id
+     WHERE v.definition_id=def_id
        AND config->>'seedKey'='interior-cost-estimator-v2-modes'
   ) THEN RETURN; END IF;
 
   SELECT v.id INTO source_version_id
     FROM customer_flow_versions v
-   WHERE v.definition_id=definition_id AND v.status='published'
+   WHERE v.definition_id=def_id AND v.status='published'
    ORDER BY v.version_no DESC LIMIT 1;
   IF source_version_id IS NULL THEN RETURN; END IF;
 
   SELECT COALESCE(MAX(version_no),0)+1 INTO next_version
-    FROM customer_flow_versions WHERE definition_id=definition_id;
+    FROM customer_flow_versions WHERE v.definition_id=def_id;
 
   INSERT INTO customer_flow_versions(definition_id,version_no,status,config,effective_from,created_at,updated_at)
-  SELECT definition_id,next_version,'draft',
+  SELECT def_id,next_version,'draft',
          COALESCE(config,'{}'::jsonb)
          || jsonb_build_object(
               'seedKey','interior-cost-estimator-v2-modes',
@@ -262,7 +262,7 @@ BEGIN
     JOIN estimator_packages np ON np.version_id=target_version_id AND np.package_key=op.package_key;
 
   UPDATE customer_flow_versions SET status='retired',updated_at=CURRENT_TIMESTAMP
-   WHERE definition_id=definition_id AND status='published';
+   WHERE v.definition_id=def_id AND status='published';
   UPDATE customer_flow_versions
      SET status='published',published_at=CURRENT_TIMESTAMP,effective_from=CURRENT_TIMESTAMP,updated_at=CURRENT_TIMESTAMP
    WHERE id=target_version_id;
