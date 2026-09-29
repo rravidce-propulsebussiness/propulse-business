@@ -52,12 +52,12 @@ const TINY_PNG='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HA
 
 test('public homepage presents construction and interior company journeys',async({page})=>{
   await page.goto('/')
-  await expect(page.getByRole('heading',{name:/plan your home/i})).toBeVisible()
+  await expect(page.getByRole('heading',{name:/build and design your home/i})).toBeVisible()
   await expect(page.getByRole('link',{name:/professional/i}).first()).toHaveAttribute('href','/leads')
   await expect(page.getByRole('link',{name:/construction estimate/i}).first()).toHaveAttribute('href','/construction-estimator')
   await expect(page.getByRole('link',{name:/interior estimate/i}).first()).toHaveAttribute('href','/interior-estimator')
-  await expect(page.getByText('A clear path from enquiry to handover.')).toBeVisible()
-  await expect(page.getByText('Names, descriptions, badges and package specifications come from the published Admin configuration.')).toBeVisible()
+  await expect(page.getByText('A clear path from first estimate to handover.')).toBeVisible()
+  await expect(page.getByText('Compare the key specifications before starting your estimate.')).toBeVisible()
 
   await page.getByRole('link',{name:/interior estimate/i}).first().click()
   await expect(page).toHaveURL(/\/interior-estimator$/)
@@ -78,11 +78,11 @@ test('customer requirement and estimate journeys use one-page forms with compact
   await expect(page.getByRole('button',{name:/next/i})).toHaveCount(0)
 })
 
-test('public company pages stay customer-focused and Admin-driven',async({page})=>{
+test('public company pages stay customer-focused and professional',async({page})=>{
   await page.goto('/construction')
-  await expect(page.getByRole('heading',{name:/build with a clear package/i})).toBeVisible()
+  await expect(page.getByRole('heading',{name:/build your home with a clear scope/i})).toBeVisible()
   await expect(page.getByRole('link',{name:/professional/i}).first()).toHaveAttribute('href','/leads')
-  await expect(page.getByText('Package details come directly from Admin.')).toBeVisible()
+  await expect(page.getByRole('link',{name:/get free consultation/i}).first()).toHaveAttribute('href','/build')
 
   await page.goto('/packages')
   await expect(page.getByRole('heading',{name:/compare the specifications/i})).toBeVisible()
@@ -91,7 +91,7 @@ test('public company pages stay customer-focused and Admin-driven',async({page})
 
   await page.goto('/how-it-works')
   await expect(page.getByRole('heading',{name:/clear project journey/i})).toBeVisible()
-  await expect(page.getByText('Consultation',{exact:true})).toBeVisible()
+  await expect(page.getByText('Estimate or consult',{exact:true})).toBeVisible()
   await expect(page.getByText('Handover',{exact:true})).toBeVisible()
 
   await page.goto('/contact')
@@ -99,21 +99,21 @@ test('public company pages stay customer-focused and Admin-driven',async({page})
   await expect(page.getByRole('link',{name:/construction estimate/i})).toBeVisible()
 })
 
-test('published package CTA preselects detailed estimator mode and package',async({page})=>{
+test('published package CTA preselects package without exposing estimate modes',async({page})=>{
   await page.goto('/packages')
   const packageAction=page.locator('.csp-package-start').first()
   await expect(packageAction).toBeVisible()
-  await expect(packageAction).toHaveAttribute('href',/\?mode=detailed&package=/)
+  await expect(packageAction).toHaveAttribute('href',/\?package=/)
   const href=await packageAction.getAttribute('href')
+  expect(href).not.toMatch(/mode=/)
   const selectedPackage=new URL(href,'http://localhost').searchParams.get('package')
   expect(selectedPackage).toBeTruthy()
 
   await packageAction.click()
-  await expect(page).toHaveURL(/mode=detailed/)
   await expect(page).toHaveURL(new RegExp('package='+selectedPackage))
-  await expect(page.locator('.est-mode-card.active')).toContainText(/Detailed/i)
-  await expect(page.locator('.est-side-summary')).toContainText('Detailed estimate')
+  await expect(page.locator('.est-mode-card')).toHaveCount(0)
   await expect(page.locator('.est-side-summary')).toContainText(/Selected package/i)
+  await expect(page.locator('.est-optional-specs')).toBeVisible()
 })
 
 test('protected customer route redirects anonymous users to login',async({page})=>{
