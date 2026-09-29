@@ -18,11 +18,14 @@ async function main() {
   assert.deepStrictEqual(new Set(columns), new Set(['contact_consent_at','contact_consent_version','intake_submission_key']));
 
   const flows = (await pool.query(
-    "SELECT d.key,v.id AS version_id,v.version_no,(SELECT COUNT(*)::int FROM customer_flow_questions q WHERE q.version_id=v.id AND q.is_active=TRUE) AS question_count FROM customer_flow_definitions d JOIN customer_flow_versions v ON v.definition_id=d.id AND v.status='published' WHERE d.key IN ('build','design') ORDER BY d.key"
+    "SELECT d.key,v.id AS version_id,v.version_no,v.config,(SELECT COUNT(*)::int FROM customer_flow_questions q WHERE q.version_id=v.id AND q.is_active=TRUE) AS question_count FROM customer_flow_definitions d JOIN customer_flow_versions v ON v.definition_id=d.id AND v.status='published' WHERE d.key IN ('build','design') ORDER BY d.key"
   )).rows;
   assert.strictEqual(flows.length, 2);
   for (const flow of flows) {
-    assert.strictEqual(Number(flow.version_no), 1);
+    assert.ok(Number(flow.version_no) >= 2);
+    assert.strictEqual(flow.config?.seedKey,`${flow.key}-requirement-v2-company`);
+    assert.strictEqual(flow.config?.submitLabel,'Submit Project Enquiry');
+    assert.doesNotMatch(String(flow.config?.subheadline||''),/match your requirement with relevant businesses/i);
     assert.ok(Number(flow.question_count) >= 10);
   }
 
