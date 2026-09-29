@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { publicRequest } from '../utils/auth'
+import { API_BASE_URL, publicRequest } from '../utils/auth'
 import { trackFunnelEvent, trackFunnelEventOnce } from '../utils/funnelTracking'
 import CustomerFlowQuestion, { isEmptyAnswer, isQuestionVisible } from '../components/CustomerFlowQuestion'
 import './RequirementWizard.css'
@@ -182,7 +182,7 @@ export default function EstimatorWizard({ flowKey }) {
           {Array.isArray(result.breakdown) && result.breakdown.length > 0 && <div className="est-breakdown"><b>What shaped this range</b>{result.breakdown.map(item=><div key={item.kind+':'+item.key}><span>{item.label}</span><em>{item.minimum===item.maximum?money(item.minimum):money(item.minimum)+' – '+money(item.maximum)}</em></div>)}</div>}
           <div className="est-lead-confirm"><b>Project enquiry saved</b><span>Your name, mobile number, selected package and estimate are attached to one customer lead for follow-up.</span></div>
           <div className="est-disclaimer">{result.disclaimer}</div>
-          <div className="rq-actions est-result-actions"><button type="button" className="secondary" onClick={restart}>Estimate another project</button><Link className="est-home" to="/">Back home</Link></div>
+          <div className="rq-actions est-result-actions"><a className="primary est-download" href={`${API_BASE_URL}/customer-flows/estimates/${encodeURIComponent(result.calculationId)}/pdf?token=${encodeURIComponent(result.pdfToken||'')}`} download>Download Estimate PDF ↓</a><button type="button" className="secondary" onClick={restart}>Estimate another project</button><Link className="est-home" to="/">Back home</Link></div>
         </div>}
       </section>
     </div>
