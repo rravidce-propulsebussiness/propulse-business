@@ -15,7 +15,7 @@ const when=value=>{
 }
 const sourceCopy={
   public_requirement:{label:'Direct requirements',description:'Customers who submitted a structured Build or Interior requirement.',icon:'⌁'},
-  public_estimator:{label:'Estimator leads',description:'Completed estimator journeys become canonical leads immediately; contact-pending estimates stay on safe hold until quotes are requested.',icon:'₹'},
+  public_estimator:{label:'Estimator leads',description:'Completed estimator journeys become canonical customer leads immediately after mandatory name, mobile and consent capture.',icon:'₹'},
 }
 const periods=[['7','7D'],['30','30D'],['90','90D'],['365','1Y'],['all','ALL']]
 
@@ -90,7 +90,7 @@ function SourceCard({item}){
   const copy=sourceCopy[item.source]||{label:item.source,description:'Customer funnel source',icon:'◈'}
   const statuses=Object.entries(item.statuses||{}).sort((a,b)=>Number(b[1])-Number(a[1])).slice(0,5)
   return <article className={'source-premium '+(item.source==='public_estimator'?'estimator':'requirement')}>
-    <div className="source-premium-head"><span>{copy.icon}</span><div><small>{item.source==='public_estimator'?'ESTIMATE → QUOTE':'DIRECT FORM'}</small><h3>{copy.label}</h3><p>{copy.description}</p></div></div>
+    <div className="source-premium-head"><span>{copy.icon}</span><div><small>{item.source==='public_estimator'?'ESTIMATE → LEAD':'DIRECT FORM'}</small><h3>{copy.label}</h3><p>{copy.description}</p></div></div>
     <div className="source-premium-metrics">
       <div><strong>{compact(item.leads)}</strong><span>Canonical leads</span></div>
       <div><strong>{compact(item.monetizedLeads)}</strong><span>Monetized leads</span></div>
@@ -257,20 +257,21 @@ export default function AdminCustomerFunnel(){
 
     <section className="premium-section customer-lead-ops">
       <div className="premium-section-head">
-        <div><span>CUSTOMER LEAD OPERATIONS</span><h2>Recent customer-generated leads</h2><p>One operational queue for requirement forms and estimator journeys, showing contact readiness and canonical lead status before operational follow-up.</p></div>
+        <div><span>CUSTOMER LEAD OPERATIONS</span><h2>Recent customer-generated leads</h2><p>One operational queue for requirement forms and estimator journeys, showing contact coverage, canonical lead status and downstream paid lead activity.</p></div>
         <Link className="question-config-link" to="/admin/leads">Open Manage Leads <span>→</span></Link>
       </div>
       <div className="customer-lead-ops-list">
         {recentCustomerLeads.length?recentCustomerLeads.map(item=>{
-          const awaiting=item.source==='public_estimator'&&item.contactPending
-          const href='/admin/leads?leadId='+encodeURIComponent(String(item.leadId))+'&source='+encodeURIComponent(item.source)+(awaiting?'&contactState=awaiting_contact':'')
-          return <article className={'customer-lead-ops-row '+(awaiting?'awaiting':'ready')} key={item.leadId}>
+          const contactComplete=Boolean(item.hasName&&item.hasPhone)
+          const contactBits=[item.hasName?'Name':null,item.hasPhone?'Phone':null,item.hasEmail?'Email':null].filter(Boolean)
+          const href='/admin/leads?leadId='+encodeURIComponent(String(item.leadId))+'&source='+encodeURIComponent(item.source)
+          return <article className={'customer-lead-ops-row '+(contactComplete?'ready':'incomplete')} key={item.leadId}>
             <div className="customer-lead-identity">
               <span className={'customer-lead-source '+(item.source==='public_estimator'?'estimator':'requirement')}>{item.source==='public_estimator'?'₹':'⌁'}</span>
-              <div><small>{item.source==='public_estimator'?'ESTIMATOR':'REQUIREMENT FORM'} · LEAD #{item.leadId}</small><strong>{item.customerName||(awaiting?'Legacy estimator customer':'Customer')}</strong><span>{item.flowName||item.flowKey||'Customer flow'}{item.flowKey?' · '+item.flowKey:''}</span></div>
+              <div><small>{item.source==='public_estimator'?'ESTIMATOR':'REQUIREMENT FORM'} · LEAD #{item.leadId}</small><strong>{item.customerName||'Legacy customer lead'}</strong><span>{item.flowName||item.flowKey||'Customer flow'}{item.flowKey?' · '+item.flowKey:''}</span></div>
             </div>
-            <div className="customer-lead-contact"><small>CONTACT</small><b className={awaiting?'pending':'ready'}>{awaiting?'Legacy: awaiting contact':'Contact ready'}</b><span>{awaiting?'Older estimate was created before mandatory contact capture':[item.hasPhone?'Phone':null,item.hasEmail?'Email':null].filter(Boolean).join(' + ')||'Contact captured'}</span></div>
-            <div className="customer-lead-status"><small>LEAD STATUS</small><b>{String(item.status||'unknown').replaceAll('_',' ')}</b><span>{item.qualityGateStatus?String(item.qualityGateStatus).replaceAll('_',' '):awaiting?'Legacy safe hold':'Canonical lead'}</span></div>
+            <div className="customer-lead-contact"><small>CONTACT</small><b className={contactComplete?'ready':'incomplete'}>{contactComplete?'Contact complete':'Legacy incomplete'}</b><span>{contactBits.join(' + ')||'No customer contact stored'}</span></div>
+            <div className="customer-lead-status"><small>LEAD STATUS</small><b>{String(item.status||'unknown').replaceAll('_',' ')}</b><span>{item.qualityGateStatus?String(item.qualityGateStatus).replaceAll('_',' '):'Canonical lead'}</span></div>
             <div className="customer-lead-context"><small>PROJECT</small><b>{item.serviceName||item.industryName||'Customer requirement'}</b><span>{[item.cityName,item.stateName,item.pincode].filter(Boolean).join(' · ')||'Location unavailable'}</span></div>
             <div className="customer-lead-value"><small>VALUE</small><b>{item.paidSales?money(item.paidSales):'—'}</b><span>{item.paidPurchases?item.paidPurchases+' paid purchase'+(item.paidPurchases===1?'':'s'):item.estimateMinimum!=null?money(item.estimateMinimum)+' – '+money(item.estimateMaximum):'Not monetized yet'}</span></div>
             <div className="customer-lead-time"><small>CREATED</small><b>{when(item.createdAt)}</b>{item.convertedAt&&<span>Lead captured {when(item.convertedAt)}</span>}</div>
@@ -293,7 +294,7 @@ export default function AdminCustomerFunnel(){
           <td><strong>{money(item.minimum)} – {money(item.maximum)}</strong></td>
           <td>{when(item.createdAt)}</td>
           <td>{item.convertedAt?<><b className="status-chip converted">Lead captured</b><small>{when(item.convertedAt)}</small></>:<b className="status-chip estimate">Legacy estimate only</b>}</td>
-          <td>{item.leadId?<><Link to={'/admin/leads?leadId='+encodeURIComponent(String(item.leadId))+(item.leadSource?'&source='+encodeURIComponent(item.leadSource):'')+(item.leadSource==='public_estimator'&&!item.convertedAt?'&contactState=awaiting_contact':'')}>Lead #{item.leadId}</Link><small>{item.leadStatus||item.leadSource||'linked'}</small></>:<span>—</span>}</td>
+          <td>{item.leadId?<><Link to={'/admin/leads?leadId='+encodeURIComponent(String(item.leadId))+(item.leadSource?'&source='+encodeURIComponent(item.leadSource):'')}>Lead #{item.leadId}</Link><small>{item.leadStatus||item.leadSource||'linked'}</small></>:<span>—</span>}</td>
           <td><strong>{item.paidSales?money(item.paidSales):'—'}</strong>{item.paidPurchases>0&&<small>{item.paidPurchases} purchase{item.paidPurchases===1?'':'s'}</small>}</td>
         </tr>):<tr><td colSpan="8" className="table-empty">No calculations match these filters.</td></tr>}
       </tbody></table></div>
