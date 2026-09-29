@@ -22,3 +22,8 @@
 .flow-panel-head-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .flow-panel-head-actions .secondary{border:1px solid #d8e1eb!important;background:#fff!important;color:#345270!important}
 @media(max-width:560px){.flow-panel-head-actions{width:100%}.flow-panel-head-actions button{flex:1}}
+
+.flow-system-field-note{padding:12px 13px;border:1px solid #d8e3ee;border-radius:10px;background:#f5f9fd;display:flex;flex-direction:column;gap:4px}
+.flow-system-field-note b{color:#264d75;font-size:8px;text-transform:uppercase;letter-spacing:.08em}
+.flow-system-field-note span{color:#75879a;font-size:8px;line-height:1.5}
+.question-card-top .danger:disabled{opacity:.35;cursor:not-allowed}
