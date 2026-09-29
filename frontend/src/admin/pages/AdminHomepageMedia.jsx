@@ -4,9 +4,9 @@ import './AdminHomepageMedia.css'
 
 const slots=[
   {key:'hero',label:'Customer homepage hero',description:'Main Construction + Interiors planning visual shown in the redesigned hero.',defaultPath:'/homepage/default-hero.svg',wide:true},
-  {key:'residential',label:'Construction requirement card',description:'Visual used for the “I want to build” customer journey.',defaultPath:'/homepage/default-residential.svg'},
-  {key:'interior',label:'Interior journey cards',description:'Visual shared by the Interior requirement and Interior estimator entry points.',defaultPath:'/homepage/default-interior.svg'},
-  {key:'turnkey',label:'Construction estimator card',description:'Visual used for the Construction Cost Estimator entry point.',defaultPath:'/homepage/default-turnkey.svg'},
+  {key:'residential',label:'Construction service visual',description:'Main visual used across the public Construction journey.',defaultPath:'/homepage/default-residential.svg'},
+  {key:'interior',label:'Interior service visual',description:'Main visual used across the public Interior journey and estimator entry point.',defaultPath:'/homepage/default-interior.svg'},
+  {key:'turnkey',label:'Construction estimate visual',description:'Supporting visual used around the Construction estimate journey.',defaultPath:'/homepage/default-turnkey.svg'},
   {key:'showcase_construction_1',label:'Construction showcase 01',description:'Customer-facing project showcase visual for Construction.',defaultPath:'/homepage/default-residential.svg'},
   {key:'showcase_construction_2',label:'Construction showcase 02',description:'Second Construction project showcase visual.',defaultPath:'/homepage/default-turnkey.svg'},
   {key:'showcase_interior_1',label:'Interior showcase 01',description:'Customer-facing project showcase visual for Interiors.',defaultPath:'/homepage/default-interior.svg'},
