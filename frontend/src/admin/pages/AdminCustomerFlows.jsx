@@ -6,10 +6,9 @@ import './AdminCustomerFlows.css'
 
 const types=['single_select','multi_select','text','number','area','budget','timeline','boolean','location']
 const emptyCreate={key:'',name:'',flowType:'requirement',industryId:'',serviceId:'',subserviceId:''}
-const blankQuestion=(index=0)=>({questionKey:'question_'+(index+1),questionType:'single_select',label:'New question',helpText:'',isRequired:false,displayOrder:(index+1)*10,validation:{},showWhen:{},leadField:'',visibility:'marketplace',isActive:true,options:[{value:'option_1',label:'Option 1',displayOrder:10,isActive:true}]})
+const blankQuestion=(index=0)=>({questionKey:'question_'+(index+1),questionType:'single_select',label:'New question',helpText:'',isRequired:false,displayOrder:(index+1)*10,validation:{uiControl:'dropdown',section:'Project details',placeholder:'Select an option'},showWhen:{},leadField:'',visibility:'marketplace',isActive:true,options:[{value:'option_1',label:'Option 1',displayOrder:10,isActive:true}]})
 const optionTypes=new Set(['single_select','multi_select','timeline'])
-const optionsText=q=>(q.options||[]).map(o=>o.value+'|'+o.label).join('\n')
-const parseOptions=text=>String(text||'').split('\n').map(x=>x.trim()).filter(Boolean).map((line,index)=>{const [value,...rest]=line.split('|');return{value:(value||'').trim(),label:(rest.join('|')||value||'').trim(),displayOrder:(index+1)*10,isActive:true}})
+const inputControls=type=>type==='single_select'||type==='timeline'?[['dropdown','Dropdown'],['cards','Cards']]:type==='multi_select'?[['checkboxes','Checkbox cards'],['cards','Cards']]:type==='boolean'?[['segmented','Yes / No buttons'],['dropdown','Dropdown']]:[['auto','Standard input']]
 const dependencyText=q=>Array.isArray(q.showWhen?.in)?q.showWhen.in.join(','):(q.showWhen?.equals??q.showWhen?.notEquals??'')
 
 export default function AdminCustomerFlows(){
