@@ -1,4 +1,5 @@
 const estimatorService = require('../services/estimatorService');
+const estimatePdfService = require('../services/estimatePdfService');
 
 function sendError(res, error, fallback) {
   const status = Number(error?.status) || (
@@ -42,6 +43,18 @@ async function getCalculation(req, res) {
   catch (error) { return sendError(res,error,'Failed to load estimate'); }
 }
 
+async function downloadPdf(req, res) {
+  try {
+    const result=await estimatePdfService.getEstimatePdf(req.params.publicId,req.query?.token);
+    res.setHeader('Content-Type','application/pdf');
+    res.setHeader('Content-Disposition',`attachment; filename="${result.filename}"`);
+    res.setHeader('Cache-Control','private, no-store, max-age=0');
+    return res.status(200).send(result.buffer);
+  } catch (error) {
+    return sendError(res,error,'Failed to download estimate PDF');
+  }
+}
+
 async function convertCalculation(req, res) {
   try {
     const result = await estimatorService.convertCalculation({
@@ -57,4 +70,4 @@ async function convertCalculation(req, res) {
   }
 }
 
-module.exports = { getAdminConfig,saveAdminConfig,calculate,getCalculation,convertCalculation };
+module.exports = { getAdminConfig,saveAdminConfig,calculate,getCalculation,downloadPdf,convertCalculation };
