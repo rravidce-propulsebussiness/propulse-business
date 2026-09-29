@@ -58,6 +58,8 @@ test('public homepage presents construction and interior company journeys',async
   await expect(page.getByRole('link',{name:/interior estimate/i}).first()).toHaveAttribute('href','/interior-estimator')
   await expect(page.getByText('A clear path from first estimate to handover.')).toBeVisible()
   await expect(page.getByText('Compare the key specifications before starting your estimate.')).toBeVisible()
+  await expect(page.getByText('See how Construction and Interiors come together.')).toBeVisible()
+  await expect(page.getByText('Professional planning without making the first step complicated.')).toBeVisible()
 
   await page.getByRole('link',{name:/interior estimate/i}).first().click()
   await expect(page).toHaveURL(/\/interior-estimator$/)
@@ -83,6 +85,7 @@ test('public company pages stay customer-focused and professional',async({page})
   await expect(page.getByRole('heading',{name:/home construction, planned from foundation to finish/i})).toBeVisible()
   await expect(page.getByRole('link',{name:/professional/i}).first()).toHaveAttribute('href','/leads')
   await expect(page.getByRole('link',{name:/get free consultation/i}).first()).toHaveAttribute('href','/construction-consultation')
+  await expect(page.locator('.csp-showcase-grid')).toBeVisible()
 
   await page.goto('/packages')
   await expect(page.getByRole('heading',{name:/compare the specifications/i})).toBeVisible()
