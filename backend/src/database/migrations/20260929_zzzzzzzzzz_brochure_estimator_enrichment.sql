@@ -180,7 +180,7 @@ BEGIN
   INSERT INTO customer_flow_questions
     (version_id,question_key,question_type,label,help_text,is_required,display_order,validation,show_when,lead_field,visibility,is_active)
   VALUES
-    (target_version_id,'customisations','multi_select','Do you want any brochure customisations?','Optional. Select only the extras you want included in this detailed estimate.',FALSE,190,'{"maxItems":12}'::jsonb,'{"questionKey":"estimate_mode","equals":"detailed"}'::jsonb,NULL,'marketplace',TRUE),
+    (target_version_id,'customisations','multi_select','Do you want any brochure customisations?','Optional. Select only the extras you want included in this detailed estimate.',FALSE,190,'{"maxItems":13}'::jsonb,'{"questionKey":"estimate_mode","equals":"detailed"}'::jsonb,NULL,'marketplace',TRUE),
     (target_version_id,'hdhmr_area','area','HDHMR area','Enter the approximate HDHMR work area in sq ft.',TRUE,200,'{"min":1,"max":50000}'::jsonb,'{"questionKey":"plywood_spec","equals":"hdhmr_action_tesa"}'::jsonb,NULL,'marketplace',TRUE),
     (target_version_id,'pu_duco_area','area','PU / Duco shutter area','Enter the approximate shutter area in sq ft.',TRUE,210,'{"min":1,"max":50000}'::jsonb,'{"questionKey":"external_laminate_spec","equals":"pu_duco"}'::jsonb,NULL,'marketplace',TRUE),
     (target_version_id,'veneer_pvc_area','area','Veneer / PVC finish area','Enter the approximate finish area in sq ft.',TRUE,220,'{"min":1,"max":50000}'::jsonb,'{"questionKey":"external_laminate_spec","equals":"veneer_pvc"}'::jsonb,NULL,'marketplace',TRUE),
