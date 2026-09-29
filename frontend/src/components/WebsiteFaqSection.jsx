@@ -77,7 +77,7 @@ export default function WebsiteFaqSection({variant='home'}){
 
   if(!standalone)return <section className="website-faq website-faq-home" id="faq">
     <div className="website-faq-home-head">
-      <div><span className="website-faq-kicker">FAQ</span><h2>Questions, clearly answered.</h2><p>Everything you need to understand Propulse, its services and the lead marketplace before you get started.</p></div>
+      <div><span className="website-faq-kicker">FAQ</span><h2>Questions, clearly answered.</h2><p>Clear answers about project requirements, cost estimators, quote requests and the professional lead marketplace.</p></div>
       <Link to="/contact?audience=users">Need more help? <span>→</span></Link>
     </div>
     <div className="website-faq-home-layout">
@@ -85,7 +85,7 @@ export default function WebsiteFaqSection({variant='home'}){
       <aside className="website-faq-support">
         <span className="website-faq-kicker">SUPPORT</span>
         <h3>Talk to Propulse.</h3>
-        <p>Have a technology, digital marketing, lead or business-support requirement? Start a conversation with the team.</p>
+        <p>Have a construction, interior, estimator or professional marketplace question? Start a conversation with the Propulse team.</p>
         <Link to="/contact?audience=users">Contact Propulse <span>→</span></Link>
       </aside>
     </div>

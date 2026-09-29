@@ -21,12 +21,79 @@ const timeAgo = value => {
   return `${days} day${days === 1 ? '' : 's'} ago`
 }
 
-const categories = [
-  { name: 'Residential Leads', query: 'residential', icon: '⌂', text: 'Villas, independent houses, apartments' },
-  { name: 'Interior Leads', query: 'interior', icon: '◇', text: 'Home interiors, modular kitchens, renovations' },
-  { name: 'Commercial Leads', query: 'commercial', icon: '▦', text: 'Offices, retail spaces, warehouses' },
-  { name: 'Turnkey Projects', query: 'turnkey', icon: '◫', text: 'Design, build and delivery opportunities' },
-  { name: 'Plot & Land Leads', query: 'plot land', icon: '⌖', text: 'Land purchase, gated communities' },
+const projectPaths = [
+  {
+    key: 'build',
+    eyebrow: 'CONSTRUCTION REQUIREMENT',
+    title: 'I want to build',
+    text: 'Share your construction requirement, project location, scope and timeline.',
+    to: '/build',
+    action: 'Start Build Requirement',
+    icon: '⌂',
+    imageKey: 'residential',
+    fallback: '/homepage/default-residential.svg',
+  },
+  {
+    key: 'design',
+    eyebrow: 'INTERIOR REQUIREMENT',
+    title: 'I need interiors',
+    text: 'Tell us about your home, interior scope, preferred finish and timeline.',
+    to: '/design',
+    action: 'Start Interior Requirement',
+    icon: '◇',
+    imageKey: 'interior',
+    fallback: '/homepage/default-interior.svg',
+  },
+  {
+    key: 'construction-estimator',
+    eyebrow: 'CONSTRUCTION ESTIMATOR',
+    title: 'Estimate construction cost',
+    text: 'Get an indicative construction range using built-up area, package and specification choices.',
+    to: '/construction-estimator',
+    action: 'Calculate Construction Cost',
+    icon: '▥',
+    imageKey: 'turnkey',
+    fallback: '/homepage/default-turnkey.svg',
+  },
+  {
+    key: 'interior-estimator',
+    eyebrow: 'INTERIOR ESTIMATOR',
+    title: 'Estimate interior cost',
+    text: 'Plan a residential interior budget using area, work scope and finish preferences.',
+    to: '/interior-estimator',
+    action: 'Calculate Interior Cost',
+    icon: '✦',
+    imageKey: 'interior',
+    fallback: '/homepage/default-interior.svg',
+  },
+]
+
+const customerSteps = [
+  { number: '01', icon: '⌁', title: 'Tell us about the project', text: 'Choose Construction or Interiors and answer only the questions relevant to your requirement.' },
+  { number: '02', icon: '₹', title: 'Understand the budget', text: 'Use the estimator for an indicative range before speaking with businesses or professionals.' },
+  { number: '03', icon: '✓', title: 'Request actual quotations', text: 'When you are ready, share contact details with explicit consent and convert the estimate into a requirement.' },
+  { number: '04', icon: '↗', title: 'Connect with relevant businesses', text: 'Your requirement enters the same Propulse lead system used by relevant construction and interior businesses.' },
+]
+
+const estimatorCards = [
+  {
+    key: 'construction',
+    tag: 'BUILD',
+    title: 'Construction Cost Estimator',
+    text: 'Built-up area, package, quality, floors, basement, site access and location-aware adjustments.',
+    to: '/construction-estimator',
+    rate: 'Turnkey, structure or finishing',
+    icon: '▥',
+  },
+  {
+    key: 'interior',
+    tag: 'INTERIORS',
+    title: 'Interior Cost Estimator',
+    text: 'Full-home or selected work, kitchen, wardrobes, false ceiling, furniture and finish choices.',
+    to: '/interior-estimator',
+    rate: 'Full-home or selected scope',
+    icon: '◇',
+  },
 ]
 
 function Home() {
@@ -38,6 +105,7 @@ function Home() {
   const [loadingLeads, setLoadingLeads] = useState(true)
   const [media, setMedia] = useState({ hero_image_url: '', category_images: {} })
   const [activeNav, setActiveNav] = useState('home')
+  const [menuOpen, setMenuOpen] = useState(false)
   const [membershipPlans, setMembershipPlans] = useState([])
   const [membershipPricingLoading, setMembershipPricingLoading] = useState(true)
   const [contactData, setContactData] = useState({})
@@ -57,12 +125,11 @@ function Home() {
     return {
       key: groupKey,
       label: groupKey === 'scale' ? 'SCALE' : 'GROW',
-      description: monthly?.description || (groupKey === 'scale' ? 'Everything in GROW plus the additional SCALE package benefits configured by Propulse.' : 'Core Propulse growth membership with the benefits configured for GROW.'),
+      description: monthly?.description || (groupKey === 'scale' ? 'Higher-volume Propulse membership configured for growing lead buyers.' : 'Core Propulse membership for businesses starting a repeatable lead-buying workflow.'),
       monthlyPrice,
       billing: group.map(plan => plan?.billing_period || `${plan?.billing_months || 1} month`).join(' · '),
       features: Array.isArray(monthly?.benefits) ? monthly.benefits : [],
       cycleCount: group.length,
-      image: groupKey === 'scale' ? '/homepage/default-hero.svg' : '/homepage/default-marketing.svg',
     }
   }).filter(Boolean), [membershipPlans])
 
@@ -100,57 +167,9 @@ function Home() {
     publicRequest('/upcoming-features').then(data => {
       if (!live) return
       const items = Array.isArray(data) ? data.filter(item => item?.is_active !== false) : []
-      if (items.length) setUpcomingFeatures(items)
+      setUpcomingFeatures(items)
     }).catch(() => {})
     return () => { live = false }
-  }, [])
-
-  useEffect(() => {
-    const sectionIds = ['home-top', 'how-it-works', 'pricing', 'about', 'contact', 'upcoming-features', 'faq']
-    let raf = 0
-    const updateActiveSection = () => {
-      cancelAnimationFrame(raf)
-      raf = requestAnimationFrame(() => {
-        const probe = window.scrollY + 125
-        let current = 'home'
-        for (const id of sectionIds) {
-          const node = document.getElementById(id)
-          if (node && node.getBoundingClientRect().top + window.scrollY <= probe) {
-            current = id === 'home-top' ? 'home' : id
-          }
-        }
-        setActiveNav(current)
-      })
-    }
-    updateActiveSection()
-    window.addEventListener('scroll', updateActiveSection, { passive: true })
-    window.addEventListener('resize', updateActiveSection)
-    return () => {
-      cancelAnimationFrame(raf)
-      window.removeEventListener('scroll', updateActiveSection)
-      window.removeEventListener('resize', updateActiveSection)
-    }
-  }, [])
-
-  useEffect(() => {
-    document.documentElement.classList.add('home-scroll')
-    const hash = window.location.hash.replace('#', '')
-    let active = true
-    queueMicrotask(() => {
-      if (!active) return
-      if (hash === 'how-it-works' || hash === 'pricing' || hash === 'about' || hash === 'contact' || hash === 'upcoming-features' || hash === 'faq') {
-        setActiveNav(hash)
-        requestAnimationFrame(() => requestAnimationFrame(() => {
-          document.getElementById(hash)?.scrollIntoView({ behavior: 'auto', block: 'start' })
-        }))
-      } else {
-        setActiveNav('home')
-      }
-    })
-    return () => {
-      active = false
-      document.documentElement.classList.remove('home-scroll')
-    }
   }, [])
 
   useEffect(() => {
@@ -173,334 +192,279 @@ function Home() {
     return () => { live = false }
   }, [token])
 
-  const scrollToHome = event => {
-    event?.preventDefault()
-    const home = document.getElementById('home-top')
-    window.history.replaceState({}, '', window.location.pathname + window.location.search)
-    setActiveNav('home')
-    if (home) home.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    else window.scrollTo({ top: 0, behavior: 'smooth' })
-  }
+  useEffect(() => {
+    const sectionIds = ['home-top','start-project','estimators','how-it-works','professionals','pricing','about','upcoming-features','contact','faq']
+    let raf = 0
+    const update = () => {
+      cancelAnimationFrame(raf)
+      raf = requestAnimationFrame(() => {
+        const probe = window.scrollY + 120
+        let current = 'home'
+        for (const id of sectionIds) {
+          const node = document.getElementById(id)
+          if (node && node.getBoundingClientRect().top + window.scrollY <= probe) current = id === 'home-top' ? 'home' : id
+        }
+        setActiveNav(current)
+      })
+    }
+    update()
+    window.addEventListener('scroll', update, { passive:true })
+    window.addEventListener('resize', update)
+    return () => {
+      cancelAnimationFrame(raf)
+      window.removeEventListener('scroll', update)
+      window.removeEventListener('resize', update)
+    }
+  }, [])
 
-  const scrollToSection = (event, id) => {
+  useEffect(() => {
+    document.documentElement.classList.add('home-scroll')
+    const hash = window.location.hash.replace('#','')
+    if (hash) requestAnimationFrame(() => requestAnimationFrame(() => document.getElementById(hash)?.scrollIntoView({block:'start'})))
+    return () => document.documentElement.classList.remove('home-scroll')
+  }, [])
+
+  const scrollTo = (event,id) => {
     event?.preventDefault()
     const target = document.getElementById(id)
-    setActiveNav(id)
-    window.history.replaceState({}, '', window.location.pathname + window.location.search + '#' + id)
-    if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    setActiveNav(id === 'home-top' ? 'home' : id)
+    setMenuOpen(false)
+    window.history.replaceState({},'',window.location.pathname + window.location.search + (id === 'home-top' ? '' : '#'+id))
+    target?.scrollIntoView({behavior:'smooth',block:'start'})
   }
 
-  const dashboardPath = user?.role === 'admin' ? '/admin' : '/leads'
-  const leadLabel = useMemo(() => leadTotal === 1 ? 'live lead available' : 'live leads available', [leadTotal])
+  const dashboardPath = user?.role === 'admin' ? '/admin' : user?.role === 'lead_partner' ? '/lead-partner' : '/leads'
+  const professionalCta = loggedIn ? dashboardPath : '/signup'
+  const publishedUpcoming = upcomingFeatures.length ? upcomingFeatures : [
+    {name:'Project workflow tools',category:'Platform',short_description:'More project and business workflow tools.',description:'Additional workflow capabilities are planned for the Propulse platform.',icon:'▦',status:'Planned',timeline:'Coming later'},
+    {name:'Business automation',category:'Automation',short_description:'Automate repetitive business follow-up.',description:'Planned automation capabilities for businesses using Propulse.',icon:'⚡',status:'Planned',timeline:'Coming later'},
+    {name:'Material discovery',category:'Marketplace',short_description:'Future construction and interior material discovery.',description:'A future marketplace direction for products, suppliers and materials.',icon:'◆',status:'Researching',timeline:'Future release'},
+  ]
+  const upcomingCategories = ['all',...Array.from(new Set(publishedUpcoming.map(item => item.category).filter(Boolean))).slice(0,5)]
+  const filteredUpcoming = publishedUpcoming.filter(item => upcomingFilter === 'all' || item.category === upcomingFilter).slice(0,6)
 
-  return (
-    <div className="home-page">
-      <header className="public-header">
-        <Link className="brand" to="/" aria-label="Propulse home">
-          <img src="/brand/propulse-logo.png" alt="Propulse" />
-        </Link>
-        <nav className="desktop-nav" aria-label="Main navigation">
-          <a className={activeNav === 'home' ? 'nav-active' : ''} href="#home-top" onClick={scrollToHome}>Home</a>
-          <Link to="/leads">Buy Leads</Link>
-          <a className={activeNav === 'how-it-works' ? 'nav-active' : ''} href="#how-it-works" onClick={event => scrollToSection(event, 'how-it-works')}>How It Works</a>
-          <a className={activeNav === 'pricing' ? 'nav-active' : ''} href="#pricing" onClick={event => scrollToSection(event, 'pricing')}>Pricing</a>
-          <a className={activeNav === 'about' ? 'nav-active' : ''} href="#about" onClick={event => scrollToSection(event, 'about')}>About</a>
-          <a className={activeNav === 'contact' ? 'nav-active' : ''} href="#contact" onClick={event => scrollToSection(event, 'contact')}>Contact</a>
-          <a className={activeNav === 'upcoming-features' ? 'nav-active' : ''} href="#upcoming-features" onClick={event => scrollToSection(event, 'upcoming-features')}>Upcoming Features</a>
-          <a className={activeNav === 'faq' ? 'nav-active' : ''} href="#faq" onClick={event => scrollToSection(event, 'faq')}>FAQ</a>
-        </nav>
-        <div className="header-actions">
-          {loggedIn ? (
-            <Link className="header-login" to={dashboardPath}>Marketplace</Link>
-          ) : (
-            <Link className="header-login" to="/login">Login</Link>
-          )}
-          <Link className="header-signup" to={loggedIn ? '/leads' : '/signup'}>{loggedIn ? 'Explore Leads' : 'Get Started'} <span>→</span></Link>
-        </div>
-      </header>
+  return <div className="home-page">
+    <header className="home-header">
+      <Link className="home-brand" to="/" aria-label="Propulse home"><img src="/brand/propulse-logo.png" alt="Propulse Business"/></Link>
+      <nav className={menuOpen ? 'home-nav open' : 'home-nav'} aria-label="Main navigation">
+        <a className={activeNav==='home'?'active':''} href="#home-top" onClick={event=>scrollTo(event,'home-top')}>Home</a>
+        <a className={activeNav==='start-project'?'active':''} href="#start-project" onClick={event=>scrollTo(event,'start-project')}>Start a Project</a>
+        <a className={activeNav==='estimators'?'active':''} href="#estimators" onClick={event=>scrollTo(event,'estimators')}>Cost Estimators</a>
+        <a className={activeNav==='professionals'?'active':''} href="#professionals" onClick={event=>scrollTo(event,'professionals')}>For Professionals</a>
+        <a className={activeNav==='how-it-works'?'active':''} href="#how-it-works" onClick={event=>scrollTo(event,'how-it-works')}>How It Works</a>
+        <a className={activeNav==='contact'?'active':''} href="#contact" onClick={event=>scrollTo(event,'contact')}>Contact</a>
+        <Link className="home-nav-market" to="/leads" onClick={()=>setMenuOpen(false)}>Buy Leads</Link>
+      </nav>
+      <div className="home-header-actions">
+        <Link className="home-login" to={loggedIn?dashboardPath:'/login'}>{loggedIn?'Dashboard':'Login'}</Link>
+        <Link className="home-pro-cta" to="/leads">Professional Marketplace <span>→</span></Link>
+        <button type="button" className="home-menu" aria-label="Toggle navigation" aria-expanded={menuOpen} onClick={()=>setMenuOpen(value=>!value)}>☰</button>
+      </div>
+    </header>
 
-      <main>
-        <section id="home-top" className="hero-section home-reveal is-visible">
-          <div className="hero-copy">
-            <span className="hero-kicker">PREMIUM LEADS FOR CONSTRUCTION &amp; INTERIOR BUSINESSES</span>
-            <h1>Verified Leads.<br /><em>Real Projects.</em></h1>
-            <p>Discover location-specific project enquiries from customers looking for construction, interiors and related services. Find the right opportunity, purchase access and connect directly.</p>
-            <div className="hero-actions">
-              <Link className="hero-primary" to="/leads">Explore Leads <span>→</span></Link>
-              <a className="hero-secondary" href="#how-it-works">How It Works <span>▶</span></a>
-            </div>
-            <div className="hero-trust">
-              <span>✓</span> Verified opportunities
-              <i />
-              <span>⌖</span> Location specific
-              <i />
-              <span>⚡</span> Real enquiries
-            </div>
+    <main>
+      <section id="home-top" className="home-hero">
+        <div className="home-hero-copy">
+          <div className="home-eyebrow"><span>●</span> CONSTRUCTION &amp; INTERIORS, SIMPLIFIED</div>
+          <h1>Plan the project.<br/><em>Know the range.</em><br/>Find the right people.</h1>
+          <p>Propulse helps customers describe construction and interior requirements, understand an indicative budget, and request actual quotations from relevant businesses when they are ready.</p>
+          <div className="home-hero-actions">
+            <a className="home-primary" href="#start-project" onClick={event=>scrollTo(event,'start-project')}>Start Your Project <span>→</span></a>
+            <a className="home-secondary" href="#estimators" onClick={event=>scrollTo(event,'estimators')}>Estimate Cost <span>↗</span></a>
           </div>
-
-          <div className="hero-visual" aria-label="Propulse lead marketplace preview">
-            <div className="hero-photo">
-              <img className="hero-media-image" src={media.hero_image_url || "/homepage/default-hero.svg"} alt="Propulse project opportunities" />
-              <div className="photo-overlay" />
-            </div>
-            <div className="hero-live-card">
-              <span className="live-dot" />
-              <div><strong>{loadingLeads ? 'Loading marketplace…' : leadTotal > 0 ? leadTotal.toLocaleString('en-IN') : 'Live'}</strong><small>{loadingLeads ? 'Checking leads' : leadTotal > 0 ? leadLabel : 'Marketplace access'}</small></div>
-              <Link to="/leads">View →</Link>
-            </div>
-            <div className="hero-badge"><b>⌖</b><span>Location<br /><strong>Specific</strong></span></div>
-          </div>
-        </section>
-
-        <section className="category-strip" aria-label="Lead categories">
-          {categories.map(category => (
-            <Link className="category-card" to={`/leads?search=${encodeURIComponent(category.query)}`} key={category.name}>
-              <div className={`category-art art-${category.query.replaceAll(' ', '-')}`}><img src={media.category_images?.[category.query.replaceAll(' ', '-').replace('plot-land','plot_land')] || `/homepage/default-${category.query.replaceAll(' ', '-')}.svg`} alt="" /><span>{category.icon}</span></div>
-              <div className="category-copy"><strong>{category.name}</strong><small>{category.text}</small></div>
-              <b>→</b>
-            </Link>
-          ))}
-        </section>
-
-        <section className="how-section home-reveal" id="how-it-works">
-          <div className="section-heading">
-            <div>
-              <span className="section-kicker">THE PROPULSE BUYING FLOW</span>
-              <h2>Discover. Evaluate. Buy. Connect.</h2>
-              <p>Move from your first search to customer follow-up through a clear, focused lead marketplace experience.</p>
-            </div>
-            <div className="join-card"><span>READY WHEN YOU ARE</span><strong>Start with the right opportunities.</strong><Link to="/leads">Explore Live Leads <b>→</b></Link></div>
-          </div>
-          <div className="steps-grid">
-            <article className="step"><div><b>1</b><span>⌖</span></div><h3>Set your target</h3><p>Choose the industries, services and locations that match your business.</p></article>
-            <article className="step"><div><b>2</b><span>⌕</span></div><h3>Browse &amp; evaluate</h3><p>Review each opportunity, requirement and available purchase details.</p></article>
-            <article className="step"><div><b>3</b><span>↗</span></div><h3>Buy access &amp; connect</h3><p>Complete your purchase, unlock eligible contact details and follow up.</p></article>
-          </div>
-        </section>
-
-        <section className="pricing-section-home home-reveal" id="pricing">
-          <div className="pricing-home-head">
-            <div>
-              <span className="section-kicker">MEMBERSHIP &amp; PRICING</span>
-              <h2>Choose GROW or SCALE.</h2>
-              <p>One membership package controls your price, billing cycle, lead allowance and included benefits.</p>
-            </div>
-            <Link className="pricing-home-action" to={loggedIn ? '/membership' : '/signup'}>{loggedIn ? 'View Memberships' : 'Get Started'} <span>→</span></Link>
-          </div>
-
-          {membershipPricingLoading ? <div className="pricing-home-empty">Loading membership packages…</div> : membershipCards.length ? <div className="pricing-home-grid">
-            {membershipCards.map(card => (
-              <article className={card.key === 'scale' ? 'pricing-home-card featured' : 'pricing-home-card'} key={card.key}>
-                <div className="pricing-home-image">
-                  <img src={card.image} alt="" />
-                  {card.key === 'scale' && <span className="pricing-home-badge">NEXT LEVEL</span>}
-                </div>
-                <div className="pricing-home-card-body">
-                  <div className="pricing-home-meta"><span>{card.label}</span><small>{card.cycleCount} billing cycle{card.cycleCount === 1 ? '' : 's'}</small></div>
-                  <h3>{card.label}</h3>
-                  <strong>{card.key === 'scale' ? 'Expand & accelerate' : 'Build & grow'}</strong>
-                  <p>{card.description}</p>
-                  <div className="pricing-home-price"><b>{money(card.monthlyPrice)} / month</b><span>{card.billing}</span></div>
-                  <ul>
-                    {card.features.slice(0, 6).map((feature, featureIndex) => (
-                      <li key={featureIndex}><i>✓</i><span>{feature}</span></li>
-                    ))}
-                  </ul>
-                  <Link className={card.key === 'scale' ? 'pricing-home-cta primary' : 'pricing-home-cta'} to={loggedIn ? '/membership' : '/signup'}>{loggedIn ? `Choose ${card.label}` : 'Create Account'} <span>→</span></Link>
-                </div>
-              </article>
-            ))}
-          </div> : <div className="pricing-home-empty">Membership packages are being configured.</div>}
-
-          <div className="pricing-home-footer"><span>GROW and SCALE pricing, billing cycles and features come directly from Membership configuration.</span><span>There is no separate Service Pricing source.</span></div>
-        </section>
-
-        <section className="benefit-band">
-          <div><span>⌖</span><div><strong>Location-Based Leads</strong><small>Find opportunities from target cities.</small></div></div>
-          <div><span>✓</span><div><strong>Verified Enquiries</strong><small>Real people. Real project requirements.</small></div></div>
-          <div><span>◷</span><div><strong>Real-Time Access</strong><small>Fresh leads added to the marketplace.</small></div></div>
-          <div><span>♧</span><div><strong>Dedicated Support</strong><small>Help when you need it.</small></div></div>
-        </section>
-
-        <section className="live-leads-section home-reveal" id="live-leads">
-          <div className="section-heading">
-            <div><span className="section-kicker">LIVE MARKETPLACE</span><h2>Find your next project.</h2><p>These opportunities are loaded from the live Propulse lead marketplace.</p></div>
-            <Link className="outline-link" to="/leads">View All Leads <span>→</span></Link>
-          </div>
-          {loadingLeads ? (
-            <div className="lead-loading">Loading live opportunities…</div>
-          ) : leads.length ? (
-            <div className="lead-grid">
-              {leads.map(lead => {
-                const location = [lead.city_name, lead.state_name].filter(Boolean).join(', ')
-                const shares = lead.pricing?.shares || []
-                const firstPrice = shares[0] ? money(shares[0].normal) : ''
-                return (
-                  <article className={`lead-card ${lead.lead_type || 'basic'}`} key={lead.id}>
-                    <div className="lead-top"><span>NEW</span><small>{timeAgo(lead.created_at)}</small></div>
-                    <div className="lead-title"><div>{String(lead.customer_name || lead.service_name || lead.industry_name || 'L').trim().charAt(0).toUpperCase()}</div><section><strong>{lead.service_name || lead.industry_name || 'Project enquiry'}</strong><small>✓ Verified opportunity</small></section></div>
-                    <p>{lead.requirement || 'Customer project requirement available in the marketplace.'}</p>
-                    <div className="lead-facts">
-                      {lead.industry_name && <span>▦ {lead.industry_name}</span>}
-                      {lead.service_name && <span>⌁ {lead.service_name}</span>}
-                      {location && <span>⌖ {location}</span>}
-                    </div>
-                    <div className="lead-footer"><small>{firstPrice ? `From ${firstPrice}` : 'Pricing shown after opening'}</small><Link to="/leads">View Lead →</Link></div>
-                  </article>
-                )
-              })}
-            </div>
-          ) : (
-            <div className="lead-empty"><strong>New opportunities are being added regularly.</strong><span>Open the marketplace to check the latest available leads.</span><Link to="/leads">Explore Leads →</Link></div>
-          )}
-        </section>
-
-        <section className="why-section about-section home-reveal" id="about">
-          <div className="why-copy about-copy">
-            <span className="section-kicker">ABOUT PROPULSE</span>
-            <h2>Technology built around <em>business growth.</em></h2>
-            <p><strong>Propulse Business Technologies Private Limited</strong> is an IT technology company focused on helping businesses build, digitize, operate and scale.</p>
-            <p>We bring practical digital capabilities together under one platform — from websites and business software to mobile apps, digital marketing, lead acquisition, automation and technology support.</p>
-            <p>Our goal is simple: make it easier for a business to use technology across the full journey, from getting discovered and generating opportunities to managing digital operations and supporting day-to-day business needs.</p>
-            <a className="why-cta" href="#contact" onClick={event => scrollToSection(event, 'contact')}>Talk to Propulse <span>→</span></a>
-          </div>
-          <div className="why-list about-capabilities">
-            <div><b>01</b><strong>Build digital presence</strong><span>Websites, web apps, business portals, mobile applications and digital experiences designed around your business.</span></div>
-            <div><b>02</b><strong>Generate demand</strong><span>SEO, social media, performance marketing, creative production, photography, video and business-focused campaigns.</span></div>
-            <div><b>03</b><strong>Acquire opportunities</strong><span>Propulse connects businesses with a lead marketplace for discovering, evaluating and purchasing relevant customer enquiries.</span></div>
-            <div><b>04</b><strong>Digitize operations</strong><span>Business software, automation, workflows, data tools and technology support that help teams work more efficiently.</span></div>
-            <div><b>05</b><strong>Support business requirements</strong><span>Technology-led support for business processes, documentation and selected compliance workflows, depending on the requirement.</span></div>
-            <div><b>06</b><strong>Scale with one technology partner</strong><span>Use Propulse for individual digital projects or combine services as your business grows and requirements change.</span></div>
-          </div>
-        </section>
-
-        <section className="testimonial-section home-reveal">
-          <div className="testimonial-intro"><span className="section-kicker">BUILT FOR BUSINESSES</span><h2>One marketplace for new project opportunities.</h2><p>Use Propulse to discover demand without building your own lead-search workflow from scratch.</p><a href="#contact" onClick={event => scrollToSection(event, 'contact')}>Talk to our team <span>→</span></a></div>
-          <div className="testimonial-cards">
-            <article><b>“</b><p>Find opportunities by service and location, review the requirement and decide whether to purchase access.</p><strong>Marketplace workflow</strong><small>Search → Review → Buy</small></article>
-            <article><b>“</b><p>Keep purchased opportunities organized in your account and continue the customer conversation from there.</p><strong>Lead management</strong><small>Purchase → Access → Follow up</small></article>
-            <article><b>“</b><p>Use configured membership and pricing options when your business needs a larger, repeatable lead-buying workflow.</p><strong>Flexible access</strong><small>Plan → Discover → Grow</small></article>
-          </div>
-        </section>
-
-        <section className="final-cta home-reveal">
-          <div><span className="section-kicker">READY TO FIND YOUR NEXT PROJECT?</span><h2>Start exploring verified leads.</h2><p>Browse the live marketplace and find opportunities relevant to your business.</p></div>
-          <div><Link className="final-primary" to="/leads">View Leads <span>→</span></Link><a className="final-secondary" href="#pricing" onClick={event => scrollToSection(event, 'pricing')}>View Pricing</a></div>
-        </section>
-
-        <section className="contact-home-section home-reveal" id="contact">
-          <div className="contact-home-head">
-            <div>
-              <span className="section-kicker">CONTACT PROPULSE</span>
-              <h2>One conversation.<br /><em>Many ways to move forward.</em></h2>
-              <p>Propulse Business Technologies Private Limited helps businesses build, market, sell and digitize. Tell us what you need — technology, digital marketing, lead opportunities, automation or business support.</p>
-            </div>
-            <div className="contact-home-company">
-              <span>PROPULSE BUSINESS TECHNOLOGIES</span>
-              <strong>{contactData.company_name || 'Propulse Business Technologies Private Limited'}</strong>
-              <small>IT Technology • Digital Growth • Lead Sales • Business Support</small>
-            </div>
-          </div>
-
-          <div className="contact-home-grid">
-            <div className="contact-home-details">
-              <a href={contactData.email ? 'mailto:' + contactData.email : '#'}><b>✉</b><div><small>Email</small><strong>{contactData.email || 'Email not configured'}</strong><span>General business enquiries</span></div><i>→</i></a>
-              <a href={contactData.phone ? 'tel:' + contactData.phone : '#'}><b>☎</b><div><small>Phone</small><strong>{contactData.phone || 'Phone not configured'}</strong><span>Speak with the team</span></div><i>→</i></a>
-              <a href={contactData.whatsapp ? 'https://wa.me/' + String(contactData.whatsapp).replace(/\D/g,'') : '#'} target="_blank" rel="noreferrer"><b>◉</b><div><small>WhatsApp</small><strong>{contactData.whatsapp || 'WhatsApp not configured'}</strong><span>Quick business conversation</span></div><i>↗</i></a>
-              <div><b>◷</b><div><small>Business hours</small><strong>{contactData.business_hours || 'Business hours not configured'}</strong><span>Response time depends on enquiry type</span></div></div>
-            </div>
-
-            <div className="contact-home-right">
-              <div className="contact-home-address">
-                <span className="contact-home-label">OFFICE &amp; LOCATION</span>
-                <h3>{contactData.company_name || 'Propulse Business Technologies Private Limited'}</h3>
-                <p>{contactData.address || 'Address not configured in Admin Contact settings.'}</p>
-                {contactData.maps_url && <a href={contactData.maps_url} target="_blank" rel="noreferrer">Open in Maps ↗</a>}
-              </div>
-              <div className="contact-home-social">
-                <span className="contact-home-label">OFFICIAL SOCIAL CHANNELS</span>
-                <div className="contact-home-social-grid">
-                  {Array.isArray(contactData.social_handles) && contactData.social_handles.filter(item => item?.enabled && item?.url).map(item => (
-                    <a href={item.url} target="_blank" rel="noreferrer" key={item.id || item.platform}><span>{String(item.platform).slice(0,1).toUpperCase()}</span><strong>{item.platform}</strong><i>↗</i></a>
-                  ))}
-                  {(!Array.isArray(contactData.social_handles) || !contactData.social_handles.some(item => item?.enabled && item?.url)) && <small>No social channels published yet.</small>}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="contact-home-bottom">
-            <div><span className="section-kicker">START WITH A REQUIREMENT</span><strong>Need a website, app, marketing support, leads or business technology?</strong></div>
-            <div><a href={contactData.email ? 'mailto:' + contactData.email : '#'}>Email Propulse <span>→</span></a><Link to="/leads">Explore Leads</Link></div>
-          </div>
-        </section>
-      </main>
-
-      <section className="upcoming-home-section home-reveal" id="upcoming-features">
-        <div className="upcoming-home-head">
-          <div>
-            <span className="section-kicker">UPCOMING FEATURES</span>
-            <h2>More technology. More ways to scale.</h2>
-            <p>Propulse is expanding beyond lead sales with business software, automation, AI, marketplaces and specialist consultation products.</p>
-          </div>
-          <a className="upcoming-home-cta" href="#contact" onClick={event => scrollToSection(event, 'contact')}>Discuss your requirement <span>→</span></a>
-        </div>
-        <div className="upcoming-home-filterbar">
-          <div><span>PRODUCT ROADMAP</span><small>{upcomingFeatures.length || 12} capabilities</small></div>
-          <div className="upcoming-home-filters">
-            {[
-              "all", ...Array.from(new Set(upcomingFeatures.map(item => item.category).filter(Boolean))).slice(0, 5)
-            ].map(filter => (
-              <button type="button" key={filter} className={upcomingFilter === filter ? 'active' : ''} onClick={() => setUpcomingFilter(filter)}>{filter === 'all' ? 'All' : filter}</button>
-            ))}
+          <div className="home-hero-trust">
+            <span><b>✓</b>No login to estimate</span>
+            <span><b>✓</b>No OTP for requirement forms</span>
+            <span><b>✓</b>Contact shared only with consent</span>
           </div>
         </div>
-        <div className="upcoming-home-grid">
-          {(upcomingFeatures.length ? upcomingFeatures : [
-            {name:'WhatsApp API',category:'Business Communication',short_description:'Connect WhatsApp with business workflows.',description:'Business communication and automation.',icon:'◉',status:'In development',timeline:'Coming soon',highlighted:true},
-            {name:'Project Management Apps',category:'Business Software',short_description:'Plan projects, teams, tasks and progress.',description:'Project planning and delivery workflows.',icon:'▦',status:'Planned',timeline:'Coming soon'},
-            {name:'Website Builder',category:'Business Software',short_description:'Build and manage business websites faster.',description:'Visual website creation and publishing.',icon:'▤',status:'In development',timeline:'Coming soon',highlighted:true},
-            {name:'Billing Software',category:'Business Software',short_description:'Simplify billing and business transactions.',description:'Billing, invoices and operational records.',icon:'₹',status:'Planned',timeline:'Coming soon'},
-            {name:'Construction Consultation',category:'Consultation',short_description:'Technology-enabled support for construction businesses.',description:'Construction-focused business and technology support.',icon:'⌂',status:'Planned',timeline:'Coming soon'},
-            {name:'Interior Consultation',category:'Consultation',short_description:'Digital support for interior businesses and projects.',description:'Interior business and project support.',icon:'◇',status:'Planned',timeline:'Coming soon'},
-            {name:'Real Estate Consultation',category:'Consultation',short_description:'Digital and business support for real estate.',description:'Real-estate technology and business support.',icon:'⌖',status:'Planned',timeline:'Coming soon'},
-            {name:'Brochure Builder',category:'Creative Tools',short_description:'Create professional brochures and marketing material.',description:'Browser-based brochure creation and export.',icon:'▧',status:'Planned',timeline:'Coming soon'},
-            {name:'Marketing Automation',category:'Marketing Technology',short_description:'Automate repetitive marketing workflows.',description:'Campaigns, follow-ups and lead workflows.',icon:'⚡',status:'In development',timeline:'Coming soon',highlighted:true},
-            {name:'AI Audio Calling',category:'AI & Automation',short_description:'AI-assisted audio calling for business workflows.',description:'AI-assisted business communication and follow-up.',icon:'◌',status:'Researching',timeline:'Future release'},
-            {name:'Construction & Interior Material Marketplace',category:'Marketplaces',short_description:'Discover materials, products and suppliers in one place.',description:'Future marketplace for materials and suppliers.',icon:'◆',status:'Researching',timeline:'Future release'},
-            {name:'More Business Technology',category:'Platform',short_description:'More tools are being planned.',description:'Additional business technology products as the platform evolves.',icon:'＋',status:'Planned',timeline:'More to come'}
-          ]).filter(item => upcomingFilter === 'all' || item.category === upcomingFilter).slice(0, 6).map((item, index) => (
-            <article className={item.highlighted ? 'upcoming-home-card featured' : 'upcoming-home-card'} key={item.id || item.slug || item.name} style={{'--up-delay': Math.min(index, 5) * 70 + 'ms'}}>
-              <div className="upcoming-home-icon">{item.icon || '✦'}</div>
-              <div className="upcoming-home-card-copy">
-                <div className="upcoming-home-meta"><span>{item.category}</span><small>{item.status}</small></div>
-                <h3>{item.name}</h3>
-                <strong>{item.short_description}</strong>
-                <p>{item.description}</p>
-              </div>
-              <div className="upcoming-home-card-foot"><span>{item.timeline}</span><b>↗</b></div>
-            </article>
-          ))}
-        </div>
-        <div className="upcoming-home-footer">
-          <span>Roadmap items, descriptions, status, order and publication are managed from Admin.</span>
-          <a href="#contact" onClick={event => scrollToSection(event, 'contact')}>Talk to Propulse <span>→</span></a>
+
+        <div className="home-hero-visual">
+          <div className="home-hero-image">
+            <img src={media.hero_image_url || '/homepage/default-hero.svg'} alt="Construction and interior project planning"/>
+            <div className="home-hero-shade"/>
+          </div>
+          <div className="hero-project-panel">
+            <div className="hero-panel-head"><span>START HERE</span><strong>What are you planning?</strong></div>
+            <Link to="/build"><i>⌂</i><div><b>Build a property</b><small>Share construction requirement</small></div><span>→</span></Link>
+            <Link to="/design"><i>◇</i><div><b>Plan home interiors</b><small>Share interior requirement</small></div><span>→</span></Link>
+            <div className="hero-panel-estimate">
+              <small>NOT READY FOR QUOTES?</small>
+              <div><Link to="/construction-estimator">Construction estimate</Link><Link to="/interior-estimator">Interior estimate</Link></div>
+            </div>
+          </div>
+          <div className="hero-floating-note"><span>₹</span><div><small>INDICATIVE COST RANGE</small><b>Before you request actual quotes</b></div></div>
         </div>
       </section>
-      <WebsiteFaqSection variant="home" />
 
-      <footer className="public-footer">
-        <div className="footer-brand"><Link to="/"><img src="/brand/propulse-logo.png" alt="Propulse" /></Link><p>Quality Leads. Real Growth.</p></div>
-        <div><strong>Marketplace</strong><Link to="/leads">Buy Leads</Link><a href="#pricing" onClick={event => scrollToSection(event, 'pricing')}>Pricing</a><Link to="/industries">Industries</Link></div>
-        <div><strong>Support</strong><a href="#contact" onClick={event => scrollToSection(event, 'contact')}>Contact</a><a href="#contact" onClick={event => scrollToSection(event, 'contact')}>Help &amp; Support</a><a href="#how-it-works">How It Works</a><a className={activeNav === 'faq' ? 'nav-active' : ''} href="#faq" onClick={event => scrollToSection(event, 'faq')}>FAQs</a></div>
-        <div><strong>Account</strong><Link to="/login">Login</Link><Link to="/signup">Create Account</Link><Link to="/profile">My Account</Link></div>
-        <div><strong>Follow Us</strong><div className="socials"><span>f</span><span>◎</span><span>in</span><span>▶</span></div><small>Quality leads. Real opportunities.</small></div>
-        <div className="footer-bottom"><span>© {new Date().getFullYear()} Propulse Business. All rights reserved.</span><span>Building businesses. Creating opportunities.</span></div>
-      </footer>
+      <section className="home-proof-strip" aria-label="Propulse customer journey benefits">
+        <div><strong>01</strong><span><b>Describe</b><small>Structured project requirement</small></span></div>
+        <div><strong>02</strong><span><b>Estimate</b><small>Indicative cost range</small></span></div>
+        <div><strong>03</strong><span><b>Request Quotes</b><small>Only when you choose</small></span></div>
+        <div><strong>04</strong><span><b>Connect</b><small>Relevant businesses follow up</small></span></div>
+      </section>
 
+      <section id="start-project" className="home-section project-start-section">
+        <div className="home-section-head">
+          <div><span>CHOOSE YOUR PATH</span><h2>What do you want to do today?</h2><p>Start with a detailed requirement or estimate the budget first. Both paths use the same structured project engine.</p></div>
+          <div className="section-note"><b>No account required</b><span>Start as a customer without creating a marketplace account.</span></div>
+        </div>
+        <div className="project-path-grid">
+          {projectPaths.map((item,index)=><Link className={index<2?'project-path requirement':'project-path estimator'} to={item.to} key={item.key}>
+            <div className="project-path-media"><img src={media.category_images?.[item.imageKey] || item.fallback} alt=""/><span>{item.icon}</span></div>
+            <div className="project-path-body"><small>{item.eyebrow}</small><h3>{item.title}</h3><p>{item.text}</p><b>{item.action} <i>→</i></b></div>
+          </Link>)}
+        </div>
+      </section>
 
-    </div>
-  )
+      <section id="estimators" className="home-section estimator-home-section">
+        <div className="estimator-home-intro">
+          <span>PROJECT COST ESTIMATORS</span>
+          <h2>Get a planning range before you talk to anyone.</h2>
+          <p>Our estimator engine uses your project answers, versioned admin-configured rates and applicable location adjustments to calculate an indicative range on the server.</p>
+          <div className="estimator-facts">
+            <div><b>₹</b><span><strong>Range, not false precision</strong><small>Minimum and maximum planning estimate.</small></span></div>
+            <div><b>⌖</b><span><strong>Location-aware</strong><small>City adjustments can be configured by Admin.</small></span></div>
+            <div><b>↺</b><span><strong>Historically reproducible</strong><small>Rate/version snapshot stored with every calculation.</small></span></div>
+          </div>
+        </div>
+        <div className="estimator-home-cards">
+          {estimatorCards.map(card=><Link className={'estimator-home-card '+card.key} to={card.to} key={card.key}>
+            <div className="estimator-card-top"><span>{card.tag}</span><i>{card.icon}</i></div>
+            <h3>{card.title}</h3><p>{card.text}</p>
+            <div className="estimator-card-bottom"><small>{card.rate}</small><b>Start estimate →</b></div>
+          </Link>)}
+        </div>
+      </section>
+
+      <section id="how-it-works" className="home-section customer-how-section">
+        <div className="home-section-head compact">
+          <div><span>HOW PROPULSE WORKS FOR CUSTOMERS</span><h2>From idea to actual quotations.</h2><p>You stay in control of when contact information is shared.</p></div>
+        </div>
+        <div className="customer-step-grid">
+          {customerSteps.map(step=><article key={step.number}><div className="customer-step-top"><b>{step.number}</b><span>{step.icon}</span></div><h3>{step.title}</h3><p>{step.text}</p></article>)}
+        </div>
+        <div className="customer-flow-cta">
+          <div><span>READY TO START?</span><strong>Choose Construction or Interiors.</strong></div>
+          <div><Link to="/build">Start Construction <span>→</span></Link><Link to="/design">Start Interiors <span>→</span></Link></div>
+        </div>
+      </section>
+
+      <section id="professionals" className="professional-section">
+        <div className="professional-inner">
+          <div className="professional-copy">
+            <span>FOR CONSTRUCTION &amp; INTERIOR BUSINESSES</span>
+            <h2>Customers plan here.<br/><em>Professionals find opportunities here.</em></h2>
+            <p>Propulse converts structured customer requirements and quote requests into the same lead marketplace your business already uses—without creating a separate CRM or lead system.</p>
+            <div className="professional-actions">
+              <Link className="professional-primary" to="/leads">Explore Live Leads <span>→</span></Link>
+              <a className="professional-secondary" href="#pricing" onClick={event=>scrollTo(event,'pricing')}>Memberships</a>
+            </div>
+            <div className="professional-stat-row">
+              <div><strong>{loadingLeads?'…':leadTotal>0?leadTotal.toLocaleString('en-IN'):'Live'}</strong><small>{leadTotal===1?'lead available':'marketplace leads'}</small></div>
+              <div><strong>PIN</strong><small>location-aware matching</small></div>
+              <div><strong>1</strong><small>canonical lead system</small></div>
+            </div>
+          </div>
+          <div className="professional-preview">
+            <div className="professional-preview-head"><span>LIVE MARKETPLACE PREVIEW</span><Link to="/leads">Open marketplace ↗</Link></div>
+            {loadingLeads?<div className="home-lead-loading">Loading live opportunities…</div>:leads.length?leads.map(lead=>{
+              const location=[lead.city_name,lead.state_name].filter(Boolean).join(', ')
+              const shares=lead.pricing?.shares||[]
+              const firstPrice=shares[0]?money(shares[0].normal):''
+              return <Link to="/leads" className="home-lead-row" key={lead.id}>
+                <div className="home-lead-avatar">{String(lead.service_name||lead.industry_name||'P').charAt(0).toUpperCase()}</div>
+                <div><strong>{lead.service_name||lead.industry_name||'Project enquiry'}</strong><span>{location||'Location available in marketplace'} · {timeAgo(lead.created_at)}</span></div>
+                <small>{firstPrice?`From ${firstPrice}`:'View pricing'}</small>
+                <b>→</b>
+              </Link>
+            }):<div className="home-lead-loading">New opportunities are being added. <Link to="/leads">Open marketplace →</Link></div>}
+          </div>
+        </div>
+      </section>
+
+      <section id="pricing" className="home-section home-membership-section">
+        <div className="home-section-head">
+          <div><span>PROFESSIONAL MEMBERSHIPS</span><h2>Buy leads with the plan that fits your business.</h2><p>GROW and SCALE stay connected to your existing Admin membership configuration—this homepage does not create another pricing source.</p></div>
+          <Link className="section-action" to={loggedIn?'/membership':'/signup'}>{loggedIn?'View Memberships':'Create Business Account'} <span>→</span></Link>
+        </div>
+        {membershipPricingLoading?<div className="membership-loading">Loading membership packages…</div>:membershipCards.length?<div className="home-membership-grid">
+          {membershipCards.map(card=><article className={card.key==='scale'?'home-membership-card featured':'home-membership-card'} key={card.key}>
+            <div className="membership-card-label"><span>{card.label}</span>{card.key==='scale'&&<b>POPULAR FOR GROWTH</b>}</div>
+            <h3>{card.key==='scale'?'Scale lead acquisition':'Start buying relevant leads'}</h3>
+            <p>{card.description}</p>
+            <div className="membership-price"><strong>{money(card.monthlyPrice)}</strong><span>/ month equivalent</span></div>
+            <small>{card.billing}</small>
+            <ul>{card.features.slice(0,6).map((feature,index)=><li key={index}><i>✓</i>{feature}</li>)}</ul>
+            <Link to={loggedIn?'/membership':'/signup'}>{loggedIn?`Choose ${card.label}`:'Create Business Account'} <span>→</span></Link>
+          </article>)}
+        </div>:<div className="membership-loading">Membership packages are being configured in Admin.</div>}
+      </section>
+
+      <section id="about" className="home-section home-about-section">
+        <div className="about-brand-panel">
+          <span>ABOUT PROPULSE</span>
+          <h2>One platform connecting project intent with business opportunity.</h2>
+          <p>Propulse Business Technologies Private Limited is building a focused customer-acquisition and project-discovery platform for Construction, Interiors and related real-estate services.</p>
+          <Link to="/industries">Explore industries <span>→</span></Link>
+        </div>
+        <div className="about-principles">
+          <article><b>01</b><div><strong>Customers get structure</strong><p>Requirements and estimators turn vague enquiries into useful project context.</p></div></article>
+          <article><b>02</b><div><strong>Businesses get relevance</strong><p>Location, service and project details make the marketplace easier to evaluate.</p></div></article>
+          <article><b>03</b><div><strong>One lead architecture</strong><p>Estimator quote requests and requirement forms feed the existing canonical lead system.</p></div></article>
+          <article><b>04</b><div><strong>Admin stays in control</strong><p>Questions, rates, memberships, media and roadmap content remain configurable.</p></div></article>
+        </div>
+      </section>
+
+      <section id="upcoming-features" className="home-section roadmap-section">
+        <div className="home-section-head">
+          <div><span>WHAT'S NEXT</span><h2>Propulse is still expanding.</h2><p>These roadmap items are loaded from the same Admin-managed Upcoming Features system.</p></div>
+          <a className="section-action" href="#contact" onClick={event=>scrollTo(event,'contact')}>Talk to Propulse <span>→</span></a>
+        </div>
+        <div className="roadmap-filter">
+          <small>{publishedUpcoming.length} published roadmap item{publishedUpcoming.length===1?'':'s'}</small>
+          <div>{upcomingCategories.map(filter=><button type="button" key={filter} className={upcomingFilter===filter?'active':''} onClick={()=>setUpcomingFilter(filter)}>{filter==='all'?'All':filter}</button>)}</div>
+        </div>
+        <div className="roadmap-grid">
+          {filteredUpcoming.map((item,index)=><article className={item.highlighted?'roadmap-card featured':'roadmap-card'} key={item.id||item.slug||item.name} style={{'--delay':Math.min(index,5)*60+'ms'}}>
+            <div className="roadmap-icon">{item.icon||'✦'}</div>
+            <div className="roadmap-meta"><span>{item.category||'Platform'}</span><small>{item.status||'Planned'}</small></div>
+            <h3>{item.name}</h3>
+            <strong>{item.short_description}</strong>
+            <p>{item.description}</p>
+            <div className="roadmap-foot"><span>{item.timeline||'Coming later'}</span><b>↗</b></div>
+          </article>)}
+        </div>
+      </section>
+
+      <section id="contact" className="contact-section-new">
+        <div className="contact-new-copy">
+          <span>CONTACT PROPULSE</span>
+          <h2>Have a project or a business question?</h2>
+          <p>Customers can start Construction or Interior requirements directly. Businesses can contact Propulse about marketplace access, memberships and platform support.</p>
+          <div className="contact-new-actions"><Link to="/build">Start a Project <span>→</span></Link><Link to="/leads">Professional Marketplace</Link></div>
+        </div>
+        <div className="contact-new-details">
+          <a href={contactData.phone?'tel:'+contactData.phone:'#'}><span>☎</span><div><small>PHONE</small><strong>{contactData.phone||'Not configured'}</strong></div></a>
+          <a href={contactData.email?'mailto:'+contactData.email:'#'}><span>✉</span><div><small>EMAIL</small><strong>{contactData.email||'Not configured'}</strong></div></a>
+          <a href={contactData.whatsapp?'https://wa.me/'+String(contactData.whatsapp).replace(/\D/g,''):'#'} target="_blank" rel="noreferrer"><span>◉</span><div><small>WHATSAPP</small><strong>{contactData.whatsapp||'Not configured'}</strong></div></a>
+          <div><span>⌖</span><div><small>OFFICE</small><strong>{contactData.address||'Address managed from Admin Contact settings'}</strong></div></div>
+        </div>
+      </section>
+
+      <WebsiteFaqSection variant="home"/>
+    </main>
+
+    <footer className="home-footer">
+      <div className="home-footer-top">
+        <div className="home-footer-brand"><Link to="/"><img src="/brand/propulse-logo.png" alt="Propulse Business"/></Link><p>Project planning for customers. Relevant opportunities for businesses.</p></div>
+        <div><strong>Customers</strong><Link to="/build">Construction Requirement</Link><Link to="/design">Interior Requirement</Link><Link to="/construction-estimator">Construction Estimator</Link><Link to="/interior-estimator">Interior Estimator</Link></div>
+        <div><strong>Professionals</strong><Link to="/leads">Buy Leads</Link><a href="#pricing" onClick={event=>scrollTo(event,'pricing')}>Memberships</a><Link to="/industries">Industries</Link><Link to={professionalCta}>{loggedIn?'Dashboard':'Create Account'}</Link></div>
+        <div><strong>Company</strong><a href="#about" onClick={event=>scrollTo(event,'about')}>About</a><a href="#contact" onClick={event=>scrollTo(event,'contact')}>Contact</a><a href="#upcoming-features" onClick={event=>scrollTo(event,'upcoming-features')}>Roadmap</a><a href="#faq" onClick={event=>scrollTo(event,'faq')}>FAQs</a></div>
+      </div>
+      <div className="home-footer-bottom"><span>© {new Date().getFullYear()} Propulse Business Technologies Private Limited.</span><span>Construction • Interiors • Project Leads</span></div>
+    </footer>
+  </div>
 }
 
 export default Home
