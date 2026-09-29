@@ -60,13 +60,18 @@ function CompanyFooter(){
   </footer>
 }
 
-function PackageCards({packages=[]}){
+function PackageCards({packages=[],estimator}){
   if(!packages.length)return <div className="csp-empty">Package details are being configured in Admin.</div>
-  return <div className="csp-package-grid">{packages.map((pkg,index)=><article className={index===1?'featured':''} key={pkg.packageKey||pkg.label||index}>
-    <div className="csp-package-head"><span>{pkg.badge||'PACKAGE'}</span><h3>{pkg.label}</h3>{pkg.priceNote&&<b>{pkg.priceNote}</b>}</div>
-    {pkg.summary&&<p>{pkg.summary}</p>}
-    <div className="csp-spec-list">{(pkg.details||[]).filter(item=>item?.isActive!==false).map((detail,i)=><div key={detail.detailKey||i}><small>{detail.section||'Specification'} · {detail.label}</small><strong>{detail.value}</strong>{detail.note&&<em>{detail.note}</em>}</div>)}</div>
-  </article>)}</div>
+  return <div className="csp-package-grid">{packages.map((pkg,index)=>{
+    const packageKey=String(pkg.packageKey||'').trim()
+    const startLink=estimator&&packageKey?`${estimator}?mode=detailed&package=${encodeURIComponent(packageKey)}`:estimator
+    return <article className={index===1?'featured':''} key={pkg.packageKey||pkg.label||index}>
+      <div className="csp-package-head"><span>{pkg.badge||'PACKAGE'}</span><h3>{pkg.label}</h3>{pkg.priceNote&&<b>{pkg.priceNote}</b>}</div>
+      {pkg.summary&&<p>{pkg.summary}</p>}
+      <div className="csp-spec-list">{(pkg.details||[]).filter(item=>item?.isActive!==false).map((detail,i)=><div key={detail.detailKey||i}><small>{detail.section||'Specification'} · {detail.label}</small><strong>{detail.value}</strong>{detail.note&&<em>{detail.note}</em>}</div>)}</div>
+      {startLink&&<Link className="csp-package-start" to={startLink}>Start with {pkg.label} <span>→</span></Link>}
+    </article>
+  })}</div>
 }
 
 function ServicePage({type}){
@@ -88,9 +93,9 @@ function ServicePage({type}){
     </section>
     <section className="csp-section csp-plan">
       <div className="csp-section-head"><span>PROJECT PLANNING</span><h2>{type==='construction'?'Start rough, then go detailed when you are ready.':'Choose the work scope, then refine materials and finishes.'}</h2><p>{type==='construction'?'The rough estimate is useful for early budget planning. Detailed mode captures steel, cement, sand, brick class, wire, switches, flooring and other Admin-configured selections.':'The rough estimate gives an early planning range. Detailed mode captures plywood, laminate, hardware, modular finish and other Admin-configured selections.'}</p></div>
-      <div className="csp-two-cards"><article><span>01</span><h3>Rough estimate</h3><p>Fast planning range using the core project details and the selected package.</p><Link to={cfg.estimator}>Start rough estimate →</Link></article><article><span>02</span><h3>Detailed estimate</h3><p>Continue with material and specification selections for a more structured project brief.</p><Link to={cfg.estimator}>Start detailed estimate →</Link></article></div>
+      <div className="csp-two-cards"><article><span>01</span><h3>Rough estimate</h3><p>Fast planning range using the core project details and the selected package.</p><Link to={cfg.estimator+'?mode=rough'}>Start rough estimate →</Link></article><article><span>02</span><h3>Detailed estimate</h3><p>Continue with material and specification selections for a more structured project brief.</p><Link to={cfg.estimator+'?mode=detailed'}>Start detailed estimate →</Link></article></div>
     </section>
-    <section className="csp-section csp-packages"><div className="csp-section-head"><span>PUBLISHED PACKAGES</span><h2>Package details come directly from Admin.</h2><p>Names, badges, summaries, specification rows and notes below are read from the currently published estimator configuration.</p></div><PackageCards packages={packages}/></section>
+    <section className="csp-section csp-packages"><div className="csp-section-head"><span>PUBLISHED PACKAGES</span><h2>Package details come directly from Admin.</h2><p>Names, badges, summaries, specification rows and notes below are read from the currently published estimator configuration.</p></div><PackageCards packages={packages} estimator={cfg.estimator}/></section>
     <section className="csp-bottom-cta"><div><span>READY TO CONTINUE?</span><h2>Turn the estimate into one structured project enquiry.</h2><p>Name and mobile number are required before the estimate is created so the project scope and estimate stay attached to the same customer lead.</p></div><div><Link className="primary" to={cfg.estimator}>Get Estimate →</Link><Link to={cfg.requirement}>Send Requirement</Link></div></section>
   </main><CompanyFooter/></div>
 }
@@ -114,9 +119,9 @@ function PackagesPage(){
     <section className="csp-simple-hero"><span>PACKAGES</span><h1>Compare the specifications before you estimate.</h1><p>Every package shown here is controlled from Admin and follows the currently published estimator version.</p></section>
     <section className="csp-section csp-packages">
       <div className="csp-package-tabs"><button type="button" className={audience==='construction'?'active':''} onClick={()=>setAudience('construction')}>Construction</button><button type="button" className={audience==='interior'?'active':''} onClick={()=>setAudience('interior')}>Interiors</button></div>
-      <PackageCards packages={packages}/>
+      <PackageCards packages={packages} estimator={audience==='construction'?'/construction-estimator':'/interior-estimator'}/>
     </section>
-    <section className="csp-bottom-cta"><div><span>NEXT STEP</span><h2>Choose a package inside the estimator.</h2><p>The selected package and its saved specification snapshot stay attached to the estimate and the customer lead.</p></div><div><Link className="primary" to={audience==='construction'?'/construction-estimator':'/interior-estimator'}>Start Estimate →</Link></div></section>
+    <section className="csp-bottom-cta"><div><span>NEXT STEP</span><h2>Start detailed estimation with your package already selected.</h2><p>Choose any package above to carry it into the estimator. The selected package and its saved specification snapshot stay attached to the estimate and the customer lead.</p></div><div><Link className="primary" to={(audience==='construction'?'/construction-estimator':'/interior-estimator')+'?mode=detailed'}>Start Detailed Estimate →</Link></div></section>
   </main><CompanyFooter/></div>
 }
 
