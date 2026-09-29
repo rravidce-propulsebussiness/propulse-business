@@ -290,6 +290,7 @@ assert(home.includes('Professional')&&home.includes('to="/leads"'),'Customer hom
 assert(home.includes('Names, descriptions, badges and package specifications come from the published Admin configuration.'),'Homepage package preview must make Admin ownership of package configuration explicit');
 assert(home.includes("publicRequest('/customer-flows/construction-cost-estimator')")&&home.includes("publicRequest('/customer-flows/interior-cost-estimator')"),'Homepage package preview must read published estimator packages instead of duplicating them');
 assert(!home.includes('const packageHighlights='),'Homepage must not hard-code package names or package descriptions');
+assert(home.includes("trackFunnelEvent('home_cta_clicked'")&&!home.includes("trackFunnelEvent('homepage_path_selected'"),'Homepage estimator CTAs must emit a supported first-party funnel event');
 assert(membershipRoutes.includes("router.get('/public', membershipPlanController.getPublicPlans)"),'Public active-only Membership pricing endpoint must remain');
 assert(membershipRoutes.includes("router.get('/', requireAuth, membershipPlanController.getPlans)"),'Admin Membership configuration must keep authenticated full-plan access');
 assert(membershipController.includes('res.json(await s.getPlans(false))'),'Public Membership endpoint must return active plans only');
