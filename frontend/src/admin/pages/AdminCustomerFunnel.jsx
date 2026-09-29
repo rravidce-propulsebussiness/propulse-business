@@ -14,7 +14,7 @@ const when=value=>{
   return Number.isNaN(date.getTime())?'—':date.toLocaleString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})
 }
 const sourceCopy={
-  public_requirement:{label:'Direct requirements',description:'Customers who submitted a structured Build or Interior requirement.',icon:'⌁'},
+  public_requirement:{label:'Free consultations',description:'Customers who requested a Construction or Interior consultation through the short callback form.',icon:'⌁'},
   public_estimator:{label:'Estimator leads',description:'Completed estimator journeys become canonical customer leads immediately after mandatory name, mobile and consent capture.',icon:'₹'},
 }
 const periods=[['7','7D'],['30','30D'],['90','90D'],['365','1Y'],['all','ALL']]
@@ -32,7 +32,7 @@ function FlowJourney({flow}){
   const icon=flow.flowType==='estimator'?'₹':'⌁'
   return <article className={'journey-card '+(flow.flowType==='estimator'?'estimator':'requirement')}>
     <div className="journey-card-head">
-      <div className="journey-title"><span>{icon}</span><div><small>{flow.flowType==='estimator'?'ESTIMATOR JOURNEY':'REQUIREMENT JOURNEY'}</small><h3>{flow.flowName}</h3><code>{flow.flowKey}</code></div></div>
+      <div className="journey-title"><span>{icon}</span><div><small>{flow.flowType==='estimator'?'ESTIMATOR JOURNEY':'CONSULTATION JOURNEY'}</small><h3>{flow.flowName}</h3><code>{flow.flowKey}</code></div></div>
       <div className="journey-result"><strong>{flow.completionRate||0}%</strong><span>open → final submit</span></div>
     </div>
 
@@ -64,7 +64,7 @@ function QuestionDropoffCard({flow}){
   const highestKey=flow.highestDropOff?.questionKey
   return <article className={'question-friction-card '+(flow.flowType==='estimator'?'estimator':'requirement')}>
     <div className="question-friction-head">
-      <div><span>{flow.flowType==='estimator'?'₹':'⌁'}</span><div><small>{flow.flowType==='estimator'?'ESTIMATOR QUESTIONS':'REQUIREMENT QUESTIONS'}</small><h3>{flow.flowName}</h3><code>{flow.flowKey}</code></div></div>
+      <div><span>{flow.flowType==='estimator'?'₹':'⌁'}</span><div><small>{flow.flowType==='estimator'?'ESTIMATOR QUESTIONS':'CONSULTATION FIELDS'}</small><h3>{flow.flowName}</h3><code>{flow.flowKey}</code></div></div>
       <div className="question-friction-summary"><strong>{flow.questionsTracked||0}</strong><span>questions observed</span>{flow.highestDropOff&&<small>{flow.highestDropOff.dropOffRate}% highest observed drop</small>}</div>
     </div>
     <div className="question-friction-list">
@@ -177,7 +177,7 @@ export default function AdminCustomerFunnel(){
     <section className="premium-kpi-grid">
       <Kpi icon="◎" eyebrow="ESTIMATE DEMAND" value={compact(summary.calculations)} label="Calculations completed" note={selectedFlow?selectedFlow.name:'All published estimator flows'} tone="blue"/>
       <Kpi icon="↗" eyebrow="LEAD CAPTURE" value={compact(summary.converted)} label="Estimator leads captured" note={`${summary.conversionRate||0}% of completed estimates are linked to canonical customer leads`} tone="orange"/>
-      <Kpi icon="⌁" eyebrow="DIRECT DEMAND" value={compact(summary.directRequirementLeads)} label="Requirement-form leads" note="Build / Interior submissions that skipped the estimator path" tone="green"/>
+      <Kpi icon="⌁" eyebrow="DIRECT DEMAND" value={compact(summary.directRequirementLeads)} label="Free consultation leads" note="Construction / Interior callback requests submitted without using the estimator" tone="green"/>
       <Kpi icon="◈" eyebrow="CANONICAL OUTPUT" value={compact(summary.customerFunnelLeads)} label="Customer-funnel leads" note={`${compact(summary.monetizedLeads)} later produced a paid marketplace purchase`} tone="purple"/>
       <Kpi icon="₹" eyebrow="MARKETPLACE VALUE" value={money(summary.paidLeadSales)} label="Gross paid lead sales" note="Attributed sales amount, not Propulse net revenue or commission" tone="navy"/>
     </section>
@@ -193,7 +193,7 @@ export default function AdminCustomerFunnel(){
       </div>
       <div className="journey-grid">
         {trackedFlows.length?trackedFlows.map(flow=><FlowJourney key={(flow.flowKey||'unknown')+'-'+flow.flowType} flow={flow}/>):<div className="premium-empty">
-          <span>◎</span><h3>Journey tracking is ready.</h3><p>Stage metrics will appear here after customers use the homepage, requirement forms and estimators on this release.</p>
+          <span>◎</span><h3>Journey tracking is ready.</h3><p>Stage metrics will appear here after customers use the homepage, free consultation forms and estimators on this release.</p>
         </div>}
       </div>
     </section>
@@ -239,9 +239,9 @@ export default function AdminCustomerFunnel(){
 
     <section className="premium-two-column demand-row">
       <article className="premium-panel">
-        <div className="premium-panel-head"><div><span>DIRECT REQUIREMENTS</span><h3>Build &amp; Interior demand</h3><p>Requirement-form submissions that became canonical leads directly.</p></div></div>
+        <div className="premium-panel-head"><div><span>FREE CONSULTATIONS</span><h3>Construction &amp; Interior consultation demand</h3><p>Short callback forms that became customer leads directly.</p></div></div>
         <div className="direct-demand-list">
-          {requirements.length?requirements.map(item=><div key={item.flowKey}><span className="direct-demand-icon">{item.flowKey==='build'?'⌂':item.flowKey==='design'?'◇':'⌁'}</span><div><strong>{item.flowKey==='build'?'Construction / Build':item.flowKey==='design'?'Interior / Design':item.flowKey}</strong><small>Latest lead {when(item.latestLeadAt)}</small></div><div className="direct-demand-number"><b>{item.leads}</b><span>leads</span></div><div className="direct-demand-number"><b>{item.sold}</b><span>sold</span></div></div>):<div className="premium-empty small"><p>No direct requirement leads in this period.</p></div>}
+          {requirements.length?requirements.map(item=><div key={item.flowKey}><span className="direct-demand-icon">{item.flowKey==='build'?'⌂':item.flowKey==='design'?'◇':'⌁'}</span><div><strong>{item.flowKey==='build'?'Construction / Build':item.flowKey==='design'?'Interior / Design':item.flowKey}</strong><small>Latest lead {when(item.latestLeadAt)}</small></div><div className="direct-demand-number"><b>{item.leads}</b><span>leads</span></div><div className="direct-demand-number"><b>{item.sold}</b><span>sold</span></div></div>):<div className="premium-empty small"><p>No free consultation leads in this period.</p></div>}
         </div>
       </article>
       <article className="premium-panel data-principles">
@@ -257,7 +257,7 @@ export default function AdminCustomerFunnel(){
 
     <section className="premium-section customer-lead-ops">
       <div className="premium-section-head">
-        <div><span>CUSTOMER LEAD OPERATIONS</span><h2>Recent customer-generated leads</h2><p>One operational queue for requirement forms and estimator journeys, showing contact coverage, canonical lead status and downstream paid lead activity.</p></div>
+        <div><span>CUSTOMER LEAD OPERATIONS</span><h2>Recent customer-generated leads</h2><p>One operational queue for free consultation and estimator journeys, showing contact coverage, canonical lead status and downstream paid lead activity.</p></div>
         <Link className="question-config-link" to="/admin/leads">Open Manage Leads <span>→</span></Link>
       </div>
       <div className="customer-lead-ops-list">
@@ -268,7 +268,7 @@ export default function AdminCustomerFunnel(){
           return <article className={'customer-lead-ops-row '+(contactComplete?'ready':'incomplete')} key={item.leadId}>
             <div className="customer-lead-identity">
               <span className={'customer-lead-source '+(item.source==='public_estimator'?'estimator':'requirement')}>{item.source==='public_estimator'?'₹':'⌁'}</span>
-              <div><small>{item.source==='public_estimator'?'ESTIMATOR':'REQUIREMENT FORM'} · LEAD #{item.leadId}</small><strong>{item.customerName||'Legacy customer lead'}</strong><span>{item.flowName||item.flowKey||'Customer flow'}{item.flowKey?' · '+item.flowKey:''}</span></div>
+              <div><small>{item.source==='public_estimator'?'ESTIMATOR':'FREE CONSULTATION'} · LEAD #{item.leadId}</small><strong>{item.customerName||'Legacy customer lead'}</strong><span>{item.flowName||item.flowKey||'Customer flow'}{item.flowKey?' · '+item.flowKey:''}</span></div>
             </div>
             <div className="customer-lead-contact"><small>CONTACT</small><b className={contactComplete?'ready':'incomplete'}>{contactComplete?'Contact complete':'Legacy incomplete'}</b><span>{contactBits.join(' + ')||'No customer contact stored'}</span></div>
             <div className="customer-lead-status"><small>LEAD STATUS</small><b>{String(item.status||'unknown').replaceAll('_',' ')}</b><span>{item.qualityGateStatus?String(item.qualityGateStatus).replaceAll('_',' '):'Canonical lead'}</span></div>
@@ -277,7 +277,7 @@ export default function AdminCustomerFunnel(){
             <div className="customer-lead-time"><small>CREATED</small><b>{when(item.createdAt)}</b>{item.convertedAt&&<span>Lead captured {when(item.convertedAt)}</span>}</div>
             <Link className="customer-lead-open" to={href}>Open lead <span>→</span></Link>
           </article>
-        }):<div className="premium-empty"><span>◈</span><h3>No customer leads in this window.</h3><p>Requirement-form and estimator-generated leads will appear here automatically.</p></div>}
+        }):<div className="premium-empty"><span>◈</span><h3>No customer leads in this window.</h3><p>Free-consultation and estimator-generated leads will appear here automatically.</p></div>}
       </div>
     </section>
 
