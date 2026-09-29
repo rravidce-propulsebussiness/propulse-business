@@ -4,7 +4,7 @@ import { publicRequest } from '../utils/auth'
 import './Home.css'
 
 const IMAGES = {
-  hero: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1800&q=88',
+  hero: '/homepage/premium-hero.svg',
   construction: 'https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=1200&q=85',
   interior: 'https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&w=1200&q=85',
   realEstate: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1200&q=85',
@@ -66,6 +66,10 @@ function Home() {
   const [error, setError] = useState('')
   const [menuOpen, setMenuOpen] = useState(false)
   const [estimateType, setEstimateType] = useState('construction')
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
+  }, [])
 
   useEffect(() => {
     let active = true
@@ -163,8 +167,6 @@ function Home() {
         <div className="pp-hero-media">
           <img src={IMAGES.hero} alt="Premium modern villa" fetchPriority="high" onError={event => { event.currentTarget.src = '/homepage/default-residential.svg' }} />
           <div className="pp-hero-fade" />
-          <div className="pp-script">From<br /><strong>Your Ideas</strong><br />to Reality</div>
-
           <div className="pp-journey">
             <div className="pp-journey-card plan">
               <div className="pp-plan-drawing" />
