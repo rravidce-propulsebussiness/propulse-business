@@ -1926,15 +1926,15 @@
 @media(max-width:1180px){.v9-leads>.v9-stats{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:760px){.v9-leads>.v9-stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .v9-card-top .intake{background:#e9f4ff;color:#245f94;border:1px solid #cfe3f7}
-.v9-card-top .intake.pending{background:#fff2e8;color:#b85a29;border-color:#f4d7c4}
-.v9-estimator-pending{display:flex;align-items:center;justify-content:space-between;gap:14px;margin:0 12px 12px;padding:13px 14px;border:1px solid #f0d7c4;border-radius:11px;background:linear-gradient(135deg,#fff8f2,#fffdfb);box-shadow:inset 0 1px 0 rgba(255,255,255,.8)}
-.v9-estimator-pending>div{min-width:0}
-.v9-estimator-pending span,.v9-estimator-pending strong,.v9-estimator-pending small{display:block}
-.v9-estimator-pending span{color:#c26937;font-size:8px;font-weight:950;letter-spacing:.11em}
-.v9-estimator-pending strong{margin-top:4px;color:#70442d;font-size:12px}
-.v9-estimator-pending small{max-width:570px;margin-top:4px;color:#8c715f;font-size:9px;line-height:1.5}
-.v9-estimator-pending>b{flex:0 0 auto;padding:6px 9px;border-radius:999px;background:#fff0e2;color:#a85528;font-size:8px;letter-spacing:.07em}
-@media(max-width:600px){.v9-estimator-pending{align-items:flex-start;flex-direction:column}}
+.v9-card-top .intake.legacy{background:#fff2e8;color:#b85a29;border-color:#f4d7c4}
+.v9-estimator-legacy{display:flex;align-items:center;justify-content:space-between;gap:14px;margin:0 12px 12px;padding:13px 14px;border:1px solid #f0d7c4;border-radius:11px;background:linear-gradient(135deg,#fff8f2,#fffdfb);box-shadow:inset 0 1px 0 rgba(255,255,255,.8)}
+.v9-estimator-legacy>div{min-width:0}
+.v9-estimator-legacy span,.v9-estimator-legacy strong,.v9-estimator-legacy small{display:block}
+.v9-estimator-legacy span{color:#c26937;font-size:8px;font-weight:950;letter-spacing:.11em}
+.v9-estimator-legacy strong{margin-top:4px;color:#70442d;font-size:12px}
+.v9-estimator-legacy small{max-width:570px;margin-top:4px;color:#8c715f;font-size:9px;line-height:1.5}
+.v9-estimator-legacy>b{flex:0 0 auto;padding:6px 9px;border-radius:999px;background:#fff0e2;color:#a85528;font-size:8px;letter-spacing:.07em}
+@media(max-width:600px){.v9-estimator-legacy{align-items:flex-start;flex-direction:column}}
 .v9-focus-chip{display:inline-flex;align-items:center;gap:7px;min-height:36px;padding:0 9px;border:1px solid #cfe0ef;border-radius:9px;background:#eef6fc;color:#295f87;font-size:10px;font-weight:900;white-space:nowrap}.v9-focus-chip button{width:20px;height:20px;border:0;border-radius:50%;background:#dcebf7;color:#3d6687;font-size:13px;line-height:1;cursor:pointer}
 
 .v9-estimator-summary{grid-column:1/-1;margin-top:8px;padding:15px;border:1px solid #dce6f2;border-radius:13px;background:linear-gradient(145deg,#f8fbff,#fff8f3);box-shadow:0 8px 24px rgba(26,55,89,.05)}.v9-estimator-summary.compact{margin:14px 0 0;padding:12px;background:#f8fbff}.v9-estimator-summary-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}.v9-estimator-summary-head>div{display:flex;flex-direction:column;gap:3px}.v9-estimator-summary-head span{font-size:8px;font-weight:900;letter-spacing:.11em;color:#d95d25}.v9-estimator-summary-head strong{font-size:13px;color:#173a66}.v9-estimator-summary-head>b{font-size:11px;color:#173a66;white-space:nowrap}.v9-estimator-summary-meta{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px}.v9-estimator-summary-meta span{padding:4px 7px;border-radius:999px;background:#fff;border:1px solid #e2e8ef;color:#60718a;font-size:8px;font-weight:800}.v9-estimator-summary>p{margin:11px 0 0;color:#6b7c91;font-size:10px;line-height:1.55}.v9-estimator-specs{margin-top:12px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.v9-estimator-specs>div{padding:9px 10px;border:1px solid #e4eaf1;border-radius:9px;background:#fff;display:flex;flex-direction:column;gap:3px}.v9-estimator-specs small{color:#7c899a;font-size:8px}.v9-estimator-specs b{color:#243e61;font-size:9px;line-height:1.4}.v9-estimator-specs em{color:#8a96a6;font-size:8px;font-style:normal;line-height:1.35}.v9-estimator-summary.compact .v9-estimator-summary-meta{margin-top:6px}.v9-estimator-summary.compact .v9-estimator-summary-head strong{font-size:11px}.v9-estimator-summary.compact .v9-estimator-summary-head>b{font-size:10px}@media(max-width:700px){.v9-estimator-summary-head{flex-direction:column}.v9-estimator-summary-head>b{white-space:normal}.v9-estimator-specs{grid-template-columns:1fr}}
