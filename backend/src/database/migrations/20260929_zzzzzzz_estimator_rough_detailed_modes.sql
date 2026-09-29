@@ -28,7 +28,7 @@ BEGIN
   IF source_version_id IS NULL THEN RETURN; END IF;
 
   SELECT COALESCE(MAX(version_no),0)+1 INTO next_version
-    FROM customer_flow_versions WHERE v.definition_id=def_id;
+    FROM customer_flow_versions WHERE definition_id=def_id;
 
   INSERT INTO customer_flow_versions(definition_id,version_no,status,config,effective_from,created_at,updated_at)
   SELECT def_id,next_version,'draft',
@@ -136,7 +136,7 @@ BEGIN
     JOIN estimator_packages np ON np.version_id=target_version_id AND np.package_key=op.package_key;
 
   UPDATE customer_flow_versions SET status='retired',updated_at=CURRENT_TIMESTAMP
-   WHERE v.definition_id=def_id AND status='published';
+   WHERE definition_id=def_id AND status='published';
   UPDATE customer_flow_versions
      SET status='published',published_at=CURRENT_TIMESTAMP,effective_from=CURRENT_TIMESTAMP,updated_at=CURRENT_TIMESTAMP
    WHERE id=target_version_id;
@@ -168,7 +168,7 @@ BEGIN
   IF source_version_id IS NULL THEN RETURN; END IF;
 
   SELECT COALESCE(MAX(version_no),0)+1 INTO next_version
-    FROM customer_flow_versions WHERE v.definition_id=def_id;
+    FROM customer_flow_versions WHERE definition_id=def_id;
 
   INSERT INTO customer_flow_versions(definition_id,version_no,status,config,effective_from,created_at,updated_at)
   SELECT def_id,next_version,'draft',
@@ -262,7 +262,7 @@ BEGIN
     JOIN estimator_packages np ON np.version_id=target_version_id AND np.package_key=op.package_key;
 
   UPDATE customer_flow_versions SET status='retired',updated_at=CURRENT_TIMESTAMP
-   WHERE v.definition_id=def_id AND status='published';
+   WHERE definition_id=def_id AND status='published';
   UPDATE customer_flow_versions
      SET status='published',published_at=CURRENT_TIMESTAMP,effective_from=CURRENT_TIMESTAMP,updated_at=CURRENT_TIMESTAMP
    WHERE id=target_version_id;
