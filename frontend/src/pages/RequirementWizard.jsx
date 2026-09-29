@@ -164,6 +164,8 @@ export default function RequirementWizard({ flowKey }) {
       let initialAnswers = {}
       let initialContact = emptyContact
       let initialCityId = ''
+      let initialConsent = false
+      let initialSubmissionKey = makeSubmissionKey()
 
       try {
         const saved = JSON.parse(sessionStorage.getItem('propulse_intake_prefill') || 'null')
@@ -173,8 +175,10 @@ export default function RequirementWizard({ flowKey }) {
           if (locationQuestion && /^\d{6}$/.test(String(saved.pincode || ''))) {
             initialAnswers[locationQuestion.questionKey] = String(saved.pincode)
           }
-          initialContact = { name: String(saved.name || ''), phone: String(saved.phone || ''), email: '' }
+          initialContact = { name: String(saved.name || ''), phone: String(saved.phone || ''), email: String(saved.email || '') }
           initialCityId = saved.cityId ? String(saved.cityId) : ''
+          initialConsent = saved.consent === true
+          if (/^[A-Za-z0-9_-]{16,100}$/.test(String(saved.submissionKey || ''))) initialSubmissionKey = String(saved.submissionKey)
           if (!initialCityId && saved.pincode) {
             const matched = loadedCities.find(city => (city.pincodes || []).some(item => String(typeof item === 'string' ? item : item?.pincode) === String(saved.pincode)))
             if (matched) initialCityId = String(matched.id)
@@ -186,8 +190,8 @@ export default function RequirementWizard({ flowKey }) {
       setAnswers(initialAnswers)
       setContact(initialContact)
       setCityId(initialCityId)
-      setConsent(false)
-      setSubmissionKey(makeSubmissionKey())
+      setConsent(initialConsent)
+      setSubmissionKey(initialSubmissionKey)
       setState({ loading: false, saving: false, error: '', success: false })
     }).catch(error => mounted.current && setState({ loading: false, saving: false, error: error.message, success: false }))
 
