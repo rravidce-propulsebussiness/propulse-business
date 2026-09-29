@@ -306,6 +306,7 @@ assert(!companySitePage.includes('Buy Leads')&&!companySitePage.includes('Member
 assert(contactPage.includes('<CompanySitePage page="contact"/>')&&!contactPage.includes('<Navigate to="/#contact"'),'Default Contact route must render the customer company contact page');
 assert(companySiteCss.includes('.csp-package-grid')&&companySiteCss.includes('.csp-professional'),'Company pages must retain premium package and Professional-header styling');
 assert(adminEstimatorConfig.includes('Detailed option pricing')&&adminEstimatorConfig.includes("metadata:{kind:'material_option'}"),'Admin estimator must expose a simple detailed material-option pricing editor');
+assert(adminEstimatorConfig.includes("q.showWhen?.questionKey==='estimate_mode'")&&adminEstimatorConfig.includes("String(option.value)!=='package_default'"),'Detailed option pricing must focus on detailed material questions and avoid double-pricing package defaults');
 assert(adminEstimatorConfig.includes('Advanced adjustments below')&&adminEstimatorConfig.includes("item?.metadata?.kind==='material_option'?null"),'Material option prices must stay separate from advanced adjustment cards');
 assert(adminEstimatorConfigCss.includes('.material-price-card')&&adminEstimatorConfigCss.includes('.material-price-grid'),'Detailed option pricing must retain premium responsive styling');
 assert(websiteFaqSection.includes("BUSINESS_ONLY_CATEGORIES=new Set(['leads','payments','withdrawals','account','reports'])"),'Homepage FAQ must filter business-marketplace categories from the customer company site');
