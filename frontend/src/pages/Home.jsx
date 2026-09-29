@@ -135,7 +135,7 @@ function Home(){
 
       <section className="company-section showcase-section" id="projects">
         <div className="company-section-head"><span>PROJECT SHOWCASE</span><h2>See how Construction and Interiors come together.</h2><p>Explore how structure, services, storage, materials and finishes come together across Construction and complete-home Interiors.</p></div>
-        <div className="project-showcase-grid">{showcaseItems.map((item,index)=><article className={index===0?'wide':''} key={item.key}>
+        <div className="project-showcase-grid">{showcaseItems.map((item,index)=><article className={index===0||index===3?'wide':''} key={item.key}>
           <div className="project-showcase-media"><img src={media.category_images?.[item.key]||item.fallback} alt={item.title}/><span>{item.eyebrow}</span></div>
           <div className="project-showcase-copy"><small>0{index+1} · {item.eyebrow}</small><h3>{item.title}</h3><p>{item.text}</p><Link to={item.eyebrow==='CONSTRUCTION'?'/construction':'/interiors'}>Explore {item.eyebrow==='CONSTRUCTION'?'Construction':'Interiors'} <b>→</b></Link></div>
         </article>)}</div>
