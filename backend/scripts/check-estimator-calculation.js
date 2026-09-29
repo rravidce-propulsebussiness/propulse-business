@@ -40,6 +40,21 @@ const noCity=calculateEstimateFromConfig({...config,cityId:null});
 assert.equal(noCity.minimum,10500);
 assert.equal(noCity.maximum,12500);
 
+const detailedMaterial=calculateEstimateFromConfig({
+  answers:{area:'100',brick_spec:'karimnagar_class_i'},
+  rateItems:[
+    {rateKey:'base',label:'Base area rate',calculationType:'per_unit',unitQuestionKey:'area',amountMin:'100.00',amountMax:'100.00',showWhen:{},isActive:true},
+  ],
+  adjustments:[
+    {adjustmentKey:'material_brick_spec_karimnagar_class_i',label:'Brick specification · Karimnagar Class I',adjustmentType:'fixed',valueMin:'250.00',valueMax:'400.00',cityId:null,showWhen:{questionKey:'brick_spec',equals:'karimnagar_class_i'},metadata:{kind:'material_option'},isActive:true},
+    {adjustmentKey:'material_brick_spec_other',label:'Other brick',adjustmentType:'fixed',valueMin:'900.00',valueMax:'900.00',cityId:null,showWhen:{questionKey:'brick_spec',equals:'other'},metadata:{kind:'material_option'},isActive:true},
+  ],
+  cityId:null,
+});
+assert.equal(detailedMaterial.minimum,10250);
+assert.equal(detailedMaterial.maximum,10400);
+assert.equal(detailedMaterial.breakdown.at(-1).key,'material_brick_spec_karimnagar_class_i');
+
 assert.throws(()=>calculateEstimateFromConfig({answers:{},rateItems:[],adjustments:[]}),/No estimator rate applies/);
 assert.throws(()=>parseQuantityScaled('1.2345'),/up to 3 decimal places/);
 console.log('Estimator exact calculation regression checks passed.');
