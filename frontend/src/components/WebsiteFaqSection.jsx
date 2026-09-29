@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { publicRequest } from '../utils/auth'
 import './WebsiteFaqSection.css'
 
+const BUSINESS_ONLY_CATEGORIES=new Set(['leads','payments','withdrawals','account','reports'])
 const CATEGORY_LABELS={
   general:'General',
   leads:'Leads',
@@ -51,11 +52,12 @@ export default function WebsiteFaqSection({variant='home'}){
 
   const visible=useMemo(()=>{
     const q=search.trim().toLowerCase()
-    return faqs.filter(item=>{
+    const source=standalone?faqs:faqs.filter(item=>!BUSINESS_ONLY_CATEGORIES.has(item.category||'general'))
+    return source.filter(item=>{
       if(category!=='all'&&(item.category||'general')!==category)return false
       return !q||[item.question,item.answer,item.category].join(' ').toLowerCase().includes(q)
     })
-  },[faqs,search,category])
+  },[faqs,search,category,standalone])
 
   const faqList=<div className="website-faq-list">
     {loading&&<div className="website-faq-state">Loading FAQs…</div>}
@@ -77,16 +79,16 @@ export default function WebsiteFaqSection({variant='home'}){
 
   if(!standalone)return <section className="website-faq website-faq-home" id="faq">
     <div className="website-faq-home-head">
-      <div><span className="website-faq-kicker">FAQ</span><h2>Questions, clearly answered.</h2><p>Clear answers about project requirements, cost estimators, quote requests and the professional lead marketplace.</p></div>
-      <Link to="/contact?audience=users">Need more help? <span>→</span></Link>
+      <div><span className="website-faq-kicker">FAQ</span><h2>Questions, clearly answered.</h2><p>Clear answers about Construction, Interiors, project requirements, packages and cost estimators.</p></div>
+      <Link to="/contact">Need more help? <span>→</span></Link>
     </div>
     <div className="website-faq-home-layout">
       {faqList}
       <aside className="website-faq-support">
         <span className="website-faq-kicker">SUPPORT</span>
         <h3>Talk to Propulse.</h3>
-        <p>Have a construction, interior, estimator or professional marketplace question? Start a conversation with the Propulse team.</p>
-        <Link to="/contact?audience=users">Contact Propulse <span>→</span></Link>
+        <p>Have a Construction, Interior, package or estimator question? Start a project conversation with the Propulse team.</p>
+        <Link to="/contact">Contact Propulse <span>→</span></Link>
       </aside>
     </div>
   </section>
