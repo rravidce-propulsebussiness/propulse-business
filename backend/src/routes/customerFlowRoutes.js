@@ -23,6 +23,7 @@ router.get('/estimates/:publicId', publicReadLimit, estimatorController.getCalcu
 router.post('/estimates/:publicId/convert', publicSubmitLimit, estimatorController.convertCalculation);
 router.get('/:key', publicReadLimit, customerFlowController.getPublic);
 router.post('/:key/calculate', publicCalculateLimit, estimatorController.calculate);
+router.post('/:key/consultation', publicSubmitLimit, customerFlowController.submitConsultation);
 router.post('/:key/submit', publicSubmitLimit, customerFlowController.submitPublic);
 
 module.exports = router;
