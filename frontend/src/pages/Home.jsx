@@ -268,7 +268,7 @@ function Home() {
         </div>
 
         <div className="pp-hero-media">
-          <img src="https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&w=1900&q=90" alt="Modern premium home" fetchPriority="high" />
+          <img src={FLOW_CONFIG[0].image} alt="Modern premium home" fetchPriority="high" />
           <div className="pp-hero-gradient" />
           <div className="pp-script"><small>FROM</small><strong>Your Ideas</strong><i>to Reality</i></div>
           <div className="pp-journey">
