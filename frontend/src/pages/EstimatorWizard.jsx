@@ -297,7 +297,7 @@ export default function EstimatorWizard({ flowKey }) {
           </div>)}</div></section>)}</div>
         </details>}
 
-        {activePackage&&<section className="rq-form-section est-selected-package-section"><div className="rq-form-section-head"><b>✓</b><div><h3>Selected package summary</h3><span>This exact published package snapshot will stay with the estimate.</span></div></div><PackagePreview item={activePackage} compact/></section>}
+        {activePackage&&<section className="rq-form-section est-selected-package-section"><div className="rq-form-section-head"><b>✓</b><div><h3>Selected package summary</h3><span>Your selected package and specifications will stay with this estimate.</span></div></div><PackagePreview item={activePackage} compact/></section>}
 
         <section className={'rq-form-section rq-contact-section'+(state.errorQuestionKey==='contact'?' error':'')} data-question-key="contact">
           <div className="rq-form-section-head"><b>{String(standardGroups.length+1).padStart(2,'0')}</b><div><h3>{flow.config?.contactTitle || 'Your contact details'}</h3><span>{flow.config?.contactText || 'Name and mobile are required so the estimate can be saved with the same customer project enquiry.'}</span></div></div>
