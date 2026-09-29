@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { useEffect, useMemo, useState } from 'react'
 import { publicRequest } from '../utils/auth'
+import usePageMeta from '../utils/usePageMeta'
 import './CompanySitePage.css'
 
 const pageCopy={
@@ -97,6 +98,7 @@ function PackageCards({packages=[],estimator}){
 
 function ServicePage({type}){
   const cfg=pageCopy[type]
+  usePageMeta(type==='construction'?'Home Construction | ProPulse Business':'Home Interiors | ProPulse Business',type==='construction'?'Explore construction packages, get a home construction estimate and request a free construction consultation.':'Explore complete-home interior packages, get an interior estimate and request a free design consultation.')
   const[media,setMedia]=useState({hero_image_url:'',category_images:{}})
   const[flow,setFlow]=useState(null)
   useEffect(()=>{
@@ -131,6 +133,7 @@ function ServicePage({type}){
 }
 
 function PackagesPage(){
+  usePageMeta('Construction & Interior Packages | ProPulse Business','Compare Construction and Interior package specifications, allowances and material inclusions before estimating your project.')
   const[flows,setFlows]=useState({construction:null,interior:null})
   const[audience,setAudience]=useState('construction')
   useEffect(()=>{
@@ -156,6 +159,7 @@ function PackagesPage(){
 }
 
 function HowItWorksPage(){
+  usePageMeta('How It Works | ProPulse Business','See the ProPulse project journey from estimate or free consultation through planning, proposal, execution and handover.')
   return <div className="csp-page"><CompanyHeader/><main>
     <section className="csp-simple-hero"><span>HOW IT WORKS</span><h1>A clear project journey from first conversation to handover.</h1><p>Start with an estimate or free consultation, then move into scope confirmation, design, planning, execution and handover.</p></section>
     <section className="csp-section"><div className="csp-step-grid">{steps.map(([number,title,text])=><article key={number}><b>{number}</b><div><h3>{title}</h3><p>{text}</p></div></article>)}</div></section>
@@ -164,6 +168,7 @@ function HowItWorksPage(){
 }
 
 function AboutPage(){
+  usePageMeta('About ProPulse Business | Construction & Interiors','Learn how ProPulse combines project estimates, package clarity and professional consultation for Construction and Interiors.')
   return <div className="csp-page"><CompanyHeader/><main>
     <section className="csp-simple-hero"><span>ABOUT</span><h1>Construction and interiors with clearer decisions from the start.</h1><p>ProPulse brings project estimates, package information and consultation into one professional customer journey for Construction and Interiors.</p></section>
     <section className="csp-section"><div className="csp-about-grid"><article><span>01</span><h3>Clear project scope</h3><p>Start with the location, project size, service scope and package information that matter most to planning.</p></article><article><span>02</span><h3>Transparent package view</h3><p>Compare major material specifications, allowances and package inclusions before committing to the next step.</p></article><article><span>03</span><h3>Practical project estimates</h3><p>Use the main project inputs to create an indicative budget range before final drawings and site review.</p></article><article><span>04</span><h3>Free consultation</h3><p>Speak with the project team using the information you already shared, instead of starting the conversation from zero.</p></article></div></section>
@@ -172,6 +177,7 @@ function AboutPage(){
 }
 
 function ContactPage(){
+  usePageMeta('Contact ProPulse Business | Construction & Interiors','Contact ProPulse for Construction and Interior project estimates, free consultations, phone, email and WhatsApp.')
   const[contact,setContact]=useState({})
   useEffect(()=>{let active=true;publicRequest('/contact?audience=website').then(data=>active&&setContact(data||{})).catch(()=>{});return()=>{active=false}},[])
   const whatsapp=String(contact.whatsapp||'').replace(/\D/g,'')
