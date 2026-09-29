@@ -12,7 +12,7 @@ const audiences=[
 const emptyForm=()=>({category:'general',question:'',answer:'',sort_order:10,is_active:true});
 
 export default function AdminFaqs(){
-  const [audience,setAudience]=useState('website');
+  const [audience,setAudience]=useState('homeowner');
   const [rows,setRows]=useState([]),[form,setForm]=useState(emptyForm),[editId,setEditId]=useState(null),[loading,setLoading]=useState(true),[saving,setSaving]=useState(false),[error,setError]=useState(''),[ok,setOk]=useState(''),[search,setSearch]=useState('');
 
   async function load(audienceKey=audience){
@@ -85,7 +85,7 @@ export default function AdminFaqs(){
     </section>
 
     <section className="admin-faq-audience-tabs" aria-label="FAQ audience">
-      {audiences.map(([key,title,description],index)=><button type="button" key={key} className={audience===key?'active':''} onClick={()=>switchAudience(key)}><span>{index===0?'◎':index===1?'₹':'◆'}</span><div><strong>{title}</strong><small>{description}</small></div></button>)}
+      {audiences.map(([key,title,description])=><button type="button" key={key} className={audience===key?'active':''} onClick={()=>switchAudience(key)}><span>{key==='homeowner'?'⌂':key==='website'?'◎':key==='investor'?'₹':'◆'}</span><div><strong>{title}</strong><small>{description}</small></div></button>)}
     </section>
 
     {error&&<div className="admin-faq-alert error">{error}</div>}
