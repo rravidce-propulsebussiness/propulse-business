@@ -74,13 +74,13 @@ function Home(){
     <header className="company-header">
       <Link className="company-brand" to="/" aria-label="ProPulse home"><img src="/brand/propulse-logo.png" alt="ProPulse Business"/></Link>
       <nav className={menuOpen?'company-nav open':'company-nav'}>
-        <a href="#home" onClick={event=>scroll(event,'home')}>Home</a>
-        <a href="#construction" onClick={event=>scroll(event,'construction')}>Construction</a>
-        <a href="#interiors" onClick={event=>scroll(event,'interiors')}>Interiors</a>
-        <a href="#estimator" onClick={event=>scroll(event,'estimator')}>Estimator</a>
-        <a href="#how-it-works" onClick={event=>scroll(event,'how-it-works')}>How It Works</a>
-        <a href="#about" onClick={event=>scroll(event,'about')}>About</a>
-        <a href="#contact" onClick={event=>scroll(event,'contact')}>Contact</a>
+        <Link to="/" onClick={()=>setMenuOpen(false)}>Home</Link>
+        <Link to="/construction" onClick={()=>setMenuOpen(false)}>Construction</Link>
+        <Link to="/interiors" onClick={()=>setMenuOpen(false)}>Interiors</Link>
+        <Link to="/packages" onClick={()=>setMenuOpen(false)}>Packages</Link>
+        <Link to="/how-it-works" onClick={()=>setMenuOpen(false)}>How It Works</Link>
+        <Link to="/about" onClick={()=>setMenuOpen(false)}>About</Link>
+        <Link to="/contact" onClick={()=>setMenuOpen(false)}>Contact</Link>
       </nav>
       <div className="company-header-actions">
         <Link className="professional-link" to="/leads">Professional <span>→</span></Link>
@@ -118,7 +118,7 @@ function Home(){
         <div className="service-grid">
           {services.map(service=><article id={service.key==='construction'?'construction':'interiors'} className="service-card" key={service.key}>
             <div className="service-media"><img src={media.category_images?.[service.imageKey]||service.fallback} alt=""/><span>{service.eyebrow}</span></div>
-            <div className="service-copy"><small>{service.eyebrow} SERVICES</small><h3>{service.title}</h3><p>{service.text}</p><div><Link to={service.estimator} onClick={()=>track(service.key==='construction'?'construction-cost-estimator':'interior-cost-estimator','service_card')}>Get Estimate <span>→</span></Link><Link to={service.requirement}>Send Requirement</Link></div></div>
+            <div className="service-copy"><small>{service.eyebrow} SERVICES</small><h3>{service.title}</h3><p>{service.text}</p><div><Link to={service.estimator} onClick={()=>track(service.key==='construction'?'construction-cost-estimator':'interior-cost-estimator','service_card')}>Get Estimate <span>→</span></Link><Link to={service.key==='construction'?'/construction':'/interiors'}>Explore Service</Link></div></div>
           </article>)}
         </div>
       </section>
