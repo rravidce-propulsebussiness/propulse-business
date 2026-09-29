@@ -22,11 +22,12 @@ async function main() {
   )).rows;
   assert.strictEqual(flows.length, 2);
   for (const flow of flows) {
-    assert.ok(Number(flow.version_no) >= 2);
-    assert.strictEqual(flow.config?.seedKey,`${flow.key}-requirement-v2-company`);
-    assert.strictEqual(flow.config?.submitLabel,'Submit Project Enquiry');
-    assert.doesNotMatch(String(flow.config?.subheadline||''),/match your requirement with relevant businesses/i);
-    assert.ok(Number(flow.question_count) >= 10);
+    assert.ok(Number(flow.version_no) >= 3);
+    assert.strictEqual(flow.config?.seedKey,`${flow.key}-free-consultation-v3`);
+    assert.strictEqual(flow.config?.experience,'free_consultation');
+    assert.strictEqual(flow.config?.submitLabel,'Get Free Consultation');
+    assert.match(String(flow.config?.subheadline||''),/project|home|consultation|team/i);
+    assert.ok(Number(flow.question_count) >= 5 && Number(flow.question_count) <= 6);
   }
 
   const functionDef = (await pool.query(
