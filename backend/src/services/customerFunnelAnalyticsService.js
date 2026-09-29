@@ -418,6 +418,111 @@ async function getTrackedJourneyAnalytics(filters){
   };
 }
 
+async function getQuestionDropoffAnalytics(filters){
+  const values=[];
+  const clauses=[
+    "e.event_type IN ('flow_question_viewed','flow_question_completed')",
+    'e.question_key IS NOT NULL',
+  ];
+  if(filters.fromDate){
+    values.push(filters.fromDate);
+    clauses.push('e.created_at >= '+sqlParam(values.length));
+  }
+  if(filters.flowId){
+    values.push(filters.flowId);
+    clauses.push('d.id = '+sqlParam(values.length));
+  }
+  const rows=(await pool.query(
+    `WITH question_events AS (
+       SELECT e.flow_key,
+              COALESCE(e.flow_type,d.flow_type) flow_type,
+              COALESCE(d.name,e.flow_key,'Unknown flow') flow_name,
+              d.id definition_id,
+              e.question_key,
+              MIN(e.question_index)::int first_position,
+              MAX(e.question_index)::int last_position,
+              MAX(e.question_count)::int max_question_count,
+              COUNT(DISTINCT e.session_id) FILTER (WHERE e.event_type='flow_question_viewed')::int viewed,
+              COUNT(DISTINCT e.session_id) FILTER (WHERE e.event_type='flow_question_completed')::int completed,
+              COUNT(*)::int events,
+              MAX(e.created_at) latest_event_at
+         FROM customer_funnel_events e
+         LEFT JOIN customer_flow_definitions d ON d.key=e.flow_key
+        WHERE ${clauses.join(' AND ')}
+        GROUP BY e.flow_key,COALESCE(e.flow_type,d.flow_type),COALESCE(d.name,e.flow_key,'Unknown flow'),d.id,e.question_key
+     )
+     SELECT qe.*,
+            q.label question_label,
+            q.question_type,
+            q.display_order
+       FROM question_events qe
+       LEFT JOIN LATERAL (
+         SELECT cq.label,cq.question_type,cq.display_order
+           FROM customer_flow_questions cq
+           JOIN customer_flow_versions cv ON cv.id=cq.version_id
+          WHERE cv.definition_id=qe.definition_id
+            AND cq.question_key=qe.question_key
+          ORDER BY CASE cv.status WHEN 'published' THEN 0 WHEN 'retired' THEN 1 ELSE 2 END,
+                   cv.version_no DESC,cq.id DESC
+          LIMIT 1
+       ) q ON TRUE
+      ORDER BY qe.flow_name,COALESCE(q.display_order,qe.first_position*10),qe.question_key`,
+    values
+  )).rows;
+
+  const flows=new Map();
+  for(const row of rows){
+    const key=row.flow_key||'unknown';
+    const viewed=number(row.viewed);
+    const completed=number(row.completed);
+    const abandoned=Math.max(0,viewed-completed);
+    const question={
+      questionKey:row.question_key,
+      label:row.question_label||row.question_key,
+      questionType:row.question_type||null,
+      displayOrder:row.display_order==null?null:Number(row.display_order),
+      firstPosition:number(row.first_position),
+      lastPosition:number(row.last_position),
+      maxQuestionCount:number(row.max_question_count),
+      viewed,
+      completed,
+      completionRate:percent(completed,viewed),
+      abandoned,
+      dropOffRate:percent(abandoned,viewed),
+      events:number(row.events),
+      latestEventAt:row.latest_event_at||null,
+    };
+    const current=flows.get(key)||{
+      flowKey:row.flow_key||null,
+      flowType:row.flow_type||null,
+      flowName:row.flow_name,
+      questions:[],
+      events:0,
+      latestEventAt:null,
+    };
+    current.questions.push(question);
+    current.events+=question.events;
+    if(question.latestEventAt&&(!current.latestEventAt||new Date(question.latestEventAt)>new Date(current.latestEventAt)))current.latestEventAt=question.latestEventAt;
+    flows.set(key,current);
+  }
+
+  return [...flows.values()].map(flow=>{
+    const withViews=flow.questions.filter(question=>question.viewed>0);
+    const highestDrop=withViews.slice().sort((a,b)=>b.dropOffRate-a.dropOffRate||b.viewed-a.viewed)[0]||null;
+    return {
+      ...flow,
+      questionsTracked:flow.questions.length,
+      highestDropOff:highestDrop?{
+        questionKey:highestDrop.questionKey,
+        label:highestDrop.label,
+        dropOffRate:highestDrop.dropOffRate,
+        abandoned:highestDrop.abandoned,
+        viewed:highestDrop.viewed,
+      }:null,
+    };
+  }).sort((a,b)=>b.events-a.events||String(a.flowName).localeCompare(String(b.flowName)));
+}
+
 async function getRecentCalculations(filters) {
   const values = [];
   const clauses = ['1=1'];
@@ -505,7 +610,7 @@ async function getRecentCalculations(filters) {
 
 async function getCustomerFunnelAnalytics(query = {}) {
   const filters = parseFilters(query);
-  const [definitions,estimator,estimators,sources,requirements,cities,recent,journeyTracking] = await Promise.all([
+  const [definitions,estimator,estimators,sources,requirements,cities,recent,journeyTracking,questionDropoff] = await Promise.all([
     getEstimatorDefinitions(),
     getEstimatorSummary(filters),
     getEstimatorBreakdown(filters),
@@ -514,6 +619,7 @@ async function getCustomerFunnelAnalytics(query = {}) {
     getCityBreakdown(filters),
     getRecentCalculations(filters),
     getTrackedJourneyAnalytics(filters),
+    getQuestionDropoffAnalytics(filters),
   ]);
   const direct = sources.find(item => item.source === 'public_requirement') || {leads:0,monetizedLeads:0,paidSales:0,statuses:{}};
   const estimatorLeads = sources.find(item => item.source === 'public_estimator') || {leads:0,monetizedLeads:0,paidSales:0,statuses:{}};
@@ -528,6 +634,7 @@ async function getCustomerFunnelAnalytics(query = {}) {
     },
     estimatorDefinitions:definitions,
     journeyTracking,
+    questionDropoff,
     summary:{
       ...estimator,
       directRequirementLeads:direct.leads,

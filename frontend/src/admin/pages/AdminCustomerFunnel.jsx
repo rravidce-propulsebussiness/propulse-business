@@ -60,6 +60,32 @@ function FlowJourney({flow}){
   </article>
 }
 
+function QuestionDropoffCard({flow}){
+  const highestKey=flow.highestDropOff?.questionKey
+  return <article className={'question-friction-card '+(flow.flowType==='estimator'?'estimator':'requirement')}>
+    <div className="question-friction-head">
+      <div><span>{flow.flowType==='estimator'?'₹':'⌁'}</span><div><small>{flow.flowType==='estimator'?'ESTIMATOR QUESTIONS':'REQUIREMENT QUESTIONS'}</small><h3>{flow.flowName}</h3><code>{flow.flowKey}</code></div></div>
+      <div className="question-friction-summary"><strong>{flow.questionsTracked||0}</strong><span>questions observed</span>{flow.highestDropOff&&<small>{flow.highestDropOff.dropOffRate}% highest observed drop</small>}</div>
+    </div>
+    <div className="question-friction-list">
+      {(flow.questions||[]).map(question=>{
+        const position=question.firstPosition===question.lastPosition
+          ? 'Step '+question.firstPosition
+          : 'Steps '+question.firstPosition+'–'+question.lastPosition
+        const highest=highestKey===question.questionKey&&question.viewed>0
+        return <div className={'question-friction-row '+(highest?'highest':'')} key={question.questionKey}>
+          <div className="question-friction-position"><b>{String(question.firstPosition||0).padStart(2,'0')}</b><small>{position}</small></div>
+          <div className="question-friction-copy"><div><strong>{question.label}</strong>{highest&&<em>Highest observed drop</em>}</div><small><code>{question.questionKey}</code>{question.questionType?' · '+question.questionType.replaceAll('_',' '):''}</small><div className="question-friction-bar"><i style={{width:Math.min(100,Math.max(0,question.completionRate||0))+'%'}}/></div></div>
+          <div className="question-friction-stat"><strong>{compact(question.viewed)}</strong><span>viewed</span></div>
+          <div className="question-friction-stat"><strong>{compact(question.completed)}</strong><span>completed</span></div>
+          <div className="question-friction-stat abandon"><strong>{compact(question.abandoned)}</strong><span>left here</span></div>
+          <div className="question-friction-rate"><strong>{question.completionRate||0}%</strong><span>completion</span><small>{question.dropOffRate||0}% drop</small></div>
+        </div>
+      })}
+    </div>
+  </article>
+}
+
 function SourceCard({item}){
   const copy=sourceCopy[item.source]||{label:item.source,description:'Customer funnel source',icon:'◈'}
   const statuses=Object.entries(item.statuses||{}).sort((a,b)=>Number(b[1])-Number(a[1])).slice(0,5)
@@ -105,6 +131,7 @@ export default function AdminCustomerFunnel(){
   const requirements=Array.isArray(data.requirements)?data.requirements:[]
   const tracking=data.journeyTracking||{}
   const trackedFlows=Array.isArray(tracking.flows)?tracking.flows:[]
+  const questionDropoff=Array.isArray(data.questionDropoff)?data.questionDropoff:[]
   const recent=data.recent||{items:[],pagination:{page:1,pages:1,total:0}}
   const selectedFlow=useMemo(()=>definitions.find(item=>String(item.id)===String(flowId)),[definitions,flowId])
   const periodLabel=period==='all'?'All time':period==='365'?'Last year':`Last ${period} days`
@@ -159,12 +186,24 @@ export default function AdminCustomerFunnel(){
         <div className="tracking-summary">
           <div><strong>{compact(tracking.homepageCtaSessions||0)}</strong><span>Homepage CTA sessions</span></div>
           <div><strong>{compact(tracking.wizardOpenSessions||0)}</strong><span>Wizard-open sessions</span></div>
-          <div><strong>{compact(tracking.events||0)}</strong><span>Safe stage events</span></div>
+          <div><strong>{compact(tracking.events||0)}</strong><span>Safe funnel events</span></div>
         </div>
       </div>
       <div className="journey-grid">
         {trackedFlows.length?trackedFlows.map(flow=><FlowJourney key={(flow.flowKey||'unknown')+'-'+flow.flowType} flow={flow}/>):<div className="premium-empty">
           <span>◎</span><h3>Journey tracking is ready.</h3><p>Stage metrics will appear here after customers use the homepage, requirement forms and estimators on this release.</p>
+        </div>}
+      </div>
+    </section>
+
+    <section className="premium-section question-friction-section">
+      <div className="premium-section-head">
+        <div><span>QUESTION FRICTION MAP</span><h2>Which question makes customers stop?</h2><p>Views and completions use anonymous sessions and configured question keys only. Customer answer values are never copied into analytics.</p></div>
+        <Link className="question-config-link" to="/admin/customer-flows">Edit questions <span>→</span></Link>
+      </div>
+      <div className="question-friction-grid">
+        {questionDropoff.length?questionDropoff.map(flow=><QuestionDropoffCard key={(flow.flowKey||'unknown')+'-'+flow.flowType} flow={flow}/>):<div className="premium-empty">
+          <span>⌁</span><h3>Question diagnostics are ready.</h3><p>After customers move through the updated wizards, this section will show which configured questions are viewed, completed or abandoned.</p>
         </div>}
       </div>
     </section>
@@ -207,7 +246,7 @@ export default function AdminCustomerFunnel(){
         <div className="premium-panel-head"><div><span>DATA PRINCIPLES</span><h3>Useful analytics without invasive tracking.</h3></div></div>
         <div className="data-principle-list">
           <div><span>01</span><p><b>No contact data</b>Event records never store customer names, phone numbers or email addresses.</p></div>
-          <div><span>02</span><p><b>No answer payloads</b>Property details, budgets and requirement answers stay in their operational records.</p></div>
+          <div><span>02</span><p><b>Question key, never answer</b>Analytics may store the configured question key and numeric step position, but never the customer’s answer value.</p></div>
           <div><span>03</span><p><b>First-party only</b>No third-party analytics SDK, pixels or session replay dependency.</p></div>
           <div><span>04</span><p><b>Canonical outcomes</b>Lead and paid-sales metrics still come from actual leads and lead purchases.</p></div>
         </div>
