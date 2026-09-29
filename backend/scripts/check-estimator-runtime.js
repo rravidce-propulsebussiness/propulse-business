@@ -70,24 +70,26 @@ async function main(){
   const submissionKey='ci_estimator_runtime_submission_001';
   const result=await estimatorService.calculate({
     key:KEY,flowToken:flow.flowToken,answers:{area:'100',quality:'premium'},submissionKey,
+    contact:{name:'CI Estimate Customer',phone:'9345678901',email:'ci-estimate@example.com'},consent:true,website:'',
   });
   assert.equal(result.minimum,11000);
   assert.equal(result.maximum,13200);
   assert.equal(result.currency,'INR');
   assert.ok(result.calculationId);
   assert.ok(result.leadId,'Completing an estimate must immediately create a canonical lead');
-  assert.equal(result.leadStatus,'quarantined','Contactless estimator leads must stay out of marketplace inventory');
+  assert.notEqual(result.leadStatus,'quarantined','Estimator leads with required contact should pass through the normal quality gate');
 
   const intentLead=(await pool.query('SELECT * FROM leads WHERE id=$1',[result.leadId])).rows[0];
   assert.ok(intentLead);
   assert.equal(intentLead.source,'public_estimator');
-  assert.equal(intentLead.status,'quarantined');
-  assert.equal(intentLead.customer_name,null);
-  assert.equal(intentLead.customer_phone,null);
+  assert.notEqual(intentLead.status,'quarantined');
+  assert.equal(intentLead.customer_name,'CI Estimate Customer');
+  assert.equal(intentLead.customer_phone,'+919345678901');
   assert.equal(intentLead.intake_submission_key,submissionKey);
   assert.equal(intentLead.custom_fields?._estimator?.calculationId,result.calculationId);
-  assert.equal(intentLead.custom_fields?._estimator?.contactPending,true);
-  assert.equal(intentLead.custom_fields?._estimator?.lifecycle,'estimate_completed');
+  assert.equal(intentLead.custom_fields?._estimator?.contactPending,false);
+  assert.equal(intentLead.custom_fields?._estimator?.lifecycle,'estimate_completed_with_contact');
+  assert.equal(intentLead.contact_consent_version,'estimator-contact-v1');
 
 
   const saved=await estimatorService.getCalculation(result.calculationId);
@@ -109,6 +111,7 @@ async function main(){
 
   const retry=await estimatorService.calculate({
     key:KEY,flowToken:flow.flowToken,answers:{area:'100',quality:'premium'},submissionKey,
+    contact:{name:'Different Name',phone:'9876543210',email:''},consent:true,website:'',
   });
   assert.equal(retry.duplicate,true);
   assert.equal(retry.calculationId,result.calculationId);
