@@ -6,6 +6,11 @@ import './WebsiteFaqSection.css'
 const BUSINESS_ONLY_CATEGORIES=new Set(['leads','payments','withdrawals','account','reports'])
 const CATEGORY_LABELS={
   general:'General',
+  construction:'Construction',
+  interiors:'Interiors',
+  estimates:'Project Estimates',
+  consultation:'Free Consultation',
+  packages:'Packages',
   leads:'Leads',
   payments:'Payments',
   withdrawals:'Withdrawals',
@@ -79,7 +84,7 @@ export default function WebsiteFaqSection({variant='home'}){
 
   if(!standalone)return <section className="website-faq website-faq-home" id="faq">
     <div className="website-faq-home-head">
-      <div><span className="website-faq-kicker">FAQ</span><h2>Questions, clearly answered.</h2><p>Clear answers about Construction, Interiors, project requirements, packages and cost estimators.</p></div>
+      <div><span className="website-faq-kicker">FAQ</span><h2>Questions, clearly answered.</h2><p>Clear answers about Construction, Interiors, packages, project estimates and free consultations.</p></div>
       <Link to="/contact">Need more help? <span>→</span></Link>
     </div>
     <div className="website-faq-home-layout">
@@ -96,13 +101,13 @@ export default function WebsiteFaqSection({variant='home'}){
   return <main className="website-faq website-faq-standalone">
     <section className="website-faq-hero">
       <div className="website-faq-hero-copy">
-        <span className="website-faq-eyebrow"><i/> CUSTOMER HELP CENTRE</span>
-        <h1>Answers for your <em>Propulse journey.</em></h1>
-        <p>Find clear answers about the marketplace, leads, payments, your account and using Propulse for business growth.</p>
+        <span className="website-faq-eyebrow"><i/> PROJECT HELP CENTRE</span>
+        <h1>Answers before you <em>start your project.</em></h1>
+        <p>Find clear answers about Construction, Interiors, package specifications, project estimates and free consultations.</p>
         <div className="website-faq-hero-stats">
           <span><strong>{faqs.length}</strong><small>Published questions</small></span>
           <span><strong>{categories.length}</strong><small>Help topics</small></span>
-          <span><strong>Admin</strong><small>Managed content</small></span>
+          <span><strong>2</strong><small>Core project services</small></span>
         </div>
       </div>
       <div className="website-faq-hero-mark" aria-hidden="true"><b>?</b><span>PROPULSE GUIDE</span></div>
@@ -122,8 +127,8 @@ export default function WebsiteFaqSection({variant='home'}){
         {faqList}
       </div>
       <aside className="website-faq-side">
-        <div className="website-faq-side-card primary"><span>NEED MORE HELP?</span><h3>Talk to our team.</h3><p>Contact Propulse for account, marketplace or service-related support.</p><Link to="/contact?audience=users">Contact Propulse <b>→</b></Link></div>
-        <div className="website-faq-side-card"><span>QUICK ACCESS</span><Link to="/leads">Explore Leads <b>↗</b></Link><Link to="/purchased-leads">Purchased Leads <b>↗</b></Link><Link to="/wallet">Wallet <b>↗</b></Link></div>
+        <div className="website-faq-side-card primary"><span>NEED MORE HELP?</span><h3>Talk to our project team.</h3><p>Request a free Construction or Interior consultation and continue with the right project context.</p><Link to="/contact">Contact Propulse <b>→</b></Link></div>
+        <div className="website-faq-side-card"><span>QUICK ACCESS</span><Link to="/construction-estimator">Construction Estimate <b>↗</b></Link><Link to="/interior-estimator">Interior Estimate <b>↗</b></Link><Link to="/packages">Compare Packages <b>↗</b></Link></div>
       </aside>
     </section>
   </main>
