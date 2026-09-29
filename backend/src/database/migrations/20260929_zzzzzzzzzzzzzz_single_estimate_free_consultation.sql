@@ -128,9 +128,24 @@ DECLARE
   headline TEXT;
   subheadline TEXT;
   result_title TEXT;
+  estimator_keys TEXT[];
 BEGIN
   FOREACH flow_key IN ARRAY ARRAY['construction-cost-estimator','interior-cost-estimator']
   LOOP
+    estimator_keys:=CASE flow_key
+      WHEN 'construction-cost-estimator' THEN ARRAY[
+        'estimate_mode','project_location','project_type','built_up_area','construction_package','quality',
+        'basement','site_access','steel_spec','cement_spec','sand_spec','brick_spec','wire_spec','switch_spec','flooring_spec'
+      ]
+      ELSE ARRAY[
+        'estimate_mode','project_location','property_type','area','property_status','scope_mode','selected_work',
+        'kitchen_package','wardrobe_units','false_ceiling_area','furniture_package','finish_quality',
+        'plywood_spec','internal_laminate_spec','external_laminate_spec','hardware_spec','modular_finish_spec',
+        'customisations','hdhmr_area','pu_duco_area','veneer_pvc_area','profile_glass_area','aristo_glass_area',
+        'granite_tile_area','dado_tile_area','quartz_area','regular_wallpaper_area','custom_wallpaper_area',
+        'blinds_curtains_area','profile_light_meters','sensor_count','mdf_cnc_area','wall_panelling_area','wall_panelling_pu_area'
+      ]
+    END;
     seed_key:=CASE flow_key
       WHEN 'construction-cost-estimator' THEN 'construction-cost-estimator-v4-single-estimate'
       ELSE 'interior-cost-estimator-v4-single-estimate'
@@ -194,7 +209,8 @@ BEGIN
     SELECT target_version_id,q.question_key,q.question_type,q.label,q.help_text,q.is_required,q.display_order,
            COALESCE(q.validation,'{}'::jsonb),q.show_when,q.lead_field,q.visibility,q.is_active
       FROM customer_flow_questions q
-     WHERE q.version_id=source_version_id;
+     WHERE q.version_id=source_version_id
+       AND q.question_key=ANY(estimator_keys);
 
     INSERT INTO customer_flow_question_options(question_id,value,label,display_order,is_active)
     SELECT nq.id,o.value,o.label,o.display_order,o.is_active
