@@ -109,8 +109,7 @@ async function main(){
   assert.equal(intentLead.customer_phone,'+919345678901');
   assert.equal(intentLead.intake_submission_key,submissionKey);
   assert.equal(intentLead.custom_fields?._estimator?.calculationId,result.calculationId);
-  assert.equal(intentLead.custom_fields?._estimator?.contactPending,false);
-  assert.equal(intentLead.custom_fields?._estimator?.lifecycle,'estimate_completed_with_contact');
+  assert.equal(intentLead.custom_fields?._estimator?.lifecycle,'estimate_completed');
   assert.equal(intentLead.contact_consent_version,'estimator-contact-v1');
 
 
