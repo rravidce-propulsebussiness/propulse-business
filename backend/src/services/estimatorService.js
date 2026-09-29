@@ -224,6 +224,8 @@ function cleanPackage(item, index, questionMap) {
   const question = questionMap.get(selectorQuestionKey);
   if (!question) fail(`Package "${label}" references unknown question "${selectorQuestionKey}"`, 'INVALID_ESTIMATOR_PACKAGE');
   if (!['single_select','multi_select','boolean'].includes(question.question_type)) fail(`Package "${label}" must use a select or boolean question`, 'INVALID_ESTIMATOR_PACKAGE');
+  if (question.question_type === 'boolean' && !['true','false'].includes(selectorValue.toLowerCase())) fail(`Package "${label}" must use true or false for its boolean selector`, 'INVALID_ESTIMATOR_PACKAGE');
+  if (question.question_type !== 'boolean' && Array.isArray(question.option_values) && !question.option_values.map(String).includes(selectorValue)) fail(`Package "${label}" references an unknown selector value`, 'INVALID_ESTIMATOR_PACKAGE');
   const rawDetails = Array.isArray(item?.details) ? item.details : [];
   if (rawDetails.length > 120) fail(`Package "${label}" has too many detail rows`, 'ESTIMATOR_CONFIG_TOO_LARGE');
   const details = rawDetails.map((detail,detailIndex)=>cleanPackageDetail(detail,detailIndex,label));
