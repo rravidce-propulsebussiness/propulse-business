@@ -288,6 +288,8 @@ assert(!home.includes('listLeads(')&&!home.includes('LIVE MARKETPLACE PREVIEW')&
 assert(home.includes('Construction')&&home.includes('Interiors')&&home.includes('/construction-estimator')&&home.includes('/interior-estimator'),'Customer homepage must stay focused on Construction and Interior journeys');
 assert(home.includes('Professional')&&home.includes('to="/leads"'),'Customer homepage must expose the marketplace only through the Professional option');
 assert(home.includes('Names, descriptions, badges and package specifications come from the published Admin configuration.'),'Homepage package preview must make Admin ownership of package configuration explicit');
+assert(home.includes("publicRequest('/customer-flows/construction-cost-estimator')")&&home.includes("publicRequest('/customer-flows/interior-cost-estimator')"),'Homepage package preview must read published estimator packages instead of duplicating them');
+assert(!home.includes('const packageHighlights='),'Homepage must not hard-code package names or package descriptions');
 assert(membershipRoutes.includes("router.get('/public', membershipPlanController.getPublicPlans)"),'Public active-only Membership pricing endpoint must remain');
 assert(membershipRoutes.includes("router.get('/', requireAuth, membershipPlanController.getPlans)"),'Admin Membership configuration must keep authenticated full-plan access');
 assert(membershipController.includes('res.json(await s.getPlans(false))'),'Public Membership endpoint must return active plans only');
