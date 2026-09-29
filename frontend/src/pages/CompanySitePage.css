@@ -32,3 +32,7 @@
   .csp-mobile-actions a:first-child{background:#f36a2c;color:#fff}
   .csp-mobile-actions a:last-child{border:1px solid #dbe4ed;background:#fff;color:#173d68}
 }
+
+.csp-inline-link{display:inline-flex!important;width:max-content!important;margin-top:7px!important;padding:0!important;border:0!important;background:transparent!important;color:#e7632a!important;font-size:7px!important;font-weight:900!important;text-decoration:none!important}
+.csp-social-links>div{margin-top:8px;display:flex;gap:6px;flex-wrap:wrap}
+.csp-social-links>div>a{width:auto!important;padding:7px 9px!important;border:1px solid #dce5ed!important;border-radius:8px!important;background:#fff!important;color:#2b5278!important;font-size:7px!important;font-weight:900!important;text-decoration:none!important}
