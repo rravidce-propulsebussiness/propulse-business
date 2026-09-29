@@ -318,7 +318,7 @@ function Home() {
         <div className="hc-section-heading">
           <span>Trust starts with clarity</span>
           <h2>Designed Around Homeowner Concerns</h2>
-          <p>No professional marketplace language on the customer homepage. The experience is focused on helping a homeowner plan the next step.</p>
+          <p>Everything is designed around a homeowner’s questions first, so you can understand the next step before choosing how to continue.</p>
         </div>
 
         <div className="hc-value-grid">
