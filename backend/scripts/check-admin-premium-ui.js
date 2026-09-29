@@ -54,6 +54,8 @@ const home=read('../frontend/src/pages/Home.jsx');
 const companySitePage=read('../frontend/src/pages/CompanySitePage.jsx');
 const companySiteCss=read('../frontend/src/pages/CompanySitePage.css');
 const contactPage=read('../frontend/src/pages/Contact.jsx');
+const adminEstimatorConfig=read('../frontend/src/admin/components/AdminEstimatorConfig.jsx');
+const adminEstimatorConfigCss=read('../frontend/src/admin/components/AdminEstimatorConfig.css');
 const server=read('../backend/src/server.js');
 const membershipRoutes=read('../backend/src/routes/membershipPlanRoutes.js');
 const membershipController=read('../backend/src/controllers/membershipPlanController.js');
@@ -302,6 +304,9 @@ assert(companySitePage.includes('Professional')&&companySitePage.includes('to="/
 assert(!companySitePage.includes('Buy Leads')&&!companySitePage.includes('Membership'),'Customer company pages must not expose marketplace purchasing or membership language');
 assert(contactPage.includes('<CompanySitePage page="contact"/>')&&!contactPage.includes('<Navigate to="/#contact"'),'Default Contact route must render the customer company contact page');
 assert(companySiteCss.includes('.csp-package-grid')&&companySiteCss.includes('.csp-professional'),'Company pages must retain premium package and Professional-header styling');
+assert(adminEstimatorConfig.includes('Detailed option pricing')&&adminEstimatorConfig.includes("metadata:{kind:'material_option'}"),'Admin estimator must expose a simple detailed material-option pricing editor');
+assert(adminEstimatorConfig.includes('Advanced adjustments below')&&adminEstimatorConfig.includes("item?.metadata?.kind==='material_option'?null"),'Material option prices must stay separate from advanced adjustment cards');
+assert(adminEstimatorConfigCss.includes('.material-price-card')&&adminEstimatorConfigCss.includes('.material-price-grid'),'Detailed option pricing must retain premium responsive styling');
 assert(membershipRoutes.includes("router.get('/public', membershipPlanController.getPublicPlans)"),'Public active-only Membership pricing endpoint must remain');
 assert(membershipRoutes.includes("router.get('/', requireAuth, membershipPlanController.getPlans)"),'Admin Membership configuration must keep authenticated full-plan access');
 assert(membershipController.includes('res.json(await s.getPlans(false))'),'Public Membership endpoint must return active plans only');
