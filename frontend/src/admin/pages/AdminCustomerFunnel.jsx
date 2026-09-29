@@ -148,7 +148,7 @@ export default function AdminCustomerFunnel(){
       <div className="funnel-command-copy">
         <div className="funnel-live-pill"><i/>FIRST-PARTY FUNNEL INTELLIGENCE</div>
         <h1>Estimator &amp; customer funnel</h1>
-        <p>Follow customer intent from project entry to completed estimate, quote request, canonical lead and paid marketplace activity.</p>
+        <p>Follow customer intent from project entry to completed estimate, canonical lead capture and downstream paid lead activity.</p>
         <div className="funnel-command-badges">
           <span><b>{compact(tracking.uniqueSessions||0)}</b> tracked sessions</span>
           <span><b>{compact(summary.calculations||0)}</b> completed estimates</span>
