@@ -19,7 +19,7 @@ const patchRule=(rule,field,value)=>{
 }
 
 export default function AdminEstimatorConfig({flowId,versionId,questions=[]}){
- const[config,setConfig]=useState(null),[cities,setCities]=useState([]),[busy,setBusy]=useState(false),[error,setError]=useState(''),[message,setMessage]=useState('')
+ const[config,setConfig]=useState(null),[cities,setCities]=useState([]),[busy,setBusy]=useState(false),[error,setError]=useState(''),[message,setMessage]=useState(''),[activeTab,setActiveTab]=useState('packages')
  const numericQuestions=useMemo(()=>questions.filter(q=>['number','area'].includes(q.questionType)),[questions])
  const selectorQuestions=useMemo(()=>questions.filter(q=>['single_select','multi_select','boolean'].includes(q.questionType)),[questions])
  const materialQuestions=useMemo(()=>selectorQuestions.filter(q=>{
@@ -37,7 +37,7 @@ export default function AdminEstimatorConfig({flowId,versionId,questions=[]}){
    setCities(Array.isArray(cityResult)?cityResult:(cityResult?.data||[]))
   }catch(e){setError(e.message)}finally{setBusy(false)}
  }
- useEffect(()=>{load()},[flowId,versionId])
+ useEffect(()=>{setActiveTab('packages');load()},[flowId,versionId])
 
  const packages=config?.packages||[],rates=config?.rates||[],adjustments=config?.adjustments||[]
  const patchPackage=(index,patch)=>setConfig(current=>({...current,packages:current.packages.map((item,i)=>i===index?{...item,...patch}:item)}))
@@ -75,6 +75,14 @@ export default function AdminEstimatorConfig({flowId,versionId,questions=[]}){
   {!config.editable&&<div className="est-admin-notice">This is the published version. Click <b>Save draft</b> in the flow header first. Packages, specifications and pricing will be copied into the new draft.</div>}
   {error&&<div className="flow-alert error">{error}</div>}{message&&<div className="flow-alert success">{message}</div>}
 
+  <div className="est-admin-tabs" role="tablist" aria-label="Estimator configuration">
+   <button type="button" role="tab" aria-selected={activeTab==='packages'} className={activeTab==='packages'?'active':''} onClick={()=>setActiveTab('packages')}><span>01</span><b>Packages</b><small>{packages.length} customer package{packages.length===1?'':'s'}</small></button>
+   <button type="button" role="tab" aria-selected={activeTab==='materials'} className={activeTab==='materials'?'active':''} onClick={()=>setActiveTab('materials')}><span>02</span><b>Detailed pricing</b><small>{adjustments.filter(item=>item?.metadata?.kind==='material_option').length} option price{adjustments.filter(item=>item?.metadata?.kind==='material_option').length===1?'':'s'}</small></button>
+   <button type="button" role="tab" aria-selected={activeTab==='rates'} className={activeTab==='rates'?'active':''} onClick={()=>setActiveTab('rates')}><span>03</span><b>Base rates</b><small>{rates.length} calculation rate{rates.length===1?'':'s'}</small></button>
+   <button type="button" role="tab" aria-selected={activeTab==='adjustments'} className={activeTab==='adjustments'?'active':''} onClick={()=>setActiveTab('adjustments')}><span>04</span><b>Advanced</b><small>{adjustments.filter(item=>item?.metadata?.kind!=='material_option').length} adjustment{adjustments.filter(item=>item?.metadata?.kind!=='material_option').length===1?'':'s'}</small></button>
+  </div>
+
+  {activeTab==='packages'&&<>
   <div className="est-admin-section-head"><div><b>Customer packages</b><small>Configure package names, badges and the specification details customers see. Link each package to the answer that activates it.</small></div><button type="button" disabled={!config.editable} onClick={()=>setConfig(current=>({...current,packages:[...(current.packages||[]),blankPackage((current.packages||[]).length)]}))}>+ Package</button></div>
   <div className="est-package-list">{packages.map((item,index)=>{
    const selector=questions.find(q=>q.questionKey===item.selectorQuestionKey)
@@ -104,7 +112,9 @@ export default function AdminEstimatorConfig({flowId,versionId,questions=[]}){
     </div>)}</div>
    </article>
   })}</div>
+  </>}
 
+  {activeTab==='materials'&&<>
   <div className="est-admin-section-head material-pricing-head"><div><b>Detailed option pricing</b><small>Set a fixed, percentage or rate × quantity adjustment for a material/specification option. Brochure-based starter rates can be edited here before publishing; use Advanced adjustments below for city-specific or complex rules.</small></div><button type="button" disabled={!config.editable} onClick={()=>setConfig(current=>({...current,adjustments:[...current.adjustments,blankMaterialAdjustment(current.adjustments.length)]}))}>+ Option price</button></div>
   <div className="material-price-list">{adjustments.map((item,index)=>{
    if(item?.metadata?.kind!=='material_option')return null
@@ -123,7 +133,9 @@ export default function AdminEstimatorConfig({flowId,versionId,questions=[]}){
     </div>
    </article>
   })}</div>
+  </>}
 
+  {activeTab==='rates'&&<>
   <div className="est-admin-section-head"><div><b>Rate items</b><small>These are the actual calculation values. Package display text never silently changes calculation rates.</small></div><button type="button" disabled={!config.editable} onClick={()=>setConfig(current=>({...current,rates:[...current.rates,blankRate(current.rates.length)]}))}>+ Rate</button></div>
   <div className="est-admin-list">{rates.map((item,index)=><article className="est-admin-card" key={item.id||item.rateKey+'-'+index}>
    <div className="est-admin-card-head"><b>{String(index+1).padStart(2,'0')}</b><strong>{item.label||'Rate item'}</strong><button type="button" disabled={!config.editable} onClick={()=>setConfig(current=>({...current,rates:current.rates.filter((_,i)=>i!==index)}))}>Remove</button></div>
@@ -138,7 +150,9 @@ export default function AdminEstimatorConfig({flowId,versionId,questions=[]}){
    </div>
    <div className="dependency-box"><b>Apply when <small>Optional</small></b><div><select disabled={!config.editable} value={item.showWhen?.questionKey||''} onChange={e=>patchRate(index,{showWhen:patchRule(item.showWhen,'questionKey',e.target.value)})}><option value="">Always</option>{questions.map(q=><option key={q.questionKey} value={q.questionKey}>{q.label} ({q.questionKey})</option>)}</select><select disabled={!config.editable||!item.showWhen?.questionKey} value={ruleMode(item.showWhen)} onChange={e=>patchRate(index,{showWhen:patchRule(item.showWhen,'mode',e.target.value)})}><option value="equals">equals</option><option value="notEquals">not equals</option><option value="in">in list</option></select><input disabled={!config.editable||!item.showWhen?.questionKey} placeholder="Value / comma list" value={ruleText(item.showWhen)} onChange={e=>patchRate(index,{showWhen:patchRule(item.showWhen,'value',e.target.value)})}/></div></div>
   </article>)}</div>
+  </>}
 
+  {activeTab==='adjustments'&&<>
   <div className="est-admin-section-head"><div><b>Adjustments</b><small>Apply fixed or percentage changes after base rates. City is optional.</small></div><button type="button" disabled={!config.editable} onClick={()=>setConfig(current=>({...current,adjustments:[...current.adjustments,blankAdjustment(current.adjustments.length)]}))}>+ Adjustment</button></div>
   <div className="est-admin-list">{adjustments.map((item,index)=>item?.metadata?.kind==='material_option'?null:<article className="est-admin-card" key={item.id||item.adjustmentKey+'-'+index}>
    <div className="est-admin-card-head"><b>{String(index+1).padStart(2,'0')}</b><strong>{item.label||'Adjustment'}</strong><button type="button" disabled={!config.editable} onClick={()=>setConfig(current=>({...current,adjustments:current.adjustments.filter((_,i)=>i!==index)}))}>Remove</button></div>
@@ -154,5 +168,6 @@ export default function AdminEstimatorConfig({flowId,versionId,questions=[]}){
    </div>
    <div className="dependency-box"><b>Apply when <small>Optional</small></b><div><select disabled={!config.editable} value={item.showWhen?.questionKey||''} onChange={e=>patchAdjustment(index,{showWhen:patchRule(item.showWhen,'questionKey',e.target.value)})}><option value="">Always</option>{questions.map(q=><option key={q.questionKey} value={q.questionKey}>{q.label} ({q.questionKey})</option>)}</select><select disabled={!config.editable||!item.showWhen?.questionKey} value={ruleMode(item.showWhen)} onChange={e=>patchAdjustment(index,{showWhen:patchRule(item.showWhen,'mode',e.target.value)})}><option value="equals">equals</option><option value="notEquals">not equals</option><option value="in">in list</option></select><input disabled={!config.editable||!item.showWhen?.questionKey} placeholder="Value / comma list" value={ruleText(item.showWhen)} onChange={e=>patchAdjustment(index,{showWhen:patchRule(item.showWhen,'value',e.target.value)})}/></div></div>
   </article>)}</div>
+  </>}
  </section>
 }
