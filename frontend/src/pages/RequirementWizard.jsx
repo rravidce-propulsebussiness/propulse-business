@@ -140,21 +140,21 @@ export default function RequirementWizard({ flowKey }) {
 
   if (state.loading) return <main className="rq-page"><div className="rq-shell rq-status">Loading your requirement form…</div></main>
   if (!flow) return <main className="rq-page"><div className="rq-shell rq-status error">{state.error || 'This requirement form is unavailable.'}<Link to="/">Back home</Link></div></main>
-  if (state.success) return <main className="rq-page"><div className="rq-shell rq-success"><div className="rq-success-mark">✓</div><span>CONSULTATION REQUEST SAVED</span><h1>{flow.config?.consultationTitle || 'Your project brief is ready.'}</h1><p>{flow.config?.consultationText || 'Your requirement and contact details are attached to one customer lead so the project team can continue with the same scope during consultation.'}</p><div><Link to="/">Back home</Link><Link className="rq-success-secondary" to="/contact">Contact project team</Link><button type="button" onClick={() => window.location.reload()}>Post another requirement</button></div></div></main>
+  if (state.success) return <main className="rq-page"><div className="rq-shell rq-success"><div className="rq-success-mark">✓</div><span>CALLBACK REQUESTED</span><h1>{flow.config?.consultationTitle || 'Your project brief is ready.'}</h1><p>{flow.config?.consultationText || 'Your requirement and contact details are attached to one customer lead so the project team can continue with the same scope during consultation.'}</p><div><Link to="/">Back home</Link><Link className="rq-success-secondary" to="/contact">Contact project team</Link><button type="button" onClick={() => window.location.reload()}>Post another requirement</button></div></div></main>
 
   return <main className="rq-page">
     <header className="rq-top"><Link to="/"><img src="/brand/propulse-logo.png" alt="ProPulse Business" /></Link><Link to="/leads">Professional →</Link></header>
     <div className="rq-shell rq-single-shell">
       <aside className="rq-side rq-single-side">
-        <span>PROJECT CONSULTATION</span>
+        <span>FREE PROJECT CONSULTATION</span>
         <h1>{flow.name}</h1>
-        <p>{flow.config?.subheadline || 'Share the project details in one form. We will keep the same scope ready for consultation and follow-up.'}</p>
+        <p>{flow.config?.subheadline || 'Share the basics in a short form. Our project team can call you back with the right context.'}</p>
         <div className="rq-scope"><small>Category</small><b>{[flow.industryName, flow.serviceName].filter(Boolean).join(' · ')}</b></div>
         <div className="rq-side-progress"><div><span>Form completion</span><b>{progress}%</b></div><i><em style={{width:progress+'%'}}/></i><small>{completedCount} of {questions.length} project fields completed</small></div>
-        <ul><li>✓ Single-page project brief</li><li>✓ No login or OTP required</li><li>✓ Same details carried into consultation</li></ul>
+        <ul><li>✓ Short project form</li><li>✓ No login or OTP required</li><li>✓ Free project consultation</li></ul>
       </aside>
       <form className="rq-card rq-form-card rq-single-form" onSubmit={submit}>
-        <div className="rq-form-head"><span>PROJECT REQUIREMENT</span><h2>{flow.config?.headline || 'Tell us about your project.'}</h2><p>Use the dropdowns and fields below. Only relevant questions appear based on your selections.</p></div>
+        <div className="rq-form-head"><span>FREE CONSULTATION</span><h2>{flow.config?.headline || 'Tell us about your project.'}</h2><p>Tell us only the basics we need before calling you. Relevant fields appear automatically.</p></div>
         {groups.map((group,index)=>{
           const required=group.questions.filter(question=>question.isRequired)
           const complete=required.filter(question=>!isEmptyAnswer(answers[question.questionKey])).length
@@ -177,7 +177,7 @@ export default function RequirementWizard({ flowKey }) {
         </section>
 
         {state.error && <div className="rq-error">{state.error}</div>}
-        <div className="rq-submit-bar"><div><small>READY FOR CONSULTATION</small><b>Your project brief and contact stay together.</b></div><button type="submit" className="primary" disabled={state.saving}>{state.saving ? 'Submitting…' : (flow.config?.submitLabel || 'Request Consultation')} <span>→</span></button></div>
+        <div className="rq-submit-bar"><div><small>FREE CONSULTATION</small><b>Submit once — our project team can continue from the same details.</b></div><button type="submit" className="primary" disabled={state.saving}>{state.saving ? 'Submitting…' : (flow.config?.submitLabel || 'Get Free Consultation')} <span>→</span></button></div>
       </form>
     </div>
   </main>
