@@ -137,7 +137,7 @@ function moneyRange(minimum,maximum) {
 function renderEstimatePdf(data) {
   const sections=[];
   const mode=String(data.answers?.estimate_mode||'rough').toLowerCase();
-  const modeLabel=mode==='detailed'?'Detailed Estimate':'Rough Estimate';
+  const modeLabel=String(data.flow?.config?.estimateLabel||'Project Estimate');
   sections.push({type:'title',title:data.flow.name||'Project Cost Estimate',subtitle:modeLabel});
   const summaryRows=[
     ['Customer',data.lead.customer_name||'Customer'],
@@ -171,7 +171,7 @@ function renderEstimatePdf(data) {
     if(data.package.summary)sections.push({type:'paragraph',text:data.package.summary});
     if(data.package.priceNote)sections.push({type:'note',text:data.package.priceNote});
     const activeDetails=(data.package.details||[]).filter(detail=>detail.isActive!==false);
-    if(mode==='detailed'){
+    if(mode!=='rough'){
       const bySection=new Map();
       for(const detail of activeDetails){
         const key=detail.section||'Specifications';
@@ -189,8 +189,8 @@ function renderEstimatePdf(data) {
   }
 
   const detailedPattern=/specification|laminate|hardware|finish|flooring|brick|steel|cement|sand|wire|switch/i;
-  const detailed=mode==='detailed'?data.answerRows.filter(row=>detailedPattern.test(row[0])):[];
-  const projectRows=mode==='detailed'?data.answerRows.filter(row=>!detailedPattern.test(row[0])):data.answerRows;
+  const detailed=data.answerRows.filter(row=>detailedPattern.test(row[0]));
+  const projectRows=data.answerRows.filter(row=>!detailedPattern.test(row[0]));
   sections.push({type:'heading',text:'Project details'});
   sections.push({type:'table',rows:projectRows});
 
