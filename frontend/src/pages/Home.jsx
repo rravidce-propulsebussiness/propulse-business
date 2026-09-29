@@ -3,31 +3,40 @@ import { Link, useNavigate } from 'react-router-dom'
 import { publicRequest } from '../utils/auth'
 import './Home.css'
 
+const IMAGES = {
+  hero: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1800&q=88',
+  construction: 'https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=1200&q=85',
+  interior: 'https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&w=1200&q=85',
+  realEstate: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1200&q=85',
+  project1: 'https://images.unsplash.com/photo-1600585152915-d208bec867a1?auto=format&fit=crop&w=900&q=84',
+  project2: 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=900&q=84',
+  project3: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=900&q=84',
+  project4: 'https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?auto=format&fit=crop&w=900&q=84',
+  project5: 'https://images.unsplash.com/photo-1600573472591-ee6b68d14c68?auto=format&fit=crop&w=900&q=84',
+}
+
 const SERVICES = [
   {
     key: 'build',
-    nav: 'Construction',
     title: 'Home Construction',
-    text: 'Build your dream home with a clear requirement, trusted businesses and transparent planning.',
-    imageKey: 'residential',
+    text: 'Build your dream home with trusted businesses, clear requirements and transparent planning.',
+    image: IMAGES.construction,
     fallback: '/homepage/default-residential.svg',
     icon: '⌂',
   },
   {
     key: 'design',
-    nav: 'Interiors',
     title: 'Interior Design',
-    text: 'Beautiful and functional interiors for apartments, villas, offices and commercial spaces.',
-    imageKey: 'interior',
+    text: 'Beautiful and functional interiors for homes, apartments, villas, offices and commercial spaces.',
+    image: IMAGES.interior,
     fallback: '/homepage/default-interior.svg',
     icon: '▤',
   },
   {
     key: 'property',
-    nav: 'Real Estate',
     title: 'Real Estate',
-    text: 'Find residential, commercial and plot requirements in the locations that matter to you.',
-    imageKey: 'plot-land',
+    text: 'Find residential, commercial and plot opportunities in locations that match your requirement.',
+    image: IMAGES.realEstate,
     fallback: '/homepage/default-plot-land.svg',
     icon: '⌂',
   },
@@ -36,22 +45,21 @@ const SERVICES = [
 const CITIES = ['Hyderabad', 'Bengaluru', 'Chennai', 'Delhi NCR', 'Mumbai', 'Pune', 'Kolkata', 'Ahmedabad']
 
 const PROJECTS = [
-  ['4 BHK Villa', 'Hyderabad', 'residential', '/homepage/default-residential.svg'],
-  ['3 BHK Apartment', 'Bengaluru', 'interior', '/homepage/default-interior.svg'],
-  ['Duplex House', 'Chennai', 'residential', '/homepage/default-residential.svg'],
-  ['Interior Design', 'Pune', 'interior', '/homepage/default-interior.svg'],
-  ['Independent House', 'Hyderabad', 'turnkey', '/homepage/default-turnkey.svg'],
+  ['4 BHK Villa', 'Hyderabad', IMAGES.project1, '/homepage/default-residential.svg'],
+  ['3 BHK Apartment', 'Bengaluru', IMAGES.project2, '/homepage/default-interior.svg'],
+  ['Duplex House', 'Chennai', IMAGES.project3, '/homepage/default-residential.svg'],
+  ['Interior Design', 'Pune', IMAGES.project4, '/homepage/default-interior.svg'],
+  ['Independent House', 'Hyderabad', IMAGES.project5, '/homepage/default-turnkey.svg'],
 ]
 
 const TESTIMONIALS = [
-  ['SR', 'Suresh Reddy', 'Hyderabad', 'ProPulse helped us structure our construction requirement clearly. The process was simple and transparent.'],
-  ['PS', 'Priya Sharma', 'Bengaluru', 'The interior requirement flow helped us explain exactly what we wanted before speaking with businesses.'],
-  ['KM', 'Karthik Menon', 'Chennai', 'We could define our property requirement quickly and receive responses relevant to our location and budget.'],
+  ['SR', 'Suresh Reddy', 'Hyderabad', 'ProPulse helped us structure our construction requirement clearly. The entire process was simple and transparent.'],
+  ['PS', 'Priya Sharma', 'Bengaluru', 'Our interior requirement was easier to explain, and we could compare responses with much better clarity.'],
+  ['KM', 'Karthik Menon', 'Chennai', 'We defined our property requirement quickly and received responses relevant to our location and budget.'],
 ]
 
 function Home() {
   const navigate = useNavigate()
-  const [media, setMedia] = useState({ category_images: {} })
   const [contactData, setContactData] = useState({})
   const [flow, setFlow] = useState('build')
   const [form, setForm] = useState({ pincode: '', name: '', phone: '' })
@@ -61,24 +69,11 @@ function Home() {
 
   useEffect(() => {
     let active = true
-    publicRequest('/homepage-media').then(data => {
-      if (active) setMedia({ category_images: data?.category_images || {} })
-    }).catch(() => {})
     publicRequest('/contact?audience=website').then(data => {
       if (active) setContactData(data || {})
     }).catch(() => {})
     return () => { active = false }
   }, [])
-
-  const imageFor = (key, fallback) =>
-    media.category_images?.[key] ||
-    media.category_images?.[key === 'plot-land' ? 'real-estate' : key] ||
-    fallback
-
-  // Deliberately use construction/residential media for the hero.
-  // The generic Admin hero can contain campaign imagery/people and should not replace
-  // the customer-acquisition construction-company hero.
-  const heroImage = imageFor('residential', '/homepage/default-residential.svg')
 
   function scrollTo(id) {
     setMenuOpen(false)
@@ -131,7 +126,7 @@ function Home() {
 
       <div className="pp-header-actions">
         <button className="pp-header-cta" onClick={() => scrollTo('home')}>Get Free Consultation <span>→</span></button>
-        <button className="pp-menu" onClick={() => setMenuOpen(v => !v)} aria-label="Open menu">☰</button>
+        <button className="pp-menu" onClick={() => setMenuOpen(value => !value)} aria-label="Open menu">☰</button>
       </div>
     </header>
 
@@ -150,13 +145,13 @@ function Home() {
 
             <label className="pp-location-field">
               <span>⌖</span>
-              <input value={form.pincode} onChange={e => setForm({ ...form, pincode: e.target.value.replace(/\D/g, '').slice(0, 6) })} inputMode="numeric" placeholder="Select City / Location (PIN code)" />
+              <input value={form.pincode} onChange={event => setForm({ ...form, pincode: event.target.value.replace(/\D/g, '').slice(0, 6) })} inputMode="numeric" placeholder="Select City / Location" />
               <b>⌄</b>
             </label>
 
             <div className="pp-contact-row">
-              <label><span>♙</span><input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} autoComplete="name" placeholder="Your Name" /></label>
-              <label><span>⌕</span><input value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value.replace(/\D/g, '').slice(0, 10) })} inputMode="tel" autoComplete="tel" placeholder="Mobile Number" /></label>
+              <label><span>♙</span><input value={form.name} onChange={event => setForm({ ...form, name: event.target.value })} autoComplete="name" placeholder="Your Name" /></label>
+              <label><span>⌕</span><input value={form.phone} onChange={event => setForm({ ...form, phone: event.target.value.replace(/\D/g, '').slice(0, 10) })} inputMode="tel" autoComplete="tel" placeholder="Mobile Number" /></label>
               <button type="submit">Get Free Consultation <span>→</span></button>
             </div>
 
@@ -166,23 +161,23 @@ function Home() {
         </div>
 
         <div className="pp-hero-media">
-          <img src={heroImage} alt="Modern premium home" onError={e => { e.currentTarget.src = '/homepage/default-residential.svg' }} />
+          <img src={IMAGES.hero} alt="Premium modern villa" fetchPriority="high" onError={event => { event.currentTarget.src = '/homepage/default-residential.svg' }} />
           <div className="pp-hero-fade" />
           <div className="pp-script">From<br /><strong>Your Ideas</strong><br />to Reality</div>
 
           <div className="pp-journey">
             <div className="pp-journey-card plan">
-              <div className="pp-plan-drawing"><i /><i /><i /><i /><i /></div>
+              <div className="pp-plan-drawing" />
               <b>Plan</b>
             </div>
             <span>→</span>
             <div className="pp-journey-card">
-              <img src={imageFor('turnkey', '/homepage/default-turnkey.svg')} alt="" />
+              <img src={IMAGES.construction} alt="" />
               <b>Build</b>
             </div>
             <span>→</span>
             <div className="pp-journey-card">
-              <img src={heroImage} alt="" />
+              <img src={IMAGES.hero} alt="" />
               <b>Your Dream Home</b>
             </div>
           </div>
@@ -204,7 +199,7 @@ function Home() {
 
         <div className="pp-service-grid">
           {SERVICES.map(item => <article key={item.key} className="pp-service-card">
-            <div className="pp-service-img"><img src={imageFor(item.imageKey, item.fallback)} alt={item.title} onError={e => { e.currentTarget.src = item.fallback }} /></div>
+            <div className="pp-service-img"><img src={item.image} alt={item.title} loading="lazy" onError={event => { event.currentTarget.src = item.fallback }} /></div>
             <div className="pp-service-info">
               <span className="pp-service-icon">{item.icon}</span>
               <div><h3>{item.title}</h3><p>{item.text}</p></div>
@@ -245,15 +240,14 @@ function Home() {
       <section className="pp-projects" id="projects">
         <div className="pp-section pp-project-inner">
           <div className="pp-section-title">
-            <div><h2>Real Projects. Real <em>Homes.</em></h2><p>Take inspiration from spaces across our core categories.</p></div>
-            <button onClick={() => scrollTo('home')}>Start Your Project <span>→</span></button>
+            <div><h2>Real Projects. Real <em>Homes.</em></h2><p>Take inspiration from completed spaces and project ideas.</p></div>
+            <button onClick={() => scrollTo('home')}>View All Projects <span>→</span></button>
           </div>
 
           <div className="pp-project-grid">
-            {PROJECTS.map(([title, city, key, fallback], index) => <article key={title}>
-              <img src={imageFor(key, fallback)} alt={title} onError={e => { e.currentTarget.src = fallback }} />
+            {PROJECTS.map(([title, city, image, fallback]) => <article key={title}>
+              <img src={image} alt={title} loading="lazy" onError={event => { event.currentTarget.src = fallback }} />
               <div><b>{title}</b><small>{city}</small></div>
-              {index === 0 && <span className="pp-featured">Featured</span>}
             </article>)}
           </div>
         </div>
@@ -261,7 +255,8 @@ function Home() {
 
       <section className="pp-section pp-reviews">
         <div className="pp-section-title">
-          <div><h2>What Our <em>Homeowners Say</em></h2><p>Real requirements. Clearer conversations. Better decisions.</p></div>
+          <div><h2>What Our <em>Homeowners Say</em></h2><p>Real families. Real experiences.</p></div>
+          <button onClick={() => scrollTo('home')}>View All Reviews <span>→</span></button>
         </div>
         <div className="pp-review-grid">
           {TESTIMONIALS.map(([initials, name, city, text]) => <article key={name}>
@@ -274,7 +269,7 @@ function Home() {
 
       <section className="pp-section pp-cities" id="about">
         <h2>We Serve in Major Cities</h2>
-        <p>Find construction, interior and property solutions in your city.</p>
+        <p>Find reliable construction, interior and property solutions in your city.</p>
         <div className="pp-city-grid">{CITIES.map(city => <span key={city}>▥ {city}</span>)}<button onClick={() => scrollTo('home')}>⌖ More Cities →</button></div>
       </section>
 
