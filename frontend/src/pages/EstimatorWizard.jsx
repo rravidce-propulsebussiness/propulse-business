@@ -137,6 +137,7 @@ function fieldClass(question,packages){
 export default function EstimatorWizard({ flowKey }) {
   const [searchParams] = useSearchParams()
   const packageParam=searchParams.get('package')
+  const consultationPath=flowKey==='construction-cost-estimator'?'/construction-consultation':'/interior-consultation'
   const [flow,setFlow] = useState(null)
   const [answers,setAnswers] = useState({})
   const [result,setResult] = useState(null)
@@ -320,7 +321,7 @@ export default function EstimatorWizard({ flowKey }) {
         {(result.package||activePackage)&&<PackagePreview item={result.package||activePackage} compact/>}
         {Array.isArray(result.breakdown) && result.breakdown.length > 0 && <div className="est-breakdown"><b>What shaped this range</b>{result.breakdown.map(item=><div key={item.kind+':'+item.key}><span>{item.label}</span><em>{item.minimum===item.maximum?money(item.minimum):money(item.minimum)+' – '+money(item.maximum)}</em></div>)}</div>}
         <div className="est-lead-confirm"><b>Project enquiry saved</b><span>Your name, mobile number, selected package, project choices and estimate are saved together for follow-up.</span></div>
-        <div className="est-consultation-card"><span>CONSULTATION READY</span><h3>{flow.config?.consultationTitle || 'Continue with the same project brief.'}</h3><p>{flow.config?.consultationText || 'You do not need to fill another form. The estimate and selected specifications are already saved with your enquiry so a consultation can continue from the same information.'}</p><Link to="/contact">{flow.config?.consultationButtonLabel || 'Contact project team'} <b>→</b></Link></div>
+        <div className="est-consultation-card"><span>CONSULTATION READY</span><h3>{flow.config?.consultationTitle || 'Continue with the same project brief.'}</h3><p>{flow.config?.consultationText || 'You do not need to fill another form. The estimate and selected specifications are already saved with your enquiry so a consultation can continue from the same information.'}</p><Link to={consultationPath}>{flow.config?.consultationButtonLabel || 'Get Free Consultation'} <b>→</b></Link></div>
         <div className="est-disclaimer">{result.disclaimer}</div>
         <div className="rq-actions est-result-actions"><a className="primary est-download" href={`${API_BASE_URL}/customer-flows/estimates/${encodeURIComponent(result.calculationId)}/pdf?token=${encodeURIComponent(result.pdfToken||'')}`} download>Download Estimate PDF ↓</a><button type="button" className="secondary" onClick={restart}>Estimate another project</button><Link className="est-home" to="/">Back home</Link></div>
       </div></section>}
