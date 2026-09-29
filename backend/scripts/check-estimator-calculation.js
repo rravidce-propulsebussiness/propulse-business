@@ -55,6 +55,20 @@ assert.equal(detailedMaterial.minimum,10250);
 assert.equal(detailedMaterial.maximum,10400);
 assert.equal(detailedMaterial.breakdown.at(-1).key,'material_brick_spec_karimnagar_class_i');
 
+const perUnitMaterial=calculateEstimateFromConfig({
+  answers:{area:'100',external_laminate_spec:'pu_duco'},
+  rateItems:[
+    {rateKey:'base',label:'Base area rate',calculationType:'per_unit',unitQuestionKey:'area',amountMin:'100.00',amountMax:'100.00',showWhen:{},isActive:true},
+  ],
+  adjustments:[
+    {adjustmentKey:'material_external_laminate_spec_pu_duco',label:'PU / Duco finish',adjustmentType:'per_unit',unitQuestionKey:'area',valueMin:'350.00',valueMax:'350.00',cityId:null,showWhen:{questionKey:'external_laminate_spec',equals:'pu_duco'},metadata:{kind:'material_option'},isActive:true},
+  ],
+  cityId:null,
+});
+assert.equal(perUnitMaterial.minimum,45000);
+assert.equal(perUnitMaterial.maximum,45000);
+assert.equal(perUnitMaterial.breakdown.at(-1).minimum,35000);
+
 assert.throws(()=>calculateEstimateFromConfig({answers:{},rateItems:[],adjustments:[]}),/No estimator rate applies/);
 assert.throws(()=>parseQuantityScaled('1.2345'),/up to 3 decimal places/);
 console.log('Estimator exact calculation regression checks passed.');
