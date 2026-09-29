@@ -115,8 +115,8 @@ SELECT version_id,x.package_key,x.label,x.badge,'finish_quality',x.selector_valu
        '{"seed":"brochure-interior-packages-v1"}'::jsonb,TRUE
 FROM versions
 CROSS JOIN (VALUES
-  ('standard','Standard','VALUE','standard','Semi-modular wood-work specification with branded soft-close hardware.','Brochure reference: ₹1,399/sft',10),
-  ('premium','Premium','POPULAR','premium','Full-modular wood-work specification with upgraded ply, laminate and hardware.','Brochure reference: ₹1,599/sft',20)
+  ('standard','Standard','VALUE','standard','Semi-modular wood-work specification with branded soft-close hardware.',NULL,10),
+  ('premium','Premium','POPULAR','premium','Full-modular wood-work specification with upgraded ply, laminate and hardware.',NULL,20)
 ) AS x(package_key,label,badge,selector_value,summary,price_note,display_order)
 ON CONFLICT(version_id,package_key) DO NOTHING;
 
