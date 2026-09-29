@@ -4,6 +4,13 @@ import { publicRequest } from '../utils/auth'
 import './Home.css'
 
 const HERO_IMAGE = 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=2200&q=92'
+const WHY_IMAGE = 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=2200&q=88'
+const FINAL_IMAGE = 'https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&w=1800&q=88'
+
+function makeSubmissionKey() {
+  if (globalThis.crypto?.randomUUID) return globalThis.crypto.randomUUID()
+  return 'consult_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 12)
+}
 
 const SERVICES = [
   {
@@ -101,11 +108,14 @@ function Home() {
   const navigate = useNavigate()
   const [cities, setCities] = useState([])
   const [contactData, setContactData] = useState({})
+  const [homepageMedia, setHomepageMedia] = useState({ hero_image_url: '', category_images: {} })
   const [loadingCities, setLoadingCities] = useState(true)
   const [consultOpen, setConsultOpen] = useState(false)
   const [popupCycle, setPopupCycle] = useState(0)
-  const [consultForm, setConsultForm] = useState({ flowKey: '', cityId: '', phone: '' })
+  const [consultForm, setConsultForm] = useState({ flowKey: '', cityId: '', name: '', phone: '', consent: false, website: '' })
+  const [consultSubmissionKey, setConsultSubmissionKey] = useState(makeSubmissionKey)
   const [consultError, setConsultError] = useState('')
+  const [consultSaving, setConsultSaving] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
 
   useEffect(() => {
@@ -118,10 +128,15 @@ function Home() {
     Promise.allSettled([
       publicRequest('/cities'),
       publicRequest('/contact?audience=website'),
-    ]).then(([cityResult, contactResult]) => {
+      publicRequest('/homepage-media'),
+    ]).then(([cityResult, contactResult, mediaResult]) => {
       if (!active) return
       if (cityResult.status === 'fulfilled') setCities(collection(cityResult.value))
       if (contactResult.status === 'fulfilled') setContactData(contactResult.value || {})
+      if (mediaResult.status === 'fulfilled') setHomepageMedia({
+        hero_image_url: mediaResult.value?.hero_image_url || '',
+        category_images: mediaResult.value?.category_images || {},
+      })
       setLoadingCities(false)
     })
     return () => { active = false }
@@ -162,27 +177,72 @@ function Home() {
     setPopupCycle(value => value + 1)
   }
 
-  function submitConsult(event) {
+  async function submitConsult(event) {
     event.preventDefault()
     const mobile = consultForm.phone.replace(/\D/g, '')
+    const name = consultForm.name.trim()
     if (!consultForm.flowKey) return setConsultError('Select what you need help with.')
     if (!consultForm.cityId) return setConsultError('Select your city or location.')
+    if (name.length < 2) return setConsultError('Enter your name.')
     if (!/^[6-9]\d{9}$/.test(mobile)) return setConsultError('Enter a valid 10-digit mobile number.')
+    if (!consultForm.consent) return setConsultError('Please accept the contact consent to continue.')
 
     try {
-      sessionStorage.setItem('propulse_intake_prefill', JSON.stringify({
-        flowKey: consultForm.flowKey,
-        cityId: Number(consultForm.cityId),
-        cityName: selectedCity?.name || '',
-        phone: mobile,
-        createdAt: Date.now(),
-      }))
-    } catch {}
+      setConsultSaving(true)
+      setConsultError('')
+      const query = new URLSearchParams(window.location.search)
+      await publicRequest('/customer-flows/' + consultForm.flowKey + '/consultation', {
+        method: 'POST',
+        body: JSON.stringify({
+          cityId: Number(consultForm.cityId),
+          contact: { name, phone: mobile, email: '' },
+          consent: true,
+          submissionKey: consultSubmissionKey,
+          website: consultForm.website,
+          attribution: {
+            utmSource: query.get('utm_source') || '',
+            utmMedium: query.get('utm_medium') || '',
+            utmCampaign: query.get('utm_campaign') || '',
+            utmContent: query.get('utm_content') || '',
+            utmTerm: query.get('utm_term') || '',
+            referrer: document.referrer || '',
+            landingPath: window.location.pathname + window.location.search,
+          },
+        }),
+      })
 
-    setConsultError('')
-    setConsultOpen(false)
-    navigate('/' + consultForm.flowKey)
+      try {
+        sessionStorage.setItem('propulse_intake_prefill', JSON.stringify({
+          flowKey: consultForm.flowKey,
+          cityId: Number(consultForm.cityId),
+          cityName: selectedCity?.name || '',
+          name,
+          phone: mobile,
+          consent: true,
+          submissionKey: consultSubmissionKey,
+          createdAt: Date.now(),
+        }))
+      } catch {}
+
+      setConsultOpen(false)
+      navigate('/' + consultForm.flowKey)
+    } catch (error) {
+      setConsultError(error.message || 'Unable to submit your consultation request.')
+      setConsultSubmissionKey(current => current || makeSubmissionKey())
+    } finally {
+      setConsultSaving(false)
+    }
   }
+
+  const media = homepageMedia.category_images || {}
+  const heroImage = homepageMedia.hero_image_url || HERO_IMAGE
+  const serviceMedia = {
+    build: media.residential || SERVICES[0].image,
+    design: media.interior || SERVICES[1].image,
+    property: media.commercial || media.plot_land || SERVICES[2].image,
+  }
+  const whyImage = media.why_homeowners || WHY_IMAGE
+  const finalImage = media.final_cta || FINAL_IMAGE
 
   return <div className="hc-home">
     <header className="hc-header">
@@ -208,7 +268,7 @@ function Home() {
 
     <main>
       <section className="hc-hero" id="home">
-        <img className="hc-hero-image" src={HERO_IMAGE} alt="Modern family home" fetchPriority="high" />
+        <img className="hc-hero-image" src={heroImage} alt="Modern family home" fetchPriority="high" />
         <div className="hc-hero-wash" />
 
         <div className="hc-hero-copy">
@@ -250,7 +310,7 @@ function Home() {
 
         <div className="hc-service-grid">
           {SERVICES.map(service => <article className="hc-service-card" key={service.key}>
-            <div className="hc-service-image"><img src={service.image} alt={service.title} /><div /></div>
+            <div className="hc-service-image"><img src={serviceMedia[service.key] || service.image} alt={service.title} loading="lazy" /><div /></div>
             <div className="hc-service-body">
               <span className="hc-service-icon"><Icon name={service.icon} size={22} /></span>
               <div>
@@ -264,7 +324,7 @@ function Home() {
         </div>
       </section>
 
-      <section className="hc-why" id="about">
+      <section className="hc-why" id="about" style={{ backgroundImage: `url("${whyImage}")` }}>
         <div className="hc-why-shade" />
         <div className="hc-why-inner">
           <div className="hc-why-heading">
@@ -308,7 +368,7 @@ function Home() {
 
         <div className="hc-inspiration-grid">
           {INSPIRATION.map(([title, image]) => <button key={title} onClick={() => openConsult()}>
-            <img src={image} alt="" />
+            <img src={image} alt="" loading="lazy" />
             <span>{title}</span>
           </button>)}
         </div>
@@ -332,7 +392,7 @@ function Home() {
       </section>
 
       <section className="hc-final" id="contact">
-        <img src="https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&w=1800&q=88" alt="" />
+        <img src={finalImage} alt="" loading="lazy" />
         <div className="hc-final-shade" />
         <div className="hc-final-copy">
           <span>Ready when you are</span>
@@ -387,13 +447,24 @@ function Home() {
         </label>
 
         <label>
+          <span>Your Name</span>
+          <input className="hc-popup-input" autoComplete="name" maxLength="160" value={consultForm.name} onChange={event => { setConsultForm({ ...consultForm, name: event.target.value }); setConsultError('') }} placeholder="Enter your name" />
+        </label>
+
+        <label>
           <span>Mobile Number</span>
           <div className="hc-popup-phone"><i>+91</i><input inputMode="tel" autoComplete="tel" maxLength="10" value={consultForm.phone} onChange={event => { setConsultForm({ ...consultForm, phone: event.target.value.replace(/\D/g, '').slice(0, 10) }); setConsultError('') }} placeholder="Enter 10-digit number" /></div>
         </label>
 
+        <label className="hc-popup-consent">
+          <input type="checkbox" checked={consultForm.consent} onChange={event => { setConsultForm({ ...consultForm, consent: event.target.checked }); setConsultError('') }} />
+          <span>I agree that ProPulse may use and share my submitted contact details with relevant businesses so they can respond to this requirement.</span>
+        </label>
+        <label className="hc-popup-honeypot" aria-hidden="true">Website<input tabIndex="-1" autoComplete="off" value={consultForm.website} onChange={event => setConsultForm({ ...consultForm, website: event.target.value })} /></label>
+
         {consultError && <div className="hc-popup-error">{consultError}</div>}
-        <button className="hc-popup-submit" type="submit">Submit Request <Icon name="arrow" size={15} /></button>
-        <small><Icon name="shield" size={12} /> Your information is used to continue your selected requirement.</small>
+        <button className="hc-popup-submit" type="submit" disabled={consultSaving}>{consultSaving ? 'Submitting…' : 'Submit Request'} {!consultSaving && <Icon name="arrow" size={15} />}</button>
+        <small><Icon name="shield" size={12} /> Your consultation is saved first, then you can add project details.</small>
       </form>
     </aside>}
   </div>
