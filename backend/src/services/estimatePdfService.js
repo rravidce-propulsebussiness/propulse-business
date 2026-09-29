@@ -164,14 +164,22 @@ function renderEstimatePdf(data) {
     sections.push({type:'heading',text:`${data.package.label} package`});
     if(data.package.summary)sections.push({type:'paragraph',text:data.package.summary});
     if(data.package.priceNote)sections.push({type:'note',text:data.package.priceNote});
-    const bySection=new Map();
-    for(const detail of data.package.details||[]){
-      if(detail.isActive===false)continue;
-      const key=detail.section||'Specifications';
-      if(!bySection.has(key))bySection.set(key,[]);
-      bySection.get(key).push([detail.label,detail.note?`${detail.value} - ${detail.note}`:detail.value]);
+    const activeDetails=(data.package.details||[]).filter(detail=>detail.isActive!==false);
+    if(mode==='detailed'){
+      const bySection=new Map();
+      for(const detail of activeDetails){
+        const key=detail.section||'Specifications';
+        if(!bySection.has(key))bySection.set(key,[]);
+        bySection.get(key).push([detail.label,detail.note?`${detail.value} - ${detail.note}`:detail.value]);
+      }
+      for(const [section,rows] of bySection)sections.push({type:'table',title:section,rows});
+    }else if(activeDetails.length){
+      sections.push({type:'table',title:'Package highlights',rows:activeDetails.slice(0,6).map(detail=>[
+        detail.label,
+        detail.note?`${detail.value} - ${detail.note}`:detail.value,
+      ])});
+      if(activeDetails.length>6)sections.push({type:'note',text:'This rough estimate shows package highlights only. Use Detailed Estimate to include the full published specification catalogue in the PDF.'});
     }
-    for(const [section,rows] of bySection)sections.push({type:'table',title:section,rows});
   }
 
   const detailedPattern=/specification|laminate|hardware|finish|flooring|brick|steel|cement|sand|wire|switch/i;
