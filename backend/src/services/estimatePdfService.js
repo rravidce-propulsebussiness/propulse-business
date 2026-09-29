@@ -139,7 +139,7 @@ function renderEstimatePdf(data) {
   const mode=String(data.answers?.estimate_mode||'rough').toLowerCase();
   const modeLabel=mode==='detailed'?'Detailed Estimate':'Rough Estimate';
   sections.push({type:'title',title:data.flow.name||'Project Cost Estimate',subtitle:modeLabel});
-  sections.push({type:'summary',rows:[
+  const summaryRows=[
     ['Customer',data.lead.customer_name||'Customer'],
     ['Mobile',data.lead.customer_phone||''],
     ['Email',data.lead.customer_email||'Not provided'],
@@ -148,7 +148,13 @@ function renderEstimatePdf(data) {
     ['Estimate version',`v${data.versionNo}`],
     ['Generated',data.createdAt?new Date(data.createdAt).toISOString().slice(0,10):''],
     ['Estimate range',moneyRange(data.minimum,data.maximum)],
-  ]});
+  ];
+  const builtUpArea=Number(data.answers?.built_up_area);
+  if(Number.isFinite(builtUpArea)&&builtUpArea>0){
+    summaryRows.push(['Built-up area',`${builtUpArea.toLocaleString('en-IN')} sq ft`]);
+    summaryRows.push(['Average estimate / sq ft',moneyRange(Number(data.minimum)/builtUpArea,Number(data.maximum)/builtUpArea)]);
+  }
+  sections.push({type:'summary',rows:summaryRows});
 
   const breakdownRows=(Array.isArray(data.breakdown)?data.breakdown:[]).map(item=>[
     item.kind==='adjustment'?`${item.label} (adjustment)`:item.label,
@@ -191,6 +197,11 @@ function renderEstimatePdf(data) {
   if(detailed.length){
     sections.push({type:'heading',text:'Detailed selections'});
     sections.push({type:'table',rows:detailed});
+  }
+
+  if(data.consultationTitle||data.consultationText){
+    sections.push({type:'heading',text:data.consultationTitle||'Consultation next step'});
+    sections.push({type:'paragraph',text:data.consultationText||'Use this saved estimate and project brief during the consultation so measurements, site conditions, drawings and final specifications can be confirmed without re-entering the same information.'});
   }
 
   sections.push({type:'heading',text:'Estimate notes'});
@@ -291,6 +302,8 @@ async function getEstimatePdf(publicId, token) {
     publicId:id,flow,versionNo:row.version_no,minimum:row.result_min,maximum:row.result_max,createdAt:row.created_at,
     cityName:row.city_name,stateName:row.state_name,pincode:row.pincode,answers,answerRows,breakdown:Array.isArray(row.breakdown)?row.breakdown:[],
     package:packageSnapshot,disclaimer,
+    consultationTitle:String(flow.config?.consultationTitle||'Consultation next step'),
+    consultationText:String(flow.config?.consultationText||'Use this saved estimate and project brief during the consultation so measurements, site conditions, drawings and final specifications can be confirmed without re-entering the same information.'),
     lead:{customer_name:row.customer_name,customer_phone:row.customer_phone,customer_email:row.customer_email},
   });
   return {buffer,filename:`propulse-estimate-${id.slice(0,8)}.pdf`};
