@@ -116,8 +116,8 @@ export default function AdminHomepageMedia(){
     </section>
 
     <div className="admin-home-media-footer">
-      <span><b>Recommended:</b> WebP or optimized JPG/PNG, up to 7 MB.</span>
-      <span>Changes become available to the homepage after the upload completes.</span>
+      <span><b>Recommended:</b> Use real project photography where available. WebP or optimized JPG/PNG, up to 7 MB.</span>
+      <span>Hero, service and showcase changes become available to the public website after upload completes.</span>
     </div>
   </main>
 }
