@@ -267,6 +267,7 @@ BEGIN
            OR COALESCE(show_when->'in','[]'::jsonb) ? 'detailed'
          ))
          OR question_key IN ('customisations')
+         OR show_when->>'questionKey' IN ('customisations','plywood_spec','external_laminate_spec')
        );
 
     UPDATE customer_flow_questions q
