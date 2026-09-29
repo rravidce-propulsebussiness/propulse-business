@@ -33,12 +33,12 @@ async function main(){
     [flow.version_id]
   )).rows;
   const keys=new Set(questions.map(q=>q.question_key));
-  for(const key of ['estimate_mode','project_location','property_type','bhk','area','property_status','scope_mode','selected_work','kitchen_package','wardrobe_units','false_ceiling_area','furniture_package','finish_quality','plywood_spec','internal_laminate_spec','external_laminate_spec','hardware_spec','modular_finish_spec','timeline','additional_requirement','customisations','hdhmr_area','pu_duco_area','veneer_pvc_area','profile_glass_area','aristo_glass_area','quartz_area','regular_wallpaper_area','custom_wallpaper_area','profile_light_meters','sensor_count','mdf_cnc_area','wall_panelling_area']){
+  for(const key of ['estimate_mode','project_location','property_type','area','property_status','scope_mode','selected_work','kitchen_package','wardrobe_units','false_ceiling_area','furniture_package','finish_quality','plywood_spec','internal_laminate_spec','external_laminate_spec','hardware_spec','modular_finish_spec','customisations','hdhmr_area','pu_duco_area','veneer_pvc_area','profile_glass_area','aristo_glass_area','granite_tile_area','dado_tile_area','quartz_area','regular_wallpaper_area','custom_wallpaper_area','blinds_curtains_area','profile_light_meters','sensor_count','mdf_cnc_area','wall_panelling_area','wall_panelling_pu_area']){
     assert.ok(keys.has(key),`Missing Interior estimator question: ${key}`);
   }
   assert.equal(questions.find(q=>q.question_key==='project_location').question_type,'location');
   assert.equal(questions.find(q=>q.question_key==='property_type').lead_field,'property_type');
-  assert.equal(questions.find(q=>q.question_key==='additional_requirement').visibility,'protected');
+  for(const removed of ['bhk','timeline','additional_requirement']) assert.ok(!keys.has(removed),`Non-calculation Interior field should not be in the current estimate: ${removed}`);
   assert.deepEqual(questions.find(q=>q.question_key==='plywood_spec').show_when,{questionKey:'estimate_mode',equals:'detailed'});
   const modeQuestion=questions.find(q=>q.question_key==='estimate_mode');
   assert.equal(modeQuestion.validation.systemHidden,true);
