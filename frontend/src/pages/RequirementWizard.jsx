@@ -37,7 +37,7 @@ export default function RequirementWizard({ flowKey }) {
         const recent = saved && Date.now() - Number(saved.createdAt || 0) < 60 * 60 * 1000
         if (recent && saved.flowKey === flowKey) {
           const locationQuestion = (data.questions || []).find(item => item.questionType === 'location')
-          if (locationQuestion && /^\\d{6}$/.test(String(saved.pincode || ''))) {
+          if (locationQuestion && /^\d{6}$/.test(String(saved.pincode || ''))) {
             initialAnswers = { [locationQuestion.questionKey]: String(saved.pincode) }
           }
           initialContact = { name: String(saved.name || ''), phone: String(saved.phone || ''), email: '' }
