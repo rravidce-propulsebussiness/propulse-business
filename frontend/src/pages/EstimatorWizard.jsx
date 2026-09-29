@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { API_BASE_URL, publicRequest } from '../utils/auth'
 import { trackFunnelEvent, trackFunnelEventOnce } from '../utils/funnelTracking'
 import { isValidIndianMobile, normalizeIndianMobileInput } from '../utils/customerContact'
+import usePageMeta from '../utils/usePageMeta'
 import CustomerFlowQuestion, { isEmptyAnswer, isQuestionVisible } from '../components/CustomerFlowQuestion'
 import './RequirementWizard.css'
 import './EstimatorWizard.css'
@@ -135,9 +136,11 @@ function fieldClass(question,packages){
 }
 
 export default function EstimatorWizard({ flowKey }) {
+  const construction=flowKey==='construction-cost-estimator'
+  usePageMeta(construction?'Construction Cost Estimate | ProPulse Business':'Interior Cost Estimate | ProPulse Business',construction?'Get an indicative home construction cost estimate using project size, scope and package selections.':'Get an indicative home interior cost estimate using home size, scope, package and optional finish selections.')
   const [searchParams] = useSearchParams()
   const packageParam=searchParams.get('package')
-  const consultationPath=flowKey==='construction-cost-estimator'?'/construction-consultation':'/interior-consultation'
+  const consultationPath=construction?'/construction-consultation':'/interior-consultation'
   const [flow,setFlow] = useState(null)
   const [answers,setAnswers] = useState({})
   const [result,setResult] = useState(null)
