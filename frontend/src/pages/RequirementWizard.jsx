@@ -110,7 +110,7 @@ export default function RequirementWizard({ flowKey }) {
   return <main className="rq-page">
     <header className="rq-top"><Link to="/"><img src="/brand/propulse-logo.png" alt="ProPulse Business" /></Link><Link to="/leads">Professional →</Link></header>
     <div className="rq-shell">
-      <aside className="rq-side"><span>PROPULSE REQUIREMENTS</span><h1>{flow.name}</h1><p>{flow.config?.subheadline || 'Tell us a few details so we can connect your requirement with relevant businesses.'}</p><div className="rq-scope"><small>Category</small><b>{[flow.industryName, flow.serviceName].filter(Boolean).join(' · ')}</b></div><ul><li>✓ No login required</li><li>✓ No OTP in this version</li><li>✓ Contact details protected</li></ul></aside>
+      <aside className="rq-side"><span>PROPULSE REQUIREMENTS</span><h1>{flow.name}</h1><p>{flow.config?.subheadline || 'Tell us a few project details so the same scope is ready for consultation and follow-up.'}</p><div className="rq-scope"><small>Category</small><b>{[flow.industryName, flow.serviceName].filter(Boolean).join(' · ')}</b></div><ul><li>✓ No login required</li><li>✓ No OTP in this version</li><li>✓ Contact details protected</li></ul></aside>
       <section className="rq-card">
         <div className="rq-progress"><div style={{ width: progress + '%' }} /></div>
         {!contactMode ? <>
@@ -123,7 +123,7 @@ export default function RequirementWizard({ flowKey }) {
           <div className="rq-contact-grid"><label>Name<input value={contact.name} onChange={event => setContact({ ...contact, name: event.target.value })} autoComplete="name" required /></label><label>Mobile number<input value={contact.phone} onChange={event => setContact({ ...contact, phone: event.target.value })} inputMode="tel" autoComplete="tel" placeholder="10-digit mobile" required /></label><label className="wide">Email <small>Optional</small><input type="email" value={contact.email} onChange={event => setContact({ ...contact, email: event.target.value })} autoComplete="email" /></label><label className="rq-honeypot" aria-hidden="true">Website<input tabIndex="-1" autoComplete="off" value={website} onChange={event => setWebsite(event.target.value)} /></label></div>
           <label className="rq-consent"><input type="checkbox" checked={consent} onChange={event => setConsent(event.target.checked)} /><span>I agree that ProPulse may use and share my project details and contact information with relevant verified professionals or contractors so they can respond to this enquiry and provide quotation or consultation follow-up.</span></label>
           {state.error && <div className="rq-error">{state.error}</div>}
-          <div className="rq-actions"><button type="button" className="secondary" onClick={() => setContactMode(false)}>← Back</button><button type="submit" className="primary" disabled={state.saving}>{state.saving ? 'Submitting…' : (flow.config?.submitLabel || 'Get Quotes')} →</button></div>
+          <div className="rq-actions"><button type="button" className="secondary" onClick={() => setContactMode(false)}>← Back</button><button type="submit" className="primary" disabled={state.saving}>{state.saving ? 'Submitting…' : (flow.config?.submitLabel || 'Submit Project Enquiry')} →</button></div>
         </form>}
       </section>
     </div>
