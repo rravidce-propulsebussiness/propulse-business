@@ -72,6 +72,8 @@ button,input,select{font:inherit}
 .hc-section-heading h2{margin:6px 0 6px;color:#0b2a49;font-size:34px;letter-spacing:-.04em}
 .hc-section-heading p{margin:0;color:#6b7f91;font-size:10px;line-height:1.55}
 .hc-section-heading.compact{margin-bottom:22px}
+.hc-inspiration-link{display:inline-flex;align-items:center;justify-content:center;gap:6px;margin-top:10px;color:var(--hc-orange);font-size:7.5px;font-weight:900;text-decoration:none}
+.hc-inspiration-link:hover{color:#d84a17}
 
 /* services */
 .hc-services{padding-top:64px}
