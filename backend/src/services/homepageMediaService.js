@@ -21,7 +21,7 @@ function normalizeImages(value){
   return next;
 }
 const CONTENT_FIELDS={
-  home:['heroKicker','heroTitle','heroAccent','heroText','servicesHeading','servicesText','showcaseHeading','showcaseText','estimatorHeading','estimatorText','trustHeading','trustText','consultationHeading','consultationText'],
+  home:['heroKicker','heroTitle','heroAccent','heroText','servicesHeading','servicesText','constructionTitle','constructionText','interiorTitle','interiorText','showcaseHeading','showcaseText','showcaseConstruction1Title','showcaseConstruction1Text','showcaseConstruction2Title','showcaseConstruction2Text','showcaseInterior1Title','showcaseInterior1Text','showcaseInterior2Title','showcaseInterior2Text','estimatorHeading','estimatorText','trustHeading','trustText','consultationHeading','consultationText'],
   construction:['heroTitle','heroText','showcaseHeading','showcaseText'],
   interiors:['heroTitle','heroText','showcaseHeading','showcaseText']
 };
