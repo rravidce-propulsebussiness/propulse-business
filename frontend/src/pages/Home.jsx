@@ -54,7 +54,7 @@ const trustPrinciples=[
 
 function Home(){
   usePageMeta('ProPulse Business | Construction & Interiors','Plan home construction and interiors, compare packages, get a project estimate and request a free consultation with ProPulse Business.')
-  const[media,setMedia]=useState({hero_image_url:'',category_images:{}})
+  const[media,setMedia]=useState({hero_image_url:'',category_images:{},content:{}})
   const[contact,setContact]=useState({})
   const[menuOpen,setMenuOpen]=useState(false)
   const[estimatorFlows,setEstimatorFlows]=useState({construction:null,interior:null})
@@ -62,7 +62,7 @@ function Home(){
 
   useEffect(()=>{
     let active=true
-    publicRequest('/homepage-media').then(data=>active&&setMedia({hero_image_url:data?.hero_image_url||'',category_images:data?.category_images||{}})).catch(()=>{})
+    publicRequest('/homepage-media').then(data=>active&&setMedia({hero_image_url:data?.hero_image_url||'',category_images:data?.category_images||{},content:data?.content||{}})).catch(()=>{})
     publicRequest('/contact?audience=website').then(data=>active&&setContact(data||{})).catch(()=>{})
     Promise.allSettled([
       publicRequest('/customer-flows/construction-cost-estimator'),
@@ -78,6 +78,7 @@ function Home(){
   },[])
 
   const track=(flowKey,source)=>trackFunnelEvent('home_cta_clicked',{flowKey,flowType:'estimator',source,metadata:{cta:flowKey}})
+  const homeContent=media.content?.home||{}
   const packageFlow=estimatorFlows[packageAudience]
   const packageItems=Array.isArray(packageFlow?.packages)?packageFlow.packages.filter(item=>item?.isActive!==false):[]
 
@@ -103,9 +104,9 @@ function Home(){
     <main>
       <section id="home" className="company-hero">
         <div className="company-hero-copy">
-          <span className="hero-kicker">CONSTRUCTION · INTERIORS · PROJECT ESTIMATES</span>
-          <h1>Build and design your home with <em>clarity before work begins.</em></h1>
-          <p>Explore Construction and Interiors, compare package specifications, get a practical project estimate and speak with our team through a free consultation.</p>
+          <span className="hero-kicker">{homeContent.heroKicker||'CONSTRUCTION · INTERIORS · PROJECT ESTIMATES'}</span>
+          <h1>{homeContent.heroTitle||'Build and design your home with'} <em>{homeContent.heroAccent||'clarity before work begins.'}</em></h1>
+          <p>{homeContent.heroText||'Explore Construction and Interiors, compare package specifications, get a practical project estimate and speak with our team through a free consultation.'}</p>
           <div className="hero-actions">
             <a className="hero-primary" href="#estimator">Get Project Estimate <span>→</span></a>
             <a className="hero-secondary" href="#contact">Get Free Consultation</a>
@@ -126,7 +127,7 @@ function Home(){
       </section>
 
       <section className="company-section services-section">
-        <div className="company-section-head"><span>WHAT WE DO</span><h2>Construction and Interiors under one roof.</h2><p>Start with the service you need, understand the package and budget, then continue with our project team for planning and execution.</p></div>
+        <div className="company-section-head"><span>WHAT WE DO</span><h2>{homeContent.servicesHeading||'Construction and Interiors under one roof.'}</h2><p>{homeContent.servicesText||'Start with the service you need, understand the package and budget, then continue with our project team for planning and execution.'}</p></div>
         <div className="service-grid">
           {services.map(service=><article id={service.key==='construction'?'construction':'interiors'} className="service-card" key={service.key}>
             <div className="service-media"><img src={media.category_images?.[service.imageKey]||service.fallback} alt=""/><span>{service.eyebrow}</span></div>
@@ -136,7 +137,7 @@ function Home(){
       </section>
 
       <section className="company-section showcase-section" id="projects">
-        <div className="company-section-head"><span>PROJECT SHOWCASE</span><h2>See how Construction and Interiors come together.</h2><p>Explore how structure, services, storage, materials and finishes come together across Construction and complete-home Interiors.</p></div>
+        <div className="company-section-head"><span>PROJECT SHOWCASE</span><h2>{homeContent.showcaseHeading||'See how Construction and Interiors come together.'}</h2><p>{homeContent.showcaseText||'Explore how structure, services, storage, materials and finishes come together across Construction and complete-home Interiors.'}</p></div>
         <div className="project-showcase-grid">{showcaseItems.map((item,index)=><article className={index===0||index===3?'wide':''} key={item.key}>
           <div className="project-showcase-media"><img src={media.category_images?.[item.key]||item.fallback} alt={item.title}/><span>{item.eyebrow}</span></div>
           <div className="project-showcase-copy"><small>0{index+1} · {item.eyebrow}</small><h3>{item.title}</h3><p>{item.text}</p><Link to={item.eyebrow==='CONSTRUCTION'?'/construction':'/interiors'}>Explore {item.eyebrow==='CONSTRUCTION'?'Construction':'Interiors'} <b>→</b></Link></div>
@@ -146,8 +147,8 @@ function Home(){
       <section id="estimator" className="estimate-showcase">
         <div className="estimate-showcase-copy">
           <span>PROJECT ESTIMATOR</span>
-          <h2>Get a useful estimate without a long questionnaire.</h2>
-          <p>Enter the main project details, choose a package and receive an indicative range. If you want to refine materials or finishes, those choices remain optional instead of blocking the estimate.</p>
+          <h2>{homeContent.estimatorHeading||'Get a useful estimate without a long questionnaire.'}</h2>
+          <p>{homeContent.estimatorText||'Enter the main project details, choose a package and receive an indicative range. If you want to refine materials or finishes, those choices remain optional instead of blocking the estimate.'}</p>
           <div className="estimate-feature-grid">
             <div><b>One straightforward estimate</b><span>Start with the information customers normally know at the planning stage.</span></div>
             <div><b>Package-based planning</b><span>See the specification package connected to the estimate before the consultation.</span></div>
@@ -173,12 +174,12 @@ function Home(){
       </section>
 
       <section className="company-section company-principles">
-        <div className="company-section-head"><span>WHY CHOOSE THIS PROCESS</span><h2>Professional planning without making the first step complicated.</h2><p>You do not need a complete BOQ or technical specification sheet to begin. Start with what you know, then refine the project with our team.</p></div>
+        <div className="company-section-head"><span>WHY CHOOSE THIS PROCESS</span><h2>{homeContent.trustHeading||'Professional planning without making the first step complicated.'}</h2><p>{homeContent.trustText||'You do not need a complete BOQ or technical specification sheet to begin. Start with what you know, then refine the project with our team.'}</p></div>
         <div className="company-principles-grid">{trustPrinciples.map(([number,title,text])=><article key={number}><b>{number}</b><h3>{title}</h3><p>{text}</p></article>)}</div>
       </section>
 
       <section id="contact" className="company-contact">
-        <div><span>START YOUR PROJECT</span><h2>Prefer to speak with a project expert?</h2><p>Request a free Construction or Interior consultation. The form is short, and our team can continue the discussion with your basic project details already available.</p><div className="contact-ctas"><Link to="/construction-consultation">Construction Consultation <span>→</span></Link><Link to="/interior-consultation">Interior Consultation</Link></div></div>
+        <div><span>START YOUR PROJECT</span><h2>{homeContent.consultationHeading||'Prefer to speak with a project expert?'}</h2><p>{homeContent.consultationText||'Request a free Construction or Interior consultation. The form is short, and our team can continue the discussion with your basic project details already available.'}</p><div className="contact-ctas"><Link to="/construction-consultation">Construction Consultation <span>→</span></Link><Link to="/interior-consultation">Interior Consultation</Link></div></div>
         <div className="contact-details">
           <a href={contact.phone?'tel:'+contact.phone:'#'}><small>PHONE</small><strong>{contact.phone||'Call us for details'}</strong></a>
           <a href={contact.email?'mailto:'+contact.email:'#'}><small>EMAIL</small><strong>{contact.email||'Email us for details'}</strong></a>
