@@ -16,6 +16,7 @@ const wizardCss=read('../frontend/src/pages/EstimatorWizard.css');
 assert.doesNotMatch(routes,/\/estimates\/:publicId\/convert/,'Legacy estimator quote-conversion route must stay removed');
 assert.doesNotMatch(controller,/convertCalculation/,'Legacy quote-conversion controller must stay removed');
 assert.doesNotMatch(estimator,/async function convertCalculation|estimator_quote_request|quote_requested/,'Estimator service must create customer leads directly without a separate quote conversion');
+assert.doesNotMatch(estimator,/contactPending/,'Active estimator lifecycle must not recreate a contact-pending state');
 assert.match(estimator,/leadCaptured:Boolean\(leadId\)/,'Estimator response must expose direct lead capture');
 assert.match(estimator,/normalizeName\(contact\?\.name\)/,'Estimator must validate customer name before calculation');
 assert.match(estimator,/normalizePhone\(contact\?\.phone\)/,'Estimator must validate mobile before calculation');
