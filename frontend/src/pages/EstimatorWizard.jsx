@@ -7,6 +7,24 @@ import './RequirementWizard.css'
 import './EstimatorWizard.css'
 
 const money = value => new Intl.NumberFormat('en-IN',{style:'currency',currency:'INR',maximumFractionDigits:0}).format(Number(value || 0))
+function packageMatches(item,answers){
+  if(!item||item.isActive===false||!item.selectorQuestionKey)return false
+  const answer=answers?.[item.selectorQuestionKey]
+  return Array.isArray(answer)?answer.map(String).includes(String(item.selectorValue)):String(answer??'')===String(item.selectorValue)
+}
+function PackagePreview({item,compact=false}){
+  if(!item)return null
+  const grouped=(item.details||[]).filter(detail=>detail.isActive!==false).reduce((acc,detail)=>{
+    const section=detail.section||'Specifications'
+    if(!acc[section])acc[section]=[]
+    acc[section].push(detail)
+    return acc
+  },{})
+  return <section className={compact?'est-package-preview compact':'est-package-preview'}>
+    <div className="est-package-preview-head"><div>{item.badge&&<span>{item.badge}</span>}<h3>{item.label}</h3>{item.summary&&<p>{item.summary}</p>}</div>{item.priceNote&&<b>{item.priceNote}</b>}</div>
+    {Object.entries(grouped).map(([section,details])=><div className="est-package-section" key={section}><strong>{section}</strong><div>{details.map(detail=><article key={detail.detailKey}><span>{detail.label}</span><b>{detail.value}</b>{detail.note&&<small>{detail.note}</small>}</article>)}</div></div>)}
+  </section>
+}
 const emptyContact = {name:'',phone:'',email:''}
 function makeSubmissionKey(){
   if(globalThis.crypto?.randomUUID)return globalThis.crypto.randomUUID()
@@ -50,6 +68,7 @@ export default function EstimatorWizard({ flowKey }) {
   },[flowKey])
 
   const questions = useMemo(() => (flow?.questions || []).filter(question => isQuestionVisible(question,answers)),[flow,answers])
+  const activePackage = useMemo(() => (flow?.packages || []).find(item=>packageMatches(item,answers)) || null,[flow,answers])
   useEffect(() => { if (step >= questions.length && questions.length) setStep(questions.length - 1) },[questions.length,step])
   const question = questions[step]
   const progress = result ? 100 : questions.length ? Math.round(((step + 1) / questions.length) * 92) : 0
@@ -137,7 +156,7 @@ export default function EstimatorWizard({ flowKey }) {
   if (!flow) return <main className="rq-page"><div className="rq-shell rq-status error">{state.error || 'This calculator is unavailable.'}<Link to="/">Back home</Link></div></main>
 
   return <main className="rq-page">
-    <header className="rq-top"><Link to="/"><img src="/brand/propulse-logo.png" alt="ProPulse Business" /></Link><Link to="/leads">For businesses →</Link></header>
+    <header className="rq-top"><Link to="/"><img src="/brand/propulse-logo.png" alt="ProPulse Business" /></Link><Link to="/leads">Professional →</Link></header>
     <div className="rq-shell estimator-shell">
       <aside className="rq-side">
         <span>PROPULSE ESTIMATOR</span>
@@ -151,6 +170,7 @@ export default function EstimatorWizard({ flowKey }) {
         {!result ? <>
           <div className="rq-step"><span>QUESTION {String(step + 1).padStart(2,'0')} / {String(questions.length).padStart(2,'0')}</span><h2>{question?.label}</h2>{question?.helpText && <p>{question.helpText}</p>}</div>
           <div className="rq-control"><CustomerFlowQuestion question={question} value={answers[question?.questionKey]} onChange={value => setAnswer(question.questionKey,value)} /></div>
+          {activePackage&&question?.questionKey===activePackage.selectorQuestionKey&&<PackagePreview item={activePackage}/>}
           {state.error && <div className="rq-error">{state.error}</div>}
           <div className="rq-actions"><button type="button" className="secondary" disabled={step===0||state.saving} onClick={()=>setStep(Math.max(0,step-1))}>← Back</button><button type="button" className="primary" disabled={state.saving} onClick={next}>{state.saving?'Calculating…':step===questions.length-1?'Calculate estimate':'Next'} →</button></div>
         </> : state.success ? <div className="rq-success est-success"><div className="rq-success-mark">✓</div><span>QUOTE REQUEST RECEIVED</span><h1>Your estimate is now a requirement.</h1><p>Relevant businesses or professionals may contact you with actual quotations. Your indicative estimate is preserved with the lead for context.</p><div><Link to="/">Back home</Link><button type="button" onClick={restart}>Estimate another project</button></div></div> : <div className="est-result">
@@ -158,6 +178,7 @@ export default function EstimatorWizard({ flowKey }) {
           <h2>{flow.config?.resultTitle || 'Estimated project cost'}</h2>
           <div className="est-range"><strong>{money(result.minimum)}</strong><i>to</i><strong>{money(result.maximum)}</strong></div>
           {result.cityName && <p className="est-city">Adjusted for {result.cityName}</p>}
+          {(result.package||activePackage)&&!quoteMode&&<PackagePreview item={result.package||activePackage} compact/>}
           {!quoteMode && Array.isArray(result.breakdown) && result.breakdown.length > 0 && <div className="est-breakdown"><b>What shaped this range</b>{result.breakdown.map(item=><div key={item.kind+':'+item.key}><span>{item.label}</span><em>{item.minimum===item.maximum?money(item.minimum):money(item.minimum)+' – '+money(item.maximum)}</em></div>)}</div>}
           <div className="est-disclaimer">{result.disclaimer}</div>
           {!quoteMode ? <div className="rq-actions est-result-actions"><button type="button" className="secondary" onClick={restart}>Recalculate</button>{result.quoteEligible?<button type="button" className="primary est-quote-cta" onClick={()=>{trackFunnelEvent('quote_form_opened',{flowKey,flowType:'estimator',calculationId:result.calculationId,source:'wizard'});setQuoteMode(true);setState(current=>({...current,error:''}))}}>{flow.config?.quoteCtaLabel || 'Get Actual Quotes'} →</button>:<Link className="est-home" to="/">Done</Link>}</div> : <form className="est-quote-form" onSubmit={requestQuotes}>
