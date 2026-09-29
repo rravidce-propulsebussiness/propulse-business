@@ -170,7 +170,7 @@ export default function AdminCustomerFunnel(){
     <section className="funnel-control-bar">
       <div className="funnel-period-control"><small>PERIOD</small><div>{periods.map(([value,label])=><button type="button" key={value} className={period===value?'active':''} onClick={()=>changePeriod(value)}>{label}</button>)}</div></div>
       <label><span>Estimator</span><select value={flowId} onChange={event=>changeFlow(event.target.value)}><option value="">All estimators</option>{definitions.map(item=><option key={item.id} value={item.id}>{item.name}{item.isActive?'':' (inactive)'}</option>)}</select></label>
-      <label><span>Calculation history</span><select value={conversion} onChange={event=>changeConversion(event.target.value)}><option value="all">All calculations</option><option value="converted">Quote requested</option><option value="unconverted">Estimate only</option></select></label>
+      <label><span>Calculation history</span><select value={conversion} onChange={event=>changeConversion(event.target.value)}><option value="all">All calculations</option><option value="converted">Lead captured</option><option value="unconverted">Legacy estimate only</option></select></label>
       <div className="funnel-control-status"><i className={state.loading?'loading':''}/><span>{state.loading?'Updating dashboard':'Live from canonical tables'}</span></div>
     </section>
 
@@ -219,18 +219,18 @@ export default function AdminCustomerFunnel(){
 
     <section className="premium-two-column">
       <article className="premium-panel estimator-performance-premium">
-        <div className="premium-panel-head"><div><span>ESTIMATOR PERFORMANCE</span><h3>Calculation → quote conversion</h3><p>Operational conversion from completed calculation to canonical quote request.</p></div><b>{periodLabel}</b></div>
+        <div className="premium-panel-head"><div><span>ESTIMATOR PERFORMANCE</span><h3>Estimate → customer lead capture</h3><p>Tracks completed estimates that are attached to a canonical customer lead with contact details.</p></div><b>{periodLabel}</b></div>
         <div className="estimator-premium-list">
           {estimators.length?estimators.map(item=><button type="button" key={item.definitionId} className={String(flowId)===String(item.definitionId)?'selected':''} onClick={()=>changeFlow(String(flowId)===String(item.definitionId)?'':String(item.definitionId))}>
             <div className="estimator-premium-title"><span><strong>{item.name}</strong><small>{item.key}</small></span><em>{item.conversionRate}%</em></div>
             <div className="estimator-premium-bar"><i style={{width:Math.min(100,Math.max(0,item.conversionRate||0))+'%'}}/></div>
-            <div className="estimator-premium-metrics"><span><b>{compact(item.calculations)}</b> calculations</span><span><b>{compact(item.converted)}</b> quote requests</span><span><b>{money(item.averageMinimum)} – {money(item.averageMaximum)}</b> average range</span></div>
+            <div className="estimator-premium-metrics"><span><b>{compact(item.calculations)}</b> calculations</span><span><b>{compact(item.converted)}</b> leads captured</span><span><b>{money(item.averageMinimum)} – {money(item.averageMaximum)}</b> average range</span></div>
           </button>):<div className="premium-empty small"><p>No estimator calculations match this period.</p></div>}
         </div>
       </article>
 
       <article className="premium-panel city-premium-panel">
-        <div className="premium-panel-head"><div><span>LOCATION SIGNAL</span><h3>Top estimator cities</h3><p>Where calculation activity and quote intent are appearing.</p></div></div>
+        <div className="premium-panel-head"><div><span>LOCATION SIGNAL</span><h3>Top estimator cities</h3><p>Where customer estimate and lead activity is appearing.</p></div></div>
         <div className="premium-table-wrap city-table"><table><thead><tr><th>City</th><th>Estimates</th><th>Quotes</th><th>Conversion</th><th>Average range</th></tr></thead><tbody>
           {cities.length?cities.map(city=><tr key={city.cityId}><td><strong>{city.cityName}</strong><small>{city.stateName||'—'}</small></td><td>{city.calculations}</td><td>{city.converted}</td><td><b className="premium-rate-pill">{city.conversionRate}%</b></td><td>{money(city.averageMinimum)} – {money(city.averageMaximum)}</td></tr>):<tr><td colSpan="5" className="table-empty">No location data in this period.</td></tr>}
         </tbody></table></div>
@@ -282,10 +282,10 @@ export default function AdminCustomerFunnel(){
 
     <section className="premium-section history-premium">
       <div className="premium-section-head history-head">
-        <div><span>CALCULATION LEDGER</span><h2>Estimator history</h2><p>Immutable calculation records with version, location, quote conversion, linked lead and paid-sale context.</p></div>
+        <div><span>CALCULATION LEDGER</span><h2>Estimator history</h2><p>Immutable calculation records with version, location, customer lead linkage and saved pricing context.</p></div>
         <form className="premium-search" onSubmit={submitSearch}><input value={queryInput} onChange={event=>setQueryInput(event.target.value)} placeholder="Search ID, PIN, city or estimator"/><button type="submit">Search</button>{query&&<button type="button" className="clear" onClick={()=>{setQueryInput('');setQuery('');setPage(1)}}>Clear</button>}</form>
       </div>
-      <div className="premium-table-wrap"><table><thead><tr><th>Calculation</th><th>Estimator</th><th>Location</th><th>Indicative range</th><th>Calculated</th><th>Quote status</th><th>Canonical lead</th><th>Paid sales</th></tr></thead><tbody>
+      <div className="premium-table-wrap"><table><thead><tr><th>Calculation</th><th>Estimator</th><th>Location</th><th>Indicative range</th><th>Calculated</th><th>Lead capture</th><th>Canonical lead</th><th>Paid sales</th></tr></thead><tbody>
         {recent.items?.length?recent.items.map(item=><tr key={item.calculationId}>
           <td><code>{item.calculationId.slice(0,10)}…</code><small>Version {item.versionNo}</small></td>
           <td><strong>{item.flowName}</strong><small>{item.flowKey}</small></td>
