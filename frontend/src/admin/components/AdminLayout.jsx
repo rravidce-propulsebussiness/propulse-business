@@ -7,7 +7,7 @@ import NotificationBell from '../../components/NotificationBell'
 const navigation=[
   {type:'link',to:'/admin',label:'Overview',icon:'⌂',end:true},
   {type:'group',key:'customer-acquisition',label:'Customer Acquisition',icon:'⌁',children:[
-    {to:'/admin/customer-flows',label:'Customer Flows'},
+    {to:'/admin/customer-flows',label:'Forms & Estimators'},
     {to:'/admin/customer-funnel',label:'Funnel Analytics'}
   ]},
   {type:'group',key:'leads',label:'Leads',icon:'◈',children:[
