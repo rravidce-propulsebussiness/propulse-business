@@ -4,6 +4,7 @@ import './AdminEstimatorConfig.css'
 
 const blankRate=(index=0)=>({rateKey:'rate_'+(index+1),label:'Base rate',calculationType:'fixed',unitQuestionKey:'',amountMin:'0.00',amountMax:'0.00',showWhen:{},displayOrder:(index+1)*10,isActive:true})
 const blankAdjustment=(index=0)=>({adjustmentKey:'adjustment_'+(index+1),label:'Adjustment',adjustmentType:'percent',valueMin:'0.00',valueMax:'0.00',cityId:'',showWhen:{},displayOrder:(index+1)*10,isActive:true})
+const blankMaterialAdjustment=(index=0)=>({adjustmentKey:'material_option_'+(index+1),label:'Detailed option price',adjustmentType:'fixed',valueMin:'0.00',valueMax:'0.00',cityId:'',showWhen:{},displayOrder:500+(index+1)*10,metadata:{kind:'material_option'},isActive:true})
 const blankPackage=(index=0)=>({packageKey:'package_'+(index+1),label:'Package '+(index+1),badge:'',selectorQuestionKey:'',selectorValue:'',summary:'',priceNote:'',displayOrder:(index+1)*10,isActive:true,details:[]})
 const blankDetail=(index=0)=>({detailKey:'detail_'+(index+1),section:'Specifications',label:'Specification',value:'',note:'',displayOrder:(index+1)*10,isActive:true})
 const keyValue=value=>String(value||'').toLowerCase().replace(/[^a-z0-9_]/g,'')
@@ -21,6 +22,7 @@ export default function AdminEstimatorConfig({flowId,versionId,questions=[]}){
  const[config,setConfig]=useState(null),[cities,setCities]=useState([]),[busy,setBusy]=useState(false),[error,setError]=useState(''),[message,setMessage]=useState('')
  const numericQuestions=useMemo(()=>questions.filter(q=>['number','area'].includes(q.questionType)),[questions])
  const selectorQuestions=useMemo(()=>questions.filter(q=>['single_select','multi_select','boolean'].includes(q.questionType)),[questions])
+ const materialQuestions=useMemo(()=>selectorQuestions.filter(q=>q.questionKey!=='estimate_mode'),[selectorQuestions])
 
  async function load(){
   if(!flowId)return
@@ -99,6 +101,24 @@ export default function AdminEstimatorConfig({flowId,versionId,questions=[]}){
    </article>
   })}</div>
 
+  <div className="est-admin-section-head material-pricing-head"><div><b>Detailed option pricing</b><small>Set a fixed or percentage cost adjustment for a material/specification option. This is the simple pricing editor for detailed estimates; use Advanced adjustments below for city-specific or complex rules.</small></div><button type="button" disabled={!config.editable} onClick={()=>setConfig(current=>({...current,adjustments:[...current.adjustments,blankMaterialAdjustment(current.adjustments.length)]}))}>+ Option price</button></div>
+  <div className="material-price-list">{adjustments.map((item,index)=>{
+   if(item?.metadata?.kind!=='material_option')return null
+   const q=questions.find(question=>question.questionKey===item.showWhen?.questionKey)
+   const options=Array.isArray(q?.options)?q.options.filter(option=>option.isActive!==false):[]
+   const selectedOption=options.find(option=>String(option.value)===String(item.showWhen?.equals??''))
+   return <article className="material-price-card" key={item.id||item.adjustmentKey+'-'+index}>
+    <div className="material-price-card-head"><div><span>DETAIL PRICE</span><strong>{item.label||'Detailed option price'}</strong><small>{q?.label||'Choose a specification'}{selectedOption?' · '+selectedOption.label:''}</small></div><label className="flow-toggle"><span><input disabled={!config.editable} type="checkbox" checked={item.isActive!==false} onChange={e=>patchAdjustment(index,{isActive:e.target.checked})}/> Active</span></label><button type="button" disabled={!config.editable} onClick={()=>setConfig(current=>({...current,adjustments:current.adjustments.filter((_,i)=>i!==index)}))}>Remove</button></div>
+    <div className="flow-grid material-price-grid">
+     <label>Specification<select disabled={!config.editable} value={item.showWhen?.questionKey||''} onChange={e=>{const question=questions.find(entry=>entry.questionKey===e.target.value);patchAdjustment(index,{showWhen:e.target.value?{questionKey:e.target.value,equals:''}:{},label:question?.label?question.label+' option':'Detailed option price',adjustmentKey:e.target.value?'material_'+keyValue(e.target.value)+'_'+(index+1):'material_option_'+(index+1),metadata:{...(item.metadata||{}),kind:'material_option'}})}}><option value="">Select detailed question</option>{materialQuestions.map(question=><option key={question.questionKey} value={question.questionKey}>{question.label}</option>)}</select></label>
+     <label>Option<select disabled={!config.editable||!q} value={item.showWhen?.equals??''} onChange={e=>{const option=options.find(entry=>String(entry.value)===String(e.target.value));patchAdjustment(index,{showWhen:{questionKey:q.questionKey,equals:e.target.value},label:(q?.label||'Specification')+(option?.label?' · '+option.label:''),adjustmentKey:'material_'+keyValue(q?.questionKey)+'_'+keyValue(e.target.value),metadata:{...(item.metadata||{}),kind:'material_option'}})}}><option value="">Select option</option>{options.map(option=><option key={option.value} value={option.value}>{option.label}</option>)}</select></label>
+     <label>Price effect<select disabled={!config.editable} value={item.adjustmentType||'fixed'} onChange={e=>patchAdjustment(index,{adjustmentType:e.target.value})}><option value="fixed">Fixed amount</option><option value="percent">Percentage</option></select></label>
+     <label>Minimum {item.adjustmentType==='percent'?'%':'₹'}<input disabled={!config.editable} inputMode="decimal" value={item.valueMin??''} onChange={e=>patchAdjustment(index,{valueMin:e.target.value})}/></label>
+     <label>Maximum {item.adjustmentType==='percent'?'%':'₹'}<input disabled={!config.editable} inputMode="decimal" value={item.valueMax??''} onChange={e=>patchAdjustment(index,{valueMax:e.target.value})}/></label>
+    </div>
+   </article>
+  })}</div>
+
   <div className="est-admin-section-head"><div><b>Rate items</b><small>These are the actual calculation values. Package display text never silently changes calculation rates.</small></div><button type="button" disabled={!config.editable} onClick={()=>setConfig(current=>({...current,rates:[...current.rates,blankRate(current.rates.length)]}))}>+ Rate</button></div>
   <div className="est-admin-list">{rates.map((item,index)=><article className="est-admin-card" key={item.id||item.rateKey+'-'+index}>
    <div className="est-admin-card-head"><b>{String(index+1).padStart(2,'0')}</b><strong>{item.label||'Rate item'}</strong><button type="button" disabled={!config.editable} onClick={()=>setConfig(current=>({...current,rates:current.rates.filter((_,i)=>i!==index)}))}>Remove</button></div>
@@ -115,7 +135,7 @@ export default function AdminEstimatorConfig({flowId,versionId,questions=[]}){
   </article>)}</div>
 
   <div className="est-admin-section-head"><div><b>Adjustments</b><small>Apply fixed or percentage changes after base rates. City is optional.</small></div><button type="button" disabled={!config.editable} onClick={()=>setConfig(current=>({...current,adjustments:[...current.adjustments,blankAdjustment(current.adjustments.length)]}))}>+ Adjustment</button></div>
-  <div className="est-admin-list">{adjustments.map((item,index)=><article className="est-admin-card" key={item.id||item.adjustmentKey+'-'+index}>
+  <div className="est-admin-list">{adjustments.map((item,index)=>item?.metadata?.kind==='material_option'?null:<article className="est-admin-card" key={item.id||item.adjustmentKey+'-'+index}>
    <div className="est-admin-card-head"><b>{String(index+1).padStart(2,'0')}</b><strong>{item.label||'Adjustment'}</strong><button type="button" disabled={!config.editable} onClick={()=>setConfig(current=>({...current,adjustments:current.adjustments.filter((_,i)=>i!==index)}))}>Remove</button></div>
    <div className="flow-grid">
     <label>Key<input disabled={!config.editable} value={item.adjustmentKey||''} onChange={e=>patchAdjustment(index,{adjustmentKey:keyValue(e.target.value)})}/></label>
