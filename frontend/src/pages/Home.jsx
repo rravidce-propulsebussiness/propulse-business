@@ -151,8 +151,8 @@ function Home(){
         <div><span>START YOUR PROJECT</span><h2>Prefer to speak with a project expert?</h2><p>Request a free Construction or Interior consultation. The form is short, and our team can continue the discussion with your basic project details already available.</p><div className="contact-ctas"><Link to="/build">Construction Consultation <span>→</span></Link><Link to="/design">Interior Consultation</Link></div></div>
         <div className="contact-details">
           <a href={contact.phone?'tel:'+contact.phone:'#'}><small>PHONE</small><strong>{contact.phone||'Call us for details'}</strong></a>
-          <a href={contact.email?'mailto:'+contact.email:'#'}><small>EMAIL</small><strong>{contact.email||'Configure in Admin'}</strong></a>
-          <a href={contact.whatsapp?'https://wa.me/'+String(contact.whatsapp).replace(/\D/g,''):'#'} target="_blank" rel="noreferrer"><small>WHATSAPP</small><strong>{contact.whatsapp||'Configure in Admin'}</strong></a>
+          <a href={contact.email?'mailto:'+contact.email:'#'}><small>EMAIL</small><strong>{contact.email||'Email us for details'}</strong></a>
+          <a href={contact.whatsapp?'https://wa.me/'+String(contact.whatsapp).replace(/\D/g,''):'#'} target="_blank" rel="noreferrer"><small>WHATSAPP</small><strong>{contact.whatsapp||'WhatsApp details coming soon'}</strong></a>
           <div><small>OFFICE</small><strong>{contact.address||'Contact us for office details'}</strong></div>
         </div>
       </section>
