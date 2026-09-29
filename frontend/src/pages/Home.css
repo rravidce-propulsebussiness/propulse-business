@@ -17,12 +17,12 @@ body{margin:0}
 .pp-home button,.pp-home input,.pp-home select{font:inherit}
 
 .pp-header{
-  height:64px;position:fixed;inset:0 0 auto;z-index:1000;display:flex;align-items:center;
+  height:58px;position:sticky;top:0;z-index:1000;display:flex;align-items:center;
   padding:0 max(22px,calc((100vw - 1280px)/2 + 22px));gap:24px;background:rgba(255,255,255,.98);
   border-bottom:1px solid #eee6dd;backdrop-filter:blur(16px)
 }
 .pp-logo{display:flex;align-items:center;flex:0 0 auto}
-.pp-logo img{display:block;width:166px;height:49px;object-fit:contain}
+.pp-logo img{display:block;width:158px;height:44px;object-fit:contain}
 .pp-nav{display:flex;align-items:center;justify-content:center;gap:1px;flex:1}
 .pp-nav button{position:relative;border:0;background:none;padding:10px 9px;color:#31475d;font-size:9px;font-weight:800;cursor:pointer}
 .pp-nav button:first-child{color:var(--pp-orange)}
@@ -34,9 +34,9 @@ body{margin:0}
 .pp-menu{display:none;width:38px;height:38px;border:1px solid var(--pp-line);border-radius:9px;background:#fff;color:var(--pp-navy);cursor:pointer}
 
 .pp-hero{
-  padding:88px max(22px,calc((100vw - 1280px)/2 + 22px)) 12px;
-  display:grid;grid-template-columns:minmax(430px,.88fr) minmax(0,1.12fr);align-items:center;gap:34px;
-  min-height:430px;background:
+  padding:18px max(22px,calc((100vw - 1280px)/2 + 22px)) 12px;
+  display:grid;grid-template-columns:minmax(430px,.82fr) minmax(0,1.18fr);align-items:center;gap:30px;
+  min-height:390px;background:
   radial-gradient(circle at 4% 58%,rgba(232,93,36,.075),transparent 30%),
   linear-gradient(110deg,#fff 0%,#fffaf4 48%,#f4eadf 100%)
 }
@@ -62,21 +62,9 @@ body{margin:0}
 .pp-consult-card>small{display:block;margin-top:5px;color:#8a949e;font-size:5.9px;text-align:right}
 .pp-form-error{margin-top:6px;padding:6px 8px;border-radius:6px;background:#fff0ec;color:#b63d21;font-size:6.8px;font-weight:850}
 
-.pp-hero-media{position:relative;height:345px;overflow:hidden}
-.pp-hero-media>img{width:100%;height:100%;object-fit:cover;object-position:center 55%;display:block}
-.pp-hero-fade{position:absolute;inset:0;background:linear-gradient(90deg,rgba(255,250,245,.03),transparent 30%,rgba(7,27,46,.08))}
-.pp-script{position:absolute;right:20px;top:18px;color:#0b2032;text-align:right;font-family:Georgia,serif;font-style:italic;font-size:12px;line-height:1.2;text-shadow:0 2px 8px rgba(255,255,255,.85)}
-.pp-script strong{font-size:22px}
-.pp-journey{position:absolute;left:12px;right:12px;bottom:10px;display:grid;grid-template-columns:1fr 28px 1fr 28px 1fr;align-items:center}
-.pp-journey>span{width:23px;height:23px;display:grid;place-items:center;justify-self:center;border-radius:50%;background:var(--pp-orange);color:#fff;font-size:9px;box-shadow:0 6px 12px rgba(232,93,36,.3);z-index:2}
-.pp-journey-card{height:88px;position:relative;overflow:hidden;border:3px solid rgba(255,255,255,.95);border-radius:9px;background:#fff;box-shadow:0 9px 22px rgba(7,27,46,.14)}
-.pp-journey-card img{width:100%;height:100%;object-fit:cover;display:block}
-.pp-journey-card b{position:absolute;left:0;right:0;bottom:0;padding:5px;background:rgba(255,255,255,.92);color:#1f3850;font-size:6.5px;text-align:center}
-.pp-journey-card.plan{display:grid;place-items:center;background:#f8f7f4}
-.pp-plan-drawing{width:76%;height:56%;position:relative;border:1px solid #99a5af;background:linear-gradient(#aab5bd 1px,transparent 1px),linear-gradient(90deg,#aab5bd 1px,transparent 1px);background-size:15px 15px;opacity:.75}
-.pp-plan-drawing:before,.pp-plan-drawing:after{content:"";position:absolute;border:1px solid #65788a}
-.pp-plan-drawing:before{inset:9px 14px}
-.pp-plan-drawing:after{left:22px;right:4px;top:20px;bottom:5px}
+.pp-hero-media{position:relative;width:100%;aspect-ratio:565/258;overflow:hidden;align-self:center}
+.pp-hero-media>img{width:100%;height:100%;object-fit:cover;display:block}
+.pp-hero-fade{display:none}
 
 .pp-trust-strip{width:min(1280px,100%);margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr);padding:0 20px;border-top:1px solid #ede5dc;border-bottom:1px solid #ede5dc;background:#fff}
 .pp-trust-strip article{display:flex;align-items:center;gap:10px;padding:12px 20px;border-right:1px solid #eee7df}
@@ -185,12 +173,11 @@ body{margin:0}
   .pp-nav button{text-align:left}
   .pp-header-cta{display:none}
   .pp-menu{display:block}
-  .pp-hero{padding:90px 18px 16px}
+  .pp-hero{padding:18px 18px 16px}
   .pp-hero h1{font-size:46px}
   .pp-consult-tabs{grid-template-columns:1fr}
   .pp-contact-row{grid-template-columns:1fr}
-  .pp-hero-media{height:350px}
-  .pp-journey{grid-template-columns:1fr 22px 1fr 22px 1fr}
+  .pp-hero-media{height:auto;aspect-ratio:565/258}
   .pp-trust-strip{grid-template-columns:1fr 1fr;padding:0 18px}
   .pp-trust-strip article:nth-child(2){border-right:0}
   .pp-trust-strip article:nth-child(-n+2){border-bottom:1px solid #eee7df}
@@ -206,8 +193,7 @@ body{margin:0}
 }
 @media(max-width:520px){
   .pp-hero h1{font-size:40px}
-  .pp-hero-media{height:315px}
-  .pp-journey-card{height:78px}
+  .pp-hero-media{height:auto;aspect-ratio:565/258}
   .pp-trust-strip{grid-template-columns:1fr}
   .pp-trust-strip article{border-right:0;border-bottom:1px solid #eee7df}
   .pp-estimator-controls{grid-template-columns:1fr}
