@@ -37,6 +37,20 @@ const howItWorks=[
   ['06','Handover','Final finishing, checks and handover complete the project journey.'],
 ]
 
+const showcaseItems=[
+  {key:'showcase_construction_1',eyebrow:'CONSTRUCTION',title:'Planning that connects structure, services and finishes.',text:'Use the estimate and package as a starting point, then refine drawings, specifications and execution scope with the project team.',fallback:'/homepage/default-residential.svg'},
+  {key:'showcase_construction_2',eyebrow:'CONSTRUCTION',title:'A clearer path from shell work to final finishing.',text:'Keep major material decisions, electrical, plumbing, waterproofing, flooring and painting inside one coordinated construction scope.',fallback:'/homepage/default-turnkey.svg'},
+  {key:'showcase_interior_1',eyebrow:'INTERIORS',title:'Spaces planned around daily use, storage and finish.',text:'Bring together room planning, modular work, materials and finish choices before execution begins.',fallback:'/homepage/default-interior.svg'},
+  {key:'showcase_interior_2',eyebrow:'INTERIORS',title:'Kitchens, wardrobes and complete-home interiors in one plan.',text:'Start with the overall home scope and package, then refine optional finishes and customisations only where needed.',fallback:'/homepage/default-interior.svg'},
+]
+
+const trustPrinciples=[
+  ['01','Clear scope before execution','Estimate, package and consultation information stay connected so the project starts with better context.'],
+  ['02','Specifications you can compare','Package inclusions and major material specifications are visible before the next project conversation.'],
+  ['03','Budget discussion before commitment','Use the estimator for a planning range, then refine the commercial scope after measurements and review.'],
+  ['04','One Construction + Interior journey','Construction and complete-home Interiors are presented through one consistent professional customer experience.'],
+]
+
 function Home(){
   const[media,setMedia]=useState({hero_image_url:'',category_images:{}})
   const[contact,setContact]=useState({})
@@ -78,6 +92,7 @@ function Home(){
         <Link to="/contact" onClick={()=>setMenuOpen(false)}>Contact</Link>
       </nav>
       <div className="company-header-actions">
+        <a className="company-estimate-link" href="#estimator">Get Estimate</a>
         <Link className="professional-link" to="/leads">Professional <span>→</span></Link>
         <button type="button" className="company-menu" aria-label="Toggle navigation" onClick={()=>setMenuOpen(value=>!value)}>☰</button>
       </div>
@@ -90,8 +105,8 @@ function Home(){
           <h1>Build and design your home with <em>clarity before work begins.</em></h1>
           <p>Explore Construction and Interiors, compare package specifications, get a practical project estimate and speak with our team through a free consultation.</p>
           <div className="hero-actions">
-            <Link className="hero-primary" to="/construction-estimator" onClick={()=>track('construction-cost-estimator','hero')}>Estimate Construction <span>→</span></Link>
-            <Link className="hero-secondary" to="/interior-estimator" onClick={()=>track('interior-cost-estimator','hero')}>Estimate Interiors</Link>
+            <a className="hero-primary" href="#estimator">Get Project Estimate <span>→</span></a>
+            <a className="hero-secondary" href="#contact">Get Free Consultation</a>
           </div>
           <div className="hero-points"><span>✓ No login required</span><span>✓ Clear package specifications</span><span>✓ Free project consultation</span></div>
         </div>
@@ -116,6 +131,14 @@ function Home(){
             <div className="service-copy"><small>{service.eyebrow} SERVICES</small><h3>{service.title}</h3><p>{service.text}</p><div><Link to={service.estimator} onClick={()=>track(service.key==='construction'?'construction-cost-estimator':'interior-cost-estimator','service_card')}>Get Estimate <span>→</span></Link><Link to={service.requirement}>Free Consultation</Link></div></div>
           </article>)}
         </div>
+      </section>
+
+      <section className="company-section showcase-section" id="projects">
+        <div className="company-section-head"><span>PROJECT SHOWCASE</span><h2>See how Construction and Interiors come together.</h2><p>Use these project visuals to understand the kind of planning, scope coordination and finish decisions the customer journey is designed to support.</p></div>
+        <div className="project-showcase-grid">{showcaseItems.map((item,index)=><article className={index===0?'wide':''} key={item.key}>
+          <div className="project-showcase-media"><img src={media.category_images?.[item.key]||item.fallback} alt={item.title}/><span>{item.eyebrow}</span></div>
+          <div className="project-showcase-copy"><small>0{index+1} · {item.eyebrow}</small><h3>{item.title}</h3><p>{item.text}</p><Link to={item.eyebrow==='CONSTRUCTION'?'/construction':'/interiors'}>Explore {item.eyebrow==='CONSTRUCTION'?'Construction':'Interiors'} <b>→</b></Link></div>
+        </article>)}</div>
       </section>
 
       <section id="estimator" className="estimate-showcase">
@@ -147,6 +170,11 @@ function Home(){
         <div className="about-copy"><span>WHY PROPULSE</span><h2>Better decisions before the project starts.</h2><p>Construction and interiors involve many decisions. We make the first stage easier with clear package information, a practical estimate and a short consultation path.</p><div className="about-list"><div><b>Clear scope</b><span>Understand the major project inputs and package inclusions before execution planning begins.</span></div><div><b>Practical estimates</b><span>Use project size, scope and package choices to create an indicative planning range.</span></div><div><b>Free consultation</b><span>Speak with our team using the same project context you already shared online.</span></div></div></div>
       </section>
 
+      <section className="company-section company-principles">
+        <div className="company-section-head"><span>WHY CHOOSE THIS PROCESS</span><h2>Professional planning without making the first step complicated.</h2><p>The website is designed for homeowners and families—not for someone who already has a complete BOQ or technical specification sheet.</p></div>
+        <div className="company-principles-grid">{trustPrinciples.map(([number,title,text])=><article key={number}><b>{number}</b><h3>{title}</h3><p>{text}</p></article>)}</div>
+      </section>
+
       <section id="contact" className="company-contact">
         <div><span>START YOUR PROJECT</span><h2>Prefer to speak with a project expert?</h2><p>Request a free Construction or Interior consultation. The form is short, and our team can continue the discussion with your basic project details already available.</p><div className="contact-ctas"><Link to="/construction-consultation">Construction Consultation <span>→</span></Link><Link to="/interior-consultation">Interior Consultation</Link></div></div>
         <div className="contact-details">
@@ -159,6 +187,11 @@ function Home(){
 
       <WebsiteFaqSection variant="home"/>
     </main>
+
+    <div className="company-mobile-actions" aria-label="Quick project actions">
+      <a href="#estimator">Get Estimate</a>
+      <a href="#contact">Free Consultation</a>
+    </div>
 
     <footer className="company-footer">
       <div className="company-footer-main"><div><img src="/brand/propulse-logo.png" alt="ProPulse Business"/><p>Construction and Interior planning, project estimates and professional consultation.</p></div><div><strong>Construction</strong><Link to="/construction-estimator">Cost Estimator</Link><Link to="/construction-consultation">Free Consultation</Link></div><div><strong>Interiors</strong><Link to="/interior-estimator">Cost Estimator</Link><Link to="/interior-consultation">Free Consultation</Link></div><div><strong>Professional</strong><Link to="/leads">Professional Access</Link></div></div>
