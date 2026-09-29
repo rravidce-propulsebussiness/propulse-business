@@ -344,7 +344,6 @@ async function saveAdminConfig(flowId, payload) {
 
     const questions = await versionQuestions(client, version.id);
     const questionMap = new Map(questions.map(q => [q.question_key,q]));
-    const questionKeys = new Set(questionMap.keys());
     const rawRates = Array.isArray(payload?.rates) ? payload.rates : [];
     const rawAdjustments = Array.isArray(payload?.adjustments) ? payload.adjustments : [];
     const rawPackages = Array.isArray(payload?.packages) ? payload.packages : null;
