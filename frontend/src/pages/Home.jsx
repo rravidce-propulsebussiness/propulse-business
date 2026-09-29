@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { publicRequest } from '../utils/auth'
 import WebsiteFaqSection from '../components/WebsiteFaqSection'
 import { trackFunnelEvent } from '../utils/funnelTracking'
+import usePageMeta from '../utils/usePageMeta'
 import './Home.css'
 
 const services=[
@@ -52,6 +53,7 @@ const trustPrinciples=[
 ]
 
 function Home(){
+  usePageMeta('ProPulse Business | Construction & Interiors','Plan home construction and interiors, compare packages, get a project estimate and request a free consultation with ProPulse Business.')
   const[media,setMedia]=useState({hero_image_url:'',category_images:{}})
   const[contact,setContact]=useState({})
   const[menuOpen,setMenuOpen]=useState(false)
