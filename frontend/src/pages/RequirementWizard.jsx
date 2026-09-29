@@ -30,7 +30,22 @@ export default function RequirementWizard({ flowKey }) {
       if (data?.flowType !== 'requirement') throw new Error('This requirement form is not available.')
       if (!mounted.current) return
       setFlow(data)
-      setAnswers({})
+      let initialAnswers = {}
+      let initialContact = emptyContact
+      try {
+        const saved = JSON.parse(sessionStorage.getItem('propulse_intake_prefill') || 'null')
+        const recent = saved && Date.now() - Number(saved.createdAt || 0) < 60 * 60 * 1000
+        if (recent && saved.flowKey === flowKey) {
+          const locationQuestion = (data.questions || []).find(item => item.questionType === 'location')
+          if (locationQuestion && /^\\d{6}$/.test(String(saved.pincode || ''))) {
+            initialAnswers = { [locationQuestion.questionKey]: String(saved.pincode) }
+          }
+          initialContact = { name: String(saved.name || ''), phone: String(saved.phone || ''), email: '' }
+          sessionStorage.removeItem('propulse_intake_prefill')
+        }
+      } catch {}
+      setAnswers(initialAnswers)
+      setContact(initialContact)
       setStep(0)
       setContactMode(false)
       setSubmissionKey(makeSubmissionKey())
@@ -83,7 +98,7 @@ export default function RequirementWizard({ flowKey }) {
   if (state.success) return <main className="rq-page"><div className="rq-shell rq-success"><div className="rq-success-mark">✓</div><span>REQUEST RECEIVED</span><h1>We have your requirement.</h1><p>Relevant businesses may contact you about this request. Your contact details remain protected from businesses until ProPulse access rules allow them to view the lead.</p><div><Link to="/">Back home</Link><button type="button" onClick={() => window.location.reload()}>Post another requirement</button></div></div></main>
 
   return <main className="rq-page">
-    <header className="rq-top"><Link to="/"><img src="/brand/propulse-logo.png" alt="ProPulse Business" /></Link><Link to="/leads">For businesses →</Link></header>
+    <header className="rq-top"><Link to="/"><img src="/brand/propulse-logo.png" alt="ProPulse Business" /></Link><Link to="/">← Back to home</Link></header>
     <div className="rq-shell">
       <aside className="rq-side"><span>PROPULSE REQUIREMENTS</span><h1>{flow.name}</h1><p>{flow.config?.subheadline || 'Tell us a few details so we can connect your requirement with relevant businesses.'}</p><div className="rq-scope"><small>Category</small><b>{[flow.industryName, flow.serviceName].filter(Boolean).join(' · ')}</b></div><ul><li>✓ No login required</li><li>✓ No OTP in this version</li><li>✓ Contact details protected</li></ul></aside>
       <section className="rq-card">
