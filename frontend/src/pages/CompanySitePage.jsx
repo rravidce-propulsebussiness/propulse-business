@@ -52,18 +52,20 @@ const serviceHighlights={
 }
 
 function CompanyHeader({estimatePath='/packages'}){
+  const[menuOpen,setMenuOpen]=useState(false)
+  const closeMenu=()=>setMenuOpen(false)
   return <header className="csp-header">
-    <Link className="csp-brand" to="/"><img src="/brand/propulse-logo.png" alt="ProPulse Business"/></Link>
-    <nav>
-      <Link to="/">Home</Link>
-      <Link to="/construction">Construction</Link>
-      <Link to="/interiors">Interiors</Link>
-      <Link to="/packages">Packages</Link>
-      <Link to="/how-it-works">How It Works</Link>
-      <Link to="/about">About</Link>
-      <Link to="/contact">Contact</Link>
+    <Link className="csp-brand" to="/" onClick={closeMenu}><img src="/brand/propulse-logo.png" alt="ProPulse Business"/></Link>
+    <nav className={menuOpen?'open':''}>
+      <Link to="/" onClick={closeMenu}>Home</Link>
+      <Link to="/construction" onClick={closeMenu}>Construction</Link>
+      <Link to="/interiors" onClick={closeMenu}>Interiors</Link>
+      <Link to="/packages" onClick={closeMenu}>Packages</Link>
+      <Link to="/how-it-works" onClick={closeMenu}>How It Works</Link>
+      <Link to="/about" onClick={closeMenu}>About</Link>
+      <Link to="/contact" onClick={closeMenu}>Contact</Link>
     </nav>
-    <div className="csp-header-actions"><Link className="csp-estimate" to={estimatePath}>Get Estimate</Link><Link className="csp-professional" to="/leads">Professional <span>→</span></Link></div>
+    <div className="csp-header-actions"><Link className="csp-estimate" to={estimatePath}>Get Estimate</Link><Link className="csp-professional" to="/leads">Professional <span>→</span></Link><button type="button" className="csp-menu" aria-label="Toggle navigation" aria-expanded={menuOpen} onClick={()=>setMenuOpen(value=>!value)}>☰</button></div>
   </header>
 }
 
