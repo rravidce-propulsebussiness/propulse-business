@@ -45,20 +45,6 @@ function PackagePreview({item,compact=false}){
 function EstimatorQuestion({question,value,onChange,packages=[],id}){
   if(!question)return null
 
-  if(question.questionKey==='estimate_mode'){
-    const modes=(question.options||[]).filter(option=>option.isActive!==false)
-    return <div className="est-mode-grid" role="group" aria-label={question.label}>{modes.map(option=>{
-      const active=String(value||'')===String(option.value)
-      const detailed=String(option.value)==='detailed'
-      return <button type="button" className={active?'est-mode-card active':'est-mode-card'} key={option.value} onClick={()=>onChange(option.value)}>
-        <span>{detailed?'DETAILED':'ROUGH'}</span>
-        <strong>{option.label}</strong>
-        <p>{detailed?'Choose material and specification options such as steel, cement, bricks, wire, flooring, plywood, laminate and hardware where configured.':'Get a faster planning range using the main project details and selected package.'}</p>
-        <b>{active?'Selected ✓':'Choose '+option.label}</b>
-      </button>
-    })}</div>
-  }
-
   const packageOptions=(packages||[]).filter(item=>item?.isActive!==false&&item.selectorQuestionKey===question.questionKey)
   if(packageOptions.length){
     return <div className="est-package-choice-grid" role="group" aria-label={question.label}>{packageOptions.map((item,index)=>{
@@ -81,15 +67,15 @@ function makeSubmissionKey(){
   return 'est_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,12)
 }
 
-function initialEstimatorAnswers(flow,modeParam,packageParam){
+function initialEstimatorAnswers(flow,packageParam){
   const seeded={}
   const activeQuestions=(flow?.questions||[]).filter(question=>question?.isActive!==false)
   const questionByKey=new Map(activeQuestions.map(question=>[question.questionKey,question]))
 
-  if(modeParam==='rough'||modeParam==='detailed'){
-    const modeQuestion=questionByKey.get('estimate_mode')
-    const allowed=(modeQuestion?.options||[]).some(option=>option?.isActive!==false&&String(option.value)===modeParam)
-    if(allowed)seeded.estimate_mode=modeParam
+  for(const question of activeQuestions){
+    if(Object.prototype.hasOwnProperty.call(question.validation||{},'systemDefault')){
+      seeded[question.questionKey]=question.validation.systemDefault
+    }
   }
 
   if(packageParam){
@@ -108,7 +94,6 @@ function smartSection(question,packages){
   const configured=String(question?.validation?.section||'').trim()
   if(configured)return configured
   const key=String(question?.questionKey||'')
-  if(key==='estimate_mode')return 'Estimate type'
   if((packages||[]).some(item=>item?.isActive!==false&&item.selectorQuestionKey===key))return 'Choose your package'
   if(['project_location'].includes(key))return 'Site & location'
   if(['project_type','own_plot','basement','site_access'].includes(key))return 'Site & project'
@@ -145,13 +130,12 @@ function groupQuestions(questions,packages){
 
 function fieldClass(question,packages){
   const isPackage=(packages||[]).some(item=>item?.isActive!==false&&item.selectorQuestionKey===question?.questionKey)
-  if(question?.questionKey==='estimate_mode'||isPackage||['text','multi_select'].includes(question?.questionType)||question?.validation?.fullWidth===true)return 'rq-field wide'
+  if(isPackage||['text','multi_select'].includes(question?.questionType)||question?.validation?.fullWidth===true)return 'rq-field wide'
   return 'rq-field'
 }
 
 export default function EstimatorWizard({ flowKey }) {
   const [searchParams] = useSearchParams()
-  const modeParam=searchParams.get('mode')
   const packageParam=searchParams.get('package')
   const [flow,setFlow] = useState(null)
   const [answers,setAnswers] = useState({})
@@ -172,7 +156,7 @@ export default function EstimatorWizard({ flowKey }) {
       if (!mounted.current) return
       if (data?.flowType !== 'estimator') throw new Error('This calculator is not available.')
       setFlow(data)
-      setAnswers(initialEstimatorAnswers(data,modeParam,packageParam))
+      setAnswers(initialEstimatorAnswers(data,packageParam))
       setResult(null)
       setContact(emptyContact)
       setConsent(false)
@@ -182,10 +166,12 @@ export default function EstimatorWizard({ flowKey }) {
       trackFunnelEvent('flow_opened',{flowKey,flowType:'estimator',source:'single_page_form'})
     }).catch(error => mounted.current && setState({loading:false,saving:false,error:error.message,errorQuestionKey:''}))
     return () => { mounted.current = false }
-  },[flowKey,modeParam,packageParam])
+  },[flowKey,packageParam])
 
-  const questions = useMemo(() => (flow?.questions || []).filter(question => isQuestionVisible(question,answers)),[flow,answers])
+  const questions = useMemo(() => (flow?.questions || []).filter(question => question?.validation?.systemHidden!==true && isQuestionVisible(question,answers)),[flow,answers])
   const groups = useMemo(()=>groupQuestions(questions,flow?.packages||[]),[questions,flow?.packages])
+  const standardGroups=useMemo(()=>groups.filter(group=>!group.questions.every(question=>question?.validation?.advancedSection===true)),[groups])
+  const advancedGroups=useMemo(()=>groups.filter(group=>group.questions.every(question=>question?.validation?.advancedSection===true)),[groups])
   const activePackage = useMemo(() => (flow?.packages || []).find(item=>packageMatches(item,answers)) || null,[flow,answers])
   const completedCount=questions.filter(question=>!isEmptyAnswer(answers[question.questionKey])).length
   const progress=result?100:questions.length?Math.round((completedCount/questions.length)*100):0
@@ -258,7 +244,7 @@ export default function EstimatorWizard({ flowKey }) {
   }
 
   function restart() {
-    setAnswers(initialEstimatorAnswers(flow,modeParam,packageParam))
+    setAnswers(initialEstimatorAnswers(flow,packageParam))
     setResult(null)
     setContact(emptyContact)
     setConsent(false)
@@ -279,15 +265,15 @@ export default function EstimatorWizard({ flowKey }) {
         <h1>{flow.name}</h1>
         <p>{flow.config?.subheadline || 'Complete one clear form to receive an indicative cost range and keep the same project brief ready for consultation.'}</p>
         <div className="rq-scope"><small>Category</small><b>{[flow.industryName,flow.serviceName].filter(Boolean).join(' · ')}</b></div>
-        <div className="est-side-summary">{answers.estimate_mode&&<div><small>Estimate type</small><b>{answers.estimate_mode==='detailed'?'Detailed estimate':'Rough estimate'}</b></div>}{activePackage&&<div><small>Selected package</small><b>{activePackage.label}</b></div>}</div>
+        <div className="est-side-summary">{activePackage&&<div><small>Selected package</small><b>{activePackage.label}</b></div>}</div>
         {!result&&<div className="rq-side-progress"><div><span>Estimate setup</span><b>{progress}%</b></div><i><em style={{width:progress+'%'}}/></i><small>{completedCount} of {questions.length} estimate fields completed</small></div>}
         <ul><li>✓ Single-page estimator</li><li>✓ Admin-controlled packages & rates</li><li>✓ Estimate and customer enquiry saved together</li></ul>
       </aside>
 
       {!result?<form className="rq-card rq-form-card rq-single-form est-single-form" onSubmit={submitEstimate}>
-        <div className="rq-form-head"><span>PROJECT ESTIMATE</span><h2>{flow.config?.headline || 'Build your estimate in one place.'}</h2><p>Choose the main project inputs first. Detailed material fields appear only when they apply.</p></div>
+        <div className="rq-form-head"><span>PROJECT ESTIMATE</span><h2>{flow.config?.headline || 'Get your project cost estimate.'}</h2><p>Complete the main project details and choose a package. Material customisation is optional.</p></div>
 
-        {groups.map((group,index)=>{
+        {standardGroups.map((group,index)=>{
           const required=group.questions.filter(question=>question.isRequired)
           const complete=required.filter(question=>!isEmptyAnswer(answers[question.questionKey])).length
           const optional=required.length===0
@@ -302,10 +288,19 @@ export default function EstimatorWizard({ flowKey }) {
         </section>
         })}
 
+        {advancedGroups.length>0&&<details className="est-optional-specs">
+          <summary><div><span>OPTIONAL</span><h3>Customise materials & specifications</h3><p>Your selected package is used by default. Open this only if you want to change specific materials, finishes or add-ons.</p></div><b>+</b></summary>
+          <div className="est-optional-specs-body">{advancedGroups.map(group=><section key={group.name}><h4>{group.name}</h4><div className="rq-form-grid">{group.questions.map(question=><div className={fieldClass(question,flow.packages||[])+(state.errorQuestionKey===question.questionKey?' error':'')} data-question-key={question.questionKey} key={question.questionKey}>
+            <label htmlFor={'est-'+question.questionKey}>{question.label}</label>
+            {question.helpText&&<p>{question.helpText}</p>}
+            <EstimatorQuestion id={'est-'+question.questionKey} question={question} value={answers[question.questionKey]} onChange={value=>setAnswer(question,value)} packages={flow.packages||[]}/>
+          </div>)}</div></section>)}</div>
+        </details>}
+
         {activePackage&&<section className="rq-form-section est-selected-package-section"><div className="rq-form-section-head"><b>✓</b><div><h3>Selected package summary</h3><span>This exact published package snapshot will stay with the estimate.</span></div></div><PackagePreview item={activePackage} compact/></section>}
 
         <section className={'rq-form-section rq-contact-section'+(state.errorQuestionKey==='contact'?' error':'')} data-question-key="contact">
-          <div className="rq-form-section-head"><b>{String(groups.length+1).padStart(2,'0')}</b><div><h3>{flow.config?.contactTitle || 'Your contact details'}</h3><span>{flow.config?.contactText || 'Name and mobile are required so the estimate can be saved with the same customer project enquiry.'}</span></div></div>
+          <div className="rq-form-section-head"><b>{String(standardGroups.length+1).padStart(2,'0')}</b><div><h3>{flow.config?.contactTitle || 'Your contact details'}</h3><span>{flow.config?.contactText || 'Name and mobile are required so the estimate can be saved with the same customer project enquiry.'}</span></div></div>
           <div className="rq-contact-grid"><label>Name<input value={contact.name} onChange={event=>setContact({...contact,name:event.target.value})} autoComplete="name" required/></label><label>Mobile number<input value={contact.phone} onChange={event=>setContact({...contact,phone:normalizeIndianMobileInput(event.target.value)})} inputMode="tel" autoComplete="tel" placeholder="10-digit mobile" maxLength="10" pattern="[6-9][0-9]{9}" required/></label><label className="wide">Email <small>Optional</small><input type="email" value={contact.email} onChange={event=>setContact({...contact,email:event.target.value})} autoComplete="email"/></label><label className="rq-honeypot" aria-hidden="true">Website<input tabIndex="-1" autoComplete="off" value={website} onChange={event=>setWebsite(event.target.value)}/></label></div>
           <label className="rq-consent"><input type="checkbox" checked={consent} onChange={event=>setConsent(event.target.checked)}/><span>I agree that ProPulse may use and share my project details and contact information with relevant verified professionals or contractors so they can respond to this project enquiry and provide consultation or service follow-up.</span></label>
         </section>
@@ -318,14 +313,13 @@ export default function EstimatorWizard({ flowKey }) {
         <div className="est-range"><strong>{money(result.minimum)}</strong><i>to</i><strong>{money(result.maximum)}</strong></div>
         {result.cityName && <p className="est-city">Adjusted for {result.cityName}</p>}
         <div className="est-result-meta-grid">
-          <div><small>Estimate type</small><b>{answers.estimate_mode==='detailed'?'Detailed':'Rough'}</b></div>
           {estimateArea>0&&<div><small>{answers.built_up_area?'Built-up area':'Home area'}</small><b>{new Intl.NumberFormat('en-IN').format(estimateArea)} sq ft</b></div>}
           {(result.package||activePackage)&&<div><small>Package</small><b>{(result.package||activePackage).label}</b></div>}
           {constructionPerSqft&&<div><small>Average estimate / sq ft</small><b>{money(constructionPerSqft.minimum)} – {money(constructionPerSqft.maximum)}</b></div>}
         </div>
         {(result.package||activePackage)&&<PackagePreview item={result.package||activePackage} compact/>}
         {Array.isArray(result.breakdown) && result.breakdown.length > 0 && <div className="est-breakdown"><b>What shaped this range</b>{result.breakdown.map(item=><div key={item.kind+':'+item.key}><span>{item.label}</span><em>{item.minimum===item.maximum?money(item.minimum):money(item.minimum)+' – '+money(item.maximum)}</em></div>)}</div>}
-        <div className="est-lead-confirm"><b>Project enquiry saved</b><span>Your name, mobile number, selected package, detailed choices and estimate are attached to one customer lead for follow-up.</span></div>
+        <div className="est-lead-confirm"><b>Project enquiry saved</b><span>Your name, mobile number, selected package, project choices and estimate are saved together for follow-up.</span></div>
         <div className="est-consultation-card"><span>CONSULTATION READY</span><h3>{flow.config?.consultationTitle || 'Continue with the same project brief.'}</h3><p>{flow.config?.consultationText || 'You do not need to fill another form. The estimate and selected specifications are already saved with your enquiry so a consultation can continue from the same information.'}</p><Link to="/contact">{flow.config?.consultationButtonLabel || 'Contact project team'} <b>→</b></Link></div>
         <div className="est-disclaimer">{result.disclaimer}</div>
         <div className="rq-actions est-result-actions"><a className="primary est-download" href={`${API_BASE_URL}/customer-flows/estimates/${encodeURIComponent(result.calculationId)}/pdf?token=${encodeURIComponent(result.pdfToken||'')}`} download>Download Estimate PDF ↓</a><button type="button" className="secondary" onClick={restart}>Estimate another project</button><Link className="est-home" to="/">Back home</Link></div>
