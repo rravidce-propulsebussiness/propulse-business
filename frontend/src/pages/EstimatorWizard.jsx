@@ -29,6 +29,40 @@ function PackagePreview({item,compact=false}){
   </section>
 }
 
+function EstimatorQuestion({question,value,onChange,packages=[]}){
+  if(!question)return null
+
+  if(question.questionKey==='estimate_mode'){
+    const modes=(question.options||[]).filter(option=>option.isActive!==false)
+    return <div className="est-mode-grid">{modes.map(option=>{
+      const active=String(value||'')===String(option.value)
+      const detailed=String(option.value)==='detailed'
+      return <button type="button" className={active?'est-mode-card active':'est-mode-card'} key={option.value} onClick={()=>onChange(option.value)}>
+        <span>{detailed?'DETAILED':'ROUGH'}</span>
+        <strong>{option.label}</strong>
+        <p>{detailed?'Choose material and specification options such as steel, cement, bricks, wire, flooring, plywood, laminate and hardware where configured.':'Get a faster planning range using the main project details and selected package.'}</p>
+        <b>{active?'Selected ✓':'Choose '+option.label}</b>
+      </button>
+    })}</div>
+  }
+
+  const packageOptions=(packages||[]).filter(item=>item?.isActive!==false&&item.selectorQuestionKey===question.questionKey)
+  if(packageOptions.length){
+    return <div className="est-package-choice-grid">{packageOptions.map((item,index)=>{
+      const active=String(value??'')===String(item.selectorValue)
+      const details=(item.details||[]).filter(detail=>detail?.isActive!==false).slice(0,4)
+      return <button type="button" className={active?'est-package-choice active':'est-package-choice'} key={item.packageKey||item.selectorValue||index} onClick={()=>onChange(item.selectorValue)}>
+        <div className="est-package-choice-head"><span>{item.badge||'PACKAGE'}</span><strong>{item.label}</strong>{item.priceNote&&<em>{item.priceNote}</em>}</div>
+        {item.summary&&<p>{item.summary}</p>}
+        {details.length>0&&<div className="est-package-choice-specs">{details.map((detail,i)=><div key={detail.detailKey||i}><small>{detail.label}</small><b>{detail.value}</b></div>)}</div>}
+        <i>{active?'Selected ✓':'Select package'}</i>
+      </button>
+    })}</div>
+  }
+
+  return <CustomerFlowQuestion question={question} value={value} onChange={onChange}/>
+}
+
 function makeSubmissionKey(){
   if(globalThis.crypto?.randomUUID)return globalThis.crypto.randomUUID()
   return 'est_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,12)
@@ -156,13 +190,14 @@ export default function EstimatorWizard({ flowKey }) {
         <h1>{flow.name}</h1>
         <p>{flow.config?.subheadline || 'Answer a few project questions to get an indicative cost range.'}</p>
         <div className="rq-scope"><small>Category</small><b>{[flow.industryName,flow.serviceName].filter(Boolean).join(' · ')}</b></div>
+        <div className="est-side-summary">{answers.estimate_mode&&<div><small>Estimate type</small><b>{answers.estimate_mode==='detailed'?'Detailed estimate':'Rough estimate'}</b></div>}{activePackage&&<div><small>Selected package</small><b>{activePackage.label}</b></div>}</div>
         <ul><li>✓ No login required</li><li>✓ Name & mobile required before estimate</li><li>✓ Your estimate is saved with your project enquiry</li></ul>
       </aside>
       <section className="rq-card">
         <div className="rq-progress"><div style={{width:progress+'%'}} /></div>
         {!result ? !contactMode ? <>
           <div className="rq-step"><span>QUESTION {String(step + 1).padStart(2,'0')} / {String(questions.length).padStart(2,'0')}</span><h2>{question?.label}</h2>{question?.helpText && <p>{question.helpText}</p>}</div>
-          <div className="rq-control"><CustomerFlowQuestion question={question} value={answers[question?.questionKey]} onChange={value => setAnswer(question.questionKey,value)} /></div>
+          <div className="rq-control"><EstimatorQuestion question={question} value={answers[question?.questionKey]} onChange={value => setAnswer(question.questionKey,value)} packages={flow.packages||[]} /></div>
           {activePackage&&question?.questionKey===activePackage.selectorQuestionKey&&<PackagePreview item={activePackage}/>}
           {state.error && <div className="rq-error">{state.error}</div>}
           <div className="rq-actions"><button type="button" className="secondary" disabled={step===0||state.saving} onClick={()=>setStep(Math.max(0,step-1))}>← Back</button><button type="button" className="primary" disabled={state.saving} onClick={next}>{step===questions.length-1?'Continue':'Next'} →</button></div>
