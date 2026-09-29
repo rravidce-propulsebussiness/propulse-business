@@ -120,7 +120,7 @@ async function main(){
   assert.equal(saved.flowKey,KEY);
 
   const row=(await pool.query(
-    'SELECT config_hash,config_snapshot,answers,result_min,result_max,lead_id,intake_submission_key FROM estimator_calculations WHERE public_id=$1',
+    'SELECT config_hash,config_snapshot,answers,breakdown,result_min,result_max,lead_id,intake_submission_key FROM estimator_calculations WHERE public_id=$1',
     [result.calculationId]
   )).rows[0];
   assert.equal(String(row.config_hash).length,64);
@@ -128,6 +128,9 @@ async function main(){
   assert.equal(row.answers.area,'100');
   assert.equal(Number(row.result_min),11000);
   assert.equal(Number(row.result_max),13200);
+  assert.ok(Array.isArray(row.breakdown));
+  assert.equal(row.breakdown.length,result.breakdown.length);
+  assert.equal(row.breakdown[0].key,result.breakdown[0].key);
   assert.equal(Number(row.lead_id),Number(result.leadId));
   assert.equal(row.intake_submission_key,submissionKey);
 
