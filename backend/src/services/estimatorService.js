@@ -454,7 +454,7 @@ function calculationResponse({ flow, calculation, location, result, leadId=null,
 }
 
 async function ensureEstimatorContactLead({flow,calculation,location,intakeKey,contact}) {
-  const details=buildEstimatorLeadPayload(flow,calculation,{source:'estimator_calculation',contactPending:false});
+  const details=buildEstimatorLeadPayload(flow,calculation,{source:'estimator_calculation'});
   if (calculation.lead_id) {
     const current=(await pool.query('SELECT id,status,customer_name,customer_phone FROM leads WHERE id=$1',[Number(calculation.lead_id)])).rows[0];
     if (current?.customer_phone) return {leadId:Number(current.id),leadStatus:current.status};
@@ -593,7 +593,7 @@ async function calculate({ key, flowToken, answers, submissionKey, contact, cons
   }
 }
 
-function buildEstimatorLeadPayload(flow, calculation, {source='estimator_calculation',contactPending=false}={}) {
+function buildEstimatorLeadPayload(flow, calculation, {source='estimator_calculation'}={}) {
   const answers = calculation.answers && typeof calculation.answers === 'object' && !Array.isArray(calculation.answers) ? calculation.answers : {};
   const custom = {};
   const marketplaceAnswers = {};
@@ -624,7 +624,7 @@ function buildEstimatorLeadPayload(flow, calculation, {source='estimator_calcula
   custom._estimator = {
     calculationId: calculation.public_id,flowKey: flow.key,definitionId: flow.definitionId,versionId: flow.versionId,versionNo: flow.versionNo,
     minimum:Number(calculation.result_min),maximum:Number(calculation.result_max),currency:calculation.currency,calculatedAt:calculation.created_at,
-    configHash:calculation.config_hash,contactPending:Boolean(contactPending),lifecycle:contactPending?'estimate_completed':'estimate_completed_with_contact',answers,
+    configHash:calculation.config_hash,lifecycle:'estimate_completed',answers,
     package:packageSnapshot?{packageKey:packageSnapshot.packageKey,label:packageSnapshot.label,badge:packageSnapshot.badge||null,summary:packageSnapshot.summary||null,priceNote:packageSnapshot.priceNote||null,details:(packageSnapshot.details||[]).filter(detail=>detail.isActive!==false)}:null,
   };
   custom._intake = {
