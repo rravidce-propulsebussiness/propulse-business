@@ -12,6 +12,38 @@ const blankQuestion=(index=0)=>({questionKey:'question_'+(index+1),questionType:
 const dependencyText=q=>Array.isArray(q.showWhen?.in)?q.showWhen.in.join(','):(q.showWhen?.equals??q.showWhen?.notEquals??'')
 const dependencyMode=q=>Array.isArray(q.showWhen?.in)?'in':Object.prototype.hasOwnProperty.call(q.showWhen||{},'notEquals')?'notEquals':'equals'
 
+function recommendedSection(question,flowType){
+ const key=String(question?.questionKey||'')
+ if(key==='estimate_mode')return 'Estimate type'
+ if(['project_location'].includes(key))return flowType==='estimator'?'Site & location':'Project location'
+ if(['project_type','own_plot','basement','site_access'].includes(key))return 'Site & project'
+ if(['plot_area','built_up_area','floors'].includes(key))return 'Area & floors'
+ if(key==='construction_package')return 'Scope of work'
+ if(key==='quality')return 'Choose your package'
+ if(['steel_spec','cement_spec','sand_spec','brick_spec'].includes(key))return 'Structure materials'
+ if(['wire_spec','switch_spec'].includes(key))return 'Electrical'
+ if(key==='flooring_spec')return 'Flooring & finishes'
+ if(['property_type','bhk','area','property_status'].includes(key))return 'Home details'
+ if(['scope_mode','selected_work','kitchen_package','wardrobe_units','false_ceiling_area','furniture_package'].includes(key))return 'Scope & quantities'
+ if(key==='finish_quality')return 'Choose your package'
+ if(['plywood_spec','internal_laminate_spec','external_laminate_spec','hardware_spec','modular_finish_spec'].includes(key))return 'Core materials & finishes'
+ if(key==='customisations')return 'Add-ons & customisations'
+ if(/(_area|_meters|_count)$/.test(key)&&question?.showWhen?.questionKey==='customisations')return 'Customisation quantities'
+ if(['timeline','additional_requirement'].includes(key))return 'Timeline & notes'
+ if(question?.questionType==='location')return 'Project location'
+ if(question?.leadField==='requirement'||question?.questionType==='text')return 'Project requirement'
+ return 'Project details'
+}
+
+function recommendedControl(question){
+ const key=String(question?.questionKey||'')
+ if(['estimate_mode','quality','finish_quality'].includes(key))return 'cards'
+ if(question?.questionType==='single_select'||question?.questionType==='timeline')return 'dropdown'
+ if(question?.questionType==='multi_select')return 'checkboxes'
+ if(question?.questionType==='boolean')return 'segmented'
+ return 'auto'
+}
+
 export default function AdminCustomerFlows(){
  const[flows,setFlows]=useState([]),[detail,setDetail]=useState(null),[industries,setIndustries]=useState([]),[services,setServices]=useState([]),[subservices,setSubservices]=useState([])
  const[createForm,setCreateForm]=useState(emptyCreate),[showCreate,setShowCreate]=useState(false),[busy,setBusy]=useState(false),[error,setError]=useState(''),[message,setMessage]=useState('')
@@ -41,6 +73,18 @@ export default function AdminCustomerFlows(){
  const patchOption=(questionIndex,optionIndex,patch)=>setDetail(current=>({...current,editingVersion:{...current.editingVersion,questions:current.editingVersion.questions.map((q,i)=>i===questionIndex?{...q,options:(q.options||[]).map((o,j)=>j===optionIndex?{...o,...patch}:o)}:q)}}))
  const addOption=questionIndex=>setDetail(current=>({...current,editingVersion:{...current.editingVersion,questions:current.editingVersion.questions.map((q,i)=>i===questionIndex?{...q,options:[...(q.options||[]),{value:'option_'+((q.options?.length||0)+1),label:'Option '+((q.options?.length||0)+1),displayOrder:((q.options?.length||0)+1)*10,isActive:true}]}:q)}}))
  const removeOption=(questionIndex,optionIndex)=>setDetail(current=>({...current,editingVersion:{...current.editingVersion,questions:current.editingVersion.questions.map((q,i)=>i===questionIndex?{...q,options:(q.options||[]).filter((_,j)=>j!==optionIndex).map((o,j)=>({...o,displayOrder:(j+1)*10}))}:q)}}))
+ function applyRecommendedLayout(){
+  setDetail(current=>({...current,editingVersion:{...current.editingVersion,questions:(current.editingVersion?.questions||[]).map(q=>({
+   ...q,
+   validation:{
+    ...(q.validation||{}),
+    section:recommendedSection(q,current.flow_type),
+    uiControl:recommendedControl(q),
+    fullWidth:['estimate_mode','quality','finish_quality','customisations'].includes(q.questionKey)||['text','multi_select'].includes(q.questionType),
+   },
+  }))}}))
+  setMessage('Recommended single-page field layout applied to this draft. Review it, then save or publish.')
+ }
  function addQuestion(){setDetail(current=>{const list=current.editingVersion?.questions||[];return{...current,editingVersion:{...current.editingVersion,questions:[...list,blankQuestion(list.length)]}}})}
  function removeQuestion(index){setDetail(current=>({...current,editingVersion:{...current.editingVersion,questions:current.editingVersion.questions.filter((_,i)=>i!==index)}}))}
  function moveQuestion(index,direction){setDetail(current=>{const list=[...current.editingVersion.questions],to=index+direction;if(to<0||to>=list.length)return current;[list[index],list[to]]=[list[to],list[index]];return{...current,editingVersion:{...current.editingVersion,questions:list.map((q,i)=>({...q,displayOrder:(i+1)*10}))}}})}
@@ -90,7 +134,7 @@ export default function AdminCustomerFlows(){
       {detail.flow_type==='estimator'&&<><label>Result title<input value={detail.editingVersion?.config?.resultTitle||''} onChange={e=>patchConfig({resultTitle:e.target.value})} placeholder="Estimated project cost"/></label><label className="wide">Estimator disclaimer<input value={detail.editingVersion?.config?.estimatorDisclaimer||''} onChange={e=>patchConfig({estimatorDisclaimer:e.target.value})} placeholder="Indicative estimate; final pricing may change after site inspection and professional review."/></label></>}
      </div></section>
 
-     <section className="flow-panel"><div className="flow-panel-head"><div><span>SINGLE-PAGE FIELD BUILDER</span><h3>{questions.length} fields</h3><p>Use dropdowns for compact choices, cards only when visual comparison matters, and sections to keep the form easy to scan.</p></div><button type="button" onClick={addQuestion}>+ Add field</button></div>
+     <section className="flow-panel"><div className="flow-panel-head"><div><span>SINGLE-PAGE FIELD BUILDER</span><h3>{questions.length} fields</h3><p>Use dropdowns for compact choices, cards only when visual comparison matters, and sections to keep the form easy to scan.</p></div><div className="flow-panel-head-actions"><button type="button" className="secondary" onClick={applyRecommendedLayout}>Apply recommended layout</button><button type="button" onClick={addQuestion}>+ Add field</button></div></div>
       <div className="question-list">{questions.map((q,index)=>{
        const controls=inputControls(q.questionType)
        const uiControl=q.validation?.uiControl||controls[0][0]
