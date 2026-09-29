@@ -302,6 +302,10 @@ async function submitRequirement({
 
   const existing = await findBySubmissionKey(idempotencyKey);
   if (existing?.source === 'homepage_consultation') {
+    const capturedFlowKey = String(existing.custom_fields?._intake?.flowKey || '');
+    if (capturedFlowKey && capturedFlowKey !== flow.key) {
+      fail('This consultation belongs to a different requirement flow. Start a new consultation for this service.', 'SUBMISSION_FLOW_MISMATCH');
+    }
     return enrichConsultationLead({ existing, flow, safeAnswers, name, phone, email });
   }
   if (existing) return { accepted: true, leadId: existing.id, duplicate: true };
