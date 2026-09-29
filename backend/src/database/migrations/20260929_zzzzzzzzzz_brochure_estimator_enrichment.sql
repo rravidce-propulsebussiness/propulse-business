@@ -198,6 +198,10 @@ BEGIN
     (target_version_id,'wall_panelling_area','area','Wall panelling area','Enter the approximate rafter wall-panelling area in sq ft.',TRUE,340,'{"min":1,"max":50000}'::jsonb,'{"questionKey":"customisations","equals":"wall_panelling"}'::jsonb,NULL,'marketplace',TRUE),
     (target_version_id,'wall_panelling_pu_area','area','PU / Duco wall-panelling area','Enter the approximate PU / Duco wall-panelling area in sq ft.',TRUE,350,'{"min":1,"max":50000}'::jsonb,'{"questionKey":"customisations","equals":"wall_panelling_pu"}'::jsonb,NULL,'marketplace',TRUE);
 
+  UPDATE customer_flow_questions
+     SET display_order=CASE question_key WHEN 'timeline' THEN 900 WHEN 'additional_requirement' THEN 910 ELSE display_order END
+   WHERE version_id=target_version_id AND question_key IN ('timeline','additional_requirement');
+
   INSERT INTO customer_flow_question_options(question_id,value,label,display_order,is_active)
   SELECT q.id,x.value,x.label,x.display_order,TRUE
     FROM customer_flow_questions q
