@@ -334,6 +334,12 @@ test('Admin login reaches operations consoles and session survives reload',async
   await expect(page.getByLabel('Intake source')).toHaveValue('public_estimator')
   await expect(page.getByLabel('Contact readiness')).toHaveCount(0)
 
+  await page.goto('/admin/homepage-media')
+  await expect(page.getByRole('heading',{name:'Website content & media'})).toBeVisible()
+  await expect(page.getByRole('button',{name:'Save website copy'})).toBeVisible()
+  await expect(page.getByText('Construction showcase 01')).toBeVisible()
+  await expect(page.getByText('Interior showcase 02')).toBeVisible()
+
   await page.goto('/admin/financial-integrity')
   await page.reload()
   await expect(page).toHaveURL(/\/admin\/financial-integrity$/)
