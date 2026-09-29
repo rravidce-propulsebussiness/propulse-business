@@ -453,7 +453,7 @@ function calculationResponse({ flow, calculation, location, result, leadId=null,
   };
 }
 
-async function ensureEstimatorContactLead({flow,calculation,location,intakeKey,contact}) {
+async function ensureEstimatorLead({flow,calculation,location,intakeKey,contact}) {
   const details=buildEstimatorLeadPayload(flow,calculation,{source:'estimator_calculation'});
   if (calculation.lead_id) {
     const current=(await pool.query('SELECT id,status,customer_name,customer_phone FROM leads WHERE id=$1',[Number(calculation.lead_id)])).rows[0];
@@ -537,7 +537,7 @@ async function calculate({ key, flowToken, answers, submissionKey, contact, cons
     const existingAdjustments=Array.isArray(savedConfig.adjustments)?savedConfig.adjustments:adjustments;
     const existingResult=calculateEstimateFromConfig({ answers:existingAnswers,rateItems:existingRates,adjustments:existingAdjustments,cityId:existing.city_id });
     const location={cityId:existing.city_id,stateId:existing.state_id,pincode:existing.pincode,cityName:existing.city_name};
-    const captured=await ensureEstimatorContactLead({flow:historicalFlow,calculation:existing,location,intakeKey,contact:contactData});
+    const captured=await ensureEstimatorLead({flow:historicalFlow,calculation:existing,location,intakeKey,contact:contactData});
     existing.lead_id=captured.leadId;
     return calculationResponse({flow:historicalFlow,calculation:existing,location,result:existingResult,leadId:captured.leadId,leadStatus:captured.leadStatus,duplicate:true});
   }
@@ -578,13 +578,13 @@ async function calculate({ key, flowToken, answers, submissionKey, contact, cons
     const racedAdjustments=Array.isArray(racedConfig.adjustments)?racedConfig.adjustments:adjustments;
     const racedResult=calculateEstimateFromConfig({ answers:raced.answers || safeAnswers,rateItems:racedRates,adjustments:racedAdjustments,cityId:raced.city_id });
     const racedLocation={cityId:raced.city_id,stateId:raced.state_id,pincode:raced.pincode,cityName:raced.city_name};
-    const captured=await ensureEstimatorContactLead({flow:racedFlow,calculation:raced,location:racedLocation,intakeKey,contact:contactData});
+    const captured=await ensureEstimatorLead({flow:racedFlow,calculation:raced,location:racedLocation,intakeKey,contact:contactData});
     raced.lead_id=captured.leadId;
     return calculationResponse({flow:racedFlow,calculation:raced,location:racedLocation,result:racedResult,leadId:captured.leadId,leadStatus:captured.leadStatus,duplicate:true});
   }
 
   try {
-    const captured=await ensureEstimatorContactLead({flow,calculation:inserted,location,intakeKey,contact:contactData});
+    const captured=await ensureEstimatorLead({flow,calculation:inserted,location,intakeKey,contact:contactData});
     inserted.lead_id=captured.leadId;
     return calculationResponse({flow,calculation:inserted,location,result,leadId:captured.leadId,leadStatus:captured.leadStatus});
   } catch (error) {
