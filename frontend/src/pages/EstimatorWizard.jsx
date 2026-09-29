@@ -106,8 +106,22 @@ function initialEstimatorAnswers(flow,modeParam,packageParam){
 function smartSection(question,packages){
   const configured=String(question?.validation?.section||'').trim()
   if(configured)return configured
-  if(question?.questionKey==='estimate_mode')return 'Estimate type'
-  if((packages||[]).some(item=>item?.isActive!==false&&item.selectorQuestionKey===question?.questionKey))return 'Choose your package'
+  const key=String(question?.questionKey||'')
+  if(key==='estimate_mode')return 'Estimate type'
+  if((packages||[]).some(item=>item?.isActive!==false&&item.selectorQuestionKey===key))return 'Choose your package'
+  if(['project_location'].includes(key))return 'Site & location'
+  if(['project_type','own_plot','basement','site_access'].includes(key))return 'Site & project'
+  if(['plot_area','built_up_area','floors'].includes(key))return 'Area & floors'
+  if(key==='construction_package')return 'Scope of work'
+  if(['steel_spec','cement_spec','sand_spec','brick_spec'].includes(key))return 'Structure materials'
+  if(['wire_spec','switch_spec'].includes(key))return 'Electrical'
+  if(key==='flooring_spec')return 'Flooring & finishes'
+  if(['property_type','bhk','area','property_status'].includes(key))return 'Home details'
+  if(['scope_mode','selected_work','kitchen_package','wardrobe_units','false_ceiling_area','furniture_package'].includes(key))return 'Scope & quantities'
+  if(['plywood_spec','internal_laminate_spec','external_laminate_spec','hardware_spec','modular_finish_spec'].includes(key))return 'Core materials & finishes'
+  if(key==='customisations')return 'Add-ons & customisations'
+  if(/(_area|_meters|_count)$/.test(key)&&question?.showWhen?.questionKey==='customisations')return 'Customisation quantities'
+  if(['timeline','additional_requirement'].includes(key))return 'Timeline & notes'
   if(question?.showWhen?.questionKey==='estimate_mode'&&(question.showWhen?.equals==='detailed'||(question.showWhen?.in||[]).includes('detailed')))return 'Detailed specifications'
   if(question?.questionType==='location')return 'Project location'
   return 'Project details'
@@ -267,14 +281,19 @@ export default function EstimatorWizard({ flowKey }) {
       {!result?<form className="rq-card rq-form-card rq-single-form est-single-form" onSubmit={submitEstimate}>
         <div className="rq-form-head"><span>PROJECT ESTIMATE</span><h2>{flow.config?.headline || 'Build your estimate in one place.'}</h2><p>Choose the main project inputs first. Detailed material fields appear only when they apply.</p></div>
 
-        {groups.map((group,index)=><section className="rq-form-section" key={group.name}>
-          <div className="rq-form-section-head"><b>{String(index+1).padStart(2,'0')}</b><div><h3>{group.name}</h3><span>{group.questions.length} field{group.questions.length===1?'':'s'}</span></div></div>
+        {groups.map((group,index)=>{
+          const required=group.questions.filter(question=>question.isRequired)
+          const complete=required.filter(question=>!isEmptyAnswer(answers[question.questionKey])).length
+          const done=required.length===0||complete===required.length
+          return <section className={'rq-form-section '+(done?'complete':'')} key={group.name}>
+          <div className="rq-form-section-head"><b>{done?'✓':String(index+1).padStart(2,'0')}</b><div><h3>{group.name}</h3><span>{required.length?complete+' of '+required.length+' required completed':'Optional details'}</span></div><em className={done?'done':''}>{done?'Complete':'Needs '+(required.length-complete)}</em></div>
           <div className="rq-form-grid">{group.questions.map(question=><div className={fieldClass(question,flow.packages||[])+(state.errorQuestionKey===question.questionKey?' error':'')} data-question-key={question.questionKey} key={question.questionKey}>
             <label>{question.label}{question.isRequired&&<sup>*</sup>}</label>
             {question.helpText&&<p>{question.helpText}</p>}
             <EstimatorQuestion question={question} value={answers[question.questionKey]} onChange={value=>setAnswer(question,value)} packages={flow.packages||[]}/>
           </div>)}</div>
-        </section>)}
+        </section>
+        })}
 
         {activePackage&&<section className="rq-form-section est-selected-package-section"><div className="rq-form-section-head"><b>✓</b><div><h3>Selected package summary</h3><span>This exact published package snapshot will stay with the estimate.</span></div></div><PackagePreview item={activePackage} compact/></section>}
 
