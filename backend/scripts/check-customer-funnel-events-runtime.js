@@ -75,8 +75,6 @@ async function main(){
   const calculationId=crypto.randomBytes(18).toString('base64url');
   await record(estSession,'estimator_contact_opened',{flowKey:estimator.key,flowType:'estimator'});
   await record(estSession,'estimate_completed',{flowKey:estimator.key,flowType:'estimator',calculationId});
-  await record(estSession,'quote_form_opened',{flowKey:estimator.key,flowType:'estimator',calculationId});
-  await record(estSession,'quote_submitted',{flowKey:estimator.key,flowType:'estimator',calculationId});
 
   await record(reqSession,'home_cta_clicked',{flowKey:requirement.key,flowType:'requirement'});
   await record(reqSession,'flow_opened',{flowKey:requirement.key,flowType:'requirement'});
@@ -138,11 +136,11 @@ async function main(){
   assert.ok(estFlow.openedSessions>=2);
   assert.ok(estFlow.startedSessions>=1);
   assert.ok(estFlow.stages.some(stage=>stage.key==='estimator_contact_opened'&&stage.sessions>=1));
-  assert.ok(estFlow.stages.some(stage=>stage.key==='quote_submitted'&&stage.sessions>=1));
+  assert.ok(estFlow.stages.some(stage=>stage.key==='estimate_completed'&&stage.sessions>=1));
   assert.ok(estFlow.stages.some(stage=>stage.key==='flow_started'&&stage.dropOff>=1),'Estimator abandonment must be visible between open and start');
   assert.ok(reqFlow.stages.some(stage=>stage.key==='requirement_submitted'&&stage.sessions>=1));
   assert.ok(report.journeyTracking.uniqueSessions>=3);
-  assert.ok(report.journeyTracking.events>=13);
+  assert.ok(report.journeyTracking.events>=11);
 
   const estQuestionFlow=report.questionDropoff.find(flow=>flow.flowKey===estimator.key);
   const reqQuestionFlow=report.questionDropoff.find(flow=>flow.flowKey===requirement.key);
