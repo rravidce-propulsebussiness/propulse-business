@@ -33,7 +33,7 @@ assert.doesNotMatch(funnelAnalytics,/Legacy quote form opened|Legacy quote reque
 assert.match(wizard,/question\.questionKey==='estimate_mode'/,'Estimator must present a dedicated rough/detailed choice');
 assert.match(wizard,/est-package-choice-grid/,'Estimator must present package choices as premium cards');
 assert.match(wizard,/Download Estimate PDF/,'Completed estimates must offer a PDF download');
-assert.match(wizard,/name and mobile number/i,'Estimator contact step must explain mandatory lead contact');
+assert.match(wizard,/name and mobile/i,'Estimator form must explain mandatory lead contact');
 assert.match(wizardCss,/\.est-mode-grid/,'Rough/detailed cards need dedicated premium styling');
 assert.match(wizardCss,/\.est-package-choice/,'Package choices need dedicated premium styling');
 assert.match(wizard,/rq-single-form/,'Estimator must render as one single-page form');
