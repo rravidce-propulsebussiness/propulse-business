@@ -150,15 +150,15 @@ function renderEstimatePdf(data) {
     for(const [section,rows] of bySection)sections.push({type:'table',title:section,rows});
   }
 
+  const detailedPattern=/specification|laminate|hardware|finish|flooring|brick|steel|cement|sand|wire|switch/i;
+  const detailed=mode==='detailed'?data.answerRows.filter(row=>detailedPattern.test(row[0])):[];
+  const projectRows=mode==='detailed'?data.answerRows.filter(row=>!detailedPattern.test(row[0])):data.answerRows;
   sections.push({type:'heading',text:'Project details'});
-  sections.push({type:'table',rows:data.answerRows});
+  sections.push({type:'table',rows:projectRows});
 
-  if(mode==='detailed'){
-    const detailed=data.answerRows.filter(row=>/specification|laminate|hardware|finish|flooring|brick|steel|cement|sand|wire|switch/i.test(row[0]));
-    if(detailed.length){
-      sections.push({type:'heading',text:'Detailed selections'});
-      sections.push({type:'table',rows:detailed});
-    }
+  if(detailed.length){
+    sections.push({type:'heading',text:'Detailed selections'});
+    sections.push({type:'table',rows:detailed});
   }
 
   sections.push({type:'heading',text:'Estimate notes'});
