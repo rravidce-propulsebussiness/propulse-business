@@ -207,6 +207,15 @@ jobs:
           DB_PASSWORD: ci_smoke
           JWT_SECRET: ci-customer-funnel-analytics-secret-32-characters
         run: npm run test:customer-funnel-analytics
+      - name: Verify customer funnel event tracking
+        env:
+          DB_HOST: 127.0.0.1
+          DB_PORT: 5432
+          DB_NAME: ci_smoke
+          DB_USER: ci_smoke
+          DB_PASSWORD: ci_smoke
+          JWT_SECRET: ci-customer-funnel-events-secret-32-characters
+        run: npm run test:customer-funnel-events
       - name: Verify lead PIN location mapping
         env:
           DB_HOST: 127.0.0.1

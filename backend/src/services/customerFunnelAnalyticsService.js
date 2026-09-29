@@ -228,6 +228,196 @@ async function getCityBreakdown(filters) {
   }));
 }
 
+const TRACKED_STAGE_CONFIG={
+  estimator:[
+    ['flow_opened','Wizard opened'],
+    ['flow_started','Project started'],
+    ['estimate_completed','Estimate completed'],
+    ['quote_form_opened','Quote form opened'],
+    ['quote_submitted','Quote request submitted'],
+  ],
+  requirement:[
+    ['flow_opened','Wizard opened'],
+    ['flow_started','Project started'],
+    ['requirement_contact_opened','Contact step reached'],
+    ['requirement_submitted','Requirement submitted'],
+  ],
+};
+
+function stageRate(value,base){
+  return percent(value,base);
+}
+
+function sqlParam(index){
+  return String.fromCharCode(36)+index;
+}
+
+async function getTrackedJourneyAnalytics(filters){
+  const values=[];
+  const clauses=['1=1'];
+  if(filters.fromDate){
+    values.push(filters.fromDate);
+    clauses.push('e.created_at >= '+sqlParam(values.length));
+  }
+  if(filters.flowId){
+    values.push(filters.flowId);
+    clauses.push('d.id = '+sqlParam(values.length));
+  }
+  const where=' WHERE '+clauses.join(' AND ');
+  const rows=(await pool.query(
+    `SELECT e.flow_key,
+            COALESCE(e.flow_type,d.flow_type) flow_type,
+            COALESCE(d.name,e.flow_key,'Unknown flow') flow_name,
+            e.event_type,
+            COUNT(DISTINCT e.session_id)::int sessions,
+            COUNT(*)::int events,
+            MIN(e.created_at) first_event_at,
+            MAX(e.created_at) latest_event_at
+       FROM customer_funnel_events e
+       LEFT JOIN customer_flow_definitions d ON d.key=e.flow_key
+       ${where}
+      GROUP BY e.flow_key,COALESCE(e.flow_type,d.flow_type),COALESCE(d.name,e.flow_key,'Unknown flow'),e.event_type
+      ORDER BY flow_name,e.event_type`,
+    values
+  )).rows;
+
+  const handoffValues=[];
+  const handoffClauses=['1=1'];
+  if(filters.fromDate){
+    handoffValues.push(filters.fromDate);
+    handoffClauses.push('e.created_at >= '+sqlParam(handoffValues.length));
+  }
+  if(filters.flowId){
+    handoffValues.push(filters.flowId);
+    handoffClauses.push('d.id = '+sqlParam(handoffValues.length));
+  }
+  const handoffWhere=' WHERE '+handoffClauses.join(' AND ');
+  const handoffRows=(await pool.query(
+    `WITH base AS (
+       SELECT e.session_id,e.flow_key,e.event_type,e.created_at
+         FROM customer_funnel_events e
+         LEFT JOIN customer_flow_definitions d ON d.key=e.flow_key
+         ${handoffWhere}
+     ),
+     cta AS (
+       SELECT session_id,flow_key,MIN(created_at) clicked_at
+         FROM base
+        WHERE event_type='home_cta_clicked' AND flow_key IS NOT NULL
+        GROUP BY session_id,flow_key
+     ),
+     opened AS (
+       SELECT session_id,flow_key,MIN(created_at) opened_at
+         FROM base
+        WHERE event_type='flow_opened' AND flow_key IS NOT NULL
+        GROUP BY session_id,flow_key
+     )
+     SELECT cta.flow_key,
+            COUNT(*)::int cta_sessions,
+            COUNT(*) FILTER (WHERE opened.opened_at IS NOT NULL)::int handoff_sessions
+       FROM cta
+       LEFT JOIN opened ON opened.session_id=cta.session_id AND opened.flow_key=cta.flow_key
+      GROUP BY cta.flow_key`,
+    handoffValues
+  )).rows;
+  const handoff=new Map(handoffRows.map(row=>[row.flow_key,{
+    ctaSessions:number(row.cta_sessions),
+    handoffSessions:number(row.handoff_sessions),
+  }]));
+
+  const flows=new Map();
+  let trackingStartedAt=null;
+  let latestEventAt=null;
+  for(const row of rows){
+    const key=row.flow_key||'unknown';
+    const current=flows.get(key)||{
+      flowKey:row.flow_key||null,
+      flowType:row.flow_type||null,
+      flowName:row.flow_name,
+      counts:{},
+      rawEvents:0,
+      firstEventAt:null,
+      latestEventAt:null,
+    };
+    current.counts[row.event_type]=number(row.sessions);
+    current.rawEvents+=number(row.events);
+    const first=row.first_event_at?new Date(row.first_event_at):null;
+    const latest=row.latest_event_at?new Date(row.latest_event_at):null;
+    if(first&&(!current.firstEventAt||first<new Date(current.firstEventAt)))current.firstEventAt=row.first_event_at;
+    if(latest&&(!current.latestEventAt||latest>new Date(current.latestEventAt)))current.latestEventAt=row.latest_event_at;
+    if(first&&(!trackingStartedAt||first<new Date(trackingStartedAt)))trackingStartedAt=row.first_event_at;
+    if(latest&&(!latestEventAt||latest>new Date(latestEventAt)))latestEventAt=row.latest_event_at;
+    flows.set(key,current);
+  }
+
+  const result=[...flows.values()].map(flow=>{
+    const config=TRACKED_STAGE_CONFIG[flow.flowType]||[];
+    const opened=number(flow.counts.flow_opened);
+    let previous=null;
+    const stages=config.map(([key,label],index)=>{
+      const sessions=number(flow.counts[key]);
+      const dropOff=previous===null?0:Math.max(0,previous-sessions);
+      const item={
+        key,label,sessions,
+        retentionRate:index===0?(sessions?100:0):stageRate(sessions,opened),
+        stepRate:previous===null?(sessions?100:0):stageRate(sessions,previous),
+        dropOff,
+        dropOffRate:previous===null?0:percent(dropOff,previous),
+      };
+      previous=sessions;
+      return item;
+    });
+    const last=stages.at(-1)?.sessions||0;
+    const home=handoff.get(flow.flowKey)||{ctaSessions:number(flow.counts.home_cta_clicked),handoffSessions:0};
+    return {
+      flowKey:flow.flowKey,
+      flowType:flow.flowType,
+      flowName:flow.flowName,
+      homepageCtaSessions:home.ctaSessions,
+      homepageHandoffSessions:home.handoffSessions,
+      homepageHandoffRate:percent(home.handoffSessions,home.ctaSessions),
+      openedSessions:opened,
+      startedSessions:number(flow.counts.flow_started),
+      completedSessions:last,
+      completionRate:percent(last,opened),
+      rawEvents:flow.rawEvents,
+      firstEventAt:flow.firstEventAt,
+      latestEventAt:flow.latestEventAt,
+      stages,
+    };
+  }).sort((a,b)=>b.openedSessions-a.openedSessions||String(a.flowName).localeCompare(String(b.flowName)));
+
+  const uniqueValues=[];
+  const uniqueClauses=['1=1'];
+  if(filters.fromDate){
+    uniqueValues.push(filters.fromDate);
+    uniqueClauses.push('e.created_at >= '+sqlParam(uniqueValues.length));
+  }
+  if(filters.flowId){
+    uniqueValues.push(filters.flowId);
+    uniqueClauses.push('d.id = '+sqlParam(uniqueValues.length));
+  }
+  const unique=(await pool.query(
+    `SELECT COUNT(DISTINCT e.session_id)::int unique_sessions,
+            COUNT(DISTINCT e.session_id) FILTER (WHERE e.event_type='home_cta_clicked')::int homepage_cta_sessions,
+            COUNT(DISTINCT e.session_id) FILTER (WHERE e.event_type='flow_opened')::int wizard_open_sessions,
+            COUNT(*)::int events
+       FROM customer_funnel_events e
+       LEFT JOIN customer_flow_definitions d ON d.key=e.flow_key
+      WHERE ${uniqueClauses.join(' AND ')}`,
+    uniqueValues
+  )).rows[0]||{};
+
+  return {
+    trackingStartedAt,
+    latestEventAt,
+    uniqueSessions:number(unique.unique_sessions),
+    homepageCtaSessions:number(unique.homepage_cta_sessions),
+    wizardOpenSessions:number(unique.wizard_open_sessions),
+    events:number(unique.events),
+    flows:result,
+  };
+}
+
 async function getRecentCalculations(filters) {
   const values = [];
   const clauses = ['1=1'];
@@ -315,7 +505,7 @@ async function getRecentCalculations(filters) {
 
 async function getCustomerFunnelAnalytics(query = {}) {
   const filters = parseFilters(query);
-  const [definitions,estimator,estimators,sources,requirements,cities,recent] = await Promise.all([
+  const [definitions,estimator,estimators,sources,requirements,cities,recent,journeyTracking] = await Promise.all([
     getEstimatorDefinitions(),
     getEstimatorSummary(filters),
     getEstimatorBreakdown(filters),
@@ -323,6 +513,7 @@ async function getCustomerFunnelAnalytics(query = {}) {
     getRequirementFlowBreakdown(filters),
     getCityBreakdown(filters),
     getRecentCalculations(filters),
+    getTrackedJourneyAnalytics(filters),
   ]);
   const direct = sources.find(item => item.source === 'public_requirement') || {leads:0,monetizedLeads:0,paidSales:0,statuses:{}};
   const estimatorLeads = sources.find(item => item.source === 'public_estimator') || {leads:0,monetizedLeads:0,paidSales:0,statuses:{}};
@@ -336,6 +527,7 @@ async function getCustomerFunnelAnalytics(query = {}) {
       q:filters.search,
     },
     estimatorDefinitions:definitions,
+    journeyTracking,
     summary:{
       ...estimator,
       directRequirementLeads:direct.leads,

@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { getUser, getToken, publicRequest } from '../utils/auth'
 import { listLeads } from '../api/leads'
 import WebsiteFaqSection from '../components/WebsiteFaqSection'
+import { trackFunnelEvent } from '../utils/funnelTracking'
 import './Home.css'
 
 const money = value => {
@@ -28,6 +29,8 @@ const projectPaths = [
     title: 'I want to build',
     text: 'Share your construction requirement, project location, scope and timeline.',
     to: '/build',
+    flowKey: 'build',
+    flowType: 'requirement',
     action: 'Start Build Requirement',
     icon: '⌂',
     imageKey: 'residential',
@@ -39,6 +42,8 @@ const projectPaths = [
     title: 'I need interiors',
     text: 'Tell us about your home, interior scope, preferred finish and timeline.',
     to: '/design',
+    flowKey: 'design',
+    flowType: 'requirement',
     action: 'Start Interior Requirement',
     icon: '◇',
     imageKey: 'interior',
@@ -50,6 +55,8 @@ const projectPaths = [
     title: 'Estimate construction cost',
     text: 'Get an indicative construction range using built-up area, package and specification choices.',
     to: '/construction-estimator',
+    flowKey: 'construction-cost-estimator',
+    flowType: 'estimator',
     action: 'Calculate Construction Cost',
     icon: '▥',
     imageKey: 'turnkey',
@@ -61,6 +68,8 @@ const projectPaths = [
     title: 'Estimate interior cost',
     text: 'Plan a residential interior budget using area, work scope and finish preferences.',
     to: '/interior-estimator',
+    flowKey: 'interior-cost-estimator',
+    flowType: 'estimator',
     action: 'Calculate Interior Cost',
     icon: '✦',
     imageKey: 'interior',
@@ -82,6 +91,7 @@ const estimatorCards = [
     title: 'Construction Cost Estimator',
     text: 'Built-up area, package, quality, floors, basement, site access and location-aware adjustments.',
     to: '/construction-estimator',
+    flowKey: 'construction-cost-estimator',
     rate: 'Turnkey, structure or finishing',
     icon: '▥',
   },
@@ -91,6 +101,7 @@ const estimatorCards = [
     title: 'Interior Cost Estimator',
     text: 'Full-home or selected work, kitchen, wardrobes, false ceiling, furniture and finish choices.',
     to: '/interior-estimator',
+    flowKey: 'interior-cost-estimator',
     rate: 'Full-home or selected scope',
     icon: '◇',
   },
@@ -233,6 +244,10 @@ function Home() {
     target?.scrollIntoView({behavior:'smooth',block:'start'})
   }
 
+  const trackJourney=(flowKey,flowType,cta,position)=>trackFunnelEvent('home_cta_clicked',{
+    flowKey,flowType,source:'homepage',metadata:{cta,position,entry:'homepage'}
+  })
+
   const dashboardPath = user?.role === 'admin' ? '/admin' : user?.role === 'lead_partner' ? '/lead-partner' : '/leads'
   const professionalCta = loggedIn ? dashboardPath : '/signup'
   const publishedUpcoming = upcomingFeatures.length ? upcomingFeatures : [
@@ -286,11 +301,11 @@ function Home() {
           </div>
           <div className="hero-project-panel">
             <div className="hero-panel-head"><span>START HERE</span><strong>What are you planning?</strong></div>
-            <Link to="/build"><i>⌂</i><div><b>Build a property</b><small>Share construction requirement</small></div><span>→</span></Link>
-            <Link to="/design"><i>◇</i><div><b>Plan home interiors</b><small>Share interior requirement</small></div><span>→</span></Link>
+            <Link to="/build" onClick={()=>trackJourney('build','requirement','build_property','hero_panel')}><i>⌂</i><div><b>Build a property</b><small>Share construction requirement</small></div><span>→</span></Link>
+            <Link to="/design" onClick={()=>trackJourney('design','requirement','plan_interiors','hero_panel')}><i>◇</i><div><b>Plan home interiors</b><small>Share interior requirement</small></div><span>→</span></Link>
             <div className="hero-panel-estimate">
               <small>NOT READY FOR QUOTES?</small>
-              <div><Link to="/construction-estimator">Construction estimate</Link><Link to="/interior-estimator">Interior estimate</Link></div>
+              <div><Link to="/construction-estimator" onClick={()=>trackJourney('construction-cost-estimator','estimator','construction_estimate','hero_panel')}>Construction estimate</Link><Link to="/interior-estimator" onClick={()=>trackJourney('interior-cost-estimator','estimator','interior_estimate','hero_panel')}>Interior estimate</Link></div>
             </div>
           </div>
           <div className="hero-floating-note"><span>₹</span><div><small>INDICATIVE COST RANGE</small><b>Before you request actual quotes</b></div></div>
@@ -310,7 +325,7 @@ function Home() {
           <div className="section-note"><b>No account required</b><span>Start as a customer without creating a marketplace account.</span></div>
         </div>
         <div className="project-path-grid">
-          {projectPaths.map((item,index)=><Link className={index<2?'project-path requirement':'project-path estimator'} to={item.to} key={item.key}>
+          {projectPaths.map((item,index)=><Link className={index<2?'project-path requirement':'project-path estimator'} to={item.to} key={item.key} onClick={()=>trackJourney(item.flowKey,item.flowType,item.key,'project_grid')}>
             <div className="project-path-media"><img src={media.category_images?.[item.imageKey] || item.fallback} alt=""/><span>{item.icon}</span></div>
             <div className="project-path-body"><small>{item.eyebrow}</small><h3>{item.title}</h3><p>{item.text}</p><b>{item.action} <i>→</i></b></div>
           </Link>)}
@@ -329,7 +344,7 @@ function Home() {
           </div>
         </div>
         <div className="estimator-home-cards">
-          {estimatorCards.map(card=><Link className={'estimator-home-card '+card.key} to={card.to} key={card.key}>
+          {estimatorCards.map(card=><Link className={'estimator-home-card '+card.key} to={card.to} key={card.key} onClick={()=>trackJourney(card.flowKey,'estimator',card.key+'_estimator','estimator_section')}>
             <div className="estimator-card-top"><span>{card.tag}</span><i>{card.icon}</i></div>
             <h3>{card.title}</h3><p>{card.text}</p>
             <div className="estimator-card-bottom"><small>{card.rate}</small><b>Start estimate →</b></div>
@@ -346,7 +361,7 @@ function Home() {
         </div>
         <div className="customer-flow-cta">
           <div><span>READY TO START?</span><strong>Choose Construction or Interiors.</strong></div>
-          <div><Link to="/build">Start Construction <span>→</span></Link><Link to="/design">Start Interiors <span>→</span></Link></div>
+          <div><Link to="/build" onClick={()=>trackJourney('build','requirement','start_construction','how_it_works')}>Start Construction <span>→</span></Link><Link to="/design" onClick={()=>trackJourney('design','requirement','start_interiors','how_it_works')}>Start Interiors <span>→</span></Link></div>
         </div>
       </section>
 
@@ -442,7 +457,7 @@ function Home() {
           <span>CONTACT PROPULSE</span>
           <h2>Have a project or a business question?</h2>
           <p>Customers can start Construction or Interior requirements directly. Businesses can contact Propulse about marketplace access, memberships and platform support.</p>
-          <div className="contact-new-actions"><Link to="/build">Start a Project <span>→</span></Link><Link to="/leads">Professional Marketplace</Link></div>
+          <div className="contact-new-actions"><Link to="/build" onClick={()=>trackJourney('build','requirement','start_project','contact')}>Start a Project <span>→</span></Link><Link to="/leads">Professional Marketplace</Link></div>
         </div>
         <div className="contact-new-details">
           <a href={contactData.phone?'tel:'+contactData.phone:'#'}><span>☎</span><div><small>PHONE</small><strong>{contactData.phone||'Not configured'}</strong></div></a>

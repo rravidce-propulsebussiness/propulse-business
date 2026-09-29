@@ -1,6 +1,7 @@
 const express = require('express');
 const customerFlowController = require('../controllers/customerFlowController');
 const estimatorController = require('../controllers/estimatorController');
+const customerFunnelEventController = require('../controllers/customerFunnelEventController');
 const requireAdmin = require('../middleware/adminMiddleware');
 const rateLimit = require('../middleware/rateLimitMiddleware');
 
@@ -8,6 +9,7 @@ const router = express.Router();
 const publicReadLimit = rateLimit({ windowMs: 60 * 1000, max: 120 });
 const publicSubmitLimit = rateLimit({ windowMs: 10 * 60 * 1000, max: 6 });
 const publicCalculateLimit = rateLimit({ windowMs: 10 * 60 * 1000, max: 30 });
+const publicEventLimit = rateLimit({ windowMs: 10 * 60 * 1000, max: 180 });
 const adminWriteLimit = rateLimit({ windowMs: 60 * 1000, max: 60 });
 
 router.get('/admin', requireAdmin, customerFlowController.listAdmin);
@@ -19,6 +21,7 @@ router.put('/admin/:id/draft', requireAdmin, adminWriteLimit, customerFlowContro
 router.post('/admin/:id/publish', requireAdmin, adminWriteLimit, customerFlowController.publish);
 router.patch('/admin/:id/status', requireAdmin, adminWriteLimit, customerFlowController.setStatus);
 
+router.post('/events', publicEventLimit, customerFunnelEventController.record);
 router.get('/estimates/:publicId', publicReadLimit, estimatorController.getCalculation);
 router.post('/estimates/:publicId/convert', publicSubmitLimit, estimatorController.convertCalculation);
 router.get('/:key', publicReadLimit, customerFlowController.getPublic);

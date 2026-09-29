@@ -43,7 +43,8 @@
     "test:interior-estimator": "node scripts/check-interior-estimator-seed.js",
     "test:estimator-conversion": "node scripts/check-estimator-conversion-runtime.js",
     "test:construction-estimator": "node scripts/check-construction-estimator-seed.js",
-    "test:customer-funnel-analytics": "node scripts/check-customer-funnel-analytics-runtime.js"
+    "test:customer-funnel-analytics": "node scripts/check-customer-funnel-analytics-runtime.js",
+    "test:customer-funnel-events": "node scripts/check-customer-funnel-events-runtime.js"
   },
   "keywords": [],
   "author": "",
