@@ -57,7 +57,7 @@ test('public homepage presents construction and interior company journeys',async
   await expect(page.getByRole('link',{name:/construction estimate/i}).first()).toHaveAttribute('href','/construction-estimator')
   await expect(page.getByRole('link',{name:/interior estimate/i}).first()).toHaveAttribute('href','/interior-estimator')
   await expect(page.getByText('A clear path from enquiry to handover.')).toBeVisible()
-  await expect(page.getByText('Actual names, details and prices are Admin configurable.')).toBeVisible()
+  await expect(page.getByText('Names, descriptions, badges and package specifications come from the published Admin configuration.')).toBeVisible()
 
   await page.getByRole('link',{name:/interior estimate/i}).first().click()
   await expect(page).toHaveURL(/\/interior-estimator$/)
