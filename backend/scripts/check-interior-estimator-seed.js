@@ -46,6 +46,8 @@ async function main(){
   assert.equal(questions.find(q=>q.question_key==='plywood_spec').is_required,false);
   assert.equal(questions.find(q=>q.question_key==='plywood_spec').validation.advancedSection,true);
   assert.equal(questions.find(q=>q.question_key==='plywood_spec').validation.systemDefault,'package_default');
+  assert.equal(questions.find(q=>q.question_key==='profile_glass_area').is_required,true,'Selected per-unit customisations must require their quantity');
+  assert.equal(questions.find(q=>q.question_key==='sensor_count').is_required,true,'Selected sensor customisation must require a circuit count');
 
   const options=(await pool.query(
     `SELECT q.question_key,o.value,o.label
