@@ -5,7 +5,7 @@ const {validateDataUrlSignature}=require('../utils/fileValidation');
 const pool=require('../config/database');
 const {homepageUploadRoot}=require('../config/uploadStorage');
 
-const SLOT_NAMES=['hero','residential','interior','commercial','turnkey','plot_land'];
+const SLOT_NAMES=['hero','residential','interior','commercial','turnkey','plot_land','why_homeowners','final_cta'];
 const MAX_BYTES=7*1024*1024;
 const MIME_EXTENSIONS={'image/jpeg':'jpg','image/png':'png','image/webp':'webp'};
 const UPLOAD_ROOT=homepageUploadRoot;
