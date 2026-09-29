@@ -154,14 +154,19 @@ export default function RequirementWizard({ flowKey }) {
       </aside>
       <form className="rq-card rq-form-card rq-single-form" onSubmit={submit}>
         <div className="rq-form-head"><span>PROJECT REQUIREMENT</span><h2>{flow.config?.headline || 'Tell us about your project.'}</h2><p>Use the dropdowns and fields below. Only relevant questions appear based on your selections.</p></div>
-        {groups.map((group,index)=><section className="rq-form-section" key={group.name}>
-          <div className="rq-form-section-head"><b>{String(index+1).padStart(2,'0')}</b><div><h3>{group.name}</h3><span>{group.questions.length} field{group.questions.length===1?'':'s'}</span></div></div>
+        {groups.map((group,index)=>{
+          const required=group.questions.filter(question=>question.isRequired)
+          const complete=required.filter(question=>!isEmptyAnswer(answers[question.questionKey])).length
+          const done=required.length===0||complete===required.length
+          return <section className={'rq-form-section '+(done?'complete':'')} key={group.name}>
+          <div className="rq-form-section-head"><b>{done?'✓':String(index+1).padStart(2,'0')}</b><div><h3>{group.name}</h3><span>{required.length?complete+' of '+required.length+' required completed':'Optional details'}</span></div><em className={done?'done':''}>{done?'Complete':'Needs '+(required.length-complete)}</em></div>
           <div className="rq-form-grid">{group.questions.map(question=><div className={fieldClass(question)+(state.errorQuestionKey===question.questionKey?' error':'')} data-question-key={question.questionKey} key={question.questionKey}>
             <label htmlFor={'rq-'+question.questionKey}>{question.label}{question.isRequired&&<sup>*</sup>}</label>
             {question.helpText&&<p>{question.helpText}</p>}
             <CustomerFlowQuestion question={question} value={answers[question.questionKey]} onChange={value => setAnswer(question,value)} />
           </div>)}</div>
-        </section>)}
+        </section>
+        })}
 
         <section className={'rq-form-section rq-contact-section'+(state.errorQuestionKey==='contact'?' error':'')} data-question-key="contact">
           <div className="rq-form-section-head"><b>{String(groups.length+1).padStart(2,'0')}</b><div><h3>{flow.config?.contactTitle || 'Your contact details'}</h3><span>{flow.config?.contactText || 'We use these details only for this project enquiry and follow-up.'}</span></div></div>
