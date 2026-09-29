@@ -49,6 +49,14 @@ assert.match(adminFlows,/Consultation message/,'Admin must configure estimate/co
 assert.match(requirementCss,/\.rq-single-shell/,'Single-page requirement form needs dedicated responsive styling');
 assert.match(adminFlowsCss,/\.option-manager/,'Structured option manager needs dedicated Admin styling');
 assert.match(wizard,/est-consultation-card/,'Completed estimate must prepare the same enquiry for consultation follow-up');
+assert.match(wizard,/est-package-more/,'Long package specifications must stay compact with expandable disclosure');
+assert.match(wizard,/Average estimate \/ sq ft/,'Construction result must expose a useful per-sq-ft planning metric');
+assert.match(wizard,/required completed/,'Long single-page forms must show section completion state');
+assert.match(requirement,/required completed/,'Requirement form must show section completion state');
+assert.match(adminFlows,/Apply recommended layout/,'Admin must offer a safe recommended single-page layout action');
+assert.match(adminFlows,/recommendedSection/,'Recommended Admin layout must organize construction/interior fields into practical sections');
+assert.match(wizardCss,/\.est-package-more/,'Estimator package disclosure needs dedicated styling');
+assert.match(requirementCss,/\.rq-form-section-head>em/,'Section completion indicators need dedicated styling');
 assert.match(wizard,/useSearchParams/,'Estimator must support validated customer deep-link preselection');
 assert.match(wizard,/initialEstimatorAnswers/,'Estimator deep links must be validated against the published flow');
 assert.match(companySite,/\?mode=rough/,'Company service pages must deep-link directly to rough estimate mode');
