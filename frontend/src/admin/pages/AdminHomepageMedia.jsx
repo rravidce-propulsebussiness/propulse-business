@@ -6,7 +6,7 @@ const slots=[
   {key:'hero',label:'Customer homepage hero',description:'Main homeowner hero visual shown behind “Your Dream Home Starts Here”.',defaultPath:'/homepage/default-hero.svg',wide:true},
   {key:'residential',label:'Construction service card',description:'Visual used for the Home Construction card on the customer homepage.',defaultPath:'/homepage/default-residential.svg'},
   {key:'interior',label:'Interior service card',description:'Visual used for the Interior Design card on the customer homepage.',defaultPath:'/homepage/default-interior.svg'},
-  {key:'commercial',label:'Real Estate service card',description:'Visual used for the Real Estate card on the customer homepage.',defaultPath:'/homepage/default-plot-land.svg'},
+  {key:'commercial',label:'Real Estate service card',description:'Visual used for the Real Estate card on the customer homepage.',defaultPath:'/homepage/default-commercial.svg'},
   {key:'why_homeowners',label:'Why Homeowners background',description:'Background visual for the homeowner trust section.',defaultPath:'/homepage/default-interior.svg',wide:true},
   {key:'final_cta',label:'Final consultation banner',description:'Closing visual behind the “Ready to Plan Your Home?” call to action.',defaultPath:'/homepage/default-residential.svg',wide:true},
   {key:'turnkey',label:'Construction estimator card',description:'Visual used for the Construction Cost Estimator entry point.',defaultPath:'/homepage/default-turnkey.svg'},
