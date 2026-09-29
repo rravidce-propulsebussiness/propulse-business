@@ -105,6 +105,7 @@ function ServicePage({type}){
   const[media,setMedia]=useState({hero_image_url:'',category_images:{},content:{}})
   const[flow,setFlow]=useState(null)
   const pageContent=media.content?.[type]||{}
+  const homeContent=media.content?.home||{}
   const cfg={...baseCfg,title:pageContent.heroTitle||baseCfg.title,text:pageContent.heroText||baseCfg.text}
   useEffect(()=>{
     let active=true
@@ -114,11 +115,11 @@ function ServicePage({type}){
   },[baseCfg.flowKey])
   const packages=useMemo(()=>Array.isArray(flow?.packages)?flow.packages.filter(item=>item?.isActive!==false):[],[flow])
   const showcase=type==='construction'?[
-    {key:'showcase_construction_1',title:'Structure, services and finishes planned as one scope.',fallback:'/homepage/default-residential.svg'},
-    {key:'showcase_construction_2',title:'From core construction to finishing decisions.',fallback:'/homepage/default-turnkey.svg'},
+    {key:'showcase_construction_1',title:homeContent.showcaseConstruction1Title||'Structure, services and finishes planned as one scope.',fallback:'/homepage/default-residential.svg'},
+    {key:'showcase_construction_2',title:homeContent.showcaseConstruction2Title||'From core construction to finishing decisions.',fallback:'/homepage/default-turnkey.svg'},
   ]:[
-    {key:'showcase_interior_1',title:'Complete-home planning around use, storage and finish.',fallback:'/homepage/default-interior.svg'},
-    {key:'showcase_interior_2',title:'Kitchens, wardrobes and spaces connected by one design direction.',fallback:'/homepage/default-interior.svg'},
+    {key:'showcase_interior_1',title:homeContent.showcaseInterior1Title||'Complete-home planning around use, storage and finish.',fallback:'/homepage/default-interior.svg'},
+    {key:'showcase_interior_2',title:homeContent.showcaseInterior2Title||'Kitchens, wardrobes and spaces connected by one design direction.',fallback:'/homepage/default-interior.svg'},
   ]
 
   return <div className="csp-page"><CompanyHeader estimatePath={cfg.estimator}/><main>
