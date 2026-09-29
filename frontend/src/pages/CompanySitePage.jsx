@@ -6,7 +6,7 @@ import './CompanySitePage.css'
 const pageCopy={
   construction:{
     eyebrow:'CONSTRUCTION',
-    title:'Build with a clear package, specification and project plan.',
+    title:'Home construction, planned from foundation to finish.',
     text:'Compare construction packages, get a practical project estimate and continue with a free construction consultation when you are ready.',
     estimator:'/construction-estimator',
     requirement:'/build',
@@ -16,8 +16,8 @@ const pageCopy={
   },
   interiors:{
     eyebrow:'INTERIORS',
-    title:'Plan your interiors room by room, finish by finish.',
-    text:'Estimate kitchen, wardrobe and interior work with configurable package details, material selections and a clear customer enquiry.',
+    title:'Complete home interiors, planned around your space and budget.',
+    text:'Plan kitchens, wardrobes, finishes and full-home interiors with clear package choices, a practical estimate and a free design consultation.'
     estimator:'/interior-estimator',
     requirement:'/design',
     flowKey:'interior-cost-estimator',
@@ -27,13 +27,28 @@ const pageCopy={
 }
 
 const steps=[
-  ['01','Consultation','Share the project location, scope, budget expectation and key requirements.'],
-  ['02','Package selection','Choose the package and specification level that best matches the project.'],
-  ['03','Design & planning','Measurements, drawings and technical planning refine the scope before execution.'],
-  ['04','2D & 3D modelling','Plans, elevations and visualisations can be prepared where they are part of the agreed scope.'],
-  ['05','Execution','Approved scope, materials and stage requirements guide the site or interior execution.'],
-  ['06','Handover','Final checks, finishing and handover complete the project journey.'],
+  ['01','Start','Get a project estimate online or request a free consultation with our team.'],
+  ['02','Confirm scope','Review location, size, package, budget expectations and the work included in the project.'],
+  ['03','Design & planning','Measurements, drawings and technical planning refine the project before execution.'],
+  ['04','Final proposal','Confirm specifications, commercial terms, milestones and the execution schedule.'],
+  ['05','Execution','The approved scope and selections guide the construction or interior work.'],
+  ['06','Handover','Final finishing, checks and handover complete the project journey.'],
 ]
+
+const serviceHighlights={
+  construction:[
+    ['Planning & architecture','Site understanding, project scope, drawings and planning before execution.'],
+    ['Structure & civil work','Core construction scope, material specifications and package-level planning.'],
+    ['MEP & finishes','Electrical, plumbing, waterproofing, flooring, painting and finishing requirements.'],
+    ['Cost & schedule clarity','Start with an indicative estimate, then refine the scope during consultation.'],
+  ],
+  interiors:[
+    ['Space planning','Plan the home around room use, storage needs and the way your family lives.'],
+    ['Modular solutions','Kitchen, wardrobes and other modular requirements can be planned by scope and package.'],
+    ['Materials & finishes','Compare boards, laminates, hardware, finishes and optional customisations.'],
+    ['Cost & execution clarity','Start with an indicative estimate, then refine selections during consultation.'],
+  ],
+}
 
 function CompanyHeader(){
   return <header className="csp-header">
@@ -62,7 +77,7 @@ function CompanyFooter(){
 
 function PackageCards({packages=[],estimator}){
   const[expanded,setExpanded]=useState({})
-  if(!packages.length)return <div className="csp-empty">Package details are being configured in Admin.</div>
+  if(!packages.length)return <div className="csp-empty">Package details are being updated. You can still start an estimate or request a free consultation.</div>
   return <div className="csp-package-grid">{packages.map((pkg,index)=>{
     const packageKey=String(pkg.packageKey||'').trim()
     const cardKey=(estimator||'packages')+':'+(packageKey||String(pkg.label||index))
@@ -101,7 +116,8 @@ function ServicePage({type}){
       <div className="csp-section-head"><span>START YOUR PROJECT</span><h2>{type==='construction'?'Choose an estimate or speak with our construction team.':'Choose an estimate or speak with our interior design team.'}</h2><p>{type==='construction'?'The estimate uses your site, area, scope and package. Optional material choices can refine it without forcing you through a long form.':'The estimate uses your home details, scope and package. Optional finishes and add-ons can refine it when you already know what you want.'}</p></div>
       <div className="csp-two-cards"><article><span>01</span><h3>Project estimate</h3><p>Get an indicative cost range using the main information customers normally know at the planning stage.</p><Link to={cfg.estimator}>Get project estimate →</Link></article><article><span>02</span><h3>Free consultation</h3><p>Prefer to speak first? Share a few basics and our project team can call you back with the right context.</p><Link to={cfg.requirement}>Get free consultation →</Link></article></div>
     </section>
-    <section className="csp-section csp-packages"><div className="csp-section-head"><span>PUBLISHED PACKAGES</span><h2>Package details come directly from Admin.</h2><p>Names, badges, summaries, specification rows and notes below are read from the currently published estimator configuration.</p></div><PackageCards packages={packages} estimator={cfg.estimator}/></section>
+    <section className="csp-section"><div className="csp-section-head"><span>{type==='construction'?'CONSTRUCTION SERVICES':'INTERIOR SERVICES'}</span><h2>{type==='construction'?'Plan the whole build, not just the square-foot rate.':'Plan the complete interior, not just individual furniture.'}</h2><p>{type==='construction'?'A professional construction discussion should cover scope, specifications, services, finishes, budget and execution planning together.':'A professional interior discussion should connect space planning, storage, materials, finishes, budget and execution instead of treating them as separate decisions.'}</p></div><div className="csp-about-grid">{serviceHighlights[type].map(([title,text],index)=><article key={title}><span>{String(index+1).padStart(2,'0')}</span><h3>{title}</h3><p>{text}</p></article>)}</div></section>
+    <section className="csp-section csp-packages"><div className="csp-section-head"><span>PACKAGE OPTIONS</span><h2>Compare what each package includes.</h2><p>Review the key material specifications, allowances and inclusions before starting the estimate or consultation.</p></div><PackageCards packages={packages} estimator={cfg.estimator}/></section>
     <section className="csp-bottom-cta"><div><span>READY TO START?</span><h2>Estimate your project or speak with our team for free.</h2><p>Use the estimate when you want a planning range. Choose the free consultation when you would rather discuss the project first.</p></div><div><Link className="primary" to={cfg.estimator}>Get Project Estimate →</Link><Link to={cfg.requirement}>Get Free Consultation</Link></div></section>
   </main><CompanyFooter/></div>
 }
@@ -155,7 +171,7 @@ function ContactPage(){
     <section className="csp-simple-hero"><span>CONTACT</span><h1>Tell us what you are planning.</h1><p>Start with a project estimate or request a free consultation. You can also reach our team using the contact details below.</p></section>
     <section className="csp-section csp-contact-grid">
       <div className="csp-contact-actions"><h2>Start with your project.</h2><p>Choose an estimate when you want a budget range, or a free consultation when you want our team to call you back first.</p><Link className="primary" to="/construction-estimator">Construction Estimate →</Link><Link to="/interior-estimator">Interior Estimate →</Link><Link to="/build">Free Construction Consultation</Link><Link to="/design">Free Interior Consultation</Link></div>
-      <div className="csp-contact-details"><a href={contact.phone?'tel:'+contact.phone:'#'}><small>PHONE</small><strong>{contact.phone||'Configure in Admin'}</strong></a><a href={contact.email?'mailto:'+contact.email:'#'}><small>EMAIL</small><strong>{contact.email||'Configure in Admin'}</strong></a><a href={whatsapp?'https://wa.me/'+whatsapp:'#'} target="_blank" rel="noreferrer"><small>WHATSAPP</small><strong>{contact.whatsapp||'Configure in Admin'}</strong></a><div><small>OFFICE</small><strong>{contact.address||'Configure in Admin'}</strong></div></div>
+      <div className="csp-contact-details"><a href={contact.phone?'tel:'+contact.phone:'#'}><small>PHONE</small><strong>{contact.phone||'Call us for details'}</strong></a><a href={contact.email?'mailto:'+contact.email:'#'}><small>EMAIL</small><strong>{contact.email||'Email us for details'}</strong></a><a href={whatsapp?'https://wa.me/'+whatsapp:'#'} target="_blank" rel="noreferrer"><small>WHATSAPP</small><strong>{contact.whatsapp||'WhatsApp details coming soon'}</strong></a><div><small>OFFICE</small><strong>{contact.address||'Contact us for office details'}</strong></div></div>
     </section>
   </main><CompanyFooter/></div>
 }
