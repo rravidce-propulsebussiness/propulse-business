@@ -37,21 +37,27 @@ const howItWorks=[
   ['06','Handover','Final finishing, checks and project handover complete the delivery journey.'],
 ]
 
-const packageHighlights=[
-  {name:'Standard',tag:'SMART VALUE',text:'Essential branded specifications with practical allowances for cost-conscious projects.'},
-  {name:'Premium',tag:'MOST CHOSEN',text:'Upgraded brands, finishes and hardware with a stronger premium specification.'},
-  {name:'Royal',tag:'SIGNATURE',text:'Higher-specification material selections for customers looking for a more premium build.'},
-]
-
 function Home(){
   const[media,setMedia]=useState({hero_image_url:'',category_images:{}})
   const[contact,setContact]=useState({})
   const[menuOpen,setMenuOpen]=useState(false)
+  const[estimatorFlows,setEstimatorFlows]=useState({construction:null,interior:null})
+  const[packageAudience,setPackageAudience]=useState('construction')
 
   useEffect(()=>{
     let active=true
     publicRequest('/homepage-media').then(data=>active&&setMedia({hero_image_url:data?.hero_image_url||'',category_images:data?.category_images||{}})).catch(()=>{})
     publicRequest('/contact?audience=website').then(data=>active&&setContact(data||{})).catch(()=>{})
+    Promise.allSettled([
+      publicRequest('/customer-flows/construction-cost-estimator'),
+      publicRequest('/customer-flows/interior-cost-estimator'),
+    ]).then(results=>{
+      if(!active)return
+      setEstimatorFlows({
+        construction:results[0].status==='fulfilled'?results[0].value:null,
+        interior:results[1].status==='fulfilled'?results[1].value:null,
+      })
+    })
     return()=>{active=false}
   },[])
 
@@ -61,6 +67,8 @@ function Home(){
     document.getElementById(id)?.scrollIntoView({behavior:'smooth',block:'start'})
   }
   const track=(flowKey,source)=>trackFunnelEvent('homepage_path_selected',{flowKey,flowType:'estimator',source})
+  const packageFlow=estimatorFlows[packageAudience]
+  const packageItems=Array.isArray(packageFlow?.packages)?packageFlow.packages.filter(item=>item?.isActive!==false):[]
 
   return <div className="company-home">
     <header className="company-header">
@@ -129,8 +137,8 @@ function Home(){
           <div className="estimate-cta-row"><Link to="/construction-estimator">Construction Estimate <span>→</span></Link><Link to="/interior-estimator">Interior Estimate <span>→</span></Link></div>
         </div>
         <div className="package-showcase">
-          <div className="package-showcase-head"><span>PACKAGE PREVIEW</span><small>Actual names, details and prices are Admin configurable.</small></div>
-          {packageHighlights.map((item,index)=><article className={index===1?'featured':''} key={item.name}><div><span>{item.tag}</span><h3>{item.name}</h3></div><p>{item.text}</p><b>{index===0?'Essential specification':index===1?'Upgraded specification':'Signature specification'}</b></article>)}
+          <div className="package-showcase-head"><div><span>LIVE PACKAGE PREVIEW</span><small>Names, descriptions, badges and package specifications come from the published Admin configuration.</small></div><div className="package-tabs"><button type="button" className={packageAudience==='construction'?'active':''} onClick={()=>setPackageAudience('construction')}>Construction</button><button type="button" className={packageAudience==='interior'?'active':''} onClick={()=>setPackageAudience('interior')}>Interiors</button></div></div>
+          {packageItems.length?packageItems.slice(0,4).map((item,index)=><article className={index===1?'featured':''} key={item.packageKey||item.label||index}><div><span>{item.badge||'PACKAGE'}</span><h3>{item.label||'Package'}</h3></div><p>{item.summary||'Package specification configured from Admin.'}</p><b>{item.priceNote||((item.details||[]).filter(detail=>detail?.isActive!==false).slice(0,2).map(detail=>detail.value).join(' · ')||'View detailed specification in the estimator')}</b></article>):<article className="package-empty"><div><span>ADMIN CONFIGURED</span><h3>No public package configured yet</h3></div><p>Publish package details from Admin → Customer Flows → Estimator configuration and they will appear here automatically.</p><b>{packageAudience==='construction'?'Construction estimator':'Interior estimator'}</b></article>}
         </div>
       </section>
 
