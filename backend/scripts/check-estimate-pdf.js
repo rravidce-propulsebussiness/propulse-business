@@ -20,7 +20,7 @@ const pdf=renderEstimatePdf({
   cityName:'Hyderabad',
   stateName:'Telangana',
   pincode:'500001',
-  answers:{estimate_mode:'detailed'},
+  answers:{estimate_mode:'detailed',built_up_area:'1000'},
   answerRows:[
     ['Which estimate do you need?','Detailed estimate'],
     ['Built-up area','1000'],
@@ -39,6 +39,8 @@ const pdf=renderEstimatePdf({
     ],
   },
   disclaimer:'Indicative planning estimate only.',
+  consultationTitle:'Consultation next step',
+  consultationText:'Review this saved estimate with the project team before finalising drawings and specifications.',
   lead:{customer_name:'CI Customer',customer_phone:'+919123456789',customer_email:'ci@example.com'},
 });
 assert.ok(Buffer.isBuffer(pdf));
@@ -49,6 +51,9 @@ assert.match(pdf.toString('ascii'),/Estimate calculation/);
 assert.match(pdf.toString('ascii'),/Base construction rate/);
 assert.match(pdf.toString('ascii'),/TATA 550 TMT/);
 assert.match(pdf.toString('ascii'),/CI Customer/);
+assert.match(pdf.toString('ascii'),/Average estimate \/ sq ft/);
+assert.match(pdf.toString('ascii'),/Consultation next step/);
+assert.match(pdf.toString('ascii'),/Review this saved estimate/);
 
 const roughPdf=renderEstimatePdf({
   publicId,
