@@ -31,13 +31,13 @@ async function main(){
     [flow.version_id]
   )).rows;
   const keys=new Set(questions.map(q=>q.question_key));
-  for(const key of ['estimate_mode','project_location','project_type','own_plot','plot_area','built_up_area','floors','construction_package','quality','steel_spec','cement_spec','sand_spec','brick_spec','wire_spec','switch_spec','flooring_spec','basement','site_access','timeline','additional_requirement']){
+  for(const key of ['estimate_mode','project_location','project_type','built_up_area','construction_package','quality','steel_spec','cement_spec','sand_spec','brick_spec','wire_spec','switch_spec','flooring_spec','basement','site_access']){
     assert.ok(keys.has(key),`Missing Construction estimator question: ${key}`);
   }
   assert.equal(questions.find(q=>q.question_key==='project_location').question_type,'location');
   assert.equal(questions.find(q=>q.question_key==='project_type').lead_field,'property_type');
   assert.equal(questions.find(q=>q.question_key==='built_up_area').question_type,'area');
-  assert.equal(questions.find(q=>q.question_key==='additional_requirement').visibility,'protected');
+  for(const removed of ['own_plot','plot_area','floors','timeline','additional_requirement']) assert.ok(!keys.has(removed),`Non-calculation Construction field should not be in the current estimate: ${removed}`);
   assert.deepEqual(questions.find(q=>q.question_key==='steel_spec').show_when,{questionKey:'estimate_mode',equals:'detailed'});
   const modeQuestion=questions.find(q=>q.question_key==='estimate_mode');
   assert.equal(modeQuestion.validation.systemHidden,true);
