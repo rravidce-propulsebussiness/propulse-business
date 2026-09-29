@@ -267,7 +267,7 @@ export default function EstimatorWizard({ flowKey }) {
         <div className="rq-scope"><small>Category</small><b>{[flow.industryName,flow.serviceName].filter(Boolean).join(' · ')}</b></div>
         <div className="est-side-summary">{activePackage&&<div><small>Selected package</small><b>{activePackage.label}</b></div>}</div>
         {!result&&<div className="rq-side-progress"><div><span>Estimate setup</span><b>{progress}%</b></div><i><em style={{width:progress+'%'}}/></i><small>{completedCount} of {questions.length} estimate fields completed</small></div>}
-        <ul><li>✓ Single-page estimator</li><li>✓ Admin-controlled packages & rates</li><li>✓ Estimate and customer enquiry saved together</li></ul>
+        <ul><li>✓ One clear project estimate</li><li>✓ Package-based pricing</li><li>✓ Free consultation after estimate</li></ul>
       </aside>
 
       {!result?<form className="rq-card rq-form-card rq-single-form est-single-form" onSubmit={submitEstimate}>
