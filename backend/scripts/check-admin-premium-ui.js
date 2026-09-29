@@ -293,7 +293,7 @@ assert(!home.includes("publicRequest('/service-pricing')")&&!home.includes('serv
 assert(!home.includes('listLeads(')&&!home.includes('LIVE MARKETPLACE PREVIEW')&&!home.includes('Buy Leads'),'Customer homepage must not render lead marketplace inventory or purchase language');
 assert(home.includes('Construction')&&home.includes('Interiors')&&home.includes('/construction-estimator')&&home.includes('/interior-estimator'),'Customer homepage must stay focused on Construction and Interior journeys');
 assert(home.includes('Professional')&&home.includes('to="/leads"'),'Customer homepage must expose the marketplace only through the Professional option');
-assert(home.includes('Names, descriptions, badges and package specifications come from the published Admin configuration.'),'Homepage package preview must make Admin ownership of package configuration explicit');
+assert(home.includes('Compare the key specifications before starting your estimate.')&&home.includes('PACKAGE PREVIEW'),'Homepage package preview must stay customer-facing while using live estimator package data');
 assert(home.includes("publicRequest('/customer-flows/construction-cost-estimator')")&&home.includes("publicRequest('/customer-flows/interior-cost-estimator')"),'Homepage package preview must read published estimator packages instead of duplicating them');
 assert(!home.includes('const packageHighlights='),'Homepage must not hard-code package names or package descriptions');
 assert(home.includes("trackFunnelEvent('home_cta_clicked'")&&!home.includes("trackFunnelEvent('homepage_path_selected'"),'Homepage estimator CTAs must emit a supported first-party funnel event');
