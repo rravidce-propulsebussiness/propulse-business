@@ -139,7 +139,7 @@ export default function AdminHomepageMedia(){
 
   return <main className="admin-home-media-page">
     <section className="admin-home-media-hero">
-      <div className="admin-home-media-hero-copy"><span>CONTENT / HOMEPAGE MEDIA</span><h1>Homepage media</h1><p>Manage the homepage hero, service visuals and Construction / Interior project showcase without changing application code.</p><div className="admin-home-media-hero-meta"><span><b>{slots.length}</b> media slots</span><span><b>{customCount}</b> custom images</span><span><b>{defaultCount}</b> defaults active</span></div></div>
+      <div className="admin-home-media-hero-copy"><span>CONTENT / WEBSITE</span><h1>Website content &amp; media</h1><p>Manage customer-facing Construction / Interior copy, hero visuals, service images and project showcases without changing application code.</p><div className="admin-home-media-hero-meta"><span><b>{slots.length}</b> media slots</span><span><b>{customCount}</b> custom images</span><span><b>{defaultCount}</b> defaults active</span></div></div>
       <div className="admin-home-media-hero-actions"><a href="/" target="_blank" rel="noreferrer"><span>↗</span><div><b>Open homepage</b><small>Preview redesigned homepage</small></div></a><button type="button" onClick={load}><span>↻</span><div><b>Refresh media</b><small>Reload saved settings</small></div></button></div>
     </section>
     {error&&<div className="admin-home-media-alert error">{error}</div>}
