@@ -64,6 +64,20 @@ test('public homepage presents construction and interior company journeys',async
   await expect(page.getByText('PROJECT COST ESTIMATOR')).toBeVisible()
 })
 
+test('customer requirement and estimate journeys use one-page forms with compact dropdowns',async({page})=>{
+  await page.goto('/build')
+  await expect(page.locator('.rq-single-form')).toBeVisible()
+  expect(await page.locator('.rq-form-section').count()).toBeGreaterThan(1)
+  expect(await page.locator('.rq-select').count()).toBeGreaterThan(0)
+  await expect(page.getByRole('button',{name:/next/i})).toHaveCount(0)
+
+  await page.goto('/interior-estimator')
+  await expect(page.locator('.rq-single-form')).toBeVisible()
+  expect(await page.locator('.rq-form-section').count()).toBeGreaterThan(1)
+  expect(await page.locator('.rq-select').count()).toBeGreaterThan(0)
+  await expect(page.getByRole('button',{name:/next/i})).toHaveCount(0)
+})
+
 test('public company pages stay customer-focused and Admin-driven',async({page})=>{
   await page.goto('/construction')
   await expect(page.getByRole('heading',{name:/build with a clear package/i})).toBeVisible()
