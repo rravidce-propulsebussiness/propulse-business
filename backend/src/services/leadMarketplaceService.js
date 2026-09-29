@@ -3,6 +3,13 @@ const pool=require('../config/database');const {leadSelect,maskLead,normalizeLea
 async function getMarketplacePage({industryId,serviceId,subserviceId,stateId,cityId,status='available',leadType,search,allIndustries,allLocations,userId,role,page=1,limit=20}){
  const safePage=Math.max(1,Number.parseInt(page,10)||1);const safeLimit=Math.min(50,Math.max(1,Number.parseInt(limit,10)||20));const values=[];const conditions=[];const add=(value,sql)=>{values.push(value);conditions.push(sql.replace('?',`$${values.length}`))};
  if(status&&status!=='all')add(status,'l.status=?');
+ if(role!=='admin')conditions.push(`NOT (
+   l.source IN ('public_requirement','public_estimator')
+   AND (
+     NULLIF(TRIM(COALESCE(l.customer_name,'')),'') IS NULL
+     OR NULLIF(TRIM(COALESCE(l.customer_phone,'')),'') IS NULL
+   )
+ )`);
  const type=normalizeLeadType(leadType);if(type)add(type,'l.lead_type=?');
  if(industryId&&String(industryId).toLowerCase()!=='all')add(industryId,'l.industry_id=?');
  if(serviceId)add(serviceId,'l.service_id=?');if(subserviceId)add(subserviceId,'l.subservice_id=?');if(stateId)add(stateId,'l.state_id=?');if(cityId)add(cityId,'l.city_id=?');
