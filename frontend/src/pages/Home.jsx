@@ -5,14 +5,14 @@ import './Home.css'
 
 const IMAGES = {
   hero: '/homepage/premium-hero.svg',
-  construction: 'https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=1200&q=85',
-  interior: 'https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&w=1200&q=85',
-  realEstate: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1200&q=85',
-  project1: 'https://images.unsplash.com/photo-1600585152915-d208bec867a1?auto=format&fit=crop&w=900&q=84',
-  project2: 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=900&q=84',
-  project3: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=900&q=84',
-  project4: 'https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?auto=format&fit=crop&w=900&q=84',
-  project5: 'https://images.unsplash.com/photo-1600573472591-ee6b68d14c68?auto=format&fit=crop&w=900&q=84',
+  construction: '/homepage/premium-construction.svg',
+  interior: '/homepage/premium-interior.svg',
+  realEstate: '/homepage/premium-realestate.svg',
+  project1: '/homepage/premium-hero.svg',
+  project2: '/homepage/premium-interior.svg',
+  project3: '/homepage/premium-construction.svg',
+  project4: '/homepage/premium-interior.svg',
+  project5: '/homepage/premium-hero.svg',
 }
 
 const SERVICES = [
@@ -68,7 +68,15 @@ function Home() {
   const [estimateType, setEstimateType] = useState('construction')
 
   useEffect(() => {
-    window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
+    const previous = 'scrollRestoration' in window.history ? window.history.scrollRestoration : null
+    if ('scrollRestoration' in window.history) window.history.scrollRestoration = 'manual'
+    window.scrollTo(0, 0)
+    requestAnimationFrame(() => window.scrollTo(0, 0))
+    const timer = setTimeout(() => window.scrollTo(0, 0), 60)
+    return () => {
+      clearTimeout(timer)
+      if (previous && 'scrollRestoration' in window.history) window.history.scrollRestoration = previous
+    }
   }, [])
 
   useEffect(() => {
@@ -167,22 +175,6 @@ function Home() {
         <div className="pp-hero-media">
           <img src={IMAGES.hero} alt="Premium modern villa" fetchPriority="high" onError={event => { event.currentTarget.src = '/homepage/default-residential.svg' }} />
           <div className="pp-hero-fade" />
-          <div className="pp-journey">
-            <div className="pp-journey-card plan">
-              <div className="pp-plan-drawing" />
-              <b>Plan</b>
-            </div>
-            <span>→</span>
-            <div className="pp-journey-card">
-              <img src={IMAGES.construction} alt="" />
-              <b>Build</b>
-            </div>
-            <span>→</span>
-            <div className="pp-journey-card">
-              <img src={IMAGES.hero} alt="" />
-              <b>Your Dream Home</b>
-            </div>
-          </div>
         </div>
       </section>
 
