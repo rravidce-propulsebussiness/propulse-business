@@ -18,8 +18,8 @@ async function main(){
   assert.ok(flow,'Construction estimator must be seeded');
   assert.equal(flow.flow_type,'estimator');
   assert.equal(flow.status,'published');
-  assert.ok(Number(flow.version_no)>=2);
-  assert.equal(flow.config.seedKey,'construction-cost-estimator-v2-modes');
+  assert.ok(Number(flow.version_no)>=3);
+  assert.equal(flow.config.seedKey,'construction-cost-estimator-v3-brochure');
   assert.match(String(flow.industry_name),/construction/i);
   assert.ok(/building|construction/i.test(String(flow.service_name)));
 
@@ -54,6 +54,21 @@ async function main(){
     'steel_spec:package_default','steel_spec:tata_550','cement_spec:ultratech_53','brick_spec:karimnagar_class_i','wire_spec:polycab_frls','switch_spec:gold_medal_air',
     'site_access:normal','site_access:restricted'
   ]) assert.ok(optionKey.has(expected),`Missing Construction estimator option: ${expected}`);
+
+  const royalDetails=(await pool.query(
+    `SELECT d.detail_key,d.section,d.label,d.value,d.note
+       FROM estimator_packages p
+       JOIN estimator_package_details d ON d.package_id=p.id AND d.is_active=TRUE
+      WHERE p.version_id=$1 AND p.package_key='royal'
+      ORDER BY d.display_order,d.id`,
+    [flow.version_id]
+  )).rows;
+  const royalDetailKeys=new Set(royalDetails.map(item=>item.detail_key));
+  for(const key of ['steel','cement','bricks','wire','switches','architecture_scope','aggregate','kitchen_platform','windows','bathroom_wall_tiles','electrical_pipes','railings','warranty']){
+    assert.ok(royalDetailKeys.has(key),`Royal brochure package missing detail: ${key}`);
+  }
+  assert.match(String(royalDetails.find(item=>item.detail_key==='architecture_scope')?.value||''),/2D floor plans/i);
+  assert.match(String(royalDetails.find(item=>item.detail_key==='warranty')?.value||''),/10-year structural warranty/i);
 
   const rateRows=(await pool.query(
     'SELECT * FROM estimator_rate_items WHERE version_id=$1 AND is_active=TRUE ORDER BY display_order,id',
