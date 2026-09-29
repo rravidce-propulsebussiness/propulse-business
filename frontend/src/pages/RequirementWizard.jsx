@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { publicRequest } from '../utils/auth'
-import { trackFunnelEvent } from '../utils/funnelTracking'
+import { trackFunnelEvent, trackFunnelEventOnce } from '../utils/funnelTracking'
 import CustomerFlowQuestion, { isEmptyAnswer, isQuestionVisible } from '../components/CustomerFlowQuestion'
 import './RequirementWizard.css'
 
@@ -48,6 +48,15 @@ export default function RequirementWizard({ flowKey }) {
   const question = questions[step]
   const progress = contactMode ? 100 : questions.length ? Math.round(((step + 1) / questions.length) * 88) : 0
 
+  useEffect(() => {
+    if (!flow || contactMode || !question?.questionKey) return
+    trackFunnelEventOnce('flow_question_viewed',{
+      flowKey,flowType:'requirement',source:'wizard',
+      questionKey:question.questionKey,questionIndex:step+1,questionCount:questions.length,
+    })
+  },[flow,contactMode,question?.questionKey,step,questions.length,flowKey])
+
+
   function setAnswer(key, value) {
     if (!startedTracked.current) {
       startedTracked.current = true
@@ -64,6 +73,10 @@ export default function RequirementWizard({ flowKey }) {
       return
     }
     setState(current => ({ ...current, error: '' }))
+    trackFunnelEventOnce('flow_question_completed',{
+      flowKey,flowType:'requirement',source:'wizard',
+      questionKey:question.questionKey,questionIndex:step+1,questionCount:questions.length,
+    })
     if (step < questions.length - 1) setStep(step + 1)
     else {
       trackFunnelEvent('requirement_contact_opened',{flowKey,flowType:'requirement',source:'wizard',metadata:{steps:questions.length}})

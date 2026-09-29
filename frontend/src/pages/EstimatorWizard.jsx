@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { publicRequest } from '../utils/auth'
-import { trackFunnelEvent } from '../utils/funnelTracking'
+import { trackFunnelEvent, trackFunnelEventOnce } from '../utils/funnelTracking'
 import CustomerFlowQuestion, { isEmptyAnswer, isQuestionVisible } from '../components/CustomerFlowQuestion'
 import './RequirementWizard.css'
 import './EstimatorWizard.css'
@@ -54,6 +54,15 @@ export default function EstimatorWizard({ flowKey }) {
   const question = questions[step]
   const progress = result ? 100 : questions.length ? Math.round(((step + 1) / questions.length) * 92) : 0
 
+  useEffect(() => {
+    if (!flow || result || !question?.questionKey) return
+    trackFunnelEventOnce('flow_question_viewed',{
+      flowKey,flowType:'estimator',source:'wizard',
+      questionKey:question.questionKey,questionIndex:step+1,questionCount:questions.length,
+    })
+  },[flow,result,question?.questionKey,step,questions.length,flowKey])
+
+
   function setAnswer(key,value) {
     if(!startedTracked.current){
       startedTracked.current=true
@@ -70,6 +79,10 @@ export default function EstimatorWizard({ flowKey }) {
       return
     }
     setState(current => ({...current,error:''}))
+    trackFunnelEventOnce('flow_question_completed',{
+      flowKey,flowType:'estimator',source:'wizard',
+      questionKey:question.questionKey,questionIndex:step+1,questionCount:questions.length,
+    })
     if (step < questions.length - 1) {
       setStep(step + 1)
       return

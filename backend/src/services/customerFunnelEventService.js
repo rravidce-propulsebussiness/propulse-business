@@ -4,6 +4,8 @@ const EVENT_TYPES = new Set([
   'home_cta_clicked',
   'flow_opened',
   'flow_started',
+  'flow_question_viewed',
+  'flow_question_completed',
   'estimate_completed',
   'quote_form_opened',
   'quote_submitted',
@@ -11,6 +13,7 @@ const EVENT_TYPES = new Set([
   'requirement_submitted',
 ]);
 const FLOW_TYPES = new Set(['estimator','requirement']);
+const QUESTION_EVENTS = new Set(['flow_question_viewed','flow_question_completed']);
 const ESTIMATOR_ONLY = new Set(['estimate_completed','quote_form_opened','quote_submitted']);
 const REQUIREMENT_ONLY = new Set(['requirement_contact_opened','requirement_submitted']);
 const META_KEYS = new Set(['cta','position','step','steps','entry']);
@@ -25,6 +28,7 @@ const ENTRY_VALUES = new Set(['homepage']);
 const OPAQUE_RE = /^[A-Za-z0-9_-]{12,80}$/;
 const FLOW_KEY_RE = /^[a-z0-9][a-z0-9-]{0,119}$/;
 const CALC_RE = /^[A-Za-z0-9_-]{20,64}$/;
+const QUESTION_KEY_RE = /^[a-z][a-z0-9_]{1,79}$/;
 
 function cleanText(value,max=120){
   return String(value||'').trim().replace(/[\r\n\t]/g,' ').slice(0,max);
@@ -70,6 +74,9 @@ async function recordEvent(payload={}){
   const flowKey=payload.flowKey==null?'':cleanText(payload.flowKey,120).toLowerCase();
   const flowType=payload.flowType==null?'':cleanText(payload.flowType,20).toLowerCase();
   const calculationId=payload.calculationId==null?'':cleanText(payload.calculationId,64);
+  const questionKey=payload.questionKey==null?'':cleanText(payload.questionKey,80).toLowerCase();
+  const questionIndex=payload.questionIndex==null?null:Number(payload.questionIndex);
+  const questionCount=payload.questionCount==null?null:Number(payload.questionCount);
   const rawSource=payload.source==null?'':cleanText(payload.source,80).toLowerCase();
   const source=SOURCES.has(rawSource)?rawSource:'';
   const pagePath=cleanPagePath(payload.pagePath);
@@ -79,28 +86,48 @@ async function recordEvent(payload={}){
   if(flowKey&&!FLOW_KEY_RE.test(flowKey))invalid('Invalid funnel flow key');
   if(flowType&&!FLOW_TYPES.has(flowType))invalid('Invalid funnel flow type');
   if(calculationId&&!CALC_RE.test(calculationId))invalid('Invalid calculation reference');
+  if(QUESTION_EVENTS.has(eventType)){
+    if(!flowKey||!flowType)invalid('Question funnel events require a flow');
+    if(!QUESTION_KEY_RE.test(questionKey))invalid('Invalid funnel question key');
+    if(!Number.isInteger(questionIndex)||questionIndex<1||questionIndex>1000)invalid('Invalid funnel question position');
+    if(!Number.isInteger(questionCount)||questionCount<1||questionCount>1000||questionIndex>questionCount)invalid('Invalid funnel question count');
+  }else if(questionKey||questionIndex!==null||questionCount!==null)invalid('Question fields are only allowed for question funnel events');
   if(flowType==='requirement'&&ESTIMATOR_ONLY.has(eventType))invalid('Estimator event cannot be recorded for a requirement flow');
   if(flowType==='estimator'&&REQUIREMENT_ONLY.has(eventType))invalid('Requirement event cannot be recorded for an estimator flow');
 
   if(flowKey){
     const definition=(await pool.query(
-      'SELECT flow_type FROM customer_flow_definitions WHERE key=$1 LIMIT 1',
+      'SELECT id,flow_type FROM customer_flow_definitions WHERE key=$1 LIMIT 1',
       [flowKey]
     )).rows[0];
     if(!definition)invalid('Unknown funnel flow key');
     if(flowType&&definition.flow_type!==flowType)invalid('Funnel flow type does not match the configured flow');
+    if(QUESTION_EVENTS.has(eventType)){
+      const knownQuestion=(await pool.query(
+        `SELECT 1
+           FROM customer_flow_questions q
+           JOIN customer_flow_versions v ON v.id=q.version_id
+          WHERE v.definition_id=$1
+            AND v.status IN ('published','retired')
+            AND q.question_key=$2
+            AND q.is_active=TRUE
+          LIMIT 1`,
+        [definition.id,questionKey]
+      )).rows[0];
+      if(!knownQuestion)invalid('Question does not belong to this published flow');
+    }
   }
 
   const metadata=cleanMetadata(payload.metadata);
   const row=(await pool.query(
     `INSERT INTO customer_funnel_events
-      (event_id,session_id,event_type,flow_key,flow_type,calculation_public_id,source,page_path,metadata)
-     VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9::jsonb)
+      (event_id,session_id,event_type,flow_key,flow_type,calculation_public_id,question_key,question_index,question_count,source,page_path,metadata)
+     VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12::jsonb)
      ON CONFLICT(event_id) DO NOTHING
      RETURNING id,created_at`,
     [
       eventId,sessionId,eventType,flowKey||null,flowType||null,calculationId||null,
-      source||null,pagePath||null,JSON.stringify(metadata)
+      questionKey||null,questionIndex,questionCount,source||null,pagePath||null,JSON.stringify(metadata)
     ]
   )).rows[0];
 

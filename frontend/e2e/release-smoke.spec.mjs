@@ -267,6 +267,8 @@ test('Admin login reaches operations consoles and session survives reload',async
   await expect(page.getByText('Which customer path produces leads?')).toBeVisible()
   await expect(page.getByText('JOURNEY INTELLIGENCE')).toBeVisible()
   await expect(page.getByText('Useful analytics without invasive tracking.')).toBeVisible()
+  await expect(page.getByText('QUESTION FRICTION MAP')).toBeVisible()
+  await expect(page.getByText('Which question makes customers stop?')).toBeVisible()
 
   await page.goto('/admin/financial-integrity')
   await page.reload()
