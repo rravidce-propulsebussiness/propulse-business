@@ -11,7 +11,7 @@ const { fail, isEmpty, isVisible, formatAnswer, validateAnswers } = require('./c
 
 const KEY_RE = /^[a-z][a-z0-9_]{1,79}$/;
 const RATE_TYPES = new Set(['fixed','per_unit']);
-const ADJUSTMENT_TYPES = new Set(['fixed','percent']);
+const ADJUSTMENT_TYPES = new Set(['fixed','percent','per_unit']);
 const QUANTITY_SCALE = 1000n;
 const PERCENT_DENOMINATOR = 10000n;
 
@@ -100,6 +100,12 @@ function calculateEstimateFromConfig({ answers, rateItems, adjustments, cityId =
     if (item.adjustmentType === 'fixed') {
       minimum += parseMoneyPaise(item.valueMin, { allowZero: true, code: 'INVALID_ESTIMATOR_ADJUSTMENT' });
       maximum += parseMoneyPaise(item.valueMax, { allowZero: true, code: 'INVALID_ESTIMATOR_ADJUSTMENT' });
+    } else if (item.adjustmentType === 'per_unit') {
+      const rawQuantity=answers?.[item.unitQuestionKey];
+      if (isEmpty(rawQuantity)) fail(`Estimator adjustment requires "${item.unitQuestionKey}"`, 'ESTIMATOR_INPUT_MISSING');
+      const quantity=parseQuantityScaled(rawQuantity);
+      minimum += multiplyRate(parseMoneyPaise(item.valueMin,{allowZero:true,code:'INVALID_ESTIMATOR_ADJUSTMENT'}),quantity);
+      maximum += multiplyRate(parseMoneyPaise(item.valueMax,{allowZero:true,code:'INVALID_ESTIMATOR_ADJUSTMENT'}),quantity);
     } else if (item.adjustmentType === 'percent') {
       minimum = applyPercent(minimum, parsePercentBps(item.valueMin));
       maximum = applyPercent(maximum, parsePercentBps(item.valueMax));
@@ -172,7 +178,7 @@ function cleanPercent(value, label) {
   return { bps, value: (Number(bps) / 100).toFixed(2) };
 }
 
-async function cleanAdjustment(client, item, index, questionKeys) {
+async function cleanAdjustment(client, item, index, questionMap) {
   const adjustmentKey = String(item?.adjustmentKey || '').trim().toLowerCase();
   const label = String(item?.label || '').trim().slice(0, 240);
   const adjustmentType = String(item?.adjustmentType || '').trim().toLowerCase();
@@ -180,9 +186,15 @@ async function cleanAdjustment(client, item, index, questionKeys) {
   if (!KEY_RE.test(adjustmentKey) || !label || !ADJUSTMENT_TYPES.has(adjustmentType)) fail(`Estimator adjustment ${index + 1} is invalid`, 'INVALID_ESTIMATOR_CONFIG');
   if (cityId && (!Number.isInteger(cityId) || cityId <= 0 || !(await client.query('SELECT 1 FROM cities WHERE id=$1 AND is_active=TRUE',[cityId])).rows.length)) fail(`Adjustment "${label}" uses an invalid city`, 'INVALID_ESTIMATOR_CONFIG');
 
+  const unitQuestionKey=adjustmentType==='per_unit'?String(item?.unitQuestionKey||'').trim().toLowerCase():null;
+  if(adjustmentType==='per_unit'){
+    const unitQuestion=questionMap.get(unitQuestionKey);
+    if(!KEY_RE.test(unitQuestionKey)||!unitQuestion||!['number','area'].includes(unitQuestion.question_type)) fail(`Adjustment "${label}" needs a number or area quantity question`, 'INVALID_ESTIMATOR_CONFIG');
+  }
+
   let min;
   let max;
-  if (adjustmentType === 'fixed') {
+  if (adjustmentType === 'fixed' || adjustmentType === 'per_unit') {
     min = cleanMoney(item?.valueMin, `${label} minimum`);
     max = cleanMoney(item?.valueMax, `${label} maximum`);
     if (max.paise < min.paise) fail(`Adjustment "${label}" maximum must be at least the minimum`, 'INVALID_ESTIMATOR_CONFIG');
@@ -193,9 +205,9 @@ async function cleanAdjustment(client, item, index, questionKeys) {
   }
 
   return {
-    adjustmentKey,label,adjustmentType,
+    adjustmentKey,label,adjustmentType,unitQuestionKey,
     valueMin:min.value,valueMax:max.value,cityId,
-    showWhen:cleanRule(item?.showWhen, questionKeys, `Adjustment "${label}"`),
+    showWhen:cleanRule(item?.showWhen, new Set(questionMap.keys()), `Adjustment "${label}"`),
     displayOrder:Number(item?.displayOrder) || (index + 1) * 10,
     metadata:item?.metadata && typeof item.metadata === 'object' && !Array.isArray(item.metadata) ? item.metadata : {},
     isActive:item?.isActive !== false,
@@ -273,7 +285,7 @@ async function getEstimatorConfigForVersion(client, versionId) {
     [versionId]
   )).rows.map(row => ({
     id:row.id,adjustmentKey:row.adjustment_key,label:row.label,adjustmentType:row.adjustment_type,
-    valueMin:String(row.value_min),valueMax:String(row.value_max),cityId:row.city_id,cityName:row.city_name || null,
+    unitQuestionKey:row.unit_question_key || null,valueMin:String(row.value_min),valueMax:String(row.value_max),cityId:row.city_id,cityName:row.city_name || null,
     showWhen:row.show_when || {},displayOrder:row.display_order,metadata:row.metadata || {},isActive:row.is_active,
   }));
   const packageRows = (await client.query(
@@ -340,7 +352,7 @@ async function saveAdminConfig(flowId, payload) {
     const rates = rawRates.map((item,index) => cleanRate(item,index,questionMap));
     if (new Set(rates.map(item => item.rateKey)).size !== rates.length) fail('Estimator rate keys must be unique', 'INVALID_ESTIMATOR_CONFIG');
     const adjustments = [];
-    for (let index=0; index<rawAdjustments.length; index += 1) adjustments.push(await cleanAdjustment(client,rawAdjustments[index],index,questionKeys));
+    for (let index=0; index<rawAdjustments.length; index += 1) adjustments.push(await cleanAdjustment(client,rawAdjustments[index],index,questionMap));
     if (adjustments.some(item => item.cityId) && !questions.some(question => question.question_type === 'location')) fail('Add a location question before configuring city-specific adjustments','ESTIMATOR_LOCATION_REQUIRED');
     if (new Set(adjustments.map(item => item.adjustmentKey)).size !== adjustments.length) fail('Estimator adjustment keys must be unique', 'INVALID_ESTIMATOR_CONFIG');
     const materialAdjustments=adjustments.filter(item=>item.metadata?.kind==='material_option');
@@ -368,9 +380,9 @@ async function saveAdminConfig(flowId, payload) {
     }
     for (const item of adjustments) {
       await client.query(
-        `INSERT INTO estimator_adjustments(version_id,adjustment_key,label,adjustment_type,value_min,value_max,city_id,show_when,display_order,metadata,is_active)
-         VALUES($1,$2,$3,$4,$5,$6,$7,$8::jsonb,$9,$10::jsonb,$11)`,
-        [version.id,item.adjustmentKey,item.label,item.adjustmentType,item.valueMin,item.valueMax,item.cityId,JSON.stringify(item.showWhen),item.displayOrder,JSON.stringify(item.metadata),item.isActive]
+        `INSERT INTO estimator_adjustments(version_id,adjustment_key,label,adjustment_type,unit_question_key,value_min,value_max,city_id,show_when,display_order,metadata,is_active)
+         VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9::jsonb,$10,$11::jsonb,$12)`,
+        [version.id,item.adjustmentKey,item.label,item.adjustmentType,item.unitQuestionKey,item.valueMin,item.valueMax,item.cityId,JSON.stringify(item.showWhen),item.displayOrder,JSON.stringify(item.metadata),item.isActive]
       );
     }
     if (packages) {
