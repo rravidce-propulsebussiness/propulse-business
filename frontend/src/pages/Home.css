@@ -164,14 +164,19 @@ button,input,select{font:inherit}
 .hc-popup-head p{margin:0;color:#758696;font-size:7px;line-height:1.4}
 .hc-consult-popup form{display:grid;gap:9px;margin-top:13px}
 .hc-consult-popup label>span{display:block;margin-bottom:4px;color:#51677a;font-size:6.5px;font-weight:800}
-.hc-consult-popup select,.hc-popup-phone{width:100%;height:37px;border:1px solid #dfe4e8;border-radius:7px;background:#fff;color:#2a485f;font-size:7.5px}
-.hc-consult-popup select{padding:0 9px;outline:none}
-.hc-consult-popup select:focus,.hc-popup-phone:focus-within{border-color:#f39a75;box-shadow:0 0 0 3px rgba(255,90,31,.08)}
+.hc-consult-popup select,.hc-popup-phone,.hc-popup-input{width:100%;height:37px;border:1px solid #dfe4e8;border-radius:7px;background:#fff;color:#2a485f;font-size:7.5px}
+.hc-consult-popup select,.hc-popup-input{padding:0 9px;outline:none}
+.hc-consult-popup select:focus,.hc-popup-input:focus,.hc-popup-phone:focus-within{border-color:#f39a75;box-shadow:0 0 0 3px rgba(255,90,31,.08)}
 .hc-popup-phone{display:grid;grid-template-columns:48px 1fr;overflow:hidden}
 .hc-popup-phone i{display:grid;place-items:center;border-right:1px solid #e4e8eb;color:#28455d;font-size:7px;font-style:normal;font-weight:850}
 .hc-popup-phone input{width:100%;border:0;outline:none;padding:0 10px;color:#29475f;font-size:7.5px}
+.hc-popup-consent{display:grid!important;grid-template-columns:16px 1fr;align-items:start;gap:7px;padding:8px;border:1px solid #eee7e1;border-radius:7px;background:#fffaf6}
+.hc-popup-consent input{width:14px;height:14px;margin:1px 0 0;accent-color:var(--hc-orange)}
+.hc-popup-consent>span{margin:0!important;color:#6f7f8d!important;font-size:6px!important;line-height:1.45;font-weight:650!important}
+.hc-popup-honeypot{position:absolute!important;left:-10000px!important;width:1px!important;height:1px!important;overflow:hidden!important}
 .hc-popup-error{padding:7px 8px;border-radius:7px;background:#fff0e9;color:#b93e19;font-size:7px;font-weight:800}
 .hc-popup-submit{height:39px;display:flex;align-items:center;justify-content:center;gap:7px;border:0;border-radius:7px;background:linear-gradient(135deg,var(--hc-orange),#ff7434);color:#fff;font-size:8px;font-weight:900;cursor:pointer}
+.hc-popup-submit:disabled{opacity:.68;cursor:wait}
 .hc-consult-popup form>small{display:flex;align-items:center;justify-content:center;gap:5px;color:#84919d;font-size:5.8px;text-align:center}
 .hc-consult-popup form>small svg{color:#436782}
 
