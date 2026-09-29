@@ -137,7 +137,8 @@ function moneyRange(minimum,maximum) {
 function renderEstimatePdf(data) {
   const sections=[];
   const mode=String(data.answers?.estimate_mode||'rough').toLowerCase();
-  const modeLabel=String(data.flow?.config?.estimateLabel||'Project Estimate');
+  const singleExperience=data.flow?.config?.estimateExperience==='single';
+  const modeLabel=singleExperience?String(data.flow?.config?.estimateLabel||'Project Estimate'):(mode==='detailed'?'Detailed Estimate':'Rough Estimate');
   sections.push({type:'title',title:data.flow.name||'Project Cost Estimate',subtitle:modeLabel});
   const summaryRows=[
     ['Customer',data.lead.customer_name||'Customer'],
