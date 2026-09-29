@@ -575,10 +575,12 @@ function buildEstimatorLeadPayload(flow, calculation, {source='estimator_quote_r
   }
 
   const estimateText = `Indicative estimate ₹${Number(calculation.result_min).toLocaleString('en-IN')} – ₹${Number(calculation.result_max).toLocaleString('en-IN')}`;
+  const packageSnapshot=selectedPackage(calculation.config_snapshot?.packages || flow.packages,answers);
   custom._estimator = {
     calculationId: calculation.public_id,flowKey: flow.key,definitionId: flow.definitionId,versionId: flow.versionId,versionNo: flow.versionNo,
     minimum:Number(calculation.result_min),maximum:Number(calculation.result_max),currency:calculation.currency,calculatedAt:calculation.created_at,
     configHash:calculation.config_hash,contactPending:Boolean(contactPending),lifecycle:contactPending?'estimate_completed':'quote_requested',answers,
+    package:packageSnapshot?{packageKey:packageSnapshot.packageKey,label:packageSnapshot.label,badge:packageSnapshot.badge||null,summary:packageSnapshot.summary||null,priceNote:packageSnapshot.priceNote||null,details:(packageSnapshot.details||[]).filter(detail=>detail.isActive!==false)}:null,
   };
   custom._intake = {
     flowKey:flow.key,definitionId:flow.definitionId,versionId:flow.versionId,versionNo:flow.versionNo,source,answers,
