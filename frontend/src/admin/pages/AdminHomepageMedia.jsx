@@ -6,7 +6,11 @@ const slots=[
   {key:'hero',label:'Customer homepage hero',description:'Main Construction + Interiors planning visual shown in the redesigned hero.',defaultPath:'/homepage/default-hero.svg',wide:true},
   {key:'residential',label:'Construction requirement card',description:'Visual used for the “I want to build” customer journey.',defaultPath:'/homepage/default-residential.svg'},
   {key:'interior',label:'Interior journey cards',description:'Visual shared by the Interior requirement and Interior estimator entry points.',defaultPath:'/homepage/default-interior.svg'},
-  {key:'turnkey',label:'Construction estimator card',description:'Visual used for the Construction Cost Estimator entry point.',defaultPath:'/homepage/default-turnkey.svg'}
+  {key:'turnkey',label:'Construction estimator card',description:'Visual used for the Construction Cost Estimator entry point.',defaultPath:'/homepage/default-turnkey.svg'},
+  {key:'showcase_construction_1',label:'Construction showcase 01',description:'Customer-facing project showcase visual for Construction.',defaultPath:'/homepage/default-residential.svg'},
+  {key:'showcase_construction_2',label:'Construction showcase 02',description:'Second Construction project showcase visual.',defaultPath:'/homepage/default-turnkey.svg'},
+  {key:'showcase_interior_1',label:'Interior showcase 01',description:'Customer-facing project showcase visual for Interiors.',defaultPath:'/homepage/default-interior.svg'},
+  {key:'showcase_interior_2',label:'Interior showcase 02',description:'Second Interior project showcase visual.',defaultPath:'/homepage/default-interior.svg'}
 ]
 
 const initial={hero_image_url:'',category_images:{}}
@@ -85,7 +89,7 @@ export default function AdminHomepageMedia(){
 
   return <main className="admin-home-media-page">
     <section className="admin-home-media-hero">
-      <div className="admin-home-media-hero-copy"><span>CONTENT / HOMEPAGE MEDIA</span><h1>Homepage media</h1><p>Manage the customer-first homepage hero and project journey visuals without changing application code.</p><div className="admin-home-media-hero-meta"><span><b>{slots.length}</b> media slots</span><span><b>{customCount}</b> custom images</span><span><b>{defaultCount}</b> defaults active</span></div></div>
+      <div className="admin-home-media-hero-copy"><span>CONTENT / HOMEPAGE MEDIA</span><h1>Homepage media</h1><p>Manage the homepage hero, service visuals and Construction / Interior project showcase without changing application code.</p><div className="admin-home-media-hero-meta"><span><b>{slots.length}</b> media slots</span><span><b>{customCount}</b> custom images</span><span><b>{defaultCount}</b> defaults active</span></div></div>
       <div className="admin-home-media-hero-actions"><a href="/" target="_blank" rel="noreferrer"><span>↗</span><div><b>Open homepage</b><small>Preview redesigned homepage</small></div></a><button type="button" onClick={load}><span>↻</span><div><b>Refresh media</b><small>Reload saved settings</small></div></button></div>
     </section>
     {error&&<div className="admin-home-media-alert error">{error}</div>}
