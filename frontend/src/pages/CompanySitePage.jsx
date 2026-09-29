@@ -50,7 +50,7 @@ const serviceHighlights={
   ],
 }
 
-function CompanyHeader(){
+function CompanyHeader({estimatePath='/packages'}){
   return <header className="csp-header">
     <Link className="csp-brand" to="/"><img src="/brand/propulse-logo.png" alt="ProPulse Business"/></Link>
     <nav>
@@ -62,7 +62,7 @@ function CompanyHeader(){
       <Link to="/about">About</Link>
       <Link to="/contact">Contact</Link>
     </nav>
-    <Link className="csp-professional" to="/leads">Professional <span>→</span></Link>
+    <div className="csp-header-actions"><Link className="csp-estimate" to={estimatePath}>Get Estimate</Link><Link className="csp-professional" to="/leads">Professional <span>→</span></Link></div>
   </header>
 }
 
@@ -106,8 +106,15 @@ function ServicePage({type}){
     return()=>{active=false}
   },[cfg.flowKey])
   const packages=useMemo(()=>Array.isArray(flow?.packages)?flow.packages.filter(item=>item?.isActive!==false):[],[flow])
+  const showcase=type==='construction'?[
+    {key:'showcase_construction_1',title:'Structure, services and finishes planned as one scope.',fallback:'/homepage/default-residential.svg'},
+    {key:'showcase_construction_2',title:'From core construction to finishing decisions.',fallback:'/homepage/default-turnkey.svg'},
+  ]:[
+    {key:'showcase_interior_1',title:'Complete-home planning around use, storage and finish.',fallback:'/homepage/default-interior.svg'},
+    {key:'showcase_interior_2',title:'Kitchens, wardrobes and spaces connected by one design direction.',fallback:'/homepage/default-interior.svg'},
+  ]
 
-  return <div className="csp-page"><CompanyHeader/><main>
+  return <div className="csp-page"><CompanyHeader estimatePath={cfg.estimator}/><main>
     <section className="csp-hero">
       <div><span>{cfg.eyebrow}</span><h1>{cfg.title}</h1><p>{cfg.text}</p><div className="csp-actions"><Link className="primary" to={cfg.estimator}>Get Project Estimate <b>→</b></Link><Link to={cfg.requirement}>Get Free Consultation</Link></div></div>
       <img src={media.category_images?.[cfg.imageKey]||cfg.fallback} alt=""/>
@@ -117,9 +124,10 @@ function ServicePage({type}){
       <div className="csp-two-cards"><article><span>01</span><h3>Project estimate</h3><p>Get an indicative cost range using the main information customers normally know at the planning stage.</p><Link to={cfg.estimator}>Get project estimate →</Link></article><article><span>02</span><h3>Free consultation</h3><p>Prefer to speak first? Share a few basics and our project team can call you back with the right context.</p><Link to={cfg.requirement}>Get free consultation →</Link></article></div>
     </section>
     <section className="csp-section"><div className="csp-section-head"><span>{type==='construction'?'CONSTRUCTION SERVICES':'INTERIOR SERVICES'}</span><h2>{type==='construction'?'Plan the whole build, not just the square-foot rate.':'Plan the complete interior, not just individual furniture.'}</h2><p>{type==='construction'?'A professional construction discussion should cover scope, specifications, services, finishes, budget and execution planning together.':'A professional interior discussion should connect space planning, storage, materials, finishes, budget and execution instead of treating them as separate decisions.'}</p></div><div className="csp-about-grid">{serviceHighlights[type].map(([title,text],index)=><article key={title}><span>{String(index+1).padStart(2,'0')}</span><h3>{title}</h3><p>{text}</p></article>)}</div></section>
+    <section className="csp-section csp-showcase"><div className="csp-section-head"><span>PROJECT SHOWCASE</span><h2>{type==='construction'?'Visualise the construction journey before you commit.':'See how complete-home interiors can come together.'}</h2><p>{type==='construction'?'Project visuals help connect the estimate with the kind of structure, services and finishing decisions that follow.':'Use the showcase as inspiration while the estimate and consultation keep your actual home scope practical.'}</p></div><div className="csp-showcase-grid">{showcase.map(item=><article key={item.key}><img src={media.category_images?.[item.key]||item.fallback} alt={item.title}/><div><span>{type==='construction'?'CONSTRUCTION':'INTERIORS'}</span><h3>{item.title}</h3></div></article>)}</div></section>
     <section className="csp-section csp-packages"><div className="csp-section-head"><span>PACKAGE OPTIONS</span><h2>Compare what each package includes.</h2><p>Review the key material specifications, allowances and inclusions before starting the estimate or consultation.</p></div><PackageCards packages={packages} estimator={cfg.estimator}/></section>
     <section className="csp-bottom-cta"><div><span>READY TO START?</span><h2>Estimate your project or speak with our team for free.</h2><p>Use the estimate when you want a planning range. Choose the free consultation when you would rather discuss the project first.</p></div><div><Link className="primary" to={cfg.estimator}>Get Project Estimate →</Link><Link to={cfg.requirement}>Get Free Consultation</Link></div></section>
-  </main><CompanyFooter/></div>
+  </main><div className="csp-mobile-actions"><Link to={cfg.estimator}>Get Estimate</Link><Link to={cfg.requirement}>Free Consultation</Link></div><CompanyFooter/></div>
 }
 
 function PackagesPage(){
