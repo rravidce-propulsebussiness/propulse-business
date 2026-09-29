@@ -233,8 +233,9 @@ const TRACKED_STAGE_CONFIG={
     ['flow_opened','Wizard opened'],
     ['flow_started','Project started'],
     ['estimate_completed','Estimate completed'],
-    ['quote_form_opened','Quote form opened'],
-    ['quote_submitted','Quote request submitted'],
+    ['estimator_contact_opened','Contact captured step opened'],
+    ['quote_form_opened','Legacy quote form opened'],
+    ['quote_submitted','Legacy quote request submitted'],
   ],
   requirement:[
     ['flow_opened','Wizard opened'],
