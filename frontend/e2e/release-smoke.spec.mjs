@@ -80,7 +80,7 @@ test('customer requirement and estimate journeys use one-page forms with compact
 
 test('public company pages stay customer-focused and professional',async({page})=>{
   await page.goto('/construction')
-  await expect(page.getByRole('heading',{name:/build your home with a clear scope/i})).toBeVisible()
+  await expect(page.getByRole('heading',{name:/home construction, planned from foundation to finish/i})).toBeVisible()
   await expect(page.getByRole('link',{name:/professional/i}).first()).toHaveAttribute('href','/leads')
   await expect(page.getByRole('link',{name:/get free consultation/i}).first()).toHaveAttribute('href','/construction-consultation')
 
@@ -91,7 +91,7 @@ test('public company pages stay customer-focused and professional',async({page})
 
   await page.goto('/how-it-works')
   await expect(page.getByRole('heading',{name:/clear project journey/i})).toBeVisible()
-  await expect(page.getByText('Estimate or consult',{exact:true})).toBeVisible()
+  await expect(page.getByText('Start',{exact:true})).toBeVisible()
   await expect(page.getByText('Handover',{exact:true})).toBeVisible()
 
   await page.goto('/contact')
