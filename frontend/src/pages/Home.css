@@ -5,3 +5,51 @@
 @media(max-width:520px){.professional-link span{display:none}.company-hero h1{font-size:41px}.company-hero-copy>p{font-size:13px}.hero-actions>a{width:100%}.hero-points{display:grid;gap:8px}.company-hero-visual{min-height:330px}.hero-image-wrap{inset:0 0 35px;border-radius:22px 22px 58px 22px}.hero-estimate-card{width:220px;padding:14px}.company-trustbar{grid-template-columns:1fr}.company-trustbar>div{border-right:0;border-bottom:1px solid #eef1f4}.company-trustbar>div:last-child{border-bottom:0}.company-section-head h2,.estimate-showcase-copy h2,.about-copy h2,.company-contact h2{font-size:34px;letter-spacing:-1px}.service-copy{padding:26px 22px}.estimate-feature-grid{grid-template-columns:1fr}.package-showcase{padding:15px}.process-grid article{min-height:auto}.contact-details{grid-template-columns:1fr}.company-footer-main{grid-template-columns:1fr}.company-footer-bottom{flex-direction:column}}
 
 .package-showcase-head>div:first-child{display:flex;min-width:0;flex-direction:column;gap:4px}.package-showcase-head>div:first-child>span{font-size:9px;font-weight:900;letter-spacing:.12em;color:#d85b24}.package-showcase-head>div:first-child>small{max-width:280px;font-size:8px;line-height:1.4;color:#8190a2}.package-tabs{display:flex;gap:5px;padding:3px;border:1px solid #e3e8ee;border-radius:9px;background:#f7f9fb}.package-tabs button{border:0;border-radius:7px;padding:7px 9px;background:transparent;color:#6d7d91;font:inherit;font-size:8px;font-weight:850;cursor:pointer}.package-tabs button.active{background:#0d315f;color:#fff;box-shadow:0 5px 12px rgba(13,49,95,.14)}.package-showcase .package-empty{border-style:dashed;background:#fbfcfd}.package-showcase article>b{display:block;line-height:1.45}.package-showcase article p{min-height:29px}@media(max-width:520px){.package-showcase-head{align-items:flex-start;flex-direction:column}.package-tabs{width:100%}.package-tabs button{flex:1}}
+
+/* Professional customer-company polish */
+.company-estimate-link{display:inline-flex;align-items:center;justify-content:center;padding:10px 14px;border:1px solid #d9e3ec;border-radius:10px;background:#fff;color:#173d68!important;text-decoration:none;font-size:10px;font-weight:900;white-space:nowrap}
+.company-estimate-link:hover{border-color:#f0b597;color:#d75e26!important}
+.showcase-section{background:#fff}
+.project-showcase-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+.project-showcase-grid>article{min-width:0;overflow:hidden;border:1px solid #e0e6ed;border-radius:20px;background:#fff;box-shadow:0 14px 40px rgba(17,45,78,.06);display:grid;grid-template-columns:minmax(230px,.95fr) minmax(0,1.05fr)}
+.project-showcase-grid>article.wide{grid-column:1/-1;grid-template-columns:minmax(340px,1.08fr) minmax(0,.92fr)}
+.project-showcase-media{position:relative;min-height:285px;overflow:hidden;background:#edf2f6}
+.project-showcase-grid>article.wide .project-showcase-media{min-height:370px}
+.project-showcase-media:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 56%,rgba(7,31,61,.43))}
+.project-showcase-media img{width:100%;height:100%;display:block;object-fit:cover;transition:transform .45s}
+.project-showcase-grid>article:hover .project-showcase-media img{transform:scale(1.025)}
+.project-showcase-media>span{position:absolute;z-index:1;left:16px;bottom:15px;padding:6px 9px;border-radius:999px;background:rgba(255,255,255,.94);color:#153d6b;font-size:7px;font-weight:950;letter-spacing:.12em}
+.project-showcase-copy{padding:28px 26px;display:flex;flex-direction:column;justify-content:center}
+.project-showcase-copy small{color:#e9652b;font-size:7px;font-weight:950;letter-spacing:.12em}
+.project-showcase-copy h3{margin:8px 0 10px;color:#11335c;font-size:22px;line-height:1.13;letter-spacing:-.5px}
+.project-showcase-copy p{margin:0;color:#708095;font-size:10px;line-height:1.7}
+.project-showcase-copy a{align-self:flex-start;margin-top:18px;padding:9px 11px;border:1px solid #dce4ec;border-radius:9px;background:#fafcfe;color:#214b76;text-decoration:none;font-size:8px;font-weight:900}
+.project-showcase-copy a b{margin-left:6px;color:#f06a2d}
+.company-principles{background:linear-gradient(180deg,#f8fafc,#fff)}
+.company-principles-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.company-principles-grid article{padding:23px 20px;border:1px solid #dfe6ed;border-radius:16px;background:#fff;box-shadow:0 8px 26px rgba(14,42,77,.04)}
+.company-principles-grid article>b{display:grid;place-items:center;width:31px;height:31px;border-radius:9px;background:#fff0e8;color:#e35f25;font-size:8px}
+.company-principles-grid h3{margin:14px 0 8px;color:#173a64;font-size:15px;line-height:1.25}
+.company-principles-grid p{margin:0;color:#748397;font-size:9px;line-height:1.7}
+.company-mobile-actions{display:none}
+@media(max-width:1100px){
+  .project-showcase-grid>article,.project-showcase-grid>article.wide{grid-column:auto;grid-template-columns:1fr}
+  .project-showcase-grid>article.wide .project-showcase-media,.project-showcase-media{min-height:290px}
+  .company-principles-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:850px){
+  .company-estimate-link{display:none}
+  .project-showcase-grid{grid-template-columns:1fr}
+  .project-showcase-grid>article.wide{grid-column:auto}
+}
+@media(max-width:700px){
+  .company-home{padding-bottom:68px}
+  .project-showcase-media,.project-showcase-grid>article.wide .project-showcase-media{min-height:230px}
+  .project-showcase-copy{padding:21px 18px}
+  .project-showcase-copy h3{font-size:19px}
+  .company-principles-grid{grid-template-columns:1fr}
+  .company-mobile-actions{position:fixed;z-index:80;left:9px;right:9px;bottom:9px;padding:6px;border:1px solid rgba(210,220,230,.9);border-radius:14px;background:rgba(255,255,255,.96);backdrop-filter:blur(14px);box-shadow:0 15px 35px rgba(10,39,76,.18);display:grid;grid-template-columns:1fr 1fr;gap:6px}
+  .company-mobile-actions a{min-height:42px;border-radius:9px;display:flex;align-items:center;justify-content:center;text-decoration:none;font-size:9px;font-weight:900}
+  .company-mobile-actions a:first-child{background:#f36a2c;color:#fff}
+  .company-mobile-actions a:last-child{border:1px solid #dbe4ed;background:#fff;color:#173d68}
+}
