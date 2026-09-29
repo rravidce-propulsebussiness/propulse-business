@@ -473,7 +473,64 @@ async function ensureEstimatorIntentLead({flow,calculation,location,intakeKey}) 
     throw error;
   }
 }
-async function calculate({ key, flowToken, answers, submissionKey }) {
+async function ensureEstimatorContactLead({flow,calculation,location,intakeKey,contact}) {
+  const details=buildEstimatorLeadPayload(flow,calculation,{source:'estimator_calculation',contactPending:false});
+  if (calculation.lead_id) {
+    const current=(await pool.query('SELECT id,status,customer_name,customer_phone FROM leads WHERE id=$1',[Number(calculation.lead_id)])).rows[0];
+    if (current?.customer_phone) return {leadId:Number(current.id),leadStatus:current.status};
+    if (current) {
+      const updated=(await pool.query(
+        `UPDATE leads SET customer_name=$1,customer_phone=$2,customer_email=$3,requirement=$4,property_type=$5,budget=$6,
+           source='public_estimator',state_id=$7,city_id=$8,pincode=$9,
+           custom_fields=COALESCE(custom_fields,'{}'::jsonb) || $10::jsonb,
+           contact_consent_at=CURRENT_TIMESTAMP,contact_consent_version='estimator-contact-v1',updated_at=CURRENT_TIMESTAMP
+         WHERE id=$11 RETURNING id,status`,
+        [contact.name,contact.phone,contact.email,details.requirement,details.propertyType,details.budget,location?.stateId||null,calculation.city_id||location?.cityId||null,calculation.pincode||location?.pincode||null,JSON.stringify(details.customFields),current.id]
+      )).rows[0];
+      const gated=await leadQualityGateService.evaluateAndApply(Number(current.id),{context:'public_estimator',autoRelease:true});
+      await pool.query('UPDATE estimator_calculations SET converted_at=COALESCE(converted_at,CURRENT_TIMESTAMP) WHERE id=$1',[calculation.id]);
+      return {leadId:Number(current.id),leadStatus:gated.lead?.status || updated.status};
+    }
+  }
+
+  let lead;
+  try {
+    lead=await leadService.createLead({
+      industryId:flow.industryId,serviceId:flow.serviceId,subserviceId:flow.subserviceId,
+      stateId:location?.stateId || null,cityId:calculation.city_id || location?.cityId || null,
+      customerName:contact.name,customerPhone:contact.phone,customerEmail:contact.email,
+      requirement:details.requirement,propertyType:details.propertyType,budget:details.budget,
+      source:'public_estimator',notes:null,customFields:details.customFields,pincode:calculation.pincode || location?.pincode || null,
+      contactConsentAt:new Date(),contactConsentVersion:'estimator-contact-v1',intakeSubmissionKey:intakeKey,
+      qualityGateContext:'public_estimator',createdBy:null,
+    });
+  } catch (error) {
+    if (error.code === 'DUPLICATE_LEAD' && error.leadId) {
+      lead=(await pool.query('SELECT id,status FROM leads WHERE id=$1',[Number(error.leadId)])).rows[0];
+    } else if (error.code === '23505') {
+      lead=(await pool.query('SELECT id,status FROM leads WHERE intake_submission_key=$1 LIMIT 1',[intakeKey])).rows[0];
+      if (!lead) throw error;
+    } else throw error;
+  }
+  if (!lead) fail('Unable to create estimator lead','ESTIMATOR_LEAD_CREATE_FAILED',409);
+  const leadId=Number(lead.id);
+  const linked=(await pool.query(
+    `UPDATE estimator_calculations SET lead_id=$1,converted_at=COALESCE(converted_at,CURRENT_TIMESTAMP)
+      WHERE id=$2 AND lead_id IS NULL RETURNING lead_id`,
+    [leadId,calculation.id]
+  )).rows[0];
+  if (!linked) {
+    const current=(await pool.query('SELECT lead_id FROM estimator_calculations WHERE id=$1',[calculation.id])).rows[0];
+    if (current?.lead_id) return {leadId:Number(current.lead_id),leadStatus:lead.status};
+    fail('Unable to link the estimate to its customer lead','ESTIMATOR_LEAD_LINK_FAILED',409);
+  }
+  return {leadId,leadStatus:lead.status};
+}
+
+async function calculate({ key, flowToken, answers, submissionKey, contact, consent, website }) {
+  if (String(website || '').trim()) fail('Unable to calculate this estimate','INVALID_ESTIMATOR_SUBMISSION');
+  if (consent !== true) fail('Consent is required to calculate an estimate and create your project enquiry','CONSENT_REQUIRED');
+  const contactData={name:normalizeName(contact?.name),phone:normalizePhone(contact?.phone),email:normalizeEmail(contact?.email)};
   const flow = await customerFlowService.getPublishedFlow(key);
   if (flow.flowType !== 'estimator') fail('This flow is not an estimator', 'NOT_ESTIMATOR', 404);
   customerFlowService.verifyFlowToken(flowToken, flow.versionId);
@@ -496,9 +553,9 @@ async function calculate({ key, flowToken, answers, submissionKey }) {
     const existingAnswers=existing.answers && typeof existing.answers === 'object' && !Array.isArray(existing.answers) ? existing.answers : safeAnswers;
     const existingResult=calculateEstimateFromConfig({ answers:existingAnswers,rateItems:rates,adjustments,cityId:existing.city_id });
     const location={cityId:existing.city_id,stateId:existing.state_id,pincode:existing.pincode,cityName:existing.city_name};
-    const intent=await ensureEstimatorIntentLead({flow,calculation:existing,location,intakeKey});
-    existing.lead_id=intent.leadId;
-    return calculationResponse({flow,calculation:existing,location,result:existingResult,leadId:intent.leadId,leadStatus:intent.leadStatus,duplicate:true});
+    const captured=await ensureEstimatorContactLead({flow,calculation:existing,location,intakeKey,contact:contactData});
+    existing.lead_id=captured.leadId;
+    return calculationResponse({flow,calculation:existing,location,result:existingResult,leadId:captured.leadId,leadStatus:captured.leadStatus,duplicate:true});
   }
 
   const location = await resolveLocation(flow,safeAnswers);
@@ -533,15 +590,15 @@ async function calculate({ key, flowToken, answers, submissionKey }) {
     if (!raced) throw error;
     const racedResult=calculateEstimateFromConfig({ answers:raced.answers || safeAnswers,rateItems:rates,adjustments,cityId:raced.city_id });
     const racedLocation={cityId:raced.city_id,stateId:raced.state_id,pincode:raced.pincode,cityName:raced.city_name};
-    const intent=await ensureEstimatorIntentLead({flow,calculation:raced,location:racedLocation,intakeKey});
-    raced.lead_id=intent.leadId;
-    return calculationResponse({flow,calculation:raced,location:racedLocation,result:racedResult,leadId:intent.leadId,leadStatus:intent.leadStatus,duplicate:true});
+    const captured=await ensureEstimatorContactLead({flow,calculation:raced,location:racedLocation,intakeKey,contact:contactData});
+    raced.lead_id=captured.leadId;
+    return calculationResponse({flow,calculation:raced,location:racedLocation,result:racedResult,leadId:captured.leadId,leadStatus:captured.leadStatus,duplicate:true});
   }
 
   try {
-    const intent=await ensureEstimatorIntentLead({flow,calculation:inserted,location,intakeKey});
-    inserted.lead_id=intent.leadId;
-    return calculationResponse({flow,calculation:inserted,location,result,leadId:intent.leadId,leadStatus:intent.leadStatus});
+    const captured=await ensureEstimatorContactLead({flow,calculation:inserted,location,intakeKey,contact:contactData});
+    inserted.lead_id=captured.leadId;
+    return calculationResponse({flow,calculation:inserted,location,result,leadId:captured.leadId,leadStatus:captured.leadStatus});
   } catch (error) {
     await pool.query('DELETE FROM estimator_calculations WHERE id=$1 AND lead_id IS NULL',[inserted.id]).catch(()=>{});
     throw error;
@@ -579,7 +636,7 @@ function buildEstimatorLeadPayload(flow, calculation, {source='estimator_quote_r
   custom._estimator = {
     calculationId: calculation.public_id,flowKey: flow.key,definitionId: flow.definitionId,versionId: flow.versionId,versionNo: flow.versionNo,
     minimum:Number(calculation.result_min),maximum:Number(calculation.result_max),currency:calculation.currency,calculatedAt:calculation.created_at,
-    configHash:calculation.config_hash,contactPending:Boolean(contactPending),lifecycle:contactPending?'estimate_completed':'quote_requested',answers,
+    configHash:calculation.config_hash,contactPending:Boolean(contactPending),lifecycle:contactPending?'estimate_completed':source==='estimator_calculation'?'estimate_completed_with_contact':'quote_requested',answers,
     package:packageSnapshot?{packageKey:packageSnapshot.packageKey,label:packageSnapshot.label,badge:packageSnapshot.badge||null,summary:packageSnapshot.summary||null,priceNote:packageSnapshot.priceNote||null,details:(packageSnapshot.details||[]).filter(detail=>detail.isActive!==false)}:null,
   };
   custom._intake = {
