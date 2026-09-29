@@ -38,6 +38,20 @@ export default function AdminEstimatorConfig({flowId,versionId,questions=[]}){
  const patchPackageDetail=(packageIndex,detailIndex,patch)=>setConfig(current=>({...current,packages:current.packages.map((item,i)=>i===packageIndex?{...item,details:(item.details||[]).map((detail,j)=>j===detailIndex?{...detail,...patch}:detail)}:item)}))
  const patchRate=(index,patch)=>setConfig(current=>({...current,rates:current.rates.map((item,i)=>i===index?{...item,...patch}:item)}))
  const patchAdjustment=(index,patch)=>setConfig(current=>({...current,adjustments:current.adjustments.map((item,i)=>i===index?{...item,...patch}:item)}))
+ const movePackage=(index,delta)=>setConfig(current=>{
+  const list=[...(current.packages||[])],next=index+delta
+  if(next<0||next>=list.length)return current
+  ;[list[index],list[next]]=[list[next],list[index]]
+  return {...current,packages:list.map((item,i)=>({...item,displayOrder:(i+1)*10}))}
+ })
+ const movePackageDetail=(packageIndex,detailIndex,delta)=>setConfig(current=>{
+  const packages=[...(current.packages||[])],item=packages[packageIndex]
+  const details=[...(item?.details||[])],next=detailIndex+delta
+  if(!item||next<0||next>=details.length)return current
+  ;[details[detailIndex],details[next]]=[details[next],details[detailIndex]]
+  packages[packageIndex]={...item,details:details.map((detail,i)=>({...detail,displayOrder:(i+1)*10}))}
+  return {...current,packages}
+ })
 
  async function save(){
   if(!config)return
@@ -60,7 +74,7 @@ export default function AdminEstimatorConfig({flowId,versionId,questions=[]}){
    const selector=questions.find(q=>q.questionKey===item.selectorQuestionKey)
    const selectorOptions=Array.isArray(selector?.options)?selector.options.filter(option=>option.isActive!==false):[]
    return <article className="est-package-card" key={item.id||item.packageKey+'-'+index}>
-    <div className="est-package-card-head"><div><b>{item.badge||'PACKAGE'}</b><strong>{item.label||'Unnamed package'}</strong><small>{item.selectorQuestionKey&&item.selectorValue?item.selectorQuestionKey+' = '+item.selectorValue:'Choose when this package applies'}</small></div><label className="flow-toggle"><span><input disabled={!config.editable} type="checkbox" checked={item.isActive!==false} onChange={e=>patchPackage(index,{isActive:e.target.checked})}/> Active</span></label><button type="button" disabled={!config.editable} onClick={()=>setConfig(current=>({...current,packages:current.packages.filter((_,i)=>i!==index)}))}>Remove</button></div>
+    <div className="est-package-card-head"><div><b>{item.badge||'PACKAGE'}</b><strong>{item.label||'Unnamed package'}</strong><small>{item.selectorQuestionKey&&item.selectorValue?item.selectorQuestionKey+' = '+item.selectorValue:'Choose when this package applies'}</small></div><div className="package-order-controls"><button type="button" title="Move package up" disabled={!config.editable||index===0} onClick={()=>movePackage(index,-1)}>↑</button><button type="button" title="Move package down" disabled={!config.editable||index===packages.length-1} onClick={()=>movePackage(index,1)}>↓</button></div><label className="flow-toggle"><span><input disabled={!config.editable} type="checkbox" checked={item.isActive!==false} onChange={e=>patchPackage(index,{isActive:e.target.checked})}/> Active</span></label><button type="button" disabled={!config.editable} onClick={()=>setConfig(current=>({...current,packages:current.packages.filter((_,i)=>i!==index).map((entry,order)=>({...entry,displayOrder:(order+1)*10}))}))}>Remove</button></div>
     <div className="flow-grid package-grid">
      <label>Package key<input disabled={!config.editable} value={item.packageKey||''} onChange={e=>patchPackage(index,{packageKey:keyValue(e.target.value)})}/></label>
      <label>Customer label<input disabled={!config.editable} value={item.label||''} onChange={e=>patchPackage(index,{label:e.target.value})}/></label>
@@ -76,9 +90,11 @@ export default function AdminEstimatorConfig({flowId,versionId,questions=[]}){
      <label>Section<input disabled={!config.editable} value={detail.section||''} onChange={e=>patchPackageDetail(index,detailIndex,{section:e.target.value})}/></label>
      <label>Label<input disabled={!config.editable} value={detail.label||''} onChange={e=>patchPackageDetail(index,detailIndex,{label:e.target.value})}/></label>
      <label className="package-detail-value">Specification<input disabled={!config.editable} value={detail.value||''} onChange={e=>patchPackageDetail(index,detailIndex,{value:e.target.value})}/></label>
+     <label>Note <small>Optional</small><input disabled={!config.editable} value={detail.note||''} placeholder="Warranty / allowance / condition" onChange={e=>patchPackageDetail(index,detailIndex,{note:e.target.value})}/></label>
      <label>Key<input disabled={!config.editable} value={detail.detailKey||''} onChange={e=>patchPackageDetail(index,detailIndex,{detailKey:keyValue(e.target.value)})}/></label>
+     <div className="package-detail-actions"><button type="button" title="Move detail up" disabled={!config.editable||detailIndex===0} onClick={()=>movePackageDetail(index,detailIndex,-1)}>↑</button><button type="button" title="Move detail down" disabled={!config.editable||detailIndex===(item.details||[]).length-1} onClick={()=>movePackageDetail(index,detailIndex,1)}>↓</button></div>
      <label className="flow-toggle"><span><input disabled={!config.editable} type="checkbox" checked={detail.isActive!==false} onChange={e=>patchPackageDetail(index,detailIndex,{isActive:e.target.checked})}/> Show</span></label>
-     <button className="package-detail-remove" type="button" disabled={!config.editable} onClick={()=>patchPackage(index,{details:(item.details||[]).filter((_,i)=>i!==detailIndex)})}>×</button>
+     <button className="package-detail-remove" type="button" disabled={!config.editable} onClick={()=>patchPackage(index,{details:(item.details||[]).filter((_,i)=>i!==detailIndex).map((entry,order)=>({...entry,displayOrder:(order+1)*10}))})}>×</button>
     </div>)}</div>
    </article>
   })}</div>
