@@ -6,6 +6,7 @@ const assert=(condition,message)=>{if(!condition)throw new Error(message)};
 const gate=require('../src/services/leadQualityGateService');
 
 const migration=read('src/database/migrations/20260928_lead_quality_quarantine.sql');
+const customerContactMigration=read('src/database/migrations/20260929_zzzzzzzzzzzzz_customer_lead_contact_hardening.sql');
 const leadService=read('src/services/leadService.js');
 const marketplace=read('src/services/leadMarketplaceService.js');
 const controller=read('src/controllers/leadController.js');
@@ -32,7 +33,10 @@ assert(controller.includes('leadInvestorService.assertInvestorLink')&&controller
 assert(leadService.includes("status='quarantined'")&&leadService.includes('gate_evaluation_error'),'Quality-gate failures must fail closed');
 assert(leadService.includes("QUALITY_OVERRIDE_REQUIRED"),'Generic status updates must not bypass quarantine review');
 assert(marketplace.includes("status='available'"),'Marketplace must default to available leads so quarantined inventory stays hidden');
+assert(marketplace.includes("l.source IN ('public_requirement','public_estimator')")&&marketplace.includes("l.customer_phone"),'Marketplace must fail closed for incomplete customer-generated leads');
+assert(customerContactMigration.includes('leads_customer_contact_sellable_check')&&customerContactMigration.includes("status IN ('available','paused')"),'Database must prevent incomplete customer-generated leads from becoming sellable');
 assert(controller.includes("'quarantined'")&&controller.includes('overrideLeadQuarantine'),'Admin controller must support quarantine status and audited override');
+assert(read('src/services/leadQualityGateService.js').includes('Customer-generated leads require a customer name and mobile number before marketplace release.'),'Admin quarantine override must not release incomplete customer-generated leads');
 assert(routes.includes("'/quality-gate/settings'")&&routes.includes("'/:id/quality-gate/recheck'")&&routes.includes("'/:id/quality-gate/override'"),'Quality gate settings/review routes are missing');
 assert(partnerInventory.includes("quality_gate_score")&&partnerInventory.includes("AS quarantined"),'Lead Partner inventory must expose quarantine state and count');
 assert(partnerDashboard.includes("l.status='quarantined' THEN 'quarantined'"),'Lead Partner dashboard must not count quarantined leads as available');
