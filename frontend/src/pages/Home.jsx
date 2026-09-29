@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { publicRequest } from '../utils/auth'
 import './Home.css'
@@ -82,7 +82,6 @@ function Home() {
     return () => { live = false }
   }, [])
 
-  const service = useMemo(() => services.find(item => item.key === selectedFlow) || services[0], [selectedFlow])
 
   const categoryImage = (item) => media?.category_images?.[item.imageKey]
     || media?.category_images?.[item.key]
