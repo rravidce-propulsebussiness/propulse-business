@@ -33,6 +33,10 @@ assert(leads.includes("refreshing?'Refreshing…':'Refresh data'"),'Manual refre
 assert(leads.includes('ESTIMATE · AWAITING CONTACT'),'Automatic estimator leads must be labelled before contact is supplied');
 assert(leads.includes('Waiting for customer contact')&&leads.includes('SAFE HOLD'),'Contact-pending estimator leads must show a safe-hold state');
 assert(css.includes('.v9-estimator-pending'),'Contact-pending estimator leads must retain dedicated premium styling');
+assert(leads.includes('All intake sources')&&leads.includes('All contact states'),'Customer acquisition filters must remain in Manage Leads');
+assert(leads.includes("initialQueryValue('source'")&&leads.includes("initialQueryValue('contactState'"),'Manage Leads must keep deep-link filter initialization');
+assert(leads.includes("initialQueryValue('leadId'")&&leads.includes('v9-focus-chip'),'Manage Leads must isolate and display an exact focused lead');
+assert(css.includes('.v9-focus-chip'),'Exact lead focus chip styling must remain');
 
 assert(leads.includes('v9-upload-workspace'),'Premium Upload Leads workspace must remain');
 assert(leads.includes('LEAD OPERATIONS / CSV IMPORT'),'Upload Leads hero must remain');

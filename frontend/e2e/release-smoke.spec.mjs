@@ -272,6 +272,12 @@ test('Admin login reaches operations consoles and session survives reload',async
   await expect(page.getByText('Useful analytics without invasive tracking.')).toBeVisible()
   await expect(page.getByText('QUESTION FRICTION MAP')).toBeVisible()
   await expect(page.getByText('Which question makes customers stop?')).toBeVisible()
+  await expect(page.getByRole('heading',{name:'Recent customer-generated leads'})).toBeVisible()
+  await expect(page.getByRole('link',{name:/Open Manage Leads/i})).toBeVisible()
+
+  await page.goto('/admin/leads?source=public_estimator&contactState=awaiting_contact')
+  await expect(page.getByLabel('Intake source')).toHaveValue('public_estimator')
+  await expect(page.getByLabel('Contact readiness')).toHaveValue('awaiting_contact')
 
   await page.goto('/admin/financial-integrity')
   await page.reload()
