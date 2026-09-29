@@ -287,6 +287,21 @@ BEGIN
           WHERE o.question_id=q.id AND o.value='package_default' AND o.is_active=TRUE
        );
 
+    -- Optional customisations remain optional to enter, but once a customer selects
+    -- a rate-by-quantity material, its dependent quantity becomes required so the
+    -- calculated add-on cannot silently use a missing quantity.
+    IF flow_key='interior-cost-estimator' THEN
+      UPDATE customer_flow_questions
+         SET is_required=TRUE
+       WHERE version_id=target_version_id
+         AND question_key IN (
+           'hdhmr_area','pu_duco_area','veneer_pvc_area','profile_glass_area','aristo_glass_area',
+           'granite_tile_area','dado_tile_area','quartz_area','regular_wallpaper_area','custom_wallpaper_area',
+           'blinds_curtains_area','profile_light_meters','sensor_count','mdf_cnc_area',
+           'wall_panelling_area','wall_panelling_pu_area'
+         );
+    END IF;
+
     UPDATE customer_flow_versions SET status='retired',updated_at=CURRENT_TIMESTAMP
      WHERE definition_id=def_id AND status='published';
     UPDATE customer_flow_versions
