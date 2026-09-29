@@ -79,6 +79,10 @@ function Home(){
 
   const track=(flowKey,source)=>trackFunnelEvent('home_cta_clicked',{flowKey,flowType:'estimator',source,metadata:{cta:flowKey}})
   const homeContent=media.content?.home||{}
+  const showcaseContent=showcaseItems.map((item,index)=>{
+    const prefix=index===0?'showcaseConstruction1':index===1?'showcaseConstruction2':index===2?'showcaseInterior1':'showcaseInterior2'
+    return {...item,title:homeContent[prefix+'Title']||item.title,text:homeContent[prefix+'Text']||item.text}
+  })
   const packageFlow=estimatorFlows[packageAudience]
   const packageItems=Array.isArray(packageFlow?.packages)?packageFlow.packages.filter(item=>item?.isActive!==false):[]
 
@@ -129,16 +133,21 @@ function Home(){
       <section className="company-section services-section">
         <div className="company-section-head"><span>WHAT WE DO</span><h2>{homeContent.servicesHeading||'Construction and Interiors under one roof.'}</h2><p>{homeContent.servicesText||'Start with the service you need, understand the package and budget, then continue with our project team for planning and execution.'}</p></div>
         <div className="service-grid">
-          {services.map(service=><article id={service.key==='construction'?'construction':'interiors'} className="service-card" key={service.key}>
-            <div className="service-media"><img src={media.category_images?.[service.imageKey]||service.fallback} alt=""/><span>{service.eyebrow}</span></div>
-            <div className="service-copy"><small>{service.eyebrow} SERVICES</small><h3>{service.title}</h3><p>{service.text}</p><div><Link to={service.estimator} onClick={()=>track(service.key==='construction'?'construction-cost-estimator':'interior-cost-estimator','service_card')}>Get Estimate <span>→</span></Link><Link to={service.requirement}>Free Consultation</Link></div></div>
-          </article>)}
+          {services.map(service=>{
+            const construction=service.key==='construction'
+            const title=construction?(homeContent.constructionTitle||service.title):(homeContent.interiorTitle||service.title)
+            const text=construction?(homeContent.constructionText||service.text):(homeContent.interiorText||service.text)
+            return <article id={construction?'construction':'interiors'} className="service-card" key={service.key}>
+              <div className="service-media"><img src={media.category_images?.[service.imageKey]||service.fallback} alt=""/><span>{service.eyebrow}</span></div>
+              <div className="service-copy"><small>{service.eyebrow} SERVICES</small><h3>{title}</h3><p>{text}</p><div><Link to={service.estimator} onClick={()=>track(construction?'construction-cost-estimator':'interior-cost-estimator','service_card')}>Get Estimate <span>→</span></Link><Link to={service.requirement}>Free Consultation</Link></div></div>
+            </article>
+          })}
         </div>
       </section>
 
       <section className="company-section showcase-section" id="projects">
         <div className="company-section-head"><span>PROJECT SHOWCASE</span><h2>{homeContent.showcaseHeading||'See how Construction and Interiors come together.'}</h2><p>{homeContent.showcaseText||'Explore how structure, services, storage, materials and finishes come together across Construction and complete-home Interiors.'}</p></div>
-        <div className="project-showcase-grid">{showcaseItems.map((item,index)=><article className={index===0||index===3?'wide':''} key={item.key}>
+        <div className="project-showcase-grid">{showcaseContent.map((item,index)=><article className={index===0||index===3?'wide':''} key={item.key}>
           <div className="project-showcase-media"><img src={media.category_images?.[item.key]||item.fallback} alt={item.title}/><span>{item.eyebrow}</span></div>
           <div className="project-showcase-copy"><small>0{index+1} · {item.eyebrow}</small><h3>{item.title}</h3><p>{item.text}</p><Link to={item.eyebrow==='CONSTRUCTION'?'/construction':'/interiors'}>Explore {item.eyebrow==='CONSTRUCTION'?'Construction':'Interiors'} <b>→</b></Link></div>
         </article>)}</div>
