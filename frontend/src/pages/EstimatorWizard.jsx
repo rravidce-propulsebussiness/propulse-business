@@ -306,7 +306,7 @@ export default function EstimatorWizard({ flowKey }) {
         </section>
 
         {state.error&&<div className="rq-error">{state.error}</div>}
-        <div className="rq-submit-bar"><div><small>INDICATIVE ESTIMATE</small><b>Calculation uses the published Admin rates and your selections.</b></div><button type="submit" className="primary" disabled={state.saving}>{state.saving?'Calculating…':(flow.config?.submitLabel || 'Calculate & Save Estimate')} <span>→</span></button></div>
+        <div className="rq-submit-bar"><div><small>INDICATIVE ESTIMATE</small><b>Your estimate uses the current package rates and the project details you selected.</b></div><button type="submit" className="primary" disabled={state.saving}>{state.saving?'Calculating…':(flow.config?.submitLabel || 'Calculate & Save Estimate')} <span>→</span></button></div>
       </form>:<section className="rq-card rq-form-card est-result-card"><div className="est-result">
         <span>YOUR PROJECT ESTIMATE</span>
         <h2>{flow.config?.resultTitle || 'Estimated project cost'}</h2>
