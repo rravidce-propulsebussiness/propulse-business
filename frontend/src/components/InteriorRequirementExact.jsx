@@ -95,7 +95,7 @@ export default function InteriorRequirementExact(props) {
   return <main className="rq-page rq-premium-page irx-page">
     <header className="irx-header">
       <Link to="/" className="irx-logo"><img src="/brand/propulse-logo.svg" alt="ProPulse" /></Link>
-      <nav><Link to="/">Home</Link><Link to="/build">Construction</Link><Link className="active" to="/design">Interiors</Link><Link to="/property">Real Estate</Link><Link to="/projects">Projects</Link><Link to="/#how-it-works">How It Works</Link><Link to="/#contact">About</Link><Link to="/#contact">Contact</Link></nav>
+      <nav><Link to="/">Home</Link><Link to="/build">Construction</Link><Link className="active" to="/design">Interiors</Link><Link to="/property">Real Estate</Link><Link to="/projects">Projects</Link><Link to="/how-it-works">How It Works</Link><Link to="/about">About</Link><Link to="/#contact">Contact</Link></nav>
       <a href="#irx-basic" className="irx-header-cta">Get Free Consultation <Icon name="arrow" size={15}/></a>
     </header>
 
