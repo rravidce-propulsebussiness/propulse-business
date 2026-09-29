@@ -556,10 +556,10 @@ async function calculate({ key, flowToken, answers, submissionKey, contact, cons
   let inserted;
   try {
     inserted = (await pool.query(
-      `INSERT INTO estimator_calculations(public_id,definition_id,version_id,city_id,pincode,answers,config_snapshot,config_hash,result_min,result_max,currency,intake_submission_key)
-       VALUES($1,$2,$3,$4,$5,$6::jsonb,$7::jsonb,$8,$9,$10,'INR',$11)
+      `INSERT INTO estimator_calculations(public_id,definition_id,version_id,city_id,pincode,answers,config_snapshot,config_hash,result_min,result_max,currency,intake_submission_key,breakdown)
+       VALUES($1,$2,$3,$4,$5,$6::jsonb,$7::jsonb,$8,$9,$10,'INR',$11,$12::jsonb)
        RETURNING *`,
-      [publicId,flow.definitionId,flow.versionId,location.cityId,location.pincode,JSON.stringify(safeAnswers),snapshotJson,configHash,result.minimum,result.maximum,intakeKey]
+      [publicId,flow.definitionId,flow.versionId,location.cityId,location.pincode,JSON.stringify(safeAnswers),snapshotJson,configHash,result.minimum,result.maximum,intakeKey,JSON.stringify(result.breakdown||[])]
     )).rows[0];
   } catch (error) {
     if (error.code !== '23505') throw error;
@@ -649,7 +649,7 @@ async function getCalculation(publicId) {
   const id = String(publicId || '').trim();
   if (!/^[A-Za-z0-9_-]{20,64}$/.test(id)) fail('Estimate not found', 'ESTIMATE_NOT_FOUND', 404);
   const row = (await pool.query(
-    `SELECT ec.public_id,ec.result_min,ec.result_max,ec.currency,ec.created_at,ec.city_id,ec.answers,ec.config_snapshot,c.name city_name,
+    `SELECT ec.public_id,ec.result_min,ec.result_max,ec.currency,ec.created_at,ec.city_id,ec.answers,ec.config_snapshot,ec.breakdown,c.name city_name,
             d.key flow_key,v.version_no
        FROM estimator_calculations ec
        JOIN customer_flow_definitions d ON d.id=ec.definition_id
@@ -664,6 +664,7 @@ async function getCalculation(publicId) {
     currency:row.currency,createdAt:row.created_at,cityId:row.city_id,cityName:row.city_name || null,
     flowKey:row.flow_key,versionNo:row.version_no,
     package:selectedPackage(row.config_snapshot?.packages,row.answers || {}),
+    breakdown:Array.isArray(row.breakdown)?row.breakdown:[],
     pdfToken:estimatePdfService.createPdfToken(row.public_id),
   };
 }
