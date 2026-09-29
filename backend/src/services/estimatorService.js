@@ -432,7 +432,7 @@ function calculationResponse({ flow, calculation, location, result, leadId=null,
     cityId:calculation.city_id || location?.cityId || null,
     cityName:location?.cityName || null,
     breakdown:result.breakdown,
-    package:selectedPackage(flow.packages,calculation.answers || {}),
+    package:selectedPackage(calculation.config_snapshot?.packages || flow.packages,calculation.answers || {}),
     quoteEligible:Boolean((calculation.city_id || location?.cityId) && (calculation.pincode || location?.pincode)),
     leadId:leadId ? Number(leadId) : null,
     leadStatus:leadStatus || null,
@@ -571,12 +571,16 @@ async function calculate({ key, flowToken, answers, submissionKey, contact, cons
   )).rows[0];
   if (existing) {
     if (Number(existing.definition_id) !== Number(flow.definitionId)) fail('Submission session belongs to a different estimator', 'INVALID_SUBMISSION_KEY', 409);
+    const historicalFlow=Number(existing.version_id)===Number(flow.versionId)?flow:await customerFlowService.getVersionFlow(existing.version_id);
     const existingAnswers=existing.answers && typeof existing.answers === 'object' && !Array.isArray(existing.answers) ? existing.answers : safeAnswers;
-    const existingResult=calculateEstimateFromConfig({ answers:existingAnswers,rateItems:rates,adjustments,cityId:existing.city_id });
+    const savedConfig=existing.config_snapshot && typeof existing.config_snapshot==='object' && !Array.isArray(existing.config_snapshot)?existing.config_snapshot:{};
+    const existingRates=Array.isArray(savedConfig.rates)?savedConfig.rates:rates;
+    const existingAdjustments=Array.isArray(savedConfig.adjustments)?savedConfig.adjustments:adjustments;
+    const existingResult=calculateEstimateFromConfig({ answers:existingAnswers,rateItems:existingRates,adjustments:existingAdjustments,cityId:existing.city_id });
     const location={cityId:existing.city_id,stateId:existing.state_id,pincode:existing.pincode,cityName:existing.city_name};
-    const captured=await ensureEstimatorContactLead({flow,calculation:existing,location,intakeKey,contact:contactData});
+    const captured=await ensureEstimatorContactLead({flow:historicalFlow,calculation:existing,location,intakeKey,contact:contactData});
     existing.lead_id=captured.leadId;
-    return calculationResponse({flow,calculation:existing,location,result:existingResult,leadId:captured.leadId,leadStatus:captured.leadStatus,duplicate:true});
+    return calculationResponse({flow:historicalFlow,calculation:existing,location,result:existingResult,leadId:captured.leadId,leadStatus:captured.leadStatus,duplicate:true});
   }
 
   const location = await resolveLocation(flow,safeAnswers);
@@ -609,11 +613,15 @@ async function calculate({ key, flowToken, answers, submissionKey, contact, cons
       [intakeKey]
     )).rows[0];
     if (!raced) throw error;
-    const racedResult=calculateEstimateFromConfig({ answers:raced.answers || safeAnswers,rateItems:rates,adjustments,cityId:raced.city_id });
+    const racedFlow=Number(raced.version_id)===Number(flow.versionId)?flow:await customerFlowService.getVersionFlow(raced.version_id);
+    const racedConfig=raced.config_snapshot && typeof raced.config_snapshot==='object' && !Array.isArray(raced.config_snapshot)?raced.config_snapshot:{};
+    const racedRates=Array.isArray(racedConfig.rates)?racedConfig.rates:rates;
+    const racedAdjustments=Array.isArray(racedConfig.adjustments)?racedConfig.adjustments:adjustments;
+    const racedResult=calculateEstimateFromConfig({ answers:raced.answers || safeAnswers,rateItems:racedRates,adjustments:racedAdjustments,cityId:raced.city_id });
     const racedLocation={cityId:raced.city_id,stateId:raced.state_id,pincode:raced.pincode,cityName:raced.city_name};
-    const captured=await ensureEstimatorContactLead({flow,calculation:raced,location:racedLocation,intakeKey,contact:contactData});
+    const captured=await ensureEstimatorContactLead({flow:racedFlow,calculation:raced,location:racedLocation,intakeKey,contact:contactData});
     raced.lead_id=captured.leadId;
-    return calculationResponse({flow,calculation:raced,location:racedLocation,result:racedResult,leadId:captured.leadId,leadStatus:captured.leadStatus,duplicate:true});
+    return calculationResponse({flow:racedFlow,calculation:raced,location:racedLocation,result:racedResult,leadId:captured.leadId,leadStatus:captured.leadStatus,duplicate:true});
   }
 
   try {
