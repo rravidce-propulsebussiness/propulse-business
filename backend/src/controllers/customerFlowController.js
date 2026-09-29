@@ -41,6 +41,27 @@ async function getPublic(req, res) {
   try { return res.json(await customerFlowService.getPublishedFlow(req.params.key)); }
   catch (error) { return sendError(res, error, 'Failed to load requirement form'); }
 }
+async function submitConsultation(req, res) {
+  try {
+    const result = await publicLeadIntakeService.submitConsultation({
+      key: req.params.key,
+      cityId: req.body?.cityId,
+      contact: req.body?.contact,
+      consent: req.body?.consent,
+      submissionKey: req.body?.submissionKey,
+      website: req.body?.website,
+      attribution: req.body?.attribution,
+    });
+    return res.status(result.duplicate ? 200 : 201).json(result);
+  } catch (error) {
+    if (!error?.status && !error?.code) {
+      console.error('Public consultation submission failed:', error);
+      return res.status(500).json({ error: 'Failed to submit consultation request' });
+    }
+    return sendError(res, error, 'Failed to submit consultation request');
+  }
+}
+
 async function submitPublic(req, res) {
   try {
     const result = await publicLeadIntakeService.submitRequirement({
@@ -62,4 +83,4 @@ async function submitPublic(req, res) {
   }
 }
 
-module.exports = { listAdmin,getAdmin,create,saveDraft,publish,setStatus,getPublic,submitPublic };
+module.exports = { listAdmin,getAdmin,create,saveDraft,publish,setStatus,getPublic,submitConsultation,submitPublic };
