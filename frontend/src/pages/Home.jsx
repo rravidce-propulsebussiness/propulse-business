@@ -66,7 +66,7 @@ function Home(){
     setMenuOpen(false)
     document.getElementById(id)?.scrollIntoView({behavior:'smooth',block:'start'})
   }
-  const track=(flowKey,source)=>trackFunnelEvent('homepage_path_selected',{flowKey,flowType:'estimator',source})
+  const track=(flowKey,source)=>trackFunnelEvent('home_cta_clicked',{flowKey,flowType:'estimator',source,metadata:{cta:flowKey}})
   const packageFlow=estimatorFlows[packageAudience]
   const packageItems=Array.isArray(packageFlow?.packages)?packageFlow.packages.filter(item=>item?.isActive!==false):[]
 
