@@ -255,6 +255,7 @@ function Home() {
         <Link to="/build">Construction</Link>
         <Link to="/design">Interior Design</Link>
         <Link to="/property">Real Estate</Link>
+        <Link to="/projects">Projects</Link>
         <button onClick={() => scrollToSection('how-it-works')}>How It Works</button>
         <button onClick={() => scrollToSection('about')}>About</button>
         <button onClick={() => scrollToSection('contact')}>Contact</button>
@@ -364,6 +365,7 @@ function Home() {
           <span>Ideas for your next step</span>
           <h2>Home Inspiration</h2>
           <p>Explore the kinds of projects homeowners can start through ProPulse.</p>
+          <Link className="hc-inspiration-link" to="/projects">Explore all project ideas <Icon name="arrow" size={14} /></Link>
         </div>
 
         <div className="hc-inspiration-grid">
