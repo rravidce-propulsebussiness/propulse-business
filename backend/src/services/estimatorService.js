@@ -442,58 +442,6 @@ function calculationResponse({ flow, calculation, location, result, leadId=null,
   };
 }
 
-async function ensureEstimatorIntentLead({flow,calculation,location,intakeKey}) {
-  if (calculation.lead_id) {
-    const lead=(await pool.query('SELECT id,status FROM leads WHERE id=$1',[Number(calculation.lead_id)])).rows[0];
-    if (lead) return {leadId:Number(lead.id),leadStatus:lead.status};
-  }
-  const details=buildEstimatorLeadPayload(flow,calculation,{source:'estimator_calculation',contactPending:true});
-  let lead;
-  let createdHere=false;
-  try {
-    lead=await leadService.createLead({
-      industryId:flow.industryId,serviceId:flow.serviceId,subserviceId:flow.subserviceId,
-      stateId:location?.stateId || null,cityId:calculation.city_id || location?.cityId || null,
-      customerName:null,customerPhone:null,customerEmail:null,
-      requirement:details.requirement,propertyType:details.propertyType,budget:details.budget,
-      source:'public_estimator',notes:null,customFields:details.customFields,pincode:calculation.pincode || location?.pincode || null,
-      intakeSubmissionKey:intakeKey,qualityGateContext:'public_estimator_intent',deferQualityGate:true,createdBy:null,
-    });
-    createdHere=true;
-  } catch (error) {
-    if (error.code !== '23505') throw error;
-    lead=(await pool.query(
-      `SELECT id,status,custom_fields FROM leads WHERE intake_submission_key=$1 LIMIT 1`,
-      [intakeKey]
-    )).rows[0];
-    if (!lead) throw error;
-    const existingFlow=String(lead.custom_fields?._intake?.flowKey || '');
-    if (existingFlow && existingFlow !== flow.key) fail('Submission session belongs to a different customer flow','INVALID_SUBMISSION_KEY',409);
-  }
-  const leadId=Number(lead.id);
-  try {
-    const linked=(await pool.query(
-      `UPDATE estimator_calculations SET lead_id=$1 WHERE id=$2 AND lead_id IS NULL RETURNING lead_id`,
-      [leadId,calculation.id]
-    )).rows[0];
-    if (!linked) {
-      const current=(await pool.query('SELECT lead_id FROM estimator_calculations WHERE id=$1',[calculation.id])).rows[0];
-      if (!current?.lead_id) fail('Unable to link the estimate to its customer lead','ESTIMATOR_LEAD_LINK_FAILED',409);
-      if (Number(current.lead_id) !== leadId) {
-        if (createdHere) await pool.query('DELETE FROM leads WHERE id=$1 AND NOT EXISTS(SELECT 1 FROM estimator_calculations WHERE lead_id=$1)',[leadId]).catch(()=>{});
-        const currentLead=(await pool.query('SELECT id,status FROM leads WHERE id=$1',[Number(current.lead_id)])).rows[0];
-        return {leadId:Number(current.lead_id),leadStatus:currentLead?.status || 'quarantined'};
-      }
-    }
-    return {leadId,leadStatus:lead.status || 'quarantined'};
-  } catch (error) {
-    if (createdHere) await pool.query(
-      'DELETE FROM leads WHERE id=$1 AND NOT EXISTS(SELECT 1 FROM estimator_calculations WHERE lead_id=$1)',
-      [leadId]
-    ).catch(()=>{});
-    throw error;
-  }
-}
 async function ensureEstimatorContactLead({flow,calculation,location,intakeKey,contact}) {
   const details=buildEstimatorLeadPayload(flow,calculation,{source:'estimator_calculation',contactPending:false});
   if (calculation.lead_id) {
