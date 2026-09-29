@@ -57,6 +57,8 @@ assert.match(adminFlows,/Apply recommended layout/,'Admin must offer a safe reco
 assert.match(adminFlows,/recommendedSection/,'Recommended Admin layout must organize construction/interior fields into practical sections');
 assert.match(wizardCss,/\.est-package-more/,'Estimator package disclosure needs dedicated styling');
 assert.match(requirementCss,/\.rq-form-section-head>em/,'Section completion indicators need dedicated styling');
+assert.match(wizard,/isValidIndianMobile/,'Estimator must validate customer mobile before calculation');
+assert.match(requirement,/isValidIndianMobile/,'Consultation form must validate customer mobile before lead submission');
 assert.match(wizard,/useSearchParams/,'Estimator must support validated customer deep-link preselection');
 assert.match(wizard,/initialEstimatorAnswers/,'Estimator deep links must be validated against the published flow');
 assert.match(companySite,/\?mode=rough/,'Company service pages must deep-link directly to rough estimate mode');
