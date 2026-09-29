@@ -523,6 +523,99 @@ async function getQuestionDropoffAnalytics(filters){
   }).sort((a,b)=>b.events-a.events||String(a.flowName).localeCompare(String(b.flowName)));
 }
 
+async function getRecentCustomerLeads(filters) {
+  const values = ['public_requirement','public_estimator'];
+  const clauses = ['l.source IN ($1,$2)'];
+  if (filters.fromDate) {
+    values.push(filters.fromDate);
+    clauses.push('l.created_at >= '+sqlParam(values.length));
+  }
+  if (filters.flowId) {
+    values.push(String(filters.flowId));
+    clauses.push("COALESCE(l.custom_fields->'_intake'->>'definitionId','') = "+sqlParam(values.length));
+  }
+  if (filters.search) {
+    values.push(`%${filters.search}%`);
+    const index=values.length;
+    const ref=sqlParam(index);
+    clauses.push(`(
+      CAST(l.id AS TEXT) ILIKE ${ref}
+      OR COALESCE(l.customer_name,'') ILIKE ${ref}
+      OR COALESCE(l.customer_phone,'') ILIKE ${ref}
+      OR COALESCE(l.customer_email,'') ILIKE ${ref}
+      OR COALESCE(l.pincode,'') ILIKE ${ref}
+      OR COALESCE(l.custom_fields->'_intake'->>'flowKey','') ILIKE ${ref}
+      OR COALESCE(d.name,'') ILIKE ${ref}
+      OR COALESCE(c.name,'') ILIKE ${ref}
+      OR COALESCE(i.name,'') ILIKE ${ref}
+      OR COALESCE(s.name,'') ILIKE ${ref}
+    )`);
+  }
+  const rows=(await pool.query(
+    `SELECT l.id,l.source,l.status,l.created_at,l.updated_at,l.customer_name,l.customer_phone,l.customer_email,
+            l.pincode,l.quality_gate_status,l.quality_gate_score,
+            COALESCE(l.custom_fields->'_intake'->>'flowKey','unknown') flow_key,
+            COALESCE(d.name,l.custom_fields->'_intake'->>'flowKey','Unknown flow') flow_name,
+            CASE WHEN LOWER(COALESCE(l.custom_fields->'_estimator'->>'contactPending',''))='true' THEN TRUE ELSE FALSE END contact_pending,
+            c.name city_name,st.name state_name,i.name industry_name,s.name service_name,
+            calc.public_id calculation_id,calc.converted_at,calc.result_min,calc.result_max,
+            COALESCE(sales.paid_purchases,0)::int paid_purchases,
+            COALESCE(sales.paid_sales,0)::numeric(14,2) paid_sales
+       FROM leads l
+       LEFT JOIN customer_flow_definitions d ON d.key=COALESCE(l.custom_fields->'_intake'->>'flowKey','')
+       LEFT JOIN cities c ON c.id=l.city_id
+       LEFT JOIN states st ON st.id=l.state_id
+       LEFT JOIN industries i ON i.id=l.industry_id
+       LEFT JOIN services s ON s.id=l.service_id
+       LEFT JOIN LATERAL (
+         SELECT ec.public_id,ec.converted_at,ec.result_min,ec.result_max
+           FROM estimator_calculations ec
+          WHERE ec.lead_id=l.id
+          ORDER BY ec.created_at DESC,ec.id DESC
+          LIMIT 1
+       ) calc ON TRUE
+       LEFT JOIN LATERAL (
+         SELECT COUNT(*) FILTER (WHERE lp.status='paid')::int paid_purchases,
+                COALESCE(SUM(lp.amount) FILTER (WHERE lp.status='paid'),0)::numeric(14,2) paid_sales
+           FROM lead_purchases lp
+          WHERE lp.lead_id=l.id
+       ) sales ON TRUE
+      WHERE ${clauses.join(' AND ')}
+      ORDER BY l.created_at DESC,l.id DESC
+      LIMIT 25`,
+    values
+  )).rows;
+
+  return rows.map(row=>({
+    leadId:Number(row.id),
+    source:row.source,
+    status:row.status,
+    flowKey:row.flow_key,
+    flowName:row.flow_name,
+    customerName:row.customer_name || null,
+    contactPending:Boolean(row.contact_pending),
+    contactReady:row.source!=='public_estimator' || !row.contact_pending,
+    hasName:Boolean(String(row.customer_name||'').trim()),
+    hasPhone:Boolean(String(row.customer_phone||'').trim()),
+    hasEmail:Boolean(String(row.customer_email||'').trim()),
+    pincode:row.pincode || null,
+    cityName:row.city_name || null,
+    stateName:row.state_name || null,
+    industryName:row.industry_name || null,
+    serviceName:row.service_name || null,
+    qualityGateStatus:row.quality_gate_status || null,
+    qualityGateScore:row.quality_gate_score==null?null:number(row.quality_gate_score),
+    calculationId:row.calculation_id || null,
+    convertedAt:row.converted_at || null,
+    estimateMinimum:row.result_min==null?null:number(row.result_min),
+    estimateMaximum:row.result_max==null?null:number(row.result_max),
+    paidPurchases:number(row.paid_purchases),
+    paidSales:number(row.paid_sales),
+    createdAt:row.created_at,
+    updatedAt:row.updated_at,
+  }));
+}
+
 async function getRecentCalculations(filters) {
   const values = [];
   const clauses = ['1=1'];
@@ -610,7 +703,7 @@ async function getRecentCalculations(filters) {
 
 async function getCustomerFunnelAnalytics(query = {}) {
   const filters = parseFilters(query);
-  const [definitions,estimator,estimators,sources,requirements,cities,recent,journeyTracking,questionDropoff] = await Promise.all([
+  const [definitions,estimator,estimators,sources,requirements,cities,recent,recentCustomerLeads,journeyTracking,questionDropoff] = await Promise.all([
     getEstimatorDefinitions(),
     getEstimatorSummary(filters),
     getEstimatorBreakdown(filters),
@@ -618,6 +711,7 @@ async function getCustomerFunnelAnalytics(query = {}) {
     getRequirementFlowBreakdown(filters),
     getCityBreakdown(filters),
     getRecentCalculations(filters),
+    getRecentCustomerLeads(filters),
     getTrackedJourneyAnalytics(filters),
     getQuestionDropoffAnalytics(filters),
   ]);
@@ -648,6 +742,7 @@ async function getCustomerFunnelAnalytics(query = {}) {
     requirements,
     cities,
     recent,
+    recentCustomerLeads,
   };
 }
 

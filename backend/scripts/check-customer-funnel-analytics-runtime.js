@@ -72,7 +72,7 @@ async function main(){
     budget:null,
     source:'public_estimator',
     notes:null,
-    customFields:{_estimator:{calculationId:'fixture'},_intake:{flowKey:scope.key,definitionId:scope.definition_id,versionId:scope.version_id,versionNo:1,answers:{}}},
+    customFields:{_estimator:{calculationId:'fixture',contactPending:true,lifecycle:'estimate_completed'},_intake:{flowKey:scope.key,definitionId:scope.definition_id,versionId:scope.version_id,versionNo:1,answers:{}}},
     pincode:'500001',
     createdBy:null,
     deferQualityGate:true,
@@ -104,6 +104,24 @@ async function main(){
   assert.ok(all.requirements.some(item=>item.flowKey==='build'&&item.leads>=1),'Requirement flow attribution must use _intake.flowKey');
   assert.ok(all.cities.some(item=>Number(item.cityId)===Number(scope.city_id)&&item.calculations>=2),'City attribution must include estimator calculations');
   assert.ok(all.recent.items.some(item=>item.calculationId===convertedId&&Number(item.leadId)===estimatorLeadId),'Recent history must link converted calculation to canonical lead');
+  assert.ok(all.recentCustomerLeads.some(item=>Number(item.leadId)===directLeadId&&item.source==='public_requirement'&&item.contactReady===true),'Operational queue must include direct requirement leads');
+  const estimatorQueue=all.recentCustomerLeads.find(item=>Number(item.leadId)===estimatorLeadId);
+  assert.ok(estimatorQueue,'Operational queue must include estimator leads');
+  assert.equal(estimatorQueue.contactPending,true);
+  assert.equal(estimatorQueue.contactReady,false);
+  assert.equal(estimatorQueue.flowKey,scope.key);
+  assert.equal(estimatorQueue.calculationId,convertedId);
+
+  const directAdminPage=await leadService.getAdminLeadsPage({source:'public_requirement',leadId:String(directLeadId),limit:12});
+  assert.equal(directAdminPage.data.length,1,'Admin source filter must isolate the direct customer lead');
+  assert.equal(Number(directAdminPage.data[0].id),directLeadId);
+
+  const waitingAdminPage=await leadService.getAdminLeadsPage({source:'public_estimator',contactState:'awaiting_contact',leadId:String(estimatorLeadId),limit:12});
+  assert.equal(waitingAdminPage.data.length,1,'Admin contact filter must expose contact-pending estimator leads');
+  assert.equal(Number(waitingAdminPage.data[0].id),estimatorLeadId);
+
+  const readyAdminPage=await leadService.getAdminLeadsPage({source:'public_estimator',contactState:'contact_ready',leadId:String(estimatorLeadId),limit:12});
+  assert.equal(readyAdminPage.data.length,0,'Contact-pending estimator leads must not appear in the contact-ready filter');
 
   const converted=await funnel.getCustomerFunnelAnalytics({
     period:'30',

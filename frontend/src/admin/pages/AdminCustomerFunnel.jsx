@@ -97,6 +97,7 @@ function SourceCard({item}){
       <div><strong>{money(item.paidSales)}</strong><span>Gross paid sales</span></div>
     </div>
     <div className="source-premium-statuses">{statuses.length?statuses.map(([status,count])=><span key={status}><b>{count}</b>{status.replaceAll('_',' ')}</span>):<span>No leads in this period</span>}</div>
+    <Link className="source-premium-link" to={'/admin/leads?source='+encodeURIComponent(item.source)}>View these leads <span>→</span></Link>
   </article>
 }
 
@@ -133,6 +134,7 @@ export default function AdminCustomerFunnel(){
   const trackedFlows=Array.isArray(tracking.flows)?tracking.flows:[]
   const questionDropoff=Array.isArray(data.questionDropoff)?data.questionDropoff:[]
   const recent=data.recent||{items:[],pagination:{page:1,pages:1,total:0}}
+  const recentCustomerLeads=Array.isArray(data.recentCustomerLeads)?data.recentCustomerLeads:[]
   const selectedFlow=useMemo(()=>definitions.find(item=>String(item.id)===String(flowId)),[definitions,flowId])
   const periodLabel=period==='all'?'All time':period==='365'?'Last year':`Last ${period} days`
 
@@ -253,6 +255,31 @@ export default function AdminCustomerFunnel(){
       </article>
     </section>
 
+    <section className="premium-section customer-lead-ops">
+      <div className="premium-section-head">
+        <div><span>CUSTOMER LEAD OPERATIONS</span><h2>Recent customer-generated leads</h2><p>One operational queue for requirement forms and estimator journeys, showing contact readiness before marketplace release.</p></div>
+        <Link className="question-config-link" to="/admin/leads">Open Manage Leads <span>→</span></Link>
+      </div>
+      <div className="customer-lead-ops-list">
+        {recentCustomerLeads.length?recentCustomerLeads.map(item=>{
+          const awaiting=item.source==='public_estimator'&&item.contactPending
+          const href='/admin/leads?leadId='+encodeURIComponent(String(item.leadId))+'&source='+encodeURIComponent(item.source)+(awaiting?'&contactState=awaiting_contact':'')
+          return <article className={'customer-lead-ops-row '+(awaiting?'awaiting':'ready')} key={item.leadId}>
+            <div className="customer-lead-identity">
+              <span className={'customer-lead-source '+(item.source==='public_estimator'?'estimator':'requirement')}>{item.source==='public_estimator'?'₹':'⌁'}</span>
+              <div><small>{item.source==='public_estimator'?'ESTIMATOR':'REQUIREMENT FORM'} · LEAD #{item.leadId}</small><strong>{item.customerName||(awaiting?'Estimator customer':'Customer')}</strong><span>{item.flowName||item.flowKey||'Customer flow'}{item.flowKey?' · '+item.flowKey:''}</span></div>
+            </div>
+            <div className="customer-lead-contact"><small>CONTACT</small><b className={awaiting?'pending':'ready'}>{awaiting?'Awaiting contact':'Contact ready'}</b><span>{awaiting?'Estimate captured safely before quote request':[item.hasPhone?'Phone':null,item.hasEmail?'Email':null].filter(Boolean).join(' + ')||'Contact captured'}</span></div>
+            <div className="customer-lead-status"><small>LEAD STATUS</small><b>{String(item.status||'unknown').replaceAll('_',' ')}</b><span>{item.qualityGateStatus?String(item.qualityGateStatus).replaceAll('_',' '):awaiting?'Safe hold':'Canonical lead'}</span></div>
+            <div className="customer-lead-context"><small>PROJECT</small><b>{item.serviceName||item.industryName||'Customer requirement'}</b><span>{[item.cityName,item.stateName,item.pincode].filter(Boolean).join(' · ')||'Location unavailable'}</span></div>
+            <div className="customer-lead-value"><small>VALUE</small><b>{item.paidSales?money(item.paidSales):'—'}</b><span>{item.paidPurchases?item.paidPurchases+' paid purchase'+(item.paidPurchases===1?'':'s'):item.estimateMinimum!=null?money(item.estimateMinimum)+' – '+money(item.estimateMaximum):'Not monetized yet'}</span></div>
+            <div className="customer-lead-time"><small>CREATED</small><b>{when(item.createdAt)}</b>{item.convertedAt&&<span>Quote requested {when(item.convertedAt)}</span>}</div>
+            <Link className="customer-lead-open" to={href}>Open lead <span>→</span></Link>
+          </article>
+        }):<div className="premium-empty"><span>◈</span><h3>No customer leads in this window.</h3><p>Requirement-form and estimator-generated leads will appear here automatically.</p></div>}
+      </div>
+    </section>
+
     <section className="premium-section history-premium">
       <div className="premium-section-head history-head">
         <div><span>CALCULATION LEDGER</span><h2>Estimator history</h2><p>Immutable calculation records with version, location, quote conversion, linked lead and paid-sale context.</p></div>
@@ -266,7 +293,7 @@ export default function AdminCustomerFunnel(){
           <td><strong>{money(item.minimum)} – {money(item.maximum)}</strong></td>
           <td>{when(item.createdAt)}</td>
           <td>{item.convertedAt?<><b className="status-chip converted">Quote requested</b><small>{when(item.convertedAt)}</small></>:<b className="status-chip estimate">Estimate only</b>}</td>
-          <td>{item.leadId?<><Link to="/admin/leads">Lead #{item.leadId}</Link><small>{item.leadStatus||item.leadSource||'linked'}</small></>:<span>—</span>}</td>
+          <td>{item.leadId?<><Link to={'/admin/leads?leadId='+encodeURIComponent(String(item.leadId))+(item.leadSource?'&source='+encodeURIComponent(item.leadSource):'')+(item.leadSource==='public_estimator'&&!item.convertedAt?'&contactState=awaiting_contact':'')}>Lead #{item.leadId}</Link><small>{item.leadStatus||item.leadSource||'linked'}</small></>:<span>—</span>}</td>
           <td><strong>{item.paidSales?money(item.paidSales):'—'}</strong>{item.paidPurchases>0&&<small>{item.paidPurchases} purchase{item.paidPurchases===1?'':'s'}</small>}</td>
         </tr>):<tr><td colSpan="8" className="table-empty">No calculations match these filters.</td></tr>}
       </tbody></table></div>
