@@ -18,8 +18,8 @@ async function main(){
   assert.ok(flow,'Construction estimator must be seeded');
   assert.equal(flow.flow_type,'estimator');
   assert.equal(flow.status,'published');
-  assert.equal(flow.version_no,1);
-  assert.equal(flow.config.seedKey,'construction-cost-estimator-v1');
+  assert.ok(Number(flow.version_no)>=2);
+  assert.equal(flow.config.seedKey,'construction-cost-estimator-v2-modes');
   assert.match(String(flow.industry_name),/construction/i);
   assert.ok(/building|construction/i.test(String(flow.service_name)));
 
@@ -29,13 +29,14 @@ async function main(){
     [flow.version_id]
   )).rows;
   const keys=new Set(questions.map(q=>q.question_key));
-  for(const key of ['project_location','project_type','own_plot','plot_area','built_up_area','floors','construction_package','quality','basement','site_access','timeline','additional_requirement']){
+  for(const key of ['estimate_mode','project_location','project_type','own_plot','plot_area','built_up_area','floors','construction_package','quality','steel_spec','cement_spec','sand_spec','brick_spec','wire_spec','switch_spec','flooring_spec','basement','site_access','timeline','additional_requirement']){
     assert.ok(keys.has(key),`Missing Construction estimator question: ${key}`);
   }
   assert.equal(questions.find(q=>q.question_key==='project_location').question_type,'location');
   assert.equal(questions.find(q=>q.question_key==='project_type').lead_field,'property_type');
   assert.equal(questions.find(q=>q.question_key==='built_up_area').question_type,'area');
   assert.equal(questions.find(q=>q.question_key==='additional_requirement').visibility,'protected');
+  assert.deepEqual(questions.find(q=>q.question_key==='steel_spec').show_when,{questionKey:'estimate_mode',equals:'detailed'});
 
   const options=(await pool.query(
     `SELECT q.question_key,o.value,o.label
@@ -48,7 +49,9 @@ async function main(){
   for(const expected of [
     'project_type:house','project_type:villa','project_type:commercial','project_type:extension',
     'construction_package:turnkey','construction_package:structure_only','construction_package:finishing_only',
+    'estimate_mode:rough','estimate_mode:detailed',
     'quality:standard','quality:premium','quality:luxury',
+    'steel_spec:package_default','steel_spec:tata_550','cement_spec:ultratech_53','brick_spec:karimnagar_class_i','wire_spec:polycab_frls','switch_spec:gold_medal_air',
     'site_access:normal','site_access:restricted'
   ]) assert.ok(optionKey.has(expected),`Missing Construction estimator option: ${expected}`);
 
