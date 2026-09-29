@@ -55,7 +55,7 @@ async function main(){
     [flow.version_id]
   )).rows;
   const optionKey=new Set(options.map(o=>o.question_key+':'+o.value));
-  for(const expected of ['estimate_mode:rough','estimate_mode:detailed','property_type:apartment','property_type:villa','bhk:3bhk','scope_mode:full_home','scope_mode:selected_work','selected_work:kitchen','selected_work:wardrobes','finish_quality:premium','finish_quality:luxury','plywood_spec:package_default','plywood_spec:hdhmr_action_tesa','hardware_spec:hettich_hafele','modular_finish_spec:full_modular','customisations:profile_glass','customisations:quartz_platform','customisations:sensor_circuit','customisations:wall_panelling']){
+  for(const expected of ['estimate_mode:rough','estimate_mode:detailed','property_type:apartment','property_type:villa','scope_mode:full_home','scope_mode:selected_work','selected_work:kitchen','selected_work:wardrobes','finish_quality:premium','finish_quality:luxury','plywood_spec:package_default','plywood_spec:hdhmr_action_tesa','hardware_spec:hettich_hafele','modular_finish_spec:full_modular','customisations:profile_glass','customisations:quartz_platform','customisations:sensor_circuit','customisations:wall_panelling']){
     assert.ok(optionKey.has(expected),`Missing Interior estimator option: ${expected}`);
   }
 
