@@ -37,6 +37,14 @@ BEGIN
      LIMIT 1;
     IF def_id IS NULL THEN CONTINUE; END IF;
 
+    UPDATE customer_flow_definitions
+       SET name=CASE flow_key
+         WHEN 'build' THEN 'Construction Free Consultation'
+         ELSE 'Interior Free Consultation'
+       END,
+       updated_at=CURRENT_TIMESTAMP
+     WHERE id=def_id;
+
     IF EXISTS (
       SELECT 1 FROM customer_flow_versions
        WHERE definition_id=def_id AND config->>'seedKey'=seed_key
