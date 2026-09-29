@@ -72,7 +72,14 @@ async function main(){
       key:KEY,flowToken:flow.flowToken,answers:{area:'100',quality:'premium'},submissionKey:'ci_estimator_missing_contact_001',
       contact:{name:'',phone:'',email:''},consent:true,website:'',
     }),
-    error=>['NAME_REQUIRED','PHONE_REQUIRED'].includes(error.code)
+    error=>error.code==='INVALID_CONTACT'
+  );
+  await assert.rejects(
+    ()=>estimatorService.calculate({
+      key:KEY,flowToken:flow.flowToken,answers:{area:'100',quality:'premium'},submissionKey:'ci_estimator_invalid_phone_001',
+      contact:{name:'CI Customer',phone:'123',email:''},consent:true,website:'',
+    }),
+    error=>error.code==='INVALID_PHONE'
   );
   await assert.rejects(
     ()=>estimatorService.calculate({
