@@ -15,17 +15,29 @@ function packageMatches(item,answers){
   return Array.isArray(answer)?answer.map(String).includes(String(item.selectorValue)):String(answer??'')===String(item.selectorValue)
 }
 
-function PackagePreview({item,compact=false}){
-  if(!item)return null
-  const grouped=(item.details||[]).filter(detail=>detail.isActive!==false).reduce((acc,detail)=>{
+function groupPackageDetails(details){
+  return details.reduce((acc,detail)=>{
     const section=detail.section||'Specifications'
     if(!acc[section])acc[section]=[]
     acc[section].push(detail)
     return acc
   },{})
+}
+
+function PackageDetailGroups({details=[]}){
+  const grouped=groupPackageDetails(details)
+  return Object.entries(grouped).map(([section,rows])=><div className="est-package-section" key={section}><strong>{section}</strong><div>{rows.map(detail=><article key={detail.detailKey}><span>{detail.label}</span><b>{detail.value}</b>{detail.note&&<small>{detail.note}</small>}</article>)}</div></div>)
+}
+
+function PackagePreview({item,compact=false}){
+  if(!item)return null
+  const activeDetails=(item.details||[]).filter(detail=>detail.isActive!==false)
+  const visibleDetails=compact?activeDetails.slice(0,6):activeDetails
+  const hiddenDetails=compact?activeDetails.slice(6):[]
   return <section className={compact?'est-package-preview compact':'est-package-preview'}>
     <div className="est-package-preview-head"><div>{item.badge&&<span>{item.badge}</span>}<h3>{item.label}</h3>{item.summary&&<p>{item.summary}</p>}</div>{item.priceNote&&<b>{item.priceNote}</b>}</div>
-    {Object.entries(grouped).map(([section,details])=><div className="est-package-section" key={section}><strong>{section}</strong><div>{details.map(detail=><article key={detail.detailKey}><span>{detail.label}</span><b>{detail.value}</b>{detail.note&&<small>{detail.note}</small>}</article>)}</div></div>)}
+    <PackageDetailGroups details={visibleDetails}/>
+    {hiddenDetails.length>0&&<details className="est-package-more"><summary>View all {activeDetails.length} package specifications <span>+</span></summary><div className="est-package-more-body"><PackageDetailGroups details={hiddenDetails}/></div></details>}
   </section>
 }
 
