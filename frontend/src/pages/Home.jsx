@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { publicRequest } from '../utils/auth'
+import WebsiteFaqSection from '../components/WebsiteFaqSection'
 import './Home.css'
 
 const HERO_IMAGE = 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=2200&q=92'
@@ -392,6 +393,8 @@ function Home() {
           </article>)}
         </div>
       </section>
+
+      <WebsiteFaqSection variant="home" />
 
       <section className="hc-final" id="contact">
         <img src={finalImage} alt="" loading="lazy" />
