@@ -65,7 +65,7 @@ test('public homepage presents construction and interior company journeys',async
 })
 
 test('customer requirement and estimate journeys use one-page forms with compact dropdowns',async({page})=>{
-  await page.goto('/build')
+  await page.goto('/construction-consultation')
   await expect(page.locator('.rq-single-form')).toBeVisible()
   expect(await page.locator('.rq-form-section').count()).toBeGreaterThan(1)
   expect(await page.locator('.rq-select').count()).toBeGreaterThan(0)
@@ -82,7 +82,7 @@ test('public company pages stay customer-focused and professional',async({page})
   await page.goto('/construction')
   await expect(page.getByRole('heading',{name:/build your home with a clear scope/i})).toBeVisible()
   await expect(page.getByRole('link',{name:/professional/i}).first()).toHaveAttribute('href','/leads')
-  await expect(page.getByRole('link',{name:/get free consultation/i}).first()).toHaveAttribute('href','/build')
+  await expect(page.getByRole('link',{name:/get free consultation/i}).first()).toHaveAttribute('href','/construction-consultation')
 
   await page.goto('/packages')
   await expect(page.getByRole('heading',{name:/compare the specifications/i})).toBeVisible()
