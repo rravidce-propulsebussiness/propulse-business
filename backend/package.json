@@ -45,7 +45,8 @@
     "test:construction-estimator": "node scripts/check-construction-estimator-seed.js",
     "test:customer-funnel-analytics": "node scripts/check-customer-funnel-analytics-runtime.js",
     "test:customer-funnel-events": "node scripts/check-customer-funnel-events-runtime.js",
-    "test:customer-intake-auto-leads": "node scripts/check-customer-intake-auto-leads-runtime.js"
+    "test:customer-intake-auto-leads": "node scripts/check-customer-intake-auto-leads-runtime.js",
+    "test:estimator-packages": "node scripts/check-estimator-package-catalogue.js"
   },
   "keywords": [],
   "author": "",
