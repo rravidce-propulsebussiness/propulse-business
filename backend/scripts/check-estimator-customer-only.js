@@ -37,5 +37,8 @@ assert.match(companySite,/\?mode=rough/,'Company service pages must deep-link di
 assert.match(companySite,/\?mode=detailed/,'Company service pages must deep-link directly to detailed estimate mode');
 assert.match(companySite,/package=\$\{encodeURIComponent\(packageKey\)\}/,'Published package cards must carry the package selection into the estimator');
 assert.match(companySiteCss,/\.csp-package-start/,'Package-to-estimator actions need dedicated premium styling');
+assert.match(companySite,/activeDetails\.slice\(0,6\)/,'Public package cards must stay compact before expansion');
+assert.match(companySite,/csp-spec-toggle/,'Customers must be able to expand the full published package specification list');
+assert.match(companySiteCss,/\.csp-spec-toggle/,'Expandable package specifications need dedicated styling');
 
 console.log('Customer-only estimator regression checks passed.');
