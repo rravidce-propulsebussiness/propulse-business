@@ -22,7 +22,11 @@ export default function AdminEstimatorConfig({flowId,versionId,questions=[]}){
  const[config,setConfig]=useState(null),[cities,setCities]=useState([]),[busy,setBusy]=useState(false),[error,setError]=useState(''),[message,setMessage]=useState('')
  const numericQuestions=useMemo(()=>questions.filter(q=>['number','area'].includes(q.questionType)),[questions])
  const selectorQuestions=useMemo(()=>questions.filter(q=>['single_select','multi_select','boolean'].includes(q.questionType)),[questions])
- const materialQuestions=useMemo(()=>selectorQuestions.filter(q=>q.questionKey!=='estimate_mode'),[selectorQuestions])
+ const materialQuestions=useMemo(()=>selectorQuestions.filter(q=>{
+  if(q.questionKey==='estimate_mode')return false
+  const detailedRule=q.showWhen?.questionKey==='estimate_mode'&&(q.showWhen?.equals==='detailed'||(Array.isArray(q.showWhen?.in)&&q.showWhen.in.includes('detailed')))
+  return detailedRule||/(spec|material|laminate|hardware|finish|floor|brick|steel|cement|sand|wire|switch|ply)/i.test(q.questionKey)
+ }),[selectorQuestions])
 
  async function load(){
   if(!flowId)return
@@ -105,7 +109,7 @@ export default function AdminEstimatorConfig({flowId,versionId,questions=[]}){
   <div className="material-price-list">{adjustments.map((item,index)=>{
    if(item?.metadata?.kind!=='material_option')return null
    const q=questions.find(question=>question.questionKey===item.showWhen?.questionKey)
-   const options=Array.isArray(q?.options)?q.options.filter(option=>option.isActive!==false):[]
+   const options=Array.isArray(q?.options)?q.options.filter(option=>option.isActive!==false&&String(option.value)!=='package_default'):[]
    const selectedOption=options.find(option=>String(option.value)===String(item.showWhen?.equals??''))
    return <article className="material-price-card" key={item.id||item.adjustmentKey+'-'+index}>
     <div className="material-price-card-head"><div><span>DETAIL PRICE</span><strong>{item.label||'Detailed option price'}</strong><small>{q?.label||'Choose a specification'}{selectedOption?' · '+selectedOption.label:''}</small></div><label className="flow-toggle"><span><input disabled={!config.editable} type="checkbox" checked={item.isActive!==false} onChange={e=>patchAdjustment(index,{isActive:e.target.checked})}/> Active</span></label><button type="button" disabled={!config.editable} onClick={()=>setConfig(current=>({...current,adjustments:current.adjustments.filter((_,i)=>i!==index)}))}>Remove</button></div>
