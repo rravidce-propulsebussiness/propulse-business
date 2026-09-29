@@ -284,7 +284,7 @@ assert(!server.includes("servicePricingRoutes")&&!server.includes("'/api/service
 assert(!adminRoutes.includes('servicePricingController')&&!adminRoutes.includes("'/service-pricing'"),'Admin routes must not retain deleted Service Pricing controller references');
 assert(home.includes("publicRequest('/membership-plans/public')"),'Homepage pricing must come from Membership packages');
 assert(!home.includes("publicRequest('/service-pricing')")&&!home.includes('servicePricing'),'Homepage must not use the legacy Service Pricing source');
-assert(home.includes('MEMBERSHIP &amp; PRICING'),'Homepage pricing section must present Membership packages');
+assert(home.includes('PROFESSIONAL MEMBERSHIPS')&&home.includes('home-membership-section')&&home.includes("['grow','scale']"),'Homepage must present the configured GROW/SCALE Membership packages in the professional funnel');
 assert(membershipRoutes.includes("router.get('/public', membershipPlanController.getPublicPlans)"),'Public active-only Membership pricing endpoint must remain');
 assert(membershipRoutes.includes("router.get('/', requireAuth, membershipPlanController.getPlans)"),'Admin Membership configuration must keep authenticated full-plan access');
 assert(membershipController.includes('res.json(await s.getPlans(false))'),'Public Membership endpoint must return active plans only');

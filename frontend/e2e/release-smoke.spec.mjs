@@ -50,6 +50,20 @@ async function findFixtureLead(page,requirement){
 
 const TINY_PNG='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Wl6S0sAAAAASUVORK5CYII='
 
+test('public homepage presents customer project and estimator journeys',async({page})=>{
+  await page.goto('/')
+  await expect(page.getByRole('heading',{name:/plan the project/i})).toBeVisible()
+  await expect(page.getByRole('link',{name:/start build requirement/i})).toHaveAttribute('href','/build')
+  await expect(page.getByRole('link',{name:/start interior requirement/i})).toHaveAttribute('href','/design')
+  await expect(page.getByRole('link',{name:/calculate construction cost/i})).toHaveAttribute('href','/construction-estimator')
+  await expect(page.getByRole('link',{name:/calculate interior cost/i})).toHaveAttribute('href','/interior-estimator')
+  await expect(page.getByRole('link',{name:/professional marketplace/i}).first()).toHaveAttribute('href','/leads')
+
+  await page.getByRole('link',{name:/calculate interior cost/i}).click()
+  await expect(page).toHaveURL(/\/interior-estimator$/)
+  await expect(page.getByText('PROPULSE ESTIMATOR')).toBeVisible()
+})
+
 test('protected customer route redirects anonymous users to login',async({page})=>{
   await page.goto('/wallet')
   await expect(page).toHaveURL(/\/login$/)
