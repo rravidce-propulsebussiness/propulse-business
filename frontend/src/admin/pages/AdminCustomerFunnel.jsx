@@ -152,7 +152,7 @@ export default function AdminCustomerFunnel(){
         <div className="funnel-command-badges">
           <span><b>{compact(tracking.uniqueSessions||0)}</b> tracked sessions</span>
           <span><b>{compact(summary.calculations||0)}</b> completed estimates</span>
-          <span><b>{summary.conversionRate||0}%</b> estimate → quote</span>
+          <span><b>{summary.conversionRate||0}%</b> estimate → lead</span>
           <span><b>{money(summary.paidLeadSales||0)}</b> gross paid lead sales</span>
         </div>
       </div>
@@ -176,7 +176,7 @@ export default function AdminCustomerFunnel(){
 
     <section className="premium-kpi-grid">
       <Kpi icon="◎" eyebrow="ESTIMATE DEMAND" value={compact(summary.calculations)} label="Calculations completed" note={selectedFlow?selectedFlow.name:'All published estimator flows'} tone="blue"/>
-      <Kpi icon="↗" eyebrow="QUOTE INTENT" value={compact(summary.converted)} label="Actual quotes requested" note={`${summary.conversionRate||0}% of completed estimates converted`} tone="orange"/>
+      <Kpi icon="↗" eyebrow="LEAD CAPTURE" value={compact(summary.converted)} label="Estimator leads captured" note={`${summary.conversionRate||0}% of completed estimates are linked to canonical customer leads`} tone="orange"/>
       <Kpi icon="⌁" eyebrow="DIRECT DEMAND" value={compact(summary.directRequirementLeads)} label="Requirement-form leads" note="Build / Interior submissions that skipped the estimator path" tone="green"/>
       <Kpi icon="◈" eyebrow="CANONICAL OUTPUT" value={compact(summary.customerFunnelLeads)} label="Customer-funnel leads" note={`${compact(summary.monetizedLeads)} later produced a paid marketplace purchase`} tone="purple"/>
       <Kpi icon="₹" eyebrow="MARKETPLACE VALUE" value={money(summary.paidLeadSales)} label="Gross paid lead sales" note="Attributed sales amount, not Propulse net revenue or commission" tone="navy"/>
