@@ -304,7 +304,7 @@ assert(companySitePage.includes('csp-showcase-grid')&&companySitePage.includes('
 assert(homepageMediaService.includes('showcase_construction_1')&&homepageMediaService.includes('showcase_interior_2'),'Homepage media service must allow Construction and Interior showcase uploads');
 assert(adminHomepageMedia.includes('Construction showcase 01')&&adminHomepageMedia.includes('Interior showcase 02'),'Admin Homepage Media must expose project showcase slots');
 assert(homepageMediaService.includes('CONTENT_FIELDS')&&homepageMediaService.includes('updateContent'),'Homepage media service must persist whitelisted customer website copy');
-assert(adminHomepageMedia.includes('Save website copy')&&adminHomepageMedia.includes('Public Construction & Interior content'),'Admin Homepage Media must expose a focused website-copy editor');
+assert(adminHomepageMedia.includes('Save website copy')&&adminHomepageMedia.includes('Public Construction &amp; Interior content'),'Admin Homepage Media must expose a focused website-copy editor');
 assert(adminRoutes.includes("router.patch('/homepage-media/content',homepageMediaController.updateContent)"),'Admin must expose an authenticated route for public website copy updates');
 assert(home.includes('media.content?.home')&&companySitePage.includes('media.content?.[type]'),'Public company pages must consume Admin-managed website copy with frontend fallbacks');
 assert(home.includes("trackFunnelEvent('home_cta_clicked'")&&!home.includes("trackFunnelEvent('homepage_path_selected'"),'Homepage estimator CTAs must emit a supported first-party funnel event');
