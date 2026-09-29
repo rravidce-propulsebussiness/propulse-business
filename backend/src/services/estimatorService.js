@@ -201,6 +201,50 @@ async function cleanAdjustment(client, item, index, questionKeys) {
   };
 }
 
+function cleanPackageDetail(item, index, packageLabel) {
+  const detailKey = String(item?.detailKey || '').trim().toLowerCase();
+  const section = String(item?.section || 'Specifications').trim().slice(0,160) || 'Specifications';
+  const label = String(item?.label || '').trim().slice(0,180);
+  const value = String(item?.value || '').trim().slice(0,800);
+  const note = String(item?.note || '').trim().slice(0,800) || null;
+  if (!KEY_RE.test(detailKey) || !label || !value) fail(`Package "${packageLabel}" detail ${index + 1} is invalid`, 'INVALID_ESTIMATOR_PACKAGE');
+  return { detailKey,section,label,value,note,displayOrder:Number(item?.displayOrder) || (index + 1) * 10,isActive:item?.isActive !== false };
+}
+
+function cleanPackage(item, index, questionMap) {
+  const packageKey = String(item?.packageKey || '').trim().toLowerCase();
+  const label = String(item?.label || '').trim().slice(0,160);
+  const badge = String(item?.badge || '').trim().slice(0,80) || null;
+  const selectorQuestionKey = String(item?.selectorQuestionKey || '').trim().toLowerCase();
+  const selectorValue = String(item?.selectorValue ?? '').trim().slice(0,160);
+  const summary = String(item?.summary || '').trim().slice(0,800) || null;
+  const priceNote = String(item?.priceNote || '').trim().slice(0,240) || null;
+  if (!KEY_RE.test(packageKey) || !label || !selectorQuestionKey || !selectorValue) fail(`Estimator package ${index + 1} is invalid`, 'INVALID_ESTIMATOR_PACKAGE');
+  const question = questionMap.get(selectorQuestionKey);
+  if (!question) fail(`Package "${label}" references unknown question "${selectorQuestionKey}"`, 'INVALID_ESTIMATOR_PACKAGE');
+  if (!['single_select','multi_select','boolean'].includes(question.question_type)) fail(`Package "${label}" must use a select or boolean question`, 'INVALID_ESTIMATOR_PACKAGE');
+  const rawDetails = Array.isArray(item?.details) ? item.details : [];
+  if (rawDetails.length > 120) fail(`Package "${label}" has too many detail rows`, 'ESTIMATOR_CONFIG_TOO_LARGE');
+  const details = rawDetails.map((detail,detailIndex)=>cleanPackageDetail(detail,detailIndex,label));
+  if (new Set(details.map(detail=>detail.detailKey)).size !== details.length) fail(`Package "${label}" detail keys must be unique`, 'INVALID_ESTIMATOR_PACKAGE');
+  return {
+    packageKey,label,badge,selectorQuestionKey,selectorValue,summary,priceNote,
+    displayOrder:Number(item?.displayOrder) || (index + 1) * 10,
+    metadata:item?.metadata && typeof item.metadata === 'object' && !Array.isArray(item.metadata) ? item.metadata : {},
+    isActive:item?.isActive !== false,details,
+  };
+}
+
+function selectedPackage(packages, answers) {
+  for (const item of Array.isArray(packages) ? packages : []) {
+    if (item.isActive === false) continue;
+    const answer = answers?.[item.selectorQuestionKey];
+    const matched = Array.isArray(answer) ? answer.map(String).includes(String(item.selectorValue)) : String(answer ?? '') === String(item.selectorValue);
+    if (matched) return item;
+  }
+  return null;
+}
+
 async function versionQuestions(client, versionId) {
   return (await client.query('SELECT question_key,question_type FROM customer_flow_questions WHERE version_id=$1 AND is_active=TRUE',[versionId])).rows;
 }
@@ -223,7 +267,28 @@ async function getEstimatorConfigForVersion(client, versionId) {
     valueMin:String(row.value_min),valueMax:String(row.value_max),cityId:row.city_id,cityName:row.city_name || null,
     showWhen:row.show_when || {},displayOrder:row.display_order,metadata:row.metadata || {},isActive:row.is_active,
   }));
-  return { rates, adjustments };
+  const packageRows = (await client.query(
+    'SELECT * FROM estimator_packages WHERE version_id=$1 ORDER BY display_order,id',
+    [versionId]
+  )).rows;
+  const detailRows = packageRows.length ? (await client.query(
+    'SELECT * FROM estimator_package_details WHERE package_id=ANY($1::int[]) ORDER BY package_id,display_order,id',
+    [packageRows.map(row=>row.id)]
+  )).rows : [];
+  const detailsByPackage = new Map();
+  for (const row of detailRows) {
+    if (!detailsByPackage.has(Number(row.package_id))) detailsByPackage.set(Number(row.package_id),[]);
+    detailsByPackage.get(Number(row.package_id)).push({
+      id:row.id,detailKey:row.detail_key,section:row.section,label:row.label,value:row.value,note:row.note,
+      displayOrder:row.display_order,isActive:row.is_active,
+    });
+  }
+  const packages = packageRows.map(row=>({
+    id:row.id,packageKey:row.package_key,label:row.label,badge:row.badge,selectorQuestionKey:row.selector_question_key,
+    selectorValue:row.selector_value,summary:row.summary,priceNote:row.price_note,displayOrder:row.display_order,
+    metadata:row.metadata || {},isActive:row.is_active,details:detailsByPackage.get(Number(row.id)) || [],
+  }));
+  return { rates, adjustments, packages };
 }
 
 async function getAdminConfig(flowId) {
@@ -261,13 +326,16 @@ async function saveAdminConfig(flowId, payload) {
     const questionKeys = new Set(questionMap.keys());
     const rawRates = Array.isArray(payload?.rates) ? payload.rates : [];
     const rawAdjustments = Array.isArray(payload?.adjustments) ? payload.adjustments : [];
-    if (rawRates.length > 250 || rawAdjustments.length > 250) fail('Estimator configuration is too large', 'ESTIMATOR_CONFIG_TOO_LARGE');
+    const rawPackages = Array.isArray(payload?.packages) ? payload.packages : null;
+    if (rawRates.length > 250 || rawAdjustments.length > 250 || (rawPackages && rawPackages.length > 80)) fail('Estimator configuration is too large', 'ESTIMATOR_CONFIG_TOO_LARGE');
     const rates = rawRates.map((item,index) => cleanRate(item,index,questionMap));
     if (new Set(rates.map(item => item.rateKey)).size !== rates.length) fail('Estimator rate keys must be unique', 'INVALID_ESTIMATOR_CONFIG');
     const adjustments = [];
     for (let index=0; index<rawAdjustments.length; index += 1) adjustments.push(await cleanAdjustment(client,rawAdjustments[index],index,questionKeys));
     if (adjustments.some(item => item.cityId) && !questions.some(question => question.question_type === 'location')) fail('Add a location question before configuring city-specific adjustments','ESTIMATOR_LOCATION_REQUIRED');
     if (new Set(adjustments.map(item => item.adjustmentKey)).size !== adjustments.length) fail('Estimator adjustment keys must be unique', 'INVALID_ESTIMATOR_CONFIG');
+    const packages = rawPackages ? rawPackages.map((item,index)=>cleanPackage(item,index,questionMap)) : null;
+    if (packages && new Set(packages.map(item=>item.packageKey)).size !== packages.length) fail('Estimator package keys must be unique', 'INVALID_ESTIMATOR_PACKAGE');
 
     await client.query('DELETE FROM estimator_rate_items WHERE version_id=$1',[version.id]);
     await client.query('DELETE FROM estimator_adjustments WHERE version_id=$1',[version.id]);
@@ -284,6 +352,23 @@ async function saveAdminConfig(flowId, payload) {
          VALUES($1,$2,$3,$4,$5,$6,$7,$8::jsonb,$9,$10::jsonb,$11)`,
         [version.id,item.adjustmentKey,item.label,item.adjustmentType,item.valueMin,item.valueMax,item.cityId,JSON.stringify(item.showWhen),item.displayOrder,JSON.stringify(item.metadata),item.isActive]
       );
+    }
+    if (packages) {
+      await client.query('DELETE FROM estimator_packages WHERE version_id=$1',[version.id]);
+      for (const item of packages) {
+        const packageRow = (await client.query(
+          `INSERT INTO estimator_packages(version_id,package_key,label,badge,selector_question_key,selector_value,summary,price_note,display_order,metadata,is_active)
+           VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10::jsonb,$11) RETURNING id`,
+          [version.id,item.packageKey,item.label,item.badge,item.selectorQuestionKey,item.selectorValue,item.summary,item.priceNote,item.displayOrder,JSON.stringify(item.metadata),item.isActive]
+        )).rows[0];
+        for (const detail of item.details) {
+          await client.query(
+            `INSERT INTO estimator_package_details(package_id,detail_key,section,label,value,note,display_order,is_active)
+             VALUES($1,$2,$3,$4,$5,$6,$7,$8)`,
+            [packageRow.id,detail.detailKey,detail.section,detail.label,detail.value,detail.note,detail.displayOrder,detail.isActive]
+          );
+        }
+      }
     }
     await client.query('COMMIT');
     return getAdminConfig(flowId);
@@ -327,6 +412,7 @@ function calculationResponse({ flow, calculation, location, result, leadId=null,
     cityId:calculation.city_id || location?.cityId || null,
     cityName:location?.cityName || null,
     breakdown:result.breakdown,
+    package:selectedPackage(flow.packages,calculation.answers || {}),
     quoteEligible:Boolean((calculation.city_id || location?.cityId) && (calculation.pincode || location?.pincode)),
     leadId:leadId ? Number(leadId) : null,
     leadStatus:leadStatus || null,
@@ -393,7 +479,7 @@ async function calculate({ key, flowToken, answers, submissionKey }) {
   customerFlowService.verifyFlowToken(flowToken, flow.versionId);
   const safeAnswers = validateAnswers(flow,answers);
   const intakeKey = String(submissionKey || '').trim() ? validateSubmissionKey(submissionKey) : `estcalc_${crypto.randomBytes(18).toString('base64url')}`;
-  const { rates, adjustments } = await getEstimatorConfigForVersion(pool,flow.versionId);
+  const { rates, adjustments, packages } = await getEstimatorConfigForVersion(pool,flow.versionId);
   if (!rates.some(item => item.isActive !== false)) fail('This estimator is not configured yet', 'ESTIMATOR_NOT_CONFIGURED', 409);
 
   const existing = (await pool.query(
@@ -421,6 +507,7 @@ async function calculate({ key, flowToken, answers, submissionKey }) {
     flow:{definitionId:flow.definitionId,key:flow.key,versionId:flow.versionId,versionNo:flow.versionNo},
     rates,
     adjustments,
+    packages,
   };
   const snapshotJson = JSON.stringify(snapshot);
   const configHash = crypto.createHash('sha256').update(snapshotJson).digest('hex');
@@ -618,7 +705,7 @@ async function getCalculation(publicId) {
   const id = String(publicId || '').trim();
   if (!/^[A-Za-z0-9_-]{20,64}$/.test(id)) fail('Estimate not found', 'ESTIMATE_NOT_FOUND', 404);
   const row = (await pool.query(
-    `SELECT ec.public_id,ec.result_min,ec.result_max,ec.currency,ec.created_at,ec.city_id,c.name city_name,
+    `SELECT ec.public_id,ec.result_min,ec.result_max,ec.currency,ec.created_at,ec.city_id,ec.answers,ec.config_snapshot,c.name city_name,
             d.key flow_key,v.version_no
        FROM estimator_calculations ec
        JOIN customer_flow_definitions d ON d.id=ec.definition_id
@@ -632,6 +719,7 @@ async function getCalculation(publicId) {
     calculationId:row.public_id,minimum:Number(row.result_min),maximum:Number(row.result_max),
     currency:row.currency,createdAt:row.created_at,cityId:row.city_id,cityName:row.city_name || null,
     flowKey:row.flow_key,versionNo:row.version_no,
+    package:selectedPackage(row.config_snapshot?.packages,row.answers || {}),
   };
 }
 
