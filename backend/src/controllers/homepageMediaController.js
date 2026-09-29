@@ -18,8 +18,12 @@ async function upload(req,res){
     return sendError(res,status,error,'Failed to save homepage image',{code:error.code});
   }
 }
+async function updateContent(req,res){
+  try{return res.json(await homepageMediaService.updateContent(req.body?.content))}
+  catch(error){console.error('Save homepage content failed:',error.message);return sendError(res,500,error,'Failed to save homepage content')}
+}
 async function remove(req,res){
   try{return res.json(await homepageMediaService.remove(req.params.slot))}
   catch(error){const status=error.code==='INVALID_SLOT'?400:500;if(status===500)console.error('Remove homepage image failed:',error.message);return sendError(res,status,error,'Failed to remove homepage image',{code:error.code})}
 }
-module.exports={getPublic,getAdmin,upload,remove};
+module.exports={getPublic,getAdmin,upload,updateContent,remove};
