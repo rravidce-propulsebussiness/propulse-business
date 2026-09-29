@@ -139,16 +139,15 @@ function renderEstimatePdf(data) {
   const mode=String(data.answers?.estimate_mode||'rough').toLowerCase();
   const singleExperience=data.flow?.config?.estimateExperience==='single';
   const modeLabel=singleExperience?String(data.flow?.config?.estimateLabel||'Project Estimate'):(mode==='detailed'?'Detailed Estimate':'Rough Estimate');
-  sections.push({type:'title',title:data.flow.name||'Project Cost Estimate',subtitle:modeLabel});
+  sections.push({type:'title',title:'ProPulse Business',subtitle:`${data.flow.name||'Project Cost Estimate'} · ${modeLabel}`});
   const summaryRows=[
-    ['Customer',data.lead.customer_name||'Customer'],
+    ['Customer name',data.lead.customer_name||'Customer'],
     ['Mobile',data.lead.customer_phone||''],
     ['Email',data.lead.customer_email||'Not provided'],
-    ['Location',[data.cityName,data.stateName,data.pincode].filter(Boolean).join(', ')],
-    ['Estimate ID',data.publicId],
-    ['Estimate version',`v${data.versionNo}`],
-    ['Generated',data.createdAt?new Date(data.createdAt).toISOString().slice(0,10):''],
-    ['Estimate range',moneyRange(data.minimum,data.maximum)],
+    ['Project location',[data.cityName,data.stateName,data.pincode].filter(Boolean).join(', ')],
+    ['Estimate reference',data.publicId],
+    ['Prepared on',data.createdAt?new Date(data.createdAt).toISOString().slice(0,10):''],
+    ['Indicative project budget',moneyRange(data.minimum,data.maximum)],
   ];
   const builtUpArea=Number(data.answers?.built_up_area);
   if(Number.isFinite(builtUpArea)&&builtUpArea>0){
@@ -196,7 +195,7 @@ function renderEstimatePdf(data) {
   sections.push({type:'table',rows:projectRows});
 
   if(detailed.length){
-    sections.push({type:'heading',text:'Detailed selections'});
+    sections.push({type:'heading',text:'Selected specifications'});
     sections.push({type:'table',rows:detailed});
   }
 
@@ -276,7 +275,7 @@ async function getEstimatePdf(publicId, token) {
 
   const row=(await pool.query(
     `SELECT ec.*,c.name city_name,st.name state_name,l.customer_name,l.customer_phone,l.customer_email,
-            d.name flow_name,v.version_no,v.config
+            d.name flow_name,d.key flow_key,v.version_no,v.config
        FROM estimator_calculations ec
        JOIN customer_flow_definitions d ON d.id=ec.definition_id
        JOIN customer_flow_versions v ON v.id=ec.version_id
@@ -307,7 +306,8 @@ async function getEstimatePdf(publicId, token) {
     consultationText:String(flow.config?.consultationText||'Use this saved estimate and project brief during the consultation so measurements, site conditions, drawings and final specifications can be confirmed without re-entering the same information.'),
     lead:{customer_name:row.customer_name,customer_phone:row.customer_phone,customer_email:row.customer_email},
   });
-  return {buffer,filename:`propulse-estimate-${id.slice(0,8)}.pdf`};
+  const estimateType=String(row.flow_key||'project').includes('construction')?'construction':String(row.flow_key||'').includes('interior')?'interior':'project';
+  return {buffer,filename:`propulse-${estimateType}-project-estimate-${id.slice(0,8)}.pdf`};
 }
 
 module.exports={createPdfToken,verifyPdfToken,getEstimatePdf,renderEstimatePdf};
