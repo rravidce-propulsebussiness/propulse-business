@@ -334,7 +334,7 @@ export default function RequirementWizard({ flowKey }) {
         <Link to="/projects">Projects</Link>
         <Link to="/how-it-works">How It Works</Link>
         <Link to="/about">About</Link>
-        <Link to="/#contact">Contact</Link>
+        <Link to="/contact">Contact</Link>
       </nav>
       <button onClick={() => jump('rq-basic')}>Get Free Consultation <Icon name="arrow" size={15} /></button>
     </header>

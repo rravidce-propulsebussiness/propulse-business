@@ -19,6 +19,15 @@ async function getAdmin(req,res){
     return sendError(res,status,error,'Failed to load contact settings',{code:error.code});
   }
 }
+async function submitInquiry(req,res){
+  try{return res.status(201).json(await contactService.createInquiry(req.body||{}))}
+  catch(error){
+    const clientCodes=['SPAM_REJECTED','INVALID_CONTACT','INVALID_PHONE','INVALID_EMAIL','INVALID_INTEREST','INVALID_CITY','INVALID_MESSAGE','INVALID_SUBMISSION_KEY'];
+    const status=clientCodes.includes(error.code)?400:500;
+    if(status===500)console.error('Submit public contact inquiry failed:',error.message);
+    return sendError(res,status,error,'Failed to send message',{code:error.code});
+  }
+}
 async function updateAdmin(req,res){
   try{return res.json(await contactService.update(req.body||{},audience(req)))}
   catch(error){
@@ -27,4 +36,4 @@ async function updateAdmin(req,res){
     return sendError(res,status,error,'Failed to save contact settings',{code:error.code});
   }
 }
-module.exports={getPublic,getAdmin,updateAdmin};
+module.exports={getPublic,getAdmin,submitInquiry,updateAdmin};

@@ -214,7 +214,7 @@ function Home() {
         <button onClick={() => navigate('/projects')}>Projects</button>
         <button onClick={() => navigate('/how-it-works')}>How It Works</button>
         <button onClick={() => navigate('/about')}>About</button>
-        <button onClick={() => scrollTo('contact')}>Contact</button>
+        <button onClick={() => navigate('/contact')}>Contact</button>
       </nav>
       <div className="pp-header-actions">
         <button className="pp-header-cta" onClick={() => scrollTo('home')}>Get Free Consultation <Icon name="arrow" size={16} /></button>
@@ -400,7 +400,7 @@ function Home() {
 
     <footer className="pp-footer">
       <div className="pp-footer-logo"><img src="/brand/propulse-logo.svg" alt="ProPulse" /><p>Construction, interiors and real estate requirements — one customer starting point.</p><small>© {new Date().getFullYear()} ProPulse. All rights reserved.</small></div>
-      <div><b>Quick Links</b><button onClick={() => scrollTo('home')}>Home</button><button onClick={() => navigate('/projects')}>Projects</button><button onClick={() => scrollTo('cities')}>Locations</button><button onClick={() => scrollTo('contact')}>Contact</button></div>
+      <div><b>Quick Links</b><button onClick={() => scrollTo('home')}>Home</button><button onClick={() => navigate('/projects')}>Projects</button><button onClick={() => scrollTo('cities')}>Locations</button><button onClick={() => navigate('/contact')}>Contact</button></div>
       <div><b>Our Services</b><Link to="/build">Construction</Link><Link to="/design">Interior Design</Link><Link to="/property">Real Estate</Link><Link to="/construction-estimator">Cost Estimator</Link></div>
       <div><b>Support</b><Link to="/contact?audience=users">FAQs</Link><Link to="/contact?audience=users">Privacy Policy</Link><Link to="/contact?audience=users">Terms & Conditions</Link></div>
       <div className="pp-footer-contact"><b>Contact</b>{phone && <span>{phone}</span>}{email && <span>{email}</span>}<span>Hyderabad, India</span></div>
