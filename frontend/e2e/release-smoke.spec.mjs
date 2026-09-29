@@ -64,6 +64,27 @@ test('public homepage presents construction and interior company journeys',async
   await expect(page.getByText('PROJECT COST ESTIMATOR')).toBeVisible()
 })
 
+test('public company pages stay customer-focused and Admin-driven',async({page})=>{
+  await page.goto('/construction')
+  await expect(page.getByRole('heading',{name:/build with a clear package/i})).toBeVisible()
+  await expect(page.getByRole('link',{name:/professional/i}).first()).toHaveAttribute('href','/leads')
+  await expect(page.getByText('Package details come directly from Admin.')).toBeVisible()
+
+  await page.goto('/packages')
+  await expect(page.getByRole('heading',{name:/compare the specifications/i})).toBeVisible()
+  await expect(page.getByRole('button',{name:'Construction'})).toBeVisible()
+  await expect(page.getByRole('button',{name:'Interiors'})).toBeVisible()
+
+  await page.goto('/how-it-works')
+  await expect(page.getByRole('heading',{name:/clear project journey/i})).toBeVisible()
+  await expect(page.getByText('Consultation',{exact:true})).toBeVisible()
+  await expect(page.getByText('Handover',{exact:true})).toBeVisible()
+
+  await page.goto('/contact')
+  await expect(page.getByRole('heading',{name:/tell us what you are planning/i})).toBeVisible()
+  await expect(page.getByRole('link',{name:/construction estimate/i})).toBeVisible()
+})
+
 test('protected customer route redirects anonymous users to login',async({page})=>{
   await page.goto('/wallet')
   await expect(page).toHaveURL(/\/login$/)
