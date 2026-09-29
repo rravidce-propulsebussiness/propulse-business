@@ -9,7 +9,7 @@ const pageCopy={
     title:'Home construction, planned from foundation to finish.',
     text:'Compare construction packages, get a practical project estimate and continue with a free construction consultation when you are ready.',
     estimator:'/construction-estimator',
-    requirement:'/build',
+    requirement:'/construction-consultation',
     flowKey:'construction-cost-estimator',
     imageKey:'residential',
     fallback:'/homepage/default-residential.svg',
@@ -19,7 +19,7 @@ const pageCopy={
     title:'Complete home interiors, planned around your space and budget.',
     text:'Plan kitchens, wardrobes, finishes and full-home interiors with clear package choices, a practical estimate and a free design consultation.'
     estimator:'/interior-estimator',
-    requirement:'/design',
+    requirement:'/interior-consultation',
     flowKey:'interior-cost-estimator',
     imageKey:'interior',
     fallback:'/homepage/default-interior.svg',
@@ -69,8 +69,8 @@ function CompanyHeader(){
 function CompanyFooter(){
   return <footer className="csp-footer">
     <div><img src="/brand/propulse-logo.png" alt="ProPulse Business"/><p>Construction and Interior planning, project estimates and professional consultation.</p></div>
-    <div><strong>Construction</strong><Link to="/construction">Overview</Link><Link to="/construction-estimator">Estimator</Link><Link to="/build">Free Consultation</Link></div>
-    <div><strong>Interiors</strong><Link to="/interiors">Overview</Link><Link to="/interior-estimator">Estimator</Link><Link to="/design">Free Consultation</Link></div>
+    <div><strong>Construction</strong><Link to="/construction">Overview</Link><Link to="/construction-estimator">Estimator</Link><Link to="/construction-consultation">Free Consultation</Link></div>
+    <div><strong>Interiors</strong><Link to="/interiors">Overview</Link><Link to="/interior-estimator">Estimator</Link><Link to="/interior-consultation">Free Consultation</Link></div>
     <div><strong>Company</strong><Link to="/packages">Packages</Link><Link to="/how-it-works">How It Works</Link><Link to="/about">About</Link><Link to="/contact">Contact</Link></div>
   </footer>
 }
@@ -151,7 +151,7 @@ function HowItWorksPage(){
   return <div className="csp-page"><CompanyHeader/><main>
     <section className="csp-simple-hero"><span>HOW IT WORKS</span><h1>A clear project journey from first conversation to handover.</h1><p>Start with an estimate or free consultation, then move into scope confirmation, design, planning, execution and handover.</p></section>
     <section className="csp-section"><div className="csp-step-grid">{steps.map(([number,title,text])=><article key={number}><b>{number}</b><div><h3>{title}</h3><p>{text}</p></div></article>)}</div></section>
-    <section className="csp-bottom-cta"><div><span>START WITH PLANNING</span><h2>Get a project estimate or choose a free consultation.</h2></div><div><Link className="primary" to="/construction-estimator">Construction Estimate →</Link><Link to="/design">Free Interior Consultation</Link></div></section>
+    <section className="csp-bottom-cta"><div><span>START WITH PLANNING</span><h2>Get a project estimate or choose a free consultation.</h2></div><div><Link className="primary" to="/construction-estimator">Construction Estimate →</Link><Link to="/interior-consultation">Free Interior Consultation</Link></div></section>
   </main><CompanyFooter/></div>
 }
 
@@ -170,7 +170,7 @@ function ContactPage(){
   return <div className="csp-page"><CompanyHeader/><main>
     <section className="csp-simple-hero"><span>CONTACT</span><h1>Tell us what you are planning.</h1><p>Start with a project estimate or request a free consultation. You can also reach our team using the contact details below.</p></section>
     <section className="csp-section csp-contact-grid">
-      <div className="csp-contact-actions"><h2>Start with your project.</h2><p>Choose an estimate when you want a budget range, or a free consultation when you want our team to call you back first.</p><Link className="primary" to="/construction-estimator">Construction Estimate →</Link><Link to="/interior-estimator">Interior Estimate →</Link><Link to="/build">Free Construction Consultation</Link><Link to="/design">Free Interior Consultation</Link></div>
+      <div className="csp-contact-actions"><h2>Start with your project.</h2><p>Choose an estimate when you want a budget range, or a free consultation when you want our team to call you back first.</p><Link className="primary" to="/construction-estimator">Construction Estimate →</Link><Link to="/interior-estimator">Interior Estimate →</Link><Link to="/construction-consultation">Free Construction Consultation</Link><Link to="/interior-consultation">Free Interior Consultation</Link></div>
       <div className="csp-contact-details"><a href={contact.phone?'tel:'+contact.phone:'#'}><small>PHONE</small><strong>{contact.phone||'Call us for details'}</strong></a><a href={contact.email?'mailto:'+contact.email:'#'}><small>EMAIL</small><strong>{contact.email||'Email us for details'}</strong></a><a href={whatsapp?'https://wa.me/'+whatsapp:'#'} target="_blank" rel="noreferrer"><small>WHATSAPP</small><strong>{contact.whatsapp||'WhatsApp details coming soon'}</strong></a><div><small>OFFICE</small><strong>{contact.address||'Contact us for office details'}</strong></div></div>
     </section>
   </main><CompanyFooter/></div>
