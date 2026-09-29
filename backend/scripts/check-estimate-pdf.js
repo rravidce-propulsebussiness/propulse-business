@@ -12,6 +12,11 @@ const pdf=renderEstimatePdf({
   versionNo:2,
   minimum:2100000,
   maximum:2450000,
+  createdAt:'2026-09-29T10:00:00.000Z',
+  breakdown:[
+    {kind:'rate',key:'base',label:'Base construction rate',minimum:2000000,maximum:2250000},
+    {kind:'adjustment',key:'premium',label:'Premium specification',minimum:100000,maximum:200000},
+  ],
   cityName:'Hyderabad',
   stateName:'Telangana',
   pincode:'500001',
@@ -40,6 +45,8 @@ assert.ok(Buffer.isBuffer(pdf));
 assert.ok(pdf.length>1000);
 assert.equal(pdf.subarray(0,8).toString('ascii'),'%PDF-1.4');
 assert.match(pdf.toString('ascii'),/Detailed Estimate/);
+assert.match(pdf.toString('ascii'),/Estimate calculation/);
+assert.match(pdf.toString('ascii'),/Base construction rate/);
 assert.match(pdf.toString('ascii'),/TATA 550 TMT/);
 assert.match(pdf.toString('ascii'),/CI Customer/);
 
