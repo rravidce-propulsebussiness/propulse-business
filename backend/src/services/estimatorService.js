@@ -4,6 +4,7 @@ const customerFlowService = require('./customerFlowService');
 const pincodeDetectionService = require('./pincodeDetectionService');
 const leadService = require('./leadService');
 const leadQualityGateService = require('./leadQualityGateService');
+const estimatePdfService = require('./estimatePdfService');
 const { normalizePhone, normalizeEmail, normalizeName, validateSubmissionKey } = require('./publicContactValidationService');
 const { parseMoneyPaise, paiseToMoney } = require('../utils/money');
 const { fail, isEmpty, isVisible, formatAnswer, validateAnswers } = require('./customerFlowValidationService');
@@ -417,6 +418,7 @@ function calculationResponse({ flow, calculation, location, result, leadId=null,
     leadId:leadId ? Number(leadId) : null,
     leadStatus:leadStatus || null,
     duplicate:Boolean(duplicate),
+    pdfToken:estimatePdfService.createPdfToken(calculation.public_id),
     disclaimer:String(flow.config?.estimatorDisclaimer || 'This is an indicative estimate based on the information provided. Final pricing may change after site inspection, measurements, specifications and professional review.'),
   };
 }
@@ -779,6 +781,7 @@ async function getCalculation(publicId) {
     currency:row.currency,createdAt:row.created_at,cityId:row.city_id,cityName:row.city_name || null,
     flowKey:row.flow_key,versionNo:row.version_no,
     package:selectedPackage(row.config_snapshot?.packages,row.answers || {}),
+    pdfToken:estimatePdfService.createPdfToken(row.public_id),
   };
 }
 
