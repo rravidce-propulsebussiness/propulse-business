@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { publicRequest } from '../utils/auth'
 import { isEmptyAnswer, isQuestionVisible } from '../components/CustomerFlowQuestion'
 import InteriorRequirementExact from '../components/InteriorRequirementExact'
+import RealEstateRequirementExact from '../components/RealEstateRequirementExact'
 import './RequirementWizard.css'
 
 const emptyContact = { name: '', phone: '', email: '' }
