@@ -295,6 +295,8 @@ assert(home.includes("publicRequest('/customer-flows/construction-cost-estimator
 assert(!home.includes('const packageHighlights='),'Homepage must not hard-code package names or package descriptions');
 assert(home.includes("trackFunnelEvent('home_cta_clicked'")&&!home.includes("trackFunnelEvent('homepage_path_selected'"),'Homepage estimator CTAs must emit a supported first-party funnel event');
 assert(app.includes('path="/construction"')&&app.includes('path="/interiors"')&&app.includes('path="/packages"')&&app.includes('path="/how-it-works"')&&app.includes('path="/about"'),'Public company routes must remain available');
+assert(app.includes("function LoggedInHomeRoute(){const token=getToken(),user=getUser();")&&!app.includes("if(token&&user)return <Navigate to=\"/leads\" replace/>"),'Logged-in professionals must still see the customer company homepage until they choose Professional');
+assert(app.includes('<Route path="/pricing" element={<Navigate to="/packages" replace/>}/>'),'Legacy public pricing URL must redirect to customer Packages');
 assert(companySitePage.includes("publicRequest('/customer-flows/'+cfg.flowKey)")&&companySitePage.includes("publicRequest('/customer-flows/construction-cost-estimator')")&&companySitePage.includes("publicRequest('/customer-flows/interior-cost-estimator')"),'Company service and package pages must use published estimator configuration');
 assert(companySitePage.includes('Professional')&&companySitePage.includes('to="/leads"'),'Company header must expose Professional access');
 assert(!companySitePage.includes('Buy Leads')&&!companySitePage.includes('Membership'),'Customer company pages must not expose marketplace purchasing or membership language');
