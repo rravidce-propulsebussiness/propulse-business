@@ -18,13 +18,15 @@ async function main(){
   assert.ok(flow,'Construction estimator must be seeded');
   assert.equal(flow.flow_type,'estimator');
   assert.equal(flow.status,'published');
-  assert.ok(Number(flow.version_no)>=3);
-  assert.equal(flow.config.seedKey,'construction-cost-estimator-v3-brochure');
+  assert.ok(Number(flow.version_no)>=4);
+  assert.equal(flow.config.seedKey,'construction-cost-estimator-v4-single-estimate');
+  assert.equal(flow.config.estimateExperience,'single');
+  assert.equal(flow.config.estimateLabel,'Project Estimate');
   assert.match(String(flow.industry_name),/construction/i);
   assert.ok(/building|construction/i.test(String(flow.service_name)));
 
   const questions=(await pool.query(
-    `SELECT question_key,question_type,is_required,show_when,lead_field,visibility
+    `SELECT question_key,question_type,is_required,show_when,lead_field,visibility,validation
        FROM customer_flow_questions WHERE version_id=$1 AND is_active=TRUE ORDER BY display_order,id`,
     [flow.version_id]
   )).rows;
@@ -37,6 +39,12 @@ async function main(){
   assert.equal(questions.find(q=>q.question_key==='built_up_area').question_type,'area');
   assert.equal(questions.find(q=>q.question_key==='additional_requirement').visibility,'protected');
   assert.deepEqual(questions.find(q=>q.question_key==='steel_spec').show_when,{questionKey:'estimate_mode',equals:'detailed'});
+  const modeQuestion=questions.find(q=>q.question_key==='estimate_mode');
+  assert.equal(modeQuestion.validation.systemHidden,true);
+  assert.equal(modeQuestion.validation.systemDefault,'detailed');
+  assert.equal(questions.find(q=>q.question_key==='steel_spec').is_required,false);
+  assert.equal(questions.find(q=>q.question_key==='steel_spec').validation.advancedSection,true);
+  assert.equal(questions.find(q=>q.question_key==='steel_spec').validation.systemDefault,'package_default');
 
   const options=(await pool.query(
     `SELECT q.question_key,o.value,o.label
