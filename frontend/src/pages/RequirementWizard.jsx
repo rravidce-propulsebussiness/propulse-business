@@ -105,10 +105,10 @@ export default function RequirementWizard({ flowKey }) {
 
   if (state.loading) return <main className="rq-page"><div className="rq-shell rq-status">Loading your requirement form…</div></main>
   if (!flow) return <main className="rq-page"><div className="rq-shell rq-status error">{state.error || 'This requirement form is unavailable.'}<Link to="/">Back home</Link></div></main>
-  if (state.success) return <main className="rq-page"><div className="rq-shell rq-success"><div className="rq-success-mark">✓</div><span>REQUEST RECEIVED</span><h1>We have your requirement.</h1><p>Relevant businesses may contact you about this request. Your contact details remain protected from businesses until ProPulse access rules allow them to view the lead.</p><div><Link to="/">Back home</Link><button type="button" onClick={() => window.location.reload()}>Post another requirement</button></div></div></main>
+  if (state.success) return <main className="rq-page"><div className="rq-shell rq-success"><div className="rq-success-mark">✓</div><span>REQUEST RECEIVED</span><h1>We have your requirement.</h1><p>Your project enquiry has been saved. The same requirement details will stay attached to the lead for professional follow-up.</p><div><Link to="/">Back home</Link><button type="button" onClick={() => window.location.reload()}>Post another requirement</button></div></div></main>
 
   return <main className="rq-page">
-    <header className="rq-top"><Link to="/"><img src="/brand/propulse-logo.png" alt="ProPulse Business" /></Link><Link to="/leads">For businesses →</Link></header>
+    <header className="rq-top"><Link to="/"><img src="/brand/propulse-logo.png" alt="ProPulse Business" /></Link><Link to="/leads">Professional →</Link></header>
     <div className="rq-shell">
       <aside className="rq-side"><span>PROPULSE REQUIREMENTS</span><h1>{flow.name}</h1><p>{flow.config?.subheadline || 'Tell us a few details so we can connect your requirement with relevant businesses.'}</p><div className="rq-scope"><small>Category</small><b>{[flow.industryName, flow.serviceName].filter(Boolean).join(' · ')}</b></div><ul><li>✓ No login required</li><li>✓ No OTP in this version</li><li>✓ Contact details protected</li></ul></aside>
       <section className="rq-card">
@@ -119,9 +119,9 @@ export default function RequirementWizard({ flowKey }) {
           {state.error && <div className="rq-error">{state.error}</div>}
           <div className="rq-actions"><button type="button" className="secondary" disabled={step === 0} onClick={() => setStep(Math.max(0, step - 1))}>← Back</button><button type="button" className="primary" onClick={next}>{step === questions.length - 1 ? 'Continue to contact' : 'Next'} →</button></div>
         </> : <form onSubmit={submit}>
-          <div className="rq-step"><span>FINAL STEP</span><h2>Where should businesses reach you?</h2><p>We only ask for contact details after your requirement is complete.</p></div>
+          <div className="rq-step"><span>FINAL STEP</span><h2>Where should we reach you?</h2><p>Enter your name and mobile number so this project requirement can be saved as a customer enquiry.</p></div>
           <div className="rq-contact-grid"><label>Name<input value={contact.name} onChange={event => setContact({ ...contact, name: event.target.value })} autoComplete="name" required /></label><label>Mobile number<input value={contact.phone} onChange={event => setContact({ ...contact, phone: event.target.value })} inputMode="tel" autoComplete="tel" placeholder="10-digit mobile" required /></label><label className="wide">Email <small>Optional</small><input type="email" value={contact.email} onChange={event => setContact({ ...contact, email: event.target.value })} autoComplete="email" /></label><label className="rq-honeypot" aria-hidden="true">Website<input tabIndex="-1" autoComplete="off" value={website} onChange={event => setWebsite(event.target.value)} /></label></div>
-          <label className="rq-consent"><input type="checkbox" checked={consent} onChange={event => setConsent(event.target.checked)} /><span>I agree that ProPulse may share my submitted contact information with relevant businesses or professionals so they can respond to this requirement.</span></label>
+          <label className="rq-consent"><input type="checkbox" checked={consent} onChange={event => setConsent(event.target.checked)} /><span>I agree that my project details and contact information may be used to respond to this enquiry and provide quotation or consultation follow-up.</span></label>
           {state.error && <div className="rq-error">{state.error}</div>}
           <div className="rq-actions"><button type="button" className="secondary" onClick={() => setContactMode(false)}>← Back</button><button type="submit" className="primary" disabled={state.saving}>{state.saving ? 'Submitting…' : (flow.config?.submitLabel || 'Get Quotes')} →</button></div>
         </form>}
