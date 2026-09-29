@@ -232,8 +232,8 @@ const TRACKED_STAGE_CONFIG={
   estimator:[
     ['flow_opened','Wizard opened'],
     ['flow_started','Project started'],
-    ['estimate_completed','Estimate completed'],
-    ['estimator_contact_opened','Contact captured step opened'],
+    ['estimator_contact_opened','Contact step reached'],
+    ['estimate_completed','Estimate & lead completed'],
     ['quote_form_opened','Legacy quote form opened'],
     ['quote_submitted','Legacy quote request submitted'],
   ],
