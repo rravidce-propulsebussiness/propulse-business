@@ -61,14 +61,20 @@ function CompanyFooter(){
 }
 
 function PackageCards({packages=[],estimator}){
+  const[expanded,setExpanded]=useState({})
   if(!packages.length)return <div className="csp-empty">Package details are being configured in Admin.</div>
   return <div className="csp-package-grid">{packages.map((pkg,index)=>{
     const packageKey=String(pkg.packageKey||'').trim()
+    const cardKey=packageKey||String(pkg.label||index)
     const startLink=estimator&&packageKey?`${estimator}?mode=detailed&package=${encodeURIComponent(packageKey)}`:estimator
+    const activeDetails=(pkg.details||[]).filter(item=>item?.isActive!==false)
+    const isExpanded=Boolean(expanded[cardKey])
+    const visibleDetails=isExpanded?activeDetails:activeDetails.slice(0,6)
     return <article className={index===1?'featured':''} key={pkg.packageKey||pkg.label||index}>
       <div className="csp-package-head"><span>{pkg.badge||'PACKAGE'}</span><h3>{pkg.label}</h3>{pkg.priceNote&&<b>{pkg.priceNote}</b>}</div>
       {pkg.summary&&<p>{pkg.summary}</p>}
-      <div className="csp-spec-list">{(pkg.details||[]).filter(item=>item?.isActive!==false).map((detail,i)=><div key={detail.detailKey||i}><small>{detail.section||'Specification'} · {detail.label}</small><strong>{detail.value}</strong>{detail.note&&<em>{detail.note}</em>}</div>)}</div>
+      <div className="csp-spec-list">{visibleDetails.map((detail,i)=><div key={detail.detailKey||i}><small>{detail.section||'Specification'} · {detail.label}</small><strong>{detail.value}</strong>{detail.note&&<em>{detail.note}</em>}</div>)}</div>
+      {activeDetails.length>6&&<button type="button" className="csp-spec-toggle" aria-expanded={isExpanded} onClick={()=>setExpanded(current=>({...current,[cardKey]:!current[cardKey]}))}>{isExpanded?'Show fewer specifications':`View all ${activeDetails.length} specifications`} <span>{isExpanded?'↑':'↓'}</span></button>}
       {startLink&&<Link className="csp-package-start" to={startLink}>Start with {pkg.label} <span>→</span></Link>}
     </article>
   })}</div>
