@@ -17,7 +17,7 @@ const pageCopy={
   interiors:{
     eyebrow:'INTERIORS',
     title:'Complete home interiors, planned around your space and budget.',
-    text:'Plan kitchens, wardrobes, finishes and full-home interiors with clear package choices, a practical estimate and a free design consultation.'
+    text:'Plan kitchens, wardrobes, finishes and full-home interiors with clear package choices, a practical estimate and a free design consultation.',
     estimator:'/interior-estimator',
     requirement:'/interior-consultation',
     flowKey:'interior-cost-estimator',
