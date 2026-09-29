@@ -158,9 +158,10 @@ export default function RequirementWizard({ flowKey }) {
         {groups.map((group,index)=>{
           const required=group.questions.filter(question=>question.isRequired)
           const complete=required.filter(question=>!isEmptyAnswer(answers[question.questionKey])).length
-          const done=required.length===0||complete===required.length
+          const optional=required.length===0
+          const done=!optional&&complete===required.length
           return <section className={'rq-form-section '+(done?'complete':'')} key={group.name}>
-          <div className="rq-form-section-head"><b>{done?'✓':String(index+1).padStart(2,'0')}</b><div><h3>{group.name}</h3><span>{required.length?complete+' of '+required.length+' required completed':'Optional details'}</span></div><em className={done?'done':''}>{done?'Complete':'Needs '+(required.length-complete)}</em></div>
+          <div className="rq-form-section-head"><b>{done?'✓':String(index+1).padStart(2,'0')}</b><div><h3>{group.name}</h3><span>{optional?'Optional details':complete+' of '+required.length+' required completed'}</span></div><em className={done?'done':optional?'optional':''}>{optional?'Optional':done?'Complete':'Needs '+(required.length-complete)}</em></div>
           <div className="rq-form-grid">{group.questions.map(question=><div className={fieldClass(question)+(state.errorQuestionKey===question.questionKey?' error':'')} data-question-key={question.questionKey} key={question.questionKey}>
             <label htmlFor={'rq-'+question.questionKey}>{question.label}{question.isRequired&&<sup>*</sup>}</label>
             {question.helpText&&<p>{question.helpText}</p>}
