@@ -222,7 +222,7 @@ export default function Projects(){
     <section className="pj-hero">
       <img src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=2200&q=92" alt="Modern premium home"/>
       <div className="pj-hero-wash"/>
-      <div className="pj-hero-copy"><span>OUR PROJECTS</span><h1>Explore Real<em>Projects & Ideas</em></h1><p>Get inspired by construction, interior and real-estate concepts, then start a requirement based on what you like.</p></div>
+      <div className="pj-hero-copy"><span>PROJECT INSPIRATION</span><h1>Explore Home<em>Projects & Ideas</em></h1><p>Browse construction, interior and real-estate inspiration, then start a requirement based on what you like. Sample images are for inspiration unless a project is explicitly marked as verified.</p></div>
       <aside className="pj-feature-box">
         <div><Icon name="home"/><span>Modern Designs</span></div>
         <div><Icon name="photo"/><span>Visual Inspiration</span></div>
@@ -234,7 +234,7 @@ export default function Projects(){
         <article><Icon name="shield"/><div><b>Clear Inspiration</b><small>Start from a visual idea</small></div></article>
         <article><Icon name="photo"/><div><b>Multiple Categories</b><small>Construction, Interiors, Real Estate</small></div></article>
         <article><Icon name="people"/><div><b>Structured Requirement</b><small>Turn ideas into a clear brief</small></div></article>
-        <article><Icon name="info"/><div><b>Transparent Information</b><small>Specs are shown as inspiration</small></div></article>
+        <article><Icon name="info"/><div><b>Clear Context</b><small>Ideas are labelled as inspiration</small></div></article>
       </div>
     </section>
 
