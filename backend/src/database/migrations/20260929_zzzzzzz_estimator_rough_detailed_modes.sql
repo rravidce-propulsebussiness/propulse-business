@@ -17,7 +17,7 @@ BEGIN
 
   IF EXISTS (
     SELECT 1 FROM customer_flow_versions
-     WHERE v.definition_id=def_id
+     WHERE definition_id=def_id
        AND config->>'seedKey'='construction-cost-estimator-v2-modes'
   ) THEN RETURN; END IF;
 
@@ -157,7 +157,7 @@ BEGIN
 
   IF EXISTS (
     SELECT 1 FROM customer_flow_versions
-     WHERE v.definition_id=def_id
+     WHERE definition_id=def_id
        AND config->>'seedKey'='interior-cost-estimator-v2-modes'
   ) THEN RETURN; END IF;
 
