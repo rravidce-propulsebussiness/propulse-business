@@ -213,7 +213,7 @@ function Home() {
         <button onClick={() => { setFlow('property'); scrollTo('home') }}>Real Estate</button>
         <button onClick={() => navigate('/projects')}>Projects</button>
         <button onClick={() => navigate('/how-it-works')}>How It Works</button>
-        <button onClick={() => scrollTo('cities')}>Locations</button>
+        <button onClick={() => navigate('/about')}>About</button>
         <button onClick={() => scrollTo('contact')}>Contact</button>
       </nav>
       <div className="pp-header-actions">

@@ -215,7 +215,7 @@ export default function Projects(){
   return <main className="pj-page">
     <header className="pj-header">
       <Link to="/" className="pj-logo"><img src="/brand/propulse-logo.svg" alt="ProPulse"/></Link>
-      <nav><Link to="/">Home</Link><Link to="/build">Construction</Link><Link to="/design">Interiors</Link><Link to="/property">Real Estate</Link><Link className="active" to="/projects">Projects</Link><Link to="/how-it-works">How It Works</Link><Link to="/#contact">About</Link><Link to="/#contact">Contact</Link></nav>
+      <nav><Link to="/">Home</Link><Link to="/build">Construction</Link><Link to="/design">Interiors</Link><Link to="/property">Real Estate</Link><Link className="active" to="/projects">Projects</Link><Link to="/how-it-works">How It Works</Link><Link to="/about">About</Link><Link to="/#contact">Contact</Link></nav>
       <button onClick={()=>navigate('/build')}>Get Free Consultation <Icon name="arrow" size={15}/></button>
     </header>
 
