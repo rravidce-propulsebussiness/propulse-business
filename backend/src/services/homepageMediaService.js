@@ -20,15 +20,34 @@ function normalizeImages(value){
   }
   return next;
 }
+const CONTENT_FIELDS={
+  home:['heroKicker','heroTitle','heroAccent','heroText','servicesHeading','servicesText','showcaseHeading','showcaseText','estimatorHeading','estimatorText','trustHeading','trustText','consultationHeading','consultationText'],
+  construction:['heroTitle','heroText','showcaseHeading','showcaseText'],
+  interiors:['heroTitle','heroText','showcaseHeading','showcaseText']
+};
+function normalizeContent(value){
+  const source=value&&typeof value==='object'&&!Array.isArray(value)?value:{};
+  const next={};
+  for(const [section,fields] of Object.entries(CONTENT_FIELDS)){
+    const input=source[section]&&typeof source[section]==='object'&&!Array.isArray(source[section])?source[section]:{};
+    next[section]={};
+    for(const field of fields){
+      const text=clean(input[field]);
+      if(text)next[section][field]=text;
+    }
+  }
+  return next;
+}
 function normalize(row){
   return {
     hero_image_url:clean(row?.hero_image_url),
     category_images:normalizeImages(row?.category_images),
+    content:normalizeContent(row?.content),
     updated_at:row?.updated_at||null
   };
 }
 async function get(){
-  const result=await pool.query('SELECT hero_image_url,category_images,updated_at FROM homepage_media_settings WHERE id=1');
+  const result=await pool.query('SELECT hero_image_url,category_images,content,updated_at FROM homepage_media_settings WHERE id=1');
   return normalize(result.rows[0]||{});
 }
 function parseImage(dataUrl){
@@ -60,7 +79,7 @@ async function replace(slot,dataUrl){
   if(key==='hero') next.hero_image_url=url;
   else next.category_images={...current.category_images,[key]:url};
   const result=await pool.query(
-    `UPDATE homepage_media_settings SET hero_image_url=$1,category_images=$2,updated_at=CURRENT_TIMESTAMP WHERE id=1 RETURNING hero_image_url,category_images,updated_at`,
+    `UPDATE homepage_media_settings SET hero_image_url=$1,category_images=$2,updated_at=CURRENT_TIMESTAMP WHERE id=1 RETURNING hero_image_url,category_images,content,updated_at`,
     [next.hero_image_url,JSON.stringify(next.category_images)]
   );
   const oldUrl=key==='hero'?current.hero_image_url:current.category_images?.[key];
@@ -78,7 +97,7 @@ async function remove(slot){
   const images={...current.category_images};
   delete images[key];
   const result=await pool.query(
-    `UPDATE homepage_media_settings SET hero_image_url=$1,category_images=$2,updated_at=CURRENT_TIMESTAMP WHERE id=1 RETURNING hero_image_url,category_images,updated_at`,
+    `UPDATE homepage_media_settings SET hero_image_url=$1,category_images=$2,updated_at=CURRENT_TIMESTAMP WHERE id=1 RETURNING hero_image_url,category_images,content,updated_at`,
     [hero,JSON.stringify(images)]
   );
   if(oldUrl&&oldUrl.startsWith('/uploads/homepage/')){
@@ -87,4 +106,12 @@ async function remove(slot){
   }
   return normalize(result.rows[0]);
 }
-module.exports={SLOT_NAMES,get,replace,remove,MAX_BYTES};
+async function updateContent(value){
+  const content=normalizeContent(value);
+  const result=await pool.query(
+    `UPDATE homepage_media_settings SET content=$1,updated_at=CURRENT_TIMESTAMP WHERE id=1 RETURNING hero_image_url,category_images,content,updated_at`,
+    [JSON.stringify(content)]
+  );
+  return normalize(result.rows[0]);
+}
+module.exports={SLOT_NAMES,get,replace,remove,updateContent,MAX_BYTES};
