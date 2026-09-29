@@ -7,6 +7,7 @@ const EVENT_TYPES = new Set([
   'flow_question_viewed',
   'flow_question_completed',
   'estimate_completed',
+  'estimator_contact_opened',
   'quote_form_opened',
   'quote_submitted',
   'requirement_contact_opened',
@@ -14,7 +15,7 @@ const EVENT_TYPES = new Set([
 ]);
 const FLOW_TYPES = new Set(['estimator','requirement']);
 const QUESTION_EVENTS = new Set(['flow_question_viewed','flow_question_completed']);
-const ESTIMATOR_ONLY = new Set(['estimate_completed','quote_form_opened','quote_submitted']);
+const ESTIMATOR_ONLY = new Set(['estimate_completed','estimator_contact_opened','quote_form_opened','quote_submitted']);
 const REQUIREMENT_ONLY = new Set(['requirement_contact_opened','requirement_submitted']);
 const META_KEYS = new Set(['cta','position','step','steps','entry']);
 const SOURCES = new Set(['homepage','wizard','ci_runtime']);
