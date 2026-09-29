@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { publicRequest } from '../utils/auth'
 import { trackFunnelEvent, trackFunnelEventOnce } from '../utils/funnelTracking'
+import { isValidIndianMobile, normalizeIndianMobileInput } from '../utils/customerContact'
 import CustomerFlowQuestion, { isEmptyAnswer, isQuestionVisible } from '../components/CustomerFlowQuestion'
 import './RequirementWizard.css'
 
@@ -113,8 +114,8 @@ export default function RequirementWizard({ flowKey }) {
       focusQuestion(missing.questionKey)
       return false
     }
-    if (!contact.name.trim() || !contact.phone.trim() || !consent) {
-      setState(current => ({ ...current, error: 'Enter your name, mobile number and accept the contact consent.',errorQuestionKey:'contact' }))
+    if (!contact.name.trim() || !isValidIndianMobile(contact.phone) || !consent) {
+      setState(current => ({ ...current, error: 'Enter your name, a valid 10-digit mobile number and accept the contact consent.',errorQuestionKey:'contact' }))
       focusQuestion('contact')
       return false
     }
@@ -170,7 +171,7 @@ export default function RequirementWizard({ flowKey }) {
 
         <section className={'rq-form-section rq-contact-section'+(state.errorQuestionKey==='contact'?' error':'')} data-question-key="contact">
           <div className="rq-form-section-head"><b>{String(groups.length+1).padStart(2,'0')}</b><div><h3>{flow.config?.contactTitle || 'Your contact details'}</h3><span>{flow.config?.contactText || 'We use these details only for this project enquiry and follow-up.'}</span></div></div>
-          <div className="rq-contact-grid"><label>Name<input value={contact.name} onChange={event => setContact({ ...contact, name: event.target.value })} autoComplete="name" required /></label><label>Mobile number<input value={contact.phone} onChange={event => setContact({ ...contact, phone: event.target.value })} inputMode="tel" autoComplete="tel" placeholder="10-digit mobile" required /></label><label className="wide">Email <small>Optional</small><input type="email" value={contact.email} onChange={event => setContact({ ...contact, email: event.target.value })} autoComplete="email" /></label><label className="rq-honeypot" aria-hidden="true">Website<input tabIndex="-1" autoComplete="off" value={website} onChange={event => setWebsite(event.target.value)} /></label></div>
+          <div className="rq-contact-grid"><label>Name<input value={contact.name} onChange={event => setContact({ ...contact, name: event.target.value })} autoComplete="name" required /></label><label>Mobile number<input value={contact.phone} onChange={event => setContact({ ...contact, phone: normalizeIndianMobileInput(event.target.value) })} inputMode="tel" autoComplete="tel" placeholder="10-digit mobile" maxLength="10" pattern="[6-9][0-9]{9}" required /></label><label className="wide">Email <small>Optional</small><input type="email" value={contact.email} onChange={event => setContact({ ...contact, email: event.target.value })} autoComplete="email" /></label><label className="rq-honeypot" aria-hidden="true">Website<input tabIndex="-1" autoComplete="off" value={website} onChange={event => setWebsite(event.target.value)} /></label></div>
           <label className="rq-consent"><input type="checkbox" checked={consent} onChange={event => setConsent(event.target.checked)} /><span>I agree that ProPulse may use and share my project details and contact information with relevant verified professionals or contractors so they can respond to this project enquiry and provide consultation or service follow-up.</span></label>
         </section>
 
