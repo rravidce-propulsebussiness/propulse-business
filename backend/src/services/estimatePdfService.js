@@ -121,6 +121,19 @@ function makePdfDocument(pages) {
   return Buffer.from(pdf,'ascii');
 }
 
+function money(value) {
+  const amount=Number(value);
+  if(!Number.isFinite(amount))return 'Rs. 0';
+  const prefix=amount<0?'-Rs. ':'Rs. ';
+  return prefix+Math.abs(amount).toLocaleString('en-IN',{maximumFractionDigits:2});
+}
+
+function moneyRange(minimum,maximum) {
+  const min=Number(minimum),max=Number(maximum);
+  if(Number.isFinite(min)&&Number.isFinite(max)&&Math.abs(min-max)<0.005)return money(min);
+  return `${money(minimum)} - ${money(maximum)}`;
+}
+
 function renderEstimatePdf(data) {
   const sections=[];
   const mode=String(data.answers?.estimate_mode||'rough').toLowerCase();
@@ -133,8 +146,19 @@ function renderEstimatePdf(data) {
     ['Location',[data.cityName,data.stateName,data.pincode].filter(Boolean).join(', ')],
     ['Estimate ID',data.publicId],
     ['Estimate version',`v${data.versionNo}`],
-    ['Estimate range',`Rs. ${Number(data.minimum).toLocaleString('en-IN')} - Rs. ${Number(data.maximum).toLocaleString('en-IN')}`],
+    ['Generated',data.createdAt?new Date(data.createdAt).toISOString().slice(0,10):''],
+    ['Estimate range',moneyRange(data.minimum,data.maximum)],
   ]});
+
+  const breakdownRows=(Array.isArray(data.breakdown)?data.breakdown:[]).map(item=>[
+    item.kind==='adjustment'?`${item.label} (adjustment)`:item.label,
+    moneyRange(item.minimum,item.maximum),
+  ]);
+  if(breakdownRows.length){
+    sections.push({type:'heading',text:'Estimate calculation'});
+    sections.push({type:'table',title:'Cost breakdown',rows:breakdownRows});
+    sections.push({type:'note',text:'The line items below are the exact saved calculation breakdown for this estimate version. The total estimate range above is the authoritative result.'});
+  }
 
   if(data.package){
     sections.push({type:'heading',text:`${data.package.label} package`});
@@ -256,8 +280,8 @@ async function getEstimatePdf(publicId, token) {
   const packageSnapshot=selectedPackage(row.config_snapshot?.packages||flow.packages,answers);
   const disclaimer=String(flow.config?.estimatorDisclaimer||'Indicative planning estimate only. Final pricing depends on site inspection, drawings, measurements, materials and final quotation.');
   const buffer=renderEstimatePdf({
-    publicId:id,flow,versionNo:row.version_no,minimum:row.result_min,maximum:row.result_max,
-    cityName:row.city_name,stateName:row.state_name,pincode:row.pincode,answers,answerRows,
+    publicId:id,flow,versionNo:row.version_no,minimum:row.result_min,maximum:row.result_max,createdAt:row.created_at,
+    cityName:row.city_name,stateName:row.state_name,pincode:row.pincode,answers,answerRows,breakdown:Array.isArray(row.breakdown)?row.breakdown:[],
     package:packageSnapshot,disclaimer,
     lead:{customer_name:row.customer_name,customer_phone:row.customer_phone,customer_email:row.customer_email},
   });
