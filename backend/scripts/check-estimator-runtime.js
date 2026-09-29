@@ -125,6 +125,50 @@ async function main(){
   assert.equal(Number(counts.calculations),1);
   assert.equal(Number(counts.leads),1);
 
+  const versionTwoDraft=await customerFlowService.saveDraft(created.id,{
+    name:'CI Generic Estimator',
+    industryId:scope.industry_id,
+    serviceId:scope.service_id||null,
+    subserviceId:null,
+    isActive:true,
+    config:{headline:'CI estimate v2',resultTitle:'CI estimated range'},
+    questions:[
+      {questionKey:'area',questionType:'area',label:'Area',isRequired:true,displayOrder:10,validation:{min:1,max:100000},showWhen:{},leadField:'',visibility:'marketplace',isActive:true,options:[]},
+      {questionKey:'quality',questionType:'single_select',label:'Quality',isRequired:true,displayOrder:20,validation:{},showWhen:{},leadField:'',visibility:'marketplace',isActive:true,options:[
+        {value:'standard',label:'Standard',displayOrder:10,isActive:true},
+        {value:'premium',label:'Premium',displayOrder:20,isActive:true},
+      ]},
+    ],
+  },null);
+  assert.equal(versionTwoDraft.editingVersion.status,'draft');
+  await estimatorService.saveAdminConfig(created.id,{
+    rates:[{
+      rateKey:'base_area',label:'Base area rate v2',calculationType:'per_unit',unitQuestionKey:'area',
+      amountMin:'200.00',amountMax:'220.00',showWhen:{},displayOrder:10,isActive:true,
+    }],
+    adjustments:[],
+  });
+  await customerFlowService.publish(created.id,null);
+  const flowV2=await customerFlowService.getPublishedFlow(KEY);
+  assert.ok(Number(flowV2.versionNo)>Number(flow.versionNo));
+
+  const historicalRetry=await estimatorService.calculate({
+    key:KEY,flowToken:flowV2.flowToken,answers:{area:'100',quality:'premium'},submissionKey,
+    contact:{name:'Ignored Retry Name',phone:'9123456789',email:''},consent:true,website:'',
+  });
+  assert.equal(historicalRetry.duplicate,true);
+  assert.equal(historicalRetry.calculationId,result.calculationId);
+  assert.equal(historicalRetry.minimum,11000);
+  assert.equal(historicalRetry.maximum,13200);
+  assert.equal(Number(historicalRetry.versionNo),Number(flow.versionNo));
+
+  const freshAfterPublish=await estimatorService.calculate({
+    key:KEY,flowToken:flowV2.flowToken,answers:{area:'100',quality:'standard'},submissionKey:'ci_estimator_runtime_submission_002',
+    contact:{name:'CI Estimate Customer Two',phone:'9345678902',email:''},consent:true,website:'',
+  });
+  assert.equal(freshAfterPublish.minimum,20000);
+  assert.equal(freshAfterPublish.maximum,22000);
+  assert.equal(Number(freshAfterPublish.versionNo),Number(flowV2.versionNo));
 
   console.log('Estimator runtime lifecycle checks passed.');
 }
