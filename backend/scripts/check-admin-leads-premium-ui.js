@@ -30,14 +30,15 @@ assert(!leads.includes('Newest leads appear first'),'Redundant inventory explain
 assert(leads.includes('v9-inventory-head'),'Premium inventory command bar must remain');
 assert(leads.includes('Auto-refresh every 60s'),'Inventory refresh status must remain visible');
 assert(leads.includes("refreshing?'Refreshing…':'Refresh data'"),'Manual refresh control must remain');
-assert(leads.includes('ESTIMATE · AWAITING CONTACT'),'Legacy estimator records without contact must remain identifiable');
-assert(leads.includes('Waiting for customer contact')&&leads.includes('SAFE HOLD'),'Legacy contact-pending estimator leads must retain a safe-hold state');
-assert(css.includes('.v9-estimator-pending'),'Contact-pending estimator leads must retain dedicated premium styling');
+assert(leads.includes('ESTIMATOR · LEGACY INCOMPLETE'),'Historical estimator records without contact must remain identifiable without reviving the old workflow');
+assert(leads.includes('Legacy estimate without complete contact')&&leads.includes('HISTORICAL ESTIMATOR RECORD'),'Legacy incomplete estimator records must be clearly historical');
+assert(css.includes('.v9-estimator-legacy'),'Historical incomplete estimator records must retain dedicated premium styling');
 assert(leads.includes('function EstimatorLeadSummary')&&leads.includes('ESTIMATOR SNAPSHOT'),'Estimator leads must show their immutable estimate/package snapshot in Admin');
 assert(leads.includes("!String(key).startsWith('_')"),'Internal estimator snapshots must stay out of editable Dynamic Fields');
 assert(css.includes('.v9-estimator-summary')&&css.includes('.v9-estimator-specs'),'Estimator snapshot cards must retain dedicated Admin styling');
-assert(leads.includes('All intake sources')&&leads.includes('All contact states'),'Customer acquisition filters must remain in Manage Leads');
-assert(leads.includes("initialQueryValue('source'")&&leads.includes("initialQueryValue('contactState'"),'Manage Leads must keep deep-link filter initialization');
+assert(leads.includes('All intake sources'),'Customer acquisition source filter must remain in Manage Leads');
+assert(!leads.includes('All contact states')&&!leads.includes("initialQueryValue('contactState'"),'Retired estimator contact-state filtering must stay removed');
+assert(leads.includes("initialQueryValue('source'"),'Manage Leads must keep intake-source deep-link initialization');
 assert(leads.includes("initialQueryValue('leadId'")&&leads.includes('v9-focus-chip'),'Manage Leads must isolate and display an exact focused lead');
 assert(css.includes('.v9-focus-chip'),'Exact lead focus chip styling must remain');
 
