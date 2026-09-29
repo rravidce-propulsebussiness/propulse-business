@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { publicRequest } from '../utils/auth'
 import { isEmptyAnswer, isQuestionVisible } from '../components/CustomerFlowQuestion'
+import InteriorRequirementExact from '../components/InteriorRequirementExact'
 import './RequirementWizard.css'
 
 const emptyContact = { name: '', phone: '', email: '' }
@@ -290,6 +291,28 @@ export default function RequirementWizard({ flowKey }) {
 
   const phone = contactData.phone || contactData.phone_number || contactData.mobile || ''
   const email = contactData.email || contactData.support_email || ''
+
+  if (flowKey === 'design') {
+    return <InteriorRequirementExact
+      flow={flow}
+      questions={questions}
+      answers={answers}
+      setAnswer={setAnswer}
+      cities={cities}
+      cityId={cityId}
+      setCity={setCity}
+      cityPincodes={cityPincodes}
+      locationQuestion={locationQuestion}
+      contact={contact}
+      setContact={setContact}
+      consent={consent}
+      setConsent={setConsent}
+      state={state}
+      submit={submit}
+      contactData={contactData}
+      completion={completion}
+    />
+  }
 
   const summaryRows = [
     ['Location', selectedCity?.name || '—'],
