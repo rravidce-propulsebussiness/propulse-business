@@ -249,7 +249,13 @@ function selectedPackage(packages, answers) {
 }
 
 async function versionQuestions(client, versionId) {
-  return (await client.query('SELECT question_key,question_type FROM customer_flow_questions WHERE version_id=$1 AND is_active=TRUE',[versionId])).rows;
+  return (await client.query(
+    `SELECT q.question_key,q.question_type,
+            ARRAY(SELECT o.value FROM customer_flow_question_options o WHERE o.question_id=q.id AND o.is_active=TRUE ORDER BY o.display_order,o.id) option_values
+       FROM customer_flow_questions q
+      WHERE q.version_id=$1 AND q.is_active=TRUE`,
+    [versionId]
+  )).rows;
 }
 
 async function getEstimatorConfigForVersion(client, versionId) {
