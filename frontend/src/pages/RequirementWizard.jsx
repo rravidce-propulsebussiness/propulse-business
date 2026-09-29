@@ -164,7 +164,7 @@ export default function RequirementWizard({ flowKey }) {
           <div className="rq-form-grid">{group.questions.map(question=><div className={fieldClass(question)+(state.errorQuestionKey===question.questionKey?' error':'')} data-question-key={question.questionKey} key={question.questionKey}>
             <label htmlFor={'rq-'+question.questionKey}>{question.label}{question.isRequired&&<sup>*</sup>}</label>
             {question.helpText&&<p>{question.helpText}</p>}
-            <CustomerFlowQuestion question={question} value={answers[question.questionKey]} onChange={value => setAnswer(question,value)} />
+            <CustomerFlowQuestion id={'rq-'+question.questionKey} question={question} value={answers[question.questionKey]} onChange={value => setAnswer(question,value)} />
           </div>)}</div>
         </section>
         })}
