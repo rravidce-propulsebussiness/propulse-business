@@ -169,7 +169,7 @@ function renderEstimatePdf(data) {
       if(detail.isActive===false)continue;
       const key=detail.section||'Specifications';
       if(!bySection.has(key))bySection.set(key,[]);
-      bySection.get(key).push([detail.label,detail.value]);
+      bySection.get(key).push([detail.label,detail.note?`${detail.value} - ${detail.note}`:detail.value]);
     }
     for(const [section,rows] of bySection)sections.push({type:'table',title:section,rows});
   }
