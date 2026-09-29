@@ -85,6 +85,23 @@ test('public company pages stay customer-focused and Admin-driven',async({page})
   await expect(page.getByRole('link',{name:/construction estimate/i})).toBeVisible()
 })
 
+test('published package CTA preselects detailed estimator mode and package',async({page})=>{
+  await page.goto('/packages')
+  const packageAction=page.locator('.csp-package-start').first()
+  await expect(packageAction).toBeVisible()
+  await expect(packageAction).toHaveAttribute('href',/\?mode=detailed&package=/)
+  const href=await packageAction.getAttribute('href')
+  const selectedPackage=new URL(href,'http://localhost').searchParams.get('package')
+  expect(selectedPackage).toBeTruthy()
+
+  await packageAction.click()
+  await expect(page).toHaveURL(/mode=detailed/)
+  await expect(page).toHaveURL(new RegExp('package='+selectedPackage))
+  await expect(page.locator('.est-mode-card.active')).toContainText(/Detailed/i)
+  await expect(page.locator('.est-side-summary')).toContainText('Detailed estimate')
+  await expect(page.locator('.est-side-summary')).toContainText(/Selected package/i)
+})
+
 test('protected customer route redirects anonymous users to login',async({page})=>{
   await page.goto('/wallet')
   await expect(page).toHaveURL(/\/login$/)
