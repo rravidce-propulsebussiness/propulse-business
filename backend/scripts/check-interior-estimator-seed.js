@@ -20,13 +20,15 @@ async function main(){
   assert.ok(flow,'Interior estimator must be seeded');
   assert.equal(flow.flow_type,'estimator');
   assert.equal(flow.status,'published');
-  assert.ok(Number(flow.version_no)>=3);
-  assert.equal(flow.config.seedKey,'interior-cost-estimator-v3-brochure');
+  assert.ok(Number(flow.version_no)>=4);
+  assert.equal(flow.config.seedKey,'interior-cost-estimator-v4-single-estimate');
+  assert.equal(flow.config.estimateExperience,'single');
+  assert.equal(flow.config.estimateLabel,'Project Estimate');
   assert.match(String(flow.industry_name),/interior/i);
   assert.match(String(flow.service_name),/interior/i);
 
   const questions=(await pool.query(
-    `SELECT question_key,question_type,is_required,show_when,lead_field,visibility
+    `SELECT question_key,question_type,is_required,show_when,lead_field,visibility,validation
        FROM customer_flow_questions WHERE version_id=$1 AND is_active=TRUE ORDER BY display_order,id`,
     [flow.version_id]
   )).rows;
@@ -38,6 +40,12 @@ async function main(){
   assert.equal(questions.find(q=>q.question_key==='property_type').lead_field,'property_type');
   assert.equal(questions.find(q=>q.question_key==='additional_requirement').visibility,'protected');
   assert.deepEqual(questions.find(q=>q.question_key==='plywood_spec').show_when,{questionKey:'estimate_mode',equals:'detailed'});
+  const modeQuestion=questions.find(q=>q.question_key==='estimate_mode');
+  assert.equal(modeQuestion.validation.systemHidden,true);
+  assert.equal(modeQuestion.validation.systemDefault,'detailed');
+  assert.equal(questions.find(q=>q.question_key==='plywood_spec').is_required,false);
+  assert.equal(questions.find(q=>q.question_key==='plywood_spec').validation.advancedSection,true);
+  assert.equal(questions.find(q=>q.question_key==='plywood_spec').validation.systemDefault,'package_default');
 
   const options=(await pool.query(
     `SELECT q.question_key,o.value,o.label
