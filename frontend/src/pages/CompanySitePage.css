@@ -5,7 +5,7 @@
 @media(max-width:560px){.csp-hero h1,.csp-simple-hero h1{font-size:40px;letter-spacing:-1.4px}.csp-hero>img{height:320px;border-radius:20px 20px 50px 20px}.csp-two-cards,.csp-about-grid,.csp-step-grid{grid-template-columns:1fr}.csp-package-tabs{width:100%}.csp-package-tabs button{flex:1}.csp-contact-details{grid-template-columns:1fr}.csp-footer{grid-template-columns:1fr}}
 
 /* Professional service-page polish */
-.csp-header-actions{display:flex;align-items:center;gap:8px}
+.csp-header-actions{margin-left:auto;display:flex;align-items:center;gap:8px}
 .csp-estimate{padding:9px 12px;border:1px solid #d9e3ec;border-radius:9px;background:#fff;color:#173e69!important;text-decoration:none;font-size:8px;font-weight:900;white-space:nowrap}
 .csp-estimate:hover{border-color:#efb89e;color:#d95e25!important}
 .csp-showcase{background:#f9fbfd}
