@@ -13,7 +13,7 @@ const services=[
     text:'Explore construction packages, understand the major specifications and get a project cost estimate before speaking with our team.',
     imageKey:'residential',
     fallback:'/homepage/default-residential.svg',
-    requirement:'/build',
+    requirement:'/construction-consultation',
     estimator:'/construction-estimator',
   },
   {
@@ -23,7 +23,7 @@ const services=[
     text:'Plan kitchens, wardrobes, finishes and full-home interiors with clear packages, a practical estimate and a free design consultation.',
     imageKey:'interior',
     fallback:'/homepage/default-interior.svg',
-    requirement:'/design',
+    requirement:'/interior-consultation',
     estimator:'/interior-estimator',
   },
 ]
@@ -148,7 +148,7 @@ function Home(){
       </section>
 
       <section id="contact" className="company-contact">
-        <div><span>START YOUR PROJECT</span><h2>Prefer to speak with a project expert?</h2><p>Request a free Construction or Interior consultation. The form is short, and our team can continue the discussion with your basic project details already available.</p><div className="contact-ctas"><Link to="/build">Construction Consultation <span>→</span></Link><Link to="/design">Interior Consultation</Link></div></div>
+        <div><span>START YOUR PROJECT</span><h2>Prefer to speak with a project expert?</h2><p>Request a free Construction or Interior consultation. The form is short, and our team can continue the discussion with your basic project details already available.</p><div className="contact-ctas"><Link to="/construction-consultation">Construction Consultation <span>→</span></Link><Link to="/interior-consultation">Interior Consultation</Link></div></div>
         <div className="contact-details">
           <a href={contact.phone?'tel:'+contact.phone:'#'}><small>PHONE</small><strong>{contact.phone||'Call us for details'}</strong></a>
           <a href={contact.email?'mailto:'+contact.email:'#'}><small>EMAIL</small><strong>{contact.email||'Email us for details'}</strong></a>
@@ -161,7 +161,7 @@ function Home(){
     </main>
 
     <footer className="company-footer">
-      <div className="company-footer-main"><div><img src="/brand/propulse-logo.png" alt="ProPulse Business"/><p>Construction and Interior planning, project estimates and professional consultation.</p></div><div><strong>Construction</strong><Link to="/construction-estimator">Cost Estimator</Link><Link to="/build">Free Consultation</Link></div><div><strong>Interiors</strong><Link to="/interior-estimator">Cost Estimator</Link><Link to="/design">Free Consultation</Link></div><div><strong>Professional</strong><Link to="/leads">Professional Access</Link></div></div>
+      <div className="company-footer-main"><div><img src="/brand/propulse-logo.png" alt="ProPulse Business"/><p>Construction and Interior planning, project estimates and professional consultation.</p></div><div><strong>Construction</strong><Link to="/construction-estimator">Cost Estimator</Link><Link to="/construction-consultation">Free Consultation</Link></div><div><strong>Interiors</strong><Link to="/interior-estimator">Cost Estimator</Link><Link to="/interior-consultation">Free Consultation</Link></div><div><strong>Professional</strong><Link to="/leads">Professional Access</Link></div></div>
       <div className="company-footer-bottom"><span>© {new Date().getFullYear()} ProPulse Business Technologies Private Limited.</span><span>Construction · Interiors · Estimation</span></div>
     </footer>
   </div>
