@@ -16,7 +16,7 @@ function categoryLabel(value){
   return CATEGORY_LABELS[value]||String(value||'General').replace(/[_-]+/g,' ').replace(/\b\w/g,m=>m.toUpperCase())
 }
 
-export default function WebsiteFaqSection({variant='home'}){
+export default function WebsiteFaqSection({variant='home',audience='website'}){
   const standalone=variant==='page'
   const [faqs,setFaqs]=useState([])
   const [loading,setLoading]=useState(true)
@@ -29,7 +29,7 @@ export default function WebsiteFaqSection({variant='home'}){
     try{
       setLoading(true)
       setError('')
-      const data=await publicRequest('/faqs?audience=website')
+      const data=await publicRequest('/faqs?audience='+encodeURIComponent(audience))
       const items=Array.isArray(data)?data.filter(item=>item?.is_active!==false):[]
       setFaqs(items)
       setOpen(current=>items.some(item=>item.id===current)?current:null)
@@ -41,7 +41,7 @@ export default function WebsiteFaqSection({variant='home'}){
     }
   }
 
-  useEffect(()=>{let active=true;queueMicrotask(()=>{if(active)load()});return()=>{active=false}},[])
+  useEffect(()=>{let active=true;queueMicrotask(()=>{if(active)load()});return()=>{active=false}},[audience])
 
   const categories=useMemo(()=>{
     const counts=new Map()
