@@ -67,7 +67,7 @@ export default function WebsiteFaqSection({variant='home'}){
   const faqList=<div className="website-faq-list">
     {loading&&<div className="website-faq-state">Loading FAQs…</div>}
     {!loading&&error&&<div className="website-faq-state error"><strong>FAQs are temporarily unavailable.</strong><button type="button" onClick={load}>Try again</button></div>}
-    {!loading&&!error&&!visible.length&&<div className="website-faq-state"><strong>No FAQs are published here yet.</strong><span>Admin can publish questions from the FAQ manager.</span></div>}
+    {!loading&&!error&&!visible.length&&<div className="website-faq-state"><strong>No FAQs are published here yet.</strong><span>Helpful project answers are being prepared. You can contact our team in the meantime.</span></div>}
     {!loading&&!error&&visible.map((item,index)=>{
       const expanded=open===item.id
       const answerId=`website-faq-answer-${item.id}`
