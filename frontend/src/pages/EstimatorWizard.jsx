@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { publicRequest } from '../utils/auth'
+import { trackFunnelEvent } from '../utils/funnelTracking'
 import CustomerFlowQuestion, { isEmptyAnswer, isQuestionVisible } from '../components/CustomerFlowQuestion'
 import './RequirementWizard.css'
 import './EstimatorWizard.css'
@@ -24,9 +25,11 @@ export default function EstimatorWizard({ flowKey }) {
   const [submissionKey,setSubmissionKey] = useState(makeSubmissionKey)
   const [state,setState] = useState({loading:true,saving:false,error:'',success:false})
   const mounted = useRef(true)
+  const startedTracked = useRef(false)
 
   useEffect(() => {
     mounted.current = true
+    startedTracked.current = false
     setState({loading:true,saving:false,error:'',success:false})
     publicRequest('/customer-flows/'+flowKey).then(data => {
       if (!mounted.current) return
@@ -41,6 +44,7 @@ export default function EstimatorWizard({ flowKey }) {
       setWebsite('')
       setSubmissionKey(makeSubmissionKey())
       setState({loading:false,saving:false,error:'',success:false})
+      trackFunnelEvent('flow_opened',{flowKey,flowType:'estimator',source:'wizard'})
     }).catch(error => mounted.current && setState({loading:false,saving:false,error:error.message,success:false}))
     return () => { mounted.current = false }
   },[flowKey])
@@ -51,6 +55,10 @@ export default function EstimatorWizard({ flowKey }) {
   const progress = result ? 100 : questions.length ? Math.round(((step + 1) / questions.length) * 92) : 0
 
   function setAnswer(key,value) {
+    if(!startedTracked.current){
+      startedTracked.current=true
+      trackFunnelEvent('flow_started',{flowKey,flowType:'estimator',source:'wizard',metadata:{step:step+1,steps:questions.length}})
+    }
     setAnswers(current => ({...current,[key]:value}))
     setState(current => ({...current,error:''}))
   }
@@ -73,6 +81,7 @@ export default function EstimatorWizard({ flowKey }) {
         body:JSON.stringify({flowToken:flow.flowToken,answers})
       })
       setResult(calculation)
+      trackFunnelEvent('estimate_completed',{flowKey,flowType:'estimator',calculationId:calculation.calculationId,source:'wizard',metadata:{steps:questions.length}})
       setState({loading:false,saving:false,error:'',success:false})
     } catch (error) {
       setState(current => ({...current,saving:false,error:error.message}))
@@ -92,6 +101,7 @@ export default function EstimatorWizard({ flowKey }) {
         method:'POST',
         body:JSON.stringify({contact,consent,submissionKey,website})
       })
+      trackFunnelEvent('quote_submitted',{flowKey,flowType:'estimator',calculationId:result.calculationId,source:'wizard'})
       setState({loading:false,saving:false,error:'',success:true})
     }catch(error){
       setState(current=>({...current,saving:false,error:error.message}))
@@ -137,7 +147,7 @@ export default function EstimatorWizard({ flowKey }) {
           {result.cityName && <p className="est-city">Adjusted for {result.cityName}</p>}
           {!quoteMode && Array.isArray(result.breakdown) && result.breakdown.length > 0 && <div className="est-breakdown"><b>What shaped this range</b>{result.breakdown.map(item=><div key={item.kind+':'+item.key}><span>{item.label}</span><em>{item.minimum===item.maximum?money(item.minimum):money(item.minimum)+' – '+money(item.maximum)}</em></div>)}</div>}
           <div className="est-disclaimer">{result.disclaimer}</div>
-          {!quoteMode ? <div className="rq-actions est-result-actions"><button type="button" className="secondary" onClick={restart}>Recalculate</button>{result.quoteEligible?<button type="button" className="primary est-quote-cta" onClick={()=>{setQuoteMode(true);setState(current=>({...current,error:''}))}}>{flow.config?.quoteCtaLabel || 'Get Actual Quotes'} →</button>:<Link className="est-home" to="/">Done</Link>}</div> : <form className="est-quote-form" onSubmit={requestQuotes}>
+          {!quoteMode ? <div className="rq-actions est-result-actions"><button type="button" className="secondary" onClick={restart}>Recalculate</button>{result.quoteEligible?<button type="button" className="primary est-quote-cta" onClick={()=>{trackFunnelEvent('quote_form_opened',{flowKey,flowType:'estimator',calculationId:result.calculationId,source:'wizard'});setQuoteMode(true);setState(current=>({...current,error:''}))}}>{flow.config?.quoteCtaLabel || 'Get Actual Quotes'} →</button>:<Link className="est-home" to="/">Done</Link>}</div> : <form className="est-quote-form" onSubmit={requestQuotes}>
             <div className="rq-step"><span>GET ACTUAL QUOTES</span><h2>Where should relevant professionals reach you?</h2><p>Your estimate and project answers will be attached to the requirement.</p></div>
             <div className="rq-contact-grid"><label>Name<input value={contact.name} onChange={event=>setContact({...contact,name:event.target.value})} autoComplete="name" required/></label><label>Mobile number<input value={contact.phone} onChange={event=>setContact({...contact,phone:event.target.value})} inputMode="tel" autoComplete="tel" placeholder="10-digit mobile" required/></label><label className="wide">Email <small>Optional</small><input type="email" value={contact.email} onChange={event=>setContact({...contact,email:event.target.value})} autoComplete="email"/></label><label className="rq-honeypot" aria-hidden="true">Website<input tabIndex="-1" autoComplete="off" value={website} onChange={event=>setWebsite(event.target.value)}/></label></div>
             <label className="rq-consent"><input type="checkbox" checked={consent} onChange={event=>setConsent(event.target.checked)}/><span>I agree that ProPulse may share my submitted contact information and project details with relevant businesses or professionals so they can provide actual quotations or callbacks.</span></label>

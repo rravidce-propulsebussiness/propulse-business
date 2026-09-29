@@ -265,6 +265,8 @@ test('Admin login reaches operations consoles and session survives reload',async
   await expect(page.getByRole('heading',{name:'Estimator & customer funnel'})).toBeVisible()
   await expect(page.getByText('Calculation → quote conversion')).toBeVisible()
   await expect(page.getByText('Which customer path produces leads?')).toBeVisible()
+  await expect(page.getByText('JOURNEY INTELLIGENCE')).toBeVisible()
+  await expect(page.getByText('Useful analytics without invasive tracking.')).toBeVisible()
 
   await page.goto('/admin/financial-integrity')
   await page.reload()

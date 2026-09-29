@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { publicRequest } from '../utils/auth'
+import { trackFunnelEvent } from '../utils/funnelTracking'
 import CustomerFlowQuestion, { isEmptyAnswer, isQuestionVisible } from '../components/CustomerFlowQuestion'
 import './RequirementWizard.css'
 
@@ -22,9 +23,11 @@ export default function RequirementWizard({ flowKey }) {
   const [submissionKey, setSubmissionKey] = useState(makeSubmissionKey)
   const [state, setState] = useState({ loading: true, saving: false, error: '', success: false })
   const mounted = useRef(true)
+  const startedTracked = useRef(false)
 
   useEffect(() => {
     mounted.current = true
+    startedTracked.current = false
     setState({ loading: true, saving: false, error: '', success: false })
     publicRequest('/customer-flows/' + flowKey).then(data => {
       if (data?.flowType !== 'requirement') throw new Error('This requirement form is not available.')
@@ -35,6 +38,7 @@ export default function RequirementWizard({ flowKey }) {
       setContactMode(false)
       setSubmissionKey(makeSubmissionKey())
       setState({ loading: false, saving: false, error: '', success: false })
+      trackFunnelEvent('flow_opened',{flowKey,flowType:'requirement',source:'wizard'})
     }).catch(error => mounted.current && setState({ loading: false, saving: false, error: error.message, success: false }))
     return () => { mounted.current = false }
   }, [flowKey])
@@ -45,6 +49,10 @@ export default function RequirementWizard({ flowKey }) {
   const progress = contactMode ? 100 : questions.length ? Math.round(((step + 1) / questions.length) * 88) : 0
 
   function setAnswer(key, value) {
+    if (!startedTracked.current) {
+      startedTracked.current = true
+      trackFunnelEvent('flow_started',{flowKey,flowType:'requirement',source:'wizard',metadata:{step:step+1,steps:questions.length}})
+    }
     setAnswers(current => ({ ...current, [key]: value }))
     setState(current => ({ ...current, error: '' }))
   }
@@ -57,7 +65,10 @@ export default function RequirementWizard({ flowKey }) {
     }
     setState(current => ({ ...current, error: '' }))
     if (step < questions.length - 1) setStep(step + 1)
-    else setContactMode(true)
+    else {
+      trackFunnelEvent('requirement_contact_opened',{flowKey,flowType:'requirement',source:'wizard',metadata:{steps:questions.length}})
+      setContactMode(true)
+    }
   }
 
   async function submit(event) {
@@ -72,6 +83,7 @@ export default function RequirementWizard({ flowKey }) {
         method: 'POST',
         body: JSON.stringify({ flowToken: flow.flowToken, answers, contact, consent, submissionKey, website })
       })
+      trackFunnelEvent('requirement_submitted',{flowKey,flowType:'requirement',source:'wizard'})
       setState({ loading: false, saving: false, error: '', success: true })
     } catch (error) {
       setState(current => ({ ...current, saving: false, error: error.message }))
