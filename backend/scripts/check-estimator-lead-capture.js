@@ -12,10 +12,11 @@ const service=read('src/services/estimatorService.js');
 assert.doesNotMatch(routes,/estimates\/:publicId\/convert/,'Estimator must not expose a second quote-conversion endpoint');
 assert.doesNotMatch(controller,/convertCalculation/,'Estimator controller must not keep legacy conversion actions');
 assert.doesNotMatch(service,/async function convertCalculation|estimator_quote_request|quote_requested/,'Estimator service must not keep legacy quote-conversion lifecycle code');
+assert.doesNotMatch(service,/contactPending/,'Estimator service must not recreate a pending-contact lifecycle');
 assert.match(service,/normalizeName\(contact\?\.name\)/,'Estimator calculation must require a customer name');
 assert.match(service,/normalizePhone\(contact\?\.phone\)/,'Estimator calculation must require a valid customer mobile');
 assert.match(service,/consent !== true/,'Estimator calculation must require consent');
-assert.match(service,/ensureEstimatorContactLead/,'Estimator calculation must create or attach the canonical customer lead');
+assert.match(service,/ensureEstimatorLead/,'Estimator calculation must create or attach the canonical customer lead');
 assert.match(service,/leadCaptured:Boolean\(leadId\)/,'Estimator response must confirm canonical lead capture');
 
 console.log('Estimator direct customer-lead capture checks passed.');
