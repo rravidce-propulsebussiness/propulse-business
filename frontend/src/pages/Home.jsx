@@ -114,7 +114,7 @@ function Home(){
       </section>
 
       <section className="company-section services-section">
-        <div className="company-section-head"><span>WHAT WE DO</span><h2>One place for Construction and Interiors.</h2><p>The customer side stays focused on project planning. Professional marketplace tools remain behind the Professional option.</p></div>
+        <div className="company-section-head"><span>WHAT WE DO</span><h2>One place for Construction and Interiors.</h2><p>The customer side stays focused on project planning. Business tools are available separately through the Professional option.</p></div>
         <div className="service-grid">
           {services.map(service=><article id={service.key==='construction'?'construction':'interiors'} className="service-card" key={service.key}>
             <div className="service-media"><img src={media.category_images?.[service.imageKey]||service.fallback} alt=""/><span>{service.eyebrow}</span></div>
@@ -166,7 +166,7 @@ function Home(){
     </main>
 
     <footer className="company-footer">
-      <div className="company-footer-main"><div><img src="/brand/propulse-logo.png" alt="ProPulse Business"/><p>Construction and Interior project planning, estimation and structured customer enquiries.</p></div><div><strong>Construction</strong><Link to="/construction-estimator">Cost Estimator</Link><Link to="/build">Send Requirement</Link></div><div><strong>Interiors</strong><Link to="/interior-estimator">Cost Estimator</Link><Link to="/design">Send Requirement</Link></div><div><strong>Professional</strong><Link to="/leads">Professional Access</Link></div></div>
+      <div className="company-footer-main"><div><img src="/brand/propulse-logo.png" alt="ProPulse Business"/><p>Construction and Interior project planning, estimation and structured project enquiries.</p></div><div><strong>Construction</strong><Link to="/construction-estimator">Cost Estimator</Link><Link to="/build">Send Requirement</Link></div><div><strong>Interiors</strong><Link to="/interior-estimator">Cost Estimator</Link><Link to="/design">Send Requirement</Link></div><div><strong>Professional</strong><Link to="/leads">Professional Access</Link></div></div>
       <div className="company-footer-bottom"><span>© {new Date().getFullYear()} ProPulse Business Technologies Private Limited.</span><span>Construction · Interiors · Estimation</span></div>
     </footer>
   </div>
