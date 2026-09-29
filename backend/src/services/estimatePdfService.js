@@ -207,7 +207,7 @@ function renderEstimatePdf(data) {
 
   sections.push({type:'heading',text:'Estimate notes'});
   sections.push({type:'paragraph',text:data.disclaimer||'This is an indicative planning estimate. Final quotation may change after site inspection, measurements, drawings, specifications and professional review.'});
-  sections.push({type:'note',text:'This estimate is generated from the pricing and package configuration that was published when the customer submitted the enquiry. Future Admin price changes do not rewrite this saved estimate.'});
+  sections.push({type:'note',text:'This estimate is based on the package and pricing configuration active when it was generated. Later price changes do not alter this saved estimate.'});
 
   const rawPages=[[]];
   let pageIndex=0;
