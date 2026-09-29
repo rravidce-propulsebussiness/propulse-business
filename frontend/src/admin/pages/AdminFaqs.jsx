@@ -2,9 +2,9 @@ import { useEffect, useState } from 'react';
 import { apiRequest } from '../../utils/api';
 import './AdminFaqs.css';
 
-const categories=[['general','General'],['leads','Leads'],['payments','Payments'],['withdrawals','Withdrawals'],['account','Account'],['reports','Reports']];
+const categories=[['general','General'],['construction','Construction'],['interiors','Interiors'],['estimates','Project Estimates'],['consultation','Free Consultation'],['packages','Packages'],['leads','Leads'],['payments','Payments'],['withdrawals','Withdrawals'],['account','Account'],['reports','Reports']];
 const audiences=[
-  ['website','User / Website FAQs','Shown in the main homepage FAQ section.'],
+  ['website','Website FAQs','Shown on the Construction + Interior customer website.'],
   ['investor','Investor FAQs','Shown on the Investor FAQ page.'],
   ['lead_partner','Lead Partner FAQs','Shown in the Lead Partner portal.']
 ];
@@ -79,7 +79,7 @@ export default function AdminFaqs(){
 
   return <main className="admin-faq-page">
     <section className="admin-faq-hero">
-      <div className="admin-faq-hero-copy"><span className="admin-faq-kicker">CONTENT / FAQ MANAGEMENT</span><h1>FAQ management</h1><p>Manage website, investor and lead-partner FAQ experiences from one content workspace.</p><div className="admin-faq-hero-meta"><span><b>{audienceMeta[1]}</b> selected</span><span><b>{publishedFaqs}</b> published</span><span><b>{draftFaqs}</b> drafts</span></div></div>
+      <div className="admin-faq-hero-copy"><span className="admin-faq-kicker">CONTENT / FAQ MANAGEMENT</span><h1>FAQ management</h1><p>Manage customer website, investor and lead-partner FAQ experiences from one content workspace.</p><div className="admin-faq-hero-meta"><span><b>{audienceMeta[1]}</b> selected</span><span><b>{publishedFaqs}</b> published</span><span><b>{draftFaqs}</b> drafts</span></div></div>
       <div className="admin-faq-hero-actions"><button type="button" onClick={()=>load(audience)} disabled={loading}><span>↻</span><div><b>{loading?'Refreshing…':'Refresh FAQs'}</b><small>Reload selected audience</small></div></button></div>
     </section>
 
