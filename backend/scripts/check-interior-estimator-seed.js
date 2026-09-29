@@ -20,23 +20,34 @@ async function main(){
   assert.ok(flow,'Interior estimator must be seeded');
   assert.equal(flow.flow_type,'estimator');
   assert.equal(flow.status,'published');
-  assert.equal(flow.version_no,1);
-  assert.equal(flow.config.seedKey,'interior-cost-estimator-v1');
+  assert.ok(Number(flow.version_no)>=4);
+  assert.equal(flow.config.seedKey,'interior-cost-estimator-v4-single-estimate');
+  assert.equal(flow.config.estimateExperience,'single');
+  assert.equal(flow.config.estimateLabel,'Project Estimate');
   assert.match(String(flow.industry_name),/interior/i);
   assert.match(String(flow.service_name),/interior/i);
 
   const questions=(await pool.query(
-    `SELECT question_key,question_type,is_required,show_when,lead_field,visibility
+    `SELECT question_key,question_type,is_required,show_when,lead_field,visibility,validation
        FROM customer_flow_questions WHERE version_id=$1 AND is_active=TRUE ORDER BY display_order,id`,
     [flow.version_id]
   )).rows;
   const keys=new Set(questions.map(q=>q.question_key));
-  for(const key of ['project_location','property_type','bhk','area','property_status','scope_mode','selected_work','kitchen_package','wardrobe_units','false_ceiling_area','furniture_package','finish_quality','timeline','additional_requirement']){
+  for(const key of ['estimate_mode','project_location','property_type','area','property_status','scope_mode','selected_work','kitchen_package','wardrobe_units','false_ceiling_area','furniture_package','finish_quality','plywood_spec','internal_laminate_spec','external_laminate_spec','hardware_spec','modular_finish_spec','customisations','hdhmr_area','pu_duco_area','veneer_pvc_area','profile_glass_area','aristo_glass_area','granite_tile_area','dado_tile_area','quartz_area','regular_wallpaper_area','custom_wallpaper_area','blinds_curtains_area','profile_light_meters','sensor_count','mdf_cnc_area','wall_panelling_area','wall_panelling_pu_area']){
     assert.ok(keys.has(key),`Missing Interior estimator question: ${key}`);
   }
   assert.equal(questions.find(q=>q.question_key==='project_location').question_type,'location');
   assert.equal(questions.find(q=>q.question_key==='property_type').lead_field,'property_type');
-  assert.equal(questions.find(q=>q.question_key==='additional_requirement').visibility,'protected');
+  for(const removed of ['bhk','timeline','additional_requirement']) assert.ok(!keys.has(removed),`Non-calculation Interior field should not be in the current estimate: ${removed}`);
+  assert.deepEqual(questions.find(q=>q.question_key==='plywood_spec').show_when,{questionKey:'estimate_mode',equals:'detailed'});
+  const modeQuestion=questions.find(q=>q.question_key==='estimate_mode');
+  assert.equal(modeQuestion.validation.systemHidden,true);
+  assert.equal(modeQuestion.validation.systemDefault,'detailed');
+  assert.equal(questions.find(q=>q.question_key==='plywood_spec').is_required,false);
+  assert.equal(questions.find(q=>q.question_key==='plywood_spec').validation.advancedSection,true);
+  assert.equal(questions.find(q=>q.question_key==='plywood_spec').validation.systemDefault,'package_default');
+  assert.equal(questions.find(q=>q.question_key==='profile_glass_area').is_required,true,'Selected per-unit customisations must require their quantity');
+  assert.equal(questions.find(q=>q.question_key==='sensor_count').is_required,true,'Selected sensor customisation must require a circuit count');
 
   const options=(await pool.query(
     `SELECT q.question_key,o.value,o.label
@@ -46,7 +57,7 @@ async function main(){
     [flow.version_id]
   )).rows;
   const optionKey=new Set(options.map(o=>o.question_key+':'+o.value));
-  for(const expected of ['property_type:apartment','property_type:villa','bhk:3bhk','scope_mode:full_home','scope_mode:selected_work','selected_work:kitchen','selected_work:wardrobes','finish_quality:premium','finish_quality:luxury']){
+  for(const expected of ['estimate_mode:rough','estimate_mode:detailed','property_type:apartment','property_type:villa','scope_mode:full_home','scope_mode:selected_work','selected_work:kitchen','selected_work:wardrobes','finish_quality:premium','finish_quality:luxury','plywood_spec:package_default','plywood_spec:hdhmr_action_tesa','hardware_spec:hettich_hafele','modular_finish_spec:full_modular','customisations:profile_glass','customisations:quartz_platform','customisations:sensor_circuit','customisations:wall_panelling']){
     assert.ok(optionKey.has(expected),`Missing Interior estimator option: ${expected}`);
   }
 
@@ -64,6 +75,17 @@ async function main(){
   )).rows;
   const adjustmentKeys=new Set(adjustmentRows.map(r=>r.adjustment_key));
   for(const key of ['premium_finish','luxury_finish','existing_home','villa_scope','independent_house_scope','hyderabad_market']) assert.ok(adjustmentKeys.has(key));
+  for(const key of ['material_plywood_hdhmr','material_external_pu_duco','material_profile_glass','material_aristo_glass','material_quartz_platform','material_sensor_circuit','material_wall_panelling']){
+    assert.ok(adjustmentKeys.has(key),`Missing brochure material adjustment: ${key}`);
+  }
+  const profileGlass=adjustmentRows.find(row=>row.adjustment_key==='material_profile_glass');
+  assert.equal(profileGlass.adjustment_type,'per_unit');
+  assert.equal(profileGlass.unit_question_key,'profile_glass_area');
+  assert.equal(Number(profileGlass.value_min),550);
+  assert.equal(Number(profileGlass.value_max),550);
+  const sensor=adjustmentRows.find(row=>row.adjustment_key==='material_sensor_circuit');
+  assert.equal(sensor.unit_question_key,'sensor_count');
+  assert.equal(Number(sensor.value_min),3500);
 
   assert.equal(isVisible({showWhen:{questionKey:'selected_work',equals:'kitchen'}},{selected_work:['kitchen','painting']}),true);
   assert.equal(isVisible({showWhen:{questionKey:'selected_work',equals:'wardrobes'}},{selected_work:['kitchen','painting']}),false);
@@ -73,7 +95,7 @@ async function main(){
     amountMin:String(row.amount_min),amountMax:String(row.amount_max),showWhen:row.show_when||{},isActive:row.is_active
   }));
   const adjustments=adjustmentRows.filter(row=>row.city_id===null).map(row=>({
-    adjustmentKey:row.adjustment_key,label:row.label,adjustmentType:row.adjustment_type,
+    adjustmentKey:row.adjustment_key,label:row.label,adjustmentType:row.adjustment_type,unitQuestionKey:row.unit_question_key,
     valueMin:String(row.value_min),valueMax:String(row.value_max),cityId:null,showWhen:row.show_when||{},isActive:row.is_active
   }));
 

@@ -72,7 +72,7 @@ async function main(){
     budget:null,
     source:'public_estimator',
     notes:null,
-    customFields:{_estimator:{calculationId:'fixture',contactPending:true,lifecycle:'estimate_completed'},_intake:{flowKey:scope.key,definitionId:scope.definition_id,versionId:scope.version_id,versionNo:1,answers:{}}},
+    customFields:{_estimator:{calculationId:'fixture',lifecycle:'estimate_completed'},_intake:{flowKey:scope.key,definitionId:scope.definition_id,versionId:scope.version_id,versionNo:1,answers:{}}},
     pincode:'500001',
     createdBy:null,
     deferQualityGate:true,
@@ -96,7 +96,7 @@ async function main(){
 
   const all=await funnel.getCustomerFunnelAnalytics({period:'30',limit:'25'});
   assert.ok(all.summary.calculations>=2,'Funnel summary must count estimator calculations');
-  assert.ok(all.summary.converted>=1,'Funnel summary must count quote conversions');
+  assert.ok(all.summary.converted>=1,'Funnel summary must count estimator lead captures');
   assert.ok(all.summary.directRequirementLeads>=1,'Funnel summary must count direct requirement leads');
   assert.ok(all.summary.estimatorCanonicalLeads>=1,'Funnel summary must count estimator canonical leads');
   assert.ok(all.sources.some(item=>item.source==='public_requirement'&&item.leads>=1),'Direct requirement source row is required');
@@ -104,11 +104,11 @@ async function main(){
   assert.ok(all.requirements.some(item=>item.flowKey==='build'&&item.leads>=1),'Requirement flow attribution must use _intake.flowKey');
   assert.ok(all.cities.some(item=>Number(item.cityId)===Number(scope.city_id)&&item.calculations>=2),'City attribution must include estimator calculations');
   assert.ok(all.recent.items.some(item=>item.calculationId===convertedId&&Number(item.leadId)===estimatorLeadId),'Recent history must link converted calculation to canonical lead');
-  assert.ok(all.recentCustomerLeads.some(item=>Number(item.leadId)===directLeadId&&item.source==='public_requirement'&&item.contactReady===true),'Operational queue must include direct requirement leads');
+  assert.ok(all.recentCustomerLeads.some(item=>Number(item.leadId)===directLeadId&&item.source==='public_requirement'&&item.hasName===true&&item.hasPhone===true),'Operational queue must include direct requirement leads with captured contact');
   const estimatorQueue=all.recentCustomerLeads.find(item=>Number(item.leadId)===estimatorLeadId);
   assert.ok(estimatorQueue,'Operational queue must include estimator leads');
-  assert.equal(estimatorQueue.contactPending,true);
-  assert.equal(estimatorQueue.contactReady,false);
+  assert.equal(estimatorQueue.hasName,true);
+  assert.equal(estimatorQueue.hasPhone,true);
   assert.equal(estimatorQueue.flowKey,scope.key);
   assert.equal(estimatorQueue.calculationId,convertedId);
 
@@ -116,12 +116,9 @@ async function main(){
   assert.equal(directAdminPage.data.length,1,'Admin source filter must isolate the direct customer lead');
   assert.equal(Number(directAdminPage.data[0].id),directLeadId);
 
-  const waitingAdminPage=await leadService.getAdminLeadsPage({source:'public_estimator',contactState:'awaiting_contact',leadId:String(estimatorLeadId),limit:12});
-  assert.equal(waitingAdminPage.data.length,1,'Admin contact filter must expose contact-pending estimator leads');
-  assert.equal(Number(waitingAdminPage.data[0].id),estimatorLeadId);
-
-  const readyAdminPage=await leadService.getAdminLeadsPage({source:'public_estimator',contactState:'contact_ready',leadId:String(estimatorLeadId),limit:12});
-  assert.equal(readyAdminPage.data.length,0,'Contact-pending estimator leads must not appear in the contact-ready filter');
+  const estimatorAdminPage=await leadService.getAdminLeadsPage({source:'public_estimator',leadId:String(estimatorLeadId),limit:12});
+  assert.equal(estimatorAdminPage.data.length,1,'Admin source filter must isolate the estimator customer lead');
+  assert.equal(Number(estimatorAdminPage.data[0].id),estimatorLeadId);
 
   const converted=await funnel.getCustomerFunnelAnalytics({
     period:'30',

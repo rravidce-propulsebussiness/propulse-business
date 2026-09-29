@@ -1,4 +1,5 @@
 const estimatorService = require('../services/estimatorService');
+const estimatePdfService = require('../services/estimatePdfService');
 
 function sendError(res, error, fallback) {
   const status = Number(error?.status) || (
@@ -27,6 +28,9 @@ async function calculate(req, res) {
       flowToken:req.body?.flowToken,
       answers:req.body?.answers,
       submissionKey:req.body?.submissionKey,
+      contact:req.body?.contact,
+      consent:req.body?.consent,
+      website:req.body?.website,
     });
     return res.status(201).json(result);
   } catch (error) {
@@ -39,19 +43,17 @@ async function getCalculation(req, res) {
   catch (error) { return sendError(res,error,'Failed to load estimate'); }
 }
 
-async function convertCalculation(req, res) {
+async function downloadPdf(req, res) {
   try {
-    const result = await estimatorService.convertCalculation({
-      publicId:req.params.publicId,
-      contact:req.body?.contact,
-      consent:req.body?.consent,
-      submissionKey:req.body?.submissionKey,
-      website:req.body?.website,
-    });
-    return res.status(result.duplicate ? 200 : 201).json(result);
+    const result=await estimatePdfService.getEstimatePdf(req.params.publicId,req.query?.token);
+    res.setHeader('Content-Type','application/pdf');
+    res.setHeader('Content-Disposition',`attachment; filename="${result.filename}"`);
+    res.setHeader('Cache-Control','private, no-store, max-age=0');
+    return res.status(200).send(result.buffer);
   } catch (error) {
-    return sendError(res,error,'Failed to request quotations');
+    return sendError(res,error,'Failed to download estimate PDF');
   }
 }
 
-module.exports = { getAdminConfig,saveAdminConfig,calculate,getCalculation,convertCalculation };
+
+module.exports = { getAdminConfig,saveAdminConfig,calculate,getCalculation,downloadPdf };

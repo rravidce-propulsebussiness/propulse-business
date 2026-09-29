@@ -78,7 +78,12 @@ function validateAnswer(question, value) {
 }
 
 function validateAnswers(flow, answers) {
-  const safeAnswers = answers && typeof answers === 'object' && !Array.isArray(answers) ? answers : {};
+  const safeAnswers = answers && typeof answers === 'object' && !Array.isArray(answers) ? { ...answers } : {};
+  for (const question of flow?.questions || []) {
+    if (isEmpty(safeAnswers[question.questionKey]) && Object.prototype.hasOwnProperty.call(question.validation || {}, 'systemDefault')) {
+      safeAnswers[question.questionKey] = question.validation.systemDefault;
+    }
+  }
   for (const question of flow?.questions || []) {
     if (!isVisible(question, safeAnswers)) continue;
     validateAnswer(question, safeAnswers[question.questionKey]);

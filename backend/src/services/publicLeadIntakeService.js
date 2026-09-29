@@ -118,7 +118,7 @@ async function submitRequirement({
 
   const safeAnswers = validateAnswers(flow, answers);
 
-  if (consent !== true) fail('Consent is required to request quotations or callbacks', 'CONSENT_REQUIRED');
+  if (consent !== true) fail('Consent is required to submit the project enquiry', 'CONSENT_REQUIRED');
   const name = normalizeName(contact?.name);
   const phone = normalizePhone(contact?.phone);
   const email = normalizeEmail(contact?.email);
@@ -151,7 +151,7 @@ async function submitRequirement({
       customFields,
       pincode: location.pincode,
       contactConsentAt: new Date(),
-      contactConsentVersion: 'quote-contact-v1',
+      contactConsentVersion: 'project-enquiry-v1',
       intakeSubmissionKey: idempotencyKey,
       qualityGateContext: 'public_requirement',
       createdBy: null,

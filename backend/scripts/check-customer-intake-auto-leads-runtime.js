@@ -92,6 +92,7 @@ async function main(){
   assert.equal(Number(lead.city_id),Number(scope.city_id));
   assert.equal(Number(lead.state_id),Number(scope.state_id));
   assert.equal(lead.intake_submission_key,submissionKey);
+  assert.equal(lead.contact_consent_version,'project-enquiry-v1');
   assert.equal(lead.custom_fields?._intake?.flowKey,FLOW_KEY);
 
   const retry=await publicLeadIntakeService.submitRequirement({

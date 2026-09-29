@@ -232,9 +232,8 @@ const TRACKED_STAGE_CONFIG={
   estimator:[
     ['flow_opened','Wizard opened'],
     ['flow_started','Project started'],
-    ['estimate_completed','Estimate completed'],
-    ['quote_form_opened','Quote form opened'],
-    ['quote_submitted','Quote request submitted'],
+    ['estimator_contact_opened','Contact step reached'],
+    ['estimate_completed','Estimate & lead completed'],
   ],
   requirement:[
     ['flow_opened','Wizard opened'],
@@ -556,7 +555,6 @@ async function getRecentCustomerLeads(filters) {
             l.pincode,l.quality_gate_status,l.quality_gate_score,
             COALESCE(l.custom_fields->'_intake'->>'flowKey','unknown') flow_key,
             COALESCE(d.name,l.custom_fields->'_intake'->>'flowKey','Unknown flow') flow_name,
-            CASE WHEN LOWER(COALESCE(l.custom_fields->'_estimator'->>'contactPending',''))='true' THEN TRUE ELSE FALSE END contact_pending,
             c.name city_name,st.name state_name,i.name industry_name,s.name service_name,
             calc.public_id calculation_id,calc.converted_at,calc.result_min,calc.result_max,
             COALESCE(sales.paid_purchases,0)::int paid_purchases,
@@ -593,8 +591,6 @@ async function getRecentCustomerLeads(filters) {
     flowKey:row.flow_key,
     flowName:row.flow_name,
     customerName:row.customer_name || null,
-    contactPending:Boolean(row.contact_pending),
-    contactReady:row.source!=='public_estimator' || !row.contact_pending,
     hasName:Boolean(String(row.customer_name||'').trim()),
     hasPhone:Boolean(String(row.customer_phone||'').trim()),
     hasEmail:Boolean(String(row.customer_email||'').trim()),

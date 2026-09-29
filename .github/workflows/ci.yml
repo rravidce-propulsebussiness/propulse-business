@@ -189,15 +189,24 @@ jobs:
           DB_PASSWORD: ci_smoke
           JWT_SECRET: ci-construction-estimator-secret-with-at-least-32-characters
         run: npm run test:construction-estimator
-      - name: Verify estimator to lead conversion
+      - name: Verify estimator package catalogues
         env:
           DB_HOST: 127.0.0.1
           DB_PORT: 5432
           DB_NAME: ci_smoke
           DB_USER: ci_smoke
           DB_PASSWORD: ci_smoke
-          JWT_SECRET: ci-estimator-conversion-secret-with-at-least-32-characters
-        run: npm run test:estimator-conversion
+          JWT_SECRET: ci-estimator-packages-secret-with-at-least-32-characters
+        run: npm run test:estimator-packages
+      - name: Verify direct estimator customer lead capture
+        env:
+          DB_HOST: 127.0.0.1
+          DB_PORT: 5432
+          DB_NAME: ci_smoke
+          DB_USER: ci_smoke
+          DB_PASSWORD: ci_smoke
+          JWT_SECRET: ci-estimator-lead-capture-secret-with-at-least-32-characters
+        run: npm run test:estimator-lead-capture
       - name: Verify automatic customer intake leads
         env:
           DB_HOST: 127.0.0.1

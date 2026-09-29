@@ -37,6 +37,13 @@ async function questions(client,versionId){
  for(const o of os){if(!by.has(Number(o.question_id)))by.set(Number(o.question_id),[]);by.get(Number(o.question_id)).push({id:o.id,value:o.value,label:o.label,displayOrder:o.display_order,isActive:o.is_active})}
  return qs.map(q=>({id:q.id,questionKey:q.question_key,questionType:q.question_type,label:q.label,helpText:q.help_text,isRequired:q.is_required,displayOrder:q.display_order,validation:q.validation||{},showWhen:q.show_when||{},leadField:q.lead_field,visibility:q.visibility,isActive:q.is_active,options:by.get(Number(q.id))||[]}));
 }
+async function estimatorPackages(client,versionId){
+ const packages=(await client.query('SELECT * FROM estimator_packages WHERE version_id=$1 ORDER BY display_order,id',[versionId])).rows;
+ if(!packages.length)return[];
+ const details=(await client.query('SELECT * FROM estimator_package_details WHERE package_id=ANY($1::int[]) ORDER BY package_id,display_order,id',[packages.map(p=>p.id)])).rows,by=new Map();
+ for(const d of details){if(!by.has(Number(d.package_id)))by.set(Number(d.package_id),[]);by.get(Number(d.package_id)).push({id:d.id,detailKey:d.detail_key,section:d.section,label:d.label,value:d.value,note:d.note,displayOrder:d.display_order,isActive:d.is_active})}
+ return packages.map(p=>({id:p.id,packageKey:p.package_key,label:p.label,badge:p.badge,selectorQuestionKey:p.selector_question_key,selectorValue:p.selector_value,summary:p.summary,priceNote:p.price_note,displayOrder:p.display_order,metadata:p.metadata||{},isActive:p.is_active,details:by.get(Number(p.id))||[]}));
+}
 async function listDefinitions(){return(await pool.query(`SELECT d.id,d.key,d.name,d.flow_type,d.industry_id,d.service_id,d.subservice_id,d.is_active,i.name industry_name,s.name service_name,ss.name subservice_name,p.version_no published_version,x.version_no draft_version FROM customer_flow_definitions d JOIN industries i ON i.id=d.industry_id LEFT JOIN services s ON s.id=d.service_id LEFT JOIN subservices ss ON ss.id=d.subservice_id LEFT JOIN LATERAL(SELECT version_no FROM customer_flow_versions WHERE definition_id=d.id AND status='published' LIMIT 1)p ON TRUE LEFT JOIN LATERAL(SELECT version_no FROM customer_flow_versions WHERE definition_id=d.id AND status='draft' ORDER BY version_no DESC LIMIT 1)x ON TRUE ORDER BY d.name`)).rows}
 async function getAdminDefinition(flowId){
  const definition=(await pool.query(`SELECT d.*,i.name industry_name,s.name service_name,ss.name subservice_name FROM customer_flow_definitions d JOIN industries i ON i.id=d.industry_id LEFT JOIN services s ON s.id=d.service_id LEFT JOIN subservices ss ON ss.id=d.subservice_id WHERE d.id=$1`,[id(flowId)])).rows[0];if(!definition)fail('Customer flow not found','FLOW_NOT_FOUND',404);
@@ -61,8 +68,16 @@ async function saveDraft(flowId,data,userId){
    if(d.flow_type==='estimator'&&source){
      await client.query(`INSERT INTO estimator_rate_items(version_id,rate_key,label,calculation_type,unit_question_key,amount_min,amount_max,show_when,display_order,metadata,is_active)
        SELECT $1,rate_key,label,calculation_type,unit_question_key,amount_min,amount_max,show_when,display_order,metadata,is_active FROM estimator_rate_items WHERE version_id=$2`,[draft.id,source.id]);
-     await client.query(`INSERT INTO estimator_adjustments(version_id,adjustment_key,label,adjustment_type,value_min,value_max,city_id,show_when,display_order,metadata,is_active)
-       SELECT $1,adjustment_key,label,adjustment_type,value_min,value_max,city_id,show_when,display_order,metadata,is_active FROM estimator_adjustments WHERE version_id=$2`,[draft.id,source.id]);
+     await client.query(`INSERT INTO estimator_adjustments(version_id,adjustment_key,label,adjustment_type,unit_question_key,value_min,value_max,city_id,show_when,display_order,metadata,is_active)
+       SELECT $1,adjustment_key,label,adjustment_type,unit_question_key,value_min,value_max,city_id,show_when,display_order,metadata,is_active FROM estimator_adjustments WHERE version_id=$2`,[draft.id,source.id]);
+     await client.query(`INSERT INTO estimator_packages(version_id,package_key,label,badge,selector_question_key,selector_value,summary,price_note,display_order,metadata,is_active)
+       SELECT $1,package_key,label,badge,selector_question_key,selector_value,summary,price_note,display_order,metadata,is_active FROM estimator_packages WHERE version_id=$2`,[draft.id,source.id]);
+     await client.query(`INSERT INTO estimator_package_details(package_id,detail_key,section,label,value,note,display_order,is_active)
+       SELECT np.id,d.detail_key,d.section,d.label,d.value,d.note,d.display_order,d.is_active
+       FROM estimator_package_details d
+       JOIN estimator_packages op ON op.id=d.package_id
+       JOIN estimator_packages np ON np.version_id=$1 AND np.package_key=op.package_key
+       WHERE op.version_id=$2`,[draft.id,source.id]);
    }
  }else await client.query('UPDATE customer_flow_versions SET config=$1::jsonb,updated_at=CURRENT_TIMESTAMP WHERE id=$2',[JSON.stringify(data.config||draft.config||{}),draft.id]);
  if(!Array.isArray(data.questions)||!data.questions.length)fail('At least one question is required','INVALID_QUESTION');const qs=data.questions.map(cleanQuestion),keys=new Set(qs.map(q=>q.questionKey));if(keys.size!==qs.length)fail('Question keys must be unique','INVALID_QUESTION');
@@ -81,7 +96,7 @@ async function publish(flowId,userId){
 async function setDefinitionStatus(flowId,isActive,userId){const r=await pool.query('UPDATE customer_flow_definitions SET is_active=$1,updated_by=$2,updated_at=CURRENT_TIMESTAMP WHERE id=$3 RETURNING id',[Boolean(isActive),userId||null,id(flowId)]);if(!r.rows[0])fail('Customer flow not found','FLOW_NOT_FOUND',404);return getAdminDefinition(r.rows[0].id)}
 async function getPublishedFlow(key){
  const r=(await pool.query(`SELECT d.id definition_id,d.key,d.name,d.flow_type,d.industry_id,d.service_id,d.subservice_id,i.name industry_name,s.name service_name,ss.name subservice_name,v.id version_id,v.version_no,v.config FROM customer_flow_definitions d JOIN industries i ON i.id=d.industry_id AND i.is_active=TRUE LEFT JOIN services s ON s.id=d.service_id AND s.is_active=TRUE LEFT JOIN subservices ss ON ss.id=d.subservice_id AND ss.is_active=TRUE JOIN customer_flow_versions v ON v.definition_id=d.id AND v.status='published' WHERE d.key=$1 AND d.is_active=TRUE AND (d.service_id IS NULL OR s.id IS NOT NULL) AND (d.subservice_id IS NULL OR ss.id IS NOT NULL) AND (v.effective_from IS NULL OR v.effective_from<=CURRENT_TIMESTAMP) LIMIT 1`,[flowKey(key)])).rows[0];if(!r)fail('This customer flow is not available','FLOW_NOT_FOUND',404);
- const qs=(await questions(pool,r.version_id)).filter(q=>q.isActive).map(q=>({...q,options:q.options.filter(o=>o.isActive)}));return{definitionId:r.definition_id,key:r.key,name:r.name,flowType:r.flow_type,industryId:r.industry_id,serviceId:r.service_id,subserviceId:r.subservice_id,industryName:r.industry_name,serviceName:r.service_name,subserviceName:r.subservice_name,versionId:r.version_id,versionNo:r.version_no,config:r.config||{},questions:qs,flowToken:signFlowToken(r.version_id)};
+ const qs=(await questions(pool,r.version_id)).filter(q=>q.isActive).map(q=>({...q,options:q.options.filter(o=>o.isActive)})),packages=r.flow_type==='estimator'?(await estimatorPackages(pool,r.version_id)).filter(p=>p.isActive).map(p=>({...p,details:p.details.filter(d=>d.isActive)})):[];return{definitionId:r.definition_id,key:r.key,name:r.name,flowType:r.flow_type,industryId:r.industry_id,serviceId:r.service_id,subserviceId:r.subservice_id,industryName:r.industry_name,serviceName:r.service_name,subserviceName:r.subservice_name,versionId:r.version_id,versionNo:r.version_no,config:r.config||{},questions:qs,packages,flowToken:signFlowToken(r.version_id)};
 }
 async function getVersionFlow(versionId){
  const version=id(versionId);if(!version)fail('Customer flow version not found','FLOW_VERSION_NOT_FOUND',404);
@@ -93,7 +108,7 @@ async function getVersionFlow(versionId){
    LEFT JOIN subservices ss ON ss.id=d.subservice_id AND ss.is_active=TRUE
    WHERE v.id=$1 AND (d.service_id IS NULL OR s.id IS NOT NULL) AND (d.subservice_id IS NULL OR ss.id IS NOT NULL)
    LIMIT 1`,[version])).rows[0];if(!r)fail('Customer flow version not found','FLOW_VERSION_NOT_FOUND',404);
- const qs=(await questions(pool,r.version_id)).filter(q=>q.isActive).map(q=>({...q,options:q.options.filter(o=>o.isActive)}));
- return{definitionId:r.definition_id,key:r.key,name:r.name,flowType:r.flow_type,industryId:r.industry_id,serviceId:r.service_id,subserviceId:r.subservice_id,industryName:r.industry_name,serviceName:r.service_name,subserviceName:r.subservice_name,versionId:r.version_id,versionNo:r.version_no,status:r.status,config:r.config||{},questions:qs};
+ const qs=(await questions(pool,r.version_id)).filter(q=>q.isActive).map(q=>({...q,options:q.options.filter(o=>o.isActive)})),packages=r.flow_type==='estimator'?await estimatorPackages(pool,r.version_id):[];
+ return{definitionId:r.definition_id,key:r.key,name:r.name,flowType:r.flow_type,industryId:r.industry_id,serviceId:r.service_id,subserviceId:r.subservice_id,industryName:r.industry_name,serviceName:r.service_name,subserviceName:r.subservice_name,versionId:r.version_id,versionNo:r.version_no,status:r.status,config:r.config||{},questions:qs,packages};
 }
 module.exports={listDefinitions,getAdminDefinition,createDefinition,saveDraft,publish,setDefinitionStatus,getPublishedFlow,getVersionFlow,verifyFlowToken};

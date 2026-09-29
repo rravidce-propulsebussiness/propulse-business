@@ -67,27 +67,50 @@ async function main(){
   const flow=await customerFlowService.getPublishedFlow(KEY);
   assert.equal(flow.flowType,'estimator');
 
+  await assert.rejects(
+    ()=>estimatorService.calculate({
+      key:KEY,flowToken:flow.flowToken,answers:{area:'100',quality:'premium'},submissionKey:'ci_estimator_missing_contact_001',
+      contact:{name:'',phone:'',email:''},consent:true,website:'',
+    }),
+    error=>error.code==='INVALID_CONTACT'
+  );
+  await assert.rejects(
+    ()=>estimatorService.calculate({
+      key:KEY,flowToken:flow.flowToken,answers:{area:'100',quality:'premium'},submissionKey:'ci_estimator_invalid_phone_001',
+      contact:{name:'CI Customer',phone:'123',email:''},consent:true,website:'',
+    }),
+    error=>error.code==='INVALID_PHONE'
+  );
+  await assert.rejects(
+    ()=>estimatorService.calculate({
+      key:KEY,flowToken:flow.flowToken,answers:{area:'100',quality:'premium'},submissionKey:'ci_estimator_missing_consent_001',
+      contact:{name:'CI Customer',phone:'9345678901',email:''},consent:false,website:'',
+    }),
+    error=>error.code==='CONSENT_REQUIRED'
+  );
+
   const submissionKey='ci_estimator_runtime_submission_001';
   const result=await estimatorService.calculate({
     key:KEY,flowToken:flow.flowToken,answers:{area:'100',quality:'premium'},submissionKey,
+    contact:{name:'CI Estimate Customer',phone:'9345678901',email:'ci-estimate@example.com'},consent:true,website:'',
   });
   assert.equal(result.minimum,11000);
   assert.equal(result.maximum,13200);
   assert.equal(result.currency,'INR');
   assert.ok(result.calculationId);
   assert.ok(result.leadId,'Completing an estimate must immediately create a canonical lead');
-  assert.equal(result.leadStatus,'quarantined','Contactless estimator leads must stay out of marketplace inventory');
+  assert.ok(result.leadStatus,'Estimator lead status must be returned after the normal quality gate');
 
   const intentLead=(await pool.query('SELECT * FROM leads WHERE id=$1',[result.leadId])).rows[0];
   assert.ok(intentLead);
   assert.equal(intentLead.source,'public_estimator');
-  assert.equal(intentLead.status,'quarantined');
-  assert.equal(intentLead.customer_name,null);
-  assert.equal(intentLead.customer_phone,null);
+  assert.ok(intentLead.status);
+  assert.equal(intentLead.customer_name,'CI Estimate Customer');
+  assert.equal(intentLead.customer_phone,'+919345678901');
   assert.equal(intentLead.intake_submission_key,submissionKey);
   assert.equal(intentLead.custom_fields?._estimator?.calculationId,result.calculationId);
-  assert.equal(intentLead.custom_fields?._estimator?.contactPending,true);
   assert.equal(intentLead.custom_fields?._estimator?.lifecycle,'estimate_completed');
+  assert.equal(intentLead.contact_consent_version,'estimator-contact-v1');
 
 
   const saved=await estimatorService.getCalculation(result.calculationId);
@@ -96,7 +119,7 @@ async function main(){
   assert.equal(saved.flowKey,KEY);
 
   const row=(await pool.query(
-    'SELECT config_hash,config_snapshot,answers,result_min,result_max,lead_id,intake_submission_key FROM estimator_calculations WHERE public_id=$1',
+    'SELECT config_hash,config_snapshot,answers,breakdown,result_min,result_max,lead_id,intake_submission_key FROM estimator_calculations WHERE public_id=$1',
     [result.calculationId]
   )).rows[0];
   assert.equal(String(row.config_hash).length,64);
@@ -104,11 +127,15 @@ async function main(){
   assert.equal(row.answers.area,'100');
   assert.equal(Number(row.result_min),11000);
   assert.equal(Number(row.result_max),13200);
+  assert.ok(Array.isArray(row.breakdown));
+  assert.equal(row.breakdown.length,result.breakdown.length);
+  assert.equal(row.breakdown[0].key,result.breakdown[0].key);
   assert.equal(Number(row.lead_id),Number(result.leadId));
   assert.equal(row.intake_submission_key,submissionKey);
 
   const retry=await estimatorService.calculate({
     key:KEY,flowToken:flow.flowToken,answers:{area:'100',quality:'premium'},submissionKey,
+    contact:{name:'Different Name',phone:'9876543210',email:''},consent:true,website:'',
   });
   assert.equal(retry.duplicate,true);
   assert.equal(retry.calculationId,result.calculationId);
@@ -122,6 +149,50 @@ async function main(){
   assert.equal(Number(counts.calculations),1);
   assert.equal(Number(counts.leads),1);
 
+  const versionTwoDraft=await customerFlowService.saveDraft(created.id,{
+    name:'CI Generic Estimator',
+    industryId:scope.industry_id,
+    serviceId:scope.service_id||null,
+    subserviceId:null,
+    isActive:true,
+    config:{headline:'CI estimate v2',resultTitle:'CI estimated range'},
+    questions:[
+      {questionKey:'area',questionType:'area',label:'Area',isRequired:true,displayOrder:10,validation:{min:1,max:100000},showWhen:{},leadField:'',visibility:'marketplace',isActive:true,options:[]},
+      {questionKey:'quality',questionType:'single_select',label:'Quality',isRequired:true,displayOrder:20,validation:{},showWhen:{},leadField:'',visibility:'marketplace',isActive:true,options:[
+        {value:'standard',label:'Standard',displayOrder:10,isActive:true},
+        {value:'premium',label:'Premium',displayOrder:20,isActive:true},
+      ]},
+    ],
+  },null);
+  assert.equal(versionTwoDraft.editingVersion.status,'draft');
+  await estimatorService.saveAdminConfig(created.id,{
+    rates:[{
+      rateKey:'base_area',label:'Base area rate v2',calculationType:'per_unit',unitQuestionKey:'area',
+      amountMin:'200.00',amountMax:'220.00',showWhen:{},displayOrder:10,isActive:true,
+    }],
+    adjustments:[],
+  });
+  await customerFlowService.publish(created.id,null);
+  const flowV2=await customerFlowService.getPublishedFlow(KEY);
+  assert.ok(Number(flowV2.versionNo)>Number(flow.versionNo));
+
+  const historicalRetry=await estimatorService.calculate({
+    key:KEY,flowToken:flowV2.flowToken,answers:{area:'100',quality:'premium'},submissionKey,
+    contact:{name:'Ignored Retry Name',phone:'9123456789',email:''},consent:true,website:'',
+  });
+  assert.equal(historicalRetry.duplicate,true);
+  assert.equal(historicalRetry.calculationId,result.calculationId);
+  assert.equal(historicalRetry.minimum,11000);
+  assert.equal(historicalRetry.maximum,13200);
+  assert.equal(Number(historicalRetry.versionNo),Number(flow.versionNo));
+
+  const freshAfterPublish=await estimatorService.calculate({
+    key:KEY,flowToken:flowV2.flowToken,answers:{area:'100',quality:'standard'},submissionKey:'ci_estimator_runtime_submission_002',
+    contact:{name:'CI Estimate Customer Two',phone:'9345678902',email:''},consent:true,website:'',
+  });
+  assert.equal(freshAfterPublish.minimum,20000);
+  assert.equal(freshAfterPublish.maximum,22000);
+  assert.equal(Number(freshAfterPublish.versionNo),Number(flowV2.versionNo));
 
   console.log('Estimator runtime lifecycle checks passed.');
 }

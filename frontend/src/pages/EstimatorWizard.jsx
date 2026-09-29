@@ -1,174 +1,333 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
-import { publicRequest } from '../utils/auth'
+import { Link, useSearchParams } from 'react-router-dom'
+import { API_BASE_URL, publicRequest } from '../utils/auth'
 import { trackFunnelEvent, trackFunnelEventOnce } from '../utils/funnelTracking'
+import { isValidIndianMobile, normalizeIndianMobileInput } from '../utils/customerContact'
+import usePageMeta from '../utils/usePageMeta'
 import CustomerFlowQuestion, { isEmptyAnswer, isQuestionVisible } from '../components/CustomerFlowQuestion'
 import './RequirementWizard.css'
 import './EstimatorWizard.css'
 
 const money = value => new Intl.NumberFormat('en-IN',{style:'currency',currency:'INR',maximumFractionDigits:0}).format(Number(value || 0))
 const emptyContact = {name:'',phone:'',email:''}
+
+function packageMatches(item,answers){
+  if(!item||item.isActive===false||!item.selectorQuestionKey)return false
+  const answer=answers?.[item.selectorQuestionKey]
+  return Array.isArray(answer)?answer.map(String).includes(String(item.selectorValue)):String(answer??'')===String(item.selectorValue)
+}
+
+function groupPackageDetails(details){
+  return details.reduce((acc,detail)=>{
+    const section=detail.section||'Specifications'
+    if(!acc[section])acc[section]=[]
+    acc[section].push(detail)
+    return acc
+  },{})
+}
+
+function PackageDetailGroups({details=[]}){
+  const grouped=groupPackageDetails(details)
+  return Object.entries(grouped).map(([section,rows])=><div className="est-package-section" key={section}><strong>{section}</strong><div>{rows.map(detail=><article key={detail.detailKey}><span>{detail.label}</span><b>{detail.value}</b>{detail.note&&<small>{detail.note}</small>}</article>)}</div></div>)
+}
+
+function PackagePreview({item,compact=false}){
+  if(!item)return null
+  const activeDetails=(item.details||[]).filter(detail=>detail.isActive!==false)
+  const visibleDetails=compact?activeDetails.slice(0,6):activeDetails
+  const hiddenDetails=compact?activeDetails.slice(6):[]
+  return <section className={compact?'est-package-preview compact':'est-package-preview'}>
+    <div className="est-package-preview-head"><div>{item.badge&&<span>{item.badge}</span>}<h3>{item.label}</h3>{item.summary&&<p>{item.summary}</p>}</div>{item.priceNote&&<b>{item.priceNote}</b>}</div>
+    <PackageDetailGroups details={visibleDetails}/>
+    {hiddenDetails.length>0&&<details className="est-package-more"><summary>View all {activeDetails.length} package specifications <span>+</span></summary><div className="est-package-more-body"><PackageDetailGroups details={hiddenDetails}/></div></details>}
+  </section>
+}
+
+function EstimatorQuestion({question,value,onChange,packages=[],id}){
+  if(!question)return null
+
+  const packageOptions=(packages||[]).filter(item=>item?.isActive!==false&&item.selectorQuestionKey===question.questionKey)
+  if(packageOptions.length){
+    return <div className="est-package-choice-grid" role="group" aria-label={question.label}>{packageOptions.map((item,index)=>{
+      const active=String(value??'')===String(item.selectorValue)
+      const details=(item.details||[]).filter(detail=>detail?.isActive!==false).slice(0,4)
+      return <button type="button" className={active?'est-package-choice active':'est-package-choice'} key={item.packageKey||item.selectorValue||index} onClick={()=>onChange(item.selectorValue)}>
+        <div className="est-package-choice-head"><span>{item.badge||'PACKAGE'}</span><strong>{item.label}</strong>{item.priceNote&&<em>{item.priceNote}</em>}</div>
+        {item.summary&&<p>{item.summary}</p>}
+        {details.length>0&&<div className="est-package-choice-specs">{details.map((detail,i)=><div key={detail.detailKey||i}><small>{detail.label}</small><b>{detail.value}</b></div>)}</div>}
+        <i>{active?'Selected ✓':'Select package'}</i>
+      </button>
+    })}</div>
+  }
+
+  return <CustomerFlowQuestion id={id} question={question} value={value} onChange={onChange}/>
+}
+
 function makeSubmissionKey(){
   if(globalThis.crypto?.randomUUID)return globalThis.crypto.randomUUID()
   return 'est_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,12)
 }
 
+function initialEstimatorAnswers(flow,packageParam){
+  const seeded={}
+  const activeQuestions=(flow?.questions||[]).filter(question=>question?.isActive!==false)
+  const questionByKey=new Map(activeQuestions.map(question=>[question.questionKey,question]))
+
+  for(const question of activeQuestions){
+    if(Object.prototype.hasOwnProperty.call(question.validation||{},'systemDefault')){
+      seeded[question.questionKey]=question.validation.systemDefault
+    }
+  }
+
+  if(packageParam){
+    const pkg=(flow?.packages||[]).find(item=>item?.isActive!==false&&String(item.packageKey||'')===String(packageParam))
+    if(pkg?.selectorQuestionKey){
+      const selectorQuestion=questionByKey.get(pkg.selectorQuestionKey)
+      const optionAllowed=(selectorQuestion?.options||[]).some(option=>option?.isActive!==false&&String(option.value)===String(pkg.selectorValue))
+      if(optionAllowed)seeded[pkg.selectorQuestionKey]=pkg.selectorValue
+    }
+  }
+
+  return seeded
+}
+
+function smartSection(question,packages){
+  const configured=String(question?.validation?.section||'').trim()
+  if(configured)return configured
+  const key=String(question?.questionKey||'')
+  if((packages||[]).some(item=>item?.isActive!==false&&item.selectorQuestionKey===key))return 'Choose your package'
+  if(['project_location'].includes(key))return 'Site & location'
+  if(['project_type','own_plot','basement','site_access'].includes(key))return 'Site & project'
+  if(['plot_area','built_up_area','floors'].includes(key))return 'Area & floors'
+  if(key==='construction_package')return 'Scope of work'
+  if(['steel_spec','cement_spec','sand_spec','brick_spec'].includes(key))return 'Structure materials'
+  if(['wire_spec','switch_spec'].includes(key))return 'Electrical'
+  if(key==='flooring_spec')return 'Flooring & finishes'
+  if(['property_type','bhk','area','property_status'].includes(key))return 'Home details'
+  if(['scope_mode','selected_work','kitchen_package','wardrobe_units','false_ceiling_area','furniture_package'].includes(key))return 'Scope & quantities'
+  if(['plywood_spec','internal_laminate_spec','external_laminate_spec','hardware_spec','modular_finish_spec'].includes(key))return 'Core materials & finishes'
+  if(key==='customisations')return 'Add-ons & customisations'
+  if(/(_area|_meters|_count)$/.test(key)&&question?.showWhen?.questionKey==='customisations')return 'Customisation quantities'
+  if(['timeline','additional_requirement'].includes(key))return 'Timeline & notes'
+  if(question?.showWhen?.questionKey==='estimate_mode'&&(question.showWhen?.equals==='detailed'||(question.showWhen?.in||[]).includes('detailed')))return 'Detailed specifications'
+  if(question?.questionType==='location')return 'Project location'
+  return 'Project details'
+}
+
+function groupQuestions(questions,packages){
+  const groups=[]
+  const byName=new Map()
+  for(const question of questions){
+    const name=smartSection(question,packages)
+    if(!byName.has(name)){
+      const group={name,questions:[]}
+      groups.push(group)
+      byName.set(name,group)
+    }
+    byName.get(name).questions.push(question)
+  }
+  return groups
+}
+
+function fieldClass(question,packages){
+  const isPackage=(packages||[]).some(item=>item?.isActive!==false&&item.selectorQuestionKey===question?.questionKey)
+  if(isPackage||['text','multi_select'].includes(question?.questionType)||question?.validation?.fullWidth===true)return 'rq-field wide'
+  return 'rq-field'
+}
+
 export default function EstimatorWizard({ flowKey }) {
+  const construction=flowKey==='construction-cost-estimator'
+  usePageMeta(construction?'Construction Cost Estimate | ProPulse Business':'Interior Cost Estimate | ProPulse Business',construction?'Get an indicative home construction cost estimate using project size, scope and package selections.':'Get an indicative home interior cost estimate using home size, scope, package and optional finish selections.')
+  const [searchParams] = useSearchParams()
+  const packageParam=searchParams.get('package')
+  const consultationPath=construction?'/construction-consultation':'/interior-consultation'
   const [flow,setFlow] = useState(null)
   const [answers,setAnswers] = useState({})
-  const [step,setStep] = useState(0)
   const [result,setResult] = useState(null)
-  const [quoteMode,setQuoteMode] = useState(false)
   const [contact,setContact] = useState(emptyContact)
   const [consent,setConsent] = useState(false)
   const [website,setWebsite] = useState('')
   const [submissionKey,setSubmissionKey] = useState(makeSubmissionKey)
-  const [state,setState] = useState({loading:true,saving:false,error:'',success:false})
+  const [state,setState] = useState({loading:true,saving:false,error:'',errorQuestionKey:''})
   const mounted = useRef(true)
   const startedTracked = useRef(false)
 
   useEffect(() => {
     mounted.current = true
     startedTracked.current = false
-    setState({loading:true,saving:false,error:'',success:false})
+    setState({loading:true,saving:false,error:'',errorQuestionKey:''})
     publicRequest('/customer-flows/'+flowKey).then(data => {
       if (!mounted.current) return
       if (data?.flowType !== 'estimator') throw new Error('This calculator is not available.')
       setFlow(data)
-      setAnswers({})
-      setStep(0)
+      setAnswers(initialEstimatorAnswers(data,packageParam))
       setResult(null)
-      setQuoteMode(false)
       setContact(emptyContact)
       setConsent(false)
       setWebsite('')
       setSubmissionKey(makeSubmissionKey())
-      setState({loading:false,saving:false,error:'',success:false})
-      trackFunnelEvent('flow_opened',{flowKey,flowType:'estimator',source:'wizard'})
-    }).catch(error => mounted.current && setState({loading:false,saving:false,error:error.message,success:false}))
+      setState({loading:false,saving:false,error:'',errorQuestionKey:''})
+      trackFunnelEvent('flow_opened',{flowKey,flowType:'estimator',source:'single_page_form'})
+    }).catch(error => mounted.current && setState({loading:false,saving:false,error:error.message,errorQuestionKey:''}))
     return () => { mounted.current = false }
-  },[flowKey])
+  },[flowKey,packageParam])
 
-  const questions = useMemo(() => (flow?.questions || []).filter(question => isQuestionVisible(question,answers)),[flow,answers])
-  useEffect(() => { if (step >= questions.length && questions.length) setStep(questions.length - 1) },[questions.length,step])
-  const question = questions[step]
-  const progress = result ? 100 : questions.length ? Math.round(((step + 1) / questions.length) * 92) : 0
+  const questions = useMemo(() => (flow?.questions || []).filter(question => question?.validation?.systemHidden!==true && isQuestionVisible(question,answers)),[flow,answers])
+  const groups = useMemo(()=>groupQuestions(questions,flow?.packages||[]),[questions,flow?.packages])
+  const standardGroups=useMemo(()=>groups.filter(group=>!group.questions.every(question=>question?.validation?.advancedSection===true)),[groups])
+  const advancedGroups=useMemo(()=>groups.filter(group=>group.questions.every(question=>question?.validation?.advancedSection===true)),[groups])
+  const activePackage = useMemo(() => (flow?.packages || []).find(item=>packageMatches(item,answers)) || null,[flow,answers])
+  const completedCount=questions.filter(question=>!isEmptyAnswer(answers[question.questionKey])).length
+  const progress=result?100:questions.length?Math.round((completedCount/questions.length)*100):0
+  const estimateArea=Number(answers.built_up_area||answers.area||0)
+  const constructionPerSqft=result&&Number(answers.built_up_area)>0?{
+    minimum:Number(result.minimum)/Number(answers.built_up_area),
+    maximum:Number(result.maximum)/Number(answers.built_up_area),
+  }:null
 
-  useEffect(() => {
-    if (!flow || result || !question?.questionKey) return
-    trackFunnelEventOnce('flow_question_viewed',{
-      flowKey,flowType:'estimator',source:'wizard',
-      questionKey:question.questionKey,questionIndex:step+1,questionCount:questions.length,
-    })
-  },[flow,result,question?.questionKey,step,questions.length,flowKey])
+  useEffect(()=>{
+    if(!flow||result)return
+    questions.forEach((question,index)=>trackFunnelEventOnce('flow_question_viewed',{
+      flowKey,flowType:'estimator',source:'single_page_form',
+      questionKey:question.questionKey,questionIndex:index+1,questionCount:questions.length,
+    }))
+  },[flow,result,questions,flowKey])
 
-
-  function setAnswer(key,value) {
+  function setAnswer(question,value) {
     if(!startedTracked.current){
       startedTracked.current=true
-      trackFunnelEvent('flow_started',{flowKey,flowType:'estimator',source:'wizard',metadata:{step:step+1,steps:questions.length}})
+      trackFunnelEvent('flow_started',{flowKey,flowType:'estimator',source:'single_page_form',metadata:{questions:questions.length}})
     }
-    setAnswers(current => ({...current,[key]:value}))
-    setState(current => ({...current,error:''}))
+    setAnswers(current => ({...current,[question.questionKey]:value}))
+    setState(current => ({...current,error:'',errorQuestionKey:''}))
+    if(!isEmptyAnswer(value)){
+      const index=questions.findIndex(item=>item.questionKey===question.questionKey)
+      trackFunnelEventOnce('flow_question_completed',{
+        flowKey,flowType:'estimator',source:'single_page_form',
+        questionKey:question.questionKey,questionIndex:index+1,questionCount:questions.length,
+      })
+    }
   }
 
-  async function next() {
-    if (!question) return
-    if (question.isRequired && isEmptyAnswer(answers[question.questionKey])) {
-      setState(current => ({...current,error:'Please answer this question to continue.'}))
-      return
+  function focusQuestion(questionKey){
+    if(!questionKey)return
+    requestAnimationFrame(()=>document.querySelector('[data-question-key="'+CSS.escape(questionKey)+'"]')?.scrollIntoView({behavior:'smooth',block:'center'}))
+  }
+
+  function validate(){
+    const missing=questions.find(question=>question.isRequired&&isEmptyAnswer(answers[question.questionKey]))
+    if(missing){
+      setState(current=>({...current,error:'Please complete “'+missing.label+'”.',errorQuestionKey:missing.questionKey}))
+      focusQuestion(missing.questionKey)
+      return false
     }
-    setState(current => ({...current,error:''}))
-    trackFunnelEventOnce('flow_question_completed',{
-      flowKey,flowType:'estimator',source:'wizard',
-      questionKey:question.questionKey,questionIndex:step+1,questionCount:questions.length,
-    })
-    if (step < questions.length - 1) {
-      setStep(step + 1)
-      return
+    if(!contact.name.trim()||!isValidIndianMobile(contact.phone)||!consent){
+      setState(current=>({...current,error:'Enter your name, a valid 10-digit mobile number and accept the contact consent.',errorQuestionKey:'contact'}))
+      focusQuestion('contact')
+      return false
     }
-    try {
-      setState(current => ({...current,saving:true,error:''}))
-      const calculation = await publicRequest('/customer-flows/'+flowKey+'/calculate',{
+    return true
+  }
+
+  async function submitEstimate(event){
+    event.preventDefault()
+    if(!validate())return
+    try{
+      setState(current=>({...current,saving:true,error:'',errorQuestionKey:''}))
+      const calculation=await publicRequest('/customer-flows/'+flowKey+'/calculate',{
         method:'POST',
-        body:JSON.stringify({flowToken:flow.flowToken,answers,submissionKey})
+        body:JSON.stringify({flowToken:flow.flowToken,answers,submissionKey,contact,consent,website})
       })
       setResult(calculation)
-      trackFunnelEvent('estimate_completed',{flowKey,flowType:'estimator',calculationId:calculation.calculationId,source:'wizard',metadata:{steps:questions.length}})
-      setState({loading:false,saving:false,error:'',success:false})
-    } catch (error) {
-      setState(current => ({...current,saving:false,error:error.message}))
-    }
-  }
-
-  async function requestQuotes(event){
-    event.preventDefault()
-    if(!result?.calculationId)return
-    if(!contact.name.trim()||!contact.phone.trim()||!consent){
-      setState(current=>({...current,error:'Enter your name, mobile number and accept the contact consent.'}))
-      return
-    }
-    try{
-      setState(current=>({...current,saving:true,error:''}))
-      await publicRequest('/customer-flows/estimates/'+result.calculationId+'/convert',{
-        method:'POST',
-        body:JSON.stringify({contact,consent,submissionKey,website})
-      })
-      trackFunnelEvent('quote_submitted',{flowKey,flowType:'estimator',calculationId:result.calculationId,source:'wizard'})
-      setState({loading:false,saving:false,error:'',success:true})
+      trackFunnelEvent('estimate_completed',{flowKey,flowType:'estimator',calculationId:calculation.calculationId,source:'single_page_form',metadata:{questions:questions.length,leadCaptured:true}})
+      setState({loading:false,saving:false,error:'',errorQuestionKey:''})
+      requestAnimationFrame(()=>window.scrollTo({top:0,behavior:'smooth'}))
     }catch(error){
-      setState(current=>({...current,saving:false,error:error.message}))
+      setState(current=>({...current,saving:false,error:error.message,errorQuestionKey:''}))
     }
   }
 
   function restart() {
-    setAnswers({})
-    setStep(0)
+    setAnswers(initialEstimatorAnswers(flow,packageParam))
     setResult(null)
-    setQuoteMode(false)
     setContact(emptyContact)
     setConsent(false)
     setWebsite('')
     setSubmissionKey(makeSubmissionKey())
-    setState({loading:false,saving:false,error:'',success:false})
+    setState({loading:false,saving:false,error:'',errorQuestionKey:''})
+    window.scrollTo({top:0,behavior:'smooth'})
   }
 
   if (state.loading) return <main className="rq-page"><div className="rq-shell rq-status">Loading calculator…</div></main>
   if (!flow) return <main className="rq-page"><div className="rq-shell rq-status error">{state.error || 'This calculator is unavailable.'}<Link to="/">Back home</Link></div></main>
 
   return <main className="rq-page">
-    <header className="rq-top"><Link to="/"><img src="/brand/propulse-logo.png" alt="ProPulse Business" /></Link><Link to="/leads">For businesses →</Link></header>
-    <div className="rq-shell estimator-shell">
-      <aside className="rq-side">
-        <span>PROPULSE ESTIMATOR</span>
+    <header className="rq-top"><Link to="/"><img src="/brand/propulse-logo.png" alt="ProPulse Business" /></Link><Link to="/leads">Professional →</Link></header>
+    <div className="rq-shell rq-single-shell estimator-shell">
+      <aside className="rq-side rq-single-side">
+        <span>PROJECT COST ESTIMATOR</span>
         <h1>{flow.name}</h1>
-        <p>{flow.config?.subheadline || 'Answer a few questions to get an indicative project cost range.'}</p>
+        <p>{flow.config?.subheadline || 'Complete one clear form to receive an indicative cost range and keep the same project brief ready for consultation.'}</p>
         <div className="rq-scope"><small>Category</small><b>{[flow.industryName,flow.serviceName].filter(Boolean).join(' · ')}</b></div>
-        <ul><li>✓ No login required</li><li>✓ Server-calculated estimate</li><li>✓ Indicative range, not a final quotation</li></ul>
+        <div className="est-side-summary">{activePackage&&<div><small>Selected package</small><b>{activePackage.label}</b></div>}</div>
+        {!result&&<div className="rq-side-progress"><div><span>Estimate setup</span><b>{progress}%</b></div><i><em style={{width:progress+'%'}}/></i><small>{completedCount} of {questions.length} estimate fields completed</small></div>}
+        <ul><li>✓ One clear project estimate</li><li>✓ Package-based pricing</li><li>✓ Free consultation after estimate</li></ul>
       </aside>
-      <section className="rq-card">
-        <div className="rq-progress"><div style={{width:progress+'%'}} /></div>
-        {!result ? <>
-          <div className="rq-step"><span>QUESTION {String(step + 1).padStart(2,'0')} / {String(questions.length).padStart(2,'0')}</span><h2>{question?.label}</h2>{question?.helpText && <p>{question.helpText}</p>}</div>
-          <div className="rq-control"><CustomerFlowQuestion question={question} value={answers[question?.questionKey]} onChange={value => setAnswer(question.questionKey,value)} /></div>
-          {state.error && <div className="rq-error">{state.error}</div>}
-          <div className="rq-actions"><button type="button" className="secondary" disabled={step===0||state.saving} onClick={()=>setStep(Math.max(0,step-1))}>← Back</button><button type="button" className="primary" disabled={state.saving} onClick={next}>{state.saving?'Calculating…':step===questions.length-1?'Calculate estimate':'Next'} →</button></div>
-        </> : state.success ? <div className="rq-success est-success"><div className="rq-success-mark">✓</div><span>QUOTE REQUEST RECEIVED</span><h1>Your estimate is now a requirement.</h1><p>Relevant businesses or professionals may contact you with actual quotations. Your indicative estimate is preserved with the lead for context.</p><div><Link to="/">Back home</Link><button type="button" onClick={restart}>Estimate another project</button></div></div> : <div className="est-result">
-          <span>INDICATIVE ESTIMATE</span>
-          <h2>{flow.config?.resultTitle || 'Estimated project cost'}</h2>
-          <div className="est-range"><strong>{money(result.minimum)}</strong><i>to</i><strong>{money(result.maximum)}</strong></div>
-          {result.cityName && <p className="est-city">Adjusted for {result.cityName}</p>}
-          {!quoteMode && Array.isArray(result.breakdown) && result.breakdown.length > 0 && <div className="est-breakdown"><b>What shaped this range</b>{result.breakdown.map(item=><div key={item.kind+':'+item.key}><span>{item.label}</span><em>{item.minimum===item.maximum?money(item.minimum):money(item.minimum)+' – '+money(item.maximum)}</em></div>)}</div>}
-          <div className="est-disclaimer">{result.disclaimer}</div>
-          {!quoteMode ? <div className="rq-actions est-result-actions"><button type="button" className="secondary" onClick={restart}>Recalculate</button>{result.quoteEligible?<button type="button" className="primary est-quote-cta" onClick={()=>{trackFunnelEvent('quote_form_opened',{flowKey,flowType:'estimator',calculationId:result.calculationId,source:'wizard'});setQuoteMode(true);setState(current=>({...current,error:''}))}}>{flow.config?.quoteCtaLabel || 'Get Actual Quotes'} →</button>:<Link className="est-home" to="/">Done</Link>}</div> : <form className="est-quote-form" onSubmit={requestQuotes}>
-            <div className="rq-step"><span>GET ACTUAL QUOTES</span><h2>Where should relevant professionals reach you?</h2><p>Your estimate and project answers will be attached to the requirement.</p></div>
-            <div className="rq-contact-grid"><label>Name<input value={contact.name} onChange={event=>setContact({...contact,name:event.target.value})} autoComplete="name" required/></label><label>Mobile number<input value={contact.phone} onChange={event=>setContact({...contact,phone:event.target.value})} inputMode="tel" autoComplete="tel" placeholder="10-digit mobile" required/></label><label className="wide">Email <small>Optional</small><input type="email" value={contact.email} onChange={event=>setContact({...contact,email:event.target.value})} autoComplete="email"/></label><label className="rq-honeypot" aria-hidden="true">Website<input tabIndex="-1" autoComplete="off" value={website} onChange={event=>setWebsite(event.target.value)}/></label></div>
-            <label className="rq-consent"><input type="checkbox" checked={consent} onChange={event=>setConsent(event.target.checked)}/><span>I agree that ProPulse may share my submitted contact information and project details with relevant businesses or professionals so they can provide actual quotations or callbacks.</span></label>
-            {state.error&&<div className="rq-error">{state.error}</div>}
-            <div className="rq-actions"><button type="button" className="secondary" disabled={state.saving} onClick={()=>setQuoteMode(false)}>← Back to estimate</button><button type="submit" className="primary" disabled={state.saving}>{state.saving?'Submitting…':'Request Quotes'} →</button></div>
-          </form>}
-        </div>}
-      </section>
+
+      {!result?<form className="rq-card rq-form-card rq-single-form est-single-form" onSubmit={submitEstimate}>
+        <div className="rq-form-head"><span>PROJECT ESTIMATE</span><h2>{flow.config?.headline || 'Get your project cost estimate.'}</h2><p>Complete the main project details and choose a package. Material customisation is optional.</p></div>
+
+        {standardGroups.map((group,index)=>{
+          const required=group.questions.filter(question=>question.isRequired)
+          const complete=required.filter(question=>!isEmptyAnswer(answers[question.questionKey])).length
+          const optional=required.length===0
+          const done=!optional&&complete===required.length
+          return <section className={'rq-form-section '+(done?'complete':'')} key={group.name}>
+          <div className="rq-form-section-head"><b>{done?'✓':String(index+1).padStart(2,'0')}</b><div><h3>{group.name}</h3><span>{optional?'Optional details':complete+' of '+required.length+' required completed'}</span></div><em className={done?'done':optional?'optional':''}>{optional?'Optional':done?'Complete':'Needs '+(required.length-complete)}</em></div>
+          <div className="rq-form-grid">{group.questions.map(question=><div className={fieldClass(question,flow.packages||[])+(state.errorQuestionKey===question.questionKey?' error':'')} data-question-key={question.questionKey} key={question.questionKey}>
+            <label htmlFor={'est-'+question.questionKey}>{question.label}{question.isRequired&&<sup>*</sup>}</label>
+            {question.helpText&&<p>{question.helpText}</p>}
+            <EstimatorQuestion id={'est-'+question.questionKey} question={question} value={answers[question.questionKey]} onChange={value=>setAnswer(question,value)} packages={flow.packages||[]}/>
+          </div>)}</div>
+        </section>
+        })}
+
+        {advancedGroups.length>0&&<details className="est-optional-specs">
+          <summary><div><span>OPTIONAL</span><h3>Customise materials & specifications</h3><p>Your selected package is used by default. Open this only if you want to change specific materials, finishes or add-ons.</p></div><b>+</b></summary>
+          <div className="est-optional-specs-body">{advancedGroups.map(group=><section key={group.name}><h4>{group.name}</h4><div className="rq-form-grid">{group.questions.map(question=><div className={fieldClass(question,flow.packages||[])+(state.errorQuestionKey===question.questionKey?' error':'')} data-question-key={question.questionKey} key={question.questionKey}>
+            <label htmlFor={'est-'+question.questionKey}>{question.label}</label>
+            {question.helpText&&<p>{question.helpText}</p>}
+            <EstimatorQuestion id={'est-'+question.questionKey} question={question} value={answers[question.questionKey]} onChange={value=>setAnswer(question,value)} packages={flow.packages||[]}/>
+          </div>)}</div></section>)}</div>
+        </details>}
+
+        {activePackage&&<section className="rq-form-section est-selected-package-section"><div className="rq-form-section-head"><b>✓</b><div><h3>Selected package summary</h3><span>Your selected package and specifications will stay with this estimate.</span></div></div><PackagePreview item={activePackage} compact/></section>}
+
+        <section className={'rq-form-section rq-contact-section'+(state.errorQuestionKey==='contact'?' error':'')} data-question-key="contact">
+          <div className="rq-form-section-head"><b>{String(standardGroups.length+1).padStart(2,'0')}</b><div><h3>{flow.config?.contactTitle || 'Your contact details'}</h3><span>{flow.config?.contactText || 'Name and mobile are required so the estimate can be saved with the same customer project enquiry.'}</span></div></div>
+          <div className="rq-contact-grid"><label>Name<input value={contact.name} onChange={event=>setContact({...contact,name:event.target.value})} autoComplete="name" required/></label><label>Mobile number<input value={contact.phone} onChange={event=>setContact({...contact,phone:normalizeIndianMobileInput(event.target.value)})} inputMode="tel" autoComplete="tel" placeholder="10-digit mobile" maxLength="10" pattern="[6-9][0-9]{9}" required/></label><label className="wide">Email <small>Optional</small><input type="email" value={contact.email} onChange={event=>setContact({...contact,email:event.target.value})} autoComplete="email"/></label><label className="rq-honeypot" aria-hidden="true">Website<input tabIndex="-1" autoComplete="off" value={website} onChange={event=>setWebsite(event.target.value)}/></label></div>
+          <label className="rq-consent"><input type="checkbox" checked={consent} onChange={event=>setConsent(event.target.checked)}/><span>I agree that ProPulse may use and share my project details and contact information with relevant verified professionals or contractors so they can respond to this project enquiry and provide consultation or service follow-up.</span></label>
+        </section>
+
+        {state.error&&<div className="rq-error">{state.error}</div>}
+        <div className="rq-submit-bar"><div><small>INDICATIVE ESTIMATE</small><b>Your estimate uses the current package rates and the project details you selected.</b></div><button type="submit" className="primary" disabled={state.saving}>{state.saving?'Calculating…':(flow.config?.submitLabel || 'Calculate & Save Estimate')} <span>→</span></button></div>
+      </form>:<section className="rq-card rq-form-card est-result-card"><div className="est-result">
+        <span>YOUR PROJECT ESTIMATE</span>
+        <h2>{flow.config?.resultTitle || 'Estimated project cost'}</h2>
+        <div className="est-range"><strong>{money(result.minimum)}</strong><i>to</i><strong>{money(result.maximum)}</strong></div>
+        {result.cityName && <p className="est-city">Adjusted for {result.cityName}</p>}
+        <div className="est-result-meta-grid">
+          {estimateArea>0&&<div><small>{answers.built_up_area?'Built-up area':'Home area'}</small><b>{new Intl.NumberFormat('en-IN').format(estimateArea)} sq ft</b></div>}
+          {(result.package||activePackage)&&<div><small>Package</small><b>{(result.package||activePackage).label}</b></div>}
+          {constructionPerSqft&&<div><small>Average estimate / sq ft</small><b>{money(constructionPerSqft.minimum)} – {money(constructionPerSqft.maximum)}</b></div>}
+        </div>
+        {(result.package||activePackage)&&<PackagePreview item={result.package||activePackage} compact/>}
+        {Array.isArray(result.breakdown) && result.breakdown.length > 0 && <div className="est-breakdown"><b>What shaped this range</b>{result.breakdown.map(item=><div key={item.kind+':'+item.key}><span>{item.label}</span><em>{item.minimum===item.maximum?money(item.minimum):money(item.minimum)+' – '+money(item.maximum)}</em></div>)}</div>}
+        <div className="est-lead-confirm"><b>Project enquiry saved</b><span>Your name, mobile number, selected package, project choices and estimate are saved together for follow-up.</span></div>
+        <div className="est-consultation-card"><span>CONSULTATION READY</span><h3>{flow.config?.consultationTitle || 'Continue with the same project brief.'}</h3><p>{flow.config?.consultationText || 'You do not need to fill another form. The estimate and selected specifications are already saved with your enquiry so a consultation can continue from the same information.'}</p><Link to={consultationPath}>{flow.config?.consultationButtonLabel || 'Get Free Consultation'} <b>→</b></Link></div>
+        <div className="est-disclaimer">{result.disclaimer}</div>
+        <div className="rq-actions est-result-actions"><a className="primary est-download" href={`${API_BASE_URL}/customer-flows/estimates/${encodeURIComponent(result.calculationId)}/pdf?token=${encodeURIComponent(result.pdfToken||'')}`} download>Download Estimate PDF ↓</a><button type="button" className="secondary" onClick={restart}>Estimate another project</button><Link className="est-home" to="/">Back home</Link></div>
+      </div></section>}
     </div>
   </main>
 }

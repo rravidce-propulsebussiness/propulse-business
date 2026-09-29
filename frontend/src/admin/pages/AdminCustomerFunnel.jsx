@@ -14,8 +14,8 @@ const when=value=>{
   return Number.isNaN(date.getTime())?'—':date.toLocaleString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})
 }
 const sourceCopy={
-  public_requirement:{label:'Direct requirements',description:'Customers who submitted a structured Build or Interior requirement.',icon:'⌁'},
-  public_estimator:{label:'Estimator leads',description:'Completed estimator journeys become canonical leads immediately; contact-pending estimates stay on safe hold until quotes are requested.',icon:'₹'},
+  public_requirement:{label:'Free consultations',description:'Customers who requested a Construction or Interior consultation through the short callback form.',icon:'⌁'},
+  public_estimator:{label:'Estimator leads',description:'Completed estimator journeys become canonical customer leads immediately after mandatory name, mobile and consent capture.',icon:'₹'},
 }
 const periods=[['7','7D'],['30','30D'],['90','90D'],['365','1Y'],['all','ALL']]
 
@@ -32,7 +32,7 @@ function FlowJourney({flow}){
   const icon=flow.flowType==='estimator'?'₹':'⌁'
   return <article className={'journey-card '+(flow.flowType==='estimator'?'estimator':'requirement')}>
     <div className="journey-card-head">
-      <div className="journey-title"><span>{icon}</span><div><small>{flow.flowType==='estimator'?'ESTIMATOR JOURNEY':'REQUIREMENT JOURNEY'}</small><h3>{flow.flowName}</h3><code>{flow.flowKey}</code></div></div>
+      <div className="journey-title"><span>{icon}</span><div><small>{flow.flowType==='estimator'?'ESTIMATOR JOURNEY':'CONSULTATION JOURNEY'}</small><h3>{flow.flowName}</h3><code>{flow.flowKey}</code></div></div>
       <div className="journey-result"><strong>{flow.completionRate||0}%</strong><span>open → final submit</span></div>
     </div>
 
@@ -64,7 +64,7 @@ function QuestionDropoffCard({flow}){
   const highestKey=flow.highestDropOff?.questionKey
   return <article className={'question-friction-card '+(flow.flowType==='estimator'?'estimator':'requirement')}>
     <div className="question-friction-head">
-      <div><span>{flow.flowType==='estimator'?'₹':'⌁'}</span><div><small>{flow.flowType==='estimator'?'ESTIMATOR QUESTIONS':'REQUIREMENT QUESTIONS'}</small><h3>{flow.flowName}</h3><code>{flow.flowKey}</code></div></div>
+      <div><span>{flow.flowType==='estimator'?'₹':'⌁'}</span><div><small>{flow.flowType==='estimator'?'ESTIMATOR QUESTIONS':'CONSULTATION FIELDS'}</small><h3>{flow.flowName}</h3><code>{flow.flowKey}</code></div></div>
       <div className="question-friction-summary"><strong>{flow.questionsTracked||0}</strong><span>questions observed</span>{flow.highestDropOff&&<small>{flow.highestDropOff.dropOffRate}% highest observed drop</small>}</div>
     </div>
     <div className="question-friction-list">
@@ -90,7 +90,7 @@ function SourceCard({item}){
   const copy=sourceCopy[item.source]||{label:item.source,description:'Customer funnel source',icon:'◈'}
   const statuses=Object.entries(item.statuses||{}).sort((a,b)=>Number(b[1])-Number(a[1])).slice(0,5)
   return <article className={'source-premium '+(item.source==='public_estimator'?'estimator':'requirement')}>
-    <div className="source-premium-head"><span>{copy.icon}</span><div><small>{item.source==='public_estimator'?'ESTIMATE → QUOTE':'DIRECT FORM'}</small><h3>{copy.label}</h3><p>{copy.description}</p></div></div>
+    <div className="source-premium-head"><span>{copy.icon}</span><div><small>{item.source==='public_estimator'?'ESTIMATE → LEAD':'DIRECT FORM'}</small><h3>{copy.label}</h3><p>{copy.description}</p></div></div>
     <div className="source-premium-metrics">
       <div><strong>{compact(item.leads)}</strong><span>Canonical leads</span></div>
       <div><strong>{compact(item.monetizedLeads)}</strong><span>Monetized leads</span></div>
@@ -148,11 +148,11 @@ export default function AdminCustomerFunnel(){
       <div className="funnel-command-copy">
         <div className="funnel-live-pill"><i/>FIRST-PARTY FUNNEL INTELLIGENCE</div>
         <h1>Estimator &amp; customer funnel</h1>
-        <p>Follow customer intent from project entry to completed estimate, quote request, canonical lead and paid marketplace activity.</p>
+        <p>Follow customer intent from project entry to completed estimate, canonical lead capture and downstream paid lead activity.</p>
         <div className="funnel-command-badges">
           <span><b>{compact(tracking.uniqueSessions||0)}</b> tracked sessions</span>
           <span><b>{compact(summary.calculations||0)}</b> completed estimates</span>
-          <span><b>{summary.conversionRate||0}%</b> estimate → quote</span>
+          <span><b>{summary.conversionRate||0}%</b> estimate → lead</span>
           <span><b>{money(summary.paidLeadSales||0)}</b> gross paid lead sales</span>
         </div>
       </div>
@@ -170,14 +170,14 @@ export default function AdminCustomerFunnel(){
     <section className="funnel-control-bar">
       <div className="funnel-period-control"><small>PERIOD</small><div>{periods.map(([value,label])=><button type="button" key={value} className={period===value?'active':''} onClick={()=>changePeriod(value)}>{label}</button>)}</div></div>
       <label><span>Estimator</span><select value={flowId} onChange={event=>changeFlow(event.target.value)}><option value="">All estimators</option>{definitions.map(item=><option key={item.id} value={item.id}>{item.name}{item.isActive?'':' (inactive)'}</option>)}</select></label>
-      <label><span>Calculation history</span><select value={conversion} onChange={event=>changeConversion(event.target.value)}><option value="all">All calculations</option><option value="converted">Quote requested</option><option value="unconverted">Estimate only</option></select></label>
+      <label><span>Calculation history</span><select value={conversion} onChange={event=>changeConversion(event.target.value)}><option value="all">All calculations</option><option value="converted">Lead captured</option><option value="unconverted">Legacy estimate only</option></select></label>
       <div className="funnel-control-status"><i className={state.loading?'loading':''}/><span>{state.loading?'Updating dashboard':'Live from canonical tables'}</span></div>
     </section>
 
     <section className="premium-kpi-grid">
       <Kpi icon="◎" eyebrow="ESTIMATE DEMAND" value={compact(summary.calculations)} label="Calculations completed" note={selectedFlow?selectedFlow.name:'All published estimator flows'} tone="blue"/>
-      <Kpi icon="↗" eyebrow="QUOTE INTENT" value={compact(summary.converted)} label="Actual quotes requested" note={`${summary.conversionRate||0}% of completed estimates converted`} tone="orange"/>
-      <Kpi icon="⌁" eyebrow="DIRECT DEMAND" value={compact(summary.directRequirementLeads)} label="Requirement-form leads" note="Build / Interior submissions that skipped the estimator path" tone="green"/>
+      <Kpi icon="↗" eyebrow="LEAD CAPTURE" value={compact(summary.converted)} label="Estimator leads captured" note={`${summary.conversionRate||0}% of completed estimates are linked to canonical customer leads`} tone="orange"/>
+      <Kpi icon="⌁" eyebrow="DIRECT DEMAND" value={compact(summary.directRequirementLeads)} label="Free consultation leads" note="Construction / Interior callback requests submitted without using the estimator" tone="green"/>
       <Kpi icon="◈" eyebrow="CANONICAL OUTPUT" value={compact(summary.customerFunnelLeads)} label="Customer-funnel leads" note={`${compact(summary.monetizedLeads)} later produced a paid marketplace purchase`} tone="purple"/>
       <Kpi icon="₹" eyebrow="MARKETPLACE VALUE" value={money(summary.paidLeadSales)} label="Gross paid lead sales" note="Attributed sales amount, not Propulse net revenue or commission" tone="navy"/>
     </section>
@@ -193,7 +193,7 @@ export default function AdminCustomerFunnel(){
       </div>
       <div className="journey-grid">
         {trackedFlows.length?trackedFlows.map(flow=><FlowJourney key={(flow.flowKey||'unknown')+'-'+flow.flowType} flow={flow}/>):<div className="premium-empty">
-          <span>◎</span><h3>Journey tracking is ready.</h3><p>Stage metrics will appear here after customers use the homepage, requirement forms and estimators on this release.</p>
+          <span>◎</span><h3>Journey tracking is ready.</h3><p>Stage metrics will appear here after customers use the homepage, free consultation forms and estimators on this release.</p>
         </div>}
       </div>
     </section>
@@ -219,19 +219,19 @@ export default function AdminCustomerFunnel(){
 
     <section className="premium-two-column">
       <article className="premium-panel estimator-performance-premium">
-        <div className="premium-panel-head"><div><span>ESTIMATOR PERFORMANCE</span><h3>Calculation → quote conversion</h3><p>Operational conversion from completed calculation to canonical quote request.</p></div><b>{periodLabel}</b></div>
+        <div className="premium-panel-head"><div><span>ESTIMATOR PERFORMANCE</span><h3>Estimate → customer lead capture</h3><p>Tracks completed estimates that are attached to a canonical customer lead with contact details.</p></div><b>{periodLabel}</b></div>
         <div className="estimator-premium-list">
           {estimators.length?estimators.map(item=><button type="button" key={item.definitionId} className={String(flowId)===String(item.definitionId)?'selected':''} onClick={()=>changeFlow(String(flowId)===String(item.definitionId)?'':String(item.definitionId))}>
             <div className="estimator-premium-title"><span><strong>{item.name}</strong><small>{item.key}</small></span><em>{item.conversionRate}%</em></div>
             <div className="estimator-premium-bar"><i style={{width:Math.min(100,Math.max(0,item.conversionRate||0))+'%'}}/></div>
-            <div className="estimator-premium-metrics"><span><b>{compact(item.calculations)}</b> calculations</span><span><b>{compact(item.converted)}</b> quote requests</span><span><b>{money(item.averageMinimum)} – {money(item.averageMaximum)}</b> average range</span></div>
+            <div className="estimator-premium-metrics"><span><b>{compact(item.calculations)}</b> calculations</span><span><b>{compact(item.converted)}</b> leads captured</span><span><b>{money(item.averageMinimum)} – {money(item.averageMaximum)}</b> average range</span></div>
           </button>):<div className="premium-empty small"><p>No estimator calculations match this period.</p></div>}
         </div>
       </article>
 
       <article className="premium-panel city-premium-panel">
-        <div className="premium-panel-head"><div><span>LOCATION SIGNAL</span><h3>Top estimator cities</h3><p>Where calculation activity and quote intent are appearing.</p></div></div>
-        <div className="premium-table-wrap city-table"><table><thead><tr><th>City</th><th>Estimates</th><th>Quotes</th><th>Conversion</th><th>Average range</th></tr></thead><tbody>
+        <div className="premium-panel-head"><div><span>LOCATION SIGNAL</span><h3>Top estimator cities</h3><p>Where customer estimate and lead activity is appearing.</p></div></div>
+        <div className="premium-table-wrap city-table"><table><thead><tr><th>City</th><th>Estimates</th><th>Leads</th><th>Capture rate</th><th>Average range</th></tr></thead><tbody>
           {cities.length?cities.map(city=><tr key={city.cityId}><td><strong>{city.cityName}</strong><small>{city.stateName||'—'}</small></td><td>{city.calculations}</td><td>{city.converted}</td><td><b className="premium-rate-pill">{city.conversionRate}%</b></td><td>{money(city.averageMinimum)} – {money(city.averageMaximum)}</td></tr>):<tr><td colSpan="5" className="table-empty">No location data in this period.</td></tr>}
         </tbody></table></div>
       </article>
@@ -239,9 +239,9 @@ export default function AdminCustomerFunnel(){
 
     <section className="premium-two-column demand-row">
       <article className="premium-panel">
-        <div className="premium-panel-head"><div><span>DIRECT REQUIREMENTS</span><h3>Build &amp; Interior demand</h3><p>Requirement-form submissions that became canonical leads directly.</p></div></div>
+        <div className="premium-panel-head"><div><span>FREE CONSULTATIONS</span><h3>Construction &amp; Interior consultation demand</h3><p>Short callback forms that became customer leads directly.</p></div></div>
         <div className="direct-demand-list">
-          {requirements.length?requirements.map(item=><div key={item.flowKey}><span className="direct-demand-icon">{item.flowKey==='build'?'⌂':item.flowKey==='design'?'◇':'⌁'}</span><div><strong>{item.flowKey==='build'?'Construction / Build':item.flowKey==='design'?'Interior / Design':item.flowKey}</strong><small>Latest lead {when(item.latestLeadAt)}</small></div><div className="direct-demand-number"><b>{item.leads}</b><span>leads</span></div><div className="direct-demand-number"><b>{item.sold}</b><span>sold</span></div></div>):<div className="premium-empty small"><p>No direct requirement leads in this period.</p></div>}
+          {requirements.length?requirements.map(item=><div key={item.flowKey}><span className="direct-demand-icon">{item.flowKey==='build'?'⌂':item.flowKey==='design'?'◇':'⌁'}</span><div><strong>{item.flowKey==='build'?'Construction / Build':item.flowKey==='design'?'Interior / Design':item.flowKey}</strong><small>Latest lead {when(item.latestLeadAt)}</small></div><div className="direct-demand-number"><b>{item.leads}</b><span>leads</span></div><div className="direct-demand-number"><b>{item.sold}</b><span>sold</span></div></div>):<div className="premium-empty small"><p>No free consultation leads in this period.</p></div>}
         </div>
       </article>
       <article className="premium-panel data-principles">
@@ -257,43 +257,44 @@ export default function AdminCustomerFunnel(){
 
     <section className="premium-section customer-lead-ops">
       <div className="premium-section-head">
-        <div><span>CUSTOMER LEAD OPERATIONS</span><h2>Recent customer-generated leads</h2><p>One operational queue for requirement forms and estimator journeys, showing contact readiness before marketplace release.</p></div>
+        <div><span>CUSTOMER LEAD OPERATIONS</span><h2>Recent customer-generated leads</h2><p>One operational queue for free consultation and estimator journeys, showing contact coverage, canonical lead status and downstream paid lead activity.</p></div>
         <Link className="question-config-link" to="/admin/leads">Open Manage Leads <span>→</span></Link>
       </div>
       <div className="customer-lead-ops-list">
         {recentCustomerLeads.length?recentCustomerLeads.map(item=>{
-          const awaiting=item.source==='public_estimator'&&item.contactPending
-          const href='/admin/leads?leadId='+encodeURIComponent(String(item.leadId))+'&source='+encodeURIComponent(item.source)+(awaiting?'&contactState=awaiting_contact':'')
-          return <article className={'customer-lead-ops-row '+(awaiting?'awaiting':'ready')} key={item.leadId}>
+          const contactComplete=Boolean(item.hasName&&item.hasPhone)
+          const contactBits=[item.hasName?'Name':null,item.hasPhone?'Phone':null,item.hasEmail?'Email':null].filter(Boolean)
+          const href='/admin/leads?leadId='+encodeURIComponent(String(item.leadId))+'&source='+encodeURIComponent(item.source)
+          return <article className={'customer-lead-ops-row '+(contactComplete?'ready':'incomplete')} key={item.leadId}>
             <div className="customer-lead-identity">
               <span className={'customer-lead-source '+(item.source==='public_estimator'?'estimator':'requirement')}>{item.source==='public_estimator'?'₹':'⌁'}</span>
-              <div><small>{item.source==='public_estimator'?'ESTIMATOR':'REQUIREMENT FORM'} · LEAD #{item.leadId}</small><strong>{item.customerName||(awaiting?'Estimator customer':'Customer')}</strong><span>{item.flowName||item.flowKey||'Customer flow'}{item.flowKey?' · '+item.flowKey:''}</span></div>
+              <div><small>{item.source==='public_estimator'?'ESTIMATOR':'FREE CONSULTATION'} · LEAD #{item.leadId}</small><strong>{item.customerName||'Legacy customer lead'}</strong><span>{item.flowName||item.flowKey||'Customer flow'}{item.flowKey?' · '+item.flowKey:''}</span></div>
             </div>
-            <div className="customer-lead-contact"><small>CONTACT</small><b className={awaiting?'pending':'ready'}>{awaiting?'Awaiting contact':'Contact ready'}</b><span>{awaiting?'Estimate captured safely before quote request':[item.hasPhone?'Phone':null,item.hasEmail?'Email':null].filter(Boolean).join(' + ')||'Contact captured'}</span></div>
-            <div className="customer-lead-status"><small>LEAD STATUS</small><b>{String(item.status||'unknown').replaceAll('_',' ')}</b><span>{item.qualityGateStatus?String(item.qualityGateStatus).replaceAll('_',' '):awaiting?'Safe hold':'Canonical lead'}</span></div>
+            <div className="customer-lead-contact"><small>CONTACT</small><b className={contactComplete?'ready':'incomplete'}>{contactComplete?'Contact complete':'Legacy incomplete'}</b><span>{contactBits.join(' + ')||'No customer contact stored'}</span></div>
+            <div className="customer-lead-status"><small>LEAD STATUS</small><b>{String(item.status||'unknown').replaceAll('_',' ')}</b><span>{item.qualityGateStatus?String(item.qualityGateStatus).replaceAll('_',' '):'Canonical lead'}</span></div>
             <div className="customer-lead-context"><small>PROJECT</small><b>{item.serviceName||item.industryName||'Customer requirement'}</b><span>{[item.cityName,item.stateName,item.pincode].filter(Boolean).join(' · ')||'Location unavailable'}</span></div>
             <div className="customer-lead-value"><small>VALUE</small><b>{item.paidSales?money(item.paidSales):'—'}</b><span>{item.paidPurchases?item.paidPurchases+' paid purchase'+(item.paidPurchases===1?'':'s'):item.estimateMinimum!=null?money(item.estimateMinimum)+' – '+money(item.estimateMaximum):'Not monetized yet'}</span></div>
-            <div className="customer-lead-time"><small>CREATED</small><b>{when(item.createdAt)}</b>{item.convertedAt&&<span>Quote requested {when(item.convertedAt)}</span>}</div>
+            <div className="customer-lead-time"><small>CREATED</small><b>{when(item.createdAt)}</b>{item.convertedAt&&<span>Lead captured {when(item.convertedAt)}</span>}</div>
             <Link className="customer-lead-open" to={href}>Open lead <span>→</span></Link>
           </article>
-        }):<div className="premium-empty"><span>◈</span><h3>No customer leads in this window.</h3><p>Requirement-form and estimator-generated leads will appear here automatically.</p></div>}
+        }):<div className="premium-empty"><span>◈</span><h3>No customer leads in this window.</h3><p>Free-consultation and estimator-generated leads will appear here automatically.</p></div>}
       </div>
     </section>
 
     <section className="premium-section history-premium">
       <div className="premium-section-head history-head">
-        <div><span>CALCULATION LEDGER</span><h2>Estimator history</h2><p>Immutable calculation records with version, location, quote conversion, linked lead and paid-sale context.</p></div>
+        <div><span>CALCULATION LEDGER</span><h2>Estimator history</h2><p>Immutable calculation records with version, location, customer lead linkage and saved pricing context.</p></div>
         <form className="premium-search" onSubmit={submitSearch}><input value={queryInput} onChange={event=>setQueryInput(event.target.value)} placeholder="Search ID, PIN, city or estimator"/><button type="submit">Search</button>{query&&<button type="button" className="clear" onClick={()=>{setQueryInput('');setQuery('');setPage(1)}}>Clear</button>}</form>
       </div>
-      <div className="premium-table-wrap"><table><thead><tr><th>Calculation</th><th>Estimator</th><th>Location</th><th>Indicative range</th><th>Calculated</th><th>Quote status</th><th>Canonical lead</th><th>Paid sales</th></tr></thead><tbody>
+      <div className="premium-table-wrap"><table><thead><tr><th>Calculation</th><th>Estimator</th><th>Location</th><th>Indicative range</th><th>Calculated</th><th>Lead capture</th><th>Canonical lead</th><th>Paid sales</th></tr></thead><tbody>
         {recent.items?.length?recent.items.map(item=><tr key={item.calculationId}>
           <td><code>{item.calculationId.slice(0,10)}…</code><small>Version {item.versionNo}</small></td>
           <td><strong>{item.flowName}</strong><small>{item.flowKey}</small></td>
           <td><strong>{item.cityName||'—'}</strong><small>{[item.stateName,item.pincode].filter(Boolean).join(' · ')||'No mapped location'}</small></td>
           <td><strong>{money(item.minimum)} – {money(item.maximum)}</strong></td>
           <td>{when(item.createdAt)}</td>
-          <td>{item.convertedAt?<><b className="status-chip converted">Quote requested</b><small>{when(item.convertedAt)}</small></>:<b className="status-chip estimate">Estimate only</b>}</td>
-          <td>{item.leadId?<><Link to={'/admin/leads?leadId='+encodeURIComponent(String(item.leadId))+(item.leadSource?'&source='+encodeURIComponent(item.leadSource):'')+(item.leadSource==='public_estimator'&&!item.convertedAt?'&contactState=awaiting_contact':'')}>Lead #{item.leadId}</Link><small>{item.leadStatus||item.leadSource||'linked'}</small></>:<span>—</span>}</td>
+          <td>{item.convertedAt?<><b className="status-chip converted">Lead captured</b><small>{when(item.convertedAt)}</small></>:<b className="status-chip estimate">Legacy estimate only</b>}</td>
+          <td>{item.leadId?<><Link to={'/admin/leads?leadId='+encodeURIComponent(String(item.leadId))+(item.leadSource?'&source='+encodeURIComponent(item.leadSource):'')}>Lead #{item.leadId}</Link><small>{item.leadStatus||item.leadSource||'linked'}</small></>:<span>—</span>}</td>
           <td><strong>{item.paidSales?money(item.paidSales):'—'}</strong>{item.paidPurchases>0&&<small>{item.paidPurchases} purchase{item.paidPurchases===1?'':'s'}</small>}</td>
         </tr>):<tr><td colSpan="8" className="table-empty">No calculations match these filters.</td></tr>}
       </tbody></table></div>

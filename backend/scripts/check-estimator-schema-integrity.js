@@ -24,6 +24,12 @@ async function main(){
   assert.match(constraints,/result_max >= result_min/i);
   assert.match(constraints,/calculation_type/i);
   assert.match(constraints,/adjustment_type/i);
+  assert.match(constraints,/per_unit/i);
+
+  const adjustmentUnitColumn=(await pool.query(
+    "SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='estimator_adjustments' AND column_name='unit_question_key'"
+  )).rowCount;
+  assert.equal(adjustmentUnitColumn,1);
 
   const publicIdIndex=(await pool.query(
     "SELECT 1 FROM pg_indexes WHERE schemaname='public' AND tablename='estimator_calculations' AND indexdef ILIKE '%UNIQUE%' AND indexdef ILIKE '%public_id%'"
@@ -39,6 +45,12 @@ async function main(){
     "SELECT 1 FROM pg_indexes WHERE schemaname='public' AND tablename='estimator_calculations' AND indexdef ILIKE '%UNIQUE%' AND indexdef ILIKE '%intake_submission_key%'"
   )).rowCount;
   assert.equal(intakeIndex,1);
+
+  const breakdownColumn=(await pool.query(
+    "SELECT data_type FROM information_schema.columns WHERE table_schema='public' AND table_name='estimator_calculations' AND column_name='breakdown'"
+  )).rows[0];
+  assert.equal(breakdownColumn?.data_type,'jsonb');
+  assert.match(constraints,/jsonb_typeof\(breakdown\).*array/i);
 
 
   console.log('Estimator schema integrity checks passed.');

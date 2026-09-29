@@ -18,24 +18,33 @@ async function main(){
   assert.ok(flow,'Construction estimator must be seeded');
   assert.equal(flow.flow_type,'estimator');
   assert.equal(flow.status,'published');
-  assert.equal(flow.version_no,1);
-  assert.equal(flow.config.seedKey,'construction-cost-estimator-v1');
+  assert.ok(Number(flow.version_no)>=4);
+  assert.equal(flow.config.seedKey,'construction-cost-estimator-v4-single-estimate');
+  assert.equal(flow.config.estimateExperience,'single');
+  assert.equal(flow.config.estimateLabel,'Project Estimate');
   assert.match(String(flow.industry_name),/construction/i);
   assert.ok(/building|construction/i.test(String(flow.service_name)));
 
   const questions=(await pool.query(
-    `SELECT question_key,question_type,is_required,show_when,lead_field,visibility
+    `SELECT question_key,question_type,is_required,show_when,lead_field,visibility,validation
        FROM customer_flow_questions WHERE version_id=$1 AND is_active=TRUE ORDER BY display_order,id`,
     [flow.version_id]
   )).rows;
   const keys=new Set(questions.map(q=>q.question_key));
-  for(const key of ['project_location','project_type','own_plot','plot_area','built_up_area','floors','construction_package','quality','basement','site_access','timeline','additional_requirement']){
+  for(const key of ['estimate_mode','project_location','project_type','built_up_area','construction_package','quality','steel_spec','cement_spec','sand_spec','brick_spec','wire_spec','switch_spec','flooring_spec','basement','site_access']){
     assert.ok(keys.has(key),`Missing Construction estimator question: ${key}`);
   }
   assert.equal(questions.find(q=>q.question_key==='project_location').question_type,'location');
   assert.equal(questions.find(q=>q.question_key==='project_type').lead_field,'property_type');
   assert.equal(questions.find(q=>q.question_key==='built_up_area').question_type,'area');
-  assert.equal(questions.find(q=>q.question_key==='additional_requirement').visibility,'protected');
+  for(const removed of ['own_plot','plot_area','floors','timeline','additional_requirement']) assert.ok(!keys.has(removed),`Non-calculation Construction field should not be in the current estimate: ${removed}`);
+  assert.deepEqual(questions.find(q=>q.question_key==='steel_spec').show_when,{questionKey:'estimate_mode',equals:'detailed'});
+  const modeQuestion=questions.find(q=>q.question_key==='estimate_mode');
+  assert.equal(modeQuestion.validation.systemHidden,true);
+  assert.equal(modeQuestion.validation.systemDefault,'detailed');
+  assert.equal(questions.find(q=>q.question_key==='steel_spec').is_required,false);
+  assert.equal(questions.find(q=>q.question_key==='steel_spec').validation.advancedSection,true);
+  assert.equal(questions.find(q=>q.question_key==='steel_spec').validation.systemDefault,'package_default');
 
   const options=(await pool.query(
     `SELECT q.question_key,o.value,o.label
@@ -48,9 +57,26 @@ async function main(){
   for(const expected of [
     'project_type:house','project_type:villa','project_type:commercial','project_type:extension',
     'construction_package:turnkey','construction_package:structure_only','construction_package:finishing_only',
+    'estimate_mode:rough','estimate_mode:detailed',
     'quality:standard','quality:premium','quality:luxury',
+    'steel_spec:package_default','steel_spec:tata_550','cement_spec:ultratech_53','brick_spec:karimnagar_class_i','wire_spec:polycab_frls','switch_spec:gold_medal_air',
     'site_access:normal','site_access:restricted'
   ]) assert.ok(optionKey.has(expected),`Missing Construction estimator option: ${expected}`);
+
+  const royalDetails=(await pool.query(
+    `SELECT d.detail_key,d.section,d.label,d.value,d.note
+       FROM estimator_packages p
+       JOIN estimator_package_details d ON d.package_id=p.id AND d.is_active=TRUE
+      WHERE p.version_id=$1 AND p.package_key='royal'
+      ORDER BY d.display_order,d.id`,
+    [flow.version_id]
+  )).rows;
+  const royalDetailKeys=new Set(royalDetails.map(item=>item.detail_key));
+  for(const key of ['steel','cement','bricks','wire','switches','architecture_scope','aggregate','kitchen_platform','windows','bathroom_wall_tiles','electrical_pipes','railings','warranty']){
+    assert.ok(royalDetailKeys.has(key),`Royal brochure package missing detail: ${key}`);
+  }
+  assert.match(String(royalDetails.find(item=>item.detail_key==='architecture_scope')?.value||''),/2D floor plans/i);
+  assert.match(String(royalDetails.find(item=>item.detail_key==='warranty')?.value||''),/10-year structural warranty/i);
 
   const rateRows=(await pool.query(
     'SELECT * FROM estimator_rate_items WHERE version_id=$1 AND is_active=TRUE ORDER BY display_order,id',

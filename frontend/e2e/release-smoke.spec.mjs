@@ -50,18 +50,73 @@ async function findFixtureLead(page,requirement){
 
 const TINY_PNG='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Wl6S0sAAAAASUVORK5CYII='
 
-test('public homepage presents customer project and estimator journeys',async({page})=>{
+test('public homepage presents construction and interior company journeys',async({page})=>{
   await page.goto('/')
-  await expect(page.getByRole('heading',{name:/plan the project/i})).toBeVisible()
-  await expect(page.getByRole('link',{name:/start build requirement/i})).toHaveAttribute('href','/build')
-  await expect(page.getByRole('link',{name:/start interior requirement/i})).toHaveAttribute('href','/design')
-  await expect(page.getByRole('link',{name:/calculate construction cost/i})).toHaveAttribute('href','/construction-estimator')
-  await expect(page.getByRole('link',{name:/calculate interior cost/i})).toHaveAttribute('href','/interior-estimator')
-  await expect(page.getByRole('link',{name:/professional marketplace/i}).first()).toHaveAttribute('href','/leads')
+  await expect(page.getByRole('heading',{name:/build and design your home/i})).toBeVisible()
+  await expect(page.getByRole('link',{name:/professional/i}).first()).toHaveAttribute('href','/leads')
+  await expect(page.getByRole('link',{name:/construction estimate/i}).first()).toHaveAttribute('href','/construction-estimator')
+  await expect(page.getByRole('link',{name:/interior estimate/i}).first()).toHaveAttribute('href','/interior-estimator')
+  await expect(page.getByText('A clear path from first estimate to handover.')).toBeVisible()
+  await expect(page.getByText('Compare the key specifications before starting your estimate.')).toBeVisible()
+  await expect(page.getByText('See how Construction and Interiors come together.')).toBeVisible()
+  await expect(page.getByText('Professional planning without making the first step complicated.')).toBeVisible()
 
-  await page.getByRole('link',{name:/calculate interior cost/i}).click()
+  await page.getByRole('link',{name:/interior estimate/i}).first().click()
   await expect(page).toHaveURL(/\/interior-estimator$/)
-  await expect(page.getByText('PROPULSE ESTIMATOR')).toBeVisible()
+  await expect(page.getByText('PROJECT COST ESTIMATOR')).toBeVisible()
+})
+
+test('customer requirement and estimate journeys use one-page forms with compact dropdowns',async({page})=>{
+  await page.goto('/construction-consultation')
+  await expect(page.locator('.rq-single-form')).toBeVisible()
+  expect(await page.locator('.rq-form-section').count()).toBeGreaterThan(1)
+  expect(await page.locator('.rq-select').count()).toBeGreaterThan(0)
+  await expect(page.getByRole('button',{name:/next/i})).toHaveCount(0)
+
+  await page.goto('/interior-estimator')
+  await expect(page.locator('.rq-single-form')).toBeVisible()
+  expect(await page.locator('.rq-form-section').count()).toBeGreaterThan(1)
+  expect(await page.locator('.rq-select').count()).toBeGreaterThan(0)
+  await expect(page.getByRole('button',{name:/next/i})).toHaveCount(0)
+})
+
+test('public company pages stay customer-focused and professional',async({page})=>{
+  await page.goto('/construction')
+  await expect(page.getByRole('heading',{name:/home construction, planned from foundation to finish/i})).toBeVisible()
+  await expect(page.getByRole('link',{name:/professional/i}).first()).toHaveAttribute('href','/leads')
+  await expect(page.getByRole('link',{name:/get free consultation/i}).first()).toHaveAttribute('href','/construction-consultation')
+  await expect(page.locator('.csp-showcase-grid')).toBeVisible()
+
+  await page.goto('/packages')
+  await expect(page.getByRole('heading',{name:/compare the specifications/i})).toBeVisible()
+  await expect(page.getByRole('button',{name:'Construction'})).toBeVisible()
+  await expect(page.getByRole('button',{name:'Interiors'})).toBeVisible()
+
+  await page.goto('/how-it-works')
+  await expect(page.getByRole('heading',{name:/clear project journey/i})).toBeVisible()
+  await expect(page.getByText('Start',{exact:true})).toBeVisible()
+  await expect(page.getByText('Handover',{exact:true})).toBeVisible()
+
+  await page.goto('/contact')
+  await expect(page.getByRole('heading',{name:/tell us what you are planning/i})).toBeVisible()
+  await expect(page.getByRole('link',{name:/construction estimate/i})).toBeVisible()
+})
+
+test('published package CTA preselects package without exposing estimate modes',async({page})=>{
+  await page.goto('/packages')
+  const packageAction=page.locator('.csp-package-start').first()
+  await expect(packageAction).toBeVisible()
+  await expect(packageAction).toHaveAttribute('href',/\?package=/)
+  const href=await packageAction.getAttribute('href')
+  expect(href).not.toMatch(/mode=/)
+  const selectedPackage=new URL(href,'http://localhost').searchParams.get('package')
+  expect(selectedPackage).toBeTruthy()
+
+  await packageAction.click()
+  await expect(page).toHaveURL(new RegExp('package='+selectedPackage))
+  await expect(page.locator('.est-mode-card')).toHaveCount(0)
+  await expect(page.locator('.est-side-summary')).toContainText(/Selected package/i)
+  await expect(page.locator('.est-optional-specs')).toBeVisible()
 })
 
 test('protected customer route redirects anonymous users to login',async({page})=>{
@@ -264,9 +319,9 @@ test('Admin login reaches operations consoles and session survives reload',async
   await page.goto('/admin/customer-funnel')
   await expect(page.getByRole('heading',{name:'Estimator & customer funnel'})).toBeVisible()
   await expect(page.getByRole('button',{name:/customer acquisition/i})).toHaveAttribute('aria-expanded','true')
-  await expect(page.getByRole('link',{name:'Customer Flows',exact:true})).toBeVisible()
+  await expect(page.getByRole('link',{name:'Forms & Estimators',exact:true})).toBeVisible()
   await expect(page.getByRole('link',{name:'Funnel Analytics',exact:true})).toBeVisible()
-  await expect(page.getByText('Calculation → quote conversion')).toBeVisible()
+  await expect(page.getByText('Estimate → customer lead capture')).toBeVisible()
   await expect(page.getByText('Which customer path produces leads?')).toBeVisible()
   await expect(page.getByText('JOURNEY INTELLIGENCE')).toBeVisible()
   await expect(page.getByText('Useful analytics without invasive tracking.')).toBeVisible()
@@ -275,9 +330,15 @@ test('Admin login reaches operations consoles and session survives reload',async
   await expect(page.getByRole('heading',{name:'Recent customer-generated leads'})).toBeVisible()
   await expect(page.getByRole('link',{name:/Open Manage Leads/i})).toBeVisible()
 
-  await page.goto('/admin/leads?source=public_estimator&contactState=awaiting_contact')
+  await page.goto('/admin/leads?source=public_estimator')
   await expect(page.getByLabel('Intake source')).toHaveValue('public_estimator')
-  await expect(page.getByLabel('Contact readiness')).toHaveValue('awaiting_contact')
+  await expect(page.getByLabel('Contact readiness')).toHaveCount(0)
+
+  await page.goto('/admin/homepage-media')
+  await expect(page.getByRole('heading',{name:'Website content & media'})).toBeVisible()
+  await expect(page.getByRole('button',{name:'Save website copy'})).toBeVisible()
+  await expect(page.getByText('Construction showcase 01')).toBeVisible()
+  await expect(page.getByText('Interior showcase 02')).toBeVisible()
 
   await page.goto('/admin/financial-integrity')
   await page.reload()
