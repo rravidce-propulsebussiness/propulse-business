@@ -65,7 +65,7 @@ function PackageCards({packages=[],estimator}){
   if(!packages.length)return <div className="csp-empty">Package details are being configured in Admin.</div>
   return <div className="csp-package-grid">{packages.map((pkg,index)=>{
     const packageKey=String(pkg.packageKey||'').trim()
-    const cardKey=packageKey||String(pkg.label||index)
+    const cardKey=(estimator||'packages')+':'+(packageKey||String(pkg.label||index))
     const startLink=estimator&&packageKey?`${estimator}?mode=detailed&package=${encodeURIComponent(packageKey)}`:estimator
     const activeDetails=(pkg.details||[]).filter(item=>item?.isActive!==false)
     const isExpanded=Boolean(expanded[cardKey])
