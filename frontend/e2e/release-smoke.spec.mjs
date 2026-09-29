@@ -285,7 +285,7 @@ test('Admin login reaches operations consoles and session survives reload',async
   await page.goto('/admin/customer-funnel')
   await expect(page.getByRole('heading',{name:'Estimator & customer funnel'})).toBeVisible()
   await expect(page.getByRole('button',{name:/customer acquisition/i})).toHaveAttribute('aria-expanded','true')
-  await expect(page.getByRole('link',{name:'Customer Flows',exact:true})).toBeVisible()
+  await expect(page.getByRole('link',{name:'Forms & Estimators',exact:true})).toBeVisible()
   await expect(page.getByRole('link',{name:'Funnel Analytics',exact:true})).toBeVisible()
   await expect(page.getByText('Estimate → customer lead capture')).toBeVisible()
   await expect(page.getByText('Which customer path produces leads?')).toBeVisible()
