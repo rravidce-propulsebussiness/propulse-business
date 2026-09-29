@@ -61,13 +61,13 @@ BEGIN
     (version_id,question_key,question_type,label,help_text,is_required,display_order,validation,show_when,lead_field,visibility,is_active)
   VALUES
     (target_version_id,'estimate_mode','single_select','Which estimate do you need?','Choose Rough for a quick planning range or Detailed to review material specifications before calculating.',TRUE,5,'{}'::jsonb,'{}'::jsonb,NULL,'marketplace',TRUE),
-    (target_version_id,'steel_spec','single_select','Steel specification','Choose the steel specification for the detailed estimate. Choose package specification if you want to retain the selected package standard.',TRUE,95,'{}'::jsonb,'{"questionKey":"estimate_mode","equals":"detailed"}'::jsonb,NULL,'marketplace',TRUE),
-    (target_version_id,'cement_spec','single_select','Cement specification','Choose the cement specification for the detailed estimate.',TRUE,96,'{}'::jsonb,'{"questionKey":"estimate_mode","equals":"detailed"}'::jsonb,NULL,'marketplace',TRUE),
-    (target_version_id,'sand_spec','single_select','Sand specification','Choose the sand specification for the detailed estimate.',TRUE,97,'{}'::jsonb,'{"questionKey":"estimate_mode","equals":"detailed"}'::jsonb,NULL,'marketplace',TRUE),
-    (target_version_id,'brick_spec','single_select','Brick specification','Choose the brick class for the detailed estimate.',TRUE,98,'{}'::jsonb,'{"questionKey":"estimate_mode","equals":"detailed"}'::jsonb,NULL,'marketplace',TRUE),
-    (target_version_id,'wire_spec','single_select','Electrical wire specification','Choose the wire specification for the detailed estimate.',TRUE,99,'{}'::jsonb,'{"questionKey":"estimate_mode","equals":"detailed"}'::jsonb,NULL,'marketplace',TRUE),
-    (target_version_id,'switch_spec','single_select','Switches & sockets','Choose the switch specification for the detailed estimate.',TRUE,100,'{}'::jsonb,'{"questionKey":"estimate_mode","equals":"detailed"}'::jsonb,NULL,'marketplace',TRUE),
-    (target_version_id,'flooring_spec','single_select','Room flooring allowance','Choose the room-flooring allowance for the detailed estimate.',TRUE,101,'{}'::jsonb,'{"questionKey":"estimate_mode","equals":"detailed"}'::jsonb,NULL,'marketplace',TRUE);
+    (target_version_id,'steel_spec','single_select','Steel specification','Choose the steel specification for the detailed estimate. Choose package specification if you want to retain the selected package standard.',TRUE,91,'{}'::jsonb,'{"questionKey":"estimate_mode","equals":"detailed"}'::jsonb,NULL,'marketplace',TRUE),
+    (target_version_id,'cement_spec','single_select','Cement specification','Choose the cement specification for the detailed estimate.',TRUE,92,'{}'::jsonb,'{"questionKey":"estimate_mode","equals":"detailed"}'::jsonb,NULL,'marketplace',TRUE),
+    (target_version_id,'sand_spec','single_select','Sand specification','Choose the sand specification for the detailed estimate.',TRUE,93,'{}'::jsonb,'{"questionKey":"estimate_mode","equals":"detailed"}'::jsonb,NULL,'marketplace',TRUE),
+    (target_version_id,'brick_spec','single_select','Brick specification','Choose the brick class for the detailed estimate.',TRUE,94,'{}'::jsonb,'{"questionKey":"estimate_mode","equals":"detailed"}'::jsonb,NULL,'marketplace',TRUE),
+    (target_version_id,'wire_spec','single_select','Electrical wire specification','Choose the wire specification for the detailed estimate.',TRUE,95,'{}'::jsonb,'{"questionKey":"estimate_mode","equals":"detailed"}'::jsonb,NULL,'marketplace',TRUE),
+    (target_version_id,'switch_spec','single_select','Switches & sockets','Choose the switch specification for the detailed estimate.',TRUE,96,'{}'::jsonb,'{"questionKey":"estimate_mode","equals":"detailed"}'::jsonb,NULL,'marketplace',TRUE),
+    (target_version_id,'flooring_spec','single_select','Room flooring allowance','Choose the room-flooring allowance for the detailed estimate.',TRUE,97,'{}'::jsonb,'{"questionKey":"estimate_mode","equals":"detailed"}'::jsonb,NULL,'marketplace',TRUE);
 
   INSERT INTO customer_flow_question_options(question_id,value,label,display_order,is_active)
   SELECT q.id,x.value,x.label,x.display_order,TRUE
