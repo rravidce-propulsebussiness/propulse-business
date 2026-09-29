@@ -21,6 +21,7 @@ const adminEstimator=read('../frontend/src/admin/components/AdminEstimatorConfig
 const adminEstimatorCss=read('../frontend/src/admin/components/AdminEstimatorConfig.css');
 const companySite=read('../frontend/src/pages/CompanySitePage.jsx');
 const companySiteCss=read('../frontend/src/pages/CompanySitePage.css');
+const singleExperienceMigration=read('src/database/migrations/20260929_zzzzzzzzzzzzzz_single_estimate_free_consultation.sql');
 
 assert.doesNotMatch(routes,/\/estimates\/:publicId\/convert/,'Legacy estimator quote-conversion route must stay removed');
 assert.doesNotMatch(controller,/convertCalculation/,'Legacy quote-conversion controller must stay removed');
@@ -32,11 +33,11 @@ assert.match(estimator,/normalizePhone\(contact\?\.phone\)/,'Estimator must vali
 assert.match(estimator,/consent !== true/,'Estimator must require contact consent before calculation');
 assert.doesNotMatch(funnelEvents,/'quote_form_opened'|'quote_submitted'/,'New legacy quote funnel events must not be accepted');
 assert.doesNotMatch(funnelAnalytics,/Legacy quote form opened|Legacy quote request submitted/,'Estimator journey analytics must end at estimate and lead completion');
-assert.match(wizard,/question\.questionKey==='estimate_mode'/,'Estimator must present a dedicated rough/detailed choice');
+assert.doesNotMatch(wizard,/DETAILED':'ROUGH|Choose Rough|Start rough estimate/,'Customer estimator must not expose Rough/Detailed mode selection');
 assert.match(wizard,/est-package-choice-grid/,'Estimator must present package choices as premium cards');
 assert.match(wizard,/Download Estimate PDF/,'Completed estimates must offer a PDF download');
 assert.match(wizard,/name and mobile/i,'Estimator form must explain mandatory lead contact');
-assert.match(wizardCss,/\.est-mode-grid/,'Rough/detailed cards need dedicated premium styling');
+assert.match(wizardCss,/\.est-optional-specs/,'Optional specification refinement needs dedicated premium styling');
 assert.match(wizardCss,/\.est-package-choice/,'Package choices need dedicated premium styling');
 assert.match(wizard,/rq-single-form/,'Estimator must render as one single-page form');
 assert.doesNotMatch(wizard,/setStep\(/,'Estimator must not return to question-by-question paging');
@@ -66,12 +67,17 @@ assert.match(adminEstimator,/Detailed pricing/,'Estimator Admin must expose focu
 assert.match(adminEstimatorCss,/\.est-admin-tabs/,'Estimator Admin tabs need dedicated responsive styling');
 assert.match(wizard,/useSearchParams/,'Estimator must support validated customer deep-link preselection');
 assert.match(wizard,/initialEstimatorAnswers/,'Estimator deep links must be validated against the published flow');
-assert.match(companySite,/\?mode=rough/,'Company service pages must deep-link directly to rough estimate mode');
-assert.match(companySite,/\?mode=detailed/,'Company service pages must deep-link directly to detailed estimate mode');
+assert.doesNotMatch(companySite,/\?mode=rough|\?mode=detailed/,'Company pages must not expose retired estimate modes');
+assert.match(companySite,/Get Free Consultation/,'Service pages must offer Free Consultation as the second customer path');
 assert.match(companySite,/package=\$\{encodeURIComponent\(packageKey\)\}/,'Published package cards must carry the package selection into the estimator');
 assert.match(companySiteCss,/\.csp-package-start/,'Package-to-estimator actions need dedicated premium styling');
 assert.match(companySite,/activeDetails\.slice\(0,6\)/,'Public package cards must stay compact before expansion');
 assert.match(companySite,/csp-spec-toggle/,'Customers must be able to expand the full published package specification list');
 assert.match(companySiteCss,/\.csp-spec-toggle/,'Expandable package specifications need dedicated styling');
+assert.match(singleExperienceMigration,/estimateExperience','single|estimateExperience.*single/i,'Published estimator experience must be versioned as one single estimate');
+assert.match(singleExperienceMigration,/systemHidden.*systemDefault.*detailed/i,'Retired estimate mode must stay as a hidden compatibility default');
+assert.match(singleExperienceMigration,/free_consultation/,'Requirement journeys must publish as short free consultation forms');
+assert.match(wizard,/systemHidden/,'Estimator UI must hide system-only compatibility questions');
+assert.match(wizard,/Customise materials & specifications/,'Estimator must keep material refinement optional and collapsible');
 
 console.log('Customer-only estimator regression checks passed.');
