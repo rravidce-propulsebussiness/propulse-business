@@ -12,6 +12,8 @@ const funnelEvents=read('src/services/customerFunnelEventService.js');
 const funnelAnalytics=read('src/services/customerFunnelAnalyticsService.js');
 const wizard=read('../frontend/src/pages/EstimatorWizard.jsx');
 const wizardCss=read('../frontend/src/pages/EstimatorWizard.css');
+const companySite=read('../frontend/src/pages/CompanySitePage.jsx');
+const companySiteCss=read('../frontend/src/pages/CompanySitePage.css');
 
 assert.doesNotMatch(routes,/\/estimates\/:publicId\/convert/,'Legacy estimator quote-conversion route must stay removed');
 assert.doesNotMatch(controller,/convertCalculation/,'Legacy quote-conversion controller must stay removed');
@@ -29,5 +31,11 @@ assert.match(wizard,/Download Estimate PDF/,'Completed estimates must offer a PD
 assert.match(wizard,/name and mobile number/i,'Estimator contact step must explain mandatory lead contact');
 assert.match(wizardCss,/\.est-mode-grid/,'Rough/detailed cards need dedicated premium styling');
 assert.match(wizardCss,/\.est-package-choice/,'Package choices need dedicated premium styling');
+assert.match(wizard,/useSearchParams/,'Estimator must support validated customer deep-link preselection');
+assert.match(wizard,/initialEstimatorAnswers/,'Estimator deep links must be validated against the published flow');
+assert.match(companySite,/\?mode=rough/,'Company service pages must deep-link directly to rough estimate mode');
+assert.match(companySite,/\?mode=detailed/,'Company service pages must deep-link directly to detailed estimate mode');
+assert.match(companySite,/package=\$\{encodeURIComponent\(packageKey\)\}/,'Published package cards must carry the package selection into the estimator');
+assert.match(companySiteCss,/\.csp-package-start/,'Package-to-estimator actions need dedicated premium styling');
 
 console.log('Customer-only estimator regression checks passed.');
