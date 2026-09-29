@@ -282,9 +282,12 @@ assert(customerMembershipCss.includes('.membership-offer-badge')&&customerMember
 assert(membershipConfigCss.includes('grid-template-columns:repeat(4,minmax(0,1fr))'),'Desktop Membership KPI layout must remain compact');
 assert(!server.includes("servicePricingRoutes")&&!server.includes("'/api/service-pricing'"),'Legacy Service Pricing API must stay unmounted');
 assert(!adminRoutes.includes('servicePricingController')&&!adminRoutes.includes("'/service-pricing'"),'Admin routes must not retain deleted Service Pricing controller references');
-assert(home.includes("publicRequest('/membership-plans/public')"),'Homepage pricing must come from Membership packages');
+assert(!home.includes("publicRequest('/membership-plans/public')")&&!home.includes('PROFESSIONAL MEMBERSHIPS')&&!home.includes('home-membership-section'),'Customer homepage must not expose professional membership pricing');
 assert(!home.includes("publicRequest('/service-pricing')")&&!home.includes('servicePricing'),'Homepage must not use the legacy Service Pricing source');
-assert(home.includes('PROFESSIONAL MEMBERSHIPS')&&home.includes('home-membership-section')&&home.includes("['grow','scale']"),'Homepage must present the configured GROW/SCALE Membership packages in the professional funnel');
+assert(!home.includes('listLeads(')&&!home.includes('LIVE MARKETPLACE PREVIEW')&&!home.includes('Buy Leads'),'Customer homepage must not render lead marketplace inventory or purchase language');
+assert(home.includes('Construction')&&home.includes('Interiors')&&home.includes('/construction-estimator')&&home.includes('/interior-estimator'),'Customer homepage must stay focused on Construction and Interior journeys');
+assert(home.includes('Professional')&&home.includes('to="/leads"'),'Customer homepage must expose the marketplace only through the Professional option');
+assert(home.includes('Actual names, details and prices are Admin configurable.'),'Homepage package preview must make Admin ownership of package configuration explicit');
 assert(membershipRoutes.includes("router.get('/public', membershipPlanController.getPublicPlans)"),'Public active-only Membership pricing endpoint must remain');
 assert(membershipRoutes.includes("router.get('/', requireAuth, membershipPlanController.getPlans)"),'Admin Membership configuration must keep authenticated full-plan access');
 assert(membershipController.includes('res.json(await s.getPlans(false))'),'Public Membership endpoint must return active plans only');
