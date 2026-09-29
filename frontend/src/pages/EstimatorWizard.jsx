@@ -7,11 +7,14 @@ import './RequirementWizard.css'
 import './EstimatorWizard.css'
 
 const money = value => new Intl.NumberFormat('en-IN',{style:'currency',currency:'INR',maximumFractionDigits:0}).format(Number(value || 0))
+const emptyContact = {name:'',phone:'',email:''}
+
 function packageMatches(item,answers){
   if(!item||item.isActive===false||!item.selectorQuestionKey)return false
   const answer=answers?.[item.selectorQuestionKey]
   return Array.isArray(answer)?answer.map(String).includes(String(item.selectorValue)):String(answer??'')===String(item.selectorValue)
 }
+
 function PackagePreview({item,compact=false}){
   if(!item)return null
   const grouped=(item.details||[]).filter(detail=>detail.isActive!==false).reduce((acc,detail)=>{
@@ -25,7 +28,7 @@ function PackagePreview({item,compact=false}){
     {Object.entries(grouped).map(([section,details])=><div className="est-package-section" key={section}><strong>{section}</strong><div>{details.map(detail=><article key={detail.detailKey}><span>{detail.label}</span><b>{detail.value}</b>{detail.note&&<small>{detail.note}</small>}</article>)}</div></div>)}
   </section>
 }
-const emptyContact = {name:'',phone:'',email:''}
+
 function makeSubmissionKey(){
   if(globalThis.crypto?.randomUUID)return globalThis.crypto.randomUUID()
   return 'est_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,12)
@@ -35,35 +38,35 @@ export default function EstimatorWizard({ flowKey }) {
   const [flow,setFlow] = useState(null)
   const [answers,setAnswers] = useState({})
   const [step,setStep] = useState(0)
+  const [contactMode,setContactMode] = useState(false)
   const [result,setResult] = useState(null)
-  const [quoteMode,setQuoteMode] = useState(false)
   const [contact,setContact] = useState(emptyContact)
   const [consent,setConsent] = useState(false)
   const [website,setWebsite] = useState('')
   const [submissionKey,setSubmissionKey] = useState(makeSubmissionKey)
-  const [state,setState] = useState({loading:true,saving:false,error:'',success:false})
+  const [state,setState] = useState({loading:true,saving:false,error:''})
   const mounted = useRef(true)
   const startedTracked = useRef(false)
 
   useEffect(() => {
     mounted.current = true
     startedTracked.current = false
-    setState({loading:true,saving:false,error:'',success:false})
+    setState({loading:true,saving:false,error:''})
     publicRequest('/customer-flows/'+flowKey).then(data => {
       if (!mounted.current) return
       if (data?.flowType !== 'estimator') throw new Error('This calculator is not available.')
       setFlow(data)
       setAnswers({})
       setStep(0)
+      setContactMode(false)
       setResult(null)
-      setQuoteMode(false)
       setContact(emptyContact)
       setConsent(false)
       setWebsite('')
       setSubmissionKey(makeSubmissionKey())
-      setState({loading:false,saving:false,error:'',success:false})
+      setState({loading:false,saving:false,error:''})
       trackFunnelEvent('flow_opened',{flowKey,flowType:'estimator',source:'wizard'})
-    }).catch(error => mounted.current && setState({loading:false,saving:false,error:error.message,success:false}))
+    }).catch(error => mounted.current && setState({loading:false,saving:false,error:error.message}))
     return () => { mounted.current = false }
   },[flowKey])
 
@@ -71,16 +74,15 @@ export default function EstimatorWizard({ flowKey }) {
   const activePackage = useMemo(() => (flow?.packages || []).find(item=>packageMatches(item,answers)) || null,[flow,answers])
   useEffect(() => { if (step >= questions.length && questions.length) setStep(questions.length - 1) },[questions.length,step])
   const question = questions[step]
-  const progress = result ? 100 : questions.length ? Math.round(((step + 1) / questions.length) * 92) : 0
+  const progress = result ? 100 : contactMode ? 96 : questions.length ? Math.round(((step + 1) / questions.length) * 88) : 0
 
   useEffect(() => {
-    if (!flow || result || !question?.questionKey) return
+    if (!flow || result || contactMode || !question?.questionKey) return
     trackFunnelEventOnce('flow_question_viewed',{
       flowKey,flowType:'estimator',source:'wizard',
       questionKey:question.questionKey,questionIndex:step+1,questionCount:questions.length,
     })
-  },[flow,result,question?.questionKey,step,questions.length,flowKey])
-
+  },[flow,result,contactMode,question?.questionKey,step,questions.length,flowKey])
 
   function setAnswer(key,value) {
     if(!startedTracked.current){
@@ -91,7 +93,7 @@ export default function EstimatorWizard({ flowKey }) {
     setState(current => ({...current,error:''}))
   }
 
-  async function next() {
+  function next() {
     if (!question) return
     if (question.isRequired && isEmptyAnswer(answers[question.questionKey])) {
       setState(current => ({...current,error:'Please answer this question to continue.'}))
@@ -106,35 +108,26 @@ export default function EstimatorWizard({ flowKey }) {
       setStep(step + 1)
       return
     }
-    try {
-      setState(current => ({...current,saving:true,error:''}))
-      const calculation = await publicRequest('/customer-flows/'+flowKey+'/calculate',{
-        method:'POST',
-        body:JSON.stringify({flowToken:flow.flowToken,answers,submissionKey})
-      })
-      setResult(calculation)
-      trackFunnelEvent('estimate_completed',{flowKey,flowType:'estimator',calculationId:calculation.calculationId,source:'wizard',metadata:{steps:questions.length}})
-      setState({loading:false,saving:false,error:'',success:false})
-    } catch (error) {
-      setState(current => ({...current,saving:false,error:error.message}))
-    }
+    trackFunnelEvent('estimator_contact_opened',{flowKey,flowType:'estimator',source:'wizard',metadata:{steps:questions.length}})
+    setContactMode(true)
   }
 
-  async function requestQuotes(event){
+  async function submitEstimate(event){
     event.preventDefault()
-    if(!result?.calculationId)return
     if(!contact.name.trim()||!contact.phone.trim()||!consent){
       setState(current=>({...current,error:'Enter your name, mobile number and accept the contact consent.'}))
       return
     }
     try{
       setState(current=>({...current,saving:true,error:''}))
-      await publicRequest('/customer-flows/estimates/'+result.calculationId+'/convert',{
+      const calculation=await publicRequest('/customer-flows/'+flowKey+'/calculate',{
         method:'POST',
-        body:JSON.stringify({contact,consent,submissionKey,website})
+        body:JSON.stringify({flowToken:flow.flowToken,answers,submissionKey,contact,consent,website})
       })
-      trackFunnelEvent('quote_submitted',{flowKey,flowType:'estimator',calculationId:result.calculationId,source:'wizard'})
-      setState({loading:false,saving:false,error:'',success:true})
+      setResult(calculation)
+      setContactMode(false)
+      trackFunnelEvent('estimate_completed',{flowKey,flowType:'estimator',calculationId:calculation.calculationId,source:'wizard',metadata:{steps:questions.length,leadCaptured:true}})
+      setState({loading:false,saving:false,error:''})
     }catch(error){
       setState(current=>({...current,saving:false,error:error.message}))
     }
@@ -143,13 +136,13 @@ export default function EstimatorWizard({ flowKey }) {
   function restart() {
     setAnswers({})
     setStep(0)
+    setContactMode(false)
     setResult(null)
-    setQuoteMode(false)
     setContact(emptyContact)
     setConsent(false)
     setWebsite('')
     setSubmissionKey(makeSubmissionKey())
-    setState({loading:false,saving:false,error:'',success:false})
+    setState({loading:false,saving:false,error:''})
   }
 
   if (state.loading) return <main className="rq-page"><div className="rq-shell rq-status">Loading calculator…</div></main>
@@ -159,35 +152,37 @@ export default function EstimatorWizard({ flowKey }) {
     <header className="rq-top"><Link to="/"><img src="/brand/propulse-logo.png" alt="ProPulse Business" /></Link><Link to="/leads">Professional →</Link></header>
     <div className="rq-shell estimator-shell">
       <aside className="rq-side">
-        <span>PROPULSE ESTIMATOR</span>
+        <span>PROJECT COST ESTIMATOR</span>
         <h1>{flow.name}</h1>
-        <p>{flow.config?.subheadline || 'Answer a few questions to get an indicative project cost range.'}</p>
+        <p>{flow.config?.subheadline || 'Answer a few project questions to get an indicative cost range.'}</p>
         <div className="rq-scope"><small>Category</small><b>{[flow.industryName,flow.serviceName].filter(Boolean).join(' · ')}</b></div>
-        <ul><li>✓ No login required</li><li>✓ Server-calculated estimate</li><li>✓ Indicative range, not a final quotation</li></ul>
+        <ul><li>✓ No login required</li><li>✓ Name & mobile required before estimate</li><li>✓ Your estimate is saved with your project enquiry</li></ul>
       </aside>
       <section className="rq-card">
         <div className="rq-progress"><div style={{width:progress+'%'}} /></div>
-        {!result ? <>
+        {!result ? !contactMode ? <>
           <div className="rq-step"><span>QUESTION {String(step + 1).padStart(2,'0')} / {String(questions.length).padStart(2,'0')}</span><h2>{question?.label}</h2>{question?.helpText && <p>{question.helpText}</p>}</div>
           <div className="rq-control"><CustomerFlowQuestion question={question} value={answers[question?.questionKey]} onChange={value => setAnswer(question.questionKey,value)} /></div>
           {activePackage&&question?.questionKey===activePackage.selectorQuestionKey&&<PackagePreview item={activePackage}/>}
           {state.error && <div className="rq-error">{state.error}</div>}
-          <div className="rq-actions"><button type="button" className="secondary" disabled={step===0||state.saving} onClick={()=>setStep(Math.max(0,step-1))}>← Back</button><button type="button" className="primary" disabled={state.saving} onClick={next}>{state.saving?'Calculating…':step===questions.length-1?'Calculate estimate':'Next'} →</button></div>
-        </> : state.success ? <div className="rq-success est-success"><div className="rq-success-mark">✓</div><span>QUOTE REQUEST RECEIVED</span><h1>Your estimate is now a requirement.</h1><p>Relevant businesses or professionals may contact you with actual quotations. Your indicative estimate is preserved with the lead for context.</p><div><Link to="/">Back home</Link><button type="button" onClick={restart}>Estimate another project</button></div></div> : <div className="est-result">
-          <span>INDICATIVE ESTIMATE</span>
+          <div className="rq-actions"><button type="button" className="secondary" disabled={step===0||state.saving} onClick={()=>setStep(Math.max(0,step-1))}>← Back</button><button type="button" className="primary" disabled={state.saving} onClick={next}>{step===questions.length-1?'Continue':'Next'} →</button></div>
+        </> : <form className="est-contact-form" onSubmit={submitEstimate}>
+          <div className="rq-step"><span>FINAL STEP</span><h2>Get your project estimate</h2><p>Enter your name and mobile number. We save the estimate with your project enquiry so our team can follow up with the same specifications you selected.</p></div>
+          {activePackage&&<PackagePreview item={activePackage} compact/>}
+          <div className="rq-contact-grid"><label>Name<input value={contact.name} onChange={event=>setContact({...contact,name:event.target.value})} autoComplete="name" required/></label><label>Mobile number<input value={contact.phone} onChange={event=>setContact({...contact,phone:event.target.value})} inputMode="tel" autoComplete="tel" placeholder="10-digit mobile" required/></label><label className="wide">Email <small>Optional</small><input type="email" value={contact.email} onChange={event=>setContact({...contact,email:event.target.value})} autoComplete="email"/></label><label className="rq-honeypot" aria-hidden="true">Website<input tabIndex="-1" autoComplete="off" value={website} onChange={event=>setWebsite(event.target.value)}/></label></div>
+          <label className="rq-consent"><input type="checkbox" checked={consent} onChange={event=>setConsent(event.target.checked)}/><span>I agree that my project details and contact information may be used to respond to this enquiry and provide quotation or consultation follow-up.</span></label>
+          {state.error&&<div className="rq-error">{state.error}</div>}
+          <div className="rq-actions"><button type="button" className="secondary" disabled={state.saving} onClick={()=>{setContactMode(false);setState(current=>({...current,error:''}))}}>← Back</button><button type="submit" className="primary" disabled={state.saving}>{state.saving?'Calculating…':'Calculate & save estimate'} →</button></div>
+        </form> : <div className="est-result">
+          <span>YOUR PROJECT ESTIMATE</span>
           <h2>{flow.config?.resultTitle || 'Estimated project cost'}</h2>
           <div className="est-range"><strong>{money(result.minimum)}</strong><i>to</i><strong>{money(result.maximum)}</strong></div>
           {result.cityName && <p className="est-city">Adjusted for {result.cityName}</p>}
-          {(result.package||activePackage)&&!quoteMode&&<PackagePreview item={result.package||activePackage} compact/>}
-          {!quoteMode && Array.isArray(result.breakdown) && result.breakdown.length > 0 && <div className="est-breakdown"><b>What shaped this range</b>{result.breakdown.map(item=><div key={item.kind+':'+item.key}><span>{item.label}</span><em>{item.minimum===item.maximum?money(item.minimum):money(item.minimum)+' – '+money(item.maximum)}</em></div>)}</div>}
+          {(result.package||activePackage)&&<PackagePreview item={result.package||activePackage} compact/>}
+          {Array.isArray(result.breakdown) && result.breakdown.length > 0 && <div className="est-breakdown"><b>What shaped this range</b>{result.breakdown.map(item=><div key={item.kind+':'+item.key}><span>{item.label}</span><em>{item.minimum===item.maximum?money(item.minimum):money(item.minimum)+' – '+money(item.maximum)}</em></div>)}</div>}
+          <div className="est-lead-confirm"><b>Project enquiry saved</b><span>Your name, mobile number, selected package and estimate are attached to one customer lead for follow-up.</span></div>
           <div className="est-disclaimer">{result.disclaimer}</div>
-          {!quoteMode ? <div className="rq-actions est-result-actions"><button type="button" className="secondary" onClick={restart}>Recalculate</button>{result.quoteEligible?<button type="button" className="primary est-quote-cta" onClick={()=>{trackFunnelEvent('quote_form_opened',{flowKey,flowType:'estimator',calculationId:result.calculationId,source:'wizard'});setQuoteMode(true);setState(current=>({...current,error:''}))}}>{flow.config?.quoteCtaLabel || 'Get Actual Quotes'} →</button>:<Link className="est-home" to="/">Done</Link>}</div> : <form className="est-quote-form" onSubmit={requestQuotes}>
-            <div className="rq-step"><span>GET ACTUAL QUOTES</span><h2>Where should relevant professionals reach you?</h2><p>Your estimate and project answers will be attached to the requirement.</p></div>
-            <div className="rq-contact-grid"><label>Name<input value={contact.name} onChange={event=>setContact({...contact,name:event.target.value})} autoComplete="name" required/></label><label>Mobile number<input value={contact.phone} onChange={event=>setContact({...contact,phone:event.target.value})} inputMode="tel" autoComplete="tel" placeholder="10-digit mobile" required/></label><label className="wide">Email <small>Optional</small><input type="email" value={contact.email} onChange={event=>setContact({...contact,email:event.target.value})} autoComplete="email"/></label><label className="rq-honeypot" aria-hidden="true">Website<input tabIndex="-1" autoComplete="off" value={website} onChange={event=>setWebsite(event.target.value)}/></label></div>
-            <label className="rq-consent"><input type="checkbox" checked={consent} onChange={event=>setConsent(event.target.checked)}/><span>I agree that ProPulse may share my submitted contact information and project details with relevant businesses or professionals so they can provide actual quotations or callbacks.</span></label>
-            {state.error&&<div className="rq-error">{state.error}</div>}
-            <div className="rq-actions"><button type="button" className="secondary" disabled={state.saving} onClick={()=>setQuoteMode(false)}>← Back to estimate</button><button type="submit" className="primary" disabled={state.saving}>{state.saving?'Submitting…':'Request Quotes'} →</button></div>
-          </form>}
+          <div className="rq-actions est-result-actions"><button type="button" className="secondary" onClick={restart}>Estimate another project</button><Link className="est-home" to="/">Back home</Link></div>
         </div>}
       </section>
     </div>
