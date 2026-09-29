@@ -1,0 +1,313 @@
+import { useEffect, useMemo, useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { publicRequest } from '../utils/auth'
+import './Projects.css'
+
+const PROJECTS = [
+  {
+    id:'modern-villa',
+    category:'construction',
+    categoryLabel:'Construction',
+    title:'Modern Villa',
+    city:'Hyderabad',
+    location:'Hyderabad, Telangana',
+    propertyType:'Villa',
+    budget:'₹50L–₹1Cr',
+    area:3200,
+    style:'Modern',
+    meta:'4 BHK',
+    image:'https://images.unsplash.com/photo-1600585152915-d208bec867a1?auto=format&fit=crop&w=1200&q=88',
+    description:'A modern villa concept with generous natural light, landscaped setbacks and clean contemporary lines.',
+  },
+  {
+    id:'apartment-interior',
+    category:'design',
+    categoryLabel:'Interiors',
+    title:'Apartment Interior',
+    city:'Hyderabad',
+    location:'Hyderabad, Telangana',
+    propertyType:'Apartment',
+    budget:'₹20L–₹50L',
+    area:2200,
+    style:'Contemporary',
+    meta:'3 BHK',
+    image:'https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=1200&q=88',
+    description:'Contemporary apartment interiors with warm materials, elegant lighting and practical storage planning.',
+  },
+  {
+    id:'premium-apartments',
+    category:'property',
+    categoryLabel:'Real Estate',
+    title:'Premium Apartments',
+    city:'Hyderabad',
+    location:'Gachibowli, Hyderabad',
+    propertyType:'Apartment',
+    budget:'₹1Cr–₹2Cr',
+    area:1800,
+    style:'Premium',
+    meta:'3 BHK',
+    image:'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=1200&q=88',
+    description:'Premium apartment inspiration for customers exploring gated communities and well-planned amenities.',
+  },
+  {
+    id:'independent-house',
+    category:'construction',
+    categoryLabel:'Construction',
+    title:'Independent House',
+    city:'Hyderabad',
+    location:'Kondapur, Hyderabad',
+    propertyType:'Independent House',
+    budget:'₹50L–₹1Cr',
+    area:2800,
+    style:'Modern',
+    meta:'4 BHK',
+    image:'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=88',
+    description:'Independent-house inspiration focused on practical family spaces and a clean architectural elevation.',
+  },
+  {
+    id:'office-interior',
+    category:'design',
+    categoryLabel:'Interiors',
+    title:'Office Space',
+    city:'Hyderabad',
+    location:'HITEC City, Hyderabad',
+    propertyType:'Office',
+    budget:'₹20L–₹50L',
+    area:5000,
+    style:'Modern',
+    meta:'Commercial',
+    image:'https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=1200&q=88',
+    description:'Office-interior inspiration balancing collaboration, privacy, circulation and polished finishes.',
+  },
+  {
+    id:'commercial-space',
+    category:'property',
+    categoryLabel:'Real Estate',
+    title:'Commercial Space',
+    city:'Hyderabad',
+    location:'Financial District, Hyderabad',
+    propertyType:'Commercial',
+    budget:'₹2Cr+',
+    area:12000,
+    style:'Premium',
+    meta:'Commercial',
+    image:'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1200&q=88',
+    description:'Commercial-property inspiration for customers evaluating visibility, access and business-ready layouts.',
+  },
+  {
+    id:'duplex-house',
+    category:'construction',
+    categoryLabel:'Construction',
+    title:'Duplex House',
+    city:'Hyderabad',
+    location:'Madhapur, Hyderabad',
+    propertyType:'Duplex',
+    budget:'₹1Cr–₹2Cr',
+    area:4000,
+    style:'Luxury',
+    meta:'5 BHK',
+    image:'https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?auto=format&fit=crop&w=1200&q=88',
+    description:'Spacious duplex-house inspiration with layered living spaces, balconies and premium finishes.',
+  },
+  {
+    id:'luxury-villa-interior',
+    category:'design',
+    categoryLabel:'Interiors',
+    title:'Luxury Villa Interior',
+    city:'Hyderabad',
+    location:'Jubilee Hills, Hyderabad',
+    propertyType:'Villa',
+    budget:'₹50L–₹1Cr',
+    area:5000,
+    style:'Luxury',
+    meta:'5 BHK',
+    image:'https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?auto=format&fit=crop&w=1200&q=88',
+    description:'Luxury-villa interior inspiration with bespoke furniture language, refined lighting and layered textures.',
+  },
+]
+
+const FAQS = [
+  ['Can I get a similar project for my requirement?','Yes. Open any project idea and start the matching Construction, Interiors or Real Estate requirement flow.'],
+  ['Are the project prices fixed?','No. Images and project details on this page are inspiration only. Actual prices depend on your location, scope, materials and quotations.'],
+  ['Do you provide end-to-end support?','ProPulse captures a structured requirement and helps relevant businesses understand what you need.'],
+  ['Can I visit completed projects?','This page currently contains project inspiration. A site visit should only be arranged directly with a relevant business when a real completed project is available.'],
+]
+
+function collection(value){
+  if(Array.isArray(value)) return value
+  if(Array.isArray(value?.data)) return value.data
+  if(Array.isArray(value?.rows)) return value.rows
+  return []
+}
+
+function Icon({name,size=18}){
+  const p={width:size,height:size,viewBox:'0 0 24 24',fill:'none',stroke:'currentColor',strokeWidth:'1.8',strokeLinecap:'round',strokeLinejoin:'round','aria-hidden':true}
+  if(name==='home')return <svg {...p}><path d="m3 11 9-8 9 8"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/></svg>
+  if(name==='building')return <svg {...p}><path d="M4 21V4h10v17"/><path d="M14 8h6v13"/><path d="M7 8h3M7 12h3M7 16h3M17 12h1M17 16h1"/></svg>
+  if(name==='sofa')return <svg {...p}><path d="M5 11V8a3 3 0 0 1 3-3h8a3 3 0 0 1 3 3v3"/><path d="M4 10a2 2 0 0 0-2 2v5h20v-5a2 2 0 0 0-2-2"/></svg>
+  if(name==='arrow')return <svg {...p}><path d="M5 12h14M14 7l5 5-5 5"/></svg>
+  if(name==='pin')return <svg {...p}><path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg>
+  if(name==='shield')return <svg {...p}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="m9 12 2 2 4-4"/></svg>
+  if(name==='photo')return <svg {...p}><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9" r="1.5"/><path d="m21 15-5-5L5 20"/></svg>
+  if(name==='info')return <svg {...p}><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>
+  if(name==='search')return <svg {...p}><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+  if(name==='area')return <svg {...p}><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
+  if(name==='people')return <svg {...p}><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2"/><path d="M3 21a6 6 0 0 1 12 0M14 16a5 5 0 0 1 7 5"/></svg>
+  if(name==='chat')return <svg {...p}><path d="M21 15a4 4 0 0 1-4 4H8l-5 3 1.6-5A7 7 0 0 1 3 12V8a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4Z"/></svg>
+  return null
+}
+
+export default function Projects(){
+  const navigate=useNavigate()
+  const [cities,setCities]=useState([])
+  const [contactData,setContactData]=useState({})
+  const [category,setCategory]=useState('all')
+  const [city,setCity]=useState('')
+  const [propertyType,setPropertyType]=useState('')
+  const [budget,setBudget]=useState('')
+  const [area,setArea]=useState('')
+  const [style,setStyle]=useState('')
+  const [query,setQuery]=useState('')
+  const [visible,setVisible]=useState(8)
+  const [openFaq,setOpenFaq]=useState(null)
+
+  useEffect(()=>{
+    window.scrollTo(0,0)
+    Promise.allSettled([publicRequest('/cities'),publicRequest('/contact?audience=website')]).then(([cityResult,contactResult])=>{
+      if(cityResult.status==='fulfilled') setCities(collection(cityResult.value))
+      if(contactResult.status==='fulfilled') setContactData(contactResult.value||{})
+    })
+  },[])
+
+  const cityOptions=useMemo(()=>{
+    const names=new Set(PROJECTS.map(p=>p.city))
+    cities.forEach(c=>c?.name&&names.add(c.name))
+    return [...names].sort()
+  },[cities])
+
+  const filtered=useMemo(()=>{
+    const q=query.trim().toLowerCase()
+    return PROJECTS.filter(project=>{
+      if(category!=='all'&&project.category!==category)return false
+      if(city&&project.city!==city)return false
+      if(propertyType&&project.propertyType!==propertyType)return false
+      if(budget&&project.budget!==budget)return false
+      if(area==='under2000'&&project.area>=2000)return false
+      if(area==='2000to4000'&&(project.area<2000||project.area>4000))return false
+      if(area==='4000plus'&&project.area<4000)return false
+      if(style&&project.style!==style)return false
+      if(q&&!([project.title,project.location,project.categoryLabel,project.propertyType,project.style,project.description].join(' ').toLowerCase().includes(q)))return false
+      return true
+    })
+  },[category,city,propertyType,budget,area,style,query])
+
+  function startSimilar(project){
+    const route=project.category==='construction'?'/build':project.category==='design'?'/design':'/property'
+    try{
+      sessionStorage.setItem('propulse_project_inspiration',JSON.stringify({projectId:project.id,title:project.title,category:project.category,city:project.city,propertyType:project.propertyType,area:project.area,style:project.style,createdAt:Date.now()}))
+    }catch{}
+    navigate(route)
+  }
+
+  const phone=contactData.phone||contactData.phone_number||contactData.mobile||''
+  const email=contactData.email||contactData.support_email||''
+
+  return <main className="pj-page">
+    <header className="pj-header">
+      <Link to="/" className="pj-logo"><img src="/brand/propulse-logo.svg" alt="ProPulse"/></Link>
+      <nav><Link to="/">Home</Link><Link to="/build">Construction</Link><Link to="/design">Interiors</Link><Link to="/property">Real Estate</Link><Link className="active" to="/projects">Projects</Link><Link to="/#how-it-works">How It Works</Link><Link to="/#contact">About</Link><Link to="/#contact">Contact</Link></nav>
+      <button onClick={()=>navigate('/build')}>Get Free Consultation <Icon name="arrow" size={15}/></button>
+    </header>
+
+    <section className="pj-hero">
+      <img src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=2200&q=92" alt="Modern premium home"/>
+      <div className="pj-hero-wash"/>
+      <div className="pj-hero-copy"><span>OUR PROJECTS</span><h1>Explore Real<em>Projects & Ideas</em></h1><p>Get inspired by construction, interior and real-estate concepts, then start a requirement based on what you like.</p></div>
+      <aside className="pj-feature-box">
+        <div><Icon name="home"/><span>Modern Designs</span></div>
+        <div><Icon name="photo"/><span>Visual Inspiration</span></div>
+        <div><Icon name="info"/><span>Detailed Information</span></div>
+        <div><Icon name="building"/><span>Get Similar Project</span></div>
+        <div><Icon name="chat"/><span>Free Consultation</span></div>
+      </aside>
+      <div className="pj-hero-benefits">
+        <article><Icon name="shield"/><div><b>Clear Inspiration</b><small>Start from a visual idea</small></div></article>
+        <article><Icon name="photo"/><div><b>Multiple Categories</b><small>Construction, Interiors, Real Estate</small></div></article>
+        <article><Icon name="people"/><div><b>Structured Requirement</b><small>Turn ideas into a clear brief</small></div></article>
+        <article><Icon name="info"/><div><b>Transparent Information</b><small>Specs are shown as inspiration</small></div></article>
+      </div>
+    </section>
+
+    <section className="pj-filter-wrap">
+      <div className="pj-filter-top">
+        <div className="pj-category-tabs">
+          <button className={category==='all'?'active':''} onClick={()=>setCategory('all')}><Icon name="home" size={15}/>All Projects</button>
+          <button className={category==='construction'?'active':''} onClick={()=>setCategory('construction')}><Icon name="building" size={15}/>Construction</button>
+          <button className={category==='design'?'active':''} onClick={()=>setCategory('design')}><Icon name="sofa" size={15}/>Interiors</button>
+          <button className={category==='property'?'active':''} onClick={()=>setCategory('property')}><Icon name="building" size={15}/>Real Estate</button>
+        </div>
+        <label className="pj-search"><Icon name="search" size={17}/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search projects, locations, styles..."/></label>
+      </div>
+      <div className="pj-filter-grid">
+        <label><Icon name="pin" size={14}/><select value={city} onChange={e=>setCity(e.target.value)}><option value="">Select City</option>{cityOptions.map(name=><option key={name} value={name}>{name}</option>)}</select></label>
+        <label><select value={propertyType} onChange={e=>setPropertyType(e.target.value)}><option value="">Project Type</option>{[...new Set(PROJECTS.map(p=>p.propertyType))].map(v=><option key={v}>{v}</option>)}</select></label>
+        <label><select value={budget} onChange={e=>setBudget(e.target.value)}><option value="">Budget Range</option>{[...new Set(PROJECTS.map(p=>p.budget))].map(v=><option key={v}>{v}</option>)}</select></label>
+        <label><select value={area} onChange={e=>setArea(e.target.value)}><option value="">Built-up Area</option><option value="under2000">Under 2000 sq ft</option><option value="2000to4000">2000–4000 sq ft</option><option value="4000plus">4000+ sq ft</option></select></label>
+        <label><select value={style} onChange={e=>setStyle(e.target.value)}><option value="">Style / Design</option>{[...new Set(PROJECTS.map(p=>p.style))].map(v=><option key={v}>{v}</option>)}</select></label>
+        <button className="pj-apply" onClick={()=>setVisible(8)}>Apply Filters</button>
+      </div>
+    </section>
+
+    <section className="pj-grid-wrap">
+      <div className="pj-project-grid">
+        {filtered.slice(0,visible).map(project=><article className="pj-project-card" key={project.id}>
+          <div className="pj-project-photo"><img src={project.image} alt={project.title}/><span className={'pj-badge '+project.category}>{project.categoryLabel}</span></div>
+          <div className="pj-project-copy">
+            <button className="pj-card-arrow" aria-label={'Start similar '+project.title} onClick={()=>startSimilar(project)}><Icon name="arrow" size={16}/></button>
+            <h3>{project.title}</h3><small>{project.location}</small>
+            <div className="pj-project-meta"><span>{project.meta}</span><span><Icon name="area" size={12}/>{project.area} sq ft</span></div>
+            <p>{project.description}</p>
+          </div>
+        </article>)}
+      </div>
+      {filtered.length===0&&<div className="pj-empty">No inspiration cards match these filters. Try clearing one or more filters.</div>}
+      {visible<filtered.length&&<button className="pj-load" onClick={()=>setVisible(v=>v+4)}>Load More Projects ↓</button>}
+    </section>
+
+    <section className="pj-stats">
+      <article><span><Icon name="home" size={23}/></span><div><b>3</b><small>Core Categories</small></div></article>
+      <article><span><Icon name="people" size={23}/></span><div><b>Admin</b><small>Managed Locations</small></div></article>
+      <article><span><Icon name="pin" size={23}/></span><div><b>City + PIN</b><small>Location-aware Intake</small></div></article>
+      <article><span><Icon name="shield" size={23}/></span><div><b>Free</b><small>Consultation Start</small></div></article>
+    </section>
+
+    <section className="pj-use-cases">
+      <div className="pj-section-head"><div><h2>How Customers <em>Use This Page</em></h2><p>Start with inspiration, then create a requirement that matches your real project.</p></div></div>
+      <div className="pj-use-grid">
+        <article><img src={PROJECTS[0].image} alt=""/><div><strong>“</strong><p>See a construction style you like, then open a Home Construction requirement with your actual city, PIN and project size.</p><b>Construction Inspiration</b></div></article>
+        <article><img src={PROJECTS[1].image} alt=""/><div><strong>“</strong><p>Use an interior example to explain the look and scope you want before selecting rooms, size, budget and preferences.</p><b>Interior Inspiration</b></div></article>
+        <article><img src={PROJECTS[2].image} alt=""/><div><strong>“</strong><p>Use a property example to clarify your preferred type, location and budget without treating the sample as a live listing.</p><b>Real Estate Inspiration</b></div></article>
+      </div>
+    </section>
+
+    <section className="pj-cta">
+      <img src="https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?auto=format&fit=crop&w=1100&q=88" alt=""/>
+      <div><h2>Have a Similar Project in Mind?</h2><p>Start a free consultation and create a personalized requirement for your project.</p></div>
+      <button onClick={()=>navigate('/build')}>Get Free Consultation <Icon name="arrow" size={16}/></button>
+      <div className="pj-cta-points"><span>○ No Obligation</span><span>○ Guided Requirement</span><span>○ Location Aware</span></div>
+    </section>
+
+    <section className="pj-faq">
+      <div className="pj-section-head"><div><h2>Frequently Asked <em>Questions</em></h2><p>Quick answers about the project-inspiration page.</p></div></div>
+      <div className="pj-faq-grid">{FAQS.map(([q,a],i)=><article key={q} className={openFaq===i?'open':''}><button onClick={()=>setOpenFaq(openFaq===i?null:i)}><span>{q}</span><b>{openFaq===i?'−':'⌄'}</b></button>{openFaq===i&&<p>{a}</p>}</article>)}</div>
+    </section>
+
+    <footer className="pj-footer">
+      <div className="pj-footer-brand"><img src="/brand/propulse-logo.svg" alt="ProPulse"/><p>Your customer starting point for construction, interiors and real-estate requirements.</p><div>f&nbsp;&nbsp;◎&nbsp;&nbsp;▶&nbsp;&nbsp;in</div></div>
+      <div><b>Quick Links</b><Link to="/">Home</Link><Link to="/build">Construction</Link><Link to="/design">Interiors</Link><Link to="/property">Real Estate</Link><Link to="/projects">Projects</Link></div>
+      <div><b>Our Services</b><Link to="/build">Home Construction</Link><Link to="/design">Interior Design</Link><Link to="/property">Real Estate</Link><Link to="/construction-estimator">Cost Estimator</Link><Link to="/build">Free Consultation</Link></div>
+      <div><b>Support</b><Link to="/contact?audience=users">FAQ</Link><Link to="/#contact">Contact Us</Link><Link to="/contact?audience=users">Privacy Policy</Link><Link to="/contact?audience=users">Terms & Conditions</Link></div>
+      <div><b>Contact Info</b>{phone&&<span><Icon name="phone" size={13}/>{phone}</span>}{email&&<span>{email}</span>}<span><Icon name="pin" size={13}/>Hyderabad, India</span></div>
+    </footer>
+  </main>
+}
