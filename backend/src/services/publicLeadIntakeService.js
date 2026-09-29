@@ -1,6 +1,8 @@
 const pool = require('../config/database');
 const customerFlowService = require('./customerFlowService');
 const leadService = require('./leadService');
+const leadQualityGateService = require('./leadQualityGateService');
+const cityService = require('./cityService');
 const pincodeDetectionService = require('./pincodeDetectionService');
 const { fail, isEmpty, isVisible, formatAnswer, validateAnswers } = require('./customerFlowValidationService');
 const { normalizePhone, normalizeEmail, normalizeName, validateSubmissionKey } = require('./publicContactValidationService');
@@ -94,9 +96,183 @@ async function resolveLocation(flow, answers) {
 
 async function findBySubmissionKey(key) {
   return (await pool.query(
-    'SELECT id FROM leads WHERE intake_submission_key=$1 LIMIT 1',
+    `SELECT id,source,status,custom_fields,industry_id,service_id,subservice_id,state_id,city_id,
+            customer_name,customer_phone,customer_email,lead_type,intake_submission_key
+       FROM leads
+      WHERE intake_submission_key=$1
+      LIMIT 1`,
     [key]
   )).rows[0] || null;
+}
+
+function cleanAttribution(value, max = 220) {
+  return String(value || '').trim().slice(0, max);
+}
+
+function buildAcquisitionAttribution(input = {}) {
+  const data = {
+    utmSource: cleanAttribution(input.utmSource, 120),
+    utmMedium: cleanAttribution(input.utmMedium, 120),
+    utmCampaign: cleanAttribution(input.utmCampaign, 160),
+    utmContent: cleanAttribution(input.utmContent, 160),
+    utmTerm: cleanAttribution(input.utmTerm, 160),
+    referrer: cleanAttribution(input.referrer, 500),
+    landingPath: cleanAttribution(input.landingPath, 300),
+  };
+  return Object.fromEntries(Object.entries(data).filter(([, value]) => value));
+}
+
+function buildConsultationCustomFields(flow, city, attribution) {
+  const custom = {
+    _intake: {
+      flowKey: flow.key,
+      definitionId: flow.definitionId,
+      versionId: flow.versionId,
+      versionNo: flow.versionNo,
+      stage: 'consultation',
+      detailedRequirementCompleted: false,
+      cityId: Number(city.id),
+      cityName: city.name,
+    },
+    _qualification: {
+      detailedRequirementCompleted: false,
+      budgetProvided: false,
+      timelineProvided: false,
+      projectSizeKnown: false,
+      marketplaceAnswers: {},
+    },
+  };
+  const acquisition = buildAcquisitionAttribution(attribution);
+  if (Object.keys(acquisition).length) custom._acquisition = acquisition;
+  return custom;
+}
+
+async function submitConsultation({
+  key,
+  cityId,
+  contact,
+  consent,
+  submissionKey,
+  website,
+  attribution,
+}) {
+  if (String(website || '').trim()) {
+    return { accepted: true, filtered: true };
+  }
+
+  const flow = await customerFlowService.getPublishedFlow(key);
+  if (flow.flowType !== 'requirement') fail('This flow is not a requirement form', 'NOT_REQUIREMENT', 404);
+  if (consent !== true) fail('Consent is required to request a consultation', 'CONSENT_REQUIRED');
+
+  const name = normalizeName(contact?.name);
+  const phone = normalizePhone(contact?.phone);
+  const email = normalizeEmail(contact?.email);
+  const idempotencyKey = validateSubmissionKey(submissionKey);
+  const existing = await findBySubmissionKey(idempotencyKey);
+  if (existing) return { accepted: true, leadId: existing.id, duplicate: true, stage: 'consultation' };
+
+  const city = await cityService.getCityById(Number(cityId));
+  if (!city) fail('Select a supported city or location', 'INVALID_CITY');
+
+  const requirement = `Free consultation request · ${flow.name}`;
+  const customFields = buildConsultationCustomFields(flow, city, attribution);
+
+  try {
+    const lead = await leadService.createLead({
+      industryId: flow.industryId,
+      serviceId: flow.serviceId,
+      subserviceId: flow.subserviceId,
+      stateId: Number(city.state_id) || null,
+      cityId: Number(city.id),
+      customerName: name,
+      customerPhone: phone,
+      customerEmail: email,
+      requirement,
+      source: 'homepage_consultation',
+      notes: null,
+      customFields,
+      contactConsentAt: new Date(),
+      contactConsentVersion: 'homepage-consultation-v1',
+      intakeSubmissionKey: idempotencyKey,
+      qualityGateContext: 'homepage_consultation',
+      deferQualityGate: true,
+      createdBy: null,
+    });
+    return { accepted: true, leadId: lead.id, duplicate: false, stage: 'consultation' };
+  } catch (error) {
+    if (error.code === 'DUPLICATE_LEAD') {
+      return { accepted: true, leadId: error.leadId || null, duplicate: true, stage: 'consultation' };
+    }
+    if (error.code === '23505') {
+      const retry = await findBySubmissionKey(idempotencyKey);
+      if (retry) return { accepted: true, leadId: retry.id, duplicate: true, stage: 'consultation' };
+    }
+    throw error;
+  }
+}
+
+async function enrichConsultationLead({ existing, flow, safeAnswers, name, phone, email }) {
+  const location = await resolveLocation(flow, safeAnswers);
+  const leadFields = deriveLeadFields(flow, safeAnswers);
+  const summary = buildSummary(flow, safeAnswers);
+  const detailedFields = buildCustomFields(flow, safeAnswers);
+  const customFields = {
+    ...(existing.custom_fields || {}),
+    ...detailedFields,
+    _acquisition: existing.custom_fields?._acquisition || detailedFields._acquisition,
+    _intake: {
+      ...detailedFields._intake,
+      stage: 'detailed_requirement',
+      consultationCaptured: true,
+    },
+  };
+  const requirement = leadFields.requirement || summary || `${flow.name} requirement`;
+  const pricing = await leadService.getConfiguredPricing(flow.industryId, location.cityId, existing.lead_type || 'basic');
+
+  const updated = (await pool.query(
+    `UPDATE leads
+        SET industry_id=$1,
+            service_id=$2,
+            subservice_id=$3,
+            state_id=$4,
+            city_id=$5,
+            customer_name=$6,
+            customer_phone=$7,
+            customer_email=$8,
+            requirement=$9,
+            property_type=$10,
+            budget=$11,
+            source='public_requirement',
+            custom_fields=$12::jsonb,
+            pricing=$13::jsonb,
+            pincode=$14,
+            contact_consent_at=CURRENT_TIMESTAMP,
+            contact_consent_version='quote-contact-v1',
+            updated_at=CURRENT_TIMESTAMP
+      WHERE id=$15
+      RETURNING *`,
+    [
+      flow.industryId,
+      flow.serviceId || null,
+      flow.subserviceId || null,
+      location.stateId,
+      location.cityId,
+      name,
+      phone,
+      email,
+      requirement,
+      leadFields.propertyType,
+      leadFields.budget,
+      JSON.stringify(customFields),
+      JSON.stringify(pricing),
+      location.pincode,
+      existing.id,
+    ]
+  )).rows[0];
+
+  if (!updated) fail('Consultation lead could not be updated', 'LEAD_NOT_FOUND', 404);
+  await leadQualityGateService.evaluateAndApply(existing.id, { context: 'public_requirement', autoRelease: true });
+  return { accepted: true, leadId: existing.id, duplicate: false, enriched: true };
 }
 
 async function submitRequirement({
@@ -125,6 +301,9 @@ async function submitRequirement({
   const idempotencyKey = validateSubmissionKey(submissionKey);
 
   const existing = await findBySubmissionKey(idempotencyKey);
+  if (existing?.source === 'homepage_consultation') {
+    return enrichConsultationLead({ existing, flow, safeAnswers, name, phone, email });
+  }
   if (existing) return { accepted: true, leadId: existing.id, duplicate: true };
 
   const location = await resolveLocation(flow, safeAnswers);
@@ -179,4 +358,4 @@ async function submitRequirement({
   }
 }
 
-module.exports = { submitRequirement };
+module.exports = { submitConsultation, submitRequirement };
