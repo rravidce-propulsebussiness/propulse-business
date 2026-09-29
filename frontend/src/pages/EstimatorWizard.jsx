@@ -42,12 +42,12 @@ function PackagePreview({item,compact=false}){
   </section>
 }
 
-function EstimatorQuestion({question,value,onChange,packages=[]}){
+function EstimatorQuestion({question,value,onChange,packages=[],id}){
   if(!question)return null
 
   if(question.questionKey==='estimate_mode'){
     const modes=(question.options||[]).filter(option=>option.isActive!==false)
-    return <div className="est-mode-grid">{modes.map(option=>{
+    return <div className="est-mode-grid" role="group" aria-label={question.label}>{modes.map(option=>{
       const active=String(value||'')===String(option.value)
       const detailed=String(option.value)==='detailed'
       return <button type="button" className={active?'est-mode-card active':'est-mode-card'} key={option.value} onClick={()=>onChange(option.value)}>
@@ -61,7 +61,7 @@ function EstimatorQuestion({question,value,onChange,packages=[]}){
 
   const packageOptions=(packages||[]).filter(item=>item?.isActive!==false&&item.selectorQuestionKey===question.questionKey)
   if(packageOptions.length){
-    return <div className="est-package-choice-grid">{packageOptions.map((item,index)=>{
+    return <div className="est-package-choice-grid" role="group" aria-label={question.label}>{packageOptions.map((item,index)=>{
       const active=String(value??'')===String(item.selectorValue)
       const details=(item.details||[]).filter(detail=>detail?.isActive!==false).slice(0,4)
       return <button type="button" className={active?'est-package-choice active':'est-package-choice'} key={item.packageKey||item.selectorValue||index} onClick={()=>onChange(item.selectorValue)}>
@@ -73,7 +73,7 @@ function EstimatorQuestion({question,value,onChange,packages=[]}){
     })}</div>
   }
 
-  return <CustomerFlowQuestion question={question} value={value} onChange={onChange}/>
+  return <CustomerFlowQuestion id={id} question={question} value={value} onChange={onChange}/>
 }
 
 function makeSubmissionKey(){
@@ -294,9 +294,9 @@ export default function EstimatorWizard({ flowKey }) {
           return <section className={'rq-form-section '+(done?'complete':'')} key={group.name}>
           <div className="rq-form-section-head"><b>{done?'✓':String(index+1).padStart(2,'0')}</b><div><h3>{group.name}</h3><span>{required.length?complete+' of '+required.length+' required completed':'Optional details'}</span></div><em className={done?'done':''}>{done?'Complete':'Needs '+(required.length-complete)}</em></div>
           <div className="rq-form-grid">{group.questions.map(question=><div className={fieldClass(question,flow.packages||[])+(state.errorQuestionKey===question.questionKey?' error':'')} data-question-key={question.questionKey} key={question.questionKey}>
-            <label>{question.label}{question.isRequired&&<sup>*</sup>}</label>
+            <label htmlFor={'est-'+question.questionKey}>{question.label}{question.isRequired&&<sup>*</sup>}</label>
             {question.helpText&&<p>{question.helpText}</p>}
-            <EstimatorQuestion question={question} value={answers[question.questionKey]} onChange={value=>setAnswer(question,value)} packages={flow.packages||[]}/>
+            <EstimatorQuestion id={'est-'+question.questionKey} question={question} value={answers[question.questionKey]} onChange={value=>setAnswer(question,value)} packages={flow.packages||[]}/>
           </div>)}</div>
         </section>
         })}
