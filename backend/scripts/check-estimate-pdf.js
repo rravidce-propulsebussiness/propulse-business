@@ -50,4 +50,25 @@ assert.match(pdf.toString('ascii'),/Base construction rate/);
 assert.match(pdf.toString('ascii'),/TATA 550 TMT/);
 assert.match(pdf.toString('ascii'),/CI Customer/);
 
+const roughPdf=renderEstimatePdf({
+  publicId,
+  flow:{name:'Construction Cost Estimator'},
+  versionNo:3,
+  minimum:1800000,
+  maximum:2300000,
+  answers:{estimate_mode:'rough'},
+  answerRows:[['Which estimate do you need?','Rough estimate'],['Built-up area','1000']],
+  package:{
+    label:'Royal',summary:'Published package',
+    details:Array.from({length:8},(_,index)=>({detailKey:'d'+index,section:'Specs',label:'Detail '+index,value:'Value '+index,isActive:true})),
+  },
+  breakdown:[{kind:'rate',key:'base',label:'Base rate',minimum:1800000,maximum:2300000}],
+  lead:{customer_name:'Rough Customer',customer_phone:'+919123456788',customer_email:null},
+});
+const roughText=roughPdf.toString('ascii');
+assert.match(roughText,/Rough Estimate/);
+assert.match(roughText,/Package highlights/);
+assert.match(roughText,/highlights only/);
+assert.doesNotMatch(roughText,/Detail 7/);
+
 console.log('Estimate PDF generation checks passed.');
