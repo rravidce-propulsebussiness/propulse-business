@@ -394,7 +394,7 @@ function Home() {
         </div>
       </section>
 
-      <WebsiteFaqSection variant="home" />
+      <WebsiteFaqSection variant="home" audience="homeowner" />
 
       <section className="hc-final" id="contact">
         <img src={finalImage} alt="" loading="lazy" />
