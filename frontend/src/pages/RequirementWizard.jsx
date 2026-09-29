@@ -135,6 +135,7 @@ function PremiumQuestion({ question, value, onChange, visual = 'default' }) {
 export default function RequirementWizard({ flowKey }) {
   const [flow, setFlow] = useState(null)
   const [cities, setCities] = useState([])
+  const [contactData, setContactData] = useState({})
   const [answers, setAnswers] = useState({})
   const [cityId, setCityId] = useState('')
   const [contact, setContact] = useState(emptyContact)
@@ -149,13 +150,14 @@ export default function RequirementWizard({ flowKey }) {
     mounted.current = true
     setState({ loading: true, saving: false, error: '', success: false })
 
-    Promise.all([publicRequest('/customer-flows/' + flowKey), publicRequest('/cities').catch(() => [])]).then(([data, cityData]) => {
+    Promise.all([publicRequest('/customer-flows/' + flowKey), publicRequest('/cities').catch(() => []), publicRequest('/contact?audience=website').catch(() => ({}))]).then(([data, cityData, websiteContact]) => {
       if (data?.flowType !== 'requirement') throw new Error('This requirement form is not available.')
       if (!mounted.current) return
 
       const loadedCities = collection(cityData)
       setFlow(data)
       setCities(loadedCities)
+      setContactData(websiteContact || {})
 
       let initialAnswers = {}
       let initialContact = emptyContact
@@ -286,6 +288,9 @@ export default function RequirementWizard({ flowKey }) {
     </div>
   </main>
 
+  const phone = contactData.phone || contactData.phone_number || contactData.mobile || ''
+  const email = contactData.email || contactData.support_email || ''
+
   const summaryRows = [
     ['Location', selectedCity?.name || '—'],
     ['PIN Code', locationQuestion ? fieldLabel(locationQuestion, answers) : '—'],
@@ -414,7 +419,7 @@ export default function RequirementWizard({ flowKey }) {
     <section className="rq-expert-strip">
       <img src={theme.expert} alt="" />
       <div><h2>Need Help? Talk to Our Expert</h2><p>Get free consultation and personalized guidance for your requirement.</p></div>
-      <a href={contact.phone ? `tel:+91${contact.phone.replace(/\D/g,'')}` : '#rq-basic'}><Icon name="phone" size={19}/> {contact.phone ? '+91 ' + contact.phone : 'Start with your details'}</a>
+      <a href={phone ? `tel:${phone.replace(/\s/g,'')}` : '#rq-basic'}><Icon name="phone" size={19}/> {phone || 'Start Free Consultation'}</a>
     </section>
 
     <footer className="rq-premium-footer">
@@ -422,7 +427,7 @@ export default function RequirementWizard({ flowKey }) {
       <div><b>Quick Links</b><Link to="/">Home</Link><Link to="/build">Construction</Link><Link to="/design">Interiors</Link><Link to="/property">Real Estate</Link></div>
       <div><b>Our Services</b><Link to="/construction-estimator">Cost Estimator</Link><Link to="/#projects">Projects</Link><Link to="/#how-it-works">How It Works</Link></div>
       <div><b>Support</b><Link to="/contact?audience=users">FAQ</Link><Link to="/contact?audience=users">Contact Us</Link><Link to="/contact?audience=users">Privacy Policy</Link></div>
-      <div><b>Category</b><span>{[flow.industryName, flow.serviceName].filter(Boolean).join(' · ') || flow.name}</span><small>Building Spaces, Elevating Lives.</small></div>
+      <div><b>Contact</b>{phone && <span>{phone}</span>}{email && <span>{email}</span>}<span>{[flow.industryName, flow.serviceName].filter(Boolean).join(' · ') || flow.name}</span><small>Building Spaces, Elevating Lives.</small></div>
     </footer>
   </main>
 }
