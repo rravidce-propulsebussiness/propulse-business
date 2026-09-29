@@ -22,7 +22,7 @@ function categoryLabel(value){
   return CATEGORY_LABELS[value]||String(value||'General').replace(/[_-]+/g,' ').replace(/\b\w/g,m=>m.toUpperCase())
 }
 
-export default function WebsiteFaqSection({variant='home'}){
+export default function WebsiteFaqSection({variant='home',allowedCategories=null}){
   const standalone=variant==='page'
   const [faqs,setFaqs]=useState([])
   const [loading,setLoading]=useState(true)
@@ -57,12 +57,14 @@ export default function WebsiteFaqSection({variant='home'}){
 
   const visible=useMemo(()=>{
     const q=search.trim().toLowerCase()
-    const source=standalone?faqs:faqs.filter(item=>!BUSINESS_ONLY_CATEGORIES.has(item.category||'general'))
+    const base=standalone?faqs:faqs.filter(item=>!BUSINESS_ONLY_CATEGORIES.has(item.category||'general'))
+    const allowed=Array.isArray(allowedCategories)&&allowedCategories.length?new Set(allowedCategories):null
+    const source=allowed?base.filter(item=>allowed.has(item.category||'general')):base
     return source.filter(item=>{
       if(category!=='all'&&(item.category||'general')!==category)return false
       return !q||[item.question,item.answer,item.category].join(' ').toLowerCase().includes(q)
     })
-  },[faqs,search,category,standalone])
+  },[faqs,search,category,standalone,allowedCategories])
 
   const faqList=<div className="website-faq-list">
     {loading&&<div className="website-faq-state">Loading FAQs…</div>}
