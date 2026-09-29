@@ -8,7 +8,7 @@ assert.throws(()=>verifyPdfToken(publicId,token+'x'),/invalid/i);
 
 const pdf=renderEstimatePdf({
   publicId,
-  flow:{name:'Construction Cost Estimator'},
+  flow:{name:'Construction Cost Estimator',config:{estimateExperience:'single',estimateLabel:'Project Estimate'}},
   versionNo:2,
   minimum:2100000,
   maximum:2450000,
@@ -46,7 +46,7 @@ const pdf=renderEstimatePdf({
 assert.ok(Buffer.isBuffer(pdf));
 assert.ok(pdf.length>1000);
 assert.equal(pdf.subarray(0,8).toString('ascii'),'%PDF-1.4');
-assert.match(pdf.toString('ascii'),/Detailed Estimate/);
+assert.match(pdf.toString('ascii'),/Project Estimate/);
 assert.match(pdf.toString('ascii'),/Estimate calculation/);
 assert.match(pdf.toString('ascii'),/Base construction rate/);
 assert.match(pdf.toString('ascii'),/TATA 550 TMT/);
