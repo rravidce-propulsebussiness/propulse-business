@@ -343,6 +343,16 @@ async function saveAdminConfig(flowId, payload) {
     for (let index=0; index<rawAdjustments.length; index += 1) adjustments.push(await cleanAdjustment(client,rawAdjustments[index],index,questionKeys));
     if (adjustments.some(item => item.cityId) && !questions.some(question => question.question_type === 'location')) fail('Add a location question before configuring city-specific adjustments','ESTIMATOR_LOCATION_REQUIRED');
     if (new Set(adjustments.map(item => item.adjustmentKey)).size !== adjustments.length) fail('Estimator adjustment keys must be unique', 'INVALID_ESTIMATOR_CONFIG');
+    const materialAdjustments=adjustments.filter(item=>item.metadata?.kind==='material_option');
+    for (const item of materialAdjustments) {
+      const dependency=String(item.showWhen?.questionKey||'').trim();
+      const optionValue=Object.prototype.hasOwnProperty.call(item.showWhen||{},'equals')?String(item.showWhen.equals):'';
+      const question=questionMap.get(dependency);
+      if (!question || !['single_select','multi_select','boolean'].includes(question.question_type) || !optionValue) fail('Detailed option prices must select a specification question and option','INVALID_ESTIMATOR_CONFIG');
+      if (question.question_type === 'boolean' && !['true','false'].includes(optionValue.toLowerCase())) fail('Detailed option price has an invalid boolean option','INVALID_ESTIMATOR_CONFIG');
+      if (question.question_type !== 'boolean' && !question.option_values.map(String).includes(optionValue)) fail('Detailed option price references an unavailable specification option','INVALID_ESTIMATOR_CONFIG');
+    }
+    if (new Set(materialAdjustments.map(item=>String(item.showWhen.questionKey)+'::'+String(item.showWhen.equals)+'::'+String(item.cityId||''))).size !== materialAdjustments.length) fail('Detailed option prices must be unique per specification option and city','INVALID_ESTIMATOR_CONFIG');
     const packages = rawPackages ? rawPackages.map((item,index)=>cleanPackage(item,index,questionMap)) : null;
     if (packages && new Set(packages.map(item=>item.packageKey)).size !== packages.length) fail('Estimator package keys must be unique', 'INVALID_ESTIMATOR_PACKAGE');
     if (packages && new Set(packages.map(item=>item.selectorQuestionKey+'::'+item.selectorValue)).size !== packages.length) fail('Each estimator package must use a unique selector question and value', 'INVALID_ESTIMATOR_PACKAGE');
