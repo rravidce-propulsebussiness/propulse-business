@@ -198,6 +198,15 @@ jobs:
           DB_PASSWORD: ci_smoke
           JWT_SECRET: ci-estimator-conversion-secret-with-at-least-32-characters
         run: npm run test:estimator-conversion
+      - name: Verify automatic customer intake leads
+        env:
+          DB_HOST: 127.0.0.1
+          DB_PORT: 5432
+          DB_NAME: ci_smoke
+          DB_USER: ci_smoke
+          DB_PASSWORD: ci_smoke
+          JWT_SECRET: ci-customer-intake-auto-leads-secret-32-characters
+        run: npm run test:customer-intake-auto-leads
       - name: Verify customer funnel analytics
         env:
           DB_HOST: 127.0.0.1

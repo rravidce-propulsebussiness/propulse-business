@@ -91,7 +91,7 @@ export default function EstimatorWizard({ flowKey }) {
       setState(current => ({...current,saving:true,error:''}))
       const calculation = await publicRequest('/customer-flows/'+flowKey+'/calculate',{
         method:'POST',
-        body:JSON.stringify({flowToken:flow.flowToken,answers})
+        body:JSON.stringify({flowToken:flow.flowToken,answers,submissionKey})
       })
       setResult(calculation)
       trackFunnelEvent('estimate_completed',{flowKey,flowType:'estimator',calculationId:calculation.calculationId,source:'wizard',metadata:{steps:questions.length}})

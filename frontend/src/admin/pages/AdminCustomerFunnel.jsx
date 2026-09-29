@@ -15,7 +15,7 @@ const when=value=>{
 }
 const sourceCopy={
   public_requirement:{label:'Direct requirements',description:'Customers who submitted a structured Build or Interior requirement.',icon:'⌁'},
-  public_estimator:{label:'Estimator leads',description:'Customers who estimated first and then requested actual quotes.',icon:'₹'},
+  public_estimator:{label:'Estimator leads',description:'Completed estimator journeys become canonical leads immediately; contact-pending estimates stay on safe hold until quotes are requested.',icon:'₹'},
 }
 const periods=[['7','7D'],['30','30D'],['90','90D'],['365','1Y'],['all','ALL']]
 

@@ -17,6 +17,9 @@ assert(app.includes('/admin/leads/upload')&&app.includes('/admin/leads/sheets'),
 assert(layout.includes("{to:'/admin/leads',label:'Manage Leads',end:true}"),'Manage Leads navigation must not absorb nested lead routes');
 assert(layout.includes("{to:'/admin/leads/upload',label:'Upload Leads'}"),'Sidebar must expose Upload Leads');
 assert(layout.includes("{to:'/admin/leads/sheets',label:'Google Sheets'}"),'Sidebar must expose Google Sheets');
+assert(layout.includes("key:'customer-acquisition',label:'Customer Acquisition'"),'Customer Flows and Funnel Analytics must have a dedicated Customer Acquisition sidebar group');
+const leadsGroup=layout.slice(layout.indexOf("key:'leads'"),layout.indexOf("key:'pricing'"));
+assert(!leadsGroup.includes('/admin/customer-flows')&&!leadsGroup.includes('/admin/customer-funnel'),'Customer acquisition tools must not remain nested under Leads');
 assert(!leads.includes('GoogleSheetAutoSync'),'Manage Leads must not render Google Sheet connection UI');
 assert(leads.includes('AdminLeadsV9 mode="manage"'),'Manage Leads must reuse the canonical lead component in manage mode');
 assert(upload.includes('AdminLeadsV9 mode="upload"'),'Upload Leads must reuse the canonical importer instead of duplicating import logic');

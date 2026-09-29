@@ -205,8 +205,9 @@ async function overrideQuarantine({leadId,adminUserId,note=''}) {
   const id=Number(leadId),client=await pool.connect();
   try{
     await client.query('BEGIN');
-    const before=(await client.query('SELECT id,status,quality_gate_status,quality_gate_score,quality_gate_reasons,created_by,lead_partner_id FROM leads WHERE id=$1 FOR UPDATE',[id])).rows[0];
+    const before=(await client.query('SELECT id,status,quality_gate_status,quality_gate_score,quality_gate_reasons,created_by,lead_partner_id,custom_fields FROM leads WHERE id=$1 FOR UPDATE',[id])).rows[0];
     if(!before)throw Object.assign(new Error('Lead is not eligible for quarantine override'),{code:'QUALITY_OVERRIDE_NOT_ALLOWED'});
+    if(before.custom_fields?._estimator?.contactPending===true)throw Object.assign(new Error('This estimator lead is waiting for customer contact details and cannot be released to the marketplace yet.'),{code:'ESTIMATOR_CONTACT_PENDING'});
     const row=(await client.query(
       `UPDATE leads SET status='available',quality_gate_status='overridden',
          quality_gate_reviewed_by=$2,quality_gate_reviewed_at=CURRENT_TIMESTAMP,quality_gate_note=$3,updated_at=CURRENT_TIMESTAMP
