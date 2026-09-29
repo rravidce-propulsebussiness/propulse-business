@@ -7,7 +7,7 @@ const pageCopy={
   construction:{
     eyebrow:'CONSTRUCTION',
     title:'Build with a clear package, specification and project plan.',
-    text:'Start with a rough or detailed construction estimate, compare the published package specifications and submit one structured project enquiry for follow-up.',
+    text:'Compare construction packages, get a practical project estimate and continue with a free construction consultation when you are ready.',
     estimator:'/construction-estimator',
     requirement:'/build',
     flowKey:'construction-cost-estimator',
@@ -94,7 +94,7 @@ function ServicePage({type}){
 
   return <div className="csp-page"><CompanyHeader/><main>
     <section className="csp-hero">
-      <div><span>{cfg.eyebrow}</span><h1>{cfg.title}</h1><p>{cfg.text}</p><div className="csp-actions"><Link className="primary" to={cfg.estimator}>Get Estimate <b>→</b></Link><Link to={cfg.requirement}>Send Requirement</Link></div></div>
+      <div><span>{cfg.eyebrow}</span><h1>{cfg.title}</h1><p>{cfg.text}</p><div className="csp-actions"><Link className="primary" to={cfg.estimator}>Get Project Estimate <b>→</b></Link><Link to={cfg.requirement}>Get Free Consultation</Link></div></div>
       <img src={media.category_images?.[cfg.imageKey]||cfg.fallback} alt=""/>
     </section>
     <section className="csp-section csp-plan">
