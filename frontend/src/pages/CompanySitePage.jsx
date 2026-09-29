@@ -53,9 +53,9 @@ function CompanyHeader(){
 
 function CompanyFooter(){
   return <footer className="csp-footer">
-    <div><img src="/brand/propulse-logo.png" alt="ProPulse Business"/><p>Construction and Interior project planning, estimation and structured project enquiries.</p></div>
-    <div><strong>Construction</strong><Link to="/construction">Overview</Link><Link to="/construction-estimator">Estimator</Link><Link to="/build">Send Requirement</Link></div>
-    <div><strong>Interiors</strong><Link to="/interiors">Overview</Link><Link to="/interior-estimator">Estimator</Link><Link to="/design">Send Requirement</Link></div>
+    <div><img src="/brand/propulse-logo.png" alt="ProPulse Business"/><p>Construction and Interior planning, project estimates and professional consultation.</p></div>
+    <div><strong>Construction</strong><Link to="/construction">Overview</Link><Link to="/construction-estimator">Estimator</Link><Link to="/build">Free Consultation</Link></div>
+    <div><strong>Interiors</strong><Link to="/interiors">Overview</Link><Link to="/interior-estimator">Estimator</Link><Link to="/design">Free Consultation</Link></div>
     <div><strong>Company</strong><Link to="/packages">Packages</Link><Link to="/how-it-works">How It Works</Link><Link to="/about">About</Link><Link to="/contact">Contact</Link></div>
   </footer>
 }
@@ -66,7 +66,7 @@ function PackageCards({packages=[],estimator}){
   return <div className="csp-package-grid">{packages.map((pkg,index)=>{
     const packageKey=String(pkg.packageKey||'').trim()
     const cardKey=(estimator||'packages')+':'+(packageKey||String(pkg.label||index))
-    const startLink=estimator&&packageKey?`${estimator}?mode=detailed&package=${encodeURIComponent(packageKey)}`:estimator
+    const startLink=estimator&&packageKey?`${estimator}?package=${encodeURIComponent(packageKey)}`:estimator
     const activeDetails=(pkg.details||[]).filter(item=>item?.isActive!==false)
     const isExpanded=Boolean(expanded[cardKey])
     const visibleDetails=isExpanded?activeDetails:activeDetails.slice(0,6)
@@ -98,11 +98,11 @@ function ServicePage({type}){
       <img src={media.category_images?.[cfg.imageKey]||cfg.fallback} alt=""/>
     </section>
     <section className="csp-section csp-plan">
-      <div className="csp-section-head"><span>PROJECT PLANNING</span><h2>{type==='construction'?'Start rough, then go detailed when you are ready.':'Choose the work scope, then refine materials and finishes.'}</h2><p>{type==='construction'?'The rough estimate is useful for early budget planning. Detailed mode captures steel, cement, sand, brick class, wire, switches, flooring and other Admin-configured selections.':'The rough estimate gives an early planning range. Detailed mode captures plywood, laminate, hardware, modular finish and other Admin-configured selections.'}</p></div>
-      <div className="csp-two-cards"><article><span>01</span><h3>Rough estimate</h3><p>Fast planning range using the core project details and the selected package.</p><Link to={cfg.estimator+'?mode=rough'}>Start rough estimate →</Link></article><article><span>02</span><h3>Detailed estimate</h3><p>Continue with material and specification selections for a more structured project brief.</p><Link to={cfg.estimator+'?mode=detailed'}>Start detailed estimate →</Link></article></div>
+      <div className="csp-section-head"><span>START YOUR PROJECT</span><h2>{type==='construction'?'Choose an estimate or speak with our construction team.':'Choose an estimate or speak with our interior design team.'}</h2><p>{type==='construction'?'The estimate uses your site, area, scope and package. Optional material choices can refine it without forcing you through a long form.':'The estimate uses your home details, scope and package. Optional finishes and add-ons can refine it when you already know what you want.'}</p></div>
+      <div className="csp-two-cards"><article><span>01</span><h3>Project estimate</h3><p>Get an indicative cost range using the main information customers normally know at the planning stage.</p><Link to={cfg.estimator}>Get project estimate →</Link></article><article><span>02</span><h3>Free consultation</h3><p>Prefer to speak first? Share a few basics and our project team can call you back with the right context.</p><Link to={cfg.requirement}>Get free consultation →</Link></article></div>
     </section>
     <section className="csp-section csp-packages"><div className="csp-section-head"><span>PUBLISHED PACKAGES</span><h2>Package details come directly from Admin.</h2><p>Names, badges, summaries, specification rows and notes below are read from the currently published estimator configuration.</p></div><PackageCards packages={packages} estimator={cfg.estimator}/></section>
-    <section className="csp-bottom-cta"><div><span>READY TO CONTINUE?</span><h2>Turn the estimate into one structured project enquiry.</h2><p>Name and mobile number are required before the estimate is created so the project scope and estimate stay attached to the same customer lead.</p></div><div><Link className="primary" to={cfg.estimator}>Get Estimate →</Link><Link to={cfg.requirement}>Send Requirement</Link></div></section>
+    <section className="csp-bottom-cta"><div><span>READY TO START?</span><h2>Estimate your project or speak with our team for free.</h2><p>Use the estimate when you want a planning range. Choose the free consultation when you would rather discuss the project first.</p></div><div><Link className="primary" to={cfg.estimator}>Get Project Estimate →</Link><Link to={cfg.requirement}>Get Free Consultation</Link></div></section>
   </main><CompanyFooter/></div>
 }
 
@@ -122,27 +122,27 @@ function PackagesPage(){
   },[])
   const packages=(flows[audience]?.packages||[]).filter(item=>item?.isActive!==false)
   return <div className="csp-page"><CompanyHeader/><main>
-    <section className="csp-simple-hero"><span>PACKAGES</span><h1>Compare the specifications before you estimate.</h1><p>Every package shown here is controlled from Admin and follows the currently published estimator version.</p></section>
+    <section className="csp-simple-hero"><span>PACKAGES</span><h1>Compare the specifications before you estimate.</h1><p>Review the major inclusions, allowances and material specifications so you know what the package means before discussing the project.</p></section>
     <section className="csp-section csp-packages">
       <div className="csp-package-tabs"><button type="button" className={audience==='construction'?'active':''} onClick={()=>setAudience('construction')}>Construction</button><button type="button" className={audience==='interior'?'active':''} onClick={()=>setAudience('interior')}>Interiors</button></div>
       <PackageCards packages={packages} estimator={audience==='construction'?'/construction-estimator':'/interior-estimator'}/>
     </section>
-    <section className="csp-bottom-cta"><div><span>NEXT STEP</span><h2>Start detailed estimation with your package already selected.</h2><p>Choose any package above to carry it into the estimator. The selected package and its saved specification snapshot stay attached to the estimate and the customer lead.</p></div><div><Link className="primary" to={(audience==='construction'?'/construction-estimator':'/interior-estimator')+'?mode=detailed'}>Start Detailed Estimate →</Link></div></section>
+    <section className="csp-bottom-cta"><div><span>NEXT STEP</span><h2>Start your estimate with a package already selected.</h2><p>Choose a package above and continue to the estimator. You can still refine optional material or finish choices before calculating.</p></div><div><Link className="primary" to={audience==='construction'?'/construction-estimator':'/interior-estimator'}>Get Project Estimate →</Link></div></section>
   </main><CompanyFooter/></div>
 }
 
 function HowItWorksPage(){
   return <div className="csp-page"><CompanyHeader/><main>
-    <section className="csp-simple-hero"><span>HOW IT WORKS</span><h1>A clear project journey from first requirement to handover.</h1><p>The workflow follows the consultation, package selection, design/planning, modelling, execution and handover sequence from your project material.</p></section>
+    <section className="csp-simple-hero"><span>HOW IT WORKS</span><h1>A clear project journey from first conversation to handover.</h1><p>Start with an estimate or free consultation, then move into scope confirmation, design, planning, execution and handover.</p></section>
     <section className="csp-section"><div className="csp-step-grid">{steps.map(([number,title,text])=><article key={number}><b>{number}</b><div><h3>{title}</h3><p>{text}</p></div></article>)}</div></section>
-    <section className="csp-bottom-cta"><div><span>START WITH PLANNING</span><h2>Estimate first or send the project requirement directly.</h2></div><div><Link className="primary" to="/construction-estimator">Construction Estimate →</Link><Link to="/interior-estimator">Interior Estimate</Link></div></section>
+    <section className="csp-bottom-cta"><div><span>START WITH PLANNING</span><h2>Get a project estimate or choose a free consultation.</h2></div><div><Link className="primary" to="/construction-estimator">Construction Estimate →</Link><Link to="/design">Free Interior Consultation</Link></div></section>
   </main><CompanyFooter/></div>
 }
 
 function AboutPage(){
   return <div className="csp-page"><CompanyHeader/><main>
-    <section className="csp-simple-hero"><span>ABOUT</span><h1>Project enquiries with more context than a normal callback form.</h1><p>ProPulse connects the customer planning experience with structured Construction and Interior project requirements, estimates and professional follow-up.</p></section>
-    <section className="csp-section"><div className="csp-about-grid"><article><span>01</span><h3>Clear project inputs</h3><p>Customers provide location, scope, package and relevant project details before the enquiry is saved.</p></article><article><span>02</span><h3>Admin-controlled specifications</h3><p>Published package names, details and pricing inputs remain configurable instead of being hard-coded in the customer website.</p></article><article><span>03</span><h3>Versioned estimate records</h3><p>The calculation snapshot stays tied to the version used when the customer submitted the estimate.</p></article><article><span>04</span><h3>Professional follow-up</h3><p>The Professional side remains separate from the customer-facing Construction and Interior company experience.</p></article></div></section>
+    <section className="csp-simple-hero"><span>ABOUT</span><h1>Construction and interiors with clearer decisions from the start.</h1><p>ProPulse brings project estimates, package information and consultation into one professional customer journey for Construction and Interiors.</p></section>
+    <section className="csp-section"><div className="csp-about-grid"><article><span>01</span><h3>Clear project scope</h3><p>Start with the location, project size, service scope and package information that matter most to planning.</p></article><article><span>02</span><h3>Transparent package view</h3><p>Compare major material specifications, allowances and package inclusions before committing to the next step.</p></article><article><span>03</span><h3>Practical project estimates</h3><p>Use the main project inputs to create an indicative budget range before final drawings and site review.</p></article><article><span>04</span><h3>Free consultation</h3><p>Speak with the project team using the information you already shared, instead of starting the conversation from zero.</p></article></div></section>
     <section className="csp-bottom-cta"><div><span>PLAN YOUR PROJECT</span><h2>Construction or Interiors — start with the scope that matters to you.</h2></div><div><Link className="primary" to="/construction">Construction →</Link><Link to="/interiors">Interiors</Link></div></section>
   </main><CompanyFooter/></div>
 }
@@ -152,9 +152,9 @@ function ContactPage(){
   useEffect(()=>{let active=true;publicRequest('/contact?audience=website').then(data=>active&&setContact(data||{})).catch(()=>{});return()=>{active=false}},[])
   const whatsapp=String(contact.whatsapp||'').replace(/\D/g,'')
   return <div className="csp-page"><CompanyHeader/><main>
-    <section className="csp-simple-hero"><span>CONTACT</span><h1>Tell us what you are planning.</h1><p>For the clearest follow-up, start with an estimate or requirement form. You can also use the configured contact details below.</p></section>
+    <section className="csp-simple-hero"><span>CONTACT</span><h1>Tell us what you are planning.</h1><p>Start with a project estimate or request a free consultation. You can also reach our team using the contact details below.</p></section>
     <section className="csp-section csp-contact-grid">
-      <div className="csp-contact-actions"><h2>Start with your project.</h2><p>Construction and Interior forms collect the project scope before contact details, so the enquiry reaches follow-up with useful context.</p><Link className="primary" to="/construction-estimator">Construction Estimate →</Link><Link to="/interior-estimator">Interior Estimate →</Link><Link to="/build">Construction Requirement</Link><Link to="/design">Interior Requirement</Link></div>
+      <div className="csp-contact-actions"><h2>Start with your project.</h2><p>Choose an estimate when you want a budget range, or a free consultation when you want our team to call you back first.</p><Link className="primary" to="/construction-estimator">Construction Estimate →</Link><Link to="/interior-estimator">Interior Estimate →</Link><Link to="/build">Free Construction Consultation</Link><Link to="/design">Free Interior Consultation</Link></div>
       <div className="csp-contact-details"><a href={contact.phone?'tel:'+contact.phone:'#'}><small>PHONE</small><strong>{contact.phone||'Configure in Admin'}</strong></a><a href={contact.email?'mailto:'+contact.email:'#'}><small>EMAIL</small><strong>{contact.email||'Configure in Admin'}</strong></a><a href={whatsapp?'https://wa.me/'+whatsapp:'#'} target="_blank" rel="noreferrer"><small>WHATSAPP</small><strong>{contact.whatsapp||'Configure in Admin'}</strong></a><div><small>OFFICE</small><strong>{contact.address||'Configure in Admin'}</strong></div></div>
     </section>
   </main><CompanyFooter/></div>
