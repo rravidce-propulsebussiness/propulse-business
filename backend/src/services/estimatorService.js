@@ -345,6 +345,7 @@ async function saveAdminConfig(flowId, payload) {
     if (new Set(adjustments.map(item => item.adjustmentKey)).size !== adjustments.length) fail('Estimator adjustment keys must be unique', 'INVALID_ESTIMATOR_CONFIG');
     const packages = rawPackages ? rawPackages.map((item,index)=>cleanPackage(item,index,questionMap)) : null;
     if (packages && new Set(packages.map(item=>item.packageKey)).size !== packages.length) fail('Estimator package keys must be unique', 'INVALID_ESTIMATOR_PACKAGE');
+    if (packages && new Set(packages.map(item=>item.selectorQuestionKey+'::'+item.selectorValue)).size !== packages.length) fail('Each estimator package must use a unique selector question and value', 'INVALID_ESTIMATOR_PACKAGE');
 
     await client.query('DELETE FROM estimator_rate_items WHERE version_id=$1',[version.id]);
     await client.query('DELETE FROM estimator_adjustments WHERE version_id=$1',[version.id]);
