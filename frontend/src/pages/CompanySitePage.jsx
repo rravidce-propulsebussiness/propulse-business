@@ -99,10 +99,12 @@ function PackageCards({packages=[],estimator}){
 }
 
 function ServicePage({type}){
-  const cfg=pageCopy[type]
+  const baseCfg=pageCopy[type]
   usePageMeta(type==='construction'?'Home Construction | ProPulse Business':'Home Interiors | ProPulse Business',type==='construction'?'Explore construction packages, get a home construction estimate and request a free construction consultation.':'Explore complete-home interior packages, get an interior estimate and request a free design consultation.')
-  const[media,setMedia]=useState({hero_image_url:'',category_images:{}})
+  const[media,setMedia]=useState({hero_image_url:'',category_images:{},content:{}})
   const[flow,setFlow]=useState(null)
+  const pageContent=media.content?.[type]||{}
+  const cfg={...baseCfg,title:pageContent.heroTitle||baseCfg.title,text:pageContent.heroText||baseCfg.text}
   useEffect(()=>{
     let active=true
     publicRequest('/homepage-media').then(data=>active&&setMedia({hero_image_url:data?.hero_image_url||'',category_images:data?.category_images||{},content:data?.content||{}})).catch(()=>{})
