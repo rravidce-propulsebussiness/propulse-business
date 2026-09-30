@@ -202,7 +202,7 @@ export default function Packages(){
   }
 
   function getConstructionQuote(pkg){
-    navigate('/solutions?package='+pkg+'#construction')
+    navigate('/quote?package='+pkg+'#construction')
   }
 
   return <main className="pkg-page">
@@ -210,15 +210,13 @@ export default function Packages(){
       <Link className="pkg-logo" to="/"><img src="/brand/propulse-logo.svg" alt="ProPulse"/></Link>
       <nav>
         <Link to="/">Home</Link>
-        <Link to="/solutions#construction">Construction</Link>
-        <Link to="/solutions#interiors">Interiors</Link>
         <Link className="active" to="/packages">Packages</Link>
-        <Link to="/solutions#property">Real Estate</Link>
         <Link to="/projects">Projects</Link>
         <Link to="/how-it-works">How It Works</Link>
         <Link to="/about">About</Link>
+        <Link to="/contact">Contact</Link>
       </nav>
-      <button onClick={()=>getConstructionQuote(selectedConstruction)}>Get Construction Quote <Icon name="arrow" size={15}/></button>
+      <button onClick={()=>getConstructionQuote(selectedConstruction)}>Get Free Quote <Icon name="arrow" size={15}/></button>
     </header>
 
     <section className={'pkg-hero '+(category==='construction'?'pkg-hero-construction':'pkg-hero-interior')}>
