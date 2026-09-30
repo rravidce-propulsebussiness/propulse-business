@@ -81,6 +81,7 @@ function Icon({name,size=20}){
   if(name==='shield')return <svg {...p}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="m9 12 2 2 4-4"/></svg>
   if(name==='receipt')return <svg {...p}><path d="M6 2h12v20l-3-2-3 2-3-2-3 2Z"/><path d="M9 7h6M9 11h6M9 15h3"/></svg>
   if(name==='support')return <svg {...p}><path d="M4 13a8 8 0 0 1 16 0"/><path d="M4 13v5h3v-5H4ZM17 13h3v5h-3v-5ZM17 20c-1 1-2.5 1-4 1"/></svg>
+  if(name==='chat')return <svg {...p}><path d="M21 15a4 4 0 0 1-4 4H8l-5 3 1.6-5A7 7 0 0 1 3 12V8a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4Z"/><path d="M8 10h.01M12 10h.01M16 10h.01"/></svg>
   if(name==='arrow')return <svg {...p}><path d="M5 12h14M14 7l5 5-5 5"/></svg>
   if(name==='pin')return <svg {...p}><path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg>
   if(name==='phone')return <svg {...p}><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 2 .7 2.9a2 2 0 0 1-.5 2.1L8 10a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.5c1 .3 1.9.6 2.9.7a2 2 0 0 1 1.7 2Z"/></svg>
@@ -90,7 +91,10 @@ function Icon({name,size=20}){
 
 export default function HowItWorks(){
   const navigate=useNavigate()
-  const [active,setActive]=useState('construction')
+  const [active,setActive]=useState(()=>{
+    const hash=typeof window!=='undefined'?window.location.hash.replace('#',''):''
+    return FLOWS.some(flow=>flow.key===hash)?hash:'construction'
+  })
   const [faqs,setFaqs]=useState([])
   const [openFaq,setOpenFaq]=useState(null)
   const [cities,setCities]=useState([])
@@ -113,9 +117,11 @@ export default function HowItWorks(){
 
   function goToFlow(key){
     setActive(key)
-    document.getElementById('hiw-'+key)?.scrollIntoView({behavior:'smooth',block:'start'})
+    if(typeof window!=='undefined')window.history.replaceState({},'',`/how-it-works#${key}`)
   }
 
+  const activeFlow=FLOWS.find(flow=>flow.key===active)||FLOWS[0]
+  const activeFlowIndex=Math.max(0,FLOWS.findIndex(flow=>flow.key===activeFlow.key))
   const phone=contactData.phone||contactData.phone_number||contactData.mobile||''
   const email=contactData.email||contactData.support_email||''
 
@@ -124,7 +130,7 @@ export default function HowItWorks(){
       <Link to="/" className="hiw-logo"><img src="/brand/propulse-logo.svg" alt="ProPulse"/></Link>
       <nav><Link to="/">Home</Link><Link to="/packages">Packages</Link><Link to="/projects">Projects</Link><Link className="active" to="/how-it-works">How It Works</Link><Link to="/about">About</Link><Link to="/contact">Contact</Link></nav>
       <div className="public-header-actions">
-        <button className="public-quote-button" onClick={()=>navigate('/quote#construction')}>Get Free Quote <Icon name="arrow" size={15}/></button>
+        <button className="public-quote-button" onClick={()=>navigate(activeFlow.route)}>Get Free Quote <Icon name="arrow" size={15}/></button>
         <Link className="public-professional-btn" to="/professionals">For Professionals</Link>
       </div>
     </header>
@@ -146,20 +152,24 @@ export default function HowItWorks(){
     </section>
 
     <section className="hiw-flow-list">
-      {FLOWS.map((flow,index)=><article className="hiw-flow" id={'hiw-'+flow.key} key={flow.key}>
-        <div className="hiw-flow-head"><span>{String(index+1).padStart(2,'0')}</span><div><h2>{flow.sectionTitle}</h2><p>{flow.sectionText}</p></div></div>
+      <article className="hiw-flow hiw-flow-active" id="hiw-active-flow" key={activeFlow.key}>
+        <div className="hiw-flow-head">
+          <span>{String(activeFlowIndex+1).padStart(2,'0')}</span>
+          <div><h2>{activeFlow.sectionTitle}</h2><p>{activeFlow.sectionText}</p></div>
+          <b className="hiw-active-category">{activeFlow.label}</b>
+        </div>
         <div className="hiw-flow-layout">
           <div className="hiw-step-grid">
-            {flow.steps.map(([icon,title,text],stepIndex)=><div className="hiw-step-card" key={title}>
+            {activeFlow.steps.map(([icon,title,text],stepIndex)=><div className="hiw-step-card" key={title}>
               <span><Icon name={icon} size={23}/></span><h3>{title}</h3><p>{text}</p>
-              {stepIndex<flow.steps.length-1&&<i><Icon name="arrow" size={15}/></i>}
+              {stepIndex<activeFlow.steps.length-1&&<i><Icon name="arrow" size={15}/></i>}
             </div>)}
           </div>
-          <button className="hiw-visual-card" onClick={()=>navigate(flow.route)}>
-            <img src={flow.image} alt={flow.imageTitle}/><div><b>{flow.imageTitle}</b><small>{flow.imageText}</small></div><span><Icon name="arrow" size={15}/></span>
+          <button className="hiw-visual-card" onClick={()=>navigate(activeFlow.route)}>
+            <img src={activeFlow.image} alt={activeFlow.imageTitle}/><div><b>{activeFlow.imageTitle}</b><small>{activeFlow.imageText}</small></div><span><Icon name="arrow" size={15}/></span>
           </button>
         </div>
-      </article>)}
+      </article>
     </section>
 
     <section className="hiw-trust-strip">
@@ -190,9 +200,9 @@ export default function HowItWorks(){
     </section>
 
     <section className="hiw-cta">
-      <img src="https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?auto=format&fit=crop&w=1200&q=90" alt="Premium villa"/>
-      <div><h2>Ready to Start Your Project?</h2><p>Get a free consultation and create a personalized requirement for your project.</p></div>
-      <button onClick={()=>navigate('/quote#construction')}>Get Free Consultation <Icon name="arrow" size={15}/></button>
+      <img src={activeFlow.image} alt={activeFlow.imageTitle}/>
+      <div><h2>Ready to Start Your {activeFlow.label} Journey?</h2><p>Get a free consultation and create a personalized requirement for your {activeFlow.label.toLowerCase()} need.</p></div>
+      <button onClick={()=>navigate(activeFlow.route)}>Get Free Consultation <Icon name="arrow" size={15}/></button>
       <div className="hiw-cta-note"><span>○ No Obligation</span><span>○ Guided Requirement</span><span>○ Location Aware</span></div>
     </section>
 
