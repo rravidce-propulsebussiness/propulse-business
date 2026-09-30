@@ -186,9 +186,10 @@ export default function Packages() {
   const quoteRef = useRef(null)
   const hash = typeof window !== 'undefined' ? window.location.hash : ''
   const [category, setCategory] = useState(hash === '#interior' ? 'interior' : 'construction')
-  const [compareConstruction, setCompareConstruction] = useState(['premium', 'royal'])
-  const [compareInterior, setCompareInterior] = useState(['standard', 'premium'])
+  const [compareConstruction, setCompareConstruction] = useState([])
+  const [compareInterior, setCompareInterior] = useState([])
   const [expanded, setExpanded] = useState({})
+  const [compareOpen, setCompareOpen] = useState(false)
   const [cities, setCities] = useState([])
   const [cityLoading, setCityLoading] = useState(true)
   const [quoteError, setQuoteError] = useState('')
@@ -226,6 +227,7 @@ export default function Packages() {
   function switchCategory(next) {
     setCategory(next)
     setExpanded({})
+    setCompareOpen(false)
     setQuoteError('')
     setQuoteForm(current => ({
       ...current,
@@ -236,6 +238,7 @@ export default function Packages() {
   }
 
   function setCompare(key) {
+    setCompareOpen(false)
     const setter = category === 'construction' ? setCompareConstruction : setCompareInterior
     setter(current => {
       if (current.includes(key)) return current.filter(item => item !== key)
@@ -245,8 +248,15 @@ export default function Packages() {
   }
 
   function clearCompare() {
+    setCompareOpen(false)
     if (category === 'construction') setCompareConstruction([])
     else setCompareInterior([])
+  }
+
+  function openComparison() {
+    if (selectedKeys.length !== 2) return
+    setCompareOpen(true)
+    window.setTimeout(() => compareRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 0)
   }
 
   function toggleDetails(key) {
@@ -370,18 +380,7 @@ export default function Packages() {
 
     <section className="pkg-main">
       <div className="pkg-packages-area">
-        <div className="pkg-packages-head">
-          <div>
-            <span>OUR PACKAGES</span>
-            <h2>Compare Packages</h2>
-            <p>Pick any 2 packages to compare. Open Full Details only when you want the complete specification.</p>
-          </div>
-          <div className="pkg-compare-helper">
-            <span className="pkg-scale-icon"><Icon name="scale" size={28} /></span>
-            <div><b>1. Select any 2 packages</b><small>Then use Compare Packages to see the differences side by side.</small></div>
-            <div className="pkg-compare-action"><small>{selectedKeys.length}/2 selected</small><button type="button" disabled={selectedKeys.length < 2} onClick={() => compareRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>Compare Packages <Icon name="arrow" size={14} /></button></div>
-          </div>
-        </div>
+        <div className="pkg-packages-kicker">OUR PACKAGES</div>
 
         <div className={'pkg-package-grid ' + (packages.length === 2 ? 'two' : '')}>
           {packages.map(item => {
@@ -412,7 +411,12 @@ export default function Packages() {
           })}
         </div>
 
-        <section className="pkg-comparison-section" ref={compareRef}>
+        <div className="pkg-compare-bottom">
+          <small>{selectedKeys.length}/2 selected</small>
+          <button type="button" disabled={selectedKeys.length !== 2} onClick={openComparison}>Compare Packages <Icon name="arrow" size={14} /></button>
+        </div>
+
+        {compareOpen && <section className="pkg-comparison-section" ref={compareRef}>
           <div className="pkg-comparison-heading">
             <div><span>PACKAGE COMPARISON</span><h2>Side-by-Side Comparison</h2><p>Compare features and specifications for your selected packages.</p></div>
             <button type="button" onClick={clearCompare}><Icon name="refresh" size={15} />Clear Selection</button>
@@ -438,7 +442,7 @@ export default function Packages() {
               </tbody>
             </table>
           </div> : <div className="pkg-comparison-empty"><Icon name="scale" size={28} /><div><b>Select any two packages</b><span>Your detailed comparison will appear here.</span></div></div>}
-        </section>
+        </section>}
       </div>
 
       <aside className="pkg-quote-card" ref={quoteRef}>
