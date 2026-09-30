@@ -51,6 +51,11 @@ export default function Solutions(){
   const navigate=useNavigate()
   const activeKey=useMemo(()=>hashKey(location.hash),[location.hash])
   const active=FLOWS[activeKey]
+  const headerCta = activeKey === 'construction'
+    ? { to: '/packages#construction', label: 'Construction Packages' }
+    : activeKey === 'interiors'
+      ? { to: '/packages#interior', label: 'Interior Packages' }
+      : { to: '/contact', label: 'Contact Us' }
 
   useEffect(()=>{
     if(!location.hash) navigate('/solutions'+location.search+'#construction',{replace:true})
@@ -74,19 +79,15 @@ export default function Solutions(){
         <Link to="/how-it-works">How It Works</Link>
         <Link to="/about">About</Link>
       </nav>
-      <Link className="sol-packages-link" to="/packages">View Packages <Icon name="arrow" size={14}/></Link>
+      <Link className="sol-packages-link" to={headerCta.to}>{headerCta.label} <Icon name="arrow" size={14}/></Link>
     </header>
 
     <section className="sol-intro">
       <div>
-        <span>ONE HOMEOWNER WORKSPACE</span>
+        <span>CHOOSE A SERVICE</span>
         <h1>Plan Your Home <em>From One Page.</em></h1>
-        <p>Switch between Construction, Interiors and Real Estate without opening separate customer pages. Each tab keeps its own questions and submission logic.</p>
+        <p>Construction quotation, interior requirement and real-estate requirement — switch services without leaving this page.</p>
       </div>
-      <aside>
-        <b>3 guided journeys</b>
-        <span>One consistent ProPulse experience</span>
-      </aside>
     </section>
 
     <section className="sol-switch" aria-label="Choose a homeowner service">
