@@ -1312,9 +1312,9 @@ button,input,select{font:inherit}
 
 .hc-expert-visual{
   position:relative;
-  min-height:600px;
+  min-height:560px;
   overflow:hidden;
-  border-radius:30px;
+  border-radius:26px;
   background:#0c2a44;
   box-shadow:
     0 42px 88px rgba(7,39,65,.19),
@@ -1374,65 +1374,46 @@ button,input,select{font:inherit}
 .hc-expert-float{
   position:absolute;
   z-index:7;
-  border:1px solid rgba(255,255,255,.72);
-  border-radius:18px;
-  background:rgba(255,255,255,.94);
-  color:#0b3152;
-  box-shadow:
-    0 24px 52px rgba(7,34,57,.20),
-    inset 0 1px 0 rgba(255,255,255,.96);
-  backdrop-filter:blur(16px) saturate(1.12);
-  animation:hcExpertFloat 5.6s ease-in-out infinite;
-}
-.hc-professionals-card{
-  left:3.3%;
-  top:4%;
-  width:41%;
-  min-height:118px;
+  width:35%;
+  min-height:92px;
   display:grid;
-  grid-template-columns:55px minmax(0,1fr);
-  gap:13px;
-  padding:16px;
-}
-.hc-materials-card{
-  right:2.8%;
-  top:5%;
-  width:39%;
-  min-height:120px;
-  display:grid;
-  grid-template-columns:55px minmax(0,1fr);
-  gap:13px;
-  padding:16px;
-  animation-delay:-1.8s;
-}
-.hc-consultation-card,
-.hc-warranty-card{
-  min-height:76px;
-  display:grid;
-  grid-template-columns:48px minmax(0,1fr) 35px;
+  grid-template-columns:44px minmax(0,1fr);
   align-items:center;
   gap:10px;
   padding:12px 13px;
-  text-align:left;
-  text-decoration:none;
+  border:1px solid rgba(255,255,255,.72);
+  border-radius:16px;
+  background:rgba(255,255,255,.95);
+  color:#0b3152;
+  box-shadow:
+    0 18px 40px rgba(7,34,57,.17),
+    inset 0 1px 0 rgba(255,255,255,.96);
+  backdrop-filter:blur(14px) saturate(1.10);
+  animation:hcExpertFloat 5.6s ease-in-out infinite;
+  pointer-events:none;
+}
+.hc-professionals-card{
+  left:3%;
+  top:3.5%;
+}
+.hc-materials-card{
+  right:3%;
+  top:3.5%;
+  animation-delay:-1.8s;
 }
 .hc-consultation-card{
-  left:21%;
-  bottom:3.3%;
-  width:42%;
-  border:1px solid rgba(255,255,255,.78);
-  cursor:pointer;
+  left:3%;
+  bottom:3.5%;
   animation-delay:-3s;
 }
 .hc-warranty-card{
-  right:2.6%;
+  right:3%;
   bottom:3.5%;
-  width:34%;
   animation-delay:-4s;
 }
 .hc-expert-card-icon{
-  width:48px;
-  height:48px;
+  width:44px;
+  height:44px;
   display:grid;
   place-items:center;
   border-radius:50%;
@@ -1443,32 +1424,32 @@ button,input,select{font:inherit}
 .hc-consultation-card b,
 .hc-warranty-card b{
   display:block;
-  font-size:14px;
+  font-size:12.5px;
   line-height:1.2;
 }
 .hc-expert-card-copy small,
 .hc-consultation-card small,
 .hc-warranty-card small{
   display:block;
-  margin-top:4px;
+  margin-top:3px;
   color:#647b8f;
-  font-size:10px;
-  line-height:1.4;
+  font-size:9.4px;
+  line-height:1.35;
 }
 .hc-expert-avatars{
   display:flex;
   align-items:center;
-  margin-top:10px;
+  margin-top:7px;
 }
 .hc-expert-avatars img,
 .hc-expert-avatars i{
-  width:34px;
-  height:34px;
-  margin-left:-6px;
-  border:3px solid #fff;
+  width:29px;
+  height:29px;
+  margin-left:-5px;
+  border:2px solid #fff;
   border-radius:50%;
   object-fit:cover;
-  box-shadow:0 5px 13px rgba(7,34,57,.12);
+  box-shadow:0 4px 10px rgba(7,34,57,.11);
 }
 .hc-expert-avatars img:first-child{margin-left:0}
 .hc-expert-avatars i{
@@ -1476,55 +1457,52 @@ button,input,select{font:inherit}
   place-items:center;
   background:#f3f6f9;
   color:#395a73;
-  font-size:18px;
+  font-size:15px;
   font-style:normal;
 }
 .hc-material-chips{
-  display:flex;
-  flex-wrap:wrap;
-  gap:5px;
-  margin-top:10px;
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:4px;
+  width:100%;
+  margin-top:7px;
 }
 .hc-material-chips i{
-  padding:5px 7px;
+  min-width:0;
+  padding:4px 3px;
   border:1px solid #f1e3d8;
-  border-radius:6px;
+  border-radius:5px;
   background:#fff8f3;
   color:#8a4c2d;
-  font-size:8.5px;
+  font-size:7.5px;
+  line-height:1;
+  text-align:center;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
   font-style:normal;
   font-weight:850;
-}
-.hc-card-arrow{
-  width:32px;
-  height:32px;
-  display:grid;
-  place-items:center;
-  border-radius:50%;
-  background:#f7f9fb;
-  color:#0b3152;
-  font-style:normal;
 }
 .hc-expert-mini{
   position:absolute;
   z-index:5;
   overflow:hidden;
   border:2px solid rgba(255,255,255,.92);
-  border-radius:24px;
-  box-shadow:0 24px 50px rgba(7,34,57,.22);
+  border-radius:20px;
+  box-shadow:0 18px 42px rgba(7,34,57,.19);
 }
 .hc-expert-mini img{width:100%;height:100%;display:block;object-fit:cover}
 .mini-living{
-  left:1.7%;
-  bottom:16%;
-  width:35%;
-  height:34%;
+  left:7%;
+  bottom:19%;
+  width:31%;
+  height:28%;
 }
 .mini-kitchen{
-  right:1.4%;
-  bottom:15%;
-  width:30%;
-  height:31%;
+  right:7%;
+  bottom:18%;
+  width:28%;
+  height:27%;
 }
 @keyframes hcExpertLine{to{stroke-dashoffset:-240}}
 @keyframes hcExpertNode{
@@ -1538,14 +1516,17 @@ button,input,select{font:inherit}
 @media(max-width:1280px){
   .hc-expert-hero-inner{grid-template-columns:minmax(390px,.86fr) minmax(590px,1.14fr)}
   .hc-expert-copy h1{font-size:54px}
-  .hc-expert-visual{min-height:560px}
+  .hc-expert-visual{min-height:540px}
+  .hc-expert-float{width:36%;min-height:88px}
+  .hc-expert-card-copy b,.hc-consultation-card b,.hc-warranty-card b{font-size:12px}
+  .hc-expert-card-copy small,.hc-consultation-card small,.hc-warranty-card small{font-size:9px}
 }
 @media(max-width:1040px){
   .hc-expert-hero{padding:18px 16px 30px}
   .hc-expert-hero-inner{grid-template-columns:1fr}
   .hc-expert-copy{padding:28px 10px 10px}
   .hc-expert-copy h1{font-size:52px}
-  .hc-expert-visual{min-height:600px}
+  .hc-expert-visual{min-height:560px}
 }
 @media(max-width:720px){
   .hc-expert-hero{padding:12px 10px 24px}
@@ -1559,20 +1540,17 @@ button,input,select{font:inherit}
   .hc-expert-benefits>span{border-bottom:1px solid #e8edf1}
   .hc-expert-benefits>span:nth-child(even){border-right:0}
   .hc-expert-visual{min-height:720px;border-radius:20px}
-  .hc-professionals-card,.hc-materials-card{
+  .hc-expert-float{
     width:calc(100% - 28px);
     left:14px;
     right:auto;
+    min-height:74px;
   }
   .hc-professionals-card{top:14px}
-  .hc-materials-card{top:148px}
-  .hc-consultation-card,.hc-warranty-card{
-    left:14px;
-    right:auto;
-    width:calc(100% - 28px);
-  }
-  .hc-consultation-card{bottom:100px}
+  .hc-materials-card{top:102px}
+  .hc-consultation-card{bottom:102px}
   .hc-warranty-card{bottom:14px}
+  .hc-material-chips{grid-template-columns:repeat(4,minmax(0,1fr))}
   .hc-expert-mini{display:none}
 }
 @media(prefers-reduced-motion:reduce){
