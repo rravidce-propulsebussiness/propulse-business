@@ -127,7 +127,7 @@ const PROJECTS = [
 ]
 
 const FAQS = [
-  ['Can I get a similar project for my requirement?','Yes. Open any project idea and start the matching Construction, Interiors or Real Estate requirement flow.'],
+  ['Can I get a similar project for my requirement?','Yes. Open any project first to review its details. If the concept suits you, you can then contact ProPulse or explore suitable packages without being redirected automatically.'],
   ['Are the project prices fixed?','No. Images and project details on this page are inspiration only. Actual prices depend on your location, scope, materials and quotations.'],
   ['Do you provide end-to-end support?','ProPulse captures a structured requirement and helps relevant businesses understand what you need.'],
   ['Can I visit completed projects?','This page currently contains project inspiration. A site visit should only be arranged directly with a relevant business when a real completed project is available.'],
@@ -260,7 +260,7 @@ export default function Projects(){
         <div><Icon name="home"/><span>Modern Designs</span></div>
         <div><Icon name="photo"/><span>Visual Inspiration</span></div>
         <div><Icon name="info"/><span>Detailed Information</span></div>
-        <div><Icon name="building"/><span>Get Similar Project</span></div>
+        <div><Icon name="building"/><span>Detailed Project View</span></div>
         <div><Icon name="chat"/><span>Free Consultation</span></div>
       </aside>
       <div className="pj-hero-benefits">
@@ -339,7 +339,7 @@ export default function Projects(){
       <img src="https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?auto=format&fit=crop&w=1100&q=88" alt=""/>
       <div><h2>Save the Ideas You Like.</h2><p>Explore project details first, compare styles and then decide the right next step for your home.</p></div>
       <Link className="pj-cta-link" to="/packages">Explore Packages <Icon name="arrow" size={16}/></Link>
-      <div className="pj-cta-points"><span>○ Detailed Concepts</span><span>○ Clear Scope</span><span>○ No Forced Redirect</span></div>
+      <div className="pj-cta-points"><span>○ Detailed Concepts</span><span>○ Clear Scope</span><span>○ Browse Before You Decide</span></div>
     </section>
 
     <section className="pj-faq">
