@@ -100,4 +100,18 @@ assert.match(homeCss,/\.hc-how-connector/);
 assert.match(homeCss,/hcHowFloat/);
 assert.match(homeCss,/hcHowConnector/);
 
+assert.match(home,/Home Inspiration/);
+assert.match(home,/Warm Modern Villa/);
+assert.match(home,/Courtyard Living/);
+assert.match(home,/Wood & Marble Kitchen/);
+assert.match(home,/Hotel-Style Bedroom/);
+assert.match(home,/Japandi Living Room/);
+assert.doesNotMatch(home,/Premium Apartments/);
+assert.doesNotMatch(home,/Gated Communities/);
+assert.doesNotMatch(home,/Ideas for your next step/);
+assert.match(homeCss,/\.hc-inspiration-card/);
+assert.match(homeCss,/\.hc-inspiration-icon/);
+assert.match(homeCss,/\.hc-inspiration-cta/);
+assert.match(homeCss,/hcInspirationIcon/);
+
 console.log('Approved public UI mockup checks passed.');
