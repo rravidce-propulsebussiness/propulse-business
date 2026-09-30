@@ -245,7 +245,7 @@ function Home() {
 
   function openConstructionQuote() {
     setConsultOpen(false)
-    navigate('/build')
+    navigate('/solutions#construction')
   }
 
   async function submitConsult(event) {
@@ -350,10 +350,10 @@ function Home() {
 
       <nav className={menuOpen ? 'hc-nav open' : 'hc-nav'} aria-label="Main navigation">
         <button className="active" onClick={() => scrollToSection('home')}>Home</button>
-        <Link to="/build">Construction</Link>
-        <Link to="/design">Interior Design</Link>
+        <Link to="/solutions#construction">Construction</Link>
+        <Link to="/solutions#interiors">Interior Design</Link>
         <Link to="/packages">Packages</Link>
-        <Link to="/property">Real Estate</Link>
+        <Link to="/solutions#property">Real Estate</Link>
         <Link to="/projects">Projects</Link>
         <Link to="/how-it-works">How It Works</Link>
         <Link to="/about">About</Link>
@@ -518,7 +518,7 @@ function Home() {
         <img src="/brand/propulse-logo.svg" alt="ProPulse" />
         <p>A homeowner-first starting point for construction, interiors and real estate requirements.</p>
       </div>
-      <div><b>Home Solutions</b><Link to="/build">Construction</Link><Link to="/design">Interior Design</Link><Link to="/packages">Interior Packages</Link><Link to="/property">Real Estate</Link></div>
+      <div><b>Home Solutions</b><Link to="/solutions#construction">Construction</Link><Link to="/solutions#interiors">Interior Design</Link><Link to="/packages">Interior Packages</Link><Link to="/solutions#property">Real Estate</Link></div>
       <div><b>Quick Links</b><Link to="/projects">Projects</Link><Link to="/how-it-works">How It Works</Link><Link to="/about">About</Link><button onClick={() => openConsult()}>Free Consultation</button><Link to="/contact">Contact</Link></div>
       <div><b>Contact</b>{phone && <a href={'tel:' + String(phone).replace(/\s/g, '')}>{phone}</a>}{email && <a href={'mailto:' + email}>{email}</a>}<span>Hyderabad, India</span></div>
     </footer>
