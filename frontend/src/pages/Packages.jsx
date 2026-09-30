@@ -309,7 +309,6 @@ export default function Packages() {
         name: quoteForm.name.trim(),
         phone,
         email: '',
-        consent: true,
         submissionKey: makeSubmissionKey(),
         createdAt: Date.now(),
       }))
