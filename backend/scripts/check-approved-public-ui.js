@@ -76,7 +76,7 @@ assert.doesNotMatch(contact,/Navigate to="\/#contact"/);
 
 for(const source of [home,quote,packages,projects,about,howItWorks,contact]){
   assert.match(source,/Professionals/);
-  assert.match(source,/to="\/login"/);
+  assert.match(source,/to="\/contact\?audience=users"/);
 }
 assert.match(publicHeader,/\.public-professional-btn/);
 assert.match(publicHeader,/Quote \+ professional public header actions/);
@@ -158,5 +158,10 @@ assert.match(projects,/Browse Before You Decide/);
 assert.doesNotMatch(projects,/function startSimilar/);
 assert.doesNotMatch(projects,/navigate\(route\)/);
 assert.match(projects,/openProject\(project\)/);
+
+assert.match(contact,/portalAudience==='lead_partners'\|\|portalAudience==='users'/);
+assert.match(websiteFaq,/className="website-faq-more" to="\/contact"/);
+assert.match(websiteFaq,/Contact ProPulse/);
+assert.doesNotMatch(websiteFaq,/\/contact\?audience=users/);
 
 console.log('Approved public UI mockup checks passed.');
