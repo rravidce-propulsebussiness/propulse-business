@@ -80,12 +80,41 @@ const SERVICES = [
 ]
 
 const INSPIRATION = [
-  ['Independent Houses', 'https://images.unsplash.com/photo-1600585152915-d208bec867a1?auto=format&fit=crop&w=900&q=86'],
-  ['Home Renovation', 'https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?auto=format&fit=crop&w=900&q=86'],
-  ['Modular Kitchens', 'https://images.unsplash.com/photo-1556911220-bff31c812dba?auto=format&fit=crop&w=900&q=86'],
-  ['Living Room Interiors', 'https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=900&q=86'],
-  ['Premium Apartments', 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=900&q=86'],
-  ['Gated Communities', 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=900&q=86'],
+  {
+    title: 'Warm Modern Villa',
+    text: 'Clean volumes, warm wood and wide glass openings.',
+    image: 'https://images.unsplash.com/photo-1600585152915-d208bec867a1?auto=format&fit=crop&w=1200&q=90',
+    icon: 'home',
+    flowKey: 'build',
+  },
+  {
+    title: 'Courtyard Living',
+    text: 'Bring daylight and greenery into the heart of the home.',
+    image: 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=1200&q=90',
+    icon: 'heart',
+    flowKey: 'build',
+  },
+  {
+    title: 'Wood & Marble Kitchen',
+    text: 'A warm, premium palette with practical storage.',
+    image: 'https://images.unsplash.com/photo-1556911220-bff31c812dba?auto=format&fit=crop&w=1200&q=90',
+    icon: 'clipboard',
+    flowKey: 'design',
+  },
+  {
+    title: 'Hotel-Style Bedroom',
+    text: 'Layered lighting, soft textures and calm neutral tones.',
+    image: 'https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&w=1200&q=90',
+    icon: 'sofa',
+    flowKey: 'design',
+  },
+  {
+    title: 'Japandi Living Room',
+    text: 'Minimal lines, natural textures and comfortable warmth.',
+    image: 'https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=1200&q=90',
+    icon: 'sofa',
+    flowKey: 'design',
+  },
 ]
 
 const HOMEOWNER_VALUES = [
@@ -532,20 +561,32 @@ function Home() {
         </div>
       </section>
 
-      <section className="hc-inspiration">
-        <div className="hc-section-heading compact">
-          <span>Ideas for your next step</span>
-          <h2>Home Inspiration</h2>
-          <p>Explore the kinds of projects homeowners can start through ProPulse.</p>
-          <Link className="hc-inspiration-link" to="/projects">Explore all project ideas <Icon name="arrow" size={14} /></Link>
+      <section className="hc-inspiration" aria-labelledby="home-inspiration-title">
+        <div className="hc-inspiration-heading">
+          <h2 id="home-inspiration-title"><span>Home</span> Inspiration</h2>
+          <i aria-hidden="true" />
+          <p>Explore design directions, layouts and finishes for your home.</p>
         </div>
 
         <div className="hc-inspiration-grid">
-          {INSPIRATION.map(([title, image]) => <button key={title} onClick={() => openConsult()}>
-            <img src={image} alt="" loading="lazy" />
-            <span>{title}</span>
-          </button>)}
+          {INSPIRATION.map(item => <article className="hc-inspiration-card" key={item.title}>
+            <button className="hc-inspiration-image" type="button" onClick={() => openConsult(item.flowKey)} aria-label={'Explore ' + item.title}>
+              <img src={item.image} alt={item.title} loading="lazy" />
+              <span className="hc-inspiration-icon"><Icon name={item.icon} size={24} /></span>
+            </button>
+            <div className="hc-inspiration-copy">
+              <div>
+                <h3>{item.title}</h3>
+                <p>{item.text}</p>
+              </div>
+              <button className="hc-inspiration-arrow" type="button" onClick={() => openConsult(item.flowKey)} aria-label={'Start with ' + item.title}>
+                <Icon name="arrow" size={17} />
+              </button>
+            </div>
+          </article>)}
         </div>
+
+        <Link className="hc-inspiration-cta" to="/projects">Explore all project ideas <Icon name="arrow" size={16} /></Link>
       </section>
 
       <section className="hc-section hc-homeowner-values">
