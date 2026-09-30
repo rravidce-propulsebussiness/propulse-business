@@ -65,6 +65,16 @@ async function locate(req, res) {
   }
 }
 
+async function reverseLocation(req, res) {
+  try {
+    return res.json(await detectionService.reverseCoordinates(req.body?.latitude, req.body?.longitude));
+  } catch (error) {
+    const bad = ['INVALID_COORDINATES', 'PIN_NOT_FOUND', 'REVERSE_LOOKUP_TIMEOUT'];
+    if (!bad.includes(error.code)) console.error('Reverse location failed:', error.message);
+    return sendError(res, bad.includes(error.code) ? 400 : 502, error, 'Unable to detect current location', { code: error.code });
+  }
+}
+
 async function listUnmapped(req, res) {
   try {
     return res.json(await detectionService.listUnmappedPins({ limit: req.query.limit }));
@@ -84,4 +94,4 @@ async function mapToCity(req, res) {
   }
 }
 
-module.exports = { search, resolve, getOne, locate, detect, listUnmapped, mapToCity };
+module.exports = { search, resolve, getOne, locate, reverseLocation, detect, listUnmapped, mapToCity };
