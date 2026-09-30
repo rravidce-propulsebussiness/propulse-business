@@ -16,6 +16,7 @@ const adminLeads = read('../frontend/src/admin/pages/AdminLeadsV9.jsx');
 const projects = read('../frontend/src/pages/Projects.jsx');
 
 assert.match(routes, /router\.post\('\/:key\/consultation'/);
+assert.match(routes, /customerFlowController\.submitConsultation/);
 assert.match(controller, /submitConsultation/);
 assert.match(intake, /source:\s*'homepage_consultation'/);
 assert.match(intake, /enrichConsultationLead/);
@@ -30,7 +31,8 @@ assert.match(requirement, /initialSubmissionKey/);
 assert.match(adminLeads, /CONSULTATION CAPTURED/);
 assert.match(media, /why_homeowners/);
 assert.match(media, /final_cta/);
-assert.match(faqService, /'homeowner'/);
+assert.match(faqService, /AUDIENCES=\['homeowner'/);
+assert.match(faqService, /'consultation'/);
 assert.doesNotMatch(projects, /Explore Real<em>Projects/);
 
 console.log('Homeowner consultation funnel checks passed.');
