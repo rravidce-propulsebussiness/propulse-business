@@ -4,7 +4,6 @@ import { publicRequest } from '../utils/auth'
 import WebsiteFaqSection from '../components/WebsiteFaqSection'
 import './Home.css'
 
-const HERO_IMAGE = 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=2200&q=92'
 const WHY_IMAGE = 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=2200&q=88'
 const FINAL_IMAGE = 'https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&w=1800&q=88'
 
@@ -376,12 +375,6 @@ function Home() {
   }
 
   const media = homepageMedia.category_images || {}
-  const heroImage = homepageMedia.hero_image_url || HERO_IMAGE
-  const serviceMedia = {
-    build: media.construction || SERVICES[0].image,
-    design: media.interior || SERVICES[1].image,
-    property: media.real_estate || SERVICES[2].image,
-  }
   const whyImage = media.why_homeowners || WHY_IMAGE
   const finalImage = media.final_cta || FINAL_IMAGE
 
