@@ -236,15 +236,6 @@ export default function RequirementWizard({ flowKey }) {
     if (!locationStateId) return []
     return cities.filter(city => String(city.state_id) === String(locationStateId)).sort((a,b) => String(a.name).localeCompare(String(b.name)))
   }, [cities, locationStateId])
-  const cityPincodes = useMemo(() => {
-    const rows = Array.isArray(selectedCity?.pincodes) ? selectedCity.pincodes : []
-    const map = new Map()
-    rows.forEach(item => {
-      const pin = String(typeof item === 'string' ? item : item?.pincode || '')
-      if (/^\d{6}$/.test(pin) && !map.has(pin)) map.set(pin, typeof item === 'string' ? { pincode: pin } : item)
-    })
-    return [...map.values()]
-  }, [selectedCity])
 
   const propertyQuestions = questions.filter(question => ['project_type', 'own_plot', 'property_type', 'property_intent', 'bhk', 'property_status', 'possession_status'].includes(question.questionKey))
   const configQuestions = questions.filter(question => ['plot_area', 'built_up_area', 'area', 'floors'].includes(question.questionKey))
@@ -456,13 +447,11 @@ export default function RequirementWizard({ flowKey }) {
       answers={answers}
       setAnswer={setAnswer}
       cities={filteredCities}
-      allCities={cities}
       locationStates={locationStates}
       locationStateId={locationStateId}
       setLocationState={setLocationState}
       cityId={cityId}
       setCity={setCity}
-      cityPincodes={cityPincodes}
       setPincode={setPincode}
       pinLookup={pinLookup}
       locationQuestion={locationQuestion}
@@ -482,13 +471,11 @@ export default function RequirementWizard({ flowKey }) {
       answers={answers}
       setAnswer={setAnswer}
       cities={filteredCities}
-      allCities={cities}
       locationStates={locationStates}
       locationStateId={locationStateId}
       setLocationState={setLocationState}
       cityId={cityId}
       setCity={setCity}
-      cityPincodes={cityPincodes}
       setPincode={setPincode}
       pinLookup={pinLookup}
       locationQuestion={locationQuestion}
