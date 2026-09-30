@@ -390,8 +390,6 @@ export default function RequirementWizard({ flowKey }) {
       locationQuestion={locationQuestion}
       contact={contact}
       setContact={setContact}
-      consent={consent}
-      setConsent={setConsent}
       state={state}
       submit={submit}
       contactData={contactData}
