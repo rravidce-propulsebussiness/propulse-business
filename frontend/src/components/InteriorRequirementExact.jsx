@@ -1,6 +1,7 @@
 import { useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { isEmptyAnswer } from './CustomerFlowQuestion'
+import QuoteLocationFields from './QuoteLocationFields'
 import './InteriorRequirementExact.css'
 
 const PROPERTY_IMAGES = {
@@ -62,7 +63,7 @@ function Chips({ question, value, onChange }) {
 }
 
 export default function InteriorRequirementExact(props) {
-  const { flow, questions, answers, setAnswer, cities, cityId, setCity, cityPincodes, locationQuestion, contact, setContact, state, submit, contactData, completion } = props
+  const { flow, questions, answers, setAnswer, cities, locationStates, locationStateId, setLocationState, cityId, setCity, locationQuestion, setPincode, pinLookup, contact, setContact, state, submit, contactData, completion } = props
   const fileRef = useRef(null)
   const [referenceFiles, setReferenceFiles] = useState([])
   const byKey = useMemo(() => Object.fromEntries(questions.map(q => [q.questionKey, q])), [questions])
@@ -78,7 +79,10 @@ export default function InteriorRequirementExact(props) {
   const areaPresets = [['< 500','400'],['500 - 1000','750'],['1000 - 2000','1500'],['2000 - 3000','2500'],['3000+','3500']]
   const roomIcons = { living_room:'living', bedroom:'bed', kitchen:'kitchen', bathroom:'bath', dining:'dining', other:'layout', full_home:'home', wardrobes:'layout', false_ceiling:'layout', furniture:'living', painting:'spark', lighting:'spark' }
   const summary = [
-    ['Location', cities.find(c => String(c.id) === String(cityId))?.name || '—'],
+    ['Location', [
+      cities.find(c => String(c.id) === String(cityId))?.name,
+      locationStates.find(s => String(s.id) === String(locationStateId))?.name,
+    ].filter(Boolean).join(', ') || '—'],
     ['PIN Code', answerLabel(locationQuestion, locationQuestion ? answers[locationQuestion.questionKey] : '')],
     ['Property Type', answerLabel(propertyType, propertyType ? answers[propertyType.questionKey] : '')],
     ['Built-up Area', area && !isEmptyAnswer(answers[area.questionKey]) ? `${answers[area.questionKey]} sq ft` : '—'],
@@ -120,8 +124,20 @@ export default function InteriorRequirementExact(props) {
         <div className="irx-card irx-basic-card">
           <div className="irx-section-title"><span>1.</span><div><h2>Basic Details</h2><p>Let's start with some basic information about your interior project.</p></div></div>
           <div className="irx-basic-grid">
-            <label><b>Property Location</b><select value={cityId} onChange={e=>setCity(e.target.value)}><option value="">Select City / Location</option>{cities.map(city=><option key={city.id} value={city.id}>{city.name}{city.state_name?` · ${city.state_name}`:''}</option>)}</select></label>
-            <label><b>PIN Code</b>{cityPincodes.length?<select value={locationQuestion?answers[locationQuestion.questionKey]||'':''} onChange={e=>locationQuestion&&setAnswer(locationQuestion.questionKey,e.target.value)}><option value="">Select PIN Code</option>{cityPincodes.map(item=><option key={item.pincode} value={item.pincode}>{item.pincode}{item.officeName?` · ${item.officeName}`:''}</option>)}</select>:<input value={locationQuestion?answers[locationQuestion.questionKey]||'':''} onChange={e=>locationQuestion&&setAnswer(locationQuestion.questionKey,e.target.value.replace(/\D/g,'').slice(0,6))} inputMode="numeric" placeholder="Enter PIN Code"/>}</label>
+            <QuoteLocationFields
+              states={locationStates}
+              stateId={locationStateId}
+              onStateChange={setLocationState}
+              cities={cities}
+              cityId={cityId}
+              onCityChange={setCity}
+              pincode={locationQuestion ? answers[locationQuestion.questionKey] || '' : ''}
+              onPincodeChange={setPincode}
+              lookupStatus={pinLookup.status}
+              lookupMessage={pinLookup.message}
+              stateLabel="Property State"
+              cityLabel="Property City / Location"
+            />
             <label><b>Your Name</b><input value={contact.name} onChange={e=>setContact({...contact,name:e.target.value})} placeholder="Enter your full name"/></label>
             <label><b>Mobile Number</b><div className="irx-phone"><span>+91</span><input value={contact.phone} onChange={e=>setContact({...contact,phone:e.target.value.replace(/\D/g,'').slice(0,10)})} inputMode="tel" placeholder="Enter 10-digit number"/></div></label>
             <label><b>Email <small>(Optional)</small></b><input type="email" value={contact.email} onChange={e=>setContact({...contact,email:e.target.value})} placeholder="Enter your email"/></label>
