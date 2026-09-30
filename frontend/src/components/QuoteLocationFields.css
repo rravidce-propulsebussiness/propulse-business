@@ -18,3 +18,8 @@
 @media(max-width:820px){.quote-location-fields{grid-template-columns:1fr 1fr}.quote-location-fields .quote-pin-field{grid-column:1/-1}}
 @media(max-width:560px){.quote-location-fields{grid-template-columns:1fr}.quote-location-fields .quote-pin-field{grid-column:auto}}
 @media(prefers-reduced-motion:reduce){.qlf-status i{animation:none}}
+
+.qlf-current-location{grid-column:1/-1;min-height:42px;display:flex;align-items:center;justify-content:center;gap:8px;border:1px solid #d8e2e8;border-radius:9px;background:#f8fbfd;color:#21445c;font:800 13px/1 inherit;cursor:pointer;transition:.18s ease}
+.qlf-current-location:hover{border-color:#b9ccd8;background:#f1f7fa}
+.qlf-current-location:disabled{opacity:.65;cursor:wait}
+.qlf-current-location span{font-size:18px;color:#e7632f}
