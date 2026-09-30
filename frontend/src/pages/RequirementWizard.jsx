@@ -559,8 +559,20 @@ export default function RequirementWizard({ flowKey }) {
         <div className="rq-section-card">
           <div className="rq-section-heading"><strong>1.</strong><div><h2>Basic Details</h2><p>Let’s start with the essential project and contact information.</p></div></div>
           <div className="rq-basic-grid">
-            <label><span>Project Location</span><div className="rq-field-icon"><Icon name="pin" size={15}/><select value={cityId} onChange={event => setCity(event.target.value)}><option value="">Select City / Location</option>{cities.map(city => <option key={city.id} value={city.id}>{city.name}{city.state_name ? ` · ${city.state_name}` : ''}</option>)}</select></div></label>
-            <label><span>PIN Code</span>{cityPincodes.length ? <select value={locationQuestion ? answers[locationQuestion.questionKey] || '' : ''} onChange={event => locationQuestion && setAnswer(locationQuestion.questionKey, event.target.value)}><option value="">Select PIN Code</option>{cityPincodes.map(item => <option key={item.pincode} value={item.pincode}>{item.pincode}{item.officeName ? ` · ${item.officeName}` : ''}</option>)}</select> : <input inputMode="numeric" maxLength="6" value={locationQuestion ? answers[locationQuestion.questionKey] || '' : ''} onChange={event => locationQuestion && setAnswer(locationQuestion.questionKey, event.target.value.replace(/\D/g,'').slice(0,6))} placeholder="Enter 6-digit PIN" />}</label>
+            <QuoteLocationFields
+              states={locationStates}
+              stateId={locationStateId}
+              onStateChange={setLocationState}
+              cities={filteredCities}
+              cityId={cityId}
+              onCityChange={setCity}
+              pincode={locationQuestion ? answers[locationQuestion.questionKey] || '' : ''}
+              onPincodeChange={setPincode}
+              lookupStatus={pinLookup.status}
+              lookupMessage={pinLookup.message}
+              stateLabel="Project State"
+              cityLabel="Project City / Location"
+            />
             <label><span>Your Name</span><input value={contact.name} onChange={event => setContact({ ...contact, name: event.target.value })} autoComplete="name" placeholder="Enter your full name" /></label>
             <label><span>Mobile Number</span><div className="rq-phone-field"><b>+91</b><input value={contact.phone} onChange={event => setContact({ ...contact, phone: event.target.value.replace(/\D/g,'').slice(0,10) })} inputMode="tel" autoComplete="tel" placeholder="Enter 10-digit number" /></div></label>
             <label><span>Email <small>(Optional)</small></span><input type="email" value={contact.email} onChange={event => setContact({ ...contact, email: event.target.value })} autoComplete="email" placeholder="Enter your email" /></label>
