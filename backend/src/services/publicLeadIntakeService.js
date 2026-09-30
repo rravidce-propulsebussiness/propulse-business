@@ -12,7 +12,7 @@ function deriveLeadFields(flow, answers) {
   for (const question of flow.questions) {
     if (!isVisible(question, answers)) continue;
     if (question.visibility !== 'marketplace' || !question.leadField || isEmpty(answers[question.questionKey])) continue;
-    const formatted = formatAnswer(question, answers[question.questionKey]);
+    const formatted = formatPublicAnswer(question, answers[question.questionKey]);
     if (question.leadField === 'property_type') result.propertyType = formatted;
     if (question.leadField === 'budget') result.budget = formatted;
     if (question.leadField === 'requirement') result.requirement = formatted;
@@ -20,11 +20,26 @@ function deriveLeadFields(flow, answers) {
   return result;
 }
 
+function constructionFloorLabel(value) {
+  const floors=Number(value);
+  if(floors===1)return 'Ground Floor';
+  if(floors===2)return 'G+1';
+  if(floors===3)return 'G+2';
+  if(floors===4)return 'G+3';
+  if(Number.isFinite(floors)&&floors>=5)return 'Above G+3';
+  return String(value??'').trim();
+}
+
+function formatPublicAnswer(question,value) {
+  if(question?.questionKey==='floors')return constructionFloorLabel(value);
+  return formatAnswer(question,value);
+}
+
 function buildSummary(flow, answers) {
   const parts = [];
   for (const question of flow.questions) {
     if (!isVisible(question, answers) || question.visibility !== 'marketplace' || isEmpty(answers[question.questionKey]) || question.questionType === 'location') continue;
-    const formatted = formatAnswer(question, answers[question.questionKey]);
+    const formatted = formatPublicAnswer(question, answers[question.questionKey]);
     if (!formatted) continue;
     parts.push(`${question.label}: ${formatted}`);
   }
@@ -39,7 +54,7 @@ function buildCustomFields(flow, answers) {
   for (const question of flow.questions) {
     if (!isVisible(question, answers) || isEmpty(answers[question.questionKey])) continue;
     const rawValue = answers[question.questionKey];
-    const formatted = formatAnswer(question, rawValue);
+    const formatted = formatPublicAnswer(question, rawValue);
     rawAnswers[question.questionKey] = rawValue;
     if (question.visibility === 'marketplace' && formatted) {
       custom[question.label] = formatted;
@@ -231,9 +246,9 @@ function consultationLeadData(flow, details) {
 
   if (flow.key === 'build') {
     marketplace.project_type = CONSULTATION_LABELS.projectType[details.projectType];
-    marketplace.floors = String(details.floors);
+    marketplace.floors = constructionFloorLabel(details.floors);
     if (details.plotArea !== null) marketplace.plot_area = `${details.plotArea} sq ft`;
-    summary.push(marketplace.project_type, `${details.floors} floor${details.floors === 1 ? '' : 's'}`);
+    summary.push(marketplace.project_type, marketplace.floors);
     if (details.plotArea !== null) summary.push(`Plot ${details.plotArea} sq ft`);
     propertyType = details.projectType === 'commercial_building' ? 'Commercial' : 'Residential';
   } else if (flow.key === 'design') {
