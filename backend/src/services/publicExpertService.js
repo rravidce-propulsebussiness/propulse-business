@@ -24,7 +24,6 @@ async function listPublicExperts({search='',industryId='',cityId='',verified='',
     const n=params.length;
     conditions.push(`(
       bp.business_name ILIKE $${n}
-      OR COALESCE(bp.business_details,'') ILIKE $${n}
       OR EXISTS(
         SELECT 1
         FROM business_profile_services bpss
@@ -97,8 +96,6 @@ async function listPublicExperts({search='',industryId='',cityId='',verified='',
        u.id AS user_id,
        bp.id AS business_profile_id,
        bp.business_name,
-       bp.business_details,
-       u.created_at AS registered_at,
        EXISTS(
          SELECT 1 FROM company_proof_documents cpd
          WHERE cpd.user_id=u.id AND cpd.status='verified'
