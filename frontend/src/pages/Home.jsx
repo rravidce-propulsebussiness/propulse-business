@@ -159,10 +159,34 @@ function Home() {
   const [consultSaving, setConsultSaving] = useState(false)
   const [consultSubmitted, setConsultSubmitted] = useState(null)
   const [menuOpen, setMenuOpen] = useState(false)
+  const [generatedHeroUrl, setGeneratedHeroUrl] = useState('')
 
   useEffect(() => {
     window.scrollTo(0, 0)
   }, [])
+
+  useEffect(() => {
+    let active = true
+    const segmentUrls = Array.from({ length: 11 }, (_, index) =>
+      '/media/propulse-home-hero-3d/' + String(index).padStart(2, '0') + '.b64'
+    )
+
+    Promise.all(segmentUrls.map(url => fetch(url).then(response => {
+      if (!response.ok) throw new Error('Hero artwork segment failed to load')
+      return response.text()
+    })))
+      .then(parts => {
+        if (!active) return
+        const base64 = parts.join('').replace(/\s+/g, '')
+        setGeneratedHeroUrl('data:image/webp;base64,' + base64)
+      })
+      .catch(() => {
+        if (active) setGeneratedHeroUrl('')
+      })
+
+    return () => { active = false }
+  }, [])
+
 
   useEffect(() => {
     let active = true
@@ -351,25 +375,6 @@ function Home() {
     node.style.setProperty('--hero-tilt-y', '0deg')
   }
 
-  function tiltServiceCard(event) {
-    const node = event.currentTarget
-    const rect = node.getBoundingClientRect()
-    const x = ((event.clientX - rect.left) / rect.width - 0.5)
-    const y = ((event.clientY - rect.top) / rect.height - 0.5)
-    node.style.setProperty('--card-rx', (y * -7).toFixed(2) + 'deg')
-    node.style.setProperty('--card-ry', (x * 8).toFixed(2) + 'deg')
-    node.style.setProperty('--card-tx', (x * 5).toFixed(2) + 'px')
-    node.style.setProperty('--card-ty', (y * 4).toFixed(2) + 'px')
-  }
-
-  function resetServiceCard(event) {
-    const node = event.currentTarget
-    node.style.setProperty('--card-rx', '0deg')
-    node.style.setProperty('--card-ry', '0deg')
-    node.style.setProperty('--card-tx', '0px')
-    node.style.setProperty('--card-ty', '0px')
-  }
-
   const media = homepageMedia.category_images || {}
   const heroImage = homepageMedia.hero_image_url || HERO_IMAGE
   const serviceMedia = {
@@ -404,107 +409,36 @@ function Home() {
 
     <main>
       <section
-        className="hc-premium-hero"
+        className="hc-art-hero"
         id="home"
         onPointerMove={movePremiumHero}
         onPointerLeave={resetPremiumHero}
+        aria-label="ProPulse home solutions"
       >
-        <div className="hc-premium-scene">
-          <img className="hc-premium-house" src={heroImage} alt="Modern premium family home" fetchPriority="high" />
-          <div className="hc-premium-scene-wash" />
-          <div className="hc-premium-scene-glow" />
+        <div className={'hc-art-stage ' + (generatedHeroUrl ? 'is-ready' : 'is-loading')}>
+          {generatedHeroUrl
+            ? <img className="hc-art-image" src={generatedHeroUrl} alt="ProPulse construction, interior design and real estate home solutions" fetchPriority="high" />
+            : <div className="hc-art-placeholder" aria-hidden="true"><span>ProPulse</span></div>}
 
-          <svg className="hc-premium-orbit" viewBox="0 0 900 520" preserveAspectRatio="none" aria-hidden="true">
-            <defs>
-              <linearGradient id="hcOrbitGradient" x1="0" y1="0" x2="1" y2="1">
-                <stop offset="0%" stopColor="#ff8a58" stopOpacity=".15" />
-                <stop offset="35%" stopColor="#ff5a1f" stopOpacity=".95" />
-                <stop offset="70%" stopColor="#ff8a58" stopOpacity=".9" />
-                <stop offset="100%" stopColor="#ff5a1f" stopOpacity=".12" />
-              </linearGradient>
-              <filter id="hcOrbitGlow">
-                <feGaussianBlur stdDeviation="4" result="blur" />
-                <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-              </filter>
-            </defs>
-            <path d="M90 320 C230 155, 370 220, 470 135 S690 35, 810 118 C895 178, 838 292, 740 330 S660 456, 522 422" />
-          </svg>
+          <div className="hc-art-depth depth-one" aria-hidden="true" />
+          <div className="hc-art-depth depth-two" aria-hidden="true" />
+          <div className="hc-art-sheen" aria-hidden="true" />
+          <div className="hc-art-vignette" aria-hidden="true" />
 
-          <span className="hc-orbit-node node-a"><Icon name="sofa" size={20}/></span>
-          <span className="hc-orbit-node node-b"><Icon name="home" size={20}/></span>
-          <span className="hc-orbit-node node-c"><Icon name="building" size={20}/></span>
+          <span className="hc-art-pulse pulse-a" aria-hidden="true" />
+          <span className="hc-art-pulse pulse-b" aria-hidden="true" />
+          <span className="hc-art-pulse pulse-c" aria-hidden="true" />
 
-          <Link className="hc-float-card float-interior" to="/quote#interiors">
-            <span><Icon name="sofa" size={22}/></span>
-            <div><b>Interior Design</b><small>Spaces that feel like home</small></div>
-            <i><Icon name="arrow" size={16}/></i>
-          </Link>
-
-          <Link className="hc-float-card float-construction" to="/quote#construction">
-            <span><Icon name="home" size={22}/></span>
-            <div><b>Construction</b><small>From foundation to finish</small></div>
-            <i><Icon name="arrow" size={16}/></i>
-          </Link>
-
-          <Link className="hc-float-card float-property" to="/quote#property">
-            <span><Icon name="building" size={22}/></span>
-            <div><b>Real Estate</b><small>Buy, Rent, Sell, Invest</small></div>
-            <i><Icon name="arrow" size={16}/></i>
-          </Link>
-
-          <div className="hc-premium-brand-plate">
-            <Icon name="home" size={28}/><b>ProPulse</b>
-          </div>
+          <Link className="hc-art-hotspot hotspot-quote" to="/quote#construction" aria-label="Get a free construction quote" />
+          <Link className="hc-art-hotspot hotspot-packages" to="/packages" aria-label="View construction and interior packages" />
+          <Link className="hc-art-hotspot hotspot-construction" to="/quote#construction" aria-label="Construction quote" />
+          <Link className="hc-art-hotspot hotspot-interior" to="/quote#interiors" aria-label="Interior design requirement" />
+          <Link className="hc-art-hotspot hotspot-property" to="/quote#property" aria-label="Real estate requirement" />
         </div>
 
-        <div className="hc-premium-copy">
-          <div className="hc-premium-kicker"><i/><span>YOUR HOME. OUR EXPERTISE.</span></div>
-          <h1>Build. Design.<br/>Find. <em>All in One Place.</em></h1>
-          <p>Construction, Interiors and Real Estate solutions for modern homeowners.</p>
-
-          <div className="hc-premium-actions">
-            <Link className="hc-premium-primary" to="/quote#construction">Get Free Quote <Icon name="arrow" size={17}/></Link>
-            <Link className="hc-premium-secondary" to="/packages">View Packages</Link>
-          </div>
-
-          <div className="hc-premium-trust">
-            <span><Icon name="shield" size={16}/> Trusted Businesses</span>
-            <span><Icon name="clipboard" size={16}/> Transparent Process</span>
-            <span><Icon name="support" size={16}/> End-to-End Support</span>
-            <span><Icon name="heart" size={16}/> Homeowner Focused</span>
-          </div>
-        </div>
-
-        <div className="hc-premium-services">
-          {SERVICES.map((service,index) => {
-            const route = service.key === 'build' ? '/quote#construction' : service.key === 'design' ? '/quote#interiors' : '/quote#property'
-            const title = service.key === 'build' ? 'Construction' : service.title
-            const description = service.key === 'build'
-              ? 'Build your dream home with expert support.'
-              : service.key === 'design'
-                ? 'Beautiful interiors for every lifestyle.'
-                : 'Buy, Rent, Sell or Invest with confidence.'
-
-            return <Link
-              to={route}
-              className={'hc-premium-service-card service-'+service.key}
-              key={service.key}
-              style={{'--hc-delay':(index*95)+'ms'}}
-              onPointerMove={tiltServiceCard}
-              onPointerLeave={resetServiceCard}
-            >
-              <div className="hc-premium-service-media">
-                <img src={serviceMedia[service.key] || service.image} alt={title} loading={index===0?'eager':'lazy'} />
-                <span><Icon name={service.icon} size={21}/></span>
-                <div className="hc-service-light" />
-              </div>
-              <div className="hc-premium-service-copy">
-                <h3>{title}</h3>
-                <p>{description}</p>
-                <b>Get Quote <Icon name="arrow" size={14}/></b>
-              </div>
-            </Link>
-          })}
+        <div className="hc-art-mobile-actions">
+          <Link to="/quote#construction">Get Free Quote <Icon name="arrow" size={16}/></Link>
+          <Link to="/packages">View Packages</Link>
         </div>
       </section>
 
