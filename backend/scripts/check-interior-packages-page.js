@@ -14,7 +14,7 @@ const home=read('../frontend/src/pages/Home.jsx');
 
 assert.match(app,/path="\/packages"/);
 assert(app.includes('path="/interior-cost-estimator" element={<Navigate to="/packages#interior" replace/>}'));
-assert(app.includes('path="/construction-cost-estimator" element={<Navigate to="/build" replace/>}'));
+assert(app.includes('path="/construction-cost-estimator" element={<Navigate to="/solutions#construction" replace/>}'));
 
 assert.match(packages,/Construction Packages/);
 assert.match(packages,/Interior Packages/);
