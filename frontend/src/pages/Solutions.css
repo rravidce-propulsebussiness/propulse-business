@@ -49,6 +49,9 @@
 .sol-flow .rq-premium-header,
 .sol-flow .irx-header,
 .sol-flow .rex-header,
+.sol-flow .rq-premium-hero,
+.sol-flow .irx-hero,
+.sol-flow .rex-hero,
 .sol-flow .irx-footer,
 .sol-flow .rex-footer{display:none!important}
 .sol-flow .rq-page,.sol-flow .rq-premium-page,.sol-flow .irx-page,.sol-flow .rex-page{min-height:auto}
@@ -82,3 +85,9 @@
   .sol-active-summary img{height:150px}
   .sol-active-summary>div{padding:18px}
 }
+
+/* Unified page owns the hero; nested flow heroes stay hidden */
+.sol-flow{margin-top:8px}
+.sol-flow .rq-flow-nav,
+.sol-flow .irx-steps,
+.sol-flow .rex-steps{margin-top:0!important}
