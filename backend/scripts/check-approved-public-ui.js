@@ -16,6 +16,7 @@ const packages=read('../frontend/src/pages/Packages.jsx');
 const publicHeader=read('../frontend/src/styles/PublicMarketingHeader.css');
 const websiteFaq=read('../frontend/src/components/WebsiteFaqSection.jsx');
 const websiteFaqCss=read('../frontend/src/components/WebsiteFaqSection.css');
+const portalContact=read('../frontend/src/pages/PortalContact.jsx');
 const contact=read('../frontend/src/pages/Contact.jsx');
 const projects=read('../frontend/src/pages/Projects.jsx');
 const about=read('../frontend/src/pages/About.jsx');
@@ -163,5 +164,8 @@ assert.match(contact,/portalAudience==='lead_partners'\|\|portalAudience==='user
 assert.match(websiteFaq,/className="website-faq-more" to="\/contact"/);
 assert.match(websiteFaq,/Contact ProPulse/);
 assert.doesNotMatch(websiteFaq,/\/contact\?audience=users/);
+
+assert.match(portalContact,/users:\{label:'Professional',title:'Professional Support'/);
+assert.match(portalContact,/Professionals<\/span><b>\/\<\/b><strong>Contact<\/strong>/);
 
 console.log('Approved public UI mockup checks passed.');
