@@ -77,7 +77,7 @@ export default function Solutions(){
       </nav>
       <div className="public-header-actions">
         <Link className="quote-header-cta" to={'/quote'+location.search+'#'+activeKey}>Get Free Quote <Icon name="arrow" size={15}/></Link>
-        <Link className="public-professional-btn" to="/contact?audience=users">For Professionals</Link>
+        <Link className="public-professional-btn" to="/professionals">For Professionals</Link>
       </div>
     </header>
 
