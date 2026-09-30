@@ -436,17 +436,15 @@ function Home() {
               </div>
             </article>
 
-            <button className="hc-expert-float hc-consultation-card" type="button" onClick={() => openConsult()}>
-              <span className="hc-expert-card-icon"><Icon name="consult" size={22}/></span>
+            <article className="hc-expert-float hc-consultation-card" aria-label="Free consultation available">
+              <span className="hc-expert-card-icon"><Icon name="consult" size={20}/></span>
               <span><b>Free Consultation</b><small>Tell us your requirement</small></span>
-              <i className="hc-card-arrow"><Icon name="arrow" size={15}/></i>
-            </button>
+            </article>
 
-            <Link className="hc-expert-float hc-warranty-card" to="/packages">
-              <span className="hc-expert-card-icon"><Icon name="shield" size={22}/></span>
+            <article className="hc-expert-float hc-warranty-card" aria-label="Warranty-backed options">
+              <span className="hc-expert-card-icon"><Icon name="shield" size={20}/></span>
               <span><b>Warranty-backed Options</b><small>Review warranty terms before you choose</small></span>
-              <i className="hc-card-arrow"><Icon name="arrow" size={15}/></i>
-            </Link>
+            </article>
 
             <div className="hc-expert-mini mini-living" aria-hidden="true">
               <img src="https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=700&q=88" alt="" />
