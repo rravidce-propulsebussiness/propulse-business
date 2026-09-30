@@ -286,3 +286,15 @@ button,input,select{font:inherit}
   .hc-popup-head h3{font-size:18px}
   .hc-popup-head p,.hc-consult-popup label>span,.hc-consult-popup select,.hc-popup-input,.hc-popup-phone i,.hc-popup-phone input,.hc-popup-unit input,.hc-popup-textarea{font-size:14px}
 }
+
+/* Basic lead capture success state */
+.hc-popup-success{display:grid;gap:14px;text-align:center;padding:8px 2px 2px}
+.hc-popup-success-icon{width:58px;height:58px;margin:0 auto;display:grid;place-items:center;border-radius:50%;background:#eaf8f1;color:#14744a}
+.hc-popup-success h4{margin:0;color:#0a2d50;font-size:20px;line-height:1.2}
+.hc-popup-success>p{margin:0;color:#5f7284;font-size:13px;line-height:1.55}
+.hc-popup-success>p b{color:#0a2d50}
+.hc-popup-quote-note{display:grid;gap:5px;padding:12px 13px;border:1px solid #f3d8c7;border-radius:10px;background:#fff8f4;text-align:left}
+.hc-popup-quote-note b{color:#9d461e;font-size:13px}
+.hc-popup-quote-note span{color:#6f7f8d;font-size:12px;line-height:1.45}
+.hc-popup-done{height:44px;border:1px solid #d8e1e8;border-radius:10px;background:#f6f9fb;color:#29475f;font-size:13px;font-weight:800;cursor:pointer}
+.hc-popup-done:hover{background:#eef3f7}
