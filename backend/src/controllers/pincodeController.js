@@ -51,6 +51,20 @@ async function detect(req, res) {
   }
 }
 
+async function locate(req, res) {
+  try {
+    const pincode = String(req.params.pincode || '').trim();
+    if (!/^\d{6}$/.test(pincode)) return res.status(400).json({ error: 'Pincode must be 6 digits' });
+    return res.json(await detectionService.locatePincode(pincode));
+  } catch (error) {
+    if (['INVALID_PINCODE', 'PIN_NOT_FOUND', 'PIN_LOOKUP_TIMEOUT'].includes(error.code)) {
+      return sendError(res, 400, error, 'Unable to detect PIN location', { code: error.code });
+    }
+    console.error('Locate pincode failed:', error.message);
+    return sendError(res, 502, error, 'Unable to detect PIN location', { code: error.code });
+  }
+}
+
 async function listUnmapped(req, res) {
   try {
     return res.json(await detectionService.listUnmappedPins({ limit: req.query.limit }));
@@ -70,4 +84,4 @@ async function mapToCity(req, res) {
   }
 }
 
-module.exports = { search, resolve, getOne, detect, listUnmapped, mapToCity };
+module.exports = { search, resolve, getOne, locate, detect, listUnmapped, mapToCity };
