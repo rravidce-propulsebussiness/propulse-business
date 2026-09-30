@@ -700,7 +700,7 @@ function Home() {
         {consultForm.flowKey === 'design' && <div className="hc-popup-detail-grid">
           <label><span>Property Type</span><select value={consultForm.propertyType} onChange={event => { setConsultForm({ ...consultForm, propertyType: event.target.value, bhk: '' }); setConsultError('') }}><option value="">Select property</option><option value="apartment">Apartment</option><option value="villa">Villa</option><option value="independent_house">Independent house</option><option value="office">Office</option><option value="commercial_space">Commercial space</option></select></label>
           <label><span>BHK <small>(Optional)</small></span><select value={consultForm.bhk} onChange={event => { setConsultForm({ ...consultForm, bhk: event.target.value }); setConsultError('') }}><option value="">Select BHK</option><option value="1bhk">1 BHK</option><option value="2bhk">2 BHK</option><option value="3bhk">3 BHK</option><option value="4bhk">4 BHK</option><option value="5plus">5+ BHK</option></select></label>
-        </div>
+        </div>}
 
         {consultForm.flowKey === 'property' && <div className="hc-popup-detail-grid">
           <label><span>I Want To</span><select value={consultForm.propertyIntent} onChange={event => { setConsultForm({ ...consultForm, propertyIntent: event.target.value }); setConsultError('') }}><option value="">Select intent</option><option value="buy">Buy</option><option value="rent">Rent</option><option value="sell">Sell</option><option value="invest">Invest</option></select></label>
