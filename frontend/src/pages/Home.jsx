@@ -357,8 +357,9 @@ function Home() {
         <Link to="/contact">Contact</Link>
       </nav>
 
-      <div className="hc-header-actions">
+      <div className="hc-header-actions public-header-actions">
         <Link className="hc-consult-btn hc-quote-btn" to="/quote#construction">Get Free Quote <Icon name="arrow" size={15} /></Link>
+        <Link className="public-professional-btn" to="/login">Professionals</Link>
         <button className="hc-menu" aria-label="Toggle navigation" onClick={() => setMenuOpen(value => !value)}>☰</button>
       </div>
     </header>
