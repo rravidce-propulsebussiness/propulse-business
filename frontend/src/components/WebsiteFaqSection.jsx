@@ -96,7 +96,7 @@ export default function WebsiteFaqSection({variant='home',audience='website'}){
         <h2>Questions, <em>clearly answered.</em></h2>
         <p>Get clear answers about free consultation, project requirements, cost estimators, contact sharing and what happens next.</p>
       </div>
-      <Link className="website-faq-more" to="/contact?audience=users"><span className="website-faq-more-icon">☵</span> Need more help? <b>→</b></Link>
+      <Link className="website-faq-more" to="/contact"><span className="website-faq-more-icon">☵</span> Need more help? <b>→</b></Link>
     </div>
     <div className="website-faq-home-layout">
       {faqList}
@@ -105,7 +105,7 @@ export default function WebsiteFaqSection({variant='home',audience='website'}){
           <span className="website-faq-kicker">SUPPORT <i/></span>
           <h3>Talk to <em>ProPulse.</em></h3>
           <p>Have a construction, interior, property or consultation question? Start a conversation with the ProPulse team. We’re here to help.</p>
-          <Link to="/contact?audience=users">Contact ProPulse <span>→</span></Link>
+          <Link to="/contact">Contact ProPulse <span>→</span></Link>
         </div>
         <div className="website-faq-support-photo" aria-hidden="true">
           <img src="https://images.unsplash.com/photo-1600585152915-d208bec867a1?auto=format&fit=crop&w=900&q=88" alt="" loading="lazy"/>
@@ -143,7 +143,7 @@ export default function WebsiteFaqSection({variant='home',audience='website'}){
         {faqList}
       </div>
       <aside className="website-faq-side">
-        <div className="website-faq-side-card primary"><span>NEED MORE HELP?</span><h3>Talk to our team.</h3><p>Contact Propulse for account, marketplace or service-related support.</p><Link to="/contact?audience=users">Contact Propulse <b>→</b></Link></div>
+        <div className="website-faq-side-card primary"><span>NEED MORE HELP?</span><h3>Talk to our team.</h3><p>Contact Propulse for account, marketplace or service-related support.</p><Link to="/contact">Contact Propulse <b>→</b></Link></div>
         <div className="website-faq-side-card"><span>QUICK ACCESS</span><Link to="/leads">Explore Leads <b>↗</b></Link><Link to="/purchased-leads">Purchased Leads <b>↗</b></Link><Link to="/wallet">Wallet <b>↗</b></Link></div>
       </aside>
     </section>
