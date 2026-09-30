@@ -298,6 +298,31 @@ button,input,select{font:inherit}
   white-space:nowrap!important;
   border:0!important;
 }
+.hc-how-premium-heading{
+  position:relative;
+  z-index:2;
+  width:min(100%,1580px);
+  margin:0 auto 28px;
+  text-align:center;
+}
+.hc-how-premium-heading h2{
+  margin:0;
+  color:#0a2d50;
+  font-size:44px;
+  line-height:1.05;
+  letter-spacing:-.045em;
+  font-weight:950;
+}
+.hc-how-premium-heading span{
+  display:block;
+  width:58px;
+  height:4px;
+  margin:14px auto 0;
+  border-radius:999px;
+  background:linear-gradient(90deg,#ff5a1f,#ff8a52);
+  box-shadow:0 0 16px rgba(255,90,31,.22);
+}
+
 .hc-how-premium{
   position:relative;
   overflow:hidden;
@@ -484,6 +509,8 @@ button,input,select{font:inherit}
   .hc-how-premium-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}
 }
 @media(max-width:620px){
+  .hc-how-premium-heading{margin-bottom:22px}
+  .hc-how-premium-heading h2{font-size:36px}
   .hc-how-premium{padding:38px 14px 42px}
   .hc-how-premium-grid{grid-template-columns:1fr;gap:20px}
   .hc-how-photo-wrap{height:190px}
