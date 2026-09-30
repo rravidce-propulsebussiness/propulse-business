@@ -233,7 +233,7 @@ button,input,select{font:inherit}
   letter-spacing:-.015em;
 }
 .hc-why-grid small{
-  margin-top:7px;
+  margin-top:6px;
   color:#c7d1d9;
   font-size:12px;
   line-height:1.5;
@@ -432,7 +432,7 @@ button,input,select{font:inherit}
   display:grid;
   place-items:center;
   border:6px solid rgba(255,255,255,.96);
-  border-radius:20px;
+  border-radius:18px;
   background:linear-gradient(145deg,#fff,#fff8f3);
   color:#ff5a1f;
   box-shadow:
@@ -460,7 +460,7 @@ button,input,select{font:inherit}
   max-width:285px;
   margin:8px auto 0;
   color:#62788d;
-  font-size:12.5px;
+  font-size:11.5px;
   line-height:1.6;
 }
 .hc-how-connector{
@@ -1312,7 +1312,7 @@ button,input,select{font:inherit}
 
 .hc-expert-visual{
   position:relative;
-  min-height:560px;
+  min-height:520px;
   overflow:hidden;
   border-radius:26px;
   background:#0c2a44;
@@ -1374,15 +1374,15 @@ button,input,select{font:inherit}
 .hc-expert-float{
   position:absolute;
   z-index:7;
-  width:35%;
-  min-height:92px;
+  width:31%;
+  min-height:78px;
   display:grid;
-  grid-template-columns:44px minmax(0,1fr);
+  grid-template-columns:38px minmax(0,1fr);
   align-items:center;
-  gap:10px;
-  padding:12px 13px;
+  gap:8px;
+  padding:10px 11px;
   border:1px solid rgba(255,255,255,.72);
-  border-radius:16px;
+  border-radius:14px;
   background:rgba(255,255,255,.95);
   color:#0b3152;
   box-shadow:
@@ -1394,26 +1394,26 @@ button,input,select{font:inherit}
 }
 .hc-professionals-card{
   left:3%;
-  top:3.5%;
+  top:3%;
 }
 .hc-materials-card{
   right:3%;
-  top:3.5%;
+  top:3%;
   animation-delay:-1.8s;
 }
 .hc-consultation-card{
   left:3%;
-  bottom:3.5%;
+  bottom:3%;
   animation-delay:-3s;
 }
 .hc-warranty-card{
   right:3%;
-  bottom:3.5%;
+  bottom:3%;
   animation-delay:-4s;
 }
 .hc-expert-card-icon{
-  width:44px;
-  height:44px;
+  width:38px;
+  height:38px;
   display:grid;
   place-items:center;
   border-radius:50%;
@@ -1433,7 +1433,7 @@ button,input,select{font:inherit}
   display:block;
   margin-top:3px;
   color:#647b8f;
-  font-size:9.4px;
+  font-size:8.6px;
   line-height:1.35;
 }
 .hc-expert-avatars{
@@ -1443,8 +1443,8 @@ button,input,select{font:inherit}
 }
 .hc-expert-avatars img,
 .hc-expert-avatars i{
-  width:29px;
-  height:29px;
+  width:25px;
+  height:25px;
   margin-left:-5px;
   border:2px solid #fff;
   border-radius:50%;
@@ -1469,12 +1469,12 @@ button,input,select{font:inherit}
 }
 .hc-material-chips i{
   min-width:0;
-  padding:4px 3px;
+  padding:3px 2px;
   border:1px solid #f1e3d8;
   border-radius:5px;
   background:#fff8f3;
   color:#8a4c2d;
-  font-size:7.5px;
+  font-size:7px;
   line-height:1;
   text-align:center;
   white-space:nowrap;
@@ -1493,16 +1493,16 @@ button,input,select{font:inherit}
 }
 .hc-expert-mini img{width:100%;height:100%;display:block;object-fit:cover}
 .mini-living{
-  left:7%;
-  bottom:19%;
-  width:31%;
-  height:28%;
-}
-.mini-kitchen{
-  right:7%;
+  left:8%;
   bottom:18%;
   width:28%;
-  height:27%;
+  height:25%;
+}
+.mini-kitchen{
+  right:8%;
+  bottom:18%;
+  width:25%;
+  height:24%;
 }
 @keyframes hcExpertLine{to{stroke-dashoffset:-240}}
 @keyframes hcExpertNode{
@@ -1516,10 +1516,10 @@ button,input,select{font:inherit}
 @media(max-width:1280px){
   .hc-expert-hero-inner{grid-template-columns:minmax(390px,.86fr) minmax(590px,1.14fr)}
   .hc-expert-copy h1{font-size:54px}
-  .hc-expert-visual{min-height:540px}
-  .hc-expert-float{width:36%;min-height:88px}
-  .hc-expert-card-copy b,.hc-consultation-card b,.hc-warranty-card b{font-size:12px}
-  .hc-expert-card-copy small,.hc-consultation-card small,.hc-warranty-card small{font-size:9px}
+  .hc-expert-visual{min-height:500px}
+  .hc-expert-float{width:32%;min-height:74px}
+  .hc-expert-card-copy b,.hc-consultation-card b,.hc-warranty-card b{font-size:11px}
+  .hc-expert-card-copy small,.hc-consultation-card small,.hc-warranty-card small{font-size:8.5px}
 }
 @media(max-width:1040px){
   .hc-expert-hero{padding:18px 16px 30px}
