@@ -18,10 +18,12 @@ assert.match(app,/path="\/build" element={<LegacySolutionRedirect hash="construc
 assert.match(app,/path="\/design" element={<LegacySolutionRedirect hash="interiors"\/>}/);
 assert.match(app,/path="\/property" element={<LegacySolutionRedirect hash="property"\/>}/);
 
-assert.match(solutions,/ONE HOMEOWNER WORKSPACE/);
+assert.match(solutions,/CHOOSE A SERVICE/);
 assert.match(solutions,/Construction Packages|Construction/);
 assert.match(solutions,/Interiors/);
 assert.match(solutions,/Real Estate/);
+assert.match(solutions,/headerCta/);
+assert.match(solutions,/Contact Us/);
 assert.match(solutions,/RequirementWizard flowKey={active\.flowKey}/);
 assert.match(solutions,/location\.search/);
 assert.match(css,/\.sol-switch/);
