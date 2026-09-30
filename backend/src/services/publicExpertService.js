@@ -87,7 +87,7 @@ async function listPublicExperts({search='',industryId='',cityId='',verified='',
     `SELECT COUNT(*)::int AS total
        FROM users u
        JOIN business_profiles bp ON bp.user_id=u.id
-       $${whereClause}`,
+       ${whereClause}`,
     params
   )).rows[0]?.total||0;
 
@@ -135,7 +135,7 @@ async function listPublicExperts({search='',industryId='',cityId='',verified='',
        ),'[]'::json) AS locations
      FROM users u
      JOIN business_profiles bp ON bp.user_id=u.id
-     $${whereClause}
+     ${whereClause}
      ORDER BY
        EXISTS(SELECT 1 FROM company_proof_documents cpdo WHERE cpdo.user_id=u.id AND cpdo.status='verified') DESC,
        u.created_at DESC,
