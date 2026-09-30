@@ -13,6 +13,7 @@ const quoteCss=read('../frontend/src/pages/Solutions.css');
 const wizard=read('../frontend/src/pages/RequirementWizard.jsx');
 const packages=read('../frontend/src/pages/Packages.jsx');
 const publicHeader=read('../frontend/src/styles/PublicMarketingHeader.css');
+const contact=read('../frontend/src/pages/Contact.jsx');
 
 assert.match(app,/path="\/quote" element={<Solutions\/>}/);
 assert.match(app,/path="\/solutions" element={<LegacySolutionRedirect\/>}/);
@@ -49,5 +50,10 @@ assert.match(wizard,/flowKey === 'property'/);
 assert.match(wizard,/RealEstateRequirementExact/);
 assert.match(packages,/\/quote\?package=/);
 assert.match(publicHeader,/Approved homepage \/ quote mockup/);
+assert.match(contact,/PublicContact/);
+assert.match(contact,/audience=website/);
+assert.match(contact,/Reach the ProPulse Team/);
+assert.match(contact,/to="\/contact"/);
+assert.doesNotMatch(contact,/Navigate to="\/#contact"/);
 
 console.log('Approved public UI mockup checks passed.');
