@@ -364,7 +364,7 @@ function Home() {
 
       <div className="hc-header-actions public-header-actions">
         <Link className="hc-consult-btn hc-quote-btn" to="/quote#construction">Get Free Quote <Icon name="arrow" size={15} /></Link>
-        <Link className="public-professional-btn" to="/contact?audience=users">For Professionals</Link>
+        <Link className="public-professional-btn" to="/professionals">For Professionals</Link>
         <button className="hc-menu" aria-label="Toggle navigation" onClick={() => setMenuOpen(value => !value)}>☰</button>
       </div>
     </header>
