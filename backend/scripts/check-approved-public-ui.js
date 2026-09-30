@@ -148,4 +148,15 @@ assert.match(websiteFaqCss,/\.website-faq-support-photo/);
 assert.match(websiteFaqCss,/\.website-faq-item\.open/);
 assert.match(websiteFaqCss,/\.website-faq-more/);
 
+assert.match(projects,/className="pj-detail-modal"/);
+assert.match(projects,/View project details/);
+assert.match(projects,/PROJECT OVERVIEW/);
+assert.match(projects,/DESIGN HIGHLIGHTS/);
+assert.match(projects,/PROJECT SCOPE/);
+assert.match(projects,/Concept, not a live quotation/);
+assert.match(projects,/Browse Before You Decide/);
+assert.doesNotMatch(projects,/function startSimilar/);
+assert.doesNotMatch(projects,/navigate\(route\)/);
+assert.match(projects,/openProject\(project\)/);
+
 console.log('Approved public UI mockup checks passed.');
