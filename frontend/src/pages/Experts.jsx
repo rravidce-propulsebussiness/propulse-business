@@ -157,7 +157,7 @@ export default function Experts(){
             </div>
 
             <div className="expert-industries">{industriesForExpert.slice(0,3).map(name=><span key={name}>{name}</span>)}{industriesForExpert.length===0&&<span>Professional services</span>}</div>
-            <p className="expert-description">{expert.business_details||'Registered ProPulse business profile.'}</p>
+            <p className="expert-description">Registered ProPulse business offering the services shown on this profile.</p>
 
             <div className="expert-meta">
               <div><Icon name="briefcase" size={15}/><span><b>{serviceNames.length||0}</b> listed service{serviceNames.length===1?'':'s'}</span></div>
@@ -188,7 +188,7 @@ export default function Experts(){
         <button className="expert-modal-close" type="button" onClick={()=>setSelected(null)}>×</button>
         <div className="expert-modal-head">
           <div className="expert-modal-avatar">{initials(selected.business_name)}</div>
-          <div><span>{selected.is_verified?'VERIFIED BUSINESS':'REGISTERED BUSINESS'}</span><h2>{selected.business_name}</h2><p>{selected.business_details||'Registered ProPulse business profile.'}</p></div>
+          <div><span>{selected.is_verified?'VERIFIED BUSINESS':'REGISTERED BUSINESS'}</span><h2>{selected.business_name}</h2><p>Review this business's listed services and service areas before starting your requirement.</p></div>
         </div>
         <div className="expert-modal-columns">
           <div><span>SERVICES</span><h3>What they offer</h3><div className="expert-detail-list">{unique((selected.services||[]).map(item=>item.subserviceName||item.serviceName)).map(name=><b key={name}>{name}</b>)}</div></div>
