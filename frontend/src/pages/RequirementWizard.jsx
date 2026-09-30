@@ -389,6 +389,28 @@ export default function RequirementWizard({ flowKey }) {
     />
   }
 
+  if (flowKey === 'property') {
+    return <RealEstateRequirementExact
+      flow={flow}
+      questions={questions}
+      answers={answers}
+      setAnswer={setAnswer}
+      cities={cities}
+      cityId={cityId}
+      setCity={setCity}
+      cityPincodes={cityPincodes}
+      locationQuestion={locationQuestion}
+      contact={contact}
+      setContact={setContact}
+      consent={consent}
+      setConsent={setConsent}
+      state={state}
+      submit={submit}
+      contactData={contactData}
+      completion={completion}
+    />
+  }
+
   const summaryRows = [
     ['Location', selectedCity?.name || '—'],
     ['PIN Code', locationQuestion ? fieldLabel(locationQuestion, answers) : '—'],
