@@ -17,6 +17,8 @@ const publicHeader=read('../frontend/src/styles/PublicMarketingHeader.css');
 const websiteFaq=read('../frontend/src/components/WebsiteFaqSection.jsx');
 const websiteFaqCss=read('../frontend/src/components/WebsiteFaqSection.css');
 const portalContact=read('../frontend/src/pages/PortalContact.jsx');
+const professionalHome=read('../frontend/src/pages/ProfessionalHome.jsx');
+const professionalHomeCss=read('../frontend/src/pages/ProfessionalHome.css');
 const contact=read('../frontend/src/pages/Contact.jsx');
 const projects=read('../frontend/src/pages/Projects.jsx');
 const about=read('../frontend/src/pages/About.jsx');
@@ -76,8 +78,8 @@ assert.match(contact,/to="\/contact"/);
 assert.doesNotMatch(contact,/Navigate to="\/#contact"/);
 
 for(const source of [home,quote,packages,projects,about,howItWorks,contact]){
-  assert.match(source,/For Professionals|Professional Support/);
-  assert.match(source,/to="\/contact\?audience=users"/);
+  assert.match(source,/For Professionals/);
+  assert.match(source,/to="\/professionals"/);
 }
 assert.match(publicHeader,/\.public-professional-btn/);
 assert.match(publicHeader,/Quote \+ professional public header actions/);
@@ -161,25 +163,28 @@ assert.doesNotMatch(projects,/navigate\(route\)/);
 assert.match(projects,/openProject\(project\)/);
 
 assert.match(contact,/portalAudience==='lead_partners'/);
-assert.match(contact,/portalAudience==='users'\) return <ProfessionalContact\/>/);
-assert.match(contact,/PROPULSE FOR PROFESSIONALS/);
-assert.match(contact,/Professional Support/);
-assert.match(contact,/Grow With Better <em>Project Opportunities\.<\/em>/);
-assert.match(contact,/Lead Support/);
-assert.match(contact,/Business verification/);
-assert.match(contact,/Professional Login/);
+assert.match(contact,/portalAudience==='users'\) return <Navigate to="\/professionals" replace\/>/);
+assert.doesNotMatch(contact,/function ProfessionalContact/);
 assert.match(websiteFaq,/className="website-faq-more" to="\/contact"/);
 assert.match(websiteFaq,/Contact ProPulse/);
 assert.doesNotMatch(websiteFaq,/\/contact\?audience=users/);
 
-assert.match(portalContact,/users:\{label:'Professional',title:'Professional Support'/);
-assert.match(portalContact,/Professionals<\/span><b>\/\<\/b><strong>Contact<\/strong>/);
-
-assert.match(contact,/publicRequest\('\/contact\?audience=users'\)/);
-assert.match(contact,/className="professional-contact-hero"/);
-assert.match(contact,/className="professional-support-strip"/);
+assert.match(professionalHome,/PROPULSE FOR PROFESSIONALS/);
+assert.match(professionalHome,/Turn Customer Requirements Into <em>Business Opportunities\.<\/em>/);
+assert.match(professionalHome,/Browse Live Leads/);
+assert.match(professionalHome,/Create Business Account/);
+assert.match(professionalHome,/Sign Up Free/);
+assert.match(professionalHome,/listLeads\(\{status:'available',page:1,limit:4\}\)/);
+assert.match(professionalHome,/Lead access|Flexible Lead Access/);
+assert.match(professionalHome,/Business verification/);
+assert.match(professionalHome,/\/login/);
+assert.match(professionalHome,/\/signup/);
+assert.match(professionalHome,/\/leads/);
+assert.match(professionalHomeCss,/\.pro-hero-market/);
+assert.match(professionalHomeCss,/\.pro-lead-card/);
+assert.match(professionalHomeCss,/\.pro-industry-grid/);
+assert.match(professionalHomeCss,/\.pro-how-grid/);
 
 assert.match(home,/For Professionals/);
-assert.match(contact,/Professional Support/);
 
 console.log('Approved public UI mockup checks passed.');
