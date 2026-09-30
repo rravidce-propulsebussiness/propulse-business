@@ -22,27 +22,33 @@ assert.match(app,/path="\/quote" element={<Solutions\/>}/);
 assert.match(app,/path="\/solutions" element={<LegacySolutionRedirect\/>}/);
 assert.match(app,/targetHash=hash\?'#'\+hash/);
 
-assert.match(home,/Build\. Design\./);
-assert.match(home,/All in One Place\./);
-assert.match(home,/Get Free Quote/);
-assert.match(home,/View Packages/);
-assert.match(home,/Trusted Businesses/);
-assert.match(home,/Transparent Process/);
-assert.match(home,/hc-premium-service-card/);
-assert.match(home,/hc-float-card/);
-assert.match(home,/hc-premium-orbit/);
+assert.match(home,/generatedHeroUrl/);
+assert.match(home,/propulse-home-hero-3d/);
+assert.match(home,/hc-art-stage/);
+assert.match(home,/hotspot-quote/);
+assert.match(home,/hotspot-packages/);
+assert.match(home,/hotspot-construction/);
+assert.match(home,/hotspot-interior/);
+assert.match(home,/hotspot-property/);
 assert.match(home,/movePremiumHero/);
-assert.match(home,/tiltServiceCard/);
 assert.match(home,/\/quote#construction/);
 assert.match(home,/\/quote#interiors/);
 assert.match(home,/\/quote#property/);
 
-assert.match(homeCss,/\.hc-premium-hero/);
-assert.match(homeCss,/hcHeroCinema/);
-assert.match(homeCss,/hcOrbitRun/);
-assert.match(homeCss,/hcFloatCard/);
-assert.match(homeCss,/hcServiceRise/);
-assert.match(homeCss,/perspective:1600px/);
+assert.match(homeCss,/\.hc-art-hero/);
+assert.match(homeCss,/\.hc-art-stage/);
+assert.match(homeCss,/hcArtCamera/);
+assert.match(homeCss,/hcArtSheen/);
+assert.match(homeCss,/hcArtPulse/);
+assert.match(homeCss,/perspective:1800px/);
+
+const heroBase64=Array.from({length:11},(_,index)=>
+  read('../frontend/public/media/propulse-home-hero-3d/'+String(index).padStart(2,'0')+'.b64').trim()
+).join('');
+const heroBytes=Buffer.from(heroBase64,'base64');
+assert(heroBytes.length>30000,'Generated homepage artwork must decode to a real image');
+assert.strictEqual(heroBytes.subarray(0,4).toString('ascii'),'RIFF','Hero must be RIFF/WebP');
+assert.strictEqual(heroBytes.subarray(8,12).toString('ascii'),'WEBP','Hero must be WebP');
 
 assert.match(quote,/What do you need help with\?/);
 assert.match(quote,/quote-service-grid/);
