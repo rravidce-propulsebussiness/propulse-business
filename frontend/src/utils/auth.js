@@ -12,7 +12,7 @@ export function saveSession({ user }) {
   currentUser = user || null
   sessionKnown = true
   // The authenticated user lives in memory only. The HttpOnly cookie is the
-  // durable session and /auth/me repopulates this state after a reload.
+  // durable session and /auth/session repopulates this state after a reload without treating anonymous visitors as an error.
 }
 
 export async function clearSession({ revoke = true } = {}) {
