@@ -475,7 +475,7 @@ function Home() {
             <div className="hc-how-photo-wrap">
               <img
                 src="https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&w=1200&q=90"
-                alt="Homeowners discussing their requirement"
+                alt="Homeowner sharing her construction or interior requirement"
                 loading="lazy"
               />
               <span className="hc-how-step">1</span>
@@ -483,25 +483,7 @@ function Home() {
             </div>
             <div className="hc-how-card-copy">
               <h3>Tell Us Your Requirement</h3>
-              <p>Choose construction, interiors or real estate and share the project details.</p>
-            </div>
-          </article>
-
-          <span className="hc-how-connector" aria-hidden="true"><Icon name="arrow" size={28}/></span>
-
-          <article className="hc-how-premium-card">
-            <div className="hc-how-photo-wrap">
-              <img
-                src="https://images.unsplash.com/photo-1556761175-b413da4baf72?auto=format&fit=crop&w=1200&q=90"
-                alt="Project brief being structured on a screen"
-                loading="lazy"
-              />
-              <span className="hc-how-step">2</span>
-              <span className="hc-how-float-icon"><Icon name="people" size={28}/></span>
-            </div>
-            <div className="hc-how-card-copy">
-              <h3>We Structure the Brief</h3>
-              <p>Your answers become one clear requirement instead of scattered calls and messages.</p>
+              <p>Share your construction or interior requirement with the details you have.</p>
             </div>
           </article>
 
@@ -511,15 +493,33 @@ function Home() {
             <div className="hc-how-photo-wrap">
               <img
                 src="https://images.unsplash.com/photo-1521737711867-e3b97375f902?auto=format&fit=crop&w=1200&q=90"
-                alt="Homeowners discussing project options"
+                alt="Homeowners meeting with experienced professionals"
+                loading="lazy"
+              />
+              <span className="hc-how-step">2</span>
+              <span className="hc-how-float-icon"><Icon name="people" size={28}/></span>
+            </div>
+            <div className="hc-how-card-copy">
+              <h3>We Find the Right Experts</h3>
+              <p>We connect you with relevant professionals, senior engineers, architects, or trusted partners.</p>
+            </div>
+          </article>
+
+          <span className="hc-how-connector" aria-hidden="true"><Icon name="arrow" size={28}/></span>
+
+          <article className="hc-how-premium-card">
+            <div className="hc-how-photo-wrap">
+              <img
+                src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1200&q=90"
+                alt="Homeowner comparing suitable project options"
                 loading="lazy"
               />
               <span className="hc-how-step">3</span>
               <span className="hc-how-float-icon"><Icon name="consult" size={28}/></span>
             </div>
             <div className="hc-how-card-copy">
-              <h3>Discuss Your Options</h3>
-              <p>Relevant businesses can respond with better context about what you actually need.</p>
+              <h3>Choose the Best Option</h3>
+              <p>Compare suggested solutions, consultations, or packages that fit your need.</p>
             </div>
           </article>
 
@@ -529,15 +529,15 @@ function Home() {
             <div className="hc-how-photo-wrap">
               <img
                 src="https://images.unsplash.com/photo-1600585152915-d208bec867a1?auto=format&fit=crop&w=1200&q=90"
-                alt="Completed modern home"
+                alt="Homeowners starting their home journey in a completed modern home"
                 loading="lazy"
               />
               <span className="hc-how-step">4</span>
               <span className="hc-how-float-icon"><Icon name="home" size={28}/></span>
             </div>
             <div className="hc-how-card-copy">
-              <h3>Move Your Home Forward</h3>
-              <p>Compare the next steps and choose how you want your project to continue.</p>
+              <h3>Start Your Home Journey</h3>
+              <p>Move ahead confidently with the right next step for your project.</p>
             </div>
           </article>
         </div>
@@ -569,58 +569,6 @@ function Home() {
         </div>
 
         <Link className="hc-inspiration-cta" to="/projects">Explore all project ideas <Icon name="arrow" size={16} /></Link>
-      </section>
-
-      <section className="hc-guided-journey" aria-labelledby="guided-home-journey-title">
-        <div className="hc-guided-heading">
-          <span>Simple Steps. Better Homes.</span>
-          <h2 id="guided-home-journey-title">How ProPulse <em>Guides Your Home Journey</em></h2>
-          <p>From your first question to the right package — a simpler, smarter way to build or renovate your home.</p>
-        </div>
-
-        <div className="hc-guided-grid">
-          <article className="hc-guided-card step-one" onClick={() => openConsult()}>
-            <span className="hc-guided-step">1</span>
-            <div className="hc-guided-art requirement-art" aria-hidden="true">
-              <div className="hc-doc-sheet">
-                <i />
-                <b />
-                <b />
-                <b />
-              </div>
-              <div className="hc-pen" />
-              <span className="hc-art-bubble"><Icon name="arrow" size={24}/></span>
-            </div>
-            <h3>Fill Your Requirement</h3>
-            <p>Share your home construction or interior needs in one clear brief.</p>
-          </article>
-
-          <span className="hc-guided-connector" aria-hidden="true"><Icon name="arrow" size={24}/></span>
-
-          <article className="hc-guided-card step-two" onClick={() => openConsult()}>
-            <span className="hc-guided-step blue">2</span>
-            <div className="hc-guided-art experts-art" aria-hidden="true">
-              <span className="hc-expert-avatar side-left"><Icon name="home" size={24}/></span>
-              <span className="hc-expert-avatar main"><Icon name="people" size={38}/></span>
-              <span className="hc-expert-avatar side-right"><Icon name="consult" size={24}/></span>
-            </div>
-            <h3>Talk to Experts</h3>
-            <p>Get connected with senior engineers, architects, or relevant specialists.</p>
-          </article>
-
-          <span className="hc-guided-connector" aria-hidden="true"><Icon name="arrow" size={24}/></span>
-
-          <article className="hc-guided-card step-three" onClick={() => navigate('/packages')}>
-            <span className="hc-guided-step">3</span>
-            <div className="hc-guided-art package-art" aria-hidden="true">
-              <span className="hc-package-card back-left"><Icon name="home" size={22}/></span>
-              <span className="hc-package-card back-right"><Icon name="home" size={22}/></span>
-              <span className="hc-package-card front"><Icon name="home" size={31}/><i/><i/><button tabIndex="-1" type="button">View</button></span>
-            </div>
-            <h3>Choose Your Package</h3>
-            <p>Compare suitable package options and move ahead with confidence.</p>
-          </article>
-        </div>
       </section>
 
       <WebsiteFaqSection variant="home" audience="homeowner" />
