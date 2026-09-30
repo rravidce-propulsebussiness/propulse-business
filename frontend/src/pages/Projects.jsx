@@ -170,6 +170,7 @@ export default function Projects(){
   const [query,setQuery]=useState('')
   const [visible,setVisible]=useState(8)
   const [openFaq,setOpenFaq]=useState(null)
+  const [selectedProject,setSelectedProject]=useState(null)
 
   useEffect(()=>{
     window.scrollTo(0,0)
@@ -201,12 +202,41 @@ export default function Projects(){
     })
   },[category,city,propertyType,budget,area,style,query])
 
-  function startSimilar(project){
-    const route=project.category==='construction'?'/build':project.category==='design'?'/design':'/property'
-    try{
-      sessionStorage.setItem('propulse_project_inspiration',JSON.stringify({projectId:project.id,title:project.title,category:project.category,city:project.city,propertyType:project.propertyType,area:project.area,style:project.style,createdAt:Date.now()}))
-    }catch{}
-    navigate(route)
+  function openProject(project){
+    setSelectedProject(project)
+    document.body.style.overflow='hidden'
+  }
+
+  function closeProject(){
+    setSelectedProject(null)
+    document.body.style.overflow=''
+  }
+
+  function projectHighlights(project){
+    if(project.category==='construction') return [
+      'Elevation and spatial planning concept',
+      'Natural light and ventilation focused layout',
+      'Flexible material and finish selections',
+      'Suitable for detailed construction consultation',
+    ]
+    if(project.category==='design') return [
+      'Space planning and storage-focused concept',
+      'Coordinated material and finish palette',
+      'Lighting and furniture planning ideas',
+      'Suitable for room-wise interior consultation',
+    ]
+    return [
+      'Location and property-type context',
+      'Budget and built-up area reference',
+      'Lifestyle and layout inspiration',
+      'Use as a brief when discussing suitable options',
+    ]
+  }
+
+  function projectScope(project){
+    if(project.category==='construction') return ['Planning','Structure','Elevation','Finishes']
+    if(project.category==='design') return ['Layout','Storage','Lighting','Finishes']
+    return ['Location','Property Type','Budget','Preferences']
   }
 
   const phone=contactData.phone||contactData.phone_number||contactData.mobile||''
@@ -263,13 +293,25 @@ export default function Projects(){
 
     <section className="pj-grid-wrap">
       <div className="pj-project-grid">
-        {filtered.slice(0,visible).map(project=><article className="pj-project-card" key={project.id}>
-          <div className="pj-project-photo"><img src={project.image} alt={project.title}/><span className={'pj-badge '+project.category}>{project.categoryLabel}</span></div>
+        {filtered.slice(0,visible).map(project=><article className="pj-project-card" key={project.id} onClick={()=>openProject(project)}>
+          <div className="pj-project-photo">
+            <img src={project.image} alt={project.title}/>
+            <span className={'pj-badge '+project.category}>{project.categoryLabel}</span>
+            <span className="pj-project-style">{project.style}</span>
+            <div className="pj-photo-overlay"><span>View project details</span><Icon name="arrow" size={16}/></div>
+          </div>
           <div className="pj-project-copy">
-            <button className="pj-card-arrow" aria-label={'Start similar '+project.title} onClick={()=>startSimilar(project)}><Icon name="arrow" size={16}/></button>
-            <h3>{project.title}</h3><small>{project.location}</small>
-            <div className="pj-project-meta"><span>{project.meta}</span><span><Icon name="area" size={12}/>{project.area} sq ft</span></div>
+            <div className="pj-project-title-row">
+              <div><h3>{project.title}</h3><small><Icon name="pin" size={12}/>{project.location}</small></div>
+              <button className="pj-card-arrow" type="button" aria-label={'View details for '+project.title} onClick={event=>{event.stopPropagation();openProject(project)}}><Icon name="arrow" size={16}/></button>
+            </div>
+            <div className="pj-project-meta">
+              <span>{project.meta}</span>
+              <span><Icon name="area" size={12}/>{project.area} sq ft</span>
+              <span>{project.budget}</span>
+            </div>
             <p>{project.description}</p>
+            <div className="pj-project-footer-row"><span>Inspiration concept</span><b>View details <Icon name="arrow" size={13}/></b></div>
           </div>
         </article>)}
       </div>
@@ -285,25 +327,81 @@ export default function Projects(){
     </section>
 
     <section className="pj-use-cases">
-      <div className="pj-section-head"><div><h2>How Customers <em>Use This Page</em></h2><p>Start with inspiration, then create a requirement that matches your real project.</p></div></div>
+      <div className="pj-section-head"><div><h2>Explore Projects <em>In Detail</em></h2><p>Open any project to review its concept, area, budget range, scope and design highlights before deciding what you want.</p></div></div>
       <div className="pj-use-grid">
-        <article><img src={PROJECTS[0].image} alt=""/><div><strong>“</strong><p>See a construction style you like, then open a Home Construction requirement with your actual city, PIN and project size.</p><b>Construction Inspiration</b></div></article>
-        <article><img src={PROJECTS[1].image} alt=""/><div><strong>“</strong><p>Use an interior example to explain the look and scope you want before selecting rooms, size, budget and preferences.</p><b>Interior Inspiration</b></div></article>
-        <article><img src={PROJECTS[2].image} alt=""/><div><strong>“</strong><p>Use a property example to clarify your preferred type, location and budget without treating the sample as a live listing.</p><b>Real Estate Inspiration</b></div></article>
+        <article><img src={PROJECTS[0].image} alt=""/><div><strong>“</strong><p>Review the construction concept, scale, style and planning highlights before using it as inspiration for your own home.</p><b>Construction Concepts</b></div></article>
+        <article><img src={PROJECTS[1].image} alt=""/><div><strong>“</strong><p>Open interior projects to understand the design language, planning approach, finishes and the kind of scope you may want.</p><b>Interior Concepts</b></div></article>
+        <article><img src={PROJECTS[2].image} alt=""/><div><strong>“</strong><p>Review property examples for type, location, scale and budget context without treating inspiration cards as live listings.</p><b>Property Concepts</b></div></article>
       </div>
     </section>
 
     <section className="pj-cta">
       <img src="https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?auto=format&fit=crop&w=1100&q=88" alt=""/>
-      <div><h2>Have a Similar Project in Mind?</h2><p>Start a free consultation and create a personalized requirement for your project.</p></div>
-      <button onClick={()=>navigate('/quote#construction')}>Get Free Consultation <Icon name="arrow" size={16}/></button>
-      <div className="pj-cta-points"><span>○ No Obligation</span><span>○ Guided Requirement</span><span>○ Location Aware</span></div>
+      <div><h2>Save the Ideas You Like.</h2><p>Explore project details first, compare styles and then decide the right next step for your home.</p></div>
+      <Link className="pj-cta-link" to="/packages">Explore Packages <Icon name="arrow" size={16}/></Link>
+      <div className="pj-cta-points"><span>○ Detailed Concepts</span><span>○ Clear Scope</span><span>○ No Forced Redirect</span></div>
     </section>
 
     <section className="pj-faq">
       <div className="pj-section-head"><div><h2>Frequently Asked <em>Questions</em></h2><p>Quick answers about the project-inspiration page.</p></div></div>
       <div className="pj-faq-grid">{FAQS.map(([q,a],i)=><article key={q} className={openFaq===i?'open':''}><button onClick={()=>setOpenFaq(openFaq===i?null:i)}><span>{q}</span><b>{openFaq===i?'−':'⌄'}</b></button>{openFaq===i&&<p>{a}</p>}</article>)}</div>
     </section>
+
+    {selectedProject&&<div className="pj-detail-backdrop" role="presentation" onMouseDown={event=>{if(event.target===event.currentTarget)closeProject()}}>
+      <section className="pj-detail-modal" role="dialog" aria-modal="true" aria-label={selectedProject.title+' project details'}>
+        <button className="pj-detail-close" type="button" onClick={closeProject} aria-label="Close project details">×</button>
+
+        <div className="pj-detail-media">
+          <img src={selectedProject.image} alt={selectedProject.title}/>
+          <span className={'pj-badge '+selectedProject.category}>{selectedProject.categoryLabel}</span>
+          <div className="pj-detail-image-note">Inspiration concept</div>
+        </div>
+
+        <div className="pj-detail-content">
+          <div className="pj-detail-heading">
+            <span>{selectedProject.style} · {selectedProject.propertyType}</span>
+            <h2>{selectedProject.title}</h2>
+            <p><Icon name="pin" size={14}/>{selectedProject.location}</p>
+          </div>
+
+          <div className="pj-detail-stats">
+            <article><small>Configuration</small><b>{selectedProject.meta}</b></article>
+            <article><small>Built-up Area</small><b>{selectedProject.area} sq ft</b></article>
+            <article><small>Budget Range</small><b>{selectedProject.budget}</b></article>
+            <article><small>Design Style</small><b>{selectedProject.style}</b></article>
+          </div>
+
+          <div className="pj-detail-section">
+            <span>PROJECT OVERVIEW</span>
+            <h3>About this concept</h3>
+            <p>{selectedProject.description}</p>
+          </div>
+
+          <div className="pj-detail-columns">
+            <div className="pj-detail-section">
+              <span>DESIGN HIGHLIGHTS</span>
+              <h3>What this project explores</h3>
+              <ul>{projectHighlights(selectedProject).map(item=><li key={item}><i>✓</i>{item}</li>)}</ul>
+            </div>
+            <div className="pj-detail-section">
+              <span>PROJECT SCOPE</span>
+              <h3>Typical discussion areas</h3>
+              <div className="pj-scope-chips">{projectScope(selectedProject).map(item=><b key={item}>{item}</b>)}</div>
+            </div>
+          </div>
+
+          <div className="pj-detail-note">
+            <Icon name="info" size={18}/>
+            <div><b>Concept, not a live quotation</b><span>Images, area and budget are for project inspiration. Final scope, pricing, materials and timelines depend on your actual requirement and the professional you choose.</span></div>
+          </div>
+
+          <div className="pj-detail-actions">
+            <Link to="/packages" onClick={closeProject}>View Packages <Icon name="arrow" size={15}/></Link>
+            <Link className="secondary" to="/contact?audience=users" onClick={closeProject}>Ask About This Project</Link>
+          </div>
+        </div>
+      </section>
+    </div>}
 
     <footer className="pj-footer">
       <div className="pj-footer-brand"><img src="/brand/propulse-logo.svg" alt="ProPulse"/><p>Your customer starting point for construction, interiors and real-estate requirements.</p><div>f&nbsp;&nbsp;◎&nbsp;&nbsp;▶&nbsp;&nbsp;in</div></div>
