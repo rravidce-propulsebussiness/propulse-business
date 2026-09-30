@@ -97,15 +97,6 @@ export default function Solutions(){
       </button>)}
     </section>
 
-    <section className="sol-active-summary">
-      <img src={active.image} alt=""/>
-      <div>
-        <span>{active.eyebrow}</span>
-        <h2>{active.subtitle}</h2>
-        <p>{active.description}</p>
-      </div>
-    </section>
-
     <div className={'sol-flow sol-flow-'+activeKey} key={active.flowKey}>
       <RequirementWizard flowKey={active.flowKey}/>
     </div>
