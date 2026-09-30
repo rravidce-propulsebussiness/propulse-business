@@ -28,14 +28,21 @@ assert.match(home,/Get Free Quote/);
 assert.match(home,/View Packages/);
 assert.match(home,/Trusted Businesses/);
 assert.match(home,/Transparent Process/);
-assert.match(home,/hc-approved-service-card/);
+assert.match(home,/hc-premium-service-card/);
+assert.match(home,/hc-float-card/);
+assert.match(home,/hc-premium-orbit/);
+assert.match(home,/movePremiumHero/);
+assert.match(home,/tiltServiceCard/);
 assert.match(home,/\/quote#construction/);
 assert.match(home,/\/quote#interiors/);
 assert.match(home,/\/quote#property/);
 
-assert.match(homeCss,/\.hc-approved-hero/);
-assert.match(homeCss,/hcApprovedZoom/);
-assert.match(homeCss,/hcApprovedCard/);
+assert.match(homeCss,/\.hc-premium-hero/);
+assert.match(homeCss,/hcHeroCinema/);
+assert.match(homeCss,/hcOrbitRun/);
+assert.match(homeCss,/hcFloatCard/);
+assert.match(homeCss,/hcServiceRise/);
+assert.match(homeCss,/perspective:1600px/);
 
 assert.match(quote,/What do you need help with\?/);
 assert.match(quote,/quote-service-grid/);
