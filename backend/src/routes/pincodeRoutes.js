@@ -12,7 +12,6 @@ router.get('/location/:pincode', publicLookupLimit, pincodeController.locate);
 router.get('/unmapped', requireAdmin, pincodeController.listUnmapped);
 router.post('/detect', requireAdmin, pincodeController.detect);
 router.post('/:pincode/map-city', requireAdmin, pincodeController.mapToCity);
-router.get('/:pincode/locate', pincodeController.locate);
 router.get('/:pincode', pincodeController.getOne);
 
 module.exports = router;
