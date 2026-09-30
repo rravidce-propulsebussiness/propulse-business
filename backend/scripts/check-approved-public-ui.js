@@ -23,6 +23,7 @@ const contact=read('../frontend/src/pages/Contact.jsx');
 const projects=read('../frontend/src/pages/Projects.jsx');
 const about=read('../frontend/src/pages/About.jsx');
 const howItWorks=read('../frontend/src/pages/HowItWorks.jsx');
+const howItWorksCss=read('../frontend/src/pages/HowItWorks.css');
 
 assert.match(app,/path="\/quote" element={<Solutions\/>}/);
 assert.match(app,/path="\/solutions" element={<LegacySolutionRedirect\/>}/);
@@ -184,6 +185,15 @@ assert.match(professionalHomeCss,/\.pro-hero-market/);
 assert.match(professionalHomeCss,/\.pro-lead-card/);
 assert.match(professionalHomeCss,/\.pro-industry-grid/);
 assert.match(professionalHomeCss,/\.pro-how-grid/);
+
+assert.match(howItWorks,/const activeFlow=FLOWS\.find/);
+assert.match(howItWorks,/className="hiw-flow hiw-flow-active"/);
+assert.match(howItWorks,/activeFlow\.steps\.map/);
+assert.match(howItWorks,/navigate\(activeFlow\.route\)/);
+assert.match(howItWorks,/window\.history\.replaceState\(\{\},'',`\/how-it-works#\$\{key\}`\)/);
+assert.doesNotMatch(howItWorks,/\{FLOWS\.map\(\(flow,index\)=>\<article className="hiw-flow"/);
+assert.match(howItWorksCss,/\.hiw-flow-active/);
+assert.match(howItWorksCss,/hiwFlowSwap/);
 
 assert.match(home,/For Professionals/);
 
