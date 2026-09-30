@@ -4,6 +4,7 @@ import { publicRequest } from '../utils/auth'
 import { isEmptyAnswer, isQuestionVisible } from '../components/CustomerFlowQuestion'
 import InteriorRequirementExact from '../components/InteriorRequirementExact'
 import RealEstateRequirementExact from '../components/RealEstateRequirementExact'
+import { downloadRequirementQuotePdf } from '../utils/requirementQuotePdf'
 import './RequirementWizard.css'
 
 const emptyContact = { name: '', phone: '', email: '' }
@@ -144,12 +145,14 @@ export default function RequirementWizard({ flowKey }) {
   const [consent, setConsent] = useState(false)
   const [website, setWebsite] = useState('')
   const [submissionKey, setSubmissionKey] = useState(makeSubmissionKey)
+  const [submissionResult, setSubmissionResult] = useState(null)
   const [state, setState] = useState({ loading: true, saving: false, error: '', success: false })
   const mounted = useRef(true)
   const theme = THEMES[flowKey] || THEMES.build
 
   useEffect(() => {
     mounted.current = true
+    setSubmissionResult(null)
     setState({ loading: true, saving: false, error: '', success: false })
 
     Promise.all([publicRequest('/customer-flows/' + flowKey), publicRequest('/cities').catch(() => []), publicRequest('/contact?audience=website').catch(() => ({}))]).then(([data, cityData, websiteContact]) => {
@@ -276,15 +279,36 @@ export default function RequirementWizard({ flowKey }) {
 
     try {
       setState(current => ({ ...current, saving: true, error: '' }))
-      await publicRequest('/customer-flows/' + flowKey + '/submit', {
+      const result = await publicRequest('/customer-flows/' + flowKey + '/submit', {
         method: 'POST',
         body: JSON.stringify({ flowToken: flow.flowToken, answers, contact: { ...contact, phone }, consent, submissionKey, website })
       })
+      setSubmissionResult(result || null)
       setState({ loading: false, saving: false, error: '', success: true })
       window.scrollTo({ top: 0, behavior: 'smooth' })
     } catch (error) {
       setState(current => ({ ...current, saving: false, error: error.message }))
     }
+  }
+
+  async function downloadQuoteRequest() {
+    const pincode = locationQuestion ? fieldLabel(locationQuestion, answers) : ''
+    const rows = questions
+      .filter(question => question.questionKey !== locationQuestion?.questionKey)
+      .map(question => [question.label.replace(/\?$/,''), fieldLabel(question, answers)])
+      .filter(([, value]) => value && value !== '—')
+
+    await downloadRequirementQuotePdf({
+      flowName: flow?.name || theme.eyebrow,
+      flowKey,
+      leadId: submissionResult?.leadId,
+      customerName: contact.name,
+      phone: contact.phone,
+      email: contact.email,
+      city: selectedCity?.name || '',
+      pincode,
+      rows,
+    })
   }
 
   if (state.loading) return <main className="rq-page"><div className="rq-shell rq-status">Loading your requirement form…</div></main>
@@ -295,9 +319,14 @@ export default function RequirementWizard({ flowKey }) {
     <div className="rq-success rq-premium-success">
       <div className="rq-success-mark">✓</div>
       <span>REQUEST RECEIVED</span>
-      <h1>Your requirement is ready.</h1>
-      <p>We have saved the structured requirement. Relevant businesses may respond according to ProPulse access rules while your contact details remain protected until access is allowed.</p>
-      <div><Link to="/">Back home</Link><button type="button" onClick={() => window.location.reload()}>Post another requirement</button></div>
+      <h1>Your quote request is ready.</h1>
+      <p>We saved your structured requirement. Download a PDF copy now for your records. This summary is not a final contractor quotation; final pricing and scope are confirmed by the business you choose.</p>
+      {submissionResult?.leadId && <div className="rq-success-reference">Request ID <b>#{submissionResult.leadId}</b></div>}
+      <div className="rq-success-actions">
+        <button className="rq-download-quote" type="button" onClick={downloadQuoteRequest}>↓ Download Quote Request PDF</button>
+        <Link className="rq-back-home" to="/">Back home</Link>
+        <button type="button" onClick={() => window.location.reload()}>Post another requirement</button>
+      </div>
     </div>
   </main>
 
