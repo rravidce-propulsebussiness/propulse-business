@@ -199,6 +199,12 @@ export default function RequirementWizard({ flowKey }) {
         }
       } catch {}
 
+      if (flowKey === 'build') {
+        const packageParam = String(new URLSearchParams(window.location.search).get('package') || '').toLowerCase()
+        const qualityByPackage = { standard: 'standard', premium: 'premium', royal: 'luxury' }
+        if (qualityByPackage[packageParam]) initialAnswers.quality = qualityByPackage[packageParam]
+      }
+
       setAnswers(initialAnswers)
       setContact(initialContact)
       setCityId(initialCityId)
