@@ -73,7 +73,7 @@ function ProfessionalContact(){
       </nav>
       <div className="public-header-actions">
         <Link className="professional-login-btn" to="/login">Professional Login</Link>
-        <Link className="public-professional-btn active" to="/contact?audience=users">Professionals</Link>
+        <Link className="public-professional-btn active" to="/contact?audience=users">Professional Support</Link>
       </div>
     </header>
 
@@ -202,7 +202,7 @@ function PublicContact(){
       </nav>
       <div className="public-header-actions">
         <Link className="contact-header-cta" to="/quote#construction">Get Free Quote <Icon name="arrow" size={15}/></Link>
-        <Link className="public-professional-btn" to="/contact?audience=users">Professionals</Link>
+        <Link className="public-professional-btn" to="/contact?audience=users">For Professionals</Link>
       </div>
     </header>
 
