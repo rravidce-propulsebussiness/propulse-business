@@ -789,7 +789,8 @@ button,input,select{font:inherit}
 .hc-footer a:hover,.hc-footer button:hover{color:#ff9462}
 
 /* consultation popup */
-.hc-consult-popup{position:fixed;z-index:1400;right:18px;bottom:18px;width:380px;max-height:calc(100vh - 30px);overflow-y:auto;padding:16px;border:1px solid #dedad6;border-radius:14px;background:#fff;box-shadow:0 24px 62px rgba(5,28,48,.23);animation:hcPopupIn .28s ease-out;scrollbar-width:thin}
+.hc-popup-backdrop{position:fixed;inset:0;z-index:1390;display:grid;place-items:center;padding:24px;background:rgba(5,28,48,.42);backdrop-filter:blur(4px)}
+.hc-consult-popup{position:relative;z-index:1400;width:380px;max-width:calc(100vw - 32px);max-height:calc(100vh - 48px);overflow-y:auto;padding:16px;border:1px solid #dedad6;border-radius:14px;background:#fff;box-shadow:0 28px 76px rgba(5,28,48,.30);animation:hcPopupIn .28s ease-out;scrollbar-width:thin}
 .hc-popup-close{position:absolute;right:8px;top:7px;width:26px;height:26px;border:0;background:none;color:#536b80;font-size:20px;line-height:1;cursor:pointer}
 .hc-popup-head{display:grid;grid-template-columns:42px 1fr;gap:10px;align-items:start;padding-right:20px}
 .hc-popup-head>span{width:40px;height:40px;display:grid;place-items:center;border-radius:50%;background:linear-gradient(135deg,var(--hc-orange),#ff7d3f);color:#fff}
@@ -812,9 +813,7 @@ button,input,select{font:inherit}
 .hc-popup-textarea{width:100%;min-height:54px;resize:vertical;padding:9px;border:1px solid #dfe4e8;border-radius:7px;outline:0;color:#29475f;font-size:12px;line-height:1.45}
 .hc-popup-textarea:focus{border-color:#f39a75;box-shadow:0 0 0 3px rgba(255,90,31,.08)}
 .hc-consult-popup label span small{font-size:12px;font-weight:650;color:#8a98a5}
-.hc-popup-consent{display:grid!important;grid-template-columns:16px 1fr;align-items:start;gap:7px;padding:8px;border:1px solid #eee7e1;border-radius:7px;background:#fffaf6}
-.hc-popup-consent input{width:14px;height:14px;margin:1px 0 0;accent-color:var(--hc-orange)}
-.hc-popup-consent>span{margin:0!important;color:#6f7f8d!important;font-size:12px!important;line-height:1.45;font-weight:650!important}
+.hc-popup-submit-notice{margin:0;padding:9px 10px;border:1px solid #eee7e1;border-radius:8px;background:#fffaf6;color:#6f7f8d;font-size:12px;line-height:1.45}
 .hc-popup-honeypot{position:absolute!important;left:-10000px!important;width:1px!important;height:1px!important;overflow:hidden!important}
 .hc-popup-error{padding:7px 8px;border-radius:7px;background:#fff0e9;color:#b93e19;font-size:12px;font-weight:800}
 .hc-popup-submit{height:39px;display:flex;align-items:center;justify-content:center;gap:7px;border:0;border-radius:7px;background:linear-gradient(135deg,var(--hc-orange),#ff7434);color:#fff;font-size:12px;font-weight:900;cursor:pointer}
@@ -884,7 +883,8 @@ button,input,select{font:inherit}
   .hc-inspiration{padding:22px 18px 28px}.hc-inspiration-grid{grid-template-columns:1fr 1fr}.hc-inspiration-grid img{height:105px}
   .hc-final{height:330px}.hc-final-copy{left:20px;right:20px;top:42px;width:auto}.hc-final-copy h2{font-size:30px}.hc-final-copy>div{flex-direction:column;align-items:flex-start}
   .hc-footer{grid-template-columns:1fr;padding:27px 20px}
-  .hc-consult-popup{left:12px;right:12px;bottom:12px;width:auto;max-height:calc(100vh - 24px)}
+  .hc-popup-backdrop{padding:12px;align-items:center}
+  .hc-consult-popup{width:100%;max-width:430px;max-height:calc(100vh - 24px)}
   .hc-popup-detail-grid{grid-template-columns:1fr}
 }
 
@@ -906,9 +906,7 @@ button,input,select{font:inherit}
 .hc-popup-unit i{font-size:12px}
 .hc-popup-textarea{min-height:82px;font-size:14px;padding:11px 12px}
 .hc-consult-popup label span small{font-size:12px}
-.hc-popup-consent{grid-template-columns:18px 1fr;gap:9px;padding:10px}
-.hc-popup-consent input{width:16px;height:16px}
-.hc-popup-consent>span{font-size:12px!important;line-height:1.5}
+.hc-popup-submit-notice{font-size:12px;line-height:1.5;padding:10px}
 .hc-popup-error{font-size:12px;padding:9px 10px}
 .hc-popup-submit{height:46px;font-size:14px}
 .hc-consult-popup form>small{font-size:12px;line-height:1.45}
