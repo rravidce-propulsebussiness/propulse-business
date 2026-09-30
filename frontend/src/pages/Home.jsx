@@ -697,7 +697,7 @@ function Home() {
         {consultForm.flowKey === 'build' && <div className="hc-popup-detail-grid">
           <label><span>Project Type</span><select value={consultForm.projectType} onChange={event => { setConsultForm({ ...consultForm, projectType: event.target.value }); setConsultError('') }}><option value="">Select project</option><option value="residential">Residential</option><option value="commercial">Commercial</option><option value="renovation">Renovation</option><option value="extension">Extension</option></select></label>
           <label><span>No. of Floors</span><select value={consultForm.floors} onChange={event => { setConsultForm({ ...consultForm, floors: event.target.value }); setConsultError('') }}><option value="">Select floors</option>{CONSTRUCTION_FLOORS.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}</select></label>
-          <label><span>Plot Area <small>(Optional)</small></span><div className="hc-popup-unit"><input type="number" min="50" max="1000000" value={consultForm.plotArea} onChange={event => setConsultForm({ ...consultForm, plotArea: event.target.value })} placeholder="e.g. 2000" /><i>sq ft</i></div></label>
+          <label><span>Plot Area <small>(Optional)</small></span><div className="hc-popup-unit"><input type="number" min="10" max="100000" value={consultForm.plotArea} onChange={event => setConsultForm({ ...consultForm, plotArea: event.target.value })} placeholder="e.g. 200" /><i>sq yards</i></div></label>
         </div>}
 
         {consultForm.flowKey === 'design' && <div className="hc-popup-detail-grid">
