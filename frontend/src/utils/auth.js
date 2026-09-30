@@ -29,17 +29,11 @@ export function bootstrapSession({ force = false } = {}) {
   if (sessionKnown && !force) return Promise.resolve(currentUser)
   if (bootstrapPromise) return bootstrapPromise
 
-  bootstrapPromise = apiRequest('/auth/me', {}, false)
-    .then(user => {
+  bootstrapPromise = apiRequest('/auth/session', {}, false)
+    .then(result => {
+      const user = result?.authenticated === true ? result.user || null : null
       saveSession({ user })
       return user
-    })
-    .catch(async error => {
-      if (error?.status === 401) {
-        await clearSession({ revoke: false })
-        return null
-      }
-      throw error
     })
     .finally(() => {
       bootstrapPromise = null
