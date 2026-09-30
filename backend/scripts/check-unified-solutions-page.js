@@ -12,31 +12,31 @@ const home=read('../frontend/src/pages/Home.jsx');
 const packages=read('../frontend/src/pages/Packages.jsx');
 
 assert.match(app,/const Solutions=lazy/);
-assert.match(app,/path="\/solutions" element={<Solutions\/>}/);
+assert.match(app,/path="\/quote" element={<Solutions\/>}/);
+assert.match(app,/path="\/solutions" element={<LegacySolutionRedirect\/>}/);
 assert.match(app,/LegacySolutionRedirect/);
 assert.match(app,/path="\/build" element={<LegacySolutionRedirect hash="construction"\/>}/);
 assert.match(app,/path="\/design" element={<LegacySolutionRedirect hash="interiors"\/>}/);
 assert.match(app,/path="\/property" element={<LegacySolutionRedirect hash="property"\/>}/);
 
-assert.match(solutions,/CHOOSE A SERVICE/);
-assert.match(solutions,/Construction Packages|Construction/);
+assert.match(solutions,/GET FREE QUOTE/);
+assert.match(solutions,/What do you need help with\?/);
+assert.match(solutions,/Construction/);
 assert.match(solutions,/Interiors/);
 assert.match(solutions,/Real Estate/);
-assert.match(solutions,/headerCta/);
-assert.match(solutions,/Contact Us/);
 assert.match(solutions,/RequirementWizard flowKey={active\.flowKey}/);
 assert.match(solutions,/location\.search/);
-assert.match(css,/\.sol-switch/);
-assert.match(css,/\.sol-flow \.rq-premium-header/);
-assert.match(css,/\.sol-flow \.irx-header/);
-assert.match(css,/\.sol-flow \.rq-premium-hero/);
-assert.match(css,/\.sol-flow \.irx-hero/);
-assert.match(css,/\.sol-flow \.rex-hero/);
-assert.doesNotMatch(solutions,/sol-active-summary/);
+assert.match(css,/\.quote-service-grid/);
+assert.match(css,/\.quote-flow \.rq-premium-header/);
+assert.match(css,/\.quote-flow \.irx-header/);
+assert.match(css,/\.quote-flow \.rq-premium-hero/);
+assert.match(css,/\.quote-flow \.irx-hero/);
+assert.match(css,/\.quote-flow \.rex-hero/);
+assert.match(solutions,/quote-service-card/);
 
-assert.match(home,/\/solutions#construction/);
-assert.match(home,/\/solutions#interiors/);
-assert.match(home,/\/solutions#property/);
-assert.match(packages,/\/solutions\?package=/);
+assert.match(home,/\/quote#construction/);
+assert.match(home,/\/quote#interiors/);
+assert.match(home,/\/quote#property/);
+assert.match(packages,/\/quote\?package=/);
 
-console.log('Unified homeowner solutions page checks passed.');
+console.log('Approved unified quote page checks passed.');
