@@ -65,8 +65,8 @@ export default function About(){
   return <main className="ab-page">
     <header className="ab-header">
       <Link to="/" className="ab-logo"><img src="/brand/propulse-logo.svg" alt="ProPulse"/></Link>
-      <nav><Link to="/">Home</Link><Link to="/build">Construction</Link><Link to="/design">Interiors</Link><Link to="/packages">Packages</Link><Link to="/property">Real Estate</Link><Link to="/projects">Projects</Link><Link to="/how-it-works">How It Works</Link><Link className="active" to="/about">About</Link><Link to="/#contact">Contact</Link></nav>
-      <button onClick={()=>navigate('/build')}>Get Free Consultation <Icon name="arrow" size={15}/></button>
+      <nav><Link to="/">Home</Link><Link to="/solutions#construction">Construction</Link><Link to="/solutions#interiors">Interiors</Link><Link to="/packages">Packages</Link><Link to="/solutions#property">Real Estate</Link><Link to="/projects">Projects</Link><Link to="/how-it-works">How It Works</Link><Link className="active" to="/about">About</Link><Link to="/#contact">Contact</Link></nav>
+      <button onClick={()=>navigate('/solutions#construction')}>Get Free Consultation <Icon name="arrow" size={15}/></button>
     </header>
 
     <section className="ab-hero">
@@ -114,7 +114,7 @@ export default function About(){
         <span>WHY CHOOSE PROPULSE</span>
         <h2>A Trusted Starting Point<br/>For Your Property Journey</h2>
         <p>ProPulse brings together structured requirements, transparent information and location-aware flows so customers can focus on the decisions that actually matter.</p>
-        <button onClick={()=>navigate('/build')}>Get Free Consultation <Icon name="arrow" size={14}/></button>
+        <button onClick={()=>navigate('/solutions#construction')}>Get Free Consultation <Icon name="arrow" size={14}/></button>
       </div>
       <div className="ab-feature-grid">
         <article><span><Icon name="shield"/></span><div><b>Relevant Businesses</b><p>Your requirement is structured so suitable businesses can understand what you need.</p></div></article>
@@ -138,15 +138,15 @@ export default function About(){
       <img src={IMPACT} alt="Premium residential project"/>
       <div className="ab-impact-copy"><span>OUR IMPACT</span><h2>Better Spaces.<em>Happier Lives.</em></h2><p>From dream homes to modern offices, from stylish interiors to better property decisions — ProPulse helps customers turn ideas into structured requirements.</p></div>
       <div className="ab-impact-actions">
-        <button onClick={()=>navigate('/build')}>Start Your Project <Icon name="arrow" size={14}/></button>
+        <button onClick={()=>navigate('/solutions#construction')}>Start Your Project <Icon name="arrow" size={14}/></button>
         <ul><li><Icon name="check" size={14}/>Customer-first requirement flows</li><li><Icon name="check" size={14}/>Admin-managed cities and industries</li><li><Icon name="check" size={14}/>Construction, interiors and real estate</li><li><Icon name="check" size={14}/>Built for clearer project conversations</li></ul>
       </div>
     </section>
 
     <footer className="ab-footer">
       <div className="ab-footer-brand"><img src="/brand/propulse-logo.svg" alt="ProPulse"/><p>Your customer starting point for construction, interiors and real-estate requirements.</p><div>f&nbsp;&nbsp;◎&nbsp;&nbsp;▶&nbsp;&nbsp;in</div></div>
-      <div><b>Quick Links</b><Link to="/">Home</Link><Link to="/build">Construction</Link><Link to="/design">Interiors</Link><Link to="/packages">Packages</Link><Link to="/property">Real Estate</Link><Link to="/projects">Projects</Link></div>
-      <div><b>Our Services</b><Link to="/build">Home Construction</Link><Link to="/design">Interior Design</Link><Link to="/property">Real Estate</Link><Link to="/build">Construction Quote</Link><Link to="/build">Free Consultation</Link></div>
+      <div><b>Quick Links</b><Link to="/">Home</Link><Link to="/solutions#construction">Construction</Link><Link to="/solutions#interiors">Interiors</Link><Link to="/packages">Packages</Link><Link to="/solutions#property">Real Estate</Link><Link to="/projects">Projects</Link></div>
+      <div><b>Our Services</b><Link to="/solutions#construction">Home Construction</Link><Link to="/solutions#interiors">Interior Design</Link><Link to="/solutions#property">Real Estate</Link><Link to="/solutions#construction">Construction Quote</Link><Link to="/solutions#construction">Free Consultation</Link></div>
       <div><b>Support</b><Link to="/contact?audience=users">FAQ</Link><Link to="/#contact">Contact Us</Link><Link to="/contact?audience=users">Privacy Policy</Link><Link to="/contact?audience=users">Terms & Conditions</Link></div>
       <div><b>Contact Info</b>{phone&&<span><Icon name="phone" size={13}/>{phone}</span>}{email&&<span>{email}</span>}<span><Icon name="pin" size={13}/>Hyderabad, India</span></div>
     </footer>
