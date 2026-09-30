@@ -1574,3 +1574,7 @@ button,input,select{font:inherit}
   .hc-location-meta b{font-size:13px}
   .hc-location-meta span{font-size:12px;white-space:normal}
 }
+
+.hc-current-location-btn{width:100%;height:40px;display:flex;align-items:center;justify-content:center;gap:7px;border:1px solid #d8e2e8;border-radius:8px;background:#f8fbfd;color:#21445c;font-size:12px;font-weight:850;cursor:pointer;transition:.18s ease}
+.hc-current-location-btn:hover{border-color:#b9ccd8;background:#f1f7fa}
+.hc-current-location-btn:disabled{opacity:.65;cursor:wait}
