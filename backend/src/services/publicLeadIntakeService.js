@@ -122,34 +122,198 @@ function buildAcquisitionAttribution(input = {}) {
   return Object.fromEntries(Object.entries(data).filter(([, value]) => value));
 }
 
-function buildConsultationCustomFields(flow, city, attribution) {
-  const custom = {
-    _intake: {
-      flowKey: flow.key,
-      definitionId: flow.definitionId,
-      versionId: flow.versionId,
-      versionNo: flow.versionNo,
-      stage: 'consultation',
-      detailedRequirementCompleted: false,
-      cityId: Number(city.id),
-      cityName: city.name,
-    },
-    _qualification: {
-      detailedRequirementCompleted: false,
-      budgetProvided: false,
-      timelineProvided: false,
-      projectSizeKnown: false,
-      marketplaceAnswers: {},
-    },
+const CONSULTATION_LABELS = {
+  projectType: {
+    house_construction: 'House construction',
+    commercial_building: 'Commercial building',
+    building_extension: 'Building extension',
+  },
+  propertyType: {
+    apartment: 'Apartment',
+    villa: 'Villa',
+    independent_house: 'Independent house',
+    office: 'Office',
+    commercial_space: 'Commercial space',
+    commercial: 'Commercial property',
+    plot: 'Plot / land',
+  },
+  bhk: {
+    '1bhk': '1 BHK',
+    '2bhk': '2 BHK',
+    '3bhk': '3 BHK',
+    '4bhk': '4 BHK',
+    '5plus': '5+ BHK',
+  },
+  propertyIntent: {
+    buy: 'Buy a property',
+    rent: 'Rent a property',
+    sell: 'Sell a property',
+    invest: 'Invest in property',
+  },
+};
+
+function cleanConsultationText(value, max = 1000) {
+  return String(value || '').trim().replace(/\s+/g, ' ').slice(0, max);
+}
+
+function allowedConsultationValue(value, map, label, { required = true } = {}) {
+  const normalized = cleanConsultationText(value, 80);
+  if (!normalized && !required) return '';
+  if (!Object.prototype.hasOwnProperty.call(map, normalized)) fail(`Select a valid ${label}`, 'INVALID_CONSULTATION_DETAILS');
+  return normalized;
+}
+
+function consultationDetails(flowKey, input = {}) {
+  const additional = cleanConsultationText(input.additional, 1000);
+  if (flowKey === 'build') {
+    const projectType = allowedConsultationValue(input.projectType, CONSULTATION_LABELS.projectType, 'project type');
+    const floors = Number(input.floors);
+    if (!Number.isInteger(floors) || floors < 1 || floors > 100) fail('Enter the planned number of floors', 'INVALID_CONSULTATION_DETAILS');
+    const plotAreaRaw = cleanConsultationText(input.plotArea, 20);
+    const plotArea = plotAreaRaw === '' ? null : Number(plotAreaRaw);
+    if (plotArea !== null && (!Number.isFinite(plotArea) || plotArea < 50 || plotArea > 1000000)) {
+      fail('Plot area must be between 50 and 10,00,000 sq ft', 'INVALID_CONSULTATION_DETAILS');
+    }
+    return { projectType, floors, plotArea, additional };
+  }
+  if (flowKey === 'design') {
+    const propertyType = allowedConsultationValue(input.propertyType, CONSULTATION_LABELS.propertyType, 'property type');
+    const residential = ['apartment','villa','independent_house'].includes(propertyType);
+    const bhk = residential ? allowedConsultationValue(input.bhk, CONSULTATION_LABELS.bhk, 'BHK', { required: false }) : '';
+    const areaRaw = cleanConsultationText(input.area, 20);
+    const area = areaRaw === '' ? null : Number(areaRaw);
+    if (area !== null && (!Number.isFinite(area) || area < 50 || area > 1000000)) {
+      fail('Area must be between 50 and 10,00,000 sq ft', 'INVALID_CONSULTATION_DETAILS');
+    }
+    return { propertyType, bhk, area, additional };
+  }
+  if (flowKey === 'property') {
+    const propertyIntent = allowedConsultationValue(input.propertyIntent, CONSULTATION_LABELS.propertyIntent, 'property intent');
+    const propertyType = allowedConsultationValue(input.propertyType, CONSULTATION_LABELS.propertyType, 'property type');
+    const budget = cleanConsultationText(input.budget, 100);
+    return { propertyIntent, propertyType, budget, additional };
+  }
+  fail('Unsupported consultation flow', 'INVALID_CONSULTATION_FLOW');
+}
+
+async function resolveConsultationLocation(cityId, pincode) {
+  const city = await cityService.getCityById(Number(cityId));
+  if (!city) fail('Select a supported city or location', 'INVALID_CITY');
+  const normalizedPincode = String(pincode || '').replace(/\D/g, '');
+  if (!/^\d{6}$/.test(normalizedPincode)) fail('Select or enter a valid 6-digit PIN code', 'INVALID_PINCODE');
+
+  let detected;
+  try {
+    detected = await pincodeDetectionService.detectPincode(normalizedPincode);
+  } catch (error) {
+    if (['PIN_NOT_FOUND','PIN_LOOKUP_TIMEOUT','INVALID_PINCODE'].includes(error.code)) {
+      fail(error.message || 'Unable to verify this PIN code', error.code || 'INVALID_PINCODE');
+    }
+    throw error;
+  }
+
+  if (!detected?.city?.id || ['NEEDS_MAPPING','NO_MATCH'].includes(detected.status)) {
+    fail('This PIN code is not mapped to a supported city yet.', 'PIN_CITY_MAPPING_REQUIRED');
+  }
+  if (Number(detected.city.id) !== Number(city.id)) {
+    fail(`This PIN code belongs to ${detected.city.name || 'another city'}. Select the matching city.`, 'PIN_CITY_MISMATCH');
+  }
+
+  return { city, pincode: normalizedPincode, stateId: Number(detected.city.state_id) || Number(city.state_id) || null };
+}
+
+function consultationLeadData(flow, details) {
+  const marketplace = {};
+  const protectedAnswers = {};
+  const summary = [];
+  let propertyType = null;
+  let budget = null;
+
+  if (flow.key === 'build') {
+    marketplace.project_type = CONSULTATION_LABELS.projectType[details.projectType];
+    marketplace.floors = String(details.floors);
+    if (details.plotArea !== null) marketplace.plot_area = `${details.plotArea} sq ft`;
+    summary.push(marketplace.project_type, `${details.floors} floor${details.floors === 1 ? '' : 's'}`);
+    if (details.plotArea !== null) summary.push(`Plot ${details.plotArea} sq ft`);
+    propertyType = details.projectType === 'commercial_building' ? 'Commercial' : 'Residential';
+  } else if (flow.key === 'design') {
+    propertyType = CONSULTATION_LABELS.propertyType[details.propertyType];
+    marketplace.property_type = propertyType;
+    if (details.bhk) marketplace.bhk = CONSULTATION_LABELS.bhk[details.bhk];
+    if (details.area !== null) marketplace.area = `${details.area} sq ft`;
+    summary.push(propertyType);
+    if (details.bhk) summary.push(marketplace.bhk);
+    if (details.area !== null) summary.push(`${details.area} sq ft`);
+  } else if (flow.key === 'property') {
+    propertyType = CONSULTATION_LABELS.propertyType[details.propertyType];
+    marketplace.property_intent = CONSULTATION_LABELS.propertyIntent[details.propertyIntent];
+    marketplace.property_type = propertyType;
+    if (details.budget) {
+      marketplace.budget = details.budget;
+      budget = details.budget;
+    }
+    summary.push(marketplace.property_intent, propertyType);
+    if (details.budget) summary.push(`Budget ${details.budget}`);
+  }
+
+  if (details.additional) protectedAnswers['Additional information'] = details.additional;
+
+  return {
+    marketplace,
+    protectedAnswers,
+    propertyType,
+    budget,
+    requirement: summary.filter(Boolean).join(' · ').slice(0, 4000) || `${flow.name} requirement`,
+  };
+}
+
+function buildConsultationCustomFields(flow, city, pincode, details, attribution) {
+  const leadData = consultationLeadData(flow, details);
+  const custom = {};
+  const labelMap = {
+    project_type: 'Project type',
+    floors: 'Floors',
+    plot_area: 'Plot area',
+    property_type: 'Property type',
+    bhk: 'BHK',
+    area: 'Area',
+    property_intent: 'Property intent',
+    budget: 'Budget',
+  };
+  Object.entries(leadData.marketplace).forEach(([key, value]) => { custom[labelMap[key] || key] = value; });
+  if (Object.keys(leadData.protectedAnswers).length) custom._protected_answers = leadData.protectedAnswers;
+
+  custom._intake = {
+    flowKey: flow.key,
+    definitionId: flow.definitionId,
+    versionId: flow.versionId,
+    versionNo: flow.versionNo,
+    stage: 'basic_live',
+    basicLeadLive: true,
+    detailedRequirementCompleted: false,
+    cityId: Number(city.id),
+    cityName: city.name,
+    pincode,
+    answers: details,
+  };
+  custom._qualification = {
+    detailedRequirementCompleted: false,
+    basicLeadLive: true,
+    budgetProvided: Boolean(leadData.budget),
+    timelineProvided: false,
+    projectSizeKnown: Boolean(details.floors || details.plotArea || details.area),
+    marketplaceAnswers: leadData.marketplace,
   };
   const acquisition = buildAcquisitionAttribution(attribution);
   if (Object.keys(acquisition).length) custom._acquisition = acquisition;
-  return custom;
+  return { custom, leadData };
 }
 
 async function submitConsultation({
   key,
   cityId,
+  pincode,
+  details,
   contact,
   consent,
   submissionKey,
@@ -169,43 +333,55 @@ async function submitConsultation({
   const email = normalizeEmail(contact?.email);
   const idempotencyKey = validateSubmissionKey(submissionKey);
   const existing = await findBySubmissionKey(idempotencyKey);
-  if (existing) return { accepted: true, leadId: existing.id, duplicate: true, stage: 'consultation' };
+  if (existing) return { accepted: true, leadId: existing.id, duplicate: true, stage: existing.custom_fields?._intake?.stage || 'basic_live', live: existing.status === 'available' };
 
-  const city = await cityService.getCityById(Number(cityId));
-  if (!city) fail('Select a supported city or location', 'INVALID_CITY');
-
-  const requirement = `Free consultation request · ${flow.name}`;
-  const customFields = buildConsultationCustomFields(flow, city, attribution);
+  const normalizedDetails = consultationDetails(flow.key, details || {});
+  const location = await resolveConsultationLocation(cityId, pincode);
+  const { custom: customFields, leadData } = buildConsultationCustomFields(flow, location.city, location.pincode, normalizedDetails, attribution);
 
   try {
     const lead = await leadService.createLead({
       industryId: flow.industryId,
       serviceId: flow.serviceId,
       subserviceId: flow.subserviceId,
-      stateId: Number(city.state_id) || null,
-      cityId: Number(city.id),
+      stateId: location.stateId,
+      cityId: Number(location.city.id),
       customerName: name,
       customerPhone: phone,
       customerEmail: email,
-      requirement,
+      requirement: leadData.requirement,
+      propertyType: leadData.propertyType,
+      budget: leadData.budget,
       source: 'homepage_consultation',
-      notes: null,
+      notes: 'Basic homeowner consultation lead. Detailed requirement may be added later.',
       customFields,
+      pincode: location.pincode,
+      leadType: 'basic',
+      accessStrategy: 'shared',
+      buyerCapacity: 3,
       contactConsentAt: new Date(),
-      contactConsentVersion: 'homepage-consultation-v1',
+      contactConsentVersion: 'homepage-consultation-v2',
       intakeSubmissionKey: idempotencyKey,
-      qualityGateContext: 'homepage_consultation',
-      deferQualityGate: true,
+      qualityGateContext: 'homepage_basic',
+      deferQualityGate: false,
       createdBy: null,
     });
-    return { accepted: true, leadId: lead.id, duplicate: false, stage: 'consultation' };
+    return {
+      accepted: true,
+      leadId: lead.id,
+      duplicate: false,
+      stage: 'basic_live',
+      live: lead.status === 'available',
+      status: lead.status,
+      buyerCapacity: Number(lead.buyer_capacity || 3),
+    };
   } catch (error) {
     if (error.code === 'DUPLICATE_LEAD') {
-      return { accepted: true, leadId: error.leadId || null, duplicate: true, stage: 'consultation' };
+      return { accepted: true, leadId: error.leadId || null, duplicate: true, stage: 'basic_live' };
     }
     if (error.code === '23505') {
       const retry = await findBySubmissionKey(idempotencyKey);
-      if (retry) return { accepted: true, leadId: retry.id, duplicate: true, stage: 'consultation' };
+      if (retry) return { accepted: true, leadId: retry.id, duplicate: true, stage: retry.custom_fields?._intake?.stage || 'basic_live', live: retry.status === 'available' };
     }
     throw error;
   }
