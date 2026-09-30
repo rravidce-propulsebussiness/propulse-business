@@ -59,13 +59,6 @@ const FLOWS=[
   },
 ]
 
-function collection(value){
-  if(Array.isArray(value)) return value
-  if(Array.isArray(value?.data)) return value.data
-  if(Array.isArray(value?.rows)) return value.rows
-  return []
-}
-
 function Icon({name,size=20}){
   const p={width:size,height:size,viewBox:'0 0 24 24',fill:'none',stroke:'currentColor',strokeWidth:'1.8',strokeLinecap:'round',strokeLinejoin:'round','aria-hidden':true}
   if(name==='home')return <svg {...p}><path d="m3 11 9-8 9 8"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/></svg>
