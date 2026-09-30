@@ -5,6 +5,7 @@ import { isEmptyAnswer, isQuestionVisible } from '../components/CustomerFlowQues
 import InteriorRequirementExact from '../components/InteriorRequirementExact'
 import RealEstateRequirementExact from '../components/RealEstateRequirementExact'
 import { downloadRequirementQuotePdf } from '../utils/requirementQuotePdf'
+import { calculateRequirementQuotation } from '../utils/customerQuotation'
 import './RequirementWizard.css'
 
 const emptyContact = { name: '', phone: '', email: '' }
@@ -14,7 +15,7 @@ const THEMES = {
     eyebrow: 'HOME CONSTRUCTION',
     line1: 'Let’s Build',
     line2: 'Your Dream Home',
-    intro: 'Tell us your requirements and create a clear construction brief for relevant businesses.',
+    intro: 'Tell us your project details to generate a structured construction quotation with cost range, specifications and milestone schedule.',
     hero: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1900&q=90',
     promo: 'https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?auto=format&fit=crop&w=1000&q=88',
     expert: 'https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?auto=format&fit=crop&w=1000&q=86',
@@ -149,6 +150,7 @@ export default function RequirementWizard({ flowKey }) {
   const [state, setState] = useState({ loading: true, saving: false, error: '', success: false })
   const mounted = useRef(true)
   const theme = THEMES[flowKey] || THEMES.build
+  const isQuotationFlow = flowKey === 'build'
 
   useEffect(() => {
     mounted.current = true
@@ -279,11 +281,26 @@ export default function RequirementWizard({ flowKey }) {
 
     try {
       setState(current => ({ ...current, saving: true, error: '' }))
+
+      if (isQuotationFlow) {
+        const scope = Array.isArray(answers.construction_scope) ? answers.construction_scope : []
+        if (!scope.some(item => ['turnkey','civil_structure','finishing'].includes(item))) {
+          throw new Error('Select Turnkey construction, Civil / structure, or Finishing work so we can calculate the quotation.')
+        }
+        if (!answers.built_up_area) {
+          throw new Error('Enter the planned total built-up area to generate the construction quotation.')
+        }
+      }
+
+      const quotation = isQuotationFlow
+        ? await calculateRequirementQuotation({ flowKey, answers, publicRequest })
+        : null
+
       const result = await publicRequest('/customer-flows/' + flowKey + '/submit', {
         method: 'POST',
         body: JSON.stringify({ flowToken: flow.flowToken, answers, contact: { ...contact, phone }, consent, submissionKey, website })
       })
-      setSubmissionResult(result || null)
+      setSubmissionResult({ ...(result || {}), quotation })
       setState({ loading: false, saving: false, error: '', success: true })
       window.scrollTo({ top: 0, behavior: 'smooth' })
     } catch (error) {
@@ -308,27 +325,38 @@ export default function RequirementWizard({ flowKey }) {
       city: selectedCity?.name || '',
       pincode,
       rows,
+      quotation: submissionResult?.quotation || null,
     })
   }
 
   if (state.loading) return <main className="rq-page"><div className="rq-shell rq-status">Loading your requirement form…</div></main>
   if (!flow) return <main className="rq-page"><div className="rq-shell rq-status error">{state.error || 'This requirement form is unavailable.'}<Link to="/">Back home</Link></div></main>
 
-  if (state.success) return <main className="rq-page rq-premium-page">
-    <header className="rq-premium-header"><Link to="/"><img src="/brand/propulse-logo.svg" alt="ProPulse" /></Link><Link to="/">Back to Home</Link></header>
-    <div className="rq-success rq-premium-success">
-      <div className="rq-success-mark">✓</div>
-      <span>REQUEST RECEIVED</span>
-      <h1>Your quote request is ready.</h1>
-      <p>We saved your structured requirement. Download a PDF copy now for your records. This summary is not a final contractor quotation; final pricing and scope are confirmed by the business you choose.</p>
-      {submissionResult?.leadId && <div className="rq-success-reference">Request ID <b>#{submissionResult.leadId}</b></div>}
-      <div className="rq-success-actions">
-        <button className="rq-download-quote" type="button" onClick={downloadQuoteRequest}>↓ Download Quote Request PDF</button>
-        <Link className="rq-back-home" to="/">Back home</Link>
-        <button type="button" onClick={() => window.location.reload()}>Post another requirement</button>
+  if (state.success) {
+    const quotation = submissionResult?.quotation
+    return <main className="rq-page rq-premium-page">
+      <header className="rq-premium-header"><Link to="/"><img src="/brand/propulse-logo.svg" alt="ProPulse" /></Link><Link to="/">Back to Home</Link></header>
+      <div className="rq-success rq-premium-success">
+        <div className="rq-success-mark">✓</div>
+        <span>{quotation ? 'QUOTATION GENERATED' : 'REQUEST RECEIVED'}</span>
+        <h1>{quotation ? 'Your detailed quotation is ready.' : 'Your requirement is ready.'}</h1>
+        <p>{quotation
+          ? 'Your project requirement has been saved and priced using the current ProPulse planning-rate configuration. Download the detailed quotation with cost breakdown, package specifications, payment milestones, exclusions and terms.'
+          : 'We saved your structured requirement. Download a PDF copy for your records.'}</p>
+        {quotation && <div className="rq-quotation-result">
+          <div><small>Estimated project cost</small><strong>{quotation.minimumText}</strong><i>to</i><strong>{quotation.maximumText}</strong></div>
+          <span>{quotation.effectiveRateText} · {quotation.project?.constructionPackage} · {quotation.project?.quality}</span>
+        </div>}
+        {submissionResult?.leadId && <div className="rq-success-reference">Request ID <b>#{submissionResult.leadId}</b></div>}
+        <div className="rq-success-actions">
+          <button className="rq-download-quote" type="button" onClick={downloadQuoteRequest}>↓ {quotation ? 'Download Detailed Quotation PDF' : 'Download Requirement PDF'}</button>
+          <Link className="rq-back-home" to="/">Back home</Link>
+          <button type="button" onClick={() => window.location.reload()}>{quotation ? 'Create another quotation' : 'Post another requirement'}</button>
+        </div>
+        {quotation && <small className="rq-quotation-disclaimer">Indicative quotation only. Final contractor price is confirmed after site inspection, drawings, measurements, selected brands, taxes and detailed commercial review.</small>}
       </div>
-    </div>
-  </main>
+    </main>
+  }
 
   const phone = contactData.phone || contactData.phone_number || contactData.mobile || ''
   const email = contactData.email || contactData.support_email || ''
@@ -376,7 +404,7 @@ export default function RequirementWizard({ flowKey }) {
         <Link to="/about">About</Link>
         <Link to="/#contact">Contact</Link>
       </nav>
-      <button onClick={() => jump('rq-basic')}>Get Free Consultation <Icon name="arrow" size={15} /></button>
+      <button onClick={() => jump('rq-basic')}>{isQuotationFlow ? 'Get Free Quotation' : 'Get Free Consultation'} <Icon name="arrow" size={15} /></button>
     </header>
 
     <section className="rq-premium-hero">
@@ -389,7 +417,7 @@ export default function RequirementWizard({ flowKey }) {
       </div>
       <div className="rq-hero-benefits">
         <article><Icon name="chat" /><div><b>Free Consultation</b><small>No obligation</small></div></article>
-        <article><Icon name="receipt" /><div><b>Transparent Estimates</b><small>Compare actual options</small></div></article>
+        <article><Icon name="receipt" /><div><b>{isQuotationFlow ? 'Detailed Quotation' : 'Transparent Estimates'}</b><small>{isQuotationFlow ? 'Cost + specifications' : 'Compare actual options'}</small></div></article>
         <article><Icon name="shield" /><div><b>Relevant Businesses</b><small>Matched to your brief</small></div></article>
         <article><Icon name="target" /><div><b>End-to-End Journey</b><small>From requirement onward</small></div></article>
       </div>
@@ -406,7 +434,7 @@ export default function RequirementWizard({ flowKey }) {
         ['rq-basic','1','Basic Details','Tell us about your project'],
         ['rq-property','2','Property Details','Type, size and preferences'],
         ['rq-preferences','3','Requirements','Scope, quality and timeline'],
-        ['rq-summary','4','Review & Submit','Confirm and connect'],
+        ['rq-summary','4',isQuotationFlow ? 'Generate Quotation' : 'Review & Submit',isQuotationFlow ? 'Calculate and download' : 'Confirm and connect'],
       ].map(([id, number, title, text], index) => <button key={id} onClick={() => jump(id)} className={completion >= [1,35,65,90][index] ? 'done' : index === 0 ? 'active' : ''}>
         <span>{completion >= [35,65,90,100][index] ? '✓' : number}</span><div><b>{title}</b><small>{text}</small></div>{index < 3 && <i><Icon name="arrow" size={14}/></i>}
       </button>)}
@@ -467,23 +495,23 @@ export default function RequirementWizard({ flowKey }) {
         </div>
 
         <aside className="rq-summary-card" id="rq-summary">
-          <div className="rq-summary-progress"><span>Requirement progress</span><b>{completion}%</b><i><em style={{ width: completion + '%' }} /></i></div>
-          <h3>Your Selection Summary</h3>
+          <div className="rq-summary-progress"><span>{isQuotationFlow ? 'Quotation progress' : 'Requirement progress'}</span><b>{completion}%</b><i><em style={{ width: completion + '%' }} /></i></div>
+          <h3>{isQuotationFlow ? 'Quotation Input Summary' : 'Your Selection Summary'}</h3>
           <div className="rq-summary-list">
             {summaryRows.map(([label,value]) => <div key={label}><span>{label}</span><b title={value}>{value}</b></div>)}
           </div>
-          <label className="rq-consent premium"><input type="checkbox" checked={consent} onChange={event => setConsent(event.target.checked)} /><span>I agree that ProPulse may share my submitted contact information with relevant businesses so they can respond to this requirement.</span></label>
+          <label className="rq-consent premium"><input type="checkbox" checked={consent} onChange={event => setConsent(event.target.checked)} /><span>I agree that ProPulse may use my submitted project details to generate this quotation and share my contact information with relevant businesses so they can respond with final commercial offers.</span></label>
           <label className="rq-honeypot" aria-hidden="true">Website<input tabIndex="-1" autoComplete="off" value={website} onChange={event => setWebsite(event.target.value)} /></label>
           {state.error && <div className="rq-error">{state.error}</div>}
-          <button className="rq-submit" type="submit" disabled={state.saving}>{state.saving ? 'Submitting…' : (flow.config?.submitLabel || 'Submit Requirement')} <Icon name="arrow" size={15}/></button>
-          <small className="rq-submit-note">No OTP required. Your request becomes a lead only after successful submission.</small>
+          <button className="rq-submit" type="submit" disabled={state.saving}>{state.saving ? (isQuotationFlow ? 'Calculating quotation…' : 'Submitting…') : (isQuotationFlow ? 'Generate Detailed Quotation' : (flow.config?.submitLabel || 'Submit Requirement'))} <Icon name="arrow" size={15}/></button>
+          <small className="rq-submit-note">{isQuotationFlow ? 'No OTP required. Pricing is calculated from Admin-configured rates and your submitted project details.' : 'No OTP required. Your request becomes a lead only after successful submission.'}</small>
         </aside>
       </div>
     </form>
 
     <section className="rq-expert-strip">
       <img src={theme.expert} alt="" />
-      <div><h2>Need Help? Talk to Our Expert</h2><p>Get free consultation and personalized guidance for your requirement.</p></div>
+      <div><h2>Need Help? Talk to Our Expert</h2><p>{isQuotationFlow ? 'Need help with built-up area, package or specifications? We can help before you generate the quotation.' : 'Get free consultation and personalized guidance for your requirement.'}</p></div>
       <a href={phone ? `tel:${phone.replace(/\s/g,'')}` : '#rq-basic'}><Icon name="phone" size={19}/> {phone || 'Start Free Consultation'}</a>
     </section>
 
