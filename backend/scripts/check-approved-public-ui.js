@@ -14,6 +14,9 @@ const wizard=read('../frontend/src/pages/RequirementWizard.jsx');
 const packages=read('../frontend/src/pages/Packages.jsx');
 const publicHeader=read('../frontend/src/styles/PublicMarketingHeader.css');
 const contact=read('../frontend/src/pages/Contact.jsx');
+const projects=read('../frontend/src/pages/Projects.jsx');
+const about=read('../frontend/src/pages/About.jsx');
+const howItWorks=read('../frontend/src/pages/HowItWorks.jsx');
 
 assert.match(app,/path="\/quote" element={<Solutions\/>}/);
 assert.match(app,/path="\/solutions" element={<LegacySolutionRedirect\/>}/);
@@ -55,5 +58,12 @@ assert.match(contact,/audience=website/);
 assert.match(contact,/Reach the ProPulse Team/);
 assert.match(contact,/to="\/contact"/);
 assert.doesNotMatch(contact,/Navigate to="\/#contact"/);
+
+for(const source of [home,quote,packages,projects,about,howItWorks,contact]){
+  assert.match(source,/Professionals/);
+  assert.match(source,/to="\/login"/);
+}
+assert.match(publicHeader,/\.public-professional-btn/);
+assert.match(publicHeader,/Quote \+ professional public header actions/);
 
 console.log('Approved public UI mockup checks passed.');
