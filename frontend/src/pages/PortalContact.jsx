@@ -8,7 +8,7 @@ import './PortalContact.css';
 
 const audienceCopy={
   lead_partners:{label:'Lead Partner',title:'Contact',sub:'Connect with ProPulse support for lead uploads, pricing, reports, earnings and withdrawals.'},
-  users:{label:'Customer',title:'Contact',sub:'Connect with ProPulse support for leads, your account, wallet and membership.'}
+  users:{label:'Professional',title:'Professional Support',sub:'Connect with ProPulse for leads, business account support, wallet, memberships, verification and marketplace assistance.'}
 };
 const empty={company_name:'',email:'',phone:'',whatsapp:'',address:'',business_hours:'',support_email:'',careers_email:'',maps_url:'',social_handles:[]};
 
@@ -21,7 +21,7 @@ export default function PortalContact({audience='lead_partners'}){
   const wa=data.whatsapp?String(data.whatsapp).replace(/\D/g,''):'';
   function signOut(){clearSession();localStorage.removeItem('propulse_session_mode');navigate('/login',{replace:true})}
   return <div className="portal-contact-shell">
-    {audience==='lead_partners'?<><LeadPartnerSidebar user={user} onSignOut={signOut}/><main className="portal-contact-main partner-main"><header className="portal-contact-topbar partner-topbar"><div className="partner-breadcrumb"><span>Lead Partner</span><b>/</b><strong>Contact</strong></div></header><PortalContactContent copy={copy} data={data} socials={socials} wa={wa} loading={loading} error={error} partner/></main></>:<><UserHeader/><main className="portal-contact-main user-contact-main"><div className="portal-contact-user-wrap"><div className="portal-contact-user-breadcrumb"><span>Account</span><b>/</b><strong>Contact</strong></div><PortalContactContent copy={copy} data={data} socials={socials} wa={wa} loading={loading} error={error}/></div></main></>}
+    {audience==='lead_partners'?<><LeadPartnerSidebar user={user} onSignOut={signOut}/><main className="portal-contact-main partner-main"><header className="portal-contact-topbar partner-topbar"><div className="partner-breadcrumb"><span>Lead Partner</span><b>/</b><strong>Contact</strong></div></header><PortalContactContent copy={copy} data={data} socials={socials} wa={wa} loading={loading} error={error} partner/></main></>:<><UserHeader/><main className="portal-contact-main user-contact-main"><div className="portal-contact-user-wrap"><div className="portal-contact-user-breadcrumb"><span>Professionals</span><b>/</b><strong>Contact</strong></div><PortalContactContent copy={copy} data={data} socials={socials} wa={wa} loading={loading} error={error}/></div></main></>}
   </div>
 }
 
