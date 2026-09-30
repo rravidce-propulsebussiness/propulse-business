@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { isEmptyAnswer } from './CustomerFlowQuestion'
+import QuoteLocationFields from './QuoteLocationFields'
 import './RealEstateRequirementExact.css'
 
 const HERO = 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=2200&q=92'
@@ -59,7 +60,7 @@ function Chips({ question, value, onChange }) {
 }
 
 export default function RealEstateRequirementExact(props) {
-  const { flow, questions, answers, setAnswer, cities, cityId, setCity, cityPincodes, locationQuestion, contact, setContact, state, submit, contactData, completion } = props
+  const { flow, questions, answers, setAnswer, cities, locationStates, locationStateId, setLocationState, cityId, setCity, locationQuestion, setPincode, pinLookup, contact, setContact, state, submit, contactData, completion } = props
   const byKey = useMemo(() => Object.fromEntries(questions.map(q => [q.questionKey, q])), [questions])
   const intent = byKey.property_intent
   const propertyType = byKey.property_type
@@ -94,7 +95,10 @@ export default function RealEstateRequirementExact(props) {
   }
 
   const summary = [
-    ['City / Location', cities.find(c => String(c.id) === String(cityId))?.name || '—'],
+    ['City / Location', [
+      cities.find(c => String(c.id) === String(cityId))?.name,
+      locationStates.find(s => String(s.id) === String(locationStateId))?.name,
+    ].filter(Boolean).join(', ') || '—'],
     ['PIN Code', labelFor(locationQuestion, locationQuestion ? answers[locationQuestion.questionKey] : '')],
     ['Property Type', propertyCards.find(cardActive)?.title || labelFor(propertyType, selectedType)],
     ['Budget Range', budget ? (answers[budget.questionKey] || '—') : '—'],
@@ -137,8 +141,20 @@ export default function RealEstateRequirementExact(props) {
         <div className="rex-card">
           <div className="rex-section-title"><span>1.</span><div><h2>Basic Details</h2><p>Let’s start with some basic information about your property requirement.</p></div></div>
           <div className="rex-basic-grid">
-            <label><b>Looking in City / Location</b><select value={cityId} onChange={e=>setCity(e.target.value)}><option value="">Select City / Location</option>{cities.map(city=><option key={city.id} value={city.id}>{city.name}{city.state_name?` · ${city.state_name}`:''}</option>)}</select></label>
-            <label><b>PIN Code <small>(Optional)</small></b>{cityPincodes.length?<select value={locationQuestion?answers[locationQuestion.questionKey]||'':''} onChange={e=>locationQuestion&&setAnswer(locationQuestion.questionKey,e.target.value)}><option value="">Select PIN Code</option>{cityPincodes.map(item=><option key={item.pincode} value={item.pincode}>{item.pincode}{item.officeName?` · ${item.officeName}`:''}</option>)}</select>:<input value={locationQuestion?answers[locationQuestion.questionKey]||'':''} onChange={e=>locationQuestion&&setAnswer(locationQuestion.questionKey,e.target.value.replace(/\D/g,'').slice(0,6))} inputMode="numeric" placeholder="Enter PIN Code"/>}</label>
+            <QuoteLocationFields
+              states={locationStates}
+              stateId={locationStateId}
+              onStateChange={setLocationState}
+              cities={cities}
+              cityId={cityId}
+              onCityChange={setCity}
+              pincode={locationQuestion ? answers[locationQuestion.questionKey] || '' : ''}
+              onPincodeChange={setPincode}
+              lookupStatus={pinLookup.status}
+              lookupMessage={pinLookup.message}
+              stateLabel="Looking in State"
+              cityLabel="City / Location"
+            />
             <label><b>Your Name</b><input value={contact.name} onChange={e=>setContact({...contact,name:e.target.value})} placeholder="Enter your full name"/></label>
             <label><b>Mobile Number</b><div className="rex-phone"><span>+91</span><input value={contact.phone} onChange={e=>setContact({...contact,phone:e.target.value.replace(/\D/g,'').slice(0,10)})} inputMode="tel" placeholder="Enter 10-digit number"/></div></label>
             <label><b>Email <small>(Optional)</small></b><input type="email" value={contact.email} onChange={e=>setContact({...contact,email:e.target.value})} placeholder="Enter your email"/></label>
