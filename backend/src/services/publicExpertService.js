@@ -22,9 +22,9 @@ async function listPublicExperts({search='',industryId='',cityId='',verified='',
   if(cleanSearch){
     params.push('%'+cleanSearch+'%');
     const n=params.length;
-    conditions.push(\`(
-      bp.business_name ILIKE $\${n}
-      OR COALESCE(bp.business_details,'') ILIKE $\${n}
+    conditions.push(`(
+      bp.business_name ILIKE $${n}
+      OR COALESCE(bp.business_details,'') ILIKE $${n}
       OR EXISTS(
         SELECT 1
         FROM business_profile_services bpss
@@ -33,7 +33,7 @@ async function listPublicExperts({search='',industryId='',cityId='',verified='',
         LEFT JOIN subservices sss ON sss.id=bpss.subservice_id
         WHERE bpss.business_profile_id=bp.id
           AND bpss.is_active=TRUE
-          AND (ii.name ILIKE $\${n} OR ss.name ILIKE $\${n} OR COALESCE(sss.name,'') ILIKE $\${n})
+          AND (ii.name ILIKE $${n} OR ss.name ILIKE $${n} OR COALESCE(sss.name,'') ILIKE $${n})
       )
       OR EXISTS(
         SELECT 1
@@ -43,21 +43,21 @@ async function listPublicExperts({search='',industryId='',cityId='',verified='',
         LEFT JOIN subcities scc ON scc.id=bpll.subcity_id
         WHERE bpll.business_profile_id=bp.id
           AND bpll.is_active=TRUE
-          AND (stt.name ILIKE $\${n} OR cc.name ILIKE $\${n} OR COALESCE(scc.name,'') ILIKE $\${n})
+          AND (stt.name ILIKE $${n} OR cc.name ILIKE $${n} OR COALESCE(scc.name,'') ILIKE $${n})
       )
-    )\`);
+    )`);
   }
 
   if(industryId){
     const id=Number(industryId);
     if(Number.isInteger(id)&&id>0){
       params.push(id);
-      conditions.push(\`EXISTS(
+      conditions.push(`EXISTS(
         SELECT 1 FROM business_profile_services bpsi
         WHERE bpsi.business_profile_id=bp.id
-          AND bpsi.industry_id=$\${params.length}
+          AND bpsi.industry_id=$${params.length}
           AND bpsi.is_active=TRUE
-      )\`);
+      )`);
     }
   }
 
@@ -65,35 +65,35 @@ async function listPublicExperts({search='',industryId='',cityId='',verified='',
     const id=Number(cityId);
     if(Number.isInteger(id)&&id>0){
       params.push(id);
-      conditions.push(\`EXISTS(
+      conditions.push(`EXISTS(
         SELECT 1 FROM business_profile_locations bplc
         WHERE bplc.business_profile_id=bp.id
-          AND bplc.city_id=$\${params.length}
+          AND bplc.city_id=$${params.length}
           AND bplc.is_active=TRUE
-      )\`);
+      )`);
     }
   }
 
   const verifiedOnly=String(verified||'').toLowerCase()==='true'||String(verified)==='1';
   if(verifiedOnly){
-    conditions.push(\`EXISTS(
+    conditions.push(`EXISTS(
       SELECT 1 FROM company_proof_documents cpdv
       WHERE cpdv.user_id=u.id AND cpdv.status='verified'
-    )\`);
+    )`);
   }
 
   const whereClause='WHERE '+conditions.join(' AND ');
   const count=(await pool.query(
-    \`SELECT COUNT(*)::int AS total
+    `SELECT COUNT(*)::int AS total
        FROM users u
        JOIN business_profiles bp ON bp.user_id=u.id
-       $\${whereClause}\`,
+       $${whereClause}`,
     params
   )).rows[0]?.total||0;
 
   const queryParams=[...params,currentPageSize,offset];
   const result=await pool.query(
-    \`SELECT
+    `SELECT
        u.id AS user_id,
        bp.id AS business_profile_id,
        bp.business_name,
@@ -135,12 +135,12 @@ async function listPublicExperts({search='',industryId='',cityId='',verified='',
        ),'[]'::json) AS locations
      FROM users u
      JOIN business_profiles bp ON bp.user_id=u.id
-     $\${whereClause}
+     $${whereClause}
      ORDER BY
        EXISTS(SELECT 1 FROM company_proof_documents cpdo WHERE cpdo.user_id=u.id AND cpdo.status='verified') DESC,
        u.created_at DESC,
        u.id DESC
-     LIMIT $\${queryParams.length-1} OFFSET $\${queryParams.length}\`,
+     LIMIT $${queryParams.length-1} OFFSET $${queryParams.length}`,
     queryParams
   );
 
