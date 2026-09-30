@@ -37,7 +37,7 @@ export default function Contact(){
   const [searchParams]=useSearchParams()
   const portalAudience=searchParams.get('audience')
   if(portalAudience==='lead_partners') return <PortalContact audience={portalAudience}/>
-  if(portalAudience==='users') return <Navigate to="/professionals" replace/>
+  if(portalAudience==='users') return <Navigate to="/professional-contact" replace/>
   return <PublicContact/>
 }
 
