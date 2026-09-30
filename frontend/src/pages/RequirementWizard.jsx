@@ -402,10 +402,10 @@ export default function RequirementWizard({ flowKey }) {
       <Link to="/"><img src="/brand/propulse-logo.svg" alt="ProPulse" /></Link>
       <nav>
         <Link to="/">Home</Link>
-        <Link className={flowKey === 'build' ? 'active' : ''} to="/solutions#construction">Construction</Link>
-        <Link className={flowKey === 'design' ? 'active' : ''} to="/solutions#interiors">Interiors</Link>
+        <Link className={flowKey === 'build' ? 'active' : ''} to="/quote#construction">Construction</Link>
+        <Link className={flowKey === 'design' ? 'active' : ''} to="/quote#interiors">Interiors</Link>
         <Link to="/packages">Packages</Link>
-        <Link className={flowKey === 'property' ? 'active' : ''} to="/solutions#property">Real Estate</Link>
+        <Link className={flowKey === 'property' ? 'active' : ''} to="/quote#property">Real Estate</Link>
         <Link to="/projects">Projects</Link>
         <Link to="/how-it-works">How It Works</Link>
         <Link to="/about">About</Link>
@@ -524,7 +524,7 @@ export default function RequirementWizard({ flowKey }) {
 
     <footer className="rq-premium-footer">
       <div><img src="/brand/propulse-logo.svg" alt="ProPulse" /><p>Your customer starting point for construction, interiors and real estate requirements.</p></div>
-      <div><b>Quick Links</b><Link to="/">Home</Link><Link to="/solutions#construction">Construction</Link><Link to="/solutions#interiors">Interiors</Link><Link to="/packages">Packages</Link><Link to="/solutions#property">Real Estate</Link></div>
+      <div><b>Quick Links</b><Link to="/">Home</Link><Link to="/quote#construction">Construction</Link><Link to="/quote#interiors">Interiors</Link><Link to="/packages">Packages</Link><Link to="/quote#property">Real Estate</Link></div>
       <div><b>Our Services</b><Link to="/construction-estimator">Cost Estimator</Link><Link to="/projects">Projects</Link><Link to="/how-it-works">How It Works</Link></div>
       <div><b>Support</b><Link to="/contact?audience=users">FAQ</Link><Link to="/contact?audience=users">Contact Us</Link><Link to="/contact?audience=users">Privacy Policy</Link></div>
       <div><b>Contact</b>{phone && <span>{phone}</span>}{email && <span>{email}</span>}<span>{[flow.industryName, flow.serviceName].filter(Boolean).join(' · ') || flow.name}</span><small>Building Spaces, Elevating Lives.</small></div>
