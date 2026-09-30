@@ -274,13 +274,13 @@ button,input,select{font:inherit}
 .hc-popup-unit input{font-size:14px;padding:0 12px}
 .hc-popup-unit i{font-size:12px}
 .hc-popup-textarea{min-height:82px;font-size:14px;padding:11px 12px}
-.hc-consult-popup label span small{font-size:11px}
+.hc-consult-popup label span small{font-size:12px}
 .hc-popup-consent{grid-template-columns:18px 1fr;gap:9px;padding:10px}
 .hc-popup-consent input{width:16px;height:16px}
 .hc-popup-consent>span{font-size:12px!important;line-height:1.5}
 .hc-popup-error{font-size:12px;padding:9px 10px}
 .hc-popup-submit{height:46px;font-size:14px}
-.hc-consult-popup form>small{font-size:11px;line-height:1.45}
+.hc-consult-popup form>small{font-size:12px;line-height:1.45}
 @media(max-width:640px){
   .hc-consult-popup{width:auto;padding:16px}
   .hc-popup-head h3{font-size:18px}
