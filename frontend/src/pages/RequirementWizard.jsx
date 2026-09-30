@@ -143,7 +143,6 @@ export default function RequirementWizard({ flowKey }) {
   const [answers, setAnswers] = useState({})
   const [cityId, setCityId] = useState('')
   const [contact, setContact] = useState(emptyContact)
-  const [consent, setConsent] = useState(false)
   const [website, setWebsite] = useState('')
   const [submissionKey, setSubmissionKey] = useState(makeSubmissionKey)
   const [submissionResult, setSubmissionResult] = useState(null)
@@ -169,7 +168,6 @@ export default function RequirementWizard({ flowKey }) {
       let initialAnswers = {}
       let initialContact = emptyContact
       let initialCityId = ''
-      let initialConsent = false
       let initialSubmissionKey = makeSubmissionKey()
 
       try {
@@ -189,7 +187,6 @@ export default function RequirementWizard({ flowKey }) {
           }
           initialContact = { name: String(saved.name || ''), phone: String(saved.phone || ''), email: String(saved.email || '') }
           initialCityId = saved.cityId ? String(saved.cityId) : ''
-          initialConsent = saved.consent === true
           if (/^[A-Za-z0-9_-]{16,100}$/.test(String(saved.submissionKey || ''))) initialSubmissionKey = String(saved.submissionKey)
           if (!initialCityId && saved.pincode) {
             const matched = loadedCities.find(city => (city.pincodes || []).some(item => String(typeof item === 'string' ? item : item?.pincode) === String(saved.pincode)))
@@ -208,7 +205,6 @@ export default function RequirementWizard({ flowKey }) {
       setAnswers(initialAnswers)
       setContact(initialContact)
       setCityId(initialCityId)
-      setConsent(initialConsent)
       setSubmissionKey(initialSubmissionKey)
       setState({ loading: false, saving: false, error: '', success: false })
     }).catch(error => mounted.current && setState({ loading: false, saving: false, error: error.message, success: false }))
@@ -237,8 +233,8 @@ export default function RequirementWizard({ flowKey }) {
   const usedKeys = new Set([locationQuestion?.questionKey, ...propertyQuestions.map(q => q.questionKey), ...configQuestions.map(q => q.questionKey), ...preferenceQuestions.map(q => q.questionKey), additionalQuestion?.questionKey].filter(Boolean))
   const extraQuestions = questions.filter(question => !usedKeys.has(question.questionKey))
 
-  const requiredTotal = questions.filter(question => question.isRequired).length + 3
-  const requiredDone = questions.filter(question => question.isRequired && !isEmptyAnswer(answers[question.questionKey])).length + (contact.name.trim() ? 1 : 0) + (/^[6-9]\d{9}$/.test(contact.phone.replace(/\D/g, '')) ? 1 : 0) + (consent ? 1 : 0)
+  const requiredTotal = questions.filter(question => question.isRequired).length + 2
+  const requiredDone = questions.filter(question => question.isRequired && !isEmptyAnswer(answers[question.questionKey])).length + (contact.name.trim() ? 1 : 0) + (/^[6-9]\d{9}$/.test(contact.phone.replace(/\D/g, '')) ? 1 : 0)
   const completion = requiredTotal ? Math.round(requiredDone / requiredTotal * 100) : 0
 
   function setAnswer(key, value) {
@@ -279,12 +275,6 @@ export default function RequirementWizard({ flowKey }) {
       jump('rq-basic')
       return
     }
-    if (!consent) {
-      setState(current => ({ ...current, error: 'Please accept the contact consent to submit your requirement.' }))
-      jump('rq-summary')
-      return
-    }
-
     try {
       setState(current => ({ ...current, saving: true, error: '' }))
 
@@ -304,7 +294,7 @@ export default function RequirementWizard({ flowKey }) {
 
       const result = await publicRequest('/customer-flows/' + flowKey + '/submit', {
         method: 'POST',
-        body: JSON.stringify({ flowToken: flow.flowToken, answers, contact: { ...contact, phone }, consent, submissionKey, website })
+        body: JSON.stringify({ flowToken: flow.flowToken, answers, contact: { ...contact, phone }, consent: true, submissionKey, website })
       })
       setSubmissionResult({ ...(result || {}), quotation })
       setState({ loading: false, saving: false, error: '', success: true })
@@ -380,8 +370,6 @@ export default function RequirementWizard({ flowKey }) {
       locationQuestion={locationQuestion}
       contact={contact}
       setContact={setContact}
-      consent={consent}
-      setConsent={setConsent}
       state={state}
       submit={submit}
       contactData={contactData}
@@ -529,7 +517,7 @@ export default function RequirementWizard({ flowKey }) {
           <div className="rq-summary-list">
             {summaryRows.map(([label,value]) => <div key={label}><span>{label}</span><b title={value}>{value}</b></div>)}
           </div>
-          <label className="rq-consent premium"><input type="checkbox" checked={consent} onChange={event => setConsent(event.target.checked)} /><span>I agree that ProPulse may use my submitted project details to generate this quotation and share my contact information with relevant businesses so they can respond with final commercial offers.</span></label>
+          <p className="rq-submit-consent">By submitting, you agree that ProPulse may use your project and contact details to process this request and connect you with relevant professionals.</p>
           <label className="rq-honeypot" aria-hidden="true">Website<input tabIndex="-1" autoComplete="off" value={website} onChange={event => setWebsite(event.target.value)} /></label>
           {state.error && <div className="rq-error">{state.error}</div>}
           <button className="rq-submit" type="submit" disabled={state.saving}>{state.saving ? (isQuotationFlow ? 'Calculating quotation…' : 'Submitting…') : (isQuotationFlow ? 'Generate Detailed Quotation' : (flow.config?.submitLabel || 'Submit Requirement'))} <Icon name="arrow" size={15}/></button>
