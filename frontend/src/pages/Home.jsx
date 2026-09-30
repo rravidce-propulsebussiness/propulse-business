@@ -454,7 +454,10 @@ function Home() {
       </section>
 
       <section className="hc-how-premium" id="how-it-works" aria-labelledby="how-it-works-title">
-        <h2 id="how-it-works-title" className="hc-visually-hidden">How It Works</h2>
+        <div className="hc-how-premium-heading">
+          <h2 id="how-it-works-title">How It Works</h2>
+          <span aria-hidden="true" />
+        </div>
 
         <div className="hc-how-premium-grid">
           <article className="hc-how-premium-card">
