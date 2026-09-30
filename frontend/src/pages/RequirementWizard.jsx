@@ -9,6 +9,18 @@ import { downloadRequirementQuotePdf } from '../utils/requirementQuotePdf'
 import { calculateRequirementQuotation } from '../utils/customerQuotation'
 import './RequirementWizard.css'
 
+const CONSTRUCTION_FLOORS = [
+  { value: '1', label: 'Ground Floor' },
+  { value: '2', label: 'G+1' },
+  { value: '3', label: 'G+2' },
+  { value: '4', label: 'G+3' },
+  { value: '5', label: 'Above G+3' },
+]
+
+function constructionFloorLabel(value) {
+  return CONSTRUCTION_FLOORS.find(option => option.value === String(value))?.label || String(value ?? '')
+}
+
 const emptyContact = { name: '', phone: '', email: '' }
 
 const THEMES = {
@@ -86,6 +98,7 @@ function fieldLabel(question, answers) {
     return value.map(item => question.options?.find(option => option.value === item)?.label || item).join(', ')
   }
   if (typeof value === 'boolean') return value ? 'Yes' : 'No'
+  if (question.questionKey === 'floors') return constructionFloorLabel(value)
   return question.options?.find(option => option.value === value)?.label || String(value)
 }
 
@@ -128,6 +141,13 @@ function PremiumQuestion({ question, value, onChange, visual = 'default' }) {
 
   if (question.questionType === 'text') {
     return <div className="rq-text-wrap"><textarea rows="4" value={value || ''} maxLength={Number(question.validation?.maxLength || 1500)} onChange={event => onChange(event.target.value)} placeholder="E.g. terrace, garden, parking, vastu preference, specific materials…" /><span>{String(value || '').length}/{Number(question.validation?.maxLength || 1500)}</span></div>
+  }
+
+  if (question.questionKey === 'floors') {
+    return <select className="rq-floor-select" value={value ?? ''} onChange={event => onChange(event.target.value)}>
+      <option value="">Select floors</option>
+      {CONSTRUCTION_FLOORS.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}
+    </select>
   }
 
   if (question.questionType === 'number' || question.questionType === 'area') {
