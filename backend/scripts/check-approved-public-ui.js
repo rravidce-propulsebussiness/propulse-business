@@ -14,6 +14,8 @@ const quoteCss=read('../frontend/src/pages/Solutions.css');
 const wizard=read('../frontend/src/pages/RequirementWizard.jsx');
 const packages=read('../frontend/src/pages/Packages.jsx');
 const publicHeader=read('../frontend/src/styles/PublicMarketingHeader.css');
+const websiteFaq=read('../frontend/src/components/WebsiteFaqSection.jsx');
+const websiteFaqCss=read('../frontend/src/components/WebsiteFaqSection.css');
 const contact=read('../frontend/src/pages/Contact.jsx');
 const projects=read('../frontend/src/pages/Projects.jsx');
 const about=read('../frontend/src/pages/About.jsx');
@@ -135,5 +137,15 @@ assert.match(home,/Tiles/);
 assert.match(home,/Hardware/);
 assert.match(homeCss,/pointer-events:none/);
 assert.match(homeCss,/grid-template-columns:repeat\(4,minmax\(0,1fr\)\)/);
+
+assert.match(websiteFaq,/Questions, <em>clearly answered\.<\/em>/);
+assert.match(websiteFaq,/website-faq-home-icon/);
+assert.match(websiteFaq,/Talk to <em>ProPulse\.<\/em>/);
+assert.match(websiteFaq,/website-faq-support-photo/);
+assert.match(websiteFaq,/return !standalone&&items.length\?items\[0\]\.id:null/);
+assert.match(websiteFaqCss,/\.website-faq-home-icon/);
+assert.match(websiteFaqCss,/\.website-faq-support-photo/);
+assert.match(websiteFaqCss,/\.website-faq-item\.open/);
+assert.match(websiteFaqCss,/\.website-faq-more/);
 
 console.log('Approved public UI mockup checks passed.');
