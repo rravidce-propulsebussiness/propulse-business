@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { publicRequest } from '../utils/auth'
 import './HowItWorks.css'
@@ -95,25 +95,14 @@ export default function HowItWorks(){
     const hash=typeof window!=='undefined'?window.location.hash.replace('#',''):''
     return FLOWS.some(flow=>flow.key===hash)?hash:'construction'
   })
-  const [faqs,setFaqs]=useState([])
-  const [openFaq,setOpenFaq]=useState(null)
-  const [cities,setCities]=useState([])
   const [contactData,setContactData]=useState({})
 
   useEffect(()=>{
     window.scrollTo(0,0)
-    Promise.allSettled([
-      publicRequest('/faqs?audience=website'),
-      publicRequest('/cities'),
-      publicRequest('/contact?audience=website'),
-    ]).then(([faqResult,cityResult,contactResult])=>{
-      if(faqResult.status==='fulfilled')setFaqs(collection(faqResult.value))
-      if(cityResult.status==='fulfilled')setCities(collection(cityResult.value))
-      if(contactResult.status==='fulfilled')setContactData(contactResult.value||{})
-    })
+    publicRequest('/contact?audience=website')
+      .then(value=>setContactData(value||{}))
+      .catch(()=>setContactData({}))
   },[])
-
-  const visibleFaqs=useMemo(()=>faqs.filter(item=>item?.is_active!==false).slice(0,4),[faqs])
 
   function goToFlow(key){
     setActive(key)
@@ -177,26 +166,6 @@ export default function HowItWorks(){
       <article><span><Icon name="receipt"/></span><div><b>TRANSPARENT ESTIMATES</b><small>Compare actual options</small></div></article>
       <article><span><Icon name="people"/></span><div><b>RELEVANT BUSINESSES</b><small>Matched by category & location</small></div></article>
       <article><span><Icon name="support"/></span><div><b>END-TO-END JOURNEY</b><small>From planning to next step</small></div></article>
-    </section>
-
-    <section className="hiw-why">
-      <div><h2>Why Homeowners<br/>Choose <em>ProPulse</em></h2><p>A customer-first starting point for construction, interiors and real-estate requirements.</p></div>
-      <article><span><Icon name="home"/></span><div><b>3</b><small>Core Categories</small></div></article>
-      <article><span><Icon name="people"/></span><div><b>Admin</b><small>Managed Flows</small></div></article>
-      <article><span><Icon name="pin"/></span><div><b>{cities.length||'City + PIN'}</b><small>{cities.length?'Active Cities':'Location-aware Intake'}</small></div></article>
-      <article><span><Icon name="check"/></span><div><b>Free</b><small>Consultation Start</small></div></article>
-    </section>
-
-    <section className="hiw-faq">
-      <div className="hiw-section-head"><div><h2>Frequently Asked <em>Questions</em></h2><p>Quick answers about the ProPulse customer journey.</p></div><Link to="/professionals">View All FAQs <Icon name="arrow" size={14}/></Link></div>
-      <div className="hiw-faq-grid">
-        {(visibleFaqs.length?visibleFaqs:[
-          {id:'a',question:'Is the consultation free?',answer:'You can start the public requirement flow without paying a consultation fee.'},
-          {id:'b',question:'Are estimates final quotations?',answer:'No. Estimators provide indicative ranges. Final quotations depend on the actual scope and business response.'},
-          {id:'c',question:'How are businesses matched?',answer:'Your category, location and requirement details help relevant businesses understand whether they can serve the request.'},
-          {id:'d',question:'Do you support documentation?',answer:'The requirement flow keeps your project details structured so the same brief can be understood consistently.'},
-        ]).map((item,index)=>{const key=item.id??index;const open=openFaq===key;return <article className={open?'open':''} key={key}><button onClick={()=>setOpenFaq(open?null:key)}><span>{item.question}</span><b>{open?'−':'⌄'}</b></button>{open&&<p>{item.answer}</p>}</article>})}
-      </div>
     </section>
 
     <section className="hiw-cta">
