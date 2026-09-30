@@ -1,3 +1,5 @@
+import { useState } from 'react'
+import { publicRequest } from '../utils/auth'
 import './QuoteLocationFields.css'
 
 function PinStatus({status,message}){
@@ -19,7 +21,46 @@ export default function QuoteLocationFields({
   pinOptional=false,
   stateLabel='State',
   cityLabel='City / Location',
+  onDetectedLocation,
 }){
+  const [locating,setLocating]=useState(false)
+
+  function detectCurrentLocation(){
+    if(!navigator.geolocation){
+      onDetectedLocation?.({error:'Current location is not supported by this browser.'})
+      return
+    }
+    setLocating(true)
+    navigator.geolocation.getCurrentPosition(
+      async position=>{
+        try{
+          const data=await publicRequest('/pincodes/reverse-location',{
+            method:'POST',
+            body:JSON.stringify({
+              latitude:position.coords.latitude,
+              longitude:position.coords.longitude,
+            }),
+          })
+          onDetectedLocation?.(data)
+        }catch(error){
+          onDetectedLocation?.({error:error.message||'Unable to detect current location.'})
+        }finally{
+          setLocating(false)
+        }
+      },
+      error=>{
+        setLocating(false)
+        const message=error.code===error.PERMISSION_DENIED
+          ? 'Location permission was denied. Enter State, City or PIN manually.'
+          : error.code===error.TIMEOUT
+            ? 'Location detection timed out. Enter State, City or PIN manually.'
+            : 'Unable to detect current location. Enter State, City or PIN manually.'
+        onDetectedLocation?.({error:message})
+      },
+      {enableHighAccuracy:false,timeout:10000,maximumAge:300000}
+    )
+  }
+
   return <div className="quote-location-fields">
     <label>
       <b>{stateLabel}</b>
@@ -55,5 +96,10 @@ export default function QuoteLocationFields({
       </div>
       <PinStatus status={lookupStatus} message={lookupMessage}/>
     </label>
+
+    <button className="qlf-current-location" type="button" onClick={detectCurrentLocation} disabled={locating}>
+      <span aria-hidden="true">⌖</span>
+      {locating?'Detecting current location…':'Use my current location'}
+    </button>
   </div>
 }
