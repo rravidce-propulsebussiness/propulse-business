@@ -148,26 +148,12 @@ function Icon({ name, size = 22 }) {
   if (name === 'heart') return <svg {...common}><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.9-8.6a5.5 5.5 0 0 0-.1-7.8Z"/></svg>
   if (name === 'pin') return <svg {...common}><path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg>
   if (name === 'clipboard') return <svg {...common}><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V2h6v2M8 9h8M8 13h8M8 17h5"/></svg>
+  if (name === 'layers') return <svg {...common}><path d="m12 2 9 5-9 5-9-5 9-5Z"/><path d="m3 12 9 5 9-5"/><path d="m3 17 9 5 9-5"/></svg>
   if (name === 'phone') return <svg {...common}><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 2 .7 2.9a2 2 0 0 1-.5 2.1L8 10a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.5c1 .3 1.9.6 2.9.7a2 2 0 0 1 1.7 2Z"/></svg>
   if (name === 'arrow') return <svg {...common}><path d="M5 12h14M14 7l5 5-5 5"/></svg>
   if (name === 'check') return <svg {...common}><path d="m5 12 4 4L19 6"/></svg>
   if (name === 'star') return <svg {...common}><path d="m12 2 3 6 7 .9-5 4.8 1.2 6.8L12 17.3 5.8 20.5 7 13.7 2 8.9 9 8Z"/></svg>
   return null
-}
-
-function HeroJourneyVideo({ source }) {
-  return <div className="hc-architecture-video">
-    {source ? <video
-      className="hc-architecture-video-element"
-      src={source}
-      autoPlay
-      muted
-      loop
-      playsInline
-      preload="auto"
-      aria-label="Animated homeowner journey from open plot and planning to completed home and interiors"
-    /> : <div className="hc-architecture-loading" aria-hidden="true"><span>Preparing home journey…</span></div>}
-  </div>
 }
 
 function Home() {
@@ -384,48 +370,90 @@ function Home() {
     </header>
 
     <main>
-      <section className="hc-video-hero" id="home">
-        <div className="hc-video-hero-inner">
-          <div className="hc-video-copy">
-            <div className="hc-video-kicker"><i/><span>YOUR HOME. OUR EXPERTISE.</span></div>
-            <h1>Build. Design.<br/>Find. <em>All in One Place.</em></h1>
-            <p>Construction, Interiors and Real Estate solutions for modern homeowners.</p>
+      <section className="hc-expert-hero" id="home">
+        <div className="hc-expert-hero-inner">
+          <div className="hc-expert-copy">
+            <div className="hc-expert-kicker"><i/><span>TRUSTED EXPERTS FOR YOUR HOME</span></div>
+            <h1>Build. Design.<br/>Find the <em>Right Experts.</em></h1>
+            <p>Get connected with trusted construction and interior professionals for your home project. Compare the right experts, branded material options, warranty-backed work where offered, and transparent choices in one place.</p>
 
-            <div className="hc-video-actions">
-              <Link className="hc-video-primary" to="/quote#construction">Get Free Quote <Icon name="arrow" size={16}/></Link>
-              <Link className="hc-video-secondary" to="/packages">View Packages</Link>
+            <div className="hc-expert-actions">
+              <Link className="hc-expert-primary" to="/quote#construction">Get Free Quote <Icon name="arrow" size={16}/></Link>
+              <Link className="hc-expert-secondary" to="/packages">View Packages</Link>
             </div>
 
-            <div className="hc-video-trust">
-              <span><Icon name="shield" size={16}/> Trusted Businesses</span>
-              <span><Icon name="clipboard" size={16}/> Transparent Process</span>
-              <span><Icon name="support" size={16}/> End-to-End Support</span>
-              <span><Icon name="heart" size={16}/> Homeowner Focused</span>
+            <div className="hc-expert-benefits" aria-label="ProPulse homeowner benefits">
+              <span><Icon name="people" size={21}/><b>Find Right<br/>Experts</b></span>
+              <span><Icon name="layers" size={21}/><b>Branded<br/>Materials</b></span>
+              <span><Icon name="shield" size={21}/><b>Warranty<br/>Options</b></span>
+              <span><Icon name="check" size={21}/><b>Transparent<br/>Choices</b></span>
+              <span><Icon name="heart" size={21}/><b>Homeowner<br/>Focused</b></span>
             </div>
           </div>
 
-          <div className="hc-video-panel">
-            <HeroJourneyVideo source="/media/propulse-home-journey.mp4" />
+          <div className="hc-expert-visual">
+            <img
+              className="hc-expert-house"
+              src="https://images.unsplash.com/photo-1600585152915-d208bec867a1?auto=format&fit=crop&w=1800&q=92"
+              alt="Modern premium home exterior"
+              fetchPriority="high"
+            />
+            <div className="hc-expert-visual-shade" aria-hidden="true"/>
 
-            <Link className="hc-video-service-card card-construction" to="/quote#construction">
-              <span><Icon name="home" size={20}/></span>
-              <div><b>Construction</b><small>From plot plan to finished home</small></div>
-              <i><Icon name="arrow" size={15}/></i>
+            <svg className="hc-expert-network" viewBox="0 0 900 620" preserveAspectRatio="none" aria-hidden="true">
+              <path d="M210 80 C330 75, 335 170, 470 184" />
+              <path d="M696 96 C626 118, 620 206, 584 240" />
+              <path d="M420 548 C455 470, 520 462, 536 380" />
+              <path d="M785 525 C720 485, 690 447, 674 392" />
+              <circle cx="470" cy="184" r="7"/>
+              <circle cx="584" cy="240" r="7"/>
+              <circle cx="536" cy="380" r="7"/>
+              <circle cx="674" cy="392" r="7"/>
+            </svg>
+
+            <article className="hc-expert-float hc-professionals-card">
+              <span className="hc-expert-card-icon"><Icon name="people" size={24}/></span>
+              <div className="hc-expert-card-copy">
+                <b>Verified Professionals</b>
+                <small>Architects, engineers, contractors</small>
+                <div className="hc-expert-avatars" aria-hidden="true">
+                  <img src="https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=120&q=80" alt="" />
+                  <img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=120&q=80" alt="" />
+                  <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=120&q=80" alt="" />
+                  <i>+</i>
+                </div>
+              </div>
+            </article>
+
+            <article className="hc-expert-float hc-materials-card">
+              <span className="hc-expert-card-icon"><Icon name="layers" size={24}/></span>
+              <div className="hc-expert-card-copy">
+                <b>Branded Material Options</b>
+                <small>Compare material choices offered by professionals</small>
+                <div className="hc-material-chips" aria-hidden="true">
+                  <i>Paints</i><i>Cement</i><i>Tiles</i><i>Hardware</i>
+                </div>
+              </div>
+            </article>
+
+            <button className="hc-expert-float hc-consultation-card" type="button" onClick={() => openConsult()}>
+              <span className="hc-expert-card-icon"><Icon name="consult" size={22}/></span>
+              <span><b>Free Consultation</b><small>Tell us your requirement</small></span>
+              <i className="hc-card-arrow"><Icon name="arrow" size={15}/></i>
+            </button>
+
+            <Link className="hc-expert-float hc-warranty-card" to="/packages">
+              <span className="hc-expert-card-icon"><Icon name="shield" size={22}/></span>
+              <span><b>Warranty-backed Options</b><small>Review warranty terms before you choose</small></span>
+              <i className="hc-card-arrow"><Icon name="arrow" size={15}/></i>
             </Link>
 
-            <Link className="hc-video-service-card card-interior" to="/quote#interiors">
-              <span><Icon name="sofa" size={20}/></span>
-              <div><b>Interior Design</b><small>Rooms, finishes and complete interiors</small></div>
-              <i><Icon name="arrow" size={15}/></i>
-            </Link>
-
-            <Link className="hc-video-service-card card-property" to="/quote#property">
-              <span><Icon name="building" size={20}/></span>
-              <div><b>Real Estate</b><small>Buy, rent, sell or invest</small></div>
-              <i><Icon name="arrow" size={15}/></i>
-            </Link>
-
-            <div className="hc-video-badge"><span/> PLOT → PLAN → HOME → INTERIOR</div>
+            <div className="hc-expert-mini mini-living" aria-hidden="true">
+              <img src="https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=700&q=88" alt="" />
+            </div>
+            <div className="hc-expert-mini mini-kitchen" aria-hidden="true">
+              <img src="https://images.unsplash.com/photo-1556911220-bff31c812dba?auto=format&fit=crop&w=700&q=88" alt="" />
+            </div>
           </div>
         </div>
       </section>
