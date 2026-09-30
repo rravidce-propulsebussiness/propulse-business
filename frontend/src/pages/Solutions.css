@@ -67,31 +67,60 @@
 .quote-chooser{
   max-width:1460px;
   margin:0 auto;
-  padding:40px 36px 32px;
+  padding:34px 36px 32px;
   text-align:center;
 }
-.quote-chooser>span{
-  display:block;
-  color:var(--quote-orange);
-  font-size:12px;
+.quote-premium-title{
+  position:relative;
+  width:max-content;
+  max-width:100%;
+  margin:0 auto 26px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:15px;
+  padding:15px 28px;
+  border:1px solid rgba(255,90,31,.22);
+  border-radius:999px;
+  background:
+    linear-gradient(#fff,#fff) padding-box,
+    linear-gradient(120deg,rgba(255,90,31,.18),rgba(255,132,74,.58),rgba(255,90,31,.18)) border-box;
+  box-shadow:
+    0 12px 34px rgba(255,90,31,.10),
+    inset 0 1px 0 rgba(255,255,255,.92);
+  overflow:hidden;
+  isolation:isolate;
+  animation:quoteTitleFloat 3.6s ease-in-out infinite;
+}
+.quote-premium-title::before{
+  content:"";
+  position:absolute;
+  inset:-80% -30%;
+  z-index:-1;
+  background:linear-gradient(100deg,transparent 35%,rgba(255,90,31,.08) 48%,rgba(255,128,70,.16) 52%,transparent 65%);
+  transform:translateX(-55%);
+  animation:quoteTitleShine 4.8s ease-in-out infinite;
+}
+.quote-premium-title strong{
+  color:var(--quote-navy);
+  font-size:24px;
+  line-height:1;
   font-weight:950;
   letter-spacing:.14em;
+  text-shadow:0 1px 0 #fff;
 }
-.quote-chooser>h1{
-  margin:9px 0 8px;
-  color:var(--quote-navy);
-  font-size:38px;
-  line-height:1.08;
-  letter-spacing:-.04em;
+.quote-premium-title i{
+  width:44px;
+  height:3px;
+  border-radius:999px;
+  background:linear-gradient(90deg,transparent,var(--quote-orange));
+  box-shadow:0 0 14px rgba(255,90,31,.24);
 }
-.quote-chooser>p{
-  margin:0;
-  color:var(--quote-muted);
-  font-size:14px;
-  line-height:1.55;
+.quote-premium-title i:last-child{
+  background:linear-gradient(90deg,var(--quote-orange),transparent);
 }
 .quote-service-grid{
-  margin-top:28px;
+  margin-top:0;
   display:grid;
   grid-template-columns:repeat(3,1fr);
   gap:16px;
@@ -387,6 +416,14 @@
 @keyframes quoteFade{from{opacity:0}to{opacity:1}}
 @keyframes quoteCardRise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
 @keyframes quoteFlowIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes quoteTitleFloat{
+  0%,100%{transform:translateY(0)}
+  50%{transform:translateY(-4px)}
+}
+@keyframes quoteTitleShine{
+  0%,35%{transform:translateX(-60%)}
+  65%,100%{transform:translateX(60%)}
+}
 
 @media(max-width:1100px){
   .quote-header{grid-template-columns:180px 1fr auto;padding:0 22px}
@@ -403,8 +440,10 @@
   .quote-header nav{display:none}
   .quote-logo img{width:146px}
   .quote-header-cta{height:40px;padding:0 13px;font-size:12px}
-  .quote-chooser{padding:30px 18px 24px}
-  .quote-chooser>h1{font-size:32px}
+  .quote-chooser{padding:28px 18px 24px}
+  .quote-premium-title{margin-bottom:22px;padding:13px 22px;gap:12px}
+  .quote-premium-title strong{font-size:21px}
+  .quote-premium-title i{width:32px}
   .quote-service-grid{grid-template-columns:1fr}
   .quote-service-card{min-height:0;display:grid;grid-template-columns:150px 1fr 45px}
   .quote-service-image{height:118px;margin:12px}
@@ -418,7 +457,9 @@
   .quote-flow .rex-form{padding:16px!important}
 }
 @media(max-width:560px){
-  .quote-chooser>h1{font-size:28px}
+  .quote-premium-title{padding:12px 17px;gap:9px}
+  .quote-premium-title strong{font-size:18px;letter-spacing:.11em}
+  .quote-premium-title i{width:22px}
   .quote-service-card{grid-template-columns:118px 1fr 38px}
   .quote-service-image{height:104px;margin:10px}
   .quote-service-copy h2{font-size:18px}
@@ -426,5 +467,5 @@
   .quote-service-card>i{width:34px;height:34px}
 }
 @media(prefers-reduced-motion:reduce){
-  .quote-page,.quote-service-card,.quote-flow,.quote-service-image img,.quote-header-cta,.quote-header nav a{animation:none!important;transition:none!important}
+  .quote-page,.quote-service-card,.quote-flow,.quote-service-image img,.quote-header-cta,.quote-header nav a,.quote-premium-title,.quote-premium-title::before{animation:none!important;transition:none!important}
 }
