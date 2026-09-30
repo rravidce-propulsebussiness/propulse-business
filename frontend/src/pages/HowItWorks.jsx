@@ -125,7 +125,7 @@ export default function HowItWorks(){
       <nav><Link to="/">Home</Link><Link to="/packages">Packages</Link><Link to="/projects">Projects</Link><Link className="active" to="/how-it-works">How It Works</Link><Link to="/about">About</Link><Link to="/contact">Contact</Link></nav>
       <div className="public-header-actions">
         <button className="public-quote-button" onClick={()=>navigate('/quote#construction')}>Get Free Quote <Icon name="arrow" size={15}/></button>
-        <Link className="public-professional-btn" to="/contact?audience=users">For Professionals</Link>
+        <Link className="public-professional-btn" to="/professionals">For Professionals</Link>
       </div>
     </header>
 
@@ -178,7 +178,7 @@ export default function HowItWorks(){
     </section>
 
     <section className="hiw-faq">
-      <div className="hiw-section-head"><div><h2>Frequently Asked <em>Questions</em></h2><p>Quick answers about the ProPulse customer journey.</p></div><Link to="/contact?audience=users">View All FAQs <Icon name="arrow" size={14}/></Link></div>
+      <div className="hiw-section-head"><div><h2>Frequently Asked <em>Questions</em></h2><p>Quick answers about the ProPulse customer journey.</p></div><Link to="/professionals">View All FAQs <Icon name="arrow" size={14}/></Link></div>
       <div className="hiw-faq-grid">
         {(visibleFaqs.length?visibleFaqs:[
           {id:'a',question:'Is the consultation free?',answer:'You can start the public requirement flow without paying a consultation fee.'},
@@ -200,7 +200,7 @@ export default function HowItWorks(){
       <div className="hiw-footer-brand"><img src="/brand/propulse-logo.svg" alt="ProPulse"/><p>Your customer starting point for construction, interiors and real-estate requirements.</p><div>f&nbsp;&nbsp;◎&nbsp;&nbsp;▶&nbsp;&nbsp;in</div></div>
       <div><b>Quick Links</b><Link to="/">Home</Link><Link to="/quote#construction">Construction</Link><Link to="/quote#interiors">Interiors</Link><Link to="/packages">Packages</Link><Link to="/quote#property">Real Estate</Link><Link to="/projects">Projects</Link></div>
       <div><b>Our Services</b><Link to="/quote#construction">Home Construction</Link><Link to="/quote#interiors">Interior Design</Link><Link to="/quote#property">Real Estate</Link><Link to="/quote#construction">Construction Quote</Link><Link to="/quote#construction">Free Consultation</Link></div>
-      <div><b>Support</b><Link to="/contact?audience=users">FAQ</Link><Link to="/#contact">Contact Us</Link><Link to="/contact?audience=users">Privacy Policy</Link><Link to="/contact?audience=users">Terms & Conditions</Link></div>
+      <div><b>Support</b><Link to="/professionals">FAQ</Link><Link to="/#contact">Contact Us</Link><Link to="/professionals">Privacy Policy</Link><Link to="/professionals">Terms & Conditions</Link></div>
       <div><b>Contact Info</b>{phone&&<span><Icon name="phone" size={13}/>{phone}</span>}{email&&<span>{email}</span>}<span><Icon name="pin" size={13}/>Hyderabad, India</span></div>
     </footer>
   </main>
