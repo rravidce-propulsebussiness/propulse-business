@@ -702,13 +702,6 @@ button,input,select{font:inherit}
   overflow:hidden;
   background:#0a2238;
 }
-.hc-architecture-canvas{
-  position:absolute;
-  width:1px;
-  height:1px;
-  opacity:0;
-  pointer-events:none;
-}
 .hc-architecture-video-element{
   position:absolute;
   inset:0;
@@ -717,7 +710,9 @@ button,input,select{font:inherit}
   object-fit:cover;
   display:block;
   background:#0a2238;
-  filter:saturate(1.06) contrast(1.025);
+  filter:saturate(1.04) contrast(1.02);
+  transform:translateZ(0);
+
 }
 .hc-architecture-video:after{
   content:"";
