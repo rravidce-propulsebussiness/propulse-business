@@ -47,3 +47,17 @@
   .rq-premium-header>button{display:none}.rq-premium-header{grid-template-columns:1fr}.rq-premium-hero{height:470px}.rq-hero-copy h1{font-size:39px}.rq-hero-copy p{font-size:12px}.rq-hero-benefits{grid-template-columns:1fr 1fr}.rq-flow-nav{grid-template-columns:1fr}.rq-flow-nav button{padding-right:0}.rq-section-card{padding:18px 15px}.rq-premium-options.image-options{grid-template-columns:1fr}.rq-premium-options.compact>button{min-width:100%}.rq-premium-footer{grid-template-columns:1fr}
 }
 @media(prefers-reduced-motion:reduce){.rq-premium-page *{animation:none!important;scroll-behavior:auto!important;transition:none!important}}
+
+/* Submitted requirement / quote-request PDF actions */
+.rq-premium-success{max-width:820px}
+.rq-success-reference{display:inline-flex!important;align-items:center;justify-content:center;gap:6px;margin:18px auto 0!important;padding:9px 14px;border:1px solid #dbe7f1;border-radius:999px;background:#f7fafc;color:#60768a;font-size:13px}
+.rq-success-reference b{color:#0a2d50}
+.rq-success-actions{margin-top:27px!important;display:flex!important;justify-content:center;gap:10px;flex-wrap:wrap}
+.rq-success-actions .rq-download-quote{background:linear-gradient(135deg,#ff5a1f,#ff7437);color:#fff;box-shadow:0 10px 24px rgba(255,90,31,.22);font-size:13px;font-weight:900;padding:13px 20px}
+.rq-success-actions .rq-download-quote:hover{transform:translateY(-1px);box-shadow:0 14px 28px rgba(255,90,31,.26)}
+.rq-success-actions .rq-back-home{background:#0a2d50;color:#fff;box-shadow:none}
+.rq-success-actions>button:not(.rq-download-quote){background:#eef2f6;color:#40506a}
+@media(max-width:640px){
+  .rq-success-actions{flex-direction:column;align-items:stretch}
+  .rq-success-actions .rq-download-quote,.rq-success-actions .rq-back-home,.rq-success-actions>button{width:100%;text-align:center}
+}
