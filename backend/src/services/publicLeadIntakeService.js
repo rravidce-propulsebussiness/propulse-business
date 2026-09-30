@@ -139,9 +139,13 @@ function buildAcquisitionAttribution(input = {}) {
 
 const CONSULTATION_LABELS = {
   projectType: {
-    house_construction: 'House construction',
-    commercial_building: 'Commercial building',
-    building_extension: 'Building extension',
+    residential: 'Residential',
+    commercial: 'Commercial',
+    renovation: 'Renovation',
+    extension: 'Extension',
+    house_construction: 'Residential',
+    commercial_building: 'Commercial',
+    building_extension: 'Extension',
   },
   propertyType: {
     apartment: 'Apartment',
@@ -250,7 +254,7 @@ function consultationLeadData(flow, details) {
     if (details.plotArea !== null) marketplace.plot_area = `${details.plotArea} sq ft`;
     summary.push(marketplace.project_type, marketplace.floors);
     if (details.plotArea !== null) summary.push(`Plot ${details.plotArea} sq ft`);
-    propertyType = details.projectType === 'commercial_building' ? 'Commercial' : 'Residential';
+    propertyType = ['commercial','commercial_building'].includes(details.projectType) ? 'Commercial' : 'Residential';
   } else if (flow.key === 'design') {
     propertyType = CONSULTATION_LABELS.propertyType[details.propertyType];
     marketplace.property_type = propertyType;
