@@ -299,7 +299,7 @@ export default function Packages(){
 
       <section className="pkg-cta">
         <div><span>READY FOR AN ACTUAL PROJECT QUOTATION?</span><h2>Use the Construction Quote Flow</h2><p>Choose a package as your preference, then let /build calculate the project using your city, built-up area, floors, scope and Admin-configured rates.</p></div>
-        <div><button onClick={()=>getConstructionQuote(selectedConstruction)}>Get {selectedConstructionPackage.name} Quote <Icon name="arrow" size={15}/></button><Link to="/solutions#construction">Open Construction Quote</Link></div>
+        <div><button onClick={()=>getConstructionQuote(selectedConstruction)}>Get {selectedConstructionPackage.name} Quote <Icon name="arrow" size={15}/></button><Link to="/quote#construction">Open Construction Quote</Link></div>
       </section>
     </>:<>
       <section className="pkg-section" id="interior-packages">
@@ -319,7 +319,7 @@ export default function Packages(){
               <li><Icon name="check" size={15}/>{item.specs.hardware}</li>
               <li><Icon name="check" size={15}/>{item.specs.finish}</li>
             </ul>
-            <Link className="pkg-card-link" to="/solutions#interiors">Share Interior Requirement <Icon name="arrow" size={14}/></Link>
+            <Link className="pkg-card-link" to="/quote#interiors">Share Interior Requirement <Icon name="arrow" size={14}/></Link>
           </article>)}
         </div>
 
@@ -346,14 +346,14 @@ export default function Packages(){
 
       <section className="pkg-cta">
         <div><span>READY TO DISCUSS YOUR INTERIORS?</span><h2>Share the Interior Requirement</h2><p>No duplicate estimator is needed here. The package page helps the homeowner compare options; the Interior flow captures the actual project requirement.</p></div>
-        <div><Link className="pkg-primary-link" to="/solutions#interiors">Share Interior Requirement <Icon name="arrow" size={15}/></Link><button className="pkg-secondary-button" onClick={()=>switchCategory('construction')}>View Construction Packages</button></div>
+        <div><Link className="pkg-primary-link" to="/quote#interiors">Share Interior Requirement <Icon name="arrow" size={15}/></Link><button className="pkg-secondary-button" onClick={()=>switchCategory('construction')}>View Construction Packages</button></div>
       </section>
     </>}
 
     <footer className="pkg-footer">
       <div><img src="/brand/propulse-logo.svg" alt="ProPulse"/><p>A homeowner-first starting point for construction, interiors and real estate requirements.</p></div>
       <div><b>Packages</b><button onClick={()=>switchCategory('construction')}>Construction Packages</button><button onClick={()=>switchCategory('interior')}>Interior Packages</button></div>
-      <div><b>Project Flows</b><Link to="/solutions#construction">Construction Quote</Link><Link to="/solutions#interiors">Interior Requirement</Link><Link to="/solutions#property">Real Estate Requirement</Link></div>
+      <div><b>Project Flows</b><Link to="/quote#construction">Construction Quote</Link><Link to="/quote#interiors">Interior Requirement</Link><Link to="/quote#property">Real Estate Requirement</Link></div>
       <div><b>Explore</b><Link to="/projects">Projects</Link><Link to="/how-it-works">How It Works</Link><Link to="/about">About ProPulse</Link></div>
     </footer>
   </main>
