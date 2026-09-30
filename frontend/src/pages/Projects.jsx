@@ -303,7 +303,6 @@ export default function Projects(){
           <div className="pj-project-copy">
             <div className="pj-project-title-row">
               <div><h3>{project.title}</h3><small><Icon name="pin" size={12}/>{project.location}</small></div>
-              <button className="pj-card-arrow" type="button" aria-label={'View details for '+project.title} onClick={event=>{event.stopPropagation();openProject(project)}}><Icon name="arrow" size={16}/></button>
             </div>
             <div className="pj-project-meta">
               <span>{project.meta}</span>
@@ -311,7 +310,7 @@ export default function Projects(){
               <span>{project.budget}</span>
             </div>
             <p>{project.description}</p>
-            <div className="pj-project-footer-row"><span>Inspiration concept</span><b>View details <Icon name="arrow" size={13}/></b></div>
+            <div className="pj-project-footer-row"><span>Inspiration concept</span><b>View Full Details <Icon name="arrow" size={13}/></b></div>
           </div>
         </article>)}
       </div>
