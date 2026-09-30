@@ -287,3 +287,58 @@
   .pkg-card-image{height:135px}
   .pkg-quote-card h2{font-size:20px}
 }
+
+
+/* Comparison flow simplification */
+.pkg-packages-kicker{
+  margin:0 0 14px;
+  text-align:center;
+  color:var(--pkg-orange);
+  font-size:10px;
+  font-weight:950;
+  letter-spacing:.14em;
+}
+.pkg-compare-bottom{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:7px;
+  margin:16px auto 2px;
+  padding:10px 16px;
+}
+.pkg-compare-bottom small{
+  color:var(--pkg-navy);
+  font-size:10px;
+  font-weight:900;
+}
+.pkg-compare-bottom button{
+  min-width:190px;
+  height:36px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:7px;
+  padding:0 18px;
+  border:0;
+  border-radius:8px;
+  background:linear-gradient(135deg,var(--pkg-orange),var(--pkg-orange-2));
+  color:#fff;
+  font-size:10px;
+  font-weight:950;
+  cursor:pointer;
+  box-shadow:0 9px 20px rgba(255,91,31,.18);
+}
+.pkg-compare-bottom button:disabled{
+  opacity:.42;
+  cursor:not-allowed;
+  box-shadow:none;
+}
+.pkg-comparison-section{
+  scroll-margin-top:86px;
+  animation:pkgCompareReveal .22s ease both;
+}
+@keyframes pkgCompareReveal{
+  from{opacity:0;transform:translateY(8px)}
+  to{opacity:1;transform:none}
+}
