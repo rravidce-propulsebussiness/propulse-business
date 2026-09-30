@@ -27,8 +27,8 @@ assert.match(pdf,/Typical exclusions/);
 assert.match(pdf,/Important terms/);
 assert.match(migration,/built_up_area/);
 assert.match(migration,/is_required=TRUE/);
-assert.match(migration,/question_key.*basement/);
-assert.match(migration,/question_key.*site_access/);
+assert.match(migration,/'basement','boolean'/);
+assert.match(migration,/'site_access','single_select'/);
 assert.match(migration,/Construction Quotation/);
 
 console.log('Construction quotation flow checks passed.');
