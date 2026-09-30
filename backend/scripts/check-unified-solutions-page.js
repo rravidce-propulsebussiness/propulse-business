@@ -27,6 +27,10 @@ assert.match(solutions,/location\.search/);
 assert.match(css,/\.sol-switch/);
 assert.match(css,/\.sol-flow \.rq-premium-header/);
 assert.match(css,/\.sol-flow \.irx-header/);
+assert.match(css,/\.sol-flow \.rq-premium-hero/);
+assert.match(css,/\.sol-flow \.irx-hero/);
+assert.match(css,/\.sol-flow \.rex-hero/);
+assert.doesNotMatch(solutions,/sol-active-summary/);
 
 assert.match(home,/\/solutions#construction/);
 assert.match(home,/\/solutions#interiors/);
