@@ -60,7 +60,7 @@ function Chips({ question, value, onChange }) {
 }
 
 export default function RealEstateRequirementExact(props) {
-  const { flow, questions, answers, setAnswer, cities, locationStates, locationStateId, setLocationState, cityId, setCity, locationQuestion, setPincode, pinLookup, contact, setContact, state, submit, contactData, completion } = props
+  const { flow, questions, answers, setAnswer, cities, locationStates, locationStateId, setLocationState, cityId, setCity, locationQuestion, setPincode, onDetectedLocation, pinLookup, contact, setContact, state, submit, contactData, completion } = props
   const byKey = useMemo(() => Object.fromEntries(questions.map(q => [q.questionKey, q])), [questions])
   const intent = byKey.property_intent
   const propertyType = byKey.property_type
@@ -150,6 +150,7 @@ export default function RealEstateRequirementExact(props) {
               onCityChange={setCity}
               pincode={locationQuestion ? answers[locationQuestion.questionKey] || '' : ''}
               onPincodeChange={setPincode}
+              onDetectedLocation={onDetectedLocation}
               lookupStatus={pinLookup.status}
               lookupMessage={pinLookup.message}
               stateLabel="Looking in State"
