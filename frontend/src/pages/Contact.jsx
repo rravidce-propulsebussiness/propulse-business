@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
+import { Link, Navigate, useSearchParams } from 'react-router-dom'
 import PortalContact from './PortalContact'
 import { publicRequest } from '../utils/auth'
 import './Contact.css'
@@ -37,136 +37,8 @@ export default function Contact(){
   const [searchParams]=useSearchParams()
   const portalAudience=searchParams.get('audience')
   if(portalAudience==='lead_partners') return <PortalContact audience={portalAudience}/>
-  if(portalAudience==='users') return <ProfessionalContact/>
+  if(portalAudience==='users') return <Navigate to="/professionals" replace/>
   return <PublicContact/>
-}
-
-function ProfessionalContact(){
-  const [data,setData]=useState(empty)
-  const [loading,setLoading]=useState(true)
-  const [error,setError]=useState('')
-
-  useEffect(()=>{
-    let active=true
-    window.scrollTo(0,0)
-    publicRequest('/contact?audience=users')
-      .then(value=>{if(active)setData({...empty,...(value||{}),social_handles:Array.isArray(value?.social_handles)?value.social_handles:[]})})
-      .catch(err=>{if(active)setError(err.message||'Unable to load professional contact details.')})
-      .finally(()=>{if(active)setLoading(false)})
-    return()=>{active=false}
-  },[])
-
-  const whatsapp=String(data.whatsapp||'').replace(/\D/g,'')
-  const email=data.email||data.support_email||''
-  const phoneHref=data.phone?'tel:'+String(data.phone).replace(/\s/g,''):'#'
-
-  return <main className="contact-page professional-contact-page">
-    <header className="contact-header">
-      <Link className="contact-logo" to="/"><img src="/brand/propulse-logo.svg" alt="ProPulse"/></Link>
-      <nav>
-        <Link to="/">Home</Link>
-        <Link to="/packages">Packages</Link>
-        <Link to="/projects">Projects</Link>
-        <Link to="/how-it-works">How It Works</Link>
-        <Link to="/about">About</Link>
-        <Link to="/contact">Homeowner Contact</Link>
-      </nav>
-      <div className="public-header-actions">
-        <Link className="professional-login-btn" to="/login">Professional Login</Link>
-        <Link className="public-professional-btn active" to="/contact?audience=users">Professional Support</Link>
-      </div>
-    </header>
-
-    <section className="professional-contact-hero">
-      <div className="professional-contact-copy">
-        <span className="professional-kicker">PROPULSE FOR PROFESSIONALS</span>
-        <h1>Grow With Better <em>Project Opportunities.</em></h1>
-        <p>For architects, engineers, contractors, interior designers, real-estate professionals and service businesses using ProPulse to access customer requirements and manage opportunities.</p>
-        <div className="professional-contact-actions">
-          <Link className="professional-primary" to="/login">Professional Login <Icon name="arrow" size={15}/></Link>
-          {data.phone&&<a className="professional-secondary" href={phoneHref}><Icon name="phone" size={15}/> Talk to Support</a>}
-        </div>
-        <div className="professional-contact-trust">
-          <span>Lead access</span><i/><span>Business verification</span><i/><span>Wallet & membership</span><i/><span>Partner support</span>
-        </div>
-      </div>
-
-      <aside className="professional-hero-panel">
-        <span>PROFESSIONAL SUPPORT</span>
-        <h2>Need help with your ProPulse business account?</h2>
-        <p>Get support for leads, verification, pricing, wallet, membership, account access and marketplace usage.</p>
-        <div className="professional-hero-stats">
-          <article><b>Leads</b><small>Opportunity access</small></article>
-          <article><b>Account</b><small>Verification & access</small></article>
-          <article><b>Wallet</b><small>Payments & balance</small></article>
-          <article><b>Plans</b><small>Membership support</small></article>
-        </div>
-      </aside>
-    </section>
-
-    {error&&<div className="contact-alert">{error}</div>}
-
-    <section className="professional-support-strip">
-      <article><span><Icon name="building"/></span><div><b>Lead Support</b><small>Help with lead access, claim issues and requirements.</small></div></article>
-      <article><span><Icon name="shield"/></span><div><b>Verification</b><small>Business profile and verification assistance.</small></div></article>
-      <article><span><Icon name="chat"/></span><div><b>Account Support</b><small>Login, membership and marketplace assistance.</small></div></article>
-      <article><span><Icon name="phone"/></span><div><b>Direct Contact</b><small>Reach the ProPulse team when you need help.</small></div></article>
-    </section>
-
-    <section className="professional-contact-body">
-      <div className="professional-contact-main">
-        <article className="professional-contact-card">
-          <div className="professional-card-head">
-            <span className="professional-kicker">CONTACT CHANNELS</span>
-            <h2>Professional Support</h2>
-            <p>Use the channel that best matches your business support request.</p>
-          </div>
-          <div className="professional-channel-grid">
-            <a href={email?'mailto:'+email:'#'}><span><Icon name="mail"/></span><div><small>Email</small><b>{loading?'Loading…':email||'Not published'}</b><em>Business support</em></div></a>
-            <a href={data.phone?phoneHref:'#'}><span><Icon name="phone"/></span><div><small>Phone</small><b>{loading?'Loading…':data.phone||'Not published'}</b><em>{data.business_hours||'Business hours'}</em></div></a>
-            <a href={whatsapp?'https://wa.me/'+whatsapp:'#'} target={whatsapp?'_blank':undefined} rel={whatsapp?'noreferrer':undefined}><span><Icon name="chat"/></span><div><small>WhatsApp</small><b>{loading?'Loading…':data.whatsapp||'Not published'}</b><em>Quick professional support</em></div></a>
-            <div><span><Icon name="clock"/></span><div><small>Support Hours</small><b>{loading?'Loading…':data.business_hours||'Not published'}</b><em>Professional assistance</em></div></div>
-          </div>
-        </article>
-
-        <article className="professional-contact-card professional-help-card">
-          <div>
-            <span className="professional-kicker">WHAT WE CAN HELP WITH</span>
-            <h2>Support Across Your ProPulse Journey</h2>
-          </div>
-          <div className="professional-help-grid">
-            <span><b>Lead access</b><small>Claims, availability and lead details</small></span>
-            <span><b>Business verification</b><small>Profile checks and verification status</small></span>
-            <span><b>Wallet & payments</b><small>Balance, payment and transaction help</small></span>
-            <span><b>Memberships</b><small>Plans, access and entitlement questions</small></span>
-            <span><b>Account</b><small>Login and profile assistance</small></span>
-            <span><b>Marketplace</b><small>Using ProPulse professionally</small></span>
-          </div>
-        </article>
-      </div>
-
-      <aside className="professional-contact-side">
-        <article className="professional-dark-card">
-          <span className="professional-kicker">ALREADY A PROFESSIONAL?</span>
-          <h2>Open Your Dashboard</h2>
-          <p>Sign in to manage your account, leads, wallet, membership and business profile.</p>
-          <Link to="/login">Professional Login <Icon name="arrow" size={15}/></Link>
-        </article>
-
-        <article className="professional-contact-card">
-          <span className="professional-kicker">OFFICE</span>
-          <h2>ProPulse Business</h2>
-          <p>{loading?'Loading…':data.address||'Hyderabad, India'}</p>
-          {data.maps_url&&<a className="professional-map-link" href={data.maps_url} target="_blank" rel="noreferrer">Open in Maps ↗</a>}
-        </article>
-      </aside>
-    </section>
-
-    <section className="professional-bottom-cta">
-      <div><span className="professional-kicker">PROFESSIONAL NETWORK</span><h2>Ready to Work With ProPulse?</h2><p>Sign in to access your professional account and available marketplace tools.</p></div>
-      <Link to="/login">Continue as Professional <Icon name="arrow" size={15}/></Link>
-    </section>
-  </main>
 }
 
 function PublicContact(){
