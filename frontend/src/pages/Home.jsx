@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { publicRequest } from '../utils/auth'
 import WebsiteFaqSection from '../components/WebsiteFaqSection'
@@ -169,6 +169,10 @@ function Home() {
   const [contactData, setContactData] = useState({})
   const [homepageMedia, setHomepageMedia] = useState({ hero_image_url: '', category_images: {} })
   const [loadingCities, setLoadingCities] = useState(true)
+  const [citySearch, setCitySearch] = useState('')
+  const [detectedLocation, setDetectedLocation] = useState(null)
+  const [locatingPincode, setLocatingPincode] = useState(false)
+  const pinLookupSeq = useRef(0)
   const [consultOpen, setConsultOpen] = useState(false)
   const [popupCycle, setPopupCycle] = useState(0)
   const [consultForm, setConsultForm] = useState(emptyConsultation)
@@ -243,6 +247,128 @@ function Home() {
     return [...map.values()]
   }, [selectedCity])
 
+  function cityLabel(city) {
+    if (!city) return ''
+    return city.name + (city.state_name ? ' · ' + city.state_name : '')
+  }
+
+  function exactCityForInput(value) {
+    const normalized = String(value || '').trim().toLowerCase()
+    if (!normalized) return null
+    return cityList.find(city => {
+      const name = String(city.name || '').trim().toLowerCase()
+      const full = cityLabel(city).trim().toLowerCase()
+      return normalized === name || normalized === full
+    }) || null
+  }
+
+  function chooseCity(city, { keepPincode = false } = {}) {
+    if (!city) return
+    setCitySearch(cityLabel(city))
+    setConsultForm(current => ({
+      ...current,
+      cityId: String(city.id),
+      pincode: keepPincode ? current.pincode : '',
+    }))
+    setDetectedLocation(current => ({
+      ...(current || {}),
+      cityName: city.name || '',
+      stateName: city.state_name || current?.stateName || '',
+      source: current?.source || 'city',
+    }))
+    setConsultError('')
+  }
+
+  function handleCitySearch(value) {
+    setCitySearch(value)
+    const exact = exactCityForInput(value)
+    setConsultForm(current => ({
+      ...current,
+      cityId: exact ? String(exact.id) : '',
+      pincode: exact && String(exact.id) === String(current.cityId) ? current.pincode : '',
+    }))
+    if (exact) {
+      setDetectedLocation(current => ({
+        ...(current || {}),
+        cityName: exact.name || '',
+        stateName: exact.state_name || current?.stateName || '',
+        source: 'city',
+      }))
+    } else {
+      setDetectedLocation(current => current?.source === 'pin' ? current : null)
+    }
+    setConsultError('')
+  }
+
+  async function locatePincode(pincode) {
+    const lookupId = ++pinLookupSeq.current
+    if (!/^\d{6}$/.test(pincode)) {
+      setLocatingPincode(false)
+      return
+    }
+    try {
+      setLocatingPincode(true)
+      setConsultError('')
+      const result = await publicRequest('/pincodes/' + pincode + '/locate')
+      if (lookupId !== pinLookupSeq.current) return
+
+      let city = result?.cityId
+        ? cityList.find(item => String(item.id) === String(result.cityId))
+        : null
+      if (!city && result?.cityName) {
+        city = cityList.find(item =>
+          String(item.name || '').trim().toLowerCase() === String(result.cityName || '').trim().toLowerCase()
+          && (!result.stateName || String(item.state_name || '').trim().toLowerCase() === String(result.stateName || '').trim().toLowerCase())
+        ) || null
+      }
+
+      setDetectedLocation({
+        source: 'pin',
+        pincode,
+        cityName: city?.name || result?.cityName || '',
+        stateName: city?.state_name || result?.stateName || '',
+        districtName: result?.districtName || '',
+        postalAreas: Array.isArray(result?.postalAreas) ? result.postalAreas : [],
+        status: result?.status || '',
+      })
+
+      setConsultForm(current => {
+        const currentCity = cityList.find(item => String(item.id) === String(current.cityId))
+        const sameState = currentCity && result?.stateName
+          ? String(currentCity.state_name || '').trim().toLowerCase() === String(result.stateName || '').trim().toLowerCase()
+          : false
+        return {
+          ...current,
+          pincode,
+          cityId: city ? String(city.id) : (sameState ? current.cityId : ''),
+        }
+      })
+
+      if (city) setCitySearch(cityLabel(city))
+      else if (result?.stateName) {
+        const currentCity = cityList.find(item => String(item.id) === String(consultForm.cityId))
+        const sameState = currentCity
+          && String(currentCity.state_name || '').trim().toLowerCase() === String(result.stateName || '').trim().toLowerCase()
+        if (!sameState) setCitySearch('')
+      }
+    } catch (error) {
+      if (lookupId !== pinLookupSeq.current) return
+      setDetectedLocation(null)
+      setConsultError(error.message || 'Unable to detect location from this PIN code.')
+    } finally {
+      if (lookupId === pinLookupSeq.current) setLocatingPincode(false)
+    }
+  }
+
+  function handlePincodeChange(value) {
+    const pincode = String(value || '').replace(/\D/g, '').slice(0, 6)
+    pinLookupSeq.current += 1
+    setDetectedLocation(null)
+    setConsultForm(current => ({ ...current, pincode }))
+    setConsultError('')
+    if (pincode.length === 6) locatePincode(pincode)
+  }
+
   const phone = contactData.phone || contactData.phone_number || contactData.mobile || ''
   const email = contactData.email || contactData.support_email || ''
 
@@ -254,6 +380,7 @@ function Home() {
   function openConsult(flowKey = '') {
     setConsultError('')
     setConsultSubmitted(null)
+    if (selectedCity && !citySearch) setCitySearch(cityLabel(selectedCity))
     setConsultForm(current => {
       if (!flowKey || flowKey === current.flowKey) return { ...current, flowKey: flowKey || current.flowKey }
       return { ...emptyConsultation(), flowKey, name: current.name, phone: current.phone }
@@ -263,6 +390,9 @@ function Home() {
 
   function changeConsultFlow(flowKey) {
     setConsultSubmitted(null)
+    setCitySearch('')
+    setDetectedLocation(null)
+    pinLookupSeq.current += 1
     setConsultForm(current => ({ ...emptyConsultation(), flowKey, name: current.name, phone: current.phone }))
     setConsultSubmissionKey(makeSubmissionKey())
     setConsultError('')
@@ -284,8 +414,11 @@ function Home() {
     const mobile = consultForm.phone.replace(/\D/g, '')
     const name = consultForm.name.trim()
     const pincode = consultForm.pincode.replace(/\D/g, '')
+    const typedCity = exactCityForInput(citySearch)
+    const submitCityId = Number(consultForm.cityId || typedCity?.id || 0)
+    const submitCity = cityList.find(city => Number(city.id) === submitCityId) || typedCity
     if (!consultForm.flowKey) return setConsultError('Select what you need help with.')
-    if (!consultForm.cityId) return setConsultError('Select your city or location.')
+    if (!submitCityId) return setConsultError('Enter and select a valid city or location.')
     if (!/^\d{6}$/.test(pincode)) return setConsultError('Select or enter a valid 6-digit PIN code.')
     if (consultForm.flowKey === 'build' && !consultForm.projectType) return setConsultError('Select the construction project type.')
     if (consultForm.flowKey === 'build' && (!/^\d{1,3}$/.test(String(consultForm.floors)) || Number(consultForm.floors) < 1 || Number(consultForm.floors) > 100)) return setConsultError('Enter the planned number of floors.')
@@ -314,7 +447,7 @@ function Home() {
       const result = await publicRequest('/customer-flows/' + consultForm.flowKey + '/consultation', {
         method: 'POST',
         body: JSON.stringify({
-          cityId: Number(consultForm.cityId),
+          cityId: submitCityId,
           pincode,
           details,
           contact: { name, phone: mobile, email: '' },
@@ -336,8 +469,8 @@ function Home() {
       try {
         sessionStorage.setItem('propulse_intake_prefill', JSON.stringify({
           flowKey: consultForm.flowKey,
-          cityId: Number(consultForm.cityId),
-          cityName: selectedCity?.name || '',
+          cityId: submitCityId,
+          cityName: submitCity?.name || '',
           pincode,
           answers: consultationPrefillAnswers(consultForm),
           name,
@@ -678,21 +811,55 @@ function Home() {
           </select>
         </label>
 
-        <label>
-          <span>City / Location</span>
-          <select value={consultForm.cityId} disabled={loadingCities} onChange={event => { setConsultForm({ ...consultForm, cityId: event.target.value, pincode: '' }); setConsultError('') }}>
-            <option value="">{loadingCities ? 'Loading locations…' : 'Select city'}</option>
-            {cityList.map(city => <option value={city.id} key={city.id}>{city.name}{city.state_name ? ' · ' + city.state_name : ''}</option>)}
-          </select>
-        </label>
+        <div className="hc-location-fields">
+          <label>
+            <span>City / Location</span>
+            <input
+              className="hc-popup-input"
+              list="hc-city-options"
+              autoComplete="off"
+              disabled={loadingCities}
+              value={citySearch}
+              onChange={event => handleCitySearch(event.target.value)}
+              onBlur={event => {
+                const exact = exactCityForInput(event.target.value)
+                if (exact) chooseCity(exact, { keepPincode: true })
+              }}
+              placeholder={loadingCities ? 'Loading locations…' : 'Type city name'}
+            />
+            <datalist id="hc-city-options">
+              {cityList.map(city => <option value={cityLabel(city)} key={city.id} />)}
+            </datalist>
+          </label>
 
-        <label>
-          <span>PIN Code</span>
-          {selectedCityPincodes.length ? <select value={consultForm.pincode} onChange={event => { setConsultForm({ ...consultForm, pincode: event.target.value }); setConsultError('') }}>
-            <option value="">Select PIN code</option>
-            {selectedCityPincodes.map(item => <option value={item.pincode} key={item.pincode}>{item.pincode}{item.officeName ? ' · ' + item.officeName : ''}</option>)}
-          </select> : <input className="hc-popup-input" inputMode="numeric" maxLength="6" value={consultForm.pincode} onChange={event => { setConsultForm({ ...consultForm, pincode: event.target.value.replace(/\D/g, '').slice(0, 6) }); setConsultError('') }} placeholder="Enter 6-digit PIN code" />}
-        </label>
+          <label>
+            <span>PIN Code {locatingPincode ? <small>Detecting…</small> : null}</span>
+            <input
+              className="hc-popup-input"
+              list={selectedCityPincodes.length ? 'hc-pin-options' : undefined}
+              inputMode="numeric"
+              autoComplete="postal-code"
+              maxLength="6"
+              value={consultForm.pincode}
+              onChange={event => handlePincodeChange(event.target.value)}
+              placeholder="Enter 6-digit PIN code"
+            />
+            {selectedCityPincodes.length ? <datalist id="hc-pin-options">
+              {selectedCityPincodes.map(item => <option value={item.pincode} key={item.pincode}>{item.officeName || ''}</option>)}
+            </datalist> : null}
+          </label>
+        </div>
+
+        {(detectedLocation || selectedCity) && <div className="hc-location-meta">
+          <Icon name="pin" size={15} />
+          <div>
+            <b>{detectedLocation?.cityName || selectedCity?.name || citySearch || 'Location detected'}</b>
+            <span>
+              {[detectedLocation?.districtName, detectedLocation?.stateName || selectedCity?.state_name].filter(Boolean).join(' · ')}
+              {detectedLocation?.source === 'pin' ? ' · synced from PIN' : ''}
+            </span>
+          </div>
+        </div>}
 
         {consultForm.flowKey === 'build' && <div className="hc-popup-detail-grid">
           <label><span>Project Type</span><select value={consultForm.projectType} onChange={event => { setConsultForm({ ...consultForm, projectType: event.target.value }); setConsultError('') }}><option value="">Select project</option><option value="house_construction">House construction</option><option value="commercial_building">Commercial building</option><option value="building_extension">Building extension</option></select></label>
