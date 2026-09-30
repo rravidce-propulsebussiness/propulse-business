@@ -453,21 +453,79 @@ function Home() {
         </div>
       </section>
 
-      <section className="hc-section hc-how" id="how-it-works">
-        <div className="hc-section-heading">
-          <span>Simple by design</span>
-          <h2>How It Works</h2>
-          <p>Start your home journey in a few clear steps.</p>
-        </div>
+      <section className="hc-how-premium" id="how-it-works" aria-labelledby="how-it-works-title">
+        <h2 id="how-it-works-title" className="hc-visually-hidden">How It Works</h2>
 
-        <div className="hc-how-grid">
-          <article><div><b>1</b><span><Icon name="clipboard" /></span></div><h3>Tell Us Your Requirement</h3><p>Choose construction, interiors or real estate and share the project details.</p></article>
-          <i><Icon name="arrow" size={22} /></i>
-          <article><div><b>2</b><span><Icon name="people" /></span></div><h3>We Structure the Brief</h3><p>Your answers become one clear requirement instead of scattered calls and messages.</p></article>
-          <i><Icon name="arrow" size={22} /></i>
-          <article><div><b>3</b><span><Icon name="consult" /></span></div><h3>Discuss Your Options</h3><p>Relevant businesses can respond with better context about what you actually need.</p></article>
-          <i><Icon name="arrow" size={22} /></i>
-          <article><div><b>4</b><span><Icon name="home" /></span></div><h3>Move Your Home Forward</h3><p>Compare the next steps and choose how you want your project to continue.</p></article>
+        <div className="hc-how-premium-grid">
+          <article className="hc-how-premium-card">
+            <div className="hc-how-photo-wrap">
+              <img
+                src="https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&w=1200&q=90"
+                alt="Homeowners discussing their requirement"
+                loading="lazy"
+              />
+              <span className="hc-how-step">1</span>
+              <span className="hc-how-float-icon"><Icon name="clipboard" size={28}/></span>
+            </div>
+            <div className="hc-how-card-copy">
+              <h3>Tell Us Your Requirement</h3>
+              <p>Choose construction, interiors or real estate and share the project details.</p>
+            </div>
+          </article>
+
+          <span className="hc-how-connector" aria-hidden="true"><Icon name="arrow" size={28}/></span>
+
+          <article className="hc-how-premium-card">
+            <div className="hc-how-photo-wrap">
+              <img
+                src="https://images.unsplash.com/photo-1556761175-b413da4baf72?auto=format&fit=crop&w=1200&q=90"
+                alt="Project brief being structured on a screen"
+                loading="lazy"
+              />
+              <span className="hc-how-step">2</span>
+              <span className="hc-how-float-icon"><Icon name="people" size={28}/></span>
+            </div>
+            <div className="hc-how-card-copy">
+              <h3>We Structure the Brief</h3>
+              <p>Your answers become one clear requirement instead of scattered calls and messages.</p>
+            </div>
+          </article>
+
+          <span className="hc-how-connector" aria-hidden="true"><Icon name="arrow" size={28}/></span>
+
+          <article className="hc-how-premium-card">
+            <div className="hc-how-photo-wrap">
+              <img
+                src="https://images.unsplash.com/photo-1521737711867-e3b97375f902?auto=format&fit=crop&w=1200&q=90"
+                alt="Homeowners discussing project options"
+                loading="lazy"
+              />
+              <span className="hc-how-step">3</span>
+              <span className="hc-how-float-icon"><Icon name="consult" size={28}/></span>
+            </div>
+            <div className="hc-how-card-copy">
+              <h3>Discuss Your Options</h3>
+              <p>Relevant businesses can respond with better context about what you actually need.</p>
+            </div>
+          </article>
+
+          <span className="hc-how-connector" aria-hidden="true"><Icon name="arrow" size={28}/></span>
+
+          <article className="hc-how-premium-card">
+            <div className="hc-how-photo-wrap">
+              <img
+                src="https://images.unsplash.com/photo-1600585152915-d208bec867a1?auto=format&fit=crop&w=1200&q=90"
+                alt="Completed modern home"
+                loading="lazy"
+              />
+              <span className="hc-how-step">4</span>
+              <span className="hc-how-float-icon"><Icon name="home" size={28}/></span>
+            </div>
+            <div className="hc-how-card-copy">
+              <h3>Move Your Home Forward</h3>
+              <p>Compare the next steps and choose how you want your project to continue.</p>
+            </div>
+          </article>
         </div>
       </section>
 
