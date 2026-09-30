@@ -352,6 +352,7 @@ function Home() {
         <button className="active" onClick={() => scrollToSection('home')}>Home</button>
         <Link to="/build">Construction</Link>
         <Link to="/design">Interior Design</Link>
+        <Link to="/packages">Packages</Link>
         <Link to="/property">Real Estate</Link>
         <Link to="/projects">Projects</Link>
         <Link to="/how-it-works">How It Works</Link>
