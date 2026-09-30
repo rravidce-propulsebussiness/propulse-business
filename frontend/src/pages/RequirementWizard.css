@@ -61,3 +61,15 @@
   .rq-success-actions{flex-direction:column;align-items:stretch}
   .rq-success-actions .rq-download-quote,.rq-success-actions .rq-back-home,.rq-success-actions>button{width:100%;text-align:center}
 }
+
+/* Detailed quotation result */
+.rq-quotation-result{margin:22px auto 4px!important;padding:18px 22px;border:1px solid #dbe7f1;border-radius:16px;background:linear-gradient(135deg,#f8fbfd,#fff7f2);max-width:650px}
+.rq-quotation-result>div{display:flex;align-items:baseline;justify-content:center;gap:10px;flex-wrap:wrap}
+.rq-quotation-result small{width:100%;color:#6e8193;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.08em}
+.rq-quotation-result strong{color:#0a2d50;font-size:25px;line-height:1.2}
+.rq-quotation-result i{color:#8797a5;font-size:13px;font-style:normal;font-weight:700}
+.rq-quotation-result>span{display:block;margin-top:8px;color:#526b82;font-size:13px;font-weight:650}
+.rq-quotation-disclaimer{display:block;max-width:650px;margin:16px auto 0;color:#758696;font-size:12px;line-height:1.55}
+@media(max-width:640px){
+  .rq-quotation-result strong{font-size:20px}
+}
