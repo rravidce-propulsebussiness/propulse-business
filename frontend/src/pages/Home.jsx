@@ -157,6 +157,7 @@ function Home() {
   const [consultSubmissionKey, setConsultSubmissionKey] = useState(makeSubmissionKey)
   const [consultError, setConsultError] = useState('')
   const [consultSaving, setConsultSaving] = useState(false)
+  const [consultSubmitted, setConsultSubmitted] = useState(null)
   const [menuOpen, setMenuOpen] = useState(false)
 
   useEffect(() => {
@@ -184,6 +185,9 @@ function Home() {
   }, [])
 
   useEffect(() => {
+    let alreadySubmitted = false
+    try { alreadySubmitted = sessionStorage.getItem('propulse_basic_lead_submitted') === '1' } catch {}
+    if (alreadySubmitted) return undefined
     const timer = window.setTimeout(() => setConsultOpen(true), 5 * 60 * 1000)
     return () => window.clearTimeout(timer)
   }, [popupCycle])
@@ -218,6 +222,7 @@ function Home() {
 
   function openConsult(flowKey = '') {
     setConsultError('')
+    setConsultSubmitted(null)
     setConsultForm(current => {
       if (!flowKey || flowKey === current.flowKey) return { ...current, flowKey: flowKey || current.flowKey }
       return { ...emptyConsultation(), flowKey, name: current.name, phone: current.phone, consent: current.consent }
@@ -226,6 +231,7 @@ function Home() {
   }
 
   function changeConsultFlow(flowKey) {
+    setConsultSubmitted(null)
     setConsultForm(current => ({ ...emptyConsultation(), flowKey, name: current.name, phone: current.phone, consent: current.consent }))
     setConsultSubmissionKey(makeSubmissionKey())
     setConsultError('')
@@ -234,7 +240,12 @@ function Home() {
   function closeConsult() {
     setConsultOpen(false)
     setConsultError('')
-    setPopupCycle(value => value + 1)
+    if (!consultSubmitted) setPopupCycle(value => value + 1)
+  }
+
+  function openConstructionQuote() {
+    setConsultOpen(false)
+    navigate('/build')
   }
 
   async function submitConsult(event) {
@@ -270,7 +281,7 @@ function Home() {
       setConsultSaving(true)
       setConsultError('')
       const query = new URLSearchParams(window.location.search)
-      await publicRequest('/customer-flows/' + consultForm.flowKey + '/consultation', {
+      const result = await publicRequest('/customer-flows/' + consultForm.flowKey + '/consultation', {
         method: 'POST',
         body: JSON.stringify({
           cityId: Number(consultForm.cityId),
@@ -307,8 +318,12 @@ function Home() {
         }))
       } catch {}
 
-      setConsultOpen(false)
-      navigate('/' + consultForm.flowKey)
+      try { sessionStorage.setItem('propulse_basic_lead_submitted', '1') } catch {}
+      setConsultSubmitted({
+        flowKey: consultForm.flowKey,
+        leadId: result?.leadId || null,
+        name,
+      })
     } catch (error) {
       setConsultError(error.message || 'Unable to submit your consultation request.')
       setConsultSubmissionKey(current => current || makeSubmissionKey())
@@ -511,10 +526,22 @@ function Home() {
       <button className="hc-popup-close" type="button" onClick={closeConsult} aria-label="Close consultation popup">×</button>
       <div className="hc-popup-head">
         <span><Icon name="phone" size={21} /></span>
-        <div><h3>Tell Us Your Requirement</h3><p>Share the basic project details first. Construction continues to a detailed quotation; other services continue to their detailed requirement flow.</p></div>
+        <div><h3>Tell Us Your Requirement</h3><p>This popup only captures a basic lead so relevant businesses can respond. It does not generate a quotation.</p></div>
       </div>
 
-      <form onSubmit={submitConsult}>
+      {consultSubmitted ? <div className="hc-popup-success">
+        <div className="hc-popup-success-icon"><Icon name="check" size={28} /></div>
+        <h4>Requirement received</h4>
+        <p>Your basic requirement has been saved successfully{consultSubmitted.leadId ? <> as <b>#L-{String(consultSubmitted.leadId).padStart(6,'0')}</b></> : null}. Relevant businesses can now respond according to ProPulse lead-access rules.</p>
+        {consultSubmitted.flowKey === 'build' && <>
+          <div className="hc-popup-quote-note">
+            <b>Need a detailed construction quotation?</b>
+            <span>Use the Construction quotation form separately to enter built-up area, scope, quality and other pricing details.</span>
+          </div>
+          <button className="hc-popup-submit" type="button" onClick={openConstructionQuote}>Get Detailed Construction Quote <Icon name="arrow" size={15} /></button>
+        </>}
+        <button className="hc-popup-done" type="button" onClick={closeConsult}>Done</button>
+      </div> : <form onSubmit={submitConsult}>
         <label>
           <span>I am looking for</span>
           <select value={consultForm.flowKey} onChange={event => changeConsultFlow(event.target.value)}>
@@ -581,9 +608,9 @@ function Home() {
         <label className="hc-popup-honeypot" aria-hidden="true">Website<input tabIndex="-1" autoComplete="off" value={consultForm.website} onChange={event => setConsultForm({ ...consultForm, website: event.target.value })} /></label>
 
         {consultError && <div className="hc-popup-error">{consultError}</div>}
-        <button className="hc-popup-submit" type="submit" disabled={consultSaving}>{consultSaving ? 'Saving…' : 'Save Requirement & Continue'} {!consultSaving && <Icon name="arrow" size={15} />}</button>
-        <small><Icon name="shield" size={12} /> We save these basics first so your enquiry is not lost, then continue to detailed project questions.</small>
-      </form>
+        <button className="hc-popup-submit" type="submit" disabled={consultSaving}>{consultSaving ? 'Saving…' : 'Submit Basic Requirement'} {!consultSaving && <Icon name="arrow" size={15} />}</button>
+        <small><Icon name="shield" size={12} /> This creates only a basic lead. Construction quotation is available separately from the Construction page.</small>
+      </form>}
     </aside>}
   </div>
 }
