@@ -4,6 +4,7 @@ import { publicRequest } from '../utils/auth'
 import { isEmptyAnswer, isQuestionVisible } from '../components/CustomerFlowQuestion'
 import InteriorRequirementExact from '../components/InteriorRequirementExact'
 import RealEstateRequirementExact from '../components/RealEstateRequirementExact'
+import QuoteLocationFields from '../components/QuoteLocationFields'
 import { downloadRequirementQuotePdf } from '../utils/requirementQuotePdf'
 import { calculateRequirementQuotation } from '../utils/customerQuotation'
 import './RequirementWizard.css'
@@ -142,6 +143,9 @@ export default function RequirementWizard({ flowKey }) {
   const [contactData, setContactData] = useState({})
   const [answers, setAnswers] = useState({})
   const [cityId, setCityId] = useState('')
+  const [locationStateId, setLocationStateId] = useState('')
+  const [pinLookup, setPinLookup] = useState({ status: '', message: '' })
+  const pinLookupRequest = useRef(0)
   const [contact, setContact] = useState(emptyContact)
   const [website, setWebsite] = useState('')
   const [submissionKey, setSubmissionKey] = useState(makeSubmissionKey)
@@ -202,9 +206,12 @@ export default function RequirementWizard({ flowKey }) {
         if (qualityByPackage[packageParam]) initialAnswers.quality = qualityByPackage[packageParam]
       }
 
+      const initialCity = loadedCities.find(city => String(city.id) === String(initialCityId))
       setAnswers(initialAnswers)
       setContact(initialContact)
       setCityId(initialCityId)
+      setLocationStateId(initialCity?.state_id ? String(initialCity.state_id) : '')
+      setPinLookup({ status: '', message: '' })
       setSubmissionKey(initialSubmissionKey)
       setState({ loading: false, saving: false, error: '', success: false })
     }).catch(error => mounted.current && setState({ loading: false, saving: false, error: error.message, success: false }))
@@ -216,6 +223,19 @@ export default function RequirementWizard({ flowKey }) {
   const byKey = useMemo(() => Object.fromEntries(questions.map(question => [question.questionKey, question])), [questions])
   const locationQuestion = questions.find(question => question.questionType === 'location')
   const selectedCity = useMemo(() => cities.find(city => String(city.id) === String(cityId)), [cities, cityId])
+  const locationStates = useMemo(() => {
+    const map = new Map()
+    cities.forEach(city => {
+      const id = city?.state_id
+      const name = city?.state_name
+      if (id && name && !map.has(String(id))) map.set(String(id), { id: String(id), name })
+    })
+    return [...map.values()].sort((a,b) => String(a.name).localeCompare(String(b.name)))
+  }, [cities])
+  const filteredCities = useMemo(() => {
+    if (!locationStateId) return []
+    return cities.filter(city => String(city.state_id) === String(locationStateId)).sort((a,b) => String(a.name).localeCompare(String(b.name)))
+  }, [cities, locationStateId])
   const cityPincodes = useMemo(() => {
     const rows = Array.isArray(selectedCity?.pincodes) ? selectedCity.pincodes : []
     const map = new Map()
@@ -233,8 +253,13 @@ export default function RequirementWizard({ flowKey }) {
   const usedKeys = new Set([locationQuestion?.questionKey, ...propertyQuestions.map(q => q.questionKey), ...configQuestions.map(q => q.questionKey), ...preferenceQuestions.map(q => q.questionKey), additionalQuestion?.questionKey].filter(Boolean))
   const extraQuestions = questions.filter(question => !usedKeys.has(question.questionKey))
 
-  const requiredTotal = questions.filter(question => question.isRequired).length + 2
-  const requiredDone = questions.filter(question => question.isRequired && !isEmptyAnswer(answers[question.questionKey])).length + (contact.name.trim() ? 1 : 0) + (/^[6-9]\d{9}$/.test(contact.phone.replace(/\D/g, '')) ? 1 : 0)
+  const locationRequiredCount = locationQuestion ? 2 : 0
+  const requiredTotal = questions.filter(question => question.isRequired).length + 2 + locationRequiredCount
+  const requiredDone = questions.filter(question => question.isRequired && !isEmptyAnswer(answers[question.questionKey])).length
+    + (contact.name.trim() ? 1 : 0)
+    + (/^[6-9]\d{9}$/.test(contact.phone.replace(/\D/g, '')) ? 1 : 0)
+    + (locationQuestion && locationStateId ? 1 : 0)
+    + (locationQuestion && cityId ? 1 : 0)
   const completion = requiredTotal ? Math.round(requiredDone / requiredTotal * 100) : 0
 
   function setAnswer(key, value) {
@@ -242,13 +267,69 @@ export default function RequirementWizard({ flowKey }) {
     setState(current => ({ ...current, error: '' }))
   }
 
+  function setLocationState(value) {
+    setLocationStateId(value)
+    const currentCity = cities.find(item => String(item.id) === String(cityId))
+    if (!currentCity || String(currentCity.state_id) !== String(value)) setCityId('')
+    setPinLookup({ status: '', message: '' })
+    setState(current => ({ ...current, error: '' }))
+  }
+
   function setCity(value) {
     const city = cities.find(item => String(item.id) === String(value))
     setCityId(value)
-    if (locationQuestion) {
-      const pins = (city?.pincodes || []).map(item => String(typeof item === 'string' ? item : item?.pincode || '')).filter(pin => /^\d{6}$/.test(pin))
-      setAnswer(locationQuestion.questionKey, pins.length === 1 ? pins[0] : '')
+    if (city?.state_id) setLocationStateId(String(city.state_id))
+    setState(current => ({ ...current, error: '' }))
+  }
+
+  function applyDetectedLocation(data, pin) {
+    if (!data) return
+    if (data.stateId) setLocationStateId(String(data.stateId))
+    if (data.cityId) setCityId(String(data.cityId))
+    const location = [data.cityName, data.stateName].filter(Boolean).join(', ')
+    if (data.cityId) {
+      setPinLookup({ status: 'matched', message: location ? \`Detected: \${location}\` : 'PIN matched to a supported city.' })
+    } else if (data.stateId || data.stateName) {
+      setPinLookup({ status: 'state', message: \`State detected\${data.stateName ? ': ' + data.stateName : ''}. Select the city to continue.\` })
+    } else {
+      setPinLookup({ status: 'error', message: 'We could not match this PIN to a supported location. Select state and city manually.' })
     }
+    if (locationQuestion && pin) setAnswers(current => ({ ...current, [locationQuestion.questionKey]: pin }))
+  }
+
+  function setPincode(value) {
+    if (!locationQuestion) return
+    const pin = String(value || '').replace(/\D/g, '').slice(0, 6)
+    setAnswer(locationQuestion.questionKey, pin)
+    const requestId = ++pinLookupRequest.current
+
+    if (pin.length < 6) {
+      setPinLookup({ status: '', message: '' })
+      return
+    }
+
+    const mappedCities = cities.filter(city => (city?.pincodes || []).some(item => String(typeof item === 'string' ? item : item?.pincode || '') === pin))
+    if (mappedCities.length === 1) {
+      const city = mappedCities[0]
+      applyDetectedLocation({
+        stateId: city.state_id,
+        stateName: city.state_name,
+        cityId: city.id,
+        cityName: city.name,
+      }, pin)
+      return
+    }
+
+    setPinLookup({ status: 'checking', message: 'Detecting state and city from PIN…' })
+    publicRequest('/pincodes/location/' + encodeURIComponent(pin))
+      .then(data => {
+        if (requestId !== pinLookupRequest.current) return
+        applyDetectedLocation(data, pin)
+      })
+      .catch(() => {
+        if (requestId !== pinLookupRequest.current) return
+        setPinLookup({ status: 'error', message: 'PIN could not be detected automatically. Select state and city manually.' })
+      })
   }
 
   function jump(id) {
@@ -266,6 +347,12 @@ export default function RequirementWizard({ flowKey }) {
           ? 'rq-config'
           : missing.questionKey === 'additional_requirement' ? 'rq-additional' : 'rq-preferences'
       jump(target)
+      return
+    }
+
+    if (locationQuestion && (!locationStateId || !cityId)) {
+      setState(current => ({ ...current, error: 'Select State and City, or enter a valid 6-digit PIN so we can detect them automatically.' }))
+      jump('rq-basic')
       return
     }
 
@@ -363,10 +450,16 @@ export default function RequirementWizard({ flowKey }) {
       questions={questions}
       answers={answers}
       setAnswer={setAnswer}
-      cities={cities}
+      cities={filteredCities}
+      allCities={cities}
+      locationStates={locationStates}
+      locationStateId={locationStateId}
+      setLocationState={setLocationState}
       cityId={cityId}
       setCity={setCity}
       cityPincodes={cityPincodes}
+      setPincode={setPincode}
+      pinLookup={pinLookup}
       locationQuestion={locationQuestion}
       contact={contact}
       setContact={setContact}
@@ -383,10 +476,16 @@ export default function RequirementWizard({ flowKey }) {
       questions={questions}
       answers={answers}
       setAnswer={setAnswer}
-      cities={cities}
+      cities={filteredCities}
+      allCities={cities}
+      locationStates={locationStates}
+      locationStateId={locationStateId}
+      setLocationState={setLocationState}
       cityId={cityId}
       setCity={setCity}
       cityPincodes={cityPincodes}
+      setPincode={setPincode}
+      pinLookup={pinLookup}
       locationQuestion={locationQuestion}
       contact={contact}
       setContact={setContact}
@@ -398,7 +497,7 @@ export default function RequirementWizard({ flowKey }) {
   }
 
   const summaryRows = [
-    ['Location', selectedCity?.name || '—'],
+    ['Location', [selectedCity?.name, selectedCity?.state_name].filter(Boolean).join(', ') || '—'],
     ['PIN Code', locationQuestion ? fieldLabel(locationQuestion, answers) : '—'],
     ...propertyQuestions.slice(0, 2).map(q => [q.label.replace(/\?$/,''), fieldLabel(q, answers)]),
     ...configQuestions.slice(0, 2).map(q => [q.label.replace(/\?$/,''), fieldLabel(q, answers)]),
