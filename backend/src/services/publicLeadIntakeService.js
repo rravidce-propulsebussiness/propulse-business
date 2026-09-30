@@ -360,7 +360,7 @@ async function submitConsultation({
       accessStrategy: 'shared',
       buyerCapacity: 3,
       contactConsentAt: new Date(),
-      contactConsentVersion: 'homepage-consultation-v2',
+      contactConsentVersion: 'homepage-submit-notice-v1',
       intakeSubmissionKey: idempotencyKey,
       qualityGateContext: 'homepage_basic',
       deferQualityGate: false,
@@ -423,7 +423,7 @@ async function enrichConsultationLead({ existing, flow, safeAnswers, name, phone
             pricing=$13::jsonb,
             pincode=$14,
             contact_consent_at=CURRENT_TIMESTAMP,
-            contact_consent_version='quote-contact-v1',
+            contact_consent_version='requirement-submit-notice-v1',
             updated_at=CURRENT_TIMESTAMP
       WHERE id=$15
       RETURNING *`,
@@ -510,7 +510,7 @@ async function submitRequirement({
       customFields,
       pincode: location.pincode,
       contactConsentAt: new Date(),
-      contactConsentVersion: 'quote-contact-v1',
+      contactConsentVersion: 'requirement-submit-notice-v1',
       intakeSubmissionKey: idempotencyKey,
       qualityGateContext: 'public_requirement',
       createdBy: null,
