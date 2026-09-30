@@ -1556,3 +1556,21 @@ button,input,select{font:inherit}
 @media(prefers-reduced-motion:reduce){
   .hc-expert-house,.hc-expert-float,.hc-expert-network path,.hc-expert-network circle{animation:none!important;transition:none!important}
 }
+
+
+/* Smart city + PIN location flow */
+.hc-location-fields{display:grid;grid-template-columns:1.15fr .85fr;gap:8px}
+.hc-location-fields label{min-width:0}
+.hc-location-fields small{margin-left:6px;color:#e7632f;font-size:10px;font-weight:800}
+.hc-location-meta{display:grid;grid-template-columns:28px 1fr;gap:8px;align-items:center;padding:9px 10px;border:1px solid #dfe9e4;border-radius:8px;background:#f7fbf9;color:#29475f}
+.hc-location-meta>svg{width:28px;height:28px;padding:6px;border-radius:50%;background:#e8f6ef;color:#187451}
+.hc-location-meta div{min-width:0;display:grid;gap:2px}
+.hc-location-meta b{overflow:hidden;color:#173b55;font-size:12px;line-height:1.25;text-overflow:ellipsis;white-space:nowrap}
+.hc-location-meta span{overflow:hidden;color:#6d7f8f;font-size:11px;line-height:1.35;text-overflow:ellipsis;white-space:nowrap}
+.hc-location-fields input[list]::-webkit-calendar-picker-indicator{opacity:.55;cursor:pointer}
+
+@media (max-width:560px){
+  .hc-location-fields{grid-template-columns:1fr}
+  .hc-location-meta b{font-size:13px}
+  .hc-location-meta span{font-size:12px;white-space:normal}
+}
