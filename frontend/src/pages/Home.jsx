@@ -695,7 +695,7 @@ function Home() {
         </label>
 
         {consultForm.flowKey === 'build' && <div className="hc-popup-detail-grid">
-          <label><span>Project Type</span><select value={consultForm.projectType} onChange={event => { setConsultForm({ ...consultForm, projectType: event.target.value }); setConsultError('') }}><option value="">Select project</option><option value="house_construction">House construction</option><option value="commercial_building">Commercial building</option><option value="building_extension">Building extension</option></select></label>
+          <label><span>Project Type</span><select value={consultForm.projectType} onChange={event => { setConsultForm({ ...consultForm, projectType: event.target.value }); setConsultError('') }}><option value="">Select project</option><option value="residential">Residential</option><option value="commercial">Commercial</option><option value="renovation">Renovation</option><option value="extension">Extension</option></select></label>
           <label><span>No. of Floors</span><select value={consultForm.floors} onChange={event => { setConsultForm({ ...consultForm, floors: event.target.value }); setConsultError('') }}><option value="">Select floors</option>{CONSTRUCTION_FLOORS.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}</select></label>
           <label><span>Plot Area <small>(Optional)</small></span><div className="hc-popup-unit"><input type="number" min="50" max="1000000" value={consultForm.plotArea} onChange={event => setConsultForm({ ...consultForm, plotArea: event.target.value })} placeholder="e.g. 2000" /><i>sq ft</i></div></label>
         </div>}
@@ -732,7 +732,6 @@ function Home() {
 
         {consultError && <div className="hc-popup-error">{consultError}</div>}
         <button className="hc-popup-submit" type="submit" disabled={consultSaving}>{consultSaving ? 'Saving…' : 'Submit Basic Requirement'} {!consultSaving && <Icon name="arrow" size={15} />}</button>
-        <small><Icon name="shield" size={12} /> This creates only a basic lead. Construction quotation is available separately from the Construction page.</small>
       </form>}
       </aside>
     </div>}
