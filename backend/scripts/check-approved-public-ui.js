@@ -4,6 +4,7 @@ const path=require('path');
 
 const root=path.join(__dirname,'..');
 const read=relative=>fs.readFileSync(path.join(root,relative),'utf8');
+const readBuffer=relative=>fs.readFileSync(path.join(root,relative));
 
 const app=read('../frontend/src/App.jsx');
 const home=read('../frontend/src/pages/Home.jsx');
@@ -22,11 +23,10 @@ assert.match(app,/path="\/quote" element={<Solutions\/>}/);
 assert.match(app,/path="\/solutions" element={<LegacySolutionRedirect\/>}/);
 assert.match(app,/targetHash=hash\?'#'\+hash/);
 
-assert.match(home,/heroVideoUrl/);
-assert.match(home,/propulse-home-journey/);
 assert.match(home,/HeroJourneyVideo/);
-assert.match(home,/new Blob\(\[bytes\], \{ type: 'video\/mp4' \}\)/);
+assert.match(home,/source="\/media\/propulse-home-journey\.mp4"/);
 assert.doesNotMatch(home,/captureStream\(30\)/);
+assert.doesNotMatch(home,/new Blob\(/);
 assert.match(home,/className="hc-architecture-video-element"/);
 assert.match(home,/className="hc-video-hero"/);
 assert.match(home,/PLOT → PLAN → HOME → INTERIOR/);
@@ -43,11 +43,8 @@ assert.match(homeCss,/\.hc-video-service-card/);
 assert.match(homeCss,/hcVideoCardFloat/);
 assert.match(homeCss,/hcVideoLivePulse/);
 
-const journeyBase64=Array.from({length:10},(_,index)=>
-  read('../frontend/public/media/propulse-home-journey/'+String(index).padStart(2,'0')+'.b64').trim()
-).join('');
-const journeyBytes=Buffer.from(journeyBase64,'base64');
-assert(journeyBytes.length>100000,'Homepage journey video must decode to a real MP4');
+const journeyBytes=readBuffer('../frontend/public/media/propulse-home-journey.mp4');
+assert(journeyBytes.length>500000,'Homepage journey video must be a production-sized MP4');
 assert.strictEqual(journeyBytes.subarray(4,8).toString('ascii'),'ftyp','Hero journey must be MP4');
 assert(/isom|mp41/.test(journeyBytes.subarray(8,40).toString('ascii')),'Hero journey MP4 must expose a supported brand');
 
