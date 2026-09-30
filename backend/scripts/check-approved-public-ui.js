@@ -24,23 +24,22 @@ assert.match(app,/targetHash=hash\?'#'\+hash/);
 
 assert.match(home,/generatedHeroUrl/);
 assert.match(home,/propulse-home-hero-3d/);
-assert.match(home,/hc-art-stage/);
-assert.match(home,/hotspot-quote/);
-assert.match(home,/hotspot-packages/);
-assert.match(home,/hotspot-construction/);
-assert.match(home,/hotspot-interior/);
-assert.match(home,/hotspot-property/);
-assert.match(home,/movePremiumHero/);
+assert.match(home,/HeroArchitectureVideo/);
+assert.match(home,/captureStream\(30\)/);
+assert.match(home,/className="hc-architecture-video-element"/);
+assert.match(home,/className="hc-video-hero"/);
+assert.match(home,/card-construction/);
+assert.match(home,/card-interior/);
+assert.match(home,/card-property/);
 assert.match(home,/\/quote#construction/);
 assert.match(home,/\/quote#interiors/);
 assert.match(home,/\/quote#property/);
 
-assert.match(homeCss,/\.hc-art-hero/);
-assert.match(homeCss,/\.hc-art-stage/);
-assert.match(homeCss,/hcArtCamera/);
-assert.match(homeCss,/hcArtSheen/);
-assert.match(homeCss,/hcArtPulse/);
-assert.match(homeCss,/perspective:1800px/);
+assert.match(homeCss,/\.hc-video-hero/);
+assert.match(homeCss,/\.hc-architecture-video-element/);
+assert.match(homeCss,/\.hc-video-service-card/);
+assert.match(homeCss,/hcVideoCardFloat/);
+assert.match(homeCss,/hcVideoLivePulse/);
 
 const heroBase64=Array.from({length:11},(_,index)=>
   read('../frontend/public/media/propulse-home-hero-3d/'+String(index).padStart(2,'0')+'.b64').trim()
