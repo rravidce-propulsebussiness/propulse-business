@@ -89,11 +89,29 @@ export default function EstimatorWizard({flowKey}){
       if(data?.flowType!=='estimator')throw new Error('This calculator is not available.')
       if(!mounted.current)return
       setFlow(data)
-      setCities(collection(cityData))
+      const loadedCities = collection(cityData)
+      setCities(loadedCities)
       setContactData(websiteContact||{})
-      setAnswers({})
-      setCityId('')
-      setStep(0)
+
+      let initialAnswers = {}
+      let initialCityId = ''
+      let initialStep = 0
+      try {
+        const saved = JSON.parse(sessionStorage.getItem('propulse_estimator_prefill') || 'null')
+        const recent = saved && Date.now() - Number(saved.createdAt || 0) < 60 * 60 * 1000
+        if (recent && saved.flowKey === flowKey) {
+          initialAnswers = saved.answers && typeof saved.answers === 'object' && !Array.isArray(saved.answers) ? saved.answers : {}
+          initialCityId = saved.cityId ? String(saved.cityId) : ''
+          sessionStorage.removeItem('propulse_estimator_prefill')
+          const visible = (data.questions || []).filter(question => isQuestionVisible(question, initialAnswers))
+          const firstMissing = visible.findIndex(question => question.isRequired && isEmptyAnswer(initialAnswers[question.questionKey]))
+          initialStep = firstMissing >= 0 ? firstMissing : Math.max(0, visible.length - 1)
+        }
+      } catch {}
+
+      setAnswers(initialAnswers)
+      setCityId(initialCityId)
+      setStep(initialStep)
       setResult(null)
       setQuoteMode(false)
       setContact(emptyContact)

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { publicRequest } from '../utils/auth'
 import { isEmptyAnswer, isQuestionVisible } from '../components/CustomerFlowQuestion'
 import InteriorRequirementExact from '../components/InteriorRequirementExact'
@@ -135,6 +135,7 @@ function PremiumQuestion({ question, value, onChange, visual = 'default' }) {
 }
 
 export default function RequirementWizard({ flowKey }) {
+  const navigate = useNavigate()
   const [flow, setFlow] = useState(null)
   const [cities, setCities] = useState([])
   const [contactData, setContactData] = useState({})
@@ -145,6 +146,7 @@ export default function RequirementWizard({ flowKey }) {
   const [website, setWebsite] = useState('')
   const [submissionKey, setSubmissionKey] = useState(makeSubmissionKey)
   const [state, setState] = useState({ loading: true, saving: false, error: '', success: false })
+  const [submission, setSubmission] = useState(null)
   const mounted = useRef(true)
   const theme = THEMES[flowKey] || THEMES.build
 
@@ -188,6 +190,7 @@ export default function RequirementWizard({ flowKey }) {
       setCityId(initialCityId)
       setConsent(false)
       setSubmissionKey(makeSubmissionKey())
+      setSubmission(null)
       setState({ loading: false, saving: false, error: '', success: false })
     }).catch(error => mounted.current && setState({ loading: false, saving: false, error: error.message, success: false }))
 
@@ -218,6 +221,14 @@ export default function RequirementWizard({ flowKey }) {
   const requiredTotal = questions.filter(question => question.isRequired).length + 3
   const requiredDone = questions.filter(question => question.isRequired && !isEmptyAnswer(answers[question.questionKey])).length + (contact.name.trim() ? 1 : 0) + (/^[6-9]\d{9}$/.test(contact.phone.replace(/\D/g, '')) ? 1 : 0) + (consent ? 1 : 0)
   const completion = requiredTotal ? Math.round(requiredDone / requiredTotal * 100) : 0
+  const missingRequired = questions.filter(question => question.isRequired && isEmptyAnswer(answers[question.questionKey]))
+  const phoneValid = /^[6-9]\d{9}$/.test(contact.phone.replace(/\D/g, ''))
+  const submitIssues = [
+    ...missingRequired.map(question => question.label.replace(/\?$/,'')),
+    ...(!contact.name.trim() ? ['Your Name'] : []),
+    ...(!phoneValid ? ['Valid Mobile Number'] : []),
+    ...(!consent ? ['Contact Consent'] : []),
+  ]
 
   function setAnswer(key, value) {
     setAnswers(current => ({ ...current, [key]: value }))
@@ -235,6 +246,46 @@ export default function RequirementWizard({ flowKey }) {
 
   function jump(id) {
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+
+  function estimatorPrefill() {
+    if (flowKey !== 'build') return
+    const projectTypeMap = {
+      house_construction: 'house',
+      commercial_building: 'commercial',
+      building_extension: 'extension',
+    }
+    const scope = Array.isArray(answers.construction_scope) ? answers.construction_scope : []
+    let constructionPackage = ''
+    if (scope.includes('turnkey')) constructionPackage = 'turnkey'
+    else if (scope.includes('civil_structure')) constructionPackage = 'structure_only'
+    else if (scope.includes('finishing')) constructionPackage = 'finishing_only'
+
+    const mapped = {
+      project_location: answers.project_location || '',
+      project_type: projectTypeMap[answers.project_type] || '',
+      own_plot: answers.own_plot,
+      plot_area: answers.plot_area || '',
+      built_up_area: answers.built_up_area || '',
+      floors: answers.floors || '',
+      construction_package: constructionPackage,
+      quality: answers.quality || '',
+      timeline: answers.timeline || '',
+      additional_requirement: answers.additional_requirement || '',
+    }
+    try {
+      sessionStorage.setItem('propulse_estimator_prefill', JSON.stringify({
+        flowKey: 'construction-cost-estimator',
+        cityId,
+        answers: Object.fromEntries(Object.entries(mapped).filter(([, value]) => value !== '' && value !== undefined && value !== null)),
+        createdAt: Date.now(),
+      }))
+    } catch {}
+  }
+
+  function openEstimator() {
+    estimatorPrefill()
+    navigate('/construction-estimator')
   }
 
   async function submit(event) {
@@ -265,10 +316,11 @@ export default function RequirementWizard({ flowKey }) {
 
     try {
       setState(current => ({ ...current, saving: true, error: '' }))
-      await publicRequest('/customer-flows/' + flowKey + '/submit', {
+      const submitted = await publicRequest('/customer-flows/' + flowKey + '/submit', {
         method: 'POST',
         body: JSON.stringify({ flowToken: flow.flowToken, answers, contact: { ...contact, phone }, consent, submissionKey, website })
       })
+      setSubmission(submitted || null)
       setState({ loading: false, saving: false, error: '', success: true })
       window.scrollTo({ top: 0, behavior: 'smooth' })
     } catch (error) {
@@ -283,10 +335,16 @@ export default function RequirementWizard({ flowKey }) {
     <header className="rq-premium-header"><Link to="/"><img src="/brand/propulse-logo.svg" alt="ProPulse" /></Link><Link to="/">Back to Home</Link></header>
     <div className="rq-success rq-premium-success">
       <div className="rq-success-mark">✓</div>
-      <span>REQUEST RECEIVED</span>
-      <h1>Your requirement is ready.</h1>
-      <p>We have saved the structured requirement. Relevant businesses may respond according to ProPulse access rules while your contact details remain protected until access is allowed.</p>
-      <div><Link to="/">Back home</Link><button type="button" onClick={() => window.location.reload()}>Post another requirement</button></div>
+      <span>QUOTATION REQUEST SUBMITTED</span>
+      <h1>Your requirement has been sent successfully.</h1>
+      <p>Relevant businesses can now respond with their actual quotations. Actual quotations are not generated instantly by ProPulse because pricing depends on the business, site details, specifications and final scope.</p>
+      {submission?.leadId && <small className="rq-success-reference">Request reference: #{submission.leadId}</small>}
+      {flowKey === 'build' && <div className="rq-success-estimate"><b>Want a price range now?</b><span>Use the Construction Cost Estimator. We’ll carry over the details you already entered so you do not have to start again.</span></div>}
+      <div>
+        {flowKey === 'build' && <button className="rq-success-primary" type="button" onClick={openEstimator}>Get Instant Cost Estimate</button>}
+        <Link to="/">Back home</Link>
+        <button type="button" onClick={() => window.location.reload()}>Post another requirement</button>
+      </div>
     </div>
   </main>
 
@@ -432,11 +490,12 @@ export default function RequirementWizard({ flowKey }) {
           <div className="rq-summary-list">
             {summaryRows.map(([label,value]) => <div key={label}><span>{label}</span><b title={value}>{value}</b></div>)}
           </div>
-          <label className="rq-consent premium"><input type="checkbox" checked={consent} onChange={event => setConsent(event.target.checked)} /><span>I agree that ProPulse may share my submitted contact information with relevant businesses so they can respond to this requirement.</span></label>
+          {submitIssues.length > 0 && <div className="rq-submit-checklist"><b>Before requesting quotations</b><span>{submitIssues.length} required item{submitIssues.length === 1 ? '' : 's'} remaining</span><ul>{submitIssues.slice(0,4).map(item => <li key={item}>{item}</li>)}</ul></div>}
+          <label className={consent ? 'rq-consent premium' : 'rq-consent premium needs-attention'}><input type="checkbox" checked={consent} onChange={event => { setConsent(event.target.checked); setState(current => ({ ...current, error: '' })) }} /><span>I agree that ProPulse may share my submitted contact information with relevant businesses so they can respond with quotations.</span></label>
           <label className="rq-honeypot" aria-hidden="true">Website<input tabIndex="-1" autoComplete="off" value={website} onChange={event => setWebsite(event.target.value)} /></label>
-          {state.error && <div className="rq-error">{state.error}</div>}
-          <button className="rq-submit" type="submit" disabled={state.saving}>{state.saving ? 'Submitting…' : (flow.config?.submitLabel || 'Submit Requirement')} <Icon name="arrow" size={15}/></button>
-          <small className="rq-submit-note">No OTP required. Your request becomes a lead only after successful submission.</small>
+          {state.error && <div className="rq-error rq-submit-error" role="alert">{state.error}</div>}
+          <button className="rq-submit" type="submit" disabled={state.saving}>{state.saving ? 'Submitting…' : 'Request Quotations'} <Icon name="arrow" size={15}/></button>
+          <small className="rq-submit-note">Actual quotations come from responding businesses. For an instant indicative price range, use the Cost Estimator.</small>
         </aside>
       </div>
     </form>
