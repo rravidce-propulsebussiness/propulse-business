@@ -160,12 +160,23 @@ assert.doesNotMatch(projects,/function startSimilar/);
 assert.doesNotMatch(projects,/navigate\(route\)/);
 assert.match(projects,/openProject\(project\)/);
 
-assert.match(contact,/portalAudience==='lead_partners'\|\|portalAudience==='users'/);
+assert.match(contact,/portalAudience==='lead_partners'/);
+assert.match(contact,/portalAudience==='users'\) return <ProfessionalContact\/>/);
+assert.match(contact,/PROPULSE FOR PROFESSIONALS/);
+assert.match(contact,/Professional Support/);
+assert.match(contact,/Grow With Better <em>Project Opportunities\.<\/em>/);
+assert.match(contact,/Lead Support/);
+assert.match(contact,/Business verification/);
+assert.match(contact,/Professional Login/);
 assert.match(websiteFaq,/className="website-faq-more" to="\/contact"/);
 assert.match(websiteFaq,/Contact ProPulse/);
 assert.doesNotMatch(websiteFaq,/\/contact\?audience=users/);
 
 assert.match(portalContact,/users:\{label:'Professional',title:'Professional Support'/);
 assert.match(portalContact,/Professionals<\/span><b>\/\<\/b><strong>Contact<\/strong>/);
+
+assert.match(contact,/publicRequest\('\/contact\?audience=users'\)/);
+assert.match(contact,/className="professional-contact-hero"/);
+assert.match(contact,/className="professional-support-strip"/);
 
 console.log('Approved public UI mockup checks passed.');
