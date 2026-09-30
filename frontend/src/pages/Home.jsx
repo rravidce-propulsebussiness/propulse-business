@@ -309,7 +309,7 @@ function Home() {
     try {
       setLocatingPincode(true)
       setConsultError('')
-      const result = await publicRequest('/pincodes/' + pincode + '/locate')
+      const result = await publicRequest('/pincodes/location/' + pincode)
       if (lookupId !== pinLookupSeq.current) return
 
       let city = result?.cityId
