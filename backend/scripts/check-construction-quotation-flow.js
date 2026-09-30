@@ -12,7 +12,9 @@ const home=read('../frontend/src/pages/Home.jsx');
 const migration=read('src/database/migrations/20260930_quote_ready_construction_flow.sql');
 
 assert.match(home,/Tell Us Your Requirement/);
-assert.match(home,/Save Requirement & Continue/);
+assert.match(home,/Submit Basic Requirement/);
+assert.match(home,/Get Detailed Construction Quote/);
+assert.doesNotMatch(home,/setConsultOpen\(false\)\s*\n\s*navigate\('\/' \+ consultForm\.flowKey\)/);
 assert.match(wizard,/calculateRequirementQuotation/);
 assert.match(wizard,/Generate Detailed Quotation/);
 assert.match(wizard,/Download Detailed Quotation PDF/);
