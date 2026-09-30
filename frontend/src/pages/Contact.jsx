@@ -71,7 +71,10 @@ function PublicContact(){
         <Link to="/about">About</Link>
         <Link className="active" to="/contact">Contact</Link>
       </nav>
-      <Link className="contact-header-cta" to="/quote#construction">Get Free Quote <Icon name="arrow" size={15}/></Link>
+      <div className="public-header-actions">
+        <Link className="contact-header-cta" to="/quote#construction">Get Free Quote <Icon name="arrow" size={15}/></Link>
+        <Link className="public-professional-btn" to="/login">Professionals</Link>
+      </div>
     </header>
 
     <section className="contact-hero">
