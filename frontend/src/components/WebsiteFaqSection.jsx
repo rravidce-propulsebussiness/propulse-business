@@ -16,6 +16,16 @@ function categoryLabel(value){
   return CATEGORY_LABELS[value]||String(value||'General').replace(/[_-]+/g,' ').replace(/\b\w/g,m=>m.toUpperCase())
 }
 
+function FaqIcon({category}){
+  const common={width:22,height:22,viewBox:'0 0 24 24',fill:'none',stroke:'currentColor',strokeWidth:'1.9',strokeLinecap:'round',strokeLinejoin:'round','aria-hidden':true}
+  const key=String(category||'general').toLowerCase()
+  if(key.includes('construct'))return <svg {...common}><path d="m3 11 9-8 9 8"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/></svg>
+  if(key.includes('consult'))return <svg {...common}><path d="M21 15a4 4 0 0 1-4 4H8l-5 3 1.6-5A7 7 0 0 1 3 12V8a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4Z"/><path d="M8 10h.01M12 10h.01M16 10h.01"/></svg>
+  if(key.includes('interior'))return <svg {...common}><path d="M5 11V8a3 3 0 0 1 3-3h8a3 3 0 0 1 3 3v3"/><path d="M4 10a2 2 0 0 0-2 2v5h20v-5a2 2 0 0 0-2-2"/><path d="M5 17v2M19 17v2"/></svg>
+  if(key.includes('price')||key.includes('cost')||key.includes('payment'))return <svg {...common}><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M8 6h8M8 10h2M12 10h2M16 10h.01M8 14h2M12 14h2M16 14h.01M8 18h2M12 18h2M16 18h.01"/></svg>
+  return <svg {...common}><path d="M12 3 4 7v10l8 4 8-4V7l-8-4Z"/><path d="M8 12h8M12 8v8"/></svg>
+}
+
 export default function WebsiteFaqSection({variant='home',audience='website'}){
   const standalone=variant==='page'
   const [faqs,setFaqs]=useState([])
@@ -32,7 +42,10 @@ export default function WebsiteFaqSection({variant='home',audience='website'}){
       const data=await publicRequest('/faqs?audience='+encodeURIComponent(audience))
       const items=Array.isArray(data)?data.filter(item=>item?.is_active!==false):[]
       setFaqs(items)
-      setOpen(current=>items.some(item=>item.id===current)?current:null)
+      setOpen(current=>{
+        if(items.some(item=>item.id===current))return current
+        return !standalone&&items.length?items[0].id:null
+      })
     }catch(e){
       setFaqs([])
       setError(e.message||'Unable to load FAQs')
@@ -67,6 +80,7 @@ export default function WebsiteFaqSection({variant='home',audience='website'}){
       return <article className={`website-faq-item${expanded?' open':''}`} key={item.id}>
         <button type="button" className="website-faq-question" onClick={()=>setOpen(expanded?null:item.id)} aria-expanded={expanded} aria-controls={answerId}>
           {standalone&&<span className="website-faq-number">{String(index+1).padStart(2,'0')}</span>}
+          {!standalone&&<span className="website-faq-home-icon"><FaqIcon category={item.category}/></span>}
           <span className="website-faq-question-copy"><small>{categoryLabel(item.category)}</small><strong>{item.question}</strong></span>
           <span className="website-faq-toggle" aria-hidden="true">{expanded?'−':'+'}</span>
         </button>
@@ -77,16 +91,25 @@ export default function WebsiteFaqSection({variant='home',audience='website'}){
 
   if(!standalone)return <section className="website-faq website-faq-home" id="faq">
     <div className="website-faq-home-head">
-      <div><span className="website-faq-kicker">FAQ</span><h2>Questions, clearly answered.</h2><p>Clear answers about free consultation, project requirements, cost estimators, contact sharing and what happens next.</p></div>
-      <Link to="/contact?audience=users">Need more help? <span>→</span></Link>
+      <div>
+        <span className="website-faq-kicker"><i/> FAQ</span>
+        <h2>Questions, <em>clearly answered.</em></h2>
+        <p>Get clear answers about free consultation, project requirements, cost estimators, contact sharing and what happens next.</p>
+      </div>
+      <Link className="website-faq-more" to="/contact?audience=users"><span className="website-faq-more-icon">☵</span> Need more help? <b>→</b></Link>
     </div>
     <div className="website-faq-home-layout">
       {faqList}
       <aside className="website-faq-support">
-        <span className="website-faq-kicker">SUPPORT</span>
-        <h3>Talk to Propulse.</h3>
-        <p>Have a construction, interior, property or consultation question? Start a conversation with the ProPulse team.</p>
-        <Link to="/contact?audience=users">Contact Propulse <span>→</span></Link>
+        <div className="website-faq-support-copy">
+          <span className="website-faq-kicker">SUPPORT <i/></span>
+          <h3>Talk to <em>ProPulse.</em></h3>
+          <p>Have a construction, interior, property or consultation question? Start a conversation with the ProPulse team. We’re here to help.</p>
+          <Link to="/contact?audience=users">Contact ProPulse <span>→</span></Link>
+        </div>
+        <div className="website-faq-support-photo" aria-hidden="true">
+          <img src="https://images.unsplash.com/photo-1600585152915-d208bec867a1?auto=format&fit=crop&w=900&q=88" alt="" loading="lazy"/>
+        </div>
       </aside>
     </div>
   </section>
