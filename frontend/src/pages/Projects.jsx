@@ -241,7 +241,7 @@ export default function Projects(){
       <nav><Link to="/">Home</Link><Link to="/packages">Packages</Link><Link className="active" to="/projects">Projects</Link><Link to="/how-it-works">How It Works</Link><Link to="/about">About</Link><Link to="/contact">Contact</Link></nav>
       <div className="public-header-actions">
         <button className="public-quote-button" onClick={()=>navigate('/quote#construction')}>Get Free Quote <Icon name="arrow" size={15}/></button>
-        <Link className="public-professional-btn" to="/contact?audience=users">For Professionals</Link>
+        <Link className="public-professional-btn" to="/professionals">For Professionals</Link>
       </div>
     </header>
 
@@ -384,7 +384,7 @@ export default function Projects(){
 
           <div className="pj-detail-actions">
             <Link to="/packages" onClick={closeProject}>View Packages <Icon name="arrow" size={15}/></Link>
-            <Link className="secondary" to="/contact?audience=users" onClick={closeProject}>Ask About This Project</Link>
+            <Link className="secondary" to="/professionals" onClick={closeProject}>Ask About This Project</Link>
           </div>
         </div>
       </section>
@@ -394,7 +394,7 @@ export default function Projects(){
       <div className="pj-footer-brand"><img src="/brand/propulse-logo.svg" alt="ProPulse"/><p>Your customer starting point for construction, interiors and real-estate requirements.</p><div>f&nbsp;&nbsp;◎&nbsp;&nbsp;▶&nbsp;&nbsp;in</div></div>
       <div><b>Quick Links</b><Link to="/">Home</Link><Link to="/quote#construction">Construction</Link><Link to="/quote#interiors">Interiors</Link><Link to="/packages">Packages</Link><Link to="/quote#property">Real Estate</Link><Link to="/projects">Projects</Link></div>
       <div><b>Our Services</b><Link to="/quote#construction">Home Construction</Link><Link to="/quote#interiors">Interior Design</Link><Link to="/quote#property">Real Estate</Link><Link to="/quote#construction">Construction Quote</Link><Link to="/quote#construction">Free Consultation</Link></div>
-      <div><b>Support</b><Link to="/contact?audience=users">FAQ</Link><Link to="/#contact">Contact Us</Link><Link to="/contact?audience=users">Privacy Policy</Link><Link to="/contact?audience=users">Terms & Conditions</Link></div>
+      <div><b>Support</b><Link to="/professionals">FAQ</Link><Link to="/#contact">Contact Us</Link><Link to="/professionals">Privacy Policy</Link><Link to="/professionals">Terms & Conditions</Link></div>
       <div><b>Contact Info</b>{phone&&<span><Icon name="phone" size={13}/>{phone}</span>}{email&&<span>{email}</span>}<span><Icon name="pin" size={13}/>Hyderabad, India</span></div>
     </footer>
   </main>
