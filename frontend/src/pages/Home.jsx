@@ -652,7 +652,7 @@ function Home() {
       <button className="hc-popup-close" type="button" onClick={closeConsult} aria-label="Close consultation popup">×</button>
       <div className="hc-popup-head">
         <span><Icon name="phone" size={21} /></span>
-        <div><h3>Tell Us Your Requirement</h3><p>This popup only captures a basic lead so relevant businesses can respond. It does not generate a quotation.</p></div>
+        <div><h3>Tell Us Your Requirement</h3></div>
       </div>
 
       {consultSubmitted ? <div className="hc-popup-success">
