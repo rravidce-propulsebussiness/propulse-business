@@ -172,6 +172,7 @@ function Home() {
   const [citySearch, setCitySearch] = useState('')
   const [detectedLocation, setDetectedLocation] = useState(null)
   const [locatingPincode, setLocatingPincode] = useState(false)
+  const [locatingDevice, setLocatingDevice] = useState(false)
   const pinLookupSeq = useRef(0)
   const [consultOpen, setConsultOpen] = useState(false)
   const [popupCycle, setPopupCycle] = useState(0)
@@ -367,6 +368,77 @@ function Home() {
     setConsultForm(current => ({ ...current, pincode }))
     setConsultError('')
     if (pincode.length === 6) locatePincode(pincode)
+  }
+
+  function detectCurrentLocation() {
+    if (!navigator.geolocation) {
+      setConsultError('Current location is not supported by this browser. Enter your city or PIN manually.')
+      return
+    }
+
+    setLocatingDevice(true)
+    setConsultError('')
+    navigator.geolocation.getCurrentPosition(
+      async position => {
+        try {
+          const result = await publicRequest('/pincodes/reverse-location', {
+            method: 'POST',
+            body: JSON.stringify({
+              latitude: position.coords.latitude,
+              longitude: position.coords.longitude,
+            }),
+          })
+
+          const city = result?.cityId
+            ? cityList.find(item => String(item.id) === String(result.cityId))
+            : cityList.find(item =>
+                String(item.name || '').trim().toLowerCase() === String(result?.cityName || '').trim().toLowerCase()
+                && (!result?.stateName || String(item.state_name || '').trim().toLowerCase() === String(result.stateName || '').trim().toLowerCase())
+              )
+
+          setConsultForm(current => ({
+            ...current,
+            pincode: String(result?.pincode || ''),
+            cityId: city ? String(city.id) : '',
+          }))
+          setCitySearch(city ? cityLabel(city) : (result?.cityName || ''))
+          setDetectedLocation({
+            source: 'device',
+            pincode: result?.pincode || '',
+            cityName: city?.name || result?.cityName || '',
+            stateName: city?.state_name || result?.stateName || '',
+            districtName: result?.districtName || '',
+            localityName: result?.localityName || '',
+            detectedAddress: result?.detectedAddress || '',
+            status: result?.status || '',
+          })
+
+          if (!city) {
+            setConsultError('Location detected, but this city is not configured yet. Please choose the nearest available city.')
+          }
+        } catch (error) {
+          setDetectedLocation(null)
+          setConsultError(error.message || 'Unable to detect your current location. Enter city or PIN manually.')
+        } finally {
+          setLocatingDevice(false)
+        }
+      },
+      error => {
+        setLocatingDevice(false)
+        if (error.code === error.PERMISSION_DENIED) {
+          setConsultError('Location permission was denied. You can still enter your city or PIN manually.')
+        } else if (error.code === error.TIMEOUT) {
+          setConsultError('Location detection timed out. Enter your city or PIN manually.')
+        } else {
+          setConsultError('Unable to read your current location. Enter your city or PIN manually.')
+        }
+      },
+      {
+        enableHighAccuracy: false,
+        timeout: 10000,
+        maximumAge: 300000,
+      }
+    )
   }
 
   const phone = contactData.phone || contactData.phone_number || contactData.mobile || ''
@@ -850,13 +922,23 @@ function Home() {
           </label>
         </div>
 
+        <button
+          className="hc-current-location-btn"
+          type="button"
+          onClick={detectCurrentLocation}
+          disabled={locatingDevice}
+        >
+          <Icon name="pin" size={16} />
+          {locatingDevice ? 'Detecting your location…' : 'Use my current location'}
+        </button>
+
         {(detectedLocation || selectedCity) && <div className="hc-location-meta">
           <Icon name="pin" size={15} />
           <div>
-            <b>{detectedLocation?.cityName || selectedCity?.name || citySearch || 'Location detected'}</b>
+            <b>{detectedLocation?.localityName ? detectedLocation.localityName + ' · ' : ''}{detectedLocation?.cityName || selectedCity?.name || citySearch || 'Location detected'}</b>
             <span>
               {[detectedLocation?.districtName, detectedLocation?.stateName || selectedCity?.state_name].filter(Boolean).join(' · ')}
-              {detectedLocation?.source === 'pin' ? ' · synced from PIN' : ''}
+              {detectedLocation?.source === 'pin' ? ' · synced from PIN' : detectedLocation?.source === 'device' ? ' · detected from current location' : ''}
             </span>
           </div>
         </div>}
