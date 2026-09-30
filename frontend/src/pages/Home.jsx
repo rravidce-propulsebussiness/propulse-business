@@ -511,7 +511,7 @@ function Home() {
       <button className="hc-popup-close" type="button" onClick={closeConsult} aria-label="Close consultation popup">×</button>
       <div className="hc-popup-head">
         <span><Icon name="phone" size={21} /></span>
-        <div><h3>Get Free Consultation</h3><p>Tell us what you need and continue with a guided homeowner requirement.</p></div>
+        <div><h3>Tell Us Your Requirement</h3><p>Share the basic project details first. Construction continues to a detailed quotation; other services continue to their detailed requirement flow.</p></div>
       </div>
 
       <form onSubmit={submitConsult}>
@@ -581,8 +581,8 @@ function Home() {
         <label className="hc-popup-honeypot" aria-hidden="true">Website<input tabIndex="-1" autoComplete="off" value={consultForm.website} onChange={event => setConsultForm({ ...consultForm, website: event.target.value })} /></label>
 
         {consultError && <div className="hc-popup-error">{consultError}</div>}
-        <button className="hc-popup-submit" type="submit" disabled={consultSaving}>{consultSaving ? 'Submitting…' : 'Submit Request'} {!consultSaving && <Icon name="arrow" size={15} />}</button>
-        <small><Icon name="shield" size={12} /> A valid submission becomes a Basic live lead immediately; you can still add full project details next.</small>
+        <button className="hc-popup-submit" type="submit" disabled={consultSaving}>{consultSaving ? 'Saving…' : 'Save Requirement & Continue'} {!consultSaving && <Icon name="arrow" size={15} />}</button>
+        <small><Icon name="shield" size={12} /> We save these basics first so your enquiry is not lost, then continue to detailed project questions.</small>
       </form>
     </aside>}
   </div>
