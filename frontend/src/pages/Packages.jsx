@@ -216,7 +216,10 @@ export default function Packages(){
         <Link to="/about">About</Link>
         <Link to="/contact">Contact</Link>
       </nav>
-      <button onClick={()=>getConstructionQuote(selectedConstruction)}>Get Free Quote <Icon name="arrow" size={15}/></button>
+      <div className="public-header-actions">
+        <button className="public-quote-button" onClick={()=>getConstructionQuote(selectedConstruction)}>Get Free Quote <Icon name="arrow" size={15}/></button>
+        <Link className="public-professional-btn" to="/login">Professionals</Link>
+      </div>
     </header>
 
     <section className={'pkg-hero '+(category==='construction'?'pkg-hero-construction':'pkg-hero-interior')}>
