@@ -89,9 +89,13 @@ assert.match(homeCss,/hcWhyIconFloat/);
 
 assert.match(home,/hc-how-premium/);
 assert.match(home,/Tell Us Your Requirement/);
-assert.match(home,/We Structure the Brief/);
-assert.match(home,/Discuss Your Options/);
-assert.match(home,/Move Your Home Forward/);
+assert.match(home,/We Find the Right Experts/);
+assert.match(home,/Choose the Best Option/);
+assert.match(home,/Start Your Home Journey/);
+assert.match(home,/senior engineers, architects, or trusted partners/);
+assert.doesNotMatch(home,/We Structure the Brief/);
+assert.doesNotMatch(home,/Discuss Your Options/);
+assert.doesNotMatch(home,/Move Your Home Forward/);
 assert.doesNotMatch(home,/Simple by design/);
 assert.doesNotMatch(home,/Start your home journey in a few clear steps\./);
 assert.match(homeCss,/\.hc-how-premium-card/);
@@ -114,17 +118,9 @@ assert.match(homeCss,/\.hc-inspiration-icon/);
 assert.match(homeCss,/\.hc-inspiration-cta/);
 assert.match(homeCss,/hcInspirationIcon/);
 
-assert.match(home,/How ProPulse <em>Guides Your Home Journey<\/em>/);
-assert.match(home,/Fill Your Requirement/);
-assert.match(home,/Talk to Experts/);
-assert.match(home,/Choose Your Package/);
-assert.match(home,/senior engineers, architects/);
+assert.doesNotMatch(home,/How ProPulse <em>Guides Your Home Journey<\/em>/);
 assert.doesNotMatch(home,/Designed Around Homeowner Concerns/);
 assert.doesNotMatch(home,/HOMEOWNER_VALUES/);
-assert.match(homeCss,/\.hc-guided-journey/);
-assert.match(homeCss,/\.requirement-art/);
-assert.match(homeCss,/\.experts-art/);
-assert.match(homeCss,/\.package-art/);
-assert.match(homeCss,/hcGuidedArrow/);
+assert.doesNotMatch(homeCss,/\.hc-guided-journey/);
 
 console.log('Approved public UI mockup checks passed.');
