@@ -22,12 +22,14 @@ assert.match(app,/path="\/quote" element={<Solutions\/>}/);
 assert.match(app,/path="\/solutions" element={<LegacySolutionRedirect\/>}/);
 assert.match(app,/targetHash=hash\?'#'\+hash/);
 
-assert.match(home,/generatedHeroUrl/);
-assert.match(home,/propulse-home-hero-3d/);
-assert.match(home,/HeroArchitectureVideo/);
-assert.match(home,/captureStream\(30\)/);
+assert.match(home,/heroVideoUrl/);
+assert.match(home,/propulse-home-journey/);
+assert.match(home,/HeroJourneyVideo/);
+assert.match(home,/new Blob\(\[bytes\], \{ type: 'video\/mp4' \}\)/);
+assert.doesNotMatch(home,/captureStream\(30\)/);
 assert.match(home,/className="hc-architecture-video-element"/);
 assert.match(home,/className="hc-video-hero"/);
+assert.match(home,/PLOT → PLAN → HOME → INTERIOR/);
 assert.match(home,/card-construction/);
 assert.match(home,/card-interior/);
 assert.match(home,/card-property/);
@@ -41,13 +43,13 @@ assert.match(homeCss,/\.hc-video-service-card/);
 assert.match(homeCss,/hcVideoCardFloat/);
 assert.match(homeCss,/hcVideoLivePulse/);
 
-const heroBase64=Array.from({length:11},(_,index)=>
-  read('../frontend/public/media/propulse-home-hero-3d/'+String(index).padStart(2,'0')+'.b64').trim()
+const journeyBase64=Array.from({length:10},(_,index)=>
+  read('../frontend/public/media/propulse-home-journey/'+String(index).padStart(2,'0')+'.b64').trim()
 ).join('');
-const heroBytes=Buffer.from(heroBase64,'base64');
-assert(heroBytes.length>30000,'Generated homepage artwork must decode to a real image');
-assert.strictEqual(heroBytes.subarray(0,4).toString('ascii'),'RIFF','Hero must be RIFF/WebP');
-assert.strictEqual(heroBytes.subarray(8,12).toString('ascii'),'WEBP','Hero must be WebP');
+const journeyBytes=Buffer.from(journeyBase64,'base64');
+assert(journeyBytes.length>100000,'Homepage journey video must decode to a real MP4');
+assert.strictEqual(journeyBytes.subarray(4,8).toString('ascii'),'ftyp','Hero journey must be MP4');
+assert(/isom|mp41/.test(journeyBytes.subarray(8,40).toString('ascii')),'Hero journey MP4 must expose a supported brand');
 
 assert.match(quote,/What do you need help with\?/);
 assert.match(quote,/quote-service-grid/);
