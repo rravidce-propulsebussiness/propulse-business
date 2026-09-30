@@ -125,4 +125,15 @@ assert.doesNotMatch(home,/Designed Around Homeowner Concerns/);
 assert.doesNotMatch(home,/HOMEOWNER_VALUES/);
 assert.doesNotMatch(homeCss,/\.hc-guided-journey/);
 
+assert.match(home,/className="hc-expert-float hc-consultation-card" aria-label="Free consultation available"/);
+assert.match(home,/className="hc-expert-float hc-warranty-card" aria-label="Warranty-backed options"/);
+assert.doesNotMatch(home,/hc-consultation-card" type="button"/);
+assert.doesNotMatch(home,/hc-warranty-card" to=/);
+assert.match(home,/Paints/);
+assert.match(home,/Cement/);
+assert.match(home,/Tiles/);
+assert.match(home,/Hardware/);
+assert.match(homeCss,/pointer-events:none/);
+assert.match(homeCss,/grid-template-columns:repeat\(4,minmax\(0,1fr\)\)/);
+
 console.log('Approved public UI mockup checks passed.');
