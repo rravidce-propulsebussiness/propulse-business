@@ -254,10 +254,6 @@ export default function RequirementWizard({ flowKey }) {
     })
     return [...map.values()].sort((a,b) => String(a.name).localeCompare(String(b.name)))
   }, [cities])
-  const filteredCities = useMemo(() => {
-    if (!locationStateId) return []
-    return cities.filter(city => String(city.state_id) === String(locationStateId)).sort((a,b) => String(a.name).localeCompare(String(b.name)))
-  }, [cities, locationStateId])
 
   const propertyQuestions = questions.filter(question => ['project_type', 'own_plot', 'property_type', 'property_intent', 'bhk', 'property_status', 'possession_status'].includes(question.questionKey))
   const configQuestions = questions.filter(question => ['plot_area', 'built_up_area', 'area', 'floors'].includes(question.questionKey))
@@ -293,9 +289,6 @@ export default function RequirementWizard({ flowKey }) {
     const city = cities.find(item => String(item.id) === String(value))
     setCityId(value)
     if (city?.state_id) setLocationStateId(String(city.state_id))
-    if (locationQuestion) setAnswers(current => ({ ...current, [locationQuestion.questionKey]: '' }))
-    pinLookupRequest.current += 1
-    setPinLookup({ status: '', message: '' })
     setState(current => ({ ...current, error: '' }))
   }
 
