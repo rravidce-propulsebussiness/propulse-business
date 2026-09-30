@@ -228,12 +228,12 @@ button,input,select{font:inherit}
 .hc-why-grid b,.hc-why-grid small{display:block}
 .hc-why-grid b{
   color:#fff;
-  font-size:15px;
+  font-size:13px;
   line-height:1.2;
   letter-spacing:-.015em;
 }
 .hc-why-grid small{
-  margin-top:6px;
+  margin-top:5px;
   color:#c7d1d9;
   font-size:12px;
   line-height:1.5;
@@ -608,7 +608,7 @@ button,input,select{font:inherit}
   min-width:0;
   overflow:visible;
   border:1px solid #f0e3d8;
-  border-radius:20px;
+  border-radius:16px;
   background:linear-gradient(180deg,#fff 0%,#fffaf6 100%);
   box-shadow:
     0 20px 44px rgba(89,51,26,.10),
@@ -697,8 +697,8 @@ button,input,select{font:inherit}
   line-height:1.48;
 }
 .hc-inspiration-arrow{
-  width:38px;
-  height:38px;
+  width:32px;
+  height:32px;
   display:grid;
   place-items:center;
   padding:0;
@@ -1312,7 +1312,7 @@ button,input,select{font:inherit}
 
 .hc-expert-visual{
   position:relative;
-  min-height:520px;
+  min-height:460px;
   overflow:hidden;
   border-radius:26px;
   background:#0c2a44;
@@ -1374,15 +1374,15 @@ button,input,select{font:inherit}
 .hc-expert-float{
   position:absolute;
   z-index:7;
-  width:31%;
-  min-height:78px;
+  width:27.5%;
+  min-height:66px;
   display:grid;
-  grid-template-columns:38px minmax(0,1fr);
+  grid-template-columns:32px minmax(0,1fr);
   align-items:center;
-  gap:8px;
-  padding:10px 11px;
+  gap:7px;
+  padding:8px 9px;
   border:1px solid rgba(255,255,255,.72);
-  border-radius:14px;
+  border-radius:12px;
   background:rgba(255,255,255,.95);
   color:#0b3152;
   box-shadow:
@@ -1399,6 +1399,7 @@ button,input,select{font:inherit}
 .hc-materials-card{
   right:3%;
   top:3%;
+  width:30%;
   animation-delay:-1.8s;
 }
 .hc-consultation-card{
@@ -1424,7 +1425,7 @@ button,input,select{font:inherit}
 .hc-consultation-card b,
 .hc-warranty-card b{
   display:block;
-  font-size:12.5px;
+  font-size:10.8px;
   line-height:1.2;
 }
 .hc-expert-card-copy small,
@@ -1433,18 +1434,18 @@ button,input,select{font:inherit}
   display:block;
   margin-top:3px;
   color:#647b8f;
-  font-size:8.6px;
+  font-size:7.8px;
   line-height:1.35;
 }
 .hc-expert-avatars{
   display:flex;
   align-items:center;
-  margin-top:7px;
+  margin-top:5px;
 }
 .hc-expert-avatars img,
 .hc-expert-avatars i{
-  width:25px;
-  height:25px;
+  width:22px;
+  height:22px;
   margin-left:-5px;
   border:2px solid #fff;
   border-radius:50%;
@@ -1463,23 +1464,23 @@ button,input,select{font:inherit}
 .hc-material-chips{
   display:grid;
   grid-template-columns:repeat(4,minmax(0,1fr));
-  gap:4px;
+  gap:3px;
   width:100%;
   margin-top:7px;
 }
 .hc-material-chips i{
   min-width:0;
-  padding:3px 2px;
+  padding:3px 1px;
   border:1px solid #f1e3d8;
   border-radius:5px;
   background:#fff8f3;
   color:#8a4c2d;
-  font-size:7px;
+  font-size:6.4px;
   line-height:1;
   text-align:center;
   white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis;
+  overflow:visible;
+  text-overflow:clip;
   font-style:normal;
   font-weight:850;
 }
@@ -1493,16 +1494,16 @@ button,input,select{font:inherit}
 }
 .hc-expert-mini img{width:100%;height:100%;display:block;object-fit:cover}
 .mini-living{
-  left:8%;
-  bottom:18%;
-  width:28%;
-  height:25%;
+  left:9%;
+  bottom:17%;
+  width:24%;
+  height:22%;
 }
 .mini-kitchen{
-  right:8%;
-  bottom:18%;
-  width:25%;
-  height:24%;
+  right:9%;
+  bottom:17%;
+  width:22%;
+  height:21%;
 }
 @keyframes hcExpertLine{to{stroke-dashoffset:-240}}
 @keyframes hcExpertNode{
@@ -1516,10 +1517,11 @@ button,input,select{font:inherit}
 @media(max-width:1280px){
   .hc-expert-hero-inner{grid-template-columns:minmax(390px,.86fr) minmax(590px,1.14fr)}
   .hc-expert-copy h1{font-size:54px}
-  .hc-expert-visual{min-height:500px}
-  .hc-expert-float{width:32%;min-height:74px}
-  .hc-expert-card-copy b,.hc-consultation-card b,.hc-warranty-card b{font-size:11px}
-  .hc-expert-card-copy small,.hc-consultation-card small,.hc-warranty-card small{font-size:8.5px}
+  .hc-expert-visual{min-height:450px}
+  .hc-expert-float{width:28%;min-height:64px}
+  .hc-materials-card{width:30%}
+  .hc-expert-card-copy b,.hc-consultation-card b,.hc-warranty-card b{font-size:10.5px}
+  .hc-expert-card-copy small,.hc-consultation-card small,.hc-warranty-card small{font-size:7.6px}
 }
 @media(max-width:1040px){
   .hc-expert-hero{padding:18px 16px 30px}
