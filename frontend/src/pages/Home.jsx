@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { publicRequest } from '../utils/auth'
 import WebsiteFaqSection from '../components/WebsiteFaqSection'
@@ -142,6 +142,151 @@ function Icon({ name, size = 22 }) {
   if (name === 'check') return <svg {...common}><path d="m5 12 4 4L19 6"/></svg>
   if (name === 'star') return <svg {...common}><path d="m12 2 3 6 7 .9-5 4.8 1.2 6.8L12 17.3 5.8 20.5 7 13.7 2 8.9 9 8Z"/></svg>
   return null
+}
+
+function HeroArchitectureVideo({ source }) {
+  const canvasRef = useRef(null)
+  const videoRef = useRef(null)
+
+  useEffect(() => {
+    if (!source) return undefined
+
+    const canvas = canvasRef.current
+    const video = videoRef.current
+    if (!canvas || !video) return undefined
+
+    const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches
+    const ctx = canvas.getContext('2d', { alpha: false })
+    if (!ctx) return undefined
+
+    let raf = 0
+    let stream = null
+    let stopped = false
+    const image = new Image()
+    image.decoding = 'async'
+
+    const ease = value => value < .5
+      ? 4 * value * value * value
+      : 1 - Math.pow(-2 * value + 2, 3) / 2
+
+    const camera = progress => {
+      const frames = [
+        { p: 0, cx: .58, cy: .68, zoom: 1.52, rot: -.35 },
+        { p: .30, cx: .59, cy: .48, zoom: 1.48, rot: .20 },
+        { p: .58, cx: .76, cy: .38, zoom: 1.58, rot: .38 },
+        { p: .82, cx: .67, cy: .62, zoom: 1.62, rot: -.18 },
+        { p: 1, cx: .58, cy: .68, zoom: 1.52, rot: -.35 },
+      ]
+      let left = frames[0]
+      let right = frames[frames.length - 1]
+      for (let index = 0; index < frames.length - 1; index += 1) {
+        if (progress >= frames[index].p && progress <= frames[index + 1].p) {
+          left = frames[index]
+          right = frames[index + 1]
+          break
+        }
+      }
+      const span = Math.max(.0001, right.p - left.p)
+      const local = ease((progress - left.p) / span)
+      const lerp = (a, b) => a + (b - a) * local
+      return {
+        cx: lerp(left.cx, right.cx),
+        cy: lerp(left.cy, right.cy),
+        zoom: lerp(left.zoom, right.zoom),
+        rot: lerp(left.rot, right.rot),
+      }
+    }
+
+    const drawFrame = now => {
+      if (stopped || !image.naturalWidth) return
+
+      const width = 1280
+      const height = 720
+      if (canvas.width !== width) canvas.width = width
+      if (canvas.height !== height) canvas.height = height
+
+      const loopMs = 12000
+      const progress = reducedMotion ? 0 : ((now || 0) % loopMs) / loopMs
+      const shot = camera(progress)
+      const imageAspect = image.naturalWidth / image.naturalHeight
+      const outputAspect = width / height
+
+      let cropW = image.naturalWidth / shot.zoom
+      let cropH = cropW / outputAspect
+      if (cropH > image.naturalHeight) {
+        cropH = image.naturalHeight / shot.zoom
+        cropW = cropH * outputAspect
+      }
+
+      const centerX = image.naturalWidth * shot.cx
+      const centerY = image.naturalHeight * shot.cy
+      let sx = centerX - cropW / 2
+      let sy = centerY - cropH / 2
+      sx = Math.max(0, Math.min(image.naturalWidth - cropW, sx))
+      sy = Math.max(0, Math.min(image.naturalHeight - cropH, sy))
+
+      ctx.save()
+      ctx.fillStyle = '#0b2439'
+      ctx.fillRect(0, 0, width, height)
+
+      ctx.translate(width / 2, height / 2)
+      ctx.rotate((shot.rot * Math.PI) / 180)
+      const scale = 1.018
+      ctx.scale(scale, scale)
+      ctx.drawImage(image, sx, sy, cropW, cropH, -width / 2, -height / 2, width, height)
+      ctx.restore()
+
+      const glow = ctx.createRadialGradient(width * .56, height * .61, 20, width * .56, height * .61, width * .52)
+      glow.addColorStop(0, 'rgba(255,126,60,.10)')
+      glow.addColorStop(.55, 'rgba(255,126,60,.025)')
+      glow.addColorStop(1, 'rgba(0,0,0,0)')
+      ctx.fillStyle = glow
+      ctx.fillRect(0, 0, width, height)
+
+      const vignette = ctx.createLinearGradient(0, 0, width, 0)
+      vignette.addColorStop(0, 'rgba(5,28,48,.16)')
+      vignette.addColorStop(.26, 'rgba(5,28,48,.025)')
+      vignette.addColorStop(.74, 'rgba(5,28,48,.015)')
+      vignette.addColorStop(1, 'rgba(5,28,48,.20)')
+      ctx.fillStyle = vignette
+      ctx.fillRect(0, 0, width, height)
+
+      if (!reducedMotion) raf = requestAnimationFrame(drawFrame)
+    }
+
+    image.onload = () => {
+      drawFrame(0)
+      if (typeof canvas.captureStream === 'function' && !reducedMotion) {
+        stream = canvas.captureStream(30)
+        video.srcObject = stream
+        video.play().catch(() => {})
+        raf = requestAnimationFrame(drawFrame)
+      }
+    }
+    image.src = source
+
+    return () => {
+      stopped = true
+      cancelAnimationFrame(raf)
+      if (stream) stream.getTracks().forEach(track => track.stop())
+      if (video) video.srcObject = null
+    }
+  }, [source])
+
+  return <div className="hc-architecture-video">
+    <canvas ref={canvasRef} className="hc-architecture-canvas" aria-hidden="true" />
+    <video
+      ref={videoRef}
+      className="hc-architecture-video-element"
+      autoPlay
+      muted
+      loop
+      playsInline
+      poster={source || undefined}
+      aria-label="Animated 3D home planning visual showing construction, interiors and property"
+    />
+    {!source && <div className="hc-architecture-loading" aria-hidden="true"><span>Preparing 3D home visual…</span></div>}
+  </div>
 }
 
 function Home() {
@@ -355,25 +500,6 @@ function Home() {
     }
   }
 
-  function movePremiumHero(event) {
-    const node = event.currentTarget
-    const rect = node.getBoundingClientRect()
-    const x = ((event.clientX - rect.left) / rect.width - 0.5)
-    const y = ((event.clientY - rect.top) / rect.height - 0.5)
-    node.style.setProperty('--hero-parallax-x', (x * 18).toFixed(2) + 'px')
-    node.style.setProperty('--hero-parallax-y', (y * 12).toFixed(2) + 'px')
-    node.style.setProperty('--hero-tilt-x', (y * -2.2).toFixed(2) + 'deg')
-    node.style.setProperty('--hero-tilt-y', (x * 2.8).toFixed(2) + 'deg')
-  }
-
-  function resetPremiumHero(event) {
-    const node = event.currentTarget
-    node.style.setProperty('--hero-parallax-x', '0px')
-    node.style.setProperty('--hero-parallax-y', '0px')
-    node.style.setProperty('--hero-tilt-x', '0deg')
-    node.style.setProperty('--hero-tilt-y', '0deg')
-  }
-
   const media = homepageMedia.category_images || {}
   const whyImage = media.why_homeowners || WHY_IMAGE
   const finalImage = media.final_cta || FINAL_IMAGE
@@ -401,37 +527,49 @@ function Home() {
     </header>
 
     <main>
-      <section
-        className="hc-art-hero"
-        id="home"
-        onPointerMove={movePremiumHero}
-        onPointerLeave={resetPremiumHero}
-        aria-label="ProPulse home solutions"
-      >
-        <div className={'hc-art-stage ' + (generatedHeroUrl ? 'is-ready' : 'is-loading')}>
-          {generatedHeroUrl
-            ? <img className="hc-art-image" src={generatedHeroUrl} alt="ProPulse construction, interior design and real estate home solutions" fetchPriority="high" />
-            : <div className="hc-art-placeholder" aria-hidden="true"><span>ProPulse</span></div>}
+      <section className="hc-video-hero" id="home">
+        <div className="hc-video-hero-inner">
+          <div className="hc-video-copy">
+            <div className="hc-video-kicker"><i/><span>YOUR HOME. OUR EXPERTISE.</span></div>
+            <h1>Build. Design.<br/>Find. <em>All in One Place.</em></h1>
+            <p>Construction, Interiors and Real Estate solutions for modern homeowners.</p>
 
-          <div className="hc-art-depth depth-one" aria-hidden="true" />
-          <div className="hc-art-depth depth-two" aria-hidden="true" />
-          <div className="hc-art-sheen" aria-hidden="true" />
-          <div className="hc-art-vignette" aria-hidden="true" />
+            <div className="hc-video-actions">
+              <Link className="hc-video-primary" to="/quote#construction">Get Free Quote <Icon name="arrow" size={16}/></Link>
+              <Link className="hc-video-secondary" to="/packages">View Packages</Link>
+            </div>
 
-          <span className="hc-art-pulse pulse-a" aria-hidden="true" />
-          <span className="hc-art-pulse pulse-b" aria-hidden="true" />
-          <span className="hc-art-pulse pulse-c" aria-hidden="true" />
+            <div className="hc-video-trust">
+              <span><Icon name="shield" size={16}/> Trusted Businesses</span>
+              <span><Icon name="clipboard" size={16}/> Transparent Process</span>
+              <span><Icon name="support" size={16}/> End-to-End Support</span>
+              <span><Icon name="heart" size={16}/> Homeowner Focused</span>
+            </div>
+          </div>
 
-          <Link className="hc-art-hotspot hotspot-quote" to="/quote#construction" aria-label="Get a free construction quote" />
-          <Link className="hc-art-hotspot hotspot-packages" to="/packages" aria-label="View construction and interior packages" />
-          <Link className="hc-art-hotspot hotspot-construction" to="/quote#construction" aria-label="Construction quote" />
-          <Link className="hc-art-hotspot hotspot-interior" to="/quote#interiors" aria-label="Interior design requirement" />
-          <Link className="hc-art-hotspot hotspot-property" to="/quote#property" aria-label="Real estate requirement" />
-        </div>
+          <div className="hc-video-panel">
+            <HeroArchitectureVideo source={generatedHeroUrl} />
 
-        <div className="hc-art-mobile-actions">
-          <Link to="/quote#construction">Get Free Quote <Icon name="arrow" size={16}/></Link>
-          <Link to="/packages">View Packages</Link>
+            <Link className="hc-video-service-card card-construction" to="/quote#construction">
+              <span><Icon name="home" size={20}/></span>
+              <div><b>Construction</b><small>From plot plan to finished home</small></div>
+              <i><Icon name="arrow" size={15}/></i>
+            </Link>
+
+            <Link className="hc-video-service-card card-interior" to="/quote#interiors">
+              <span><Icon name="sofa" size={20}/></span>
+              <div><b>Interior Design</b><small>Rooms, finishes and complete interiors</small></div>
+              <i><Icon name="arrow" size={15}/></i>
+            </Link>
+
+            <Link className="hc-video-service-card card-property" to="/quote#property">
+              <span><Icon name="building" size={20}/></span>
+              <div><b>Real Estate</b><small>Buy, rent, sell or invest</small></div>
+              <i><Icon name="arrow" size={15}/></i>
+            </Link>
+
+            <div className="hc-video-badge"><span/> LIVE 3D HOME JOURNEY</div>
+          </div>
         </div>
       </section>
 
