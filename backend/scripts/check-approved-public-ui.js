@@ -87,4 +87,17 @@ assert.match(homeCss,/\.hc-why-arrow/);
 assert.match(homeCss,/hcWhyGlow/);
 assert.match(homeCss,/hcWhyIconFloat/);
 
+assert.match(home,/hc-how-premium/);
+assert.match(home,/Tell Us Your Requirement/);
+assert.match(home,/We Structure the Brief/);
+assert.match(home,/Discuss Your Options/);
+assert.match(home,/Move Your Home Forward/);
+assert.doesNotMatch(home,/Simple by design/);
+assert.doesNotMatch(home,/Start your home journey in a few clear steps\./);
+assert.match(homeCss,/\.hc-how-premium-card/);
+assert.match(homeCss,/\.hc-how-photo-wrap/);
+assert.match(homeCss,/\.hc-how-connector/);
+assert.match(homeCss,/hcHowFloat/);
+assert.match(homeCss,/hcHowConnector/);
+
 console.log('Approved public UI mockup checks passed.');
