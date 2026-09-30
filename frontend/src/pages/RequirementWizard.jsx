@@ -625,10 +625,10 @@ export default function RequirementWizard({ flowKey }) {
       </section>
 
       <section className="rq-section-card" id="rq-property">
-        <div className="rq-section-heading"><strong>2.</strong><div><h2>Property Type</h2><p>Select the options that best describe your project.</p></div></div>
+        <div className="rq-section-heading"><strong>2.</strong><div><h2>Property Type</h2></div></div>
         <div className="rq-question-stack">
           {propertyQuestions.map((question, index) => <div className="rq-question-block" key={question.id || question.questionKey}>
-            <div className="rq-question-label"><b>{question.label}</b>{question.helpText && <small>{question.helpText}</small>}</div>
+            <div className="rq-question-label">{index === 0 ? null : <>{question.label && <b>{question.label}</b>}{question.helpText && <small>{question.helpText}</small>}</>}</div>
             <PremiumQuestion question={question} value={answers[question.questionKey]} onChange={value => setAnswer(question.questionKey, value)} visual={index === 0 ? 'image' : 'default'} />
           </div>)}
         </div>
