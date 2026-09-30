@@ -421,17 +421,34 @@ function Home() {
 
       <section className="hc-why" id="about" style={{ backgroundImage: `url("${whyImage}")` }}>
         <div className="hc-why-shade" />
+        <div className="hc-why-glow" aria-hidden="true" />
         <div className="hc-why-inner">
           <div className="hc-why-heading">
-            <h2>Why Homeowners Choose ProPulse</h2>
-            <p>We make the first step easier: explain what you need, keep the project context organised and move forward with relevant options.</p>
+            <h2>Why Homeowners<br/>Choose <em>ProPulse.</em></h2>
+            <span className="hc-why-underline" aria-hidden="true" />
           </div>
 
           <div className="hc-why-grid">
-            <article><span><Icon name="shield" /></span><div><b>Structured Requirements</b><small>Your project details stay clear from the beginning.</small></div></article>
-            <article><span><Icon name="people" /></span><div><b>Multiple Options</b><small>Use the same brief when comparing responses.</small></div></article>
-            <article><span><Icon name="consult" /></span><div><b>Free Consultation</b><small>Start without paying for the initial consultation.</small></div></article>
-            <article><span><Icon name="support" /></span><div><b>End-to-End Journey</b><small>From planning to the next project decision.</small></div></article>
+            <article>
+              <span className="hc-why-icon"><Icon name="clipboard" /></span>
+              <div><b>Structured Requirements</b><small>Your project details stay clear from the beginning.</small></div>
+              <Link className="hc-why-arrow" to="/quote#construction" aria-label="Start a structured requirement"><Icon name="arrow" size={15}/></Link>
+            </article>
+            <article>
+              <span className="hc-why-icon"><Icon name="people" /></span>
+              <div><b>Multiple Options</b><small>Use the same brief when comparing responses.</small></div>
+              <Link className="hc-why-arrow" to="/quote" aria-label="Explore homeowner options"><Icon name="arrow" size={15}/></Link>
+            </article>
+            <article>
+              <span className="hc-why-icon"><Icon name="consult" /></span>
+              <div><b>Free Consultation</b><small>Start without paying for the initial consultation.</small></div>
+              <button className="hc-why-arrow" type="button" onClick={() => openConsult()} aria-label="Open free consultation"><Icon name="arrow" size={15}/></button>
+            </article>
+            <article>
+              <span className="hc-why-icon"><Icon name="support" /></span>
+              <div><b>End-to-End Journey</b><small>From planning to the next project decision.</small></div>
+              <Link className="hc-why-arrow" to="/how-it-works" aria-label="See how ProPulse works"><Icon name="arrow" size={15}/></Link>
+            </article>
           </div>
         </div>
       </section>
