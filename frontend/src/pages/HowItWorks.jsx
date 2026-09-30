@@ -10,7 +10,7 @@ const FLOWS=[
     key:'construction',
     label:'Construction',
     subtitle:'Build Your Dream Home',
-    route:'/build',
+    route:'/quote#construction',
     sectionTitle:'Construction – How It Works',
     sectionText:'Build your dream home with a clear requirement, estimated planning and relevant businesses.',
     image:'https://images.unsplash.com/photo-1600585152915-d208bec867a1?auto=format&fit=crop&w=1200&q=88',
@@ -27,7 +27,7 @@ const FLOWS=[
     key:'interiors',
     label:'Interiors',
     subtitle:'Design Beautiful Spaces',
-    route:'/design',
+    route:'/quote#interiors',
     sectionTitle:'Interiors – How It Works',
     sectionText:'Create a clearer interior brief for your home, office or commercial space.',
     image:'https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=1200&q=88',
@@ -44,7 +44,7 @@ const FLOWS=[
     key:'realestate',
     label:'Real Estate',
     subtitle:'Buy, Sell or Invest',
-    route:'/property',
+    route:'/quote#property',
     sectionTitle:'Real Estate – How It Works',
     sectionText:'Create a structured requirement for residential, commercial or plot properties.',
     image:'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=1200&q=88',
@@ -122,8 +122,8 @@ export default function HowItWorks(){
   return <main className="hiw-page">
     <header className="hiw-header">
       <Link to="/" className="hiw-logo"><img src="/brand/propulse-logo.svg" alt="ProPulse"/></Link>
-      <nav><Link to="/">Home</Link><Link to="/solutions#construction">Construction</Link><Link to="/solutions#interiors">Interiors</Link><Link to="/packages">Packages</Link><Link to="/solutions#property">Real Estate</Link><Link to="/projects">Projects</Link><Link className="active" to="/how-it-works">How It Works</Link><Link to="/about">About</Link><Link to="/#contact">Contact</Link></nav>
-      <button onClick={()=>navigate('/solutions#construction')}>Get Free Consultation <Icon name="arrow" size={15}/></button>
+      <nav><Link to="/">Home</Link><Link to="/packages">Packages</Link><Link to="/projects">Projects</Link><Link className="active" to="/how-it-works">How It Works</Link><Link to="/about">About</Link><Link to="/contact">Contact</Link></nav>
+      <button onClick={()=>navigate('/quote#construction')}>Get Free Quote <Icon name="arrow" size={15}/></button>
     </header>
 
     <section className="hiw-hero">
@@ -189,14 +189,14 @@ export default function HowItWorks(){
     <section className="hiw-cta">
       <img src="https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?auto=format&fit=crop&w=1200&q=90" alt="Premium villa"/>
       <div><h2>Ready to Start Your Project?</h2><p>Get a free consultation and create a personalized requirement for your project.</p></div>
-      <button onClick={()=>navigate('/solutions#construction')}>Get Free Consultation <Icon name="arrow" size={15}/></button>
+      <button onClick={()=>navigate('/quote#construction')}>Get Free Consultation <Icon name="arrow" size={15}/></button>
       <div className="hiw-cta-note"><span>○ No Obligation</span><span>○ Guided Requirement</span><span>○ Location Aware</span></div>
     </section>
 
     <footer className="hiw-footer">
       <div className="hiw-footer-brand"><img src="/brand/propulse-logo.svg" alt="ProPulse"/><p>Your customer starting point for construction, interiors and real-estate requirements.</p><div>f&nbsp;&nbsp;◎&nbsp;&nbsp;▶&nbsp;&nbsp;in</div></div>
-      <div><b>Quick Links</b><Link to="/">Home</Link><Link to="/solutions#construction">Construction</Link><Link to="/solutions#interiors">Interiors</Link><Link to="/packages">Packages</Link><Link to="/solutions#property">Real Estate</Link><Link to="/projects">Projects</Link></div>
-      <div><b>Our Services</b><Link to="/solutions#construction">Home Construction</Link><Link to="/solutions#interiors">Interior Design</Link><Link to="/solutions#property">Real Estate</Link><Link to="/solutions#construction">Construction Quote</Link><Link to="/solutions#construction">Free Consultation</Link></div>
+      <div><b>Quick Links</b><Link to="/">Home</Link><Link to="/quote#construction">Construction</Link><Link to="/quote#interiors">Interiors</Link><Link to="/packages">Packages</Link><Link to="/quote#property">Real Estate</Link><Link to="/projects">Projects</Link></div>
+      <div><b>Our Services</b><Link to="/quote#construction">Home Construction</Link><Link to="/quote#interiors">Interior Design</Link><Link to="/quote#property">Real Estate</Link><Link to="/quote#construction">Construction Quote</Link><Link to="/quote#construction">Free Consultation</Link></div>
       <div><b>Support</b><Link to="/contact?audience=users">FAQ</Link><Link to="/#contact">Contact Us</Link><Link to="/contact?audience=users">Privacy Policy</Link><Link to="/contact?audience=users">Terms & Conditions</Link></div>
       <div><b>Contact Info</b>{phone&&<span><Icon name="phone" size={13}/>{phone}</span>}{email&&<span>{email}</span>}<span><Icon name="pin" size={13}/>Hyderabad, India</span></div>
     </footer>
