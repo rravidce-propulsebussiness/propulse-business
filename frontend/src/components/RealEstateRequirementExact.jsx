@@ -59,7 +59,7 @@ function Chips({ question, value, onChange }) {
 }
 
 export default function RealEstateRequirementExact(props) {
-  const { flow, questions, answers, setAnswer, cities, cityId, setCity, cityPincodes, locationQuestion, contact, setContact, consent, setConsent, state, submit, contactData, completion } = props
+  const { flow, questions, answers, setAnswer, cities, cityId, setCity, cityPincodes, locationQuestion, contact, setContact, state, submit, contactData, completion } = props
   const byKey = useMemo(() => Object.fromEntries(questions.map(q => [q.questionKey, q])), [questions])
   const intent = byKey.property_intent
   const propertyType = byKey.property_type
@@ -176,7 +176,7 @@ export default function RealEstateRequirementExact(props) {
         </div>
 
         <aside className="rex-side" id="rq-summary">
-          <section className="rex-summary-card"><h3>Your Selection Summary</h3><div>{summary.map(([label,value])=><p key={label}><span>{label}</span><b title={value}>{value}</b></p>)}</div><label className="rex-consent"><input type="checkbox" checked={consent} onChange={e=>setConsent(e.target.checked)}/><span>I agree that ProPulse may share my submitted contact details with relevant businesses so they can respond to this requirement.</span></label>{state.error&&<div className="rex-error">{state.error}</div>}<button type="submit" disabled={state.saving}>{state.saving?'Submitting…':(flow.config?.submitLabel||'Submit Requirement')} <Icon name="arrow" size={15}/></button><small>Our experts will get in touch with you shortly.</small></section>
+          <section className="rex-summary-card"><h3>Your Selection Summary</h3><div>{summary.map(([label,value])=><p key={label}><span>{label}</span><b title={value}>{value}</b></p>)}</div><p className="rex-submit-consent">By submitting, you agree that ProPulse may use your project and contact details to process this request and connect you with relevant professionals.</p>{state.error&&<div className="rex-error">{state.error}</div>}<button type="submit" disabled={state.saving}>{state.saving?'Submitting…':(flow.config?.submitLabel||'Submit Requirement')} <Icon name="arrow" size={15}/></button><small>Our experts will get in touch with you shortly.</small></section>
 
           <section className="rex-help"><div><span><Icon name="support"/></span><div><b>Need Help?<br/>Talk to Our Real Estate Expert</b><small>Get free consultation and personalized property guidance.</small></div></div><a href={phone?`tel:${phone.replace(/\s/g,'')}`:'#rex-basic'}><Icon name="phone" size={16}/>{phone||'Start Free Consultation'}</a><small>Mon - Sat, 9 AM - 8 PM</small></section>
 
