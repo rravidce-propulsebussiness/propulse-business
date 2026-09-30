@@ -327,6 +327,77 @@ async function detectPincode(pincode, { forceRefresh = false } = {}) {
   };
 }
 
+async function locatePincode(pincode) {
+  const pin = normalizePincode(pincode);
+  if (!pin) {
+    const error = new Error('Pincode must be 6 digits');
+    error.code = 'INVALID_PINCODE';
+    throw error;
+  }
+
+  let directory = await getStoredPin(pin);
+  if (!directory || !Array.isArray(directory.postal_areas) || !directory.postal_areas.length) {
+    const offices = await fetchIndiaPost(pin);
+    directory = await savePinDirectory({ pincode: pin, offices });
+  }
+
+  const mapped = await pool.query(
+    `SELECT DISTINCT c.id,c.name,c.state_id,s.name AS state_name
+       FROM city_pincodes cp
+       JOIN cities c ON c.id=cp.city_id AND c.is_active=TRUE
+       JOIN states s ON s.id=c.state_id AND s.is_active=TRUE
+      WHERE cp.pincode=$1 AND cp.is_active=TRUE
+      ORDER BY c.id`,
+    [pin]
+  );
+
+  if (mapped.rows.length === 1) {
+    return {
+      pincode: pin,
+      stateId: Number(mapped.rows[0].state_id) || null,
+      stateName: mapped.rows[0].state_name || directory.state_name || null,
+      cityId: Number(mapped.rows[0].id) || null,
+      cityName: mapped.rows[0].name || null,
+      districtName: directory.district_name || null,
+      postalAreas: Array.isArray(directory.postal_areas) ? directory.postal_areas : [],
+      status: 'MAPPED',
+    };
+  }
+
+  const officeNames = Array.isArray(directory.postal_areas)
+    ? directory.postal_areas
+    : Array.isArray(directory.postal_data)
+      ? directory.postal_data.map(item => item?.name).filter(Boolean)
+      : [];
+
+  const match = await findSafeCityMatch({
+    stateName: directory.state_name,
+    districtName: directory.district_name,
+    officeNames,
+  });
+
+  const city = match.status === 'AUTO_MAPPED' ? match.city : null;
+  const stateRow = directory.state_id
+    ? { id: directory.state_id, name: directory.state_name }
+    : directory.state_name
+      ? (await pool.query(
+          'SELECT id,name FROM states WHERE is_active=TRUE AND LOWER(TRIM(name))=LOWER(TRIM($1)) LIMIT 1',
+          [directory.state_name]
+        )).rows[0] || null
+      : null;
+
+  return {
+    pincode: pin,
+    stateId: Number(city?.state_id || stateRow?.id) || null,
+    stateName: city?.state_name || stateRow?.name || directory.state_name || null,
+    cityId: Number(city?.id) || null,
+    cityName: city?.name || null,
+    districtName: directory.district_name || null,
+    postalAreas: officeNames.slice(0, 25),
+    status: city ? 'DETECTED' : 'STATE_ONLY',
+  };
+}
+
 async function listUnmappedPins({ limit = 100 } = {}) {
   const safeLimit = Math.min(200, Math.max(1, Number(limit) || 100));
   const result = await pool.query(
@@ -351,6 +422,7 @@ async function listUnmappedPins({ limit = 100 } = {}) {
 
 module.exports = {
   detectPincode,
+  locatePincode,
   mapPinToCity,
   listUnmappedPins,
   fetchIndiaPost,
