@@ -76,7 +76,7 @@ assert.match(contact,/to="\/contact"/);
 assert.doesNotMatch(contact,/Navigate to="\/#contact"/);
 
 for(const source of [home,quote,packages,projects,about,howItWorks,contact]){
-  assert.match(source,/Professionals/);
+  assert.match(source,/For Professionals|Professional Support/);
   assert.match(source,/to="\/contact\?audience=users"/);
 }
 assert.match(publicHeader,/\.public-professional-btn/);
@@ -178,5 +178,8 @@ assert.match(portalContact,/Professionals<\/span><b>\/\<\/b><strong>Contact<\/st
 assert.match(contact,/publicRequest\('\/contact\?audience=users'\)/);
 assert.match(contact,/className="professional-contact-hero"/);
 assert.match(contact,/className="professional-support-strip"/);
+
+assert.match(home,/For Professionals/);
+assert.match(contact,/Professional Support/);
 
 console.log('Approved public UI mockup checks passed.');
