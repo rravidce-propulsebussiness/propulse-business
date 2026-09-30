@@ -373,13 +373,13 @@ export default function Packages() {
         <div className="pkg-packages-head">
           <div>
             <span>OUR PACKAGES</span>
-            <h2>Choose & Compare Packages</h2>
-            <p>Select up to 2 packages to compare side-by-side. Explore features, specifications and inclusions to find the right fit for your home.</p>
+            <h2>Compare Packages</h2>
+            <p>Pick any 2 packages to compare. Open Full Details only when you want the complete specification.</p>
           </div>
           <div className="pkg-compare-helper">
             <span className="pkg-scale-icon"><Icon name="scale" size={28} /></span>
-            <div><b>Select up to 2 packages<br/>to compare</b><small>Choose any two packages and click Compare Packages for a detailed comparison.</small></div>
-            <div className="pkg-compare-action"><small>{selectedKeys.length} package{selectedKeys.length === 1 ? '' : 's'} selected</small><button type="button" disabled={selectedKeys.length < 2} onClick={() => compareRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>Compare Packages <Icon name="arrow" size={14} /></button></div>
+            <div><b>1. Select any 2 packages</b><small>Then use Compare Packages to see the differences side by side.</small></div>
+            <div className="pkg-compare-action"><small>{selectedKeys.length}/2 selected</small><button type="button" disabled={selectedKeys.length < 2} onClick={() => compareRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>Compare Packages <Icon name="arrow" size={14} /></button></div>
           </div>
         </div>
 
@@ -400,9 +400,9 @@ export default function Packages() {
                 <div className="pkg-card-price"><strong>₹{item.price.toLocaleString('en-IN')}</strong><span>/sq ft</span></div>
                 <ul>{item.highlights.map(value => <li key={value}><Icon name="check" size={15} />{value}</li>)}</ul>
                 <div className="pkg-card-actions">
+                  <button className={'pkg-select-compare ' + (selected ? 'active' : '')} type="button" onClick={() => setCompare(item.key)}>{selected ? <><Icon name="check" size={14} />Selected</> : 'Compare'}</button>
                   <button className="pkg-get-quote" type="button" onClick={() => openQuote(item.key)}>Get Quote <Icon name="arrow" size={14} /></button>
-                  <button className={'pkg-select-compare ' + (selected ? 'active' : '')} type="button" onClick={() => setCompare(item.key)}>{selected ? <><Icon name="check" size={14} />Selected for Comparison</> : 'Select to Compare'}</button>
-                  <button className="pkg-details-toggle" type="button" onClick={() => toggleDetails(item.key)}>View Full Details <Icon name="chevron" size={15} /></button>
+                  <button className="pkg-details-toggle" type="button" onClick={() => toggleDetails(item.key)}>{open ? 'Hide Details' : 'Full Details'} <Icon name="chevron" size={15} /></button>
                 </div>
                 {open && <div className="pkg-full-details">
                   {Object.entries(item.specs).map(([label, value]) => <div key={label}><b>{label}</b><span>{value}</span></div>)}
@@ -442,9 +442,9 @@ export default function Packages() {
       </div>
 
       <aside className="pkg-quote-card" ref={quoteRef}>
-        <span>GET YOUR CUSTOM QUOTE</span>
-        <h2>Request Your Quote</h2>
-        <p>Share your details and continue into the detailed project flow with your selections already filled in.</p>
+        <span>QUICK QUOTE REQUEST</span>
+        <h2>Get a Quote</h2>
+        <p>Choose a package and enter your basic details. You can confirm the remaining project information on the next step.</p>
 
         <form onSubmit={submitQuote}>
           <div className="pkg-form-two">
@@ -477,8 +477,8 @@ export default function Packages() {
           <label><span>Requirement Details</span><textarea value={quoteForm.requirements} onChange={event => setQuoteForm(current => ({ ...current, requirements: event.target.value }))} placeholder="Tell us about your project, plot size, timeline or any specific requirements..." /></label>
 
           {quoteError && <div className="pkg-form-error">{quoteError}</div>}
-          <button className="pkg-submit-quote" type="submit"><Icon name="send" size={16} />Get My Quote <Icon name="arrow" size={15} /></button>
-          <small className="pkg-form-note"><Icon name="check" size={14} />Next, confirm PIN code, area/floors and submit your detailed requirement.</small>
+          <button className="pkg-submit-quote" type="submit"><Icon name="send" size={16} />Continue to Quote <Icon name="arrow" size={15} /></button>
+          <small className="pkg-form-note"><Icon name="check" size={14} />Next: confirm PIN code, size and project details.</small>
         </form>
 
         <div className="pkg-quote-trust">
