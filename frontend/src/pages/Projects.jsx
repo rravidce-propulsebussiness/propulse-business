@@ -126,12 +126,6 @@ const PROJECTS = [
   },
 ]
 
-const FAQS = [
-  ['Can I get a similar project for my requirement?','Yes. Open any project first to review its details. If the concept suits you, you can then contact ProPulse or explore suitable packages without being redirected automatically.'],
-  ['Are the project prices fixed?','No. Images and project details on this page are inspiration only. Actual prices depend on your location, scope, materials and quotations.'],
-  ['Do you provide end-to-end support?','ProPulse captures a structured requirement and helps relevant businesses understand what you need.'],
-  ['Can I visit completed projects?','This page currently contains project inspiration. A site visit should only be arranged directly with a relevant business when a real completed project is available.'],
-]
 
 function collection(value){
   if(Array.isArray(value)) return value
@@ -169,7 +163,6 @@ export default function Projects(){
   const [style,setStyle]=useState('')
   const [query,setQuery]=useState('')
   const [visible,setVisible]=useState(8)
-  const [openFaq,setOpenFaq]=useState(null)
   const [selectedProject,setSelectedProject]=useState(null)
 
   useEffect(()=>{
@@ -319,10 +312,10 @@ export default function Projects(){
     </section>
 
     <section className="pj-stats">
-      <article><span><Icon name="home" size={23}/></span><div><b>3</b><small>Core Categories</small></div></article>
-      <article><span><Icon name="people" size={23}/></span><div><b>Admin</b><small>Managed Locations</small></div></article>
-      <article><span><Icon name="pin" size={23}/></span><div><b>City + PIN</b><small>Location-aware Intake</small></div></article>
-      <article><span><Icon name="shield" size={23}/></span><div><b>Free</b><small>Consultation Start</small></div></article>
+      <article><span><Icon name="building" size={23}/></span><div><b>10</b><small>Metro Cities</small></div></article>
+      <article><span><Icon name="pin" size={23}/></span><div><b>50+</b><small>Locations Covered</small></div></article>
+      <article><span><Icon name="home" size={23}/></span><div><b>3</b><small>Project Categories</small></div></article>
+      <article><span><Icon name="shield" size={23}/></span><div><b>Free</b><small>Consultation</small></div></article>
     </section>
 
     <section className="pj-use-cases">
@@ -339,11 +332,6 @@ export default function Projects(){
       <div><h2>Save the Ideas You Like.</h2><p>Explore project details first, compare styles and then decide the right next step for your home.</p></div>
       <Link className="pj-cta-link" to="/packages">Explore Packages <Icon name="arrow" size={16}/></Link>
       <div className="pj-cta-points"><span>○ Detailed Concepts</span><span>○ Clear Scope</span><span>○ Browse Before You Decide</span></div>
-    </section>
-
-    <section className="pj-faq">
-      <div className="pj-section-head"><div><h2>Frequently Asked <em>Questions</em></h2><p>Quick answers about the project-inspiration page.</p></div></div>
-      <div className="pj-faq-grid">{FAQS.map(([q,a],i)=><article key={q} className={openFaq===i?'open':''}><button onClick={()=>setOpenFaq(openFaq===i?null:i)}><span>{q}</span><b>{openFaq===i?'−':'⌄'}</b></button>{openFaq===i&&<p>{a}</p>}</article>)}</div>
     </section>
 
     {selectedProject&&<div className="pj-detail-backdrop" role="presentation" onMouseDown={event=>{if(event.target===event.currentTarget)closeProject()}}>
