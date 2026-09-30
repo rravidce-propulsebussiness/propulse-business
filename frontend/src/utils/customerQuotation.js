@@ -12,6 +12,7 @@ const DISPLAY={
   quality:{standard:'Standard',premium:'Premium',luxury:'Luxury'},
   construction_package:{turnkey:'Turnkey construction',structure_only:'Civil / structure only',finishing_only:'Finishing work only'},
   site_access:{normal:'Normal site access',restricted:'Restricted / narrow access'},
+  timeline:{immediately:'Immediately',within_30_days:'Within 30 days',one_to_three_months:'1–3 months',three_to_six_months:'3–6 months',later:'Later / exploring'},
 };
 
 const PAYMENT_SCHEDULE=[
@@ -92,6 +93,17 @@ function number(value){
   return Number.isFinite(parsed)?parsed:0;
 }
 function display(map,key,fallback='—'){return map?.[key]||fallback}
+
+function specificationsFor(packageKey,quality){
+  const all=PACKAGE_SPECIFICATIONS[quality]||PACKAGE_SPECIFICATIONS.standard;
+  if(packageKey==='structure_only'){
+    return all.filter(([label])=>['Architecture & engineering','Structure','Masonry','Water storage & misc.'].includes(label));
+  }
+  if(packageKey==='finishing_only'){
+    return all.filter(([label])=>['Flooring','Kitchen','Doors & windows','Bathrooms','Electrical','Painting','Water storage & misc.'].includes(label));
+  }
+  return all;
+}
 
 function primaryBuildPackage(scope){
   const selected=Array.isArray(scope)?scope:[];
@@ -178,7 +190,7 @@ export function buildConstructionQuotation({answers={},estimatorAnswers={},resul
       quality:display(DISPLAY.quality,quality,quality),
       siteAccess:display(DISPLAY.site_access,estimatorAnswers.site_access,estimatorAnswers.site_access),
       basement:estimatorAnswers.basement?'Yes':'No',
-      timeline:String(answers.timeline||'—'),
+      timeline:display(DISPLAY.timeline,answers.timeline,String(answers.timeline||'—')),
       scope:Array.isArray(answers.construction_scope)?answers.construction_scope:[],
       additional:String(answers.additional_requirement||'').trim(),
     },
@@ -190,7 +202,7 @@ export function buildConstructionQuotation({answers={},estimatorAnswers={},resul
       minimumText:money(item.minimum),
       maximumText:money(item.maximum),
     })):[],
-    specifications:PACKAGE_SPECIFICATIONS[quality]||PACKAGE_SPECIFICATIONS.standard,
+    specifications:specificationsFor(packageKey,quality),
     paymentSchedule,
     estimatedDuration: floors>=4?'8 - 12 months':floors===3?'7 - 10 months':floors===2?'6 - 9 months':'5 - 8 months',
     exclusions:EXCLUSIONS,
