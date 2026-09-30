@@ -18,7 +18,6 @@ const emptyConsultation = () => ({
   pincode: '',
   name: '',
   phone: '',
-  consent: false,
   website: '',
   projectType: '',
   floors: '',
@@ -176,6 +175,18 @@ function Home() {
   }, [])
 
   useEffect(() => {
+    if (!consultOpen) return undefined
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    const onKeyDown = event => { if (event.key === 'Escape') closeConsult() }
+    window.addEventListener('keydown', onKeyDown)
+    return () => {
+      document.body.style.overflow = previousOverflow
+      window.removeEventListener('keydown', onKeyDown)
+    }
+  }, [consultOpen])
+
+  useEffect(() => {
     let active = true
     setLoadingCities(true)
     Promise.allSettled([
@@ -199,7 +210,8 @@ function Home() {
     let alreadySubmitted = false
     try { alreadySubmitted = sessionStorage.getItem('propulse_basic_lead_submitted') === '1' } catch {}
     if (alreadySubmitted) return undefined
-    const timer = window.setTimeout(() => setConsultOpen(true), 5 * 60 * 1000)
+    const delay = popupCycle === 0 ? 15 * 1000 : 5 * 60 * 1000
+    const timer = window.setTimeout(() => setConsultOpen(true), delay)
     return () => window.clearTimeout(timer)
   }, [popupCycle])
 
@@ -236,14 +248,14 @@ function Home() {
     setConsultSubmitted(null)
     setConsultForm(current => {
       if (!flowKey || flowKey === current.flowKey) return { ...current, flowKey: flowKey || current.flowKey }
-      return { ...emptyConsultation(), flowKey, name: current.name, phone: current.phone, consent: current.consent }
+      return { ...emptyConsultation(), flowKey, name: current.name, phone: current.phone }
     })
     setConsultOpen(true)
   }
 
   function changeConsultFlow(flowKey) {
     setConsultSubmitted(null)
-    setConsultForm(current => ({ ...emptyConsultation(), flowKey, name: current.name, phone: current.phone, consent: current.consent }))
+    setConsultForm(current => ({ ...emptyConsultation(), flowKey, name: current.name, phone: current.phone }))
     setConsultSubmissionKey(makeSubmissionKey())
     setConsultError('')
   }
@@ -274,7 +286,6 @@ function Home() {
     if (consultForm.flowKey === 'property' && !consultForm.propertyType) return setConsultError('Select the property type.')
     if (name.length < 2) return setConsultError('Enter your name.')
     if (!/^[6-9]\d{9}$/.test(mobile)) return setConsultError('Enter a valid 10-digit mobile number.')
-    if (!consultForm.consent) return setConsultError('Please accept the contact consent to continue.')
 
     const details = {
       projectType: consultForm.projectType,
@@ -628,7 +639,8 @@ function Home() {
       <div><b>Contact</b>{phone && <a href={'tel:' + String(phone).replace(/\s/g, '')}>{phone}</a>}{email && <a href={'mailto:' + email}>{email}</a>}<span>Hyderabad, India</span></div>
     </footer>
 
-    {consultOpen && <aside className="hc-consult-popup" role="dialog" aria-label="Free consultation">
+    {consultOpen && <div className="hc-popup-backdrop" role="presentation" onMouseDown={event => { if (event.target === event.currentTarget) closeConsult() }}>
+      <aside className="hc-consult-popup" role="dialog" aria-modal="true" aria-label="Free consultation">
       <button className="hc-popup-close" type="button" onClick={closeConsult} aria-label="Close consultation popup">×</button>
       <div className="hc-popup-head">
         <span><Icon name="phone" size={21} /></span>
@@ -707,17 +719,15 @@ function Home() {
           <div className="hc-popup-phone"><i>+91</i><input inputMode="tel" autoComplete="tel" maxLength="10" value={consultForm.phone} onChange={event => { setConsultForm({ ...consultForm, phone: event.target.value.replace(/\D/g, '').slice(0, 10) }); setConsultError('') }} placeholder="Enter 10-digit number" /></div>
         </label>
 
-        <label className="hc-popup-consent">
-          <input type="checkbox" checked={consultForm.consent} onChange={event => { setConsultForm({ ...consultForm, consent: event.target.checked }); setConsultError('') }} />
-          <span>I agree that ProPulse may use and share my submitted contact details with relevant businesses so they can respond to this requirement.</span>
-        </label>
+        <p className="hc-popup-submit-notice">By submitting, you agree that ProPulse may use your details to process this requirement and connect you with relevant professionals.</p>
         <label className="hc-popup-honeypot" aria-hidden="true">Website<input tabIndex="-1" autoComplete="off" value={consultForm.website} onChange={event => setConsultForm({ ...consultForm, website: event.target.value })} /></label>
 
         {consultError && <div className="hc-popup-error">{consultError}</div>}
         <button className="hc-popup-submit" type="submit" disabled={consultSaving}>{consultSaving ? 'Saving…' : 'Submit Basic Requirement'} {!consultSaving && <Icon name="arrow" size={15} />}</button>
         <small><Icon name="shield" size={12} /> This creates only a basic lead. Construction quotation is available separately from the Construction page.</small>
       </form>}
-    </aside>}
+      </aside>
+    </div>}
   </div>
 }
 
