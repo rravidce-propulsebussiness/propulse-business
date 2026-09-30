@@ -1,3 +1,7 @@
+UPDATE customer_flow_definitions
+SET name='Construction Quotation', updated_at=CURRENT_TIMESTAMP
+WHERE key='build' AND flow_type='requirement';
+
 -- Make the public construction flow quotation-ready.
 -- The homepage popup remains a quick requirement capture; /build collects the
 -- additional pricing inputs needed by the existing Admin-managed estimator.
