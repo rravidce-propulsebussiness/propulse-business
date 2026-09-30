@@ -208,7 +208,6 @@ function HeroArchitectureVideo({ source }) {
       const loopMs = 12000
       const progress = reducedMotion ? 0 : ((now || 0) % loopMs) / loopMs
       const shot = camera(progress)
-      const imageAspect = image.naturalWidth / image.naturalHeight
       const outputAspect = width / height
 
       let cropW = image.naturalWidth / shot.zoom
@@ -260,7 +259,6 @@ function HeroArchitectureVideo({ source }) {
         stream = canvas.captureStream(30)
         video.srcObject = stream
         video.play().catch(() => {})
-        raf = requestAnimationFrame(drawFrame)
       }
     }
     image.src = source
