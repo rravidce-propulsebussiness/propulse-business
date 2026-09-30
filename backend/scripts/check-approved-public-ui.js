@@ -28,6 +28,12 @@ const projects=read('../frontend/src/pages/Projects.jsx');
 const about=read('../frontend/src/pages/About.jsx');
 const howItWorks=read('../frontend/src/pages/HowItWorks.jsx');
 const howItWorksCss=read('../frontend/src/pages/HowItWorks.css');
+const quoteLocationFields=read('../frontend/src/components/QuoteLocationFields.jsx');
+const quoteLocationCss=read('../frontend/src/components/QuoteLocationFields.css');
+const interiorExact=read('../frontend/src/components/InteriorRequirementExact.jsx');
+const realEstateExact=read('../frontend/src/components/RealEstateRequirementExact.jsx');
+const pincodeDetection=read('./src/services/pincodeDetectionService.js');
+const pincodeRoutes=read('./src/routes/pincodeRoutes.js');
 
 assert.match(app,/path="\/experts" element={<Experts\/>}/);
 assert.match(app,/path="\/quote" element={<Solutions\/>}/);
@@ -227,5 +233,28 @@ assert.doesNotMatch(publicExpertService,/business_details,/);
 assert.match(serverSource,/app\.use\('\/api\/experts',publicExpertRoutes\)/);
 
 assert.match(home,/For Professionals/);
+
+assert.match(wizard,/QuoteLocationFields/);
+assert.match(wizard,/const locationStates=useMemo/);
+assert.match(wizard,/const filteredCities=useMemo/);
+assert.match(wizard,/function setPincode\(value\)/);
+assert.match(wizard,/\/pincodes\/location\//);
+assert.match(wizard,/stateLabel="Project State"/);
+assert.match(wizard,/cityLabel="Project City \/ Location"/);
+assert.match(wizard,/Select State and City, or enter a valid 6-digit PIN/);
+assert.match(interiorExact,/QuoteLocationFields/);
+assert.match(interiorExact,/stateLabel="Property State"/);
+assert.match(realEstateExact,/QuoteLocationFields/);
+assert.match(realEstateExact,/stateLabel="Looking in State"/);
+assert.match(quoteLocationFields,/Select State/);
+assert.match(quoteLocationFields,/Select City \/ Location/);
+assert.match(quoteLocationFields,/Enter 6-digit PIN/);
+assert.match(quoteLocationFields,/lookupStatus==='matched'/);
+assert.match(quoteLocationCss,/\.quote-location-fields/);
+assert.match(quoteLocationCss,/grid-template-columns:repeat\(3,minmax\(0,1fr\)\)/);
+assert.match(pincodeDetection,/async function locatePincode\(pincode\)/);
+assert.match(pincodeDetection,/status: 'MAPPED'/);
+assert.match(pincodeDetection,/status: city \? 'DETECTED' : 'STATE_ONLY'/);
+assert.match(pincodeRoutes,/router\.get\('\/location\/:pincode', publicLookupLimit, pincodeController\.locate\)/);
 
 console.log('Approved public UI mockup checks passed.');
