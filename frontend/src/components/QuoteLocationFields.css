@@ -1,4 +1,4 @@
-.quote-location-fields{grid-column:1/-1;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px 14px}
+.quote-location-fields{grid-column:1/-1;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px 14px;align-items:start}
 .quote-location-fields label{display:flex;flex-direction:column;gap:6px;min-width:0}
 .quote-location-fields label>b{color:#163650;font-size:12px}
 .quote-location-fields label>b small{color:#98a1a8;font-weight:600}
@@ -15,6 +15,6 @@
 .qlf-status.matched,.qlf-status.state{color:#168854}.qlf-status.error{color:#c84a27}.qlf-status.checking{color:#4e7294}
 .qlf-status i{width:10px;height:10px;border:2px solid #c6d5e2;border-top-color:#356aa3;border-radius:50%;animation:qlfSpin .75s linear infinite}
 @keyframes qlfSpin{to{transform:rotate(360deg)}}
-@media(max-width:820px){.quote-location-fields{grid-template-columns:1fr 1fr}.quote-location-fields .quote-pin-field{grid-column:1/-1}}
-@media(max-width:560px){.quote-location-fields{grid-template-columns:1fr}.quote-location-fields .quote-pin-field{grid-column:auto}}
+.qlf-city-hint{min-height:16px;margin-top:-1px;color:#778b9d;font-size:9px;line-height:1.35;font-weight:650}
+@media(max-width:560px){.quote-location-fields{grid-template-columns:1fr}}
 @media(prefers-reduced-motion:reduce){.qlf-status i{animation:none}}
