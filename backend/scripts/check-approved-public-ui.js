@@ -77,4 +77,14 @@ for(const source of [home,quote,packages,projects,about,howItWorks,contact]){
 assert.match(publicHeader,/\.public-professional-btn/);
 assert.match(publicHeader,/Quote \+ professional public header actions/);
 
+assert.match(home,/Why Homeowners/);
+assert.match(home,/Choose <em>ProPulse\.<\/em>/);
+assert.match(home,/hc-why-underline/);
+assert.match(home,/hc-why-arrow/);
+assert.doesNotMatch(home,/We make the first step easier: explain what you need/);
+assert.match(homeCss,/\.hc-why-grid article/);
+assert.match(homeCss,/\.hc-why-arrow/);
+assert.match(homeCss,/hcWhyGlow/);
+assert.match(homeCss,/hcWhyIconFloat/);
+
 console.log('Approved public UI mockup checks passed.');
