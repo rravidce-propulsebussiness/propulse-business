@@ -63,7 +63,7 @@ function Chips({ question, value, onChange }) {
 }
 
 export default function InteriorRequirementExact(props) {
-  const { flow, questions, answers, setAnswer, cities, locationStates, locationStateId, setLocationState, cityId, setCity, locationQuestion, setPincode, pinLookup, contact, setContact, state, submit, contactData, completion } = props
+  const { flow, questions, answers, setAnswer, cities, locationStates, locationStateId, setLocationState, cityId, setCity, locationQuestion, setPincode, onDetectedLocation, pinLookup, contact, setContact, state, submit, contactData, completion } = props
   const fileRef = useRef(null)
   const [referenceFiles, setReferenceFiles] = useState([])
   const byKey = useMemo(() => Object.fromEntries(questions.map(q => [q.questionKey, q])), [questions])
@@ -133,6 +133,7 @@ export default function InteriorRequirementExact(props) {
               onCityChange={setCity}
               pincode={locationQuestion ? answers[locationQuestion.questionKey] || '' : ''}
               onPincodeChange={setPincode}
+              onDetectedLocation={onDetectedLocation}
               lookupStatus={pinLookup.status}
               lookupMessage={pinLookup.message}
               stateLabel="Property State"
