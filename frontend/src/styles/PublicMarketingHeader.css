@@ -35,7 +35,7 @@
   white-space:nowrap!important;
   transition:color .2s ease,transform .2s ease!important;
 }
-.pkg-header nav a:hover,.pj-header nav a:hover,.ab-header nav a:hover,.hiw-header nav a:hover,.contact-header nav a:hover,.contact-header nav a:hover,
+.pkg-header nav a:hover,.pj-header nav a:hover,.ab-header nav a:hover,.hiw-header nav a:hover,.contact-header nav a:hover,
 .pkg-header nav a.active,.pj-header nav a.active,.ab-header nav a.active,.hiw-header nav a.active,.contact-header nav a.active{
   color:#ff5a1f!important;
 }
