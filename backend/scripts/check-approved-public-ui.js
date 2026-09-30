@@ -194,6 +194,12 @@ assert.match(howItWorks,/window\.history\.replaceState\(\{\},'',`\/how-it-works#
 assert.doesNotMatch(howItWorks,/\{FLOWS\.map\(\(flow,index\)=>\<article className="hiw-flow"/);
 assert.match(howItWorksCss,/\.hiw-flow-active/);
 assert.match(howItWorksCss,/hiwFlowSwap/);
+assert.doesNotMatch(howItWorks,/Why Homeowners/);
+assert.doesNotMatch(howItWorks,/Frequently Asked/);
+assert.doesNotMatch(howItWorks,/View All FAQs/);
+assert.doesNotMatch(howItWorks,/Admin<\/b><small>Managed Flows/);
+assert.doesNotMatch(howItWorksCss,/\.hiw-why/);
+assert.doesNotMatch(howItWorksCss,/\.hiw-faq/);
 
 assert.match(home,/For Professionals/);
 
