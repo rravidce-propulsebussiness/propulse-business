@@ -24,7 +24,6 @@ const emptyConsultation = () => ({
   plotArea: '',
   propertyType: '',
   bhk: '',
-  area: '',
   propertyIntent: '',
   budget: '',
   additional: '',
@@ -40,7 +39,6 @@ function consultationPrefillAnswers(form) {
   if (form.flowKey === 'design') {
     if (form.propertyType) answers.property_type = form.propertyType
     if (form.bhk) answers.bhk = form.bhk
-    if (form.area) answers.area = String(form.area)
   }
   if (form.flowKey === 'property') {
     if (form.propertyIntent) answers.property_intent = form.propertyIntent
@@ -506,7 +504,6 @@ function Home() {
       plotArea: consultForm.plotArea,
       propertyType: consultForm.propertyType,
       bhk: consultForm.bhk,
-      area: consultForm.area,
       propertyIntent: consultForm.propertyIntent,
       budget: consultForm.budget,
       additional: consultForm.additional,
@@ -944,15 +941,14 @@ function Home() {
         </div>}
 
         {consultForm.flowKey === 'build' && <div className="hc-popup-detail-grid">
-          <label><span>Project Type</span><select value={consultForm.projectType} onChange={event => { setConsultForm({ ...consultForm, projectType: event.target.value }); setConsultError('') }}><option value="">Select project</option><option value="house_construction">House construction</option><option value="commercial_building">Commercial building</option><option value="building_extension">Building extension</option></select></label>
+          <label><span>Project Type</span><select value={consultForm.projectType} onChange={event => { setConsultForm({ ...consultForm, projectType: event.target.value }); setConsultError('') }}><option value="">Select project</option><option value="residential">Residential</option><option value="commercial">Commercial</option><option value="renovation">Renovation</option><option value="extension">Extension</option></select></label>
           <label><span>No. of Floors</span><select value={consultForm.floors} onChange={event => { setConsultForm({ ...consultForm, floors: event.target.value }); setConsultError('') }}><option value="">Select floors</option>{CONSTRUCTION_FLOORS.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}</select></label>
-          <label><span>Plot Area <small>(Optional)</small></span><div className="hc-popup-unit"><input type="number" min="50" max="1000000" value={consultForm.plotArea} onChange={event => setConsultForm({ ...consultForm, plotArea: event.target.value })} placeholder="e.g. 2000" /><i>sq ft</i></div></label>
+          <label><span>Plot Area <small>(Optional)</small></span><div className="hc-popup-unit"><input type="number" min="10" max="100000" value={consultForm.plotArea} onChange={event => setConsultForm({ ...consultForm, plotArea: event.target.value })} placeholder="e.g. 200" /><i>sq yards</i></div></label>
         </div>}
 
         {consultForm.flowKey === 'design' && <div className="hc-popup-detail-grid">
           <label><span>Property Type</span><select value={consultForm.propertyType} onChange={event => { setConsultForm({ ...consultForm, propertyType: event.target.value, bhk: '' }); setConsultError('') }}><option value="">Select property</option><option value="apartment">Apartment</option><option value="villa">Villa</option><option value="independent_house">Independent house</option><option value="office">Office</option><option value="commercial_space">Commercial space</option></select></label>
-          {['apartment','villa','independent_house'].includes(consultForm.propertyType) && <label><span>BHK <small>(Optional)</small></span><select value={consultForm.bhk} onChange={event => setConsultForm({ ...consultForm, bhk: event.target.value })}><option value="">Select BHK</option><option value="1bhk">1 BHK</option><option value="2bhk">2 BHK</option><option value="3bhk">3 BHK</option><option value="4bhk">4 BHK</option><option value="5plus">5+ BHK</option></select></label>}
-          <label><span>Approx. Area <small>(Optional)</small></span><div className="hc-popup-unit"><input type="number" min="50" max="1000000" value={consultForm.area} onChange={event => setConsultForm({ ...consultForm, area: event.target.value })} placeholder="e.g. 1500" /><i>sq ft</i></div></label>
+          <label><span>BHK <small>(Optional)</small></span><select value={consultForm.bhk} onChange={event => { setConsultForm({ ...consultForm, bhk: event.target.value }); setConsultError('') }}><option value="">Select BHK</option><option value="1bhk">1 BHK</option><option value="2bhk">2 BHK</option><option value="3bhk">3 BHK</option><option value="4bhk">4 BHK</option><option value="5plus">5+ BHK</option></select></label>
         </div>}
 
         {consultForm.flowKey === 'property' && <div className="hc-popup-detail-grid">

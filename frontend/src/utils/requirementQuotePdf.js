@@ -334,7 +334,7 @@ async function detailedQuotationPages({quotation,flowName,flowKey,leadId,custome
   drawKeyValueRows(page,[
     ['Project Type',quotation.project?.projectType],
     ['Property Type',quotation.project?.propertyType],
-    ['Plot Area',quotation.project?.plotArea?quotation.project.plotArea+' sq ft':'—'],
+    ['Plot Area',quotation.project?.plotArea?quotation.project.plotArea+' sq yards':'—'],
     ['Total Built-up Area',quotation.project?.builtUpArea?quotation.project.builtUpArea+' sq ft':'—'],
     ['Floors',quotation.project?.floors||'—'],
     ['Approx. Average / Floor',quotation.project?.averageFloorArea?Math.round(quotation.project.averageFloorArea)+' sq ft':'—'],

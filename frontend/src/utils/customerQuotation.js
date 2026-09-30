@@ -1,13 +1,17 @@
 const BUILD_PRIMARY_SCOPES=['turnkey','civil_structure','finishing'];
 
 const BUILD_PROJECT_TYPE={
+  residential:'house',
+  commercial:'commercial',
+  renovation:'house',
+  extension:'extension',
   house_construction:'house',
   commercial_building:'commercial',
   building_extension:'extension',
 };
 
 const DISPLAY={
-  project_type:{house_construction:'House construction',commercial_building:'Commercial building',building_extension:'Building extension'},
+  project_type:{residential:'Residential',commercial:'Commercial',renovation:'Renovation',extension:'Extension',house_construction:'Residential',commercial_building:'Commercial',building_extension:'Extension'},
   property_type:{residential:'Residential',commercial:'Commercial'},
   quality:{standard:'Standard',premium:'Premium',luxury:'Royal'},
   construction_package:{turnkey:'Turnkey construction',structure_only:'Civil / structure only',finishing_only:'Finishing work only'},

@@ -32,6 +32,7 @@ function constructionFloorLabel(value) {
 
 function formatPublicAnswer(question,value) {
   if(question?.questionKey==='floors')return constructionFloorLabel(value);
+  if(question?.questionKey==='plot_area')return String(value??'').trim()+' sq yards';
   return formatAnswer(question,value);
 }
 
@@ -139,9 +140,13 @@ function buildAcquisitionAttribution(input = {}) {
 
 const CONSULTATION_LABELS = {
   projectType: {
-    house_construction: 'House construction',
-    commercial_building: 'Commercial building',
-    building_extension: 'Building extension',
+    residential: 'Residential',
+    commercial: 'Commercial',
+    renovation: 'Renovation',
+    extension: 'Extension',
+    house_construction: 'Residential',
+    commercial_building: 'Commercial',
+    building_extension: 'Extension',
   },
   propertyType: {
     apartment: 'Apartment',
@@ -186,8 +191,8 @@ function consultationDetails(flowKey, input = {}) {
     if (!Number.isInteger(floors) || floors < 1 || floors > 100) fail('Enter the planned number of floors', 'INVALID_CONSULTATION_DETAILS');
     const plotAreaRaw = cleanConsultationText(input.plotArea, 20);
     const plotArea = plotAreaRaw === '' ? null : Number(plotAreaRaw);
-    if (plotArea !== null && (!Number.isFinite(plotArea) || plotArea < 50 || plotArea > 1000000)) {
-      fail('Plot area must be between 50 and 10,00,000 sq ft', 'INVALID_CONSULTATION_DETAILS');
+    if (plotArea !== null && (!Number.isFinite(plotArea) || plotArea < 10 || plotArea > 100000)) {
+      fail('Plot area must be between 10 and 1,00,000 sq yards', 'INVALID_CONSULTATION_DETAILS');
     }
     return { projectType, floors, plotArea, additional };
   }
@@ -247,10 +252,10 @@ function consultationLeadData(flow, details) {
   if (flow.key === 'build') {
     marketplace.project_type = CONSULTATION_LABELS.projectType[details.projectType];
     marketplace.floors = constructionFloorLabel(details.floors);
-    if (details.plotArea !== null) marketplace.plot_area = `${details.plotArea} sq ft`;
+    if (details.plotArea !== null) marketplace.plot_area = `${details.plotArea} sq yards`;
     summary.push(marketplace.project_type, marketplace.floors);
-    if (details.plotArea !== null) summary.push(`Plot ${details.plotArea} sq ft`);
-    propertyType = details.projectType === 'commercial_building' ? 'Commercial' : 'Residential';
+    if (details.plotArea !== null) summary.push(`Plot ${details.plotArea} sq yards`);
+    propertyType = ['commercial','commercial_building'].includes(details.projectType) ? 'Commercial' : 'Residential';
   } else if (flow.key === 'design') {
     propertyType = CONSULTATION_LABELS.propertyType[details.propertyType];
     marketplace.property_type = propertyType;

@@ -99,6 +99,7 @@ function fieldLabel(question, answers) {
   }
   if (typeof value === 'boolean') return value ? 'Yes' : 'No'
   if (question.questionKey === 'floors') return constructionFloorLabel(value)
+  if (question.questionKey === 'plot_area') return String(value) + ' sq yards'
   return question.options?.find(option => option.value === value)?.label || String(value)
 }
 
@@ -151,7 +152,8 @@ function PremiumQuestion({ question, value, onChange, visual = 'default' }) {
   }
 
   if (question.questionType === 'number' || question.questionType === 'area') {
-    return <div className="rq-number-wrap"><input type="number" min={question.validation?.min} max={question.validation?.max} value={value ?? ''} onChange={event => onChange(event.target.value)} placeholder={question.questionType === 'area' ? 'Enter area' : 'Enter number'} />{question.questionType === 'area' && <span>sq ft</span>}</div>
+    const areaUnit = question.questionKey === 'plot_area' ? 'sq yards' : 'sq ft'
+    return <div className="rq-number-wrap"><input type="number" min={question.validation?.min} max={question.validation?.max} value={value ?? ''} onChange={event => onChange(event.target.value)} placeholder={question.questionKey === 'plot_area' ? 'Enter plot area' : question.questionType === 'area' ? 'Enter area' : 'Enter number'} />{question.questionType === 'area' && <span>{areaUnit}</span>}</div>
   }
 
   return <input className="rq-basic-input" value={value || ''} maxLength={Number(question.validation?.maxLength || 240)} onChange={event => onChange(event.target.value)} placeholder={question.questionType === 'budget' ? 'Example: ₹25–40 lakh' : 'Enter your answer'} />
@@ -252,10 +254,6 @@ export default function RequirementWizard({ flowKey }) {
     })
     return [...map.values()].sort((a,b) => String(a.name).localeCompare(String(b.name)))
   }, [cities])
-  const filteredCities = useMemo(() => {
-    if (!locationStateId) return []
-    return cities.filter(city => String(city.state_id) === String(locationStateId)).sort((a,b) => String(a.name).localeCompare(String(b.name)))
-  }, [cities, locationStateId])
 
   const propertyQuestions = questions.filter(question => ['project_type', 'own_plot', 'property_type', 'property_intent', 'bhk', 'property_status', 'possession_status'].includes(question.questionKey))
   const configQuestions = questions.filter(question => ['plot_area', 'built_up_area', 'area', 'floors'].includes(question.questionKey))
@@ -264,12 +262,11 @@ export default function RequirementWizard({ flowKey }) {
   const usedKeys = new Set([locationQuestion?.questionKey, ...propertyQuestions.map(q => q.questionKey), ...configQuestions.map(q => q.questionKey), ...preferenceQuestions.map(q => q.questionKey), additionalQuestion?.questionKey].filter(Boolean))
   const extraQuestions = questions.filter(question => !usedKeys.has(question.questionKey))
 
-  const locationRequiredCount = locationQuestion ? 2 : 0
+  const locationRequiredCount = locationQuestion ? 1 : 0
   const requiredTotal = questions.filter(question => question.isRequired).length + 2 + locationRequiredCount
   const requiredDone = questions.filter(question => question.isRequired && !isEmptyAnswer(answers[question.questionKey])).length
     + (contact.name.trim() ? 1 : 0)
     + (/^[6-9]\d{9}$/.test(contact.phone.replace(/\D/g, '')) ? 1 : 0)
-    + (locationQuestion && locationStateId ? 1 : 0)
     + (locationQuestion && cityId ? 1 : 0)
   const completion = requiredTotal ? Math.round(requiredDone / requiredTotal * 100) : 0
 
@@ -292,9 +289,6 @@ export default function RequirementWizard({ flowKey }) {
     const city = cities.find(item => String(item.id) === String(value))
     setCityId(value)
     if (city?.state_id) setLocationStateId(String(city.state_id))
-    if (locationQuestion) setAnswers(current => ({ ...current, [locationQuestion.questionKey]: '' }))
-    pinLookupRequest.current += 1
-    setPinLookup({ status: '', message: '' })
     setState(current => ({ ...current, error: '' }))
   }
 
@@ -306,9 +300,9 @@ export default function RequirementWizard({ flowKey }) {
     if (data.cityId) {
       setPinLookup({ status: 'matched', message: location ? `Detected: ${location}` : 'PIN matched to a supported city.' })
     } else if (data.stateId || data.stateName) {
-      setPinLookup({ status: 'state', message: `State detected${data.stateName ? ': ' + data.stateName : ''}. Select the city to continue.` })
+      setPinLookup({ status: 'state', message: `State detected${data.stateName ? ': ' + data.stateName : ''}. Type your city to continue.` })
     } else {
-      setPinLookup({ status: 'error', message: 'We could not match this PIN to a supported location. Select state and city manually.' })
+      setPinLookup({ status: 'error', message: 'We could not match this PIN automatically. Type your city name below.' })
     }
     if (locationQuestion && pin) setAnswers(current => ({ ...current, [locationQuestion.questionKey]: pin }))
   }
@@ -344,7 +338,7 @@ export default function RequirementWizard({ flowKey }) {
       })
       .catch(() => {
         if (requestId !== pinLookupRequest.current) return
-        setPinLookup({ status: 'error', message: 'PIN could not be detected automatically. Select state and city manually.' })
+        setPinLookup({ status: 'error', message: 'PIN could not be detected automatically. Type your city name below.' })
       })
   }
 
@@ -390,8 +384,8 @@ export default function RequirementWizard({ flowKey }) {
       return
     }
 
-    if (locationQuestion && (!locationStateId || !cityId)) {
-      setState(current => ({ ...current, error: 'Select State and City, or enter a valid 6-digit PIN so we can detect them automatically.' }))
+    if (locationQuestion && !cityId) {
+      setState(current => ({ ...current, error: 'Enter a valid 6-digit PIN to auto-detect the city, or type and choose a supported city.' }))
       jump('rq-basic')
       return
     }
@@ -490,7 +484,7 @@ export default function RequirementWizard({ flowKey }) {
       questions={questions}
       answers={answers}
       setAnswer={setAnswer}
-      cities={filteredCities}
+      cities={cities}
       locationStates={locationStates}
       locationStateId={locationStateId}
       setLocationState={setLocationState}
@@ -515,7 +509,7 @@ export default function RequirementWizard({ flowKey }) {
       questions={questions}
       answers={answers}
       setAnswer={setAnswer}
-      cities={filteredCities}
+      cities={cities}
       locationStates={locationStates}
       locationStateId={locationStateId}
       setLocationState={setLocationState}
@@ -598,10 +592,7 @@ export default function RequirementWizard({ flowKey }) {
           <div className="rq-section-heading"><strong>1.</strong><div><h2>Basic Details</h2><p>Let’s start with the essential project and contact information.</p></div></div>
           <div className="rq-basic-grid">
             <QuoteLocationFields
-              states={locationStates}
-              stateId={locationStateId}
-              onStateChange={setLocationState}
-              cities={filteredCities}
+              cities={cities}
               cityId={cityId}
               onCityChange={setCity}
               pincode={locationQuestion ? answers[locationQuestion.questionKey] || '' : ''}
@@ -609,7 +600,6 @@ export default function RequirementWizard({ flowKey }) {
               onDetectedLocation={applyDeviceLocation}
               lookupStatus={pinLookup.status}
               lookupMessage={pinLookup.message}
-              stateLabel="Project State"
               cityLabel="Project City / Location"
             />
             <label><span>Your Name</span><input value={contact.name} onChange={event => setContact({ ...contact, name: event.target.value })} autoComplete="name" placeholder="Enter your full name" /></label>
