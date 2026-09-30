@@ -164,7 +164,7 @@ export default function ProfessionalHome(){
       <div><img src="/brand/propulse-logo.svg" alt="ProPulse"/><p>Lead opportunities and business growth tools for professionals.</p></div>
       <div><b>Marketplace</b><Link to="/leads">Browse Leads</Link><Link to="/signup">Create Account</Link><Link to="/login">Login</Link></div>
       <div><b>Homeowners</b><Link to="/">Home</Link><Link to="/packages">Packages</Link><Link to="/projects">Projects</Link></div>
-      <div><b>Support</b><Link to="/contact">Contact ProPulse</Link></div>
+      <div><b>Support</b><Link to="/professional-contact">Professional Contact</Link></div>
     </footer>
   </main>
 }
