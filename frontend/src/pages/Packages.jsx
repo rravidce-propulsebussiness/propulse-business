@@ -333,7 +333,7 @@ export default function Packages() {
       </nav>
       <div className="pkg-header-actions">
         <button className="pkg-header-quote" type="button" onClick={() => openQuote()}>Get Free Quote <Icon name="arrow" size={15} /></button>
-        <Link className="pkg-pro-button" to="/login">Professionals</Link>
+        <Link className="pkg-pro-button" to="/contact?audience=users">Professionals</Link>
       </div>
     </header>
 
