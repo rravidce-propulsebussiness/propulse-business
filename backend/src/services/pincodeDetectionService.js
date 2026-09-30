@@ -398,6 +398,68 @@ async function locatePincode(pincode) {
   };
 }
 
+async function reverseCoordinates(latitude, longitude) {
+  const lat = Number(latitude);
+  const lon = Number(longitude);
+  if (!Number.isFinite(lat) || lat < -90 || lat > 90 || !Number.isFinite(lon) || lon < -180 || lon > 180) {
+    const error = new Error('Valid latitude and longitude are required');
+    error.code = 'INVALID_COORDINATES';
+    throw error;
+  }
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 8000);
+  try {
+    const url = new URL('https://nominatim.openstreetmap.org/reverse');
+    url.searchParams.set('format', 'jsonv2');
+    url.searchParams.set('lat', String(lat));
+    url.searchParams.set('lon', String(lon));
+    url.searchParams.set('zoom', '18');
+    url.searchParams.set('addressdetails', '1');
+
+    const response = await fetch(url, {
+      headers: {
+        Accept: 'application/json',
+        'User-Agent': 'ProPulseBusiness/1.0 location-lookup',
+      },
+      signal: controller.signal,
+    });
+    if (!response.ok) {
+      const error = new Error('Location lookup service is unavailable');
+      error.code = 'REVERSE_LOOKUP_FAILED';
+      throw error;
+    }
+
+    const payload = await response.json();
+    const address = payload?.address || {};
+    const pincode = String(address.postcode || '').replace(/\D/g, '').slice(0, 6);
+    if (!/^\d{6}$/.test(pincode)) {
+      const error = new Error('Could not determine a 6-digit PIN for this location');
+      error.code = 'PIN_NOT_FOUND';
+      throw error;
+    }
+
+    const pinLocation = await locatePincode(pincode);
+    return {
+      ...pinLocation,
+      latitude: lat,
+      longitude: lon,
+      localityName: address.suburb || address.neighbourhood || address.quarter || address.village || address.town || address.city_district || '',
+      detectedAddress: payload?.display_name || '',
+      source: 'device-location',
+    };
+  } catch (error) {
+    if (error.name === 'AbortError') {
+      const timeoutError = new Error('Location lookup timed out');
+      timeoutError.code = 'REVERSE_LOOKUP_TIMEOUT';
+      throw timeoutError;
+    }
+    throw error;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
 async function listUnmappedPins({ limit = 100 } = {}) {
   const safeLimit = Math.min(200, Math.max(1, Number(limit) || 100));
   const result = await pool.query(
@@ -426,4 +488,5 @@ module.exports = {
   mapPinToCity,
   listUnmappedPins,
   fetchIndiaPost,
+  reverseCoordinates,
 };
