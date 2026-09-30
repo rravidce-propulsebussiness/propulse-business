@@ -14,6 +14,7 @@ const home = read('../frontend/src/pages/Home.jsx');
 const requirement = read('../frontend/src/pages/RequirementWizard.jsx');
 const adminLeads = read('../frontend/src/admin/pages/AdminLeadsV9.jsx');
 const projects = read('../frontend/src/pages/Projects.jsx');
+const marketplace = read('../frontend/src/pages/LeadsV2.jsx');
 
 assert.match(routes, /router\.post\('\/:key\/consultation'/);
 assert.match(routes, /customerFlowController\.submitConsultation/);
@@ -41,7 +42,8 @@ assert.match(requirement, /saved\.submissionKey/);
 assert.match(requirement, /initialSubmissionKey/);
 assert.match(requirement, /saved\.answers/);
 assert.match(adminLeads, /BASIC LEAD LIVE/);
-assert.match(adminLeads, /lower 3-buyer tier/);
+assert.match(adminLeads, /3-buyer Basic pricing/);
+assert.match(marketplace, /Basic details · Shared 3/);
 assert.match(media, /why_homeowners/);
 assert.match(media, /final_cta/);
 assert.match(faqService, /AUDIENCES=\['homeowner'/);
