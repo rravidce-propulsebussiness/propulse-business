@@ -32,7 +32,12 @@ export default function EstimatorWizard({ flowKey }) {
       if (!mounted.current) return
       if (data?.flowType !== 'estimator') throw new Error('This calculator is not available.')
       setFlow(data)
-      setAnswers({})
+      const query = new URLSearchParams(window.location.search)
+      const requestedPackage = String(query.get('package') || '').toLowerCase()
+      const initialAnswers = flowKey === 'interior-cost-estimator' && ['standard','premium','luxury'].includes(requestedPackage)
+        ? { finish_quality: requestedPackage }
+        : {}
+      setAnswers(initialAnswers)
       setStep(0)
       setResult(null)
       setQuoteMode(false)
