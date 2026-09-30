@@ -15,27 +15,23 @@
 .sol-header nav a.active:after{content:"";position:absolute;left:0;right:0;bottom:-24px;height:2px;border-radius:2px;background:var(--sol-orange)}
 .sol-packages-link{height:42px;padding:0 16px;display:flex;align-items:center;gap:7px;border-radius:10px;background:linear-gradient(135deg,#ff5a1f,#ff7840);color:#fff;font-size:12px;font-weight:900;box-shadow:0 10px 22px rgba(255,90,31,.2)}
 
-.sol-intro{max-width:1420px;margin:0 auto;padding:42px 36px 28px;display:flex;align-items:end;justify-content:space-between;gap:28px}
+.sol-intro{max-width:1420px;margin:0 auto;padding:26px 36px 16px;display:block}
 .sol-intro>div{max-width:840px}
 .sol-intro>div>span,.sol-active-summary>div>span{color:var(--sol-orange);font-size:12px;font-weight:900;letter-spacing:.13em}
-.sol-intro h1{margin:8px 0 10px;color:var(--sol-navy);font-size:47px;line-height:1;letter-spacing:-.045em}
+.sol-intro h1{margin:5px 0 7px;color:var(--sol-navy);font-size:34px;line-height:1.05;letter-spacing:-.04em}
 .sol-intro h1 em{color:var(--sol-orange);font-style:normal}
-.sol-intro p{margin:0;color:var(--sol-muted);font-size:14px;line-height:1.6}
-.sol-intro aside{min-width:230px;padding:17px 19px;border:1px solid #e7ddd6;border-radius:14px;background:#fff8f3}
-.sol-intro aside b,.sol-intro aside span{display:block}
-.sol-intro aside b{color:var(--sol-navy);font-size:16px}
-.sol-intro aside span{margin-top:4px;color:var(--sol-muted);font-size:12px}
+.sol-intro p{margin:0;color:var(--sol-muted);font-size:13px;line-height:1.55}
 
-.sol-switch{max-width:1360px;margin:0 auto 24px;padding:0 24px;display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
-.sol-switch button{position:relative;min-height:96px;display:grid;grid-template-columns:46px 1fr 24px;align-items:center;gap:12px;padding:15px 17px;border:1px solid var(--sol-line);border-radius:15px;background:#fff;text-align:left;cursor:pointer;box-shadow:0 10px 25px rgba(8,43,75,.05);transition:.2s}
+.sol-switch{max-width:1360px;margin:0 auto 14px;padding:0 24px;display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.sol-switch button{position:relative;min-height:80px;display:grid;grid-template-columns:40px 1fr 22px;align-items:center;gap:10px;padding:11px 14px;border:1px solid var(--sol-line);border-radius:14px;background:#fff;text-align:left;cursor:pointer;box-shadow:0 8px 20px rgba(8,43,75,.05);transition:.2s}
 .sol-switch button:hover,.sol-switch button.active{transform:translateY(-2px);border-color:#ffb596;box-shadow:0 16px 34px rgba(8,43,75,.10)}
 .sol-switch button.active{background:linear-gradient(180deg,#fff,#fff8f4)}
-.sol-switch-icon{width:44px;height:44px;display:grid;place-items:center;border-radius:12px;background:#fff3ed;color:var(--sol-orange)}
+.sol-switch-icon{width:38px;height:38px;display:grid;place-items:center;border-radius:11px;background:#fff3ed;color:var(--sol-orange)}
 .sol-switch button.active .sol-switch-icon{background:var(--sol-orange);color:#fff}
 .sol-switch small,.sol-switch b,.sol-switch em{display:block}
 .sol-switch small{color:#8796a4;font-size:10px;font-weight:900;letter-spacing:.08em}
-.sol-switch b{margin-top:3px;color:var(--sol-navy);font-size:16px}
-.sol-switch em{margin-top:2px;color:#697d8f;font-size:11px;font-style:normal;font-weight:650}
+.sol-switch b{margin-top:2px;color:var(--sol-navy);font-size:15px}
+.sol-switch em{margin-top:1px;color:#697d8f;font-size:11px;font-style:normal;font-weight:650}
 .sol-switch>button>i{color:#93a0ab}
 .sol-switch button.active>i{color:var(--sol-orange)}
 
@@ -69,7 +65,6 @@
 @media(max-width:900px){
   .sol-header{grid-template-columns:1fr auto}
   .sol-header nav{display:none}
-  .sol-intro{align-items:flex-start;flex-direction:column}
   .sol-switch{grid-template-columns:1fr}
   .sol-active-summary{margin-left:20px;margin-right:20px}
 }
@@ -77,9 +72,8 @@
   .sol-header{height:64px;padding:0 14px}
   .sol-logo img{width:145px}
   .sol-packages-link{height:38px;padding:0 11px;font-size:11px}
-  .sol-intro{padding:30px 16px 20px}
-  .sol-intro h1{font-size:36px}
-  .sol-intro aside{width:100%}
+  .sol-intro{padding:22px 16px 14px}
+  .sol-intro h1{font-size:30px}
   .sol-switch{padding:0 12px}
   .sol-active-summary{height:auto;margin:0 12px 18px;grid-template-columns:1fr}
   .sol-active-summary img{height:150px}
@@ -87,7 +81,7 @@
 }
 
 /* Unified page owns the hero; nested flow heroes stay hidden */
-.sol-flow{margin-top:8px}
+.sol-flow{margin-top:0}
 .sol-flow .rq-flow-nav,
 .sol-flow .irx-steps,
 .sol-flow .rex-steps{margin-top:0!important}
