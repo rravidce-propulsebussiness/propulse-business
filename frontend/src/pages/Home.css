@@ -1187,7 +1187,7 @@ button,input,select{font:inherit}
 .hc-expert-hero{
   position:relative;
   overflow:hidden;
-  padding:20px 28px 30px;
+  padding:12px 24px 22px;
   background:
     radial-gradient(circle at 73% 22%,rgba(126,178,255,.16),transparent 25%),
     radial-gradient(circle at 16% 56%,rgba(255,165,104,.12),transparent 21%),
@@ -1195,24 +1195,24 @@ button,input,select{font:inherit}
   border-bottom:1px solid #e8edf1;
 }
 .hc-expert-hero-inner{
-  width:min(100%,1500px);
+  width:min(100%,1450px);
   margin:0 auto;
   display:grid;
-  grid-template-columns:minmax(430px,.82fr) minmax(650px,1.18fr);
-  gap:24px;
+  grid-template-columns:minmax(400px,.80fr) minmax(610px,1.20fr);
+  gap:20px;
   align-items:center;
 }
 .hc-expert-copy{
   position:relative;
   z-index:4;
-  padding:42px 6px 30px 4px;
+  padding:24px 6px 20px 4px;
 }
 .hc-expert-kicker{
   width:max-content;
   display:flex;
   align-items:center;
-  gap:12px;
-  padding:10px 16px;
+  gap:10px;
+  padding:8px 14px;
   border:1px solid #e1e8ed;
   border-radius:999px;
   background:rgba(255,255,255,.9);
@@ -1232,9 +1232,9 @@ button,input,select{font:inherit}
 }
 .hc-expert-copy h1{
   max-width:630px;
-  margin:22px 0 0;
+  margin:16px 0 0;
   color:#072d51;
-  font-size:60px;
+  font-size:52px;
   line-height:1.02;
   letter-spacing:-.055em;
   font-weight:950;
@@ -1246,26 +1246,26 @@ button,input,select{font:inherit}
 }
 .hc-expert-copy>p{
   max-width:590px;
-  margin:20px 0 0;
+  margin:14px 0 0;
   color:#4d6b83;
-  font-size:17px;
-  line-height:1.64;
+  font-size:15.5px;
+  line-height:1.56;
 }
 .hc-expert-actions{
   display:flex;
-  gap:13px;
-  margin-top:26px;
+  gap:11px;
+  margin-top:20px;
 }
 .hc-expert-primary,.hc-expert-secondary{
-  height:52px;
-  min-width:180px;
+  height:46px;
+  min-width:160px;
   display:inline-flex;
   align-items:center;
   justify-content:center;
   gap:9px;
-  padding:0 22px;
-  border-radius:11px;
-  font-size:13px;
+  padding:0 19px;
+  border-radius:10px;
+  font-size:12.5px;
   font-weight:950;
   text-decoration:none;
   transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease;
@@ -1290,35 +1290,35 @@ button,input,select{font:inherit}
   display:grid;
   grid-template-columns:repeat(5,minmax(0,1fr));
   max-width:650px;
-  margin-top:31px;
+  margin-top:22px;
   border-top:1px solid #edf1f4;
   border-bottom:1px solid #edf1f4;
 }
 .hc-expert-benefits>span{
-  min-height:77px;
+  min-height:64px;
   display:flex;
   flex-direction:column;
   align-items:center;
   justify-content:center;
-  gap:7px;
-  padding:8px 10px;
+  gap:5px;
+  padding:7px 8px;
   color:#0c3152;
   text-align:center;
   border-right:1px solid #e8edf1;
 }
 .hc-expert-benefits>span:last-child{border-right:0}
 .hc-expert-benefits svg{color:#0e3d65}
-.hc-expert-benefits b{font-size:10px;line-height:1.2}
+.hc-expert-benefits b{font-size:9.4px;line-height:1.18}
 
 .hc-expert-visual{
   position:relative;
-  min-height:460px;
+  min-height:400px;
   overflow:hidden;
-  border-radius:26px;
+  border-radius:22px;
   background:#0c2a44;
   box-shadow:
-    0 42px 88px rgba(7,39,65,.19),
-    0 14px 32px rgba(7,39,65,.08);
+    0 30px 64px rgba(7,39,65,.16),
+    0 12px 26px rgba(7,39,65,.07);
   isolation:isolate;
 }
 .hc-expert-house{
@@ -1374,13 +1374,13 @@ button,input,select{font:inherit}
 .hc-expert-float{
   position:absolute;
   z-index:7;
-  width:27.5%;
-  min-height:66px;
+  width:26.5%;
+  min-height:58px;
   display:grid;
-  grid-template-columns:32px minmax(0,1fr);
+  grid-template-columns:30px minmax(0,1fr);
   align-items:center;
-  gap:7px;
-  padding:8px 9px;
+  gap:6px;
+  padding:7px 8px;
   border:1px solid rgba(255,255,255,.72);
   border-radius:12px;
   background:rgba(255,255,255,.95);
@@ -1399,7 +1399,7 @@ button,input,select{font:inherit}
 .hc-materials-card{
   right:3%;
   top:3%;
-  width:30%;
+  width:29%;
   animation-delay:-1.8s;
 }
 .hc-consultation-card{
@@ -1413,8 +1413,8 @@ button,input,select{font:inherit}
   animation-delay:-4s;
 }
 .hc-expert-card-icon{
-  width:38px;
-  height:38px;
+  width:34px;
+  height:34px;
   display:grid;
   place-items:center;
   border-radius:50%;
@@ -1425,7 +1425,7 @@ button,input,select{font:inherit}
 .hc-consultation-card b,
 .hc-warranty-card b{
   display:block;
-  font-size:10.8px;
+  font-size:10px;
   line-height:1.2;
 }
 .hc-expert-card-copy small,
@@ -1434,7 +1434,7 @@ button,input,select{font:inherit}
   display:block;
   margin-top:3px;
   color:#647b8f;
-  font-size:7.8px;
+  font-size:7.2px;
   line-height:1.35;
 }
 .hc-expert-avatars{
@@ -1444,8 +1444,8 @@ button,input,select{font:inherit}
 }
 .hc-expert-avatars img,
 .hc-expert-avatars i{
-  width:22px;
-  height:22px;
+  width:20px;
+  height:20px;
   margin-left:-5px;
   border:2px solid #fff;
   border-radius:50%;
@@ -1466,7 +1466,7 @@ button,input,select{font:inherit}
   grid-template-columns:repeat(4,minmax(0,1fr));
   gap:3px;
   width:100%;
-  margin-top:7px;
+  margin-top:5px;
 }
 .hc-material-chips i{
   min-width:0;
@@ -1475,7 +1475,7 @@ button,input,select{font:inherit}
   border-radius:5px;
   background:#fff8f3;
   color:#8a4c2d;
-  font-size:6.4px;
+  font-size:6px;
   line-height:1;
   text-align:center;
   white-space:nowrap;
@@ -1489,21 +1489,21 @@ button,input,select{font:inherit}
   z-index:5;
   overflow:hidden;
   border:2px solid rgba(255,255,255,.92);
-  border-radius:20px;
-  box-shadow:0 18px 42px rgba(7,34,57,.19);
+  border-radius:16px;
+  box-shadow:0 15px 34px rgba(7,34,57,.19);
 }
 .hc-expert-mini img{width:100%;height:100%;display:block;object-fit:cover}
 .mini-living{
   left:9%;
-  bottom:17%;
-  width:24%;
-  height:22%;
+  bottom:16%;
+  width:22%;
+  height:20%;
 }
 .mini-kitchen{
   right:9%;
-  bottom:17%;
-  width:22%;
-  height:21%;
+  bottom:16%;
+  width:20%;
+  height:19%;
 }
 @keyframes hcExpertLine{to{stroke-dashoffset:-240}}
 @keyframes hcExpertNode{
@@ -1516,32 +1516,32 @@ button,input,select{font:inherit}
 }
 @media(max-width:1280px){
   .hc-expert-hero-inner{grid-template-columns:minmax(390px,.86fr) minmax(590px,1.14fr)}
-  .hc-expert-copy h1{font-size:54px}
-  .hc-expert-visual{min-height:450px}
-  .hc-expert-float{width:28%;min-height:64px}
-  .hc-materials-card{width:30%}
-  .hc-expert-card-copy b,.hc-consultation-card b,.hc-warranty-card b{font-size:10.5px}
-  .hc-expert-card-copy small,.hc-consultation-card small,.hc-warranty-card small{font-size:7.6px}
+  .hc-expert-copy h1{font-size:48px}
+  .hc-expert-visual{min-height:390px}
+  .hc-expert-float{width:27%;min-height:56px}
+  .hc-materials-card{width:29%}
+  .hc-expert-card-copy b,.hc-consultation-card b,.hc-warranty-card b{font-size:9.8px}
+  .hc-expert-card-copy small,.hc-consultation-card small,.hc-warranty-card small{font-size:7px}
 }
 @media(max-width:1040px){
-  .hc-expert-hero{padding:18px 16px 30px}
+  .hc-expert-hero{padding:14px 16px 24px}
   .hc-expert-hero-inner{grid-template-columns:1fr}
-  .hc-expert-copy{padding:28px 10px 10px}
-  .hc-expert-copy h1{font-size:52px}
-  .hc-expert-visual{min-height:560px}
+  .hc-expert-copy{padding:22px 10px 8px}
+  .hc-expert-copy h1{font-size:46px}
+  .hc-expert-visual{min-height:500px}
 }
 @media(max-width:720px){
-  .hc-expert-hero{padding:12px 10px 24px}
-  .hc-expert-copy{padding:20px 6px 8px}
+  .hc-expert-hero{padding:10px 10px 20px}
+  .hc-expert-copy{padding:16px 6px 6px}
   .hc-expert-kicker span{font-size:9px}
-  .hc-expert-copy h1{font-size:42px}
-  .hc-expert-copy>p{font-size:15px}
+  .hc-expert-copy h1{font-size:38px}
+  .hc-expert-copy>p{font-size:14px}
   .hc-expert-actions{flex-direction:column;align-items:stretch}
   .hc-expert-primary,.hc-expert-secondary{width:100%}
   .hc-expert-benefits{grid-template-columns:repeat(2,1fr)}
   .hc-expert-benefits>span{border-bottom:1px solid #e8edf1}
   .hc-expert-benefits>span:nth-child(even){border-right:0}
-  .hc-expert-visual{min-height:720px;border-radius:20px}
+  .hc-expert-visual{min-height:620px;border-radius:18px}
   .hc-expert-float{
     width:calc(100% - 28px);
     left:14px;
