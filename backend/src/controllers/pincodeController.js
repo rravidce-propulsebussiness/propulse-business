@@ -39,6 +39,19 @@ async function getOne(req, res) {
   }
 }
 
+async function locate(req, res) {
+  try {
+    const result = await detectionService.locatePincode(req.params.pincode);
+    return res.json(result);
+  } catch (error) {
+    const bad = ['INVALID_PINCODE', 'PIN_NOT_FOUND', 'PIN_LOOKUP_TIMEOUT'];
+    return res.status(bad.includes(error.code) ? 400 : 502).json({
+      error: error.message || 'Failed to locate PIN',
+      code: error.code,
+    });
+  }
+}
+
 async function detect(req, res) {
   try {
     const result = await detectionService.detectPincode(req.body?.pincode || req.params?.pincode, {
