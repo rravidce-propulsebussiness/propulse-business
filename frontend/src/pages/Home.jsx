@@ -117,24 +117,6 @@ const INSPIRATION = [
   },
 ]
 
-const HOMEOWNER_VALUES = [
-  {
-    icon: 'clipboard',
-    title: 'Clear requirement first',
-    text: 'Share the important details once so every conversation starts with the same project context.',
-  },
-  {
-    icon: 'pin',
-    title: 'Local relevance',
-    text: 'City and PIN-based intake keeps your request focused on businesses that can actually serve your area.',
-  },
-  {
-    icon: 'shield',
-    title: 'You stay in control',
-    text: 'Start with a free consultation and decide how you want to continue after reviewing your options.',
-  },
-]
-
 function collection(value) {
   if (Array.isArray(value)) return value
   if (Array.isArray(value?.data)) return value.data
@@ -589,20 +571,55 @@ function Home() {
         <Link className="hc-inspiration-cta" to="/projects">Explore all project ideas <Icon name="arrow" size={16} /></Link>
       </section>
 
-      <section className="hc-section hc-homeowner-values">
-        <div className="hc-section-heading">
-          <span>Trust starts with clarity</span>
-          <h2>Designed Around Homeowner Concerns</h2>
-          <p>Everything is designed around a homeowner’s questions first, so you can understand the next step before choosing how to continue.</p>
+      <section className="hc-guided-journey" aria-labelledby="guided-home-journey-title">
+        <div className="hc-guided-heading">
+          <span>Simple Steps. Better Homes.</span>
+          <h2 id="guided-home-journey-title">How ProPulse <em>Guides Your Home Journey</em></h2>
+          <p>From your first question to the right package — a simpler, smarter way to build or renovate your home.</p>
         </div>
 
-        <div className="hc-value-grid">
-          {HOMEOWNER_VALUES.map(item => <article key={item.title}>
-            <span><Icon name={item.icon} size={24} /></span>
-            <h3>{item.title}</h3>
-            <p>{item.text}</p>
-            <div><Icon name="check" size={15} /> Homeowner-first experience</div>
-          </article>)}
+        <div className="hc-guided-grid">
+          <article className="hc-guided-card step-one" onClick={() => openConsult()}>
+            <span className="hc-guided-step">1</span>
+            <div className="hc-guided-art requirement-art" aria-hidden="true">
+              <div className="hc-doc-sheet">
+                <i />
+                <b />
+                <b />
+                <b />
+              </div>
+              <div className="hc-pen" />
+              <span className="hc-art-bubble"><Icon name="arrow" size={24}/></span>
+            </div>
+            <h3>Fill Your Requirement</h3>
+            <p>Share your home construction or interior needs in one clear brief.</p>
+          </article>
+
+          <span className="hc-guided-connector" aria-hidden="true"><Icon name="arrow" size={24}/></span>
+
+          <article className="hc-guided-card step-two" onClick={() => openConsult()}>
+            <span className="hc-guided-step blue">2</span>
+            <div className="hc-guided-art experts-art" aria-hidden="true">
+              <span className="hc-expert-avatar side-left"><Icon name="home" size={24}/></span>
+              <span className="hc-expert-avatar main"><Icon name="people" size={38}/></span>
+              <span className="hc-expert-avatar side-right"><Icon name="consult" size={24}/></span>
+            </div>
+            <h3>Talk to Experts</h3>
+            <p>Get connected with senior engineers, architects, or relevant specialists.</p>
+          </article>
+
+          <span className="hc-guided-connector" aria-hidden="true"><Icon name="arrow" size={24}/></span>
+
+          <article className="hc-guided-card step-three" onClick={() => navigate('/packages')}>
+            <span className="hc-guided-step">3</span>
+            <div className="hc-guided-art package-art" aria-hidden="true">
+              <span className="hc-package-card back-left"><Icon name="home" size={22}/></span>
+              <span className="hc-package-card back-right"><Icon name="home" size={22}/></span>
+              <span className="hc-package-card front"><Icon name="home" size={31}/><i/><i/><button tabIndex="-1" type="button">View</button></span>
+            </div>
+            <h3>Choose Your Package</h3>
+            <p>Compare suitable package options and move ahead with confidence.</p>
+          </article>
         </div>
       </section>
 
