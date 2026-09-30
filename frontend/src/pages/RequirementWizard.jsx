@@ -99,6 +99,7 @@ function fieldLabel(question, answers) {
   }
   if (typeof value === 'boolean') return value ? 'Yes' : 'No'
   if (question.questionKey === 'floors') return constructionFloorLabel(value)
+  if (question.questionKey === 'plot_area') return String(value) + ' sq yards'
   return question.options?.find(option => option.value === value)?.label || String(value)
 }
 
@@ -151,7 +152,8 @@ function PremiumQuestion({ question, value, onChange, visual = 'default' }) {
   }
 
   if (question.questionType === 'number' || question.questionType === 'area') {
-    return <div className="rq-number-wrap"><input type="number" min={question.validation?.min} max={question.validation?.max} value={value ?? ''} onChange={event => onChange(event.target.value)} placeholder={question.questionType === 'area' ? 'Enter area' : 'Enter number'} />{question.questionType === 'area' && <span>sq ft</span>}</div>
+    const areaUnit = question.questionKey === 'plot_area' ? 'sq yards' : 'sq ft'
+    return <div className="rq-number-wrap"><input type="number" min={question.validation?.min} max={question.validation?.max} value={value ?? ''} onChange={event => onChange(event.target.value)} placeholder={question.questionKey === 'plot_area' ? 'Enter plot area' : question.questionType === 'area' ? 'Enter area' : 'Enter number'} />{question.questionType === 'area' && <span>{areaUnit}</span>}</div>
   }
 
   return <input className="rq-basic-input" value={value || ''} maxLength={Number(question.validation?.maxLength || 240)} onChange={event => onChange(event.target.value)} placeholder={question.questionType === 'budget' ? 'Example: ₹25–40 lakh' : 'Enter your answer'} />
