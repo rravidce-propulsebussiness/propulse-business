@@ -857,7 +857,7 @@ function Home() {
       <button className="hc-popup-close" type="button" onClick={closeConsult} aria-label="Close consultation popup">×</button>
       <div className="hc-popup-head">
         <span><Icon name="phone" size={21} /></span>
-        <div><h3>Tell Us Your Requirement</h3><p>This popup only captures a basic lead so relevant businesses can respond. It does not generate a quotation.</p></div>
+        <div><h3>Tell Us Your Requirement</h3></div>
       </div>
 
       {consultSubmitted ? <div className="hc-popup-success">
@@ -981,7 +981,6 @@ function Home() {
 
         {consultError && <div className="hc-popup-error">{consultError}</div>}
         <button className="hc-popup-submit" type="submit" disabled={consultSaving}>{consultSaving ? 'Saving…' : 'Submit Basic Requirement'} {!consultSaving && <Icon name="arrow" size={15} />}</button>
-        <small><Icon name="shield" size={12} /> This creates only a basic lead. Construction quotation is available separately from the Construction page.</small>
       </form>}
       </aside>
     </div>}
