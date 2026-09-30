@@ -13,6 +13,46 @@ function makeSubmissionKey() {
   return 'consult_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 12)
 }
 
+const emptyConsultation = () => ({
+  flowKey: '',
+  cityId: '',
+  pincode: '',
+  name: '',
+  phone: '',
+  consent: false,
+  website: '',
+  projectType: '',
+  floors: '',
+  plotArea: '',
+  propertyType: '',
+  bhk: '',
+  area: '',
+  propertyIntent: '',
+  budget: '',
+  additional: '',
+})
+
+function consultationPrefillAnswers(form) {
+  const answers = {}
+  if (form.flowKey === 'build') {
+    if (form.projectType) answers.project_type = form.projectType
+    if (form.floors) answers.floors = String(form.floors)
+    if (form.plotArea) answers.plot_area = String(form.plotArea)
+  }
+  if (form.flowKey === 'design') {
+    if (form.propertyType) answers.property_type = form.propertyType
+    if (form.bhk) answers.bhk = form.bhk
+    if (form.area) answers.area = String(form.area)
+  }
+  if (form.flowKey === 'property') {
+    if (form.propertyIntent) answers.property_intent = form.propertyIntent
+    if (form.propertyType) answers.property_type = form.propertyType
+    if (form.budget) answers.budget = form.budget
+  }
+  if (form.additional.trim()) answers.additional_requirement = form.additional.trim()
+  return answers
+}
+
 const SERVICES = [
   {
     key: 'build',
@@ -113,7 +153,7 @@ function Home() {
   const [loadingCities, setLoadingCities] = useState(true)
   const [consultOpen, setConsultOpen] = useState(false)
   const [popupCycle, setPopupCycle] = useState(0)
-  const [consultForm, setConsultForm] = useState({ flowKey: '', cityId: '', name: '', phone: '', consent: false, website: '' })
+  const [consultForm, setConsultForm] = useState(emptyConsultation)
   const [consultSubmissionKey, setConsultSubmissionKey] = useState(makeSubmissionKey)
   const [consultError, setConsultError] = useState('')
   const [consultSaving, setConsultSaving] = useState(false)
@@ -158,6 +198,16 @@ function Home() {
     [cityList, consultForm.cityId]
   )
 
+  const selectedCityPincodes = useMemo(() => {
+    const rows = Array.isArray(selectedCity?.pincodes) ? selectedCity.pincodes : []
+    const map = new Map()
+    rows.forEach(item => {
+      const pincode = String(typeof item === 'string' ? item : item?.pincode || '')
+      if (/^\d{6}$/.test(pincode) && !map.has(pincode)) map.set(pincode, typeof item === 'string' ? { pincode } : item)
+    })
+    return [...map.values()]
+  }, [selectedCity])
+
   const phone = contactData.phone || contactData.phone_number || contactData.mobile || ''
   const email = contactData.email || contactData.support_email || ''
 
@@ -168,8 +218,17 @@ function Home() {
 
   function openConsult(flowKey = '') {
     setConsultError('')
-    setConsultForm(current => ({ ...current, flowKey: flowKey || current.flowKey }))
+    setConsultForm(current => {
+      if (!flowKey || flowKey === current.flowKey) return { ...current, flowKey: flowKey || current.flowKey }
+      return { ...emptyConsultation(), flowKey, name: current.name, phone: current.phone, consent: current.consent }
+    })
     setConsultOpen(true)
+  }
+
+  function changeConsultFlow(flowKey) {
+    setConsultForm(current => ({ ...emptyConsultation(), flowKey, name: current.name, phone: current.phone, consent: current.consent }))
+    setConsultSubmissionKey(makeSubmissionKey())
+    setConsultError('')
   }
 
   function closeConsult() {
@@ -182,11 +241,30 @@ function Home() {
     event.preventDefault()
     const mobile = consultForm.phone.replace(/\D/g, '')
     const name = consultForm.name.trim()
+    const pincode = consultForm.pincode.replace(/\D/g, '')
     if (!consultForm.flowKey) return setConsultError('Select what you need help with.')
     if (!consultForm.cityId) return setConsultError('Select your city or location.')
+    if (!/^\d{6}$/.test(pincode)) return setConsultError('Select or enter a valid 6-digit PIN code.')
+    if (consultForm.flowKey === 'build' && !consultForm.projectType) return setConsultError('Select the construction project type.')
+    if (consultForm.flowKey === 'build' && (!/^\d{1,3}$/.test(String(consultForm.floors)) || Number(consultForm.floors) < 1 || Number(consultForm.floors) > 100)) return setConsultError('Enter the planned number of floors.')
+    if (consultForm.flowKey === 'design' && !consultForm.propertyType) return setConsultError('Select the property type.')
+    if (consultForm.flowKey === 'property' && !consultForm.propertyIntent) return setConsultError('Select whether you want to buy, rent, sell or invest.')
+    if (consultForm.flowKey === 'property' && !consultForm.propertyType) return setConsultError('Select the property type.')
     if (name.length < 2) return setConsultError('Enter your name.')
     if (!/^[6-9]\d{9}$/.test(mobile)) return setConsultError('Enter a valid 10-digit mobile number.')
     if (!consultForm.consent) return setConsultError('Please accept the contact consent to continue.')
+
+    const details = {
+      projectType: consultForm.projectType,
+      floors: consultForm.floors,
+      plotArea: consultForm.plotArea,
+      propertyType: consultForm.propertyType,
+      bhk: consultForm.bhk,
+      area: consultForm.area,
+      propertyIntent: consultForm.propertyIntent,
+      budget: consultForm.budget,
+      additional: consultForm.additional,
+    }
 
     try {
       setConsultSaving(true)
@@ -196,6 +274,8 @@ function Home() {
         method: 'POST',
         body: JSON.stringify({
           cityId: Number(consultForm.cityId),
+          pincode,
+          details,
           contact: { name, phone: mobile, email: '' },
           consent: true,
           submissionKey: consultSubmissionKey,
@@ -217,6 +297,8 @@ function Home() {
           flowKey: consultForm.flowKey,
           cityId: Number(consultForm.cityId),
           cityName: selectedCity?.name || '',
+          pincode,
+          answers: consultationPrefillAnswers(consultForm),
           name,
           phone: mobile,
           consent: true,
@@ -435,7 +517,7 @@ function Home() {
       <form onSubmit={submitConsult}>
         <label>
           <span>I am looking for</span>
-          <select value={consultForm.flowKey} onChange={event => { setConsultForm({ ...consultForm, flowKey: event.target.value }); setConsultError('') }}>
+          <select value={consultForm.flowKey} onChange={event => changeConsultFlow(event.target.value)}>
             <option value="">Select requirement</option>
             <option value="build">Home Construction</option>
             <option value="design">Interior Design</option>
@@ -445,11 +527,42 @@ function Home() {
 
         <label>
           <span>City / Location</span>
-          <select value={consultForm.cityId} disabled={loadingCities} onChange={event => { setConsultForm({ ...consultForm, cityId: event.target.value }); setConsultError('') }}>
+          <select value={consultForm.cityId} disabled={loadingCities} onChange={event => { setConsultForm({ ...consultForm, cityId: event.target.value, pincode: '' }); setConsultError('') }}>
             <option value="">{loadingCities ? 'Loading locations…' : 'Select city'}</option>
             {cityList.map(city => <option value={city.id} key={city.id}>{city.name}{city.state_name ? ' · ' + city.state_name : ''}</option>)}
           </select>
         </label>
+
+        <label>
+          <span>PIN Code</span>
+          {selectedCityPincodes.length ? <select value={consultForm.pincode} onChange={event => { setConsultForm({ ...consultForm, pincode: event.target.value }); setConsultError('') }}>
+            <option value="">Select PIN code</option>
+            {selectedCityPincodes.map(item => <option value={item.pincode} key={item.pincode}>{item.pincode}{item.officeName ? ' · ' + item.officeName : ''}</option>)}
+          </select> : <input className="hc-popup-input" inputMode="numeric" maxLength="6" value={consultForm.pincode} onChange={event => { setConsultForm({ ...consultForm, pincode: event.target.value.replace(/\D/g, '').slice(0, 6) }); setConsultError('') }} placeholder="Enter 6-digit PIN code" />}
+        </label>
+
+        {consultForm.flowKey === 'build' && <div className="hc-popup-detail-grid">
+          <label><span>Project Type</span><select value={consultForm.projectType} onChange={event => { setConsultForm({ ...consultForm, projectType: event.target.value }); setConsultError('') }}><option value="">Select project</option><option value="house_construction">House construction</option><option value="commercial_building">Commercial building</option><option value="building_extension">Building extension</option></select></label>
+          <label><span>No. of Floors</span><input className="hc-popup-input" type="number" min="1" max="100" value={consultForm.floors} onChange={event => { setConsultForm({ ...consultForm, floors: event.target.value }); setConsultError('') }} placeholder="e.g. 2" /></label>
+          <label><span>Plot Area <small>(Optional)</small></span><div className="hc-popup-unit"><input type="number" min="50" max="1000000" value={consultForm.plotArea} onChange={event => setConsultForm({ ...consultForm, plotArea: event.target.value })} placeholder="e.g. 2000" /><i>sq ft</i></div></label>
+        </div>}
+
+        {consultForm.flowKey === 'design' && <div className="hc-popup-detail-grid">
+          <label><span>Property Type</span><select value={consultForm.propertyType} onChange={event => { setConsultForm({ ...consultForm, propertyType: event.target.value, bhk: '' }); setConsultError('') }}><option value="">Select property</option><option value="apartment">Apartment</option><option value="villa">Villa</option><option value="independent_house">Independent house</option><option value="office">Office</option><option value="commercial_space">Commercial space</option></select></label>
+          {['apartment','villa','independent_house'].includes(consultForm.propertyType) && <label><span>BHK <small>(Optional)</small></span><select value={consultForm.bhk} onChange={event => setConsultForm({ ...consultForm, bhk: event.target.value })}><option value="">Select BHK</option><option value="1bhk">1 BHK</option><option value="2bhk">2 BHK</option><option value="3bhk">3 BHK</option><option value="4bhk">4 BHK</option><option value="5plus">5+ BHK</option></select></label>}
+          <label><span>Approx. Area <small>(Optional)</small></span><div className="hc-popup-unit"><input type="number" min="50" max="1000000" value={consultForm.area} onChange={event => setConsultForm({ ...consultForm, area: event.target.value })} placeholder="e.g. 1500" /><i>sq ft</i></div></label>
+        </div>}
+
+        {consultForm.flowKey === 'property' && <div className="hc-popup-detail-grid">
+          <label><span>I Want To</span><select value={consultForm.propertyIntent} onChange={event => { setConsultForm({ ...consultForm, propertyIntent: event.target.value }); setConsultError('') }}><option value="">Select intent</option><option value="buy">Buy</option><option value="rent">Rent</option><option value="sell">Sell</option><option value="invest">Invest</option></select></label>
+          <label><span>Property Type</span><select value={consultForm.propertyType} onChange={event => { setConsultForm({ ...consultForm, propertyType: event.target.value }); setConsultError('') }}><option value="">Select property</option><option value="apartment">Apartment</option><option value="villa">Villa</option><option value="independent_house">Independent house</option><option value="plot">Plot / land</option><option value="commercial">Commercial property</option><option value="office">Office space</option></select></label>
+          <label><span>Budget <small>(Optional)</small></span><input className="hc-popup-input" maxLength="100" value={consultForm.budget} onChange={event => setConsultForm({ ...consultForm, budget: event.target.value })} placeholder="e.g. ₹40–60 lakh" /></label>
+        </div>}
+
+        {consultForm.flowKey && <label>
+          <span>Additional Information <small>(Optional)</small></span>
+          <textarea className="hc-popup-textarea" rows="2" maxLength="1000" value={consultForm.additional} onChange={event => setConsultForm({ ...consultForm, additional: event.target.value })} placeholder="Share any important requirement, preferred locality, parking, vastu, materials, rooms, etc." />
+        </label>}
 
         <label>
           <span>Your Name</span>
@@ -469,7 +582,7 @@ function Home() {
 
         {consultError && <div className="hc-popup-error">{consultError}</div>}
         <button className="hc-popup-submit" type="submit" disabled={consultSaving}>{consultSaving ? 'Submitting…' : 'Submit Request'} {!consultSaving && <Icon name="arrow" size={15} />}</button>
-        <small><Icon name="shield" size={12} /> Your consultation is saved first, then you can add project details.</small>
+        <small><Icon name="shield" size={12} /> A valid submission becomes a Basic live lead immediately; you can still add full project details next.</small>
       </form>
     </aside>}
   </div>
