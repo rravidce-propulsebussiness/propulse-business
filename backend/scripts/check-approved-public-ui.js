@@ -19,12 +19,17 @@ const websiteFaqCss=read('../frontend/src/components/WebsiteFaqSection.css');
 const portalContact=read('../frontend/src/pages/PortalContact.jsx');
 const professionalHome=read('../frontend/src/pages/ProfessionalHome.jsx');
 const professionalHomeCss=read('../frontend/src/pages/ProfessionalHome.css');
+const experts=read('../frontend/src/pages/Experts.jsx');
+const expertsCss=read('../frontend/src/pages/Experts.css');
+const publicExpertService=read('./src/services/publicExpertService.js');
+const serverSource=read('./src/server.js');
 const contact=read('../frontend/src/pages/Contact.jsx');
 const projects=read('../frontend/src/pages/Projects.jsx');
 const about=read('../frontend/src/pages/About.jsx');
 const howItWorks=read('../frontend/src/pages/HowItWorks.jsx');
 const howItWorksCss=read('../frontend/src/pages/HowItWorks.css');
 
+assert.match(app,/path="\/experts" element={<Experts\/>}/);
 assert.match(app,/path="\/quote" element={<Solutions\/>}/);
 assert.match(app,/path="\/solutions" element={<LegacySolutionRedirect\/>}/);
 assert.match(app,/targetHash=hash\?'#'\+hash/);
@@ -81,6 +86,9 @@ assert.doesNotMatch(contact,/Navigate to="\/#contact"/);
 for(const source of [home,quote,packages,projects,about,howItWorks,contact]){
   assert.match(source,/For Professionals/);
   assert.match(source,/to="\/professionals"/);
+}
+for(const source of [home,quote,packages,projects,about,howItWorks,contact]){
+  assert.match(source,/to="\/experts">Experts<\/Link>/);
 }
 assert.match(publicHeader,/\.public-professional-btn/);
 assert.match(publicHeader,/Quote \+ professional public header actions/);
@@ -200,6 +208,23 @@ assert.doesNotMatch(howItWorks,/View All FAQs/);
 assert.doesNotMatch(howItWorks,/Admin<\/b><small>Managed Flows/);
 assert.doesNotMatch(howItWorksCss,/\.hiw-why/);
 assert.doesNotMatch(howItWorksCss,/\.hiw-faq/);
+
+assert.match(experts,/REGISTERED PROPULSE BUSINESSES/);
+assert.match(experts,/Registered Businesses on <em>ProPulse<\/em>/);
+assert.match(experts,/Verified only/);
+assert.match(experts,/View Business Profile/);
+assert.match(experts,/Direct phone and email details are not displayed publicly/);
+assert.match(experts,/publicRequest\('\/experts\?'/);
+assert.match(expertsCss,/\.experts-grid/);
+assert.match(expertsCss,/\.expert-card/);
+assert.match(expertsCss,/\.expert-modal/);
+assert.match(publicExpertService,/u\.role='business'/);
+assert.match(publicExpertService,/u\.is_active=TRUE/);
+assert.match(publicExpertService,/company_proof_documents/);
+assert.doesNotMatch(publicExpertService,/bp\.phone/);
+assert.doesNotMatch(publicExpertService,/u\.email/);
+assert.doesNotMatch(publicExpertService,/business_details,/);
+assert.match(serverSource,/app\.use\('\/api\/experts',publicExpertRoutes\)/);
 
 assert.match(home,/For Professionals/);
 
