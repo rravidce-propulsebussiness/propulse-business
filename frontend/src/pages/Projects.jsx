@@ -215,8 +215,8 @@ export default function Projects(){
   return <main className="pj-page">
     <header className="pj-header">
       <Link to="/" className="pj-logo"><img src="/brand/propulse-logo.svg" alt="ProPulse"/></Link>
-      <nav><Link to="/">Home</Link><Link to="/solutions#construction">Construction</Link><Link to="/solutions#interiors">Interiors</Link><Link to="/packages">Packages</Link><Link to="/solutions#property">Real Estate</Link><Link className="active" to="/projects">Projects</Link><Link to="/how-it-works">How It Works</Link><Link to="/about">About</Link><Link to="/#contact">Contact</Link></nav>
-      <button onClick={()=>navigate('/solutions#construction')}>Get Free Consultation <Icon name="arrow" size={15}/></button>
+      <nav><Link to="/">Home</Link><Link to="/packages">Packages</Link><Link className="active" to="/projects">Projects</Link><Link to="/how-it-works">How It Works</Link><Link to="/about">About</Link><Link to="/contact">Contact</Link></nav>
+      <button onClick={()=>navigate('/quote#construction')}>Get Free Quote <Icon name="arrow" size={15}/></button>
     </header>
 
     <section className="pj-hero">
@@ -293,7 +293,7 @@ export default function Projects(){
     <section className="pj-cta">
       <img src="https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?auto=format&fit=crop&w=1100&q=88" alt=""/>
       <div><h2>Have a Similar Project in Mind?</h2><p>Start a free consultation and create a personalized requirement for your project.</p></div>
-      <button onClick={()=>navigate('/solutions#construction')}>Get Free Consultation <Icon name="arrow" size={16}/></button>
+      <button onClick={()=>navigate('/quote#construction')}>Get Free Consultation <Icon name="arrow" size={16}/></button>
       <div className="pj-cta-points"><span>○ No Obligation</span><span>○ Guided Requirement</span><span>○ Location Aware</span></div>
     </section>
 
@@ -304,8 +304,8 @@ export default function Projects(){
 
     <footer className="pj-footer">
       <div className="pj-footer-brand"><img src="/brand/propulse-logo.svg" alt="ProPulse"/><p>Your customer starting point for construction, interiors and real-estate requirements.</p><div>f&nbsp;&nbsp;◎&nbsp;&nbsp;▶&nbsp;&nbsp;in</div></div>
-      <div><b>Quick Links</b><Link to="/">Home</Link><Link to="/solutions#construction">Construction</Link><Link to="/solutions#interiors">Interiors</Link><Link to="/packages">Packages</Link><Link to="/solutions#property">Real Estate</Link><Link to="/projects">Projects</Link></div>
-      <div><b>Our Services</b><Link to="/solutions#construction">Home Construction</Link><Link to="/solutions#interiors">Interior Design</Link><Link to="/solutions#property">Real Estate</Link><Link to="/solutions#construction">Construction Quote</Link><Link to="/solutions#construction">Free Consultation</Link></div>
+      <div><b>Quick Links</b><Link to="/">Home</Link><Link to="/quote#construction">Construction</Link><Link to="/quote#interiors">Interiors</Link><Link to="/packages">Packages</Link><Link to="/quote#property">Real Estate</Link><Link to="/projects">Projects</Link></div>
+      <div><b>Our Services</b><Link to="/quote#construction">Home Construction</Link><Link to="/quote#interiors">Interior Design</Link><Link to="/quote#property">Real Estate</Link><Link to="/quote#construction">Construction Quote</Link><Link to="/quote#construction">Free Consultation</Link></div>
       <div><b>Support</b><Link to="/contact?audience=users">FAQ</Link><Link to="/#contact">Contact Us</Link><Link to="/contact?audience=users">Privacy Policy</Link><Link to="/contact?audience=users">Terms & Conditions</Link></div>
       <div><b>Contact Info</b>{phone&&<span><Icon name="phone" size={13}/>{phone}</span>}{email&&<span>{email}</span>}<span><Icon name="pin" size={13}/>Hyderabad, India</span></div>
     </footer>
