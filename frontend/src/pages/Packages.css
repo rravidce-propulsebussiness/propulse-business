@@ -185,3 +185,105 @@
   .pkg-bottom-trust{grid-template-columns:1fr;margin:0 12px 12px}.pkg-bottom-trust article{border-right:0;border-bottom:1px solid #dbe5ec;padding-bottom:9px}.pkg-bottom-trust article:last-child{border-bottom:0}
   .pkg-disclaimer{margin-left:12px;margin-right:12px}
 }
+
+
+/* Compact clarity pass — reduce visual noise and make actions obvious */
+.pkg-header{height:68px}
+.pkg-logo img{width:164px;height:46px}
+.pkg-header nav{gap:24px}
+.pkg-header nav a{font-size:12px}
+.pkg-header-quote,.pkg-pro-button{height:40px;padding:0 15px;font-size:12px}
+
+.pkg-hero{min-height:314px}
+.pkg-hero-content{min-height:314px;padding-top:27px;padding-bottom:27px}
+.pkg-hero h1{font-size:44px;max-width:690px}
+.pkg-hero-copy>p{font-size:13.5px;max-width:660px}
+.pkg-category-switch{margin-top:14px}
+.pkg-category-switch button{height:41px;min-width:188px;font-size:11px}
+.pkg-hero-benefits{gap:25px;margin-top:14px}
+.pkg-hero-benefits article>span{width:34px;height:34px}
+.pkg-hero-benefits b{font-size:10px}
+.pkg-reference-card{padding:18px;border-radius:15px}
+.pkg-reference-card>strong{font-size:32px}
+.pkg-reference-list{gap:7px;margin-top:14px;padding-top:13px}
+.pkg-reference-list span{font-size:9.5px}
+
+.pkg-main{padding-top:24px;grid-template-columns:minmax(0,1fr) 292px;gap:20px}
+.pkg-packages-head{grid-template-columns:minmax(0,1fr) 420px;gap:16px;margin-bottom:11px}
+.pkg-packages-head h2,.pkg-comparison-heading h2,.pkg-quote-card h2{font-size:24px;letter-spacing:-.035em}
+.pkg-packages-head p,.pkg-comparison-heading p,.pkg-quote-card>p{font-size:10.5px}
+.pkg-packages-head>div:first-child>span,.pkg-comparison-heading>div>span,.pkg-quote-card>span{font-size:9.5px}
+.pkg-compare-helper{min-height:60px;grid-template-columns:42px minmax(0,1fr) 138px;gap:9px;padding:8px 9px}
+.pkg-scale-icon{width:36px;height:36px}
+.pkg-compare-helper b{font-size:9.5px}
+.pkg-compare-helper>div>small{font-size:7.8px}
+.pkg-compare-action{gap:4px;padding-left:9px}
+.pkg-compare-action button{height:31px;font-size:8.7px}
+
+.pkg-package-grid{gap:9px}
+.pkg-card-image{height:96px;margin:5px}
+.pkg-card-check{width:23px;height:23px}
+.pkg-card-badge{font-size:7.8px;padding:3px 7px}
+.pkg-card-body{padding:1px 9px 8px}
+.pkg-card-body>small{font-size:6.8px}
+.pkg-card-body h3{font-size:15px;margin-top:2px}
+.pkg-card-body>p{min-height:29px;font-size:8.8px;line-height:1.23}
+.pkg-card-price strong{font-size:18px}
+.pkg-card-price span{font-size:8px}
+.pkg-card-body ul{margin:5px 0 6px;gap:2px}
+.pkg-card-body li{font-size:8.4px}
+.pkg-card-actions{grid-template-columns:1fr 1fr;gap:4px}
+.pkg-card-actions button{height:27px;font-size:8px}
+.pkg-select-compare{grid-column:auto;border:1px solid #ffb58f;background:#fff7f2;color:#a8441f}
+.pkg-select-compare.active{background:#fff0e8;border-color:#ff8d5a;color:#943d18}
+.pkg-get-quote{grid-column:auto}
+.pkg-details-toggle{grid-column:1/-1;height:25px!important;border:0!important;border-top:1px solid #edf0f2!important;border-radius:0!important;background:transparent!important;color:#31526c!important}
+.pkg-full-details{margin-top:5px}
+.pkg-full-details>div{grid-template-columns:68px 1fr;padding:4px 0}
+.pkg-full-details b,.pkg-full-details span{font-size:7.4px}
+
+.pkg-comparison-section{margin-top:12px}
+.pkg-comparison-heading{margin-bottom:7px}
+.pkg-comparison-heading>button{font-size:8.7px}
+.pkg-comparison-table th,.pkg-comparison-table td{padding:6px 8px}
+.pkg-comparison-table th{font-size:8.3px}
+.pkg-comparison-table td:first-child{font-size:8.3px}
+.pkg-comparison-table td:not(:first-child){font-size:8px}
+
+.pkg-quote-card{top:82px;padding:13px;border-radius:12px}
+.pkg-quote-card h2{font-size:21px;margin-top:3px}
+.pkg-quote-card>p{margin-bottom:10px;line-height:1.4}
+.pkg-quote-card form{gap:7px}
+.pkg-quote-card label>span{font-size:8.7px;margin-bottom:3px}
+.pkg-form-two{gap:6px}
+.pkg-quote-card input,.pkg-quote-card select,.pkg-quote-card textarea{font-size:9px}
+.pkg-quote-card input,.pkg-quote-card select{height:31px;padding:0 8px}
+.pkg-quote-card textarea{min-height:54px;padding:7px 8px}
+.pkg-package-chips{min-height:31px;padding:4px}
+.pkg-package-chips button{height:21px;font-size:7.8px}
+.pkg-submit-quote{height:36px;font-size:9.5px}
+.pkg-form-note{font-size:7.8px}
+.pkg-quote-trust{margin-top:8px;padding-top:8px}
+.pkg-quote-trust b{font-size:7.5px}
+.pkg-quote-trust small{font-size:6.6px}
+
+.pkg-bottom-trust{padding-top:10px;padding-bottom:10px}
+.pkg-bottom-trust b{font-size:8.5px}
+.pkg-bottom-trust small{font-size:7px}
+.pkg-disclaimer{font-size:8.3px}
+
+@media(max-width:1180px){
+  .pkg-main{grid-template-columns:1fr}
+  .pkg-quote-card{position:relative;top:auto;max-width:760px}
+}
+@media(max-width:900px){
+  .pkg-packages-head{grid-template-columns:1fr}
+  .pkg-hero h1{font-size:40px}
+}
+@media(max-width:640px){
+  .pkg-header{height:62px}
+  .pkg-hero h1{font-size:34px}
+  .pkg-packages-head h2,.pkg-comparison-heading h2{font-size:22px}
+  .pkg-card-image{height:135px}
+  .pkg-quote-card h2{font-size:20px}
+}
