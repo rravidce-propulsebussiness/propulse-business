@@ -171,9 +171,16 @@ export default function RequirementWizard({ flowKey }) {
         const saved = JSON.parse(sessionStorage.getItem('propulse_intake_prefill') || 'null')
         const recent = saved && Date.now() - Number(saved.createdAt || 0) < 60 * 60 * 1000
         if (recent && saved.flowKey === flowKey) {
-          const locationQuestion = (data.questions || []).find(item => item.questionType === 'location')
+          const flowQuestions = data.questions || []
+          const locationQuestion = flowQuestions.find(item => item.questionType === 'location')
           if (locationQuestion && /^\d{6}$/.test(String(saved.pincode || ''))) {
             initialAnswers[locationQuestion.questionKey] = String(saved.pincode)
+          }
+          if (saved.answers && typeof saved.answers === 'object' && !Array.isArray(saved.answers)) {
+            const allowedKeys = new Set(flowQuestions.map(item => item.questionKey))
+            Object.entries(saved.answers).forEach(([key, value]) => {
+              if (allowedKeys.has(key) && value !== undefined && value !== null && value !== '') initialAnswers[key] = value
+            })
           }
           initialContact = { name: String(saved.name || ''), phone: String(saved.phone || ''), email: String(saved.email || '') }
           initialCityId = saved.cityId ? String(saved.cityId) : ''
