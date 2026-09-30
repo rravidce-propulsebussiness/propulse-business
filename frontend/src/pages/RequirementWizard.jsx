@@ -271,6 +271,8 @@ export default function RequirementWizard({ flowKey }) {
     setLocationStateId(value)
     const currentCity = cities.find(item => String(item.id) === String(cityId))
     if (!currentCity || String(currentCity.state_id) !== String(value)) setCityId('')
+    if (locationQuestion) setAnswers(current => ({ ...current, [locationQuestion.questionKey]: '' }))
+    pinLookupRequest.current += 1
     setPinLookup({ status: '', message: '' })
     setState(current => ({ ...current, error: '' }))
   }
@@ -279,6 +281,9 @@ export default function RequirementWizard({ flowKey }) {
     const city = cities.find(item => String(item.id) === String(value))
     setCityId(value)
     if (city?.state_id) setLocationStateId(String(city.state_id))
+    if (locationQuestion) setAnswers(current => ({ ...current, [locationQuestion.questionKey]: '' }))
+    pinLookupRequest.current += 1
+    setPinLookup({ status: '', message: '' })
     setState(current => ({ ...current, error: '' }))
   }
 
@@ -288,9 +293,9 @@ export default function RequirementWizard({ flowKey }) {
     if (data.cityId) setCityId(String(data.cityId))
     const location = [data.cityName, data.stateName].filter(Boolean).join(', ')
     if (data.cityId) {
-      setPinLookup({ status: 'matched', message: location ? \`Detected: \${location}\` : 'PIN matched to a supported city.' })
+      setPinLookup({ status: 'matched', message: location ? `Detected: ${location}` : 'PIN matched to a supported city.' })
     } else if (data.stateId || data.stateName) {
-      setPinLookup({ status: 'state', message: \`State detected\${data.stateName ? ': ' + data.stateName : ''}. Select the city to continue.\` })
+      setPinLookup({ status: 'state', message: `State detected${data.stateName ? ': ' + data.stateName : ''}. Select the city to continue.` })
     } else {
       setPinLookup({ status: 'error', message: 'We could not match this PIN to a supported location. Select state and city manually.' })
     }
