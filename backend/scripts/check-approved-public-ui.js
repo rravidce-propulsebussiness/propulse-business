@@ -114,4 +114,17 @@ assert.match(homeCss,/\.hc-inspiration-icon/);
 assert.match(homeCss,/\.hc-inspiration-cta/);
 assert.match(homeCss,/hcInspirationIcon/);
 
+assert.match(home,/How ProPulse <em>Guides Your Home Journey<\/em>/);
+assert.match(home,/Fill Your Requirement/);
+assert.match(home,/Talk to Experts/);
+assert.match(home,/Choose Your Package/);
+assert.match(home,/senior engineers, architects/);
+assert.doesNotMatch(home,/Designed Around Homeowner Concerns/);
+assert.doesNotMatch(home,/HOMEOWNER_VALUES/);
+assert.match(homeCss,/\.hc-guided-journey/);
+assert.match(homeCss,/\.requirement-art/);
+assert.match(homeCss,/\.experts-art/);
+assert.match(homeCss,/\.package-art/);
+assert.match(homeCss,/hcGuidedArrow/);
+
 console.log('Approved public UI mockup checks passed.');
