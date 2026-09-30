@@ -46,6 +46,8 @@ async function submitConsultation(req, res) {
     const result = await publicLeadIntakeService.submitConsultation({
       key: req.params.key,
       cityId: req.body?.cityId,
+      pincode: req.body?.pincode,
+      details: req.body?.details,
       contact: req.body?.contact,
       consent: req.body?.consent,
       submissionKey: req.body?.submissionKey,
