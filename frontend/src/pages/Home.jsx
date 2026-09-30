@@ -173,42 +173,9 @@ function Home() {
   const [consultSaving, setConsultSaving] = useState(false)
   const [consultSubmitted, setConsultSubmitted] = useState(null)
   const [menuOpen, setMenuOpen] = useState(false)
-  const [heroVideoUrl, setHeroVideoUrl] = useState('')
 
   useEffect(() => {
     window.scrollTo(0, 0)
-  }, [])
-
-  useEffect(() => {
-    let active = true
-    let objectUrl = ''
-    const segmentUrls = Array.from({ length: 10 }, (_, index) =>
-      '/media/propulse-home-journey/' + String(index).padStart(2, '0') + '.b64'
-    )
-
-    Promise.all(segmentUrls.map(url => fetch(url).then(response => {
-      if (!response.ok) throw new Error('Hero video segment failed to load')
-      return response.text()
-    })))
-      .then(parts => {
-        if (!active) return
-        const base64 = parts.join('').replace(/\s+/g, '')
-        const binary = atob(base64)
-        const bytes = new Uint8Array(binary.length)
-        for (let index = 0; index < binary.length; index += 1) {
-          bytes[index] = binary.charCodeAt(index)
-        }
-        objectUrl = URL.createObjectURL(new Blob([bytes], { type: 'video/mp4' }))
-        setHeroVideoUrl(objectUrl)
-      })
-      .catch(() => {
-        if (active) setHeroVideoUrl('')
-      })
-
-    return () => {
-      active = false
-      if (objectUrl) URL.revokeObjectURL(objectUrl)
-    }
   }, [])
 
   useEffect(() => {
@@ -427,7 +394,7 @@ function Home() {
           </div>
 
           <div className="hc-video-panel">
-            <HeroJourneyVideo source={heroVideoUrl} />
+            <HeroJourneyVideo source="/media/propulse-home-journey.mp4" />
 
             <Link className="hc-video-service-card card-construction" to="/quote#construction">
               <span><Icon name="home" size={20}/></span>
