@@ -9,7 +9,7 @@ const BUILD_PROJECT_TYPE={
 const DISPLAY={
   project_type:{house_construction:'House construction',commercial_building:'Commercial building',building_extension:'Building extension'},
   property_type:{residential:'Residential',commercial:'Commercial'},
-  quality:{standard:'Standard',premium:'Premium',luxury:'Luxury'},
+  quality:{standard:'Standard',premium:'Premium',luxury:'Royal'},
   construction_package:{turnkey:'Turnkey construction',structure_only:'Civil / structure only',finishing_only:'Finishing work only'},
   site_access:{normal:'Normal site access',restricted:'Restricted / narrow access'},
   timeline:{immediately:'Immediately',within_30_days:'Within 30 days',one_to_three_months:'1–3 months',three_to_six_months:'3–6 months',later:'Later / exploring'},
