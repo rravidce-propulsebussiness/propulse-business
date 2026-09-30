@@ -46,7 +46,7 @@ export default function UserHeader() {
       <Link className={active("/wallet")} to="/wallet" onClick={()=>setOpen(false)}>Wallet</Link>
       <Link className={active("/membership")} to="/membership" onClick={()=>setOpen(false)}>Membership</Link>
       {isPro && <Link className={active("/investment")} to="/investment" onClick={()=>setOpen(false)}>Investor</Link>}
-      {!location.pathname.startsWith("/investment") && <Link className={active("/contact?audience=users")} to="/contact?audience=users" onClick={()=>setOpen(false)}>Contact</Link>}
+      {!location.pathname.startsWith("/investment") && <Link className={active("/professional-contact")} to="/professional-contact" onClick={()=>setOpen(false)}>Contact</Link>}
       <Link className={(location.pathname==='/'&&location.hash==='#faq')||location.pathname==='/faq'?' active':''} to="/#faq" onClick={()=>setOpen(false)}>FAQ</Link>
       <button className="user-header-mobile-logout" onClick={logout}>Logout</button>
     </nav>
