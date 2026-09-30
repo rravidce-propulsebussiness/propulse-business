@@ -348,6 +348,30 @@ export default function RequirementWizard({ flowKey }) {
       })
   }
 
+  function applyDeviceLocation(data) {
+    if (data?.error) {
+      setPinLookup({ status: 'error', message: data.error })
+      return
+    }
+    const pin = String(data?.pincode || '').replace(/\D/g, '').slice(0, 6)
+    if (pin && locationQuestion) setAnswers(current => ({ ...current, [locationQuestion.questionKey]: pin }))
+    if (data?.stateId) setLocationStateId(String(data.stateId))
+    if (data?.cityId) setCityId(String(data.cityId))
+
+    if (data?.cityId) {
+      const label = [data.localityName, data.cityName, data.stateName].filter(Boolean).join(', ')
+      setPinLookup({ status: 'matched', message: label ? 'Current location: ' + label : 'Current location detected.' })
+      return
+    }
+
+    setPinLookup({
+      status: data?.stateId || data?.stateName ? 'state' : 'error',
+      message: data?.stateId || data?.stateName
+        ? 'Current location detected' + (data.stateName ? ': ' + data.stateName : '') + '. Select the city to continue.'
+        : 'Current location detected, but no supported city match was found.',
+    })
+  }
+
   function jump(id) {
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
@@ -473,6 +497,7 @@ export default function RequirementWizard({ flowKey }) {
       cityId={cityId}
       setCity={setCity}
       setPincode={setPincode}
+      onDetectedLocation={applyDeviceLocation}
       pinLookup={pinLookup}
       locationQuestion={locationQuestion}
       contact={contact}
@@ -497,6 +522,7 @@ export default function RequirementWizard({ flowKey }) {
       cityId={cityId}
       setCity={setCity}
       setPincode={setPincode}
+      onDetectedLocation={applyDeviceLocation}
       pinLookup={pinLookup}
       locationQuestion={locationQuestion}
       contact={contact}
@@ -580,6 +606,7 @@ export default function RequirementWizard({ flowKey }) {
               onCityChange={setCity}
               pincode={locationQuestion ? answers[locationQuestion.questionKey] || '' : ''}
               onPincodeChange={setPincode}
+              onDetectedLocation={applyDeviceLocation}
               lookupStatus={pinLookup.status}
               lookupMessage={pinLookup.message}
               stateLabel="Project State"
