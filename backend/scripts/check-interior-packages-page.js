@@ -14,7 +14,7 @@ const home=read('../frontend/src/pages/Home.jsx');
 
 assert.match(app,/path="\/packages"/);
 assert(app.includes('path="/interior-cost-estimator" element={<Navigate to="/packages#interior" replace/>}'));
-assert(app.includes('path="/construction-cost-estimator" element={<Navigate to="/solutions#construction" replace/>}'));
+assert(app.includes('path="/construction-cost-estimator" element={<Navigate to="/quote#construction" replace/>}'));
 
 assert.match(packages,/Construction Packages/);
 assert.match(packages,/Interior Packages/);
@@ -42,6 +42,6 @@ assert.match(css,/\.pkg-custom-grid/);
 assert.match(wizard,/qualityByPackage/);
 assert.match(wizard,/royal:\s*'luxury'/);
 assert.match(quoteModel,/luxury:'Royal'/);
-assert.match(home,/Interior Packages/);
+assert.match(home,/View Packages/);
 
 console.log('Combined construction and interior packages page checks passed.');
