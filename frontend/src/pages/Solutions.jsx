@@ -82,9 +82,11 @@ export default function Solutions(){
     </header>
 
     <section className="quote-chooser">
-      <span>GET FREE QUOTE</span>
-      <h1>What do you need help with?</h1>
-      <p>Choose a service to get started. Stay on the same page and share your details.</p>
+      <div className="quote-premium-title" aria-label="Get Free Quote">
+        <i aria-hidden="true"/>
+        <strong>GET FREE QUOTE</strong>
+        <i aria-hidden="true"/>
+      </div>
 
       <div className="quote-service-grid">
         {Object.entries(FLOWS).map(([key,item],index)=><button
