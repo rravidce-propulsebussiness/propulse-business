@@ -195,6 +195,39 @@ async function logout(req, res) {
 }
 
 
+
+async function session(req, res) {
+  const header = req.headers.authorization || '';
+  const cookieHeader = String(req.headers.cookie || '');
+  const cookieToken = cookieHeader
+    .split(';')
+    .map(part => part.trim())
+    .find(part => part.startsWith(`${AUTH_COOKIE}=`))
+    ?.slice(AUTH_COOKIE.length + 1);
+  const encodedToken = header.startsWith('Bearer ') ? header.slice(7) : cookieToken;
+
+  if (!encodedToken) return res.json({ authenticated: false, user: null });
+
+  try {
+    const token = decodeURIComponent(encodedToken);
+    const tokenUser = authService.verifyToken(token);
+    const currentUser = await authService.getAuthenticatedUser(tokenUser.id, tokenUser.auth_version);
+    if (!currentUser) {
+      clearAuthCookie(res);
+      return res.json({ authenticated: false, user: null });
+    }
+    const user = await authService.getPublicAuthenticatedUser(currentUser);
+    if (!user) {
+      clearAuthCookie(res);
+      return res.json({ authenticated: false, user: null });
+    }
+    return res.json({ authenticated: true, user });
+  } catch {
+    clearAuthCookie(res);
+    return res.json({ authenticated: false, user: null });
+  }
+}
+
 async function me(req, res) {
   try {
     const user = await authService.getPublicAuthenticatedUser(req.user);
@@ -206,4 +239,4 @@ async function me(req, res) {
   }
 }
 
-module.exports = { signup, uploadCompanyProofs, downloadCompanyProof, login, googleLogin, forgotPassword, resetPassword, logout, me };
+module.exports = { signup, uploadCompanyProofs, downloadCompanyProof, login, googleLogin, forgotPassword, resetPassword, logout, session, me };
