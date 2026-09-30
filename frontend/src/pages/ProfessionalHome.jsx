@@ -58,7 +58,7 @@ export default function ProfessionalHome(){
         <a href="#opportunities">Leads</a>
         <a href="#how">How It Works</a>
         <a href="#benefits">Benefits</a>
-        <Link to="/contact">Homeowners</Link>
+        <Link to="/">Homeowners</Link>
       </nav>
       <div className="pro-home-actions">
         <Link className="pro-login" to="/login">Login</Link>
