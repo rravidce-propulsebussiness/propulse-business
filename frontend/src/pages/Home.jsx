@@ -245,7 +245,7 @@ function Home() {
 
   function openConstructionQuote() {
     setConsultOpen(false)
-    navigate('/solutions#construction')
+    navigate('/quote#construction')
   }
 
   async function submitConsult(event) {
@@ -333,7 +333,7 @@ function Home() {
   }
 
   const media = homepageMedia.category_images || {}
-  const heroImage = homepageMedia.hero_image_url || HERO_IMAGE
+  const heroImage = media.residential || homepageMedia.hero_image_url || HERO_IMAGE
   const serviceMedia = {
     build: media.residential || SERVICES[0].image,
     design: media.interior || SERVICES[1].image,
@@ -343,84 +343,65 @@ function Home() {
   const finalImage = media.final_cta || FINAL_IMAGE
 
   return <div className="hc-home">
-    <header className="hc-header">
+    <header className="hc-header hc-approved-header">
       <Link className="hc-logo" to="/" aria-label="ProPulse home">
         <img src="/brand/propulse-logo.svg" alt="ProPulse" />
       </Link>
 
       <nav className={menuOpen ? 'hc-nav open' : 'hc-nav'} aria-label="Main navigation">
         <button className="active" onClick={() => scrollToSection('home')}>Home</button>
-        <Link to="/solutions#construction">Construction</Link>
-        <Link to="/solutions#interiors">Interior Design</Link>
         <Link to="/packages">Packages</Link>
-        <Link to="/solutions#property">Real Estate</Link>
         <Link to="/projects">Projects</Link>
         <Link to="/how-it-works">How It Works</Link>
         <Link to="/about">About</Link>
-        <button onClick={() => scrollToSection('contact')}>Contact</button>
+        <Link to="/contact">Contact</Link>
       </nav>
 
       <div className="hc-header-actions">
-        <button className="hc-consult-btn" onClick={() => openConsult()}>Get Free Consultation <Icon name="arrow" size={15} /></button>
+        <Link className="hc-consult-btn hc-quote-btn" to="/quote#construction">Get Free Quote <Icon name="arrow" size={15} /></Link>
         <button className="hc-menu" aria-label="Toggle navigation" onClick={() => setMenuOpen(value => !value)}>☰</button>
       </div>
     </header>
 
     <main>
-      <section className="hc-hero" id="home">
+      <section className="hc-hero hc-approved-hero" id="home">
         <img className="hc-hero-image" src={heroImage} alt="Modern family home" fetchPriority="high" />
         <div className="hc-hero-wash" />
 
-        <div className="hc-hero-copy">
-          <span className="hc-trust-pill"><Icon name="people" size={17} /> Homeowners first · plan with confidence</span>
-          <h1>Your Dream Home <em>Starts Here</em></h1>
-          <p>Get connected with relevant builders, interior designers and real estate businesses for your home needs. Plan, design, build or find property with a clear requirement from the start.</p>
+        <div className="hc-hero-copy hc-approved-copy">
+          <h1>Build. Design.<br/>Find. <em>All in One Place.</em></h1>
+          <p>Construction, Interiors and Real Estate solutions for modern homeowners.</p>
 
-          <div className="hc-hero-benefits">
-            <div><span><Icon name="shield" size={19} /></span><b>Relevant Businesses</b></div>
-            <div><span><Icon name="consult" size={19} /></span><b>Free Consultation</b></div>
-            <div><span><Icon name="support" size={19} /></span><b>Guided Journey</b></div>
-            <div><span><Icon name="heart" size={19} /></span><b>Homeowner Focused</b></div>
+          <div className="hc-approved-actions">
+            <Link className="hc-primary-cta" to="/quote#construction">Get Free Quote <Icon name="arrow" size={17} /></Link>
+            <Link className="hc-secondary-cta" to="/packages">View Packages</Link>
           </div>
 
-          <button className="hc-primary-cta" onClick={() => scrollToSection('services')}>Explore Home Solutions <Icon name="arrow" size={18} /></button>
+          <div className="hc-approved-trust">
+            <span><Icon name="shield" size={15}/> Trusted Businesses</span>
+            <span><Icon name="pin" size={15}/> Transparent Process</span>
+            <span><Icon name="support" size={15}/> End-to-End Support</span>
+            <span><Icon name="heart" size={15}/> Homeowner Focused</span>
+          </div>
         </div>
 
-        <div className="hc-hero-menu">
-          <button onClick={() => openConsult('build')}><span><Icon name="home" size={18} /></span><b>Build Your Home</b></button>
-          <button onClick={() => openConsult('design')}><span><Icon name="sofa" size={18} /></span><b>Design Your Interiors</b></button>
-          <button onClick={() => openConsult('property')}><span><Icon name="building" size={18} /></span><b>Buy or Sell Property</b></button>
-          <button onClick={() => openConsult('property')}><span><Icon name="star" size={18} /></span><b>Property Guidance</b></button>
-        </div>
-      </section>
-
-      <section className="hc-stats" aria-label="ProPulse homeowner benefits">
-        <article><span><Icon name="people" /></span><div><strong>Homeowner First</strong><small>Built around customer requirements</small></div></article>
-        <article><span><Icon name="building" /></span><div><strong>3 Core Journeys</strong><small>Construction · Interiors · Property</small></div></article>
-        <article><span><Icon name="pin" /></span><div><strong>Location Aware</strong><small>City and PIN-based intake</small></div></article>
-        <article><span><Icon name="heart" /></span><div><strong>Free to Start</strong><small>Begin with consultation</small></div></article>
-      </section>
-
-      <section className="hc-section hc-services" id="services">
-        <div className="hc-section-heading">
-          <span>Your home. Our structured journey.</span>
-          <h2>Explore What You Need</h2>
-          <p>Choose the right starting point for your home and share one clear requirement.</p>
-        </div>
-
-        <div className="hc-service-grid">
-          {SERVICES.map(service => <article className="hc-service-card" key={service.key}>
-            <div className="hc-service-image"><img src={serviceMedia[service.key] || service.image} alt={service.title} loading="lazy" /><div /></div>
-            <div className="hc-service-body">
-              <span className="hc-service-icon"><Icon name={service.icon} size={22} /></span>
-              <div>
-                <small>{service.eyebrow}</small>
-                <h3>{service.title}</h3>
-                <p>{service.text}</p>
-              </div>
-              <Link to={'/' + service.key} aria-label={'Start ' + service.title}><Icon name="arrow" size={17} /></Link>
+        <div className="hc-approved-service-grid">
+          {SERVICES.map((service,index) => <Link
+            to={service.key === 'build' ? '/quote#construction' : service.key === 'design' ? '/quote#interiors' : '/quote#property'}
+            className="hc-approved-service-card"
+            key={service.key}
+            style={{'--hc-delay':(index*80)+'ms'}}
+          >
+            <div className="hc-approved-service-image">
+              <img src={serviceMedia[service.key] || service.image} alt={service.title} loading={index===0?'eager':'lazy'} />
+              <span><Icon name={service.icon} size={18}/></span>
             </div>
-          </article>)}
+            <div className="hc-approved-service-text">
+              <h3>{service.key === 'build' ? 'Construction' : service.title}</h3>
+              <p>{service.key === 'build' ? 'Build your dream home with expert support.' : service.key === 'design' ? 'Beautiful interiors for every lifestyle.' : 'Buy, Rent, Sell or Invest with confidence.'}</p>
+              <b>Get Quote <Icon name="arrow" size={14}/></b>
+            </div>
+          </Link>)}
         </div>
       </section>
 
@@ -502,8 +483,8 @@ function Home() {
           <h2>Ready to Plan Your Home?</h2>
           <p>Start with a free consultation and continue with the right construction, interior or property requirement.</p>
           <div>
-            <button onClick={() => openConsult()}>Get Free Consultation <Icon name="arrow" size={16} /></button>
-            <button className="secondary" onClick={() => scrollToSection('services')}>Explore Services</button>
+            <Link to="/quote#construction">Get Free Quote <Icon name="arrow" size={16} /></Link>
+            <Link className="secondary" to="/packages">View Packages</Link>
           </div>
         </div>
         <div className="hc-final-trust">
@@ -518,7 +499,7 @@ function Home() {
         <img src="/brand/propulse-logo.svg" alt="ProPulse" />
         <p>A homeowner-first starting point for construction, interiors and real estate requirements.</p>
       </div>
-      <div><b>Home Solutions</b><Link to="/solutions#construction">Construction</Link><Link to="/solutions#interiors">Interior Design</Link><Link to="/packages">Interior Packages</Link><Link to="/solutions#property">Real Estate</Link></div>
+      <div><b>Home Solutions</b><Link to="/quote#construction">Construction</Link><Link to="/quote#interiors">Interior Design</Link><Link to="/packages">Interior Packages</Link><Link to="/quote#property">Real Estate</Link></div>
       <div><b>Quick Links</b><Link to="/projects">Projects</Link><Link to="/how-it-works">How It Works</Link><Link to="/about">About</Link><button onClick={() => openConsult()}>Free Consultation</button><Link to="/contact">Contact</Link></div>
       <div><b>Contact</b>{phone && <a href={'tel:' + String(phone).replace(/\s/g, '')}>{phone}</a>}{email && <a href={'mailto:' + email}>{email}</a>}<span>Hyderabad, India</span></div>
     </footer>
