@@ -2,7 +2,7 @@ import './QuoteLocationFields.css'
 
 function PinStatus({status,message}){
   if(!message)return null
-  return <small className={'qlf-status '+(status||'')}>{status==='checking'?<i/>:null}{message}</small>
+  return <small id="quote-pin-status" className={'qlf-status '+(status||'')}>{status==='checking'?<i/>:null}{message}</small>
 }
 
 export default function QuoteLocationFields({
