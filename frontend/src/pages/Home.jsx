@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { publicRequest } from '../utils/auth'
 import WebsiteFaqSection from '../components/WebsiteFaqSection'
@@ -144,146 +144,18 @@ function Icon({ name, size = 22 }) {
   return null
 }
 
-function HeroArchitectureVideo({ source }) {
-  const canvasRef = useRef(null)
-  const videoRef = useRef(null)
-
-  useEffect(() => {
-    if (!source) return undefined
-
-    const canvas = canvasRef.current
-    const video = videoRef.current
-    if (!canvas || !video) return undefined
-
-    const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches
-    const ctx = canvas.getContext('2d', { alpha: false })
-    if (!ctx) return undefined
-
-    let raf = 0
-    let stream = null
-    let stopped = false
-    const image = new Image()
-    image.decoding = 'async'
-
-    const ease = value => value < .5
-      ? 4 * value * value * value
-      : 1 - Math.pow(-2 * value + 2, 3) / 2
-
-    const camera = progress => {
-      const frames = [
-        { p: 0, cx: .58, cy: .68, zoom: 1.52, rot: -.35 },
-        { p: .30, cx: .59, cy: .48, zoom: 1.48, rot: .20 },
-        { p: .58, cx: .76, cy: .38, zoom: 1.58, rot: .38 },
-        { p: .82, cx: .67, cy: .62, zoom: 1.62, rot: -.18 },
-        { p: 1, cx: .58, cy: .68, zoom: 1.52, rot: -.35 },
-      ]
-      let left = frames[0]
-      let right = frames[frames.length - 1]
-      for (let index = 0; index < frames.length - 1; index += 1) {
-        if (progress >= frames[index].p && progress <= frames[index + 1].p) {
-          left = frames[index]
-          right = frames[index + 1]
-          break
-        }
-      }
-      const span = Math.max(.0001, right.p - left.p)
-      const local = ease((progress - left.p) / span)
-      const lerp = (a, b) => a + (b - a) * local
-      return {
-        cx: lerp(left.cx, right.cx),
-        cy: lerp(left.cy, right.cy),
-        zoom: lerp(left.zoom, right.zoom),
-        rot: lerp(left.rot, right.rot),
-      }
-    }
-
-    const drawFrame = now => {
-      if (stopped || !image.naturalWidth) return
-
-      const width = 1280
-      const height = 720
-      if (canvas.width !== width) canvas.width = width
-      if (canvas.height !== height) canvas.height = height
-
-      const loopMs = 12000
-      const progress = reducedMotion ? 0 : ((now || 0) % loopMs) / loopMs
-      const shot = camera(progress)
-      const outputAspect = width / height
-
-      let cropW = image.naturalWidth / shot.zoom
-      let cropH = cropW / outputAspect
-      if (cropH > image.naturalHeight) {
-        cropH = image.naturalHeight / shot.zoom
-        cropW = cropH * outputAspect
-      }
-
-      const centerX = image.naturalWidth * shot.cx
-      const centerY = image.naturalHeight * shot.cy
-      let sx = centerX - cropW / 2
-      let sy = centerY - cropH / 2
-      sx = Math.max(0, Math.min(image.naturalWidth - cropW, sx))
-      sy = Math.max(0, Math.min(image.naturalHeight - cropH, sy))
-
-      ctx.save()
-      ctx.fillStyle = '#0b2439'
-      ctx.fillRect(0, 0, width, height)
-
-      ctx.translate(width / 2, height / 2)
-      ctx.rotate((shot.rot * Math.PI) / 180)
-      const scale = 1.018
-      ctx.scale(scale, scale)
-      ctx.drawImage(image, sx, sy, cropW, cropH, -width / 2, -height / 2, width, height)
-      ctx.restore()
-
-      const glow = ctx.createRadialGradient(width * .56, height * .61, 20, width * .56, height * .61, width * .52)
-      glow.addColorStop(0, 'rgba(255,126,60,.10)')
-      glow.addColorStop(.55, 'rgba(255,126,60,.025)')
-      glow.addColorStop(1, 'rgba(0,0,0,0)')
-      ctx.fillStyle = glow
-      ctx.fillRect(0, 0, width, height)
-
-      const vignette = ctx.createLinearGradient(0, 0, width, 0)
-      vignette.addColorStop(0, 'rgba(5,28,48,.16)')
-      vignette.addColorStop(.26, 'rgba(5,28,48,.025)')
-      vignette.addColorStop(.74, 'rgba(5,28,48,.015)')
-      vignette.addColorStop(1, 'rgba(5,28,48,.20)')
-      ctx.fillStyle = vignette
-      ctx.fillRect(0, 0, width, height)
-
-      if (!reducedMotion) raf = requestAnimationFrame(drawFrame)
-    }
-
-    image.onload = () => {
-      drawFrame(0)
-      if (typeof canvas.captureStream === 'function' && !reducedMotion) {
-        stream = canvas.captureStream(30)
-        video.srcObject = stream
-        video.play().catch(() => {})
-      }
-    }
-    image.src = source
-
-    return () => {
-      stopped = true
-      cancelAnimationFrame(raf)
-      if (stream) stream.getTracks().forEach(track => track.stop())
-      if (video) video.srcObject = null
-    }
-  }, [source])
-
+function HeroJourneyVideo({ source }) {
   return <div className="hc-architecture-video">
-    <canvas ref={canvasRef} className="hc-architecture-canvas" aria-hidden="true" />
-    <video
-      ref={videoRef}
+    {source ? <video
       className="hc-architecture-video-element"
+      src={source}
       autoPlay
       muted
       loop
       playsInline
-      poster={source || undefined}
-      aria-label="Animated 3D home planning visual showing construction, interiors and property"
-    />
-    {!source && <div className="hc-architecture-loading" aria-hidden="true"><span>Preparing 3D home visual…</span></div>}
+      preload="auto"
+      aria-label="Animated homeowner journey from open plot and planning to completed home and interiors"
+    /> : <div className="hc-architecture-loading" aria-hidden="true"><span>Preparing home journey…</span></div>}
   </div>
 }
 
@@ -301,7 +173,7 @@ function Home() {
   const [consultSaving, setConsultSaving] = useState(false)
   const [consultSubmitted, setConsultSubmitted] = useState(null)
   const [menuOpen, setMenuOpen] = useState(false)
-  const [generatedHeroUrl, setGeneratedHeroUrl] = useState('')
+  const [heroVideoUrl, setHeroVideoUrl] = useState('')
 
   useEffect(() => {
     window.scrollTo(0, 0)
@@ -309,26 +181,35 @@ function Home() {
 
   useEffect(() => {
     let active = true
-    const segmentUrls = Array.from({ length: 11 }, (_, index) =>
-      '/media/propulse-home-hero-3d/' + String(index).padStart(2, '0') + '.b64'
+    let objectUrl = ''
+    const segmentUrls = Array.from({ length: 10 }, (_, index) =>
+      '/media/propulse-home-journey/' + String(index).padStart(2, '0') + '.b64'
     )
 
     Promise.all(segmentUrls.map(url => fetch(url).then(response => {
-      if (!response.ok) throw new Error('Hero artwork segment failed to load')
+      if (!response.ok) throw new Error('Hero video segment failed to load')
       return response.text()
     })))
       .then(parts => {
         if (!active) return
         const base64 = parts.join('').replace(/\s+/g, '')
-        setGeneratedHeroUrl('data:image/webp;base64,' + base64)
+        const binary = atob(base64)
+        const bytes = new Uint8Array(binary.length)
+        for (let index = 0; index < binary.length; index += 1) {
+          bytes[index] = binary.charCodeAt(index)
+        }
+        objectUrl = URL.createObjectURL(new Blob([bytes], { type: 'video/mp4' }))
+        setHeroVideoUrl(objectUrl)
       })
       .catch(() => {
-        if (active) setGeneratedHeroUrl('')
+        if (active) setHeroVideoUrl('')
       })
 
-    return () => { active = false }
+    return () => {
+      active = false
+      if (objectUrl) URL.revokeObjectURL(objectUrl)
+    }
   }, [])
-
 
   useEffect(() => {
     let active = true
@@ -546,7 +427,7 @@ function Home() {
           </div>
 
           <div className="hc-video-panel">
-            <HeroArchitectureVideo source={generatedHeroUrl} />
+            <HeroJourneyVideo source={heroVideoUrl} />
 
             <Link className="hc-video-service-card card-construction" to="/quote#construction">
               <span><Icon name="home" size={20}/></span>
@@ -566,7 +447,7 @@ function Home() {
               <i><Icon name="arrow" size={15}/></i>
             </Link>
 
-            <div className="hc-video-badge"><span/> LIVE 3D HOME JOURNEY</div>
+            <div className="hc-video-badge"><span/> PLOT → PLAN → HOME → INTERIOR</div>
           </div>
         </div>
       </section>
