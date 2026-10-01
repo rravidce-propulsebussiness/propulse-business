@@ -22,7 +22,6 @@ export default function UserHeader() {
     <Link className="user-header-brand" to="/" onClick={()=>setOpen(false)}><img src="/brand/propulse-logo.png" alt="Propulse Business"/></Link>
     <nav className={`user-header-nav${open?' open':''}`}>
       <Link to="/">Home</Link>
-      <Link to="/industries">Industries</Link>
       <Link to="/#pricing" onClick={()=>setOpen(false)}>Pricing</Link>
       <Link to="/#upcoming-features" onClick={()=>setOpen(false)}>Upcoming Features</Link>
       <Link to="/#faq" onClick={()=>setOpen(false)}>FAQ</Link>
