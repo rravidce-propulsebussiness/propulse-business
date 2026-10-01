@@ -5,7 +5,7 @@ import './AdminFaqs.css';
 const categories=[['general','General'],['consultation','Consultation'],['construction','Construction'],['interiors','Interiors'],['property','Real Estate'],['privacy','Privacy'],['leads','Leads'],['payments','Payments'],['withdrawals','Withdrawals'],['account','Account'],['reports','Reports']];
 const audiences=[
   ['homeowner','Homeowner FAQs','Shown on the public customer-acquisition homepage.'],
-  ['website','Business / User FAQs','Shown in the logged-in user FAQ experience.'],
+  ['website','Professional / Business FAQs','Shown on the public Professionals FAQ and logged-in business FAQ experience.'],
   ['investor','Investor FAQs','Shown on the Investor FAQ page.'],
   ['lead_partner','Lead Partner FAQs','Shown in the Lead Partner portal.']
 ];
