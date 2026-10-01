@@ -67,10 +67,11 @@ export default function Solutions(){
       <nav>
         <Link to="/">Home</Link>
         <Link to="/packages">Packages</Link>
-        <Link to="/projects">Projects</Link><Link to="/experts">Experts</Link>
+        <Link to="/projects">Projects</Link>
         <Link to="/how-it-works">How It Works</Link>
         <Link to="/about">About</Link>
         <Link to="/contact">Contact</Link>
+        <Link to="/experts">Experts</Link>
       </nav>
       <div className="public-header-actions">
         <Link className="quote-header-cta" to={'/quote'+location.search+'#'+activeKey}>Get Free Quote <Icon name="arrow" size={15}/></Link>
