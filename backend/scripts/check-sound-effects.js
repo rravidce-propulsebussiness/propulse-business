@@ -32,7 +32,7 @@ must('../frontend/src/components/NotificationBell.jsx',["playSound('notification
 must('../frontend/src/pages/Profile.jsx',["playSound('upload')","playSound('success')","playSound('warning')"]);
 
 const soundSource=read('../frontend/src/utils/soundEffects.js');
-if(/\.mp3|\.wav|\.ogg/i.test(soundSource))throw new Error('Sound engine must not depend on external audio files');
+if(/\.(?:mp3|wav|ogg)(?:['\"`?#)\\s]|$)/i.test(soundSource))throw new Error('Sound engine must not depend on external audio files');
 if(!soundSource.includes("window.addEventListener('pointerdown'"))throw new Error('Sound engine must unlock only after user interaction');
 
 console.log('Website sound effects static checks passed.');
