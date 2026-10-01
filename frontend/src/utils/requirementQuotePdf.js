@@ -481,7 +481,7 @@ function drawWhyChoose(page){
   drawSectionHeading(page,'Why choose ProPulse?','A clearer starting point for comparing construction options.');
   items.forEach(([title,body],index)=>{
     const y=page.y;
-    ctx=page.ctx;
+    const ctx=page.ctx;
     ctx.fillStyle=index%2===0?'#fff7f2':'#f7f9fb';
     roundedRect(ctx,MARGIN,y,CONTENT_WIDTH,112,12);ctx.fill();
     ctx.fillStyle='#ff5a1f';ctx.font='800 22px Arial, sans-serif';
