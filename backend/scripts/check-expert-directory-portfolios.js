@@ -8,6 +8,6 @@ must('src/services/expertDirectoryService.js',['allowedPlanGroups','membership_r
 must('src/services/publicExpertService.js',['requireActiveMembership','business_profile_projects','business_profile_service_plans']);
 must('src/services/profileService.js',['projects','service_plans','public_headline','public_profile_enabled']);
 must('../frontend/src/pages/Profile.jsx',['Completed projects','Service plans','Public profile']);
-must('../frontend/src/pages/Experts.jsx',['Subscribed professionals','Completed projects','Service plans']);
+must('../frontend/src/pages/Experts.jsx',['SUBSCRIBED PROPULSE PROFESSIONALS','Completed projects','Service plans']);
 must('../frontend/src/admin/pages/AdminExpertDirectory.jsx',['Expert Directory','Allowed membership','Featured','Hidden']);
 console.log('Expert directory portfolio checks passed.');
