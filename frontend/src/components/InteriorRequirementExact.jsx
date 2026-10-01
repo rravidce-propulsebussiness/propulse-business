@@ -74,8 +74,6 @@ export default function InteriorRequirementExact(props) {
   const extraQuestions = questions.filter(q => !excluded.has(q.questionKey))
   const phone = contactData.phone || contactData.phone_number || contactData.mobile || ''
   const email = contactData.email || contactData.support_email || ''
-  const areaPresets = [['< 500','400'],['500 - 1000','750'],['1000 - 2000','1500'],['2000 - 3000','2500'],['3000+','3500']]
-  const roomIcons = { living_room:'living', bedroom:'bed', kitchen:'kitchen', bathroom:'bath', dining:'dining', other:'layout', full_home:'home', wardrobes:'layout', false_ceiling:'layout', furniture:'living', painting:'spark', lighting:'spark' }
   const summary = [
     ['Location', [
       cities.find(c => String(c.id) === String(cityId))?.name,
