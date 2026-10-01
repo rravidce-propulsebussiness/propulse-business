@@ -632,7 +632,13 @@ export default function RequirementWizard({ flowKey }) {
             <span>{ownPlotQuestion.label}</span>
             <PremiumQuestion question={ownPlotQuestion} value={answers[ownPlotQuestion.questionKey]} onChange={value => setAnswer(ownPlotQuestion.questionKey, value)} />
           </div>}
-          {configQuestions.map(question => <label key={question.id || question.questionKey}><span>{question.label}</span><PremiumQuestion question={question} value={answers[question.questionKey]} onChange={value => setAnswer(question.questionKey, value)} /></label>)}
+          {configQuestions.map(question => question.questionKey === 'site_access'
+            ? <div className="rq-config-choice rq-site-access" key={question.id || question.questionKey}>
+                <span>{question.label}</span>
+                {question.helpText && <small className="rq-config-help">{question.helpText}</small>}
+                <PremiumQuestion question={question} value={answers[question.questionKey]} onChange={value => setAnswer(question.questionKey, value)} />
+              </div>
+            : <label key={question.id || question.questionKey}><span>{question.label}</span><PremiumQuestion question={question} value={answers[question.questionKey]} onChange={value => setAnswer(question.questionKey, value)} /></label>)}
         </div>
       </section>
 
