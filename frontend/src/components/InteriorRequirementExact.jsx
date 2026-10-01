@@ -214,7 +214,7 @@ export default function InteriorRequirementExact(props) {
         <div><Icon name="spark"/><span>Modern Designs</span></div><div><Icon name="layout"/><span>Functional Spaces</span></div><div><Icon name="spark"/><span>Custom Solutions</span></div><div><Icon name="clock"/><span>On-Time Planning</span></div><div><Icon name="receipt"/><span>Budget Friendly</span></div>
       </aside>
       <div className="irx-benefits">
-        <article><Icon name="chat"/><div><b>Free Consultation</b><small>No obligation</small></div></article><article><Icon name="receipt"/><div><b>Transparent Estimates</b><small>Compare multiple options</small></div></article><article><Icon name="shield"/><div><b>Relevant Designers</b><small>Matched to your requirement</small></div></article><article><Icon name="support"/><div><b>End-to-End Support</b><small>From design to handover</small></div></article>
+        <article><Icon name="chat"/><div><b>Free Consultation</b><small>No obligation</small></div></article><article><Icon name="receipt"/><div><b>Package Options</b><small>Compare specifications</small></div></article><article><Icon name="shield"/><div><b>Relevant Designers</b><small>Matched to your requirement</small></div></article><article><Icon name="support"/><div><b>End-to-End Support</b><small>From design to handover</small></div></article>
       </div>
     </section>
 
