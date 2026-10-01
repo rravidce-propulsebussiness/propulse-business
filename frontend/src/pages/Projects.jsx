@@ -367,13 +367,6 @@ const PROJECTS = [
 ]
 
 
-function collection(value){
-  if(Array.isArray(value)) return value
-  if(Array.isArray(value?.data)) return value.data
-  if(Array.isArray(value?.rows)) return value.rows
-  return []
-}
-
 function Icon({name,size=18}){
   const p={width:size,height:size,viewBox:'0 0 24 24',fill:'none',stroke:'currentColor',strokeWidth:'1.8',strokeLinecap:'round',strokeLinejoin:'round','aria-hidden':true}
   if(name==='home')return <svg {...p}><path d="m3 11 9-8 9 8"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/></svg>
@@ -396,47 +389,27 @@ function openLeadPopup(flowKey=''){
 }
 
 export default function Projects(){
-  const [cities,setCities]=useState([])
   const [contactData,setContactData]=useState({})
   const [category,setCategory]=useState('all')
-  const [city,setCity]=useState('')
-  const [propertyType,setPropertyType]=useState('')
-  const [budget,setBudget]=useState('')
-  const [area,setArea]=useState('')
-  const [style,setStyle]=useState('')
   const [query,setQuery]=useState('')
   const [visible,setVisible]=useState(12)
   const [selectedProject,setSelectedProject]=useState(null)
 
   useEffect(()=>{
     window.scrollTo(0,0)
-    Promise.allSettled([publicRequest('/cities'),publicRequest('/contact?audience=website')]).then(([cityResult,contactResult])=>{
-      if(cityResult.status==='fulfilled') setCities(collection(cityResult.value))
-      if(contactResult.status==='fulfilled') setContactData(contactResult.value||{})
-    })
+    publicRequest('/contact?audience=website')
+      .then(value=>setContactData(value||{}))
+      .catch(()=>{})
   },[])
-
-  const cityOptions=useMemo(()=>{
-    const names=new Set(PROJECTS.map(p=>p.city))
-    cities.forEach(c=>c?.name&&names.add(c.name))
-    return [...names].sort()
-  },[cities])
 
   const filtered=useMemo(()=>{
     const q=query.trim().toLowerCase()
     return PROJECTS.filter(project=>{
       if(category!=='all'&&project.category!==category)return false
-      if(city&&project.city!==city)return false
-      if(propertyType&&project.propertyType!==propertyType)return false
-      if(budget&&project.budget!==budget)return false
-      if(area==='under2000'&&project.area>=2000)return false
-      if(area==='2000to4000'&&(project.area<2000||project.area>4000))return false
-      if(area==='4000plus'&&project.area<4000)return false
-      if(style&&project.style!==style)return false
       if(q&&!([project.title,project.location,project.categoryLabel,project.propertyType,project.style,project.description].join(' ').toLowerCase().includes(q)))return false
       return true
     })
-  },[category,city,propertyType,budget,area,style,query])
+  },[category,query])
 
   function openProject(project){
     setSelectedProject(project)
@@ -593,14 +566,6 @@ export default function Projects(){
           <button className={category==='property'?'active':''} onClick={()=>setCategory('property')}><Icon name="building" size={15}/>Real Estate</button>
         </div>
         <label className="pj-search"><Icon name="search" size={17}/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search projects, locations, styles..."/></label>
-      </div>
-      <div className="pj-filter-grid">
-        <label><Icon name="pin" size={14}/><select value={city} onChange={e=>setCity(e.target.value)}><option value="">Select City</option>{cityOptions.map(name=><option key={name} value={name}>{name}</option>)}</select></label>
-        <label><select value={propertyType} onChange={e=>setPropertyType(e.target.value)}><option value="">Project Type</option>{[...new Set(PROJECTS.map(p=>p.propertyType))].map(v=><option key={v}>{v}</option>)}</select></label>
-        <label><select value={budget} onChange={e=>setBudget(e.target.value)}><option value="">Budget Range</option>{[...new Set(PROJECTS.map(p=>p.budget))].map(v=><option key={v}>{v}</option>)}</select></label>
-        <label><select value={area} onChange={e=>setArea(e.target.value)}><option value="">Built-up Area</option><option value="under2000">Under 2000 sq ft</option><option value="2000to4000">2000–4000 sq ft</option><option value="4000plus">4000+ sq ft</option></select></label>
-        <label><select value={style} onChange={e=>setStyle(e.target.value)}><option value="">Style / Design</option>{[...new Set(PROJECTS.map(p=>p.style))].map(v=><option key={v}>{v}</option>)}</select></label>
-        <button className="pj-apply" onClick={()=>setVisible(12)}>Apply Filters</button>
       </div>
     </section>
 
