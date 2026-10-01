@@ -17,13 +17,7 @@ const CONSTRUCTION_FLOORS = [
   { value: '5', label: 'Above G+3' },
 ]
 
-const PLOT_AREA_OPTIONS = [
-  { value: 'under_100', label: 'Less than 100 sq yards' },
-  { value: '100_200', label: '100–200 sq yards' },
-  { value: 'above_200', label: 'Above 200 sq yards' },
-]
-
-const PLOT_AREA_ESTIMATE_YARDS = {
+const LEGACY_PLOT_AREA_ESTIMATE_YARDS = {
   under_100: 90,
   '100_200': 150,
   above_200: 250,
@@ -32,7 +26,7 @@ const PLOT_AREA_ESTIMATE_YARDS = {
 function plotAreaSqYards(value) {
   const numeric = Number(value)
   if (Number.isFinite(numeric) && numeric > 0) return numeric
-  return PLOT_AREA_ESTIMATE_YARDS[String(value || '')] || 0
+  return LEGACY_PLOT_AREA_ESTIMATE_YARDS[String(value || '')] || 0
 }
 
 function constructionFloorLabel(value) {
@@ -118,9 +112,8 @@ function fieldLabel(question, answers) {
   if (typeof value === 'boolean') return value ? 'Yes' : 'No'
   if (question.questionKey === 'floors') return constructionFloorLabel(value)
   if (question.questionKey === 'plot_area') {
-    return question.options?.find(option => option.value === value)?.label
-      || PLOT_AREA_OPTIONS.find(option => option.value === value)?.label
-      || (String(value) + ' sq yards')
+    const yards = plotAreaSqYards(value)
+    return yards ? String(yards) + ' sq yards' : '—'
   }
   return question.options?.find(option => option.value === value)?.label || String(value)
 }
@@ -130,11 +123,8 @@ function PremiumQuestion({ question, value, onChange, visual = 'default' }) {
   const options = question.options || []
 
   if (question.questionKey === 'plot_area') {
-    const plotOptions = options.length ? options : PLOT_AREA_OPTIONS
-    return <select className="rq-floor-select rq-plot-area-select" value={value ?? ''} onChange={event => onChange(event.target.value)}>
-      <option value="">Select plot area</option>
-      {plotOptions.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}
-    </select>
+    const numericValue = Number.isFinite(Number(value)) && Number(value) > 0 ? value : ''
+    return <div className="rq-number-wrap"><input type="number" min={10} max={100000} value={numericValue} onChange={event => onChange(event.target.value)} placeholder="Enter plot area" /><span>sq yards</span></div>
   }
 
   if (question.questionType === 'single_select' || question.questionType === 'timeline') {
@@ -305,14 +295,13 @@ export default function RequirementWizard({ flowKey }) {
   const configQuestions = flowKey === 'build'
     ? [
         questions.find(question => question.questionKey === 'plot_area'),
-        builtUpQuestion,
         questions.find(question => question.questionKey === 'floors'),
         questions.find(question => question.questionKey === 'site_access'),
       ].filter(Boolean)
     : questions.filter(question => question.questionKey === 'area')
   const preferenceQuestions = questions.filter(question => ['quality', 'budget', 'timeline', 'interior_scope', 'kitchen', 'wardrobes', 'false_ceiling', 'furniture', 'finish_quality'].includes(question.questionKey))
   const additionalQuestion = questions.find(question => question.questionKey === 'additional_requirement')
-  const usedKeys = new Set([locationQuestion?.questionKey, ownPlotQuestion?.questionKey, ...propertyQuestions.map(q => q.questionKey), ...configQuestions.map(q => q.questionKey), ...preferenceQuestions.map(q => q.questionKey), additionalQuestion?.questionKey].filter(Boolean))
+  const usedKeys = new Set([locationQuestion?.questionKey, ownPlotQuestion?.questionKey, builtUpQuestion?.questionKey, ...propertyQuestions.map(q => q.questionKey), ...configQuestions.map(q => q.questionKey), ...preferenceQuestions.map(q => q.questionKey), additionalQuestion?.questionKey].filter(Boolean))
   const extraQuestions = questions.filter(question => !usedKeys.has(question.questionKey))
 
   const locationRequiredCount = locationQuestion ? 1 : 0
@@ -442,9 +431,11 @@ export default function RequirementWizard({ flowKey }) {
     const missing = questions.find(question => question.isRequired && isEmptyAnswer(answers[question.questionKey]))
     if (missing) {
       setState(current => ({ ...current, error: `Please complete “${missing.label}”.` }))
-      const target = missing.questionKey === 'own_plot' || ['plot_area','built_up_area','site_access','area','floors'].includes(missing.questionKey)
-        ? 'rq-config'
-        : ['project_type','property_intent','bhk','property_status','possession_status'].includes(missing.questionKey)
+      const target = missing.questionKey === 'built_up_area'
+        ? 'rq-built-up'
+        : missing.questionKey === 'own_plot' || ['plot_area','site_access','area','floors'].includes(missing.questionKey)
+          ? 'rq-config'
+          : ['project_type','property_intent','bhk','property_status','possession_status'].includes(missing.questionKey)
           ? 'rq-property'
           : missing.questionKey === 'additional_requirement' ? 'rq-additional' : 'rq-preferences'
       jump(target)
@@ -678,8 +669,8 @@ export default function RequirementWizard({ flowKey }) {
             <span>{ownPlotQuestion.label}</span>
             <PremiumQuestion question={ownPlotQuestion} value={answers[ownPlotQuestion.questionKey]} onChange={value => setAnswer(ownPlotQuestion.questionKey, value)} />
           </div>}
-          {configQuestions.map(question => ['site_access','built_up_area'].includes(question.questionKey)
-            ? <div className={'rq-config-choice ' + (question.questionKey === 'site_access' ? 'rq-site-access' : 'rq-built-up')} key={question.id || question.questionKey}>
+          {configQuestions.map(question => question.questionKey === 'site_access'
+            ? <div className="rq-config-choice rq-site-access" key={question.id || question.questionKey}>
                 <span>{question.label}</span>
                 <PremiumQuestion question={question} value={answers[question.questionKey]} onChange={value => setAnswer(question.questionKey, value)} />
                 {question.helpText && <small className="rq-config-help">{question.helpText}</small>}
@@ -709,6 +700,13 @@ export default function RequirementWizard({ flowKey }) {
               </div>)}
             </div>
           </section>
+
+          {builtUpQuestion && <section className="rq-section-card rq-built-up-card" id="rq-built-up">
+            <div className="rq-section-heading"><div><h2>Planned total built-up area</h2><p>Auto-calculated from plot area and floors. You can edit this value.</p></div></div>
+            <div className="rq-built-up-field">
+              <PremiumQuestion question={builtUpQuestion} value={answers[builtUpQuestion.questionKey]} onChange={value => setAnswer(builtUpQuestion.questionKey, value)} />
+            </div>
+          </section>}
 
           <section className="rq-section-card" id="rq-additional">
             <div className="rq-section-heading"><strong>5.</strong><div><h2>Additional Requirements</h2><p>Tell us any important details we should preserve in the lead.</p></div></div>
