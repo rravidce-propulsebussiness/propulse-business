@@ -413,3 +413,77 @@
     animation:none!important;
   }
 }
+
+
+/* Interior request success — package brochure, not instant quotation */
+.rq-interior-success{
+  max-width:860px;
+}
+.rq-interior-package-result{
+  width:min(100%,720px);
+  margin:24px auto 4px;
+  padding:24px 26px;
+  border:1px solid #eadfd7;
+  border-radius:16px;
+  background:
+    radial-gradient(circle at 95% 5%,rgba(255,90,31,.09),transparent 34%),
+    linear-gradient(135deg,#fffaf7,#fff);
+  box-shadow:0 16px 34px rgba(11,47,77,.06);
+  text-align:left;
+}
+.rq-interior-package-result>small{
+  display:block;
+  margin-bottom:10px;
+  color:#ef5a22;
+  font-size:10px;
+  font-weight:950;
+  letter-spacing:.12em;
+}
+.rq-interior-package-result>div{
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:18px;
+}
+.rq-interior-package-result strong{
+  color:#0b2f4e;
+  font-size:28px;
+  font-weight:900;
+  letter-spacing:-.03em;
+}
+.rq-interior-package-result b{
+  color:#0b2f4e;
+  font-size:22px;
+  font-weight:900;
+  white-space:nowrap;
+}
+.rq-interior-package-result b em{
+  display:block;
+  margin-top:2px;
+  color:#7b8b99;
+  font-size:10px;
+  font-style:normal;
+  font-weight:700;
+  text-align:right;
+}
+.rq-interior-package-result p{
+  margin:13px 0 10px;
+  color:#667b8d;
+  font-size:12.5px;
+  line-height:1.55;
+}
+.rq-interior-package-result>span{
+  display:block;
+  padding-top:10px;
+  border-top:1px solid #eee7e2;
+  color:#8a776d;
+  font-size:10.5px;
+  font-weight:650;
+}
+@media(max-width:620px){
+  .rq-interior-package-result>div{
+    align-items:flex-start;
+    flex-direction:column;
+  }
+  .rq-interior-package-result b em{text-align:left}
+}
