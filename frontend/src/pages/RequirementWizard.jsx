@@ -274,10 +274,13 @@ export default function RequirementWizard({ flowKey, onCompletionChange }) {
         }
       } catch {}
 
+      const packageParam = String(new URLSearchParams(window.location.search).get('package') || '').toLowerCase()
       if (flowKey === 'build') {
-        const packageParam = String(new URLSearchParams(window.location.search).get('package') || '').toLowerCase()
         const qualityByPackage = { standard: 'standard', premium: 'premium', royal: 'luxury' }
         if (qualityByPackage[packageParam]) initialAnswers.quality = qualityByPackage[packageParam]
+      }
+      if (flowKey === 'design' && ['standard','premium'].includes(packageParam)) {
+        initialAnswers.finish_quality = packageParam
       }
 
       const initialCity = loadedCities.find(city => String(city.id) === String(initialCityId))
