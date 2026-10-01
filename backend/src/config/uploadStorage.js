@@ -9,6 +9,7 @@ const uploadRoot=configuredRoot
 const homepageUploadRoot=path.join(uploadRoot,'homepage');
 const companyProofRoot=path.join(uploadRoot,'company-proofs');
 const privateProofRoot=path.join(uploadRoot,'private-proofs');
+const leadReferenceRoot=path.join(uploadRoot,'lead-references');
 
 async function checkUploadStorage(){
   await fs.promises.access(uploadRoot,fs.constants.R_OK|fs.constants.W_OK);
@@ -34,4 +35,4 @@ async function ensureUploadStorage(){
   return probeUploadStorage();
 }
 
-module.exports={uploadRoot,homepageUploadRoot,companyProofRoot,privateProofRoot,checkUploadStorage,probeUploadStorage,ensureUploadStorage};
+module.exports={uploadRoot,homepageUploadRoot,companyProofRoot,privateProofRoot,leadReferenceRoot,checkUploadStorage,probeUploadStorage,ensureUploadStorage};
