@@ -26,7 +26,7 @@ export default function UserHeader() {
       <Link to="/#pricing" onClick={()=>setOpen(false)}>Pricing</Link>
       <Link to="/#upcoming-features" onClick={()=>setOpen(false)}>Upcoming Features</Link>
       <Link to="/#faq" onClick={()=>setOpen(false)}>FAQ</Link>
-      {location.pathname !== '/leads' && <Link className="leads-active" to="/leads" onClick={()=>setOpen(false)}>Explore Leads</Link>}
+      {location.pathname !== '/professionals' && <Link className="leads-active" to="/professionals" onClick={()=>setOpen(false)}>Explore Leads</Link>}
       <Link className="public-nav-auth" to="/login" onClick={()=>setOpen(false)}>Login</Link>
       <Link className="public-nav-auth" to="/signup" onClick={()=>setOpen(false)}>Sign up</Link>
     </nav>
