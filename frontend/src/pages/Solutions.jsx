@@ -76,6 +76,22 @@ export default function Solutions(){
       </div>
     </header>
 
+    <section className="quote-flow-switcher" aria-label="Choose quote type">
+      <div className="quote-flow-switcher-inner">
+        {Object.entries(FLOWS).map(([key,item])=><button
+          type="button"
+          key={key}
+          className={activeKey===key?'active':''}
+          onClick={()=>navigate('/quote'+location.search+'#'+key)}
+          aria-pressed={activeKey===key}
+        >
+          <span><Icon name={item.icon} size={18}/></span>
+          <b>{item.title}</b>
+          {activeKey===key&&<i>Selected</i>}
+        </button>)}
+      </div>
+    </section>
+
     <section className={'quote-flow quote-flow-'+activeKey} key={active.flowKey}>
       <RequirementWizard flowKey={active.flowKey}/>
     </section>
