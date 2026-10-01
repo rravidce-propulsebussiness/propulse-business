@@ -1,6 +1,7 @@
 const pool = require('../config/database');
 const expertDirectoryService = require('./expertDirectoryService');
 const projectVideoService = require('./projectVideoService');
+const projectPlanService = require('./projectPlanService');
 
 function profileError(message,code='INVALID_PROFILE_SELECTION'){
   return Object.assign(new Error(message),{code});
@@ -234,7 +235,7 @@ async function updateProfile(userId, payload) {
 
     const profileId = profile.rows[0].id;
     const existingProjects=(await client.query(
-      'SELECT id,video_url,video_published_at FROM business_profile_projects WHERE business_profile_id=$1',
+      'SELECT id,video_url,video_published_at,plan_url FROM business_profile_projects WHERE business_profile_id=$1',
       [profileId]
     )).rows;
     const existingById=new Map(existingProjects.map(item=>[Number(item.id),item]));
@@ -253,12 +254,22 @@ async function updateProfile(userId, payload) {
             : new Date();
         }
       }
+      if(item.planUrl){
+        if(item.planUrl.startsWith('/uploads/')&&!item.planUrl.startsWith('/uploads/business-projects/')){
+          throw profileError('Uploaded project plan URL is invalid');
+        }
+        if(item.planUrl.startsWith('/uploads/business-projects/'))projectPlanService.managedPlanInfo(userId,item.planUrl);
+      }
       return {...item,videoPublishedAt};
     });
     const currentManagedUrls=new Set(projectsForSave.map(item=>item.videoUrl).filter(url=>String(url||'').startsWith('/uploads/business-projects/')));
     const removedManagedUrls=existingProjects
       .map(item=>item.video_url)
       .filter(url=>String(url||'').startsWith('/uploads/business-projects/')&&!currentManagedUrls.has(url));
+    const currentManagedPlanUrls=new Set(projectsForSave.map(item=>item.planUrl).filter(url=>String(url||'').startsWith('/uploads/business-projects/')));
+    const removedManagedPlanUrls=existingProjects
+      .map(item=>item.plan_url)
+      .filter(url=>String(url||'').startsWith('/uploads/business-projects/')&&!currentManagedPlanUrls.has(url));
     await client.query('UPDATE business_profile_services SET is_active = FALSE, updated_at = CURRENT_TIMESTAMP WHERE business_profile_id = $1', [profileId]);
     await client.query(`
       INSERT INTO business_profile_services (business_profile_id,industry_id,service_id,subservice_id,is_active)
@@ -313,6 +324,8 @@ async function updateProfile(userId, payload) {
     await client.query('COMMIT');
     projectVideoService.removeManagedProjectVideos(userId,removedManagedUrls)
       .catch(error=>console.error('Remove unused project video failed:',error?.message||error));
+    projectPlanService.removeManagedProjectPlans(userId,removedManagedPlanUrls)
+      .catch(error=>console.error('Remove unused project plan failed:',error?.message||error));
     return { user: { ...user.rows[0], profile: result } };
   } catch (error) {
     await client.query('ROLLBACK');
