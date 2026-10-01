@@ -85,4 +85,37 @@ async function submitPublic(req, res) {
   }
 }
 
-module.exports = { listAdmin,getAdmin,create,saveDraft,publish,setStatus,getPublic,submitConsultation,submitPublic };
+async function uploadReference(req,res){
+  try{
+    const result=await leadReferenceStorageService.saveReference({
+      key:req.params.key,
+      leadId:req.params.leadId,
+      submissionKey:req.body?.submissionKey,
+      originalName:req.body?.originalName,
+      dataUrl:req.body?.dataUrl,
+      attachmentKey:req.body?.attachmentKey,
+    });
+    return res.status(result.duplicate?200:201).json(result);
+  }catch(error){
+    if(!error?.status&&!error?.code)console.error('Public reference upload failed:',error);
+    return sendError(res,error?.status||500,error,'Failed to upload reference file',{code:error?.code});
+  }
+}
+
+async function downloadReferenceAdmin(req,res){
+  try{
+    const file=await leadReferenceStorageService.getAdminReference({
+      leadId:req.params.leadId,
+      attachmentId:req.params.attachmentId,
+    });
+    res.setHeader('Content-Type',file.mime);
+    res.setHeader('Content-Disposition',`inline; filename*=UTF-8''${encodeURIComponent(file.name)}`);
+    res.setHeader('Cache-Control','private, no-store');
+    return res.sendFile(file.path);
+  }catch(error){
+    if(!error?.status&&!error?.code)console.error('Admin reference download failed:',error);
+    return sendError(res,error?.status||500,error,'Failed to load reference file',{code:error?.code});
+  }
+}
+
+module.exports = { listAdmin,getAdmin,create,saveDraft,publish,setStatus,getPublic,submitConsultation,submitPublic,uploadReference,downloadReferenceAdmin };
