@@ -1,6 +1,7 @@
 import {useEffect,useRef,useState} from 'react';
 import {useNavigate} from 'react-router-dom';
 import {authRequest,getUser} from '../utils/auth';
+import {playSound} from '../utils/soundEffects';
 import './NotificationBell.css';
 
 const when=value=>{
@@ -23,14 +24,23 @@ export default function NotificationBell({className=''}) {
   const [items,setItems]=useState([]);
   const [loading,setLoading]=useState(false);
   const ref=useRef(null);
+  const unreadRef=useRef(0);
+  const countReadyRef=useRef(false);
 
-  const refreshCount=()=>authRequest('/notifications/unread-count').then(r=>setUnread(Number(r?.unread||0))).catch(()=>{});
+  const applyUnread=value=>{
+    const next=Number(value||0);
+    if(countReadyRef.current&&next>unreadRef.current)playSound('notification');
+    unreadRef.current=next;
+    countReadyRef.current=true;
+    setUnread(next);
+  };
+  const refreshCount=()=>authRequest('/notifications/unread-count').then(r=>applyUnread(r?.unread)).catch(()=>{});
   const load=async()=>{
     setLoading(true);
     try{
       const result=await authRequest('/notifications?limit=8');
       setItems(result?.items||[]);
-      setUnread(Number(result?.unread||0));
+      applyUnread(result?.unread);
     }catch{}finally{setLoading(false)}
   };
 
@@ -55,7 +65,7 @@ export default function NotificationBell({className=''}) {
   const openItem=async item=>{
     if(!item.read_at){
       await authRequest('/notifications/'+item.id+'/read',{method:'PATCH'}).catch(()=>{});
-      setUnread(v=>Math.max(0,v-1));
+      setUnread(v=>{const next=Math.max(0,v-1);unreadRef.current=next;return next});
     }
     setOpen(false);
     navigate(item.action_url||allRoute(role));
