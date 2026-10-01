@@ -97,11 +97,6 @@ export default function Packages() {
     () => selectedKeys.map(key => packages.find(item => item.key === key)).filter(Boolean),
     [packages, selectedKeys]
   )
-  const cityList = useMemo(
-    () => [...cities].sort((a, b) => String(a.name || '').localeCompare(String(b.name || ''))),
-    [cities]
-  )
-
   function switchCategory(next) {
     setCategory(next)
     setExpanded({})
