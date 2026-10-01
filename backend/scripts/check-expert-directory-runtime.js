@@ -8,13 +8,20 @@ async function main(){
     'SELECT directory_enabled,require_active_membership,require_verified,allowed_plan_groups,show_projects,show_videos,show_plans,updated_by,updated_at FROM expert_directory_settings WHERE id=1'
   )).rows[0];
   const userIds=[];
+  let createdPlanId=null;
   try{
-    const plan=(await pool.query(
+    let plan=(await pool.query(
       "SELECT id FROM membership_plans WHERE is_active=TRUE AND LOWER(REPLACE(COALESCE(plan_type,''),'-','_'))='pro' ORDER BY id LIMIT 1"
     )).rows[0];
-    assert.ok(plan,'Expected at least one active Pro membership plan in bootstrap data');
-
     const stamp=String(Date.now());
+    if(!plan){
+      plan=(await pool.query(
+        "INSERT INTO membership_plans(name,description,price,duration_days,is_active,plan_group,plan_type,billing_period,billing_months,monthly_base_price,discount_percent) VALUES($1,$2,100,30,TRUE,'grow','pro','monthly',1,100,0) RETURNING id",
+        ['CI Expert Directory GROW '+stamp,'Temporary CI-only Pro plan']
+      )).rows[0];
+      createdPlanId=plan.id;
+    }
+
     async function createBusiness(suffix){
       const user=(await pool.query(
         "INSERT INTO users(name,email,password_hash,role,is_active) VALUES($1,$2,$3,'business',TRUE) RETURNING id",
@@ -63,6 +70,7 @@ async function main(){
     console.log('Expert directory subscription runtime checks passed.');
   }finally{
     if(userIds.length)await pool.query('DELETE FROM users WHERE id=ANY($1::int[])',[userIds]);
+    if(createdPlanId)await pool.query('DELETE FROM membership_plans WHERE id=$1',[createdPlanId]);
     if(original){
       await pool.query(
         'UPDATE expert_directory_settings SET directory_enabled=$1,require_active_membership=$2,require_verified=$3,allowed_plan_groups=$4::jsonb,show_projects=$5,show_videos=$6,show_plans=$7,updated_by=$8,updated_at=$9 WHERE id=1',
