@@ -169,7 +169,7 @@ export default function WebsiteFaqSection({variant='home',audience='website'}){
       </div>
       <aside className="website-faq-side">
         <div className="website-faq-side-card primary"><span>NEED MORE HELP?</span><h3>Talk to our team.</h3><p>Contact Propulse for account, marketplace or service-related support.</p><Link to="/contact">Contact Propulse <b>→</b></Link></div>
-        <div className="website-faq-side-card"><span>QUICK ACCESS</span><Link to="/leads">Explore Leads <b>↗</b></Link><Link to="/purchased-leads">Purchased Leads <b>↗</b></Link><Link to="/wallet">Wallet <b>↗</b></Link></div>
+        <div className="website-faq-side-card"><span>QUICK ACCESS</span><Link to="/professionals">Explore Leads <b>↗</b></Link><Link to="/purchased-leads">Purchased Leads <b>↗</b></Link><Link to="/wallet">Wallet <b>↗</b></Link></div>
       </aside>
     </section>
   </main>
