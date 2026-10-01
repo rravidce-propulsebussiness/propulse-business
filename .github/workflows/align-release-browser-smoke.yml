@@ -1,0 +1,72 @@
+name: Align release browser smoke
+
+on:
+  push:
+    branches:
+      - fix/production-readiness-20261001
+
+permissions:
+  contents: write
+
+jobs:
+  align:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Update stale release E2E contracts
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+
+          path=Path("frontend/e2e/release-smoke.spec.mjs")
+          source=path.read_text(encoding="utf-8")
+
+          start=source.index("test('public homepage presents customer project and estimator journeys'")
+          end=source.index("\ntest('protected customer route redirects anonymous users to login'", start)
+
+          block="""test('public homepage presents customer project and estimator journeys',async({page})=>{
+            await page.goto('/')
+            await expect(page.getByRole('heading',{name:/build\\. design\\. find.*right professionals/i})).toBeVisible()
+            await expect(page.getByRole('button',{name:/start your requirement/i}).first()).toBeVisible()
+            await expect(page.getByRole('link',{name:/view packages/i}).first()).toHaveAttribute('href','/packages')
+            await expect(page.getByRole('link',{name:/get free quote/i})).toHaveAttribute('href','/quote#interiors')
+            await expect(page.getByRole('link',{name:/for professionals/i})).toHaveAttribute('href','/professionals')
+            await expect(page.getByRole('heading',{name:/what do you need/i})).toBeVisible()
+
+            await page.getByRole('button',{name:/start your requirement/i}).first().click()
+            await expect(page.getByRole('dialog',{name:/tell us your requirement/i})).toBeVisible()
+            await expect(page.getByLabel('I am looking for')).toBeVisible()
+            await page.getByRole('button',{name:'Close'}).click()
+
+            await page.goto('/construction-estimator')
+            await expect(page).toHaveURL(/\\/quote#construction$/)
+            await page.goto('/interior-estimator')
+            await expect(page).toHaveURL(/\\/packages#interior$/)
+          })
+          """
+
+          source=source[:start]+block+source[end:]
+          legacy="await expect(page).toHaveURL(/\\/leads(?:\\?|$)/)"
+          canonical="await expect(page).toHaveURL(/\\/professionals(?:\\?|$)/)"
+          count=source.count(legacy)
+          if count != 3:
+              raise SystemExit(f"Expected 3 legacy business URL assertions, found {count}")
+          source=source.replace(legacy,canonical)
+          path.write_text(source,encoding="utf-8")
+          PY
+          git diff --check
+          rm -f .github/workflows/align-release-browser-smoke.yml
+      - name: Commit aligned release gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "test(e2e): align release smoke with canonical routes"
+          git push origin HEAD:fix/production-readiness-20261001
