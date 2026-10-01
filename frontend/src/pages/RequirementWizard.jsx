@@ -241,7 +241,9 @@ export default function RequirementWizard({ flowKey }) {
     return () => { mounted.current = false }
   }, [flowKey])
 
-  const questions = useMemo(() => (flow?.questions || []).filter(question => isQuestionVisible(question, answers)), [flow, answers])
+  const questions = useMemo(() => (flow?.questions || [])
+    .filter(question => isQuestionVisible(question, answers))
+    .filter(question => !(flowKey === 'build' && question.questionKey === 'property_type')), [flow, answers, flowKey])
   const byKey = useMemo(() => Object.fromEntries(questions.map(question => [question.questionKey, question])), [questions])
   const locationQuestion = questions.find(question => question.questionType === 'location')
   const selectedCity = useMemo(() => cities.find(city => String(city.id) === String(cityId)), [cities, cityId])
@@ -255,11 +257,12 @@ export default function RequirementWizard({ flowKey }) {
     return [...map.values()].sort((a,b) => String(a.name).localeCompare(String(b.name)))
   }, [cities])
 
-  const propertyQuestions = questions.filter(question => ['project_type', 'own_plot', 'property_type', 'property_intent', 'bhk', 'property_status', 'possession_status'].includes(question.questionKey))
+  const ownPlotQuestion = flowKey === 'build' ? questions.find(question => question.questionKey === 'own_plot') : null
+  const propertyQuestions = questions.filter(question => ['project_type', 'property_intent', 'bhk', 'property_status', 'possession_status'].includes(question.questionKey))
   const configQuestions = questions.filter(question => ['plot_area', 'built_up_area', 'area', 'floors'].includes(question.questionKey))
   const preferenceQuestions = questions.filter(question => ['construction_scope', 'quality', 'budget', 'timeline', 'interior_scope', 'kitchen', 'wardrobes', 'false_ceiling', 'furniture', 'finish_quality'].includes(question.questionKey))
   const additionalQuestion = questions.find(question => question.questionKey === 'additional_requirement')
-  const usedKeys = new Set([locationQuestion?.questionKey, ...propertyQuestions.map(q => q.questionKey), ...configQuestions.map(q => q.questionKey), ...preferenceQuestions.map(q => q.questionKey), additionalQuestion?.questionKey].filter(Boolean))
+  const usedKeys = new Set([locationQuestion?.questionKey, ownPlotQuestion?.questionKey, ...propertyQuestions.map(q => q.questionKey), ...configQuestions.map(q => q.questionKey), ...preferenceQuestions.map(q => q.questionKey), additionalQuestion?.questionKey].filter(Boolean))
   const extraQuestions = questions.filter(question => !usedKeys.has(question.questionKey))
 
   const locationRequiredCount = locationQuestion ? 1 : 0
@@ -375,10 +378,10 @@ export default function RequirementWizard({ flowKey }) {
     const missing = questions.find(question => question.isRequired && isEmptyAnswer(answers[question.questionKey]))
     if (missing) {
       setState(current => ({ ...current, error: `Please complete “${missing.label}”.` }))
-      const target = ['project_type','own_plot','property_type','property_intent','bhk','property_status','possession_status'].includes(missing.questionKey)
-        ? 'rq-property'
-        : ['plot_area','built_up_area','area','floors'].includes(missing.questionKey)
-          ? 'rq-config'
+      const target = missing.questionKey === 'own_plot' || ['plot_area','built_up_area','area','floors'].includes(missing.questionKey)
+        ? 'rq-config'
+        : ['project_type','property_intent','bhk','property_status','possession_status'].includes(missing.questionKey)
+          ? 'rq-property'
           : missing.questionKey === 'additional_requirement' ? 'rq-additional' : 'rq-preferences'
       jump(target)
       return
@@ -578,8 +581,8 @@ export default function RequirementWizard({ flowKey }) {
     <div className="rq-flow-nav">
       {[
         ['rq-basic','1','Basic Details','Tell us about your project'],
-        ['rq-property','2','Property Details','Type, size and preferences'],
-        ['rq-preferences','3','Requirements','Scope, quality and timeline'],
+        ['rq-config','2','Project Details','Plot, area and floors'],
+        ['rq-preferences','3','Requirements','Type, scope and timeline'],
         ['rq-summary','4',isQuotationFlow ? 'Generate Quotation' : 'Review & Submit',isQuotationFlow ? 'Calculate and download' : 'Confirm and connect'],
       ].map(([id, number, title, text], index) => <button key={id} onClick={() => jump(id)} className={completion >= [1,35,65,90][index] ? 'done' : index === 0 ? 'active' : ''}>
         <span>{completion >= [35,65,90,100][index] ? '✓' : number}</span><div><b>{title}</b><small>{text}</small></div>{index < 3 && <i><Icon name="arrow" size={14}/></i>}
@@ -614,20 +617,24 @@ export default function RequirementWizard({ flowKey }) {
         </aside>
       </section>
 
+      <section className="rq-section-card" id="rq-config">
+        <div className="rq-section-heading"><strong>2.</strong><div><h2>Project Details</h2></div></div>
+        <div className="rq-config-grid rq-config-grid-four">
+          {ownPlotQuestion && <div className="rq-config-choice">
+            <span>{ownPlotQuestion.label}</span>
+            <PremiumQuestion question={ownPlotQuestion} value={answers[ownPlotQuestion.questionKey]} onChange={value => setAnswer(ownPlotQuestion.questionKey, value)} />
+          </div>}
+          {configQuestions.map(question => <label key={question.id || question.questionKey}><span>{question.label}</span><PremiumQuestion question={question} value={answers[question.questionKey]} onChange={value => setAnswer(question.questionKey, value)} /></label>)}
+        </div>
+      </section>
+
       <section className="rq-section-card" id="rq-property">
-        <div className="rq-section-heading"><strong>2.</strong><div><h2>Property Type</h2></div></div>
+        <div className="rq-section-heading"><strong>3.</strong><div><h2>Property Type</h2></div></div>
         <div className="rq-question-stack">
           {propertyQuestions.map((question, index) => <div className="rq-question-block" key={question.id || question.questionKey}>
             <div className="rq-question-label">{index === 0 ? null : <>{question.label && <b>{question.label}</b>}{question.helpText && <small>{question.helpText}</small>}</>}</div>
             <PremiumQuestion question={question} value={answers[question.questionKey]} onChange={value => setAnswer(question.questionKey, value)} visual={index === 0 ? 'image' : 'default'} />
           </div>)}
-        </div>
-      </section>
-
-      <section className="rq-section-card" id="rq-config">
-        <div className="rq-section-heading"><strong>3.</strong><div><h2>Built-up Area & Configuration</h2><p>Help us understand the size and scale you’re planning.</p></div></div>
-        <div className="rq-config-grid">
-          {configQuestions.map(question => <label key={question.id || question.questionKey}><span>{question.label}</span><PremiumQuestion question={question} value={answers[question.questionKey]} onChange={value => setAnswer(question.questionKey, value)} /></label>)}
         </div>
       </section>
 
