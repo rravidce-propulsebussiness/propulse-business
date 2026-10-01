@@ -102,8 +102,8 @@ for(const source of [home,quote,packages,projects,about,howItWorks,contact]){
 }
 
 // Experts directory is public but does not expose direct contact data.
-assert.match(experts,/REGISTERED PROPULSE BUSINESSES/);
-assert.match(experts,/Registered Businesses on <em>ProPulse<\/em>/);
+assert.match(experts,/SUBSCRIBED PROPULSE PROFESSIONALS/);
+assert.match(experts,/Subscribed Businesses on <em>ProPulse<\/em>/);
 assert.match(experts,/Verified only/);
 assert.match(experts,/View Business Profile/);
 assert.match(experts,/Direct phone and email details are not displayed publicly/);
@@ -114,6 +114,10 @@ assert.match(expertsCss,/\.expert-modal/);
 assert.match(publicExpertService,/u\.role='business'/);
 assert.match(publicExpertService,/u\.is_active=TRUE/);
 assert.match(publicExpertService,/company_proof_documents/);
+assert.match(publicExpertService,/requireActiveMembership/);
+assert.match(publicExpertService,/business_profile_projects/);
+assert.match(publicExpertService,/business_profile_service_plans/);
+assert.match(publicExpertService,/getPublicExpert/);
 assert.doesNotMatch(publicExpertService,/bp\.phone/);
 assert.doesNotMatch(publicExpertService,/u\.email/);
 assert.match(serverSource,/app\.use\('\/api\/experts',publicExpertRoutes\)/);
