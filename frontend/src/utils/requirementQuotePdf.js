@@ -305,6 +305,195 @@ function savePdf(images,filename){
   setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
 
+
+function drawHouseLineArt(ctx,x,y,w,h){
+  ctx.save();
+  ctx.strokeStyle='#d8dee5';
+  ctx.lineWidth=3;
+  ctx.globalAlpha=.9;
+  const base=y+h*.78;
+  ctx.beginPath();
+  ctx.moveTo(x,base);ctx.lineTo(x+w,base);
+  ctx.moveTo(x+w*.12,base);ctx.lineTo(x+w*.12,y+h*.44);
+  ctx.lineTo(x+w*.38,y+h*.18);
+  ctx.lineTo(x+w*.64,y+h*.44);
+  ctx.lineTo(x+w*.64,base);
+  ctx.moveTo(x+w*.38,y+h*.18);ctx.lineTo(x+w*.86,y+h*.18);
+  ctx.lineTo(x+w*.94,y+h*.34);
+  ctx.lineTo(x+w*.94,base);
+  ctx.moveTo(x+w*.25,base);ctx.lineTo(x+w*.25,y+h*.56);ctx.lineTo(x+w*.42,y+h*.56);ctx.lineTo(x+w*.42,base);
+  ctx.moveTo(x+w*.70,base);ctx.lineTo(x+w*.70,y+h*.45);ctx.lineTo(x+w*.84,y+h*.45);ctx.lineTo(x+w*.84,base);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawExactCostPanel(page,quotation){
+  const{ctx}=page;
+  const total=quotation.totalText||quotation.minimumText||money(quotation.total||quotation.minimum);
+  ctx.fillStyle='#fff7f2';
+  roundedRect(ctx,MARGIN,page.y,CONTENT_WIDTH,190,18);ctx.fill();
+  ctx.fillStyle='#7b8b99';
+  ctx.font='800 17px Arial, sans-serif';
+  ctx.textAlign='center';
+  ctx.fillText('EXACT PACKAGE QUOTATION',PAGE_WIDTH/2,page.y+42);
+  ctx.fillStyle='#0a2d50';
+  ctx.font='800 45px Arial, sans-serif';
+  ctx.fillText(total,PAGE_WIDTH/2,page.y+102);
+  ctx.fillStyle='#425f78';
+  ctx.font='700 20px Arial, sans-serif';
+  const detail=(quotation.packageRateText||quotation.effectiveRateText||'—')+' · '+(quotation.project?.constructionPackage||'Package')+' · '+Number(quotation.project?.builtUpArea||0).toLocaleString('en-IN')+' sq ft';
+  ctx.fillText(detail,PAGE_WIDTH/2,page.y+145);
+  ctx.fillStyle='#ff5a1f';
+  ctx.fillRect(MARGIN+120,page.y+170,CONTENT_WIDTH-240,4);
+  ctx.textAlign='left';
+  page.y+=218;
+}
+
+function drawWorkCostTable(page,quotation){
+  const{ctx}=page;
+  const total=Number(quotation.total||quotation.minimum||0);
+  const builtUp=Number(quotation.project?.builtUpArea||0);
+  const floors=Math.max(1,Number(quotation.project?.floors||1));
+  const rate=Number(quotation.packageRate||quotation.project?.packageRate||0);
+  const floorArea=builtUp/floors;
+  const names=['Ground Floor','First Floor','Second Floor','Third Floor','Fourth Floor'];
+  const rows=[];
+  for(let i=0;i<floors;i++){
+    const area=i===floors-1?builtUp-Math.round(floorArea)*(floors-1):Math.round(floorArea);
+    const amount=i===floors-1?total-rows.reduce((sum,row)=>sum+row.amount,0):Math.round(area*rate);
+    rows.push({label:names[i]||('Floor '+(i+1)),area,rate,amount});
+  }
+
+  const widths=[390,200,200,246];
+  const headers=['WORK DESCRIPTION','SFT','RATE','AMOUNT'];
+  let x=MARGIN;
+  ctx.fillStyle='#f1d1cc';
+  ctx.fillRect(MARGIN,page.y,CONTENT_WIDTH,52);
+  ctx.fillStyle='#173957';
+  ctx.font='800 15px Arial, sans-serif';
+  headers.forEach((header,index)=>{ctx.fillText(header,x+12,page.y+32);x+=widths[index]});
+  page.y+=52;
+
+  rows.forEach((row,index)=>{
+    const h=58;
+    ctx.fillStyle=index%2===0?'#fff':'#fbfcfd';
+    ctx.fillRect(MARGIN,page.y,CONTENT_WIDTH,h);
+    ctx.strokeStyle='#dfe5ea';ctx.strokeRect(MARGIN,page.y,CONTENT_WIDTH,h);
+    ctx.fillStyle='#263f55';ctx.font='600 17px Arial, sans-serif';
+    ctx.fillText(row.label,MARGIN+12,page.y+35);
+    ctx.font='700 16px Arial, sans-serif';
+    ctx.fillText(Math.round(row.area).toLocaleString('en-IN'),MARGIN+widths[0]+12,page.y+35);
+    ctx.fillText(money(row.rate),MARGIN+widths[0]+widths[1]+12,page.y+35);
+    ctx.fillText(money(row.amount),MARGIN+widths[0]+widths[1]+widths[2]+12,page.y+35);
+    page.y+=h;
+  });
+
+  ctx.fillStyle='#0a2d50';
+  ctx.fillRect(MARGIN,page.y,CONTENT_WIDTH,64);
+  ctx.fillStyle='#fff';
+  ctx.font='800 18px Arial, sans-serif';
+  ctx.fillText('TOTAL',MARGIN+12,page.y+39);
+  ctx.textAlign='right';
+  ctx.fillText(money(total),PAGE_WIDTH-MARGIN-14,page.y+39);
+  ctx.textAlign='left';
+  page.y+=82;
+}
+
+function drawExactPaymentTable(page,schedule){
+  const{ctx}=page;
+  const widths=[90,610,160,176];
+  const headers=['%','MILESTONE','AMOUNT','STATUS'];
+  let x=MARGIN;
+  ctx.fillStyle='#f1d1cc';ctx.fillRect(MARGIN,page.y,CONTENT_WIDTH,52);
+  ctx.fillStyle='#173957';ctx.font='800 15px Arial, sans-serif';
+  headers.forEach((header,index)=>{ctx.fillText(header,x+10,page.y+32);x+=widths[index]});
+  page.y+=52;
+  schedule.forEach((item,index)=>{
+    const lines=wrap(ctx,item.milestone,565);
+    const h=Math.max(58,26+lines.length*21);
+    ctx.fillStyle=index%2===0?'#fff':'#fbfcfd';
+    ctx.fillRect(MARGIN,page.y,CONTENT_WIDTH,h);
+    ctx.strokeStyle='#e4e9ee';ctx.strokeRect(MARGIN,page.y,CONTENT_WIDTH,h);
+    ctx.fillStyle='#173957';ctx.font='700 16px Arial, sans-serif';
+    ctx.fillText(String(item.percent)+'%',MARGIN+12,page.y+31);
+    ctx.font='500 15px Arial, sans-serif';
+    lines.forEach((line,lineIndex)=>ctx.fillText(line,MARGIN+widths[0]+10,page.y+29+lineIndex*21));
+    ctx.font='700 15px Arial, sans-serif';
+    ctx.fillText(money(item.amount??item.minimum),MARGIN+widths[0]+widths[1]+10,page.y+31);
+    ctx.fillStyle='#7b8b99';
+    ctx.fillText('Milestone',MARGIN+widths[0]+widths[1]+widths[2]+10,page.y+31);
+    page.y+=h;
+  });
+  page.y+=14;
+}
+
+function drawCover(page,quotation,customerName,city){
+  const{ctx}=page;
+  page.y=230;
+  ctx.fillStyle='#ff5a1f';
+  ctx.font='800 22px Arial, sans-serif';
+  ctx.fillText('CONSTRUCTION QUOTATION',MARGIN,page.y);
+  ctx.fillStyle='#0a2d50';
+  ctx.font='800 64px Arial, sans-serif';
+  ctx.fillText('Build your dream',MARGIN,page.y+86);
+  ctx.fillText('home with clarity.',MARGIN,page.y+154);
+  ctx.fillStyle='#5f7284';
+  ctx.font='500 22px Arial, sans-serif';
+  wrap(ctx,'Package pricing, project details, specifications, payment milestones and important terms in one professional quotation.',CONTENT_WIDTH-80)
+    .slice(0,3).forEach((line,index)=>ctx.fillText(line,MARGIN,page.y+213+index*31));
+
+  ctx.fillStyle='#fff7f2';
+  roundedRect(ctx,MARGIN,page.y+330,CONTENT_WIDTH,220,18);ctx.fill();
+  ctx.fillStyle='#7b8b99';ctx.font='800 15px Arial, sans-serif';
+  ctx.fillText('CUSTOMER',MARGIN+26,page.y+370);
+  ctx.fillStyle='#173957';ctx.font='800 26px Arial, sans-serif';
+  ctx.fillText(customerName||'Customer',MARGIN+26,page.y+405);
+  ctx.fillStyle='#7b8b99';ctx.font='800 15px Arial, sans-serif';
+  ctx.fillText('SITE / LOCATION',MARGIN+26,page.y+456);
+  ctx.fillStyle='#173957';ctx.font='700 21px Arial, sans-serif';
+  ctx.fillText(city||'To be confirmed',MARGIN+26,page.y+490);
+
+  ctx.fillStyle='#ff5a1f';
+  roundedRect(ctx,PAGE_WIDTH-MARGIN-330,page.y+355,300,150,16);ctx.fill();
+  ctx.fillStyle='#fff';ctx.textAlign='center';ctx.font='800 16px Arial, sans-serif';
+  ctx.fillText(String(quotation.project?.constructionPackage||'PACKAGE').toUpperCase(),PAGE_WIDTH-MARGIN-180,page.y+390);
+  ctx.font='800 37px Arial, sans-serif';
+  ctx.fillText(quotation.packageRateText||quotation.effectiveRateText||'—',PAGE_WIDTH-MARGIN-180,page.y+440);
+  ctx.font='700 15px Arial, sans-serif';
+  ctx.fillText('CURRENT PROPULSE PACKAGE RATE',PAGE_WIDTH-MARGIN-180,page.y+476);
+  ctx.textAlign='left';
+
+  drawHouseLineArt(ctx,MARGIN+60,page.y+650,CONTENT_WIDTH-120,420);
+  ctx.fillStyle='#0a2d50';ctx.font='800 22px Arial, sans-serif';
+  ctx.fillText('ProPulse Business',MARGIN,page.y+1160);
+  ctx.fillStyle='#7b8b99';ctx.font='500 16px Arial, sans-serif';
+  ctx.fillText('Structured homeowner quotation · Generated from your submitted project details',MARGIN,page.y+1192);
+}
+
+function drawWhyChoose(page){
+  const items=[
+    ['Transparent package pricing','Quotation amount is calculated from the selected package rate and confirmed built-up area.'],
+    ['Clear specifications','Material allowances and package inclusions are listed before you proceed.'],
+    ['Structured payment milestones','A milestone-based payment view makes the project easier to plan.'],
+    ['Relevant professionals','Your submitted requirement can be connected to relevant professionals for final commercial confirmation.'],
+    ['Customer-controlled details','You can review the area, package and requirement details before final contractor engagement.'],
+  ];
+  drawSectionHeading(page,'Why choose ProPulse?','A clearer starting point for comparing construction options.');
+  items.forEach(([title,body],index)=>{
+    const y=page.y;
+    ctx=page.ctx;
+    ctx.fillStyle=index%2===0?'#fff7f2':'#f7f9fb';
+    roundedRect(ctx,MARGIN,y,CONTENT_WIDTH,112,12);ctx.fill();
+    ctx.fillStyle='#ff5a1f';ctx.font='800 22px Arial, sans-serif';
+    ctx.fillText('✓',MARGIN+20,y+39);
+    ctx.fillStyle='#173957';ctx.font='800 19px Arial, sans-serif';
+    ctx.fillText(title,MARGIN+58,y+35);
+    ctx.fillStyle='#5f7284';ctx.font='500 16px Arial, sans-serif';
+    wrap(ctx,body,CONTENT_WIDTH-90).slice(0,2).forEach((line,lineIndex)=>ctx.fillText(line,MARGIN+58,y+65+lineIndex*21));
+    page.y+=124;
+  });
+}
+
 async function detailedQuotationPages({quotation,flowName,flowKey,leadId,customerName,phone,email,city,pincode,rows}){
   const logo=await loadLogo();
   const pages=[];
@@ -314,67 +503,113 @@ async function detailedQuotationPages({quotation,flowName,flowKey,leadId,custome
     return page;
   };
 
-  let page=addPage('Detailed Quotation');
-  drawHero(page,'Your '+(quotation?.title||'Project Quotation'),'Structured project pricing, specifications and milestone plan based on the details submitted to ProPulse.');
+  let page=addPage('Construction Quotation');
+  drawCover(page,quotation,customerName,city);
+
+  page=addPage('Quotation');
+  drawHero(page,'Quotation Details','Customer, site and package information captured from the submitted requirement.','QUOTATION');
   drawMetaGrid(page,[
-    ['Quotation No.',leadId?'PP-'+leadId:'PP-'+String(quotation?.calculationId||Date.now()).slice(-10)],
-    ['Generated',shortDate(quotation?.generatedAt)],
-    ['Valid Until',shortDate(quotation?.validUntil)],
-    ['Service',flowName],
+    ['Quotation No.',leadId?'PP-'+leadId:'PP-'+String(Date.now()).slice(-10)],
+    ['Date',shortDate(quotation?.generatedAt)],
+    ['Validity',shortDate(quotation?.validUntil)],
     ['Customer',customerName||'—'],
     ['Mobile',phone?'+91 '+String(phone).replace(/\D/g,'').slice(-10):'—'],
-    ['Location',[city,pincode].filter(Boolean).join(' · ')||'—'],
     ['Email',email||'Not provided'],
-  ]);
-  drawSectionHeading(page,'Estimated project cost','This is the system-generated planning quotation from the Admin-configured rate engine.');
-  drawCostCards(page,quotation);
-
-  page=addPage('Project & Cost Details');
-  drawSectionHeading(page,'Construction details');
-  drawKeyValueRows(page,[
-    ['Project Type',quotation.project?.projectType],
-    ['Property Type',quotation.project?.propertyType],
+    ['Site Location',[city,pincode].filter(Boolean).join(' · ')||'—'],
     ['Plot Area',quotation.project?.plotArea?quotation.project.plotArea+' sq yards':'—'],
-    ['Total Built-up Area',quotation.project?.builtUpArea?quotation.project.builtUpArea+' sq ft':'—'],
-    ['Floors',quotation.project?.floors||'—'],
-    ['Approx. Average / Floor',quotation.project?.averageFloorArea?Math.round(quotation.project.averageFloorArea)+' sq ft':'—'],
-    ['Package',quotation.project?.constructionPackage],
-    ['Specification Level',quotation.project?.quality],
-    ['Site Access',quotation.project?.siteAccess],
-    ['Basement',quotation.project?.basement],
-    ['Expected Construction Duration',quotation.estimatedDuration],
   ]);
-  drawSectionHeading(page,'Cost breakdown');
-  drawBreakdownTable(page,quotation.costBreakdown||[]);
+  drawSectionHeading(page,'Package selected');
+  drawKeyValueRows(page,[
+    ['Package',quotation.project?.constructionPackage||'—'],
+    ['Package Rate',quotation.packageRateText||quotation.effectiveRateText||'—'],
+    ['Built-up Area',quotation.project?.builtUpArea?Number(quotation.project.builtUpArea).toLocaleString('en-IN')+' sq ft':'—'],
+    ['Floors',quotation.project?.floors||'—'],
+    ['Site Access',quotation.project?.siteAccess||'—'],
+    ['Expected Start',quotation.project?.timeline||'—'],
+  ]);
 
-  page=addPage('Package Specifications');
-  drawSectionHeading(page,(quotation.project?.quality||'Standard')+' package assumptions','These are planning assumptions used to make the quotation useful. The selected contractor must confirm final brands, models and quantities.');
-  drawSpecificationCards(page,quotation.specifications||[]);
+  page=addPage('Specification and Cost');
+  drawSectionHeading(page,'Specification and Cost','Exact quotation using the current ProPulse package rate shown on the Packages page.');
+  drawExactCostPanel(page,quotation);
+  drawKeyValueRows(page,[
+    ['Calculation',Number(quotation.project?.builtUpArea||0).toLocaleString('en-IN')+' sq ft × '+(quotation.packageRateText||'—')],
+    ['Final Quotation Amount',quotation.totalText||quotation.minimumText||'—'],
+    ['Package',quotation.project?.constructionPackage||'—'],
+    ['Validity','30 days from generation'],
+  ]);
 
-  page=addPage('Payment Schedule');
-  drawSectionHeading(page,'Suggested milestone schedule','A structured milestone split similar to a professional construction quotation. Final payment terms are agreed with the selected business.');
-  drawPaymentTable(page,quotation.paymentSchedule||[]);
-  drawSectionHeading(page,'Estimated completion');
-  drawKeyValueRows(page,[['Planning duration',quotation.estimatedDuration||'—'],['Quotation validity','30 days from generation']]);
+  page=addPage('Work Description & Cost');
+  drawSectionHeading(page,'Work Description & Cost','Floor-wise allocation is shown for planning clarity; the final quoted total remains the exact package-rate calculation.');
+  drawWorkCostTable(page,quotation);
+  drawKeyValueRows(page,[
+    ['Total Built-up Area',Number(quotation.project?.builtUpArea||0).toLocaleString('en-IN')+' sq ft'],
+    ['Package Rate',quotation.packageRateText||'—'],
+    ['Final Amount',quotation.totalText||quotation.minimumText||'—'],
+  ]);
 
-  page=addPage('Scope, Exclusions & Terms');
-  drawSectionHeading(page,'Customer requirement');
-  drawKeyValueRows(page,(rows||[]).slice(0,18));
-  if(quotation.project?.additional)drawKeyValueRows(page,[['Additional Information',quotation.project.additional]]);
-  if(page.y>1180)page=addPage('Scope, Exclusions & Terms');
-  drawSectionHeading(page,'Typical exclusions');
+  const specs=Array.isArray(quotation.specifications)?quotation.specifications:[];
+  const chunkSize=7;
+  for(let offset=0;offset<specs.length;offset+=chunkSize){
+    page=addPage((quotation.project?.constructionPackage||'Package')+' Specifications');
+    drawSectionHeading(
+      page,
+      (quotation.project?.constructionPackage||'Package')+' Specifications',
+      offset===0?'Package inclusions and material allowances currently shown on ProPulse Packages.':'Continued package specifications.'
+    );
+    drawSpecificationCards(page,specs.slice(offset,offset+chunkSize));
+  }
+
+  page=addPage('Schedule of Payments');
+  drawSectionHeading(page,'Schedule of Payments','Suggested milestone split applied to the exact quotation amount.');
+  drawKeyValueRows(page,[['Total Project Cost',quotation.totalText||quotation.minimumText||'—']]);
+  drawExactPaymentTable(page,quotation.paymentSchedule||[]);
+
+  page=addPage('Work Schedule & Exclusions');
+  drawSectionHeading(page,'Work Schedule and Completion Time');
+  drawKeyValueRows(page,[
+    ['Estimated Duration',quotation.estimatedDuration||'—'],
+    ['Expected Start',quotation.project?.timeline||'—'],
+  ]);
+  drawSectionHeading(page,'Works / Costs Not Included','Unless specifically included in the selected package or final contractor agreement.');
   drawBullets(page,quotation.exclusions||[]);
-  if(page.y>1250)page=addPage('Terms & Notes');
-  drawSectionHeading(page,'Important terms');
+
+  page=addPage('Points to Note');
+  drawSectionHeading(page,'Points to Note','Important commercial and quotation conditions.');
   drawBullets(page,quotation.terms||[]);
-  page.y+=14;
+  if(quotation.project?.additional){
+    page.y+=14;
+    drawSectionHeading(page,'Additional Requirement');
+    drawKeyValueRows(page,[['Customer Notes',quotation.project.additional]]);
+  }
+
+  page=addPage('Why Choose ProPulse');
+  drawWhyChoose(page);
+
+  page=addPage('Thank You');
+  page.y=300;
+  page.ctx.textAlign='center';
+  page.ctx.fillStyle='#ff5a1f';
+  page.ctx.font='800 20px Arial, sans-serif';
+  page.ctx.fillText('THANK YOU FOR CHOOSING PROPULSE',PAGE_WIDTH/2,page.y);
+  page.ctx.fillStyle='#0a2d50';
+  page.ctx.font='800 52px Arial, sans-serif';
+  page.ctx.fillText('Your quotation is ready.',PAGE_WIDTH/2,page.y+82);
+  page.ctx.fillStyle='#5f7284';
+  page.ctx.font='500 20px Arial, sans-serif';
+  wrap(page.ctx,'Use this document to review your package, project area, exact package-rate amount, specifications and payment plan before final contractor confirmation.',CONTENT_WIDTH-120)
+    .slice(0,4).forEach((line,index)=>page.ctx.fillText(line,PAGE_WIDTH/2,page.y+135+index*29));
   page.ctx.fillStyle='#fff7f2';
-  roundedRect(page.ctx,MARGIN,page.y,CONTENT_WIDTH,130,12);page.ctx.fill();
-  page.ctx.fillStyle='#b24a1f';page.ctx.font='800 18px Arial, sans-serif';
-  page.ctx.fillText('IMPORTANT',MARGIN+20,page.y+30);
-  page.ctx.fillStyle='#5e6f7f';page.ctx.font='500 17px Arial, sans-serif';
-  const note=quotation.disclaimer||'This is an indicative quotation generated from the information provided. Final pricing is confirmed after professional review.';
-  wrap(page.ctx,note,CONTENT_WIDTH-40).slice(0,4).forEach((line,index)=>page.ctx.fillText(line,MARGIN+20,page.y+59+index*23));
+  roundedRect(page.ctx,MARGIN+110,page.y+310,CONTENT_WIDTH-220,190,18);page.ctx.fill();
+  page.ctx.fillStyle='#7b8b99';page.ctx.font='800 15px Arial, sans-serif';
+  page.ctx.fillText('FINAL QUOTATION AMOUNT',PAGE_WIDTH/2,page.y+355);
+  page.ctx.fillStyle='#0a2d50';page.ctx.font='800 44px Arial, sans-serif';
+  page.ctx.fillText(quotation.totalText||quotation.minimumText||'—',PAGE_WIDTH/2,page.y+420);
+  page.ctx.fillStyle='#425f78';page.ctx.font='700 18px Arial, sans-serif';
+  page.ctx.fillText((quotation.project?.constructionPackage||'Package')+' · '+(quotation.packageRateText||'—'),PAGE_WIDTH/2,page.y+462);
+  page.ctx.textAlign='left';
+  drawHouseLineArt(page.ctx,MARGIN+120,page.y+600,CONTENT_WIDTH-240,350);
+  page.ctx.fillStyle='#5f7284';page.ctx.font='500 15px Arial, sans-serif';
+  wrap(page.ctx,quotation.disclaimer||'',CONTENT_WIDTH-80).slice(0,5).forEach((line,index)=>page.ctx.fillText(line,MARGIN+40,page.y+1040+index*22));
 
   return pages;
 }
