@@ -67,10 +67,11 @@ function PublicContact(){
       <nav>
         <Link to="/">Home</Link>
         <Link to="/packages">Packages</Link>
-        <Link to="/projects">Projects</Link><Link to="/experts">Experts</Link>
+        <Link to="/projects">Projects</Link>
         <Link to="/how-it-works">How It Works</Link>
         <Link to="/about">About</Link>
         <Link className="active" to="/contact">Contact</Link>
+        <Link to="/experts">Experts</Link>
       </nav>
       <div className="public-header-actions">
         <Link className="contact-header-cta" to="/quote#construction">Get Free Quote <Icon name="arrow" size={15}/></Link>
