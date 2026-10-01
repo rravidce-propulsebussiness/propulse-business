@@ -16,8 +16,6 @@
 @keyframes hiwFlowSwap{from{opacity:.45;transform:translateY(8px)}to{opacity:1;transform:none}}
 @keyframes hiwTabEnter{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
 @keyframes hiwTabSelect{0%{transform:translateY(0) scale(.985)}60%{transform:translateY(-3px) scale(1.012)}100%{transform:translateY(-2px) scale(1)}}
-to{opacity:1;transform:none}}
-to{opacity:1;transform:scale(1)}}
 @keyframes hiwStepReveal{from{opacity:0;transform:translateY(16px) scale(.985)}to{opacity:1;transform:none}}
 @keyframes hiwVisualReveal{from{opacity:0;transform:translateX(18px)}to{opacity:1;transform:none}}
 @keyframes hiwArrowNudge{0%,100%{transform:translateX(0)}50%{transform:translateX(4px)}}

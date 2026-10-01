@@ -744,6 +744,9 @@ export default function RequirementWizard({ flowKey, onCompletionChange }) {
           <div className="rq-section-heading"><strong>1.</strong><div><h2>Basic Details</h2><p>Project and contact essentials for a more accurate quotation.</p></div></div>
           <div className="rq-basic-grid">
             <QuoteLocationFields
+              states={locationStates}
+              stateId={locationStateId}
+              onStateChange={setLocationState}
               cities={cities}
               cityId={cityId}
               onCityChange={setCity}

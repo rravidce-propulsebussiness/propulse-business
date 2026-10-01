@@ -54,7 +54,7 @@
 }
 .irx-select-field>small,.irx-preference-field>small,.irx-scope-field>small,.irx-work-heading>small{
   color:#84919d;
-  font-size:11px;
+  font-size:12px;
   line-height:1.4;
 }
 .irx-select-field select,.irx-preference-field select,.irx-preference-field input{
@@ -116,7 +116,7 @@
 }
 .irx-scope-cards button small{
   color:#81909c;
-  font-size:10.5px;
+  font-size:12px;
   line-height:1.35;
 }
 .irx-scope-cards button i{
@@ -189,7 +189,7 @@
   background:#ffeadf;
 }
 .irx-work-grid button>b{
-  font-size:11px;
+  font-size:12px;
   line-height:1.25;
   text-align:center;
 }
@@ -204,7 +204,7 @@
   border-radius:50%;
   background:#ef5a22;
   color:#fff;
-  font-size:10px;
+  font-size:12px;
   font-style:normal;
   font-weight:900;
 }
@@ -263,7 +263,7 @@
   font-size:13px;
 }
 .irx-scope-cards button small{
-  font-size:11px;
+  font-size:12px;
 }
 
 .irx-work-selector{
@@ -292,7 +292,7 @@
   border-radius:8px;
   background:#fff;
   color:#29465f;
-  font-size:10.5px;
+  font-size:12px;
   font-weight:850;
   cursor:pointer;
 }
@@ -309,7 +309,7 @@
   min-height:92px;
 }
 .irx-work-grid button>b{
-  font-size:11.5px;
+  font-size:12px;
 }
 .irx-work-grid button.active{
   box-shadow:0 8px 20px rgba(239,90,34,.10);
@@ -361,7 +361,7 @@
 }
 .irx-bedroom-field small{
   color:#81909c;
-  font-size:10.5px;
+  font-size:12px;
   line-height:1.35;
 }
 .irx-bedroom-field select{
@@ -418,7 +418,7 @@
 }
 .irx-property-select-field small{
   color:#81909c;
-  font-size:10.5px;
+  font-size:12px;
   line-height:1.35;
 }
 .irx-property-select-field select{
@@ -477,7 +477,7 @@
 }
 .irx-package-heading small{
   color:#7f8e9a;
-  font-size:11px;
+  font-size:12px;
   line-height:1.45;
 }
 .irx-package-heading>a{
@@ -485,7 +485,7 @@
   align-items:center;
   gap:5px;
   color:#ef5a22;
-  font-size:11px;
+  font-size:12px;
   font-weight:850;
   text-decoration:none;
   white-space:nowrap;
@@ -529,7 +529,7 @@
 }
 .irx-package-top span{
   color:#ef5a22;
-  font-size:9.5px;
+  font-size:12px;
   font-weight:950;
   letter-spacing:.11em;
 }
@@ -538,7 +538,7 @@
   border-radius:999px;
   background:#fff1e9;
   color:#9c451f;
-  font-size:9px;
+  font-size:12px;
   font-style:normal;
   font-weight:850;
 }
@@ -563,13 +563,13 @@
 .irx-package-name>strong small{
   margin-left:2px;
   color:#718394;
-  font-size:10px;
+  font-size:12px;
   font-weight:700;
 }
 .irx-package-grid p{
   margin:0;
   color:#718394;
-  font-size:10.5px;
+  font-size:12px;
   line-height:1.48;
 }
 .irx-package-highlights{
@@ -579,7 +579,7 @@
 }
 .irx-package-highlights span{
   color:#415f77;
-  font-size:9.5px;
+  font-size:12px;
   font-weight:700;
 }
 .irx-package-grid em{
@@ -589,7 +589,7 @@
   border-radius:8px;
   background:#f2f5f7;
   color:#21425e;
-  font-size:10px;
+  font-size:12px;
   font-style:normal;
   font-weight:900;
 }
@@ -601,7 +601,7 @@
   display:block;
   margin-top:11px;
   color:#8996a1;
-  font-size:10px;
+  font-size:12px;
   line-height:1.45;
 }
 
@@ -643,7 +643,7 @@
 }
 .irx-pref-copy>small{
   color:#80909d;
-  font-size:10.5px;
+  font-size:12px;
   line-height:1.4;
 }
 .irx-budget-field>select,
@@ -731,10 +731,10 @@
   border-radius:50%;
   background:#ff5a1f;
   color:#fff;
-  font-size:9px;
+  font-size:12px;
 }
 .irx-timeline-options button b{
-  font-size:10.5px;
+  font-size:12px;
   font-weight:850;
   line-height:1.25;
   text-align:center;
@@ -792,7 +792,7 @@
   display:block;
   margin-bottom:5px;
   color:#ef5a22;
-  font-size:9px;
+  font-size:12px;
   line-height:1;
   font-weight:950;
   letter-spacing:.14em;
@@ -830,13 +830,13 @@
 }
 .irx-basic-grid>label>b{
   color:#153954;
-  font-size:11px;
+  font-size:12px;
   font-weight:900;
   letter-spacing:.01em;
 }
 .irx-basic-grid>label>b small{
   color:#96a3ad;
-  font-size:9px;
+  font-size:12px;
   font-weight:700;
 }
 .irx-basic-grid input,
@@ -978,7 +978,7 @@
 }
 .irx-notes-label>b{
   color:#153954;
-  font-size:11.5px;
+  font-size:12px;
   font-weight:900;
 }
 .irx-notes-label>small{
@@ -986,7 +986,7 @@
   border-radius:999px;
   background:#f3f6f8;
   color:#8e9aa4;
-  font-size:8.5px;
+  font-size:12px;
   font-weight:850;
 }
 .irx-notes-premium textarea{
@@ -1012,7 +1012,7 @@
   right:26px;
   bottom:22px;
   color:#a0aab3;
-  font-size:10px;
+  font-size:12px;
 }
 
 /* Floor plan / reference file uploader */
@@ -1048,14 +1048,14 @@
   border-radius:999px;
   background:#f1f4f6;
   color:#8b98a3;
-  font-size:8.5px;
+  font-size:12px;
   font-weight:850;
 }
 .irx-upload-head p{
   max-width:720px;
   margin:0;
   color:#7f8f9c;
-  font-size:10.5px;
+  font-size:12px;
   line-height:1.5;
 }
 .irx-upload-head>span{
@@ -1064,7 +1064,7 @@
   border-radius:999px;
   background:#fff0e8;
   color:#cf531f;
-  font-size:9.5px;
+  font-size:12px;
   font-weight:900;
 }
 .irx-upload-dropzone{
@@ -1104,12 +1104,12 @@
 }
 .irx-upload-dropzone strong{
   color:#173957;
-  font-size:11.5px;
+  font-size:12px;
   font-weight:900;
 }
 .irx-upload-dropzone small{
   color:#8997a3;
-  font-size:9.5px;
+  font-size:12px;
 }
 .irx-reference-gallery{
   display:grid;
@@ -1161,14 +1161,14 @@
 .irx-reference-gallery article>div:last-child>b{
   overflow:hidden;
   color:#173957;
-  font-size:9.5px;
+  font-size:12px;
   font-weight:850;
   text-overflow:ellipsis;
   white-space:nowrap;
 }
 .irx-reference-gallery article>div:last-child>small{
   color:#8b98a3;
-  font-size:8.5px;
+  font-size:12px;
 }
 .irx-pdf-preview{
   width:100%;
@@ -1185,12 +1185,12 @@
   border-radius:7px;
   background:#ff5a1f;
   color:#fff;
-  font-size:10px;
+  font-size:12px;
   font-weight:950;
 }
 .irx-pdf-preview>small{
   color:#7b8b98;
-  font-size:8.5px;
+  font-size:12px;
 }
 .irx-upload-notice{
   margin-top:9px;
@@ -1198,14 +1198,14 @@
   border-radius:8px;
   background:#fff5ef;
   color:#a84b27;
-  font-size:9.5px;
+  font-size:12px;
   font-weight:700;
 }
 .irx-upload-footnote{
   display:block!important;
   margin-top:9px!important;
   color:#8d99a3!important;
-  font-size:9.5px!important;
+  font-size:12px!important;
 }
 
 @media(max-width:1050px){

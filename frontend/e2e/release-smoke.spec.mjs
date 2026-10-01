@@ -52,16 +52,22 @@ const TINY_PNG='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HA
 
 test('public homepage presents customer project and estimator journeys',async({page})=>{
   await page.goto('/')
-  await expect(page.getByRole('heading',{name:/plan the project/i})).toBeVisible()
-  await expect(page.getByRole('link',{name:/start build requirement/i})).toHaveAttribute('href','/build')
-  await expect(page.getByRole('link',{name:/start interior requirement/i})).toHaveAttribute('href','/design')
-  await expect(page.getByRole('link',{name:/calculate construction cost/i})).toHaveAttribute('href','/construction-estimator')
-  await expect(page.getByRole('link',{name:/calculate interior cost/i})).toHaveAttribute('href','/interior-estimator')
-  await expect(page.getByRole('link',{name:/professional marketplace/i}).first()).toHaveAttribute('href','/leads')
+  await expect(page.getByRole('heading',{name:/build\. design\. find.*right professionals/i})).toBeVisible()
+  await expect(page.getByRole('button',{name:/start your requirement/i}).first()).toBeVisible()
+  await expect(page.getByRole('link',{name:/view packages/i}).first()).toHaveAttribute('href','/packages')
+  await expect(page.getByRole('link',{name:/get free quote/i})).toHaveAttribute('href','/quote#interiors')
+  await expect(page.getByRole('link',{name:/for professionals/i})).toHaveAttribute('href','/professionals')
+  await expect(page.getByRole('heading',{name:/what do you need/i})).toBeVisible()
 
-  await page.getByRole('link',{name:/calculate interior cost/i}).click()
-  await expect(page).toHaveURL(/\/interior-estimator$/)
-  await expect(page.getByText('PROPULSE ESTIMATOR')).toBeVisible()
+  await page.getByRole('button',{name:/start your requirement/i}).first().click()
+  await expect(page.getByRole('dialog',{name:/tell us your requirement/i})).toBeVisible()
+  await expect(page.getByLabel('I am looking for')).toBeVisible()
+  await page.getByRole('button',{name:'Close'}).click()
+
+  await page.goto('/construction-estimator')
+  await expect(page).toHaveURL(/\/quote#construction$/)
+  await page.goto('/interior-estimator')
+  await expect(page).toHaveURL(/\/packages#interior$/)
 })
 
 test('protected customer route redirects anonymous users to login',async({page})=>{
@@ -72,11 +78,11 @@ test('protected customer route redirects anonymous users to login',async({page})
 
 test('business login survives reload and cannot access Admin APIs',async({page})=>{
   await login(page,accounts.business)
-  await expect(page).toHaveURL(/\/leads(?:\?|$)/)
+  await expect(page).toHaveURL(/\/professionals(?:\?|$)/)
   await expect(page.getByRole('heading',{name:'Find the right opportunity for your business.'})).toBeVisible()
 
   await page.reload()
-  await expect(page).toHaveURL(/\/leads(?:\?|$)/)
+  await expect(page).toHaveURL(/\/professionals(?:\?|$)/)
 
   await page.goto('/wallet')
   await expect(page.getByText('AVAILABLE BALANCE')).toBeVisible()
@@ -94,7 +100,7 @@ test.describe('financial mutation release gate',()=>{
 
   test('financial mutations remain exactly-once across wallet and manual approvals',async({page})=>{
     await login(page,accounts.business)
-    await expect(page).toHaveURL(/\/leads(?:\?|$)/)
+    await expect(page).toHaveURL(/\/professionals(?:\?|$)/)
 
     const startingWallet=await api(page,'/api/wallet?summary=1')
     expect(startingWallet.status).toBe(200)
