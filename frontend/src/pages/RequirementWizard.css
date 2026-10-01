@@ -487,3 +487,22 @@
   }
   .rq-interior-package-result b em{text-align:left}
 }
+
+
+.rq-reference-upload-status{
+  width:min(100%,720px);
+  margin:12px auto 0;
+  padding:10px 12px;
+  border:1px solid #d9eadf;
+  border-radius:10px;
+  background:#f4fbf6;
+  color:#2d6c43;
+  font-size:11px;
+  font-weight:800;
+  text-align:center;
+}
+.rq-reference-upload-status.warning{
+  border-color:#f0d9cd;
+  background:#fff7f2;
+  color:#a64b28;
+}
