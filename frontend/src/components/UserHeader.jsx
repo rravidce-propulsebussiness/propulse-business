@@ -22,10 +22,12 @@ export default function UserHeader() {
     <Link className="user-header-brand" to="/" onClick={()=>setOpen(false)}><img src="/brand/propulse-logo.png" alt="Propulse Business"/></Link>
     <nav className={`user-header-nav${open?' open':''}`}>
       <Link to="/">Home</Link>
-      <Link to="/#pricing" onClick={()=>setOpen(false)}>Pricing</Link>
-      <Link to="/#upcoming-features" onClick={()=>setOpen(false)}>Upcoming Features</Link>
-      <Link to="/#faq" onClick={()=>setOpen(false)}>FAQ</Link>
-      {location.pathname !== '/professionals' && <Link className="leads-active" to="/professionals" onClick={()=>setOpen(false)}>Explore Leads</Link>}
+      {location.pathname !== '/professionals' && <>
+        <Link to="/#pricing" onClick={()=>setOpen(false)}>Pricing</Link>
+        <Link to="/#upcoming-features" onClick={()=>setOpen(false)}>Upcoming Features</Link>
+        <Link to="/#faq" onClick={()=>setOpen(false)}>FAQ</Link>
+        <Link className="leads-active" to="/professionals" onClick={()=>setOpen(false)}>Explore Leads</Link>
+      </>}
       <Link className="public-nav-auth" to="/login" onClick={()=>setOpen(false)}>Login</Link>
       <Link className="public-nav-auth" to="/signup" onClick={()=>setOpen(false)}>Sign up</Link>
     </nav>
