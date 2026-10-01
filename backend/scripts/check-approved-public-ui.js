@@ -121,6 +121,7 @@ assert.match(publicExpertService,/getPublicExpert/);
 assert.doesNotMatch(publicExpertService,/bp\.phone/);
 assert.doesNotMatch(publicExpertService,/bp\.business_details/);
 assert.doesNotMatch(publicExpertService,/membership_expires_at/);
+assert.doesNotMatch(publicExpertService,/updatedBy/);
 assert.doesNotMatch(publicExpertService,/u\.email/);
 assert.match(serverSource,/app\.use\('\/api\/experts',publicExpertRoutes\)/);
 
