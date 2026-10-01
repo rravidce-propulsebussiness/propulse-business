@@ -318,10 +318,42 @@ export default function InteriorRequirementExact(props) {
               </div>
             </div>}
 
-            <div className="irx-preference-grid">
-              {finishQuality&&<div className="irx-preference-field"><b>{finishQuality.label}</b>{finishQuality.helpText&&<small>{finishQuality.helpText}</small>}<Chips question={finishQuality} value={answers[finishQuality.questionKey]} onChange={value=>setAnswer(finishQuality.questionKey,value)}/></div>}
-              {budget&&<label className="irx-preference-field"><b>{budget.label}</b>{budget.helpText&&<small>{budget.helpText}</small>}{budget.options?.length?<select value={answers[budget.questionKey]||''} onChange={e=>setAnswer(budget.questionKey,e.target.value)}><option value="">Select budget</option>{budget.options.map(option=><option key={option.value} value={option.value}>{option.label}</option>)}</select>:<input value={answers[budget.questionKey]||''} onChange={e=>setAnswer(budget.questionKey,e.target.value)} placeholder="Enter approximate budget"/>}</label>}
-              {timeline&&<div className="irx-preference-field irx-timeline-field"><b>{timeline.label}</b>{timeline.helpText&&<small>{timeline.helpText}</small>}<Chips question={timeline} value={answers[timeline.questionKey]} onChange={value=>setAnswer(timeline.questionKey,value)}/></div>}
+            <div className="irx-package-section">
+              <div className="irx-package-heading">
+                <div><b>Choose Interior Package</b><small>Package options and specifications are synced with the ProPulse Packages page.</small></div>
+                <Link to="/packages#interior">Compare packages <Icon name="arrow" size={13}/></Link>
+              </div>
+              <div className="irx-package-grid">
+                {INTERIOR_PACKAGES.map(item=>{
+                  const active=selectedPackageKey===item.key
+                  return <button type="button" key={item.key} className={active?'active':''} onClick={()=>setAnswer(finishQuality?.questionKey||'finish_quality',item.key)}>
+                    <div className="irx-package-top"><span>{item.eyebrow}</span>{item.badge&&<i>{item.badge}</i>}</div>
+                    <div className="irx-package-name"><b>{item.name}</b><strong>₹{item.price.toLocaleString('en-IN')}<small>/sq ft</small></strong></div>
+                    <p>{item.description}</p>
+                    <div className="irx-package-highlights">{item.highlights.slice(0,3).map(text=><span key={text}>✓ {text}</span>)}</div>
+                    <em>{active?'Selected':'Select Package'}</em>
+                  </button>
+                })}
+              </div>
+              <small className="irx-package-note">Package rates are brochure references only. Final interior price depends on measurements, selected work, design, materials and site conditions.</small>
+            </div>
+
+            <div className="irx-preference-grid irx-premium-preferences">
+              {budget&&<label className="irx-preference-field irx-budget-field">
+                <div className="irx-pref-icon"><Icon name="receipt" size={18}/></div>
+                <div className="irx-pref-copy"><b>Approximate Budget</b><small>{budget.helpText||'Share a rough budget so the right businesses can respond.'}</small></div>
+                {budget.options?.length
+                  ? <select value={answers[budget.questionKey]||''} onChange={e=>setAnswer(budget.questionKey,e.target.value)}><option value="">Select budget range</option>{budget.options.map(option=><option key={option.value} value={option.value}>{option.label}</option>)}</select>
+                  : <div className="irx-budget-input"><span>₹</span><input value={answers[budget.questionKey]||''} onChange={e=>setAnswer(budget.questionKey,e.target.value)} placeholder="Enter approximate budget"/></div>}
+              </label>}
+              {timeline&&<div className="irx-preference-field irx-timeline-field irx-premium-timeline">
+                <div className="irx-pref-icon"><Icon name="clock" size={18}/></div>
+                <div className="irx-pref-copy"><b>When do you want to start?</b><small>{timeline.helpText||'Choose the closest expected start timeline.'}</small></div>
+                <div className="irx-timeline-options">{(timeline.options||[]).map(option=>{
+                  const active=answers[timeline.questionKey]===option.value
+                  return <button type="button" key={option.value} className={active?'active':''} onClick={()=>setAnswer(timeline.questionKey,option.value)}>{active&&<span>✓</span>}<b>{option.label}</b></button>
+                })}</div>
+              </div>}
             </div>
 
             {extraQuestions.length>0&&<div className="irx-extra-grid">{extraQuestions.map(question=><div className="irx-extra-q" key={question.questionKey}><b>{question.label}</b>{question.helpText&&<small>{question.helpText}</small>}{['single_select','multi_select','timeline','boolean'].includes(question.questionType)?<Chips question={question} value={answers[question.questionKey]} onChange={value=>setAnswer(question.questionKey,value)}/>:<input value={answers[question.questionKey]||''} onChange={e=>setAnswer(question.questionKey,e.target.value)} placeholder="Enter details"/>}</div>)}</div>}
@@ -335,7 +367,7 @@ export default function InteriorRequirementExact(props) {
         </div>
 
         <aside className="irx-side" id="irx-summary">
-          <section className="irx-summary-card"><h3>Your Selection Summary</h3><div>{summary.map(([label,value])=><p key={label}><span>{label}</span><b title={value}>{value}</b></p>)}</div><p className="irx-submit-consent">By submitting, you agree that ProPulse may use your project and contact details to process this request and connect you with relevant professionals.</p>{state.error&&<div className="irx-error">{state.error}</div>}<button type="submit" disabled={state.saving}>{state.saving?'Submitting…':(flow.config?.submitLabel||'Submit Requirement')} <Icon name="arrow" size={15}/></button><small>Our experts will get in touch with you shortly.</small></section>
+          <section className="irx-summary-card"><h3>Your Selection Summary</h3><div>{summary.map(([label,value])=><p key={label}><span>{label}</span><b title={value}>{value}</b></p>)}</div><p className="irx-submit-consent">By submitting, you agree that ProPulse may use your project and contact details to process this request and connect you with relevant professionals.</p>{state.error&&<div className="irx-error">{state.error}</div>}<button type="submit" disabled={state.saving}>{state.saving?'Sending Request…':'Request Quote'} <Icon name="arrow" size={15}/></button><small>No instant price is generated for interiors. A business will confirm the final quote after reviewing your requirement.</small></section>
           <section className="irx-help"><div className="irx-help-head"><span><Icon name="support"/></span><div><b>Need Help?<br/>Talk to Our Expert</b><small>Get free consultation and personalized guidance for your interior project.</small></div></div><a href={phone?`tel:${phone.replace(/\s/g,'')}`:'#irx-basic'}><Icon name="phone" size={16}/>{phone||'Start Free Consultation'}</a><small>Mon - Sat, 9 AM - 8 PM</small></section>
         </aside>
       </div>
