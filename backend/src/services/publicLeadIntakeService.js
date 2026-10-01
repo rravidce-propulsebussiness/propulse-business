@@ -17,6 +17,10 @@ function deriveLeadFields(flow, answers) {
     if (question.leadField === 'budget') result.budget = formatted;
     if (question.leadField === 'requirement') result.requirement = formatted;
   }
+  if (flow.key === 'build' && !result.propertyType && !isEmpty(answers.project_type)) {
+    const projectTypeQuestion = flow.questions.find(question => question.questionKey === 'project_type');
+    result.propertyType = projectTypeQuestion ? formatPublicAnswer(projectTypeQuestion, answers.project_type) : String(answers.project_type);
+  }
   return result;
 }
 
