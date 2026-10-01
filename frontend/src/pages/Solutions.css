@@ -64,6 +64,77 @@
 }
 .quote-header-cta:hover{transform:translateY(-2px);box-shadow:0 16px 30px rgba(255,90,31,.28)}
 
+.quote-flow-switcher{
+  position:sticky;
+  top:72px;
+  z-index:145;
+  padding:12px 24px;
+  border-bottom:1px solid #edf0f2;
+  background:rgba(255,255,255,.96);
+  backdrop-filter:blur(14px);
+}
+.quote-flow-switcher-inner{
+  max-width:760px;
+  margin:0 auto;
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:8px;
+  padding:5px;
+  border:1px solid #e4eaf0;
+  border-radius:14px;
+  background:#f7f9fb;
+  box-shadow:0 8px 22px rgba(8,43,75,.055);
+}
+.quote-flow-switcher button{
+  min-height:48px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:9px;
+  padding:8px 14px;
+  border:1px solid transparent;
+  border-radius:10px;
+  background:transparent;
+  color:#173957;
+  cursor:pointer;
+  transition:all .2s ease;
+}
+.quote-flow-switcher button>span{
+  width:30px;
+  height:30px;
+  display:grid;
+  place-items:center;
+  border-radius:9px;
+  background:#edf2f6;
+  color:#173957;
+}
+.quote-flow-switcher button>b{
+  font-size:13px;
+  font-weight:900;
+  white-space:nowrap;
+}
+.quote-flow-switcher button>i{
+  font-style:normal;
+  font-size:9px;
+  font-weight:900;
+  letter-spacing:.04em;
+  color:#ff5a1f;
+}
+.quote-flow-switcher button:hover{
+  background:#fff;
+  border-color:#dce5ec;
+}
+.quote-flow-switcher button.active{
+  border-color:#ffb08d;
+  background:linear-gradient(180deg,#fff,#fff8f4);
+  color:#082b4b;
+  box-shadow:0 6px 16px rgba(255,90,31,.12);
+}
+.quote-flow-switcher button.active>span{
+  background:#ff5a1f;
+  color:#fff;
+}
+
 .quote-chooser{
   max-width:1460px;
   margin:0 auto;
@@ -427,4 +498,17 @@
 }
 @media(prefers-reduced-motion:reduce){
   .quote-page,.quote-service-card,.quote-flow,.quote-service-image img,.quote-header-cta,.quote-header nav a{animation:none!important;transition:none!important}
+}
+
+@media(max-width:860px){
+  .quote-flow-switcher{top:66px;padding:9px 12px}
+  .quote-flow-switcher-inner{max-width:none;display:flex;overflow-x:auto;scrollbar-width:none}
+  .quote-flow-switcher-inner::-webkit-scrollbar{display:none}
+  .quote-flow-switcher button{min-width:138px;flex:0 0 auto;padding:7px 10px}
+  .quote-flow-switcher button>i{display:none}
+}
+@media(max-width:520px){
+  .quote-flow-switcher{padding:8px}
+  .quote-flow-switcher button{min-width:126px}
+  .quote-flow-switcher button>b{font-size:12px}
 }
