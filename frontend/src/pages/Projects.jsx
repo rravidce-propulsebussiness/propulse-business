@@ -151,6 +151,10 @@ function Icon({name,size=18}){
   return null
 }
 
+function openLeadPopup(flowKey=''){
+  window.dispatchEvent(new CustomEvent('propulse:open-lead-popup',{detail:{flowKey}}))
+}
+
 export default function Projects(){
   const navigate=useNavigate()
   const [cities,setCities]=useState([])
@@ -240,7 +244,7 @@ export default function Projects(){
       <Link to="/" className="pj-logo"><img src="/brand/propulse-logo.svg" alt="ProPulse"/></Link>
       <nav><Link to="/">Home</Link><Link to="/packages">Packages</Link><Link className="active" to="/projects">Projects</Link><Link to="/how-it-works">How It Works</Link><Link to="/about">About</Link><Link to="/contact">Contact</Link><Link to="/experts">Find Professionals</Link></nav>
       <div className="public-header-actions">
-        <button className="public-quote-button" onClick={()=>navigate('/quote#construction')}>Get Free Quote <Icon name="arrow" size={15}/></button>
+        <button className="public-quote-button" onClick={()=>openLeadPopup('')}>Get Free Quote <Icon name="arrow" size={15}/></button>
         <Link className="public-professional-btn" to="/professionals">For Professionals</Link>
       </div>
     </header>
