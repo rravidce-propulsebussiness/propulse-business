@@ -2,6 +2,7 @@ import { useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { isEmptyAnswer } from './CustomerFlowQuestion'
 import QuoteLocationFields from './QuoteLocationFields'
+import { INTERIOR_PACKAGES } from '../data/interiorPackageCatalog'
 import './InteriorRequirementExact.css'
 
 const PROPERTY_IMAGES = {
