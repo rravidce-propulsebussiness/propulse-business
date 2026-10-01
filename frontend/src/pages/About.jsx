@@ -137,15 +137,6 @@ export default function About(){
       <article><span><Icon name="people"/></span><b>Customer Focus</b><p>Customer needs stay at the centre of every public flow.</p></article>
     </section>
 
-    <section className="ab-impact" id="ab-impact">
-      <img src={IMPACT} alt="Premium residential project"/>
-      <div className="ab-impact-copy"><span>OUR IMPACT</span><h2>Better Spaces.<em>Happier Lives.</em></h2><p>From dream homes to modern offices, from stylish interiors to better property decisions — ProPulse helps customers turn ideas into structured requirements.</p></div>
-      <div className="ab-impact-actions">
-        <button onClick={()=>navigate('/quote#construction')}>Start Your Project <Icon name="arrow" size={14}/></button>
-        <ul><li><Icon name="check" size={14}/>Customer-first requirement flows</li><li><Icon name="check" size={14}/>Admin-managed cities and industries</li><li><Icon name="check" size={14}/>Construction, interiors and real estate</li><li><Icon name="check" size={14}/>Built for clearer project conversations</li></ul>
-      </div>
-    </section>
-
     <footer className="ab-footer">
       <div className="ab-footer-brand"><img src="/brand/propulse-logo.svg" alt="ProPulse"/><p>Your customer starting point for construction, interiors and real-estate requirements.</p><div>f&nbsp;&nbsp;◎&nbsp;&nbsp;▶&nbsp;&nbsp;in</div></div>
       <div><b>Quick Links</b><Link to="/">Home</Link><Link to="/quote#construction">Construction</Link><Link to="/quote#interiors">Interiors</Link><Link to="/packages">Packages</Link><Link to="/quote#property">Real Estate</Link><Link to="/projects">Projects</Link></div>
