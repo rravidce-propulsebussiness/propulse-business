@@ -54,7 +54,8 @@ test('public homepage presents homeowner acquisition journeys',async({page})=>{
   await page.goto('/')
   await expect(page.locator('.hc-hero h1')).toContainText('Build. Design. Find')
   await expect(page.locator('.hc-hero h1')).toContainText('Right Professionals.')
-  await expect(page.getByRole('button',{name:/start your requirement/i})).toBeVisible()
+  const heroRequirementButton=page.locator('#home').getByRole('button',{name:'Start Your Requirement'})
+  await expect(heroRequirementButton).toBeVisible()
   await expect(page.getByRole('link',{name:/view packages/i}).first()).toHaveAttribute('href','/packages')
   await expect(page.getByRole('link',{name:/get free quote/i}).first()).toHaveAttribute('href','/quote#interiors')
   await expect(page.getByRole('link',{name:/find professionals/i}).first()).toHaveAttribute('href','/experts')
@@ -64,7 +65,7 @@ test('public homepage presents homeowner acquisition journeys',async({page})=>{
   await expect(page.getByRole('heading',{name:'Design Your Space'})).toBeVisible()
   await expect(page.getByRole('heading',{name:'Find a Property'})).toBeVisible()
 
-  await page.getByRole('button',{name:/start your requirement/i}).click()
+  await heroRequirementButton.click()
   await expect(page.getByText('Tell Us Your Requirement',{exact:true})).toBeVisible()
   await expect(page.getByRole('button',{name:/submit requirement/i})).toBeVisible()
 })
