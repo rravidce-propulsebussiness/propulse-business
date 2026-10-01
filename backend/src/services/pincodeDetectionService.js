@@ -2,6 +2,7 @@ const pool = require('../config/database');
 
 const INDIA_POST_LOOKUP = 'https://api.postalpincode.in/pincode/';
 const MAX_INDIA_POST_BYTES = 256 * 1024;
+const MAX_NOMINATIM_BYTES = 128 * 1024;
 
 function normalizeText(value) {
   return String(value || '')
@@ -424,13 +425,32 @@ async function reverseCoordinates(latitude, longitude) {
       },
       signal: controller.signal,
     });
+    const contentLength = Number(response.headers.get('content-length') || 0);
+    if (contentLength > MAX_NOMINATIM_BYTES) {
+      const error = new Error('Location lookup service returned an unexpectedly large response');
+      error.code = 'REVERSE_LOOKUP_FAILED';
+      throw error;
+    }
     if (!response.ok) {
       const error = new Error('Location lookup service is unavailable');
       error.code = 'REVERSE_LOOKUP_FAILED';
       throw error;
     }
 
-    const payload = await response.json();
+    const body = await readResponseTextLimited(response, MAX_NOMINATIM_BYTES);
+    if (body === null) {
+      const error = new Error('Location lookup service returned an unexpectedly large response');
+      error.code = 'REVERSE_LOOKUP_FAILED';
+      throw error;
+    }
+    let payload;
+    try {
+      payload = JSON.parse(body);
+    } catch {
+      const error = new Error('Location lookup service returned an invalid response');
+      error.code = 'REVERSE_LOOKUP_FAILED';
+      throw error;
+    }
     const address = payload?.address || {};
     const pincode = String(address.postcode || '').replace(/\D/g, '').slice(0, 6);
     if (!/^\d{6}$/.test(pincode)) {
