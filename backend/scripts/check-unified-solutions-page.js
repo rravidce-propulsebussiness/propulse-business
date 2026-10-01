@@ -19,20 +19,19 @@ assert.match(app,/path="\/build" element={<LegacySolutionRedirect hash="construc
 assert.match(app,/path="\/design" element={<LegacySolutionRedirect hash="interiors"\/>}/);
 assert.match(app,/path="\/property" element={<LegacySolutionRedirect hash="property"\/>}/);
 
-assert.match(solutions,/GET FREE QUOTE/);
-assert.match(solutions,/What do you need help with\?/);
+assert.match(solutions,/quote-flow-switcher/);
+assert.match(solutions,/Choose quote type/);
 assert.match(solutions,/Construction/);
 assert.match(solutions,/Interiors/);
 assert.match(solutions,/Real Estate/);
 assert.match(solutions,/RequirementWizard flowKey={active\.flowKey}/);
 assert.match(solutions,/location\.search/);
-assert.match(css,/\.quote-service-grid/);
-assert.match(css,/\.quote-flow \.rq-premium-header/);
-assert.match(css,/\.quote-flow \.irx-header/);
+assert.match(solutions,/aria-pressed={activeKey===key}/);
+assert.match(css,/\.quote-flow-switcher/);
+assert.match(css,/quoteFlowIn/);
 assert.match(css,/\.quote-flow \.rq-premium-hero/);
 assert.match(css,/\.quote-flow \.irx-hero/);
 assert.match(css,/\.quote-flow \.rex-hero/);
-assert.match(solutions,/quote-service-card/);
 
 assert.match(home,/\/quote#construction/);
 assert.match(home,/\/quote#interiors/);

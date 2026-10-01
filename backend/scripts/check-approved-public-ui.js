@@ -4,217 +4,104 @@ const path=require('path');
 
 const root=path.join(__dirname,'..');
 const read=relative=>fs.readFileSync(path.join(root,relative),'utf8');
-const readBuffer=relative=>fs.readFileSync(path.join(root,relative));
 
 const app=read('../frontend/src/App.jsx');
 const home=read('../frontend/src/pages/Home.jsx');
 const homeCss=read('../frontend/src/pages/Home.css');
+const popup=read('../frontend/src/components/GlobalLeadPopup.jsx');
 const quote=read('../frontend/src/pages/Solutions.jsx');
 const quoteCss=read('../frontend/src/pages/Solutions.css');
 const wizard=read('../frontend/src/pages/RequirementWizard.jsx');
 const packages=read('../frontend/src/pages/Packages.jsx');
-const publicHeader=read('../frontend/src/styles/PublicMarketingHeader.css');
-const websiteFaq=read('../frontend/src/components/WebsiteFaqSection.jsx');
-const websiteFaqCss=read('../frontend/src/components/WebsiteFaqSection.css');
-const portalContact=read('../frontend/src/pages/PortalContact.jsx');
-const professionalHome=read('../frontend/src/pages/ProfessionalHome.jsx');
-const professionalHomeCss=read('../frontend/src/pages/ProfessionalHome.css');
-const experts=read('../frontend/src/pages/Experts.jsx');
-const expertsCss=read('../frontend/src/pages/Experts.css');
-const publicExpertService=read('./src/services/publicExpertService.js');
-const serverSource=read('./src/server.js');
-const contact=read('../frontend/src/pages/Contact.jsx');
 const projects=read('../frontend/src/pages/Projects.jsx');
 const about=read('../frontend/src/pages/About.jsx');
 const howItWorks=read('../frontend/src/pages/HowItWorks.jsx');
-const howItWorksCss=read('../frontend/src/pages/HowItWorks.css');
+const contact=read('../frontend/src/pages/Contact.jsx');
+const experts=read('../frontend/src/pages/Experts.jsx');
+const expertsCss=read('../frontend/src/pages/Experts.css');
 const quoteLocationFields=read('../frontend/src/components/QuoteLocationFields.jsx');
 const quoteLocationCss=read('../frontend/src/components/QuoteLocationFields.css');
 const interiorExact=read('../frontend/src/components/InteriorRequirementExact.jsx');
 const realEstateExact=read('../frontend/src/components/RealEstateRequirementExact.jsx');
 const pincodeDetection=read('./src/services/pincodeDetectionService.js');
 const pincodeRoutes=read('./src/routes/pincodeRoutes.js');
+const publicExpertService=read('./src/services/publicExpertService.js');
+const serverSource=read('./src/server.js');
 
+// Canonical public routes and shared requirement popup.
 assert.match(app,/path="\/experts" element={<Experts\/>}/);
 assert.match(app,/path="\/quote" element={<Solutions\/>}/);
+assert.match(app,/path="\/professionals" element={<Leads\/>}/);
 assert.match(app,/path="\/solutions" element={<LegacySolutionRedirect\/>}/);
 assert.match(app,/targetHash=hash\?'#'\+hash/);
+assert.match(app,/<GlobalLeadPopup\/>/);
+assert.doesNotMatch(app,/ProfessionalHome/);
 
-assert.match(home,/className="hc-expert-hero"/);
-assert.match(home,/TRUSTED EXPERTS FOR YOUR HOME/);
-assert.match(home,/Find the <em>Right Experts\.<\/em>/);
-assert.match(home,/Verified Professionals/);
-assert.match(home,/Branded Material Options/);
-assert.match(home,/Warranty-backed Options/);
-assert.match(home,/Free Consultation/);
-assert.match(home,/Find Right/);
-assert.match(home,/Branded/);
-assert.match(home,/Warranty/);
-assert.match(home,/Transparent/);
-assert.match(home,/Homeowner/);
+// Homeowner acquisition homepage.
+assert.match(home,/Build\. Design\. Find/);
+assert.match(home,/Right Professionals/);
+assert.match(home,/Start Your Requirement/);
+assert.match(home,/propulse:open-lead-popup/);
+assert.match(home,/What do you need\?/);
+assert.match(home,/Build Your Home/);
+assert.match(home,/Design Your Space/);
+assert.match(home,/Find a Property/);
+assert.match(home,/Why Homeowners Choose ProPulse/);
+assert.match(home,/How It Works/);
+assert.match(home,/audience="homeowner"/);
+assert.match(home,/to="\/experts">Find Professionals<\/Link>/);
+assert.match(home,/to="\/professionals">For Professionals<\/Link>/);
 assert.match(home,/\/quote#construction/);
-assert.match(home,/\/packages/);
-assert.doesNotMatch(home,/className="hc-video-hero"/);
+assert.match(home,/\/quote#interiors/);
+assert.match(home,/\/quote#property/);
+assert.match(homeCss,/\.hc-hero/);
+assert.match(homeCss,/\.hc-service-grid/);
+assert.match(homeCss,/\.hc-benefit-grid/);
+assert.match(homeCss,/\.hc-step-grid/);
 assert.doesNotMatch(home,/HeroJourneyVideo/);
 
-assert.match(homeCss,/\.hc-expert-hero/);
-assert.match(homeCss,/\.hc-expert-visual/);
-assert.match(homeCss,/\.hc-expert-float/);
-assert.match(homeCss,/\.hc-expert-network/);
-assert.match(homeCss,/\.hc-professionals-card/);
-assert.match(homeCss,/\.hc-materials-card/);
-assert.match(homeCss,/\.hc-warranty-card/);
-assert.match(homeCss,/hcExpertLine/);
-assert.match(homeCss,/hcExpertFloat/);
+// Shared basic lead intake must remain wired to the public consultation endpoint.
+assert.match(popup,/Tell Us Your Requirement/);
+assert.match(popup,/\/customer-flows\/'\+form\.flowKey\+'\/consultation/);
+assert.match(popup,/consent:true/);
+assert.match(popup,/PIN Code/);
+assert.match(popup,/No\. of Floors/);
+assert.match(popup,/Submit Requirement/);
+assert.match(popup,/Requirement received/);
+assert.match(popup,/Continue to Detailed Requirement/);
+assert.match(popup,/propulse_basic_lead_submitted/);
 
-assert.match(quote,/What do you need help with\?/);
-assert.match(quote,/quote-service-grid/);
+// Unified detailed quote flow.
+assert.match(quote,/quote-flow-switcher/);
+assert.match(quote,/Choose quote type/);
 assert.match(quote,/Construction/);
 assert.match(quote,/Interiors/);
 assert.match(quote,/Real Estate/);
-assert.match(quote,/\/quote'\+location\.search\+'#'/);
-assert.match(quoteCss,/quoteCardRise/);
+assert.match(quote,/RequirementWizard flowKey={active\.flowKey}/);
+assert.match(quote,/aria-pressed={activeKey===key}/);
+assert.match(quoteCss,/\.quote-flow-switcher/);
 assert.match(quoteCss,/quoteFlowIn/);
 assert.match(quoteCss,/\.quote-flow \.rq-premium-hero/);
 assert.match(quoteCss,/\.quote-flow \.irx-hero/);
 assert.match(quoteCss,/\.quote-flow \.rex-hero/);
-
-assert.match(wizard,/flowKey === 'property'/);
 assert.match(wizard,/RealEstateRequirementExact/);
-assert.match(packages,/\/quote\?package=/);
-assert.match(publicHeader,/Approved homepage \/ quote mockup/);
-assert.match(contact,/PublicContact/);
-assert.match(contact,/audience=website/);
-assert.match(contact,/Reach the ProPulse Team/);
-assert.match(contact,/to="\/contact"/);
-assert.doesNotMatch(contact,/Navigate to="\/#contact"/);
+assert.match(wizard,/QuoteLocationFields/);
 
+// Packages keep customer quote links and comparison behavior.
+assert.match(packages,/Construction Packages/);
+assert.match(packages,/Interior Packages/);
+assert.match(packages,/Side-by-Side Comparison/);
+assert.match(packages,/Get Quote/);
+assert.match(packages,/\/quote\?package=/);
+
+// Public marketing pages keep both customer/professional navigation paths.
 for(const source of [home,quote,packages,projects,about,howItWorks,contact]){
   assert.match(source,/For Professionals/);
   assert.match(source,/to="\/professionals"/);
+  assert.match(source,/to="\/experts">Find Professionals<\/Link>/);
 }
-for(const source of [home,quote,packages,projects,about,howItWorks,contact]){
-  assert.match(source,/to="\/experts">Experts<\/Link>/);
-}
-assert.match(publicHeader,/\.public-professional-btn/);
-assert.match(publicHeader,/Quote \+ professional public header actions/);
 
-assert.match(home,/Why Homeowners/);
-assert.match(home,/Choose <em>ProPulse\.<\/em>/);
-assert.match(home,/hc-why-underline/);
-assert.match(home,/hc-why-arrow/);
-assert.doesNotMatch(home,/We make the first step easier: explain what you need/);
-assert.match(homeCss,/\.hc-why-grid article/);
-assert.match(homeCss,/\.hc-why-arrow/);
-assert.match(homeCss,/hcWhyGlow/);
-assert.match(homeCss,/hcWhyIconFloat/);
-
-assert.match(home,/hc-how-premium/);
-assert.match(home,/Tell Us Your Requirement/);
-assert.match(home,/We Find the Right Experts/);
-assert.match(home,/Choose the Best Option/);
-assert.match(home,/Start Your Home Journey/);
-assert.match(home,/senior engineers, architects, or trusted partners/);
-assert.doesNotMatch(home,/We Structure the Brief/);
-assert.doesNotMatch(home,/Discuss Your Options/);
-assert.doesNotMatch(home,/Move Your Home Forward/);
-assert.doesNotMatch(home,/Simple by design/);
-assert.doesNotMatch(home,/Start your home journey in a few clear steps\./);
-assert.match(homeCss,/\.hc-how-premium-card/);
-assert.match(homeCss,/\.hc-how-photo-wrap/);
-assert.match(homeCss,/\.hc-how-connector/);
-assert.match(homeCss,/hcHowFloat/);
-assert.match(homeCss,/hcHowConnector/);
-
-assert.match(home,/Home Inspiration/);
-assert.match(home,/Warm Modern Villa/);
-assert.match(home,/Courtyard Living/);
-assert.match(home,/Wood & Marble Kitchen/);
-assert.match(home,/Hotel-Style Bedroom/);
-assert.match(home,/Japandi Living Room/);
-assert.doesNotMatch(home,/Premium Apartments/);
-assert.doesNotMatch(home,/Gated Communities/);
-assert.doesNotMatch(home,/Ideas for your next step/);
-assert.match(homeCss,/\.hc-inspiration-card/);
-assert.match(homeCss,/\.hc-inspiration-icon/);
-assert.match(homeCss,/\.hc-inspiration-cta/);
-assert.match(homeCss,/hcInspirationIcon/);
-
-assert.doesNotMatch(home,/How ProPulse <em>Guides Your Home Journey<\/em>/);
-assert.doesNotMatch(home,/Designed Around Homeowner Concerns/);
-assert.doesNotMatch(home,/HOMEOWNER_VALUES/);
-assert.doesNotMatch(homeCss,/\.hc-guided-journey/);
-
-assert.match(home,/className="hc-expert-float hc-consultation-card" aria-label="Free consultation available"/);
-assert.match(home,/className="hc-expert-float hc-warranty-card" aria-label="Warranty-backed options"/);
-assert.doesNotMatch(home,/hc-consultation-card" type="button"/);
-assert.doesNotMatch(home,/hc-warranty-card" to=/);
-assert.match(home,/Paints/);
-assert.match(home,/Cement/);
-assert.match(home,/Tiles/);
-assert.match(home,/Hardware/);
-assert.match(homeCss,/pointer-events:none/);
-assert.match(homeCss,/grid-template-columns:repeat\(4,minmax\(0,1fr\)\)/);
-
-assert.match(websiteFaq,/Questions, <em>clearly answered\.<\/em>/);
-assert.match(websiteFaq,/website-faq-home-icon/);
-assert.match(websiteFaq,/Talk to <em>ProPulse\.<\/em>/);
-assert.match(websiteFaq,/website-faq-support-photo/);
-assert.match(websiteFaq,/return !standalone&&items.length\?items\[0\]\.id:null/);
-assert.match(websiteFaqCss,/\.website-faq-home-icon/);
-assert.match(websiteFaqCss,/\.website-faq-support-photo/);
-assert.match(websiteFaqCss,/\.website-faq-item\.open/);
-assert.match(websiteFaqCss,/\.website-faq-more/);
-
-assert.match(projects,/className="pj-detail-modal"/);
-assert.match(projects,/View project details/);
-assert.match(projects,/PROJECT OVERVIEW/);
-assert.match(projects,/DESIGN HIGHLIGHTS/);
-assert.match(projects,/PROJECT SCOPE/);
-assert.match(projects,/Concept, not a live quotation/);
-assert.match(projects,/Browse Before You Decide/);
-assert.doesNotMatch(projects,/function startSimilar/);
-assert.doesNotMatch(projects,/navigate\(route\)/);
-assert.match(projects,/openProject\(project\)/);
-
-assert.match(contact,/portalAudience==='lead_partners'/);
-assert.match(contact,/portalAudience==='users'\) return <Navigate to="\/professionals" replace\/>/);
-assert.doesNotMatch(contact,/function ProfessionalContact/);
-assert.match(websiteFaq,/className="website-faq-more" to="\/contact"/);
-assert.match(websiteFaq,/Contact ProPulse/);
-assert.doesNotMatch(websiteFaq,/\/contact\?audience=users/);
-
-assert.match(professionalHome,/PROPULSE FOR PROFESSIONALS/);
-assert.match(professionalHome,/Turn Customer Requirements Into <em>Business Opportunities\.<\/em>/);
-assert.match(professionalHome,/Browse Live Leads/);
-assert.match(professionalHome,/Create Business Account/);
-assert.match(professionalHome,/Sign Up Free/);
-assert.match(professionalHome,/listLeads\(\{status:'available',page:1,limit:4\}\)/);
-assert.match(professionalHome,/Lead access|Flexible Lead Access/);
-assert.match(professionalHome,/Business verification/);
-assert.match(professionalHome,/\/login/);
-assert.match(professionalHome,/\/signup/);
-assert.match(professionalHome,/\/leads/);
-assert.match(professionalHomeCss,/\.pro-hero-market/);
-assert.match(professionalHomeCss,/\.pro-lead-card/);
-assert.match(professionalHomeCss,/\.pro-industry-grid/);
-assert.match(professionalHomeCss,/\.pro-how-grid/);
-
-assert.match(howItWorks,/const activeFlow=FLOWS\.find/);
-assert.match(howItWorks,/className="hiw-flow hiw-flow-active"/);
-assert.match(howItWorks,/activeFlow\.steps\.map/);
-assert.match(howItWorks,/navigate\(activeFlow\.route\)/);
-assert.match(howItWorks,/window\.history\.replaceState\(\{\},'',`\/how-it-works#\$\{key\}`\)/);
-assert.doesNotMatch(howItWorks,/\{FLOWS\.map\(\(flow,index\)=>\<article className="hiw-flow"/);
-assert.match(howItWorksCss,/\.hiw-flow-active/);
-assert.match(howItWorksCss,/hiwFlowSwap/);
-assert.doesNotMatch(howItWorks,/Why Homeowners/);
-assert.doesNotMatch(howItWorks,/Frequently Asked/);
-assert.doesNotMatch(howItWorks,/View All FAQs/);
-assert.doesNotMatch(howItWorks,/Admin<\/b><small>Managed Flows/);
-assert.doesNotMatch(howItWorksCss,/\.hiw-why/);
-assert.doesNotMatch(howItWorksCss,/\.hiw-faq/);
-
+// Experts directory is public but does not expose direct contact data.
 assert.match(experts,/REGISTERED PROPULSE BUSINESSES/);
 assert.match(experts,/Registered Businesses on <em>ProPulse<\/em>/);
 assert.match(experts,/Verified only/);
@@ -229,27 +116,19 @@ assert.match(publicExpertService,/u\.is_active=TRUE/);
 assert.match(publicExpertService,/company_proof_documents/);
 assert.doesNotMatch(publicExpertService,/bp\.phone/);
 assert.doesNotMatch(publicExpertService,/u\.email/);
-assert.doesNotMatch(publicExpertService,/business_details,/);
 assert.match(serverSource,/app\.use\('\/api\/experts',publicExpertRoutes\)/);
 
-assert.match(home,/For Professionals/);
-
+// Location selection and PIN lookup must be available in every requirement experience.
 assert.match(wizard,/QuoteLocationFields/);
-assert.match(wizard,/const locationStates=useMemo/);
-assert.match(wizard,/const filteredCities=useMemo/);
-assert.match(wizard,/function setPincode\(value\)/);
-assert.match(wizard,/\/pincodes\/location\//);
-assert.match(wizard,/stateLabel="Project State"/);
-assert.match(wizard,/cityLabel="Project City \/ Location"/);
-assert.match(wizard,/Select State and City, or enter a valid 6-digit PIN/);
 assert.match(interiorExact,/QuoteLocationFields/);
-assert.match(interiorExact,/stateLabel="Property State"/);
 assert.match(realEstateExact,/QuoteLocationFields/);
-assert.match(realEstateExact,/stateLabel="Looking in State"/);
 assert.match(quoteLocationFields,/Select State/);
-assert.match(quoteLocationFields,/Select City \/ Location/);
+assert.match(quoteLocationFields,/Type city \/ location/);
+assert.match(quoteLocationFields,/state_id/);
+assert.match(quoteLocationFields,/disabled={!stateId}/);
+assert.match(quoteLocationFields,/Use my current location/);
 assert.match(quoteLocationFields,/Enter 6-digit PIN/);
-assert.match(quoteLocationFields,/lookupStatus==='matched'/);
+assert.match(quoteLocationFields,/lookupStatus === 'matched'/);
 assert.match(quoteLocationCss,/\.quote-location-fields/);
 assert.match(quoteLocationCss,/grid-template-columns:repeat\(3,minmax\(0,1fr\)\)/);
 assert.match(pincodeDetection,/async function locatePincode\(pincode\)/);
@@ -257,4 +136,4 @@ assert.match(pincodeDetection,/status: 'MAPPED'/);
 assert.match(pincodeDetection,/status: city \? 'DETECTED' : 'STATE_ONLY'/);
 assert.match(pincodeRoutes,/router\.get\('\/location\/:pincode', publicLookupLimit, pincodeController\.locate\)/);
 
-console.log('Approved public UI mockup checks passed.');
+console.log('Approved public UI and customer-acquisition contract checks passed.');

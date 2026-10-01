@@ -282,9 +282,9 @@ assert(customerMembershipCss.includes('.membership-offer-badge')&&customerMember
 assert(membershipConfigCss.includes('grid-template-columns:repeat(4,minmax(0,1fr))'),'Desktop Membership KPI layout must remain compact');
 assert(!server.includes("servicePricingRoutes")&&!server.includes("'/api/service-pricing'"),'Legacy Service Pricing API must stay unmounted');
 assert(!adminRoutes.includes('servicePricingController')&&!adminRoutes.includes("'/service-pricing'"),'Admin routes must not retain deleted Service Pricing controller references');
-assert(home.includes("publicRequest('/membership-plans/public')"),'Homepage pricing must come from Membership packages');
-assert(!home.includes("publicRequest('/service-pricing')")&&!home.includes('servicePricing'),'Homepage must not use the legacy Service Pricing source');
-assert(home.includes('PROFESSIONAL MEMBERSHIPS')&&home.includes('home-membership-section')&&home.includes("['grow','scale']"),'Homepage must present the configured GROW/SCALE Membership packages in the professional funnel');
+assert(!home.includes("publicRequest('/service-pricing')")&&!home.includes('servicePricing'),'Homeowner homepage must not use the legacy Service Pricing source');
+assert(home.includes('Start Your Requirement')&&home.includes("propulse:open-lead-popup"),'Homeowner homepage must keep the customer requirement entry point');
+assert(customerMembership.includes("apiRequest('/membership-plans')"),'Professional Membership pricing must remain sourced from Membership packages');
 assert(membershipRoutes.includes("router.get('/public', membershipPlanController.getPublicPlans)"),'Public active-only Membership pricing endpoint must remain');
 assert(membershipRoutes.includes("router.get('/', requireAuth, membershipPlanController.getPlans)"),'Admin Membership configuration must keep authenticated full-plan access');
 assert(membershipController.includes('res.json(await s.getPlans(false))'),'Public Membership endpoint must return active plans only');

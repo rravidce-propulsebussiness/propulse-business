@@ -1,5 +1,5 @@
 .website-faq{box-sizing:border-box;color:#15385f}.website-faq *{box-sizing:border-box}
-.website-faq-kicker{display:flex;align-items:center;gap:10px;color:#ff5a1f;font-size:11px;font-weight:950;letter-spacing:.16em;text-transform:uppercase}
+.website-faq-kicker{display:flex;align-items:center;gap:10px;color:#ff5a1f;font-size:12px;font-weight:950;letter-spacing:.16em;text-transform:uppercase}
 .website-faq-home{
   scroll-margin-top:92px;
   position:relative;
@@ -159,7 +159,7 @@
 }
 .website-faq-question-copy small{
   color:#ff5a1f;
-  font-size:10px;
+  font-size:12px;
   font-weight:950;
   letter-spacing:.15em;
   text-transform:uppercase;
@@ -357,7 +357,7 @@
 .website-faq-compact-head p{
   margin:5px 0 0;
   color:#778a99;
-  font-size:11px;
+  font-size:12px;
   line-height:1.5;
 }
 .website-faq-compact-head>a{
@@ -365,7 +365,7 @@
   align-items:center;
   gap:7px;
   color:#ef5a22;
-  font-size:10px;
+  font-size:12px;
   font-weight:900;
   text-decoration:none;
   white-space:nowrap;
@@ -397,7 +397,7 @@
   cursor:pointer;
 }
 .website-faq-compact-item>button strong{
-  font-size:10px;
+  font-size:12px;
   line-height:1.35;
   font-weight:850;
 }
@@ -411,7 +411,7 @@
   padding:0 13px 12px;
   border-top:1px solid #edf1f3;
   color:#748795;
-  font-size:9.5px;
+  font-size:12px;
   line-height:1.55;
 }
 .website-faq-compact-item.open{
