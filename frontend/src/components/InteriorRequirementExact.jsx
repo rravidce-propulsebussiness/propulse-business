@@ -148,18 +148,21 @@ export default function InteriorRequirementExact(props) {
     if (mode === 'end_to_end' && selectedWork) setAnswer(selectedWork.questionKey, [])
   }
 
-  function toggleInteriorWork(value) {
+  function setInteriorWorkValues(values) {
     if (!scope) return
+    if (isLegacyScope) {
+      setLegacyScopeMode('selected_work')
+      setAnswer(scope.questionKey, values)
+      return
+    }
+    if (selectedWork) setAnswer(selectedWork.questionKey, values)
+  }
+
+  function toggleInteriorWork(value) {
     const next = selectedWorkValues.includes(value)
       ? selectedWorkValues.filter(item => item !== value)
       : [...selectedWorkValues, value]
-
-    if (isLegacyScope) {
-      setLegacyScopeMode('selected_work')
-      setAnswer(scope.questionKey, next)
-      return
-    }
-    if (selectedWork) setAnswer(selectedWork.questionKey, next)
+    setInteriorWorkValues(next)
   }
 
   const selectedWorkLabel = selectedWorkValues.length
@@ -254,41 +257,42 @@ export default function InteriorRequirementExact(props) {
           <section className="irx-card" id="irx-requirements">
             <div className="irx-section-title"><span>4.</span><div><h2>Interior Requirements</h2><p>Choose your home configuration and whether you want complete interiors or only selected work.</p></div></div>
 
-            <div className="irx-requirement-grid">
-              {bhk&&<label className="irx-select-field">
+            <div className={'irx-requirement-grid '+(!showBhk?'scope-only':'')}>
+              {showBhk&&<label className="irx-select-field">
                 <b>Home Configuration</b>
                 <small>Select the closest BHK configuration.</small>
-                <select value={answers[bhk.questionKey]||''} onChange={e=>setAnswer(bhk.questionKey,e.target.value)}>
+                <select value={bhk ? (answers[bhk.questionKey]||'') : (answers.bhk||'')} onChange={e=>setAnswer(bhk?.questionKey||'bhk',e.target.value)}>
                   <option value="">Select BHK</option>
-                  {(bhk.options||[]).map(option=><option key={option.value} value={option.value}>{option.label}</option>)}
+                  {bhkOptions.map(option=><option key={option.value} value={option.value}>{option.label}</option>)}
                 </select>
               </label>}
 
               {scope&&<div className="irx-scope-field">
-                <b>{scope.label||'What interior scope do you need?'}</b>
-                <small>{scope.helpText||'Choose end-to-end interiors or select only the work you need.'}</small>
+                <b>What interior scope do you need?</b>
+                <small>Choose complete interiors or pick only the work you need.</small>
                 <div className="irx-scope-cards">
-                  {(scope.options||[]).map(option=>{
-                    const active=answers[scope.questionKey]===option.value
-                    const detail=option.value==='end_to_end'?'Complete interior planning for the selected property':'Choose only specific interior items'
-                    return <button type="button" key={option.value} className={active?'active':''} onClick={()=>{
-                      setAnswer(scope.questionKey,option.value)
-                      if(option.value==='end_to_end'&&selectedWork)setAnswer(selectedWork.questionKey,[])
-                    }}>
-                      <span><b>{option.label}</b><small>{detail}</small></span>{active&&<i>✓</i>}
+                  {INTERIOR_SCOPE_MODES.map(option=>{
+                    const active=scopeMode===option.value
+                    return <button type="button" key={option.value} className={active?'active':''} onClick={()=>selectScopeMode(option.value)}>
+                      <span><b>{option.label}</b><small>{option.detail}</small></span>{active&&<i>✓</i>}
                     </button>
                   })}
                 </div>
               </div>}
             </div>
 
-            {scope&&answers[scope.questionKey]==='selected_work'&&selectedWork&&<div className="irx-work-selector">
-              <div className="irx-work-heading"><b>Select the work you need</b><small>Choose one or more items. End-to-End hides this list automatically.</small></div>
+            {scope&&scopeMode==='selected_work'&&<div className="irx-work-selector">
+              <div className="irx-work-heading-row">
+                <div className="irx-work-heading"><b>Select the work you need</b><small>Choose any combination. Full Home Interiors keeps these items hidden because they are already included.</small></div>
+                <div className="irx-work-actions">
+                  <button type="button" onClick={()=>setInteriorWorkValues(workOptions.map(option=>option.value))}>Select All</button>
+                  {selectedWorkValues.length>0&&<button type="button" onClick={()=>setInteriorWorkValues([])}>Clear</button>}
+                </div>
+              </div>
               <div className="irx-work-grid">
-                {(selectedWork.options||[]).map(option=>{
-                  const selected=Array.isArray(answers[selectedWork.questionKey])?answers[selectedWork.questionKey]:[]
-                  const active=selected.includes(option.value)
-                  return <button type="button" key={option.value} className={active?'active':''} onClick={()=>setAnswer(selectedWork.questionKey,active?selected.filter(value=>value!==option.value):[...selected,option.value])}>
+                {workOptions.map(option=>{
+                  const active=selectedWorkValues.includes(option.value)
+                  return <button type="button" key={option.value} className={active?'active':''} onClick={()=>toggleInteriorWork(option.value)}>
                     <span><Icon name={WORK_ICONS[option.value]||'layout'} size={20}/></span><b>{option.label}</b>{active&&<i>✓</i>}
                   </button>
                 })}
