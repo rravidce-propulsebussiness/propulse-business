@@ -220,11 +220,6 @@ export default function LeadsV2() {
   const title = category ? `${category.replaceAll('-', ' ')} leads` : 'Available Leads'
   const visibleLeads = useMemo(() => leads, [leads])
 
-  const topIndustry = useMemo(() => visibleLeads.find(l => hasValue(l.industry_name))?.industry_name || '', [visibleLeads])
-  const topLocation = useMemo(() => {
-    const lead = visibleLeads.find(l => hasValue(l.state_name) || hasValue(l.city_name))
-    return [lead?.city_name, lead?.state_name].filter(hasValue).join(', ')
-  }, [visibleLeads])
   const filterOptions = filterCatalog
 
   const openBuyModal = (lead) => {
@@ -401,7 +396,6 @@ export default function LeadsV2() {
     <UserHeader />
     <main className="lv2-page">
       <section className="lv2-market-head"><div className="lv2-title-block"><span></span><div><h1>{title}</h1><p>All available leads are shown by default.</p></div></div><div className="lv2-controls"><div className="lv2-search"><span>⌕</span><input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by industry, service, location..." aria-label="Search leads"/><b>⌕</b></div><div className="lv2-guest-filters"><select value={industryFilter} onChange={e => { setIndustryFilter(e.target.value); setCityFilter('') }} aria-label="Filter by industry"><option value="">All Industries</option>{filterOptions.industries.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}</select><select value={cityFilter} onChange={e => setCityFilter(e.target.value)} aria-label="Filter by city"><option value="">All Cities</option>{filterOptions.cities.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}</select></div></div></section>
-      <section className="lv2-stats"><div className="lv2-stat orange"><span>▣</span><div><b>{pagination.total}</b><small>Total Leads</small></div></div><div className="lv2-stat blue"><span>♟</span><div><b>{topIndustry || 'Verified opportunities'}</b><small>Top Industry</small></div></div><div className="lv2-stat green"><span>●</span><div><b>{topLocation || 'India'}</b><small>Top Location</small></div></div><div className="lv2-stat purple"><span>★</span><div><b>4.8</b><small>Avg. Quality Score</small></div></div><div className="lv2-verified">✓ &nbsp; Verified Opportunities Only</div></section>
       {error && <div className="lv2-error">{error}</div>}{notice && <div className="lv2-error">{notice}</div>}
       {loading ? <div className="lv2-empty"><span>PROPULSE MARKETPLACE</span><strong>Loading opportunities...</strong></div> : !visibleLeads.length ? <div className="lv2-empty"><span>PROPULSE MARKETPLACE</span><strong>No matching leads</strong><p>Try another search or filter.</p></div> : <div className="lv2-grid">
         {visibleLeads.map(lead => {
