@@ -322,7 +322,7 @@ export default function Packages() {
 
         <aside className="pkg-reference-card">
           <small>{category === 'construction' ? 'CONSTRUCTION REFERENCE' : 'INTERIOR REFERENCE'}</small>
-          <strong>₹{(category === 'construction' ? 1750 : 1399).toLocaleString('en-IN')}<em>/sq ft</em></strong>
+          <strong>₹{(category === 'construction' ? CONSTRUCTION_PACKAGE_CATALOG.standard.rate : 1399).toLocaleString('en-IN')}<em>/sq ft</em></strong>
           <p>{category === 'construction' ? 'Standard package brochure reference' : 'Standard woodwork brochure reference'}</p>
           <div className="pkg-reference-list">
             <span><Icon name="shield" size={17} />Final scope and price are confirmed in the project quotation</span>
