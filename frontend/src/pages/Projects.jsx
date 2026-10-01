@@ -236,6 +236,59 @@ export default function Projects(){
     return ['Location','Property Type','Budget','Preferences']
   }
 
+  function projectSpecifications(project){
+    if(project.category==='design'){
+      if(project.propertyType==='Office'||project.propertyType==='Commercial') return [
+        ['Interior Scope','Complete office interior concept'],
+        ['Work Zones','Reception, workstations, cabins and meeting areas'],
+        ['Storage','Integrated office and utility storage'],
+        ['Ceiling','False-ceiling and services coordination'],
+        ['Lighting','Ambient, task and accent lighting'],
+        ['Furniture','Fixed + loose office furniture'],
+        ['Services','Electrical, data, HVAC and power planning'],
+        ['Finish Direction',project.style+' commercial finish palette'],
+        ['Flooring','Existing / selected project finish'],
+        ['Site Status','Finalised after measurement and site inspection'],
+      ]
+      return [
+        ['Interior Scope','Full-home interior concept'],
+        ['Rooms','Living + '+project.meta+' bedrooms + kitchen'],
+        ['Kitchen','Modular kitchen planning'],
+        ['Wardrobes',project.meta+' bedroom wardrobe planning'],
+        ['TV Unit','Living-room TV wall / media unit'],
+        ['False Ceiling','Living and dining ceiling concept'],
+        ['Lighting','Ambient + task + accent lighting'],
+        ['Furniture','Fixed and loose furniture planning'],
+        ['Storage','Room-wise custom storage'],
+        ['Finish Direction',project.style+' laminate / veneer / paint palette'],
+      ]
+    }
+    if(project.category==='construction') return [
+      ['Construction Scope','Complete residential construction concept'],
+      ['Configuration',project.meta],
+      ['Structure','RCC framed structure'],
+      ['Planning','Room layout, circulation and ventilation'],
+      ['Elevation',project.style+' exterior elevation'],
+      ['Electrical','Point layout and DB planning'],
+      ['Plumbing','Water-supply and drainage planning'],
+      ['Flooring','Package / material based selection'],
+      ['Doors & Windows','Finalised with selected package'],
+      ['Execution','Final timeline after drawings and site inputs'],
+    ]
+    return [
+      ['Property Context',project.propertyType+' reference concept'],
+      ['Configuration',project.meta],
+      ['Area Reference',project.area+' sq ft built-up area'],
+      ['Budget Reference',project.budget],
+      ['Location',project.location],
+      ['Furnishing','To be verified on the actual property'],
+      ['Parking','To be verified on the actual property'],
+      ['Amenities','Project-specific; verify before decision'],
+      ['Availability','Not represented as a live listing'],
+      ['Due Diligence','Approvals, title and ownership to be verified'],
+    ]
+  }
+
   function projectPlanningDetails(project){
     if(project.category==='construction') return [
       ['Planning focus','Plot utilisation, setbacks, circulation and room planning'],
@@ -398,6 +451,14 @@ export default function Projects(){
             <article><small>Budget Range</small><b>{selectedProject.budget}</b></article>
             <article><small>Design Style</small><b>{selectedProject.style}</b></article>
             <article><small>Category</small><b>{selectedProject.categoryLabel}</b></article>
+          </div>
+
+          <div className="pj-detail-section pj-spec-section">
+            <span>INDICATIVE SPECIFICATION</span>
+            <h3>Project details at a glance</h3>
+            <div className="pj-spec-grid">
+              {projectSpecifications(selectedProject).map(([label,value])=><article key={label}><small>{label}</small><b>{value}</b></article>)}
+            </div>
           </div>
 
           <div className="pj-detail-section">
