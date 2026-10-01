@@ -3,8 +3,6 @@ import { Link, useNavigate } from 'react-router-dom'
 import { publicRequest } from '../utils/auth'
 import './HowItWorks.css'
 
-const HERO='https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=2200&q=92'
-
 const FLOWS=[
   {
     key:'construction',
@@ -127,18 +125,6 @@ export default function HowItWorks(){
         <Link className="public-professional-btn" to="/professionals">For Professionals</Link>
       </div>
     </header>
-
-    <section className="hiw-hero">
-      <img src={HERO} alt="Premium modern home"/>
-      <div className="hiw-hero-wash"/>
-      <div className="hiw-hero-copy"><span>HOW IT WORKS</span><h1>From Your Idea<em>to Reality</em></h1><p>A simple and transparent process to help you build, design or define the property you need.</p></div>
-      <div className="hiw-hero-benefits">
-        <article><span><Icon name="shield"/></span><div><b>Simple Process</b><small>Easy and hassle-free</small></div></article>
-        <article><span><Icon name="people"/></span><div><b>Relevant Businesses</b><small>Matched to your requirement</small></div></article>
-        <article><span><Icon name="receipt"/></span><div><b>Transparent Estimates</b><small>Understand the budget first</small></div></article>
-        <article><span><Icon name="support"/></span><div><b>End-to-End Journey</b><small>From requirement onward</small></div></article>
-      </div>
-    </section>
 
     <section className="hiw-tabs">
       {FLOWS.map(flow=><button key={flow.key} className={active===flow.key?'active':''} onClick={()=>goToFlow(flow.key)}><span><Icon name={flow.key==='construction'?'home':flow.key==='interiors'?'sofa':'building'} size={20}/></span><div><b>{flow.label}</b><small>{flow.subtitle}</small></div></button>)}
