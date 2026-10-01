@@ -394,6 +394,8 @@ export default function Projects(){
   const [query,setQuery]=useState('')
   const [visible,setVisible]=useState(12)
   const [selectedProject,setSelectedProject]=useState(null)
+  const [recentVideos,setRecentVideos]=useState([])
+  const [videoLoading,setVideoLoading]=useState(true)
 
   useEffect(()=>{
     window.scrollTo(0,0)
@@ -401,6 +403,36 @@ export default function Projects(){
       .then(value=>setContactData(value||{}))
       .catch(()=>{})
   },[])
+
+  useEffect(()=>{
+    let active=true
+    publicRequest('/experts/project-videos?page=1&pageSize=18')
+      .then(value=>{
+        if(!active)return
+        const rows=Array.isArray(value)?value:Array.isArray(value?.data)?value.data:[]
+        setRecentVideos(rows)
+      })
+      .catch(()=>{if(active)setRecentVideos([])})
+      .finally(()=>{if(active)setVideoLoading(false)})
+    return()=>{active=false}
+  },[])
+
+  const sortedVideos=useMemo(()=>[...recentVideos].sort((a,b)=>{
+    const right=new Date(b.video_published_at||0).getTime()
+    const left=new Date(a.video_published_at||0).getTime()
+    return right-left||Number(b.project_id||0)-Number(a.project_id||0)
+  }),[recentVideos])
+
+  function playableVideo(url){
+    const value=String(url||'')
+    return value.startsWith('/uploads/business-projects/')||/\.(mp4|mov|webm)(?:$|[?#])/i.test(value)
+  }
+
+  function recentLabel(value){
+    const date=new Date(value)
+    if(Number.isNaN(date.getTime()))return 'Recently added'
+    return new Intl.DateTimeFormat('en-IN',{day:'numeric',month:'short',year:'numeric'}).format(date)
+  }
 
   const filtered=useMemo(()=>{
     const q=query.trim().toLowerCase()
@@ -556,6 +588,30 @@ export default function Projects(){
         <Link className="public-professional-btn" to="/professionals">For Professionals</Link>
       </div>
     </header>
+
+    {(videoLoading||sortedVideos.length>0)&&<section className="pj-video-wrap">
+      <div className="pj-video-heading">
+        <div><span>REAL PROFESSIONAL WORK</span><h2>Recent project videos</h2><p>Latest published videos from eligible ProPulse professionals appear first.</p></div>
+        <Link to="/experts">Find Professionals <Icon name="arrow" size={14}/></Link>
+      </div>
+      {videoLoading?<div className="pj-video-loading">Loading recent project videos…</div>:<div className="pj-video-grid">
+        {sortedVideos.map(video=><article className="pj-video-card" key={video.project_id}>
+          <div className="pj-video-media">
+            {playableVideo(video.video_url)
+              ?<video controls playsInline preload="metadata" poster={video.cover_image_url||undefined} src={video.video_url}/>
+              :video.cover_image_url
+                ?<a href={video.video_url} target="_blank" rel="noreferrer"><img src={video.cover_image_url} alt={video.title||'Project video'}/><span>Watch video ↗</span></a>
+                :<a className="pj-video-external" href={video.video_url} target="_blank" rel="noreferrer">Watch external video ↗</a>}
+          </div>
+          <div className="pj-video-copy">
+            <div className="pj-video-meta"><span>{video.project_type||'Completed project'}</span><time>{recentLabel(video.video_published_at)}</time></div>
+            <h3>{video.title}</h3>
+            <p>{video.description||'Completed project shared by a ProPulse professional.'}</p>
+            <div className="pj-video-business"><div><b>{video.business_name}</b><small>{video.location_text||'Service location available in profile'}</small></div>{video.is_verified&&<span><Icon name="shield" size={13}/> Verified</span>}</div>
+          </div>
+        </article>)}
+      </div>}
+    </section>}
 
     <section className="pj-filter-wrap">
       <div className="pj-filter-top">

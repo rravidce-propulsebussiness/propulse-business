@@ -109,6 +109,7 @@ app.use('/api/investments/admin/:id/payout',largeJsonFor('POST'));
 app.use('/api/admin/lead-partner-payouts/direct',largeJsonFor('POST'));
 app.use('/api/admin/lead-partner-payouts/:payoutId',largeJsonFor('PATCH'));
 app.use('/api/admin/homepage-media',largeJsonFor('POST'));
+app.use('/api/profile/projects/video',express.raw({type:['video/mp4','video/webm','video/quicktime'],limit:'51mb'}));
 app.use('/api/customer-flows/:key/:leadId/attachments',largeJsonFor('POST'));
 app.use('/api/customer-flows',express.json({limit:'64kb'}));
 app.use(express.json({limit:DEFAULT_JSON_BYTES}));
