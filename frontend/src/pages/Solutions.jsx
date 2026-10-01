@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import RequirementWizard from './RequirementWizard'
 import './Solutions.css'
@@ -54,8 +54,10 @@ export default function Solutions(){
   const navigate=useNavigate()
   const activeKey=useMemo(()=>hashKey(location.hash),[location.hash])
   const active=FLOWS[activeKey]
+  const [completed,setCompleted]=useState(false)
 
   useEffect(()=>{
+    setCompleted(false)
     if(!location.hash) navigate('/quote'+location.search+'#construction',{replace:true})
   },[location.hash,location.search,navigate])
 
@@ -76,7 +78,7 @@ export default function Solutions(){
       </div>
     </header>
 
-    <section className="quote-flow-switcher" aria-label="Choose quote type">
+    {!completed&&<section className="quote-flow-switcher" aria-label="Choose quote type">
       <div className="quote-flow-switcher-inner">
         {Object.entries(FLOWS).map(([key,item])=><button
           type="button"
@@ -90,10 +92,10 @@ export default function Solutions(){
           {activeKey===key&&<i>Selected</i>}
         </button>)}
       </div>
-    </section>
+    </section>}
 
     <section className={'quote-flow quote-flow-'+activeKey} key={active.flowKey}>
-      <RequirementWizard flowKey={active.flowKey}/>
+      <RequirementWizard flowKey={active.flowKey} onCompletionChange={setCompleted}/>
     </section>
   </main>
 }
