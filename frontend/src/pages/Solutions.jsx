@@ -59,11 +59,6 @@ export default function Solutions(){
     if(!location.hash) navigate('/quote'+location.search+'#construction',{replace:true})
   },[location.hash,location.search,navigate])
 
-  function switchFlow(key){
-    navigate('/quote'+location.search+'#'+key)
-    window.scrollTo({top:0,behavior:'smooth'})
-  }
-
   return <main className="quote-page">
     <header className="quote-header">
       <Link className="quote-logo" to="/"><img src="/brand/propulse-logo.svg" alt="ProPulse"/></Link>
@@ -80,34 +75,6 @@ export default function Solutions(){
         <Link className="public-professional-btn" to="/professionals">For Professionals</Link>
       </div>
     </header>
-
-    <section className="quote-chooser">
-      <span>GET FREE QUOTE</span>
-      <h1>What do you need help with?</h1>
-      <p>Choose a service to get started. Stay on the same page and share your details.</p>
-
-      <div className="quote-service-grid">
-        {Object.entries(FLOWS).map(([key,item],index)=><button
-          type="button"
-          key={key}
-          className={'quote-service-card '+(activeKey===key?'active':'')}
-          onClick={()=>switchFlow(key)}
-          style={{'--quote-delay':(index*70)+'ms'}}
-        >
-          <div className="quote-service-image">
-            <img src={item.image} alt="" />
-            <span><Icon name={item.icon} size={23}/></span>
-          </div>
-          <div className="quote-service-copy">
-            <small>{item.eyebrow}</small>
-            <h2>{item.title}</h2>
-            <h3>{item.subtitle}</h3>
-            <p>{item.description}</p>
-          </div>
-          <i><Icon name="arrow" size={18}/></i>
-        </button>)}
-      </div>
-    </section>
 
     <section className={'quote-flow quote-flow-'+activeKey} key={active.flowKey}>
       <RequirementWizard flowKey={active.flowKey}/>
