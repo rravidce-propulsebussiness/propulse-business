@@ -14,15 +14,16 @@ function normalize(row={}){
   };
 }
 
-async function ensureRow(client=pool){
-  await client.query('INSERT INTO sound_effect_settings(id) VALUES(1) ON CONFLICT(id) DO NOTHING');
-}
-
 async function getSettings(client=pool){
-  await ensureRow(client);
-  const result=await client.query(
+  let result=await client.query(
     'SELECT master_enabled,click_enabled,success_enabled,warning_enabled,upload_enabled,notification_enabled,default_volume,updated_by,updated_at FROM sound_effect_settings WHERE id=1'
   );
+  if(!result.rows.length){
+    await client.query('INSERT INTO sound_effect_settings(id) VALUES(1) ON CONFLICT(id) DO NOTHING');
+    result=await client.query(
+      'SELECT master_enabled,click_enabled,success_enabled,warning_enabled,upload_enabled,notification_enabled,default_volume,updated_by,updated_at FROM sound_effect_settings WHERE id=1'
+    );
+  }
   return normalize(result.rows[0]);
 }
 
