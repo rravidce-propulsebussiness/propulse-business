@@ -33,6 +33,10 @@ function Icon({name,size=19}){
   return null
 }
 
+function openLeadPopup(flowKey=''){
+  window.dispatchEvent(new CustomEvent('propulse:open-lead-popup',{detail:{flowKey}}))
+}
+
 export default function Contact(){
   const [searchParams]=useSearchParams()
   const portalAudience=searchParams.get('audience')
@@ -74,7 +78,7 @@ function PublicContact(){
         <Link to="/experts">Find Professionals</Link>
       </nav>
       <div className="public-header-actions">
-        <Link className="contact-header-cta" to="/quote#construction">Get Free Quote <Icon name="arrow" size={15}/></Link>
+        <Link className="contact-header-cta" to="/quote#construction" onClick={event=>{event.preventDefault();openLeadPopup('')}}>Get Free Quote <Icon name="arrow" size={15}/></Link>
         <Link className="public-professional-btn" to="/professionals">For Professionals</Link>
       </div>
     </header>
@@ -85,7 +89,7 @@ function PublicContact(){
         <h1>Questions About Your Home Journey? <em>Talk to Us.</em></h1>
         <p>Whether you are planning construction, interiors or a property requirement, reach the ProPulse team using the contact details configured by our Admin team.</p>
         <div className="contact-hero-actions">
-          <Link className="contact-primary" to="/quote#construction">Get Free Quote <Icon name="arrow" size={15}/></Link>
+          <Link className="contact-primary" to="/quote#construction" onClick={event=>{event.preventDefault();openLeadPopup('')}}>Get Free Quote <Icon name="arrow" size={15}/></Link>
           {data.phone&&<a className="contact-secondary" href={phoneHref}><Icon name="phone" size={15}/> Call Us</a>}
         </div>
         <div className="contact-trust"><span>Homeowner focused</span><i/><span>Admin-managed contact details</span><i/><span>Construction · Interiors · Real Estate</span></div>
@@ -172,7 +176,7 @@ function PublicContact(){
 
     <section className="contact-bottom-cta">
       <div><span className="contact-kicker">READY TO START?</span><h2>Tell Us What You Need</h2><p>Choose Construction, Interiors or Real Estate and continue with the guided homeowner flow.</p></div>
-      <div><Link to="/packages">View Packages</Link><Link to="/quote#construction">Get Free Quote <Icon name="arrow" size={14}/></Link></div>
+      <div><Link to="/packages">View Packages</Link><Link to="/quote#construction" onClick={event=>{event.preventDefault();openLeadPopup('')}}>Get Free Quote <Icon name="arrow" size={14}/></Link></div>
     </section>
 
     <footer className="contact-public-footer">
