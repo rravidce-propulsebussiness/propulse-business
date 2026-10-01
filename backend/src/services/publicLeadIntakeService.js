@@ -32,7 +32,11 @@ function constructionFloorLabel(value) {
 
 function formatPublicAnswer(question,value) {
   if(question?.questionKey==='floors')return constructionFloorLabel(value);
-  if(question?.questionKey==='plot_area')return String(value??'').trim()+' sq yards';
+  if(question?.questionKey==='plot_area') {
+    const optionLabel = question?.options?.find(option => option.value === value)?.label;
+    if(optionLabel)return optionLabel;
+    return String(value??'').trim()+' sq yards';
+  }
   return formatAnswer(question,value);
 }
 
