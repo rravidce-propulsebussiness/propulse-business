@@ -199,7 +199,7 @@ function PremiumQuestion({ question, value, onChange, visual = 'default' }) {
   return <input className="rq-basic-input" value={value || ''} maxLength={Number(question.validation?.maxLength || 240)} onChange={event => onChange(event.target.value)} placeholder={question.questionType === 'budget' ? 'Example: ₹25–40 lakh' : 'Enter your answer'} />
 }
 
-export default function RequirementWizard({ flowKey }) {
+export default function RequirementWizard({ flowKey, onCompletionChange }) {
   const [flow, setFlow] = useState(null)
   const [cities, setCities] = useState([])
   const [contactData, setContactData] = useState({})
@@ -220,6 +220,7 @@ export default function RequirementWizard({ flowKey }) {
 
   useEffect(() => {
     mounted.current = true
+    onCompletionChange?.(false)
     setSubmissionResult(null)
     setState({ loading: true, saving: false, error: '', success: false })
 
@@ -487,6 +488,7 @@ export default function RequirementWizard({ flowKey }) {
       })
       setSubmissionResult({ ...(result || {}), quotation })
       setState({ loading: false, saving: false, error: '', success: true })
+      onCompletionChange?.(true)
       window.scrollTo({ top: 0, behavior: 'smooth' })
     } catch (error) {
       setState(current => ({ ...current, saving: false, error: error.message }))
