@@ -206,4 +206,3 @@ async function resetTestData(req,res){
 }
 
 module.exports = { getDashboardStats, getSystemHealth, getPerformance, getFinancialIntegrity, getRiskCenter, reviewRiskEvent, getAuditTimeline, getBackgroundJobs, getOperationalEvents, reviewOperationalEvent, retryBackgroundJob, getUsers, getUser360, setUserMembershipPlan, createAdmin, setUserStatus, setUserRole, updateUserProfile, getCompanyProofs, verifyCompanyProof, rejectCompanyProof, getTestResetPreview, resetTestData };
-

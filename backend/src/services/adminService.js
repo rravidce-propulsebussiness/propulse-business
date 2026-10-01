@@ -619,4 +619,3 @@ async function reviewCompanyProof({ documentId, status, reviewReason = '', revie
 }
 
 module.exports={getDashboardStats,getUsers,createAdmin,setUserStatus,setUserRole,updateUserProfile,getCompanyProofs,reviewCompanyProof};
-
