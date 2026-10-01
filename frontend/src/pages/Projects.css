@@ -136,3 +136,104 @@
 /* Projects card clarity — keep one details action */
 .pj-project-title-row{display:block}
 .pj-project-footer-row b{cursor:pointer}
+
+
+/* Rich project detail data */
+.pj-detail-stats{
+  grid-template-columns:repeat(3,minmax(0,1fr));
+}
+.pj-detail-planning-section{
+  margin-top:24px;
+  padding-top:2px;
+}
+.pj-detail-planning-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:9px;
+  margin-top:12px;
+}
+.pj-detail-planning-grid article{
+  min-height:88px;
+  padding:12px 13px;
+  border:1px solid #e4eaf0;
+  border-radius:11px;
+  background:linear-gradient(145deg,#fbfdff,#f7fafc);
+}
+.pj-detail-planning-grid small{
+  display:block;
+  color:#f05b24;
+  font-size:8px;
+  font-weight:950;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+}
+.pj-detail-planning-grid p{
+  margin:6px 0 0;
+  color:#5f7487;
+  font-size:10px;
+  line-height:1.5;
+}
+.pj-detail-confirm{
+  display:grid;
+  grid-template-columns:180px minmax(0,1fr);
+  gap:18px;
+  align-items:start;
+  margin-top:22px;
+  padding:15px;
+  border:1px solid #e2e8ed;
+  border-radius:12px;
+  background:#f9fbfc;
+}
+.pj-detail-confirm>div:first-child>span{
+  color:#f05b24;
+  font-size:8px;
+  font-weight:950;
+  letter-spacing:.12em;
+}
+.pj-detail-confirm h3{
+  margin:5px 0 0;
+  color:#123450;
+  font-size:15px;
+}
+.pj-detail-confirm>div:last-child{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:7px 12px;
+}
+.pj-detail-confirm b{
+  display:flex;
+  align-items:flex-start;
+  gap:7px;
+  color:#5f7487;
+  font-size:9.5px;
+  line-height:1.4;
+  font-weight:700;
+}
+.pj-detail-confirm b i{
+  width:17px;
+  height:17px;
+  display:grid;
+  place-items:center;
+  flex:0 0 17px;
+  border-radius:50%;
+  background:#eaf7f0;
+  color:#198b5c;
+  font-size:9px;
+  font-style:normal;
+}
+.pj-detail-content{
+  scrollbar-width:thin;
+  scrollbar-color:#c7d1d8 transparent;
+}
+.pj-detail-content::-webkit-scrollbar{width:8px}
+.pj-detail-content::-webkit-scrollbar-thumb{background:#c7d1d8;border-radius:999px}
+.pj-detail-content::-webkit-scrollbar-track{background:transparent}
+@media(max-width:860px){
+  .pj-detail-stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .pj-detail-planning-grid{grid-template-columns:1fr}
+  .pj-detail-confirm{grid-template-columns:1fr}
+}
+@media(max-width:540px){
+  .pj-detail-stats{grid-template-columns:1fr 1fr}
+  .pj-detail-confirm>div:last-child{grid-template-columns:1fr}
+}
