@@ -270,3 +270,72 @@
   font-weight:900;
   text-decoration:none;
 }
+/* Real profile tabs + project plan uploads */
+.profile-tabs{scroll-margin-top:92px}
+.profile-save{
+  position:static;
+  bottom:auto;
+  z-index:auto;
+  padding:6px 0 0;
+  background:transparent;
+  backdrop-filter:none;
+  -webkit-backdrop-filter:none;
+}
+.profile-plan-file-field{display:grid;gap:8px;align-content:start}
+.profile-plan-file-field>label:first-child{display:grid;gap:6px}
+.profile-plan-upload{
+  min-height:58px;
+  display:flex!important;
+  flex-direction:column;
+  align-items:flex-start!important;
+  justify-content:center;
+  gap:3px!important;
+  padding:10px 12px;
+  border:1px dashed #f0a17f;
+  border-radius:10px;
+  background:#fff7f2;
+  color:#df5428!important;
+  cursor:pointer;
+  transition:.18s ease;
+}
+.profile-plan-upload:hover{border-color:#ed6335;background:#fff1e9}
+.profile-plan-upload.busy{opacity:.7;cursor:wait}
+.profile-plan-upload span{font-size:12px;font-weight:950}
+.profile-plan-upload small{color:#8c766d;font-size:12px;font-weight:700}
+.profile-plan-upload input{display:none}
+.profile-plan-preview{
+  width:100%;
+  max-height:250px;
+  display:block;
+  object-fit:contain;
+  border:1px solid #dce5ed;
+  border-radius:10px;
+  background:#f8fafc;
+}
+.profile-plan-link{
+  width:max-content;
+  max-width:100%;
+  display:inline-flex;
+  align-items:center;
+  padding:8px 10px;
+  border:1px solid #dce5ed;
+  border-radius:8px;
+  background:#fff;
+  color:#1c527b;
+  font-size:12px;
+  font-weight:900;
+  text-decoration:none;
+}
+.profile-plan-remove{
+  width:max-content;
+  border:0;
+  background:transparent;
+  color:#bb3d30;
+  font-size:12px;
+  font-weight:900;
+  cursor:pointer;
+  padding:3px 0;
+}
+@media(max-width:800px){
+  .profile-save{position:static;bottom:auto;background:transparent;backdrop-filter:none}
+}
