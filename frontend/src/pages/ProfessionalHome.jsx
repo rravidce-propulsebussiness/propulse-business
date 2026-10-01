@@ -163,7 +163,7 @@ export default function ProfessionalHome(){
         <h1>Turn Customer Requirements Into <em>Business Opportunities.</em></h1>
         <p>Discover relevant construction, interior and real-estate leads, review the requirement before you buy, and grow your business through one focused marketplace.</p>
         <div className="pro-hero-actions">
-          <Link className="pro-primary" to="/leads">Browse Live Leads <Icon name="arrow" size={16}/></Link>
+          <Link className="pro-primary" to={selectedCityId?'/leads?cityId='+selectedCityId:'/leads'}>Browse Live Leads <Icon name="arrow" size={16}/></Link>
           <Link className="pro-secondary" to="/signup">Sign Up Free</Link>
         </div>
         <div className="pro-hero-trust">
@@ -254,7 +254,7 @@ export default function ProfessionalHome(){
             <p>{lead.industry_name||'Customer requirement'}</p>
             <div className="pro-live-location"><Icon name="pin" size={14}/><span>{location}</span></div>
             <div className="pro-live-meta"><span><Icon name="lock" size={13}/> Contact protected</span><b>{lead.pincode?'PIN '+lead.pincode:'Structured requirement'}</b></div>
-            <Link to="/leads">View lead <Icon name="arrow" size={13}/></Link>
+            <Link to={selectedCityId?'/leads?cityId='+selectedCityId:'/leads'}>View lead <Icon name="arrow" size={13}/></Link>
           </article>
         })}
       </div>}
