@@ -151,23 +151,28 @@ export default function Packages() {
     const selected = selectedKeys(category).includes(item.key)
     const open = Boolean(expanded[category + ':' + item.key])
     const title = item.title || item.name
-    return <article className={'pkg-premium-card ' + (selected ? 'selected' : '')} key={item.key}>
+    return <article className={'pkg-premium-card tier-' + item.key + ' ' + (selected ? 'selected' : '')} key={item.key}>
       <div className="pkg-card-photo">
         <img src={item.image} alt={title} loading="lazy" />
+        <div className="pkg-card-photo-shade" />
         {item.badge && <span className="pkg-card-badge">{item.badge}</span>}
-        <button className={'pkg-compare-check ' + (selected ? 'checked' : '')} type="button" onClick={() => setCompare(category, item.key)} aria-label={(selected ? 'Remove ' : 'Add ') + title + ' comparison'}>
-          {selected ? <Icon name="check" size={14} /> : null}
-        </button>
+        {selected && <span className="pkg-card-selected"><Icon name="check" size={12}/> Selected for comparison</span>}
       </div>
       <div className="pkg-premium-card-body">
-        <small>{item.eyebrow}</small>
-        <h3>{title}</h3>
-        <div className="pkg-premium-price"><strong>₹{item.price.toLocaleString('en-IN')}</strong><span>/sq ft</span></div>
-        <p>{item.description}</p>
-        <ul>{item.highlights.map(value => <li key={value}><Icon name="check" size={13}/>{value}</li>)}</ul>
+        <div className="pkg-card-heading">
+          <div><small>{item.eyebrow}</small><h3>{title}</h3></div>
+          <div className="pkg-premium-price"><strong>₹{item.price.toLocaleString('en-IN')}</strong><span>per sq ft</span></div>
+        </div>
+        <p className="pkg-card-description">{item.description}</p>
+        <div className="pkg-card-highlights">
+          <span>Package highlights</span>
+          <ul>{item.highlights.map(value => <li key={value}><Icon name="check" size={13}/>{value}</li>)}</ul>
+        </div>
         <div className="pkg-premium-actions">
           <button className="primary" type="button" onClick={() => openQuote(category, item.key)}>Get Quote <Icon name="arrow" size={14}/></button>
-          <button className={'compare ' + (selected ? 'selected' : '')} type="button" onClick={() => setCompare(category, item.key)}>{selected ? 'Selected' : 'Compare'}</button>
+          <button className={'compare ' + (selected ? 'selected' : '')} type="button" onClick={() => setCompare(category, item.key)}>
+            {selected ? <><Icon name="check" size={13}/> Selected</> : 'Compare'}
+          </button>
         </div>
         <button
           className={'pkg-full-toggle ' + (open ? 'open' : '')}
@@ -176,7 +181,7 @@ export default function Packages() {
           aria-expanded={open}
           aria-controls={'pkg-details-' + category + '-' + item.key}
         >
-          <span>{open ? 'Hide Details' : 'Full Details'}</span>
+          <span>{open ? 'Hide full specifications' : 'View full specifications'}</span>
           <i><Icon name="chevron" size={14}/></i>
         </button>
         {open && <div className="pkg-full-details" id={'pkg-details-' + category + '-' + item.key}>
@@ -213,8 +218,8 @@ export default function Packages() {
 
   function compareBar(category) {
     const count = selectedKeys(category).length
-    return <div className="pkg-compare-bar">
-      <div><Icon name="scale" size={17}/><span><b>{count}/2 selected</b><small>Select any two packages to compare.</small></span></div>
+    return <div className={'pkg-compare-bar ' + (count === 2 ? 'ready' : '')}>
+      <div className="pkg-compare-status"><i><Icon name="scale" size={17}/></i><span><b>{count}/2 packages selected</b><small>{count === 2 ? 'Ready to compare side by side.' : 'Choose any two packages to compare.'}</small></span></div>
       <button type="button" disabled={count !== 2} onClick={() => openComparison(category)}>Compare Packages <Icon name="arrow" size={13}/></button>
     </div>
   }
