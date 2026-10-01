@@ -109,13 +109,14 @@ app.use('/api/investments/admin/:id/payout',largeJsonFor('POST'));
 app.use('/api/admin/lead-partner-payouts/direct',largeJsonFor('POST'));
 app.use('/api/admin/lead-partner-payouts/:payoutId',largeJsonFor('PATCH'));
 app.use('/api/admin/homepage-media',largeJsonFor('POST'));
+app.use('/api/customer-flows/:key/:leadId/attachments',largeJsonFor('POST'));
 app.use('/api/customer-flows',express.json({limit:'64kb'}));
 app.use(express.json({limit:DEFAULT_JSON_BYTES}));
 app.use('/api',(req,res,next)=>{res.setHeader('Cache-Control','no-store, private');res.setHeader('Pragma','no-cache');res.setHeader('Expires','0');next();});
 app.use('/api',csrfProtection);
 const apiRateLimit=rateLimit({windowMs:15*60*1000,max:600,scope:'global',shared:true,sharedChunkSize:10});
 app.use('/api',apiRateLimit);
-app.use('/uploads',(req,res,next)=>{if(req.path==='/company-proofs'||req.path.startsWith('/company-proofs/'))return res.status(404).json({error:'Not found'});if(req.path==='/private-proofs'||req.path.startsWith('/private-proofs/'))return res.status(404).json({error:'Not found'});return next();});
+app.use('/uploads',(req,res,next)=>{if(req.path==='/company-proofs'||req.path.startsWith('/company-proofs/'))return res.status(404).json({error:'Not found'});if(req.path==='/private-proofs'||req.path.startsWith('/private-proofs/'))return res.status(404).json({error:'Not found'});if(req.path==='/lead-references'||req.path.startsWith('/lead-references/'))return res.status(404).json({error:'Not found'});return next();});
 app.use('/uploads',express.static(uploadRoot,{fallthrough:true,maxAge:'7d',immutable:true}));
 function setHealthHeaders(res){res.setHeader('Cache-Control','no-store');}
 function withTimeout(promise,label){
