@@ -142,9 +142,10 @@ export default function Home() {
         <Link to="/experts">Find Professionals</Link>
       </nav>
       <div className="hc-header-actions public-header-actions">
-        <button className="hc-consult-btn hc-quote-btn" type="button" onClick={() => openRequirement('')}>
+        <Link className="hc-consult-btn hc-quote-btn" to="/quote#interiors">
           Get Free Quote <Icon name="arrow" size={15} />
-        </button>
+        </Link>
+        <Link className="public-professional-btn" to="/professionals">For Professionals</Link>
       </div>
     </header>
 
