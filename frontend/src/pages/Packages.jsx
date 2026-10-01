@@ -49,24 +49,6 @@ const INTERIOR_DISPLAY_PACKAGES = INTERIOR_PACKAGES.map((item) => ({
   highlights: item.highlights,
 }))
 
-const REAL_ESTATE_OPTIONS = [
-  {
-    title: 'Apartments',
-    text: 'Modern apartments in prime locations',
-    image: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=1100&q=88',
-  },
-  {
-    title: 'Villas',
-    text: 'Premium villas for spacious living',
-    image: 'https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?auto=format&fit=crop&w=1100&q=88',
-  },
-  {
-    title: 'Residential Plots',
-    text: 'Well-located plots for your future home',
-    image: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1100&q=88',
-  },
-]
-
 const CONSTRUCTION_COMPARE_ROWS = [
   ['Best for', 'Practical homes & strong value', 'Balanced premium homes', 'High-spec premium homes'],
   ['Architecture', '2D + structural + 3D + soil test', 'Adds digital survey + MEP drawings', 'Digital survey + MEP + higher-spec package'],
@@ -100,36 +82,31 @@ function Icon({ name, size = 20 }) {
   if (name === 'chevron') return <svg {...p}><path d="m7 10 5 5 5-5"/></svg>
   if (name === 'home') return <svg {...p}><path d="m3 11 9-8 9 8"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/></svg>
   if (name === 'sofa') return <svg {...p}><path d="M5 11V8a3 3 0 0 1 3-3h8a3 3 0 0 1 3 3v3"/><path d="M4 10a2 2 0 0 0-2 2v5h20v-5a2 2 0 0 0-2-2"/><path d="M5 17v2M19 17v2"/></svg>
-  if (name === 'building') return <svg {...p}><path d="M4 21V4h10v17"/><path d="M14 8h6v13"/><path d="M7 8h3M7 12h3M7 16h3M17 12h1M17 16h1"/></svg>
   if (name === 'shield') return <svg {...p}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="m9 12 2 2 4-4"/></svg>
   if (name === 'people') return <svg {...p}><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2"/><path d="M3 21a6 6 0 0 1 12 0M14 16a5 5 0 0 1 7 5"/></svg>
   if (name === 'tag') return <svg {...p}><path d="M20 13 11 22 2 13V2h11l7 7Z"/><circle cx="7" cy="7" r="1.5"/></svg>
   if (name === 'headset') return <svg {...p}><path d="M4 13a8 8 0 0 1 16 0"/><path d="M4 13v5h3v-5H4ZM17 13h3v5h-3v-5ZM17 20c-1 1-2.5 1-4 1"/></svg>
   if (name === 'scale') return <svg {...p}><path d="M12 3v18M5 6h14M7 6 3 14h8L7 6ZM17 6l-4 8h8l-4-8Z"/><path d="M3 14a4 4 0 0 0 8 0M13 14a4 4 0 0 0 8 0M8 21h8"/></svg>
   if (name === 'refresh') return <svg {...p}><path d="M20 6v5h-5"/><path d="M4 18v-5h5"/><path d="M6.1 9A7 7 0 0 1 18 6l2 5M4 13l2 5a7 7 0 0 0 11.9-3"/></svg>
-  if (name === 'pin') return <svg {...p}><path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg>
   return null
 }
 
 export default function Packages() {
   const navigate = useNavigate()
-  const constructionRef = useRef(null)
-  const interiorRef = useRef(null)
-  const realEstateRef = useRef(null)
   const constructionCompareRef = useRef(null)
   const interiorCompareRef = useRef(null)
-
-  const [activeCategory, setActiveCategory] = useState('construction')
+  const initialHash = typeof window !== 'undefined' ? window.location.hash : ''
+  const [activeCategory, setActiveCategory] = useState(initialHash === '#interior' || initialHash === '#interiors' ? 'interior' : 'construction')
   const [compareConstruction, setCompareConstruction] = useState([])
   const [compareInterior, setCompareInterior] = useState([])
   const [compareOpen, setCompareOpen] = useState({ construction: false, interior: false })
   const [expanded, setExpanded] = useState({})
 
-  function scrollToCategory(category) {
+  function switchCategory(category) {
+    if (!['construction','interior'].includes(category)) return
     setActiveCategory(category)
-    const ref = category === 'construction' ? constructionRef : category === 'interior' ? interiorRef : realEstateRef
-    ref.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    window.history.replaceState({}, '', category === 'construction' ? '/packages#construction' : category === 'interior' ? '/packages#interior' : '/packages#real-estate')
+    setExpanded({})
+    window.history.replaceState({}, '', category === 'construction' ? '/packages#construction' : '/packages#interior')
   }
 
   function selectedKeys(category) {
@@ -259,7 +236,7 @@ export default function Packages() {
         <div className="pkg-premium-copy">
           <span className="pkg-kicker"><i/>OUR PACKAGES</span>
           <h1>Beautiful Spaces<br/><em>Within Your Budget</em></h1>
-          <p>Explore carefully curated packages for construction, interiors and real estate. Transparent scope, modern designs and flexible options to match your needs.</p>
+          <p>Explore carefully curated construction and interior packages. Compare scope, materials and pricing, then continue with the option that fits your project.</p>
           <div className="pkg-hero-points">
             <span><i><Icon name="people" size={17}/></i><b>Verified<br/>Professionals</b></span>
             <span><i><Icon name="shield" size={17}/></i><b>Quality<br/>Materials</b></span>
@@ -274,13 +251,20 @@ export default function Packages() {
       </div>
     </section>
 
-    <section className="pkg-category-nav">
-      <button className={activeCategory === 'construction' ? 'active' : ''} type="button" onClick={() => scrollToCategory('construction')}><i><Icon name="home" size={21}/></i><span><b>Construction Packages</b><small>Build your dream home</small></span><Icon name="arrow" size={15}/></button>
-      <button className={activeCategory === 'interior' ? 'active' : ''} type="button" onClick={() => scrollToCategory('interior')}><i><Icon name="sofa" size={21}/></i><span><b>Interior Packages</b><small>Beautiful interior solutions</small></span><Icon name="arrow" size={15}/></button>
-      <button className={activeCategory === 'real-estate' ? 'active' : ''} type="button" onClick={() => scrollToCategory('real-estate')}><i><Icon name="building" size={21}/></i><span><b>Real Estate</b><small>Curated property inspiration</small></span><Icon name="arrow" size={15}/></button>
+    <section className="pkg-category-nav" aria-label="Package categories">
+      <button className={activeCategory === 'construction' ? 'active' : ''} type="button" onClick={() => switchCategory('construction')}>
+        <i><Icon name="home" size={21}/></i>
+        <span><b>Construction Packages</b><small>Build your dream home</small></span>
+        <em>{activeCategory === 'construction' ? 'Selected' : 'View'}</em>
+      </button>
+      <button className={activeCategory === 'interior' ? 'active' : ''} type="button" onClick={() => switchCategory('interior')}>
+        <i><Icon name="sofa" size={21}/></i>
+        <span><b>Interior Packages</b><small>Premium interior solutions</small></span>
+        <em>{activeCategory === 'interior' ? 'Selected' : 'View'}</em>
+      </button>
     </section>
 
-    <section className="pkg-premium-section" ref={constructionRef}>
+    {activeCategory === 'construction' ? <section className="pkg-premium-section pkg-active-panel">
       <div className="pkg-section-head">
         <div><span><i/>CONSTRUCTION PACKAGES</span><h2>Build Your Dream Home</h2><p>Choose from construction packages with transparent pricing, quality materials and clear specifications.</p></div>
         <div className="pkg-section-benefits"><span><Icon name="shield" size={15}/>Quality Construction</span><span><Icon name="people" size={15}/>Trusted Professionals</span><span><Icon name="check" size={15}/>Clear Specifications</span></div>
@@ -288,27 +272,15 @@ export default function Packages() {
       <div className="pkg-premium-grid construction">{CONSTRUCTION_PACKAGES.map(item => renderPackageCard('construction', item))}</div>
       {compareBar('construction')}
       {renderCompare('construction')}
-    </section>
-
-    <section className="pkg-premium-section pkg-interior-section" ref={interiorRef}>
+    </section> : <section className="pkg-premium-section pkg-active-panel pkg-interior-section">
       <div className="pkg-section-head">
-        <div><span><i/>INTERIOR PACKAGES</span><h2>Transform Your Interiors</h2><p>Stylish, functional interior packages built around practical material and hardware references.</p></div>
+        <div><span><i/>INTERIOR PACKAGES</span><h2>Transform Your Interiors</h2><p>Choose a premium interior package with clear material, hardware and finish references.</p></div>
         <div className="pkg-section-benefits"><span><Icon name="sofa" size={15}/>Modular Solutions</span><span><Icon name="shield" size={15}/>Branded Materials</span><span><Icon name="tag" size={15}/>Clear Package Rates</span></div>
       </div>
       <div className="pkg-premium-grid interior">{INTERIOR_DISPLAY_PACKAGES.map(item => renderPackageCard('interior', item))}</div>
       {compareBar('interior')}
       {renderCompare('interior')}
-    </section>
-
-    <section className="pkg-premium-section pkg-real-estate-section" ref={realEstateRef}>
-      <div className="pkg-section-head">
-        <div><span><i/>REAL ESTATE</span><h2>Find the Right Property</h2><p>Browse property inspiration by type, location and budget before sharing your exact requirement.</p></div>
-        <div className="pkg-section-benefits"><span><Icon name="shield" size={15}/>Clear Context</span><span><Icon name="pin" size={15}/>Prime Locations</span><span><Icon name="people" size={15}/>Professional Support</span></div>
-      </div>
-      <div className="pkg-property-grid">
-        {REAL_ESTATE_OPTIONS.map(item => <article key={item.title}><img src={item.image} alt={item.title} loading="lazy"/><div><span><h3>{item.title}</h3><p>{item.text}</p></span><Link to="/projects">Explore <Icon name="arrow" size={13}/></Link></div></article>)}
-      </div>
-    </section>
+    </section>}
 
     <section className="pkg-bottom-note">
       <Icon name="shield" size={17}/>
