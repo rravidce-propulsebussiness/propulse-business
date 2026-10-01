@@ -49,7 +49,8 @@
     "test:construction-quotation": "node scripts/check-construction-quotation-flow.js",
     "test:packages": "node scripts/check-interior-packages-page.js",
     "test:solutions": "node scripts/check-unified-solutions-page.js",
-    "test:approved-ui": "node scripts/check-approved-public-ui.js"
+    "test:approved-ui": "node scripts/check-approved-public-ui.js",
+    "test:expert-directory-runtime": "node scripts/check-expert-directory-runtime.js"
   },
   "keywords": [],
   "author": "",
