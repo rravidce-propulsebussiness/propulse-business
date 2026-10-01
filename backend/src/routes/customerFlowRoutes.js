@@ -18,6 +18,7 @@ router.post('/admin', requireAdmin, adminWriteLimit, customerFlowController.crea
 router.put('/admin/:id/draft', requireAdmin, adminWriteLimit, customerFlowController.saveDraft);
 router.post('/admin/:id/publish', requireAdmin, adminWriteLimit, customerFlowController.publish);
 router.patch('/admin/:id/status', requireAdmin, adminWriteLimit, customerFlowController.setStatus);
+router.get('/admin/leads/:leadId/attachments/:attachmentId', requireAdmin, customerFlowController.downloadReferenceAdmin);
 
 router.get('/estimates/:publicId', publicReadLimit, estimatorController.getCalculation);
 router.post('/estimates/:publicId/convert', publicSubmitLimit, estimatorController.convertCalculation);
@@ -25,5 +26,6 @@ router.get('/:key', publicReadLimit, customerFlowController.getPublic);
 router.post('/:key/calculate', publicCalculateLimit, estimatorController.calculate);
 router.post('/:key/consultation', publicSubmitLimit, customerFlowController.submitConsultation);
 router.post('/:key/submit', publicSubmitLimit, customerFlowController.submitPublic);
+router.post('/:key/:leadId/attachments', publicSubmitLimit, customerFlowController.uploadReference);
 
 module.exports = router;
