@@ -506,11 +506,14 @@ export default function RequirementWizard({ flowKey }) {
         <span>{quotation ? 'QUOTATION GENERATED' : 'REQUEST RECEIVED'}</span>
         <h1>{quotation ? 'Your detailed quotation is ready.' : 'Your requirement is ready.'}</h1>
         <p>{quotation
-          ? 'Your project requirement has been saved and priced using the current ProPulse planning-rate configuration. Download the detailed quotation with cost breakdown, package specifications, payment milestones, exclusions and terms.'
+          ? 'Your project requirement has been saved and priced using the selected ProPulse package rate. Download the detailed quotation with exact package pricing, specifications, payment milestones, exclusions and terms.'
           : 'We saved your structured requirement. Download a PDF copy for your records.'}</p>
         {quotation && <div className="rq-quotation-result">
-          <div><small>Estimated project cost</small><strong>{quotation.minimumText}</strong><i>to</i><strong>{quotation.maximumText}</strong></div>
-          <span>{quotation.effectiveRateText} · {quotation.project?.constructionPackage} · {quotation.project?.quality}</span>
+          <div>
+            <small>{quotation.exactPricing ? 'Package quotation amount' : 'Estimated project cost'}</small>
+            <strong>{quotation.totalText || quotation.minimumText}</strong>
+          </div>
+          <span>{quotation.packageRateText || quotation.effectiveRateText} · {quotation.project?.constructionPackage} · {quotation.project?.builtUpArea?.toLocaleString('en-IN')} sq ft</span>
         </div>}
         {submissionResult?.leadId && <div className="rq-success-reference">Request ID <b>#{submissionResult.leadId}</b></div>}
         <div className="rq-success-actions">
