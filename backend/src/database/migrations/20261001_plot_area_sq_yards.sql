@@ -9,5 +9,6 @@ FROM customer_flow_versions v
 JOIN customer_flow_definitions d ON d.id=v.definition_id
 WHERE q.version_id=v.id
   AND q.question_key='plot_area'
+  AND q.question_type='area'
   AND d.key IN ('build','construction-cost-estimator')
   AND v.status IN ('published','draft');
