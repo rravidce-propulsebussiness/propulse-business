@@ -99,13 +99,22 @@ function fieldLabel(question, answers) {
   }
   if (typeof value === 'boolean') return value ? 'Yes' : 'No'
   if (question.questionKey === 'floors') return constructionFloorLabel(value)
-  if (question.questionKey === 'plot_area') return String(value) + ' sq yards'
+  if (question.questionKey === 'plot_area') {
+    return question.options?.find(option => option.value === value)?.label || (String(value) + ' sq yards')
+  }
   return question.options?.find(option => option.value === value)?.label || String(value)
 }
 
 function PremiumQuestion({ question, value, onChange, visual = 'default' }) {
   if (!question) return null
   const options = question.options || []
+
+  if (question.questionKey === 'plot_area' && options.length) {
+    return <select className="rq-floor-select rq-plot-area-select" value={value ?? ''} onChange={event => onChange(event.target.value)}>
+      <option value="">Select plot area</option>
+      {options.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}
+    </select>
+  }
 
   if (question.questionType === 'single_select' || question.questionType === 'timeline') {
     const imageMode = visual === 'image'
@@ -259,7 +268,9 @@ export default function RequirementWizard({ flowKey }) {
 
   const ownPlotQuestion = flowKey === 'build' ? questions.find(question => question.questionKey === 'own_plot') : null
   const propertyQuestions = questions.filter(question => ['project_type', 'property_intent', 'bhk', 'property_status', 'possession_status'].includes(question.questionKey))
-  const configQuestions = questions.filter(question => ['plot_area', 'built_up_area', 'area', 'floors'].includes(question.questionKey))
+  const configQuestions = questions.filter(question => flowKey === 'build'
+    ? ['plot_area', 'site_access', 'floors'].includes(question.questionKey)
+    : ['area'].includes(question.questionKey))
   const preferenceQuestions = questions.filter(question => ['construction_scope', 'quality', 'budget', 'timeline', 'interior_scope', 'kitchen', 'wardrobes', 'false_ceiling', 'furniture', 'finish_quality'].includes(question.questionKey))
   const additionalQuestion = questions.find(question => question.questionKey === 'additional_requirement')
   const usedKeys = new Set([locationQuestion?.questionKey, ownPlotQuestion?.questionKey, ...propertyQuestions.map(q => q.questionKey), ...configQuestions.map(q => q.questionKey), ...preferenceQuestions.map(q => q.questionKey), additionalQuestion?.questionKey].filter(Boolean))
@@ -378,7 +389,7 @@ export default function RequirementWizard({ flowKey }) {
     const missing = questions.find(question => question.isRequired && isEmptyAnswer(answers[question.questionKey]))
     if (missing) {
       setState(current => ({ ...current, error: `Please complete “${missing.label}”.` }))
-      const target = missing.questionKey === 'own_plot' || ['plot_area','built_up_area','area','floors'].includes(missing.questionKey)
+      const target = missing.questionKey === 'own_plot' || ['plot_area','site_access','area','floors'].includes(missing.questionKey)
         ? 'rq-config'
         : ['project_type','property_intent','bhk','property_status','possession_status'].includes(missing.questionKey)
           ? 'rq-property'
@@ -405,14 +416,11 @@ export default function RequirementWizard({ flowKey }) {
       if (isQuotationFlow) {
         const scope = Array.isArray(answers.construction_scope) ? answers.construction_scope : []
         if (!scope.some(item => ['turnkey','civil_structure','finishing'].includes(item))) {
-          throw new Error('Select Turnkey construction, Civil / structure, or Finishing work so we can calculate the quotation.')
-        }
-        if (!answers.built_up_area) {
-          throw new Error('Enter the planned total built-up area to generate the construction quotation.')
+          throw new Error('Select Turnkey construction, Civil / structure, or Finishing work so we can understand the construction scope.')
         }
       }
 
-      const quotation = isQuotationFlow
+      const quotation = isQuotationFlow && answers.built_up_area
         ? await calculateRequirementQuotation({ flowKey, answers, publicRequest })
         : null
 
@@ -658,14 +666,14 @@ export default function RequirementWizard({ flowKey }) {
 
         <aside className="rq-summary-card" id="rq-summary">
           <div className="rq-summary-progress"><span>{isQuotationFlow ? 'Quotation progress' : 'Requirement progress'}</span><b>{completion}%</b><i><em style={{ width: completion + '%' }} /></i></div>
-          <h3>{isQuotationFlow ? 'Quotation Input Summary' : 'Your Selection Summary'}</h3>
+          <h3>{isQuotationFlow && answers.built_up_area ? 'Quotation Input Summary' : 'Your Selection Summary'}</h3>
           <div className="rq-summary-list">
             {summaryRows.map(([label,value]) => <div key={label}><span>{label}</span><b title={value}>{value}</b></div>)}
           </div>
           <p className="rq-submit-consent">By submitting, you agree that ProPulse may use your project and contact details to process this request and connect you with relevant professionals.</p>
           <label className="rq-honeypot" aria-hidden="true">Website<input tabIndex="-1" autoComplete="off" value={website} onChange={event => setWebsite(event.target.value)} /></label>
           {state.error && <div className="rq-error">{state.error}</div>}
-          <button className="rq-submit" type="submit" disabled={state.saving}>{state.saving ? (isQuotationFlow ? 'Calculating quotation…' : 'Submitting…') : (isQuotationFlow ? 'Generate Detailed Quotation' : (flow.config?.submitLabel || 'Submit Requirement'))} <Icon name="arrow" size={15}/></button>
+          <button className="rq-submit" type="submit" disabled={state.saving}>{state.saving ? 'Submitting…' : (isQuotationFlow && answers.built_up_area ? 'Generate Detailed Quotation' : (isQuotationFlow ? 'Get Free Quote' : (flow.config?.submitLabel || 'Submit Requirement')))} <Icon name="arrow" size={15}/></button>
           <small className="rq-submit-note">{isQuotationFlow ? 'No OTP required. Pricing is calculated from Admin-configured rates and your submitted project details.' : 'No OTP required. Your request becomes a lead only after successful submission.'}</small>
         </aside>
       </div>
