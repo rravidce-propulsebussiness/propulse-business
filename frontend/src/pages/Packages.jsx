@@ -242,27 +242,6 @@ export default function Packages() {
       </div>
     </header>
 
-    <section className="pkg-premium-hero">
-      <div className="pkg-premium-hero-bg"/>
-      <div className="pkg-premium-hero-inner">
-        <div className="pkg-premium-copy">
-          <span className="pkg-kicker"><i/>OUR PACKAGES</span>
-          <h1>Beautiful Spaces<br/><em>Within Your Budget</em></h1>
-          <p>Explore carefully curated construction and interior packages. Compare scope, materials and pricing, then continue with the option that fits your project.</p>
-          <div className="pkg-hero-points">
-            <span><i><Icon name="people" size={17}/></i><b>Verified<br/>Professionals</b></span>
-            <span><i><Icon name="shield" size={17}/></i><b>Quality<br/>Materials</b></span>
-            <span><i><Icon name="tag" size={17}/></i><b>Transparent<br/>Pricing</b></span>
-            <span><i><Icon name="headset" size={17}/></i><b>End-to-End<br/>Support</b></span>
-          </div>
-        </div>
-        <aside className="pkg-hero-cta">
-          <div><b>Turn your ideas into reality</b><p>Choose a package and get a detailed quotation for your requirement.</p></div>
-          <Link to="/quote#interiors"><Icon name="arrow" size={18}/></Link>
-        </aside>
-      </div>
-    </section>
-
     <section className="pkg-category-nav" aria-label="Package categories">
       <button className={activeCategory === 'construction' ? 'active' : ''} type="button" onClick={() => switchCategory('construction')}>
         <i><Icon name="home" size={21}/></i>
