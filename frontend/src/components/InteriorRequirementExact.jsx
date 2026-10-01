@@ -121,7 +121,10 @@ export default function InteriorRequirementExact(props) {
   const email = contactData.email || contactData.support_email || ''
 
   const propertyTypeValue = propertyType ? answers[propertyType.questionKey] : ''
-  const showBhk = ['apartment','villa','independent_house'].includes(propertyTypeValue)
+  // Keep the bedroom selector visible by default so the customer can see it
+  // even before choosing a residential property. Hide it only for clearly
+  // non-residential property types.
+  const showBhk = !['office','commercial_space'].includes(propertyTypeValue)
   const bhkOptions = bhk?.options?.length ? bhk.options : FALLBACK_BHK_OPTIONS
   const scopeAnswer = scope ? answers[scope.questionKey] : ''
   const legacyScopeValues = Array.isArray(scopeAnswer) ? scopeAnswer : []
@@ -244,10 +247,13 @@ export default function InteriorRequirementExact(props) {
 
       <section className="irx-card" id="irx-property">
         <div className="irx-section-title"><span>2.</span><div><h2>Property Details</h2><p>Select the property type and number of bedrooms.</p></div></div>
-        <div className="irx-property-grid">{(propertyType?.options||[]).map(option=>{const active=answers[propertyType.questionKey]===option.value;return <button type="button" key={option.value} className={active?'active':''} onClick={()=>setAnswer(propertyType.questionKey,option.value)}><div><img src={PROPERTY_IMAGES[option.value]||PROPERTY_IMAGES.apartment} alt=""/>{active&&<i>✓</i>}</div><b>{option.label}</b></button>})}</div>
+        <div className="irx-property-grid">{(propertyType?.options||[]).map(option=>{const active=answers[propertyType.questionKey]===option.value;return <button type="button" key={option.value} className={active?'active':''} onClick={()=>{
+          setAnswer(propertyType.questionKey,option.value)
+          if(['office','commercial_space'].includes(option.value)) setAnswer(bhk?.questionKey||'bhk','')
+        }}><div><img src={PROPERTY_IMAGES[option.value]||PROPERTY_IMAGES.apartment} alt=""/>{active&&<i>✓</i>}</div><b>{option.label}</b></button>})}</div>
         {showBhk&&<div className="irx-bedroom-row">
           <label className="irx-bedroom-field">
-            <div><b>Number of Bedrooms</b><small>Select your home configuration.</small></div>
+            <div><b>Number of Bedrooms (BHK)</b><small>Select 1 BHK, 2 BHK, 3 BHK or more.</small></div>
             <select value={bhk ? (answers[bhk.questionKey]||'') : (answers.bhk||'')} onChange={e=>setAnswer(bhk?.questionKey||'bhk',e.target.value)}>
               <option value="">Select bedrooms</option>
               {bhkOptions.map(option=><option key={option.value} value={option.value}>{option.label}</option>)}
