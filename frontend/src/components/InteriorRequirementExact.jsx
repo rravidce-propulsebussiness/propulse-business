@@ -112,6 +112,10 @@ export default function InteriorRequirementExact(props) {
   const scope = byKey.interior_scope
   const selectedWork = byKey.selected_work
   const finishQuality = byKey.finish_quality
+  const selectedPackageKey = ['standard','premium'].includes(String(answers.finish_quality || '').toLowerCase())
+    ? String(answers.finish_quality).toLowerCase()
+    : ''
+  const selectedPackage = INTERIOR_PACKAGES.find(item => item.key === selectedPackageKey) || null
   const budget = byKey.budget
   const timeline = byKey.timeline
   const style = byKey.design_style
@@ -183,7 +187,7 @@ export default function InteriorRequirementExact(props) {
     ...(showBhk ? [['Bedrooms', bhk ? answerLabel(bhk, answers[bhk.questionKey]) : (answers.bhk || '—')]] : []),
     ['Interior Scope', scopeMode === 'end_to_end' ? 'Full Home Interiors' : scopeMode === 'selected_work' ? 'Selected Work' : '—'],
     ...(scopeMode === 'selected_work' ? [['Selected Work', selectedWorkLabel]] : []),
-    ['Finish Level', answerLabel(finishQuality, finishQuality ? answers[finishQuality.questionKey] : '')],
+    ['Interior Package', selectedPackage ? selectedPackage.name : '—'],
     ['Budget', answerLabel(budget, budget ? answers[budget.questionKey] : '')],
     ['Timeline', answerLabel(timeline, timeline ? answers[timeline.questionKey] : '')],
     ['Design Style', answerLabel(style, style ? answers[style.questionKey] : '')],
