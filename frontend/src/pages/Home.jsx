@@ -273,7 +273,7 @@ export default function Home() {
       </div>
       <div><b>Quick Links</b><Link to="/">Home</Link><Link to="/quote#construction">Construction</Link><Link to="/quote#interiors">Interiors</Link><Link to="/packages">Packages</Link><Link to="/quote#property">Real Estate</Link><Link to="/projects">Projects</Link></div>
       <div><b>Our Services</b><Link to="/quote#construction">Home Construction</Link><Link to="/quote#interiors">Interior Design</Link><Link to="/quote#property">Real Estate</Link><Link to="/quote#construction">Construction Quote</Link><button type="button" onClick={() => openRequirement('')}>Free Consultation</button></div>
-      <div><b>Support</b><Link to="/contact">FAQ</Link><Link to="/contact">Contact Us</Link><Link to="/contact">Privacy Policy</Link><Link to="/contact">Terms & Conditions</Link></div>
+      <div><b>Support</b><Link to="/faq">FAQ</Link><Link to="/contact">Contact Us</Link><Link to="/contact">Privacy Policy</Link><Link to="/contact">Terms & Conditions</Link></div>
       <div><b>Contact Info</b>{phone&&<a href={'tel:'+String(phone).replace(/\s/g,'')}><Icon name="phone" size={12}/>{phone}</a>}{email&&<a href={'mailto:'+email}>{email}</a>}<span><Icon name="pin" size={12}/>Hyderabad, India</span></div>
     </footer>
   </div>
