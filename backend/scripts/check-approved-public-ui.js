@@ -119,6 +119,7 @@ assert.match(publicExpertService,/business_profile_projects/);
 assert.match(publicExpertService,/business_profile_service_plans/);
 assert.match(publicExpertService,/getPublicExpert/);
 assert.doesNotMatch(publicExpertService,/bp\.phone/);
+assert.doesNotMatch(publicExpertService,/bp\.business_details/);
 assert.doesNotMatch(publicExpertService,/u\.email/);
 assert.match(serverSource,/app\.use\('\/api\/experts',publicExpertRoutes\)/);
 
