@@ -28,6 +28,7 @@ function FaqIcon({category}){
 
 export default function WebsiteFaqSection({variant='home',audience='website'}){
   const standalone=variant==='page'
+  const compactHome=variant==='home-compact'
   const [faqs,setFaqs]=useState([])
   const [loading,setLoading]=useState(true)
   const [error,setError]=useState('')
@@ -44,7 +45,7 @@ export default function WebsiteFaqSection({variant='home',audience='website'}){
       setFaqs(items)
       setOpen(current=>{
         if(items.some(item=>item.id===current))return current
-        return !standalone&&items.length?items[0].id:null
+        return variant==='home'&&items.length?items[0].id:null
       })
     }catch(e){
       setFaqs([])
@@ -88,6 +89,30 @@ export default function WebsiteFaqSection({variant='home',audience='website'}){
       </article>
     })}
   </div>
+
+  if(compactHome){
+    const compactItems=visible.slice(0,4)
+    return <section className="website-faq website-faq-compact" id="faq">
+      <div className="website-faq-compact-head">
+        <div><h2>Frequently Asked Questions</h2><p>Quick answers about the ProPulse customer journey.</p></div>
+        <Link to="/contact">View All FAQs <span>→</span></Link>
+      </div>
+      <div className="website-faq-compact-grid">
+        {loading&&<div className="website-faq-state">Loading FAQs…</div>}
+        {!loading&&error&&<div className="website-faq-state error"><strong>FAQs are temporarily unavailable.</strong><button type="button" onClick={load}>Try again</button></div>}
+        {!loading&&!error&&!compactItems.length&&<div className="website-faq-state"><strong>No FAQs are published here yet.</strong></div>}
+        {!loading&&!error&&compactItems.map(item=>{
+          const expanded=open===item.id
+          return <article className={'website-faq-compact-item'+(expanded?' open':'')} key={item.id}>
+            <button type="button" onClick={()=>setOpen(expanded?null:item.id)} aria-expanded={expanded}>
+              <strong>{item.question}</strong><span>{expanded?'−':'⌄'}</span>
+            </button>
+            {expanded&&<p>{item.answer}</p>}
+          </article>
+        })}
+      </div>
+    </section>
+  }
 
   if(!standalone)return <section className="website-faq website-faq-home" id="faq">
     <div className="website-faq-home-head">
