@@ -30,6 +30,32 @@ const WORK_ICONS = {
   study_unit: 'layout',
   crockery_unit: 'kitchen',
 }
+
+const INTERIOR_SCOPE_MODES = [
+  { value: 'end_to_end', label: 'Full Home Interiors', detail: 'Complete interior planning for your home' },
+  { value: 'selected_work', label: 'Select Specific Work', detail: 'Choose only the items you need' },
+]
+
+const FALLBACK_INTERIOR_WORK = [
+  { value: 'modular_kitchen', label: 'Modular Kitchen' },
+  { value: 'wardrobes', label: 'Wardrobes' },
+  { value: 'tv_unit', label: 'TV Unit' },
+  { value: 'false_ceiling', label: 'False Ceiling' },
+  { value: 'furniture', label: 'Furniture' },
+  { value: 'lighting', label: 'Lighting' },
+  { value: 'painting', label: 'Painting / Wall Finish' },
+  { value: 'pooja_unit', label: 'Pooja Unit' },
+  { value: 'study_unit', label: 'Study Unit' },
+  { value: 'crockery_unit', label: 'Crockery Unit' },
+]
+
+const FALLBACK_BHK_OPTIONS = [
+  { value: '1_bhk', label: '1 BHK' },
+  { value: '2_bhk', label: '2 BHK' },
+  { value: '3_bhk', label: '3 BHK' },
+  { value: '4_bhk', label: '4 BHK' },
+  { value: '5_plus_bhk', label: '5+ BHK' },
+]
 const HERO = 'https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=2100&q=92'
 const PROMO = 'https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&w=1200&q=90'
 
@@ -78,6 +104,7 @@ export default function InteriorRequirementExact(props) {
   const { flow, questions, answers, setAnswer, cities, locationStates, locationStateId, setLocationState, cityId, setCity, locationQuestion, setPincode, onDetectedLocation, pinLookup, contact, setContact, state, submit, contactData, completion } = props
   const fileRef = useRef(null)
   const [referenceFiles, setReferenceFiles] = useState([])
+  const [legacyScopeMode, setLegacyScopeMode] = useState('')
   const byKey = useMemo(() => Object.fromEntries(questions.map(q => [q.questionKey, q])), [questions])
   const propertyType = byKey.property_type
   const bhk = byKey.bhk
@@ -92,6 +119,53 @@ export default function InteriorRequirementExact(props) {
   const extraQuestions = questions.filter(q => !handledKeys.has(q.questionKey))
   const phone = contactData.phone || contactData.phone_number || contactData.mobile || ''
   const email = contactData.email || contactData.support_email || ''
+
+  const propertyTypeValue = propertyType ? answers[propertyType.questionKey] : ''
+  const showBhk = ['apartment','villa','independent_house'].includes(propertyTypeValue)
+  const bhkOptions = bhk?.options?.length ? bhk.options : FALLBACK_BHK_OPTIONS
+  const scopeAnswer = scope ? answers[scope.questionKey] : ''
+  const legacyScopeValues = Array.isArray(scopeAnswer) ? scopeAnswer : []
+  const isLegacyScope = Boolean(scope && scope.questionType === 'multi_select' && !selectedWork)
+  const fullHomeLegacyValue = scope?.options?.find(option => ['full_home','end_to_end'].includes(option.value))?.value || 'full_home'
+  const legacySpecificOptions = (scope?.options || []).filter(option => !['full_home','end_to_end','selected_work'].includes(option.value))
+  const workOptions = selectedWork?.options?.length ? selectedWork.options : (legacySpecificOptions.length ? legacySpecificOptions : FALLBACK_INTERIOR_WORK)
+  const selectedWorkValues = selectedWork
+    ? (Array.isArray(answers[selectedWork.questionKey]) ? answers[selectedWork.questionKey] : [])
+    : legacyScopeValues.filter(value => value !== fullHomeLegacyValue)
+  const scopeMode = isLegacyScope
+    ? (legacyScopeValues.includes(fullHomeLegacyValue) ? 'end_to_end' : (legacyScopeMode || (selectedWorkValues.length ? 'selected_work' : '')))
+    : (scopeAnswer || '')
+
+  function selectScopeMode(mode) {
+    if (!scope) return
+    if (isLegacyScope) {
+      setLegacyScopeMode(mode)
+      if (mode === 'end_to_end') setAnswer(scope.questionKey, [fullHomeLegacyValue])
+      else setAnswer(scope.questionKey, legacyScopeValues.filter(value => value !== fullHomeLegacyValue))
+      return
+    }
+    setAnswer(scope.questionKey, mode)
+    if (mode === 'end_to_end' && selectedWork) setAnswer(selectedWork.questionKey, [])
+  }
+
+  function toggleInteriorWork(value) {
+    if (!scope) return
+    const next = selectedWorkValues.includes(value)
+      ? selectedWorkValues.filter(item => item !== value)
+      : [...selectedWorkValues, value]
+
+    if (isLegacyScope) {
+      setLegacyScopeMode('selected_work')
+      setAnswer(scope.questionKey, next)
+      return
+    }
+    if (selectedWork) setAnswer(selectedWork.questionKey, next)
+  }
+
+  const selectedWorkLabel = selectedWorkValues.length
+    ? selectedWorkValues.map(value => workOptions.find(option => option.value === value)?.label || value).join(', ')
+    : '—'
+
   const summary = [
     ['Location', [
       cities.find(c => String(c.id) === String(cityId))?.name,
@@ -99,9 +173,9 @@ export default function InteriorRequirementExact(props) {
     ].filter(Boolean).join(', ') || '—'],
     ['PIN Code', answerLabel(locationQuestion, locationQuestion ? answers[locationQuestion.questionKey] : '')],
     ['Property Type', answerLabel(propertyType, propertyType ? answers[propertyType.questionKey] : '')],
-    ...(bhk ? [['Home Configuration', answerLabel(bhk, answers[bhk.questionKey])]] : []),
-    ['Interior Scope', answerLabel(scope, scope ? answers[scope.questionKey] : '')],
-    ...(selectedWork ? [['Selected Work', answerLabel(selectedWork, answers[selectedWork.questionKey])]] : []),
+    ...(showBhk ? [['Home Configuration', bhk ? answerLabel(bhk, answers[bhk.questionKey]) : (answers.bhk || '—')]] : []),
+    ['Interior Scope', scopeMode === 'end_to_end' ? 'Full Home Interiors' : scopeMode === 'selected_work' ? 'Selected Work' : '—'],
+    ...(scopeMode === 'selected_work' ? [['Selected Work', selectedWorkLabel]] : []),
     ['Finish Level', answerLabel(finishQuality, finishQuality ? answers[finishQuality.questionKey] : '')],
     ['Budget', answerLabel(budget, budget ? answers[budget.questionKey] : '')],
     ['Timeline', answerLabel(timeline, timeline ? answers[timeline.questionKey] : '')],
