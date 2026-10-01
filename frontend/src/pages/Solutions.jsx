@@ -49,6 +49,10 @@ function hashKey(hash){
   return FLOWS[key]?key:'construction'
 }
 
+function openLeadPopup(flowKey=''){
+  window.dispatchEvent(new CustomEvent('propulse:open-lead-popup',{detail:{flowKey}}))
+}
+
 export default function Solutions(){
   const location=useLocation()
   const navigate=useNavigate()
@@ -74,7 +78,7 @@ export default function Solutions(){
         <Link to="/experts">Find Professionals</Link>
       </nav>
       <div className="public-header-actions">
-        <Link className="quote-header-cta" to={'/quote'+location.search+'#'+activeKey}>Get Free Quote <Icon name="arrow" size={15}/></Link>
+        <Link className="quote-header-cta" to={'/quote'+location.search+'#'+activeKey} onClick={event=>{event.preventDefault();openLeadPopup(active.flowKey)}}>Get Free Quote <Icon name="arrow" size={15}/></Link>
         <Link className="public-professional-btn" to="/professionals">For Professionals</Link>
       </div>
     </header>
