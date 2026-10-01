@@ -9,8 +9,6 @@ const FLOWS=[
     label:'Construction',
     subtitle:'Build Your Dream Home',
     route:'/quote#construction',
-    sectionTitle:'Construction – How It Works',
-    sectionText:'Build your dream home with a clear requirement, estimated planning and relevant businesses.',
     image:'https://images.unsplash.com/photo-1600585152915-d208bec867a1?auto=format&fit=crop&w=1200&q=88',
     imageTitle:'From Plan to Your Dream Home',
     imageText:'Start with a structured requirement and move forward with clarity.',
@@ -26,8 +24,6 @@ const FLOWS=[
     label:'Interiors',
     subtitle:'Design Beautiful Spaces',
     route:'/quote#interiors',
-    sectionTitle:'Interiors – How It Works',
-    sectionText:'Create a clearer interior brief for your home, office or commercial space.',
     image:'https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=1200&q=88',
     imageTitle:'Turn Your Space into Something Special',
     imageText:'Define rooms, style, scope and preferences before requesting responses.',
@@ -43,8 +39,6 @@ const FLOWS=[
     label:'Real Estate',
     subtitle:'Buy, Sell or Invest',
     route:'/quote#property',
-    sectionTitle:'Real Estate – How It Works',
-    sectionText:'Create a structured requirement for residential, commercial or plot properties.',
     image:'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=1200&q=88',
     imageTitle:'Better Decisions Start with Clear Requirements',
     imageText:'Define property type, location, budget and preferences in one place.',
@@ -112,7 +106,6 @@ export default function HowItWorks(){
   }
 
   const activeFlow=FLOWS.find(flow=>flow.key===active)||FLOWS[0]
-  const activeFlowIndex=Math.max(0,FLOWS.findIndex(flow=>flow.key===activeFlow.key))
   const phone=contactData.phone||contactData.phone_number||contactData.mobile||''
   const email=contactData.email||contactData.support_email||''
 
@@ -132,11 +125,6 @@ export default function HowItWorks(){
 
     <section className="hiw-flow-list">
       <article className="hiw-flow hiw-flow-active" id="hiw-active-flow" key={activeFlow.key}>
-        <div className="hiw-flow-head">
-          <span>{String(activeFlowIndex+1).padStart(2,'0')}</span>
-          <div><h2>{activeFlow.sectionTitle}</h2><p>{activeFlow.sectionText}</p></div>
-          <b className="hiw-active-category">{activeFlow.label}</b>
-        </div>
         <div className="hiw-flow-layout">
           <div className="hiw-step-grid">
             {activeFlow.steps.map(([icon,title,text],stepIndex)=><div className="hiw-step-card" key={title}>
