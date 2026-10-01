@@ -20,7 +20,8 @@ const navigation=[
   ]},
   {type:'group',key:'customers',label:'Customers',icon:'◎',children:[
     {to:'/admin/users',label:'Users',aliases:['/admin/businesses']},
-    {to:'/admin/company-proofs',label:'Company Proofs'}
+    {to:'/admin/company-proofs',label:'Company Proofs'},
+    {to:'/admin/support-chats',label:'Support Chats'}
   ]},
   {type:'group',key:'payments',label:'Payments & Wallet',icon:'▣',children:[
     {to:'/admin/payments',label:'Payments',aliases:['/admin/wallet-topups']},

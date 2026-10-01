@@ -13,3 +13,5 @@
 .sound-control-switch input:checked+i{background:#f05b24}.sound-control-switch input:checked+i:after{transform:translateX(18px)}.sound-control-switch input:disabled+i{opacity:.55}
 .sound-control-volume{display:grid;gap:8px}.sound-control-volume>span{display:flex;align-items:center;justify-content:space-between;gap:12px}.sound-control-volume b,.sound-control-volume strong{font-size:12px;color:#214764}.sound-control-volume strong{color:#f05b24}.sound-control-volume input{width:100%;accent-color:#f05b24}
 @media(max-width:700px){.sound-control{left:12px;bottom:12px}.sound-control-button{width:40px;height:40px}.sound-control-panel{bottom:48px}}
+
+.sound-control-test{width:100%;margin-top:11px;padding:9px 11px;border:1px solid #f0c5b4;border-radius:9px;background:#fff7f2;color:#d94f22;font-size:12px;font-weight:900;cursor:pointer}.sound-control-test:disabled{opacity:.45;cursor:not-allowed}

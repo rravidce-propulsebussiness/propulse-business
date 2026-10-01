@@ -17,7 +17,7 @@ let config={...DEFAULT_CONFIG}
 let enabled=true
 let userVolume=1
 let audioContext=null
-let unlocked=false
+let interactionReady=false
 let installed=false
 const listeners=new Set()
 
@@ -94,43 +94,42 @@ function ensureContext(){
 }
 
 function unlock(){
+  interactionReady=true
   const ctx=ensureContext()
-  if(!ctx)return
-  if(ctx.state==='suspended')ctx.resume().catch(()=>{})
-  unlocked=true
+  if(!ctx)return Promise.resolve(false)
+  if(ctx.state==='running')return Promise.resolve(true)
+  return ctx.resume().then(()=>ctx.state==='running').catch(()=>false)
 }
 
 const PATTERNS={
   click:[
-    {frequency:420,duration:0.028,delay:0,wave:'triangle',gain:0.09},
+    {frequency:420,duration:0.032,delay:0,wave:'triangle',gain:0.32},
   ],
   success:[
-    {frequency:523,duration:0.065,delay:0,wave:'sine',gain:0.12},
-    {frequency:659,duration:0.065,delay:0.055,wave:'sine',gain:0.10},
-    {frequency:784,duration:0.09,delay:0.11,wave:'sine',gain:0.085},
+    {frequency:523,duration:0.07,delay:0,wave:'sine',gain:0.30},
+    {frequency:659,duration:0.07,delay:0.055,wave:'sine',gain:0.28},
+    {frequency:784,duration:0.1,delay:0.11,wave:'sine',gain:0.24},
   ],
   warning:[
-    {frequency:330,duration:0.075,delay:0,wave:'triangle',gain:0.09},
-    {frequency:262,duration:0.11,delay:0.07,wave:'triangle',gain:0.07},
+    {frequency:330,duration:0.08,delay:0,wave:'triangle',gain:0.30},
+    {frequency:262,duration:0.12,delay:0.075,wave:'triangle',gain:0.24},
   ],
   upload:[
-    {frequency:440,duration:0.055,delay:0,wave:'sine',gain:0.10},
-    {frequency:660,duration:0.08,delay:0.05,wave:'sine',gain:0.09},
+    {frequency:440,duration:0.06,delay:0,wave:'sine',gain:0.30},
+    {frequency:660,duration:0.09,delay:0.055,wave:'sine',gain:0.26},
   ],
   notification:[
-    {frequency:740,duration:0.07,delay:0,wave:'sine',gain:0.09},
-    {frequency:988,duration:0.12,delay:0.075,wave:'sine',gain:0.07},
+    {frequency:740,duration:0.075,delay:0,wave:'sine',gain:0.28},
+    {frequency:988,duration:0.13,delay:0.08,wave:'sine',gain:0.23},
   ],
 }
 
-export function playSound(type){
-  if(typeof window==='undefined'||!unlocked||!categoryEnabled(type))return false
-  const ctx=ensureContext()
+function schedulePattern(ctx,type){
   const notes=PATTERNS[type]
-  if(!ctx||!notes?.length)return false
+  if(!notes?.length)return false
   const baseVolume=Math.max(0,Math.min(0.5,Number(config.defaultVolume||0.2)))*userVolume
   if(baseVolume<=0)return false
-  const now=ctx.currentTime+0.004
+  const now=ctx.currentTime+0.006
   notes.forEach(note=>{
     const oscillator=ctx.createOscillator()
     const gain=ctx.createGain()
@@ -138,14 +137,25 @@ export function playSound(type){
     const stop=start+note.duration
     oscillator.type=note.wave
     oscillator.frequency.setValueAtTime(note.frequency,start)
-    gain.gain.setValueAtTime(0,start)
-    gain.gain.linearRampToValueAtTime(baseVolume*note.gain,start+0.008)
+    gain.gain.setValueAtTime(0.0001,start)
+    gain.gain.linearRampToValueAtTime(Math.max(0.0001,baseVolume*note.gain),start+0.008)
     gain.gain.exponentialRampToValueAtTime(0.0001,stop)
     oscillator.connect(gain)
     gain.connect(ctx.destination)
     oscillator.start(start)
-    oscillator.stop(stop+0.01)
+    oscillator.stop(stop+0.015)
   })
+  return true
+}
+
+export function playSound(type){
+  if(typeof window==='undefined'||!interactionReady||!categoryEnabled(type))return false
+  const ctx=ensureContext()
+  if(!ctx||!PATTERNS[type]?.length)return false
+  if(ctx.state==='running')return schedulePattern(ctx,type)
+  ctx.resume()
+    .then(()=>{if(ctx.state==='running')schedulePattern(ctx,type)})
+    .catch(()=>{})
   return true
 }
 
