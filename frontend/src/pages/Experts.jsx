@@ -85,10 +85,10 @@ export default function Experts(){
         <Link to="/">Home</Link>
         <Link to="/packages">Packages</Link>
         <Link to="/projects">Projects</Link>
-        <Link className="active" to="/experts">Experts</Link>
         <Link to="/how-it-works">How It Works</Link>
         <Link to="/about">About</Link>
         <Link to="/contact">Contact</Link>
+        <Link className="active" to="/experts">Experts</Link>
       </nav>
       <div className="experts-header-actions">
         <Link className="experts-quote" to="/quote">Get Free Quote <Icon name="arrow" size={15}/></Link>
