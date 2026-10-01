@@ -17,6 +17,13 @@ const CONSTRUCTION_FLOORS = [
   { value: '5', label: 'Above G+3' },
 ]
 
+const CONSTRUCTION_BUDGET_OPTIONS = [
+  { value: 'under_25_lakh', label: 'Below ₹25 lakh' },
+  { value: '25_50_lakh', label: '₹25–50 lakh' },
+  { value: '50_lakh_1_cr', label: '₹50 lakh–₹1 crore' },
+  { value: 'above_1_cr', label: 'Above ₹1 crore' },
+]
+
 const LEGACY_PLOT_AREA_ESTIMATE_YARDS = {
   under_100: 90,
   '100_200': 150,
@@ -115,6 +122,11 @@ function fieldLabel(question, answers) {
     const yards = plotAreaSqYards(value)
     return yards ? String(yards) + ' sq yards' : '—'
   }
+  if (question.questionKey === 'budget') {
+    return question.options?.find(option => option.value === value)?.label
+      || CONSTRUCTION_BUDGET_OPTIONS.find(option => option.value === value)?.label
+      || String(value)
+  }
   return question.options?.find(option => option.value === value)?.label || String(value)
 }
 
@@ -125,6 +137,14 @@ function PremiumQuestion({ question, value, onChange, visual = 'default' }) {
   if (question.questionKey === 'plot_area') {
     const numericValue = Number.isFinite(Number(value)) && Number(value) > 0 ? value : ''
     return <div className="rq-number-wrap"><input type="number" min={10} max={100000} value={numericValue} onChange={event => onChange(event.target.value)} placeholder="Enter plot area" /><span>sq yards</span></div>
+  }
+
+  if (question.questionKey === 'budget' && visual === 'budget-dropdown') {
+    const budgetOptions = options.length ? options : CONSTRUCTION_BUDGET_OPTIONS
+    return <select className="rq-floor-select rq-budget-select" value={value ?? ''} onChange={event => onChange(event.target.value)}>
+      <option value="">Select budget range</option>
+      {budgetOptions.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}
+    </select>
   }
 
   if (question.questionType === 'single_select' || question.questionType === 'timeline') {
@@ -699,7 +719,7 @@ export default function RequirementWizard({ flowKey }) {
             <div className="rq-question-stack">
               {[...preferenceQuestions, ...extraQuestions].map((question, index) => <div className="rq-question-block" key={question.id || question.questionKey}>
                 <div className="rq-question-label"><b>{question.label}</b>{question.helpText && <small>{question.helpText}</small>}</div>
-                <PremiumQuestion question={question} value={answers[question.questionKey]} onChange={value => setAnswer(question.questionKey, value)} visual={question.questionKey === 'quality' || question.questionKey === 'finish_quality' ? 'image' : 'default'} />
+                <PremiumQuestion question={question} value={answers[question.questionKey]} onChange={value => setAnswer(question.questionKey, value)} visual={flowKey === 'build' && question.questionKey === 'budget' ? 'budget-dropdown' : (question.questionKey === 'quality' || question.questionKey === 'finish_quality' ? 'image' : 'default')} />
               </div>)}
             </div>
           </section>
