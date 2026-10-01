@@ -161,13 +161,6 @@ export default function HowItWorks(){
       <article><span><Icon name="support"/></span><div><b>END-TO-END JOURNEY</b><small>From planning to next step</small></div></article>
     </section>
 
-    <section className="hiw-cta">
-      <img src={activeFlow.image} alt={activeFlow.imageTitle}/>
-      <div><h2>Ready to Start Your {activeFlow.label} Journey?</h2><p>Get a free consultation and create a personalized requirement for your {activeFlow.label.toLowerCase()} need.</p></div>
-      <button onClick={()=>navigate(activeFlow.route)}>Get Free Consultation <Icon name="arrow" size={15}/></button>
-      <div className="hiw-cta-note"><span>○ No Obligation</span><span>○ Guided Requirement</span><span>○ Location Aware</span></div>
-    </section>
-
     <footer className="hiw-footer">
       <div className="hiw-footer-brand"><img src="/brand/propulse-logo.svg" alt="ProPulse"/><p>Your customer starting point for construction, interiors and real-estate requirements.</p><div>f&nbsp;&nbsp;◎&nbsp;&nbsp;▶&nbsp;&nbsp;in</div></div>
       <div><b>Quick Links</b><Link to="/">Home</Link><Link to="/quote#construction">Construction</Link><Link to="/quote#interiors">Interiors</Link><Link to="/packages">Packages</Link><Link to="/quote#property">Real Estate</Link><Link to="/projects">Projects</Link></div>
