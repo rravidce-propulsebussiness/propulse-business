@@ -116,7 +116,7 @@ export default function RealEstateRequirementExact(props) {
     <section className="rex-hero">
       <img src={HERO} alt="Premium real estate development"/>
       <div className="rex-hero-wash"/>
-      <div className="rex-hero-copy"><span>REAL ESTATE</span><h1>Find Your Perfect<em>Property</em></h1><p>Buy, rent, sell or invest in residential, commercial and plot properties with a structured requirement.</p></div>
+      <div className="rex-hero-copy"><span>REAL ESTATE DISCOVERY</span><h1>Find the Right<em>Property, Faster.</em></h1><p>Tell us your location, budget and preferences once. We turn them into one clear property requirement.</p><a href="#rex-basic">Start Your Search <Icon name="arrow" size={15}/></a></div>
       <aside className="rex-hero-features">
         <div><Icon name="home"/><span>Residential Properties</span></div>
         <div><Icon name="building"/><span>Commercial Spaces</span></div>
@@ -133,13 +133,13 @@ export default function RealEstateRequirementExact(props) {
     </section>
 
     <div className="rex-steps">
-      {[['1','Basic Details','Tell us what you’re looking for','#rex-basic'],['2','Property Preferences','Type, budget and location','#rq-property'],['3','Additional Requirements','Features and specifications','#rq-preferences'],['4','Review & Submit','Confirm and connect','#rq-summary']].map(([n,title,sub,href],i)=><a key={n} href={href} className={i===0?'active':completion>[30,55,80,99][i]?'done':''}><span>{completion>[30,55,80,99][i]?'✓':n}</span><div><b>{title}</b><small>{sub}</small></div>{i<3&&<Icon name="arrow" size={14}/>}</a>)}
+      {[['1','Basic Details','Location and contact','#rex-basic'],['2','Property Search','Intent and property type','#rq-property'],['3','Preferences','Budget, features and timeline','#rq-preferences'],['4','Review & Request','Confirm your requirement','#rq-summary']].map(([n,title,sub,href],i)=><a key={n} href={href} className={i===0?'active':completion>[30,55,80,99][i]?'done':''}><span>{completion>[30,55,80,99][i]?'✓':n}</span><div><b>{title}</b><small>{sub}</small></div>{i<3&&<Icon name="arrow" size={14}/>}</a>)}
     </div>
 
     <form className="rex-form" onSubmit={submit}>
       <section className="rex-top-grid" id="rex-basic">
         <div className="rex-card">
-          <div className="rex-section-title"><span>1.</span><div><h2>Basic Details</h2><p>Let’s start with some basic information about your property requirement.</p></div></div>
+          <div className="rex-section-title rex-section-title-premium"><span>1.</span><div><small>YOUR SEARCH STARTS HERE</small><h2>Basic Details</h2><p>Tell us where you are looking and how we can reach you.</p></div></div>
           <div className="rex-basic-grid">
             <QuoteLocationFields
               states={locationStates}
@@ -161,43 +161,51 @@ export default function RealEstateRequirementExact(props) {
             <label><b>Email <small>(Optional)</small></b><input type="email" value={contact.email} onChange={e=>setContact({...contact,email:e.target.value})} placeholder="Enter your email"/></label>
           </div>
         </div>
-        <aside className="rex-promo"><div><img src={PROMO} alt=""/><h3>Better<br/><strong>Investments</strong><br/>Brighter<br/><strong>Tomorrows</strong></h3></div><footer><span><b>Clear</b><small>Requirements</small></span><span><b>Relevant</b><small>Property Leads</small></span><span><b>Admin</b><small>Managed Locations</small></span></footer></aside>
+        <aside className="rex-promo rex-promo-premium"><div><img src={PROMO} alt=""/><div className="rex-promo-overlay"/><span className="rex-promo-kicker">PROPERTY DISCOVERY</span><h3>Find Better.<br/><strong>Choose Smarter.</strong></h3><p>One clear requirement for location, budget and property preference.</p></div><footer><span><b>Guided</b><small>Property Search</small></span><span><b>Relevant</b><small>Local Options</small></span><span><b>Simple</b><small>One Requirement</small></span></footer></aside>
       </section>
 
       <section className="rex-card" id="rq-property">
-        <div className="rex-section-title"><span>2.</span><div><h2>Property Type</h2><p>Select the type of property you’re interested in.</p></div></div>
-        {intent && <div className="rex-intent"><span>I want to</span><Chips question={intent} value={answers[intent.questionKey]} onChange={v=>setAnswer(intent.questionKey,v)}/></div>}
+        <div className="rex-section-title rex-section-title-premium"><span>2.</span><div><small>PROPERTY SEARCH</small><h2>What are you looking for?</h2><p>Choose your intent first, then select the closest property category.</p></div></div>
+        {intent && <div className="rex-intent rex-intent-premium"><div><b>I want to</b><small>Select your property goal</small></div><Chips question={intent} value={answers[intent.questionKey]} onChange={v=>setAnswer(intent.questionKey,v)}/></div>}
         <div className="rex-property-grid">{propertyCards.map(card=><button type="button" key={card.key} className={cardActive(card)?'active':''} onClick={()=>selectProperty(card)}><div><img src={card.image} alt=""/>{cardActive(card)&&<i>✓</i>}</div><b>{card.title}</b><small>{card.subtitle}</small></button>)}</div>
       </section>
 
       <div className="rex-content-grid">
         <div>
           <section className="rex-card">
-            <div className="rex-section-title"><span>3.</span><div><h2>Budget Range</h2><p>Select your approximate budget range.</p></div></div>
+            <div className="rex-section-title rex-section-title-premium"><span>3.</span><div><small>BUDGET</small><h2>Your Budget Range</h2><p>Select the closest range so property matches stay relevant.</p></div></div>
             <div className="rex-budget">{budgetOptions.map(option=><button type="button" key={option} className={answers[budget?.questionKey]===option?'active':''} onClick={()=>budget&&setAnswer(budget.questionKey,option)}>{option}</button>)}</div>
           </section>
 
           <section className="rex-card" id="rq-preferences">
-            <div className="rex-section-title"><span>4.</span><div><h2>Property Preferences</h2><p>Select your preferred property features. You can choose multiple options.</p></div></div>
+            <div className="rex-section-title rex-section-title-premium"><span>4.</span><div><small>PREFERENCES</small><h2>Property Preferences</h2><p>Choose the features that matter most. Multiple selections are allowed.</p></div></div>
             {preferences && <div className="rex-pref-grid">{(preferences.options||[]).map(option=>{const selected=Array.isArray(answers[preferences.questionKey])?answers[preferences.questionKey]:[];const active=selected.includes(option.value);return <button type="button" key={option.value} className={active?'active':''} onClick={()=>setAnswer(preferences.questionKey,active?selected.filter(v=>v!==option.value):[...selected,option.value])}><div><img src={PREF_IMAGES[option.value]||CARD_IMAGES.residential} alt=""/>{active&&<i>✓</i>}</div><b>{option.label}</b></button>})}</div>}
             <div className="rex-subprefs">
-              {bhk && <div><b>Home Size</b><Chips question={bhk} value={answers[bhk.questionKey]} onChange={v=>setAnswer(bhk.questionKey,v)}/></div>}
-              {timeline && <div><b>When do you want to move forward?</b><Chips question={timeline} value={answers[timeline.questionKey]} onChange={v=>setAnswer(timeline.questionKey,v)}/></div>}
+              {bhk && <div className="rex-subpref-card"><span className="rex-subpref-icon"><Icon name="home" size={18}/></span><div><b>Home Configuration</b><small>Select the closest BHK requirement.</small><Chips question={bhk} value={answers[bhk.questionKey]} onChange={v=>setAnswer(bhk.questionKey,v)}/></div></div>}
+              {timeline && <div className="rex-subpref-card"><span className="rex-subpref-icon"><Icon name="arrow" size={18}/></span><div><b>When do you want to move forward?</b><small>Choose your expected decision timeline.</small><Chips question={timeline} value={answers[timeline.questionKey]} onChange={v=>setAnswer(timeline.questionKey,v)}/></div></div>}
             </div>
           </section>
 
-          <section className="rex-card">
-            <div className="rex-section-title"><span>5.</span><div><h2>Additional Requirements</h2><p>Tell us any specific requirements you have.</p></div></div>
-            {additional&&<div className="rex-notes"><textarea maxLength={Number(additional.validation?.maxLength||1500)} value={answers[additional.questionKey]||''} onChange={e=>setAnswer(additional.questionKey,e.target.value)} placeholder="E.g. number of bedrooms, preferred area, nearby schools, facing, parking, amenities, etc."/><span>{String(answers[additional.questionKey]||'').length}/{Number(additional.validation?.maxLength||1500)}</span></div>}
+          <section className="rex-card rex-notes-card">
+            <div className="rex-section-title rex-section-title-premium"><span>5.</span><div><small>FINAL DETAILS</small><h2>Additional Requirements</h2><p>Add any locality, facing, parking, amenity or property-specific preference.</p></div></div>
+            {additional&&<div className="rex-notes rex-notes-premium"><div className="rex-notes-label"><b>Requirement Notes</b><small>Optional</small></div><textarea maxLength={Number(additional.validation?.maxLength||1500)} value={answers[additional.questionKey]||''} onChange={e=>setAnswer(additional.questionKey,e.target.value)} placeholder="E.g. preferred locality, gated community, east-facing, parking, nearby school or metro, possession preference, etc."/><span>{String(answers[additional.questionKey]||'').length}/{Number(additional.validation?.maxLength||1500)}</span></div>}
           </section>
         </div>
 
         <aside className="rex-side" id="rq-summary">
-          <section className="rex-summary-card"><h3>Your Selection Summary</h3><div>{summary.map(([label,value])=><p key={label}><span>{label}</span><b title={value}>{value}</b></p>)}</div><p className="rex-submit-consent">By submitting, you agree that ProPulse may use your project and contact details to process this request and connect you with relevant professionals.</p>{state.error&&<div className="rex-error">{state.error}</div>}<button type="submit" disabled={state.saving}>{state.saving?'Submitting…':(flow.config?.submitLabel||'Submit Requirement')} <Icon name="arrow" size={15}/></button><small>Our experts will get in touch with you shortly.</small></section>
+          <section className="rex-summary-card rex-summary-premium">
+            <div className="rex-summary-head"><div><small>YOUR REQUIREMENT</small><h3>Selection Summary</h3></div><span>{Math.min(100,Math.max(0,Math.round(completion||0)))}%</span></div>
+            <div className="rex-summary-progress"><i style={{width:`${Math.min(100,Math.max(0,completion||0))}%`}}/></div>
+            <div className="rex-summary-rows">{summary.map(([label,value])=><p key={label}><span>{label}</span><b title={value}>{value}</b></p>)}</div>
+            <p className="rex-submit-consent">Submit your requirement to connect with relevant real-estate businesses for your location and preferences.</p>
+            {state.error&&<div className="rex-error">{state.error}</div>}
+            <button type="submit" disabled={state.saving}>{state.saving?'Sending Request…':'Request Property Options'} <Icon name="arrow" size={15}/></button>
+            <small>No OTP required. Your requirement is shared only after submission.</small>
+          </section>
 
-          <section className="rex-help"><div><span><Icon name="support"/></span><div><b>Need Help?<br/>Talk to Our Real Estate Expert</b><small>Get free consultation and personalized property guidance.</small></div></div><a href={phone?`tel:${phone.replace(/\s/g,'')}`:'#rex-basic'}><Icon name="phone" size={16}/>{phone||'Start Free Consultation'}</a><small>Mon - Sat, 9 AM - 8 PM</small></section>
+          <section className="rex-help rex-help-premium"><div><span><Icon name="support"/></span><div><small>FREE GUIDANCE</small><b>Need help deciding?</b><p>Talk to a real-estate expert about location, property type or budget.</p></div></div><a href={phone?`tel:${phone.replace(/\s/g,'')}`:'#rex-basic'}><Icon name="phone" size={16}/>{phone||'Start Free Consultation'}</a><small>Mon - Sat, 9 AM - 8 PM</small></section>
 
-          <section className="rex-locations"><h4><Icon name="pin" size={16}/>Available Locations</h4><div>{cities.slice(0,8).map(city=><button type="button" key={city.id} onClick={()=>{setCity(String(city.id));document.getElementById('rex-basic')?.scrollIntoView({behavior:'smooth'})}}>{city.name}</button>)}</div></section>
+          <section className="rex-locations rex-locations-premium"><div className="rex-locations-head"><span><Icon name="pin" size={16}/></span><div><small>POPULAR SEARCH AREAS</small><h4>Available Locations</h4></div></div><div>{cities.slice(0,8).map(city=><button type="button" key={city.id} onClick={()=>{setCity(String(city.id));document.getElementById('rex-basic')?.scrollIntoView({behavior:'smooth'})}}>{city.name}<Icon name="arrow" size={11}/></button>)}</div></section>
         </aside>
       </div>
     </form>
