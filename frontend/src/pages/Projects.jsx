@@ -503,7 +503,6 @@ export default function Projects(){
 
           <div className="pj-detail-actions">
             <Link to="/packages" onClick={closeProject}>View Packages <Icon name="arrow" size={15}/></Link>
-            <Link className="secondary" to="/professionals" onClick={closeProject}>Ask About This Project</Link>
           </div>
         </div>
       </section>
