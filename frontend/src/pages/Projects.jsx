@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { publicRequest } from '../utils/auth'
 import './Projects.css'
 
@@ -396,7 +396,6 @@ function openLeadPopup(flowKey=''){
 }
 
 export default function Projects(){
-  const navigate=useNavigate()
   const [cities,setCities]=useState([])
   const [contactData,setContactData]=useState({})
   const [category,setCategory]=useState('all')
