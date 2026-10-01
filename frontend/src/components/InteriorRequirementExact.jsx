@@ -70,7 +70,7 @@ export default function InteriorRequirementExact(props) {
   const propertyType = byKey.property_type
   const style = byKey.design_style
   const additional = byKey.additional_requirement
-  const excluded = new Set(['project_location','property_type','area','rooms','design_style','additional_requirement'])
+  const excluded = new Set(['project_location','property_type','area','rooms','interior_scope','design_style','additional_requirement'])
   const extraQuestions = questions.filter(q => !excluded.has(q.questionKey))
   const phone = contactData.phone || contactData.phone_number || contactData.mobile || ''
   const email = contactData.email || contactData.support_email || ''
@@ -81,8 +81,6 @@ export default function InteriorRequirementExact(props) {
     ].filter(Boolean).join(', ') || '—'],
     ['PIN Code', answerLabel(locationQuestion, locationQuestion ? answers[locationQuestion.questionKey] : '')],
     ['Property Type', answerLabel(propertyType, propertyType ? answers[propertyType.questionKey] : '')],
-    ['Built-up Area', area && !isEmptyAnswer(answers[area.questionKey]) ? `${answers[area.questionKey]} sq ft` : '—'],
-    ['Rooms', answerLabel(rooms, rooms ? answers[rooms.questionKey] : '')],
     ['Design Style', answerLabel(style, style ? answers[style.questionKey] : '')],
   ]
 
