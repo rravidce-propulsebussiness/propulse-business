@@ -327,13 +327,6 @@ export default function Projects(){
       </div>
     </section>
 
-    <section className="pj-cta">
-      <img src="https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?auto=format&fit=crop&w=1100&q=88" alt=""/>
-      <div><h2>Save the Ideas You Like.</h2><p>Explore project details first, compare styles and then decide the right next step for your home.</p></div>
-      <Link className="pj-cta-link" to="/packages">Explore Packages <Icon name="arrow" size={16}/></Link>
-      <div className="pj-cta-points"><span>○ Detailed Concepts</span><span>○ Clear Scope</span><span>○ Browse Before You Decide</span></div>
-    </section>
-
     {selectedProject&&<div className="pj-detail-backdrop" role="presentation" onMouseDown={event=>{if(event.target===event.currentTarget)closeProject()}}>
       <section className="pj-detail-modal" role="dialog" aria-modal="true" aria-label={selectedProject.title+' project details'}>
         <button className="pj-detail-close" type="button" onClick={closeProject} aria-label="Close project details">×</button>
