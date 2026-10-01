@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { listLeads } from '../api/leads'
+import { publicRequest } from '../utils/auth'
 import './ProfessionalHome.css'
 
 function Icon({name,size=20}){
@@ -18,17 +19,22 @@ function Icon({name,size=20}){
   return null
 }
 
-const fallback=[
-  {id:'example-1',industry_name:'Construction',service_name:'Home Construction',city_name:'Hyderabad',state_name:'Telangana',lead_type:'basic',example:true},
-  {id:'example-2',industry_name:'Interiors',service_name:'Residential Interiors',city_name:'Hyderabad',state_name:'Telangana',lead_type:'premium',example:true},
-  {id:'example-3',industry_name:'Real Estate',service_name:'Property Requirement',city_name:'Hyderabad',state_name:'Telangana',lead_type:'exclusive',example:true},
-]
-
 function toItems(value){
   if(Array.isArray(value))return value
   if(Array.isArray(value?.items))return value.items
   if(Array.isArray(value?.data))return value.data
   return []
+}
+
+function toCollection(value){
+  if(Array.isArray(value))return value
+  if(Array.isArray(value?.data))return value.data
+  if(Array.isArray(value?.rows))return value.rows
+  return []
+}
+
+function cityLabel(city){
+  return [city?.name,city?.state_name].filter(Boolean).join(', ')
 }
 
 function leadLabel(value){
@@ -38,18 +44,103 @@ function leadLabel(value){
 
 export default function ProfessionalHome(){
   const [leads,setLeads]=useState([])
+  const [cities,setCities]=useState([])
+  const [selectedCityId,setSelectedCityId]=useState('')
   const [loading,setLoading]=useState(true)
+  const [locationState,setLocationState]=useState({
+    status:'detecting',
+    cityId:'',
+    cityName:'',
+    stateName:'',
+    pincode:'',
+    localityName:'',
+    message:'Detecting your city…',
+  })
 
   useEffect(()=>{
     let live=true
-    listLeads({status:'available',page:1,limit:4})
-      .then(data=>{if(live)setLeads(toItems(data).slice(0,4))})
-      .catch(()=>{if(live)setLeads([])})
-      .finally(()=>{if(live)setLoading(false)})
+    publicRequest('/cities')
+      .then(value=>{if(live)setCities(toCollection(value))})
+      .catch(()=>{if(live)setCities([])})
     return()=>{live=false}
   },[])
 
-  const preview=useMemo(()=>leads.length?leads:fallback,[leads])
+  useEffect(()=>{
+    let live=true
+    setLoading(true)
+    const params={status:'available',page:1,limit:8}
+    if(selectedCityId)params.cityId=selectedCityId
+    listLeads(params)
+      .then(data=>{if(live)setLeads(toItems(data).slice(0,8))})
+      .catch(()=>{if(live)setLeads([])})
+      .finally(()=>{if(live)setLoading(false)})
+    return()=>{live=false}
+  },[selectedCityId])
+
+  function applyDetectedLocation(result){
+    const cityId=result?.cityId ? String(result.cityId) : ''
+    setLocationState({
+      status:cityId?'matched':'partial',
+      cityId,
+      cityName:result?.cityName||'',
+      stateName:result?.stateName||'',
+      pincode:result?.pincode||'',
+      localityName:result?.localityName||'',
+      message:cityId
+        ? 'Showing available leads near your detected city.'
+        : 'Location detected. Choose your city to filter available leads.',
+    })
+    if(cityId)setSelectedCityId(cityId)
+  }
+
+  function detectLocation(){
+    if(!navigator.geolocation){
+      setLocationState(current=>({...current,status:'unsupported',message:'Automatic location is not supported in this browser. Choose your city below.'}))
+      return
+    }
+
+    setLocationState(current=>({...current,status:'detecting',message:'Detecting your city…'}))
+    navigator.geolocation.getCurrentPosition(
+      position=>{
+        publicRequest('/pincodes/reverse-location',{
+          method:'POST',
+          body:JSON.stringify({
+            latitude:position.coords.latitude,
+            longitude:position.coords.longitude,
+          }),
+        })
+          .then(result=>{
+            applyDetectedLocation(result)
+            try{
+              sessionStorage.setItem('propulse_professional_location',JSON.stringify({...result,savedAt:Date.now()}))
+            }catch{}
+          })
+          .catch(()=>{
+            setLocationState(current=>({...current,status:'error',message:'We could not match your location to a supported city. Choose your city below.'}))
+          })
+      },
+      error=>{
+        const denied=error?.code===1
+        setLocationState(current=>({...current,status:denied?'denied':'error',message:denied?'Location permission was not allowed. Choose your city below.':'Unable to detect your location. Choose your city below.'}))
+      },
+      {enableHighAccuracy:false,timeout:9000,maximumAge:300000},
+    )
+  }
+
+  useEffect(()=>{
+    try{
+      const cached=JSON.parse(sessionStorage.getItem('propulse_professional_location')||'null')
+      if(cached?.savedAt && Date.now()-Number(cached.savedAt)<6*60*60*1000){
+        applyDetectedLocation(cached)
+        return
+      }
+    }catch{}
+    detectLocation()
+  },[])
+
+  const visibleCities=useMemo(()=>[...cities].sort((a,b)=>cityLabel(a).localeCompare(cityLabel(b))),[cities])
+  const selectedCity=useMemo(()=>visibleCities.find(city=>String(city.id)===String(selectedCityId))||null,[visibleCities,selectedCityId])
+  const preview=useMemo(()=>leads.slice(0,4),[leads])
 
   return <main className="pro-home">
     <header className="pro-home-header">
@@ -84,14 +175,14 @@ export default function ProfessionalHome(){
 
       <div className="pro-hero-market">
         <div className="pro-market-head">
-          <div><span>LIVE MARKETPLACE PREVIEW</span><h2>Relevant opportunities, in one place.</h2></div>
-          <Link to="/leads">View all <Icon name="arrow" size={14}/></Link>
+          <div><span>LIVE LEADS {selectedCity||locationState.cityName?'· NEAR YOU':''}</span><h2>{selectedCity?.name||locationState.cityName ? 'Opportunities around '+(selectedCity?.name||locationState.cityName)+'.' : 'Relevant opportunities, in one place.'}</h2></div>
+          <Link to={selectedCityId?'/leads?cityId='+selectedCityId:'/leads'}>View all <Icon name="arrow" size={14}/></Link>
         </div>
         <div className="pro-market-grid">
-          {loading?<div className="pro-market-loading">Loading available leads…</div>:preview.map((lead,index)=>{
+          {loading?<div className="pro-market-loading">Loading available leads…</div>:preview.length===0?<div className="pro-market-loading">No live leads found for this city right now.</div>:preview.map((lead,index)=>{
             const location=[lead.city_name,lead.state_name].filter(Boolean).join(', ')||'Location available'
             return <article className="pro-lead-card" key={lead.id||index}>
-              <div className="pro-lead-top"><span className={'pro-lead-type '+String(lead.lead_type||'basic').toLowerCase()}>{leadLabel(lead.lead_type)}</span><small>{lead.example?'Example':'Available'}</small></div>
+              <div className="pro-lead-top"><span className={'pro-lead-type '+String(lead.lead_type||'basic').toLowerCase()}>{leadLabel(lead.lead_type)}</span><small>Available</small></div>
               <div className="pro-lead-icon"><Icon name="briefcase" size={23}/></div>
               <h3>{lead.service_name||lead.industry_name||'Business Opportunity'}</h3>
               <p>{lead.industry_name||'Customer requirement'}</p>
@@ -111,25 +202,62 @@ export default function ProfessionalHome(){
     </section>
 
     <section className="pro-opportunities" id="opportunities">
-      <div className="pro-section-head">
-        <span>LEAD MARKETPLACE</span>
-        <h2>Find opportunities that <em>fit your business.</em></h2>
-        <p>Start with the industries and locations you actually serve. ProPulse keeps the customer requirement structured so you can evaluate the opportunity before taking the next step.</p>
+      <div className="pro-section-head pro-leads-head">
+        <div>
+          <span>LIVE LEAD MARKETPLACE</span>
+          <h2>Available leads <em>{selectedCity?.name||locationState.cityName ? 'near '+(selectedCity?.name||locationState.cityName) : 'for professionals'}.</em></h2>
+          <p>We use your city only to make the marketplace more relevant. You can change the city or view all available leads at any time.</p>
+        </div>
+        <Link className="pro-view-all" to={selectedCityId?'/leads?cityId='+selectedCityId:'/leads'}>View all leads <Icon name="arrow" size={14}/></Link>
       </div>
-      <div className="pro-industry-grid">
-        <article className="construction">
-          <div className="pro-industry-image"><img src="https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=1100&q=88" alt="Construction professional"/></div>
-          <div><span>CONSTRUCTION</span><h3>Home construction requirements</h3><p>Discover homeowner enquiries for new construction, renovation and related services.</p><Link to="/leads?category=construction">Explore construction leads <Icon name="arrow" size={14}/></Link></div>
-        </article>
-        <article className="interiors">
-          <div className="pro-industry-image"><img src="https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=1100&q=88" alt="Interior design project"/></div>
-          <div><span>INTERIORS</span><h3>Interior project requirements</h3><p>Find customers looking for residential interiors, modular work and complete-home solutions.</p><Link to="/leads?category=interiors">Explore interior leads <Icon name="arrow" size={14}/></Link></div>
-        </article>
-        <article className="real-estate">
-          <div className="pro-industry-image"><img src="https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=1100&q=88" alt="Real estate buildings"/></div>
-          <div><span>REAL ESTATE</span><h3>Property customer requirements</h3><p>Connect with relevant property enquiries based on the services and locations you support.</p><Link to="/leads?category=real-estate">Explore real-estate leads <Icon name="arrow" size={14}/></Link></div>
-        </article>
+
+      <div className="pro-location-panel">
+        <div className={'pro-location-status '+locationState.status}>
+          <i><Icon name="pin" size={18}/></i>
+          <div>
+            <small>AUTO LOCATION</small>
+            <b>{selectedCity ? cityLabel(selectedCity) : locationState.cityName ? [locationState.cityName,locationState.stateName].filter(Boolean).join(', ') : locationState.status==='detecting' ? 'Detecting your city…' : 'Choose your city'}</b>
+            <span>{locationState.localityName ? locationState.localityName+(locationState.pincode?' · '+locationState.pincode:'') : locationState.message}</span>
+          </div>
+        </div>
+        <label className="pro-city-select">
+          <span>City</span>
+          <select value={selectedCityId} onChange={event=>{
+            const value=event.target.value
+            setSelectedCityId(value)
+            const city=visibleCities.find(item=>String(item.id)===String(value))
+            setLocationState(current=>({...current,status:value?'manual':'all',cityId:value,cityName:city?.name||'',stateName:city?.state_name||'',message:value?'Showing leads for your selected city.':'Showing available leads from all cities.'}))
+          }}>
+            <option value="">All cities</option>
+            {visibleCities.map(city=><option key={city.id} value={city.id}>{cityLabel(city)}</option>)}
+          </select>
+        </label>
+        <button className="pro-detect-location" type="button" onClick={detectLocation} disabled={locationState.status==='detecting'}>
+          <Icon name="pin" size={16}/>{locationState.status==='detecting'?'Detecting…':'Use my location'}
+        </button>
       </div>
+
+      {loading?<div className="pro-live-loading">Loading available leads…</div>:leads.length===0?<div className="pro-live-empty">
+        <span><Icon name="briefcase" size={25}/></span>
+        <div><h3>No live leads in this city right now</h3><p>Choose another city or view all leads. New customer requirements will appear here automatically.</p></div>
+        {selectedCityId&&<button type="button" onClick={()=>setSelectedCityId('')}>Show all cities</button>}
+      </div>:<div className="pro-live-grid">
+        {leads.map((lead,index)=>{
+          const location=[lead.city_name,lead.state_name].filter(Boolean).join(', ')||'Location available'
+          return <article className="pro-live-card" key={lead.id||index}>
+            <div className="pro-live-card-top">
+              <span className={'pro-lead-type '+String(lead.lead_type||'basic').toLowerCase()}>{leadLabel(lead.lead_type)}</span>
+              <small>Available</small>
+            </div>
+            <div className="pro-live-icon"><Icon name="briefcase" size={20}/></div>
+            <h3>{lead.service_name||lead.industry_name||'Business Opportunity'}</h3>
+            <p>{lead.industry_name||'Customer requirement'}</p>
+            <div className="pro-live-location"><Icon name="pin" size={14}/><span>{location}</span></div>
+            <div className="pro-live-meta"><span><Icon name="lock" size={13}/> Contact protected</span><b>{lead.pincode?'PIN '+lead.pincode:'Structured requirement'}</b></div>
+            <Link to="/leads">View lead <Icon name="arrow" size={13}/></Link>
+          </article>
+        })}
+      </div>}
     </section>
 
     <section className="pro-how" id="how">
