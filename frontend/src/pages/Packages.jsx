@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { publicRequest } from '../utils/auth'
 import { CONSTRUCTION_PACKAGE_CATALOG } from '../data/constructionPackageCatalog'
-import { INTERIOR_PACKAGES } from '../data/interiorPackageCatalog'
+import { INTERIOR_PACKAGE_CATALOG, INTERIOR_PACKAGES } from '../data/interiorPackageCatalog'
 import './Packages.css'
 
 const CONSTRUCTION_PACKAGES = [
@@ -282,7 +282,7 @@ export default function Packages() {
 
         <aside className="pkg-reference-card">
           <small>{category === 'construction' ? 'CONSTRUCTION REFERENCE' : 'INTERIOR REFERENCE'}</small>
-          <strong>₹{(category === 'construction' ? CONSTRUCTION_PACKAGE_CATALOG.standard.rate : 1399).toLocaleString('en-IN')}<em>/sq ft</em></strong>
+          <strong>₹{(category === 'construction' ? CONSTRUCTION_PACKAGE_CATALOG.standard.rate : INTERIOR_PACKAGE_CATALOG.standard.price).toLocaleString('en-IN')}<em>/sq ft</em></strong>
           <p>{category === 'construction' ? 'Standard package brochure reference' : 'Standard woodwork brochure reference'}</p>
           <div className="pkg-reference-list">
             <span><Icon name="shield" size={17} />Final scope and price are confirmed in the project quotation</span>
