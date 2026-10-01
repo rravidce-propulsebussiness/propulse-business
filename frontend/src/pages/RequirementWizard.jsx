@@ -261,7 +261,7 @@ export default function RequirementWizard({ flowKey }) {
 
   const questions = useMemo(() => (flow?.questions || [])
     .filter(question => isQuestionVisible(question, answers))
-    .filter(question => !(flowKey === 'build' && question.questionKey === 'property_type')), [flow, answers, flowKey])
+    .filter(question => !(flowKey === 'build' && ['property_type','construction_scope'].includes(question.questionKey))), [flow, answers, flowKey])
   const byKey = useMemo(() => Object.fromEntries(questions.map(question => [question.questionKey, question])), [questions])
   const locationQuestion = questions.find(question => question.questionType === 'location')
   const selectedCity = useMemo(() => cities.find(city => String(city.id) === String(cityId)), [cities, cityId])
@@ -280,7 +280,7 @@ export default function RequirementWizard({ flowKey }) {
   const configQuestions = questions.filter(question => flowKey === 'build'
     ? ['plot_area', 'site_access', 'floors'].includes(question.questionKey)
     : ['area'].includes(question.questionKey))
-  const preferenceQuestions = questions.filter(question => ['construction_scope', 'quality', 'budget', 'timeline', 'interior_scope', 'kitchen', 'wardrobes', 'false_ceiling', 'furniture', 'finish_quality'].includes(question.questionKey))
+  const preferenceQuestions = questions.filter(question => ['quality', 'budget', 'timeline', 'interior_scope', 'kitchen', 'wardrobes', 'false_ceiling', 'furniture', 'finish_quality'].includes(question.questionKey))
   const additionalQuestion = questions.find(question => question.questionKey === 'additional_requirement')
   const usedKeys = new Set([locationQuestion?.questionKey, ownPlotQuestion?.questionKey, ...propertyQuestions.map(q => q.questionKey), ...configQuestions.map(q => q.questionKey), ...preferenceQuestions.map(q => q.questionKey), additionalQuestion?.questionKey].filter(Boolean))
   const extraQuestions = questions.filter(question => !usedKeys.has(question.questionKey))
@@ -421,13 +421,6 @@ export default function RequirementWizard({ flowKey }) {
     }
     try {
       setState(current => ({ ...current, saving: true, error: '' }))
-
-      if (isQuotationFlow) {
-        const scope = Array.isArray(answers.construction_scope) ? answers.construction_scope : []
-        if (!scope.some(item => ['turnkey','civil_structure','finishing'].includes(item))) {
-          throw new Error('Select Turnkey construction, Civil / structure, or Finishing work so we can understand the construction scope.')
-        }
-      }
 
       const quotation = isQuotationFlow && answers.built_up_area
         ? await calculateRequirementQuotation({ flowKey, answers, publicRequest })
@@ -664,7 +657,7 @@ export default function RequirementWizard({ flowKey }) {
       <div className="rq-lower-grid">
         <div>
           <section className="rq-section-card" id="rq-preferences">
-            <div className="rq-section-heading"><strong>4.</strong><div><h2>Requirements & Preferences</h2><p>Choose the scope, quality, budget and timing that fit your project.</p></div></div>
+            <div className="rq-section-heading"><strong>4.</strong><div><h2>Requirements & Preferences</h2><p>Choose the quality, budget and timing that fit your project.</p></div></div>
             <div className="rq-question-stack">
               {[...preferenceQuestions, ...extraQuestions].map((question, index) => <div className="rq-question-block" key={question.id || question.questionKey}>
                 <div className="rq-question-label"><b>{question.label}</b>{question.helpText && <small>{question.helpText}</small>}</div>
