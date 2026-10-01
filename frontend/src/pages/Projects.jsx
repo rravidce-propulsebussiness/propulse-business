@@ -236,6 +236,49 @@ export default function Projects(){
     return ['Location','Property Type','Budget','Preferences']
   }
 
+  function projectPlanningDetails(project){
+    if(project.category==='construction') return [
+      ['Planning focus','Plot utilisation, setbacks, circulation and room planning'],
+      ['Structure','Foundation and RCC structure to be finalised after drawings and site inputs'],
+      ['Services','Electrical, plumbing and water planning coordinated with the layout'],
+      ['Elevation','Facade language and exterior finishes matched to the selected style'],
+      ['Material selection','Package and branded-material choices finalised during quotation'],
+      ['Approvals','Local drawings, approvals and site conditions to be confirmed before execution'],
+    ]
+    if(project.category==='design'){
+      if(project.propertyType==='Office'||project.propertyType==='Commercial') return [
+        ['Layout focus','Work zones, meeting areas, circulation and collaborative spaces'],
+        ['Storage','Integrated storage and utility planning based on operational needs'],
+        ['Lighting','Ambient, task and feature-lighting coordination'],
+        ['Furniture','Fixed and loose furniture planning to suit the workspace'],
+        ['Finish direction',project.style+' material and colour palette'],
+        ['Services','Electrical, data, HVAC and ceiling coordination to be detailed after site review'],
+      ]
+      return [
+        ['Room planning','Living, bedrooms, kitchen and circulation planned as one coordinated interior'],
+        ['Storage','Wardrobes, kitchen storage and utility requirements planned around daily use'],
+        ['Lighting','Ambient, task and decorative-lighting layers'],
+        ['Furniture','Fixed and loose furniture can be included based on selected scope'],
+        ['Finish direction',project.style+' material and colour palette'],
+        ['Site inputs','Measurements, floor plan and existing-site conditions to be confirmed before final quote'],
+      ]
+    }
+    return [
+      ['Location fit','Review commute, neighbourhood, access and nearby infrastructure'],
+      ['Property fit','Confirm configuration, usable area and layout against your requirement'],
+      ['Budget fit','Treat the displayed budget only as an inspiration/reference band'],
+      ['Amenities','Parking, security and project amenities should be verified for a live property'],
+      ['Availability','Inventory, seller/developer details and current availability are not represented here'],
+      ['Due diligence','Ownership, approvals and regulatory information must be checked on the actual property'],
+    ]
+  }
+
+  function projectConfirmations(project){
+    if(project.category==='construction') return ['Actual plot dimensions','Soil/site condition','Final built-up area','Chosen package & materials','Approvals and execution timeline']
+    if(project.category==='design') return ['Exact site measurements','Floor plan / reference images','Rooms or areas in scope','Package / finish preference','Electrical, ceiling and furniture scope']
+    return ['Exact property / project','Live price and availability','Developer / seller details','Approvals / ownership','Site visit and final commercial terms']
+  }
+
   const phone=contactData.phone||contactData.phone_number||contactData.mobile||''
   const email=contactData.email||contactData.support_email||''
 
@@ -349,10 +392,12 @@ export default function Projects(){
           </div>
 
           <div className="pj-detail-stats">
+            <article><small>Project Type</small><b>{selectedProject.propertyType}</b></article>
             <article><small>Configuration</small><b>{selectedProject.meta}</b></article>
             <article><small>Built-up Area</small><b>{selectedProject.area} sq ft</b></article>
             <article><small>Budget Range</small><b>{selectedProject.budget}</b></article>
             <article><small>Design Style</small><b>{selectedProject.style}</b></article>
+            <article><small>Category</small><b>{selectedProject.categoryLabel}</b></article>
           </div>
 
           <div className="pj-detail-section">
@@ -372,6 +417,22 @@ export default function Projects(){
               <h3>Typical discussion areas</h3>
               <div className="pj-scope-chips">{projectScope(selectedProject).map(item=><b key={item}>{item}</b>)}</div>
             </div>
+          </div>
+
+          <div className="pj-detail-section pj-detail-planning-section">
+            <span>PLANNING DETAILS</span>
+            <h3>Useful details before you proceed</h3>
+            <div className="pj-detail-planning-grid">
+              {projectPlanningDetails(selectedProject).map(([label,value])=><article key={label}><small>{label}</small><p>{value}</p></article>)}
+            </div>
+          </div>
+
+          <div className="pj-detail-confirm">
+            <div>
+              <span>BEFORE FINALISING</span>
+              <h3>What should be confirmed?</h3>
+            </div>
+            <div>{projectConfirmations(selectedProject).map(item=><b key={item}><i>✓</i>{item}</b>)}</div>
           </div>
 
           <div className="pj-detail-note">
