@@ -17,6 +17,12 @@ const CONSTRUCTION_FLOORS = [
   { value: '5', label: 'Above G+3' },
 ]
 
+const PLOT_AREA_OPTIONS = [
+  { value: 'under_100', label: 'Less than 100 sq yards' },
+  { value: '100_200', label: '100–200 sq yards' },
+  { value: 'above_200', label: 'Above 200 sq yards' },
+]
+
 function constructionFloorLabel(value) {
   return CONSTRUCTION_FLOORS.find(option => option.value === String(value))?.label || String(value ?? '')
 }
@@ -100,7 +106,9 @@ function fieldLabel(question, answers) {
   if (typeof value === 'boolean') return value ? 'Yes' : 'No'
   if (question.questionKey === 'floors') return constructionFloorLabel(value)
   if (question.questionKey === 'plot_area') {
-    return question.options?.find(option => option.value === value)?.label || (String(value) + ' sq yards')
+    return question.options?.find(option => option.value === value)?.label
+      || PLOT_AREA_OPTIONS.find(option => option.value === value)?.label
+      || (String(value) + ' sq yards')
   }
   return question.options?.find(option => option.value === value)?.label || String(value)
 }
@@ -109,10 +117,11 @@ function PremiumQuestion({ question, value, onChange, visual = 'default' }) {
   if (!question) return null
   const options = question.options || []
 
-  if (question.questionKey === 'plot_area' && options.length) {
+  if (question.questionKey === 'plot_area') {
+    const plotOptions = options.length ? options : PLOT_AREA_OPTIONS
     return <select className="rq-floor-select rq-plot-area-select" value={value ?? ''} onChange={event => onChange(event.target.value)}>
       <option value="">Select plot area</option>
-      {options.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}
+      {plotOptions.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}
     </select>
   }
 
@@ -635,8 +644,8 @@ export default function RequirementWizard({ flowKey }) {
           {configQuestions.map(question => question.questionKey === 'site_access'
             ? <div className="rq-config-choice rq-site-access" key={question.id || question.questionKey}>
                 <span>{question.label}</span>
-                {question.helpText && <small className="rq-config-help">{question.helpText}</small>}
                 <PremiumQuestion question={question} value={answers[question.questionKey]} onChange={value => setAnswer(question.questionKey, value)} />
+                {question.helpText && <small className="rq-config-help">{question.helpText}</small>}
               </div>
             : <label key={question.id || question.questionKey}><span>{question.label}</span><PremiumQuestion question={question} value={answers[question.questionKey]} onChange={value => setAnswer(question.questionKey, value)} /></label>)}
         </div>
