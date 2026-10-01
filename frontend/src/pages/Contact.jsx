@@ -78,7 +78,7 @@ function PublicContact(){
         <Link to="/experts">Find Professionals</Link>
       </nav>
       <div className="public-header-actions">
-        <Link className="contact-header-cta" to="/quote#construction" onClick={event=>{event.preventDefault();openLeadPopup('')}}>Get Free Quote <Icon name="arrow" size={15}/></Link>
+        <Link className="contact-header-cta" to="/quote#interiors">Get Free Quote <Icon name="arrow" size={15}/></Link>
         <Link className="public-professional-btn" to="/professionals">For Professionals</Link>
       </div>
     </header>
