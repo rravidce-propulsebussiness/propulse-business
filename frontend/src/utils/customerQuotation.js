@@ -10,6 +10,18 @@ const BUILD_PROJECT_TYPE={
   building_extension:'extension',
 };
 
+const PLOT_AREA_YARDS={
+  under_100:90,
+  '100_200':150,
+  above_200:250,
+};
+
+function plotAreaYards(value){
+  const numeric=Number(value);
+  if(Number.isFinite(numeric)&&numeric>0)return numeric;
+  return PLOT_AREA_YARDS[String(value||'')]||0;
+}
+
 const DISPLAY={
   project_type:{residential:'Residential',commercial:'Commercial',renovation:'Renovation',extension:'Extension',house_construction:'Residential',commercial_building:'Commercial',building_extension:'Extension'},
   property_type:{residential:'Residential',commercial:'Commercial'},
@@ -111,26 +123,24 @@ function specificationsFor(packageKey,quality){
 
 function primaryBuildPackage(scope){
   const selected=Array.isArray(scope)?scope:[];
-  if(selected.includes('turnkey'))return 'turnkey';
   if(selected.includes('civil_structure'))return 'structure_only';
   if(selected.includes('finishing'))return 'finishing_only';
-  return '';
+  return 'turnkey';
 }
 
 function buildEstimatorAnswers(answers={}){
   const packageKey=primaryBuildPackage(answers.construction_scope);
-  if(!packageKey)throw new Error('Select Turnkey construction, Civil / structure, or Finishing work to generate a construction quotation.');
-  if(!answers.built_up_area)throw new Error('Enter the planned total built-up area to generate a detailed quotation.');
+  if(!answers.built_up_area)throw new Error('Enter or confirm the planned total built-up area to generate a detailed quotation.');
   return{
     project_location:answers.project_location,
     project_type:BUILD_PROJECT_TYPE[answers.project_type]||'house',
     own_plot:answers.own_plot,
-    plot_area:answers.plot_area,
+    plot_area:plotAreaYards(answers.plot_area),
     built_up_area:answers.built_up_area,
     floors:answers.floors,
     construction_package:packageKey,
     quality:answers.quality,
-    basement:answers.basement===true,
+    basement:false,
     site_access:answers.site_access||'normal',
     timeline:answers.timeline,
     additional_requirement:answers.additional_requirement||'',
