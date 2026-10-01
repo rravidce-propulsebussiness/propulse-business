@@ -95,7 +95,7 @@ export default function Experts(){
         <Link className="active" to="/experts">Find Professionals</Link>
       </nav>
       <div className="experts-header-actions">
-        <Link className="experts-quote" to="/quote" onClick={event=>{event.preventDefault();openLeadPopup('')}}>Get Free Quote <Icon name="arrow" size={15}/></Link>
+        <Link className="experts-quote" to="/quote#interiors">Get Free Quote <Icon name="arrow" size={15}/></Link>
         <Link className="experts-pro" to="/professionals">For Professionals</Link>
       </div>
     </header>
