@@ -313,3 +313,103 @@
   .rq-section-heading h2{font-size:21px}
   .rq-section-heading p{font-size:12px}
 }
+
+
+/* Subtle animated surface — keeps the homeowner form premium without distracting motion */
+.rq-section-card{
+  position:relative;
+  isolation:isolate;
+  overflow:hidden;
+  background:
+    radial-gradient(circle at 88% 12%,rgba(255,112,52,.065),transparent 28%),
+    radial-gradient(circle at 8% 92%,rgba(20,68,105,.045),transparent 31%),
+    linear-gradient(135deg,#ffffff 0%,#fffdfb 46%,#f9fcff 100%);
+  background-size:145% 145%,150% 150%,100% 100%;
+  animation:rqCardAmbient 12s ease-in-out infinite alternate;
+}
+.rq-section-card::before{
+  content:"";
+  position:absolute;
+  z-index:-1;
+  width:280px;
+  height:280px;
+  top:-165px;
+  right:-95px;
+  border-radius:50%;
+  background:radial-gradient(circle,rgba(255,90,31,.10) 0%,rgba(255,90,31,.035) 42%,transparent 72%);
+  filter:blur(1px);
+  pointer-events:none;
+  animation:rqCardOrb 9s ease-in-out infinite;
+}
+.rq-section-card::after{
+  content:"";
+  position:absolute;
+  z-index:-1;
+  inset:0;
+  pointer-events:none;
+  background:
+    linear-gradient(115deg,transparent 20%,rgba(255,255,255,.5) 42%,rgba(255,132,78,.055) 49%,rgba(255,255,255,.42) 56%,transparent 78%);
+  transform:translateX(-115%);
+  animation:rqCardSheen 10s ease-in-out infinite;
+}
+.rq-section-card> *{
+  position:relative;
+  z-index:1;
+}
+.rq-section-card:hover{
+  border-color:#dbe5ed;
+  box-shadow:0 20px 54px rgba(8,43,75,.075),0 0 0 1px rgba(255,90,31,.02);
+}
+
+.rq-vision-image img{
+  animation:rqVisionDrift 13s ease-in-out infinite alternate;
+}
+.rq-vision-card{
+  background:linear-gradient(180deg,#fff,#f8fafc);
+}
+.rq-vision-stats{
+  position:relative;
+  overflow:hidden;
+}
+.rq-vision-stats::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  background:linear-gradient(100deg,transparent 25%,rgba(255,90,31,.045) 48%,transparent 72%);
+  transform:translateX(-110%);
+  animation:rqStatsSheen 9s ease-in-out infinite;
+}
+
+@keyframes rqCardAmbient{
+  0%{background-position:0% 0%,100% 100%,0 0}
+  100%{background-position:100% 70%,0% 25%,0 0}
+}
+@keyframes rqCardOrb{
+  0%,100%{transform:translate3d(0,0,0) scale(1)}
+  50%{transform:translate3d(-34px,30px,0) scale(1.12)}
+}
+@keyframes rqCardSheen{
+  0%,58%{transform:translateX(-115%);opacity:0}
+  68%{opacity:.7}
+  82%{transform:translateX(115%);opacity:.18}
+  100%{transform:translateX(115%);opacity:0}
+}
+@keyframes rqVisionDrift{
+  0%{transform:scale(1.01) translate3d(0,0,0)}
+  100%{transform:scale(1.055) translate3d(-5px,-3px,0)}
+}
+@keyframes rqStatsSheen{
+  0%,62%{transform:translateX(-110%)}
+  82%,100%{transform:translateX(110%)}
+}
+
+@media(prefers-reduced-motion:reduce){
+  .rq-section-card,
+  .rq-section-card::before,
+  .rq-section-card::after,
+  .rq-vision-image img,
+  .rq-vision-stats::before{
+    animation:none!important;
+  }
+}
