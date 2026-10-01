@@ -23,6 +23,18 @@ const PLOT_AREA_OPTIONS = [
   { value: 'above_200', label: 'Above 200 sq yards' },
 ]
 
+const PLOT_AREA_ESTIMATE_YARDS = {
+  under_100: 90,
+  '100_200': 150,
+  above_200: 250,
+}
+
+function plotAreaSqYards(value) {
+  const numeric = Number(value)
+  if (Number.isFinite(numeric) && numeric > 0) return numeric
+  return PLOT_AREA_ESTIMATE_YARDS[String(value || '')] || 0
+}
+
 function constructionFloorLabel(value) {
   return CONSTRUCTION_FLOORS.find(option => option.value === String(value))?.label || String(value ?? '')
 }
@@ -186,6 +198,7 @@ export default function RequirementWizard({ flowKey }) {
   const [locationStateId, setLocationStateId] = useState('')
   const [pinLookup, setPinLookup] = useState({ status: '', message: '' })
   const pinLookupRequest = useRef(0)
+  const autoBuiltUpRef = useRef('')
   const [contact, setContact] = useState(emptyContact)
   const [website, setWebsite] = useState('')
   const [submissionKey, setSubmissionKey] = useState(makeSubmissionKey)
@@ -261,7 +274,7 @@ export default function RequirementWizard({ flowKey }) {
 
   const questions = useMemo(() => (flow?.questions || [])
     .filter(question => isQuestionVisible(question, answers))
-    .filter(question => !(flowKey === 'build' && ['property_type','construction_scope'].includes(question.questionKey))), [flow, answers, flowKey])
+    .filter(question => !(flowKey === 'build' && ['property_type','construction_scope','basement'].includes(question.questionKey))), [flow, answers, flowKey])
   const byKey = useMemo(() => Object.fromEntries(questions.map(question => [question.questionKey, question])), [questions])
   const locationQuestion = questions.find(question => question.questionType === 'location')
   const selectedCity = useMemo(() => cities.find(city => String(city.id) === String(cityId)), [cities, cityId])
@@ -277,9 +290,26 @@ export default function RequirementWizard({ flowKey }) {
 
   const ownPlotQuestion = flowKey === 'build' ? questions.find(question => question.questionKey === 'own_plot') : null
   const propertyQuestions = questions.filter(question => ['project_type', 'property_intent', 'bhk', 'property_status', 'possession_status'].includes(question.questionKey))
-  const configQuestions = questions.filter(question => flowKey === 'build'
-    ? ['plot_area', 'site_access', 'floors'].includes(question.questionKey)
-    : ['area'].includes(question.questionKey))
+  const builtUpQuestion = flowKey === 'build'
+    ? (questions.find(question => question.questionKey === 'built_up_area') || {
+        id: 'derived-built-up-area',
+        questionKey: 'built_up_area',
+        questionType: 'area',
+        label: 'Planned total built-up area',
+        helpText: 'Auto-calculated from plot area and floors. You can edit this value.',
+        isRequired: true,
+        validation: { min: 50, max: 1000000 },
+        options: [],
+      })
+    : null
+  const configQuestions = flowKey === 'build'
+    ? [
+        questions.find(question => question.questionKey === 'plot_area'),
+        builtUpQuestion,
+        questions.find(question => question.questionKey === 'floors'),
+        questions.find(question => question.questionKey === 'site_access'),
+      ].filter(Boolean)
+    : questions.filter(question => question.questionKey === 'area')
   const preferenceQuestions = questions.filter(question => ['quality', 'budget', 'timeline', 'interior_scope', 'kitchen', 'wardrobes', 'false_ceiling', 'furniture', 'finish_quality'].includes(question.questionKey))
   const additionalQuestion = questions.find(question => question.questionKey === 'additional_requirement')
   const usedKeys = new Set([locationQuestion?.questionKey, ownPlotQuestion?.questionKey, ...propertyQuestions.map(q => q.questionKey), ...configQuestions.map(q => q.questionKey), ...preferenceQuestions.map(q => q.questionKey), additionalQuestion?.questionKey].filter(Boolean))
@@ -297,6 +327,20 @@ export default function RequirementWizard({ flowKey }) {
     setAnswers(current => ({ ...current, [key]: value }))
     setState(current => ({ ...current, error: '' }))
   }
+
+  useEffect(() => {
+    if (flowKey !== 'build') return
+    const plotYards = plotAreaSqYards(answers.plot_area)
+    const floorCount = Number(answers.floors)
+    if (!plotYards || !Number.isFinite(floorCount) || floorCount < 1) return
+
+    const calculated = String(Math.round(plotYards * 9 * floorCount))
+    const current = String(answers.built_up_area ?? '')
+    if (!current || current === String(autoBuiltUpRef.current || '')) {
+      autoBuiltUpRef.current = calculated
+      setAnswers(previous => ({ ...previous, built_up_area: calculated }))
+    }
+  }, [flowKey, answers.plot_area, answers.floors])
 
   function setLocationState(value) {
     setLocationStateId(value)
@@ -398,7 +442,7 @@ export default function RequirementWizard({ flowKey }) {
     const missing = questions.find(question => question.isRequired && isEmptyAnswer(answers[question.questionKey]))
     if (missing) {
       setState(current => ({ ...current, error: `Please complete “${missing.label}”.` }))
-      const target = missing.questionKey === 'own_plot' || ['plot_area','site_access','area','floors'].includes(missing.questionKey)
+      const target = missing.questionKey === 'own_plot' || ['plot_area','built_up_area','site_access','area','floors'].includes(missing.questionKey)
         ? 'rq-config'
         : ['project_type','property_intent','bhk','property_status','possession_status'].includes(missing.questionKey)
           ? 'rq-property'
@@ -634,8 +678,8 @@ export default function RequirementWizard({ flowKey }) {
             <span>{ownPlotQuestion.label}</span>
             <PremiumQuestion question={ownPlotQuestion} value={answers[ownPlotQuestion.questionKey]} onChange={value => setAnswer(ownPlotQuestion.questionKey, value)} />
           </div>}
-          {configQuestions.map(question => question.questionKey === 'site_access'
-            ? <div className="rq-config-choice rq-site-access" key={question.id || question.questionKey}>
+          {configQuestions.map(question => ['site_access','built_up_area'].includes(question.questionKey)
+            ? <div className={'rq-config-choice ' + (question.questionKey === 'site_access' ? 'rq-site-access' : 'rq-built-up')} key={question.id || question.questionKey}>
                 <span>{question.label}</span>
                 <PremiumQuestion question={question} value={answers[question.questionKey]} onChange={value => setAnswer(question.questionKey, value)} />
                 {question.helpText && <small className="rq-config-help">{question.helpText}</small>}
