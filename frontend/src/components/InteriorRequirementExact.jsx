@@ -146,14 +146,6 @@ export default function InteriorRequirementExact(props) {
         <div className="irx-property-grid">{(propertyType?.options||[]).map(option=>{const active=answers[propertyType.questionKey]===option.value;return <button type="button" key={option.value} className={active?'active':''} onClick={()=>setAnswer(propertyType.questionKey,option.value)}><div><img src={PROPERTY_IMAGES[option.value]||PROPERTY_IMAGES.apartment} alt=""/>{active&&<i>✓</i>}</div><b>{option.label}</b></button>})}</div>
       </section>
 
-      <section className="irx-card">
-        <div className="irx-section-title"><span>3.</span><div><h2>Built-up Area & Rooms</h2><p>Help us understand the size and rooms you want to design.</p></div></div>
-        <div className="irx-area-room-grid">
-          <div><b className="irx-field-title">Built-up Area (sq ft)</b><div className="irx-area-pills">{areaPresets.map(([label,v])=><button type="button" key={v} className={String(answers[area?.questionKey]||'')===v?'active':''} onClick={()=>area&&setAnswer(area.questionKey,v)}>{label}</button>)}</div></div>
-          <div><b className="irx-field-title">Rooms to Design</b><div className="irx-room-pills">{(rooms?.options||[]).slice(0,6).map(option=>{const selected=Array.isArray(answers[rooms.questionKey])?answers[rooms.questionKey]:[];const active=selected.includes(option.value);return <button type="button" key={option.value} className={active?'active':''} onClick={()=>setAnswer(rooms.questionKey,active?selected.filter(v=>v!==option.value):[...selected,option.value])}><Icon name={roomIcons[option.value]||'layout'} size={19}/><span>{option.label}</span></button>})}</div></div>
-        </div>
-      </section>
-
       <div className="irx-lower">
         <div>
           <section className="irx-card" id="irx-style">
