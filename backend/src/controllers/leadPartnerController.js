@@ -1,4 +1,11 @@
+const { sendError } = require('../utils/errorResponse');
+const {sendProofDescriptor}=require('../utils/proofResponse');
 const leadPartnerService = require('../services/leadPartnerService');
+const pricingService = require('../services/leadPartnerPricingService');
+const payoutAccountService = require('../services/leadPartnerPayoutAccountService');
+const earningsService = require('../services/leadPartnerEarningsService');
+const payoutService = require('../services/leadPartnerPayoutService');
+const leadReportService = require('../services/leadReportService');
 const { resolvePincode } = require('../services/pincodeService');
 
 async function requirePincode(body) {
@@ -12,64 +19,27 @@ async function requirePincode(body) {
   throw new Error('Pincode is required and must be a valid 6-digit Indian PIN, or a matching location must be provided');
 }
 
-async function apply(req, res) {
-  try {
-    const partner = await leadPartnerService.apply(req.user.id);
-    return res.status(201).json(partner);
-  } catch (error) {
-    if (error.code === '23505') return res.status(409).json({ error: 'Lead Partner application already exists' });
-    return res.status(500).json({ error: 'Failed to apply as Lead Partner' });
-  }
-}
-
-async function me(req, res) {
-  try {
-    const partner = await leadPartnerService.getPartnerByUserId(req.user.id);
-    return res.json(partner || { status: 'not_applied' });
-  } catch (error) {
-    return res.status(500).json({ error: 'Failed to load Lead Partner status' });
-  }
-}
-
-async function createLead(req, res) {
-  try {
-    const pincode = await requirePincode(req.body);
-    const lead = await leadPartnerService.createLead({ ...req.body, pincode, userId: req.user.id });
-    return res.status(201).json(lead);
-  } catch (error) {
-    const message = String(error?.message || '');
-    if (['PARTNER_NOT_FOUND', 'PARTNER_NOT_ACTIVE'].includes(error.code)) return res.status(403).json({ error: message, code: error.code });
-    if (error.code === 'DUPLICATE_LEAD' || error.code === '23505') return res.status(409).json({ error: error.message || 'Duplicate lead', code: 'DUPLICATE_LEAD', leadId: error.leadId });
-    if (message === 'Industry is required' || message.startsWith('Pincode is required')) return res.status(400).json({ error: message });
-    return res.status(500).json({ error: message || 'Failed to submit lead' });
-  }
-}
-
-async function myLeads(req, res) {
-  try {
-    return res.json(await leadPartnerService.getMyLeads(req.user.id, req.query));
-  } catch (error) {
-    if (['PARTNER_NOT_FOUND', 'PARTNER_NOT_ACTIVE'].includes(error.code)) return res.status(403).json({ error: error.message, code: error.code });
-    return res.status(500).json({ error: 'Failed to fetch Lead Partner leads' });
-  }
-}
-
-async function adminPartners(req, res) {
-  try {
-    return res.json(await leadPartnerService.getAdminPartners(req.query));
-  } catch (error) {
-    return res.status(400).json({ error: error.message || 'Failed to fetch Lead Partners' });
-  }
-}
-
-async function adminUpdateStatus(req, res) {
-  try {
-    const partner = await leadPartnerService.updateStatus(Number(req.params.id), String(req.body?.status || '').trim().toLowerCase());
-    if (!partner) return res.status(404).json({ error: 'Lead Partner not found' });
-    return res.json(partner);
-  } catch (error) {
-    return res.status(400).json({ error: error.message || 'Failed to update Lead Partner status' });
-  }
-}
-
-module.exports = { apply, me, createLead, myLeads, adminPartners, adminUpdateStatus };
+async function dashboard(req,res){try{return res.json(await leadPartnerService.getDashboard(req.user.id,req.query?.period));}catch(e){return res.status(500).json({error:'Failed to load Lead Partner dashboard'});}}
+async function apply(req,res){try{return res.status(201).json(await leadPartnerService.apply(req.user.id));}catch(e){return sendError(res,500,e,'Failed to process Lead Partner request');}}
+async function me(req,res){try{const partner=await leadPartnerService.getPartnerByUserId(req.user.id);return res.json(partner||{status:'not_applied'});}catch(e){return res.status(500).json({error:'Failed to load Lead Partner profile'});}}
+async function createLead(req,res){try{const pincode=await requirePincode(req.body||{});return res.status(201).json(await leadPartnerService.createLead({userId:req.user.id,...(req.body||{}),pincode}));}catch(e){if(e.code==='DUPLICATE_LEAD'||e.code==='23505')return sendError(res,409,e,'Duplicate lead',{code:'DUPLICATE_LEAD',leadId:e.leadId});const s=['PARTNER_NOT_FOUND','PARTNER_NOT_ACTIVE'].includes(e.code)?403:400;return sendError(res,s,e,'Lead Partner request failed',{code:e.code});}}
+async function myLeads(req,res){try{return res.json(await leadPartnerService.getMyLeads(req.user.id,req.query||{}));}catch(e){const s=['PARTNER_NOT_FOUND','PARTNER_NOT_ACTIVE'].includes(e.code)?403:500;return sendError(res,s,e,'Lead Partner request failed',{code:e.code});}}
+async function adminPartners(req,res){try{return res.json(await leadPartnerService.getAdminPartners(req.query||{}));}catch(e){return res.status(500).json({error:'Failed to load Lead Partners'});}}
+async function adminPartnerFinancials(req,res){try{return res.json(await earningsService.getAdminPartnerFinancials(req.params.partnerId));}catch(e){return sendError(res,e.code==='PARTNER_NOT_FOUND'?404:500,e,'Failed to load Lead Partner financials',{code:e.code});}}
+async function adminUpdateStatus(req,res){try{return res.json(await leadPartnerService.updateStatus(req.params.partnerId,req.body?.status,req.user?.id));}catch(e){return sendError(res,e.code==='PARTNER_NOT_FOUND'?404:400,e,'Failed to update Lead Partner status',{code:e.code});}}
+async function pricing(req,res){try{return res.json(await pricingService.list(req.user.id,req.query||{}));}catch(e){const status=e.code==='INVALID_STATUS'?400:500;if(status===500)console.error('Lead Partner pricing workspace failed:',e.message);return sendError(res,status,e,'Failed to load partner pricing',{code:e.code});}}
+async function savePricingRule(req,res){try{return res.json(await pricingService.saveRule(req.user.id,{...(req.body||{}),id:req.params.ruleId}));}catch(e){return sendError(res,500,e,'Failed to process Lead Partner request');}}
+async function createPricingRule(req,res){try{return res.status(201).json(await pricingService.saveRule(req.user.id,req.body||{}));}catch(e){return sendError(res,500,e,'Failed to process Lead Partner request');}}
+async function deletePricingRule(req,res){try{return res.json(await pricingService.deleteRule(req.user.id,req.params.ruleId));}catch(e){return sendError(res,400,e,'Lead Partner request failed',{code:e.code});}}
+async function updatePricing(req,res){try{return res.json(await pricingService.update(req.user.id,req.params.leadId,req.body||{}));}catch(e){return sendError(res,500,e,'Failed to process Lead Partner request');}}
+async function payoutAccount(req,res){try{return res.json(await payoutAccountService.get(req.user.id));}catch(e){return res.status(500).json({error:'Failed to load payout account'});}}
+async function savePayoutAccount(req,res){try{return res.json(await payoutAccountService.save({userId:req.user.id,...(req.body||{}),ifscCode:String(req.body?.ifscCode||'').toUpperCase()}));}catch(e){return sendError(res,e.code==='INVALID_PARTNER_PAYOUT_ACCOUNT'?400:500,e,'Failed to save payout account',{code:e.code});}}
+async function funds(req,res){try{return res.json(await payoutService.getFunds(req.user.id));}catch(e){const s=['PARTNER_NOT_FOUND','PARTNER_NOT_ACTIVE'].includes(e.code)?403:500;return sendError(res,s,e,'Lead Partner request failed',{code:e.code});}}
+async function requestWithdrawal(req,res){try{return res.status(201).json(await payoutService.requestWithdrawal({userId:req.user.id,amount:req.body?.amount,notes:req.body?.notes}));}catch(e){const s=['INVALID_AMOUNT','PAYOUT_ACCOUNT_REQUIRED','INSUFFICIENT_FUNDS'].includes(e.code)?400:['PARTNER_NOT_FOUND','PARTNER_NOT_ACTIVE'].includes(e.code)?403:500;return sendError(res,s,e,'Lead Partner request failed',{code:e.code});}}async function transactions(req,res){try{return res.json(await payoutService.getTransactions(req.user.id));}catch(e){const s=['PARTNER_NOT_FOUND','PARTNER_NOT_ACTIVE'].includes(e.code)?403:500;return sendError(res,s,e,'Failed to load transaction history',{code:e.code});}}
+async function reports(req,res){try{return res.json(await leadReportService.getLeadPartnerReports(req.user.id,{status:req.query?.status,search:req.query?.search,page:req.query?.page,limit:req.query?.limit}))}catch(e){const status=['PARTNER_NOT_FOUND','PARTNER_NOT_ACTIVE'].includes(e.code)?403:e.code==='INVALID_REPORT_STATUS'?400:500;if(status===500)console.error('Lead Partner reports failed:',e.message);return sendError(res,status,e,'Failed to load Lead Partner reports',{code:e.code})}}
+async function adminPayouts(req,res){try{return res.json(await payoutService.adminList({status:req.query?.status,search:req.query?.search,page:req.query?.page,limit:req.query?.limit}));}catch(e){const status=e.code==='INVALID_STATUS'?400:500;if(status===500)console.error('Admin Lead Partner payouts failed:',e.message);return sendError(res,status,e,'Failed to load Lead Partner payouts',{code:e.code});}}
+async function adminPayoutProof(req,res){try{const data=await payoutService.adminProof(req.params.payoutId);if(!data)return res.status(404).json({error:'Lead Partner payout not found'});return res.json(data)}catch(e){console.error('Admin Lead Partner payout proof failed:',e.message);return sendError(res,500,e,'Failed to load Lead Partner payout proof')}}
+async function adminPayoutProofFile(req,res){try{const data=await payoutService.adminProofDescriptor(req.params.payoutId);if(!data)return res.status(404).json({error:'Lead Partner payout not found'});return sendProofDescriptor(res,data)}catch(e){console.error('Admin Lead Partner payout proof stream failed:',e.message);return sendError(res,500,e,'Failed to stream Lead Partner payout proof')}}
+async function adminProcessPayout(req,res){try{return res.json(await payoutService.adminProcess({requestId:req.params.payoutId,adminId:req.user.id,action:req.body?.action,transferReference:req.body?.transferReference,proofUrl:req.body?.proofUrl,rejectionReason:req.body?.rejectionReason,notes:req.body?.notes}));}catch(e){const bad=['ALREADY_PROCESSED','INVALID_ACTION','TRANSFER_REFERENCE_REQUIRED','INVALID_TRANSFER_PROOF','TRANSFER_PROOF_REQUIRED','TRANSFER_PROOF_TOO_LARGE','DUPLICATE_REFERENCE','PAYOUT_ALLOCATION_MISMATCH'].includes(e.code);return sendError(res,e.code==='NOT_FOUND'?404:bad?400:500,e,'Failed to process Lead Partner payout',{code:e.code});}}
+async function adminDirectPayout(req,res){try{return res.status(201).json(await payoutService.adminDirectPayout({partnerId:req.body?.partnerId,userId:req.body?.userId,adminId:req.user.id,amount:req.body?.amount,transferReference:req.body?.transferReference,proofUrl:req.body?.proofUrl,notes:req.body?.notes}));}catch(e){const bad=['INVALID_AMOUNT','PAYOUT_ACCOUNT_REQUIRED','INSUFFICIENT_FUNDS','PARTNER_NOT_FOUND','PARTNER_NOT_ACTIVE','TRANSFER_REFERENCE_REQUIRED','INVALID_TRANSFER_PROOF','TRANSFER_PROOF_REQUIRED','TRANSFER_PROOF_TOO_LARGE','DUPLICATE_REFERENCE','PAYOUT_ALLOCATION_MISMATCH'].includes(e.code);return sendError(res,bad?400:500,e,'Failed to transfer Lead Partner payout',{code:e.code});}}
+module.exports={dashboard,apply,me,createLead,myLeads,adminPartners,adminPartnerFinancials,adminUpdateStatus,pricing,createPricingRule,savePricingRule,deletePricingRule,updatePricing,payoutAccount,savePayoutAccount,funds,requestWithdrawal,adminPayouts,adminPayoutProof,adminPayoutProofFile,adminProcessPayout,adminDirectPayout,transactions,reports};

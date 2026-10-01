@@ -1,0 +1,94 @@
+name: propulse-${DEPLOY_ENVIRONMENT:?Set DEPLOY_ENVIRONMENT to staging or production}
+
+x-backend-common: &backend-common
+  image: propulse-backend:${GIT_COMMIT_SHA:?Set GIT_COMMIT_SHA to the exact deployed commit}
+  build:
+    context: ../backend
+  env_file:
+    - ${BACKEND_ENV_FILE:?Set BACKEND_ENV_FILE to the environment-specific backend env file}
+  restart: unless-stopped
+  stop_grace_period: 20s
+  volumes:
+    - propulse-uploads:/data/propulse/uploads
+
+x-backend-environment: &backend-environment
+  NODE_ENV: production
+  DEPLOY_ENVIRONMENT: ${DEPLOY_ENVIRONMENT}
+  GIT_COMMIT_SHA: ${GIT_COMMIT_SHA}
+  RELEASE_ID: ${RELEASE_ID:-}
+  UPLOAD_STORAGE_ROOT: /data/propulse/uploads
+  RUN_MIGRATIONS_ON_STARTUP: "false"
+  RUN_MIGRATIONS_ON_WORKER_STARTUP: "false"
+
+services:
+  backend:
+    <<: *backend-common
+    environment:
+      <<: *backend-environment
+      PORT: "5000"
+      DB_APPLICATION_NAME: propulse-web
+      RUN_BACKGROUND_JOBS_IN_WEB: "false"
+      REQUIRE_BACKGROUND_WORKER: "true"
+      TRUST_PROXY: "1"
+    expose:
+      - "5000"
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:5000/health/live',{signal:AbortSignal.timeout(3000)}).then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"
+      interval: 15s
+      timeout: 5s
+      start_period: 20s
+      retries: 4
+
+  worker:
+    <<: *backend-common
+    command: ["npm","run","worker"]
+    environment:
+      <<: *backend-environment
+      DB_APPLICATION_NAME: propulse-worker
+      RUN_BACKGROUND_JOBS_IN_WEB: "false"
+      REQUIRE_BACKGROUND_WORKER: "false"
+    depends_on:
+      backend:
+        condition: service_healthy
+
+  frontend:
+    image: propulse-frontend:${GIT_COMMIT_SHA}
+    build:
+      context: ../frontend
+      args:
+        VITE_API_URL: /api
+        VITE_GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+    restart: unless-stopped
+    stop_grace_period: 15s
+    depends_on:
+      backend:
+        condition: service_healthy
+      worker:
+        condition: service_started
+    ports:
+      - "${PUBLIC_BIND_ADDRESS:-127.0.0.1}:${PUBLIC_PORT:-8080}:8080"
+    healthcheck:
+      test: ["CMD-SHELL","wget -q -O - http://127.0.0.1:8080/health/live | grep -q '\"status\":\"ok\"'"]
+      interval: 15s
+      timeout: 5s
+      start_period: 15s
+      retries: 4
+
+  migrate:
+    <<: *backend-common
+    profiles: ["release"]
+    restart: "no"
+    command: ["npm","run","db:migrate"]
+    environment:
+      <<: *backend-environment
+      DB_APPLICATION_NAME: propulse-migration
+      RUN_BACKGROUND_JOBS_IN_WEB: "false"
+      REQUIRE_BACKGROUND_WORKER: "false"
+
+volumes:
+  propulse-uploads:
+    name: propulse-${DEPLOY_ENVIRONMENT}-uploads

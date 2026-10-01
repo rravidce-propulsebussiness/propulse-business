@@ -1,13 +1,13 @@
 const pool=require('../config/database');const {leadSelect,maskLead,normalizeLeadType,isProMember}=require('./leadReadService');
 
-async function getMarketplacePage({industryId,serviceId,subserviceId,stateId,cityId,status='available',leadType,search,allIndustries,userId,role,page=1,limit=20}){
+async function getMarketplacePage({industryId,serviceId,subserviceId,stateId,cityId,status='available',leadType,search,allIndustries,allLocations,userId,role,page=1,limit=20}){
  const safePage=Math.max(1,Number.parseInt(page,10)||1);const safeLimit=Math.min(50,Math.max(1,Number.parseInt(limit,10)||20));const values=[];const conditions=[];const add=(value,sql)=>{values.push(value);conditions.push(sql.replace('?',`$${values.length}`))};
  if(status&&status!=='all')add(status,'l.status=?');
  const type=normalizeLeadType(leadType);if(type)add(type,'l.lead_type=?');
  if(industryId&&String(industryId).toLowerCase()!=='all')add(industryId,'l.industry_id=?');
  if(serviceId)add(serviceId,'l.service_id=?');if(subserviceId)add(subserviceId,'l.subservice_id=?');if(stateId)add(stateId,'l.state_id=?');if(cityId)add(cityId,'l.city_id=?');
  const q=String(search||'').trim().toLowerCase();if(q){values.push(`%${q}%`);const p=`$${values.length}`;conditions.push(`(LOWER(COALESCE(i.name,'')) LIKE ${p} OR LOWER(COALESCE(s.name,'')) LIKE ${p} OR LOWER(COALESCE(ss.name,'')) LIKE ${p} OR LOWER(COALESCE(c.name,'')) LIKE ${p} OR LOWER(COALESCE(st.name,'')) LIKE ${p} OR LOWER(COALESCE(l.requirement,'')) LIKE ${p})`)}
- if(role!=='admin'&&userId&&!String(allIndustries||'').match(/^(1|true)$/i)){
+ if(role!=='admin'&&userId){
    values.push(userId);const p=`$${values.length}`;
    conditions.push(`EXISTS (
      SELECT 1 FROM business_profiles bp
@@ -31,7 +31,8 @@ async function getMarketplacePage({industryId,serviceId,subserviceId,stateId,cit
        AND (l.city_id IS NULL OR bpl.city_id=l.city_id OR (bc.name IS NOT NULL AND lc.name IS NOT NULL AND LOWER(TRIM(bc.name))=LOWER(TRIM(lc.name))))
    )`);
  }
- if(role!=='admin'&&userId){values.push(userId);const p3=`$${values.length}`;conditions.push(`NOT EXISTS (SELECT 1 FROM lead_purchases lp WHERE lp.lead_id=l.id AND lp.user_id=${p3} AND lp.status='paid')`);values.push(userId);const p4=`$${values.length}`;conditions.push(`l.investor_user_id IS DISTINCT FROM ${p4}`)}
+ conditions.push(`(SELECT COUNT(DISTINCT buyer.user_id)::int FROM (SELECT lp.user_id FROM lead_purchases lp LEFT JOIN payments pcap ON pcap.id=lp.payment_id WHERE lp.lead_id=l.id AND (lp.status='paid' OR (lp.status='pending_payment' AND pcap.status='pending')) UNION SELECT ec.user_id FROM lead_entitlement_claims ec WHERE ec.lead_id=l.id AND (ec.expires_at IS NULL OR ec.expires_at>=CURRENT_TIMESTAMP)) buyer) < lead_effective_buyer_capacity(l.access_strategy,l.buyer_capacity,l.release_to_two_after_hours,l.release_to_three_after_hours,l.created_at,l.access_capacity_locked)`);
+ if(role!=='admin'&&userId){values.push(userId);const p3=String.fromCharCode(36)+values.length;conditions.push(`NOT EXISTS (SELECT 1 FROM lead_purchases lp WHERE lp.lead_id=l.id AND lp.user_id=${p3} AND lp.status='paid')`);values.push(userId);const pClaim=String.fromCharCode(36)+values.length;conditions.push(`NOT EXISTS (SELECT 1 FROM lead_entitlement_claims ec WHERE ec.lead_id=l.id AND ec.user_id=${pClaim} AND (ec.expires_at IS NULL OR ec.expires_at>=CURRENT_TIMESTAMP))`);values.push(userId);const p4=String.fromCharCode(36)+values.length;conditions.push(`l.investor_user_id IS DISTINCT FROM ${p4}`)}
  const where=conditions.length?`WHERE ${conditions.join(' AND ')}`:'';
  const from=`leads l LEFT JOIN industries i ON i.id=l.industry_id LEFT JOIN services s ON s.id=l.service_id LEFT JOIN subservices ss ON ss.id=l.subservice_id LEFT JOIN states st ON st.id=l.state_id LEFT JOIN cities c ON c.id=l.city_id`;
  const count=await pool.query(`SELECT COUNT(DISTINCT l.id)::int AS total FROM ${from} ${where}`,values);const total=Number(count.rows[0]?.total||0);const offset=(safePage-1)*safeLimit;

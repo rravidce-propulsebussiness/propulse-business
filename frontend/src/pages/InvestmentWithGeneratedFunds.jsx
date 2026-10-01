@@ -1,5 +1,5 @@
-import Investment from './Investment'
+import InvestmentCycleDashboard from './InvestmentCycleDashboard'
 
-export default function InvestmentWithGeneratedFunds(){
-  return <Investment />
+export default function InvestmentWithGeneratedFunds() {
+  return <InvestmentCycleDashboard />
 }

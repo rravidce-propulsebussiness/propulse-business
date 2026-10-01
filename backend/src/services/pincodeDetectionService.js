@@ -1,6 +1,8 @@
 const pool = require('../config/database');
 
 const INDIA_POST_LOOKUP = 'https://api.postalpincode.in/pincode/';
+const MAX_INDIA_POST_BYTES = 256 * 1024;
+const MAX_NOMINATIM_BYTES = 128 * 1024;
 
 function normalizeText(value) {
   return String(value || '')
@@ -14,6 +16,28 @@ function normalizePincode(value) {
   return /^\d{6}$/.test(pin) ? pin : null;
 }
 
+async function readResponseTextLimited(response, maxBytes) {
+  if (!response.body) return '';
+  const reader = response.body.getReader();
+  const chunks = [];
+  let total = 0;
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) return Buffer.concat(chunks, total).toString('utf8');
+      const chunk = Buffer.from(value);
+      total += chunk.length;
+      if (total > maxBytes) {
+        await reader.cancel().catch(() => {});
+        return null;
+      }
+      chunks.push(chunk);
+    }
+  } finally {
+    reader.releaseLock();
+  }
+}
+
 async function fetchIndiaPost(pincode) {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 10000);
@@ -22,8 +46,19 @@ async function fetchIndiaPost(pincode) {
       headers: { Accept: 'application/json' },
       signal: controller.signal,
     });
+    const contentLength = Number(response.headers.get('content-length') || 0);
+    if (contentLength > MAX_INDIA_POST_BYTES) {
+      throw new Error('India Post returned an unexpectedly large response');
+    }
     if (!response.ok) throw new Error(`India Post lookup failed (HTTP ${response.status})`);
-    const payload = await response.json();
+    const body = await readResponseTextLimited(response, MAX_INDIA_POST_BYTES);
+    if (body === null) throw new Error('India Post returned an unexpectedly large response');
+    let payload;
+    try {
+      payload = JSON.parse(body);
+    } catch {
+      throw new Error('India Post returned an invalid response');
+    }
     const first = Array.isArray(payload) ? payload[0] : payload;
     const offices = Array.isArray(first?.PostOffice) ? first.PostOffice : [];
     if (!offices.length) {
@@ -54,9 +89,9 @@ async function getStoredPin(pincode) {
   )).rows[0] || null;
 }
 
-async function findSafeCityMatch({ stateName, officeNames }) {
+async function findSafeCityMatch({ stateName, districtName, officeNames }) {
   const names = [...new Set((officeNames || []).map(normalizeText).filter(Boolean))];
-  if (!stateName || !names.length) return { status: 'NO_MATCH', candidates: [] };
+  if (!stateName) return { status: 'NO_MATCH', candidates: [] };
 
   const result = await pool.query(
     `SELECT DISTINCT c.id,c.name,c.state_id,s.name AS state_name
@@ -67,16 +102,23 @@ async function findSafeCityMatch({ stateName, officeNames }) {
       WHERE c.is_active=TRUE
         AND s.is_active=TRUE
         AND LOWER(TRIM(s.name))=LOWER(TRIM($1))
-        AND EXISTS (
-          SELECT 1
-            FROM unnest($2::text[]) AS office_name
-           WHERE regexp_replace(LOWER(TRIM(office_name)), '[^a-z0-9]+', '', 'g')
-                 = regexp_replace(LOWER(TRIM(c.name)), '[^a-z0-9]+', '', 'g')
-              OR regexp_replace(LOWER(TRIM(office_name)), '[^a-z0-9]+', '', 'g')
-                 = regexp_replace(LOWER(TRIM(COALESCE(sc.name,''))), '[^a-z0-9]+', '', 'g')
+        AND (
+          EXISTS (
+            SELECT 1
+              FROM unnest($2::text[]) AS office_name
+             WHERE regexp_replace(LOWER(TRIM(office_name)), '[^a-z0-9]+', '', 'g')
+                   = regexp_replace(LOWER(TRIM(c.name)), '[^a-z0-9]+', '', 'g')
+                OR regexp_replace(LOWER(TRIM(office_name)), '[^a-z0-9]+', '', 'g')
+                   = regexp_replace(LOWER(TRIM(COALESCE(sc.name,''))), '[^a-z0-9]+', '', 'g')
+          )
+          OR (
+            NULLIF(regexp_replace(LOWER(TRIM($3)), '[^a-z0-9]+', '', 'g'),'') IS NOT NULL
+            AND regexp_replace(LOWER(TRIM($3)), '[^a-z0-9]+', '', 'g')
+                = regexp_replace(LOWER(TRIM(c.name)), '[^a-z0-9]+', '', 'g')
+          )
         )
       ORDER BY c.id`,
-    [stateName, names]
+    [stateName, names, districtName || '']
   );
 
   const unique = [];
@@ -268,6 +310,7 @@ async function detectPincode(pincode, { forceRefresh = false } = {}) {
   }
   const match = await findSafeCityMatch({
     stateName: directory.state_name,
+    districtName: directory.district_name,
     officeNames,
   });
 
@@ -283,6 +326,158 @@ async function detectPincode(pincode, { forceRefresh = false } = {}) {
     candidates: match.candidates,
     mapping,
   };
+}
+
+async function locatePincode(pincode) {
+  const pin = normalizePincode(pincode);
+  if (!pin) {
+    const error = new Error('Pincode must be 6 digits');
+    error.code = 'INVALID_PINCODE';
+    throw error;
+  }
+
+  let directory = await getStoredPin(pin);
+  if (!directory || !Array.isArray(directory.postal_areas) || !directory.postal_areas.length) {
+    const offices = await fetchIndiaPost(pin);
+    directory = await savePinDirectory({ pincode: pin, offices });
+  }
+
+  const mapped = await pool.query(
+    `SELECT DISTINCT c.id,c.name,c.state_id,s.name AS state_name
+       FROM city_pincodes cp
+       JOIN cities c ON c.id=cp.city_id AND c.is_active=TRUE
+       JOIN states s ON s.id=c.state_id AND s.is_active=TRUE
+      WHERE cp.pincode=$1 AND cp.is_active=TRUE
+      ORDER BY c.id`,
+    [pin]
+  );
+
+  if (mapped.rows.length === 1) {
+    return {
+      pincode: pin,
+      stateId: Number(mapped.rows[0].state_id) || null,
+      stateName: mapped.rows[0].state_name || directory.state_name || null,
+      cityId: Number(mapped.rows[0].id) || null,
+      cityName: mapped.rows[0].name || null,
+      districtName: directory.district_name || null,
+      postalAreas: Array.isArray(directory.postal_areas) ? directory.postal_areas : [],
+      status: 'MAPPED',
+    };
+  }
+
+  const officeNames = Array.isArray(directory.postal_areas)
+    ? directory.postal_areas
+    : Array.isArray(directory.postal_data)
+      ? directory.postal_data.map(item => item?.name).filter(Boolean)
+      : [];
+
+  const match = await findSafeCityMatch({
+    stateName: directory.state_name,
+    districtName: directory.district_name,
+    officeNames,
+  });
+
+  const city = match.status === 'AUTO_MAPPED' ? match.city : null;
+  const stateRow = directory.state_id
+    ? { id: directory.state_id, name: directory.state_name }
+    : directory.state_name
+      ? (await pool.query(
+          'SELECT id,name FROM states WHERE is_active=TRUE AND LOWER(TRIM(name))=LOWER(TRIM($1)) LIMIT 1',
+          [directory.state_name]
+        )).rows[0] || null
+      : null;
+
+  return {
+    pincode: pin,
+    stateId: Number(city?.state_id || stateRow?.id) || null,
+    stateName: city?.state_name || stateRow?.name || directory.state_name || null,
+    cityId: Number(city?.id) || null,
+    cityName: city?.name || null,
+    districtName: directory.district_name || null,
+    postalAreas: officeNames.slice(0, 25),
+    status: city ? 'DETECTED' : 'STATE_ONLY',
+  };
+}
+
+async function reverseCoordinates(latitude, longitude) {
+  const lat = Number(latitude);
+  const lon = Number(longitude);
+  if (!Number.isFinite(lat) || lat < -90 || lat > 90 || !Number.isFinite(lon) || lon < -180 || lon > 180) {
+    const error = new Error('Valid latitude and longitude are required');
+    error.code = 'INVALID_COORDINATES';
+    throw error;
+  }
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 8000);
+  try {
+    const url = new URL('https://nominatim.openstreetmap.org/reverse');
+    url.searchParams.set('format', 'jsonv2');
+    url.searchParams.set('lat', String(lat));
+    url.searchParams.set('lon', String(lon));
+    url.searchParams.set('zoom', '18');
+    url.searchParams.set('addressdetails', '1');
+
+    const response = await fetch(url, {
+      headers: {
+        Accept: 'application/json',
+        'User-Agent': 'ProPulseBusiness/1.0 location-lookup',
+      },
+      signal: controller.signal,
+    });
+    const contentLength = Number(response.headers.get('content-length') || 0);
+    if (contentLength > MAX_NOMINATIM_BYTES) {
+      const error = new Error('Location lookup service returned an unexpectedly large response');
+      error.code = 'REVERSE_LOOKUP_FAILED';
+      throw error;
+    }
+    if (!response.ok) {
+      const error = new Error('Location lookup service is unavailable');
+      error.code = 'REVERSE_LOOKUP_FAILED';
+      throw error;
+    }
+
+    const body = await readResponseTextLimited(response, MAX_NOMINATIM_BYTES);
+    if (body === null) {
+      const error = new Error('Location lookup service returned an unexpectedly large response');
+      error.code = 'REVERSE_LOOKUP_FAILED';
+      throw error;
+    }
+    let payload;
+    try {
+      payload = JSON.parse(body);
+    } catch {
+      const error = new Error('Location lookup service returned an invalid response');
+      error.code = 'REVERSE_LOOKUP_FAILED';
+      throw error;
+    }
+    const address = payload?.address || {};
+    const pincode = String(address.postcode || '').replace(/\D/g, '').slice(0, 6);
+    if (!/^\d{6}$/.test(pincode)) {
+      const error = new Error('Could not determine a 6-digit PIN for this location');
+      error.code = 'PIN_NOT_FOUND';
+      throw error;
+    }
+
+    const pinLocation = await locatePincode(pincode);
+    return {
+      ...pinLocation,
+      latitude: lat,
+      longitude: lon,
+      localityName: address.suburb || address.neighbourhood || address.quarter || address.village || address.town || address.city_district || '',
+      detectedAddress: payload?.display_name || '',
+      source: 'device-location',
+    };
+  } catch (error) {
+    if (error.name === 'AbortError') {
+      const timeoutError = new Error('Location lookup timed out');
+      timeoutError.code = 'REVERSE_LOOKUP_TIMEOUT';
+      throw timeoutError;
+    }
+    throw error;
+  } finally {
+    clearTimeout(timeout);
+  }
 }
 
 async function listUnmappedPins({ limit = 100 } = {}) {
@@ -309,7 +504,9 @@ async function listUnmappedPins({ limit = 100 } = {}) {
 
 module.exports = {
   detectPincode,
+  locatePincode,
   mapPinToCity,
   listUnmappedPins,
   fetchIndiaPost,
+  reverseCoordinates,
 };

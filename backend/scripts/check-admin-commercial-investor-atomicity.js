@@ -40,7 +40,7 @@ const fakePool={
 
 const originalLoad=Module._load;
 Module._load=function(request,parent,isMain){
-  if(parent&&parent.filename&&parent.filename.endsWith('/backend/src/services/adminCommercialService.js')&&request==='../config/database')return fakePool;
+  if(parent&&parent.filename&&parent.filename.replace(/\\/g,'/').endsWith('/backend/src/services/adminCommercialService.js')&&request==='../config/database')return fakePool;
   return originalLoad.apply(this,arguments);
 };
 

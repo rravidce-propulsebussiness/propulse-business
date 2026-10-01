@@ -1,4 +1,5 @@
 const profileService = require('../services/profileService');
+const { sendError } = require('../utils/errorResponse');
 
 async function getProfile(req, res) {
   try {
@@ -22,8 +23,11 @@ async function updateProfile(req, res) {
     });
     return res.json(result);
   } catch (error) {
-    console.error('Update profile failed:', error.message);
-    return res.status(400).json({ error: error.message || 'Failed to update profile' });
+    const map={INVALID_PROFILE_SELECTION:400,PROFILE_ACCOUNT_NOT_FOUND:404,PROFILE_NOT_FOUND:404};
+    if(error.code==='23505')return res.status(409).json({error:'Email address is already in use'});
+    const status=map[error.code]||500;
+    if(status===500)console.error('Update profile failed:', error);
+    return sendError(res,status,error,'Failed to update profile',{code:error.code});
   }
 }
 

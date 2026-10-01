@@ -10,15 +10,10 @@ CREATE TABLE IF NOT EXISTS lead_reports (
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
-
 CREATE INDEX IF NOT EXISTS idx_lead_reports_lead ON lead_reports(lead_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_lead_reports_reporter ON lead_reports(reporter_user_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_lead_reports_status ON lead_reports(status, created_at DESC);
-
-CREATE UNIQUE INDEX IF NOT EXISTS uq_lead_reports_active_reporter_lead
-  ON lead_reports(lead_id, reporter_user_id)
-  WHERE status = 'pending';
-
+CREATE UNIQUE INDEX IF NOT EXISTS uq_lead_reports_active_reporter_lead ON lead_reports(lead_id, reporter_user_id) WHERE status = 'pending';
 CREATE TABLE IF NOT EXISTS lead_reporting_controls (
   id SERIAL PRIMARY KEY,
   user_id INTEGER NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
@@ -29,6 +24,4 @@ CREATE TABLE IF NOT EXISTS lead_reporting_controls (
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
-
-CREATE INDEX IF NOT EXISTS idx_lead_reporting_controls_can_report
-  ON lead_reporting_controls(can_report_leads);
+CREATE INDEX IF NOT EXISTS idx_lead_reporting_controls_can_report ON lead_reporting_controls(can_report_leads);
