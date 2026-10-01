@@ -88,7 +88,7 @@ export default function Experts(){
         <Link to="/how-it-works">How It Works</Link>
         <Link to="/about">About</Link>
         <Link to="/contact">Contact</Link>
-        <Link className="active" to="/experts">Experts</Link>
+        <Link className="active" to="/experts">Find Professionals</Link>
       </nav>
       <div className="experts-header-actions">
         <Link className="experts-quote" to="/quote">Get Free Quote <Icon name="arrow" size={15}/></Link>
@@ -201,7 +201,7 @@ export default function Experts(){
 
     <footer className="experts-footer">
       <div><img src="/brand/propulse-logo.svg" alt="ProPulse"/><p>Helping homeowners discover registered businesses and start structured project requirements.</p></div>
-      <div><b>Homeowners</b><Link to="/">Home</Link><Link to="/experts">Experts</Link><Link to="/projects">Projects</Link><Link to="/packages">Packages</Link></div>
+      <div><b>Homeowners</b><Link to="/">Home</Link><Link to="/experts">Find Professionals</Link><Link to="/projects">Projects</Link><Link to="/packages">Packages</Link></div>
       <div><b>Support</b><Link to="/how-it-works">How It Works</Link><Link to="/contact">Contact</Link></div>
       <div><b>Professionals</b><Link to="/professionals">Professional Home</Link><Link to="/login">Login</Link><Link to="/signup">Sign Up</Link></div>
     </footer>
