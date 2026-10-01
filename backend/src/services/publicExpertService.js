@@ -179,7 +179,15 @@ async function listPublicExperts({search='',industryId='',cityId='',verified='',
 
   return {
     data:publicRows,
-    settings,
+    settings:{
+      directoryEnabled:settings.directoryEnabled,
+      requireActiveMembership:settings.requireActiveMembership,
+      requireVerified:settings.requireVerified,
+      allowedPlanGroups:settings.allowedPlanGroups,
+      showProjects:settings.showProjects,
+      showVideos:settings.showVideos,
+      showPlans:settings.showPlans,
+    },
     pagination:{
       page:currentPage,pageSize:currentPageSize,total:Number(count||0),
       totalPages:count?Math.ceil(Number(count)/currentPageSize):0,
