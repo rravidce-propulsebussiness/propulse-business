@@ -61,19 +61,20 @@ async function main(){
     assert.strictEqual(detail.business_details,undefined,'Internal business_details must never be returned publicly');
     assert.strictEqual(detail.membership_expires_at,undefined,'Membership expiry must remain private');
 
-    const olderVideo=(await pool.query(
-      "INSERT INTO business_profile_projects(business_profile_id,title,video_url,video_published_at,is_published,sort_order) VALUES($1,$2,$3,CURRENT_TIMESTAMP-INTERVAL '2 days',TRUE,0) RETURNING id",
-      [subscribed.profileId,'Older runtime video','https://cdn.example.test/older.mp4']
+    const olderProject=(await pool.query(
+      "INSERT INTO business_profile_projects(business_profile_id,title,cover_image_url,published_at,is_published,sort_order) VALUES($1,$2,$3,CURRENT_TIMESTAMP-INTERVAL '2 days',TRUE,0) RETURNING id",
+      [subscribed.profileId,'Older runtime project','https://cdn.example.test/older.jpg']
     )).rows[0];
-    const newerVideo=(await pool.query(
-      "INSERT INTO business_profile_projects(business_profile_id,title,video_url,video_published_at,is_published,sort_order) VALUES($1,$2,$3,CURRENT_TIMESTAMP-INTERVAL '1 hour',TRUE,1) RETURNING id",
-      [subscribed.profileId,'Newer runtime video','https://cdn.example.test/newer.mp4']
+    const newerProject=(await pool.query(
+      "INSERT INTO business_profile_projects(business_profile_id,title,plan_url,published_at,is_published,sort_order) VALUES($1,$2,$3,CURRENT_TIMESTAMP-INTERVAL '1 hour',TRUE,1) RETURNING id",
+      [subscribed.profileId,'Newer runtime project','https://cdn.example.test/newer.pdf']
     )).rows[0];
-    let videos=await publicExpertService.listRecentProjectVideos({page:1,pageSize:12});
-    const fixtureVideos=videos.data.filter(item=>[olderVideo.id,newerVideo.id].includes(Number(item.project_id)));
-    assert.strictEqual(fixtureVideos.length,2,'Eligible published project videos must appear on Projects feed');
-    assert.strictEqual(Number(fixtureVideos[0].project_id),newerVideo.id,'Newest project video must appear first');
-    assert.strictEqual(Number(fixtureVideos[1].project_id),olderVideo.id,'Older project video must follow newer video');
+    let projects=await publicExpertService.listRecentProjects({page:1,pageSize:12});
+    const fixtureProjects=projects.data.filter(item=>[olderProject.id,newerProject.id].includes(Number(item.project_id)));
+    assert.strictEqual(fixtureProjects.length,2,'Eligible published projects must appear on Projects feed even without video');
+    assert.strictEqual(Number(fixtureProjects[0].project_id),newerProject.id,'Newest completed project must appear first');
+    assert.strictEqual(Number(fixtureProjects[1].project_id),olderProject.id,'Older completed project must follow newer project');
+    assert.strictEqual(fixtureProjects[0].plan_url,'https://cdn.example.test/newer.pdf','Project plan must be available on the Projects feed when enabled');
 
     await expertDirectoryService.updateBusinessVisibility(null,subscribed.userId,{isHidden:true,isFeatured:false,sortOrder:0});
     list=await publicExpertService.listPublicExperts({search:'Expert Runtime '+stamp,page:1,pageSize:48});
@@ -81,8 +82,8 @@ async function main(){
     detail=await publicExpertService.getPublicExpert(subscribed.profileId);
     assert.strictEqual(detail,null,'Admin-hidden business detail must not be fetchable directly');
 
-    videos=await publicExpertService.listRecentProjectVideos({page:1,pageSize:12});
-    assert.ok(!videos.data.some(item=>Number(item.business_profile_id)===subscribed.profileId),'Admin-hidden business videos must disappear from Projects feed');
+    projects=await publicExpertService.listRecentProjects({page:1,pageSize:12});
+    assert.ok(!projects.data.some(item=>Number(item.business_profile_id)===subscribed.profileId),'Admin-hidden business projects must disappear from Projects feed');
 
     console.log('Expert directory subscription runtime checks passed.');
   }finally{

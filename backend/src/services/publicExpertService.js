@@ -259,6 +259,66 @@ async function listRecentProjectVideos({page=1,pageSize=12}={}){
   };
 }
 
+async function listRecentProjects({page=1,pageSize=18}={}){
+  const settings=await expertDirectoryService.getSettings();
+  const currentPage=toPositiveInt(page,1,100000);
+  const currentPageSize=toPositiveInt(pageSize,18,48);
+  if(!settings.directoryEnabled||!settings.showProjects){
+    return {data:[],pagination:{page:currentPage,pageSize:currentPageSize,total:0,totalPages:0,hasNextPage:false,hasPreviousPage:false}};
+  }
+  const offset=(currentPage-1)*currentPageSize;
+  const params=[];
+  const conditions=["bpp.is_published=TRUE"];
+  addEligibilityConditions(settings,params,conditions);
+  const where='WHERE '+conditions.join(' AND ');
+  const total=Number((await pool.query(
+    `SELECT COUNT(*)::int AS total
+     FROM business_profile_projects bpp
+     JOIN business_profiles bp ON bp.id=bpp.business_profile_id
+     JOIN users u ON u.id=bp.user_id
+     LEFT JOIN business_expert_directory_settings beds ON beds.user_id=u.id
+     ${where}`,
+    params
+  )).rows[0]?.total||0);
+  const result=await pool.query(
+    `SELECT
+       bpp.id AS project_id,
+       bpp.title,
+       bpp.project_type,
+       bpp.description,
+       bpp.location_text,
+       bpp.completion_year,
+       bpp.area_text,
+       bpp.budget_text,
+       bpp.cover_image_url,
+       ${settings.showVideos?'bpp.video_url':'NULL::text AS video_url'},
+       ${settings.showPlans?'bpp.plan_url':'NULL::text AS plan_url'},
+       COALESCE(bpp.published_at,bpp.video_published_at,bpp.created_at) AS published_at,
+       bp.id AS business_profile_id,
+       bp.business_name,
+       EXISTS(SELECT 1 FROM company_proof_documents cpd WHERE cpd.user_id=u.id AND cpd.status='verified') AS is_verified,
+       mem.plan_group
+     FROM business_profile_projects bpp
+     JOIN business_profiles bp ON bp.id=bpp.business_profile_id
+     JOIN users u ON u.id=bp.user_id
+     LEFT JOIN business_expert_directory_settings beds ON beds.user_id=u.id
+     ${membershipLateral()}
+     ${where}
+     ORDER BY COALESCE(bpp.published_at,bpp.video_published_at,bpp.created_at) DESC,bpp.id DESC
+     LIMIT ${currentPageSize} OFFSET ${offset}`,
+    params
+  );
+  return {
+    data:result.rows,
+    pagination:{
+      page:currentPage,pageSize:currentPageSize,total,
+      totalPages:total?Math.ceil(total/currentPageSize):0,
+      hasNextPage:currentPage*currentPageSize<total,
+      hasPreviousPage:currentPage>1&&total>0,
+    },
+  };
+}
+
 async function getPublicExpert(expertId){
   const id=Number(expertId);
   if(!Number.isInteger(id)||id<=0)return null;
@@ -291,4 +351,4 @@ async function getPublicExpert(expertId){
   return {...base,services:services.rows,locations:locations.rows,projects:projects.rows,service_plans:plans.rows,directory_settings:{showProjects:settings.showProjects,showVideos:settings.showVideos,showPlans:settings.showPlans}};
 }
 
-module.exports={listPublicExperts,listRecentProjectVideos,getPublicExpert};
+module.exports={listPublicExperts,listRecentProjects,listRecentProjectVideos,getPublicExpert};

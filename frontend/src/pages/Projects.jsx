@@ -394,8 +394,8 @@ export default function Projects(){
   const [query,setQuery]=useState('')
   const [visible,setVisible]=useState(12)
   const [selectedProject,setSelectedProject]=useState(null)
-  const [recentVideos,setRecentVideos]=useState([])
-  const [videoLoading,setVideoLoading]=useState(true)
+  const [recentProjects,setRecentProjects]=useState([])
+  const [recentProjectsLoading,setRecentProjectsLoading]=useState(true)
 
   useEffect(()=>{
     window.scrollTo(0,0)
@@ -406,26 +406,34 @@ export default function Projects(){
 
   useEffect(()=>{
     let active=true
-    publicRequest('/experts/project-videos?page=1&pageSize=18')
+    publicRequest('/experts/projects?page=1&pageSize=18')
       .then(value=>{
         if(!active)return
         const rows=Array.isArray(value)?value:Array.isArray(value?.data)?value.data:[]
-        setRecentVideos(rows)
+        setRecentProjects(rows)
       })
-      .catch(()=>{if(active)setRecentVideos([])})
-      .finally(()=>{if(active)setVideoLoading(false)})
+      .catch(()=>{if(active)setRecentProjects([])})
+      .finally(()=>{if(active)setRecentProjectsLoading(false)})
     return()=>{active=false}
   },[])
 
-  const sortedVideos=useMemo(()=>[...recentVideos].sort((a,b)=>{
-    const right=new Date(b.video_published_at||0).getTime()
-    const left=new Date(a.video_published_at||0).getTime()
+  const sortedRecentProjects=useMemo(()=>[...recentProjects].sort((a,b)=>{
+    const right=new Date(b.published_at||0).getTime()
+    const left=new Date(a.published_at||0).getTime()
     return right-left||Number(b.project_id||0)-Number(a.project_id||0)
-  }),[recentVideos])
+  }),[recentProjects])
 
   function playableVideo(url){
     const value=String(url||'')
     return value.startsWith('/uploads/business-projects/')||/\.(mp4|mov|webm)(?:$|[?#])/i.test(value)
+  }
+
+  function imagePlan(url){
+    return /\.(?:jpg|jpeg|png|webp)(?:$|[?#])/i.test(String(url||''))
+  }
+
+  function pdfPlan(url){
+    return /\.pdf(?:$|[?#])/i.test(String(url||''))
   }
 
   function recentLabel(value){
@@ -589,25 +597,31 @@ export default function Projects(){
       </div>
     </header>
 
-    {(videoLoading||sortedVideos.length>0)&&<section className="pj-video-wrap">
+    {(recentProjectsLoading||sortedRecentProjects.length>0)&&<section className="pj-video-wrap">
       <div className="pj-video-heading">
-        <div><span>REAL PROFESSIONAL WORK</span><h2>Recent project videos</h2><p>Latest published videos from eligible ProPulse professionals appear first.</p></div>
+        <div><span>REAL PROFESSIONAL WORK</span><h2>Recent completed projects</h2><p>Published business projects appear automatically here, newest first.</p></div>
         <Link to="/experts">Find Professionals <Icon name="arrow" size={14}/></Link>
       </div>
-      {videoLoading?<div className="pj-video-loading">Loading recent project videos…</div>:<div className="pj-video-grid">
-        {sortedVideos.map(video=><article className="pj-video-card" key={video.project_id}>
+      {recentProjectsLoading?<div className="pj-video-loading">Loading recent completed projects…</div>:<div className="pj-video-grid">
+        {sortedRecentProjects.map(project=><article className="pj-video-card" key={project.project_id}>
           <div className="pj-video-media">
-            {playableVideo(video.video_url)
-              ?<video controls playsInline preload="metadata" poster={video.cover_image_url||undefined} src={video.video_url}/>
-              :video.cover_image_url
-                ?<a href={video.video_url} target="_blank" rel="noreferrer"><img src={video.cover_image_url} alt={video.title||'Project video'}/><span>Watch video ↗</span></a>
-                :<a className="pj-video-external" href={video.video_url} target="_blank" rel="noreferrer">Watch external video ↗</a>}
+            {playableVideo(project.video_url)
+              ?<video controls playsInline preload="metadata" poster={project.cover_image_url||undefined} src={project.video_url}/>
+              :project.cover_image_url
+                ?<img src={project.cover_image_url} alt={project.title||'Completed project'}/>
+                :imagePlan(project.plan_url)
+                  ?<img src={project.plan_url} alt={(project.title||'Project')+' plan / drawing'}/>
+                  :<div className="pj-project-media-placeholder"><Icon name="building" size={30}/><b>{pdfPlan(project.plan_url)?'PDF plan available':'Completed project'}</b></div>}
           </div>
           <div className="pj-video-copy">
-            <div className="pj-video-meta"><span>{video.project_type||'Completed project'}</span><time>{recentLabel(video.video_published_at)}</time></div>
-            <h3>{video.title}</h3>
-            <p>{video.description||'Completed project shared by a ProPulse professional.'}</p>
-            <div className="pj-video-business"><div><b>{video.business_name}</b><small>{video.location_text||'Service location available in profile'}</small></div>{video.is_verified&&<span><Icon name="shield" size={13}/> Verified</span>}</div>
+            <div className="pj-video-meta"><span>{project.project_type||'Completed project'}</span><time>{recentLabel(project.published_at)}</time></div>
+            <h3>{project.title}</h3>
+            <p>{project.description||'Completed project shared by a ProPulse professional.'}</p>
+            <div className="pj-project-assets">
+              {project.video_url&&!playableVideo(project.video_url)&&<a href={project.video_url} target="_blank" rel="noreferrer">Watch video ↗</a>}
+              {project.plan_url&&<a href={project.plan_url} target="_blank" rel="noreferrer">{pdfPlan(project.plan_url)?'View PDF plan ↗':'View plan / drawing ↗'}</a>}
+            </div>
+            <div className="pj-video-business"><div><b>{project.business_name}</b><small>{project.location_text||'Service location available in profile'}</small></div>{project.is_verified&&<span><Icon name="shield" size={13}/> Verified</span>}</div>
           </div>
         </article>)}
       </div>}
