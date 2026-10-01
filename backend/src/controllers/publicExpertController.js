@@ -5,6 +5,11 @@ async function list(req,res){
   catch(error){console.error('List public experts failed:',error);return res.status(500).json({error:'Failed to load subscribed professionals'});}
 }
 
+async function projects(req,res){
+  try{return res.json(await publicExpertService.listRecentProjects(req.query||{}));}
+  catch(error){console.error('List recent projects failed:',error);return res.status(500).json({error:'Failed to load recent projects'});}
+}
+
 async function projectVideos(req,res){
   try{return res.json(await publicExpertService.listRecentProjectVideos(req.query||{}));}
   catch(error){console.error('List recent project videos failed:',error);return res.status(500).json({error:'Failed to load recent project videos'});}
@@ -18,4 +23,4 @@ async function get(req,res){
   }catch(error){console.error('Get public expert failed:',error);return res.status(500).json({error:'Failed to load business profile'});}
 }
 
-module.exports={list,projectVideos,get};
+module.exports={list,projects,projectVideos,get};
