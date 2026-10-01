@@ -31,6 +31,10 @@ function unique(values){
   return [...new Set(values.filter(Boolean))]
 }
 
+function openLeadPopup(flowKey=''){
+  window.dispatchEvent(new CustomEvent('propulse:open-lead-popup',{detail:{flowKey}}))
+}
+
 export default function Experts(){
   const [experts,setExperts]=useState([])
   const [industries,setIndustries]=useState([])
@@ -91,7 +95,7 @@ export default function Experts(){
         <Link className="active" to="/experts">Find Professionals</Link>
       </nav>
       <div className="experts-header-actions">
-        <Link className="experts-quote" to="/quote">Get Free Quote <Icon name="arrow" size={15}/></Link>
+        <Link className="experts-quote" to="/quote" onClick={event=>{event.preventDefault();openLeadPopup('')}}>Get Free Quote <Icon name="arrow" size={15}/></Link>
         <Link className="experts-pro" to="/professionals">For Professionals</Link>
       </div>
     </header>
@@ -103,7 +107,7 @@ export default function Experts(){
         <p>Explore registered construction, interior and real-estate businesses on ProPulse. Compare services and service areas before you create your requirement.</p>
         <div className="experts-hero-actions">
           <a href="#expert-directory">Explore Experts <Icon name="arrow" size={15}/></a>
-          <Link to="/quote">Tell Us Your Requirement</Link>
+          <Link to="/quote" onClick={event=>{event.preventDefault();openLeadPopup('')}}>Tell Us Your Requirement</Link>
         </div>
         <div className="experts-hero-points">
           <span><Icon name="shield" size={17}/> Verification status shown clearly</span>
@@ -180,7 +184,7 @@ export default function Experts(){
     <section className="experts-trust-note">
       <div><Icon name="shield" size={28}/></div>
       <div><h2>Registered does not always mean verified.</h2><p>ProPulse shows a separate verification badge when a business proof has been reviewed and approved. Always review scope, quotation, warranty terms, materials and agreements before choosing a professional.</p></div>
-      <Link to="/quote">Get Free Consultation <Icon name="arrow" size={15}/></Link>
+      <Link to="/quote" onClick={event=>{event.preventDefault();openLeadPopup('')}}>Get Free Consultation <Icon name="arrow" size={15}/></Link>
     </section>
 
     {selected&&<div className="expert-modal-backdrop" onMouseDown={event=>{if(event.target===event.currentTarget)setSelected(null)}}>
@@ -195,7 +199,7 @@ export default function Experts(){
           <div><span>SERVICE AREAS</span><h3>Where they serve</h3><div className="expert-detail-list">{unique((selected.locations||[]).map(item=>[item.cityName,item.stateName].filter(Boolean).join(', '))).map(name=><b key={name}>{name}</b>)}</div></div>
         </div>
         <div className="expert-modal-note"><Icon name="shield" size={18}/><span>Direct phone and email details are not displayed publicly. Create your requirement to connect through the ProPulse lead process.</span></div>
-        <div className="expert-modal-actions"><Link to="/quote" onClick={()=>setSelected(null)}>Start Your Requirement <Icon name="arrow" size={14}/></Link><button type="button" onClick={()=>setSelected(null)}>Continue Browsing</button></div>
+        <div className="expert-modal-actions"><Link to="/quote" onClick={event=>{event.preventDefault();setSelected(null);openLeadPopup('')}}>Start Your Requirement <Icon name="arrow" size={14}/></Link><button type="button" onClick={()=>setSelected(null)}>Continue Browsing</button></div>
       </section>
     </div>}
 
