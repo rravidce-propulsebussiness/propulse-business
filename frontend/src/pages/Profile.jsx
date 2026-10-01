@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { authRequest, saveSession, getUser } from '../utils/auth'
 import UserHeader from '../components/UserHeader'
 import './Profile.css'
+import {playSound} from '../utils/soundEffects'
 
 const emptyService=()=>({industryId:'',serviceId:'',subserviceId:''})
 const emptyLocation=()=>({stateId:'',cityId:''})
@@ -134,8 +135,10 @@ export default function Profile(){
         timeoutMs:120000,
       })
       setProjects(items=>items.map((item,i)=>i===index?{...item,videoUrl:result.url||'',videoPublishedAt:result.uploadedAt||''}:item))
+      playSound('upload')
       setMessage('Video uploaded. Save changes to publish it on your profile and Projects page.')
     }catch(err){
+      playSound('warning')
       setError(err.message||'Unable to upload project video.')
     }finally{
       setVideoUploads(current=>({...current,[index]:false}))
@@ -170,8 +173,10 @@ export default function Profile(){
         timeoutMs:90000,
       })
       setProjects(items=>items.map((item,i)=>i===index?{...item,planUrl:result.url||''}:item))
+      playSound('upload')
       setMessage('Plan / drawing uploaded. Save changes to attach it to this project.')
     }catch(err){
+      playSound('warning')
       setError(err.message||'Unable to upload plan / drawing.')
     }finally{
       setPlanUploads(current=>({...current,[index]:false}))
@@ -220,8 +225,9 @@ export default function Profile(){
       if(savedProfile){
         setProjects((savedProfile.projects||[]).map(mapProject));setPlans((savedProfile.service_plans||[]).map(mapPlan));setDirectoryStatus(savedProfile.directory_status||null)
       }
+      playSound('success')
       setMessage('Profile saved successfully. Public directory content is up to date.')
-    }catch(err){setError(err.message)}finally{setSaving(false)}
+    }catch(err){playSound('warning');setError(err.message)}finally{setSaving(false)}
   }
 
   if(loading)return <><UserHeader/><div className="profile-page"><div className="profile-loading">Loading your business profile…</div></div></>

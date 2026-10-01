@@ -49,6 +49,7 @@ const navigation=[
     {to:'/admin/test-reset',label:'Test Data Reset'}
   ]},
   {type:'group',key:'website',label:'Website & Content',icon:'▧',children:[
+    {to:'/admin/sound-effects',label:'Sound Effects'},
     {to:'/admin/homepage-media',label:'Homepage Media'},
     {to:'/admin/upcoming-features',label:'Upcoming Features'},
     {to:'/admin/contact-social',label:'Contact & Social'},

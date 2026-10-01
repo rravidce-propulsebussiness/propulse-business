@@ -30,6 +30,7 @@ const faqRoutes=require('./routes/faqRoutes');const upcomingFeatureRoutes=requir
 const homepageMediaRoutes=require('./routes/homepageMediaRoutes');
 const contactRoutes=require('./routes/contactRoutes');
 const notificationRoutes=require('./routes/notificationRoutes');
+const soundSettingsRoutes=require('./routes/soundSettingsRoutes');
 const paymentWebhookRoutes=require('./routes/paymentWebhookRoutes');
 const observabilityRoutes=require('./routes/observabilityRoutes');
 const adminFaqRoutes=require('./routes/adminFaqRoutes');
@@ -116,6 +117,7 @@ app.use('/api/customer-flows',express.json({limit:'64kb'}));
 app.use(express.json({limit:DEFAULT_JSON_BYTES}));
 app.use('/api',(req,res,next)=>{res.setHeader('Cache-Control','no-store, private');res.setHeader('Pragma','no-cache');res.setHeader('Expires','0');next();});
 app.use('/api',csrfProtection);
+app.use('/api/sound-settings',soundSettingsRoutes);
 const apiRateLimit=rateLimit({windowMs:15*60*1000,max:600,scope:'global',shared:true,sharedChunkSize:10});
 app.use('/api',apiRateLimit);
 app.use('/uploads',(req,res,next)=>{if(req.path==='/company-proofs'||req.path.startsWith('/company-proofs/'))return res.status(404).json({error:'Not found'});if(req.path==='/private-proofs'||req.path.startsWith('/private-proofs/'))return res.status(404).json({error:'Not found'});if(req.path==='/lead-references'||req.path.startsWith('/lead-references/'))return res.status(404).json({error:'Not found'});return next();});
