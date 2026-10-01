@@ -86,6 +86,15 @@ function makeSubmissionKey() {
   return 'req_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 12)
 }
 
+function fileToDataUrl(file) {
+  return new Promise((resolve,reject)=>{
+    const reader=new FileReader()
+    reader.onload=()=>resolve(String(reader.result||''))
+    reader.onerror=()=>reject(reader.error||new Error('Failed to read file'))
+    reader.readAsDataURL(file)
+  })
+}
+
 function collection(value) {
   if (Array.isArray(value)) return value
   if (Array.isArray(value?.data)) return value.data
@@ -449,7 +458,33 @@ export default function RequirementWizard({ flowKey, onCompletionChange }) {
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
 
-  async function submit(event) {
+  async function uploadInteriorReferences(files,leadId) {
+    if(flowKey!=='design'||!leadId||!Array.isArray(files)||!files.length)return{referenceFilesUploaded:0,referenceFilesFailed:0}
+    let uploaded=0
+    let failed=0
+    for(const file of files.slice(0,8)){
+      try{
+        const dataUrl=await fileToDataUrl(file)
+        await publicRequest('/customer-flows/'+flowKey+'/'+leadId+'/attachments',{
+          method:'POST',
+          body:JSON.stringify({
+            submissionKey,
+            originalName:file.name,
+            attachmentKey:[file.name,file.size,file.lastModified].join(':').slice(0,240),
+            dataUrl,
+          }),
+          timeoutMs:45000,
+        })
+        uploaded+=1
+      }catch(error){
+        console.error('Reference upload failed:',error)
+        failed+=1
+      }
+    }
+    return{referenceFilesUploaded:uploaded,referenceFilesFailed:failed}
+  }
+
+  async function submit(event,referenceFiles=[]) {
     event.preventDefault()
     const missing = questions.find(question => question.isRequired && isEmptyAnswer(answers[question.questionKey]))
     if (missing) {
@@ -488,7 +523,8 @@ export default function RequirementWizard({ flowKey, onCompletionChange }) {
         method: 'POST',
         body: JSON.stringify({ flowToken: flow.flowToken, answers, contact: { ...contact, phone }, consent: true, submissionKey, website })
       })
-      setSubmissionResult({ ...(result || {}), quotation })
+      const referenceUpload = await uploadInteriorReferences(referenceFiles,result?.leadId)
+      setSubmissionResult({ ...(result || {}), quotation, ...referenceUpload })
       setState({ loading: false, saving: false, error: '', success: true })
       onCompletionChange?.(true)
       window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -551,6 +587,8 @@ export default function RequirementWizard({ flowKey, onCompletionChange }) {
             <span>This is a package reference, not an instant project quotation.</span>
           </div>
           {submissionResult?.leadId && <div className="rq-success-reference">Request ID <b>#{submissionResult.leadId}</b></div>}
+          {submissionResult?.referenceFilesUploaded>0&&<div className="rq-reference-upload-status">✓ {submissionResult.referenceFilesUploaded} floor plan / reference file{submissionResult.referenceFilesUploaded===1?'':'s'} attached to this request.</div>}
+          {submissionResult?.referenceFilesFailed>0&&<div className="rq-reference-upload-status warning">Request saved, but {submissionResult.referenceFilesFailed} reference file{submissionResult.referenceFilesFailed===1?'':'s'} could not be uploaded.</div>}
           <div className="rq-success-actions">
             <button className="rq-download-quote" type="button" onClick={downloadInteriorBrochure}>↓ Download Interior Package Brochure</button>
             <Link className="rq-back-home" to="/">Back home</Link>
