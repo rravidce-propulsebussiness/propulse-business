@@ -77,7 +77,7 @@ function Icon({name,size=18}){
 export default function GlobalLeadPopup(){
   const location=useLocation()
   const navigate=useNavigate()
-  const eligible=location.pathname!=='/'&&!EXCLUDED_PREFIXES.some(prefix=>location.pathname.startsWith(prefix))
+  const eligible=!EXCLUDED_PREFIXES.some(prefix=>location.pathname.startsWith(prefix))
   const [open,setOpen]=useState(false)
   const [cycle,setCycle]=useState(0)
   const [cities,setCities]=useState([])
@@ -130,13 +130,14 @@ export default function GlobalLeadPopup(){
     const handler=event=>{
       if(!eligible)return
       const detail=event.detail||{}
+      const hasFlow=Object.prototype.hasOwnProperty.call(detail,'flowKey')
       const nextFlow=['build','design','property'].includes(detail.flowKey)?detail.flowKey:''
       const packageNote=detail.packageName
         ? (nextFlow==='design'?'Interior package preference: ':'Package preference: ')+detail.packageName
         : ''
       setForm(current=>({
         ...EMPTY,
-        flowKey:nextFlow||current.flowKey,
+        flowKey:hasFlow?nextFlow:current.flowKey,
         name:current.name,
         phone:current.phone,
         additional:packageNote,
