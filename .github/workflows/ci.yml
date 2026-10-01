@@ -222,6 +222,14 @@ jobs:
           DB_USER: ci_smoke
           DB_PASSWORD: ci_smoke
         run: node scripts/check-membership-integrity.js
+      - name: Verify subscribed Experts directory runtime
+        env:
+          DB_HOST: 127.0.0.1
+          DB_PORT: 5432
+          DB_NAME: ci_smoke
+          DB_USER: ci_smoke
+          DB_PASSWORD: ci_smoke
+        run: npm run test:expert-directory-runtime
       - name: Verify payment and wallet integrity
         env:
           DB_HOST: 127.0.0.1

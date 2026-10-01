@@ -28,6 +28,7 @@ const navigation=[
   ]},
   {type:'group',key:'memberships',label:'Memberships',icon:'★',children:[
     {to:'/admin/memberships',label:'GROW & SCALE',aliases:['/admin/membership-plans','/admin/service-pricing']},
+    {to:'/admin/expert-directory',label:'Expert Directory'},
     {to:'/admin/coupons',label:'Coupons'}
   ]},
   {type:'group',key:'lead-partners',label:'Lead Partners',icon:'♙',children:[
