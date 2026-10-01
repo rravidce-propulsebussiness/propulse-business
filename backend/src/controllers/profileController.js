@@ -1,5 +1,6 @@
 const profileService = require('../services/profileService');
 const { sendError } = require('../utils/errorResponse');
+const projectVideoService = require('../services/projectVideoService');
 
 async function getProfile(req, res) {
   try {
@@ -35,4 +36,17 @@ async function updateProfile(req, res) {
   }
 }
 
-module.exports = { getProfile, updateProfile };
+async function uploadProjectVideo(req,res){
+  try{
+    if(req.user?.role!=='business')return res.status(403).json({error:'Business account required'});
+    const result=await projectVideoService.saveProjectVideo(req.user.id,req.get('content-type'),req.body);
+    return res.status(201).json(result);
+  }catch(error){
+    const bad=new Set(['INVALID_PROJECT_VIDEO_TYPE','INVALID_PROJECT_VIDEO','PROJECT_VIDEO_TOO_LARGE']);
+    const status=bad.has(error.code)?400:500;
+    if(status===500)console.error('Project video upload failed:',error);
+    return sendError(res,status,error,'Failed to upload project video',{code:error.code});
+  }
+}
+
+module.exports = { getProfile, updateProfile, uploadProjectVideo };

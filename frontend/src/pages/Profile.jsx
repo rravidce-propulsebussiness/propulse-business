@@ -6,7 +6,7 @@ import './Profile.css'
 
 const emptyService=()=>({industryId:'',serviceId:'',subserviceId:''})
 const emptyLocation=()=>({stateId:'',cityId:''})
-const emptyProject=()=>({title:'',projectType:'',description:'',locationText:'',completionYear:'',areaText:'',budgetText:'',coverImageUrl:'',videoUrl:'',planUrl:'',isPublished:true})
+const emptyProject=()=>({title:'',projectType:'',description:'',locationText:'',completionYear:'',areaText:'',budgetText:'',coverImageUrl:'',videoUrl:'',videoPublishedAt:'',planUrl:'',isPublished:true})
 const emptyPlan=()=>({title:'',description:'',priceFrom:'',durationLabel:'',inclusions:'',isPublished:true})
 
 function reasonText(status){
@@ -31,6 +31,7 @@ function mapProject(item){
     budgetText:item.budget_text||'',
     coverImageUrl:item.cover_image_url||'',
     videoUrl:item.video_url||'',
+    videoPublishedAt:item.video_published_at||'',
     planUrl:item.plan_url||'',
     isPublished:item.is_published!==false,
   }
@@ -62,6 +63,7 @@ export default function Profile(){
   const [projects,setProjects]=useState([])
   const [plans,setPlans]=useState([])
   const [directoryStatus,setDirectoryStatus]=useState(null)
+  const [videoUploads,setVideoUploads]=useState({})
   const [loading,setLoading]=useState(true)
   const [saving,setSaving]=useState(false)
   const [message,setMessage]=useState('')
@@ -106,6 +108,42 @@ export default function Profile(){
   function updateLocation(index,field,value){setLocationSelections(items=>items.map((x,i)=>i!==index?x:field==='stateId'?{stateId:value,cityId:''}:{...x,cityId:value}));setMessage('')}
   function updateProject(index,field,value){setProjects(items=>items.map((item,i)=>i===index?{...item,[field]:value}:item));setMessage('')}
   function updatePlan(index,field,value){setPlans(items=>items.map((item,i)=>i===index?{...item,[field]:value}:item));setMessage('')}
+
+  async function uploadProjectVideo(index,file){
+    if(!file)return
+    const extension=String(file.name||'').toLowerCase().split('.').pop()
+    const inferred={mp4:'video/mp4',mov:'video/quicktime',webm:'video/webm'}[extension]
+    const mime=file.type||inferred||''
+    if(!['video/mp4','video/quicktime','video/webm'].includes(mime)){
+      setError('Only MP4, MOV and WebM project videos are supported.')
+      return
+    }
+    if(file.size>50*1024*1024){
+      setError('Project videos must be 50 MB or smaller.')
+      return
+    }
+    try{
+      setVideoUploads(current=>({...current,[index]:true}))
+      setError('');setMessage('')
+      const result=await authRequest('/profile/projects/video',{
+        method:'POST',
+        headers:{'Content-Type':mime},
+        body:file,
+        timeoutMs:120000,
+      })
+      setProjects(items=>items.map((item,i)=>i===index?{...item,videoUrl:result.url||'',videoPublishedAt:result.uploadedAt||''}:item))
+      setMessage('Video uploaded. Save changes to publish it on your profile and Projects page.')
+    }catch(err){
+      setError(err.message||'Unable to upload project video.')
+    }finally{
+      setVideoUploads(current=>({...current,[index]:false}))
+    }
+  }
+
+  function playableVideo(url){
+    const value=String(url||'')
+    return value.startsWith('/uploads/business-projects/')||/\.(mp4|mov|webm)(?:$|[?#])/i.test(value)
+  }
 
   function addAllServicesForIndustry(index){
     const industryId=serviceSelections[index]?.industryId
@@ -200,10 +238,10 @@ export default function Profile(){
           </section>
 
           <section className="profile-panel profile-project-panel" id="profile-projects">
-            <div className="panel-title"><div><span>05</span><h2>Completed projects</h2><p>Add up to 20 real projects. Images appear as portfolio cards; video and plan links open separately.</p></div><button type="button" onClick={()=>setProjects(items=>[...items,emptyProject()])}>+ Add project</button></div>
+            <div className="panel-title"><div><span>05</span><h2>Completed projects</h2><p>Add up to 20 real projects. Upload MP4, MOV or WebM videos directly; published videos also appear newest-first on the Projects page.</p></div><button type="button" onClick={()=>setProjects(items=>[...items,emptyProject()])}>+ Add project</button></div>
             <div className="profile-showcase-list">{projects.map((project,index)=><article className="profile-showcase-card" key={project.id||`project-${index}`}>
               <div className="profile-showcase-card-head"><div><span>PROJECT {String(index+1).padStart(2,'0')}</span><h3>{project.title||'Untitled project'}</h3></div><div><label className="profile-inline-check"><input type="checkbox" checked={project.isPublished} onChange={e=>updateProject(index,'isPublished',e.target.checked)}/> Public</label><button type="button" className="row-remove" onClick={()=>setProjects(items=>items.filter((_,i)=>i!==index))}>Remove</button></div></div>
-              <div className="profile-showcase-grid"><label>Project title<input value={project.title} maxLength="180" onChange={e=>updateProject(index,'title',e.target.value)} placeholder="3BHK premium apartment interiors"/></label><label>Project type<input value={project.projectType} maxLength="120" onChange={e=>updateProject(index,'projectType',e.target.value)} placeholder="Interior / Villa / Commercial"/></label><label>Location<input value={project.locationText} maxLength="180" onChange={e=>updateProject(index,'locationText',e.target.value)} placeholder="Hyderabad, Telangana"/></label><label>Completion year<input type="number" min="1950" max="2200" value={project.completionYear} onChange={e=>updateProject(index,'completionYear',e.target.value)}/></label><label>Area<input value={project.areaText} maxLength="120" onChange={e=>updateProject(index,'areaText',e.target.value)} placeholder="2,400 sq ft"/></label><label>Project value / budget<input value={project.budgetText} maxLength="120" onChange={e=>updateProject(index,'budgetText',e.target.value)} placeholder="₹28–32 lakh"/></label><label className="wide">Description<textarea rows="3" value={project.description} maxLength="3000" onChange={e=>updateProject(index,'description',e.target.value)} placeholder="Scope completed, design approach, materials and outcome…"/></label><label className="wide">Cover image URL<input value={project.coverImageUrl} onChange={e=>updateProject(index,'coverImageUrl',e.target.value)} placeholder="https://… image"/></label><label>Video URL<input value={project.videoUrl} onChange={e=>updateProject(index,'videoUrl',e.target.value)} placeholder="https://… video / reel"/></label><label>Plan / drawing URL<input value={project.planUrl} onChange={e=>updateProject(index,'planUrl',e.target.value)} placeholder="https://… plan or PDF"/></label></div>
+              <div className="profile-showcase-grid"><label>Project title<input value={project.title} maxLength="180" onChange={e=>updateProject(index,'title',e.target.value)} placeholder="3BHK premium apartment interiors"/></label><label>Project type<input value={project.projectType} maxLength="120" onChange={e=>updateProject(index,'projectType',e.target.value)} placeholder="Interior / Villa / Commercial"/></label><label>Location<input value={project.locationText} maxLength="180" onChange={e=>updateProject(index,'locationText',e.target.value)} placeholder="Hyderabad, Telangana"/></label><label>Completion year<input type="number" min="1950" max="2200" value={project.completionYear} onChange={e=>updateProject(index,'completionYear',e.target.value)}/></label><label>Area<input value={project.areaText} maxLength="120" onChange={e=>updateProject(index,'areaText',e.target.value)} placeholder="2,400 sq ft"/></label><label>Project value / budget<input value={project.budgetText} maxLength="120" onChange={e=>updateProject(index,'budgetText',e.target.value)} placeholder="₹28–32 lakh"/></label><label className="wide">Description<textarea rows="3" value={project.description} maxLength="3000" onChange={e=>updateProject(index,'description',e.target.value)} placeholder="Scope completed, design approach, materials and outcome…"/></label><label className="wide">Cover image URL<input value={project.coverImageUrl} onChange={e=>updateProject(index,'coverImageUrl',e.target.value)} placeholder="https://… image"/></label><div className="profile-video-field"><label>Video URL<input value={project.videoUrl} onChange={e=>updateProject(index,'videoUrl',e.target.value)} placeholder="Upload a video below or paste https://…"/></label><label className={'profile-video-upload '+(videoUploads[index]?'busy':'')}><span>{videoUploads[index]?'Uploading video…':'Upload video'}</span><small>MP4, MOV or WebM · max 50 MB</small><input type="file" accept="video/mp4,video/quicktime,video/webm,.mp4,.mov,.webm" disabled={Boolean(videoUploads[index])} onChange={e=>{const file=e.target.files?.[0];e.target.value='';uploadProjectVideo(index,file)}}/></label>{project.videoUrl&&playableVideo(project.videoUrl)&&<video className="profile-project-video-preview" controls preload="metadata" src={project.videoUrl}/>} {project.videoUrl&&!playableVideo(project.videoUrl)&&<a className="profile-video-link" href={project.videoUrl} target="_blank" rel="noreferrer">Open external video ↗</a>}</div><label>Plan / drawing URL<input value={project.planUrl} onChange={e=>updateProject(index,'planUrl',e.target.value)} placeholder="https://… plan or PDF"/></label></div>
             </article>)}{!projects.length&&<div className="profile-showcase-empty"><b>No completed projects added yet.</b><span>Add real work to make your public profile stronger.</span></div>}</div>
           </section>
 

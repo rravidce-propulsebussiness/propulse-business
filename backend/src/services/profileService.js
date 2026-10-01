@@ -1,5 +1,6 @@
 const pool = require('../config/database');
 const expertDirectoryService = require('./expertDirectoryService');
+const projectVideoService = require('./projectVideoService');
 
 function profileError(message,code='INVALID_PROFILE_SELECTION'){
   return Object.assign(new Error(message),{code});
@@ -31,6 +32,7 @@ function normalizeProjects(projects){
     const completionYear=item?.completionYear==null||item.completionYear===''?null:Number(item.completionYear);
     if(completionYear!==null&&(!Number.isInteger(completionYear)||completionYear<1950||completionYear>2200))throw profileError('Project completion year is invalid');
     return {
+      id:Number.isInteger(Number(item?.id))&&Number(item.id)>0?Number(item.id):null,
       title:cleanText(item?.title,180,'Project title',{required:true}),
       projectType:cleanText(item?.projectType,120,'Project type'),
       description:cleanText(item?.description,3000,'Project description'),
@@ -111,7 +113,7 @@ async function getProfile(userId, client = pool) {
     ),
     client.query(
       `SELECT id,title,project_type,description,location_text,completion_year,area_text,budget_text,
-              cover_image_url,video_url,plan_url,sort_order,is_published
+              cover_image_url,video_url,video_published_at,plan_url,sort_order,is_published
        FROM business_profile_projects
        WHERE business_profile_id=$1
        ORDER BY sort_order,id`, [profile.id]
@@ -231,6 +233,32 @@ async function updateProfile(userId, payload) {
     if (!profile.rows.length) throw profileError('Business profile not found','PROFILE_NOT_FOUND');
 
     const profileId = profile.rows[0].id;
+    const existingProjects=(await client.query(
+      'SELECT id,video_url,video_published_at FROM business_profile_projects WHERE business_profile_id=$1',
+      [profileId]
+    )).rows;
+    const existingById=new Map(existingProjects.map(item=>[Number(item.id),item]));
+    const projectsForSave=normalizedProjects.map(item=>{
+      let videoPublishedAt=null;
+      if(item.videoUrl){
+        if(item.videoUrl.startsWith('/uploads/')&&!item.videoUrl.startsWith('/uploads/business-projects/')){
+          throw profileError('Uploaded project video URL is invalid');
+        }
+        const managed=projectVideoService.managedVideoInfo(userId,item.videoUrl);
+        if(managed) videoPublishedAt=managed.uploadedAt;
+        else{
+          const previous=item.id?existingById.get(item.id):null;
+          videoPublishedAt=previous&&previous.video_url===item.videoUrl&&previous.video_published_at
+            ? previous.video_published_at
+            : new Date();
+        }
+      }
+      return {...item,videoPublishedAt};
+    });
+    const currentManagedUrls=new Set(projectsForSave.map(item=>item.videoUrl).filter(url=>String(url||'').startsWith('/uploads/business-projects/')));
+    const removedManagedUrls=existingProjects
+      .map(item=>item.video_url)
+      .filter(url=>String(url||'').startsWith('/uploads/business-projects/')&&!currentManagedUrls.has(url));
     await client.query('UPDATE business_profile_services SET is_active = FALSE, updated_at = CURRENT_TIMESTAMP WHERE business_profile_id = $1', [profileId]);
     await client.query(`
       INSERT INTO business_profile_services (business_profile_id,industry_id,service_id,subservice_id,is_active)
@@ -250,19 +278,19 @@ async function updateProfile(userId, payload) {
     `,[profileId,validatedSelections.locations.map(x=>x.stateId),validatedSelections.locations.map(x=>x.cityId),validatedSelections.locations.map(x=>x.subcityId),validatedSelections.locations.map(x=>x.pincode)]);
 
     await client.query('DELETE FROM business_profile_projects WHERE business_profile_id=$1',[profileId]);
-    if(normalizedProjects.length){
+    if(projectsForSave.length){
       await client.query(`
         INSERT INTO business_profile_projects
-          (business_profile_id,title,project_type,description,location_text,completion_year,area_text,budget_text,cover_image_url,video_url,plan_url,sort_order,is_published)
-        SELECT $1,x.title,x.project_type,x.description,x.location_text,x.completion_year,x.area_text,x.budget_text,x.cover_image_url,x.video_url,x.plan_url,x.sort_order,x.is_published
+          (business_profile_id,title,project_type,description,location_text,completion_year,area_text,budget_text,cover_image_url,video_url,video_published_at,plan_url,sort_order,is_published)
+        SELECT $1,x.title,x.project_type,x.description,x.location_text,x.completion_year,x.area_text,x.budget_text,x.cover_image_url,x.video_url,x.video_published_at,x.plan_url,x.sort_order,x.is_published
         FROM jsonb_to_recordset($2::jsonb) AS x(
           title text,project_type text,description text,location_text text,completion_year int,area_text text,budget_text text,
-          cover_image_url text,video_url text,plan_url text,sort_order int,is_published boolean
+          cover_image_url text,video_url text,video_published_at timestamp,plan_url text,sort_order int,is_published boolean
         )
-      `,[profileId,JSON.stringify(normalizedProjects.map(item=>({
+      `,[profileId,JSON.stringify(projectsForSave.map(item=>({
         title:item.title,project_type:item.projectType,description:item.description,location_text:item.locationText,
         completion_year:item.completionYear,area_text:item.areaText,budget_text:item.budgetText,cover_image_url:item.coverImageUrl,
-        video_url:item.videoUrl,plan_url:item.planUrl,sort_order:item.sortOrder,is_published:item.isPublished,
+        video_url:item.videoUrl,video_published_at:item.videoPublishedAt?new Date(item.videoPublishedAt).toISOString():null,plan_url:item.planUrl,sort_order:item.sortOrder,is_published:item.isPublished,
       })))]);
     }
 
@@ -283,6 +311,8 @@ async function updateProfile(userId, payload) {
 
     const result = await getProfile(userId, client);
     await client.query('COMMIT');
+    projectVideoService.removeManagedProjectVideos(userId,removedManagedUrls)
+      .catch(error=>console.error('Remove unused project video failed:',error?.message||error));
     return { user: { ...user.rows[0], profile: result } };
   } catch (error) {
     await client.query('ROLLBACK');

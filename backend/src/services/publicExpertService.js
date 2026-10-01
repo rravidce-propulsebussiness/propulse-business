@@ -197,6 +197,68 @@ async function listPublicExperts({search='',industryId='',cityId='',verified='',
   };
 }
 
+async function listRecentProjectVideos({page=1,pageSize=12}={}){
+  const settings=await expertDirectoryService.getSettings();
+  const currentPage=toPositiveInt(page,1,100000);
+  const currentPageSize=toPositiveInt(pageSize,12,36);
+  if(!settings.directoryEnabled||!settings.showProjects||!settings.showVideos){
+    return {data:[],pagination:{page:currentPage,pageSize:currentPageSize,total:0,totalPages:0,hasNextPage:false,hasPreviousPage:false}};
+  }
+  const offset=(currentPage-1)*currentPageSize;
+  const params=[];
+  const conditions=["bpp.is_published=TRUE","COALESCE(bpp.video_url,'')<>''"];
+  addEligibilityConditions(settings,params,conditions);
+  const where='WHERE '+conditions.join(' AND ');
+  const total=Number((await pool.query(
+    `SELECT COUNT(*)::int AS total
+     FROM business_profile_projects bpp
+     JOIN business_profiles bp ON bp.id=bpp.business_profile_id
+     JOIN users u ON u.id=bp.user_id
+     LEFT JOIN business_expert_directory_settings beds ON beds.user_id=u.id
+     ${where}`,
+    params
+  )).rows[0]?.total||0);
+  const queryParams=[...params,currentPageSize,offset];
+  const result=await pool.query(
+    `SELECT
+       bpp.id AS project_id,
+       bpp.title,
+       bpp.project_type,
+       bpp.description,
+       bpp.location_text,
+       bpp.completion_year,
+       bpp.area_text,
+       bpp.budget_text,
+       bpp.cover_image_url,
+       bpp.video_url,
+       COALESCE(bpp.video_published_at,bpp.created_at) AS video_published_at,
+       bp.id AS business_profile_id,
+       bp.business_name,
+       EXISTS(SELECT 1 FROM company_proof_documents cpd WHERE cpd.user_id=u.id AND cpd.status='verified') AS is_verified,
+       mem.plan_group
+     FROM business_profile_projects bpp
+     JOIN business_profiles bp ON bp.id=bpp.business_profile_id
+     JOIN users u ON u.id=bp.user_id
+     LEFT JOIN business_expert_directory_settings beds ON beds.user_id=u.id
+     ${membershipLateral()}
+     ${where}
+     ORDER BY COALESCE(bpp.video_published_at,bpp.created_at) DESC,bpp.id DESC
+     LIMIT ${queryParams.length-1} OFFSET ${queryParams.length}`,
+    queryParams
+  );
+  return {
+    data:result.rows,
+    pagination:{
+      page:currentPage,
+      pageSize:currentPageSize,
+      total,
+      totalPages:total?Math.ceil(total/currentPageSize):0,
+      hasNextPage:currentPage*currentPageSize<total,
+      hasPreviousPage:currentPage>1&&total>0,
+    },
+  };
+}
+
 async function getPublicExpert(expertId){
   const id=Number(expertId);
   if(!Number.isInteger(id)||id<=0)return null;
@@ -223,10 +285,10 @@ async function getPublicExpert(expertId){
   const [services,locations,projects,plans]=await Promise.all([
     pool.query(`SELECT bps.industry_id AS "industryId",i.name AS "industryName",bps.service_id AS "serviceId",s.name AS "serviceName",bps.subservice_id AS "subserviceId",ss.name AS "subserviceName" FROM business_profile_services bps JOIN industries i ON i.id=bps.industry_id JOIN services s ON s.id=bps.service_id LEFT JOIN subservices ss ON ss.id=bps.subservice_id WHERE bps.business_profile_id=$1 AND bps.is_active=TRUE ORDER BY i.name,s.name,ss.name`,[id]),
     pool.query(`SELECT bpl.state_id AS "stateId",st.name AS "stateName",bpl.city_id AS "cityId",c.name AS "cityName",bpl.subcity_id AS "subcityId",sc.name AS "subcityName" FROM business_profile_locations bpl JOIN states st ON st.id=bpl.state_id JOIN cities c ON c.id=bpl.city_id LEFT JOIN subcities sc ON sc.id=bpl.subcity_id WHERE bpl.business_profile_id=$1 AND bpl.is_active=TRUE ORDER BY st.name,c.name`,[id]),
-    settings.showProjects?pool.query(`SELECT id,title,project_type,description,location_text,completion_year,area_text,budget_text,cover_image_url,${settings.showVideos?'video_url':'NULL::text AS video_url'},${settings.showPlans?'plan_url':'NULL::text AS plan_url'},sort_order FROM business_profile_projects WHERE business_profile_id=$1 AND is_published=TRUE ORDER BY sort_order,id`,[id]):Promise.resolve({rows:[]}),
+    settings.showProjects?pool.query(`SELECT id,title,project_type,description,location_text,completion_year,area_text,budget_text,cover_image_url,${settings.showVideos?'video_url':'NULL::text AS video_url'},video_published_at,${settings.showPlans?'plan_url':'NULL::text AS plan_url'},sort_order FROM business_profile_projects WHERE business_profile_id=$1 AND is_published=TRUE ORDER BY sort_order,id`,[id]):Promise.resolve({rows:[]}),
     settings.showPlans?pool.query(`SELECT id,title,description,price_from,duration_label,inclusions,sort_order FROM business_profile_service_plans WHERE business_profile_id=$1 AND is_published=TRUE ORDER BY sort_order,id`,[id]):Promise.resolve({rows:[]}),
   ]);
   return {...base,services:services.rows,locations:locations.rows,projects:projects.rows,service_plans:plans.rows,directory_settings:{showProjects:settings.showProjects,showVideos:settings.showVideos,showPlans:settings.showPlans}};
 }
 
-module.exports={listPublicExperts,getPublicExpert};
+module.exports={listPublicExperts,listRecentProjectVideos,getPublicExpert};
