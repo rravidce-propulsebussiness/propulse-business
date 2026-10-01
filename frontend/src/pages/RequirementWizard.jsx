@@ -648,10 +648,10 @@ export default function RequirementWizard({ flowKey }) {
 
     <div className="rq-flow-nav">
       {[
-        ['rq-basic','1','Basic Details','Tell us about your project'],
-        ['rq-config','2','Project Details','Plot, area and floors'],
-        ['rq-preferences','3','Requirements','Type, scope and timeline'],
-        ['rq-summary','4',isQuotationFlow ? 'Generate Quotation' : 'Review & Submit',isQuotationFlow ? 'Calculate and download' : 'Confirm and connect'],
+        ['rq-basic','1','Basic Details','Project & contact essentials'],
+        ['rq-config','2','Project Details','Plot, floors & site access'],
+        ['rq-preferences','3','Preferences','Package, budget & timeline'],
+        ['rq-summary','4',isQuotationFlow ? 'Your Quotation' : 'Review & Submit',isQuotationFlow ? 'Review & download' : 'Confirm and connect'],
       ].map(([id, number, title, text], index) => <button key={id} onClick={() => jump(id)} className={completion >= [1,35,65,90][index] ? 'done' : index === 0 ? 'active' : ''}>
         <span>{completion >= [35,65,90,100][index] ? '✓' : number}</span><div><b>{title}</b><small>{text}</small></div>{index < 3 && <i><Icon name="arrow" size={14}/></i>}
       </button>)}
@@ -660,7 +660,7 @@ export default function RequirementWizard({ flowKey }) {
     <form className="rq-premium-form" onSubmit={submit}>
       <section className="rq-form-row basic-row" id="rq-basic">
         <div className="rq-section-card">
-          <div className="rq-section-heading"><strong>1.</strong><div><h2>Basic Details</h2><p>Let’s start with the essential project and contact information.</p></div></div>
+          <div className="rq-section-heading"><strong>1.</strong><div><h2>Basic Details</h2><p>Project and contact essentials for a more accurate quotation.</p></div></div>
           <div className="rq-basic-grid">
             <QuoteLocationFields
               cities={cities}
@@ -680,8 +680,8 @@ export default function RequirementWizard({ flowKey }) {
         </div>
 
         <aside className="rq-vision-card">
-          <div className="rq-vision-image"><img src={theme.promo} alt="" /><div><span>Turn Your</span><strong>Vision into Reality</strong></div></div>
-          <div className="rq-vision-stats"><span><b>Simple</b><small>Guided Form</small></span><span><b>Admin</b><small>Managed Flow</small></span><span><b>Secure</b><small>Lead Intake</small></span></div>
+          <div className="rq-vision-image"><img src={theme.promo} alt="" /><div><span>PLAN WITH CLARITY</span><strong>Build with confidence.</strong></div></div>
+          <div className="rq-vision-stats"><span><b>Guided</b><small>Easy Journey</small></span><span><b>Tailored</b><small>Your Preferences</small></span><span><b>Secure</b><small>Protected Details</small></span></div>
         </aside>
       </section>
 
