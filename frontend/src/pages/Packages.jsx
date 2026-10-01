@@ -151,7 +151,7 @@ export default function Packages() {
         <Link to="/experts">Find Professionals</Link>
       </nav>
       <div className="pkg-header-actions">
-        <button className="pkg-header-quote" type="button" onClick={() => window.dispatchEvent(new CustomEvent('propulse:open-lead-popup',{detail:{flowKey:category==='construction'?'build':'design'}}))}>Get Free Quote <Icon name="arrow" size={15} /></button>
+        <Link className="pkg-header-quote" to="/quote#interiors">Get Free Quote <Icon name="arrow" size={15} /></Link>
         <Link className="pkg-pro-button" to="/professionals">For Professionals</Link>
       </div>
     </header>
