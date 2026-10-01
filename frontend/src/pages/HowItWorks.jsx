@@ -123,7 +123,7 @@ export default function HowItWorks(){
       <Link to="/" className="hiw-logo"><img src="/brand/propulse-logo.svg" alt="ProPulse"/></Link>
       <nav><Link to="/">Home</Link><Link to="/packages">Packages</Link><Link to="/projects">Projects</Link><Link className="active" to="/how-it-works">How It Works</Link><Link to="/about">About</Link><Link to="/contact">Contact</Link><Link to="/experts">Find Professionals</Link></nav>
       <div className="public-header-actions">
-        <button className="public-quote-button" onClick={()=>openLeadPopup(popupFlowKey(activeFlow.key))}>Get Free Quote <Icon name="arrow" size={15}/></button>
+        <Link className="public-quote-button" to="/quote#interiors">Get Free Quote <Icon name="arrow" size={15}/></Link>
         <Link className="public-professional-btn" to="/professionals">For Professionals</Link>
       </div>
     </header>
