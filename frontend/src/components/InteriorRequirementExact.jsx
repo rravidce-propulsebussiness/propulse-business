@@ -68,8 +68,6 @@ export default function InteriorRequirementExact(props) {
   const [referenceFiles, setReferenceFiles] = useState([])
   const byKey = useMemo(() => Object.fromEntries(questions.map(q => [q.questionKey, q])), [questions])
   const propertyType = byKey.property_type
-  const area = byKey.area
-  const rooms = byKey.rooms || byKey.interior_scope
   const style = byKey.design_style
   const additional = byKey.additional_requirement
   const excluded = new Set(['project_location','property_type','area','rooms','design_style','additional_requirement'])
