@@ -125,7 +125,7 @@ async function listPublicExperts({search='',industryId='',cityId='',verified='',
        bp.id AS business_profile_id,
        bp.business_name,
        bp.public_headline,
-       COALESCE(NULLIF(bp.public_summary,''),bp.business_details) AS public_summary,
+       COALESCE(NULLIF(bp.public_summary,''),'') AS public_summary,
        bp.years_experience,
        EXISTS(SELECT 1 FROM company_proof_documents cpd WHERE cpd.user_id=u.id AND cpd.status='verified') AS is_verified,
        COALESCE(beds.is_featured,FALSE) AS is_featured,
@@ -172,8 +172,15 @@ async function listPublicExperts({search='',industryId='',cityId='',verified='',
     queryParams
   );
 
+  const publicRows=result.rows.map(row=>({
+    ...row,
+    project_count:settings.showProjects?Number(row.project_count||0):0,
+    plan_count:settings.showPlans?Number(row.plan_count||0):0,
+    cover_image_url:settings.showProjects?row.cover_image_url:null,
+  }));
+
   return {
-    data:result.rows,
+    data:publicRows,
     settings,
     pagination:{
       page:currentPage,pageSize:currentPageSize,total:Number(count||0),
@@ -193,8 +200,8 @@ async function getPublicExpert(expertId){
   const conditions=['bp.id=$1'];
   addEligibilityConditions(settings,params,conditions);
   const base=(await pool.query(
-    `SELECT u.id AS user_id,bp.id AS business_profile_id,bp.business_name,bp.business_details,
-            bp.public_headline,COALESCE(NULLIF(bp.public_summary,''),bp.business_details) AS public_summary,bp.years_experience,
+    `SELECT u.id AS user_id,bp.id AS business_profile_id,bp.business_name,
+            bp.public_headline,COALESCE(NULLIF(bp.public_summary,''),'') AS public_summary,bp.years_experience,
             EXISTS(SELECT 1 FROM company_proof_documents cpd WHERE cpd.user_id=u.id AND cpd.status='verified') AS is_verified,
             COALESCE(beds.is_featured,FALSE) AS is_featured,
             mem.plan_group,mem.plan_name,mem.expires_at AS membership_expires_at
@@ -210,7 +217,7 @@ async function getPublicExpert(expertId){
   const [services,locations,projects,plans]=await Promise.all([
     pool.query(`SELECT bps.industry_id AS "industryId",i.name AS "industryName",bps.service_id AS "serviceId",s.name AS "serviceName",bps.subservice_id AS "subserviceId",ss.name AS "subserviceName" FROM business_profile_services bps JOIN industries i ON i.id=bps.industry_id JOIN services s ON s.id=bps.service_id LEFT JOIN subservices ss ON ss.id=bps.subservice_id WHERE bps.business_profile_id=$1 AND bps.is_active=TRUE ORDER BY i.name,s.name,ss.name`,[id]),
     pool.query(`SELECT bpl.state_id AS "stateId",st.name AS "stateName",bpl.city_id AS "cityId",c.name AS "cityName",bpl.subcity_id AS "subcityId",sc.name AS "subcityName" FROM business_profile_locations bpl JOIN states st ON st.id=bpl.state_id JOIN cities c ON c.id=bpl.city_id LEFT JOIN subcities sc ON sc.id=bpl.subcity_id WHERE bpl.business_profile_id=$1 AND bpl.is_active=TRUE ORDER BY st.name,c.name`,[id]),
-    settings.showProjects?pool.query(`SELECT id,title,project_type,description,location_text,completion_year,area_text,budget_text,cover_image_url,${settings.showVideos?'video_url':'NULL::text AS video_url'},plan_url,sort_order FROM business_profile_projects WHERE business_profile_id=$1 AND is_published=TRUE ORDER BY sort_order,id`,[id]):Promise.resolve({rows:[]}),
+    settings.showProjects?pool.query(`SELECT id,title,project_type,description,location_text,completion_year,area_text,budget_text,cover_image_url,${settings.showVideos?'video_url':'NULL::text AS video_url'},${settings.showPlans?'plan_url':'NULL::text AS plan_url'},sort_order FROM business_profile_projects WHERE business_profile_id=$1 AND is_published=TRUE ORDER BY sort_order,id`,[id]):Promise.resolve({rows:[]}),
     settings.showPlans?pool.query(`SELECT id,title,description,price_from,duration_label,inclusions,sort_order FROM business_profile_service_plans WHERE business_profile_id=$1 AND is_published=TRUE ORDER BY sort_order,id`,[id]):Promise.resolve({rows:[]}),
   ]);
   return {...base,services:services.rows,locations:locations.rows,projects:projects.rows,service_plans:plans.rows,directory_settings:{showProjects:settings.showProjects,showVideos:settings.showVideos,showPlans:settings.showPlans}};
