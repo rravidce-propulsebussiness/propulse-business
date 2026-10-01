@@ -176,7 +176,7 @@ export default function InteriorRequirementExact(props) {
     ].filter(Boolean).join(', ') || '—'],
     ['PIN Code', answerLabel(locationQuestion, locationQuestion ? answers[locationQuestion.questionKey] : '')],
     ['Property Type', answerLabel(propertyType, propertyType ? answers[propertyType.questionKey] : '')],
-    ...(showBhk ? [['Home Configuration', bhk ? answerLabel(bhk, answers[bhk.questionKey]) : (answers.bhk || '—')]] : []),
+    ...(showBhk ? [['Bedrooms', bhk ? answerLabel(bhk, answers[bhk.questionKey]) : (answers.bhk || '—')]] : []),
     ['Interior Scope', scopeMode === 'end_to_end' ? 'Full Home Interiors' : scopeMode === 'selected_work' ? 'Selected Work' : '—'],
     ...(scopeMode === 'selected_work' ? [['Selected Work', selectedWorkLabel]] : []),
     ['Finish Level', answerLabel(finishQuality, finishQuality ? answers[finishQuality.questionKey] : '')],
@@ -211,7 +211,7 @@ export default function InteriorRequirementExact(props) {
     </section>
 
     <div className="irx-steps">
-      {[['1','Basic Details','Tell us about your space','#irx-basic'],['2','Property Details','Property type and configuration','#irx-property'],['3','Design & Scope','Style, BHK and work selection','#irx-style'],['4','Review & Submit','Confirm and connect','#irx-summary']].map(([n,title,sub,href],index) => <a href={href} key={n} className={index===0?'active':completion>[30,55,80,99][index]?'done':''}><span>{completion>[30,55,80,99][index]?'✓':n}</span><div><b>{title}</b><small>{sub}</small></div>{index<3&&<Icon name="arrow" size={14}/>}</a>)}
+      {[['1','Basic Details','Tell us about your space','#irx-basic'],['2','Property Details','Property type and configuration','#irx-property'],['3','Design & Scope','Style and work selection','#irx-style'],['4','Review & Submit','Confirm and connect','#irx-summary']].map(([n,title,sub,href],index) => <a href={href} key={n} className={index===0?'active':completion>[30,55,80,99][index]?'done':''}><span>{completion>[30,55,80,99][index]?'✓':n}</span><div><b>{title}</b><small>{sub}</small></div>{index<3&&<Icon name="arrow" size={14}/>}</a>)}
     </div>
 
     <form className="irx-form" onSubmit={submit}>
@@ -243,8 +243,17 @@ export default function InteriorRequirementExact(props) {
       </section>
 
       <section className="irx-card" id="irx-property">
-        <div className="irx-section-title"><span>2.</span><div><h2>Property Type</h2><p>Select the type of property you want to design.</p></div></div>
+        <div className="irx-section-title"><span>2.</span><div><h2>Property Details</h2><p>Select the property type and number of bedrooms.</p></div></div>
         <div className="irx-property-grid">{(propertyType?.options||[]).map(option=>{const active=answers[propertyType.questionKey]===option.value;return <button type="button" key={option.value} className={active?'active':''} onClick={()=>setAnswer(propertyType.questionKey,option.value)}><div><img src={PROPERTY_IMAGES[option.value]||PROPERTY_IMAGES.apartment} alt=""/>{active&&<i>✓</i>}</div><b>{option.label}</b></button>})}</div>
+        {showBhk&&<div className="irx-bedroom-row">
+          <label className="irx-bedroom-field">
+            <div><b>Number of Bedrooms</b><small>Select your home configuration.</small></div>
+            <select value={bhk ? (answers[bhk.questionKey]||'') : (answers.bhk||'')} onChange={e=>setAnswer(bhk?.questionKey||'bhk',e.target.value)}>
+              <option value="">Select bedrooms</option>
+              {bhkOptions.map(option=><option key={option.value} value={option.value}>{option.label}</option>)}
+            </select>
+          </label>
+        </div>}
       </section>
 
       <div className="irx-lower">
@@ -257,16 +266,7 @@ export default function InteriorRequirementExact(props) {
           <section className="irx-card" id="irx-requirements">
             <div className="irx-section-title"><span>4.</span><div><h2>Interior Requirements</h2><p>Choose your home configuration and whether you want complete interiors or only selected work.</p></div></div>
 
-            <div className={'irx-requirement-grid '+(!showBhk?'scope-only':'')}>
-              {showBhk&&<label className="irx-select-field">
-                <b>Home Configuration</b>
-                <small>Select the closest BHK configuration.</small>
-                <select value={bhk ? (answers[bhk.questionKey]||'') : (answers.bhk||'')} onChange={e=>setAnswer(bhk?.questionKey||'bhk',e.target.value)}>
-                  <option value="">Select BHK</option>
-                  {bhkOptions.map(option=><option key={option.value} value={option.value}>{option.label}</option>)}
-                </select>
-              </label>}
-
+            <div className="irx-requirement-grid scope-only">
               {scope&&<div className="irx-scope-field">
                 <b>What interior scope do you need?</b>
                 <small>Choose complete interiors or pick only the work you need.</small>
