@@ -5,8 +5,9 @@ import { isEmptyAnswer, isQuestionVisible } from '../components/CustomerFlowQues
 import InteriorRequirementExact from '../components/InteriorRequirementExact'
 import RealEstateRequirementExact from '../components/RealEstateRequirementExact'
 import QuoteLocationFields from '../components/QuoteLocationFields'
-import { downloadRequirementQuotePdf } from '../utils/requirementQuotePdf'
+import { downloadInteriorBrochurePdf, downloadRequirementQuotePdf } from '../utils/requirementQuotePdf'
 import { calculateRequirementQuotation } from '../utils/customerQuotation'
+import { getInteriorPackage } from '../data/interiorPackageCatalog'
 import './RequirementWizard.css'
 
 const CONSTRUCTION_FLOORS = [
@@ -517,11 +518,47 @@ export default function RequirementWizard({ flowKey, onCompletionChange }) {
     })
   }
 
+  async function downloadInteriorBrochure() {
+    const packageKey = ['standard','premium'].includes(String(answers.finish_quality || '').toLowerCase())
+      ? String(answers.finish_quality).toLowerCase()
+      : 'standard'
+    await downloadInteriorBrochurePdf({
+      packageKey,
+      requestId: submissionResult?.leadId,
+      customerName: contact.name,
+      city: [selectedCity?.name, selectedCity?.state_name].filter(Boolean).join(', '),
+    })
+  }
+
   if (state.loading) return <main className="rq-page"><div className="rq-shell rq-status">Loading your requirement form…</div></main>
   if (!flow) return <main className="rq-page"><div className="rq-shell rq-status error">{state.error || 'This requirement form is unavailable.'}<Link to="/">Back home</Link></div></main>
 
   if (state.success) {
     const quotation = submissionResult?.quotation
+    if (flowKey === 'design') {
+      const interiorPackage = getInteriorPackage(answers.finish_quality)
+      return <main className="rq-page rq-premium-page">
+        <header className="rq-premium-header"><Link to="/"><img src="/brand/propulse-logo.svg" alt="ProPulse" /></Link><Link to="/">Back to Home</Link></header>
+        <div className="rq-success rq-premium-success rq-interior-success">
+          <div className="rq-success-mark">✓</div>
+          <span>QUOTE REQUEST RECEIVED</span>
+          <h1>Your interior quote request is submitted.</h1>
+          <p>We saved your project requirements and package preference. Final pricing is confirmed only after the selected work, measurements, design, materials and site conditions are reviewed.</p>
+          <div className="rq-interior-package-result">
+            <small>SELECTED INTERIOR PACKAGE</small>
+            <div><strong>{interiorPackage.name}</strong><b>₹{interiorPackage.price.toLocaleString('en-IN')}<em>/sq ft reference</em></b></div>
+            <p>{interiorPackage.description}</p>
+            <span>This is a package reference, not an instant project quotation.</span>
+          </div>
+          {submissionResult?.leadId && <div className="rq-success-reference">Request ID <b>#{submissionResult.leadId}</b></div>}
+          <div className="rq-success-actions">
+            <button className="rq-download-quote" type="button" onClick={downloadInteriorBrochure}>↓ Download Interior Package Brochure</button>
+            <Link className="rq-back-home" to="/">Back home</Link>
+            <button type="button" onClick={() => window.location.reload()}>Request another quote</button>
+          </div>
+        </div>
+      </main>
+    }
     return <main className="rq-page rq-premium-page">
       <header className="rq-premium-header"><Link to="/"><img src="/brand/propulse-logo.svg" alt="ProPulse" /></Link><Link to="/">Back to Home</Link></header>
       <div className="rq-success rq-premium-success">
