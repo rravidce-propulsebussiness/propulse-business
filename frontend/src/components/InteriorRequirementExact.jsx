@@ -108,6 +108,7 @@ function Chips({ question, value, onChange }) {
 export default function InteriorRequirementExact(props) {
   const { flow, questions, answers, setAnswer, cities, locationStates, locationStateId, setLocationState, cityId, setCity, locationQuestion, setPincode, onDetectedLocation, pinLookup, contact, setContact, state, submit, contactData, completion } = props
   const fileRef = useRef(null)
+  const previewUrlsRef = useRef(new Set())
   const [referenceFiles, setReferenceFiles] = useState([])
   const [uploadNotice, setUploadNotice] = useState('')
   const [legacyScopeMode, setLegacyScopeMode] = useState('')
@@ -131,10 +132,9 @@ export default function InteriorRequirementExact(props) {
   const email = contactData.email || contactData.support_email || ''
 
   useEffect(() => () => {
-    referenceFiles.forEach(item => {
-      if (item.previewUrl) URL.revokeObjectURL(item.previewUrl)
-    })
-  }, [referenceFiles])
+    previewUrlsRef.current.forEach(url => URL.revokeObjectURL(url))
+    previewUrlsRef.current.clear()
+  }, [])
 
   const propertyTypeValue = propertyType ? answers[propertyType.questionKey] : ''
   // Keep the bedroom selector visible by default so the customer can see it
@@ -216,11 +216,9 @@ export default function InteriorRequirementExact(props) {
         const key = [file.name,file.size,file.lastModified].join(':')
         if (existing.has(key) || next.length >= MAX_REFERENCE_FILES) continue
         existing.add(key)
-        next.push({
-          key,
-          file,
-          previewUrl: file.type.startsWith('image/') ? URL.createObjectURL(file) : '',
-        })
+        const previewUrl = file.type.startsWith('image/') ? URL.createObjectURL(file) : ''
+        if (previewUrl) previewUrlsRef.current.add(previewUrl)
+        next.push({ key, file, previewUrl })
       }
       return next
     })
@@ -233,7 +231,10 @@ export default function InteriorRequirementExact(props) {
   function removeReferenceFile(key) {
     setReferenceFiles(current => {
       const item = current.find(entry => entry.key === key)
-      if (item?.previewUrl) URL.revokeObjectURL(item.previewUrl)
+      if (item?.previewUrl) {
+        URL.revokeObjectURL(item.previewUrl)
+        previewUrlsRef.current.delete(item.previewUrl)
+      }
       return current.filter(entry => entry.key !== key)
     })
   }
