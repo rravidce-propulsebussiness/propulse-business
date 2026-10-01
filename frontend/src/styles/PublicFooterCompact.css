@@ -1,0 +1,54 @@
+/* Compact public-site footer treatment shared across customer-facing pages. */
+main[class*="-page"]:not([class*="admin"]):not([class*="dashboard"]):not([class*="lead-partner"]) > footer{
+  padding:16px 28px 18px !important;
+  gap:18px !important;
+  border-radius:18px 18px 0 0 !important;
+  min-height:0 !important;
+}
+main[class*="-page"]:not([class*="admin"]):not([class*="dashboard"]):not([class*="lead-partner"]) > footer > div{
+  gap:3px !important;
+}
+main[class*="-page"]:not([class*="admin"]):not([class*="dashboard"]):not([class*="lead-partner"]) > footer img{
+  width:auto !important;
+  max-width:138px !important;
+  height:auto !important;
+  max-height:38px !important;
+  object-fit:contain;
+}
+main[class*="-page"]:not([class*="admin"]):not([class*="dashboard"]):not([class*="lead-partner"]) > footer p{
+  margin-top:2px !important;
+  margin-bottom:2px !important;
+  font-size:9.5px !important;
+  line-height:1.45 !important;
+}
+main[class*="-page"]:not([class*="admin"]):not([class*="dashboard"]):not([class*="lead-partner"]) > footer b,
+main[class*="-page"]:not([class*="admin"]):not([class*="dashboard"]):not([class*="lead-partner"]) > footer strong{
+  margin-bottom:1px !important;
+  font-size:10px !important;
+  line-height:1.25 !important;
+}
+main[class*="-page"]:not([class*="admin"]):not([class*="dashboard"]):not([class*="lead-partner"]) > footer a,
+main[class*="-page"]:not([class*="admin"]):not([class*="dashboard"]):not([class*="lead-partner"]) > footer span{
+  font-size:9.5px !important;
+  line-height:1.35 !important;
+}
+main[class*="-page"]:not([class*="admin"]):not([class*="dashboard"]):not([class*="lead-partner"]) > footer svg{
+  width:12px !important;
+  height:12px !important;
+}
+main[class*="-page"]:not([class*="admin"]):not([class*="dashboard"]):not([class*="lead-partner"]) > footer [class*="social"]{
+  margin-top:4px !important;
+  gap:8px !important;
+}
+@media(max-width:860px){
+  main[class*="-page"]:not([class*="admin"]):not([class*="dashboard"]):not([class*="lead-partner"]) > footer{
+    padding:15px 18px 18px !important;
+    gap:14px !important;
+  }
+}
+@media(max-width:540px){
+  main[class*="-page"]:not([class*="admin"]):not([class*="dashboard"]):not([class*="lead-partner"]) > footer{
+    padding:16px 16px 20px !important;
+    gap:12px !important;
+  }
+}
