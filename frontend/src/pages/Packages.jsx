@@ -1,6 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-import { publicRequest } from '../utils/auth'
+import { useMemo, useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { CONSTRUCTION_PACKAGE_CATALOG } from '../data/constructionPackageCatalog'
 import { INTERIOR_PACKAGE_CATALOG, INTERIOR_PACKAGES } from '../data/interiorPackageCatalog'
 import './Packages.css'
@@ -67,19 +66,6 @@ const INTERIOR_COMPARE_ROWS = [
   ['Handle allowance', 'Up to ₹120/no.', 'Up to ₹250/no.'],
 ]
 
-function collection(value) {
-  if (Array.isArray(value)) return value
-  if (Array.isArray(value?.data)) return value.data
-  if (Array.isArray(value?.rows)) return value.rows
-  if (Array.isArray(value?.items)) return value.items
-  return []
-}
-
-function makeSubmissionKey() {
-  if (globalThis.crypto?.randomUUID) return globalThis.crypto.randomUUID()
-  return 'pkg_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 12)
-}
-
 function Icon({ name, size = 20 }) {
   const p = { width: size, height: size, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: '1.8', strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': true }
   if (name === 'check') return <svg {...p}><path d="m5 12 4 4L19 6"/></svg>
@@ -97,37 +83,13 @@ function Icon({ name, size = 20 }) {
 }
 
 export default function Packages() {
-  const navigate = useNavigate()
   const compareRef = useRef(null)
-  const quoteRef = useRef(null)
   const hash = typeof window !== 'undefined' ? window.location.hash : ''
   const [category, setCategory] = useState(hash === '#interior' ? 'interior' : 'construction')
   const [compareConstruction, setCompareConstruction] = useState([])
   const [compareInterior, setCompareInterior] = useState([])
   const [expanded, setExpanded] = useState({})
   const [compareOpen, setCompareOpen] = useState(false)
-  const [cities, setCities] = useState([])
-  const [cityLoading, setCityLoading] = useState(true)
-  const [quoteError, setQuoteError] = useState('')
-  const [quoteForm, setQuoteForm] = useState({
-    name: '',
-    phone: '',
-    cityId: '',
-    projectType: '',
-    budget: '',
-    requirements: '',
-    packageKeys: ['premium'],
-  })
-
-  useEffect(() => {
-    let active = true
-    publicRequest('/cities')
-      .then(value => { if (active) setCities(collection(value)) })
-      .catch(() => {})
-      .finally(() => { if (active) setCityLoading(false) })
-    return () => { active = false }
-  }, [])
-
   const packages = category === 'construction' ? CONSTRUCTION_PACKAGES : INTERIOR_PACKAGES
   const selectedKeys = category === 'construction' ? compareConstruction : compareInterior
   const compareRows = category === 'construction' ? CONSTRUCTION_COMPARE_ROWS : INTERIOR_COMPARE_ROWS
@@ -144,12 +106,6 @@ export default function Packages() {
     setCategory(next)
     setExpanded({})
     setCompareOpen(false)
-    setQuoteError('')
-    setQuoteForm(current => ({
-      ...current,
-      projectType: '',
-      packageKeys: next === 'construction' ? ['premium'] : ['premium'],
-    }))
     window.history.replaceState({}, '', next === 'interior' ? '/packages#interior' : '/packages#construction')
   }
 
@@ -180,70 +136,16 @@ export default function Packages() {
   }
 
   function openQuote(key) {
-    setQuoteForm(current => ({ ...current, packageKeys: key ? [key] : current.packageKeys }))
-    quoteRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
-  }
-
-  function submitQuote(event) {
-    event.preventDefault()
-    const phone = quoteForm.phone.replace(/\D/g, '')
-    if (quoteForm.name.trim().length < 2) return setQuoteError('Enter your full name.')
-    if (!/^[6-9]\d{9}$/.test(phone)) return setQuoteError('Enter a valid 10-digit mobile number.')
-    if (!quoteForm.cityId) return setQuoteError('Select your city.')
-    if (!quoteForm.projectType) return setQuoteError(category === 'construction' ? 'Select your project type.' : 'Select your property type.')
-    if (!quoteForm.packageKeys.length) return setQuoteError('Select at least one package.')
-
-    const city = cityList.find(item => String(item.id) === String(quoteForm.cityId))
-    const primaryPackage = quoteForm.packageKeys[0]
-    const answers = category === 'construction'
-      ? {
-          project_type: quoteForm.projectType,
-          quality: primaryPackage === 'royal' ? 'luxury' : primaryPackage,
-          budget: quoteForm.budget,
-          additional_requirement: [
-            quoteForm.requirements,
-            'Package preference: ' + quoteForm.packageKeys.map(key => packages.find(item => item.key === key)?.name).filter(Boolean).join(', '),
-          ].filter(Boolean).join(' · '),
-        }
-      : {
-          property_type: quoteForm.projectType,
-          finish_quality: primaryPackage === 'premium' ? 'premium' : 'standard',
-          budget: quoteForm.budget,
-          additional_requirement: [
-            quoteForm.requirements,
-            'Interior package preference: ' + quoteForm.packageKeys.map(key => packages.find(item => item.key === key)?.name).filter(Boolean).join(', '),
-          ].filter(Boolean).join(' · '),
-        }
-
-    try {
-      sessionStorage.setItem('propulse_intake_prefill', JSON.stringify({
+    const item = packages.find(pkg => pkg.key === key)
+    window.dispatchEvent(new CustomEvent('propulse:open-lead-popup', {
+      detail: {
         flowKey: category === 'construction' ? 'build' : 'design',
-        cityId: Number(quoteForm.cityId),
-        cityName: city?.name || '',
-        pincode: '',
-        answers,
-        name: quoteForm.name.trim(),
-        phone,
-        email: '',
-        submissionKey: makeSubmissionKey(),
-        createdAt: Date.now(),
-      }))
-    } catch {}
-
-    const flowKey = category === 'construction' ? 'build' : 'design'
-    const query = category === 'construction' ? '?package=' + encodeURIComponent(primaryPackage) : ''
-    navigate('/requirements/' + flowKey + query)
+        packageKey: key || '',
+        packageName: item?.name || '',
+      },
+    }))
   }
 
-  function toggleQuotePackage(key) {
-    setQuoteForm(current => {
-      const exists = current.packageKeys.includes(key)
-      if (exists) return { ...current, packageKeys: current.packageKeys.filter(item => item !== key) }
-      if (current.packageKeys.length >= 2) return { ...current, packageKeys: [current.packageKeys[1], key] }
-      return { ...current, packageKeys: [...current.packageKeys, key] }
-    })
-    setQuoteError('')
-  }
 
   return <main className="pkg-page">
     <header className="pkg-header">
@@ -257,7 +159,7 @@ export default function Packages() {
         <Link to="/contact">Contact</Link>
       </nav>
       <div className="pkg-header-actions">
-        <button className="pkg-header-quote" type="button" onClick={() => openQuote()}>Get Free Quote <Icon name="arrow" size={15} /></button>
+        <button className="pkg-header-quote" type="button" onClick={() => window.dispatchEvent(new CustomEvent('propulse:open-lead-popup',{detail:{flowKey:category==='construction'?'build':'design'}}))}>Get Free Quote <Icon name="arrow" size={15} /></button>
         <Link className="pkg-pro-button" to="/professionals">For Professionals</Link>
       </div>
     </header>
@@ -360,52 +262,7 @@ export default function Packages() {
         </section>}
       </div>
 
-      <aside className="pkg-quote-card" ref={quoteRef}>
-        <span>QUICK QUOTE REQUEST</span>
-        <h2>Get a Quote</h2>
-        <p>Choose a package and enter your basic details. You can confirm the remaining project information on the next step.</p>
 
-        <form onSubmit={submitQuote}>
-          <div className="pkg-form-two">
-            <label><span>Full Name *</span><input value={quoteForm.name} onChange={event => setQuoteForm(current => ({ ...current, name: event.target.value }))} placeholder="Enter your full name" autoComplete="name" /></label>
-            <label><span>Mobile Number *</span><input value={quoteForm.phone} onChange={event => setQuoteForm(current => ({ ...current, phone: event.target.value.replace(/\D/g, '').slice(0, 10) }))} placeholder="+91 98765 43210" inputMode="tel" autoComplete="tel" /></label>
-          </div>
-
-          <div className="pkg-form-two">
-            <label><span>City *</span><select value={quoteForm.cityId} onChange={event => setQuoteForm(current => ({ ...current, cityId: event.target.value }))}><option value="">{cityLoading ? 'Loading cities…' : 'Select your city'}</option>{cityList.map(city => <option key={city.id} value={city.id}>{city.name}{city.state_name ? ' · ' + city.state_name : ''}</option>)}</select></label>
-            <label><span>{category === 'construction' ? 'Project Type *' : 'Property Type *'}</span><select value={quoteForm.projectType} onChange={event => setQuoteForm(current => ({ ...current, projectType: event.target.value }))}>
-              <option value="">Select {category === 'construction' ? 'project' : 'property'} type</option>
-              {category === 'construction' ? <>
-                <option value="house_construction">House construction</option>
-                <option value="commercial_building">Commercial building</option>
-                <option value="building_extension">Building extension</option>
-              </> : <>
-                <option value="apartment">Apartment</option>
-                <option value="villa">Villa</option>
-                <option value="independent_house">Independent house</option>
-                <option value="office">Office</option>
-                <option value="commercial_space">Commercial space</option>
-              </>}
-            </select></label>
-          </div>
-
-          <label className="pkg-package-interest"><span>Package Interested In *</span><div className="pkg-package-chips">{packages.map(item => <button type="button" key={item.key} className={quoteForm.packageKeys.includes(item.key) ? 'active' : ''} onClick={() => toggleQuotePackage(item.key)}>{item.name}{quoteForm.packageKeys.includes(item.key) ? ' ×' : ' +'}</button>)}</div></label>
-
-          <label><span>Budget Range</span><select value={quoteForm.budget} onChange={event => setQuoteForm(current => ({ ...current, budget: event.target.value }))}><option value="">Select budget range</option><option value="Under ₹25 lakh">Under ₹25 lakh</option><option value="₹25–50 lakh">₹25–50 lakh</option><option value="₹50 lakh–₹1 crore">₹50 lakh–₹1 crore</option><option value="₹1–2 crore">₹1–2 crore</option><option value="Above ₹2 crore">Above ₹2 crore</option></select></label>
-
-          <label><span>Requirement Details</span><textarea value={quoteForm.requirements} onChange={event => setQuoteForm(current => ({ ...current, requirements: event.target.value }))} placeholder="Tell us about your project, plot size, timeline or any specific requirements..." /></label>
-
-          {quoteError && <div className="pkg-form-error">{quoteError}</div>}
-          <button className="pkg-submit-quote" type="submit"><Icon name="send" size={16} />Continue to Quote <Icon name="arrow" size={15} /></button>
-          <small className="pkg-form-note"><Icon name="check" size={14} />Next: confirm PIN code, size and project details.</small>
-        </form>
-
-        <div className="pkg-quote-trust">
-          <span><Icon name="shield" size={17} /><b>Free</b><small>Consultation</small></span>
-          <span><Icon name="headset" size={17} /><b>Expert</b><small>Support</small></span>
-          <span><Icon name="check" size={17} /><b>No</b><small>Obligation</small></span>
-        </div>
-      </aside>
     </section>
 
     <section className="pkg-bottom-trust">
