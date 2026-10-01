@@ -78,7 +78,7 @@ export default function Solutions(){
         <Link to="/experts">Find Professionals</Link>
       </nav>
       <div className="public-header-actions">
-        <Link className="quote-header-cta" to={'/quote'+location.search+'#'+activeKey} onClick={event=>{event.preventDefault();openLeadPopup(active.flowKey)}}>Get Free Quote <Icon name="arrow" size={15}/></Link>
+        <Link className="quote-header-cta" to="/quote#interiors">Get Free Quote <Icon name="arrow" size={15}/></Link>
         <Link className="public-professional-btn" to="/professionals">For Professionals</Link>
       </div>
     </header>
