@@ -247,19 +247,27 @@ export default function InteriorRequirementExact(props) {
 
       <section className="irx-card" id="irx-property">
         <div className="irx-section-title"><span>2.</span><div><h2>Property Details</h2><p>Select the property type and number of bedrooms.</p></div></div>
-        <div className="irx-property-grid">{(propertyType?.options||[]).map(option=>{const active=answers[propertyType.questionKey]===option.value;return <button type="button" key={option.value} className={active?'active':''} onClick={()=>{
-          setAnswer(propertyType.questionKey,option.value)
-          if(['office','commercial_space'].includes(option.value)) setAnswer(bhk?.questionKey||'bhk','')
-        }}><div><img src={PROPERTY_IMAGES[option.value]||PROPERTY_IMAGES.apartment} alt=""/>{active&&<i>✓</i>}</div><b>{option.label}</b></button>})}</div>
-        {showBhk&&<div className="irx-bedroom-row">
-          <label className="irx-bedroom-field">
+        <div className="irx-property-selectors">
+          <label className="irx-property-select-field">
+            <div><b>Property Type</b><small>Select the type of property you want to design.</small></div>
+            <select value={propertyType ? (answers[propertyType.questionKey]||'') : ''} onChange={e=>{
+              const value=e.target.value
+              if(propertyType) setAnswer(propertyType.questionKey,value)
+              if(['office','commercial_space'].includes(value)) setAnswer(bhk?.questionKey||'bhk','')
+            }}>
+              <option value="">Select property type</option>
+              {(propertyType?.options||[]).map(option=><option key={option.value} value={option.value}>{option.label}</option>)}
+            </select>
+          </label>
+
+          {showBhk&&<label className="irx-property-select-field">
             <div><b>Number of Bedrooms (BHK)</b><small>Select 1 BHK, 2 BHK, 3 BHK or more.</small></div>
             <select value={bhk ? (answers[bhk.questionKey]||'') : (answers.bhk||'')} onChange={e=>setAnswer(bhk?.questionKey||'bhk',e.target.value)}>
               <option value="">Select bedrooms</option>
               {bhkOptions.map(option=><option key={option.value} value={option.value}>{option.label}</option>)}
             </select>
-          </label>
-        </div>}
+          </label>}
+        </div>
       </section>
 
       <div className="irx-lower">
