@@ -152,7 +152,7 @@ export default function Packages() {
         <Link to="/how-it-works">How It Works</Link>
         <Link to="/about">About</Link>
         <Link to="/contact">Contact</Link>
-        <Link to="/experts">Experts</Link>
+        <Link to="/experts">Find Professionals</Link>
       </nav>
       <div className="pkg-header-actions">
         <button className="pkg-header-quote" type="button" onClick={() => window.dispatchEvent(new CustomEvent('propulse:open-lead-popup',{detail:{flowKey:category==='construction'?'build':'design'}}))}>Get Free Quote <Icon name="arrow" size={15} /></button>
