@@ -285,7 +285,8 @@ export default function RequirementWizard({ flowKey, onCompletionChange }) {
 
   const questions = useMemo(() => (flow?.questions || [])
     .filter(question => isQuestionVisible(question, answers))
-    .filter(question => !(flowKey === 'build' && ['property_type','construction_scope','basement'].includes(question.questionKey))), [flow, answers, flowKey])
+    .filter(question => !(flowKey === 'build' && ['property_type','construction_scope','basement'].includes(question.questionKey)))
+    .filter(question => !(flowKey === 'design' && ['area','rooms','interior_scope'].includes(question.questionKey))), [flow, answers, flowKey])
   const byKey = useMemo(() => Object.fromEntries(questions.map(question => [question.questionKey, question])), [questions])
   const locationQuestion = questions.find(question => question.questionType === 'location')
   const selectedCity = useMemo(() => cities.find(city => String(city.id) === String(cityId)), [cities, cityId])
