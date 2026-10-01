@@ -124,6 +124,246 @@ const PROJECTS = [
     image:'https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?auto=format&fit=crop&w=1200&q=88',
     description:'Luxury-villa interior inspiration with bespoke furniture language, refined lighting and layered textures.',
   },
+  {
+    id:'courtyard-villa',
+    category:'construction',
+    categoryLabel:'Construction',
+    title:'Courtyard Villa',
+    city:'Hyderabad',
+    location:'Kokapet, Hyderabad',
+    propertyType:'Villa',
+    budget:'₹1Cr–₹2Cr',
+    area:3600,
+    style:'Contemporary',
+    meta:'4 BHK',
+    image:'https://images.unsplash.com/photo-1600047509807-ba8f99d2cdde?auto=format&fit=crop&w=1200&q=88',
+    description:'Courtyard-focused villa inspiration with private outdoor pockets, daylight and cross ventilation.',
+  },
+  {
+    id:'compact-urban-home',
+    category:'construction',
+    categoryLabel:'Construction',
+    title:'Compact Urban Home',
+    city:'Hyderabad',
+    location:'Manikonda, Hyderabad',
+    propertyType:'Independent House',
+    budget:'₹25L–₹50L',
+    area:1800,
+    style:'Minimal',
+    meta:'3 BHK',
+    image:'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=1200&q=88',
+    description:'Compact independent-home concept for narrow urban plots with efficient room planning and simple elevation.',
+  },
+  {
+    id:'contemporary-farmhouse',
+    category:'construction',
+    categoryLabel:'Construction',
+    title:'Contemporary Farmhouse',
+    city:'Hyderabad',
+    location:'Shankarpally, Hyderabad',
+    propertyType:'Farmhouse',
+    budget:'₹1Cr–₹2Cr',
+    area:4200,
+    style:'Contemporary',
+    meta:'4 BHK',
+    image:'https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&w=1200&q=88',
+    description:'Relaxed farmhouse inspiration combining larger openings, shaded verandahs and contemporary materials.',
+  },
+  {
+    id:'row-house',
+    category:'construction',
+    categoryLabel:'Construction',
+    title:'Row House',
+    city:'Bengaluru',
+    location:'Whitefield, Bengaluru',
+    propertyType:'Row House',
+    budget:'₹50L–₹1Cr',
+    area:2400,
+    style:'Modern',
+    meta:'3 BHK',
+    image:'https://images.unsplash.com/photo-1600573472550-8090b5e0745e?auto=format&fit=crop&w=1200&q=88',
+    description:'Modern row-house concept with efficient vertical planning, balconies and a compact family layout.',
+  },
+  {
+    id:'penthouse-interior',
+    category:'design',
+    categoryLabel:'Interiors',
+    title:'Penthouse Interior',
+    city:'Hyderabad',
+    location:'Nanakramguda, Hyderabad',
+    propertyType:'Apartment',
+    budget:'₹50L–₹1Cr',
+    area:3400,
+    style:'Luxury',
+    meta:'4 BHK',
+    image:'https://images.unsplash.com/photo-1600566753051-f0b89df2dd90?auto=format&fit=crop&w=1200&q=88',
+    description:'Penthouse interior inspiration with layered lighting, premium finishes and large-format living spaces.',
+  },
+  {
+    id:'minimal-apartment',
+    category:'design',
+    categoryLabel:'Interiors',
+    title:'Minimal Apartment',
+    city:'Hyderabad',
+    location:'Kukatpally, Hyderabad',
+    propertyType:'Apartment',
+    budget:'₹10L–₹20L',
+    area:1450,
+    style:'Minimalist',
+    meta:'2 BHK',
+    image:'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1200&q=88',
+    description:'Minimal apartment concept with clean storage, soft neutral finishes and practical everyday furniture.',
+  },
+  {
+    id:'modular-kitchen-project',
+    category:'design',
+    categoryLabel:'Interiors',
+    title:'Modular Kitchen',
+    city:'Hyderabad',
+    location:'Miyapur, Hyderabad',
+    propertyType:'Apartment',
+    budget:'Under ₹10L',
+    area:450,
+    style:'Contemporary',
+    meta:'Kitchen',
+    image:'https://images.unsplash.com/photo-1556911220-bff31c812dba?auto=format&fit=crop&w=1200&q=88',
+    description:'Modular-kitchen inspiration focused on storage efficiency, work triangle, lighting and durable finishes.',
+  },
+  {
+    id:'scandinavian-home-interior',
+    category:'design',
+    categoryLabel:'Interiors',
+    title:'Scandinavian Home Interior',
+    city:'Bengaluru',
+    location:'Sarjapur, Bengaluru',
+    propertyType:'Apartment',
+    budget:'₹20L–₹50L',
+    area:1900,
+    style:'Scandinavian',
+    meta:'3 BHK',
+    image:'https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&w=1200&q=88',
+    description:'Bright Scandinavian-inspired home with pale wood, functional storage and soft layered furnishings.',
+  },
+  {
+    id:'coworking-office',
+    category:'design',
+    categoryLabel:'Interiors',
+    title:'Co-working Office',
+    city:'Hyderabad',
+    location:'Madhapur, Hyderabad',
+    propertyType:'Office',
+    budget:'₹20L–₹50L',
+    area:6500,
+    style:'Industrial',
+    meta:'Commercial',
+    image:'https://images.unsplash.com/photo-1497366811353-6870744d04b2?auto=format&fit=crop&w=1200&q=88',
+    description:'Flexible co-working interior inspiration with collaborative zones, meeting rooms and acoustic separation.',
+  },
+  {
+    id:'retail-store-interior',
+    category:'design',
+    categoryLabel:'Interiors',
+    title:'Retail Store Interior',
+    city:'Hyderabad',
+    location:'Banjara Hills, Hyderabad',
+    propertyType:'Commercial',
+    budget:'₹10L–₹20L',
+    area:2200,
+    style:'Modern',
+    meta:'Retail',
+    image:'https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=1200&q=88',
+    description:'Retail interior concept balancing product display, lighting, customer circulation and branded finishes.',
+  },
+  {
+    id:'gated-community-apartment',
+    category:'property',
+    categoryLabel:'Real Estate',
+    title:'Gated Community Apartment',
+    city:'Hyderabad',
+    location:'Narsingi, Hyderabad',
+    propertyType:'Apartment',
+    budget:'₹1Cr–₹2Cr',
+    area:2100,
+    style:'Premium',
+    meta:'3 BHK',
+    image:'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=1200&q=88',
+    description:'Gated-community apartment inspiration for buyers comparing layouts, amenities, access and neighbourhood fit.',
+  },
+  {
+    id:'villa-community',
+    category:'property',
+    categoryLabel:'Real Estate',
+    title:'Villa Community',
+    city:'Hyderabad',
+    location:'Tellapur, Hyderabad',
+    propertyType:'Villa',
+    budget:'₹2Cr+',
+    area:3800,
+    style:'Luxury',
+    meta:'4 BHK',
+    image:'https://images.unsplash.com/photo-1600607687644-c7171b42498f?auto=format&fit=crop&w=1200&q=88',
+    description:'Villa-community inspiration for customers evaluating private outdoor space, community amenities and scale.',
+  },
+  {
+    id:'investment-apartment',
+    category:'property',
+    categoryLabel:'Real Estate',
+    title:'Investment Apartment',
+    city:'Hyderabad',
+    location:'Kondapur, Hyderabad',
+    propertyType:'Apartment',
+    budget:'₹50L–₹1Cr',
+    area:1250,
+    style:'Modern',
+    meta:'2 BHK',
+    image:'https://images.unsplash.com/photo-1494526585095-c41746248156?auto=format&fit=crop&w=1200&q=88',
+    description:'Compact apartment inspiration for customers comparing budget, connectivity and rental-demand considerations.',
+  },
+  {
+    id:'residential-plot',
+    category:'property',
+    categoryLabel:'Real Estate',
+    title:'Residential Plot',
+    city:'Hyderabad',
+    location:'Shadnagar, Hyderabad',
+    propertyType:'Plot',
+    budget:'₹25L–₹50L',
+    area:2400,
+    style:'Open Plot',
+    meta:'267 sq yd',
+    image:'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1200&q=88',
+    description:'Residential-plot inspiration for customers exploring location, access, surrounding development and future use.',
+  },
+  {
+    id:'commercial-office-unit',
+    category:'property',
+    categoryLabel:'Real Estate',
+    title:'Commercial Office Unit',
+    city:'Hyderabad',
+    location:'Kokapet, Hyderabad',
+    propertyType:'Commercial',
+    budget:'₹1Cr–₹2Cr',
+    area:3200,
+    style:'Premium',
+    meta:'Office',
+    image:'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1200&q=88',
+    description:'Commercial office inspiration for comparing floor efficiency, access, visibility and business-location context.',
+  },
+  {
+    id:'family-apartment-interior',
+    category:'design',
+    categoryLabel:'Interiors',
+    title:'Family Apartment Interior',
+    city:'Vijayawada',
+    location:'Vijayawada, Andhra Pradesh',
+    propertyType:'Apartment',
+    budget:'₹20L–₹50L',
+    area:2050,
+    style:'Warm Modern',
+    meta:'3 BHK',
+    image:'https://images.unsplash.com/photo-1615874959474-d609969a20ed?auto=format&fit=crop&w=1200&q=88',
+    description:'Family-focused interior concept with durable finishes, integrated storage and comfortable shared spaces.',
+  },
 ]
 
 
@@ -166,7 +406,7 @@ export default function Projects(){
   const [area,setArea]=useState('')
   const [style,setStyle]=useState('')
   const [query,setQuery]=useState('')
-  const [visible,setVisible]=useState(8)
+  const [visible,setVisible]=useState(12)
   const [selectedProject,setSelectedProject]=useState(null)
 
   useEffect(()=>{
@@ -345,25 +585,6 @@ export default function Projects(){
       </div>
     </header>
 
-    <section className="pj-hero">
-      <img src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=2200&q=92" alt="Modern premium home"/>
-      <div className="pj-hero-wash"/>
-      <div className="pj-hero-copy"><span>PROJECT INSPIRATION</span><h1>Explore Home<em>Projects & Ideas</em></h1><p>Browse construction, interior and real-estate inspiration, then start a requirement based on what you like. Sample images are for inspiration unless a project is explicitly marked as verified.</p></div>
-      <aside className="pj-feature-box">
-        <div><Icon name="home"/><span>Modern Designs</span></div>
-        <div><Icon name="photo"/><span>Visual Inspiration</span></div>
-        <div><Icon name="info"/><span>Detailed Information</span></div>
-        <div><Icon name="building"/><span>Detailed Project View</span></div>
-        <div><Icon name="chat"/><span>Free Consultation</span></div>
-      </aside>
-      <div className="pj-hero-benefits">
-        <article><Icon name="shield"/><div><b>Clear Inspiration</b><small>Start from a visual idea</small></div></article>
-        <article><Icon name="photo"/><div><b>Multiple Categories</b><small>Construction, Interiors, Real Estate</small></div></article>
-        <article><Icon name="people"/><div><b>Structured Requirement</b><small>Turn ideas into a clear brief</small></div></article>
-        <article><Icon name="info"/><div><b>Clear Context</b><small>Ideas are labelled as inspiration</small></div></article>
-      </div>
-    </section>
-
     <section className="pj-filter-wrap">
       <div className="pj-filter-top">
         <div className="pj-category-tabs">
@@ -380,7 +601,7 @@ export default function Projects(){
         <label><select value={budget} onChange={e=>setBudget(e.target.value)}><option value="">Budget Range</option>{[...new Set(PROJECTS.map(p=>p.budget))].map(v=><option key={v}>{v}</option>)}</select></label>
         <label><select value={area} onChange={e=>setArea(e.target.value)}><option value="">Built-up Area</option><option value="under2000">Under 2000 sq ft</option><option value="2000to4000">2000–4000 sq ft</option><option value="4000plus">4000+ sq ft</option></select></label>
         <label><select value={style} onChange={e=>setStyle(e.target.value)}><option value="">Style / Design</option>{[...new Set(PROJECTS.map(p=>p.style))].map(v=><option key={v}>{v}</option>)}</select></label>
-        <button className="pj-apply" onClick={()=>setVisible(8)}>Apply Filters</button>
+        <button className="pj-apply" onClick={()=>setVisible(12)}>Apply Filters</button>
       </div>
     </section>
 
@@ -408,7 +629,7 @@ export default function Projects(){
         </article>)}
       </div>
       {filtered.length===0&&<div className="pj-empty">No inspiration cards match these filters. Try clearing one or more filters.</div>}
-      {visible<filtered.length&&<button className="pj-load" onClick={()=>setVisible(v=>v+4)}>Load More Projects ↓</button>}
+      {visible<filtered.length&&<button className="pj-load" onClick={()=>setVisible(v=>v+6)}>Load More Projects ↓</button>}
     </section>
 
     <section className="pj-stats">
@@ -416,15 +637,6 @@ export default function Projects(){
       <article><span><Icon name="pin" size={23}/></span><div><b>50+</b><small>Locations Covered</small></div></article>
       <article><span><Icon name="home" size={23}/></span><div><b>3</b><small>Project Categories</small></div></article>
       <article><span><Icon name="shield" size={23}/></span><div><b>Free</b><small>Consultation</small></div></article>
-    </section>
-
-    <section className="pj-use-cases">
-      <div className="pj-section-head"><div><h2>Explore Projects <em>In Detail</em></h2><p>Open any project to review its concept, area, budget range, scope and design highlights before deciding what you want.</p></div></div>
-      <div className="pj-use-grid">
-        <article><img src={PROJECTS[0].image} alt=""/><div><strong>“</strong><p>Review the construction concept, scale, style and planning highlights before using it as inspiration for your own home.</p><b>Construction Concepts</b></div></article>
-        <article><img src={PROJECTS[1].image} alt=""/><div><strong>“</strong><p>Open interior projects to understand the design language, planning approach, finishes and the kind of scope you may want.</p><b>Interior Concepts</b></div></article>
-        <article><img src={PROJECTS[2].image} alt=""/><div><strong>“</strong><p>Review property examples for type, location, scale and budget context without treating inspiration cards as live listings.</p><b>Property Concepts</b></div></article>
-      </div>
     </section>
 
     {selectedProject&&<div className="pj-detail-backdrop" role="presentation" onMouseDown={event=>{if(event.target===event.currentTarget)closeProject()}}>
