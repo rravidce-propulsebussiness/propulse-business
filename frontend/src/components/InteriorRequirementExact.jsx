@@ -68,10 +68,16 @@ export default function InteriorRequirementExact(props) {
   const [referenceFiles, setReferenceFiles] = useState([])
   const byKey = useMemo(() => Object.fromEntries(questions.map(q => [q.questionKey, q])), [questions])
   const propertyType = byKey.property_type
+  const bhk = byKey.bhk
+  const scope = byKey.interior_scope
+  const selectedWork = byKey.selected_work
+  const finishQuality = byKey.finish_quality
+  const budget = byKey.budget
+  const timeline = byKey.timeline
   const style = byKey.design_style
   const additional = byKey.additional_requirement
-  const excluded = new Set(['project_location','property_type','area','rooms','interior_scope','design_style','additional_requirement'])
-  const extraQuestions = questions.filter(q => !excluded.has(q.questionKey))
+  const handledKeys = new Set(['project_location','property_type','bhk','interior_scope','selected_work','finish_quality','budget','timeline','design_style','additional_requirement'])
+  const extraQuestions = questions.filter(q => !handledKeys.has(q.questionKey))
   const phone = contactData.phone || contactData.phone_number || contactData.mobile || ''
   const email = contactData.email || contactData.support_email || ''
   const summary = [
@@ -81,6 +87,12 @@ export default function InteriorRequirementExact(props) {
     ].filter(Boolean).join(', ') || '—'],
     ['PIN Code', answerLabel(locationQuestion, locationQuestion ? answers[locationQuestion.questionKey] : '')],
     ['Property Type', answerLabel(propertyType, propertyType ? answers[propertyType.questionKey] : '')],
+    ...(bhk ? [['Home Configuration', answerLabel(bhk, answers[bhk.questionKey])]] : []),
+    ['Interior Scope', answerLabel(scope, scope ? answers[scope.questionKey] : '')],
+    ...(selectedWork ? [['Selected Work', answerLabel(selectedWork, answers[selectedWork.questionKey])]] : []),
+    ['Finish Level', answerLabel(finishQuality, finishQuality ? answers[finishQuality.questionKey] : '')],
+    ['Budget', answerLabel(budget, budget ? answers[budget.questionKey] : '')],
+    ['Timeline', answerLabel(timeline, timeline ? answers[timeline.questionKey] : '')],
     ['Design Style', answerLabel(style, style ? answers[style.questionKey] : '')],
   ]
 
