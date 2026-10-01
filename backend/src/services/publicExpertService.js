@@ -131,8 +131,6 @@ async function listPublicExperts({search='',industryId='',cityId='',verified='',
        COALESCE(beds.is_featured,FALSE) AS is_featured,
        COALESCE(beds.sort_order,0) AS sort_order,
        mem.plan_group,
-       mem.plan_name,
-       mem.expires_at AS membership_expires_at,
        (SELECT COUNT(*)::int FROM business_profile_projects bpp WHERE bpp.business_profile_id=bp.id AND bpp.is_published=TRUE) AS project_count,
        (SELECT COUNT(*)::int FROM business_profile_service_plans bspp WHERE bspp.business_profile_id=bp.id AND bspp.is_published=TRUE) AS plan_count,
        (SELECT bpp.cover_image_url FROM business_profile_projects bpp WHERE bpp.business_profile_id=bp.id AND bpp.is_published=TRUE AND COALESCE(bpp.cover_image_url,'')<>'' ORDER BY bpp.sort_order,bpp.id LIMIT 1) AS cover_image_url,
@@ -204,7 +202,7 @@ async function getPublicExpert(expertId){
             bp.public_headline,COALESCE(NULLIF(bp.public_summary,''),'') AS public_summary,bp.years_experience,
             EXISTS(SELECT 1 FROM company_proof_documents cpd WHERE cpd.user_id=u.id AND cpd.status='verified') AS is_verified,
             COALESCE(beds.is_featured,FALSE) AS is_featured,
-            mem.plan_group,mem.plan_name,mem.expires_at AS membership_expires_at
+            mem.plan_group
      FROM users u
      JOIN business_profiles bp ON bp.user_id=u.id
      LEFT JOIN business_expert_directory_settings beds ON beds.user_id=u.id
