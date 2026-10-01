@@ -203,9 +203,7 @@ export function buildConstructionQuotation({answers={},estimatorAnswers={},resul
       constructionPackage:display(DISPLAY.construction_package,packageKey,packageKey),
       quality:display(DISPLAY.quality,quality,quality),
       siteAccess:display(DISPLAY.site_access,estimatorAnswers.site_access,estimatorAnswers.site_access),
-      basement:estimatorAnswers.basement?'Yes':'No',
       timeline:display(DISPLAY.timeline,answers.timeline,String(answers.timeline||'—')),
-      scope:Array.isArray(answers.construction_scope)?answers.construction_scope:[],
       additional:String(answers.additional_requirement||'').trim(),
     },
     costBreakdown:Array.isArray(result.breakdown)?result.breakdown.map(item=>({
