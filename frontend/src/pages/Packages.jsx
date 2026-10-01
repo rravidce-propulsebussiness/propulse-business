@@ -169,10 +169,17 @@ export default function Packages() {
           <button className="primary" type="button" onClick={() => openQuote(category, item.key)}>Get Quote <Icon name="arrow" size={14}/></button>
           <button className={'compare ' + (selected ? 'selected' : '')} type="button" onClick={() => setCompare(category, item.key)}>{selected ? 'Selected' : 'Compare'}</button>
         </div>
-        <button className="pkg-full-toggle" type="button" onClick={() => toggleDetails(category, item.key)}>
-          {open ? 'Hide Details' : 'Full Details'} <Icon name="chevron" size={14}/>
+        <button
+          className={'pkg-full-toggle ' + (open ? 'open' : '')}
+          type="button"
+          onClick={() => toggleDetails(category, item.key)}
+          aria-expanded={open}
+          aria-controls={'pkg-details-' + category + '-' + item.key}
+        >
+          <span>{open ? 'Hide Details' : 'Full Details'}</span>
+          <i><Icon name="chevron" size={14}/></i>
         </button>
-        {open && <div className="pkg-full-details">
+        {open && <div className="pkg-full-details" id={'pkg-details-' + category + '-' + item.key}>
           {Object.entries(item.specs).map(([label,value]) => <div key={label}><b>{label}</b><span>{value}</span></div>)}
         </div>}
       </div>
