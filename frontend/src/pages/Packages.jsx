@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { CONSTRUCTION_PACKAGE_CATALOG } from '../data/constructionPackageCatalog'
 import { INTERIOR_PACKAGE_CATALOG, INTERIOR_PACKAGES } from '../data/interiorPackageCatalog'
 import './Packages.css'
@@ -83,6 +83,7 @@ function Icon({ name, size = 20 }) {
 }
 
 export default function Packages() {
+  const navigate = useNavigate()
   const compareRef = useRef(null)
   const hash = typeof window !== 'undefined' ? window.location.hash : ''
   const [category, setCategory] = useState(hash === '#interior' ? 'interior' : 'construction')
@@ -131,14 +132,9 @@ export default function Packages() {
   }
 
   function openQuote(key) {
-    const item = packages.find(pkg => pkg.key === key)
-    window.dispatchEvent(new CustomEvent('propulse:open-lead-popup', {
-      detail: {
-        flowKey: category === 'construction' ? 'build' : 'design',
-        packageKey: key || '',
-        packageName: item?.name || '',
-      },
-    }))
+    const packageKey = String(key || '').toLowerCase()
+    const hash = category === 'construction' ? 'construction' : 'interiors'
+    navigate('/quote?package=' + encodeURIComponent(packageKey) + '#' + hash)
   }
 
 
