@@ -256,18 +256,12 @@ export default function Packages() {
     </section>
 
     {activeCategory === 'construction' ? <section className="pkg-premium-section pkg-active-panel">
-      <div className="pkg-section-head">
-        <div><span><i/>CONSTRUCTION PACKAGES</span><h2>Build Your Dream Home</h2><p>Choose from construction packages with transparent pricing, quality materials and clear specifications.</p></div>
-        <div className="pkg-section-benefits"><span><Icon name="shield" size={15}/>Quality Construction</span><span><Icon name="people" size={15}/>Trusted Professionals</span><span><Icon name="check" size={15}/>Clear Specifications</span></div>
-      </div>
+      <div className="pkg-section-benefits"><span><Icon name="shield" size={15}/>Quality Construction</span><span><Icon name="people" size={15}/>Trusted Professionals</span><span><Icon name="check" size={15}/>Clear Specifications</span></div>
       <div className="pkg-premium-grid construction">{CONSTRUCTION_PACKAGES.map(item => renderPackageCard('construction', item))}</div>
       {compareBar('construction')}
       {renderCompare('construction')}
     </section> : <section className="pkg-premium-section pkg-active-panel pkg-interior-section">
-      <div className="pkg-section-head">
-        <div><span><i/>INTERIOR PACKAGES</span><h2>Transform Your Interiors</h2><p>Choose a premium interior package with clear material, hardware and finish references.</p></div>
-        <div className="pkg-section-benefits"><span><Icon name="sofa" size={15}/>Modular Solutions</span><span><Icon name="shield" size={15}/>Branded Materials</span><span><Icon name="tag" size={15}/>Clear Package Rates</span></div>
-      </div>
+      <div className="pkg-section-benefits"><span><Icon name="sofa" size={15}/>Modular Solutions</span><span><Icon name="shield" size={15}/>Branded Materials</span><span><Icon name="tag" size={15}/>Clear Package Rates</span></div>
       <div className="pkg-premium-grid interior">{INTERIOR_DISPLAY_PACKAGES.map(item => renderPackageCard('interior', item))}</div>
       {compareBar('interior')}
       {renderCompare('interior')}
