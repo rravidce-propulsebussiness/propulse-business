@@ -50,18 +50,23 @@ async function findFixtureLead(page,requirement){
 
 const TINY_PNG='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Wl6S0sAAAAASUVORK5CYII='
 
-test('public homepage presents customer project and estimator journeys',async({page})=>{
+test('public homepage presents homeowner acquisition journeys',async({page})=>{
   await page.goto('/')
-  await expect(page.getByRole('heading',{name:/plan the project/i})).toBeVisible()
-  await expect(page.getByRole('link',{name:/start build requirement/i})).toHaveAttribute('href','/build')
-  await expect(page.getByRole('link',{name:/start interior requirement/i})).toHaveAttribute('href','/design')
-  await expect(page.getByRole('link',{name:/calculate construction cost/i})).toHaveAttribute('href','/construction-estimator')
-  await expect(page.getByRole('link',{name:/calculate interior cost/i})).toHaveAttribute('href','/interior-estimator')
-  await expect(page.getByRole('link',{name:/professional marketplace/i}).first()).toHaveAttribute('href','/leads')
+  await expect(page.locator('.hc-hero h1')).toContainText('Build. Design. Find')
+  await expect(page.locator('.hc-hero h1')).toContainText('Right Professionals.')
+  await expect(page.getByRole('button',{name:/start your requirement/i})).toBeVisible()
+  await expect(page.getByRole('link',{name:/view packages/i}).first()).toHaveAttribute('href','/packages')
+  await expect(page.getByRole('link',{name:/get free quote/i}).first()).toHaveAttribute('href','/quote#interiors')
+  await expect(page.getByRole('link',{name:/find professionals/i}).first()).toHaveAttribute('href','/experts')
+  await expect(page.getByRole('link',{name:/for professionals/i}).first()).toHaveAttribute('href','/professionals')
+  await expect(page.getByRole('heading',{name:/what do you need/i})).toBeVisible()
+  await expect(page.getByRole('heading',{name:'Build Your Home'})).toBeVisible()
+  await expect(page.getByRole('heading',{name:'Design Your Space'})).toBeVisible()
+  await expect(page.getByRole('heading',{name:'Find a Property'})).toBeVisible()
 
-  await page.getByRole('link',{name:/calculate interior cost/i}).click()
-  await expect(page).toHaveURL(/\/interior-estimator$/)
-  await expect(page.getByText('PROPULSE ESTIMATOR')).toBeVisible()
+  await page.getByRole('button',{name:/start your requirement/i}).click()
+  await expect(page.getByText('Tell Us Your Requirement',{exact:true})).toBeVisible()
+  await expect(page.getByRole('button',{name:/submit requirement/i})).toBeVisible()
 })
 
 test('protected customer route redirects anonymous users to login',async({page})=>{
@@ -72,11 +77,11 @@ test('protected customer route redirects anonymous users to login',async({page})
 
 test('business login survives reload and cannot access Admin APIs',async({page})=>{
   await login(page,accounts.business)
-  await expect(page).toHaveURL(/\/leads(?:\?|$)/)
+  await expect(page).toHaveURL(/\/professionals(?:\?|$)/)
   await expect(page.getByRole('heading',{name:'Find the right opportunity for your business.'})).toBeVisible()
 
   await page.reload()
-  await expect(page).toHaveURL(/\/leads(?:\?|$)/)
+  await expect(page).toHaveURL(/\/professionals(?:\?|$)/)
 
   await page.goto('/wallet')
   await expect(page.getByText('AVAILABLE BALANCE')).toBeVisible()
@@ -94,7 +99,7 @@ test.describe('financial mutation release gate',()=>{
 
   test('financial mutations remain exactly-once across wallet and manual approvals',async({page})=>{
     await login(page,accounts.business)
-    await expect(page).toHaveURL(/\/leads(?:\?|$)/)
+    await expect(page).toHaveURL(/\/professionals(?:\?|$)/)
 
     const startingWallet=await api(page,'/api/wallet?summary=1')
     expect(startingWallet.status).toBe(200)
