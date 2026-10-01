@@ -74,3 +74,5 @@
 @media(max-width:640px){
   .rq-quotation-result strong{font-size:20px}
 }
+
+.rq-config-help{margin-top:-2px;color:#83909b;font-size:10px;line-height:1.35;font-weight:600}.rq-site-access .rq-premium-options{gap:6px}.rq-site-access .rq-premium-options>button{min-width:0;flex:1;padding-left:8px;padding-right:8px}.rq-plot-area-select{width:100%}
