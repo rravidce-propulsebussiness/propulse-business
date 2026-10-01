@@ -134,7 +134,7 @@ export default function InteriorRequirementExact(props) {
     </section>
 
     <div className="irx-steps">
-      {[['1','Basic Details','Tell us about your space','#irx-basic'],['2','Property Details','Type, size and layout','#irx-property'],['3','Design & Scope','Style, BHK and work selection','#irx-style'],['4','Review & Submit','Confirm and connect','#irx-summary']].map(([n,title,sub,href],index) => <a href={href} key={n} className={index===0?'active':completion>[30,55,80,99][index]?'done':''}><span>{completion>[30,55,80,99][index]?'✓':n}</span><div><b>{title}</b><small>{sub}</small></div>{index<3&&<Icon name="arrow" size={14}/>}</a>)}
+      {[['1','Basic Details','Tell us about your space','#irx-basic'],['2','Property Details','Property type and configuration','#irx-property'],['3','Design & Scope','Style, BHK and work selection','#irx-style'],['4','Review & Submit','Confirm and connect','#irx-summary']].map(([n,title,sub,href],index) => <a href={href} key={n} className={index===0?'active':completion>[30,55,80,99][index]?'done':''}><span>{completion>[30,55,80,99][index]?'✓':n}</span><div><b>{title}</b><small>{sub}</small></div>{index<3&&<Icon name="arrow" size={14}/>}</a>)}
     </div>
 
     <form className="irx-form" onSubmit={submit}>
@@ -162,7 +162,7 @@ export default function InteriorRequirementExact(props) {
             <label><b>Email <small>(Optional)</small></b><input type="email" value={contact.email} onChange={e=>setContact({...contact,email:e.target.value})} placeholder="Enter your email"/></label>
           </div>
         </div>
-        <aside className="irx-promo"><div className="irx-promo-photo"><img src={PROMO} alt=""/><h3>Transform<br/>Your Space<br/>Your Way</h3></div><div className="irx-promo-stats"><span><b>Guided</b><small>Requirement Flow</small></span><span><b>Admin</b><small>Managed Questions</small></span><span><b>Multi-city</b><small>Location Support</small></span></div></aside>
+        <aside className="irx-promo"><div className="irx-promo-photo"><img src={PROMO} alt=""/><h3>Transform<br/>Your Space<br/>Your Way</h3></div><div className="irx-promo-stats"><span><b>Guided</b><small>Easy Journey</small></span><span><b>Tailored</b><small>Your Preferences</small></span><span><b>Local</b><small>City-aware Matching</small></span></div></aside>
       </section>
 
       <section className="irx-card" id="irx-property">
