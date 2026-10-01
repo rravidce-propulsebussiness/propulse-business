@@ -1,5 +1,5 @@
 import {useEffect,useRef,useState} from 'react'
-import {getSoundState,setSoundEnabled,setSoundVolume,subscribeSoundState} from '../utils/soundEffects'
+import {getSoundState,playSound,setSoundEnabled,setSoundVolume,subscribeSoundState} from '../utils/soundEffects'
 import './SoundControl.css'
 
 export default function SoundControl(){
@@ -32,6 +32,7 @@ export default function SoundControl(){
         <span><b>Personal volume</b><strong>{Math.round(state.userVolume*100)}%</strong></span>
         <input type="range" min="0" max="100" step="5" value={Math.round(state.userVolume*100)} disabled={!state.config.masterEnabled||!state.enabled} onChange={event=>setSoundVolume(Number(event.target.value)/100)}/>
       </label>
+      <button type="button" className="sound-control-test" disabled={!active} onClick={()=>playSound('success')}>Test sound</button>
     </div>}
     <button type="button" className={'sound-control-button'+(active?' active':'')} aria-label={active?'Sound effects on':'Sound effects off'} aria-expanded={open} title="Sound effects" onClick={()=>setOpen(value=>!value)}>
       <span aria-hidden="true">{active?'🔊':'🔇'}</span>

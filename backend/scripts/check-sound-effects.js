@@ -20,9 +20,9 @@ must('src/routes/soundSettingsRoutes.js',["router.get('/',controller.getPublic)"
 must('src/routes/adminRoutes.js',["/sound-effects","soundSettingsController"]);
 must('src/server.js',["/api/sound-settings","soundSettingsRoutes"]);
 must('../frontend/src/utils/soundEffects.js',[
-  'AudioContext','propulse_sound_enabled','propulse_sound_volume','playSound','notification','upload','success','warning'
+  'AudioContext','propulse_sound_enabled','propulse_sound_volume','playSound','interactionReady','schedulePattern','ctx.resume()','notification','upload','success','warning'
 ]);
-must('../frontend/src/components/SoundControl.jsx',['Website sound','Personal volume','setSoundEnabled','setSoundVolume']);
+must('../frontend/src/components/SoundControl.jsx',['Website sound','Personal volume','Test sound','playSound','setSoundEnabled','setSoundVolume']);
 must('../frontend/src/admin/pages/AdminSoundEffects.jsx',[
   'Master sound effects','Button & link click','Upload complete','Notifications','Default volume'
 ]);
