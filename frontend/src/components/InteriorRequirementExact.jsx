@@ -110,7 +110,7 @@ export default function InteriorRequirementExact(props) {
     </section>
 
     <div className="irx-steps">
-      {[['1','Basic Details','Tell us about your space','#irx-basic'],['2','Property Details','Type, size and layout','#irx-property'],['3','Design Requirements','Style, rooms and preferences','#irx-style'],['4','Review & Submit','Confirm and connect','#irx-summary']].map(([n,title,sub,href],index) => <a href={href} key={n} className={index===0?'active':completion>[30,55,80,99][index]?'done':''}><span>{completion>[30,55,80,99][index]?'✓':n}</span><div><b>{title}</b><small>{sub}</small></div>{index<3&&<Icon name="arrow" size={14}/>}</a>)}
+      {[['1','Basic Details','Tell us about your space','#irx-basic'],['2','Property Details','Type, size and layout','#irx-property'],['3','Design Preferences','Style and preferences','#irx-style'],['4','Review & Submit','Confirm and connect','#irx-summary']].map(([n,title,sub,href],index) => <a href={href} key={n} className={index===0?'active':completion>[30,55,80,99][index]?'done':''}><span>{completion>[30,55,80,99][index]?'✓':n}</span><div><b>{title}</b><small>{sub}</small></div>{index<3&&<Icon name="arrow" size={14}/>}</a>)}
     </div>
 
     <form className="irx-form" onSubmit={submit}>
@@ -149,12 +149,12 @@ export default function InteriorRequirementExact(props) {
       <div className="irx-lower">
         <div>
           <section className="irx-card" id="irx-style">
-            <div className="irx-section-title"><span>4.</span><div><h2>Interior Style Preference</h2><p>Choose your preferred interior style. You can select multiple options.</p></div></div>
+            <div className="irx-section-title"><span>3.</span><div><h2>Interior Style Preference</h2><p>Choose your preferred interior style. You can select multiple options.</p></div></div>
             <div className="irx-style-grid">{(style?.options||[]).map(option=>{const selected=Array.isArray(answers[style.questionKey])?answers[style.questionKey]:[];const active=selected.includes(option.value);return <button type="button" key={option.value} className={active?'active':''} onClick={()=>setAnswer(style.questionKey,active?selected.filter(v=>v!==option.value):[...selected,option.value])}><div><img src={STYLE_IMAGES[option.value]||STYLE_IMAGES.modern} alt=""/>{active&&<i>✓</i>}</div><b>{option.label}</b></button>})}</div>
           </section>
 
           <section className="irx-card">
-            <div className="irx-section-title"><span>5.</span><div><h2>Additional Requirements</h2><p>Tell us about any specific requirements you have.</p></div></div>
+            <div className="irx-section-title"><span>4.</span><div><h2>Additional Requirements</h2><p>Tell us about any specific requirements you have.</p></div></div>
             {extraQuestions.length>0&&<div className="irx-extra-grid">{extraQuestions.map(question=><div className="irx-extra-q" key={question.questionKey}><b>{question.label}</b>{question.helpText&&<small>{question.helpText}</small>}{['single_select','multi_select','timeline','boolean'].includes(question.questionType)?<Chips question={question} value={answers[question.questionKey]} onChange={v=>setAnswer(question.questionKey,v)}/>:<input value={answers[question.questionKey]||''} onChange={e=>setAnswer(question.questionKey,e.target.value)} placeholder={question.questionType==='budget'?'Enter approximate budget':'Enter details'}/>}</div>)}</div>}
             {additional&&<div className="irx-notes"><textarea maxLength={Number(additional.validation?.maxLength||1500)} value={answers[additional.questionKey]||''} onChange={e=>setAnswer(additional.questionKey,e.target.value)} placeholder="E.g. Modular kitchen, wardrobe, false ceiling, lighting, furniture, smart home, etc."/><span>{String(answers[additional.questionKey]||'').length}/{Number(additional.validation?.maxLength||1500)}</span></div>}
             <div className="irx-upload"><b>Upload Reference Images <small>(Optional)</small></b><input ref={fileRef} hidden type="file" accept="image/*" multiple onChange={pickFiles}/><div className="irx-upload-grid">{[0,1,2].map(index=><button type="button" key={index} onClick={()=>fileRef.current?.click()}>{referenceFiles[index]?<><span className="irx-file-name">{referenceFiles[index].name}</span><small>Selected locally</small></>:<><Icon name="upload"/><span>Upload Image</span></>}</button>)}</div><small>Choose up to 5 images, max 5MB each. Reference files stay local until file-storage support is enabled.</small></div>
