@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { isEmptyAnswer } from './CustomerFlowQuestion'
 import QuoteLocationFields from './QuoteLocationFields'
@@ -57,6 +57,10 @@ const FALLBACK_BHK_OPTIONS = [
   { value: '4_bhk', label: '4 BHK' },
   { value: '5_plus_bhk', label: '5+ BHK' },
 ]
+
+const MAX_REFERENCE_FILES = 8
+const MAX_REFERENCE_FILE_BYTES = 5 * 1024 * 1024
+const REFERENCE_FILE_TYPES = new Set(['image/jpeg','image/png','image/webp','application/pdf'])
 const HERO = 'https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=2100&q=92'
 const PROMO = 'https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&w=1200&q=90'
 
@@ -105,6 +109,7 @@ export default function InteriorRequirementExact(props) {
   const { flow, questions, answers, setAnswer, cities, locationStates, locationStateId, setLocationState, cityId, setCity, locationQuestion, setPincode, onDetectedLocation, pinLookup, contact, setContact, state, submit, contactData, completion } = props
   const fileRef = useRef(null)
   const [referenceFiles, setReferenceFiles] = useState([])
+  const [uploadNotice, setUploadNotice] = useState('')
   const [legacyScopeMode, setLegacyScopeMode] = useState('')
   const byKey = useMemo(() => Object.fromEntries(questions.map(q => [q.questionKey, q])), [questions])
   const propertyType = byKey.property_type
@@ -124,6 +129,12 @@ export default function InteriorRequirementExact(props) {
   const extraQuestions = questions.filter(q => !handledKeys.has(q.questionKey))
   const phone = contactData.phone || contactData.phone_number || contactData.mobile || ''
   const email = contactData.email || contactData.support_email || ''
+
+  useEffect(() => () => {
+    referenceFiles.forEach(item => {
+      if (item.previewUrl) URL.revokeObjectURL(item.previewUrl)
+    })
+  }, [referenceFiles])
 
   const propertyTypeValue = propertyType ? answers[propertyType.questionKey] : ''
   // Keep the bedroom selector visible by default so the customer can see it
@@ -194,10 +205,39 @@ export default function InteriorRequirementExact(props) {
   ]
 
   function pickFiles(event) {
-    const files = Array.from(event.target.files || []).filter(file => file.type.startsWith('image/') && file.size <= 5 * 1024 * 1024)
-    setReferenceFiles(current => [...current, ...files].slice(0, 5))
+    const incoming = Array.from(event.target.files || [])
+    const accepted = incoming.filter(file => REFERENCE_FILE_TYPES.has(file.type) && file.size <= MAX_REFERENCE_FILE_BYTES)
+    const rejected = incoming.length - accepted.length
+
+    setReferenceFiles(current => {
+      const existing = new Set(current.map(item => item.key))
+      const next = [...current]
+      for (const file of accepted) {
+        const key = [file.name,file.size,file.lastModified].join(':')
+        if (existing.has(key) || next.length >= MAX_REFERENCE_FILES) continue
+        existing.add(key)
+        next.push({
+          key,
+          file,
+          previewUrl: file.type.startsWith('image/') ? URL.createObjectURL(file) : '',
+        })
+      }
+      return next
+    })
+
+    if (rejected) setUploadNotice('Some files were skipped. Use JPG, PNG, WebP or PDF files up to 5 MB each.')
+    else if (incoming.length) setUploadNotice('')
     event.target.value = ''
   }
+
+  function removeReferenceFile(key) {
+    setReferenceFiles(current => {
+      const item = current.find(entry => entry.key === key)
+      if (item?.previewUrl) URL.revokeObjectURL(item.previewUrl)
+      return current.filter(entry => entry.key !== key)
+    })
+  }
+
 
   return <main className="rq-page rq-premium-page irx-page">
     <header className="irx-header">
@@ -222,10 +262,10 @@ export default function InteriorRequirementExact(props) {
       {[['1','Basic Details','Tell us about your space','#irx-basic'],['2','Property Details','Property type and configuration','#irx-property'],['3','Design & Scope','Style and work selection','#irx-style'],['4','Review & Submit','Confirm and connect','#irx-summary']].map(([n,title,sub,href],index) => <a href={href} key={n} className={index===0?'active':completion>[30,55,80,99][index]?'done':''}><span>{completion>[30,55,80,99][index]?'✓':n}</span><div><b>{title}</b><small>{sub}</small></div>{index<3&&<Icon name="arrow" size={14}/>}</a>)}
     </div>
 
-    <form className="irx-form" onSubmit={submit}>
+    <form className="irx-form" onSubmit={event=>submit(event,referenceFiles.map(item=>item.file))}>
       <section className="irx-top-grid" id="irx-basic">
         <div className="irx-card irx-basic-card">
-          <div className="irx-section-title"><span>1.</span><div><h2>Basic Details</h2><p>Let's start with some basic information about your interior project.</p></div></div>
+          <div className="irx-section-title irx-section-title-premium"><span>1.</span><div><small>PROJECT ESSENTIALS</small><h2>Basic Details</h2><p>Tell us where the project is and how we can reach you.</p></div></div>
           <div className="irx-basic-grid">
             <QuoteLocationFields
               states={locationStates}
@@ -278,7 +318,7 @@ export default function InteriorRequirementExact(props) {
       <div className="irx-lower">
         <div>
           <section className="irx-card" id="irx-style">
-            <div className="irx-section-title"><span>3.</span><div><h2>Interior Style Preference</h2><p>Choose your preferred interior style. You can select multiple options.</p></div></div>
+            <div className="irx-section-title irx-section-title-premium"><span>3.</span><div><small>DESIGN DIRECTION</small><h2>Interior Style Preference</h2><p>Select one or more styles that match the look you want.</p></div></div>
             <div className="irx-style-grid">{(style?.options||[]).map(option=>{const selected=Array.isArray(answers[style.questionKey])?answers[style.questionKey]:[];const active=selected.includes(option.value);return <button type="button" key={option.value} className={active?'active':''} onClick={()=>setAnswer(style.questionKey,active?selected.filter(v=>v!==option.value):[...selected,option.value])}><div><img src={STYLE_IMAGES[option.value]||STYLE_IMAGES.modern} alt=""/>{active&&<i>✓</i>}</div><b>{option.label}</b></button>})}</div>
           </section>
 
@@ -359,10 +399,32 @@ export default function InteriorRequirementExact(props) {
             {extraQuestions.length>0&&<div className="irx-extra-grid">{extraQuestions.map(question=><div className="irx-extra-q" key={question.questionKey}><b>{question.label}</b>{question.helpText&&<small>{question.helpText}</small>}{['single_select','multi_select','timeline','boolean'].includes(question.questionType)?<Chips question={question} value={answers[question.questionKey]} onChange={value=>setAnswer(question.questionKey,value)}/>:<input value={answers[question.questionKey]||''} onChange={e=>setAnswer(question.questionKey,e.target.value)} placeholder="Enter details"/>}</div>)}</div>}
           </section>
 
-          <section className="irx-card" id="irx-notes">
-            <div className="irx-section-title"><span>5.</span><div><h2>Additional Notes</h2><p>Add any specific preferences, site details or reference images.</p></div></div>
-            {additional&&<div className="irx-notes"><textarea maxLength={Number(additional.validation?.maxLength||1500)} value={answers[additional.questionKey]||''} onChange={e=>setAnswer(additional.questionKey,e.target.value)} placeholder="E.g. TV wall, pooja unit, storage preference, material choice, lighting idea, smart home, etc."/><span>{String(answers[additional.questionKey]||'').length}/{Number(additional.validation?.maxLength||1500)}</span></div>}
-            <div className="irx-upload"><b>Upload Reference Images <small>(Optional)</small></b><input ref={fileRef} hidden type="file" accept="image/*" multiple onChange={pickFiles}/><div className="irx-upload-grid">{[0,1,2].map(index=><button type="button" key={index} onClick={()=>fileRef.current?.click()}>{referenceFiles[index]?<><span className="irx-file-name">{referenceFiles[index].name}</span><small>Selected locally</small></>:<><Icon name="upload"/><span>Upload Image</span></>}</button>)}</div><small>Choose up to 5 images, max 5MB each.</small></div>
+          <section className="irx-card irx-notes-card" id="irx-notes">
+            <div className="irx-section-title irx-section-title-premium"><span>5.</span><div><small>FINAL DETAILS</small><h2>Additional Notes</h2><p>Share anything that will help a designer understand your space and preferences.</p></div></div>
+            {additional&&<div className="irx-notes irx-notes-premium"><div className="irx-notes-label"><b>Project Notes</b><small>Optional</small></div><textarea maxLength={Number(additional.validation?.maxLength||1500)} value={answers[additional.questionKey]||''} onChange={e=>setAnswer(additional.questionKey,e.target.value)} placeholder="E.g. TV wall, pooja unit, storage preference, material choice, lighting idea, smart-home requirement, etc."/><span>{String(answers[additional.questionKey]||'').length}/{Number(additional.validation?.maxLength||1500)}</span></div>}
+            <div className="irx-upload irx-upload-premium">
+              <div className="irx-upload-head">
+                <div><b>Upload Floor Plan or Reference Images <small>Optional</small></b><p>Add a floor plan, site sketch or inspiration images so businesses can understand the requirement better.</p></div>
+                <span>{referenceFiles.length}/{MAX_REFERENCE_FILES} files</span>
+              </div>
+              <input ref={fileRef} hidden type="file" accept="image/jpeg,image/png,image/webp,application/pdf" multiple onChange={pickFiles}/>
+              <button className="irx-upload-dropzone" type="button" onClick={()=>fileRef.current?.click()} disabled={referenceFiles.length>=MAX_REFERENCE_FILES}>
+                <span className="irx-upload-icon"><Icon name="upload" size={22}/></span>
+                <strong>{referenceFiles.length?'Add More Files':'Choose Floor Plan or Images'}</strong>
+                <small>JPG, PNG, WebP or PDF · up to 5 MB each</small>
+              </button>
+              {referenceFiles.length>0&&<div className="irx-reference-gallery">
+                {referenceFiles.map((item,index)=><article key={item.key}>
+                  <div className="irx-reference-preview">
+                    {item.previewUrl?<img src={item.previewUrl} alt={'Reference '+(index+1)}/>:<span className="irx-pdf-preview"><b>PDF</b><small>Floor plan / document</small></span>}
+                    <button type="button" onClick={()=>removeReferenceFile(item.key)} aria-label={'Remove '+item.file.name}>×</button>
+                  </div>
+                  <div><b title={item.file.name}>{item.file.name}</b><small>{(item.file.size/1024/1024).toFixed(1)} MB</small></div>
+                </article>)}
+              </div>}
+              {uploadNotice&&<div className="irx-upload-notice">{uploadNotice}</div>}
+              <small className="irx-upload-footnote">You can add up to {MAX_REFERENCE_FILES} files. Multiple selections are supported.</small>
+            </div>
           </section>
         </div>
 
