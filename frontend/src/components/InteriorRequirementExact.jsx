@@ -134,7 +134,7 @@ export default function InteriorRequirementExact(props) {
     </section>
 
     <div className="irx-steps">
-      {[['1','Basic Details','Tell us about your space','#irx-basic'],['2','Property Details','Type, size and layout','#irx-property'],['3','Design Preferences','Style and preferences','#irx-style'],['4','Review & Submit','Confirm and connect','#irx-summary']].map(([n,title,sub,href],index) => <a href={href} key={n} className={index===0?'active':completion>[30,55,80,99][index]?'done':''}><span>{completion>[30,55,80,99][index]?'✓':n}</span><div><b>{title}</b><small>{sub}</small></div>{index<3&&<Icon name="arrow" size={14}/>}</a>)}
+      {[['1','Basic Details','Tell us about your space','#irx-basic'],['2','Property Details','Type, size and layout','#irx-property'],['3','Design & Scope','Style, BHK and work selection','#irx-style'],['4','Review & Submit','Confirm and connect','#irx-summary']].map(([n,title,sub,href],index) => <a href={href} key={n} className={index===0?'active':completion>[30,55,80,99][index]?'done':''}><span>{completion>[30,55,80,99][index]?'✓':n}</span><div><b>{title}</b><small>{sub}</small></div>{index<3&&<Icon name="arrow" size={14}/>}</a>)}
     </div>
 
     <form className="irx-form" onSubmit={submit}>
@@ -177,11 +177,63 @@ export default function InteriorRequirementExact(props) {
             <div className="irx-style-grid">{(style?.options||[]).map(option=>{const selected=Array.isArray(answers[style.questionKey])?answers[style.questionKey]:[];const active=selected.includes(option.value);return <button type="button" key={option.value} className={active?'active':''} onClick={()=>setAnswer(style.questionKey,active?selected.filter(v=>v!==option.value):[...selected,option.value])}><div><img src={STYLE_IMAGES[option.value]||STYLE_IMAGES.modern} alt=""/>{active&&<i>✓</i>}</div><b>{option.label}</b></button>})}</div>
           </section>
 
-          <section className="irx-card">
-            <div className="irx-section-title"><span>4.</span><div><h2>Additional Requirements</h2><p>Tell us about any specific requirements you have.</p></div></div>
-            {extraQuestions.length>0&&<div className="irx-extra-grid">{extraQuestions.map(question=><div className="irx-extra-q" key={question.questionKey}><b>{question.label}</b>{question.helpText&&<small>{question.helpText}</small>}{['single_select','multi_select','timeline','boolean'].includes(question.questionType)?<Chips question={question} value={answers[question.questionKey]} onChange={v=>setAnswer(question.questionKey,v)}/>:<input value={answers[question.questionKey]||''} onChange={e=>setAnswer(question.questionKey,e.target.value)} placeholder={question.questionType==='budget'?'Enter approximate budget':'Enter details'}/>}</div>)}</div>}
-            {additional&&<div className="irx-notes"><textarea maxLength={Number(additional.validation?.maxLength||1500)} value={answers[additional.questionKey]||''} onChange={e=>setAnswer(additional.questionKey,e.target.value)} placeholder="E.g. Modular kitchen, wardrobe, false ceiling, lighting, furniture, smart home, etc."/><span>{String(answers[additional.questionKey]||'').length}/{Number(additional.validation?.maxLength||1500)}</span></div>}
-            <div className="irx-upload"><b>Upload Reference Images <small>(Optional)</small></b><input ref={fileRef} hidden type="file" accept="image/*" multiple onChange={pickFiles}/><div className="irx-upload-grid">{[0,1,2].map(index=><button type="button" key={index} onClick={()=>fileRef.current?.click()}>{referenceFiles[index]?<><span className="irx-file-name">{referenceFiles[index].name}</span><small>Selected locally</small></>:<><Icon name="upload"/><span>Upload Image</span></>}</button>)}</div><small>Choose up to 5 images, max 5MB each. Reference files stay local until file-storage support is enabled.</small></div>
+          <section className="irx-card" id="irx-requirements">
+            <div className="irx-section-title"><span>4.</span><div><h2>Interior Requirements</h2><p>Choose your home configuration and whether you want complete interiors or only selected work.</p></div></div>
+
+            <div className="irx-requirement-grid">
+              {bhk&&<label className="irx-select-field">
+                <b>Home Configuration</b>
+                <small>Select the closest BHK configuration.</small>
+                <select value={answers[bhk.questionKey]||''} onChange={e=>setAnswer(bhk.questionKey,e.target.value)}>
+                  <option value="">Select BHK</option>
+                  {(bhk.options||[]).map(option=><option key={option.value} value={option.value}>{option.label}</option>)}
+                </select>
+              </label>}
+
+              {scope&&<div className="irx-scope-field">
+                <b>{scope.label||'What interior scope do you need?'}</b>
+                <small>{scope.helpText||'Choose end-to-end interiors or select only the work you need.'}</small>
+                <div className="irx-scope-cards">
+                  {(scope.options||[]).map(option=>{
+                    const active=answers[scope.questionKey]===option.value
+                    const detail=option.value==='end_to_end'?'Complete interior planning for the selected property':'Choose only specific interior items'
+                    return <button type="button" key={option.value} className={active?'active':''} onClick={()=>{
+                      setAnswer(scope.questionKey,option.value)
+                      if(option.value==='end_to_end'&&selectedWork)setAnswer(selectedWork.questionKey,[])
+                    }}>
+                      <span><b>{option.label}</b><small>{detail}</small></span>{active&&<i>✓</i>}
+                    </button>
+                  })}
+                </div>
+              </div>}
+            </div>
+
+            {scope&&answers[scope.questionKey]==='selected_work'&&selectedWork&&<div className="irx-work-selector">
+              <div className="irx-work-heading"><b>Select the work you need</b><small>Choose one or more items. End-to-End hides this list automatically.</small></div>
+              <div className="irx-work-grid">
+                {(selectedWork.options||[]).map(option=>{
+                  const selected=Array.isArray(answers[selectedWork.questionKey])?answers[selectedWork.questionKey]:[]
+                  const active=selected.includes(option.value)
+                  return <button type="button" key={option.value} className={active?'active':''} onClick={()=>setAnswer(selectedWork.questionKey,active?selected.filter(value=>value!==option.value):[...selected,option.value])}>
+                    <span><Icon name={WORK_ICONS[option.value]||'layout'} size={20}/></span><b>{option.label}</b>{active&&<i>✓</i>}
+                  </button>
+                })}
+              </div>
+            </div>}
+
+            <div className="irx-preference-grid">
+              {finishQuality&&<div className="irx-preference-field"><b>{finishQuality.label}</b>{finishQuality.helpText&&<small>{finishQuality.helpText}</small>}<Chips question={finishQuality} value={answers[finishQuality.questionKey]} onChange={value=>setAnswer(finishQuality.questionKey,value)}/></div>}
+              {budget&&<label className="irx-preference-field"><b>{budget.label}</b>{budget.helpText&&<small>{budget.helpText}</small>}{budget.options?.length?<select value={answers[budget.questionKey]||''} onChange={e=>setAnswer(budget.questionKey,e.target.value)}><option value="">Select budget</option>{budget.options.map(option=><option key={option.value} value={option.value}>{option.label}</option>)}</select>:<input value={answers[budget.questionKey]||''} onChange={e=>setAnswer(budget.questionKey,e.target.value)} placeholder="Enter approximate budget"/>}</label>}
+              {timeline&&<div className="irx-preference-field irx-timeline-field"><b>{timeline.label}</b>{timeline.helpText&&<small>{timeline.helpText}</small>}<Chips question={timeline} value={answers[timeline.questionKey]} onChange={value=>setAnswer(timeline.questionKey,value)}/></div>}
+            </div>
+
+            {extraQuestions.length>0&&<div className="irx-extra-grid">{extraQuestions.map(question=><div className="irx-extra-q" key={question.questionKey}><b>{question.label}</b>{question.helpText&&<small>{question.helpText}</small>}{['single_select','multi_select','timeline','boolean'].includes(question.questionType)?<Chips question={question} value={answers[question.questionKey]} onChange={value=>setAnswer(question.questionKey,value)}/>:<input value={answers[question.questionKey]||''} onChange={e=>setAnswer(question.questionKey,e.target.value)} placeholder="Enter details"/>}</div>)}</div>}
+          </section>
+
+          <section className="irx-card" id="irx-notes">
+            <div className="irx-section-title"><span>5.</span><div><h2>Additional Notes</h2><p>Add any specific preferences, site details or reference images.</p></div></div>
+            {additional&&<div className="irx-notes"><textarea maxLength={Number(additional.validation?.maxLength||1500)} value={answers[additional.questionKey]||''} onChange={e=>setAnswer(additional.questionKey,e.target.value)} placeholder="E.g. TV wall, pooja unit, storage preference, material choice, lighting idea, smart home, etc."/><span>{String(answers[additional.questionKey]||'').length}/{Number(additional.validation?.maxLength||1500)}</span></div>}
+            <div className="irx-upload"><b>Upload Reference Images <small>(Optional)</small></b><input ref={fileRef} hidden type="file" accept="image/*" multiple onChange={pickFiles}/><div className="irx-upload-grid">{[0,1,2].map(index=><button type="button" key={index} onClick={()=>fileRef.current?.click()}>{referenceFiles[index]?<><span className="irx-file-name">{referenceFiles[index].name}</span><small>Selected locally</small></>:<><Icon name="upload"/><span>Upload Image</span></>}</button>)}</div><small>Choose up to 5 images, max 5MB each.</small></div>
           </section>
         </div>
 
