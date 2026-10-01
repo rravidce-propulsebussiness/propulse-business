@@ -1,3 +1,5 @@
+import { INTERIOR_PACKAGES, getInteriorPackage } from '../data/interiorPackageCatalog'
+
 const PAGE_WIDTH=1240;
 const PAGE_HEIGHT=1754;
 const PDF_WIDTH=595.28;
@@ -655,4 +657,118 @@ export async function downloadRequirementQuotePdf({
   wrap(page.ctx,note,CONTENT_WIDTH-40).forEach((line,index)=>page.ctx.fillText(line,MARGIN+20,page.y+60+index*23));
   const safe=String(flowKey||'requirement').replace(/[^a-z0-9_-]+/gi,'-').toLowerCase();
   savePdf([page],'propulse-'+safe+'-quote-request-'+(leadId||Date.now())+'.pdf');
+}
+
+
+export async function downloadInteriorBrochurePdf({
+  packageKey='standard',
+  requestId,
+  customerName='',
+  city='',
+}={}){
+  const logo=await loadLogo();
+  const selected=getInteriorPackage(packageKey);
+  const pages=[];
+
+  const cover=createPage(logo,1,'Interior Package Brochure');
+  pages.push(cover);
+  cover.y=250;
+  cover.ctx.fillStyle='#ff5a1f';
+  cover.ctx.font='800 18px Arial, sans-serif';
+  cover.ctx.fillText('INTERIOR PACKAGE BROCHURE',MARGIN,cover.y);
+  cover.ctx.fillStyle='#0a2d50';
+  cover.ctx.font='800 58px Arial, sans-serif';
+  cover.ctx.fillText(selected.name+' Interiors',MARGIN,cover.y+78);
+  cover.ctx.fillStyle='#5f7284';
+  cover.ctx.font='500 20px Arial, sans-serif';
+  wrap(cover.ctx,selected.description,CONTENT_WIDTH-50).slice(0,3).forEach((line,index)=>cover.ctx.fillText(line,MARGIN,cover.y+126+index*30));
+
+  cover.ctx.fillStyle='#fff7f2';
+  roundedRect(cover.ctx,MARGIN,cover.y+245,CONTENT_WIDTH,250,18);cover.ctx.fill();
+  cover.ctx.fillStyle='#7b8b99';
+  cover.ctx.font='800 14px Arial, sans-serif';
+  cover.ctx.fillText('SELECTED PACKAGE',MARGIN+28,cover.y+286);
+  cover.ctx.fillStyle='#0a2d50';
+  cover.ctx.font='800 38px Arial, sans-serif';
+  cover.ctx.fillText(selected.name,MARGIN+28,cover.y+338);
+  cover.ctx.fillStyle='#ff5a1f';
+  cover.ctx.font='800 34px Arial, sans-serif';
+  cover.ctx.fillText(money(selected.price)+'/sq ft',MARGIN+28,cover.y+393);
+  cover.ctx.fillStyle='#6f8190';
+  cover.ctx.font='600 16px Arial, sans-serif';
+  cover.ctx.fillText('Package reference rate — not a final project quotation',MARGIN+28,cover.y+429);
+
+  const meta=[];
+  if(requestId)meta.push(['Request ID','#'+requestId]);
+  if(customerName)meta.push(['Customer',customerName]);
+  if(city)meta.push(['Location',city]);
+  if(meta.length){
+    cover.y+=540;
+    drawMetaGrid(cover,meta);
+  }else{
+    cover.y+=560;
+  }
+
+  drawSectionHeading(cover,'Package Highlights');
+  drawBullets(cover,selected.highlights||[]);
+
+  const specsPage=createPage(logo,2,selected.name+' Package');
+  pages.push(specsPage);
+  drawHero(specsPage,selected.name+' Interior Package','Material and finish references currently shown on the ProPulse Packages page.','PACKAGE SPECIFICATIONS');
+  drawSpecificationCards(specsPage,Object.entries(selected.specs||{}));
+  specsPage.y+=8;
+  specsPage.ctx.fillStyle='#fff7f2';
+  roundedRect(specsPage.ctx,MARGIN,specsPage.y,CONTENT_WIDTH,145,12);specsPage.ctx.fill();
+  specsPage.ctx.fillStyle='#b24a1f';
+  specsPage.ctx.font='800 16px Arial, sans-serif';
+  specsPage.ctx.fillText('IMPORTANT',MARGIN+20,specsPage.y+32);
+  specsPage.ctx.fillStyle='#5f7284';
+  specsPage.ctx.font='500 16px Arial, sans-serif';
+  wrap(specsPage.ctx,'This brochure is a package guide, not a final quotation. Final interior price depends on site measurements, selected work, design, quantities, brands, materials, taxes and site conditions.',CONTENT_WIDTH-40)
+    .forEach((line,index)=>specsPage.ctx.fillText(line,MARGIN+20,specsPage.y+64+index*22));
+
+  const compare=createPage(logo,3,'Interior Package Comparison');
+  pages.push(compare);
+  drawHero(compare,'Compare Interior Packages','Use this guide to review the current ProPulse interior package references before final commercial confirmation.','PACKAGE COMPARISON');
+
+  const colLabel=280;
+  const packageWidth=(CONTENT_WIDTH-colLabel)/INTERIOR_PACKAGES.length;
+  compare.ctx.fillStyle='#0a2d50';
+  compare.ctx.fillRect(MARGIN,compare.y,CONTENT_WIDTH,62);
+  compare.ctx.fillStyle='#fff';
+  compare.ctx.font='800 16px Arial, sans-serif';
+  compare.ctx.fillText('Specification',MARGIN+14,compare.y+38);
+  INTERIOR_PACKAGES.forEach((pkg,index)=>{
+    compare.ctx.fillText(pkg.name,MARGIN+colLabel+index*packageWidth+14,compare.y+38);
+  });
+  compare.y+=62;
+
+  const specLabels=[...new Set(INTERIOR_PACKAGES.flatMap(pkg=>Object.keys(pkg.specs||{})))];
+  const rows=[
+    ['Reference Rate',...INTERIOR_PACKAGES.map(pkg=>money(pkg.price)+'/sq ft')],
+    ...specLabels.map(label=>[label,...INTERIOR_PACKAGES.map(pkg=>pkg.specs?.[label]||'—')]),
+  ];
+
+  rows.forEach((row,rowIndex)=>{
+    const values=row.slice(1);
+    const lineSets=values.map(value=>wrap(compare.ctx,value,packageWidth-28));
+    const labelLines=wrap(compare.ctx,row[0],colLabel-28);
+    const maxLines=Math.max(labelLines.length,...lineSets.map(lines=>lines.length));
+    const h=Math.max(58,28+maxLines*22);
+    compare.ctx.fillStyle=rowIndex%2===0?'#fbfcfd':'#fff7f2';
+    compare.ctx.fillRect(MARGIN,compare.y,CONTENT_WIDTH,h);
+    compare.ctx.strokeStyle='#e3e8ed';
+    compare.ctx.strokeRect(MARGIN,compare.y,CONTENT_WIDTH,h);
+    compare.ctx.fillStyle='#173957';
+    compare.ctx.font='700 15px Arial, sans-serif';
+    labelLines.forEach((line,index)=>compare.ctx.fillText(line,MARGIN+14,compare.y+29+index*21));
+    values.forEach((value,index)=>{
+      compare.ctx.fillStyle='#526b82';
+      compare.ctx.font='500 14px Arial, sans-serif';
+      lineSets[index].forEach((line,lineIndex)=>compare.ctx.fillText(line,MARGIN+colLabel+index*packageWidth+14,compare.y+29+lineIndex*21));
+    });
+    compare.y+=h;
+  });
+
+  savePdf(pages,'propulse-interior-'+selected.key+'-package-brochure-'+(requestId||Date.now())+'.pdf');
 }
