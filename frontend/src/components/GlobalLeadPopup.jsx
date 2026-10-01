@@ -117,14 +117,14 @@ export default function GlobalLeadPopup(){
   },[eligible])
 
   useEffect(()=>{
-    if(!eligible)return undefined
+    if(!eligible||open||submitted)return undefined
     let submittedBefore=false
     try{submittedBefore=sessionStorage.getItem('propulse_basic_lead_submitted')==='1'}catch{}
     if(submittedBefore)return undefined
     const delay=cycle===0?15000:300000
     const timer=window.setTimeout(()=>setOpen(true),delay)
     return()=>window.clearTimeout(timer)
-  },[eligible,location.pathname,location.hash,cycle])
+  },[eligible,location.pathname,location.hash,cycle,open,submitted])
 
   useEffect(()=>{
     const handler=event=>{
