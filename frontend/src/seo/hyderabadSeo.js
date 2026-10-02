@@ -30,6 +30,24 @@ export const HYDERABAD_CITY_SEO_ROUTE={
   summary:'Choose the Hyderabad service you need, then narrow the requirement by locality, scope, budget and timeline before you compare relevant responses.',
 }
 
+export const HYDERABAD_CONSTRUCTION_COST_ROUTE={
+  path:'/hyderabad/construction-cost',
+  type:'cost-guide',
+  serviceSlug:'construction',
+  title:'House Construction Cost in Hyderabad | Per Sq Ft Guide | ProPulse',
+  description:'Plan house construction cost in Hyderabad using ProPulse package reference rates, built-up-area examples, cost drivers and a construction estimator before requesting actual quotations.',
+  heading:'House construction cost in Hyderabad',
+  summary:'Use current ProPulse construction package reference rates to build a preliminary Hyderabad budget, understand what can change the final cost and move from a per-sq-ft estimate to an actual project quotation.',
+  searchTerms:[
+    'house construction cost in Hyderabad',
+    'construction cost per sq ft in Hyderabad',
+    'construction cost per sft in Hyderabad',
+    'home construction cost Hyderabad',
+    'G+1 construction cost Hyderabad',
+    'building construction cost in Hyderabad',
+  ],
+}
+
 export const HYDERABAD_SERVICES={
   construction:{
     slug:'construction',
@@ -193,6 +211,7 @@ export const HYDERABAD_COMPARISON_SEO_ROUTES=Object.values(COMPARISONS).map(item
 
 export const HYDERABAD_SEO_ROUTES=[
   HYDERABAD_CITY_SEO_ROUTE,
+  HYDERABAD_CONSTRUCTION_COST_ROUTE,
   ...HYDERABAD_SERVICE_SEO_ROUTES,
   ...HYDERABAD_LOCALITY_SEO_ROUTES,
   ...HYDERABAD_COMPARISON_SEO_ROUTES,
