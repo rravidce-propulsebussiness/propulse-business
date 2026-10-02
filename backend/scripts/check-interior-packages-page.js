@@ -13,10 +13,17 @@ const quoteModel=read('../frontend/src/utils/customerQuotation.js');
 const home=read('../frontend/src/pages/Home.jsx');
 const constructionCatalog=read('../frontend/src/data/constructionPackageCatalog.js');
 const interiorCatalog=read('../frontend/src/data/interiorPackageCatalog.js');
+const retiredInteriorEstimator=read('src/database/migrations/20261002_zzz_disable_interior_cost_estimator.sql');
+const nginx=read('../frontend/deploy/nginx.conf');
 
 assert.match(app,/path="\/packages"/);
 assert(app.includes('path="/interior-cost-estimator" element={<Navigate to="/packages#interior" replace/>}'));
-assert(app.includes('path="/construction-cost-estimator" element={<Navigate to="/quote#construction" replace/>}'));
+assert(app.includes('path="/estimate/interior-cost-estimator" element={<Navigate to="/packages#interior" replace/>}'));
+assert(app.includes('path="/construction-cost-estimator" element={<Navigate to="/quote?package=standard#construction" replace/>}'));
+assert(retiredInteriorEstimator.includes("WHERE key='interior-cost-estimator'"));
+assert(retiredInteriorEstimator.includes('is_active=FALSE'));
+assert(nginx.includes('location = /estimate/interior-cost-estimator'));
+assert(nginx.includes('return 301 "/packages#interior"'));
 
 assert.match(packages,/Construction Packages/);
 assert.match(packages,/Interior Packages/);
