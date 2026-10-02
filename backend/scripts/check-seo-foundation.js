@@ -9,6 +9,8 @@ const app=read('../frontend/src/App.jsx');
 const manager=read('../frontend/src/components/SeoManager.jsx');
 const config=read('../frontend/src/seo/seoConfig.js');
 const hyderabad=read('../frontend/src/seo/hyderabadSeo.js');
+const regional=read('../frontend/src/seo/regionalSeo.js');
+const regionalLanding=read('../frontend/src/pages/RegionalSeoLanding.jsx');
 const landing=read('../frontend/src/pages/HyderabadSeoLanding.jsx');
 const home=read('../frontend/src/pages/Home.jsx');
 const packages=read('../frontend/src/data/constructionPackageCatalog.js');
@@ -83,6 +85,31 @@ assert(app.includes('/hyderabad/:serviceSlug'),'React router must expose Hyderab
 assert(app.includes('/hyderabad/:serviceSlug/:localitySlug'),'React router must expose crawlable Hyderabad locality pages');
 assert(app.includes('/hyderabad/:serviceSlug/compare-options'),'React router must expose Hyderabad comparison pages');
 assert(config.includes('HYDERABAD_SEO_ROUTES'),'Global SEO config must include Hyderabad routes');
+
+assert(config.includes('REGIONAL_SEO_ROUTES'),'Global SEO config must include state and district routes');
+assert(app.includes("RegionalSeoLanding"),'React router must load regional SEO landing pages');
+assert(app.includes('path="/:stateSlug/construction/:districtSlug"'),'React router must expose district construction pages');
+assert(app.includes('path="/:stateSlug/construction"'),'React router must expose state construction hubs');
+assert(regional.includes("districtCount:33"),'Telangana SEO data must reflect 33 districts');
+assert(regional.includes("districtCount:28"),'Andhra Pradesh SEO data must reflect the current 28-district structure');
+assert(regional.includes("slug:'markapuram'")&&regional.includes("slug:'polavaram'"),'Andhra Pradesh SEO data must include the 2026 Markapuram and Polavaram districts');
+assert(regional.includes("REGIONAL_DISTRICT_SEO_ROUTES"),'Regional SEO data must generate district routes');
+assert(regionalLanding.includes('CHOOSE YOUR DISTRICT'),'State construction hubs must expose district discovery');
+assert(regionalLanding.includes('MAJOR AREAS TO SPECIFY'),'District pages must include useful location prompts');
+assert(regionalLanding.includes('FIND THE RIGHT CONSTRUCTION PARTNER'),'District pages must teach construction-provider comparison');
+assert(regionalLanding.includes("'/quote?package='+item.key+'#construction'"),'District package cards must link to package-specific quote flows');
+assert(seoRoutes.includes("'/telangana/construction'")&&seoRoutes.includes("'/andhra-pradesh/construction'"),'Sitemap must expose both state construction hubs');
+assert(seoRoutes.includes("...TELANGANA_DISTRICTS.map(district=>'/telangana/construction/'+district)"),'Sitemap must generate Telangana district construction routes');
+assert(seoRoutes.includes("...ANDHRA_PRADESH_DISTRICTS.map(district=>'/andhra-pradesh/construction/'+district)"),'Sitemap must generate Andhra Pradesh district construction routes');
+assert(buildScript.includes('regionalConstructionContent(route)'),'Static SEO must prerender state and district construction content');
+assert(manager.includes("route.type==='state-construction-hub'||route.type==='district-construction'"),'Runtime structured data must understand regional construction routes');
+assert(manager.includes('districtFaqJsonLd(route)'),'District pages must expose FAQ structured data at runtime');
+assert(buildScript.includes('districtFaqSchema(route)'),'District pages must expose FAQ structured data in static HTML');
+for(const districtSlug of ['karimnagar','rangareddy','medchal-malkajgiri','sangareddy','visakhapatnam','guntur','ntr','tirupati','markapuram','polavaram']){
+  assert(regional.includes("slug:'"+districtSlug+"'"),'Regional district data missing '+districtSlug);
+  assert(seoRoutes.includes("'"+districtSlug+"'"),'Regional district sitemap missing '+districtSlug);
+}
+
 assert(hyderabad.includes('HYDERABAD_CITY_SEO_ROUTE'),'Hyderabad SEO data must expose a city hub');
 assert(hyderabad.includes('HYDERABAD_CONSTRUCTION_COST_ROUTE'),'Hyderabad SEO data must expose the construction cost guide');
 assert(hyderabad.includes('HYDERABAD_LOCALITY_SEO_ROUTES'),'Hyderabad SEO data must expose locality routes');
@@ -90,7 +117,7 @@ assert(hyderabad.includes('HYDERABAD_LOCALITY_SEO_ROUTES'),'Hyderabad SEO data m
 for(const locality of ['Uppal','Kothapet','LB Nagar','Gachibowli','Kondapur','Kukatpally','Miyapur','Kokapet','Narsingi','Tellapur']){
   assert(hyderabad.includes("name:'"+locality+"'"),'Hyderabad locality index missing '+locality);
 }
-for(const localitySlug of ['uppal','habsiguda','tarnaka','nagole','kothapet','lb-nagar','saroornagar','vanasthalipuram','hayathnagar','dilsukhnagar','gachibowli','financial-district','nanakramguda','kondapur','madhapur','hitec-city','manikonda','kokapet','narsingi','tellapur','nallagandla','tolichowki','mehdipatnam','attapur','kukatpally','ferozguda','balanagar','bowenpally','miyapur','bachupally','pragathi-nagar','ameenpur','kompally','banjara-hills','jubilee-hills']){
+for(const localitySlug of ['uppal','habsiguda','tarnaka','nagole','kothapet','lb-nagar','saroornagar','vanasthalipuram','hayathnagar','dilsukhnagar','gachibowli','financial-district','nanakramguda','kondapur','madhapur','hitec-city','manikonda','kokapet','narsingi','tellapur','nallagandla','tolichowki','mehdipatnam','attapur','kukatpally','ferozguda','balanagar','bowenpally','miyapur','bachupally','pragathi-nagar','ameenpur','kompally','banjara-hills','jubilee-hills','ghatkesar','pocharam','boduppal','peerzadiguda','medipally','ecil','kapra','alwal','suchitra','quthbullapur','jeedimetla','medchal','shamirpet','shamshabad','tukkuguda','adibatla','nadergul','rajendranagar','bandlaguda-jagir','puppalaguda','patancheru','chandanagar','lingampally','beeramguda','kollur','mokila','shankarpally']){
   assert(hyderabad.includes("slug:'"+localitySlug+"'"),'Frontend Hyderabad locality missing '+localitySlug);
   assert(seoRoutes.includes("'"+localitySlug+"'"),'Hyderabad construction sitemap locality missing '+localitySlug);
 }
