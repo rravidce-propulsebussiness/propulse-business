@@ -1,4 +1,5 @@
 import {HYDERABAD_SEO_ROUTES} from './hyderabadSeo.js'
+import {REGIONAL_SEO_ROUTES} from './regionalSeo.js'
 
 export const SITE_NAME='ProPulse Business'
 
@@ -73,6 +74,7 @@ export const CORE_PUBLIC_SEO_ROUTES=[
 export const PUBLIC_SEO_ROUTES=[
   ...CORE_PUBLIC_SEO_ROUTES,
   ...HYDERABAD_SEO_ROUTES,
+  ...REGIONAL_SEO_ROUTES,
 ]
 
 export const PUBLIC_SEO_PATHS=new Set(PUBLIC_SEO_ROUTES.map(route=>route.path))
