@@ -131,6 +131,10 @@ export const REGIONAL_DISTRICT_SEO_ROUTES=Object.values(REGIONAL_STATES).flatMap
       'home construction in '+item.name,
       'house construction company in '+item.name,
       'construction services in '+item.name+' district',
+      ...item.centers.flatMap(center=>[
+        'construction in '+center,
+        'construction company in '+center,
+      ]),
     ],
   }))
 )
