@@ -25,7 +25,7 @@ assert(frontend.includes('VITE_API_URL=/api'),'Frontend production build must re
 assert(nginx.includes('location ^~ /api/'),'Frontend proxy must route API traffic internally');
 assert(nginx.includes('location ^~ /health/'),'Frontend proxy must expose backend health probes');
 assert(nginx.includes('client_max_body_size 10m'),'Reverse proxy must allow the application upload envelope');
-assert(nginx.includes('try_files $uri $uri/ /index.html'),'SPA fallback is required');
+assert(nginx.includes('try_files $uri $uri.html $uri/ /index.html'),'SPA fallback must prefer route-specific SEO HTML before index.html');
 
 assert(compose.includes('backend:')&&compose.includes('worker:')&&compose.includes('frontend:'),'Deployment must keep web, worker and frontend as distinct supervised services');
 assert(compose.includes('profiles: ["release"]')&&compose.includes('npm","run","db:migrate'),'Database migration must be an explicit one-off release service');

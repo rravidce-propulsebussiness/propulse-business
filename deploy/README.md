@@ -47,6 +47,8 @@ export DEPLOY_ENVIRONMENT=staging
 export GIT_COMMIT_SHA="$(git rev-parse HEAD)"
 export RELEASE_ID="staging-$(date -u +%Y%m%dT%H%M%SZ)"
 export BACKEND_ENV_FILE=/secure/propulse-staging.env
+# Exact public HTTPS origin used to build canonical/Open Graph metadata.
+export PUBLIC_SITE_URL=https://staging.example.com
 
 docker compose --env-file "$BACKEND_ENV_FILE" -f deploy/compose.yml --profile release build
 docker compose --env-file "$BACKEND_ENV_FILE" -f deploy/compose.yml --profile release run --rm migrate
@@ -73,3 +75,15 @@ filesystem. Do not run independent local upload volumes behind a load balancer.
 
 Keep the worker as a separate supervised process. PostgreSQL advisory locks protect
 scheduled work from duplicate execution, but one worker is normally enough.
+
+
+## Search engine metadata
+
+Set `PUBLIC_SITE_URL` to the exact external HTTPS origin before building the frontend.
+The production build generates route-specific HTML metadata and crawlable fallback
+content for the public marketing routes. The frontend proxies `/robots.txt` and
+`/sitemap.xml` to the backend; the backend uses `PUBLIC_APP_URL` (or `FRONTEND_URL`)
+for their canonical origin. Keep those values aligned with `PUBLIC_SITE_URL`.
+
+Private account, Admin, investment, Lead Partner and requirement-flow routes emit
+`X-Robots-Tag: noindex, nofollow, noarchive` and are excluded from the sitemap.
