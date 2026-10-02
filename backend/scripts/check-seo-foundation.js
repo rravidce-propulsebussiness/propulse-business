@@ -136,6 +136,12 @@ assert(home.includes('to="/hyderabad/construction"'),'Homepage must link to the 
 assert(home.includes('to="/hyderabad/construction-cost"'),'Homepage must link to the Hyderabad construction cost guide');
 assert(home.includes('to="/hyderabad/interior-designers"'),'Homepage must link to the Hyderabad interiors hub');
 assert(home.includes('to="/hyderabad/real-estate"'),'Homepage must link to the Hyderabad real-estate hub');
+assert(home.includes('to="/telangana/construction"'),'Homepage must link to the Telangana construction district hub');
+assert(home.includes('to="/andhra-pradesh/construction"'),'Homepage must link to the Andhra Pradesh construction district hub');
+for(const outerPath of ['/hyderabad/construction/ghatkesar','/hyderabad/construction/shamshabad','/hyderabad/construction/patancheru']){
+  assert(home.includes('to="'+outerPath+'"'),'Homepage metro-belt linking missing '+outerPath);
+}
+assert(buildScript.includes('homeRegionalCoverage(route)'),'Static homepage must expose regional construction coverage');
 assert(aboutPage.includes('PRIOR OPERATING EXPERIENCE'),'About page must retain generic prior operating experience context');
 assert(aboutPage.includes('hands-on residential construction and interior execution work in Hyderabad'),'About page must describe the prior experience generically');
 assert(landing.includes('prior hands-on residential construction and interior execution experience in Hyderabad'),'Hyderabad construction hub must retain generic operating experience context');
