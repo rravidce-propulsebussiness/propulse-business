@@ -66,7 +66,7 @@ function CityHubPage(){
       <article><span>DISCOVER OPTIONS</span><h2>Use ProPulse as a starting point</h2><p>ProPulse helps customers structure requirements and discover relevant registered businesses. It does not claim to execute every service itself.</p><ul><li>Browse public business profiles</li><li>Review completed projects where available</li><li>Create a structured requirement</li><li>Verify credentials and terms directly</li></ul></article>
     </section>
 
-    <section className="local-seo-city-links"><h2>Plan and compare Hyderabad options</h2><div><Link to="/hyderabad/construction-cost">House construction cost in Hyderabad</Link>{services.map(service=><Link key={service.slug} to={'/hyderabad/'+service.slug+'/compare-options'}>Compare {service.label} options in Hyderabad</Link>)}</div></section>
+    <section className="local-seo-city-links"><h2>Plan and compare Hyderabad options</h2><div><Link to="/hyderabad/construction-cost">House construction cost in Hyderabad</Link><Link to="/telangana/construction">Construction across Telangana districts</Link><Link to="/andhra-pradesh/construction">Construction across Andhra Pradesh districts</Link>{services.map(service=><Link key={service.slug} to={'/hyderabad/'+service.slug+'/compare-options'}>Compare {service.label} options in Hyderabad</Link>)}</div></section>
 
     <section className="local-seo-cta"><span>HYDERABAD</span><h2>Start with the location and scope you already know</h2><p>A clear requirement helps businesses understand the project before they respond.</p><Link to="/quote">Start Free Requirement</Link></section>
   </main>
@@ -117,7 +117,7 @@ function ServicePage({entry,service}){
 
     <section className="local-seo-faq"><div className="local-seo-section-title"><span>FAQ</span><h2>{service.label} in Hyderabad: common questions</h2></div><div>{faqs.map(item=><article key={item.q}><h3>{item.q}</h3><p>{item.a}</p></article>)}</div></section>
 
-    <section className="local-seo-city-links"><h2>Explore more Hyderabad planning pages</h2><div>{service.slug==='construction'&&<Link to="/hyderabad/construction-cost">House construction cost in Hyderabad</Link>}{['construction','interior-designers','real-estate'].map(serviceBySlug).filter(item=>item.slug!==service.slug).map(item=><Link key={item.slug} to={'/hyderabad/'+item.slug}>{item.heading}</Link>)}<Link to={'/hyderabad/'+service.slug+'/compare-options'}>Compare {service.label} options in Hyderabad</Link></div></section>
+    <section className="local-seo-city-links"><h2>Explore more Hyderabad planning pages</h2><div>{service.slug==='construction'&&<><Link to="/hyderabad/construction-cost">House construction cost in Hyderabad</Link><Link to="/telangana/construction">Construction across Telangana districts</Link><Link to="/andhra-pradesh/construction">Construction across Andhra Pradesh districts</Link></>}{['construction','interior-designers','real-estate'].map(serviceBySlug).filter(item=>item.slug!==service.slug).map(item=><Link key={item.slug} to={'/hyderabad/'+item.slug}>{item.heading}</Link>)}<Link to={'/hyderabad/'+service.slug+'/compare-options'}>Compare {service.label} options in Hyderabad</Link></div></section>
 
     <section className="local-seo-cta"><span>HYDERABAD</span><h2>Ready to create your {service.label.toLowerCase()} requirement?</h2><p>Start with the details you already know. Add the exact locality so businesses can understand where the requirement is.</p><Link to={quoteRoute(service)}>Start Free Requirement</Link></section>
   </main>
