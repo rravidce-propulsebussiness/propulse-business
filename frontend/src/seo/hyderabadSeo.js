@@ -115,6 +115,7 @@ const COMPARISONS={
     heading:'Comparing Brick&Bolt, BuildNext and local construction options in Hyderabad?',
     summary:'ProPulse is not a construction contractor. It helps you prepare one structured requirement and discover relevant businesses so you can compare actual project-specific responses.',
     brands:['Brick&Bolt','BuildNext'],
+    searchTerms:['Brick&Bolt Hyderabad','Brick&Bolt alternative Hyderabad','BuildNext Hyderabad','BuildNext alternative Hyderabad','construction companies in Hyderabad'],
     searchIntent:'If you are searching for a Brick&Bolt alternative in Hyderabad, a BuildNext alternative in Hyderabad, or local house-construction contractors, compare every option against the same project scope rather than a generic brand ranking.',
   },
   'interior-designers':{
@@ -125,6 +126,7 @@ const COMPARISONS={
     heading:'Comparing Livspace, HomeLane, DesignCafe and other Hyderabad interior options?',
     summary:'ProPulse is a requirement and discovery platform, not an interior execution brand. Use one structured brief to explore relevant Hyderabad businesses alongside the brands you are already researching.',
     brands:['Livspace','HomeLane','DesignCafe','NoBroker Interiors','Decorpot'],
+    searchTerms:['Livspace Hyderabad','HomeLane Hyderabad','DesignCafe Hyderabad','NoBroker Interiors Hyderabad','Decorpot Hyderabad','interior companies in Hyderabad'],
     searchIntent:'For searches such as Livspace alternatives in Hyderabad, HomeLane alternatives, DesignCafe alternatives, NoBroker Interiors alternatives or Decorpot alternatives, use the same room scope, materials, budget and delivery expectations when you compare quotations.',
   },
   'real-estate':{
@@ -135,6 +137,7 @@ const COMPARISONS={
     heading:'Comparing property portals and local real-estate options in Hyderabad?',
     summary:'ProPulse does not replace a property listing portal. It gives you another route: submit a clear property requirement and let relevant businesses understand what you actually need.',
     brands:['NoBroker','MagicBricks','99acres'],
+    searchTerms:['NoBroker Hyderabad','MagicBricks Hyderabad','99acres Hyderabad','property agents in Hyderabad','real estate companies in Hyderabad'],
     searchIntent:'If you are comparing NoBroker, MagicBricks, 99acres or local real-estate professionals in Hyderabad, define the same locality, property type, budget and timing before reviewing the available options.',
   },
 }
