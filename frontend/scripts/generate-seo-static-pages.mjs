@@ -98,6 +98,18 @@ function costGuideContent(route){
   '</section>'
 }
 
+
+function projectsAuthorityContent(route){
+  if(route.path!=='/projects')return ''
+  const localitySlugs=['kondapur','madhapur','kokapet','manikonda','kukatpally','miyapur','narsingi','tellapur','banjara-hills','jubilee-hills']
+  const localityLinks=localitySlugs.map(localityBySlug).filter(Boolean).map(locality=>'<li><a href="'+escapeHtml(localityPagePath('construction',locality.slug))+'">Construction in '+escapeHtml(locality.name)+'</a></li>').join('')
+  return '<section style="padding:10px 0 42px">'+
+    '<h2>Explore Hyderabad services and construction areas</h2>'+
+    '<p style="max-width:850px;line-height:1.55">Use project inspiration as a starting point, then open the relevant Hyderabad planning page to compare scope, cost inputs and locality-specific construction requirements.</p>'+
+    '<ul><li><a href="/hyderabad/construction">Home Construction in Hyderabad</a></li><li><a href="/hyderabad/interior-designers">Interior Designers in Hyderabad</a></li><li><a href="/hyderabad/real-estate">Real Estate Services in Hyderabad</a></li><li><a href="/hyderabad/construction-cost">House construction cost in Hyderabad</a></li>'+localityLinks+'</ul>'+
+  '</section>'
+}
+
 function comparisonDisclosure(route){
   if(route.type!=='comparison'||!Array.isArray(route.brands))return ''
   const searches=Array.isArray(route.searchTerms)&&route.searchTerms.length?'<h2>Common Hyderabad comparison searches</h2><ul>'+route.searchTerms.map(term=>'<li>'+escapeHtml(term)+'</li>').join('')+'</ul>':''
@@ -109,7 +121,7 @@ function fallback(route){
   return '<main data-seo-static-fallback="true" style="font-family:Arial,sans-serif;max-width:1100px;margin:0 auto;padding:32px;color:#173f5e">'+
     '<header style="display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap"><a href="/" aria-label="'+escapeHtml(SITE_NAME)+' home"><img src="/brand/propulse-logo.svg" alt="'+escapeHtml(SITE_NAME)+'" width="180" height="48"></a><nav aria-label="Primary">'+nav+'</nav></header>'+
     '<section style="padding:72px 0 34px"><p style="font-weight:700;color:#f05b24">PROPULSE BUSINESS</p><h1 style="max-width:850px;font-size:44px;line-height:1.08;margin:12px 0">'+escapeHtml(route.heading)+'</h1><p style="max-width:780px;font-size:18px;line-height:1.6">'+escapeHtml(route.summary)+'</p><p style="max-width:780px;line-height:1.6">'+escapeHtml(route.description)+'</p><p><a href="/quote" style="font-weight:700;color:#d94f22">Start your requirement</a> · <a href="/experts" style="font-weight:700;color:#173f5e">Find professionals</a></p></section>'+
-    cityHubContent(route)+hyderabadAreas(route)+localityContent(route)+costGuideContent(route)+comparisonDisclosure(route)+'</main>'
+    cityHubContent(route)+hyderabadAreas(route)+localityContent(route)+costGuideContent(route)+projectsAuthorityContent(route)+comparisonDisclosure(route)+'</main>'
 }
 
 function breadcrumbItems(route){
