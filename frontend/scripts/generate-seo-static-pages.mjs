@@ -162,6 +162,18 @@ function breadcrumbItems(route){
   return items
 }
 
+function localityFaqSchema(route){
+  if(route.type!=='local-service'||route.serviceSlug!=='construction')return null
+  const name=route.localityName
+  const qa=[
+    ['How do I get construction quotes in '+name+'?','Share the exact site location, approximate built-up area, floor count, project type, budget and preferred start timeline so relevant businesses can understand one consistent brief.'],
+    ['How do I find a construction company in '+name+'?','Compare relevant completed work, scope, material specifications, exclusions, milestones, warranty terms and the final written quotation before choosing a business.'],
+    ['What should I compare in a construction quotation?','Compare structural scope, material brands or grades, finishing allowances, exclusions, payment milestones, timeline, variation rules, taxes and handover obligations.'],
+    ['Can I compare construction packages before requesting a quote?','Yes. Review the available construction package references, then request a site-specific quotation using the package level closest to your expected specifications.'],
+  ]
+  return {'@context':'https://schema.org','@type':'FAQPage',mainEntity:qa.map(([question,answer])=>({'@type':'Question',name:question,acceptedAnswer:{'@type':'Answer',text:answer}}))}
+}
+
 function staticJsonLd(route){
   const page={
     '@context':'https://schema.org',
@@ -175,6 +187,8 @@ function staticJsonLd(route){
   if(route.type==='cost-guide')page.about={'@type':'Service',name:'House construction cost planning',areaServed:{'@type':'City',name:'Hyderabad, Telangana, India'}}
   if(route.type==='city-service'||route.type==='local-service')page.about={'@type':'Service',name:route.serviceSlug==='construction'?'Home construction':route.serviceSlug==='interior-designers'?'Interior design':'Real estate services',areaServed:route.type==='local-service'?{'@type':'Place',name:route.localityName+', Hyderabad, Telangana, India'}:{'@type':'City',name:'Hyderabad, Telangana, India'}}
   const data=[{'@context':'https://schema.org','@type':'Organization',name:SITE_NAME,url:absolute('/'),logo:absolute('/brand/propulse-logo.png')},page,{'@context':'https://schema.org','@type':'BreadcrumbList',itemListElement:breadcrumbItems(route)}]
+  const faq=localityFaqSchema(route)
+  if(faq)data.push(faq)
   return JSON.stringify(data).replaceAll('</script','<\\/script')
 }
 
