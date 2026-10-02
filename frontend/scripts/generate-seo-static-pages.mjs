@@ -94,7 +94,7 @@ function costGuideContent(route){
     '<h2>Example built-up-area budgets</h2>'+examples+
     '<h2>What changes the final house construction cost?</h2><ul><li>Soil and foundation requirements</li><li>Number of floors and structural design</li><li>Site access and logistics</li><li>Material and finishing specifications</li><li>Electrical, plumbing and waterproofing scope</li><li>Approvals, external works and package exclusions</li></ul>'+
     '<h2>Common Hyderabad construction cost searches</h2><ul>'+route.searchTerms.map(term=>'<li>'+escapeHtml(term)+'</li>').join('')+'</ul>'+
-    '<p><a href="/estimate/construction-cost-estimator">Use the construction estimator</a> · <a href="/packages#construction">Compare construction packages</a> · <a href="/quote#construction">Request construction quotes</a></p>'+
+    '<p><a href="/estimate/construction-cost-estimator">Use the construction estimator</a> · <a href="/packages#construction">Compare construction packages</a> · <a href="/hyderabad/construction/compare-options">Compare construction options</a> · <a href="/quote#construction">Request construction quotes</a></p>'+
   '</section>'
 }
 
