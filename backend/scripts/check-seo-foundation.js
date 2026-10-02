@@ -96,6 +96,8 @@ assert(regional.includes("district('markapuram'")&&regional.includes("district('
 assert(regional.includes("REGIONAL_DISTRICT_SEO_ROUTES"),'Regional SEO data must generate district routes');
 assert(regionalLanding.includes('CHOOSE YOUR DISTRICT'),'State construction hubs must expose district discovery');
 assert(regionalLanding.includes('MAJOR AREAS TO SPECIFY'),'District pages must include useful location prompts');
+assert(regional.includes("...item.centers.flatMap(center=>["),'Regional SEO data must target major-center construction searches without creating thin town URLs');
+assert(regionalLanding.includes("...district.centers.flatMap(center=>["),'District landing pages must visibly expose major-center construction search intent');
 assert(regionalLanding.includes('FIND THE RIGHT CONSTRUCTION PARTNER'),'District pages must teach construction-provider comparison');
 assert(regionalLanding.includes("'/quote?package='+item.key+'#construction'"),'District package cards must link to package-specific quote flows');
 assert(seoRoutes.includes("'/telangana/construction'")&&seoRoutes.includes("'/andhra-pradesh/construction'"),'Sitemap must expose both state construction hubs');
@@ -194,6 +196,12 @@ assert(hyderabad.includes("name:'Keesara'"),'Keesara locality must be included')
 assert(hyderabad.includes("name:'Maheshwaram'"),'Maheshwaram locality must be included');
 assert(hyderabad.includes("name:'Moinabad'"),'Moinabad locality must be included');
 assert(hyderabad.includes("name:'Nizampet'"),'Nizampet locality must be included');
+assert(hyderabad.includes("name:'Dammaiguda'"),'Dammaiguda locality must be included');
+assert(hyderabad.includes("name:'Sainikpuri'"),'Sainikpuri locality must be included');
+assert(hyderabad.includes("name:'Meerpet'"),'Meerpet locality must be included');
+assert(hyderabad.includes("name:'Maheshwaram'"),'Maheshwaram locality must be included');
+assert(hyderabad.includes("name:'Gandipet'"),'Gandipet locality must be included');
+assert(hyderabad.includes("name:'Ramachandrapuram'"),'Ramachandrapuram locality must be included');
 assert(landing.includes('locality-homepage'),'Locality SEO pages must use the mini-homepage layout');
 assert(landing.includes('CONSTRUCTION PACKAGES'),'Locality landing pages must show construction packages');
 assert(landing.includes('FIND THE RIGHT CONSTRUCTION PARTNER'),'Locality landing pages must include partner-comparison guidance');
