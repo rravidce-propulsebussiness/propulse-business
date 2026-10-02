@@ -3,9 +3,10 @@ const express=require('express');
 const router=express.Router();
 
 const HYDERABAD_CONSTRUCTION_LOCALITIES=[
-  'uppal','kothapet','lb-nagar','vanasthalipuram','dilsukhnagar',
-  'gachibowli','kondapur','madhapur','hitec-city','manikonda','kokapet','narsingi',
-  'tellapur','nallagandla','kukatpally','miyapur','kompally','ameenpur',
+  'uppal','habsiguda','tarnaka','nagole','kothapet','lb-nagar','saroornagar','vanasthalipuram','hayathnagar','dilsukhnagar',
+  'gachibowli','financial-district','nanakramguda','kondapur','madhapur','hitec-city','manikonda','kokapet','narsingi','tellapur','nallagandla',
+  'tolichowki','mehdipatnam','attapur',
+  'kukatpally','ferozguda','balanagar','bowenpally','miyapur','bachupally','pragathi-nagar','ameenpur','kompally',
   'banjara-hills','jubilee-hills',
 ];
 
