@@ -21,6 +21,7 @@ const PUBLIC_PATHS=[
   '/faq',
   '/hyderabad',
   '/hyderabad/construction',
+  '/hyderabad/construction-cost',
   '/hyderabad/interior-designers',
   '/hyderabad/real-estate',
   ...HYDERABAD_CONSTRUCTION_LOCALITIES.map(locality=>'/hyderabad/construction/'+locality),
