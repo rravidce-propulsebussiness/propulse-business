@@ -164,8 +164,8 @@ assert(landing.includes('NEARBY CONSTRUCTION AREAS'),'Locality landing pages mus
 assert(landing.includes("'/quote?package='+item.key+'#construction'"),'Locality package cards must link into package-specific construction quotes');
 assert(buildScript.includes('Construction packages for '),'Static locality pages must prerender package content');
 assert(buildScript.includes('How to find the right construction partner in '),'Static locality pages must prerender partner-comparison content');
-assert(landing.includes('COMMON PROJECT INTENT'),'Construction locality pages must provide useful search-intent content');
-assert(landing.includes('COMPARE LIKE FOR LIKE'),'Construction locality pages must teach quote comparison rather than only repeat keywords');
+assert(landing.includes('SEARCH INTENT AROUND'),'Construction locality pages must provide useful visible search-intent content');
+assert(landing.includes('How to compare construction companies in'),'Construction locality pages must teach provider comparison rather than only repeat keywords');
 assert(manager.includes("route.type==='local-service'"),'Structured data should identify locality service context');
 assert(buildScript.includes('localityContent(route)'),'Static SEO output must include crawlable locality content');
 assert(buildScript.includes('application/ld+json'),'Static SEO output must include JSON-LD before JavaScript executes');
