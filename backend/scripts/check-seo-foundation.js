@@ -89,7 +89,8 @@ assert(hyderabad.includes('HYDERABAD_LOCALITY_SEO_ROUTES'),'Hyderabad SEO data m
 for(const locality of ['Uppal','Kothapet','LB Nagar','Gachibowli','Kondapur','Kukatpally','Miyapur','Kokapet','Narsingi','Tellapur']){
   assert(hyderabad.includes("name:'"+locality+"'"),'Hyderabad locality index missing '+locality);
 }
-for(const localitySlug of ['uppal','kothapet','lb-nagar','gachibowli','kondapur','kukatpally','miyapur','kokapet','narsingi','tellapur']){
+for(const localitySlug of ['uppal','kothapet','lb-nagar','vanasthalipuram','dilsukhnagar','gachibowli','kondapur','madhapur','hitec-city','manikonda','kokapet','narsingi','tellapur','nallagandla','kukatpally','miyapur','kompally','ameenpur','banjara-hills','jubilee-hills']){
+  assert(hyderabad.includes("slug:'"+localitySlug+"'"),'Frontend Hyderabad locality missing '+localitySlug);
   assert(seoRoutes.includes("'"+localitySlug+"'"),'Hyderabad construction sitemap locality missing '+localitySlug);
 }
 assert(seoRoutes.includes("...HYDERABAD_CONSTRUCTION_LOCALITIES.map(locality=>'/hyderabad/construction/'+locality)"),'Sitemap must generate construction locality URLs');
@@ -123,6 +124,8 @@ assert(landing.includes('QUICK BUDGET EXAMPLES'),'Construction cost guide must p
 assert(landing.includes('G+1 construction cost in Hyderabad'),'Construction cost guide must answer G+1 search intent');
 assert(constructionEstimatorSeed.includes("'construction-cost-estimator'"),'Construction estimator seed key must remain construction-cost-estimator');
 assert(landing.includes('/estimate/construction-cost-estimator'),'Construction cost guide must link to the seeded estimator');
+assert(landing.includes('to="/hyderabad/construction/compare-options"'),'Cost guide must link to construction comparison');
+assert(buildScript.includes('/hyderabad/construction/compare-options'),'Static cost guide must link to construction comparison');
 assert(buildScript.includes('/estimate/construction-cost-estimator'),'Static cost guide must link to the seeded estimator');
 assert(!landing.includes('to="/estimate/construction"'),'SEO pages must not use the invalid construction estimator route');
 assert(packagePage.includes('to="/hyderabad/construction-cost"'),'Construction packages must link to the Hyderabad cost guide');
