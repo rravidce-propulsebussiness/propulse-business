@@ -224,6 +224,22 @@ function LocalityPage({entry,service,locality}){
       <div className="locality-search-chips">{entry.searchTerms.map(term=><span key={term}>{term}</span>)}</div>
     </section>
 
+    <section className="locality-knowledge-section">
+      <div className="local-seo-section-title">
+        <span>HOME CONSTRUCTION KNOWLEDGE</span>
+        <h2>Popular home-planning questions around {locality.name}</h2>
+        <p>These are related questions people research before choosing materials, interiors or a contractor. ProPulse does not rank one contractor or material as universally best; use the guides to prepare better project questions.</p>
+      </div>
+      <div className="locality-knowledge-grid">
+        <Link to="/guides/best-steel-for-house-construction"><span>MATERIALS</span><b>What is the best steel for house construction?</b><small>BIS standards, grades, ductility and site checks →</small></Link>
+        <Link to="/guides/2bhk-interiors-hyderabad"><span>INTERIORS</span><b>2BHK interiors in {locality.name}</b><small>Room scope, modular work, materials and quote comparison →</small></Link>
+        <Link to="/guides/choose-construction-contractor-hyderabad"><span>CONTRACTORS</span><b>How to choose the best contractor in {locality.name}</b><small>Compare scope, projects, exclusions and contract terms →</small></Link>
+        <Link to="/guides/prevent-cracks-in-house"><span>QUALITY</span><b>Precautions to reduce cracks in a new house</b><small>Design, concrete, curing, masonry and movement detailing →</small></Link>
+        <Link to="/guides/home-construction-checklist"><span>PLANNING</span><b>Home construction checklist for {locality.name}</b><small>Plot, design, structure, services, finishes and handover →</small></Link>
+        <Link to="/guides/waterproofing-precautions-new-house"><span>WATERPROOFING</span><b>Waterproofing precautions for a new house</b><small>Roofs, toilets, balconies, penetrations and testing →</small></Link>
+      </div>
+    </section>
+
     <section className="locality-nearby-section">
       <div className="local-seo-section-title">
         <span>NEARBY CONSTRUCTION AREAS</span>
