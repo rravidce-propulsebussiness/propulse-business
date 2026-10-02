@@ -196,29 +196,6 @@ function breadcrumbItems(route){
   return items
 }
 
-function localityFaqSchema(route){
-  if(route.type!=='local-service'||route.serviceSlug!=='construction')return null
-  const name=route.localityName
-  const qa=[
-    ['How do I get construction quotes in '+name+'?','Share the exact site location, approximate built-up area, floor count, project type, budget and preferred start timeline so relevant businesses can understand one consistent brief.'],
-    ['How do I find a construction company in '+name+'?','Compare relevant completed work, scope, material specifications, exclusions, milestones, warranty terms and the final written quotation before choosing a business.'],
-    ['What should I compare in a construction quotation?','Compare structural scope, material brands or grades, finishing allowances, exclusions, payment milestones, timeline, variation rules, taxes and handover obligations.'],
-    ['Can I compare construction packages before requesting a quote?','Yes. Review the available construction package references, then request a site-specific quotation using the package level closest to your expected specifications.'],
-  ]
-  return {'@context':'https://schema.org','@type':'FAQPage',mainEntity:qa.map(([question,answer])=>({'@type':'Question',name:question,acceptedAnswer:{'@type':'Answer',text:answer}}))}
-}
-
-function districtFaqSchema(route){
-  if(route.type!=='district-construction')return null
-  const name=route.districtName
-  const qa=[
-    ['How do I get construction quotes in '+name+' district?','Share the exact site location, approximate built-up area, floor count, project type, budget and preferred timeline so relevant businesses can understand one consistent brief.'],
-    ['How do I compare builders in '+name+'?','Compare relevant completed work, material specifications, exclusions, milestone payments, timeline, warranty terms and the final written scope rather than only the headline rate.'],
-    ['Can I select a construction package before requesting a quote?','Yes. Review Standard, Premium and Royal package references, then confirm the site-specific specification and final quotation with the business you choose.'],
-  ]
-  return {'@context':'https://schema.org','@type':'FAQPage',mainEntity:qa.map(([question,answer])=>({'@type':'Question',name:question,acceptedAnswer:{'@type':'Answer',text:answer}}))}
-}
-
 function staticJsonLd(route){
   const page={
     '@context':'https://schema.org',
@@ -233,10 +210,6 @@ function staticJsonLd(route){
   if(route.type==='city-service'||route.type==='local-service')page.about={'@type':'Service',name:route.serviceSlug==='construction'?'Home construction':route.serviceSlug==='interior-designers'?'Interior design':'Real estate services',areaServed:route.type==='local-service'?{'@type':'Place',name:route.localityName+', Hyderabad, Telangana, India'}:{'@type':'City',name:'Hyderabad, Telangana, India'}}
   if(route.type==='state-construction-hub'||route.type==='district-construction')page.about={'@type':'Service',name:'Home construction',areaServed:route.type==='district-construction'?{'@type':'AdministrativeArea',name:route.districtName+' district, '+route.stateName+', India'}:{'@type':'AdministrativeArea',name:route.stateName+', India'}}
   const data=[{'@context':'https://schema.org','@type':'Organization',name:SITE_NAME,url:absolute('/'),logo:absolute('/brand/propulse-logo.png')},page,{'@context':'https://schema.org','@type':'BreadcrumbList',itemListElement:breadcrumbItems(route)}]
-  const faq=localityFaqSchema(route)
-  if(faq)data.push(faq)
-  const districtFaq=districtFaqSchema(route)
-  if(districtFaq)data.push(districtFaq)
   return JSON.stringify(data).replaceAll('</script','<\\/script')
 }
 
