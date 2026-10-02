@@ -30,6 +30,15 @@ const ANDHRA_PRADESH_DISTRICTS=[
   'sri-potti-sriramulu-nellore','sri-sathya-sai','srikakulam','tirupati','visakhapatnam','vizianagaram','west-godavari','ysr-kadapa',
 ];
 
+const CONSTRUCTION_GUIDES=[
+  'best-steel-for-house-construction',
+  'prevent-cracks-in-house',
+  '2bhk-interiors-hyderabad',
+  'choose-construction-contractor-hyderabad',
+  'home-construction-checklist',
+  'waterproofing-precautions-new-house',
+];
+
 const PUBLIC_PATHS=[
   '/',
   '/quote',
@@ -50,6 +59,7 @@ const PUBLIC_PATHS=[
   ...TELANGANA_DISTRICTS.map(district=>'/telangana/construction/'+district),
   '/andhra-pradesh/construction',
   ...ANDHRA_PRADESH_DISTRICTS.map(district=>'/andhra-pradesh/construction/'+district),
+  ...CONSTRUCTION_GUIDES.map(guide=>'/guides/'+guide),
   '/hyderabad/construction/compare-options',
   '/hyderabad/interior-designers/compare-options',
   '/hyderabad/real-estate/compare-options',
