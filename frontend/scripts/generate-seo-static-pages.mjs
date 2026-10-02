@@ -72,15 +72,22 @@ function localityContent(route){
   const locality=localityBySlug(route.localitySlug)
   if(!service||!locality)return ''
   const nearby=nearbyLocalities(locality)
+  const packages=Object.values(CONSTRUCTION_PACKAGE_CATALOG)
+  const money=value=>'₹'+Number(value||0).toLocaleString('en-IN')
+  const packageCards=packages.map(item=>'<article style="padding:16px;border:1px solid #ddd;border-radius:10px"><h3>'+escapeHtml(item.name)+' package</h3><p><strong>'+escapeHtml(money(item.rate))+'/sq ft reference</strong></p><p>'+escapeHtml(item.specs?.Architecture||'Package specifications apply.')+'</p><p><a href="/quote?package='+escapeHtml(item.key)+'#construction">Get '+escapeHtml(item.name)+' quote</a></p></article>').join('')
+  const nearbyCards=nearby.map(item=>'<li><a href="'+escapeHtml(localityPagePath('construction',item.slug))+'">Construction in '+escapeHtml(item.name)+'</a> — contractors, packages and quote planning</li>').join('')
   return '<section style="padding:10px 0 42px">'+
+    '<h2>Construction in '+escapeHtml(locality.name)+', Hyderabad</h2>'+
+    '<p style="max-width:850px;line-height:1.55">'+escapeHtml(route.localityContext||service.localityText(locality.name))+'</p>'+
+    '<p><a href="/quote?package=standard#construction">Get construction quote in '+escapeHtml(locality.name)+'</a> · <a href="/packages#construction">View construction packages</a></p>'+
+    '<h2>Construction packages for '+escapeHtml(locality.name)+'</h2><div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;max-width:900px">'+packageCards+'</div>'+
+    '<h2>How to find the right construction partner in '+escapeHtml(locality.name)+'</h2><ol><li>Use the same built-up area, floors and drawings for every quotation.</li><li>Compare materials, exclusions and finishing allowances.</li><li>Review relevant completed work and project experience.</li><li>Confirm milestones, variation rules, warranties and handover terms.</li></ol>'+
     '<h2>Common construction searches around '+escapeHtml(locality.name)+'</h2><ul>'+route.searchTerms.map(term=>'<li>'+escapeHtml(term)+'</li>').join('')+'</ul>'+
     '<h2>What to include in a construction quote request</h2><ul>'+service.checklist.map(item=>'<li>'+escapeHtml(item)+'</li>').join('')+'</ul>'+
-    '<h2>Compare quotations consistently</h2><p style="max-width:850px;line-height:1.55">Use the same site scope, built-up area, floor count, specifications, budget assumptions and timeline when you compare contractors or construction companies.</p>'+
-    '<h2>Nearby Hyderabad construction areas</h2><ul>'+nearby.map(item=>'<li><a href="'+escapeHtml(localityPagePath('construction',item.slug))+'">Construction in '+escapeHtml(item.name)+'</a></li>').join('')+'</ul>'+
-    '<p><a href="/quote?package=standard#construction">Get a construction quote</a> · <a href="/quote#construction">Start a construction requirement</a></p>'+
+    '<h2>Nearby construction areas</h2><ul>'+nearbyCards+'</ul>'+
+    '<p><a href="/hyderabad/construction">View all Hyderabad construction areas</a> · <a href="/hyderabad/construction-cost">Hyderabad construction cost guide</a></p>'+
   '</section>'
 }
-
 
 function costGuideContent(route){
   if(route.type!=='cost-guide')return ''
