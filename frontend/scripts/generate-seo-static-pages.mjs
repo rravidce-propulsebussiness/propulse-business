@@ -99,7 +99,8 @@ function costGuideContent(route){
 
 function comparisonDisclosure(route){
   if(route.type!=='comparison'||!Array.isArray(route.brands))return ''
-  return '<section style="padding:10px 0 42px"><h2>Independent comparison note</h2><p style="max-width:850px;line-height:1.55">ProPulse is independent and is not affiliated with or endorsed by '+route.brands.map(escapeHtml).join(', ')+'. Brand names are shown only because customers may be researching these options. Check each provider directly before deciding.</p><p style="max-width:850px;line-height:1.55">'+escapeHtml(route.searchIntent||'')+'</p></section>'
+  const searches=Array.isArray(route.searchTerms)&&route.searchTerms.length?'<h2>Common Hyderabad comparison searches</h2><ul>'+route.searchTerms.map(term=>'<li>'+escapeHtml(term)+'</li>').join('')+'</ul>':''
+  return '<section style="padding:10px 0 42px"><h2>Independent comparison note</h2><p style="max-width:850px;line-height:1.55">ProPulse is independent and is not affiliated with or endorsed by '+route.brands.map(escapeHtml).join(', ')+'. Brand names are shown only because customers may be researching these options. Check each provider directly before deciding.</p><p style="max-width:850px;line-height:1.55">'+escapeHtml(route.searchIntent||'')+'</p>'+searches+'</section>'
 }
 
 function fallback(route){
