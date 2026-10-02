@@ -1,6 +1,7 @@
 import {Link, Navigate, useParams} from 'react-router-dom'
 import {
   HYDERABAD_CITY_SEO_ROUTE,
+  HYDERABAD_CONSTRUCTION_COST_ROUTE,
   HYDERABAD_LOCALITIES,
   comparisonByService,
   hyderabadSeoEntry,
@@ -11,6 +12,7 @@ import {
   nearbyLocalities,
   serviceBySlug,
 } from '../seo/hyderabadSeo'
+import {CONSTRUCTION_PACKAGE_CATALOG} from '../data/constructionPackageCatalog'
 import './HyderabadSeoLanding.css'
 
 function quoteRoute(service){
@@ -64,7 +66,7 @@ function CityHubPage(){
       <article><span>DISCOVER OPTIONS</span><h2>Use ProPulse as a starting point</h2><p>ProPulse helps customers structure requirements and discover relevant registered businesses. It does not claim to execute every service itself.</p><ul><li>Browse public business profiles</li><li>Review completed projects where available</li><li>Create a structured requirement</li><li>Verify credentials and terms directly</li></ul></article>
     </section>
 
-    <section className="local-seo-city-links"><h2>Compare Hyderabad options</h2><div>{services.map(service=><Link key={service.slug} to={'/hyderabad/'+service.slug+'/compare-options'}>Compare {service.label} options in Hyderabad</Link>)}</div></section>
+    <section className="local-seo-city-links"><h2>Plan and compare Hyderabad options</h2><div><Link to="/hyderabad/construction-cost">House construction cost in Hyderabad</Link>{services.map(service=><Link key={service.slug} to={'/hyderabad/'+service.slug+'/compare-options'}>Compare {service.label} options in Hyderabad</Link>)}</div></section>
 
     <section className="local-seo-cta"><span>HYDERABAD</span><h2>Start with the location and scope you already know</h2><p>A clear requirement helps businesses understand the project before they respond.</p><Link to="/quote">Start Free Requirement</Link></section>
   </main>
@@ -110,7 +112,7 @@ function ServicePage({entry,service}){
 
     <section className="local-seo-faq"><div className="local-seo-section-title"><span>FAQ</span><h2>{service.label} in Hyderabad: common questions</h2></div><div>{faqs.map(item=><article key={item.q}><h3>{item.q}</h3><p>{item.a}</p></article>)}</div></section>
 
-    <section className="local-seo-city-links"><h2>Explore the other Hyderabad requirement categories</h2><div>{['construction','interior-designers','real-estate'].map(serviceBySlug).filter(item=>item.slug!==service.slug).map(item=><Link key={item.slug} to={'/hyderabad/'+item.slug}>{item.heading}</Link>)}<Link to={'/hyderabad/'+service.slug+'/compare-options'}>Compare {service.label} options in Hyderabad</Link></div></section>
+    <section className="local-seo-city-links"><h2>Explore more Hyderabad planning pages</h2><div>{service.slug==='construction'&&<Link to="/hyderabad/construction-cost">House construction cost in Hyderabad</Link>}{['construction','interior-designers','real-estate'].map(serviceBySlug).filter(item=>item.slug!==service.slug).map(item=><Link key={item.slug} to={'/hyderabad/'+item.slug}>{item.heading}</Link>)}<Link to={'/hyderabad/'+service.slug+'/compare-options'}>Compare {service.label} options in Hyderabad</Link></div></section>
 
     <section className="local-seo-cta"><span>HYDERABAD</span><h2>Ready to create your {service.label.toLowerCase()} requirement?</h2><p>Start with the details you already know. Add the exact locality so businesses can understand where the requirement is.</p><Link to={quoteRoute(service)}>Start Free Requirement</Link></section>
   </main>
@@ -149,11 +151,72 @@ function LocalityPage({entry,service,locality}){
       <article><span>LOCALITY DETAIL</span><h2>Make the {locality.name} site unambiguous</h2><p>Include the exact locality, PIN code or site pin, plot details and nearby landmark information available to you. This prevents a broad “Hyderabad” enquiry from being interpreted as a different project area.</p><Link className="local-inline-link" to={quoteRoute(service)}>Create a requirement for {locality.name}</Link></article>
     </section>
 
-    <section className="local-seo-city-links"><h2>Nearby Hyderabad construction pages</h2><div>{nearby.map(item=><Link key={item.slug} to={localityPagePath('construction',item.slug)}>{service.localityHeading(item.name)}</Link>)}<Link to="/hyderabad/construction">All Hyderabad construction areas</Link></div></section>
+    <section className="local-seo-city-links"><h2>Nearby Hyderabad construction pages</h2><div><Link to="/hyderabad/construction-cost">Construction cost in Hyderabad</Link>{nearby.map(item=><Link key={item.slug} to={localityPagePath('construction',item.slug)}>{service.localityHeading(item.name)}</Link>)}<Link to="/hyderabad/construction">All Hyderabad construction areas</Link></div></section>
 
     <section className="local-seo-faq"><div className="local-seo-section-title"><span>FAQ</span><h2>Construction in {locality.name}: common questions</h2></div><div>{faqs.map(item=><article key={item.q}><h3>{item.q}</h3><p>{item.a}</p></article>)}</div></section>
 
     <section className="local-seo-cta"><span>{locality.name.toUpperCase()} · HYDERABAD</span><h2>Turn your search into one clear construction requirement</h2><p>Add the site, scope, budget and timeline you already know, then compare actual project-specific responses.</p><Link to={quoteRoute(service)}>Start Construction Requirement</Link></section>
+  </main>
+}
+
+
+function ConstructionCostGuidePage(){
+  const service=serviceBySlug('construction')
+  const packages=Object.values(CONSTRUCTION_PACKAGE_CATALOG)
+  const sampleAreas=[1000,1500,2000]
+  const rupees=value=>'₹'+Number(value||0).toLocaleString('en-IN')
+  const faqs=[
+    {q:'What is the house construction cost per sq ft in Hyderabad?',a:'There is no single fixed Hyderabad rate for every project. ProPulse currently shows package reference rates from '+rupees(packages[0]?.rate)+' per sq ft through '+rupees(packages[packages.length-1]?.rate)+' per sq ft, depending on the selected package specifications. Final quotations can change with site conditions, design, scope, exclusions and current commercial terms.'},
+    {q:'How do I estimate G+1 construction cost in Hyderabad?',a:'First estimate the total built-up area across both floors, then multiply that built-up area by the relevant planning rate. Add items that are outside the chosen package scope and confirm structural, approval and site-specific requirements before treating the result as a project budget.'},
+    {q:'Does construction cost use plot area or built-up area?',a:'Construction rates are generally compared against built-up construction area, not only the land or plot area. A plot can have a different total built-up area depending on setbacks, floor count, design and approvals.'},
+    {q:'Are the ProPulse rates final contractor quotations?',a:'No. The rates on this guide are package brochure references from the current ProPulse construction package catalog. Use them for initial planning, then create a site-specific requirement and obtain actual quotations.'},
+  ]
+  return <main className="local-seo-page construction-cost-page">
+    <Header/>
+    <section className="local-seo-hero">
+      <div className="local-seo-breadcrumb"><Link to="/">Home</Link><span>›</span><Link to="/hyderabad">Hyderabad</Link><span>›</span><b>Construction Cost</b></div>
+      <span className="local-seo-eyebrow">HYDERABAD CONSTRUCTION BUDGET GUIDE</span>
+      <h1>{HYDERABAD_CONSTRUCTION_COST_ROUTE.heading}</h1>
+      <p>{HYDERABAD_CONSTRUCTION_COST_ROUTE.summary}</p>
+      <div className="local-seo-actions"><Link className="primary" to="/estimate/construction">Calculate Construction Estimate</Link><Link className="secondary" to="/packages#construction">Compare Packages</Link></div>
+      <div className="local-seo-trust"><span>Current ProPulse package rates</span><span>Built-up-area examples</span><span>Actual quote still required</span></div>
+    </section>
+
+    <section className="cost-rate-section">
+      <div className="local-seo-section-title"><span>CURRENT PROPULSE REFERENCES</span><h2>Construction package rates used for initial planning</h2><p>These are brochure reference rates from the same package catalog used on ProPulse. They are not a Hyderabad-wide market average and they are not a final contractor quotation.</p></div>
+      <div className="cost-rate-grid">
+        {packages.map(item=><article key={item.key}><span>{item.name.toUpperCase()}</span><strong>{rupees(item.rate)}</strong><small>per sq ft</small><p>{item.specs?.Architecture||'Package specifications apply.'}</p><Link to={'/packages#construction'}>Review package specifications</Link></article>)}
+      </div>
+    </section>
+
+    <section className="cost-example-section">
+      <div className="local-seo-section-title"><span>QUICK BUDGET EXAMPLES</span><h2>What the package rate means for common built-up areas</h2><p>Example budgets below are simple built-up-area × package-rate calculations. They do not add land cost or items outside the selected construction package.</p></div>
+      <div className="cost-table-wrap"><table className="cost-example-table"><thead><tr><th>Built-up area</th>{packages.map(item=><th key={item.key}>{item.name}<small>{rupees(item.rate)}/sq ft</small></th>)}</tr></thead><tbody>{sampleAreas.map(area=><tr key={area}><th>{area.toLocaleString('en-IN')} sq ft</th>{packages.map(item=><td key={item.key}>{rupees(area*item.rate)}</td>)}</tr>)}</tbody></table></div>
+      <p className="cost-note">For G+1 or multi-floor homes, use the approximate total built-up area across all floors rather than multiplying the plot area blindly.</p>
+    </section>
+
+    <section className="local-seo-grid">
+      <article><span>WHAT CHANGES THE FINAL COST</span><h2>Why two Hyderabad homes with the same area can cost differently</h2><ul><li>Soil condition and foundation requirements</li><li>Number of floors and structural design</li><li>Site access and logistics</li><li>Architectural complexity and elevation</li><li>Steel, cement, brick or block specifications</li><li>Flooring, doors, windows and sanitaryware</li><li>Electrical, plumbing and waterproofing scope</li><li>Items excluded from the construction package</li></ul></article>
+      <article><span>COMPARE THE FULL SCOPE</span><h2>Do not choose a contractor on per-sq-ft rate alone</h2><p>Ask every business to quote against the same built-up area, drawings, specifications and exclusions. A lower rate can represent a different material allowance or a smaller included scope.</p><ul><li>Confirm material brands or allowances</li><li>Check architectural and structural deliverables</li><li>Review payment milestones and variation rules</li><li>Confirm taxes, approvals and external works</li><li>Check warranty and handover obligations</li></ul></article>
+    </section>
+
+    <section className="local-seo-process"><div className="local-seo-section-title"><span>FROM SEARCH TO PROJECT BUDGET</span><h2>A safer way to estimate house construction cost in Hyderabad</h2></div><div className="local-seo-process-grid">
+      <article><b>01</b><h3>Calculate built-up area</h3><p>Start with the approximate construction area across all proposed floors.</p></article>
+      <article><b>02</b><h3>Select specifications</h3><p>Use a package or specification level that matches the materials and finish you actually expect.</p></article>
+      <article><b>03</b><h3>Add project-specific items</h3><p>Account for site conditions, approvals, external works and anything excluded from the base package.</p></article>
+      <article><b>04</b><h3>Request actual quotations</h3><p>Send the same drawings, area and scope to relevant construction businesses and compare like for like.</p></article>
+    </div></section>
+
+    <section className="cost-search-intent">
+      <div className="local-seo-section-title"><span>COMMON HYDERABAD SEARCHES</span><h2>Construction cost questions this guide is designed to answer</h2></div>
+      <div className="local-seo-chip-grid">{HYDERABAD_CONSTRUCTION_COST_ROUTE.searchTerms.map(term=><span key={term}>{term}</span>)}</div>
+    </section>
+
+    <section className="local-seo-city-links"><h2>Continue planning your Hyderabad project</h2><div><Link to="/estimate/construction">Construction cost estimator</Link><Link to="/packages#construction">Construction packages</Link><Link to="/hyderabad/construction">Construction in Hyderabad</Link><Link to="/hyderabad/construction/uppal">Construction in Uppal</Link><Link to="/hyderabad/construction/kothapet">Construction in Kothapet</Link><Link to="/hyderabad/construction/gachibowli">Construction in Gachibowli</Link></div></section>
+
+    <section className="local-seo-faq"><div className="local-seo-section-title"><span>FAQ</span><h2>Hyderabad construction cost questions</h2></div><div>{faqs.map(item=><article key={item.q}><h3>{item.q}</h3><p>{item.a}</p></article>)}</div></section>
+
+    <section className="local-seo-cta"><span>HYDERABAD</span><h2>Move from an indicative cost to a site-specific construction quote</h2><p>Use the estimator for initial planning, then share your actual site, built-up area, floors and specifications with relevant businesses.</p><Link to={quoteRoute(service)}>Request Construction Quotes</Link></section>
   </main>
 }
 
@@ -186,6 +249,7 @@ function ComparisonPage({entry,service}){
 
 export default function HyderabadSeoLanding(){
   const {serviceSlug,localitySlug}=useParams()
+  if(window.location.pathname==='/hyderabad/construction-cost')return <ConstructionCostGuidePage/>
   if(!serviceSlug)return <CityHubPage/>
   const service=serviceBySlug(serviceSlug)
   if(!service)return <Navigate to="/hyderabad" replace/>
