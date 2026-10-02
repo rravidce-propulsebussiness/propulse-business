@@ -77,12 +77,30 @@ function pageJsonLd(route,origin){
         :{'@type':'City',name:'Hyderabad, Telangana, India'},
     }
   }
+  if(route.type==='state-construction-hub'||route.type==='district-construction'){
+    page.about={
+      '@type':'Service',
+      name:'Home construction',
+      areaServed:route.type==='district-construction'
+        ?{'@type':'AdministrativeArea',name:route.districtName+' district, '+route.stateName+', India'}
+        :{'@type':'State',name:route.stateName+', India'},
+    }
+  }
   return page
 }
 
 function breadcrumbItems(route,origin){
   const home=origin+'/'
   const items=[{'@type':'ListItem',position:1,name:'Home',item:home}]
+  if(route.type==='state-construction-hub'){
+    items.push({'@type':'ListItem',position:2,name:route.stateName,item:origin+'/'+route.stateSlug+'/construction'})
+    return items
+  }
+  if(route.type==='district-construction'){
+    items.push({'@type':'ListItem',position:2,name:route.stateName,item:origin+'/'+route.stateSlug+'/construction'})
+    items.push({'@type':'ListItem',position:3,name:route.districtName,item:origin+route.path})
+    return items
+  }
   if(!route.path.startsWith('/hyderabad')){
     items.push({'@type':'ListItem',position:2,name:route.heading,item:origin+route.path})
     return items
@@ -135,6 +153,17 @@ function localityFaqJsonLd(route){
   }
 }
 
+function districtFaqJsonLd(route){
+  if(route.type!=='district-construction')return null
+  const name=route.districtName
+  const qa=[
+    ['How do I get construction quotes in '+name+' district?','Share the exact site location, approximate built-up area, floor count, project type, budget and preferred timeline so relevant businesses can understand one consistent brief.'],
+    ['How do I compare builders in '+name+'?','Compare relevant completed work, material specifications, exclusions, milestone payments, timeline, warranty terms and the final written scope rather than only the headline rate.'],
+    ['Can I select a construction package before requesting a quote?','Yes. Review Standard, Premium and Royal package references, then confirm the site-specific specification and final quotation with the business you choose.'],
+  ]
+  return {'@context':'https://schema.org','@type':'FAQPage',mainEntity:qa.map(([question,answer])=>({'@type':'Question',name:question,acceptedAnswer:{'@type':'Answer',text:answer}}))}
+}
+
 function jsonLdFor(route,origin){
   const home=origin+'/'
   const organization={
@@ -166,6 +195,8 @@ function jsonLdFor(route,origin){
   ]
   const faq=localityFaqJsonLd(route)
   if(faq)data.push(faq)
+  const districtFaq=districtFaqJsonLd(route)
+  if(districtFaq)data.push(districtFaq)
   return data
 }
 
