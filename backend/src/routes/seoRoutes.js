@@ -8,6 +8,22 @@ const HYDERABAD_CONSTRUCTION_LOCALITIES=[
   'tolichowki','mehdipatnam','attapur',
   'kukatpally','ferozguda','balanagar','bowenpally','miyapur','bachupally','pragathi-nagar','ameenpur','kompally',
   'banjara-hills','jubilee-hills',
+  'ghatkesar','pocharam','boduppal','peerzadiguda','medipally','ecil','kapra','alwal','suchitra','quthbullapur','jeedimetla','medchal','shamirpet',
+  'shamshabad','tukkuguda','adibatla','nadergul','rajendranagar','bandlaguda-jagir','puppalaguda',
+  'patancheru','chandanagar','lingampally','beeramguda','kollur','mokila','shankarpally',
+];
+
+const TELANGANA_DISTRICTS=[
+  'adilabad','bhadradri-kothagudem','hanumakonda','hyderabad','jagtial','jangaon','jayashankar-bhupalpally','jogulamba-gadwal','kamareddy',
+  'karimnagar','khammam','kumuram-bheem-asifabad','mahabubabad','mahabubnagar','mancherial','medak','medchal-malkajgiri','mulugu',
+  'nagarkurnool','nalgonda','narayanpet','nirmal','nizamabad','peddapalli','rajanna-sircilla','rangareddy','sangareddy','siddipet',
+  'suryapet','vikarabad','wanaparthy','warangal','yadadri-bhuvanagiri',
+];
+
+const ANDHRA_PRADESH_DISTRICTS=[
+  'alluri-sitharama-raju','anakapalli','anantapuramu','annamayya','bapatla','chittoor','east-godavari','eluru','guntur','kakinada',
+  'dr-br-ambedkar-konaseema','krishna','kurnool','markapuram','nandyal','ntr','palnadu','parvathipuram-manyam','polavaram','prakasam',
+  'sri-potti-sriramulu-nellore','sri-sathya-sai','srikakulam','tirupati','visakhapatnam','vizianagaram','west-godavari','ysr-kadapa',
 ];
 
 const PUBLIC_PATHS=[
@@ -26,6 +42,10 @@ const PUBLIC_PATHS=[
   '/hyderabad/interior-designers',
   '/hyderabad/real-estate',
   ...HYDERABAD_CONSTRUCTION_LOCALITIES.map(locality=>'/hyderabad/construction/'+locality),
+  '/telangana/construction',
+  ...TELANGANA_DISTRICTS.map(district=>'/telangana/construction/'+district),
+  '/andhra-pradesh/construction',
+  ...ANDHRA_PRADESH_DISTRICTS.map(district=>'/andhra-pradesh/construction/'+district),
   '/hyderabad/construction/compare-options',
   '/hyderabad/interior-designers/compare-options',
   '/hyderabad/real-estate/compare-options',
