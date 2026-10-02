@@ -14,6 +14,7 @@ const HYDERABAD_CONSTRUCTION_LOCALITIES=[
   'keesara','nagaram','dammaiguda','rampally','cherlapally','sainikpuri','yapral','safilguda','malkajgiri',
   'karmanghat','champapet','hastinapuram','meerpet','badangpet','balapur','turkayamjal','ibrahimpatnam','bongloor','maheshwaram',
   'nizampet','mallampet','dundigal','gandimaisamma','bhel','ramachandrapuram','velimela','osman-nagar','gandipet','manchirevula','moinabad',
+  'secunderabad','begumpet','ameerpet','panjagutta','somajiguda','khairatabad','amberpet','ramanthapur',
 ];
 
 const TELANGANA_DISTRICTS=[
