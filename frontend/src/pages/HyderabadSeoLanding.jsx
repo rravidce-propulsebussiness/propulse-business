@@ -61,11 +61,6 @@ function CityHubPage(){
       </div>
     </section>
 
-    {service.slug==='construction'&&<section className="local-seo-experience-note">
-      <div><span>HYDERABAD OPERATING BACKGROUND</span><h2>Built with hands-on construction and interiors experience</h2><p>ProPulse is a technology and requirement platform. Its Hyderabad construction journey is informed by prior operating experience through SG Homes in Kukatpally, including residential construction and interior execution.</p></div>
-      <Link to="/about#ab-industry-experience">Read the SG Homes experience background</Link>
-    </section>}
-
     <section className="local-seo-grid">
       <article><span>PLAN BEFORE CONTACTING</span><h2>Keep one comparable project brief</h2><p>For construction, record plot location, built-up area, floors and approximate budget. For interiors, use the same rooms and finish expectations. For property, keep locality, property type and budget consistent.</p><ul><li>Same scope for every provider</li><li>Same budget assumptions</li><li>Same timeline expectations</li><li>Compare exclusions as well as price</li></ul></article>
       <article><span>DISCOVER OPTIONS</span><h2>Use ProPulse as a starting point</h2><p>ProPulse helps customers structure requirements and discover relevant registered businesses. It does not claim to execute every service itself.</p><ul><li>Browse public business profiles</li><li>Review completed projects where available</li><li>Create a structured requirement</li><li>Verify credentials and terms directly</li></ul></article>
@@ -93,6 +88,11 @@ function ServicePage({entry,service}){
       <div className="local-seo-actions"><Link className="primary" to={quoteRoute(service)}>Start {service.label} Requirement</Link><Link className="secondary" to="/experts">Find Professionals</Link></div>
       <div className="local-seo-trust"><span>One structured requirement</span><span>Locality-aware details</span><span>You choose the business</span></div>
     </section>
+
+    {service.slug==='construction'&&<section className="local-seo-experience-note">
+      <div><span>HYDERABAD OPERATING BACKGROUND</span><h2>Built with hands-on construction and interiors experience</h2><p>ProPulse is a technology and requirement platform. Its Hyderabad construction journey is informed by prior operating experience through SG Homes in Kukatpally, including residential construction and interior execution.</p></div>
+      <Link to="/about#ab-industry-experience">Read the SG Homes experience background</Link>
+    </section>}
 
     <section className="local-seo-grid">
       <article><span>WHAT YOU CAN REQUEST</span><h2>{service.heading}</h2><p>{entry.description}</p><p>{service.citySearchIntent}</p><ul>{service.needs.map(item=><li key={item}>{item}</li>)}</ul></article>
