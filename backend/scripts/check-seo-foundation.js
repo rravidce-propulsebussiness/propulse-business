@@ -20,6 +20,9 @@ const dockerfile=read('../frontend/Dockerfile');
 const compose=read('../deploy/compose.yml');
 const server=read('src/server.js');
 const seoRoutes=read('src/routes/seoRoutes.js');
+const constructionEstimatorSeed=read('src/database/migrations/20260929_z_construction_estimator_seed.sql');
+const packagePage=read('../frontend/src/pages/Packages.jsx');
+const estimatorPage=read('../frontend/src/pages/EstimatorWizard.jsx');
 
 assert(index.includes('name="description"'),'Base HTML must include a meta description');
 assert(index.includes('name="robots"'),'Base HTML must include robots metadata');
@@ -96,6 +99,13 @@ assert(landing.includes('ProPulse is independent'),'Comparison page must disclos
 assert(landing.includes('CONSTRUCTION_PACKAGE_CATALOG'),'Construction cost guide must use the shared package catalog');
 assert(landing.includes('QUICK BUDGET EXAMPLES'),'Construction cost guide must provide useful built-up-area examples');
 assert(landing.includes('G+1 construction cost in Hyderabad'),'Construction cost guide must answer G+1 search intent');
+assert(constructionEstimatorSeed.includes("'construction-cost-estimator'"),'Construction estimator seed key must remain construction-cost-estimator');
+assert(landing.includes('/estimate/construction-cost-estimator'),'Construction cost guide must link to the seeded estimator');
+assert(buildScript.includes('/estimate/construction-cost-estimator'),'Static cost guide must link to the seeded estimator');
+assert(!landing.includes('to="/estimate/construction"'),'SEO pages must not use the invalid construction estimator route');
+assert(packagePage.includes('to="/hyderabad/construction-cost"'),'Construction packages must link to the Hyderabad cost guide');
+assert(estimatorPage.includes("flowKey==='construction-cost-estimator'?'/hyderabad/construction-cost'"),'Construction estimator must link back to the Hyderabad cost guide');
+
 assert(packages.includes('rate: 1750')&&packages.includes('rate: 1899')&&packages.includes('rate: 2099'),'Construction package catalog must expose current planning rates');
 assert(buildScript.includes('costGuideContent(route)'),'Static SEO output must include crawlable construction cost content');
 assert(buildScript.includes('CONSTRUCTION_PACKAGE_CATALOG'),'Static construction cost content must use the shared package catalog');
