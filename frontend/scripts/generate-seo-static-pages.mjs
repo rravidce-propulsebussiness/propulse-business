@@ -115,9 +115,8 @@ function aboutExperienceContent(route){
   if(route.path!=='/about')return ''
   return '<section style="padding:10px 0 42px">'+
     '<h2>Prior construction and interiors operating experience</h2>'+
-    '<p style="max-width:850px;line-height:1.55">Before ProPulse, our operating background included SG Homes in Kukatpally, Hyderabad, across residential construction and interior execution. That practical experience helped shape ProPulse around clearer scopes, comparable quotations, locality-aware requirements and better project conversations.</p>'+
-    '<p style="max-width:850px;line-height:1.55">SG Homes is referenced as prior industry experience, not as a current ProPulse subsidiary or marketplace listing.</p>'+
-    '<p><a href="https://www.google.com/maps/place/SG+Homes/data=!4m2!3m1!1s0x0:0x71d9e2c71741db9b?sa=X&ved=1t:2428&ictx=111">View SG Homes on Google Maps</a> · <a href="https://in.linkedin.com/company/sghome">View SG Homes on LinkedIn</a></p>'+
+    '<p style="max-width:850px;line-height:1.55">Before ProPulse, our operating background included hands-on residential construction and interior execution work in Hyderabad. That practical experience helped shape ProPulse around clearer scopes, comparable quotations, locality-aware requirements and better project conversations.</p>'+
+    '<p style="max-width:850px;line-height:1.55">We use that experience to design customer flows that reflect how real construction and interior projects are planned, quoted and discussed.</p>'+
   '</section>'
 }
 
@@ -125,8 +124,8 @@ function constructionExperienceContent(route){
   if(route.type!=='city-service'||route.serviceSlug!=='construction')return ''
   return '<section style="padding:10px 0 42px">'+
     '<h2>Hyderabad operating background</h2>'+
-    '<p style="max-width:850px;line-height:1.55">ProPulse is a technology and requirement platform. Its Hyderabad construction journey is informed by prior operating experience through SG Homes in Kukatpally, including residential construction and interior execution.</p>'+
-    '<p><a href="/about#ab-industry-experience">Read the SG Homes experience background</a></p>'+
+    '<p style="max-width:850px;line-height:1.55">ProPulse is a technology and requirement platform informed by prior hands-on residential construction and interior execution experience in Hyderabad.</p>'+
+    '<p><a href="/about#ab-industry-experience">Read the operating experience background</a></p>'+
   '</section>'
 }
 
