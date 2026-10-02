@@ -3,6 +3,7 @@ import path from 'node:path'
 import {fileURLToPath} from 'node:url'
 import {PUBLIC_SEO_ROUTES,SITE_NAME} from '../src/seo/seoConfig.js'
 import {HYDERABAD_LOCALITIES,localityBySlug,localityPagePath,nearbyLocalities,serviceBySlug} from '../src/seo/hyderabadSeo.js'
+import {CONSTRUCTION_PACKAGE_CATALOG} from '../src/data/constructionPackageCatalog.js'
 
 const here=path.dirname(fileURLToPath(import.meta.url))
 const dist=path.resolve(here,'../dist')
@@ -51,7 +52,7 @@ function cityHubContent(route){
   if(route.type!=='city-hub')return ''
   const serviceLinks=['construction','interior-designers','real-estate'].map(serviceBySlug).map(service=>'<li><a href="/hyderabad/'+service.slug+'">'+escapeHtml(service.heading)+'</a></li>').join('')
   const localityLinks=HYDERABAD_LOCALITIES.map(locality=>'<li><a href="'+escapeHtml(localityPagePath('construction',locality.slug))+'">Construction in '+escapeHtml(locality.name)+'</a></li>').join('')
-  return '<section style="padding:10px 0 42px"><h2>Hyderabad services</h2><ul>'+serviceLinks+'</ul><h2>Construction by Hyderabad locality</h2><ul>'+localityLinks+'</ul></section>'
+  return '<section style="padding:10px 0 42px"><h2>Hyderabad services</h2><ul>'+serviceLinks+'</ul><p><a href="/hyderabad/construction-cost">House construction cost in Hyderabad</a></p><h2>Construction by Hyderabad locality</h2><ul>'+localityLinks+'</ul></section>'
 }
 
 function hyderabadAreas(route){
@@ -79,6 +80,23 @@ function localityContent(route){
   '</section>'
 }
 
+
+function costGuideContent(route){
+  if(route.type!=='cost-guide')return ''
+  const packages=Object.values(CONSTRUCTION_PACKAGE_CATALOG)
+  const areas=[1000,1500,2000]
+  const money=value=>'₹'+Number(value||0).toLocaleString('en-IN')
+  const rates='<ul>'+packages.map(item=>'<li><strong>'+escapeHtml(item.name)+': '+escapeHtml(money(item.rate))+'/sq ft</strong> — '+escapeHtml(item.specs?.Architecture||'Package specifications apply.')+'</li>').join('')+'</ul>'
+  const examples='<table style="border-collapse:collapse;width:100%;max-width:850px"><thead><tr><th style="text-align:left;padding:8px;border:1px solid #ddd">Built-up area</th>'+packages.map(item=>'<th style="text-align:left;padding:8px;border:1px solid #ddd">'+escapeHtml(item.name)+'</th>').join('')+'</tr></thead><tbody>'+areas.map(area=>'<tr><th style="text-align:left;padding:8px;border:1px solid #ddd">'+area.toLocaleString('en-IN')+' sq ft</th>'+packages.map(item=>'<td style="padding:8px;border:1px solid #ddd">'+escapeHtml(money(area*item.rate))+'</td>').join('')+'</tr>').join('')+'</tbody></table>'
+  return '<section style="padding:10px 0 42px">'+
+    '<h2>Current ProPulse construction package reference rates</h2><p style="max-width:850px;line-height:1.55">These are ProPulse brochure reference rates for initial planning. They are not a Hyderabad-wide market average or a final contractor quotation.</p>'+rates+
+    '<h2>Example built-up-area budgets</h2>'+examples+
+    '<h2>What changes the final house construction cost?</h2><ul><li>Soil and foundation requirements</li><li>Number of floors and structural design</li><li>Site access and logistics</li><li>Material and finishing specifications</li><li>Electrical, plumbing and waterproofing scope</li><li>Approvals, external works and package exclusions</li></ul>'+
+    '<h2>Common Hyderabad construction cost searches</h2><ul>'+route.searchTerms.map(term=>'<li>'+escapeHtml(term)+'</li>').join('')+'</ul>'+
+    '<p><a href="/estimate/construction">Use the construction estimator</a> · <a href="/packages#construction">Compare construction packages</a> · <a href="/quote#construction">Request construction quotes</a></p>'+
+  '</section>'
+}
+
 function comparisonDisclosure(route){
   if(route.type!=='comparison'||!Array.isArray(route.brands))return ''
   return '<section style="padding:10px 0 42px"><h2>Independent comparison note</h2><p style="max-width:850px;line-height:1.55">ProPulse is independent and is not affiliated with or endorsed by '+route.brands.map(escapeHtml).join(', ')+'. Brand names are shown only because customers may be researching these options. Check each provider directly before deciding.</p><p style="max-width:850px;line-height:1.55">'+escapeHtml(route.searchIntent||'')+'</p></section>'
@@ -89,7 +107,7 @@ function fallback(route){
   return '<main data-seo-static-fallback="true" style="font-family:Arial,sans-serif;max-width:1100px;margin:0 auto;padding:32px;color:#173f5e">'+
     '<header style="display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap"><a href="/" aria-label="'+escapeHtml(SITE_NAME)+' home"><img src="/brand/propulse-logo.svg" alt="'+escapeHtml(SITE_NAME)+'" width="180" height="48"></a><nav aria-label="Primary">'+nav+'</nav></header>'+
     '<section style="padding:72px 0 34px"><p style="font-weight:700;color:#f05b24">PROPULSE BUSINESS</p><h1 style="max-width:850px;font-size:44px;line-height:1.08;margin:12px 0">'+escapeHtml(route.heading)+'</h1><p style="max-width:780px;font-size:18px;line-height:1.6">'+escapeHtml(route.summary)+'</p><p style="max-width:780px;line-height:1.6">'+escapeHtml(route.description)+'</p><p><a href="/quote" style="font-weight:700;color:#d94f22">Start your requirement</a> · <a href="/experts" style="font-weight:700;color:#173f5e">Find professionals</a></p></section>'+
-    cityHubContent(route)+hyderabadAreas(route)+localityContent(route)+comparisonDisclosure(route)+'</main>'
+    cityHubContent(route)+hyderabadAreas(route)+localityContent(route)+costGuideContent(route)+comparisonDisclosure(route)+'</main>'
 }
 
 function breadcrumbItems(route){
@@ -97,6 +115,7 @@ function breadcrumbItems(route){
   if(!route.path.startsWith('/hyderabad'))return [...items,{'@type':'ListItem',position:2,name:route.heading,item:absolute(route.path)}]
   items.push({'@type':'ListItem',position:2,name:'Hyderabad',item:absolute('/hyderabad')})
   if(route.type==='city-hub')return items
+  if(route.type==='cost-guide')return [...items,{'@type':'ListItem',position:3,name:'Construction Cost',item:absolute(route.path)}]
   if(route.type==='city-service')return [...items,{'@type':'ListItem',position:3,name:route.heading,item:absolute(route.path)}]
   if(route.type==='local-service')return [...items,{'@type':'ListItem',position:3,name:'Construction',item:absolute('/hyderabad/construction')},{'@type':'ListItem',position:4,name:route.localityName,item:absolute(route.path)}]
   if(route.type==='comparison')return [...items,{'@type':'ListItem',position:3,name:serviceBySlug(route.serviceSlug)?.label||route.serviceSlug,item:absolute('/hyderabad/'+route.serviceSlug)},{'@type':'ListItem',position:4,name:'Compare options',item:absolute(route.path)}]
@@ -113,6 +132,7 @@ function staticJsonLd(route){
     inLanguage:'en-IN',
     isPartOf:{'@type':'WebSite',name:SITE_NAME,url:absolute('/')},
   }
+  if(route.type==='cost-guide')page.about={'@type':'Service',name:'House construction cost planning',areaServed:{'@type':'City',name:'Hyderabad, Telangana, India'}}
   if(route.type==='city-service'||route.type==='local-service')page.about={'@type':'Service',name:route.serviceSlug==='construction'?'Home construction':route.serviceSlug==='interior-designers'?'Interior design':'Real estate services',areaServed:route.type==='local-service'?{'@type':'Place',name:route.localityName+', Hyderabad, Telangana, India'}:{'@type':'City',name:'Hyderabad, Telangana, India'}}
   const data=[{'@context':'https://schema.org','@type':'Organization',name:SITE_NAME,url:absolute('/'),logo:absolute('/brand/propulse-logo.png')},page,{'@context':'https://schema.org','@type':'BreadcrumbList',itemListElement:breadcrumbItems(route)}]
   return JSON.stringify(data).replaceAll('</script','<\\/script')
