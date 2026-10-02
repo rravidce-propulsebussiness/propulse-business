@@ -10,7 +10,9 @@ const manager=read('../frontend/src/components/SeoManager.jsx');
 const config=read('../frontend/src/seo/seoConfig.js');
 const hyderabad=read('../frontend/src/seo/hyderabadSeo.js');
 const regional=read('../frontend/src/seo/regionalSeo.js');
+const guides=read('../frontend/src/seo/constructionGuides.js');
 const regionalLanding=read('../frontend/src/pages/RegionalSeoLanding.jsx');
+const guidePage=read('../frontend/src/pages/ConstructionGuide.jsx');
 const landing=read('../frontend/src/pages/HyderabadSeoLanding.jsx');
 const home=read('../frontend/src/pages/Home.jsx');
 const packages=read('../frontend/src/data/constructionPackageCatalog.js');
@@ -85,6 +87,23 @@ assert(app.includes('/hyderabad/:serviceSlug'),'React router must expose Hyderab
 assert(app.includes('/hyderabad/:serviceSlug/:localitySlug'),'React router must expose crawlable Hyderabad locality pages');
 assert(app.includes('/hyderabad/:serviceSlug/compare-options'),'React router must expose Hyderabad comparison pages');
 assert(config.includes('HYDERABAD_SEO_ROUTES'),'Global SEO config must include Hyderabad routes');
+assert(config.includes('CONSTRUCTION_GUIDE_ROUTES'),'Global SEO config must include construction guide routes');
+assert(app.includes('path="/guides/:guideSlug"'),'React router must expose construction guide pages');
+for(const guideSlug of ['best-steel-for-house-construction','prevent-cracks-in-house','2bhk-interiors-hyderabad','choose-construction-contractor-hyderabad','home-construction-checklist','waterproofing-precautions-new-house']){
+  assert(guides.includes("slug:'"+guideSlug+"'"),'Construction guide data missing '+guideSlug);
+  assert(seoRoutes.includes("'"+guideSlug+"'"),'Construction guide sitemap missing '+guideSlug);
+}
+assert(guides.includes('best steel for house construction'),'Steel guide must target steel-selection search intent');
+assert(guides.includes('best contractor in Hyderabad'),'Contractor guide must target contractor-selection search intent');
+assert(guides.includes('2bhk interiors in Hyderabad'),'Interior guide must target 2BHK interior search intent');
+assert(guides.includes('how to avoid cracks in house construction'),'Crack guide must target crack-prevention search intent');
+assert(guides.includes('IS 1786:2008'),'Steel guide must reference the current reinforcement standard');
+assert(guides.includes('IS 456:2000'),'Construction guide content must reference reinforced-concrete practice');
+assert(guidePage.includes('guide-search-intent'),'Guide pages must visibly expose related search intent');
+assert(guidePage.includes('RELATED SEARCHES'),'Guide pages must label related search intent');
+assert(buildScript.includes('guideContent(route)'),'Static SEO must prerender construction guide content');
+assert(manager.includes("route.type==='construction-guide'?'Article'"),'Runtime SEO must expose Article schema for guide pages');
+assert(buildScript.includes("route.type==='construction-guide'?'Article'"),'Static SEO must prerender Article schema for guide pages');
 
 assert(config.includes('REGIONAL_SEO_ROUTES'),'Global SEO config must include state and district routes');
 assert(app.includes("RegionalSeoLanding"),'React router must load regional SEO landing pages');
@@ -142,6 +161,12 @@ assert(home.includes('to="/hyderabad/interior-designers"'),'Homepage must link t
 assert(home.includes('to="/hyderabad/real-estate"'),'Homepage must link to the Hyderabad real-estate hub');
 assert(home.includes('to="/telangana/construction"'),'Homepage must link to the Telangana construction district hub');
 assert(home.includes('to="/andhra-pradesh/construction"'),'Homepage must link to the Andhra Pradesh construction district hub');
+for(const guidePath of ['/guides/best-steel-for-house-construction','/guides/prevent-cracks-in-house','/guides/choose-construction-contractor-hyderabad','/guides/2bhk-interiors-hyderabad','/guides/home-construction-checklist','/guides/waterproofing-precautions-new-house']){
+  assert(home.includes('to="'+guidePath+'"'),'Homepage construction guide link missing '+guidePath);
+  assert(landing.includes('to="'+guidePath+'"'),'Hyderabad/locality guide link missing '+guidePath);
+}
+assert(regionalLanding.includes('/guides/best-steel-for-house-construction'),'Regional construction hubs must link to material guides');
+assert(regionalLanding.includes('/guides/home-construction-checklist'),'Regional construction hubs must link to planning guides');
 for(const outerPath of ['/hyderabad/construction/ghatkesar','/hyderabad/construction/shamshabad','/hyderabad/construction/patancheru']){
   assert(home.includes('to="'+outerPath+'"'),'Homepage metro-belt linking missing '+outerPath);
 }
@@ -191,6 +216,13 @@ assert(hyderabad.includes("'construction in '+name"),'Locality SEO must target d
 assert(hyderabad.includes("'construction contractors near '+name"),'Locality SEO must target nearby contractor intent');
 assert(hyderabad.includes("'house construction company in '+name"),'Locality SEO must target house-construction company intent');
 assert(hyderabad.includes("'home builders in '+name"),'Locality SEO must target home-builder intent');
+assert(hyderabad.includes("'best contractor in '+name"),'Locality SEO must target best-contractor search intent without making a ranking claim');
+assert(hyderabad.includes("'house construction cost in '+name"),'Locality SEO must target construction-cost search intent');
+assert(hyderabad.includes("'2bhk interior in '+name"),'Locality SEO must target related 2BHK interior search intent');
+assert(landing.includes('2BHK interiors in {locality.name}'),'Locality pages must connect localized 2BHK interior searches to the interior guide');
+assert(landing.includes('How to choose the best contractor in {locality.name}'),'Locality pages must connect contractor search intent to the selection guide');
+assert(landing.includes('What is the best steel for house construction?'),'Locality pages must surface steel-selection guidance');
+assert(landing.includes('Precautions to reduce cracks in a new house'),'Locality pages must surface crack-prevention guidance');
 assert(hyderabad.includes("'builders near '+name"),'Locality SEO must target nearby builder intent');
 assert(hyderabad.includes("'best construction company in '+name"),'Locality SEO must cover best-company search intent without making a ranking claim');
 assert(hyderabad.includes("name:'Ferozguda'"),'Ferozguda locality must be included');
@@ -219,6 +251,10 @@ assert(!buildScript.includes("'@type':'FAQPage'"),'Static SEO should not emit de
 assert(landing.includes("'/quote?package='+item.key+'#construction'"),'Locality package cards must link into package-specific construction quotes');
 assert(buildScript.includes('Construction packages for '),'Static locality pages must prerender package content');
 assert(buildScript.includes('How to find the right construction partner in '),'Static locality pages must prerender partner-comparison content');
+assert(buildScript.includes('What is the best steel for house construction?'),'Static locality pages must prerender steel-guide links');
+assert(buildScript.includes('Precautions to reduce cracks in a new house'),'Static locality pages must prerender crack-prevention links');
+assert(buildScript.includes('2BHK interiors in '),'Static locality pages must prerender localized 2BHK interior intent');
+assert(buildScript.includes('Popular construction guides'),'Static homepage must prerender construction guide links');
 assert(landing.includes('SEARCH INTENT AROUND'),'Construction locality pages must provide useful visible search-intent content');
 assert(landing.includes('How to compare construction companies in'),'Construction locality pages must teach provider comparison rather than only repeat keywords');
 assert(manager.includes("route.type==='local-service'"),'Structured data should identify locality service context');
