@@ -204,6 +204,39 @@ export default function Home() {
         </div>
       </section>
 
+      <section className="hc-section hc-hyderabad-seo" aria-labelledby="hyderabad-services-title">
+        <div className="hc-container">
+          <div className="hc-section-head">
+            <div>
+              <span className="hc-local-eyebrow">HYDERABAD</span>
+              <h2 id="hyderabad-services-title">Explore services across Hyderabad</h2>
+              <p>Start with the service or locality closest to your requirement, then add your exact site, property, budget and timeline.</p>
+            </div>
+            <Link to="/hyderabad">View Hyderabad Hub <Icon name="arrow" size={13}/></Link>
+          </div>
+
+          <div className="hc-hyderabad-service-links">
+            <Link to="/hyderabad/construction"><b>Construction in Hyderabad</b><span>Home construction, contractors, quotes and project planning.</span></Link>
+            <Link to="/hyderabad/interior-designers"><b>Interior Designers in Hyderabad</b><span>Home interiors, rooms, finishes, budget and delivery planning.</span></Link>
+            <Link to="/hyderabad/real-estate"><b>Real Estate Services in Hyderabad</b><span>Buy, sell, rent and investment property requirements.</span></Link>
+          </div>
+
+          <div className="hc-locality-links">
+            <b>Popular construction areas</b>
+            <div>
+              <Link to="/hyderabad/construction/uppal">Construction in Uppal</Link>
+              <Link to="/hyderabad/construction/kothapet">Construction in Kothapet</Link>
+              <Link to="/hyderabad/construction/lb-nagar">Construction in LB Nagar</Link>
+              <Link to="/hyderabad/construction/gachibowli">Construction in Gachibowli</Link>
+              <Link to="/hyderabad/construction/kondapur">Construction in Kondapur</Link>
+              <Link to="/hyderabad/construction/kukatpally">Construction in Kukatpally</Link>
+              <Link to="/hyderabad/construction/miyapur">Construction in Miyapur</Link>
+              <Link to="/hyderabad/construction/kokapet">Construction in Kokapet</Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section className="hc-section hc-benefits">
         <div className="hc-container">
           <div className="hc-section-head compact">
@@ -271,8 +304,8 @@ export default function Home() {
         <p>Your customer starting point for construction, interiors and real-estate requirements.</p>
         <div className="hc-footer-social"><span>f</span><span>◎</span><span>▶</span><span>in</span></div>
       </div>
-      <div><b>Quick Links</b><Link to="/">Home</Link><Link to="/quote#construction">Construction</Link><Link to="/quote#interiors">Interiors</Link><Link to="/packages">Packages</Link><Link to="/quote#property">Real Estate</Link><Link to="/projects">Projects</Link></div>
-      <div><b>Our Services</b><Link to="/quote#construction">Home Construction</Link><Link to="/quote#interiors">Interior Design</Link><Link to="/quote#property">Real Estate</Link><Link to="/quote#construction">Construction Quote</Link><button type="button" onClick={() => openRequirement('')}>Free Consultation</button></div>
+      <div><b>Quick Links</b><Link to="/">Home</Link><Link to="/hyderabad">Hyderabad</Link><Link to="/hyderabad/construction">Construction</Link><Link to="/hyderabad/interior-designers">Interiors</Link><Link to="/packages">Packages</Link><Link to="/hyderabad/real-estate">Real Estate</Link><Link to="/projects">Projects</Link></div>
+      <div><b>Our Services</b><Link to="/hyderabad/construction">Home Construction in Hyderabad</Link><Link to="/hyderabad/interior-designers">Interior Design in Hyderabad</Link><Link to="/hyderabad/real-estate">Real Estate in Hyderabad</Link><Link to="/quote#construction">Construction Quote</Link><button type="button" onClick={() => openRequirement('')}>Free Consultation</button></div>
       <div><b>Support</b><Link to="/faq">FAQ</Link><Link to="/contact">Contact Us</Link><Link to="/contact">Privacy Policy</Link><Link to="/contact">Terms & Conditions</Link></div>
       <div><b>Contact Info</b>{phone&&<a href={'tel:'+String(phone).replace(/\s/g,'')}><Icon name="phone" size={12}/>{phone}</a>}{email&&<a href={'mailto:'+email}>{email}</a>}<span><Icon name="pin" size={12}/>Hyderabad, India</span></div>
     </footer>
