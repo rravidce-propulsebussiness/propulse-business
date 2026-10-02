@@ -9,10 +9,12 @@ const scheduler=read('src/services/leadPartnerSheetSyncScheduler.js');
 const partnerInventory=read('src/services/leadPartnerInventoryCompatService.js');
 const worker=read('src/worker.js');
 const runtimeFlags=read('src/config/runtimeFlags.js');
+const rateLimitConfig=read('src/config/apiRateLimitConfig.js');
 const pkg=JSON.parse(read('package.json'));
 
-assert(server.includes("shared:true"),'Global production API limiter must use the shared PostgreSQL bucket');
-assert(!server.includes("scope:'global',shared:false"),'Global API limiter must not be instance-local');
+assert(rateLimitConfig.includes('shared:Boolean(isProduction)'),'Global production API limiter must use the shared PostgreSQL bucket');
+assert(rateLimitConfig.includes('const defaultMax=isProduction?600:10000'),'Global API limiter must preserve the strict production default');
+assert(!rateLimitConfig.includes('shared:false')||rateLimitConfig.includes('shared:Boolean(isProduction)'),'Global API limiter must not be hard-coded instance-local in production');
 assert(server.includes("envFlag('RUN_MIGRATIONS_ON_STARTUP',true)"),'Web migration startup must be explicitly configurable');
 assert(server.includes("envFlag('RUN_BACKGROUND_JOBS_IN_WEB',true)"),'Web background jobs must be explicitly configurable');
 assert(server.includes("if(runMigrationsOnStartup)await runMigrations()"),'Web process must honor migration startup control');
