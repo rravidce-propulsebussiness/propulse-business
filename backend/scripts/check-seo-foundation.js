@@ -125,12 +125,16 @@ for(const localitySlug of ['uppal','habsiguda','tarnaka','nagole','kothapet','lb
 }
 assert(seoRoutes.includes("...HYDERABAD_CONSTRUCTION_LOCALITIES.map(locality=>'/hyderabad/construction/'+locality)"),'Sitemap must generate construction locality URLs');
 assert(!seoRoutes.includes('/hyderabad/interior-designers/kothapet'),'Interior locality doorway URLs must not be mass-generated yet');
-for(const brand of ['Brick&Bolt','BuildNext','Livspace','HomeLane','DesignCafe','NoBroker Interiors','Decorpot','MagicBricks','99acres']){
+for(const brand of ['Brick&Bolt','BuildNext','JSW One Homes','Livspace','HomeLane','DesignCafe',"D'LIFE Interiors",'NoBroker Interiors','Decorpot','MagicBricks','99acres','Housing.com','Square Yards']){
   assert(hyderabad.includes("'"+brand+"'"),'Comparison SEO content missing '+brand);
 }
-for(const term of ['Brick&Bolt Hyderabad','BuildNext Hyderabad','Livspace Hyderabad','HomeLane Hyderabad','DesignCafe Hyderabad','NoBroker Interiors Hyderabad','Decorpot Hyderabad','NoBroker Hyderabad','MagicBricks Hyderabad','99acres Hyderabad']){
+for(const term of ['Brick&Bolt Hyderabad','BuildNext Hyderabad','JSW One Homes Hyderabad','Livspace Hyderabad','HomeLane Hyderabad','DesignCafe Hyderabad',"D'LIFE Interiors Hyderabad",'NoBroker Interiors Hyderabad','Decorpot Hyderabad','NoBroker Hyderabad','MagicBricks Hyderabad','99acres Hyderabad','Housing.com Hyderabad','Square Yards Hyderabad']){
   assert(hyderabad.includes("'"+term+"'"),'Company search variant missing '+term);
 }
+assert(hyderabad.includes('JSW One Homes alternative Hyderabad'),'Construction comparison must target JSW One Homes alternative intent');
+assert(hyderabad.includes("D'LIFE Interiors alternative Hyderabad"),'Interior comparison must target D\'LIFE alternative intent');
+assert(hyderabad.includes('Housing.com alternative Hyderabad'),'Real-estate comparison must target Housing.com alternative intent');
+assert(hyderabad.includes('Square Yards alternative Hyderabad'),'Real-estate comparison must target Square Yards alternative intent');
 assert(landing.includes('COMMON SEARCHES'),'Comparison pages must visibly explain company-name searches');
 assert(buildScript.includes('Common Hyderabad comparison searches'),'Static comparison pages must expose company-name searches');
 
