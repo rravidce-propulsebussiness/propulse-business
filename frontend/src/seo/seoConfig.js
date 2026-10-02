@@ -1,3 +1,5 @@
+import {HYDERABAD_SEO_ROUTES} from './hyderabadSeo.js'
+
 export const SITE_NAME='ProPulse Business'
 
 export const HOME_SEO={
@@ -8,7 +10,7 @@ export const HOME_SEO={
   summary:'Use ProPulse to plan your requirement, compare relevant options, explore completed work and connect with registered businesses.',
 }
 
-export const PUBLIC_SEO_ROUTES=[
+export const CORE_PUBLIC_SEO_ROUTES=[
   HOME_SEO,
   {
     path:'/quote',
@@ -66,6 +68,11 @@ export const PUBLIC_SEO_ROUTES=[
     heading:'Frequently asked questions about ProPulse',
     summary:'Find quick answers about submitting requirements, receiving responses and using ProPulse.',
   },
+]
+
+export const PUBLIC_SEO_ROUTES=[
+  ...CORE_PUBLIC_SEO_ROUTES,
+  ...HYDERABAD_SEO_ROUTES,
 ]
 
 export const PUBLIC_SEO_PATHS=new Set(PUBLIC_SEO_ROUTES.map(route=>route.path))

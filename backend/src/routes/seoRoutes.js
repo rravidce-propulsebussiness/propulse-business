@@ -12,6 +12,12 @@ const PUBLIC_PATHS=[
   '/about',
   '/contact',
   '/faq',
+  '/hyderabad/construction',
+  '/hyderabad/interior-designers',
+  '/hyderabad/real-estate',
+  '/hyderabad/construction/compare-options',
+  '/hyderabad/interior-designers/compare-options',
+  '/hyderabad/real-estate/compare-options',
 ];
 
 function safeOrigin(req){

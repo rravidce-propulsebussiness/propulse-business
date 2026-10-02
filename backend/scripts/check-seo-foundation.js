@@ -8,6 +8,8 @@ const index=read('../frontend/index.html');
 const app=read('../frontend/src/App.jsx');
 const manager=read('../frontend/src/components/SeoManager.jsx');
 const config=read('../frontend/src/seo/seoConfig.js');
+const hyderabad=read('../frontend/src/seo/hyderabadSeo.js');
+const landing=read('../frontend/src/pages/HyderabadSeoLanding.jsx');
 const buildScript=read('../frontend/scripts/generate-seo-static-pages.mjs');
 const frontendPackage=JSON.parse(read('../frontend/package.json'));
 const nginx=read('../frontend/deploy/nginx.conf');
@@ -39,7 +41,7 @@ assert(manager.includes('VITE_PUBLIC_SITE_URL'),'Runtime SEO must support a conf
 
 assert(frontendPackage.scripts.build.includes('generate-seo-static-pages.mjs'),'Production build must generate route-specific SEO HTML');
 assert(buildScript.includes('data-seo-static-fallback'),'Static SEO pages must contain crawlable fallback content');
-assert(buildScript.includes("route.path.slice(1)+'.html'"),'Public routes must receive route-specific static HTML');
+assert(buildScript.includes("fs.mkdirSync(path.dirname(target),{recursive:true})"),'Nested SEO routes must create their output directories');
 assert(buildScript.includes('og:description')&&buildScript.includes('twitter:description'),'Static pages must receive route-specific social metadata');
 
 assert(server.includes("require('./routes/seoRoutes')")&&server.includes("app.use('/',seoRoutes)"),'Backend must expose robots and sitemap routes');
@@ -54,4 +56,26 @@ assert(nginx.includes('try_files $uri $uri.html $uri/ /index.html'),'Nginx must 
 assert(dockerfile.includes('ARG VITE_PUBLIC_SITE_URL'),'Frontend image must accept the canonical public origin');
 assert(compose.includes('VITE_PUBLIC_SITE_URL: \${PUBLIC_SITE_URL:-}'),'Deployment must pass the public site origin into the frontend build');
 
-console.log('Technical SEO foundation regression checks passed.');
+for(const route of ['/hyderabad/construction','/hyderabad/interior-designers','/hyderabad/real-estate']){
+  assert(seoRoutes.includes("'"+route+"'"),'Hyderabad sitemap missing '+route);
+}
+for(const route of ['/hyderabad/construction/compare-options','/hyderabad/interior-designers/compare-options','/hyderabad/real-estate/compare-options']){
+  assert(seoRoutes.includes("'"+route+"'"),'Comparison sitemap missing '+route);
+}
+assert(app.includes('/hyderabad/:serviceSlug'),'React router must expose Hyderabad SEO hubs');
+assert(app.includes('/hyderabad/:serviceSlug/compare-options'),'React router must expose Hyderabad comparison pages');
+assert(config.includes('HYDERABAD_SEO_ROUTES'),'Global SEO config must include Hyderabad routes');
+
+for(const locality of ['Uppal','Kothapet','LB Nagar','Gachibowli','Kondapur','Kukatpally','Miyapur','Kokapet','Narsingi','Tellapur']){
+  assert(hyderabad.includes("name:'"+locality+"'"),'Hyderabad locality index missing '+locality);
+}
+for(const brand of ['Brick&Bolt','Livspace','HomeLane','DesignCafe','NoBroker Interiors','MagicBricks','99acres']){
+  assert(hyderabad.includes("'"+brand+"'"),'Comparison SEO content missing '+brand);
+}
+assert(landing.includes('ProPulse is independent'),'Comparison page must disclose brand independence');
+assert(landing.includes('Instead of creating dozens of thin location pages'),'Local SEO page must intentionally avoid doorway-page expansion');
+assert(!seoRoutes.includes('/hyderabad/construction/uppal'),'Individual locality doorway URLs must not be indexed');
+assert(!seoRoutes.includes('/hyderabad/interior-designers/kothapet'),'Individual locality doorway URLs must not be indexed');
+assert(manager.includes("route.type==='city-service'")||manager.includes("route.type==='local'"),'Structured data should identify local service context');
+
+console.log('Technical and Hyderabad SEO regression checks passed.');

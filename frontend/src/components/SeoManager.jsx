@@ -13,12 +13,12 @@ function ensureMeta(selector,attributes={}){
 }
 
 function setNamedMeta(name,content){
-  const node=ensureMeta(`meta[name="${name}"]`,{name})
+  const node=ensureMeta('meta[name="'+name+'"]',{name})
   node.setAttribute('content',content)
 }
 
 function setPropertyMeta(property,content){
-  const node=ensureMeta(`meta[property="${property}"]`,{property})
+  const node=ensureMeta('meta[property="'+property+'"]',{property})
   node.setAttribute('content',content)
 }
 
@@ -40,6 +40,31 @@ function siteOrigin(){
   return window.location.origin
 }
 
+function pageJsonLd(route,origin){
+  const home=origin+'/'
+  const page={
+    '@context':'https://schema.org',
+    '@type':'WebPage',
+    name:route.title,
+    url:origin+route.path,
+    description:route.description,
+    isPartOf:{'@type':'WebSite',name:SITE_NAME,url:home},
+    inLanguage:'en-IN',
+  }
+  if(route.type==='city-service'){
+    page.about={
+      '@type':'Service',
+      name:route.serviceSlug==='construction'
+        ?'Home construction'
+        :route.serviceSlug==='interior-designers'
+          ?'Interior design'
+          :'Real estate services',
+      areaServed:{'@type':'City',name:'Hyderabad, Telangana, India'},
+    }
+  }
+  return page
+}
+
 function jsonLdFor(route,origin){
   const home=origin+'/'
   const organization={
@@ -59,23 +84,18 @@ function jsonLdFor(route,origin){
     description:HOME_SEO.description,
   }
   if(route.path==='/')return [organization,website]
+
+  const isHyderabad=route.type==='city-service'||route.type==='comparison'
   return [
     organization,
-    {
-      '@context':'https://schema.org',
-      '@type':'WebPage',
-      name:route.title,
-      url:origin+route.path,
-      description:route.description,
-      isPartOf:{'@type':'WebSite',name:SITE_NAME,url:home},
-      inLanguage:'en-IN',
-    },
+    pageJsonLd(route,origin),
     {
       '@context':'https://schema.org',
       '@type':'BreadcrumbList',
       itemListElement:[
         {'@type':'ListItem',position:1,name:'Home',item:home},
-        {'@type':'ListItem',position:2,name:route.heading,item:origin+route.path},
+        ...(isHyderabad?[{'@type':'ListItem',position:2,name:'Hyderabad',item:origin+'/hyderabad'}]:[]),
+        {'@type':'ListItem',position:isHyderabad?3:2,name:route.heading,item:origin+route.path},
       ],
     },
   ]
