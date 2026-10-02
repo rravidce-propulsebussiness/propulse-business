@@ -57,6 +57,13 @@ function pageJsonLd(route,origin){
     isPartOf:{'@type':'WebSite',name:SITE_NAME,url:home},
     inLanguage:'en-IN',
   }
+  if(route.type==='cost-guide'){
+    page.about={
+      '@type':'Service',
+      name:'House construction cost planning',
+      areaServed:{'@type':'City',name:'Hyderabad, Telangana, India'},
+    }
+  }
   if(route.type==='city-service'||route.type==='local-service'){
     page.about={
       '@type':'Service',
@@ -85,6 +92,10 @@ function breadcrumbItems(route,origin){
     return items
   }
   items.push({'@type':'ListItem',position:2,name:'Hyderabad',item:origin+'/hyderabad'})
+  if(route.type==='cost-guide'){
+    items.push({'@type':'ListItem',position:3,name:'Construction Cost',item:origin+route.path})
+    return items
+  }
   if(route.type==='city-service'){
     items.push({'@type':'ListItem',position:3,name:route.heading,item:origin+route.path})
     return items
