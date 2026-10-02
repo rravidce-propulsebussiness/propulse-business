@@ -108,6 +108,18 @@ function ServicePage({entry,service}){
       </div>
     </section>
 
+    {service.slug==='construction'&&<section className="locality-knowledge-section">
+      <div className="local-seo-section-title"><span>CONSTRUCTION GUIDES</span><h2>Popular questions before building a home in Hyderabad</h2><p>Use these guides for material, quality and contractor-selection research, then create a project-specific requirement with your actual site details.</p></div>
+      <div className="locality-knowledge-grid">
+        <Link to="/guides/best-steel-for-house-construction"><span>MATERIALS</span><b>Best steel for house construction</b><small>TMT grades, BIS standards and what to verify →</small></Link>
+        <Link to="/guides/prevent-cracks-in-house"><span>QUALITY</span><b>Precautions to reduce cracks in a new house</b><small>Concrete, curing, masonry and movement detailing →</small></Link>
+        <Link to="/guides/choose-construction-contractor-hyderabad"><span>CONTRACTORS</span><b>How to choose the best contractor in Hyderabad</b><small>Scope, projects, exclusions and contract terms →</small></Link>
+        <Link to="/guides/2bhk-interiors-hyderabad"><span>INTERIORS</span><b>2BHK interiors in Hyderabad</b><small>Room scope, materials and quote comparison →</small></Link>
+        <Link to="/guides/home-construction-checklist"><span>PLANNING</span><b>Home construction checklist</b><small>Plot to handover planning stages →</small></Link>
+        <Link to="/guides/waterproofing-precautions-new-house"><span>WATERPROOFING</span><b>Waterproofing precautions for a new house</b><small>Roofs, toilets, balconies and testing →</small></Link>
+      </div>
+    </section>}
+
     <section className="local-seo-process"><div className="local-seo-section-title"><span>HOW PROPULSE WORKS</span><h2>From Hyderabad requirement to relevant responses</h2></div><div className="local-seo-process-grid">
       <article><b>01</b><h3>Share your requirement</h3><p>Add the locality, scope, budget and timing that matter for your project or property need.</p></article>
       <article><b>02</b><h3>Keep one clear brief</h3><p>Your requirement stays structured so each business is responding to the same core information.</p></article>
