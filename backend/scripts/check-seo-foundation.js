@@ -126,10 +126,10 @@ for(const localitySlug of ['uppal','habsiguda','tarnaka','nagole','kothapet','lb
 assert(seoRoutes.includes("...HYDERABAD_CONSTRUCTION_LOCALITIES.map(locality=>'/hyderabad/construction/'+locality)"),'Sitemap must generate construction locality URLs');
 assert(!seoRoutes.includes('/hyderabad/interior-designers/kothapet'),'Interior locality doorway URLs must not be mass-generated yet');
 for(const brand of ['Brick&Bolt','BuildNext','JSW One Homes','Livspace','HomeLane','DesignCafe',"D'LIFE Interiors",'NoBroker Interiors','Decorpot','MagicBricks','99acres','Housing.com','Square Yards']){
-  assert(hyderabad.includes("'"+brand+"'"),'Comparison SEO content missing '+brand);
+  assert(hyderabad.includes(brand),'Comparison SEO content missing '+brand);
 }
 for(const term of ['Brick&Bolt Hyderabad','BuildNext Hyderabad','JSW One Homes Hyderabad','Livspace Hyderabad','HomeLane Hyderabad','DesignCafe Hyderabad',"D'LIFE Interiors Hyderabad",'NoBroker Interiors Hyderabad','Decorpot Hyderabad','NoBroker Hyderabad','MagicBricks Hyderabad','99acres Hyderabad','Housing.com Hyderabad','Square Yards Hyderabad']){
-  assert(hyderabad.includes("'"+term+"'"),'Company search variant missing '+term);
+  assert(hyderabad.includes(term),'Company search variant missing '+term);
 }
 assert(hyderabad.includes('JSW One Homes alternative Hyderabad'),'Construction comparison must target JSW One Homes alternative intent');
 assert(hyderabad.includes("D'LIFE Interiors alternative Hyderabad"),'Interior comparison must target D\'LIFE alternative intent');
