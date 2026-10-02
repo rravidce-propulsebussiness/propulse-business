@@ -2,6 +2,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import {fileURLToPath} from 'node:url'
 import {PUBLIC_SEO_ROUTES,SITE_NAME} from '../src/seo/seoConfig.js'
+import {HYDERABAD_LOCALITIES,serviceBySlug} from '../src/seo/hyderabadSeo.js'
 
 const here=path.dirname(fileURLToPath(import.meta.url))
 const dist=path.resolve(here,'../dist')
@@ -24,10 +25,10 @@ function replaceTitle(html,value){
 }
 
 function replaceMeta(html,attribute,key,value){
-  const re=new RegExp('<meta\\s+[^>]*'+attribute+'="'+key+'"[^>]*>','i')
+  const re=new RegExp("<meta\\s+[^>]*"+attribute+"=[\\"']"+key+"[\\"'][^>]*>","i")
   const tag='<meta '+attribute+'="'+escapeHtml(key)+'" content="'+escapeHtml(value)+'">'
   if(re.test(html))return html.replace(re,tag)
-  return html.replace('</head>','  '+tag+'\\n  </head>')
+  return html.replace('</head>','  '+tag+'\n  </head>')
 }
 
 function replaceCanonical(html,value){
@@ -35,14 +36,14 @@ function replaceCanonical(html,value){
   if(/<link\s+[^>]*rel=["']canonical["'][^>]*>/i.test(html)){
     return html.replace(/<link\s+[^>]*rel=["']canonical["'][^>]*>/i,tag)
   }
-  return html.replace('</head>','  '+tag+'\\n  </head>')
+  return html.replace('</head>','  '+tag+'\n  </head>')
 }
 
 function absolute(urlPath){
   return origin?origin+urlPath:urlPath
 }
 
-function fallback(route){
+function baseLinks(route){
   const links=[
     ['Home','/'],
     ['Get Quote','/quote'],
@@ -52,23 +53,54 @@ function fallback(route){
     ['How It Works','/how-it-works'],
     ['About','/about'],
     ['Contact','/contact'],
-    ['FAQs','/faq'],
   ]
-  const nav=links.map(function(item){
-    return '<a href="'+item[1]+'" style="margin-right:14px;color:#173f5e">'+item[0]+'</a>'
+  if(route.type==='city-service'){
+    links.push(['Compare Hyderabad options','/hyderabad/'+route.serviceSlug+'/compare-options'])
+  }
+  return links
+}
+
+function hyderabadAreas(route){
+  if(route.type!=='city-service')return ''
+  const service=serviceBySlug(route.serviceSlug)
+  if(!service)return ''
+  return '<section style="padding:10px 0 42px">'+
+    '<h2>'+escapeHtml(service.label)+' across Hyderabad localities</h2>'+
+    '<div>'+HYDERABAD_LOCALITIES.map(function(locality){
+      return '<article id="'+escapeHtml(locality.slug)+'" style="padding:10px 0">'+
+        '<h3 style="margin-bottom:4px">'+escapeHtml(service.localityHeading(locality.name))+'</h3>'+
+        '<p style="max-width:850px;line-height:1.55">'+escapeHtml(service.localityText(locality.name))+'</p>'+
+      '</article>'
+    }).join('')+'</div>'+
+  '</section>'
+}
+
+function comparisonDisclosure(route){
+  if(route.type!=='comparison'||!Array.isArray(route.brands))return ''
+  return '<section style="padding:10px 0 42px">'+
+    '<h2>Independent comparison note</h2>'+
+    '<p style="max-width:850px;line-height:1.55">ProPulse is independent and is not affiliated with or endorsed by '+route.brands.map(escapeHtml).join(', ')+'. Brand names are shown only because customers may be researching these options. Check each provider directly before deciding.</p>'+
+  '</section>'
+}
+
+function fallback(route){
+  const nav=baseLinks(route).map(function(item){
+    return '<a href="'+item[1]+'" style="margin-right:14px;color:#173f5e">'+escapeHtml(item[0])+'</a>'
   }).join('')
   return '<main data-seo-static-fallback="true" style="font-family:Arial,sans-serif;max-width:1100px;margin:0 auto;padding:32px;color:#173f5e">'+
     '<header style="display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap">'+
       '<a href="/" aria-label="'+escapeHtml(SITE_NAME)+' home"><img src="/brand/propulse-logo.svg" alt="'+escapeHtml(SITE_NAME)+'" width="180" height="48"></a>'+
       '<nav aria-label="Primary">'+nav+'</nav>'+
     '</header>'+
-    '<section style="padding:72px 0 48px">'+
+    '<section style="padding:72px 0 34px">'+
       '<p style="font-weight:700;color:#f05b24">PROPULSE BUSINESS</p>'+
       '<h1 style="max-width:850px;font-size:44px;line-height:1.08;margin:12px 0">'+escapeHtml(route.heading)+'</h1>'+
       '<p style="max-width:780px;font-size:18px;line-height:1.6">'+escapeHtml(route.summary)+'</p>'+
       '<p style="max-width:780px;line-height:1.6">'+escapeHtml(route.description)+'</p>'+
       '<p><a href="/quote" style="font-weight:700;color:#d94f22">Start your requirement</a> · <a href="/experts" style="font-weight:700;color:#173f5e">Find professionals</a></p>'+
     '</section>'+
+    hyderabadAreas(route)+
+    comparisonDisclosure(route)+
   '</main>'
 }
 
@@ -96,7 +128,9 @@ for(const route of PUBLIC_SEO_ROUTES){
   if(route.path==='/'){
     fs.writeFileSync(indexPath,html)
   }else{
-    fs.writeFileSync(path.join(dist,route.path.slice(1)+'.html'),html)
+    const target=path.join(dist,route.path.slice(1)+'.html')
+    fs.mkdirSync(path.dirname(target),{recursive:true})
+    fs.writeFileSync(target,html)
   }
 }
 
