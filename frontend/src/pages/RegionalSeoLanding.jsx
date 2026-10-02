@@ -45,6 +45,18 @@ function StateHub({state}){
 
     <PackageCards/>
 
+    <section className="regional-guides">
+      <div className="regional-section-title"><span>HOME CONSTRUCTION GUIDES</span><h2>Research materials, quality and contractor selection before you build</h2><p>These guides answer common construction questions that apply across districts, then link back into project-specific quote flows.</p></div>
+      <div className="regional-guide-grid">
+        <Link to="/guides/best-steel-for-house-construction">Best steel for house construction</Link>
+        <Link to="/guides/prevent-cracks-in-house">Precautions to reduce cracks in a new house</Link>
+        <Link to="/guides/choose-construction-contractor-hyderabad">How to choose a construction contractor</Link>
+        <Link to="/guides/home-construction-checklist">Home construction checklist</Link>
+        <Link to="/guides/waterproofing-precautions-new-house">Waterproofing precautions</Link>
+        <Link to="/guides/2bhk-interiors-hyderabad">2BHK interior planning guide</Link>
+      </div>
+    </section>
+
     <section className="regional-process">
       <div className="regional-section-title"><span>COMPARE CONSISTENTLY</span><h2>Use one scope across every construction company you review</h2></div>
       <div className="regional-process-grid">
@@ -109,6 +121,17 @@ function DistrictPage({state,district}){
     <section className="regional-searches">
       <div className="regional-section-title"><span>DISTRICT SEARCH INTENT</span><h2>Construction searches around {district.name}</h2><p>These are closely related ways customers search for the same underlying project need. Use one clear site-specific requirement rather than comparing generic claims.</p></div>
       <div>{searches.map(term=><span key={term}>{term}</span>)}</div>
+    </section>
+
+    <section className="regional-guides">
+      <div className="regional-section-title"><span>CONSTRUCTION KNOWLEDGE</span><h2>Useful guides before choosing materials or a contractor</h2></div>
+      <div className="regional-guide-grid">
+        <Link to="/guides/best-steel-for-house-construction">Best steel for house construction</Link>
+        <Link to="/guides/prevent-cracks-in-house">How to reduce cracks in a new house</Link>
+        <Link to="/guides/choose-construction-contractor-hyderabad">How to compare construction contractors</Link>
+        <Link to="/guides/home-construction-checklist">Home construction checklist</Link>
+        <Link to="/guides/waterproofing-precautions-new-house">Waterproofing precautions</Link>
+      </div>
     </section>
 
     <section className="regional-nearby-districts">
