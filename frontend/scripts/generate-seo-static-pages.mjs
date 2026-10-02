@@ -5,6 +5,7 @@ import {PUBLIC_SEO_ROUTES,SITE_NAME} from '../src/seo/seoConfig.js'
 import {HYDERABAD_LOCALITIES,localityBySlug,localityPagePath,nearbyLocalities,serviceBySlug} from '../src/seo/hyderabadSeo.js'
 import {CONSTRUCTION_PACKAGE_CATALOG} from '../src/data/constructionPackageCatalog.js'
 import {REGIONAL_STATES,districtBySlug,districtPath,stateBySlug} from '../src/seo/regionalSeo.js'
+import {CONSTRUCTION_GUIDES,guideBySlug} from '../src/seo/constructionGuides.js'
 
 const here=path.dirname(fileURLToPath(import.meta.url))
 const dist=path.resolve(here,'../dist')
@@ -85,6 +86,14 @@ function localityContent(route){
     '<h2>How to find the right construction partner in '+escapeHtml(locality.name)+'</h2><ol><li>Use the same built-up area, floors and drawings for every quotation.</li><li>Compare materials, exclusions and finishing allowances.</li><li>Review relevant completed work and project experience.</li><li>Confirm milestones, variation rules, warranties and handover terms.</li></ol>'+
     '<h2>Common construction searches around '+escapeHtml(locality.name)+'</h2><ul>'+route.searchTerms.map(term=>'<li>'+escapeHtml(term)+'</li>').join('')+'</ul>'+
     '<h2>What to include in a construction quote request</h2><ul>'+service.checklist.map(item=>'<li>'+escapeHtml(item)+'</li>').join('')+'</ul>'+
+    '<h2>Related home construction questions</h2><ul>'+
+      '<li><a href="/guides/best-steel-for-house-construction">What is the best steel for house construction?</a></li>'+
+      '<li><a href="/guides/2bhk-interiors-hyderabad">2BHK interiors in '+escapeHtml(locality.name)+'</a></li>'+
+      '<li><a href="/guides/choose-construction-contractor-hyderabad">How to choose the best contractor in '+escapeHtml(locality.name)+'</a></li>'+
+      '<li><a href="/guides/prevent-cracks-in-house">Precautions to reduce cracks in a new house</a></li>'+
+      '<li><a href="/guides/home-construction-checklist">Home construction checklist</a></li>'+
+      '<li><a href="/guides/waterproofing-precautions-new-house">Waterproofing precautions for a new house</a></li>'+
+    '</ul>'+
     '<h2>Nearby construction areas</h2><ul>'+nearbyCards+'</ul>'+
     '<p><a href="/hyderabad/construction">View all Hyderabad construction areas</a> · <a href="/hyderabad/construction-cost">Hyderabad construction cost guide</a></p>'+
   '</section>'
@@ -106,6 +115,21 @@ function costGuideContent(route){
   '</section>'
 }
 
+
+function guideContent(route){
+  if(route.type!=='construction-guide')return ''
+  const guide=guideBySlug(route.guideSlug)
+  if(!guide)return ''
+  const sections=guide.sections.map((item,index)=>'<section style="padding:14px 0"><p style="font-weight:700;color:#f05b24">'+String(index+1).padStart(2,'0')+'</p><h2>'+escapeHtml(item.heading)+'</h2><p style="max-width:850px;line-height:1.65">'+escapeHtml(item.body)+'</p>'+(item.bullets?.length?'<ul>'+item.bullets.map(b=>'<li>'+escapeHtml(b)+'</li>').join('')+'</ul>':'')+'</section>').join('')
+  const related=CONSTRUCTION_GUIDES.filter(item=>item.slug!==guide.slug).slice(0,5).map(item=>'<li><a href="/guides/'+escapeHtml(item.slug)+'">'+escapeHtml(item.heading)+'</a></li>').join('')
+  return '<section style="padding:10px 0 42px">'+
+    (guide.note?'<aside style="padding:12px;border:1px solid #f0c5b4;background:#fff8f4"><strong>Important</strong><p>'+escapeHtml(guide.note)+'</p></aside>':'')+
+    sections+
+    '<h2>Related searches</h2><ul>'+guide.searchTerms.map(term=>'<li>'+escapeHtml(term)+'</li>').join('')+'</ul>'+
+    '<h2>Related guides</h2><ul>'+related+'</ul>'+
+    '<p><a href="'+escapeHtml(guide.cta)+'">'+escapeHtml(guide.ctaLabel)+'</a> · <a href="/packages">View packages</a></p>'+
+  '</section>'
+}
 
 function projectsAuthorityContent(route){
   if(route.path!=='/projects')return ''
@@ -179,7 +203,7 @@ function fallback(route){
   return '<main data-seo-static-fallback="true" style="font-family:Arial,sans-serif;max-width:1100px;margin:0 auto;padding:32px;color:#173f5e">'+
     '<header style="display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap"><a href="/" aria-label="'+escapeHtml(SITE_NAME)+' home"><img src="/brand/propulse-logo.svg" alt="'+escapeHtml(SITE_NAME)+'" width="180" height="48"></a><nav aria-label="Primary">'+nav+'</nav></header>'+
     '<section style="padding:72px 0 34px"><p style="font-weight:700;color:#f05b24">PROPULSE BUSINESS</p><h1 style="max-width:850px;font-size:44px;line-height:1.08;margin:12px 0">'+escapeHtml(route.heading)+'</h1><p style="max-width:780px;font-size:18px;line-height:1.6">'+escapeHtml(route.summary)+'</p><p style="max-width:780px;line-height:1.6">'+escapeHtml(route.description)+'</p><p><a href="/quote" style="font-weight:700;color:#d94f22">Start your requirement</a> · <a href="/experts" style="font-weight:700;color:#173f5e">Find professionals</a></p></section>'+
-    cityHubContent(route)+hyderabadAreas(route)+constructionExperienceContent(route)+localityContent(route)+costGuideContent(route)+regionalConstructionContent(route)+homeRegionalCoverage(route)+projectsAuthorityContent(route)+aboutExperienceContent(route)+comparisonDisclosure(route)+'</main>'
+    cityHubContent(route)+hyderabadAreas(route)+constructionExperienceContent(route)+localityContent(route)+costGuideContent(route)+guideContent(route)+regionalConstructionContent(route)+homeRegionalCoverage(route)+projectsAuthorityContent(route)+aboutExperienceContent(route)+comparisonDisclosure(route)+'</main>'
 }
 
 function breadcrumbItems(route){
