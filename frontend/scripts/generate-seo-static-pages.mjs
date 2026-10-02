@@ -4,6 +4,7 @@ import {fileURLToPath} from 'node:url'
 import {PUBLIC_SEO_ROUTES,SITE_NAME} from '../src/seo/seoConfig.js'
 import {HYDERABAD_LOCALITIES,localityBySlug,localityPagePath,nearbyLocalities,serviceBySlug} from '../src/seo/hyderabadSeo.js'
 import {CONSTRUCTION_PACKAGE_CATALOG} from '../src/data/constructionPackageCatalog.js'
+import {REGIONAL_STATES,districtBySlug,districtPath,stateBySlug} from '../src/seo/regionalSeo.js'
 
 const here=path.dirname(fileURLToPath(import.meta.url))
 const dist=path.resolve(here,'../dist')
@@ -136,6 +137,32 @@ function constructionExperienceContent(route){
   '</section>'
 }
 
+function regionalConstructionContent(route){
+  if(route.type!=='state-construction-hub'&&route.type!=='district-construction')return ''
+  const state=stateBySlug(route.stateSlug)
+  if(!state)return ''
+  const packages=Object.values(CONSTRUCTION_PACKAGE_CATALOG)
+  const money=value=>'₹'+Number(value||0).toLocaleString('en-IN')
+  const packageList='<ul>'+packages.map(item=>'<li><strong>'+escapeHtml(item.name)+' '+escapeHtml(money(item.rate))+'/sq ft reference</strong> — <a href="/quote?package='+escapeHtml(item.key)+'#construction">Get '+escapeHtml(item.name)+' quote</a></li>').join('')+'</ul>'
+  if(route.type==='state-construction-hub'){
+    const districts=state.districts.map(item=>'<li><a href="'+escapeHtml(districtPath(state.slug,item.slug))+'">Construction in '+escapeHtml(item.name)+' district</a> — '+escapeHtml(item.centers.join(', '))+'</li>').join('')
+    return '<section style="padding:10px 0 42px"><h2>Construction across all '+state.districtCount+' '+escapeHtml(state.name)+' districts</h2><p style="max-width:850px;line-height:1.55">Choose the district where your project site is located, compare construction package references and create one consistent requirement before reviewing businesses.</p><ul>'+districts+'</ul><h2>Construction package starting points</h2>'+packageList+'</section>'
+  }
+  const district=districtBySlug(route.stateSlug,route.districtSlug)
+  if(!district)return ''
+  const centers=district.centers.map(name=>'<li>'+escapeHtml(name)+' — add the exact locality, PIN or site pin in your requirement</li>').join('')
+  const related=state.districts.filter(item=>item.slug!==district.slug).slice(0,8).map(item=>'<li><a href="'+escapeHtml(districtPath(state.slug,item.slug))+'">Construction in '+escapeHtml(item.name)+'</a></li>').join('')
+  return '<section style="padding:10px 0 42px">'+
+    '<h2>Construction in '+escapeHtml(district.name)+' district</h2><p style="max-width:850px;line-height:1.55">Use one site-specific brief for builders and construction companies across '+escapeHtml(district.name)+'. Keep built-up area, floor count, drawings, specifications, budget and timeline consistent.</p>'+
+    '<h2>Major areas to specify</h2><ul>'+centers+'</ul>'+
+    '<h2>Construction packages</h2>'+packageList+
+    '<h2>How to compare construction companies in '+escapeHtml(district.name)+'</h2><ol><li>Use the same built-up area and floor count.</li><li>Compare material specifications and exclusions.</li><li>Review relevant completed work.</li><li>Confirm milestones, variation rules, warranties and handover scope.</li></ol>'+
+    '<h2>Common district construction searches</h2><ul>'+route.searchTerms.map(term=>'<li>'+escapeHtml(term)+'</li>').join('')+'</ul>'+
+    '<h2>Other '+escapeHtml(state.name)+' districts</h2><ul>'+related+'</ul>'+
+    '<p><a href="/quote?package=standard#construction">Get construction quote</a> · <a href="/packages#construction">View construction packages</a></p>'+
+  '</section>'
+}
+
 function comparisonDisclosure(route){
   if(route.type!=='comparison'||!Array.isArray(route.brands))return ''
   const searches=Array.isArray(route.searchTerms)&&route.searchTerms.length?'<h2>Common Hyderabad comparison searches</h2><ul>'+route.searchTerms.map(term=>'<li>'+escapeHtml(term)+'</li>').join('')+'</ul>':''
@@ -147,11 +174,13 @@ function fallback(route){
   return '<main data-seo-static-fallback="true" style="font-family:Arial,sans-serif;max-width:1100px;margin:0 auto;padding:32px;color:#173f5e">'+
     '<header style="display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap"><a href="/" aria-label="'+escapeHtml(SITE_NAME)+' home"><img src="/brand/propulse-logo.svg" alt="'+escapeHtml(SITE_NAME)+'" width="180" height="48"></a><nav aria-label="Primary">'+nav+'</nav></header>'+
     '<section style="padding:72px 0 34px"><p style="font-weight:700;color:#f05b24">PROPULSE BUSINESS</p><h1 style="max-width:850px;font-size:44px;line-height:1.08;margin:12px 0">'+escapeHtml(route.heading)+'</h1><p style="max-width:780px;font-size:18px;line-height:1.6">'+escapeHtml(route.summary)+'</p><p style="max-width:780px;line-height:1.6">'+escapeHtml(route.description)+'</p><p><a href="/quote" style="font-weight:700;color:#d94f22">Start your requirement</a> · <a href="/experts" style="font-weight:700;color:#173f5e">Find professionals</a></p></section>'+
-    cityHubContent(route)+hyderabadAreas(route)+constructionExperienceContent(route)+localityContent(route)+costGuideContent(route)+projectsAuthorityContent(route)+aboutExperienceContent(route)+comparisonDisclosure(route)+'</main>'
+    cityHubContent(route)+hyderabadAreas(route)+constructionExperienceContent(route)+localityContent(route)+costGuideContent(route)+regionalConstructionContent(route)+projectsAuthorityContent(route)+aboutExperienceContent(route)+comparisonDisclosure(route)+'</main>'
 }
 
 function breadcrumbItems(route){
   const items=[{'@type':'ListItem',position:1,name:'Home',item:absolute('/')}]
+  if(route.type==='state-construction-hub')return [...items,{'@type':'ListItem',position:2,name:route.stateName,item:absolute(route.path)}]
+  if(route.type==='district-construction')return [...items,{'@type':'ListItem',position:2,name:route.stateName,item:absolute('/'+route.stateSlug+'/construction')},{'@type':'ListItem',position:3,name:route.districtName,item:absolute(route.path)}]
   if(!route.path.startsWith('/hyderabad'))return [...items,{'@type':'ListItem',position:2,name:route.heading,item:absolute(route.path)}]
   items.push({'@type':'ListItem',position:2,name:'Hyderabad',item:absolute('/hyderabad')})
   if(route.type==='city-hub')return items
@@ -174,6 +203,17 @@ function localityFaqSchema(route){
   return {'@context':'https://schema.org','@type':'FAQPage',mainEntity:qa.map(([question,answer])=>({'@type':'Question',name:question,acceptedAnswer:{'@type':'Answer',text:answer}}))}
 }
 
+function districtFaqSchema(route){
+  if(route.type!=='district-construction')return null
+  const name=route.districtName
+  const qa=[
+    ['How do I get construction quotes in '+name+' district?','Share the exact site location, approximate built-up area, floor count, project type, budget and preferred timeline so relevant businesses can understand one consistent brief.'],
+    ['How do I compare builders in '+name+'?','Compare relevant completed work, material specifications, exclusions, milestone payments, timeline, warranty terms and the final written scope rather than only the headline rate.'],
+    ['Can I select a construction package before requesting a quote?','Yes. Review Standard, Premium and Royal package references, then confirm the site-specific specification and final quotation with the business you choose.'],
+  ]
+  return {'@context':'https://schema.org','@type':'FAQPage',mainEntity:qa.map(([question,answer])=>({'@type':'Question',name:question,acceptedAnswer:{'@type':'Answer',text:answer}}))}
+}
+
 function staticJsonLd(route){
   const page={
     '@context':'https://schema.org',
@@ -186,9 +226,12 @@ function staticJsonLd(route){
   }
   if(route.type==='cost-guide')page.about={'@type':'Service',name:'House construction cost planning',areaServed:{'@type':'City',name:'Hyderabad, Telangana, India'}}
   if(route.type==='city-service'||route.type==='local-service')page.about={'@type':'Service',name:route.serviceSlug==='construction'?'Home construction':route.serviceSlug==='interior-designers'?'Interior design':'Real estate services',areaServed:route.type==='local-service'?{'@type':'Place',name:route.localityName+', Hyderabad, Telangana, India'}:{'@type':'City',name:'Hyderabad, Telangana, India'}}
+  if(route.type==='state-construction-hub'||route.type==='district-construction')page.about={'@type':'Service',name:'Home construction',areaServed:route.type==='district-construction'?{'@type':'AdministrativeArea',name:route.districtName+' district, '+route.stateName+', India'}:{'@type':'State',name:route.stateName+', India'}}
   const data=[{'@context':'https://schema.org','@type':'Organization',name:SITE_NAME,url:absolute('/'),logo:absolute('/brand/propulse-logo.png')},page,{'@context':'https://schema.org','@type':'BreadcrumbList',itemListElement:breadcrumbItems(route)}]
   const faq=localityFaqSchema(route)
   if(faq)data.push(faq)
+  const districtFaq=districtFaqSchema(route)
+  if(districtFaq)data.push(districtFaq)
   return JSON.stringify(data).replaceAll('</script','<\\/script')
 }
 
