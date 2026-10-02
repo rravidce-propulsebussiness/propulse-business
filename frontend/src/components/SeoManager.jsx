@@ -177,6 +177,9 @@ export default function SeoManager(){
     setNamedMeta('googlebot',robots)
     setNamedMeta('application-name',SITE_NAME)
     setNamedMeta('theme-color','#0c3152')
+    const googleVerification=String(import.meta.env.VITE_GOOGLE_SITE_VERIFICATION||'').trim()
+    if(googleVerification)setNamedMeta('google-site-verification',googleVerification)
+    else document.head.querySelector('meta[name="google-site-verification"]')?.remove()
 
     setPropertyMeta('og:site_name',SITE_NAME)
     setPropertyMeta('og:type','website')
