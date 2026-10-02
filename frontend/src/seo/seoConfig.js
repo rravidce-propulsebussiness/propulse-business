@@ -50,7 +50,7 @@ export const CORE_PUBLIC_SEO_ROUTES=[
   {
     path:'/about',
     title:'About ProPulse | Construction, Interiors & Real Estate',
-    description:'Learn about ProPulse, its Hyderabad construction and interiors operating background including prior SG Homes experience, and how the platform helps customers create clearer requirements.',
+    description:'Learn about ProPulse, its Hyderabad construction and interiors operating background, and how the platform helps customers create clearer requirements.'
     heading:'About ProPulse Business',
     summary:'ProPulse is a customer starting point for structured construction, interiors and real-estate requirements.',
   },
