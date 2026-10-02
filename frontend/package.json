@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build && node scripts/generate-seo-static-pages.mjs",
     "lint": "oxlint",
     "preview": "vite preview",
     "test:google-gis": "node scripts/check-google-gis.mjs",

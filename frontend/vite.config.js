@@ -28,6 +28,14 @@ export default defineConfig({
         target: apiTarget,
         changeOrigin: true,
       },
+      '/robots.txt': {
+        target: apiTarget,
+        changeOrigin: true,
+      },
+      '/sitemap.xml': {
+        target: apiTarget,
+        changeOrigin: true,
+      },
     },
   },
 })
