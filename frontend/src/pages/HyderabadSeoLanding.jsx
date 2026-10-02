@@ -212,7 +212,7 @@ function ConstructionCostGuidePage(){
       <div className="local-seo-chip-grid">{HYDERABAD_CONSTRUCTION_COST_ROUTE.searchTerms.map(term=><span key={term}>{term}</span>)}</div>
     </section>
 
-    <section className="local-seo-city-links"><h2>Continue planning your Hyderabad project</h2><div><Link to="/estimate/construction-cost-estimator">Construction cost estimator</Link><Link to="/packages#construction">Construction packages</Link><Link to="/hyderabad/construction">Construction in Hyderabad</Link><Link to="/hyderabad/construction/uppal">Construction in Uppal</Link><Link to="/hyderabad/construction/kothapet">Construction in Kothapet</Link><Link to="/hyderabad/construction/gachibowli">Construction in Gachibowli</Link></div></section>
+    <section className="local-seo-city-links"><h2>Continue planning your Hyderabad project</h2><div><Link to="/estimate/construction-cost-estimator">Construction cost estimator</Link><Link to="/packages#construction">Construction packages</Link><Link to="/hyderabad/construction">Construction in Hyderabad</Link><Link to="/hyderabad/construction/compare-options">Compare construction options in Hyderabad</Link><Link to="/hyderabad/construction/uppal">Construction in Uppal</Link><Link to="/hyderabad/construction/kothapet">Construction in Kothapet</Link><Link to="/hyderabad/construction/gachibowli">Construction in Gachibowli</Link></div></section>
 
     <section className="local-seo-faq"><div className="local-seo-section-title"><span>FAQ</span><h2>Hyderabad construction cost questions</h2></div><div>{faqs.map(item=><article key={item.q}><h3>{item.q}</h3><p>{item.a}</p></article>)}</div></section>
 
