@@ -37,6 +37,36 @@ export const HYDERABAD_LOCALITIES=[
 
   {slug:'banjara-hills',name:'Banjara Hills',zone:'Central Hyderabad',focus:'Premium central-Hyderabad locality where high-specification rebuilds, villas and renovation projects need detailed material and finish schedules.',nearby:['jubilee-hills','madhapur','mehdipatnam','tolichowki']},
   {slug:'jubilee-hills',name:'Jubilee Hills',zone:'Central Hyderabad',focus:'Premium central-west locality with custom villas, luxury rebuilds and complex site requirements where scope clarity is critical.',nearby:['banjara-hills','madhapur','hitec-city','manikonda']},
+
+  {slug:'ghatkesar',name:'Ghatkesar',zone:'Hyderabad Outer East',focus:'Outer-east Hyderabad growth belt with plotted housing, independent homes and campus-adjacent residential construction demand.',nearby:['pocharam','peerzadiguda','uppal','nagole']},
+  {slug:'pocharam',name:'Pocharam',zone:'Hyderabad Outer East',focus:'East-Hyderabad growth pocket with new residential communities, plotted homes and independent construction requirements.',nearby:['ghatkesar','peerzadiguda','boduppal','uppal']},
+  {slug:'boduppal',name:'Boduppal',zone:'Hyderabad Outer East',focus:'Dense residential municipality on the east side of Hyderabad with independent-home, rebuild and renovation demand.',nearby:['peerzadiguda','medipally','uppal','pocharam']},
+  {slug:'peerzadiguda',name:'Peerzadiguda',zone:'Hyderabad Outer East',focus:'Growing east-Hyderabad residential belt where compact plots, duplexes and family-home construction are common.',nearby:['boduppal','medipally','pocharam','uppal']},
+  {slug:'medipally',name:'Medipally',zone:'Hyderabad Outer East',focus:'Residential growth area between Uppal and Ghatkesar corridors with independent homes and redevelopment requirements.',nearby:['peerzadiguda','boduppal','uppal','ghatkesar']},
+  {slug:'ecil',name:'ECIL',zone:'Hyderabad North-East',focus:'Established north-east Hyderabad residential belt with independent homes, additions, rebuilds and renovation requirements.',nearby:['kapra','alwal','habsiguda','uppal']},
+  {slug:'kapra',name:'Kapra',zone:'Hyderabad North-East',focus:'Mature north-east residential area where family-home rebuilds, additions and renovation-plus-civil scopes are common.',nearby:['ecil','alwal','habsiguda','uppal']},
+  {slug:'alwal',name:'Alwal',zone:'Hyderabad North',focus:'Established north-Hyderabad residential locality with independent-home, redevelopment and renovation requirements.',nearby:['suchitra','bowenpally','kompally','ecil']},
+  {slug:'suchitra',name:'Suchitra',zone:'Hyderabad North',focus:'North-Hyderabad residential-commercial junction with compact plots, rebuilds and independent-home construction needs.',nearby:['alwal','quthbullapur','jeedimetla','kompally']},
+  {slug:'quthbullapur',name:'Quthbullapur',zone:'Hyderabad North-West',focus:'Large north-west residential-industrial belt with redevelopment, mixed-use and independent-home construction requirements.',nearby:['suchitra','jeedimetla','kukatpally','balanagar']},
+  {slug:'jeedimetla',name:'Jeedimetla',zone:'Hyderabad North-West',focus:'Established north-west Hyderabad belt where residential rebuilds and mixed-use projects require clear site and access planning.',nearby:['quthbullapur','suchitra','balanagar','kukatpally']},
+  {slug:'medchal',name:'Medchal',zone:'Hyderabad Outer North',focus:'Outer north-Hyderabad growth corridor with plotted development, villas and independent family-home construction demand.',nearby:['kompally','shamirpet','alwal','suchitra']},
+  {slug:'shamirpet',name:'Shamirpet',zone:'Hyderabad Outer North',focus:'Northern growth corridor with villas, plotted homes and larger-site residential construction requirements.',nearby:['medchal','kompally','alwal','ecil']},
+
+  {slug:'shamshabad',name:'Shamshabad',zone:'Hyderabad Outer South',focus:'Airport-side southern growth corridor with plotted homes, villas and residential-commercial construction opportunities.',nearby:['rajendranagar','tukkuguda','adibatla','bandlaguda-jagir']},
+  {slug:'tukkuguda',name:'Tukkuguda',zone:'Hyderabad Outer South',focus:'Fast-growing south-Hyderabad corridor with villas, plotted homes and turnkey residential construction demand.',nearby:['shamshabad','adibatla','nadergul','rajendranagar']},
+  {slug:'adibatla',name:'Adibatla',zone:'Hyderabad Outer South-East',focus:'South-east Hyderabad growth corridor with plotted residential development, villas and independent-home construction demand.',nearby:['tukkuguda','nadergul','lb-nagar','vanasthalipuram']},
+  {slug:'nadergul',name:'Nadergul',zone:'Hyderabad Outer South-East',focus:'Residential growth pocket between LB Nagar and Adibatla corridors with independent homes and duplex requirements.',nearby:['adibatla','tukkuguda','lb-nagar','vanasthalipuram']},
+  {slug:'rajendranagar',name:'Rajendranagar',zone:'Hyderabad South-West',focus:'South-west Hyderabad residential corridor with independent homes, redevelopment and mixed urban-fringe construction.',nearby:['shamshabad','bandlaguda-jagir','attapur','narsingi']},
+  {slug:'bandlaguda-jagir',name:'Bandlaguda Jagir',zone:'Hyderabad South-West',focus:'Growing south-west residential municipality with villas, independent homes and redevelopment requirements.',nearby:['rajendranagar','attapur','narsingi','puppalaguda']},
+  {slug:'puppalaguda',name:'Puppalaguda',zone:'Hyderabad West',focus:'Premium west-Hyderabad residential pocket with villas, high-specification homes and redevelopment requirements.',nearby:['manikonda','narsingi','bandlaguda-jagir','gachibowli']},
+
+  {slug:'patancheru',name:'Patancheru',zone:'Hyderabad Outer West',focus:'Western industrial-residential growth corridor with plotted homes, independent houses and mixed-use construction needs.',nearby:['beeramguda','chandanagar','lingampally','kollur']},
+  {slug:'chandanagar',name:'Chandanagar',zone:'Hyderabad West',focus:'Established west-Hyderabad residential belt with rebuild, independent-home and renovation requirements.',nearby:['lingampally','miyapur','beeramguda','patancheru']},
+  {slug:'lingampally',name:'Lingampally',zone:'Hyderabad West',focus:'West-Hyderabad residential and transit hub with independent homes, redevelopment and premium renovation needs.',nearby:['chandanagar','nallagandla','miyapur','beeramguda']},
+  {slug:'beeramguda',name:'Beeramguda',zone:'Hyderabad Outer West',focus:'Large residential growth belt with independent homes, duplexes and plotted family-home construction demand.',nearby:['patancheru','chandanagar','lingampally','ameenpur']},
+  {slug:'kollur',name:'Kollur',zone:'Hyderabad Outer West',focus:'Premium plotted and villa growth corridor where larger residential sites need careful structural and external-work scope planning.',nearby:['tellapur','kokapet','patancheru','mokila']},
+  {slug:'mokila',name:'Mokila',zone:'Hyderabad Outer West',focus:'Villa and plotted-home corridor on Hyderabad’s western edge with custom residential construction requirements.',nearby:['kollur','tellapur','narsingi','shankarpally']},
+  {slug:'shankarpally',name:'Shankarpally',zone:'Hyderabad Outer West',focus:'Outer western residential growth corridor with plotted homes, villas and larger independent-house projects.',nearby:['mokila','kollur','patancheru','tellapur']},
 ]
 export const HYDERABAD_CITY_SEO_ROUTE={
   path:'/hyderabad',
