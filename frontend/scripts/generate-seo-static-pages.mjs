@@ -76,7 +76,7 @@ function localityContent(route){
     '<h2>What to include in a construction quote request</h2><ul>'+service.checklist.map(item=>'<li>'+escapeHtml(item)+'</li>').join('')+'</ul>'+
     '<h2>Compare quotations consistently</h2><p style="max-width:850px;line-height:1.55">Use the same site scope, built-up area, floor count, specifications, budget assumptions and timeline when you compare contractors or construction companies.</p>'+
     '<h2>Nearby Hyderabad construction areas</h2><ul>'+nearby.map(item=>'<li><a href="'+escapeHtml(localityPagePath('construction',item.slug))+'">Construction in '+escapeHtml(item.name)+'</a></li>').join('')+'</ul>'+
-    '<p><a href="/estimate/construction">Try the construction estimator</a> · <a href="/quote#construction">Start a construction requirement</a></p>'+
+    '<p><a href="/estimate/construction-cost-estimator">Try the construction estimator</a> · <a href="/quote#construction">Start a construction requirement</a></p>'+
   '</section>'
 }
 
@@ -93,7 +93,7 @@ function costGuideContent(route){
     '<h2>Example built-up-area budgets</h2>'+examples+
     '<h2>What changes the final house construction cost?</h2><ul><li>Soil and foundation requirements</li><li>Number of floors and structural design</li><li>Site access and logistics</li><li>Material and finishing specifications</li><li>Electrical, plumbing and waterproofing scope</li><li>Approvals, external works and package exclusions</li></ul>'+
     '<h2>Common Hyderabad construction cost searches</h2><ul>'+route.searchTerms.map(term=>'<li>'+escapeHtml(term)+'</li>').join('')+'</ul>'+
-    '<p><a href="/estimate/construction">Use the construction estimator</a> · <a href="/packages#construction">Compare construction packages</a> · <a href="/quote#construction">Request construction quotes</a></p>'+
+    '<p><a href="/estimate/construction-cost-estimator">Use the construction estimator</a> · <a href="/packages#construction">Compare construction packages</a> · <a href="/quote#construction">Request construction quotes</a></p>'+
   '</section>'
 }
 
