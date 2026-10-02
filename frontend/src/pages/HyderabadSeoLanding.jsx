@@ -130,7 +130,7 @@ function LocalityPage({entry,service,locality}){
     <section className="local-seo-hero">
       <div className="local-seo-breadcrumb"><Link to="/">Home</Link><span>›</span><Link to="/hyderabad">Hyderabad</Link><span>›</span><Link to="/hyderabad/construction">Construction</Link><span>›</span><b>{locality.name}</b></div>
       <span className="local-seo-eyebrow">{locality.zone.toUpperCase()} · HYDERABAD</span><h1>{entry.heading}</h1><p>{entry.summary}</p>
-      <div className="local-seo-actions"><Link className="primary" to={quoteRoute(service)}>Get Construction Quotes</Link><Link className="secondary" to="/estimate/construction">Try Construction Estimator</Link></div>
+      <div className="local-seo-actions"><Link className="primary" to={quoteRoute(service)}>Get Construction Quotes</Link><Link className="secondary" to="/estimate/construction-cost-estimator">Try Construction Estimator</Link></div>
       <div className="local-seo-trust"><span>Site-specific brief</span><span>Comparable project scope</span><span>No forced provider choice</span></div>
     </section>
 
@@ -147,7 +147,7 @@ function LocalityPage({entry,service,locality}){
     </div></section>
 
     <section className="local-seo-grid">
-      <article><span>COST PLANNING</span><h2>What can change a construction estimate?</h2><p>A locality name alone does not determine the final cost. Plot conditions, built-up area, number of floors, structural design, specifications, finishes, approvals and project timing can all change the quotation.</p><Link className="local-inline-link" to="/estimate/construction">Use the construction estimator</Link></article>
+      <article><span>COST PLANNING</span><h2>What can change a construction estimate?</h2><p>A locality name alone does not determine the final cost. Plot conditions, built-up area, number of floors, structural design, specifications, finishes, approvals and project timing can all change the quotation.</p><Link className="local-inline-link" to="/estimate/construction-cost-estimator">Use the construction estimator</Link></article>
       <article><span>LOCALITY DETAIL</span><h2>Make the {locality.name} site unambiguous</h2><p>Include the exact locality, PIN code or site pin, plot details and nearby landmark information available to you. This prevents a broad “Hyderabad” enquiry from being interpreted as a different project area.</p><Link className="local-inline-link" to={quoteRoute(service)}>Create a requirement for {locality.name}</Link></article>
     </section>
 
@@ -178,7 +178,7 @@ function ConstructionCostGuidePage(){
       <span className="local-seo-eyebrow">HYDERABAD CONSTRUCTION BUDGET GUIDE</span>
       <h1>{HYDERABAD_CONSTRUCTION_COST_ROUTE.heading}</h1>
       <p>{HYDERABAD_CONSTRUCTION_COST_ROUTE.summary}</p>
-      <div className="local-seo-actions"><Link className="primary" to="/estimate/construction">Calculate Construction Estimate</Link><Link className="secondary" to="/packages#construction">Compare Packages</Link></div>
+      <div className="local-seo-actions"><Link className="primary" to="/estimate/construction-cost-estimator">Calculate Construction Estimate</Link><Link className="secondary" to="/packages#construction">Compare Packages</Link></div>
       <div className="local-seo-trust"><span>Current ProPulse package rates</span><span>Built-up-area examples</span><span>Actual quote still required</span></div>
     </section>
 
@@ -212,7 +212,7 @@ function ConstructionCostGuidePage(){
       <div className="local-seo-chip-grid">{HYDERABAD_CONSTRUCTION_COST_ROUTE.searchTerms.map(term=><span key={term}>{term}</span>)}</div>
     </section>
 
-    <section className="local-seo-city-links"><h2>Continue planning your Hyderabad project</h2><div><Link to="/estimate/construction">Construction cost estimator</Link><Link to="/packages#construction">Construction packages</Link><Link to="/hyderabad/construction">Construction in Hyderabad</Link><Link to="/hyderabad/construction/uppal">Construction in Uppal</Link><Link to="/hyderabad/construction/kothapet">Construction in Kothapet</Link><Link to="/hyderabad/construction/gachibowli">Construction in Gachibowli</Link></div></section>
+    <section className="local-seo-city-links"><h2>Continue planning your Hyderabad project</h2><div><Link to="/estimate/construction-cost-estimator">Construction cost estimator</Link><Link to="/packages#construction">Construction packages</Link><Link to="/hyderabad/construction">Construction in Hyderabad</Link><Link to="/hyderabad/construction/uppal">Construction in Uppal</Link><Link to="/hyderabad/construction/kothapet">Construction in Kothapet</Link><Link to="/hyderabad/construction/gachibowli">Construction in Gachibowli</Link></div></section>
 
     <section className="local-seo-faq"><div className="local-seo-section-title"><span>FAQ</span><h2>Hyderabad construction cost questions</h2></div><div>{faqs.map(item=><article key={item.q}><h3>{item.q}</h3><p>{item.a}</p></article>)}</div></section>
 
