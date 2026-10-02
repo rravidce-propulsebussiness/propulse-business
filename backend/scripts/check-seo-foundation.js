@@ -21,6 +21,7 @@ const compose=read('../deploy/compose.yml');
 const server=read('src/server.js');
 const seoRoutes=read('src/routes/seoRoutes.js');
 const packagePage=read('../frontend/src/pages/Packages.jsx');
+const requirementWizard=read('../frontend/src/pages/RequirementWizard.jsx');
 const projectPage=read('../frontend/src/pages/Projects.jsx');
 const aboutPage=read('../frontend/src/pages/About.jsx');
 const frontendEnv=read('../frontend/.env.example');
@@ -138,6 +139,10 @@ assert(landing.includes('/quote?package=standard#construction'),'Construction SE
 assert(buildScript.includes('/quote?package=standard#construction'),'Static construction SEO CTAs must use the direct standard quote flow');
 assert(retiredEstimatorMigration.includes("WHERE key='construction-cost-estimator'"),'Retirement migration must target the legacy construction estimator');
 assert(retiredEstimatorMigration.includes('is_active=FALSE'),'Retirement migration must deactivate the legacy construction estimator');
+assert(nginx.includes('location = /estimate/construction-cost-estimator'),'Production nginx must intercept the retired estimator URL');
+assert(nginx.includes('return 301 "/quote?package=standard#construction"'),'Production nginx must permanently redirect retired estimator URLs to the standard quote flow');
+assert(requirementWizard.includes("get('package')"),'Quote flow must read the package query parameter');
+assert(requirementWizard.includes("standard: 'standard'"),'Standard package query must map into the construction quote answers');
 assert(landing.includes('to="/hyderabad/construction/compare-options"'),'Cost guide must link to construction comparison');
 assert(buildScript.includes('/hyderabad/construction/compare-options'),'Static cost guide must link to construction comparison');
 assert(packagePage.includes('to="/hyderabad/construction-cost"'),'Construction packages must link to the Hyderabad cost guide');
