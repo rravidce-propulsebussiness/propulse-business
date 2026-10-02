@@ -245,6 +245,17 @@ export default function Home() {
               <Link to="/andhra-pradesh/construction">All 28 Andhra Pradesh Districts</Link>
             </div>
           </div>
+          <div className="hc-locality-links">
+            <b>Popular construction guides</b>
+            <div>
+              <Link to="/guides/best-steel-for-house-construction">Best Steel for House Construction</Link>
+              <Link to="/guides/prevent-cracks-in-house">How to Reduce Cracks in a New House</Link>
+              <Link to="/guides/choose-construction-contractor-hyderabad">Best Contractor in Hyderabad: How to Choose</Link>
+              <Link to="/guides/2bhk-interiors-hyderabad">2BHK Interiors in Hyderabad</Link>
+              <Link to="/guides/home-construction-checklist">Home Construction Checklist</Link>
+              <Link to="/guides/waterproofing-precautions-new-house">Waterproofing Precautions</Link>
+            </div>
+          </div>
         </div>
       </section>
 
