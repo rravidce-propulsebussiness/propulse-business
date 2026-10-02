@@ -6,6 +6,8 @@ import './About.css'
 const HERO='https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=2200&q=92'
 const STORY='https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=1500&q=90'
 const IMPACT='https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?auto=format&fit=crop&w=1500&q=90'
+const SG_HOMES_MAPS_URL='https://www.google.com/maps/place/SG+Homes/data=!4m2!3m1!1s0x0:0x71d9e2c71741db9b?sa=X&ved=1t:2428&ictx=111'
+const SG_HOMES_LINKEDIN_URL='https://in.linkedin.com/company/sghome'
 
 function collection(value){
   if(Array.isArray(value)) return value
@@ -106,6 +108,25 @@ export default function About(){
       <div className="ab-story-visual" id="ab-vision">
         <img src={STORY} alt="Premium interior space"/>
         <div className="ab-story-card"><h3>Creating Spaces<br/>That Matter</h3><i/><p>Whether it’s a dream home, a beautiful interior or a smarter property decision, ProPulse is designed to make the starting point clearer and simpler.</p></div>
+      </div>
+    </section>
+
+    <section className="ab-industry-experience" id="ab-industry-experience" aria-labelledby="ab-industry-experience-title">
+      <div className="ab-industry-experience-copy">
+        <span>PRIOR OPERATING EXPERIENCE</span>
+        <h2 id="ab-industry-experience-title">Hands-on construction and interiors experience in Hyderabad</h2>
+        <p>Before ProPulse, our operating background included SG Homes in Kukatpally, Hyderabad, working across residential construction and interior execution. That practical experience helped shape ProPulse around clearer scopes, comparable quotations, locality-aware requirements and better project conversations.</p>
+        <p>SG Homes is referenced here as prior industry experience. It is not presented as a current ProPulse subsidiary, partner or marketplace listing.</p>
+        <div className="ab-industry-experience-links">
+          <a href={SG_HOMES_MAPS_URL} target="_blank" rel="noreferrer">View SG Homes on Google Maps <Icon name="arrow" size={13}/></a>
+          <a href={SG_HOMES_LINKEDIN_URL} target="_blank" rel="noreferrer">View SG Homes on LinkedIn <Icon name="arrow" size={13}/></a>
+        </div>
+      </div>
+      <div className="ab-industry-experience-facts">
+        <article><span><Icon name="building"/></span><div><small>Business</small><b>SG Homes</b></div></article>
+        <article><span><Icon name="pin"/></span><div><small>Operating Area</small><b>Kukatpally, Hyderabad</b></div></article>
+        <article><span><Icon name="home"/></span><div><small>Experience</small><b>Residential Construction</b></div></article>
+        <article><span><Icon name="bulb"/></span><div><small>Related Work</small><b>Interiors & Home Automation</b></div></article>
       </div>
     </section>
 
