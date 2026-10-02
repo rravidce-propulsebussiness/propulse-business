@@ -25,7 +25,7 @@ function replaceTitle(html,value){
 }
 
 function replaceMeta(html,attribute,key,value){
-  const re=new RegExp("<meta\\s+[^>]*"+attribute+"=[\\"']"+key+"[\\"'][^>]*>","i")
+  const re=new RegExp('<meta\\s+[^>]*'+attribute+'="'+key+'"[^>]*>','i')
   const tag='<meta '+attribute+'="'+escapeHtml(key)+'" content="'+escapeHtml(value)+'">'
   if(re.test(html))return html.replace(re,tag)
   return html.replace('</head>','  '+tag+'\n  </head>')
