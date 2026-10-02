@@ -90,8 +90,8 @@ function ServicePage({entry,service}){
     </section>
 
     {service.slug==='construction'&&<section className="local-seo-experience-note">
-      <div><span>HYDERABAD OPERATING BACKGROUND</span><h2>Built with hands-on construction and interiors experience</h2><p>ProPulse is a technology and requirement platform. Its Hyderabad construction journey is informed by prior operating experience through SG Homes in Kukatpally, including residential construction and interior execution.</p></div>
-      <Link to="/about#ab-industry-experience">Read the SG Homes experience background</Link>
+      <div><span>HYDERABAD OPERATING BACKGROUND</span><h2>Built with hands-on construction and interiors experience</h2><p>ProPulse is a technology and requirement platform informed by prior hands-on residential construction and interior execution experience in Hyderabad.</p></div>
+      <Link to="/about#ab-industry-experience">Read the operating experience background</Link>
     </section>}
 
     <section className="local-seo-grid">
