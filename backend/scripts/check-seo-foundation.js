@@ -20,12 +20,11 @@ const dockerfile=read('../frontend/Dockerfile');
 const compose=read('../deploy/compose.yml');
 const server=read('src/server.js');
 const seoRoutes=read('src/routes/seoRoutes.js');
-const constructionEstimatorSeed=read('src/database/migrations/20260929_z_construction_estimator_seed.sql');
 const packagePage=read('../frontend/src/pages/Packages.jsx');
-const estimatorPage=read('../frontend/src/pages/EstimatorWizard.jsx');
 const projectPage=read('../frontend/src/pages/Projects.jsx');
 const aboutPage=read('../frontend/src/pages/About.jsx');
 const frontendEnv=read('../frontend/.env.example');
+const retiredEstimatorMigration=read('src/database/migrations/20261002_zz_disable_construction_cost_estimator.sql');
 
 assert(index.includes('name="description"'),'Base HTML must include a meta description');
 assert(index.includes('name="robots"'),'Base HTML must include robots metadata');
@@ -131,14 +130,17 @@ assert(landing.includes('ProPulse is independent'),'Comparison page must disclos
 assert(landing.includes('CONSTRUCTION_PACKAGE_CATALOG'),'Construction cost guide must use the shared package catalog');
 assert(landing.includes('QUICK BUDGET EXAMPLES'),'Construction cost guide must provide useful built-up-area examples');
 assert(landing.includes('G+1 construction cost in Hyderabad'),'Construction cost guide must answer G+1 search intent');
-assert(constructionEstimatorSeed.includes("'construction-cost-estimator'"),'Construction estimator seed key must remain construction-cost-estimator');
-assert(landing.includes('/estimate/construction-cost-estimator'),'Construction cost guide must link to the seeded estimator');
+assert(app.includes('path="/estimate/construction-cost-estimator"'),'Legacy construction estimator URL must have an explicit retirement redirect');
+assert(app.includes('to="/quote?package=standard#construction"'),'Legacy construction estimator must redirect to the standard construction quote flow');
+assert(!landing.includes('/estimate/construction-cost-estimator'),'Public Hyderabad SEO pages must not link to the retired estimator');
+assert(!buildScript.includes('/estimate/construction-cost-estimator'),'Static SEO HTML must not link to the retired estimator');
+assert(landing.includes('/quote?package=standard#construction'),'Construction SEO CTAs must use the direct standard quote flow');
+assert(buildScript.includes('/quote?package=standard#construction'),'Static construction SEO CTAs must use the direct standard quote flow');
+assert(retiredEstimatorMigration.includes("WHERE key='construction-cost-estimator'"),'Retirement migration must target the legacy construction estimator');
+assert(retiredEstimatorMigration.includes('is_active=FALSE'),'Retirement migration must deactivate the legacy construction estimator');
 assert(landing.includes('to="/hyderabad/construction/compare-options"'),'Cost guide must link to construction comparison');
 assert(buildScript.includes('/hyderabad/construction/compare-options'),'Static cost guide must link to construction comparison');
-assert(buildScript.includes('/estimate/construction-cost-estimator'),'Static cost guide must link to the seeded estimator');
-assert(!landing.includes('to="/estimate/construction"'),'SEO pages must not use the invalid construction estimator route');
 assert(packagePage.includes('to="/hyderabad/construction-cost"'),'Construction packages must link to the Hyderabad cost guide');
-assert(estimatorPage.includes("flowKey==='construction-cost-estimator'?'/hyderabad/construction-cost'"),'Construction estimator must link back to the Hyderabad cost guide');
 
 assert(packages.includes('rate: 1750')&&packages.includes('rate: 1899')&&packages.includes('rate: 2099'),'Construction package catalog must expose current planning rates');
 assert(buildScript.includes('costGuideContent(route)'),'Static SEO output must include crawlable construction cost content');
