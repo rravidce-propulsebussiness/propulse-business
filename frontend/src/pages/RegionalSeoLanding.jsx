@@ -67,6 +67,10 @@ function DistrictPage({state,district}){
     'home construction in '+district.name,
     'house construction company in '+district.name,
     'construction services in '+district.name+' district',
+    ...district.centers.flatMap(center=>[
+      'construction in '+center,
+      'construction company in '+center,
+    ]),
   ]
   const faqs=[
     {q:'How do I get construction quotes in '+district.name+' district?',a:'Share the site location, built-up area, floors, project type, budget and preferred timeline. Use the same brief when reviewing different construction businesses.'},
