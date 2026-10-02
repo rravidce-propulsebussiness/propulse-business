@@ -83,7 +83,7 @@ function pageJsonLd(route,origin){
       name:'Home construction',
       areaServed:route.type==='district-construction'
         ?{'@type':'AdministrativeArea',name:route.districtName+' district, '+route.stateName+', India'}
-        :{'@type':'State',name:route.stateName+', India'},
+        :{'@type':'AdministrativeArea',name:route.stateName+', India'},
     }
   }
   return page
