@@ -88,6 +88,12 @@ assert(!seoRoutes.includes('/hyderabad/interior-designers/kothapet'),'Interior l
 for(const brand of ['Brick&Bolt','BuildNext','Livspace','HomeLane','DesignCafe','NoBroker Interiors','Decorpot','MagicBricks','99acres']){
   assert(hyderabad.includes("'"+brand+"'"),'Comparison SEO content missing '+brand);
 }
+for(const term of ['Brick&Bolt Hyderabad','BuildNext Hyderabad','Livspace Hyderabad','HomeLane Hyderabad','DesignCafe Hyderabad','NoBroker Interiors Hyderabad','Decorpot Hyderabad','NoBroker Hyderabad','MagicBricks Hyderabad','99acres Hyderabad']){
+  assert(hyderabad.includes("'"+term+"'"),'Company search variant missing '+term);
+}
+assert(landing.includes('COMMON SEARCHES'),'Comparison pages must visibly explain company-name searches');
+assert(buildScript.includes('Common Hyderabad comparison searches'),'Static comparison pages must expose company-name searches');
+
 assert(home.includes('to="/hyderabad/construction"'),'Homepage must link to the Hyderabad construction hub');
 assert(home.includes('to="/hyderabad/construction-cost"'),'Homepage must link to the Hyderabad construction cost guide');
 assert(home.includes('to="/hyderabad/interior-designers"'),'Homepage must link to the Hyderabad interiors hub');
