@@ -40,6 +40,7 @@ const { startAdminGoogleSheetAutoSync }=require('./services/adminGoogleSheetSync
 const { startFinancialReconciliationScheduler }=require('./services/financialReconciliationScheduler');
 const { startNotificationScheduler }=require('./services/notificationScheduler');
 const rateLimit=require('./middleware/rateLimitMiddleware');
+const {getApiGlobalRateLimitConfig}=require('./config/apiRateLimitConfig');
 const csrfProtection=require('./middleware/csrfMiddleware');
 const {getConfiguredOrigins}=require('./config/httpOrigins');
 const {envFlag}=require('./config/runtimeFlags');
@@ -118,7 +119,8 @@ app.use('/api/customer-flows',express.json({limit:'64kb'}));
 app.use(express.json({limit:DEFAULT_JSON_BYTES}));
 app.use('/api',(req,res,next)=>{res.setHeader('Cache-Control','no-store, private');res.setHeader('Pragma','no-cache');res.setHeader('Expires','0');next();});
 app.use('/api',csrfProtection);
-const apiRateLimit=rateLimit({windowMs:15*60*1000,max:600,scope:'global',shared:true,sharedChunkSize:10});
+const apiGlobalRateLimitConfig=getApiGlobalRateLimitConfig({isProduction});
+const apiRateLimit=rateLimit({...apiGlobalRateLimitConfig,scope:'global'});
 app.use('/api',apiRateLimit);
 app.use('/api/sound-settings',soundSettingsRoutes);
 app.use('/api/support-chat',supportChatRoutes);
