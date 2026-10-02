@@ -11,6 +11,7 @@ const config=read('../frontend/src/seo/seoConfig.js');
 const hyderabad=read('../frontend/src/seo/hyderabadSeo.js');
 const landing=read('../frontend/src/pages/HyderabadSeoLanding.jsx');
 const home=read('../frontend/src/pages/Home.jsx');
+const packages=read('../frontend/src/data/constructionPackageCatalog.js');
 const buildScript=read('../frontend/scripts/generate-seo-static-pages.mjs');
 const frontendPackage=JSON.parse(read('../frontend/package.json'));
 const nginx=read('../frontend/deploy/nginx.conf');
@@ -57,18 +58,20 @@ assert(nginx.includes('try_files $uri $uri.html $uri/ /index.html'),'Nginx must 
 assert(dockerfile.includes('ARG VITE_PUBLIC_SITE_URL'),'Frontend image must accept the canonical public origin');
 assert(compose.includes('VITE_PUBLIC_SITE_URL: \${PUBLIC_SITE_URL:-}'),'Deployment must pass the public site origin into the frontend build');
 
-for(const route of ['/hyderabad','/hyderabad/construction','/hyderabad/interior-designers','/hyderabad/real-estate']){
+for(const route of ['/hyderabad','/hyderabad/construction','/hyderabad/construction-cost','/hyderabad/interior-designers','/hyderabad/real-estate']){
   assert(seoRoutes.includes("'"+route+"'"),'Hyderabad sitemap missing '+route);
 }
 for(const route of ['/hyderabad/construction/compare-options','/hyderabad/interior-designers/compare-options','/hyderabad/real-estate/compare-options']){
   assert(seoRoutes.includes("'"+route+"'"),'Comparison sitemap missing '+route);
 }
 assert(app.includes('path="/hyderabad"'),'React router must expose the Hyderabad city hub');
+assert(app.includes('path="/hyderabad/construction-cost"'),'React router must expose the Hyderabad construction cost guide');
 assert(app.includes('/hyderabad/:serviceSlug'),'React router must expose Hyderabad SEO hubs');
 assert(app.includes('/hyderabad/:serviceSlug/:localitySlug'),'React router must expose crawlable Hyderabad locality pages');
 assert(app.includes('/hyderabad/:serviceSlug/compare-options'),'React router must expose Hyderabad comparison pages');
 assert(config.includes('HYDERABAD_SEO_ROUTES'),'Global SEO config must include Hyderabad routes');
 assert(hyderabad.includes('HYDERABAD_CITY_SEO_ROUTE'),'Hyderabad SEO data must expose a city hub');
+assert(hyderabad.includes('HYDERABAD_CONSTRUCTION_COST_ROUTE'),'Hyderabad SEO data must expose the construction cost guide');
 assert(hyderabad.includes('HYDERABAD_LOCALITY_SEO_ROUTES'),'Hyderabad SEO data must expose locality routes');
 
 for(const locality of ['Uppal','Kothapet','LB Nagar','Gachibowli','Kondapur','Kukatpally','Miyapur','Kokapet','Narsingi','Tellapur']){
@@ -83,12 +86,19 @@ for(const brand of ['Brick&Bolt','BuildNext','Livspace','HomeLane','DesignCafe',
   assert(hyderabad.includes("'"+brand+"'"),'Comparison SEO content missing '+brand);
 }
 assert(home.includes('to="/hyderabad/construction"'),'Homepage must link to the Hyderabad construction hub');
+assert(home.includes('to="/hyderabad/construction-cost"'),'Homepage must link to the Hyderabad construction cost guide');
 assert(home.includes('to="/hyderabad/interior-designers"'),'Homepage must link to the Hyderabad interiors hub');
 assert(home.includes('to="/hyderabad/real-estate"'),'Homepage must link to the Hyderabad real-estate hub');
 for(const localityPath of ['/hyderabad/construction/uppal','/hyderabad/construction/kothapet','/hyderabad/construction/lb-nagar','/hyderabad/construction/gachibowli','/hyderabad/construction/kondapur']){
   assert(home.includes('to="'+localityPath+'"'),'Homepage internal linking missing '+localityPath);
 }
 assert(landing.includes('ProPulse is independent'),'Comparison page must disclose brand independence');
+assert(landing.includes('CONSTRUCTION_PACKAGE_CATALOG'),'Construction cost guide must use the shared package catalog');
+assert(landing.includes('QUICK BUDGET EXAMPLES'),'Construction cost guide must provide useful built-up-area examples');
+assert(landing.includes('G+1 construction cost in Hyderabad'),'Construction cost guide must answer G+1 search intent');
+assert(packages.includes('rate: 1750')&&packages.includes('rate: 1899')&&packages.includes('rate: 2099'),'Construction package catalog must expose current planning rates');
+assert(buildScript.includes('costGuideContent(route)'),'Static SEO output must include crawlable construction cost content');
+assert(buildScript.includes('CONSTRUCTION_PACKAGE_CATALOG'),'Static construction cost content must use the shared package catalog');
 assert(landing.includes('COMMON PROJECT INTENT'),'Construction locality pages must provide useful search-intent content');
 assert(landing.includes('COMPARE LIKE FOR LIKE'),'Construction locality pages must teach quote comparison rather than only repeat keywords');
 assert(manager.includes("route.type==='local-service'"),'Structured data should identify locality service context');
