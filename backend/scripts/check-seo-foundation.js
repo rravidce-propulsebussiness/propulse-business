@@ -10,6 +10,7 @@ const manager=read('../frontend/src/components/SeoManager.jsx');
 const config=read('../frontend/src/seo/seoConfig.js');
 const hyderabad=read('../frontend/src/seo/hyderabadSeo.js');
 const landing=read('../frontend/src/pages/HyderabadSeoLanding.jsx');
+const home=read('../frontend/src/pages/Home.jsx');
 const buildScript=read('../frontend/scripts/generate-seo-static-pages.mjs');
 const frontendPackage=JSON.parse(read('../frontend/package.json'));
 const nginx=read('../frontend/deploy/nginx.conf');
@@ -80,6 +81,12 @@ assert(seoRoutes.includes("...HYDERABAD_CONSTRUCTION_LOCALITIES.map(locality=>'/
 assert(!seoRoutes.includes('/hyderabad/interior-designers/kothapet'),'Interior locality doorway URLs must not be mass-generated yet');
 for(const brand of ['Brick&Bolt','BuildNext','Livspace','HomeLane','DesignCafe','NoBroker Interiors','Decorpot','MagicBricks','99acres']){
   assert(hyderabad.includes("'"+brand+"'"),'Comparison SEO content missing '+brand);
+}
+assert(home.includes('to="/hyderabad/construction"'),'Homepage must link to the Hyderabad construction hub');
+assert(home.includes('to="/hyderabad/interior-designers"'),'Homepage must link to the Hyderabad interiors hub');
+assert(home.includes('to="/hyderabad/real-estate"'),'Homepage must link to the Hyderabad real-estate hub');
+for(const localityPath of ['/hyderabad/construction/uppal','/hyderabad/construction/kothapet','/hyderabad/construction/lb-nagar','/hyderabad/construction/gachibowli','/hyderabad/construction/kondapur']){
+  assert(home.includes('to="'+localityPath+'"'),'Homepage internal linking missing '+localityPath);
 }
 assert(landing.includes('ProPulse is independent'),'Comparison page must disclose brand independence');
 assert(landing.includes('COMMON PROJECT INTENT'),'Construction locality pages must provide useful search-intent content');
