@@ -143,6 +143,10 @@ assert(estimatorPage.includes("flowKey==='construction-cost-estimator'?'/hyderab
 assert(packages.includes('rate: 1750')&&packages.includes('rate: 1899')&&packages.includes('rate: 2099'),'Construction package catalog must expose current planning rates');
 assert(buildScript.includes('costGuideContent(route)'),'Static SEO output must include crawlable construction cost content');
 assert(buildScript.includes('CONSTRUCTION_PACKAGE_CATALOG'),'Static construction cost content must use the shared package catalog');
+assert(hyderabad.includes("'construction in '+name"),'Locality SEO must target direct construction-in-area intent');
+assert(hyderabad.includes("'construction contractors near '+name"),'Locality SEO must target nearby contractor intent');
+assert(hyderabad.includes("'house construction company in '+name"),'Locality SEO must target house-construction company intent');
+assert(hyderabad.includes("'home builders in '+name"),'Locality SEO must target home-builder intent');
 assert(landing.includes('COMMON PROJECT INTENT'),'Construction locality pages must provide useful search-intent content');
 assert(landing.includes('COMPARE LIKE FOR LIKE'),'Construction locality pages must teach quote comparison rather than only repeat keywords');
 assert(manager.includes("route.type==='local-service'"),'Structured data should identify locality service context');
