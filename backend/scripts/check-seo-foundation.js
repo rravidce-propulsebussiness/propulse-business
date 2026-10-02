@@ -23,6 +23,8 @@ const seoRoutes=read('src/routes/seoRoutes.js');
 const constructionEstimatorSeed=read('src/database/migrations/20260929_z_construction_estimator_seed.sql');
 const packagePage=read('../frontend/src/pages/Packages.jsx');
 const estimatorPage=read('../frontend/src/pages/EstimatorWizard.jsx');
+const projectPage=read('../frontend/src/pages/Projects.jsx');
+const frontendEnv=read('../frontend/.env.example');
 
 assert(index.includes('name="description"'),'Base HTML must include a meta description');
 assert(index.includes('name="robots"'),'Base HTML must include robots metadata');
@@ -60,6 +62,13 @@ assert(nginx.includes('try_files $uri $uri.html $uri/ /index.html'),'Nginx must 
 
 assert(dockerfile.includes('ARG VITE_PUBLIC_SITE_URL'),'Frontend image must accept the canonical public origin');
 assert(compose.includes('VITE_PUBLIC_SITE_URL: \${PUBLIC_SITE_URL:-}'),'Deployment must pass the public site origin into the frontend build');
+assert(dockerfile.includes('ARG VITE_GOOGLE_SITE_VERIFICATION'),'Frontend image must accept an optional Search Console verification token');
+assert(compose.includes('VITE_GOOGLE_SITE_VERIFICATION: \${GOOGLE_SITE_VERIFICATION:-}'),'Deployment must pass the Search Console verification token into the frontend build');
+assert(frontendEnv.includes('VITE_GOOGLE_SITE_VERIFICATION='),'Frontend env example must document Search Console verification');
+assert(manager.includes('VITE_GOOGLE_SITE_VERIFICATION'),'Runtime SEO must support Search Console verification');
+assert(manager.includes('google-site-verification'),'Runtime SEO must use the Google verification meta name');
+assert(buildScript.includes('googleSiteVerification'),'Static SEO generation must support Search Console verification');
+assert(buildScript.includes("'google-site-verification'"),'Static SEO generation must emit the Google verification meta name');
 
 for(const route of ['/hyderabad','/hyderabad/construction','/hyderabad/construction-cost','/hyderabad/interior-designers','/hyderabad/real-estate']){
   assert(seoRoutes.includes("'"+route+"'"),'Hyderabad sitemap missing '+route);
@@ -98,6 +107,13 @@ assert(home.includes('to="/hyderabad/construction"'),'Homepage must link to the 
 assert(home.includes('to="/hyderabad/construction-cost"'),'Homepage must link to the Hyderabad construction cost guide');
 assert(home.includes('to="/hyderabad/interior-designers"'),'Homepage must link to the Hyderabad interiors hub');
 assert(home.includes('to="/hyderabad/real-estate"'),'Homepage must link to the Hyderabad real-estate hub');
+assert(projectPage.includes('pj-hyderabad-authority'),'Projects page must expose a Hyderabad authority section');
+assert(projectPage.includes('HYDERABAD_PROJECT_SEO_LINKS'),'Projects page must maintain explicit locality SEO links');
+for(const localityPath of ['/hyderabad/construction/kondapur','/hyderabad/construction/madhapur','/hyderabad/construction/kokapet','/hyderabad/construction/manikonda','/hyderabad/construction/kukatpally','/hyderabad/construction/miyapur','/hyderabad/construction/narsingi','/hyderabad/construction/tellapur']){
+  assert(projectPage.includes("to:'"+localityPath+"'"),'Projects authority linking missing '+localityPath);
+}
+assert(buildScript.includes('projectsAuthorityContent(route)'),'Static projects page must expose Hyderabad authority content');
+assert(buildScript.includes('Explore Hyderabad services and construction areas'),'Static projects authority section must remain descriptive');
 for(const localityPath of ['/hyderabad/construction/uppal','/hyderabad/construction/kothapet','/hyderabad/construction/lb-nagar','/hyderabad/construction/gachibowli','/hyderabad/construction/kondapur']){
   assert(home.includes('to="'+localityPath+'"'),'Homepage internal linking missing '+localityPath);
 }
