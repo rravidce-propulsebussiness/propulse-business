@@ -223,13 +223,14 @@ function breadcrumbItems(route){
 function staticJsonLd(route){
   const page={
     '@context':'https://schema.org',
-    '@type':route.type==='city-hub'?'CollectionPage':'WebPage',
+    '@type':route.type==='city-hub'?'CollectionPage':route.type==='construction-guide'?'Article':'WebPage',
     name:route.title,
     url:absolute(route.path),
     description:route.description,
     inLanguage:'en-IN',
     isPartOf:{'@type':'WebSite',name:SITE_NAME,url:absolute('/')},
   }
+  if(route.type==='construction-guide'){page.headline=route.heading;page.articleSection='Home construction and interiors';page.publisher={'@type':'Organization',name:SITE_NAME,url:absolute('/')};page.mainEntityOfPage=absolute(route.path)}
   if(route.type==='cost-guide')page.about={'@type':'Service',name:'House construction cost planning',areaServed:{'@type':'City',name:'Hyderabad, Telangana, India'}}
   if(route.type==='city-service'||route.type==='local-service')page.about={'@type':'Service',name:route.serviceSlug==='construction'?'Home construction':route.serviceSlug==='interior-designers'?'Interior design':'Real estate services',areaServed:route.type==='local-service'?{'@type':'Place',name:route.localityName+', Hyderabad, Telangana, India'}:{'@type':'City',name:'Hyderabad, Telangana, India'}}
   if(route.type==='state-construction-hub'||route.type==='district-construction')page.about={'@type':'Service',name:'Home construction',areaServed:route.type==='district-construction'?{'@type':'AdministrativeArea',name:route.districtName+' district, '+route.stateName+', India'}:{'@type':'AdministrativeArea',name:route.stateName+', India'}}
