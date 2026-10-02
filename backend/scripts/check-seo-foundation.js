@@ -26,7 +26,7 @@ assert(index.includes('property="og:title"')&&index.includes('name="twitter:card
 assert(index.includes('Construction, Interiors &amp; Real Estate Services | ProPulse'),'Homepage title must be descriptive');
 
 for(const route of ['/quote','/experts','/packages','/projects','/how-it-works','/about','/contact','/faq']){
-  assert(config.includes("'"+route+"'"),'SEO config missing public route '+route);
+  assert(config.includes("path:\'"+route+"\'"),'SEO config missing public route '+route);
   assert(seoRoutes.includes("'"+route+"'"),'Sitemap route missing '+route);
 }
 for(const privatePath of ['/admin','/profile','/wallet','/investment','/lead-partner']){
