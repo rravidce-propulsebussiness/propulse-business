@@ -50,12 +50,18 @@ function pageJsonLd(route,origin){
   const home=origin+'/'
   const page={
     '@context':'https://schema.org',
-    '@type':route.type==='city-hub'?'CollectionPage':'WebPage',
+    '@type':route.type==='city-hub'?'CollectionPage':route.type==='construction-guide'?'Article':'WebPage',
     name:route.title,
     url:origin+route.path,
     description:route.description,
     isPartOf:{'@type':'WebSite',name:SITE_NAME,url:home},
     inLanguage:'en-IN',
+  }
+  if(route.type==='construction-guide'){
+    page.headline=route.heading
+    page.articleSection='Home construction and interiors'
+    page.publisher={'@type':'Organization',name:SITE_NAME,url:home}
+    page.mainEntityOfPage=origin+route.path
   }
   if(route.type==='cost-guide'){
     page.about={
