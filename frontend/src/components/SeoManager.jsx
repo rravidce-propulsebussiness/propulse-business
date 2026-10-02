@@ -133,37 +133,6 @@ function breadcrumbItems(route,origin){
   return items
 }
 
-function localityFaqJsonLd(route){
-  if(route.type!=='local-service'||route.serviceSlug!=='construction')return null
-  const name=route.localityName
-  const qa=[
-    ['How do I get construction quotes in '+name+'?','Share the exact site location, approximate built-up area, floor count, project type, budget and preferred start timeline so relevant businesses can understand one consistent brief.'],
-    ['How do I find a construction company in '+name+'?','Compare relevant completed work, scope, material specifications, exclusions, milestones, warranty terms and the final written quotation before choosing a business.'],
-    ['What should I compare in a construction quotation?','Compare structural scope, material brands or grades, finishing allowances, exclusions, payment milestones, timeline, variation rules, taxes and handover obligations.'],
-    ['Can I compare construction packages before requesting a quote?','Yes. Review the available construction package references, then request a site-specific quotation using the package level closest to your expected specifications.'],
-  ]
-  return {
-    '@context':'https://schema.org',
-    '@type':'FAQPage',
-    mainEntity:qa.map(([question,answer])=>({
-      '@type':'Question',
-      name:question,
-      acceptedAnswer:{'@type':'Answer',text:answer},
-    })),
-  }
-}
-
-function districtFaqJsonLd(route){
-  if(route.type!=='district-construction')return null
-  const name=route.districtName
-  const qa=[
-    ['How do I get construction quotes in '+name+' district?','Share the exact site location, approximate built-up area, floor count, project type, budget and preferred timeline so relevant businesses can understand one consistent brief.'],
-    ['How do I compare builders in '+name+'?','Compare relevant completed work, material specifications, exclusions, milestone payments, timeline, warranty terms and the final written scope rather than only the headline rate.'],
-    ['Can I select a construction package before requesting a quote?','Yes. Review Standard, Premium and Royal package references, then confirm the site-specific specification and final quotation with the business you choose.'],
-  ]
-  return {'@context':'https://schema.org','@type':'FAQPage',mainEntity:qa.map(([question,answer])=>({'@type':'Question',name:question,acceptedAnswer:{'@type':'Answer',text:answer}}))}
-}
-
 function jsonLdFor(route,origin){
   const home=origin+'/'
   const organization={
@@ -193,10 +162,6 @@ function jsonLdFor(route,origin){
       itemListElement:breadcrumbItems(route,origin),
     },
   ]
-  const faq=localityFaqJsonLd(route)
-  if(faq)data.push(faq)
-  const districtFaq=districtFaqJsonLd(route)
-  if(districtFaq)data.push(districtFaq)
   return data
 }
 
