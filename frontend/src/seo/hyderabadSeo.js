@@ -101,6 +101,15 @@ export const HYDERABAD_LOCALITIES=[
   {slug:'gandipet',name:'Gandipet',zone:'Hyderabad West',focus:'Premium western residential corridor with villas, larger sites and high-specification custom-home construction.',nearby:['manchirevula','narsingi','kokapet','moinabad']},
   {slug:'manchirevula',name:'Manchirevula',zone:'Hyderabad West',focus:'Premium residential growth pocket near Narsingi and Gandipet with villas and custom-home requirements.',nearby:['gandipet','narsingi','kokapet','puppalaguda']},
   {slug:'moinabad',name:'Moinabad',zone:'Hyderabad Outer West',focus:'Outer western villa and farmhouse corridor with larger plots, custom residential projects and external-work scope considerations.',nearby:['gandipet','shankarpally','mokila','manchirevula']},
+
+  {slug:'secunderabad',name:'Secunderabad',zone:'Central-North Hyderabad',focus:'Mature urban residential market where rebuilds, additions, mixed-use sites and renovation-led construction require precise scope planning.',nearby:['begumpet','malkajgiri','bowenpally','tarnaka']},
+  {slug:'begumpet',name:'Begumpet',zone:'Central Hyderabad',focus:'Established premium urban locality with redevelopment, renovation and compact-site residential construction requirements.',nearby:['secunderabad','ameerpet','somajiguda','panjagutta']},
+  {slug:'ameerpet',name:'Ameerpet',zone:'Central Hyderabad',focus:'Dense central urban area where rebuilds, mixed-use properties and renovation-plus-civil scopes need clear access and exclusion planning.',nearby:['begumpet','panjagutta','somajiguda','khairatabad']},
+  {slug:'panjagutta',name:'Panjagutta',zone:'Central Hyderabad',focus:'High-density central locality where redevelopment, structural renovation and compact residential-commercial construction need detailed planning.',nearby:['ameerpet','somajiguda','banjara-hills','khairatabad']},
+  {slug:'somajiguda',name:'Somajiguda',zone:'Central Hyderabad',focus:'Premium central locality with redevelopment, high-specification renovation and urban residential construction requirements.',nearby:['panjagutta','begumpet','khairatabad','banjara-hills']},
+  {slug:'khairatabad',name:'Khairatabad',zone:'Central Hyderabad',focus:'Central urban locality where redevelopment, additions and mixed residential-commercial scopes need precise site and access details.',nearby:['somajiguda','panjagutta','banjara-hills','amberpet']},
+  {slug:'amberpet',name:'Amberpet',zone:'Central-East Hyderabad',focus:'Established central-east residential area with rebuilds, independent homes and renovation-led construction requirements.',nearby:['ramanthapur','tarnaka','saidabad','khairatabad']},
+  {slug:'ramanthapur',name:'Ramanthapur',zone:'East Hyderabad',focus:'Established east-Hyderabad residential locality with independent-home rebuilds, additions and compact-site construction demand.',nearby:['amberpet','habsiguda','uppal','tarnaka']},
 ]
 export const HYDERABAD_CITY_SEO_ROUTE={
   path:'/hyderabad',
