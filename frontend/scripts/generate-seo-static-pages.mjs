@@ -163,6 +163,11 @@ function regionalConstructionContent(route){
   '</section>'
 }
 
+function homeRegionalCoverage(route){
+  if(route.path!=='/')return ''
+  return '<section style="padding:10px 0 42px"><h2>Construction coverage by region</h2><ul><li><a href="/hyderabad/construction">Construction in Hyderabad</a></li><li><a href="/telangana/construction">Construction across all 33 Telangana districts</a></li><li><a href="/andhra-pradesh/construction">Construction across all 28 Andhra Pradesh districts</a></li></ul><h2>Hyderabad surrounding construction areas</h2><ul><li><a href="/hyderabad/construction/ghatkesar">Construction in Ghatkesar</a></li><li><a href="/hyderabad/construction/shamshabad">Construction in Shamshabad</a></li><li><a href="/hyderabad/construction/patancheru">Construction in Patancheru</a></li><li><a href="/hyderabad/construction/medchal">Construction in Medchal</a></li></ul></section>'
+}
+
 function comparisonDisclosure(route){
   if(route.type!=='comparison'||!Array.isArray(route.brands))return ''
   const searches=Array.isArray(route.searchTerms)&&route.searchTerms.length?'<h2>Common Hyderabad comparison searches</h2><ul>'+route.searchTerms.map(term=>'<li>'+escapeHtml(term)+'</li>').join('')+'</ul>':''
@@ -174,7 +179,7 @@ function fallback(route){
   return '<main data-seo-static-fallback="true" style="font-family:Arial,sans-serif;max-width:1100px;margin:0 auto;padding:32px;color:#173f5e">'+
     '<header style="display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap"><a href="/" aria-label="'+escapeHtml(SITE_NAME)+' home"><img src="/brand/propulse-logo.svg" alt="'+escapeHtml(SITE_NAME)+'" width="180" height="48"></a><nav aria-label="Primary">'+nav+'</nav></header>'+
     '<section style="padding:72px 0 34px"><p style="font-weight:700;color:#f05b24">PROPULSE BUSINESS</p><h1 style="max-width:850px;font-size:44px;line-height:1.08;margin:12px 0">'+escapeHtml(route.heading)+'</h1><p style="max-width:780px;font-size:18px;line-height:1.6">'+escapeHtml(route.summary)+'</p><p style="max-width:780px;line-height:1.6">'+escapeHtml(route.description)+'</p><p><a href="/quote" style="font-weight:700;color:#d94f22">Start your requirement</a> · <a href="/experts" style="font-weight:700;color:#173f5e">Find professionals</a></p></section>'+
-    cityHubContent(route)+hyderabadAreas(route)+constructionExperienceContent(route)+localityContent(route)+costGuideContent(route)+regionalConstructionContent(route)+projectsAuthorityContent(route)+aboutExperienceContent(route)+comparisonDisclosure(route)+'</main>'
+    cityHubContent(route)+hyderabadAreas(route)+constructionExperienceContent(route)+localityContent(route)+costGuideContent(route)+regionalConstructionContent(route)+homeRegionalCoverage(route)+projectsAuthorityContent(route)+aboutExperienceContent(route)+comparisonDisclosure(route)+'</main>'
 }
 
 function breadcrumbItems(route){
