@@ -92,7 +92,7 @@ assert(app.includes('path="/:stateSlug/construction/:districtSlug"'),'React rout
 assert(app.includes('path="/:stateSlug/construction"'),'React router must expose state construction hubs');
 assert(regional.includes("districtCount:33"),'Telangana SEO data must reflect 33 districts');
 assert(regional.includes("districtCount:28"),'Andhra Pradesh SEO data must reflect the current 28-district structure');
-assert(regional.includes("slug:'markapuram'")&&regional.includes("slug:'polavaram'"),'Andhra Pradesh SEO data must include the 2026 Markapuram and Polavaram districts');
+assert(regional.includes("district('markapuram'")&&regional.includes("district('polavaram'"),'Andhra Pradesh SEO data must include the 2026 Markapuram and Polavaram districts');
 assert(regional.includes("REGIONAL_DISTRICT_SEO_ROUTES"),'Regional SEO data must generate district routes');
 assert(regionalLanding.includes('CHOOSE YOUR DISTRICT'),'State construction hubs must expose district discovery');
 assert(regionalLanding.includes('MAJOR AREAS TO SPECIFY'),'District pages must include useful location prompts');
@@ -106,7 +106,7 @@ assert(manager.includes("route.type==='state-construction-hub'||route.type==='di
 assert(manager.includes('districtFaqJsonLd(route)'),'District pages must expose FAQ structured data at runtime');
 assert(buildScript.includes('districtFaqSchema(route)'),'District pages must expose FAQ structured data in static HTML');
 for(const districtSlug of ['karimnagar','rangareddy','medchal-malkajgiri','sangareddy','visakhapatnam','guntur','ntr','tirupati','markapuram','polavaram']){
-  assert(regional.includes("slug:'"+districtSlug+"'"),'Regional district data missing '+districtSlug);
+  assert(regional.includes("district('"+districtSlug+"'"),'Regional district data missing '+districtSlug);
   assert(seoRoutes.includes("'"+districtSlug+"'"),'Regional district sitemap missing '+districtSlug);
 }
 
