@@ -105,8 +105,6 @@ assert(seoRoutes.includes("...TELANGANA_DISTRICTS.map(district=>'/telangana/cons
 assert(seoRoutes.includes("...ANDHRA_PRADESH_DISTRICTS.map(district=>'/andhra-pradesh/construction/'+district)"),'Sitemap must generate Andhra Pradesh district construction routes');
 assert(buildScript.includes('regionalConstructionContent(route)'),'Static SEO must prerender state and district construction content');
 assert(manager.includes("route.type==='state-construction-hub'||route.type==='district-construction'"),'Runtime structured data must understand regional construction routes');
-assert(manager.includes('districtFaqJsonLd(route)'),'District pages must expose FAQ structured data at runtime');
-assert(buildScript.includes('districtFaqSchema(route)'),'District pages must expose FAQ structured data in static HTML');
 for(const districtSlug of ['karimnagar','rangareddy','medchal-malkajgiri','sangareddy','visakhapatnam','guntur','ntr','tirupati','markapuram','polavaram']){
   assert(regional.includes("district('"+districtSlug+"'"),'Regional district data missing '+districtSlug);
   assert(seoRoutes.includes("'"+districtSlug+"'"),'Regional district sitemap missing '+districtSlug);
@@ -214,13 +212,13 @@ assert(landing.includes('locality-homepage'),'Locality SEO pages must use the mi
 assert(landing.includes('CONSTRUCTION PACKAGES'),'Locality landing pages must show construction packages');
 assert(landing.includes('FIND THE RIGHT CONSTRUCTION PARTNER'),'Locality landing pages must include partner-comparison guidance');
 assert(landing.includes('NEARBY CONSTRUCTION AREAS'),'Locality landing pages must expose nearby-area discovery');
+assert(landing.includes('Construction in {locality.name}: common questions'),'Visible FAQ content must remain on locality landing pages');
+assert(regionalLanding.includes('Construction in {district.name}: common questions'),'Visible FAQ content must remain on district landing pages');
+assert(!manager.includes("'@type':'FAQPage'"),'Runtime SEO should not emit deprecated FAQPage rich-result schema');
+assert(!buildScript.includes("'@type':'FAQPage'"),'Static SEO should not emit deprecated FAQPage rich-result schema');
 assert(landing.includes("'/quote?package='+item.key+'#construction'"),'Locality package cards must link into package-specific construction quotes');
 assert(buildScript.includes('Construction packages for '),'Static locality pages must prerender package content');
 assert(buildScript.includes('How to find the right construction partner in '),'Static locality pages must prerender partner-comparison content');
-assert(manager.includes('localityFaqJsonLd(route)'),'Locality runtime SEO must expose FAQPage schema');
-assert(manager.includes("'@type':'FAQPage'"),'Runtime locality schema must use FAQPage');
-assert(buildScript.includes('localityFaqSchema(route)'),'Static locality SEO must expose FAQPage schema');
-assert(buildScript.includes("'@type':'FAQPage'"),'Static locality schema must use FAQPage');
 assert(landing.includes('SEARCH INTENT AROUND'),'Construction locality pages must provide useful visible search-intent content');
 assert(landing.includes('How to compare construction companies in'),'Construction locality pages must teach provider comparison rather than only repeat keywords');
 assert(manager.includes("route.type==='local-service'"),'Structured data should identify locality service context');
