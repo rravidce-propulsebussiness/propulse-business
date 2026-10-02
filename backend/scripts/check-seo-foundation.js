@@ -24,6 +24,7 @@ const constructionEstimatorSeed=read('src/database/migrations/20260929_z_constru
 const packagePage=read('../frontend/src/pages/Packages.jsx');
 const estimatorPage=read('../frontend/src/pages/EstimatorWizard.jsx');
 const projectPage=read('../frontend/src/pages/Projects.jsx');
+const aboutPage=read('../frontend/src/pages/About.jsx');
 const frontendEnv=read('../frontend/.env.example');
 
 assert(index.includes('name="description"'),'Base HTML must include a meta description');
@@ -108,6 +109,15 @@ assert(home.includes('to="/hyderabad/construction"'),'Homepage must link to the 
 assert(home.includes('to="/hyderabad/construction-cost"'),'Homepage must link to the Hyderabad construction cost guide');
 assert(home.includes('to="/hyderabad/interior-designers"'),'Homepage must link to the Hyderabad interiors hub');
 assert(home.includes('to="/hyderabad/real-estate"'),'Homepage must link to the Hyderabad real-estate hub');
+assert(aboutPage.includes('PRIOR OPERATING EXPERIENCE'),'About page must label SG Homes as prior operating experience');
+assert(aboutPage.includes('SG Homes in Kukatpally, Hyderabad'),'About page must identify the SG Homes Hyderabad background');
+assert(aboutPage.includes('not presented as a current ProPulse subsidiary'),'About page must avoid implying current SG Homes affiliation');
+assert(aboutPage.includes('SG_HOMES_MAPS_URL'),'About page must expose a public Google Maps reference');
+assert(aboutPage.includes('SG_HOMES_LINKEDIN_URL'),'About page must expose a public LinkedIn reference');
+assert(!aboutPage.includes('5.0')&&!aboutPage.includes('14 reviews'),'About page must not hard-code changing SG Homes review metrics');
+assert(landing.includes('prior operating experience through SG Homes'),'Hyderabad construction hub must disclose the SG Homes relationship as prior experience');
+assert(buildScript.includes('aboutExperienceContent(route)'),'Static About HTML must include SG Homes experience');
+assert(buildScript.includes('constructionExperienceContent(route)'),'Static Hyderabad construction HTML must include SG Homes experience context');
 assert(projectPage.includes('pj-hyderabad-authority'),'Projects page must expose a Hyderabad authority section');
 assert(projectPage.includes('HYDERABAD_PROJECT_SEO_LINKS'),'Projects page must maintain explicit locality SEO links');
 for(const localityPath of ['/hyderabad/construction/kondapur','/hyderabad/construction/madhapur','/hyderabad/construction/kokapet','/hyderabad/construction/manikonda','/hyderabad/construction/kukatpally','/hyderabad/construction/miyapur','/hyderabad/construction/narsingi','/hyderabad/construction/tellapur']){
