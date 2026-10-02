@@ -11,6 +11,7 @@ const indexPath=path.join(dist,'index.html')
 const template=fs.readFileSync(indexPath,'utf8')
 const configuredOrigin=String(process.env.VITE_PUBLIC_SITE_URL||'').trim().replace(/\/+$/,'')
 const origin=/^https?:\/\//i.test(configuredOrigin)?configuredOrigin:''
+const googleSiteVerification=String(process.env.VITE_GOOGLE_SITE_VERIFICATION||'').trim()
 
 function escapeHtml(value=''){
   return String(value)
@@ -146,6 +147,7 @@ function render(route){
   html=replaceMeta(html,'name','description',route.description)
   html=replaceMeta(html,'name','robots','index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1')
   html=replaceMeta(html,'name','googlebot','index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1')
+  if(googleSiteVerification)html=replaceMeta(html,'name','google-site-verification',googleSiteVerification)
   html=replaceMeta(html,'property','og:title',route.title)
   html=replaceMeta(html,'property','og:description',route.description)
   html=replaceMeta(html,'property','og:url',canonical)
