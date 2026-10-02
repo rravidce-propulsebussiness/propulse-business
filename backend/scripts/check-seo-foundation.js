@@ -117,7 +117,7 @@ assert(hyderabad.includes('HYDERABAD_LOCALITY_SEO_ROUTES'),'Hyderabad SEO data m
 for(const locality of ['Uppal','Kothapet','LB Nagar','Gachibowli','Kondapur','Kukatpally','Miyapur','Kokapet','Narsingi','Tellapur']){
   assert(hyderabad.includes("name:'"+locality+"'"),'Hyderabad locality index missing '+locality);
 }
-for(const localitySlug of ['uppal','habsiguda','tarnaka','nagole','kothapet','lb-nagar','saroornagar','vanasthalipuram','hayathnagar','dilsukhnagar','gachibowli','financial-district','nanakramguda','kondapur','madhapur','hitec-city','manikonda','kokapet','narsingi','tellapur','nallagandla','tolichowki','mehdipatnam','attapur','kukatpally','ferozguda','balanagar','bowenpally','miyapur','bachupally','pragathi-nagar','ameenpur','kompally','banjara-hills','jubilee-hills','ghatkesar','pocharam','boduppal','peerzadiguda','medipally','ecil','kapra','alwal','suchitra','quthbullapur','jeedimetla','medchal','shamirpet','shamshabad','tukkuguda','adibatla','nadergul','rajendranagar','bandlaguda-jagir','puppalaguda','patancheru','chandanagar','lingampally','beeramguda','kollur','mokila','shankarpally']){
+for(const localitySlug of ['uppal','habsiguda','tarnaka','nagole','kothapet','lb-nagar','saroornagar','vanasthalipuram','hayathnagar','dilsukhnagar','gachibowli','financial-district','nanakramguda','kondapur','madhapur','hitec-city','manikonda','kokapet','narsingi','tellapur','nallagandla','tolichowki','mehdipatnam','attapur','kukatpally','ferozguda','balanagar','bowenpally','miyapur','bachupally','pragathi-nagar','ameenpur','kompally','banjara-hills','jubilee-hills','ghatkesar','pocharam','boduppal','peerzadiguda','medipally','ecil','kapra','alwal','suchitra','quthbullapur','jeedimetla','medchal','shamirpet','shamshabad','tukkuguda','adibatla','nadergul','rajendranagar','bandlaguda-jagir','puppalaguda','patancheru','chandanagar','lingampally','beeramguda','kollur','mokila','shankarpally','keesara','nagaram','dammaiguda','rampally','cherlapally','sainikpuri','yapral','safilguda','malkajgiri','karmanghat','champapet','hastinapuram','meerpet','badangpet','balapur','turkayamjal','ibrahimpatnam','bongloor','maheshwaram','nizampet','mallampet','dundigal','gandimaisamma','bhel','ramachandrapuram','velimela','osman-nagar','gandipet','manchirevula','moinabad']){
   assert(hyderabad.includes("slug:'"+localitySlug+"'"),'Frontend Hyderabad locality missing '+localitySlug);
   assert(seoRoutes.includes("'"+localitySlug+"'"),'Hyderabad construction sitemap locality missing '+localitySlug);
 }
@@ -190,6 +190,10 @@ assert(hyderabad.includes("'home builders in '+name"),'Locality SEO must target 
 assert(hyderabad.includes("'builders near '+name"),'Locality SEO must target nearby builder intent');
 assert(hyderabad.includes("'best construction company in '+name"),'Locality SEO must cover best-company search intent without making a ranking claim');
 assert(hyderabad.includes("name:'Ferozguda'"),'Ferozguda locality must be included');
+assert(hyderabad.includes("name:'Keesara'"),'Keesara locality must be included');
+assert(hyderabad.includes("name:'Maheshwaram'"),'Maheshwaram locality must be included');
+assert(hyderabad.includes("name:'Moinabad'"),'Moinabad locality must be included');
+assert(hyderabad.includes("name:'Nizampet'"),'Nizampet locality must be included');
 assert(landing.includes('locality-homepage'),'Locality SEO pages must use the mini-homepage layout');
 assert(landing.includes('CONSTRUCTION PACKAGES'),'Locality landing pages must show construction packages');
 assert(landing.includes('FIND THE RIGHT CONSTRUCTION PARTNER'),'Locality landing pages must include partner-comparison guidance');
