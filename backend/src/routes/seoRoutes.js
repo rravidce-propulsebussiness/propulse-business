@@ -2,6 +2,13 @@ const express=require('express');
 
 const router=express.Router();
 
+const HYDERABAD_CONSTRUCTION_LOCALITIES=[
+  'uppal','kothapet','lb-nagar','vanasthalipuram','dilsukhnagar',
+  'gachibowli','kondapur','madhapur','hitec-city','manikonda','kokapet','narsingi',
+  'tellapur','nallagandla','kukatpally','miyapur','kompally','ameenpur',
+  'banjara-hills','jubilee-hills',
+];
+
 const PUBLIC_PATHS=[
   '/',
   '/quote',
@@ -12,9 +19,11 @@ const PUBLIC_PATHS=[
   '/about',
   '/contact',
   '/faq',
+  '/hyderabad',
   '/hyderabad/construction',
   '/hyderabad/interior-designers',
   '/hyderabad/real-estate',
+  ...HYDERABAD_CONSTRUCTION_LOCALITIES.map(locality=>'/hyderabad/construction/'+locality),
   '/hyderabad/construction/compare-options',
   '/hyderabad/interior-designers/compare-options',
   '/hyderabad/real-estate/compare-options',
