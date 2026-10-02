@@ -19,7 +19,7 @@ const seoRoutes=read('src/routes/seoRoutes.js');
 
 assert(index.includes('name="description"'),'Base HTML must include a meta description');
 assert(index.includes('name="robots"'),'Base HTML must include robots metadata');
-assert(index.includes('rel="canonical"'),'Base HTML must include a canonical link');
+assert(!index.includes('rel="canonical" href="/"'),'Source HTML must not expose a root canonical that Vite treats as an asset');
 assert(index.includes('property="og:title"')&&index.includes('name="twitter:card"'),'Base HTML must include social metadata');
 assert(index.includes('Construction, Interiors &amp; Real Estate Services | ProPulse'),'Homepage title must be descriptive');
 
