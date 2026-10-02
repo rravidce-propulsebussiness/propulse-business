@@ -125,45 +125,134 @@ function ServicePage({entry,service}){
 
 function LocalityPage({entry,service,locality}){
   const nearby=nearbyLocalities(locality)
+  const packages=Object.values(CONSTRUCTION_PACKAGE_CATALOG)
+  const rupees=value=>'₹'+Number(value||0).toLocaleString('en-IN')
   const faqs=[
-    {q:'How do I request construction in '+locality.name+'?',a:'Add the exact site location, plot or built-up area, floor count, project type, approximate budget and preferred start timeline. That gives construction businesses enough context to respond to one consistent brief.'},
-    {q:'What should I compare in a construction quotation?',a:'Compare the included scope, structural specifications, material brands or grades, exclusions, payment milestones, timeline, change-order rules, warranty terms and taxes—not only the headline price.'},
-    {q:'Can I use ProPulse to find builders or construction companies in '+locality.name+'?',a:'You can create a structured requirement and browse public business information available on ProPulse. Verify the provider’s credentials, site experience, quotation and commercial terms directly before proceeding.'},
+    {q:'How do I get construction quotes in '+locality.name+'?',a:'Start with the exact site location, approximate built-up area, floor count, project type, budget and preferred start timeline. ProPulse uses that structured brief to help you compare relevant construction options more consistently.'},
+    {q:'How do I find a construction company in '+locality.name+'?',a:'Use one project brief for every provider you review. Compare relevant completed work, scope, material specifications, exclusions, milestones, warranty terms and the final written quotation before choosing a business.'},
+    {q:'What should I compare in a construction quotation?',a:'Compare the included structural scope, material brands or grades, finishing allowances, exclusions, payment milestones, timeline, variation rules, taxes and handover obligations—not only the headline per-sq-ft rate.'},
+    {q:'Can I compare construction packages before requesting a quote?',a:'Yes. ProPulse shows Standard, Premium and Royal package references so you can understand specification levels before moving into the detailed construction quote flow.'},
   ]
-  return <main className="local-seo-page locality-detail-page">
+
+  return <main className="local-seo-page locality-detail-page locality-homepage">
     <Header/>
-    <section className="local-seo-hero">
+
+    <section className="local-seo-hero locality-home-hero">
       <div className="local-seo-breadcrumb"><Link to="/">Home</Link><span>›</span><Link to="/hyderabad">Hyderabad</Link><span>›</span><Link to="/hyderabad/construction">Construction</Link><span>›</span><b>{locality.name}</b></div>
-      <span className="local-seo-eyebrow">{locality.zone.toUpperCase()} · HYDERABAD</span><h1>{entry.heading}</h1><p>{entry.summary}</p>
-      <div className="local-seo-actions"><Link className="primary" to={quoteRoute(service)}>Get Construction Quotes</Link><Link className="secondary" to="/quote?package=standard#construction">Get Construction Quote</Link></div>
-      <div className="local-seo-trust"><span>Site-specific brief</span><span>Comparable project scope</span><span>No forced provider choice</span></div>
+      <div className="locality-home-hero-grid">
+        <div>
+          <span className="local-seo-eyebrow">{locality.zone.toUpperCase()} · HYDERABAD</span>
+          <h1>{entry.heading}</h1>
+          <p>{entry.summary}</p>
+          <div className="local-seo-actions">
+            <Link className="primary" to="/quote?package=standard#construction">Get Construction Quote</Link>
+            <Link className="secondary" to="/packages#construction">View Construction Packages</Link>
+          </div>
+          <div className="local-seo-trust"><span>Locality-specific requirement</span><span>Package comparison</span><span>Relevant business discovery</span></div>
+        </div>
+        <aside className="locality-home-summary">
+          <span>BUILDING IN {locality.name.toUpperCase()}?</span>
+          <h2>Start with one clear project brief</h2>
+          <p>{entry.localityContext||service.localityText(locality.name)}</p>
+          <ul>
+            <li>Plot or exact site location</li>
+            <li>Approximate built-up area</li>
+            <li>Floors and project type</li>
+            <li>Budget and preferred timeline</li>
+          </ul>
+          <Link to="/quote?package=standard#construction">Start requirement for {locality.name}</Link>
+        </aside>
+      </div>
     </section>
 
-    <section className="local-seo-grid locality-intent-grid">
-      <article><span>COMMON PROJECT INTENT</span><h2>Construction searches around {locality.name}</h2><p>Customers may describe the same need in different ways. The useful next step is to turn that search into one site-specific project brief.</p><ul>{entry.searchTerms.map(term=><li key={term}>{term}</li>)}</ul></article>
-      <article><span>QUOTE INPUTS</span><h2>What to include before asking for a quote</h2><p>Keep these inputs consistent when you speak with different contractors or construction companies.</p><ul>{service.checklist.map(item=><li key={item}>{item}</li>)}</ul></article>
+    <section className="locality-package-section">
+      <div className="local-seo-section-title">
+        <span>CONSTRUCTION PACKAGES</span>
+        <h2>Compare package starting points for construction in {locality.name}</h2>
+        <p>Use the package references to understand specification levels before requesting a site-specific quotation. Final pricing depends on your drawings, built-up area, site conditions, exclusions and selected materials.</p>
+      </div>
+      <div className="locality-package-grid">
+        {packages.map(item=><article key={item.key} className={item.key==='premium'?'featured':''}>
+          <span>{item.name.toUpperCase()}</span>
+          <strong>{rupees(item.rate)}</strong>
+          <small>reference rate / sq ft</small>
+          <p>{item.specs?.Architecture||'Construction package specifications apply.'}</p>
+          <ul>{Object.values(item.specs||{}).slice(0,3).map((spec,index)=><li key={index}>{String(spec)}</li>)}</ul>
+          <Link to={'/quote?package='+item.key+'#construction'}>Get {item.name} Quote</Link>
+        </article>)}
+      </div>
+      <div className="locality-package-footer"><Link to="/packages#construction">Compare full construction package specifications</Link><Link to="/hyderabad/construction-cost">See Hyderabad construction cost guide</Link></div>
     </section>
 
-    <section className="local-seo-process locality-planning"><div className="local-seo-section-title"><span>COMPARE LIKE FOR LIKE</span><h2>Four checks before choosing a construction option in {locality.name}</h2></div><div className="local-seo-process-grid">
-      <article><b>01</b><h3>Confirm site scope</h3><p>Use the same plot dimensions, built-up area, floor count and project type for every quotation.</p></article>
-      <article><b>02</b><h3>Check specifications</h3><p>Compare structural scope, material grades, finishing assumptions and items excluded from the quoted amount.</p></article>
-      <article><b>03</b><h3>Review milestones</h3><p>Understand payment stages, approval points, expected timeline and how changes or additional work are priced.</p></article>
-      <article><b>04</b><h3>Verify the provider</h3><p>Review relevant completed work, credentials, contract terms and responsibilities before you commit.</p></article>
-    </div></section>
-
-    <section className="local-seo-grid">
-      <article><span>COST PLANNING</span><h2>What can change a construction estimate?</h2><p>A locality name alone does not determine the final cost. Plot conditions, built-up area, number of floors, structural design, specifications, finishes, approvals and project timing can all change the quotation.</p><Link className="local-inline-link" to="/quote?package=standard#construction">Get a construction quote</Link></article>
-      <article><span>LOCALITY DETAIL</span><h2>Make the {locality.name} site unambiguous</h2><p>Include the exact locality, PIN code or site pin, plot details and nearby landmark information available to you. This prevents a broad “Hyderabad” enquiry from being interpreted as a different project area.</p><Link className="local-inline-link" to={quoteRoute(service)}>Create a requirement for {locality.name}</Link></article>
+    <section className="locality-partner-section">
+      <div className="local-seo-section-title">
+        <span>FIND THE RIGHT CONSTRUCTION PARTNER</span>
+        <h2>How to compare construction companies in {locality.name}</h2>
+        <p>Do not choose only from a headline rate. Give every construction company the same project brief and compare the complete scope.</p>
+      </div>
+      <div className="locality-partner-grid">
+        <article><b>01</b><h3>Fix the same project scope</h3><p>Use the same built-up area, floors, structural requirements, drawings and expected finish level for every provider.</p></article>
+        <article><b>02</b><h3>Compare materials and exclusions</h3><p>Check steel, cement, blocks, flooring, doors, windows, sanitaryware, electrical scope and what is excluded.</p></article>
+        <article><b>03</b><h3>Review relevant experience</h3><p>Look for completed work that is reasonably similar to your house type, scale, specification and site conditions.</p></article>
+        <article><b>04</b><h3>Confirm milestones and contract terms</h3><p>Understand payment stages, variation pricing, expected timeline, warranties and handover responsibilities before proceeding.</p></article>
+      </div>
+      <div className="locality-partner-actions"><Link to="/experts">Find ProPulse Professionals</Link><Link to="/quote?package=standard#construction">Create Construction Requirement</Link></div>
     </section>
 
-    <section className="local-seo-city-links"><h2>Nearby Hyderabad construction pages</h2><div><Link to="/hyderabad/construction-cost">Construction cost in Hyderabad</Link>{nearby.map(item=><Link key={item.slug} to={localityPagePath('construction',item.slug)}>{service.localityHeading(item.name)}</Link>)}<Link to="/hyderabad/construction">All Hyderabad construction areas</Link></div></section>
+    <section className="local-seo-grid locality-context-grid">
+      <article>
+        <span>LOCAL CONSTRUCTION PLANNING</span>
+        <h2>Planning a home in {locality.name}</h2>
+        <p>{entry.localityContext||service.localityText(locality.name)}</p>
+        <p>The exact street, plot dimensions, access, soil conditions, floor count and design can materially change structural scope and total project cost. Add those details before treating any broad per-sq-ft figure as a final quotation.</p>
+        <Link className="local-inline-link" to="/quote?package=standard#construction">Get site-specific quote</Link>
+      </article>
+      <article>
+        <span>WHAT TO SHARE</span>
+        <h2>Details that help contractors quote correctly</h2>
+        <ul>{service.checklist.map(item=><li key={item}>{item}</li>)}</ul>
+        <Link className="local-inline-link" to="/projects">View project inspiration</Link>
+      </article>
+    </section>
 
-    <section className="local-seo-faq"><div className="local-seo-section-title"><span>FAQ</span><h2>Construction in {locality.name}: common questions</h2></div><div>{faqs.map(item=><article key={item.q}><h3>{item.q}</h3><p>{item.a}</p></article>)}</div></section>
+    <section className="locality-search-section">
+      <div className="local-seo-section-title">
+        <span>SEARCH INTENT AROUND {locality.name.toUpperCase()}</span>
+        <h2>Construction services people search for in {locality.name}</h2>
+        <p>These phrases describe closely related project needs. The useful next step is the same: turn the search into one clear site-specific requirement.</p>
+      </div>
+      <div className="locality-search-chips">{entry.searchTerms.map(term=><span key={term}>{term}</span>)}</div>
+    </section>
 
-    <section className="local-seo-cta"><span>{locality.name.toUpperCase()} · HYDERABAD</span><h2>Turn your search into one clear construction requirement</h2><p>Add the site, scope, budget and timeline you already know, then compare actual project-specific responses.</p><Link to={quoteRoute(service)}>Start Construction Requirement</Link></section>
+    <section className="locality-nearby-section">
+      <div className="local-seo-section-title">
+        <span>NEARBY CONSTRUCTION AREAS</span>
+        <h2>Construction services near {locality.name}</h2>
+        <p>If your site is close to {locality.name} but falls in a neighbouring area, open the closest locality page so your requirement and internal links stay location-specific.</p>
+      </div>
+      <div className="locality-nearby-grid">
+        {nearby.map(item=><Link key={item.slug} to={localityPagePath('construction',item.slug)}>
+          <span>{item.zone}</span>
+          <b>Construction in {item.name}</b>
+          <small>Contractors, packages, project scope and quote planning →</small>
+        </Link>)}
+      </div>
+      <div className="locality-nearby-all"><Link to="/hyderabad/construction">View all Hyderabad construction areas</Link></div>
+    </section>
+
+    <section className="local-seo-faq locality-home-faq">
+      <div className="local-seo-section-title"><span>FAQ</span><h2>Construction in {locality.name}: common questions</h2></div>
+      <div>{faqs.map(item=><article key={item.q}><h3>{item.q}</h3><p>{item.a}</p></article>)}</div>
+    </section>
+
+    <section className="local-seo-cta locality-home-cta">
+      <span>{locality.name.toUpperCase()} · HYDERABAD</span>
+      <h2>Ready to start your construction requirement in {locality.name}?</h2>
+      <p>Choose a package starting point, add your site and project details, then compare relevant responses against one consistent brief.</p>
+      <div><Link to="/quote?package=standard#construction">Get Construction Quote</Link><Link className="secondary-cta" to="/packages#construction">View Packages</Link></div>
+    </section>
   </main>
 }
-
 
 function ConstructionCostGuidePage(){
   const service=serviceBySlug('construction')
