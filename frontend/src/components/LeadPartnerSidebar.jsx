@@ -12,7 +12,7 @@ const nav=[
   {to:'/lead-partner/notifications',label:'Notifications',icon:'♢',notifications:true},
   {to:'/lead-partner/account',label:'Account',icon:'◎'},
   {to:'/lead-partner/faqs',label:'FAQs',icon:'?'},
-  {to:'/contact?audience=lead_partners',label:'Contact',icon:'☎',contact:true},
+  {to:'/lead-partner/contact',label:'Contact',icon:'☎'},
 ];
 
 export default function LeadPartnerSidebar({user,onSignOut}){
@@ -22,7 +22,6 @@ export default function LeadPartnerSidebar({user,onSignOut}){
   const initials=(user?.name||'Lead Partner').split(' ').filter(Boolean).slice(0,2).map(x=>x[0]).join('').toUpperCase()||'LP';
   const active=item=>{
     if(item.aliases?.includes(location.pathname)) return true;
-    if(item.contact) return location.pathname==='/contact'&&new URLSearchParams(location.search).get('audience')==='lead_partners';
     return item.exact?location.pathname===item.to:location.pathname.startsWith(item.to);
   };
 
