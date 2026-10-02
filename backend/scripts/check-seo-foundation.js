@@ -54,7 +54,7 @@ assert(nginx.includes('X-Robots-Tag "noindex, nofollow, noarchive"'),'Private SP
 assert(nginx.includes('try_files $uri $uri.html $uri/ /index.html'),'Nginx must serve route-specific SEO HTML before SPA fallback');
 
 assert(dockerfile.includes('ARG VITE_PUBLIC_SITE_URL'),'Frontend image must accept the canonical public origin');
-assert(compose.includes('VITE_PUBLIC_SITE_URL: \\${PUBLIC_SITE_URL:-}'),'Deployment must pass the public site origin into the frontend build');
+assert(compose.includes('VITE_PUBLIC_SITE_URL: \${PUBLIC_SITE_URL:-}'),'Deployment must pass the public site origin into the frontend build');
 
 for(const route of ['/hyderabad','/hyderabad/construction','/hyderabad/interior-designers','/hyderabad/real-estate']){
   assert(seoRoutes.includes("'"+route+"'"),'Hyderabad sitemap missing '+route);
