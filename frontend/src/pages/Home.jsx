@@ -224,6 +224,7 @@ export default function Home() {
           <div className="hc-locality-links">
             <b>Popular construction areas</b>
             <div>
+              <Link to="/hyderabad/construction-cost">Construction Cost in Hyderabad</Link>
               <Link to="/hyderabad/construction/uppal">Construction in Uppal</Link>
               <Link to="/hyderabad/construction/kothapet">Construction in Kothapet</Link>
               <Link to="/hyderabad/construction/lb-nagar">Construction in LB Nagar</Link>
