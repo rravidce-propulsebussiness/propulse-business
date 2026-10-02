@@ -110,6 +110,26 @@ function projectsAuthorityContent(route){
   '</section>'
 }
 
+
+function aboutExperienceContent(route){
+  if(route.path!=='/about')return ''
+  return '<section style="padding:10px 0 42px">'+
+    '<h2>Prior construction and interiors operating experience</h2>'+
+    '<p style="max-width:850px;line-height:1.55">Before ProPulse, our operating background included SG Homes in Kukatpally, Hyderabad, across residential construction and interior execution. That practical experience helped shape ProPulse around clearer scopes, comparable quotations, locality-aware requirements and better project conversations.</p>'+
+    '<p style="max-width:850px;line-height:1.55">SG Homes is referenced as prior industry experience, not as a current ProPulse subsidiary or marketplace listing.</p>'+
+    '<p><a href="https://www.google.com/maps/place/SG+Homes/data=!4m2!3m1!1s0x0:0x71d9e2c71741db9b?sa=X&ved=1t:2428&ictx=111">View SG Homes on Google Maps</a> · <a href="https://in.linkedin.com/company/sghome">View SG Homes on LinkedIn</a></p>'+
+  '</section>'
+}
+
+function constructionExperienceContent(route){
+  if(route.type!=='city-service'||route.serviceSlug!=='construction')return ''
+  return '<section style="padding:10px 0 42px">'+
+    '<h2>Hyderabad operating background</h2>'+
+    '<p style="max-width:850px;line-height:1.55">ProPulse is a technology and requirement platform. Its Hyderabad construction journey is informed by prior operating experience through SG Homes in Kukatpally, including residential construction and interior execution.</p>'+
+    '<p><a href="/about#ab-industry-experience">Read the SG Homes experience background</a></p>'+
+  '</section>'
+}
+
 function comparisonDisclosure(route){
   if(route.type!=='comparison'||!Array.isArray(route.brands))return ''
   const searches=Array.isArray(route.searchTerms)&&route.searchTerms.length?'<h2>Common Hyderabad comparison searches</h2><ul>'+route.searchTerms.map(term=>'<li>'+escapeHtml(term)+'</li>').join('')+'</ul>':''
@@ -121,7 +141,7 @@ function fallback(route){
   return '<main data-seo-static-fallback="true" style="font-family:Arial,sans-serif;max-width:1100px;margin:0 auto;padding:32px;color:#173f5e">'+
     '<header style="display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap"><a href="/" aria-label="'+escapeHtml(SITE_NAME)+' home"><img src="/brand/propulse-logo.svg" alt="'+escapeHtml(SITE_NAME)+'" width="180" height="48"></a><nav aria-label="Primary">'+nav+'</nav></header>'+
     '<section style="padding:72px 0 34px"><p style="font-weight:700;color:#f05b24">PROPULSE BUSINESS</p><h1 style="max-width:850px;font-size:44px;line-height:1.08;margin:12px 0">'+escapeHtml(route.heading)+'</h1><p style="max-width:780px;font-size:18px;line-height:1.6">'+escapeHtml(route.summary)+'</p><p style="max-width:780px;line-height:1.6">'+escapeHtml(route.description)+'</p><p><a href="/quote" style="font-weight:700;color:#d94f22">Start your requirement</a> · <a href="/experts" style="font-weight:700;color:#173f5e">Find professionals</a></p></section>'+
-    cityHubContent(route)+hyderabadAreas(route)+localityContent(route)+costGuideContent(route)+projectsAuthorityContent(route)+comparisonDisclosure(route)+'</main>'
+    cityHubContent(route)+hyderabadAreas(route)+constructionExperienceContent(route)+localityContent(route)+costGuideContent(route)+projectsAuthorityContent(route)+aboutExperienceContent(route)+comparisonDisclosure(route)+'</main>'
 }
 
 function breadcrumbItems(route){
