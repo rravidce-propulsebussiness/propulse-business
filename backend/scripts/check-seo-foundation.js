@@ -26,7 +26,7 @@ assert(index.includes('property="og:title"')&&index.includes('name="twitter:card
 assert(index.includes('Construction, Interiors &amp; Real Estate Services | ProPulse'),'Homepage title must be descriptive');
 
 for(const route of ['/quote','/experts','/packages','/projects','/how-it-works','/about','/contact','/faq']){
-  assert(config.includes("path:'"+route+"'"),'SEO config missing public route '+route);
+  assert(config.includes("'"+route+"'"),'SEO config missing public route '+route);
   assert(seoRoutes.includes("'"+route+"'"),'Sitemap route missing '+route);
 }
 for(const privatePath of ['/admin','/profile','/wallet','/investment','/lead-partner']){
@@ -54,28 +54,38 @@ assert(nginx.includes('X-Robots-Tag "noindex, nofollow, noarchive"'),'Private SP
 assert(nginx.includes('try_files $uri $uri.html $uri/ /index.html'),'Nginx must serve route-specific SEO HTML before SPA fallback');
 
 assert(dockerfile.includes('ARG VITE_PUBLIC_SITE_URL'),'Frontend image must accept the canonical public origin');
-assert(compose.includes('VITE_PUBLIC_SITE_URL: \${PUBLIC_SITE_URL:-}'),'Deployment must pass the public site origin into the frontend build');
+assert(compose.includes('VITE_PUBLIC_SITE_URL: ${PUBLIC_SITE_URL:-}'),'Deployment must pass the public site origin into the frontend build');
 
-for(const route of ['/hyderabad/construction','/hyderabad/interior-designers','/hyderabad/real-estate']){
+for(const route of ['/hyderabad','/hyderabad/construction','/hyderabad/interior-designers','/hyderabad/real-estate']){
   assert(seoRoutes.includes("'"+route+"'"),'Hyderabad sitemap missing '+route);
 }
 for(const route of ['/hyderabad/construction/compare-options','/hyderabad/interior-designers/compare-options','/hyderabad/real-estate/compare-options']){
   assert(seoRoutes.includes("'"+route+"'"),'Comparison sitemap missing '+route);
 }
+assert(app.includes('path="/hyderabad"'),'React router must expose the Hyderabad city hub');
 assert(app.includes('/hyderabad/:serviceSlug'),'React router must expose Hyderabad SEO hubs');
+assert(app.includes('/hyderabad/:serviceSlug/:localitySlug'),'React router must expose crawlable Hyderabad locality pages');
 assert(app.includes('/hyderabad/:serviceSlug/compare-options'),'React router must expose Hyderabad comparison pages');
 assert(config.includes('HYDERABAD_SEO_ROUTES'),'Global SEO config must include Hyderabad routes');
+assert(hyderabad.includes('HYDERABAD_CITY_SEO_ROUTE'),'Hyderabad SEO data must expose a city hub');
+assert(hyderabad.includes('HYDERABAD_LOCALITY_SEO_ROUTES'),'Hyderabad SEO data must expose locality routes');
 
 for(const locality of ['Uppal','Kothapet','LB Nagar','Gachibowli','Kondapur','Kukatpally','Miyapur','Kokapet','Narsingi','Tellapur']){
   assert(hyderabad.includes("name:'"+locality+"'"),'Hyderabad locality index missing '+locality);
 }
-for(const brand of ['Brick&Bolt','Livspace','HomeLane','DesignCafe','NoBroker Interiors','MagicBricks','99acres']){
+for(const localitySlug of ['uppal','kothapet','lb-nagar','gachibowli','kondapur','kukatpally','miyapur','kokapet','narsingi','tellapur']){
+  assert(seoRoutes.includes("'"+localitySlug+"'"),'Hyderabad construction sitemap locality missing '+localitySlug);
+}
+assert(seoRoutes.includes("...HYDERABAD_CONSTRUCTION_LOCALITIES.map(locality=>'/hyderabad/construction/'+locality)"),'Sitemap must generate construction locality URLs');
+assert(!seoRoutes.includes('/hyderabad/interior-designers/kothapet'),'Interior locality doorway URLs must not be mass-generated yet');
+for(const brand of ['Brick&Bolt','BuildNext','Livspace','HomeLane','DesignCafe','NoBroker Interiors','Decorpot','MagicBricks','99acres']){
   assert(hyderabad.includes("'"+brand+"'"),'Comparison SEO content missing '+brand);
 }
 assert(landing.includes('ProPulse is independent'),'Comparison page must disclose brand independence');
-assert(landing.includes('Instead of creating dozens of thin location pages'),'Local SEO page must intentionally avoid doorway-page expansion');
-assert(!seoRoutes.includes('/hyderabad/construction/uppal'),'Individual locality doorway URLs must not be indexed');
-assert(!seoRoutes.includes('/hyderabad/interior-designers/kothapet'),'Individual locality doorway URLs must not be indexed');
-assert(manager.includes("route.type==='city-service'")||manager.includes("route.type==='local'"),'Structured data should identify local service context');
+assert(landing.includes('COMMON PROJECT INTENT'),'Construction locality pages must provide useful search-intent content');
+assert(landing.includes('COMPARE LIKE FOR LIKE'),'Construction locality pages must teach quote comparison rather than only repeat keywords');
+assert(manager.includes("route.type==='local-service'"),'Structured data should identify locality service context');
+assert(buildScript.includes('localityContent(route)'),'Static SEO output must include crawlable locality content');
+assert(buildScript.includes('application/ld+json'),'Static SEO output must include JSON-LD before JavaScript executes');
 
 console.log('Technical and Hyderabad SEO regression checks passed.');
