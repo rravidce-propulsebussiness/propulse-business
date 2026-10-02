@@ -164,6 +164,10 @@ assert(landing.includes('NEARBY CONSTRUCTION AREAS'),'Locality landing pages mus
 assert(landing.includes("'/quote?package='+item.key+'#construction'"),'Locality package cards must link into package-specific construction quotes');
 assert(buildScript.includes('Construction packages for '),'Static locality pages must prerender package content');
 assert(buildScript.includes('How to find the right construction partner in '),'Static locality pages must prerender partner-comparison content');
+assert(manager.includes('localityFaqJsonLd(route)'),'Locality runtime SEO must expose FAQPage schema');
+assert(manager.includes("'@type':'FAQPage'"),'Runtime locality schema must use FAQPage');
+assert(buildScript.includes('localityFaqSchema(route)'),'Static locality SEO must expose FAQPage schema');
+assert(buildScript.includes("'@type':'FAQPage'"),'Static locality schema must use FAQPage');
 assert(landing.includes('SEARCH INTENT AROUND'),'Construction locality pages must provide useful visible search-intent content');
 assert(landing.includes('How to compare construction companies in'),'Construction locality pages must teach provider comparison rather than only repeat keywords');
 assert(manager.includes("route.type==='local-service'"),'Structured data should identify locality service context');
