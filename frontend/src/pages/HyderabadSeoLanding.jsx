@@ -236,6 +236,8 @@ function ComparisonPage({entry,service}){
       <article><span>HOW PROPULSE DIFFERS</span><h2>One requirement instead of another execution brand</h2><p>ProPulse does not claim to be the same type of service as the brands above. It helps you structure your need and discover relevant businesses so you have more context before deciding who to contact.</p><ul><li>One structured requirement</li><li>Public business profiles where available</li><li>Completed project information where published</li><li>Your choice of whom to contact</li></ul></article>
     </section>
 
+    {Array.isArray(entry.searchTerms)&&entry.searchTerms.length>0&&<section className="cost-search-intent comparison-search-intent"><div className="local-seo-section-title"><span>COMMON SEARCHES</span><h2>Company and category searches customers use in Hyderabad</h2><p>These phrases are included to help users who are already researching named providers. ProPulse remains independent and does not claim affiliation with the brands listed above.</p></div><div className="local-seo-chip-grid">{entry.searchTerms.map(term=><span key={term}>{term}</span>)}</div></section>}
+
     <section className="local-seo-process"><div className="local-seo-section-title"><span>COMPARE USING YOUR OWN PROJECT</span><h2>Use the same brief for every option you review</h2></div><div className="local-seo-process-grid">
       <article><b>01</b><h3>Define scope</h3><p>Write down the actual project or property need instead of comparing generic advertising claims.</p></article>
       <article><b>02</b><h3>Fix your budget range</h3><p>Use one realistic budget band so each response starts from comparable assumptions.</p></article>
