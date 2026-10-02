@@ -90,7 +90,7 @@ assert(hyderabad.includes('HYDERABAD_LOCALITY_SEO_ROUTES'),'Hyderabad SEO data m
 for(const locality of ['Uppal','Kothapet','LB Nagar','Gachibowli','Kondapur','Kukatpally','Miyapur','Kokapet','Narsingi','Tellapur']){
   assert(hyderabad.includes("name:'"+locality+"'"),'Hyderabad locality index missing '+locality);
 }
-for(const localitySlug of ['uppal','kothapet','lb-nagar','vanasthalipuram','dilsukhnagar','gachibowli','kondapur','madhapur','hitec-city','manikonda','kokapet','narsingi','tellapur','nallagandla','kukatpally','miyapur','kompally','ameenpur','banjara-hills','jubilee-hills']){
+for(const localitySlug of ['uppal','habsiguda','tarnaka','nagole','kothapet','lb-nagar','saroornagar','vanasthalipuram','hayathnagar','dilsukhnagar','gachibowli','financial-district','nanakramguda','kondapur','madhapur','hitec-city','manikonda','kokapet','narsingi','tellapur','nallagandla','tolichowki','mehdipatnam','attapur','kukatpally','ferozguda','balanagar','bowenpally','miyapur','bachupally','pragathi-nagar','ameenpur','kompally','banjara-hills','jubilee-hills']){
   assert(hyderabad.includes("slug:'"+localitySlug+"'"),'Frontend Hyderabad locality missing '+localitySlug);
   assert(seoRoutes.includes("'"+localitySlug+"'"),'Hyderabad construction sitemap locality missing '+localitySlug);
 }
@@ -154,6 +154,16 @@ assert(hyderabad.includes("'construction in '+name"),'Locality SEO must target d
 assert(hyderabad.includes("'construction contractors near '+name"),'Locality SEO must target nearby contractor intent');
 assert(hyderabad.includes("'house construction company in '+name"),'Locality SEO must target house-construction company intent');
 assert(hyderabad.includes("'home builders in '+name"),'Locality SEO must target home-builder intent');
+assert(hyderabad.includes("'builders near '+name"),'Locality SEO must target nearby builder intent');
+assert(hyderabad.includes("'best construction company in '+name"),'Locality SEO must cover best-company search intent without making a ranking claim');
+assert(hyderabad.includes("name:'Ferozguda'"),'Ferozguda locality must be included');
+assert(landing.includes('locality-homepage'),'Locality SEO pages must use the mini-homepage layout');
+assert(landing.includes('CONSTRUCTION PACKAGES'),'Locality landing pages must show construction packages');
+assert(landing.includes('FIND THE RIGHT CONSTRUCTION PARTNER'),'Locality landing pages must include partner-comparison guidance');
+assert(landing.includes('NEARBY CONSTRUCTION AREAS'),'Locality landing pages must expose nearby-area discovery');
+assert(landing.includes("'/quote?package='+item.key+'#construction'"),'Locality package cards must link into package-specific construction quotes');
+assert(buildScript.includes('Construction packages for '),'Static locality pages must prerender package content');
+assert(buildScript.includes('How to find the right construction partner in '),'Static locality pages must prerender partner-comparison content');
 assert(landing.includes('COMMON PROJECT INTENT'),'Construction locality pages must provide useful search-intent content');
 assert(landing.includes('COMPARE LIKE FOR LIKE'),'Construction locality pages must teach quote comparison rather than only repeat keywords');
 assert(manager.includes("route.type==='local-service'"),'Structured data should identify locality service context');
