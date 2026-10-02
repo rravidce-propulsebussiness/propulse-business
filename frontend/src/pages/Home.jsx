@@ -233,6 +233,16 @@ export default function Home() {
               <Link to="/hyderabad/construction/kukatpally">Construction in Kukatpally</Link>
               <Link to="/hyderabad/construction/miyapur">Construction in Miyapur</Link>
               <Link to="/hyderabad/construction/kokapet">Construction in Kokapet</Link>
+              <Link to="/hyderabad/construction/ghatkesar">Construction in Ghatkesar</Link>
+              <Link to="/hyderabad/construction/shamshabad">Construction in Shamshabad</Link>
+              <Link to="/hyderabad/construction/patancheru">Construction in Patancheru</Link>
+            </div>
+          </div>
+          <div className="hc-locality-links">
+            <b>State-wide construction coverage</b>
+            <div>
+              <Link to="/telangana/construction">All 33 Telangana Districts</Link>
+              <Link to="/andhra-pradesh/construction">All 28 Andhra Pradesh Districts</Link>
             </div>
           </div>
         </div>
