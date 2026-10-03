@@ -4,6 +4,7 @@ require('dotenv').config();
 const pool = require('../config/database');
 
 const migrationsDir = path.join(__dirname, 'migrations');
+const baselineSchemaPath = path.join(__dirname, 'schema.sql');
 const MIGRATION_LOCK_KEY = 'propulse:schema-migrations';
 
 async function ensureLedger(client) {
@@ -96,6 +97,16 @@ function splitTopLevelStatements(sql) {
   return statements;
 }
 
+function getMigrationFiles() {
+  const dated = fs.existsSync(migrationsDir)
+    ? fs.readdirSync(migrationsDir)
+        .filter(f => f.endsWith('.sql'))
+        .sort()
+        .map(f => path.join(migrationsDir, f))
+    : [];
+  return fs.existsSync(baselineSchemaPath) ? [baselineSchemaPath, ...dated] : dated;
+}
+
 async function applyFile(client, filePath, appliedFilenames = null) {
   const filename = path.relative(__dirname, filePath).replace(/\\/g, '/');
   if (appliedFilenames?.has(filename)) return false;
@@ -139,12 +150,7 @@ async function runMigrations() {
     await client.query('SELECT pg_advisory_lock(hashtext($1))', [MIGRATION_LOCK_KEY]);
     lockAcquired = true;
     await ensureLedger(client);
-    const files = fs.existsSync(migrationsDir)
-      ? fs.readdirSync(migrationsDir)
-          .filter(f => f.endsWith('.sql'))
-          .sort()
-          .map(f => path.join(migrationsDir, f))
-      : [];
+    const files = getMigrationFiles();
     const appliedRows = await client.query('SELECT filename FROM schema_migrations');
     const appliedFilenames = new Set(appliedRows.rows.map(row => String(row.filename)));
     let applied = 0;
@@ -168,4 +174,4 @@ if (require.main === module) {
     .finally(() => pool.end());
 }
 
-module.exports = { runMigrations, hasTransactionControl, migrationControlSurface, isNoTransactionMigration, splitTopLevelStatements };
+module.exports = { runMigrations, getMigrationFiles, hasTransactionControl, migrationControlSurface, isNoTransactionMigration, splitTopLevelStatements };
