@@ -31,7 +31,7 @@ export default function AdminFaqs(){
 
   function switchAudience(key){
     if(key===audience)return;
-    setAudience(key);setEditId(null);setForm(emptyForm(audience));setSearch('');setOk('');setError('');
+    setAudience(key);setEditId(null);setForm(emptyForm(key));setSearch('');setOk('');setError('');
   }
 
   function reset(){
