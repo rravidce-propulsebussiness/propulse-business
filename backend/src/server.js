@@ -127,10 +127,13 @@ app.use(express.json({limit:DEFAULT_JSON_BYTES}));
 app.use('/api',(req,res,next)=>{res.setHeader('Cache-Control','no-store, private');res.setHeader('Pragma','no-cache');res.setHeader('Expires','0');next();});
 app.use('/api',(req,res,next)=>{
   if(!allowDegradedStartup||startupReady)return next();
-  if(req.method==='GET'&&req.path==='/auth/session'){
+  const degradedGet=req.method==='GET';
+  if(degradedGet)res.setHeader('X-Backend-Degraded','true');
+
+  if(degradedGet&&req.path==='/auth/session'){
     return res.json({authenticated:false,user:null,degraded:true});
   }
-  if(req.method==='GET'&&req.path==='/sound-settings'){
+  if(degradedGet&&req.path==='/sound-settings'){
     return res.json({
       masterEnabled:true,
       clickEnabled:true,
@@ -142,6 +145,51 @@ app.use('/api',(req,res,next)=>{
       degraded:true
     });
   }
+  if(degradedGet&&req.path==='/contact'){
+    const requestedAudience=String(req.query?.audience||'website').trim().toLowerCase();
+    const audience=['website','users','lead_partners','common'].includes(requestedAudience)?requestedAudience:'website';
+    return res.json({
+      audience,
+      company_name:'',
+      email:'',
+      phone:'',
+      whatsapp:'',
+      address:'',
+      business_hours:'',
+      support_email:'',
+      careers_email:'',
+      maps_url:'',
+      website_url:'/',
+      social_handles:[],
+      updated_at:null,
+      degraded:true
+    });
+  }
+  if(degradedGet&&req.path==='/cities'){
+    return res.json({
+      data:[],
+      pagination:{page:1,pageSize:0,total:0,totalPages:0,hasNextPage:false,hasPreviousPage:false},
+      degraded:true
+    });
+  }
+  if(degradedGet&&req.path==='/homepage-media'){
+    return res.json({hero_image_url:'',category_images:{},updated_at:null,degraded:true});
+  }
+  if(degradedGet&&req.path==='/support-chat/config'){
+    return res.json({
+      enabled:false,
+      allowGuests:false,
+      widgetTitle:'Chat with us',
+      greeting:'Hi! How can we help you today?',
+      offlineMessage:'Support is temporarily unavailable. Please try again shortly.',
+      pollSeconds:4,
+      degraded:true
+    });
+  }
+  if(degradedGet&&req.path==='/faqs'){
+    return res.json([]);
+  }
+
   res.setHeader('Retry-After',String(Math.max(1,Math.ceil(startupRetryMs/1000))));
   return res.status(503).json({error:'Service is initializing',database:'unavailable',retryable:true,code:'BACKEND_NOT_READY'});
 });
