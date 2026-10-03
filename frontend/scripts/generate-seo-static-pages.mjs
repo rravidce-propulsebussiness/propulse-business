@@ -6,6 +6,7 @@ import {HYDERABAD_LOCALITIES,localityBySlug,localityPagePath,nearbyLocalities,se
 import {CONSTRUCTION_PACKAGE_CATALOG} from '../src/data/constructionPackageCatalog.js'
 import {REGIONAL_STATES,districtBySlug,districtPath,stateBySlug} from '../src/seo/regionalSeo.js'
 import {CONSTRUCTION_GUIDES,guideBySlug} from '../src/seo/constructionGuides.js'
+import {SEO_FAQ_CATEGORIES,homeownerSeoFaqs} from '../src/seo/faqKnowledge.js'
 
 const here=path.dirname(fileURLToPath(import.meta.url))
 const dist=path.resolve(here,'../dist')
@@ -144,6 +145,15 @@ function guideContent(route){
   '</section>'
 }
 
+function homeownerFaqContent(route){
+  if(route.path!=='/faq')return ''
+  const faqs=homeownerSeoFaqs()
+  return '<section style="padding:10px 0 42px">'+SEO_FAQ_CATEGORIES.map(category=>{
+    const items=faqs.filter(item=>item.category===category.key)
+    return '<section style="padding:18px 0"><h2>'+escapeHtml(category.label)+' FAQs</h2><p style="max-width:850px;line-height:1.55">'+escapeHtml(category.description)+'</p>'+items.map(item=>'<article style="padding:14px 0;border-bottom:1px solid #e4ebef"><h3>'+escapeHtml(item.question)+'</h3><p style="max-width:900px;line-height:1.65">'+escapeHtml(item.answer)+'</p></article>').join('')+'</section>'
+  }).join('')+'<p><a href="/guides">Browse construction guides</a> · <a href="/quote">Start a project requirement</a> · <a href="/experts">Find professionals</a></p></section>'
+}
+
 function projectsAuthorityContent(route){
   if(route.path!=='/projects')return ''
   const localitySlugs=['kondapur','madhapur','kokapet','manikonda','kukatpally','miyapur','narsingi','tellapur','banjara-hills','jubilee-hills']
@@ -218,7 +228,7 @@ function fallback(route){
   return '<main data-seo-static-fallback="true" style="font-family:Arial,sans-serif;max-width:1100px;margin:0 auto;padding:32px;color:#173f5e">'+
     '<header style="display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap"><a href="/" aria-label="'+escapeHtml(SITE_NAME)+' home"><img src="/brand/propulse-logo.svg" alt="'+escapeHtml(SITE_NAME)+'" width="180" height="48"></a><nav aria-label="Primary">'+nav+'</nav></header>'+
     '<section style="padding:72px 0 34px"><p style="font-weight:700;color:#f05b24">PROPULSE BUSINESS</p><h1 style="max-width:850px;font-size:44px;line-height:1.08;margin:12px 0">'+escapeHtml(route.heading)+'</h1><p style="max-width:780px;font-size:18px;line-height:1.6">'+escapeHtml(route.summary)+'</p><p style="max-width:780px;line-height:1.6">'+escapeHtml(route.description)+'</p><p><a href="/quote" style="font-weight:700;color:#d94f22">Start your requirement</a> · <a href="/experts" style="font-weight:700;color:#173f5e">Find professionals</a></p></section>'+
-    cityHubContent(route)+hyderabadAreas(route)+constructionExperienceContent(route)+localityContent(route)+costGuideContent(route)+guideContent(route)+regionalConstructionContent(route)+homeRegionalCoverage(route)+projectsAuthorityContent(route)+aboutExperienceContent(route)+comparisonDisclosure(route)+'</main>'
+    cityHubContent(route)+hyderabadAreas(route)+constructionExperienceContent(route)+localityContent(route)+costGuideContent(route)+guideContent(route)+regionalConstructionContent(route)+homeRegionalCoverage(route)+homeownerFaqContent(route)+projectsAuthorityContent(route)+aboutExperienceContent(route)+comparisonDisclosure(route)+'</main>'
 }
 
 function breadcrumbItems(route){
