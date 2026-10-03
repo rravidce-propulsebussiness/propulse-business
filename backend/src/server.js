@@ -1,6 +1,8 @@
 require('dotenv').config();
 const express=require('express');
 const crypto=require('crypto');
+const fs=require('fs');
+const path=require('path');
 const cors=require('cors');
 const pool=require('./config/database');
 const {runMigrations}=require('./database/runMigrations');
@@ -177,6 +179,25 @@ async function readiness(req,res){
 app.get('/health/ready',readiness);
 app.get('/health',readiness);
 app.use('/api/observability',observabilityRoutes);app.use('/api/customer-flows',customerFlowRoutes);app.use('/api/auth',authRoutes);app.use('/api/notifications',notificationRoutes);app.use('/api/profile',profileRoutes);app.use('/api/admin',adminRoutes);app.use('/api/lead-partner',leadPartnerRoutes);app.use('/api/lead-reports',leadReportRoutes);app.use('/api/lead-partner/faqs',faqRoutes);app.use('/api/faqs',publicFaqRoutes);app.use('/api/experts',publicExpertRoutes);app.use('/api/upcoming-features',upcomingFeatureRoutes);app.use('/api/contact',contactRoutes);app.use('/api/homepage-media',homepageMediaRoutes);app.use('/api/admin/faqs',adminFaqRoutes);app.use('/api/leads',leadRoutes);app.use('/api/payments',paymentRoutes);app.use('/api/payment-receiving-details',paymentReceivingDetailsRoutes);app.use('/api/coupons',couponRoutes);app.use('/api/membership-plans',membershipPlanRoutes);app.use('/api/admin/commercial',adminCommercialRoutes);app.use('/api/wallet',walletRoutes);app.use('/api/investments',investmentRoutes);app.use('/api/investor/payout-account',investorPayoutAccountRoutes);app.use('/api/industries',industryRoutes);app.use('/api/services',serviceRoutes);app.use('/api/subservices',subserviceRoutes);app.use('/api/states',stateRoutes);app.use('/api/cities',cityRoutes);app.use('/api/subcities',subcityRoutes);app.use('/api/pincodes',pincodeRoutes);
+const frontendDistPath=path.resolve(__dirname,'../../frontend/dist');
+const frontendIndexPath=path.join(frontendDistPath,'index.html');
+const hasBuiltFrontend=isProduction&&fs.existsSync(frontendIndexPath);
+if(hasBuiltFrontend){
+  app.use(express.static(frontendDistPath,{
+    index:false,
+    maxAge:'1h',
+    setHeaders(res,filePath){
+      if(filePath.split(path.sep).includes('assets'))res.setHeader('Cache-Control','public, max-age=31536000, immutable');
+    }
+  }));
+  app.use((req,res,next)=>{
+    if(!['GET','HEAD'].includes(req.method))return next();
+    if(req.path.startsWith('/api')||req.path.startsWith('/health')||req.path.startsWith('/uploads')||req.path==='/robots.txt'||req.path==='/sitemap.xml')return next();
+    const accept=String(req.get('accept')||'');
+    if(!accept.includes('text/html'))return next();
+    return res.sendFile(frontendIndexPath);
+  });
+}
 app.use((req,res)=>res.status(404).json({error:'Not found'}));
 app.use((err,req,res,next)=>{if(err.message==='CORS origin not allowed')return res.status(403).json({error:'Origin not allowed'});if(err.type==='entity.parse.failed')return res.status(400).json({error:'Invalid JSON body'});if(err.type==='entity.too.large')return res.status(413).json({error:'Request body is too large'});res.locals.operationalError=err;console.error(`[${req.requestId||'no-request-id'}] Unhandled server error:`,err.stack||err);return res.status(500).json({error:'Internal server error',requestId:req.requestId||undefined});});
 let server;let stopLeadPartnerSheetAutoSync=()=>{};let stopAdminGoogleSheetAutoSync=()=>{};let stopFinancialReconciliation=async()=>{};let stopNotifications=async()=>{};let shuttingDown=false;
