@@ -98,6 +98,10 @@ assert(websiteFaq.includes("homeownerSeoFaqs"),'Public FAQ must include the craw
 assert(websiteFaq.includes("construction:'Construction'")&&websiteFaq.includes("interiors:'Interiors'")&&websiteFaq.includes("property:'Real Estate'"),'Public FAQ must label Construction, Interiors and Real Estate categories');
 assert(websiteFaq.includes("setSearchParams({category:item.key})"),'FAQ category tabs must create shareable category-filter URLs');
 assert(websiteFaq.includes("item.keywords"),'FAQ search must include related keywords');
+assert(websiteFaq.includes("resolveHomeownerFaqs"),'Homeowner FAQ runtime must merge the full knowledge baseline when legacy API data is incomplete');
+assert(websiteFaq.includes("HOMEOWNER_BASELINE_READY_COUNT=100"),'Homeowner FAQ runtime must detect incomplete legacy datasets');
+assert(websiteFaq.includes("HOMEOWNER_PRIMARY_CATEGORIES"),'Public homeowner FAQ must restrict visible category tabs to Construction, Interiors and Real Estate');
+assert(websiteFaq.includes("requested!=='all'&&!HOMEOWNER_PRIMARY_CATEGORIES.has(requested)"),'Legacy FAQ category URLs such as privacy must reset to All');
 assert(faqKnowledge.includes("Why is a lintel necessary above doors and windows?"),'FAQ library must answer lintel search intent');
 assert(faqKnowledge.includes("What causes honeycombing in concrete?"),'FAQ library must answer honeycombing search intent');
 assert(faqKnowledge.includes("Why do cracks form in a new house?"),'FAQ library must answer crack search intent');
