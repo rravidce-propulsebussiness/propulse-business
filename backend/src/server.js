@@ -55,6 +55,7 @@ const app=express();
 const isProduction=process.env.NODE_ENV==='production';
 const PORT=Number(process.env.PORT)||5000;
 const configuredOrigins=getConfiguredOrigins({isProduction});
+const backendSecurityPath=requestPath=>requestPath.startsWith('/api')||requestPath.startsWith('/uploads')||requestPath.startsWith('/health');
 const DEFAULT_JSON_BYTES='1mb';
 const LARGE_JSON_BYTES='9mb';
 const healthCheckTimeoutMs=Math.min(10000,Math.max(500,Number(process.env.HEALTH_CHECK_TIMEOUT_MS)||2500));
@@ -103,7 +104,7 @@ app.use((req,res,next)=>{
   next();
 });
 app.use(cors({origin(origin,callback){if(!origin||configuredOrigins.includes(origin))return callback(null,true);return callback(new Error('CORS origin not allowed'));},credentials:true}));
-app.use((req,res,next)=>{res.setHeader('X-Content-Type-Options','nosniff');res.setHeader('X-Frame-Options','DENY');res.setHeader('Referrer-Policy','strict-origin-when-cross-origin');res.setHeader('Permissions-Policy','camera=(),microphone=(),geolocation=()');res.setHeader('Content-Security-Policy',"default-src 'none'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'; form-action 'none'");if(isProduction)res.setHeader('Strict-Transport-Security','max-age=31536000; includeSubDomains');next();});
+app.use((req,res,next)=>{res.setHeader('X-Content-Type-Options','nosniff');res.setHeader('X-Frame-Options','DENY');res.setHeader('Referrer-Policy','strict-origin-when-cross-origin');res.setHeader('Permissions-Policy','camera=(),microphone=(),geolocation=()');if(backendSecurityPath(req.path))res.setHeader('Content-Security-Policy',"default-src 'none'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'; form-action 'none'");if(isProduction)res.setHeader('Strict-Transport-Security','max-age=31536000; includeSubDomains');next();});
 app.use('/',seoRoutes);
 app.use('/api/payment-webhooks/razorpay',express.raw({type:'application/json',limit:'256kb'}),paymentWebhookRoutes);
 const largeJsonParser=express.json({limit:LARGE_JSON_BYTES});
@@ -185,6 +186,7 @@ const hasBuiltFrontend=isProduction&&fs.existsSync(frontendIndexPath);
 if(hasBuiltFrontend){
   app.use(express.static(frontendDistPath,{
     index:false,
+    extensions:['html'],
     maxAge:'1h',
     setHeaders(res,filePath){
       if(filePath.split(path.sep).includes('assets'))res.setHeader('Cache-Control','public, max-age=31536000, immutable');
