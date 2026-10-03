@@ -18,6 +18,7 @@ const websiteFaq=read('../frontend/src/components/WebsiteFaqSection.jsx');
 const userFaq=read('../frontend/src/pages/UserFAQ.jsx');
 const adminFaq=read('../frontend/src/admin/pages/AdminFaqs.jsx');
 const homeownerFaqMigration=read('../backend/src/database/migrations/20261003_seed_homeowner_search_faqs.sql');
+const homeownerFaqMigrationMore=read('../backend/src/database/migrations/20261003_seed_homeowner_search_faqs_more.sql');
 const landing=read('../frontend/src/pages/HyderabadSeoLanding.jsx');
 const home=read('../frontend/src/pages/Home.jsx');
 const packages=read('../frontend/src/data/constructionPackageCatalog.js');
@@ -105,9 +106,15 @@ assert(faqKnowledge.includes("Which material is best for home construction?"),'F
 assert(faqKnowledge.includes("Plywood, MDF or HDHMR: which is best for wardrobes?"),'FAQ library must answer wardrobe-material search intent');
 assert(faqKnowledge.includes("What is RERA and why should a homebuyer check it?"),'FAQ library must answer RERA search intent');
 assert(faqKnowledge.includes("What is carpet area?"),'FAQ library must answer carpet-area search intent');
-assert((faqKnowledge.match(/faq\('/g)||[]).length>=60,'Homeowner FAQ knowledge library must contain at least 60 searchable Q&As');
+assert(faqKnowledge.includes("What is a slump test and why is it done?"),'FAQ library must answer concrete slump-test search intent');
+assert(faqKnowledge.includes("Why do cracks often appear where a wall meets a beam or column?"),'FAQ library must answer RCC-masonry junction crack intent');
+assert(faqKnowledge.includes("Gypsum ceiling or POP ceiling: which is better?"),'FAQ library must answer false-ceiling material intent');
+assert(faqKnowledge.includes("Is bank loan approval proof that a property is legally safe?"),'FAQ library must answer property legal-check intent');
+assert(faqKnowledge.includes("What should I verify before buying an open plot?"),'FAQ library must answer open-plot due-diligence intent');
+assert((faqKnowledge.match(/faq\('/g)||[]).length>=120,'Homeowner FAQ knowledge library must contain at least 120 searchable Q&As');
 assert(homeownerFaqMigration.includes("INSERT INTO faq_entries"),'Homeowner FAQ migration must seed the existing FAQ table');
-assert((homeownerFaqMigration.match(/\('homeowner'/g)||[]).length>=60,'FAQ migration must seed at least 60 homeowner questions');
+assert((homeownerFaqMigration.match(/\('homeowner'/g)||[]).length>=60,'Initial FAQ migration must seed at least 60 homeowner questions');
+assert((homeownerFaqMigrationMore.match(/\('homeowner'/g)||[]).length>=50,'Second FAQ migration must seed at least 50 additional homeowner questions');
 assert(adminFaq.includes("searchable public Construction, Interiors and Real Estate FAQ centre"),'Admin FAQ manager must identify the homeowner knowledge centre');
 assert(buildScript.includes('homeownerFaqContent(route)'),'Static SEO must prerender homeowner FAQ answers');
 assert(buildScript.includes("route.path!=='/faq'"),'FAQ prerender must be scoped to /faq');
@@ -205,6 +212,11 @@ for(const guidePath of ['/guides/best-steel-for-house-construction','/guides/pre
   assert(landing.includes('to="'+guidePath+'"'),'Hyderabad/locality guide link missing '+guidePath);
 }
 assert(home.includes('to="/guides"'),'Homepage must link to the guide hub');
+assert(home.includes('<Link to="/faq">FAQ</Link>'),'Homeowner homepage must expose FAQ navigation');
+assert(userFaq.includes('PublicFaqHeader'),'Public FAQ page must use a homeowner header when logged out');
+assert(userFaq.includes('to="/faq"'),'Public FAQ header must expose an active FAQ link');
+assert(userFaq.includes('to="/guides"'),'Public FAQ header must link to the guides hub');
+assert(userFaq.includes("loggedIn?<UserHeader/>:<PublicFaqHeader/>"),'Logged-in users must retain the existing user header while public homeowners get the customer FAQ header');
 assert(regionalLanding.includes('to="/guides"'),'Regional construction hubs must link to the guide hub');
 assert(regionalLanding.includes('/guides/best-steel-for-house-construction'),'Regional construction hubs must link to material guides');
 assert(regionalLanding.includes('/guides/home-construction-checklist'),'Regional construction hubs must link to planning guides');
