@@ -54,6 +54,11 @@ function StateHub({state}){
         <Link to="/guides/home-construction-checklist">Home construction checklist</Link>
         <Link to="/guides/waterproofing-precautions-new-house">Waterproofing precautions</Link>
         <Link to="/guides/2bhk-interiors-hyderabad">2BHK interior planning guide</Link>
+        <Link to="/guides/best-cement-for-house-construction">Best cement for house construction</Link>
+        <Link to="/guides/m-sand-vs-river-sand-house-construction">M-sand vs river sand</Link>
+        <Link to="/guides/soil-test-before-house-construction">Soil test before construction</Link>
+        <Link to="/guides/electrical-planning-new-house">Electrical planning for a new house</Link>
+        <Link to="/guides">Browse all construction guides</Link>
       </div>
     </section>
 
@@ -131,6 +136,10 @@ function DistrictPage({state,district}){
         <Link to="/guides/choose-construction-contractor-hyderabad">How to compare construction contractors</Link>
         <Link to="/guides/home-construction-checklist">Home construction checklist</Link>
         <Link to="/guides/waterproofing-precautions-new-house">Waterproofing precautions</Link>
+        <Link to="/guides/best-cement-for-house-construction">Best cement for house construction</Link>
+        <Link to="/guides/m-sand-vs-river-sand-house-construction">M-sand vs river sand</Link>
+        <Link to="/guides/soil-test-before-house-construction">Soil test before construction</Link>
+        <Link to="/guides">Browse all construction guides</Link>
       </div>
     </section>
 
