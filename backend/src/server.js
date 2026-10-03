@@ -1,6 +1,8 @@
 require('dotenv').config();
 const express=require('express');
 const crypto=require('crypto');
+const fs=require('fs');
+const path=require('path');
 const cors=require('cors');
 const pool=require('./config/database');
 const {runMigrations}=require('./database/runMigrations');
@@ -53,6 +55,7 @@ const app=express();
 const isProduction=process.env.NODE_ENV==='production';
 const PORT=Number(process.env.PORT)||5000;
 const configuredOrigins=getConfiguredOrigins({isProduction});
+const backendSecurityPath=requestPath=>requestPath.startsWith('/api')||requestPath.startsWith('/uploads')||requestPath.startsWith('/health');
 const DEFAULT_JSON_BYTES='1mb';
 const LARGE_JSON_BYTES='9mb';
 const healthCheckTimeoutMs=Math.min(10000,Math.max(500,Number(process.env.HEALTH_CHECK_TIMEOUT_MS)||2500));
@@ -64,6 +67,7 @@ const slowRequestMs=Math.min(60000,Math.max(250,Number(process.env.SLOW_REQUEST_
 const operationalMonitoringEnabled=envFlag('OPERATIONAL_MONITORING_ENABLED',true);
 const runMigrationsOnStartup=envFlag('RUN_MIGRATIONS_ON_STARTUP',true);
 const runBackgroundJobsInWeb=envFlag('RUN_BACKGROUND_JOBS_IN_WEB',true);
+const allowDegradedStartup=envFlag('ALLOW_DEGRADED_STARTUP',false);
 const requireBackgroundWorker=envFlag('REQUIRE_BACKGROUND_WORKER',false);
 const workerHeartbeatMaxAgeSeconds=Math.min(600,Math.max(30,Math.floor(Number(process.env.WORKER_HEARTBEAT_MAX_AGE_SECONDS)||120)));
 const trustProxy=String(process.env.TRUST_PROXY||'').trim();
@@ -101,7 +105,7 @@ app.use((req,res,next)=>{
   next();
 });
 app.use(cors({origin(origin,callback){if(!origin||configuredOrigins.includes(origin))return callback(null,true);return callback(new Error('CORS origin not allowed'));},credentials:true}));
-app.use((req,res,next)=>{res.setHeader('X-Content-Type-Options','nosniff');res.setHeader('X-Frame-Options','DENY');res.setHeader('Referrer-Policy','strict-origin-when-cross-origin');res.setHeader('Permissions-Policy','camera=(),microphone=(),geolocation=()');res.setHeader('Content-Security-Policy',"default-src 'none'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'; form-action 'none'");if(isProduction)res.setHeader('Strict-Transport-Security','max-age=31536000; includeSubDomains');next();});
+app.use((req,res,next)=>{res.setHeader('X-Content-Type-Options','nosniff');res.setHeader('X-Frame-Options','DENY');res.setHeader('Referrer-Policy','strict-origin-when-cross-origin');res.setHeader('Permissions-Policy','camera=(),microphone=(),geolocation=()');if(backendSecurityPath(req.path))res.setHeader('Content-Security-Policy',"default-src 'none'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'; form-action 'none'");if(isProduction)res.setHeader('Strict-Transport-Security','max-age=31536000; includeSubDomains');next();});
 app.use('/',seoRoutes);
 app.use('/api/payment-webhooks/razorpay',express.raw({type:'application/json',limit:'256kb'}),paymentWebhookRoutes);
 const largeJsonParser=express.json({limit:LARGE_JSON_BYTES});
@@ -120,6 +124,12 @@ app.use('/api/customer-flows/:key/:leadId/attachments',largeJsonFor('POST'));
 app.use('/api/customer-flows',express.json({limit:'64kb'}));
 app.use(express.json({limit:DEFAULT_JSON_BYTES}));
 app.use('/api',(req,res,next)=>{res.setHeader('Cache-Control','no-store, private');res.setHeader('Pragma','no-cache');res.setHeader('Expires','0');next();});
+app.use('/api',(req,res,next)=>{
+  if(!allowDegradedStartup||startupReady)return next();
+  const safeBootstrapGet=req.method==='GET'&&(req.path==='/auth/session'||req.path==='/sound-settings');
+  if(safeBootstrapGet)return next();
+  return res.status(503).json({error:'Service is initializing',database:'unavailable',retryable:true});
+});
 app.use('/api',csrfProtection);
 const apiGlobalRateLimitConfig=getApiGlobalRateLimitConfig({isProduction});
 const apiRateLimit=rateLimit({...apiGlobalRateLimitConfig,scope:'global'});
@@ -167,8 +177,18 @@ async function readiness(req,res){
   if(!databaseReady)console.error(`[${req.requestId}] Readiness database check failed:`,database.reason?.message||database.reason);
   if(!storageReady)console.error(`[${req.requestId}] Readiness storage check failed:`,storage.reason?.message||storage.reason);
   if(requireBackgroundWorker&&!workerReady)console.error(`[${req.requestId}] Readiness worker check failed: latest heartbeat age=${workerAgeSeconds??'missing'}s`);
+  const startupError=startupFailure?{
+    code:String(startupFailure.code||startupFailure.cause?.code||'STARTUP_FAILURE').slice(0,80),
+    kind:/password|authentication/i.test(String(startupFailure.message||''))?'authentication':
+      /certificate|self signed|ssl/i.test(String(startupFailure.message||''))?'ssl':
+      /ENOTFOUND|getaddrinfo|dns/i.test(String(startupFailure.message||''))?'dns':
+      /ECONNREFUSED|connect/i.test(String(startupFailure.message||''))?'connection':
+      /timeout/i.test(String(startupFailure.message||''))?'timeout':'startup'
+  }:null;
   return res.status(503).json({
     status:'error',
+    startup:startupReady?'ready':(startupFailure?'degraded':'initializing'),
+    startupError,
     database:databaseReady?'connected':'unavailable',
     storage:storageReady?'ready':'unavailable',
     worker:requireBackgroundWorker?(workerReady?'fresh':'unavailable'):'not-required'
@@ -177,9 +197,31 @@ async function readiness(req,res){
 app.get('/health/ready',readiness);
 app.get('/health',readiness);
 app.use('/api/observability',observabilityRoutes);app.use('/api/customer-flows',customerFlowRoutes);app.use('/api/auth',authRoutes);app.use('/api/notifications',notificationRoutes);app.use('/api/profile',profileRoutes);app.use('/api/admin',adminRoutes);app.use('/api/lead-partner',leadPartnerRoutes);app.use('/api/lead-reports',leadReportRoutes);app.use('/api/lead-partner/faqs',faqRoutes);app.use('/api/faqs',publicFaqRoutes);app.use('/api/experts',publicExpertRoutes);app.use('/api/upcoming-features',upcomingFeatureRoutes);app.use('/api/contact',contactRoutes);app.use('/api/homepage-media',homepageMediaRoutes);app.use('/api/admin/faqs',adminFaqRoutes);app.use('/api/leads',leadRoutes);app.use('/api/payments',paymentRoutes);app.use('/api/payment-receiving-details',paymentReceivingDetailsRoutes);app.use('/api/coupons',couponRoutes);app.use('/api/membership-plans',membershipPlanRoutes);app.use('/api/admin/commercial',adminCommercialRoutes);app.use('/api/wallet',walletRoutes);app.use('/api/investments',investmentRoutes);app.use('/api/investor/payout-account',investorPayoutAccountRoutes);app.use('/api/industries',industryRoutes);app.use('/api/services',serviceRoutes);app.use('/api/subservices',subserviceRoutes);app.use('/api/states',stateRoutes);app.use('/api/cities',cityRoutes);app.use('/api/subcities',subcityRoutes);app.use('/api/pincodes',pincodeRoutes);
+const packagedFrontendPath=path.resolve(__dirname,'../public');
+const workspaceFrontendPath=path.resolve(__dirname,'../../frontend/dist');
+const frontendDistPath=fs.existsSync(path.join(packagedFrontendPath,'index.html'))?packagedFrontendPath:workspaceFrontendPath;
+const frontendIndexPath=path.join(frontendDistPath,'index.html');
+const hasBuiltFrontend=isProduction&&fs.existsSync(frontendIndexPath);
+if(hasBuiltFrontend){
+  app.use(express.static(frontendDistPath,{
+    index:false,
+    extensions:['html'],
+    maxAge:'1h',
+    setHeaders(res,filePath){
+      if(filePath.split(path.sep).includes('assets'))res.setHeader('Cache-Control','public, max-age=31536000, immutable');
+    }
+  }));
+  app.use((req,res,next)=>{
+    if(!['GET','HEAD'].includes(req.method))return next();
+    if(req.path.startsWith('/api')||req.path.startsWith('/health')||req.path.startsWith('/uploads')||req.path==='/robots.txt'||req.path==='/sitemap.xml')return next();
+    const accept=String(req.get('accept')||'');
+    if(!accept.includes('text/html'))return next();
+    return res.sendFile(frontendIndexPath);
+  });
+}
 app.use((req,res)=>res.status(404).json({error:'Not found'}));
 app.use((err,req,res,next)=>{if(err.message==='CORS origin not allowed')return res.status(403).json({error:'Origin not allowed'});if(err.type==='entity.parse.failed')return res.status(400).json({error:'Invalid JSON body'});if(err.type==='entity.too.large')return res.status(413).json({error:'Request body is too large'});res.locals.operationalError=err;console.error(`[${req.requestId||'no-request-id'}] Unhandled server error:`,err.stack||err);return res.status(500).json({error:'Internal server error',requestId:req.requestId||undefined});});
-let server;let stopLeadPartnerSheetAutoSync=()=>{};let stopAdminGoogleSheetAutoSync=()=>{};let stopFinancialReconciliation=async()=>{};let stopNotifications=async()=>{};let shuttingDown=false;
+let server;let stopLeadPartnerSheetAutoSync=()=>{};let stopAdminGoogleSheetAutoSync=()=>{};let stopFinancialReconciliation=async()=>{};let stopNotifications=async()=>{};let shuttingDown=false;let startupReady=false;let startupFailure=null;
 async function shutdown(signal,exitCode=0){
   if(shuttingDown)return;
   shuttingDown=true;
@@ -219,31 +261,54 @@ async function recordFatalProcessError(kind,error){
   }).catch(()=>{});
   await Promise.race([capture,new Promise(resolve=>setTimeout(resolve,750))]);
 }
+function configureServer(){
+  server.requestTimeout=httpRequestTimeoutMs;
+  server.headersTimeout=httpHeadersTimeoutMs;
+  server.keepAliveTimeout=httpKeepAliveTimeoutMs;
+  server.maxRequestsPerSocket=httpMaxRequestsPerSocket;
+  server.maxHeadersCount=100;
+  process.once('SIGTERM',()=>shutdown('SIGTERM'));
+  process.once('SIGINT',()=>shutdown('SIGINT'));
+  process.once('uncaughtException',error=>{console.error('Uncaught exception:',error?.stack||error);void recordFatalProcessError('uncaught_exception',error).finally(()=>shutdown('uncaughtException',1));});
+  process.once('unhandledRejection',reason=>{console.error('Unhandled rejection:',reason?.stack||reason);void recordFatalProcessError('unhandled_rejection',reason).finally(()=>shutdown('unhandledRejection',1));});
+}
+async function finishStartup(){
+  await ensureUploadStorage();
+  if(runMigrationsOnStartup)await runMigrations();
+  else console.log('Database migrations skipped on web startup (RUN_MIGRATIONS_ON_STARTUP=false).');
+  if(operationalMonitoringEnabled)await operationalMonitoringService.pruneResolved().catch(error=>console.error('Operational-event retention cleanup failed:',error.message));
+  startupReady=true;
+  startupFailure=null;
+  console.log('Backend startup checks completed successfully.');
+  if(runBackgroundJobsInWeb){
+    stopLeadPartnerSheetAutoSync=startLeadPartnerSheetAutoSync();
+    stopAdminGoogleSheetAutoSync=startAdminGoogleSheetAutoSync();
+    stopFinancialReconciliation=startFinancialReconciliationScheduler({runImmediately:true});
+    stopNotifications=startNotificationScheduler({runImmediately:true});
+  }else console.log('Background jobs disabled in web process (RUN_BACKGROUND_JOBS_IN_WEB=false).');
+}
 async function start(){
-  try{
-    await ensureUploadStorage();
-    if(runMigrationsOnStartup)await runMigrations();
-    else console.log('Database migrations skipped on web startup (RUN_MIGRATIONS_ON_STARTUP=false).');
-    if(operationalMonitoringEnabled)await operationalMonitoringService.pruneResolved().catch(error=>console.error('Operational-event retention cleanup failed:',error.message));
+  if(allowDegradedStartup){
     server=app.listen(PORT,'0.0.0.0',()=>{
-      console.log(`Server running on port ${PORT}`);
-      if(runBackgroundJobsInWeb){
-        stopLeadPartnerSheetAutoSync=startLeadPartnerSheetAutoSync();
-        stopAdminGoogleSheetAutoSync=startAdminGoogleSheetAutoSync();
-        stopFinancialReconciliation=startFinancialReconciliationScheduler({runImmediately:true});
-        stopNotifications=startNotificationScheduler({runImmediately:true});
-      }else console.log('Background jobs disabled in web process (RUN_BACKGROUND_JOBS_IN_WEB=false).');
+      console.log(`Server running on port ${PORT} in degraded-startup mode.`);
     });
-    server.requestTimeout=httpRequestTimeoutMs;
-    server.headersTimeout=httpHeadersTimeoutMs;
-    server.keepAliveTimeout=httpKeepAliveTimeoutMs;
-    server.maxRequestsPerSocket=httpMaxRequestsPerSocket;
-    server.maxHeadersCount=100;
-    process.once('SIGTERM',()=>shutdown('SIGTERM'));
-    process.once('SIGINT',()=>shutdown('SIGINT'));
-    process.once('uncaughtException',error=>{console.error('Uncaught exception:',error?.stack||error);void recordFatalProcessError('uncaught_exception',error).finally(()=>shutdown('uncaughtException',1));});
-    process.once('unhandledRejection',reason=>{console.error('Unhandled rejection:',reason?.stack||reason);void recordFatalProcessError('unhandled_rejection',reason).finally(()=>shutdown('unhandledRejection',1));});
+    configureServer();
+    try{
+      await finishStartup();
+    }catch(error){
+      startupFailure=error;
+      console.error('Backend startup checks failed; frontend remains available in degraded mode:');
+      console.error(error?.stack||error||'Unknown error');
+      await recordFatalProcessError('startup_failure',error).catch(()=>{});
+    }
+    return;
+  }
+  try{
+    await finishStartup();
+    server=app.listen(PORT,'0.0.0.0',()=>console.log(`Server running on port ${PORT}`));
+    configureServer();
   }catch(error){
+    startupFailure=error;
     console.error('Backend startup failed:');
     console.error(error?.stack||error||'Unknown error');
     await recordFatalProcessError('startup_failure',error).catch(()=>{});

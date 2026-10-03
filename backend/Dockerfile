@@ -2,7 +2,7 @@ FROM node:24-bookworm-slim AS dependencies
 WORKDIR /app
 ENV NODE_ENV=production
 COPY package.json package-lock.json ./
-RUN npm ci --omit=dev && npm cache clean --force
+RUN npm ci --omit=dev --ignore-scripts && npm cache clean --force
 
 FROM node:24-bookworm-slim AS runtime
 WORKDIR /app
@@ -10,7 +10,7 @@ ENV NODE_ENV=production \
     PORT=5000
 RUN mkdir -p /app/uploads && chown -R node:node /app
 COPY --from=dependencies --chown=node:node /app/node_modules ./node_modules
-COPY --chown=node:node package.json package-lock.json ./
+COPY --chown=node:node package.json package-lock.json index.js ./
 COPY --chown=node:node src ./src
 COPY --chown=node:node scripts ./scripts
 USER node
