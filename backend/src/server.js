@@ -107,6 +107,7 @@ app.use((req,res,next)=>{
 });
 app.use(cors({origin(origin,callback){if(!origin||configuredOrigins.includes(origin))return callback(null,true);return callback(new Error('CORS origin not allowed'));},credentials:true}));
 app.use((req,res,next)=>{res.setHeader('X-Content-Type-Options','nosniff');res.setHeader('X-Frame-Options','DENY');res.setHeader('Referrer-Policy','strict-origin-when-cross-origin');res.setHeader('Permissions-Policy','camera=(),microphone=(),geolocation=()');if(!backendSecurityPath(req.path))res.setHeader('Cross-Origin-Opener-Policy','same-origin-allow-popups');if(backendSecurityPath(req.path))res.setHeader('Content-Security-Policy',"default-src 'none'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'; form-action 'none'");if(isProduction)res.setHeader('Strict-Transport-Security','max-age=31536000; includeSubDomains');next();});
+app.get('/favicon.ico',(req,res)=>res.redirect(308,'/favicon.svg'));
 app.use('/',seoRoutes);
 app.use('/api/payment-webhooks/razorpay',express.raw({type:'application/json',limit:'256kb'}),paymentWebhookRoutes);
 const largeJsonParser=express.json({limit:LARGE_JSON_BYTES});
@@ -191,6 +192,15 @@ app.use('/api',(req,res,next)=>{
   }
   if(degradedGet&&req.path==='/industries'){
     return res.json([]);
+  }
+  if(degradedGet&&/^\/customer-flows\/(build|design|property)$/.test(req.path)){
+    const key=req.path.split('/').pop();
+    return res.json({
+      key,
+      unavailable:true,
+      degraded:true,
+      message:'This requirement form is temporarily unavailable while the service reconnects.'
+    });
   }
   if(degradedGet&&req.path==='/leads'){
     return res.json({

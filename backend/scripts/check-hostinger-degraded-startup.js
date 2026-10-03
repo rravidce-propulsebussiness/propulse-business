@@ -14,6 +14,7 @@ assert(server.includes("req.path==='/homepage-media'"),'degraded mode serves emp
 assert(server.includes("req.path==='/support-chat/config'"),'degraded mode disables support chat safely');
 assert(server.includes("req.path==='/faqs'"),'degraded mode serves empty FAQ fallback');
 assert(server.includes("req.path==='/industries'"),'degraded mode serves empty industry bootstrap fallback');
+assert(server.includes("customer-flows\\/(build|design|property)"),'degraded mode serves explicit requirement-form fallback');
 assert(server.includes("req.path==='/leads'"),'degraded mode serves explicit marketplace unavailable response');
 assert(server.includes("unavailable:true"),'degraded marketplace response is distinguishable from an empty marketplace');
 assert(server.includes("X-Backend-Degraded"),'degraded public bootstrap responses are marked for diagnostics');
