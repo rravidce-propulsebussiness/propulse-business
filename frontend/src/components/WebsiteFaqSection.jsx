@@ -49,10 +49,11 @@ export default function WebsiteFaqSection({variant='home',audience='website'}){
       const data=await publicRequest('/faqs?audience='+encodeURIComponent(audience))
       const remote=Array.isArray(data)?data.filter(item=>item?.is_active!==false):[]
       const defaults=audience==='homeowner'?homeownerSeoFaqs():[]
-      setFaqs(remote.length?remote:defaults)
+      const resolved=remote.length?remote:defaults
+      setFaqs(resolved)
       setOpen(current=>{
-        if(items.some(item=>item.id===current))return current
-        return variant==='home'&&items.length?items[0].id:null
+        if(resolved.some(item=>item.id===current))return current
+        return variant==='home'&&resolved.length?resolved[0].id:null
       })
     }catch(e){
       const defaults=audience==='homeowner'?homeownerSeoFaqs():[]
