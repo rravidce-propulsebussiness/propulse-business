@@ -65,10 +65,10 @@ export const CORE_PUBLIC_SEO_ROUTES=[
   },
   {
     path:'/faq',
-    title:'ProPulse FAQs | Construction, Interiors & Real Estate',
-    description:'Read answers to common questions about ProPulse construction, interior and real-estate requirements, quotes, professionals and the customer journey.',
-    heading:'Frequently asked questions about ProPulse',
-    summary:'Find quick answers about submitting requirements, receiving responses and using ProPulse.',
+    title:'Construction, Interior & Real Estate FAQs | ProPulse',
+    description:'Search practical construction, interior and real-estate questions about lintels, honeycombing, cracks, steel, cement, interiors, RERA, carpet area and property checks.',
+    heading:'Construction, interior and real-estate questions answered',
+    summary:'Search practical homeowner questions by category and use the answers to plan better construction, interior and property decisions.',
   },
 ]
 
