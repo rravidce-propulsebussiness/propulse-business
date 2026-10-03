@@ -2,6 +2,26 @@ const { Pool } = require('pg');
 require('dotenv').config();
 
 const databaseUrl = String(process.env.DATABASE_URL || '').trim();
+if(databaseUrl&&/(YOUR_|\[YOUR|CHANGE_ME|PLACEHOLDER)/i.test(databaseUrl)){
+  const error=new Error('DATABASE_URL still contains an example placeholder');
+  error.code='DATABASE_URL_PLACEHOLDER';
+  throw error;
+}
+if(databaseUrl){
+  try{
+    const parsed=new URL(databaseUrl);
+    if(!['postgres:','postgresql:'].includes(parsed.protocol)||!parsed.hostname||!parsed.username||!parsed.pathname||parsed.pathname==='/'){
+      const error=new Error('DATABASE_URL is not a complete PostgreSQL URL');
+      error.code='DATABASE_URL_INVALID';
+      throw error;
+    }
+  }catch(error){
+    if(error?.code)throw error;
+    const wrapped=new Error('DATABASE_URL is not a valid PostgreSQL connection URL');
+    wrapped.code='DATABASE_URL_INVALID';
+    throw wrapped;
+  }
+}
 const required = ['DB_HOST', 'DB_PORT', 'DB_NAME', 'DB_USER', 'DB_PASSWORD'];
 if (process.env.NODE_ENV === 'production' && !databaseUrl) {
   const missing = required.filter(key => !String(process.env[key] || '').trim());
