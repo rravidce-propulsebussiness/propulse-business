@@ -362,6 +362,53 @@ async function getAuthenticatedUser(id, authVersion) {
   return user;
 }
 
+async function getAuthenticatedUserBySupabaseId(supabaseUserId) {
+  const normalizedId = String(supabaseUserId || '').trim();
+  if (!normalizedId) return null;
+  const result = await pool.query(
+    `SELECT id,name,email,role,auth_version,supabase_user_id
+     FROM users
+     WHERE supabase_user_id=$1 AND is_active=TRUE`,
+    [normalizedId],
+  );
+  return result.rows[0] || null;
+}
+
+async function linkSupabaseIdentity({ appUserId, supabaseUserId, email }) {
+  const normalizedSupabaseId = String(supabaseUserId || '').trim();
+  const normalizedEmail = String(email || '').trim().toLowerCase();
+  if (!normalizedSupabaseId || !normalizedEmail) {
+    throw Object.assign(new Error('A verified Supabase identity is required'), { code: 'INVALID_SUPABASE_IDENTITY' });
+  }
+
+  try {
+    const result = await pool.query(
+      `UPDATE users
+       SET supabase_user_id=$2, updated_at=CURRENT_TIMESTAMP
+       WHERE id=$1
+         AND LOWER(email)=$3
+         AND (supabase_user_id IS NULL OR supabase_user_id=$2)
+       RETURNING id,name,email,role,auth_version,supabase_user_id`,
+      [appUserId, normalizedSupabaseId, normalizedEmail],
+    );
+    if (!result.rows[0]) {
+      throw Object.assign(
+        new Error('Supabase email must match the signed-in Propulse account email'),
+        { code: 'SUPABASE_EMAIL_MISMATCH' },
+      );
+    }
+    return result.rows[0];
+  } catch (error) {
+    if (error.code === '23505') {
+      throw Object.assign(
+        new Error('This Supabase account is already linked to another Propulse account'),
+        { code: 'SUPABASE_IDENTITY_ALREADY_LINKED' },
+      );
+    }
+    throw error;
+  }
+}
+
 async function getPublicAuthenticatedUser(user) {
   if (!user?.id) return null;
   const [profile, membership] = await Promise.all([
@@ -391,4 +438,4 @@ async function getCompanyProofDocument({ documentId, userId, isAdmin = false }) 
   return result.rows[0] || null;
 }
 
-module.exports = { signup, saveCompanyProofDocuments, getCompanyProofDocument, login, googleLogin, createPasswordReset, resetPassword, verifyToken, getUserById, getPublicAuthenticatedUser, getAuthenticatedUser, revokeAuthSessions };
+module.exports = { signup, saveCompanyProofDocuments, getCompanyProofDocument, login, googleLogin, createPasswordReset, resetPassword, verifyToken, getUserById, getPublicAuthenticatedUser, getAuthenticatedUser, getAuthenticatedUserBySupabaseId, linkSupabaseIdentity, revokeAuthSessions };
