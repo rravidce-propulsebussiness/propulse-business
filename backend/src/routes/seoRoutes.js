@@ -37,6 +37,17 @@ const CONSTRUCTION_GUIDES=[
   'choose-construction-contractor-hyderabad',
   'home-construction-checklist',
   'waterproofing-precautions-new-house',
+  'best-cement-for-house-construction',
+  'm-sand-vs-river-sand-house-construction',
+  'red-brick-vs-aac-block-house',
+  'concrete-curing-house-construction',
+  'soil-test-before-house-construction',
+  'rcc-slab-before-concrete-checklist',
+  'electrical-planning-new-house',
+  'plumbing-checklist-new-house',
+  'wall-putty-primer-paint-sequence',
+  'modular-kitchen-planning-hyderabad',
+  'wardrobe-materials-plywood-mdf-hdhmr',
 ];
 
 const PUBLIC_PATHS=[
@@ -59,6 +70,7 @@ const PUBLIC_PATHS=[
   ...TELANGANA_DISTRICTS.map(district=>'/telangana/construction/'+district),
   '/andhra-pradesh/construction',
   ...ANDHRA_PRADESH_DISTRICTS.map(district=>'/andhra-pradesh/construction/'+district),
+  '/guides',
   ...CONSTRUCTION_GUIDES.map(guide=>'/guides/'+guide),
   '/hyderabad/construction/compare-options',
   '/hyderabad/interior-designers/compare-options',
