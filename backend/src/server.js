@@ -183,7 +183,9 @@ async function readiness(req,res){
 app.get('/health/ready',readiness);
 app.get('/health',readiness);
 app.use('/api/observability',observabilityRoutes);app.use('/api/customer-flows',customerFlowRoutes);app.use('/api/auth',authRoutes);app.use('/api/notifications',notificationRoutes);app.use('/api/profile',profileRoutes);app.use('/api/admin',adminRoutes);app.use('/api/lead-partner',leadPartnerRoutes);app.use('/api/lead-reports',leadReportRoutes);app.use('/api/lead-partner/faqs',faqRoutes);app.use('/api/faqs',publicFaqRoutes);app.use('/api/experts',publicExpertRoutes);app.use('/api/upcoming-features',upcomingFeatureRoutes);app.use('/api/contact',contactRoutes);app.use('/api/homepage-media',homepageMediaRoutes);app.use('/api/admin/faqs',adminFaqRoutes);app.use('/api/leads',leadRoutes);app.use('/api/payments',paymentRoutes);app.use('/api/payment-receiving-details',paymentReceivingDetailsRoutes);app.use('/api/coupons',couponRoutes);app.use('/api/membership-plans',membershipPlanRoutes);app.use('/api/admin/commercial',adminCommercialRoutes);app.use('/api/wallet',walletRoutes);app.use('/api/investments',investmentRoutes);app.use('/api/investor/payout-account',investorPayoutAccountRoutes);app.use('/api/industries',industryRoutes);app.use('/api/services',serviceRoutes);app.use('/api/subservices',subserviceRoutes);app.use('/api/states',stateRoutes);app.use('/api/cities',cityRoutes);app.use('/api/subcities',subcityRoutes);app.use('/api/pincodes',pincodeRoutes);
-const frontendDistPath=path.resolve(__dirname,'../../frontend/dist');
+const packagedFrontendPath=path.resolve(__dirname,'../public');
+const workspaceFrontendPath=path.resolve(__dirname,'../../frontend/dist');
+const frontendDistPath=fs.existsSync(path.join(packagedFrontendPath,'index.html'))?packagedFrontendPath:workspaceFrontendPath;
 const frontendIndexPath=path.join(frontendDistPath,'index.html');
 const hasBuiltFrontend=isProduction&&fs.existsSync(frontendIndexPath);
 if(hasBuiltFrontend){
