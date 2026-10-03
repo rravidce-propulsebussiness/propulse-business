@@ -1,6 +1,6 @@
 import {HYDERABAD_SEO_ROUTES} from './hyderabadSeo.js'
 import {REGIONAL_SEO_ROUTES} from './regionalSeo.js'
-import {CONSTRUCTION_GUIDE_ROUTES} from './constructionGuides.js'
+import {CONSTRUCTION_GUIDE_HUB_ROUTE,CONSTRUCTION_GUIDE_ROUTES} from './constructionGuides.js'
 
 export const SITE_NAME='ProPulse Business'
 
@@ -76,6 +76,7 @@ export const PUBLIC_SEO_ROUTES=[
   ...CORE_PUBLIC_SEO_ROUTES,
   ...HYDERABAD_SEO_ROUTES,
   ...REGIONAL_SEO_ROUTES,
+  CONSTRUCTION_GUIDE_HUB_ROUTE,
   ...CONSTRUCTION_GUIDE_ROUTES,
 ]
 
