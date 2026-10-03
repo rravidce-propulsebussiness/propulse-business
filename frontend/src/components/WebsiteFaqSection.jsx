@@ -65,6 +65,11 @@ export default function WebsiteFaqSection({variant='home',audience='website'}){
   }
 
   useEffect(()=>{let active=true;queueMicrotask(()=>{if(active)load()});return()=>{active=false}},[audience])
+  useEffect(()=>{
+    if(!standalone)return
+    const next=String(searchParams.get('category')||'all').toLowerCase()
+    if(next!==category){setCategory(next);setOpen(null)}
+  },[searchParams,standalone,category])
 
   const categories=useMemo(()=>{
     const counts=new Map()
