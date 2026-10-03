@@ -254,6 +254,10 @@ export default function Home() {
               <Link to="/guides/2bhk-interiors-hyderabad">2BHK Interiors in Hyderabad</Link>
               <Link to="/guides/home-construction-checklist">Home Construction Checklist</Link>
               <Link to="/guides/waterproofing-precautions-new-house">Waterproofing Precautions</Link>
+              <Link to="/guides/best-cement-for-house-construction">Best Cement for House Construction</Link>
+              <Link to="/guides/m-sand-vs-river-sand-house-construction">M-Sand vs River Sand</Link>
+              <Link to="/guides/soil-test-before-house-construction">Soil Test Before House Construction</Link>
+              <Link to="/guides">View All Construction Guides</Link>
             </div>
           </div>
         </div>
