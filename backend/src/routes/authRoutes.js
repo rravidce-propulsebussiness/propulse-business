@@ -17,6 +17,7 @@ router.post('/forgot-password', recoveryLimit, authController.forgotPassword);
 router.post('/reset-password', recoveryLimit, authController.resetPassword);
 router.post('/logout', authController.logout);
 router.get('/session', authController.session);
+router.post('/supabase/link', requireAuth, authWriteLimit, authController.linkSupabaseIdentity);
 router.get('/me', requireAuth, authController.me);
 
 module.exports = router;
