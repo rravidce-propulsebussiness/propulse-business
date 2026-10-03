@@ -70,7 +70,8 @@ export default function WebsiteFaqSection({variant='home',audience='website'}){
   const categories=useMemo(()=>{
     const counts=new Map()
     faqs.forEach(item=>{const key=item.category||'general';counts.set(key,(counts.get(key)||0)+1)})
-    return [...counts.entries()].map(([key,count])=>({key,label:categoryLabel(key),count}))
+    const priority={construction:1,interiors:2,property:3,general:4,consultation:5,privacy:6}
+    return [...counts.entries()].map(([key,count])=>({key,label:categoryLabel(key),count})).sort((a,b)=>(priority[a.key]||50)-(priority[b.key]||50)||a.label.localeCompare(b.label))
   },[faqs])
 
   const visible=useMemo(()=>{
