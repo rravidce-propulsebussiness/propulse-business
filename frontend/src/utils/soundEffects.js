@@ -85,8 +85,13 @@ function categoryEnabled(type){
   return false
 }
 
+function userGestureActive(){
+  try{return Boolean(navigator.userActivation?.isActive)}catch{return false}
+}
+
 function ensureContext(){
   if(audioContext)return audioContext
+  if(!userGestureActive())return null
   const AudioContextCtor=window.AudioContext||window.webkitAudioContext
   if(!AudioContextCtor)return null
   audioContext=new AudioContextCtor()
@@ -94,6 +99,7 @@ function ensureContext(){
 }
 
 function unlock(){
+  if(!userGestureActive())return Promise.resolve(false)
   interactionReady=true
   const ctx=ensureContext()
   if(!ctx)return Promise.resolve(false)
@@ -178,8 +184,9 @@ export function installSoundEffects(){
   if(typeof window==='undefined'||installed)return
   installed=true
   readPreferences()
-  const unlockOnce=()=>unlock()
-  window.addEventListener('pointerdown',unlockOnce,{capture:true,passive:true})
+  const unlockOnce=event=>{if(event?.isTrusted!==false)unlock()}
+  window.addEventListener('click',unlockOnce,{capture:true,passive:true})
+  window.addEventListener('touchend',unlockOnce,{capture:true,passive:true})
   window.addEventListener('keydown',unlockOnce,{capture:true})
   document.addEventListener('click',event=>{
     const element=event.target?.closest?.('button,a,[role="button"],input[type="button"],input[type="submit"]')
