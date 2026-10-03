@@ -9,11 +9,37 @@ function Header(){
   </header>
 }
 
+function GuideHub(){
+  const categories=[...new Set(CONSTRUCTION_GUIDES.map(item=>item.category))]
+  return <main className="guide-page guide-hub-page">
+    <Header/>
+    <section className="guide-hero guide-hub-hero">
+      <div className="guide-breadcrumb"><Link to="/">Home</Link><span>›</span><b>Guides</b></div>
+      <span className="guide-eyebrow">PROPULSE KNOWLEDGE HUB</span>
+      <h1>Home construction and interior planning guides</h1>
+      <p>Research materials, construction quality, contractor selection, MEP planning and interiors before turning the useful details into a project-specific requirement.</p>
+      <div className="guide-actions"><Link className="primary" to="/quote?package=standard#construction">Get Construction Quote</Link><Link className="secondary" to="/packages">View Packages</Link></div>
+    </section>
+    <section className="guide-hub-index">
+      {categories.map(category=><section key={category}>
+        <div className="guide-hub-category"><span>{category.toUpperCase()}</span><h2>{category} guides</h2></div>
+        <div className="guide-hub-grid">{CONSTRUCTION_GUIDES.filter(item=>item.category===category).map(item=><Link key={item.slug} to={'/guides/'+item.slug}><span>{item.category}</span><b>{item.heading}</b><p>{item.summary}</p><small>Read guide →</small></Link>)}</div>
+      </section>)}
+    </section>
+    <section className="guide-local-links"><h2>Popular Hyderabad construction pages</h2><div><Link to="/hyderabad/construction">Construction in Hyderabad</Link><Link to="/hyderabad/construction-cost">Construction cost in Hyderabad</Link><Link to="/hyderabad/construction/uppal">Construction in Uppal</Link><Link to="/hyderabad/construction/kukatpally">Construction in Kukatpally</Link><Link to="/hyderabad/construction/gachibowli">Construction in Gachibowli</Link></div></section>
+    <section className="guide-cta"><span>FROM RESEARCH TO PROJECT BRIEF</span><h2>Use the guides to ask better construction questions</h2><p>Then add your real site, scope, package level, budget and timeline so relevant businesses can respond to one consistent requirement.</p><Link to="/quote?package=standard#construction">Start Construction Requirement</Link></section>
+  </main>
+}
+
 export default function ConstructionGuide(){
   const {guideSlug}=useParams()
+  if(!guideSlug)return <GuideHub/>
   const guide=guideBySlug(guideSlug)
-  if(!guide)return <Navigate to="/hyderabad/construction" replace/>
-  const related=CONSTRUCTION_GUIDES.filter(item=>item.slug!==guide.slug).slice(0,5)
+  if(!guide)return <Navigate to="/guides" replace/>
+  const related=[
+    ...CONSTRUCTION_GUIDES.filter(item=>item.slug!==guide.slug&&item.category===guide.category),
+    ...CONSTRUCTION_GUIDES.filter(item=>item.slug!==guide.slug&&item.category!==guide.category),
+  ].slice(0,6)
 
   return <main className="guide-page">
     <Header/>
@@ -31,6 +57,7 @@ export default function ConstructionGuide(){
       <aside className="guide-toc">
         <span>IN THIS GUIDE</span>
         {guide.sections.map((item,index)=><a key={item.heading} href={'#guide-section-'+index}>{item.heading}</a>)}
+        <Link to="/guides">Browse all guides</Link>
         <Link to="/hyderabad/construction-cost">Hyderabad construction cost guide</Link>
       </aside>
       <div className="guide-article">
