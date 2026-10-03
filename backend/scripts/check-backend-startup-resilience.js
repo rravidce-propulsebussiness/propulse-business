@@ -4,8 +4,14 @@ const path = require('node:path');
 
 const server = fs.readFileSync(path.join(__dirname, '..', 'src', 'server.js'), 'utf8');
 
-const listenIndex = server.indexOf("server=app.listen(PORT,'0.0.0.0'");
-const dependencyInitIndex = server.indexOf('void initializeDependencies();');
+const startFunctionIndex = server.indexOf('async function start(){');
+assert.ok(startFunctionIndex >= 0, 'Backend start function must exist');
+const startCallIndex = server.indexOf('\nstart();', startFunctionIndex);
+assert.ok(startCallIndex > startFunctionIndex, 'Backend start invocation must exist');
+const startFunction = server.slice(startFunctionIndex, startCallIndex);
+
+const listenIndex = startFunction.indexOf("server=app.listen(PORT,'0.0.0.0'");
+const dependencyInitIndex = startFunction.indexOf('void initializeDependencies();');
 assert.ok(listenIndex >= 0, 'Backend must bind the HTTP listener');
 assert.ok(dependencyInitIndex > listenIndex, 'HTTP listener must bind before dependency initialization starts');
 
