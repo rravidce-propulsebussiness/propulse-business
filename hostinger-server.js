@@ -21,6 +21,7 @@ const backendEnv={
   ...process.env,
   PORT:String(backendPort),
   NODE_ENV:process.env.NODE_ENV||'production',
+  SERVE_FRONTEND_FROM_BACKEND:'false',
   RUN_BACKGROUND_JOBS_IN_WEB:process.env.RUN_BACKGROUND_JOBS_IN_WEB||'true',
   REQUIRE_BACKGROUND_WORKER:process.env.REQUIRE_BACKGROUND_WORKER||'false',
 };
