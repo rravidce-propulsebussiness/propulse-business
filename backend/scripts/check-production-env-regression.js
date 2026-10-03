@@ -51,6 +51,17 @@ const valid = run({});
 assert.equal(valid.status, 0, valid.stderr || valid.stdout);
 assert.match(valid.stdout, /Production environment check passed/);
 
+const urlOnly = run({
+  DATABASE_URL: 'postgresql://postgres.project-ref:password@pooler.example.com:5432/postgres',
+  DB_HOST: '',
+  DB_PORT: '',
+  DB_NAME: '',
+  DB_USER: '',
+  DB_PASSWORD: '',
+});
+assert.equal(urlOnly.status, 0, urlOnly.stderr || urlOnly.stdout);
+assert.match(urlOnly.stdout, /Production environment check passed/);
+
 const unsafe = run({
   JWT_SECRET: 'short',
   CORS_ORIGIN: '*',
