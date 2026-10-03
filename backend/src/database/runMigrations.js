@@ -5,6 +5,7 @@ const pool = require('../config/database');
 
 const migrationsDir = path.join(__dirname, 'migrations');
 const baselineSchemaPath = path.join(__dirname, 'schema.sql');
+const catalogSeedPath = path.join(__dirname, 'catalogSeed.sql');
 const MIGRATION_LOCK_KEY = 'propulse:schema-migrations';
 
 async function ensureLedger(client) {
@@ -104,7 +105,8 @@ function getMigrationFiles() {
         .sort()
         .map(f => path.join(migrationsDir, f))
     : [];
-  return fs.existsSync(baselineSchemaPath) ? [baselineSchemaPath, ...dated] : dated;
+  const bootstrap = [baselineSchemaPath, catalogSeedPath].filter(filePath => fs.existsSync(filePath));
+  return [...bootstrap, ...dated];
 }
 
 async function applyFile(client, filePath, appliedFilenames = null) {
