@@ -1,5 +1,14 @@
 const section=(heading,body,bullets=[])=>({heading,body,bullets})
 
+export const CONSTRUCTION_GUIDE_HUB_ROUTE={
+  path:'/guides',
+  type:'guide-hub',
+  title:'Home Construction & Interior Guides | ProPulse',
+  description:'Practical guides for home construction, materials, concrete quality, contractor selection, waterproofing, electrical, plumbing and interiors.',
+  heading:'Home construction and interior planning guides',
+  summary:'Research common construction and interior decisions, then turn the useful details into a project-specific requirement.',
+}
+
 export const CONSTRUCTION_GUIDES=[
   {
     slug:'best-steel-for-house-construction',
@@ -353,12 +362,3 @@ export const CONSTRUCTION_GUIDE_ROUTES=CONSTRUCTION_GUIDES.map(item=>({
   searchTerms:item.searchTerms,
 }))
 
-
-export const CONSTRUCTION_GUIDE_HUB_ROUTE={
-  path:'/guides',
-  type:'guide-hub',
-  title:'Home Construction & Interior Guides | ProPulse',
-  description:'Practical guides for home construction, materials, concrete quality, contractor selection, waterproofing, electrical, plumbing and interiors.',
-  heading:'Home construction and interior planning guides',
-  summary:'Research common construction and interior decisions, then turn the useful details into a project-specific requirement.',
-}
