@@ -78,7 +78,7 @@ export const PUBLIC_SEO_ROUTES=[
   ...REGIONAL_SEO_ROUTES,
   CONSTRUCTION_GUIDE_HUB_ROUTE,
   ...CONSTRUCTION_GUIDE_ROUTES,
-]
+].filter(Boolean)
 
 export const PUBLIC_SEO_PATHS=new Set(PUBLIC_SEO_ROUTES.map(route=>route.path))
 
