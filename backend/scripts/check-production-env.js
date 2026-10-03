@@ -23,12 +23,25 @@ function parseOrigin(raw, key) {
 
 if (value('NODE_ENV') !== 'production') fail('NODE_ENV must be production (this command is intended for the deployed staging/production environment, not your normal local development .env)');
 
-for (const key of ['DB_HOST', 'DB_PORT', 'DB_NAME', 'DB_USER', 'DB_PASSWORD']) {
-  if (!value(key)) fail(`${key} is required`);
+const databaseUrl = value('DATABASE_URL');
+if (!databaseUrl) {
+  for (const key of ['DB_HOST', 'DB_PORT', 'DB_NAME', 'DB_USER', 'DB_PASSWORD']) {
+    if (!value(key)) fail(`${key} is required when DATABASE_URL is not set`);
+  }
 }
-
+if (databaseUrl) {
+  try {
+    const url = new URL(databaseUrl);
+    if (!['postgres:','postgresql:'].includes(url.protocol)) fail('DATABASE_URL must use postgres:// or postgresql://');
+    if (!url.hostname) fail('DATABASE_URL must include a database host');
+    if (!url.username) fail('DATABASE_URL must include a database user');
+    if (!url.pathname || url.pathname === '/') fail('DATABASE_URL must include a database name');
+  } catch {
+    fail('DATABASE_URL is not a valid PostgreSQL connection URL');
+  }
+}
 const dbPort = Number(value('DB_PORT'));
-if (value('DB_PORT') && (!Number.isInteger(dbPort) || dbPort < 1 || dbPort > 65535)) fail('DB_PORT must be a valid TCP port');
+if (!databaseUrl && value('DB_PORT') && (!Number.isInteger(dbPort) || dbPort < 1 || dbPort > 65535)) fail('DB_PORT must be a valid TCP port');
 
 const jwtSecret = value('JWT_SECRET');
 if (jwtSecret.length < 32) fail('JWT_SECRET must be at least 32 characters');
@@ -48,7 +61,10 @@ const trustProxy = value('TRUST_PROXY');
 if (/^true$/i.test(trustProxy)) fail('TRUST_PROXY=true is too broad for production; configure a trusted hop count/address or false');
 if (!trustProxy) warn('TRUST_PROXY is empty; use false for direct connections or configure the actual trusted proxy');
 
-const dbHost = value('DB_HOST').toLowerCase();
+let dbHost = value('DB_HOST').toLowerCase();
+if (databaseUrl) {
+  try { dbHost = new URL(databaseUrl).hostname.toLowerCase(); } catch {}
+}
 const localDb = ['localhost', '127.0.0.1', '::1'].includes(dbHost);
 const dbSsl = /^(1|true|require)$/i.test(value('DB_SSL'));
 if (!localDb && !dbSsl) warn('DB_SSL is disabled for a non-local database host; verify the database is reached only over a trusted private network');
