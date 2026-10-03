@@ -361,4 +361,3 @@ export const CONSTRUCTION_GUIDE_ROUTES=CONSTRUCTION_GUIDES.map(item=>({
   summary:item.summary,
   searchTerms:item.searchTerms,
 }))
-
