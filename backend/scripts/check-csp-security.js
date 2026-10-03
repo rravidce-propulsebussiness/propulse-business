@@ -21,6 +21,7 @@ if (frontendMatch) {
   const csp = frontendMatch[1];
   assert(csp.includes("default-src 'self'"), 'Frontend CSP has self default');
   assert(csp.includes("script-src 'self' https://accounts.google.com/gsi/client"), 'Frontend CSP allows Google GIS script only');
+  assert(csp.includes("style-src 'self' 'unsafe-inline' https://accounts.google.com/gsi/style"), 'Frontend CSP allows Google GIS stylesheet');
   assert(csp.includes("frame-src https://accounts.google.com/gsi/"), 'Frontend CSP allows Google GIS iframe');
   assert(csp.includes("connect-src 'self' https://accounts.google.com/gsi/"), 'Frontend CSP allows same-origin and Google GIS connections');
   assert(csp.includes("object-src 'none'"), 'Frontend CSP disables plugin/object content');
@@ -31,6 +32,7 @@ if (frontendMatch) {
 assert(server.includes('Content-Security-Policy'), 'Backend sends a Content-Security-Policy header');
 assert(server.includes("default-src 'none'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'; form-action 'none'"), 'Backend API CSP is restrictive');
 assert(server.includes("X-Frame-Options','DENY"), 'Backend denies framing with X-Frame-Options');
+assert(server.includes("Cross-Origin-Opener-Policy','same-origin-allow-popups"), 'Frontend responses allow Google popup communication with COOP');
 
 if (process.exitCode) {
   process.exit(process.exitCode);
