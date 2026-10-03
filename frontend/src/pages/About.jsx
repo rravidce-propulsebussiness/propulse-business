@@ -109,6 +109,21 @@ export default function About(){
       </div>
     </section>
 
+    <section className="ab-industry-experience" id="ab-industry-experience" aria-labelledby="ab-industry-experience-title">
+      <div className="ab-industry-experience-copy">
+        <span>PRIOR OPERATING EXPERIENCE</span>
+        <h2 id="ab-industry-experience-title">Hands-on construction and interiors experience in Hyderabad</h2>
+        <p>Before ProPulse, our operating background included hands-on residential construction and interior execution work in Hyderabad. That practical experience helped shape ProPulse around clearer scopes, comparable quotations, locality-aware requirements and better project conversations.</p>
+        <p>We use that experience to design customer flows that reflect how real construction and interior projects are planned, quoted and discussed.</p>
+      </div>
+      <div className="ab-industry-experience-facts">
+        <article><span><Icon name="building"/></span><div><small>Background</small><b>Construction & Interiors</b></div></article>
+        <article><span><Icon name="pin"/></span><div><small>Operating Area</small><b>Hyderabad</b></div></article>
+        <article><span><Icon name="home"/></span><div><small>Experience</small><b>Residential Construction</b></div></article>
+        <article><span><Icon name="bulb"/></span><div><small>Related Work</small><b>Interiors & Home Automation</b></div></article>
+      </div>
+    </section>
+
     <section className="ab-stats">
       <article><span><Icon name="home"/></span><div><b>3</b><small>Core Customer Journeys</small></div></article>
       <article><span><Icon name="people"/></span><div><b>{activeIndustries.length||'Admin'}</b><small>{activeIndustries.length?'Active Industries':'Managed Categories'}</small></div></article>

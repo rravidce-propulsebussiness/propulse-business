@@ -1,4 +1,6 @@
 import {HYDERABAD_SEO_ROUTES} from './hyderabadSeo.js'
+import {REGIONAL_SEO_ROUTES} from './regionalSeo.js'
+import {CONSTRUCTION_GUIDE_HUB_ROUTE,CONSTRUCTION_GUIDE_ROUTES} from './constructionGuides.js'
 
 export const SITE_NAME='ProPulse Business'
 
@@ -50,7 +52,7 @@ export const CORE_PUBLIC_SEO_ROUTES=[
   {
     path:'/about',
     title:'About ProPulse | Construction, Interiors & Real Estate',
-    description:'Learn about ProPulse and how the platform helps customers start construction, interior and real-estate requirements with clearer information and relevant businesses.',
+    description:'Learn about ProPulse, its Hyderabad construction and interiors operating background, and how the platform helps customers create clearer requirements.',
     heading:'About ProPulse Business',
     summary:'ProPulse is a customer starting point for structured construction, interiors and real-estate requirements.',
   },
@@ -63,17 +65,20 @@ export const CORE_PUBLIC_SEO_ROUTES=[
   },
   {
     path:'/faq',
-    title:'ProPulse FAQs | Construction, Interiors & Real Estate',
-    description:'Read answers to common questions about ProPulse construction, interior and real-estate requirements, quotes, professionals and the customer journey.',
-    heading:'Frequently asked questions about ProPulse',
-    summary:'Find quick answers about submitting requirements, receiving responses and using ProPulse.',
+    title:'Construction, Interior & Real Estate FAQs | ProPulse',
+    description:'Search practical construction, interior and real-estate questions about lintels, honeycombing, cracks, steel, cement, interiors, RERA, carpet area and property checks.',
+    heading:'Construction, interior and real-estate questions answered',
+    summary:'Search practical homeowner questions by category and use the answers to plan better construction, interior and property decisions.',
   },
 ]
 
 export const PUBLIC_SEO_ROUTES=[
   ...CORE_PUBLIC_SEO_ROUTES,
   ...HYDERABAD_SEO_ROUTES,
-]
+  ...REGIONAL_SEO_ROUTES,
+  CONSTRUCTION_GUIDE_HUB_ROUTE,
+  ...CONSTRUCTION_GUIDE_ROUTES,
+].filter(Boolean)
 
 export const PUBLIC_SEO_PATHS=new Set(PUBLIC_SEO_ROUTES.map(route=>route.path))
 

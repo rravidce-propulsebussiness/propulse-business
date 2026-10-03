@@ -119,7 +119,7 @@ export default function EstimatorWizard({ flowKey }) {
   if (!flow) return <main className="rq-page"><div className="rq-shell rq-status error">{state.error || 'This calculator is unavailable.'}<Link to="/">Back home</Link></div></main>
 
   return <main className="rq-page">
-    <header className="rq-top"><Link to="/"><img src="/brand/propulse-logo.svg" alt="ProPulse Business" /></Link><Link to="/">← Back to home</Link></header>
+    <header className="rq-top"><Link to="/"><img src="/brand/propulse-logo.svg" alt="ProPulse Business" /></Link><Link to={flowKey==='construction-cost-estimator'?'/hyderabad/construction-cost':'/'}>← {flowKey==='construction-cost-estimator'?'Back to Hyderabad cost guide':'Back to home'}</Link></header>
     <div className="rq-shell estimator-shell">
       <aside className="rq-side">
         <span>PROPULSE ESTIMATOR</span>

@@ -4,16 +4,16 @@ import './AdminFaqs.css';
 
 const categories=[['general','General'],['consultation','Consultation'],['construction','Construction'],['interiors','Interiors'],['property','Real Estate'],['privacy','Privacy'],['leads','Leads'],['payments','Payments'],['withdrawals','Withdrawals'],['account','Account'],['reports','Reports']];
 const audiences=[
-  ['homeowner','Homeowner FAQs','Shown on the public customer-acquisition homepage.'],
+  ['homeowner','Homeowner FAQs','Shown on the searchable public Construction, Interiors and Real Estate FAQ centre.'],
   ['website','Professional / Business FAQs','Shown on the public Professionals FAQ and logged-in business FAQ experience.'],
   ['investor','Investor FAQs','Shown on the Investor FAQ page.'],
   ['lead_partner','Lead Partner FAQs','Shown in the Lead Partner portal.']
 ];
-const emptyForm=()=>({category:'general',question:'',answer:'',sort_order:10,is_active:true});
+const emptyForm=(audience='homeowner')=>({category:audience==='homeowner'?'construction':'general',question:'',answer:'',sort_order:10,is_active:true});
 
 export default function AdminFaqs(){
   const [audience,setAudience]=useState('homeowner');
-  const [rows,setRows]=useState([]),[form,setForm]=useState(emptyForm),[editId,setEditId]=useState(null),[loading,setLoading]=useState(true),[saving,setSaving]=useState(false),[error,setError]=useState(''),[ok,setOk]=useState(''),[search,setSearch]=useState('');
+  const [rows,setRows]=useState([]),[form,setForm]=useState(()=>emptyForm('homeowner')),[editId,setEditId]=useState(null),[loading,setLoading]=useState(true),[saving,setSaving]=useState(false),[error,setError]=useState(''),[ok,setOk]=useState(''),[search,setSearch]=useState('');
 
   async function load(audienceKey=audience){
     try{
@@ -31,11 +31,11 @@ export default function AdminFaqs(){
 
   function switchAudience(key){
     if(key===audience)return;
-    setAudience(key);setEditId(null);setForm(emptyForm());setSearch('');setOk('');setError('');
+    setAudience(key);setEditId(null);setForm(emptyForm(key));setSearch('');setOk('');setError('');
   }
 
   function reset(){
-    setEditId(null);setForm(emptyForm());setOk('');setError('');
+    setEditId(null);setForm(emptyForm(audience));setOk('');setError('');
   }
 
   function edit(row){
@@ -52,7 +52,7 @@ export default function AdminFaqs(){
       const body={...form,audience,sort_order:Number(form.sort_order)||0};
       await apiRequest(editId?'/admin/faqs/'+editId:'/admin/faqs',{method:editId?'PUT':'POST',body:JSON.stringify(body)});
       const successMessage=editId?'FAQ updated successfully.':'FAQ created successfully.';
-      setEditId(null);setForm(emptyForm());setOk(successMessage);
+      setEditId(null);setForm(emptyForm(audience));setOk(successMessage);
       await load(audience);
     }catch(e){
       setError(e.message||'Unable to save FAQ');

@@ -1,6 +1,8 @@
 require('dotenv').config();
 const express=require('express');
 const crypto=require('crypto');
+const fs=require('fs');
+const path=require('path');
 const cors=require('cors');
 const pool=require('./config/database');
 const {runMigrations}=require('./database/runMigrations');
@@ -63,10 +65,16 @@ const httpMaxRequestsPerSocket=Math.min(10000,Math.max(1,Math.floor(Number(proce
 const slowRequestMs=Math.min(60000,Math.max(250,Number(process.env.SLOW_REQUEST_MS)||2000));
 const operationalMonitoringEnabled=envFlag('OPERATIONAL_MONITORING_ENABLED',true);
 const runMigrationsOnStartup=envFlag('RUN_MIGRATIONS_ON_STARTUP',true);
+const serveFrontendFromBackend=envFlag('SERVE_FRONTEND_FROM_BACKEND',false);
+const frontendDist=path.resolve(__dirname,'../../frontend/dist');
+const frontendIndexPath=path.join(frontendDist,'index.html');
+const frontendDistAvailable=serveFrontendFromBackend&&fs.existsSync(frontendIndexPath);
 const runBackgroundJobsInWeb=envFlag('RUN_BACKGROUND_JOBS_IN_WEB',true);
 const requireBackgroundWorker=envFlag('REQUIRE_BACKGROUND_WORKER',false);
 const workerHeartbeatMaxAgeSeconds=Math.min(600,Math.max(30,Math.floor(Number(process.env.WORKER_HEARTBEAT_MAX_AGE_SECONDS)||120)));
 const trustProxy=String(process.env.TRUST_PROXY||'').trim();
+const backendOnlyPath=requestPath=>requestPath==='/robots.txt'||requestPath==='/sitemap.xml'||requestPath==='/health'||requestPath.startsWith('/health/')||requestPath.startsWith('/api')||requestPath.startsWith('/uploads');
+const privateFrontendPath=requestPath=>/^\/(admin|login|signup|forgot-password|reset-password|profile|wallet|membership|notifications|purchased-leads|my-leads|investment|lead-partner|requirements|estimate|professional-contact|professionals|upcoming-features)(\/|$)/.test(requestPath);
 if(trustProxy) app.set('trust proxy',trustProxy==='false'?false:trustProxy==='true'?true:Number.isNaN(Number(trustProxy))?trustProxy:Number(trustProxy));
 app.disable('x-powered-by');
 app.use((req,res,next)=>{
