@@ -124,7 +124,12 @@ app.use('/api/customer-flows/:key/:leadId/attachments',largeJsonFor('POST'));
 app.use('/api/customer-flows',express.json({limit:'64kb'}));
 app.use(express.json({limit:DEFAULT_JSON_BYTES}));
 app.use('/api',(req,res,next)=>{res.setHeader('Cache-Control','no-store, private');res.setHeader('Pragma','no-cache');res.setHeader('Expires','0');next();});
-app.use('/api',(req,res,next)=>{if(!allowDegradedStartup||startupReady)return next();return res.status(503).json({error:'Service is initializing',database:'unavailable',retryable:true});});
+app.use('/api',(req,res,next)=>{
+  if(!allowDegradedStartup||startupReady)return next();
+  const safeBootstrapGet=req.method==='GET'&&(req.path==='/auth/session'||req.path==='/sound-settings');
+  if(safeBootstrapGet)return next();
+  return res.status(503).json({error:'Service is initializing',database:'unavailable',retryable:true});
+});
 app.use('/api',csrfProtection);
 const apiGlobalRateLimitConfig=getApiGlobalRateLimitConfig({isProduction});
 const apiRateLimit=rateLimit({...apiGlobalRateLimitConfig,scope:'global'});
@@ -172,9 +177,18 @@ async function readiness(req,res){
   if(!databaseReady)console.error(`[${req.requestId}] Readiness database check failed:`,database.reason?.message||database.reason);
   if(!storageReady)console.error(`[${req.requestId}] Readiness storage check failed:`,storage.reason?.message||storage.reason);
   if(requireBackgroundWorker&&!workerReady)console.error(`[${req.requestId}] Readiness worker check failed: latest heartbeat age=${workerAgeSeconds??'missing'}s`);
+  const startupError=startupFailure?{
+    code:String(startupFailure.code||startupFailure.cause?.code||'STARTUP_FAILURE').slice(0,80),
+    kind:/password|authentication/i.test(String(startupFailure.message||''))?'authentication':
+      /certificate|self signed|ssl/i.test(String(startupFailure.message||''))?'ssl':
+      /ENOTFOUND|getaddrinfo|dns/i.test(String(startupFailure.message||''))?'dns':
+      /ECONNREFUSED|connect/i.test(String(startupFailure.message||''))?'connection':
+      /timeout/i.test(String(startupFailure.message||''))?'timeout':'startup'
+  }:null;
   return res.status(503).json({
     status:'error',
     startup:startupReady?'ready':(startupFailure?'degraded':'initializing'),
+    startupError,
     database:databaseReady?'connected':'unavailable',
     storage:storageReady?'ready':'unavailable',
     worker:requireBackgroundWorker?(workerReady?'fresh':'unavailable'):'not-required'
