@@ -4,6 +4,26 @@ import { publicRequest } from '../utils/auth'
 import { homeownerSeoFaqs } from '../seo/faqKnowledge'
 import './WebsiteFaqSection.css'
 
+const HOMEOWNER_PRIMARY_CATEGORIES=new Set(['construction','interiors','property'])
+const HOMEOWNER_BASELINE_READY_COUNT=100
+
+function normalizeQuestion(value){
+  return String(value||'').trim().toLowerCase().replace(/\s+/g,' ')
+}
+
+function resolveHomeownerFaqs(remote,defaults){
+  const primaryRemote=remote.filter(item=>HOMEOWNER_PRIMARY_CATEGORIES.has(String(item?.category||'').toLowerCase()))
+  if(primaryRemote.length>=HOMEOWNER_BASELINE_READY_COUNT)return primaryRemote
+  const byQuestion=new Map(primaryRemote.map(item=>[normalizeQuestion(item.question),item]))
+  const merged=defaults.map(item=>byQuestion.get(normalizeQuestion(item.question))||item)
+  const known=new Set(merged.map(item=>normalizeQuestion(item.question)))
+  for(const item of primaryRemote){
+    const key=normalizeQuestion(item.question)
+    if(!known.has(key)){merged.push(item);known.add(key)}
+  }
+  return merged
+}
+
 const CATEGORY_LABELS={
   general:'General',
   leads:'Leads',
@@ -39,7 +59,8 @@ export default function WebsiteFaqSection({variant='home',audience='website'}){
   const [error,setError]=useState('')
   const [open,setOpen]=useState(null)
   const [search,setSearch]=useState('')
-  const initialCategory=standalone?String(searchParams.get('category')||'all').toLowerCase():'all'
+  const requestedCategory=standalone?String(searchParams.get('category')||'all').toLowerCase():'all'
+  const initialCategory=audience==='homeowner'&&requestedCategory!=='all'&&!HOMEOWNER_PRIMARY_CATEGORIES.has(requestedCategory)?'all':requestedCategory
   const [category,setCategory]=useState(initialCategory)
 
   async function load(){
@@ -49,7 +70,7 @@ export default function WebsiteFaqSection({variant='home',audience='website'}){
       const data=await publicRequest('/faqs?audience='+encodeURIComponent(audience))
       const remote=Array.isArray(data)?data.filter(item=>item?.is_active!==false):[]
       const defaults=audience==='homeowner'?homeownerSeoFaqs():[]
-      const resolved=remote.length?remote:defaults
+      const resolved=audience==='homeowner'?resolveHomeownerFaqs(remote,defaults):(remote.length?remote:defaults)
       setFaqs(resolved)
       setOpen(current=>{
         if(resolved.some(item=>item.id===current))return current
@@ -67,9 +88,11 @@ export default function WebsiteFaqSection({variant='home',audience='website'}){
   useEffect(()=>{let active=true;queueMicrotask(()=>{if(active)load()});return()=>{active=false}},[audience])
   useEffect(()=>{
     if(!standalone)return
-    const next=String(searchParams.get('category')||'all').toLowerCase()
+    const requested=String(searchParams.get('category')||'all').toLowerCase()
+    const next=audience==='homeowner'&&requested!=='all'&&!HOMEOWNER_PRIMARY_CATEGORIES.has(requested)?'all':requested
     if(next!==category){setCategory(next);setOpen(null)}
-  },[searchParams,standalone,category])
+    if(next==='all'&&requested!=='all')setSearchParams({}, {replace:true})
+  },[searchParams,standalone,category,audience,setSearchParams])
 
   const categories=useMemo(()=>{
     const counts=new Map()
