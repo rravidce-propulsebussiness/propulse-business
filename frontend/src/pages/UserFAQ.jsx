@@ -4,6 +4,6 @@ import WebsiteFaqSection from '../components/WebsiteFaqSection'
 export default function UserFAQ(){
   return <div className="website-faq-page">
     <UserHeader/>
-    <WebsiteFaqSection variant="page"/>
+    <WebsiteFaqSection variant="page" audience="homeowner"/>
   </div>
 }
