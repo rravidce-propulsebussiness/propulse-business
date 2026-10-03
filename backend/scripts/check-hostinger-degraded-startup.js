@@ -13,6 +13,9 @@ assert(server.includes("req.path==='/cities'"),'degraded mode serves empty city 
 assert(server.includes("req.path==='/homepage-media'"),'degraded mode serves empty homepage media fallback');
 assert(server.includes("req.path==='/support-chat/config'"),'degraded mode disables support chat safely');
 assert(server.includes("req.path==='/faqs'"),'degraded mode serves empty FAQ fallback');
+assert(server.includes("req.path==='/industries'"),'degraded mode serves empty industry bootstrap fallback');
+assert(server.includes("req.path==='/leads'"),'degraded mode serves explicit marketplace unavailable response');
+assert(server.includes("unavailable:true"),'degraded marketplace response is distinguishable from an empty marketplace');
 assert(server.includes("X-Backend-Degraded"),'degraded public bootstrap responses are marked for diagnostics');
 assert(server.includes("degraded:true"),'degraded bootstrap fallbacks are explicitly marked');
 assert(server.includes("scheduleStartupRetry"),'failed Hostinger startup schedules automatic retries');
