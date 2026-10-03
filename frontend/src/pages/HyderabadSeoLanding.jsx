@@ -117,6 +117,12 @@ function ServicePage({entry,service}){
         <Link to="/guides/2bhk-interiors-hyderabad"><span>INTERIORS</span><b>2BHK interiors in Hyderabad</b><small>Room scope, materials and quote comparison →</small></Link>
         <Link to="/guides/home-construction-checklist"><span>PLANNING</span><b>Home construction checklist</b><small>Plot to handover planning stages →</small></Link>
         <Link to="/guides/waterproofing-precautions-new-house"><span>WATERPROOFING</span><b>Waterproofing precautions for a new house</b><small>Roofs, toilets, balconies and testing →</small></Link>
+        <Link to="/guides/best-cement-for-house-construction"><span>MATERIALS</span><b>Best cement for house construction</b><small>OPC, PPC, PSC, standards and site storage →</small></Link>
+        <Link to="/guides/m-sand-vs-river-sand-house-construction"><span>MATERIALS</span><b>M-sand vs river sand</b><small>Grading, source quality and application checks →</small></Link>
+        <Link to="/guides/soil-test-before-house-construction"><span>FOUNDATION</span><b>Do you need a soil test before construction?</b><small>Investigation, foundation inputs and planning →</small></Link>
+        <Link to="/guides/electrical-planning-new-house"><span>MEP</span><b>Electrical planning for a new house</b><small>Loads, points, circuits and future readiness →</small></Link>
+        <Link to="/guides/modular-kitchen-planning-hyderabad"><span>INTERIORS</span><b>Modular kitchen planning in Hyderabad</b><small>Layout, materials, hardware and appliances →</small></Link>
+        <Link to="/guides"><span>ALL GUIDES</span><b>Browse the ProPulse knowledge hub</b><small>Materials, quality, MEP, finishes and interiors →</small></Link>
       </div>
     </section>}
 
@@ -249,6 +255,12 @@ function LocalityPage({entry,service,locality}){
         <Link to="/guides/prevent-cracks-in-house"><span>QUALITY</span><b>Precautions to reduce cracks in a new house</b><small>Design, concrete, curing, masonry and movement detailing →</small></Link>
         <Link to="/guides/home-construction-checklist"><span>PLANNING</span><b>Home construction checklist for {locality.name}</b><small>Plot, design, structure, services, finishes and handover →</small></Link>
         <Link to="/guides/waterproofing-precautions-new-house"><span>WATERPROOFING</span><b>Waterproofing precautions for a new house</b><small>Roofs, toilets, balconies, penetrations and testing →</small></Link>
+        <Link to="/guides/best-cement-for-house-construction"><span>MATERIALS</span><b>Best cement for house construction in {locality.name}</b><small>OPC, PPC, PSC, standards and storage →</small></Link>
+        <Link to="/guides/m-sand-vs-river-sand-house-construction"><span>MATERIALS</span><b>M-sand vs river sand for a home in {locality.name}</b><small>Grading, quality and application comparison →</small></Link>
+        <Link to="/guides/soil-test-before-house-construction"><span>FOUNDATION</span><b>Soil test before building in {locality.name}</b><small>Why site conditions matter before foundation design →</small></Link>
+        <Link to="/guides/electrical-planning-new-house"><span>MEP</span><b>Electrical planning for a new house in {locality.name}</b><small>Points, loads, circuits and future readiness →</small></Link>
+        <Link to="/guides/modular-kitchen-planning-hyderabad"><span>INTERIORS</span><b>Modular kitchen planning in {locality.name}</b><small>Layout, materials, hardware and appliance coordination →</small></Link>
+        <Link to="/guides"><span>ALL GUIDES</span><b>Browse all home construction guides</b><small>Cement, sand, blocks, curing, MEP, finishes and interiors →</small></Link>
       </div>
     </section>
 
