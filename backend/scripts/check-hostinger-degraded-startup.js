@@ -8,6 +8,12 @@ assert(server.includes("frontend remains available in degraded mode"),'startup f
 assert(server.includes("Service is initializing"),'API returns explicit retryable degraded response');
 assert(server.includes("req.path==='/auth/session'"),'degraded mode serves anonymous-safe auth session fallback');
 assert(server.includes("req.path==='/sound-settings'"),'degraded mode serves default public sound settings');
+assert(server.includes("req.path==='/contact'"),'degraded mode serves safe public contact fallback');
+assert(server.includes("req.path==='/cities'"),'degraded mode serves empty city bootstrap fallback');
+assert(server.includes("req.path==='/homepage-media'"),'degraded mode serves empty homepage media fallback');
+assert(server.includes("req.path==='/support-chat/config'"),'degraded mode disables support chat safely');
+assert(server.includes("req.path==='/faqs'"),'degraded mode serves empty FAQ fallback');
+assert(server.includes("X-Backend-Degraded"),'degraded public bootstrap responses are marked for diagnostics');
 assert(server.includes("degraded:true"),'degraded bootstrap fallbacks are explicitly marked');
 assert(server.includes("scheduleStartupRetry"),'failed Hostinger startup schedules automatic retries');
 assert(server.includes("STARTUP_RETRY_MS"),'Hostinger startup retry interval is configurable');
