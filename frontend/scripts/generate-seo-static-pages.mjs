@@ -46,7 +46,7 @@ function absolute(urlPath){
 }
 
 function baseLinks(route){
-  const links=[['Home','/'],['Hyderabad','/hyderabad'],['Get Quote','/quote'],['Find Professionals','/experts'],['Packages','/packages'],['Projects','/projects'],['How It Works','/how-it-works'],['About','/about'],['Contact','/contact']]
+  const links=[['Home','/'],['Hyderabad','/hyderabad'],['Guides','/guides'],['Get Quote','/quote'],['Find Professionals','/experts'],['Packages','/packages'],['Projects','/projects'],['How It Works','/how-it-works'],['About','/about'],['Contact','/contact']]
   if(route.type==='city-service'||route.type==='local-service')links.push(['Compare Hyderabad options','/hyderabad/'+route.serviceSlug+'/compare-options'])
   return links
 }
@@ -93,6 +93,12 @@ function localityContent(route){
       '<li><a href="/guides/prevent-cracks-in-house">Precautions to reduce cracks in a new house</a></li>'+
       '<li><a href="/guides/home-construction-checklist">Home construction checklist</a></li>'+
       '<li><a href="/guides/waterproofing-precautions-new-house">Waterproofing precautions for a new house</a></li>'+
+      '<li><a href="/guides/best-cement-for-house-construction">Best cement for house construction in '+escapeHtml(locality.name)+'</a></li>'+
+      '<li><a href="/guides/m-sand-vs-river-sand-house-construction">M-sand vs river sand for a home in '+escapeHtml(locality.name)+'</a></li>'+
+      '<li><a href="/guides/soil-test-before-house-construction">Soil test before building in '+escapeHtml(locality.name)+'</a></li>'+
+      '<li><a href="/guides/electrical-planning-new-house">Electrical planning for a new house in '+escapeHtml(locality.name)+'</a></li>'+
+      '<li><a href="/guides/modular-kitchen-planning-hyderabad">Modular kitchen planning in '+escapeHtml(locality.name)+'</a></li>'+
+      '<li><a href="/guides">Browse all construction and interior guides</a></li>'+
     '</ul>'+
     '<h2>Nearby construction areas</h2><ul>'+nearbyCards+'</ul>'+
     '<p><a href="/hyderabad/construction">View all Hyderabad construction areas</a> · <a href="/hyderabad/construction-cost">Hyderabad construction cost guide</a></p>'+
@@ -117,17 +123,24 @@ function costGuideContent(route){
 
 
 function guideContent(route){
+  if(route.type==='guide-hub'){
+    const categories=[...new Set(CONSTRUCTION_GUIDES.map(item=>item.category))]
+    return '<section style="padding:10px 0 42px">'+categories.map(category=>{
+      const links=CONSTRUCTION_GUIDES.filter(item=>item.category===category).map(item=>'<li><a href="/guides/'+escapeHtml(item.slug)+'">'+escapeHtml(item.heading)+'</a> — '+escapeHtml(item.summary)+'</li>').join('')
+      return '<h2>'+escapeHtml(category)+' guides</h2><ul>'+links+'</ul>'
+    }).join('')+'<p><a href="/quote?package=standard#construction">Get construction quote</a> · <a href="/packages">View packages</a></p></section>'
+  }
   if(route.type!=='construction-guide')return ''
   const guide=guideBySlug(route.guideSlug)
   if(!guide)return ''
   const sections=guide.sections.map((item,index)=>'<section style="padding:14px 0"><p style="font-weight:700;color:#f05b24">'+String(index+1).padStart(2,'0')+'</p><h2>'+escapeHtml(item.heading)+'</h2><p style="max-width:850px;line-height:1.65">'+escapeHtml(item.body)+'</p>'+(item.bullets?.length?'<ul>'+item.bullets.map(b=>'<li>'+escapeHtml(b)+'</li>').join('')+'</ul>':'')+'</section>').join('')
-  const related=CONSTRUCTION_GUIDES.filter(item=>item.slug!==guide.slug).slice(0,5).map(item=>'<li><a href="/guides/'+escapeHtml(item.slug)+'">'+escapeHtml(item.heading)+'</a></li>').join('')
+  const related=[...CONSTRUCTION_GUIDES.filter(item=>item.slug!==guide.slug&&item.category===guide.category),...CONSTRUCTION_GUIDES.filter(item=>item.slug!==guide.slug&&item.category!==guide.category)].slice(0,6).map(item=>'<li><a href="/guides/'+escapeHtml(item.slug)+'">'+escapeHtml(item.heading)+'</a></li>').join('')
   return '<section style="padding:10px 0 42px">'+
     (guide.note?'<aside style="padding:12px;border:1px solid #f0c5b4;background:#fff8f4"><strong>Important</strong><p>'+escapeHtml(guide.note)+'</p></aside>':'')+
     sections+
     '<h2>Related searches</h2><ul>'+guide.searchTerms.map(term=>'<li>'+escapeHtml(term)+'</li>').join('')+'</ul>'+
     '<h2>Related guides</h2><ul>'+related+'</ul>'+
-    '<p><a href="'+escapeHtml(guide.cta)+'">'+escapeHtml(guide.ctaLabel)+'</a> · <a href="/packages">View packages</a></p>'+
+    '<p><a href="'+escapeHtml(guide.cta)+'">'+escapeHtml(guide.ctaLabel)+'</a> · <a href="/guides">Browse all guides</a> · <a href="/packages">View packages</a></p>'+
   '</section>'
 }
 
@@ -210,6 +223,8 @@ function fallback(route){
 
 function breadcrumbItems(route){
   const items=[{'@type':'ListItem',position:1,name:'Home',item:absolute('/')}]
+  if(route.type==='guide-hub')return [...items,{'@type':'ListItem',position:2,name:'Guides',item:absolute('/guides')}]
+  if(route.type==='construction-guide')return [...items,{'@type':'ListItem',position:2,name:'Guides',item:absolute('/guides')},{'@type':'ListItem',position:3,name:route.heading,item:absolute(route.path)}]
   if(route.type==='state-construction-hub')return [...items,{'@type':'ListItem',position:2,name:route.stateName,item:absolute(route.path)}]
   if(route.type==='district-construction')return [...items,{'@type':'ListItem',position:2,name:route.stateName,item:absolute('/'+route.stateSlug+'/construction')},{'@type':'ListItem',position:3,name:route.districtName,item:absolute(route.path)}]
   if(!route.path.startsWith('/hyderabad'))return [...items,{'@type':'ListItem',position:2,name:route.heading,item:absolute(route.path)}]
@@ -225,7 +240,7 @@ function breadcrumbItems(route){
 function staticJsonLd(route){
   const page={
     '@context':'https://schema.org',
-    '@type':route.type==='city-hub'?'CollectionPage':route.type==='construction-guide'?'Article':'WebPage',
+    '@type':(route.type==='city-hub'||route.type==='guide-hub')?'CollectionPage':route.type==='construction-guide'?'Article':'WebPage',
     name:route.title,
     url:absolute(route.path),
     description:route.description,
