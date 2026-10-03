@@ -129,7 +129,7 @@ export const CONSTRUCTION_GUIDES=[
       section('Test before covering the system','Where appropriate for the system and area, carry out the specified pond/flood or water test before tiles/screeds conceal the waterproofing. Document defects and repairs.'),
       section('Protect completed waterproofing','Subsequent trades can puncture or damage finished layers. Control access and use the specified protective screed/board/detail before continuing.')
     ],
-  },,
+  },
   {
     slug:'best-cement-for-house-construction',
     type:'construction-guide',
@@ -348,10 +348,10 @@ export const CONSTRUCTION_GUIDES=[
 ]
 
 export function guideBySlug(slug){
-  return CONSTRUCTION_GUIDES.find(item=>item.slug===String(slug||'').toLowerCase())||null
+  return CONSTRUCTION_GUIDES.filter(Boolean).find(item=>item.slug===String(slug||'').toLowerCase())||null
 }
 
-export const CONSTRUCTION_GUIDE_ROUTES=CONSTRUCTION_GUIDES.map(item=>({
+export const CONSTRUCTION_GUIDE_ROUTES=CONSTRUCTION_GUIDES.filter(Boolean).map(item=>({
   path:'/guides/'+item.slug,
   type:'construction-guide',
   guideSlug:item.slug,
