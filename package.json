@@ -1,0 +1,15 @@
+{
+  "name": "propulse-business-hostinger",
+  "version": "1.0.0",
+  "private": true,
+  "engines": {
+    "node": "22.x"
+  },
+  "scripts": {
+    "postinstall": "npm --prefix backend ci && npm --prefix frontend ci",
+    "build": "npm --prefix frontend run build",
+    "start": "npm --prefix backend start",
+    "db:migrate": "npm --prefix backend run db:migrate",
+    "check:production-env": "npm --prefix backend run check:production-env"
+  }
+}
