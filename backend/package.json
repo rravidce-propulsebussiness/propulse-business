@@ -54,7 +54,7 @@
     "test:sound-settings-runtime": "node scripts/check-sound-settings-runtime.js",
     "test:support-chat-runtime": "node scripts/check-support-chat-runtime.js",
     "telegram:support:set-webhook": "node scripts/configure-telegram-support-webhook.js",
-    "postinstall": "npm --prefix ../frontend ci --include=dev && npm --prefix ../frontend run build"
+    "postinstall": "node scripts/build-hostinger-frontend.js"
   },
   "keywords": [],
   "author": "",
