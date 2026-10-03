@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { publicRequest } from '../utils/auth'
+import { homeownerSeoFaqs } from '../seo/faqKnowledge'
 import './WebsiteFaqSection.css'
 
 const CATEGORY_LABELS={
@@ -9,7 +10,10 @@ const CATEGORY_LABELS={
   payments:'Payments',
   withdrawals:'Withdrawals',
   account:'Account',
-  reports:'Reports'
+  reports:'Reports',
+  construction:'Construction',
+  interiors:'Interiors',
+  property:'Real Estate'
 }
 
 function categoryLabel(value){
@@ -29,27 +33,33 @@ function FaqIcon({category}){
 export default function WebsiteFaqSection({variant='home',audience='website'}){
   const standalone=variant==='page'
   const compactHome=variant==='home-compact'
+  const [searchParams,setSearchParams]=useSearchParams()
   const [faqs,setFaqs]=useState([])
   const [loading,setLoading]=useState(true)
   const [error,setError]=useState('')
   const [open,setOpen]=useState(null)
   const [search,setSearch]=useState('')
-  const [category,setCategory]=useState('all')
+  const initialCategory=standalone?String(searchParams.get('category')||'all').toLowerCase():'all'
+  const [category,setCategory]=useState(initialCategory)
 
   async function load(){
     try{
       setLoading(true)
       setError('')
       const data=await publicRequest('/faqs?audience='+encodeURIComponent(audience))
-      const items=Array.isArray(data)?data.filter(item=>item?.is_active!==false):[]
+      const remote=Array.isArray(data)?data.filter(item=>item?.is_active!==false):[]
+      const defaults=audience==='homeowner'?homeownerSeoFaqs():[]
+      const remoteKeys=new Set(remote.map(item=>String(item.question||'').trim().toLowerCase()))
+      const items=[...remote,...defaults.filter(item=>!remoteKeys.has(String(item.question||'').trim().toLowerCase()))]
       setFaqs(items)
       setOpen(current=>{
         if(items.some(item=>item.id===current))return current
         return variant==='home'&&items.length?items[0].id:null
       })
     }catch(e){
-      setFaqs([])
-      setError(e.message||'Unable to load FAQs')
+      const defaults=audience==='homeowner'?homeownerSeoFaqs():[]
+      setFaqs(defaults)
+      if(!defaults.length)setError(e.message||'Unable to load FAQs')
     }finally{
       setLoading(false)
     }
@@ -67,7 +77,7 @@ export default function WebsiteFaqSection({variant='home',audience='website'}){
     const q=search.trim().toLowerCase()
     return faqs.filter(item=>{
       if(category!=='all'&&(item.category||'general')!==category)return false
-      return !q||[item.question,item.answer,item.category].join(' ').toLowerCase().includes(q)
+      return !q||[item.question,item.answer,item.category,...(Array.isArray(item.keywords)?item.keywords:[])].join(' ').toLowerCase().includes(q)
     })
   },[faqs,search,category])
 
@@ -95,7 +105,7 @@ export default function WebsiteFaqSection({variant='home',audience='website'}){
     return <section className="website-faq website-faq-compact" id="faq">
       <div className="website-faq-compact-head">
         <div><h2>Frequently Asked Questions</h2><p>Quick answers about the ProPulse customer journey.</p></div>
-        <Link to="/contact">View All FAQs <span>→</span></Link>
+        <Link to="/faq">View All FAQs <span>→</span></Link>
       </div>
       <div className="website-faq-compact-grid">
         {loading&&<div className="website-faq-state">Loading FAQs…</div>}
@@ -143,12 +153,12 @@ export default function WebsiteFaqSection({variant='home',audience='website'}){
     <section className="website-faq-hero">
       <div className="website-faq-hero-copy">
         <span className="website-faq-eyebrow"><i/> CUSTOMER HELP CENTRE</span>
-        <h1>Answers for your <em>Propulse journey.</em></h1>
-        <p>Find clear answers about the marketplace, leads, payments, your account and using Propulse for business growth.</p>
+        <h1>Search construction, interiors & <em>property answers.</em></h1>
+        <p>Find practical answers to the questions people ask before building a home, planning interiors or buying property.</p>
         <div className="website-faq-hero-stats">
           <span><strong>{faqs.length}</strong><small>Published questions</small></span>
-          <span><strong>{categories.length}</strong><small>Help topics</small></span>
-          <span><strong>Admin</strong><small>Managed content</small></span>
+          <span><strong>{categories.length}</strong><small>Search topics</small></span>
+          <span><strong>Search</strong><small>Questions & answers</small></span>
         </div>
       </div>
       <div className="website-faq-hero-mark" aria-hidden="true"><b>?</b><span>PROPULSE GUIDE</span></div>
@@ -157,8 +167,8 @@ export default function WebsiteFaqSection({variant='home',audience='website'}){
     <section className="website-faq-tools">
       <div className="website-faq-search"><span>⌕</span><input value={search} onChange={e=>{setSearch(e.target.value);setOpen(null)}} placeholder="Search questions, answers or topics…"/></div>
       <div className="website-faq-filters">
-        <button type="button" className={category==='all'?'active':''} onClick={()=>{setCategory('all');setOpen(null)}}>All <span>{faqs.length}</span></button>
-        {categories.map(item=><button type="button" key={item.key} className={category===item.key?'active':''} onClick={()=>{setCategory(item.key);setOpen(null)}}>{item.label} <span>{item.count}</span></button>)}
+        <button type="button" className={category==='all'?'active':''} onClick={()=>{setCategory('all');setOpen(null);if(standalone)setSearchParams({})}}>All <span>{faqs.length}</span></button>
+        {categories.map(item=><button type="button" key={item.key} className={category===item.key?'active':''} onClick={()=>{setCategory(item.key);setOpen(null);if(standalone)setSearchParams({category:item.key})}}>{item.label} <span>{item.count}</span></button>)}
       </div>
     </section>
 
@@ -168,8 +178,8 @@ export default function WebsiteFaqSection({variant='home',audience='website'}){
         {faqList}
       </div>
       <aside className="website-faq-side">
-        <div className="website-faq-side-card primary"><span>NEED MORE HELP?</span><h3>Talk to our team.</h3><p>Contact Propulse for account, marketplace or service-related support.</p><Link to="/contact">Contact Propulse <b>→</b></Link></div>
-        <div className="website-faq-side-card"><span>QUICK ACCESS</span><Link to="/professionals">Explore Leads <b>↗</b></Link><Link to="/purchased-leads">Purchased Leads <b>↗</b></Link><Link to="/wallet">Wallet <b>↗</b></Link></div>
+        <div className="website-faq-side-card primary"><span>NEED PROJECT HELP?</span><h3>Turn an answer into a requirement.</h3><p>Use what you learned here to prepare a clearer construction, interior or property requirement.</p><Link to="/quote">Start Requirement <b>→</b></Link></div>
+        <div className="website-faq-side-card"><span>QUICK ACCESS</span><Link to="/guides">Construction Guides <b>↗</b></Link><Link to="/packages">Packages <b>↗</b></Link><Link to="/experts">Find Professionals <b>↗</b></Link></div>
       </aside>
     </section>
   </main>
