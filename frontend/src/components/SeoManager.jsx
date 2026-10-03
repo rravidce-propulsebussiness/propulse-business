@@ -50,7 +50,7 @@ function pageJsonLd(route,origin){
   const home=origin+'/'
   const page={
     '@context':'https://schema.org',
-    '@type':route.type==='city-hub'?'CollectionPage':route.type==='construction-guide'?'Article':'WebPage',
+    '@type':(route.type==='city-hub'||route.type==='guide-hub')?'CollectionPage':route.type==='construction-guide'?'Article':'WebPage',
     name:route.title,
     url:origin+route.path,
     description:route.description,
