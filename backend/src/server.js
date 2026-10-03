@@ -262,13 +262,16 @@ async function readiness(req,res){
   if(!databaseReady)console.error(`[${req.requestId}] Readiness database check failed:`,database.reason?.message||database.reason);
   if(!storageReady)console.error(`[${req.requestId}] Readiness storage check failed:`,storage.reason?.message||storage.reason);
   if(requireBackgroundWorker&&!workerReady)console.error(`[${req.requestId}] Readiness worker check failed: latest heartbeat age=${workerAgeSeconds??'missing'}s`);
+  const startupCode=String(startupFailure?.code||startupFailure?.cause?.code||'');
+  const startupMessage=String(startupFailure?.message||'');
   const startupError=startupFailure?{
-    code:String(startupFailure.code||startupFailure.cause?.code||'STARTUP_FAILURE').slice(0,80),
-    kind:/password|authentication/i.test(String(startupFailure.message||''))?'authentication':
-      /certificate|self signed|ssl/i.test(String(startupFailure.message||''))?'ssl':
-      /ENOTFOUND|getaddrinfo|dns/i.test(String(startupFailure.message||''))?'dns':
-      /ECONNREFUSED|connect/i.test(String(startupFailure.message||''))?'connection':
-      /timeout/i.test(String(startupFailure.message||''))?'timeout':'startup'
+    code:String(startupCode||'STARTUP_FAILURE').slice(0,80),
+    kind:/password|authentication/i.test(startupMessage)?'authentication':
+      /certificate|self signed|ssl/i.test(startupMessage)?'ssl':
+      /ENOTFOUND|getaddrinfo|dns/i.test(startupMessage)?'dns':
+      /^(42P01|42703|42P07|42710)$/.test(startupCode)||/relation .* does not exist|column .* does not exist/i.test(startupMessage)?'migration':
+      /ECONNREFUSED|connect/i.test(startupMessage)?'connection':
+      /timeout/i.test(startupMessage)?'timeout':'startup'
   }:null;
   return res.status(503).json({
     status:'error',
