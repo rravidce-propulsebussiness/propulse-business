@@ -10,10 +10,10 @@ function assert(value,message){
   else console.log('PASS: '+message)
 }
 
-assert(database.includes(".pooler.supabase.com"),'Supabase shared pooler host is detected');
+assert(/pooler\\\\\.supabase\\\\\.com/.test(database),'Supabase shared pooler host is detected');
 assert(database.includes("DB_SSL_CA_BASE64"),'Optional Supabase CA configuration is supported');
 assert(database.includes("isSupabasePooler ? false : rejectUnauthorizedRequested"),'Supabase pooler falls back to encrypted require-mode when CA is absent');
-assert(database.includes("dbSslCa ? true"),'Supplying the CA restores strict certificate verification');
+assert(/dbSslRejectUnauthorized=dbSslCa[\\s\\S]*?\\? true/.test(database),'Supplying the CA restores strict certificate verification');
 assert(database.includes("normalized.searchParams.delete(key)"),'Connection-string SSL query parameters cannot override explicit TLS policy');
 assert(env.includes("DB_SSL_CA_BASE64="),'Supabase CA environment option is documented');
 assert(server.includes("app.get('/favicon.ico'"),'favicon.ico has a compatibility redirect');
