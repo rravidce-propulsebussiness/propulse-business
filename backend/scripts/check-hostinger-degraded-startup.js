@@ -6,7 +6,11 @@ function assert(v,m){if(!v){console.error('FAIL: '+m);process.exitCode=1}else co
 assert(server.includes("ALLOW_DEGRADED_STARTUP"),'server supports degraded startup');
 assert(server.includes("frontend remains available in degraded mode"),'startup failure keeps frontend online');
 assert(server.includes("Service is initializing"),'API returns explicit retryable degraded response');
-assert(server.includes("safeBootstrapGet"),'anonymous session and public sound bootstrap bypass the degraded API gate');
+assert(server.includes("req.path==='/auth/session'"),'degraded mode serves anonymous-safe auth session fallback');
+assert(server.includes("req.path==='/sound-settings'"),'degraded mode serves default public sound settings');
+assert(server.includes("degraded:true"),'degraded bootstrap fallbacks are explicitly marked');
+assert(server.includes("scheduleStartupRetry"),'failed Hostinger startup schedules automatic retries');
+assert(server.includes("STARTUP_RETRY_MS"),'Hostinger startup retry interval is configurable');
 assert(server.includes("startupError"),'readiness exposes a sanitized startup failure classification');
 assert(server.includes("startup:startupReady?'ready'"),'health readiness reports startup state');
 assert(entry.includes("ALLOW_DEGRADED_STARTUP=process.env.ALLOW_DEGRADED_STARTUP||'true'"),'Hostinger entry enables degraded startup');
