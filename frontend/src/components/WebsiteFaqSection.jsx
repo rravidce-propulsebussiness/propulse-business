@@ -49,9 +49,7 @@ export default function WebsiteFaqSection({variant='home',audience='website'}){
       const data=await publicRequest('/faqs?audience='+encodeURIComponent(audience))
       const remote=Array.isArray(data)?data.filter(item=>item?.is_active!==false):[]
       const defaults=audience==='homeowner'?homeownerSeoFaqs():[]
-      const remoteKeys=new Set(remote.map(item=>String(item.question||'').trim().toLowerCase()))
-      const items=[...remote,...defaults.filter(item=>!remoteKeys.has(String(item.question||'').trim().toLowerCase()))]
-      setFaqs(items)
+      setFaqs(remote.length?remote:defaults)
       setOpen(current=>{
         if(items.some(item=>item.id===current))return current
         return variant==='home'&&items.length?items[0].id:null
