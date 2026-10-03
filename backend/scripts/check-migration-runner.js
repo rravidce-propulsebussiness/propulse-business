@@ -15,11 +15,16 @@ assert.match(split[0],/INDEX CONCURRENTLY a/);
 assert.match(split[1],/INDEX CONCURRENTLY b/);
 
 const files=getMigrationFiles();
-assert.ok(files.length>1,'Migration runner must include baseline plus dated migrations');
-assert.strictEqual(path.basename(files[0]),'schema.sql','Canonical base schema must run before dated migrations');
+assert.ok(files.length>2,'Migration runner must include baseline, catalog seed and dated migrations');
+assert.strictEqual(path.basename(files[0]),'schema.sql','Canonical base schema must run first');
+assert.strictEqual(path.basename(files[1]),'catalogSeed.sql','Canonical catalog seed must run before dated migrations');
 const baseline=fs.readFileSync(files[0],'utf8');
+const catalog=fs.readFileSync(files[1],'utf8');
 for(const table of ['industries','users','membership_plans','memberships','leads']){
   assert.match(baseline,new RegExp('CREATE TABLE IF NOT EXISTS '+table+'\\b'),'Baseline schema must create '+table);
+}
+for(const value of ['Construction','Real Estate','Interior Design & Home Improvement','Hyderabad']){
+  assert.ok(catalog.includes(value),'Catalog seed must contain '+value);
 }
 
 console.log('Migration transaction detection regression test passed.');
