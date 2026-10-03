@@ -64,6 +64,7 @@ const httpHeadersTimeoutMs=Math.min(httpRequestTimeoutMs,Math.max(5000,Number(pr
 const httpKeepAliveTimeoutMs=Math.min(60000,Math.max(1000,Number(process.env.HTTP_KEEP_ALIVE_TIMEOUT_MS)||5000));
 const httpMaxRequestsPerSocket=Math.min(10000,Math.max(1,Math.floor(Number(process.env.HTTP_MAX_REQUESTS_PER_SOCKET)||1000)));
 const slowRequestMs=Math.min(60000,Math.max(250,Number(process.env.SLOW_REQUEST_MS)||2000));
+const startupRetryMs=Math.min(300000,Math.max(5000,Number(process.env.STARTUP_RETRY_MS)||30000));
 const operationalMonitoringEnabled=envFlag('OPERATIONAL_MONITORING_ENABLED',true);
 const runMigrationsOnStartup=envFlag('RUN_MIGRATIONS_ON_STARTUP',true);
 const runBackgroundJobsInWeb=envFlag('RUN_BACKGROUND_JOBS_IN_WEB',true);
@@ -126,9 +127,23 @@ app.use(express.json({limit:DEFAULT_JSON_BYTES}));
 app.use('/api',(req,res,next)=>{res.setHeader('Cache-Control','no-store, private');res.setHeader('Pragma','no-cache');res.setHeader('Expires','0');next();});
 app.use('/api',(req,res,next)=>{
   if(!allowDegradedStartup||startupReady)return next();
-  const safeBootstrapGet=req.method==='GET'&&(req.path==='/auth/session'||req.path==='/sound-settings');
-  if(safeBootstrapGet)return next();
-  return res.status(503).json({error:'Service is initializing',database:'unavailable',retryable:true});
+  if(req.method==='GET'&&req.path==='/auth/session'){
+    return res.json({authenticated:false,user:null,degraded:true});
+  }
+  if(req.method==='GET'&&req.path==='/sound-settings'){
+    return res.json({
+      masterEnabled:true,
+      clickEnabled:true,
+      successEnabled:true,
+      warningEnabled:true,
+      uploadEnabled:true,
+      notificationEnabled:true,
+      defaultVolume:0.2,
+      degraded:true
+    });
+  }
+  res.setHeader('Retry-After',String(Math.max(1,Math.ceil(startupRetryMs/1000))));
+  return res.status(503).json({error:'Service is initializing',database:'unavailable',retryable:true,code:'BACKEND_NOT_READY'});
 });
 app.use('/api',csrfProtection);
 const apiGlobalRateLimitConfig=getApiGlobalRateLimitConfig({isProduction});
@@ -221,7 +236,7 @@ if(hasBuiltFrontend){
 }
 app.use((req,res)=>res.status(404).json({error:'Not found'}));
 app.use((err,req,res,next)=>{if(err.message==='CORS origin not allowed')return res.status(403).json({error:'Origin not allowed'});if(err.type==='entity.parse.failed')return res.status(400).json({error:'Invalid JSON body'});if(err.type==='entity.too.large')return res.status(413).json({error:'Request body is too large'});res.locals.operationalError=err;console.error(`[${req.requestId||'no-request-id'}] Unhandled server error:`,err.stack||err);return res.status(500).json({error:'Internal server error',requestId:req.requestId||undefined});});
-let server;let stopLeadPartnerSheetAutoSync=()=>{};let stopAdminGoogleSheetAutoSync=()=>{};let stopFinancialReconciliation=async()=>{};let stopNotifications=async()=>{};let shuttingDown=false;let startupReady=false;let startupFailure=null;
+let server;let stopLeadPartnerSheetAutoSync=()=>{};let stopAdminGoogleSheetAutoSync=()=>{};let stopFinancialReconciliation=async()=>{};let stopNotifications=async()=>{};let shuttingDown=false;let startupReady=false;let startupFailure=null;let startupTimer=null;let backgroundJobsStarted=false;
 async function shutdown(signal,exitCode=0){
   if(shuttingDown)return;
   shuttingDown=true;
@@ -229,6 +244,7 @@ async function shutdown(signal,exitCode=0){
   const forceTimer=setTimeout(()=>{console.error('Graceful shutdown timed out; forcing exit.');process.exit(1);},10000);
   forceTimer.unref?.();
   try{
+    if(startupTimer){clearTimeout(startupTimer);startupTimer=null;}
     stopLeadPartnerSheetAutoSync();
     stopAdminGoogleSheetAutoSync();
     await stopFinancialReconciliation();
@@ -272,6 +288,16 @@ function configureServer(){
   process.once('uncaughtException',error=>{console.error('Uncaught exception:',error?.stack||error);void recordFatalProcessError('uncaught_exception',error).finally(()=>shutdown('uncaughtException',1));});
   process.once('unhandledRejection',reason=>{console.error('Unhandled rejection:',reason?.stack||reason);void recordFatalProcessError('unhandled_rejection',reason).finally(()=>shutdown('unhandledRejection',1));});
 }
+function startBackgroundJobsOnce(){
+  if(backgroundJobsStarted)return;
+  backgroundJobsStarted=true;
+  if(runBackgroundJobsInWeb){
+    stopLeadPartnerSheetAutoSync=startLeadPartnerSheetAutoSync();
+    stopAdminGoogleSheetAutoSync=startAdminGoogleSheetAutoSync();
+    stopFinancialReconciliation=startFinancialReconciliationScheduler({runImmediately:true});
+    stopNotifications=startNotificationScheduler({runImmediately:true});
+  }else console.log('Background jobs disabled in web process (RUN_BACKGROUND_JOBS_IN_WEB=false).');
+}
 async function finishStartup(){
   await ensureUploadStorage();
   if(runMigrationsOnStartup)await runMigrations();
@@ -280,12 +306,22 @@ async function finishStartup(){
   startupReady=true;
   startupFailure=null;
   console.log('Backend startup checks completed successfully.');
-  if(runBackgroundJobsInWeb){
-    stopLeadPartnerSheetAutoSync=startLeadPartnerSheetAutoSync();
-    stopAdminGoogleSheetAutoSync=startAdminGoogleSheetAutoSync();
-    stopFinancialReconciliation=startFinancialReconciliationScheduler({runImmediately:true});
-    stopNotifications=startNotificationScheduler({runImmediately:true});
-  }else console.log('Background jobs disabled in web process (RUN_BACKGROUND_JOBS_IN_WEB=false).');
+  startBackgroundJobsOnce();
+}
+function scheduleStartupRetry(){
+  if(shuttingDown||startupReady||startupTimer)return;
+  console.error(`Retrying backend startup checks in ${startupRetryMs}ms.`);
+  startupTimer=setTimeout(()=>{
+    startupTimer=null;
+    void finishStartup().catch(async error=>{
+      startupFailure=error;
+      console.error('Backend startup retry failed; remaining in degraded mode:');
+      console.error(error?.stack||error||'Unknown error');
+      await recordFatalProcessError('startup_failure',error).catch(()=>{});
+      scheduleStartupRetry();
+    });
+  },startupRetryMs);
+  startupTimer.unref?.();
 }
 async function start(){
   if(allowDegradedStartup){
@@ -300,6 +336,7 @@ async function start(){
       console.error('Backend startup checks failed; frontend remains available in degraded mode:');
       console.error(error?.stack||error||'Unknown error');
       await recordFatalProcessError('startup_failure',error).catch(()=>{});
+      scheduleStartupRetry();
     }
     return;
   }
