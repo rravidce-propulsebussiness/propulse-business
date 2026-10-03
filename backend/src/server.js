@@ -67,6 +67,7 @@ const slowRequestMs=Math.min(60000,Math.max(250,Number(process.env.SLOW_REQUEST_
 const operationalMonitoringEnabled=envFlag('OPERATIONAL_MONITORING_ENABLED',true);
 const runMigrationsOnStartup=envFlag('RUN_MIGRATIONS_ON_STARTUP',true);
 const runBackgroundJobsInWeb=envFlag('RUN_BACKGROUND_JOBS_IN_WEB',true);
+const allowDegradedStartup=envFlag('ALLOW_DEGRADED_STARTUP',false);
 const requireBackgroundWorker=envFlag('REQUIRE_BACKGROUND_WORKER',false);
 const workerHeartbeatMaxAgeSeconds=Math.min(600,Math.max(30,Math.floor(Number(process.env.WORKER_HEARTBEAT_MAX_AGE_SECONDS)||120)));
 const trustProxy=String(process.env.TRUST_PROXY||'').trim();
@@ -123,6 +124,7 @@ app.use('/api/customer-flows/:key/:leadId/attachments',largeJsonFor('POST'));
 app.use('/api/customer-flows',express.json({limit:'64kb'}));
 app.use(express.json({limit:DEFAULT_JSON_BYTES}));
 app.use('/api',(req,res,next)=>{res.setHeader('Cache-Control','no-store, private');res.setHeader('Pragma','no-cache');res.setHeader('Expires','0');next();});
+app.use('/api',(req,res,next)=>{if(!allowDegradedStartup||startupReady)return next();return res.status(503).json({error:'Service is initializing',database:'unavailable',retryable:true});});
 app.use('/api',csrfProtection);
 const apiGlobalRateLimitConfig=getApiGlobalRateLimitConfig({isProduction});
 const apiRateLimit=rateLimit({...apiGlobalRateLimitConfig,scope:'global'});
@@ -172,6 +174,7 @@ async function readiness(req,res){
   if(requireBackgroundWorker&&!workerReady)console.error(`[${req.requestId}] Readiness worker check failed: latest heartbeat age=${workerAgeSeconds??'missing'}s`);
   return res.status(503).json({
     status:'error',
+    startup:startupReady?'ready':(startupFailure?'degraded':'initializing'),
     database:databaseReady?'connected':'unavailable',
     storage:storageReady?'ready':'unavailable',
     worker:requireBackgroundWorker?(workerReady?'fresh':'unavailable'):'not-required'
@@ -202,7 +205,7 @@ if(hasBuiltFrontend){
 }
 app.use((req,res)=>res.status(404).json({error:'Not found'}));
 app.use((err,req,res,next)=>{if(err.message==='CORS origin not allowed')return res.status(403).json({error:'Origin not allowed'});if(err.type==='entity.parse.failed')return res.status(400).json({error:'Invalid JSON body'});if(err.type==='entity.too.large')return res.status(413).json({error:'Request body is too large'});res.locals.operationalError=err;console.error(`[${req.requestId||'no-request-id'}] Unhandled server error:`,err.stack||err);return res.status(500).json({error:'Internal server error',requestId:req.requestId||undefined});});
-let server;let stopLeadPartnerSheetAutoSync=()=>{};let stopAdminGoogleSheetAutoSync=()=>{};let stopFinancialReconciliation=async()=>{};let stopNotifications=async()=>{};let shuttingDown=false;
+let server;let stopLeadPartnerSheetAutoSync=()=>{};let stopAdminGoogleSheetAutoSync=()=>{};let stopFinancialReconciliation=async()=>{};let stopNotifications=async()=>{};let shuttingDown=false;let startupReady=false;let startupFailure=null;
 async function shutdown(signal,exitCode=0){
   if(shuttingDown)return;
   shuttingDown=true;
@@ -242,31 +245,54 @@ async function recordFatalProcessError(kind,error){
   }).catch(()=>{});
   await Promise.race([capture,new Promise(resolve=>setTimeout(resolve,750))]);
 }
+function configureServer(){
+  server.requestTimeout=httpRequestTimeoutMs;
+  server.headersTimeout=httpHeadersTimeoutMs;
+  server.keepAliveTimeout=httpKeepAliveTimeoutMs;
+  server.maxRequestsPerSocket=httpMaxRequestsPerSocket;
+  server.maxHeadersCount=100;
+  process.once('SIGTERM',()=>shutdown('SIGTERM'));
+  process.once('SIGINT',()=>shutdown('SIGINT'));
+  process.once('uncaughtException',error=>{console.error('Uncaught exception:',error?.stack||error);void recordFatalProcessError('uncaught_exception',error).finally(()=>shutdown('uncaughtException',1));});
+  process.once('unhandledRejection',reason=>{console.error('Unhandled rejection:',reason?.stack||reason);void recordFatalProcessError('unhandled_rejection',reason).finally(()=>shutdown('unhandledRejection',1));});
+}
+async function finishStartup(){
+  await ensureUploadStorage();
+  if(runMigrationsOnStartup)await runMigrations();
+  else console.log('Database migrations skipped on web startup (RUN_MIGRATIONS_ON_STARTUP=false).');
+  if(operationalMonitoringEnabled)await operationalMonitoringService.pruneResolved().catch(error=>console.error('Operational-event retention cleanup failed:',error.message));
+  startupReady=true;
+  startupFailure=null;
+  console.log('Backend startup checks completed successfully.');
+  if(runBackgroundJobsInWeb){
+    stopLeadPartnerSheetAutoSync=startLeadPartnerSheetAutoSync();
+    stopAdminGoogleSheetAutoSync=startAdminGoogleSheetAutoSync();
+    stopFinancialReconciliation=startFinancialReconciliationScheduler({runImmediately:true});
+    stopNotifications=startNotificationScheduler({runImmediately:true});
+  }else console.log('Background jobs disabled in web process (RUN_BACKGROUND_JOBS_IN_WEB=false).');
+}
 async function start(){
-  try{
-    await ensureUploadStorage();
-    if(runMigrationsOnStartup)await runMigrations();
-    else console.log('Database migrations skipped on web startup (RUN_MIGRATIONS_ON_STARTUP=false).');
-    if(operationalMonitoringEnabled)await operationalMonitoringService.pruneResolved().catch(error=>console.error('Operational-event retention cleanup failed:',error.message));
+  if(allowDegradedStartup){
     server=app.listen(PORT,'0.0.0.0',()=>{
-      console.log(`Server running on port ${PORT}`);
-      if(runBackgroundJobsInWeb){
-        stopLeadPartnerSheetAutoSync=startLeadPartnerSheetAutoSync();
-        stopAdminGoogleSheetAutoSync=startAdminGoogleSheetAutoSync();
-        stopFinancialReconciliation=startFinancialReconciliationScheduler({runImmediately:true});
-        stopNotifications=startNotificationScheduler({runImmediately:true});
-      }else console.log('Background jobs disabled in web process (RUN_BACKGROUND_JOBS_IN_WEB=false).');
+      console.log(`Server running on port ${PORT} in degraded-startup mode.`);
     });
-    server.requestTimeout=httpRequestTimeoutMs;
-    server.headersTimeout=httpHeadersTimeoutMs;
-    server.keepAliveTimeout=httpKeepAliveTimeoutMs;
-    server.maxRequestsPerSocket=httpMaxRequestsPerSocket;
-    server.maxHeadersCount=100;
-    process.once('SIGTERM',()=>shutdown('SIGTERM'));
-    process.once('SIGINT',()=>shutdown('SIGINT'));
-    process.once('uncaughtException',error=>{console.error('Uncaught exception:',error?.stack||error);void recordFatalProcessError('uncaught_exception',error).finally(()=>shutdown('uncaughtException',1));});
-    process.once('unhandledRejection',reason=>{console.error('Unhandled rejection:',reason?.stack||reason);void recordFatalProcessError('unhandled_rejection',reason).finally(()=>shutdown('unhandledRejection',1));});
+    configureServer();
+    try{
+      await finishStartup();
+    }catch(error){
+      startupFailure=error;
+      console.error('Backend startup checks failed; frontend remains available in degraded mode:');
+      console.error(error?.stack||error||'Unknown error');
+      await recordFatalProcessError('startup_failure',error).catch(()=>{});
+    }
+    return;
+  }
+  try{
+    await finishStartup();
+    server=app.listen(PORT,'0.0.0.0',()=>console.log(`Server running on port ${PORT}`));
+    configureServer();
   }catch(error){
+    startupFailure=error;
     console.error('Backend startup failed:');
     console.error(error?.stack||error||'Unknown error');
     await recordFatalProcessError('startup_failure',error).catch(()=>{});
