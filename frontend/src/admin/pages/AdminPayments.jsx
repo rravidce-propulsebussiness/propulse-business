@@ -2,10 +2,11 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { openApiBlob } from '../../utils/api'
 import './AdminPayments.css'
 import useAdminRequest from '../hooks/useAdminRequest'
+import { formatAdminDate, formatAdminDateTime, formatInr } from '../utils/formatters'
 
-const money = value => `₹${Number(value || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}`
-const dateTime = value => value ? new Date(value).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—'
-const dateOnly = value => value ? new Date(value).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'
+const money = formatInr
+const dateTime = formatAdminDateTime
+const dateOnly = formatAdminDate
 
 export default function AdminPayments() {
   const [approvalType, setApprovalType] = useState('membership')
