@@ -1,0 +1,2 @@
+var e=/^[=+\-@\t\r]/;function t(t){let n=String(t??``);return e.test(n)&&(n=`'${n}`),`"${n.replace(/"/g,`""`)}"`}function n(e){return e.map(e=>e.map(t).join(`,`)).join(`
+`)}function r(e,t){let r=new Blob([`\uFEFF${n(t)}`],{type:`text/csv;charset=utf-8`}),i=URL.createObjectURL(r),a=document.createElement(`a`);a.href=i,a.download=e,document.body.appendChild(a),a.click(),a.remove(),URL.revokeObjectURL(i)}export{r as t};
