@@ -32,7 +32,6 @@ function assertBuildTooling(){
 }
 
 function buildFrontendSync(){
-  if(fs.existsSync(frontendIndex))return;
   assertBuildTooling();
   console.log('Building Hostinger frontend.');
   runSync(process.execPath,[viteBin,'build','--config',path.join(frontendRoot,'vite.config.js')],{cwd:frontendRoot});
@@ -42,7 +41,6 @@ function buildFrontendSync(){
 }
 
 async function buildFrontendAsync(){
-  if(fs.existsSync(frontendIndex))return;
   if(buildPromise)return buildPromise;
   assertBuildTooling();
   console.log('Hostinger web server is live; building Vite frontend in the background.');
