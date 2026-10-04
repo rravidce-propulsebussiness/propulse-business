@@ -30,7 +30,7 @@ jobs:
       - name: Bake production release markers
         run: |
           node -e "require('fs').writeFileSync('frontend/public/release.json', JSON.stringify({commit:process.env.GITHUB_SHA,environment:'production',builtAt:new Date().toISOString()})+'\\n')"
-          node -e "require('fs').writeFileSync('backend/hostinger-release.json', JSON.stringify({commit:process.env.GITHUB_SHA,builtAt:new Date().toISOString()})+'\\n')"
+          node -e "require('fs').writeFileSync('backend/hostinger-release.json', JSON.stringify({commit:process.env.GITHUB_SHA,environment:'production',builtAt:new Date().toISOString()})+'\\n')"
           cat frontend/public/release.json
           cat backend/hostinger-release.json
 
