@@ -157,7 +157,13 @@ async function runMigrations() {
     const appliedFilenames = new Set(appliedRows.rows.map(row => String(row.filename)));
     let applied = 0;
     for (const file of files) {
-      if (await applyFile(client, file, appliedFilenames)) applied += 1;
+      try {
+        if (await applyFile(client, file, appliedFilenames)) applied += 1;
+      } catch (error) {
+        const filename = path.relative(__dirname, file).replace(/\\/g, '/');
+        error.message = filename + ': ' + error.message;
+        throw error;
+      }
     }
     console.log(`Database migrations completed (${applied} applied, ${files.length} checked).`);
     return { applied, checked: files.length };
