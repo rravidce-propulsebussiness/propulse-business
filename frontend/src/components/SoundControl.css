@@ -1,0 +1,17 @@
+.sound-control{position:fixed;left:18px;bottom:18px;z-index:3900}
+.sound-control-button{width:42px;height:42px;display:grid;place-items:center;border:1px solid rgba(15,55,87,.16);border-radius:13px;background:rgba(255,255,255,.94);box-shadow:0 12px 32px rgba(8,35,57,.16);cursor:pointer;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);transition:.18s ease}
+.sound-control-button:hover{transform:translateY(-1px);box-shadow:0 15px 35px rgba(8,35,57,.2)}
+.sound-control-button span{font-size:18px;line-height:1}
+.sound-control-button.active{border-color:rgba(240,91,36,.28)}
+.sound-control-panel{position:absolute;left:0;bottom:52px;width:min(320px,calc(100vw - 32px));padding:14px;border:1px solid #dde6ed;border-radius:16px;background:rgba(255,255,255,.98);box-shadow:0 20px 50px rgba(8,35,57,.2)}
+.sound-control-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding-bottom:11px;border-bottom:1px solid #edf1f4}
+.sound-control-head b,.sound-control-head small{display:block}.sound-control-head b{color:#173d5c;font-size:14px}.sound-control-head small{margin-top:4px;color:#7b8d9b;font-size:12px;line-height:1.45}
+.sound-control-head button{border:0;background:transparent;color:#7f909d;font-size:20px;cursor:pointer}
+.sound-control-switch{display:flex;align-items:center;gap:12px;padding:13px 0 10px}
+.sound-control-switch>span{flex:1}.sound-control-switch b,.sound-control-switch small{display:block}.sound-control-switch b{color:#214764;font-size:12px}.sound-control-switch small{margin-top:3px;color:#8b99a5;font-size:12px}
+.sound-control-switch input{position:absolute;opacity:0;pointer-events:none}.sound-control-switch i{position:relative;width:42px;height:24px;border-radius:999px;background:#d8e1e7;transition:.18s}.sound-control-switch i:after{content:"";position:absolute;left:3px;top:3px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.18);transition:.18s}
+.sound-control-switch input:checked+i{background:#f05b24}.sound-control-switch input:checked+i:after{transform:translateX(18px)}.sound-control-switch input:disabled+i{opacity:.55}
+.sound-control-volume{display:grid;gap:8px}.sound-control-volume>span{display:flex;align-items:center;justify-content:space-between;gap:12px}.sound-control-volume b,.sound-control-volume strong{font-size:12px;color:#214764}.sound-control-volume strong{color:#f05b24}.sound-control-volume input{width:100%;accent-color:#f05b24}
+@media(max-width:700px){.sound-control{left:12px;bottom:12px}.sound-control-button{width:40px;height:40px}.sound-control-panel{bottom:48px}}
+
+.sound-control-test{width:100%;margin-top:11px;padding:9px 11px;border:1px solid #f0c5b4;border-radius:9px;background:#fff7f2;color:#d94f22;font-size:12px;font-weight:900;cursor:pointer}.sound-control-test:disabled{opacity:.45;cursor:not-allowed}

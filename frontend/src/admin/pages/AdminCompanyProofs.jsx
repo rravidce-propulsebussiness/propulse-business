@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { API_BASE_URL } from '../../utils/api';
-import { authRequest, getToken } from '../../utils/auth';
+import { authRequest } from '../../utils/auth';
 import './AdminCompanyProofs.css';
 
 const dateTime = value => value ? new Date(value).toLocaleString() : '—';
@@ -37,8 +37,8 @@ export default function AdminCompanyProofs() {
     }
   }, [page, status]);
 
-  useEffect(() => { load(); }, [load]);
-  useEffect(() => { setPage(1); }, [status]);
+  useEffect(() => { let active=true; queueMicrotask(()=>{if(active)load()}); return()=>{active=false}; }, [load]);
+  useEffect(() => { let active=true; queueMicrotask(()=>{if(active)setPage(1)}); return()=>{active=false}; }, [status]);
 
   async function review(documentId, nextStatus, reviewReason = '') {
     try {
@@ -62,7 +62,7 @@ export default function AdminCompanyProofs() {
     try {
       setError('');
       const response = await fetch(`${API_BASE_URL}/auth/company-proofs/${documentId}`, {
-        headers: { Authorization: `Bearer ${getToken()}` },
+        credentials: 'include',
       });
       if (!response.ok) {
         const data = await response.json().catch(() => ({}));

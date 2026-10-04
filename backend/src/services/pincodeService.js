@@ -84,7 +84,6 @@ async function fetchPostalPincode(pincode) {
       // API's first record reports a postal district instead.
       office_names: offices.map(x => String(x?.Name || '').trim()).filter(Boolean),
       office_count: offices.length,
-      office_names: offices.map(x => String(x?.Name || '').trim()).filter(Boolean),
       source: 'postalpincode-api',
       synced_at: new Date(),
     };
