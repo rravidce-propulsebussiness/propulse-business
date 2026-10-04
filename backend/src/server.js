@@ -110,7 +110,8 @@ app.use((req,res,next)=>{
   next();
 });
 app.use(cors({origin(origin,callback){if(!origin||configuredOrigins.includes(origin))return callback(null,true);return callback(new Error('CORS origin not allowed'));},credentials:true}));
-app.use((req,res,next)=>{res.setHeader('X-Content-Type-Options','nosniff');res.setHeader('X-Frame-Options','DENY');res.setHeader('Referrer-Policy','strict-origin-when-cross-origin');res.setHeader('Permissions-Policy','camera=(),microphone=(),geolocation=()');res.setHeader('Content-Security-Policy',"default-src 'none'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'; form-action 'none'");if(isProduction)res.setHeader('Strict-Transport-Security','max-age=31536000; includeSubDomains');next();});
+app.use((req,res,next)=>{res.setHeader('X-Content-Type-Options','nosniff');res.setHeader('X-Frame-Options','DENY');res.setHeader('Referrer-Policy','strict-origin-when-cross-origin');res.setHeader('Permissions-Policy','camera=(),microphone=(),geolocation=()');if(!backendOnlyPath(req.path))res.setHeader('Cross-Origin-Opener-Policy','same-origin-allow-popups');if(backendOnlyPath(req.path))res.setHeader('Content-Security-Policy',"default-src 'none'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'; form-action 'none'");if(isProduction)res.setHeader('Strict-Transport-Security','max-age=31536000; includeSubDomains');next();});
+app.get('/favicon.ico',(req,res)=>res.redirect(308,'/favicon.svg'));
 app.use('/',seoRoutes);
 app.use('/api/payment-webhooks/razorpay',express.raw({type:'application/json',limit:'256kb'}),paymentWebhookRoutes);
 const largeJsonParser=express.json({limit:LARGE_JSON_BYTES});
@@ -129,6 +130,33 @@ app.use('/api/customer-flows/:key/:leadId/attachments',largeJsonFor('POST'));
 app.use('/api/customer-flows',express.json({limit:'64kb'}));
 app.use(express.json({limit:DEFAULT_JSON_BYTES}));
 app.use('/api',(req,res,next)=>{res.setHeader('Cache-Control','no-store, private');res.setHeader('Pragma','no-cache');res.setHeader('Expires','0');next();});
+app.use('/api',(req,res,next)=>{
+  if(startupReady)return next();
+  const degradedGet=req.method==='GET';
+  if(degradedGet)res.setHeader('X-Backend-Degraded','true');
+
+  if(degradedGet&&req.path==='/auth/session')return res.json({authenticated:false,user:null,degraded:true});
+  if(degradedGet&&req.path==='/sound-settings')return res.json({
+    masterEnabled:true,clickEnabled:true,successEnabled:true,warningEnabled:true,
+    uploadEnabled:true,notificationEnabled:true,defaultVolume:0.2,degraded:true
+  });
+  if(degradedGet&&req.path==='/contact'){
+    const requestedAudience=String(req.query?.audience||'website').trim().toLowerCase();
+    const audience=['website','users','lead_partners','common'].includes(requestedAudience)?requestedAudience:'website';
+    return res.json({audience,company_name:'',email:'',phone:'',whatsapp:'',address:'',business_hours:'',support_email:'',careers_email:'',maps_url:'',website_url:'/',social_handles:[],updated_at:null,degraded:true});
+  }
+  if(degradedGet&&req.path==='/cities')return res.json({data:[],pagination:{page:1,pageSize:0,total:0,totalPages:0,hasNextPage:false,hasPreviousPage:false},degraded:true});
+  if(degradedGet&&req.path==='/homepage-media')return res.json({hero_image_url:'',category_images:{},updated_at:null,degraded:true});
+  if(degradedGet&&req.path==='/support-chat/config')return res.json({enabled:false,allowGuests:false,widgetTitle:'Chat with us',greeting:'Hi! How can we help you today?',offlineMessage:'Support is temporarily unavailable. Please try again shortly.',pollSeconds:4,degraded:true});
+  if(degradedGet&&req.path==='/faqs')return res.json([]);
+  if(degradedGet&&req.path==='/industries')return res.json([]);
+  if(degradedGet&&/^\/customer-flows\/(build|design|property)$/.test(req.path)){
+    const key=req.path.split('/').pop();
+    return res.json({key,unavailable:true,degraded:true,message:'This requirement form is temporarily unavailable while the service reconnects.'});
+  }
+  if(degradedGet&&req.path==='/leads')return res.json({items:[],pagination:{page:1,limit:20,total:0,hasNext:false,hasPrevious:false},degraded:true,unavailable:true,message:'Lead marketplace is temporarily unavailable while the service reconnects.'});
+  return next();
+});
 app.use('/api',csrfProtection);
 const apiGlobalRateLimitConfig=getApiGlobalRateLimitConfig({isProduction});
 const apiRateLimit=rateLimit({...apiGlobalRateLimitConfig,scope:'global'});
