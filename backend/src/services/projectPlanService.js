@@ -3,6 +3,7 @@ const path=require('path');
 const crypto=require('crypto');
 const {businessProjectRoot}=require('../config/uploadStorage');
 const s3=require('./s3PrivateObjectStorageService');
+const {normalizeMime,displayUrl}=require('./projectMediaStorageUtils');
 
 const MAX_PLAN_BYTES=15*1024*1024;
 const MIME_EXTENSIONS={
@@ -13,7 +14,6 @@ const MIME_EXTENSIONS={
 };
 
 function planError(message,code){return Object.assign(new Error(message),{code});}
-function normalizeMime(value){return String(value||'').split(';')[0].trim().toLowerCase();}
 function validateSignature(buffer,mime){
   if(!Buffer.isBuffer(buffer)||!buffer.length)return false;
   if(mime==='application/pdf')return buffer.subarray(0,5).toString('ascii')==='%PDF-';
@@ -48,12 +48,6 @@ function managedPlanInfo(userId,url){
   const prefix=`/uploads/business-projects/${Number(userId)}-plan-`;
   if(!value.startsWith(prefix))throw planError('Uploaded project plan does not belong to this business','PROJECT_PLAN_OWNERSHIP');
   return{url:value,...parseFilename(userId,path.posix.basename(value)),provider:'local'};
-}
-async function displayUrl(value){
-  const stored=String(value||'').trim();
-  if(!stored)return '';
-  if(s3.isReference(stored))return s3.getMediaGetUrl(stored,{expiresSeconds:3600});
-  return stored;
 }
 async function saveProjectPlan(userId,mime,buffer){
   const parsed=assertPlanBuffer(buffer,mime);
