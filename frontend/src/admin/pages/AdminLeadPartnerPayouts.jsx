@@ -2,6 +2,7 @@ import {useCallback,useEffect,useMemo,useState} from 'react';
 import {useSearchParams} from 'react-router-dom';
 import {authRequest} from '../../utils/auth';
 import {openApiBlob} from '../../utils/api';
+import {payoutProofError,readPayoutProofDataUrl} from '../utils/payoutProof';
 import './AdminLeadPartnerPayouts.css';
 
 const money=v=>`₹${Number(v||0).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2})}`;
@@ -91,13 +92,16 @@ export default function AdminLeadPartnerPayouts(){
   async function readProof(event,setter){
     const file=event.target.files?.[0];
     if(!file)return;
-    if(!['image/png','image/jpeg','image/webp'].includes(file.type)){setError('Payment proof must be a PNG, JPG, or WebP image.');event.target.value='';return}
-    if(file.size>6*1024*1024){setError('Payment proof must be 6 MB or smaller.');event.target.value='';return}
+    const validation=payoutProofError(file);
+    if(validation){setError(validation);event.target.value='';return}
     setError('');
-    const reader=new FileReader();
-    reader.onload=()=>setter(current=>({...current,proof:String(reader.result||''),proofName:file.name}));
-    reader.onerror=()=>{setter(current=>({...current,proof:'',proofName:''}));setError('Could not read the payment proof image.')};
-    reader.readAsDataURL(file);
+    try{
+      const proof=await readPayoutProofDataUrl(file);
+      setter(current=>({...current,proof,proofName:file.name}));
+    }catch(error){
+      setter(current=>({...current,proof:'',proofName:''}));
+      setError(error.message||'Could not read the payment proof image.');
+    }
   }
 
   function closeReview(){setSelected(null);setTransfer(emptyTransfer());setReason('')}
