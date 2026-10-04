@@ -5,6 +5,7 @@ const {spawn}=require('child_process');
 const frontendRoot=path.resolve(__dirname,'../frontend');
 const frontendDist=path.join(frontendRoot,'dist');
 const frontendIndex=path.join(frontendDist,'index.html');
+const bundledFrontendIndex=path.join(__dirname,'hostinger-frontend','index.html');
 const viteBin=path.join(__dirname,'node_modules','vite','bin','vite.js');
 let frontendBuilding=false;
 
@@ -29,7 +30,7 @@ function run(args,cwd){
 }
 
 async function buildFrontend(){
-  if(frontendBuilding||fs.existsSync(frontendIndex))return;
+  if(frontendBuilding||fs.existsSync(bundledFrontendIndex)||fs.existsSync(frontendIndex))return;
   if(!fs.existsSync(frontendRoot)){
     console.error('Frontend source directory is not available in this Hostinger checkout.');
     return;
