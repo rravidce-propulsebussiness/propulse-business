@@ -56,6 +56,7 @@ assert(!backendIndex.includes("spawn(process.execPath,['src/server.js']"),'Backe
 assert(!backendIndex.includes('proxyToBackend'),'Backend-root Hostinger entry must not proxy API traffic over localhost');
 assert(backendIndex.includes("process.env.SERVE_FRONTEND_FROM_BACKEND='true'"),'Backend-root Hostinger entry enables single-process frontend serving');
 assert(backendIndex.includes("Hostinger single-process app is live; building frontend in the background."),'Backend-root Hostinger entry builds frontend after API startup');
+assert(backendIndex.includes("if(frontendBuilding||fs.existsSync(bundledFrontendIndex)||fs.existsSync(frontendIndex))return;"),'Backend-root Hostinger skips redundant runtime frontend builds when deploy output already exists');
 assert(backendIndex.includes("fs.symlinkSync(backendNodeModules,frontendNodeModules"),'Backend-root Hostinger entry exposes installed dependencies to the frontend build');
 assert(backendServer.includes("app.use(express.static(frontendDist"),'Backend server serves built frontend assets in single-process mode');
 assert(backendServer.includes("Application frontend is starting. Please retry shortly."),'Backend server keeps HTML requests safe while background frontend build runs');
