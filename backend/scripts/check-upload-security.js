@@ -4,7 +4,9 @@ const path = require('path');
 const { validateDataUrlSignature } = require('../src/utils/fileValidation');
 
 const homepage = fs.readFileSync(path.join(__dirname, '../src/services/homepageMediaService.js'), 'utf8');
-const pricing = fs.readFileSync(path.join(__dirname, '../src/services/servicePricingService.js'), 'utf8');
+const wallet = fs.readFileSync(path.join(__dirname, '../src/services/walletService.js'), 'utf8');
+const authRoutes = fs.readFileSync(path.join(__dirname, '../src/routes/authRoutes.js'), 'utf8');
+const authService = fs.readFileSync(path.join(__dirname, '../src/services/authService.js'), 'utf8');
 
 const png = Buffer.from([137,80,78,71,13,10,26,10]).toString('base64');
 const jpeg = Buffer.from([255,216,255,224]).toString('base64');
@@ -16,10 +18,15 @@ assert.strictEqual(validateDataUrlSignature(`data:image/jpeg;base64,${jpeg}`, ['
 assert.strictEqual(validateDataUrlSignature(`data:image/webp;base64,${webp}`, ['image/webp']), true);
 assert.strictEqual(validateDataUrlSignature(`data:image/png;base64,${fakePng}`, ['image/png']), false);
 
-for (const [label, source] of [['homepage', homepage], ['service pricing', pricing]]) {
-  assert(source.includes('validateDataUrlSignature'), `${label}: signature validator is not imported`);
-  assert(source.includes("validateDataUrlSignature(value,['image/jpeg','image/png','image/webp'])"), `${label}: signature validation is not enforced`);
-  assert(source.includes("crypto.randomBytes(12).toString('hex')"), `${label}: upload filename is not generated with cryptographic randomness`);
-}
+assert(homepage.includes('validateDataUrlSignature'), 'homepage: signature validator is not imported');
+assert(homepage.includes("validateDataUrlSignature(value,['image/jpeg','image/png','image/webp'])"), 'homepage: signature validation is not enforced');
+assert(homepage.includes("crypto.randomBytes(12).toString('hex')"), 'homepage: upload filename is not generated with cryptographic randomness');
 
-console.log('Image upload signature security checks passed.');
+assert(wallet.includes('validateDataUrlSignature'), 'wallet proof: signature validator is not imported');
+assert(wallet.includes("['image/png','image/jpeg','image/webp','application/pdf']"), 'wallet proof: approved proof types are not enforced');
+assert(wallet.includes('MAX_TOPUP_PROOF_BYTES'), 'wallet proof: upload size limit is missing');
+
+assert(authRoutes.includes("const companyProofUploadLimit = rateLimit({ windowMs: 15 * 60 * 1000, max: 10 });"), 'company proof upload rate limit is not configured');
+assert(authRoutes.includes("router.post('/company-proofs', requireAuth, companyProofUploadLimit, authController.uploadCompanyProofs);"), 'company proof upload route is missing its dedicated rate limit');
+assert(authService.includes('MAX_PASSWORD_CHARS = 64') && authService.includes('MAX_BCRYPT_BYTES = 72'), 'signup/reset password must enforce bcrypt-safe upper bounds');
+console.log('Image upload and authentication boundary security checks passed.');

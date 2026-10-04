@@ -28,11 +28,11 @@ assert(migration.includes('reviewed_by INTEGER REFERENCES users(id)') && migrati
 
 assert(authRoutes.includes("router.post('/company-proofs', requireAuth"), 'Company proof upload endpoint must require authentication');
 assert(authRoutes.includes("router.get('/company-proofs/:documentId', requireAuth"), 'Company proof download endpoint must require authentication');
-assert(authService.includes('const createdFiles = [];'), 'Company proof upload must track created files for cleanup');
+assert(authService.includes('const createdFiles = [];'), 'Company proof upload must track created storage references for cleanup');
 assert(authService.includes("await client.query('BEGIN');"), 'Company proof upload must use a database transaction');
 assert(authService.includes("await client.query('COMMIT');"), 'Company proof upload must commit the database transaction');
 assert(authService.includes("await client.query('ROLLBACK');"), 'Company proof upload must rollback the database transaction on failure');
-assert(authService.includes('fs.rmSync(filePath, { force: true });'), 'Company proof upload must remove created files after rollback');
+assert(authService.includes('companyProofStorage.remove(reference)'), 'Company proof upload must remove created private objects/files after rollback');
 assert(authService.includes('preparedDocuments'), 'Company proof upload must validate all documents before writing files');
 
 console.log('Company proof review and upload atomicity regression test passed.');

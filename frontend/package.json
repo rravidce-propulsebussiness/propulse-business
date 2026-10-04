@@ -5,10 +5,23 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build && node scripts/generate-seo-static-pages.mjs",
     "lint": "oxlint",
     "preview": "vite preview",
-    "test:google-gis": "node scripts/check-google-gis.mjs"
+    "test:google-gis": "node scripts/check-google-gis.mjs",
+    "test:source-graph": "node scripts/check-source-graph.mjs",
+    "test:csv-security": "node scripts/check-csv-security.mjs",
+    "test:user-header-layout": "node scripts/check-user-header-layout.mjs",
+    "test:lead-marketplace-display": "node scripts/check-lead-marketplace-display.mjs",
+    "test:payment-proof-preview": "node scripts/check-payment-proof-preview.mjs",
+    "test:wallet-history": "node scripts/check-wallet-history.mjs",
+    "test:wallet-membership-tab": "node scripts/check-wallet-membership-tab.mjs",
+    "test:investor-faq-layout": "node scripts/check-investor-faq-layout.mjs",
+    "test:auth-bootstrap": "node scripts/check-auth-session-bootstrap.mjs",
+    "test:lead-partner-reports": "node scripts/check-lead-partner-reports.mjs",
+    "test:lead-partner-pricing": "node scripts/check-lead-partner-pricing.mjs",
+    "test:wallet-coupon-react": "node scripts/check-wallet-coupon-react.mjs",
+    "test:admin-investments-react": "node scripts/check-admin-investments-react.mjs"
   },
   "dependencies": {
     "react": "^19.2.8",

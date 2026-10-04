@@ -13,6 +13,7 @@ const checks = [
   ['GoogleButton renders GIS button', button.includes('googleId.renderButton')],
   ['Google client ID comes from Vite env', button.includes('VITE_GOOGLE_CLIENT_ID') || loader.includes('VITE_GOOGLE_CLIENT_ID')],
   ['GIS is not statically loaded in index.html', !/<script\b[^>]*\bsrc=["']https:\/\/accounts\.google\.com\/gsi\/client["'][^>]*>/i.test(index)],
+  ['GIS stylesheet is allowed by CSP', index.includes("https://accounts.google.com/gsi/style")],
   ['FedCM button behavior is explicit', button.includes('use_fedcm_for_button: false')],
 ]
 

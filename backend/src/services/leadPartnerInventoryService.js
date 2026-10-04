@@ -1,6 +1,7 @@
 const pool = require('../config/database');
 const leadService = require('./leadService');
 const partnerPricing = require('./leadPartnerPricingService');
+const leadQualityGateService = require('./leadQualityGateService');
 const { fetchGoogleSheetCsv } = require('./googleSheetService');
 const { detectPincode } = require('./pincodeDetectionService');
 const cityService = require('./cityService');
@@ -20,7 +21,7 @@ const aliases = {
   requirement: 'requirement', requirements: 'requirement', requirementdetails: 'requirement',
   propertytype: 'propertyType', budget: 'budget', source: 'source', notes: 'notes',
   buyercapacity: 'buyerCapacity', buyercapacitylimit: 'buyerCapacity', maxbuyers: 'buyerCapacity', capacity: 'buyerCapacity',
-  leadtype: 'leadType', exclusive: 'isExclusive', isexclusive: 'isExclusive',
+  leadtype: 'leadType', accessstrategy: 'accessStrategy', buyerstrategy: 'accessStrategy', releaseto2hours: 'releaseToTwoAfterHours', releasetotwohours: 'releaseToTwoAfterHours', releaseto3hours: 'releaseToThreeAfterHours', releasetothreehours: 'releaseToThreeAfterHours', proearlyaccess: 'isExclusive', earlyaccess: 'isExclusive', exclusive: 'isExclusive', isexclusive: 'isExclusive', exclusivedelaydays:'exclusiveDelayDays', earlyaccessdelaydays:'exclusiveDelayDays', proearlyaccessdelaydays:'exclusiveDelayDays',
 };
 
 function parseCsv(text) {
@@ -35,8 +36,11 @@ function parseCsv(text) {
   row.push(cell); if (row.some(v => clean(v))) rows.push(row);
   if (!rows.length) return [];
   const headers = rows[0].map(h => aliases[norm(h)] || clean(h));
-  return rows.slice(1).map(source => Object.fromEntries(headers.map((h, i) => [h, clean(source[i])])))
-    .filter(r => Object.values(r).some(Boolean));
+  return rows.slice(1).map(source => {
+    const row=Object.fromEntries(headers.map((h, i) => [h, clean(source[i])]));
+    if(norm(row.industry)==='intriordesignandhomeinteriors')row.industry='Interior Design & Home Interiors';
+    return row;
+  }).filter(r => Object.values(r).some(Boolean));
 }
 
 async function catalogs() {
@@ -75,7 +79,10 @@ function resolveClassification(row, cat) {
   if (row.subservice && !subservice) { const matches = candidateMatches(cat.subservices, row.subservice); throw new Error(matches.length > 1 ? 'Subservice is ambiguous; include Service' : 'Subservice could not be resolved'); }
   if (service && industry && Number(service.industry_id) !== Number(industry.id)) throw new Error('Service does not belong to the selected Industry');
   if (subservice && service && Number(subservice.service_id) !== Number(service.id)) throw new Error('Subservice does not belong to the selected Service');
-  if (!industry) throw new Error('Industry is required or must be derivable from Service/Subservice');
+  if (!industry) {
+    if(!clean(row.industry)&&!clean(row.service)&&!clean(row.subservice))throw new Error('Industry, Service and Subservice are all blank; provide at least one classification value');
+    throw new Error('Industry is required or must be derivable from Service/Subservice');
+  }
   return { industry, service, subservice };
 }
 
@@ -233,54 +240,198 @@ async function resolveLocationFromPincode(pincode, cat, suppliedState, suppliedC
 
 const CORE_SHEET_FIELDS = new Set([
   'id','industry','service','subservice','state','city','pincode','customerName','customerPhone','customerEmail',
-  'requirement','propertyType','budget','source','notes','buyerCapacity','leadType','isExclusive'
+  'requirement','propertyType','budget','source','notes','buyerCapacity','leadType','accessStrategy','releaseToTwoAfterHours','releaseToThreeAfterHours','isExclusive','exclusiveDelayDays','Pro 1 Buyer','Pro 1 Share'
 ]);
 
+const isPartnerPricingField=key=>['pro1buyer','pro1buyers','pro1share','pro1shares','pro1buyerprice','pro1shareprice'].includes(norm(key));
 function buildImportedCustomFields(row) {
   return Object.fromEntries(
     Object.entries(row)
-      .filter(([key, value]) => !CORE_SHEET_FIELDS.has(key) && clean(value))
+      .filter(([key, value]) => !CORE_SHEET_FIELDS.has(key) && !isPartnerPricingField(key) && clean(value))
       .map(([key, value]) => [key, value])
   );
 }
 
-async function buildLead(row, cat) {
+function parseAccessStrategy(value){const n=norm(value);if(!n)return undefined;if(n.includes('permanent')||n==='single'||n==='singlebuyer'||n==='singleonly')return'permanent_single';if(n.includes('auto'))return'auto_release';if(n.includes('shared'))return'shared';throw new Error('Access Strategy must be Single Only, Permanent Single, Auto Release, or Shared from Start');}
+function partnerProOnePrice(row){for(const[key,value]of Object.entries(row||{})){const n=norm(key);if(!['pro1buyer','pro1buyers','pro1share','pro1shares','pro1buyerprice','pro1shareprice'].includes(n))continue;if(!clean(value))return null;const price=Number(value);if(!Number.isFinite(price)||price<0)throw new Error('Pro 1 Buyer price must be a non-negative number');return price}return null}
+async function buildLead(row, cat, locationCache=null) {
   const { industry, service, subservice } = resolveClassification(row, cat);
-  const location = await resolveLocationFromPincode(row.pincode, cat, row.state, row.city);
-  const capacity = Number(row.buyerCapacity);
+  const locationKey=`${clean(row.pincode).replace(/\D/g,'')}\u0000${norm(row.state)}\u0000${norm(row.city)}`;
+  let locationPromise=locationCache?.get(locationKey);
+  if(!locationPromise){locationPromise=resolveLocationFromPincode(row.pincode,cat,row.state,row.city);if(locationCache)locationCache.set(locationKey,locationPromise)}
+  const location = await locationPromise;
+  const capacityRaw=clean(row.buyerCapacity);const capacity=capacityRaw===''?undefined:Number(capacityRaw);
+  if(capacityRaw!==''&&(!Number.isFinite(capacity)||capacity<1||capacity>3))throw new Error('Buyer Capacity must be between 1 and 3');
+  const strategy=parseAccessStrategy(row.accessStrategy);
+  const releaseTwo=clean(row.releaseToTwoAfterHours)===''?undefined:Number(row.releaseToTwoAfterHours);
+  const releaseThree=clean(row.releaseToThreeAfterHours)===''?undefined:Number(row.releaseToThreeAfterHours);
+  if(releaseTwo!==undefined&&(!Number.isFinite(releaseTwo)||releaseTwo<0))throw new Error('Release to 2 Hours must be zero or greater');
+  if(releaseThree!==undefined&&(!Number.isFinite(releaseThree)||releaseThree<0))throw new Error('Release to 3 Hours must be zero or greater');
+  if(releaseTwo!==undefined&&releaseThree!==undefined&&releaseThree<releaseTwo)throw new Error('Release to 3 Hours must be after Release to 2 Hours');
   return {
     industryId: industry.id, serviceId: service?.id || null, subserviceId: subservice?.id || null,
     stateId: location.state.id, cityId: location.city.id, customerName: row.customerName, customerPhone: row.customerPhone,
     customerEmail: row.customerEmail || '', requirement: row.requirement || 'Lead requirement not provided', propertyType: row.propertyType || '', budget: row.budget || '',
     source: row.source || 'lead-partner-upload', notes: row.notes || '', customFields: buildImportedCustomFields(row), pincode: location.pincode,
-    buyerCapacity: Number.isFinite(capacity) && capacity >= 2 ? Math.floor(capacity) : 3,
+    buyerCapacity: strategy==='permanent_single'?1:(capacity===undefined?undefined:Math.floor(capacity)),
+    accessStrategy:strategy,releaseToTwoAfterHours:releaseTwo,releaseToThreeAfterHours:releaseThree,
     leadType: norm(row.leadType) === 'premium' ? 'premium' : 'basic', isExclusive: ['true', 'yes', 'y', '1', 'exclusive'].includes(norm(row.isExclusive)),
+    exclusiveDelayDays:clean(row.exclusiveDelayDays)===''?undefined:Number(row.exclusiveDelayDays),
+    partnerProOnePrice:partnerProOnePrice(row),
+  };
+}
+async function previewPinReadOnly(row,cat){
+  const value=clean(row.pincode).replace(/\D/g,'');
+  if(!/^\d{6}$/.test(value))throw new Error('Pincode is required and must be a valid 6-digit Indian PIN');
+  const pin=(await pool.query(
+    `SELECT p.pincode,p.state_id,p.state_name,p.district_name,
+            COUNT(DISTINCT cp.city_id) FILTER(WHERE cp.is_active=TRUE)::int AS mapped_cities
+       FROM india_pincodes p
+       LEFT JOIN city_pincodes cp ON cp.pincode=p.pincode
+      WHERE p.pincode=$1 AND p.is_active=TRUE
+      GROUP BY p.pincode,p.state_id,p.state_name,p.district_name`,
+    [value]
+  )).rows[0];
+  if(!pin)return{warning:`PIN ${value} will be verified against India Post during activation`};
+  const state=cat.states.find(x=>Number(x.id)===Number(pin.state_id)||norm(x.name)===norm(pin.state_name));
+  if(!state)throw new Error(`State for pincode ${value} is not present in the catalog`);
+  if(row.state&&norm(row.state)!==norm(state.name))throw new Error(`Pincode ${value} belongs to ${state.name}, not ${row.state}`);
+  if(row.city){
+    const city=cat.cities.find(x=>Number(x.state_id)===Number(state.id)&&norm(x.name)===norm(row.city));
+    if(!city)return{warning:`City "${row.city}" is not in the ${state.name} catalog yet; activation will verify and create it when safe`};
+    const mapped=(await pool.query('SELECT 1 FROM city_pincodes WHERE pincode=$1 AND city_id=$2 AND is_active=TRUE LIMIT 1',[value,city.id])).rowCount>0;
+    if(!mapped)return{warning:`PIN ${value} is not currently mapped to ${city.name}; activation will verify the relationship`};
+    return{};
+  }
+  if(Number(pin.mapped_cities||0)===0)return{warning:`PIN ${value} has no City mapping yet; activation will resolve it`};
+  if(Number(pin.mapped_cities||0)>1)return{warning:`PIN ${value} maps to multiple Cities; add City to the sheet for deterministic import`};
+  return{};
+}
+async function previewCsv({userId,csv}){
+  const rows=parseCsv(csv);if(!rows.length)throw new Error('CSV contains no data rows');
+  const cat=await catalogs();
+  const partner=(await pool.query('SELECT id,status FROM lead_partners WHERE user_id=$1 LIMIT 1',[userId])).rows[0];
+  if(!partner)throw new Error('Lead Partner profile not found');
+  if(partner.status!=='active')throw new Error('Lead Partner account is not active');
+
+  const phones=[...new Set(rows.map(row=>clean(row.customerPhone).replace(/\D/g,'')).filter(value=>value.length>=7))];
+  const emails=[...new Set(rows.map(row=>clean(row.customerEmail).toLowerCase()).filter(Boolean))];
+  const existing=(phones.length||emails.length)?(await pool.query(
+    `SELECT regexp_replace(COALESCE(customer_phone,''),'[^0-9]','','g') AS phone_key,
+            LOWER(TRIM(COALESCE(customer_email,''))) AS email_key
+       FROM leads
+      WHERE regexp_replace(COALESCE(customer_phone,''),'[^0-9]','','g')=ANY($1::text[])
+         OR LOWER(TRIM(COALESCE(customer_email,'')))=ANY($2::text[])`,
+    [phones,emails]
+  )).rows:[];
+  const existingPhones=new Set(existing.map(row=>row.phone_key).filter(Boolean));
+  const existingEmails=new Set(existing.map(row=>row.email_key).filter(Boolean));
+
+  const seen=new Set(),previewRows=[];
+  let valid=0,warning=0,invalid=0,duplicates=0;
+  for(let index=0;index<rows.length;index+=1){
+    const row=rows[index];
+    const phone=clean(row.customerPhone).replace(/\D/g,'');
+    const email=clean(row.customerEmail).toLowerCase();
+    const rowKey=clean(row.id)||phone||email||`Row ${index+2}`;
+    const duplicateKey=clean(row.id)||phone||email||`${norm(row.customerName)}:${norm(row.requirement)}`;
+    if(duplicateKey&&seen.has(duplicateKey)){
+      duplicates+=1;warning+=1;
+      if(previewRows.length<60)previewRows.push({row:index+2,status:'warning',action:'skip',key:rowKey,messages:['Duplicate row in this sheet; the later copy will be skipped']});
+      continue;
+    }
+    if(duplicateKey)seen.add(duplicateKey);
+    const messages=[];
+    try{
+      resolveClassification(row,cat);
+      const capacityRaw=clean(row.buyerCapacity);const capacity=capacityRaw===''?undefined:Number(capacityRaw);
+      if(capacityRaw!==''&&(!Number.isFinite(capacity)||capacity<1||capacity>3))throw new Error('Buyer Capacity must be between 1 and 3');
+      parseAccessStrategy(row.accessStrategy);
+      const releaseTwo=clean(row.releaseToTwoAfterHours)===''?undefined:Number(row.releaseToTwoAfterHours);
+      const releaseThree=clean(row.releaseToThreeAfterHours)===''?undefined:Number(row.releaseToThreeAfterHours);
+      if(releaseTwo!==undefined&&(!Number.isFinite(releaseTwo)||releaseTwo<0))throw new Error('Release to 2 Hours must be zero or greater');
+      if(releaseThree!==undefined&&(!Number.isFinite(releaseThree)||releaseThree<0))throw new Error('Release to 3 Hours must be zero or greater');
+      if(releaseTwo!==undefined&&releaseThree!==undefined&&releaseThree<releaseTwo)throw new Error('Release to 3 Hours must be after Release to 2 Hours');
+      partnerProOnePrice(row);
+      const pinState=await previewPinReadOnly(row,cat);
+      if(pinState.warning)messages.push(pinState.warning);
+      if(!phone&&!email)messages.push('Customer phone and email are both blank');
+      if((phone&&existingPhones.has(phone))||(email&&existingEmails.has(email)))messages.push('A lead with this phone/email already exists; activation may count it as a duplicate');
+      const status=messages.length?'warning':'valid';
+      if(status==='warning')warning+=1;else valid+=1;
+      if(previewRows.length<60)previewRows.push({row:index+2,status,action:'create',key:rowKey,messages});
+    }catch(error){
+      invalid+=1;
+      if(previewRows.length<60)previewRows.push({row:index+2,status:'invalid',action:'create',key:rowKey,messages:[String(error.message||'Row is invalid')]});
+    }
+  }
+  return{
+    summary:{total:rows.length,valid,warning,invalid,duplicates,creates:Math.max(0,rows.length-duplicates)},
+    rows:previewRows
   };
 }
 
+function failureCategory(message){
+  const text=String(message||'').toLowerCase();
+  if(text.includes('pincode')||text.includes('pin ')||text.includes('postal'))return'PIN / location';
+  if(text.includes('industry')||text.includes('service')||text.includes('subservice'))return'Industry / service';
+  if(text.includes('access strategy')||text.includes('buyer capacity')||text.includes('release to'))return'Buyer access';
+  if(text.includes('price')||text.includes('pricing'))return'Pricing';
+  if(text.includes('customer')||text.includes('phone')||text.includes('email'))return'Customer data';
+  return'Other';
+}
+function summarizeFailures(failures){
+  const counts={};
+  for(const failure of failures||[]){const category=failureCategory(failure);counts[category]=(counts[category]||0)+1}
+  return Object.entries(counts).sort((a,b)=>b[1]-a[1]).map(([category,count])=>({category,count}));
+}
 async function importCsv({ userId, csv }) {
   const rows = parseCsv(csv); if (!rows.length) throw new Error('CSV contains no data rows');
   const cat = await catalogs();
   const partner = (await pool.query('SELECT id,status FROM lead_partners WHERE user_id=$1 LIMIT 1', [userId])).rows[0];
   if (!partner) throw new Error('Lead Partner profile not found'); if (partner.status !== 'active') throw new Error('Lead Partner account is not active');
-  let created = 0; let failed = 0; let duplicate = 0; const failures = [];
+  const settings=await partnerPricing.getSettings();
+  const locationCache=new Map();
+  let created = 0; let failed = 0; let duplicate = 0; let quarantined = 0;
+  const failures = [];
+  const duplicateSamples = [];
   for (const row of rows) {
+    let createdLead=null;
     try {
-      const lead = await buildLead(row, cat);
-      const createdLead = await leadService.createLead({ ...lead, createdBy: userId });
-      await pool.query('UPDATE leads SET lead_partner_id=$1 WHERE id=$2 AND created_by=$3', [partner.id, createdLead.id, userId]);
+      const lead = await buildLead(row, cat, locationCache);
+      createdLead = await leadService.createLead({ ...lead, createdBy: userId, leadPartnerId:partner.id, qualityGateContext:'lead_partner', deferQualityGate:true });
       const configured = await partnerPricing.applyConfiguredPricingToLead(userId, createdLead.id, createdLead.pricing, lead.industryId, lead.cityId, lead.leadType);
+      const hasSheetPartnerPrice=lead.partnerProOnePrice!==null&&lead.partnerProOnePrice!==undefined&&lead.partnerProOnePrice!=='';const sheetPricing=hasSheetPartnerPrice&&Number.isFinite(Number(lead.partnerProOnePrice))?partnerPricing.buildFixedPartnerPricing(Number(lead.partnerProOnePrice),settings.normalPriceUplift):null;
+      const effectivePricing=sheetPricing||configured||createdLead.pricing||{shares:[]};
+      const overridden=JSON.stringify(effectivePricing)!==JSON.stringify(createdLead.pricing||{shares:[]});
       await pool.query(
         `UPDATE leads SET partner_base_pricing=$1::jsonb,partner_pricing_overridden=$2,partner_pricing_updated_at=$3,pricing=$4::jsonb,updated_at=CURRENT_TIMESTAMP WHERE id=$5 AND created_by=$6`,
-        [JSON.stringify(createdLead.pricing || { shares: [] }), Boolean(configured && JSON.stringify(configured) !== JSON.stringify(createdLead.pricing)), configured && JSON.stringify(configured) !== JSON.stringify(createdLead.pricing) ? new Date() : null, JSON.stringify(configured || createdLead.pricing || { shares: [] }), createdLead.id, userId]
+        [JSON.stringify(createdLead.pricing || { shares: [] }), overridden, overridden ? new Date() : null, JSON.stringify(effectivePricing), createdLead.id, userId]
       );
+      const gated=await leadQualityGateService.evaluateAndApply(createdLead.id,{context:'lead_partner',autoRelease:true});
+      createdLead=gated.lead||createdLead;
       created += 1;
+      if(createdLead.status==='quarantined')quarantined += 1;
     } catch (error) {
-      if (error.code === 'DUPLICATE_LEAD') duplicate += 1; else failed += 1;
-      failures.push(`${row.id || row.customerPhone || row.customerEmail || created + failed + duplicate}: ${error.message}`);
+      if(createdLead?.id){
+        await pool.query(
+          `DELETE FROM leads WHERE id=$1 AND created_by=$2 AND status='quarantined'
+             AND NOT EXISTS(SELECT 1 FROM lead_purchases p WHERE p.lead_id=leads.id)`,
+          [createdLead.id,userId]
+        ).catch(()=>{});
+      }
+      const rowKey=row.id || row.customerPhone || row.customerEmail || created + failed + duplicate + 1;
+      const detail=`${rowKey}: ${error.message}`;
+      if (error.code === 'DUPLICATE_LEAD') {
+        duplicate += 1;
+        if(duplicateSamples.length<5)duplicateSamples.push(detail);
+      } else {
+        failed += 1;
+        failures.push(detail);
+      }
     }
   }
-  return { total: rows.length, created, duplicate, failed, failures };
+  return { total: rows.length, created, quarantined, duplicate, failed, failures, duplicateSamples, failureSummary:summarizeFailures(failures) };
 }
 
 async function importGoogleSheet({ userId, url }) {
@@ -290,13 +441,14 @@ async function importGoogleSheet({ userId, url }) {
 }
 
 async function getSheetConnections({ userId }) {
-  return (await pool.query(
+  const rows=(await pool.query(
     `SELECT id,spreadsheet_id,gid,source_url,status,last_synced_at,last_sync_created,last_sync_duplicate,last_sync_failed,last_sync_failures,created_at,updated_at
        FROM lead_partner_sheet_connections
       WHERE user_id=$1
       ORDER BY updated_at DESC,id DESC`,
     [userId]
   )).rows;
+  return rows.map(row=>({...row,last_sync_failure_summary:summarizeFailures(Array.isArray(row.last_sync_failures)?row.last_sync_failures:[])}));
 }
 
 async function connectGoogleSheet({ userId, url }) {
@@ -373,10 +525,10 @@ async function listInventory({ userId, status = 'all', search = '', industryId =
   const where = conditions.join(' AND ');
   const [data, stats, filters] = await Promise.all([
     pool.query(
-      `SELECT l.id,l.customer_name,l.customer_phone,l.customer_email,l.requirement,l.status,l.lead_type,l.buyer_capacity,l.is_exclusive,l.pincode,l.created_at,l.custom_fields,
+      `SELECT l.id,l.customer_name,l.customer_phone,l.customer_email,l.requirement,l.status,l.lead_type,l.buyer_capacity,l.access_strategy,l.release_to_two_after_hours,l.release_to_three_after_hours,l.access_capacity_locked,lead_effective_buyer_capacity(l.access_strategy,l.buyer_capacity,l.release_to_two_after_hours,l.release_to_three_after_hours,l.created_at,l.access_capacity_locked) AS effective_buyer_capacity,l.is_exclusive,l.pincode,l.created_at,l.custom_fields,l.quality_gate_score,l.quality_gate_status,l.quality_gate_reasons,l.quality_gate_checked_at,
               i.name AS industry_name,s.name AS service_name,ss.name AS subservice_name,st.name AS state_name,c.name AS city_name,
               (${outcomeSql}) AS outcome_status,
-              (SELECT COUNT(DISTINCT p.id)::int FROM lead_purchases p WHERE p.lead_id=l.id AND p.status='paid') AS buyer_count
+              (SELECT COUNT(DISTINCT acquired.user_id)::int FROM (SELECT p.user_id FROM lead_purchases p WHERE p.lead_id=l.id AND p.status='paid' UNION SELECT ec.user_id FROM lead_entitlement_claims ec WHERE ec.lead_id=l.id) acquired) AS buyer_count
          FROM leads l
          LEFT JOIN lead_partners lp ON lp.id=l.lead_partner_id
          JOIN industries i ON i.id=l.industry_id
@@ -406,7 +558,8 @@ async function listInventory({ userId, status = 'all', search = '', industryId =
              COUNT(*) FILTER (WHERE outcome_status='fake')::int AS fake,
              COUNT(*) FILTER (WHERE outcome_status='expired')::int AS expired,
              COUNT(*) FILTER (WHERE outcome_status='closed')::int AS closed,
-             COUNT(*) FILTER (WHERE outcome_status='invalid')::int AS invalid
+             COUNT(*) FILTER (WHERE outcome_status='invalid')::int AS invalid,
+              COUNT(*) FILTER (WHERE outcome_status='quarantined')::int AS quarantined
         FROM base`,
       [userId]
     ),
@@ -417,9 +570,9 @@ async function listInventory({ userId, status = 'all', search = '', industryId =
   ]);
   return {
     data: data.rows,
-    stats: stats.rows[0] || { total:0,active:0,available:0,paused:0,sold:0,refunded:0,fake:0,expired:0,closed:0,invalid:0 },
+    stats: stats.rows[0] || { total:0,active:0,available:0,paused:0,sold:0,refunded:0,fake:0,expired:0,closed:0,invalid:0,quarantined:0 },
     filters: { industries: filters[0].rows, cities: filters[1].rows }
   };
 }
 
-module.exports = { importCsv, importGoogleSheet, getSheetConnections, connectGoogleSheet, syncGoogleSheet, disableSheetConnection, listInventory };
+module.exports = { importCsv, previewCsv, importGoogleSheet, getSheetConnections, connectGoogleSheet, syncGoogleSheet, disableSheetConnection, listInventory, summarizeFailures };
