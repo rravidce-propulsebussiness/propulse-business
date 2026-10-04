@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 82" role="img" aria-labelledby="title desc">
+<title id="title">ProPulse</title>
+<desc id="desc">ProPulse building spaces elevating lives logo</desc>
+<defs>
+  <linearGradient id="orange" x1="0" x2="1" y1="0" y2="1">
+    <stop offset="0" stop-color="#f57a2f"/>
+    <stop offset="1" stop-color="#d84b19"/>
+  </linearGradient>
+</defs>
+<g transform="translate(4 5)">
+  <path d="M10 55V38L24 29V55Z" fill="url(#orange)"/>
+  <path d="M29 55V22L43 12V55Z" fill="#071b2e"/>
+  <path d="M48 55V7L63 18V55Z" fill="#071b2e"/>
+  <path d="M65 10H86c15 0 25 8 25 20 0 12-10 20-25 20H72V38h14c7 0 11-3 11-8s-4-8-11-8H65Z" fill="url(#orange)"/>
+  <path d="M40 56 65 34 84 50" fill="none" stroke="#e85d24" stroke-width="5" stroke-linecap="square" stroke-linejoin="miter"/>
+  <path d="M18 58c18-9 47-11 83 0" fill="none" stroke="#071b2e" stroke-width="4" stroke-linecap="round"/>
+  <rect x="67" y="45" width="4" height="4" fill="#071b2e"/><rect x="73" y="45" width="4" height="4" fill="#071b2e"/>
+  <rect x="67" y="51" width="4" height="4" fill="#071b2e"/><rect x="73" y="51" width="4" height="4" fill="#071b2e"/>
+</g>
+<g transform="translate(118 11)">
+  <text x="0" y="36" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="35" font-weight="800" letter-spacing="-1.6" fill="#071b2e">Pro</text>
+  <text x="53" y="36" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="35" font-weight="800" letter-spacing="-1.6" fill="#e85d24">Pulse</text>
+  <line x1="0" y1="48" x2="18" y2="48" stroke="#e85d24" stroke-width="2"/>
+  <line x1="147" y1="48" x2="165" y2="48" stroke="#e85d24" stroke-width="2"/>
+  <text x="24" y="51" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="5.2" font-weight="700" letter-spacing="1.1" fill="#344c61">BUILDING SPACES, ELEVATING LIVES.</text>
+</g>
+</svg>

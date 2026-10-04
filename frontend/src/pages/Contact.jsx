@@ -1,147 +1,189 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, Navigate, useSearchParams } from 'react-router-dom'
-import { apiRequest } from '../utils/api'
 import PortalContact from './PortalContact'
+import { publicRequest } from '../utils/auth'
 import './Contact.css'
 
-const empty={company_name:'',email:'',phone:'',whatsapp:'',address:'',business_hours:'',support_email:'',careers_email:'',maps_url:'',website_url:'',social_handles:[]}
+const empty={
+  company_name:'ProPulse Business',
+  email:'',
+  phone:'',
+  whatsapp:'',
+  address:'',
+  business_hours:'',
+  support_email:'',
+  careers_email:'',
+  maps_url:'',
+  website_url:'/',
+  social_handles:[],
+}
 
-function Icon({children}){return <span className="contact-icon" aria-hidden="true">{children}</span>}
+function Icon({name,size=19}){
+  const p={width:size,height:size,viewBox:'0 0 24 24',fill:'none',stroke:'currentColor',strokeWidth:'1.8',strokeLinecap:'round',strokeLinejoin:'round','aria-hidden':true}
+  if(name==='arrow')return <svg {...p}><path d="M5 12h14M14 7l5 5-5 5"/></svg>
+  if(name==='phone')return <svg {...p}><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 2 .7 2.9a2 2 0 0 1-.5 2.1L8 10a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.5c1 .3 1.9.6 2.9.7a2 2 0 0 1 1.7 2Z"/></svg>
+  if(name==='mail')return <svg {...p}><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
+  if(name==='pin')return <svg {...p}><path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg>
+  if(name==='clock')return <svg {...p}><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+  if(name==='chat')return <svg {...p}><path d="M21 15a4 4 0 0 1-4 4H8l-5 3 1.6-5A7 7 0 0 1 3 12V8a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4Z"/></svg>
+  if(name==='home')return <svg {...p}><path d="m3 11 9-8 9 8"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/></svg>
+  if(name==='sofa')return <svg {...p}><path d="M5 11V8a3 3 0 0 1 3-3h8a3 3 0 0 1 3 3v3"/><path d="M4 10a2 2 0 0 0-2 2v5h20v-5a2 2 0 0 0-2-2"/></svg>
+  if(name==='building')return <svg {...p}><path d="M4 21V4h10v17"/><path d="M14 8h6v13"/><path d="M7 8h3M7 12h3M7 16h3M17 12h1M17 16h1"/></svg>
+  if(name==='shield')return <svg {...p}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="m9 12 2 2 4-4"/></svg>
+  return null
+}
+
+function openLeadPopup(flowKey=''){
+  window.dispatchEvent(new CustomEvent('propulse:open-lead-popup',{detail:{flowKey}}))
+}
 
 export default function Contact(){
   const [searchParams]=useSearchParams()
   const portalAudience=searchParams.get('audience')
-  if(portalAudience==='lead_partners'||portalAudience==='users') return <PortalContact audience={portalAudience}/>
-  return <Navigate to="/#contact" replace/>
+  if(portalAudience==='lead_partners') return <PortalContact audience={portalAudience}/>
+  if(portalAudience==='users') return <Navigate to="/professional-contact" replace/>
+  return <PublicContact/>
 }
 
-function PublicContact({searchParams}){
-  const audience=['website','common'].includes(searchParams.get('audience')||'website')?searchParams.get('audience')||'website':'website'
+function PublicContact(){
   const [data,setData]=useState(empty)
   const [loading,setLoading]=useState(true)
   const [error,setError]=useState('')
+
   useEffect(()=>{
     let active=true
-    setLoading(true);setError('')
-    apiRequest('/contact?audience='+encodeURIComponent(audience),{},false)
-      .then(value=>active&&setData({...empty,...value}))
-      .catch(err=>active&&setError(err.message||'Unable to load contact details'))
-      .finally(()=>active&&setLoading(false))
+    window.scrollTo(0,0)
+    publicRequest('/contact?audience=website')
+      .then(value=>{if(active)setData({...empty,...(value||{}),social_handles:Array.isArray(value?.social_handles)?value.social_handles:[]})})
+      .catch(err=>{if(active)setError(err.message||'Unable to load contact details.')})
+      .finally(()=>{if(active)setLoading(false)})
     return()=>{active=false}
-  },[audience])
+  },[])
 
-  const socials=useMemo(()=>Array.isArray(data.social_handles)?data.social_handles.filter(item=>item?.enabled&&item?.url):[],[data])
-  const wa=data.whatsapp?String(data.whatsapp).replace(/\D/g,''):''
-  const display=v=>loading?'Loading…':v||'Not configured'
-  const company=data.company_name||'Propulse Business Technologies Private Limited'
+  const socials=useMemo(()=>data.social_handles.filter(item=>item?.enabled&&item?.url),[data.social_handles])
+  const whatsapp=String(data.whatsapp||'').replace(/\D/g,'')
+  const phoneHref=data.phone?'tel:'+String(data.phone).replace(/\s/g,''):'#'
+  const email=data.email||data.support_email||''
 
-  return <div className="contact-page">
-    <header className="public-header contact-header">
-      <Link className="brand" to="/" aria-label="Propulse Business home"><img src="/brand/propulse-logo.png" alt="Propulse Business"/></Link>
-      <nav className="desktop-nav" aria-label="Main navigation">
+  return <main className="contact-page">
+    <header className="contact-header">
+      <Link className="contact-logo" to="/"><img src="/brand/propulse-logo.svg" alt="ProPulse"/></Link>
+      <nav>
         <Link to="/">Home</Link>
-        <Link to="/leads">Buy Leads</Link>
-        <a href="/#how-it-works">How It Works</a>
-        <a href="/#pricing">Pricing</a>
-        <a href="/#about">About</a>
-        <Link className="nav-active" to="/contact">Contact</Link>
+        <Link to="/packages">Packages</Link>
+        <Link to="/projects">Projects</Link>
+        <Link to="/how-it-works">How It Works</Link>
+        <Link to="/about">About</Link>
+        <Link className="active" to="/contact">Contact</Link>
+        <Link to="/experts">Find Professionals</Link>
       </nav>
-      <div className="header-actions">
-        <Link className="header-login" to="/login">Login</Link>
-        <Link className="header-signup" to="/signup">Get Started <span>→</span></Link>
+      <div className="public-header-actions">
+        <Link className="contact-header-cta" to="/quote#interiors">Get Free Quote <Icon name="arrow" size={15}/></Link>
+        <Link className="public-professional-btn" to="/professionals">For Professionals</Link>
       </div>
     </header>
 
-    <main>
-      <section className="contact-hero">
-        <div className="contact-hero-copy">
-          <span className="contact-kicker">CONNECT WITH PROPULSE</span>
-          <h1>Let’s build your next <em>digital move.</em></h1>
-          <p>Talk to Propulse about technology, digital marketing, lead opportunities, software, automation or business support. We’ll help route your requirement to the right team.</p>
-          <div className="contact-hero-actions">
-            {data.email&&<a href={'mailto:'+data.email} className="contact-primary">Email Propulse <span>→</span></a>}
-            {wa&&<a href={'https://wa.me/'+wa} target="_blank" rel="noreferrer" className="contact-secondary">WhatsApp <span>↗</span></a>}
+    <section className="contact-hero">
+      <div className="contact-hero-copy">
+        <span className="contact-kicker">CONTACT PROPULSE</span>
+        <h1>Questions About Your Home Journey? <em>Talk to Us.</em></h1>
+        <p>Whether you are planning construction, interiors or a property requirement, reach the ProPulse team using the contact details configured by our Admin team.</p>
+        <div className="contact-hero-actions">
+          <Link className="contact-primary" to="/quote#construction" onClick={event=>{event.preventDefault();openLeadPopup('')}}>Get Free Quote <Icon name="arrow" size={15}/></Link>
+          {data.phone&&<a className="contact-secondary" href={phoneHref}><Icon name="phone" size={15}/> Call Us</a>}
+        </div>
+        <div className="contact-trust"><span>Homeowner focused</span><i/><span>Admin-managed contact details</span><i/><span>Construction · Interiors · Real Estate</span></div>
+      </div>
+
+      <aside className="contact-hero-card">
+        <span>WE'RE HERE TO HELP</span>
+        <strong>{loading?'Loading contact information…':data.business_hours||'Contact our support team during business hours.'}</strong>
+        <small>For project requirements, the fastest starting point is the guided quote page. For support or general questions, use the channels below.</small>
+        <div className="contact-hero-contact"><span>•</span><div><b>{email||'Website support'}</b><small>{data.phone||'Contact details managed from Admin'}</small></div></div>
+      </aside>
+    </section>
+
+    {error&&<div className="contact-alert">{error}</div>}
+
+    <section className="contact-service-strip">
+      <article><b>01</b><span>Construction</span><small>Quotation, packages and project requirements.</small></article>
+      <article><b>02</b><span>Interiors</span><small>Design scope, rooms, finishes and requirements.</small></article>
+      <article><b>03</b><span>Real Estate</span><small>Buy, rent, sell or investment requirements.</small></article>
+      <article><b>04</b><span>Support</span><small>Website, account and general assistance.</small></article>
+    </section>
+
+    <section className="contact-body">
+      <div className="contact-main-column">
+        <article className="contact-panel">
+          <div className="contact-panel-heading"><span className="contact-kicker">CONTACT CHANNELS</span><h2>Reach the ProPulse Team</h2><p>These details are loaded directly from Admin → Contact & Social → Website.</p></div>
+          <div className="contact-detail-grid">
+            <a className="contact-detail-card" href={email?'mailto:'+email:'#'}>
+              <span className="contact-icon"><Icon name="mail" size={17}/></span><div><small>Email</small><strong>{loading?'Loading…':email||'Not published'}</strong><span>General website enquiries</span></div><b>→</b>
+            </a>
+            <a className="contact-detail-card" href={data.phone?phoneHref:'#'}>
+              <span className="contact-icon"><Icon name="phone" size={17}/></span><div><small>Phone</small><strong>{loading?'Loading…':data.phone||'Not published'}</strong><span>{data.business_hours||'Business hours'}</span></div><b>→</b>
+            </a>
+            <a className="contact-detail-card" href={whatsapp?'https://wa.me/'+whatsapp:'#'} target={whatsapp?'_blank':undefined} rel={whatsapp?'noreferrer':undefined}>
+              <span className="contact-icon"><Icon name="chat" size={17}/></span><div><small>WhatsApp</small><strong>{loading?'Loading…':data.whatsapp||'Not published'}</strong><span>Quick project questions</span></div><b>→</b>
+            </a>
+            <div className="contact-detail-card">
+              <span className="contact-icon"><Icon name="clock" size={17}/></span><div><small>Business Hours</small><strong>{loading?'Loading…':data.business_hours||'Not published'}</strong><span>Support availability</span></div>
+            </div>
           </div>
-          <div className="contact-trust"><span>✓</span> Technology support <i/><span>✓</span> Business growth <i/><span>✓</span> Lead marketplace</div>
-        </div>
-        <div className="contact-hero-card">
-          <span>PROPULSE BUSINESS</span>
-          <strong>{company}</strong>
-          <small>IT technology • Digital growth • Lead sales • Business support</small>
-          <div className="contact-hero-contact"><span>●</span><div><b>{display(data.business_hours)}</b><small>Business hours</small></div></div>
-        </div>
-      </section>
+        </article>
 
-      {error&&<div className="contact-alert">{error}</div>}
+        <article className="contact-panel location-panel">
+          <div className="contact-panel-heading contact-location-heading">
+            <div><span className="contact-kicker">LOCATION</span><h2>Office & Address</h2><p>{data.address||'The public office address can be configured from Admin.'}</p></div>
+            {data.maps_url&&<a className="contact-outline-btn" href={data.maps_url} target="_blank" rel="noreferrer">Open in Maps ↗</a>}
+          </div>
+          <div className="contact-map">
+            <div className="contact-map-grid"/>
+            <div className="contact-map-pin"><span>●</span></div>
+            <div className="contact-map-caption"><b>{data.company_name||'ProPulse Business'}</b><span>{data.address||'Address not published'}</span></div>
+          </div>
+        </article>
+      </div>
 
-      <section className="contact-service-strip">
-        <article><b>01</b><span>Technology</span><small>Websites, apps, software, automation and digital systems.</small></article>
-        <article><b>02</b><span>Digital Marketing</span><small>SEO, social media, campaigns, branding, photo and video.</small></article>
-        <article><b>03</b><span>Lead Sales</span><small>Discover and purchase relevant customer enquiries.</small></article>
-        <article><b>04</b><span>Business Support</span><small>Registration, GST, ITR and selected filing workflows.</small></article>
-      </section>
+      <aside className="contact-side-column">
+        <article className="contact-panel contact-direct">
+          <span className="contact-kicker">DIRECT SUPPORT</span>
+          <h2>Need assistance?</h2>
+          <p>Choose the channel that best matches what you need. Project quotation requests should start from the guided quote page so your details stay structured.</p>
+          <div className="contact-direct-links">
+            {data.support_email&&<a href={'mailto:'+data.support_email}><span>SUPPORT</span><strong>{data.support_email}</strong><b>→</b></a>}
+            {data.careers_email&&<a href={'mailto:'+data.careers_email}><span>CAREERS</span><strong>{data.careers_email}</strong><b>→</b></a>}
+            {data.phone&&<a href={phoneHref}><span>PHONE</span><strong>{data.phone}</strong><b>→</b></a>}
+          </div>
+          <Link className="contact-dark-cta" to="/quote#construction">Start a Project Quote <Icon name="arrow" size={15}/></Link>
+        </article>
 
-      <section className="contact-body">
-        <div className="contact-main-column">
-          <article className="contact-panel">
-            <div className="contact-panel-heading">
-              <div><span className="contact-kicker">CONTACT DETAILS</span><h2>Choose the channel that works for you.</h2><p>Use the details configured by Admin for the public website.</p></div>
-            </div>
-            <div className="contact-detail-grid">
-              <a className="contact-detail-card" href={data.email?'mailto:'+data.email:'#'}><Icon>✉</Icon><div><small>Email</small><strong>{display(data.email)}</strong><span>General enquiries &amp; conversations</span></div><b>→</b></a>
-              <a className="contact-detail-card" href={data.phone?'tel:'+data.phone:'#'}><Icon>☎</Icon><div><small>Phone</small><strong>{display(data.phone)}</strong><span>Speak with the team</span></div><b>→</b></a>
-              <a className="contact-detail-card" href={wa?'https://wa.me/'+wa:'#'} target="_blank" rel="noreferrer"><Icon>◉</Icon><div><small>WhatsApp</small><strong>{display(data.whatsapp)}</strong><span>Quick business conversation</span></div><b>→</b></a>
-              <div className="contact-detail-card"><Icon>◷</Icon><div><small>Business hours</small><strong>{display(data.business_hours)}</strong><span>Response timing depends on the enquiry</span></div></div>
-            </div>
-          </article>
+        <article className="contact-panel">
+          <div className="contact-panel-heading"><span className="contact-kicker">SOCIAL CHANNELS</span><h2>Stay Connected</h2><p>Only social links enabled by Admin are shown here.</p></div>
+          <div className="contact-social-grid">
+            {socials.length?socials.map(item=><a key={item.id||item.platform} href={item.url} target="_blank" rel="noreferrer"><span>{String(item.platform||'?').slice(0,1).toUpperCase()}</span><div><strong>{item.platform}</strong><small>Open profile ↗</small></div></a>):<div className="contact-empty">No public social channels are currently published.</div>}
+          </div>
+        </article>
 
-          <article className="contact-panel location-panel">
-            <div className="contact-panel-heading">
-              <div><span className="contact-kicker">OFFICE &amp; LOCATION</span><h2>{company}</h2><p>{display(data.address)}</p></div>
-              {data.maps_url&&<a className="contact-outline-btn" href={data.maps_url} target="_blank" rel="noreferrer">Open in Maps ↗</a>}
-            </div>
-            <div className="contact-map"><div className="contact-map-grid"/><div className="contact-map-pin"><span>●</span></div><div className="contact-map-caption"><b>PROPULSE</b><span>Business &amp; technology support</span></div></div>
-          </article>
-        </div>
+        <article className="contact-panel contact-address-mini">
+          <span className="contact-kicker">OFFICE</span>
+          <strong>{data.company_name||'ProPulse Business'}</strong>
+          <p>{data.address||'Public address has not been configured yet.'}</p>
+          {data.maps_url&&<a href={data.maps_url} target="_blank" rel="noreferrer">View location ↗</a>}
+        </article>
+      </aside>
+    </section>
 
-        <aside className="contact-side-column">
-          <article className="contact-panel contact-direct">
-            <span className="contact-kicker">START A CONVERSATION</span>
-            <h2>Tell us what you’re building.</h2>
-            <p>From a new website or app to digital campaigns, lead acquisition or a business technology requirement, start with a simple conversation.</p>
-            <div className="contact-direct-links">
-              <a href={data.support_email?'mailto:'+data.support_email:'#'}><span>Support</span><strong>{display(data.support_email)}</strong><b>→</b></a>
-              <a href={data.careers_email?'mailto:'+data.careers_email:'#'}><span>Careers</span><strong>{display(data.careers_email)}</strong><b>→</b></a>
-            </div>
-            <Link to="/signup" className="contact-dark-cta">Get Started <span>→</span></Link>
-          </article>
+    <section className="contact-bottom-cta">
+      <div><span className="contact-kicker">READY TO START?</span><h2>Tell Us What You Need</h2><p>Choose Construction, Interiors or Real Estate and continue with the guided homeowner flow.</p></div>
+      <div><Link to="/packages">View Packages</Link><Link to="/quote#construction" onClick={event=>{event.preventDefault();openLeadPopup('')}}>Get Free Quote <Icon name="arrow" size={14}/></Link></div>
+    </section>
 
-          <article className="contact-panel">
-            <div className="contact-panel-heading"><div><span className="contact-kicker">SOCIAL CHANNELS</span><h2>Stay connected.</h2><p>Official links published by Admin.</p></div></div>
-            <div className="contact-social-grid">{socials.length?socials.map(item=><a key={item.id} href={item.url} target="_blank" rel="noreferrer"><span>{String(item.platform).slice(0,1).toUpperCase()}</span><div><strong>{item.platform}</strong><small>Open profile ↗</small></div></a>):<div className="contact-empty">Social channels will appear here when published by Admin.</div>}</div>
-          </article>
-
-          <article className="contact-panel contact-address-mini">
-            <span className="contact-kicker">BUSINESS WEBSITE</span>
-            <strong>{company}</strong>
-            <p>Practical IT and digital services for businesses that want to build, market, sell and scale.</p>
-            {data.website_url&&data.website_url!=='/'&&<a href={data.website_url} target="_blank" rel="noreferrer">Visit website ↗</a>}
-          </article>
-        </aside>
-      </section>
-
-      <section className="contact-bottom-cta">
-        <div><span className="contact-kicker">READY WHEN YOU ARE</span><h2>Have a requirement? Let’s talk.</h2><p>Reach Propulse using the contact details above or start from the business platform.</p></div>
-        <div><Link to="/leads">Explore Leads</Link><Link to="/signup">Create Account</Link></div>
-      </section>
-    </main>
-
-    <footer className="public-footer contact-footer">
-      <div className="footer-brand"><Link to="/"><img src="/brand/propulse-logo.png" alt="Propulse"/></Link><p>Building businesses through technology and digital growth.</p></div>
-      <div><strong>Platform</strong><Link to="/leads">Buy Leads</Link><a href="/#pricing">Services &amp; Pricing</a><a href="/#about">About Propulse</a></div>
-      <div><strong>Company</strong><Link to="/contact">Contact</Link><a href="/#how-it-works">How It Works</a><Link to="/login">Login</Link></div>
-      <div><strong>Contact</strong><span>{display(data.email)}</span><span>{display(data.phone)}</span></div>
-      <div className="footer-bottom"><span>© {new Date().getFullYear()} {company}. All rights reserved.</span><span>Technology • Digital Growth • Lead Sales • Business Support</span></div>
+    <footer className="contact-public-footer">
+      <div><img src="/brand/propulse-logo.svg" alt="ProPulse"/><p>A homeowner-first starting point for construction, interiors and real estate requirements.</p></div>
+      <div><b>Quick Links</b><Link to="/">Home</Link><Link to="/packages">Packages</Link><Link to="/projects">Projects</Link></div>
+      <div><b>Support</b><Link to="/how-it-works">How It Works</Link><Link to="/about">About</Link><Link to="/contact">Contact</Link></div>
+      <div><b>Contact</b>{data.phone&&<a href={phoneHref}>{data.phone}</a>}{email&&<a href={'mailto:'+email}>{email}</a>}<span>{data.address||'Hyderabad, India'}</span></div>
     </footer>
-  </div>
+  </main>
 }

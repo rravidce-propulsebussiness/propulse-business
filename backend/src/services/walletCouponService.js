@@ -1,12 +1,20 @@
 const pool=require('../config/database')
 const couponService=require('./couponService')
+const privateProofStorage=require('./privateProofStorageService')
+const { decodeBase64Payload, validateDataUrlSignature } = require('../utils/fileValidation');
+const { parseMoneyPaise, paiseToMoney } = require('../utils/money');
+const paymentAvailability=require('./paymentAvailabilityService');
+const MAX_TOPUP_PROOF_BYTES = 5 * 1024 * 1024;
+function validateTopupProof(proofUrl){ const value=String(proofUrl||'').trim(); if(!value) return; const parsed=decodeBase64Payload(value); if(!parsed || parsed.data.length<=0 || parsed.data.length>MAX_TOPUP_PROOF_BYTES || !validateDataUrlSignature(value,['image/png','image/jpeg','image/webp','application/pdf'])) throw Object.assign(new Error('Top-up proof must be a valid PNG, JPEG, WebP, or PDF file under 5 MB.'),{code:'INVALID_PROOF'}); }
 
 async function createTopupWithCoupon({userId,amount,reference,proofUrl,couponCode}){
   const value=Number(amount)
+  validateTopupProof(proofUrl)
   if(!Number.isFinite(value)||value<=0)throw Object.assign(new Error('Amount must be greater than zero'),{code:'INVALID_AMOUNT'})
   const normalizedReference=reference==null?null:String(reference).trim()||null
   const code=String(couponCode||'').trim()
   const client=await pool.connect()
+  let storedProof=null
   try{
     await client.query('BEGIN')
     if(normalizedReference)await client.query('SELECT pg_advisory_xact_lock(hashtext($1))',[`wallet-topup-reference:${normalizedReference.toLowerCase()}`])
@@ -27,18 +35,63 @@ async function createTopupWithCoupon({userId,amount,reference,proofUrl,couponCod
       await client.query(`UPDATE payments SET wallet_transaction_id=$1,updated_at=CURRENT_TIMESTAMP WHERE id=$2`,[tx.id,payment.id])
       const redemption=await couponService.reserveRedemption(client,{couponId:coupon.coupon.id,userId,paymentId:payment.id,purchaseType:'wallet_topup',purchaseId:topup.id,discountAmount:coupon.discountAmount})
       await couponService.redeemForPayment(client,payment.id)
+      const promotionReward=await couponService.applyRewardForPayment(client,payment.id)
       await client.query('COMMIT')
-      return {...topup,payment_id:payment.id,subtotal_amount:value,discount_amount:coupon.discountAmount,payable_amount:0,wallet_credited_amount:value,auto_approved:true,coupon:{code:coupon.coupon.code,discountAmount:coupon.discountAmount,subtotalAmount:value,finalAmount:0},redemption_id:redemption?.id||null}
+      return {...topup,payment_id:payment.id,subtotal_amount:value,discount_amount:coupon.discountAmount,payable_amount:0,wallet_credited_amount:value+(promotionReward?.reward_amount||0),promotion_reward:promotionReward||null,auto_approved:true,coupon:{code:coupon.coupon.code,discountAmount:coupon.discountAmount,subtotalAmount:value,finalAmount:0,reward:coupon.reward||null},redemption_id:redemption?.id||null}
     }
+    await paymentAvailability.requireOffline(client);
     if(!normalizedReference)throw Object.assign(new Error('Payment reference / UTR is required for a discounted top-up with an amount to pay'),{code:'REFERENCE_REQUIRED'})
-    const topup=(await client.query(`INSERT INTO wallet_topups(user_id,amount,reference,proof_url) VALUES($1,$2,$3,$4) RETURNING *`,[userId,value,normalizedReference,proofUrl||null])).rows[0]
+    storedProof=await privateProofStorage.storeDataUrl(proofUrl,{category:'wallet-topups',maxBytes:MAX_TOPUP_PROOF_BYTES})
+    const topup=(await client.query(`INSERT INTO wallet_topups(user_id,amount,reference,proof_url) VALUES($1,$2,$3,$4) RETURNING *`,[userId,value,normalizedReference,storedProof||null])).rows[0]
     const payment=(await client.query(`INSERT INTO payments(user_id,amount,payment_method,status,wallet_amount,external_amount,purchase_type,purchase_id,notes,coupon_id,coupon_code,subtotal_amount,discount_amount) VALUES($1,$2,'manual','pending',0,$2,'wallet_topup',$3,$4,$5,$6,$7,$8) RETURNING *`,[userId,payable,topup.id,`Wallet top-up #${topup.id}`,coupon?.coupon?.id||null,coupon?.coupon?.code||null,value,coupon?.discountAmount||0])).rows[0]
     if(coupon)await couponService.reserveRedemption(client,{couponId:coupon.coupon.id,userId,paymentId:payment.id,purchaseType:'wallet_topup',purchaseId:topup.id,discountAmount:coupon.discountAmount})
     await client.query('COMMIT')
-    return {...topup,payment_id:payment.id,subtotal_amount:value,discount_amount:coupon?.discountAmount||0,payable_amount:payable,coupon:coupon?{code:coupon.coupon.code,discountAmount:coupon.discountAmount,subtotalAmount:value,finalAmount:payable}:null}
-  }catch(e){await client.query('ROLLBACK');throw e}finally{client.release()}
+    return {...topup,payment_id:payment.id,subtotal_amount:value,discount_amount:coupon?.discountAmount||0,payable_amount:payable,coupon:coupon?{code:coupon.coupon.code,discountAmount:coupon.discountAmount,subtotalAmount:value,finalAmount:payable,reward:coupon.reward||null,benefit:coupon.benefit||null}:null}
+  }catch(e){
+    await client.query('ROLLBACK')
+    if(storedProof)await privateProofStorage.removeStoredProof(storedProof).catch(cleanupError=>console.error('Wallet coupon top-up proof cleanup failed:',cleanupError.message))
+    throw e
+  }finally{client.release()}
 }
 
-async function syncApprovedTopup({topupId}){const client=await pool.connect();try{await client.query('BEGIN');const payment=(await client.query(`SELECT * FROM payments WHERE purchase_type='wallet_topup' AND purchase_id=$1 FOR UPDATE`,[topupId])).rows[0];if(payment&&payment.status==='pending'){await client.query(`UPDATE payments SET status='paid',payment_method='manual',paid_at=CURRENT_TIMESTAMP,updated_at=CURRENT_TIMESTAMP WHERE id=$1`,[payment.id]);if(payment.coupon_id)await couponService.redeemForPayment(client,payment.id)}await client.query('COMMIT');return payment}catch(e){await client.query('ROLLBACK');throw e}finally{client.release()}}
-async function syncRejectedTopup({topupId}){const client=await pool.connect();try{await client.query('BEGIN');const payment=(await client.query(`SELECT * FROM payments WHERE purchase_type='wallet_topup' AND purchase_id=$1 FOR UPDATE`,[topupId])).rows[0];if(payment&&payment.status==='pending'){await client.query(`UPDATE payments SET status='rejected',updated_at=CURRENT_TIMESTAMP WHERE id=$1`,[payment.id]);if(payment.coupon_id)await couponService.releaseForPayment(client,payment.id)}await client.query('COMMIT');return payment}catch(e){await client.query('ROLLBACK');throw e}finally{client.release()}}
-module.exports={createTopupWithCoupon,syncApprovedTopup,syncRejectedTopup}
+async function createGatewayTopup({userId,amount,couponCode}){
+  const value=paiseToMoney(parseMoneyPaise(amount));
+  const code=String(couponCode||'').trim();
+  const client=await pool.connect();
+  try{
+    await client.query('BEGIN');
+    await paymentAvailability.requireOnline(client);
+    const coupon=code?await couponService.validateForUser({client,userId,code,subtotal:value,purchaseType:'wallet_topup'}):null;
+    const payable=Number((coupon?coupon.finalAmount:value).toFixed(2));
+    if(payable===0&&coupon){
+      await client.query('ROLLBACK');
+      return createTopupWithCoupon({userId,amount:value,reference:null,proofUrl:null,couponCode:code});
+    }
+    if(payable<=0)throw Object.assign(new Error('Amount must be greater than zero'),{code:'INVALID_AMOUNT'});
+    const topup=(await client.query(
+      `INSERT INTO wallet_topups(user_id,amount,reference,proof_url,payment_method,status)
+       VALUES($1,$2,NULL,NULL,'gateway','pending') RETURNING *`,
+      [userId,value]
+    )).rows[0];
+    const payment=(await client.query(
+      `INSERT INTO payments(
+         user_id,amount,payment_method,status,wallet_amount,external_amount,purchase_type,purchase_id,
+         notes,coupon_id,coupon_code,subtotal_amount,discount_amount
+       ) VALUES($1,$2,'gateway','pending',0,$2,'wallet_topup',$3,$4,$5,$6,$7,$8)
+       RETURNING *`,
+      [userId,payable,topup.id,`Wallet top-up #${topup.id} online checkout`,coupon?.coupon?.id||null,coupon?.coupon?.code||null,value,coupon?.discountAmount||0]
+    )).rows[0];
+    if(coupon)await couponService.reserveRedemption(client,{couponId:coupon.coupon.id,userId,paymentId:payment.id,purchaseType:'wallet_topup',purchaseId:topup.id,discountAmount:coupon.discountAmount});
+    await client.query('COMMIT');
+    return {...topup,payment_id:payment.id,payment,subtotal_amount:value,discount_amount:coupon?.discountAmount||0,payable_amount:payable,coupon:coupon?{code:coupon.coupon.code,discountAmount:coupon.discountAmount,subtotalAmount:value,finalAmount:payable,reward:coupon.reward||null,benefit:coupon.benefit||null}:null};
+  }catch(error){
+    await client.query('ROLLBACK');
+    throw error;
+  }finally{client.release()}
+}
+
+async function syncApprovedTopupInTransaction(client,{topupId}){const payment=(await client.query(`SELECT * FROM payments WHERE purchase_type='wallet_topup' AND purchase_id=$1 FOR UPDATE`,[topupId])).rows[0];if(payment&&payment.status==='pending'){await client.query(`UPDATE payments SET status='paid',payment_method='manual',paid_at=CURRENT_TIMESTAMP,updated_at=CURRENT_TIMESTAMP WHERE id=$1`,[payment.id]);if(payment.coupon_id){await couponService.redeemForPayment(client,payment.id);await couponService.applyRewardForPayment(client,payment.id)}}return payment}
+async function syncRejectedTopupInTransaction(client,{topupId}){const payment=(await client.query(`SELECT * FROM payments WHERE purchase_type='wallet_topup' AND purchase_id=$1 FOR UPDATE`,[topupId])).rows[0];if(payment&&payment.status==='pending'){await client.query(`UPDATE payments SET status='rejected',updated_at=CURRENT_TIMESTAMP WHERE id=$1`,[payment.id]);if(payment.coupon_id)await couponService.releaseForPayment(client,payment.id)}return payment}
+async function syncApprovedTopup({topupId}){const client=await pool.connect();try{await client.query('BEGIN');const payment=await syncApprovedTopupInTransaction(client,{topupId});await client.query('COMMIT');return payment}catch(e){await client.query('ROLLBACK');throw e}finally{client.release()}}
+async function syncRejectedTopup({topupId}){const client=await pool.connect();try{await client.query('BEGIN');const payment=await syncRejectedTopupInTransaction(client,{topupId});await client.query('COMMIT');return payment}catch(e){await client.query('ROLLBACK');throw e}finally{client.release()}}
+module.exports={createTopupWithCoupon,createGatewayTopup,syncApprovedTopup,syncRejectedTopup,syncApprovedTopupInTransaction,syncRejectedTopupInTransaction}

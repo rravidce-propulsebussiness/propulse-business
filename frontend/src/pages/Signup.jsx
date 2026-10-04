@@ -99,15 +99,13 @@ function Signup() {
   const subserviceOptions = useMemo(() => serviceSelections.map((s) => subservices.filter((item) => String(item.service_id) === String(s.serviceId))), [subservices, serviceSelections])
   const cityOptions = useMemo(() => locationSelections.map((s) => cities.filter((item) => String(item.state_id) === String(s.stateId))), [cities, locationSelections])
 
-  function accountTypeLabel() {
-    return accountType === 'lead_partner' ? 'Lead Partner' : 'User'
-  }
 
   function validateCredentials() {
     const mobile = String(form.phone || '').replace(/\D/g, '')
     if (!/^\d{10}$/.test(mobile)) return 'Mobile number must be exactly 10 digits.'
     if (!googleCredential) {
-      if (!/^(?=.*[A-Za-z])(?=.*\d).{7,}$/.test(form.password)) return 'Password must contain letters and numbers, for example Ravi143.'
+      if (form.password.length < 8 || form.password.length > 64 || !/[A-Za-z]/.test(form.password) || !/\d/.test(form.password)) return 'Password must be 8-64 characters and contain at least one letter and one number.'
+      if (new TextEncoder().encode(form.password).length > 72) return 'Password is too long after UTF-8 encoding. Use a shorter password.'
       if (form.password !== form.confirm) return 'Passwords do not match.'
     }
     return ''
@@ -150,7 +148,7 @@ function Signup() {
     try {
       setLoading(true)
       if (!proofDocuments.length) return setError('Upload at least one company proof document.')
-      const result = await authRequest('/auth/signup', { method: 'POST', body: JSON.stringify({ ...form, confirm: undefined, password: googleCredential ? undefined : form.password, accountType, services: cleanServices, locations: cleanLocations, googleCredential: googleCredential || undefined }) })
+      const result = await authRequest('/auth/signup', { method: 'POST', body: JSON.stringify({ ...form, confirm: undefined, password: googleCredential ? undefined : form.password, role: accountType, services: cleanServices, locations: cleanLocations, googleCredential: googleCredential || undefined }) })
       saveSession(result)
       setDocumentUploadStatus('uploading')
       for (const file of proofDocuments) {
@@ -222,22 +220,6 @@ function Signup() {
     }
   }, [completeGoogleLogin])
 
-  const handleGoogle = useCallback(async credential => {
-    setError('')
-    try {
-      setGoogleLoading(true)
-      const result = await authRequest('/auth/google', {
-        method: 'POST',
-        body: JSON.stringify({ credential }),
-      })
-      await completeGoogleLogin(result)
-    } catch (err) {
-      setError(err.message)
-    } finally {
-      setGoogleLoading(false)
-    }
-  }, [completeGoogleLogin])
-
   return (
     <div className="signup-premium-page">
       <header className="signup-topbar">
@@ -287,8 +269,8 @@ function Signup() {
                 <label>Full name<input name="name" autoComplete="name" value={form.name} onChange={(e) => update('name', e.target.value)} placeholder="Enter your full name" required /></label>
                 <label>Email address<input name="email" type="email" autoComplete="email" value={form.email} onChange={(e) => update('email', e.target.value)} placeholder="Enter your email address" required /></label>
                 <label>Mobile number<input type="tel" autoComplete="tel" value={form.phone} onChange={(e) => update('phone', e.target.value)} placeholder="Enter your mobile number" required /></label>
-                <label>Password<div className="signup-password-field"><input name="password" type={showPassword ? 'text' : 'password'} autoComplete="new-password" minLength={7} pattern="(?=.*[A-Za-z])(?=.*[0-9]).{7,}" title="Use at least 7 characters with letters and numbers, e.g. Ravi143" value={form.password} onChange={(e) => update('password', e.target.value)} placeholder="Example: Ravi143" required /><button type="button" onClick={() => setShowPassword(v => !v)}>{showPassword ? 'Hide' : 'Show'}</button></div></label>
-                <label className="signup-full">Confirm password<input name="confirm-password" type={showPassword ? 'text' : 'password'} autoComplete="new-password" minLength={7} value={form.confirm} onChange={(e) => update('confirm', e.target.value)} placeholder="Repeat your password" required /></label>
+                <label>Password<div className="signup-password-field"><input name="password" type={showPassword ? 'text' : 'password'} autoComplete="new-password" minLength={8} maxLength={64} pattern="(?=.*[A-Za-z])(?=.*[0-9]).{8,64}" title="Use 8-64 characters with letters and numbers" value={form.password} onChange={(e) => update('password', e.target.value)} placeholder="Example: Ravi143" required /><button type="button" onClick={() => setShowPassword(v => !v)}>{showPassword ? 'Hide' : 'Show'}</button></div></label>
+                <label className="signup-full">Confirm password<input name="confirm-password" type={showPassword ? 'text' : 'password'} autoComplete="new-password" minLength={8} maxLength={64} value={form.confirm} onChange={(e) => update('confirm', e.target.value)} placeholder="Repeat your password" required /></label>
               </div>
             </section>
             <button className="signup-submit" type="submit" disabled={loading || googleLoading || loadingData}>Create Account <span>→</span></button>

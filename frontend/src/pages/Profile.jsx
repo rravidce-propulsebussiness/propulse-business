@@ -1,215 +1,331 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { authRequest, saveSession, getUser } from '../utils/auth'
+import UserHeader from '../components/UserHeader'
 import './Profile.css'
+import {playSound} from '../utils/soundEffects'
 
-const emptyService = () => ({ industryId: '', serviceId: '', subserviceId: '' })
-const emptyLocation = () => ({ stateId: '', cityId: '' })
+const emptyService=()=>({industryId:'',serviceId:'',subserviceId:''})
+const emptyLocation=()=>({stateId:'',cityId:''})
+const emptyProject=()=>({title:'',projectType:'',description:'',locationText:'',completionYear:'',areaText:'',budgetText:'',coverImageUrl:'',videoUrl:'',videoDisplayUrl:'',videoPublishedAt:'',planUrl:'',planDisplayUrl:'',isPublished:true})
+const emptyPlan=()=>({title:'',description:'',priceFrom:'',durationLabel:'',inclusions:'',isPublished:true})
 
-function Profile() {
-  const navigate = useNavigate()
-  const [form, setForm] = useState({ name: '', email: '', phone: '', businessName: '', businessDetails: '' })
-  const [industries, setIndustries] = useState([])
-  const [services, setServices] = useState([])
-  const [subservices, setSubservices] = useState([])
-  const [states, setStates] = useState([])
-  const [cities, setCities] = useState([])
-  const [serviceSelections, setServiceSelections] = useState([])
-  const [locationSelections, setLocationSelections] = useState([])
-  const [companyProofs, setCompanyProofs] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [saving, setSaving] = useState(false)
-  const [message, setMessage] = useState('')
-  const [error, setError] = useState('')
+function reasonText(status){
+  const reason=status?.reason
+  if(status?.eligible)return 'Your business is eligible to appear in Find Professionals.'
+  if(reason==='membership_required')return 'An active eligible membership is required before this profile can appear publicly.'
+  if(reason==='verification_required')return 'Admin currently requires verified businesses for the public directory.'
+  if(reason==='directory_disabled')return 'The public Expert Directory is currently disabled by Admin.'
+  if(reason==='profile_hidden')return 'This public profile is currently hidden or disabled.'
+  return 'Complete your public business profile to become eligible for the Expert Directory.'
+}
 
-  useEffect(() => {
-    async function load() {
-      try {
-        const [profile, industryData, serviceData, subserviceData, stateData, cityData] = await Promise.all([
-          authRequest('/profile'), authRequest('/industries'), authRequest('/services'),
-          authRequest('/subservices'), authRequest('/states'), authRequest('/cities'),
+function mapProject(item){
+  return {
+    id:item.id,
+    title:item.title||'',
+    projectType:item.project_type||'',
+    description:item.description||'',
+    locationText:item.location_text||'',
+    completionYear:item.completion_year||'',
+    areaText:item.area_text||'',
+    budgetText:item.budget_text||'',
+    coverImageUrl:item.cover_image_url||'',
+    videoUrl:item.video_url||'',
+    videoDisplayUrl:item.video_display_url||item.video_url||'',
+    videoPublishedAt:item.video_published_at||'',
+    planUrl:item.plan_url||'',
+    planDisplayUrl:item.plan_display_url||item.plan_url||'',
+    isPublished:item.is_published!==false,
+  }
+}
+
+function mapPlan(item){
+  return {
+    id:item.id,
+    title:item.title||'',
+    description:item.description||'',
+    priceFrom:item.price_from??'',
+    durationLabel:item.duration_label||'',
+    inclusions:Array.isArray(item.inclusions)?item.inclusions.join('\n'):'',
+    isPublished:item.is_published!==false,
+  }
+}
+
+export default function Profile(){
+  const navigate=useNavigate()
+  const [form,setForm]=useState({name:'',email:'',phone:'',businessName:'',businessDetails:'',publicHeadline:'',publicSummary:'',yearsExperience:'',publicProfileEnabled:true})
+  const [industries,setIndustries]=useState([])
+  const [services,setServices]=useState([])
+  const [subservices,setSubservices]=useState([])
+  const [states,setStates]=useState([])
+  const [cities,setCities]=useState([])
+  const [serviceSelections,setServiceSelections]=useState([])
+  const [locationSelections,setLocationSelections]=useState([])
+  const [companyProofs,setCompanyProofs]=useState([])
+  const [projects,setProjects]=useState([])
+  const [plans,setPlans]=useState([])
+  const [directoryStatus,setDirectoryStatus]=useState(null)
+  const [videoUploads,setVideoUploads]=useState({})
+  const [planUploads,setPlanUploads]=useState({})
+  const [activeSection,setActiveSection]=useState('business')
+  const [loading,setLoading]=useState(true)
+  const [saving,setSaving]=useState(false)
+  const [message,setMessage]=useState('')
+  const [error,setError]=useState('')
+
+  useEffect(()=>{
+    async function load(){
+      try{
+        const [profile,industryData,serviceData,subserviceData,stateData,cityData]=await Promise.all([
+          authRequest('/profile'),authRequest('/industries'),authRequest('/services'),authRequest('/subservices'),authRequest('/states'),authRequest('/cities'),
         ])
-        setForm({ name: getUser()?.name || '', email: getUser()?.email || '', phone: profile.phone || '', businessName: profile.business_name || '', businessDetails: profile.business_details || '' })
-        setIndustries(industryData); setServices(serviceData); setSubservices(subserviceData); setStates(stateData); setCities(cityData)
-        setServiceSelections(profile.services.map((x) => ({ industryId: String(x.industry_id), serviceId: String(x.service_id), subserviceId: x.subservice_id ? String(x.subservice_id) : '' })))
-        setLocationSelections(profile.locations.map((x) => ({ stateId: String(x.state_id), cityId: String(x.city_id) })))
-        setCompanyProofs(Array.isArray(profile.company_proofs) ? profile.company_proofs : [])
-      } catch (err) { setError(err.message) } finally { setLoading(false) }
+        setForm({
+          name:getUser()?.name||'',email:getUser()?.email||'',phone:profile.phone||'',businessName:profile.business_name||'',businessDetails:profile.business_details||'',
+          publicHeadline:profile.public_headline||'',publicSummary:profile.public_summary||'',yearsExperience:profile.years_experience??'',publicProfileEnabled:profile.public_profile_enabled!==false,
+        })
+        setIndustries(industryData);setServices(serviceData);setSubservices(subserviceData);setStates(stateData);setCities(cityData)
+        setServiceSelections((profile.services||[]).map(x=>({industryId:String(x.industry_id),serviceId:String(x.service_id),subserviceId:x.subservice_id?String(x.subservice_id):''})))
+        setLocationSelections((profile.locations||[]).map(x=>({stateId:String(x.state_id),cityId:String(x.city_id)})))
+        setCompanyProofs(Array.isArray(profile.company_proofs)?profile.company_proofs:[])
+        setProjects((profile.projects||[]).map(mapProject))
+        setPlans((profile.service_plans||[]).map(mapPlan))
+        setDirectoryStatus(profile.directory_status||null)
+      }catch(err){setError(err.message)}finally{setLoading(false)}
     }
     load()
-  }, [])
+  },[])
 
-  const serviceOptions = useMemo(() => serviceSelections.map((x) => services.filter((s) => String(s.industry_id) === String(x.industryId))), [services, serviceSelections])
-  const subserviceOptions = useMemo(() => serviceSelections.map((x) => subservices.filter((s) => String(s.service_id) === String(x.serviceId))), [subservices, serviceSelections])
-  const cityOptions = useMemo(() => locationSelections.map((x) => cities.filter((c) => String(c.state_id) === String(x.stateId))), [cities, locationSelections])
-  const initials = (form.businessName || form.name || 'P').trim().split(/\s+/).slice(0, 2).map((part) => part[0]).join('').toUpperCase() || 'P'
-  const completionItems = [
-    Boolean(form.name && form.email && form.phone),
-    Boolean(form.businessName && form.businessDetails),
-    serviceSelections.length > 0 && serviceSelections.every((x) => x.industryId && x.serviceId),
-    locationSelections.length > 0 && locationSelections.every((x) => x.stateId && x.cityId),
+  const serviceOptions=useMemo(()=>serviceSelections.map(x=>services.filter(s=>String(s.industry_id)===String(x.industryId))),[services,serviceSelections])
+  const subserviceOptions=useMemo(()=>serviceSelections.map(x=>subservices.filter(s=>String(s.service_id)===String(x.serviceId))),[subservices,serviceSelections])
+  const cityOptions=useMemo(()=>locationSelections.map(x=>cities.filter(c=>String(c.state_id)===String(x.stateId))),[cities,locationSelections])
+  const initials=(form.businessName||form.name||'P').trim().split(/\s+/).slice(0,2).map(part=>part[0]).join('').toUpperCase()||'P'
+  const completionItems=[
+    Boolean(form.name&&form.email&&form.phone),Boolean(form.businessName&&form.businessDetails),
+    serviceSelections.length>0&&serviceSelections.every(x=>x.industryId&&x.serviceId),locationSelections.length>0&&locationSelections.every(x=>x.stateId&&x.cityId),
+    Boolean(form.publicHeadline&&form.publicSummary),projects.length>0,
   ]
-  const completion = Math.round((completionItems.filter(Boolean).length / completionItems.length) * 100)
-  function scrollToSection(id) {
-    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-  }
+  const completion=Math.round((completionItems.filter(Boolean).length/completionItems.length)*100)
 
-  function update(field, value) { setForm((x) => ({ ...x, [field]: value })); setMessage('') }
-  function updateService(index, field, value) {
-    setServiceSelections((items) => items.map((x, i) => i !== index ? x : field === 'industryId' ? { industryId: value, serviceId: '', subserviceId: '' } : field === 'serviceId' ? { ...x, serviceId: value, subserviceId: '' } : { ...x, [field]: value }))
-    setMessage('')
-  }
-  function updateLocation(index, field, value) {
-    setLocationSelections((items) => items.map((x, i) => i !== index ? x : field === 'stateId' ? { stateId: value, cityId: '' } : { ...x, cityId: value }))
-    setMessage('')
-  }
-  function addAllServicesForIndustry(index) {
-    const industryId = serviceSelections[index]?.industryId
-    if (!industryId) return setError('Select an industry first.')
-    const available = services.filter((service) => String(service.industry_id) === String(industryId))
-    if (!available.length) return setError('No services are available for this industry.')
-    setServiceSelections((items) => {
-      const existing = new Set(items.map((item) => `${item.industryId}:${item.serviceId}`))
-      const additions = available.filter((service) => !existing.has(`${industryId}:${service.id}`)).map((service) => ({ industryId: String(industryId), serviceId: String(service.id), subserviceId: '' }))
-      return additions.length ? [...items, ...additions] : items
-    })
-    setMessage('All available services for this industry were added.')
-    setError('')
-  }
+  function selectSection(section){setActiveSection(section);setMessage('');requestAnimationFrame(()=>document.getElementById('profile-tabs')?.scrollIntoView({behavior:'smooth',block:'start'}))}
+  function update(field,value){setForm(x=>({...x,[field]:value}));setMessage('')}
+  function updateService(index,field,value){setServiceSelections(items=>items.map((x,i)=>i!==index?x:field==='industryId'?{industryId:value,serviceId:'',subserviceId:''}:field==='serviceId'?{...x,serviceId:value,subserviceId:''}:{...x,[field]:value}));setMessage('')}
+  function updateLocation(index,field,value){setLocationSelections(items=>items.map((x,i)=>i!==index?x:field==='stateId'?{stateId:value,cityId:''}:{...x,cityId:value}));setMessage('')}
+  function updateProject(index,field,value){setProjects(items=>items.map((item,i)=>i!==index?item:field==='videoUrl'?{...item,videoUrl:value,videoDisplayUrl:value}:field==='planUrl'?{...item,planUrl:value,planDisplayUrl:value}:{...item,[field]:value}));setMessage('')}
+  function updatePlan(index,field,value){setPlans(items=>items.map((item,i)=>i===index?{...item,[field]:value}:item));setMessage('')}
 
-  async function save(e) {
-    e.preventDefault(); setError(''); setMessage('')
-    if (!serviceSelections.length || serviceSelections.some((x) => !x.industryId || !x.serviceId)) return setError('Complete every service selection.')
-    if (!locationSelections.length || locationSelections.some((x) => !x.stateId || !x.cityId)) return setError('Complete every location selection.')
-    try {
-      setSaving(true)
-      const result = await authRequest('/profile', {
-        method: 'PUT', body: JSON.stringify({ ...form, services: serviceSelections.map((x) => ({ industryId: Number(x.industryId), serviceId: Number(x.serviceId), subserviceId: x.subserviceId ? Number(x.subserviceId) : null })), locations: locationSelections.map((x) => ({ stateId: Number(x.stateId), cityId: Number(x.cityId) })) }),
+  async function uploadProjectVideo(index,file){
+    if(!file)return
+    const extension=String(file.name||'').toLowerCase().split('.').pop()
+    const inferred={mp4:'video/mp4',mov:'video/quicktime',webm:'video/webm'}[extension]
+    const mime=file.type||inferred||''
+    if(!['video/mp4','video/quicktime','video/webm'].includes(mime)){
+      setError('Only MP4, MOV and WebM project videos are supported.')
+      return
+    }
+    if(file.size>50*1024*1024){
+      setError('Project videos must be 50 MB or smaller.')
+      return
+    }
+    try{
+      setVideoUploads(current=>({...current,[index]:true}))
+      setError('');setMessage('')
+      const result=await authRequest('/profile/projects/video',{
+        method:'POST',
+        headers:{'Content-Type':mime},
+        body:file,
+        timeoutMs:120000,
       })
-      saveSession({ token: getTokenSafe(), user: result.user })
-      setMessage('Profile saved successfully.')
-    } catch (err) { setError(err.message) } finally { setSaving(false) }
+      setProjects(items=>items.map((item,i)=>i===index?{...item,videoUrl:result.url||'',videoDisplayUrl:result.displayUrl||result.url||'',videoPublishedAt:result.uploadedAt||''}:item))
+      playSound('upload')
+      setMessage('Video uploaded. Save changes to publish it on your profile and Projects page.')
+    }catch(err){
+      playSound('warning')
+      setError(err.message||'Unable to upload project video.')
+    }finally{
+      setVideoUploads(current=>({...current,[index]:false}))
+    }
   }
 
-  function getTokenSafe() { return localStorage.getItem('propulse_auth_token') }
+  function playableVideo(url){
+    const value=String(url||'')
+    return value.startsWith('/uploads/business-projects/')||/\.(mp4|mov|webm)(?:$|[?#])/i.test(value)
+  }
 
-  if (loading) return <div className="profile-page"><div className="profile-loading">Loading your business profile…</div></div>
+  async function uploadProjectPlan(index,file){
+    if(!file)return
+    const extension=String(file.name||'').toLowerCase().split('.').pop()
+    const inferred={pdf:'application/pdf',jpg:'image/jpeg',jpeg:'image/jpeg',png:'image/png',webp:'image/webp'}[extension]
+    const mime=file.type||inferred||''
+    if(!['application/pdf','image/jpeg','image/png','image/webp'].includes(mime)){
+      setError('Only PDF, JPG, PNG and WebP plan files are supported.')
+      return
+    }
+    if(file.size>15*1024*1024){
+      setError('Plan / drawing files must be 15 MB or smaller.')
+      return
+    }
+    try{
+      setPlanUploads(current=>({...current,[index]:true}))
+      setError('');setMessage('')
+      const result=await authRequest('/profile/projects/plan',{
+        method:'POST',
+        headers:{'Content-Type':mime},
+        body:file,
+        timeoutMs:90000,
+      })
+      setProjects(items=>items.map((item,i)=>i===index?{...item,planUrl:result.url||'',planDisplayUrl:result.displayUrl||result.url||''}:item))
+      playSound('upload')
+      setMessage('Plan / drawing uploaded. Save changes to attach it to this project.')
+    }catch(err){
+      playSound('warning')
+      setError(err.message||'Unable to upload plan / drawing.')
+    }finally{
+      setPlanUploads(current=>({...current,[index]:false}))
+    }
+  }
 
-  return (
+  function planPreviewKind(url){
+    const value=String(url||'').toLowerCase()
+    if(/\.pdf(?:$|[?#])/.test(value))return 'pdf'
+    if(/\.(?:jpg|jpeg|png|webp)(?:$|[?#])/.test(value))return 'image'
+    return 'external'
+  }
+
+  function addAllServicesForIndustry(index){
+    const industryId=serviceSelections[index]?.industryId
+    if(!industryId)return setError('Select an industry first.')
+    const available=services.filter(service=>String(service.industry_id)===String(industryId))
+    if(!available.length)return setError('No services are available for this industry.')
+    setServiceSelections(items=>{
+      const existing=new Set(items.map(item=>`${item.industryId}:${item.serviceId}`))
+      const additions=available.filter(service=>!existing.has(`${industryId}:${service.id}`)).map(service=>({industryId:String(industryId),serviceId:String(service.id),subserviceId:''}))
+      return additions.length?[...items,...additions]:items
+    })
+    setMessage('All available services for this industry were added.');setError('')
+  }
+
+  async function save(e){
+    e.preventDefault();setError('');setMessage('')
+    if(!form.name.trim()||!form.email.trim()||!form.phone.trim()||!form.businessName.trim()||!form.businessDetails.trim())return setError('Complete all business information before saving.')
+    if(!serviceSelections.length||serviceSelections.some(x=>!x.industryId||!x.serviceId))return setError('Complete every service selection.')
+    if(!locationSelections.length||locationSelections.some(x=>!x.stateId||!x.cityId))return setError('Complete every location selection.')
+    if(projects.some(item=>!item.title.trim()))return setError('Every completed project needs a title.')
+    if(plans.some(item=>!item.title.trim()))return setError('Every service plan needs a title.')
+    try{
+      setSaving(true)
+      const result=await authRequest('/profile',{method:'PUT',body:JSON.stringify({
+        ...form,
+        yearsExperience:form.yearsExperience===''?null:Number(form.yearsExperience),
+        services:serviceSelections.map(x=>({industryId:Number(x.industryId),serviceId:Number(x.serviceId),subserviceId:x.subserviceId?Number(x.subserviceId):null})),
+        locations:locationSelections.map(x=>({stateId:Number(x.stateId),cityId:Number(x.cityId)})),
+        projects:projects.map(item=>({...item,completionYear:item.completionYear===''?null:Number(item.completionYear)})),
+        plans:plans.map(item=>({...item,priceFrom:item.priceFrom===''?null:Number(item.priceFrom),inclusions:item.inclusions.split('\n').map(v=>v.trim()).filter(Boolean)})),
+      })})
+      saveSession({user:result.user})
+      const savedProfile=result.user?.profile
+      if(savedProfile){
+        setProjects((savedProfile.projects||[]).map(mapProject));setPlans((savedProfile.service_plans||[]).map(mapPlan));setDirectoryStatus(savedProfile.directory_status||null)
+      }
+      playSound('success')
+      setMessage('Profile saved successfully. Public directory content is up to date.')
+    }catch(err){playSound('warning');setError(err.message)}finally{setSaving(false)}
+  }
+
+  if(loading)return <><UserHeader/><div className="profile-page"><div className="profile-loading">Loading your business profile…</div></div></>
+
+  return <>
+    <UserHeader/>
     <div className="profile-page">
       <section className="profile-hero">
-        <div className="profile-hero-glow" />
+        <div className="profile-hero-glow"/>
         <div className="profile-avatar">{initials}</div>
         <div className="profile-hero-main">
-          <div className="profile-hero-title">
-            <div>
-              <span className="profile-kicker">ACCOUNT PROFILE</span>
-              <h1>{form.businessName || form.name || 'Business profile'}</h1>
-              <p>{form.businessDetails || 'Keep your business profile, services and lead coverage up to date.'}</p>
-            </div>
-            <button className="profile-hero-back" type="button" onClick={() => navigate('/dashboard')}>← Dashboard</button>
-          </div>
-          <div className="profile-hero-meta">
-            <span>✉ {form.email || 'Email not set'}</span>
-            <span>☎ {form.phone || 'Phone not set'}</span>
-            <span>⌁ {locationSelections.length} location{locationSelections.length === 1 ? '' : 's'}</span>
-            <span>✦ {serviceSelections.length} service{serviceSelections.length === 1 ? '' : 's'}</span>
-          </div>
+          <div className="profile-hero-title"><div><span className="profile-kicker">BUSINESS PROFILE</span><h1>{form.businessName||form.name||'Business profile'}</h1><p>{form.publicHeadline||form.businessDetails||'Build a strong public profile customers can evaluate before creating a requirement.'}</p></div><button className="profile-hero-back" type="button" onClick={()=>navigate('/professionals')}>← Marketplace</button></div>
+          <div className="profile-hero-meta"><span>✉ {form.email||'Email not set'}</span><span>☎ {form.phone||'Phone not set'}</span><span>⌁ {locationSelections.length} location{locationSelections.length===1?'':'s'}</span><span>✦ {serviceSelections.length} service{serviceSelections.length===1?'':'s'}</span><span>▣ {projects.length} project{projects.length===1?'':'s'}</span></div>
         </div>
-        <div className="profile-completion-mini">
-          <strong>{completion}%</strong>
-          <span>Profile complete</span>
-          <div><i style={{ width: `${completion}%` }} /></div>
-        </div>
+        <div className="profile-completion-mini"><strong>{completion}%</strong><span>Profile complete</span><div><i style={{width:`${completion}%`}}/></div></div>
       </section>
 
-      <nav className="profile-tabs" aria-label="Profile sections">
-        <button type="button" className="active" onClick={() => scrollToSection('profile-information')}>Personal information</button>
-        <button type="button" onClick={() => scrollToSection('profile-services')}>Services</button>
-        <button type="button" onClick={() => scrollToSection('profile-locations')}>Locations</button>
+      <section className={`profile-directory-banner ${directoryStatus?.eligible?'eligible':'attention'}`}>
+        <div><span>{directoryStatus?.eligible?'PUBLIC DIRECTORY READY':'PUBLIC DIRECTORY STATUS'}</span><h3>{directoryStatus?.eligible?'Your business can appear in Experts':'Complete eligibility for Experts'}</h3><p>{reasonText(directoryStatus)}</p></div>
+        <div className="profile-directory-actions">{directoryStatus?.membership&&<b>{String(directoryStatus.membership.planGroup||'').toUpperCase()} member</b>}{directoryStatus?.eligible&&<Link to="/experts">Preview Experts ↗</Link>}</div>
+      </section>
+
+      <nav className="profile-tabs" id="profile-tabs" aria-label="Profile sections">
+        <button type="button" className={activeSection==='business'?'active':''} onClick={()=>selectSection('business')}>Business</button>
+        <button type="button" className={activeSection==='services'?'active':''} onClick={()=>selectSection('services')}>Services</button>
+        <button type="button" className={activeSection==='locations'?'active':''} onClick={()=>selectSection('locations')}>Locations</button>
+        <button type="button" className={activeSection==='public'?'active':''} onClick={()=>selectSection('public')}>Public profile</button>
+        <button type="button" className={activeSection==='projects'?'active':''} onClick={()=>selectSection('projects')}>Projects</button>
+        <button type="button" className={activeSection==='plans'?'active':''} onClick={()=>selectSection('plans')}>Packages</button>
       </nav>
 
-      {error && <div className="profile-alert error">{error}</div>}
-      {message && <div className="profile-alert success">{message}</div>}
+      {error&&<div className="profile-alert error">{error}</div>}
+      {message&&<div className="profile-alert success">{message}</div>}
 
       <form onSubmit={save} className="profile-form">
         <div className="profile-main-column">
-        <section className="profile-panel profile-information" id="profile-information">
-          <div className="panel-title"><div><span>01</span><h2>Business information</h2></div></div>
-          <div className="profile-grid">
-            <label>Full name<input value={form.name} onChange={(e) => update('name', e.target.value)} required /></label>
-            <label>Email<input type="email" value={form.email} onChange={(e) => update('email', e.target.value)} required /></label>
-            <label>Phone<input value={form.phone} onChange={(e) => update('phone', e.target.value)} required /></label>
-            <label>Business name<input value={form.businessName} onChange={(e) => update('businessName', e.target.value)} required /></label>
-            <label className="wide">Business details<textarea rows="4" value={form.businessDetails} onChange={(e) => update('businessDetails', e.target.value)} required /></label>
-          </div>
-        </section>
+          {activeSection==='business'&&<>
+          <section className="profile-panel profile-information" id="profile-information">
+            <div className="panel-title"><div><span>01</span><h2>Business information</h2><p>Private account and core business details.</p></div></div>
+            <div className="profile-grid"><label>Full name<input value={form.name} onChange={e=>update('name',e.target.value)} required/></label><label>Email<input type="email" value={form.email} onChange={e=>update('email',e.target.value)} required/></label><label>Phone<input value={form.phone} onChange={e=>update('phone',e.target.value)} required/></label><label>Business name<input value={form.businessName} onChange={e=>update('businessName',e.target.value)} required/></label><label className="wide">Business details<textarea rows="4" value={form.businessDetails} onChange={e=>update('businessDetails',e.target.value)} required/></label></div>
+          </section>
+          </>}
 
-        <section className="profile-panel" id="profile-services">
-          <div className="panel-title"><div><span>02</span><h2>Services you provide</h2><p>Add every service you want matching leads for.</p></div><button type="button" onClick={() => setServiceSelections((x) => [...x, emptyService()])}>+ Add service</button></div>
-          <div className="profile-list">
-            {serviceSelections.map((x, i) => <div className="profile-row" key={`s-${i}`}><div className="row-number">{String(i + 1).padStart(2, '0')}</div><label>Industry<select value={x.industryId} onChange={(e) => updateService(i, 'industryId', e.target.value)} required><option value="">Select industry</option>{industries.map((v) => <option key={v.id} value={v.id}>{v.name}</option>)}</select></label><label>Service<select value={x.serviceId} onChange={(e) => updateService(i, 'serviceId', e.target.value)} disabled={!x.industryId} required><option value="">Select service</option>{(serviceOptions[i] || []).map((v) => <option key={v.id} value={v.id}>{v.name}</option>)}</select></label><label>Subservice <small>Optional · blank means all</small><select value={x.subserviceId} onChange={(e) => updateService(i, 'subserviceId', e.target.value)} disabled={!x.serviceId}><option value="">All related</option>{(subserviceOptions[i] || []).map((v) => <option key={v.id} value={v.id}>{v.name}</option>)}</select></label><button type="button" className="add-all-services" onClick={() => addAllServicesForIndustry(i)} disabled={!x.industryId}>Add all services</button><button type="button" className="row-remove" onClick={() => setServiceSelections((items) => items.filter((_, n) => n !== i))}>Remove</button></div>)}
-          </div>
-        </section>
+          {activeSection==='services'&&<>
+          <section className="profile-panel" id="profile-services">
+            <div className="panel-title"><div><span>02</span><h2>Services you provide</h2><p>These services drive lead matching and appear on your public profile.</p></div><button type="button" onClick={()=>setServiceSelections(x=>[...x,emptyService()])}>+ Add service</button></div>
+            <div className="profile-list">{serviceSelections.map((x,i)=><div className="profile-row" key={`s-${i}`}><div className="row-number">{String(i+1).padStart(2,'0')}</div><label>Industry<select value={x.industryId} onChange={e=>updateService(i,'industryId',e.target.value)} required><option value="">Select industry</option>{industries.map(v=><option key={v.id} value={v.id}>{v.name}</option>)}</select></label><label>Service<select value={x.serviceId} onChange={e=>updateService(i,'serviceId',e.target.value)} disabled={!x.industryId} required><option value="">Select service</option>{(serviceOptions[i]||[]).map(v=><option key={v.id} value={v.id}>{v.name}</option>)}</select></label><label>Subservice <small>Optional · blank means all</small><select value={x.subserviceId} onChange={e=>updateService(i,'subserviceId',e.target.value)} disabled={!x.serviceId}><option value="">All related</option>{(subserviceOptions[i]||[]).map(v=><option key={v.id} value={v.id}>{v.name}</option>)}</select></label><button type="button" className="add-all-services" onClick={()=>addAllServicesForIndustry(i)} disabled={!x.industryId}>Add all services</button><button type="button" className="row-remove" onClick={()=>setServiceSelections(items=>items.filter((_,n)=>n!==i))}>Remove</button></div>)}</div>
+          </section>
+          </>}
 
-        <section className="profile-panel" id="profile-locations">
-          <div className="panel-title"><div><span>03</span><h2>Locations you serve</h2><p>Add every city where you want to receive leads.</p></div><button type="button" onClick={() => setLocationSelections((x) => [...x, emptyLocation()])}>+ Add location</button></div>
-          <div className="profile-list">
-            {locationSelections.map((x, i) => <div className="profile-row location-row" key={`l-${i}`}><div className="row-number">{String(i + 1).padStart(2, '0')}</div><label>State / UT<select value={x.stateId} onChange={(e) => updateLocation(i, 'stateId', e.target.value)} required><option value="">Select state / UT</option>{states.map((v) => <option key={v.id} value={v.id}>{v.name}</option>)}</select></label><label>City<select value={x.cityId} onChange={(e) => updateLocation(i, 'cityId', e.target.value)} disabled={!x.stateId} required><option value="">Select city</option>{(cityOptions[i] || []).map((v) => <option key={v.id} value={v.id}>{v.name}</option>)}</select></label><button type="button" className="row-remove" onClick={() => setLocationSelections((items) => items.filter((_, n) => n !== i))}>Remove</button></div>)}
-          </div>
-        </section>
+          {activeSection==='locations'&&<>
+          <section className="profile-panel" id="profile-locations">
+            <div className="panel-title"><div><span>03</span><h2>Locations you serve</h2><p>Customers can see the cities you cover, but not your private contact information.</p></div><button type="button" onClick={()=>setLocationSelections(x=>[...x,emptyLocation()])}>+ Add location</button></div>
+            <div className="profile-list">{locationSelections.map((x,i)=><div className="profile-row location-row" key={`l-${i}`}><div className="row-number">{String(i+1).padStart(2,'0')}</div><label>State / UT<select value={x.stateId} onChange={e=>updateLocation(i,'stateId',e.target.value)} required><option value="">Select state / UT</option>{states.map(v=><option key={v.id} value={v.id}>{v.name}</option>)}</select></label><label>City<select value={x.cityId} onChange={e=>updateLocation(i,'cityId',e.target.value)} disabled={!x.stateId} required><option value="">Select city</option>{(cityOptions[i]||[]).map(v=><option key={v.id} value={v.id}>{v.name}</option>)}</select></label><button type="button" className="row-remove" onClick={()=>setLocationSelections(items=>items.filter((_,n)=>n!==i))}>Remove</button></div>)}</div>
+          </section>
+          </>}
+
+          {activeSection==='public'&&<>
+          <section className="profile-panel profile-public-panel" id="profile-public">
+            <div className="panel-title"><div><span>04</span><h2>Public profile</h2><p>This copy is shown to homeowners in Find Professionals.</p></div><label className="profile-public-toggle"><input type="checkbox" checked={form.publicProfileEnabled} onChange={e=>update('publicProfileEnabled',e.target.checked)}/><span>Publish when eligible</span></label></div>
+            <div className="profile-grid"><label className="wide">Public headline<input maxLength="180" value={form.publicHeadline} onChange={e=>update('publicHeadline',e.target.value)} placeholder="Turnkey home construction with transparent project execution"/></label><label>Years of experience<input type="number" min="0" max="100" value={form.yearsExperience} onChange={e=>update('yearsExperience',e.target.value)} placeholder="e.g. 8"/></label><label className="wide">Public summary<textarea rows="5" maxLength="3000" value={form.publicSummary} onChange={e=>update('publicSummary',e.target.value)} placeholder="Describe your strengths, process, project types, materials, team and customer experience…"/></label></div>
+          </section>
+          </>}
+
+          {activeSection==='projects'&&<>
+          <section className="profile-panel profile-project-panel" id="profile-projects">
+            <div className="panel-title"><div><span>05</span><h2>Completed projects</h2><p>Add up to 20 real projects. Upload MP4, MOV or WebM videos directly; published videos also appear newest-first on the Projects page.</p></div><button type="button" onClick={()=>setProjects(items=>[...items,emptyProject()])}>+ Add project</button></div>
+            <div className="profile-showcase-list">{projects.map((project,index)=><article className="profile-showcase-card" key={project.id||`project-${index}`}>
+              <div className="profile-showcase-card-head"><div><span>PROJECT {String(index+1).padStart(2,'0')}</span><h3>{project.title||'Untitled project'}</h3></div><div><label className="profile-inline-check"><input type="checkbox" checked={project.isPublished} onChange={e=>updateProject(index,'isPublished',e.target.checked)}/> Public</label><button type="button" className="row-remove" onClick={()=>setProjects(items=>items.filter((_,i)=>i!==index))}>Remove</button></div></div>
+              <div className="profile-showcase-grid"><label>Project title<input value={project.title} maxLength="180" onChange={e=>updateProject(index,'title',e.target.value)} placeholder="3BHK premium apartment interiors"/></label><label>Project type<input value={project.projectType} maxLength="120" onChange={e=>updateProject(index,'projectType',e.target.value)} placeholder="Interior / Villa / Commercial"/></label><label>Location<input value={project.locationText} maxLength="180" onChange={e=>updateProject(index,'locationText',e.target.value)} placeholder="Hyderabad, Telangana"/></label><label>Completion year<input type="number" min="1950" max="2200" value={project.completionYear} onChange={e=>updateProject(index,'completionYear',e.target.value)}/></label><label>Area<input value={project.areaText} maxLength="120" onChange={e=>updateProject(index,'areaText',e.target.value)} placeholder="2,400 sq ft"/></label><label>Project value / budget<input value={project.budgetText} maxLength="120" onChange={e=>updateProject(index,'budgetText',e.target.value)} placeholder="₹28–32 lakh"/></label><label className="wide">Description<textarea rows="3" value={project.description} maxLength="3000" onChange={e=>updateProject(index,'description',e.target.value)} placeholder="Scope completed, design approach, materials and outcome…"/></label><label className="wide">Cover image URL<input value={project.coverImageUrl} onChange={e=>updateProject(index,'coverImageUrl',e.target.value)} placeholder="https://… image"/></label><div className="profile-video-field"><label>Video URL<input value={project.videoUrl} onChange={e=>updateProject(index,'videoUrl',e.target.value)} placeholder="Upload a video below or paste https://…"/></label><label className={'profile-video-upload '+(videoUploads[index]?'busy':'')}><span>{videoUploads[index]?'Uploading video…':'Upload video'}</span><small>MP4, MOV or WebM · max 50 MB</small><input type="file" accept="video/mp4,video/quicktime,video/webm,.mp4,.mov,.webm" disabled={Boolean(videoUploads[index])} onChange={e=>{const file=e.target.files?.[0];e.target.value='';uploadProjectVideo(index,file)}}/></label>{project.videoUrl&&playableVideo(project.videoDisplayUrl||project.videoUrl)&&<video className="profile-project-video-preview" controls preload="metadata" src={project.videoDisplayUrl||project.videoUrl}/>} {project.videoUrl&&!playableVideo(project.videoDisplayUrl||project.videoUrl)&&<a className="profile-video-link" href={project.videoDisplayUrl||project.videoUrl} target="_blank" rel="noreferrer">Open external video ↗</a>}</div><div className="profile-plan-file-field"><label>Plan / drawing link <small>Optional if hosted elsewhere</small><input value={project.planUrl} onChange={e=>updateProject(index,'planUrl',e.target.value)} placeholder="Upload below or paste https://…"/></label><label className={'profile-plan-upload '+(planUploads[index]?'busy':'')}><span>{planUploads[index]?'Uploading plan…':'Upload plan / drawing'}</span><small>PDF, JPG, PNG or WebP · max 15 MB</small><input type="file" accept="application/pdf,image/jpeg,image/png,image/webp,.pdf,.jpg,.jpeg,.png,.webp" disabled={Boolean(planUploads[index])} onChange={e=>{const file=e.target.files?.[0];e.target.value='';uploadProjectPlan(index,file)}}/></label>{project.planUrl&&planPreviewKind(project.planDisplayUrl||project.planUrl)==='image'&&<img className="profile-plan-preview" src={project.planDisplayUrl||project.planUrl} alt={(project.title||'Project')+' plan / drawing'}/>} {project.planUrl&&planPreviewKind(project.planDisplayUrl||project.planUrl)==='pdf'&&<a className="profile-plan-link" href={project.planDisplayUrl||project.planUrl} target="_blank" rel="noreferrer">View PDF plan ↗</a>} {project.planUrl&&planPreviewKind(project.planDisplayUrl||project.planUrl)==='external'&&<a className="profile-plan-link" href={project.planDisplayUrl||project.planUrl} target="_blank" rel="noreferrer">Open plan / drawing ↗</a>} {project.planUrl&&<button type="button" className="profile-plan-remove" onClick={()=>updateProject(index,'planUrl','')}>Remove plan / drawing</button>}</div></div>
+            </article>)}{!projects.length&&<div className="profile-showcase-empty"><b>No completed projects added yet.</b><span>Add real work to make your public profile stronger.</span></div>}</div>
+          </section>
+          </>}
+
+          {activeSection==='plans'&&<>
+          <section className="profile-panel profile-plan-panel" id="profile-plans">
+            <div className="panel-title"><div><span>06</span><h2>Service packages</h2><p>Optional packages customers can review before submitting a requirement. Project drawings and PDFs stay inside each Project.</p></div><button type="button" onClick={()=>setPlans(items=>[...items,emptyPlan()])}>+ Add plan</button></div>
+            <div className="profile-showcase-list">{plans.map((plan,index)=><article className="profile-showcase-card compact" key={plan.id||`plan-${index}`}><div className="profile-showcase-card-head"><div><span>PLAN {String(index+1).padStart(2,'0')}</span><h3>{plan.title||'Untitled plan'}</h3></div><div><label className="profile-inline-check"><input type="checkbox" checked={plan.isPublished} onChange={e=>updatePlan(index,'isPublished',e.target.checked)}/> Public</label><button type="button" className="row-remove" onClick={()=>setPlans(items=>items.filter((_,i)=>i!==index))}>Remove</button></div></div><div className="profile-showcase-grid"><label>Plan title<input value={plan.title} maxLength="160" onChange={e=>updatePlan(index,'title',e.target.value)} placeholder="Premium turnkey interiors"/></label><label>Starting price ₹<input type="number" min="0" value={plan.priceFrom} onChange={e=>updatePlan(index,'priceFrom',e.target.value)} placeholder="500000"/></label><label>Duration<input value={plan.durationLabel} maxLength="120" onChange={e=>updatePlan(index,'durationLabel',e.target.value)} placeholder="8–10 weeks"/></label><label className="wide">Description<textarea rows="3" value={plan.description} maxLength="2000" onChange={e=>updatePlan(index,'description',e.target.value)} placeholder="Who this plan is for and what customers should expect…"/></label><label className="wide">Inclusions <small>One per line</small><textarea rows="4" value={plan.inclusions} onChange={e=>updatePlan(index,'inclusions',e.target.value)} placeholder="Design consultation · Material selection · Execution management"/></label></div></article>)}{!plans.length&&<div className="profile-showcase-empty"><b>No public service plans added.</b><span>Add packages only if you want customers to compare offerings in Experts.</span></div>}</div>
+          </section>
+          </>}
         </div>
 
         <aside className="profile-side-column">
-          <section className="profile-side-card profile-progress-card">
-            <div className="profile-ring" style={{ '--progress': `${completion * 3.6}deg` }}><strong>{completion}%</strong></div>
-            <div><span className="side-kicker">PROFILE COMPLETION</span><h3>Build a complete profile</h3><p>Complete your details to keep lead matching accurate.</p></div>
-            <ul>
-              <li className={completionItems[0] ? 'done' : ''}>Personal information</li>
-              <li className={completionItems[1] ? 'done' : ''}>Business details</li>
-              <li className={completionItems[2] ? 'done' : ''}>Services</li>
-              <li className={completionItems[3] ? 'done' : ''}>Lead locations</li>
-            </ul>
-          </section>
-
-          <section className="profile-side-card">
-            <span className="side-icon">✦</span>
-            <span className="side-kicker">LEAD MATCHING</span>
-            <h3>Your coverage</h3>
-            <div className="coverage-stat"><strong>{serviceSelections.length}</strong><span>Services</span></div>
-            <div className="coverage-stat"><strong>{locationSelections.length}</strong><span>Locations</span></div>
-            <p>Use the sections on the left to keep your matching preferences current.</p>
-          </section>
+          <section className="profile-side-card profile-progress-card"><div className="profile-ring" style={{'--progress':`${completion*3.6}deg`}}><strong>{completion}%</strong></div><div><span className="side-kicker">PROFILE COMPLETION</span><h3>Build a credible profile</h3><p>Services, locations and real project evidence make the public profile more useful.</p></div><ul><li className={completionItems[0]?'done':''}>Personal information</li><li className={completionItems[1]?'done':''}>Business details</li><li className={completionItems[2]?'done':''}>Services</li><li className={completionItems[3]?'done':''}>Lead locations</li><li className={completionItems[4]?'done':''}>Public profile copy</li><li className={completionItems[5]?'done':''}>Completed project</li></ul></section>
+          <section className="profile-side-card"><span className="side-icon">✦</span><span className="side-kicker">PUBLIC SHOWCASE</span><h3>What customers can review</h3><div className="coverage-stat"><strong>{projects.filter(x=>x.isPublished).length}</strong><span>Projects</span></div><div className="coverage-stat"><strong>{plans.filter(x=>x.isPublished).length}</strong><span>Packages</span></div><p>Phone and email remain protected on the public directory.</p></section>
+          <section className="profile-side-card profile-membership-card"><span className="side-kicker">EXPERT DIRECTORY</span><h3>{directoryStatus?.membership?`${String(directoryStatus.membership.planGroup||'').toUpperCase()} membership`:'No active eligible plan'}</h3><p>{reasonText(directoryStatus)}</p>{directoryStatus?.eligible&&<Link to="/experts">View directory ↗</Link>}</section>
         </aside>
 
+        {activeSection==='business'&&<>
         <section className="profile-panel profile-proof-panel">
-          <div className="panel-title">
-            <div><span>04</span><h2>Company proof</h2><p>Documents uploaded during signup are stored with your business account.</p></div>
-          </div>
-          {companyProofs.length ? (
-            <div className="profile-proof-list">
-              {companyProofs.map((doc) => (
-                <div className="profile-proof-item" key={doc.id || (doc.original_name + '-' + doc.created_at)}>
-                  <div className="profile-proof-icon">{String(doc.mime_type || '').includes('pdf') ? 'PDF' : 'IMG'}</div>
-                  <div className="profile-proof-info">
-                    <strong>{doc.original_name || 'Company proof document'}</strong>
-                    <small>{doc.mime_type || 'Document'} · {doc.file_size ? (Number(doc.file_size) / 1024 / 1024).toFixed(2) + ' MB' : ''}{doc.status ? ' · ' + String(doc.status).replace(/^./, (m) => m.toUpperCase()) : ''}</small>
-                  </div>
-                  {doc.file_url && <a className="profile-proof-view" href={doc.file_url} target="_blank" rel="noreferrer">View document ↗</a>}
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="profile-proof-empty">
-              <strong>No company proof documents found</strong>
-              <span>Upload a proof document from signup to complete your business verification.</span>
-            </div>
-          )}
+          <div className="panel-title"><div><span>07</span><h2>Company proof</h2><p>Verification documents remain private and are reviewed by ProPulse Admin.</p></div></div>
+          {companyProofs.length?<div className="profile-proof-list">{companyProofs.map(doc=><div className="profile-proof-item" key={doc.id||(doc.original_name+'-'+doc.created_at)}><div className="profile-proof-icon">{String(doc.mime_type||'').includes('pdf')?'PDF':'IMG'}</div><div className="profile-proof-info"><strong>{doc.original_name||'Company proof document'}</strong><small>{doc.mime_type||'Document'} · {doc.file_size?(Number(doc.file_size)/1024/1024).toFixed(2)+' MB':''}{doc.status?' · '+String(doc.status).replace(/^./,m=>m.toUpperCase()):''}</small></div>{doc.file_url&&<a className="profile-proof-view" href={doc.file_url} target="_blank" rel="noreferrer">View document ↗</a>}</div>)}</div>:<div className="profile-proof-empty"><strong>No company proof documents found</strong><span>Upload a proof document from signup to complete business verification.</span></div>}
         </section>
-        <div className="profile-save"><button type="submit" disabled={saving}>{saving ? 'Saving…' : 'Save changes'} <span>→</span></button></div>
+        </>}
+        <div className="profile-save"><button type="submit" disabled={saving}>{saving?'Saving…':'Save changes'} <span>→</span></button></div>
       </form>
     </div>
-  )
+  </>
 }
-
-export default Profile
