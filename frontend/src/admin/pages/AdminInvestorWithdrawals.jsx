@@ -3,11 +3,12 @@ import './AdminInvestorWithdrawals.css'
 import useAdminRequest from '../hooks/useAdminRequest'
 import { useNavigate } from 'react-router-dom'
 import { payoutProofError, readPayoutProofDataUrl } from '../utils/payoutProof'
+import { formatAdminDateTime, formatInr, formatSnakeTitle } from '../utils/formatters'
 
-const money = value => `₹${Number(value || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-const date = value => value ? new Date(value).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—'
+const money = value => formatInr(value, { minimumFractionDigits: 2 })
+const date = formatAdminDateTime
 const cleanStatus = value => String(value || 'pending').toLowerCase()
-const label = value => String(value || '').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
+const label = formatSnakeTitle
 
 function payoutSnapshot(request) {
   const raw = request?.payout_account_snapshot
