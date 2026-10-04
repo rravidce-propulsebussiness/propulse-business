@@ -1,0 +1,57 @@
+name: Hostinger Prebuild Frontend
+
+on:
+  push:
+    branches:
+      - feature/hostinger-business-deployment
+
+permissions:
+  contents: write
+
+concurrency:
+  group: hostinger-prebuild-frontend
+  cancel-in-progress: true
+
+jobs:
+  prebuild:
+    if: ${{ !contains(github.event.head_commit.message, '[hostinger-prebuilt]') }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout deployment branch
+        uses: actions/checkout@v4
+        with:
+          ref: feature/hostinger-business-deployment
+          fetch-depth: 0
+
+      - name: Use Node 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+
+      - name: Install root dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Build Hostinger frontend
+        env:
+          VITE_API_URL: /api
+          VITE_PUBLIC_SITE_URL: https://sghomesinterior.in
+        run: npm run build
+
+      - name: Verify frontend output
+        run: |
+          test -f frontend/dist/index.html
+          test -d frontend/dist/assets
+          echo "Frontend build is ready."
+
+      - name: Commit prebuilt frontend
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -f frontend/dist
+          if git diff --cached --quiet; then
+            echo "No frontend build changes to commit."
+            exit 0
+          fi
+          git commit -m "Prebuild Hostinger frontend [hostinger-prebuilt]"
+          git push origin HEAD:feature/hostinger-business-deployment
