@@ -1,10 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { apiRequest } from '../../utils/api'
-import { getToken, clearSession } from '../../utils/auth'
 import { useNavigate } from 'react-router-dom'
 import InvestorActionModals from './InvestorActionModals'
 import './InvestorActionModals.css'
 import './AdminInvestmentsPremium.css'
+import useAdminRequest from '../hooks/useAdminRequest'
 
 const money = value => `₹${Number(value || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}`
 const date = value => value ? new Date(value).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'
@@ -25,14 +24,7 @@ export default function AdminInvestmentsWallet() {
   const [settings, setSettings] = useState(null); const [maturityPreset, setMaturityPreset] = useState('30'); const [maturityDays, setMaturityDays] = useState('30'); const [commissionPercent, setCommissionPercent] = useState('5')
   const [settingsLoading, setSettingsLoading] = useState(true); const [settingsBusy, setSettingsBusy] = useState(false); const [settingsMessage, setSettingsMessage] = useState(''); const [commissionMessage, setCommissionMessage] = useState('')
 
-  const request = useCallback(async (path, options = {}) => {
-    if (!getToken()) {
-      clearSession()
-      navigate('/login', { replace: true })
-      throw new Error('Your admin session has expired. Please sign in again.')
-    }
-    return apiRequest(path, options)
-  }, [navigate])
+  const request = useAdminRequest()
   const load = useCallback(async (silent = false) => {
     if (!silent) setLoading(true)
     setError('')
