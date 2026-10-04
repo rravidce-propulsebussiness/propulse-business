@@ -11,8 +11,9 @@ const sheetSync=read('src/services/adminGoogleSheetSyncService.js');
 
 assert(service.includes('function normalizeSheetPricingRows'),'Lead service must preserve partial sheet pricing rows');
 assert(service.includes('const next={...current,...row}'),'Sheet pricing must overlay Admin-configured pricing field by field');
-assert(service.includes("pricingSource==='sheet'?mergePricing(configured,pricing)"),'Create/update path must merge sheet pricing over Admin pricing');
+assert(service.includes('resolveEffectivePricing(configured,pricing,pricingSource)'),'Create/update path must resolve sheet/lead pricing over Admin pricing');
 assert(service.includes("pricingSource==='rule'?configured"),'Blank sheet pricing must use Admin configuration');
+assert(service.includes('function assertValidPricing')&&service.includes("error.code='PRICING_REQUIRED'"),'Lead create/update must reject missing or zero pricing');
 assert(service.includes('Sheet pricing for ')&&service.includes('share(s) is incomplete'),'Sheet-only tiers must reject incomplete Normal/Pro pricing');
 
 assert(adminImport.includes('Blank access and pricing cells use Admin Basic defaults'),'CSV sample must document Admin fallback');
