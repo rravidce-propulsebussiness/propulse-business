@@ -354,9 +354,4 @@
 }
 
 
-.pj-hyderabad-authority{max-width:1392px;margin:0 auto 28px;padding:24px;border:1px solid #e8e1da;border-radius:18px;background:linear-gradient(135deg,#fffaf6,#fff);box-shadow:0 14px 36px rgba(7,27,46,.045)}
-.pj-hyderabad-authority>div:first-child{max-width:850px}.pj-hyderabad-authority>div:first-child>span{display:block;color:var(--pj-orange);font-size:12px;font-weight:950;letter-spacing:.12em}.pj-hyderabad-authority h2{margin:7px 0 0;color:#0f2f4c;font-size:24px;line-height:1.15;letter-spacing:-.025em}.pj-hyderabad-authority p{margin:8px 0 0;color:#667b8d;font-size:12px;line-height:1.6}
-.pj-hyderabad-service-links{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin-top:18px}.pj-hyderabad-service-links a{display:flex;align-items:center;min-height:42px;padding:10px 12px;border:1px solid #e0e7ec;border-radius:10px;background:#fff;color:#173957;font-size:12px;font-weight:900}.pj-hyderabad-service-links a:hover{border-color:#efb49d;color:#df5421}
-.pj-hyderabad-location-links{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}.pj-hyderabad-location-links a{display:inline-flex;align-items:center;min-height:34px;padding:7px 10px;border:1px solid #e6e1dc;border-radius:999px;background:#fff;color:#516b7f;font-size:12px;font-weight:850}.pj-hyderabad-location-links a:hover{border-color:#efb49d;color:#df5421}
-@media(max-width:860px){.pj-hyderabad-authority{margin-left:18px;margin-right:18px}.pj-hyderabad-service-links{grid-template-columns:1fr}}
-@media(max-width:540px){.pj-hyderabad-authority{margin-left:14px;margin-right:14px;padding:18px}.pj-hyderabad-authority h2{font-size:21px}}
+
