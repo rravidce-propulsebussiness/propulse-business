@@ -19,6 +19,7 @@ assert(pkg.engines?.node==='24.x','Hostinger wrapper pins Node 24.x');
 assert(pkg.scripts?.build==='node index.js --build-only','Manual Hostinger build uses the same runtime-build path');
 assert(rootIndex.includes("const frontendDist=path.join(frontendRoot,'dist')"),'Hostinger runtime build targets frontend/dist');
 assert(rootIndex.includes("buildFrontendAsync()"),'Hostinger entry builds the frontend asynchronously after server startup');
+assert(rootIndex.includes("if(fs.existsSync(frontendIndex))return;"),'Hostinger root runtime skips rebuilding an already generated frontend');
 assert(pkg.scripts?.start==='node index.js','Hostinger starts through the default index.js entrypoint');
 for(const dependency of ['express','pg','bcryptjs','cors','dotenv','jsonwebtoken','react','react-dom','react-router-dom','vite','@vitejs/plugin-react']){
   assert(pkg.dependencies?.[dependency],'Hostinger root package must install '+dependency);

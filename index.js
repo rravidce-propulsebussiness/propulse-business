@@ -41,6 +41,7 @@ function buildFrontendSync(){
 }
 
 async function buildFrontendAsync(){
+  if(fs.existsSync(frontendIndex))return;
   if(buildPromise)return buildPromise;
   assertBuildTooling();
   console.log('Hostinger web server is live; building Vite frontend in the background.');
