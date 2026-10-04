@@ -368,23 +368,6 @@ const PROJECTS = [
   },
 ]
 
-const HYDERABAD_PROJECT_SEO_LINKS=[
-  {label:'Home Construction in Hyderabad',to:'/hyderabad/construction'},
-  {label:'Interior Designers in Hyderabad',to:'/hyderabad/interior-designers'},
-  {label:'Real Estate Services in Hyderabad',to:'/hyderabad/real-estate'},
-  {label:'House construction cost in Hyderabad',to:'/hyderabad/construction-cost'},
-  {label:'Construction in Kondapur',to:'/hyderabad/construction/kondapur'},
-  {label:'Construction in Madhapur',to:'/hyderabad/construction/madhapur'},
-  {label:'Construction in Kokapet',to:'/hyderabad/construction/kokapet'},
-  {label:'Construction in Manikonda',to:'/hyderabad/construction/manikonda'},
-  {label:'Construction in Kukatpally',to:'/hyderabad/construction/kukatpally'},
-  {label:'Construction in Miyapur',to:'/hyderabad/construction/miyapur'},
-  {label:'Construction in Narsingi',to:'/hyderabad/construction/narsingi'},
-  {label:'Construction in Tellapur',to:'/hyderabad/construction/tellapur'},
-  {label:'Construction in Banjara Hills',to:'/hyderabad/construction/banjara-hills'},
-  {label:'Construction in Jubilee Hills',to:'/hyderabad/construction/jubilee-hills'},
-]
-
 
 function Icon({name,size=18}){
   const p={width:size,height:size,viewBox:'0 0 24 24',fill:'none',stroke:'currentColor',strokeWidth:'1.8',strokeLinecap:'round',strokeLinejoin:'round','aria-hidden':true}
@@ -687,17 +670,6 @@ export default function Projects(){
       <article><span><Icon name="pin" size={23}/></span><div><b>50+</b><small>Locations Covered</small></div></article>
       <article><span><Icon name="home" size={23}/></span><div><b>3</b><small>Project Categories</small></div></article>
       <article><span><Icon name="shield" size={23}/></span><div><b>Free</b><small>Consultation</small></div></article>
-    </section>
-
-    <section className="pj-hyderabad-authority">
-      <div className="pj-authority-copy">
-        <span>HYDERABAD PROJECT PLANNING</span>
-        <h2>Explore Hyderabad services and construction areas</h2>
-        <p>Use these project concepts for inspiration, then open the relevant Hyderabad planning page to compare scope, cost inputs and locality-specific construction requirements.</p>
-      </div>
-      <div className="pj-authority-links">
-        {HYDERABAD_PROJECT_SEO_LINKS.map(item=><Link key={item.to} to={item.to}>{item.label}<Icon name="arrow" size={13}/></Link>)}
-      </div>
     </section>
 
     {selectedProject&&<div className="pj-detail-backdrop" role="presentation" onMouseDown={event=>{if(event.target===event.currentTarget)closeProject()}}>
