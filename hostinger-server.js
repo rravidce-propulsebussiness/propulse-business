@@ -13,10 +13,6 @@ const frontendDist=path.join(__dirname,'frontend','dist');
 const frontendIndex=path.join(frontendDist,'index.html');
 const isProduction=String(process.env.NODE_ENV||'production')==='production';
 
-if(!fs.existsSync(frontendIndex)){
-  throw new Error('Hostinger frontend build is missing. Run npm run build before npm start.');
-}
-
 const backendEnv={
   ...process.env,
   PORT:String(backendPort),
@@ -121,6 +117,11 @@ app.use((req,res,next)=>{
   if(!['GET','HEAD'].includes(req.method))return next();
   const accept=String(req.get('accept')||'');
   if(accept&&!accept.includes('text/html')&&!accept.includes('*/*'))return next();
+  if(!fs.existsSync(frontendIndex)){
+    res.setHeader('Retry-After','5');
+    res.setHeader('Cache-Control','no-store');
+    return res.status(503).send('Application frontend is starting. Please retry shortly.');
+  }
   return res.sendFile(frontendIndex,error=>error?next(error):undefined);
 });
 
@@ -133,7 +134,7 @@ app.use((err,req,res,next)=>{
 let server=app.listen(publicPort,'0.0.0.0',()=>{
   console.log('Hostinger web entry listening on port '+publicPort);
   console.log('Proxying backend traffic to 127.0.0.1:'+backendPort);
-  console.log('Serving frontend from '+frontendDist);
+  console.log('Serving frontend from '+frontendDist+(fs.existsSync(frontendIndex)?' (ready)':' (building)'));
 });
 
 function shutdown(signal){
