@@ -1,5 +1,6 @@
 import {Component} from 'react'
 import {reportClientError} from '../utils/clientObservability'
+import {reloadOnceForStaleAsset} from '../utils/chunkRecovery'
 
 export default class AppErrorBoundary extends Component{
   constructor(props){
@@ -11,6 +12,7 @@ export default class AppErrorBoundary extends Component{
   }
   componentDidCatch(error,info){
     reportClientError(error,{kind:'react_error_boundary',componentStack:info?.componentStack||null})
+    reloadOnceForStaleAsset(error)
   }
   render(){
     if(!this.state.failed)return this.props.children
