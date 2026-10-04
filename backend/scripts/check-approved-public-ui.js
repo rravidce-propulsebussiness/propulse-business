@@ -6,6 +6,9 @@ const root=path.join(__dirname,'..');
 const read=relative=>fs.readFileSync(path.join(root,relative),'utf8');
 
 const app=read('../frontend/src/App.jsx');
+const mainEntry=read('../frontend/src/main.jsx');
+const errorBoundary=read('../frontend/src/components/AppErrorBoundary.jsx');
+const chunkRecovery=read('../frontend/src/utils/chunkRecovery.js');
 const home=read('../frontend/src/pages/Home.jsx');
 const homeCss=read('../frontend/src/pages/Home.css');
 const popup=read('../frontend/src/components/GlobalLeadPopup.jsx');
@@ -27,6 +30,12 @@ const pincodeDetection=read('./src/services/pincodeDetectionService.js');
 const pincodeRoutes=read('./src/routes/pincodeRoutes.js');
 const publicExpertService=read('./src/services/publicExpertService.js');
 const serverSource=read('./src/server.js');
+
+assert.match(mainEntry,/installVitePreloadRecovery/);
+assert.match(errorBoundary,/reloadOnceForStaleAsset\(error\)/);
+assert.match(chunkRecovery,/vite:preloadError/);
+assert.match(chunkRecovery,/failed to fetch dynamically imported module/);
+assert.match(chunkRecovery,/RELOAD_COOLDOWN_MS=60_000/);
 
 // Canonical public routes and shared requirement popup.
 assert.match(app,/path="\/experts" element={<Experts\/>}/);
