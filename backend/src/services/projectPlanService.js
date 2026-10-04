@@ -14,7 +14,6 @@ const MIME_EXTENSIONS={
 };
 
 function planError(message,code){return Object.assign(new Error(message),{code});}
-function normalizeMime(value){return String(value||'').split(';')[0].trim().toLowerCase();}
 function validateSignature(buffer,mime){
   if(!Buffer.isBuffer(buffer)||!buffer.length)return false;
   if(mime==='application/pdf')return buffer.subarray(0,5).toString('ascii')==='%PDF-';
