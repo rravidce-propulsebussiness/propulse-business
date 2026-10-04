@@ -10,6 +10,26 @@ function messageThreadId(){
 }
 function publicAppUrl(){return clean(process.env.PUBLIC_APP_URL).replace(/\/+$/,'');}
 
+function approverMap(){
+  const raw=clean(process.env.TELEGRAM_SUPPORT_APPROVER_MAP);
+  if(!raw)return {};
+  try{
+    const parsed=JSON.parse(raw);
+    if(!parsed||Array.isArray(parsed)||typeof parsed!=='object')return {};
+    const output={};
+    for(const [telegramUserId,adminUserId] of Object.entries(parsed)){
+      const telegramId=clean(telegramUserId);
+      const adminId=Number.parseInt(String(adminUserId),10);
+      if(/^\d+$/.test(telegramId)&&Number.isInteger(adminId)&&adminId>0)output[telegramId]=adminId;
+    }
+    return output;
+  }catch{return {};}
+}
+
+function approverAdminId(telegramUserId){
+  return approverMap()[clean(telegramUserId)]||null;
+}
+
 function webhookUrl(){
   const explicit=clean(process.env.TELEGRAM_SUPPORT_WEBHOOK_URL);
   if(explicit)return explicit;
@@ -25,7 +45,12 @@ function isConfigured(){
   return Boolean(botToken()&&chatId()&&validSecret()&&webhookUrl());
 }
 
+function isApprovalConfigured(){
+  return isConfigured()&&Object.keys(approverMap()).length>0;
+}
+
 function status(){
+  const approvers=Object.keys(approverMap()).length;
   return {
     configured:isConfigured(),
     botTokenConfigured:Boolean(botToken()),
@@ -33,6 +58,8 @@ function status(){
     webhookSecretConfigured:validSecret(),
     webhookUrl:webhookUrl()||null,
     messageThreadId:messageThreadId(),
+    paymentApprovalConfigured:isConfigured()&&approvers>0,
+    paymentApproverCount:approvers,
   };
 }
 
@@ -73,8 +100,7 @@ async function apiCall(method,payload){
   }
 }
 
-async function sendMessage({text,replyToMessageId=null}={}){
-  if(!isConfigured())throw Object.assign(new Error('Telegram support is not configured'),{code:'TELEGRAM_NOT_CONFIGURED'});
+function messagePayload({text,replyToMessageId=null,replyMarkup=null}={}){
   const payload={
     chat_id:chatId(),
     text:String(text||'').slice(0,4096),
@@ -82,7 +108,43 @@ async function sendMessage({text,replyToMessageId=null}={}){
     ...(messageThreadId()?{message_thread_id:messageThreadId()}:{})
   };
   if(replyToMessageId)payload.reply_parameters={message_id:Number(replyToMessageId),allow_sending_without_reply:true};
-  return apiCall('sendMessage',payload);
+  if(replyMarkup)payload.reply_markup=replyMarkup;
+  return payload;
+}
+
+async function sendMessage({text,replyToMessageId=null,replyMarkup=null}={}){
+  if(!isConfigured())throw Object.assign(new Error('Telegram support is not configured'),{code:'TELEGRAM_NOT_CONFIGURED'});
+  return apiCall('sendMessage',messagePayload({text,replyToMessageId,replyMarkup}));
+}
+
+async function editMessageText({messageId,text,replyMarkup=null}={}){
+  if(!isConfigured())throw Object.assign(new Error('Telegram support is not configured'),{code:'TELEGRAM_NOT_CONFIGURED'});
+  const payload={
+    chat_id:chatId(),
+    message_id:Number(messageId),
+    text:String(text||'').slice(0,4096),
+    disable_web_page_preview:true,
+  };
+  if(replyMarkup)payload.reply_markup=replyMarkup;
+  return apiCall('editMessageText',payload);
+}
+
+async function editMessageReplyMarkup({messageId,replyMarkup}={}){
+  if(!isConfigured())throw Object.assign(new Error('Telegram support is not configured'),{code:'TELEGRAM_NOT_CONFIGURED'});
+  return apiCall('editMessageReplyMarkup',{
+    chat_id:chatId(),
+    message_id:Number(messageId),
+    reply_markup:replyMarkup||{inline_keyboard:[]},
+  });
+}
+
+async function answerCallbackQuery({callbackQueryId,text='',showAlert=false}={}){
+  if(!isConfigured())throw Object.assign(new Error('Telegram support is not configured'),{code:'TELEGRAM_NOT_CONFIGURED'});
+  return apiCall('answerCallbackQuery',{
+    callback_query_id:String(callbackQueryId||''),
+    text:String(text||'').slice(0,200),
+    show_alert:Boolean(showAlert),
+  });
 }
 
 async function configureWebhook(){
@@ -90,7 +152,7 @@ async function configureWebhook(){
   const payload={
     url:webhookUrl(),
     secret_token:webhookSecret(),
-    allowed_updates:['message'],
+    allowed_updates:['message','callback_query'],
     drop_pending_updates:false,
   };
   return apiCall('setWebhook',payload);
@@ -99,5 +161,7 @@ async function configureWebhook(){
 function expectedChatId(){return chatId();}
 
 module.exports={
-  isConfigured,status,verifyWebhookSecret,sendMessage,configureWebhook,expectedChatId,webhookUrl,
+  isConfigured,isApprovalConfigured,status,verifyWebhookSecret,
+  sendMessage,editMessageText,editMessageReplyMarkup,answerCallbackQuery,
+  configureWebhook,expectedChatId,webhookUrl,approverAdminId,
 };

@@ -1,5 +1,6 @@
 const supportChatService=require('../services/supportChatService');
 const telegramSupportService=require('../services/telegramSupportService');
+const telegramPaymentReviewService=require('../services/telegramPaymentReviewService');
 const {sendError}=require('../utils/errorResponse');
 
 function token(req){return String(req.get('x-support-chat-token')||'').trim();}
@@ -39,7 +40,9 @@ async function telegramWebhook(req,res){
     return res.status(401).json({error:'Invalid Telegram webhook secret'});
   }
   try{
-    const result=await supportChatService.processTelegramUpdate(req.body||{});
+    const result=req.body?.callback_query
+      ?await telegramPaymentReviewService.processCallback(req.body.callback_query)
+      :await supportChatService.processTelegramUpdate(req.body||{});
     return res.json({ok:true,...result});
   }catch(error){
     console.error('Telegram support webhook failed:',error?.message||error);

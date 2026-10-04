@@ -7,6 +7,7 @@ const {sendProofDescriptor}=require('../utils/proofResponse');
 const membershipCustomerAdminService = require('../services/membershipCustomerAdminService');
 const { getMembershipAccess, getCurrentProMembership } = require('../services/membershipAccessService');
 const paymentGatewayService = require('../services/paymentGatewayService');
+const telegramPaymentReviewService = require('../services/telegramPaymentReviewService');
 
 const MAX_PROOF_BYTES = 5 * 1024 * 1024;
 const PROOF_DATA_URL = /^data:(image\/(?:png|jpeg|webp)|application\/pdf);base64,([A-Za-z0-9+/]+={0,2})$/i;
@@ -40,9 +41,11 @@ async function submitPaymentReference(req,res){
     try{
       if(draftId.startsWith('draft_')){
         const updated=await investmentPaymentDraftService.submit({id:draftId,userId:req.user.id,manualReference,proofUrl:storedProof,notes:req.body.notes});
+        await telegramPaymentReviewService.notifyPaymentReview(updated.id).catch(error=>console.error('Telegram payment review notification failed:',error.message));
         return res.json(updated);
       }
       const result=await paymentService.submitPaymentReference({userId:req.user.id,paymentId:req.params.id,manualReference,proofUrl:storedProof,notes:req.body.notes});
+      await telegramPaymentReviewService.notifyPaymentReview(result.id).catch(error=>console.error('Telegram payment review notification failed:',error.message));
       return res.json(result);
     }catch(error){
       await privateProofStorage.removeStoredProof(storedProof).catch(cleanupError=>console.error('Payment proof cleanup failed:',cleanupError.message));
