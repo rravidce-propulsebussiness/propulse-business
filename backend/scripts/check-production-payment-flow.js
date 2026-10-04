@@ -5,6 +5,7 @@ const jwt = require('jsonwebtoken');
 const drafts = require('../src/services/investmentPaymentDraftService');
 const payments = require('../src/services/paymentService');
 const controller = require('../src/controllers/paymentController');
+const walletService = require('../src/services/walletService');
 
 async function main() {
   if (!/^(propulse_verify_|ci_|investment_ci)/.test(process.env.DB_NAME || '')) {
@@ -18,6 +19,7 @@ async function main() {
   const standard = await user('business');
   const pro = await user('business');
   const partner = await user('lead_partner');
+  await q("INSERT INTO lead_partners(user_id,status) VALUES($1,'active')", [partner.id]);
   const industry = (await q('INSERT INTO industries(name,slug) VALUES($1,$1) RETURNING id', [tag]))[0].id;
   const state = (await q('SELECT id FROM states WHERE is_active=TRUE LIMIT 1'))[0].id;
   const existingPlan = (await q("SELECT id FROM membership_plans WHERE plan_type='pro' AND plan_group='grow' AND is_active=TRUE LIMIT 1"))[0];
@@ -104,6 +106,19 @@ async function main() {
   assert.equal(page.items.length, 1);
   assert(page.total >= 3 && page.pages >= 3, 'Admin pagination must retain database totals');
   assert.equal(await payments.updatePaymentStatus(2147483647, 'paid', admin.id), null);
+
+  const walletSummary = await walletService.getWallet(standard.id,{includeTransactions:false});
+  for(let i=1;i<=3;i+=1){
+    await q("INSERT INTO wallet_topups(user_id,amount,reference,status) VALUES($1,$2,$3,$4)",[standard.id,100+i,`${tag}-wallet-${i}`,i===1?'pending':'approved']);
+    await q("INSERT INTO wallet_transactions(wallet_id,user_id,type,amount,balance_after,reference_type,description) VALUES($1,$2,'credit',$3,$4,'test',$5)",[walletSummary.id,standard.id,10+i,10+i,`${tag}-wallet-tx-${i}`]);
+  }
+  const walletDetail=await walletService.getAdminWalletCustomerDetails(standard.id,{rechargePage:1,rechargeLimit:1,transactionPage:1,transactionLimit:1});
+  assert.equal(walletDetail.recharges.length,1,'Customer 360 wallet recharge page must respect its limit');
+  assert.equal(walletDetail.transactions.length,1,'Customer 360 wallet ledger page must respect its limit');
+  assert(walletDetail.pagination.recharges.total>=3&&walletDetail.pagination.recharges.pages>=3,'Customer 360 recharge pagination must retain database totals');
+  assert(walletDetail.pagination.transactions.total>=3&&walletDetail.pagination.transactions.pages>=3,'Customer 360 ledger pagination must retain database totals');
+  assert(walletDetail.stats.pending_topups>=1,'Customer 360 must retain the true pending top-up count outside the loaded page');
+
   console.log('Production payment flow passed: roles, sessions, expiry, durable drafts, concurrency, rollback, review and pagination.');
 }
 

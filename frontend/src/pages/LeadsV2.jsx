@@ -3,7 +3,10 @@ import { useEffect, useMemo, useState } from 'react'
 import { authRequest, publicRequest, getToken, getUser } from '../utils/auth'
 import { claimLead, getLead, listLeads, purchaseLead } from '../api/leads'
 import UserHeader from '../components/UserHeader'
-import PaymentProofPicker, { paymentProofError } from '../components/PaymentProofPicker'
+import PaymentProofPicker from '../components/PaymentProofPicker'
+import PaymentMethodSelector from '../components/PaymentMethodSelector'
+import { loadPaymentOptions, runRazorpayCheckout } from '../utils/paymentGateway'
+import { paymentProofError } from '../components/paymentProofValidation'
 import './LeadsV2.css'
 import './LeadsV2Payment.css'
 
@@ -92,6 +95,7 @@ export default function LeadsV2() {
   const [leads, setLeads] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [marketplaceUnavailable, setMarketplaceUnavailable] = useState(false)
   const [upgrade, setUpgrade] = useState(false)
   const [expanded, setExpanded] = useState(null)
   const [buyModal, setBuyModal] = useState(null)
@@ -121,6 +125,8 @@ export default function LeadsV2() {
   const [couponReward, setCouponReward] = useState(null)
   const [publicLeadOffers, setPublicLeadOffers] = useState([])
   const [currentMembership, setCurrentMembership] = useState(null)
+  const [paymentOptions, setPaymentOptions] = useState({offlineEnabled:true,onlineEnabled:false,onlineDisplayMode:'coming_soon'})
+  const [paymentMode, setPaymentMode] = useState('offline')
 
   useEffect(() => {
     let live = true
@@ -140,18 +146,20 @@ export default function LeadsV2() {
       queueMicrotask(() => { if (live) setPaymentReceiving([]) })
       return () => { live = false }
     }
-    authRequest('/payment-receiving-details')
-      .then(data => { if (live) setPaymentReceiving(Array.isArray(data) ? data.filter(item => item?.is_active !== false) : []) })
-      .catch(() => { if (live) setPaymentReceiving([]) })
+    Promise.all([
+      authRequest('/payment-receiving-details').catch(() => []),
+      loadPaymentOptions().catch(() => ({offlineEnabled:true,onlineEnabled:false,onlineDisplayMode:'coming_soon'}))
+    ]).then(([data,options]) => {
+      if (!live) return
+      setPaymentReceiving(Array.isArray(data) ? data.filter(item => item?.is_active !== false) : [])
+      setPaymentOptions(options || {})
+      setPaymentMode(options?.onlineEnabled&&options?.onlineDisplayMode==='live'?'online':options?.offlineEnabled!==false?'offline':'')
+    }).catch(() => { if (live) setPaymentReceiving([]) })
     return () => { live = false }
   }, [buyModal, payment])
   useEffect(() => { let live=true; queueMicrotask(()=>{if(live)setPage(1)}); return()=>{live=false} }, [search, category, industryFilter, cityFilter])
   useEffect(() => {
     let live = true
-    if (logged) {
-      queueMicrotask(() => { if (live) setFilterCatalog({ industries: [], cities: [] }) })
-      return () => { live = false }
-    }
     Promise.all([
       publicRequest('/industries'),
       publicRequest('/cities')
@@ -172,7 +180,7 @@ export default function LeadsV2() {
       })
       .catch(() => { if (live) setFilterCatalog({ industries: [], cities: [] }) })
     return () => { live = false }
-  }, [logged])
+  }, [])
   useEffect(() => {
     let live = true
     const timer = setTimeout(async () => {
@@ -188,12 +196,19 @@ export default function LeadsV2() {
           ...(cityFilter ? { cityId: cityFilter } : {})
         }, token)
         if (live) {
+          if (d?.degraded && d?.unavailable) {
+            setMarketplaceUnavailable(true)
+            setLeads([])
+            setPagination({ page: 1, limit: 20, total: 0, hasNext: false, hasPrevious: false })
+            return
+          }
+          setMarketplaceUnavailable(false)
           const items = Array.isArray(d) ? d : (d.items || [])
           const availableItems = items.filter(l => !l.is_purchased && !l.purchased && !l.access?.claimed && !l.access?.purchased)
           setLeads(availableItems)
           setPagination(d.pagination ? { ...d.pagination, total: Math.max(0, Number(d.pagination.total || 0) - (items.length - availableItems.length)) } : { page, limit: 20, total: availableItems.length, hasNext: false, hasPrevious: page > 1 })
         }
-      } catch (e) { if (live) setError(e.message) }
+      } catch (e) { if (live) { setMarketplaceUnavailable(false); setError(e.message) } }
       finally { if (live) setLoading(false) }
     }, 250)
     return () => { live = false; clearTimeout(timer) }
@@ -213,18 +228,13 @@ export default function LeadsV2() {
   const title = category ? `${category.replaceAll('-', ' ')} leads` : 'Available Leads'
   const visibleLeads = useMemo(() => leads, [leads])
 
-  const topIndustry = useMemo(() => visibleLeads.find(l => hasValue(l.industry_name))?.industry_name || '', [visibleLeads])
-  const topLocation = useMemo(() => {
-    const lead = visibleLeads.find(l => hasValue(l.state_name) || hasValue(l.city_name))
-    return [lead?.city_name, lead?.state_name].filter(hasValue).join(', ')
-  }, [visibleLeads])
   const filterOptions = filterCatalog
 
   const openBuyModal = (lead) => {
     if (!logged) { navigate('/login'); return }
     if (!lead.pricing?.shares?.length) { setError('Pricing is not available for this lead.'); return }
     setError(''); setNotice(''); setPaymentError(''); setCouponCode(''); setCouponStatus(''); setCouponError(''); setCouponDiscount(0); setCouponFinalAmount(null); setCouponReward(null); setPublicLeadOffers([]); setUseWallet(true); setWalletBalance(0); setPaymentProof(null); setBuyModal(lead)
-    authRequest('/wallet').then(data => setWalletBalance(Number(data?.balance ?? data?.wallet?.balance ?? 0))).catch(() => {})
+    authRequest('/wallet?summary=1').then(data => setWalletBalance(Number(data?.balance ?? data?.wallet?.balance ?? 0))).catch(() => {})
     const industryId = lead?.industry_id ? `&industryId=${encodeURIComponent(lead.industry_id)}` : ''
     const leadRow = lead?.pricing?.shares?.[0] || null
     const offerSubtotal = Number(leadRow?.[isPro ? 'pro' : 'normal'] || 0)
@@ -304,12 +314,13 @@ export default function LeadsV2() {
     const discountedTotal = Math.max(0, Number(couponFinalAmount != null ? couponFinalAmount : selectedPrice))
     const walletDeduction = useWallet ? Math.min(Math.max(0, Number(walletBalance || 0)), discountedTotal) : 0
     const estimatedExternal = Math.max(0, discountedTotal - walletDeduction)
-    if (estimatedExternal > 0) {
+    if (estimatedExternal > 0 && paymentMode === 'offline') {
       const reference = document.getElementById('lead-payment-utr')?.value?.trim()
       if (!reference) return setPaymentError('Enter the payment reference / UTR first.')
       const proofValidation = paymentProofError(paymentProof?.file)
       if (proofValidation) return setPaymentError(proofValidation)
     }
+    if (estimatedExternal > 0 && !paymentMode) return setPaymentError('No external payment method is currently available.')
     const key = `${lead.id}-${shares}-${plan}-${useWallet ? 'wallet' : 'direct'}`
     setBuying(key); setPaymentError(''); setNotice(''); setError(''); setCouponError('')
     try {
@@ -318,6 +329,13 @@ export default function LeadsV2() {
       if (needsExternalPayment) {
         setPayment(d)
         setPaymentLead(lead)
+        if (paymentMode === 'online') {
+          setDirectSubmitting(true)
+          await runRazorpayCheckout({paymentId:d.payment.id,description:`Lead #${lead.id} purchase`})
+          setPayment(null);setPaymentLead(null);setPaymentProof(null);setPaymentError('');setPaymentSuccess(`Lead #${lead.id} payment completed successfully.`);setBuyModal(null)
+          setBuying(null)
+          return
+        }
         const reference = document.getElementById('lead-payment-utr')?.value?.trim()
         const proofValidation = paymentProofError(paymentProof?.file)
         if (!reference || proofValidation) {
@@ -385,12 +403,15 @@ export default function LeadsV2() {
   return <div className="lv2-shell">
     <UserHeader />
     <main className="lv2-page">
-      {!logged && <section className="lv2-market-head"><div className="lv2-title-block"><span></span><div><h1>{title}</h1><p>High quality, verified leads to grow your business</p></div></div><div className="lv2-controls"><div className="lv2-search"><span>⌕</span><input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by industry, service, location..." aria-label="Search leads"/><b>⌕</b></div>{!logged && <div className="lv2-guest-filters"><select value={industryFilter} onChange={e => { setIndustryFilter(e.target.value); setCityFilter('') }} aria-label="Filter by industry"><option value="">All Industries</option>{filterOptions.industries.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}</select><select value={cityFilter} onChange={e => setCityFilter(e.target.value)} aria-label="Filter by city"><option value="">All Cities</option>{filterOptions.cities.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}</select></div>}</div></section>}
-      <section className="lv2-stats"><div className="lv2-stat orange"><span>▣</span><div><b>{pagination.total}</b><small>Total Leads</small></div></div><div className="lv2-stat blue"><span>♟</span><div><b>{topIndustry || 'Verified opportunities'}</b><small>Top Industry</small></div></div><div className="lv2-stat green"><span>●</span><div><b>{topLocation || 'India'}</b><small>Top Location</small></div></div><div className="lv2-stat purple"><span>★</span><div><b>4.8</b><small>Avg. Quality Score</small></div></div><div className="lv2-verified">✓ &nbsp; Verified Opportunities Only</div></section>
+      <section className="lv2-market-head"><div className="lv2-title-block"><span></span><div><h1>{title}</h1><p>All available leads are shown by default.</p></div></div><div className="lv2-controls"><div className="lv2-search"><span>⌕</span><input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by industry, service, location..." aria-label="Search leads"/><b>⌕</b></div><div className="lv2-guest-filters"><select value={industryFilter} onChange={e => { setIndustryFilter(e.target.value); setCityFilter('') }} aria-label="Filter by industry"><option value="">All Industries</option>{filterOptions.industries.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}</select><select value={cityFilter} onChange={e => setCityFilter(e.target.value)} aria-label="Filter by city"><option value="">All Cities</option>{filterOptions.cities.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}</select></div></div></section>
       {error && <div className="lv2-error">{error}</div>}{notice && <div className="lv2-error">{notice}</div>}
-      {loading ? <div className="lv2-empty"><span>PROPULSE MARKETPLACE</span><strong>Loading opportunities...</strong></div> : !visibleLeads.length ? <div className="lv2-empty"><span>PROPULSE MARKETPLACE</span><strong>No matching leads</strong><p>Try another search or filter.</p></div> : <div className="lv2-grid">
+      {loading ? <div className="lv2-empty"><span>PROPULSE MARKETPLACE</span><strong>Loading opportunities...</strong></div> : marketplaceUnavailable ? <div className="lv2-empty"><span>PROPULSE MARKETPLACE</span><strong>Marketplace temporarily unavailable</strong><p>We are reconnecting to the service. Please try again shortly.</p></div> : !visibleLeads.length ? <div className="lv2-empty"><span>PROPULSE MARKETPLACE</span><strong>No matching leads</strong><p>Try another search or filter.</p></div> : <div className="lv2-grid">
         {visibleLeads.map(lead => {
           const shares = lead.pricing?.shares || []
+          const cardPricingRow = shares[0] || null
+          const cardLeadPrice = Number(cardPricingRow?.[isPro ? 'pro' : 'normal'] || 0)
+          const cardNormalPrice = Number(cardPricingRow?.normal || 0)
+          const cardProPrice = Number(cardPricingRow?.pro || 0)
           const dynamic = visibleCustomFields(lead.custom_fields)
           const open = expanded === lead.id
           const exclusive = Boolean(lead.has_exclusive_option)
@@ -405,23 +426,26 @@ export default function LeadsV2() {
           const budgetDisplay = budgetRange || (hasValue(lead.budget) ? money(lead.budget) : '')
           const buyerCapacity = Math.max(1, Math.min(3, Number(lead.effective_buyer_capacity || lead.buyer_capacity) || 3))
           const purchasedBuyers = Math.min(buyerCapacity, Math.max(0, Number(lead.purchased_buyer_count) || 0))
+          const fastBasic = String(lead.source || '').toLowerCase() === 'homepage_consultation'
           const initials = String(lead.customer_name || lead.service_name || lead.industry_name || 'L').trim().charAt(0).toUpperCase()
           return <article className={`lv2-card ${lead.lead_type || 'basic'} ${exclusive ? 'has-exclusive' : ''}`} key={lead.id}>
-            <div className="lv2-card-top"><span className="lv2-id">#L-{String(lead.id).padStart(6, '0')}</span><small>{timeAgo(lead.created_at)}</small></div>
-            <div className="lv2-person"><div className="lv2-avatar">{initials}</div><div className="lv2-person-copy"><div><h2>{hasValue(lead.customer_name) ? lead.customer_name : (lead.service_name || lead.industry_name || 'Business opportunity')}</h2><span className="lv2-verified-mini">✓ Verified</span></div><p>{lead.requirement || 'Verified business requirement'}</p></div></div>
+            <div className="lv2-card-top"><span className="lv2-id">#L-{String(lead.id).padStart(6, '0')}</span>{fastBasic && <span className="lv2-basic-detail-pill">Basic details · Shared 3</span>}<small>{timeAgo(lead.created_at)}</small></div>
+            <div className="lv2-person"><div className="lv2-avatar">{initials}</div><div className="lv2-person-copy"><div><h2>{hasValue(lead.customer_name) ? lead.customer_name : (lead.service_name || lead.industry_name || 'Business opportunity')}</h2><span className="lv2-verified-mini">✓ Verified</span></div></div></div>
             <div className="lv2-facts">
               {hasValue(lead.industry_name) && <div><span>▣</span><b>{lead.industry_name}</b></div>}
               {hasValue(lead.service_name) && <div><span>⌁</span><b>{lead.service_name}{hasValue(lead.subservice_name) ? `, ${lead.subservice_name}` : ''}</b></div>}
-              {hasValue(location) && <div><span>⌖</span><b>{location}</b></div>}{hasValue(lead.pincode) && <div><span>#</span><b>PIN {lead.pincode}</b></div>}
-              {hasValue(budgetDisplay) && <div><span>₹</span><b>{budgetDisplay}</b></div>}
-              {hasValue(workNumbers) && <div><span>▦</span><b>{workNumbers} work{norm(workNumbers) === '1' ? '' : 's'}</b></div>}
+              {hasValue(location) && <div><span>⌖</span><b>{location}</b></div>}
               {hasValue(property) && <div><span>⌂</span><b>{property}</b></div>}
-              {hasValue(timeline) && <div><span>▦</span><b>{timeline}</b></div>}
+              {hasValue(budgetDisplay) && <div><span>₹</span><b>{budgetDisplay}</b></div>}
               <div><span>◉</span><b>Purchased {purchasedBuyers}/{buyerCapacity}</b></div>
+            </div>
+            <div className="lv2-card-price">
+              <div><small>LEAD PRICE</small><strong>{cardLeadPrice > 0 ? money(cardLeadPrice) : 'Price unavailable'}</strong></div>
+              {logged && isPro && cardNormalPrice > cardProPrice && cardProPrice > 0 && <em>You save {money(cardNormalPrice-cardProPrice)}</em>}
             </div>
             <div className="lv2-contact"><span>Contact Details (Masked)</span><div>{hasValue(lead.customer_phone) && <b>⌕ &nbsp; {maskContact(lead.customer_phone)}</b>}{hasValue(workPhone) && <b>⌖ &nbsp; Work {workPhone}</b>}{hasValue(lead.customer_email) && <b>✉ &nbsp; {maskContact(lead.customer_email)}</b>}{!hasValue(lead.customer_phone) && !hasValue(workPhone) && !hasValue(lead.customer_email) && <b>Contact available after purchase</b>}</div></div>
             <div className="lv2-card-actions"><button className="lv2-details-link" onClick={() => setExpanded(open ? null : lead.id)}>{open ? 'Hide Full Details' : 'View Full Details'} <b>→</b></button><button className="lv2-buy" onClick={() => openBuyModal(lead)} disabled={!shares.length}>{claimed ? 'Purchased' : '🛒  Buy Lead'}</button></div>
-            {open && <div className="lv2-details"><div className="lv2-details-head"><h3>Lead details</h3><span>{claimed ? 'Access granted' : 'Verified opportunity'}</span></div><div className="lv2-detail-grid">{[['Industry', lead.industry_name], ['Service', lead.service_name], ['Subservice', lead.subservice_name], ['Location', location], ['PIN code', lead.pincode], ['Property type', property], ['Budget', budgetDisplay], ['Work numbers', workNumbers], ['Work phone', workPhone], ['Purchased', `${purchasedBuyers}/${buyerCapacity}`], ['Source', lead.source], ['Customer', lead.customer_name], ['Phone', lead.customer_phone ? maskContact(lead.customer_phone) : ''], ['Email', lead.customer_email ? maskContact(lead.customer_email) : '']].filter(([, v]) => hasValue(v)).map(([k, v], index) => <div key={`${k}-${index}`}><small>{k}</small><b>{v}</b></div>)}{dynamic.map(([k, v], index) => <div key={`${k}-${index}`}><small>{label(k)}</small><b>{displayValue(k, typeof v === 'object' ? JSON.stringify(v) : v)}</b></div>)}</div>{hasValue(lead.notes) && <p className="lv2-notes"><b>Notes</b>{maskContact(lead.notes)}</p>}</div>}
+            {open && <div className="lv2-details"><div className="lv2-details-head"><h3>Lead details</h3><span>{claimed ? 'Access granted' : 'Verified opportunity'}</span></div><div className="lv2-detail-grid">{[['Industry', lead.industry_name], ['Service', lead.service_name], ['Subservice', lead.subservice_name], ['Location', location], ['PIN code', lead.pincode], ['Property type', property], ['Budget', budgetDisplay], ['Timeline', timeline], ['Lead price', cardLeadPrice > 0 ? money(cardLeadPrice) : 'Price unavailable'], ['Work numbers', workNumbers], ['Work phone', workPhone], ['Purchased', `${purchasedBuyers}/${buyerCapacity}`], ['Source', fastBasic ? 'Basic homeowner enquiry' : lead.source], ['Customer', lead.customer_name], ['Phone', lead.customer_phone ? maskContact(lead.customer_phone) : ''], ['Email', lead.customer_email ? maskContact(lead.customer_email) : '']].filter(([, v]) => hasValue(v)).map(([k, v], index) => <div key={`${k}-${index}`}><small>{k}</small><b>{v}</b></div>)}{dynamic.map(([k, v], index) => <div key={`${k}-${index}`}><small>{label(k)}</small><b>{displayValue(k, typeof v === 'object' ? JSON.stringify(v) : v)}</b></div>)}</div>{hasValue(lead.requirement) && <p className="lv2-requirement-full"><b>Requirement</b>{maskContact(lead.requirement)}</p>}{hasValue(lead.notes) && <p className="lv2-notes"><b>Notes</b>{maskContact(lead.notes)}</p>}</div>}
             {logged && !claimed && leadAccess.canClaim && <div className="lv2-exclusive"><div><b>{leadAccess.entitlementSource==='new_business'?'Welcome lead entitlement':leadAccess.entitlementSource==='campaign'?'Business entitlement':leadAccess.entitlementSource==='admin'?'Propulse lead entitlement':'Membership access'}</b><span>{leadAccess.entitlementSource==='new_business'?'Included by your registration entitlement rule':leadAccess.entitlementSource==='campaign'?'Included in a Propulse business entitlement':leadAccess.entitlementSource==='admin'?'Granted directly to your business':'Included in your current plan'}{leadAccess.remaining !== undefined ? ` · ${leadAccess.remaining} remaining` : ''}</span></div><button disabled={claiming === lead.id} onClick={() => claim(lead)}>{claiming === lead.id ? 'Claiming…' : 'Claim free →'}</button></div>}
             {logged && !claimed && leadAccess.reason && !leadAccess.canClaim && <div className="lv2-card-cta"><div><b>Lead entitlement</b><span>{leadAccess.reason}</span></div></div>}
             {claimed && <div className="lv2-card-cta"><div><b>Lead access granted</b><span>You can use this lead from your account.</span></div><Link to="/dashboard">Open dashboard →</Link></div>}
@@ -486,7 +510,8 @@ export default function LeadsV2() {
         const receiving = bankAccounts[0] || paymentReceiving[0] || null
         const copyValue = async value => { if (!value) return; try { await navigator.clipboard.writeText(String(value)) } catch {} }
         return <section className="lv2-buy-payment-section">
-          {directAmount > 0 && <section className="lv2-buy-bank-card">
+          {directAmount > 0 && <PaymentMethodSelector options={paymentOptions} value={paymentMode} onChange={setPaymentMode} disabled={Boolean(buying)||directSubmitting}/>}
+          {directAmount > 0 && paymentMode==='offline' && <section className="lv2-buy-bank-card">
             <div className="lv2-buy-payment-section-title"><span>🏦</span><div><strong>Bank Account Details</strong><small>Transfer exactly {money(directAmount)} to the account below.</small></div></div>
             {receiving ? <div className="lv2-buy-bank-grid">
               {receiving.bank_name && <div><span>Bank Name</span><b>{receiving.bank_name}</b><button type="button" onClick={() => copyValue(receiving.bank_name)}>Copy</button></div>}
@@ -498,14 +523,14 @@ export default function LeadsV2() {
             </div> : <div className="lv2-buy-bank-empty">Payment receiving details are not configured yet. Please contact support.</div>}
             {receiving?.instructions && <div className="lv2-buy-payment-instructions">{receiving.instructions}</div>}
           </section>}
-          {directAmount > 0 && <div className="lv2-buy-payment-fields">
+          {directAmount > 0 && paymentMode==='offline' && <div className="lv2-buy-payment-fields">
             <label><span>Payment reference / UTR</span><input id="lead-payment-utr" placeholder="Enter transaction ID / UTR" autoComplete="off" /></label>
             <div className="lv2-proof-field"><span className="lv2-proof-field-label">Payment proof</span><PaymentProofPicker id="lead-payment-proof" value={paymentProof} onChange={setPaymentProof} onError={setPaymentError} /></div>
           </div>}
           {paymentError && <div className="lv2-payment-error" role="alert">{paymentError}</div>}
           <div className="lv2-buy-checkout-note"><strong>🔒 Secure & Safe Transaction</strong><small>Wallet deduction and coupon discount are applied automatically.</small></div>
           <button type="button" className="lv2-buy-final-submit" disabled={!currentBuyerAccess || buyModalClaimed || Boolean(buying) || directSubmitting} onClick={() => { const plan = isPro ? 'pro' : 'normal'; submitLeadCheckout(buyModal, plan) }}>
-            {buying || directSubmitting ? 'Submitting…' : 'Submit Purchase'}
+            {buying || directSubmitting ? 'Processing…' : directAmount > 0 && paymentMode==='online' ? 'Pay Online & Purchase' : 'Submit Purchase'}
           </button>
 
         </section>

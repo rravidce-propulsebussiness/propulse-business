@@ -1,4 +1,5 @@
 const pool = require('../config/database');
+const privateProofStorage = require('./privateProofStorageService');
 
 async function getLinkedLeads({ investorId, investmentId = null }) {
   const values = [Number(investorId)];
@@ -93,6 +94,7 @@ async function recordAdSpend({ investmentId, amount, platform, campaign, spendDa
 
 async function payout({ investmentId, adminId, transferReference, proofUrl, forceTransfer = false }) {
   const client = await pool.connect();
+  let storedProof=null;
   try {
     await client.query('BEGIN');
     const inv = (await client.query('SELECT * FROM investments WHERE id=$1 FOR UPDATE', [investmentId])).rows[0];
@@ -130,11 +132,18 @@ async function payout({ investmentId, adminId, transferReference, proofUrl, forc
     }
     if (!String(transferReference || '').trim()) throw Object.assign(new Error('Transfer reference is required'), { code:'TRANSFER_REFERENCE_REQUIRED' });
     if (!String(proofUrl || '').trim()) throw Object.assign(new Error('Transfer proof is required'), { code:'TRANSFER_PROOF_REQUIRED' });
-    await client.query(`UPDATE investments SET status='paid',payout_amount=$1,payout_transfer_reference=$2,payout_proof_url=$3,updated_at=CURRENT_TIMESTAMP WHERE id=$4`,[payoutAmount,String(transferReference).trim(),String(proofUrl).trim(),inv.id]);
+    storedProof=await privateProofStorage.storeDataUrl(String(proofUrl).trim(),{category:'investor-settlements',maxBytes:6*1024*1024});
+    await client.query(`UPDATE investments SET status='paid',payout_amount=$1,payout_transfer_reference=$2,payout_proof_url=$3,updated_at=CURRENT_TIMESTAMP WHERE id=$4`,[payoutAmount,String(transferReference).trim(),storedProof,inv.id]);
     await client.query('COMMIT');
     return { investment: {...inv,status:'paid',payout_amount:payoutAmount,payout_transfer_reference:String(transferReference).trim(),payout_proof_url:String(proofUrl).trim()}, payout_amount:payoutAmount, transferred_to_investor:payoutAmount };
-  } catch(error){await client.query('ROLLBACK');throw error}
+  } catch(error){await client.query('ROLLBACK');if(storedProof)await privateProofStorage.removeStoredProof(storedProof).catch(cleanupError=>console.error('Investor settlement proof cleanup failed:',cleanupError.message));throw error}
   finally{client.release()}
 }
 
-module.exports={getLinkedLeads,updateAdAmount,getAdSpend,recordAdSpend,payout};
+async function getPayoutProof({investmentId}){
+  const row=(await pool.query(`SELECT id,payout_proof_url FROM investments WHERE id=$1`,[Number(investmentId)])).rows[0];
+  if(!row)throw Object.assign(new Error('Investment not found'),{code:'NOT_FOUND'});
+  return{id:Number(row.id),proof_url:await privateProofStorage.materializeProof(row.payout_proof_url,{maxBytes:6*1024*1024})};
+}
+
+module.exports={getLinkedLeads,updateAdAmount,getAdSpend,recordAdSpend,payout,getPayoutProof};

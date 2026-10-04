@@ -23,6 +23,8 @@ if (frontendMatch) {
   assert(csp.includes("script-src 'self' https://accounts.google.com/gsi/client"), 'Frontend CSP allows Google GIS script only');
   assert(csp.includes("frame-src https://accounts.google.com/gsi/"), 'Frontend CSP allows Google GIS iframe');
   assert(csp.includes("connect-src 'self' https://accounts.google.com/gsi/"), 'Frontend CSP allows same-origin and Google GIS connections');
+  assert(csp.includes("https://*.r2.cloudflarestorage.com"), 'Frontend CSP allows Cloudflare R2 object URLs');
+  assert(csp.includes("media-src 'self' https://*.r2.cloudflarestorage.com"), 'Frontend CSP allows signed R2 video media');
   assert(csp.includes("object-src 'none'"), 'Frontend CSP disables plugin/object content');
   assert(csp.includes("base-uri 'self'"), 'Frontend CSP restricts base URI');
   assert(!csp.includes("'unsafe-eval'"), 'Frontend CSP does not allow unsafe eval');

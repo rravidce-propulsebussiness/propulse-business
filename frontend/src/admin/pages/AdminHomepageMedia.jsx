@@ -3,12 +3,14 @@ import { apiRequest } from '../../utils/api'
 import './AdminHomepageMedia.css'
 
 const slots=[
-  {key:'hero',label:'Hero image',description:'Main homepage hero visual.',defaultPath:'/homepage/default-hero.svg',wide:true},
-  {key:'residential',label:'Residential leads',description:'Residential category card image.',defaultPath:'/homepage/default-residential.svg'},
-  {key:'interior',label:'Interior leads',description:'Interior category card image.',defaultPath:'/homepage/default-interior.svg'},
-  {key:'commercial',label:'Commercial leads',description:'Commercial category card image.',defaultPath:'/homepage/default-commercial.svg'},
-  {key:'turnkey',label:'Turnkey projects',description:'Turnkey category card image.',defaultPath:'/homepage/default-turnkey.svg'},
-  {key:'plot_land',label:'Plot & land leads',description:'Plot and land category card image.',defaultPath:'/homepage/default-plot-land.svg'}
+  {key:'hero',label:'Customer homepage hero',description:'Main homeowner hero visual shown behind “Your Dream Home Starts Here”.',defaultPath:'/homepage/default-hero.svg',wide:true},
+  {key:'residential',label:'Construction service card',description:'Visual used for the Home Construction card on the customer homepage.',defaultPath:'/homepage/default-residential.svg'},
+  {key:'interior',label:'Interior service card',description:'Visual used for the Interior Design card on the customer homepage.',defaultPath:'/homepage/default-interior.svg'},
+  {key:'commercial',label:'Real Estate service card',description:'Visual used for the Real Estate card on the customer homepage.',defaultPath:'/homepage/default-commercial.svg'},
+  {key:'why_homeowners',label:'Why Homeowners background',description:'Background visual for the homeowner trust section.',defaultPath:'/homepage/default-interior.svg',wide:true},
+  {key:'final_cta',label:'Final consultation banner',description:'Closing visual behind the “Ready to Plan Your Home?” call to action.',defaultPath:'/homepage/default-residential.svg',wide:true},
+  {key:'turnkey',label:'Construction estimator card',description:'Visual used for the Construction Cost Estimator entry point.',defaultPath:'/homepage/default-turnkey.svg'},
+  {key:'plot_land',label:'Property / plot fallback',description:'Fallback visual available for real-estate and plot-focused customer journeys.',defaultPath:'/homepage/default-plot-land.svg'}
 ]
 
 const initial={hero_image_url:'',category_images:{}}
@@ -80,19 +82,21 @@ export default function AdminHomepageMedia(){
     finally{setBusy('')}
   }
 
-  if(loading)return <main className="admin-home-media-page"><div className="admin-home-media-loading">Loading homepage media…</div></main>
+  if(loading)return <main className="admin-home-media-page"><div className="admin-home-media-loading"><div className="admin-home-media-spinner"/>Loading homepage media…</div></main>
+
+  const customCount=(settings.hero_image_url?1:0)+slots.filter(slot=>slot.key!=='hero'&&settings.category_images?.[slot.key]).length
+  const defaultCount=slots.length-customCount
 
   return <main className="admin-home-media-page">
     <section className="admin-home-media-hero">
-      <div><span>HOMEPAGE CONTENT</span><h1>Homepage Images</h1><p>Replace the lead-sales homepage visuals without changing code. Uploaded images are stored as files on the backend server.</p></div>
-      <div className="admin-home-media-mark">P</div>
+      <div className="admin-home-media-hero-copy"><span>CONTENT / HOMEPAGE MEDIA</span><h1>Homepage media</h1><p>Manage the customer-first homepage hero and project journey visuals without changing application code.</p><div className="admin-home-media-hero-meta"><span><b>{slots.length}</b> media slots</span><span><b>{customCount}</b> custom images</span><span><b>{defaultCount}</b> defaults active</span></div></div>
+      <div className="admin-home-media-hero-actions"><a href="/" target="_blank" rel="noreferrer"><span>↗</span><div><b>Open homepage</b><small>Preview redesigned homepage</small></div></a><button type="button" onClick={load}><span>↻</span><div><b>Refresh media</b><small>Reload saved settings</small></div></button></div>
     </section>
     {error&&<div className="admin-home-media-alert error">{error}</div>}
     {ok&&<div className="admin-home-media-alert success">{ok}</div>}
 
     <section className="admin-home-media-note">
-      <strong>Production media storage</strong>
-      <span>Images are saved under <code>backend/uploads/homepage</code>. The database stores only the file URL. Keep this folder on persistent VPS storage and include it in your backup plan.</span>
+      <div className="admin-home-media-note-icon">i</div><div><strong>Production media storage</strong><span>Uploads are stored under <code>backend/uploads/homepage</code> while the database keeps the file URL. Keep this folder on persistent storage and include it in backups.</span></div>
     </section>
 
     <section className="admin-home-media-grid">
@@ -112,8 +116,8 @@ export default function AdminHomepageMedia(){
     </section>
 
     <div className="admin-home-media-footer">
-      <a href="/" target="_blank" rel="noreferrer">Open homepage ↗</a>
-      <span>Recommended: WebP or optimized JPG/PNG, up to 7 MB.</span>
+      <span><b>Recommended:</b> WebP or optimized JPG/PNG, up to 7 MB.</span>
+      <span>Changes become available to the homepage after the upload completes.</span>
     </div>
   </main>
 }

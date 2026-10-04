@@ -79,7 +79,7 @@ export default function LeadPartnerWithdrawals() {
         </header>
 
         <div className="withdrawals-content">
-          <section className="withdrawals-heading"><div><h1>Withdrawals</h1></div><div className="withdrawals-live"><i /> Live earnings</div></section>
+          <section className="withdrawals-heading premium-page-hero"><div className="withdrawals-hero-copy"><span>LEAD PARTNER / FINANCE</span><h1>Earnings &amp; withdrawals</h1><p>Review available earnings, submit withdrawal requests and track every payout from the existing partner ledger.</p><div className="withdrawals-hero-meta"><span><b>{loading?'—':money(available)}</b> available</span><span><b>{loading?'—':money(reserved)}</b> pending</span><span><b>{requests.length}</b> requests</span></div></div><button type="button" className="withdrawals-hero-refresh" onClick={load} disabled={loading}><span>↻</span><div><b>{loading?'Refreshing…':'Refresh funds'}</b><small>Reload balances and payouts</small></div></button></section>
 
           {error && <div className="withdrawals-message error">{error}</div>}
           {message && <div className="withdrawals-message success">✓ {message}</div>}
