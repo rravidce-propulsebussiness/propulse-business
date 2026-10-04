@@ -38,8 +38,10 @@ assert.match(app,/<GlobalLeadPopup\/>/);
 assert.doesNotMatch(app,/ProfessionalHome/);
 
 // Homeowner acquisition homepage.
-assert.match(home,/Build\. Design\. Find/);
-assert.match(home,/Right Professionals/);
+assert.match(home,/Don&apos;t Leave Your/);
+assert.match(home,/Find the right partner\. Build it right\./);
+assert.doesNotMatch(home,/Build\. Design\. Find/);
+assert.doesNotMatch(home,/Right Professionals/);
 assert.match(home,/Start Your Requirement/);
 assert.match(home,/propulse:open-lead-popup/);
 assert.match(home,/What do you need\?/);

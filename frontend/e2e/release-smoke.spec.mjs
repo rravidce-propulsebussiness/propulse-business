@@ -52,8 +52,11 @@ const TINY_PNG='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HA
 
 test('public homepage presents homeowner acquisition journeys',async({page})=>{
   await page.goto('/')
-  await expect(page.locator('.hc-hero h1')).toContainText('Build. Design. Find')
-  await expect(page.locator('.hc-hero h1')).toContainText('Right Professionals.')
+  await expect(page.locator('.hc-hero h1')).toContainText("Don't Leave Your")
+  await expect(page.locator('.hc-hero h1')).toContainText('Dream Home')
+  await expect(page.locator('.hc-hero h1')).toContainText('to Chance.')
+  await expect(page.locator('.hc-hero-tagline')).toHaveText('Find the right partner. Build it right.')
+  await expect(page.getByText('Branded Material Options',{exact:true})).toBeVisible()
   const heroRequirementButton=page.locator('#home').getByRole('button',{name:'Start Your Requirement'})
   await expect(heroRequirementButton).toBeVisible()
   await expect(page.getByRole('link',{name:/view packages/i}).first()).toHaveAttribute('href','/packages')
