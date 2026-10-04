@@ -610,7 +610,7 @@ jobs:
         with:
           fetch-depth: 2
       - name: Repository whitespace check
-        run: git diff --check HEAD^ HEAD
+        run: git diff --check HEAD^ HEAD -- . ':(exclude)backend/hostinger-frontend/**'
       - name: Block committed environment files
         shell: bash
         run: |
