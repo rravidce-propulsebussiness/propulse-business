@@ -14,6 +14,7 @@ const MATURITY_OPTIONS = [
 ]
 
 export default function AdminInvestmentsWallet() {
+  const navigate = useNavigate()
   const [data, setData] = useState({ investors: [], portfolio: {}, pagination: {page:1,pages:1,total:0,limit:30} })
   const [page,setPage]=useState(1)
   const [search, setSearch] = useState(''); const [status, setStatus] = useState('all'); const [industryId, setIndustryId] = useState(''); const searchRef = useRef('')
