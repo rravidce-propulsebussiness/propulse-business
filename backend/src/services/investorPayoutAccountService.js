@@ -1,32 +1,6 @@
 const pool = require('../config/database')
 const securityRiskService = require('./securityRiskService')
-
-function clean(value){ return value == null ? null : String(value).trim() || null }
-
-function validateBank(input){
-  const accountHolderName = clean(input.accountHolderName)
-  const accountNumber = clean(input.accountNumber)
-  const ifscCode = clean(input.ifscCode)?.toUpperCase()
-  const bankName = clean(input.bankName)
-  if (!accountHolderName || !accountNumber || !ifscCode || !bankName) {
-    throw Object.assign(new Error('Complete bank account details are required'), { code:'INVALID_PAYOUT_ACCOUNT' })
-  }
-  if (!/^[A-Z]{4}0[A-Z0-9]{6}$/.test(ifscCode)) {
-    throw Object.assign(new Error('Enter a valid IFSC code'), { code:'INVALID_PAYOUT_ACCOUNT' })
-  }
-  if (!/^[0-9]{6,30}$/.test(accountNumber)) {
-    throw Object.assign(new Error('Enter a valid bank account number'), { code:'INVALID_PAYOUT_ACCOUNT' })
-  }
-  return { method:'bank', accountHolderName, accountNumber, ifscCode, bankName }
-}
-
-function validateUpi(input){
-  const upiId = clean(input.upiId)?.toLowerCase()
-  if (!upiId || !/^[a-zA-Z0-9._-]{2,}@[a-zA-Z0-9.-]{2,}$/.test(upiId)) {
-    throw Object.assign(new Error('Enter a valid UPI ID'), { code:'INVALID_PAYOUT_ACCOUNT' })
-  }
-  return { method:'upi', upiId }
-}
+const {validateBank,validateUpi}=require('./payoutAccountValidation')
 
 function publicAccount(row){
   if (!row) return null
@@ -48,8 +22,8 @@ async function get(userId){
 async function save({userId, method, accountHolderName, accountNumber, ifscCode, bankName, upiId}){
   const normalizedMethod = String(method || '').trim().toLowerCase()
   const details = normalizedMethod === 'bank'
-    ? validateBank({accountHolderName,accountNumber,ifscCode,bankName})
-    : normalizedMethod === 'upi' ? validateUpi({upiId}) : (()=>{ throw Object.assign(new Error('Select Bank Account or UPI'),{code:'INVALID_PAYOUT_ACCOUNT'}) })()
+    ? validateBank({accountHolderName,accountNumber,ifscCode,bankName},'INVALID_PAYOUT_ACCOUNT')
+    : normalizedMethod === 'upi' ? validateUpi({upiId},'INVALID_PAYOUT_ACCOUNT') : (()=>{ throw Object.assign(new Error('Select Bank Account or UPI'),{code:'INVALID_PAYOUT_ACCOUNT'}) })()
   const client = await pool.connect()
   try {
     await client.query('BEGIN')
