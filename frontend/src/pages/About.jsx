@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { publicRequest } from '../utils/auth'
 import './About.css'
+import { openLeadPopup } from '../utils/leadPopup'
 
 const HERO='https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=2200&q=92'
 const STORY='https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=1500&q=90'
@@ -37,9 +38,6 @@ function Icon({name,size=20}){
   return null
 }
 
-function openLeadPopup(flowKey=''){
-  window.dispatchEvent(new CustomEvent('propulse:open-lead-popup',{detail:{flowKey}}))
-}
 
 export default function About(){
   const navigate=useNavigate()
