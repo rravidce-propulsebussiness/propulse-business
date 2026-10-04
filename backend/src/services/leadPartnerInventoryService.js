@@ -1,0 +1,578 @@
+const pool = require('../config/database');
+const leadService = require('./leadService');
+const partnerPricing = require('./leadPartnerPricingService');
+const leadQualityGateService = require('./leadQualityGateService');
+const { fetchGoogleSheetCsv } = require('./googleSheetService');
+const { detectPincode } = require('./pincodeDetectionService');
+const cityService = require('./cityService');
+
+const clean = v => String(v ?? '').trim();
+const norm = v => clean(v).toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]/g, '');
+const aliases = {
+  id: 'id', leadid: 'id', lead_id: 'id', externalid: 'id', external_id: 'id',
+  industry: 'industry', industryname: 'industry', industrytype: 'industry', industrycategory: 'industry', category: 'industry',
+  service: 'service', servicename: 'service', servicetype: 'service', servicecategory: 'service',
+  subservice: 'subservice', subservicename: 'subservice',
+  state: 'state', statename: 'state', city: 'city', cityname: 'city',
+  pincode: 'pincode', pin: 'pincode', zipcode: 'pincode', postalcode: 'pincode', postal: 'pincode',
+  customername: 'customerName', name: 'customerName', customer: 'customerName',
+  customerphone: 'customerPhone', phone: 'customerPhone', mobile: 'customerPhone', whatsapp: 'customerPhone',
+  customeremail: 'customerEmail', email: 'customerEmail',
+  requirement: 'requirement', requirements: 'requirement', requirementdetails: 'requirement',
+  propertytype: 'propertyType', budget: 'budget', source: 'source', notes: 'notes',
+  buyercapacity: 'buyerCapacity', buyercapacitylimit: 'buyerCapacity', maxbuyers: 'buyerCapacity', capacity: 'buyerCapacity',
+  leadtype: 'leadType', accessstrategy: 'accessStrategy', buyerstrategy: 'accessStrategy', releaseto2hours: 'releaseToTwoAfterHours', releasetotwohours: 'releaseToTwoAfterHours', releaseto3hours: 'releaseToThreeAfterHours', releasetothreehours: 'releaseToThreeAfterHours', proearlyaccess: 'isExclusive', earlyaccess: 'isExclusive', exclusive: 'isExclusive', isexclusive: 'isExclusive', exclusivedelaydays:'exclusiveDelayDays', earlyaccessdelaydays:'exclusiveDelayDays', proearlyaccessdelaydays:'exclusiveDelayDays',
+};
+
+function parseCsv(text) {
+  const rows = []; let row = []; let cell = ''; let quoted = false;
+  for (let i = 0; i < text.length; i += 1) {
+    const c = text[i];
+    if (c === '"') { if (quoted && text[i + 1] === '"') { cell += '"'; i += 1; } else quoted = !quoted; }
+    else if (c === ',' && !quoted) { row.push(cell); cell = ''; }
+    else if ((c === '\n' || c === '\r') && !quoted) { if (c === '\r' && text[i + 1] === '\n') i += 1; row.push(cell); if (row.some(v => clean(v))) rows.push(row); row = []; cell = ''; }
+    else cell += c;
+  }
+  row.push(cell); if (row.some(v => clean(v))) rows.push(row);
+  if (!rows.length) return [];
+  const headers = rows[0].map(h => aliases[norm(h)] || clean(h));
+  return rows.slice(1).map(source => {
+    const row=Object.fromEntries(headers.map((h, i) => [h, clean(source[i])]));
+    if(norm(row.industry)==='intriordesignandhomeinteriors')row.industry='Interior Design & Home Interiors';
+    return row;
+  }).filter(r => Object.values(r).some(Boolean));
+}
+
+async function catalogs() {
+  const [industries, services, subservices, states, cities] = await Promise.all([
+    pool.query('SELECT id,name,slug FROM industries WHERE is_active=TRUE'),
+    pool.query('SELECT id,name,slug,industry_id FROM services WHERE is_active=TRUE'),
+    pool.query('SELECT id,name,slug,service_id FROM subservices WHERE is_active=TRUE'),
+    pool.query('SELECT id,name,code FROM states WHERE is_active=TRUE'),
+    pool.query('SELECT id,name,slug,state_id FROM cities WHERE is_active=TRUE'),
+  ]);
+  return { industries: industries.rows, services: services.rows, subservices: subservices.rows, states: states.rows, cities: cities.rows };
+}
+
+function candidateMatches(items, value) {
+  const wanted = norm(value);
+  if (!wanted) return [];
+  const exact = items.filter(x => norm(x.name) === wanted || norm(x.slug) === wanted);
+  if (exact.length) return exact;
+  const relaxed = items.filter(x => {
+    const name = norm(x.name); const slug = norm(x.slug);
+    return name.includes(wanted) || wanted.includes(name) || slug.includes(wanted) || wanted.includes(slug);
+  });
+  return relaxed.length === 1 ? relaxed : [];
+}
+const findExact = (items, value) => { const matches = candidateMatches(items, value); return matches.length === 1 ? matches[0] : null; };
+const findScoped = (items, value, parentId, parentKey) => findExact(parentId == null ? items : items.filter(x => Number(x[parentKey]) === Number(parentId)), value);
+
+function resolveClassification(row, cat) {
+  let industry = findExact(cat.industries, row.industry);
+  let service = findScoped(cat.services, row.service, industry?.id, 'industry_id');
+  let subservice = findScoped(cat.subservices, row.subservice, service?.id, 'service_id');
+  if (!service && subservice) service = cat.services.find(x => Number(x.id) === Number(subservice.service_id)) || null;
+  if (!industry && service) industry = cat.industries.find(x => Number(x.id) === Number(service.industry_id)) || null;
+  if (row.industry && !industry) { const matches = candidateMatches(cat.industries, row.industry); throw new Error(matches.length > 1 ? 'Industry is ambiguous' : 'Industry could not be resolved'); }
+  if (row.service && !service) { const matches = candidateMatches(cat.services, row.service); throw new Error(matches.length > 1 ? 'Service is ambiguous; include Industry' : 'Service could not be resolved'); }
+  if (row.subservice && !subservice) { const matches = candidateMatches(cat.subservices, row.subservice); throw new Error(matches.length > 1 ? 'Subservice is ambiguous; include Service' : 'Subservice could not be resolved'); }
+  if (service && industry && Number(service.industry_id) !== Number(industry.id)) throw new Error('Service does not belong to the selected Industry');
+  if (subservice && service && Number(subservice.service_id) !== Number(service.id)) throw new Error('Subservice does not belong to the selected Service');
+  if (!industry) {
+    if(!clean(row.industry)&&!clean(row.service)&&!clean(row.subservice))throw new Error('Industry, Service and Subservice are all blank; provide at least one classification value');
+    throw new Error('Industry is required or must be derivable from Service/Subservice');
+  }
+  return { industry, service, subservice };
+}
+
+async function resolveLocationFromPincode(pincode, cat, suppliedState, suppliedCity) {
+  const value = clean(pincode).replace(/\D/g, '');
+  if (!/^\d{6}$/.test(value)) throw new Error('Pincode is required and must be a valid 6-digit Indian PIN');
+
+  // Use the same detector as the Admin PIN Mapping page so a new Google Sheet
+  // PIN is persisted to india_pincodes with complete India Post metadata.
+  const detected = await detectPincode(value);
+  const pin = detected;
+  if (!pin) throw new Error(`Pincode ${value} could not be resolved`);
+
+  // State is always canonical from the PIN lookup, exactly like the Admin uploader.
+  const state = cat.states.find(x => Number(x.id) === Number(pin.state_id) || norm(x.name) === norm(pin.state_name));
+  if (!state) throw new Error(`State for pincode ${value} is not present in the catalog`);
+  // Persist the canonical state ID for newly discovered PINs. This also lets the
+  // directory trigger maintain city_pincodes automatically when district == city.
+  await pool.query(
+    `UPDATE india_pincodes
+        SET state_id=$1,updated_at=CURRENT_TIMESTAMP
+      WHERE pincode=$2 AND (state_id IS DISTINCT FROM $1 OR state_id IS NULL)`,
+    [state.id, value]
+  ).catch(() => {});
+  if (suppliedState && norm(suppliedState) !== norm(state.name)) {
+    throw new Error(`Pincode ${value} belongs to ${state.name}, not ${suppliedState}`);
+  }
+
+  // The Admin uploader treats the PIN response as the authority for State,
+  // while City can come from the uploaded row. Do the same here so a postal
+  // district such as Rangareddy/Medak can still map to the business City
+  // catalog (for example Hyderabad/Patancheru) when that city is supplied.
+  let city = null;
+  if (suppliedCity) {
+    const suppliedMatches = cat.cities.filter(x => Number(x.state_id) === Number(state.id) && norm(x.name) === norm(suppliedCity));
+    if (suppliedMatches.length === 1) city = suppliedMatches[0];
+    else if (suppliedMatches.length > 1) throw new Error(`City ${suppliedCity} is ambiguous in ${state.name}`);
+    else {
+      const relaxed = candidateMatches(cat.cities.filter(x => Number(x.state_id) === Number(state.id)), suppliedCity);
+      if (relaxed.length === 1) city = relaxed[0];
+      else {
+        // An explicitly supplied City is safe to add to the business catalog.
+        // Never create a city from a postal district alone.
+        const cityName = clean(suppliedCity);
+        const slug = cityName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+        try {
+          city = await cityService.createCity({ stateId: state.id, name: cityName, slug });
+          cat.cities.push(city);
+        } catch (error) {
+          if (error.code === 'CITY_ALREADY_EXISTS') {
+            city = findExact(cat.cities.filter(x => Number(x.state_id) === Number(state.id)), cityName);
+          }
+          if (!city) throw new Error(`City ${suppliedCity} is not present in the ${state.name} catalog and could not be created: ${error.message}`);
+        }
+      }
+    }
+  }
+
+  // If City was not supplied, first use an exact State + India Post District
+  // match when it resolves to exactly one Propulse City. A postal district is
+  // not always a business city, so never use fuzzy or partial matching here.
+  if (!city && pin.district_name) {
+    const districtMatches = cat.cities.filter(x =>
+      Number(x.state_id) === Number(state.id) && norm(x.name) === norm(pin.district_name)
+    );
+    if (districtMatches.length === 1) city = districtMatches[0];
+    else if (districtMatches.length > 1) {
+      throw new Error(`Pincode ${value} has an ambiguous Propulse City for postal district ${pin.district_name}; provide City in the sheet`);
+    }
+  }
+
+  // If City was not supplied, prefer the canonical city_pincodes mapping.
+  if (!city) {
+    const cityRows = (await pool.query(
+      `SELECT DISTINCT c.id,c.name,c.slug,c.state_id
+         FROM city_pincodes cp
+         JOIN cities c ON c.id=cp.city_id
+        WHERE cp.pincode=$1
+          AND cp.is_active=TRUE
+          AND c.is_active=TRUE
+          AND c.state_id=$2`,
+      [value, state.id]
+    )).rows;
+    const uniqueCities = [...new Map(cityRows.map(x => [String(x.id), x])).values()];
+    if (uniqueCities.length === 1) city = uniqueCities[0];
+    if (uniqueCities.length > 1) throw new Error(`Pincode ${value} maps to multiple cities; provide a matching City`);
+  }
+
+  // Last fallback uses every postal office name, not just the API's first
+  // district/city field. A single PIN can cover many offices; for example
+  // 502319 includes Patancheru and several surrounding offices. If one of
+  // those names is an exact Propulse city, use that catalog city.
+  if (!city) {
+    const postalNames = Array.isArray(pin.office_names) ? pin.office_names : [];
+    const candidates = [...postalNames, pin.city_name, pin.district_name, pin.office_name]
+      .filter(Boolean)
+      .map(x => String(x).trim());
+    for (const candidate of candidates) {
+      const exact = cat.cities.filter(x =>
+        Number(x.state_id) === Number(state.id) && norm(x.name) === norm(candidate)
+      );
+      if (exact.length === 1) { city = exact[0]; break; }
+    }
+  }
+
+  // If there is still no City, create a catalog City from the canonical
+  // India Post district. This is the automatic-city-creation fallback for
+  // Google Sheet imports: State comes from the PIN and district is used only
+  // when there is no existing city/office mapping.
+  if (!city && pin.district_name) {
+    const districtName = clean(pin.district_name);
+    const districtSlug = districtName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    try {
+      city = await cityService.createCity({
+        stateId: state.id,
+        name: districtName,
+        slug: districtSlug,
+      });
+      cat.cities.push(city);
+    } catch (error) {
+      if (error.code === 'CITY_ALREADY_EXISTS') {
+        city = findExact(
+          cat.cities.filter(x => Number(x.state_id) === Number(state.id)),
+          districtName
+        );
+      }
+      if (!city) {
+        throw new Error(
+          `Pincode ${value} is valid, but its postal district ${districtName} could not be mapped to a Propulse City: ${error.message}`
+        );
+      }
+    }
+  }
+
+  if (!city) {
+    throw new Error(
+      `Pincode ${value} is valid, but no State/City mapping could be created from the India Post directory.`
+    );
+  }
+  if (Number(city.state_id) !== Number(state.id)) throw new Error(`City ${city.name} is outside the resolved state ${state.name}`);
+
+  // Persist the validated City↔PIN relationship. Do not swallow database
+  // errors: a successful import must never report a mapping that was not saved.
+  await pool.query(
+    `INSERT INTO city_pincodes(city_id,pincode,office_name,is_active)
+     VALUES($1,$2,$3,TRUE)
+     ON CONFLICT(city_id,pincode) DO UPDATE SET
+       office_name=COALESCE(EXCLUDED.office_name,city_pincodes.office_name),
+       is_active=TRUE,updated_at=CURRENT_TIMESTAMP`,
+    [city.id, value, pin.office_name || pin.district_name || city.name]
+  );
+
+  return { pincode: value, state, city };
+}
+
+const CORE_SHEET_FIELDS = new Set([
+  'id','industry','service','subservice','state','city','pincode','customerName','customerPhone','customerEmail',
+  'requirement','propertyType','budget','source','notes','buyerCapacity','leadType','accessStrategy','releaseToTwoAfterHours','releaseToThreeAfterHours','isExclusive','exclusiveDelayDays','Pro 1 Buyer','Pro 1 Share'
+]);
+
+const isPartnerPricingField=key=>['pro1buyer','pro1buyers','pro1share','pro1shares','pro1buyerprice','pro1shareprice'].includes(norm(key));
+function buildImportedCustomFields(row) {
+  return Object.fromEntries(
+    Object.entries(row)
+      .filter(([key, value]) => !CORE_SHEET_FIELDS.has(key) && !isPartnerPricingField(key) && clean(value))
+      .map(([key, value]) => [key, value])
+  );
+}
+
+function parseAccessStrategy(value){const n=norm(value);if(!n)return undefined;if(n.includes('permanent')||n==='single'||n==='singlebuyer'||n==='singleonly')return'permanent_single';if(n.includes('auto'))return'auto_release';if(n.includes('shared'))return'shared';throw new Error('Access Strategy must be Single Only, Permanent Single, Auto Release, or Shared from Start');}
+function partnerProOnePrice(row){for(const[key,value]of Object.entries(row||{})){const n=norm(key);if(!['pro1buyer','pro1buyers','pro1share','pro1shares','pro1buyerprice','pro1shareprice'].includes(n))continue;if(!clean(value))return null;const price=Number(value);if(!Number.isFinite(price)||price<0)throw new Error('Pro 1 Buyer price must be a non-negative number');return price}return null}
+async function buildLead(row, cat, locationCache=null) {
+  const { industry, service, subservice } = resolveClassification(row, cat);
+  const locationKey=`${clean(row.pincode).replace(/\D/g,'')}\u0000${norm(row.state)}\u0000${norm(row.city)}`;
+  let locationPromise=locationCache?.get(locationKey);
+  if(!locationPromise){locationPromise=resolveLocationFromPincode(row.pincode,cat,row.state,row.city);if(locationCache)locationCache.set(locationKey,locationPromise)}
+  const location = await locationPromise;
+  const capacityRaw=clean(row.buyerCapacity);const capacity=capacityRaw===''?undefined:Number(capacityRaw);
+  if(capacityRaw!==''&&(!Number.isFinite(capacity)||capacity<1||capacity>3))throw new Error('Buyer Capacity must be between 1 and 3');
+  const strategy=parseAccessStrategy(row.accessStrategy);
+  const releaseTwo=clean(row.releaseToTwoAfterHours)===''?undefined:Number(row.releaseToTwoAfterHours);
+  const releaseThree=clean(row.releaseToThreeAfterHours)===''?undefined:Number(row.releaseToThreeAfterHours);
+  if(releaseTwo!==undefined&&(!Number.isFinite(releaseTwo)||releaseTwo<0))throw new Error('Release to 2 Hours must be zero or greater');
+  if(releaseThree!==undefined&&(!Number.isFinite(releaseThree)||releaseThree<0))throw new Error('Release to 3 Hours must be zero or greater');
+  if(releaseTwo!==undefined&&releaseThree!==undefined&&releaseThree<releaseTwo)throw new Error('Release to 3 Hours must be after Release to 2 Hours');
+  return {
+    industryId: industry.id, serviceId: service?.id || null, subserviceId: subservice?.id || null,
+    stateId: location.state.id, cityId: location.city.id, customerName: row.customerName, customerPhone: row.customerPhone,
+    customerEmail: row.customerEmail || '', requirement: row.requirement || 'Lead requirement not provided', propertyType: row.propertyType || '', budget: row.budget || '',
+    source: row.source || 'lead-partner-upload', notes: row.notes || '', customFields: buildImportedCustomFields(row), pincode: location.pincode,
+    buyerCapacity: strategy==='permanent_single'?1:(capacity===undefined?undefined:Math.floor(capacity)),
+    accessStrategy:strategy,releaseToTwoAfterHours:releaseTwo,releaseToThreeAfterHours:releaseThree,
+    leadType: norm(row.leadType) === 'premium' ? 'premium' : 'basic', isExclusive: ['true', 'yes', 'y', '1', 'exclusive'].includes(norm(row.isExclusive)),
+    exclusiveDelayDays:clean(row.exclusiveDelayDays)===''?undefined:Number(row.exclusiveDelayDays),
+    partnerProOnePrice:partnerProOnePrice(row),
+  };
+}
+async function previewPinReadOnly(row,cat){
+  const value=clean(row.pincode).replace(/\D/g,'');
+  if(!/^\d{6}$/.test(value))throw new Error('Pincode is required and must be a valid 6-digit Indian PIN');
+  const pin=(await pool.query(
+    `SELECT p.pincode,p.state_id,p.state_name,p.district_name,
+            COUNT(DISTINCT cp.city_id) FILTER(WHERE cp.is_active=TRUE)::int AS mapped_cities
+       FROM india_pincodes p
+       LEFT JOIN city_pincodes cp ON cp.pincode=p.pincode
+      WHERE p.pincode=$1 AND p.is_active=TRUE
+      GROUP BY p.pincode,p.state_id,p.state_name,p.district_name`,
+    [value]
+  )).rows[0];
+  if(!pin)return{warning:`PIN ${value} will be verified against India Post during activation`};
+  const state=cat.states.find(x=>Number(x.id)===Number(pin.state_id)||norm(x.name)===norm(pin.state_name));
+  if(!state)throw new Error(`State for pincode ${value} is not present in the catalog`);
+  if(row.state&&norm(row.state)!==norm(state.name))throw new Error(`Pincode ${value} belongs to ${state.name}, not ${row.state}`);
+  if(row.city){
+    const city=cat.cities.find(x=>Number(x.state_id)===Number(state.id)&&norm(x.name)===norm(row.city));
+    if(!city)return{warning:`City "${row.city}" is not in the ${state.name} catalog yet; activation will verify and create it when safe`};
+    const mapped=(await pool.query('SELECT 1 FROM city_pincodes WHERE pincode=$1 AND city_id=$2 AND is_active=TRUE LIMIT 1',[value,city.id])).rowCount>0;
+    if(!mapped)return{warning:`PIN ${value} is not currently mapped to ${city.name}; activation will verify the relationship`};
+    return{};
+  }
+  if(Number(pin.mapped_cities||0)===0)return{warning:`PIN ${value} has no City mapping yet; activation will resolve it`};
+  if(Number(pin.mapped_cities||0)>1)return{warning:`PIN ${value} maps to multiple Cities; add City to the sheet for deterministic import`};
+  return{};
+}
+async function previewCsv({userId,csv}){
+  const rows=parseCsv(csv);if(!rows.length)throw new Error('CSV contains no data rows');
+  const cat=await catalogs();
+  const partner=(await pool.query('SELECT id,status FROM lead_partners WHERE user_id=$1 LIMIT 1',[userId])).rows[0];
+  if(!partner)throw new Error('Lead Partner profile not found');
+  if(partner.status!=='active')throw new Error('Lead Partner account is not active');
+
+  const phones=[...new Set(rows.map(row=>clean(row.customerPhone).replace(/\D/g,'')).filter(value=>value.length>=7))];
+  const emails=[...new Set(rows.map(row=>clean(row.customerEmail).toLowerCase()).filter(Boolean))];
+  const existing=(phones.length||emails.length)?(await pool.query(
+    `SELECT regexp_replace(COALESCE(customer_phone,''),'[^0-9]','','g') AS phone_key,
+            LOWER(TRIM(COALESCE(customer_email,''))) AS email_key
+       FROM leads
+      WHERE regexp_replace(COALESCE(customer_phone,''),'[^0-9]','','g')=ANY($1::text[])
+         OR LOWER(TRIM(COALESCE(customer_email,'')))=ANY($2::text[])`,
+    [phones,emails]
+  )).rows:[];
+  const existingPhones=new Set(existing.map(row=>row.phone_key).filter(Boolean));
+  const existingEmails=new Set(existing.map(row=>row.email_key).filter(Boolean));
+
+  const seen=new Set(),previewRows=[];
+  let valid=0,warning=0,invalid=0,duplicates=0;
+  for(let index=0;index<rows.length;index+=1){
+    const row=rows[index];
+    const phone=clean(row.customerPhone).replace(/\D/g,'');
+    const email=clean(row.customerEmail).toLowerCase();
+    const rowKey=clean(row.id)||phone||email||`Row ${index+2}`;
+    const duplicateKey=clean(row.id)||phone||email||`${norm(row.customerName)}:${norm(row.requirement)}`;
+    if(duplicateKey&&seen.has(duplicateKey)){
+      duplicates+=1;warning+=1;
+      if(previewRows.length<60)previewRows.push({row:index+2,status:'warning',action:'skip',key:rowKey,messages:['Duplicate row in this sheet; the later copy will be skipped']});
+      continue;
+    }
+    if(duplicateKey)seen.add(duplicateKey);
+    const messages=[];
+    try{
+      resolveClassification(row,cat);
+      const capacityRaw=clean(row.buyerCapacity);const capacity=capacityRaw===''?undefined:Number(capacityRaw);
+      if(capacityRaw!==''&&(!Number.isFinite(capacity)||capacity<1||capacity>3))throw new Error('Buyer Capacity must be between 1 and 3');
+      parseAccessStrategy(row.accessStrategy);
+      const releaseTwo=clean(row.releaseToTwoAfterHours)===''?undefined:Number(row.releaseToTwoAfterHours);
+      const releaseThree=clean(row.releaseToThreeAfterHours)===''?undefined:Number(row.releaseToThreeAfterHours);
+      if(releaseTwo!==undefined&&(!Number.isFinite(releaseTwo)||releaseTwo<0))throw new Error('Release to 2 Hours must be zero or greater');
+      if(releaseThree!==undefined&&(!Number.isFinite(releaseThree)||releaseThree<0))throw new Error('Release to 3 Hours must be zero or greater');
+      if(releaseTwo!==undefined&&releaseThree!==undefined&&releaseThree<releaseTwo)throw new Error('Release to 3 Hours must be after Release to 2 Hours');
+      partnerProOnePrice(row);
+      const pinState=await previewPinReadOnly(row,cat);
+      if(pinState.warning)messages.push(pinState.warning);
+      if(!phone&&!email)messages.push('Customer phone and email are both blank');
+      if((phone&&existingPhones.has(phone))||(email&&existingEmails.has(email)))messages.push('A lead with this phone/email already exists; activation may count it as a duplicate');
+      const status=messages.length?'warning':'valid';
+      if(status==='warning')warning+=1;else valid+=1;
+      if(previewRows.length<60)previewRows.push({row:index+2,status,action:'create',key:rowKey,messages});
+    }catch(error){
+      invalid+=1;
+      if(previewRows.length<60)previewRows.push({row:index+2,status:'invalid',action:'create',key:rowKey,messages:[String(error.message||'Row is invalid')]});
+    }
+  }
+  return{
+    summary:{total:rows.length,valid,warning,invalid,duplicates,creates:Math.max(0,rows.length-duplicates)},
+    rows:previewRows
+  };
+}
+
+function failureCategory(message){
+  const text=String(message||'').toLowerCase();
+  if(text.includes('pincode')||text.includes('pin ')||text.includes('postal'))return'PIN / location';
+  if(text.includes('industry')||text.includes('service')||text.includes('subservice'))return'Industry / service';
+  if(text.includes('access strategy')||text.includes('buyer capacity')||text.includes('release to'))return'Buyer access';
+  if(text.includes('price')||text.includes('pricing'))return'Pricing';
+  if(text.includes('customer')||text.includes('phone')||text.includes('email'))return'Customer data';
+  return'Other';
+}
+function summarizeFailures(failures){
+  const counts={};
+  for(const failure of failures||[]){const category=failureCategory(failure);counts[category]=(counts[category]||0)+1}
+  return Object.entries(counts).sort((a,b)=>b[1]-a[1]).map(([category,count])=>({category,count}));
+}
+async function importCsv({ userId, csv }) {
+  const rows = parseCsv(csv); if (!rows.length) throw new Error('CSV contains no data rows');
+  const cat = await catalogs();
+  const partner = (await pool.query('SELECT id,status FROM lead_partners WHERE user_id=$1 LIMIT 1', [userId])).rows[0];
+  if (!partner) throw new Error('Lead Partner profile not found'); if (partner.status !== 'active') throw new Error('Lead Partner account is not active');
+  const settings=await partnerPricing.getSettings();
+  const locationCache=new Map();
+  let created = 0; let failed = 0; let duplicate = 0; let quarantined = 0;
+  const failures = [];
+  const duplicateSamples = [];
+  for (const row of rows) {
+    let createdLead=null;
+    try {
+      const lead = await buildLead(row, cat, locationCache);
+      createdLead = await leadService.createLead({ ...lead, createdBy: userId, leadPartnerId:partner.id, qualityGateContext:'lead_partner', deferQualityGate:true });
+      const configured = await partnerPricing.applyConfiguredPricingToLead(userId, createdLead.id, createdLead.pricing, lead.industryId, lead.cityId, lead.leadType);
+      const hasSheetPartnerPrice=lead.partnerProOnePrice!==null&&lead.partnerProOnePrice!==undefined&&lead.partnerProOnePrice!=='';const sheetPricing=hasSheetPartnerPrice&&Number.isFinite(Number(lead.partnerProOnePrice))?partnerPricing.buildFixedPartnerPricing(Number(lead.partnerProOnePrice),settings.normalPriceUplift):null;
+      const effectivePricing=sheetPricing||configured||createdLead.pricing||{shares:[]};
+      const overridden=JSON.stringify(effectivePricing)!==JSON.stringify(createdLead.pricing||{shares:[]});
+      await pool.query(
+        `UPDATE leads SET partner_base_pricing=$1::jsonb,partner_pricing_overridden=$2,partner_pricing_updated_at=$3,pricing=$4::jsonb,updated_at=CURRENT_TIMESTAMP WHERE id=$5 AND created_by=$6`,
+        [JSON.stringify(createdLead.pricing || { shares: [] }), overridden, overridden ? new Date() : null, JSON.stringify(effectivePricing), createdLead.id, userId]
+      );
+      const gated=await leadQualityGateService.evaluateAndApply(createdLead.id,{context:'lead_partner',autoRelease:true});
+      createdLead=gated.lead||createdLead;
+      created += 1;
+      if(createdLead.status==='quarantined')quarantined += 1;
+    } catch (error) {
+      if(createdLead?.id){
+        await pool.query(
+          `DELETE FROM leads WHERE id=$1 AND created_by=$2 AND status='quarantined'
+             AND NOT EXISTS(SELECT 1 FROM lead_purchases p WHERE p.lead_id=leads.id)`,
+          [createdLead.id,userId]
+        ).catch(()=>{});
+      }
+      const rowKey=row.id || row.customerPhone || row.customerEmail || created + failed + duplicate + 1;
+      const detail=`${rowKey}: ${error.message}`;
+      if (error.code === 'DUPLICATE_LEAD') {
+        duplicate += 1;
+        if(duplicateSamples.length<5)duplicateSamples.push(detail);
+      } else {
+        failed += 1;
+        failures.push(detail);
+      }
+    }
+  }
+  return { total: rows.length, created, quarantined, duplicate, failed, failures, duplicateSamples, failureSummary:summarizeFailures(failures) };
+}
+
+async function importGoogleSheet({ userId, url }) {
+  const result = await fetchGoogleSheetCsv(url);
+  const imported = await importCsv({ userId, csv: result.csv });
+  return { ...imported, spreadsheetId: result.spreadsheetId, gid: result.gid };
+}
+
+async function getSheetConnections({ userId }) {
+  const rows=(await pool.query(
+    `SELECT id,spreadsheet_id,gid,source_url,status,last_synced_at,last_sync_created,last_sync_duplicate,last_sync_failed,last_sync_failures,created_at,updated_at
+       FROM lead_partner_sheet_connections
+      WHERE user_id=$1
+      ORDER BY updated_at DESC,id DESC`,
+    [userId]
+  )).rows;
+  return rows.map(row=>({...row,last_sync_failure_summary:summarizeFailures(Array.isArray(row.last_sync_failures)?row.last_sync_failures:[])}));
+}
+
+async function connectGoogleSheet({ userId, url }) {
+  const result = await fetchGoogleSheetCsv(url);
+  const imported = await importCsv({ userId, csv: result.csv });
+  const saved = (await pool.query(
+    `INSERT INTO lead_partner_sheet_connections(
+       user_id,spreadsheet_id,gid,source_url,last_synced_at,last_sync_created,last_sync_duplicate,last_sync_failed,last_sync_failures
+     ) VALUES($1,$2,$3,$4,CURRENT_TIMESTAMP,$5,$6,$7,$8::jsonb)
+     ON CONFLICT(user_id,spreadsheet_id,gid) DO UPDATE SET
+       source_url=EXCLUDED.source_url,
+       status='active',
+       last_synced_at=EXCLUDED.last_synced_at,
+       last_sync_created=EXCLUDED.last_sync_created,
+       last_sync_duplicate=EXCLUDED.last_sync_duplicate,
+       last_sync_failed=EXCLUDED.last_sync_failed,
+       last_sync_failures=EXCLUDED.last_sync_failures,
+       updated_at=CURRENT_TIMESTAMP
+     RETURNING *`,
+    [userId, result.spreadsheetId, result.gid || '0', url, imported.created, imported.duplicate, imported.failed, JSON.stringify(imported.failures)]
+  )).rows[0];
+  return { connection: saved, import: imported };
+}
+
+async function syncGoogleSheet({ userId, connectionId }) {
+  const connection = (await pool.query(
+    `SELECT * FROM lead_partner_sheet_connections WHERE id=$1 AND user_id=$2 AND status='active'`,
+    [connectionId, userId]
+  )).rows[0];
+  if (!connection) { const error = new Error('Active Google Sheet connection not found'); error.code = 'SHEET_CONNECTION_NOT_FOUND'; throw error; }
+  const result = await fetchGoogleSheetCsv(connection.source_url);
+  if (result.spreadsheetId !== connection.spreadsheet_id || String(result.gid || '0') !== String(connection.gid || '0')) throw new Error('Google Sheet URL no longer matches the connected sheet');
+  const imported = await importCsv({ userId, csv: result.csv });
+  const saved = (await pool.query(
+    `UPDATE lead_partner_sheet_connections
+        SET last_synced_at=CURRENT_TIMESTAMP,last_sync_created=$1,last_sync_duplicate=$2,last_sync_failed=$3,last_sync_failures=$4::jsonb,updated_at=CURRENT_TIMESTAMP
+      WHERE id=$5 AND user_id=$6
+      RETURNING *`,
+    [imported.created, imported.duplicate, imported.failed, JSON.stringify(imported.failures), connectionId, userId]
+  )).rows[0];
+  return { connection: saved, import: imported };
+}
+
+async function disableSheetConnection({ userId, connectionId }) {
+  const result = await pool.query(
+    `UPDATE lead_partner_sheet_connections SET status='disabled',updated_at=CURRENT_TIMESTAMP WHERE id=$1 AND user_id=$2 RETURNING *`,
+    [connectionId, userId]
+  );
+  if (!result.rows[0]) { const error = new Error('Sheet connection not found'); error.code = 'SHEET_CONNECTION_NOT_FOUND'; throw error; }
+  return result.rows[0];
+}
+
+async function listInventory({ userId, status = 'all', search = '', industryId = 'all', cityId = 'all' } = {}) {
+  const params = [userId];
+  const conditions = ['((lp.user_id=$1 AND l.lead_partner_id=lp.id) OR (l.created_by=$1 AND l.lead_partner_id IS NULL))'];
+  const outcomeSql = `CASE
+    WHEN EXISTS (SELECT 1 FROM lead_reports r WHERE r.lead_id=l.id AND r.status='verified_fake') THEN 'fake'
+    WHEN EXISTS (SELECT 1 FROM lead_purchases p WHERE p.lead_id=l.id AND p.status='refunded') THEN 'refunded'
+    WHEN EXISTS (SELECT 1 FROM lead_purchases p WHERE p.lead_id=l.id AND p.status='paid') THEN 'sold'
+    WHEN EXISTS (SELECT 1 FROM lead_entitlement_claims ec WHERE ec.lead_id=l.id AND ec.expires_at IS NOT NULL AND ec.expires_at < CURRENT_TIMESTAMP) THEN 'expired'
+    ELSE l.status
+  END`;
+  if (status && status !== 'all') {
+    if (['fake','refunded','sold','expired'].includes(String(status))) conditions.push(`(${outcomeSql})=$${params.length+1}`);
+    else conditions.push(`l.status=$${params.length+1}`);
+    params.push(String(status));
+  }
+  if (industryId && industryId !== 'all') { params.push(Number(industryId)); conditions.push(`l.industry_id=$${params.length}`); }
+  if (cityId && cityId !== 'all') { params.push(Number(cityId)); conditions.push(`l.city_id=$${params.length}`); }
+  if (clean(search)) {
+    params.push(`%${clean(search)}%`);
+    conditions.push(`(l.customer_name ILIKE $${params.length} OR l.customer_phone ILIKE $${params.length} OR COALESCE(l.customer_email,'') ILIKE $${params.length} OR l.requirement ILIKE $${params.length} OR CAST(l.id AS TEXT) ILIKE $${params.length})`);
+  }
+  const where = conditions.join(' AND ');
+  const [data, stats, filters] = await Promise.all([
+    pool.query(
+      `SELECT l.id,l.customer_name,l.customer_phone,l.customer_email,l.requirement,l.status,l.lead_type,l.buyer_capacity,l.access_strategy,l.release_to_two_after_hours,l.release_to_three_after_hours,l.access_capacity_locked,lead_effective_buyer_capacity(l.access_strategy,l.buyer_capacity,l.release_to_two_after_hours,l.release_to_three_after_hours,l.created_at,l.access_capacity_locked) AS effective_buyer_capacity,l.is_exclusive,l.pincode,l.created_at,l.custom_fields,l.quality_gate_score,l.quality_gate_status,l.quality_gate_reasons,l.quality_gate_checked_at,
+              i.name AS industry_name,s.name AS service_name,ss.name AS subservice_name,st.name AS state_name,c.name AS city_name,
+              (${outcomeSql}) AS outcome_status,
+              (SELECT COUNT(DISTINCT acquired.user_id)::int FROM (SELECT p.user_id FROM lead_purchases p WHERE p.lead_id=l.id AND p.status='paid' UNION SELECT ec.user_id FROM lead_entitlement_claims ec WHERE ec.lead_id=l.id) acquired) AS buyer_count
+         FROM leads l
+         LEFT JOIN lead_partners lp ON lp.id=l.lead_partner_id
+         JOIN industries i ON i.id=l.industry_id
+         LEFT JOIN services s ON s.id=l.service_id
+         LEFT JOIN subservices ss ON ss.id=l.subservice_id
+         JOIN states st ON st.id=l.state_id
+         JOIN cities c ON c.id=l.city_id
+        WHERE ${where}
+        ORDER BY l.created_at DESC,l.id DESC
+        LIMIT 500`,
+      params
+    ),
+    pool.query(
+      `WITH base AS (
+        SELECT l.id,l.status,
+          ${outcomeSql} AS outcome_status
+        FROM leads l
+        LEFT JOIN lead_partners lp ON lp.id=l.lead_partner_id
+        WHERE ((lp.user_id=$1 AND l.lead_partner_id=lp.id) OR (l.created_by=$1 AND l.lead_partner_id IS NULL))
+      )
+      SELECT COUNT(*)::int AS total,
+             COUNT(*) FILTER (WHERE outcome_status IN ('available','paused'))::int AS active,
+             COUNT(*) FILTER (WHERE outcome_status='available')::int AS available,
+             COUNT(*) FILTER (WHERE outcome_status='paused')::int AS paused,
+             COUNT(*) FILTER (WHERE outcome_status='sold')::int AS sold,
+             COUNT(*) FILTER (WHERE outcome_status='refunded')::int AS refunded,
+             COUNT(*) FILTER (WHERE outcome_status='fake')::int AS fake,
+             COUNT(*) FILTER (WHERE outcome_status='expired')::int AS expired,
+             COUNT(*) FILTER (WHERE outcome_status='closed')::int AS closed,
+             COUNT(*) FILTER (WHERE outcome_status='invalid')::int AS invalid,
+              COUNT(*) FILTER (WHERE outcome_status='quarantined')::int AS quarantined
+        FROM base`,
+      [userId]
+    ),
+    Promise.all([
+      pool.query('SELECT id,name FROM industries WHERE is_active=TRUE ORDER BY name'),
+      pool.query('SELECT id,name,state_id FROM cities WHERE is_active=TRUE ORDER BY name')
+    ])
+  ]);
+  return {
+    data: data.rows,
+    stats: stats.rows[0] || { total:0,active:0,available:0,paused:0,sold:0,refunded:0,fake:0,expired:0,closed:0,invalid:0,quarantined:0 },
+    filters: { industries: filters[0].rows, cities: filters[1].rows }
+  };
+}
+
+module.exports = { importCsv, previewCsv, importGoogleSheet, getSheetConnections, connectGoogleSheet, syncGoogleSheet, disableSheetConnection, listInventory, summarizeFailures };
