@@ -478,11 +478,6 @@
     min-height:80px;
     padding:12px 12px 12px 50px;
   }
-  .v9-leads>.v9-stats .v9-stat:before{
-    left:12px;
-    width:29px;
-    height:29px;
-  }
   .v9-leads>.v9-stats .v9-stat strong{font-size:19px}
   .v9-leads>.v9-leads-panel>.v9-filterbar{
     position:relative;
@@ -504,10 +499,6 @@
   .v9-leads>.v9-leads-panel .v9-tier-filters button{flex:1}
   .v9-leads>.v9-leads-panel .v9-filter-clear{
     width:100%;
-  }
-  .v9-leads>.v9-leads-panel>.v9-grid{
-    grid-template-columns:1fr;
-    padding:10px;
   }
 }
 
