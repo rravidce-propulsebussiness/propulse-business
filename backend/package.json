@@ -56,7 +56,8 @@
     "telegram:support:set-webhook": "node scripts/configure-telegram-support-webhook.js",
     "build:hostinger-frontend": "node scripts/build-hostinger-frontend.js",
     "postinstall": "node scripts/build-hostinger-frontend.js",
-    "audit:migration-target": "node scripts/audit-local-supabase-merge.js"
+    "audit:migration-target": "node scripts/audit-local-supabase-merge.js",
+    "migrate:supabase-core": "node scripts/migrate-local-to-supabase-core.js"
   },
   "keywords": [],
   "author": "",
