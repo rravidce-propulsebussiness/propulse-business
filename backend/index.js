@@ -31,7 +31,7 @@ function run(args,cwd){
 }
 
 async function buildFrontend(){
-  if(frontendBuilding)return;
+  if(frontendBuilding||fs.existsSync(bundledFrontendIndex)||fs.existsSync(frontendIndex))return;
   if(!fs.existsSync(frontendRoot)){
     console.error('Frontend source directory is not available in this Hostinger checkout.');
     return;
