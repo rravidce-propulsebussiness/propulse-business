@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { publicRequest } from '../utils/auth'
 import './HowItWorks.css'
+import { openLeadPopup } from '../utils/leadPopup'
 
 const FLOWS=[
   {
@@ -74,9 +75,6 @@ function Icon({name,size=20}){
   return null
 }
 
-function openLeadPopup(flowKey=''){
-  window.dispatchEvent(new CustomEvent('propulse:open-lead-popup',{detail:{flowKey}}))
-}
 
 function popupFlowKey(key){
   if(key==='construction')return 'build'
