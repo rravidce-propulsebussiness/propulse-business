@@ -68,6 +68,22 @@ async function run(){
   let localProofRefs=0,companyFiles=0,migratedRows=0;
 
   for(const target of targets){
+    const tableExists=(await pool.query(
+      "SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND table_name=$1) AS exists",
+      [target.table]
+    )).rows[0]?.exists;
+    if(!tableExists){
+      console.log(target.table+'.'+target.column+': skipped (table does not exist)');
+      continue;
+    }
+    const columnExists=(await pool.query(
+      "SELECT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name=$1 AND column_name=$2) AS exists",
+      [target.table,target.column]
+    )).rows[0]?.exists;
+    if(!columnExists){
+      console.log(target.table+'.'+target.column+': skipped (column does not exist)');
+      continue;
+    }
     const rows=(await pool.query("SELECT DISTINCT "+target.column+" AS reference FROM "+target.table+" WHERE "+target.column+" LIKE 'private-proof:%' ORDER BY "+target.column)).rows;
     localProofRefs+=rows.length;
     console.log(target.table+'.'+target.column+':',rows.length,'legacy private reference(s)');
