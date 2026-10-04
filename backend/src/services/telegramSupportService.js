@@ -132,24 +132,25 @@ async function apiMultipart(method,{fields={},fileField,fileBuffer,fileName,file
   }
 }
 
-function mediaCommonPayload({caption='',replyToMessageId=null}={}){
+function mediaCommonPayload({caption='',replyToMessageId=null,replyMarkup=null}={}){
   const payload={
     chat_id:chatId(),
     caption:String(caption||'').slice(0,1024),
     ...(messageThreadId()?{message_thread_id:messageThreadId()}:{})
   };
   if(replyToMessageId)payload.reply_parameters={message_id:Number(replyToMessageId),allow_sending_without_reply:true};
+  if(replyMarkup)payload.reply_markup=replyMarkup;
   return payload;
 }
 
-async function sendProofAttachment({descriptor,caption='',replyToMessageId=null}={}){
+async function sendProofAttachment({descriptor,caption='',replyToMessageId=null,replyMarkup=null}={}){
   if(!isConfigured())throw Object.assign(new Error('Telegram support is not configured'),{code:'TELEGRAM_NOT_CONFIGURED'});
   if(!descriptor)throw new Error('Payment proof descriptor is required');
   const mime=String(descriptor.mime||'').toLowerCase();
   const isImage=mime.startsWith('image/');
   const method=isImage?'sendPhoto':'sendDocument';
   const fileField=isImage?'photo':'document';
-  const payload=mediaCommonPayload({caption,replyToMessageId});
+  const payload=mediaCommonPayload({caption,replyToMessageId,replyMarkup});
   if(descriptor.externalUrl){
     payload[fileField]=descriptor.externalUrl;
     return apiCall(method,payload);
@@ -196,6 +197,17 @@ async function editMessageText({messageId,text,replyMarkup=null}={}){
   return apiCall('editMessageText',payload);
 }
 
+async function editMessageCaption({messageId,caption,replyMarkup=null}={}){
+  if(!isConfigured())throw Object.assign(new Error('Telegram support is not configured'),{code:'TELEGRAM_NOT_CONFIGURED'});
+  const payload={
+    chat_id:chatId(),
+    message_id:Number(messageId),
+    caption:String(caption||'').slice(0,1024),
+  };
+  if(replyMarkup)payload.reply_markup=replyMarkup;
+  return apiCall('editMessageCaption',payload);
+}
+
 async function editMessageReplyMarkup({messageId,replyMarkup}={}){
   if(!isConfigured())throw Object.assign(new Error('Telegram support is not configured'),{code:'TELEGRAM_NOT_CONFIGURED'});
   return apiCall('editMessageReplyMarkup',{
@@ -229,6 +241,6 @@ function expectedChatId(){return chatId();}
 
 module.exports={
   isConfigured,isApprovalConfigured,status,verifyWebhookSecret,
-  sendMessage,sendProofAttachment,editMessageText,editMessageReplyMarkup,answerCallbackQuery,
+  sendMessage,sendProofAttachment,editMessageText,editMessageCaption,editMessageReplyMarkup,answerCallbackQuery,
   configureWebhook,expectedChatId,webhookUrl,approverAdminId,
 };
