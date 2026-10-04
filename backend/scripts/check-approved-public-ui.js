@@ -106,10 +106,12 @@ for(const source of [home,quote,packages,projects,about,howItWorks,contact]){
 
 // Experts directory is public but does not expose direct contact data.
 assert.doesNotMatch(experts,/experts-hero/);
-assert.match(experts,/PROFESSIONAL DIRECTORY/);
-assert.match(experts,/Subscribed Businesses on <em>ProPulse<\/em>/);
-assert.match(experts,/Verified only/);
-assert.match(experts,/View Business Profile/);
+assert.match(experts,/TRUSTED PROFESSIONALS/);
+assert.match(experts,/Expert<\/span> <em>Engineers<\/em>/);
+assert.match(experts,/Find trusted construction, interior and real-estate professionals/);
+assert.match(experts,/More Filters/);
+assert.match(experts,/View Profile/);
+assert.match(experts,/Send Requirement/);
 assert.match(experts,/Direct phone and email details are not displayed publicly/);
 assert.match(experts,/publicRequest\('\/experts\?'/);
 assert.match(expertsCss,/\.experts-grid/);
