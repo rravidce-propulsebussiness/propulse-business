@@ -28,8 +28,17 @@ async function main() {
       await new Promise(resolve => setTimeout(resolve, 250));
     }
     assert(healthy, `Server did not start: ${output}`);
+    const live = await fetch(`${base}/health/live`);
+    assert.equal(live.status, 200);
+    assert.equal((await live.json()).status, 'ok');
+    assert.match(String(live.headers.get('cache-control') || ''), /no-store/i);
+    const ready = await fetch(`${base}/health/ready`);
+    assert.equal(ready.status, 200);
+    assert.equal((await ready.json()).database, 'connected');
+    assert.match(String(ready.headers.get('cache-control') || ''), /no-store/i);
     const health = await fetch(`${base}/health`);
     assert.equal((await health.json()).database, 'connected');
+    assert.match(String(health.headers.get('cache-control') || ''), /no-store/i);
     assert(health.headers.get('strict-transport-security'));
     assert.equal(health.headers.get('x-powered-by'), null);
     const invalid = await fetch(`${base}/api/auth/login`, {

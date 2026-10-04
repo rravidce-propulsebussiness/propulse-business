@@ -1,0 +1,402 @@
+import {Link, Navigate, useParams} from 'react-router-dom'
+import {
+  HYDERABAD_CITY_SEO_ROUTE,
+  HYDERABAD_CONSTRUCTION_COST_ROUTE,
+  HYDERABAD_LOCALITIES,
+  comparisonByService,
+  hyderabadSeoEntry,
+  localityBySlug,
+  localityGroups,
+  localityPagePath,
+  localitySeoEntry,
+  nearbyLocalities,
+  serviceBySlug,
+} from '../seo/hyderabadSeo'
+import {CONSTRUCTION_PACKAGE_CATALOG} from '../data/constructionPackageCatalog'
+import './HyderabadSeoLanding.css'
+
+function quoteRoute(service){
+  return '/quote#'+service.quoteHash
+}
+
+function Header(){
+  return <header className="local-seo-header">
+    <Link className="local-seo-logo" to="/"><img src="/brand/propulse-logo.svg" alt="ProPulse Business"/></Link>
+    <nav>
+      <Link to="/">Home</Link><Link to="/hyderabad">Hyderabad</Link><Link to="/quote">Get Quote</Link>
+      <Link to="/experts">Find Professionals</Link><Link to="/projects">Projects</Link><Link to="/packages">Packages</Link><Link to="/contact">Contact</Link>
+    </nav>
+    <Link className="local-seo-pro" to="/professionals">For Professionals</Link>
+  </header>
+}
+
+function CityHubPage(){
+  const services=['construction','interior-designers','real-estate'].map(serviceBySlug)
+  const construction=serviceBySlug('construction')
+  return <main className="local-seo-page city-hub-page">
+    <Header/>
+    <section className="local-seo-hero">
+      <div className="local-seo-breadcrumb"><Link to="/">Home</Link><span>›</span><b>Hyderabad</b></div>
+      <span className="local-seo-eyebrow">HYDERABAD · TELANGANA</span>
+      <h1>{HYDERABAD_CITY_SEO_ROUTE.heading}</h1>
+      <p>{HYDERABAD_CITY_SEO_ROUTE.summary}</p>
+      <div className="local-seo-actions"><Link className="primary" to="/quote">Start a Requirement</Link><Link className="secondary" to="/experts">Find Professionals</Link></div>
+      <div className="local-seo-trust"><span>Locality-aware requirements</span><span>Construction, interiors & property</span><span>You choose the business</span></div>
+    </section>
+
+    <section className="local-seo-service-cards">
+      <div className="local-seo-section-title"><span>START BY SERVICE</span><h2>What do you need in Hyderabad?</h2><p>Choose the closest service category, then add the area, scope, budget and timing that matter to your requirement.</p></div>
+      <div>
+        {services.map(service=><article key={service.slug}>
+          <span>{service.label.toUpperCase()}</span><h3>{service.heading}</h3><p>{service.summary}</p>
+          <Link to={'/hyderabad/'+service.slug}>Explore {service.label} in Hyderabad</Link>
+        </article>)}
+      </div>
+    </section>
+
+    <section className="local-seo-area-index">
+      <div className="local-seo-section-title"><span>CONSTRUCTION BY LOCALITY</span><h2>Find construction information for your Hyderabad area</h2><p>These pages are built around actual project-planning inputs such as site location, built-up area, floors, budget, timeline and quote comparison—not just a changed locality name.</p></div>
+      <div className="local-seo-chip-grid">
+        {HYDERABAD_LOCALITIES.map(locality=><Link key={locality.slug} to={localityPagePath('construction',locality.slug)}>{construction.localityHeading(locality.name)}</Link>)}
+      </div>
+    </section>
+
+    <section className="local-seo-grid">
+      <article><span>PLAN BEFORE CONTACTING</span><h2>Keep one comparable project brief</h2><p>For construction, record plot location, built-up area, floors and approximate budget. For interiors, use the same rooms and finish expectations. For property, keep locality, property type and budget consistent.</p><ul><li>Same scope for every provider</li><li>Same budget assumptions</li><li>Same timeline expectations</li><li>Compare exclusions as well as price</li></ul></article>
+      <article><span>DISCOVER OPTIONS</span><h2>Use ProPulse as a starting point</h2><p>ProPulse helps customers structure requirements and discover relevant registered businesses. It does not claim to execute every service itself.</p><ul><li>Browse public business profiles</li><li>Review completed projects where available</li><li>Create a structured requirement</li><li>Verify credentials and terms directly</li></ul></article>
+    </section>
+
+    <section className="local-seo-city-links"><h2>Plan and compare Hyderabad options</h2><div><Link to="/hyderabad/construction-cost">House construction cost in Hyderabad</Link><Link to="/telangana/construction">Construction across Telangana districts</Link><Link to="/andhra-pradesh/construction">Construction across Andhra Pradesh districts</Link>{services.map(service=><Link key={service.slug} to={'/hyderabad/'+service.slug+'/compare-options'}>Compare {service.label} options in Hyderabad</Link>)}</div></section>
+
+    <section className="local-seo-cta"><span>HYDERABAD</span><h2>Start with the location and scope you already know</h2><p>A clear requirement helps businesses understand the project before they respond.</p><Link to="/quote">Start Free Requirement</Link></section>
+  </main>
+}
+
+function ServicePage({entry,service}){
+  const groups=localityGroups()
+  const faqs=[
+    {q:'How do I start a '+service.label.toLowerCase()+' requirement in Hyderabad?',a:'Start with the location, project or property details, approximate budget and timeline. ProPulse turns those inputs into one structured requirement that relevant businesses can understand.'},
+    {q:'Can I specify a Hyderabad locality such as Uppal or Kothapet?',a:'Yes. Add the exact locality and any site or property details you already know. That makes the requirement more useful than a generic city-level enquiry.'},
+    {q:'Does ProPulse itself execute '+service.label.toLowerCase()+' work?',a:'No. ProPulse is a requirement and discovery platform. The actual service, quotation, credentials, scope and commercial terms come from the businesses you choose to engage with.'},
+  ]
+
+  return <main className="local-seo-page">
+    <Header/>
+    <section className="local-seo-hero">
+      <div className="local-seo-breadcrumb"><Link to="/">Home</Link><span>›</span><Link to="/hyderabad">Hyderabad</Link><span>›</span><b>{service.label}</b></div>
+      <span className="local-seo-eyebrow">HYDERABAD · TELANGANA</span><h1>{entry.heading}</h1><p>{entry.summary}</p>
+      <div className="local-seo-actions"><Link className="primary" to={quoteRoute(service)}>Start {service.label} Requirement</Link><Link className="secondary" to="/experts">Find Professionals</Link></div>
+      <div className="local-seo-trust"><span>One structured requirement</span><span>Locality-aware details</span><span>You choose the business</span></div>
+    </section>
+
+    {service.slug==='construction'&&<section className="local-seo-experience-note">
+      <div><span>HYDERABAD OPERATING BACKGROUND</span><h2>Built with hands-on construction and interiors experience</h2><p>ProPulse is a technology and requirement platform informed by prior hands-on residential construction and interior execution experience in Hyderabad.</p></div>
+      <Link to="/about#ab-industry-experience">Read the operating experience background</Link>
+    </section>}
+
+    <section className="local-seo-grid">
+      <article><span>WHAT YOU CAN REQUEST</span><h2>{service.heading}</h2><p>{entry.description}</p><p>{service.citySearchIntent}</p><ul>{service.needs.map(item=><li key={item}>{item}</li>)}</ul></article>
+      <article><span>PREPARE BEFORE YOU SUBMIT</span><h2>Details that help businesses respond clearly</h2><p>More complete inputs reduce back-and-forth and make project-specific responses easier to compare.</p><ul>{service.checklist.map(item=><li key={item}>{item}</li>)}</ul></article>
+    </section>
+
+    <section className="local-seo-area-index">
+      <div className="local-seo-section-title"><span>HYDERABAD LOCALITIES</span><h2>Search by the area where your requirement is located</h2><p>{service.slug==='construction'?'Open a dedicated construction page for each target locality, then start a project brief with the same core inputs.':'Use this Hyderabad hub to add the locality directly to your requirement without creating thin, repetitive pages.'}</p></div>
+      <div className="local-seo-zone-list">
+        {groups.map(group=><article key={group.zone}><header><span>{group.zone}</span><b>{group.localities.length} areas</b></header><div className="local-seo-locality-grid">
+          {group.localities.map(locality=><section id={locality.slug} key={locality.slug}><h3>{service.localityHeading(locality.name)}</h3><p>{service.localityText(locality.name)}</p><Link to={service.slug==='construction'?localityPagePath(service.slug,locality.slug):quoteRoute(service)}>{service.slug==='construction'?'View '+service.localityHeading(locality.name):'Start requirement for '+locality.name}</Link></section>)}
+        </div></article>)}
+      </div>
+    </section>
+
+    {service.slug==='construction'&&<section className="locality-knowledge-section">
+      <div className="local-seo-section-title"><span>CONSTRUCTION GUIDES</span><h2>Popular questions before building a home in Hyderabad</h2><p>Use these guides for material, quality and contractor-selection research, then create a project-specific requirement with your actual site details.</p></div>
+      <div className="locality-knowledge-grid">
+        <Link to="/guides/best-steel-for-house-construction"><span>MATERIALS</span><b>Best steel for house construction</b><small>TMT grades, BIS standards and what to verify →</small></Link>
+        <Link to="/guides/prevent-cracks-in-house"><span>QUALITY</span><b>Precautions to reduce cracks in a new house</b><small>Concrete, curing, masonry and movement detailing →</small></Link>
+        <Link to="/guides/choose-construction-contractor-hyderabad"><span>CONTRACTORS</span><b>How to choose the best contractor in Hyderabad</b><small>Scope, projects, exclusions and contract terms →</small></Link>
+        <Link to="/guides/2bhk-interiors-hyderabad"><span>INTERIORS</span><b>2BHK interiors in Hyderabad</b><small>Room scope, materials and quote comparison →</small></Link>
+        <Link to="/guides/home-construction-checklist"><span>PLANNING</span><b>Home construction checklist</b><small>Plot to handover planning stages →</small></Link>
+        <Link to="/guides/waterproofing-precautions-new-house"><span>WATERPROOFING</span><b>Waterproofing precautions for a new house</b><small>Roofs, toilets, balconies and testing →</small></Link>
+        <Link to="/guides/best-cement-for-house-construction"><span>MATERIALS</span><b>Best cement for house construction</b><small>OPC, PPC, PSC, standards and site storage →</small></Link>
+        <Link to="/guides/m-sand-vs-river-sand-house-construction"><span>MATERIALS</span><b>M-sand vs river sand</b><small>Grading, source quality and application checks →</small></Link>
+        <Link to="/guides/soil-test-before-house-construction"><span>FOUNDATION</span><b>Do you need a soil test before construction?</b><small>Investigation, foundation inputs and planning →</small></Link>
+        <Link to="/guides/electrical-planning-new-house"><span>MEP</span><b>Electrical planning for a new house</b><small>Loads, points, circuits and future readiness →</small></Link>
+        <Link to="/guides/modular-kitchen-planning-hyderabad"><span>INTERIORS</span><b>Modular kitchen planning in Hyderabad</b><small>Layout, materials, hardware and appliances →</small></Link>
+        <Link to="/guides"><span>ALL GUIDES</span><b>Browse the ProPulse knowledge hub</b><small>Materials, quality, MEP, finishes and interiors →</small></Link>
+      </div>
+    </section>}
+
+    <section className="local-seo-process"><div className="local-seo-section-title"><span>HOW PROPULSE WORKS</span><h2>From Hyderabad requirement to relevant responses</h2></div><div className="local-seo-process-grid">
+      <article><b>01</b><h3>Share your requirement</h3><p>Add the locality, scope, budget and timing that matter for your project or property need.</p></article>
+      <article><b>02</b><h3>Keep one clear brief</h3><p>Your requirement stays structured so each business is responding to the same core information.</p></article>
+      <article><b>03</b><h3>Review relevant options</h3><p>Look at actual responses, public business profiles and completed project information where available.</p></article>
+      <article><b>04</b><h3>Choose your next step</h3><p>Verify credentials, scope, price and terms directly with the business before proceeding.</p></article>
+    </div></section>
+
+    <section className="local-seo-faq"><div className="local-seo-section-title"><span>FAQ</span><h2>{service.label} in Hyderabad: common questions</h2></div><div>{faqs.map(item=><article key={item.q}><h3>{item.q}</h3><p>{item.a}</p></article>)}</div></section>
+
+    <section className="local-seo-city-links"><h2>Explore more Hyderabad planning pages</h2><div>{service.slug==='construction'&&<><Link to="/hyderabad/construction-cost">House construction cost in Hyderabad</Link><Link to="/telangana/construction">Construction across Telangana districts</Link><Link to="/andhra-pradesh/construction">Construction across Andhra Pradesh districts</Link></>}{['construction','interior-designers','real-estate'].map(serviceBySlug).filter(item=>item.slug!==service.slug).map(item=><Link key={item.slug} to={'/hyderabad/'+item.slug}>{item.heading}</Link>)}<Link to={'/hyderabad/'+service.slug+'/compare-options'}>Compare {service.label} options in Hyderabad</Link></div></section>
+
+    <section className="local-seo-cta"><span>HYDERABAD</span><h2>Ready to create your {service.label.toLowerCase()} requirement?</h2><p>Start with the details you already know. Add the exact locality so businesses can understand where the requirement is.</p><Link to={quoteRoute(service)}>Start Free Requirement</Link></section>
+  </main>
+}
+
+function LocalityPage({entry,service,locality}){
+  const nearby=nearbyLocalities(locality)
+  const packages=Object.values(CONSTRUCTION_PACKAGE_CATALOG)
+  const rupees=value=>'₹'+Number(value||0).toLocaleString('en-IN')
+  const faqs=[
+    {q:'How do I get construction quotes in '+locality.name+'?',a:'Start with the exact site location, approximate built-up area, floor count, project type, budget and preferred start timeline. ProPulse uses that structured brief to help you compare relevant construction options more consistently.'},
+    {q:'How do I find a construction company in '+locality.name+'?',a:'Use one project brief for every provider you review. Compare relevant completed work, scope, material specifications, exclusions, milestones, warranty terms and the final written quotation before choosing a business.'},
+    {q:'What should I compare in a construction quotation?',a:'Compare the included structural scope, material brands or grades, finishing allowances, exclusions, payment milestones, timeline, variation rules, taxes and handover obligations—not only the headline per-sq-ft rate.'},
+    {q:'Can I compare construction packages before requesting a quote?',a:'Yes. ProPulse shows Standard, Premium and Royal package references so you can understand specification levels before moving into the detailed construction quote flow.'},
+  ]
+
+  return <main className="local-seo-page locality-detail-page locality-homepage">
+    <Header/>
+
+    <section className="local-seo-hero locality-home-hero">
+      <div className="local-seo-breadcrumb"><Link to="/">Home</Link><span>›</span><Link to="/hyderabad">Hyderabad</Link><span>›</span><Link to="/hyderabad/construction">Construction</Link><span>›</span><b>{locality.name}</b></div>
+      <div className="locality-home-hero-grid">
+        <div>
+          <span className="local-seo-eyebrow">{locality.zone.toUpperCase()} · HYDERABAD</span>
+          <h1>{entry.heading}</h1>
+          <p>{entry.summary}</p>
+          <div className="local-seo-actions">
+            <Link className="primary" to="/quote?package=standard#construction">Get Construction Quote</Link>
+            <Link className="secondary" to="/packages#construction">View Construction Packages</Link>
+          </div>
+          <div className="local-seo-trust"><span>Locality-specific requirement</span><span>Package comparison</span><span>Relevant business discovery</span></div>
+        </div>
+        <aside className="locality-home-summary">
+          <span>BUILDING IN {locality.name.toUpperCase()}?</span>
+          <h2>Start with one clear project brief</h2>
+          <p>{entry.localityContext||service.localityText(locality.name)}</p>
+          <ul>
+            <li>Plot or exact site location</li>
+            <li>Approximate built-up area</li>
+            <li>Floors and project type</li>
+            <li>Budget and preferred timeline</li>
+          </ul>
+          <Link to="/quote?package=standard#construction">Start requirement for {locality.name}</Link>
+        </aside>
+      </div>
+    </section>
+
+    <section className="locality-package-section">
+      <div className="local-seo-section-title">
+        <span>CONSTRUCTION PACKAGES</span>
+        <h2>Compare package starting points for construction in {locality.name}</h2>
+        <p>Use the package references to understand specification levels before requesting a site-specific quotation. Final pricing depends on your drawings, built-up area, site conditions, exclusions and selected materials.</p>
+      </div>
+      <div className="locality-package-grid">
+        {packages.map(item=><article key={item.key} className={item.key==='premium'?'featured':''}>
+          <span>{item.name.toUpperCase()}</span>
+          <strong>{rupees(item.rate)}</strong>
+          <small>reference rate / sq ft</small>
+          <p>{item.specs?.Architecture||'Construction package specifications apply.'}</p>
+          <ul>{Object.values(item.specs||{}).slice(0,3).map((spec,index)=><li key={index}>{String(spec)}</li>)}</ul>
+          <Link to={'/quote?package='+item.key+'#construction'}>Get {item.name} Quote</Link>
+        </article>)}
+      </div>
+      <div className="locality-package-footer"><Link to="/packages#construction">Compare full construction package specifications</Link><Link to="/hyderabad/construction-cost">See Hyderabad construction cost guide</Link></div>
+    </section>
+
+    <section className="locality-partner-section">
+      <div className="local-seo-section-title">
+        <span>FIND THE RIGHT CONSTRUCTION PARTNER</span>
+        <h2>How to compare construction companies in {locality.name}</h2>
+        <p>Do not choose only from a headline rate. Give every construction company the same project brief and compare the complete scope.</p>
+      </div>
+      <div className="locality-partner-grid">
+        <article><b>01</b><h3>Fix the same project scope</h3><p>Use the same built-up area, floors, structural requirements, drawings and expected finish level for every provider.</p></article>
+        <article><b>02</b><h3>Compare materials and exclusions</h3><p>Check steel, cement, blocks, flooring, doors, windows, sanitaryware, electrical scope and what is excluded.</p></article>
+        <article><b>03</b><h3>Review relevant experience</h3><p>Look for completed work that is reasonably similar to your house type, scale, specification and site conditions.</p></article>
+        <article><b>04</b><h3>Confirm milestones and contract terms</h3><p>Understand payment stages, variation pricing, expected timeline, warranties and handover responsibilities before proceeding.</p></article>
+      </div>
+      <div className="locality-partner-actions"><Link to="/experts">Find ProPulse Professionals</Link><Link to="/quote?package=standard#construction">Create Construction Requirement</Link></div>
+    </section>
+
+    <section className="local-seo-grid locality-context-grid">
+      <article>
+        <span>LOCAL CONSTRUCTION PLANNING</span>
+        <h2>Planning a home in {locality.name}</h2>
+        <p>{entry.localityContext||service.localityText(locality.name)}</p>
+        <p>The exact street, plot dimensions, access, soil conditions, floor count and design can materially change structural scope and total project cost. Add those details before treating any broad per-sq-ft figure as a final quotation.</p>
+        <Link className="local-inline-link" to="/quote?package=standard#construction">Get site-specific quote</Link>
+      </article>
+      <article>
+        <span>WHAT TO SHARE</span>
+        <h2>Details that help contractors quote correctly</h2>
+        <ul>{service.checklist.map(item=><li key={item}>{item}</li>)}</ul>
+        <Link className="local-inline-link" to="/projects">View project inspiration</Link>
+      </article>
+    </section>
+
+    <section className="locality-search-section">
+      <div className="local-seo-section-title">
+        <span>SEARCH INTENT AROUND {locality.name.toUpperCase()}</span>
+        <h2>Construction services people search for in {locality.name}</h2>
+        <p>These phrases describe closely related project needs. The useful next step is the same: turn the search into one clear site-specific requirement.</p>
+      </div>
+      <div className="locality-search-chips">{entry.searchTerms.map(term=><span key={term}>{term}</span>)}</div>
+    </section>
+
+    <section className="locality-knowledge-section">
+      <div className="local-seo-section-title">
+        <span>HOME CONSTRUCTION KNOWLEDGE</span>
+        <h2>Popular home-planning questions around {locality.name}</h2>
+        <p>These are related questions people research before choosing materials, interiors or a contractor. ProPulse does not rank one contractor or material as universally best; use the guides to prepare better project questions.</p>
+      </div>
+      <div className="locality-knowledge-grid">
+        <Link to="/guides/best-steel-for-house-construction"><span>MATERIALS</span><b>What is the best steel for house construction?</b><small>BIS standards, grades, ductility and site checks →</small></Link>
+        <Link to="/guides/2bhk-interiors-hyderabad"><span>INTERIORS</span><b>2BHK interiors in {locality.name}</b><small>Room scope, modular work, materials and quote comparison →</small></Link>
+        <Link to="/guides/choose-construction-contractor-hyderabad"><span>CONTRACTORS</span><b>How to choose the best contractor in {locality.name}</b><small>Compare scope, projects, exclusions and contract terms →</small></Link>
+        <Link to="/guides/prevent-cracks-in-house"><span>QUALITY</span><b>Precautions to reduce cracks in a new house</b><small>Design, concrete, curing, masonry and movement detailing →</small></Link>
+        <Link to="/guides/home-construction-checklist"><span>PLANNING</span><b>Home construction checklist for {locality.name}</b><small>Plot, design, structure, services, finishes and handover →</small></Link>
+        <Link to="/guides/waterproofing-precautions-new-house"><span>WATERPROOFING</span><b>Waterproofing precautions for a new house</b><small>Roofs, toilets, balconies, penetrations and testing →</small></Link>
+        <Link to="/guides/best-cement-for-house-construction"><span>MATERIALS</span><b>Best cement for house construction in {locality.name}</b><small>OPC, PPC, PSC, standards and storage →</small></Link>
+        <Link to="/guides/m-sand-vs-river-sand-house-construction"><span>MATERIALS</span><b>M-sand vs river sand for a home in {locality.name}</b><small>Grading, quality and application comparison →</small></Link>
+        <Link to="/guides/soil-test-before-house-construction"><span>FOUNDATION</span><b>Soil test before building in {locality.name}</b><small>Why site conditions matter before foundation design →</small></Link>
+        <Link to="/guides/electrical-planning-new-house"><span>MEP</span><b>Electrical planning for a new house in {locality.name}</b><small>Points, loads, circuits and future readiness →</small></Link>
+        <Link to="/guides/modular-kitchen-planning-hyderabad"><span>INTERIORS</span><b>Modular kitchen planning in {locality.name}</b><small>Layout, materials, hardware and appliance coordination →</small></Link>
+        <Link to="/guides"><span>ALL GUIDES</span><b>Browse all home construction guides</b><small>Cement, sand, blocks, curing, MEP, finishes and interiors →</small></Link>
+      </div>
+    </section>
+
+    <section className="locality-nearby-section">
+      <div className="local-seo-section-title">
+        <span>NEARBY CONSTRUCTION AREAS</span>
+        <h2>Construction services near {locality.name}</h2>
+        <p>If your site is close to {locality.name} but falls in a neighbouring area, open the closest locality page so your requirement and internal links stay location-specific.</p>
+      </div>
+      <div className="locality-nearby-grid">
+        {nearby.map(item=><Link key={item.slug} to={localityPagePath('construction',item.slug)}>
+          <span>{item.zone}</span>
+          <b>Construction in {item.name}</b>
+          <small>Contractors, packages, project scope and quote planning →</small>
+        </Link>)}
+      </div>
+      <div className="locality-nearby-all"><Link to="/hyderabad/construction">View all Hyderabad construction areas</Link></div>
+    </section>
+
+    <section className="local-seo-faq locality-home-faq">
+      <div className="local-seo-section-title"><span>FAQ</span><h2>Construction in {locality.name}: common questions</h2></div>
+      <div>{faqs.map(item=><article key={item.q}><h3>{item.q}</h3><p>{item.a}</p></article>)}</div>
+    </section>
+
+    <section className="local-seo-cta locality-home-cta">
+      <span>{locality.name.toUpperCase()} · HYDERABAD</span>
+      <h2>Ready to start your construction requirement in {locality.name}?</h2>
+      <p>Choose a package starting point, add your site and project details, then compare relevant responses against one consistent brief.</p>
+      <div><Link to="/quote?package=standard#construction">Get Construction Quote</Link><Link className="secondary-cta" to="/packages#construction">View Packages</Link></div>
+    </section>
+  </main>
+}
+
+function ConstructionCostGuidePage(){
+  const service=serviceBySlug('construction')
+  const packages=Object.values(CONSTRUCTION_PACKAGE_CATALOG)
+  const sampleAreas=[1000,1500,2000]
+  const rupees=value=>'₹'+Number(value||0).toLocaleString('en-IN')
+  const faqs=[
+    {q:'What is the house construction cost per sq ft in Hyderabad?',a:'There is no single fixed Hyderabad rate for every project. ProPulse currently shows package reference rates from '+rupees(packages[0]?.rate)+' per sq ft through '+rupees(packages[packages.length-1]?.rate)+' per sq ft, depending on the selected package specifications. Final quotations can change with site conditions, design, scope, exclusions and current commercial terms.'},
+    {q:'How do I estimate G+1 construction cost in Hyderabad?',a:'First estimate the total built-up area across both floors, then multiply that built-up area by the relevant planning rate. Add items that are outside the chosen package scope and confirm structural, approval and site-specific requirements before treating the result as a project budget.'},
+    {q:'Does construction cost use plot area or built-up area?',a:'Construction rates are generally compared against built-up construction area, not only the land or plot area. A plot can have a different total built-up area depending on setbacks, floor count, design and approvals.'},
+    {q:'Are the ProPulse rates final contractor quotations?',a:'No. The rates on this guide are package brochure references from the current ProPulse construction package catalog. Use them for initial planning, then create a site-specific requirement and obtain actual quotations.'},
+  ]
+  return <main className="local-seo-page construction-cost-page">
+    <Header/>
+    <section className="local-seo-hero">
+      <div className="local-seo-breadcrumb"><Link to="/">Home</Link><span>›</span><Link to="/hyderabad">Hyderabad</Link><span>›</span><b>Construction Cost</b></div>
+      <span className="local-seo-eyebrow">HYDERABAD CONSTRUCTION BUDGET GUIDE</span>
+      <h1>{HYDERABAD_CONSTRUCTION_COST_ROUTE.heading}</h1>
+      <p>{HYDERABAD_CONSTRUCTION_COST_ROUTE.summary}</p>
+      <div className="local-seo-actions"><Link className="primary" to="/quote?package=standard#construction">Get Construction Quote</Link><Link className="secondary" to="/packages#construction">Compare Packages</Link></div>
+      <div className="local-seo-trust"><span>Current ProPulse package rates</span><span>Built-up-area examples</span><span>Actual quote still required</span></div>
+    </section>
+
+    <section className="cost-rate-section">
+      <div className="local-seo-section-title"><span>CURRENT PROPULSE REFERENCES</span><h2>Construction package rates used for initial planning</h2><p>These are brochure reference rates from the same package catalog used on ProPulse. They are not a Hyderabad-wide market average and they are not a final contractor quotation.</p></div>
+      <div className="cost-rate-grid">
+        {packages.map(item=><article key={item.key}><span>{item.name.toUpperCase()}</span><strong>{rupees(item.rate)}</strong><small>per sq ft</small><p>{item.specs?.Architecture||'Package specifications apply.'}</p><Link to={'/packages#construction'}>Review package specifications</Link></article>)}
+      </div>
+    </section>
+
+    <section className="cost-example-section">
+      <div className="local-seo-section-title"><span>QUICK BUDGET EXAMPLES</span><h2>What the package rate means for common built-up areas</h2><p>Example budgets below are simple built-up-area × package-rate calculations. They do not add land cost or items outside the selected construction package.</p></div>
+      <div className="cost-table-wrap"><table className="cost-example-table"><thead><tr><th>Built-up area</th>{packages.map(item=><th key={item.key}>{item.name}<small>{rupees(item.rate)}/sq ft</small></th>)}</tr></thead><tbody>{sampleAreas.map(area=><tr key={area}><th>{area.toLocaleString('en-IN')} sq ft</th>{packages.map(item=><td key={item.key}>{rupees(area*item.rate)}</td>)}</tr>)}</tbody></table></div>
+      <p className="cost-note">For G+1 or multi-floor homes, use the approximate total built-up area across all floors rather than multiplying the plot area blindly.</p>
+    </section>
+
+    <section className="local-seo-grid">
+      <article><span>WHAT CHANGES THE FINAL COST</span><h2>Why two Hyderabad homes with the same area can cost differently</h2><ul><li>Soil condition and foundation requirements</li><li>Number of floors and structural design</li><li>Site access and logistics</li><li>Architectural complexity and elevation</li><li>Steel, cement, brick or block specifications</li><li>Flooring, doors, windows and sanitaryware</li><li>Electrical, plumbing and waterproofing scope</li><li>Items excluded from the construction package</li></ul></article>
+      <article><span>COMPARE THE FULL SCOPE</span><h2>Do not choose a contractor on per-sq-ft rate alone</h2><p>Ask every business to quote against the same built-up area, drawings, specifications and exclusions. A lower rate can represent a different material allowance or a smaller included scope.</p><ul><li>Confirm material brands or allowances</li><li>Check architectural and structural deliverables</li><li>Review payment milestones and variation rules</li><li>Confirm taxes, approvals and external works</li><li>Check warranty and handover obligations</li></ul></article>
+    </section>
+
+    <section className="local-seo-process"><div className="local-seo-section-title"><span>FROM SEARCH TO PROJECT BUDGET</span><h2>A safer way to estimate house construction cost in Hyderabad</h2></div><div className="local-seo-process-grid">
+      <article><b>01</b><h3>Calculate built-up area</h3><p>Start with the approximate construction area across all proposed floors.</p></article>
+      <article><b>02</b><h3>Select specifications</h3><p>Use a package or specification level that matches the materials and finish you actually expect.</p></article>
+      <article><b>03</b><h3>Add project-specific items</h3><p>Account for site conditions, approvals, external works and anything excluded from the base package.</p></article>
+      <article><b>04</b><h3>Request actual quotations</h3><p>Send the same drawings, area and scope to relevant construction businesses and compare like for like.</p></article>
+    </div></section>
+
+    <section className="cost-search-intent">
+      <div className="local-seo-section-title"><span>COMMON HYDERABAD SEARCHES</span><h2>Construction cost questions this guide is designed to answer</h2></div>
+      <div className="local-seo-chip-grid">{HYDERABAD_CONSTRUCTION_COST_ROUTE.searchTerms.map(term=><span key={term}>{term}</span>)}</div>
+    </section>
+
+    <section className="local-seo-city-links"><h2>Continue planning your Hyderabad project</h2><div><Link to="/quote?package=standard#construction">Get standard construction quote</Link><Link to="/packages#construction">Construction packages</Link><Link to="/hyderabad/construction">Construction in Hyderabad</Link><Link to="/hyderabad/construction/compare-options">Compare construction options in Hyderabad</Link><Link to="/hyderabad/construction/uppal">Construction in Uppal</Link><Link to="/hyderabad/construction/kothapet">Construction in Kothapet</Link><Link to="/hyderabad/construction/gachibowli">Construction in Gachibowli</Link></div></section>
+
+    <section className="local-seo-faq"><div className="local-seo-section-title"><span>FAQ</span><h2>Hyderabad construction cost questions</h2></div><div>{faqs.map(item=><article key={item.q}><h3>{item.q}</h3><p>{item.a}</p></article>)}</div></section>
+
+    <section className="local-seo-cta"><span>HYDERABAD</span><h2>Move from an indicative cost to a site-specific construction quote</h2><p>Use the estimator for initial planning, then share your actual site, built-up area, floors and specifications with relevant businesses.</p><Link to={quoteRoute(service)}>Request Construction Quotes</Link></section>
+  </main>
+}
+
+function ComparisonPage({entry,service}){
+  return <main className="local-seo-page comparison-page">
+    <Header/>
+    <section className="local-seo-hero">
+      <div className="local-seo-breadcrumb"><Link to="/">Home</Link><span>›</span><Link to="/hyderabad">Hyderabad</Link><span>›</span><Link to={'/hyderabad/'+service.slug}>{service.label}</Link><span>›</span><b>Compare options</b></div>
+      <span className="local-seo-eyebrow">INDEPENDENT COMPARISON STARTING POINT</span><h1>{entry.heading}</h1><p>{entry.summary}</p>
+      <div className="local-seo-actions"><Link className="primary" to={quoteRoute(service)}>Create One Requirement</Link><Link className="secondary" to="/experts">Browse ProPulse Businesses</Link></div>
+    </section>
+
+    <section className="comparison-disclosure"><b>Important disclosure</b><p>ProPulse is independent and is not affiliated with, endorsed by, or representing {entry.brands.join(', ')}. Their names are used only because customers may be researching these options. Check each provider's current website, quotation, scope and terms directly before making a decision.</p></section>
+
+    <section className="local-seo-grid comparison-grid">
+      <article><span>WHAT YOU MAY ALREADY BE RESEARCHING</span><h2>Brands and options customers compare in Hyderabad</h2><div className="comparison-brands">{entry.brands.map(brand=><b key={brand}>{brand}</b>)}</div><p>{entry.searchIntent}</p></article>
+      <article><span>HOW PROPULSE DIFFERS</span><h2>One requirement instead of another execution brand</h2><p>ProPulse does not claim to be the same type of service as the brands above. It helps you structure your need and discover relevant businesses so you have more context before deciding who to contact.</p><ul><li>One structured requirement</li><li>Public business profiles where available</li><li>Completed project information where published</li><li>Your choice of whom to contact</li></ul></article>
+    </section>
+
+    {Array.isArray(entry.searchTerms)&&entry.searchTerms.length>0&&<section className="cost-search-intent comparison-search-intent"><div className="local-seo-section-title"><span>COMMON SEARCHES</span><h2>Company and category searches customers use in Hyderabad</h2><p>These phrases are included to help users who are already researching named providers. ProPulse remains independent and does not claim affiliation with the brands listed above.</p></div><div className="local-seo-chip-grid">{entry.searchTerms.map(term=><span key={term}>{term}</span>)}</div></section>}
+
+    <section className="local-seo-process"><div className="local-seo-section-title"><span>COMPARE USING YOUR OWN PROJECT</span><h2>Use the same brief for every option you review</h2></div><div className="local-seo-process-grid">
+      <article><b>01</b><h3>Define scope</h3><p>Write down the actual project or property need instead of comparing generic advertising claims.</p></article>
+      <article><b>02</b><h3>Fix your budget range</h3><p>Use one realistic budget band so each response starts from comparable assumptions.</p></article>
+      <article><b>03</b><h3>Verify the provider</h3><p>Check current portfolio, credentials, terms, exclusions and after-sales obligations directly.</p></article>
+      <article><b>04</b><h3>Compare the final quote</h3><p>Review scope, materials, timeline and commercial terms before deciding.</p></article>
+    </div></section>
+
+    <section className="local-seo-cta"><span>HYDERABAD</span><h2>Compare with your own requirement, not a generic brand ranking</h2><p>Submit the details that matter to you, review actual responses and verify every provider before proceeding.</p><Link to={quoteRoute(service)}>Create Requirement</Link></section>
+  </main>
+}
+
+export default function HyderabadSeoLanding(){
+  const {serviceSlug,localitySlug}=useParams()
+  if(window.location.pathname==='/hyderabad/construction-cost')return <ConstructionCostGuidePage/>
+  if(!serviceSlug)return <CityHubPage/>
+  const service=serviceBySlug(serviceSlug)
+  if(!service)return <Navigate to="/hyderabad" replace/>
+  if(localitySlug){
+    const locality=localityBySlug(localitySlug)
+    const entry=localitySeoEntry(serviceSlug,localitySlug)
+    if(!entry||!locality)return <Navigate to={'/hyderabad/'+serviceSlug} replace/>
+    return <LocalityPage entry={entry} service={service} locality={locality}/>
+  }
+  const comparison=window.location.pathname.endsWith('/compare-options')
+  const entry=hyderabadSeoEntry(serviceSlug,comparison)
+  if(!entry)return <Navigate to="/hyderabad" replace/>
+  return comparison?<ComparisonPage entry={comparisonByService(serviceSlug)} service={service}/>:<ServicePage entry={entry} service={service}/>
+}

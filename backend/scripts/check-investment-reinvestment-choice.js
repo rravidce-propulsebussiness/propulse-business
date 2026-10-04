@@ -5,7 +5,7 @@ const path = require('path');
 const service = fs.readFileSync(path.join(__dirname, '../src/services/investmentService.js'), 'utf8');
 const controller = fs.readFileSync(path.join(__dirname, '../src/controllers/investmentController.js'), 'utf8');
 const routes = fs.readFileSync(path.join(__dirname, '../src/routes/investmentRoutes.js'), 'utf8');
-const investmentUi = fs.readFileSync(path.join(__dirname, '../../frontend/src/pages/Investment.jsx'), 'utf8');
+const investmentUi = fs.readFileSync(path.join(__dirname, '../../frontend/src/pages/InvestmentCycleDashboard.jsx'), 'utf8');
 
 const reinvestStart = service.indexOf('async function reinvestInvestment');
 const reinvestEnd = service.indexOf('\nasync function adminList', reinvestStart);
@@ -21,8 +21,8 @@ assert(!reinvestBlock.includes('walletService'), 'Reinvestment must not use wall
 assert(!reinvestBlock.includes('wallet_transactions'), 'Reinvestment must not debit the wallet');
 assert(controller.includes('service.reinvestInvestment'), 'Controller must expose investor reinvestment');
 assert(routes.includes("router.post('/:id/reinvest'"), 'Investor reinvestment route is missing');
-assert(investmentUi.includes('checked={autoInvest}'), 'Investor UI must bind the reinvestment choice');
-assert(/reinvestmentEnabled\s*:\s*autoInvest/.test(investmentUi) || investmentUi.includes('reinvestmentEnabled })'), 'Investor checkout must persist the reinvestment choice');
+assert(investmentUi.includes('autoInvestChoice'), 'Investor UI must bind the reinvestment choice');
+assert(/reinvestmentEnabled\s*:\s*(?:active\s*\?\s*auto\s*:\s*)?autoInvestChoice/.test(investmentUi), 'Investor checkout must persist the reinvestment choice');
 assert(investmentUi.includes('WITHDRAW EARNINGS') || investmentUi.includes('Withdraw Earnings'), 'Investor UI must provide the owner-account earnings withdrawal flow');
 
 console.log('Investor-choice reinvestment regression test passed.');
