@@ -47,6 +47,14 @@ const STEPS = [
   { number: '4', icon: 'home', title: 'Move Forward', text: 'Compare quotations and choose the option you like.' },
 ]
 
+const MATERIAL_BRANDS = [
+  { key: 'tiles', brand: 'Kajaria', label: 'Tiles' },
+  { key: 'plywood', brand: 'CenturyPly', label: 'Plywood' },
+  { key: 'laminates', brand: 'Greenlam', label: 'Laminates' },
+  { key: 'paints', brand: 'Asian Paints', label: 'Paints' },
+  { key: 'fittings', brand: 'Jaquar', label: 'Fittings' },
+]
+
 const PROJECTS = [
   {
     title: 'Independent House',
@@ -199,28 +207,56 @@ export default function Home() {
         <div className="hc-hero-overlay" />
         <div className="hc-container hc-hero-inner">
           <div className="hc-hero-copy">
-            <span className="hc-eyebrow">CONSTRUCTION <i/> INTERIORS <i/> REAL ESTATE</span>
-            <h1>Build. Design. Find<br/>the <em>Right Professionals.</em></h1>
-            <p>Tell us what you need. Compare relevant professionals, packages and material options for construction, interiors and real estate.</p>
+            <h1>Don&apos;t Leave Your<br/>Dream Home<br/><em>to Chance.</em></h1>
+            <p className="hc-hero-tagline">Find the right partner. Build it right.</p>
             <div className="hc-hero-actions">
               <button className="hc-btn-primary" type="button" onClick={() => openRequirement('')}>Start Your Requirement <Icon name="arrow" size={15}/></button>
               <Link className="hc-btn-secondary" to="/packages">View Packages</Link>
             </div>
             <div className="hc-hero-trust">
-              <span><i><Icon name="consult" size={15}/></i>Free Consultation</span>
-              <span><i><Icon name="people" size={15}/></i>Relevant Professionals</span>
-              <span><i><Icon name="shield" size={15}/></i>Warranty Options</span>
+              <span>
+                <i><Icon name="consult" size={15}/></i>
+                <span><b>Free Consultation</b><small>Expert guidance</small></span>
+              </span>
+              <span>
+                <i><Icon name="people" size={15}/></i>
+                <span><b>Relevant Professionals</b><small>Verified &amp; trusted</small></span>
+              </span>
+              <span>
+                <i><Icon name="shield" size={15}/></i>
+                <span><b>Warranty Options</b><small>Peace of mind</small></span>
+              </span>
             </div>
           </div>
 
           <article className="hc-float-card hc-float-professionals">
-            <span><Icon name="people" size={21}/></span>
-            <div><b>Verified Professionals</b><small>Across major cities</small></div>
+            <div className="hc-float-heading">
+              <span><Icon name="people" size={21}/></span>
+              <div><b>Verified Professionals</b><small>Across major cities</small></div>
+            </div>
+            <div className="hc-pro-avatar-row" aria-hidden="true">
+              <span>AR</span><span>SK</span><span>VM</span><span>RK</span><span>+</span>
+            </div>
           </article>
 
           <article className="hc-float-card hc-float-materials">
-            <span><Icon name="layers" size={21}/></span>
-            <div><b>Branded Material Options</b><small>Trusted quality choices</small></div>
+            <div className="hc-material-heading">
+              <span><Icon name="layers" size={21}/></span>
+              <div><b>Branded Material Options</b><small>Premium brands for a better home</small></div>
+            </div>
+            <div className="hc-material-brand-grid">
+              {MATERIAL_BRANDS.map(item => (
+                <div className="hc-material-brand" key={item.key}>
+                  <div className={'hc-material-thumb hc-material-'+item.key} aria-hidden="true">
+                    <span />
+                    <span />
+                    <span />
+                  </div>
+                  <strong>{item.brand}</strong>
+                  <small>{item.label}</small>
+                </div>
+              ))}
+            </div>
           </article>
         </div>
       </section>
