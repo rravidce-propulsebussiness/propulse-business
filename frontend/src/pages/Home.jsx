@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { publicRequest } from '../utils/auth'
-import WebsiteFaqSection from '../components/WebsiteFaqSection'
 import './Home.css'
 
 const DEFAULT_HERO = 'https://images.unsplash.com/photo-1600585152915-d208bec867a1?auto=format&fit=crop&w=2200&q=92'
@@ -331,7 +330,6 @@ export default function Home() {
         </div>
       </section>
 
-      <WebsiteFaqSection variant="home-compact" audience="homeowner" />
 
       <section className="hc-slim-cta">
         <div className="hc-container hc-slim-cta-inner">
