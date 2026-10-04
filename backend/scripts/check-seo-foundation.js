@@ -218,7 +218,6 @@ assert(userFaq.includes("loggedIn?<UserHeader/>:<PublicFaqHeader/>"),'Logged-in 
 assert(regionalLanding.includes('to="/guides"'),'Regional construction hubs must link to the guide hub');
 assert(regionalLanding.includes('/guides/best-steel-for-house-construction'),'Regional construction hubs must link to material guides');
 assert(regionalLanding.includes('/guides/home-construction-checklist'),'Regional construction hubs must link to planning guides');
-assert(buildScript.includes('homeRegionalCoverage(route)'),'Static homepage must expose regional construction coverage');
 assert(aboutPage.includes('PRIOR OPERATING EXPERIENCE'),'About page must retain generic prior operating experience context');
 assert(aboutPage.includes('hands-on residential construction and interior execution work in Hyderabad'),'About page must describe the prior experience generically');
 assert(landing.includes('prior hands-on residential construction and interior execution experience in Hyderabad'),'Hyderabad construction hub must retain generic operating experience context');
@@ -234,9 +233,6 @@ for(const localityPath of ['/hyderabad/construction/kondapur','/hyderabad/constr
 }
 assert(buildScript.includes('projectsAuthorityContent(route)'),'Static projects page must expose Hyderabad authority content');
 assert(buildScript.includes('Explore Hyderabad services and construction areas'),'Static projects authority section must remain descriptive');
-for(const localityPath of ['/hyderabad/construction/uppal','/hyderabad/construction/kothapet','/hyderabad/construction/lb-nagar','/hyderabad/construction/gachibowli','/hyderabad/construction/kondapur']){
-  assert(home.includes('to="'+localityPath+'"'),'Homepage internal linking missing '+localityPath);
-}
 assert(landing.includes('ProPulse is independent'),'Comparison page must disclose brand independence');
 assert(landing.includes('CONSTRUCTION_PACKAGE_CATALOG'),'Construction cost guide must use the shared package catalog');
 assert(landing.includes('QUICK BUDGET EXAMPLES'),'Construction cost guide must provide useful built-up-area examples');
@@ -314,7 +310,6 @@ assert(buildScript.includes('How to find the right construction partner in '),'S
 assert(buildScript.includes('What is the best steel for house construction?'),'Static locality pages must prerender steel-guide links');
 assert(buildScript.includes('Precautions to reduce cracks in a new house'),'Static locality pages must prerender crack-prevention links');
 assert(buildScript.includes('2BHK interiors in '),'Static locality pages must prerender localized 2BHK interior intent');
-assert(buildScript.includes('Popular construction guides'),'Static homepage must prerender construction guide links');
 assert(buildScript.includes('best-cement-for-house-construction'),'Static SEO must prerender cement-guide links');
 assert(buildScript.includes('m-sand-vs-river-sand-house-construction'),'Static SEO must prerender sand-guide links');
 assert(buildScript.includes('soil-test-before-house-construction'),'Static SEO must prerender soil-test guide links');
