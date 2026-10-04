@@ -7,6 +7,7 @@ const smoke=read('scripts/check-deployed-smoke.js');
 const wait=read('scripts/wait-for-deployment.js');
 const workflow=read('../.github/workflows/release-promotion.yml');
 const hostingerWorkflow=read('../.github/workflows/hostinger-prebuild.yml');
+const hostingerMainWorkflow=read('../.github/workflows/hostinger-main-prebuild.yml');
 const docs=read('../docs/staging-release.md');
 const production=read('../docs/production.md');
 assert(identity.includes('DEPLOY_ENVIRONMENT'),'Release identity must distinguish staging and production');
@@ -28,6 +29,10 @@ assert(hostingerWorkflow.includes('Bake Hostinger release identity'),'Hostinger 
 assert(hostingerWorkflow.includes('DEPLOY_EXPECTED_COMMIT: ${{ github.sha }}'),'Hostinger verification must wait for the exact source commit');
 assert(hostingerWorkflow.includes('node scripts/wait-for-deployment.js'),'Hostinger prebuild must wait for the live release');
 assert(hostingerWorkflow.includes('node scripts/check-deployed-smoke.js'),'Hostinger prebuild must smoke-test production after deployment');
+assert(hostingerMainWorkflow.includes('Bake production release markers'),'Main Hostinger prebuild must bake production release identity before building');
+assert(hostingerMainWorkflow.includes("frontend/public/release.json"),'Main Hostinger prebuild must publish a frontend release marker');
+assert(hostingerMainWorkflow.includes("backend/hostinger-release.json"),'Main Hostinger prebuild must publish a backend release marker');
+assert(hostingerMainWorkflow.includes("git add -f backend/hostinger-frontend backend/hostinger-release.json"),'Main Hostinger prebuild must commit the backend release marker with the deploy bundle');
 assert(docs.includes('Never point staging at the production database'),'Staging isolation must be documented');
 assert(docs.includes('required reviewers'),'Production approval must be documented');
 assert(production.includes('docs/staging-release.md'),'Production guide must link to release guide');
