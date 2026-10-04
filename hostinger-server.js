@@ -12,6 +12,7 @@ const backendPort=requestedBackendPort===publicPort?publicPort+1:requestedBacken
 const frontendDist=path.join(__dirname,'frontend','dist');
 const frontendIndex=path.join(frontendDist,'index.html');
 const isProduction=String(process.env.NODE_ENV||'production')==='production';
+const backendRestartMs=Math.min(30000,Math.max(1000,Number(process.env.HOSTINGER_BACKEND_RESTART_MS)||3000));
 
 const backendEnv={
   ...process.env,
@@ -22,18 +23,48 @@ const backendEnv={
   REQUIRE_BACKGROUND_WORKER:process.env.REQUIRE_BACKGROUND_WORKER||'false',
 };
 
-const backend=spawn(process.execPath,['src/server.js'],{
-  cwd:path.join(__dirname,'backend'),
-  env:backendEnv,
-  stdio:'inherit',
-});
+let backend=null;
+let backendRestartTimer=null;
+let shuttingDown=false;
 
-backend.once('exit',(code,signal)=>{
-  if(signal)console.error('Hostinger backend process exited from signal '+signal);
-  else if(code)console.error('Hostinger backend process exited with code '+code);
-  if(server?.listening)server.close(()=>process.exit(code||1));
-  else process.exit(code||1);
-});
+function scheduleBackendRestart(reason){
+  if(shuttingDown||backendRestartTimer)return;
+  console.error('Hostinger backend unavailable'+(reason?': '+reason:'')+'. Retrying in '+backendRestartMs+'ms.');
+  backendRestartTimer=setTimeout(()=>{
+    backendRestartTimer=null;
+    startBackend();
+  },backendRestartMs);
+  backendRestartTimer.unref?.();
+}
+
+function startBackend(){
+  if(shuttingDown)return;
+  let child;
+  try{
+    child=spawn(process.execPath,['src/server.js'],{
+      cwd:path.join(__dirname,'backend'),
+      env:backendEnv,
+      stdio:'inherit',
+    });
+  }catch(error){
+    scheduleBackendRestart(error?.message||String(error));
+    return;
+  }
+  backend=child;
+  child.once('error',error=>{
+    if(backend===child)backend=null;
+    scheduleBackendRestart(error?.message||String(error));
+  });
+  child.once('exit',(code,signal)=>{
+    if(backend===child)backend=null;
+    if(shuttingDown)return;
+    if(signal)console.error('Hostinger backend process exited from signal '+signal);
+    else console.error('Hostinger backend process exited with code '+String(code));
+    scheduleBackendRestart();
+  });
+}
+
+startBackend();
 
 function backendRoute(requestPath){
   return requestPath==='/robots.txt'
@@ -70,8 +101,14 @@ function proxyToBackend(req,res){
   });
   upstream.on('error',error=>{
     console.error('Hostinger backend proxy failed:',error.message);
-    if(!res.headersSent)res.status(502).json({error:'Application backend is starting. Please retry shortly.'});
-    else res.end();
+    if(!res.headersSent){
+      if(req.path==='/health/live'){
+        res.setHeader('Cache-Control','no-store');
+        return res.status(200).json({status:'ok',wrapper:'live',backend:'restarting'});
+      }
+      return res.status(503).json({error:'Application backend is starting. Please retry shortly.'});
+    }
+    res.end();
   });
   req.pipe(upstream);
 }
@@ -120,7 +157,8 @@ app.use((req,res,next)=>{
   if(!fs.existsSync(frontendIndex)){
     res.setHeader('Retry-After','5');
     res.setHeader('Cache-Control','no-store');
-    return res.status(503).send('Application frontend is starting. Please retry shortly.');
+    res.setHeader('X-App-Starting','frontend');
+    return res.status(200).send('<!doctype html><html><head><meta charset="utf-8"><meta name="robots" content="noindex"><title>ProPulse</title></head><body>Application is starting. Please retry shortly.</body></html>');
   }
   return res.sendFile(frontendIndex,error=>error?next(error):undefined);
 });
@@ -138,8 +176,14 @@ let server=app.listen(publicPort,'0.0.0.0',()=>{
 });
 
 function shutdown(signal){
+  if(shuttingDown)return;
+  shuttingDown=true;
   console.log(signal+' received by Hostinger wrapper; shutting down.');
-  backend.kill('SIGTERM');
+  if(backendRestartTimer){
+    clearTimeout(backendRestartTimer);
+    backendRestartTimer=null;
+  }
+  backend?.kill('SIGTERM');
   server.close(()=>process.exit(0));
   const timer=setTimeout(()=>process.exit(1),10000);
   timer.unref?.();
