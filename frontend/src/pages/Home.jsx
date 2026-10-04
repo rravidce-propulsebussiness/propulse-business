@@ -48,11 +48,11 @@ const STEPS = [
 ]
 
 const MATERIAL_BRANDS = [
-  { key: 'tiles', brand: 'Kajaria', label: 'Tiles' },
-  { key: 'plywood', brand: 'CenturyPly', label: 'Plywood' },
-  { key: 'laminates', brand: 'Greenlam', label: 'Laminates' },
-  { key: 'paints', brand: 'Asian Paints', label: 'Paints' },
-  { key: 'fittings', brand: 'Jaquar', label: 'Fittings' },
+  { key: 'tiles', brand: 'Kajaria', label: 'Tiles', logo: 'https://www.google.com/s2/favicons?domain=kajariaceramics.com&sz=128' },
+  { key: 'plywood', brand: 'CenturyPly', label: 'Plywood', logo: 'https://www.google.com/s2/favicons?domain=centuryply.com&sz=128' },
+  { key: 'laminates', brand: 'Greenlam', label: 'Laminates', logo: 'https://www.google.com/s2/favicons?domain=greenlam.com&sz=128' },
+  { key: 'paints', brand: 'Asian Paints', label: 'Paints', logo: 'https://www.google.com/s2/favicons?domain=asianpaints.com&sz=128' },
+  { key: 'fittings', brand: 'Jaquar', label: 'Fittings', logo: 'https://www.google.com/s2/favicons?domain=jaquar.com&sz=128' },
 ]
 
 const PROJECTS = [
@@ -247,10 +247,11 @@ export default function Home() {
             <div className="hc-material-brand-grid">
               {MATERIAL_BRANDS.map(item => (
                 <div className="hc-material-brand" key={item.key}>
-                  <div className={'hc-material-thumb hc-material-'+item.key} aria-hidden="true">
-                    <span />
-                    <span />
-                    <span />
+                  <div className={'hc-material-thumb hc-material-'+item.key}>
+                    <span aria-hidden="true" />
+                    <span aria-hidden="true" />
+                    <span aria-hidden="true" />
+                    <img className="hc-material-brand-logo" src={item.logo} alt="" loading="lazy" />
                   </div>
                   <strong>{item.brand}</strong>
                   <small>{item.label}</small>
