@@ -78,12 +78,9 @@ if (!value('GOOGLE_CLIENT_ID')) warn('Google sign-in is not configured (GOOGLE_C
 
 if (value('ADMIN_PASSWORD')) warn('ADMIN_PASSWORD is present in the long-running environment; remove bootstrap admin credentials after creating the admin account');
 
-const uploadRoot=value('UPLOAD_STORAGE_ROOT');
-if(!uploadRoot) fail('UPLOAD_STORAGE_ROOT is required in production and must point to a durable mounted volume');
-else if(!path.isAbsolute(uploadRoot)) fail('UPLOAD_STORAGE_ROOT must be an absolute path in production');
-
 const privateObjectDriver=(value('PRIVATE_OBJECT_STORAGE_DRIVER')||'local').toLowerCase();
 if(!['local','s3'].includes(privateObjectDriver))fail('PRIVATE_OBJECT_STORAGE_DRIVER must be local or s3');
+const uploadRoot=value('UPLOAD_STORAGE_ROOT');
 if(privateObjectDriver==='s3'){
   for(const key of ['PRIVATE_OBJECT_STORAGE_ENDPOINT','PRIVATE_OBJECT_STORAGE_BUCKET','PRIVATE_OBJECT_STORAGE_ACCESS_KEY_ID','PRIVATE_OBJECT_STORAGE_SECRET_ACCESS_KEY']){
     if(!value(key))fail(`${key} is required when PRIVATE_OBJECT_STORAGE_DRIVER=s3`);
@@ -96,9 +93,11 @@ if(privateObjectDriver==='s3'){
   const signedSeconds=Number(value('PRIVATE_OBJECT_STORAGE_SIGNED_URL_SECONDS')||60);
   if(!Number.isInteger(signedSeconds)||signedSeconds<15||signedSeconds>300)fail('PRIVATE_OBJECT_STORAGE_SIGNED_URL_SECONDS must be an integer between 15 and 300');
   const backupStrategy=value('PRIVATE_OBJECT_STORAGE_BACKUP_STRATEGY').toLowerCase();
-  if(!['bucket_versioning','replication','external_backup'].includes(backupStrategy))fail('PRIVATE_OBJECT_STORAGE_BACKUP_STRATEGY must be bucket_versioning, replication, or external_backup when S3 private storage is enabled');
+  if(!['bucket_versioning','replication','external_backup'].includes(backupStrategy))fail('PRIVATE_OBJECT_STORAGE_BACKUP_STRATEGY must be bucket_versioning, replication, or external_backup when S3 object storage is enabled');
 }else{
-  warn('Private sensitive uploads are using local durable storage; configure PRIVATE_OBJECT_STORAGE_DRIVER=s3 before multi-instance scale.');
+  if(!uploadRoot)fail('UPLOAD_STORAGE_ROOT is required when PRIVATE_OBJECT_STORAGE_DRIVER=local and must point to a durable mounted volume');
+  else if(!path.isAbsolute(uploadRoot))fail('UPLOAD_STORAGE_ROOT must be an absolute path in production');
+  warn('Uploads are using local durable storage; configure PRIVATE_OBJECT_STORAGE_DRIVER=s3 before multi-instance scale or VPS migration.');
 }
 
 const healthTimeout=Number(value('HEALTH_CHECK_TIMEOUT_MS')||2500);
