@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { publicRequest } from '../utils/auth'
 import './Experts.css'
 import { openLeadPopup } from '../utils/leadPopup'
+import PublicIcon from '../components/PublicIcon'
 
 function collection(value){
   if(Array.isArray(value))return value

@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { publicRequest } from '../utils/auth'
 import './HowItWorks.css'
 import { openLeadPopup } from '../utils/leadPopup'
+import PublicIcon from '../components/PublicIcon'
 
 const FLOWS=[
   {

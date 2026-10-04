@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { publicRequest } from '../utils/auth'
 import './Projects.css'
 import { openLeadPopup } from '../utils/leadPopup'
+import PublicIcon from '../components/PublicIcon'
 
 const PROJECTS = [
   {
