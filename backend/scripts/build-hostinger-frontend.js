@@ -10,6 +10,8 @@ const frontendIndex=path.join(frontendDist,'index.html');
 const backendNodeModules=path.join(backendRoot,'node_modules');
 const frontendNodeModules=path.join(frontendRoot,'node_modules');
 const viteBin=path.join(backendNodeModules,'vite','bin','vite.js');
+const bundledFrontend=path.join(backendRoot,'hostinger-frontend');
+const bundledIndex=path.join(bundledFrontend,'index.html');
 let linked=false;
 
 function run(args,cwd){
@@ -32,7 +34,13 @@ try{
   run([viteBin,'build','--config',path.join(frontendRoot,'vite.config.js')],frontendRoot);
   run([path.join(frontendRoot,'scripts','generate-seo-static-pages.mjs')],frontendRoot);
   if(!fs.existsSync(frontendIndex))throw new Error('Frontend build did not produce frontend/dist/index.html');
-  console.log('Frontend build ready for Hostinger publish.');
+  fs.rmSync(bundledFrontend,{recursive:true,force:true});
+  fs.cpSync(frontendDist,bundledFrontend,{recursive:true});
+  if(!fs.existsSync(bundledIndex))throw new Error('Bundled Hostinger frontend is missing index.html');
+  console.log('Frontend build bundled inside backend for Hostinger publish.');
 }finally{
-  if(linked)fs.rmSync(frontendNodeModules,{recursive:true,force:true});
+  if(linked){
+    try{fs.unlinkSync(frontendNodeModules);}
+    catch(error){if(error?.code!=='ENOENT')throw error;}
+  }
 }
