@@ -16,6 +16,8 @@ assert(pkg.scripts?.build?.includes('npm ci --omit=dev --prefix backend'),'Hosti
 assert(pkg.scripts?.build?.includes('npm ci --include=dev --prefix frontend'),'Hostinger build installs frontend build dependencies');
 assert(pkg.scripts?.build?.includes('npm run build --prefix frontend'),'Hostinger build generates the Vite/prerendered frontend');
 assert(pkg.scripts?.start==='node hostinger-server.js','Hostinger starts through the single-app wrapper');
+assert(pkg.dependencies?.express,'Hostinger root package declares Express for framework detection');
+assert(wrapper.includes("require('express')"),'Hostinger wrapper resolves Express from root dependencies');
 assert(wrapper.includes("startsWith('/api/')"),'Hostinger wrapper proxies API traffic');
 assert(wrapper.includes("requestPath==='/robots.txt'"),'Hostinger wrapper proxies robots.txt');
 assert(wrapper.includes("requestPath==='/sitemap.xml'"),'Hostinger wrapper proxies sitemap.xml');
