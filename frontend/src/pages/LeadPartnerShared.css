@@ -1,204 +1,74 @@
-/* Shared Lead Partner workspace geometry.
-   Every Lead Partner page uses the same desktop canvas, sidebar and topbar dimensions.
-   Page-specific CSS should only control page content, not global shell geometry. */
-:root{--lp-shell-sidebar:280px;--lp-shell-topbar:58px;--lp-shell-content-max:1450px;--lp-shell-content-pad-x:28px;--lp-shell-content-pad-y:27px}
-.lp-sidebar,.pricing-sidebar,.partner-sidebar,.withdrawals-sidebar,.account-sidebar,.reports-sidebar,.faq-sidebar{width:var(--lp-shell-sidebar)!important;height:100dvh!important;box-sizing:border-box}
-.lp-main,.pricing-main,.partner-main,.withdrawals-main,.account-main,.reports-main,.faq-main{margin-left:var(--lp-shell-sidebar)!important;width:calc(100% - var(--lp-shell-sidebar))!important;min-height:100dvh}
-.lp-topbar,.pricing-topbar,.partner-topbar,.withdrawals-topbar,.account-topbar,.reports-topbar,.faq-topbar{height:var(--lp-shell-topbar)!important;box-sizing:border-box}
-.lp-content,.pricing-content,.partner-content,.withdrawals-content,.account-content,.reports-content,.faq-content{max-width:var(--lp-shell-content-max)!important;box-sizing:border-box;margin-left:auto!important;margin-right:auto!important;padding-top:var(--lp-shell-content-pad-y)!important;padding-left:var(--lp-shell-content-pad-x)!important;padding-right:var(--lp-shell-content-pad-x)!important}
-.lp-brand,.pricing-brand,.partner-brand,.withdrawals-brand,.account-brand,.reports-brand,.faq-brand{height:94px!important;box-sizing:border-box}
-.lp-nav-label,.pricing-nav-label,.partner-nav-label,.withdrawals-nav-label,.account-nav-label,.reports-nav-label,.faq-nav-label{padding-top:34px!important;padding-left:25px!important;padding-right:25px!important;padding-bottom:13px!important}
-.lp-nav,.pricing-nav,.partner-nav,.withdrawals-nav,.account-nav,.reports-nav,.faq-nav{padding-left:13px!important;padding-right:13px!important;gap:4px!important}
-.lp-nav a,.pricing-nav a,.partner-nav a,.withdrawals-nav a,.account-nav a,.reports-nav a,.faq-nav a{min-height:44px;box-sizing:border-box}
-.lp-sidebar-bottom,.pricing-sidebar-bottom,.partner-sidebar-bottom,.withdrawals-sidebar-bottom,.account-sidebar-bottom,.reports-sidebar-bottom,.faq-sidebar-bottom{padding-left:15px!important;padding-right:15px!important}
-@media(max-width:1100px) and (min-width:721px){
-  :root{--lp-shell-sidebar:240px}
-}
-@media(max-width:720px){
-  .lp-sidebar,.pricing-sidebar,.partner-sidebar,.withdrawals-sidebar,.account-sidebar,.reports-sidebar,.faq-sidebar{position:static!important;width:100%!important;height:auto!important}
-  .lp-main,.pricing-main,.partner-main,.withdrawals-main,.account-main,.reports-main,.faq-main{margin-left:0!important;width:100%!important}
-  .lp-content,.pricing-content,.partner-content,.withdrawals-content,.account-content,.reports-content,.faq-content{max-width:none!important;padding-left:14px!important;padding-right:14px!important;padding-top:20px!important}
-  .lp-brand,.pricing-brand,.partner-brand,.withdrawals-brand,.account-brand,.reports-brand,.faq-brand{height:78px!important}
-}
-
-/* Final shell lock: higher specificity keeps individual page CSS from changing
-   workspace geometry. Page styles remain responsible only for their content. */
-#root .lp-sidebar,#root .pricing-sidebar,#root .partner-sidebar,#root .withdrawals-sidebar,#root .account-sidebar,#root .reports-sidebar,#root .faq-sidebar{width:280px!important;min-width:280px!important;max-width:280px!important}
-#root .lp-main,#root .pricing-main,#root .partner-main,#root .withdrawals-main,#root .account-main,#root .reports-main,#root .faq-main{margin-left:280px!important;width:calc(100% - 280px)!important;max-width:none!important}
-#root .lp-topbar,#root .pricing-topbar,#root .partner-topbar,#root .withdrawals-topbar,#root .account-topbar,#root .reports-topbar,#root .faq-topbar{height:58px!important;min-height:58px!important}
-#root .lp-content,#root .pricing-content,#root .partner-content,#root .withdrawals-content,#root .account-content,#root .reports-content,#root .faq-content{max-width:1450px!important;margin-left:auto!important;margin-right:auto!important}
-#root .lp-brand,#root .pricing-brand,#root .partner-brand,#root .withdrawals-brand,#root .account-brand,#root .reports-brand,#root .faq-brand{height:94px!important;min-height:94px!important}
-@media(max-width:1100px) and (min-width:721px){
-  #root .lp-sidebar,#root .pricing-sidebar,#root .partner-sidebar,#root .withdrawals-sidebar,#root .account-sidebar,#root .reports-sidebar,#root .faq-sidebar{width:240px!important;min-width:240px!important;max-width:240px!important}
-  #root .lp-main,#root .pricing-main,#root .partner-main,#root .withdrawals-main,#root .account-main,#root .reports-main,#root .faq-main{margin-left:240px!important;width:calc(100% - 240px)!important}
-}
-@media(max-width:720px){
-  #root .lp-sidebar,#root .pricing-sidebar,#root .partner-sidebar,#root .withdrawals-sidebar,#root .account-sidebar,#root .reports-sidebar,#root .faq-sidebar{width:100%!important;min-width:0!important;max-width:none!important}
-  #root .lp-main,#root .pricing-main,#root .partner-main,#root .withdrawals-main,#root .account-main,#root .reports-main,#root .faq-main{margin-left:0!important;width:100%!important}
-  #root .lp-topbar,#root .pricing-topbar,#root .partner-topbar,#root .withdrawals-topbar,#root .account-topbar,#root .reports-topbar,#root .faq-topbar{height:58px!important;min-height:58px!important}
-}
-
-
-/* Unified ProPulse Lead Partner brand lock */
-#root .lp-brand,#root .pricing-brand,#root .partner-brand,#root .withdrawals-brand,#root .account-brand,#root .reports-brand,#root .faq-brand{
-  width:100%!important;height:94px!important;min-height:94px!important;box-sizing:border-box!important;
-  display:flex!important;align-items:center!important;gap:13px!important;padding:0 24px!important;
-  border-bottom:1px solid #edf1f6!important;
-}
-#root .lp-brand-mark,#root .pricing-brand-mark,#root .partner-brand-mark,#root .withdrawals-brand-mark,#root .account-brand-mark,#root .reports-brand-mark,#root .faq-brand-mark{
-  width:44px!important;height:44px!important;min-width:44px!important;max-width:44px!important;
-  border-radius:11px!important;background:#f45125!important;color:#fff!important;
-  display:grid!important;place-items:center!important;font-size:24px!important;line-height:1!important;font-weight:900!important;
-}
-#root .lp-brand>b,#root .pricing-brand>b,#root .partner-brand>b,#root .withdrawals-brand>b,#root .account-brand>b,#root .reports-brand>b,#root .faq-brand>b,
-#root .lp-brand>span>b,#root .pricing-brand>span>b,#root .partner-brand>span>b,#root .withdrawals-brand>span>b,#root .account-brand>span>b,#root .reports-brand>span>b,#root .faq-brand>span>b{
-  display:block!important;color:#11345f!important;font-size:20px!important;line-height:1!important;letter-spacing:.01em!important;margin:0!important;
-}
-#root .lp-brand b span,#root .pricing-brand b span,#root .partner-brand b span,#root .withdrawals-brand b span,#root .account-brand b span,#root .reports-brand b span,#root .faq-brand b span{color:#f45125!important}
-#root .lp-brand small,#root .pricing-brand small,#root .partner-brand small,#root .withdrawals-brand small,#root .account-brand small,#root .reports-brand small,#root .faq-brand small{
-  display:block!important;margin-top:7px!important;color:#8795aa!important;font-size:8px!important;font-weight:900!important;line-height:1!important;letter-spacing:.17em!important;
-}
-#root .pricing-brand em{display:none!important}
-
-
-/* Final typography lock for every Lead Partner sidebar */
-#root .lp-nav a,#root .pricing-nav a,#root .partner-nav a,#root .withdrawals-nav a,#root .reports-nav a,#root .faq-nav a,#root .account-nav a{
-  display:flex!important;align-items:center!important;gap:15px!important;
-  min-height:44px!important;height:44px!important;box-sizing:border-box!important;
-  padding:0 15px!important;border-radius:10px!important;
-  font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif!important;
-  font-size:13px!important;line-height:1!important;font-weight:800!important;
-  letter-spacing:0!important;
-}
-#root .lp-nav a .lp-icon,#root .pricing-nav a i,#root .partner-nav a i,#root .withdrawals-nav a i,#root .reports-nav a i,#root .faq-nav a i,#root .account-nav a i{
-  width:22px!important;min-width:22px!important;text-align:center!important;
-  font-size:17px!important;line-height:1!important;font-weight:700!important;
-}
-#root .lp-nav-label,#root .pricing-nav-label,#root .partner-nav-label,#root .withdrawals-nav-label,#root .reports-nav-label,#root .faq-nav-label,#root .account-nav-label{
-  padding:34px 25px 13px!important;
-  font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif!important;
-  font-size:10px!important;line-height:1.2!important;font-weight:900!important;
-  letter-spacing:.14em!important;
-}
-#root .lp-sidebar-bottom,#root .pricing-sidebar-bottom,#root .partner-sidebar-bottom,#root .withdrawals-sidebar-bottom,#root .reports-sidebar-bottom,#root .faq-sidebar-bottom,#root .account-sidebar-bottom{
-  padding:18px 15px!important;
-}
-#root .lp-sidebar-user,#root .pricing-user,#root .partner-user,#root .withdrawals-user,#root .reports-user,#root .faq-user,#root .account-user{
-  display:flex!important;align-items:center!important;gap:10px!important;padding:7px!important;
-}
-#root .lp-sidebar-user>b,#root .pricing-user>b,#root .partner-user>b,#root .withdrawals-user>b,#root .reports-user>b,#root .faq-user>b,#root .account-user>b{
-  font-size:12px!important;font-weight:800!important;
-}
-#root .lp-sidebar-user small,#root .pricing-user small,#root .partner-user small,#root .withdrawals-user small,#root .reports-user small,#root .faq-user small,#root .account-user small{
-  font-size:9px!important;font-weight:500!important;
-}
-#root .lp-sidebar-bottom button,#root .pricing-sidebar-bottom button,#root .partner-sidebar-bottom button,#root .withdrawals-sidebar-bottom button,#root .reports-sidebar-bottom button,#root .faq-sidebar-bottom button,#root .account-sidebar-bottom button{
-  font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif!important;
-  font-size:11px!important;line-height:1.2!important;font-weight:800!important;
-  padding:10px 11px!important;
-}
-
-
-/* Single shared Lead Partner sidebar: identical structure, typography and icon geometry on every page. */
-#root .lead-partner-sidebar{
-  position:fixed!important;inset:0 auto 0 0!important;
-  width:280px!important;min-width:280px!important;max-width:280px!important;
-  height:100dvh!important;box-sizing:border-box!important;
-  background:#fff!important;border-right:1px solid #e6ebf2!important;
-  display:flex!important;flex-direction:column!important;z-index:50!important;
-  font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif!important;
-}
-#root .lead-partner-brand{
-  width:100%!important;height:94px!important;min-height:94px!important;
-  box-sizing:border-box!important;padding:0 24px!important;
-  display:flex!important;align-items:center!important;gap:13px!important;
-  border-bottom:1px solid #edf1f6!important;
-}
-#root .lead-partner-brand-mark{
-  width:44px!important;height:44px!important;min-width:44px!important;
-  border-radius:11px!important;background:#f45125!important;color:#fff!important;
-  display:grid!important;place-items:center!important;
-  font-size:24px!important;line-height:1!important;font-weight:900!important;
-}
+:root{--lp-sidebar:264px;--lp-topbar:70px;--lp-content-max:1450px}
+#root:has(.lead-partner-sidebar){width:100%;max-width:none;margin:0;border-inline:0;text-align:left;display:block}
+#root .lead-partner-sidebar{position:fixed!important;inset:0 auto 0 0!important;z-index:50!important;width:var(--lp-sidebar)!important;min-width:var(--lp-sidebar)!important;max-width:var(--lp-sidebar)!important;height:100dvh!important;padding:20px 16px 16px!important;display:flex!important;flex-direction:column!important;box-sizing:border-box!important;overflow-y:auto!important;overflow-x:hidden!important;background:radial-gradient(circle at -10% 100%,rgba(27,92,166,.18),transparent 26%),linear-gradient(180deg,#0d2d55 0%,#092541 48%,#071f38 100%)!important;border-right:1px solid rgba(151,184,224,.12)!important;box-shadow:18px 0 48px rgba(4,23,44,.16)!important;font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif!important}
+#root .lead-partner-brand-row{display:flex!important;align-items:center!important;justify-content:space-between!important;padding:3px 6px 25px!important}
+#root .lead-partner-brand{display:flex!important;align-items:center!important;gap:12px!important;color:#fff!important;text-decoration:none!important}
+#root .lead-partner-brand-mark{display:grid!important;place-items:center!important;flex:0 0 46px!important;width:46px!important;height:46px!important;border-radius:15px!important;background:linear-gradient(145deg,#0b4c99,#1675d5)!important;color:#fff!important;box-shadow:0 13px 28px rgba(2,13,26,.25),inset 0 1px 0 rgba(255,255,255,.22)!important;font-size:25px!important;font-weight:950!important;font-style:italic!important}
 #root .lead-partner-brand-copy{display:block!important;min-width:0!important}
-#root .lead-partner-brand-copy>b{
-  display:block!important;margin:0!important;color:#11345f!important;
-  font-size:20px!important;line-height:1!important;font-weight:900!important;
-  letter-spacing:.01em!important;
+#root .lead-partner-brand-copy>b{display:block!important;color:#fff!important;font-size:19px!important;line-height:1!important;letter-spacing:.065em!important;white-space:nowrap!important}
+#root .lead-partner-brand-copy>b span{color:#ff6a32!important}
+#root .lead-partner-brand-copy>small{display:block!important;margin-top:6px!important;color:#9eb2ca!important;font-size:7px!important;font-weight:900!important;letter-spacing:.18em!important;white-space:nowrap!important}
+#root .lead-partner-nav-label{padding:0 11px 11px!important;color:#7691ad!important;font-size:7px!important;font-weight:950!important;letter-spacing:.17em!important}
+#root .lead-partner-nav{display:flex!important;flex-direction:column!important;gap:5px!important;padding:0!important;margin:0!important}
+#root .lead-partner-nav>a{position:relative!important;width:100%!important;min-height:45px!important;display:flex!important;align-items:center!important;gap:10px!important;padding:9px 11px!important;border:1px solid transparent!important;border-radius:13px!important;box-sizing:border-box!important;background:transparent!important;color:#d5e1ee!important;text-decoration:none!important;font-size:10.5px!important;font-weight:800!important;transition:.18s ease!important}
+#root .lead-partner-nav-icon{display:grid!important;place-items:center!important;flex:0 0 31px!important;width:31px!important;height:31px!important;border-radius:10px!important;background:rgba(255,255,255,.07)!important;color:#bcd0e5!important;font-size:14px!important;font-weight:800!important}
+#root .lead-partner-nav>a:hover{border-color:rgba(139,184,236,.12)!important;background:rgba(255,255,255,.045)!important;color:#fff!important}
+#root .lead-partner-nav>a.active{border-color:rgba(90,161,241,.48)!important;background:linear-gradient(135deg,rgba(32,92,164,.8),rgba(25,79,144,.72))!important;color:#fff!important;box-shadow:0 10px 24px rgba(0,20,44,.22),inset 0 1px 0 rgba(255,255,255,.08)!important}
+#root .lead-partner-nav>a.active:before{content:"";position:absolute;left:4px;top:50%;width:3px;height:19px;transform:translateY(-50%);border-radius:999px;background:#ff6a32;box-shadow:0 0 12px rgba(255,106,50,.5)}
+#root .lead-partner-nav>a.active .lead-partner-nav-icon{background:rgba(255,255,255,.11)!important;color:#fff!important}
+#root .lead-partner-help-block{margin-top:16px;padding:13px;border:1px solid rgba(98,155,222,.22);border-radius:14px;background:linear-gradient(135deg,rgba(28,77,133,.5),rgba(13,52,94,.5));color:#fff}
+#root .lead-partner-help-block>span{display:grid;place-items:center;width:28px;height:28px;border-radius:9px;background:rgba(255,255,255,.08);font-size:11px;font-weight:950}
+#root .lead-partner-help-block>div{margin-top:9px}
+#root .lead-partner-help-block b,#root .lead-partner-help-block small{display:block}
+#root .lead-partner-help-block b{font-size:8px}
+#root .lead-partner-help-block small{margin-top:3px;color:#9fb4cd;font-size:6.2px;line-height:1.4}
+#root .lead-partner-help-block>a{display:inline-block;margin-top:9px;color:#dceafa;text-decoration:none;font-size:6.4px;font-weight:900}
+#root .lead-partner-sidebar-bottom{margin-top:auto!important;padding-top:14px!important;border-top:0!important}
+#root .lead-partner-user{display:flex!important;align-items:center!important;gap:10px!important;padding:10px!important;border:1px solid rgba(98,155,222,.18)!important;border-radius:13px!important;background:rgba(255,255,255,.04)!important}
+#root .lead-partner-avatar{display:grid!important;place-items:center!important;flex:0 0 34px!important;width:34px!important;height:34px!important;border-radius:50%!important;background:linear-gradient(145deg,#0d4a98,#176ed0)!important;color:#fff!important;font-size:8px!important;font-weight:950!important}
+#root .lead-partner-user>div{min-width:0!important}
+#root .lead-partner-user b,#root .lead-partner-user small{display:block!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important}
+#root .lead-partner-user b{color:#fff!important;font-size:8.2px!important}
+#root .lead-partner-user small{margin-top:3px!important;max-width:145px!important;color:#9fb2c7!important;font-size:6.2px!important}
+#root .lead-partner-sidebar-bottom>button{width:100%!important;margin-top:8px!important;padding:9px 10px!important;border:0!important;border-radius:9px!important;background:transparent!important;color:#94abc4!important;text-align:left!important;font-size:8px!important;font-weight:800!important;cursor:pointer!important}
+#root .lead-partner-sidebar-bottom>button:hover{background:rgba(255,255,255,.05)!important;color:#fff!important}
+
+#root .lp-main,#root .pricing-main,#root .partner-main,#root .withdrawals-main,#root .reports-main,#root .account-main,#root .faq-main{margin-left:var(--lp-sidebar)!important;width:calc(100% - var(--lp-sidebar))!important;min-height:100vh!important;max-width:none!important;background:radial-gradient(circle at 95% 4%,rgba(57,117,198,.08),transparent 22%),linear-gradient(180deg,#f5f8fc 0%,#eef3f8 100%)!important}
+#root .lp-topbar,#root .pricing-topbar,#root .partner-topbar,#root .withdrawals-topbar,#root .reports-topbar,#root .account-topbar,#root .faq-topbar{position:fixed!important;top:0!important;left:var(--lp-sidebar)!important;right:0!important;z-index:30!important;height:var(--lp-topbar)!important;min-height:var(--lp-topbar)!important;display:flex!important;align-items:center!important;justify-content:space-between!important;padding:0 28px!important;background:rgba(255,255,255,.94)!important;border-bottom:1px solid #e0e7ef!important;box-shadow:0 7px 22px rgba(17,45,79,.03)!important;backdrop-filter:blur(16px)!important}
+#root .lp-breadcrumb,#root .pricing-breadcrumb,#root .partner-breadcrumb,#root .withdrawals-breadcrumb,#root .reports-breadcrumb,#root .account-breadcrumb,#root .faq-breadcrumb{display:flex!important;align-items:center!important;gap:7px!important;font-size:8.5px!important}
+#root .lp-breadcrumb span,#root .pricing-breadcrumb span,#root .partner-breadcrumb span,#root .withdrawals-breadcrumb span,#root .reports-breadcrumb span,#root .account-breadcrumb span,#root .faq-breadcrumb span{color:#93a0b1!important}
+#root .lp-breadcrumb b,#root .pricing-breadcrumb b,#root .partner-breadcrumb b,#root .withdrawals-breadcrumb b,#root .reports-breadcrumb b,#root .account-breadcrumb b,#root .faq-breadcrumb b{color:#ced6df!important;font-weight:500!important}
+#root .lp-breadcrumb strong,#root .pricing-breadcrumb strong,#root .partner-breadcrumb strong,#root .withdrawals-breadcrumb strong,#root .reports-breadcrumb strong,#root .account-breadcrumb strong,#root .faq-breadcrumb strong{color:#123b71!important;font-weight:900!important}
+#root .lp-content,#root .pricing-content,#root .partner-content,#root .withdrawals-content,#root .reports-content,#root .account-content,#root .faq-content{width:100%!important;max-width:var(--lp-content-max)!important;margin:0 auto!important;padding:calc(var(--lp-topbar) + 24px) 28px 42px!important;box-sizing:border-box!important}
+
+@media(max-height:820px) and (min-width:851px){
+  #root .lead-partner-sidebar{padding-top:13px!important;padding-bottom:10px!important}
+  #root .lead-partner-brand-row{padding-bottom:16px!important}
+  #root .lead-partner-nav{gap:3px!important}
+  #root .lead-partner-nav>a{min-height:39px!important;padding:6px 9px!important}
+  #root .lead-partner-help-block{padding:9px 11px;margin-top:10px}
 }
-#root .lead-partner-brand-copy>b span{color:#f45125!important}
-#root .lead-partner-brand-copy>small{
-  display:block!important;margin-top:7px!important;color:#8795aa!important;
-  font-size:8px!important;line-height:1!important;font-weight:900!important;
-  letter-spacing:.17em!important;
-}
-#root .lead-partner-nav-label{
-  padding:34px 25px 13px!important;margin:0!important;
-  color:#8290a4!important;font-size:10px!important;line-height:1.2!important;
-  font-weight:900!important;letter-spacing:.14em!important;
-}
-#root .lead-partner-nav{
-  display:flex!important;flex-direction:column!important;gap:4px!important;
-  padding:0 13px!important;margin:0!important;
-}
-#root .lead-partner-nav>a{
-  width:100%!important;height:44px!important;min-height:44px!important;
-  box-sizing:border-box!important;padding:0 15px!important;margin:0!important;
-  display:flex!important;align-items:center!important;gap:15px!important;
-  border-radius:10px!important;background:transparent!important;
-  color:#546982!important;text-decoration:none!important;
-  font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif!important;
-  font-size:13px!important;line-height:1!important;font-weight:800!important;
-  letter-spacing:0!important;
-}
-#root .lead-partner-nav>a:hover{background:#f6f8fb!important;color:#123d77!important}
-#root .lead-partner-nav>a.active{background:#e9f1ff!important;color:#103d7a!important}
-#root .lead-partner-nav-icon{
-  width:22px!important;min-width:22px!important;
-  display:grid!important;place-items:center!important;
-  color:currentColor!important;font-size:17px!important;line-height:1!important;
-  font-weight:800!important;
-}
-#root .lead-partner-sidebar-bottom{
-  margin-top:auto!important;padding:18px 15px!important;
-  border-top:1px solid #edf1f6!important;
-}
-#root .lead-partner-user{
-  display:flex!important;align-items:center!important;gap:10px!important;
-  padding:7px!important;
-}
-#root .lead-partner-avatar{
-  width:42px!important;height:42px!important;min-width:42px!important;
-  border-radius:50%!important;background:#edf3fb!important;color:#123e78!important;
-  display:grid!important;place-items:center!important;
-  font-size:13px!important;font-weight:900!important;
-}
-#root .lead-partner-user>b,#root .lead-partner-user>div>b{
-  display:block!important;color:#17375f!important;
-  font-size:12px!important;line-height:1.2!important;font-weight:800!important;
-}
-#root .lead-partner-user>div>small{
-  display:block!important;margin-top:4px!important;color:#8391a5!important;
-  max-width:150px!important;overflow:hidden!important;text-overflow:ellipsis!important;
-  white-space:nowrap!important;font-size:9px!important;line-height:1.2!important;
-}
-#root .lead-partner-sidebar-bottom>button{
-  width:100%!important;height:38px!important;margin-top:12px!important;
-  padding:0 11px!important;box-sizing:border-box!important;
-  border:1px solid #e1e7ef!important;border-radius:9px!important;background:#fff!important;
-  color:#52657e!important;text-align:left!important;cursor:pointer!important;
-  font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif!important;
-  font-size:11px!important;line-height:1!important;font-weight:800!important;
-}
-#root .lead-partner-main,
-#root .lp-main,#root .pricing-main,#root .partner-main,#root .withdrawals-main,#root .reports-main,#root .faq-main,#root .account-main{
-  margin-left:280px!important;width:calc(100% - 280px)!important;
-}
-@media(max-width:1100px) and (min-width:721px){
+@media(max-width:1100px) and (min-width:851px){
+  :root{--lp-sidebar:240px}
   #root .lead-partner-sidebar{width:240px!important;min-width:240px!important;max-width:240px!important}
-  #root .lead-partner-main,#root .lp-main,#root .pricing-main,#root .partner-main,#root .withdrawals-main,#root .reports-main,#root .faq-main,#root .account-main{margin-left:240px!important;width:calc(100% - 240px)!important}
 }
-@media(max-width:720px){
-  #root .lead-partner-sidebar{position:static!important;width:100%!important;min-width:0!important;max-width:none!important;height:auto!important}
-  #root .lead-partner-main,#root .lp-main,#root .pricing-main,#root .partner-main,#root .withdrawals-main,#root .reports-main,#root .faq-main,#root .account-main{margin-left:0!important;width:100%!important}
+@media(max-width:850px){
+  :root{--lp-sidebar:0px;--lp-topbar:64px}
+  #root .lead-partner-sidebar{position:static!important;width:100%!important;min-width:0!important;max-width:none!important;height:auto!important;padding:14px!important;box-shadow:none!important;border-right:0!important;border-bottom:1px solid rgba(151,184,224,.12)!important}
+  #root .lead-partner-brand-row{padding:0 2px 12px!important}
+  #root .lead-partner-nav-label{padding:0 3px 8px!important}
+  #root .lead-partner-nav{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:6px!important}
+  #root .lead-partner-nav>a{min-height:42px!important;padding:6px 8px!important;font-size:8px!important}
+  #root .lead-partner-nav-icon{width:27px!important;height:27px!important;flex-basis:27px!important;font-size:12px!important}
+  #root .lead-partner-help-block,#root .lead-partner-sidebar-bottom{display:none!important}
+  #root .lp-main,#root .pricing-main,#root .partner-main,#root .withdrawals-main,#root .reports-main,#root .account-main,#root .faq-main{margin-left:0!important;width:100%!important}
+  #root .lp-topbar,#root .pricing-topbar,#root .partner-topbar,#root .withdrawals-topbar,#root .reports-topbar,#root .account-topbar,#root .faq-topbar{position:sticky!important;left:0!important;right:auto!important;padding:0 16px!important}
+  #root .lp-content,#root .pricing-content,#root .partner-content,#root .withdrawals-content,#root .reports-content,#root .account-content,#root .faq-content{padding:18px 16px 34px!important}
 }
+@media(max-width:560px){
+  #root .lead-partner-nav{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  #root .lead-partner-brand-mark{width:40px!important;height:40px!important;flex-basis:40px!important}
+  #root .lead-partner-brand-copy>b{font-size:17px!important}
+  #root .lp-content,#root .pricing-content,#root .partner-content,#root .withdrawals-content,#root .reports-content,#root .account-content,#root .faq-content{padding:14px 10px 28px!important}
+}
+#root .lead-partner-notification-count{margin-left:auto;min-width:17px;height:17px;padding:0 4px;display:grid;place-items:center;border-radius:999px;background:#ef5a28;color:#fff;font-size:6px;font-weight:950;box-sizing:border-box}
