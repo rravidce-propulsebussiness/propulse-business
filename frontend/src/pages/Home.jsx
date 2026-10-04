@@ -319,9 +319,8 @@ export default function Home() {
 
       <section className="hc-section hc-projects">
         <div className="hc-container">
-          <div className="hc-section-head">
-            <div><h2>Home Inspiration</h2><p>Explore real projects to get ideas for your construction or interior journey.</p></div>
-            <Link to="/projects">View All Projects <Icon name="arrow" size={13}/></Link>
+          <div className="hc-section-head hc-section-head-centered">
+            <h2>Home Inspiration</h2>
           </div>
           <div className="hc-project-grid">
             {PROJECTS.map(project => <article key={project.title}>
