@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import './AdminInvestorWithdrawals.css'
 import useAdminRequest from '../hooks/useAdminRequest'
 import { useNavigate } from 'react-router-dom'
+import { payoutProofError, readPayoutProofDataUrl } from '../utils/payoutProof'
 
 const money = value => `₹${Number(value || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 const date = value => value ? new Date(value).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—'
@@ -25,18 +26,6 @@ function destinationLabel(request) {
   }
   return request.payout_method || 'Payout account'
 }
-
-function fileToDataUrl(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.onload = () => resolve(String(reader.result || ''))
-    reader.onerror = () => reject(new Error('Unable to read the screenshot.'))
-    reader.readAsDataURL(file)
-  })
-}
-
-const MAX_PROOF_FILE_BYTES = 6 * 1024 * 1024
-const PROOF_TYPES = ['image/png', 'image/jpeg', 'image/webp']
 
 export default function AdminInvestorWithdrawals() {
   const navigate = useNavigate()
@@ -134,17 +123,17 @@ export default function AdminInvestorWithdrawals() {
 
   async function handleProofFile(file) {
     if (!file) return
-    if (!PROOF_TYPES.includes(file.type)) {
-      setError('Transfer proof must be a PNG, JPG, or WebP screenshot.')
-      return
-    }
-    if (file.size > MAX_PROOF_FILE_BYTES) {
-      setError('Transfer proof image is too large. Please use an image under 6 MB.')
+    const validation = payoutProofError(file, {
+      typeMessage: 'Transfer proof must be a PNG, JPG, or WebP screenshot.',
+      sizeMessage: 'Transfer proof image is too large. Please use an image under 6 MB.',
+    })
+    if (validation) {
+      setError(validation)
       return
     }
     try {
       setError('')
-      setProofData(await fileToDataUrl(file))
+      setProofData(await readPayoutProofDataUrl(file, 'Unable to read the screenshot.'))
       setProofName(file.name || 'Payment proof')
       setExistingProofUrl('')
     } catch (e) {
