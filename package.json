@@ -10,6 +10,7 @@
   "scripts": {
     "start": "node index.js",
     "build": "node index.js --build-only",
+    "postinstall": "node index.js --build-only",
     "test:hostinger": "node backend/scripts/check-hostinger-single-app.js"
   },
   "dependencies": {
