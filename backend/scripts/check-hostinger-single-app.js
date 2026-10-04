@@ -7,6 +7,7 @@ const wrapper=fs.readFileSync(path.join(root,'hostinger-server.js'),'utf8');
 const rootIndex=fs.readFileSync(path.join(root,'index.js'),'utf8');
 const backendPkg=JSON.parse(fs.readFileSync(path.join(root,'backend','package.json'),'utf8'));
 const backendIndex=fs.readFileSync(path.join(root,'backend','index.js'),'utf8');
+const backendServer=fs.readFileSync(path.join(root,'backend','src','server.js'),'utf8');
 const env=fs.readFileSync(path.join(root,'.env.example'),'utf8');
 
 function assert(condition,message){
@@ -40,10 +41,14 @@ assert(backendPkg.main==='index.js'&&backendPkg.scripts?.start==='node index.js'
 for(const dependency of ['express','pg','react','react-dom','react-router-dom','vite','@vitejs/plugin-react']){
   assert(backendPkg.dependencies?.[dependency],'Backend-root Hostinger package installs '+dependency);
 }
-assert(backendIndex.includes("app.listen(publicPort,'0.0.0.0'"),'Backend-root Hostinger entry opens the public port');
-assert(backendIndex.includes("spawn(process.execPath,['src/server.js']"),'Backend-root Hostinger entry launches the real API process');
-assert(backendIndex.includes("Hostinger backend-root app is live; building frontend in the background."),'Backend-root Hostinger entry builds frontend after listen');
+assert(backendIndex.includes("require('./src/server')"),'Backend-root Hostinger entry launches the real API in-process');
+assert(!backendIndex.includes("spawn(process.execPath,['src/server.js']"),'Backend-root Hostinger entry must not launch a child backend process');
+assert(!backendIndex.includes('proxyToBackend'),'Backend-root Hostinger entry must not proxy API traffic over localhost');
+assert(backendIndex.includes("process.env.SERVE_FRONTEND_FROM_BACKEND='true'"),'Backend-root Hostinger entry enables single-process frontend serving');
+assert(backendIndex.includes("Hostinger single-process app is live; building frontend in the background."),'Backend-root Hostinger entry builds frontend after API startup');
 assert(backendIndex.includes("fs.symlinkSync(backendNodeModules,frontendNodeModules"),'Backend-root Hostinger entry exposes installed dependencies to the frontend build');
+assert(backendServer.includes("app.use(express.static(frontendDist"),'Backend server serves built frontend assets in single-process mode');
+assert(backendServer.includes("Application frontend is starting. Please retry shortly."),'Backend server keeps HTML requests safe while background frontend build runs');
 assert(wrapper.includes("startsWith('/api/')"),'Hostinger wrapper proxies API traffic');
 assert(wrapper.includes("requestPath==='/robots.txt'"),'Hostinger wrapper proxies robots.txt');
 assert(wrapper.includes("requestPath==='/sitemap.xml'"),'Hostinger wrapper proxies sitemap.xml');
