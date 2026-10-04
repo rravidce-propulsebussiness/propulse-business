@@ -45,8 +45,9 @@ assert(privateProof.includes('s3.getObjectBuffer(key,{maxBytes})'),'Legacy mater
 assert(companyProof.includes("key='company-proofs/'"),'Company verification documents must support private object storage');
 assert(homepageMedia.includes("objectKey=\`homepage/\${filename}\`")&&homepageMedia.includes('s3.makeReference(objectKey)'),'Homepage media must support R2 writes');
 assert(leadReference.includes("objectKey=\`lead-references/\${row.id}/\${filename}\`")&&leadReference.includes('s3.getObjectBuffer'),'Lead attachments must support R2 write/read');
-assert(projectVideo.includes("key=\`business-projects/\${filename}\`")&&projectVideo.includes('getMediaGetUrl'),'Project videos must use stable R2 refs plus signed display URLs');
-assert(projectPlan.includes("key=\`business-projects/\${filename}\`")&&projectPlan.includes('getMediaGetUrl'),'Project plans must use stable R2 refs plus signed display URLs');
+assert(projectVideo.includes("key=\`business-projects/\${filename}\`")&&projectVideo.includes('displayUrl:await displayUrl(url)'),'Project videos must use stable R2 refs plus shared signed display URLs');
+assert(projectPlan.includes("key=\`business-projects/\${filename}\`")&&projectPlan.includes('displayUrl:await displayUrl(url)'),'Project plans must use stable R2 refs plus shared signed display URLs');
+assert(projectMediaUtils.includes("s3.getMediaGetUrl(stored,{expiresSeconds:3600})"),'Shared project media display URLs must use signed object-storage URLs');
 assert(profileService.includes('video_display_url')&&profileService.includes('plan_display_url'),'Editable profiles must keep R2 storage refs separate from signed display URLs');
 assert(publicExpertService.includes('materializeProjectMedia'),'Public expert APIs must materialize signed project media URLs');
 assert(uploadStorage.includes('if(s3.isEnabled())')&&uploadStorage.includes('s3.probe()'),'Upload readiness must probe R2 when object storage is enabled');
