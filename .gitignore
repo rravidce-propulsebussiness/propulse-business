@@ -170,3 +170,6 @@ backend/uploads/private-proofs/*
 deploy/env/*.env
 deploy/env/*.secret
 deploy/env/*.local
+
+# Generated deployment bundles (rebuilt by Hostinger/CI)
+backend/hostinger-frontend/
