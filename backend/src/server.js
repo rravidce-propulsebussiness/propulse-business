@@ -296,23 +296,32 @@ function startBackgroundJobsOnce(){
 async function initializeDependencies(){
   if(shuttingDown||startupReady)return;
   try{
-    console.log('Initializing backend dependencies...');
-    await ensureUploadStorage();
+    console.log('Initializing backend database dependencies...');
     if(runMigrationsOnStartup)await runMigrations();
     else console.log('Database migrations skipped on web startup (RUN_MIGRATIONS_ON_STARTUP=false).');
     if(operationalMonitoringEnabled)await operationalMonitoringService.pruneResolved().catch(error=>console.error('Operational-event retention cleanup failed:',error.message));
     startupReady=true;
     startupError=null;
-    console.log('Backend dependencies are ready.');
+    console.log('Backend database dependencies are ready.');
     startBackgroundJobsOnce();
+
+    // Object storage is important for upload features, but it must not take down
+    // authentication, admin, notifications, catalog or lead APIs if R2 is
+    // temporarily unavailable or misconfigured. Readiness still reports storage.
+    void ensureUploadStorage().then(()=>{
+      console.log('Upload storage is ready.');
+    }).catch(async error=>{
+      console.error('Upload storage initialization is degraded:',error?.message||error);
+      await recordFatalProcessError('storage_startup_failure',error).catch(()=>{});
+    });
   }catch(error){
     startupReady=false;
     startupError=error?.message||String(error||'Unknown startup error');
-    console.error('Backend dependency initialization failed:');
+    console.error('Backend database initialization failed:');
     console.error(error?.stack||error||'Unknown error');
     await recordFatalProcessError('startup_failure',error).catch(()=>{});
     if(!shuttingDown){
-      console.error(`Retrying backend dependency initialization in ${startupRetryMs}ms.`);
+      console.error(`Retrying backend database initialization in ${startupRetryMs}ms.`);
       startupTimer=setTimeout(()=>{startupTimer=null;void initializeDependencies();},startupRetryMs);
       startupTimer.unref?.();
     }
