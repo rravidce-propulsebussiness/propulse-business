@@ -40,7 +40,7 @@ assert(sheets.includes('Sheet Access Strategy / Max Buyers → Single Only overr
 assert(sheets.includes('Sheet exact 1 / 2 / 3 buyer price → Admin exact-tier price'),'Google Sheet UI must explain pricing precedence');
 
 assert(pricingUi.includes('<option value="permanent_single">Single Only</option>'),'Lead Pricing must expose Single Only while retaining permanent_single internally');
-assert(leadService.includes("pricingSource==='sheet'?mergePricing(configured,pricing)"),'Sheet pricing must merge over Admin configured pricing');
+assert(leadService.includes('resolveEffectivePricing(configured,pricing,pricingSource)'),'Sheet pricing must merge over Admin configured pricing');
 assert(leadService.includes('function mergePricing(base,sheet)'),'Pricing must keep one field-level sheet-over-config merge path');
 
 console.log('Lead import optional defaults regression test passed.');
