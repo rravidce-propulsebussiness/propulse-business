@@ -3,14 +3,15 @@
   "private": true,
   "version": "1.0.0",
   "description": "Hostinger single-app deployment wrapper for ProPulse Business",
-  "main": "hostinger-server.js",
+  "main": "index.js",
   "engines": {
     "node": "24.x"
   },
   "scripts": {
     "build": "npm ci --omit=dev --prefix backend && npm ci --include=dev --prefix frontend && npm run build --prefix frontend",
-    "start": "node hostinger-server.js",
-    "test:hostinger": "node backend/scripts/check-hostinger-single-app.js"
+    "start": "node index.js",
+    "test:hostinger": "node backend/scripts/check-hostinger-single-app.js",
+    "postinstall": "npm ci --omit=dev --prefix backend && npm ci --include=dev --prefix frontend && npm run build --prefix frontend"
   },
   "dependencies": {
     "express": "^5.2.1"
