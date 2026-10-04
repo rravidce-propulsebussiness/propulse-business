@@ -186,11 +186,6 @@
   border-color:#3d76c7!important;
   box-shadow:0 0 0 3px rgba(23,101,220,.09)!important;
 }
-.wallet-add-modal form input[type=file]{
-  height:auto!important;
-  min-height:40px!important;
-  padding:7px!important;
-}
 .wallet-add-modal .wallet-primary{
   grid-column:1 / -1;
   height:44px!important;
@@ -236,6 +231,7 @@
   display:none!important;
 }
 .wallet-add-modal form label:has(input[type="file"]){
+  position:relative;
   align-content:start;
 }
 .wallet-add-modal form input[type="file"]{
@@ -283,9 +279,6 @@
   margin-top:20px;
   z-index:2;
   font-size:14px;
-}
-.wallet-add-modal form label:has(input[type="file"]){
-  position:relative;
 }
 @media(max-width:700px){
   .wallet-add-modal form label:has(input[type="file"]):after{
