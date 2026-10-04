@@ -59,7 +59,7 @@ async function main(){
       ['cities',"SELECT id,state_id,name,slug FROM cities ORDER BY id",r=>key(r.slug)||key(r.name)],
       ['services',"SELECT id,industry_id,name,slug FROM services ORDER BY id",r=>key(r.slug)||key(r.name)],
       ['subservices',"SELECT id,service_id,name,slug FROM subservices ORDER BY id",r=>key(r.slug)||key(r.name)],
-      ['users',"SELECT id,name,email,role,supabase_user_id FROM users ORDER BY id",r=>key(r.email)]
+      ['users',"SELECT id,name,email,role FROM users ORDER BY id",r=>key(r.email)]
     ];
     const summary=[];
     for(const [name,sql,naturalKey] of defs){
