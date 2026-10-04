@@ -368,19 +368,6 @@ const PROJECTS = [
   },
 ]
 
-const HYDERABAD_PROJECT_SEO_LINKS=[
-  {label:'House construction cost in Hyderabad',to:'/hyderabad/construction-cost'},
-  {label:'Construction in Kondapur',to:'/hyderabad/construction/kondapur'},
-  {label:'Construction in Madhapur',to:'/hyderabad/construction/madhapur'},
-  {label:'Construction in Kokapet',to:'/hyderabad/construction/kokapet'},
-  {label:'Construction in Manikonda',to:'/hyderabad/construction/manikonda'},
-  {label:'Construction in Kukatpally',to:'/hyderabad/construction/kukatpally'},
-  {label:'Construction in Miyapur',to:'/hyderabad/construction/miyapur'},
-  {label:'Construction in Narsingi',to:'/hyderabad/construction/narsingi'},
-  {label:'Construction in Tellapur',to:'/hyderabad/construction/tellapur'},
-  {label:'Construction in Banjara Hills',to:'/hyderabad/construction/banjara-hills'},
-  {label:'Construction in Jubilee Hills',to:'/hyderabad/construction/jubilee-hills'},
-]
 
 function Icon({name,size=18}){
   const p={width:size,height:size,viewBox:'0 0 24 24',fill:'none',stroke:'currentColor',strokeWidth:'1.8',strokeLinecap:'round',strokeLinejoin:'round','aria-hidden':true}
@@ -676,22 +663,6 @@ export default function Projects(){
       </div>
       {filtered.length===0&&<div className="pj-empty">No inspiration cards match these filters. Try clearing one or more filters.</div>}
       {visible<filtered.length&&<button className="pj-load" onClick={()=>setVisible(v=>v+6)}>Load More Projects ↓</button>}
-    </section>
-
-    <section className="pj-hyderabad-authority" aria-labelledby="pj-hyderabad-authority-title">
-      <div>
-        <span>HYDERABAD PROJECT PLANNING</span>
-        <h2 id="pj-hyderabad-authority-title">Explore Hyderabad services and construction areas</h2>
-        <p>Use these project concepts for inspiration, then open the relevant Hyderabad planning page to compare scope, cost inputs and locality-specific construction requirements.</p>
-      </div>
-      <div className="pj-hyderabad-service-links">
-        <Link to="/hyderabad/construction">Home Construction in Hyderabad</Link>
-        <Link to="/hyderabad/interior-designers">Interior Designers in Hyderabad</Link>
-        <Link to="/hyderabad/real-estate">Real Estate Services in Hyderabad</Link>
-      </div>
-      <div className="pj-hyderabad-location-links">
-        {HYDERABAD_PROJECT_SEO_LINKS.map(item=><Link key={item.to} to={item.to}>{item.label}</Link>)}
-      </div>
     </section>
 
     <section className="pj-stats">
