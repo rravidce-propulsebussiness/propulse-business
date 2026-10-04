@@ -31,6 +31,11 @@ jobs:
       - name: Install root dependencies
         run: npm install --no-audit --no-fund
 
+      - name: Bake frontend release marker
+        run: |
+          node -e "require('fs').writeFileSync('frontend/public/release.json', JSON.stringify({commit:process.env.GITHUB_SHA,environment:'production',builtAt:new Date().toISOString()})+'\\n')"
+          cat frontend/public/release.json
+
       - name: Build Hostinger frontend
         env:
           VITE_API_URL: /api
@@ -46,9 +51,11 @@ jobs:
         run: |
           test -f frontend/dist/index.html
           test -d frontend/dist/assets
+          test -f frontend/dist/release.json
           test -f backend/hostinger-frontend/index.html
           test -d backend/hostinger-frontend/assets
-          echo "Frontend build and backend publish bundle are ready."
+          test -f backend/hostinger-frontend/release.json
+          echo "Frontend build, release marker and backend publish bundle are ready."
 
       - name: Bake Hostinger release identity
         run: |
