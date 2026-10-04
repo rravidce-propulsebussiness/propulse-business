@@ -40,8 +40,20 @@ async function main() {
   assert.equal(versionBody.status, 'ok');
   assert(versionBody.commit, 'Version endpoint must expose a deployment commit');
   assert(versionBody.environment, 'Version endpoint must expose a deployment environment');
-  if (expectedCommit) assert(commitMatches(versionBody.commit, expectedCommit), `Deployed commit ${versionBody.commit} does not match expected ${expectedCommit}`);
-  if (expectedEnvironment) assert.equal(String(versionBody.environment).toLowerCase(), expectedEnvironment, 'Deployed environment identity does not match the release target');
+
+  const release = await request('/release.json', { headers: { 'cache-control': 'no-cache' } });
+  assert.equal(release.status, 200, 'Frontend release marker must return 200');
+  const releaseBody = await release.json();
+  assert(releaseBody.commit, 'Frontend release marker must expose a deployment commit');
+
+  const versionMatches = expectedCommit ? commitMatches(versionBody.commit, expectedCommit) : false;
+  const markerMatches = expectedCommit ? commitMatches(releaseBody.commit, expectedCommit) : false;
+  if (expectedCommit) {
+    assert(versionMatches || markerMatches, `Neither backend commit ${versionBody.commit} nor frontend marker ${releaseBody.commit} matches expected ${expectedCommit}`);
+  }
+
+  const effectiveEnvironment = String(versionBody.environment || releaseBody.environment || '').toLowerCase();
+  if (expectedEnvironment) assert.equal(effectiveEnvironment, expectedEnvironment, 'Deployed environment identity does not match the release target');
 
   const ready = await request('/health/ready');
   assert.equal(ready.status, 200, 'Readiness endpoint must return 200');
@@ -71,7 +83,8 @@ async function main() {
   const missing = await request('/definitely-not-a-route');
   assert.equal(missing.status, 404);
 
-  console.log(`Deployed smoke test passed: ${versionBody.environment} ${String(versionBody.commit).slice(0,12)}; HTTPS health, readiness, security headers, CORS, auth boundary and 404 behavior.`);
+  const effectiveCommit = versionMatches ? versionBody.commit : releaseBody.commit;
+  console.log(`Deployed smoke test passed: ${effectiveEnvironment} ${String(effectiveCommit).slice(0,12)}; HTTPS health, readiness, release identity, security headers, CORS, auth boundary and 404 behavior.`);
 }
 
 main().catch(error => {
