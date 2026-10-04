@@ -8,20 +8,28 @@ function Login() {
   const navigate = useNavigate()
   const location = useLocation()
   const [form, setForm] = useState({ email: '', password: '' })
-  const [accountType, setAccountType] = useState('business')
   const [showPassword, setShowPassword] = useState(false)
   const [remember, setRemember] = useState(true)
   const [loading, setLoading] = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
   const [error, setError] = useState('')
 
-  const finishLogin = useCallback((result) => {
+  const finishLogin = useCallback(async (result) => {
     saveSession(result)
-    if (!remember) localStorage.setItem('propulse_session_mode', 'session')
-    const destination = location.state?.from?.pathname
-      || (result.user?.role === 'admin' ? '/admin' : '/leads')
+    if (result.user?.role === 'admin') {
+      navigate('/admin', { replace: true })
+      return
+    }
+
+    // Lead Partner accounts must never enter the marketplace.
+    if (result.user?.role === 'lead_partner') {
+      navigate('/lead-partner', { replace: true })
+      return
+    }
+
+    const destination = location.state?.from?.pathname || '/leads'
     navigate(destination, { replace: true })
-  }, [location.state, navigate, remember])
+  }, [location.state, navigate])
 
   async function submit(e) {
     e.preventDefault()
@@ -29,8 +37,8 @@ function Login() {
     if (!form.email || !form.password) return setError('Enter your email and password.')
     try {
       setLoading(true)
-      const result = await authRequest('/auth/login', { method: 'POST', body: JSON.stringify(form) })
-      finishLogin(result)
+      const result = await authRequest('/auth/login', { method: 'POST', body: JSON.stringify({ ...form, remember }) })
+      await finishLogin(result)
     } catch (err) {
       setError(err.message)
     } finally {
@@ -44,15 +52,15 @@ function Login() {
       setGoogleLoading(true)
       const result = await authRequest('/auth/google', {
         method: 'POST',
-        body: JSON.stringify({ credential, accountType }),
+        body: JSON.stringify({ credential, remember }),
       })
-      finishLogin(result)
+      await finishLogin(result)
     } catch (err) {
       setError(err.message)
     } finally {
       setGoogleLoading(false)
     }
-  }, [accountType, finishLogin])
+  }, [finishLogin, remember])
 
   return (
     <div className="auth-page login-premium">
@@ -80,23 +88,7 @@ function Login() {
 
       <main className="auth-card-wrap login-premium-card-wrap">
         <div className="auth-card login-premium-card">
-          <div className="auth-heading login-heading">
-            <p className="auth-kicker">WELCOME BACK</p>
-            <h2>Welcome back.</h2>
-            <p>Sign in to continue your business journey.</p>
-          </div>
-
           {error && <div className="auth-error" role="alert">{error}</div>}
-
-          <div className="account-type-grid" role="radiogroup" aria-label="Account type">
-            <button type="button" className={`account-type-card ${accountType === 'business' ? 'selected' : ''}`} onClick={() => setAccountType('business')} aria-pressed={accountType === 'business'} disabled={loading || googleLoading}>
-              <span className="account-icon" aria-hidden="true">♙</span><span className="account-copy"><strong>User</strong><small>Buy leads &amp; grow your business</small></span>
-            </button>
-            <button type="button" className={`account-type-card ${accountType === 'lead_partner' ? 'selected' : ''}`} onClick={() => setAccountType('lead_partner')} aria-pressed={accountType === 'lead_partner'} disabled={loading || googleLoading}>
-              <span className="account-icon" aria-hidden="true">♙♙</span><span className="account-copy"><strong>Lead Partner</strong><small>Submit &amp; manage leads</small></span>
-            </button>
-          </div>
-          <div className="signup-role-note">Choose how you use Propulse. Google sign-in uses the selected account type for new accounts.</div>
 
           <div className="google-auth-block">
             <GoogleButton onCredential={handleGoogle} disabled={loading || googleLoading} />

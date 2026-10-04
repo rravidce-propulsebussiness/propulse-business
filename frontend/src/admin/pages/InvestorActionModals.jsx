@@ -11,8 +11,8 @@ export default function InvestorActionModals({ spendOpen, transferOpen, availabl
   const [reference, setReference] = useState('')
   const [proofUrl, setProofUrl] = useState('')
 
-  useEffect(() => { if (spendOpen) { setSpendAmount(''); setPlatform('Meta'); setCampaign(''); setSpendDate(new Date().toISOString().slice(0, 10)); setSpendNotes('') } }, [spendOpen])
-  useEffect(() => { if (transferOpen) { setReference(''); setProofUrl('') } }, [transferOpen])
+  useEffect(() => { if (!spendOpen) return undefined; let active=true; queueMicrotask(()=>{if(active){setSpendAmount('');setPlatform('Meta');setCampaign('');setSpendDate(new Date().toISOString().slice(0,10));setSpendNotes('')}}); return()=>{active=false} }, [spendOpen])
+  useEffect(() => { if (!transferOpen) return undefined; let active=true; queueMicrotask(()=>{if(active){setReference('');setProofUrl('')}}); return()=>{active=false} }, [transferOpen])
   if (!spendOpen && !transferOpen) return null
 
   const submitSpend = event => {

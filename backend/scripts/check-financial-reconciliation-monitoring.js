@@ -1,0 +1,33 @@
+const fs=require('fs');
+const path=require('path');
+const root=path.join(__dirname,'..');
+const read=relative=>fs.readFileSync(path.join(root,relative),'utf8');
+const assert=(condition,message)=>{if(!condition)throw new Error(message)};
+
+const migration=read('src/database/migrations/20260928_financial_reconciliation_monitoring.sql');
+const monitor=read('src/services/financialReconciliationMonitorService.js');
+const scheduler=read('src/services/financialReconciliationScheduler.js');
+const worker=read('src/worker.js');
+const server=read('src/server.js');
+const controller=read('src/controllers/adminController.js');
+const health=read('src/services/adminSystemHealthService.js');
+const integrityPage=read('../frontend/src/admin/pages/AdminFinancialIntegrity.jsx');
+const healthPage=read('../frontend/src/admin/pages/AdminSystemHealth.jsx');
+
+assert(migration.includes('CREATE TABLE IF NOT EXISTS financial_reconciliation_runs'),'Financial reconciliation run history table is missing');
+assert(migration.includes('CREATE TABLE IF NOT EXISTS admin_operational_alerts'),'Persistent Admin operational alerts table is missing');
+assert(migration.includes('CONSTRAINT uq_admin_operational_alert_key UNIQUE(alert_key)'),'Operational alerts must be deduplicated by stable alert key');
+assert(monitor.includes('pg_try_advisory_lock'),'Scheduled reconciliation must use a cross-process advisory lock');
+assert(monitor.includes('skipIfCompletedWithinMinutes'),'Scheduler must avoid duplicate runs after worker/web restarts');
+assert(monitor.includes('getFinancialIntegrity({force:true})'),'Scheduled reconciliation must run the canonical fresh reconciliation engine');
+assert(monitor.includes("status='resolved'")&&monitor.includes("status='active'"),'Financial alerts must automatically activate and resolve');
+assert(monitor.includes("financial:scan_failed"),'Failed automated reconciliation must create a persistent critical Admin alert');
+assert(scheduler.includes('DEFAULT_INTERVAL_MS=24*60*60*1000'),'Automated reconciliation must default to daily');
+assert(worker.includes('startFinancialReconciliationScheduler')&&worker.includes('await stopFinancialReconciliation()'),'Dedicated worker must start and gracefully stop financial monitoring');
+assert(server.includes('startFinancialReconciliationScheduler')&&server.includes('await stopFinancialReconciliation()'),'Single-process web deployment must also support financial monitoring');
+assert(controller.includes('getMonitoringSummary'),'Financial Integrity Admin response must include persisted monitoring state');
+assert(health.includes('getHealthSummary'),'System Health must include scheduled financial reconciliation health');
+assert(integrityPage.includes('Automated reconciliation'),'Financial Integrity UI must expose automated run history');
+assert(integrityPage.includes('Active Admin alerts'),'Financial Integrity UI must expose active persistent alerts');
+assert(healthPage.includes('Financial reconciliation'),'System Health UI must expose the reconciliation signal');
+console.log('Financial reconciliation monitoring regression test passed.');

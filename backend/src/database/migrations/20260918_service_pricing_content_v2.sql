@@ -8,7 +8,6 @@ SET
   features='["Website design & development","Web apps, portals & business software","Mobile app development","SEO, social media & performance marketing","Branding, photography, videography, reels & ad creatives"]'::jsonb,
   cta_label='Talk to Marketing',
   cta_url='/contact',
-  image_url='https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=1400&q=85',
   sort_order=10
 WHERE slug='marketing-growth';
 
@@ -23,7 +22,6 @@ SET
   cta_label='Explore Leads',
   cta_url='/leads',
   highlighted=TRUE,
-  image_url='https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=1400&q=85',
   sort_order=20
 WHERE slug='lead-marketplace';
 
@@ -38,6 +36,5 @@ SET
   cta_label='Talk to Compliance',
   cta_url='/contact',
   highlighted=FALSE,
-  image_url='https://images.unsplash.com/photo-1450101499163-c8848c66ca85?auto=format&fit=crop&w=1400&q=85',
   sort_order=30
 WHERE slug='government-compliance';
