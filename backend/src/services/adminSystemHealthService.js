@@ -220,7 +220,7 @@ async function getSystemHealth(){
     },
     storage:{
       status:storageOk?'ready':'unavailable',
-      persistentConfigured:Boolean(String(process.env.UPLOAD_STORAGE_ROOT||'').trim()),
+      persistentConfigured:privateObjectStorage.isEnabled()||Boolean(String(process.env.UPLOAD_STORAGE_ROOT||'').trim()),
       privateObjects:{
         driver:privateObjectStorage.driver(),
         status:privateObjectHealth.status||'unavailable',
