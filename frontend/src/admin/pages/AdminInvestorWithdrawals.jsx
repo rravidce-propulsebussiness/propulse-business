@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import './AdminInvestorWithdrawals.css'
 import useAdminRequest from '../hooks/useAdminRequest'
+import { useNavigate } from 'react-router-dom'
 
 const money = value => `₹${Number(value || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 const date = value => value ? new Date(value).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—'
@@ -38,6 +39,7 @@ const MAX_PROOF_FILE_BYTES = 6 * 1024 * 1024
 const PROOF_TYPES = ['image/png', 'image/jpeg', 'image/webp']
 
 export default function AdminInvestorWithdrawals() {
+  const navigate = useNavigate()
   const [requests, setRequests] = useState([])
   const [status, setStatus] = useState('pending')
   const [search, setSearch] = useState('')
