@@ -8,6 +8,7 @@ const assert = (condition, message) => { if (!condition) throw new Error(message
 
 const leads = read('src/pages/LeadsV2.jsx')
 const picker = read('src/components/PaymentProofPicker.jsx')
+const validation = read('src/components/paymentProofValidation.js')
 
 assert((leads.match(/<PaymentProofPicker/g) || []).length === 2, 'Both lead payment paths must reuse the shared proof picker')
 assert(!leads.includes("lead-payment-proof')?.files"), 'Lead checkout must not read payment proof directly from the DOM')
@@ -16,7 +17,7 @@ assert(picker.includes('Selected — ready to submit'), 'Selected proof must sho
 assert(picker.includes('Selected payment proof preview'), 'Image proofs must render a visible preview')
 assert(picker.includes('Change'), 'Selected proof must offer a change control')
 assert(picker.includes('Remove'), 'Selected proof must offer a remove control')
-assert(picker.includes("'image/jpeg'") && picker.includes("'image/png'") && picker.includes("'application/pdf'"), 'Proof picker must restrict supported file types')
-assert(picker.includes('5 MB or smaller'), 'Proof picker must enforce the 5 MB limit')
+assert(validation.includes("'image/jpeg'") && validation.includes("'image/png'") && validation.includes("'application/pdf'"), 'Proof picker must restrict supported file types')
+assert(validation.includes('5 MB or smaller'), 'Proof picker must enforce the 5 MB limit')
 
 console.log('Payment proof preview regression test passed.')

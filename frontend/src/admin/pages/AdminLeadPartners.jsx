@@ -193,7 +193,7 @@ export default function AdminLeadPartners(){
                     <td><b>{money(row.available_earnings)}</b><small>Not yet requested</small></td>
                     <td><b className={Number(row.pending_transfer||0)>0?'due':''}>{money(row.pending_transfer)}</b><small>{row.pending_payout_count||0} pending request{Number(row.pending_payout_count||0)===1?'':'s'}</small></td>
                     <td><b>{money(row.transferred_amount)}</b><small>Paid to partner</small></td>
-                    <td><b>{Number(row.verified_fake_rate_pct||0).toFixed(2)}%</b><small>verified fake rate</small></td>
+                    <td><b>{row.quality_score===null||row.quality_score===undefined?'—':Number(row.quality_score).toFixed(1)+'/100'}</b><small>{String(row.quality_band||'no_data').replace(/_/g,' ')} · {Number(row.verified_fake_rate_pct||0).toFixed(2)}% fake</small></td>
                     <td>
                       <div className="alp-actions">
                         <button type="button" className="primary" onClick={()=>openDetails(row)}>View partner</button>
@@ -238,10 +238,21 @@ export default function AdminLeadPartners(){
 
             <section className="alp-partner-strip">
               <div><span>STATUS</span><strong className={`status ${detail.partner?.status||selected.status}`}>{statusText(detail.partner?.status||selected.status)}</strong></div>
-              <div><span>QUALITY</span><strong>{Number(detail.quality?.verifiedFakeRatePct||0).toFixed(2)}% fake rate</strong></div>
+              <div><span>QUALITY</span><strong>{detail.quality?.score===null||detail.quality?.score===undefined?'—':Number(detail.quality.score).toFixed(1)+'/100 · '+String(detail.quality.band||'').replace(/_/g,' ')}</strong></div>
               <div><span>PAYOUT ACCOUNT</span><strong>{detail.partner?.payout_method==='upi'?(detail.partner?.upi_id||'UPI'):(detail.partner?.bank_name||detail.partner?.account_holder_name||'Not configured')}</strong></div>
               <div><span>JOINED</span><strong>{shortDate(detail.partner?.created_at)}</strong></div>
               {Number(detail.pendingTransfer||0)>0&&<button type="button" onClick={()=>navigate(`/admin/lead-partner-payouts?search=${encodeURIComponent(detail.partner?.user_email||selected.user_email||'')}`)}>Review transfer due →</button>}
+            </section>
+
+            <section className="alp-quality-panel">
+              <div className="alp-quality-breakdown">
+                {['completeness','validity','uniqueness','outcome'].map(key=><div key={key}><span>{key}</span><strong>{Number(detail.quality?.breakdown?.[key]?.score||0).toFixed(1)}<small> / {detail.quality?.breakdown?.[key]?.max||0}</small></strong></div>)}
+              </div>
+              <div className="alp-quality-issues">
+                <span>QUALITY SIGNALS</span>
+                <strong>{detail.quality?.topIssues?.length?'Needs review':'No elevated data-quality counters'}</strong>
+                <small>{detail.quality?.topIssues?.length?detail.quality.topIssues.map(x=>x.label+' ('+x.count+')').join(' · '):('Verified fake rate '+Number(detail.quality?.verifiedFakeRatePct||0).toFixed(2)+'% · '+String(detail.quality?.confidence||'none')+' confidence')}</small>
+              </div>
             </section>
 
             <nav className="alp-detail-tabs">
@@ -252,7 +263,7 @@ export default function AdminLeadPartners(){
 
             {detailTab==='leads'&&<section className="alp-detail-section">
               <div className="alp-section-head"><div><span>PARTNER INVENTORY</span><h3>Leads from this partner</h3></div><small>Sales and earnings are calculated from the existing lead purchase and partner earning ledgers.</small></div>
-              {!detail.leads?.length?<div className="alp-state">This partner has not added any leads yet.</div>:<div className="alp-detail-table-wrap"><table className="alp-detail-table"><thead><tr><th>LEAD</th><th>CREATED</th><th>OUTCOME</th><th>PURCHASES</th><th>LEAD SALES</th><th>PARTNER EARNING</th></tr></thead><tbody>{detail.leads.map(lead=>{const outcome=leadOutcome(lead);return <tr key={lead.id}><td><b>#{lead.id} · {lead.customer_name||lead.service_name||lead.industry_name||'Lead'}</b><small>{[lead.industry_name,lead.service_name,lead.city_name].filter(Boolean).join(' · ')||'—'}</small><small>{lead.requirement||'No requirement summary'}</small></td><td>{shortDate(lead.created_at)}</td><td><span className={`alp-outcome ${outcome.key}`}>{outcome.label}</span></td><td><b>{lead.purchase_count}</b>{lead.last_purchase_at&&<small>Last {shortDate(lead.last_purchase_at)}</small>}</td><td><b>{money(lead.gross_sales)}</b>{Number(lead.refunded_sales||0)>0&&<small>{money(lead.refunded_sales)} refunded</small>}</td><td><b>{money(lead.generated_earning)}</b>{Number(lead.reversed_earning||0)>0&&<small>{money(lead.reversed_earning)} reversed</small>}</td></tr>})}</tbody></table></div>}
+              {!detail.leads?.length?<div className="alp-state">This partner has not added any leads yet.</div>:<div className="alp-detail-table-wrap"><table className="alp-detail-table"><thead><tr><th>LEAD</th><th>QUALITY</th><th>CREATED</th><th>OUTCOME</th><th>PURCHASES</th><th>LEAD SALES</th><th>PARTNER EARNING</th></tr></thead><tbody>{detail.leads.map(lead=>{const outcome=leadOutcome(lead);return <tr key={lead.id}><td><b>#{lead.id} · {lead.customer_name||lead.service_name||lead.industry_name||'Lead'}</b><small>{[lead.industry_name,lead.service_name,lead.city_name].filter(Boolean).join(' · ')||'—'}</small><small>{lead.requirement||'No requirement summary'}</small></td><td><b>{lead.quality_score===null||lead.quality_score===undefined?'—':Number(lead.quality_score).toFixed(1)+'/100'}</b><small>{String(lead.quality_band||'no_data').replace(/_/g,' ')}</small>{lead.quality_flags?.length>0&&<small>{lead.quality_flags.slice(0,2).join(' · ').replace(/_/g,' ')}</small>}</td><td>{shortDate(lead.created_at)}</td><td><span className={`alp-outcome ${outcome.key}`}>{outcome.label}</span></td><td><b>{lead.purchase_count}</b>{lead.last_purchase_at&&<small>Last {shortDate(lead.last_purchase_at)}</small>}</td><td><b>{money(lead.gross_sales)}</b>{Number(lead.refunded_sales||0)>0&&<small>{money(lead.refunded_sales)} refunded</small>}</td><td><b>{money(lead.generated_earning)}</b>{Number(lead.reversed_earning||0)>0&&<small>{money(lead.reversed_earning)} reversed</small>}</td></tr>})}</tbody></table></div>}
             </section>}
 
             {detailTab==='earnings'&&<section className="alp-detail-section">

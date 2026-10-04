@@ -1,6 +1,7 @@
 const pool = require('../config/database');
 const ledger = require('./investorFinancialLedgerService');
 const payoutAccounts = require('./investorPayoutAccountService');
+const privateProofStorage = require('./privateProofStorageService');
 
 async function transferInvestorEarnings({ userId, adminId, transferReference, proofUrl }) {
   const reference = String(transferReference || '').trim();
@@ -10,6 +11,7 @@ async function transferInvestorEarnings({ userId, adminId, transferReference, pr
 
   const investorId = Number(userId);
   const client = await pool.connect();
+  let storedProof=null;
   try {
     await client.query('BEGIN');
     await ledger.lockInvestorFinancials(client, investorId);
@@ -54,6 +56,7 @@ async function transferInvestorEarnings({ userId, adminId, transferReference, pr
 
     const summary = await ledger.getInvestorFinancialSummary(investorId, client);
     let remaining = Number(summary.non_auto_earnings_withdrawable || 0);
+    storedProof=await privateProofStorage.storeDataUrl(proof,{category:'investor-settlements',maxBytes:6*1024*1024});
     let total = 0;
     const settled = [];
 
@@ -74,7 +77,7 @@ async function transferInvestorEarnings({ userId, adminId, transferReference, pr
             payout_proof_url=$3,
             updated_at=CURRENT_TIMESTAMP
         WHERE id=$4
-      `, [amount, reference, proof, Number(row.id)]);
+      `, [amount, reference, storedProof, Number(row.id)]);
 
       total += amount;
       remaining = Math.max(0, remaining - amount);
@@ -104,6 +107,7 @@ async function transferInvestorEarnings({ userId, adminId, transferReference, pr
     };
   } catch (error) {
     await client.query('ROLLBACK');
+    if(storedProof)await privateProofStorage.removeStoredProof(storedProof).catch(cleanupError=>console.error('Investor settlement proof cleanup failed:',cleanupError.message));
     throw error;
   } finally { client.release(); }
 }

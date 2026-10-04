@@ -85,7 +85,10 @@ assert(grants.includes('async function deleteBusinessCampaign'),'Business entitl
 assert(grants.includes("campaign.audience_scope==='specific_users'"),'Campaign matching must support selected business users');
 assert(grants.includes("campaign.verification_scope==='verified'")&&grants.includes("campaign.verification_scope==='unverified'"),'Campaign matching must support verification filters');
 assert(grants.includes('bps.industry_id=')&&grants.includes('bpl.state_id=')&&grants.includes('bpl2.city_id='),'Campaign matching must enforce industry/state/city filters');
-assert(grants.includes("VALUES($1,'campaign'"),'Matching businesses must receive campaign grants');
+assert(grants.includes("SELECT u.user_id,'campaign',$2")&&grants.includes('jsonb_to_recordset($1::jsonb)'),'Matching businesses must receive campaign grants through a batched insert');
+assert(grants.includes('DELETE FROM lead_entitlement_grants WHERE id=ANY($1::int[])'),'Campaign sync must batch unused-recipient grant deletes');
+assert(grants.includes('WHERE id=ANY($1::int[])')&&grants.includes('revokeIds'),'Campaign sync must batch recipient revocations');
+assert(grants.includes('updatePayload')&&grants.includes('insertPayload'),'Campaign sync must batch existing and new recipient mutations');
 assert(grants.includes('CAMPAIGN_ALLOWANCE_BELOW_USAGE'),'Campaign edits must protect already-used credits');
 assert(grants.includes("grant.source==='admin'&&claimCount===0"),'Unused manual grants should be hard-deletable');
 assert(grants.includes("WHERE g.revoked_at IS NULL"),'Deleted/revoked grants must stay out of Recent entitlements');

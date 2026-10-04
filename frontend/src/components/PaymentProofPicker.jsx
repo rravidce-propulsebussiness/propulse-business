@@ -1,7 +1,5 @@
+import { paymentProofError } from './paymentProofValidation'
 import './PaymentProofPicker.css'
-
-const MAX_BYTES = 5 * 1024 * 1024
-const ALLOWED_TYPES = new Set(['image/jpeg', 'image/png', 'application/pdf'])
 
 const fileSize = bytes => {
   const size = Number(bytes || 0)
@@ -13,13 +11,6 @@ const fileKind = file => {
   if (file?.type === 'application/pdf') return 'PDF'
   if (file?.type === 'image/png') return 'PNG'
   return 'JPG'
-}
-
-export function paymentProofError(file) {
-  if (!file) return 'Choose a payment proof first.'
-  if (!ALLOWED_TYPES.has(String(file.type || '').toLowerCase())) return 'Payment proof must be a JPG, PNG or PDF file.'
-  if (Number(file.size || 0) > MAX_BYTES) return 'Payment proof must be 5 MB or smaller.'
-  return ''
 }
 
 function readDataUrl(file) {

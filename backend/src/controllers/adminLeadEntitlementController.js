@@ -1,4 +1,5 @@
 const grantService=require('../services/leadEntitlementGrantService');
+const {sendError}=require('../utils/errorResponse');
 
 function statusFor(error){
   const map={
@@ -38,7 +39,7 @@ async function createRule(req,res){
   catch(error){
     const status=statusFor(error);
     if(status===500)console.error('Registration entitlement rule create failed:',error);
-    return res.status(status).json({error:error.message||'Failed to create registration entitlement rule',code:error.code});
+    return sendError(res,status,error,'Failed to create registration entitlement rule',{code:error.code});
   }
 }
 
@@ -47,7 +48,7 @@ async function updateRule(req,res){
   catch(error){
     const status=statusFor(error);
     if(status===500)console.error('Registration entitlement rule update failed:',error);
-    return res.status(status).json({error:error.message||'Failed to update registration entitlement rule',code:error.code});
+    return sendError(res,status,error,'Failed to update registration entitlement rule',{code:error.code});
   }
 }
 
@@ -56,7 +57,7 @@ async function deleteRule(req,res){
   catch(error){
     const status=statusFor(error);
     if(status===500)console.error('Registration entitlement rule delete failed:',error);
-    return res.status(status).json({error:error.message||'Failed to delete registration entitlement rule',code:error.code});
+    return sendError(res,status,error,'Failed to delete registration entitlement rule',{code:error.code});
   }
 }
 
@@ -65,7 +66,7 @@ async function createCampaign(req,res){
   catch(error){
     const status=statusFor(error);
     if(status===500)console.error('Business entitlement campaign create failed:',error);
-    return res.status(status).json({error:error.message||'Failed to create business entitlement',code:error.code});
+    return sendError(res,status,error,'Failed to create business entitlement',{code:error.code});
   }
 }
 
@@ -74,7 +75,7 @@ async function updateCampaign(req,res){
   catch(error){
     const status=statusFor(error);
     if(status===500)console.error('Business entitlement campaign update failed:',error);
-    return res.status(status).json({error:error.message||'Failed to update business entitlement',code:error.code});
+    return sendError(res,status,error,'Failed to update business entitlement',{code:error.code});
   }
 }
 
@@ -83,7 +84,7 @@ async function deleteCampaign(req,res){
   catch(error){
     const status=statusFor(error);
     if(status===500)console.error('Business entitlement campaign delete failed:',error);
-    return res.status(status).json({error:error.message||'Failed to delete business entitlement',code:error.code});
+    return sendError(res,status,error,'Failed to delete business entitlement',{code:error.code});
   }
 }
 
@@ -92,7 +93,7 @@ async function createGrant(req,res){
   catch(error){
     const status=statusFor(error);
     if(status===500)console.error('Manual lead entitlement grant failed:',error);
-    return res.status(status).json({error:error.message||'Failed to create lead entitlement grant',code:error.code});
+    return sendError(res,status,error,'Failed to create lead entitlement grant',{code:error.code});
   }
 }
 
@@ -101,7 +102,7 @@ async function updateGrant(req,res){
   catch(error){
     const status=statusFor(error);
     if(status===500)console.error('Lead entitlement grant update failed:',error);
-    return res.status(status).json({error:error.message||'Failed to update entitlement grant',code:error.code});
+    return sendError(res,status,error,'Failed to update entitlement grant',{code:error.code});
   }
 }
 
@@ -110,7 +111,7 @@ async function deleteGrant(req,res){
   catch(error){
     const status=statusFor(error);
     if(status===500)console.error('Lead entitlement grant delete failed:',error);
-    return res.status(status).json({error:error.message||'Failed to delete entitlement grant',code:error.code});
+    return sendError(res,status,error,'Failed to delete entitlement grant',{code:error.code});
   }
 }
 
