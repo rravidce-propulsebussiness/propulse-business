@@ -3,10 +3,10 @@ const syncService=require('./adminGoogleSheetSyncService');
 const notificationService=require('./notificationService');
 const jobControl=require('./backgroundJobControlService');
 const sheetSyncSettings=require('./sheetSyncSettingsService');
+const {createIntervalScheduler}=require('./intervalSchedulerService');
 
 const AUTO_SYNC_INTERVAL_MS=5*60*1000;
 const SCHEDULER_TICK_MS=60*1000;
-let timer=null;
 let running=false;
 
 async function dueConnections(config,{onlyOne=false}={}){
@@ -80,13 +80,10 @@ async function runAutoSync({source='scheduled',triggeredBy=null}={}){
     task:()=>runAutoSyncCore({automated,config})
   });
 }
-function startAdminGoogleSheetAutoSync({unref=true,runImmediately=false}={}){
-  if(timer)return()=>{};
-  console.log('Admin Google Sheet scheduler enabled: Admin-controlled interval; worker checks once per minute.');
-  if(runImmediately)void runAutoSync({source:'startup'});
-  timer=setInterval(()=>{void runAutoSync({source:'scheduled'})},SCHEDULER_TICK_MS);
-  if(unref)timer.unref?.();
-  return()=>{if(timer){clearInterval(timer);timer=null}}
-}
+const startAdminGoogleSheetAutoSync=createIntervalScheduler({
+  intervalMs:SCHEDULER_TICK_MS,
+  run:runAutoSync,
+  startMessage:'Admin Google Sheet scheduler enabled: Admin-controlled interval; worker checks once per minute.',
+});
 
 module.exports={startAdminGoogleSheetAutoSync,runAutoSync,runAutoSyncCore,dueConnections,AUTO_SYNC_INTERVAL_MS,SCHEDULER_TICK_MS};

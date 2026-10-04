@@ -10,6 +10,7 @@ const control=read('src/services/backgroundJobControlService.js');
 const registry=read('src/services/backgroundJobRegistryService.js');
 const adminSheets=read('src/services/adminGoogleSheetSyncScheduler.js');
 const partnerSheets=read('src/services/leadPartnerSheetSyncScheduler.js');
+const intervalScheduler=read('src/services/intervalSchedulerService.js');
 const notifications=read('src/services/notificationScheduler.js');
 const financial=read('src/services/financialReconciliationScheduler.js');
 const controller=read('src/controllers/adminController.js');
@@ -35,7 +36,7 @@ for(const [name,source,key] of [
   assert(source.includes("jobControl.execute")&&source.includes(key),name+' is not wired to the shared job recorder');
 }
 assert(notifications.includes('membership_expiry_reminders'),'Membership reminder scheduler is not recorded');
-assert(adminSheets.includes("source:'startup'")&&partnerSheets.includes("source:'startup'")&&notifications.includes("source:'startup'")&&financial.includes("source:'startup'"),'Immediate worker runs must be labeled startup');
+assert(adminSheets.includes('createIntervalScheduler')&&partnerSheets.includes('createIntervalScheduler')&&intervalScheduler.includes("source:'startup'")&&notifications.includes("source:'startup'")&&financial.includes("source:'startup'"),'Immediate worker runs must be labeled startup');
 
 assert(registry.includes("retrySupported:false")&&registry.includes('database_backup_verification'),'Backup verification must be monitored but not HTTP retryable');
 assert(registry.includes("background_job.retry"),'Admin manual retry must be audited');
