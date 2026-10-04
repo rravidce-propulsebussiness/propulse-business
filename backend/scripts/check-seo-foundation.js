@@ -205,17 +205,11 @@ assert(hyderabad.includes('Square Yards alternative Hyderabad'),'Real-estate com
 assert(landing.includes('COMMON SEARCHES'),'Comparison pages must visibly explain company-name searches');
 assert(buildScript.includes('Common Hyderabad comparison searches'),'Static comparison pages must expose company-name searches');
 
-assert(home.includes('to="/hyderabad/construction"'),'Homepage must link to the Hyderabad construction hub');
-assert(home.includes('to="/hyderabad/construction-cost"'),'Homepage must link to the Hyderabad construction cost guide');
-assert(home.includes('to="/hyderabad/interior-designers"'),'Homepage must link to the Hyderabad interiors hub');
-assert(home.includes('to="/hyderabad/real-estate"'),'Homepage must link to the Hyderabad real-estate hub');
-assert(home.includes('to="/telangana/construction"'),'Homepage must link to the Telangana construction district hub');
-assert(home.includes('to="/andhra-pradesh/construction"'),'Homepage must link to the Andhra Pradesh construction district hub');
+assert(!home.includes('hc-hyderabad-seo'),'Homepage must not render the removed Hyderabad SEO discovery block');
+assert(!home.includes('Explore services across Hyderabad'),'Homepage must not render the removed Hyderabad discovery heading');
 for(const guidePath of ['/guides/best-steel-for-house-construction','/guides/prevent-cracks-in-house','/guides/choose-construction-contractor-hyderabad','/guides/2bhk-interiors-hyderabad','/guides/home-construction-checklist','/guides/waterproofing-precautions-new-house','/guides/best-cement-for-house-construction','/guides/m-sand-vs-river-sand-house-construction','/guides/soil-test-before-house-construction']){
-  assert(home.includes('to="'+guidePath+'"'),'Homepage construction guide link missing '+guidePath);
   assert(landing.includes('to="'+guidePath+'"'),'Hyderabad/locality guide link missing '+guidePath);
 }
-assert(home.includes('to="/guides"'),'Homepage must link to the guide hub');
 assert(home.includes('<Link to="/faq">FAQ</Link>'),'Homeowner homepage must expose FAQ navigation');
 assert(userFaq.includes('PublicFaqHeader'),'Public FAQ page must use a homeowner header when logged out');
 assert(userFaq.includes('to="/faq"'),'Public FAQ header must expose an active FAQ link');
@@ -224,10 +218,6 @@ assert(userFaq.includes("loggedIn?<UserHeader/>:<PublicFaqHeader/>"),'Logged-in 
 assert(regionalLanding.includes('to="/guides"'),'Regional construction hubs must link to the guide hub');
 assert(regionalLanding.includes('/guides/best-steel-for-house-construction'),'Regional construction hubs must link to material guides');
 assert(regionalLanding.includes('/guides/home-construction-checklist'),'Regional construction hubs must link to planning guides');
-for(const outerPath of ['/hyderabad/construction/ghatkesar','/hyderabad/construction/shamshabad','/hyderabad/construction/patancheru']){
-  assert(home.includes('to="'+outerPath+'"'),'Homepage metro-belt linking missing '+outerPath);
-}
-assert(buildScript.includes('homeRegionalCoverage(route)'),'Static homepage must expose regional construction coverage');
 assert(aboutPage.includes('PRIOR OPERATING EXPERIENCE'),'About page must retain generic prior operating experience context');
 assert(aboutPage.includes('hands-on residential construction and interior execution work in Hyderabad'),'About page must describe the prior experience generically');
 assert(landing.includes('prior hands-on residential construction and interior execution experience in Hyderabad'),'Hyderabad construction hub must retain generic operating experience context');
@@ -243,9 +233,6 @@ for(const localityPath of ['/hyderabad/construction/kondapur','/hyderabad/constr
 }
 assert(buildScript.includes('projectsAuthorityContent(route)'),'Static projects page must expose Hyderabad authority content');
 assert(buildScript.includes('Explore Hyderabad services and construction areas'),'Static projects authority section must remain descriptive');
-for(const localityPath of ['/hyderabad/construction/uppal','/hyderabad/construction/kothapet','/hyderabad/construction/lb-nagar','/hyderabad/construction/gachibowli','/hyderabad/construction/kondapur']){
-  assert(home.includes('to="'+localityPath+'"'),'Homepage internal linking missing '+localityPath);
-}
 assert(landing.includes('ProPulse is independent'),'Comparison page must disclose brand independence');
 assert(landing.includes('CONSTRUCTION_PACKAGE_CATALOG'),'Construction cost guide must use the shared package catalog');
 assert(landing.includes('QUICK BUDGET EXAMPLES'),'Construction cost guide must provide useful built-up-area examples');
@@ -323,7 +310,6 @@ assert(buildScript.includes('How to find the right construction partner in '),'S
 assert(buildScript.includes('What is the best steel for house construction?'),'Static locality pages must prerender steel-guide links');
 assert(buildScript.includes('Precautions to reduce cracks in a new house'),'Static locality pages must prerender crack-prevention links');
 assert(buildScript.includes('2BHK interiors in '),'Static locality pages must prerender localized 2BHK interior intent');
-assert(buildScript.includes('Popular construction guides'),'Static homepage must prerender construction guide links');
 assert(buildScript.includes('best-cement-for-house-construction'),'Static SEO must prerender cement-guide links');
 assert(buildScript.includes('m-sand-vs-river-sand-house-construction'),'Static SEO must prerender sand-guide links');
 assert(buildScript.includes('soil-test-before-house-construction'),'Static SEO must prerender soil-test guide links');
