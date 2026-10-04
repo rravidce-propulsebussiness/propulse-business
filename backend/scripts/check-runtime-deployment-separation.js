@@ -6,6 +6,7 @@ const assert=(condition,message)=>{if(!condition)throw new Error(message)};
 
 const server=read('src/server.js');
 const scheduler=read('src/services/leadPartnerSheetSyncScheduler.js');
+const intervalScheduler=read('src/services/intervalSchedulerService.js');
 const partnerInventory=read('src/services/leadPartnerInventoryCompatService.js');
 const worker=read('src/worker.js');
 const runtimeFlags=read('src/config/runtimeFlags.js');
@@ -20,9 +21,9 @@ assert(server.includes("envFlag('RUN_BACKGROUND_JOBS_IN_WEB',true)"),'Web backgr
 assert(server.includes("if(runMigrationsOnStartup)await runMigrations()"),'Web process must honor migration startup control');
 assert(server.includes('if(runBackgroundJobsInWeb){')&&server.includes('stopLeadPartnerSheetAutoSync=startLeadPartnerSheetAutoSync()')&&server.includes('stopAdminGoogleSheetAutoSync=startAdminGoogleSheetAutoSync()'),'Web process must honor background-job control for Lead Partner and Admin sheet schedulers');
 assert(runtimeFlags.includes("['0', 'false', 'no', 'off']"),'Runtime flag parser must support explicit false values');
-assert(scheduler.includes("unref = true")&&scheduler.includes("runImmediately = false"),'Sheet scheduler must support web and worker modes');
-assert(scheduler.includes("if (runImmediately) void runAutoSync({source:'startup'})"),'Dedicated worker must be able to sync immediately and label the run as startup');
-assert(scheduler.includes("if (unref) timer.unref?.()"),'Web scheduler timer must remain non-blocking');
+assert(scheduler.includes('createIntervalScheduler')&&intervalScheduler.includes('unref=true')&&intervalScheduler.includes('runImmediately=false'),'Sheet scheduler must support web and worker modes');
+assert(intervalScheduler.includes("if(runImmediately)void run({source:'startup'})"),'Dedicated worker must be able to sync immediately and label the run as startup');
+assert(intervalScheduler.includes('if(unref)timer.unref?.()'),'Web scheduler timer must remain non-blocking');
 assert(!scheduler.includes('pg_try_advisory_lock'),'Lead Partner scheduler must not hold a process-wide DB advisory-lock connection');
 assert(partnerInventory.includes("pg_try_advisory_lock($1,$2)")&&partnerInventory.includes("pg_advisory_unlock($1,$2)"),'Lead Partner sheet sync must serialize per connection across replicas');
 assert(scheduler.includes("error?.code === 'SYNC_IN_PROGRESS'"),'Lead Partner scheduler must treat per-connection lock contention as a normal skip');
