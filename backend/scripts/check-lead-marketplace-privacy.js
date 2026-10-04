@@ -34,7 +34,9 @@ const masked = maskLead({
   },
 });
 
-assert(masked.customer_name === 'Alice Smith', 'Marketplace must expose the customer name for lead evaluation');
+assert(masked.customer_name === 'Alice Smith', 'Marketplace may expose the customer name for ordinary manually sourced leads');
+assert(maskLead({ customer_name: 'Homeowner', source: 'homepage_consultation' }).customer_name === 'Customer', 'Live homepage consultation leads must hide the homeowner name before purchase');
+assert(maskLead({ customer_name: 'Homeowner', source: 'public_requirement' }).customer_name === 'Customer', 'Public requirement leads must hide the homeowner name before purchase');
 assert(masked.customer_phone !== '+91 98765 43210', 'Marketplace must mask customer phones');
 assert(masked.customer_email !== 'alice@example.com', 'Marketplace must mask customer emails');
 assert(masked.pincode === '500001', 'Marketplace must expose the canonical 6-digit pincode');

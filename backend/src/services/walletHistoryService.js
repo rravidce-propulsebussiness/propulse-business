@@ -22,11 +22,14 @@ const historicalBalanceSql = `
   )::numeric
 `;
 
-async function getHistory(userId) {
+async function getHistory(userId,{page=1,limit=50}={}) {
+  const safeLimit=Math.min(Math.max(Number(limit)||50,1),100);
+  const safePage=Math.max(Number(page)||1,1);
+  const offset=(safePage-1)*safeLimit;
   const [walletResult, directResult, leadResult] = await Promise.all([
-    pool.query(`SELECT wt.id,wt.type,wt.amount,wt.balance_after,wt.reference_type,wt.reference_id,wt.payment_id,wt.status,wt.description,wt.created_at,p.status AS payment_status FROM wallet_transactions wt LEFT JOIN payments p ON p.id=wt.payment_id WHERE wt.user_id=$1 ORDER BY wt.created_at DESC,wt.id DESC LIMIT 200`, [userId]),
-    pool.query(`SELECT p.id,p.amount,p.status,p.payment_method,p.manual_reference,p.wallet_amount,p.external_amount,p.purchase_type,p.purchase_id,p.notes,p.created_at,p.updated_at,p.paid_at,${historicalBalanceSql} AS balance_after FROM payments p WHERE p.user_id=$1 AND COALESCE(p.external_amount,0)>0 ORDER BY p.created_at DESC,p.id DESC LIMIT 200`, [userId]),
-    pool.query(`SELECT lp.id AS lead_purchase_id,lp.status AS purchase_status,lp.shares,p.id AS payment_id,p.amount,p.status,p.payment_method,p.manual_reference,p.wallet_amount,p.external_amount,p.purchase_type,p.purchase_id,p.notes,p.created_at,p.paid_at,${historicalBalanceSql} AS balance_after,l.id AS lead_id,l.requirement,l.property_type,l.budget FROM lead_purchases lp JOIN payments p ON p.id=lp.payment_id JOIN leads l ON l.id=lp.lead_id WHERE lp.user_id=$1 AND lp.status='paid' AND p.status='paid' ORDER BY COALESCE(p.paid_at,p.created_at) DESC,p.id DESC LIMIT 200`, [userId])
+    pool.query(`SELECT wt.id,wt.type,wt.amount,wt.balance_after,wt.reference_type,wt.reference_id,wt.payment_id,wt.status,wt.description,wt.created_at,p.status AS payment_status FROM wallet_transactions wt LEFT JOIN payments p ON p.id=wt.payment_id WHERE wt.user_id=$1 ORDER BY wt.created_at DESC,wt.id DESC LIMIT $2 OFFSET $3`, [userId,safeLimit,offset]),
+    pool.query(`SELECT p.id,p.amount,p.status,p.payment_method,p.manual_reference,p.wallet_amount,p.external_amount,p.purchase_type,p.purchase_id,p.notes,p.created_at,p.updated_at,p.paid_at,${historicalBalanceSql} AS balance_after FROM payments p WHERE p.user_id=$1 AND COALESCE(p.external_amount,0)>0 ORDER BY p.created_at DESC,p.id DESC LIMIT $2 OFFSET $3`, [userId,safeLimit,offset]),
+    pool.query(`SELECT lp.id AS lead_purchase_id,lp.status AS purchase_status,lp.shares,p.id AS payment_id,p.amount,p.status,p.payment_method,p.manual_reference,p.wallet_amount,p.external_amount,p.purchase_type,p.purchase_id,p.notes,p.created_at,p.paid_at,${historicalBalanceSql} AS balance_after,l.id AS lead_id,l.requirement,l.property_type,l.budget FROM lead_purchases lp JOIN payments p ON p.id=lp.payment_id JOIN leads l ON l.id=lp.lead_id WHERE lp.user_id=$1 AND lp.status='paid' AND p.status='paid' ORDER BY COALESCE(p.paid_at,p.created_at) DESC,p.id DESC LIMIT $2 OFFSET $3`, [userId,safeLimit,offset])
   ]);
 
   const wallet = walletResult.rows.map(x => ({
@@ -41,6 +44,12 @@ async function getHistory(userId) {
     id:`lead-${x.lead_purchase_id}`,lead_purchase_id:x.lead_purchase_id,payment_id:x.payment_id,lead_id:x.lead_id,title:x.requirement||x.property_type||`Lead #${x.lead_id}`,requirement:x.requirement,property_type:x.property_type,budget:x.budget,shares:Number(x.shares||1),purchase_status:x.purchase_status,amount:Number(x.amount),wallet_amount:Number(x.wallet_amount||0),external_amount:Number(x.external_amount||0),balance_after:Number(x.balance_after||0),payment_method:x.payment_method,manual_reference:x.manual_reference,status:x.status,created_at:x.created_at,paid_at:x.paid_at,notes:x.notes
   }));
   const combined=[...wallet,...direct].sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
-  return {combined,leadPurchases};
+  return {
+    combined,
+    leadPurchases,
+    page:safePage,
+    limit:safeLimit,
+    has_more:walletResult.rows.length===safeLimit||directResult.rows.length===safeLimit||leadResult.rows.length===safeLimit
+  };
 }
 module.exports={getHistory};

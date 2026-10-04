@@ -8,6 +8,10 @@ const files = [
   'src/controllers/investmentCycleController.js',
   'src/controllers/paymentController.js',
   'src/controllers/walletController.js',
+  'src/controllers/adminLeadEntitlementController.js',
+  'src/controllers/investorPayoutAccountController.js',
+  'src/controllers/subcityController.js',
+  'src/controllers/profileController.js',
 ];
 
 const rawInternalErrorPatterns = [

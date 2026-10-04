@@ -30,11 +30,14 @@ function normalizePartnerTiers(value, settings = {}) {
 export default function LeadPartnerPricing() {
   const navigate = useNavigate();
   const user = getUser();
-  const [data, setData] = useState({ settings: { commissionPercent: 5, normalPriceUplift: 100, twoSharePercent: 60, threeSharePercent: 45 }, leads: [], rules: [] });
+  const [data, setData] = useState({ settings: { commissionPercent: 5, normalPriceUplift: 100, twoSharePercent: 60, threeSharePercent: 45 }, leads: [], rules: [], pagination: { page:1, limit:20, total:0, totalPages:0 } });
   const [industries, setIndustries] = useState([]);
   const [cities, setCities] = useState([]);
-  const [search] = useState('');
-  const [status] = useState('all');
+  const [searchInput, setSearchInput] = useState('');
+  const [search, setSearch] = useState('');
+  const [status, setStatus] = useState('all');
+  const [page, setPage] = useState(1);
+  const [ruleSearch, setRuleSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [savingId, setSavingId] = useState(null);
   const [savingRule, setSavingRule] = useState(false);
@@ -47,18 +50,20 @@ export default function LeadPartnerPricing() {
   const uplift = Number(settings.normalPriceUplift ?? 100);
   const leads = useMemo(() => Array.isArray(data.leads) ? data.leads : [], [data.leads]);
   const rules = useMemo(() => Array.isArray(data.rules) ? data.rules : [], [data.rules]);
+  const filteredRules = useMemo(() => { const q=ruleSearch.trim().toLowerCase(); return q ? rules.filter(rule => [rule.industryName,rule.cityName,rule.leadType].join(' ').toLowerCase().includes(q)) : rules; }, [rules,ruleSearch]);
+  const pagination = data.pagination || { page:1, limit:20, total:leads.length, totalPages:0 };
   const sharePercent = sharePercentFor(settings);
 
   const load = useCallback(async () => {
     try {
       setLoading(true); setError('');
-      const params = new URLSearchParams({ search, status });
+      const params = new URLSearchParams({ search, status, page:String(page), limit:'20' });
       const result = await authRequest(`/lead-partner/pricing?${params}`);
-      setData(result || { settings: { commissionPercent: 5, normalPriceUplift: 100, twoSharePercent: 60, threeSharePercent: 45 }, leads: [], rules: [] });
+      setData(result || { settings: { commissionPercent: 5, normalPriceUplift: 100, twoSharePercent: 60, threeSharePercent: 45 }, leads: [], rules: [], pagination: { page:1, limit:20, total:0, totalPages:0 } });
       setDrafts(Object.fromEntries((result?.leads || []).map(lead => [lead.id, normalizePartnerTiers(lead.pricing, result?.settings)])));
     } catch (e) { setError(e.message); }
     finally { setLoading(false); }
-  }, [search, status])
+  }, [search, status, page])
 
   const loadCatalogs = useCallback(async () => {
     try {
@@ -68,7 +73,9 @@ export default function LeadPartnerPricing() {
     } catch (e) { setError(e.message); }
   }, [])
 
-  useEffect(() => { let active=true; queueMicrotask(()=>{if(active){load();loadCatalogs()}}); return()=>{active=false}; }, [load, loadCatalogs]);
+  useEffect(() => { let active=true; queueMicrotask(()=>{if(active)load()}); return()=>{active=false}; }, [load]);
+  useEffect(() => { let active=true; queueMicrotask(()=>{if(active)loadCatalogs()}); return()=>{active=false}; }, [loadCatalogs]);
+  useEffect(() => { const timer=setTimeout(()=>{setPage(1);setSearch(searchInput.trim())},300); return()=>clearTimeout(timer); }, [searchInput]);
 
   function changeDraft(leadId, shares, value) {
     if (Number(shares) !== 1) return;
@@ -120,7 +127,7 @@ export default function LeadPartnerPricing() {
     }
   }
 
-  function signOut() { clearSession(); localStorage.removeItem('propulse_session_mode'); navigate('/login', { replace: true }); }
+  function signOut() { clearSession(); navigate('/login', { replace: true }); }
 
   return (
     <div className="pricing-shell">
@@ -130,7 +137,7 @@ export default function LeadPartnerPricing() {
         <header className="pricing-topbar"><div className="pricing-breadcrumb"><span>Lead Partner</span><b>/</b><strong>Pricing & Revenue</strong></div></header>
 
         <div className="pricing-content">
-          <section className="pricing-hero"><div><h1>Pricing & Revenue</h1></div></section>
+          <section className="pricing-hero premium-page-hero"><div className="pricing-hero-copy"><span>LEAD PARTNER / PRICING</span><h1>Pricing &amp; revenue</h1><p>Configure Pro pricing rules and lead-level overrides while keeping Admin-controlled commission, uplift and sharing ratios visible.</p><div className="pricing-hero-meta"><span><b>{rules.length}</b> pricing rules</span><span><b>{Number(pagination.total||0)}</b> leads available</span><span><b>{settings.commissionPercent??5}%</b> commission</span></div></div><button className="pricing-hero-refresh" type="button" onClick={load} disabled={loading}><span>↻</span><div><b>{loading?'Refreshing…':'Refresh pricing'}</b><small>Reload rules and lead prices</small></div></button></section>
 
           {(error || success) && <div className={`pricing-message ${error ? 'error' : 'success'}`}>{error || success}</div>}
 
@@ -159,13 +166,15 @@ export default function LeadPartnerPricing() {
 
           <div className="pricing-bottom">
             <section className="pricing-panel rules-panel">
-              <div className="pricing-panel-title compact"><div><h2>Configured Pro pricing rules</h2><p>Only rules belonging to your Lead Partner account are shown.</p></div><input placeholder="⌕  Search industry, city or lead type..." /></div>
-              {!rules.length ? <div className="pricing-empty">No Pro pricing configurations yet. Create one above.</div> : <div className="pricing-table-wrap"><table className="pricing-table"><thead><tr><th>#</th><th>Industry</th><th>City</th><th>Lead Type</th><th>1 Share (₹)</th><th>2 Shares ({sharePercent[2]}%)</th><th>3 Shares ({sharePercent[3]}%)</th><th>Status</th><th>Updated</th></tr></thead><tbody>{rules.map((rule,i)=><tr key={rule.id}><td>{i+1}</td><td>{rule.industryName||'All industries'}</td><td>{rule.cityName||'All cities'}</td><td>{cap(rule.leadType)}</td>{SHARE_TIERS.map(shares=>{const tier=(rule.pricing?.shares||[]).find(x=>Number(x.shares)===shares);return <td key={shares}>{money(tier?.pro)}</td>})}<td><span className="status-active">{rule.isActive?'Active':'Off'}</span></td><td>{rule.updatedAt?new Date(rule.updatedAt).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}):'—'}</td></tr>)}</tbody></table></div>}
+              <div className="pricing-panel-title compact"><div><h2>Configured Pro pricing rules</h2><p>Only rules belonging to your Lead Partner account are shown.</p></div><input value={ruleSearch} onChange={e=>setRuleSearch(e.target.value)} placeholder="⌕  Search industry, city or lead type..." /></div>
+              {!rules.length ? <div className="pricing-empty">No Pro pricing configurations yet. Create one above.</div> : <div className="pricing-table-wrap"><table className="pricing-table"><thead><tr><th>#</th><th>Industry</th><th>City</th><th>Lead Type</th><th>1 Share (₹)</th><th>2 Shares ({sharePercent[2]}%)</th><th>3 Shares ({sharePercent[3]}%)</th><th>Status</th><th>Updated</th></tr></thead><tbody>{filteredRules.map((rule,i)=><tr key={rule.id}><td>{i+1}</td><td>{rule.industryName||'All industries'}</td><td>{rule.cityName||'All cities'}</td><td>{cap(rule.leadType)}</td>{SHARE_TIERS.map(shares=>{const tier=(rule.pricing?.shares||[]).find(x=>Number(x.shares)===shares);return <td key={shares}>{money(tier?.pro)}</td>})}<td><span className="status-active">{rule.isActive?'Active':'Off'}</span></td><td>{rule.updatedAt?new Date(rule.updatedAt).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}):'—'}</td></tr>)}</tbody></table></div>}
             </section>
 
             <section className="pricing-panel overrides-panel">
-              <div className="pricing-panel-title compact"><div><h2>Lead-level Pro price overrides</h2><p>Set custom Pro prices for specific high-value leads.</p></div><button className="pricing-outline">＋ Add Override</button></div>
-              <div className="override-list">{loading ? <div className="pricing-empty">Loading…</div> : !leads.length ? <div className="pricing-empty">No uploaded leads are available for pricing yet.</div> : leads.slice(0,5).map(lead=>{const tiers=normalizePartnerTiers({shares:drafts[lead.id]||[]},settings);const locked=['sold','closed','invalid'].includes(lead.status);return <article key={lead.id}><div><span>#{lead.id}</span><strong>{lead.customerName||'Customer'}</strong><small>{lead.phone||lead.email||'No contact'}</small></div><label>1-share Pro<input disabled={locked} type="number" value={tiers[0]?.pro||0} onChange={e=>changeDraft(lead.id,1,e.target.value)}/></label><span className={`override-status ${lead.status}`}>{cap(lead.status)}</span><button disabled={locked||savingId===lead.id} onClick={()=>save(lead)}>{savingId===lead.id?'…':'Save'}</button></article>})}</div>
+              <div className="pricing-panel-title compact"><div><h2>Lead-level Pro price overrides</h2><p>Search any uploaded lead and set a custom Pro price while it remains editable.</p></div></div>
+              <div className="pricing-override-tools"><input value={searchInput} onChange={e=>setSearchInput(e.target.value)} placeholder="Search lead ID, customer, phone or requirement…"/><select value={status} onChange={e=>{setPage(1);setStatus(e.target.value)}}><option value="all">All statuses</option><option value="available">Available</option><option value="paused">Paused</option><option value="sold">Sold</option><option value="closed">Closed</option><option value="invalid">Invalid</option></select></div>
+              <div className="override-list">{loading ? <div className="pricing-empty">Loading…</div> : !leads.length ? <div className="pricing-empty">{Number(pagination.total||0)?'No leads match these filters.':'No uploaded leads are available for pricing yet.'}</div> : leads.map(lead=>{const tiers=normalizePartnerTiers({shares:drafts[lead.id]||[]},settings);const locked=['sold','closed','invalid'].includes(lead.status);return <article key={lead.id}><div><span>#{lead.id}</span><strong>{lead.customerName||'Customer'}</strong><small>{lead.customerPhone||'No contact'} · {lead.serviceName||lead.industryName||'Lead'}</small></div><label>1-share Pro<input disabled={locked} type="number" value={tiers[0]?.pro||0} onChange={e=>changeDraft(lead.id,1,e.target.value)}/></label><span className={`override-status ${lead.status}`}>{cap(lead.status)}</span><button disabled={locked||savingId===lead.id} onClick={()=>save(lead)}>{savingId===lead.id?'…':'Save'}</button></article>})}</div>
+              {Number(pagination.totalPages||0)>1&&<div className="pricing-pagination"><button type="button" disabled={loading||page<=1} onClick={()=>setPage(p=>Math.max(1,p-1))}>← Previous</button><span>Page <b>{page}</b> of <b>{pagination.totalPages}</b> · {pagination.total} leads</span><button type="button" disabled={loading||page>=pagination.totalPages} onClick={()=>setPage(p=>p+1)}>Next →</button></div>}
               <div className="override-note">Only 1-share Pro can be changed. 2-share = {sharePercent[2]}% and 3-share = {sharePercent[3]}%, controlled by Admin.</div>
             </section>
           </div>

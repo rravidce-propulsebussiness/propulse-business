@@ -5,6 +5,7 @@ import './AdminDashboard.css'
 
 const money=value=>`₹${Number(value||0).toLocaleString('en-IN',{maximumFractionDigits:2})}`
 const count=value=>Number(value||0).toLocaleString('en-IN')
+const EMPTY_OBJECT=Object.freeze({})
 
 function MiniBars({tone='blue'}){
   return <span className={`admin-mini-bars ${tone}`} aria-hidden="true">
@@ -89,13 +90,13 @@ export default function AdminDashboard(){
     return()=>{mounted=false}
   },[])
 
-  const streams=stats?.streams||{}
-  const propulse=streams.propulse||{}
-  const leadPartner=streams.leadPartner||{}
-  const investor=streams.investor||{}
-  const revenue=stats?.revenue||{}
-  const actions=stats?.actions||{}
-  const customers=stats?.customers||{}
+  const streams=stats?.streams||EMPTY_OBJECT
+  const propulse=streams.propulse||EMPTY_OBJECT
+  const leadPartner=streams.leadPartner||EMPTY_OBJECT
+  const investor=streams.investor||EMPTY_OBJECT
+  const revenue=stats?.revenue||EMPTY_OBJECT
+  const actions=stats?.actions||EMPTY_OBJECT
+  const customers=stats?.customers||EMPTY_OBJECT
   const show=value=>loading?'—':value
 
   const revenuePeriods=useMemo(()=>({

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { apiRequest } from '../../utils/api'
 import { clearSession, getToken } from '../../utils/auth'
 import { useNavigate } from 'react-router-dom'
@@ -55,6 +55,9 @@ export default function AdminInvestorWithdrawals() {
   const [busy, setBusy] = useState(null)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
+  const [page, setPage] = useState(1)
+  const [pagination, setPagination] = useState({ page: 1, limit: 50, total: 0, pages: 1 })
+  const [metrics, setMetrics] = useState({ totalCount: 0, totalAmount: 0, pendingCount: 0, pendingAmount: 0, paidCount: 0, paidAmount: 0, rejectedCount: 0, rejectedAmount: 0 })
 
   const request = useCallback(async (path, options = {}) => {
     if (!getToken()) {
@@ -65,28 +68,40 @@ export default function AdminInvestorWithdrawals() {
     return apiRequest(path, options)
   }, [navigate])
 
-  const load = useCallback(async (silent = false) => {
+  const load = useCallback(async (silent = false, nextPage = 1) => {
     if (!silent) setLoading(true)
     setError('')
     try {
-      const qs = new URLSearchParams({ status: 'all', search: query.trim() })
+      const qs = new URLSearchParams({
+        status,
+        search: query.trim(),
+        page: String(nextPage),
+        limit: '50',
+      })
       const data = await request(`/investments/admin/transfer-requests?${qs}`)
-      setRequests(Array.isArray(data) ? data : [])
+      setRequests(Array.isArray(data) ? data : (data.items || []))
+      setPagination({
+        page: Number(data?.page || nextPage),
+        limit: Number(data?.limit || 50),
+        total: Number(data?.total || 0),
+        pages: Number(data?.pages || 1),
+      })
+      setMetrics(data?.stats || { totalCount: 0, totalAmount: 0, pendingCount: 0, pendingAmount: 0, paidCount: 0, paidAmount: 0, rejectedCount: 0, rejectedAmount: 0 })
+      setPage(Number(data?.page || nextPage))
     } catch (e) {
       setError(e.message || 'Unable to load withdrawal requests.')
     } finally {
       if (!silent) setLoading(false)
     }
-  }, [request, query])
-
+  }, [request, query, status])
   useEffect(() => {
     let active = true
-    queueMicrotask(() => { if (active) load() })
+    queueMicrotask(() => { if (active) load(false, 1) })
     return () => { active = false }
   }, [load])
 
   useEffect(() => {
-    const refresh = () => { if (document.visibilityState === 'visible') load(true) }
+    const refresh = () => { if (document.visibilityState === 'visible') load(true, page) }
     const timer = window.setInterval(refresh, 60000)
     document.addEventListener('visibilitychange', refresh)
     window.addEventListener('focus', refresh)
@@ -95,23 +110,9 @@ export default function AdminInvestorWithdrawals() {
       document.removeEventListener('visibilitychange', refresh)
       window.removeEventListener('focus', refresh)
     }
-  }, [load])
+  }, [load, page])
 
-  const metrics = useMemo(() => requests.reduce((acc, item) => {
-    const state = cleanStatus(item.status)
-    const amount = Number(item.amount || 0)
-    acc.totalCount += 1
-    acc.totalAmount += amount
-    if (state === 'pending') { acc.pendingCount += 1; acc.pendingAmount += amount }
-    if (state === 'paid') { acc.paidCount += 1; acc.paidAmount += amount }
-    if (state === 'rejected') { acc.rejectedCount += 1; acc.rejectedAmount += amount }
-    return acc
-  }, { totalCount: 0, totalAmount: 0, pendingCount: 0, pendingAmount: 0, paidCount: 0, paidAmount: 0, rejectedCount: 0, rejectedAmount: 0 }), [requests])
-
-  const visibleRequests = useMemo(
-    () => status === 'all' ? requests : requests.filter(item => cleanStatus(item.status) === status),
-    [requests, status]
-  )
+  const visibleRequests = requests
 
   async function openRequest(requestItem) {
     setSelected(requestItem)
@@ -196,7 +197,7 @@ export default function AdminInvestorWithdrawals() {
         ? `Withdrawal #${selected.id} marked paid successfully.`
         : `Withdrawal #${selected.id} rejected and its reservation released.`)
       setSelected(null)
-      await load(true)
+      await load(true, page)
     } catch (e) {
       setError(e.message || 'Unable to process withdrawal request.')
     } finally {
@@ -206,6 +207,7 @@ export default function AdminInvestorWithdrawals() {
 
   function submitSearch(event) {
     event?.preventDefault()
+    setPage(1)
     setQuery(search.trim())
   }
 
@@ -228,7 +230,7 @@ export default function AdminInvestorWithdrawals() {
         <button type="button" className="secondary" onClick={() => navigate('/admin/investments')}>
           <span>←</span><div><b>Investments</b><small>Return to investor portfolio</small></div>
         </button>
-        <button type="button" className="primary" onClick={() => load()} disabled={loading}>
+        <button type="button" className="primary" onClick={() => load(false, page)} disabled={loading}>
           <span>↻</span><div><b>{loading ? 'Refreshing…' : 'Refresh queue'}</b><small>Reload withdrawal ledger</small></div>
         </button>
       </div>
@@ -265,7 +267,7 @@ export default function AdminInvestorWithdrawals() {
             ['paid', 'Paid', metrics.paidCount],
             ['rejected', 'Rejected', metrics.rejectedCount],
             ['all', 'All', metrics.totalCount],
-          ].map(([key, text, count]) => <button key={key} type="button" className={status === key ? 'active' : ''} onClick={() => setStatus(key)}>{text}<b>{count}</b></button>)}
+          ].map(([key, text, count]) => <button key={key} type="button" className={status === key ? 'active' : ''} onClick={() => { setPage(1); setStatus(key) }}>{text}<b>{count}</b></button>)}
         </div>
         <span className="admin-withdrawals-auto-refresh">Auto-refreshes every 60 seconds</span>
       </div>
@@ -290,6 +292,11 @@ export default function AdminInvestorWithdrawals() {
             </tr>
           })}</tbody>
         </table>
+        {pagination.pages > 1 && <div className="admin-withdrawals-pagination">
+          <button type="button" disabled={loading || page <= 1} onClick={() => load(false, page - 1)}>← Previous</button>
+          <span>Page <b>{page}</b> of <b>{pagination.pages}</b> · {pagination.total} records</span>
+          <button type="button" disabled={loading || page >= pagination.pages} onClick={() => load(false, page + 1)}>Next →</button>
+        </div>}
       </div>}
     </section>
 
