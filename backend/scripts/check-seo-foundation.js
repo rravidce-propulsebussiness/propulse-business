@@ -228,11 +228,10 @@ for(const source of [aboutPage,landing,buildScript,config]){
 }
 assert(projectPage.includes('pj-hyderabad-authority'),'Projects page must expose a Hyderabad authority section');
 assert(projectPage.includes('HYDERABAD_PROJECT_SEO_LINKS'),'Projects page must maintain explicit locality SEO links');
-for(const localityPath of ['/hyderabad/construction/kondapur','/hyderabad/construction/madhapur','/hyderabad/construction/kokapet','/hyderabad/construction/manikonda','/hyderabad/construction/kukatpally','/hyderabad/construction/miyapur','/hyderabad/construction/narsingi','/hyderabad/construction/tellapur']){
-  assert(projectPage.includes("to:'"+localityPath+"'"),'Projects authority linking missing '+localityPath);
-}
-assert(buildScript.includes('projectsAuthorityContent(route)'),'Static projects page must expose Hyderabad authority content');
-assert(buildScript.includes('Explore Hyderabad services and construction areas'),'Static projects authority section must remain descriptive');
+assert(!projectPage.includes('HYDERABAD_PROJECT_SEO_LINKS'),'Projects page must not contain the removed Hyderabad planning link block');
+assert(!projectPage.includes('pj-hyderabad-authority'),'Projects page must not render the removed Hyderabad planning section');
+assert(!buildScript.includes('projectsAuthorityContent(route)'),'Static Projects HTML must not reintroduce the removed Hyderabad planning section');
+assert(!buildScript.includes('Explore Hyderabad services and construction areas'),'Static Projects HTML must not contain the removed Hyderabad planning copy');
 assert(landing.includes('ProPulse is independent'),'Comparison page must disclose brand independence');
 assert(landing.includes('CONSTRUCTION_PACKAGE_CATALOG'),'Construction cost guide must use the shared package catalog');
 assert(landing.includes('QUICK BUDGET EXAMPLES'),'Construction cost guide must provide useful built-up-area examples');
