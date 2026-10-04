@@ -8,6 +8,7 @@ const KEY='ci-estimator-conversion';
 let definitionId=null;
 let calculationId=null;
 let leadId=null;
+let pricingRuleId=null;
 
 async function cleanup(){
   if(!definitionId){
@@ -24,6 +25,7 @@ async function cleanup(){
     await pool.query('DELETE FROM customer_flow_definitions WHERE id=$1',[definitionId]).catch(()=>{});
   }
   if(leadId) await pool.query('DELETE FROM leads WHERE id=$1',[leadId]).catch(()=>{});
+  if(pricingRuleId) await pool.query('DELETE FROM lead_pricing_rules WHERE id=$1',[pricingRuleId]).catch(()=>{});
 }
 
 async function main(){
@@ -44,6 +46,8 @@ async function main(){
       ORDER BY CASE WHEN LOWER(c.name)='hyderabad' AND LOWER(s.name)='telangana' THEN 0 ELSE 1 END,c.id LIMIT 1`
   )).rows[0];
   assert.ok(scope?.industry_id&&scope?.service_id&&location?.city_id&&location?.state_id);
+
+  pricingRuleId=(await pool.query(`INSERT INTO lead_pricing_rules(industry_id,city_id,lead_type,pricing,is_active) VALUES($1,$2,'basic',$3::jsonb,TRUE) RETURNING id`,[scope.industry_id,location.city_id,JSON.stringify({shares:[{shares:1,normal:1000,pro:900},{shares:2,normal:700,pro:600},{shares:3,normal:500,pro:400}]})])).rows[0].id;
 
   const created=await customerFlowService.createDefinition({
     key:KEY,name:'CI Estimator Conversion',flowType:'estimator',
