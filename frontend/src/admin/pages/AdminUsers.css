@@ -1899,3 +1899,5 @@
     overflow-x:auto;
   }
 }
+
+.wallet-360-load-more{display:block;width:100%;margin:10px 0 18px;padding:10px 14px;border:1px solid #d7e3ef;border-radius:9px;background:#f7fbff;color:#17457f;font-size:10px;font-weight:850;cursor:pointer}.wallet-360-load-more:hover{background:#eef6ff}.wallet-360-load-more:disabled{opacity:.55;cursor:not-allowed}

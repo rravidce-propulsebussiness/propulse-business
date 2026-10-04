@@ -2,17 +2,18 @@ import { useEffect, useState } from 'react';
 import { apiRequest } from '../../utils/api';
 import './AdminFaqs.css';
 
-const categories=[['general','General'],['leads','Leads'],['payments','Payments'],['withdrawals','Withdrawals'],['account','Account'],['reports','Reports']];
+const categories=[['general','General'],['consultation','Consultation'],['construction','Construction'],['interiors','Interiors'],['property','Real Estate'],['privacy','Privacy'],['leads','Leads'],['payments','Payments'],['withdrawals','Withdrawals'],['account','Account'],['reports','Reports']];
 const audiences=[
-  ['website','User / Website FAQs','Shown in the main homepage FAQ section.'],
+  ['homeowner','Homeowner FAQs','Shown on the searchable public Construction, Interiors and Real Estate FAQ centre.'],
+  ['website','Professional / Business FAQs','Shown on the public Professionals FAQ and logged-in business FAQ experience.'],
   ['investor','Investor FAQs','Shown on the Investor FAQ page.'],
   ['lead_partner','Lead Partner FAQs','Shown in the Lead Partner portal.']
 ];
-const emptyForm=()=>({category:'general',question:'',answer:'',sort_order:10,is_active:true});
+const emptyForm=(audience='homeowner')=>({category:audience==='homeowner'?'construction':'general',question:'',answer:'',sort_order:10,is_active:true});
 
 export default function AdminFaqs(){
-  const [audience,setAudience]=useState('website');
-  const [rows,setRows]=useState([]),[form,setForm]=useState(emptyForm),[editId,setEditId]=useState(null),[loading,setLoading]=useState(true),[saving,setSaving]=useState(false),[error,setError]=useState(''),[ok,setOk]=useState(''),[search,setSearch]=useState('');
+  const [audience,setAudience]=useState('homeowner');
+  const [rows,setRows]=useState([]),[form,setForm]=useState(()=>emptyForm('homeowner')),[editId,setEditId]=useState(null),[loading,setLoading]=useState(true),[saving,setSaving]=useState(false),[error,setError]=useState(''),[ok,setOk]=useState(''),[search,setSearch]=useState('');
 
   async function load(audienceKey=audience){
     try{
@@ -30,11 +31,11 @@ export default function AdminFaqs(){
 
   function switchAudience(key){
     if(key===audience)return;
-    setAudience(key);setEditId(null);setForm(emptyForm());setSearch('');setOk('');setError('');
+    setAudience(key);setEditId(null);setForm(emptyForm(key));setSearch('');setOk('');setError('');
   }
 
   function reset(){
-    setEditId(null);setForm(emptyForm());setOk('');setError('');
+    setEditId(null);setForm(emptyForm(audience));setOk('');setError('');
   }
 
   function edit(row){
@@ -51,7 +52,7 @@ export default function AdminFaqs(){
       const body={...form,audience,sort_order:Number(form.sort_order)||0};
       await apiRequest(editId?'/admin/faqs/'+editId:'/admin/faqs',{method:editId?'PUT':'POST',body:JSON.stringify(body)});
       const successMessage=editId?'FAQ updated successfully.':'FAQ created successfully.';
-      setEditId(null);setForm(emptyForm());setOk(successMessage);
+      setEditId(null);setForm(emptyForm(audience));setOk(successMessage);
       await load(audience);
     }catch(e){
       setError(e.message||'Unable to save FAQ');
@@ -79,12 +80,12 @@ export default function AdminFaqs(){
 
   return <main className="admin-faq-page">
     <section className="admin-faq-hero">
-      <div className="admin-faq-hero-copy"><span className="admin-faq-kicker">CONTENT / FAQ MANAGEMENT</span><h1>FAQ management</h1><p>Manage website, investor and lead-partner FAQ experiences from one content workspace.</p><div className="admin-faq-hero-meta"><span><b>{audienceMeta[1]}</b> selected</span><span><b>{publishedFaqs}</b> published</span><span><b>{draftFaqs}</b> drafts</span></div></div>
+      <div className="admin-faq-hero-copy"><span className="admin-faq-kicker">CONTENT / FAQ MANAGEMENT</span><h1>FAQ management</h1><p>Manage homeowner, business-user, investor and lead-partner FAQ experiences from one content workspace.</p><div className="admin-faq-hero-meta"><span><b>{audienceMeta[1]}</b> selected</span><span><b>{publishedFaqs}</b> published</span><span><b>{draftFaqs}</b> drafts</span></div></div>
       <div className="admin-faq-hero-actions"><button type="button" onClick={()=>load(audience)} disabled={loading}><span>↻</span><div><b>{loading?'Refreshing…':'Refresh FAQs'}</b><small>Reload selected audience</small></div></button></div>
     </section>
 
     <section className="admin-faq-audience-tabs" aria-label="FAQ audience">
-      {audiences.map(([key,title,description],index)=><button type="button" key={key} className={audience===key?'active':''} onClick={()=>switchAudience(key)}><span>{index===0?'◎':index===1?'₹':'◆'}</span><div><strong>{title}</strong><small>{description}</small></div></button>)}
+      {audiences.map(([key,title,description])=><button type="button" key={key} className={audience===key?'active':''} onClick={()=>switchAudience(key)}><span>{key==='homeowner'?'⌂':key==='website'?'◎':key==='investor'?'₹':'◆'}</span><div><strong>{title}</strong><small>{description}</small></div></button>)}
     </section>
 
     {error&&<div className="admin-faq-alert error">{error}</div>}

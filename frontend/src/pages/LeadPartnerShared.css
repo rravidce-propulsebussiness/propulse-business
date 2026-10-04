@@ -71,3 +71,4 @@
   #root .lead-partner-brand-copy>b{font-size:17px!important}
   #root .lp-content,#root .pricing-content,#root .partner-content,#root .withdrawals-content,#root .reports-content,#root .account-content,#root .faq-content{padding:14px 10px 28px!important}
 }
+#root .lead-partner-notification-count{margin-left:auto;min-width:17px;height:17px;padding:0 4px;display:grid;place-items:center;border-radius:999px;background:#ef5a28;color:#fff;font-size:6px;font-weight:950;box-sizing:border-box}

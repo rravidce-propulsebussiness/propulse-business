@@ -585,16 +585,20 @@ async function syncBusinessCampaign(client,campaignId){
   `,[campaignId])).rows;
   const byUser=new Map(existing.map(row=>[Number(row.user_id),row]));
 
+  const deleteIds=[];
+  const revokeIds=[];
   for(const row of existing){
     if(targetSet.has(Number(row.user_id)))continue;
     const claims=number(row.used_shared)+number(row.used_premium);
-    if(claims===0){
-      await client.query('DELETE FROM lead_entitlement_grants WHERE id=$1',[row.id]);
-    }else if(!row.revoked_at){
-      await client.query('UPDATE lead_entitlement_grants SET revoked_at=CURRENT_TIMESTAMP,updated_at=CURRENT_TIMESTAMP WHERE id=$1',[row.id]);
-    }
+    if(claims===0)deleteIds.push(Number(row.id));
+    else if(!row.revoked_at)revokeIds.push(Number(row.id));
   }
+  if(deleteIds.length)await client.query('DELETE FROM lead_entitlement_grants WHERE id=ANY($1::int[])',[deleteIds]);
+  if(revokeIds.length)await client.query('UPDATE lead_entitlement_grants SET revoked_at=CURRENT_TIMESTAMP,updated_at=CURRENT_TIMESTAMP WHERE id=ANY($1::int[])',[revokeIds]);
 
+  const syncNow=new Date();
+  const updatePayload=[];
+  const insertPayload=[];
   for(const userId of targetIds){
     const row=byUser.get(userId);
     const usedShared=number(row?.used_shared);
@@ -602,41 +606,60 @@ async function syncBusinessCampaign(client,campaignId){
     if(campaign.shared_quantity<usedShared||campaign.premium_quantity<usedPremium){
       fail('Campaign allowance cannot be lower than credits already used by a recipient','CAMPAIGN_ALLOWANCE_BELOW_USAGE');
     }
-    const startsAt=row?.revoked_at?new Date():(row?.starts_at?new Date(row.starts_at):new Date());
+    const startsAt=row?.revoked_at?syncNow:(row?.starts_at?new Date(row.starts_at):syncNow);
     const expiresAt=Number(campaign.valid_days)>0
       ?new Date(startsAt.getTime()+Number(campaign.valid_days)*86400000)
       :null;
-
-    if(row){
-      await client.query(`
-        UPDATE lead_entitlement_grants
-        SET source='campaign',starts_at=$2,
-            shared_quantity=$3,premium_quantity=$4,
-            expires_at=$5,claim_expiry_days=$6,
-            allow_single=$7,allow_shared=$8,allow_auto_release=$9,allow_exclusive=$10,
-            notes=$11,revoked_at=NULL,updated_at=CURRENT_TIMESTAMP
-        WHERE id=$1
-      `,[
-        row.id,startsAt,campaign.shared_quantity,campaign.premium_quantity,expiresAt,campaign.claim_expiry_days,
-        campaign.allow_single,campaign.allow_shared,campaign.allow_auto_release,campaign.allow_exclusive,
-        campaign.notes||`Business entitlement campaign #${campaign.id}: ${campaign.name}`
-      ]);
-    }else{
-      await client.query(`
-        INSERT INTO lead_entitlement_grants(
-          user_id,source,campaign_id,shared_quantity,premium_quantity,starts_at,expires_at,
-          claim_expiry_days,allow_single,allow_shared,allow_auto_release,allow_exclusive,
-          created_by,notes
-        )
-        VALUES($1,'campaign',$2,$3,$4,CURRENT_TIMESTAMP,$5,$6,$7,$8,$9,$10,$11,$12)
-      `,[
-        userId,campaign.id,campaign.shared_quantity,campaign.premium_quantity,expiresAt,
-        campaign.claim_expiry_days,campaign.allow_single,campaign.allow_shared,
-        campaign.allow_auto_release,campaign.allow_exclusive,campaign.created_by,
-        campaign.notes||`Business entitlement campaign #${campaign.id}: ${campaign.name}`
-      ]);
-    }
+    const timing={starts_at:startsAt.toISOString(),expires_at:expiresAt?expiresAt.toISOString():null};
+    if(row)updatePayload.push({id:Number(row.id),...timing});
+    else insertPayload.push({user_id:userId,...timing});
   }
+
+  const notes=campaign.notes||`Business entitlement campaign #${campaign.id}: ${campaign.name}`;
+  if(updatePayload.length){
+    await client.query(`
+      UPDATE lead_entitlement_grants g
+      SET source='campaign',
+          starts_at=u.starts_at,
+          shared_quantity=$2,
+          premium_quantity=$3,
+          expires_at=u.expires_at,
+          claim_expiry_days=$4,
+          allow_single=$5,
+          allow_shared=$6,
+          allow_auto_release=$7,
+          allow_exclusive=$8,
+          notes=$9,
+          revoked_at=NULL,
+          updated_at=CURRENT_TIMESTAMP
+      FROM jsonb_to_recordset($1::jsonb) AS u(id int,starts_at timestamp,expires_at timestamp)
+      WHERE g.id=u.id
+    `,[
+      JSON.stringify(updatePayload),
+      campaign.shared_quantity,campaign.premium_quantity,campaign.claim_expiry_days,
+      campaign.allow_single,campaign.allow_shared,campaign.allow_auto_release,campaign.allow_exclusive,
+      notes
+    ]);
+  }
+
+  if(insertPayload.length){
+    await client.query(`
+      INSERT INTO lead_entitlement_grants(
+        user_id,source,campaign_id,shared_quantity,premium_quantity,starts_at,expires_at,
+        claim_expiry_days,allow_single,allow_shared,allow_auto_release,allow_exclusive,
+        created_by,notes
+      )
+      SELECT u.user_id,'campaign',$2,$3,$4,u.starts_at,u.expires_at,$5,$6,$7,$8,$9,$10,$11
+      FROM jsonb_to_recordset($1::jsonb) AS u(user_id int,starts_at timestamp,expires_at timestamp)
+      ON CONFLICT DO NOTHING
+    `,[
+      JSON.stringify(insertPayload),
+      campaign.id,campaign.shared_quantity,campaign.premium_quantity,campaign.claim_expiry_days,
+      campaign.allow_single,campaign.allow_shared,campaign.allow_auto_release,campaign.allow_exclusive,
+      campaign.created_by,notes
+    ]);
+  }
+
   return{recipientCount:targetIds.length};
 }
 

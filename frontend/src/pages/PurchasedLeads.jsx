@@ -20,7 +20,7 @@ const money = value => { if (!hasValue(value)) return ''; const text = String(va
 const flatten = lead => ({ ...(lead?.custom_fields && typeof lead.custom_fields === 'object' ? lead.custom_fields : {}), ...(lead?.customFields && typeof lead.customFields === 'object' ? lead.customFields : {}) })
 const findField = (fields, exact = [], fuzzy = []) => { const entries = Object.entries(fields).filter(([,v]) => hasValue(v)); const exactSet = exact.map(norm); const hit = entries.find(([k]) => exactSet.includes(norm(k))); if (hit) return String(hit[1]).trim(); const patterns = fuzzy.map(norm); const fuzzyHit = entries.find(([k]) => patterns.some(p => norm(k).includes(p))); return fuzzyHit ? String(fuzzyHit[1]).trim() : '' }
 const contactKey = key => /(phone|mobile|whatsapp|email|mail|contact|website|url)/i.test(String(key))
-const hiddenKey = key => /(pricing|price|buyer.?capacity|normal|pro)/i.test(String(key))
+const hiddenKey = key => String(key).startsWith('_') || /(pricing|price|buyer.?capacity|normal|pro)/i.test(String(key))
 const phoneDigits = value => { const digits = String(value || '').replace(/\D/g, ''); return !digits ? '' : digits.length === 10 ? `91${digits}` : digits }
 function crmDefaults(lead) { return { status: lead.crm_status || 'new', remarks: lead.crm_remarks || '', nextFollowupAt: toDateInput(lead.next_followup_at), markFollowedUp: false } }
 

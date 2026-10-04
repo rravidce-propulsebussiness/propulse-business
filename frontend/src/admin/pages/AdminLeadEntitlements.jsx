@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from 'react'
 import { authRequest } from '../../utils/auth'
 import './AdminLeadEntitlements.css'
 
+const EMPTY_LIST=Object.freeze([])
+
 const formatDate=value=>value?new Date(value).toLocaleString():'No expiry'
 const clamp=(value,min,max)=>Math.min(max,Math.max(min,Number(value)||0))
 const defaultAccessRules={
@@ -136,7 +138,7 @@ export default function AdminLeadEntitlements(){
     finally{setLoading(false)}
   }
 
-  useEffect(()=>{load()},[])
+  useEffect(()=>{let active=true;queueMicrotask(()=>{if(active)load()});return()=>{active=false}},[])
 
   useEffect(()=>{
     let active=true
@@ -370,9 +372,9 @@ export default function AdminLeadEntitlements(){
   }
 
   const summary=data?.summary||{}
-  const registrationRules=Array.isArray(data?.registrationRules)?data.registrationRules:[]
-  const businessCampaigns=Array.isArray(data?.businessCampaigns)?data.businessCampaigns:[]
-  const grants=Array.isArray(data?.grants)?data.grants:[]
+  const registrationRules=Array.isArray(data?.registrationRules)?data.registrationRules:EMPTY_LIST
+  const businessCampaigns=Array.isArray(data?.businessCampaigns)?data.businessCampaigns:EMPTY_LIST
+  const grants=Array.isArray(data?.grants)?data.grants:EMPTY_LIST
 
   const ruleCities=useMemo(()=>{
     if(!rule.stateId)return cities
