@@ -1,15 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { apiRequest, openApiBlob } from '../../utils/api'
-import { clearSession, getToken } from '../../utils/auth'
-import { useNavigate } from 'react-router-dom'
+import { openApiBlob } from '../../utils/api'
 import './AdminPayments.css'
+import useAdminRequest from '../hooks/useAdminRequest'
 
 const money = value => `₹${Number(value || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}`
 const dateTime = value => value ? new Date(value).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—'
 const dateOnly = value => value ? new Date(value).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'
 
 export default function AdminPayments() {
-  const navigate = useNavigate()
   const [approvalType, setApprovalType] = useState('membership')
   const [payments, setPayments] = useState([])
   const [topups, setTopups] = useState([])
@@ -23,14 +21,7 @@ export default function AdminPayments() {
   const [topupMeta, setTopupMeta] = useState({ total: 0, pages: 0, stats: {} })
   const [expandedApproval, setExpandedApproval] = useState({})
 
-  const request = useCallback(async (path, options = {}) => {
-    if (!getToken()) {
-      clearSession()
-      navigate('/login', { replace: true })
-      throw new Error('Your admin session has expired. Please sign in again.')
-    }
-    return apiRequest(path, options)
-  }, [navigate])
+  const request = useAdminRequest()
 
   const fetchPayments = useCallback(async (nextPage = 1, overrideStatus = status) => {
     const qs = new URLSearchParams({
