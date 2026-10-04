@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import RequirementWizard from './RequirementWizard'
 import './Solutions.css'
+import { openLeadPopup } from '../utils/leadPopup'
 
 const FLOWS = {
   construction: {
@@ -49,9 +50,6 @@ function hashKey(hash){
   return FLOWS[key]?key:'construction'
 }
 
-function openLeadPopup(flowKey=''){
-  window.dispatchEvent(new CustomEvent('propulse:open-lead-popup',{detail:{flowKey}}))
-}
 
 export default function Solutions(){
   const location=useLocation()

@@ -3,6 +3,7 @@ import { Link, Navigate, useSearchParams } from 'react-router-dom'
 import PortalContact from './PortalContact'
 import { publicRequest } from '../utils/auth'
 import './Contact.css'
+import { openLeadPopup } from '../utils/leadPopup'
 
 const empty={
   company_name:'ProPulse Business',
@@ -33,9 +34,6 @@ function Icon({name,size=19}){
   return null
 }
 
-function openLeadPopup(flowKey=''){
-  window.dispatchEvent(new CustomEvent('propulse:open-lead-popup',{detail:{flowKey}}))
-}
 
 export default function Contact(){
   const [searchParams]=useSearchParams()

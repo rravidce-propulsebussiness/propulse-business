@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { publicRequest } from '../utils/auth'
 import './Experts.css'
+import { openLeadPopup } from '../utils/leadPopup'
 
 function collection(value){
   if(Array.isArray(value))return value
@@ -29,7 +30,6 @@ function Icon({name,size=20}){
 function initials(name){return String(name||'Business').split(/\s+/).filter(Boolean).slice(0,2).map(part=>part[0]?.toUpperCase()).join('')||'B'}
 function unique(values){return [...new Set(values.filter(Boolean))]}
 function money(value){if(value==null||value==='')return null;const n=Number(value);return Number.isFinite(n)?new Intl.NumberFormat('en-IN',{style:'currency',currency:'INR',maximumFractionDigits:0}).format(n):null}
-function openLeadPopup(flowKey=''){window.dispatchEvent(new CustomEvent('propulse:open-lead-popup',{detail:{flowKey}}))}
 
 export default function Experts(){
   const [experts,setExperts]=useState([])

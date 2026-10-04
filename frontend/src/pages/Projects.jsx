@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { publicRequest } from '../utils/auth'
 import './Projects.css'
+import { openLeadPopup } from '../utils/leadPopup'
 
 const PROJECTS = [
   {
@@ -397,9 +398,6 @@ function Icon({name,size=18}){
   return null
 }
 
-function openLeadPopup(flowKey=''){
-  window.dispatchEvent(new CustomEvent('propulse:open-lead-popup',{detail:{flowKey}}))
-}
 
 export default function Projects(){
   const [contactData,setContactData]=useState({})
