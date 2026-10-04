@@ -72,7 +72,9 @@ async function createDatabaseBackup({outputDirectory=null}={}){
 if(require.main===module){
   createDatabaseBackup()
     .then(result=>{
+      const source=sourceDbConfig();
       console.log('Database backup created and checksummed.');
+      console.log('Source:',source.host+'/'+source.database+' as '+source.user);
       console.log('Dump:',result.dumpPath);
       console.log('Manifest:',result.manifestPath);
       console.log('SHA-256:',result.manifest.artifact.sha256);
