@@ -226,8 +226,6 @@ assert(buildScript.includes('constructionExperienceContent(route)'),'Static Hyde
 for(const source of [aboutPage,landing,buildScript,config]){
   assert(!/SG Homes|SG_HOMES|sghome/i.test(source),'Public SEO source must not contain the removed prior-company name or links');
 }
-assert(projectPage.includes('pj-hyderabad-authority'),'Projects page must expose a Hyderabad authority section');
-assert(projectPage.includes('HYDERABAD_PROJECT_SEO_LINKS'),'Projects page must maintain explicit locality SEO links');
 assert(!projectPage.includes('HYDERABAD_PROJECT_SEO_LINKS'),'Projects page must not contain the removed Hyderabad planning link block');
 assert(!projectPage.includes('pj-hyderabad-authority'),'Projects page must not render the removed Hyderabad planning section');
 assert(!buildScript.includes('projectsAuthorityContent(route)'),'Static Projects HTML must not reintroduce the removed Hyderabad planning section');
