@@ -1,6 +1,7 @@
 import {useCallback,useEffect,useMemo,useState} from 'react';
 import {useSearchParams} from 'react-router-dom';
 import {authRequest} from '../../utils/auth';
+import {openApiBlob} from '../../utils/api';
 import './AdminLeadPartnerPayouts.css';
 
 const money=v=>`₹${Number(v||0).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2})}`;
@@ -11,6 +12,8 @@ const emptyTransfer=()=>({reference:'',proof:'',proofName:'',notes:''});
 export default function AdminLeadPartnerPayouts(){
   const [params]=useSearchParams();
   const [rows,setRows]=useState([]);
+  const [meta,setMeta]=useState({total:0,pages:1,stats:{}});
+  const [page,setPage]=useState(1);
   const [partners,setPartners]=useState([]);
   const [status,setStatus]=useState('pending');
   const [search,setSearch]=useState(()=>params.get('search')||'');
@@ -29,33 +32,61 @@ export default function AdminLeadPartnerPayouts(){
   const [error,setError]=useState('');
   const [message,setMessage]=useState('');
 
-  const load=useCallback(async()=>{
+  const load=useCallback(async(nextPage=1)=>{
     setError('');
     setLoading(true);
     try{
       const [payouts,partnerData]=await Promise.all([
-        authRequest(`/admin/lead-partner-payouts?status=all&search=${encodeURIComponent(query)}`),
+        authRequest(`/admin/lead-partner-payouts?status=${encodeURIComponent(status)}&search=${encodeURIComponent(query)}&page=${nextPage}&limit=50`),
         authRequest('/admin/lead-partners?status=active&limit=100')
       ]);
-      setRows(Array.isArray(payouts)?payouts:[]);
+      setRows(Array.isArray(payouts?.items)?payouts.items:[]);
+      setMeta({total:Number(payouts?.total||0),pages:Number(payouts?.pages||1),stats:payouts?.stats||{}});
+      setPage(Number(payouts?.page||nextPage));
       setPartners(Array.isArray(partnerData?.partners)?partnerData.partners:[]);
     }catch(e){setError(e.message||'Failed to load partner payouts')}
     finally{setLoading(false)}
-  },[query]);
+  },[query,status]);
 
-  useEffect(()=>{let active=true;queueMicrotask(()=>{if(active)load()});return()=>{active=false}},[load]);
+  useEffect(()=>{let active=true;queueMicrotask(()=>{if(active)load(1)});return()=>{active=false}},[load]);
 
-  const visibleRows=useMemo(()=>status==='all'?rows:rows.filter(r=>r.status===status),[rows,status]);
-  const stats=useMemo(()=>rows.reduce((a,r)=>{
-    const amount=Number(r.amount||0);
-    if(r.status==='pending'){a.pending+=amount;a.pendingCount+=1}
-    if(r.status==='paid'){a.paid+=amount;a.paidCount+=1}
-    if(r.status==='rejected')a.rejectedCount+=1;
-    if((r.request_source||'partner')==='admin')a.directCount+=1;
-    return a;
-  },{pending:0,pendingCount:0,paid:0,paidCount:0,rejectedCount:0,directCount:0}),[rows]);
+  const visibleRows=rows;
+  const stats=useMemo(()=>({
+    pending:Number(meta.stats?.pending_amount||0),
+    pendingCount:Number(meta.stats?.pending_count||0),
+    paid:Number(meta.stats?.paid_amount||0),
+    paidCount:Number(meta.stats?.paid_count||0),
+    rejectedCount:Number(meta.stats?.rejected_count||0),
+    directCount:Number(meta.stats?.direct_count||0),
+    totalCount:Number(meta.stats?.total_count||0)
+  }),[meta.stats]);
 
   const selectedDirectPartner=useMemo(()=>partners.find(p=>String(p.id)===String(directPartnerId))||null,[partners,directPartnerId]);
+
+  async function openStoredProof(payout){
+    setError('');
+    const basePath=`/admin/lead-partner-payouts/${payout.id}/proof`;
+    try{
+      await openApiBlob(`${basePath}/file`);
+    }catch(streamError){
+      try{
+        const data=await authRequest(basePath);
+        const source=String(data?.proof_url||'').trim();
+        if(!source){setError('No payment proof is available for this payout.');return}
+        const win=window.open('','_blank');
+        if(!win){setError('Allow pop-ups to view the payment proof.');return}
+        const doc=win.document;
+        doc.title=`Payout #${payout.id} proof`;
+        const style=doc.createElement('style');
+        style.textContent='body{margin:0;background:#111;display:flex;align-items:center;justify-content:center;min-height:100vh}img{max-width:95vw;max-height:95vh;object-fit:contain}';
+        doc.head.appendChild(style);
+        const image=doc.createElement('img');
+        image.src=source;
+        image.alt=`Payout #${payout.id} payment proof`;
+        doc.body.replaceChildren(image);
+      }catch(e){setError(e.message||streamError.message||'Unable to load payout proof')}
+    }
+  }
 
   async function readProof(event,setter){
     const file=event.target.files?.[0];
@@ -82,7 +113,7 @@ export default function AdminLeadPartnerPayouts(){
       await authRequest(`/admin/lead-partner-payouts/${selected.id}`,{method:'PATCH',body:JSON.stringify(action==='paid'?{action,transferReference:transfer.reference,proofUrl:transfer.proof,notes:transfer.notes}:{action:'reject',rejectionReason:reason})});
       setMessage(action==='paid'?`Payout #${selected.id} marked paid successfully.`:`Payout #${selected.id} rejected and reserved earnings released.`);
       closeReview();
-      await load();
+      await load(page);
     }catch(e){setError(e.message||'Failed to process payout')}
     finally{setBusy(null)}
   }
@@ -116,12 +147,12 @@ export default function AdminLeadPartnerPayouts(){
       const result=await authRequest('/admin/lead-partner-payouts/direct',{method:'POST',body:JSON.stringify({partnerId:Number(directPartnerId),amount,transferReference:directTransfer.reference,proofUrl:directTransfer.proof,notes:directTransfer.notes})});
       setMessage(`Direct transfer ${money(result.amount)} completed as payout #${result.id}.`);
       closeDirect();
-      await load();
+      await load(page);
     }catch(e){setError(e.message||'Failed to complete direct transfer')}
     finally{setBusy(null)}
   }
 
-  const submitSearch=e=>{e?.preventDefault();setQuery(search.trim())};
+  const submitSearch=e=>{e?.preventDefault();setPage(1);setQuery(search.trim())};
 
   return <main className="alpp-page">
     <section className="alpp-hero">
@@ -154,8 +185,8 @@ export default function AdminLeadPartnerPayouts(){
       </div>
 
       <div className="alpp-tabs">
-        {[['pending','Pending',stats.pendingCount],['paid','Paid',stats.paidCount],['rejected','Rejected',stats.rejectedCount],['all','All',rows.length]].map(([key,label,count])=><button key={key} type="button" className={status===key?'active':''} onClick={()=>setStatus(key)}>{label}<b>{count}</b></button>)}
-        <button type="button" className="refresh" onClick={load} disabled={loading}>↻ Refresh</button>
+        {[['pending','Pending',stats.pendingCount],['paid','Paid',stats.paidCount],['rejected','Rejected',stats.rejectedCount],['all','All',stats.totalCount]].map(([key,label,count])=><button key={key} type="button" className={status===key?'active':''} onClick={()=>{setPage(1);setStatus(key)}}>{label}<b>{count}</b></button>)}
+        <button type="button" className="refresh" onClick={()=>load(page)} disabled={loading}>↻ Refresh</button>
       </div>
 
       {loading?<div className="alpp-state"><div className="alpp-spinner"/>Loading payout ledger…</div>:!visibleRows.length?<div className="alpp-empty"><div>₹</div><h3>No payouts in this view</h3><p>{status==='pending'?'There are no partner withdrawal requests waiting for transfer.':'Try another status or clear the search.'}</p></div>:<div className="alpp-table-wrap">
@@ -170,9 +201,10 @@ export default function AdminLeadPartnerPayouts(){
             <td>{date(r.requested_at)}</td>
             <td><span className={`alpp-status ${r.status}`}>{title(r.status)}</span></td>
             <td><b>{r.transfer_reference||'—'}</b>{r.rejection_reason&&<small className="reason">{r.rejection_reason}</small>}</td>
-            <td>{r.status==='pending'?<button className="review" type="button" onClick={()=>{setSelected(r);setTransfer(emptyTransfer());setReason('')}}>Review & transfer</button>:<span className="processed">Completed</span>}</td>
+            <td>{r.status==='pending'?<button className="review" type="button" onClick={()=>{setSelected(r);setTransfer(emptyTransfer());setReason('')}}>Review & transfer</button>:<div className="alpp-processed-actions"><span className="processed">Completed</span>{r.status==='paid'&&r.has_proof&&<button className="proof-link" type="button" onClick={()=>openStoredProof(r)}>View proof</button>}</div>}</td>
           </tr>)}</tbody>
         </table>
+        {meta.pages>1&&<div className="alpp-pagination"><button type="button" disabled={loading||page<=1} onClick={()=>load(page-1)}>← Previous</button><span>Page <b>{page}</b> of <b>{meta.pages}</b> · {meta.total} records</span><button type="button" disabled={loading||page>=meta.pages} onClick={()=>load(page+1)}>Next →</button></div>}
       </div>}
     </section>
 

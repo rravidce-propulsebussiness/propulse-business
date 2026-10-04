@@ -1,9 +1,25 @@
 const pool = require('../config/database');
 const statementService = require('./investmentCycleStatementService');
 
-async function list(userId) {
-  const uid = Number(userId);
-  const rows = (await pool.query(`
+async function list(userId,{page=null,limit=null}={}) {
+  const uid=Number(userId);
+  const paginated=page!==null||limit!==null;
+  const safeLimit=Math.min(Math.max(Number(limit)||20,1),50);
+  const safePage=Math.max(Number(page)||1,1);
+  let total=null;
+  let pageValue=safePage;
+  let paginationSql='';
+  const params=[uid];
+
+  if(paginated){
+    total=Number((await pool.query('SELECT COUNT(*)::int AS total FROM investment_cycles WHERE user_id=$1',[uid])).rows[0]?.total||0);
+    const pages=Math.ceil(total/safeLimit);
+    pageValue=pages>0?Math.min(safePage,pages):1;
+    params.push(safeLimit,(pageValue-1)*safeLimit);
+    paginationSql=` LIMIT $${params.length-1} OFFSET $${params.length}`;
+  }
+
+  const rows=(await pool.query(`
     SELECT ic.id,ic.user_id,ic.status,ic.auto_invest,ic.started_at,ic.maturity_at,ic.exit_requested_at,ic.closed_at,ic.admin_closed_reason,ic.exit_reason,
       COALESCE((SELECT SUM(i.amount) FROM investments i WHERE i.cycle_id=ic.id AND i.status<>'cancelled' AND i.parent_investment_id IS NULL),0)::numeric AS actual_investment,
       COALESCE((SELECT SUM(i.amount) FROM investments i WHERE i.cycle_id=ic.id AND i.status<>'cancelled' AND i.parent_investment_id IS NOT NULL),0)::numeric AS reinvestment,
@@ -13,10 +29,13 @@ async function list(userId) {
       COALESCE((SELECT SUM(ira.allocated_amount) FROM investment_revenue_allocations ira JOIN investments i ON i.id=ira.investment_id WHERE i.user_id=$1 AND i.cycle_id=ic.id AND i.status<>'cancelled'),0)::numeric AS investor_earnings,
       COALESCE((SELECT COUNT(*) FROM leads l WHERE l.investor_user_id=$1 AND l.cycle_id=ic.id),0)::int AS linked_leads,
       COALESCE((SELECT COUNT(*) FROM leads l WHERE l.investor_user_id=$1 AND l.cycle_id=ic.id AND EXISTS (SELECT 1 FROM lead_purchases lp WHERE lp.lead_id=l.id AND lp.status='paid')),0)::int AS sold_leads
-    FROM investment_cycles ic WHERE ic.user_id=$1
-    ORDER BY CASE WHEN ic.status IN ('ACTIVE','EXIT_REQUESTED','WAITING_FOR_LEADS') THEN 0 ELSE 1 END,ic.id DESC
-  `,[uid])).rows;
-  return rows.map(r=>({...r,id:Number(r.id),user_id:Number(r.user_id),auto_invest:Boolean(r.auto_invest),actual_investment:Number(r.actual_investment||0),reinvestment:Number(r.reinvestment||0),total_invested:Number(r.total_invested||0),ad_spent:Number(r.ad_spent||0),gross_revenue:Number(r.gross_revenue||0),investor_earnings:Number(r.investor_earnings||0),linked_leads:Number(r.linked_leads||0),sold_leads:Number(r.sold_leads||0)}));
+    FROM investment_cycles ic
+    WHERE ic.user_id=$1
+    ORDER BY CASE WHEN ic.status IN ('ACTIVE','EXIT_REQUESTED','WAITING_FOR_LEADS') THEN 0 ELSE 1 END,ic.id DESC${paginationSql}
+  `,params)).rows.map(r=>({...r,id:Number(r.id),user_id:Number(r.user_id),auto_invest:Boolean(r.auto_invest),actual_investment:Number(r.actual_investment||0),reinvestment:Number(r.reinvestment||0),total_invested:Number(r.total_invested||0),ad_spent:Number(r.ad_spent||0),gross_revenue:Number(r.gross_revenue||0),investor_earnings:Number(r.investor_earnings||0),linked_leads:Number(r.linked_leads||0),sold_leads:Number(r.sold_leads||0)}));
+
+  if(!paginated)return rows;
+  return{cycles:rows,total,page:pageValue,limit:safeLimit,pages:Math.ceil(total/safeLimit)};
 }
 
 async function getCycleHistory(userId,cycleId){

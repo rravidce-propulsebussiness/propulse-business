@@ -2,6 +2,8 @@ const assert = require('node:assert/strict');
 
 const baseUrl = String(process.env.DEPLOY_BASE_URL || '').replace(/\/$/, '');
 const appOrigin = String(process.env.DEPLOY_APP_ORIGIN || '').replace(/\/$/, '');
+const expectedCommit = String(process.env.DEPLOY_EXPECTED_COMMIT || '').trim().toLowerCase();
+const expectedEnvironment = String(process.env.DEPLOY_EXPECTED_ENVIRONMENT || '').trim().toLowerCase();
 
 if (!baseUrl) throw new Error('Set DEPLOY_BASE_URL to the deployed backend/public origin, for example https://staging.example.com');
 if (!appOrigin) throw new Error('Set DEPLOY_APP_ORIGIN to the deployed frontend origin');
@@ -16,6 +18,13 @@ if (base.protocol !== 'https:' && !['localhost', '127.0.0.1'].includes(base.host
   throw new Error('DEPLOY_BASE_URL must use HTTPS outside localhost');
 }
 
+function commitMatches(actual, expected) {
+  const left = String(actual || '').trim().toLowerCase();
+  const right = String(expected || '').trim().toLowerCase();
+  if (!/^[0-9a-f]{7,64}$/.test(left) || !/^[0-9a-f]{7,64}$/.test(right)) return false;
+  return left === right || left.startsWith(right) || right.startsWith(left);
+}
+
 async function request(path, options = {}) {
   return fetch(`${baseUrl}${path}`, { redirect: 'manual', signal: AbortSignal.timeout(10000), ...options });
 }
@@ -25,6 +34,15 @@ async function main() {
   assert.equal(live.status, 200, 'Liveness endpoint must return 200');
   assert.equal((await live.json()).status, 'ok');
 
+  const version = await request('/health/version');
+  assert.equal(version.status, 200, 'Version endpoint must return 200');
+  const versionBody = await version.json();
+  assert.equal(versionBody.status, 'ok');
+  assert(versionBody.commit, 'Version endpoint must expose a deployment commit');
+  assert(versionBody.environment, 'Version endpoint must expose a deployment environment');
+  if (expectedCommit) assert(commitMatches(versionBody.commit, expectedCommit), `Deployed commit ${versionBody.commit} does not match expected ${expectedCommit}`);
+  if (expectedEnvironment) assert.equal(String(versionBody.environment).toLowerCase(), expectedEnvironment, 'Deployed environment identity does not match the release target');
+
   const ready = await request('/health/ready');
   assert.equal(ready.status, 200, 'Readiness endpoint must return 200');
   const readyBody = await ready.json();
@@ -33,7 +51,7 @@ async function main() {
   const health = await request('/health');
   assert.equal(health.status, 200, 'Legacy /health endpoint must remain healthy');
 
-  for (const response of [live, ready, health]) {
+  for (const response of [live, version, ready, health]) {
     assert.match(String(response.headers.get('cache-control') || ''), /no-store/i, 'Health endpoints must not be cached');
     assert.equal(response.headers.get('x-powered-by'), null, 'Express signature must be disabled');
     assert.equal(response.headers.get('x-content-type-options'), 'nosniff');
@@ -53,7 +71,7 @@ async function main() {
   const missing = await request('/definitely-not-a-route');
   assert.equal(missing.status, 404);
 
-  console.log('Deployed smoke test passed: HTTPS health, readiness, security headers, CORS, auth boundary and 404 behavior.');
+  console.log(`Deployed smoke test passed: ${versionBody.environment} ${String(versionBody.commit).slice(0,12)}; HTTPS health, readiness, security headers, CORS, auth boundary and 404 behavior.`);
 }
 
 main().catch(error => {

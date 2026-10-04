@@ -1,4 +1,5 @@
 const pool=require('../config/database');
+const leadQualityService=require('./leadQualityService');
 async function getCommissionPercent(client=pool){const row=(await client.query('SELECT commission_percent FROM lead_partner_settings WHERE id=1')).rows[0]||{};const value=Number(row.commission_percent??5);return Number.isFinite(value)?Math.max(0,Math.min(100,value)):5}
 async function applyOutstandingRecovery(client,earning){
   const outstanding=(await client.query(`SELECT id,amount FROM lead_partner_earning_adjustments WHERE partner_id=$1 AND status='outstanding' ORDER BY created_at,id FOR UPDATE`,[earning.partner_id])).rows;
@@ -56,7 +57,7 @@ async function getAdminPartnerFinancials(partnerId,client=pool){
   `,[id])).rows[0];
   if(!partner)throw Object.assign(new Error('Lead Partner not found'),{code:'PARTNER_NOT_FOUND'});
 
-  const [summaryResult,recoveryResult,historyResult,leadsResult,payoutsResult,qualityResult]=await Promise.all([
+  const [summaryResult,recoveryResult,historyResult,leadsResult,payoutsResult]=await Promise.all([
     client.query(`
       SELECT
         COALESCE(SUM(e.earning_amount-COALESCE(x.adjusted,0)-COALESCE(x.reserved,0)-COALESCE(x.paid,0))
@@ -162,30 +163,6 @@ async function getAdminPartnerFinancials(partnerId,client=pool){
       WHERE partner_id=$1
       ORDER BY requested_at DESC,id DESC
       LIMIT 300
-    `,[id]),
-    client.query(`
-      WITH partner_leads AS (
-        SELECT id FROM leads WHERE lead_partner_id=$1
-      ),
-      purchased AS (
-        SELECT DISTINCT lp.lead_id
-        FROM lead_purchases lp
-        JOIN partner_leads pl ON pl.id=lp.lead_id
-        WHERE lp.status IN ('paid','refunded')
-      ),
-      fake AS (
-        SELECT DISTINCT r.lead_id
-        FROM lead_reports r
-        JOIN partner_leads pl ON pl.id=r.lead_id
-        WHERE r.status='verified_fake'
-      )
-      SELECT
-        (SELECT COUNT(*) FROM partner_leads)::int AS total_leads,
-        (SELECT COUNT(*) FROM purchased)::int AS purchased_leads,
-        (SELECT COUNT(*) FROM fake)::int AS verified_fake_leads,
-        CASE WHEN (SELECT COUNT(*) FROM purchased)=0 THEN 0
-             ELSE ROUND((SELECT COUNT(*) FROM fake)::numeric*100.0/(SELECT COUNT(*) FROM purchased),2)
-        END AS verified_fake_rate_pct
     `,[id])
   ]);
 
@@ -194,14 +171,14 @@ async function getAdminPartnerFinancials(partnerId,client=pool){
   const payoutRows=payoutsResult.rows||[];
   const pendingTransfer=payoutRows.filter(x=>x.status==='pending').reduce((sum,x)=>sum+Number(x.amount||0),0);
   const transferredAmount=payoutRows.filter(x=>x.status==='paid').reduce((sum,x)=>sum+Number(x.amount||0),0);
-  const quality=qualityResult.rows[0]||{};
+  const [quality,leadQualityMap]=await Promise.all([leadQualityService.getPartnerQuality(id,client),leadQualityService.getLeadQualityMap(id,client)]);
 
   return{
     partner:{
       ...partner,
       id:Number(partner.id),
       user_id:Number(partner.user_id),
-      quality_score:Number(partner.quality_score||0)
+      quality_score:quality.score
     },
     availableEarnings:Number(summary.available_earnings||0),
     reservedEarnings:Number(summary.reserved_earnings||0),
@@ -214,15 +191,14 @@ async function getAdminPartnerFinancials(partnerId,client=pool){
     transferredAmount:Number(transferredAmount.toFixed(2)),
     recoveryOutstanding:Number(recovery.outstanding||0),
     recoveryTotal:Number(recovery.total||0),
-    quality:{
-      totalLeads:Number(quality.total_leads||0),
-      purchasedLeads:Number(quality.purchased_leads||0),
-      verifiedFakeLeads:Number(quality.verified_fake_leads||0),
-      verifiedFakeRatePct:Number(quality.verified_fake_rate_pct||0)
-    },
+    quality,
     leads:leadsResult.rows.map(row=>({
       ...row,
       id:Number(row.id),
+      quality_score:leadQualityMap.get(Number(row.id))?.score ?? null,
+      quality_band:leadQualityMap.get(Number(row.id))?.band || 'no_data',
+      quality_flags:leadQualityMap.get(Number(row.id))?.flags || [],
+      quality_breakdown:leadQualityMap.get(Number(row.id))?.breakdown || null,
       purchase_count:Number(row.purchase_count||0),
       paid_sales:Number(row.paid_sales||0),
       refunded_sales:Number(row.refunded_sales||0),

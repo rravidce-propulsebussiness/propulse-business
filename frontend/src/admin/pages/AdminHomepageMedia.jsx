@@ -3,12 +3,14 @@ import { apiRequest } from '../../utils/api'
 import './AdminHomepageMedia.css'
 
 const slots=[
-  {key:'hero',label:'Hero image',description:'Main homepage hero visual.',defaultPath:'/homepage/default-hero.svg',wide:true},
-  {key:'residential',label:'Residential leads',description:'Residential category card image.',defaultPath:'/homepage/default-residential.svg'},
-  {key:'interior',label:'Interior leads',description:'Interior category card image.',defaultPath:'/homepage/default-interior.svg'},
-  {key:'commercial',label:'Commercial leads',description:'Commercial category card image.',defaultPath:'/homepage/default-commercial.svg'},
-  {key:'turnkey',label:'Turnkey projects',description:'Turnkey category card image.',defaultPath:'/homepage/default-turnkey.svg'},
-  {key:'plot_land',label:'Plot & land leads',description:'Plot and land category card image.',defaultPath:'/homepage/default-plot-land.svg'}
+  {key:'hero',label:'Customer homepage hero',description:'Main homeowner hero visual shown behind “Your Dream Home Starts Here”.',defaultPath:'/homepage/default-hero.svg',wide:true},
+  {key:'residential',label:'Construction service card',description:'Visual used for the Home Construction card on the customer homepage.',defaultPath:'/homepage/default-residential.svg'},
+  {key:'interior',label:'Interior service card',description:'Visual used for the Interior Design card on the customer homepage.',defaultPath:'/homepage/default-interior.svg'},
+  {key:'commercial',label:'Real Estate service card',description:'Visual used for the Real Estate card on the customer homepage.',defaultPath:'/homepage/default-commercial.svg'},
+  {key:'why_homeowners',label:'Why Homeowners background',description:'Background visual for the homeowner trust section.',defaultPath:'/homepage/default-interior.svg',wide:true},
+  {key:'final_cta',label:'Final consultation banner',description:'Closing visual behind the “Ready to Plan Your Home?” call to action.',defaultPath:'/homepage/default-residential.svg',wide:true},
+  {key:'turnkey',label:'Construction estimator card',description:'Visual used for the Construction Cost Estimator entry point.',defaultPath:'/homepage/default-turnkey.svg'},
+  {key:'plot_land',label:'Property / plot fallback',description:'Fallback visual available for real-estate and plot-focused customer journeys.',defaultPath:'/homepage/default-plot-land.svg'}
 ]
 
 const initial={hero_image_url:'',category_images:{}}
@@ -87,8 +89,8 @@ export default function AdminHomepageMedia(){
 
   return <main className="admin-home-media-page">
     <section className="admin-home-media-hero">
-      <div className="admin-home-media-hero-copy"><span>CONTENT / HOMEPAGE MEDIA</span><h1>Homepage media</h1><p>Manage the visual assets used across the public lead-sales homepage without changing application code.</p><div className="admin-home-media-hero-meta"><span><b>{slots.length}</b> media slots</span><span><b>{customCount}</b> custom images</span><span><b>{defaultCount}</b> defaults active</span></div></div>
-      <div className="admin-home-media-hero-actions"><a href="/" target="_blank" rel="noreferrer"><span>↗</span><div><b>Open homepage</b><small>Preview public media</small></div></a><button type="button" onClick={load}><span>↻</span><div><b>Refresh media</b><small>Reload saved settings</small></div></button></div>
+      <div className="admin-home-media-hero-copy"><span>CONTENT / HOMEPAGE MEDIA</span><h1>Homepage media</h1><p>Manage the customer-first homepage hero and project journey visuals without changing application code.</p><div className="admin-home-media-hero-meta"><span><b>{slots.length}</b> media slots</span><span><b>{customCount}</b> custom images</span><span><b>{defaultCount}</b> defaults active</span></div></div>
+      <div className="admin-home-media-hero-actions"><a href="/" target="_blank" rel="noreferrer"><span>↗</span><div><b>Open homepage</b><small>Preview redesigned homepage</small></div></a><button type="button" onClick={load}><span>↻</span><div><b>Refresh media</b><small>Reload saved settings</small></div></button></div>
     </section>
     {error&&<div className="admin-home-media-alert error">{error}</div>}
     {ok&&<div className="admin-home-media-alert success">{ok}</div>}

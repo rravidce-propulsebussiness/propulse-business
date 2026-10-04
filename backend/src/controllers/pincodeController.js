@@ -1,5 +1,6 @@
 const pincodeService = require('../services/pincodeService');
 const detectionService = require('../services/pincodeDetectionService');
+const {sendError}=require('../utils/errorResponse');
 
 async function search(req, res) {
   try {
@@ -46,7 +47,31 @@ async function detect(req, res) {
     return res.json(result);
   } catch (error) {
     const bad = ['INVALID_PINCODE', 'PIN_NOT_FOUND', 'PIN_LOOKUP_TIMEOUT'];
-    return res.status(bad.includes(error.code) ? 400 : 502).json({ error: error.message || 'Failed to detect PIN', code: error.code });
+    const status=bad.includes(error.code)?400:502;if(status===502)console.error('Detect pincode failed:',error.message);return sendError(res,status,error,'Failed to detect PIN',{code:error.code});
+  }
+}
+
+async function locate(req, res) {
+  try {
+    const pincode = String(req.params.pincode || '').trim();
+    if (!/^\d{6}$/.test(pincode)) return res.status(400).json({ error: 'Pincode must be 6 digits' });
+    return res.json(await detectionService.locatePincode(pincode));
+  } catch (error) {
+    if (['INVALID_PINCODE', 'PIN_NOT_FOUND', 'PIN_LOOKUP_TIMEOUT'].includes(error.code)) {
+      return sendError(res, 400, error, 'Unable to detect PIN location', { code: error.code });
+    }
+    console.error('Locate pincode failed:', error.message);
+    return sendError(res, 502, error, 'Unable to detect PIN location', { code: error.code });
+  }
+}
+
+async function reverseLocation(req, res) {
+  try {
+    return res.json(await detectionService.reverseCoordinates(req.body?.latitude, req.body?.longitude));
+  } catch (error) {
+    const bad = ['INVALID_COORDINATES', 'PIN_NOT_FOUND', 'REVERSE_LOOKUP_TIMEOUT'];
+    if (!bad.includes(error.code)) console.error('Reverse location failed:', error.message);
+    return sendError(res, bad.includes(error.code) ? 400 : 502, error, 'Unable to detect current location', { code: error.code });
   }
 }
 
@@ -65,8 +90,8 @@ async function mapToCity(req, res) {
     return res.json(result);
   } catch (error) {
     const bad = ['INVALID_PINCODE', 'INVALID_CITY', 'PIN_NOT_DETECTED', 'CITY_NOT_FOUND', 'CITY_STATE_MISMATCH'];
-    return res.status(bad.includes(error.code) ? 400 : 500).json({ error: error.message || 'Failed to map PIN', code: error.code });
+    const status=bad.includes(error.code)?400:500;if(status===500)console.error('Map pincode failed:',error.message);return sendError(res,status,error,'Failed to map PIN',{code:error.code});
   }
 }
 
-module.exports = { search, resolve, getOne, detect, listUnmapped, mapToCity };
+module.exports = { search, resolve, getOne, locate, reverseLocation, detect, listUnmapped, mapToCity };

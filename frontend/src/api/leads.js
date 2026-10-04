@@ -47,6 +47,7 @@ export async function purchaseLead(id, shares, options = {}) {
   const couponCode = String(options.couponCode || '').trim().toUpperCase()
   const data = await authRequest(`/leads/${id}/purchase`, {
     method: 'POST',
+    idempotency: true,
     body: JSON.stringify({
       shares,
       useWallet: useWallet !== false,
