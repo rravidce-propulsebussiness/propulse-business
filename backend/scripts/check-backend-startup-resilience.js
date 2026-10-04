@@ -18,6 +18,8 @@ assert.ok(dependencyInitIndex > listenIndex, 'HTTP listener must bind before dep
 assert.match(server, /if\(startupReady\)return next\(\)/, 'API gate must allow traffic only after startup dependencies are ready');
 assert.match(server, /code:'BACKEND_NOT_READY'/, 'Dependency outages must return a structured 503 instead of dropping the process');
 assert.match(server, /setTimeout\(\(\)=>\{startupTimer=null;void initializeDependencies\(\);\},startupRetryMs\)/, 'Dependency initialization must retry');
+assert(server.indexOf("if(runMigrationsOnStartup)await runMigrations()")<server.indexOf("void ensureUploadStorage().then"),'Database readiness must be established before optional upload storage probing');
+assert(server.includes("Upload storage initialization is degraded:"),'Storage startup failures must degrade upload features without blocking the whole API');
 assert.match(server, /app\.get\('\/health\/live'/, 'Liveness endpoint must remain available while dependencies recover');
 assert.match(server, /status:'starting'/, 'Readiness endpoint must expose initializing state');
 
