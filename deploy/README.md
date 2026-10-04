@@ -49,6 +49,8 @@ export RELEASE_ID="staging-$(date -u +%Y%m%dT%H%M%SZ)"
 export BACKEND_ENV_FILE=/secure/propulse-staging.env
 # Exact public HTTPS origin used to build canonical/Open Graph metadata.
 export PUBLIC_SITE_URL=https://staging.example.com
+# Optional: paste only the content value from Google's HTML-tag verification.
+export GOOGLE_SITE_VERIFICATION=
 
 docker compose --env-file "$BACKEND_ENV_FILE" -f deploy/compose.yml --profile release build
 docker compose --env-file "$BACKEND_ENV_FILE" -f deploy/compose.yml --profile release run --rm migrate
@@ -84,6 +86,17 @@ The production build generates route-specific HTML metadata and crawlable fallba
 content for the public marketing routes. The frontend proxies `/robots.txt` and
 `/sitemap.xml` to the backend; the backend uses `PUBLIC_APP_URL` (or `FRONTEND_URL`)
 for their canonical origin. Keep those values aligned with `PUBLIC_SITE_URL`.
+
+For Google Search Console HTML-tag verification, set `GOOGLE_SITE_VERIFICATION`
+to the token inside Google's `content="..."` value before building the frontend.
+The build injects `<meta name="google-site-verification">` into static public HTML,
+and the runtime SEO manager keeps the same meta available during client navigation.
+Leave the variable empty when verification is not configured; do not commit a
+production verification token into source control.
+
+After deployment, submit `/sitemap.xml` in Search Console and inspect the canonical
+production URLs such as `/hyderabad`, `/hyderabad/construction`,
+`/hyderabad/construction-cost` and the highest-priority locality pages.
 
 Private account, Admin, investment, Lead Partner and requirement-flow routes emit
 `X-Robots-Tag: noindex, nofollow, noarchive` and are excluded from the sitemap.

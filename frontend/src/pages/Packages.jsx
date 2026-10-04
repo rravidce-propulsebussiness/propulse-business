@@ -269,7 +269,7 @@ export default function Packages() {
 
     <section className="pkg-bottom-note">
       <Icon name="shield" size={17}/>
-      <p>Package rates and specifications shown here are brochure references. Final pricing, exact brands, quantities, taxes, exclusions, warranties and scope are confirmed in the project quotation.</p>
+      <p>Package rates and specifications shown here are brochure references. Final pricing, exact brands, quantities, taxes, exclusions, warranties and scope are confirmed in the project quotation. <Link to="/hyderabad/construction-cost">See the Hyderabad construction cost guide.</Link></p>
     </section>
   </main>
 }

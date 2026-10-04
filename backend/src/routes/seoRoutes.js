@@ -2,6 +2,54 @@ const express=require('express');
 
 const router=express.Router();
 
+const HYDERABAD_CONSTRUCTION_LOCALITIES=[
+  'uppal','habsiguda','tarnaka','nagole','kothapet','lb-nagar','saroornagar','vanasthalipuram','hayathnagar','dilsukhnagar',
+  'gachibowli','financial-district','nanakramguda','kondapur','madhapur','hitec-city','manikonda','kokapet','narsingi','tellapur','nallagandla',
+  'tolichowki','mehdipatnam','attapur',
+  'kukatpally','ferozguda','balanagar','bowenpally','miyapur','bachupally','pragathi-nagar','ameenpur','kompally',
+  'banjara-hills','jubilee-hills',
+  'ghatkesar','pocharam','boduppal','peerzadiguda','medipally','ecil','kapra','alwal','suchitra','quthbullapur','jeedimetla','medchal','shamirpet',
+  'shamshabad','tukkuguda','adibatla','nadergul','rajendranagar','bandlaguda-jagir','puppalaguda',
+  'patancheru','chandanagar','lingampally','beeramguda','kollur','mokila','shankarpally',
+  'keesara','nagaram','dammaiguda','rampally','cherlapally','sainikpuri','yapral','safilguda','malkajgiri',
+  'karmanghat','champapet','hastinapuram','meerpet','badangpet','balapur','turkayamjal','ibrahimpatnam','bongloor','maheshwaram',
+  'nizampet','mallampet','dundigal','gandimaisamma','bhel','ramachandrapuram','velimela','osman-nagar','gandipet','manchirevula','moinabad',
+  'secunderabad','begumpet','ameerpet','panjagutta','somajiguda','khairatabad','amberpet','ramanthapur',
+];
+
+const TELANGANA_DISTRICTS=[
+  'adilabad','bhadradri-kothagudem','hanumakonda','hyderabad','jagtial','jangaon','jayashankar-bhupalpally','jogulamba-gadwal','kamareddy',
+  'karimnagar','khammam','kumuram-bheem-asifabad','mahabubabad','mahabubnagar','mancherial','medak','medchal-malkajgiri','mulugu',
+  'nagarkurnool','nalgonda','narayanpet','nirmal','nizamabad','peddapalli','rajanna-sircilla','rangareddy','sangareddy','siddipet',
+  'suryapet','vikarabad','wanaparthy','warangal','yadadri-bhuvanagiri',
+];
+
+const ANDHRA_PRADESH_DISTRICTS=[
+  'alluri-sitharama-raju','anakapalli','anantapuramu','annamayya','bapatla','chittoor','east-godavari','eluru','guntur','kakinada',
+  'dr-br-ambedkar-konaseema','krishna','kurnool','markapuram','nandyal','ntr','palnadu','parvathipuram-manyam','polavaram','prakasam',
+  'sri-potti-sriramulu-nellore','sri-sathya-sai','srikakulam','tirupati','visakhapatnam','vizianagaram','west-godavari','ysr-kadapa',
+];
+
+const CONSTRUCTION_GUIDES=[
+  'best-steel-for-house-construction',
+  'prevent-cracks-in-house',
+  '2bhk-interiors-hyderabad',
+  'choose-construction-contractor-hyderabad',
+  'home-construction-checklist',
+  'waterproofing-precautions-new-house',
+  'best-cement-for-house-construction',
+  'm-sand-vs-river-sand-house-construction',
+  'red-brick-vs-aac-block-house',
+  'concrete-curing-house-construction',
+  'soil-test-before-house-construction',
+  'rcc-slab-before-concrete-checklist',
+  'electrical-planning-new-house',
+  'plumbing-checklist-new-house',
+  'wall-putty-primer-paint-sequence',
+  'modular-kitchen-planning-hyderabad',
+  'wardrobe-materials-plywood-mdf-hdhmr',
+];
+
 const PUBLIC_PATHS=[
   '/',
   '/quote',
@@ -12,9 +60,18 @@ const PUBLIC_PATHS=[
   '/about',
   '/contact',
   '/faq',
+  '/hyderabad',
   '/hyderabad/construction',
+  '/hyderabad/construction-cost',
   '/hyderabad/interior-designers',
   '/hyderabad/real-estate',
+  ...HYDERABAD_CONSTRUCTION_LOCALITIES.map(locality=>'/hyderabad/construction/'+locality),
+  '/telangana/construction',
+  ...TELANGANA_DISTRICTS.map(district=>'/telangana/construction/'+district),
+  '/andhra-pradesh/construction',
+  ...ANDHRA_PRADESH_DISTRICTS.map(district=>'/andhra-pradesh/construction/'+district),
+  '/guides',
+  ...CONSTRUCTION_GUIDES.map(guide=>'/guides/'+guide),
   '/hyderabad/construction/compare-options',
   '/hyderabad/interior-designers/compare-options',
   '/hyderabad/real-estate/compare-options',

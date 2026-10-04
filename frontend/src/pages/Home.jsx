@@ -138,6 +138,7 @@ export default function Home() {
         <Link to="/projects">Projects</Link>
         <Link to="/how-it-works">How It Works</Link>
         <Link to="/about">About</Link>
+        <Link to="/faq">FAQ</Link>
         <Link to="/contact">Contact</Link>
         <Link to="/experts">Find Professionals</Link>
       </nav>
@@ -200,6 +201,65 @@ export default function Home() {
                 <button type="button" onClick={() => openRequirement(item.key)} aria-label={'Start '+item.title}><Icon name="arrow" size={15}/></button>
               </div>
             </article>)}
+          </div>
+        </div>
+      </section>
+
+      <section className="hc-section hc-hyderabad-seo" aria-labelledby="hyderabad-services-title">
+        <div className="hc-container">
+          <div className="hc-section-head">
+            <div>
+              <span className="hc-local-eyebrow">HYDERABAD</span>
+              <h2 id="hyderabad-services-title">Explore services across Hyderabad</h2>
+              <p>Start with the service or locality closest to your requirement, then add your exact site, property, budget and timeline.</p>
+            </div>
+            <Link to="/hyderabad">View Hyderabad Hub <Icon name="arrow" size={13}/></Link>
+          </div>
+
+          <div className="hc-hyderabad-service-links">
+            <Link to="/hyderabad/construction"><b>Construction in Hyderabad</b><span>Home construction, contractors, quotes and project planning.</span></Link>
+            <Link to="/hyderabad/interior-designers"><b>Interior Designers in Hyderabad</b><span>Home interiors, rooms, finishes, budget and delivery planning.</span></Link>
+            <Link to="/hyderabad/real-estate"><b>Real Estate Services in Hyderabad</b><span>Buy, sell, rent and investment property requirements.</span></Link>
+          </div>
+
+          <div className="hc-locality-links">
+            <b>Popular construction areas</b>
+            <div>
+              <Link to="/hyderabad/construction-cost">Construction Cost in Hyderabad</Link>
+              <Link to="/hyderabad/construction/uppal">Construction in Uppal</Link>
+              <Link to="/hyderabad/construction/kothapet">Construction in Kothapet</Link>
+              <Link to="/hyderabad/construction/lb-nagar">Construction in LB Nagar</Link>
+              <Link to="/hyderabad/construction/gachibowli">Construction in Gachibowli</Link>
+              <Link to="/hyderabad/construction/kondapur">Construction in Kondapur</Link>
+              <Link to="/hyderabad/construction/kukatpally">Construction in Kukatpally</Link>
+              <Link to="/hyderabad/construction/miyapur">Construction in Miyapur</Link>
+              <Link to="/hyderabad/construction/kokapet">Construction in Kokapet</Link>
+              <Link to="/hyderabad/construction/ghatkesar">Construction in Ghatkesar</Link>
+              <Link to="/hyderabad/construction/shamshabad">Construction in Shamshabad</Link>
+              <Link to="/hyderabad/construction/patancheru">Construction in Patancheru</Link>
+            </div>
+          </div>
+          <div className="hc-locality-links">
+            <b>State-wide construction coverage</b>
+            <div>
+              <Link to="/telangana/construction">All 33 Telangana Districts</Link>
+              <Link to="/andhra-pradesh/construction">All 28 Andhra Pradesh Districts</Link>
+            </div>
+          </div>
+          <div className="hc-locality-links">
+            <b>Popular construction guides</b>
+            <div>
+              <Link to="/guides/best-steel-for-house-construction">Best Steel for House Construction</Link>
+              <Link to="/guides/prevent-cracks-in-house">How to Reduce Cracks in a New House</Link>
+              <Link to="/guides/choose-construction-contractor-hyderabad">Best Contractor in Hyderabad: How to Choose</Link>
+              <Link to="/guides/2bhk-interiors-hyderabad">2BHK Interiors in Hyderabad</Link>
+              <Link to="/guides/home-construction-checklist">Home Construction Checklist</Link>
+              <Link to="/guides/waterproofing-precautions-new-house">Waterproofing Precautions</Link>
+              <Link to="/guides/best-cement-for-house-construction">Best Cement for House Construction</Link>
+              <Link to="/guides/m-sand-vs-river-sand-house-construction">M-Sand vs River Sand</Link>
+              <Link to="/guides/soil-test-before-house-construction">Soil Test Before House Construction</Link>
+              <Link to="/guides">View All Construction Guides</Link>
+            </div>
           </div>
         </div>
       </section>
@@ -271,8 +331,8 @@ export default function Home() {
         <p>Your customer starting point for construction, interiors and real-estate requirements.</p>
         <div className="hc-footer-social"><span>f</span><span>◎</span><span>▶</span><span>in</span></div>
       </div>
-      <div><b>Quick Links</b><Link to="/">Home</Link><Link to="/quote#construction">Construction</Link><Link to="/quote#interiors">Interiors</Link><Link to="/packages">Packages</Link><Link to="/quote#property">Real Estate</Link><Link to="/projects">Projects</Link></div>
-      <div><b>Our Services</b><Link to="/quote#construction">Home Construction</Link><Link to="/quote#interiors">Interior Design</Link><Link to="/quote#property">Real Estate</Link><Link to="/quote#construction">Construction Quote</Link><button type="button" onClick={() => openRequirement('')}>Free Consultation</button></div>
+      <div><b>Quick Links</b><Link to="/">Home</Link><Link to="/hyderabad">Hyderabad</Link><Link to="/quote#construction">Construction</Link><Link to="/quote#interiors">Interiors</Link><Link to="/packages">Packages</Link><Link to="/quote#property">Real Estate</Link><Link to="/projects">Projects</Link><Link to="/faq">FAQ</Link></div>
+      <div><b>Our Services</b><Link to="/quote#construction">Home Construction</Link><Link to="/quote#interiors">Interior Design</Link><Link to="/quote#property">Real Estate</Link><Link to="/hyderabad/construction-cost">Hyderabad Cost Guide</Link><button type="button" onClick={() => openRequirement('')}>Free Consultation</button></div>
       <div><b>Support</b><Link to="/faq">FAQ</Link><Link to="/contact">Contact Us</Link><Link to="/contact">Privacy Policy</Link><Link to="/contact">Terms & Conditions</Link></div>
       <div><b>Contact Info</b>{phone&&<a href={'tel:'+String(phone).replace(/\s/g,'')}><Icon name="phone" size={12}/>{phone}</a>}{email&&<a href={'mailto:'+email}>{email}</a>}<span><Icon name="pin" size={12}/>Hyderabad, India</span></div>
     </footer>
