@@ -114,7 +114,11 @@ async function insertCommon(local,target,table,row,{exclude=[],overrides={},retu
   }
   const cols=Object.keys(values);
   if(!cols.length)throw new Error('No insertable columns for '+table);
-  const params=cols.map((_,i)=>'
+  const params=cols.map((_,i)=>'$'+(i+1)).join(',');
+  const sql='INSERT INTO '+qid(table)+' ('+cols.map(qid).join(',')+') VALUES ('+params+')'+(returning?' RETURNING '+qid(returning):'');
+  const res=await target.query(sql,cols.map(col=>values[col]));
+  return returning?res.rows[0]?.[returning]:null;
+}
 function resolveTwo(rows,a,b){
   const x=rows.find(a)||null;
   const y=rows.find(b)||null;
