@@ -12,6 +12,9 @@ must('src/services/telegramSupportService.js',[
   'approverAdminId',
   'answerCallbackQuery',
   'editMessageReplyMarkup',
+  'sendProofAttachment',
+  'FormData',
+  'Blob',
 ]);
 must('src/services/telegramPaymentReviewService.js',[
   'telegram_payment_review_map',
@@ -22,6 +25,9 @@ must('src/services/telegramPaymentReviewService.js',[
   'rejectTopup',
   'unmapped_review_message',
   'confirmationRequired',
+  'privateProofStorage.getProofDescriptor',
+  'sendProofAttachment',
+  'proofStatus',
 ]);
 must('src/controllers/supportChatController.js',[
   'telegramPaymentReviewService.processCallback',
