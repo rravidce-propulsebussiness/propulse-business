@@ -39,7 +39,7 @@ async function runAutoSyncCore({automated=false,config=null}={}){
     console.log(`Admin Google Sheet auto-sync started: ${connections.length} active connection(s).`);
     for(const connection of connections){
       try{
-        const result=await syncService.syncConnection({connectionId:connection.id});
+        const result=await syncService.syncConnection({connectionId:connection.id,force:automated});
         const sync=result.sync||{};
         if(result.busy||sync.busy){
           console.log(`Admin Google Sheet auto-sync skipped busy connection=${connection.id}; another replica is syncing it.`);
