@@ -1,5 +1,15 @@
 const pool=require('../config/database');
 const expertDirectoryService=require('./expertDirectoryService');
+const projectVideoService=require('./projectVideoService');
+const projectPlanService=require('./projectPlanService');
+
+async function materializeProjectMedia(rows){
+  return Promise.all((rows||[]).map(async row=>({
+    ...row,
+    video_url:row.video_url?await projectVideoService.displayUrl(row.video_url):row.video_url,
+    plan_url:row.plan_url?await projectPlanService.displayUrl(row.plan_url):row.plan_url,
+  })));
+}
 
 function toPositiveInt(value,fallback,max=100){
   const parsed=Number.parseInt(value,10);
@@ -246,8 +256,9 @@ async function listRecentProjectVideos({page=1,pageSize=12}={}){
      LIMIT ${currentPageSize} OFFSET ${offset}`,
     queryParams
   );
+  const data=await materializeProjectMedia(result.rows);
   return {
-    data:result.rows,
+    data,
     pagination:{
       page:currentPage,
       pageSize:currentPageSize,
@@ -308,8 +319,9 @@ async function listRecentProjects({page=1,pageSize=18}={}){
      LIMIT ${currentPageSize} OFFSET ${offset}`,
     params
   );
+  const data=await materializeProjectMedia(result.rows);
   return {
-    data:result.rows,
+    data,
     pagination:{
       page:currentPage,pageSize:currentPageSize,total,
       totalPages:total?Math.ceil(total/currentPageSize):0,
@@ -348,7 +360,8 @@ async function getPublicExpert(expertId){
     settings.showProjects?pool.query(`SELECT id,title,project_type,description,location_text,completion_year,area_text,budget_text,cover_image_url,${settings.showVideos?'video_url':'NULL::text AS video_url'},video_published_at,${settings.showPlans?'plan_url':'NULL::text AS plan_url'},sort_order FROM business_profile_projects WHERE business_profile_id=$1 AND is_published=TRUE ORDER BY sort_order,id`,[id]):Promise.resolve({rows:[]}),
     settings.showPlans?pool.query(`SELECT id,title,description,price_from,duration_label,inclusions,sort_order FROM business_profile_service_plans WHERE business_profile_id=$1 AND is_published=TRUE ORDER BY sort_order,id`,[id]):Promise.resolve({rows:[]}),
   ]);
-  return {...base,services:services.rows,locations:locations.rows,projects:projects.rows,service_plans:plans.rows,directory_settings:{showProjects:settings.showProjects,showVideos:settings.showVideos,showPlans:settings.showPlans}};
+  const renderedProjects=await materializeProjectMedia(projects.rows);
+  return {...base,services:services.rows,locations:locations.rows,projects:renderedProjects,service_plans:plans.rows,directory_settings:{showProjects:settings.showProjects,showVideos:settings.showVideos,showPlans:settings.showPlans}};
 }
 
 module.exports={listPublicExperts,listRecentProjects,listRecentProjectVideos,getPublicExpert};
