@@ -3,7 +3,7 @@ const http=require('http');
 const path=require('path');
 const {spawn}=require('child_process');
 
-const express=require(path.join(__dirname,'backend','node_modules','express'));
+const express=require('express');
 const app=express();
 
 const publicPort=Number(process.env.PORT)||3000;
