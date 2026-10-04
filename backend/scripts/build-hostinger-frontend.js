@@ -34,5 +34,5 @@ try{
   if(!fs.existsSync(frontendIndex))throw new Error('Frontend build did not produce frontend/dist/index.html');
   console.log('Frontend build ready for Hostinger publish.');
 }finally{
-  if(linked)fs.rmSync(frontendNodeModules,{force:true});
+  if(linked)fs.rmSync(frontendNodeModules,{recursive:true,force:true});
 }
