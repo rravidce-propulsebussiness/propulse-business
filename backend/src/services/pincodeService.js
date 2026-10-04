@@ -1,5 +1,29 @@
 const pool = require('../config/database');
 
+const MAX_POSTAL_PINCODE_BYTES = 256 * 1024;
+
+async function readResponseTextLimited(response, maxBytes) {
+  if (!response.body) return '';
+  const reader = response.body.getReader();
+  const chunks = [];
+  let total = 0;
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) return Buffer.concat(chunks, total).toString('utf8');
+      const chunk = Buffer.from(value);
+      total += chunk.length;
+      if (total > maxBytes) {
+        await reader.cancel().catch(() => {});
+        return null;
+      }
+      chunks.push(chunk);
+    }
+  } finally {
+    reader.releaseLock();
+  }
+}
+
 async function searchPincodes({ query = '', stateId, limit = 50 } = {}) {
   const values = [], conditions = ['is_active=TRUE'];
   if (stateId) {
@@ -22,11 +46,88 @@ async function searchPincodes({ query = '', stateId, limit = 50 } = {}) {
   )).rows;
 }
 
+async function fetchPostalPincode(pincode) {
+  const value = String(pincode || '').trim();
+  if (!/^\d{6}$/.test(value)) return null;
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 8000);
+  try {
+    const response = await fetch(`https://api.postalpincode.in/pincode/${value}`, {
+      headers: { Accept: 'application/json' },
+      signal: controller.signal,
+    });
+    const contentLength = Number(response.headers.get('content-length') || 0);
+    if (contentLength > MAX_POSTAL_PINCODE_BYTES) return null;
+    if (!response.ok) return null;
+    const body = await readResponseTextLimited(response, MAX_POSTAL_PINCODE_BYTES);
+    if (body === null) return null;
+    let payload;
+    try {
+      payload = JSON.parse(body);
+    } catch {
+      return null;
+    }
+    const offices = payload?.[0]?.Status === 'Success' && Array.isArray(payload?.[0]?.PostOffice)
+      ? payload[0].PostOffice
+      : [];
+    const first = offices[0];
+    if (!first) return null;
+    return {
+      pincode: value,
+      state_id: null,
+      state_name: String(first.State || '').trim(),
+      district_name: String(first.District || first.Block || '').trim(),
+      office_name: String(first.Name || '').trim(),
+      city_name: String(first.District || first.Block || first.Name || '').trim(),
+      // A PIN can serve several post offices. Keep all office names so the
+      // importer can match a Propulse city such as Patancheru even when the
+      // API's first record reports a postal district instead.
+      office_names: offices.map(x => String(x?.Name || '').trim()).filter(Boolean),
+      office_count: offices.length,
+      source: 'postalpincode-api',
+      synced_at: new Date(),
+    };
+  } catch (_) {
+    return null;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
 async function getPincode(pincode) {
-  return (await pool.query(
-    'SELECT pincode,state_id,state_name,district_name,office_count,source,synced_at FROM india_pincodes WHERE pincode=$1 AND is_active=TRUE',
-    [String(pincode).trim()]
-  )).rows[0] || null;
+  const value = String(pincode).trim();
+  const local = (await pool.query(
+    'SELECT pincode,state_id,state_name,district_name,office_count,office_names,source,synced_at FROM india_pincodes WHERE pincode=$1 AND is_active=TRUE',
+    [value]
+  )).rows[0];
+  if (local && Array.isArray(local.office_names) && local.office_names.length) return local;
+
+  // Older cached PIN rows did not retain all postal offices. Refresh those
+  // rows once so city/taluk names can participate in catalog matching.
+  // Keep the Lead Partner importer consistent with the Admin lead uploader,
+  // which detects the location from the same public India PIN lookup API.
+  const external = await fetchPostalPincode(value);
+  if (!external) return null;
+
+  // Cache the successful lookup so repeated sheet syncs do not need an API call.
+  try {
+    await pool.query(
+      `INSERT INTO india_pincodes(pincode,state_id,state_name,district_name,office_count,office_names,source,synced_at,is_active)
+       VALUES($1,NULL,$2,$3,$4,$5,$6,CURRENT_TIMESTAMP,TRUE)
+       ON CONFLICT(pincode) DO UPDATE SET
+         state_name=EXCLUDED.state_name,
+         district_name=EXCLUDED.district_name,
+         office_count=EXCLUDED.office_count,
+         office_names=EXCLUDED.office_names,
+         source=EXCLUDED.source,
+         synced_at=CURRENT_TIMESTAMP,
+         is_active=TRUE`,
+      [external.pincode, external.state_name, external.district_name, external.office_count, external.office_names || [], external.source]
+    );
+  } catch (_) {
+    // Lookup is still valid even if the optional cache write cannot be completed.
+  }
+  return external;
 }
 
 async function resolvePincode({ stateId, cityId, district = '', location = '' } = {}) {

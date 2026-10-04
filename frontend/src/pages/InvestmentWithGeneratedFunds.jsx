@@ -1,9 +1,5 @@
-import Investment from './Investment'
-import InvestorGeneratedFunds from './InvestorGeneratedFunds'
+import InvestmentCycleDashboard from './InvestmentCycleDashboard'
 
-export default function InvestmentWithGeneratedFunds(){
-  return <>
-    <div className="investment-generated-top"><InvestorGeneratedFunds /></div>
-    <Investment />
-  </>
+export default function InvestmentWithGeneratedFunds() {
+  return <InvestmentCycleDashboard />
 }
