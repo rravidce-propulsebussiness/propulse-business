@@ -185,7 +185,7 @@
 }
 .hc-hero-trust small{
   color:#7c8f9e;
-  font-size:10.5px;
+  font-size:12px;
   line-height:1.2;
   white-space:nowrap;
 }
@@ -256,7 +256,7 @@
   color:#123652;
   background:linear-gradient(145deg,#edf3f7,#d6e2e9);
   box-shadow:0 3px 8px rgba(8,39,65,.08);
-  font-size:9px;
+  font-size:12px;
   font-weight:950;
 }
 .hc-pro-avatar-row span:first-child{margin-left:0;background:linear-gradient(145deg,#ffe2bd,#e7b16b)}
@@ -378,7 +378,7 @@
   overflow:hidden;
   margin-top:7px;
   color:#123652;
-  font-size:9.5px;
+  font-size:12px;
   line-height:1.15;
   font-weight:950;
   text-overflow:ellipsis;
@@ -388,7 +388,7 @@
   display:block;
   margin-top:2px;
   color:#7d8e9b;
-  font-size:9px;
+  font-size:12px;
   line-height:1.15;
 }
 
