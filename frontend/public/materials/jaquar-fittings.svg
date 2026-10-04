@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 120" role="img" aria-labelledby="t d">
+<title id="t">Jaquar fittings</title><desc id="d">Modern chrome faucet</desc>
+<defs><linearGradient id="m" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fafafa"/><stop offset=".2" stop-color="#aeb9c0"/><stop offset=".45" stop-color="#fff"/><stop offset=".7" stop-color="#7f8b93"/><stop offset="1" stop-color="#eef1f2"/></linearGradient><filter id="s"><feDropShadow dx="0" dy="5" stdDeviation="4" flood-color="#142b3c" flood-opacity=".18"/></filter></defs>
+<rect width="160" height="120" rx="16" fill="#f0efeb"/>
+<g filter="url(#s)">
+<ellipse cx="80" cy="93" rx="42" ry="11" fill="#fff" stroke="#e1e4e6"/>
+<rect x="73" y="32" width="13" height="53" rx="6" fill="url(#m)"/>
+<path d="M80 38h38c11 0 18 7 18 18v8h-13v-8c0-4-2-6-6-6H80Z" fill="url(#m)"/>
+<rect x="123" y="61" width="13" height="18" rx="5" fill="url(#m)"/>
+<rect x="69" y="27" width="21" height="7" rx="3.5" fill="#555f66"/>
+<rect x="65" y="24" width="29" height="5" rx="2.5" fill="url(#m)"/>
+</g>
+<rect x="101" y="8" width="50" height="22" rx="11" fill="#0b3150"/><text x="126" y="23" text-anchor="middle" font-family="Arial,sans-serif" font-size="10.5" font-weight="700" fill="#fff">Jaquar</text>
+</svg>
