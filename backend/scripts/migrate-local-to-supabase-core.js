@@ -42,9 +42,15 @@ async function all(client,table,order='id'){
   const orderClause=columns.some(x=>x.column_name===order)?' ORDER BY '+qid(order):'';
   return(await client.query('SELECT * FROM '+qid(table)+orderClause)).rows;
 }
+const columnCache=new WeakMap();
 async function columnSet(client,table){
+  let cache=columnCache.get(client);
+  if(!cache){cache=new Map();columnCache.set(client,cache)}
+  if(cache.has(table))return cache.get(table);
   const rows=(await client.query(`SELECT column_name FROM information_schema.columns WHERE table_schema='public' AND table_name=$1`,[table])).rows;
-  return new Set(rows.map(r=>r.column_name));
+  const value=new Set(rows.map(r=>r.column_name));
+  cache.set(table,value);
+  return value;
 }
 const commonCache=new Map();
 async function commonColumns(local,target,table){
@@ -135,10 +141,12 @@ async function migrate(){
 
     const localCityPins=await all(local,'city_pincodes');
     const targetCityPins=await all(target,'city_pincodes');
+    const cityPinKeys=new Set(targetCityPins.map(t=>[t.city_id,String(t.pincode),norm(t.office_name)].join('|')));
     for(const row of localCityPins){
       const cityId=need(cityMap,row.city_id,'city_pincodes.city_id');
-      const found=cityId>0&&targetCityPins.find(t=>t.city_id===cityId&&String(t.pincode)===String(row.pincode)&&norm(t.office_name)===norm(row.office_name));
-      if(found){bump('city_pincodes','matched');continue}
+      const pinKey=[cityId,String(row.pincode),norm(row.office_name)].join('|');
+      if(cityPinKeys.has(pinKey)){bump('city_pincodes','matched');continue}
+      cityPinKeys.add(pinKey);
       bump('city_pincodes','inserted');
       if(APPLY)await insertCommon(local,target,'city_pincodes',row,{exclude:['city_id'],overrides:{city_id:cityId}});
     }
