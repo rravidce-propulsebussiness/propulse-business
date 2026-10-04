@@ -82,7 +82,6 @@ export default function AdminCustomerFlows(){
        <div className="dependency-box"><b>Conditional display <small>Optional</small></b><div><input placeholder="Depends on question key" value={q.showWhen?.questionKey||''} onChange={e=>patchQuestion(index,{showWhen:e.target.value?{questionKey:e.target.value,equals:dependencyText(q)}:{}})}/><select value={Array.isArray(q.showWhen?.in)?'in':Object.prototype.hasOwnProperty.call(q.showWhen||{},'notEquals')?'notEquals':'equals'} onChange={e=>{const dep=q.showWhen?.questionKey;if(!dep)return;const text=dependencyText(q);patchQuestion(index,{showWhen:e.target.value==='in'?{questionKey:dep,in:text.split(',').map(v=>v.trim()).filter(Boolean)}:{questionKey:dep,[e.target.value]:text}})}}><option value="equals">equals</option><option value="notEquals">not equals</option><option value="in">in list</option></select><input placeholder="Value or comma list" value={dependencyText(q)} onChange={e=>{const dep=q.showWhen?.questionKey;if(!dep)return;const mode=Array.isArray(q.showWhen?.in)?'in':Object.prototype.hasOwnProperty.call(q.showWhen||{},'notEquals')?'notEquals':'equals';patchQuestion(index,{showWhen:mode==='in'?{questionKey:dep,in:e.target.value.split(',').map(v=>v.trim()).filter(Boolean)}:{questionKey:dep,[mode]:e.target.value}})}}/></div></div>
       </article>)}</div>
      </section>
-     {detail.flow_type==='estimator'&&<AdminEstimatorConfig flowId={detail.id} versionId={detail.editingVersion?.id} questions={questions}/>}
     </>}
    </section>
   </div>
