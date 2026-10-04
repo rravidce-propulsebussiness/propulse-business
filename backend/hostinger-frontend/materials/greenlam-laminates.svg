@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 120" role="img" aria-labelledby="t d">
+<title id="t">Greenlam laminates</title><desc id="d">Designer laminate swatches</desc>
+<defs><filter id="s"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#142b3c" flood-opacity=".16"/></filter></defs>
+<rect width="160" height="120" rx="16" fill="#eee8e1"/>
+<g transform="translate(30 24)" filter="url(#s)">
+<rect x="13" y="22" width="78" height="45" rx="5" fill="#d2b48c" transform="rotate(-18 13 22)"/>
+<rect x="26" y="16" width="78" height="45" rx="5" fill="#8f6950" transform="rotate(-8 26 16)"/>
+<rect x="38" y="15" width="78" height="45" rx="5" fill="#57463f" transform="rotate(6 38 15)"/>
+<rect x="49" y="23" width="70" height="40" rx="5" fill="#c7c0b2" transform="rotate(16 49 23)"/>
+</g>
+<g opacity=".35" stroke="#fff"><path d="M47 55h52"/><path d="M53 64h52"/><path d="M61 73h48"/></g>
+<rect x="89" y="8" width="62" height="22" rx="11" fill="#0b3150"/><text x="120" y="23" text-anchor="middle" font-family="Arial,sans-serif" font-size="10.5" font-weight="700" fill="#fff">Greenlam</text>
+</svg>
