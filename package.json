@@ -11,5 +11,8 @@
     "build": "npm ci --omit=dev --prefix backend && npm ci --include=dev --prefix frontend && npm run build --prefix frontend",
     "start": "node hostinger-server.js",
     "test:hostinger": "node backend/scripts/check-hostinger-single-app.js"
+  },
+  "dependencies": {
+    "express": "^5.2.1"
   }
 }
