@@ -16,6 +16,8 @@ assert(inventory.includes("n==='singleonly'"),'Lead Partner Google Sheet import 
 assert(inventory.includes("intriordesignandhomeinteriors")&&inventory.includes("Interior Design & Home Interiors"),'Lead Partner sheet import must normalize the same known Interior Design industry typo as Admin import');
 assert(inventory.includes('Industry, Service and Subservice are all blank'),'Blank classification rows must report a precise actionable reason');
 assert(inventory.includes('const locationCache=new Map()'),'Lead Partner sheet import must cache repeated PIN/location resolution within one file');
+assert(!inventory.includes('state_id=$1,updated_at=CURRENT_TIMESTAMP'),'Lead Partner PIN state persistence must not write the nonexistent india_pincodes.updated_at column');
+assert(inventory.includes('SET state_id=$1')&&inventory.includes('WHERE pincode=$2 AND (state_id IS DISTINCT FROM $1 OR state_id IS NULL)'),'Lead Partner PIN import must still persist the canonical State ID');
 assert(inventory.includes('const settings=await partnerPricing.getSettings()'),'Partner pricing settings must be loaded once per import rather than per row');
 assert(inventory.includes('failureSummary:summarizeFailures(failures)'),'Lead Partner import must return categorized failure diagnostics');
 assert(inventory.includes("if (error.code === 'DUPLICATE_LEAD')")&&inventory.includes('duplicateSamples.push(detail)'),'Duplicate rows must be counted separately from genuine failures');
