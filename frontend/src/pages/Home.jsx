@@ -288,8 +288,8 @@ export default function Home() {
 
       <section className="hc-section hc-benefits">
         <div className="hc-container">
-          <div className="hc-section-head compact">
-            <div><h2>Why Homeowners Choose ProPulse</h2><p>A customer-first platform for construction, interiors and real estate requirements.</p></div>
+          <div className="hc-section-head compact hc-section-head-centered">
+            <h2>Why Homeowners Choose ProPulse</h2>
           </div>
           <div className="hc-benefit-grid">
             {BENEFITS.map((item,index) => <article key={item.title}>
