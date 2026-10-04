@@ -1,4 +1,5 @@
 const pool=require('../config/database');
+const criticalActionAudit=require('./criticalActionAuditService');
 
 const STRATEGIES=Object.freeze(['permanent_single','auto_release','shared']);
 const DEFAULTS=Object.freeze({
@@ -81,10 +82,11 @@ async function getSettingsForType(leadType='basic'){
   return settings[type];
 }
 
-async function updateSettings(input={}){
+async function updateSettings(input={},adminUserId=null){
   const client=await pool.connect();
   try{
     await client.query('BEGIN');
+    const before=await getSettings();
     const result={};
     for(const type of ['basic','premium']){
       const fallback=DEFAULTS[type];
@@ -95,6 +97,7 @@ async function updateSettings(input={}){
         RETURNING *`,[type,cfg.accessStrategy,cfg.buyerCapacity,cfg.releaseToTwoAfterHours,cfg.releaseToThreeAfterHours])).rows[0];
       result[type]=normalizeConfig({defaultStrategy:row.default_strategy,maxBuyerCapacity:row.max_buyer_capacity,releaseToTwoAfterHours:row.release_to_two_after_hours,releaseToThreeAfterHours:row.release_to_three_after_hours},fallback);
     }
+    await criticalActionAudit.record(client,{actorId:adminUserId,category:'pricing',action:'pricing.access_settings',entityType:'lead_access_settings',entityId:'defaults',beforeData:before,afterData:result,source:'lead_access_strategy'});
     await client.query('COMMIT');
     return result;
   }catch(error){await client.query('ROLLBACK');throw error}finally{client.release()}

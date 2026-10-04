@@ -2,6 +2,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { clearSession, getUser, getToken, authRequest } from '../utils/auth'
 import './UserHeader.css'
+import NotificationBell from './NotificationBell'
 
 export default function UserHeader() {
   const navigate = useNavigate(); const location = useLocation(); const user = getUser(); const token = getToken(); const loggedIn = Boolean(token && user)
@@ -18,14 +19,12 @@ export default function UserHeader() {
   }
 
   if(!loggedIn) return <><header className="user-header public-leads-header">
-    <Link className="user-header-brand" to="/" onClick={()=>setOpen(false)}><img src="/brand/propulse-logo.png" alt="Propulse Business"/></Link>
+    <Link className="user-header-brand" to="/professionals" onClick={()=>setOpen(false)}><img src="/brand/propulse-logo.png" alt="Propulse Business"/></Link>
     <nav className={`user-header-nav${open?' open':''}`}>
-      <Link to="/">Home</Link>
-      <Link to="/industries">Industries</Link>
-      <Link to="/#pricing" onClick={()=>setOpen(false)}>Pricing</Link>
-      <Link to="/#upcoming-features" onClick={()=>setOpen(false)}>Upcoming Features</Link>
-      <Link to="/#faq" onClick={()=>setOpen(false)}>FAQ</Link>
-      {location.pathname !== '/leads' && <Link className="leads-active" to="/leads" onClick={()=>setOpen(false)}>Explore Leads</Link>}
+      <Link to="/professionals">Home</Link>
+      <Link to="/upcoming-features" onClick={()=>setOpen(false)}>Upcoming Features</Link>
+      <Link to="/faq" onClick={()=>setOpen(false)}>FAQ</Link>
+      {!['/professionals','/faq','/upcoming-features'].includes(location.pathname) && <Link className="leads-active" to="/professionals" onClick={()=>setOpen(false)}>Explore Leads</Link>}
       <Link className="public-nav-auth" to="/login" onClick={()=>setOpen(false)}>Login</Link>
       <Link className="public-nav-auth" to="/signup" onClick={()=>setOpen(false)}>Sign up</Link>
     </nav>
@@ -38,17 +37,18 @@ export default function UserHeader() {
 
   if(user?.role==='admin') return null
   const displayName=businessName||'Your Business'; const avatarLetter=displayName.trim().charAt(0).toUpperCase()||'B'
-  return <><header className="user-header"><Link className="user-header-brand" to="/" onClick={()=>setOpen(false)}><img src="/brand/propulse-logo.png" alt="Propulse Business"/></Link>
+  return <><header className="user-header"><Link className="user-header-brand" to="/professionals" onClick={()=>setOpen(false)}><img src="/brand/propulse-logo.png" alt="Propulse Business"/></Link>
     <nav className={"user-header-nav" + (open ? " open" : "")}>
-      <Link className={active("/")} to="/" onClick={()=>setOpen(false)}>Home</Link>
+      <Link className={active("/professionals")} to="/professionals" onClick={()=>setOpen(false)}>Home</Link>
       <Link className={active("/purchased-leads")} to="/purchased-leads" onClick={()=>setOpen(false)}>Purchased Leads</Link>
       <Link className={active("/wallet")} to="/wallet" onClick={()=>setOpen(false)}>Wallet</Link>
       <Link className={active("/membership")} to="/membership" onClick={()=>setOpen(false)}>Membership</Link>
       {isPro && <Link className={active("/investment")} to="/investment" onClick={()=>setOpen(false)}>Investor</Link>}
-      {!location.pathname.startsWith("/investment") && <Link className={active("/contact?audience=users")} to="/contact?audience=users" onClick={()=>setOpen(false)}>Contact</Link>}
-      <Link className={(location.pathname==='/'&&location.hash==='#faq')||location.pathname==='/faq'?' active':''} to="/#faq" onClick={()=>setOpen(false)}>FAQ</Link>
+      {!location.pathname.startsWith("/investment") && <Link className={active("/professional-contact")} to="/professional-contact" onClick={()=>setOpen(false)}>Contact</Link>}
+      <Link className={active("/upcoming-features")} to="/upcoming-features" onClick={()=>setOpen(false)}>Upcoming Features</Link>
+      <Link className={active("/faq")} to="/faq" onClick={()=>setOpen(false)}>FAQ</Link>
       <button className="user-header-mobile-logout" onClick={logout}>Logout</button>
     </nav>
-    <div className="user-header-right"><Link className="user-profile-pill" to="/profile" aria-label="Open business profile"><span className="user-avatar">{avatarLetter}</span><span className="user-profile-name">{displayName}</span></Link><button className="user-logout" onClick={logout}>Logout</button><button className="user-menu-toggle" aria-label="Open navigation" onClick={()=>setOpen(v=>!v)}>☰</button></div>
+    <div className="user-header-right"><NotificationBell/><Link className="user-profile-pill" to="/profile" aria-label="Open business profile"><span className="user-avatar">{avatarLetter}</span><span className="user-profile-name">{displayName}</span></Link><button className="user-logout" onClick={logout}>Logout</button><button className="user-menu-toggle" aria-label="Open navigation" onClick={()=>setOpen(v=>!v)}>☰</button></div>
   </header><div className="user-header-spacer" aria-hidden="true"/></>
 }

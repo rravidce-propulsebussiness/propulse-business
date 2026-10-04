@@ -26,12 +26,13 @@ export default function LeadPartnerFaq(){
     <main className="faq-main">
       <header className="faq-topbar"><div className="faq-breadcrumb"><span>Lead Partner</span><b>/</b><strong>FAQs</strong></div></header>
       <div className="faq-content">
-        <section className="faq-hero">
-          <div className="faq-hero-copy"><h1>How can we help you?</h1>
-            <div className="faq-search"><span>⌕</span><input value={search} onChange={e=>{setSearch(e.target.value);setOpen(null)}} placeholder="Search FAQs… e.g. payment, lead validity, withdrawal"/><button type="button">Search</button></div>
+        <section className="faq-hero premium-page-hero">
+          <div className="faq-hero-copy"><span className="faq-hero-kicker">LEAD PARTNER / HELP CENTER</span><h1>How can we help?</h1><p>Search Lead Partner guidance for inventory, pricing, lead quality, earnings, withdrawals and account management.</p>
+            <div className="faq-hero-meta"><span><b>{faqs.length}</b> help articles</span><span><b>{counts[category]||0}</b> in selected category</span><span><b>{visible.length}</b> matching search</span></div>
+            <div className="faq-search"><span>⌕</span><input value={search} onChange={e=>{setSearch(e.target.value);setOpen(null)}} placeholder="Search payment, lead validity, withdrawal…"/>{search&&<button type="button" onClick={()=>setSearch('')}>Clear</button>}</div>
             <div className="faq-popular"><span>Popular:</span>{['lead validity','payment','withdrawal','refund','lead quality','account','reports'].map(x=><button type="button" key={x} onClick={()=>setSearch(x)}>{x}</button>)}</div>
           </div>
-          <div className="faq-hero-art" aria-hidden="true"><div className="faq-bubble big">?</div><div className="faq-bubble small">≡</div><div className="faq-leaf">◒</div></div>
+          <div className="faq-hero-actions"><button type="button" onClick={load} disabled={loading}><span>↻</span><div><b>{loading?'Refreshing…':'Refresh FAQs'}</b><small>Reload help content</small></div></button><Link to="/contact?audience=lead_partners"><span>☎</span><div><b>Contact support</b><small>Reach the ProPulse team</small></div></Link></div>
         </section>
 
         {error&&<div className="faq-alert">{error}<button onClick={load}>Retry</button></div>}
@@ -48,12 +49,12 @@ export default function LeadPartnerFaq(){
 
           <aside className="faq-side">
             <section className="faq-card quick-help"><div className="faq-card-head"><div><h2>Common guides</h2></div></div>{QUICK.map(([q,cat])=><button type="button" key={q} onClick={()=>{setCategory(cat);setSearch('')}}><span>↗</span><div><strong>{q}</strong><small>{CATEGORIES.find(x=>x[0]===cat)?.[2]}</small></div><b>›</b></button>)}</section>
-            <section className="faq-support"><div className="faq-support-icon">◉</div><div><span>STILL NEED HELP?</span><h3>We're here to help.</h3><p>Contact your ProPulse administrator with your lead, report or withdrawal reference.</p></div><Link to="/lead-partner/reports">Open Reports →</Link></section>
+            <section className="faq-support"><div className="faq-support-icon">◉</div><div><span>STILL NEED HELP?</span><h3>We're here to help.</h3><p>Contact ProPulse support with your lead, report or withdrawal reference.</p></div><Link to="/contact?audience=lead_partners">Contact support →</Link></section>
             <section className="faq-card resources"><div className="faq-card-head"><div><h2>Lead Partner tools</h2></div></div><Link to="/lead-partner/inventory">Lead Inventory <b>›</b></Link><Link to="/lead-partner/pricing">Pricing &amp; Revenue <b>›</b></Link><Link to="/lead-partner/withdrawals">Earnings &amp; Withdrawals <b>›</b></Link><Link to="/lead-partner/account">Account &amp; Payout <b>›</b></Link></section>
           </aside>
         </div>
 
-        <section className="faq-bottom-help"><div><h2>Can't find what you're looking for?</h2></div><Link to="/lead-partner/account">Account &amp; payout settings →</Link></section>
+        <section className="faq-bottom-help"><div><span>SUPPORT</span><h2>Can't find what you're looking for?</h2><p>Use the Lead Partner contact page for direct support channels and business hours.</p></div><Link to="/contact?audience=lead_partners">Contact ProPulse →</Link></section>
       </div>
     </main>
   </div>

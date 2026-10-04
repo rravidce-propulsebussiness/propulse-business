@@ -1,0 +1,74 @@
+const fs=require('fs');
+const path=require('path');
+const root=path.join(__dirname,'..');
+const read=relative=>fs.readFileSync(path.join(root,relative),'utf8');
+const assert=(condition,message)=>{if(!condition)throw new Error(message)};
+const notifications=require('../src/services/notificationService');
+
+const migration=read('src/database/migrations/20260928_notifications.sql');
+const service=read('src/services/notificationService.js');
+const scheduler=read('src/services/notificationScheduler.js');
+const email=read('src/services/emailService.js');
+const server=read('src/server.js');
+const worker=read('src/worker.js');
+const payment=read('src/services/paymentService.js');
+const wallet=read('src/services/walletService.js');
+const purchase=read('src/services/leadPurchaseService.js');
+const adminUser=read('src/services/adminUser360Service.js');
+const partnerPayout=read('src/services/leadPartnerPayoutService.js');
+const investorPayout=read('src/services/investorPayoutRequestService.js');
+const adminSheet=read('src/services/adminGoogleSheetSyncScheduler.js');
+const partnerSheet=read('src/services/leadPartnerSheetSyncScheduler.js');
+const reconciliation=read('src/services/financialReconciliationScheduler.js');
+const risk=read('src/services/securityRiskService.js');
+const quality=read('src/services/leadQualityGateService.js');
+const adminService=read('src/services/adminService.js');
+const partnerService=read('src/services/leadPartnerService.js');
+const routes=read('src/routes/notificationRoutes.js');
+const app=read('../frontend/src/App.jsx');
+const bell=read('../frontend/src/components/NotificationBell.jsx');
+const page=read('../frontend/src/pages/Notifications.jsx');
+const adminLayout=read('../frontend/src/admin/components/AdminLayout.jsx');
+const partnerSidebar=read('../frontend/src/components/LeadPartnerSidebar.jsx');
+const userHeader=read('../frontend/src/components/UserHeader.jsx');
+const investorHeader=read('../frontend/src/components/InvestorHeader.jsx');
+
+assert(migration.includes('CREATE TABLE IF NOT EXISTS notifications'),'Notification inbox table is missing');
+assert(migration.includes('CREATE TABLE IF NOT EXISTS notification_deliveries'),'Notification delivery outbox is missing');
+assert(migration.includes('CREATE TABLE IF NOT EXISTS user_notification_preferences'),'Notification preferences table is missing');
+assert(migration.includes('uq_notifications_user_dedupe'),'Per-user notification dedupe index is missing');
+assert(service.includes("ON CONFLICT(user_id,dedupe_key) WHERE dedupe_key IS NOT NULL"),'Notification writes must be idempotent');
+assert(service.includes('FOR UPDATE SKIP LOCKED'),'Email outbox claims must support concurrent workers');
+assert(service.includes('if(email&&row.inserted)'),'Duplicate events must not enqueue late email deliveries');
+assert(service.includes("row.email_enabled===false")&&service.includes("'Email notifications disabled'"),'Email worker must re-check the current user preference before delivery');
+assert(service.includes("status='processing' AND d.updated_at<CURRENT_TIMESTAMP-INTERVAL '10 minutes'"),'Stale email claims must be recoverable');
+assert(service.includes('attempts>=5')&&service.includes("terminal?'failed':'retry'"),'Email delivery retries must have a terminal bound');
+assert(service.includes("dedupeKey:`membership-expiry:"),'Membership expiry reminders must deduplicate');
+const safe=notifications.sanitizeMetadata({manual_reference:'RAW-UTR',proof_url:'private-key',password:'secret',safe:'ok'});
+assert(safe.manual_reference==='[redacted]'&&safe.proof_url==='[redacted]'&&safe.password==='[redacted]'&&safe.safe==='ok','Notification metadata must redact sensitive fields');
+
+assert(email.includes('sendNotificationEmail')&&email.includes('isConfigured'),'Existing email provider must support generic notification delivery');
+assert(email.includes('AbortController()')&&email.includes('readResponseTextLimited(response, 64 * 1024)'),'Notification email must retain provider timeout/size protections');
+assert(server.includes("app.use('/api/notifications',notificationRoutes)")&&worker.includes('startNotificationScheduler'),'Notification API and dedicated worker scheduler must be wired');
+assert(routes.includes("router.get('/unread-count'")&&routes.includes("router.put('/preferences'")&&routes.includes("router.post('/read-all'"),'Notification API routes are incomplete');
+
+assert(payment.includes("type:approved?'payment_approved':'payment_rejected'"),'Payment review notifications are missing');
+assert(wallet.includes("type:'wallet_topup_approved'")&&wallet.includes("type:'wallet_topup_rejected'")&&wallet.includes("type:'wallet_adjusted'"),'Wallet notifications are incomplete');
+assert(purchase.includes("type:'lead_purchased'"),'Lead-purchase notification is missing');
+assert(adminUser.includes("type:current?'membership_plan_changed':'membership_assigned'")&&payment.includes("type:'membership_updated'"),'Membership change notifications are incomplete');
+assert(partnerPayout.includes("type:'payout_paid'")&&partnerPayout.includes("type:'payout_rejected'"),'Lead Partner payout notifications are incomplete');
+assert(investorPayout.includes("type:'investor_payout_paid'")&&investorPayout.includes("type:'investor_payout_rejected'"),'Investor payout notifications are incomplete');
+assert(adminSheet.includes("type:'admin_sheet_sync_failed'")&&partnerSheet.includes("type:'lead_partner_sheet_sync_failed'"),'Google Sheet failure notifications are incomplete');
+assert(reconciliation.includes("type:'financial_reconciliation_issue'")&&reconciliation.includes("type:'financial_reconciliation_failed'"),'Financial reconciliation alerts are missing');
+assert(risk.includes("type:'security_risk_event'"),'High-risk Risk Center notifications are missing');
+assert(quality.includes("type:'lead_quality_hold'")&&quality.includes("type:'lead_quality_released'"),'Lead quality notifications are incomplete');
+assert(adminService.includes("type:'company_verification_updated'"),'Company verification notification is missing');
+assert(partnerService.includes("type:'lead_partner_status_changed'"),'Lead Partner status notification is missing');
+
+assert(app.includes('Notifications=lazy')&&app.includes('path="/notifications"')&&app.includes('path="/admin/notifications"')&&app.includes('path="/lead-partner/notifications"'),'Role notification routes are missing');
+assert(bell.includes("'/notifications/unread-count'")&&bell.includes("'/notifications/'+item.id+'/read'"),'Notification bell must load and mark notifications');
+assert(page.includes('<span>Email notifications</span>')&&page.includes("'/notifications/preferences'")&&page.includes("'/notifications/read-all'"),'Notification center preferences/read controls are missing');
+assert(adminLayout.includes('<NotificationBell/>')&&userHeader.includes('<NotificationBell/>')&&investorHeader.includes('<NotificationBell/>'),'Header notification bells are missing');
+assert(partnerSidebar.includes('lead-partner-notification-count'),'Lead Partner unread badge is missing');
+
+console.log('Central notification system regression test passed.');

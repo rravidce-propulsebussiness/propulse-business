@@ -28,61 +28,89 @@ async function getMyReports(userId){
   );
   return result.rows;
 }
-async function getLeadPartnerReports(userId){
-  const result=await pool.query(
-    `SELECT
-       r.id,
-       r.lead_id,
-       r.reporter_user_id,
-       r.reason,
-       r.details,
-       r.status,
-       r.created_at,
-       r.reviewed_at,
-       r.reviewed_by,
-       r.updated_at,
-       l.customer_name,
-       l.customer_phone,
-       l.customer_email,
-       l.industry_id,
-       l.service_id,
-       l.city_id,
-       l.state_id,
-       l.status AS lead_status,
-       l.created_at AS lead_created_at,
-       i.name AS industry_name,
-       s.name AS service_name,
-       c.name AS city_name,
-       st.name AS state_name,
-       reporter.name AS reporter_name,
-       reporter.email AS reporter_email,
-       reviewer.name AS reviewer_name
-     FROM lead_reports r
-     INNER JOIN leads l ON l.id=r.lead_id
-     INNER JOIN lead_partners lp ON lp.id=l.lead_partner_id
-     LEFT JOIN industries i ON i.id=l.industry_id
-     LEFT JOIN services s ON s.id=l.service_id
-     LEFT JOIN cities c ON c.id=l.city_id
-     LEFT JOIN states st ON st.id=l.state_id
-     LEFT JOIN users reporter ON reporter.id=r.reporter_user_id
-     LEFT JOIN users reviewer ON reviewer.id=r.reviewed_by
-     WHERE lp.user_id=$1
-     ORDER BY r.created_at DESC,r.id DESC
-     LIMIT 500`,
-    [Number(userId)]
-  );
-  const rows=result.rows;
-  const reportedLeadIds=new Set(rows.map(row=>Number(row.lead_id)).filter(Number.isFinite));
-  return {
+async function getLeadPartnerReports(userId,{status='all',search='',page=1,limit=50}={}){
+  const partnerUserId=Number(userId);
+  const allowed=['pending','verified_fake','verified_genuine','rejected','all'];
+  const normalizedStatus=String(status||'all').trim().toLowerCase();
+  if(!allowed.includes(normalizedStatus)){const e=new Error('Invalid report status');e.code='INVALID_REPORT_STATUS';throw e}
+  const safeLimit=Math.min(100,Math.max(1,Number(limit)||50));
+  const safePage=Math.max(1,Number(page)||1);
+  const baseFrom=`lead_reports r
+    INNER JOIN leads l ON l.id=r.lead_id
+    INNER JOIN lead_partners lp ON lp.id=l.lead_partner_id
+    LEFT JOIN industries i ON i.id=l.industry_id
+    LEFT JOIN services s ON s.id=l.service_id
+    LEFT JOIN cities c ON c.id=l.city_id
+    LEFT JOIN states st ON st.id=l.state_id
+    LEFT JOIN users reporter ON reporter.id=r.reporter_user_id
+    LEFT JOIN users reviewer ON reviewer.id=r.reviewed_by`;
+
+  const summaryPromise=pool.query(`
+    WITH partner_reports AS (
+      SELECT r.lead_id,r.status,r.reason
+      FROM lead_reports r
+      JOIN leads l ON l.id=r.lead_id
+      JOIN lead_partners lp ON lp.id=l.lead_partner_id
+      WHERE lp.user_id=$1
+    )
+    SELECT
+      COUNT(*)::int AS total_reports,
+      COUNT(DISTINCT lead_id)::int AS reported_leads,
+      COUNT(*) FILTER(WHERE status='pending')::int AS pending,
+      COUNT(*) FILTER(WHERE status='verified_fake')::int AS verified_fake,
+      COUNT(*) FILTER(WHERE status='verified_genuine')::int AS verified_genuine,
+      COUNT(*) FILTER(WHERE status='rejected')::int AS rejected,
+      COALESCE((
+        SELECT jsonb_object_agg(reason,count)
+        FROM (SELECT reason,COUNT(*)::int AS count FROM partner_reports GROUP BY reason) reason_rows
+      ),'{}'::jsonb) AS reason_counts
+    FROM partner_reports
+  `,[partnerUserId]);
+
+  const params=[partnerUserId];
+  const conditions=['lp.user_id=$1'];
+  const searchValue=String(search||'').trim();
+  if(searchValue){
+    params.push(`%${searchValue}%`);
+    conditions.push(`CONCAT_WS(' ',r.id,r.lead_id,l.customer_name,l.customer_phone,l.customer_email,i.name,s.name,c.name,st.name,r.details,r.reason,r.status) ILIKE $${params.length}`);
+  }
+  if(normalizedStatus!=='all'){
+    params.push(normalizedStatus);
+    conditions.push(`r.status=$${params.length}`);
+  }
+  const where=`WHERE ${conditions.join(' AND ')}`;
+  const totalPromise=pool.query(`SELECT COUNT(*)::int AS total FROM ${baseFrom} ${where}`,params);
+  const [summaryResult,totalResult]=await Promise.all([summaryPromise,totalPromise]);
+  const total=Number(totalResult.rows[0]?.total||0);
+  const totalPages=Math.ceil(total/safeLimit);
+  const pageValue=totalPages>0?Math.min(safePage,totalPages):1;
+  const offset=(pageValue-1)*safeLimit;
+  const dataParams=[...params,safeLimit,offset];
+  const rows=(await pool.query(`
+    SELECT
+      r.id,r.lead_id,r.reporter_user_id,r.reason,r.details,r.status,r.created_at,r.reviewed_at,r.reviewed_by,r.updated_at,
+      l.customer_name,l.customer_phone,l.customer_email,l.industry_id,l.service_id,l.city_id,l.state_id,l.status AS lead_status,l.created_at AS lead_created_at,
+      i.name AS industry_name,s.name AS service_name,c.name AS city_name,st.name AS state_name,
+      reporter.name AS reporter_name,reporter.email AS reporter_email,reviewer.name AS reviewer_name
+    FROM ${baseFrom}
+    ${where}
+    ORDER BY r.created_at DESC,r.id DESC
+    LIMIT $${dataParams.length-1} OFFSET $${dataParams.length}
+  `,dataParams)).rows;
+
+  const rawSummary=summaryResult.rows[0]||{};
+  return{
     data:rows,
     summary:{
-      total_reports:rows.length,
-      reported_leads:reportedLeadIds.size,
-      pending:rows.filter(row=>row.status==='pending').length,
-      verified_fake:rows.filter(row=>row.status==='verified_fake').length,
-      verified_genuine:rows.filter(row=>row.status==='verified_genuine').length,
-      rejected:rows.filter(row=>row.status==='rejected').length
-    }
+      total_reports:Number(rawSummary.total_reports||0),
+      reported_leads:Number(rawSummary.reported_leads||0),
+      pending:Number(rawSummary.pending||0),
+      verified_fake:Number(rawSummary.verified_fake||0),
+      verified_genuine:Number(rawSummary.verified_genuine||0),
+      rejected:Number(rawSummary.rejected||0),
+      reason_counts:rawSummary.reason_counts&&typeof rawSummary.reason_counts==='object'?rawSummary.reason_counts:{}
+    },
+    pagination:{page:pageValue,limit:safeLimit,total,totalPages}
   };
 }
 const sqlBind=index=>String.fromCharCode(36)+String(index);

@@ -346,6 +346,7 @@
 
 .admin-top-status{
   display:flex;
+  text-decoration:none;
   align-items:center;
   gap:7px;
   padding:7px 11px;
@@ -487,3 +488,10 @@
   .admin-top-user{padding-left:0;border-left:0}
   .admin-content{padding:64px 12px 28px}
 }
+
+.admin-top-status.checking{border-color:#dfe5ec;background:#f7f9fb;color:#75869a}
+.admin-top-status.checking i{background:#94a3b4;box-shadow:0 0 0 4px rgba(148,163,180,.10)}
+.admin-top-status.attention{border-color:#f2d9b5;background:#fff9ee;color:#9a681d}
+.admin-top-status.attention i{background:#e3a13a;box-shadow:0 0 0 4px rgba(227,161,58,.12)}
+.admin-top-status.degraded{border-color:#edc8c3;background:#fff5f3;color:#a64b40}
+.admin-top-status.degraded i{background:#df5a48;box-shadow:0 0 0 4px rgba(223,90,72,.12)}
