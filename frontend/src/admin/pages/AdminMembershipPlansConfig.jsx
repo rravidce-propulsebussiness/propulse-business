@@ -264,6 +264,28 @@ function LeadAllowanceGrid({value,months,onChange}){
   </div>
 }
 
+function PackageCard({groupKey,groupPlans,pricingRules,onOpenPackage}){
+  const first=groupPlans[0]
+  const active=groupPlans.filter(plan=>plan.is_active!==false)
+  return <article className={`membership-package-card ${groupKey}`}>
+    <div className="membership-package-card-head">
+      <div><span>MEMBERSHIP PACKAGE</span><h3>{groupKey.toUpperCase()}</h3><small>{active.length} active billing cycle{active.length===1?'':'s'}</small></div>
+      <button type="button" onClick={()=>onOpenPackage(groupKey)}>{groupPlans.length?'Edit package':'Create package'}</button>
+    </div>
+    <div className="membership-package-card-summary">
+      <div><span>Base / month</span><strong>{money(first?.monthly_base_price||0)}</strong></div>
+      <div><span>Features</span><strong>{Array.isArray(first?.benefits)?first.benefits.length:0}</strong></div>
+      <div><span>Pricing rules</span><strong>{pricingRules.filter(rule=>String(rule.plan_group).toLowerCase()===groupKey).length}</strong></div>
+    </div>
+    <div className="membership-package-cycles">
+      {active.length?active.map(plan=><div className="membership-cycle-summary" key={plan.id}>
+        <div><strong>{plan.billing_period||`${plan.billing_months}-month`}</strong><small>{plan.billing_months} month{Number(plan.billing_months)===1?'':'s'}</small></div>
+        <div><span>{money(plan.price)}</span><small>{entitlementSummary(plan.lead_entitlements)}</small></div>
+      </div>):<div className="membership-empty-inline">No active billing cycles.</div>}
+    </div>
+  </article>
+}
+
 export default function AdminMembershipPlansConfig(){
   const [plans,setPlans]=useState([])
   const [pricingRules,setPricingRules]=useState([])
@@ -651,28 +673,6 @@ export default function AdminMembershipPlansConfig(){
     }
   }
 
-  function PackageCard({groupKey,groupPlans}){
-    const first=groupPlans[0]
-    const active=groupPlans.filter(plan=>plan.is_active!==false)
-    return <article className={`membership-package-card ${groupKey}`}>
-      <div className="membership-package-card-head">
-        <div><span>MEMBERSHIP PACKAGE</span><h3>{groupKey.toUpperCase()}</h3><small>{active.length} active billing cycle{active.length===1?'':'s'}</small></div>
-        <button type="button" onClick={()=>openPackage(groupKey)}>{groupPlans.length?'Edit package':'Create package'}</button>
-      </div>
-      <div className="membership-package-card-summary">
-        <div><span>Base / month</span><strong>{money(first?.monthly_base_price||0)}</strong></div>
-        <div><span>Features</span><strong>{Array.isArray(first?.benefits)?first.benefits.length:0}</strong></div>
-        <div><span>Pricing rules</span><strong>{pricingRules.filter(rule=>String(rule.plan_group).toLowerCase()===groupKey).length}</strong></div>
-      </div>
-      <div className="membership-package-cycles">
-        {active.length?active.map(plan=><div className="membership-cycle-summary" key={plan.id}>
-          <div><strong>{plan.billing_period||`${plan.billing_months}-month`}</strong><small>{plan.billing_months} month{Number(plan.billing_months)===1?'':'s'}</small></div>
-          <div><span>{money(plan.price)}</span><small>{entitlementSummary(plan.lead_entitlements)}</small></div>
-        </div>):<div className="membership-empty-inline">No active billing cycles.</div>}
-      </div>
-    </article>
-  }
-
   return <main className="membership-admin-page">
     <section className="membership-admin-hero">
       <div>
@@ -705,8 +705,8 @@ export default function AdminMembershipPlansConfig(){
         <small>Base price · billing cycles · lead allowance · features</small>
       </div>
       {loading?<div className="membership-empty">Loading memberships…</div>:<div className="membership-package-grid">
-        <PackageCard groupKey="grow" groupPlans={growPlans}/>
-        <PackageCard groupKey="scale" groupPlans={scalePlans}/>
+        <PackageCard groupKey="grow" groupPlans={growPlans} pricingRules={pricingRules} onOpenPackage={openPackage}/>
+        <PackageCard groupKey="scale" groupPlans={scalePlans} pricingRules={pricingRules} onOpenPackage={openPackage}/>
       </div>}
     </section>
 

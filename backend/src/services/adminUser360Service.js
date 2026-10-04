@@ -1,3 +1,5 @@
+const criticalActionAudit=require('./criticalActionAuditService');
+const notificationService=require('./notificationService');
 const pool=require('../config/database');
 const paymentService=require('./paymentService');
 const walletService=require('./walletService');
@@ -199,13 +201,13 @@ async function getUser360(userId){
   const remainingDays=daysRemaining(current?.expires_at);
   const paidPayments=payments.filter(item=>item.status==='paid');
   const pendingPayments=payments.filter(item=>item.status==='pending');
-  const pendingTopups=(wallet?.recharges||[]).filter(item=>item.status==='pending');
+  const pendingTopupCount=number(wallet?.stats?.pending_topups);
   const attention=[];
   if(!user.is_active)attention.push({level:'critical',code:'ACCOUNT_INACTIVE',text:'Account is inactive'});
   if(user.role==='business'&&!user.is_verified)attention.push({level:'warning',code:'UNVERIFIED',text:'Business is not verified'});
   if(current&&remainingDays!==null&&remainingDays<=7)attention.push({level:'warning',code:'MEMBERSHIP_EXPIRING',text:`${String(current.plan_group||current.plan_name||'Membership').toUpperCase()} expires in ${remainingDays} day${remainingDays===1?'':'s'}`});
   if(pendingPayments.length)attention.push({level:'warning',code:'PENDING_PAYMENT',text:`${pendingPayments.length} payment${pendingPayments.length===1?'':'s'} pending review`});
-  if(pendingTopups.length)attention.push({level:'warning',code:'PENDING_TOPUP',text:`${pendingTopups.length} wallet recharge${pendingTopups.length===1?'':'s'} pending review`});
+  if(pendingTopupCount)attention.push({level:'warning',code:'PENDING_TOPUP',text:`${pendingTopupCount} wallet recharge${pendingTopupCount===1?'':'s'} pending review`});
 
   return{
     user,
@@ -217,7 +219,7 @@ async function getUser360(userId){
       totalPaid:paidPayments.reduce((sum,item)=>sum+number(item.amount),0),
       activeEntitlements:activeEntitlements?.summary||{shared:{},premium:{}},
       pendingPayments:pendingPayments.length,
-      pendingTopups:pendingTopups.length
+      pendingTopups:pendingTopupCount
     },
     attention,
     membership:membership||{customer:null,plans:[],history:[]},
@@ -298,6 +300,22 @@ async function setMembershipPlan({userId,planId,adminId,days,reason}){
         ) VALUES($1,$2,$3,'assign_plan',NULL,'active',NULL,$4,NULL,$5)
       `,[membership.id,userId,adminId||null,membership.expires_at,`Assigned ${plan.name}. ${cleanReason}`]);
     }
+    await criticalActionAudit.record(client,{
+      actorId:adminId,category:'membership',
+      action:current?'membership.change_plan':'membership.assign_plan',
+      entityType:'membership',entityId:membership.id,
+      beforeData:current?{membershipId:current.id,planId:current.membership_plan_id,planName:current.old_plan_name,status:current.status,expiresAt:current.expires_at}:null,
+      afterData:{membershipId:membership.id,planId:plan.id,planName:plan.name,status:membership.status,expiresAt:membership.expires_at},
+      reason:cleanReason,metadata:{userId:Number(userId)},source:'admin_user_360'
+    });
+    await notificationService.notifyUser({
+      userId,type:current?'membership_plan_changed':'membership_assigned',category:'membership',severity:'success',
+      title:current?'Membership plan changed':'Membership activated',
+      message:current?`Your membership was changed to ${plan.name} by ProPulse.`:`${plan.name} membership was activated for your account.`,
+      actionUrl:'/membership',relatedType:'membership',relatedId:membership.id,
+      dedupeKey:`membership-plan:${membership.id}:${plan.id}:${new Date(membership.expires_at).toISOString()}`,
+      metadata:{planId:plan.id,planName:plan.name,expiresAt:membership.expires_at}
+    },client);
     await client.query('COMMIT');
     return membership;
   }catch(error){

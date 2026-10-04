@@ -1,0 +1,13 @@
+const router=require('express').Router();
+const auth=require('../middleware/authMiddleware');
+const c=require('../controllers/notificationController');
+const rateLimit=require('../middleware/rateLimitMiddleware');
+const writeLimit=rateLimit({windowMs:60*1000,max:60});
+router.use(auth);
+router.get('/',c.list);
+router.get('/unread-count',c.unread);
+router.get('/preferences',c.preferences);
+router.put('/preferences',writeLimit,c.updatePreferences);
+router.post('/read-all',writeLimit,c.readAll);
+router.patch('/:id/read',writeLimit,c.read);
+module.exports=router;

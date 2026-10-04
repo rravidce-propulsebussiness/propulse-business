@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from 'react'
 import UserHeader from '../components/UserHeader'
 import { authRequest, getToken, getUser, saveSession } from '../utils/auth'
 import { apiRequest } from '../utils/api'
+import PaymentMethodSelector from '../components/PaymentMethodSelector'
+import { loadPaymentOptions, runRazorpayCheckout } from '../utils/paymentGateway'
 import './Membership.css'
 import './CouponCheckout.css'
 
@@ -111,6 +113,8 @@ export default function Membership() {
   const [couponResult, setCouponResult] = useState(null)
   const [couponError, setCouponError] = useState('')
   const [couponChecking, setCouponChecking] = useState(false)
+  const [paymentOptions, setPaymentOptions] = useState({offlineEnabled:true,onlineEnabled:false,onlineDisplayMode:'coming_soon'})
+  const [paymentMode, setPaymentMode] = useState('offline')
 
   useEffect(() => {
     let active = true
@@ -120,15 +124,18 @@ export default function Membership() {
         return
       }
       try {
-        const [planData, membership, access] = await Promise.all([
+        const [planData, membership, access, options] = await Promise.all([
           apiRequest('/membership-plans'),
           authRequest('/payments/membership/current').catch(() => null),
-          authRequest('/investments/access').catch(() => null)
+          authRequest('/investments/access').catch(() => null),
+          loadPaymentOptions().catch(() => ({offlineEnabled:true,onlineEnabled:false,onlineDisplayMode:'coming_soon'}))
         ])
         if (!active) return
         setPlans(asArray(planData).filter((item) => item?.is_active !== false))
         setCurrentMembership(membershipRecord(membership))
         setInvestmentAccess(access || null)
+        setPaymentOptions(options || {})
+        setPaymentMode(options?.onlineEnabled&&options?.onlineDisplayMode==='live'?'online':options?.offlineEnabled!==false?'offline':'')
         if (user && access && typeof access.isPro === 'boolean') saveSession({ user: { ...user, is_pro_member: access.isPro } })
       } catch (err) {
         if (active) setError(err?.message || 'Unable to load membership options.')
@@ -138,7 +145,7 @@ export default function Membership() {
     }
     load()
     return () => { active = false }
-  }, [token])
+  }, [token, user])
 
   const growPlans = useMemo(() => plans.filter((item) => planType(item) === 'pro' && String(item?.plan_group || '').toLowerCase() === 'grow').sort((a, b) => Number(a?.billing_months || 0) - Number(b?.billing_months || 0) || Number(a?.price || 0) - Number(b?.price || 0)), [plans])
   const scalePlans = useMemo(() => plans.filter((item) => planType(item) === 'pro' && String(item?.plan_group || '').toLowerCase() === 'scale').sort((a, b) => Number(a?.billing_months || 0) - Number(b?.billing_months || 0) || Number(a?.price || 0) - Number(b?.price || 0)), [plans])
@@ -215,6 +222,7 @@ export default function Membership() {
       const code = withCoupon && couponResult ? couponCode.trim().toUpperCase() : ''
       const result = await authRequest('/payments/checkout/membership', {
         method: 'POST',
+        idempotency: true,
         body: JSON.stringify({
           membershipPlanId: selectedPlan.id,
           ...(code ? { couponCode: code } : {})
@@ -223,6 +231,7 @@ export default function Membership() {
       setCheckout(result)
       setCouponOpen(false)
       if (result.requiresExternalPayment) {
+        setPaymentMode(paymentOptions?.onlineEnabled&&paymentOptions?.onlineDisplayMode==='live'?'online':paymentOptions?.offlineEnabled!==false?'offline':'')
         setManualOpen(true)
       } else {
         setSubmitted(true)
@@ -266,6 +275,27 @@ export default function Membership() {
       setSelectedPlan(null)
     } catch (err) {
       setError(err?.message || 'Unable to submit payment.')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  async function payOnline() {
+    if (!checkout?.payment?.id) { setError('Payment session is unavailable. Please try again.'); return }
+    try {
+      setSubmitting(true)
+      setError('')
+      await runRazorpayCheckout({
+        paymentId: checkout.payment.id,
+        description: selectedPlan?.name ? `${selectedPlan.name} membership` : 'ProPulse membership'
+      })
+      setSubmitted(true)
+      setManualOpen(false)
+      const refreshedMembership = await authRequest('/payments/membership/current').catch(() => currentMembership)
+      setCurrentMembership(membershipRecord(refreshedMembership))
+      setSelectedPlan(null)
+    } catch (err) {
+      if (err?.code !== 'PAYMENT_CANCELLED') setError(err?.message || 'Unable to complete online payment.')
     } finally {
       setSubmitting(false)
     }
@@ -390,20 +420,24 @@ export default function Membership() {
     {manualOpen && selectedPlan && checkout && <div className="membership-modal-backdrop" onClick={() => setManualOpen(false)}>
       <div className="membership-payment-modal" onClick={(event) => event.stopPropagation()}>
         <button className="membership-modal-close" onClick={() => setManualOpen(false)}>×</button>
-        <span className="membership-kicker">DIRECT PAYMENT</span>
+        <span className="membership-kicker">PAYMENT</span>
         <h2>Complete membership payment</h2>
-        <p>{Number(checkout.walletAmount) > 0 ? 'Your wallet balance has been applied automatically. Pay only the remaining amount directly.' : 'Your wallet has no available balance, so the full amount is due directly.'}</p>
+        <p>{Number(checkout.walletAmount) > 0 ? 'Your wallet balance has been applied automatically. Choose how to pay the remaining amount.' : 'Choose your preferred payment method below.'}</p>
         <div className="manual-summary">
           {checkout?.coupon && <><span>Original price</span><strong>{money(checkout.coupon.subtotalAmount)}</strong><span>Coupon discount</span><strong>− {money(checkout.coupon.discountAmount)}</strong></>}
           <span>Total</span><strong>{money(checkout.payment?.amount || selectedPlan.price)} / {period(selectedPlan).toLowerCase()}</strong>
           <span>Wallet applied</span><strong>{money(checkout.walletAmount)}</strong>
-          <span>Remaining direct payment</span><strong>{money(checkout.externalAmount)}</strong>
+          <span>Remaining payment</span><strong>{money(checkout.externalAmount)}</strong>
         </div>
-        <div className="manual-method"><b>UPI / BANK TRANSFER</b><span>Payment details will be configured by Propulse admin.</span></div>
-        <label className="manual-input-label">Payment reference / UTR<input id="manual-utr" placeholder="Enter UTR or transaction ID" /></label>
-        <label className="manual-input-label">Payment proof<input id="manual-proof" type="file" accept="image/*,.pdf" /></label>
-        <div className="manual-next"><b>Verification</b><ol><li>Make the remaining direct payment.</li><li>Enter the UTR / transaction reference.</li><li>Submit proof for admin verification.</li></ol></div>
-        <button className="membership-primary" onClick={submitManual} disabled={submitting}>{submitting ? 'Submitting…' : `Submit ${money(checkout.externalAmount)} payment`} <span>→</span></button>
+        <PaymentMethodSelector options={paymentOptions} value={paymentMode} onChange={setPaymentMode} disabled={submitting}/>
+        {paymentMode==='offline'&&paymentOptions?.offlineEnabled!==false&&<>
+          <div className="manual-method"><b>{paymentOptions?.offlineLabel||'UPI / BANK TRANSFER'}</b><span>Pay using a configured Propulse receiving account, then submit the UTR and proof.</span></div>
+          <label className="manual-input-label">Payment reference / UTR<input id="manual-utr" placeholder="Enter UTR or transaction ID" /></label>
+          <label className="manual-input-label">Payment proof<input id="manual-proof" type="file" accept="image/*,.pdf" /></label>
+          <div className="manual-next"><b>Verification</b><ol><li>Make the remaining direct payment.</li><li>Enter the UTR / transaction reference.</li><li>Submit proof for admin verification.</li></ol></div>
+          <button className="membership-primary" onClick={submitManual} disabled={submitting}>{submitting ? 'Submitting…' : `Submit ${money(checkout.externalAmount)} payment`} <span>→</span></button>
+        </>}
+        {paymentMode==='online'&&paymentOptions?.onlineEnabled&&<button className="membership-primary" onClick={payOnline} disabled={submitting}>{submitting?'Opening secure checkout…':`Pay ${money(checkout.externalAmount)} online`} <span>→</span></button>}
       </div>
     </div>}
     </main>

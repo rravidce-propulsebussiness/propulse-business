@@ -1,26 +1,46 @@
 import { Link, useLocation } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { authRequest } from '../utils/auth';
 import '../pages/LeadPartnerShared.css';
+
+const nav=[
+  {to:'/lead-partner/dashboard',label:'Dashboard',icon:'⌂',exact:true,aliases:['/lead-partner']},
+  {to:'/lead-partner/inventory',label:'Lead Inventory',icon:'◈'},
+  {to:'/lead-partner/pricing',label:'Pricing & Revenue',icon:'₹'},
+  {to:'/lead-partner/withdrawals',label:'Earnings & Withdrawals',icon:'⇩'},
+  {to:'/lead-partner/reports',label:'Reports',icon:'▥'},
+  {to:'/lead-partner/notifications',label:'Notifications',icon:'♢',notifications:true},
+  {to:'/lead-partner/account',label:'Account',icon:'◎'},
+  {to:'/lead-partner/faqs',label:'FAQs',icon:'?'},
+  {to:'/lead-partner/contact',label:'Contact',icon:'☎'},
+];
 
 export default function LeadPartnerSidebar({user,onSignOut}){
   const location=useLocation();
+  const [unread,setUnread]=useState(0);
+  useEffect(()=>{let active=true;const refresh=()=>authRequest('/notifications/unread-count').then(r=>{if(active)setUnread(Number(r?.unread||0))}).catch(()=>{});refresh();const timer=setInterval(refresh,60000);const onRefresh=()=>refresh();window.addEventListener('propulse-notifications-refresh',onRefresh);return()=>{active=false;clearInterval(timer);window.removeEventListener('propulse-notifications-refresh',onRefresh)}},[]);
   const initials=(user?.name||'Lead Partner').split(' ').filter(Boolean).slice(0,2).map(x=>x[0]).join('').toUpperCase()||'LP';
-  const is=(prefix,exact=false)=>exact?location.pathname===prefix:location.pathname.startsWith(prefix);
+  const active=item=>{
+    if(item.aliases?.includes(location.pathname)) return true;
+    return item.exact?location.pathname===item.to:location.pathname.startsWith(item.to);
+  };
+
   return <aside className="lead-partner-sidebar">
-    <div className="lead-partner-brand">
-      <span className="lead-partner-brand-mark">P</span>
-      <span className="lead-partner-brand-copy"><b>PRO<span>PULSE</span></b><small>LEAD PARTNER</small></span>
+    <div className="lead-partner-brand-row">
+      <Link className="lead-partner-brand" to="/lead-partner/dashboard" aria-label="ProPulse Lead Partner dashboard">
+        <span className="lead-partner-brand-mark">P</span>
+        <span className="lead-partner-brand-copy"><b>PRO<span>PULSE</span></b><small>LEAD PARTNER</small></span>
+      </Link>
     </div>
+
     <div className="lead-partner-nav-label">WORKSPACE</div>
-    <nav className="lead-partner-nav">
-      <Link className={is('/lead-partner',true)?'active':''} to="/lead-partner"><span className="lead-partner-nav-icon">⌂</span><span>Overview</span></Link>
-      <Link className={is('/lead-partner/inventory')?'active':''} to="/lead-partner/inventory"><span className="lead-partner-nav-icon">◈</span><span>Lead Inventory</span></Link>
-      <Link className={is('/lead-partner/pricing')?'active':''} to="/lead-partner/pricing"><span className="lead-partner-nav-icon">₹</span><span>Pricing &amp; Revenue</span></Link>
-      <Link className={is('/lead-partner/withdrawals')?'active':''} to="/lead-partner/withdrawals"><span className="lead-partner-nav-icon">⇩</span><span>Earnings &amp; Withdrawals</span></Link>
-      <Link className={is('/lead-partner/reports')?'active':''} to="/lead-partner/reports"><span className="lead-partner-nav-icon">▥</span><span>Reports</span></Link>
-      <Link className={location.pathname==='/contact' && new URLSearchParams(location.search).get('audience')==='lead_partners'?'active':''} to="/contact?audience=lead_partners"><span className="lead-partner-nav-icon">☎</span><span>Contact</span></Link>
-      <Link className={is('/lead-partner/faqs')?'active':''} to="/lead-partner/faqs"><span className="lead-partner-nav-icon">?</span><span>FAQs</span></Link>
-      <Link className={is('/lead-partner/account')?'active':''} to="/lead-partner/account"><span className="lead-partner-nav-icon">◎</span><span>Account</span></Link>
+    <nav className="lead-partner-nav" aria-label="Lead Partner navigation">
+      {nav.map(item=><Link key={item.to} className={active(item)?'active':''} to={item.to}>
+        <span className="lead-partner-nav-icon">{item.icon}</span>
+        <span>{item.label}</span>{item.notifications&&unread>0&&<b className="lead-partner-notification-count">{unread>99?'99+':unread}</b>}
+      </Link>)}
     </nav>
+
     <div className="lead-partner-sidebar-bottom">
       <div className="lead-partner-user">
         <span className="lead-partner-avatar">{initials}</span>

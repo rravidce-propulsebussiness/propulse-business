@@ -1,0 +1,34 @@
+const fs=require('fs');
+const path=require('path');
+const root=path.join(__dirname,'..');
+const read=relative=>fs.readFileSync(path.join(root,relative),'utf8');
+const assert=(condition,message)=>{if(!condition)throw new Error(message)};
+
+const inventory=read('src/services/leadPartnerInventoryService.js');
+const scheduler=read('src/services/leadPartnerSheetSyncScheduler.js');
+const ui=read('../frontend/src/pages/LeadPartnerInventory.jsx');
+const investor=read('../frontend/src/pages/InvestorInvestmentSection.jsx');
+const compat=read('src/services/leadPartnerInventoryCompatService.js');
+const routes=read('src/routes/leadPartnerRoutes.js');
+const migration=read('src/database/migrations/20260928_lead_partner_sheet_default_industry.sql');
+
+assert(inventory.includes("n==='singleonly'"),'Lead Partner Google Sheet import must accept Single Only wording');
+assert(inventory.includes("intriordesignandhomeinteriors")&&inventory.includes("Interior Design & Home Interiors"),'Lead Partner sheet import must normalize the same known Interior Design industry typo as Admin import');
+assert(inventory.includes('Industry, Service and Subservice are all blank'),'Blank classification rows must report a precise actionable reason');
+assert(inventory.includes('const locationCache=new Map()'),'Lead Partner sheet import must cache repeated PIN/location resolution within one file');
+assert(inventory.includes('const settings=await partnerPricing.getSettings()'),'Partner pricing settings must be loaded once per import rather than per row');
+assert(inventory.includes('failureSummary:summarizeFailures(failures)'),'Lead Partner import must return categorized failure diagnostics');
+assert(inventory.includes("if (error.code === 'DUPLICATE_LEAD')")&&inventory.includes('duplicateSamples.push(detail)'),'Duplicate rows must be counted separately from genuine failures');
+assert(inventory.includes('failures.push(detail)'),'Only genuine import errors must populate the failure list');
+assert(inventory.includes('last_sync_failure_summary:summarizeFailures'),'Stored sheet connections must expose failure-category summaries');
+assert(scheduler.includes('failureSummary='),'Worker logs must include failure category counts');
+assert(scheduler.includes('Google Sheet row failures:'),'Worker logs must include sample row-level failures');
+assert(scheduler.includes('Google Sheet duplicate samples:'),'Worker logs may show duplicates separately without polluting failure diagnostics');
+assert(ui.includes('partner-sheet-failure-summary'),'Lead Partner inventory must show failure categories');
+assert(migration.includes('default_industry_id'),'Lead Partner sheet connections must persist an optional default Industry');
+assert(compat.includes('applyDefaultIndustry')&&compat.includes('hasClassification'),'Default Industry must apply only when the row has no classification fields');
+assert(compat.includes('defaultIndustryId:connection.default_industry_id'),'Recurring sheet sync must reuse the stored default Industry');
+assert(routes.includes("/inventory/sheets/:connectionId/default-industry"),'Lead Partners must be able to update a connected sheet default Industry');
+assert(ui.includes('Default Industry for blank rows'),'Lead Partner UI must expose the per-sheet default Industry explicitly');
+assert(!investor.includes('const isSold ='),'Unused investor isSold helper must remain removed');
+console.log('Lead Partner sheet diagnostics/efficiency regression test passed.');

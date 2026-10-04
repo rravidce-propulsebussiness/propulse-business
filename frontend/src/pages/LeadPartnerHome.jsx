@@ -58,7 +58,8 @@ export default function LeadPartnerHome(){
     ['refunded','Refunded'],
     ['fake','Verified fake'],
     ['closed','Closed'],
-    ['paused','Paused']
+    ['paused','Paused'],
+    ['quarantined','Quarantined']
   ].map(([key,label])=>({key,label,value:Number(status[key]||0)})).filter(x=>x.value>0)
 
   const activity=useMemo(()=>{
@@ -86,23 +87,25 @@ export default function LeadPartnerHome(){
   const statusGradient=useMemo(()=>{
     if(!totalStatus)return 'conic-gradient(#dfe6ef 0 100%)'
     let cursor=0
-    const colorMap={available:'#1c9b68',sold:'#2d6fd1',refunded:'#d98a2d',fake:'#d65349',closed:'#d0a328',paused:'#7f8da0'}
+    const colorMap={available:'#1c9b68',sold:'#2d6fd1',refunded:'#d98a2d',fake:'#d65349',closed:'#d0a328',paused:'#7f8da0',quarantined:'#b67a19'}
     return `conic-gradient(${statusSegments.map(x=>{const start=cursor;cursor+=(x.value/totalStatus)*100;return `${colorMap[x.key]||'#7f8da0'} ${start}% ${cursor}%`}).join(',')})`
   },[statusSegments,totalStatus])
 
   const uploaded=Number(stats.totalLeads||0)
   const sold=Number(stats.soldLeads||0)
   const conversionRate=uploaded>0?Math.min(100,(sold/uploaded)*100):0
-  const genuine=Number(quality.verifiedGenuineReports||0)
   const fake=Number(quality.verifiedFakeLeads||0)
   const fakeRate=Number(quality.verifiedFakeRatePct||0)
+  const qualityScore=quality.score===null||quality.score===undefined?null:Number(quality.score)
+  const qualityBand=String(quality.band||'no_data').replace(/_/g,' ').replace(/\b\w/g,x=>x.toUpperCase())
+  const qualityBreakdown=quality.breakdown||{}
+  const qualityIssues=Array.isArray(quality.topIssues)?quality.topIssues:[]
   const firstName=user?.name?.split(' ')?.[0]||'Partner'
   const hour=new Date().getHours()
   const greeting=hour<12?'Good morning':hour<17?'Good afternoon':'Good evening'
 
   function signOut(){
     clearSession()
-    localStorage.removeItem('propulse_session_mode')
     navigate('/login',{replace:true})
   }
 
@@ -111,7 +114,7 @@ export default function LeadPartnerHome(){
 
     <main className="lp-main">
       <header className="lp-topbar">
-        <div className="lp-breadcrumb"><span>Lead Partner</span><b>/</b><strong>Overview</strong></div>
+        <div className="lp-breadcrumb"><span>Lead Partner</span><b>/</b><strong>Dashboard</strong></div>
         <div className="lp-topbar-actions">
           <Link to="/lead-partner/inventory">Lead inventory</Link>
           <button type="button" onClick={()=>setRefreshKey(v=>v+1)} disabled={loading}>↻ {loading?'Refreshing':'Refresh'}</button>
@@ -209,15 +212,20 @@ export default function LeadPartnerHome(){
           <article className="lp-card lp-quality-card">
             <div className="lp-card-head"><div><span className="lp-section-kicker">LEAD QUALITY</span><h2>Reported lead outcomes</h2><p>Verified outcomes from buyer reports.</p></div><Link to="/lead-partner/reports">Open reports →</Link></div>
             <div className="lp-quality-summary">
-              <div className="lp-quality-score"><span>VERIFIED FAKE RATE</span><strong>{loading?'—':fakeRate.toFixed(2)+'%'}</strong><small>{fake} fake lead{fake===1?'':'s'} across {Number(quality.purchasedLeads||0)} purchased leads</small></div>
+              <div className={'lp-quality-score '+String(quality.band||'no_data')}><span>QUALITY SCORE</span><strong>{loading?'—':qualityScore===null?'—':qualityScore.toFixed(1)+'/100'}</strong><small>{qualityScore===null?'No lead data yet':qualityBand+' · '+String(quality.confidence||'low')+' confidence · '+Number(quality.sampleSize||0)+' leads scored'}</small></div>
               <div className="lp-quality-grid">
-                <div><span>Purchased leads</span><strong>{loading?'—':quality.purchasedLeads??0}</strong></div>
-                <div><span>Verified genuine</span><strong>{loading?'—':quality.verifiedGenuineReports??0}</strong></div>
-                <div><span>Verified fake</span><strong className="quality-danger">{loading?'—':quality.verifiedFakeLeads??0}</strong></div>
-                <div><span>Fake rate</span><strong>{loading?'—':Number(quality.verifiedFakeRatePct||0).toFixed(2)}%</strong></div>
+                <div><span>Completeness</span><strong>{loading?'—':Number(qualityBreakdown.completeness?.score||0).toFixed(1)}<small> / {qualityBreakdown.completeness?.max||45}</small></strong></div>
+                <div><span>Validity</span><strong>{loading?'—':Number(qualityBreakdown.validity?.score||0).toFixed(1)}<small> / {qualityBreakdown.validity?.max||25}</small></strong></div>
+                <div><span>Uniqueness</span><strong>{loading?'—':Number(qualityBreakdown.uniqueness?.score||0).toFixed(1)}<small> / {qualityBreakdown.uniqueness?.max||15}</small></strong></div>
+                <div><span>Buyer outcome</span><strong>{loading?'—':Number(qualityBreakdown.outcome?.score||0).toFixed(1)}<small> / {qualityBreakdown.outcome?.max||15}</small></strong></div>
               </div>
             </div>
-            <div className="lp-quality-note">Verified fake leads continue through the existing refund and partner-earnings reversal workflow.</div>
+            <div className="lp-quality-note">
+              <b>{fakeRate.toFixed(2)}% verified fake rate</b>
+              <span>{fake} fake lead{fake===1?'':'s'} across {Number(quality.purchasedLeads||0)} purchased leads.</span>
+              {qualityIssues.length>0&&<span>Top checks: {qualityIssues.map(x=>x.label+' ('+x.count+')').join(' · ')}</span>}
+              {!qualityIssues.length&&qualityScore!==null&&<span>No current data-quality risk counters are elevated.</span>}
+            </div>
           </article>
 
           <article className="lp-card lp-quick-actions-card">

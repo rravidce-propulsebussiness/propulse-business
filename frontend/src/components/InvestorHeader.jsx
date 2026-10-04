@@ -2,6 +2,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { authRequest, clearSession, getToken, getUser } from '../utils/auth'
 import './InvestorHeader.css'
+import NotificationBell from './NotificationBell'
 
 export default function InvestorHeader() {
   const navigate = useNavigate()
@@ -105,6 +106,7 @@ export default function InvestorHeader() {
       </nav>
 
       <div className="investor-header-right">
+        <NotificationBell/>
         <Link
           className="investor-profile"
           to="/profile"

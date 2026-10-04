@@ -44,7 +44,7 @@ assert(entitlement.includes('accessService.effectiveCapacity'),'Membership claim
 assert(entitlement.includes('accessService.lockCapacity'),'Membership claims must lock the current stage');
 assert(entitlement.includes('accessService.closeIfFull'),'Membership claims must close a full lead');
 assert(entitlement.includes('const {isProMember}=require(\'./leadReadService\')'),'Membership access must reuse the shared Pro-membership check');
-assert(entitlement.includes('!await isProMember(userId)')&&entitlement.includes('!pro)fail(\'Pro Early Access is still active\''),'Pro Early Access must block non-Pro claims without blocking Pro members');
+assert(entitlement.includes("const pro=exclusiveActive?await isProMember(userId,client):false")&&entitlement.includes("if(exclusiveActive&&!pro&&!grantAccess)fail('Pro Early Access is still active','EXCLUSIVE_LOCKED')"),'Pro Early Access must block non-Pro claims without blocking Pro members');
 
 assert(marketplace.includes('lead_effective_buyer_capacity'),'Marketplace must hide leads whose current buyer stage is full');
 assert(marketplace.includes("lp.status='pending_payment'")&&marketplace.includes("pcap.status='pending'"),'Marketplace availability must reserve pending-payment buyer slots');

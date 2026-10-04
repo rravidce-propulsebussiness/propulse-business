@@ -91,48 +91,116 @@ SET slug = EXCLUDED.slug,
 
 -- One canonical city per state/UT is enough to make a clean database usable immediately.
 -- The catalog remains extensible through the existing city administration APIs.
-INSERT INTO cities (state_id, name, slug)
-SELECT st.id, v.city_name, v.city_slug
-FROM states st
-JOIN (VALUES
-  ('Andhra Pradesh','Amaravati','amaravati'),
-  ('Arunachal Pradesh','Itanagar','itanagar'),
-  ('Assam','Dispur','dispur'),
-  ('Bihar','Patna','patna'),
-  ('Chhattisgarh','Raipur','raipur'),
-  ('Goa','Panaji','panaji'),
-  ('Gujarat','Gandhinagar','gandhinagar'),
-  ('Haryana','Chandigarh','chandigarh'),
-  ('Himachal Pradesh','Shimla','shimla'),
-  ('Jharkhand','Ranchi','ranchi'),
-  ('Karnataka','Bengaluru','bengaluru'),
-  ('Kerala','Thiruvananthapuram','thiruvananthapuram'),
-  ('Madhya Pradesh','Bhopal','bhopal'),
-  ('Maharashtra','Mumbai','mumbai'),
-  ('Manipur','Imphal','imphal'),
-  ('Meghalaya','Shillong','shillong'),
-  ('Mizoram','Aizawl','aizawl'),
-  ('Nagaland','Kohima','kohima'),
-  ('Odisha','Bhubaneswar','bhubaneswar'),
-  ('Punjab','Chandigarh','chandigarh'),
-  ('Rajasthan','Jaipur','jaipur'),
-  ('Sikkim','Gangtok','gangtok'),
-  ('Tamil Nadu','Chennai','chennai'),
-  ('Telangana','Hyderabad','hyderabad'),
-  ('Tripura','Agartala','agartala'),
-  ('Uttar Pradesh','Lucknow','lucknow'),
-  ('Uttarakhand','Dehradun','dehradun'),
-  ('West Bengal','Kolkata','kolkata'),
-  ('Andaman and Nicobar Islands','Port Blair','port-blair'),
-  ('Chandigarh','Chandigarh','chandigarh'),
-  ('Dadra and Nagar Haveli and Daman and Diu','Daman','daman'),
-  ('Delhi','New Delhi','new-delhi'),
-  ('Jammu and Kashmir','Srinagar','srinagar'),
-  ('Ladakh','Leh','leh'),
-  ('Lakshadweep','Kavaratti','kavaratti'),
-  ('Puducherry','Puducherry','puducherry')
-) AS v(state_name,city_name,city_slug) ON st.name = v.state_name
-ON CONFLICT (state_id, name) DO UPDATE
-SET slug = EXCLUDED.slug,
-    is_active = TRUE,
-    updated_at = CURRENT_TIMESTAMP;
+WITH city_seed(state_name,city_name,city_slug) AS (
+  VALUES
+    ('Andhra Pradesh','Amaravati','amaravati'),
+    ('Arunachal Pradesh','Itanagar','itanagar'),
+    ('Assam','Dispur','dispur'),
+    ('Bihar','Patna','patna'),
+    ('Chhattisgarh','Raipur','raipur'),
+    ('Goa','Panaji','panaji'),
+    ('Gujarat','Gandhinagar','gandhinagar'),
+    ('Haryana','Chandigarh','chandigarh'),
+    ('Himachal Pradesh','Shimla','shimla'),
+    ('Jharkhand','Ranchi','ranchi'),
+    ('Karnataka','Bengaluru','bengaluru'),
+    ('Kerala','Thiruvananthapuram','thiruvananthapuram'),
+    ('Madhya Pradesh','Bhopal','bhopal'),
+    ('Maharashtra','Mumbai','mumbai'),
+    ('Manipur','Imphal','imphal'),
+    ('Meghalaya','Shillong','shillong'),
+    ('Mizoram','Aizawl','aizawl'),
+    ('Nagaland','Kohima','kohima'),
+    ('Odisha','Bhubaneswar','bhubaneswar'),
+    ('Punjab','Chandigarh','chandigarh'),
+    ('Rajasthan','Jaipur','jaipur'),
+    ('Sikkim','Gangtok','gangtok'),
+    ('Tamil Nadu','Chennai','chennai'),
+    ('Telangana','Hyderabad','hyderabad'),
+    ('Tripura','Agartala','agartala'),
+    ('Uttar Pradesh','Lucknow','lucknow'),
+    ('Uttarakhand','Dehradun','dehradun'),
+    ('West Bengal','Kolkata','kolkata'),
+    ('Andaman and Nicobar Islands','Port Blair','port-blair'),
+    ('Chandigarh','Chandigarh','chandigarh'),
+    ('Dadra and Nagar Haveli and Daman and Diu','Daman','daman'),
+    ('Delhi','New Delhi','new-delhi'),
+    ('Jammu and Kashmir','Srinagar','srinagar'),
+    ('Ladakh','Leh','leh'),
+    ('Lakshadweep','Kavaratti','kavaratti'),
+    ('Puducherry','Puducherry','puducherry')
+),
+resolved AS (
+  SELECT st.id AS state_id,s.city_name,s.city_slug,
+         (
+           SELECT c.id
+           FROM cities c
+           WHERE c.state_id=st.id AND c.name=s.city_name
+           ORDER BY c.is_active DESC,c.id
+           LIMIT 1
+         ) AS existing_id
+  FROM city_seed s
+  JOIN states st ON st.name=s.state_name
+)
+INSERT INTO cities (state_id,name,slug,is_active)
+SELECT state_id,city_name,city_slug,TRUE
+FROM resolved
+WHERE existing_id IS NULL
+ON CONFLICT DO NOTHING;
+
+WITH city_seed(state_name,city_name,city_slug) AS (
+  VALUES
+    ('Andhra Pradesh','Amaravati','amaravati'),
+    ('Arunachal Pradesh','Itanagar','itanagar'),
+    ('Assam','Dispur','dispur'),
+    ('Bihar','Patna','patna'),
+    ('Chhattisgarh','Raipur','raipur'),
+    ('Goa','Panaji','panaji'),
+    ('Gujarat','Gandhinagar','gandhinagar'),
+    ('Haryana','Chandigarh','chandigarh'),
+    ('Himachal Pradesh','Shimla','shimla'),
+    ('Jharkhand','Ranchi','ranchi'),
+    ('Karnataka','Bengaluru','bengaluru'),
+    ('Kerala','Thiruvananthapuram','thiruvananthapuram'),
+    ('Madhya Pradesh','Bhopal','bhopal'),
+    ('Maharashtra','Mumbai','mumbai'),
+    ('Manipur','Imphal','imphal'),
+    ('Meghalaya','Shillong','shillong'),
+    ('Mizoram','Aizawl','aizawl'),
+    ('Nagaland','Kohima','kohima'),
+    ('Odisha','Bhubaneswar','bhubaneswar'),
+    ('Punjab','Chandigarh','chandigarh'),
+    ('Rajasthan','Jaipur','jaipur'),
+    ('Sikkim','Gangtok','gangtok'),
+    ('Tamil Nadu','Chennai','chennai'),
+    ('Telangana','Hyderabad','hyderabad'),
+    ('Tripura','Agartala','agartala'),
+    ('Uttar Pradesh','Lucknow','lucknow'),
+    ('Uttarakhand','Dehradun','dehradun'),
+    ('West Bengal','Kolkata','kolkata'),
+    ('Andaman and Nicobar Islands','Port Blair','port-blair'),
+    ('Chandigarh','Chandigarh','chandigarh'),
+    ('Dadra and Nagar Haveli and Daman and Diu','Daman','daman'),
+    ('Delhi','New Delhi','new-delhi'),
+    ('Jammu and Kashmir','Srinagar','srinagar'),
+    ('Ladakh','Leh','leh'),
+    ('Lakshadweep','Kavaratti','kavaratti'),
+    ('Puducherry','Puducherry','puducherry')
+),
+chosen AS (
+  SELECT st.id AS state_id,s.city_name,s.city_slug,
+         (
+           SELECT c.id
+           FROM cities c
+           WHERE c.state_id=st.id AND c.name=s.city_name
+           ORDER BY c.is_active DESC,c.id
+           LIMIT 1
+         ) AS existing_id
+  FROM city_seed s
+  JOIN states st ON st.name=s.state_name
+)
+UPDATE cities c
+SET slug=chosen.city_slug,is_active=TRUE,updated_at=CURRENT_TIMESTAMP
+FROM chosen
+WHERE c.id=chosen.existing_id
+  AND (c.slug IS DISTINCT FROM chosen.city_slug OR c.is_active IS DISTINCT FROM TRUE);

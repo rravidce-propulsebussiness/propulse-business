@@ -111,8 +111,8 @@ export default function LeadPartnerAccount(){
       </header>
 
       <div className="account-content">
-        <section className="account-heading">
-          <div><h1>Account</h1></div>
+        <section className="account-heading premium-page-hero">
+          <div className="account-hero-copy"><span>LEAD PARTNER / ACCOUNT</span><h1>Account &amp; payouts</h1><p>Manage your payout destination, transaction history and authenticated Lead Partner account details.</p><div className="account-hero-meta"><span><b>{verified?'Active':'Setup needed'}</b> payout account</span><span><b>{method==='upi'?'UPI':'Bank'}</b> selected method</span><span><b>Secure</b> masked details</span></div></div>
           <div className="account-secure"><span>✓</span><div><strong>Secure payout details</strong><small>Only masked payout information is shown in the portal.</small></div></div>
         </section>
 
