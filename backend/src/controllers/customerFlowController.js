@@ -111,6 +111,7 @@ async function downloadReferenceAdmin(req,res){
     res.setHeader('Content-Type',file.mime);
     res.setHeader('Content-Disposition',`inline; filename*=UTF-8''${encodeURIComponent(file.name)}`);
     res.setHeader('Cache-Control','private, no-store');
+    if(file.buffer)return res.send(file.buffer);
     return res.sendFile(file.path);
   }catch(error){
     if(!error?.status&&!error?.code)console.error('Admin reference download failed:',error);
