@@ -286,65 +286,6 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="hc-section hc-hyderabad-seo" aria-labelledby="hyderabad-services-title">
-        <div className="hc-container">
-          <div className="hc-section-head">
-            <div>
-              <span className="hc-local-eyebrow">HYDERABAD</span>
-              <h2 id="hyderabad-services-title">Explore services across Hyderabad</h2>
-              <p>Start with the service or locality closest to your requirement, then add your exact site, property, budget and timeline.</p>
-            </div>
-            <Link to="/hyderabad">View Hyderabad Hub <Icon name="arrow" size={13}/></Link>
-          </div>
-
-          <div className="hc-hyderabad-service-links">
-            <Link to="/hyderabad/construction"><b>Construction in Hyderabad</b><span>Home construction, contractors, quotes and project planning.</span></Link>
-            <Link to="/hyderabad/interior-designers"><b>Interior Designers in Hyderabad</b><span>Home interiors, rooms, finishes, budget and delivery planning.</span></Link>
-            <Link to="/hyderabad/real-estate"><b>Real Estate Services in Hyderabad</b><span>Buy, sell, rent and investment property requirements.</span></Link>
-          </div>
-
-          <div className="hc-locality-links">
-            <b>Popular construction areas</b>
-            <div>
-              <Link to="/hyderabad/construction-cost">Construction Cost in Hyderabad</Link>
-              <Link to="/hyderabad/construction/uppal">Construction in Uppal</Link>
-              <Link to="/hyderabad/construction/kothapet">Construction in Kothapet</Link>
-              <Link to="/hyderabad/construction/lb-nagar">Construction in LB Nagar</Link>
-              <Link to="/hyderabad/construction/gachibowli">Construction in Gachibowli</Link>
-              <Link to="/hyderabad/construction/kondapur">Construction in Kondapur</Link>
-              <Link to="/hyderabad/construction/kukatpally">Construction in Kukatpally</Link>
-              <Link to="/hyderabad/construction/miyapur">Construction in Miyapur</Link>
-              <Link to="/hyderabad/construction/kokapet">Construction in Kokapet</Link>
-              <Link to="/hyderabad/construction/ghatkesar">Construction in Ghatkesar</Link>
-              <Link to="/hyderabad/construction/shamshabad">Construction in Shamshabad</Link>
-              <Link to="/hyderabad/construction/patancheru">Construction in Patancheru</Link>
-            </div>
-          </div>
-          <div className="hc-locality-links">
-            <b>State-wide construction coverage</b>
-            <div>
-              <Link to="/telangana/construction">All 33 Telangana Districts</Link>
-              <Link to="/andhra-pradesh/construction">All 28 Andhra Pradesh Districts</Link>
-            </div>
-          </div>
-          <div className="hc-locality-links">
-            <b>Popular construction guides</b>
-            <div>
-              <Link to="/guides/best-steel-for-house-construction">Best Steel for House Construction</Link>
-              <Link to="/guides/prevent-cracks-in-house">How to Reduce Cracks in a New House</Link>
-              <Link to="/guides/choose-construction-contractor-hyderabad">Best Contractor in Hyderabad: How to Choose</Link>
-              <Link to="/guides/2bhk-interiors-hyderabad">2BHK Interiors in Hyderabad</Link>
-              <Link to="/guides/home-construction-checklist">Home Construction Checklist</Link>
-              <Link to="/guides/waterproofing-precautions-new-house">Waterproofing Precautions</Link>
-              <Link to="/guides/best-cement-for-house-construction">Best Cement for House Construction</Link>
-              <Link to="/guides/m-sand-vs-river-sand-house-construction">M-Sand vs River Sand</Link>
-              <Link to="/guides/soil-test-before-house-construction">Soil Test Before House Construction</Link>
-              <Link to="/guides">View All Construction Guides</Link>
-            </div>
-          </div>
-        </div>
-      </section>
-
       <section className="hc-section hc-benefits">
         <div className="hc-container">
           <div className="hc-section-head compact">
