@@ -1,0 +1,60 @@
+name: Hostinger Main Prebuild
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  prebuild:
+    if: ${{ !contains(github.event.head_commit.message, '[hostinger-prebuilt]') }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v7
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
+      - name: Install root dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Build frontend
+        env:
+          VITE_API_URL: /api
+          VITE_PUBLIC_SITE_URL: https://sghomesinterior.in
+        run: npm run build
+
+      - name: Refresh single backend deploy bundle
+        run: |
+          rm -rf backend/hostinger-frontend
+          cp -R frontend/dist backend/hostinger-frontend
+          test -f backend/hostinger-frontend/index.html
+          test -d backend/hostinger-frontend/assets
+
+      - name: Commit fresh Hostinger bundle
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          if [ "$(git rev-parse HEAD)" != "$(git rev-parse origin/main)" ]; then
+            echo "main advanced during the build; a newer run will build the latest source."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -f backend/hostinger-frontend
+          if git diff --cached --quiet; then
+            echo "Hostinger bundle is already current."
+            exit 0
+          fi
+          git commit -m "Prebuild Hostinger backend frontend [hostinger-prebuilt]"
+          git push origin HEAD:main
