@@ -302,9 +302,8 @@ export default function Home() {
 
       <section className="hc-section hc-how">
         <div className="hc-container">
-          <div className="hc-section-head">
-            <div><h2>How It Works</h2><p>From your requirement to the right professional, in a few simple steps.</p></div>
-            <Link to="/how-it-works">Learn More <Icon name="arrow" size={13}/></Link>
+          <div className="hc-section-head hc-section-head-centered">
+            <h2>How It Works</h2>
           </div>
           <div className="hc-step-grid">
             {STEPS.map((step,index) => <article key={step.number}>
