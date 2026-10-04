@@ -802,8 +802,8 @@
   .hc-hero-trust{width:100%;grid-template-columns:1fr;margin-top:17px;padding:5px 9px}
   .hc-hero-trust>span{padding:7px 5px}
   .hc-hero-trust>span+span{border-left:0;border-top:1px solid #e6ebef}
-  .hc-hero-trust b{font-size:11.5px}
-  .hc-hero-trust small{font-size:10px}
+  .hc-hero-trust b{font-size:12px}
+  .hc-hero-trust small{font-size:12px}
   .hc-section-head{align-items:flex-start;flex-direction:column;gap:8px}
   .hc-section-head h2{font-size:22px}
   .hc-service-card{grid-template-columns:1fr}
