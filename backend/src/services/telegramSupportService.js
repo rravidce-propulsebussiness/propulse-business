@@ -1,4 +1,5 @@
 const crypto=require('crypto');
+const fs=require('fs/promises');
 
 function clean(value){return String(value??'').trim();}
 function botToken(){return clean(process.env.TELEGRAM_SUPPORT_BOT_TOKEN);}
@@ -100,6 +101,72 @@ async function apiCall(method,payload){
   }
 }
 
+async function apiMultipart(method,{fields={},fileField,fileBuffer,fileName,fileMime}={}){
+  const token=botToken();
+  if(!token)throw Object.assign(new Error('Telegram support bot is not configured'),{code:'TELEGRAM_NOT_CONFIGURED'});
+  const controller=new AbortController();
+  const timer=setTimeout(()=>controller.abort(),20000);
+  timer.unref?.();
+  try{
+    const form=new FormData();
+    for(const [key,value] of Object.entries(fields||{})){
+      if(value===undefined||value===null||value==='')continue;
+      form.append(key,typeof value==='string'?value:JSON.stringify(value));
+    }
+    form.append(fileField,new Blob([fileBuffer],{type:fileMime||'application/octet-stream'}),fileName||'proof');
+    const response=await fetch('https://api.telegram.org/bot'+token+'/'+method,{
+      method:'POST',
+      body:form,
+      signal:controller.signal,
+    });
+    const data=await response.json().catch(()=>({}));
+    if(!response.ok||data?.ok!==true){
+      const error=new Error(String(data?.description||'Telegram API request failed'));
+      error.code='TELEGRAM_API_ERROR';
+      error.status=response.status;
+      throw error;
+    }
+    return data.result;
+  }finally{
+    clearTimeout(timer);
+  }
+}
+
+function mediaCommonPayload({caption='',replyToMessageId=null}={}){
+  const payload={
+    chat_id:chatId(),
+    caption:String(caption||'').slice(0,1024),
+    ...(messageThreadId()?{message_thread_id:messageThreadId()}:{})
+  };
+  if(replyToMessageId)payload.reply_parameters={message_id:Number(replyToMessageId),allow_sending_without_reply:true};
+  return payload;
+}
+
+async function sendProofAttachment({descriptor,caption='',replyToMessageId=null}={}){
+  if(!isConfigured())throw Object.assign(new Error('Telegram support is not configured'),{code:'TELEGRAM_NOT_CONFIGURED'});
+  if(!descriptor)throw new Error('Payment proof descriptor is required');
+  const mime=String(descriptor.mime||'').toLowerCase();
+  const isImage=mime.startsWith('image/');
+  const method=isImage?'sendPhoto':'sendDocument';
+  const fileField=isImage?'photo':'document';
+  const payload=mediaCommonPayload({caption,replyToMessageId});
+  if(descriptor.externalUrl){
+    payload[fileField]=descriptor.externalUrl;
+    return apiCall(method,payload);
+  }
+  let fileBuffer=descriptor.buffer;
+  if(!fileBuffer&&descriptor.filePath)fileBuffer=await fs.readFile(descriptor.filePath);
+  if(!fileBuffer||!fileBuffer.length)throw new Error('Payment proof file is unavailable');
+  const ext=mime==='image/png'?'.png':mime==='image/webp'?'.webp':mime==='application/pdf'?'.pdf':'.jpg';
+  return apiMultipart(method,{
+    fields:payload,
+    fileField,
+    fileBuffer,
+    fileName:'payment-proof'+ext,
+    fileMime:mime||'application/octet-stream',
+  });
+}
+
 function messagePayload({text,replyToMessageId=null,replyMarkup=null}={}){
   const payload={
     chat_id:chatId(),
@@ -162,6 +229,6 @@ function expectedChatId(){return chatId();}
 
 module.exports={
   isConfigured,isApprovalConfigured,status,verifyWebhookSecret,
-  sendMessage,editMessageText,editMessageReplyMarkup,answerCallbackQuery,
+  sendMessage,sendProofAttachment,editMessageText,editMessageReplyMarkup,answerCallbackQuery,
   configureWebhook,expectedChatId,webhookUrl,approverAdminId,
 };
