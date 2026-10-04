@@ -13,6 +13,8 @@ const s3=require('../src/services/s3PrivateObjectStorageService');
 const privateProof=require('../src/services/privateProofStorageService');
 const companyProofStorage=require('../src/services/companyProofStorageService');
 const authService=require('../src/services/authService');
+const projectVideo=require('../src/services/projectVideoService');
+const projectPlan=require('../src/services/projectPlanService');
 
 const objects=new Map();
 const types=new Map();
@@ -57,6 +59,23 @@ global.fetch=async(input,options={})=>{
   assert(s3.isReference(row.stored_name),'Company proof DB row must store only an opaque object reference');
   const companyDescriptor=await companyProofStorage.descriptor(row.stored_name,{mimeType:row.mime_type,size:row.file_size});
   assert(companyDescriptor.externalUrl.includes('X-Amz-Signature='),'Company proof reads must use a signed object URL');
+
+  const mp4=Buffer.concat([Buffer.alloc(4),Buffer.from('ftyp'),Buffer.alloc(12)]);
+  const video=await projectVideo.saveProjectVideo(user.id,'video/mp4',mp4);
+  assert(s3.isReference(video.url),'Project video must store an opaque R2 reference');
+  assert(video.displayUrl.includes('X-Amz-Signature='),'Project video upload must return a signed display URL');
+  assert(video.displayUrl.includes('X-Amz-Expires=3600'),'Project video display URL must use the media expiry');
+  assert.strictEqual(projectVideo.managedVideoInfo(user.id,video.url).provider,'s3','Project video ownership parser must recognize R2');
+  assert.throws(()=>projectVideo.managedVideoInfo(user.id+1,video.url),/does not belong/,'Project video reference must enforce owner isolation');
+
+  const pdf=Buffer.from('%PDF-1.4\nR2 runtime plan\n');
+  const plan=await projectPlan.saveProjectPlan(user.id,'application/pdf',pdf);
+  assert(s3.isReference(plan.url),'Project plan must store an opaque R2 reference');
+  assert(plan.displayUrl.includes('X-Amz-Signature='),'Project plan upload must return a signed display URL');
+  assert.strictEqual(projectPlan.managedPlanInfo(user.id,plan.url).provider,'s3','Project plan ownership parser must recognize R2');
+
+  await projectVideo.removeManagedProjectVideos(user.id,[video.url]);
+  await projectPlan.removeManagedProjectPlans(user.id,[plan.url]);
 
   await privateProof.removeStoredProof(proofRef);
   assert(objects.size>=1,'Removing one proof must not remove unrelated company proof objects');
