@@ -50,14 +50,38 @@ jobs:
           test -d backend/hostinger-frontend/assets
           echo "Frontend build and backend publish bundle are ready."
 
+      - name: Bake Hostinger release identity
+        run: |
+          node -e "require('fs').writeFileSync('backend/hostinger-release.json', JSON.stringify({commit:process.env.GITHUB_SHA,builtAt:new Date().toISOString()})+'\\n')"
+          cat backend/hostinger-release.json
+
       - name: Commit prebuilt frontend
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -f frontend/dist backend/hostinger-frontend
+          git add -f frontend/dist backend/hostinger-frontend backend/hostinger-release.json
           if git diff --cached --quiet; then
             echo "No frontend build changes to commit."
             exit 0
           fi
           git commit -m "Prebuild Hostinger frontend [hostinger-prebuilt]"
           git push origin HEAD:feature/hostinger-business-deployment
+
+      - name: Wait for Hostinger production deployment
+        working-directory: backend
+        env:
+          DEPLOY_BASE_URL: https://sghomesinterior.in
+          DEPLOY_EXPECTED_COMMIT: ${{ github.sha }}
+          DEPLOY_EXPECTED_ENVIRONMENT: production
+          DEPLOY_WAIT_SECONDS: '900'
+          DEPLOY_POLL_SECONDS: '10'
+        run: node scripts/wait-for-deployment.js
+
+      - name: Run Hostinger production smoke
+        working-directory: backend
+        env:
+          DEPLOY_BASE_URL: https://sghomesinterior.in
+          DEPLOY_APP_ORIGIN: https://sghomesinterior.in
+          DEPLOY_EXPECTED_COMMIT: ${{ github.sha }}
+          DEPLOY_EXPECTED_ENVIRONMENT: production
+        run: node scripts/check-deployed-smoke.js

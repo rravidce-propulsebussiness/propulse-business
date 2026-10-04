@@ -1,5 +1,18 @@
-const startedAt=new Date().toISOString();
+const fs=require('fs');
+const path=require('path');
 
+const startedAt=new Date().toISOString();
+const bakedReleasePath=path.resolve(__dirname,'../../hostinger-release.json');
+
+function bakedCommit(){
+  try{
+    const payload=JSON.parse(fs.readFileSync(bakedReleasePath,'utf8'));
+    return String(payload?.commit||'').trim();
+  }catch(error){
+    if(error?.code!=='ENOENT'&&error?.name!=='SyntaxError')console.warn('Unable to read baked release identity:',error?.message||error);
+    return '';
+  }
+}
 function rawCommit(){
   return String(
     process.env.GIT_COMMIT_SHA||
@@ -9,6 +22,7 @@ function rawCommit(){
     process.env.HEROKU_SLUG_COMMIT||
     process.env.SOURCE_VERSION||
     process.env.COMMIT_SHA||
+    bakedCommit()||
     ''
   ).trim();
 }
