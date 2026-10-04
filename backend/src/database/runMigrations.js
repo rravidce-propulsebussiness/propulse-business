@@ -145,22 +145,50 @@ async function applyFile(client, filePath, appliedFilenames = null) {
   }
 }
 
+function migrationFilename(filePath) {
+  return path.relative(__dirname, filePath).replace(/\\/g, '/');
+}
+
+function pendingMigrationFiles(files, appliedFilenames) {
+  return files.filter(filePath => !appliedFilenames.has(migrationFilename(filePath)));
+}
+
+async function readAppliedFilenames(client) {
+  const appliedRows = await client.query('SELECT filename FROM schema_migrations');
+  return new Set(appliedRows.rows.map(row => String(row.filename)));
+}
+
 async function runMigrations() {
   const client = await pool.connect();
   let lockAcquired = false;
   try {
-    await client.query('SELECT pg_advisory_lock(hashtext($1))', [MIGRATION_LOCK_KEY]);
-    lockAcquired = true;
     await ensureLedger(client);
     const files = getMigrationFiles();
-    const appliedRows = await client.query('SELECT filename FROM schema_migrations');
-    const appliedFilenames = new Set(appliedRows.rows.map(row => String(row.filename)));
+
+    // Most production restarts have no schema work to do. Avoid taking the
+    // global migration advisory lock in that common case so overlapping
+    // Hostinger restarts do not block readiness behind another no-op runner.
+    let appliedFilenames = await readAppliedFilenames(client);
+    let pendingFiles = pendingMigrationFiles(files, appliedFilenames);
+    if (!pendingFiles.length) {
+      console.log(`Database migrations completed (0 applied, ${files.length} checked; already current).`);
+      return { applied: 0, checked: files.length };
+    }
+
+    await client.query('SELECT pg_advisory_lock(hashtext($1))', [MIGRATION_LOCK_KEY]);
+    lockAcquired = true;
+
+    // Another process may have completed the pending files while this process
+    // waited for the lock. Re-read the ledger before applying anything.
+    appliedFilenames = await readAppliedFilenames(client);
+    pendingFiles = pendingMigrationFiles(files, appliedFilenames);
+
     let applied = 0;
-    for (const file of files) {
+    for (const file of pendingFiles) {
       try {
         if (await applyFile(client, file, appliedFilenames)) applied += 1;
       } catch (error) {
-        const filename = path.relative(__dirname, file).replace(/\\/g, '/');
+        const filename = migrationFilename(file);
         error.message = filename + ': ' + error.message;
         throw error;
       }
@@ -182,4 +210,4 @@ if (require.main === module) {
     .finally(() => pool.end());
 }
 
-module.exports = { runMigrations, getMigrationFiles, hasTransactionControl, migrationControlSurface, isNoTransactionMigration, splitTopLevelStatements };
+module.exports = { runMigrations, getMigrationFiles, migrationFilename, pendingMigrationFiles, hasTransactionControl, migrationControlSurface, isNoTransactionMigration, splitTopLevelStatements };
