@@ -8,12 +8,21 @@
     "node": "24.x"
   },
   "scripts": {
-    "build": "npm ci --omit=dev --prefix backend && npm ci --include=dev --prefix frontend && npm run build --prefix frontend",
     "start": "node index.js",
-    "test:hostinger": "node backend/scripts/check-hostinger-single-app.js",
-    "postinstall": "npm ci --omit=dev --prefix backend && npm ci --include=dev --prefix frontend && npm run build --prefix frontend"
+    "build": "node index.js --build-only",
+    "test:hostinger": "node backend/scripts/check-hostinger-single-app.js"
   },
   "dependencies": {
-    "express": "^5.2.1"
+    "@vitejs/plugin-react": "^6.1.0",
+    "bcryptjs": "^3.0.2",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.2",
+    "pg": "^8.23.0",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "react-router-dom": "^7.18.3",
+    "vite": "^8.2.2"
   }
 }
