@@ -105,7 +105,8 @@ for(const source of [home,quote,packages,projects,about,howItWorks,contact]){
 }
 
 // Experts directory is public but does not expose direct contact data.
-assert.match(experts,/SUBSCRIBED PROPULSE PROFESSIONALS/);
+assert.doesNotMatch(experts,/experts-hero/);
+assert.match(experts,/PROFESSIONAL DIRECTORY/);
 assert.match(experts,/Subscribed Businesses on <em>ProPulse<\/em>/);
 assert.match(experts,/Verified only/);
 assert.match(experts,/View Business Profile/);

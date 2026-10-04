@@ -87,17 +87,6 @@ export default function Experts(){
       <div className="experts-header-actions"><Link className="experts-quote" to="/quote#interiors">Get Free Quote <Icon name="arrow" size={15}/></Link><Link className="experts-pro" to="/professionals">For Professionals</Link></div>
     </header>
 
-    <section className="experts-hero">
-      <div className="experts-hero-copy">
-        <span className="experts-kicker"><i/> SUBSCRIBED PROPULSE PROFESSIONALS</span>
-        <h1>Compare Real Business <em>Profiles</em>, Not Just Names.</h1>
-        <p>Explore subscribed construction, interior and real-estate businesses with services, locations, completed projects, videos and public plans before you create your requirement.</p>
-        <div className="experts-hero-actions"><a href="#expert-directory">Explore Professionals <Icon name="arrow" size={15}/></a><Link to="/quote" onClick={event=>{event.preventDefault();openLeadPopup('')}}>Tell Us Your Requirement</Link></div>
-        <div className="experts-hero-points"><span><Icon name="star" size={17}/> Active subscription required</span><span><Icon name="briefcase" size={17}/> Completed projects and plans</span><span><Icon name="pin" size={17}/> Service locations visible</span></div>
-      </div>
-      <div className="experts-hero-visual"><img src="https://images.unsplash.com/photo-1521737711867-e3b97375f902?auto=format&fit=crop&w=1500&q=90" alt="Construction and design professionals discussing a project"/><div className="experts-hero-overlay"/><article className="experts-floating-card one"><span><Icon name="star" size={21}/></span><div><b>Subscribed Professionals</b><small>Admin-controlled membership eligibility</small></div></article><article className="experts-floating-card two"><span><Icon name="home" size={21}/></span><div><b>Completed Work</b><small>Projects, videos and drawings</small></div></article><article className="experts-floating-card three"><span><Icon name="shield" size={21}/></span><div><b>Verification Shown</b><small>Separate proof-approved badge</small></div></article></div>
-    </section>
-
     <section className="experts-directory" id="expert-directory">
       <div className="experts-directory-head"><div><span>PROFESSIONAL DIRECTORY</span><h2>Subscribed Businesses on <em>ProPulse</em></h2><p>Profiles appear according to Admin membership rules. Direct phone and email details remain protected; customers connect through the ProPulse requirement flow.</p></div><div className="experts-count"><b>{loading?'—':pagination.total||0}</b><span>Eligible professionals</span></div></div>
 
