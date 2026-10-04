@@ -15,16 +15,19 @@ function assert(condition,message){
 assert(pkg.engines?.node==='24.x','Hostinger wrapper pins Node 24.x');
 assert(pkg.scripts?.build==='node index.js --build-only','Manual Hostinger build uses the same runtime-build path');
 assert(rootIndex.includes("const frontendDist=path.join(frontendRoot,'dist')"),'Hostinger runtime build targets frontend/dist');
-assert(rootIndex.includes("ensureFrontendBuild()"),'Hostinger entry guarantees the frontend build before serving');
+assert(rootIndex.includes("buildFrontendAsync()"),'Hostinger entry builds the frontend asynchronously after server startup');
 assert(pkg.scripts?.start==='node index.js','Hostinger starts through the default index.js entrypoint');
 for(const dependency of ['express','pg','bcryptjs','cors','dotenv','jsonwebtoken','react','react-dom','react-router-dom','vite','@vitejs/plugin-react']){
   assert(pkg.dependencies?.[dependency],'Hostinger root package must install '+dependency);
 }
 assert(!pkg.scripts?.postinstall,'Hostinger deployment must not rely on npm lifecycle scripts');
-assert(rootIndex.includes("spawnSync"),'Hostinger index.js must be able to build the frontend at runtime');
+assert(rootIndex.includes("spawnSync")&&rootIndex.includes("spawn"),'Hostinger index.js supports manual and background frontend builds');
 assert(rootIndex.includes("node_modules','vite','bin','vite.js"),'Hostinger runtime build must use root-installed Vite');
 assert(rootIndex.includes("generate-seo-static-pages.mjs"),'Hostinger runtime build must generate SEO static pages');
 assert(rootIndex.includes("require('./hostinger-server')"),'Hostinger index.js must launch the single-app wrapper');
+assert(rootIndex.indexOf("require('./hostinger-server')")<rootIndex.indexOf('void buildFrontendAsync()'),'Hostinger must open the public server before starting the background frontend build');
+assert(!wrapper.includes('Hostinger frontend build is missing. Run npm run build before npm start.'),'Hostinger wrapper must not exit when frontend/dist is initially absent');
+assert(wrapper.includes("return res.status(503).send('Application frontend is starting. Please retry shortly.')"),'Hostinger serves a temporary frontend-starting response while Vite builds');
 assert(pkg.dependencies?.express,'Hostinger root package declares Express for framework detection');
 assert(wrapper.includes("require('express')"),'Hostinger wrapper resolves Express from root dependencies');
 assert(wrapper.includes("startsWith('/api/')"),'Hostinger wrapper proxies API traffic');
