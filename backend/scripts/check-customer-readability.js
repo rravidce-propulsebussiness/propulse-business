@@ -12,7 +12,6 @@ const files=[
   'frontend/src/pages/HowItWorks.css',
   'frontend/src/pages/Contact.css',
   'frontend/src/components/WebsiteFaqSection.css',
-  'frontend/src/pages/EstimatorWizard.css',
   'frontend/src/pages/LeadsV2.css',
   'frontend/src/pages/LeadsV2Payment.css',
   'frontend/src/components/UserHeader.css',
