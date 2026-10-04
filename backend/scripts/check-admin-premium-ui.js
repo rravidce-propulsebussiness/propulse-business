@@ -20,7 +20,7 @@ const adminCouponsCss=read('../frontend/src/admin/pages/AdminCoupons.css');
 const couponService=read('../backend/src/services/couponService.js');
 const couponRoutes=read('../backend/src/routes/couponRoutes.js');
 const couponPromotionMigration=read('../backend/src/database/migrations/2026-09-27-zzzz-coupon-promotion-rewards.sql');
-const walletCouponEnhancer=read('../frontend/src/walletCouponEnhancer.js');
+const walletPage=read('../frontend/src/pages/Wallet.jsx');
 const customerLeads=read('../frontend/src/pages/LeadsV2.jsx');
 const customerLeadsCss=read('../frontend/src/pages/LeadsV2.css');
 const walletCouponService=read('../backend/src/services/walletCouponService.js');
@@ -70,8 +70,8 @@ assert(adminUsers.includes('premium-user-card'),'Premium user cards must remain'
 assert(!adminUsers.includes('<table>'),'Admin Users must not regress to the old wide table layout');
 assert(adminUsers.includes('Manage')&&adminUsers.includes('Deactivate')&&adminUsers.includes('Activate'),'User management actions must remain');
 assert(adminUsers.includes('＋ Create Admin'),'Create Admin action must remain');
-assert(adminUsers.includes("updateService(i, 'subserviceId', e.target.value)"),'Subservice editor must update the selected service row');
-assert(adminUsers.includes("updateLocation(i, 'subcityId', e.target.value)"),'Area editor must update the selected location row');
+assert(/updateService\(i\s*,\s*['"]subserviceId['"]\s*,\s*e\.target\.value\)/.test(adminUsers),'Subservice editor must update the selected service row');
+assert(/updateLocation\(i\s*,\s*['"]subcityId['"]\s*,\s*e\.target\.value\)/.test(adminUsers),'Area editor must update the selected location row');
 assert(adminUsersCss.includes('/* Premium Admin Users workspace */'),'Premium Users styling must remain');
 assert(adminUsersCss.includes('grid-template-columns:repeat(auto-fill,minmax(330px,1fr))'),'Desktop Users card grid must remain responsive');
 assert(adminUsersCss.includes('.premium-user-modal'),'Premium account management modal styling must remain');
@@ -158,8 +158,9 @@ assert(couponService.includes('async function getPublicOffersForUser')&&couponRo
 assert(couponService.includes('async function applyRewardForPayment')&&couponService.includes("reference_type,reference_id,payment_id,description")&&couponService.includes("'promotion'"),'Wallet promotion rewards must be recorded as canonical wallet transactions');
 assert(couponService.includes("INSERT INTO lead_entitlement_grants")&&couponService.includes("VALUES($1,'promotion'"),'Lead bonus promotions must create canonical lead entitlement grants');
 assert(walletCouponService.includes('applyRewardForPayment')&&paymentService.includes('applyRewardForPayment')&&leadPurchaseService.includes('applyRewardForPayment'),'Promotion rewards must only be granted from successful wallet, membership or lead payment completion paths');
-assert(walletCouponEnhancer.includes("/coupons/offers?purchaseType=wallet_topup")&&walletCouponEnhancer.includes('receive'),'Add Balance must surface eligible wallet offers such as add ₹5,000 and receive ₹6,000');
-assert(walletCouponEnhancer.includes('walletCredit = validAmount ? amount + bonus : 0'),'Wallet offer preview must show the full credited balance including promotion bonus');
+assert(walletPage.includes("/coupons/offers?purchaseType=wallet_topup")&&walletPage.includes('receive'),'Add Balance must surface eligible wallet offers such as add ₹5,000 and receive ₹6,000');
+assert(walletPage.includes('const walletCredit=validAmount?numericAmount+bonus:0'),'Wallet offer preview must show the full credited balance including promotion bonus');
+assert(walletPage.includes("authRequest('/coupons/validate'")&&walletPage.includes('fullyDiscounted'),'Wallet coupon flow must remain React-driven and support zero-payment offers');
 assert(customerLeads.includes("/coupons/offers?purchaseType=lead")&&customerLeads.includes('publicLeadOffers'),'Lead checkout must surface eligible public lead promotions');
 assert(customerLeads.includes('Reward after payment')&&customerLeads.includes('couponReward'),'Lead checkout must explain bonus lead or wallet rewards before purchase');
 assert(customerLeadsCss.includes('.lv2-public-offers')&&customerLeadsCss.includes('.lv2-promotion-reward'),'Lead promotion offer and reward-summary styling must remain');
@@ -281,16 +282,16 @@ assert(customerMembershipCss.includes('.membership-offer-badge')&&customerMember
 assert(membershipConfigCss.includes('grid-template-columns:repeat(4,minmax(0,1fr))'),'Desktop Membership KPI layout must remain compact');
 assert(!server.includes("servicePricingRoutes")&&!server.includes("'/api/service-pricing'"),'Legacy Service Pricing API must stay unmounted');
 assert(!adminRoutes.includes('servicePricingController')&&!adminRoutes.includes("'/service-pricing'"),'Admin routes must not retain deleted Service Pricing controller references');
-assert(home.includes("publicRequest('/membership-plans/public')"),'Homepage pricing must come from Membership packages');
-assert(!home.includes("publicRequest('/service-pricing')")&&!home.includes('servicePricing'),'Homepage must not use the legacy Service Pricing source');
-assert(home.includes('MEMBERSHIP &amp; PRICING'),'Homepage pricing section must present Membership packages');
+assert(!home.includes("publicRequest('/service-pricing')")&&!home.includes('servicePricing'),'Homeowner homepage must not use the legacy Service Pricing source');
+assert(home.includes('Start Your Requirement')&&home.includes("propulse:open-lead-popup"),'Homeowner homepage must keep the customer requirement entry point');
+assert(customerMembership.includes("apiRequest('/membership-plans')"),'Professional Membership pricing must remain sourced from Membership packages');
 assert(membershipRoutes.includes("router.get('/public', membershipPlanController.getPublicPlans)"),'Public active-only Membership pricing endpoint must remain');
 assert(membershipRoutes.includes("router.get('/', requireAuth, membershipPlanController.getPlans)"),'Admin Membership configuration must keep authenticated full-plan access');
 assert(membershipController.includes('res.json(await s.getPlans(false))'),'Public Membership endpoint must return active plans only');
 assert(servicePricingRemoval.includes('DROP TABLE IF EXISTS service_pricing'),'Final schema must remove the redundant Service Pricing table');
 
 
-assert(dashboard.includes('const revenue=stats?.revenue||{}'),'Overview must use the backend revenue summary');
+assert(/const revenue=stats\?\.revenue\|\|(EMPTY_OBJECT|\{\})/.test(dashboard),'Overview must use the backend revenue summary');
 assert(dashboard.includes("const [revenuePeriod,setRevenuePeriod]=useState('month')"),'Overview must keep the revenue period filter');
 assert(dashboard.includes('REVENUE COMMAND CENTER')&&dashboard.includes('Total earnings'),'Overview must keep the top earnings command center');
 assert(dashboard.includes("['today','Today']")&&dashboard.includes("['week','This Week']")&&dashboard.includes("['month','This Month']")&&dashboard.includes("['all','All Time']"),'Overview revenue filters must keep Today, This Week, This Month and All Time');

@@ -19,7 +19,7 @@ export default function AdminTestReset(){
     finally{setLoading(false)}
   }
 
-  useEffect(()=>{load()},[])
+  useEffect(()=>{let active=true;queueMicrotask(()=>{if(active)load()});return()=>{active=false}},[])
 
   const items=useMemo(()=>preview?Object.values(preview.counts||{}):[],[preview])
   const hasData=items.some(item=>Number(item.count)>0)||Number(preview?.wallets?.nonZero)>0

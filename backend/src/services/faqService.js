@@ -1,7 +1,7 @@
 const pool=require('../config/database');
 
-const CATEGORIES=['general','leads','payments','withdrawals','account','reports'];
-const AUDIENCES=['website','investor','lead_partner'];
+const CATEGORIES=['general','consultation','construction','interiors','property','privacy','leads','payments','withdrawals','account','reports'];
+const AUDIENCES=['homeowner','website','investor','lead_partner'];
 
 function normalizeId(value){
   const id=Number(value);

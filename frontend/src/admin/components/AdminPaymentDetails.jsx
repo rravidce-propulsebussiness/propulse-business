@@ -34,13 +34,16 @@ export default function AdminPaymentDetails(){
   const [error,setError]=useState('')
   const [message,setMessage]=useState('')
   const [copied,setCopied]=useState('')
+  const [options,setOptions]=useState({offlineEnabled:true,onlineEnabled:false,onlineDisplayMode:'coming_soon',onlineLabel:'Pay Online',onlineComingSoonMessage:'Online payment is coming soon.',offlineLabel:'UPI / Bank Transfer'})
+  const [savingOptions,setSavingOptions]=useState(false)
 
   const load=async()=>{
     try{
       setLoading(true)
       setError('')
-      const data=await apiRequest('/payment-receiving-details/admin')
+      const [data,paymentOptions]=await Promise.all([apiRequest('/payment-receiving-details/admin'),apiRequest('/payment-receiving-details/admin/options')])
       setItems(Array.isArray(data)?data:[])
+      if(paymentOptions)setOptions(paymentOptions)
     }catch(e){
       setError(e.message||'Failed to load receiving details')
     }finally{
@@ -154,6 +157,15 @@ export default function AdminPaymentDetails(){
     }
   }
 
+  const saveOptions=async()=>{
+    try{
+      setSavingOptions(true);setError('');setMessage('')
+      const saved=await apiRequest('/payment-receiving-details/admin/options',{method:'PUT',body:JSON.stringify(options)})
+      setOptions(saved);setMessage('Payment availability updated.')
+    }catch(e){setError(e.message||'Failed to update payment availability')}
+    finally{setSavingOptions(false)}
+  }
+
   const copy=async(value,key)=>{
     const text=String(value||'').trim()
     if(!text)return
@@ -188,6 +200,26 @@ export default function AdminPaymentDetails(){
 
     {error&&<div className="apd-alert error">{error}</div>}
     {message&&<div className="apd-alert success">{message}</div>}
+
+    <section className="payment-availability-panel">
+      <div className="payment-availability-head"><div><span>PAYMENT AVAILABILITY</span><h2>Customer payment modes</h2><p>Control online gateway and manual UPI / bank payments independently.</p></div><button type="button" onClick={saveOptions} disabled={savingOptions}>{savingOptions?'Saving…':'Save payment modes'}</button></div>
+      <div className="payment-availability-grid">
+        <article className={`payment-mode-card ${options.onlineEnabled?'live':options.onlineDisplayMode==='coming_soon'?'soon':'off'}`}>
+          <div className="payment-mode-card-head"><div className="payment-mode-symbol">⚡</div><div><span>ONLINE GATEWAY</span><h3>{options.onlineLabel||'Pay Online'}</h3></div><label className="payment-toggle"><input type="checkbox" checked={Boolean(options.onlineEnabled)} onChange={e=>setOptions(v=>({...v,onlineEnabled:e.target.checked,onlineDisplayMode:e.target.checked?'live':v.onlineDisplayMode==='live'?'coming_soon':v.onlineDisplayMode}))}/><i/></label></div>
+          <p>{options.onlineEnabled?'Customers can start Razorpay checkout now.':'Online checkout is disabled. Choose whether customers should see Coming Soon or nothing.'}</p>
+          {!options.onlineEnabled&&<label className="payment-mode-field">When disabled<select value={options.onlineDisplayMode==='live'?'coming_soon':options.onlineDisplayMode} onChange={e=>setOptions(v=>({...v,onlineDisplayMode:e.target.value}))}><option value="coming_soon">Show “Coming Soon”</option><option value="hidden">Hide online payment</option></select></label>}
+          <label className="payment-mode-field">Button label<input maxLength="80" value={options.onlineLabel||''} onChange={e=>setOptions(v=>({...v,onlineLabel:e.target.value}))}/></label>
+          {!options.onlineEnabled&&options.onlineDisplayMode==='coming_soon'&&<label className="payment-mode-field">Coming Soon message<input maxLength="220" value={options.onlineComingSoonMessage||''} onChange={e=>setOptions(v=>({...v,onlineComingSoonMessage:e.target.value}))}/></label>}
+        </article>
+        <article className={`payment-mode-card ${options.offlineEnabled?'live':'off'}`}>
+          <div className="payment-mode-card-head"><div className="payment-mode-symbol">₹</div><div><span>OFFLINE / MANUAL</span><h3>{options.offlineLabel||'UPI / Bank Transfer'}</h3></div><label className="payment-toggle"><input type="checkbox" checked={Boolean(options.offlineEnabled)} onChange={e=>setOptions(v=>({...v,offlineEnabled:e.target.checked}))}/><i/></label></div>
+          <p>{options.offlineEnabled?'Customers can use configured UPI / bank accounts and submit UTR / proof.':'Manual UPI / bank payment is disabled across checkout APIs.'}</p>
+          <label className="payment-mode-field">Customer label<input maxLength="80" value={options.offlineLabel||''} onChange={e=>setOptions(v=>({...v,offlineLabel:e.target.value}))}/></label>
+        </article>
+      </div>
+      {options.onlineEnabled&&options.gatewayConfigured===false&&<div className="payment-availability-warning">Online payment is enabled, but Razorpay credentials are not configured on the backend. Customers will not be allowed to start online checkout until the gateway is configured.</div>}
+      {!options.onlineEnabled&&!options.offlineEnabled&&<div className="payment-availability-warning">Both payment methods are disabled. Wallet-only and zero-payable transactions can still complete, but customers cannot pay an external amount.</div>}
+    </section>
 
     <section className="receiving-accounts-panel">
       <div className="receiving-panel-head">
