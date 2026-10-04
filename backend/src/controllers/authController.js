@@ -1,6 +1,7 @@
 const authService = require('../services/authService');
 const { sendPasswordResetEmail } = require('../services/emailService');
 const companyProofStorage = require('../services/companyProofStorageService');
+const supabaseAuthService = require('../services/supabaseAuthService');
 const { sendProofDescriptor } = require('../utils/proofResponse');
 
 const AUTH_COOKIE = 'propulse_auth';
@@ -228,6 +229,35 @@ async function session(req, res) {
   }
 }
 
+async function linkSupabaseIdentity(req, res) {
+  try {
+    const accessToken = String(req.body?.accessToken || '').trim();
+    if (!accessToken) return res.status(400).json({ error: 'Supabase access token is required' });
+    if (!supabaseAuthService.isConfigured()) {
+      return res.status(503).json({ error: 'Supabase Auth is not enabled on this server' });
+    }
+
+    const supabaseUser = await supabaseAuthService.verifyAccessToken(accessToken);
+    const linkedUser = await authService.linkSupabaseIdentity({
+      appUserId: req.user.id,
+      supabaseUserId: supabaseUser.id,
+      email: supabaseUser.email,
+    });
+    const user = await authService.getPublicAuthenticatedUser(linkedUser);
+    return res.json({ linked: true, user });
+  } catch (error) {
+    if (error.code === 'SUPABASE_EMAIL_MISMATCH') return res.status(409).json({ error: error.message, code: error.code });
+    if (error.code === 'SUPABASE_IDENTITY_ALREADY_LINKED') return res.status(409).json({ error: error.message, code: error.code });
+    if (error.code === 'SUPABASE_AUTH_TIMEOUT') return res.status(503).json({ error: 'Authentication service is temporarily unavailable' });
+    if (['INVALID_SUPABASE_SESSION', 'INVALID_SUPABASE_IDENTITY'].includes(error.code)) {
+      return res.status(401).json({ error: 'Invalid or expired Supabase session' });
+    }
+    console.error('Supabase identity linking failed:', error.message);
+    return res.status(500).json({ error: 'Failed to link Supabase account' });
+  }
+}
+
+
 async function me(req, res) {
   try {
     const user = await authService.getPublicAuthenticatedUser(req.user);
@@ -239,4 +269,4 @@ async function me(req, res) {
   }
 }
 
-module.exports = { signup, uploadCompanyProofs, downloadCompanyProof, login, googleLogin, forgotPassword, resetPassword, logout, session, me };
+module.exports = { signup, uploadCompanyProofs, downloadCompanyProof, login, googleLogin, forgotPassword, resetPassword, logout, session, linkSupabaseIdentity, me };
