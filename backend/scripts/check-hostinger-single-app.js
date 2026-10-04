@@ -27,7 +27,11 @@ assert(rootIndex.includes("generate-seo-static-pages.mjs"),'Hostinger runtime bu
 assert(rootIndex.includes("require('./hostinger-server')"),'Hostinger index.js must launch the single-app wrapper');
 assert(rootIndex.indexOf("require('./hostinger-server')")<rootIndex.indexOf('void buildFrontendAsync()'),'Hostinger must open the public server before starting the background frontend build');
 assert(!wrapper.includes('Hostinger frontend build is missing. Run npm run build before npm start.'),'Hostinger wrapper must not exit when frontend/dist is initially absent');
-assert(wrapper.includes("return res.status(503).send('Application frontend is starting. Please retry shortly.')"),'Hostinger serves a temporary frontend-starting response while Vite builds');
+assert(wrapper.includes("return res.status(200).send("),'Hostinger returns HTTP 200 while the frontend build is still starting');
+assert(wrapper.includes("X-App-Starting"),'Hostinger marks temporary startup responses');
+assert(wrapper.includes("scheduleBackendRestart"),'Hostinger wrapper supervises and restarts the backend child process');
+assert(wrapper.includes("backend?.kill('SIGTERM')"),'Hostinger wrapper stops the backend child during shutdown');
+assert(wrapper.includes("if(req.path==='/health/live')"),'Hostinger liveness remains available while backend restarts');
 assert(pkg.dependencies?.express,'Hostinger root package declares Express for framework detection');
 assert(wrapper.includes("require('express')"),'Hostinger wrapper resolves Express from root dependencies');
 assert(wrapper.includes("startsWith('/api/')"),'Hostinger wrapper proxies API traffic');
