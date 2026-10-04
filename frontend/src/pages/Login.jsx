@@ -16,8 +16,6 @@ function Login() {
 
   const finishLogin = useCallback(async (result) => {
     saveSession(result)
-    if (!remember) localStorage.setItem('propulse_session_mode', 'session')
-
     if (result.user?.role === 'admin') {
       navigate('/admin', { replace: true })
       return
@@ -29,17 +27,9 @@ function Login() {
       return
     }
 
-    try {
-      const partner = await authRequest('/lead-partner/me')
-      if (partner?.status === 'active') {
-        navigate('/lead-partner', { replace: true })
-        return
-      }
-    } catch {}
-
     const destination = location.state?.from?.pathname || '/leads'
     navigate(destination, { replace: true })
-  }, [location.state, navigate, remember])
+  }, [location.state, navigate])
 
   async function submit(e) {
     e.preventDefault()
@@ -47,7 +37,7 @@ function Login() {
     if (!form.email || !form.password) return setError('Enter your email and password.')
     try {
       setLoading(true)
-      const result = await authRequest('/auth/login', { method: 'POST', body: JSON.stringify(form) })
+      const result = await authRequest('/auth/login', { method: 'POST', body: JSON.stringify({ ...form, remember }) })
       await finishLogin(result)
     } catch (err) {
       setError(err.message)
@@ -62,7 +52,7 @@ function Login() {
       setGoogleLoading(true)
       const result = await authRequest('/auth/google', {
         method: 'POST',
-        body: JSON.stringify({ credential }),
+        body: JSON.stringify({ credential, remember }),
       })
       await finishLogin(result)
     } catch (err) {
@@ -70,7 +60,7 @@ function Login() {
     } finally {
       setGoogleLoading(false)
     }
-  }, [finishLogin])
+  }, [finishLogin, remember])
 
   return (
     <div className="auth-page login-premium">

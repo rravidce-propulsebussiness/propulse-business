@@ -2,6 +2,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { authRequest, clearSession, getToken, getUser } from '../utils/auth'
 import './InvestorHeader.css'
+import NotificationBell from './NotificationBell'
 
 export default function InvestorHeader() {
   const navigate = useNavigate()
@@ -63,7 +64,7 @@ export default function InvestorHeader() {
     if (!query) return true
     const targetParams = new URLSearchParams(query)
     const currentParams = new URLSearchParams(location.search)
-    return [...targetParams.entries()].every(([key,value]) => currentParams.get(key) === value)
+    return [...targetParams.entries()].every(([key, value]) => currentParams.get(key) === value)
   }
 
   const nav = isPro
@@ -73,7 +74,6 @@ export default function InvestorHeader() {
         { label: 'Linked Leads', to: '/investment/leads' },
         { label: 'History', to: '/investment/history' },
         { label: 'FAQ', to: '/investment/faq' },
-        { label: 'Contact', to: '/contact?audience=users' },
       ]
     : [{ label: 'Home', to: '/' }]
 
@@ -88,8 +88,6 @@ export default function InvestorHeader() {
       >
         <img src="/brand/propulse-logo.png" alt="Propulse Business" />
       </Link>
-
-      {isPro && <div className="investor-header-label">INVESTOR</div>}
 
       <nav className={`investor-header-nav${open ? ' open' : ''}`}>
         {nav.map(item => (
@@ -108,6 +106,7 @@ export default function InvestorHeader() {
       </nav>
 
       <div className="investor-header-right">
+        <NotificationBell/>
         <Link
           className="investor-profile"
           to="/profile"

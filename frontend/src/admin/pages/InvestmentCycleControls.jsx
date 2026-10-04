@@ -4,6 +4,7 @@ import { apiRequest } from '../../utils/api'
 const money = value => `₹${Number(value || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}`
 const dateTime = value => value ? new Date(value).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—'
 const OPEN = ['ACTIVE', 'EXIT_REQUESTED', 'WAITING_FOR_LEADS']
+const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char])
 
 export default function InvestmentCycleControls() {
   useEffect(() => {
@@ -63,21 +64,20 @@ export default function InvestmentCycleControls() {
         const sales = Array.isArray(statement?.sales_detail) ? statement.sales_detail : []
         const investments = Array.isArray(history?.investments) ? history.investments : []
 
-        const spendGroups = await Promise.all(investments.map(async inv => {
-          try {
-            const result = await apiRequest(`/investments/admin/${inv.id}/ad-spend`)
-            return { id: Number(inv.id), spends: Array.isArray(result?.spends) ? result.spends : [] }
-          } catch {
-            return { id: Number(inv.id), spends: [] }
-          }
-        }))
-        const spendMap = new Map(spendGroups.map(item => [item.id, item.spends]))
+        const adSpends = Array.isArray(history?.ad_spends) ? history.ad_spends : []
+        const spendsByInvestment = new Map()
+        adSpends.forEach(spend => {
+          const id = Number(spend.investment_id)
+          const group = spendsByInvestment.get(id) || []
+          group.push(spend)
+          spendsByInvestment.set(id, group)
+        })
 
         const events = []
         investments.forEach(inv => {
           events.push({ type: 'investment', label: `Investment #${inv.id} added`, amount: Number(inv.amount || 0), date: inv.created_at })
-          const spends = spendMap.get(Number(inv.id)) || []
-          spends.forEach(spend => events.push({ type: 'ad', label: `Ads spent · Investment #${inv.id}`, amount: -Math.abs(Number(spend.amount || 0)), date: spend.created_at || spend.spend_date }))
+          const spends = spendsByInvestment.get(Number(inv.id)) || []
+          spends.forEach(spend => events.push({ type: 'ad', label: `Ads spent · Investment #${inv.id}`, amount: -Math.abs(Number(spend.amount || 0)), date: spend.occurred_at || spend.created_at || spend.spend_date }))
         })
         sales.forEach(sale => events.push({ type: 'revenue', label: `Lead #${sale.lead_id} sold · ${Number(sale.shares || 1)} ${Number(sale.shares || 1) === 1 ? 'single share' : 'shared shares'}`, amount: Number(sale.investor_earnings || 0), gross: Number(sale.amount || 0), date: sale.sold_at }))
         events.sort((a, b) => new Date(a.date || 0) - new Date(b.date || 0))
@@ -93,7 +93,7 @@ export default function InvestmentCycleControls() {
         const saleRows = sales.map(sale => `<div class="cycle-sale-row"><strong>Lead #${sale.lead_id}</strong><span>${Number(sale.shares || 1)} ${Number(sale.shares || 1) === 1 ? 'share · Single' : 'shares · Shared'}</span><span class="sale-amount">${money(sale.amount)} gross</span><span class="sale-earnings">+${money(sale.investor_earnings)} investor</span></div>`).join('')
 
         box.innerHTML = `<div class="cycle-statement">
-          <div class="cycle-statement-title"><span>Cycle #${cycleId} Complete Statement</span><span>${String(cycle.status || '').toUpperCase()}</span></div>
+          <div class="cycle-statement-title"><span>Cycle #${cycleId} Complete Statement</span><span>${escapeHtml(String(cycle.status || '').toUpperCase())}</span></div>
           <div class="cycle-statement-grid">
             <div class="cycle-stat"><span>Total Invested</span><strong>${money(investment.principal)}</strong></div>
             <div class="cycle-stat blue"><span>Ad Spend</span><strong>${money(ads.spent)}</strong></div>
@@ -115,12 +115,12 @@ export default function InvestmentCycleControls() {
 
           <div class="cycle-section"><div class="cycle-section-title"><strong>Cycle Timeline</strong><span>${cycle.auto_invest ? 'Auto-Invest' : 'Non-Auto'}</span></div><div class="cycle-sale-list"><div class="cycle-sale-row"><strong>Started</strong><span>${dateTime(cycle.started_at)}</span><span>Maturity</span><span>${dateTime(cycle.maturity_at)}</span></div><div class="cycle-sale-row"><strong>Exit</strong><span>${dateTime(cycle.exit_requested_at)}</span><span>Closed</span><span>${dateTime(cycle.closed_at)}</span></div></div></div>
 
-          ${cycle.admin_closed_reason || cycle.exit_reason ? `<div class="cycle-closure"><strong>Closure reason:</strong> ${cycle.admin_closed_reason || cycle.exit_reason}</div>` : ''}
+          ${cycle.admin_closed_reason || cycle.exit_reason ? `<div class="cycle-closure"><strong>Closure reason:</strong> ${escapeHtml(cycle.admin_closed_reason || cycle.exit_reason)}</div>` : ''}
           <div class="cycle-section"><div class="cycle-section-title"><strong>Other Financial Activity</strong><span>${Number(ads.transactions || 0)} ad-spend transaction(s) · ${Number(investment.count || 0)} investment row(s) · ${Number(payouts.requests || 0)} withdrawal request(s)</span></div></div>
         </div>`
         box.dataset.loaded = 'true'
         button.textContent = 'Hide History'
-      } catch (error) {
+      } catch {
         box.innerHTML = '<div class="cycle-error">Unable to load cycle statement/history.</div>'
         button.textContent = 'View Full History'
       } finally {
@@ -134,9 +134,9 @@ export default function InvestmentCycleControls() {
       try {
         const userId = await investorIdForModal(modal)
         if (!userId || stopped || !modal.isConnected) return
-        const result = await apiRequest('/investments/admin/cycles')
+        const result = await apiRequest(`/investments/admin/investor/${userId}/cycles?page=1&limit=50`)
         const all = Array.isArray(result) ? result : (Array.isArray(result?.cycles) ? result.cycles : [])
-        const cycles = all.filter(cycle => Number(cycle.user_id) === Number(userId)).sort((a, b) => {
+        const cycles = all.sort((a, b) => {
           const aOpen = OPEN.includes(String(a.status || '').toUpperCase())
           const bOpen = OPEN.includes(String(b.status || '').toUpperCase())
           return Number(bOpen) - Number(aOpen) || Number(b.id || 0) - Number(a.id || 0)
@@ -145,7 +145,7 @@ export default function InvestmentCycleControls() {
         const previous = cycles.filter(cycle => !current || Number(cycle.id) !== Number(current.id))
         const renderCycle = (cycle, isCurrent) => {
           const closed = String(cycle.status || '').toUpperCase() === 'CLOSED'
-          return `<div class="investor-cycle-row"><div class="investor-cycle-main"><div class="investor-cycle-info"><strong>${isCurrent ? 'Current Active Cycle' : `Cycle #${cycle.id}`} · ${cycle.auto_invest ? 'Auto-Invest' : 'Non-Auto'}</strong><small>${money(cycle.principal)} invested · ${Number(cycle.total_leads || 0)} linked leads · ${Number(cycle.final_leads || 0)} final · ${Number(cycle.pending_leads || 0)} pending</small></div><span class="investor-cycle-status ${closed ? 'closed' : ''}">${cycle.status || '—'}</span><div class="investor-cycle-actions"><button class="investor-cycle-history-toggle" data-cycle-id="${cycle.id}">View Full History</button>${closed ? '' : `<button class="close-cycle" data-cycle-id="${cycle.id}">Close Cycle</button><button class="finish-cycle" data-cycle-id="${cycle.id}">Finish</button>`}</div></div><div class="investor-cycle-history" data-history-cycle-id="${cycle.id}" hidden></div></div>`
+          return `<div class="investor-cycle-row"><div class="investor-cycle-main"><div class="investor-cycle-info"><strong>${isCurrent ? 'Current Active Cycle' : `Cycle #${cycle.id}`} · ${cycle.auto_invest ? 'Auto-Invest' : 'Non-Auto'}</strong><small>${money(cycle.principal)} invested · ${Number(cycle.total_leads || 0)} linked leads · ${Number(cycle.final_leads || 0)} final · ${Number(cycle.pending_leads || 0)} pending</small></div><span class="investor-cycle-status ${closed ? 'closed' : ''}">${escapeHtml(cycle.status || '—')}</span><div class="investor-cycle-actions"><button class="investor-cycle-history-toggle" data-cycle-id="${cycle.id}">View Full History</button>${closed ? '' : `<button class="close-cycle" data-cycle-id="${cycle.id}">Close Cycle</button><button class="finish-cycle" data-cycle-id="${cycle.id}">Finish</button>`}</div></div><div class="investor-cycle-history" data-history-cycle-id="${cycle.id}" hidden></div></div>`
         }
         const panel = document.createElement('div')
         panel.className = 'investor-cycle-panel'
