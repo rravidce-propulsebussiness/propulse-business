@@ -37,17 +37,24 @@ jobs:
           VITE_PUBLIC_SITE_URL: https://sghomesinterior.in
         run: npm run build
 
+      - name: Bundle frontend inside backend publish root
+        run: |
+          rm -rf backend/hostinger-frontend
+          cp -R frontend/dist backend/hostinger-frontend
+
       - name: Verify frontend output
         run: |
           test -f frontend/dist/index.html
           test -d frontend/dist/assets
-          echo "Frontend build is ready."
+          test -f backend/hostinger-frontend/index.html
+          test -d backend/hostinger-frontend/assets
+          echo "Frontend build and backend publish bundle are ready."
 
       - name: Commit prebuilt frontend
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -f frontend/dist
+          git add -f frontend/dist backend/hostinger-frontend
           if git diff --cached --quiet; then
             echo "No frontend build changes to commit."
             exit 0
