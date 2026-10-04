@@ -455,6 +455,15 @@ async function processTelegramUpdate(update){
   if(configuredThread&&Number(message.message_thread_id||0)!==Number(configuredThread))return {ignored:true,reason:'wrong_thread'};
   let body=cleanText(message.text||message.caption,4000);
   if(!body)return {ignored:true,reason:'no_text'};
+  if(/^\/whoami(?:@\w+)?$/i.test(body)){
+    const telegramUserId=String(message.from?.id||'').trim();
+    if(!telegramUserId)return {ignored:true,reason:'missing_sender_id'};
+    await telegram.sendMessage({
+      text:'Your Telegram user ID is: '+telegramUserId,
+      replyToMessageId:Number(message.message_id)||null,
+    });
+    return {accepted:true,command:'whoami'};
+  }
   let conversationId=null;
   const replyId=message.reply_to_message?.message_id;
   if(replyId){
