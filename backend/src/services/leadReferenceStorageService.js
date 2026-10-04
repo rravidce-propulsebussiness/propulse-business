@@ -5,6 +5,7 @@ const pool=require('../config/database');
 const {leadReferenceRoot}=require('../config/uploadStorage');
 const {decodeBase64Payload,validateDataUrlSignature}=require('../utils/fileValidation');
 const {validateSubmissionKey}=require('./publicContactValidationService');
+const s3=require('./s3PrivateObjectStorageService');
 
 const MAX_FILES=8;
 const MAX_BYTES=5*1024*1024;
@@ -54,6 +55,17 @@ function verifyOwner(row,key,submissionKey){
   const flowKey=String(row.custom_fields?._intake?.flowKey||'');
   if(flowKey&&flowKey!==String(key||''))fail('Requirement flow mismatch','ATTACHMENT_NOT_ALLOWED',403);
 }
+async function removeStored(storageKey){
+  const value=String(storageKey||'');
+  if(!value)return;
+  if(s3.isReference(value)){
+    await s3.deleteObject(s3.parseReference(value));
+    return;
+  }
+  const absolute=path.resolve(leadReferenceRoot,value);
+  if(!absolute.startsWith(path.resolve(leadReferenceRoot)+path.sep))return;
+  await fs.promises.unlink(absolute).catch(error=>{if(error?.code!=='ENOENT')throw error});
+}
 async function saveReference({key,leadId,submissionKey,originalName,dataUrl,attachmentKey}){
   const row=await getLead(leadId);
   verifyOwner(row,key,submissionKey);
@@ -74,19 +86,26 @@ async function saveReference({key,leadId,submissionKey,originalName,dataUrl,atta
 
   const id=crypto.randomUUID();
   const extension=EXTENSIONS[parsed.mime];
-  const folder=path.join(leadReferenceRoot,String(row.id));
-  await fs.promises.mkdir(folder,{recursive:true,mode:0o700});
   const filename=`${Date.now()}-${crypto.randomBytes(12).toString('hex')}.${extension}`;
-  const destination=path.join(folder,filename);
-
-  await fs.promises.writeFile(destination,parsed.data,{flag:'wx',mode:0o600});
+  let storageKey;
+  if(s3.isEnabled()){
+    const objectKey=`lead-references/${row.id}/${filename}`;
+    await s3.putObject(objectKey,parsed.data,{contentType:parsed.mime});
+    storageKey=s3.makeReference(objectKey);
+  }else{
+    const folder=path.join(leadReferenceRoot,String(row.id));
+    await fs.promises.mkdir(folder,{recursive:true,mode:0o700});
+    const destination=path.join(folder,filename);
+    await fs.promises.writeFile(destination,parsed.data,{flag:'wx',mode:0o600});
+    storageKey=`${row.id}/${filename}`;
+  }
   const item={
     id,
     attachmentKey:safeAttachmentKey||id,
     originalName:cleanName(originalName),
     mime:parsed.mime,
     size:parsed.data.length,
-    storageKey:`${row.id}/${filename}`,
+    storageKey,
     uploadedAt:new Date().toISOString(),
   };
   const nextCustom={...custom,_reference_files:[...current,item]};
@@ -99,7 +118,7 @@ async function saveReference({key,leadId,submissionKey,originalName,dataUrl,atta
       [JSON.stringify(nextCustom),row.id]
     );
   }catch(error){
-    await fs.promises.unlink(destination).catch(()=>{});
+    await removeStored(storageKey).catch(()=>{});
     throw error;
   }
   return{accepted:true,duplicate:false,attachment:publicMeta(item),count:nextCustom._reference_files.length};
@@ -109,10 +128,14 @@ async function getAdminReference({leadId,attachmentId}){
   const files=Array.isArray(row.custom_fields?._reference_files)?row.custom_fields._reference_files:[];
   const item=files.find(file=>String(file.id)===String(attachmentId));
   if(!item)fail('Attachment not found','ATTACHMENT_NOT_FOUND',404);
-  const relative=String(item.storageKey||'');
+  const stored=String(item.storageKey||'');
+  if(s3.isReference(stored)){
+    const result=await s3.getObjectBuffer(s3.parseReference(stored),{maxBytes:MAX_BYTES});
+    return{buffer:result.buffer,mime:item.mime||result.contentType||'application/octet-stream',name:cleanName(item.originalName),meta:publicMeta(item)};
+  }
   const expectedPrefix=String(row.id)+'/';
-  if(!relative.startsWith(expectedPrefix))fail('Attachment path is invalid','ATTACHMENT_NOT_FOUND',404);
-  const absolute=path.resolve(leadReferenceRoot,relative);
+  if(!stored.startsWith(expectedPrefix))fail('Attachment path is invalid','ATTACHMENT_NOT_FOUND',404);
+  const absolute=path.resolve(leadReferenceRoot,stored);
   const root=path.resolve(leadReferenceRoot)+path.sep;
   if(!absolute.startsWith(root))fail('Attachment path is invalid','ATTACHMENT_NOT_FOUND',404);
   await fs.promises.access(absolute,fs.constants.R_OK);

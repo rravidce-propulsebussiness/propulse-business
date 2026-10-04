@@ -62,6 +62,20 @@ const urlOnly = run({
 assert.equal(urlOnly.status, 0, urlOnly.stderr || urlOnly.stdout);
 assert.match(urlOnly.stdout, /Production environment check passed/);
 
+const r2Only = run({
+  UPLOAD_STORAGE_ROOT: '',
+  PRIVATE_OBJECT_STORAGE_DRIVER: 's3',
+  PRIVATE_OBJECT_STORAGE_ENDPOINT: 'https://example-account.r2.cloudflarestorage.com',
+  PRIVATE_OBJECT_STORAGE_REGION: 'auto',
+  PRIVATE_OBJECT_STORAGE_BUCKET: 'propulse-files',
+  PRIVATE_OBJECT_STORAGE_ACCESS_KEY_ID: 'test-access',
+  PRIVATE_OBJECT_STORAGE_SECRET_ACCESS_KEY: 'test-secret',
+  PRIVATE_OBJECT_STORAGE_SIGNED_URL_SECONDS: '60',
+  PRIVATE_OBJECT_STORAGE_BACKUP_STRATEGY: 'bucket_versioning',
+});
+assert.equal(r2Only.status, 0, r2Only.stderr || r2Only.stdout);
+assert.match(r2Only.stdout, /Production environment check passed/);
+
 const unsafe = run({
   JWT_SECRET: 'short',
   CORS_ORIGIN: '*',

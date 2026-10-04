@@ -3,6 +3,7 @@ const fs=require('fs');
 const path=require('path');
 const crypto=require('crypto');
 const {uploadRoot,ensureUploadStorage}=require('../src/config/uploadStorage');
+const s3=require('../src/services/s3PrivateObjectStorageService');
 const {
   backupRoot,timestamp,buildCommit,ensurePrivateDirectory,sha256File,ensureBackupVerificationSchema,recordVerification
 }=require('./backup-common');
@@ -54,6 +55,23 @@ async function backupPrivateStorage(){
   let partialRoot=null;
   try{
     await ensureBackupVerificationSchema();
+    if(s3.isEnabled()){
+      const strategy=String(process.env.PRIVATE_OBJECT_STORAGE_BACKUP_STRATEGY||'').trim().toLowerCase();
+      if(!['bucket_versioning','replication','external_backup'].includes(strategy))throw new Error('PRIVATE_OBJECT_STORAGE_BACKUP_STRATEGY must be configured for R2/S3 storage backups');
+      const health=await s3.probe();
+      const cfg=s3.config();
+      artifactName=`s3://${cfg.bucket}`;
+      const verification=await recordVerification({
+        backupType:'private_storage',
+        status:'verified',
+        artifactName,
+        metrics:{provider:'s3',bucket:cfg.bucket,strategy,probeStatus:health.status},
+        startedAt
+      });
+      console.log(`Object storage backup strategy verified: run #${verification.id}.`);
+      console.log('Bucket:',cfg.bucket,'Strategy:',strategy);
+      return{...verification,provider:'s3',bucket:cfg.bucket,strategy};
+    }
     await ensureUploadStorage();
     const configured=String(process.env.PRIVATE_STORAGE_BACKUP_DIRECTORY||'').trim();
     const destinationBase=await ensurePrivateDirectory(path.resolve(configured||path.join(backupRoot(),'private-storage')));

@@ -2,6 +2,8 @@ const pool = require('../config/database');
 const expertDirectoryService = require('./expertDirectoryService');
 const projectVideoService = require('./projectVideoService');
 const projectPlanService = require('./projectPlanService');
+const companyProofStorageService = require('./companyProofStorageService');
+const s3 = require('./s3PrivateObjectStorageService');
 
 function profileError(message,code='INVALID_PROFILE_SELECTION'){
   return Object.assign(new Error(message),{code});
@@ -18,6 +20,7 @@ function cleanUrl(value,label){
   const text=String(value??'').trim();
   if(!text)return null;
   if(text.length>2000)throw profileError(`${label} is too long`);
+  if(s3.isReference(text))return text;
   if(text.startsWith('/uploads/'))return text;
   let parsed;
   try{parsed=new URL(text);}catch{throw profileError(`${label} must be a valid URL`);}
@@ -128,12 +131,25 @@ async function getProfile(userId, client = pool) {
     expertDirectoryService.getUserDirectoryStatus(userId,client),
   ]);
 
+  const renderedProofs=await Promise.all(companyProofs.rows.map(async doc=>{
+    if(!doc.file_url||!s3.isReference(doc.file_url))return doc;
+    try{
+      const descriptor=await companyProofStorageService.descriptor(doc.file_url,{mimeType:doc.mime_type,size:doc.file_size});
+      return {...doc,file_url:descriptor?.externalUrl||null};
+    }catch{return {...doc,file_url:null}}
+  }));
+  const renderedProjects=await Promise.all(projects.rows.map(async project=>({
+    ...project,
+    video_display_url:await projectVideoService.displayUrl(project.video_url),
+    plan_display_url:await projectPlanService.displayUrl(project.plan_url),
+  })));
+
   return {
     ...profile,
     services: services.rows,
     locations: locations.rows,
-    company_proofs: companyProofs.rows,
-    projects: projects.rows,
+    company_proofs: renderedProofs,
+    projects: renderedProjects,
     service_plans: plans.rows,
     directory_status: directoryStatus,
   };
@@ -258,20 +274,18 @@ async function updateProfile(userId, payload) {
         if(item.planUrl.startsWith('/uploads/')&&!item.planUrl.startsWith('/uploads/business-projects/')){
           throw profileError('Uploaded project plan URL is invalid');
         }
-        if(item.planUrl.startsWith('/uploads/business-projects/'))projectPlanService.managedPlanInfo(userId,item.planUrl);
+        if(s3.isReference(item.planUrl)||item.planUrl.startsWith('/uploads/business-projects/'))projectPlanService.managedPlanInfo(userId,item.planUrl);
       }
       const previous=item.id?existingById.get(item.id):null;
       const publishedAt=previous?.published_at||new Date();
       return {...item,videoPublishedAt,publishedAt};
     });
-    const currentManagedUrls=new Set(projectsForSave.map(item=>item.videoUrl).filter(url=>String(url||'').startsWith('/uploads/business-projects/')));
-    const removedManagedUrls=existingProjects
-      .map(item=>item.video_url)
-      .filter(url=>String(url||'').startsWith('/uploads/business-projects/')&&!currentManagedUrls.has(url));
-    const currentManagedPlanUrls=new Set(projectsForSave.map(item=>item.planUrl).filter(url=>String(url||'').startsWith('/uploads/business-projects/')));
-    const removedManagedPlanUrls=existingProjects
-      .map(item=>item.plan_url)
-      .filter(url=>String(url||'').startsWith('/uploads/business-projects/')&&!currentManagedPlanUrls.has(url));
+    const isManagedVideo=url=>{try{return Boolean(projectVideoService.managedVideoInfo(userId,url))}catch{return false}};
+    const isManagedPlan=url=>{try{return Boolean(projectPlanService.managedPlanInfo(userId,url))}catch{return false}};
+    const currentManagedUrls=new Set(projectsForSave.map(item=>item.videoUrl).filter(isManagedVideo));
+    const removedManagedUrls=existingProjects.map(item=>item.video_url).filter(url=>isManagedVideo(url)&&!currentManagedUrls.has(url));
+    const currentManagedPlanUrls=new Set(projectsForSave.map(item=>item.planUrl).filter(isManagedPlan));
+    const removedManagedPlanUrls=existingProjects.map(item=>item.plan_url).filter(url=>isManagedPlan(url)&&!currentManagedPlanUrls.has(url));
     await client.query('UPDATE business_profile_services SET is_active = FALSE, updated_at = CURRENT_TIMESTAMP WHERE business_profile_id = $1', [profileId]);
     await client.query(`
       INSERT INTO business_profile_services (business_profile_id,industry_id,service_id,subservice_id,is_active)

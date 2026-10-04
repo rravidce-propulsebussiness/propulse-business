@@ -135,6 +135,10 @@ function makeReference(key){return PREFIX+normalizeKey(key)}
 function parseReference(value){const raw=String(value||'');return raw.startsWith(PREFIX)?normalizeKey(raw.slice(PREFIX.length)):null}
 function isReference(value){try{return Boolean(parseReference(value))}catch{return false}}
 async function getSignedGetUrl(referenceOrKey,{expiresSeconds}={}){const safe=Math.min(300,Math.max(15,Number(expiresSeconds||config().signedUrlSeconds)||60));return buildPresignedGetUrl(parseReference(referenceOrKey)||normalizeKey(referenceOrKey),{expiresSeconds:safe})}
+async function getMediaGetUrl(referenceOrKey,{expiresSeconds=3600}={}){
+  const safe=Math.min(21600,Math.max(60,Number(expiresSeconds)||3600));
+  return buildPresignedGetUrl(parseReference(referenceOrKey)||normalizeKey(referenceOrKey),{expiresSeconds:safe});
+}
 async function probe(){
   if(!isEnabled())return{provider:'local',configured:false,status:'disabled'};
   if(probeCache&&Date.now()-probeCacheAt<60000)return probeCache;
@@ -146,4 +150,4 @@ async function probe(){
   }catch(error){await deleteObject(key).catch(()=>{});throw error}
 }
 
-module.exports={PREFIX,driver,isEnabled,config,normalizeKey,makeReference,parseReference,isReference,putObject,deleteObject,getObjectBuffer,getSignedGetUrl,buildPresignedGetUrl,authorizationHeaders,probe,enc};
+module.exports={PREFIX,driver,isEnabled,config,normalizeKey,makeReference,parseReference,isReference,putObject,deleteObject,getObjectBuffer,getSignedGetUrl,getMediaGetUrl,buildPresignedGetUrl,authorizationHeaders,probe,enc};
