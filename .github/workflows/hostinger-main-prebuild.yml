@@ -27,6 +27,13 @@ jobs:
       - name: Install root dependencies
         run: npm install --no-audit --no-fund
 
+      - name: Bake production release markers
+        run: |
+          node -e "require('fs').writeFileSync('frontend/public/release.json', JSON.stringify({commit:process.env.GITHUB_SHA,environment:'production',builtAt:new Date().toISOString()})+'\\n')"
+          node -e "require('fs').writeFileSync('backend/hostinger-release.json', JSON.stringify({commit:process.env.GITHUB_SHA,builtAt:new Date().toISOString()})+'\\n')"
+          cat frontend/public/release.json
+          cat backend/hostinger-release.json
+
       - name: Build frontend
         env:
           VITE_API_URL: /api
@@ -51,7 +58,7 @@ jobs:
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -f backend/hostinger-frontend
+          git add -f backend/hostinger-frontend backend/hostinger-release.json
           if git diff --cached --quiet; then
             echo "Hostinger bundle is already current."
             exit 0
