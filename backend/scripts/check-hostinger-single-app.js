@@ -41,8 +41,13 @@ assert(backendPkg.main==='index.js'&&backendPkg.scripts?.start==='node index.js'
 assert(backendPkg.scripts?.postinstall==='node scripts/build-hostinger-frontend.js','Backend-root Hostinger install builds the frontend before publish');
 assert(backendPkg.scripts?.['build:hostinger-frontend']==='node scripts/build-hostinger-frontend.js','Backend-root Hostinger exposes an explicit frontend build script');
 const backendBuildScript=fs.readFileSync(path.join(root,'backend','scripts','build-hostinger-frontend.js'),'utf8');
-assert(backendBuildScript.includes('Frontend build ready for Hostinger publish.'),'Hostinger install build verifies frontend/dist before publish');
+assert(backendBuildScript.includes('Frontend build bundled inside backend for Hostinger publish.'),'Hostinger install build bundles frontend inside the published backend app');
 assert(backendBuildScript.includes('generate-seo-static-pages.mjs'),'Hostinger install build generates SEO static pages');
+assert(backendBuildScript.includes("const bundledFrontend=path.join(backendRoot,'hostinger-frontend')"),'Hostinger install build targets a frontend bundle inside backend');
+assert(backendBuildScript.includes('fs.cpSync(frontendDist,bundledFrontend,{recursive:true})'),'Hostinger install build copies Vite output into the backend publish root');
+assert(backendBuildScript.includes('fs.unlinkSync(frontendNodeModules)'),'Hostinger cleanup unlinks the temporary node_modules symlink safely');
+assert(backendServer.includes("const bundledFrontendDist=path.resolve(__dirname,'../hostinger-frontend')"),'Backend server prefers the bundled frontend included in the Hostinger app');
+assert(backendIndex.includes("bundledFrontendIndex"),'Backend runtime skips redundant frontend builds when the bundled frontend is present');
 for(const dependency of ['express','pg','react','react-dom','react-router-dom','vite','@vitejs/plugin-react']){
   assert(backendPkg.dependencies?.[dependency],'Backend-root Hostinger package installs '+dependency);
 }
