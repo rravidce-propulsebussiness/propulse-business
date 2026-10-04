@@ -57,7 +57,8 @@
     "build:hostinger-frontend": "node scripts/build-hostinger-frontend.js",
     "postinstall": "node scripts/build-hostinger-frontend.js",
     "audit:migration-target": "node scripts/audit-local-supabase-merge.js",
-    "migrate:supabase-core": "node scripts/migrate-local-to-supabase-core.js"
+    "migrate:supabase-core": "node scripts/migrate-local-to-supabase-core.js",
+    "backup:migration-target": "node scripts/backup-migration-target.js"
   },
   "keywords": [],
   "author": "",
