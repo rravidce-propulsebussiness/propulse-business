@@ -27,6 +27,8 @@ function classify(result){
   return'succeeded';
 }
 function leaseMinutes(){return Math.min(720,Math.max(15,Number(process.env.BACKGROUND_JOB_LEASE_MINUTES)||120))}
+function leaseStaleSeconds(){return Math.min(1800,Math.max(120,Number(process.env.BACKGROUND_JOB_LEASE_STALE_SECONDS)||300))}
+function leaseHeartbeatMs(){return Math.min(120000,Math.max(30000,Math.floor(leaseStaleSeconds()*1000/3)))}
 async function acquireLease(jobKey){
   const ownerToken=crypto.randomUUID();
   const row=(await pool.query(
@@ -35,10 +37,35 @@ async function acquireLease(jobKey){
      ON CONFLICT(job_key) DO UPDATE
        SET owner_token=EXCLUDED.owner_token,locked_until=EXCLUDED.locked_until,updated_at=CURRENT_TIMESTAMP
        WHERE background_job_leases.locked_until<=CURRENT_TIMESTAMP
+          OR background_job_leases.updated_at<=CURRENT_TIMESTAMP-($4*INTERVAL '1 second')
      RETURNING owner_token`,
-    [String(jobKey).slice(0,100),ownerToken,leaseMinutes()]
+    [String(jobKey).slice(0,100),ownerToken,leaseMinutes(),leaseStaleSeconds()]
   )).rows[0];
   return row?ownerToken:null;
+}
+async function renewLease(jobKey,ownerToken){
+  if(!ownerToken)return false;
+  const result=await pool.query(
+    `UPDATE background_job_leases
+        SET locked_until=CURRENT_TIMESTAMP+($3*INTERVAL '1 minute'),updated_at=CURRENT_TIMESTAMP
+      WHERE job_key=$1 AND owner_token=$2
+      RETURNING owner_token`,
+    [String(jobKey).slice(0,100),ownerToken,leaseMinutes()]
+  );
+  return result.rowCount===1;
+}
+async function recoverStaleRuns(jobKey){
+  await pool.query(
+    `UPDATE background_job_runs
+        SET status='failed',
+            error_message=COALESCE(error_message,'Previous worker stopped before completing this job'),
+            completed_at=CURRENT_TIMESTAMP,
+            duration_ms=GREATEST(0,FLOOR(EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP-started_at))*1000))::bigint
+      WHERE job_key=$1
+        AND status='running'
+        AND started_at<=CURRENT_TIMESTAMP-($2*INTERVAL '1 second')`,
+    [String(jobKey).slice(0,100),leaseStaleSeconds()]
+  );
 }
 async function releaseLease(jobKey,ownerToken){
   if(!ownerToken)return;
@@ -67,7 +94,12 @@ async function execute({jobKey,source='scheduled',triggeredBy=null,task}){
     await finishRun(run.id,{status:'skipped',summary:{reason:'busy'}});
     return{busy:true,skipped:true,runId:Number(run.id),jobStatus:'skipped'};
   }
+  await recoverStaleRuns(jobKey);
   const run=await insertRun({jobKey,source,triggeredBy,status:'running'});
+  let heartbeatTimer=setInterval(()=>{
+    renewLease(jobKey,ownerToken).catch(error=>console.error('Background job lease heartbeat failed:',error.message));
+  },leaseHeartbeatMs());
+  heartbeatTimer.unref?.();
   try{
     const result=await task();
     const status=classify(result);
@@ -77,6 +109,8 @@ async function execute({jobKey,source='scheduled',triggeredBy=null,task}){
     await finishRun(run.id,{status:'failed',summary:{code:error?.code||null},errorMessage:error?.message||'Background job failed'}).catch(()=>{});
     throw error;
   }finally{
+    if(heartbeatTimer)clearInterval(heartbeatTimer);
+    heartbeatTimer=null;
     await releaseLease(jobKey,ownerToken).catch(error=>console.error('Background job lease release failed:',error.message));
   }
 }
@@ -92,4 +126,4 @@ async function recentRuns(jobKey,{limit=8}={}){
     startedAt:row.started_at||null,completedAt:row.completed_at||null,durationMs:row.duration_ms==null?null:Number(row.duration_ms)
   }));
 }
-module.exports={sanitize,classify,leaseMinutes,acquireLease,releaseLease,execute,recentRuns,insertRun,finishRun};
+module.exports={sanitize,classify,leaseMinutes,leaseStaleSeconds,leaseHeartbeatMs,acquireLease,renewLease,recoverStaleRuns,releaseLease,execute,recentRuns,insertRun,finishRun};
