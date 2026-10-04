@@ -13,7 +13,7 @@ must('src/services/telegramSupportService.js',[
   'TELEGRAM_SUPPORT_BOT_TOKEN','TELEGRAM_SUPPORT_CHAT_ID','TELEGRAM_SUPPORT_WEBHOOK_SECRET','timingSafeEqual','setWebhook'
 ]);
 must('src/services/supportChatService.js',[
-  'hashToken','deliverCustomerMessage','processTelegramUpdate','support_telegram_message_map','adminReply','listAdminConversations'
+  'hashToken','deliverCustomerMessage','processTelegramUpdate','support_telegram_message_map','adminReply','listAdminConversations','/whoami','Your Telegram user ID is:'
 ]);
 must('src/controllers/supportChatController.js',[
   'x-support-chat-token','x-telegram-bot-api-secret-token','telegramWebhook','adminReply'

@@ -4,10 +4,11 @@ import {authRequest} from '../../utils/auth';
 import {openApiBlob} from '../../utils/api';
 import {payoutProofError,readPayoutProofDataUrl} from '../utils/payoutProof';
 import './AdminLeadPartnerPayouts.css';
+import {formatInr,formatSnakeTitle} from '../utils/formatters';
 
-const money=v=>`₹${Number(v||0).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2})}`;
+const money=v=>formatInr(v,{minimumFractionDigits:2});
 const date=v=>v?new Date(v).toLocaleString('en-IN',{dateStyle:'medium',timeStyle:'short'}):'—';
-const title=v=>String(v||'').replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
+const title=formatSnakeTitle;
 const emptyTransfer=()=>({reference:'',proof:'',proofName:'',notes:''});
 
 export default function AdminLeadPartnerPayouts(){
