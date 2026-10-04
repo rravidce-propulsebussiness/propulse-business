@@ -149,22 +149,8 @@ async function setReviewStatus(type,id,status){
   );
 }
 
-async function sendProof(type,id,row,reviewMessageId){
-  if(!row?.proof_url)return{status:'missing'};
-  try{
-    const descriptor=await privateProofStorage.getProofDescriptor(row.proof_url);
-    if(!descriptor)return{status:'missing'};
-    const label=type==='payment'?'Payment':'Wallet top-up';
-    const sent=await telegram.sendProofAttachment({
-      descriptor,
-      caption:'📎 '+label+' #'+id+' proof',
-      replyToMessageId:reviewMessageId,
-    });
-    return{status:'sent',messageId:sent?.message_id||null};
-  }catch(error){
-    console.error('Telegram payment proof delivery failed:',error?.message||error);
-    return{status:'failed',error:clean(error?.message||'Telegram proof delivery failed')};
-  }
+function mediaReviewCaption(type,row){
+  return renderEntity(type,row).slice(0,950);
 }
 
 async function sendReview(type,id,row){
@@ -172,13 +158,29 @@ async function sendReview(type,id,row){
   const claim=await claimReviewMessage(type,id);
   if(!claim.claimed)return{status:'duplicate',messageId:claim.row?.telegram_message_id||null};
   try{
-    const sent=await telegram.sendMessage({
-      text:renderEntity(type,row),
-      replyMarkup:reviewKeyboard(type,id),
-    });
+    let sent;
+    if(row?.proof_url){
+      try{
+        const descriptor=await privateProofStorage.getProofDescriptor(row.proof_url);
+        if(descriptor){
+          sent=await telegram.sendProofAttachment({
+            descriptor,
+            caption:mediaReviewCaption(type,row),
+            replyMarkup:reviewKeyboard(type,id),
+          });
+        }
+      }catch(error){
+        console.error('Telegram payment proof delivery failed:',error?.message||error);
+      }
+    }
+    if(!sent){
+      sent=await telegram.sendMessage({
+        text:renderEntity(type,row),
+        replyMarkup:reviewKeyboard(type,id),
+      });
+    }
     await attachMessage(type,id,sent.message_id);
-    const proof=await sendProof(type,id,row,sent.message_id);
-    return{status:'sent',messageId:sent.message_id,proofStatus:proof.status,proofMessageId:proof.messageId||null};
+    return{status:'sent',messageId:sent.message_id,media:Boolean(sent?.photo||sent?.document)};
   }catch(error){
     await releaseClaim(type,id).catch(()=>{});
     throw error;
@@ -227,13 +229,14 @@ async function closeMessage(query,type,id,row,admin,outcome){
     outcome==='approved'?'✅ Reviewed in Telegram':'❌ Reviewed in Telegram',
     'By: '+(admin?.name||admin?.email||'Admin'),
     'Reviewed: '+dateTime(new Date()),
-  ].join('\n').slice(0,4096);
-  await telegram.editMessageText({
-    messageId:query.message.message_id,
-    text:finalText,
-    replyMarkup:emptyKeyboard(),
-  }).catch(async()=>{
-    await telegram.editMessageReplyMarkup({messageId:query.message.message_id,replyMarkup:emptyKeyboard()}).catch(()=>{});
+  ].join('\n');
+  const messageId=query.message.message_id;
+  const isMedia=Boolean(query.message?.photo?.length||query.message?.document);
+  const edited=isMedia
+    ?telegram.editMessageCaption({messageId,caption:finalText.slice(0,1024),replyMarkup:emptyKeyboard()})
+    :telegram.editMessageText({messageId,text:finalText.slice(0,4096),replyMarkup:emptyKeyboard()});
+  await edited.catch(async()=>{
+    await telegram.editMessageReplyMarkup({messageId,replyMarkup:emptyKeyboard()}).catch(()=>{});
   });
 }
 async function settle(type,id,decision,admin,query){
