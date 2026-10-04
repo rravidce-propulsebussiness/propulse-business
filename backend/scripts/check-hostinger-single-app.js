@@ -4,6 +4,7 @@ const path=require('path');
 const root=path.resolve(__dirname,'../..');
 const pkg=JSON.parse(fs.readFileSync(path.join(root,'package.json'),'utf8'));
 const wrapper=fs.readFileSync(path.join(root,'hostinger-server.js'),'utf8');
+const rootIndex=fs.readFileSync(path.join(root,'index.js'),'utf8');
 const env=fs.readFileSync(path.join(root,'.env.example'),'utf8');
 
 function assert(condition,message){
