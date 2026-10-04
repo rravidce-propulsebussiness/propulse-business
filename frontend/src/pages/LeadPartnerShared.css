@@ -1,0 +1,74 @@
+:root{--lp-sidebar:264px;--lp-topbar:70px;--lp-content-max:1450px}
+#root:has(.lead-partner-sidebar){width:100%;max-width:none;margin:0;border-inline:0;text-align:left;display:block}
+#root .lead-partner-sidebar{position:fixed!important;inset:0 auto 0 0!important;z-index:50!important;width:var(--lp-sidebar)!important;min-width:var(--lp-sidebar)!important;max-width:var(--lp-sidebar)!important;height:100dvh!important;padding:20px 16px 16px!important;display:flex!important;flex-direction:column!important;box-sizing:border-box!important;overflow-y:auto!important;overflow-x:hidden!important;background:radial-gradient(circle at -10% 100%,rgba(27,92,166,.18),transparent 26%),linear-gradient(180deg,#0d2d55 0%,#092541 48%,#071f38 100%)!important;border-right:1px solid rgba(151,184,224,.12)!important;box-shadow:18px 0 48px rgba(4,23,44,.16)!important;font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif!important}
+#root .lead-partner-brand-row{display:flex!important;align-items:center!important;justify-content:space-between!important;padding:3px 6px 25px!important}
+#root .lead-partner-brand{display:flex!important;align-items:center!important;gap:12px!important;color:#fff!important;text-decoration:none!important}
+#root .lead-partner-brand-mark{display:grid!important;place-items:center!important;flex:0 0 46px!important;width:46px!important;height:46px!important;border-radius:15px!important;background:linear-gradient(145deg,#0b4c99,#1675d5)!important;color:#fff!important;box-shadow:0 13px 28px rgba(2,13,26,.25),inset 0 1px 0 rgba(255,255,255,.22)!important;font-size:25px!important;font-weight:950!important;font-style:italic!important}
+#root .lead-partner-brand-copy{display:block!important;min-width:0!important}
+#root .lead-partner-brand-copy>b{display:block!important;color:#fff!important;font-size:19px!important;line-height:1!important;letter-spacing:.065em!important;white-space:nowrap!important}
+#root .lead-partner-brand-copy>b span{color:#ff6a32!important}
+#root .lead-partner-brand-copy>small{display:block!important;margin-top:6px!important;color:#9eb2ca!important;font-size:7px!important;font-weight:900!important;letter-spacing:.18em!important;white-space:nowrap!important}
+#root .lead-partner-nav-label{padding:0 11px 11px!important;color:#7691ad!important;font-size:7px!important;font-weight:950!important;letter-spacing:.17em!important}
+#root .lead-partner-nav{display:flex!important;flex-direction:column!important;gap:5px!important;padding:0!important;margin:0!important}
+#root .lead-partner-nav>a{position:relative!important;width:100%!important;min-height:45px!important;display:flex!important;align-items:center!important;gap:10px!important;padding:9px 11px!important;border:1px solid transparent!important;border-radius:13px!important;box-sizing:border-box!important;background:transparent!important;color:#d5e1ee!important;text-decoration:none!important;font-size:10.5px!important;font-weight:800!important;transition:.18s ease!important}
+#root .lead-partner-nav-icon{display:grid!important;place-items:center!important;flex:0 0 31px!important;width:31px!important;height:31px!important;border-radius:10px!important;background:rgba(255,255,255,.07)!important;color:#bcd0e5!important;font-size:14px!important;font-weight:800!important}
+#root .lead-partner-nav>a:hover{border-color:rgba(139,184,236,.12)!important;background:rgba(255,255,255,.045)!important;color:#fff!important}
+#root .lead-partner-nav>a.active{border-color:rgba(90,161,241,.48)!important;background:linear-gradient(135deg,rgba(32,92,164,.8),rgba(25,79,144,.72))!important;color:#fff!important;box-shadow:0 10px 24px rgba(0,20,44,.22),inset 0 1px 0 rgba(255,255,255,.08)!important}
+#root .lead-partner-nav>a.active:before{content:"";position:absolute;left:4px;top:50%;width:3px;height:19px;transform:translateY(-50%);border-radius:999px;background:#ff6a32;box-shadow:0 0 12px rgba(255,106,50,.5)}
+#root .lead-partner-nav>a.active .lead-partner-nav-icon{background:rgba(255,255,255,.11)!important;color:#fff!important}
+#root .lead-partner-help-block{margin-top:16px;padding:13px;border:1px solid rgba(98,155,222,.22);border-radius:14px;background:linear-gradient(135deg,rgba(28,77,133,.5),rgba(13,52,94,.5));color:#fff}
+#root .lead-partner-help-block>span{display:grid;place-items:center;width:28px;height:28px;border-radius:9px;background:rgba(255,255,255,.08);font-size:11px;font-weight:950}
+#root .lead-partner-help-block>div{margin-top:9px}
+#root .lead-partner-help-block b,#root .lead-partner-help-block small{display:block}
+#root .lead-partner-help-block b{font-size:8px}
+#root .lead-partner-help-block small{margin-top:3px;color:#9fb4cd;font-size:6.2px;line-height:1.4}
+#root .lead-partner-help-block>a{display:inline-block;margin-top:9px;color:#dceafa;text-decoration:none;font-size:6.4px;font-weight:900}
+#root .lead-partner-sidebar-bottom{margin-top:auto!important;padding-top:14px!important;border-top:0!important}
+#root .lead-partner-user{display:flex!important;align-items:center!important;gap:10px!important;padding:10px!important;border:1px solid rgba(98,155,222,.18)!important;border-radius:13px!important;background:rgba(255,255,255,.04)!important}
+#root .lead-partner-avatar{display:grid!important;place-items:center!important;flex:0 0 34px!important;width:34px!important;height:34px!important;border-radius:50%!important;background:linear-gradient(145deg,#0d4a98,#176ed0)!important;color:#fff!important;font-size:8px!important;font-weight:950!important}
+#root .lead-partner-user>div{min-width:0!important}
+#root .lead-partner-user b,#root .lead-partner-user small{display:block!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important}
+#root .lead-partner-user b{color:#fff!important;font-size:8.2px!important}
+#root .lead-partner-user small{margin-top:3px!important;max-width:145px!important;color:#9fb2c7!important;font-size:6.2px!important}
+#root .lead-partner-sidebar-bottom>button{width:100%!important;margin-top:8px!important;padding:9px 10px!important;border:0!important;border-radius:9px!important;background:transparent!important;color:#94abc4!important;text-align:left!important;font-size:8px!important;font-weight:800!important;cursor:pointer!important}
+#root .lead-partner-sidebar-bottom>button:hover{background:rgba(255,255,255,.05)!important;color:#fff!important}
+
+#root .lp-main,#root .pricing-main,#root .partner-main,#root .withdrawals-main,#root .reports-main,#root .account-main,#root .faq-main{margin-left:var(--lp-sidebar)!important;width:calc(100% - var(--lp-sidebar))!important;min-height:100vh!important;max-width:none!important;background:radial-gradient(circle at 95% 4%,rgba(57,117,198,.08),transparent 22%),linear-gradient(180deg,#f5f8fc 0%,#eef3f8 100%)!important}
+#root .lp-topbar,#root .pricing-topbar,#root .partner-topbar,#root .withdrawals-topbar,#root .reports-topbar,#root .account-topbar,#root .faq-topbar{position:fixed!important;top:0!important;left:var(--lp-sidebar)!important;right:0!important;z-index:30!important;height:var(--lp-topbar)!important;min-height:var(--lp-topbar)!important;display:flex!important;align-items:center!important;justify-content:space-between!important;padding:0 28px!important;background:rgba(255,255,255,.94)!important;border-bottom:1px solid #e0e7ef!important;box-shadow:0 7px 22px rgba(17,45,79,.03)!important;backdrop-filter:blur(16px)!important}
+#root .lp-breadcrumb,#root .pricing-breadcrumb,#root .partner-breadcrumb,#root .withdrawals-breadcrumb,#root .reports-breadcrumb,#root .account-breadcrumb,#root .faq-breadcrumb{display:flex!important;align-items:center!important;gap:7px!important;font-size:8.5px!important}
+#root .lp-breadcrumb span,#root .pricing-breadcrumb span,#root .partner-breadcrumb span,#root .withdrawals-breadcrumb span,#root .reports-breadcrumb span,#root .account-breadcrumb span,#root .faq-breadcrumb span{color:#93a0b1!important}
+#root .lp-breadcrumb b,#root .pricing-breadcrumb b,#root .partner-breadcrumb b,#root .withdrawals-breadcrumb b,#root .reports-breadcrumb b,#root .account-breadcrumb b,#root .faq-breadcrumb b{color:#ced6df!important;font-weight:500!important}
+#root .lp-breadcrumb strong,#root .pricing-breadcrumb strong,#root .partner-breadcrumb strong,#root .withdrawals-breadcrumb strong,#root .reports-breadcrumb strong,#root .account-breadcrumb strong,#root .faq-breadcrumb strong{color:#123b71!important;font-weight:900!important}
+#root .lp-content,#root .pricing-content,#root .partner-content,#root .withdrawals-content,#root .reports-content,#root .account-content,#root .faq-content{width:100%!important;max-width:var(--lp-content-max)!important;margin:0 auto!important;padding:calc(var(--lp-topbar) + 24px) 28px 42px!important;box-sizing:border-box!important}
+
+@media(max-height:820px) and (min-width:851px){
+  #root .lead-partner-sidebar{padding-top:13px!important;padding-bottom:10px!important}
+  #root .lead-partner-brand-row{padding-bottom:16px!important}
+  #root .lead-partner-nav{gap:3px!important}
+  #root .lead-partner-nav>a{min-height:39px!important;padding:6px 9px!important}
+  #root .lead-partner-help-block{padding:9px 11px;margin-top:10px}
+}
+@media(max-width:1100px) and (min-width:851px){
+  :root{--lp-sidebar:240px}
+  #root .lead-partner-sidebar{width:240px!important;min-width:240px!important;max-width:240px!important}
+}
+@media(max-width:850px){
+  :root{--lp-sidebar:0px;--lp-topbar:64px}
+  #root .lead-partner-sidebar{position:static!important;width:100%!important;min-width:0!important;max-width:none!important;height:auto!important;padding:14px!important;box-shadow:none!important;border-right:0!important;border-bottom:1px solid rgba(151,184,224,.12)!important}
+  #root .lead-partner-brand-row{padding:0 2px 12px!important}
+  #root .lead-partner-nav-label{padding:0 3px 8px!important}
+  #root .lead-partner-nav{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:6px!important}
+  #root .lead-partner-nav>a{min-height:42px!important;padding:6px 8px!important;font-size:8px!important}
+  #root .lead-partner-nav-icon{width:27px!important;height:27px!important;flex-basis:27px!important;font-size:12px!important}
+  #root .lead-partner-help-block,#root .lead-partner-sidebar-bottom{display:none!important}
+  #root .lp-main,#root .pricing-main,#root .partner-main,#root .withdrawals-main,#root .reports-main,#root .account-main,#root .faq-main{margin-left:0!important;width:100%!important}
+  #root .lp-topbar,#root .pricing-topbar,#root .partner-topbar,#root .withdrawals-topbar,#root .reports-topbar,#root .account-topbar,#root .faq-topbar{position:sticky!important;left:0!important;right:auto!important;padding:0 16px!important}
+  #root .lp-content,#root .pricing-content,#root .partner-content,#root .withdrawals-content,#root .reports-content,#root .account-content,#root .faq-content{padding:18px 16px 34px!important}
+}
+@media(max-width:560px){
+  #root .lead-partner-nav{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  #root .lead-partner-brand-mark{width:40px!important;height:40px!important;flex-basis:40px!important}
+  #root .lead-partner-brand-copy>b{font-size:17px!important}
+  #root .lp-content,#root .pricing-content,#root .partner-content,#root .withdrawals-content,#root .reports-content,#root .account-content,#root .faq-content{padding:14px 10px 28px!important}
+}
+#root .lead-partner-notification-count{margin-left:auto;min-width:17px;height:17px;padding:0 4px;display:grid;place-items:center;border-radius:999px;background:#ef5a28;color:#fff;font-size:6px;font-weight:950;box-sizing:border-box}

@@ -1,213 +1,340 @@
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { getUser, getToken } from '../utils/auth'
+import { publicRequest } from '../utils/auth'
+import WebsiteFaqSection from '../components/WebsiteFaqSection'
 import './Home.css'
 
-const services = [
-  { number: '01', title: 'Website', text: 'Build a professional online presence that makes your business credible and ready to convert visitors.' },
-  { number: '02', title: 'SEO', text: 'Improve your visibility in search so potential customers can find your business when they need you.' },
-  { number: '03', title: 'Landing Pages', text: 'Create focused pages for campaigns, offers and services that turn attention into enquiries.' },
-  { number: '04', title: 'Social Media', text: 'Keep your brand active, consistent and professional across your social presence.' },
-  { number: '05', title: 'Lead Generation', text: 'Put your business in front of relevant demand and create more opportunities to talk to customers.' },
-  { number: '06', title: 'Ongoing Support', text: 'Maintain, improve and manage the digital foundation as your business grows.' },
+const DEFAULT_HERO = 'https://images.unsplash.com/photo-1600585152915-d208bec867a1?auto=format&fit=crop&w=2200&q=92'
+
+const SERVICES = [
+  {
+    key: 'build',
+    eyebrow: 'Construction',
+    title: 'Build Your Home',
+    text: 'Independent house, villa, apartment and commercial construction.',
+    image: 'https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?auto=format&fit=crop&w=1200&q=88',
+    icon: 'home',
+  },
+  {
+    key: 'design',
+    eyebrow: 'Interiors',
+    title: 'Design Your Space',
+    text: 'Home interiors, office interiors and customized spaces.',
+    image: 'https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=1200&q=88',
+    icon: 'sofa',
+  },
+  {
+    key: 'property',
+    eyebrow: 'Real Estate',
+    title: 'Find a Property',
+    text: 'Buy, sell, rent or invest in the right property.',
+    image: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=1200&q=88',
+    icon: 'building',
+  },
 ]
 
-const leadPreviews = [
-  { service: 'Interior Design', location: 'Hyderabad', requirement: '3 BHK complete interior design', tag: 'HIGH INTENT' },
-  { service: 'Solar Energy', location: 'Bengaluru', requirement: 'Residential rooftop solar requirement', tag: 'NEW' },
-  { service: 'Home Construction', location: 'Pune', requirement: 'Independent house construction', tag: 'ACTIVE' },
+const BENEFITS = [
+  { icon: 'clipboard', title: 'One Requirement, Multiple Options', text: 'Compare different solutions in one place.' },
+  { icon: 'people', title: 'Relevant Professionals', text: 'Discover registered businesses for your requirement.' },
+  { icon: 'layers', title: 'Package & Material Comparison', text: 'Compare packages, materials and estimates.' },
+  { icon: 'consult', title: 'Free Consultation', text: 'Get initial guidance without any obligation.' },
 ]
 
-const categories = [
-  { name: 'Interior & Modular', query: 'interior' },
-  { name: 'Construction', query: 'construction' },
-  { name: 'Home Services', query: 'home-services' },
-  { name: 'Real Estate', query: 'real-estate' },
-  { name: 'Education', query: 'education' },
-  { name: 'Financial Services', query: 'finance' },
+const STEPS = [
+  { number: '1', icon: 'clipboard', title: 'Share Your Requirement', text: 'Tell us about your plot, budget and preferences.' },
+  { number: '2', icon: 'layers', title: 'Get Estimated Plan', text: 'Use the estimator to understand an indicative budget range.' },
+  { number: '3', icon: 'people', title: 'Connect with Professionals', text: 'Relevant professionals can understand the same structured brief.' },
+  { number: '4', icon: 'home', title: 'Move Forward', text: 'Compare quotations and choose the option you like.' },
 ]
 
-const faqs = [
-  ['What is Propulse Business?', 'Propulse Business helps growing businesses build their digital presence and create customer opportunities without needing to build a full marketing team from day one.'],
-  ['Why use Propulse instead of hiring a team?', 'A growing business may need a website, SEO, landing pages, social media and lead generation. Propulse brings these growth needs together so you can start lean, reduce overhead and add support as you grow.'],
-  ['Does Propulse provide leads?', 'Yes. Lead generation is a core part of Propulse. Businesses can also browse the lead marketplace and explore opportunities relevant to their services and locations.'],
-  ['Can I use only one Propulse service?', 'Yes. You can start with the service or support your business needs most and expand as your growth requirements change.'],
-  ['Are results guaranteed?', 'No business can honestly guarantee a specific number of customers or sales. Propulse focuses on building the right foundation, generating opportunities and continuously improving the system.'],
+const PROJECTS = [
+  {
+    title: 'Independent House',
+    location: 'Hyderabad, Telangana',
+    image: 'https://images.unsplash.com/photo-1600585152915-d208bec867a1?auto=format&fit=crop&w=1200&q=90',
+  },
+  {
+    title: 'Living Room Interiors',
+    location: 'Vijayawada, Andhra Pradesh',
+    image: 'https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=1200&q=90',
+  },
+  {
+    title: 'Apartment Project',
+    location: 'Bengaluru, Karnataka',
+    image: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=1200&q=90',
+  },
+  {
+    title: 'Modular Kitchen',
+    location: 'Visakhapatnam, Andhra Pradesh',
+    image: 'https://images.unsplash.com/photo-1556911220-bff31c812dba?auto=format&fit=crop&w=1200&q=90',
+  },
 ]
 
-function Home() {
-  const token = getToken()
-  const user = getUser()
-  const loggedIn = Boolean(token && user)
-  const dashboardPath = user?.role === 'admin' ? '/admin' : '/dashboard'
-
-  return (
-    <div className="home-page">
-      <header className="public-header">
-        <Link className="brand" to="/" aria-label="Propulse Business home">
-          <img src="/brand/propulse-logo.png" alt="Propulse Business" />
-        </Link>
-        <nav className="desktop-nav" aria-label="Main navigation">
-          <Link to="/">Home</Link>
-          <a href="#services">Services</a>
-          <a href="#why-propulse">Why Propulse</a>
-          <a href="#how-it-works">How it works</a>
-          <a href="#faq">FAQ</a>
-        </nav>
-        <div className="header-actions">
-          <Link className="header-leads" to="/leads">See Leads</Link>
-          {loggedIn ? (
-            <Link className="header-dashboard" to={dashboardPath}>
-              {user?.role === 'admin' ? 'Admin Panel' : 'Dashboard'} <span>→</span>
-            </Link>
-          ) : (
-            <>
-              <Link className="header-login" to="/login">Login</Link>
-              <Link className="header-signup" to="/signup">Sign up</Link>
-            </>
-          )}
-        </div>
-      </header>
-
-      <main>
-        <section className="hero-section">
-          <div className="hero-copy">
-            <span className="hero-kicker">PROPULSE BUSINESS · GROWTH SUPPORT</span>
-            <h1>Grow your business<br /><em>without the overhead.</em></h1>
-            <p>Website, SEO, landing pages, social media and lead generation — the essentials you need to start attracting customers, without having to build a full marketing team from day one.</p>
-            <div className="hero-actions">
-              <Link className="hero-primary" to={loggedIn ? dashboardPath : '/signup'}>{loggedIn ? 'Go to dashboard' : 'Get started'} <span>→</span></Link>
-              <Link className="hero-secondary" to="/leads">See live leads</Link>
-            </div>
-            <div className="hero-trust">
-              <span>✓</span> Start lean <i /><span>✓</span> One growth partner <i /><span>✓</span> Scale as you grow
-            </div>
-          </div>
-          <div className="hero-visual" aria-hidden="true">
-            <div className="hero-glow" />
-            <div className="hero-orbit orbit-one" />
-            <div className="hero-orbit orbit-two" />
-            <div className="growth-board">
-              <div className="board-top"><span>YOUR GROWTH STACK</span><b>PROPULSE</b></div>
-              <div className="board-main">
-                <div className="board-core"><span>GROW</span><strong>∞</strong><small>ONE PARTNER</small></div>
-                <div className="board-pill pill-one">WEBSITE</div>
-                <div className="board-pill pill-two">SEO</div>
-                <div className="board-pill pill-three">LEADS</div>
-                <div className="board-pill pill-four">SOCIAL</div>
-              </div>
-              <div className="board-bottom"><span>Build</span><i /><span>Attract</span><i /><span>Convert</span><i /><span>Scale</span></div>
-            </div>
-            <div className="hero-float hero-float-one"><b>01</b><span>growth partner</span></div>
-            <div className="hero-float hero-float-two"><b>LEADS</b><span>available to explore</span></div>
-          </div>
-        </section>
-
-        <section className="problem-section">
-          <div className="problem-intro">
-            <span className="section-kicker">THE REAL PROBLEM</span>
-            <h2>Running a business is hard enough. Building a marketing team shouldn't be another problem.</h2>
-          </div>
-          <div className="problem-grid">
-            <div><strong>01</strong><h3>Website</h3><p>Your business needs a credible online presence.</p></div>
-            <div><strong>02</strong><h3>SEO</h3><p>You need to be visible when customers search.</p></div>
-            <div><strong>03</strong><h3>Content & Social</h3><p>Your brand needs consistent digital activity.</p></div>
-            <div><strong>04</strong><h3>Lead Generation</h3><p>You need a reliable flow of opportunities.</p></div>
-          </div>
-          <div className="problem-bottom">Hiring separately can mean <b>2–3 people, multiple vendors and more overhead</b> — before you even know what is working.</div>
-        </section>
-
-        <section className="section-block services-section" id="services">
-          <div className="section-heading">
-            <div><span className="section-kicker">WHAT PROPULSE HANDLES</span><h2>Everything you need to start growing.</h2><p>Bring the important pieces of your digital growth system together.</p></div>
-          </div>
-          <div className="service-grid">
-            {services.map((service) => (
-              <article className="service-card" key={service.number}>
-                <span>{service.number}</span>
-                <h3>{service.title}</h3>
-                <p>{service.text}</p>
-                <b>Propulse support <em>→</em></b>
-              </article>
-            ))}
-          </div>
-        </section>
-
-        <section className="why-section" id="why-propulse">
-          <div className="why-copy">
-            <span className="section-kicker">WHY PROPULSE</span>
-            <h2>Start lean.<br /><em>Scale smart.</em></h2>
-            <p>You don't need a big team before you have a big business. Propulse gives you access to the growth support you need now, then lets you expand that support as your business grows.</p>
-            <Link to={loggedIn ? dashboardPath : '/signup'} className="why-cta">Build your growth system <span>→</span></Link>
-          </div>
-          <div className="why-list">
-            <div><strong>Less overhead</strong><span>Reduce the need to hire multiple specialists at the beginning.</span></div>
-            <div><strong>One growth partner</strong><span>Keep your digital growth work coordinated instead of scattered across vendors.</span></div>
-            <div><strong>Flexible support</strong><span>Start with what matters most and add capabilities as you scale.</span></div>
-            <div><strong>Real opportunities</strong><span>Access Propulse's lead marketplace alongside your broader growth strategy.</span></div>
-          </div>
-        </section>
-
-        <section className="section-block leads-section" id="leads">
-          <div className="section-heading">
-            <div><span className="section-kicker">SEE LEADS</span><h2>Looking for customers right now?</h2><p>Explore the Propulse marketplace and discover opportunities relevant to your business.</p></div>
-            <Link to="/leads" className="section-link">See all leads <span>→</span></Link>
-          </div>
-          <div className="lead-grid">
-            {leadPreviews.map((lead) => (
-              <article className="lead-card" key={`${lead.service}-${lead.location}`}>
-                <div className="lead-card-top"><span>{lead.tag}</span><span className="lead-type">LEAD</span></div>
-                <h3>{lead.service}</h3>
-                <p>{lead.requirement}</p>
-                <div className="lead-location">⌖ {lead.location}</div>
-                <div className="lead-protected"><span>Customer details protected</span><Link to="/leads">View →</Link></div>
-              </article>
-            ))}
-          </div>
-        </section>
-
-        <section className="section-block industries-section" id="industries">
-          <div className="section-heading centered"><span className="section-kicker">EXPLORE DEMAND</span><h2>Find opportunities in your market.</h2><p>Explore categories and jump directly into relevant leads.</p></div>
-          <div className="category-grid">
-            {categories.map((category, index) => (
-              <Link to={`/leads?category=${encodeURIComponent(category.query)}`} className="category-card" key={category.name}>
-                <span>0{index + 1}</span><strong>{category.name}</strong><b>→</b>
-              </Link>
-            ))}
-          </div>
-        </section>
-
-        <section className="how-section" id="how-it-works">
-          <div className="section-heading centered"><span className="section-kicker">HOW IT WORKS</span><h2>A simpler way to start growing.</h2><p>Build the foundation first, then keep improving as demand grows.</p></div>
-          <div className="steps-grid">
-            <div className="step"><b>01</b><h3>Tell us your business goals</h3><p>Share what you sell, who you want to reach and where you operate.</p></div>
-            <div className="step"><b>02</b><h3>Build your growth foundation</h3><p>Set up the website, SEO, landing pages, social presence or lead strategy you need.</p></div>
-            <div className="step"><b>03</b><h3>Attract and convert demand</h3><p>Use the system to create opportunities, learn what works and improve over time.</p></div>
-          </div>
-        </section>
-
-        <section className="faq-section" id="faq">
-          <div className="section-heading centered"><span className="section-kicker">FAQ</span><h2>Questions, answered.</h2><p>Everything you need to know before getting started.</p></div>
-          <div className="faq-list">
-            {faqs.map(([question, answer]) => (
-              <details className="faq-item" key={question}><summary>{question}<span>+</span></summary><p>{answer}</p></details>
-            ))}
-          </div>
-        </section>
-
-        {!loggedIn && (
-          <section className="final-cta">
-            <div><span className="section-kicker">READY TO GROW?</span><h2>You don't need a bigger team to take the next step.</h2><p>Start with the growth support your business needs today and build from there.</p></div>
-            <Link to="/signup">Create your business account <span>→</span></Link>
-          </section>
-        )}
-      </main>
-
-      <footer className="public-footer">
-        <span>© {new Date().getFullYear()} Propulse Business</span>
-        <div><Link to="/">Home</Link><Link to="/leads">See Leads</Link><Link to="/login">Login</Link><Link to="/signup">Sign up</Link><a href="#faq">FAQ</a></div>
-      </footer>
-    </div>
-  )
+function Icon({ name, size = 20 }) {
+  const common = {
+    width: size,
+    height: size,
+    viewBox: '0 0 24 24',
+    fill: 'none',
+    stroke: 'currentColor',
+    strokeWidth: '1.8',
+    strokeLinecap: 'round',
+    strokeLinejoin: 'round',
+    'aria-hidden': true,
+  }
+  if (name === 'home') return <svg {...common}><path d="m3 11 9-8 9 8"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/></svg>
+  if (name === 'sofa') return <svg {...common}><path d="M5 11V8a3 3 0 0 1 3-3h8a3 3 0 0 1 3 3v3"/><path d="M4 10a2 2 0 0 0-2 2v5h20v-5a2 2 0 0 0-2-2"/><path d="M5 17v2M19 17v2"/></svg>
+  if (name === 'building') return <svg {...common}><path d="M4 21V4h10v17"/><path d="M14 8h6v13"/><path d="M7 8h3M7 12h3M7 16h3M17 12h1M17 16h1"/></svg>
+  if (name === 'shield') return <svg {...common}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="m9 12 2 2 4-4"/></svg>
+  if (name === 'consult') return <svg {...common}><path d="M21 15a4 4 0 0 1-4 4H8l-5 3 1.6-5A7 7 0 0 1 3 12V8a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4Z"/><path d="M8 10h.01M12 10h.01M16 10h.01"/></svg>
+  if (name === 'people') return <svg {...common}><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2"/><path d="M3 21a6 6 0 0 1 12 0M14 16a5 5 0 0 1 7 5"/></svg>
+  if (name === 'pin') return <svg {...common}><path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg>
+  if (name === 'clipboard') return <svg {...common}><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V2h6v2M8 9h8M8 13h8M8 17h5"/></svg>
+  if (name === 'layers') return <svg {...common}><path d="m12 2 9 5-9 5-9-5 9-5Z"/><path d="m3 12 9 5 9-5"/><path d="m3 17 9 5 9-5"/></svg>
+  if (name === 'arrow') return <svg {...common}><path d="M5 12h14M14 7l5 5-5 5"/></svg>
+  if (name === 'check') return <svg {...common}><path d="m5 12 4 4L19 6"/></svg>
+  if (name === 'phone') return <svg {...common}><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 2 .7 2.9a2 2 0 0 1-.5 2.1L8 10a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.5c1 .3 1.9.6 2.9.7a2 2 0 0 1 1.7 2Z"/></svg>
+  return null
 }
 
-export default Home
+function openRequirement(flowKey = '') {
+  window.dispatchEvent(new CustomEvent('propulse:open-lead-popup', {
+    detail: { flowKey },
+  }))
+}
+
+export default function Home() {
+  const [contactData, setContactData] = useState({})
+  const [homepageMedia, setHomepageMedia] = useState({ hero_image_url: '' })
+
+  useEffect(() => {
+    window.scrollTo(0, 0)
+    let active = true
+    Promise.allSettled([
+      publicRequest('/contact?audience=website'),
+      publicRequest('/homepage-media'),
+    ]).then(([contactResult, mediaResult]) => {
+      if (!active) return
+      if (contactResult.status === 'fulfilled') setContactData(contactResult.value || {})
+      if (mediaResult.status === 'fulfilled') {
+        setHomepageMedia({ hero_image_url: mediaResult.value?.hero_image_url || '' })
+      }
+    })
+    return () => { active = false }
+  }, [])
+
+  const phone = contactData.phone || contactData.phone_number || contactData.mobile || ''
+  const email = contactData.email || contactData.support_email || ''
+  const heroImage = homepageMedia.hero_image_url || DEFAULT_HERO
+
+  return <div className="hc-home">
+    <header className="hc-header">
+      <Link className="hc-logo" to="/" aria-label="ProPulse home">
+        <img src="/brand/propulse-logo.svg" alt="ProPulse" />
+      </Link>
+      <nav className="hc-nav" aria-label="Main navigation">
+        <Link className="active" to="/">Home</Link>
+        <Link to="/packages">Packages</Link>
+        <Link to="/projects">Projects</Link>
+        <Link to="/how-it-works">How It Works</Link>
+        <Link to="/about">About</Link>
+        <Link to="/faq">FAQ</Link>
+        <Link to="/contact">Contact</Link>
+        <Link to="/experts">Find Professionals</Link>
+      </nav>
+      <div className="hc-header-actions public-header-actions">
+        <Link className="hc-consult-btn hc-quote-btn" to="/quote#interiors">
+          Get Free Quote <Icon name="arrow" size={15} />
+        </Link>
+        <Link className="public-professional-btn" to="/professionals">For Professionals</Link>
+      </div>
+    </header>
+
+    <main>
+      <section className="hc-hero" id="home">
+        <img className="hc-hero-image" src={heroImage} alt="Premium modern home" fetchPriority="high" />
+        <div className="hc-hero-overlay" />
+        <div className="hc-container hc-hero-inner">
+          <div className="hc-hero-copy">
+            <span className="hc-eyebrow">CONSTRUCTION <i/> INTERIORS <i/> REAL ESTATE</span>
+            <h1>Build. Design. Find<br/>the <em>Right Professionals.</em></h1>
+            <p>Tell us what you need. Compare relevant professionals, packages and material options for construction, interiors and real estate.</p>
+            <div className="hc-hero-actions">
+              <button className="hc-btn-primary" type="button" onClick={() => openRequirement('')}>Start Your Requirement <Icon name="arrow" size={15}/></button>
+              <Link className="hc-btn-secondary" to="/packages">View Packages</Link>
+            </div>
+            <div className="hc-hero-trust">
+              <span><i><Icon name="consult" size={15}/></i>Free Consultation</span>
+              <span><i><Icon name="people" size={15}/></i>Relevant Professionals</span>
+              <span><i><Icon name="shield" size={15}/></i>Warranty Options</span>
+            </div>
+          </div>
+
+          <article className="hc-float-card hc-float-professionals">
+            <span><Icon name="people" size={21}/></span>
+            <div><b>Verified Professionals</b><small>Across major cities</small></div>
+          </article>
+
+          <article className="hc-float-card hc-float-materials">
+            <span><Icon name="layers" size={21}/></span>
+            <div><b>Branded Material Options</b><small>Trusted quality choices</small></div>
+          </article>
+        </div>
+      </section>
+
+      <section className="hc-section hc-services">
+        <div className="hc-container">
+          <div className="hc-section-head">
+            <div><h2>What do you need?</h2><p>Choose a service to get started with your requirement.</p></div>
+            <Link to="/quote">View All Services <Icon name="arrow" size={13}/></Link>
+          </div>
+          <div className="hc-service-grid">
+            {SERVICES.map(item => <article className="hc-service-card" key={item.key}>
+              <img src={item.image} alt={item.title} loading="lazy" />
+              <div className="hc-service-copy">
+                <span className="hc-service-icon"><Icon name={item.icon} size={19}/></span>
+                <div>
+                  <h3>{item.title}</h3>
+                  <b>{item.eyebrow}</b>
+                  <p>{item.text}</p>
+                </div>
+                <button type="button" onClick={() => openRequirement(item.key)} aria-label={'Start '+item.title}><Icon name="arrow" size={15}/></button>
+              </div>
+            </article>)}
+          </div>
+        </div>
+      </section>
+
+      <section className="hc-section hc-hyderabad-seo" aria-labelledby="hyderabad-services-title">
+        <div className="hc-container">
+          <div className="hc-section-head">
+            <div>
+              <span className="hc-local-eyebrow">HYDERABAD</span>
+              <h2 id="hyderabad-services-title">Explore services across Hyderabad</h2>
+              <p>Start with the service or locality closest to your requirement, then add your exact site, property, budget and timeline.</p>
+            </div>
+            <Link to="/hyderabad">View Hyderabad Hub <Icon name="arrow" size={13}/></Link>
+          </div>
+
+          <div className="hc-hyderabad-service-links">
+            <Link to="/hyderabad/construction"><b>Construction in Hyderabad</b><span>Home construction, contractors, quotes and project planning.</span></Link>
+            <Link to="/hyderabad/interior-designers"><b>Interior Designers in Hyderabad</b><span>Home interiors, rooms, finishes, budget and delivery planning.</span></Link>
+            <Link to="/hyderabad/real-estate"><b>Real Estate Services in Hyderabad</b><span>Buy, sell, rent and investment property requirements.</span></Link>
+          </div>
+
+          <div className="hc-locality-links">
+            <b>Popular construction areas</b>
+            <div>
+              <Link to="/hyderabad/construction-cost">Construction Cost in Hyderabad</Link>
+              <Link to="/hyderabad/construction/uppal">Construction in Uppal</Link>
+              <Link to="/hyderabad/construction/kothapet">Construction in Kothapet</Link>
+              <Link to="/hyderabad/construction/lb-nagar">Construction in LB Nagar</Link>
+              <Link to="/hyderabad/construction/gachibowli">Construction in Gachibowli</Link>
+              <Link to="/hyderabad/construction/kondapur">Construction in Kondapur</Link>
+              <Link to="/hyderabad/construction/kukatpally">Construction in Kukatpally</Link>
+              <Link to="/hyderabad/construction/miyapur">Construction in Miyapur</Link>
+              <Link to="/hyderabad/construction/kokapet">Construction in Kokapet</Link>
+              <Link to="/hyderabad/construction/ghatkesar">Construction in Ghatkesar</Link>
+              <Link to="/hyderabad/construction/shamshabad">Construction in Shamshabad</Link>
+              <Link to="/hyderabad/construction/patancheru">Construction in Patancheru</Link>
+            </div>
+          </div>
+          <div className="hc-locality-links">
+            <b>State-wide construction coverage</b>
+            <div>
+              <Link to="/telangana/construction">All 33 Telangana Districts</Link>
+              <Link to="/andhra-pradesh/construction">All 28 Andhra Pradesh Districts</Link>
+            </div>
+          </div>
+          <div className="hc-locality-links">
+            <b>Popular construction guides</b>
+            <div>
+              <Link to="/guides/best-steel-for-house-construction">Best Steel for House Construction</Link>
+              <Link to="/guides/prevent-cracks-in-house">How to Reduce Cracks in a New House</Link>
+              <Link to="/guides/choose-construction-contractor-hyderabad">Best Contractor in Hyderabad: How to Choose</Link>
+              <Link to="/guides/2bhk-interiors-hyderabad">2BHK Interiors in Hyderabad</Link>
+              <Link to="/guides/home-construction-checklist">Home Construction Checklist</Link>
+              <Link to="/guides/waterproofing-precautions-new-house">Waterproofing Precautions</Link>
+              <Link to="/guides/best-cement-for-house-construction">Best Cement for House Construction</Link>
+              <Link to="/guides/m-sand-vs-river-sand-house-construction">M-Sand vs River Sand</Link>
+              <Link to="/guides/soil-test-before-house-construction">Soil Test Before House Construction</Link>
+              <Link to="/guides">View All Construction Guides</Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="hc-section hc-benefits">
+        <div className="hc-container">
+          <div className="hc-section-head compact">
+            <div><h2>Why Homeowners Choose ProPulse</h2><p>A customer-first platform for construction, interiors and real estate requirements.</p></div>
+          </div>
+          <div className="hc-benefit-grid">
+            {BENEFITS.map((item,index) => <article key={item.title}>
+              <span className={'tone-'+(index+1)}><Icon name={item.icon} size={19}/></span>
+              <div><h3>{item.title}</h3><p>{item.text}</p></div>
+            </article>)}
+          </div>
+        </div>
+      </section>
+
+      <section className="hc-section hc-how">
+        <div className="hc-container">
+          <div className="hc-section-head">
+            <div><h2>How It Works</h2><p>From your requirement to the right professional, in a few simple steps.</p></div>
+            <Link to="/how-it-works">Learn More <Icon name="arrow" size={13}/></Link>
+          </div>
+          <div className="hc-step-grid">
+            {STEPS.map((step,index) => <article key={step.number}>
+              <span className={'hc-step-number tone-'+(index+1)}>{step.number}</span>
+              <span className={'hc-step-icon tone-'+(index+1)}><Icon name={step.icon} size={18}/></span>
+              <h3>{step.title}</h3>
+              <p>{step.text}</p>
+              {index < STEPS.length-1 && <i className="hc-step-arrow"><Icon name="arrow" size={15}/></i>}
+            </article>)}
+          </div>
+        </div>
+      </section>
+
+      <section className="hc-section hc-projects">
+        <div className="hc-container">
+          <div className="hc-section-head">
+            <div><h2>Home Inspiration</h2><p>Explore real projects to get ideas for your construction or interior journey.</p></div>
+            <Link to="/projects">View All Projects <Icon name="arrow" size={13}/></Link>
+          </div>
+          <div className="hc-project-grid">
+            {PROJECTS.map(project => <article key={project.title}>
+              <img src={project.image} alt={project.title} loading="lazy"/>
+              <div><h3>{project.title}</h3><p><Icon name="pin" size={12}/>{project.location}</p></div>
+            </article>)}
+          </div>
+        </div>
+      </section>
+
+      <WebsiteFaqSection variant="home-compact" audience="homeowner" />
+
+      <section className="hc-slim-cta">
+        <div className="hc-container hc-slim-cta-inner">
+          <img src={heroImage} alt="" loading="lazy"/>
+          <div><h2>Ready to Start Your Project?</h2><p>Get expert guidance and compare the best options.</p></div>
+          <div className="hc-slim-actions">
+            <button type="button" onClick={() => openRequirement('')}>Start Your Requirement <Icon name="arrow" size={14}/></button>
+            <Link to="/packages">View Packages</Link>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer className="hc-footer">
+      <div className="hc-footer-brand">
+        <img src="/brand/propulse-logo.svg" alt="ProPulse" />
+        <p>Your customer starting point for construction, interiors and real-estate requirements.</p>
+        <div className="hc-footer-social"><span>f</span><span>◎</span><span>▶</span><span>in</span></div>
+      </div>
+      <div><b>Quick Links</b><Link to="/">Home</Link><Link to="/hyderabad">Hyderabad</Link><Link to="/quote#construction">Construction</Link><Link to="/quote#interiors">Interiors</Link><Link to="/packages">Packages</Link><Link to="/quote#property">Real Estate</Link><Link to="/projects">Projects</Link><Link to="/faq">FAQ</Link></div>
+      <div><b>Our Services</b><Link to="/quote#construction">Home Construction</Link><Link to="/quote#interiors">Interior Design</Link><Link to="/quote#property">Real Estate</Link><Link to="/hyderabad/construction-cost">Hyderabad Cost Guide</Link><button type="button" onClick={() => openRequirement('')}>Free Consultation</button></div>
+      <div><b>Support</b><Link to="/faq">FAQ</Link><Link to="/contact">Contact Us</Link><Link to="/contact">Privacy Policy</Link><Link to="/contact">Terms & Conditions</Link></div>
+      <div><b>Contact Info</b>{phone&&<a href={'tel:'+String(phone).replace(/\s/g,'')}><Icon name="phone" size={12}/>{phone}</a>}{email&&<a href={'mailto:'+email}>{email}</a>}<span><Icon name="pin" size={12}/>Hyderabad, India</span></div>
+    </footer>
+  </div>
+}

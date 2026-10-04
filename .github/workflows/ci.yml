@@ -1,58 +1,97 @@
 name: CI
 
+concurrency:
+  group: ci-v2-${{ github.workflow }}-${{ github.event.pull_request.head.ref || github.ref_name }}
+  cancel-in-progress: true
+
 on:
   push:
-    branches: [main]
+    branches:
+      - main
   pull_request:
-    branches: [main]
   workflow_dispatch:
 
 jobs:
   frontend:
     name: Frontend lint and build
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     defaults:
       run:
         working-directory: frontend
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
-          node-version: 20
+          node-version: 24
           cache: npm
           cache-dependency-path: frontend/package-lock.json
       - name: Install dependencies
         run: npm ci
+      - name: Audit runtime dependencies
+        run: npm audit --omit=dev --audit-level=high
       - name: Lint
         run: npm run lint
+      - name: Frontend source graph
+        run: npm run test:source-graph
+      - name: Authoritative auth bootstrap
+        run: npm run test:auth-bootstrap
+      - name: CSV export security
+        run: npm run test:csv-security
+      - name: User header layout
+        run: npm run test:user-header-layout
+      - name: Lead marketplace display
+        run: npm run test:lead-marketplace-display
+      - name: Payment proof preview
+        run: npm run test:payment-proof-preview
+      - name: Wallet history clarity
+        run: npm run test:wallet-history
+      - name: Wallet membership tab
+        run: npm run test:wallet-membership-tab
+      - name: React wallet coupon UI
+        run: npm run test:wallet-coupon-react
+      - name: React Admin Investments UI
+        run: npm run test:admin-investments-react
+      - name: Lead Partner reports pagination
+        run: npm run test:lead-partner-reports
+      - name: Lead Partner pricing workspace
+        run: npm run test:lead-partner-pricing
+      - name: Investor FAQ layout
+        run: npm run test:investor-faq-layout
       - name: Build
         run: npm run build
+      - name: Google GIS regression checks
+        run: npm run test:google-gis
 
   backend:
     name: Backend install and syntax check
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     defaults:
       run:
         working-directory: backend
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
-          node-version: 20
+          node-version: 24
           cache: npm
           cache-dependency-path: backend/package-lock.json
       - name: Install dependencies
         run: npm ci
+      - name: Audit runtime dependencies
+        run: npm audit --omit=dev --audit-level=high
       - name: Syntax check
         run: npm test
 
   backend-startup:
     name: Backend startup and database smoke test
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     services:
       postgres:
         image: postgres:16
@@ -72,11 +111,11 @@ jobs:
         working-directory: backend
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
-          node-version: 20
+          node-version: 24
           cache: npm
           cache-dependency-path: backend/package-lock.json
       - name: Install dependencies
@@ -89,6 +128,76 @@ jobs:
           DB_USER: ci_smoke
           DB_PASSWORD: ci_smoke
         run: npm run db:bootstrap
+      - name: Refuse bootstrap on populated database
+        env:
+          DB_HOST: 127.0.0.1
+          DB_PORT: 5432
+          DB_NAME: ci_smoke
+          DB_USER: ci_smoke
+          DB_PASSWORD: ci_smoke
+        shell: bash
+        run: |
+          set -euo pipefail
+          if npm run db:bootstrap > /tmp/bootstrap-second.log 2>&1; then
+            echo "db:bootstrap unexpectedly succeeded on a populated database."
+            cat /tmp/bootstrap-second.log
+            exit 1
+          fi
+          grep -q "requires an empty database" /tmp/bootstrap-second.log
+          grep -q "db:migrate" /tmp/bootstrap-second.log
+          echo "Populated-database bootstrap refusal passed."
+      - name: Verify customer requirement flow integrity
+        env:
+          DB_HOST: 127.0.0.1
+          DB_PORT: 5432
+          DB_NAME: ci_smoke
+          DB_USER: ci_smoke
+          DB_PASSWORD: ci_smoke
+        run: npm run test:customer-flow
+      - name: Verify estimator schema integrity
+        env:
+          DB_HOST: 127.0.0.1
+          DB_PORT: 5432
+          DB_NAME: ci_smoke
+          DB_USER: ci_smoke
+          DB_PASSWORD: ci_smoke
+        run: npm run test:estimator-schema
+      - name: Verify estimator runtime lifecycle
+        env:
+          DB_HOST: 127.0.0.1
+          DB_PORT: 5432
+          DB_NAME: ci_smoke
+          DB_USER: ci_smoke
+          DB_PASSWORD: ci_smoke
+          JWT_SECRET: ci-estimator-secret-with-at-least-32-characters
+        run: npm run test:estimator-runtime
+      - name: Verify Interior estimator seed and pricing
+        env:
+          DB_HOST: 127.0.0.1
+          DB_PORT: 5432
+          DB_NAME: ci_smoke
+          DB_USER: ci_smoke
+          DB_PASSWORD: ci_smoke
+          JWT_SECRET: ci-interior-estimator-secret-with-at-least-32-characters
+        run: npm run test:interior-estimator
+      - name: Verify Construction estimator seed and pricing
+        env:
+          DB_HOST: 127.0.0.1
+          DB_PORT: 5432
+          DB_NAME: ci_smoke
+          DB_USER: ci_smoke
+          DB_PASSWORD: ci_smoke
+          JWT_SECRET: ci-construction-estimator-secret-with-at-least-32-characters
+        run: npm run test:construction-estimator
+      - name: Verify estimator to lead conversion
+        env:
+          DB_HOST: 127.0.0.1
+          DB_PORT: 5432
+          DB_NAME: ci_smoke
+          DB_USER: ci_smoke
+          DB_PASSWORD: ci_smoke
+          JWT_SECRET: ci-estimator-conversion-secret-with-at-least-32-characters
+        run: npm run test:estimator-conversion
       - name: Verify lead PIN location mapping
         env:
           DB_HOST: 127.0.0.1
@@ -113,6 +222,30 @@ jobs:
           DB_USER: ci_smoke
           DB_PASSWORD: ci_smoke
         run: node scripts/check-membership-integrity.js
+      - name: Verify subscribed Experts directory runtime
+        env:
+          DB_HOST: 127.0.0.1
+          DB_PORT: 5432
+          DB_NAME: ci_smoke
+          DB_USER: ci_smoke
+          DB_PASSWORD: ci_smoke
+        run: npm run test:expert-directory-runtime
+      - name: Verify website sound settings runtime
+        env:
+          DB_HOST: 127.0.0.1
+          DB_PORT: 5432
+          DB_NAME: ci_smoke
+          DB_USER: ci_smoke
+          DB_PASSWORD: ci_smoke
+        run: npm run test:sound-settings-runtime
+      - name: Verify Telegram support chat runtime
+        env:
+          DB_HOST: 127.0.0.1
+          DB_PORT: 5432
+          DB_NAME: ci_smoke
+          DB_USER: ci_smoke
+          DB_PASSWORD: ci_smoke
+        run: npm run test:support-chat-runtime
       - name: Verify payment and wallet integrity
         env:
           DB_HOST: 127.0.0.1
@@ -121,6 +254,137 @@ jobs:
           DB_USER: ci_smoke
           DB_PASSWORD: ci_smoke
         run: node scripts/check-payment-integrity.js
+      - name: Verify Lead Partner ledger integrity
+        env:
+          DB_HOST: 127.0.0.1
+          DB_PORT: 5432
+          DB_NAME: ci_smoke
+          DB_USER: ci_smoke
+          DB_PASSWORD: ci_smoke
+        run: npm run test:ledger
+      - name: Verify Lead Partner payout lifecycle
+        env:
+          DB_HOST: 127.0.0.1
+          DB_PORT: 5432
+          DB_NAME: ci_smoke
+          DB_USER: ci_smoke
+          DB_PASSWORD: ci_smoke
+        timeout-minutes: 3
+        run: npm run test:payout
+      - name: Verify financial reconciliation SQL
+        env:
+          DB_HOST: 127.0.0.1
+          DB_PORT: 5432
+          DB_NAME: ci_smoke
+          DB_USER: ci_smoke
+          DB_PASSWORD: ci_smoke
+        timeout-minutes: 2
+        run: npm run test:financial-integrity-runtime
+      - name: Verify security Risk Center runtime
+        env:
+          DB_HOST: 127.0.0.1
+          DB_PORT: 5432
+          DB_NAME: ci_smoke
+          DB_USER: ci_smoke
+          DB_PASSWORD: ci_smoke
+          JWT_SECRET: ci-risk-center-secret-32-characters-minimum
+        timeout-minutes: 2
+        run: npm run test:risk-center-runtime
+      - name: Verify critical action audit runtime
+        env:
+          DB_HOST: 127.0.0.1
+          DB_PORT: 5432
+          DB_NAME: ci_smoke
+          DB_USER: ci_smoke
+          DB_PASSWORD: ci_smoke
+        timeout-minutes: 2
+        run: npm run test:critical-audit-runtime
+      - name: Verify notification runtime
+        env:
+          DB_HOST: 127.0.0.1
+          DB_PORT: 5432
+          DB_NAME: ci_smoke
+          DB_USER: ci_smoke
+          DB_PASSWORD: ci_smoke
+        timeout-minutes: 2
+        run: npm run test:notification-runtime
+      - name: Verify payment gateway runtime
+        env:
+          DB_HOST: 127.0.0.1
+          DB_PORT: 5432
+          DB_NAME: ci_smoke
+          DB_USER: ci_smoke
+          DB_PASSWORD: ci_smoke
+        timeout-minutes: 2
+        run: npm run test:payment-gateway-runtime
+      - name: Verify payment availability runtime
+        env:
+          DB_HOST: 127.0.0.1
+          DB_PORT: 5432
+          DB_NAME: ci_smoke
+          DB_USER: ci_smoke
+          DB_PASSWORD: ci_smoke
+        timeout-minutes: 2
+        run: npm run test:payment-availability-runtime
+      - name: Verify private object storage runtime
+        env:
+          DB_HOST: 127.0.0.1
+          DB_PORT: 5432
+          DB_NAME: ci_smoke
+          DB_USER: ci_smoke
+          DB_PASSWORD: ci_smoke
+        timeout-minutes: 2
+        run: npm run test:private-object-storage-runtime
+      - name: Verify background jobs runtime
+        env:
+          DB_HOST: 127.0.0.1
+          DB_PORT: 5432
+          DB_NAME: ci_smoke
+          DB_USER: ci_smoke
+          DB_PASSWORD: ci_smoke
+        timeout-minutes: 2
+        run: npm run test:background-jobs-runtime
+      - name: Verify database backup restore drill
+        env:
+          DB_HOST: 127.0.0.1
+          DB_PORT: 5432
+          DB_NAME: ci_smoke
+          DB_USER: ci_smoke
+          DB_PASSWORD: ci_smoke
+          BACKUP_DIRECTORY: ${{ runner.temp }}/propulse-backups
+        timeout-minutes: 4
+        run: npm run backup:verify
+      - name: Verify private upload storage backup
+        env:
+          DB_HOST: 127.0.0.1
+          DB_PORT: 5432
+          DB_NAME: ci_smoke
+          DB_USER: ci_smoke
+          DB_PASSWORD: ci_smoke
+          UPLOAD_STORAGE_ROOT: ${{ runner.temp }}/propulse-uploads
+          PRIVATE_STORAGE_BACKUP_DIRECTORY: ${{ runner.temp }}/propulse-upload-backups
+        timeout-minutes: 2
+        run: |
+          mkdir -p "$UPLOAD_STORAGE_ROOT/private-proofs"
+          printf 'ci-private-proof' > "$UPLOAD_STORAGE_ROOT/private-proofs/restore-check.txt"
+          npm run backup:storage
+      - name: Verify production payment flow and startup
+        env:
+          DB_HOST: 127.0.0.1
+          DB_PORT: 5432
+          DB_NAME: ci_smoke
+          DB_USER: ci_smoke
+          DB_PASSWORD: ci_smoke
+        run: npm run test:production
+      - name: Verify background worker heartbeat
+        env:
+          DB_HOST: 127.0.0.1
+          DB_PORT: 5432
+          DB_NAME: ci_smoke
+          DB_USER: ci_smoke
+          DB_PASSWORD: ci_smoke
+        timeout-minutes: 2
+        run: npm run test:worker-runtime
       - name: Start backend
         env:
           PORT: 5000
@@ -130,6 +394,8 @@ jobs:
           DB_USER: ci_smoke
           DB_PASSWORD: ci_smoke
           JWT_SECRET: ci-smoke-secret
+          RUN_MIGRATIONS_ON_STARTUP: 'false'
+          RUN_BACKGROUND_JOBS_IN_WEB: 'false'
         run: |
           node src/server.js > /tmp/backend.log 2>&1 &
           echo $! > /tmp/backend.pid
@@ -140,7 +406,7 @@ jobs:
               exit 1
             fi
             status=$(curl --silent --show-error --output /tmp/backend-response.json --write-out '%{http_code}' http://127.0.0.1:5000/health || true)
-            if [ "$status" = "200" ] && grep -q '\"database\":\"connected\"' /tmp/backend-response.json; then
+            if [ "$status" = "200" ] && grep -q '"database":"connected"' /tmp/backend-response.json; then
               echo "Backend and PostgreSQL health check passed."
               cat /tmp/backend-response.json
               exit 0
@@ -153,15 +419,175 @@ jobs:
           exit 1
       - name: Stop backend
         if: always()
+        shell: bash
         run: |
-          if [ -f /tmp/backend.pid ]; then kill "$(cat /tmp/backend.pid)" 2>/dev/null || true; fi
+          set -euo pipefail
+          if [ -f /tmp/backend.pid ]; then
+            pid="$(cat /tmp/backend.pid)"
+            kill "$pid" 2>/dev/null || true
+            for i in {1..20}; do
+              if ! kill -0 "$pid" 2>/dev/null; then break; fi
+              sleep 0.25
+            done
+          fi
+          if grep -q "Graceful shutdown failed" /tmp/backend.log 2>/dev/null; then
+            echo "Backend logged a graceful shutdown failure:"
+            cat /tmp/backend.log
+            exit 1
+          fi
+
+
+  release-e2e:
+    name: Release browser E2E
+    needs:
+      - frontend
+      - backend
+      - backend-startup
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: ci_e2e
+          POSTGRES_USER: ci_e2e
+          POSTGRES_PASSWORD: ci_e2e
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ci_e2e -d ci_e2e"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: |
+            backend/package-lock.json
+            frontend/package-lock.json
+      - name: Install backend dependencies
+        working-directory: backend
+        run: npm ci
+      - name: Bootstrap E2E database
+        working-directory: backend
+        env:
+          DB_HOST: 127.0.0.1
+          DB_PORT: 5432
+          DB_NAME: ci_e2e
+          DB_USER: ci_e2e
+          DB_PASSWORD: ci_e2e
+        run: npm run db:bootstrap
+      - name: Seed isolated E2E accounts
+        working-directory: backend
+        env:
+          NODE_ENV: test
+          E2E_SEED: 'true'
+          DB_HOST: 127.0.0.1
+          DB_PORT: 5432
+          DB_NAME: ci_e2e
+          DB_USER: ci_e2e
+          DB_PASSWORD: ci_e2e
+        run: node scripts/seed-release-e2e.js
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+      - name: Install pinned Playwright test runtime
+        working-directory: frontend
+        run: npm install --no-save --package-lock=false @playwright/test@1.55.0
+      - name: Install Chromium
+        working-directory: frontend
+        run: npx playwright install --with-deps chromium
+      - name: Start dedicated worker
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd backend
+          NODE_ENV=test           DB_HOST=127.0.0.1 DB_PORT=5432 DB_NAME=ci_e2e DB_USER=ci_e2e DB_PASSWORD=ci_e2e           RUN_MIGRATIONS_ON_WORKER_STARTUP=false           WORKER_HEARTBEAT_INTERVAL_MS=5000           npm run worker > /tmp/e2e-worker.log 2>&1 &
+          echo $! > /tmp/e2e-worker.pid
+      - name: Start backend
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd backend
+          PORT=5000           NODE_ENV=test           DB_HOST=127.0.0.1 DB_PORT=5432 DB_NAME=ci_e2e DB_USER=ci_e2e DB_PASSWORD=ci_e2e           JWT_SECRET=e2e-ci-secret-with-at-least-32-characters           PUBLIC_APP_URL=http://127.0.0.1:5173           CORS_ORIGIN=http://127.0.0.1:5173           RUN_MIGRATIONS_ON_STARTUP=false           RUN_BACKGROUND_JOBS_IN_WEB=false           REQUIRE_BACKGROUND_WORKER=true           WORKER_HEARTBEAT_MAX_AGE_SECONDS=30           npm start > /tmp/e2e-backend.log 2>&1 &
+          echo $! > /tmp/e2e-backend.pid
+          for i in {1..40}; do
+            status=$(curl --silent --output /tmp/e2e-ready.json --write-out '%{http_code}' http://127.0.0.1:5000/health/ready || true)
+            if [ "$status" = "200" ]; then
+              cat /tmp/e2e-ready.json
+              exit 0
+            fi
+            if ! kill -0 "$(cat /tmp/e2e-backend.pid)" 2>/dev/null; then
+              cat /tmp/e2e-backend.log
+              exit 1
+            fi
+            sleep 1
+          done
+          echo "E2E backend did not become ready."
+          cat /tmp/e2e-backend.log
+          cat /tmp/e2e-worker.log
+          cat /tmp/e2e-ready.json 2>/dev/null || true
+          exit 1
+      - name: Start frontend
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd frontend
+          VITE_DEV_API_TARGET=http://127.0.0.1:5000 npm run dev -- --host 127.0.0.1 > /tmp/e2e-frontend.log 2>&1 &
+          echo $! > /tmp/e2e-frontend.pid
+          for i in {1..30}; do
+            status=$(curl --silent --output /dev/null --write-out '%{http_code}' http://127.0.0.1:5173/login || true)
+            if [ "$status" = "200" ]; then exit 0; fi
+            if ! kill -0 "$(cat /tmp/e2e-frontend.pid)" 2>/dev/null; then
+              cat /tmp/e2e-frontend.log
+              exit 1
+            fi
+            sleep 1
+          done
+          echo "E2E frontend did not become ready."
+          cat /tmp/e2e-frontend.log
+          exit 1
+      - name: Run release browser smoke
+        working-directory: frontend
+        env:
+          E2E_BASE_URL: http://127.0.0.1:5173
+        run: npx playwright test -c e2e/playwright.config.mjs
+      - name: Upload E2E diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-e2e-diagnostics
+          if-no-files-found: ignore
+          path: |
+            frontend/playwright-report/
+            frontend/test-results/
+      - name: Stop E2E processes
+        if: always()
+        shell: bash
+        run: |
+          for file in /tmp/e2e-frontend.pid /tmp/e2e-backend.pid /tmp/e2e-worker.pid; do
+            if [ -f "$file" ]; then kill "$(cat "$file")" 2>/dev/null || true; fi
+          done
+          sleep 1
+          echo "=== Backend log ==="
+          tail -n 80 /tmp/e2e-backend.log 2>/dev/null || true
+          echo "=== Worker log ==="
+          tail -n 80 /tmp/e2e-worker.log 2>/dev/null || true
+          echo "=== Frontend log ==="
+          tail -n 80 /tmp/e2e-frontend.log 2>/dev/null || true
 
   duplicate-scan:
     name: Duplicate code scan
     runs-on: ubuntu-latest
+    timeout-minutes: 3
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - name: Detect exact duplicate files
         shell: bash
         run: |
@@ -177,9 +603,14 @@ jobs:
   production-static-scan:
     name: Production security/static scan
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 2
+      - name: Repository whitespace check
+        run: git diff --check HEAD^ HEAD
       - name: Block committed environment files
         shell: bash
         run: |
@@ -188,6 +619,17 @@ jobs:
             echo "A real environment file is tracked. Remove it and rotate any exposed credentials."
             exit 1
           fi
+      - name: Block tracked runtime uploads
+        shell: bash
+        run: |
+          set -euo pipefail
+          matches=$(git ls-files 'backend/uploads/**' | grep -vE '/\.gitkeep$' || true)
+          if [ -n "$matches" ]; then
+            echo "Runtime upload files must not be committed:"
+            echo "$matches"
+            exit 1
+          fi
+          echo "No runtime uploads are tracked."
       - name: Block hardcoded production localhost API URLs
         shell: bash
         run: |
@@ -202,7 +644,79 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          if git grep -nEI '(password|secret|access[_-]?token|private[_-]?key)[[:space:]]*[:=][[:space:]]*["'"'][^"'"']{12,}["'"']' -- ':!*.lock' ':!*.example' ':!*.sample' ':!backend/src/database/schema.sql'; then
+          if git grep -nEI '(password|secret|access[_-]?token|private[_-]?key)[[:space:]]*[:=][[:space:]]*["'"'"'][^"'"'"']{12,}["'"'"']' -- ':!*.lock' ':!*.example' ':!*.sample' ':!backend/src/database/schema.sql'; then
             echo "Potential hardcoded secret detected. Review the matches before merging."
             exit 1
           fi
+
+      - name: Block runtime fetch monkey patches
+        shell: bash
+        run: |
+          set -euo pipefail
+          matches=$(git grep -nE 'window\.fetch[[:space:]]*=' -- frontend/src || true)
+          if [ -n "$matches" ]; then
+            echo "Global window.fetch monkey patch detected:"
+            echo "$matches"
+            exit 1
+          fi
+          echo "No global fetch monkey patches found."
+
+      - name: Block legacy browser auth token storage
+        shell: bash
+        run: |
+          set -euo pipefail
+          matches=$(git grep -n 'propulse_auth_token' -- frontend/src || true)
+          if [ -n "$matches" ]; then
+            echo "Legacy browser JWT storage reference detected:"
+            echo "$matches"
+            exit 1
+          fi
+          echo "No legacy browser JWT storage references found."
+
+      - name: Block document.write
+        shell: bash
+        run: |
+          set -euo pipefail
+          matches=$(git grep -nE 'document\.write[[:space:]]*\(' -- frontend/src || true)
+          if [ -n "$matches" ]; then
+            echo "document.write usage detected:"
+            echo "$matches"
+            exit 1
+          fi
+          echo "No document.write usage found."
+
+      - name: Block frontend Authorization headers
+        shell: bash
+        run: |
+          set -euo pipefail
+          matches=$(git grep -n 'Authorization' -- frontend/src || true)
+          if [ -n "$matches" ]; then
+            echo "Frontend Authorization header detected; browser auth must use HttpOnly cookies:"
+            echo "$matches"
+            exit 1
+          fi
+          echo "No frontend Authorization headers found."
+
+  container-build:
+    name: Container deployment build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Build backend runtime image
+        run: docker build --pull -t propulse-backend-ci ./backend
+      - name: Build frontend edge image
+        run: docker build --pull --build-arg VITE_API_URL=/api --build-arg VITE_GOOGLE_CLIENT_ID=ci-client-id.apps.googleusercontent.com -t propulse-frontend-ci ./frontend
+      - name: Validate deployment Compose graph
+        env:
+          DEPLOY_ENVIRONMENT: staging
+          GIT_COMMIT_SHA: ${{ github.sha }}
+          BACKEND_ENV_FILE: ./env/staging.backend.env.example
+          RELEASE_ID: ci-${{ github.run_id }}
+        run: docker compose --env-file deploy/env/staging.backend.env.example -f deploy/compose.yml --profile release config >/tmp/propulse-compose.yml
+      - name: Verify non-root backend image
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(docker image inspect propulse-backend-ci --format '{{.Config.User}}')" = "node"

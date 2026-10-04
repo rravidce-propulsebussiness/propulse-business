@@ -2,8 +2,7 @@ import { useCallback, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { authRequest, saveSession } from '../utils/auth'
 import GoogleButton from '../components/GoogleButton'
-import './Auth.css'
-import './AuthExtras.css'
+import './Login.css'
 
 function Login() {
   const navigate = useNavigate()
@@ -15,13 +14,22 @@ function Login() {
   const [googleLoading, setGoogleLoading] = useState(false)
   const [error, setError] = useState('')
 
-  const finishLogin = useCallback((result) => {
+  const finishLogin = useCallback(async (result) => {
     saveSession(result)
-    if (!remember) localStorage.setItem('propulse_session_mode', 'session')
-    const destination = location.state?.from?.pathname
-      || (result.user?.role === 'admin' ? '/admin' : '/leads')
+    if (result.user?.role === 'admin') {
+      navigate('/admin', { replace: true })
+      return
+    }
+
+    // Lead Partner accounts must never enter the marketplace.
+    if (result.user?.role === 'lead_partner') {
+      navigate('/lead-partner', { replace: true })
+      return
+    }
+
+    const destination = location.state?.from?.pathname || '/leads'
     navigate(destination, { replace: true })
-  }, [location.state, navigate, remember])
+  }, [location.state, navigate])
 
   async function submit(e) {
     e.preventDefault()
@@ -29,8 +37,8 @@ function Login() {
     if (!form.email || !form.password) return setError('Enter your email and password.')
     try {
       setLoading(true)
-      const result = await authRequest('/auth/login', { method: 'POST', body: JSON.stringify(form) })
-      finishLogin(result)
+      const result = await authRequest('/auth/login', { method: 'POST', body: JSON.stringify({ ...form, remember }) })
+      await finishLogin(result)
     } catch (err) {
       setError(err.message)
     } finally {
@@ -42,45 +50,44 @@ function Login() {
     setError('')
     try {
       setGoogleLoading(true)
-      const result = await authRequest('/auth/google', { method: 'POST', body: JSON.stringify({ credential }) })
-      finishLogin(result)
+      const result = await authRequest('/auth/google', {
+        method: 'POST',
+        body: JSON.stringify({ credential, remember }),
+      })
+      await finishLogin(result)
     } catch (err) {
       setError(err.message)
     } finally {
       setGoogleLoading(false)
     }
-  }, [finishLogin])
+  }, [finishLogin, remember])
 
   return (
-    <div className="auth-page">
-      <section className="auth-visual" aria-label="Pro Pulse Business">
-        <div className="auth-visual-overlay" />
-        <div className="auth-visual-content">
-          <div className="auth-logo-frame">
-            <img className="auth-logo" src="/brand/propulse-logo.png" alt="Pro Pulse Business Technologies Private Limited" />
+    <div className="auth-page login-premium">
+      <header className="login-topbar">
+        <Link className="login-topbar-brand" to="/" aria-label="Propulse Business home"><img src="/brand/propulse-logo.png" alt="Propulse Business Technologies Private Limited" /><span>Building Business Together</span></Link>
+        <div className="login-topbar-context">Technology <i/> Growth <i/> Opportunities</div>
+        <Link className="login-back-home" to="/"><span>←</span> Back to Home</Link>
+      </header>
+      <section className="login-premium-visual" aria-label="Propulse Business Technologies">
+        <div className="login-premium-image"/>
+        <div className="login-premium-glow"/>
+        <div className="login-premium-visual-content">
+          <span className="login-premium-kicker">WELCOME TO PROPULSE</span>
+          <h1>Technology built around<br /><em>business growth.</em></h1>
+          <p><strong>Propulse Business Technologies Private Limited</strong> helps businesses build, digitize, operate and scale through practical technology, digital growth and business solutions.</p>
+          <div className="login-premium-features">
+            <div><b>01</b><span><strong>Technology</strong><small>Websites, apps, software and automation.</small></span></div>
+            <div><b>02</b><span><strong>Digital Growth</strong><small>Marketing, creative and demand generation.</small></span></div>
+            <div><b>03</b><span><strong>Lead Opportunities</strong><small>Discover and buy relevant customer enquiries.</small></span></div>
+            <div><b>04</b><span><strong>Business Support</strong><small>Technology-led operational and compliance support.</small></span></div>
           </div>
-          <div className="auth-visual-copy">
-            <span>QUALIFIED LEADS. BETTER OPPORTUNITIES.</span>
-            <h1>Get High-Value<br /><em>Clients.</em></h1>
-            <p>Connect with qualified customers actively looking for your services — and turn more opportunities into paying clients.</p>
-          </div>
-          <div className="auth-visual-footer">
-            <span>CONNECT</span><i /> <span>GROW</span><i /> <span>BUILD</span><i /> <span>SUCCEED</span>
-          </div>
+          <div className="login-premium-quote"><span>“</span><p>Technology built around business growth.</p><small>— Propulse Business Technologies</small></div>
         </div>
       </section>
 
-      <main className="auth-card-wrap">
-        <div className="auth-card">
-          <div className="mobile-brand">
-            <img src="/brand/propulse-logo.png" alt="Pro Pulse" />
-          </div>
-          <div className="auth-heading">
-            <p className="auth-kicker">WELCOME BACK</p>
-            <h2>Sign in</h2>
-            <p>Access your leads and business opportunities.</p>
-          </div>
-
+      <main className="auth-card-wrap login-premium-card-wrap">
+        <div className="auth-card login-premium-card">
           {error && <div className="auth-error" role="alert">{error}</div>}
 
           <div className="google-auth-block">
@@ -103,16 +110,17 @@ function Login() {
 
             <div className="auth-options">
               <label className="check"><input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} /> Remember me</label>
-              <Link className="text-button" to="/forgot-password">Forgot password?</Link>
+              <div className="auth-secondary-links"><Link className="text-button" to="/forgot-password">Forgot password?</Link></div>
             </div>
 
-            <button className="auth-submit" disabled={loading || googleLoading}>
+            <button className="auth-submit login-premium-submit" disabled={loading || googleLoading}>
               {loading ? 'Signing in…' : googleLoading ? 'Signing in with Google…' : 'Sign in'} <span>→</span>
             </button>
           </form>
 
           <div className="auth-divider"><span /> <b>NEW TO PRO PULSE?</b> <span /></div>
           <Link className="auth-outline" to="/signup">Create an account <span>→</span></Link>
+          <p className="login-legal-note">By continuing, you agree to use Propulse for business-related technology, growth and lead services.</p>
         </div>
       </main>
     </div>

@@ -1,0 +1,99 @@
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import LeadPartnerSidebar from '../components/LeadPartnerSidebar';
+import { useNavigate } from 'react-router-dom';
+import { authRequest, clearSession, getUser } from '../utils/auth';
+import { downloadCsv } from '../utils/csv';
+import './LeadPartnerReports.css';
+
+const REASONS={fake:'Fake / invalid lead',wrong_number:'Wrong number',not_interested:'Customer not interested',duplicate:'Duplicate lead',other:'Other'};
+const STATUS={pending:'Pending review',verified_fake:'Verified fake',verified_genuine:'Verified genuine',rejected:'Rejected'};
+const EMPTY_SUMMARY={total_reports:0,reported_leads:0,pending:0,verified_fake:0,verified_genuine:0,rejected:0,reason_counts:{}};
+const formatDate=v=>v?new Date(v).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}):'—';
+const formatDateTime=v=>v?new Date(v).toLocaleString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}):'—';
+
+export default function LeadPartnerReports(){
+  const navigate=useNavigate(); const user=getUser();
+  const [reports,setReports]=useState([]); const [reportSummary,setReportSummary]=useState(EMPTY_SUMMARY); const [loading,setLoading]=useState(true); const [error,setError]=useState('');
+  const [filter,setFilter]=useState('all'); const [search,setSearch]=useState(''); const [query,setQuery]=useState(''); const [page,setPage]=useState(1); const [pagination,setPagination]=useState({page:1,limit:50,total:0,totalPages:0}); const [selected,setSelected]=useState(null); const [refreshing,setRefreshing]=useState(false); const [exporting,setExporting]=useState(false);
+
+  const load=useCallback(async(nextPage=1,{silent=false}={})=>{
+    try{
+      if(!silent)setLoading(true);
+      setError('');
+      const params=new URLSearchParams({status:filter,search:query,page:String(nextPage),limit:'50'});
+      const data=await authRequest(`/lead-partner/reports?${params}`);
+      setReports(Array.isArray(data?.data)?data.data:[]);
+      setReportSummary(data?.summary||EMPTY_SUMMARY);
+      setPagination(data?.pagination||{page:nextPage,limit:50,total:0,totalPages:0});
+      setPage(Number(data?.pagination?.page||nextPage));
+    }catch(e){setError(e.message||'Unable to load reported leads')}
+    finally{if(!silent)setLoading(false)}
+  },[filter,query]);
+
+  useEffect(()=>{let active=true;queueMicrotask(()=>{if(active)load(1)});return()=>{active=false}},[load]);
+  useEffect(()=>{const timer=setTimeout(()=>{setPage(1);setQuery(search.trim())},300);return()=>clearTimeout(timer)},[search]);
+  async function refresh(){try{setRefreshing(true);await load(page,{silent:true})}finally{setRefreshing(false)}}
+  function signOut(){clearSession();navigate('/login',{replace:true})}
+
+  const counts=useMemo(()=>({
+    all:Number(reportSummary.total_reports||0),
+    reported_leads:Number(reportSummary.reported_leads||0),
+    pending:Number(reportSummary.pending||0),
+    verified_fake:Number(reportSummary.verified_fake||0),
+    verified_genuine:Number(reportSummary.verified_genuine||0),
+    rejected:Number(reportSummary.rejected||0)
+  }),[reportSummary]);
+  const reasonCounts=useMemo(()=>Object.entries(reportSummary.reason_counts||{}).map(([key,count])=>({key,label:REASONS[key]||key,count:Number(count||0)})).filter(x=>x.count>0).sort((a,b)=>b.count-a.count),[reportSummary]);
+  const filtered=reports;
+
+  async function exportReport(){
+    try{
+      setExporting(true);setError('');
+      const all=[];
+      let exportPage=1,totalPages=1;
+      do{
+        const params=new URLSearchParams({status:filter,search:query,page:String(exportPage),limit:'100'});
+        const data=await authRequest(`/lead-partner/reports?${params}`);
+        all.push(...(Array.isArray(data?.data)?data.data:[]));
+        totalPages=Math.max(1,Number(data?.pagination?.totalPages||1));
+        exportPage+=1;
+      }while(exportPage<=totalPages);
+      const headers=['Report ID','Lead ID','Customer','Phone','Industry','Service','Location','Reason','Report status','Lead status','Reported on','Reviewed on'];
+      const rows=all.map(r=>[r.id,r.lead_id,r.customer_name||'',r.customer_phone||'',r.industry_name||'',r.service_name||'',[r.city_name,r.state_name].filter(Boolean).join(', '),REASONS[r.reason]||r.reason,STATUS[r.status]||r.status,r.lead_status||'',r.created_at||'',r.reviewed_at||'']);
+      downloadCsv('propulse-lead-reports.csv',[headers,...rows]);
+    }catch(e){setError(e.message||'Unable to export lead reports')}
+    finally{setExporting(false)}
+  }
+
+  return <div className="reports-shell">
+    <LeadPartnerSidebar user={user} onSignOut={signOut} />
+    <main className="reports-main">
+      <header className="reports-topbar"><div className="reports-breadcrumb"><span>Lead Partner</span><b>/</b><strong>Reports</strong></div></header>
+      <div className="reports-content">
+        <section className="reports-heading premium-page-hero"><div className="reports-hero-copy"><span>LEAD PARTNER / REPORTS</span><h1>Lead reports</h1><p>Track buyer-submitted lead reports, Admin review outcomes and verified lead-quality signals.</p><div className="reports-hero-meta"><span><b>{counts.reported_leads}</b> reported leads</span><span><b>{counts.pending}</b> pending</span><span><b>{counts.verified_fake}</b> verified fake</span></div></div><div className="reports-hero-actions"><button type="button" onClick={refresh} disabled={refreshing}><span>↻</span><div><b>{refreshing?'Refreshing…':'Refresh'}</b><small>Reload report outcomes</small></div></button><button className="reports-export" type="button" onClick={exportReport} disabled={exporting}><span>⇩</span><div><b>{exporting?'Exporting…':'Export report'}</b><small>Download all matching rows</small></div></button></div></section>
+        {error&&<div className="reports-alert">{error}<button onClick={load}>Retry</button></div>}
+        <section className="reports-kpi-grid">
+          <article><div className="reports-kpi-icon blue">▤</div><div><span>Reported Leads</span><strong>{loading?'—':counts.reported_leads}</strong></div></article>
+          <article><div className="reports-kpi-icon green">✓</div><div><span>Verified Genuine</span><strong>{loading?'—':counts.verified_genuine}</strong></div></article>
+          <article><div className="reports-kpi-icon red">!</div><div><span>Verified Fake</span><strong>{loading?'—':counts.verified_fake}</strong></div></article>
+          <article><div className="reports-kpi-icon orange">◷</div><div><span>Pending Review</span><strong>{loading?'—':counts.pending}</strong></div></article>
+        </section>
+        <section className="reports-analytics-grid">
+          <article className="reports-card"><div className="reports-card-head"><div><h2>Report status</h2></div></div><div className="reports-status-bars">
+            {[['verified_fake','Verified fake',counts.verified_fake],['pending','Pending review',counts.pending],['verified_genuine','Verified genuine',counts.verified_genuine],['rejected','Rejected',counts.rejected]].map(([key,label,count])=><div key={key}><div><span>{label}</span><b>{count}</b></div><div className="reports-bar"><i className={key} style={{width:(counts.all?Math.max(3,(count/counts.all)*100):0)+'%'}}/></div></div>)}
+          </div></article>
+          <article className="reports-card"><div className="reports-card-head"><div><h2>Report reasons</h2></div></div>{reasonCounts.length?<div className="reports-reasons">{reasonCounts.map(x=><div key={x.key}><span className="reason-dot"/><span>{x.label}</span><b>{x.count}</b></div>)}</div>:<div className="reports-empty-mini">No reports submitted yet.</div>}</article>
+        </section>
+        <section className="reports-card reports-table-card">
+          <div className="reports-card-head reports-table-head"><div><h2>Reported Leads</h2></div><button className="reports-refresh" type="button" onClick={refresh} disabled={refreshing}>{refreshing?'Refreshing…':'↻ Refresh'}</button></div>
+          <div className="reports-filter-row"><div className="reports-search"><span>⌕</span><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search lead, customer, service, city, reason…"/></div><div className="reports-filter-tabs">{[['all','All'],['pending','Pending'],['verified_fake','Verified fake'],['verified_genuine','Genuine'],['rejected','Rejected']].map(([key,label])=><button type="button" key={key} className={filter===key?'active':''} onClick={()=>{setPage(1);setFilter(key)}}>{label}<b>{counts[key]}</b></button>)}</div></div>
+          {loading?<div className="reports-loading">Loading reported leads…</div>:!filtered.length?<div className="reports-empty"><span>▥</span><strong>{counts.all?'No reports match your filters':'No reported leads yet'}</strong><p>{counts.all?'Change the search or status filter.':'When you report a purchased lead, its review and outcome will appear here.'}</p></div>:<div className="reports-table-wrap"><table className="reports-table"><thead><tr><th>ID</th><th>DATE</th><th>LEAD</th><th>REPORTED BY</th><th>SERVICE</th><th>LOCATION</th><th>REASON</th><th>STATUS</th><th>LEAD OUTCOME</th><th>ACTION</th></tr></thead><tbody>
+            {filtered.map(r=><tr key={r.id}><td><b>#R{r.id}</b><small>Lead #{r.lead_id}</small></td><td>{formatDate(r.created_at)}<small>{r.reviewed_at?('Reviewed '+formatDate(r.reviewed_at)):'Awaiting review'}</small></td><td><b>{r.customer_name||'Customer'}</b><small>{r.customer_phone||'Phone unavailable'}</small></td><td><b>{r.reporter_name||'User'}</b><small>{r.reporter_email||'—'}</small></td><td>{r.service_name||r.industry_name||'—'}</td><td>{[r.city_name,r.state_name].filter(Boolean).join(', ')||'—'}</td><td><span className="reason-pill">{REASONS[r.reason]||r.reason}</span></td><td><span className={'report-status-pill '+r.status}>{STATUS[r.status]||r.status}</span></td><td><span className={'lead-outcome-pill '+(r.lead_status||'')}>{r.lead_status==='invalid'?'Invalidated':r.lead_status||'—'}</span></td><td><button className="reports-view-btn" type="button" onClick={()=>setSelected(r)}>View</button></td></tr>)}
+          </tbody></table></div>}
+          {!loading&&filtered.length>0&&<><div className="reports-table-footer">Showing <b>{filtered.length}</b> of <b>{pagination.total}</b> matching report{Number(pagination.total)===1?'':'s'} · Page <b>{page}</b> of <b>{Math.max(1,Number(pagination.totalPages||1))}</b></div>{Number(pagination.totalPages||0)>1&&<div className="reports-pagination"><button type="button" disabled={loading||page<=1} onClick={()=>load(page-1)}>← Previous</button><span>{page} / {pagination.totalPages}</span><button type="button" disabled={loading||page>=pagination.totalPages} onClick={()=>load(page+1)}>Next →</button></div>}</>}
+        </section>
+      </div>
+    </main>
+    {selected&&<div className="report-detail-overlay" onClick={()=>setSelected(null)}><div className="report-detail-modal" onClick={e=>e.stopPropagation()}><button type="button" className="report-detail-close" onClick={()=>setSelected(null)}>×</button><span className="reports-kicker">REPORT #{selected.id}</span><h2>{selected.customer_name||'Reported lead'}</h2><div className="report-detail-status"><span className={'report-status-pill '+selected.status}>{STATUS[selected.status]||selected.status}</span><span className={'lead-outcome-pill '+(selected.lead_status||'')}>{selected.lead_status==='invalid'?'Lead invalidated':selected.lead_status||'Lead status unavailable'}</span></div><div className="report-detail-grid"><div><small>Lead ID</small><strong>#{selected.lead_id}</strong></div><div><small>Reason</small><strong>{REASONS[selected.reason]||selected.reason}</strong></div><div><small>Reported by</small><strong>{selected.reporter_name||'User'}{selected.reporter_email?' · '+selected.reporter_email:''}</strong></div><div><small>Service</small><strong>{selected.service_name||selected.industry_name||'—'}</strong></div><div><small>Location</small><strong>{[selected.city_name,selected.state_name].filter(Boolean).join(', ')||'—'}</strong></div><div><small>Reported</small><strong>{formatDateTime(selected.created_at)}</strong></div><div><small>Reviewed</small><strong>{formatDateTime(selected.reviewed_at)}</strong></div></div><div className="report-detail-section"><small>Your report details</small><p>{selected.details||'No additional details were provided.'}</p></div><div className="report-detail-section"><small>Outcome</small><p>{selected.status==='verified_fake'?'The lead was verified as fake/invalid and marked invalid. The existing refund and partner-earnings reversal workflow applies to the underlying lead purchase.':selected.status==='verified_genuine'?'The report was reviewed and the lead was not verified as fake.':'The report remains under review or was rejected; this report did not produce a fake-lead outcome.'}</p></div></div></div>}
+  </div>
+}
