@@ -20,7 +20,7 @@ const commitMatches=(actual,expected)=>{
   return left===right||left.startsWith(right)||right.startsWith(left);
 };
 async function getJson(path){
-  const response=await fetch(baseUrl+path,{redirect:'manual',signal:AbortSignal.timeout(10000),headers:{accept:'application/json'}});
+  const response=await fetch(baseUrl+path,{redirect:'manual',signal:AbortSignal.timeout(10000),headers:{accept:'application/json','cache-control':'no-cache'}});
   let body=null;try{body=await response.json()}catch{}
   return{response,body};
 }
@@ -28,14 +28,29 @@ async function main(){
   const deadline=Date.now()+waitSeconds*1000;let last='deployment has not reported the requested release yet';
   while(Date.now()<deadline){
     try{
-      const version=await getJson('/health/version');
-      const actualCommit=String(version.body?.commit||''),actualEnvironment=String(version.body?.environment||'').toLowerCase();
-      if(version.response.status!==200)last='version endpoint returned HTTP '+version.response.status;
-      else if(!commitMatches(actualCommit,expectedCommit))last='deployed commit is '+(actualCommit||'unknown')+', waiting for '+expectedCommit.slice(0,12);
-      else if(actualEnvironment!==expectedEnvironment)last='deployment environment is '+(actualEnvironment||'unknown')+', expected '+expectedEnvironment;
-      else{
+      const [version,marker]=await Promise.all([getJson('/health/version'),getJson('/release.json')]);
+      const versionCommit=String(version.body?.commit||'');
+      const markerCommit=String(marker.body?.commit||'');
+      const versionEnvironment=String(version.body?.environment||'').toLowerCase();
+      const markerEnvironment=String(marker.body?.environment||'').toLowerCase();
+      const matchedCommit=commitMatches(versionCommit,expectedCommit)
+        ? versionCommit
+        : (commitMatches(markerCommit,expectedCommit)?markerCommit:'');
+      const actualEnvironment=versionEnvironment||markerEnvironment;
+
+      if(version.response.status!==200&&marker.response.status!==200){
+        last='version endpoint returned HTTP '+version.response.status+' and release marker returned HTTP '+marker.response.status;
+      }else if(!matchedCommit){
+        last='backend commit is '+(versionCommit||'unknown')+', frontend marker is '+(markerCommit||'unknown')+', waiting for '+expectedCommit.slice(0,12);
+      }else if(actualEnvironment&&actualEnvironment!==expectedEnvironment){
+        last='deployment environment is '+actualEnvironment+', expected '+expectedEnvironment;
+      }else{
         const ready=await getJson('/health/ready');
-        if(ready.response.status===200&&ready.body?.status==='ok'){console.log('Deployment ready: '+expectedEnvironment+' '+actualCommit.slice(0,12));return}
+        if(ready.response.status===200&&ready.body?.status==='ok'){
+          const source=commitMatches(versionCommit,expectedCommit)?'backend version':'frontend release marker';
+          console.log('Deployment ready via '+source+': '+expectedEnvironment+' '+matchedCommit.slice(0,12));
+          return;
+        }
         last='requested release is visible but readiness returned HTTP '+ready.response.status;
       }
     }catch(error){last=String(error?.message||error).slice(0,240)}
