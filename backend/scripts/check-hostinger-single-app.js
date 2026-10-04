@@ -17,9 +17,13 @@ assert(pkg.scripts?.build?.includes('npm ci --omit=dev --prefix backend'),'Hosti
 assert(pkg.scripts?.build?.includes('npm ci --include=dev --prefix frontend'),'Hostinger build installs frontend build dependencies');
 assert(pkg.scripts?.build?.includes('npm run build --prefix frontend'),'Hostinger build generates the Vite/prerendered frontend');
 assert(pkg.scripts?.start==='node index.js','Hostinger starts through the default index.js entrypoint');
-assert(pkg.scripts?.postinstall?.includes('npm ci --omit=dev --prefix backend'),'Hostinger npm install must install backend dependencies');
-assert(pkg.scripts?.postinstall?.includes('npm ci --include=dev --prefix frontend'),'Hostinger npm install must install frontend build dependencies');
-assert(pkg.scripts?.postinstall?.includes('npm run build --prefix frontend'),'Hostinger npm install must build the frontend');
+for(const dependency of ['express','pg','bcryptjs','cors','dotenv','jsonwebtoken','react','react-dom','react-router-dom','vite','@vitejs/plugin-react']){
+  assert(pkg.dependencies?.[dependency],'Hostinger root package must install '+dependency);
+}
+assert(!pkg.scripts?.postinstall,'Hostinger deployment must not rely on npm lifecycle scripts');
+assert(rootIndex.includes("spawnSync"),'Hostinger index.js must be able to build the frontend at runtime');
+assert(rootIndex.includes("node_modules','vite','bin','vite.js"),'Hostinger runtime build must use root-installed Vite');
+assert(rootIndex.includes("generate-seo-static-pages.mjs"),'Hostinger runtime build must generate SEO static pages');
 assert(rootIndex.includes("require('./hostinger-server')"),'Hostinger index.js must launch the single-app wrapper');
 assert(pkg.dependencies?.express,'Hostinger root package declares Express for framework detection');
 assert(wrapper.includes("require('express')"),'Hostinger wrapper resolves Express from root dependencies');
