@@ -37,6 +37,10 @@ Module._load = function(request, parent, isMain) {
       hasPreviousPage: true,
     });
 
+    const countQuery = queries[0];
+    assert.match(countQuery.text, /u\.name ILIKE \$1/, 'Admin user search must use PostgreSQL parameter placeholders');
+    assert.doesNotMatch(countQuery.text, /ILIKE 1(?:\s|$)/, 'Admin user search must never emit ILIKE 1');
+
     const dataQuery = queries[1];
     assert.match(dataQuery.text, /LIMIT \$\d+ OFFSET \$\d+/);
     assert.equal(dataQuery.params.at(-2), 100, 'page size must be capped at 100');
