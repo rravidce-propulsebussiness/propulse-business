@@ -48,11 +48,11 @@ const STEPS = [
 ]
 
 const MATERIAL_BRANDS = [
-  { key: 'tiles', brand: 'Kajaria', label: 'Tiles', logo: 'https://www.google.com/s2/favicons?domain=kajariaceramics.com&sz=128' },
-  { key: 'plywood', brand: 'CenturyPly', label: 'Plywood', logo: 'https://www.google.com/s2/favicons?domain=centuryply.com&sz=128' },
-  { key: 'laminates', brand: 'Greenlam', label: 'Laminates', logo: 'https://www.google.com/s2/favicons?domain=greenlam.com&sz=128' },
-  { key: 'paints', brand: 'Asian Paints', label: 'Paints', logo: 'https://www.google.com/s2/favicons?domain=asianpaints.com&sz=128' },
-  { key: 'fittings', brand: 'Jaquar', label: 'Fittings', logo: 'https://www.google.com/s2/favicons?domain=jaquar.com&sz=128' },
+  { key: 'tiles', brand: 'Kajaria', label: 'Tiles', image: '/materials/kajaria-tiles.svg' },
+  { key: 'plywood', brand: 'CenturyPly', label: 'Plywood', image: '/materials/centuryply-plywood.svg' },
+  { key: 'laminates', brand: 'Greenlam', label: 'Laminates', image: '/materials/greenlam-laminates.svg' },
+  { key: 'paints', brand: 'Asian Paints', label: 'Paints', image: '/materials/asian-paints.svg' },
+  { key: 'fittings', brand: 'Jaquar', label: 'Fittings', image: '/materials/jaquar-fittings.svg' },
 ]
 
 const PROJECTS = [
@@ -232,7 +232,7 @@ export default function Home() {
           <article className="hc-float-card hc-float-professionals">
             <div className="hc-float-heading">
               <span><Icon name="people" size={21}/></span>
-              <div><b>Verified Professionals</b><small>Across major cities</small></div>
+              <div><b>Certified Engineers</b><small>Across major cities</small></div>
             </div>
             <div className="hc-pro-avatar-row" aria-hidden="true">
               <span>AR</span><span>SK</span><span>VM</span><span>RK</span><span>+</span>
@@ -247,11 +247,13 @@ export default function Home() {
             <div className="hc-material-brand-grid">
               {MATERIAL_BRANDS.map(item => (
                 <div className="hc-material-brand" key={item.key}>
-                  <div className={'hc-material-thumb hc-material-'+item.key}>
-                    <span aria-hidden="true" />
-                    <span aria-hidden="true" />
-                    <span aria-hidden="true" />
-                    <img className="hc-material-brand-logo" src={item.logo} alt="" loading="lazy" />
+                  <div className="hc-material-thumb">
+                    <img
+                      className="hc-material-product-image"
+                      src={item.image}
+                      alt={`${item.brand} ${item.label}`}
+                      loading="lazy"
+                    />
                   </div>
                   <strong>{item.brand}</strong>
                   <small>{item.label}</small>
