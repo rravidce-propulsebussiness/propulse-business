@@ -5,6 +5,8 @@ const {spawn}=require('child_process');
 const frontendRoot=path.resolve(__dirname,'../frontend');
 const frontendDist=path.join(frontendRoot,'dist');
 const frontendIndex=path.join(frontendDist,'index.html');
+const bundledFrontendDist=path.join(__dirname,'hostinger-frontend');
+const bundledFrontendIndex=path.join(bundledFrontendDist,'index.html');
 const viteBin=path.join(__dirname,'node_modules','vite','bin','vite.js');
 let frontendBuilding=false;
 
@@ -29,7 +31,7 @@ function run(args,cwd){
 }
 
 async function buildFrontend(){
-  if(frontendBuilding||fs.existsSync(frontendIndex))return;
+  if(frontendBuilding||fs.existsSync(bundledFrontendIndex)||fs.existsSync(frontendIndex))return;
   if(!fs.existsSync(frontendRoot)){
     console.error('Frontend source directory is not available in this Hostinger checkout.');
     return;
@@ -70,12 +72,14 @@ function startEmergencyFrontend(error){
     error:'Backend startup failed',
     code:'BACKEND_STARTUP_FAILED'
   }));
-  app.use(express.static(frontendDist,{index:'index.html',extensions:['html'],fallthrough:true}));
+  const emergencyFrontendDist=fs.existsSync(bundledFrontendIndex)?bundledFrontendDist:frontendDist;
+  const emergencyFrontendIndex=fs.existsSync(bundledFrontendIndex)?bundledFrontendIndex:frontendIndex;
+  app.use(express.static(emergencyFrontendDist,{index:'index.html',extensions:['html'],fallthrough:true}));
   app.use((req,res,next)=>{
     if(!['GET','HEAD'].includes(req.method))return next();
     const accept=String(req.get('accept')||'');
     if(accept&&!accept.includes('text/html')&&!accept.includes('*/*'))return next();
-    if(fs.existsSync(frontendIndex))return res.sendFile(frontendIndex);
+    if(fs.existsSync(emergencyFrontendIndex))return res.sendFile(emergencyFrontendIndex);
     res.setHeader('Cache-Control','no-store');
     return res.status(200).send('<!doctype html><html><head><meta charset="utf-8"><meta name="robots" content="noindex"><title>ProPulse</title></head><body>Application is recovering. Please retry shortly.</body></html>');
   });
