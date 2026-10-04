@@ -266,9 +266,8 @@ export default function Home() {
 
       <section className="hc-section hc-services">
         <div className="hc-container">
-          <div className="hc-section-head">
-            <div><h2>What do you need?</h2><p>Choose a service to get started with your requirement.</p></div>
-            <Link to="/quote">View All Services <Icon name="arrow" size={13}/></Link>
+          <div className="hc-section-head hc-section-head-centered">
+            <h2>What do you need?</h2>
           </div>
           <div className="hc-service-grid">
             {SERVICES.map(item => <article className="hc-service-card" key={item.key}>

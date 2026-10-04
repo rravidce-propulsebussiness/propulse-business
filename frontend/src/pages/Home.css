@@ -358,6 +358,12 @@
   white-space:nowrap;
 }
 .hc-section-head>a:hover{text-decoration:underline}
+.hc-section-head.hc-section-head-centered{
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+}
+.hc-section-head.hc-section-head-centered h2{width:100%}
 
 /* Services */
 .hc-services{background:#fff}
