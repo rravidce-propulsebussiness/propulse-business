@@ -11,6 +11,7 @@ const homepageMedia=read('src/services/homepageMediaService.js');
 const leadReference=read('src/services/leadReferenceStorageService.js');
 const projectVideo=read('src/services/projectVideoService.js');
 const projectPlan=read('src/services/projectPlanService.js');
+const projectMediaUtils=read('src/services/projectMediaStorageUtils.js');
 const profileService=read('src/services/profileService.js');
 const publicExpertService=read('src/services/publicExpertService.js');
 const uploadStorage=read('src/config/uploadStorage.js');
