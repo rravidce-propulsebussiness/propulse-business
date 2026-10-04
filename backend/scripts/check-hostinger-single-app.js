@@ -5,6 +5,8 @@ const root=path.resolve(__dirname,'../..');
 const pkg=JSON.parse(fs.readFileSync(path.join(root,'package.json'),'utf8'));
 const wrapper=fs.readFileSync(path.join(root,'hostinger-server.js'),'utf8');
 const rootIndex=fs.readFileSync(path.join(root,'index.js'),'utf8');
+const backendPkg=JSON.parse(fs.readFileSync(path.join(root,'backend','package.json'),'utf8'));
+const backendIndex=fs.readFileSync(path.join(root,'backend','index.js'),'utf8');
 const env=fs.readFileSync(path.join(root,'.env.example'),'utf8');
 
 function assert(condition,message){
@@ -30,6 +32,14 @@ assert(!wrapper.includes('Hostinger frontend build is missing. Run npm run build
 assert(wrapper.includes("return res.status(503).send('Application frontend is starting. Please retry shortly.')"),'Hostinger serves a temporary frontend-starting response while Vite builds');
 assert(pkg.dependencies?.express,'Hostinger root package declares Express for framework detection');
 assert(wrapper.includes("require('express')"),'Hostinger wrapper resolves Express from root dependencies');
+assert(backendPkg.main==='index.js'&&backendPkg.scripts?.start==='node index.js','Backend directory is also a valid Hostinger app root');
+for(const dependency of ['express','pg','react','react-dom','react-router-dom','vite','@vitejs/plugin-react']){
+  assert(backendPkg.dependencies?.[dependency],'Backend-root Hostinger package installs '+dependency);
+}
+assert(backendIndex.includes("app.listen(publicPort,'0.0.0.0'"),'Backend-root Hostinger entry opens the public port');
+assert(backendIndex.includes("spawn(process.execPath,['src/server.js']"),'Backend-root Hostinger entry launches the real API process');
+assert(backendIndex.includes("Hostinger backend-root app is live; building frontend in the background."),'Backend-root Hostinger entry builds frontend after listen');
+assert(backendIndex.includes("fs.symlinkSync(backendNodeModules,frontendNodeModules"),'Backend-root Hostinger entry exposes installed dependencies to the frontend build');
 assert(wrapper.includes("startsWith('/api/')"),'Hostinger wrapper proxies API traffic');
 assert(wrapper.includes("requestPath==='/robots.txt'"),'Hostinger wrapper proxies robots.txt');
 assert(wrapper.includes("requestPath==='/sitemap.xml'"),'Hostinger wrapper proxies sitemap.xml');
