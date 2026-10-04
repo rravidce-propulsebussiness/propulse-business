@@ -4,10 +4,11 @@ import InvestorActionModals from './InvestorActionModals'
 import './InvestorActionModals.css'
 import './AdminInvestmentsPremium.css'
 import useAdminRequest from '../hooks/useAdminRequest'
+import { formatAdminDate, formatAdminDateTime, formatInr } from '../utils/formatters'
 
-const money = value => `₹${Number(value || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}`
-const date = value => value ? new Date(value).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'
-const dateTime = value => value ? new Date(value).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—'
+const money = formatInr
+const date = formatAdminDate
+const dateTime = formatAdminDateTime
 const MATURITY_OPTIONS = [
   { value: 'immediate', label: 'Immediate · testing' }, { value: '7', label: '7 days' }, { value: '14', label: '14 days' },
   { value: '30', label: '30 days' }, { value: '90', label: '90 days' }, { value: '180', label: '180 days' }, { value: '365', label: '365 days' }, { value: 'custom', label: 'Custom' },
