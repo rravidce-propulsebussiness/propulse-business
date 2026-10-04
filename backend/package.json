@@ -55,7 +55,8 @@
     "test:support-chat-runtime": "node scripts/check-support-chat-runtime.js",
     "telegram:support:set-webhook": "node scripts/configure-telegram-support-webhook.js",
     "build:hostinger-frontend": "node scripts/build-hostinger-frontend.js",
-    "postinstall": "node scripts/build-hostinger-frontend.js"
+    "postinstall": "node scripts/build-hostinger-frontend.js",
+    "audit:migration-target": "node scripts/audit-local-supabase-merge.js"
   },
   "keywords": [],
   "author": "",
