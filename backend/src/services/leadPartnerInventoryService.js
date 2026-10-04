@@ -103,7 +103,7 @@ async function resolveLocationFromPincode(pincode, cat, suppliedState, suppliedC
   // directory trigger maintain city_pincodes automatically when district == city.
   await pool.query(
     `UPDATE india_pincodes
-        SET state_id=$1,updated_at=CURRENT_TIMESTAMP
+        SET state_id=$1
       WHERE pincode=$2 AND (state_id IS DISTINCT FROM $1 OR state_id IS NULL)`,
     [state.id, value]
   ).catch(() => {});
