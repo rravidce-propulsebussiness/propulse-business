@@ -205,17 +205,11 @@ assert(hyderabad.includes('Square Yards alternative Hyderabad'),'Real-estate com
 assert(landing.includes('COMMON SEARCHES'),'Comparison pages must visibly explain company-name searches');
 assert(buildScript.includes('Common Hyderabad comparison searches'),'Static comparison pages must expose company-name searches');
 
-assert(home.includes('to="/hyderabad/construction"'),'Homepage must link to the Hyderabad construction hub');
-assert(home.includes('to="/hyderabad/construction-cost"'),'Homepage must link to the Hyderabad construction cost guide');
-assert(home.includes('to="/hyderabad/interior-designers"'),'Homepage must link to the Hyderabad interiors hub');
-assert(home.includes('to="/hyderabad/real-estate"'),'Homepage must link to the Hyderabad real-estate hub');
-assert(home.includes('to="/telangana/construction"'),'Homepage must link to the Telangana construction district hub');
-assert(home.includes('to="/andhra-pradesh/construction"'),'Homepage must link to the Andhra Pradesh construction district hub');
+assert(!home.includes('hc-hyderabad-seo'),'Homepage must not render the removed Hyderabad SEO discovery block');
+assert(!home.includes('Explore services across Hyderabad'),'Homepage must not render the removed Hyderabad discovery heading');
 for(const guidePath of ['/guides/best-steel-for-house-construction','/guides/prevent-cracks-in-house','/guides/choose-construction-contractor-hyderabad','/guides/2bhk-interiors-hyderabad','/guides/home-construction-checklist','/guides/waterproofing-precautions-new-house','/guides/best-cement-for-house-construction','/guides/m-sand-vs-river-sand-house-construction','/guides/soil-test-before-house-construction']){
-  assert(home.includes('to="'+guidePath+'"'),'Homepage construction guide link missing '+guidePath);
   assert(landing.includes('to="'+guidePath+'"'),'Hyderabad/locality guide link missing '+guidePath);
 }
-assert(home.includes('to="/guides"'),'Homepage must link to the guide hub');
 assert(home.includes('<Link to="/faq">FAQ</Link>'),'Homeowner homepage must expose FAQ navigation');
 assert(userFaq.includes('PublicFaqHeader'),'Public FAQ page must use a homeowner header when logged out');
 assert(userFaq.includes('to="/faq"'),'Public FAQ header must expose an active FAQ link');
