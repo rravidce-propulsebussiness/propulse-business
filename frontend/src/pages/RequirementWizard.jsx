@@ -235,6 +235,7 @@ export default function RequirementWizard({ flowKey, onCompletionChange }) {
     setState({ loading: true, saving: false, error: '', success: false })
 
     Promise.all([publicRequest('/customer-flows/' + flowKey), publicRequest('/cities').catch(() => []), publicRequest('/contact?audience=website').catch(() => ({}))]).then(([data, cityData, websiteContact]) => {
+      if (data?.unavailable) throw new Error(data.message || 'This requirement form is temporarily unavailable. Please try again shortly.')
       if (data?.flowType !== 'requirement') throw new Error('This requirement form is not available.')
       if (!mounted.current) return
 
