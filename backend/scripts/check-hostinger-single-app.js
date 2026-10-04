@@ -38,6 +38,11 @@ assert(wrapper.includes("if(req.path==='/health/live')"),'Hostinger liveness rem
 assert(pkg.dependencies?.express,'Hostinger root package declares Express for framework detection');
 assert(wrapper.includes("require('express')"),'Hostinger wrapper resolves Express from root dependencies');
 assert(backendPkg.main==='index.js'&&backendPkg.scripts?.start==='node index.js','Backend directory is also a valid Hostinger app root');
+assert(backendPkg.scripts?.postinstall==='node scripts/build-hostinger-frontend.js','Backend-root Hostinger install builds the frontend before publish');
+assert(backendPkg.scripts?.['build:hostinger-frontend']==='node scripts/build-hostinger-frontend.js','Backend-root Hostinger exposes an explicit frontend build script');
+const backendBuildScript=fs.readFileSync(path.join(root,'backend','scripts','build-hostinger-frontend.js'),'utf8');
+assert(backendBuildScript.includes('Frontend build ready for Hostinger publish.'),'Hostinger install build verifies frontend/dist before publish');
+assert(backendBuildScript.includes('generate-seo-static-pages.mjs'),'Hostinger install build generates SEO static pages');
 for(const dependency of ['express','pg','react','react-dom','react-router-dom','vite','@vitejs/plugin-react']){
   assert(backendPkg.dependencies?.[dependency],'Backend-root Hostinger package installs '+dependency);
 }
