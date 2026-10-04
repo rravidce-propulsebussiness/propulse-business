@@ -32,19 +32,19 @@ function dbConfig(prefix='',fallback=null){
 }
 function sourceDbConfig(){
   const databaseUrl=String(process.env.DATABASE_URL||'').trim();
-  if(databaseUrl&&!/(YOUR_|\\[YOUR|CHANGE_ME|PLACEHOLDER)/i.test(databaseUrl)){
+  if(databaseUrl&&!/(YOUR_|\[YOUR|CHANGE_ME|PLACEHOLDER)/i.test(databaseUrl)){
     const parsed=new URL(databaseUrl);
     if(!['postgres:','postgresql:'].includes(parsed.protocol)||!parsed.hostname||!parsed.username||!parsed.pathname||parsed.pathname==='/'){
       throw new Error('DATABASE_URL is not a complete PostgreSQL URL');
     }
     const host=parsed.hostname;
     const sslMode=String(parsed.searchParams.get('sslmode')||'').trim().toLowerCase();
-    const isSupabasePooler=/\\.pooler\\.supabase\\.com$/i.test(host);
+    const isSupabasePooler=/\.pooler\.supabase\.com$/i.test(host);
     const ssl=isSupabasePooler||['require','verify-ca','verify-full'].includes(sslMode)||/^(1|true|require)$/i.test(String(process.env.DB_SSL||'').trim());
     return{
       host,
       port:Number(parsed.port)||5432,
-      database:decodeURIComponent(parsed.pathname.replace(/^\\//,'')),
+      database:decodeURIComponent(parsed.pathname.replace(/^\//,'')),
       user:decodeURIComponent(parsed.username),
       password:decodeURIComponent(parsed.password),
       ssl,
