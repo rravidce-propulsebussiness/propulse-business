@@ -1,4 +1,7 @@
 const profileService = require('../services/profileService');
+const { sendError } = require('../utils/errorResponse');
+const projectVideoService = require('../services/projectVideoService');
+const projectPlanService = require('../services/projectPlanService');
 
 async function getProfile(req, res) {
   try {
@@ -13,18 +16,51 @@ async function getProfile(req, res) {
 
 async function updateProfile(req, res) {
   try {
-    const { name, email, phone, businessName, businessDetails, services, locations } = req.body;
+    const {
+      name,email,phone,businessName,businessDetails,services,locations,
+      publicHeadline,publicSummary,yearsExperience,publicProfileEnabled,projects,plans,
+    } = req.body;
     if (!name?.trim() || !email?.trim() || !phone?.trim() || !businessName?.trim() || !businessDetails?.trim()) {
       return res.status(400).json({ error: 'Complete all business details' });
     }
     const result = await profileService.updateProfile(req.user.id, {
-      name, email, phone, businessName, businessDetails, services, locations,
+      name,email,phone,businessName,businessDetails,services,locations,
+      publicHeadline,publicSummary,yearsExperience,publicProfileEnabled,projects,plans,
     });
     return res.json(result);
   } catch (error) {
-    console.error('Update profile failed:', error.message);
-    return res.status(400).json({ error: error.message || 'Failed to update profile' });
+    const map={INVALID_PROFILE_SELECTION:400,PROFILE_ACCOUNT_NOT_FOUND:404,PROFILE_NOT_FOUND:404};
+    if(error.code==='23505')return res.status(409).json({error:'Email address is already in use'});
+    const status=map[error.code]||500;
+    if(status===500)console.error('Update profile failed:', error);
+    return sendError(res,status,error,'Failed to update profile',{code:error.code});
   }
 }
 
-module.exports = { getProfile, updateProfile };
+async function uploadProjectVideo(req,res){
+  try{
+    if(req.user?.role!=='business')return res.status(403).json({error:'Business account required'});
+    const result=await projectVideoService.saveProjectVideo(req.user.id,req.get('content-type'),req.body);
+    return res.status(201).json(result);
+  }catch(error){
+    const bad=new Set(['INVALID_PROJECT_VIDEO_TYPE','INVALID_PROJECT_VIDEO','PROJECT_VIDEO_TOO_LARGE']);
+    const status=bad.has(error.code)?400:500;
+    if(status===500)console.error('Project video upload failed:',error);
+    return sendError(res,status,error,'Failed to upload project video',{code:error.code});
+  }
+}
+
+async function uploadProjectPlan(req,res){
+  try{
+    if(req.user?.role!=='business')return res.status(403).json({error:'Business account required'});
+    const result=await projectPlanService.saveProjectPlan(req.user.id,req.get('content-type'),req.body);
+    return res.status(201).json(result);
+  }catch(error){
+    const bad=new Set(['INVALID_PROJECT_PLAN_TYPE','INVALID_PROJECT_PLAN','PROJECT_PLAN_TOO_LARGE']);
+    const status=bad.has(error.code)?400:500;
+    if(status===500)console.error('Project plan upload failed:',error);
+    return sendError(res,status,error,'Failed to upload project plan',{code:error.code});
+  }
+}
+
+module.exports = { getProfile, updateProfile, uploadProjectVideo, uploadProjectPlan };

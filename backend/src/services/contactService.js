@@ -1,18 +1,36 @@
 const pool=require('../config/database');
 
 const AUDIENCES=['website','users','lead_partners','common'];
+const MAX_URL_LENGTH=2048;
+
 function clean(value){return String(value??'').trim()}
 function normalizeAudience(value){
   const audience=clean(value||'website').toLowerCase();
   if(!AUDIENCES.includes(audience)){const e=new Error('Invalid contact audience');e.code='INVALID_AUDIENCE';throw e}
   return audience;
 }
+function normalizeHttpsUrl(value,field){
+  const raw=clean(value);
+  if(!raw) return '';
+  if(raw.length>MAX_URL_LENGTH){const e=new Error(field+' URL is too long');e.code='INVALID_CONTACT_URL';throw e}
+  if(/[\\\r\n]/.test(raw)){const e=new Error(field+' must be a valid HTTPS URL');e.code='INVALID_CONTACT_URL';throw e}
+  let url;
+  try{url=new URL(raw)}catch{const e=new Error(field+' must be a valid HTTPS URL');e.code='INVALID_CONTACT_URL';throw e}
+  if(url.protocol!=='https:'||url.username||url.password){const e=new Error(field+' must be a valid HTTPS URL');e.code='INVALID_CONTACT_URL';throw e}
+  return url.toString();
+}
+function normalizeWebsiteUrl(value){
+  const raw=clean(value)||'/';
+  if(raw.length>MAX_URL_LENGTH){const e=new Error('Website URL is too long');e.code='INVALID_CONTACT_URL';throw e}
+  if(raw.startsWith('/')&&!raw.startsWith('//')&&!/[\\\r\n]/.test(raw)) return raw;
+  return normalizeHttpsUrl(raw,'Website');
+}
 function normalizeSocials(value){
   if(!Array.isArray(value)) return [];
   return value.map((item,index)=>({
     id:clean(item?.id)||`social-${index+1}`,
     platform:clean(item?.platform)||'Social',
-    url:clean(item?.url),
+    url:normalizeHttpsUrl(item?.url,'Social'),
     enabled:item?.enabled!==false
   })).filter(item=>item.platform.length>=2);
 }
@@ -26,8 +44,8 @@ function normalize(input={}){
     business_hours:clean(input.business_hours),
     support_email:clean(input.support_email),
     careers_email:clean(input.careers_email),
-    maps_url:clean(input.maps_url),
-    website_url:clean(input.website_url)||'/',
+    maps_url:normalizeHttpsUrl(input.maps_url,'Maps'),
+    website_url:normalizeWebsiteUrl(input.website_url),
     social_handles:normalizeSocials(input.social_handles)
   };
 }
@@ -51,4 +69,4 @@ async function update(input,audience='website'){
   );
   return result.rows[0];
 }
-module.exports={AUDIENCES,get,update};
+module.exports={AUDIENCES,get,update,normalize};

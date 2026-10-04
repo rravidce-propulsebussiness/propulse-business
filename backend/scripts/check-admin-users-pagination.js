@@ -41,7 +41,7 @@ Module._load = function(request, parent, isMain) {
     assert.match(dataQuery.text, /LIMIT \$\d+ OFFSET \$\d+/);
     assert.equal(dataQuery.params.at(-2), 100, 'page size must be capped at 100');
     assert.equal(dataQuery.params.at(-1), 200, 'offset must be calculated from page and capped size');
-    assert.match(dataQuery.text, /ORDER BY u\.created_at DESC, u\.id DESC/);
+    assert.match(dataQuery.text, /ORDER BY u\.created_at DESC,\s*u\.id DESC/);
 
     queries.length = 0;
     const defaultResult = await adminService.getUsers({});
