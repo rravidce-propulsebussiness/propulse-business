@@ -2,10 +2,11 @@ require('dotenv').config({quiet:true});
 const {Client}=require('pg');
 
 const APPLY=process.argv.includes('--apply');
+const SKIP_CATALOG_LOCATION=/^(1|true|yes|on)$/i.test(String(process.env.MIGRATION_SKIP_CATALOG_LOCATION||''));
 const stats=new Map();
 const warnings=[];
 
-function bump(table,kind){const s=stats.get(table)||{matched:0,inserted:0};s[kind]+=1;stats.set(table,s)}
+function bump(table,kind){const s=stats.get(table)||{matched:0,inserted:0,skipped:0};s[kind]+=1;stats.set(table,s)}
 function norm(v){return String(v??'').trim().toLowerCase()}
 function qid(v){return '"'+String(v).replace(/"/g,'""')+'"'}
 function localConfig(){
@@ -132,33 +133,38 @@ async function migrate(){
     console.log(APPLY?'MODE: APPLY':'MODE: DRY RUN (no writes)');
     if(APPLY){await target.query('BEGIN');inTx=true}
 
-    const stateMap=await upsertHierarchy({local,target,table:'states',keyColumns:['name','code']});
-    const industryMap=await upsertHierarchy({local,target,table:'industries',keyColumns:['slug','name']});
-    const cityMap=await upsertHierarchy({local,target,table:'cities',parentMap:stateMap,parentColumn:'state_id',keyColumns:['slug','name']});
-    const serviceMap=await upsertHierarchy({local,target,table:'services',parentMap:industryMap,parentColumn:'industry_id',keyColumns:['slug','name']});
-    const subserviceMap=await upsertHierarchy({local,target,table:'subservices',parentMap:serviceMap,parentColumn:'service_id',keyColumns:['slug','name']});
-    const subcityMap=await upsertHierarchy({local,target,table:'subcities',parentMap:cityMap,parentColumn:'city_id',keyColumns:['slug','name']});
+    let stateMap=new Map(),industryMap=new Map(),cityMap=new Map(),serviceMap=new Map(),subserviceMap=new Map(),subcityMap=new Map();
+    if(SKIP_CATALOG_LOCATION){
+      console.log('Skipping states/cities/subcities/pincodes and industries/services/subservices by request.');
+    }else{
+      stateMap=await upsertHierarchy({local,target,table:'states',keyColumns:['name','code']});
+      industryMap=await upsertHierarchy({local,target,table:'industries',keyColumns:['slug','name']});
+      cityMap=await upsertHierarchy({local,target,table:'cities',parentMap:stateMap,parentColumn:'state_id',keyColumns:['slug','name']});
+      serviceMap=await upsertHierarchy({local,target,table:'services',parentMap:industryMap,parentColumn:'industry_id',keyColumns:['slug','name']});
+      subserviceMap=await upsertHierarchy({local,target,table:'subservices',parentMap:serviceMap,parentColumn:'service_id',keyColumns:['slug','name']});
+      subcityMap=await upsertHierarchy({local,target,table:'subcities',parentMap:cityMap,parentColumn:'city_id',keyColumns:['slug','name']});
 
-    const localCityPins=await all(local,'city_pincodes');
-    const targetCityPins=await all(target,'city_pincodes');
-    const cityPinKeys=new Set(targetCityPins.map(t=>[t.city_id,String(t.pincode),norm(t.office_name)].join('|')));
-    for(const row of localCityPins){
-      const cityId=need(cityMap,row.city_id,'city_pincodes.city_id');
-      const pinKey=[cityId,String(row.pincode),norm(row.office_name)].join('|');
-      if(cityPinKeys.has(pinKey)){bump('city_pincodes','matched');continue}
-      cityPinKeys.add(pinKey);
-      bump('city_pincodes','inserted');
-      if(APPLY)await insertCommon(local,target,'city_pincodes',row,{exclude:['city_id'],overrides:{city_id:cityId}});
-    }
+      const localCityPins=await all(local,'city_pincodes');
+      const targetCityPins=await all(target,'city_pincodes');
+      const cityPinKeys=new Set(targetCityPins.map(t=>[t.city_id,String(t.pincode),norm(t.office_name)].join('|')));
+      for(const row of localCityPins){
+        const cityId=need(cityMap,row.city_id,'city_pincodes.city_id');
+        const pinKey=[cityId,String(row.pincode),norm(row.office_name)].join('|');
+        if(cityPinKeys.has(pinKey)){bump('city_pincodes','matched');continue}
+        cityPinKeys.add(pinKey);
+        bump('city_pincodes','inserted');
+        if(APPLY)await insertCommon(local,target,'city_pincodes',row,{exclude:['city_id'],overrides:{city_id:cityId}});
+      }
 
-    const localIndiaPins=await all(local,'india_pincodes','pincode');
-    const targetIndiaPins=await all(target,'india_pincodes','pincode');
-    const targetPinSet=new Set(targetIndiaPins.map(r=>String(r.pincode)));
-    for(const row of localIndiaPins){
-      if(targetPinSet.has(String(row.pincode))){bump('india_pincodes','matched');continue}
-      const stateId=row.state_id==null?null:need(stateMap,row.state_id,'india_pincodes.state_id',true);
-      bump('india_pincodes','inserted');
-      if(APPLY)await insertCommon(local,target,'india_pincodes',row,{exclude:['state_id'],overrides:{state_id:stateId},returning:null});
+      const localIndiaPins=await all(local,'india_pincodes','pincode');
+      const targetIndiaPins=await all(target,'india_pincodes','pincode');
+      const targetPinSet=new Set(targetIndiaPins.map(r=>String(r.pincode)));
+      for(const row of localIndiaPins){
+        if(targetPinSet.has(String(row.pincode))){bump('india_pincodes','matched');continue}
+        const stateId=row.state_id==null?null:need(stateMap,row.state_id,'india_pincodes.state_id',true);
+        bump('india_pincodes','inserted');
+        if(APPLY)await insertCommon(local,target,'india_pincodes',row,{exclude:['state_id'],overrides:{state_id:stateId},returning:null});
+      }
     }
 
     const localUsers=await all(local,'users');
@@ -189,6 +195,7 @@ async function migrate(){
     const localBps=await all(local,'business_profile_services');
     const targetBps=await all(target,'business_profile_services');
     for(const row of localBps){
+      if(SKIP_CATALOG_LOCATION){bump('business_profile_services','skipped');continue}
       const ids={
         business_profile_id:need(profileMap,row.business_profile_id,'business_profile_services.business_profile_id'),
         industry_id:need(industryMap,row.industry_id,'business_profile_services.industry_id'),
@@ -204,6 +211,7 @@ async function migrate(){
     const localBpl=await all(local,'business_profile_locations');
     const targetBpl=await all(target,'business_profile_locations');
     for(const row of localBpl){
+      if(SKIP_CATALOG_LOCATION){bump('business_profile_locations','skipped');continue}
       const ids={
         business_profile_id:need(profileMap,row.business_profile_id,'business_profile_locations.business_profile_id'),
         state_id:need(stateMap,row.state_id,'business_profile_locations.state_id'),
@@ -245,7 +253,7 @@ async function migrate(){
       const userId=need(userMap,row.user_id,'lead_partner_sheet_connections.user_id');
       const existing=userId>0&&targetPartnerSheets.find(t=>t.user_id===userId&&String(t.spreadsheet_id)===String(row.spreadsheet_id)&&String(t.gid)===String(row.gid));
       if(existing){bump('lead_partner_sheet_connections','matched');continue}
-      const defaultIndustryId=need(industryMap,row.default_industry_id,'lead_partner_sheet_connections.default_industry_id',true);
+      const defaultIndustryId=SKIP_CATALOG_LOCATION?null:need(industryMap,row.default_industry_id,'lead_partner_sheet_connections.default_industry_id',true);
       bump('lead_partner_sheet_connections','inserted');
       if(APPLY)await insertCommon(local,target,'lead_partner_sheet_connections',row,{exclude:['user_id','default_industry_id'],overrides:{user_id:userId,default_industry_id:defaultIndustryId}});
     }
@@ -253,6 +261,7 @@ async function migrate(){
     const localLeads=await all(local,'leads');
     const targetLeads=await all(target,'leads');
     for(const row of localLeads){
+      if(SKIP_CATALOG_LOCATION){bump('leads','skipped');continue}
       const existing=targetLeads.find(t=>{
         if(row.intake_submission_key&&t.intake_submission_key)return String(t.intake_submission_key)===String(row.intake_submission_key);
         return norm(t.customer_email)===norm(row.customer_email)&&String(t.customer_phone||'')===String(row.customer_phone||'')&&String(t.created_at||'')===String(row.created_at||'');
@@ -278,7 +287,7 @@ async function migrate(){
 
     if(APPLY){await target.query('COMMIT');inTx=false}
     console.log('\n=== Core migration summary ===');
-    for(const [table,s] of stats)console.log(table+': matched='+s.matched+' '+(APPLY?'inserted=':'would_insert=')+s.inserted);
+    for(const [table,s] of stats)console.log(table+': matched='+s.matched+' '+(APPLY?'inserted=':'would_insert=')+s.inserted+' skipped='+(s.skipped||0));
     if(warnings.length){console.log('\nWarnings:');for(const w of warnings)console.log('- '+w)}
     console.log(APPLY?'\nCore migration committed successfully.':'\nDry run complete. No database rows were changed. Re-run with --apply only after a verified target backup.');
   }catch(error){
