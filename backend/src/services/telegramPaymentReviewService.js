@@ -1,5 +1,6 @@
 const pool=require('../config/database');
 const telegram=require('./telegramSupportService');
+const privateProofStorage=require('./privateProofStorageService');
 
 function clean(value){return String(value??'').trim();}
 function money(value){return '₹'+Number(value||0).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2});}
@@ -148,6 +149,24 @@ async function setReviewStatus(type,id,status){
   );
 }
 
+async function sendProof(type,id,row,reviewMessageId){
+  if(!row?.proof_url)return{status:'missing'};
+  try{
+    const descriptor=await privateProofStorage.getProofDescriptor(row.proof_url);
+    if(!descriptor)return{status:'missing'};
+    const label=type==='payment'?'Payment':'Wallet top-up';
+    const sent=await telegram.sendProofAttachment({
+      descriptor,
+      caption:'📎 '+label+' #'+id+' proof',
+      replyToMessageId:reviewMessageId,
+    });
+    return{status:'sent',messageId:sent?.message_id||null};
+  }catch(error){
+    console.error('Telegram payment proof delivery failed:',error?.message||error);
+    return{status:'failed',error:clean(error?.message||'Telegram proof delivery failed')};
+  }
+}
+
 async function sendReview(type,id,row){
   if(!telegram.isApprovalConfigured())return{status:'not_configured'};
   const claim=await claimReviewMessage(type,id);
@@ -158,7 +177,8 @@ async function sendReview(type,id,row){
       replyMarkup:reviewKeyboard(type,id),
     });
     await attachMessage(type,id,sent.message_id);
-    return{status:'sent',messageId:sent.message_id};
+    const proof=await sendProof(type,id,row,sent.message_id);
+    return{status:'sent',messageId:sent.message_id,proofStatus:proof.status,proofMessageId:proof.messageId||null};
   }catch(error){
     await releaseClaim(type,id).catch(()=>{});
     throw error;
