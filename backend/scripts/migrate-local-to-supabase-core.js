@@ -98,10 +98,11 @@ async function upsertHierarchy({local,target,table,parentMap=null,parentColumn=n
     let existing=null;
     for(const key of keyColumns){
       if(row[key]==null||String(row[key]).trim()==='')continue;
-      const match=candidates.find(t=>norm(t[key])===norm(row[key]));
-      if(match){
-        if(existing&&existing.id!==match.id)throw new Error(table+' natural-key ambiguity for local id '+row.id);
-        existing=match;
+      const matches=candidates.filter(t=>norm(t[key])===norm(row[key]));
+      if(matches.length>1)throw new Error(table+' duplicate target '+key+' for local id '+row.id);
+      if(matches.length===1){
+        existing=matches[0];
+        break;
       }
     }
     if(existing){map.set(Number(row.id),Number(existing.id));bump(table,'matched');continue}
@@ -125,7 +126,7 @@ async function migrate(){
     console.log(APPLY?'MODE: APPLY':'MODE: DRY RUN (no writes)');
     if(APPLY){await target.query('BEGIN');inTx=true}
 
-    const stateMap=await upsertHierarchy({local,target,table:'states',keyColumns:['code','name']});
+    const stateMap=await upsertHierarchy({local,target,table:'states',keyColumns:['name','code']});
     const industryMap=await upsertHierarchy({local,target,table:'industries',keyColumns:['slug','name']});
     const cityMap=await upsertHierarchy({local,target,table:'cities',parentMap:stateMap,parentColumn:'state_id',keyColumns:['slug','name']});
     const serviceMap=await upsertHierarchy({local,target,table:'services',parentMap:industryMap,parentColumn:'industry_id',keyColumns:['slug','name']});
