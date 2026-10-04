@@ -1,3 +1,4 @@
 Hostinger deploy trigger
-Requested: 2026-10-04T10:18:00+05:30
-Runtime fix commit: 607ef7098829831f6e6743877d295a8989b55ca9
+Repair: backend-local frontend bundle
+Source commit: d6175eb17d7f396f9eba107e81f80a88c8f67e97
+Bundle path: backend/hostinger-frontend
