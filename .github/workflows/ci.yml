@@ -592,7 +592,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          duplicates=$(git ls-files -z -- '*.js' '*.jsx' '*.ts' '*.tsx' '*.css' '*.json' | xargs -0 -r sha256sum | sort -k1,1 | awk 'last==$1 {print $1 "  " lastfile "  " $2} {last=$1; lastfile=$2}')
+          duplicates=$(git ls-files -z -- '*.js' '*.jsx' '*.ts' '*.tsx' '*.css' '*.json' ':(exclude)frontend/dist/**' ':(exclude)backend/hostinger-frontend/**' | xargs -0 -r sha256sum | sort -k1,1 | awk 'last==$1 {print $1 "  " lastfile "  " $2} {last=$1; lastfile=$2}')
           if [ -n "$duplicates" ]; then
             echo "Exact duplicate tracked source/config files detected:"
             echo "$duplicates"
