@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom'
 import { publicRequest } from '../utils/auth'
 import './Experts.css'
 import { openLeadPopup } from '../utils/leadPopup'
-import PublicIcon from '../components/PublicIcon'
 
 function collection(value){
   if(Array.isArray(value))return value
@@ -25,6 +24,7 @@ function Icon({name,size=20}){
   if(name==='play')return <svg {...p}><path d="m8 5 11 7-11 7Z"/></svg>
   if(name==='file')return <svg {...p}><path d="M6 2h8l4 4v16H6z"/><path d="M14 2v5h5"/></svg>
   if(name==='star')return <svg {...p}><path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-3-5.6 3 1.1-6.2L3 9.6l6.2-.9z"/></svg>
+  if(name==='users')return <svg {...p}><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
   return null
 }
 
@@ -88,9 +88,14 @@ export default function Experts(){
     </header>
 
     <section className="experts-directory" id="expert-directory">
-      <div className="experts-directory-head"><div><span>PROFESSIONAL DIRECTORY</span><h2>Subscribed Businesses on <em>ProPulse</em></h2><p>Profiles appear according to Admin membership rules. Direct phone and email details remain protected; customers connect through the ProPulse requirement flow.</p></div><div className="experts-count"><b>{loading?'—':pagination.total||0}</b><span>Eligible professionals</span></div></div>
+      <div className="experts-directory-intro">
+        <div className="experts-intro-pill"><Icon name="users" size={17}/><span>TRUSTED PROFESSIONALS</span></div>
+        <h1><span>Expert</span> <em>Engineers</em></h1>
+        <i aria-hidden="true"/>
+        <p>Find trusted construction, interior and real-estate professionals.</p>
+      </div>
 
-      <div className="experts-filter-bar"><label className="experts-search"><Icon name="search" size={18}/><input value={filters.search} onChange={event=>updateFilter('search',event.target.value)} placeholder="Search business, service or location"/></label><label><Icon name="briefcase" size={17}/><select value={filters.industryId} onChange={event=>updateFilter('industryId',event.target.value)}><option value="">All industries</option>{industries.map(item=><option value={item.id} key={item.id}>{item.name}</option>)}</select></label><label><Icon name="pin" size={17}/><select value={filters.cityId} onChange={event=>updateFilter('cityId',event.target.value)}><option value="">All cities</option>{visibleCities.map(item=><option value={item.id} key={item.id}>{item.name}{item.state_name?' · '+item.state_name:''}</option>)}</select></label><button className={filters.verified?'active':''} type="button" onClick={()=>updateFilter('verified',!filters.verified)}><Icon name="shield" size={17}/> Verified only</button></div>
+      <div className="experts-filter-bar"><label className="experts-search"><Icon name="search" size={18}/><input value={filters.search} onChange={event=>updateFilter('search',event.target.value)} placeholder="Search by name, service, or location..."/></label><label><Icon name="briefcase" size={17}/><select value={filters.industryId} onChange={event=>updateFilter('industryId',event.target.value)}><option value="">All categories</option>{industries.map(item=><option value={item.id} key={item.id}>{item.name}</option>)}</select></label><label><Icon name="pin" size={17}/><select value={filters.cityId} onChange={event=>updateFilter('cityId',event.target.value)}><option value="">All cities</option>{visibleCities.map(item=><option value={item.id} key={item.id}>{item.name}{item.state_name?' · '+item.state_name:''}</option>)}</select></label><button className={filters.verified?'active':''} type="button" onClick={()=>updateFilter('verified',!filters.verified)}><Icon name="filter" size={17}/>{filters.verified?'Verified only':'More Filters'}</button></div>
 
       {error&&<div className="experts-state error">{error}</div>}
       {loading&&<div className="experts-loading-grid">{Array.from({length:8}).map((_,index)=><i key={index}/>)}</div>}
@@ -104,15 +109,24 @@ export default function Experts(){
         const serviceNames=unique(services.map(item=>item.subserviceName||item.serviceName))
         const cityNames=unique(locations.map(item=>item.cityName))
         return <article className={`expert-card ${expert.is_featured?'featured':''}`} key={expert.business_profile_id||expert.user_id}>
-          {expert.cover_image_url?<div className="expert-card-cover"><img src={expert.cover_image_url} alt={`${expert.business_name} project`}/>{expert.is_featured&&<span><Icon name="star" size={12}/> Featured</span>}</div>:expert.is_featured?<div className="expert-featured-ribbon"><Icon name="star" size={12}/> Featured</div>:null}
-          <div className="expert-card-top"><div className="expert-avatar">{initials(expert.business_name)}</div><div className="expert-card-title"><h3>{expert.business_name}</h3><div>{expert.is_verified?<span className="verified"><Icon name="shield" size={13}/> Verified</span>:<span className="registered"><Icon name="check" size={13}/> Subscribed</span>}<span className={`expert-membership ${expert.plan_group||'grow'}`}>{String(expert.plan_group||'member').toUpperCase()}</span></div></div></div>
-          {expert.public_headline&&<h4 className="expert-headline">{expert.public_headline}</h4>}
-          <div className="expert-industries">{industriesForExpert.slice(0,3).map(name=><span key={name}>{name}</span>)}{industriesForExpert.length===0&&<span>Professional services</span>}</div>
-          <p className="expert-description">{expert.public_summary||'Subscribed ProPulse business offering the listed professional services.'}</p>
-          <div className="expert-meta"><div><Icon name="briefcase" size={15}/><span><b>{serviceNames.length||0}</b> service{serviceNames.length===1?'':'s'}</span></div><div><Icon name="pin" size={15}/><span>{cityNames.slice(0,2).join(', ')||'Service areas configured'}{cityNames.length>2?' +'+(cityNames.length-2):''}</span></div></div>
-          <div className="expert-proof-stats"><span><b>{expert.project_count||0}</b> Completed projects</span><span><b>{expert.plan_count||0}</b> Service plans</span>{expert.years_experience!=null&&<span><b>{expert.years_experience}</b> Years experience</span>}</div>
-          <div className="expert-service-preview">{serviceNames.slice(0,3).map(name=><span key={name}>{name}</span>)}</div>
-          <button type="button" className="expert-view" disabled={selectedLoading} onClick={()=>viewExpert(expert)}>{selectedLoading?'Loading…':'View Business Profile'} <Icon name="arrow" size={14}/></button>
+          <div className={`expert-card-cover ${expert.cover_image_url?'has-image':'fallback'}`}>
+            {expert.cover_image_url?<img src={expert.cover_image_url} alt={`${expert.business_name} project`}/>:<div className="expert-cover-placeholder"><Icon name="home" size={38}/><span>Project showcase</span></div>}
+            <span className={expert.is_verified?'verified-badge':'subscribed-badge'}>{expert.is_verified?<><Icon name="check" size={13}/> Verified</>:<><Icon name="check" size={13}/> Subscribed</>}</span>
+            {expert.is_featured&&<span className="featured-badge"><Icon name="star" size={12}/> Featured</span>}
+          </div>
+          <div className="expert-card-identity">
+            <div className="expert-avatar">{initials(expert.business_name)}</div>
+            <div className="expert-card-title"><h3>{expert.business_name}</h3><p>{expert.public_headline||industriesForExpert[0]||'Professional services'}</p></div>
+            <span className={`expert-membership ${expert.plan_group||'grow'}`}>{String(expert.plan_group||'member').toUpperCase()}</span>
+          </div>
+          <div className="expert-industries">{industriesForExpert.slice(0,3).map(name=><span key={name}>{name}</span>)}{industriesForExpert.length===0&&serviceNames.slice(0,3).map(name=><span key={name}>{name}</span>)}</div>
+          <div className="expert-location"><Icon name="pin" size={16}/><span>{cityNames.slice(0,2).join(', ')||'Service areas configured'}{cityNames.length>2?' +'+(cityNames.length-2):''}</span></div>
+          <p className="expert-description">{expert.public_summary||'Trusted ProPulse professional offering the listed services and project support.'}</p>
+          <div className="expert-proof-stats"><span><b>{expert.project_count||0}</b> Projects</span><span><b>{serviceNames.length||0}</b> Services</span><span><b>{expert.years_experience||'—'}</b> Years</span></div>
+          <div className="expert-card-actions">
+            <button type="button" className="expert-view" disabled={selectedLoading} onClick={()=>viewExpert(expert)}>{selectedLoading?'Loading…':'View Profile'}</button>
+            <button type="button" className="expert-requirement" onClick={()=>openLeadPopup('')}>Send Requirement <Icon name="arrow" size={14}/></button>
+          </div>
         </article>
       })}</div>}
 
