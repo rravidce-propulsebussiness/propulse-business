@@ -1,5 +1,6 @@
 const customerFlowService = require('../services/customerFlowService');
 const publicLeadIntakeService = require('../services/publicLeadIntakeService');
+const leadReferenceStorageService = require('../services/leadReferenceStorageService');
 
 function sendError(res, error, fallback) {
   const status = Number(error?.status) || (
@@ -97,8 +98,9 @@ async function uploadReference(req,res){
     });
     return res.status(result.duplicate?200:201).json(result);
   }catch(error){
-    if(!error?.status&&!error?.code)console.error('Public reference upload failed:',error);
-    return sendError(res,error?.status||500,error,'Failed to upload reference file',{code:error?.code});
+    const status=Number(error?.status)||(['INVALID_ATTACHMENT','ATTACHMENT_TOO_LARGE','ATTACHMENT_LIMIT','INVALID_LEAD'].includes(error?.code)?400:error?.code==='LEAD_NOT_FOUND'?404:error?.code==='ATTACHMENT_NOT_ALLOWED'?403:500);
+    if(status>=500)console.error('Public reference upload failed:',error);
+    return res.status(status).json({error:error?.message||'Failed to upload reference file',code:error?.code});
   }
 }
 
@@ -114,8 +116,9 @@ async function downloadReferenceAdmin(req,res){
     if(file.buffer)return res.send(file.buffer);
     return res.sendFile(file.path);
   }catch(error){
-    if(!error?.status&&!error?.code)console.error('Admin reference download failed:',error);
-    return sendError(res,error?.status||500,error,'Failed to load reference file',{code:error?.code});
+    const status=Number(error?.status)||(error?.code==='ATTACHMENT_NOT_FOUND'||error?.code==='LEAD_NOT_FOUND'?404:500);
+    if(status>=500)console.error('Admin reference download failed:',error);
+    return res.status(status).json({error:error?.message||'Failed to load reference file',code:error?.code});
   }
 }
 
