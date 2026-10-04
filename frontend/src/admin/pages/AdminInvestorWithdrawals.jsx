@@ -1,8 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
-import { apiRequest } from '../../utils/api'
-import { clearSession, getToken } from '../../utils/auth'
-import { useNavigate } from 'react-router-dom'
 import './AdminInvestorWithdrawals.css'
+import useAdminRequest from '../hooks/useAdminRequest'
 
 const money = value => `₹${Number(value || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 const date = value => value ? new Date(value).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—'
@@ -40,7 +38,6 @@ const MAX_PROOF_FILE_BYTES = 6 * 1024 * 1024
 const PROOF_TYPES = ['image/png', 'image/jpeg', 'image/webp']
 
 export default function AdminInvestorWithdrawals() {
-  const navigate = useNavigate()
   const [requests, setRequests] = useState([])
   const [status, setStatus] = useState('pending')
   const [search, setSearch] = useState('')
@@ -59,14 +56,7 @@ export default function AdminInvestorWithdrawals() {
   const [pagination, setPagination] = useState({ page: 1, limit: 50, total: 0, pages: 1 })
   const [metrics, setMetrics] = useState({ totalCount: 0, totalAmount: 0, pendingCount: 0, pendingAmount: 0, paidCount: 0, paidAmount: 0, rejectedCount: 0, rejectedAmount: 0 })
 
-  const request = useCallback(async (path, options = {}) => {
-    if (!getToken()) {
-      clearSession()
-      navigate('/login', { replace: true })
-      throw new Error('Your admin session has expired. Please sign in again.')
-    }
-    return apiRequest(path, options)
-  }, [navigate])
+  const request = useAdminRequest()
 
   const load = useCallback(async (silent = false, nextPage = 1) => {
     if (!silent) setLoading(true)
