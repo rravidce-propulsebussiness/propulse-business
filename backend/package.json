@@ -53,7 +53,9 @@
     "test:expert-directory-runtime": "node scripts/check-expert-directory-runtime.js",
     "test:sound-settings-runtime": "node scripts/check-sound-settings-runtime.js",
     "test:support-chat-runtime": "node scripts/check-support-chat-runtime.js",
-    "telegram:support:set-webhook": "node scripts/configure-telegram-support-webhook.js"
+    "telegram:support:set-webhook": "node scripts/configure-telegram-support-webhook.js",
+    "build:hostinger-frontend": "node scripts/build-hostinger-frontend.js",
+    "postinstall": "node scripts/build-hostinger-frontend.js"
   },
   "keywords": [],
   "author": "",
