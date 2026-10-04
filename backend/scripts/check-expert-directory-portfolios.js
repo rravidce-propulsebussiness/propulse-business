@@ -19,7 +19,7 @@ must('../frontend/src/pages/Profile.jsx',['activeSection','selectSection','Uploa
 if(read('../frontend/src/pages/Profile.jsx').includes('scrollToSection('))throw new Error('Profile tabs must switch sections instead of scrolling through all sections');
 must('../frontend/src/pages/Profile.css',['profile-plan-upload','profile-plan-preview','position:static','backdrop-filter:none']);
 must('../frontend/src/pages/Projects.jsx',['Recent completed projects','/experts/projects','published_at','sortedRecentProjects','View PDF plan']);
-must('../frontend/src/pages/Experts.jsx',['TRUSTED PROFESSIONALS','Expert</span> <em>Engineers</em>','Completed projects','Service plans','Send Requirement']);
+must('../frontend/src/pages/Experts.jsx',['TRUSTED PROFESSIONALS','Expert</span> <em>Engineers</em>','COMPLETED PROJECTS','SERVICE PLANS','Send Requirement']);
 if(read('../frontend/src/pages/Experts.jsx').includes('experts-hero'))throw new Error('Experts page hero section must remain removed');
 must('../frontend/src/admin/pages/AdminExpertDirectory.jsx',['Expert Directory','Allowed membership','Featured','Hidden']);
 console.log('Expert directory portfolio checks passed.');
