@@ -69,6 +69,12 @@ async function buildFrontend(){
     console.error('Frontend source directory is not available in this Hostinger checkout.');
     return;
   }
+  const frontendNodeModules=path.join(frontendRoot,'node_modules');
+  const backendNodeModules=path.join(__dirname,'node_modules');
+  if(!fs.existsSync(frontendNodeModules)&&fs.existsSync(backendNodeModules)){
+    try{fs.symlinkSync(backendNodeModules,frontendNodeModules,'dir');}
+    catch(error){console.warn('Could not link frontend node_modules to backend dependencies:',error.message);}
+  }
   if(!fs.existsSync(viteBin)){
     console.error('Vite is not installed in backend/node_modules; frontend build cannot start.');
     return;
