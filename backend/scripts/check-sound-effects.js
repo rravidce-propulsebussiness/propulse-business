@@ -33,6 +33,8 @@ must('../frontend/src/pages/Profile.jsx',["playSound('upload')","playSound('succ
 
 const soundSource=read('../frontend/src/utils/soundEffects.js');
 if(/\.(?:mp3|wav|ogg)(?:['\"`?#)\\s]|$)/i.test(soundSource))throw new Error('Sound engine must not depend on external audio files');
-if(!soundSource.includes("window.addEventListener('pointerdown'"))throw new Error('Sound engine must unlock only after user interaction');
+if(!soundSource.includes("navigator.userActivation?.isActive"))throw new Error('Sound engine must require an active browser user gesture before creating AudioContext');
+if(!soundSource.includes("window.addEventListener('click'"))throw new Error('Sound engine must unlock from a trusted click gesture');
+if(soundSource.includes("window.addEventListener('pointerdown'"))throw new Error('Sound engine must not create/resume AudioContext from pointerdown before browser activation is established');
 
 console.log('Website sound effects static checks passed.');
