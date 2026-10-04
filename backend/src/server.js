@@ -69,7 +69,6 @@ const runMigrationsOnStartup=envFlag('RUN_MIGRATIONS_ON_STARTUP',true);
 const serveFrontendFromBackend=envFlag('SERVE_FRONTEND_FROM_BACKEND',false);
 const frontendDist=path.resolve(__dirname,'../../frontend/dist');
 const frontendIndexPath=path.join(frontendDist,'index.html');
-const frontendDistAvailable=serveFrontendFromBackend&&fs.existsSync(frontendIndexPath);
 const runBackgroundJobsInWeb=envFlag('RUN_BACKGROUND_JOBS_IN_WEB',true);
 const requireBackgroundWorker=envFlag('REQUIRE_BACKGROUND_WORKER',false);
 const workerHeartbeatMaxAgeSeconds=Math.min(600,Math.max(30,Math.floor(Number(process.env.WORKER_HEARTBEAT_MAX_AGE_SECONDS)||120)));
@@ -224,6 +223,22 @@ async function readiness(req,res){
 app.get('/health/ready',readiness);
 app.get('/health',readiness);
 app.use('/api/observability',observabilityRoutes);app.use('/api/customer-flows',customerFlowRoutes);app.use('/api/auth',authRoutes);app.use('/api/notifications',notificationRoutes);app.use('/api/profile',profileRoutes);app.use('/api/admin',adminRoutes);app.use('/api/lead-partner',leadPartnerRoutes);app.use('/api/lead-reports',leadReportRoutes);app.use('/api/lead-partner/faqs',faqRoutes);app.use('/api/faqs',publicFaqRoutes);app.use('/api/experts',publicExpertRoutes);app.use('/api/upcoming-features',upcomingFeatureRoutes);app.use('/api/contact',contactRoutes);app.use('/api/homepage-media',homepageMediaRoutes);app.use('/api/admin/faqs',adminFaqRoutes);app.use('/api/leads',leadRoutes);app.use('/api/payments',paymentRoutes);app.use('/api/payment-receiving-details',paymentReceivingDetailsRoutes);app.use('/api/coupons',couponRoutes);app.use('/api/membership-plans',membershipPlanRoutes);app.use('/api/admin/commercial',adminCommercialRoutes);app.use('/api/wallet',walletRoutes);app.use('/api/investments',investmentRoutes);app.use('/api/investor/payout-account',investorPayoutAccountRoutes);app.use('/api/industries',industryRoutes);app.use('/api/services',serviceRoutes);app.use('/api/subservices',subserviceRoutes);app.use('/api/states',stateRoutes);app.use('/api/cities',cityRoutes);app.use('/api/subcities',subcityRoutes);app.use('/api/pincodes',pincodeRoutes);
+if(serveFrontendFromBackend){
+  app.use(express.static(frontendDist,{index:'index.html',extensions:['html'],fallthrough:true}));
+  app.use((req,res,next)=>{
+    if(backendOnlyPath(req.path))return next();
+    if(!['GET','HEAD'].includes(req.method))return next();
+    const accept=String(req.get('accept')||'');
+    if(accept&&!accept.includes('text/html')&&!accept.includes('*/*'))return next();
+    if(!fs.existsSync(frontendIndexPath)){
+      res.setHeader('Retry-After','5');
+      res.setHeader('Cache-Control','no-store');
+      return res.status(503).send('Application frontend is starting. Please retry shortly.');
+    }
+    if(privateFrontendPath(req.path))res.setHeader('X-Robots-Tag','noindex, nofollow');
+    return res.sendFile(frontendIndexPath,error=>error?next(error):undefined);
+  });
+}
 app.use((req,res)=>res.status(404).json({error:'Not found'}));
 app.use((err,req,res,next)=>{if(err.message==='CORS origin not allowed')return res.status(403).json({error:'Origin not allowed'});if(err.type==='entity.parse.failed')return res.status(400).json({error:'Invalid JSON body'});if(err.type==='entity.too.large')return res.status(413).json({error:'Request body is too large'});res.locals.operationalError=err;console.error(`[${req.requestId||'no-request-id'}] Unhandled server error:`,err.stack||err);return res.status(500).json({error:'Internal server error',requestId:req.requestId||undefined});});
 let server;let stopLeadPartnerSheetAutoSync=()=>{};let stopAdminGoogleSheetAutoSync=()=>{};let stopFinancialReconciliation=async()=>{};let stopNotifications=async()=>{};let shuttingDown=false;let startupReady=false;let startupError=null;let startupTimer=null;let backgroundJobsStarted=false;
