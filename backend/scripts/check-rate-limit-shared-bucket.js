@@ -23,6 +23,11 @@ Module._load = function(request, parent, isMain) {
     process.env.NODE_ENV = 'production';
     const rateLimit = require('../src/middleware/rateLimitMiddleware');
     const middleware = rateLimit({ windowMs: 60_000, max: 2 });
+    const customMiddleware = rateLimit({
+      windowMs: 60_000,
+      max: 2,
+      keyGenerator: (request) => `custom:${request.body?.identity || ''}`,
+    });
     const req = { ip: '127.0.0.1', baseUrl: '/api/payments', path: '/membership', route: { path: '/membership' } };
     const headers = {};
     const responses = [];
@@ -43,6 +48,15 @@ Module._load = function(request, parent, isMain) {
     assert.equal(headers['RateLimit-Remaining'], '0');
     assert.match(queries[0].text, /INSERT INTO rate_limit_buckets/);
     assert.match(queries[0].text, /ON CONFLICT \(bucket_key\) DO UPDATE/);
+
+    nextCount = 1;
+    const customReqA = { ...req, ip: '10.0.0.1', body: { identity: 'same-user' } };
+    const customReqB = { ...req, ip: '10.0.0.2', body: { identity: 'same-user' } };
+    await customMiddleware(customReqA, makeRes(), () => { nextCalls += 1; });
+    await customMiddleware(customReqB, makeRes(), () => { nextCalls += 1; });
+    const customQueries = queries.slice(-2);
+    assert.equal(customQueries[0].params[0], 'custom:same-user', 'custom key must replace the default IP route key');
+    assert.equal(customQueries[1].params[0], 'custom:same-user', 'custom key must remain stable across proxy/client IP changes');
 
     console.log('Shared rate-limit bucket regression test passed.');
   } finally {
