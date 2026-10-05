@@ -30,6 +30,9 @@ assert(service.includes('const saved=synced.skipped'),'Unchanged-sheet checks mu
 assert(service.includes("forCreate&&!detected?.state_id&&!detected?.state_name"),'Admin sheet sync must allow verified PINs with State-only resolution when the City catalog has no matching City');
 assert(!service.includes("New PIN detected — Map to City"),'Verified State-only PINs must not be rejected solely because City mapping is incomplete');
 assert(service.includes('leave City unset until mapped'),'Preview copy must explain State-only PIN imports accurately');
+assert(service.includes("value.match(/^z:(\\d{6})$/i)"),'Admin sheet sync must normalize Meta lead-form PIN values such as z:500008');
+assert(service.includes('const normalizedRawPin=normalizePincode(rawPin)'),'Admin sheet activation must send the normalized six-digit PIN to the location detector');
+assert(service.includes("const pincode=normalizePincode(location.pincode)||normalizePincode(rawPincode)||normalizePincode(lead?.pincode)"),'Lead payloads must persist normalized PIN values');
 assert(server.includes('startAdminGoogleSheetAutoSync'),'Web compatibility mode must start Admin sheet background sync');
 assert(worker.includes('startAdminGoogleSheetAutoSync({ unref: false, runImmediately: true })'),'Dedicated worker must run Admin sheet background sync');
 assert(ui.includes("authRequest('/leads/google-sheet/connections'"),'Admin UI must load and create database-backed sheet connections');
