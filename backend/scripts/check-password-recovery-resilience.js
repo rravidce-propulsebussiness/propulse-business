@@ -32,6 +32,11 @@ assert.match(service,/created_at > CURRENT_TIMESTAMP - INTERVAL '60 seconds'/,'p
 assert.match(service,/async function discardPasswordResetToken/,'failed email sends must have a token cleanup helper');
 assert.match(controller,/discardPasswordResetToken\(reset\.token\)/,'failed reset email delivery must discard the unusable token');
 assert.match(controller,/PASSWORD_RESET_EMAIL_UNAVAILABLE/,'reset email failures must use a stable error code');
+assert.match(controller,/password_recovery_email_failure/,'reset email failures must create a dedicated operational event');
+assert.match(controller,/providerStatus/,'reset email failure telemetry must retain only the provider HTTP status');
+assert.match(controller,/providerCode/,'reset email failure telemetry must retain a safe provider error code');
+assert.match(controller,/emailConfigured:isEmailConfigured\(\)/,'reset email failure telemetry must record configuration readiness without exposing credentials');
+assert.doesNotMatch(controller,/metadata:\{[^}]*email[^A-Za-z]/s,'reset email failure telemetry must not include the recipient email');
 assert.match(controller,/process\.env\.PUBLIC_APP_URL[\s\S]*process\.env\.FRONTEND_URL[\s\S]*process\.env\.APP_URL/,'reset links must have resilient public URL fallback');
 
 assert.match(forgot,/submittingRef/,'forgot-password form must block duplicate in-flight requests');
