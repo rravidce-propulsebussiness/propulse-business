@@ -37,6 +37,12 @@ assert.match(chunkRecovery,/vite:preloadError/);
 assert.match(chunkRecovery,/failed to fetch dynamically imported module/);
 assert.match(chunkRecovery,/RELOAD_COOLDOWN_MS=60_000/);
 
+assert.match(projects,/const previous=document\.body\.style\.overflow/);
+assert.match(projects,/return\(\)=>\{document\.body\.style\.overflow=previous\}/);
+assert.doesNotMatch(projects,/function openProject\(project\)\{\s*setSelectedProject\(project\)\s*document\.body\.style\.overflow/);
+assert.doesNotMatch(projects,/import \{ openLeadPopup \}/);
+assert.doesNotMatch(projects,/import PublicIcon /);
+
 // Canonical public routes and shared requirement popup.
 assert.match(app,/path="\/experts" element={<Experts\/>}/);
 assert.match(app,/path="\/quote" element={<Solutions\/>}/);
