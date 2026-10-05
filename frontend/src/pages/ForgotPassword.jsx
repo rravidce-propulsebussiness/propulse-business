@@ -20,7 +20,13 @@ function ForgotPassword() {
       const result = await publicRequest('/auth/forgot-password', { method: 'POST', body: JSON.stringify({ email }) })
       setMessage(result.message || 'If an account exists for that email, a reset link has been sent.')
     } catch (err) {
-      setError(err.message)
+      if (err.status === 429) {
+        const seconds = Math.max(1, Number(err.retryAfter) || 60)
+        const minutes = Math.max(1, Math.ceil(seconds / 60))
+        setError(`Too many reset requests for this email. Please try again in about ${minutes} minute${minutes === 1 ? '' : 's'}.`)
+      } else {
+        setError(err.message)
+      }
     } finally {
       setLoading(false)
     }
