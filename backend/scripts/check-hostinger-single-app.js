@@ -78,6 +78,11 @@ assert(backendServer.includes('knownSpaFrontendPath(req.path)')&&backendServer.i
 assert(backendServer.includes("'/interior-estimator'")&&backendServer.includes('publicDynamicFrontendPath'),'Backend SPA allowlist must preserve estimator redirects and dynamic SEO routes');
 assert(wrapper.includes("'/interior-estimator'")&&wrapper.includes('publicDynamicFrontendPath'),'Wrapper SPA allowlist must preserve estimator redirects and dynamic SEO routes');
 for(const source of [wrapper,backendServer]){
+  assert(source.includes('function serveExactPrerenderedHtml(root)'),'Runtime must define exact prerendered HTML resolution');
+  assert(source.includes("relative+'.html'"),'Runtime must prefer a route-level prerendered .html file');
+  assert(source.indexOf('app.use(serveExactPrerenderedHtml(frontendDist))')<source.indexOf('app.use(express.static(frontendDist'),'Exact prerendered HTML must run before express.static directory redirects');
+}
+for(const source of [wrapper,backendServer]){
   assert(source.includes("['/home','/','']")&&source.includes("['/leads','/professionals','']"),'Legacy Home and Leads aliases must use server-side redirects');
   assert(source.includes("['/build','/quote','#construction']")&&source.includes("['/design','/quote','#interiors']"),'Legacy Construction and Interior aliases must use server-side redirects');
   assert(source.includes("['/property','/quote','#property']")&&source.includes("['/real-estate','/quote','#property']"),'Legacy Real Estate aliases must use server-side redirects');
