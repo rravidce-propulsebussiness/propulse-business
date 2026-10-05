@@ -19,8 +19,11 @@ export default function AdminSupportChats(){
   const [saving,setSaving]=useState(false)
   const [error,setError]=useState('')
   const [message,setMessage]=useState('')
-  const searchRef=useRef(search);searchRef.current=search
-  const selectedMessageCountRef=useRef(0);selectedMessageCountRef.current=selected?.messages?.length||0
+  const searchRef=useRef(search)
+  const selectedMessageCountRef=useRef(0)
+
+  useEffect(()=>{searchRef.current=search},[search])
+  useEffect(()=>{selectedMessageCountRef.current=selected?.messages?.length||0},[selected?.messages?.length])
 
   const loadSettings=useCallback(async()=>{
     const value=await authRequest('/admin/support-chat/settings')
