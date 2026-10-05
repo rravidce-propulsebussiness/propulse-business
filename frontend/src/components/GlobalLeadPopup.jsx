@@ -312,12 +312,12 @@ export default function GlobalLeadPopup(){
         <button type="button" className="glp-primary" onClick={continueDetailed}>Continue to Detailed Requirement <Icon name="arrow" size={15}/></button>
         <button type="button" className="glp-secondary" onClick={closePopup}>Done</button>
       </div>:<form onSubmit={submit}>
-        <label className="glp-full"><span>I am looking for</span><select value={form.flowKey} onChange={event=>setFlow(event.target.value)}><option value="">Select requirement</option><option value="build">Home Construction</option><option value="design">Interior Design</option><option value="property">Real Estate</option></select></label>
-
         <div className="glp-two">
-          <label><span>City / Location</span><input list="glp-city-list" value={citySearch} onChange={event=>changeCity(event.target.value)} onBlur={event=>{const match=exactCity(event.target.value);if(match){setCitySearch(cityLabel(match));setForm(current=>({...current,cityId:String(match.id)}))}}} placeholder={loadingCities?'Loading cities…':'Type city name'} disabled={loadingCities}/><datalist id="glp-city-list">{cityList.map(city=><option key={city.id} value={cityLabel(city)}/>)}</datalist></label>
           <label><span>PIN Code {pinBusy?<small>Detecting…</small>:null}</span><input inputMode="numeric" maxLength="6" value={form.pincode} onChange={event=>lookupPin(event.target.value)} placeholder="6-digit PIN"/></label>
+          <label><span>City / Location</span><input list="glp-city-list" value={citySearch} onChange={event=>changeCity(event.target.value)} onBlur={event=>{const match=exactCity(event.target.value);if(match){setCitySearch(cityLabel(match));setForm(current=>({...current,cityId:String(match.id)}))}}} placeholder={loadingCities?'Loading cities…':'Type city name'} disabled={loadingCities}/><datalist id="glp-city-list">{cityList.map(city=><option key={city.id} value={cityLabel(city)}/>)}</datalist></label>
         </div>
+
+        <label className="glp-full"><span>I am looking for</span><select value={form.flowKey} onChange={event=>setFlow(event.target.value)}><option value="">Select requirement</option><option value="build">Home Construction</option><option value="design">Interior Design</option><option value="property">Real Estate</option></select></label>
 
         {detected&&<div className="glp-location"><Icon name="pin" size={14}/><span>{[detected.cityName,detected.districtName,detected.stateName].filter(Boolean).join(' · ')}</span></div>}
 
