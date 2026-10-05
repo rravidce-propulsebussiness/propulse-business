@@ -77,6 +77,8 @@ assert(wrapper.includes('knownSpaFrontendPath(req.path)')&&wrapper.includes("res
 assert(backendServer.includes('knownSpaFrontendPath(req.path)')&&backendServer.includes("res.status(404).send('Not found')"),'Backend single-process SPA fallback must return 404 for unknown HTML routes');
 assert(backendServer.includes("'/interior-estimator'")&&backendServer.includes('publicDynamicFrontendPath'),'Backend SPA allowlist must preserve estimator redirects and dynamic SEO routes');
 assert(wrapper.includes("'/interior-estimator'")&&wrapper.includes('publicDynamicFrontendPath'),'Wrapper SPA allowlist must preserve estimator redirects and dynamic SEO routes');
+assert(wrapper.includes("app.get('/industries',(req,res)=>res.redirect(301,'/'))")&&!wrapper.includes("'/pricing','/industries','/leads'"),'Root Hostinger wrapper must permanently redirect the legacy public /industries route');
+assert(backendServer.includes("app.get('/industries',(req,res)=>res.redirect(301,'/'))")&&!backendServer.includes("'/pricing','/industries','/leads'"),'Backend single-app runtime must permanently redirect the legacy public /industries route');
 assert(wrapper.includes("X-Robots-Tag"),'Hostinger wrapper noindexes private frontend routes');
 assert(wrapper.includes("RUN_BACKGROUND_JOBS_IN_WEB:process.env.RUN_BACKGROUND_JOBS_IN_WEB||'true'"),'Hostinger staging defaults background jobs into the web backend');
 assert(wrapper.includes("SERVE_FRONTEND_FROM_BACKEND:'false'"),'Hostinger wrapper keeps backend behind the internal proxy');
