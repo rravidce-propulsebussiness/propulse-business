@@ -235,7 +235,15 @@ export default function AdminUsers() {
     finally{setWalletPageBusy('')}
   }
 
-  async function createAdmin(e) { e.preventDefault(); try { setSaving(true); setError(''); await authRequest('/admin/users/admin', { method: 'POST', body: JSON.stringify(form) }); setShowCreate(false); setForm({ name: '', email: '', password: '' }); await loadUsers(); } catch (e) { setError(e.message); } finally { setSaving(false); } }
+  async function createAdmin(e) {
+    e.preventDefault();
+    const passwordBytes=new TextEncoder().encode(form.password).length;
+    if(form.password.length<8||form.password.length>64||passwordBytes>72||!/[A-Za-z]/.test(form.password)||!/\d/.test(form.password)){
+      setError('Admin password must be 8–64 characters and include at least one letter and one number.');
+      return;
+    }
+    try { setSaving(true); setError(''); await authRequest('/admin/users/admin', { method: 'POST', body: JSON.stringify(form) }); setShowCreate(false); setForm({ name: '', email: '', password: '' }); await loadUsers(); } catch (e) { setError(e.message); } finally { setSaving(false); }
+  }
 
   const currentMembership=user360?.snapshot?.currentMembership||null;
   const manageableMembership=currentMembership||user360?.membership?.plans?.[0]||null;
@@ -546,6 +554,6 @@ export default function AdminUsers() {
       </div>
     </div>}
 
-    {showCreate && <div className="modal-backdrop" onClick={() => setShowCreate(false)}><form className="user-modal create-user-modal premium-create-admin-modal" onClick={e => e.stopPropagation()} onSubmit={createAdmin}><div className="modal-head"><div><span className="eyebrow">NEW ADMIN</span><h2>Create Administrator</h2></div><button type="button" onClick={() => setShowCreate(false)}>×</button></div><div className="create-grid"><label>Name<input required value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} /></label><label>Email<input required type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} /></label><label>Password<input required type="password" minLength="8" value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} /></label></div><div className="modal-actions"><button className="admin-primary-btn" type="submit" disabled={saving}>{saving ? 'Creating...' : 'Create administrator'}</button><button type="button" onClick={() => setShowCreate(false)}>Cancel</button></div></form></div>}
+    {showCreate && <div className="modal-backdrop" onClick={() => setShowCreate(false)}><form className="user-modal create-user-modal premium-create-admin-modal" onClick={e => e.stopPropagation()} onSubmit={createAdmin}><div className="modal-head"><div><span className="eyebrow">NEW ADMIN</span><h2>Create Administrator</h2></div><button type="button" onClick={() => setShowCreate(false)}>×</button></div><div className="create-grid"><label>Name<input required value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} /></label><label>Email<input required type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} /></label><label>Password<input required type="password" minLength="8" maxLength="64" pattern="(?=.*[A-Za-z])(?=.*\d).{8,64}" title="Use 8–64 characters with at least one letter and one number." placeholder="8–64 characters, letter + number" value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} /></label></div><div className="modal-actions"><button className="admin-primary-btn" type="submit" disabled={saving}>{saving ? 'Creating...' : 'Create administrator'}</button><button type="button" onClick={() => setShowCreate(false)}>Cancel</button></div></form></div>}
   </section>;
 }
