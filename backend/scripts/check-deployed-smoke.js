@@ -116,6 +116,10 @@ async function main() {
   assert(Array.isArray(expertsBody.data), 'Public Experts directory must return a data array');
   assert(expertsBody.pagination && typeof expertsBody.pagination === 'object', 'Public Experts directory must return pagination metadata');
 
+  const industriesPage = await request('/industries', { headers: { accept: 'text/html' } });
+  assert.equal(industriesPage.status, 301, 'Legacy public /industries route must permanently redirect');
+  assert.equal(industriesPage.headers.get('location'), '/', 'Legacy public /industries route must redirect to the homepage');
+
   const allowed = await request('/api/investments', { headers: { origin: appOrigin } });
   assert.equal(allowed.headers.get('access-control-allow-origin'), appOrigin, 'Configured frontend origin must receive CORS permission');
   assert.equal(allowed.status, 401, 'Anonymous investment API request should be unauthorized');
