@@ -70,6 +70,10 @@ function Login() {
       </header>
       <main className="auth-card-wrap login-premium-card-wrap">
         <div className="auth-card login-premium-card">
+          <div className="login-form-heading">
+            <h1>Sign in</h1>
+            <p>Access your ProPulse account.</p>
+          </div>
           {error && <div className="auth-error" role="alert">{error}</div>}
 
           <div className="google-auth-block">
@@ -102,7 +106,6 @@ function Login() {
 
           <div className="auth-divider"><span /> <b>NEW TO PRO PULSE?</b> <span /></div>
           <Link className="auth-outline" to="/signup">Create an account <span>→</span></Link>
-          <p className="login-legal-note">By continuing, you agree to use Propulse for business-related technology, growth and lead services.</p>
         </div>
       </main>
     </div>
