@@ -41,6 +41,7 @@ assert(hostingerMainWorkflow.includes("backend/hostinger-release.json"),'Main Ho
 assert(hostingerMainWorkflow.includes("environment:'production'"),'Main Hostinger release marker must identify production');
 assert(markerHelper.includes('ensureFrontendReleaseMarker')&&markerHelper.includes('bakedReleasePath'),'Runtime Hostinger rebuilds must preserve the baked production release marker');
 assert(hostingerMainWorkflow.includes("git add -f frontend/dist backend/hostinger-frontend backend/hostinger-release.json"),'Main Hostinger prebuild must commit both root-wrapper and backend-root frontend bundles with the release marker');
+assert(hostingerMainWorkflow.includes("if ! git push origin HEAD:main; then")&&hostingerMainWorkflow.includes("git rev-parse HEAD^")&&hostingerMainWorkflow.includes("main advanced during the push"),'Main Hostinger prebuild must treat a concurrent main advance as a benign superseded run');
 assert(docs.includes('Never point staging at the production database'),'Staging isolation must be documented');
 assert(docs.includes('required reviewers'),'Production approval must be documented');
 assert(production.includes('docs/staging-release.md'),'Production guide must link to release guide');
