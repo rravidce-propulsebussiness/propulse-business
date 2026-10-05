@@ -37,6 +37,7 @@ assert(storage.includes('runPrivateStorageBackupCore({force:true})'),'R2 backup 
 assert(r2Backup.includes("backupBucket")&&r2Backup.includes("snapshots/")&&r2Backup.includes('s3.headObject'),'Automated R2 backup must target protected snapshot paths and verify each copied object');
 assert(r2Backup.includes('chooseBackupTarget')&&r2Backup.includes("locked_primary_prefix"),'Automated R2 backup must remain available when production credentials are bucket-scoped');
 assert(r2Backup.includes('backup_verification_runs')&&r2Backup.includes("status:'verified'"),'Automated R2 backup must persist verified backup state');
+assert(r2Backup.includes('restoredManifest')&&r2Backup.includes('sha256(restoredManifest.buffer)'),'Backup manifest verification must fall back to readback checksum verification when HEAD metadata differs');
 assert(server.includes('startPrivateStorageBackupScheduler')&&worker.includes('startPrivateStorageBackupScheduler'),'R2 backups must run in both supported background-job deployment modes');
 assert(packageJson.includes('"backup:verify"')&&packageJson.includes('"backup:storage"')&&packageJson.includes('"backup:all"'),'Operator backup commands must be exposed in package scripts');
 assert(workflow.includes('Verify database backup restore drill'),'CI must execute a real database dump/restore drill');
