@@ -4,7 +4,7 @@ import {fileURLToPath} from 'node:url'
 import {PUBLIC_SEO_ROUTES,SITE_NAME} from '../src/seo/seoConfig.js'
 import {HYDERABAD_LOCALITIES,localityBySlug,localityPagePath,nearbyLocalities,serviceBySlug} from '../src/seo/hyderabadSeo.js'
 import {CONSTRUCTION_PACKAGE_CATALOG} from '../src/data/constructionPackageCatalog.js'
-import {REGIONAL_STATES,districtBySlug,districtPath,stateBySlug} from '../src/seo/regionalSeo.js'
+import {districtBySlug,districtPath,stateBySlug} from '../src/seo/regionalSeo.js'
 import {CONSTRUCTION_GUIDES,guideBySlug} from '../src/seo/constructionGuides.js'
 import {SEO_FAQ_CATEGORIES,homeownerSeoFaqs} from '../src/seo/faqKnowledge.js'
 
