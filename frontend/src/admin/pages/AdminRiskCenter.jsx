@@ -1,4 +1,4 @@
-import {useEffect,useMemo,useState} from 'react';
+import {useCallback,useEffect,useMemo,useRef,useState} from 'react';
 import {authRequest} from '../../utils/auth';
 import './AdminRiskCenter.css';
 
@@ -32,20 +32,24 @@ export default function AdminRiskCenter(){
   const [loading,setLoading]=useState(true);
   const [busyId,setBusyId]=useState(null);
   const [message,setMessage]=useState('');
+  const searchRef=useRef(search);
 
-  const load=async(nextPage=page)=>{
+  useEffect(()=>{searchRef.current=search},[search]);
+
+  const load=useCallback(async(nextPage=1)=>{
     setLoading(true);
     try{
       const params=new URLSearchParams({status,severity,type,page:String(nextPage),limit:'50'});
-      if(search.trim())params.set('search',search.trim());
+      const searchValue=searchRef.current.trim();
+      if(searchValue)params.set('search',searchValue);
       const result=await authRequest('/admin/risk-center?'+params.toString());
       setData(result||{items:[],stats:{},types:[],page:1,pages:1,total:0});
       setPage(Number(result?.page||nextPage));
     }catch(e){setMessage(e.message||'Failed to load Risk Center')}
     finally{setLoading(false)}
-  };
+  },[status,severity,type]);
 
-  useEffect(()=>{let active=true;queueMicrotask(()=>{if(active)load(1)});return()=>{active=false}},[status,severity,type]);
+  useEffect(()=>{let active=true;queueMicrotask(()=>{if(active)load(1)});return()=>{active=false}},[load]);
 
   const ordered=useMemo(()=>[...(data.items||[])].sort((a,b)=>(sevRank[b.severity]||0)-(sevRank[a.severity]||0)||new Date(b.last_seen_at)-new Date(a.last_seen_at)),[data.items]);
 
