@@ -61,6 +61,9 @@ assert(missingContact.shouldQuarantine&&missingContact.gateFlags.includes('missi
 const badPin=gate.decide({...goodFeature,valid_pincode:false,pincode_city_mapped:false},settings);
 assert(badPin.shouldQuarantine&&badPin.gateFlags.includes('invalid_pincode'),'Invalid PIN must quarantine a lead');
 
+const missingCity=gate.decide({...goodFeature,has_city:false,pincode_city_mapped:false},settings);
+assert(missingCity.shouldQuarantine&&missingCity.gateFlags.includes('pincode_city_mismatch'),'A valid PIN without a resolved City mapping must stay quarantined instead of becoming broadly sellable at State level');
+
 const strict=gate.decide(goodFeature,{...settings,minimumScore:96});
 assert(strict.shouldQuarantine&&strict.gateFlags.includes('score_below_threshold'),'Configured minimum score must be enforced');
 
