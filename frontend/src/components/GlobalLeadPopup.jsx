@@ -1,7 +1,9 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { publicRequest } from '../utils/auth'
 import './GlobalLeadPopup.css'
+
+const AUTO_POPUP_DELAY_MS=5*60*1000
 
 const FLOORS = [
   { value:'1', label:'Ground Floor' },
@@ -93,8 +95,6 @@ export default function GlobalLeadPopup(){
   const pinSeq=useRef(0)
 
   const cityList=useMemo(()=>[...cities].sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''))),[cities])
-  const selectedCity=useMemo(()=>cityList.find(city=>String(city.id)===String(form.cityId)),[cityList,form.cityId])
-
   function cityLabel(city){
     return city?city.name+(city.state_name?' · '+city.state_name:''):''
   }
@@ -108,10 +108,16 @@ export default function GlobalLeadPopup(){
     })||null
   }
 
+  const closePopup=useCallback(()=>{
+    setOpen(false)
+    setError('')
+    if(!submitted)setCycle(value=>value+1)
+  },[submitted])
+
   useEffect(()=>{
     if(!eligible)return undefined
     let active=true
-    setLoadingCities(true)
+    queueMicrotask(()=>{if(active)setLoadingCities(true)})
     publicRequest('/cities').then(value=>{if(active)setCities(collection(value))}).catch(()=>{}).finally(()=>{if(active)setLoadingCities(false)})
     return()=>{active=false}
   },[eligible])
@@ -121,8 +127,7 @@ export default function GlobalLeadPopup(){
     let submittedBefore=false
     try{submittedBefore=sessionStorage.getItem('propulse_basic_lead_submitted')==='1'}catch{}
     if(submittedBefore)return undefined
-    const delay=cycle===0?15000:300000
-    const timer=window.setTimeout(()=>setOpen(true),delay)
+    const timer=window.setTimeout(()=>setOpen(true),AUTO_POPUP_DELAY_MS)
     return()=>window.clearTimeout(timer)
   },[eligible,location.pathname,location.hash,cycle,open,submitted])
 
@@ -163,13 +168,7 @@ export default function GlobalLeadPopup(){
       document.body.style.overflow=previous
       window.removeEventListener('keydown',onKey)
     }
-  },[open,submitted])
-
-  function closePopup(){
-    setOpen(false)
-    setError('')
-    if(!submitted)setCycle(value=>value+1)
-  }
+  },[open,closePopup])
   function setFlow(flowKey){
     setForm(current=>({...EMPTY,flowKey,name:current.name,phone:current.phone}))
     setCitySearch('')
