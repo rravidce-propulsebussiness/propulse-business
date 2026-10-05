@@ -27,6 +27,9 @@ assert(service.includes("pg_try_advisory_lock($1,$2)")&&service.includes("pg_adv
 assert(scheduler.includes('another replica is syncing it'),'Scheduler must treat per-connection lock contention as a normal skip');
 assert(service.includes("if(!locked)return{busy:true,sync:{busy:true,skipped:true,reason:'SYNC_IN_PROGRESS'}}"),'Overlapping sheet sync must return a stable busy result');
 assert(service.includes('const saved=synced.skipped'),'Unchanged-sheet checks must preserve the previous sync metrics');
+assert(service.includes("forCreate&&!detected?.state_id&&!detected?.state_name"),'Admin sheet sync must allow verified PINs with State-only resolution when the City catalog has no matching City');
+assert(!service.includes("New PIN detected — Map to City"),'Verified State-only PINs must not be rejected solely because City mapping is incomplete');
+assert(service.includes('leave City unset until mapped'),'Preview copy must explain State-only PIN imports accurately');
 assert(server.includes('startAdminGoogleSheetAutoSync'),'Web compatibility mode must start Admin sheet background sync');
 assert(worker.includes('startAdminGoogleSheetAutoSync({ unref: false, runImmediately: true })'),'Dedicated worker must run Admin sheet background sync');
 assert(ui.includes("authRequest('/leads/google-sheet/connections'"),'Admin UI must load and create database-backed sheet connections');
