@@ -1,7 +1,5 @@
 import { getConstructionPackage } from '../data/constructionPackageCatalog'
 
-const BUILD_PRIMARY_SCOPES=['turnkey','civil_structure','finishing'];
-
 const BUILD_PROJECT_TYPE={
   residential:'house',
   commercial:'commercial',
