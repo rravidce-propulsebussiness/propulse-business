@@ -19,7 +19,7 @@ const TARGETS=[
   {id:'requirement',label:'Requirement',canonical:'Requirement',group:'Lead',aliases:['requirement','requirements','requirement details','give more details','give more details and requirement','update']},
   {id:'propertyType',label:'Property Type',canonical:'Property Type',group:'Lead',aliases:['property type','property','interior type','falt size']},
   {id:'budget',label:'Budget',canonical:'Budget',group:'Lead',aliases:['budget']},
-  {id:'source',label:'Source',canonical:'Source',group:'Lead',aliases:['source','lead source','campaign name']},
+  {id:'source',label:'Source',canonical:'Source',group:'Lead',aliases:['source','lead source','platform']},
   {id:'notes',label:'Notes',canonical:'Notes',group:'Lead',aliases:['notes','remarks']},
   {id:'leadType',label:'Lead Type',canonical:'Lead Type',group:'Access',aliases:['lead type']},
   {id:'accessStrategy',label:'Access Strategy',canonical:'Access Strategy',group:'Access',aliases:['access strategy','buyer strategy']},

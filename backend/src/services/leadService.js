@@ -11,22 +11,24 @@ function mergePricing(base,sheet){const configured=completePricingRows(base?.sha
 async function getConfiguredPricing(industryId,cityId,leadType='basic'){const type=normalizeLeadType(leadType)||'basic';const r=await pool.query(`SELECT pricing FROM lead_pricing_rules WHERE is_active=TRUE AND lead_type=$3 AND (industry_id=$1 OR industry_id IS NULL) AND (city_id=$2 OR city_id IS NULL) ORDER BY CASE WHEN industry_id IS NOT NULL AND city_id IS NOT NULL THEN 3 WHEN industry_id IS NOT NULL THEN 2 WHEN city_id IS NOT NULL THEN 1 ELSE 0 END DESC LIMIT 1`,[industryId||null,cityId||null,type]);if(!r.rows[0])return{shares:[]};const pricing=cleanJson(r.rows[0].pricing,{shares:[]});return{shares:completePricingRows(pricing.shares)};}
 function assertValidPricing(pricing){const rows=normalizePricingRows(pricing?.shares);const by=new Map(rows.map(x=>[x.shares,x]));for(const shares of [1,2,3]){const row=by.get(shares);if(!row||!(row.normal>0)||!(row.pro>0)){const error=new Error('Lead pricing is required. Configure positive Normal and Pro prices for 1, 2 and 3 buyers in Admin Lead Pricing, or enter a lead pricing override.');error.code='PRICING_REQUIRED';throw error}}return{shares:[1,2,3].map(shares=>by.get(shares))}}
 function resolveEffectivePricing(configured,pricing,pricingSource){const rows=Array.isArray(pricing?.shares)?pricing.shares:[];const hasPositiveOverride=rows.some(row=>Number(row?.normal)>0||Number(row?.pro)>0);const hasExplicitInvalid=rows.some(row=>(row?.normal!==undefined&&row?.normal!==null&&row?.normal!==''&&Number(row.normal)<=0)||(row?.pro!==undefined&&row?.pro!==null&&row?.pro!==''&&Number(row.pro)<=0));const legacyEmpty=rows.length>0&&!hasPositiveOverride&&hasExplicitInvalid;const effective=legacyEmpty?configured:(pricingSource==='sheet'&&hasPositiveOverride?mergePricing(configured,pricing):pricingSource==='rule'?configured:(hasPositiveOverride?mergePricing(configured,pricing):configured));return assertValidPricing(effective)}
-async function findDuplicateLead({industryId,serviceId,subserviceId,customerPhone,customerEmail,customerName,requirement,windowHours=24}){
+async function findDuplicateLead({industryId,serviceId,subserviceId,customerPhone,customerEmail,customerName,requirement,pincode,windowHours=24*30}){
   const phone=String(customerPhone||'').replace(/\D/g,'');
   const email=String(customerEmail||'').trim().toLowerCase();
   const name=String(customerName||'').trim().toLowerCase();
   const req=String(requirement||'').trim().toLowerCase();
-  const hours=Math.max(1,Math.min(24*30,Number(windowHours)||24));
-  const scope=[industryId,serviceId||null,subserviceId||null,hours];
-  const recent=`industry_id=$1 AND service_id IS NOT DISTINCT FROM $2 AND subservice_id IS NOT DISTINCT FROM $3 AND created_at>=CURRENT_TIMESTAMP-($4 * INTERVAL '1 hour')`;
-  if(phone.length>=7){const r=await pool.query(`SELECT id,customer_name FROM leads WHERE ${recent} AND regexp_replace(COALESCE(customer_phone,''),'[^0-9]','','g')=$5 AND ($6::text='' OR LOWER(TRIM(COALESCE(requirement,'')))=$6) ORDER BY created_at DESC LIMIT 1`,[...scope,phone,req]);if(r.rows[0])return r.rows[0];}
-  if(email){const r=await pool.query(`SELECT id,customer_name FROM leads WHERE ${recent} AND LOWER(TRIM(COALESCE(customer_email,'')))=$5 AND ($6::text='' OR LOWER(TRIM(COALESCE(requirement,'')))=$6) ORDER BY created_at DESC LIMIT 1`,[...scope,email,req]);if(r.rows[0])return r.rows[0];}
-  if(name&&req){const r=await pool.query(`SELECT id,customer_name FROM leads WHERE ${recent} AND LOWER(TRIM(COALESCE(customer_name,'')))=$5 AND LOWER(TRIM(COALESCE(requirement,'')))=$6 ORDER BY created_at DESC LIMIT 1`,[...scope,name,req]);if(r.rows[0])return r.rows[0];}
+  const rawPin=String(pincode||'').replace(/\D/g,'');
+  const pin=/^\d{6}$/.test(rawPin)?rawPin:'';
+  const hours=Math.max(1,Math.min(24*30,Number(windowHours)||24*30));
+  const scope=[industryId,serviceId||null,subserviceId||null,hours,pin];
+  const recent=`industry_id=$1 AND service_id IS NOT DISTINCT FROM $2 AND subservice_id IS NOT DISTINCT FROM $3 AND created_at>=CURRENT_TIMESTAMP-($4 * INTERVAL '1 hour') AND ($5::text='' OR COALESCE(pincode,'')=$5)`;
+  if(phone.length>=7){const r=await pool.query(`SELECT id,customer_name FROM leads WHERE ${recent} AND regexp_replace(COALESCE(customer_phone,''),'[^0-9]','','g')=$6 AND ($7::text='' OR LOWER(TRIM(COALESCE(requirement,'')))=$7) ORDER BY created_at DESC LIMIT 1`,[...scope,phone,req]);if(r.rows[0])return r.rows[0];}
+  if(email){const r=await pool.query(`SELECT id,customer_name FROM leads WHERE ${recent} AND LOWER(TRIM(COALESCE(customer_email,'')))=$6 AND ($7::text='' OR LOWER(TRIM(COALESCE(requirement,'')))=$7) ORDER BY created_at DESC LIMIT 1`,[...scope,email,req]);if(r.rows[0])return r.rows[0];}
+  if(name&&req){const r=await pool.query(`SELECT id,customer_name FROM leads WHERE ${recent} AND LOWER(TRIM(COALESCE(customer_name,'')))=$6 AND LOWER(TRIM(COALESCE(requirement,'')))=$7 ORDER BY created_at DESC LIMIT 1`,[...scope,name,req]);if(r.rows[0])return r.rows[0];}
   return null;
 }
 async function createLead({industryId,serviceId,subserviceId,stateId,cityId,customerName,customerPhone,customerEmail,requirement,propertyType,budget,source,notes,customFields,pricing,pricingSource,leadType='basic',isExclusive=false,exclusiveDelayDays,exclusiveDelayHours,pincode,zipcode,buyerCapacity,accessStrategy,releaseToTwoAfterHours,releaseToThreeAfterHours,createdBy,leadPartnerId=null,investorUserId=null,qualityGateContext='admin',deferQualityGate=false,contactConsentAt=null,contactConsentVersion=null,intakeSubmissionKey=null}){
   if(!industryId)throw new Error('Industry is required');
-  const duplicate=await findDuplicateLead({industryId,serviceId,subserviceId,customerPhone,customerEmail,customerName,requirement});
+  const duplicate=await findDuplicateLead({industryId,serviceId,subserviceId,customerPhone,customerEmail,customerName,requirement,pincode:pincode||zipcode});
   if(duplicate){
     const error=new Error(`Duplicate lead: a recent matching requirement already exists${duplicate.customer_name?` (${duplicate.customer_name})`:''}.`);
     error.code='DUPLICATE_LEAD';error.leadId=duplicate.id;throw error;
