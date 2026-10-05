@@ -11,6 +11,16 @@ const emailService = require('./emailService');
 const DEFAULT_PAGE_SIZE = 25;
 const MAX_PAGE_SIZE = 100;
 const MANAGEABLE_ROLES = new Set(['business', 'lead_partner', 'admin']);
+const ADMIN_PASSWORD_MIN_CHARS = 8;
+const ADMIN_PASSWORD_MAX_CHARS = 64;
+const BCRYPT_MAX_BYTES = 72;
+
+function validAdminPassword(password){
+  if(typeof password!=='string')return false;
+  if(password.length<ADMIN_PASSWORD_MIN_CHARS||password.length>ADMIN_PASSWORD_MAX_CHARS)return false;
+  if(Buffer.byteLength(password,'utf8')>BCRYPT_MAX_BYTES)return false;
+  return /[A-Za-z]/.test(password)&&/\d/.test(password);
+}
 
 function parsePagination(query = {}) {
   const rawPage = Number.parseInt(query.page, 10);
@@ -450,7 +460,7 @@ async function sendUserPasswordReset({userId,actingAdminId=null}={}){
 
 async function createAdmin({ name, email, password, actingAdminId=null }) {
   const cleanName = String(name || '').trim(), normalizedEmail = String(email || '').trim().toLowerCase();
-  if (!cleanName || !normalizedEmail || String(password || '').length < 8) { const error = new Error('Name, valid email and password of at least 8 characters are required'); error.code='INVALID_ADMIN'; throw error; }
+  if (!cleanName || !normalizedEmail || !validAdminPassword(password)) { const error = new Error('Name, valid email and a password of 8-64 characters with at least one letter and one number are required'); error.code='INVALID_ADMIN'; throw error; }
   const client=await pool.connect();
   try{
     await client.query('BEGIN');
