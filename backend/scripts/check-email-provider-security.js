@@ -14,7 +14,7 @@ if(!/EMAIL_PROVIDER_REJECTED/.test(source)||!/EMAIL_PROVIDER_TIMEOUT/.test(sourc
 if(/throw new Error\([^)]*body/i.test(source)){
   throw new Error('Email provider security regression: provider response body must not be thrown or logged');
 }
-if(!/readResponseTextLimited\(response, 64 \* 1024\)/.test(source)){
+if(!source.includes('readResponseTextLimited(response,64*1024)')&&!source.includes('readResponseTextLimited(response, 64 * 1024)')){
   throw new Error('Email provider security regression: provider response should be bounded before throwing');
 }
 console.log('Email provider error security regression test passed.');
