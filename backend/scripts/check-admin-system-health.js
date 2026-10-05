@@ -20,6 +20,9 @@ assert(controller.includes('adminSystemHealthService.getSystemHealth()'),'System
 assert(service.includes('pool.totalCount')&&service.includes('pool.waitingCount'),'System Health must expose database pool pressure');
 assert(service.includes('busyConnections')&&service.includes('(busyConnections/poolMax)*100'),'Database utilization must use busy connections rather than total open pool size');
 assert(service.includes('checkUploadStorage()'),'System Health must check private/persistent upload storage');
+assert(service.includes('async function legacyUploadHealth()')&&service.includes('lead_partner_payout_requests')&&service.includes("stored_name NOT LIKE 'private-object-s3:%'"),'System Health must count legacy pre-R2 upload references');
+assert(service.includes("code:'legacy_upload_references'")&&service.includes('legacyReferences:legacyUploads'),'System Health must surface legacy upload references as an actionable attention issue');
+assert(page.includes('Legacy upload refs')&&page.includes('No pre-R2 local upload references remain'),'Admin System Health UI must display legacy upload reference state');
 assert(service.includes('workerHeartbeat.latestHeartbeat()'),'System Health must inspect the background worker heartbeat');
 assert(service.includes('backgroundWorkerRequired')&&service.includes("process.env.REQUIRE_BACKGROUND_WORKER"),'System Health must use the same worker requirement flag as runtime readiness');
 assert(service.includes("if(backgroundWorkerRequired&&!workerFresh)"),'Missing worker heartbeat must only degrade health when a dedicated worker is required');
