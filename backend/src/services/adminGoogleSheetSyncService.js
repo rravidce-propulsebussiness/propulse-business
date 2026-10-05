@@ -249,7 +249,7 @@ async function updateConnectionDefaultIndustry({connectionId,defaultIndustryId=n
   const id=Number(connectionId);
   if(!Number.isInteger(id)||id<=0)throw Object.assign(new Error('Google Sheet connection not found'),{code:'SHEET_CONNECTION_NOT_FOUND'});
   const industry=await resolveDefaultIndustry(defaultIndustryId);
-  const row=(await pool.query(`UPDATE admin_google_sheet_connections SET default_industry_id=$1,updated_at=CURRENT_TIMESTAMP WHERE id=$2 AND status='active' RETURNING *`,[industry?.id||null,id])).rows[0];
+  const row=(await pool.query(`UPDATE admin_google_sheet_connections SET default_industry_id=$1,fingerprint=NULL,last_checked_at=NULL,updated_at=CURRENT_TIMESTAMP WHERE id=$2 AND status='active' RETURNING *`,[industry?.id||null,id])).rows[0];
   if(!row)throw Object.assign(new Error('Google Sheet connection not found'),{code:'SHEET_CONNECTION_NOT_FOUND'});
   return{...row,default_industry_name:industry?.name||null};
 }
