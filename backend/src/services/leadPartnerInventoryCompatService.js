@@ -282,7 +282,9 @@ async function syncGoogleSheet({userId,connectionId,force=false}){
     if(!force&&connection.fingerprint&&String(connection.fingerprint)===String(analysis.fingerprint)){
       const saved=(await pool.query(
         `UPDATE lead_partner_sheet_connections
-            SET last_synced_at=CURRENT_TIMESTAMP,sync_failure_count=0,last_sync_error_at=NULL,last_sync_error=NULL,next_retry_at=NULL,updated_at=CURRENT_TIMESTAMP
+            SET last_synced_at=CURRENT_TIMESTAMP,
+                last_sync_created=0,last_sync_duplicate=0,last_sync_failed=0,last_sync_failures='[]'::jsonb,
+                sync_failure_count=0,last_sync_error_at=NULL,last_sync_error=NULL,next_retry_at=NULL,updated_at=CURRENT_TIMESTAMP
           WHERE id=$1 AND user_id=$2
           RETURNING *`,
         [id,userId]
