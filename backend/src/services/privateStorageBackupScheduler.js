@@ -60,6 +60,7 @@ async function chooseBackupTarget(source){
   }catch(error){
     await s3.deleteObject(probeKey,{configOverride:preferred}).catch(()=>{});
     if(error?.providerStatus!==403||hasExplicitBackupCredentials())throw error;
+    // Cloudflare bucket-scoped S3 credentials cannot reach a second bucket. The backups/ prefix is object-locked in production.
     console.warn('Backup bucket credentials are scoped to the primary bucket; using the locked backups/ prefix in the primary R2 bucket.');
     return{config:sourceConfigOverride(source),prefix:'backups/',mode:'locked_primary_prefix'};
   }
