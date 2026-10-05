@@ -64,12 +64,14 @@ async function readArtifact(file,maxBytes){
 }
 async function verifyRemoteObject(key,expected,{configOverride,maxBytes}){
   const head=await s3.headObject(key,{configOverride,timeoutMs:120000});
-  if(!head||head.size!==expected.length)throw Object.assign(new Error('Remote database backup size verification failed'),{code:'DATABASE_BACKUP_REMOTE_SIZE_MISMATCH'});
   const restored=await s3.getObjectBuffer(key,{configOverride,maxBytes,timeoutMs:120000});
   if(restored.buffer.length!==expected.length||sha256(restored.buffer)!==sha256(expected)){
     throw Object.assign(new Error('Remote database backup checksum verification failed'),{code:'DATABASE_BACKUP_REMOTE_HASH_MISMATCH'});
   }
-  return head;
+  if(!head||head.size!==expected.length){
+    console.warn('R2 HEAD metadata differed after database backup write; full readback SHA-256 verification passed for',key);
+  }
+  return{...(head||{}),size:restored.buffer.length,verifiedBy:'readback_sha256'};
 }
 async function runDatabaseBackupCore({force=false}={}){
   if(!s3.isEnabled())return{skipped:true,reason:'object_storage_disabled'};
