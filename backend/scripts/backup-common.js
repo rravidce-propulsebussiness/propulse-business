@@ -4,6 +4,7 @@ const path=require('path');
 const crypto=require('crypto');
 const {spawn}=require('child_process');
 const {Client}=require('pg');
+const releaseIdentity=require('../src/services/releaseIdentityService');
 
 function envFlag(name,fallback=false){
   const value=String(process.env[name]??'').trim().toLowerCase();
@@ -99,8 +100,7 @@ function timestamp(){
   return new Date().toISOString().replace(/[:.]/g,'-');
 }
 function buildCommit(){
-  const raw=String(process.env.GIT_COMMIT_SHA||process.env.RENDER_GIT_COMMIT||process.env.VERCEL_GIT_COMMIT_SHA||process.env.COMMIT_SHA||'').trim();
-  return raw?raw.slice(0,64):'local';
+  return String(releaseIdentity.commit()||'local').trim().slice(0,64)||'local';
 }
 async function ensurePrivateDirectory(dir){
   await fs.promises.mkdir(dir,{recursive:true,mode:0o700});
