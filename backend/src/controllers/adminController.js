@@ -158,7 +158,7 @@ async function verifyCompanyProof(req, res) {
       reviewedBy: req.user.id,
     }));
   } catch (error) {
-    const map = { INVALID_PROOF_DOCUMENT: 400, INVALID_PROOF_STATUS: 400, INVALID_REVIEWER: 400, NOT_FOUND: 404, PROOF_ALREADY_REVIEWED: 409 };
+    const map = { INVALID_PROOF_DOCUMENT: 400, INVALID_PROOF_STATUS: 400, INVALID_REVIEWER: 400, NOT_FOUND: 404, PROOF_ALREADY_REVIEWED: 409, PROOF_FILE_UNAVAILABLE: 409 };
     if (map[error.code]) return res.status(map[error.code]).json({ error: error.message, code: error.code });
     console.error('Verify company proof failed:', error.message);
     return res.status(500).json({ error: 'Failed to verify company proof' });

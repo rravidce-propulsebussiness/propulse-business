@@ -41,7 +41,9 @@ async function descriptor(reference,{mimeType,size}={}){
   const name=safeStoredName(reference);
   const filePath=path.resolve(companyProofRoot,name);
   if(!filePath.startsWith(path.resolve(companyProofRoot)+path.sep))throw new Error('Invalid company proof path');
-  const stat=await fsp.stat(filePath);
+  let stat;
+  try{stat=await fsp.stat(filePath)}
+  catch(error){if(error?.code==='ENOENT')return null;throw error}
   if(!stat.isFile())return null;
   return{filePath,mime:mimeType||null,size:Number(size)||stat.size};
 }

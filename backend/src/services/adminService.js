@@ -4,6 +4,7 @@ const bcrypt = require('bcryptjs');
 const pool = require('../config/database');
 const { validateSelections } = require('./profileService');
 const leadEntitlementGrantService = require('./leadEntitlementGrantService');
+const companyProofStorage = require('./companyProofStorageService');
 
 const DEFAULT_PAGE_SIZE = 25;
 const MAX_PAGE_SIZE = 100;
@@ -507,7 +508,7 @@ async function getCompanyProofs({ status = 'pending', page, pageSize, limit } = 
   );
   const total = countResult.rows[0]?.total || 0;
   const result = await pool.query(
-    `SELECT cpd.id,cpd.user_id,cpd.original_name,cpd.mime_type,cpd.file_size,cpd.status,
+    `SELECT cpd.id,cpd.user_id,cpd.original_name,cpd.stored_name,cpd.mime_type,cpd.file_size,cpd.status,
             cpd.created_at,cpd.updated_at,cpd.reviewed_by,cpd.reviewed_at,cpd.review_reason,
             u.name AS user_name,u.email AS user_email,bp.business_name
      FROM company_proof_documents cpd
@@ -518,8 +519,13 @@ async function getCompanyProofs({ status = 'pending', page, pageSize, limit } = 
      LIMIT $2 OFFSET $3`,
     [normalizedStatus, currentPageSize, offset],
   );
+  const data=await Promise.all(result.rows.map(async row=>{
+    const {stored_name,...safe}=row;
+    const fileAvailable=Boolean(await companyProofStorage.descriptor(stored_name,{mimeType:row.mime_type,size:row.file_size}).catch(()=>null));
+    return{...safe,file_available:fileAvailable,storage_backend:String(stored_name||'').startsWith('private-object-s3:')?'r2':'legacy_local'};
+  }));
   return {
-    data: result.rows,
+    data,
     pagination: {
       page: currentPage,
       pageSize: currentPageSize,
@@ -567,7 +573,7 @@ async function reviewCompanyProof({ documentId, status, reviewReason = '', revie
   try {
     await client.query('BEGIN');
     const current = (await client.query(
-      'SELECT id,status FROM company_proof_documents WHERE id=$1 FOR UPDATE',
+      'SELECT id,status,stored_name,mime_type,file_size FROM company_proof_documents WHERE id=$1 FOR UPDATE',
       [normalizedDocumentId],
     )).rows[0];
 
@@ -580,6 +586,14 @@ async function reviewCompanyProof({ documentId, status, reviewReason = '', revie
       const error = new Error(`Company proof is already ${current.status}`);
       error.code = 'PROOF_ALREADY_REVIEWED';
       throw error;
+    }
+    if(normalizedStatus==='verified'){
+      const descriptor=await companyProofStorage.descriptor(current.stored_name,{mimeType:current.mime_type,size:current.file_size}).catch(()=>null);
+      if(!descriptor){
+        const error=new Error('Company proof file is unavailable. Ask the user to upload the document again.');
+        error.code='PROOF_FILE_UNAVAILABLE';
+        throw error;
+      }
     }
 
     const updated = (await client.query(
