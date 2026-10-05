@@ -79,8 +79,9 @@ const workerHeartbeatMaxAgeSeconds=Math.min(600,Math.max(30,Math.floor(Number(pr
 const trustProxy=String(process.env.TRUST_PROXY||'').trim();
 const backendOnlyPath=requestPath=>requestPath==='/robots.txt'||requestPath==='/sitemap.xml'||requestPath==='/health'||requestPath.startsWith('/health/')||requestPath.startsWith('/api')||requestPath.startsWith('/uploads');
 const privateFrontendPath=requestPath=>/^\/(admin|login|signup|forgot-password|reset-password|profile|wallet|membership|notifications|purchased-leads|my-leads|investment|lead-partner|requirements|estimate|professional-contact|professionals|upcoming-features|dashboard)(\/|$)/.test(requestPath);
-const publicSpaFrontendPaths=new Set(['/','/home','/quote','/solutions','/build','/design','/property','/experts','/packages','/projects','/how-it-works','/about','/real-estate','/contact','/faq','/pricing','/industries','/leads']);
-const knownSpaFrontendPath=requestPath=>privateFrontendPath(requestPath)||publicSpaFrontendPaths.has(requestPath);
+const publicSpaFrontendPaths=new Set(['/','/home','/quote','/solutions','/build','/design','/property','/experts','/packages','/projects','/how-it-works','/about','/real-estate','/contact','/faq','/pricing','/industries','/leads','/hyderabad','/guides','/interior-estimator','/interior-cost-estimator','/construction-estimator','/construction-cost-estimator']);
+const publicDynamicFrontendPath=requestPath=>/^\/hyderabad\/[a-z0-9-]+(?:\/(?:compare-options|[a-z0-9-]+))?$/.test(requestPath)||/^\/guides\/[a-z0-9-]+$/.test(requestPath)||/^\/[a-z0-9-]+\/construction(?:\/[a-z0-9-]+)?$/.test(requestPath);
+const knownSpaFrontendPath=requestPath=>privateFrontendPath(requestPath)||publicSpaFrontendPaths.has(requestPath)||publicDynamicFrontendPath(requestPath);
 if(trustProxy) app.set('trust proxy',trustProxy==='false'?false:trustProxy==='true'?true:Number.isNaN(Number(trustProxy))?trustProxy:Number(trustProxy));
 app.disable('x-powered-by');
 app.use((req,res,next)=>{
