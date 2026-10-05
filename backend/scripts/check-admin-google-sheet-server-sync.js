@@ -27,6 +27,8 @@ assert(defaultIndustryMigration.includes('default_industry_id'),'Admin sheet con
 assert(!scheduler.includes('pg_try_advisory_lock'),'Admin sheet scheduler must not hold a process-wide DB advisory-lock connection');
 assert(service.includes("pg_try_advisory_lock($1,$2)")&&service.includes("pg_advisory_unlock($1,$2)"),'Each Admin sheet connection must serialize manual and worker sync across replicas');
 assert(scheduler.includes('another replica is syncing it'),'Scheduler must treat per-connection lock contention as a normal skip');
+assert(scheduler.includes('force:!automated'),'Scheduled Admin sync must use fingerprints and skip unchanged sheets while manual global runs may force a reprocess');
+assert(service.includes('fingerprint=NULL,last_checked_at=NULL'),'Changing a connected Admin sheet default Industry must invalidate its fingerprint and make it immediately due');
 assert(service.includes("if(!locked)return{busy:true,sync:{busy:true,skipped:true,reason:'SYNC_IN_PROGRESS'}}"),'Overlapping sheet sync must return a stable busy result');
 assert(service.includes('const saved=synced.skipped'),'Unchanged-sheet checks must preserve the previous sync metrics');
 assert(service.includes("forCreate&&!detected?.state_id&&!detected?.state_name"),'Admin sheet sync must allow verified PINs with State-only resolution when the City catalog has no matching City');
