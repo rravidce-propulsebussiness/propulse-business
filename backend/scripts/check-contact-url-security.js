@@ -12,6 +12,7 @@ if(!/MAX_URL_LENGTH=2048/.test(serviceSource)) throw new Error('Contact URL secu
 if(!/raw\.startsWith\('\/'\)&&!raw\.startsWith\('\/\/'\)/.test(serviceSource)) throw new Error('Contact URL security regression: internal-path validation missing');
 if(!/INVALID_CONTACT_URL/.test(serviceSource)) throw new Error('Contact URL security regression: invalid URL error missing');
 if(!/INVALID_CONTACT_URL.*\?400/.test(controllerSource.replace(/\s+/g,''))) throw new Error('Contact URL security regression: controller must return HTTP 400');
+if(!contactService.AUDIENCES.includes('professionals')) throw new Error('Professional contact audience regression: professionals audience missing');
 
 function assertThrows(label,fn){
   try{fn(); throw new Error(label+' was accepted');}

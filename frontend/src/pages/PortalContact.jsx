@@ -8,7 +8,8 @@ import './PortalContact.css';
 
 const audienceCopy={
   lead_partners:{label:'Lead Partner',title:'Contact',sub:'Connect with ProPulse support for lead uploads, pricing, reports, earnings and withdrawals.'},
-  users:{label:'Professional',title:'Professional Support',sub:'Connect with ProPulse for leads, business account support, wallet, memberships, verification and marketplace assistance.'}
+  professionals:{label:'Professional',title:'Professional Support',sub:'Connect with ProPulse for leads, business account support, wallet, memberships, verification and marketplace assistance.'},
+  users:{label:'Customer',title:'Customer Support',sub:'Connect with ProPulse for homeowner account and project support.'}
 };
 const empty={company_name:'',email:'',phone:'',whatsapp:'',address:'',business_hours:'',support_email:'',careers_email:'',maps_url:'',social_handles:[]};
 

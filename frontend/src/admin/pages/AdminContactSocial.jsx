@@ -3,8 +3,9 @@ import { apiRequest } from '../../utils/api';
 import './AdminContactSocial.css';
 
 const AUDIENCES=[
-  {key:'website',label:'Website (Public)',sub:'Shown on the main website',icon:'◎'},
-  {key:'users',label:'Users (Customers)',sub:'Shown to registered users',icon:'♙'},
+  {key:'website',label:'Website (Public)',sub:'Shown on the main homeowner website',icon:'◎'},
+  {key:'users',label:'Users (Customers)',sub:'Customer-specific contact settings',icon:'♙'},
+  {key:'professionals',label:'Professionals',sub:'Shown on the professional contact page',icon:'▣'},
   {key:'lead_partners',label:'Lead Partners',sub:'Shown to lead partners',icon:'◆'},
   {key:'common',label:'Common Settings',sub:'Shared across all sections',icon:'⚙'}
 ];
@@ -55,7 +56,7 @@ export default function AdminContactSocial(){
   return <main className="admin-contact-page">
     <section className="admin-contact-hero">
       <div className="admin-contact-hero-copy"><span className="admin-contact-kicker">CONTENT / CONTACT &amp; SOCIAL</span><h1>Contact &amp; social</h1><p>Manage contact information, destinations and social media handles for each platform audience.</p><div className="admin-contact-hero-meta"><span><b>{current?.label}</b> selected</span><span><b>{contactChannels}</b> contact channels</span><span><b>{publishedCount}</b> social links live</span></div></div>
-      <div className="admin-contact-hero-actions"><a href={audience==='website'?'/contact':'/'} target="_blank" rel="noreferrer"><span>↗</span><div><b>Preview</b><small>{audience==='website'?'Open contact page':'Open website'}</small></div></a><button type="button" onClick={()=>loadAudience(audience)} disabled={loading}><span>↻</span><div><b>{loading?'Refreshing…':'Refresh'}</b><small>Reload saved settings</small></div></button></div>
+      <div className="admin-contact-hero-actions"><a href={audience==='website'?'/contact':audience==='professionals'?'/professional-contact':'/'} target="_blank" rel="noreferrer"><span>↗</span><div><b>Preview</b><small>{audience==='website'?'Open contact page':audience==='professionals'?'Open professional contact':'Open website'}</small></div></a><button type="button" onClick={()=>loadAudience(audience)} disabled={loading}><span>↻</span><div><b>{loading?'Refreshing…':'Refresh'}</b><small>Reload saved settings</small></div></button></div>
     </section>
     {error&&<div className="admin-contact-alert error">{error}</div>}
     {ok&&<div className="admin-contact-alert success">{ok}</div>}

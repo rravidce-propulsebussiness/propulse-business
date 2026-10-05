@@ -26,6 +26,10 @@ const experts=read('../frontend/src/pages/Experts.jsx');
 const expertsCss=read('../frontend/src/pages/Experts.css');
 const quoteLocationFields=read('../frontend/src/components/QuoteLocationFields.jsx');
 const notificationBell=read('../frontend/src/components/NotificationBell.jsx');
+const portalContact=read('../frontend/src/pages/PortalContact.jsx');
+const adminContactSocial=read('../frontend/src/admin/pages/AdminContactSocial.jsx');
+const userHeader=read('../frontend/src/components/UserHeader.jsx');
+const realEstateBuySellMigration=read('./src/database/migrations/20261006_real_estate_buy_sell_only.sql');
 const quoteLocationCss=read('../frontend/src/components/QuoteLocationFields.css');
 const interiorExact=read('../frontend/src/components/InteriorRequirementExact.jsx');
 const realEstateExact=read('../frontend/src/components/RealEstateRequirementExact.jsx');
@@ -56,6 +60,11 @@ assert.doesNotMatch(projects,/import PublicIcon /);
 assert.match(app,/path="\/experts" element={<Experts\/>}/);
 assert.match(app,/path="\/quote" element={<Solutions\/>}/);
 assert.match(app,/path="\/professionals" element={<Leads\/>}/);
+assert.match(app,/path="\/professional-contact" element={<PortalContact audience="professionals"\/>}/);
+assert.match(contact,/portalAudience==='users'[\s\S]*<Navigate to="\/contact" replace\/>/);
+assert.match(portalContact,/professionals:\{label:'Professional',title:'Professional Support'/);
+assert.match(adminContactSocial,/key:'professionals',label:'Professionals'/);
+assert.match(userHeader,/to="\/professional-contact"[\s\S]*>Contact<\/Link>/);
 assert.match(app,/path="\/solutions" element={<LegacySolutionRedirect\/>}/);
 assert.match(app,/targetHash=hash\?'#'\+hash/);
 assert.match(app,/<GlobalLeadPopup\/>/);
@@ -86,12 +95,29 @@ assert.match(homeCss,/\.hc-service-grid/);
 assert.match(homeCss,/\.hc-benefit-grid/);
 assert.match(homeCss,/\.hc-step-grid/);
 assert.doesNotMatch(home,/HeroJourneyVideo/);
+assert.match(home,/Buy or sell the right property/);
+assert.doesNotMatch(home,/buy, sell, rent or invest/i);
+assert.match(quote,/Buy or sell property with a structured location/);
+assert.doesNotMatch(quote,/buy, rent, sell or invest/i);
+assert.match(contact,/Buy and sell property requirements/);
+assert.match(projects,/title:'Apartment for Sale'/);
+assert.doesNotMatch(projects,/Investment Apartment|rental-demand considerations/);
 
 // Shared basic lead intake must remain wired to the public consultation endpoint.
 assert.match(popup,/Tell Us Your Requirement/);
 assert.match(popup,/\/customer-flows\/'\+form\.flowKey\+'\/consultation/);
 assert.match(popup,/consent:true/);
 assert.match(popup,/PIN Code/);
+assert(popup.indexOf('PIN Code')<popup.indexOf('City / Location')&&popup.indexOf('City / Location')<popup.indexOf('I am looking for'),'Global lead popup must start with PIN, then City, then requirement type');
+assert.match(popup,/label:'G\+3 and above'/);
+assert.doesNotMatch(popup,/label:'Above G\+3'|label:'G\+3'/);
+assert.match(popup,/<option value="buy">Buy<\/option><option value="sell">Sell<\/option>/);
+assert.doesNotMatch(popup,/<option value="rent">Rent<\/option>|<option value="invest">Invest<\/option>/);
+assert.match(realEstateBuySellMigration,/o\.value NOT IN \('buy','sell'\)/);
+assert.match(realEstateExact,/to="\/faq">FAQ<\/Link>/);
+assert.match(realEstateExact,/to="\/contact">Contact Us<\/Link>/);
+assert.doesNotMatch(realEstateExact,/key:'rental'|key:'investment'|intent:'rent'|intent:'invest'/);
+assert.doesNotMatch(realEstateExact,/to="\/contact\?audience=users">Privacy Policy<\/Link>|to="\/contact\?audience=users">Terms & Conditions<\/Link>/);
 assert.match(popup,/No\. of Floors/);
 assert.match(popup,/Submit Requirement/);
 assert.match(popup,/Requirement received/);
@@ -138,6 +164,13 @@ for(const source of [home,quote,packages,projects,about,howItWorks,contact]){
   assert.match(source,/For Professionals/);
   assert.match(source,/to="\/professionals"/);
   assert.match(source,/to="\/experts">Find Professionals<\/Link>/);
+}
+
+for(const source of [home,projects,about,howItWorks,interiorExact,realEstateExact,wizard]){
+  assert.doesNotMatch(source,/\/#contact/);
+  assert.doesNotMatch(source,/>Privacy Policy<|>Terms & Conditions</);
+  assert.match(source,/to="\/faq">FAQ<\/Link>/);
+  assert.match(source,/to="\/contact">Contact(?: Us)?<\/Link>/);
 }
 
 // Experts directory is public but does not expose direct contact data.

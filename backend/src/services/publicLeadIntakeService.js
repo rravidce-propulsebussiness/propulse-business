@@ -25,8 +25,7 @@ function constructionFloorLabel(value) {
   if(floors===1)return 'Ground Floor';
   if(floors===2)return 'G+1';
   if(floors===3)return 'G+2';
-  if(floors===4)return 'G+3';
-  if(Number.isFinite(floors)&&floors>=5)return 'Above G+3';
+  if(Number.isFinite(floors)&&floors>=4)return 'G+3 and above';
   return String(value??'').trim();
 }
 
@@ -170,9 +169,7 @@ const CONSULTATION_LABELS = {
   },
   propertyIntent: {
     buy: 'Buy a property',
-    rent: 'Rent a property',
     sell: 'Sell a property',
-    invest: 'Invest in property',
   },
 };
 

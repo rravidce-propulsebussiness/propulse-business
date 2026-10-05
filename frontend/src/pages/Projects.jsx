@@ -305,10 +305,10 @@ const PROJECTS = [
     description:'Villa-community inspiration for customers evaluating private outdoor space, community amenities and scale.',
   },
   {
-    id:'investment-apartment',
+    id:'apartment-for-sale',
     category:'property',
     categoryLabel:'Real Estate',
-    title:'Investment Apartment',
+    title:'Apartment for Sale',
     city:'Hyderabad',
     location:'Kondapur, Hyderabad',
     propertyType:'Apartment',
@@ -317,7 +317,7 @@ const PROJECTS = [
     style:'Modern',
     meta:'2 BHK',
     image:'https://images.unsplash.com/photo-1494526585095-c41746248156?auto=format&fit=crop&w=1200&q=88',
-    description:'Compact apartment inspiration for customers comparing budget, connectivity and rental-demand considerations.',
+    description:'Compact apartment inspiration for buyers and sellers comparing budget, connectivity, condition and resale value.',
   },
   {
     id:'residential-plot',
@@ -760,7 +760,7 @@ export default function Projects(){
       <div className="pj-footer-brand"><img src="/brand/propulse-logo.svg" alt="ProPulse"/><p>Your customer starting point for construction, interiors and real-estate requirements.</p><div>f&nbsp;&nbsp;◎&nbsp;&nbsp;▶&nbsp;&nbsp;in</div></div>
       <div><b>Quick Links</b><Link to="/">Home</Link><Link to="/quote#construction">Construction</Link><Link to="/quote#interiors">Interiors</Link><Link to="/packages">Packages</Link><Link to="/quote#property">Real Estate</Link><Link to="/projects">Projects</Link></div>
       <div><b>Our Services</b><Link to="/quote#construction">Home Construction</Link><Link to="/quote#interiors">Interior Design</Link><Link to="/quote#property">Real Estate</Link><Link to="/quote#construction">Construction Quote</Link><Link to="/quote#construction">Free Consultation</Link></div>
-      <div><b>Support</b><Link to="/professionals">FAQ</Link><Link to="/#contact">Contact Us</Link><Link to="/professionals">Privacy Policy</Link><Link to="/professionals">Terms & Conditions</Link></div>
+      <div><b>Support</b><Link to="/faq">FAQ</Link><Link to="/contact">Contact Us</Link></div>
       <div><b>Contact Info</b>{phone&&<span><Icon name="phone" size={13}/>{phone}</span>}{email&&<span>{email}</span>}<span><Icon name="pin" size={13}/>Hyderabad, India</span></div>
     </footer>
   </main>
