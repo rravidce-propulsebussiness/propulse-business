@@ -165,7 +165,12 @@ app.use('/api',(req,res,next)=>{
 });
 app.use('/api',csrfProtection);
 const apiGlobalRateLimitConfig=getApiGlobalRateLimitConfig({isProduction});
-const apiRateLimit=rateLimit({...apiGlobalRateLimitConfig,scope:'global'});
+const independentlyProtectedAuthPaths=new Set(['/auth/forgot-password','/auth/reset-password']);
+const apiRateLimit=rateLimit({
+  ...apiGlobalRateLimitConfig,
+  scope:'global',
+  skip:req=>independentlyProtectedAuthPaths.has(req.path),
+});
 app.use('/api',apiRateLimit);
 app.use('/api',(req,res,next)=>{
   if(startupReady)return next();
