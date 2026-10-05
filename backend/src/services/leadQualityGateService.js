@@ -183,7 +183,8 @@ async function evaluateAndApply(leadId,{context='system',autoRelease=true,review
       type:'lead_quality_hold',category:'lead',severity:'warning',title:'Lead held for quality review',
       message:`Lead #${leadId} is quarantined at ${Number(evaluation.score||0).toFixed(1)}/100. ${evaluation.reasons?.[0]?.message||'Review the lead quality checks.'}`,
       relatedType:'lead',relatedId:leadId,dedupeKey:`lead-quality-hold:${leadId}:${fingerprint}`,
-      metadata:{qualityScore:Number(evaluation.score||0),gateFlags:evaluation.gateFlags||[]}
+      metadata:{qualityScore:Number(evaluation.score||0),gateFlags:evaluation.gateFlags||[]},
+      email:false
     };
     if(current.lead_partner_id&&current.created_by){
       await notificationService.notifyUser({...payload,userId:current.created_by,actionUrl:'/lead-partner/inventory'},client);
