@@ -26,6 +26,14 @@ async function main() {
     assert.ok(Number(flow.question_count) >= 10);
   }
 
+  const propertyIntentOptions=(await pool.query(
+    "SELECT o.value,o.is_active FROM customer_flow_definitions d JOIN customer_flow_versions v ON v.definition_id=d.id AND v.status='published' JOIN customer_flow_questions q ON q.version_id=v.id AND q.question_key='property_intent' JOIN customer_flow_question_options o ON o.question_id=q.id WHERE d.key='property' AND v.version_no=(SELECT MAX(v2.version_no) FROM customer_flow_versions v2 WHERE v2.definition_id=d.id AND v2.status='published') AND o.value IN ('buy','sell','rent','invest') ORDER BY o.display_order,o.id"
+  )).rows;
+  const activePropertyIntents=propertyIntentOptions.filter(row=>row.is_active).map(row=>row.value);
+  assert.deepStrictEqual(activePropertyIntents,['buy','sell']);
+  assert(propertyIntentOptions.some(row=>row.value==='rent'&&!row.is_active),'Rent intent must be inactive');
+  assert(propertyIntentOptions.some(row=>row.value==='invest'&&!row.is_active),'Invest intent must be inactive');
+
   const functionDef = (await pool.query(
     "SELECT pg_get_functiondef(p.oid) AS definition FROM pg_proc p WHERE p.proname='prevent_duplicate_lead_insert' ORDER BY p.oid DESC LIMIT 1"
   )).rows[0]?.definition || '';
