@@ -24,7 +24,15 @@ function run(overrides) {
       RESEND_FROM_EMAIL: '',
       GOOGLE_CLIENT_ID: '',
       ADMIN_PASSWORD: '',
-      UPLOAD_STORAGE_ROOT: '/var/lib/propulse/uploads',
+      UPLOAD_STORAGE_ROOT: '',
+      PRIVATE_OBJECT_STORAGE_DRIVER: 's3',
+      PRIVATE_OBJECT_STORAGE_ENDPOINT: 'https://example-account.r2.cloudflarestorage.com',
+      PRIVATE_OBJECT_STORAGE_REGION: 'auto',
+      PRIVATE_OBJECT_STORAGE_BUCKET: 'propulse-files',
+      PRIVATE_OBJECT_STORAGE_ACCESS_KEY_ID: 'test-access',
+      PRIVATE_OBJECT_STORAGE_SECRET_ACCESS_KEY: 'test-secret',
+      PRIVATE_OBJECT_STORAGE_SIGNED_URL_SECONDS: '60',
+      PRIVATE_OBJECT_STORAGE_BACKUP_STRATEGY: 'bucket_versioning',
       HEALTH_CHECK_TIMEOUT_MS: '2500',
       HTTP_REQUEST_TIMEOUT_MS: '60000',
       HTTP_HEADERS_TIMEOUT_MS: '15000',
@@ -75,6 +83,18 @@ const r2Only = run({
 });
 assert.equal(r2Only.status, 0, r2Only.stderr || r2Only.stdout);
 assert.match(r2Only.stdout, /Production environment check passed/);
+
+const localStorage = run({
+  PRIVATE_OBJECT_STORAGE_DRIVER: 'local',
+  PRIVATE_OBJECT_STORAGE_ENDPOINT: '',
+  PRIVATE_OBJECT_STORAGE_BUCKET: '',
+  PRIVATE_OBJECT_STORAGE_ACCESS_KEY_ID: '',
+  PRIVATE_OBJECT_STORAGE_SECRET_ACCESS_KEY: '',
+  PRIVATE_OBJECT_STORAGE_BACKUP_STRATEGY: '',
+  UPLOAD_STORAGE_ROOT: '/var/lib/propulse/uploads',
+});
+assert.notEqual(localStorage.status, 0);
+assert.match(`${localStorage.stdout}\n${localStorage.stderr}`, /PRIVATE_OBJECT_STORAGE_DRIVER must be s3 in production/);
 
 const unsafe = run({
   JWT_SECRET: 'short',
