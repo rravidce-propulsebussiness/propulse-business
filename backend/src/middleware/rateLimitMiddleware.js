@@ -134,8 +134,14 @@ function rateLimit({ windowMs = 15 * 60 * 1000, max = 100, scope = 'route', shar
     res.setHeader('RateLimit-Remaining', String(Math.max(0, safeMax - count)));
 
     if (count > safeMax) {
-      res.setHeader('Retry-After', String(Math.max(1, retryAfter)));
-      return res.status(429).json({ error: 'Too many requests. Please try again later.' });
+      const safeRetryAfter = Math.max(1, retryAfter);
+      res.setHeader('Retry-After', String(safeRetryAfter));
+      res.setHeader('RateLimit-Reset', String(safeRetryAfter));
+      return res.status(429).json({
+        error: 'Too many requests. Please try again later.',
+        code: 'RATE_LIMITED',
+        retryAfter: safeRetryAfter,
+      });
     }
     return next();
   };
