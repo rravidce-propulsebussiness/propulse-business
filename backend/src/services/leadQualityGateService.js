@@ -196,7 +196,8 @@ async function evaluateAndApply(leadId,{context='system',autoRelease=true,review
       title:'Lead released from quality hold',message:`Lead #${leadId} passed review and is available in inventory.`,
       actionUrl:'/lead-partner/inventory',relatedType:'lead',relatedId:leadId,
       dedupeKey:`lead-quality-released:${leadId}:${Number(evaluation.score||0).toFixed(1)}`,
-      metadata:{qualityScore:Number(evaluation.score||0)}
+      metadata:{qualityScore:Number(evaluation.score||0)},
+      email:false
     },client);
   }
   return{lead,settings,evaluation};
