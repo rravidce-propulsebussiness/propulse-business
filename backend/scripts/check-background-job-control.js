@@ -24,6 +24,9 @@ assert(migration.includes("trigger_source IN ('scheduled','manual','startup')"),
 assert(leaseMigration.includes('CREATE TABLE IF NOT EXISTS background_job_leases'),'Background job lease table is missing');
 assert(control.includes('INSERT INTO background_job_leases')&&control.includes('locked_until<=CURRENT_TIMESTAMP'),'Background jobs must use an expiring cross-process database lease');
 assert(control.includes('releaseLease(jobKey,ownerToken)'),'Background job leases must be released after execution');
+assert(control.includes("background_job_leases.updated_at<=CURRENT_TIMESTAMP-($4*INTERVAL '1 second')"),'Orphaned background-job leases must become stealable after a stale heartbeat');
+assert(control.includes('renewLease(jobKey,ownerToken)')&&control.includes('leaseHeartbeatMs()'),'Active long-running jobs must heartbeat their database lease');
+assert(control.includes('recoverStaleRuns(jobKey)')&&control.includes('Previous worker stopped before completing this job'),'A replacement worker must close abandoned running rows');
 assert(control.includes("SECRET_KEY=/(password|token|secret"),'Background job summaries must redact secret-like fields');
 assert(control.includes("status:'failed'")&&control.includes("status:'skipped'"),'Background job recorder must preserve failed/skipped states');
 
