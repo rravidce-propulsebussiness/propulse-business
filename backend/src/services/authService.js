@@ -327,6 +327,12 @@ async function createPasswordReset(email) {
   return { user, token: rawToken };
 }
 
+async function discardPasswordReset(token) {
+  if (!token || typeof token !== 'string') return;
+  const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+  await pool.query('DELETE FROM password_reset_tokens WHERE token_hash=$1 AND used_at IS NULL', [tokenHash]);
+}
+
 async function resetPassword({ token, password }) {
   if (!token || typeof token !== 'string' || !isValidPassword(password)) throw Object.assign(new Error('A valid reset token and a password of 8-64 characters with a letter and number are required'), { code: 'INVALID_RESET_REQUEST' });
   const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
@@ -438,4 +444,4 @@ async function getCompanyProofDocument({ documentId, userId, isAdmin = false }) 
   return result.rows[0] || null;
 }
 
-module.exports = { signup, saveCompanyProofDocuments, getCompanyProofDocument, login, googleLogin, createPasswordReset, resetPassword, verifyToken, getUserById, getPublicAuthenticatedUser, getAuthenticatedUser, getAuthenticatedUserBySupabaseId, linkSupabaseIdentity, revokeAuthSessions };
+module.exports = { signup, saveCompanyProofDocuments, getCompanyProofDocument, login, googleLogin, createPasswordReset, discardPasswordReset, resetPassword, verifyToken, getUserById, getPublicAuthenticatedUser, getAuthenticatedUser, getAuthenticatedUserBySupabaseId, linkSupabaseIdentity, revokeAuthSessions };
