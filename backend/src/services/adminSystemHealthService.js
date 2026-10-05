@@ -154,12 +154,14 @@ async function getSystemHealth(){
   const busyConnections=Math.max(0,totalConnections-idleConnections);
   const waiting=safeNumber(pool.waitingCount);
   const memory=process.memoryUsage();
-  const email=emailService.configurationHealth();
+  const emailConfig=emailService.configurationHealth();
+  const productionEmailRisk=releaseIdentity.deploymentEnvironment()==='production'&&emailConfig.senderMode==='resend_test';
+  const email={...emailConfig,status:!emailConfig.configured?'unavailable':productionEmailRisk?'degraded':'ready'};
   const issues=[];
 
   if(!databaseOk)issues.push(createIssue({severity:'degraded',code:'database_unavailable',title:'Database unavailable',message:'The web process could not complete the PostgreSQL health probe.',actionUrl:'/admin/system-health',actionLabel:'Refresh health',source:'database'}));
   if(!email.configured)issues.push(createIssue({severity:'degraded',code:'email_delivery_unavailable',title:'Email delivery is not configured',message:'Password reset and notification emails cannot be delivered until the email provider is configured.',actionUrl:'/admin/system-health',actionLabel:'Review email configuration',source:'email'}));
-  else if(releaseIdentity.deploymentEnvironment()==='production'&&email.senderMode==='resend_test')issues.push(createIssue({severity:'degraded',code:'email_test_sender_in_production',title:'Production is using the Resend test sender',message:'Configure RESEND_FROM_EMAIL on a verified sender domain. The Resend test sender is not suitable for customer password-reset delivery.',actionUrl:'/admin/system-health',actionLabel:'Review email configuration',source:'email'}));
+  else if(productionEmailRisk)issues.push(createIssue({severity:'degraded',code:'email_test_sender_in_production',title:'Production is using the Resend test sender',message:'Configure RESEND_FROM_EMAIL on a verified sender domain. The Resend test sender is not suitable for customer password-reset delivery.',actionUrl:'/admin/system-health',actionLabel:'Review email configuration',source:'email'}));
   if(databaseOk&&waiting>0)issues.push(createIssue({severity:'attention',code:'database_pool_waiting',title:'Database requests are waiting',message:`${waiting} request${waiting===1?' is':'s are'} waiting for a PostgreSQL connection.`,actionUrl:'/admin/system-health',actionLabel:'Review runtime',source:'database'}));
   if(!storageOk)issues.push(createIssue({severity:'degraded',code:'upload_storage_unavailable',title:'Upload storage unavailable',message:'The configured upload storage health check failed.',actionUrl:'/admin/system-health',actionLabel:'Review storage',source:'storage'}));
   if(!privateObjectOk)issues.push(createIssue({severity:'degraded',code:'private_objects_unavailable',title:'Private object storage unavailable',message:privateObjectHealth.error||'Private proof/object storage could not be reached.',actionUrl:'/admin/system-health',actionLabel:'Review storage',source:'private_objects'}));
