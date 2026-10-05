@@ -16,6 +16,8 @@ assert(identity.includes('hostinger-release.json')&&identity.includes('bakedComm
 assert(identity.includes('function bakedRelease()'),'Release identity must read baked Hostinger metadata as an object');
 assert(identity.includes("bakedRelease()?.environment"),'Release identity must prefer the baked deployment environment when present');
 assert(server.includes("app.get('/health/version'"),'Public release identity endpoint is missing');
+assert(server.includes("app.get('/release.json'")&&server.includes("path.join(frontendDist,'release.json')"),'Backend must expose the exact bundled frontend release marker');
+assert(hostingerMainWorkflow.includes("git add -f frontend/dist backend/hostinger-frontend backend/hostinger-release.json"),'Main Hostinger prebuild must publish both frontend bundles and release identity');
 assert(server.includes('releaseIdentity.snapshot()'),'Version endpoint must use shared release identity');
 assert(smoke.includes("request('/health/version')"),'Deployed smoke must verify version identity');
 assert(smoke.includes('DEPLOY_EXPECTED_COMMIT')&&smoke.includes('DEPLOY_EXPECTED_ENVIRONMENT'),'Smoke must verify expected release');
