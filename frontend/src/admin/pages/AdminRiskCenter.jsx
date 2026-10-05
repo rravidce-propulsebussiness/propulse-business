@@ -32,7 +32,9 @@ export default function AdminRiskCenter(){
   const [loading,setLoading]=useState(true);
   const [busyId,setBusyId]=useState(null);
   const [message,setMessage]=useState('');
-  const searchRef=useRef(search);searchRef.current=search;
+  const searchRef=useRef(search);
+
+  useEffect(()=>{searchRef.current=search},[search]);
 
   const load=useCallback(async(nextPage=1)=>{
     setLoading(true);
