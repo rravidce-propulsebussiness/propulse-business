@@ -22,6 +22,8 @@ assert(migration.includes("'quarantined'"),'Lead status constraint must explicit
 assert(migration.includes('quality_gate_score')&&migration.includes('quality_gate_reasons'),'Lead quarantine audit metadata is missing');
 assert(migration.includes('lead_quality_gate_settings'),'Quality gate settings table is missing');
 assert(leadService.includes('leadQualityGateService.evaluateAndApply'),'Every lead creation must pass the common quality gate');
+assert(leadService.includes('windowHours=24*30')&&leadService.includes("COALESCE(pincode,'')=$5"),'Duplicate lead protection must cover repeat sheet imports for up to 30 days while scoping valid PINs so distinct projects at different locations are not collapsed');
+assert(leadService.includes('pincode:pincode||zipcode'),'Lead creation must pass the normalized project PIN into duplicate detection');
 assert(leadService.includes("'quarantined') RETURNING *"),'New leads must be inserted quarantined before quality evaluation to avoid a sellable race window');
 assert(leadService.includes('lead_partner_id,investor_user_id,status')&&leadService.includes('leadPartnerId?Number(leadPartnerId):null'),'Lead ownership and investor attribution must be inserted before quality release');
 assert(partnerInventory.includes('leadPartnerId:partner.id'),'Lead Partner bulk imports must insert ownership atomically');
