@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { publicRequest } from '../utils/auth'
-import { isEmptyAnswer, isQuestionVisible } from '../components/CustomerFlowQuestion'
+import { isEmptyAnswer, isQuestionVisible } from '../components/customerFlowQuestionUtils'
 import InteriorRequirementExact from '../components/InteriorRequirementExact'
 import RealEstateRequirementExact from '../components/RealEstateRequirementExact'
 import QuoteLocationFields from '../components/QuoteLocationFields'
