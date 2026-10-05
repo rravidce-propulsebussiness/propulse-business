@@ -72,7 +72,9 @@ export async function apiRequest(path, options = {}, includeToken = true) {
     const error = new Error(data.error || 'Request failed')
     error.status = response.status
     error.code = data.code
-    const retryAfter = Number(response.headers.get('Retry-After'))
+    const retryAfterHeader = Number(response.headers.get('Retry-After'))
+    const retryAfterBody = Number(data.retryAfterSeconds)
+    const retryAfter = Number.isFinite(retryAfterHeader) && retryAfterHeader > 0 ? retryAfterHeader : retryAfterBody
     if (Number.isFinite(retryAfter) && retryAfter > 0) error.retryAfter = retryAfter
     throw error
   }
