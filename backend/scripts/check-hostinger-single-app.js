@@ -64,6 +64,8 @@ assert(backendServer.includes("Application frontend is starting. Please retry sh
 assert(wrapper.includes("startsWith('/api/')"),'Hostinger wrapper proxies API traffic');
 assert(wrapper.includes("requestPath==='/robots.txt'"),'Hostinger wrapper proxies robots.txt');
 assert(wrapper.includes("requestPath==='/sitemap.xml'"),'Hostinger wrapper proxies sitemap.xml');
+assert(wrapper.includes("requestPath==='/release.json'"),'Hostinger wrapper proxies the frontend release marker to the backend bundle');
+assert(backendServer.includes("app.get('/release.json'")&&backendServer.includes("path.join(frontendDist,'release.json')"),'Backend single-app runtime serves the bundled release marker explicitly');
 assert(wrapper.includes("express.static(frontendDist"),'Hostinger wrapper serves the built frontend');
 assert(wrapper.includes("extensions:['html']"),'Hostinger wrapper resolves prerendered .html SEO routes');
 assert(wrapper.includes('knownSpaFrontendPath(req.path)')&&wrapper.includes("res.status(404).send('Not found')"),'Hostinger wrapper must return 404 for unknown HTML routes');
