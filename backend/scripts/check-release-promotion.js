@@ -22,6 +22,7 @@ assert(hostingerMainWorkflow.includes("git add -f frontend/dist backend/hostinge
 assert(server.includes('releaseIdentity.snapshot()'),'Version endpoint must use shared release identity');
 assert(smoke.includes("request('/health/version')"),'Deployed smoke must verify version identity');
 assert(smoke.includes("request('/api/auth/session'")&&smoke.includes("request('/api/sound-settings'")&&smoke.includes("request('/api/experts?page=1&pageSize=1'"),'Deployed smoke must verify the critical public session, sound-settings and Experts APIs');
+assert(smoke.includes("request('/industries'")&&smoke.includes("industriesPage.status, 301"),'Deployed smoke must verify the legacy public /industries redirect');
 assert(smoke.includes('DEPLOY_EXPECTED_COMMIT')&&smoke.includes('DEPLOY_EXPECTED_ENVIRONMENT'),'Smoke must verify expected release');
 assert(wait.includes("'/health/version'")&&wait.includes("'/health/ready'"),'Waiter must require identity and readiness');
 assert(workflow.includes('name: Release Promotion'),'Release workflow is missing');
