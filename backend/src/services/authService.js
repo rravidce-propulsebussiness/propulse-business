@@ -320,11 +320,31 @@ async function createPasswordReset(email) {
   const result = await pool.query(`SELECT id,name,email FROM users WHERE LOWER(email)=$1 AND is_active=TRUE`, [normalizedEmail]);
   const user = result.rows[0];
   if (!user) return null;
+
+  const cooldown = await pool.query(
+    `SELECT EXISTS (
+       SELECT 1
+       FROM password_reset_tokens
+       WHERE user_id=$1
+         AND used_at IS NULL
+         AND expires_at > CURRENT_TIMESTAMP
+         AND created_at > CURRENT_TIMESTAMP - INTERVAL '60 seconds'
+     ) AS active`,
+    [user.id]
+  );
+  if (cooldown.rows[0]?.active === true) return { user, cooldown: true };
+
   const rawToken = crypto.randomBytes(32).toString('hex');
   const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex');
   await pool.query(`DELETE FROM password_reset_tokens WHERE user_id=$1 OR expires_at < CURRENT_TIMESTAMP`, [user.id]);
   await pool.query(`INSERT INTO password_reset_tokens (user_id,token_hash,expires_at) VALUES ($1,$2,CURRENT_TIMESTAMP + INTERVAL '30 minutes')`, [user.id, tokenHash]);
-  return { user, token: rawToken };
+  return { user, token: rawToken, cooldown: false };
+}
+
+async function discardPasswordResetToken(token) {
+  if (!token || typeof token !== 'string') return;
+  const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+  await pool.query('DELETE FROM password_reset_tokens WHERE token_hash=$1', [tokenHash]);
 }
 
 async function resetPassword({ token, password }) {
@@ -438,4 +458,4 @@ async function getCompanyProofDocument({ documentId, userId, isAdmin = false }) 
   return result.rows[0] || null;
 }
 
-module.exports = { signup, saveCompanyProofDocuments, getCompanyProofDocument, login, googleLogin, createPasswordReset, resetPassword, verifyToken, getUserById, getPublicAuthenticatedUser, getAuthenticatedUser, getAuthenticatedUserBySupabaseId, linkSupabaseIdentity, revokeAuthSessions };
+module.exports = { signup, saveCompanyProofDocuments, getCompanyProofDocument, login, googleLogin, createPasswordReset, discardPasswordResetToken, resetPassword, verifyToken, getUserById, getPublicAuthenticatedUser, getAuthenticatedUser, getAuthenticatedUserBySupabaseId, linkSupabaseIdentity, revokeAuthSessions };
