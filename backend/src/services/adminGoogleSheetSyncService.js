@@ -237,7 +237,12 @@ async function syncConnection({connectionId,adminId,force=false}){
     if(!connection){const e=new Error('Active Google Sheet connection not found');e.code='SHEET_CONNECTION_NOT_FOUND';throw e}
     const synced=await syncGoogleSheet({adminId:adminId||connection.created_by||null,url:connection.source_url,defaults:connection.defaults||{},columnMappings:connection.column_mappings||{},previousFingerprint:connection.fingerprint,force,defaultIndustryId:connection.default_industry_id});
     const saved=synced.skipped
-      ?(await pool.query(`UPDATE admin_google_sheet_connections SET last_checked_at=CURRENT_TIMESTAMP,sync_failure_count=0,last_sync_error_at=NULL,last_sync_error=NULL,next_retry_at=NULL,updated_at=CURRENT_TIMESTAMP WHERE id=$1 RETURNING *`,[id])).rows[0]
+      ?(await pool.query(`UPDATE admin_google_sheet_connections
+            SET last_checked_at=CURRENT_TIMESTAMP,
+                last_sync_created=0,last_sync_updated=0,last_sync_unchanged=$1,last_sync_failed=0,last_sync_failures='[]'::jsonb,
+                sync_failure_count=0,last_sync_error_at=NULL,last_sync_error=NULL,next_retry_at=NULL,updated_at=CURRENT_TIMESTAMP
+          WHERE id=$2
+          RETURNING *`,[Number(synced.total||0),id])).rows[0]
       :(await pool.query(`UPDATE admin_google_sheet_connections SET last_checked_at=CURRENT_TIMESTAMP,last_synced_at=CURRENT_TIMESTAMP,fingerprint=COALESCE($1,fingerprint),last_sync_created=$2,last_sync_updated=$3,last_sync_unchanged=$4,last_sync_failed=$5,last_sync_failures=$6::jsonb,sync_failure_count=0,last_sync_error_at=NULL,last_sync_error=NULL,next_retry_at=NULL,updated_at=CURRENT_TIMESTAMP WHERE id=$7 RETURNING *`,[synced.fingerprint||connection.fingerprint,synced.created||0,synced.updated||0,synced.unchanged||0,synced.failed||0,JSON.stringify(synced.failures||[]),id])).rows[0];
     return{connection:saved,sync:synced};
   }finally{
