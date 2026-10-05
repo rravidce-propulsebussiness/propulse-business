@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { apiRequest } from '../../utils/api'
 import { HYDERABAD_SEO_ROUTES } from '../../seo/hyderabadSeo'
 import { REGIONAL_SEO_ROUTES } from '../../seo/regionalSeo'
@@ -17,7 +17,7 @@ export default function AdminCustomerFlows(){
  const[flows,setFlows]=useState([]),[detail,setDetail]=useState(null),[industries,setIndustries]=useState([]),[services,setServices]=useState([]),[subservices,setSubservices]=useState([])
  const[createForm,setCreateForm]=useState(emptyCreate),[showCreate,setShowCreate]=useState(false),[busy,setBusy]=useState(false),[error,setError]=useState(''),[message,setMessage]=useState('')
 
- async function load(selectedId){
+ const load=useCallback(async(selectedId)=>{
   try{
    setBusy(true);setError('')
    const[flowRows,industryRows,serviceRows,subserviceRows]=await Promise.all([apiRequest('/customer-flows/admin'),apiRequest('/industries'),apiRequest('/services'),apiRequest('/subservices')])
@@ -25,13 +25,17 @@ export default function AdminCustomerFlows(){
    const chosen=selectedId||flowRows?.[0]?.id
    setDetail(chosen?await apiRequest('/customer-flows/admin/'+chosen):null)
   }catch(e){setError(e.message)}finally{setBusy(false)}
- }
- useEffect(()=>{load()},[])
+ },[])
+ useEffect(()=>{
+  let active=true
+  queueMicrotask(()=>{if(active)load()})
+  return()=>{active=false}
+ },[load])
 
- const editorServices=useMemo(()=>services.filter(x=>String(x.industry_id)===String(detail?.industry_id)),[services,detail?.industry_id])
- const editorSubs=useMemo(()=>subservices.filter(x=>String(x.service_id)===String(detail?.service_id)),[subservices,detail?.service_id])
- const createServices=useMemo(()=>services.filter(x=>String(x.industry_id)===String(createForm.industryId)),[services,createForm.industryId])
- const createSubs=useMemo(()=>subservices.filter(x=>String(x.service_id)===String(createForm.serviceId)),[subservices,createForm.serviceId])
+ const editorServices=services.filter(x=>String(x.industry_id)===String(detail?.industry_id))
+ const editorSubs=subservices.filter(x=>String(x.service_id)===String(detail?.service_id))
+ const createServices=services.filter(x=>String(x.industry_id)===String(createForm.industryId))
+ const createSubs=subservices.filter(x=>String(x.service_id)===String(createForm.serviceId))
  const questions=detail?.editingVersion?.questions||[]
 
  const patchDetail=patch=>setDetail(current=>({...current,...patch}))
