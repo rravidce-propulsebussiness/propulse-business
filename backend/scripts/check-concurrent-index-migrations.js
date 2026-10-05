@@ -7,7 +7,8 @@ const assert=(condition,message)=>{if(!condition)throw new Error(message)};
 for(const relative of [
   'src/database/migrations/20260928_production_hot_path_indexes.sql',
   'src/database/migrations/20260928_investor_linked_lead_pagination.sql',
-  'src/database/migrations/20260928_investment_cycle_latest_index.sql'
+  'src/database/migrations/20260928_investment_cycle_latest_index.sql',
+  'src/database/migrations/20261006_hot_fk_indexes.sql'
 ]){
   const migration=read(relative);
   assert(migration.includes('-- propulse:no-transaction'),relative+' must opt out of the migration transaction');
