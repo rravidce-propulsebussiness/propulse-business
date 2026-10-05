@@ -45,6 +45,8 @@ assert.match(forgot,/Try again in/,'forgot-password form must show a retry count
 assert.match(forgot,/PASSWORD_RESET_EMAIL_UNAVAILABLE/,'forgot-password form must show a delivery-specific error');
 assert.match(forgot,/ACCOUNT_NOT_FOUND/,'forgot-password form must handle missing accounts explicitly');
 assert.match(forgot,/Reset link sent\. Please check your email\./,'forgot-password form must show an explicit successful send message');
+assert.match(forgot,/Not in your inbox\? Check Spam or Promotions\./,'forgot-password success must guide users to spam/promotions');
+assert.match(forgot,/prefers-reduced-motion/,'typing hint must respect reduced-motion preferences');
 assert.match(reset,/Too many reset attempts/,'reset-password form must explain throttling');
 assert.match(app,/import ForgotPassword from '\.\/pages\/ForgotPassword'/,'forgot-password must be in the main bundle');
 assert.match(app,/import ResetPassword from '\.\/pages\/ResetPassword'/,'reset-password must be in the main bundle');
