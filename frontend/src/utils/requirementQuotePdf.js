@@ -139,27 +139,6 @@ function drawMetaGrid(page,items){
   });
   page.y+=Math.ceil(items.length/2)*90+12;
 }
-function drawCostCards(page,quotation){
-  const{ctx}=page;
-  const width=(CONTENT_WIDTH-24)/3;
-  const cards=[
-    ['ESTIMATED MINIMUM',quotation.minimumText||money(quotation.minimum)],
-    ['ESTIMATED MAXIMUM',quotation.maximumText||money(quotation.maximum)],
-    ['EFFECTIVE RATE',quotation.effectiveRateText||'—'],
-  ];
-  cards.forEach(([label,value],index)=>{
-    const x=MARGIN+index*(width+12);
-    ctx.fillStyle=index===1?'#0a2d50':'#fff7f2';
-    roundedRect(ctx,x,page.y,width,104,12);ctx.fill();
-    ctx.fillStyle=index===1?'#cdddea':'#a4512e';
-    ctx.font='800 13px Arial, sans-serif';
-    ctx.fillText(label,x+16,page.y+28);
-    ctx.fillStyle=index===1?'#fff':'#0a2d50';
-    ctx.font='800 22px Arial, sans-serif';
-    wrap(ctx,value,width-32).slice(0,2).forEach((line,lineIndex)=>ctx.fillText(line,x+16,page.y+62+lineIndex*22));
-  });
-  page.y+=124;
-}
 function drawKeyValueRows(page,rows){
   const{ctx}=page;
   for(const [label,value] of rows){
@@ -179,31 +158,6 @@ function drawKeyValueRows(page,rows){
     page.y+=height+9;
   }
 }
-function drawBreakdownTable(page,rows){
-  const{ctx}=page;
-  const col1=500,col2=268,col3=268;
-  ctx.fillStyle='#0a2d50';
-  ctx.fillRect(MARGIN,page.y,CONTENT_WIDTH,50);
-  ctx.fillStyle='#fff';
-  ctx.font='800 16px Arial, sans-serif';
-  ctx.fillText('Cost component',MARGIN+15,page.y+31);
-  ctx.fillText('Minimum',MARGIN+col1+15,page.y+31);
-  ctx.fillText('Maximum',MARGIN+col1+col2+15,page.y+31);
-  page.y+=50;
-  rows.forEach((row,index)=>{
-    const h=58;
-    ctx.fillStyle=index%2===0?'#fbfcfd':'#fff';
-    ctx.fillRect(MARGIN,page.y,CONTENT_WIDTH,h);
-    ctx.strokeStyle='#e4e9ee';ctx.strokeRect(MARGIN,page.y,CONTENT_WIDTH,h);
-    ctx.fillStyle='#263f55';ctx.font='600 17px Arial, sans-serif';
-    ctx.fillText(String(row.label||'Cost item').slice(0,48),MARGIN+15,page.y+35);
-    ctx.fillStyle='#173957';ctx.font='700 17px Arial, sans-serif';
-    ctx.fillText(row.minimumText||money(row.minimum),MARGIN+col1+15,page.y+35);
-    ctx.fillText(row.maximumText||money(row.maximum),MARGIN+col1+col2+15,page.y+35);
-    page.y+=h;
-  });
-  page.y+=16;
-}
 function drawSpecificationCards(page,specifications){
   const{ctx}=page;
   specifications.forEach(([label,value],index)=>{
@@ -217,31 +171,6 @@ function drawSpecificationCards(page,specifications){
     lines.forEach((line,lineIndex)=>ctx.fillText(line,MARGIN+280,page.y+29+lineIndex*23));
     page.y+=height+9;
   });
-}
-function drawPaymentTable(page,schedule){
-  const{ctx}=page;
-  const widths=[90,580,183,183];
-  const headers=['%','Milestone','Minimum','Maximum'];
-  let x=MARGIN;
-  ctx.fillStyle='#0a2d50';ctx.fillRect(MARGIN,page.y,CONTENT_WIDTH,52);
-  ctx.fillStyle='#fff';ctx.font='800 15px Arial, sans-serif';
-  headers.forEach((header,index)=>{ctx.fillText(header,x+10,page.y+32);x+=widths[index]});
-  page.y+=52;
-  schedule.forEach((item,index)=>{
-    const lines=wrap(ctx,item.milestone,540);
-    const h=Math.max(58,25+lines.length*22);
-    ctx.fillStyle=index%2===0?'#fbfcfd':'#fff';ctx.fillRect(MARGIN,page.y,CONTENT_WIDTH,h);
-    ctx.strokeStyle='#e4e9ee';ctx.strokeRect(MARGIN,page.y,CONTENT_WIDTH,h);
-    ctx.fillStyle='#173957';ctx.font='700 16px Arial, sans-serif';
-    ctx.fillText(String(item.percent)+'%',MARGIN+12,page.y+31);
-    ctx.font='500 16px Arial, sans-serif';
-    lines.forEach((line,lineIndex)=>ctx.fillText(line,MARGIN+widths[0]+10,page.y+29+lineIndex*22));
-    ctx.font='700 15px Arial, sans-serif';
-    ctx.fillText(money(item.minimum),MARGIN+widths[0]+widths[1]+10,page.y+31);
-    ctx.fillText(money(item.maximum),MARGIN+widths[0]+widths[1]+widths[2]+10,page.y+31);
-    page.y+=h;
-  });
-  page.y+=14;
 }
 function drawBullets(page,items){
   const{ctx}=page;
@@ -496,7 +425,7 @@ function drawWhyChoose(page){
   });
 }
 
-async function detailedQuotationPages({quotation,flowName,flowKey,leadId,customerName,phone,email,city,pincode,rows}){
+async function detailedQuotationPages({quotation,leadId,customerName,phone,email,city,pincode}){
   const logo=await loadLogo();
   const pages=[];
   const addPage=(title='Detailed Quotation')=>{
