@@ -32,7 +32,9 @@ assert(control.includes("background_job_leases.updated_at<=CURRENT_TIMESTAMP-($4
 assert(control.includes('renewLease(jobKey,ownerToken)')&&control.includes('leaseHeartbeatMs()'),'Active long-running jobs must heartbeat their database lease');
 assert(control.includes('recoverStaleRuns(jobKey)')&&control.includes('Previous worker stopped before completing this job'),'A replacement worker must close abandoned running rows');
 assert(control.includes("SECRET_KEY=/(password|token|secret"),'Background job summaries must redact secret-like fields');
-assert(control.includes("status:'failed'")&&control.includes("status:'skipped'"),'Background job recorder must preserve failed/skipped states');
+assert(control.includes("return'failed'")&&control.includes("return'skipped'")&&control.includes("finishRun(run.id,{status,summary:result||{}})"),'Executed background jobs must preserve failed/skipped result states');
+assert(control.includes("return{busy:true,skipped:true,reason:'busy',runId:null,jobStatus:'skipped'}"),'Lease contention must report busy without inventing a run id');
+assert(!control.includes("insertRun({jobKey,source,triggeredBy,status:'skipped',summary:{reason:'busy'}}"),'Lease contention must not create fake skipped-run ledger rows');
 
 for(const [name,source,key] of [
   ['Admin sheet sync',adminSheets,'admin_google_sheet_sync'],

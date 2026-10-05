@@ -25,9 +25,9 @@ const assert=(v,m)=>{if(!v)throw new Error(m)};
      ON CONFLICT(job_key) DO UPDATE SET owner_token=EXCLUDED.owner_token,locked_until=EXCLUDED.locked_until,updated_at=CURRENT_TIMESTAMP`
   );
   const busy=await control.execute({jobKey:'ci_locked_job',source:'manual',triggeredBy:admin.id,task:async()=>({unexpected:true})});
-  assert(busy.busy===true&&busy.skipped===true,'Concurrent job must be skipped while an unexpired database lease is held');
-  const busyRow=(await pool.query('SELECT status,summary FROM background_job_runs WHERE id=$1',[busy.runId])).rows[0];
-  assert(busyRow.status==='skipped'&&busyRow.summary.reason==='busy','Busy run must be persisted as skipped');
+  assert(busy.busy===true&&busy.skipped===true&&busy.reason==='busy'&&busy.runId===null&&busy.jobStatus==='skipped','Concurrent job must return busy without an invented run id while an unexpired database lease is held');
+  const busyCount=Number((await pool.query("SELECT COUNT(*)::int AS count FROM background_job_runs WHERE job_key='ci_locked_job'")).rows[0].count);
+  assert(busyCount===0,'Lease contention must not persist a fake skipped run');
   await pool.query("DELETE FROM background_job_leases WHERE job_key='ci_locked_job'");
 
   const manual=await registry.retry('notification_email_delivery',{adminId:admin.id});
