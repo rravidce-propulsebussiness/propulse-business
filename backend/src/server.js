@@ -310,11 +310,16 @@ async function initializeDependencies(){
     console.log('Initializing backend database dependencies...');
     if(runMigrationsOnStartup)await runMigrations();
     else console.log('Database migrations skipped on web startup (RUN_MIGRATIONS_ON_STARTUP=false).');
-    if(operationalMonitoringEnabled)await operationalMonitoringService.pruneResolved().catch(error=>console.error('Operational-event retention cleanup failed:',error.message));
     startupReady=true;
     startupError=null;
     console.log('Backend database dependencies are ready.');
     startBackgroundJobsOnce();
+
+    // Retention cleanup is housekeeping, not a dependency required to serve API
+    // traffic. Run it after readiness so deploy restarts do not return 503 while
+    // an old monitoring row is being deleted.
+    if(operationalMonitoringEnabled)void operationalMonitoringService.pruneResolved()
+      .catch(error=>console.error('Operational-event retention cleanup failed:',error.message));
 
     // Object storage is important for upload features, but it must not take down
     // authentication, admin, notifications, catalog or lead APIs if R2 is

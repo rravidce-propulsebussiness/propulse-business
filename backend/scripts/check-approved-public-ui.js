@@ -24,6 +24,7 @@ const contact=read('../frontend/src/pages/Contact.jsx');
 const experts=read('../frontend/src/pages/Experts.jsx');
 const expertsCss=read('../frontend/src/pages/Experts.css');
 const quoteLocationFields=read('../frontend/src/components/QuoteLocationFields.jsx');
+const notificationBell=read('../frontend/src/components/NotificationBell.jsx');
 const quoteLocationCss=read('../frontend/src/components/QuoteLocationFields.css');
 const interiorExact=read('../frontend/src/components/InteriorRequirementExact.jsx');
 const realEstateExact=read('../frontend/src/components/RealEstateRequirementExact.jsx');
@@ -95,6 +96,15 @@ assert.match(popup,/Submit Requirement/);
 assert.match(popup,/Requirement received/);
 assert.match(popup,/Continue to Detailed Requirement/);
 assert.match(popup,/propulse_basic_lead_submitted/);
+assert.match(popup,/const AUTO_POPUP_DELAY_MS=5\*60\*1000/);
+assert.doesNotMatch(popup,/cycle===0\?15000:300000/);
+assert.match(popup,/const closePopup=useCallback/);
+assert.match(popup,/\[open,closePopup\]/);
+assert.match(quoteLocationFields,/queueMicrotask\(\(\)=>\{/);
+assert.match(notificationBell,/const applyUnread=useCallback/);
+assert.match(notificationBell,/queueMicrotask\(refresh\)/);
+assert.match(notificationBell,/if\(active\)applyUnread/);
+assert.doesNotMatch(popup,/const selectedCity=useMemo/);
 
 // Unified detailed quote flow.
 assert.match(quote,/quote-flow-switcher/);

@@ -1,4 +1,4 @@
-import {useEffect,useRef,useState} from 'react';
+import {useCallback,useEffect,useRef,useState} from 'react';
 import {useNavigate} from 'react-router-dom';
 import {authRequest,getUser} from '../utils/auth';
 import {playSound} from '../utils/soundEffects';
@@ -27,40 +27,41 @@ export default function NotificationBell({className=''}) {
   const unreadRef=useRef(0);
   const countReadyRef=useRef(false);
 
-  const applyUnread=value=>{
+  const applyUnread=useCallback(value=>{
     const next=Number(value||0);
     if(countReadyRef.current&&next>unreadRef.current)playSound('notification');
     unreadRef.current=next;
     countReadyRef.current=true;
     setUnread(next);
-  };
-  const refreshCount=()=>authRequest('/notifications/unread-count').then(r=>applyUnread(r?.unread)).catch(()=>{});
-  const load=async()=>{
-    setLoading(true);
-    try{
-      const result=await authRequest('/notifications?limit=8');
-      setItems(result?.items||[]);
-      applyUnread(result?.unread);
-    }catch{}finally{setLoading(false)}
-  };
-
-  useEffect(()=>{
-    let active=true;
-    if(!active)return undefined;
-    refreshCount();
-    const timer=setInterval(refreshCount,60000);
-    const onRefresh=()=>refreshCount();
-    window.addEventListener('propulse-notifications-refresh',onRefresh);
-    return()=>{active=false;clearInterval(timer);window.removeEventListener('propulse-notifications-refresh',onRefresh)}
   },[]);
 
   useEffect(()=>{
+    let active=true;
+    const refresh=()=>authRequest('/notifications/unread-count').then(r=>{if(active)applyUnread(r?.unread)}).catch(()=>{});
+    queueMicrotask(refresh);
+    const timer=setInterval(refresh,60000);
+    window.addEventListener('propulse-notifications-refresh',refresh);
+    return()=>{active=false;clearInterval(timer);window.removeEventListener('propulse-notifications-refresh',refresh)}
+  },[applyUnread]);
+
+  useEffect(()=>{
     if(!open)return undefined;
-    load();
+    let active=true;
+    queueMicrotask(async()=>{
+      if(!active)return
+      setLoading(true);
+      try{
+        const result=await authRequest('/notifications?limit=8');
+        if(active){
+          setItems(result?.items||[]);
+          applyUnread(result?.unread);
+        }
+      }catch{}finally{if(active)setLoading(false)}
+    });
     const close=e=>{if(ref.current&&!ref.current.contains(e.target))setOpen(false)};
     document.addEventListener('mousedown',close);
-    return()=>document.removeEventListener('mousedown',close);
-  },[open]);
+    return()=>{active=false;document.removeEventListener('mousedown',close)}
+  },[open,applyUnread]);
 
   const openItem=async item=>{
     if(!item.read_at){
