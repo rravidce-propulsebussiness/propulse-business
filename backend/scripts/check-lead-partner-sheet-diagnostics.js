@@ -34,6 +34,7 @@ assert(fingerprintMigration.includes('ADD COLUMN IF NOT EXISTS fingerprint CHAR(
 assert(compat.includes('connection.fingerprint')&&compat.includes("reason:'unchanged'")&&compat.includes('fingerprint=$1'),'Scheduled Lead Partner sheet sync must skip unchanged sheets and persist a new fingerprint after processing');
 assert(compat.includes('fingerprint=NULL,last_synced_at=NULL'),'Changing the default Industry must invalidate the partner sheet fingerprint and make the connection immediately due');
 assert(controller.includes('force:true'),'Explicit Lead Partner sync actions must be able to reprocess an unchanged sheet after catalog or PIN fixes');
+assert(compat.includes("last_sync_created=0,last_sync_duplicate=0,last_sync_failed=0,last_sync_failures='[]'::jsonb"),'An unchanged scheduled Lead Partner sheet check must clear stale duplicate and failure metrics');
 assert(compat.includes('applyDefaultIndustry')&&compat.includes('hasClassification'),'Default Industry must apply only when the row has no classification fields');
 assert(compat.includes('defaultIndustryId:connection.default_industry_id'),'Recurring sheet sync must reuse the stored default Industry');
 assert(routes.includes("/inventory/sheets/:connectionId/default-industry"),'Lead Partners must be able to update a connected sheet default Industry');
