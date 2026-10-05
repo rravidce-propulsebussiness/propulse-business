@@ -15,6 +15,7 @@ const financialReconciliationMaxAgeHours=Math.min(168,Math.max(2,Number(process.
 const backupVerificationMaxAgeHours=Math.min(720,Math.max(1,Number(process.env.BACKUP_VERIFICATION_MAX_AGE_HOURS)||30));
 const backupVerificationRequired=/^(1|true|yes|on)$/i.test(String(process.env.REQUIRE_BACKUP_VERIFICATION||'').trim());
 const persistentSheetFailureThreshold=Math.min(20,Math.max(2,Math.floor(Number(process.env.SYSTEM_HEALTH_SHEET_FAILURE_THRESHOLD)||3)));
+const backgroundWorkerRequired=/^(1|true|yes|on)$/i.test(String(process.env.REQUIRE_BACKGROUND_WORKER||'').trim());
 
 function safeNumber(value){const n=Number(value);return Number.isFinite(n)?n:0}
 function safeMessage(value,fallback){return String(value||fallback||'Operational check failed').replace(/\s+/g,' ').slice(0,240)}
@@ -165,7 +166,7 @@ async function getSystemHealth(){
   if(databaseOk&&waiting>0)issues.push(createIssue({severity:'attention',code:'database_pool_waiting',title:'Database requests are waiting',message:`${waiting} request${waiting===1?' is':'s are'} waiting for a PostgreSQL connection.`,actionUrl:'/admin/system-health',actionLabel:'Review runtime',source:'database'}));
   if(!storageOk)issues.push(createIssue({severity:'degraded',code:'upload_storage_unavailable',title:'Upload storage unavailable',message:'The configured upload storage health check failed.',actionUrl:'/admin/system-health',actionLabel:'Review storage',source:'storage'}));
   if(!privateObjectOk)issues.push(createIssue({severity:'degraded',code:'private_objects_unavailable',title:'Private object storage unavailable',message:privateObjectHealth.error||'Private proof/object storage could not be reached.',actionUrl:'/admin/system-health',actionLabel:'Review storage',source:'private_objects'}));
-  if(!workerFresh)issues.push(createIssue({severity:'degraded',code:'worker_heartbeat_stale',title:heartbeat?'Background worker heartbeat is stale':'Background worker unavailable',message:heartbeat?`The latest worker heartbeat is ${workerAgeSeconds} seconds old; the freshness limit is ${workerHeartbeatMaxAgeSeconds} seconds.`:'No background worker heartbeat is available.',actionUrl:'/admin/jobs',actionLabel:'Open background jobs',source:'worker'}));
+  if(backgroundWorkerRequired&&!workerFresh)issues.push(createIssue({severity:'degraded',code:'worker_heartbeat_stale',title:heartbeat?'Background worker heartbeat is stale':'Background worker unavailable',message:heartbeat?`The latest worker heartbeat is ${workerAgeSeconds} seconds old; the freshness limit is ${workerHeartbeatMaxAgeSeconds} seconds.`:'No background worker heartbeat is available.',actionUrl:'/admin/jobs',actionLabel:'Open background jobs',source:'worker'}));
   if(migrations.status!=='current')issues.push(createIssue({severity:'degraded',code:'migrations_not_current',title:'Database migrations are not current',message:migrations.status==='pending'?`${migrations.pending} migration${migrations.pending===1?' is':'s are'} pending.`:'Migration state could not be read.',actionUrl:'/admin/system-health',actionLabel:'Review migrations',source:'migrations'}));
 
   addSheetIssues(issues,'Lead Partner sheet',leadPartnerSheets,{source:'lead_partner_sheets',actionUrl:'/admin/lead-partners',actionLabel:'Open Lead Partners'});
@@ -237,7 +238,8 @@ async function getSystemHealth(){
       }
     },
     worker:{
-      status:workerFresh?'fresh':heartbeat?'stale':'unavailable',
+      required:backgroundWorkerRequired,
+      status:!backgroundWorkerRequired?'not_required':workerFresh?'fresh':heartbeat?'stale':'unavailable',
       ageSeconds:workerAgeSeconds,
       maxAgeSeconds:workerHeartbeatMaxAgeSeconds,
       lastSeenAt:heartbeat?.last_seen_at||null,
