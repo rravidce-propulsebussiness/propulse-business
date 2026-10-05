@@ -19,6 +19,9 @@ assert(identity.includes("bakedRelease()?.environment"),'Release identity must p
 assert(server.includes("app.get('/health/version'"),'Public release identity endpoint is missing');
 assert(server.includes("app.get('/release.json'")&&server.includes("path.join(frontendDist,'release.json')"),'Backend must expose the exact bundled frontend release marker');
 assert(hostingerMainWorkflow.includes("git add -f frontend/dist backend/hostinger-frontend backend/hostinger-release.json"),'Main Hostinger prebuild must publish both frontend bundles and release identity');
+assert(hostingerMainWorkflow.includes("group: hostinger-main-production-prebuild")&&hostingerMainWorkflow.includes("cancel-in-progress: true"),'Main Hostinger prebuild must cancel superseded source builds');
+assert(hostingerMainWorkflow.includes("paths-ignore:")&&hostingerMainWorkflow.includes("'backend/hostinger-frontend/**'")&&hostingerMainWorkflow.includes("'frontend/dist/**'"),'Generated Hostinger bundle commits must not start another main prebuild');
+assert(hostingerMainWorkflow.includes("'backend/scripts/check-*.js'")&&hostingerMainWorkflow.includes("'docs/**'")&&hostingerMainWorkflow.includes("'**/*.md'"),'Check-only and documentation changes must not create another prebuild bundle commit');
 assert(server.includes('releaseIdentity.snapshot()'),'Version endpoint must use shared release identity');
 assert(smoke.includes("request('/health/version')"),'Deployed smoke must verify version identity');
 assert(smoke.includes("request('/api/auth/session'")&&smoke.includes("request('/api/sound-settings'")&&smoke.includes("request('/api/experts?page=1&pageSize=1'"),'Deployed smoke must verify the critical public session, sound-settings and Experts APIs');
