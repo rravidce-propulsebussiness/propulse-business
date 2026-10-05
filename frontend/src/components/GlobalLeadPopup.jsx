@@ -9,8 +9,7 @@ const FLOORS = [
   { value:'1', label:'Ground Floor' },
   { value:'2', label:'G+1' },
   { value:'3', label:'G+2' },
-  { value:'4', label:'G+3' },
-  { value:'5', label:'Above G+3' },
+  { value:'4', label:'G+3 and above' },
 ]
 
 const EMPTY = {
