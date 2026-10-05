@@ -43,6 +43,7 @@ const { startAdminGoogleSheetAutoSync }=require('./services/adminGoogleSheetSync
 const { startFinancialReconciliationScheduler }=require('./services/financialReconciliationScheduler');
 const { startNotificationScheduler }=require('./services/notificationScheduler');
 const { startPrivateStorageBackupScheduler }=require('./services/privateStorageBackupScheduler');
+const { startDatabaseBackupScheduler }=require('./services/databaseBackupScheduler');
 const rateLimit=require('./middleware/rateLimitMiddleware');
 const {getApiGlobalRateLimitConfig}=require('./config/apiRateLimitConfig');
 const csrfProtection=require('./middleware/csrfMiddleware');
@@ -259,7 +260,7 @@ if(serveFrontendFromBackend){
 }
 app.use((req,res)=>res.status(404).json({error:'Not found'}));
 app.use((err,req,res,next)=>{if(err.message==='CORS origin not allowed')return res.status(403).json({error:'Origin not allowed'});if(err.type==='entity.parse.failed')return res.status(400).json({error:'Invalid JSON body'});if(err.type==='entity.too.large')return res.status(413).json({error:'Request body is too large'});res.locals.operationalError=err;console.error(`[${req.requestId||'no-request-id'}] Unhandled server error:`,err.stack||err);return res.status(500).json({error:'Internal server error',requestId:req.requestId||undefined});});
-let server;let stopLeadPartnerSheetAutoSync=()=>{};let stopAdminGoogleSheetAutoSync=()=>{};let stopFinancialReconciliation=async()=>{};let stopNotifications=async()=>{};let stopPrivateStorageBackup=async()=>{};let shuttingDown=false;let startupReady=false;let startupError=null;let startupTimer=null;let backgroundJobsStarted=false;
+let server;let stopLeadPartnerSheetAutoSync=()=>{};let stopAdminGoogleSheetAutoSync=()=>{};let stopFinancialReconciliation=async()=>{};let stopNotifications=async()=>{};let stopPrivateStorageBackup=async()=>{};let stopDatabaseBackup=async()=>{};let shuttingDown=false;let startupReady=false;let startupError=null;let startupTimer=null;let backgroundJobsStarted=false;
 async function shutdown(signal,exitCode=0){
   if(shuttingDown)return;
   shuttingDown=true;
@@ -273,6 +274,7 @@ async function shutdown(signal,exitCode=0){
     await stopFinancialReconciliation();
     await stopNotifications();
     await stopPrivateStorageBackup();
+    await stopDatabaseBackup();
     if(server?.listening){
       await new Promise((resolve,reject)=>server.close(error=>{
         if(!error||error.code==='ERR_SERVER_NOT_RUNNING')return resolve();
@@ -310,6 +312,7 @@ function startBackgroundJobsOnce(){
     stopFinancialReconciliation=startFinancialReconciliationScheduler({runImmediately:false});
     stopNotifications=startNotificationScheduler({runImmediately:false});
     stopPrivateStorageBackup=startPrivateStorageBackupScheduler({runImmediately:true});
+    stopDatabaseBackup=startDatabaseBackupScheduler({runImmediately:true});
   }else console.log('Background jobs disabled in web process (RUN_BACKGROUND_JOBS_IN_WEB=false).');
 }
 
