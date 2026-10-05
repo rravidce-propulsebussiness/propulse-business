@@ -2,7 +2,7 @@ const fs=require('fs');
 const path=require('path');
 const source=fs.readFileSync(path.join(__dirname,'../src/services/emailService.js'),'utf8');
 
-if(!/AbortController\(\)/.test(source)||!/setTimeout\(\(\)\s*=>\s*controller\.abort\(\),\s*10000\)/.test(source)) throw new Error('Email provider security regression: request timeout is missing');
+if(!source.includes('new AbortController()')||(!source.includes('setTimeout(()=>controller.abort(),10000)')&&!source.includes('setTimeout(() => controller.abort(), 10000)'))) throw new Error('Email provider security regression: request timeout is missing');
 if(!/signal:\s*controller\.signal/.test(source)) throw new Error('Email provider security regression: fetch abort signal is missing');
 if(!/Accept:\s*'application\/json'/.test(source)) throw new Error('Email provider security regression: JSON accept header is missing');
 if(!/contentLength\s*>\s*64\s*\*\s*1024/.test(source)) throw new Error('Email provider security regression: provider response size limit is missing');
