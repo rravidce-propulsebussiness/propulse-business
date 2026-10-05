@@ -169,9 +169,7 @@ const CONSULTATION_LABELS = {
   },
   propertyIntent: {
     buy: 'Buy a property',
-    rent: 'Rent a property',
     sell: 'Sell a property',
-    invest: 'Invest in property',
   },
 };
 
