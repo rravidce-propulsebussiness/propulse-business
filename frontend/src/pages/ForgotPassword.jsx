@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { publicRequest } from '../utils/auth'
 import './Auth.css'
@@ -7,27 +7,46 @@ import './AuthExtras.css'
 function ForgotPassword() {
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
+  const [cooldown, setCooldown] = useState(0)
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
+  const submittingRef = useRef(false)
+
+  useEffect(() => {
+    if (cooldown <= 0) return undefined
+    const timer = window.setInterval(() => setCooldown((value) => Math.max(0, value - 1)), 1000)
+    return () => window.clearInterval(timer)
+  }, [cooldown])
 
   async function submit(e) {
     e.preventDefault()
+    if (submittingRef.current || loading || cooldown > 0) return
+    const normalizedEmail = email.trim().toLowerCase()
     setMessage('')
     setError('')
-    if (!email.trim()) return setError('Enter your email address.')
+    if (!normalizedEmail) return setError('Enter your email address.')
+    submittingRef.current = true
     try {
       setLoading(true)
-      const result = await publicRequest('/auth/forgot-password', { method: 'POST', body: JSON.stringify({ email }) })
+      const result = await publicRequest('/auth/forgot-password', {
+        method: 'POST',
+        body: JSON.stringify({ email: normalizedEmail }),
+      })
       setMessage(result.message || 'If an account exists for that email, a reset link has been sent.')
+      setCooldown(60)
     } catch (err) {
       if (err.status === 429) {
         const seconds = Math.max(1, Number(err.retryAfter) || 60)
+        setCooldown(seconds)
         const minutes = Math.max(1, Math.ceil(seconds / 60))
         setError(`Too many reset requests for this email. Please try again in about ${minutes} minute${minutes === 1 ? '' : 's'}.`)
+      } else if (err.code === 'PASSWORD_RESET_EMAIL_UNAVAILABLE') {
+        setError('We could not send the reset email right now. Please try again in a moment.')
       } else {
-        setError(err.message)
+        setError(err.message || 'Unable to send the reset link right now.')
       }
     } finally {
+      submittingRef.current = false
       setLoading(false)
     }
   }
@@ -47,7 +66,9 @@ function ForgotPassword() {
           {message && <div className="auth-success" role="status">{message}</div>}
           <form onSubmit={submit}>
             <label>Email address<input type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@company.com" required /></label>
-            <button className="auth-submit" disabled={loading}>{loading ? 'Sending…' : 'Send reset link'} <span>→</span></button>
+            <button className="auth-submit" disabled={loading || cooldown > 0}>
+              {loading ? 'Sending…' : cooldown > 0 ? `Try again in ${cooldown}s` : 'Send reset link'} <span>→</span>
+            </button>
           </form>
           <p className="auth-switch"><Link to="/login">← Back to sign in</Link></p>
         </div>
