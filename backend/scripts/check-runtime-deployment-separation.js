@@ -30,4 +30,10 @@ assert(scheduler.includes("error?.code === 'SYNC_IN_PROGRESS'"),'Lead Partner sc
 assert(worker.includes("startLeadPartnerSheetAutoSync({ unref: false, runImmediately: true })")&&worker.includes("startAdminGoogleSheetAutoSync({ unref: false, runImmediately: true })"),'Worker must keep both sheet schedulers alive and run an initial cycle');
 assert(worker.includes("RUN_MIGRATIONS_ON_WORKER_STARTUP"),'Worker migration behavior must be explicit');
 assert(pkg.scripts.worker==='node src/worker.js','Backend must expose a supervised worker command');
+
+const readyPosition=server.indexOf('startupReady=true');
+const prunePosition=server.indexOf('operationalMonitoringService.pruneResolved()');
+assert(readyPosition>=0&&prunePosition>readyPosition,'Operational-event retention cleanup must run after API startup readiness');
+assert(server.includes('void operationalMonitoringService.pruneResolved()'),'Retention cleanup must be non-blocking during web startup');
+
 console.log('Runtime deployment separation regression test passed.');
