@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
-import { isEmptyAnswer } from './CustomerFlowQuestion'
+import { isEmptyAnswer } from './customerFlowQuestionUtils'
 import QuoteLocationFields from './QuoteLocationFields'
 import './RealEstateRequirementExact.css'
 
