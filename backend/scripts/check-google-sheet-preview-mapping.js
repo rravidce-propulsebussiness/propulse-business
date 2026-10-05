@@ -53,4 +53,9 @@ assert(suppressed.mappedCsv.split('\n')[0].includes('Unmapped Industry'),'Explic
 const remapped=previewModule.analyzeCsv(sample,{scope:'admin',columnMappings:{source:'Custom Source'}});
 assert(remapped.mappedCsv.split('\n')[0].includes('Source'),'Explicit custom-column mapping must produce the canonical importer header');
 
+const metaLead='campaign_name,platform,phone_number\nA campaign name that can exceed the lead source database width,ig,9876543210';
+const metaMapped=previewModule.analyzeCsv(metaLead,{scope:'admin'});
+assert(metaMapped.effectiveMappings.source==='platform','Meta lead sheets must map platform to Source by default');
+assert(metaMapped.mappedCsv.split('\n')[0].includes('campaign_name'),'Campaign name must remain an ordinary custom field instead of being forced into the short Source column');
+
 console.log('Google Sheet preview and mapping regression test passed.');
