@@ -113,6 +113,7 @@ export default function AdminCompanyProofs() {
                     <div>
                       <strong>{document.original_name}</strong>
                       <small>{bytes(document.file_size)} · Uploaded {dateTime(document.created_at)}</small>
+                      {document.file_available===false && <small className="proof-storage-missing">File unavailable · ask user to re-upload</small>}
                     </div>
                   </div>
                   <div className="company-proof-business">
@@ -126,10 +127,10 @@ export default function AdminCompanyProofs() {
                 </div>
 
                 <div className="company-proof-actions">
-                  <button onClick={() => openDocument(document.id)}>View document</button>
+                  <button disabled={document.file_available===false} onClick={() => openDocument(document.id)}>{document.file_available===false?'File unavailable':'View document'}</button>
                   {document.status === 'pending' && (
                     <>
-                      <button className="verify" disabled={savingId === document.id} onClick={() => review(document.id, 'verified')}>
+                      <button className="verify" disabled={savingId === document.id || document.file_available===false} onClick={() => review(document.id, 'verified')}>
                         {savingId === document.id ? 'Saving…' : 'Verify'}
                       </button>
                       <button className="reject" disabled={savingId === document.id} onClick={() => requestReject(document.id)}>
