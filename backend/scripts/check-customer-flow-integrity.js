@@ -5,12 +5,18 @@ const pool = require('../src/config/database');
 
 async function main() {
   const compatSeed = fs.readFileSync(path.join(__dirname,'../src/database/migrations/20260928_customer_flow_04_existing_catalog_compat.sql'),'utf8');
+  const realEstateBuySellMigration = fs.readFileSync(path.join(__dirname,'../src/database/migrations/20261006_real_estate_buy_sell_only.sql'),'utf8');
+  const popup = fs.readFileSync(path.join(__dirname,'../../frontend/src/components/GlobalLeadPopup.jsx'),'utf8');
+  const realEstateUi = fs.readFileSync(path.join(__dirname,'../../frontend/src/components/RealEstateRequirementExact.jsx'),'utf8');
   assert.match(compatSeed, /LOWER\(COALESCE\(i\.slug,''\)\)/);
   assert.match(compatSeed, /LOWER\(i\.name\) LIKE '%construction%'/);
   assert.match(compatSeed, /LOWER\(i\.name\) LIKE '%interior%'/);
   assert.match(compatSeed, /AS service_id/);
   assert.doesNotMatch(compatSeed, /INSERT\s+INTO\s+industries/i);
   assert.doesNotMatch(compatSeed, /INSERT\s+INTO\s+services/i);
+  assert.match(realEstateBuySellMigration, /NOT IN \('buy','sell'\)/);
+  assert.doesNotMatch(popup, /<option value="rent">|<option value="invest">/);
+  assert.doesNotMatch(realEstateUi, /key:'rental'|key:'investment'|intent:'rent'|intent:'invest'/);
 
   const columns = (await pool.query(
     "SELECT column_name FROM information_schema.columns WHERE table_schema='public' AND table_name='leads' AND column_name IN ('contact_consent_at','contact_consent_version','intake_submission_key')"
@@ -25,6 +31,17 @@ async function main() {
     assert.strictEqual(Number(flow.version_no), 1);
     assert.ok(Number(flow.question_count) >= 10);
   }
+
+  const propertyIntents = (await pool.query(
+    `SELECT o.value
+       FROM customer_flow_definitions d
+       JOIN customer_flow_versions v ON v.definition_id=d.id AND v.status='published'
+       JOIN customer_flow_questions q ON q.version_id=v.id AND q.question_key='property_intent' AND q.is_active=TRUE
+       JOIN customer_flow_question_options o ON o.question_id=q.id AND o.is_active=TRUE
+      WHERE d.key='property'
+      ORDER BY o.display_order,o.id`
+  )).rows.map(row => row.value);
+  assert.deepStrictEqual(propertyIntents, ['buy','sell']);
 
   const functionDef = (await pool.query(
     "SELECT pg_get_functiondef(p.oid) AS definition FROM pg_proc p WHERE p.proname='prevent_duplicate_lead_insert' ORDER BY p.oid DESC LIMIT 1"
