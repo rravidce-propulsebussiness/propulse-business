@@ -30,6 +30,40 @@ function backupConfigOverride(){
     signedUrlSeconds:60,
   };
 }
+
+function hasExplicitBackupCredentials(){
+  return Boolean(
+    clean(process.env.PRIVATE_OBJECT_STORAGE_BACKUP_ACCESS_KEY_ID)
+    || clean(process.env.PRIVATE_OBJECT_STORAGE_BACKUP_SECRET_ACCESS_KEY)
+    || clean(process.env.PRIVATE_OBJECT_STORAGE_BACKUP_SESSION_TOKEN)
+  );
+}
+function sourceConfigOverride(source){
+  return{
+    endpoint:source.endpointUrl.toString(),
+    region:source.region,
+    bucket:source.bucket,
+    accessKeyId:source.accessKeyId,
+    secretAccessKey:source.secretAccessKey,
+    sessionToken:source.sessionToken,
+    forcePathStyle:source.forcePathStyle,
+    signedUrlSeconds:60,
+  };
+}
+async function chooseBackupTarget(source){
+  const preferred=backupConfigOverride();
+  const probeKey=`_health/backup-target-${Date.now()}-${crypto.randomBytes(4).toString('hex')}.txt`;
+  try{
+    await s3.putObject(probeKey,Buffer.from('ok'),{contentType:'text/plain',configOverride:preferred});
+    await s3.deleteObject(probeKey,{configOverride:preferred}).catch(()=>{});
+    return{config:preferred,prefix:'',mode:'separate_bucket'};
+  }catch(error){
+    await s3.deleteObject(probeKey,{configOverride:preferred}).catch(()=>{});
+    if(error?.providerStatus!==403||hasExplicitBackupCredentials())throw error;
+    console.warn('Backup bucket credentials are scoped to the primary bucket; using the locked backups/ prefix in the primary R2 bucket.');
+    return{config:sourceConfigOverride(source),prefix:'backups/',mode:'locked_primary_prefix'};
+  }
+}
 async function referencedObjects(){
   const rows=(await pool.query(`
     WITH refs AS (
@@ -118,9 +152,11 @@ async function runPrivateStorageBackupCore({force=false}={}){
     if(!locked)return{skipped:true,reason:'backup_already_running'};
 
     const sourceCfg=s3.config();
-    const backupCfg=backupConfigOverride();
+    const target=await chooseBackupTarget(sourceCfg);
+    const backupCfg=target.config;
     const day=new Date().toISOString().slice(0,10);
-    artifactName=`s3://${backupCfg.bucket}/snapshots/${day}`;
+    const targetKey=relative=>target.prefix+relative;
+    artifactName=`s3://${backupCfg.bucket}/${targetKey(`snapshots/${day}`)}`;
     const keys=await referencedObjects();
     const manifest=[];
     let copied=0,reused=0,totalBytes=0;
@@ -129,7 +165,7 @@ async function runPrivateStorageBackupCore({force=false}={}){
       const sourceHead=await s3.headObject(key);
       if(!sourceHead)throw Object.assign(new Error('Primary R2 object is missing: '+key),{code:'PRIVATE_STORAGE_SOURCE_MISSING'});
       if(sourceHead.size<=0||sourceHead.size>MAX_BACKUP_OBJECT_BYTES)throw Object.assign(new Error('Primary R2 object has an invalid backup size: '+key),{code:'PRIVATE_STORAGE_SOURCE_SIZE_INVALID'});
-      const backupKey=`snapshots/${day}/${key}`;
+      const backupKey=targetKey(`snapshots/${day}/${key}`);
       let backupHead=await s3.headObject(backupKey,{configOverride:backupCfg});
       if(backupHead&&backupHead.size===sourceHead.size&&backupHead.etag&&sourceHead.etag&&backupHead.etag===sourceHead.etag){
         reused+=1;
@@ -153,10 +189,10 @@ async function runPrivateStorageBackupCore({force=false}={}){
     }
 
     const completedAt=new Date().toISOString();
-    const manifestKey=`manifests/${day}-${Date.now()}.json`;
+    const manifestKey=targetKey(`manifests/${day}-${Date.now()}.json`);
     const manifestBody=Buffer.from(JSON.stringify({
       version:1,startedAt,completedAt,
-      sourceBucket:sourceCfg.bucket,backupBucket:backupCfg.bucket,
+      sourceBucket:sourceCfg.bucket,backupBucket:backupCfg.bucket,backupMode:target.mode,backupPrefix:target.prefix,
       objectCount:keys.length,totalBytes,copied,reused,objects:manifest
     },null,2)+'\n');
     await s3.putObject(manifestKey,manifestBody,{contentType:'application/json',configOverride:backupCfg});
@@ -165,10 +201,10 @@ async function runPrivateStorageBackupCore({force=false}={}){
 
     const verification=await recordVerification({
       status:'verified',artifactName,sizeBytes:totalBytes,startedAt,
-      metrics:{provider:'r2',sourceBucket:sourceCfg.bucket,backupBucket:backupCfg.bucket,objectCount:keys.length,copied,reused,totalBytes,manifestKey,protection:'30_day_bucket_lock'}
+      metrics:{provider:'r2',sourceBucket:sourceCfg.bucket,backupBucket:backupCfg.bucket,backupMode:target.mode,backupPrefix:target.prefix,objectCount:keys.length,copied,reused,totalBytes,manifestKey,protection:'30_day_bucket_lock'}
     });
     console.log(`Private R2 backup verified: run #${verification.id}, objects=${keys.length}, copied=${copied}, reused=${reused}, bytes=${totalBytes}.`);
-    return{verified:true,runId:Number(verification.id),objectCount:keys.length,copied,reused,totalBytes,backupBucket:backupCfg.bucket,manifestKey};
+    return{verified:true,runId:Number(verification.id),objectCount:keys.length,copied,reused,totalBytes,backupBucket:backupCfg.bucket,backupMode:target.mode,backupPrefix:target.prefix,manifestKey};
   }catch(error){
     await recordVerification({
       status:'failed',artifactName,sizeBytes:null,startedAt,
@@ -213,6 +249,6 @@ function startPrivateStorageBackupScheduler({unref=true,runImmediately=true}={})
 }
 
 module.exports={
-  DEFAULT_INTERVAL_MS,MAX_BACKUP_OBJECT_BYTES,configuredIntervalMs,backupConfigOverride,
+  DEFAULT_INTERVAL_MS,MAX_BACKUP_OBJECT_BYTES,configuredIntervalMs,backupConfigOverride,chooseBackupTarget,
   referencedObjects,runPrivateStorageBackup,runPrivateStorageBackupCore,startPrivateStorageBackupScheduler
 };
