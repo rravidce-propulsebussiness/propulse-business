@@ -95,6 +95,11 @@ assert.match(popup,/Submit Requirement/);
 assert.match(popup,/Requirement received/);
 assert.match(popup,/Continue to Detailed Requirement/);
 assert.match(popup,/propulse_basic_lead_submitted/);
+assert.match(popup,/const AUTO_POPUP_DELAY_MS=5\*60\*1000/);
+assert.doesNotMatch(popup,/cycle===0\?15000:300000/);
+assert.match(popup,/const closePopup=useCallback/);
+assert.match(popup,/\[open,closePopup\]/);
+assert.doesNotMatch(popup,/const selectedCity=useMemo/);
 
 // Unified detailed quote flow.
 assert.match(quote,/quote-flow-switcher/);
