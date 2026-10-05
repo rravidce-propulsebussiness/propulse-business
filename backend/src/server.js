@@ -254,6 +254,23 @@ async function readiness(req,res){
 app.get('/health/ready',readiness);
 app.get('/health',readiness);
 app.use('/api/observability',observabilityRoutes);app.use('/api/customer-flows',customerFlowRoutes);app.use('/api/auth',authRoutes);app.use('/api/notifications',notificationRoutes);app.use('/api/profile',profileRoutes);app.use('/api/admin',adminRoutes);app.use('/api/lead-partner',leadPartnerRoutes);app.use('/api/lead-reports',leadReportRoutes);app.use('/api/lead-partner/faqs',faqRoutes);app.use('/api/faqs',publicFaqRoutes);app.use('/api/experts',publicExpertRoutes);app.use('/api/upcoming-features',upcomingFeatureRoutes);app.use('/api/contact',contactRoutes);app.use('/api/homepage-media',homepageMediaRoutes);app.use('/api/admin/faqs',adminFaqRoutes);app.use('/api/leads',leadRoutes);app.use('/api/payments',paymentRoutes);app.use('/api/payment-receiving-details',paymentReceivingDetailsRoutes);app.use('/api/coupons',couponRoutes);app.use('/api/membership-plans',membershipPlanRoutes);app.use('/api/admin/commercial',adminCommercialRoutes);app.use('/api/wallet',walletRoutes);app.use('/api/investments',investmentRoutes);app.use('/api/investor/payout-account',investorPayoutAccountRoutes);app.use('/api/industries',industryRoutes);app.use('/api/services',serviceRoutes);app.use('/api/subservices',subserviceRoutes);app.use('/api/states',stateRoutes);app.use('/api/cities',cityRoutes);app.use('/api/subcities',subcityRoutes);app.use('/api/pincodes',pincodeRoutes);
+function serveExactPrerenderedHtml(root){
+  return(req,res,next)=>{
+    if(!['GET','HEAD'].includes(req.method))return next();
+    const accept=String(req.get('accept')||'');
+    if(accept&&!accept.includes('text/html')&&!accept.includes('*/*'))return next();
+    const requestPath=String(req.path||'');
+    if(requestPath==='/'||privateFrontendPath(requestPath)||!knownSpaFrontendPath(requestPath))return next();
+    const relative=requestPath.replace(/^\\/+/, '');
+    if(!relative||relative.split('/').some(part=>part==='.'||part==='..'))return next();
+    const candidate=path.join(root,relative+'.html');
+    try{
+      if(!fs.existsSync(candidate)||!fs.statSync(candidate).isFile())return next();
+    }catch{return next()}
+    res.setHeader('Cache-Control','no-cache');
+    return res.sendFile(candidate,error=>error?next(error):undefined);
+  };
+}
 if(serveFrontendFromBackend){
   const redirectLegacyFrontend=(target,hash='')=>(req,res)=>{
     const queryIndex=req.originalUrl.indexOf('?');
@@ -270,6 +287,7 @@ if(serveFrontendFromBackend){
     ['/pricing','/','#pricing'],
     ['/industries','/',''],
   ])app.get(from,redirectLegacyFrontend(target,hash));
+  app.use(serveExactPrerenderedHtml(frontendDist));
   app.use(express.static(frontendDist,{index:'index.html',extensions:['html'],fallthrough:true}));
   app.use((req,res,next)=>{
     if(backendOnlyPath(req.path))return next();
