@@ -71,6 +71,23 @@ async function main() {
     if (base.protocol === 'https:') assert(response.headers.get('strict-transport-security'), 'HTTPS deployment must send HSTS');
   }
 
+  const session = await request('/api/auth/session', { headers: { origin: appOrigin } });
+  assert.equal(session.status, 200, 'Public auth session bootstrap must return 200');
+  const sessionBody = await session.json();
+  assert.equal(sessionBody.authenticated, false, 'Anonymous deployed smoke must remain unauthenticated');
+  assert.equal(sessionBody.user, null, 'Anonymous deployed smoke must not expose a user');
+
+  const soundSettings = await request('/api/sound-settings', { headers: { origin: appOrigin } });
+  assert.equal(soundSettings.status, 200, 'Public sound settings must return 200');
+  const soundSettingsBody = await soundSettings.json();
+  assert.equal(typeof soundSettingsBody.masterEnabled, 'boolean', 'Public sound settings must expose a usable configuration');
+
+  const experts = await request('/api/experts?page=1&pageSize=1', { headers: { origin: appOrigin } });
+  assert.equal(experts.status, 200, 'Public Experts directory API must return 200');
+  const expertsBody = await experts.json();
+  assert(Array.isArray(expertsBody.data), 'Public Experts directory must return a data array');
+  assert(expertsBody.pagination && typeof expertsBody.pagination === 'object', 'Public Experts directory must return pagination metadata');
+
   const allowed = await request('/api/investments', { headers: { origin: appOrigin } });
   assert.equal(allowed.headers.get('access-control-allow-origin'), appOrigin, 'Configured frontend origin must receive CORS permission');
   assert.equal(allowed.status, 401, 'Anonymous investment API request should be unauthorized');
@@ -84,7 +101,7 @@ async function main() {
   assert.equal(missing.status, 404);
 
   const effectiveCommit = versionMatches ? versionBody.commit : releaseBody.commit;
-  console.log(`Deployed smoke test passed: ${effectiveEnvironment} ${String(effectiveCommit).slice(0,12)}; HTTPS health, readiness, release identity, security headers, CORS, auth boundary and 404 behavior.`);
+  console.log(`Deployed smoke test passed: ${effectiveEnvironment} ${String(effectiveCommit).slice(0,12)}; HTTPS health, readiness, release identity, public session/sound/Experts APIs, security headers, CORS, auth boundary and 404 behavior.`);
 }
 
 main().catch(error => {
