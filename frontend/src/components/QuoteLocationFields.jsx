@@ -46,8 +46,13 @@ export default function QuoteLocationFields({
   const [cityText, setCityText] = useState('')
 
   useEffect(() => {
-    if (selectedCity) setCityText(String(selectedCity.name || ''))
-    else if (!cityId) setCityText('')
+    let active=true
+    queueMicrotask(()=>{
+      if(!active)return
+      if (selectedCity) setCityText(String(selectedCity.name || ''))
+      else if (!cityId) setCityText('')
+    })
+    return()=>{active=false}
   }, [selectedCity, cityId, stateId])
 
   function resolveCity(value) {
