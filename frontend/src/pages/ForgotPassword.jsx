@@ -9,6 +9,7 @@ function ForgotPassword() {
   const [loading, setLoading] = useState(false)
   const [cooldown, setCooldown] = useState(0)
   const [message, setMessage] = useState('')
+  const [deliveryHint, setDeliveryHint] = useState('')
   const [error, setError] = useState('')
   const submittingRef = useRef(false)
 
@@ -18,11 +19,42 @@ function ForgotPassword() {
     return () => window.clearInterval(timer)
   }, [cooldown])
 
+  useEffect(() => {
+    if (!message) {
+      setDeliveryHint('')
+      return undefined
+    }
+
+    const hint = 'Not in your inbox? Check Spam or Promotions.'
+    const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches
+    if (reduceMotion) {
+      setDeliveryHint(hint)
+      return undefined
+    }
+
+    setDeliveryHint('')
+    let index = 0
+    let typingTimer
+    const startTimer = window.setTimeout(() => {
+      typingTimer = window.setInterval(() => {
+        index += 1
+        setDeliveryHint(hint.slice(0, index))
+        if (index >= hint.length) window.clearInterval(typingTimer)
+      }, 34)
+    }, 420)
+
+    return () => {
+      window.clearTimeout(startTimer)
+      if (typingTimer) window.clearInterval(typingTimer)
+    }
+  }, [message])
+
   async function submit(e) {
     e.preventDefault()
     if (submittingRef.current || loading || cooldown > 0) return
     const normalizedEmail = email.trim().toLowerCase()
     setMessage('')
+    setDeliveryHint('')
     setError('')
     if (!normalizedEmail) return setError('Enter your email address.')
     submittingRef.current = true
@@ -65,7 +97,14 @@ function ForgotPassword() {
           <h1>Forgot your password?</h1>
           <p className="auth-recovery-copy">Enter the email you use for ProPulse Business and we'll send you a secure reset link.</p>
           {error && <div className="auth-error" role="alert">{error}</div>}
-          {message && <div className="auth-success" role="status">{message}</div>}
+          {message && (
+            <div className="auth-success auth-success-recovery" role="status">
+              <div>{message}</div>
+              <div className="auth-delivery-hint" aria-label="Not in your inbox? Check Spam or Promotions.">
+                <span aria-hidden="true">{deliveryHint}</span><span className="auth-typing-cursor" aria-hidden="true">|</span>
+              </div>
+            </div>
+          )}
           <form onSubmit={submit}>
             <label>Email address<input type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@company.com" required /></label>
             <button className="auth-submit" disabled={loading || cooldown > 0}>
