@@ -1,4 +1,4 @@
-import {useEffect,useState} from 'react';
+import {useCallback,useEffect,useState} from 'react';
 import {useNavigate} from 'react-router-dom';
 import {authRequest,clearSession,getUser} from '../utils/auth';
 import UserHeader from '../components/UserHeader';
@@ -17,18 +17,19 @@ function NotificationContent(){
   const [loading,setLoading]=useState(true);
   const [message,setMessage]=useState('');
 
-  const load=async(nextPage=page)=>{
+  const load=useCallback(async(nextPage=1)=>{
+    const targetPage=Math.max(1,Number(nextPage)||1);
     setLoading(true);
     try{
-      const params=new URLSearchParams({category,unreadOnly:String(unreadOnly),page:String(nextPage),limit:'30'});
+      const params=new URLSearchParams({category,unreadOnly:String(unreadOnly),page:String(targetPage),limit:'30'});
       const result=await authRequest('/notifications?'+params.toString());
       setData(result||{items:[],unread:0,total:0,page:1,pages:1});
-      setPage(Number(result?.page||nextPage));
+      setPage(Number(result?.page||targetPage));
       window.dispatchEvent(new Event('propulse-notifications-refresh'));
     }catch(e){setMessage(e.message||'Failed to load notifications')}
     finally{setLoading(false)}
-  };
-  useEffect(()=>{let active=true;queueMicrotask(()=>{if(active)load(1)});return()=>{active=false}},[category,unreadOnly]);
+  },[category,unreadOnly]);
+  useEffect(()=>{let active=true;queueMicrotask(()=>{if(active)load(1)});return()=>{active=false}},[load]);
   useEffect(()=>{authRequest('/notifications/preferences').then(setPrefs).catch(()=>{})},[]);
 
   const markRead=async item=>{
