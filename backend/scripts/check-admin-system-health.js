@@ -11,6 +11,8 @@ const routes=read('src/routes/adminRoutes.js');
 const layout=read('../frontend/src/admin/components/AdminLayout.jsx');
 const app=read('../frontend/src/App.jsx');
 const page=read('../frontend/src/admin/pages/AdminSystemHealth.jsx');
+const emailService=read('src/services/emailService.js');
+const envExample=read('.env.example');
 
 assert(routes.includes("router.use(requireAuth,requireAdmin);"),'Admin routes must remain protected before system-health registration');
 assert(routes.includes("router.get('/system-health',adminController.getSystemHealth)"),'Admin System Health endpoint must exist');
@@ -19,6 +21,11 @@ assert(service.includes('pool.totalCount')&&service.includes('pool.waitingCount'
 assert(service.includes('busyConnections')&&service.includes('(busyConnections/poolMax)*100'),'Database utilization must use busy connections rather than total open pool size');
 assert(service.includes('checkUploadStorage()'),'System Health must check private/persistent upload storage');
 assert(service.includes('workerHeartbeat.latestHeartbeat()'),'System Health must inspect the background worker heartbeat');
+assert(service.includes("emailService.configurationHealth()"),'System Health must include safe email-delivery configuration health');
+assert(service.includes("email_test_sender_in_production"),'System Health must flag the Resend test sender in production');
+assert(emailService.includes('function configurationHealth()')&&emailService.includes("senderMode=domain==='resend.dev'?'resend_test'"),'Email service must expose a secret-free sender mode');
+assert(page.includes('Email delivery')&&page.includes('TEST SENDER'),'Admin System Health UI must show email delivery state');
+assert(envExample.includes('verified in Resend')&&!envExample.includes('RESEND_FROM_EMAIL=ProPulse Business <onboarding@resend.dev>'),'Production env example must not recommend the Resend test sender');
 assert(service.includes('schema_migrations'),'System Health must report migration state');
 assert(service.includes('lead_partner_sheet_connections')&&service.includes('admin_google_sheet_connections'),'System Health must report both sheet-sync systems');
 assert(service.includes("persistentConnectionErrors>0?'degraded'")&&service.includes("connectionErrors>0||failing>0?'attention'"),'Temporary sheet issues must be attention while persistent connection failures degrade health');
