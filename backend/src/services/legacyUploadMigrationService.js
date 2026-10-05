@@ -40,6 +40,7 @@ async function migrateLegacyCompanyProofsToObjectStorage({limit=50}={}){
 
     const extension=path.extname(legacyName)||((row.mime_type||'').includes('pdf')?'.pdf':(row.mime_type||'').includes('png')?'.png':'.jpg');
     let nextReference=null;
+    let committed=false;
     try{
       nextReference=await companyProofStorage.storeBuffer({
         userId:row.user_id,
@@ -56,18 +57,21 @@ async function migrateLegacyCompanyProofsToObjectStorage({limit=50}={}){
         );
         if(result.rowCount!==1)throw new Error('Legacy company proof changed during migration');
         await client.query('COMMIT');
+        committed=true;
       }catch(error){
-        await client.query('ROLLBACK');
+        await client.query('ROLLBACK').catch(()=>{});
         throw error;
       }finally{
         client.release();
       }
-      await fs.unlink(filePath).catch(error=>{if(error?.code!=='ENOENT')throw error});
-      summary.migrated+=1;
     }catch(error){
       summary.failed+=1;
-      if(nextReference)await companyProofStorage.remove(nextReference).catch(()=>{});
+      if(nextReference&&!committed)await companyProofStorage.remove(nextReference).catch(()=>{});
+      continue;
     }
+
+    summary.migrated+=1;
+    await fs.unlink(filePath).catch(()=>{});
   }
   return summary;
 }
