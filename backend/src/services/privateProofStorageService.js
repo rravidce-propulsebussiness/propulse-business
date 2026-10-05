@@ -34,7 +34,8 @@ async function storeDataUrl(value,{category='proof',maxBytes=DEFAULT_MAX_BYTES}=
   if(data.length!==bytes||!data.length)throw Object.assign(new Error('Proof data is invalid'),{code:'INVALID_PRIVATE_PROOF'});
   const folder=safeCategory(category);
   const filename=`${Date.now()}-${crypto.randomBytes(16).toString('hex')}${MIME_EXT[mime]}`;
-  if(s3.isEnabled()){
+  const useObjectStorage=s3.assertWriteStorage();
+  if(useObjectStorage){
     const key=`private-proofs/${folder}/${filename}`;
     await s3.putObject(key,data,{contentType:mime});
     return s3.makeReference(key);

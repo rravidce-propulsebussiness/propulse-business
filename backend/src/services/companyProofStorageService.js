@@ -18,7 +18,8 @@ async function storeBuffer({userId,buffer,mimeType,extension}){
   if(!data.length)throw new Error('Company proof is empty');
   const suffix=String(extension||'').replace(/[^.A-Za-z0-9]/g,'').slice(0,8);
   const filename=String(userId)+'-'+Date.now()+'-'+crypto.randomBytes(8).toString('hex')+suffix;
-  if(s3.isEnabled()){
+  const useObjectStorage=s3.assertWriteStorage();
+  if(useObjectStorage){
     const key='company-proofs/'+filename;
     await s3.putObject(key,data,{contentType:mimeType||'application/octet-stream'});
     return s3.makeReference(key);

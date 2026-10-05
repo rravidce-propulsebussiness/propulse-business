@@ -54,7 +54,8 @@ async function saveProjectPlan(userId,mime,buffer){
   const timestamp=Date.now();
   const filename=`${Number(userId)}-plan-${timestamp}-${crypto.randomBytes(12).toString('hex')}.${parsed.extension}`;
   let url;
-  if(s3.isEnabled()){
+  const useObjectStorage=s3.assertWriteStorage();
+  if(useObjectStorage){
     const key=`business-projects/${filename}`;
     await s3.putObject(key,buffer,{contentType:parsed.mime});
     url=s3.makeReference(key);
