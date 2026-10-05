@@ -12,21 +12,22 @@ function hashRecoveryIdentity(value) {
   return crypto.createHash('sha256').update(normalized).digest('hex');
 }
 
+function passwordRecoveryKey(req, prefix, value) {
+  const identityHash = hashRecoveryIdentity(value);
+  if (!identityHash) return '';
+  const sourceHash = hashRecoveryIdentity(req.ip || req.socket?.remoteAddress || 'unknown');
+  return `${prefix}:${identityHash}:source:${sourceHash || 'unknown'}`;
+}
+
 const forgotPasswordLimit = rateLimit({
-  windowMs: 15 * 60 * 1000,
+  windowMs: 10 * 60 * 1000,
   max: 5,
-  keyGenerator: (req) => {
-    const hash = hashRecoveryIdentity(req.body?.email);
-    return hash ? `password-recovery-email:${hash}` : '';
-  },
+  keyGenerator: (req) => passwordRecoveryKey(req, 'password-recovery-email', req.body?.email),
 });
 const resetPasswordLimit = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 10,
-  keyGenerator: (req) => {
-    const hash = hashRecoveryIdentity(req.body?.token);
-    return hash ? `password-reset-token:${hash}` : '';
-  },
+  keyGenerator: (req) => passwordRecoveryKey(req, 'password-reset-token', req.body?.token),
 });
 const companyProofUploadLimit = rateLimit({ windowMs: 15 * 60 * 1000, max: 10 });
 
