@@ -16,6 +16,7 @@ const supportChat=read('../frontend/src/components/SupportChatWidget.jsx');
 const quote=read('../frontend/src/pages/Solutions.jsx');
 const quoteCss=read('../frontend/src/pages/Solutions.css');
 const wizard=read('../frontend/src/pages/RequirementWizard.jsx');
+const questionUtils=read('../frontend/src/components/customerFlowQuestionUtils.js');
 const packages=read('../frontend/src/pages/Packages.jsx');
 const projects=read('../frontend/src/pages/Projects.jsx');
 const about=read('../frontend/src/pages/About.jsx');
@@ -120,6 +121,9 @@ assert.match(quoteCss,/\.quote-flow \.rq-premium-hero/);
 assert.match(quoteCss,/\.quote-flow \.irx-hero/);
 assert.match(quoteCss,/\.quote-flow \.rex-hero/);
 assert.match(wizard,/RealEstateRequirementExact/);
+assert.match(questionUtils,/export const isEmptyAnswer/);
+assert.match(questionUtils,/export function isQuestionVisible/);
+assert.match(wizard,/queueMicrotask\(\(\)=>\{/);
 assert.match(wizard,/QuoteLocationFields/);
 
 // Packages keep customer quote links and comparison behavior.

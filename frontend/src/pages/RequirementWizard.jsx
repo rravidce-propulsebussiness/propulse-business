@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { publicRequest } from '../utils/auth'
-import { isEmptyAnswer, isQuestionVisible } from '../components/CustomerFlowQuestion'
+import { isEmptyAnswer, isQuestionVisible } from '../components/customerFlowQuestionUtils'
 import InteriorRequirementExact from '../components/InteriorRequirementExact'
 import RealEstateRequirementExact from '../components/RealEstateRequirementExact'
 import QuoteLocationFields from '../components/QuoteLocationFields'
@@ -234,8 +234,11 @@ export default function RequirementWizard({ flowKey, onCompletionChange }) {
   useEffect(() => {
     mounted.current = true
     onCompletionChangeRef.current?.(false)
-    setSubmissionResult(null)
-    setState({ loading: true, saving: false, error: '', success: false })
+    queueMicrotask(()=>{
+      if(!mounted.current)return
+      setSubmissionResult(null)
+      setState({ loading: true, saving: false, error: '', success: false })
+    })
 
     Promise.all([publicRequest('/customer-flows/' + flowKey), publicRequest('/cities').catch(() => []), publicRequest('/contact?audience=website').catch(() => ({}))]).then(([data, cityData, websiteContact]) => {
       if (data?.unavailable) throw new Error(data.message || 'This requirement form is temporarily unavailable. Please try again shortly.')
@@ -808,7 +811,7 @@ export default function RequirementWizard({ flowKey, onCompletionChange }) {
           <section className="rq-section-card" id="rq-preferences">
             <div className="rq-section-heading"><strong>4.</strong><div><h2>Requirements & Preferences</h2><p>Choose the quality, budget and timing that fit your project.</p></div></div>
             <div className="rq-question-stack">
-              {[...preferenceQuestions, ...extraQuestions].map((question, index) => <div className="rq-question-block" key={question.id || question.questionKey}>
+              {[...preferenceQuestions, ...extraQuestions].map(question => <div className="rq-question-block" key={question.id || question.questionKey}>
                 <div className="rq-question-label"><b>{question.label}</b>{question.helpText && <small>{question.helpText}</small>}</div>
                 <PremiumQuestion question={question} value={answers[question.questionKey]} onChange={value => setAnswer(question.questionKey, value)} visual={flowKey === 'build' && question.questionKey === 'budget' ? 'budget-dropdown' : (question.questionKey === 'quality' || question.questionKey === 'finish_quality' ? 'image' : 'default')} />
               </div>)}

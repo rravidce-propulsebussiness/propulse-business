@@ -1,4 +1,4 @@
-import {useEffect,useMemo,useState} from 'react';
+import {useCallback,useEffect,useMemo,useRef,useState} from 'react';
 import {authRequest} from '../../utils/auth';
 import './AdminAuditTimeline.css';
 
@@ -35,22 +35,32 @@ export default function AdminAuditTimeline(){
   const [page,setPage]=useState(1);
   const [loading,setLoading]=useState(true);
   const [message,setMessage]=useState('');
+  const searchRef=useRef(search);
+  const fromRef=useRef(from);
+  const toRef=useRef(to);
 
-  const load=async(nextPage=page)=>{
+  useEffect(()=>{searchRef.current=search},[search]);
+  useEffect(()=>{fromRef.current=from},[from]);
+  useEffect(()=>{toRef.current=to},[to]);
+
+  const load=useCallback(async(nextPage=1)=>{
     setLoading(true);
     try{
       const params=new URLSearchParams({category,action,entityType,page:String(nextPage),limit:'50'});
-      if(search.trim())params.set('search',search.trim());
-      if(from)params.set('from',new Date(from+'T00:00:00').toISOString());
-      if(to)params.set('to',new Date(to+'T23:59:59').toISOString());
+      const searchValue=searchRef.current.trim();
+      const fromValue=fromRef.current;
+      const toValue=toRef.current;
+      if(searchValue)params.set('search',searchValue);
+      if(fromValue)params.set('from',new Date(fromValue+'T00:00:00').toISOString());
+      if(toValue)params.set('to',new Date(toValue+'T23:59:59').toISOString());
       const result=await authRequest('/admin/audit-timeline?'+params.toString());
       setData(result||{items:[],stats:{},actions:[],entities:[],page:1,pages:1,total:0});
       setPage(Number(result?.page||nextPage));
     }catch(e){setMessage(e.message||'Failed to load audit timeline')}
     finally{setLoading(false)}
-  };
+  },[category,action,entityType]);
 
-  useEffect(()=>{let active=true;queueMicrotask(()=>{if(active)load(1)});return()=>{active=false}},[category,action,entityType]);
+  useEffect(()=>{let active=true;queueMicrotask(()=>{if(active)load(1)});return()=>{active=false}},[load]);
   const actions=useMemo(()=>data.actions||[],[data.actions]);
   const stats=data.stats||{};
 

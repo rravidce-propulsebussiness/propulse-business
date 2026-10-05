@@ -4,7 +4,6 @@ import PortalContact from './PortalContact'
 import { publicRequest } from '../utils/auth'
 import './Contact.css'
 import { openLeadPopup } from '../utils/leadPopup'
-import PublicIcon from '../components/PublicIcon'
 
 const empty={
   company_name:'ProPulse Business',
