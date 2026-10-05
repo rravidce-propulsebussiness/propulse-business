@@ -140,6 +140,15 @@ for(const source of [home,quote,packages,projects,about,howItWorks,contact]){
   assert.match(source,/to="\/experts">Find Professionals<\/Link>/);
 }
 
+for(const source of [home,projects,about,howItWorks,interiorExact,wizard]){
+  assert.doesNotMatch(source,/\/#contact/);
+  assert.doesNotMatch(source,/>Privacy Policy<|>Terms & Conditions</);
+}
+for(const source of [home,projects,about,howItWorks,interiorExact,wizard]){
+  assert.match(source,/to="\/faq">FAQ<\/Link>/);
+  assert.match(source,/to="\/contact">Contact(?: Us)?<\/Link>/);
+}
+
 // Experts directory is public but does not expose direct contact data.
 assert.doesNotMatch(experts,/experts-hero/);
 assert.match(experts,/TRUSTED PROFESSIONALS/);
