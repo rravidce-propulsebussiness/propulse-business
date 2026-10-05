@@ -2,8 +2,6 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import RequirementWizard from './RequirementWizard'
 import './Solutions.css'
-import { openLeadPopup } from '../utils/leadPopup'
-import PublicIcon from '../components/PublicIcon'
 
 const FLOWS = {
   construction: {
@@ -60,7 +58,6 @@ export default function Solutions(){
   const [completed,setCompleted]=useState(false)
 
   useEffect(()=>{
-    setCompleted(false)
     if(!location.hash) navigate('/quote'+location.search+'#construction',{replace:true})
   },[location.hash,location.search,navigate])
 
