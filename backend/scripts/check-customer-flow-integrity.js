@@ -8,6 +8,8 @@ async function main() {
   const realEstateBuySellMigration = fs.readFileSync(path.join(__dirname,'../src/database/migrations/20261006_real_estate_buy_sell_only.sql'),'utf8');
   const popup = fs.readFileSync(path.join(__dirname,'../../frontend/src/components/GlobalLeadPopup.jsx'),'utf8');
   const realEstateUi = fs.readFileSync(path.join(__dirname,'../../frontend/src/components/RealEstateRequirementExact.jsx'),'utf8');
+  const publicIntake = fs.readFileSync(path.join(__dirname,'../src/services/publicLeadIntakeService.js'),'utf8');
+  const flowService = fs.readFileSync(path.join(__dirname,'../src/services/customerFlowService.js'),'utf8');
   assert.match(compatSeed, /LOWER\(COALESCE\(i\.slug,''\)\)/);
   assert.match(compatSeed, /LOWER\(i\.name\) LIKE '%construction%'/);
   assert.match(compatSeed, /LOWER\(i\.name\) LIKE '%interior%'/);
@@ -17,6 +19,8 @@ async function main() {
   assert.match(realEstateBuySellMigration, /NOT IN \('buy','sell'\)/);
   assert.doesNotMatch(popup, /<option value="rent">|<option value="invest">/);
   assert.doesNotMatch(realEstateUi, /key:'rental'|key:'investment'|intent:'rent'|intent:'invest'/);
+  assert.doesNotMatch(publicIntake, /propertyIntent:\s*\{[^}]*rent:|propertyIntent:\s*\{[^}]*invest:/s);
+  assert.match(flowService, /r\.key==='property'[\s\S]*property_intent'[\s\S]*\['buy','sell'\]/);
 
   const columns = (await pool.query(
     "SELECT column_name FROM information_schema.columns WHERE table_schema='public' AND table_name='leads' AND column_name IN ('contact_consent_at','contact_consent_version','intake_submission_key')"
