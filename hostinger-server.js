@@ -69,6 +69,7 @@ startBackend();
 function backendRoute(requestPath){
   return requestPath==='/robots.txt'
     ||requestPath==='/sitemap.xml'
+    ||requestPath==='/release.json'
     ||requestPath==='/health'
     ||requestPath.startsWith('/health/')
     ||requestPath.startsWith('/api/')
