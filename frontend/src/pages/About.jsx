@@ -3,11 +3,9 @@ import { Link, useNavigate } from 'react-router-dom'
 import { publicRequest } from '../utils/auth'
 import './About.css'
 import { openLeadPopup } from '../utils/leadPopup'
-import PublicIcon from '../components/PublicIcon'
 
 const HERO='https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=2200&q=92'
 const STORY='https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=1500&q=90'
-const IMPACT='https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?auto=format&fit=crop&w=1500&q=90'
 
 function collection(value){
   if(Array.isArray(value)) return value
