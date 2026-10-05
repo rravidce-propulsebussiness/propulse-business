@@ -8,6 +8,7 @@ const controller = fs.readFileSync(path.join(root, 'controllers', 'adminControll
 const routes = fs.readFileSync(path.join(root, 'routes', 'adminRoutes.js'), 'utf8');
 const authRoutes = fs.readFileSync(path.join(root, 'routes', 'authRoutes.js'), 'utf8');
 const migration = fs.readFileSync(path.join(root, 'database', 'migrations', '2026-09-23-company-proof-review.sql'), 'utf8');
+const ui = fs.readFileSync(path.join(__dirname, '../../frontend/src/admin/pages/AdminCompanyProofs.jsx'), 'utf8');
 
 function assert(condition, message) {
   if (!condition) throw new Error(message);
@@ -34,5 +35,9 @@ assert(authService.includes("await client.query('COMMIT');"), 'Company proof upl
 assert(authService.includes("await client.query('ROLLBACK');"), 'Company proof upload must rollback the database transaction on failure');
 assert(authService.includes('companyProofStorage.remove(reference)'), 'Company proof upload must remove created private objects/files after rollback');
 assert(authService.includes('preparedDocuments'), 'Company proof upload must validate all documents before writing files');
+assert(service.includes('PROOF_FILE_UNAVAILABLE')&&service.includes('companyProofStorage.descriptor(current.stored_name'),'Admin must not verify a proof whose stored file is unavailable');
+assert(service.includes('file_available:fileAvailable')&&service.includes("storage_backend:String(stored_name||'').startsWith('private-object-s3:')?'r2':'legacy_local'"),'Admin proof listing must expose storage availability without leaking storage references');
+assert(controller.includes('PROOF_FILE_UNAVAILABLE: 409'),'Unavailable proof verification must return a conflict instead of a server error');
+assert(ui.includes('File unavailable · ask user to re-upload')&&ui.includes("document.file_available===false"),'Admin UI must identify missing proof files and disable unsafe actions');
 
 console.log('Company proof review and upload atomicity regression test passed.');
