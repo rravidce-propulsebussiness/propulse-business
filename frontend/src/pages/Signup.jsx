@@ -230,6 +230,10 @@ function Signup() {
       </header>
       <main className="signup-premium-main">
         <div className="signup-card-premium">
+          <div className="signup-form-heading">
+            <h1>Create account</h1>
+            <p>Enter your details to get started.</p>
+          </div>
           {error && <div className="signup-error" role="alert">{error}</div>}
 
           {loadingData && <div className="signup-loading">Loading business options…</div>}
