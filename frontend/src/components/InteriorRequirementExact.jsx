@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { isEmptyAnswer } from './CustomerFlowQuestion'
+import { isEmptyAnswer } from './customerFlowQuestionUtils'
 import QuoteLocationFields from './QuoteLocationFields'
 import { INTERIOR_PACKAGES } from '../data/interiorPackageCatalog'
 import './InteriorRequirementExact.css'
