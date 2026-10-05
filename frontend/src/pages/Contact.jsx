@@ -39,7 +39,7 @@ export default function Contact(){
   const [searchParams]=useSearchParams()
   const portalAudience=searchParams.get('audience')
   if(portalAudience==='lead_partners') return <PortalContact audience={portalAudience}/>
-  if(portalAudience==='users') return <Navigate to="/professional-contact" replace/>
+  if(portalAudience==='users') return <Navigate to="/contact" replace/>
   return <PublicContact/>
 }
 
@@ -106,7 +106,7 @@ function PublicContact(){
     <section className="contact-service-strip">
       <article><b>01</b><span>Construction</span><small>Quotation, packages and project requirements.</small></article>
       <article><b>02</b><span>Interiors</span><small>Design scope, rooms, finishes and requirements.</small></article>
-      <article><b>03</b><span>Real Estate</span><small>Buy, rent, sell or investment requirements.</small></article>
+      <article><b>03</b><span>Real Estate</span><small>Buy and sell property requirements.</small></article>
       <article><b>04</b><span>Support</span><small>Website, account and general assistance.</small></article>
     </section>
 
