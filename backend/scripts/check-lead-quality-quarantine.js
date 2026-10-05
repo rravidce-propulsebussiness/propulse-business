@@ -17,6 +17,7 @@ const partnerUi=read('../frontend/src/pages/LeadPartnerInventory.jsx');
 const leadRead=read('src/services/leadReadService.js');
 const purchaseService=read('src/services/leadPurchaseService.js');
 const entitlementService=read('src/services/leadEntitlementService.js');
+const gateSource=read('src/services/leadQualityGateService.js');
 
 assert(migration.includes("'quarantined'"),'Lead status constraint must explicitly support quarantine');
 assert(migration.includes('quality_gate_score')&&migration.includes('quality_gate_reasons'),'Lead quarantine audit metadata is missing');
@@ -44,6 +45,10 @@ assert(partnerUi.includes('<option value="quarantined">Quarantined</option>')&&p
 assert(leadRead.includes("'quality_gate_reasons'")&&leadRead.includes('stripQualityGate'),'Buyer-facing lead responses must hide internal quality-review metadata');
 assert(purchaseService.includes("if(lead.status!=='available')")&&purchaseService.includes("purchase.lead_status!=='available'"),'Direct and pending-payment lead purchases must reject quarantined leads');
 assert(entitlementService.includes("lead.status!=='available'")&&entitlementService.includes("LEAD_UNAVAILABLE"),'Membership/entitlement access must reject quarantined leads');
+const automaticRelease=gateSource.slice(gateSource.indexOf("dedupeKey:\`lead-quality-released:"),gateSource.indexOf("async function overrideQuarantine"));
+assert(automaticRelease.includes("email:false"),'Automated quality re-evaluation releases must stay in-app to avoid burst email delivery');
+const manualOverride=gateSource.slice(gateSource.indexOf("async function overrideQuarantine"));
+assert(manualOverride.includes("title:'Lead released from quality hold'")&&!manualOverride.includes("email:false"),'Manual Admin quality overrides must continue to email the Lead Partner');
 
 const goodFeature={
   status:'available',has_name:true,has_contact:true,has_requirement:true,has_industry:true,has_service_detail:true,
