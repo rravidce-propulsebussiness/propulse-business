@@ -103,7 +103,7 @@ export default function RealEstateRequirementExact(props) {
   return <main className="rq-page rq-premium-page rex-page">
     <header className="rex-header">
       <Link to="/" className="rex-logo"><img src="/brand/propulse-logo.svg" alt="ProPulse"/></Link>
-      <nav><Link to="/">Home</Link><Link to="/quote#construction">Construction</Link><Link to="/quote#interiors">Interiors</Link><Link to="/packages">Packages</Link><Link className="active" to="/quote#property">Real Estate</Link><Link to="/projects">Projects</Link><Link to="/how-it-works">How It Works</Link><Link to="/about">About</Link><Link to="/#contact">Contact</Link></nav>
+      <nav><Link to="/">Home</Link><Link to="/quote#construction">Construction</Link><Link to="/quote#interiors">Interiors</Link><Link to="/packages">Packages</Link><Link className="active" to="/quote#property">Real Estate</Link><Link to="/projects">Projects</Link><Link to="/how-it-works">How It Works</Link><Link to="/about">About</Link><Link to="/contact">Contact</Link></nav>
       <a href="#rex-basic" className="rex-header-cta">Get Free Consultation <Icon name="arrow" size={15}/></a>
     </header>
 
