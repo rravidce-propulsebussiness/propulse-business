@@ -14,18 +14,18 @@ function hashRecoveryIdentity(value) {
 
 const forgotPasswordLimit = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 5,
+  max: 10,
   keyGenerator: (req) => {
     const hash = hashRecoveryIdentity(req.body?.email);
-    return hash ? `password-recovery-email:${hash}` : '';
+    return hash ? `password-recovery-email:v2:${hash}` : '';
   },
 });
 const resetPasswordLimit = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 10,
+  max: 15,
   keyGenerator: (req) => {
     const hash = hashRecoveryIdentity(req.body?.token);
-    return hash ? `password-reset-token:${hash}` : '';
+    return hash ? `password-reset-token:v2:${hash}` : '';
   },
 });
 const companyProofUploadLimit = rateLimit({ windowMs: 15 * 60 * 1000, max: 10 });
