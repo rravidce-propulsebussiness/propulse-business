@@ -166,7 +166,11 @@ app.use('/api',(req,res,next)=>{
 app.use('/api',csrfProtection);
 const apiGlobalRateLimitConfig=getApiGlobalRateLimitConfig({isProduction});
 const apiRateLimit=rateLimit({...apiGlobalRateLimitConfig,scope:'global'});
-app.use('/api',apiRateLimit);
+const independentlyProtectedAuthPaths=new Set(['/auth/forgot-password','/auth/reset-password']);
+app.use('/api',(req,res,next)=>{
+  if(independentlyProtectedAuthPaths.has(req.path))return next();
+  return apiRateLimit(req,res,next);
+});
 app.use('/api',(req,res,next)=>{
   if(startupReady)return next();
   res.setHeader('Retry-After',String(Math.max(1,Math.ceil(startupRetryMs/1000))));
