@@ -225,42 +225,18 @@ function Signup() {
       <header className="signup-topbar">
         <Link className="signup-topbar-brand" to="/" aria-label="Propulse Business home">
           <img src="/brand/propulse-logo.png" alt="Propulse Business Technologies Private Limited" />
-          <span>Building Business Together</span>
         </Link>
-        <div className="signup-topbar-context">Technology <i/> Growth <i/> Opportunities</div>
         <Link className="signup-back-home" to="/"><span>←</span> Back to Home</Link>
       </header>
-      <section className="signup-premium-visual" aria-label="Propulse Business">
-        <div className="signup-visual-bg" />
-        <div className="signup-visual-overlay" />
-        <div className="signup-visual-orbit orbit-a" />
-        <div className="signup-visual-orbit orbit-b" />
-
-        <div className="signup-visual-content">
-          <div className="signup-visual-kicker"><span /> JOIN PROPULSE</div>
-          <h1>Be Part of<br /><em>Bigger Growth.</em></h1>
-          <p>Create your account and unlock opportunities in technology, digital growth, lead sales and business solutions with Propulse.</p>
-
-          <div className="signup-benefits">
-            <div><b>01</b><span><strong>Access Leads</strong><small>Discover relevant customer opportunities.</small></span></div>
-            <div><b>02</b><span><strong>Grow Your Business</strong><small>Use technology, marketing and digital tools.</small></span></div>
-            <div><b>03</b><span><strong>Expert Support</strong><small>Build, digitize and scale with practical support.</small></span></div>
-            <div><b>04</b><span><strong>Secure &amp; Reliable</strong><small>Business-focused systems and workflows.</small></span></div>
-          </div>
-
-          <div className="signup-quote">
-            <span>“</span>
-            <div><p>Technology built around business growth.</p><small>— Propulse Business Technologies</small></div>
-          </div>
-        </div>
-
-        <div className="signup-visual-foot">PROPULSE BUSINESS TECHNOLOGIES PRIVATE LIMITED</div>
-      </section>
 
       <main className="signup-premium-main">
         <div className="signup-card-premium">
-          {error && <div className="signup-error" role="alert">{error}</div>}
+          <div className="signup-simple-heading">
+            <h1>Create account</h1>
+            <p>Create your ProPulse business account.</p>
+          </div>
 
+          {error && <div className="signup-error" role="alert">{error}</div>}
           {loadingData && <div className="signup-loading">Loading business options…</div>}
 
           <form className="signup-form" onSubmit={openBusinessDetails}>
@@ -273,13 +249,16 @@ function Signup() {
                 <label className="signup-full">Confirm password<input name="confirm-password" type={showPassword ? 'text' : 'password'} autoComplete="new-password" minLength={8} maxLength={64} value={form.confirm} onChange={(e) => update('confirm', e.target.value)} placeholder="Repeat your password" required /></label>
               </div>
             </section>
+
             <button className="signup-submit" type="submit" disabled={loading || googleLoading || loadingData}>Create Account <span>→</span></button>
+
             <div className="signup-or"><span /> <b>OR</b> <span /></div>
             <div className="signup-google signup-google-signup">
               <div className="signup-google-label">Continue with Google</div>
               <GoogleButton onCredential={handleGoogleSignup} disabled={loading || googleLoading || loadingData} />
             </div>
           </form>
+
           {showBusinessModal && (
             <div className="signup-business-modal-backdrop" role="presentation" onMouseDown={(e) => { if (e.target === e.currentTarget) setShowBusinessModal(false) }}>
               <div className="signup-business-modal" role="dialog" aria-modal="true" aria-labelledby="business-details-title">
@@ -313,12 +292,10 @@ function Signup() {
               </div>
             </div>
           )}
-          <div className="signup-security"><span>⌑</span><div><strong>Your information is secure with us.</strong><small>Business account details are used to provide the Propulse service experience.</small></div></div>
 
           <p className="signup-bottom-login">Already have an account? <Link to="/login">Sign in <b>→</b></Link></p>
         </div>
       </main>
     </div>
-  )
-}
+  )}
 export default Signup
