@@ -18,7 +18,7 @@ assert(worker.includes('await workerHeartbeat.beat()'),'Worker startup must fail
 assert(worker.includes('await stopHeartbeat()'),'Worker shutdown must flush its stopped heartbeat before closing PostgreSQL');
 assert(server.includes("app.get('/health/worker'"),'Web service must expose worker health');
 assert(server.includes("envFlag('REQUIRE_BACKGROUND_WORKER',false)"),'Worker readiness enforcement must be opt-in');
-assert(server.includes("if(shuttingDown)return res.status(503).json({status:'draining'"),'Readiness must fail immediately while the web process drains');
+assert(/if\(shuttingDown\)\s*\{[\s\S]*?expectedOperationalTransition='draining';[\s\S]*?return res\.status\(503\)\.json\(\{status:'draining'/.test(server),'Readiness must fail immediately while the web process drains');
 assert(server.includes("workerAgeSeconds<=workerHeartbeatMaxAgeSeconds"),'Required worker readiness must enforce heartbeat freshness');
 assert(env.includes("REQUIRE_BACKGROUND_WORKER=true requires RUN_BACKGROUND_JOBS_IN_WEB=false"),'Production preflight must reject contradictory worker topology');
 assert(env.includes("Dedicated background jobs are configured but REQUIRE_BACKGROUND_WORKER is false"),'Production preflight must warn when worker death is invisible to readiness');
