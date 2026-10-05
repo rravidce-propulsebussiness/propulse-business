@@ -228,15 +228,10 @@ function Signup() {
         </Link>
         <Link className="signup-back-home" to="/"><span>←</span> Back to Home</Link>
       </header>
-
       <main className="signup-premium-main">
         <div className="signup-card-premium">
-          <div className="signup-simple-heading">
-            <h1>Create account</h1>
-            <p>Create your ProPulse business account.</p>
-          </div>
-
           {error && <div className="signup-error" role="alert">{error}</div>}
+
           {loadingData && <div className="signup-loading">Loading business options…</div>}
 
           <form className="signup-form" onSubmit={openBusinessDetails}>
@@ -249,16 +244,13 @@ function Signup() {
                 <label className="signup-full">Confirm password<input name="confirm-password" type={showPassword ? 'text' : 'password'} autoComplete="new-password" minLength={8} maxLength={64} value={form.confirm} onChange={(e) => update('confirm', e.target.value)} placeholder="Repeat your password" required /></label>
               </div>
             </section>
-
             <button className="signup-submit" type="submit" disabled={loading || googleLoading || loadingData}>Create Account <span>→</span></button>
-
             <div className="signup-or"><span /> <b>OR</b> <span /></div>
             <div className="signup-google signup-google-signup">
               <div className="signup-google-label">Continue with Google</div>
               <GoogleButton onCredential={handleGoogleSignup} disabled={loading || googleLoading || loadingData} />
             </div>
           </form>
-
           {showBusinessModal && (
             <div className="signup-business-modal-backdrop" role="presentation" onMouseDown={(e) => { if (e.target === e.currentTarget) setShowBusinessModal(false) }}>
               <div className="signup-business-modal" role="dialog" aria-modal="true" aria-labelledby="business-details-title">
@@ -292,10 +284,10 @@ function Signup() {
               </div>
             </div>
           )}
-
           <p className="signup-bottom-login">Already have an account? <Link to="/login">Sign in <b>→</b></Link></p>
         </div>
       </main>
     </div>
-  )}
+  )
+}
 export default Signup

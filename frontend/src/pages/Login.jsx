@@ -65,19 +65,11 @@ function Login() {
   return (
     <div className="auth-page login-premium">
       <header className="login-topbar">
-        <Link className="login-topbar-brand" to="/" aria-label="Propulse Business home">
-          <img src="/brand/propulse-logo.png" alt="Propulse Business Technologies Private Limited" />
-        </Link>
+        <Link className="login-topbar-brand" to="/" aria-label="Propulse Business home"><img src="/brand/propulse-logo.png" alt="Propulse Business Technologies Private Limited" /></Link>
         <Link className="login-back-home" to="/"><span>←</span> Back to Home</Link>
       </header>
-
       <main className="auth-card-wrap login-premium-card-wrap">
         <div className="auth-card login-premium-card">
-          <div className="login-simple-heading">
-            <h1>Sign in</h1>
-            <p>Access your ProPulse account.</p>
-          </div>
-
           {error && <div className="auth-error" role="alert">{error}</div>}
 
           <div className="google-auth-block">
@@ -110,9 +102,11 @@ function Login() {
 
           <div className="auth-divider"><span /> <b>NEW TO PRO PULSE?</b> <span /></div>
           <Link className="auth-outline" to="/signup">Create an account <span>→</span></Link>
+          <p className="login-legal-note">By continuing, you agree to use Propulse for business-related technology, growth and lead services.</p>
         </div>
       </main>
     </div>
-  )}
+  )
+}
 
 export default Login
