@@ -1,6 +1,6 @@
 const pool=require('../config/database');
 
-const AUDIENCES=['website','users','lead_partners','common'];
+const AUDIENCES=['website','users','professionals','lead_partners','common'];
 const MAX_URL_LENGTH=2048;
 
 function clean(value){return String(value??'').trim()}
