@@ -80,7 +80,7 @@ const runBackgroundJobsInWeb=envFlag('RUN_BACKGROUND_JOBS_IN_WEB',true);
 const requireBackgroundWorker=envFlag('REQUIRE_BACKGROUND_WORKER',false);
 const workerHeartbeatMaxAgeSeconds=Math.min(600,Math.max(30,Math.floor(Number(process.env.WORKER_HEARTBEAT_MAX_AGE_SECONDS)||120)));
 const trustProxy=String(process.env.TRUST_PROXY||'').trim();
-const backendOnlyPath=requestPath=>requestPath==='/robots.txt'||requestPath==='/sitemap.xml'||requestPath==='/health'||requestPath.startsWith('/health/')||requestPath.startsWith('/api')||requestPath.startsWith('/uploads');
+const backendOnlyPath=requestPath=>requestPath==='/robots.txt'||requestPath==='/sitemap.xml'||requestPath==='/release.json'||requestPath==='/health'||requestPath.startsWith('/health/')||requestPath.startsWith('/api')||requestPath.startsWith('/uploads');
 const privateFrontendPath=requestPath=>/^\/(admin|login|signup|forgot-password|reset-password|profile|wallet|membership|notifications|purchased-leads|my-leads|investment|lead-partner|requirements|estimate|professional-contact|professionals|upcoming-features|dashboard)(\/|$)/.test(requestPath);
 const publicSpaFrontendPaths=new Set(['/','/home','/quote','/solutions','/build','/design','/property','/experts','/packages','/projects','/how-it-works','/about','/real-estate','/contact','/faq','/pricing','/industries','/leads','/hyderabad','/guides','/interior-estimator','/interior-cost-estimator','/construction-estimator','/construction-cost-estimator']);
 const publicDynamicFrontendPath=requestPath=>/^\/hyderabad\/[a-z0-9-]+(?:\/(?:compare-options|[a-z0-9-]+))?$/.test(requestPath)||/^\/guides\/[a-z0-9-]+$/.test(requestPath)||/^\/[a-z0-9-]+\/construction(?:\/[a-z0-9-]+)?$/.test(requestPath);
@@ -198,6 +198,14 @@ function withTimeout(promise,label){
 }
 app.get('/health/live',(req,res)=>{setHealthHeaders(res);res.json({status:'ok'});});
 app.get('/health/version',(req,res)=>{setHealthHeaders(res);res.json({status:'ok',...releaseIdentity.snapshot()});});
+app.get('/release.json',(req,res)=>{
+  setHealthHeaders(res);
+  const markerPath=path.join(frontendDist,'release.json');
+  if(!fs.existsSync(markerPath)){
+    return res.status(503).json({error:'Frontend release marker unavailable',...releaseIdentity.snapshot()});
+  }
+  return res.sendFile(markerPath,error=>error?res.status(503).json({error:'Frontend release marker unavailable',...releaseIdentity.snapshot()}):undefined);
+});
 app.get('/health/worker',async(req,res)=>{
   setHealthHeaders(res);
   try{
