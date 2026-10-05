@@ -31,6 +31,8 @@ assert(control.includes('renewLease(jobKey,ownerToken)')&&control.includes('leas
 assert(control.includes('recoverStaleRuns(jobKey)')&&control.includes('Previous worker stopped before completing this job'),'A replacement worker must close abandoned running rows');
 assert(control.includes("SECRET_KEY=/(password|token|secret"),'Background job summaries must redact secret-like fields');
 assert(control.includes("status:'failed'")&&control.includes("status:'skipped'"),'Background job recorder must preserve failed/skipped states');
+assert(control.includes("return{busy:true,skipped:true,reason:'busy',runId:null,jobStatus:'skipped'}"),'Lease misses must return busy without creating fake job runs');
+assert(!control.includes("insertRun({jobKey,source,triggeredBy,status:'skipped',summary:{reason:'busy'}}"),'Cross-replica lease misses must not inflate the run ledger');
 
 for(const [name,source,key] of [
   ['Admin sheet sync',adminSheets,'admin_google_sheet_sync'],
