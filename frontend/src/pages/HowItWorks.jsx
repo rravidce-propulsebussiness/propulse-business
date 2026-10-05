@@ -2,8 +2,6 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { publicRequest } from '../utils/auth'
 import './HowItWorks.css'
-import { openLeadPopup } from '../utils/leadPopup'
-import PublicIcon from '../components/PublicIcon'
 
 const FLOWS=[
   {
@@ -76,13 +74,6 @@ function Icon({name,size=20}){
   return null
 }
 
-
-function popupFlowKey(key){
-  if(key==='construction')return 'build'
-  if(key==='interiors')return 'design'
-  if(key==='property')return 'property'
-  return ''
-}
 
 export default function HowItWorks(){
   const navigate=useNavigate()
