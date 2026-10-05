@@ -25,8 +25,24 @@ function commitMatches(actual, expected) {
   return left === right || left.startsWith(right) || right.startsWith(left);
 }
 
+function errorSummary(error){
+  const cause=error?.cause||{};
+  return[
+    error?.message,
+    cause?.code,
+    cause?.hostname,
+    cause?.address,
+    cause?.port,
+    cause?.message,
+  ].filter(Boolean).map(String).filter((value,index,array)=>array.indexOf(value)===index).join(' | ').slice(0,500);
+}
+
 async function request(path, options = {}) {
-  return fetch(`${baseUrl}${path}`, { redirect: 'manual', signal: AbortSignal.timeout(10000), ...options });
+  try{
+    return await fetch(`${baseUrl}${path}`, { redirect: 'manual', signal: AbortSignal.timeout(10000), ...options });
+  }catch(error){
+    throw new Error(`Deployment request ${path} failed: ${errorSummary(error)||String(error)}`,{cause:error});
+  }
 }
 
 async function main() {

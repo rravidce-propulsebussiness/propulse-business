@@ -14,6 +14,17 @@ if(!expectedCommit||!/^[0-9a-f]{7,64}$/.test(expectedCommit))throw new Error('Se
 if(!expectedEnvironment||!/^[a-z0-9_-]{2,30}$/.test(expectedEnvironment))throw new Error('Set DEPLOY_EXPECTED_ENVIRONMENT to staging or production');
 
 const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
+function errorSummary(error){
+  const cause=error?.cause||{};
+  return[
+    error?.message,
+    cause?.code,
+    cause?.hostname,
+    cause?.address,
+    cause?.port,
+    cause?.message,
+  ].filter(Boolean).map(String).filter((value,index,array)=>array.indexOf(value)===index).join(' | ').slice(0,500);
+}
 const commitMatches=(actual,expected)=>{
   const left=String(actual||'').trim().toLowerCase(),right=String(expected||'').trim().toLowerCase();
   if(!/^[0-9a-f]{7,64}$/.test(left))return false;
@@ -53,7 +64,7 @@ async function main(){
         }
         last='requested release is visible but readiness returned HTTP '+ready.response.status;
       }
-    }catch(error){last=String(error?.message||error).slice(0,240)}
+    }catch(error){last=errorSummary(error)||String(error).slice(0,500)}
     console.log('Waiting for '+expectedEnvironment+' release '+expectedCommit.slice(0,12)+': '+last);
     await sleep(pollSeconds*1000);
   }
