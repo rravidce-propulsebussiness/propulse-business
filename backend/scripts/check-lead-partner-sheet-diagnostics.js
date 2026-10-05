@@ -13,7 +13,7 @@ const routes=read('src/routes/leadPartnerRoutes.js');
 const migration=read('src/database/migrations/20260928_lead_partner_sheet_default_industry.sql');
 
 assert(inventory.includes("n==='singleonly'"),'Lead Partner Google Sheet import must accept Single Only wording');
-assert(inventory.includes("intriordesignandhomeinteriors")&&inventory.includes("Interior Design & Home Interiors"),'Lead Partner sheet import must normalize the same known Interior Design industry typo as Admin import');
+assert(inventory.includes("interiordesignandhomeinteriors:'interiordesignandhomeimprovement'")&&inventory.includes('canonicalIndustryValue'),'Lead Partner sheet import must normalize legacy Interior Design & Home Interiors values to the active Interior Design & Home Improvement catalog');
 assert(inventory.includes('Industry, Service and Subservice are all blank'),'Blank classification rows must report a precise actionable reason');
 assert(inventory.includes('const locationCache=new Map()'),'Lead Partner sheet import must cache repeated PIN/location resolution within one file');
 assert(!inventory.includes('state_id=$1,updated_at=CURRENT_TIMESTAMP'),'Lead Partner PIN state persistence must not write the nonexistent india_pincodes.updated_at column');
