@@ -90,9 +90,7 @@ async function finishRun(runId,{status,summary={},errorMessage=null},db=pool){
 async function execute({jobKey,source='scheduled',triggeredBy=null,task}){
   const ownerToken=await acquireLease(jobKey);
   if(!ownerToken){
-    const run=await insertRun({jobKey,source,triggeredBy,status:'skipped',summary:{reason:'busy'}});
-    await finishRun(run.id,{status:'skipped',summary:{reason:'busy'}});
-    return{busy:true,skipped:true,runId:Number(run.id),jobStatus:'skipped'};
+    return{busy:true,skipped:true,reason:'busy',runId:null,jobStatus:'skipped'};
   }
   await recoverStaleRuns(jobKey);
   const run=await insertRun({jobKey,source,triggeredBy,status:'running'});
