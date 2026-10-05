@@ -134,6 +134,23 @@ app.use((req,res,next)=>{
   next();
 });
 
+function serveExactPrerenderedHtml(root){
+  return(req,res,next)=>{
+    if(!['GET','HEAD'].includes(req.method))return next();
+    const accept=String(req.get('accept')||'');
+    if(accept&&!accept.includes('text/html')&&!accept.includes('*/*'))return next();
+    const requestPath=String(req.path||'');
+    if(requestPath==='/'||privateFrontendPath(requestPath)||!knownSpaFrontendPath(requestPath))return next();
+    const relative=requestPath.replace(/^\\/+/, '');
+    if(!relative||relative.split('/').some(part=>part==='.'||part==='..'))return next();
+    const candidate=path.join(root,relative+'.html');
+    try{
+      if(!fs.existsSync(candidate)||!fs.statSync(candidate).isFile())return next();
+    }catch{return next()}
+    res.setHeader('Cache-Control','no-cache');
+    return res.sendFile(candidate,error=>error?next(error):undefined);
+  };
+}
 function redirectLegacyFrontend(target,hash=''){
   return(req,res)=>{
     const queryIndex=req.originalUrl.indexOf('?');
@@ -164,6 +181,8 @@ for(const [from,to] of [
 }
 
 app.use((req,res,next)=>backendRoute(req.path)?proxyToBackend(req,res):next());
+
+app.use(serveExactPrerenderedHtml(frontendDist));
 
 app.use(express.static(frontendDist,{
   index:'index.html',
