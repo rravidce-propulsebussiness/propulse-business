@@ -25,6 +25,7 @@ const migration=read('scripts/migrate-private-uploads-to-object-storage.js');
 const proofResponse=read('src/utils/proofResponse.js');
 const legacyUploadMigration=read('src/services/legacyUploadMigrationService.js');
 const server=read('src/server.js');
+const privateStorageBackup=read('src/services/privateStorageBackupScheduler.js');
 
 const signed=s3.buildPresignedGetUrl('test.txt',{
   expiresSeconds:86400,
@@ -73,6 +74,9 @@ assert(migration.includes('company_proof_documents'),'Migration utility must cov
 assert(legacyUploadMigration.includes("stored_name NOT LIKE 'private-object-s3:%'")&&legacyUploadMigration.includes('companyProofStorage.storeBuffer'),'Startup legacy migration must move local company proofs into object storage');
 assert(legacyUploadMigration.includes("../../uploads/company-proofs")&&legacyUploadMigration.includes('readLegacyCompanyProof'),'Legacy company proof migration must search both configured and original Hostinger upload roots');
 assert(server.includes('migrateLegacyCompanyProofsToObjectStorage')&&server.includes('Legacy company proof migration'),'Server must attempt the idempotent legacy migration after object storage is ready');
+assert(s3.headObject,'S3 abstraction must expose HEAD checks for cross-bucket verification');
+assert(privateStorageBackup.includes("snapshots/")&&privateStorageBackup.includes('PRIVATE_OBJECT_STORAGE_BACKUP_BUCKET'),'Private R2 backup must write to a separate backup bucket');
+assert(privateStorageBackup.includes('sha256(restored.buffer)')&&privateStorageBackup.includes('backup_verification_runs'),'Private R2 backup must verify restored bytes and persist verification state');
 assert(proofResponse.includes("'Referrer-Policy','no-referrer'"),'Signed proof redirects must not leak their query token through referrers');
 
 console.log('Private object storage abstraction regression test passed.');
