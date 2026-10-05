@@ -146,8 +146,18 @@ async function forgotPassword(req, res) {
     if (!email) return res.status(400).json({ error: 'Email address is required' });
 
     reset = await authService.createPasswordReset(email);
-    if (!reset || reset.cooldown) {
-      return res.json({ message: 'If an account exists for that email, a password reset link has been sent.' });
+    if (!reset) {
+      return res.status(404).json({
+        error: 'No user found with this email address.',
+        code: 'ACCOUNT_NOT_FOUND',
+      });
+    }
+    if (reset.cooldown) {
+      return res.json({
+        message: 'Reset link already sent. Please check your email.',
+        sent: true,
+        cooldown: true,
+      });
     }
 
     const baseUrl = String(
@@ -160,7 +170,11 @@ async function forgotPassword(req, res) {
     if (!baseUrl) throw new Error('Public application URL is not configured');
     const resetUrl = `${baseUrl}/reset-password#token=${encodeURIComponent(reset.token)}`;
     await sendPasswordResetEmail({ to: reset.user.email, name: reset.user.name, resetUrl });
-    return res.json({ message: 'If an account exists for that email, a password reset link has been sent.' });
+    return res.json({
+      message: 'Reset link sent. Please check your email.',
+      sent: true,
+      cooldown: false,
+    });
   } catch (error) {
     if (reset?.token) {
       await authService.discardPasswordResetToken(reset.token).catch((cleanupError) => {
