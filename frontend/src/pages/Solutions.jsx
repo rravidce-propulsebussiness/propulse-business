@@ -27,7 +27,7 @@ const FLOWS = {
     eyebrow: 'REAL ESTATE',
     title: 'Real Estate',
     subtitle: 'Find Your Property',
-    description: 'Buy, rent, sell or invest with a structured location, property-type and budget requirement.',
+    description: 'Buy or sell property with a structured location, property-type and budget requirement.',
     image: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=1100&q=90',
     icon: 'property',
   },
