@@ -155,6 +155,22 @@ async function main() {
   assert(Array.isArray(expertsBody.data), 'Public Experts directory must return a data array');
   assert(expertsBody.pagination && typeof expertsBody.pagination === 'object', 'Public Experts directory must return pagination metadata');
 
+  const legacyRedirects = [
+    ['/home', '/'],
+    ['/leads', '/professionals'],
+    ['/industries', '/'],
+    ['/pricing', '/#pricing'],
+    ['/build?utm_source=smoke', '/quote?utm_source=smoke#construction'],
+    ['/design', '/quote#interiors'],
+    ['/property', '/quote#property'],
+    ['/real-estate', '/quote#property'],
+  ];
+  for (const [from, to] of legacyRedirects) {
+    const response = await request(from, { headers: { accept: 'text/html' } });
+    assert.equal(response.status, 301, `Legacy public route ${from} must permanently redirect`);
+    assert.equal(response.headers.get('location'), to, `Legacy public route ${from} must redirect to ${to}`);
+  }
+
   const allowed = await request('/api/investments', { headers: { origin: appOrigin } });
   assert.equal(allowed.headers.get('access-control-allow-origin'), appOrigin, 'Configured frontend origin must receive CORS permission');
   assert.equal(allowed.status, 401, 'Anonymous investment API request should be unauthorized');
