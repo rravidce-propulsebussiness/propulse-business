@@ -59,7 +59,9 @@
     "audit:migration-target": "node scripts/audit-local-supabase-merge.js",
     "migrate:supabase-core": "node scripts/migrate-local-to-supabase-core.js",
     "backup:migration-target": "node scripts/backup-migration-target.js",
-    "test:telegram-payment": "node scripts/check-telegram-payment-approval.js"
+    "test:telegram-payment": "node scripts/check-telegram-payment-approval.js",
+    "backup:logical": "node scripts/logical-database-backup.js",
+    "backup:logical:verify": "node scripts/verify-logical-database-backup.js"
   },
   "keywords": [],
   "author": "",
