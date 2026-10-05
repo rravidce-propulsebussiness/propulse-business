@@ -59,7 +59,7 @@ jobs:
 
       - name: Bake Hostinger release identity
         run: |
-          node -e "require('fs').writeFileSync('backend/hostinger-release.json', JSON.stringify({commit:process.env.GITHUB_SHA,builtAt:new Date().toISOString()})+'\\n')"
+          node -e "require('fs').writeFileSync('backend/hostinger-release.json', JSON.stringify({commit:process.env.GITHUB_SHA,environment:'production',builtAt:new Date().toISOString()})+'\\n')"
           cat backend/hostinger-release.json
 
       - name: Commit prebuilt frontend
