@@ -4,6 +4,7 @@ const path=require('path');
 const migration=fs.readFileSync(path.join(__dirname,'../src/database/migrations/20260928_production_hot_path_indexes.sql'),'utf8');
 const latestCycleMigration=fs.readFileSync(path.join(__dirname,'../src/database/migrations/20260928_investment_cycle_latest_index.sql'),'utf8');
 const functionHardening=fs.readFileSync(path.join(__dirname,'../src/database/migrations/20261005_supabase_function_search_path_hardening.sql'),'utf8');
+const duplicateCleanup=fs.readFileSync(path.join(__dirname,'../src/database/migrations/20261005_drop_duplicate_indexes.sql'),'utf8');
 const assert=(condition,message)=>{if(!condition)throw new Error(message)};
 
 assert(migration.includes('idx_wallet_topups_status_created_id'),'Wallet top-up review queue needs status/time index');
@@ -33,6 +34,14 @@ for(const fn of [
   'lead_effective_buyer_capacity(text, integer, integer, integer, timestamp without time zone, integer)'
 ]){
   assert(functionHardening.includes('ALTER FUNCTION public.'+fn+' SET search_path = public, pg_temp'),'Missing fixed search_path for '+fn);
+}
+
+assert(duplicateCleanup.includes('-- propulse:no-transaction'),'Duplicate-index cleanup must run without a transaction for concurrent drops');
+for(const indexName of ['idx_leads_created_at','idx_payments_created_at','idx_wallet_topups_review_queue','uq_wallet_refund_payment']){
+  assert(duplicateCleanup.includes('DROP INDEX CONCURRENTLY IF EXISTS public.'+indexName),'Missing concurrent duplicate-index drop for '+indexName);
+}
+for(const keepName of ['leads_created_at_idx','payments_created_at_idx','idx_wallet_topups_status_created_id','uq_wallet_transactions_refund_payment']){
+  assert(!duplicateCleanup.includes('DROP INDEX CONCURRENTLY IF EXISTS public.'+keepName),'Canonical index must not be dropped: '+keepName);
 }
 
 console.log('Production hot-path index and function hardening regression test passed.');
