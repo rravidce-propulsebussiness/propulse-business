@@ -78,7 +78,9 @@ const requireBackgroundWorker=envFlag('REQUIRE_BACKGROUND_WORKER',false);
 const workerHeartbeatMaxAgeSeconds=Math.min(600,Math.max(30,Math.floor(Number(process.env.WORKER_HEARTBEAT_MAX_AGE_SECONDS)||120)));
 const trustProxy=String(process.env.TRUST_PROXY||'').trim();
 const backendOnlyPath=requestPath=>requestPath==='/robots.txt'||requestPath==='/sitemap.xml'||requestPath==='/health'||requestPath.startsWith('/health/')||requestPath.startsWith('/api')||requestPath.startsWith('/uploads');
-const privateFrontendPath=requestPath=>/^\/(admin|login|signup|forgot-password|reset-password|profile|wallet|membership|notifications|purchased-leads|my-leads|investment|lead-partner|requirements|estimate|professional-contact|professionals|upcoming-features)(\/|$)/.test(requestPath);
+const privateFrontendPath=requestPath=>/^\/(admin|login|signup|forgot-password|reset-password|profile|wallet|membership|notifications|purchased-leads|my-leads|investment|lead-partner|requirements|estimate|professional-contact|professionals|upcoming-features|dashboard)(\/|$)/.test(requestPath);
+const publicSpaFrontendPaths=new Set(['/','/home','/quote','/solutions','/build','/design','/property','/experts','/packages','/projects','/how-it-works','/about','/real-estate','/contact','/faq','/pricing','/industries','/leads']);
+const knownSpaFrontendPath=requestPath=>privateFrontendPath(requestPath)||publicSpaFrontendPaths.has(requestPath);
 if(trustProxy) app.set('trust proxy',trustProxy==='false'?false:trustProxy==='true'?true:Number.isNaN(Number(trustProxy))?trustProxy:Number(trustProxy));
 app.disable('x-powered-by');
 app.use((req,res,next)=>{
@@ -238,6 +240,10 @@ if(serveFrontendFromBackend){
       res.setHeader('Retry-After','5');
       res.setHeader('Cache-Control','no-store');
       return res.status(503).send('Application frontend is starting. Please retry shortly.');
+    }
+    if(!knownSpaFrontendPath(req.path)){
+      res.setHeader('X-Robots-Tag','noindex, nofollow');
+      return res.status(404).send('Not found');
     }
     if(privateFrontendPath(req.path))res.setHeader('X-Robots-Tag','noindex, nofollow');
     return res.sendFile(frontendIndexPath,error=>error?next(error):undefined);
