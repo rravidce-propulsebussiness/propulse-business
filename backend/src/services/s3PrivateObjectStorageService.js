@@ -13,6 +13,13 @@ function boolEnv(name,fallback=false){
 }
 function driver(){return String(process.env.PRIVATE_OBJECT_STORAGE_DRIVER||'local').trim().toLowerCase()}
 function isEnabled(){return driver()==='s3'}
+function assertWriteStorage(){
+  if(isEnabled())return true;
+  if(process.env.NODE_ENV==='production'){
+    throw Object.assign(new Error('Production uploads require S3-compatible object storage'),{code:'PRIVATE_OBJECT_STORAGE_REQUIRED'});
+  }
+  return false;
+}
 function config(overrides={}){
   const endpoint=String(overrides.endpoint||process.env.PRIVATE_OBJECT_STORAGE_ENDPOINT||'').trim();
   const region=String(overrides.region||process.env.PRIVATE_OBJECT_STORAGE_REGION||'us-east-1').trim()||'us-east-1';
@@ -150,4 +157,4 @@ async function probe(){
   }catch(error){await deleteObject(key).catch(()=>{});throw error}
 }
 
-module.exports={PREFIX,driver,isEnabled,config,normalizeKey,makeReference,parseReference,isReference,putObject,deleteObject,getObjectBuffer,getSignedGetUrl,getMediaGetUrl,buildPresignedGetUrl,authorizationHeaders,probe,enc};
+module.exports={PREFIX,driver,isEnabled,assertWriteStorage,config,normalizeKey,makeReference,parseReference,isReference,putObject,deleteObject,getObjectBuffer,getSignedGetUrl,getMediaGetUrl,buildPresignedGetUrl,authorizationHeaders,probe,enc};
