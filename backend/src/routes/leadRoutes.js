@@ -23,6 +23,7 @@ router.post('/google-sheet/sync',requireAdmin,leadController.syncGoogleSheet);
 router.get('/google-sheet/connections',requireAdmin,leadController.listGoogleSheetConnections);
 router.post('/google-sheet/connections',requireAdmin,leadController.connectGoogleSheet);
 router.post('/google-sheet/connections/:id/sync',requireAdmin,leadController.syncGoogleSheetConnection);
+router.put('/google-sheet/connections/:id/default-industry',requireAdmin,leadController.updateGoogleSheetDefaultIndustry);
 router.delete('/google-sheet/connections/:id',requireAdmin,leadController.disconnectGoogleSheet);
 router.get('/purchased',requireAuth,leadPurchaseController.purchases);
 router.get('/purchased/export',requireAuth,leadPurchaseController.exportPurchases);
