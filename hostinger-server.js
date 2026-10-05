@@ -76,6 +76,12 @@ function backendRoute(requestPath){
     ||requestPath.startsWith('/uploads/');
 }
 
+function privateFrontendPath(requestPath){
+  return /^\/(admin|login|signup|forgot-password|reset-password|profile|wallet|membership|notifications|purchased-leads|my-leads|investment|lead-partner|requirements|estimate|professional-contact|professionals|upcoming-features|dashboard)(\/|$)/.test(requestPath);
+}
+const publicSpaFrontendPaths=new Set(['/','/home','/quote','/solutions','/build','/design','/property','/experts','/packages','/projects','/how-it-works','/about','/real-estate','/contact','/faq','/pricing','/industries','/leads']);
+function knownSpaFrontendPath(requestPath){return privateFrontendPath(requestPath)||publicSpaFrontendPaths.has(requestPath);}
+
 function proxyToBackend(req,res){
   const forwardedProto=String(req.headers['x-forwarded-proto']||'').split(',')[0].trim()||(req.socket.encrypted?'https':'https');
   const forwardedHost=String(req.headers['x-forwarded-host']||req.headers.host||'').split(',')[0].trim();
@@ -159,6 +165,10 @@ app.use((req,res,next)=>{
     res.setHeader('Cache-Control','no-store');
     res.setHeader('X-App-Starting','frontend');
     return res.status(200).send('<!doctype html><html><head><meta charset="utf-8"><meta name="robots" content="noindex"><title>ProPulse</title></head><body>Application is starting. Please retry shortly.</body></html>');
+  }
+  if(!knownSpaFrontendPath(req.path)){
+    res.setHeader('X-Robots-Tag','noindex, nofollow');
+    return res.status(404).send('Not found');
   }
   return res.sendFile(frontendIndex,error=>error?next(error):undefined);
 });
