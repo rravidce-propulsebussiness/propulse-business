@@ -1,3 +1,4 @@
+const crypto = require('crypto');
 const express = require('express');
 const authController = require('../controllers/authController');
 const requireAuth = require('../middleware/authMiddleware');
@@ -5,7 +6,28 @@ const rateLimit = require('../middleware/rateLimitMiddleware');
 
 const router = express.Router();
 const authWriteLimit = rateLimit({ windowMs: 15 * 60 * 1000, max: 10 });
-const recoveryLimit = rateLimit({ windowMs: 15 * 60 * 1000, max: 5 });
+function hashRecoveryIdentity(value) {
+  const normalized = String(value || '').trim().toLowerCase();
+  if (!normalized) return '';
+  return crypto.createHash('sha256').update(normalized).digest('hex');
+}
+
+const forgotPasswordLimit = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  keyGenerator: (req) => {
+    const hash = hashRecoveryIdentity(req.body?.email);
+    return hash ? `password-recovery-email:${hash}` : '';
+  },
+});
+const resetPasswordLimit = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  keyGenerator: (req) => {
+    const hash = hashRecoveryIdentity(req.body?.token);
+    return hash ? `password-reset-token:${hash}` : '';
+  },
+});
 const companyProofUploadLimit = rateLimit({ windowMs: 15 * 60 * 1000, max: 10 });
 
 router.post('/signup', authWriteLimit, authController.signup);
@@ -13,8 +35,8 @@ router.post('/company-proofs', requireAuth, companyProofUploadLimit, authControl
 router.get('/company-proofs/:documentId', requireAuth, authController.downloadCompanyProof);
 router.post('/login', authWriteLimit, authController.login);
 router.post('/google', authWriteLimit, authController.googleLogin);
-router.post('/forgot-password', recoveryLimit, authController.forgotPassword);
-router.post('/reset-password', recoveryLimit, authController.resetPassword);
+router.post('/forgot-password', forgotPasswordLimit, authController.forgotPassword);
+router.post('/reset-password', resetPasswordLimit, authController.resetPassword);
 router.post('/logout', authController.logout);
 router.get('/session', authController.session);
 router.post('/supabase/link', requireAuth, authWriteLimit, authController.linkSupabaseIdentity);
