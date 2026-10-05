@@ -98,12 +98,20 @@ async function consumeSharedLeasedBucket(key, windowMs, chunkSize) {
   return { request_count: count, retry_after: Math.max(1, Math.ceil((lease.expiresAt - Date.now()) / 1000)) };
 }
 
-function rateLimit({ windowMs = 15 * 60 * 1000, max = 100, scope = 'route', shared = true, sharedChunkSize = 1, keyGenerator = null } = {}) {
+function rateLimit({ windowMs = 15 * 60 * 1000, max = 100, scope = 'route', shared = true, sharedChunkSize = 1, keyGenerator = null, skip = null } = {}) {
   const safeWindowMs = Math.max(1000, Number(windowMs) || 15 * 60 * 1000);
   const safeMax = Math.max(1, Math.floor(Number(max) || 100));
   const safeSharedChunkSize = Math.min(safeMax, Math.max(1, Math.floor(Number(sharedChunkSize) || 1)));
 
   return async (req, res, next) => {
+    if (typeof skip === 'function') {
+      try {
+        if (skip(req)) return next();
+      } catch (error) {
+        console.error('Rate-limit skip check failed:', error.message);
+      }
+    }
+
     let key = '';
     if (typeof keyGenerator === 'function') {
       try {
