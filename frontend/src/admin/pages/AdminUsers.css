@@ -1901,3 +1901,6 @@
 }
 
 .wallet-360-load-more{display:block;width:100%;margin:10px 0 18px;padding:10px 14px;border:1px solid #d7e3ef;border-radius:9px;background:#f7fbff;color:#17457f;font-size:10px;font-weight:850;cursor:pointer}.wallet-360-load-more:hover{background:#eef6ff}.wallet-360-load-more:disabled{opacity:.55;cursor:not-allowed}
+
+.users-success.user-360-success{margin:12px 18px 0;padding:11px 13px;border:1px solid #b7e4ca;border-radius:10px;background:#eefaf3;color:#17653d;font-size:13px;font-weight:700}
+.user-360-quick-actions button:disabled{opacity:.55;cursor:not-allowed}

@@ -14,6 +14,10 @@ const forgot=read('../frontend/src/pages/ForgotPassword.jsx');
 const reset=read('../frontend/src/pages/ResetPassword.jsx');
 const app=read('../frontend/src/App.jsx');
 const email=read('src/services/emailService.js');
+const adminRoutes=read('src/routes/adminRoutes.js');
+const adminController=read('src/controllers/adminController.js');
+const adminService=read('src/services/adminService.js');
+const adminUsers=read('../frontend/src/admin/pages/AdminUsers.jsx');
 
 assert.match(routes,/password-recovery-email:v2:/,'forgot-password must use its own versioned email bucket');
 assert.match(routes,/password-reset-token:v2:/,'reset-password must use its own versioned token bucket');
@@ -60,5 +64,21 @@ assert.match(email,/EMAIL_PROVIDER_REJECTED/,'email provider must expose a stabl
 assert.match(email,/EMAIL_PROVIDER_TIMEOUT/,'email provider must expose a stable timeout code internally');
 assert.match(email,/function configurationHealth\(\)/,'email provider must expose secret-free configuration health');
 assert.match(email,/resend_test/,'email provider health must distinguish the Resend test sender');
+
+assert.match(adminRoutes,/router\.use\(requireAuth,requireAdmin\)/,'Admin password reset must remain behind Admin authentication');
+assert.match(adminRoutes,/userPasswordResetLimit=rateLimit\(\{windowMs:15\*60\*1000,max:10/,'Admin password reset must be independently rate-limited');
+assert.match(adminRoutes,/router\.post\('\/users\/:id\/password-reset',userPasswordResetLimit,adminController\.sendUserPasswordReset\)/,'Admin Users must expose a dedicated password-reset route');
+assert.match(adminController,/async function sendUserPasswordReset/,'Admin controller must expose password reset delivery');
+assert.match(adminController,/PASSWORD_RESET_EMAIL_UNAVAILABLE:503/,'Admin reset delivery failures must surface as service unavailable');
+assert.match(adminService,/async function sendUserPasswordReset/,'Admin service must implement password reset delivery');
+assert.match(adminService,/authService\.createPasswordReset\(user\.email\)/,'Admin reset must reuse the standard one-time token flow');
+assert.match(adminService,/emailService\.sendPasswordResetEmail\(\{to:user\.email,name:user\.name,resetUrl\}\)/,'Admin reset must reuse the normal email delivery template');
+assert.match(adminService,/discardPasswordResetToken\(reset\.token\)/,'Admin reset must remove unusable tokens when delivery/configuration fails');
+assert.match(adminService,/action:'send_password_reset_link'/,'Admin password reset requests must enter the account audit trail');
+assert.match(adminService,/if\(!user\.is_active\)/,'Inactive accounts must not receive reset links');
+assert.match(adminService,/reset-password#token=/,'Admin-issued reset links must keep tokens in the URL fragment');
+assert.match(adminUsers,/Send password reset link/,'Admin Users Account 360 must expose password reset delivery');
+assert.match(adminUsers,/Ask the user to check Inbox, Spam or Promotions/,'Admin reset success must guide support staff to Spam/Promotions');
+assert.match(adminUsers,/disabled=\{!selected\.is_active\|\|userBusy==='password-reset'\}/,'Admin reset action must be disabled for inactive accounts and while sending');
 
 console.log('Password recovery resilience regression test passed.');

@@ -5,6 +5,8 @@ const pool = require('../config/database');
 const { validateSelections } = require('./profileService');
 const leadEntitlementGrantService = require('./leadEntitlementGrantService');
 const companyProofStorage = require('./companyProofStorageService');
+const authService = require('./authService');
+const emailService = require('./emailService');
 
 const DEFAULT_PAGE_SIZE = 25;
 const MAX_PAGE_SIZE = 100;
@@ -366,6 +368,86 @@ async function getUsers({ search = '', role = 'all', status = 'all', industryId 
   return { data: result.rows, pagination: { page: currentPage, pageSize: currentPageSize, total, totalPages: total === 0 ? 0 : Math.ceil(total / currentPageSize), hasNextPage: currentPage * currentPageSize < total, hasPreviousPage: currentPage > 1 && total > 0 } };
 }
 
+function publicAppBaseUrl(){
+  return String(
+    process.env.PUBLIC_APP_URL
+    || process.env.FRONTEND_URL
+    || process.env.APP_URL
+    || process.env.CORS_ORIGIN
+    || ''
+  ).split(',')[0].trim().replace(/\/$/,'');
+}
+
+async function sendUserPasswordReset({userId,actingAdminId=null}={}){
+  const targetUserId=Number(userId);
+  if(!Number.isInteger(targetUserId)||targetUserId<=0){
+    const error=new Error('User not found');
+    error.code='NOT_FOUND';
+    throw error;
+  }
+  const user=(await pool.query(
+    'SELECT id,name,email,is_active FROM users WHERE id=$1',
+    [targetUserId]
+  )).rows[0];
+  if(!user){
+    const error=new Error('User not found');
+    error.code='NOT_FOUND';
+    throw error;
+  }
+  if(!user.is_active){
+    const error=new Error('Activate this account before sending a password reset link.');
+    error.code='INACTIVE_ACCOUNT';
+    throw error;
+  }
+
+  const reset=await authService.createPasswordReset(user.email);
+  if(!reset){
+    const error=new Error('User not found');
+    error.code='NOT_FOUND';
+    throw error;
+  }
+  if(reset.cooldown){
+    await recordUserAudit(pool,{
+      userId:targetUserId,adminId:actingAdminId,action:'send_password_reset_link',
+      afterData:{email:user.email,delivery:'email',cooldown:true}
+    }).catch(error=>console.error('Admin password reset audit failed:',error.message));
+    return{
+      sent:true,
+      cooldown:true,
+      message:'A reset link was already sent recently. Ask the user to check Inbox, Spam or Promotions.'
+    };
+  }
+
+  const baseUrl=publicAppBaseUrl();
+  if(!baseUrl){
+    await authService.discardPasswordResetToken(reset.token).catch(()=>{});
+    const error=new Error('Public application URL is not configured');
+    error.code='RESET_URL_UNAVAILABLE';
+    throw error;
+  }
+  const resetUrl=`${baseUrl}/reset-password#token=${encodeURIComponent(reset.token)}`;
+  try{
+    await emailService.sendPasswordResetEmail({to:user.email,name:user.name,resetUrl});
+  }catch(error){
+    await authService.discardPasswordResetToken(reset.token).catch(()=>{});
+    const deliveryError=new Error('Password reset email could not be sent right now.');
+    deliveryError.code='PASSWORD_RESET_EMAIL_UNAVAILABLE';
+    deliveryError.cause=error;
+    throw deliveryError;
+  }
+
+  await recordUserAudit(pool,{
+    userId:targetUserId,adminId:actingAdminId,action:'send_password_reset_link',
+    afterData:{email:user.email,delivery:'email',cooldown:false}
+  }).catch(error=>console.error('Admin password reset audit failed:',error.message));
+
+  return{
+    sent:true,
+    cooldown:false,
+    message:'Reset link sent. Ask the user to check Inbox, Spam or Promotions.'
+  };
+}
+
 async function createAdmin({ name, email, password, actingAdminId=null }) {
   const cleanName = String(name || '').trim(), normalizedEmail = String(email || '').trim().toLowerCase();
   if (!cleanName || !normalizedEmail || String(password || '').length < 8) { const error = new Error('Name, valid email and password of at least 8 characters are required'); error.code='INVALID_ADMIN'; throw error; }
@@ -632,4 +714,4 @@ async function reviewCompanyProof({ documentId, status, reviewReason = '', revie
   }
 }
 
-module.exports={getDashboardStats,getUsers,createAdmin,setUserStatus,setUserRole,updateUserProfile,getCompanyProofs,reviewCompanyProof};
+module.exports={getDashboardStats,getUsers,createAdmin,sendUserPasswordReset,setUserStatus,setUserRole,updateUserProfile,getCompanyProofs,reviewCompanyProof};
