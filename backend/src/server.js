@@ -177,6 +177,7 @@ const apiRateLimit=rateLimit({
 app.use('/api',apiRateLimit);
 app.use('/api',(req,res,next)=>{
   if(startupReady)return next();
+  res.locals.expectedOperationalTransition='backend_starting';
   res.setHeader('Retry-After',String(Math.max(1,Math.ceil(startupRetryMs/1000))));
   return res.status(503).json({
     error:'Backend dependencies are starting',
@@ -202,6 +203,7 @@ app.get('/release.json',(req,res)=>{
   setHealthHeaders(res);
   const markerPath=path.join(frontendDist,'release.json');
   if(!fs.existsSync(markerPath)){
+    res.locals.expectedOperationalTransition='frontend_release_starting';
     return res.status(503).json({error:'Frontend release marker unavailable',...releaseIdentity.snapshot()});
   }
   return res.sendFile(markerPath,error=>error?res.status(503).json({error:'Frontend release marker unavailable',...releaseIdentity.snapshot()}):undefined);
@@ -220,8 +222,14 @@ app.get('/health/worker',async(req,res)=>{
 });
 async function readiness(req,res){
   setHealthHeaders(res);
-  if(shuttingDown)return res.status(503).json({status:'draining',database:'unknown',storage:'unknown',worker:requireBackgroundWorker?'unknown':'not-required'});
-  if(!startupReady)return res.status(503).json({status:'starting',database:'unknown',storage:'unknown',worker:requireBackgroundWorker?'unknown':'not-required',startup:'initializing'});
+  if(shuttingDown){
+    res.locals.expectedOperationalTransition='draining';
+    return res.status(503).json({status:'draining',database:'unknown',storage:'unknown',worker:requireBackgroundWorker?'unknown':'not-required'});
+  }
+  if(!startupReady){
+    res.locals.expectedOperationalTransition='backend_starting';
+    return res.status(503).json({status:'starting',database:'unknown',storage:'unknown',worker:requireBackgroundWorker?'unknown':'not-required',startup:'initializing'});
+  }
   const [database,storage,worker]=await Promise.allSettled([
     withTimeout(pool.query('SELECT 1'),'Database'),
     withTimeout(checkUploadStorage(),'Upload storage'),
