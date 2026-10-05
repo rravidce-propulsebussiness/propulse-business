@@ -88,7 +88,8 @@ async function saveReference({key,leadId,submissionKey,originalName,dataUrl,atta
   const extension=EXTENSIONS[parsed.mime];
   const filename=`${Date.now()}-${crypto.randomBytes(12).toString('hex')}.${extension}`;
   let storageKey;
-  if(s3.isEnabled()){
+  const useObjectStorage=s3.assertWriteStorage();
+  if(useObjectStorage){
     const objectKey=`lead-references/${row.id}/${filename}`;
     await s3.putObject(objectKey,parsed.data,{contentType:parsed.mime});
     storageKey=s3.makeReference(objectKey);
