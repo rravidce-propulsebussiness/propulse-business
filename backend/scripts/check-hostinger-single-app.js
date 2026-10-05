@@ -73,6 +73,14 @@ assert(wrapper.includes("requestPath==='/release.json'"),'Hostinger wrapper prox
 assert(backendServer.includes("app.get('/release.json'")&&backendServer.includes("path.join(frontendDist,'release.json')"),'Backend single-app runtime serves the bundled release marker explicitly');
 assert(wrapper.includes("express.static(frontendDist"),'Hostinger wrapper serves the built frontend');
 assert(wrapper.includes("extensions:['html']"),'Hostinger wrapper resolves prerendered .html SEO routes');
+assert(fs.existsSync(path.join(root,'frontend/dist/hyderabad/construction.html')),'Hyderabad construction prerender must exist as an exact .html file');
+assert(fs.existsSync(path.join(root,'frontend/dist/hyderabad/construction')),'Hyderabad construction locality directory must coexist with the service prerender');
+for(const source of [wrapper,backendServer]){
+  assert(source.includes('function publicPrerenderedFrontendFile(requestPath)'),'Frontend server must prefer exact prerender files before directory handling');
+  assert(source.includes("path.resolve(frontendDist,relative+'.html')"),'Prerender resolver must target the exact .html artifact');
+  assert(source.indexOf('publicPrerenderedFrontendFile(req.path)')<source.indexOf('express.static(frontendDist'),'Exact prerender middleware must run before express.static can redirect a same-name directory');
+  assert(source.includes("!/^[A-Za-z0-9/_-]+$/.test(relative)")&&source.includes('candidate.startsWith(root)'),'Prerender resolver must block unsafe filesystem paths');
+}
 assert(wrapper.includes('knownSpaFrontendPath(req.path)')&&wrapper.includes("res.status(404).send('Not found')"),'Hostinger wrapper must return 404 for unknown HTML routes');
 assert(backendServer.includes('knownSpaFrontendPath(req.path)')&&backendServer.includes("res.status(404).send('Not found')"),'Backend single-process SPA fallback must return 404 for unknown HTML routes');
 assert(backendServer.includes("'/interior-estimator'")&&backendServer.includes('publicDynamicFrontendPath'),'Backend SPA allowlist must preserve estimator redirects and dynamic SEO routes');
