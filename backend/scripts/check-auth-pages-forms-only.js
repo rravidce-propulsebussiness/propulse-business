@@ -25,9 +25,9 @@ assert.match(signup,/signup-business-modal/);
 assert.doesNotMatch(signup,/signup-premium-visual|JOIN PROPULSE|Bigger Growth/);
 assert.doesNotMatch(signupCss,/\.signup-premium-visual|\.signup-visual-|\.signup-benefits|\.signup-quote/);
 
-assert.match(app,/MINIMAL_AUTH_ROUTES=new Set\(\['\/login','\/signup','\/forgot-password','\/reset-password'\]\)/);
-assert.match(app,/function GlobalWidgets\(\)\{const location=useLocation\(\);if\(MINIMAL_AUTH_ROUTES\.has\(location\.pathname\)\)return null;/);
-assert.match(app,/<GlobalWidgets\/>/);
-assert.doesNotMatch(app,/<Routes>[\s\S]*<\/Routes><GlobalLeadPopup\/><SupportChatWidget\/><SoundControl\/>/);
+assert(app.includes("const MINIMAL_AUTH_ROUTES=new Set(['/login','/signup','/forgot-password','/reset-password']);"));
+assert(app.includes("function GlobalWidgets(){const location=useLocation();const pathname=location.pathname.replace(/\\/+$/,'')||'/';if(MINIMAL_AUTH_ROUTES.has(pathname))return null;return <><GlobalLeadPopup/><SupportChatWidget/><SoundControl/></>}"));
+assert(app.includes("</Routes><GlobalWidgets/></Suspense>"));
+assert(!app.includes("return <><GlobalWidgets/></>"),'GlobalWidgets must not recursively render itself');
 
 console.log('Auth pages forms-only regression test passed.');
