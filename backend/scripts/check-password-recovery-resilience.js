@@ -12,6 +12,8 @@ const controller=read('src/controllers/authController.js');
 const service=read('src/services/authService.js');
 const forgot=read('../frontend/src/pages/ForgotPassword.jsx');
 const reset=read('../frontend/src/pages/ResetPassword.jsx');
+const app=read('../frontend/src/App.jsx');
+const email=read('src/services/emailService.js');
 
 assert.match(routes,/password-recovery-email:v2:/,'forgot-password must use its own versioned email bucket');
 assert.match(routes,/password-reset-token:v2:/,'reset-password must use its own versioned token bucket');
@@ -37,5 +39,13 @@ assert.match(forgot,/setCooldown\(60\)/,'forgot-password form must enforce a sho
 assert.match(forgot,/Try again in/,'forgot-password form must show a retry countdown');
 assert.match(forgot,/PASSWORD_RESET_EMAIL_UNAVAILABLE/,'forgot-password form must show a delivery-specific error');
 assert.match(reset,/Too many reset attempts/,'reset-password form must explain throttling');
+assert.match(app,/import ForgotPassword from '\.\/pages\/ForgotPassword'/,'forgot-password must be in the main bundle');
+assert.match(app,/import ResetPassword from '\.\/pages\/ResetPassword'/,'reset-password must be in the main bundle');
+assert.doesNotMatch(app,/ForgotPassword=lazy/,'forgot-password must not depend on a route chunk');
+assert.doesNotMatch(app,/ResetPassword=lazy/,'reset-password must not depend on a route chunk');
+assert.match(email,/const maxAttempts=2/,'email provider must retry one transient failure');
+assert.match(email,/transientProviderStatus\(response\.status\)/,'email provider retry must be limited to transient HTTP failures');
+assert.match(email,/EMAIL_PROVIDER_REJECTED/,'email provider must expose a stable rejection code internally');
+assert.match(email,/EMAIL_PROVIDER_TIMEOUT/,'email provider must expose a stable timeout code internally');
 
 console.log('Password recovery resilience regression test passed.');

@@ -2,46 +2,66 @@ function isConfigured(){
   return Boolean(String(process.env.RESEND_API_KEY||'').trim()&&String(process.env.RESEND_FROM_EMAIL||'').trim());
 }
 
+function transientProviderStatus(status){return status===429||status>=500}
+function emailProviderError(message,{status=null,code='EMAIL_PROVIDER_FAILED'}={}){
+  const error=new Error(message);
+  error.code=code;
+  if(Number.isInteger(status))error.providerStatus=status;
+  return error;
+}
+function wait(ms){return new Promise(resolve=>setTimeout(resolve,ms))}
+
 async function sendResendEmail({to,subject,html,errorContext='notification'}){
   const apiKey=process.env.RESEND_API_KEY;
   const from=process.env.RESEND_FROM_EMAIL;
-  if(!apiKey||!from)throw new Error('Email delivery is not configured');
+  if(!apiKey||!from)throw emailProviderError('Email delivery is not configured',{code:'EMAIL_PROVIDER_NOT_CONFIGURED'});
 
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 10000);
+  const maxAttempts=2;
+  for(let attempt=1;attempt<=maxAttempts;attempt+=1){
+    const controller=new AbortController();
+    const timeout=setTimeout(()=>controller.abort(),10000);
+    try{
+      const response=await fetch('https://api.resend.com/emails',{
+        method:'POST',
+        headers:{
+          Authorization:`Bearer ${apiKey}`,
+          'Content-Type':'application/json',
+          Accept:'application/json',
+        },
+        body:JSON.stringify({from,to:[to],subject,html}),
+        signal:controller.signal,
+      });
 
-  try {
-    const response = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-      },
-      body: JSON.stringify({from,to:[to],subject,html}),
-      signal: controller.signal,
-    });
+      const contentLength=Number(response.headers.get('content-length')||0);
+      if(contentLength>64*1024)throw emailProviderError('Email provider returned an unexpectedly large response',{status:response.status});
 
-    const contentLength = Number(response.headers.get('content-length') || 0);
-    if (contentLength > 64 * 1024) {
-      throw new Error('Email provider returned an unexpectedly large response');
+      const body=await readResponseTextLimited(response,64*1024);
+      if(!response.ok){
+        if(attempt<maxAttempts&&transientProviderStatus(response.status)){
+          await wait(350);
+          continue;
+        }
+        const context=errorContext==='reset'?'reset':'notification';
+        throw emailProviderError(`Email provider rejected the ${context} email (HTTP ${response.status})`,{
+          status:response.status,
+          code:'EMAIL_PROVIDER_REJECTED',
+        });
+      }
+      if(body===null)return{id:null};
+      try{return JSON.parse(body||'{}')}catch{return{id:null}}
+    }catch(error){
+      const timeoutFailure=error?.name==='AbortError';
+      if(attempt<maxAttempts&&(timeoutFailure||error?.code==='ECONNRESET'||error?.code==='ETIMEDOUT')){
+        await wait(350);
+        continue;
+      }
+      if(timeoutFailure)throw emailProviderError('Email provider request timed out',{code:'EMAIL_PROVIDER_TIMEOUT'});
+      throw error;
+    }finally{
+      clearTimeout(timeout);
     }
-
-    const body=await readResponseTextLimited(response, 64 * 1024);
-    if (!response.ok) {
-      if(errorContext==='reset')throw new Error(`Email provider rejected the reset email (HTTP ${response.status})`);
-      throw new Error(`Email provider rejected the notification email (HTTP ${response.status})`);
-    }
-    if(body===null)return{id:null};
-    try{return JSON.parse(body||'{}')}catch{return{id:null}}
-  } catch (error) {
-    if (error.name === 'AbortError') {
-      throw new Error('Email provider request timed out');
-    }
-    throw error;
-  } finally {
-    clearTimeout(timeout);
   }
+  throw emailProviderError('Email delivery failed after retry');
 }
 
 async function sendPasswordResetEmail({ to, name, resetUrl }) {
