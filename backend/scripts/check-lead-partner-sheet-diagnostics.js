@@ -11,6 +11,8 @@ const investor=read('../frontend/src/pages/InvestorInvestmentSection.jsx');
 const compat=read('src/services/leadPartnerInventoryCompatService.js');
 const routes=read('src/routes/leadPartnerRoutes.js');
 const migration=read('src/database/migrations/20260928_lead_partner_sheet_default_industry.sql');
+const fingerprintMigration=read('src/database/migrations/20261005_lead_partner_sheet_fingerprint.sql');
+const controller=read('src/controllers/leadPartnerInventoryController.js');
 
 assert(inventory.includes("n==='singleonly'"),'Lead Partner Google Sheet import must accept Single Only wording');
 assert(inventory.includes("interiordesignandhomeinteriors:'interiordesignandhomeimprovement'")&&inventory.includes('canonicalIndustryValue'),'Lead Partner sheet import must normalize legacy Interior Design & Home Interiors values to the active Interior Design & Home Improvement catalog');
@@ -28,6 +30,10 @@ assert(scheduler.includes('Google Sheet row failures:'),'Worker logs must includ
 assert(scheduler.includes('Google Sheet duplicate samples:'),'Worker logs may show duplicates separately without polluting failure diagnostics');
 assert(ui.includes('partner-sheet-failure-summary'),'Lead Partner inventory must show failure categories');
 assert(migration.includes('default_industry_id'),'Lead Partner sheet connections must persist an optional default Industry');
+assert(fingerprintMigration.includes('ADD COLUMN IF NOT EXISTS fingerprint CHAR(64)'),'Lead Partner sheet connections must persist the last processed raw-sheet fingerprint');
+assert(compat.includes('connection.fingerprint')&&compat.includes("reason:'unchanged'")&&compat.includes('fingerprint=$1'),'Scheduled Lead Partner sheet sync must skip unchanged sheets and persist a new fingerprint after processing');
+assert(compat.includes('fingerprint=NULL,last_synced_at=NULL'),'Changing the default Industry must invalidate the partner sheet fingerprint and make the connection immediately due');
+assert(controller.includes('force:true'),'Explicit Lead Partner sync actions must be able to reprocess an unchanged sheet after catalog or PIN fixes');
 assert(compat.includes('applyDefaultIndustry')&&compat.includes('hasClassification'),'Default Industry must apply only when the row has no classification fields');
 assert(compat.includes('defaultIndustryId:connection.default_industry_id'),'Recurring sheet sync must reuse the stored default Industry');
 assert(routes.includes("/inventory/sheets/:connectionId/default-industry"),'Lead Partners must be able to update a connected sheet default Industry');

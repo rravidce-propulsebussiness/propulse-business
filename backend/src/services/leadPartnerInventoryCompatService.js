@@ -249,23 +249,23 @@ async function connectGoogleSheet({userId,url,defaultIndustryId=null,columnMappi
   const imported=await importCsv({userId,csv:analysis.mappedCsv,defaultIndustryId:defaultIndustry?.id||null});
   const connection=(await pool.query(
     `INSERT INTO lead_partner_sheet_connections(
-       user_id,spreadsheet_id,gid,source_url,default_industry_id,column_mappings,last_preview_summary,last_previewed_at,
+       user_id,spreadsheet_id,gid,source_url,default_industry_id,column_mappings,last_preview_summary,last_previewed_at,fingerprint,
        last_synced_at,last_sync_created,last_sync_duplicate,last_sync_failed,last_sync_failures
-     ) VALUES($1,$2,$3,$4,$5,$6::jsonb,$7::jsonb,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,$8,$9,$10,$11::jsonb)
+     ) VALUES($1,$2,$3,$4,$5,$6::jsonb,$7::jsonb,CURRENT_TIMESTAMP,$8,CURRENT_TIMESTAMP,$9,$10,$11,$12::jsonb)
      ON CONFLICT(user_id,spreadsheet_id,gid) DO UPDATE SET
        source_url=EXCLUDED.source_url,default_industry_id=EXCLUDED.default_industry_id,column_mappings=EXCLUDED.column_mappings,
-       last_preview_summary=EXCLUDED.last_preview_summary,last_previewed_at=CURRENT_TIMESTAMP,status='active',
+       last_preview_summary=EXCLUDED.last_preview_summary,last_previewed_at=CURRENT_TIMESTAMP,fingerprint=EXCLUDED.fingerprint,status='active',
        last_synced_at=EXCLUDED.last_synced_at,last_sync_created=EXCLUDED.last_sync_created,last_sync_duplicate=EXCLUDED.last_sync_duplicate,
        last_sync_failed=EXCLUDED.last_sync_failed,last_sync_failures=EXCLUDED.last_sync_failures,
        sync_failure_count=0,last_sync_error_at=NULL,last_sync_error=NULL,next_retry_at=NULL,updated_at=CURRENT_TIMESTAMP
      RETURNING *`,
-    [userId,result.spreadsheetId,result.gid||'0',url,defaultIndustry?.id||null,JSON.stringify(analysis.effectiveMappings),JSON.stringify(preview.summary||{}),imported.created,imported.duplicate,imported.failed,JSON.stringify(imported.failures)]
+    [userId,result.spreadsheetId,result.gid||'0',url,defaultIndustry?.id||null,JSON.stringify(analysis.effectiveMappings),JSON.stringify(preview.summary||{}),analysis.fingerprint,imported.created,imported.duplicate,imported.failed,JSON.stringify(imported.failures)]
   )).rows[0];
   await sheetPreview.consumePreview(previewToken);
   return{connection,import:imported};
 }
 
-async function syncGoogleSheet({userId,connectionId}){
+async function syncGoogleSheet({userId,connectionId,force=false}){
   const id=Number(connectionId);
   if(!Number.isInteger(id)||id<=0){const e=new Error('Active Google Sheet connection not found');e.code='SHEET_CONNECTION_NOT_FOUND';throw e;}
   const lockClient=await pool.connect();
@@ -279,8 +279,25 @@ async function syncGoogleSheet({userId,connectionId}){
     const result=await fetchGoogleSheetCsv(connection.source_url);
     if(result.spreadsheetId!==connection.spreadsheet_id||String(result.gid||'0')!==String(connection.gid||'0'))throw new Error('Google Sheet URL no longer matches the connected sheet');
     const analysis=sheetPreview.analyzeCsv(result.csv||'',{columnMappings:connection.column_mappings||{},scope:'lead_partner'});
+    if(!force&&connection.fingerprint&&String(connection.fingerprint)===String(analysis.fingerprint)){
+      const saved=(await pool.query(
+        `UPDATE lead_partner_sheet_connections
+            SET last_synced_at=CURRENT_TIMESTAMP,sync_failure_count=0,last_sync_error_at=NULL,last_sync_error=NULL,next_retry_at=NULL,updated_at=CURRENT_TIMESTAMP
+          WHERE id=$1 AND user_id=$2
+          RETURNING *`,
+        [id,userId]
+      )).rows[0];
+      return{connection:saved,import:{total:0,created:0,duplicate:0,failed:0,failures:[],duplicateSamples:[],failureSummary:[],skipped:true,reason:'unchanged'}};
+    }
     const imported=await importCsv({userId,csv:analysis.mappedCsv,defaultIndustryId:connection.default_industry_id});
-    const saved=(await pool.query(`UPDATE lead_partner_sheet_connections SET last_synced_at=CURRENT_TIMESTAMP,last_sync_created=$1,last_sync_duplicate=$2,last_sync_failed=$3,last_sync_failures=$4::jsonb,sync_failure_count=0,last_sync_error_at=NULL,last_sync_error=NULL,next_retry_at=NULL,updated_at=CURRENT_TIMESTAMP WHERE id=$5 AND user_id=$6 RETURNING *`,[imported.created,imported.duplicate,imported.failed,JSON.stringify(imported.failures),id,userId])).rows[0];
+    const saved=(await pool.query(
+      `UPDATE lead_partner_sheet_connections
+          SET fingerprint=$1,last_synced_at=CURRENT_TIMESTAMP,last_sync_created=$2,last_sync_duplicate=$3,last_sync_failed=$4,last_sync_failures=$5::jsonb,
+              sync_failure_count=0,last_sync_error_at=NULL,last_sync_error=NULL,next_retry_at=NULL,updated_at=CURRENT_TIMESTAMP
+        WHERE id=$6 AND user_id=$7
+        RETURNING *`,
+      [analysis.fingerprint,imported.created,imported.duplicate,imported.failed,JSON.stringify(imported.failures),id,userId]
+    )).rows[0];
     return{connection:saved,import:imported};
   }finally{
     if(locked)await lockClient.query('SELECT pg_advisory_unlock($1,$2)',[73190521,id]).catch(()=>{});
@@ -298,7 +315,7 @@ async function listInventory(args){
 
 
 async function getSheetConnections({userId}){
-  const rows=(await pool.query(`SELECT c.id,c.spreadsheet_id,c.gid,c.source_url,c.status,c.default_industry_id,i.name AS default_industry_name,c.column_mappings,c.last_preview_summary,c.last_previewed_at,c.last_synced_at,c.last_sync_created,c.last_sync_duplicate,c.last_sync_failed,c.last_sync_failures,c.created_at,c.updated_at
+  const rows=(await pool.query(`SELECT c.id,c.spreadsheet_id,c.gid,c.source_url,c.status,c.default_industry_id,i.name AS default_industry_name,c.column_mappings,c.last_preview_summary,c.last_previewed_at,c.fingerprint,c.last_synced_at,c.last_sync_created,c.last_sync_duplicate,c.last_sync_failed,c.last_sync_failures,c.created_at,c.updated_at
     FROM lead_partner_sheet_connections c
     LEFT JOIN industries i ON i.id=c.default_industry_id
     WHERE c.user_id=$1
@@ -309,7 +326,7 @@ async function updateSheetDefaultIndustry({userId,connectionId,defaultIndustryId
   const id=Number(connectionId);
   if(!Number.isInteger(id)||id<=0)throw Object.assign(new Error('Sheet connection not found'),{code:'SHEET_CONNECTION_NOT_FOUND'});
   const industry=await resolveDefaultIndustry(defaultIndustryId);
-  const row=(await pool.query(`UPDATE lead_partner_sheet_connections SET default_industry_id=$1,updated_at=CURRENT_TIMESTAMP WHERE id=$2 AND user_id=$3 RETURNING *`,[industry?.id||null,id,userId])).rows[0];
+  const row=(await pool.query(`UPDATE lead_partner_sheet_connections SET default_industry_id=$1,fingerprint=NULL,last_synced_at=NULL,updated_at=CURRENT_TIMESTAMP WHERE id=$2 AND user_id=$3 RETURNING *`,[industry?.id||null,id,userId])).rows[0];
   if(!row)throw Object.assign(new Error('Sheet connection not found'),{code:'SHEET_CONNECTION_NOT_FOUND'});
   return{...row,default_industry_name:industry?.name||null};
 }
