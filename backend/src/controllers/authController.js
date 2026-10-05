@@ -1,5 +1,5 @@
 const authService = require('../services/authService');
-const { sendPasswordResetEmail } = require('../services/emailService');
+const { isConfigured: isEmailConfigured, sendPasswordResetEmail } = require('../services/emailService');
 const companyProofStorage = require('../services/companyProofStorageService');
 const supabaseAuthService = require('../services/supabaseAuthService');
 const { sendProofDescriptor } = require('../utils/proofResponse');
@@ -138,21 +138,44 @@ async function googleLogin(req, res) {
 }
 
 async function forgotPassword(req, res) {
+  let reset = null;
   try {
     const email = String(req.body?.email || '').trim();
     if (!email) return res.status(400).json({ error: 'Email address is required' });
 
-    const reset = await authService.createPasswordReset(email);
+    if (!isEmailConfigured()) {
+      console.error('Forgot password failed: email delivery is not configured');
+      return res.status(503).json({
+        error: 'Password reset email is temporarily unavailable. Please try again later.',
+        code: 'PASSWORD_RESET_EMAIL_UNAVAILABLE',
+      });
+    }
+
+    reset = await authService.createPasswordReset(email);
     if (!reset) return res.json({ message: 'If an account exists for that email, a password reset link has been sent.' });
 
-    const baseUrl = String(process.env.PUBLIC_APP_URL || process.env.CORS_ORIGIN || '').split(',')[0].replace(/\/$/, '');
-    if (!baseUrl) throw new Error('PUBLIC_APP_URL is not configured');
+    const baseUrl = [
+      process.env.PUBLIC_APP_URL,
+      process.env.FRONTEND_URL,
+      process.env.APP_URL,
+      process.env.CORS_ORIGIN,
+    ].map(value => String(value || '').split(',')[0].trim().replace(/\/$/, '')).find(Boolean);
+    if (!baseUrl) throw new Error('Public application URL is not configured');
+
     const resetUrl = `${baseUrl}/reset-password#token=${encodeURIComponent(reset.token)}`;
     await sendPasswordResetEmail({ to: reset.user.email, name: reset.user.name, resetUrl });
     return res.json({ message: 'If an account exists for that email, a password reset link has been sent.' });
   } catch (error) {
+    if (reset?.token) {
+      await authService.discardPasswordReset(reset.token).catch(cleanupError => {
+        console.error('Password reset token cleanup failed:', cleanupError.message);
+      });
+    }
     console.error('Forgot password failed:', error.message);
-    return res.status(503).json({ error: 'Password reset email could not be sent right now. Please try again later.' });
+    return res.status(503).json({
+      error: 'Password reset email could not be sent right now. Please try again later.',
+      code: 'PASSWORD_RESET_EMAIL_UNAVAILABLE',
+    });
   }
 }
 
