@@ -234,8 +234,11 @@ export default function RequirementWizard({ flowKey, onCompletionChange }) {
   useEffect(() => {
     mounted.current = true
     onCompletionChangeRef.current?.(false)
-    setSubmissionResult(null)
-    setState({ loading: true, saving: false, error: '', success: false })
+    queueMicrotask(()=>{
+      if(!mounted.current)return
+      setSubmissionResult(null)
+      setState({ loading: true, saving: false, error: '', success: false })
+    })
 
     Promise.all([publicRequest('/customer-flows/' + flowKey), publicRequest('/cities').catch(() => []), publicRequest('/contact?audience=website').catch(() => ({}))]).then(([data, cityData, websiteContact]) => {
       if (data?.unavailable) throw new Error(data.message || 'This requirement form is temporarily unavailable. Please try again shortly.')
