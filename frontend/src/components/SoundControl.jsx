@@ -1,5 +1,5 @@
 import {useEffect,useRef,useState} from 'react'
-import {getSoundState,playSound,setSoundEnabled,setSoundVolume,subscribeSoundState} from '../utils/soundEffects'
+import {getSoundState,playSound,refreshSoundSettings,setSoundEnabled,setSoundVolume,subscribeSoundState} from '../utils/soundEffects'
 import './SoundControl.css'
 
 export default function SoundControl(){
@@ -8,6 +8,7 @@ export default function SoundControl(){
   const ref=useRef(null)
 
   useEffect(()=>subscribeSoundState(setState),[])
+  useEffect(()=>{void refreshSoundSettings()},[])
   useEffect(()=>{
     if(!open)return undefined
     const close=event=>{if(ref.current&&!ref.current.contains(event.target))setOpen(false)}
