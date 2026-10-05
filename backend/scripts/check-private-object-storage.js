@@ -23,6 +23,8 @@ const healthUi=read('../frontend/src/admin/pages/AdminSystemHealth.jsx');
 const productionEnv=read('scripts/check-production-env.js');
 const migration=read('scripts/migrate-private-uploads-to-object-storage.js');
 const proofResponse=read('src/utils/proofResponse.js');
+const legacyUploadMigration=read('src/services/legacyUploadMigrationService.js');
+const server=read('src/server.js');
 
 const signed=s3.buildPresignedGetUrl('test.txt',{
   expiresSeconds:86400,
@@ -68,6 +70,8 @@ assert(productionEnv.includes('PRIVATE_OBJECT_STORAGE_SIGNED_URL_SECONDS must be
 assert(migration.includes("process.argv.includes('--apply')"),'Historical private-object migration must be dry-run-first');
 assert(migration.includes("payments")&&migration.includes("wallet_topups")&&migration.includes("lead_partner_payouts")&&migration.includes("investor_payout_requests")&&migration.includes("investments"),'Migration utility must cover all existing private-proof columns');
 assert(migration.includes('company_proof_documents'),'Migration utility must cover legacy company-proof files');
+assert(legacyUploadMigration.includes("stored_name NOT LIKE 'private-object-s3:%'")&&legacyUploadMigration.includes('companyProofStorage.storeBuffer'),'Startup legacy migration must move local company proofs into object storage');
+assert(server.includes('migrateLegacyCompanyProofsToObjectStorage')&&server.includes('Legacy company proof migration'),'Server must attempt the idempotent legacy migration after object storage is ready');
 assert(proofResponse.includes("'Referrer-Policy','no-referrer'"),'Signed proof redirects must not leak their query token through referrers');
 
 console.log('Private object storage abstraction regression test passed.');
