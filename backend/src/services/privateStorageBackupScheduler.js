@@ -2,6 +2,7 @@ const crypto=require('crypto');
 const pool=require('../config/database');
 const s3=require('./s3PrivateObjectStorageService');
 const notificationService=require('./notificationService');
+const jobControl=require('./backgroundJobControlService');
 
 const DEFAULT_INTERVAL_MS=24*60*60*1000;
 const DEFAULT_RECENT_HOURS=20;
@@ -186,9 +187,12 @@ async function runPrivateStorageBackupCore({force=false}={}){
     lockClient.release();
   }
 }
-async function runPrivateStorageBackup(options={}){
+async function runPrivateStorageBackup({source='scheduled',triggeredBy=null,force=false}={}){
   if(cyclePromise)return cyclePromise;
-  cyclePromise=runPrivateStorageBackupCore(options).finally(()=>{cyclePromise=null});
+  cyclePromise=jobControl.execute({
+    jobKey:'private_storage_backup',source,triggeredBy,
+    task:()=>runPrivateStorageBackupCore({force})
+  }).finally(()=>{cyclePromise=null});
   return cyclePromise;
 }
 function startPrivateStorageBackupScheduler({unref=true,runImmediately=true}={}){
@@ -199,8 +203,8 @@ function startPrivateStorageBackupScheduler({unref=true,runImmediately=true}={})
   }
   const intervalMs=configuredIntervalMs();
   console.log(`Private R2 backup scheduler enabled: every ${Math.round(intervalMs/3600000)} hour(s).`);
-  if(runImmediately)setTimeout(()=>{void runPrivateStorageBackup().catch(error=>console.error('Private R2 backup cycle failed:',error.message))},15000).unref?.();
-  timer=setInterval(()=>{void runPrivateStorageBackup().catch(error=>console.error('Private R2 backup cycle failed:',error.message))},intervalMs);
+  if(runImmediately)setTimeout(()=>{void runPrivateStorageBackup({source:'startup'}).catch(error=>console.error('Private R2 backup cycle failed:',error.message))},15000).unref?.();
+  timer=setInterval(()=>{void runPrivateStorageBackup({source:'scheduled'}).catch(error=>console.error('Private R2 backup cycle failed:',error.message))},intervalMs);
   if(unref)timer.unref?.();
   return async()=>{
     if(timer){clearInterval(timer);timer=null}
