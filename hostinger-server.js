@@ -83,6 +83,15 @@ function privateFrontendPath(requestPath){
 const publicSpaFrontendPaths=new Set(['/','/quote','/solutions','/experts','/packages','/projects','/how-it-works','/about','/contact','/faq','/hyderabad','/guides','/interior-estimator','/interior-cost-estimator','/construction-estimator','/construction-cost-estimator']);
 function publicDynamicFrontendPath(requestPath){return /^\/hyderabad\/[a-z0-9-]+(?:\/(?:compare-options|[a-z0-9-]+))?$/.test(requestPath)||/^\/guides\/[a-z0-9-]+$/.test(requestPath)||/^\/[a-z0-9-]+\/construction(?:\/[a-z0-9-]+)?$/.test(requestPath);}
 function knownSpaFrontendPath(requestPath){return privateFrontendPath(requestPath)||publicSpaFrontendPaths.has(requestPath)||publicDynamicFrontendPath(requestPath);}
+function publicPrerenderedFrontendFile(requestPath){
+  if(!publicSpaFrontendPaths.has(requestPath)&&!publicDynamicFrontendPath(requestPath))return null;
+  const relative=String(requestPath||'').replace(/^\/+|\/+$/g,'');
+  if(!relative||!/^[A-Za-z0-9/_-]+$/.test(relative))return null;
+  const root=path.resolve(frontendDist)+path.sep;
+  const candidate=path.resolve(frontendDist,relative+'.html');
+  if(!candidate.startsWith(root))return null;
+  try{return fs.statSync(candidate).isFile()?candidate:null}catch{return null}
+}
 
 function proxyToBackend(req,res){
   const forwardedProto=String(req.headers['x-forwarded-proto']||'').split(',')[0].trim()||(req.socket.encrypted?'https':'https');
@@ -164,6 +173,14 @@ for(const [from,to] of [
 }
 
 app.use((req,res,next)=>backendRoute(req.path)?proxyToBackend(req,res):next());
+
+app.use((req,res,next)=>{
+  if(!['GET','HEAD'].includes(req.method))return next();
+  const prerendered=publicPrerenderedFrontendFile(req.path);
+  if(!prerendered)return next();
+  res.setHeader('Cache-Control','no-cache');
+  return res.sendFile(prerendered,error=>error?next(error):undefined);
+});
 
 app.use(express.static(frontendDist,{
   index:'index.html',
