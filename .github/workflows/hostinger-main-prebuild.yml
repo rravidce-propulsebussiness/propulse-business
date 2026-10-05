@@ -64,7 +64,15 @@ jobs:
             exit 0
           fi
           git commit -m "Prebuild Hostinger backend frontend [hostinger-prebuilt]"
-          git push origin HEAD:main
+          if ! git push origin HEAD:main; then
+            git fetch origin main
+            if [ "$(git rev-parse HEAD^)" != "$(git rev-parse origin/main)" ]; then
+              echo "main advanced during the push; a newer run will build the latest source."
+              exit 0
+            fi
+            echo "Hostinger prebuild push failed while main was unchanged."
+            exit 1
+          fi
 
       - name: Wait for Hostinger production deployment
         working-directory: backend
