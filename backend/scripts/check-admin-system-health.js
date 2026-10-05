@@ -20,6 +20,8 @@ assert(service.includes('busyConnections')&&service.includes('(busyConnections/p
 assert(service.includes('checkUploadStorage()'),'System Health must check private/persistent upload storage');
 assert(service.includes('workerHeartbeat.latestHeartbeat()'),'System Health must inspect the background worker heartbeat');
 assert(service.includes('schema_migrations'),'System Health must report migration state');
+assert(service.includes("emailService=require('./emailService')")&&service.includes('recoveryEmailHealth()'),'System Health must report recovery-email readiness without exposing email credentials');
+assert(service.includes("route='/api/auth/forgot-password'")&&service.includes("INTERVAL '30 minutes'"),'Recovery-email health must use recent server-side failures rather than recipient data');
 assert(service.includes('lead_partner_sheet_connections')&&service.includes('admin_google_sheet_connections'),'System Health must report both sheet-sync systems');
 assert(service.includes("persistentConnectionErrors>0?'degraded'")&&service.includes("connectionErrors>0||failing>0?'attention'"),'Temporary sheet issues must be attention while persistent connection failures degrade health');
 assert(service.includes("let status='healthy'")&&service.includes("maxStatus(status,issue.severity)"),'Overall System Health must aggregate healthy, attention and degraded states');
@@ -33,4 +35,5 @@ assert(app.includes('AdminSystemHealth')&&app.includes('path="/admin/system-heal
 assert(page.includes("authRequest('/admin/system-health')"),'System Health UI must load the authenticated endpoint');
 assert(page.includes('Auto refresh · 30s'),'System Health UI must support automatic refresh');
 assert(page.includes('WHY THE SYSTEM IS DEGRADED')&&page.includes('active utilization'),'System Health UI must explain degraded status and show active DB utilization');
+assert(page.includes('Recovery email')&&page.includes('recent failures'),'System Health UI must show password recovery email health');
 console.log('Admin System Health regression test passed.');
