@@ -9,6 +9,7 @@ const login=read('frontend/src/pages/Login.jsx');
 const signup=read('frontend/src/pages/Signup.jsx');
 const loginCss=read('frontend/src/pages/Login.css');
 const signupCss=read('frontend/src/pages/Signup.css');
+const app=read('frontend/src/App.jsx');
 
 assert.match(login,/login-topbar/);
 assert.match(login,/login-form-heading/);
@@ -23,5 +24,10 @@ assert.match(signup,/Create account/);
 assert.match(signup,/signup-business-modal/);
 assert.doesNotMatch(signup,/signup-premium-visual|JOIN PROPULSE|Bigger Growth/);
 assert.doesNotMatch(signupCss,/\.signup-premium-visual|\.signup-visual-|\.signup-benefits|\.signup-quote/);
+
+assert.match(app,/MINIMAL_AUTH_ROUTES=new Set\(\['\/login','\/signup','\/forgot-password','\/reset-password'\]\)/);
+assert.match(app,/function GlobalWidgets\(\)\{const location=useLocation\(\);if\(MINIMAL_AUTH_ROUTES\.has\(location\.pathname\)\)return null;/);
+assert.match(app,/<GlobalWidgets\/>/);
+assert.doesNotMatch(app,/<Routes>[\s\S]*<\/Routes><GlobalLeadPopup\/><SupportChatWidget\/><SoundControl\/>/);
 
 console.log('Auth pages forms-only regression test passed.');
