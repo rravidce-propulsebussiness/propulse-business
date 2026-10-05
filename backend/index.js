@@ -1,6 +1,7 @@
 const fs=require('fs');
 const path=require('path');
 const {spawn}=require('child_process');
+const {ensureFrontendReleaseMarker}=require('./scripts/hostinger-release-marker');
 
 const frontendRoot=path.resolve(__dirname,'../frontend');
 const frontendDist=path.join(frontendRoot,'dist');
@@ -37,6 +38,7 @@ async function buildFrontend(){
     return;
   }
   ensureFrontendDependencyLink();
+  ensureFrontendReleaseMarker();
   if(!fs.existsSync(viteBin)){
     console.error('Vite is not installed in backend/node_modules; frontend build cannot start.');
     return;
