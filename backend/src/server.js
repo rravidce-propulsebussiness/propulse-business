@@ -198,6 +198,7 @@ function withTimeout(promise,label){
 }
 app.get('/health/live',(req,res)=>{setHealthHeaders(res);res.json({status:'ok'});});
 app.get('/health/version',(req,res)=>{setHealthHeaders(res);res.json({status:'ok',...releaseIdentity.snapshot()});});
+app.get('/release.json',(req,res)=>{setHealthHeaders(res);res.json(releaseIdentity.snapshot());});
 app.get('/health/worker',async(req,res)=>{
   setHealthHeaders(res);
   try{
