@@ -77,6 +77,14 @@ assert(wrapper.includes('knownSpaFrontendPath(req.path)')&&wrapper.includes("res
 assert(backendServer.includes('knownSpaFrontendPath(req.path)')&&backendServer.includes("res.status(404).send('Not found')"),'Backend single-process SPA fallback must return 404 for unknown HTML routes');
 assert(backendServer.includes("'/interior-estimator'")&&backendServer.includes('publicDynamicFrontendPath'),'Backend SPA allowlist must preserve estimator redirects and dynamic SEO routes');
 assert(wrapper.includes("'/interior-estimator'")&&wrapper.includes('publicDynamicFrontendPath'),'Wrapper SPA allowlist must preserve estimator redirects and dynamic SEO routes');
+for(const source of [wrapper,backendServer]){
+  assert(source.includes("['/home','/','']")&&source.includes("['/leads','/professionals','']"),'Legacy Home and Leads aliases must use server-side redirects');
+  assert(source.includes("['/build','/quote','#construction']")&&source.includes("['/design','/quote','#interiors']"),'Legacy Construction and Interior aliases must use server-side redirects');
+  assert(source.includes("['/property','/quote','#property']")&&source.includes("['/real-estate','/quote','#property']"),'Legacy Real Estate aliases must use server-side redirects');
+  assert(source.includes("['/pricing','/','#pricing']")&&source.includes("['/industries','/','']"),'Legacy Pricing and Industries aliases must use server-side redirects');
+  assert(source.includes("const queryIndex=req.originalUrl.indexOf('?')")&&source.includes("target+query+hash"),'Legacy public redirects must preserve query strings before their canonical hash');
+  assert(!source.includes("'/home','/quote','/solutions','/build','/design','/property'"),'Legacy fixed aliases must be removed from the public SPA allowlist');
+}
 assert(wrapper.includes("X-Robots-Tag"),'Hostinger wrapper noindexes private frontend routes');
 assert(wrapper.includes("RUN_BACKGROUND_JOBS_IN_WEB:process.env.RUN_BACKGROUND_JOBS_IN_WEB||'true'"),'Hostinger staging defaults background jobs into the web backend');
 assert(wrapper.includes("SERVE_FRONTEND_FROM_BACKEND:'false'"),'Hostinger wrapper keeps backend behind the internal proxy');

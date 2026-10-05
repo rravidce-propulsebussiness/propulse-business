@@ -22,11 +22,17 @@ assert(hostingerMainWorkflow.includes("git add -f frontend/dist backend/hostinge
 assert(server.includes('releaseIdentity.snapshot()'),'Version endpoint must use shared release identity');
 assert(smoke.includes("request('/health/version')"),'Deployed smoke must verify version identity');
 assert(smoke.includes("request('/api/auth/session'")&&smoke.includes("request('/api/sound-settings'")&&smoke.includes("request('/api/experts?page=1&pageSize=1'"),'Deployed smoke must verify the critical public session, sound-settings and Experts APIs');
+assert(smoke.includes("const legacyRedirects = [")&&smoke.includes("['/leads', '/professionals']")&&smoke.includes("['/build?utm_source=smoke', '/quote?utm_source=smoke#construction']"),'Deployed smoke must verify canonical legacy public redirects and query preservation');
 assert(smoke.includes("'/experts'")&&smoke.includes("'/projects'")&&smoke.includes("'/packages'")&&smoke.includes("'/login'")&&smoke.includes("'/forgot-password'")&&smoke.includes("'/hyderabad/construction'"),'Deployed smoke must verify critical public, auth and SEO pages');
 assert(smoke.includes('Homepage must reference a built JavaScript asset')&&smoke.includes('Homepage JavaScript asset must return 200'),'Deployed smoke must verify a built frontend JavaScript asset');
+assert(smoke.includes("request('/favicon.svg'")&&smoke.includes("request('/brand/propulse-logo.svg'"),'Deployed smoke must verify core public brand assets');
+assert(smoke.includes("request('/robots.txt'")&&smoke.includes("request('/sitemap.xml'")&&smoke.includes("Production sitemap must never advertise localhost URLs"),'Deployed smoke must verify production robots and sitemap output');
 assert(smoke.includes('DEPLOY_EXPECTED_COMMIT')&&smoke.includes('DEPLOY_EXPECTED_ENVIRONMENT'),'Smoke must verify expected release');
 assert(wait.includes("'/health/version'")&&wait.includes("'/health/ready'"),'Waiter must require identity and readiness');
 assert(wait.includes('cause?.code')&&wait.includes('cause?.hostname')&&wait.includes('errorSummary(error)'),'Deployment waiter must expose network failure causes');
+assert(wait.includes('responseSummary(result)')&&wait.includes("response.headers.get('server')")&&wait.includes("response.headers.get('content-type')"),'Deployment waiter must expose safe edge response metadata');
+assert(wait.includes('forbiddenStreak>=3')&&wait.includes('repeated 403 indicates an edge/security/routing block before Express'),'Deployment waiter must fail fast on repeated edge 403 responses');
+assert(wait.includes("'user-agent':'ProPulse-Deployment-Check/1.0'"),'Deployment waiter must send an identifiable User-Agent');
 assert(smoke.includes('Deployment request')&&smoke.includes('cause?.code')&&smoke.includes('cause?.hostname'),'Deployed smoke must expose network failure causes');
 assert(workflow.includes('name: Release Promotion'),'Release workflow is missing');
 assert(workflow.includes('name: staging')&&workflow.includes('name: production'),'Workflow must use staging and production environments');

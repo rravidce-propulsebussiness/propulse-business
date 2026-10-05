@@ -115,6 +115,29 @@ async function main() {
   const mainScriptBody = await mainScript.text();
   assert(mainScriptBody.length > 100, 'Homepage JavaScript asset must not be empty');
 
+  const favicon = await request('/favicon.svg');
+  assert.equal(favicon.status, 200, 'Favicon must return 200');
+  assert.match(String(favicon.headers.get('content-type') || ''), /image\/svg\+xml|svg/i, 'Favicon must have an SVG content type');
+  assert((await favicon.text()).includes('<svg'), 'Favicon must return SVG content');
+
+  const logo = await request('/brand/propulse-logo.svg');
+  assert.equal(logo.status, 200, 'Public ProPulse logo must return 200');
+  assert.match(String(logo.headers.get('content-type') || ''), /image\/svg\+xml|svg/i, 'Public ProPulse logo must have an SVG content type');
+
+  const robots = await request('/robots.txt');
+  assert.equal(robots.status, 200, 'robots.txt must return 200');
+  const robotsBody = await robots.text();
+  assert(robotsBody.includes('Sitemap: '+base.origin+'/sitemap.xml'), 'robots.txt must advertise the production sitemap');
+  assert(robotsBody.includes('Disallow: /admin/'), 'robots.txt must keep Admin private');
+
+  const sitemap = await request('/sitemap.xml');
+  assert.equal(sitemap.status, 200, 'sitemap.xml must return 200');
+  assert.match(String(sitemap.headers.get('content-type') || ''), /xml/i, 'sitemap.xml must have an XML content type');
+  const sitemapBody = await sitemap.text();
+  assert(sitemapBody.includes('<loc>'+base.origin+'/</loc>'), 'sitemap.xml must include the production homepage');
+  assert(sitemapBody.includes('<loc>'+base.origin+'/hyderabad/construction</loc>'), 'sitemap.xml must include the Hyderabad construction landing page');
+  assert(!sitemapBody.includes('localhost'), 'Production sitemap must never advertise localhost URLs');
+
   const session = await request('/api/auth/session', { headers: { origin: appOrigin } });
   assert.equal(session.status, 200, 'Public auth session bootstrap must return 200');
   const sessionBody = await session.json();
@@ -132,6 +155,22 @@ async function main() {
   assert(Array.isArray(expertsBody.data), 'Public Experts directory must return a data array');
   assert(expertsBody.pagination && typeof expertsBody.pagination === 'object', 'Public Experts directory must return pagination metadata');
 
+  const legacyRedirects = [
+    ['/home', '/'],
+    ['/leads', '/professionals'],
+    ['/industries', '/'],
+    ['/pricing', '/#pricing'],
+    ['/build?utm_source=smoke', '/quote?utm_source=smoke#construction'],
+    ['/design', '/quote#interiors'],
+    ['/property', '/quote#property'],
+    ['/real-estate', '/quote#property'],
+  ];
+  for (const [from, to] of legacyRedirects) {
+    const response = await request(from, { headers: { accept: 'text/html' } });
+    assert.equal(response.status, 301, `Legacy public route ${from} must permanently redirect`);
+    assert.equal(response.headers.get('location'), to, `Legacy public route ${from} must redirect to ${to}`);
+  }
+
   const allowed = await request('/api/investments', { headers: { origin: appOrigin } });
   assert.equal(allowed.headers.get('access-control-allow-origin'), appOrigin, 'Configured frontend origin must receive CORS permission');
   assert.equal(allowed.status, 401, 'Anonymous investment API request should be unauthorized');
@@ -145,7 +184,7 @@ async function main() {
   assert.equal(missing.status, 404);
 
   const effectiveCommit = versionMatches ? versionBody.commit : releaseBody.commit;
-  console.log(`Deployed smoke test passed: ${effectiveEnvironment} ${String(effectiveCommit).slice(0,12)}; HTTPS health, readiness, release identity, public pages/assets, public session/sound/Experts APIs, security headers, CORS, auth boundary and 404 behavior.`);
+  console.log(`Deployed smoke test passed: ${effectiveEnvironment} ${String(effectiveCommit).slice(0,12)}; HTTPS health, readiness, release identity, public pages/assets/SEO files, public session/sound/Experts APIs, security headers, CORS, auth boundary and 404 behavior.`);
 }
 
 main().catch(error => {

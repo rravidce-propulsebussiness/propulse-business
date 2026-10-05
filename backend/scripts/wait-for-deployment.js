@@ -30,13 +30,37 @@ const commitMatches=(actual,expected)=>{
   if(!/^[0-9a-f]{7,64}$/.test(left))return false;
   return left===right||left.startsWith(right)||right.startsWith(left);
 };
+function responseSummary(result){
+  const {response,text}=result||{};
+  if(!response)return 'no response';
+  const parts=[
+    'HTTP '+response.status,
+    response.headers.get('server')?'server='+response.headers.get('server'):null,
+    response.headers.get('content-type')?'content-type='+response.headers.get('content-type'):null,
+    response.headers.get('via')?'via='+response.headers.get('via'):null,
+    response.headers.get('location')?'location='+response.headers.get('location'):null,
+    text?'body='+text.replace(/\s+/g,' ').slice(0,180):null,
+  ].filter(Boolean);
+  return parts.join(', ').slice(0,600);
+}
 async function getJson(path){
-  const response=await fetch(baseUrl+path,{redirect:'manual',signal:AbortSignal.timeout(10000),headers:{accept:'application/json','cache-control':'no-cache'}});
-  let body=null;try{body=await response.json()}catch{}
-  return{response,body};
+  const response=await fetch(baseUrl+path,{
+    redirect:'manual',
+    signal:AbortSignal.timeout(10000),
+    headers:{
+      accept:'application/json',
+      'cache-control':'no-cache',
+      'user-agent':'ProPulse-Deployment-Check/1.0'
+    }
+  });
+  const text=await response.text();
+  let body=null;try{body=text?JSON.parse(text):null}catch{}
+  return{response,body,text};
 }
 async function main(){
-  const deadline=Date.now()+waitSeconds*1000;let last='deployment has not reported the requested release yet';
+  const deadline=Date.now()+waitSeconds*1000;
+  let last='deployment has not reported the requested release yet';
+  let forbiddenStreak=0;
   while(Date.now()<deadline){
     try{
       const [version,marker]=await Promise.all([getJson('/health/version'),getJson('/release.json')]);
@@ -50,12 +74,24 @@ async function main(){
       const actualEnvironment=versionEnvironment||markerEnvironment;
 
       if(version.response.status!==200&&marker.response.status!==200){
-        last='version endpoint returned HTTP '+version.response.status+' and release marker returned HTTP '+marker.response.status;
+        const bothForbidden=version.response.status===403&&marker.response.status===403;
+        forbiddenStreak=bothForbidden?forbiddenStreak+1:0;
+        if(bothForbidden){
+          const homepage=await getJson('/').catch(()=>null);
+          last='Hostinger edge denied public deployment checks: version ['+responseSummary(version)+'], marker ['+responseSummary(marker)+']'
+            +(homepage?', homepage ['+responseSummary(homepage)+']':'');
+          if(forbiddenStreak>=3)throw new Error(last+'; repeated 403 indicates an edge/security/routing block before Express');
+        }else{
+          last='version endpoint ['+responseSummary(version)+'] and release marker ['+responseSummary(marker)+']';
+        }
       }else if(!matchedCommit){
+        forbiddenStreak=0;
         last='backend commit is '+(versionCommit||'unknown')+', frontend marker is '+(markerCommit||'unknown')+', waiting for '+expectedCommit.slice(0,12);
       }else if(actualEnvironment&&actualEnvironment!==expectedEnvironment){
+        forbiddenStreak=0;
         last='deployment environment is '+actualEnvironment+', expected '+expectedEnvironment;
       }else{
+        forbiddenStreak=0;
         const ready=await getJson('/health/ready');
         if(ready.response.status===200&&ready.body?.status==='ok'){
           const source=commitMatches(versionCommit,expectedCommit)?'backend version':'frontend release marker';
