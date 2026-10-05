@@ -305,10 +305,10 @@ const PROJECTS = [
     description:'Villa-community inspiration for customers evaluating private outdoor space, community amenities and scale.',
   },
   {
-    id:'investment-apartment',
+    id:'apartment-for-sale',
     category:'property',
     categoryLabel:'Real Estate',
-    title:'Investment Apartment',
+    title:'Apartment for Sale',
     city:'Hyderabad',
     location:'Kondapur, Hyderabad',
     propertyType:'Apartment',
@@ -317,7 +317,7 @@ const PROJECTS = [
     style:'Modern',
     meta:'2 BHK',
     image:'https://images.unsplash.com/photo-1494526585095-c41746248156?auto=format&fit=crop&w=1200&q=88',
-    description:'Compact apartment inspiration for customers comparing budget, connectivity and rental-demand considerations.',
+    description:'Compact apartment inspiration for buyers and sellers comparing budget, connectivity, condition and resale value.',
   },
   {
     id:'residential-plot',
