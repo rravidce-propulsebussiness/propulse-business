@@ -12,6 +12,7 @@ const signupCss=read('frontend/src/pages/Signup.css');
 const app=read('frontend/src/App.jsx');
 const soundEffects=read('frontend/src/utils/soundEffects.js');
 const soundControl=read('frontend/src/components/SoundControl.jsx');
+const resetPassword=read('frontend/src/pages/ResetPassword.jsx');
 
 assert.match(login,/login-topbar/);
 assert.match(login,/login-form-heading/);
@@ -34,5 +35,8 @@ assert(!app.includes("return <><GlobalWidgets/></>"),'GlobalWidgets must not rec
 assert(soundEffects.includes("const authPath=/^\\/(login|signup|forgot-password|reset-password)\\/?$/.test(window.location.pathname)"));
 assert(soundEffects.includes("if(!authPath)refreshSoundSettings()"));
 assert(soundControl.includes("refreshSoundSettings")&&soundControl.includes("useEffect(()=>{void refreshSoundSettings()},[])"));
+assert(resetPassword.includes("password.length > 64")&&resetPassword.includes("passwordBytes > 72"));
+assert(resetPassword.includes("!/[A-Za-z]/.test(password)")&&resetPassword.includes("!/\\d/.test(password)"));
+assert(resetPassword.includes("8–64 characters and include at least one letter and one number."));
 
 console.log('Auth pages forms-only regression test passed.');
