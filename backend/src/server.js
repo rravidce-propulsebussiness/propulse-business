@@ -78,7 +78,10 @@ const requireBackgroundWorker=envFlag('REQUIRE_BACKGROUND_WORKER',false);
 const workerHeartbeatMaxAgeSeconds=Math.min(600,Math.max(30,Math.floor(Number(process.env.WORKER_HEARTBEAT_MAX_AGE_SECONDS)||120)));
 const trustProxy=String(process.env.TRUST_PROXY||'').trim();
 const backendOnlyPath=requestPath=>requestPath==='/robots.txt'||requestPath==='/sitemap.xml'||requestPath==='/health'||requestPath.startsWith('/health/')||requestPath.startsWith('/api')||requestPath.startsWith('/uploads');
-const privateFrontendPath=requestPath=>/^\/(admin|login|signup|forgot-password|reset-password|profile|wallet|membership|notifications|purchased-leads|my-leads|investment|lead-partner|requirements|estimate|professional-contact|professionals|upcoming-features)(\/|$)/.test(requestPath);
+const privateFrontendPath=requestPath=>/^\/(admin|login|signup|forgot-password|reset-password|profile|wallet|membership|notifications|purchased-leads|my-leads|investment|lead-partner|requirements|estimate|professional-contact|professionals|upcoming-features|dashboard)(\/|$)/.test(requestPath);
+const publicSpaFrontendPaths=new Set(['/','/home','/quote','/solutions','/build','/design','/property','/experts','/packages','/projects','/how-it-works','/about','/real-estate','/contact','/faq','/pricing','/industries','/leads','/hyderabad','/guides','/interior-estimator','/interior-cost-estimator','/construction-estimator','/construction-cost-estimator']);
+const publicDynamicFrontendPath=requestPath=>/^\/hyderabad\/[a-z0-9-]+(?:\/(?:compare-options|[a-z0-9-]+))?$/.test(requestPath)||/^\/guides\/[a-z0-9-]+$/.test(requestPath)||/^\/[a-z0-9-]+\/construction(?:\/[a-z0-9-]+)?$/.test(requestPath);
+const knownSpaFrontendPath=requestPath=>privateFrontendPath(requestPath)||publicSpaFrontendPaths.has(requestPath)||publicDynamicFrontendPath(requestPath);
 if(trustProxy) app.set('trust proxy',trustProxy==='false'?false:trustProxy==='true'?true:Number.isNaN(Number(trustProxy))?trustProxy:Number(trustProxy));
 app.disable('x-powered-by');
 app.use((req,res,next)=>{
@@ -162,7 +165,12 @@ app.use('/api',(req,res,next)=>{
 });
 app.use('/api',csrfProtection);
 const apiGlobalRateLimitConfig=getApiGlobalRateLimitConfig({isProduction});
-const apiRateLimit=rateLimit({...apiGlobalRateLimitConfig,scope:'global'});
+const independentlyProtectedAuthPaths=new Set(['/auth/forgot-password','/auth/reset-password']);
+const apiRateLimit=rateLimit({
+  ...apiGlobalRateLimitConfig,
+  scope:'global',
+  skip:req=>independentlyProtectedAuthPaths.has(req.path),
+});
 app.use('/api',apiRateLimit);
 app.use('/api',(req,res,next)=>{
   if(startupReady)return next();
@@ -239,6 +247,10 @@ if(serveFrontendFromBackend){
       res.setHeader('Cache-Control','no-store');
       return res.status(503).send('Application frontend is starting. Please retry shortly.');
     }
+    if(!knownSpaFrontendPath(req.path)){
+      res.setHeader('X-Robots-Tag','noindex, nofollow');
+      return res.status(404).send('Not found');
+    }
     if(privateFrontendPath(req.path))res.setHeader('X-Robots-Tag','noindex, nofollow');
     return res.sendFile(frontendIndexPath,error=>error?next(error):undefined);
   });
@@ -292,8 +304,8 @@ function startBackgroundJobsOnce(){
   if(runBackgroundJobsInWeb){
     stopLeadPartnerSheetAutoSync=startLeadPartnerSheetAutoSync();
     stopAdminGoogleSheetAutoSync=startAdminGoogleSheetAutoSync();
-    stopFinancialReconciliation=startFinancialReconciliationScheduler({runImmediately:true});
-    stopNotifications=startNotificationScheduler({runImmediately:true});
+    stopFinancialReconciliation=startFinancialReconciliationScheduler({runImmediately:false});
+    stopNotifications=startNotificationScheduler({runImmediately:false});
   }else console.log('Background jobs disabled in web process (RUN_BACKGROUND_JOBS_IN_WEB=false).');
 }
 
@@ -303,11 +315,16 @@ async function initializeDependencies(){
     console.log('Initializing backend database dependencies...');
     if(runMigrationsOnStartup)await runMigrations();
     else console.log('Database migrations skipped on web startup (RUN_MIGRATIONS_ON_STARTUP=false).');
-    if(operationalMonitoringEnabled)await operationalMonitoringService.pruneResolved().catch(error=>console.error('Operational-event retention cleanup failed:',error.message));
     startupReady=true;
     startupError=null;
     console.log('Backend database dependencies are ready.');
     startBackgroundJobsOnce();
+
+    // Retention cleanup is housekeeping, not a dependency required to serve API
+    // traffic. Run it after readiness so deploy restarts do not return 503 while
+    // an old monitoring row is being deleted.
+    if(operationalMonitoringEnabled)void operationalMonitoringService.pruneResolved()
+      .catch(error=>console.error('Operational-event retention cleanup failed:',error.message));
 
     // Object storage is important for upload features, but it must not take down
     // authentication, admin, notifications, catalog or lead APIs if R2 is
