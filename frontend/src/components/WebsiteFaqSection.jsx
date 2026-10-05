@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { publicRequest } from '../utils/auth'
 import { homeownerSeoFaqs } from '../seo/faqKnowledge'
@@ -63,7 +63,7 @@ export default function WebsiteFaqSection({variant='home',audience='website'}){
   const initialCategory=audience==='homeowner'&&requestedCategory!=='all'&&!HOMEOWNER_PRIMARY_CATEGORIES.has(requestedCategory)?'all':requestedCategory
   const [category,setCategory]=useState(initialCategory)
 
-  async function load(){
+  const load=useCallback(async()=>{
     try{
       setLoading(true)
       setError('')
@@ -83,15 +83,20 @@ export default function WebsiteFaqSection({variant='home',audience='website'}){
     }finally{
       setLoading(false)
     }
-  }
+  },[audience,variant])
 
-  useEffect(()=>{let active=true;queueMicrotask(()=>{if(active)load()});return()=>{active=false}},[audience])
+  useEffect(()=>{let active=true;queueMicrotask(()=>{if(active)load()});return()=>{active=false}},[load])
   useEffect(()=>{
-    if(!standalone)return
+    if(!standalone)return undefined
+    let active=true
     const requested=String(searchParams.get('category')||'all').toLowerCase()
     const next=audience==='homeowner'&&requested!=='all'&&!HOMEOWNER_PRIMARY_CATEGORIES.has(requested)?'all':requested
-    if(next!==category){setCategory(next);setOpen(null)}
-    if(next==='all'&&requested!=='all')setSearchParams({}, {replace:true})
+    queueMicrotask(()=>{
+      if(!active)return
+      if(next!==category){setCategory(next);setOpen(null)}
+      if(next==='all'&&requested!=='all')setSearchParams({}, {replace:true})
+    })
+    return()=>{active=false}
   },[searchParams,standalone,category,audience,setSearchParams])
 
   const categories=useMemo(()=>{
