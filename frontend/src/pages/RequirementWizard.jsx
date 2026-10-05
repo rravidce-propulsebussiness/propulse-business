@@ -808,7 +808,7 @@ export default function RequirementWizard({ flowKey, onCompletionChange }) {
           <section className="rq-section-card" id="rq-preferences">
             <div className="rq-section-heading"><strong>4.</strong><div><h2>Requirements & Preferences</h2><p>Choose the quality, budget and timing that fit your project.</p></div></div>
             <div className="rq-question-stack">
-              {[...preferenceQuestions, ...extraQuestions].map((question, index) => <div className="rq-question-block" key={question.id || question.questionKey}>
+              {[...preferenceQuestions, ...extraQuestions].map(question => <div className="rq-question-block" key={question.id || question.questionKey}>
                 <div className="rq-question-label"><b>{question.label}</b>{question.helpText && <small>{question.helpText}</small>}</div>
                 <PremiumQuestion question={question} value={answers[question.questionKey]} onChange={value => setAnswer(question.questionKey, value)} visual={flowKey === 'build' && question.questionKey === 'budget' ? 'budget-dropdown' : (question.questionKey === 'quality' || question.questionKey === 'finish_quality' ? 'image' : 'default')} />
               </div>)}
