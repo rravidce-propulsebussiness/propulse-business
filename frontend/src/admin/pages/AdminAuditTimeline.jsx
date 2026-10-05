@@ -35,9 +35,13 @@ export default function AdminAuditTimeline(){
   const [page,setPage]=useState(1);
   const [loading,setLoading]=useState(true);
   const [message,setMessage]=useState('');
-  const searchRef=useRef(search);searchRef.current=search;
-  const fromRef=useRef(from);fromRef.current=from;
-  const toRef=useRef(to);toRef.current=to;
+  const searchRef=useRef(search);
+  const fromRef=useRef(from);
+  const toRef=useRef(to);
+
+  useEffect(()=>{searchRef.current=search},[search]);
+  useEffect(()=>{fromRef.current=from},[from]);
+  useEffect(()=>{toRef.current=to},[to]);
 
   const load=useCallback(async(nextPage=1)=>{
     setLoading(true);
