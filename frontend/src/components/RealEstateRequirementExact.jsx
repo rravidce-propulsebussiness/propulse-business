@@ -11,8 +11,6 @@ const CARD_IMAGES = {
   residential: 'https://images.unsplash.com/photo-1600585152915-d208bec867a1?auto=format&fit=crop&w=900&q=88',
   commercial: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=900&q=88',
   plot: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=900&q=88',
-  rental: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=900&q=88',
-  investment: 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=900&q=88',
 }
 
 const PREF_IMAGES = {
@@ -32,7 +30,6 @@ function Icon({ name, size = 20 }) {
   if (name === 'home') return <svg {...p}><path d="m3 11 9-8 9 8"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/></svg>
   if (name === 'building') return <svg {...p}><path d="M4 21V4h10v17"/><path d="M14 8h6v13"/><path d="M7 8h3M7 12h3M7 16h3M17 12h1M17 16h1"/></svg>
   if (name === 'plot') return <svg {...p}><path d="m4 17 4-8 5 4 3-6 4 10"/><path d="M3 20h18"/></svg>
-  if (name === 'invest') return <svg {...p}><path d="M4 20V10M10 20V4M16 20v-7M22 20V7"/><path d="m3 7 6-4 6 5 6-5"/></svg>
   if (name === 'shield') return <svg {...p}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="m9 12 2 2 4-4"/></svg>
   if (name === 'chat') return <svg {...p}><path d="M21 15a4 4 0 0 1-4 4H8l-5 3 1.6-5A7 7 0 0 1 3 12V8a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4Z"/></svg>
   if (name === 'receipt') return <svg {...p}><path d="M6 2h12v20l-3-2-3 2-3-2-3 2Z"/><path d="M9 7h6M9 11h6M9 15h3"/></svg>
@@ -73,25 +70,21 @@ export default function RealEstateRequirementExact(props) {
   const email = contactData.email || contactData.support_email || ''
 
   const propertyCards = [
-    { key:'residential', title:'Residential', subtitle:'Apartments, Villas, Independent Houses', image:CARD_IMAGES.residential, type:'apartment', intent:'buy' },
-    { key:'commercial', title:'Commercial', subtitle:'Office spaces, Shops, Showrooms', image:CARD_IMAGES.commercial, type:'commercial', intent:'buy' },
-    { key:'plot', title:'Plot / Land', subtitle:'Residential or Commercial plots', image:CARD_IMAGES.plot, type:'plot', intent:'buy' },
-    { key:'rental', title:'Rental', subtitle:'Homes, Apartments, Commercial on Rent', image:CARD_IMAGES.rental, type:'apartment', intent:'rent' },
-    { key:'investment', title:'Investment', subtitle:'Projects with high return potential', image:CARD_IMAGES.investment, type:'apartment', intent:'invest' },
+    { key:'residential', title:'Residential', subtitle:'Apartments, Villas, Independent Houses', image:CARD_IMAGES.residential, type:'apartment' },
+    { key:'commercial', title:'Commercial', subtitle:'Office spaces, Shops, Showrooms', image:CARD_IMAGES.commercial, type:'commercial' },
+    { key:'plot', title:'Plot / Land', subtitle:'Residential or Commercial plots', image:CARD_IMAGES.plot, type:'plot' },
   ]
 
   const budgetOptions = ['Under ₹20 Lakhs','₹20 - 50 Lakhs','₹50 Lakhs - 1 Crore','₹1 - 2 Crore','₹2 - 5 Crore','Above ₹5 Crore']
   const selectedType = answers[propertyType?.questionKey]
-  const selectedIntent = answers[intent?.questionKey]
 
   function selectProperty(card) {
     if (propertyType) setAnswer(propertyType.questionKey, card.type)
-    if (intent) setAnswer(intent.questionKey, card.intent)
   }
 
   function cardActive(card) {
-    if (card.key === 'residential') return ['apartment','villa','independent_house'].includes(selectedType) && !['rent','invest'].includes(selectedIntent)
-    return selectedType === card.type && selectedIntent === card.intent
+    if (card.key === 'residential') return ['apartment','villa','independent_house'].includes(selectedType)
+    return selectedType === card.type
   }
 
   const summary = [
@@ -100,6 +93,7 @@ export default function RealEstateRequirementExact(props) {
       locationStates.find(s => String(s.id) === String(locationStateId))?.name,
     ].filter(Boolean).join(', ') || '—'],
     ['PIN Code', labelFor(locationQuestion, locationQuestion ? answers[locationQuestion.questionKey] : '')],
+    ['Intent', labelFor(intent, intent ? answers[intent.questionKey] : '')],
     ['Property Type', propertyCards.find(cardActive)?.title || labelFor(propertyType, selectedType)],
     ['Budget Range', budget ? (answers[budget.questionKey] || '—') : '—'],
     ['Preference', labelFor(preferences, preferences ? answers[preferences.questionKey] : '')],
@@ -121,7 +115,7 @@ export default function RealEstateRequirementExact(props) {
         <div><Icon name="home"/><span>Residential Properties</span></div>
         <div><Icon name="building"/><span>Commercial Spaces</span></div>
         <div><Icon name="plot"/><span>Plots & Land</span></div>
-        <div><Icon name="invest"/><span>Investment Guidance</span></div>
+        <div><Icon name="support"/><span>Buy & Sell Guidance</span></div>
         <div><Icon name="doc"/><span>Requirement Documentation</span></div>
       </aside>
       <div className="rex-benefits">
@@ -210,6 +204,6 @@ export default function RealEstateRequirementExact(props) {
       </div>
     </form>
 
-    <footer className="rex-footer"><div><img src="/brand/propulse-logo.svg" alt="ProPulse"/><p>Your trusted starting point for construction, interiors and real estate requirements.</p><div>f&nbsp;&nbsp;◎&nbsp;&nbsp;▶&nbsp;&nbsp;in</div></div><div><b>Quick Links</b><Link to="/">Home</Link><Link to="/quote#construction">Construction</Link><Link to="/quote#interiors">Interiors</Link><Link to="/packages">Packages</Link><Link to="/quote#property">Real Estate</Link><Link to="/projects">Projects</Link></div><div><b>Our Services</b><Link to="/quote#construction">Home Construction</Link><Link to="/quote#interiors">Interior Design</Link><Link to="/quote#property">Real Estate</Link><Link to="/quote#construction">Construction Quote</Link><Link to="/quote#property">Free Consultation</Link></div><div><b>Support</b><Link to="/contact?audience=users">FAQ</Link><Link to="/#contact">Contact Us</Link><Link to="/contact?audience=users">Privacy Policy</Link><Link to="/contact?audience=users">Terms & Conditions</Link></div><div><b>Contact Info</b>{phone&&<span><Icon name="phone" size={14}/>{phone}</span>}{email&&<span>{email}</span>}<span><Icon name="pin" size={14}/>Hyderabad, India</span></div></footer>
+    <footer className="rex-footer"><div><img src="/brand/propulse-logo.svg" alt="ProPulse"/><p>Your trusted starting point for construction, interiors and real estate requirements.</p><div>f&nbsp;&nbsp;◎&nbsp;&nbsp;▶&nbsp;&nbsp;in</div></div><div><b>Quick Links</b><Link to="/">Home</Link><Link to="/quote#construction">Construction</Link><Link to="/quote#interiors">Interiors</Link><Link to="/packages">Packages</Link><Link to="/quote#property">Real Estate</Link><Link to="/projects">Projects</Link></div><div><b>Our Services</b><Link to="/quote#construction">Home Construction</Link><Link to="/quote#interiors">Interior Design</Link><Link to="/quote#property">Real Estate</Link><Link to="/quote#construction">Construction Quote</Link><Link to="/quote#property">Free Consultation</Link></div><div><b>Support</b><Link to="/faq">FAQ</Link><Link to="/contact">Contact Us</Link></div><div><b>Contact Info</b>{phone&&<span><Icon name="phone" size={14}/>{phone}</span>}{email&&<span>{email}</span>}<span><Icon name="pin" size={14}/>Hyderabad, India</span></div></footer>
   </main>
 }
