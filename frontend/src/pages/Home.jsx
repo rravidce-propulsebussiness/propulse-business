@@ -26,7 +26,7 @@ const SERVICES = [
     key: 'property',
     eyebrow: 'Real Estate',
     title: 'Find a Property',
-    text: 'Buy, sell, rent or invest in the right property.',
+    text: 'Buy or sell the right property with a clear requirement.',
     image: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=1200&q=88',
     icon: 'building',
   },
