@@ -10,6 +10,7 @@ const env=read('scripts/check-production-env.js');
 
 assert(server.includes("HEALTH_CHECK_TIMEOUT_MS")&&server.includes('Promise.allSettled'),'Readiness must bound dependency checks and report them independently');
 assert(server.includes("database:databaseReady?'connected':'unavailable'"),'Readiness must distinguish database failure');
+assert(server.includes("expectedOperationalTransition='backend_starting'")&&server.includes("expectedOperationalTransition='draining'"),'Readiness must mark only expected lifecycle 503 responses as operational transitions');
 assert(server.includes("storage:storageReady?'ready':'unavailable'"),'Readiness must distinguish storage failure');
 assert(storage.includes('probeUploadStorage')&&storage.includes("writeFile(probe,'ok'")&&storage.includes('s3.probe()'),'Development startup must still support probing local storage while R2 uses the remote probe');
 assert(storage.includes('unlink(probe)'),'Storage probe must clean up its temporary file');
