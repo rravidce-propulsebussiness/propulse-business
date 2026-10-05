@@ -80,6 +80,7 @@ if (value('ADMIN_PASSWORD')) warn('ADMIN_PASSWORD is present in the long-running
 
 const privateObjectDriver=(value('PRIVATE_OBJECT_STORAGE_DRIVER')||'local').toLowerCase();
 if(!['local','s3'].includes(privateObjectDriver))fail('PRIVATE_OBJECT_STORAGE_DRIVER must be local or s3');
+if(privateObjectDriver!=='s3')fail('PRIVATE_OBJECT_STORAGE_DRIVER must be s3 in production; Hostinger local filesystem uploads are not allowed');
 const uploadRoot=value('UPLOAD_STORAGE_ROOT');
 if(privateObjectDriver==='s3'){
   for(const key of ['PRIVATE_OBJECT_STORAGE_ENDPOINT','PRIVATE_OBJECT_STORAGE_BUCKET','PRIVATE_OBJECT_STORAGE_ACCESS_KEY_ID','PRIVATE_OBJECT_STORAGE_SECRET_ACCESS_KEY']){
