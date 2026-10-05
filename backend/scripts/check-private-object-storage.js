@@ -39,7 +39,12 @@ const signed=s3.buildPresignedGetUrl('test.txt',{
 assert(signed.includes('X-Amz-Signature=aeeed9bbccd4d02ee5c0109b86d86835f995330da4c265957d157751f604d404'),'SigV4 presigning must match the published AWS S3 example');
 assert(signed.startsWith('https://examplebucket.s3.amazonaws.com/test.txt?'),'Virtual-hosted S3 URL construction is incorrect');
 
-assert(privateProof.includes('s3.isEnabled()')&&privateProof.includes('s3.makeReference(key)'),'Private payment/payout proofs must support S3 writes');
+assert(privateProof.includes('s3.assertWriteStorage()')&&privateProof.includes('s3.makeReference(key)'),'Private payment/payout proofs must fail closed to object storage in production');
+assert(companyProof.includes('s3.assertWriteStorage()'),'Company proof uploads must fail closed to object storage in production');
+assert(homepageMedia.includes('s3.assertWriteStorage()'),'Homepage media uploads must fail closed to object storage in production');
+assert(leadReference.includes('s3.assertWriteStorage()'),'Lead attachment uploads must fail closed to object storage in production');
+assert(projectVideo.includes('s3.assertWriteStorage()'),'Project video uploads must fail closed to object storage in production');
+assert(projectPlan.includes('s3.assertWriteStorage()'),'Project plan uploads must fail closed to object storage in production');
 assert(privateProof.includes('s3.getSignedGetUrl(value)'),'Private proof reads must use short-lived signed URLs');
 assert(privateProof.includes('s3.getObjectBuffer(key,{maxBytes})'),'Legacy materialization API must support S3 objects');
 assert(companyProof.includes("key='company-proofs/'"),'Company verification documents must support private object storage');
@@ -50,6 +55,7 @@ assert(projectPlan.includes("key=\`business-projects/\${filename}\`")&&projectPl
 assert(projectMediaUtils.includes("s3.getMediaGetUrl(stored,{expiresSeconds:3600})"),'Shared project media display URLs must use signed object-storage URLs');
 assert(profileService.includes('video_display_url')&&profileService.includes('plan_display_url'),'Editable profiles must keep R2 storage refs separate from signed display URLs');
 assert(publicExpertService.includes('materializeProjectMedia'),'Public expert APIs must materialize signed project media URLs');
+assert(uploadStorage.includes("process.env.NODE_ENV==='production'")&&uploadStorage.includes('s3.assertWriteStorage()'),'Production upload readiness must reject local filesystem storage');
 assert(uploadStorage.includes('if(s3.isEnabled())')&&uploadStorage.includes('s3.probe()'),'Upload readiness must probe R2 when object storage is enabled');
 assert(frontendCsp.includes("https://*.r2.cloudflarestorage.com")&&frontendCsp.includes("media-src 'self'"),'Frontend CSP must allow signed R2 images and videos');
 assert(authService.includes('companyProofStorage.storeBuffer'),'Company proof uploads must use the storage abstraction');
@@ -57,6 +63,7 @@ assert(authController.includes('companyProofStorage.descriptor')&&authController
 
 assert(health.includes('privateObjectStorage.probe()'),'System Health must actively probe configured private object storage');
 assert(healthUi.includes('Private objects'),'Admin System Health must show private object storage');
+assert(productionEnv.includes('PRIVATE_OBJECT_STORAGE_DRIVER must be s3 in production'),'Production preflight must reject Hostinger/local upload storage');
 assert(productionEnv.includes('PRIVATE_OBJECT_STORAGE_BACKUP_STRATEGY'),'Production preflight must require an explicit S3 backup strategy');
 assert(productionEnv.includes('PRIVATE_OBJECT_STORAGE_SIGNED_URL_SECONDS must be an integer between 15 and 300'),'Production preflight must bound private signed URLs');
 assert(migration.includes("process.argv.includes('--apply')"),'Historical private-object migration must be dry-run-first');
