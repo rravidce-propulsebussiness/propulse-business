@@ -71,6 +71,34 @@ async function main() {
     if (base.protocol === 'https:') assert(response.headers.get('strict-transport-security'), 'HTTPS deployment must send HSTS');
   }
 
+  const publicPages = [
+    '/',
+    '/experts',
+    '/projects',
+    '/packages',
+    '/login',
+    '/forgot-password',
+    '/hyderabad/construction',
+  ];
+  let homepageHtml = '';
+  for (const path of publicPages) {
+    const response = await request(path, { headers: { accept: 'text/html' } });
+    assert.equal(response.status, 200, `Public page ${path} must return 200`);
+    assert.match(String(response.headers.get('content-type') || ''), /text\/html/i, `Public page ${path} must return HTML`);
+    const html = await response.text();
+    assert(html.length > 200, `Public page ${path} must return rendered application HTML`);
+    assert(!/Application (?:is starting|frontend is starting)|Application is recovering/i.test(html), `Public page ${path} must not return a startup shell`);
+    if (path === '/') homepageHtml = html;
+  }
+
+  const mainScriptMatch = homepageHtml.match(/<script[^>]+src=["']([^"']*\/assets\/[^"']+\.js)["']/i);
+  assert(mainScriptMatch, 'Homepage must reference a built JavaScript asset');
+  const mainScript = await request(mainScriptMatch[1]);
+  assert.equal(mainScript.status, 200, 'Homepage JavaScript asset must return 200');
+  assert.match(String(mainScript.headers.get('content-type') || ''), /(javascript|ecmascript)/i, 'Homepage JavaScript asset must have a JavaScript content type');
+  const mainScriptBody = await mainScript.text();
+  assert(mainScriptBody.length > 100, 'Homepage JavaScript asset must not be empty');
+
   const session = await request('/api/auth/session', { headers: { origin: appOrigin } });
   assert.equal(session.status, 200, 'Public auth session bootstrap must return 200');
   const sessionBody = await session.json();
@@ -101,7 +129,7 @@ async function main() {
   assert.equal(missing.status, 404);
 
   const effectiveCommit = versionMatches ? versionBody.commit : releaseBody.commit;
-  console.log(`Deployed smoke test passed: ${effectiveEnvironment} ${String(effectiveCommit).slice(0,12)}; HTTPS health, readiness, release identity, public session/sound/Experts APIs, security headers, CORS, auth boundary and 404 behavior.`);
+  console.log(`Deployed smoke test passed: ${effectiveEnvironment} ${String(effectiveCommit).slice(0,12)}; HTTPS health, readiness, release identity, public pages/assets, public session/sound/Experts APIs, security headers, CORS, auth boundary and 404 behavior.`);
 }
 
 main().catch(error => {
