@@ -2,8 +2,6 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { publicRequest } from '../utils/auth'
 import './Projects.css'
-import { openLeadPopup } from '../utils/leadPopup'
-import PublicIcon from '../components/PublicIcon'
 
 const PROJECTS = [
   {
@@ -450,14 +448,19 @@ export default function Projects(){
     })
   },[category,query])
 
+  useEffect(()=>{
+    if(!selectedProject)return undefined
+    const previous=document.body.style.overflow
+    document.body.style.overflow='hidden'
+    return()=>{document.body.style.overflow=previous}
+  },[selectedProject])
+
   function openProject(project){
     setSelectedProject(project)
-    document.body.style.overflow='hidden'
   }
 
   function closeProject(){
     setSelectedProject(null)
-    document.body.style.overflow=''
   }
 
   function projectHighlights(project){
