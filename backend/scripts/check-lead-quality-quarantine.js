@@ -45,6 +45,8 @@ assert(partnerUi.includes('<option value="quarantined">Quarantined</option>')&&p
 assert(leadRead.includes("'quality_gate_reasons'")&&leadRead.includes('stripQualityGate'),'Buyer-facing lead responses must hide internal quality-review metadata');
 assert(purchaseService.includes("if(lead.status!=='available')")&&purchaseService.includes("purchase.lead_status!=='available'"),'Direct and pending-payment lead purchases must reject quarantined leads');
 assert(entitlementService.includes("lead.status!=='available'")&&entitlementService.includes("LEAD_UNAVAILABLE"),'Membership/entitlement access must reject quarantined leads');
+const automaticHold=gateSource.slice(gateSource.indexOf("type:'lead_quality_hold'"),gateSource.indexOf("}else if(current.status==='quarantined'"));
+assert(automaticHold.includes("email:false"),'Automated quality holds must stay in-app to avoid bulk-import email bursts');
 const automaticRelease=gateSource.slice(gateSource.indexOf("dedupeKey:\`lead-quality-released:"),gateSource.indexOf("async function overrideQuarantine"));
 assert(automaticRelease.includes("email:false"),'Automated quality re-evaluation releases must stay in-app to avoid burst email delivery');
 const manualOverride=gateSource.slice(gateSource.indexOf("async function overrideQuarantine"));
