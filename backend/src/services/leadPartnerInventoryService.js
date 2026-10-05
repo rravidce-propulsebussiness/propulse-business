@@ -67,14 +67,25 @@ function candidateMatches(items, value) {
 }
 const findExact = (items, value) => { const matches = candidateMatches(items, value); return matches.length === 1 ? matches[0] : null; };
 const findScoped = (items, value, parentId, parentKey) => findExact(parentId == null ? items : items.filter(x => Number(x[parentKey]) === Number(parentId)), value);
+const INDUSTRY_ALIASES=Object.freeze({
+  interiordesignandhomeinteriors:'interiordesignandhomeimprovement',
+  homeinteriors:'interiordesignandhomeimprovement',
+  interiors:'interiordesignandhomeimprovement',
+});
+function canonicalIndustryValue(value){
+  const raw=clean(value);
+  if(!raw)return raw;
+  return INDUSTRY_ALIASES[norm(raw)]||raw;
+}
 
 function resolveClassification(row, cat) {
-  let industry = findExact(cat.industries, row.industry);
+  const industryValue=canonicalIndustryValue(row.industry);
+  let industry = findExact(cat.industries, industryValue);
   let service = findScoped(cat.services, row.service, industry?.id, 'industry_id');
   let subservice = findScoped(cat.subservices, row.subservice, service?.id, 'service_id');
   if (!service && subservice) service = cat.services.find(x => Number(x.id) === Number(subservice.service_id)) || null;
   if (!industry && service) industry = cat.industries.find(x => Number(x.id) === Number(service.industry_id)) || null;
-  if (row.industry && !industry) { const matches = candidateMatches(cat.industries, row.industry); throw new Error(matches.length > 1 ? 'Industry is ambiguous' : 'Industry could not be resolved'); }
+  if (row.industry && !industry) { const matches = candidateMatches(cat.industries, industryValue); throw new Error(matches.length > 1 ? 'Industry is ambiguous' : 'Industry could not be resolved'); }
   if (row.service && !service) { const matches = candidateMatches(cat.services, row.service); throw new Error(matches.length > 1 ? 'Service is ambiguous; include Industry' : 'Service could not be resolved'); }
   if (row.subservice && !subservice) { const matches = candidateMatches(cat.subservices, row.subservice); throw new Error(matches.length > 1 ? 'Subservice is ambiguous; include Service' : 'Subservice could not be resolved'); }
   if (service && industry && Number(service.industry_id) !== Number(industry.id)) throw new Error('Service does not belong to the selected Industry');
