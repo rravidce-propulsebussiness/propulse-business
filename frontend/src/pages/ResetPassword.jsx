@@ -26,7 +26,13 @@ function ResetPassword() {
       setDone(true)
       window.setTimeout(() => navigate('/login', { replace: true }), 1200)
     } catch (err) {
-      setError(err.message)
+      if (err.status === 429) {
+        const seconds = Math.max(1, Number(err.retryAfter) || 60)
+        const minutes = Math.max(1, Math.ceil(seconds / 60))
+        setError(`Too many reset attempts. Please try again in about ${minutes} minute${minutes === 1 ? '' : 's'}.`)
+      } else {
+        setError(err.message)
+      }
     } finally {
       setLoading(false)
     }
