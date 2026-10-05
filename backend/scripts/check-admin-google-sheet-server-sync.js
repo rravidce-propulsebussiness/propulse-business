@@ -29,6 +29,7 @@ assert(service.includes("pg_try_advisory_lock($1,$2)")&&service.includes("pg_adv
 assert(scheduler.includes('another replica is syncing it'),'Scheduler must treat per-connection lock contention as a normal skip');
 assert(scheduler.includes('force:!automated'),'Scheduled Admin sync must use fingerprints and skip unchanged sheets while manual global runs may force a reprocess');
 assert(service.includes('fingerprint=NULL,last_checked_at=NULL'),'Changing a connected Admin sheet default Industry must invalidate its fingerprint and make it immediately due');
+assert(service.includes("last_sync_failed=0,last_sync_failures='[]'::jsonb")&&service.includes('last_sync_unchanged=$1'),'An unchanged scheduled Admin sheet check must clear stale failures and report the current rows as unchanged');
 assert(service.includes("if(!locked)return{busy:true,sync:{busy:true,skipped:true,reason:'SYNC_IN_PROGRESS'}}"),'Overlapping sheet sync must return a stable busy result');
 assert(service.includes('const saved=synced.skipped'),'Unchanged-sheet checks must preserve the previous sync metrics');
 assert(service.includes("forCreate&&!detected?.state_id&&!detected?.state_name"),'Admin sheet sync must allow verified PINs with State-only resolution when the City catalog has no matching City');
