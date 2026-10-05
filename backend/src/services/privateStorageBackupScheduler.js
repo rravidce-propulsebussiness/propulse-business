@@ -198,6 +198,7 @@ async function runPrivateStorageBackupCore({force=false}={}){
     },null,2)+'\n');
     await s3.putObject(manifestKey,manifestBody,{contentType:'application/json',configOverride:backupCfg});
     const manifestHead=await s3.headObject(manifestKey,{configOverride:backupCfg});
+    // Some R2/S3 gateways can report unexpected HEAD metadata immediately after a write; verify bytes before declaring failure.
     let manifestVerified=Boolean(manifestHead&&manifestHead.size===manifestBody.length);
     if(!manifestVerified){
       const restoredManifest=await s3.getObjectBuffer(manifestKey,{maxBytes:1024*1024,configOverride:backupCfg});
