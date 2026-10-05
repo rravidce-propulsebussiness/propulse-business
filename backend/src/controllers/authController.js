@@ -138,21 +138,38 @@ async function googleLogin(req, res) {
 }
 
 async function forgotPassword(req, res) {
+  let reset = null;
   try {
     const email = String(req.body?.email || '').trim();
     if (!email) return res.status(400).json({ error: 'Email address is required' });
 
-    const reset = await authService.createPasswordReset(email);
-    if (!reset) return res.json({ message: 'If an account exists for that email, a password reset link has been sent.' });
+    reset = await authService.createPasswordReset(email);
+    if (!reset || reset.cooldown) {
+      return res.json({ message: 'If an account exists for that email, a password reset link has been sent.' });
+    }
 
-    const baseUrl = String(process.env.PUBLIC_APP_URL || process.env.CORS_ORIGIN || '').split(',')[0].replace(/\/$/, '');
-    if (!baseUrl) throw new Error('PUBLIC_APP_URL is not configured');
+    const baseUrl = String(
+      process.env.PUBLIC_APP_URL
+      || process.env.FRONTEND_URL
+      || process.env.APP_URL
+      || process.env.CORS_ORIGIN
+      || ''
+    ).split(',')[0].trim().replace(/\/$/, '');
+    if (!baseUrl) throw new Error('Public application URL is not configured');
     const resetUrl = `${baseUrl}/reset-password#token=${encodeURIComponent(reset.token)}`;
     await sendPasswordResetEmail({ to: reset.user.email, name: reset.user.name, resetUrl });
     return res.json({ message: 'If an account exists for that email, a password reset link has been sent.' });
   } catch (error) {
+    if (reset?.token) {
+      await authService.discardPasswordResetToken(reset.token).catch((cleanupError) => {
+        console.error('Password reset token cleanup failed:', cleanupError.message);
+      });
+    }
     console.error('Forgot password failed:', error.message);
-    return res.status(503).json({ error: 'Password reset email could not be sent right now. Please try again later.' });
+    return res.status(503).json({
+      error: 'Password reset email could not be sent right now. Please try again later.',
+      code: 'PASSWORD_RESET_EMAIL_UNAVAILABLE',
+    });
   }
 }
 
