@@ -1,5 +1,7 @@
 const authService = require('../services/authService');
-const { sendPasswordResetEmail } = require('../services/emailService');
+const emailService = require('../services/emailService');
+const { sendPasswordResetEmail } = emailService;
+const operationalMonitoringService = require('../services/operationalMonitoringService');
 const companyProofStorage = require('../services/companyProofStorageService');
 const supabaseAuthService = require('../services/supabaseAuthService');
 const { sendProofDescriptor } = require('../utils/proofResponse');
@@ -166,6 +168,21 @@ async function forgotPassword(req, res) {
       });
     }
     console.error('Forgot password failed:', error.message, error?.code||'', error?.providerStatus||'');
+    void operationalMonitoringService.recordEvent({
+      source:'backend',
+      eventType:'password_reset_email_failure',
+      severity:'error',
+      message:'Password reset email delivery failed',
+      route:'/api/auth/forgot-password',
+      method:'POST',
+      statusCode:503,
+      requestId:req.requestId,
+      metadata:{
+        errorCode:error?.code||null,
+        providerStatus:Number.isInteger(error?.providerStatus)?error.providerStatus:null,
+        senderMode:emailService.configurationHealth().senderMode,
+      },
+    }).catch(monitorError=>console.error('Password reset email failure telemetry failed:',monitorError.message));
     return res.status(503).json({
       error: 'Password reset email could not be sent right now. Please try again later.',
       code: 'PASSWORD_RESET_EMAIL_UNAVAILABLE',
