@@ -10,6 +10,7 @@ const dump=read('scripts/database-backup.js');
 const restore=read('scripts/verify-database-backup.js');
 const storage=read('scripts/backup-private-storage.js');
 const r2Backup=read('src/services/privateStorageBackupScheduler.js');
+const databaseBackup=read('src/services/databaseBackupScheduler.js');
 const server=read('src/server.js');
 const worker=read('src/worker.js');
 const health=read('src/services/adminSystemHealthService.js');
@@ -40,6 +41,10 @@ assert(r2Backup.includes('configuredStartupRetryMs')&&r2Backup.includes('result?
 assert(r2Backup.includes('backup_verification_runs')&&r2Backup.includes("status:'verified'"),'Automated R2 backup must persist verified backup state');
 assert(r2Backup.includes('restoredManifest')&&r2Backup.includes('sha256(restoredManifest.buffer)'),'Backup manifest verification must fall back to readback checksum verification when HEAD metadata differs');
 assert(server.includes('startPrivateStorageBackupScheduler')&&worker.includes('startPrivateStorageBackupScheduler'),'R2 backups must run in both supported background-job deployment modes');
+assert(databaseBackup.includes('createDatabaseBackup')&&databaseBackup.includes("jobKey:'database_backup'"),'Production database backups must reuse the consistent pg_dump snapshot pipeline and the shared job controller');
+assert(databaseBackup.includes("database/${day}")&&databaseBackup.includes('verifyRemoteObject')&&databaseBackup.includes("verification:'full_readback_sha256'"),'Production database dumps must be stored in protected R2 paths and verified by full readback SHA-256');
+assert(databaseBackup.includes("fs.promises.rm(tempRoot")&&databaseBackup.includes('DATABASE_BACKUP_MAX_BYTES'),'Database backup temporary files must be bounded and removed after R2 upload');
+assert(server.includes('startDatabaseBackupScheduler')&&worker.includes('startDatabaseBackupScheduler'),'Database backups must run in both supported background-job deployment modes');
 assert(packageJson.includes('"backup:verify"')&&packageJson.includes('"backup:storage"')&&packageJson.includes('"backup:all"'),'Operator backup commands must be exposed in package scripts');
 assert(workflow.includes('Verify database backup restore drill'),'CI must execute a real database dump/restore drill');
 assert(workflow.includes('Verify private upload storage backup'),'CI must execute a private-storage backup verification');
