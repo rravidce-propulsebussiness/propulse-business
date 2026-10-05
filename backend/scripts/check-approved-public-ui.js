@@ -12,6 +12,7 @@ const chunkRecovery=read('../frontend/src/utils/chunkRecovery.js');
 const home=read('../frontend/src/pages/Home.jsx');
 const homeCss=read('../frontend/src/pages/Home.css');
 const popup=read('../frontend/src/components/GlobalLeadPopup.jsx');
+const supportChat=read('../frontend/src/components/SupportChatWidget.jsx');
 const quote=read('../frontend/src/pages/Solutions.jsx');
 const quoteCss=read('../frontend/src/pages/Solutions.css');
 const wizard=read('../frontend/src/pages/RequirementWizard.jsx');
@@ -36,6 +37,12 @@ assert.match(errorBoundary,/reloadOnceForStaleAsset\(error\)/);
 assert.match(chunkRecovery,/vite:preloadError/);
 assert.match(chunkRecovery,/failed to fetch dynamically imported module/);
 assert.match(chunkRecovery,/RELOAD_COOLDOWN_MS=60_000/);
+assert.match(supportChat,/const userId=user\?\.id\|\|null/);
+assert.match(supportChat,/\},\[userId\]\)/);
+assert.match(wizard,/onCompletionChangeRef\.current\?\.\(false\)/);
+assert.match(wizard,/onCompletionChangeRef\.current\?\.\(true\)/);
+assert.match(wizard,/answers\.built_up_area\]\)/);
+
 
 assert.match(projects,/const previous=document\.body\.style\.overflow/);
 assert.match(projects,/return\(\)=>\{document\.body\.style\.overflow=previous\}/);

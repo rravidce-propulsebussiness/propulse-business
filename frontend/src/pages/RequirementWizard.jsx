@@ -225,12 +225,15 @@ export default function RequirementWizard({ flowKey, onCompletionChange }) {
   const [submissionResult, setSubmissionResult] = useState(null)
   const [state, setState] = useState({ loading: true, saving: false, error: '', success: false })
   const mounted = useRef(true)
+  const onCompletionChangeRef = useRef(onCompletionChange)
   const theme = THEMES[flowKey] || THEMES.build
   const isQuotationFlow = flowKey === 'build'
 
+  useEffect(()=>{onCompletionChangeRef.current=onCompletionChange},[onCompletionChange])
+
   useEffect(() => {
     mounted.current = true
-    onCompletionChange?.(false)
+    onCompletionChangeRef.current?.(false)
     setSubmissionResult(null)
     setState({ loading: true, saving: false, error: '', success: false })
 
@@ -301,7 +304,6 @@ export default function RequirementWizard({ flowKey, onCompletionChange }) {
     .filter(question => isQuestionVisible(question, answers))
     .filter(question => !(flowKey === 'build' && ['property_type','construction_scope','basement'].includes(question.questionKey)))
     .filter(question => !(flowKey === 'design' && ['area','rooms','property_status','possession_status','kitchen','wardrobes','false_ceiling','furniture'].includes(question.questionKey))), [flow, answers, flowKey])
-  const byKey = useMemo(() => Object.fromEntries(questions.map(question => [question.questionKey, question])), [questions])
   const locationQuestion = questions.find(question => question.questionType === 'location')
   const selectedCity = useMemo(() => cities.find(city => String(city.id) === String(cityId)), [cities, cityId])
   const locationStates = useMemo(() => {
@@ -361,11 +363,15 @@ export default function RequirementWizard({ flowKey, onCompletionChange }) {
 
     const calculated = String(Math.round(plotYards * 9 * floorCount))
     const current = String(answers.built_up_area ?? '')
+    if(current===calculated){
+      autoBuiltUpRef.current=calculated
+      return
+    }
     if (!current || current === String(autoBuiltUpRef.current || '')) {
       autoBuiltUpRef.current = calculated
       setAnswers(previous => ({ ...previous, built_up_area: calculated }))
     }
-  }, [flowKey, answers.plot_area, answers.floors])
+  }, [flowKey, answers.plot_area, answers.floors, answers.built_up_area])
 
   function setLocationState(value) {
     setLocationStateId(value)
@@ -530,7 +536,7 @@ export default function RequirementWizard({ flowKey, onCompletionChange }) {
       const referenceUpload = await uploadInteriorReferences(referenceFiles,result?.leadId)
       setSubmissionResult({ ...(result || {}), quotation, ...referenceUpload })
       setState({ loading: false, saving: false, error: '', success: true })
-      onCompletionChange?.(true)
+      onCompletionChangeRef.current?.(true)
       window.scrollTo({ top: 0, behavior: 'smooth' })
     } catch (error) {
       setState(current => ({ ...current, saving: false, error: error.message }))
