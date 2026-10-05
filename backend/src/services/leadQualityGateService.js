@@ -130,7 +130,7 @@ function decide(feature,settings){
     if(settings.requireContact&&!feature.has_contact)flags.push('missing_contact');
     if(settings.requireValidContact&&feature.has_contact&&!feature.valid_contact)flags.push('invalid_contact');
     if(settings.requireValidPincode&&!feature.valid_pincode)flags.push('invalid_pincode');
-    if(settings.requirePincodeCityMatch&&feature.has_city&&feature.valid_pincode&&!feature.pincode_city_mapped)flags.push('pincode_city_mismatch');
+    if(settings.requirePincodeCityMatch&&feature.valid_pincode&&(!feature.has_city||!feature.pincode_city_mapped))flags.push('pincode_city_mismatch');
     if(settings.requireClassificationValid&&!feature.classification_valid)flags.push('classification_mismatch');
   }
   const unique=[...new Set(flags)];
