@@ -23,5 +23,5 @@ must('../frontend/src/pages/Experts.jsx',['TRUSTED PROFESSIONALS','Expert</span>
 if(read('../frontend/src/pages/Experts.jsx').includes('experts-hero'))throw new Error('Experts page hero section must remain removed');
 must('../frontend/src/admin/pages/AdminExpertDirectory.jsx',['Expert Directory','Allowed membership','Featured','Hidden']);
 must('../frontend/src/admin/pages/AdminExpertDirectory.jsx',['businessRequest=useRef(0)','searchReady=useRef(false)','requestId!==businessRequest.current','queueMicrotask']);
-if(read('../frontend/src/admin/pages/AdminExpertDirectory.jsx').includes('if(loading)return'))throw new Error('Expert Directory search effect must not drop searches typed during initial loading');
+if(/useEffect\(\(\)=>\{\s*if\(loading\)return\s*const timer/.test(read('../frontend/src/admin/pages/AdminExpertDirectory.jsx')))throw new Error('Expert Directory search effect must not drop searches typed during initial loading');
 console.log('Expert directory portfolio checks passed.');
