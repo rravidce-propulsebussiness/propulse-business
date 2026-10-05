@@ -28,6 +28,7 @@ function timeLabel(value){
 export default function SupportChatWidget(){
   const location=useLocation()
   const user=getUser()
+  const userId=user?.id||null
   const [config,setConfig]=useState(null)
   const [open,setOpen]=useState(false)
   const [conversation,setConversation]=useState(null)
@@ -75,7 +76,7 @@ export default function SupportChatWidget(){
             if(active){setConversation(null);setMessages([]);setToken('')}
           }
         }
-        if(user){
+        if(userId){
           try{
             const current=await publicRequest('/support-chat/current')
             if(active&&current?.conversation)applyThread(current)
@@ -85,7 +86,7 @@ export default function SupportChatWidget(){
       .catch(()=>{})
       .finally(()=>{if(active)setLoading(false)})
     return()=>{active=false}
-  },[user?.id])
+  },[userId])
 
   useEffect(()=>{
     if(!open||!conversation?.id||conversation.status!=='open')return undefined
