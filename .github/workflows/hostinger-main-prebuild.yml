@@ -65,3 +65,22 @@ jobs:
           fi
           git commit -m "Prebuild Hostinger backend frontend [hostinger-prebuilt]"
           git push origin HEAD:main
+
+      - name: Wait for Hostinger production deployment
+        working-directory: backend
+        env:
+          DEPLOY_BASE_URL: https://sghomesinterior.in
+          DEPLOY_EXPECTED_COMMIT: ${{ github.sha }}
+          DEPLOY_EXPECTED_ENVIRONMENT: production
+          DEPLOY_WAIT_SECONDS: '900'
+          DEPLOY_POLL_SECONDS: '10'
+        run: node scripts/wait-for-deployment.js
+
+      - name: Run Hostinger production smoke
+        working-directory: backend
+        env:
+          DEPLOY_BASE_URL: https://sghomesinterior.in
+          DEPLOY_APP_ORIGIN: https://sghomesinterior.in
+          DEPLOY_EXPECTED_COMMIT: ${{ github.sha }}
+          DEPLOY_EXPECTED_ENVIRONMENT: production
+        run: node scripts/check-deployed-smoke.js
