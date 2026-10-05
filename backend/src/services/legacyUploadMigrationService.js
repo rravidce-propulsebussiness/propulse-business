@@ -6,6 +6,18 @@ const companyProofStorage=require('./companyProofStorageService');
 const s3=require('./s3PrivateObjectStorageService');
 
 const MAX_COMPANY_PROOF_BYTES=5*1024*1024;
+const legacyDefaultCompanyProofRoot=path.resolve(__dirname,'../../uploads/company-proofs');
+
+async function readLegacyCompanyProof(name){
+  const roots=[...new Set([path.resolve(companyProofRoot),legacyDefaultCompanyProofRoot])];
+  for(const root of roots){
+    const candidate=path.join(root,name);
+    try{return{buffer:await fs.readFile(candidate),filePath:candidate}}
+    catch(error){if(error?.code!=='ENOENT')throw error}
+  }
+  return null;
+}
+
 
 function safeLegacyName(value){
   const raw=String(value||'');
@@ -27,15 +39,10 @@ async function migrateLegacyCompanyProofsToObjectStorage({limit=50}={}){
   for(const row of rows){
     const legacyName=safeLegacyName(row.stored_name);
     if(!legacyName){summary.failed+=1;continue}
-    const filePath=path.join(companyProofRoot,legacyName);
-    let buffer;
-    try{
-      buffer=await fs.readFile(filePath);
-    }catch(error){
-      if(error?.code==='ENOENT'){summary.missing+=1;continue}
-      summary.failed+=1;
-      continue;
-    }
+    let legacyFile;
+    try{legacyFile=await readLegacyCompanyProof(legacyName)}catch{summary.failed+=1;continue}
+    if(!legacyFile){summary.missing+=1;continue}
+    const {buffer,filePath}=legacyFile;
     if(!buffer.length||buffer.length>MAX_COMPANY_PROOF_BYTES){summary.failed+=1;continue}
 
     const extension=path.extname(legacyName)||((row.mime_type||'').includes('pdf')?'.pdf':(row.mime_type||'').includes('png')?'.png':'.jpg');
