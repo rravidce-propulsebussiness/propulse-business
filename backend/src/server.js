@@ -85,6 +85,15 @@ const privateFrontendPath=requestPath=>/^\/(admin|login|signup|forgot-password|r
 const publicSpaFrontendPaths=new Set(['/','/quote','/solutions','/experts','/packages','/projects','/how-it-works','/about','/contact','/faq','/hyderabad','/guides','/interior-estimator','/interior-cost-estimator','/construction-estimator','/construction-cost-estimator']);
 const publicDynamicFrontendPath=requestPath=>/^\/hyderabad\/[a-z0-9-]+(?:\/(?:compare-options|[a-z0-9-]+))?$/.test(requestPath)||/^\/guides\/[a-z0-9-]+$/.test(requestPath)||/^\/[a-z0-9-]+\/construction(?:\/[a-z0-9-]+)?$/.test(requestPath);
 const knownSpaFrontendPath=requestPath=>privateFrontendPath(requestPath)||publicSpaFrontendPaths.has(requestPath)||publicDynamicFrontendPath(requestPath);
+function publicPrerenderedFrontendFile(requestPath){
+  if(!publicSpaFrontendPaths.has(requestPath)&&!publicDynamicFrontendPath(requestPath))return null;
+  const relative=String(requestPath||'').replace(/^\/+|\/+$/g,'');
+  if(!relative||!/^[A-Za-z0-9/_-]+$/.test(relative))return null;
+  const root=path.resolve(frontendDist)+path.sep;
+  const candidate=path.resolve(frontendDist,relative+'.html');
+  if(!candidate.startsWith(root))return null;
+  try{return fs.statSync(candidate).isFile()?candidate:null}catch{return null}
+}
 if(trustProxy) app.set('trust proxy',trustProxy==='false'?false:trustProxy==='true'?true:Number.isNaN(Number(trustProxy))?trustProxy:Number(trustProxy));
 app.disable('x-powered-by');
 app.use((req,res,next)=>{
@@ -270,6 +279,13 @@ if(serveFrontendFromBackend){
     ['/pricing','/','#pricing'],
     ['/industries','/',''],
   ])app.get(from,redirectLegacyFrontend(target,hash));
+  app.use((req,res,next)=>{
+    if(!['GET','HEAD'].includes(req.method))return next();
+    const prerendered=publicPrerenderedFrontendFile(req.path);
+    if(!prerendered)return next();
+    res.setHeader('Cache-Control','no-cache');
+    return res.sendFile(prerendered,error=>error?next(error):undefined);
+  });
   app.use(express.static(frontendDist,{index:'index.html',extensions:['html'],fallthrough:true}));
   app.use((req,res,next)=>{
     if(backendOnlyPath(req.path))return next();
