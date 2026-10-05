@@ -41,6 +41,36 @@ async function migrationHealth(){
   const applied=safeNumber(row?.count);
   return{checked:files.length,applied,pending:Math.max(0,files.length-applied),status:applied>=files.length?'current':'pending'};
 }
+async function legacyUploadHealth(){
+  const row=(await pool.query(`
+    SELECT
+      (SELECT COUNT(*)::int FROM company_proof_documents
+        WHERE COALESCE(stored_name,'')<>'' AND stored_name NOT LIKE 'private-object-s3:%') AS company_proofs,
+      (
+        SELECT
+          (CASE WHEN hero_image_url LIKE '/uploads/%' THEN 1 ELSE 0 END)
+          + COALESCE((SELECT COUNT(*) FROM jsonb_each_text(COALESCE(category_images,'{}'::jsonb)) entry WHERE entry.value LIKE '/uploads/%'),0)
+        FROM homepage_media_settings WHERE id=1
+      )::int AS homepage_media,
+      (SELECT COUNT(*)::int FROM business_profile_projects
+        WHERE video_url LIKE '/uploads/%' OR plan_url LIKE '/uploads/%' OR cover_image_url LIKE '/uploads/%') AS project_media,
+      (
+        (SELECT COUNT(*) FROM payments WHERE proof_url LIKE 'private-proof:%')
+        +(SELECT COUNT(*) FROM wallet_topups WHERE proof_url LIKE 'private-proof:%')
+        +(SELECT COUNT(*) FROM lead_partner_payout_requests WHERE proof_url LIKE 'private-proof:%')
+        +(SELECT COUNT(*) FROM investor_payout_requests WHERE proof_url LIKE 'private-proof:%')
+        +(SELECT COUNT(*) FROM investments WHERE payout_proof_url LIKE 'private-proof:%')
+      )::int AS private_proofs
+  `)).rows[0]||{};
+  const result={
+    companyProofs:safeNumber(row.company_proofs),
+    homepageMedia:safeNumber(row.homepage_media),
+    projectMedia:safeNumber(row.project_media),
+    privateProofs:safeNumber(row.private_proofs)
+  };
+  result.total=result.companyProofs+result.homepageMedia+result.projectMedia+result.privateProofs;
+  return result;
+}
 async function sheetHealth(tableName){
   const allowed=new Set(['lead_partner_sheet_connections','admin_google_sheet_connections']);
   if(!allowed.has(tableName))throw new Error('Unsupported sheet connection table');
@@ -125,12 +155,13 @@ function addSheetIssues(issues,label,data,{source,actionUrl,actionLabel}){
 }
 
 async function getSystemHealth(){
-  const [databaseProbe,storageProbe,privateObjectProbe,heartbeatResult,migrationsResult,partnerSheetsResult,adminSheetsResult,financialResult,backupResult]=await Promise.allSettled([
+  const [databaseProbe,storageProbe,privateObjectProbe,heartbeatResult,migrationsResult,legacyUploadsResult,partnerSheetsResult,adminSheetsResult,financialResult,backupResult]=await Promise.allSettled([
     pool.query('SELECT NOW() AS now'),
     checkUploadStorage(),
     privateObjectStorage.isEnabled()?privateObjectStorage.probe():Promise.resolve({provider:'local',configured:false,status:'ready'}),
     workerHeartbeat.latestHeartbeat(),
     migrationHealth(),
+    legacyUploadHealth(),
     leadPartnerSheetHealth(),
     adminSheetHealth(),
     financialReconciliationMonitor.getHealthSummary({maxAgeHours:financialReconciliationMaxAgeHours}),
@@ -145,6 +176,7 @@ async function getSystemHealth(){
   const workerAgeSeconds=heartbeat?safeNumber(heartbeat.age_seconds):null;
   const workerFresh=Boolean(heartbeat)&&workerAgeSeconds<=workerHeartbeatMaxAgeSeconds;
   const migrations=migrationsResult.status==='fulfilled'?migrationsResult.value:{status:'unavailable',checked:0,applied:0,pending:null};
+  const legacyUploads=legacyUploadsResult.status==='fulfilled'?legacyUploadsResult.value:{total:null,companyProofs:null,homepageMedia:null,projectMedia:null,privateProofs:null,unavailable:true};
   const leadPartnerSheets=partnerSheetsResult.status==='fulfilled'?partnerSheetsResult.value:{status:'degraded',active:0,failing:0,connectionErrors:0,persistentConnectionErrors:0,maxFailureCount:0,persistentFailureThreshold:persistentSheetFailureThreshold,lastSyncedAt:null,recentProblems:[],unavailable:true};
   const adminSheets=adminSheetsResult.status==='fulfilled'?adminSheetsResult.value:{status:'degraded',active:0,failing:0,connectionErrors:0,persistentConnectionErrors:0,maxFailureCount:0,persistentFailureThreshold:persistentSheetFailureThreshold,lastSyncedAt:null,recentProblems:[],unavailable:true};
   const financialIntegrity=financialResult.status==='fulfilled'?financialResult.value:{status:'unavailable',latestRunId:null,lastCompletedAt:null,ageHours:null,maxAgeHours:financialReconciliationMaxAgeHours,criticalAlerts:0,warningAlerts:0,totalIssues:null};
@@ -166,6 +198,8 @@ async function getSystemHealth(){
   if(databaseOk&&waiting>0)issues.push(createIssue({severity:'attention',code:'database_pool_waiting',title:'Database requests are waiting',message:`${waiting} request${waiting===1?' is':'s are'} waiting for a PostgreSQL connection.`,actionUrl:'/admin/system-health',actionLabel:'Review runtime',source:'database'}));
   if(!storageOk)issues.push(createIssue({severity:'degraded',code:'upload_storage_unavailable',title:'Upload storage unavailable',message:'The configured upload storage health check failed.',actionUrl:'/admin/system-health',actionLabel:'Review storage',source:'storage'}));
   if(!privateObjectOk)issues.push(createIssue({severity:'degraded',code:'private_objects_unavailable',title:'Private object storage unavailable',message:privateObjectHealth.error||'Private proof/object storage could not be reached.',actionUrl:'/admin/system-health',actionLabel:'Review storage',source:'private_objects'}));
+  if(legacyUploads.unavailable)issues.push(createIssue({severity:'attention',code:'legacy_upload_reference_check_unavailable',title:'Legacy upload reference check unavailable',message:'System Health could not count database references that still depend on application-local uploads.',actionUrl:'/admin/system-health',actionLabel:'Review storage',source:'legacy_uploads'}));
+  else if(legacyUploads.total>0)issues.push(createIssue({severity:'attention',code:'legacy_upload_references',title:'Legacy local upload references remain',message:`${legacyUploads.total} stored reference${legacyUploads.total===1?' still depends':'s still depend'} on pre-R2 local upload storage. Migrate or replace these files before removing legacy Hostinger uploads.`,actionUrl:'/admin/system-health',actionLabel:'Review storage',source:'legacy_uploads'}));
   if(backgroundWorkerRequired&&!workerFresh)issues.push(createIssue({severity:'degraded',code:'worker_heartbeat_stale',title:heartbeat?'Background worker heartbeat is stale':'Background worker unavailable',message:heartbeat?`The latest worker heartbeat is ${workerAgeSeconds} seconds old; the freshness limit is ${workerHeartbeatMaxAgeSeconds} seconds.`:'No background worker heartbeat is available.',actionUrl:'/admin/jobs',actionLabel:'Open background jobs',source:'worker'}));
   if(migrations.status!=='current')issues.push(createIssue({severity:'degraded',code:'migrations_not_current',title:'Database migrations are not current',message:migrations.status==='pending'?`${migrations.pending} migration${migrations.pending===1?' is':'s are'} pending.`:'Migration state could not be read.',actionUrl:'/admin/system-health',actionLabel:'Review migrations',source:'migrations'}));
 
@@ -235,7 +269,8 @@ async function getSystemHealth(){
         configured:Boolean(privateObjectHealth.configured),
         provider:privateObjectHealth.provider||privateObjectStorage.driver(),
         error:privateObjectHealth.error||null
-      }
+      },
+      legacyReferences:legacyUploads
     },
     worker:{
       required:backgroundWorkerRequired,
