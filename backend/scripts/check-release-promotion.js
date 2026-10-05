@@ -24,6 +24,8 @@ assert(smoke.includes("request('/health/version')"),'Deployed smoke must verify 
 assert(smoke.includes("request('/api/auth/session'")&&smoke.includes("request('/api/sound-settings'")&&smoke.includes("request('/api/experts?page=1&pageSize=1'"),'Deployed smoke must verify the critical public session, sound-settings and Experts APIs');
 assert(smoke.includes("'/experts'")&&smoke.includes("'/projects'")&&smoke.includes("'/packages'")&&smoke.includes("'/login'")&&smoke.includes("'/forgot-password'")&&smoke.includes("'/hyderabad/construction'"),'Deployed smoke must verify critical public, auth and SEO pages');
 assert(smoke.includes('Homepage must reference a built JavaScript asset')&&smoke.includes('Homepage JavaScript asset must return 200'),'Deployed smoke must verify a built frontend JavaScript asset');
+assert(smoke.includes("request('/favicon.svg'")&&smoke.includes("request('/brand/propulse-logo.svg'"),'Deployed smoke must verify core public brand assets');
+assert(smoke.includes("request('/robots.txt'")&&smoke.includes("request('/sitemap.xml'")&&smoke.includes("Production sitemap must never advertise localhost URLs"),'Deployed smoke must verify production robots and sitemap output');
 assert(smoke.includes('DEPLOY_EXPECTED_COMMIT')&&smoke.includes('DEPLOY_EXPECTED_ENVIRONMENT'),'Smoke must verify expected release');
 assert(wait.includes("'/health/version'")&&wait.includes("'/health/ready'"),'Waiter must require identity and readiness');
 assert(wait.includes('cause?.code')&&wait.includes('cause?.hostname')&&wait.includes('errorSummary(error)'),'Deployment waiter must expose network failure causes');
