@@ -25,6 +25,8 @@ assert(migration.includes('CREATE TABLE IF NOT EXISTS backup_verification_runs')
 assert(common.includes('pg_export_snapshot')===false,'Snapshot export must remain owned by the database-backup operation');
 assert(common.includes('ensureBackupVerificationSchema'),'Backup verification must preflight its schema before expensive backup work');
 assert(common.includes('BACKUP_SCHEMA_NOT_READY')&&common.includes('npm run db:migrate'),'Missing backup schema must produce an actionable migration error');
+assert(common.includes("releaseIdentity=require('../src/services/releaseIdentityService')")&&common.includes('releaseIdentity.commit()'),'Database backup verification must record the baked production release identity when Hostinger does not expose a Git SHA environment variable');
+assert(r2Backup.includes("releaseIdentity=require('./releaseIdentityService')")&&r2Backup.includes("releaseIdentity.commit()==='local'?null:releaseIdentity.commit()"),'Private-storage backup verification must record the same deployed release identity');
 assert(dump.includes('pg_export_snapshot()'),'Database backup must export a PostgreSQL snapshot');
 assert(dump.includes("'--snapshot',snapshot"),'pg_dump must use the exact exported snapshot used for source metrics');
 assert(dump.includes("'--format=custom'")&&dump.includes("'--no-owner'")&&dump.includes("'--no-privileges'"),'Database dump must be portable and not restore owners/privileges');
