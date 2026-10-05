@@ -119,7 +119,7 @@ assert.match(output, /JWT_SECRET/);
 assert.match(output, /CORS_ORIGIN/);
 assert.match(output, /PUBLIC_APP_URL/);
 assert.match(output, /TRUST_PROXY=true/);
-assert.match(output, /UPLOAD_STORAGE_ROOT/);
+assert.match(output, /PRIVATE_OBJECT_STORAGE_DRIVER must be s3 in production/);
 assert.match(output, /HEALTH_CHECK_TIMEOUT_MS/);
 assert.match(output, /HTTP_REQUEST_TIMEOUT_MS/);
 assert.match(output, /HTTP_HEADERS_TIMEOUT_MS/);
