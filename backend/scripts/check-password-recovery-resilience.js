@@ -80,5 +80,12 @@ assert.match(adminService,/reset-password#token=/,'Admin-issued reset links must
 assert.match(adminUsers,/Send password reset link/,'Admin Users Account 360 must expose password reset delivery');
 assert.match(adminUsers,/Ask the user to check Inbox, Spam or Promotions/,'Admin reset success must guide support staff to Spam/Promotions');
 assert.match(adminUsers,/disabled=\{!selected\.is_active\|\|userBusy==='password-reset'\}/,'Admin reset action must be disabled for inactive accounts and while sending');
+assert.match(adminService,/function validAdminPassword\(password\)/,'Create Admin must have an explicit password-policy validator');
+assert.match(adminService,/password\.length<ADMIN_PASSWORD_MIN_CHARS\|\|password\.length>ADMIN_PASSWORD_MAX_CHARS/,'Create Admin must enforce the same 8-64 character bounds');
+assert.match(adminService,/Buffer\.byteLength\(password,'utf8'\)>BCRYPT_MAX_BYTES/,'Create Admin must enforce the bcrypt byte limit');
+assert.match(adminService,/\[A-Za-z\]\/\.test\(password\)&&\/\\d\/\.test\(password\)/,'Create Admin must require at least one letter and one number');
+assert.match(adminUsers,/new TextEncoder\(\)\.encode\(form\.password\)\.length/,'Create Admin UI must enforce the bcrypt byte limit before submit');
+assert.match(adminUsers,/maxLength="64"/,'Create Admin password field must cap the visible character length');
+assert.match(adminUsers,/placeholder="8–64 characters, letter \+ number"/,'Create Admin UI must explain the shared password policy');
 
 console.log('Password recovery resilience regression test passed.');
