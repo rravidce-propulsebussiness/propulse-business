@@ -14,7 +14,6 @@ const leadReferenceRoot=path.join(uploadRoot,'lead-references');
 const businessProjectRoot=path.join(uploadRoot,'business-projects');
 
 async function checkUploadStorage(){
-  if(process.env.NODE_ENV==='production')s3.assertWriteStorage();
   if(s3.isEnabled()){
     await s3.probe();
     return true;
@@ -24,7 +23,6 @@ async function checkUploadStorage(){
 }
 
 async function probeUploadStorage(){
-  if(process.env.NODE_ENV==='production')s3.assertWriteStorage();
   if(s3.isEnabled()){
     await s3.probe();
     return true;
@@ -42,7 +40,6 @@ async function probeUploadStorage(){
 }
 
 async function ensureUploadStorage(){
-  if(process.env.NODE_ENV==='production')s3.assertWriteStorage();
   if(!s3.isEnabled())await fs.promises.mkdir(uploadRoot,{recursive:true,mode:0o700});
   await checkUploadStorage();
   return true;
