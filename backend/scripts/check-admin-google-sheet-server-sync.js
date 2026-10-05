@@ -12,6 +12,7 @@ const scheduler=read('src/services/adminGoogleSheetSyncScheduler.js');
 const server=read('src/server.js');
 const worker=read('src/worker.js');
 const migration=read('src/database/migrations/20260928_admin_google_sheet_connections.sql');
+const defaultIndustryMigration=read('src/database/migrations/20261005_admin_google_sheet_default_industry.sql');
 
 assert(routes.includes("router.post('/google-sheet/sync',requireAdmin,leadController.syncGoogleSheet)"),'Admin Google Sheet sync must be protected by admin auth');
 assert(controller.includes('adminGoogleSheetSyncService.syncGoogleSheet'),'Google Sheet controller must delegate sync work to the backend service');
@@ -22,6 +23,7 @@ assert(routes.includes("router.get('/google-sheet/connections',requireAdmin,lead
 assert(routes.includes("router.post('/google-sheet/connections/:id/sync',requireAdmin,leadController.syncGoogleSheetConnection)"),'Stored Admin sheets must support manual backend sync');
 assert(service.includes('admin_google_sheet_connections'),'Admin sheet sync service must persist connections in PostgreSQL');
 assert(migration.includes('CREATE TABLE IF NOT EXISTS admin_google_sheet_connections'),'Admin sheet connection migration must exist');
+assert(defaultIndustryMigration.includes('default_industry_id'),'Admin sheet connections must persist an optional default Industry');
 assert(!scheduler.includes('pg_try_advisory_lock'),'Admin sheet scheduler must not hold a process-wide DB advisory-lock connection');
 assert(service.includes("pg_try_advisory_lock($1,$2)")&&service.includes("pg_advisory_unlock($1,$2)"),'Each Admin sheet connection must serialize manual and worker sync across replicas');
 assert(scheduler.includes('another replica is syncing it'),'Scheduler must treat per-connection lock contention as a normal skip');
@@ -38,7 +40,12 @@ assert(worker.includes('startAdminGoogleSheetAutoSync({ unref: false, runImmedia
 assert(ui.includes("authRequest('/leads/google-sheet/connections'"),'Admin UI must load and create database-backed sheet connections');
 assert(!ui.includes("authRequest('/leads?status=all')"),'Admin Google Sheet UI must not download the full lead table');
 assert(!ui.includes("authRequest('/pincodes/detect'"),'Admin Google Sheet UI must not perform per-row PIN lookups');
-assert(!ui.includes("method:'PUT'"),'Admin Google Sheet UI must not issue per-row lead update requests');
+assert(!ui.includes("authRequest(`/leads/${"),'Admin Google Sheet UI must not issue per-row lead update requests');
+assert(routes.includes("/google-sheet/connections/:id/default-industry"),'Admin sheet connections must expose a default Industry update route');
+assert(controller.includes('defaultIndustryId:req.body?.defaultIndustryId'),'Admin controller must pass the selected default Industry into preview/activation');
+assert(service.includes('applyDefaultIndustry')&&service.includes('hasClassification'),'Admin Default Industry must apply only when Industry, Service and Subservice are all blank');
+assert(service.includes('defaultIndustryId:connection.default_industry_id'),'Recurring Admin sheet sync must reuse the stored default Industry');
+assert(ui.includes('Default Industry for blank classification')&&ui.includes('Default Industry saved'),'Admin sheet UI must expose the default Industry on new and existing connections');
 assert(!ui.includes("authRequest('/leads',{method:'POST'"),'Admin Google Sheet UI must not issue per-row lead create requests');
 assert(!ui.includes('localStorage.setItem(STORAGE_KEY'),'Connected Admin sheets must not remain browser-only');
 assert(ui.includes('even when this page is closed'),'Admin UI must communicate backend-owned automatic sync');
