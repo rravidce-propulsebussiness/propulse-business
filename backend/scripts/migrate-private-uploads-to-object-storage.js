@@ -12,7 +12,7 @@ const MAX_BYTES=6*1024*1024;
 const targets=[
   {table:'payments',column:'proof_url'},
   {table:'wallet_topups',column:'proof_url'},
-  {table:'lead_partner_payouts',column:'proof_url'},
+  {table:'lead_partner_payout_requests',column:'proof_url'},
   {table:'investor_payout_requests',column:'proof_url'},
   {table:'investments',column:'payout_proof_url'}
 ];
