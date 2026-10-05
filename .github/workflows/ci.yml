@@ -146,6 +146,14 @@ jobs:
           grep -q "requires an empty database" /tmp/bootstrap-second.log
           grep -q "db:migrate" /tmp/bootstrap-second.log
           echo "Populated-database bootstrap refusal passed."
+      - name: Verify professional contact audience isolation
+        env:
+          DB_HOST: 127.0.0.1
+          DB_PORT: 5432
+          DB_NAME: ci_smoke
+          DB_USER: ci_smoke
+          DB_PASSWORD: ci_smoke
+        run: node scripts/check-contact-audience-runtime.js
       - name: Verify customer requirement flow integrity
         env:
           DB_HOST: 127.0.0.1
