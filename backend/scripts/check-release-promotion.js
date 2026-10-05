@@ -16,6 +16,7 @@ assert(identity.includes('hostinger-release.json')&&identity.includes('bakedComm
 assert(identity.includes('function bakedRelease()'),'Release identity must read baked Hostinger metadata as an object');
 assert(identity.includes("bakedRelease()?.environment"),'Release identity must prefer the baked deployment environment when present');
 assert(server.includes("app.get('/health/version'"),'Public release identity endpoint is missing');
+assert(server.includes("app.get('/release.json'"),'Frontend release marker endpoint must remain available even when the frontend is served through the backend process');
 assert(server.includes('releaseIdentity.snapshot()'),'Version endpoint must use shared release identity');
 assert(smoke.includes("request('/health/version')"),'Deployed smoke must verify version identity');
 assert(smoke.includes('DEPLOY_EXPECTED_COMMIT')&&smoke.includes('DEPLOY_EXPECTED_ENVIRONMENT'),'Smoke must verify expected release');
@@ -37,6 +38,7 @@ assert(hostingerMainWorkflow.includes("frontend/public/release.json"),'Main Host
 assert(hostingerMainWorkflow.includes("backend/hostinger-release.json"),'Main Hostinger prebuild must publish a backend release marker');
 assert(hostingerMainWorkflow.includes("environment:'production'"),'Main Hostinger release marker must identify production');
 assert(hostingerMainWorkflow.includes("git add -f backend/hostinger-frontend backend/hostinger-release.json"),'Main Hostinger prebuild must commit the backend release marker with the deploy bundle');
+assert(hostingerMainWorkflow.includes('Wait for Hostinger production deployment')&&hostingerMainWorkflow.includes('Run Hostinger production smoke'),'Main Hostinger prebuild must wait for and smoke-test the live production release');
 assert(docs.includes('Never point staging at the production database'),'Staging isolation must be documented');
 assert(docs.includes('required reviewers'),'Production approval must be documented');
 assert(production.includes('docs/staging-release.md'),'Production guide must link to release guide');
