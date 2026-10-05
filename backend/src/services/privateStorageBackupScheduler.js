@@ -3,6 +3,7 @@ const pool=require('../config/database');
 const s3=require('./s3PrivateObjectStorageService');
 const notificationService=require('./notificationService');
 const jobControl=require('./backgroundJobControlService');
+const releaseIdentity=require('./releaseIdentityService');
 
 const DEFAULT_INTERVAL_MS=24*60*60*1000;
 const DEFAULT_RECENT_HOURS=20;
@@ -129,7 +130,7 @@ async function recordVerification({status,artifactName,sizeBytes=null,metrics={}
      RETURNING id,completed_at`,
     [
       status,artifactName,sizeBytes,
-      clean(process.env.GIT_COMMIT_SHA||process.env.COMMIT_SHA||'')||null,
+      releaseIdentity.commit()==='local'?null:releaseIdentity.commit(),
       JSON.stringify(metrics||{}),
       errorMessage?String(errorMessage).slice(0,1000):null,
       startedAt
