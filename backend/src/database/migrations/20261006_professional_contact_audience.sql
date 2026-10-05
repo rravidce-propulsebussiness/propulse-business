@@ -45,7 +45,7 @@ INSERT INTO contact_audience_settings (
 )
 SELECT
   'professionals',
-  'ProPulse Business Private Limited',
+  '',
   '', '', '', '', '', '', '', '', '/professional-contact', '[]'::jsonb
 WHERE NOT EXISTS (SELECT 1 FROM contact_audience_settings WHERE audience='professionals')
 ON CONFLICT (audience) DO NOTHING;
