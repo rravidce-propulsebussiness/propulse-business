@@ -32,6 +32,8 @@ assert.match(service,/created_at > CURRENT_TIMESTAMP - INTERVAL '60 seconds'/,'p
 assert.match(service,/async function discardPasswordResetToken/,'failed email sends must have a token cleanup helper');
 assert.match(controller,/discardPasswordResetToken\(reset\.token\)/,'failed reset email delivery must discard the unusable token');
 assert.match(controller,/PASSWORD_RESET_EMAIL_UNAVAILABLE/,'reset email failures must use a stable error code');
+assert.match(controller,/ACCOUNT_NOT_FOUND/,'unknown recovery emails must return an explicit account-not-found code');
+assert.match(controller,/No user found with this email address\./,'unknown recovery emails must show the requested missing-user message');
 assert.match(controller,/password_reset_email_failure/,'reset delivery failures must create a dedicated operational event');
 assert.match(controller,/providerStatus:Number\.isInteger/,'reset failure telemetry must preserve only the safe provider HTTP status');
 assert.match(controller,/senderMode:emailService\.configurationHealth\(\)\.senderMode/,'reset failure telemetry must capture only a safe sender mode');
@@ -41,6 +43,8 @@ assert.match(forgot,/submittingRef/,'forgot-password form must block duplicate i
 assert.match(forgot,/setCooldown\(60\)/,'forgot-password form must enforce a short resend cooldown');
 assert.match(forgot,/Try again in/,'forgot-password form must show a retry countdown');
 assert.match(forgot,/PASSWORD_RESET_EMAIL_UNAVAILABLE/,'forgot-password form must show a delivery-specific error');
+assert.match(forgot,/ACCOUNT_NOT_FOUND/,'forgot-password form must handle missing accounts explicitly');
+assert.match(forgot,/Reset link sent\. Please check your email\./,'forgot-password form must show an explicit successful send message');
 assert.match(reset,/Too many reset attempts/,'reset-password form must explain throttling');
 assert.match(app,/import ForgotPassword from '\.\/pages\/ForgotPassword'/,'forgot-password must be in the main bundle');
 assert.match(app,/import ResetPassword from '\.\/pages\/ResetPassword'/,'reset-password must be in the main bundle');
