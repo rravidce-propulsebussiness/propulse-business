@@ -29,6 +29,7 @@ assert(preview.includes('fingerprint:crypto.createHash'),'Preview must fingerpri
 assert(preview.includes('effectiveMappings'),'Column mapping must be normalized and deterministic');
 assert(admin.includes('async function previewGoogleSheet'),'Admin preview validator is missing');
 assert(admin.includes("sheetPreview.assertPreview"),'Admin connection activation must require a valid preview');
+assert(admin.includes('defaultIndustryId:defaultIndustry?.id||null'),'Admin preview token must bind the selected default Industry so activation cannot change it silently');
 assert(admin.includes("columnMappings:connection.column_mappings||{}"),'Admin scheduled sync must reuse the approved mapping');
 assert(partnerBase.includes('async function previewCsv'),'Lead Partner read-only row validation is missing');
 assert(partnerCompat.includes('async function previewGoogleSheet'),'Lead Partner Google Sheet preview is missing');
