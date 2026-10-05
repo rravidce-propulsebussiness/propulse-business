@@ -26,6 +26,8 @@ assert(smoke.includes("'/experts'")&&smoke.includes("'/projects'")&&smoke.includ
 assert(smoke.includes('Homepage must reference a built JavaScript asset')&&smoke.includes('Homepage JavaScript asset must return 200'),'Deployed smoke must verify a built frontend JavaScript asset');
 assert(smoke.includes('DEPLOY_EXPECTED_COMMIT')&&smoke.includes('DEPLOY_EXPECTED_ENVIRONMENT'),'Smoke must verify expected release');
 assert(wait.includes("'/health/version'")&&wait.includes("'/health/ready'"),'Waiter must require identity and readiness');
+assert(wait.includes('cause?.code')&&wait.includes('cause?.hostname')&&wait.includes('errorSummary(error)'),'Deployment waiter must expose network failure causes');
+assert(smoke.includes('Deployment request')&&smoke.includes('cause?.code')&&smoke.includes('cause?.hostname'),'Deployed smoke must expose network failure causes');
 assert(workflow.includes('name: Release Promotion'),'Release workflow is missing');
 assert(workflow.includes('name: staging')&&workflow.includes('name: production'),'Workflow must use staging and production environments');
 assert(workflow.includes('needs: staging'),'Production must depend on staging');
