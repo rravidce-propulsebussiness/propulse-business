@@ -22,6 +22,7 @@ assert(hostingerMainWorkflow.includes("git add -f frontend/dist backend/hostinge
 assert(server.includes('releaseIdentity.snapshot()'),'Version endpoint must use shared release identity');
 assert(smoke.includes("request('/health/version')"),'Deployed smoke must verify version identity');
 assert(smoke.includes("request('/api/auth/session'")&&smoke.includes("request('/api/sound-settings'")&&smoke.includes("request('/api/experts?page=1&pageSize=1'"),'Deployed smoke must verify the critical public session, sound-settings and Experts APIs');
+assert(smoke.includes("request('/industries'")&&smoke.includes("industriesPage.status, 301"),'Deployed smoke must verify the legacy public /industries redirect');
 assert(smoke.includes("'/experts'")&&smoke.includes("'/projects'")&&smoke.includes("'/packages'")&&smoke.includes("'/login'")&&smoke.includes("'/forgot-password'")&&smoke.includes("'/hyderabad/construction'"),'Deployed smoke must verify critical public, auth and SEO pages');
 assert(smoke.includes('Homepage must reference a built JavaScript asset')&&smoke.includes('Homepage JavaScript asset must return 200'),'Deployed smoke must verify a built frontend JavaScript asset');
 assert(smoke.includes('DEPLOY_EXPECTED_COMMIT')&&smoke.includes('DEPLOY_EXPECTED_ENVIRONMENT'),'Smoke must verify expected release');
