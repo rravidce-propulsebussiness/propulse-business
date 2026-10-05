@@ -65,29 +65,19 @@ function Login() {
   return (
     <div className="auth-page login-premium">
       <header className="login-topbar">
-        <Link className="login-topbar-brand" to="/" aria-label="Propulse Business home"><img src="/brand/propulse-logo.png" alt="Propulse Business Technologies Private Limited" /><span>Building Business Together</span></Link>
-        <div className="login-topbar-context">Technology <i/> Growth <i/> Opportunities</div>
+        <Link className="login-topbar-brand" to="/" aria-label="Propulse Business home">
+          <img src="/brand/propulse-logo.png" alt="Propulse Business Technologies Private Limited" />
+        </Link>
         <Link className="login-back-home" to="/"><span>←</span> Back to Home</Link>
       </header>
-      <section className="login-premium-visual" aria-label="Propulse Business Technologies">
-        <div className="login-premium-image"/>
-        <div className="login-premium-glow"/>
-        <div className="login-premium-visual-content">
-          <span className="login-premium-kicker">WELCOME TO PROPULSE</span>
-          <h1>Technology built around<br /><em>business growth.</em></h1>
-          <p><strong>Propulse Business Technologies Private Limited</strong> helps businesses build, digitize, operate and scale through practical technology, digital growth and business solutions.</p>
-          <div className="login-premium-features">
-            <div><b>01</b><span><strong>Technology</strong><small>Websites, apps, software and automation.</small></span></div>
-            <div><b>02</b><span><strong>Digital Growth</strong><small>Marketing, creative and demand generation.</small></span></div>
-            <div><b>03</b><span><strong>Lead Opportunities</strong><small>Discover and buy relevant customer enquiries.</small></span></div>
-            <div><b>04</b><span><strong>Business Support</strong><small>Technology-led operational and compliance support.</small></span></div>
-          </div>
-          <div className="login-premium-quote"><span>“</span><p>Technology built around business growth.</p><small>— Propulse Business Technologies</small></div>
-        </div>
-      </section>
 
       <main className="auth-card-wrap login-premium-card-wrap">
         <div className="auth-card login-premium-card">
+          <div className="login-simple-heading">
+            <h1>Sign in</h1>
+            <p>Access your ProPulse account.</p>
+          </div>
+
           {error && <div className="auth-error" role="alert">{error}</div>}
 
           <div className="google-auth-block">
@@ -120,11 +110,9 @@ function Login() {
 
           <div className="auth-divider"><span /> <b>NEW TO PRO PULSE?</b> <span /></div>
           <Link className="auth-outline" to="/signup">Create an account <span>→</span></Link>
-          <p className="login-legal-note">By continuing, you agree to use Propulse for business-related technology, growth and lead services.</p>
         </div>
       </main>
     </div>
-  )
-}
+  )}
 
 export default Login
