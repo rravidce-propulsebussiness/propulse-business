@@ -47,6 +47,8 @@ assert.match(forgot,/ACCOUNT_NOT_FOUND/,'forgot-password form must handle missin
 assert.match(forgot,/Reset link sent\. Please check your email\./,'forgot-password form must show an explicit successful send message');
 assert.match(forgot,/Not in your inbox\? Check Spam or Promotions\./,'forgot-password success must guide users to spam/promotions');
 assert.match(forgot,/prefers-reduced-motion/,'typing hint must respect reduced-motion preferences');
+assert.match(forgot,/queueMicrotask\(\(\) => \{/,'typing hint state changes must be deferred out of the effect body');
+assert.match(forgot,/active = false/,'typing hint async work must stop after unmount');
 assert.match(reset,/Too many reset attempts/,'reset-password form must explain throttling');
 assert.match(app,/import ForgotPassword from '\.\/pages\/ForgotPassword'/,'forgot-password must be in the main bundle');
 assert.match(app,/import ResetPassword from '\.\/pages\/ResetPassword'/,'reset-password must be in the main bundle');

@@ -20,31 +20,40 @@ function ForgotPassword() {
   }, [cooldown])
 
   useEffect(() => {
-    if (!message) {
-      setDeliveryHint('')
-      return undefined
-    }
-
-    const hint = 'Not in your inbox? Check Spam or Promotions.'
-    const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches
-    if (reduceMotion) {
-      setDeliveryHint(hint)
-      return undefined
-    }
-
-    setDeliveryHint('')
-    let index = 0
+    let active = true
     let typingTimer
-    const startTimer = window.setTimeout(() => {
-      typingTimer = window.setInterval(() => {
-        index += 1
-        setDeliveryHint(hint.slice(0, index))
-        if (index >= hint.length) window.clearInterval(typingTimer)
-      }, 34)
-    }, 420)
+    let startTimer
+
+    queueMicrotask(() => {
+      if (!active) return
+      if (!message) {
+        setDeliveryHint('')
+        return
+      }
+
+      const hint = 'Not in your inbox? Check Spam or Promotions.'
+      const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches
+      if (reduceMotion) {
+        setDeliveryHint(hint)
+        return
+      }
+
+      setDeliveryHint('')
+      let index = 0
+      startTimer = window.setTimeout(() => {
+        if (!active) return
+        typingTimer = window.setInterval(() => {
+          if (!active) return
+          index += 1
+          setDeliveryHint(hint.slice(0, index))
+          if (index >= hint.length) window.clearInterval(typingTimer)
+        }, 34)
+      }, 420)
+    })
 
     return () => {
-      window.clearTimeout(startTimer)
+      active = false
+      if (startTimer) window.clearTimeout(startTimer)
       if (typingTimer) window.clearInterval(typingTimer)
     }
   }, [message])
