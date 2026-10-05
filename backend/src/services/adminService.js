@@ -281,24 +281,24 @@ async function getUsers({ search = '', role = 'all', status = 'all', industryId 
     params.push(`%${String(search).trim()}%`);
     const n=params.length;
     conditions.push(`(
-      u.name ILIKE ${n}
-      OR u.email ILIKE ${n}
-      OR COALESCE(bp.business_name,'') ILIKE ${n}
-      OR COALESCE(bp.phone,'') ILIKE ${n}
-      OR CAST(u.id AS text) ILIKE ${n}
+      u.name ILIKE $${n}
+      OR u.email ILIKE $${n}
+      OR COALESCE(bp.business_name,'') ILIKE $${n}
+      OR COALESCE(bp.phone,'') ILIKE $${n}
+      OR CAST(u.id AS text) ILIKE $${n}
       OR EXISTS(
         SELECT 1 FROM payments p
         WHERE p.user_id=u.id
           AND (
-            CAST(p.id AS text) ILIKE ${n}
-            OR COALESCE(p.manual_reference,'') ILIKE ${n}
-            OR COALESCE(p.gateway_payment_id,'') ILIKE ${n}
-            OR COALESCE(p.gateway_order_id,'') ILIKE ${n}
+            CAST(p.id AS text) ILIKE $${n}
+            OR COALESCE(p.manual_reference,'') ILIKE $${n}
+            OR COALESCE(p.gateway_payment_id,'') ILIKE $${n}
+            OR COALESCE(p.gateway_order_id,'') ILIKE $${n}
           )
       )
       OR EXISTS(
         SELECT 1 FROM lead_purchases lp
-        WHERE lp.user_id=u.id AND CAST(lp.lead_id AS text) ILIKE ${n}
+        WHERE lp.user_id=u.id AND CAST(lp.lead_id AS text) ILIKE $${n}
       )
     )`);
   }
