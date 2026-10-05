@@ -32,7 +32,7 @@ function ForgotPassword() {
         method: 'POST',
         body: JSON.stringify({ email: normalizedEmail }),
       })
-      setMessage(result.message || 'If an account exists for that email, a reset link has been sent.')
+      setMessage(result.message || 'Reset link sent. Please check your email.')
       setCooldown(60)
     } catch (err) {
       if (err.status === 429) {
@@ -40,6 +40,8 @@ function ForgotPassword() {
         setCooldown(seconds)
         const minutes = Math.max(1, Math.ceil(seconds / 60))
         setError(`Too many reset requests for this email. Please try again in about ${minutes} minute${minutes === 1 ? '' : 's'}.`)
+      } else if (err.code === 'ACCOUNT_NOT_FOUND') {
+        setError('No user found with this email address.')
       } else if (err.code === 'PASSWORD_RESET_EMAIL_UNAVAILABLE') {
         setError('We could not send the reset email right now. Please try again in a moment.')
       } else {
