@@ -96,7 +96,8 @@ async function main() {
   const mainScript = await request(mainScriptMatch[1]);
   assert.equal(mainScript.status, 200, 'Homepage JavaScript asset must return 200');
   assert.match(String(mainScript.headers.get('content-type') || ''), /(javascript|ecmascript)/i, 'Homepage JavaScript asset must have a JavaScript content type');
-  assert(Number(mainScript.headers.get('content-length') || 0) !== 0, 'Homepage JavaScript asset must not be empty');
+  const mainScriptBody = await mainScript.text();
+  assert(mainScriptBody.length > 100, 'Homepage JavaScript asset must not be empty');
 
   const session = await request('/api/auth/session', { headers: { origin: appOrigin } });
   assert.equal(session.status, 200, 'Public auth session bootstrap must return 200');
