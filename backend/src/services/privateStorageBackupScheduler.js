@@ -9,10 +9,17 @@ const DEFAULT_RECENT_HOURS=20;
 const MAX_BACKUP_OBJECT_BYTES=64*1024*1024;
 const LOCK_KEY=78134921652731;
 let timer=null;
+let startupRetryTimer=null;
 let cyclePromise=null;
 
 function configuredIntervalMs(){
   return Math.min(7*24*60*60*1000,Math.max(6*60*60*1000,Number(process.env.PRIVATE_STORAGE_BACKUP_INTERVAL_MS)||DEFAULT_INTERVAL_MS));
+}
+function configuredStartupRetryMs(){
+  return Math.min(10*60*1000,Math.max(30*1000,Number(process.env.PRIVATE_STORAGE_BACKUP_STARTUP_RETRY_MS)||90*1000));
+}
+function configuredStartupRetryAttempts(){
+  return Math.min(8,Math.max(1,Math.floor(Number(process.env.PRIVATE_STORAGE_BACKUP_STARTUP_RETRY_ATTEMPTS)||5)));
 }
 function clean(value){return String(value??'').trim()}
 function backupConfigOverride(){
@@ -245,17 +252,37 @@ function startPrivateStorageBackupScheduler({unref=true,runImmediately=true}={})
     return async()=>{};
   }
   const intervalMs=configuredIntervalMs();
+  const retryMs=configuredStartupRetryMs();
+  const retryAttempts=configuredStartupRetryAttempts();
   console.log(`Private R2 backup scheduler enabled: every ${Math.round(intervalMs/3600000)} hour(s).`);
-  if(runImmediately)setTimeout(()=>{void runPrivateStorageBackup({source:'startup'}).catch(error=>console.error('Private R2 backup cycle failed:',error.message))},15000).unref?.();
+
+  const startupAttempt=async attempt=>{
+    try{
+      const result=await runPrivateStorageBackup({source:'startup'});
+      if(result?.busy&&attempt<retryAttempts){
+        console.log(`Private R2 startup backup is busy; retrying in ${Math.round(retryMs/1000)}s (attempt ${attempt+1}/${retryAttempts}).`);
+        startupRetryTimer=setTimeout(()=>{startupRetryTimer=null;void startupAttempt(attempt+1)},retryMs);
+        if(unref)startupRetryTimer.unref?.();
+      }
+    }catch(error){
+      console.error('Private R2 backup cycle failed:',error.message);
+    }
+  };
+
+  if(runImmediately){
+    startupRetryTimer=setTimeout(()=>{startupRetryTimer=null;void startupAttempt(1)},15000);
+    if(unref)startupRetryTimer.unref?.();
+  }
   timer=setInterval(()=>{void runPrivateStorageBackup({source:'scheduled'}).catch(error=>console.error('Private R2 backup cycle failed:',error.message))},intervalMs);
   if(unref)timer.unref?.();
   return async()=>{
     if(timer){clearInterval(timer);timer=null}
+    if(startupRetryTimer){clearTimeout(startupRetryTimer);startupRetryTimer=null}
     if(cyclePromise)await cyclePromise.catch(()=>{});
   };
 }
 
 module.exports={
-  DEFAULT_INTERVAL_MS,MAX_BACKUP_OBJECT_BYTES,configuredIntervalMs,backupConfigOverride,chooseBackupTarget,
+  DEFAULT_INTERVAL_MS,MAX_BACKUP_OBJECT_BYTES,configuredIntervalMs,configuredStartupRetryMs,configuredStartupRetryAttempts,backupConfigOverride,chooseBackupTarget,
   referencedObjects,runPrivateStorageBackup,runPrivateStorageBackupCore,startPrivateStorageBackupScheduler
 };
