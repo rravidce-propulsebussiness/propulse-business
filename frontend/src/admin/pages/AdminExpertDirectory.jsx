@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { authRequest } from '../../utils/auth'
 import './AdminExpertDirectory.css'
 
@@ -23,6 +23,8 @@ export default function AdminExpertDirectory(){
   const [saving,setSaving]=useState('')
   const [error,setError]=useState('')
   const [message,setMessage]=useState('')
+  const businessRequest=useRef(0)
+  const searchReady=useRef(false)
 
   async function loadOverview(){
     const value=await authRequest('/admin/expert-directory')
@@ -30,19 +32,28 @@ export default function AdminExpertDirectory(){
   }
 
   async function loadBusinesses(page=1,term=search){
+    const requestId=++businessRequest.current
     const params=new URLSearchParams({page:String(page),pageSize:'50'})
     if(term.trim())params.set('search',term.trim())
     const value=await authRequest('/admin/expert-directory/businesses?'+params)
+    if(requestId!==businessRequest.current)return
     setBusinesses(listData(value))
     setPagination(value?.pagination||{page,total:0,totalPages:0})
   }
 
   useEffect(()=>{
-    Promise.all([loadOverview(),loadBusinesses(1,'')]).catch(err=>setError(err.message||'Unable to load Expert Directory settings.')).finally(()=>setLoading(false))
+    let active=true
+    queueMicrotask(()=>{
+      if(!active)return
+      Promise.all([loadOverview(),loadBusinesses(1,'')])
+        .catch(err=>{if(active)setError(err.message||'Unable to load Expert Directory settings.')})
+        .finally(()=>{if(active)setLoading(false)})
+    })
+    return()=>{active=false}
   },[])
 
   useEffect(()=>{
-    if(loading)return
+    if(!searchReady.current){searchReady.current=true;return undefined}
     const timer=setTimeout(()=>loadBusinesses(1,search).catch(err=>setError(err.message)),250)
     return()=>clearTimeout(timer)
   },[search])
