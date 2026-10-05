@@ -7,6 +7,7 @@ const financialReconciliationMonitor=require('./financialReconciliationMonitorSe
 const backupVerificationService=require('./backupVerificationService');
 const privateObjectStorage=require('./s3PrivateObjectStorageService');
 const releaseIdentity=require('./releaseIdentityService');
+const emailService=require('./emailService');
 
 const migrationsDir=path.join(__dirname,'../database/migrations');
 const workerHeartbeatMaxAgeSeconds=Math.min(600,Math.max(30,Math.floor(Number(process.env.WORKER_HEARTBEAT_MAX_AGE_SECONDS)||120)));
@@ -122,8 +123,27 @@ function addSheetIssues(issues,label,data,{source,actionUrl,actionLabel}){
   }
 }
 
+async function recoveryEmailHealth(){
+  const configured=emailService.isConfigured();
+  const row=(await pool.query(
+    `SELECT COALESCE(SUM(occurrence_count),0)::int AS failures,
+            MAX(last_seen_at) AS last_failure_at
+       FROM operational_events
+      WHERE route='/api/auth/forgot-password'
+        AND event_type='http_5xx'
+        AND last_seen_at>=CURRENT_TIMESTAMP-INTERVAL '30 minutes'`
+  )).rows[0]||{};
+  const recentFailures=safeNumber(row.failures);
+  return{
+    configured,
+    recentFailures,
+    lastFailureAt:row.last_failure_at||null,
+    status:!configured?'unavailable':recentFailures>0?'attention':'ready'
+  };
+}
+
 async function getSystemHealth(){
-  const [databaseProbe,storageProbe,privateObjectProbe,heartbeatResult,migrationsResult,partnerSheetsResult,adminSheetsResult,financialResult,backupResult]=await Promise.allSettled([
+  const [databaseProbe,storageProbe,privateObjectProbe,heartbeatResult,migrationsResult,partnerSheetsResult,adminSheetsResult,financialResult,backupResult,recoveryEmailResult]=await Promise.allSettled([
     pool.query('SELECT NOW() AS now'),
     checkUploadStorage(),
     privateObjectStorage.isEnabled()?privateObjectStorage.probe():Promise.resolve({provider:'local',configured:false,status:'ready'}),
@@ -132,7 +152,8 @@ async function getSystemHealth(){
     leadPartnerSheetHealth(),
     adminSheetHealth(),
     financialReconciliationMonitor.getHealthSummary({maxAgeHours:financialReconciliationMaxAgeHours}),
-    backupVerificationService.getHealthSummary({maxAgeHours:backupVerificationMaxAgeHours,required:backupVerificationRequired})
+    backupVerificationService.getHealthSummary({maxAgeHours:backupVerificationMaxAgeHours,required:backupVerificationRequired}),
+    recoveryEmailHealth()
   ]);
 
   const databaseOk=databaseProbe.status==='fulfilled';
@@ -147,6 +168,7 @@ async function getSystemHealth(){
   const adminSheets=adminSheetsResult.status==='fulfilled'?adminSheetsResult.value:{status:'degraded',active:0,failing:0,connectionErrors:0,persistentConnectionErrors:0,maxFailureCount:0,persistentFailureThreshold:persistentSheetFailureThreshold,lastSyncedAt:null,recentProblems:[],unavailable:true};
   const financialIntegrity=financialResult.status==='fulfilled'?financialResult.value:{status:'unavailable',latestRunId:null,lastCompletedAt:null,ageHours:null,maxAgeHours:financialReconciliationMaxAgeHours,criticalAlerts:0,warningAlerts:0,totalIssues:null};
   const backups=backupResult.status==='fulfilled'?backupResult.value:{status:'unavailable',required:backupVerificationRequired,maxAgeHours:backupVerificationMaxAgeHours,database:{status:'unavailable'},privateStorage:{status:'unavailable'},verifiedCount:0};
+  const recoveryEmail=recoveryEmailResult.status==='fulfilled'?recoveryEmailResult.value:{configured:false,recentFailures:null,lastFailureAt:null,status:'unavailable'};
   const poolMax=Math.max(1,Number(pool.options?.max)||5);
   const totalConnections=safeNumber(pool.totalCount);
   const idleConnections=Math.min(totalConnections,safeNumber(pool.idleCount));
@@ -161,6 +183,9 @@ async function getSystemHealth(){
   if(!privateObjectOk)issues.push(createIssue({severity:'degraded',code:'private_objects_unavailable',title:'Private object storage unavailable',message:privateObjectHealth.error||'Private proof/object storage could not be reached.',actionUrl:'/admin/system-health',actionLabel:'Review storage',source:'private_objects'}));
   if(!workerFresh)issues.push(createIssue({severity:'degraded',code:'worker_heartbeat_stale',title:heartbeat?'Background worker heartbeat is stale':'Background worker unavailable',message:heartbeat?`The latest worker heartbeat is ${workerAgeSeconds} seconds old; the freshness limit is ${workerHeartbeatMaxAgeSeconds} seconds.`:'No background worker heartbeat is available.',actionUrl:'/admin/jobs',actionLabel:'Open background jobs',source:'worker'}));
   if(migrations.status!=='current')issues.push(createIssue({severity:'degraded',code:'migrations_not_current',title:'Database migrations are not current',message:migrations.status==='pending'?`${migrations.pending} migration${migrations.pending===1?' is':'s are'} pending.`:'Migration state could not be read.',actionUrl:'/admin/system-health',actionLabel:'Review migrations',source:'migrations'}));
+
+  if(!recoveryEmail.configured)issues.push(createIssue({severity:'degraded',code:'recovery_email_unconfigured',title:'Password recovery email is not configured',message:'Password reset requests cannot deliver email until the provider configuration is available.',actionUrl:'/admin/system-health',actionLabel:'Review runtime',source:'recovery_email'}));
+  else if(recoveryEmail.recentFailures>0)issues.push(createIssue({severity:'attention',code:'recovery_email_recent_failures',title:'Password recovery email recently failed',message:`${recoveryEmail.recentFailures} reset-email request${recoveryEmail.recentFailures===1?'':'s'} returned a server error in the last 30 minutes. Monitor the provider after the latest recovery fix.`,actionUrl:'/admin/operational-errors',actionLabel:'Open operational errors',source:'recovery_email'}));
 
   addSheetIssues(issues,'Lead Partner sheet',leadPartnerSheets,{source:'lead_partner_sheets',actionUrl:'/admin/lead-partners',actionLabel:'Open Lead Partners'});
   addSheetIssues(issues,'Admin sheet',adminSheets,{source:'admin_sheets',actionUrl:'/admin/leads/sheets',actionLabel:'Open Google Sheets'});
@@ -239,6 +264,7 @@ async function getSystemHealth(){
     migrations,
     financialIntegrity,
     backups,
+    recoveryEmail,
     sheets:{
       leadPartner:leadPartnerSheets,
       admin:adminSheets
