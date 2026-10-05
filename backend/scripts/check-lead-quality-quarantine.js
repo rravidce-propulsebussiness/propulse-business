@@ -22,6 +22,8 @@ assert(migration.includes("'quarantined'"),'Lead status constraint must explicit
 assert(migration.includes('quality_gate_score')&&migration.includes('quality_gate_reasons'),'Lead quarantine audit metadata is missing');
 assert(migration.includes('lead_quality_gate_settings'),'Quality gate settings table is missing');
 assert(leadService.includes('leadQualityGateService.evaluateAndApply'),'Every lead creation must pass the common quality gate');
+assert(leadService.includes('windowHours=24*30')&&leadService.includes("COALESCE(pincode,'')=$5"),'Duplicate lead protection must cover repeat sheet imports for up to 30 days while scoping valid PINs so distinct projects at different locations are not collapsed');
+assert(leadService.includes('pincode:pincode||zipcode'),'Lead creation must pass the normalized project PIN into duplicate detection');
 assert(leadService.includes("'quarantined') RETURNING *"),'New leads must be inserted quarantined before quality evaluation to avoid a sellable race window');
 assert(leadService.includes('lead_partner_id,investor_user_id,status')&&leadService.includes('leadPartnerId?Number(leadPartnerId):null'),'Lead ownership and investor attribution must be inserted before quality release');
 assert(partnerInventory.includes('leadPartnerId:partner.id'),'Lead Partner bulk imports must insert ownership atomically');
@@ -58,6 +60,9 @@ assert(missingContact.shouldQuarantine&&missingContact.gateFlags.includes('missi
 
 const badPin=gate.decide({...goodFeature,valid_pincode:false,pincode_city_mapped:false},settings);
 assert(badPin.shouldQuarantine&&badPin.gateFlags.includes('invalid_pincode'),'Invalid PIN must quarantine a lead');
+
+const missingCity=gate.decide({...goodFeature,has_city:false,pincode_city_mapped:false},settings);
+assert(missingCity.shouldQuarantine&&missingCity.gateFlags.includes('pincode_city_mismatch'),'A valid PIN without a resolved City mapping must stay quarantined instead of becoming broadly sellable at State level');
 
 const strict=gate.decide(goodFeature,{...settings,minimumScore:96});
 assert(strict.shouldQuarantine&&strict.gateFlags.includes('score_below_threshold'),'Configured minimum score must be enforced');
