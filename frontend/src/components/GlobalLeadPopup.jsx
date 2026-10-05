@@ -333,7 +333,7 @@ export default function GlobalLeadPopup(){
         </div>}
 
         {form.flowKey==='property'&&<div className="glp-two glp-detail">
-          <label><span>I want to</span><select value={form.propertyIntent} onChange={event=>setForm({...form,propertyIntent:event.target.value})}><option value="">Select intent</option><option value="buy">Buy</option><option value="rent">Rent</option><option value="sell">Sell</option><option value="invest">Invest</option></select></label>
+          <label><span>I want to</span><select value={form.propertyIntent} onChange={event=>setForm({...form,propertyIntent:event.target.value})}><option value="">Select intent</option><option value="buy">Buy</option><option value="sell">Sell</option></select></label>
           <label><span>Property Type</span><select value={form.propertyType} onChange={event=>setForm({...form,propertyType:event.target.value})}><option value="">Select property</option><option value="apartment">Apartment</option><option value="villa">Villa</option><option value="independent_house">Independent House</option><option value="commercial">Commercial</option><option value="plot">Plot / Land</option></select></label>
           <label><span>Budget <small>Optional</small></span><select value={form.budget} onChange={event=>setForm({...form,budget:event.target.value})}><option value="">Select budget</option><option value="Under ₹20 Lakhs">Under ₹20 Lakhs</option><option value="₹20 - 50 Lakhs">₹20 - 50 Lakhs</option><option value="₹50 Lakhs - 1 Crore">₹50 Lakhs - 1 Crore</option><option value="₹1 - 2 Crore">₹1 - 2 Crore</option><option value="Above ₹2 Crore">Above ₹2 Crore</option></select></label>
         </div>}
