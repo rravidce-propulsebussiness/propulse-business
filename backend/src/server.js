@@ -261,7 +261,7 @@ function serveExactPrerenderedHtml(root){
     if(accept&&!accept.includes('text/html')&&!accept.includes('*/*'))return next();
     const requestPath=String(req.path||'');
     if(requestPath==='/'||privateFrontendPath(requestPath)||!knownSpaFrontendPath(requestPath))return next();
-    const relative=requestPath.replace(/^\\/+/, '');
+    const relative=requestPath.replace(/^\/+/,'');
     if(!relative||relative.split('/').some(part=>part==='.'||part==='..'))return next();
     const candidate=path.join(root,relative+'.html');
     try{
