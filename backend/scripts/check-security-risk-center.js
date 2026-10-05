@@ -49,5 +49,6 @@ assert(app.includes("AdminRiskCenter")&&app.includes('path="/admin/risk-center"'
 assert(layout.includes("to:'/admin/risk-center',label:'Risk Center'"),'Risk Center must be visible under Admin System navigation');
 assert(ui.includes('Signals are indicators for review, not automatic accusations or account freezes.'),'Risk Center UI must avoid treating signals as automatic guilt');
 assert(ui.includes("review(event,'resolved')")&&ui.includes("review(event,'dismissed')"),'Risk Center UI must support explicit resolve and dismiss review actions');
+assert(ui.includes('const load=useCallback')&&ui.includes('searchRef=useRef(search)')&&ui.includes('[load]'),'Risk Center filter effect must use a stable loader while keeping search manual');
 
 console.log('Security Risk Center regression test passed.');
