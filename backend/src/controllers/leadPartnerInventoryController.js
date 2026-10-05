@@ -64,7 +64,7 @@ async function connectGoogleSheet(req, res) {
 }
 async function syncGoogleSheet(req, res) {
   try {
-    const result = await service.syncGoogleSheet({ userId: req.user.id, connectionId: Number(req.params.connectionId) });
+    const result = await service.syncGoogleSheet({ userId: req.user.id, connectionId: Number(req.params.connectionId), force:true });
     return res.json({ ...result.import, connection: result.connection });
   } catch (error) {
     const status=importStatus(error); if(status===500)console.error('Lead Partner Google Sheet sync failed:', error.message);
@@ -74,7 +74,7 @@ async function syncGoogleSheet(req, res) {
 async function updateSheetDefaultIndustry(req,res){
   try{
     const connection=await service.updateSheetDefaultIndustry({userId:req.user.id,connectionId:Number(req.params.connectionId),defaultIndustryId:req.body?.defaultIndustryId});
-    const synced=await service.syncGoogleSheet({userId:req.user.id,connectionId:Number(req.params.connectionId)});
+    const synced=await service.syncGoogleSheet({userId:req.user.id,connectionId:Number(req.params.connectionId),force:true});
     return res.json({...synced.import,connection:{...synced.connection,default_industry_name:connection.default_industry_name}});
   }catch(error){
     const status=error.code==='SHEET_CONNECTION_NOT_FOUND'?404:error.code==='INVALID_DEFAULT_INDUSTRY'?400:importStatus(error);
