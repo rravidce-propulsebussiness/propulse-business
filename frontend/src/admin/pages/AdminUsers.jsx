@@ -13,7 +13,7 @@ const accountTypeLabel = role => role === 'business' ? 'User' : role === 'lead_p
 export default function AdminUsers() {
   const [users, setUsers] = useState([]), [catalogs, setCatalogs] = useState(null), [subcitiesByCity, setSubcitiesByCity] = useState({});
   const [query, setQuery] = useState(''), [role, setRole] = useState('all'), [status, setStatus] = useState('all'), [userPage, setUserPage] = useState(1), [userPagination, setUserPagination] = useState(null);
-  const [loading, setLoading] = useState(true), [catalogLoading, setCatalogLoading] = useState(false), [error, setError] = useState(''), [selected, setSelected] = useState(null);
+  const [loading, setLoading] = useState(true), [catalogLoading, setCatalogLoading] = useState(false), [error, setError] = useState(''), [notice,setNotice]=useState(''), [selected, setSelected] = useState(null);
   const [editing, setEditing] = useState(false), [saving, setSaving] = useState(false), [roleSaving, setRoleSaving] = useState(false), [roleDraft, setRoleDraft] = useState('business');
   const [showCreate, setShowCreate] = useState(false), [form, setForm] = useState({ name: '', email: '', password: '' });
   const [editForm, setEditForm] = useState(null);
@@ -79,7 +79,7 @@ export default function AdminUsers() {
     }
   }
   async function openUser(u) {
-    setSelected(u); setEditing(false); setError(''); setRoleDraft(u.role || 'business'); setUserTab('overview'); setUser360(null);
+    setSelected(u); setEditing(false); setError(''); setNotice(''); setRoleDraft(u.role || 'business'); setUserTab('overview'); setUser360(null);
     setMembershipDays(30); setMembershipReason(''); setWalletAmount(''); setWalletReason('');
     setEditForm({
       name: u.name || '', email: u.email || '', phone: u.phone || '', businessName: u.business_name || '', businessDetails: u.business_details || '',
@@ -96,6 +96,19 @@ export default function AdminUsers() {
     setEditing(true); setCatalogLoading(true); setError('');
     try { await loadCatalogs(); } catch (e) { setError(e.message); } finally { setCatalogLoading(false); }
   }
+  async function sendPasswordResetLink(){
+    if(!selected)return;
+    if(!selected.is_active)return setError('Activate this account before sending a password reset link.');
+    if(!window.confirm(`Send a password reset link to ${selected.email}?`))return;
+    try{
+      setUserBusy('password-reset');setError('');setNotice('');
+      const result=await authRequest(`/admin/users/${selected.id}/password-reset`,{method:'POST'});
+      setNotice(result?.message||'Reset link sent. Ask the user to check Inbox, Spam or Promotions.');
+      await loadUser360(selected.id,true);
+    }catch(e){setError(e.message||'Failed to send password reset link')}
+    finally{setUserBusy('')}
+  }
+
   async function toggleStatus(u) {
     try { setError(''); const x = await authRequest(`/admin/users/${u.id}/status`, { method: 'PATCH', body: JSON.stringify({ isActive: !u.is_active }) }); setUsers(c => c.map(v => v.id === u.id ? { ...v, ...x } : v)); setSelected(v => v && v.id === u.id ? { ...v, ...x } : v); if(selected?.id===u.id)await loadUser360(u.id,true); }
     catch (e) { setError(e.message); }
@@ -353,6 +366,7 @@ export default function AdminUsers() {
         </div>
 
         {error && <div className="users-error user-360-error">{error}</div>}
+        {notice && <div className="users-success user-360-success" role="status">{notice}</div>}
 
         {user360Loading ? <div className="user-360-loading"><span className="users-loading-ring"/><strong>Loading account workspace…</strong></div> : <>
           <div className="user-360-snapshot">
@@ -389,6 +403,7 @@ export default function AdminUsers() {
                 <button type="button" onClick={()=>setUserTab('leads')}>View lead history</button>
                 <button type="button" onClick={()=>setUserTab('entitlements')}>View entitlements</button>
                 <button type="button" onClick={()=>setUserTab('profile')}>Edit profile</button>
+                <button type="button" disabled={!selected.is_active||userBusy==='password-reset'} onClick={sendPasswordResetLink}>{userBusy==='password-reset'?'Sending reset link…':'Send password reset link'}</button>
               </div>
               <div className="user-360-recent">
                 <div className="user-360-section-head"><div><span>RECENT</span><h3>Latest activity</h3></div></div>
