@@ -165,7 +165,7 @@ async function forgotPassword(req, res) {
         console.error('Password reset token cleanup failed:', cleanupError.message);
       });
     }
-    console.error('Forgot password failed:', error.message);
+    console.error('Forgot password failed:', error.message, error?.code||'', error?.providerStatus||'');
     return res.status(503).json({
       error: 'Password reset email could not be sent right now. Please try again later.',
       code: 'PASSWORD_RESET_EMAIL_UNAVAILABLE',

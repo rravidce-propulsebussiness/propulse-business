@@ -48,7 +48,7 @@ const safe=notifications.sanitizeMetadata({manual_reference:'RAW-UTR',proof_url:
 assert(safe.manual_reference==='[redacted]'&&safe.proof_url==='[redacted]'&&safe.password==='[redacted]'&&safe.safe==='ok','Notification metadata must redact sensitive fields');
 
 assert(email.includes('sendNotificationEmail')&&email.includes('isConfigured'),'Existing email provider must support generic notification delivery');
-assert(email.includes('AbortController()')&&email.includes('readResponseTextLimited(response, 64 * 1024)'),'Notification email must retain provider timeout/size protections');
+assert(/AbortController\(\)/.test(email)&&/readResponseTextLimited\(response,\s*64\s*\*\s*1024\)/.test(email),'Notification email must retain provider timeout/size protections');
 assert(server.includes("app.use('/api/notifications',notificationRoutes)")&&worker.includes('startNotificationScheduler'),'Notification API and dedicated worker scheduler must be wired');
 assert(routes.includes("router.get('/unread-count'")&&routes.includes("router.put('/preferences'")&&routes.includes("router.post('/read-all'"),'Notification API routes are incomplete');
 
