@@ -21,6 +21,9 @@ assert(service.includes('pool.totalCount')&&service.includes('pool.waitingCount'
 assert(service.includes('busyConnections')&&service.includes('(busyConnections/poolMax)*100'),'Database utilization must use busy connections rather than total open pool size');
 assert(service.includes('checkUploadStorage()'),'System Health must check private/persistent upload storage');
 assert(service.includes('workerHeartbeat.latestHeartbeat()'),'System Health must inspect the background worker heartbeat');
+assert(service.includes('backgroundWorkerRequired')&&service.includes("process.env.REQUIRE_BACKGROUND_WORKER"),'System Health must use the same worker requirement flag as runtime readiness');
+assert(service.includes("if(backgroundWorkerRequired&&!workerFresh)"),'Missing worker heartbeat must only degrade health when a dedicated worker is required');
+assert(page.includes("'not_required'")&&page.includes('Not required — scheduled jobs run in the web process'),'Admin UI must show optional web-scheduler mode as healthy');
 assert(service.includes("emailService.configurationHealth()"),'System Health must include safe email-delivery configuration health');
 assert(service.includes("email_test_sender_in_production"),'System Health must flag the Resend test sender in production');
 assert(emailService.includes('function configurationHealth()')&&emailService.includes("senderMode=domain==='resend.dev'?'resend_test'"),'Email service must expose a secret-free sender mode');
