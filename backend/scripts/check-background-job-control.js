@@ -16,6 +16,8 @@ const financial=read('src/services/financialReconciliationScheduler.js');
 const controller=read('src/controllers/adminController.js');
 const routes=read('src/routes/adminRoutes.js');
 const app=read('../frontend/src/App.jsx');
+const server=read('src/server.js');
+const worker=read('src/worker.js');
 const nav=read('../frontend/src/admin/components/AdminLayout.jsx');
 const page=read('../frontend/src/admin/pages/AdminBackgroundJobs.jsx');
 
@@ -39,6 +41,10 @@ for(const [name,source,key] of [
   assert(source.includes("jobControl.execute")&&source.includes(key),name+' is not wired to the shared job recorder');
 }
 assert(notifications.includes('membership_expiry_reminders'),'Membership reminder scheduler is not recorded');
+assert(server.includes("startFinancialReconciliationScheduler({runImmediately:false})"),'Web startup must not force financial reconciliation immediately during deploy restarts');
+assert(server.includes("startNotificationScheduler({runImmediately:false})"),'Web startup must not force notification jobs immediately during deploy restarts');
+assert(worker.includes("startFinancialReconciliationScheduler({ unref: false, runImmediately: true })"),'Dedicated worker may still run financial reconciliation immediately');
+assert(worker.includes("startNotificationScheduler({ unref:false, runImmediately:true })"),'Dedicated worker may still run notification jobs immediately');
 assert(adminSheets.includes('createIntervalScheduler')&&partnerSheets.includes('createIntervalScheduler')&&intervalScheduler.includes("source:'startup'")&&notifications.includes("source:'startup'")&&financial.includes("source:'startup'"),'Immediate worker runs must be labeled startup');
 
 assert(registry.includes("retrySupported:false")&&registry.includes('database_backup_verification'),'Backup verification must be monitored but not HTTP retryable');

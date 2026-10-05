@@ -299,8 +299,8 @@ function startBackgroundJobsOnce(){
   if(runBackgroundJobsInWeb){
     stopLeadPartnerSheetAutoSync=startLeadPartnerSheetAutoSync();
     stopAdminGoogleSheetAutoSync=startAdminGoogleSheetAutoSync();
-    stopFinancialReconciliation=startFinancialReconciliationScheduler({runImmediately:true});
-    stopNotifications=startNotificationScheduler({runImmediately:true});
+    stopFinancialReconciliation=startFinancialReconciliationScheduler({runImmediately:false});
+    stopNotifications=startNotificationScheduler({runImmediately:false});
   }else console.log('Background jobs disabled in web process (RUN_BACKGROUND_JOBS_IN_WEB=false).');
 }
 
