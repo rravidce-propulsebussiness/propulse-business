@@ -55,5 +55,6 @@ assert(app.includes('AdminAuditTimeline')&&app.includes('path="/admin/audit-time
 assert(layout.includes("to:'/admin/audit-timeline',label:'Audit Timeline'"),'Audit Timeline must appear under Admin System navigation');
 assert(ui.includes('Sensitive credentials, proof files, raw UTRs and full bank details are automatically redacted'),'Audit Timeline must communicate snapshot redaction');
 assert(ui.includes('<ChangeList changes={item.metadata?.changes||[]}'),'Audit Timeline must display structured before/after changes');
+assert(ui.includes('const load=useCallback')&&ui.includes('searchRef=useRef(search)')&&ui.includes('[load]'),'Audit Timeline filter effect must use a stable loader without auto-running manual search/date inputs');
 
 console.log('Critical action audit regression test passed.');
