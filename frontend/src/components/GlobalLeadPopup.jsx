@@ -9,8 +9,7 @@ const FLOORS = [
   { value:'1', label:'Ground Floor' },
   { value:'2', label:'G+1' },
   { value:'3', label:'G+2' },
-  { value:'4', label:'G+3' },
-  { value:'5', label:'Above G+3' },
+  { value:'4', label:'G+3 and above' },
 ]
 
 const EMPTY = {
@@ -312,12 +311,12 @@ export default function GlobalLeadPopup(){
         <button type="button" className="glp-primary" onClick={continueDetailed}>Continue to Detailed Requirement <Icon name="arrow" size={15}/></button>
         <button type="button" className="glp-secondary" onClick={closePopup}>Done</button>
       </div>:<form onSubmit={submit}>
-        <label className="glp-full"><span>I am looking for</span><select value={form.flowKey} onChange={event=>setFlow(event.target.value)}><option value="">Select requirement</option><option value="build">Home Construction</option><option value="design">Interior Design</option><option value="property">Real Estate</option></select></label>
-
         <div className="glp-two">
-          <label><span>City / Location</span><input list="glp-city-list" value={citySearch} onChange={event=>changeCity(event.target.value)} onBlur={event=>{const match=exactCity(event.target.value);if(match){setCitySearch(cityLabel(match));setForm(current=>({...current,cityId:String(match.id)}))}}} placeholder={loadingCities?'Loading cities…':'Type city name'} disabled={loadingCities}/><datalist id="glp-city-list">{cityList.map(city=><option key={city.id} value={cityLabel(city)}/>)}</datalist></label>
           <label><span>PIN Code {pinBusy?<small>Detecting…</small>:null}</span><input inputMode="numeric" maxLength="6" value={form.pincode} onChange={event=>lookupPin(event.target.value)} placeholder="6-digit PIN"/></label>
+          <label><span>City / Location</span><input list="glp-city-list" value={citySearch} onChange={event=>changeCity(event.target.value)} onBlur={event=>{const match=exactCity(event.target.value);if(match){setCitySearch(cityLabel(match));setForm(current=>({...current,cityId:String(match.id)}))}}} placeholder={loadingCities?'Loading cities…':'Type city name'} disabled={loadingCities}/><datalist id="glp-city-list">{cityList.map(city=><option key={city.id} value={cityLabel(city)}/>)}</datalist></label>
         </div>
+
+        <label className="glp-full"><span>I am looking for</span><select value={form.flowKey} onChange={event=>setFlow(event.target.value)}><option value="">Select requirement</option><option value="build">Home Construction</option><option value="design">Interior Design</option><option value="property">Real Estate</option></select></label>
 
         {detected&&<div className="glp-location"><Icon name="pin" size={14}/><span>{[detected.cityName,detected.districtName,detected.stateName].filter(Boolean).join(' · ')}</span></div>}
 
@@ -333,7 +332,7 @@ export default function GlobalLeadPopup(){
         </div>}
 
         {form.flowKey==='property'&&<div className="glp-two glp-detail">
-          <label><span>I want to</span><select value={form.propertyIntent} onChange={event=>setForm({...form,propertyIntent:event.target.value})}><option value="">Select intent</option><option value="buy">Buy</option><option value="rent">Rent</option><option value="sell">Sell</option><option value="invest">Invest</option></select></label>
+          <label><span>I want to</span><select value={form.propertyIntent} onChange={event=>setForm({...form,propertyIntent:event.target.value})}><option value="">Select intent</option><option value="buy">Buy</option><option value="sell">Sell</option></select></label>
           <label><span>Property Type</span><select value={form.propertyType} onChange={event=>setForm({...form,propertyType:event.target.value})}><option value="">Select property</option><option value="apartment">Apartment</option><option value="villa">Villa</option><option value="independent_house">Independent House</option><option value="commercial">Commercial</option><option value="plot">Plot / Land</option></select></label>
           <label><span>Budget <small>Optional</small></span><select value={form.budget} onChange={event=>setForm({...form,budget:event.target.value})}><option value="">Select budget</option><option value="Under ₹20 Lakhs">Under ₹20 Lakhs</option><option value="₹20 - 50 Lakhs">₹20 - 50 Lakhs</option><option value="₹50 Lakhs - 1 Crore">₹50 Lakhs - 1 Crore</option><option value="₹1 - 2 Crore">₹1 - 2 Crore</option><option value="Above ₹2 Crore">Above ₹2 Crore</option></select></label>
         </div>}
