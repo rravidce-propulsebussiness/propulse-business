@@ -80,7 +80,7 @@ function backendRoute(requestPath){
 function privateFrontendPath(requestPath){
   return /^\/(admin|login|signup|forgot-password|reset-password|profile|wallet|membership|notifications|purchased-leads|my-leads|investment|lead-partner|requirements|estimate|professional-contact|professionals|upcoming-features|dashboard)(\/|$)/.test(requestPath);
 }
-const publicSpaFrontendPaths=new Set(['/','/home','/quote','/solutions','/build','/design','/property','/experts','/packages','/projects','/how-it-works','/about','/real-estate','/contact','/faq','/pricing','/industries','/leads','/hyderabad','/guides','/interior-estimator','/interior-cost-estimator','/construction-estimator','/construction-cost-estimator']);
+const publicSpaFrontendPaths=new Set(['/','/home','/quote','/solutions','/build','/design','/property','/experts','/packages','/projects','/how-it-works','/about','/real-estate','/contact','/faq','/pricing','/leads','/hyderabad','/guides','/interior-estimator','/interior-cost-estimator','/construction-estimator','/construction-cost-estimator']);
 function publicDynamicFrontendPath(requestPath){return /^\/hyderabad\/[a-z0-9-]+(?:\/(?:compare-options|[a-z0-9-]+))?$/.test(requestPath)||/^\/guides\/[a-z0-9-]+$/.test(requestPath)||/^\/[a-z0-9-]+\/construction(?:\/[a-z0-9-]+)?$/.test(requestPath);}
 function knownSpaFrontendPath(requestPath){return privateFrontendPath(requestPath)||publicSpaFrontendPaths.has(requestPath)||publicDynamicFrontendPath(requestPath);}
 
@@ -133,6 +133,8 @@ app.use((req,res,next)=>{
   }
   next();
 });
+
+app.get('/industries',(req,res)=>res.redirect(301,'/'));
 
 for(const [from,to] of [
   ['/estimate/construction-cost-estimator','/quote?package=standard#construction'],
