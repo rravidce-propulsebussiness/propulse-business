@@ -8,6 +8,7 @@ const {chooseBackupTarget}=require('./privateStorageBackupScheduler');
 const notificationService=require('./notificationService');
 const jobControl=require('./backgroundJobControlService');
 const {createDatabaseBackup}=require('../../scripts/database-backup');
+const {createLogicalDatabaseBackup,FORMAT:LOGICAL_FORMAT}=require('../../scripts/logical-database-backup');
 const {recordVerification}=require('../../scripts/backup-common');
 
 const DEFAULT_INTERVAL_MS=24*60*60*1000;
@@ -33,6 +34,17 @@ function configuredStartupRetryAttempts(){
   return Math.min(8,Math.max(1,Math.floor(Number(process.env.DATABASE_BACKUP_STARTUP_RETRY_ATTEMPTS)||5)));
 }
 function sha256(buffer){return crypto.createHash('sha256').update(buffer).digest('hex')}
+function pgDumpUnavailable(error){return /pg_dump was not found/i.test(String(error?.message||''))}
+async function createPortableBackup(tempRoot){
+  try{
+    const result=await createDatabaseBackup({outputDirectory:tempRoot});
+    return{...result,format:'pg_dump_custom'};
+  }catch(error){
+    if(!pgDumpUnavailable(error))throw error;
+    console.warn('pg_dump is unavailable in this runtime; using the verified logical JSON backup fallback.');
+    return createLogicalDatabaseBackup({outputDirectory:tempRoot});
+  }
+}
 async function latestVerifiedAgeHours(){
   const row=(await pool.query(
     `SELECT EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP-completed_at))/3600.0 AS age_hours
@@ -72,7 +84,7 @@ async function runDatabaseBackupCore({force=false}={}){
   let backup=null;
   let artifactName=null;
   try{
-    backup=await createDatabaseBackup({outputDirectory:tempRoot});
+    backup=await createPortableBackup(tempRoot);
     const dump=await readArtifact(backup.dumpPath,maxBytes);
     const localHash=sha256(dump.buffer);
     if(localHash!==String(backup.manifest?.artifact?.sha256||'')){
@@ -87,8 +99,9 @@ async function runDatabaseBackupCore({force=false}={}){
     const manifestKey=targetKey(`database/${day}/${path.basename(backup.manifestPath)}`);
     artifactName=`s3://${target.config.bucket}/${dumpKey}`;
 
+    const backupFormat=String(backup.format||backup.manifest?.format||'pg_dump_custom');
     await s3.putObject(dumpKey,dump.buffer,{
-      contentType:'application/octet-stream',configOverride:target.config,timeoutMs:120000
+      contentType:backupFormat===LOGICAL_FORMAT?'application/gzip':'application/octet-stream',configOverride:target.config,timeoutMs:120000
     });
     await verifyRemoteObject(dumpKey,dump.buffer,{configOverride:target.config,maxBytes});
 
@@ -120,6 +133,7 @@ async function runDatabaseBackupCore({force=false}={}){
       metrics:{
         provider:'r2',
         verification:'full_readback_sha256',
+        format:backupFormat,
         backupBucket:target.config.bucket,
         backupMode:target.mode,
         backupPrefix:target.prefix,
@@ -132,6 +146,7 @@ async function runDatabaseBackupCore({force=false}={}){
     console.log(`Database R2 backup verified: run #${verification.id}, bytes=${dump.size}, sha256=${localHash.slice(0,12)}....`);
     return{
       verified:true,
+      format:backupFormat,
       verificationId:Number(verification.id),
       bytes:dump.size,
       sha256:localHash,
@@ -155,7 +170,7 @@ async function runDatabaseBackupCore({force=false}={}){
     await notificationService.notifyAdmins({
       type:'database_backup_failed',category:'system',severity:'critical',
       title:'Database backup failed',
-      message:'The automated PostgreSQL backup could not be created or verified in Cloudflare R2. Review System Health and database backup tooling.',
+      message:'The automated database backup could not be created or verified in Cloudflare R2. Review System Health and backup diagnostics.',
       actionUrl:'/admin/system-health',relatedType:'database_backup',relatedId:new Date().toISOString().slice(0,10),
       dedupeKey:`database-backup-failed:${new Date().toISOString().slice(0,10)}`
     }).catch(()=>{});
@@ -212,5 +227,5 @@ function startDatabaseBackupScheduler({unref=true,runImmediately=true}={}){
 module.exports={
   DEFAULT_INTERVAL_MS,DEFAULT_MAX_BYTES,
   configuredIntervalMs,configuredRecentHours,configuredMaxBytes,configuredStartupRetryMs,configuredStartupRetryAttempts,
-  runDatabaseBackup,runDatabaseBackupCore,startDatabaseBackupScheduler,verifyRemoteObject
+  pgDumpUnavailable,createPortableBackup,runDatabaseBackup,runDatabaseBackupCore,startDatabaseBackupScheduler,verifyRemoteObject
 };
