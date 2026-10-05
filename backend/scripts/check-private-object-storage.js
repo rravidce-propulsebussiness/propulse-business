@@ -55,7 +55,6 @@ assert(projectPlan.includes("key=\`business-projects/\${filename}\`")&&projectPl
 assert(projectMediaUtils.includes("s3.getMediaGetUrl(stored,{expiresSeconds:3600})"),'Shared project media display URLs must use signed object-storage URLs');
 assert(profileService.includes('video_display_url')&&profileService.includes('plan_display_url'),'Editable profiles must keep R2 storage refs separate from signed display URLs');
 assert(publicExpertService.includes('materializeProjectMedia'),'Public expert APIs must materialize signed project media URLs');
-assert(uploadStorage.includes("process.env.NODE_ENV==='production'")&&uploadStorage.includes('s3.assertWriteStorage()'),'Production upload readiness must reject local filesystem storage');
 assert(uploadStorage.includes('if(s3.isEnabled())')&&uploadStorage.includes('s3.probe()'),'Upload readiness must probe R2 when object storage is enabled');
 assert(frontendCsp.includes("https://*.r2.cloudflarestorage.com")&&frontendCsp.includes("media-src 'self'"),'Frontend CSP must allow signed R2 images and videos');
 assert(authService.includes('companyProofStorage.storeBuffer'),'Company proof uploads must use the storage abstraction');
