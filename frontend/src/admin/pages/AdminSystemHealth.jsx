@@ -123,6 +123,7 @@ export default function AdminSystemHealth(){
   const pool=data?.database?.pool||{}
   const financial=data?.financialIntegrity||{}
   const backups=data?.backups||{}
+  const recoveryEmail=data?.recoveryEmail||{}
   const poolNote=useMemo(()=>{
     if(!data)return 'Waiting for runtime metrics'
     if(Number(pool.waiting)>0)return pool.waiting+' request'+(pool.waiting===1?' is':'s are')+' waiting for a DB connection'
@@ -154,6 +155,7 @@ export default function AdminSystemHealth(){
       <HealthCard label="Migrations" value={data?.migrations?.status||'—'} note={data?(data.migrations?.applied||0)+' applied · '+(data.migrations?.pending??'—')+' pending':'Waiting for migration state'} tone={stateTone(data?.migrations?.status)}/>
       <HealthCard label="Financial reconciliation" value={financial.status||'—'} note={financial.lastCompletedAt?'Last automated run '+fmtDate(financial.lastCompletedAt):'No automated reconciliation recorded'} tone={stateTone(financial.status)} metric={data?(Number(financial.criticalAlerts||0)+Number(financial.warningAlerts||0))+' active alerts':null}/>
       <HealthCard label="Backup verification" value={backups.status||'—'} note={backups.database?.lastVerifiedAt?'DB restore verified '+fmtDate(backups.database.lastVerifiedAt):(backups.required?'Production verification required':'Verification not required locally')} tone={stateTone(backups.status)} metric={data?(backups.verifiedCount||0)+'/2 verified':null}/>
+      <HealthCard label="Recovery email" value={recoveryEmail.status||'—'} note={!recoveryEmail.configured?'Email provider configuration unavailable':recoveryEmail.lastFailureAt?'Last reset-email failure '+fmtDate(recoveryEmail.lastFailureAt):'No recent reset-email failures'} tone={stateTone(recoveryEmail.status)} metric={recoveryEmail.recentFailures?recoveryEmail.recentFailures+' recent failures':null}/>
     </section>
 
     <section className="system-health-grid">
@@ -196,6 +198,7 @@ export default function AdminSystemHealth(){
         <span className={data?.sheets?.leadPartner?.status==='healthy'&&data?.sheets?.admin?.status==='healthy'?'ok':data?.sheets?.leadPartner?.status==='degraded'||data?.sheets?.admin?.status==='degraded'?'bad':'warn'}>Sheet connections</span>
         <span className={financial.status==='healthy'?'ok':['warning','stale','not_run'].includes(financial.status)?'warn':'bad'}>Financial reconciliation</span>
         <span className={backups.status==='healthy'?'ok':['not_run','stale'].includes(backups.status)?'warn':'bad'}>Backup verification</span>
+        <span className={recoveryEmail.status==='ready'?'ok':recoveryEmail.status==='attention'?'warn':'bad'}>Recovery email</span>
       </div>
     </section>
   </main>
