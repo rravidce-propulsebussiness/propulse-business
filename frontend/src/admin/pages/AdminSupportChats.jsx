@@ -1,4 +1,4 @@
-import {useEffect,useState} from 'react'
+import {useCallback,useEffect,useRef,useState} from 'react'
 import {authRequest} from '../../utils/auth'
 import {playSound} from '../../utils/soundEffects'
 import './AdminSupportChats.css'
@@ -19,31 +19,42 @@ export default function AdminSupportChats(){
   const [saving,setSaving]=useState(false)
   const [error,setError]=useState('')
   const [message,setMessage]=useState('')
+  const searchRef=useRef(search);searchRef.current=search
+  const selectedMessageCountRef=useRef(0);selectedMessageCountRef.current=selected?.messages?.length||0
 
-  async function loadSettings(){
+  const loadSettings=useCallback(async()=>{
     const value=await authRequest('/admin/support-chat/settings')
     setSettings(value)
-  }
-  async function loadList(){
-    const value=await authRequest('/admin/support-chats?status='+encodeURIComponent(status)+'&search='+encodeURIComponent(search)+'&limit=100')
+  },[])
+  const loadList=useCallback(async()=>{
+    const value=await authRequest('/admin/support-chats?status='+encodeURIComponent(status)+'&search='+encodeURIComponent(searchRef.current)+'&limit=100')
     setItems(Array.isArray(value)?value:Array.isArray(value?.data)?value.data:[])
-  }
-  async function loadConversation(id,{sound=false}={}){
+  },[status])
+  const loadConversation=useCallback(async(id,{sound=false}={})=>{
     if(!id)return
     const value=await authRequest('/admin/support-chats/'+encodeURIComponent(id))
-    if(sound&&selected?.messages?.length&&value?.messages?.length>selected.messages.length)playSound('notification')
+    if(sound&&selectedMessageCountRef.current&&value?.messages?.length>selectedMessageCountRef.current)playSound('notification')
     setSelected(value)
-  }
+  },[])
 
-  useEffect(()=>{loadSettings().catch(err=>setError(err.message));},[])
-  useEffect(()=>{loadList().catch(err=>setError(err.message));},[status])
   useEffect(()=>{
+    let active=true
+    queueMicrotask(()=>{if(active)loadSettings().catch(err=>setError(err.message))})
+    return()=>{active=false}
+  },[loadSettings])
+  useEffect(()=>{
+    let active=true
+    queueMicrotask(()=>{if(active)loadList().catch(err=>setError(err.message))})
+    return()=>{active=false}
+  },[loadList])
+  useEffect(()=>{
+    const conversationId=selected?.conversation?.id
     const timer=setInterval(()=>{
       loadList().catch(()=>{})
-      if(selected?.conversation?.id)loadConversation(selected.conversation.id,{sound:true}).catch(()=>{})
+      if(conversationId)loadConversation(conversationId,{sound:true}).catch(()=>{})
     },5000)
     return()=>clearInterval(timer)
-  },[selected?.conversation?.id,status,search])
+  },[selected?.conversation?.id,loadList,loadConversation])
 
   async function saveSettings(){
     try{
