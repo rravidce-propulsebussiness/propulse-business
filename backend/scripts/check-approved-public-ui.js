@@ -28,6 +28,7 @@ const experts=read('../frontend/src/pages/Experts.jsx');
 const expertsCss=read('../frontend/src/pages/Experts.css');
 const quoteLocationFields=read('../frontend/src/components/QuoteLocationFields.jsx');
 const notificationBell=read('../frontend/src/components/NotificationBell.jsx');
+const userHeader=read('../frontend/src/components/UserHeader.jsx');
 const quoteLocationCss=read('../frontend/src/components/QuoteLocationFields.css');
 const interiorExact=read('../frontend/src/components/InteriorRequirementExact.jsx');
 const realEstateExact=read('../frontend/src/components/RealEstateRequirementExact.jsx');
@@ -62,6 +63,7 @@ assert.match(app,/path="\/professional-contact" element={<PortalContact audience
 assert.match(contact,/portalAudience==='users'[\s\S]*<Navigate to="\/contact" replace\/>/);
 assert.match(portalContact,/professionals:\{label:'Professional',title:'Professional Support'/);
 assert.match(adminContactSocial,/key:'professionals',label:'Professionals'/);
+assert.match(userHeader,/to="\/professional-contact"[\s\S]*>Contact<\/Link>/);
 assert.match(app,/path="\/solutions" element={<LegacySolutionRedirect\/>}/);
 assert.match(app,/targetHash=hash\?'#'\+hash/);
 assert.match(app,/<GlobalLeadPopup\/>/);
