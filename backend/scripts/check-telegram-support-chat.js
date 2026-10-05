@@ -29,6 +29,7 @@ must('../frontend/src/components/SupportChatWidget.jsx',[
 must('../frontend/src/admin/pages/AdminSupportChats.jsx',[
   'Telegram bridge','/admin/support-chats','Send reply','Resolve'
 ]);
+must('../frontend/src/admin/pages/AdminSupportChats.jsx',['const loadSettings=useCallback','const loadList=useCallback','const loadConversation=useCallback','searchRef=useRef(search)','selectedMessageCountRef=useRef(0)','queueMicrotask']);
 must('../frontend/src/App.jsx',["<SupportChatWidget/>","/admin/support-chats"]);
 must('../frontend/src/admin/components/AdminLayout.jsx',["/admin/support-chats","Support Chats"]);
 
