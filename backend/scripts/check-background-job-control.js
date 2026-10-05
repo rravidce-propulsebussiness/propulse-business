@@ -14,6 +14,7 @@ const intervalScheduler=read('src/services/intervalSchedulerService.js');
 const notifications=read('src/services/notificationScheduler.js');
 const financial=read('src/services/financialReconciliationScheduler.js');
 const privateStorageBackup=read('src/services/privateStorageBackupScheduler.js');
+const databaseBackup=read('src/services/databaseBackupScheduler.js');
 const controller=read('src/controllers/adminController.js');
 const routes=read('src/routes/adminRoutes.js');
 const app=read('../frontend/src/App.jsx');
@@ -38,7 +39,8 @@ for(const [name,source,key] of [
   ['Lead Partner sheet sync',partnerSheets,'lead_partner_google_sheet_sync'],
   ['Notification delivery',notifications,'notification_email_delivery'],
   ['Financial reconciliation',financial,'financial_reconciliation'],
-  ['Private R2 backup',privateStorageBackup,'private_storage_backup']
+  ['Private R2 backup',privateStorageBackup,'private_storage_backup'],
+  ['Database backup',databaseBackup,'database_backup']
 ]){
   assert(source.includes("jobControl.execute")&&source.includes(key),name+' is not wired to the shared job recorder');
 }
@@ -49,7 +51,9 @@ assert(worker.includes("startFinancialReconciliationScheduler({ unref: false, ru
 assert(worker.includes("startNotificationScheduler({ unref:false, runImmediately:true })"),'Dedicated worker may still run notification jobs immediately');
 assert(server.includes("startPrivateStorageBackupScheduler({runImmediately:true})"),'Web background mode must schedule private R2 backups');
 assert(worker.includes("startPrivateStorageBackupScheduler({ unref:false, runImmediately:true })"),'Dedicated worker must schedule private R2 backups');
-assert(adminSheets.includes('createIntervalScheduler')&&partnerSheets.includes('createIntervalScheduler')&&intervalScheduler.includes("source:'startup'")&&notifications.includes("source:'startup'")&&financial.includes("source:'startup'")&&privateStorageBackup.includes("source:'startup'"),'Immediate worker runs must be labeled startup');
+assert(server.includes("startDatabaseBackupScheduler({runImmediately:true})"),'Web background mode must schedule database backups');
+assert(worker.includes("startDatabaseBackupScheduler({ unref:false, runImmediately:true })"),'Dedicated worker must schedule database backups');
+assert(adminSheets.includes('createIntervalScheduler')&&partnerSheets.includes('createIntervalScheduler')&&intervalScheduler.includes("source:'startup'")&&notifications.includes("source:'startup'")&&financial.includes("source:'startup'")&&privateStorageBackup.includes("source:'startup'")&&databaseBackup.includes("source:'startup'"),'Immediate worker runs must be labeled startup');
 
 assert(registry.includes("retrySupported:false")&&registry.includes('database_backup_verification'),'Backup verification must be monitored but not HTTP retryable');
 assert(registry.includes("background_job.retry"),'Admin manual retry must be audited');
