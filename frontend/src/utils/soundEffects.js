@@ -194,5 +194,6 @@ export function installSoundEffects(){
     playSound('click')
   },true)
   window.addEventListener('propulse:sound',event=>playSound(event?.detail?.type))
-  refreshSoundSettings()
+  const authPath=/^\/(login|signup|forgot-password|reset-password)\/?$/.test(window.location.pathname)
+  if(!authPath)refreshSoundSettings()
 }
