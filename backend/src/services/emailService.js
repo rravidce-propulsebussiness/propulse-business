@@ -2,6 +2,24 @@ function isConfigured(){
   return Boolean(String(process.env.RESEND_API_KEY||'').trim()&&String(process.env.RESEND_FROM_EMAIL||'').trim());
 }
 
+function senderDomain(){
+  const raw=String(process.env.RESEND_FROM_EMAIL||'').trim();
+  const bracket=raw.match(/<([^<>\s]+@[^<>\s]+)>/);
+  const address=String(bracket?.[1]||raw).trim().toLowerCase();
+  const at=address.lastIndexOf('@');
+  return at>0?address.slice(at+1):'';
+}
+function configurationHealth(){
+  const configured=isConfigured();
+  const domain=senderDomain();
+  const senderMode=domain==='resend.dev'?'resend_test':domain?'custom_domain':'missing';
+  return{
+    configured,
+    status:configured?(senderMode==='resend_test'?'attention':'ready'):'unavailable',
+    senderMode,
+  };
+}
+
 function transientProviderStatus(status){return status===429||status>=500}
 function emailProviderError(message,{status=null,code='EMAIL_PROVIDER_FAILED'}={}){
   const error=new Error(message);
@@ -115,4 +133,4 @@ function escapeHtml(value) {
 }
 function escapeAttribute(value) { return escapeHtml(value); }
 
-module.exports = { isConfigured,sendPasswordResetEmail,sendNotificationEmail };
+module.exports = { isConfigured,configurationHealth,sendPasswordResetEmail,sendNotificationEmail };

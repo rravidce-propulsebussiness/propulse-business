@@ -148,6 +148,7 @@ export default function AdminSystemHealth(){
     <section className="system-health-overview">
       <HealthCard label="Overall" value={loading&&!data?'Checking…':statusLabel(data?.status)} note={data?'Checked '+fmtDate(data.checkedAt):'Waiting for backend'} tone={overallTone} metric={data?.summary?.issueCount?data.summary.issueCount+' active issue'+(data.summary.issueCount===1?'':'s'):null}/>
       <HealthCard label="Database" value={data?.database?.status||'—'} note={poolNote} tone={stateTone(data?.database?.status)} metric={data?(pool.utilizationPercent||0)+'% active utilization':null}/>
+      <HealthCard label="Email delivery" value={data?.email?.status||'—'} note={!data?.email?.configured?'Email provider is not configured':data?.email?.senderMode==='resend_test'?'Resend test sender configured — use a verified domain in production':'Custom sender domain configured'} tone={stateTone(data?.email?.status)} metric={data?.email?.senderMode==='custom_domain'?'VERIFIED-DOMAIN MODE':data?.email?.senderMode==='resend_test'?'TEST SENDER':null}/>
       <HealthCard label="Upload storage" value={data?.storage?.status||'—'} note={data?.storage?.persistentConfigured?'Persistent storage configured':'Using application-local storage'} tone={stateTone(data?.storage?.status)}/>
       <HealthCard label="Private objects" value={data?.storage?.privateObjects?.status||'—'} note={data?.storage?.privateObjects?.driver==='s3'?(data?.storage?.privateObjects?.status==='ready'?'S3-compatible private storage ready':data?.storage?.privateObjects?.error||'S3-compatible storage unavailable'):'Private proofs currently use local durable storage'} tone={stateTone(data?.storage?.privateObjects?.status)} metric={data?.storage?.privateObjects?.driver?.toUpperCase()||null}/>
       <HealthCard label="Background worker" value={data?.worker?.status||'—'} note={data?.worker?.lastSeenAt?'Heartbeat '+fmtDate(data.worker.lastSeenAt):'No heartbeat available'} tone={stateTone(data?.worker?.status)} metric={data?.worker?.ageSeconds!=null?data.worker.ageSeconds+'s old':null}/>
@@ -190,6 +191,7 @@ export default function AdminSystemHealth(){
       <div className="system-health-release-items">
         <span className={data?.database?.status==='connected'?'ok':'bad'}>Database</span>
         <span className={data?.storage?.status==='ready'?'ok':'bad'}>Storage</span>
+        <span className={data?.email?.status==='ready'?'ok':data?.email?.status==='attention'?'warn':'bad'}>Email delivery</span>
         <span className={data?.storage?.privateObjects?.status==='ready'?'ok':'bad'}>Private objects</span>
         <span className={data?.worker?.status==='fresh'?'ok':'bad'}>Worker</span>
         <span className={data?.migrations?.status==='current'?'ok':'bad'}>Migrations</span>

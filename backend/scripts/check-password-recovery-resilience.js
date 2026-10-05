@@ -32,6 +32,9 @@ assert.match(service,/created_at > CURRENT_TIMESTAMP - INTERVAL '60 seconds'/,'p
 assert.match(service,/async function discardPasswordResetToken/,'failed email sends must have a token cleanup helper');
 assert.match(controller,/discardPasswordResetToken\(reset\.token\)/,'failed reset email delivery must discard the unusable token');
 assert.match(controller,/PASSWORD_RESET_EMAIL_UNAVAILABLE/,'reset email failures must use a stable error code');
+assert.match(controller,/password_reset_email_failure/,'reset delivery failures must create a dedicated operational event');
+assert.match(controller,/providerStatus:Number\.isInteger/,'reset failure telemetry must preserve only the safe provider HTTP status');
+assert.match(controller,/senderMode:emailService\.configurationHealth\(\)\.senderMode/,'reset failure telemetry must capture only a safe sender mode');
 assert.match(controller,/process\.env\.PUBLIC_APP_URL[\s\S]*process\.env\.FRONTEND_URL[\s\S]*process\.env\.APP_URL/,'reset links must have resilient public URL fallback');
 
 assert.match(forgot,/submittingRef/,'forgot-password form must block duplicate in-flight requests');
@@ -47,5 +50,7 @@ assert.match(email,/const maxAttempts=2/,'email provider must retry one transien
 assert.match(email,/transientProviderStatus\(response\.status\)/,'email provider retry must be limited to transient HTTP failures');
 assert.match(email,/EMAIL_PROVIDER_REJECTED/,'email provider must expose a stable rejection code internally');
 assert.match(email,/EMAIL_PROVIDER_TIMEOUT/,'email provider must expose a stable timeout code internally');
+assert.match(email,/function configurationHealth\(\)/,'email provider must expose secret-free configuration health');
+assert.match(email,/resend_test/,'email provider health must distinguish the Resend test sender');
 
 console.log('Password recovery resilience regression test passed.');
