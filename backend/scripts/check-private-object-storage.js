@@ -71,6 +71,7 @@ assert(migration.includes("process.argv.includes('--apply')"),'Historical privat
 assert(migration.includes("payments")&&migration.includes("wallet_topups")&&migration.includes("lead_partner_payouts")&&migration.includes("investor_payout_requests")&&migration.includes("investments"),'Migration utility must cover all existing private-proof columns');
 assert(migration.includes('company_proof_documents'),'Migration utility must cover legacy company-proof files');
 assert(legacyUploadMigration.includes("stored_name NOT LIKE 'private-object-s3:%'")&&legacyUploadMigration.includes('companyProofStorage.storeBuffer'),'Startup legacy migration must move local company proofs into object storage');
+assert(legacyUploadMigration.includes("../../uploads/company-proofs")&&legacyUploadMigration.includes('readLegacyCompanyProof'),'Legacy company proof migration must search both configured and original Hostinger upload roots');
 assert(server.includes('migrateLegacyCompanyProofsToObjectStorage')&&server.includes('Legacy company proof migration'),'Server must attempt the idempotent legacy migration after object storage is ready');
 assert(proofResponse.includes("'Referrer-Policy','no-referrer'"),'Signed proof redirects must not leak their query token through referrers');
 
