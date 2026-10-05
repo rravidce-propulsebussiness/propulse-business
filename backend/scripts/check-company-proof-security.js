@@ -34,6 +34,7 @@ assert(authService.includes('companyProofStorage.storeBuffer'), 'Company-proof w
 assert(authService.includes('companyProofStorage.remove(reference)'), 'Company-proof rollback cleanup must use the private storage abstraction');
 assert(companyProofStorage.includes("flag:'wx',mode:0o600"), 'Local company-proof fallback must create private files exclusively');
 assert(companyProofStorage.includes('s3.getSignedGetUrl(reference)'), 'S3 company-proof reads must use short-lived signed URLs');
+assert(companyProofStorage.includes("if(error?.code==='ENOENT')return null"),'Missing legacy company-proof files must return not-found instead of raising a server error');
 
 assert(
   authService.includes('WHERE id=$1 AND (user_id=$2 OR $3=TRUE)') &&
