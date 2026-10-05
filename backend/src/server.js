@@ -51,6 +51,7 @@ const {uploadRoot,checkUploadStorage,ensureUploadStorage}=require('./config/uplo
 const workerHeartbeat=require('./services/backgroundWorkerHeartbeatService');
 const operationalMonitoringService=require('./services/operationalMonitoringService');
 const releaseIdentity=require('./services/releaseIdentityService');
+const {migrateLegacyCompanyProofsToObjectStorage}=require('./services/legacyUploadMigrationService');
 const app=express();
 const isProduction=process.env.NODE_ENV==='production';
 const PORT=Number(process.env.PORT)||5000;
@@ -329,8 +330,16 @@ async function initializeDependencies(){
     // Object storage is important for upload features, but it must not take down
     // authentication, admin, notifications, catalog or lead APIs if R2 is
     // temporarily unavailable or misconfigured. Readiness still reports storage.
-    void ensureUploadStorage().then(()=>{
+    void ensureUploadStorage().then(async()=>{
       console.log('Upload storage is ready.');
+      try{
+        const migration=await migrateLegacyCompanyProofsToObjectStorage();
+        if(migration.enabled&&migration.found){
+          console.log(`Legacy company proof migration: found=${migration.found} migrated=${migration.migrated} missing=${migration.missing} failed=${migration.failed}`);
+        }
+      }catch(error){
+        console.error('Legacy company proof migration failed:',error?.message||error);
+      }
     }).catch(async error=>{
       console.error('Upload storage initialization is degraded:',error?.message||error);
       await recordFatalProcessError('storage_startup_failure',error).catch(()=>{});
