@@ -15,6 +15,9 @@ for(const relative of [
   assert(migration.includes('CREATE INDEX CONCURRENTLY IF NOT EXISTS'),relative+' must build production indexes concurrently');
   assert(!migration.includes('CREATE INDEX IF NOT EXISTS'),relative+' must not use blocking index creation');
 }
+const hot=read('src/database/migrations/20261006_hot_fk_indexes.sql');
+assert(hot.includes('idx_leads_city_created_id')&&hot.includes('ON leads(city_id, created_at DESC, id DESC)'),'Hot FK migration must optimize city-filtered lead ordering');
+assert(hot.includes('idx_background_job_runs_triggered_by')&&hot.includes('ON background_job_runs(triggered_by)'),'Hot FK migration must cover background-job actor foreign key');
 const runnerSource=read('src/database/runMigrations.js');
 assert(runnerSource.includes('if (isNoTransactionMigration(sql))'),'Migration runner must honor explicit non-transactional migrations');
 assert(runnerSource.includes('for (const statement of splitTopLevelStatements(sql))'),'Concurrent index statements must be sent separately to PostgreSQL');
