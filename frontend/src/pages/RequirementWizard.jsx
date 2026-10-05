@@ -710,7 +710,7 @@ export default function RequirementWizard({ flowKey, onCompletionChange }) {
         <Link to="/projects">Projects</Link>
         <Link to="/how-it-works">How It Works</Link>
         <Link to="/about">About</Link>
-        <Link to="/#contact">Contact</Link>
+        <Link to="/contact">Contact</Link>
       </nav>
       <button onClick={() => jump('rq-basic')}>{isQuotationFlow ? 'Get Free Quotation' : 'Get Free Consultation'} <Icon name="arrow" size={15} /></button>
     </header>
@@ -856,7 +856,7 @@ export default function RequirementWizard({ flowKey, onCompletionChange }) {
       <div><img src="/brand/propulse-logo.svg" alt="ProPulse" /><p>Your customer starting point for construction, interiors and real estate requirements.</p></div>
       <div><b>Quick Links</b><Link to="/">Home</Link><Link to="/quote#construction">Construction</Link><Link to="/quote#interiors">Interiors</Link><Link to="/packages">Packages</Link><Link to="/quote#property">Real Estate</Link></div>
       <div><b>Our Services</b><Link to="/construction-estimator">Cost Estimator</Link><Link to="/projects">Projects</Link><Link to="/how-it-works">How It Works</Link></div>
-      <div><b>Support</b><Link to="/contact?audience=users">FAQ</Link><Link to="/contact?audience=users">Contact Us</Link><Link to="/contact?audience=users">Privacy Policy</Link></div>
+      <div><b>Support</b><Link to="/faq">FAQ</Link><Link to="/contact">Contact Us</Link></div>
       <div><b>Contact</b>{phone && <span>{phone}</span>}{email && <span>{email}</span>}<span>{[flow.industryName, flow.serviceName].filter(Boolean).join(' · ') || flow.name}</span><small>Building Spaces, Elevating Lives.</small></div>
     </footer>
   </main>
