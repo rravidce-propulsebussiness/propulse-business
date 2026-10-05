@@ -75,6 +75,7 @@ assert(legacyUploadMigration.includes("stored_name NOT LIKE 'private-object-s3:%
 assert(legacyUploadMigration.includes("../../uploads/company-proofs")&&legacyUploadMigration.includes('readLegacyCompanyProof'),'Legacy company proof migration must search both configured and original Hostinger upload roots');
 assert(server.includes('migrateLegacyCompanyProofsToObjectStorage')&&server.includes('Legacy company proof migration'),'Server must attempt the idempotent legacy migration after object storage is ready');
 assert(s3.headObject,'S3 abstraction must expose HEAD checks for cross-bucket verification');
+assert(read('src/services/s3PrivateObjectStorageService.js').includes('timeoutMs=TIMEOUT_MS')&&read('src/services/s3PrivateObjectStorageService.js').includes('Math.min(120000'),'R2 backup operations must support bounded extended timeouts for larger artifacts');
 assert(privateStorageBackup.includes("snapshots/")&&privateStorageBackup.includes('PRIVATE_OBJECT_STORAGE_BACKUP_BUCKET'),'Private R2 backup must prefer a dedicated backup bucket');
 assert(privateStorageBackup.includes("mode:'locked_primary_prefix'")&&privateStorageBackup.includes("prefix:'backups/'"),'Scoped R2 credentials must fall back to the locked backups/ prefix instead of disabling backups');
 assert(privateStorageBackup.includes('sha256(restored.buffer)')&&privateStorageBackup.includes('backup_verification_runs'),'Private R2 backup must verify restored bytes and persist verification state');
