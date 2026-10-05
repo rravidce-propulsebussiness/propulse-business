@@ -9,12 +9,14 @@ function defs({sheetIntervalMs=5*60*1000,adminEnabled=true,partnerEnabled=true}=
   const partnerSheets=require('./leadPartnerSheetSyncScheduler');
   const financial=require('./financialReconciliationScheduler');
   const notifications=require('./notificationScheduler');
+  const privateStorageBackup=require('./privateStorageBackupScheduler');
   return[
     {key:'admin_google_sheet_sync',name:'Admin Google Sheet Sync',group:'Google Sheets',description:'Imports and updates leads from Admin-managed Google Sheet connections.',intervalMs:sheetIntervalMs||adminSheets.AUTO_SYNC_INTERVAL_MS||300000,retrySupported:true,scheduleEnabled:adminEnabled},
     {key:'lead_partner_google_sheet_sync',name:'Lead Partner Google Sheet Sync',group:'Google Sheets',description:'Imports Lead Partner inventory from connected Google Sheets.',intervalMs:sheetIntervalMs||partnerSheets.AUTO_SYNC_INTERVAL_MS||300000,retrySupported:true,scheduleEnabled:partnerEnabled},
     {key:'notification_email_delivery',name:'Notification Email Delivery',group:'Notifications',description:'Delivers queued transactional notification emails with retry/backoff.',intervalMs:notifications.DELIVERY_INTERVAL_MS,retrySupported:true},
     {key:'membership_expiry_reminders',name:'Membership Expiry Reminders',group:'Notifications',description:'Creates deduplicated membership-expiry reminders for customers.',intervalMs:notifications.REMINDER_INTERVAL_MS,retrySupported:true},
-    {key:'financial_reconciliation',name:'Financial Reconciliation',group:'Finance',description:'Reconciles wallet, payment, payout and investment financial integrity.',intervalMs:financial.configuredIntervalMs(),retrySupported:true}
+    {key:'financial_reconciliation',name:'Financial Reconciliation',group:'Finance',description:'Reconciles wallet, payment, payout and investment financial integrity.',intervalMs:financial.configuredIntervalMs(),retrySupported:true},
+    {key:'private_storage_backup',name:'Cloudflare R2 Backup',group:'Backups',description:'Copies every database-referenced private R2 object into the locked backup bucket and verifies the copy.',intervalMs:privateStorageBackup.configuredIntervalMs(),retrySupported:true}
   ];
 }
 function compactRun(row){
@@ -80,8 +82,8 @@ async function list({historyLimit=6}={}){
     backupVerification.getHealthSummary({maxAgeHours:30,required:String(process.env.NODE_ENV||'')==='production'}).catch(()=>null)
   ]);
   const externalJobs=[
-    {key:'database_backup_verification',name:'Database Backup Restore Verification',group:'Backups',description:'External backup/restore drill executed by the production backup command or OS scheduler.',retrySupported:false,executionMode:'external',status:backups?.database?.status||'unknown',lastCompletedAt:backups?.database?.lastVerifiedAt||null,error:backups?.database?.error||null},
-    {key:'private_storage_backup_verification',name:'Private Upload Backup Verification',group:'Backups',description:'External snapshot verification for local private upload storage.',retrySupported:false,executionMode:'external',status:backups?.privateStorage?.status||'unknown',lastCompletedAt:backups?.privateStorage?.lastVerifiedAt||null,error:backups?.privateStorage?.error||null}
+    {key:'database_backup_verification',name:'Database Backup Restore Verification',group:'Backups',description:'External database backup/restore drill executed by the production backup command or OS scheduler.',retrySupported:false,executionMode:'external',status:backups?.database?.status||'unknown',lastCompletedAt:backups?.database?.lastVerifiedAt||null,error:backups?.database?.error||null},
+    {key:'private_storage_backup_verification',name:'R2 Backup Verification',group:'Backups',description:'Latest verified copy status for private Cloudflare R2 objects.',retrySupported:false,executionMode:'automated',status:backups?.privateStorage?.status||'unknown',lastCompletedAt:backups?.privateStorage?.lastVerifiedAt||null,error:backups?.privateStorage?.error||null}
   ];
   return{checkedAt:new Date().toISOString(),worker,jobs,externalJobs};
 }
@@ -96,6 +98,7 @@ async function retry(jobKey,{adminId}={}){
   else if(key==='notification_email_delivery')result=await require('./notificationScheduler').runNotificationDelivery({source:'manual',triggeredBy:adminId});
   else if(key==='membership_expiry_reminders')result=await require('./notificationScheduler').runMembershipReminders({source:'manual',triggeredBy:adminId});
   else if(key==='financial_reconciliation')result=await require('./financialReconciliationScheduler').runFinancialReconciliation({source:'manual',triggeredBy:adminId});
+  else if(key==='private_storage_backup')result=await require('./privateStorageBackupScheduler').runPrivateStorageBackup({source:'manual',triggeredBy:adminId,force:true});
   else throw Object.assign(new Error('Background job is not retryable'),{code:'JOB_RETRY_UNSUPPORTED'});
   await audit.record(pool,{
     actorId:adminId,category:'system',action:'background_job.retry',entityType:'background_job',entityId:key,

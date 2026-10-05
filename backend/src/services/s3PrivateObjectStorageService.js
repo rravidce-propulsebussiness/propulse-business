@@ -109,8 +109,8 @@ async function readLimited(response,maxBytes){
     }
   }finally{reader.releaseLock()}
 }
-async function signedFetch(method,key,{body=Buffer.alloc(0),contentType}={}){
-  const cfg=config(),url=objectUrl(key,cfg),payload=Buffer.isBuffer(body)?body:Buffer.from(body||'');
+async function signedFetch(method,key,{body=Buffer.alloc(0),contentType,configOverride}={}){
+  const cfg=config(configOverride||{}),url=objectUrl(key,cfg),payload=Buffer.isBuffer(body)?body:Buffer.from(body||'');
   const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),TIMEOUT_MS);timer.unref?.();
   try{
     const response=await fetch(url,{method,headers:authorizationHeaders(method,url,{body:payload,contentType,cfg}),body:['GET','HEAD','DELETE'].includes(method)?undefined:payload,signal:controller.signal});
@@ -123,14 +123,22 @@ async function signedFetch(method,key,{body=Buffer.alloc(0),contentType}={}){
   }catch(error){if(error?.name==='AbortError')throw Object.assign(new Error('Private object storage request timed out'),{code:'PRIVATE_OBJECT_STORAGE_TIMEOUT'});throw error}
   finally{clearTimeout(timer)}
 }
-async function putObject(key,data,{contentType='application/octet-stream'}={}){
+async function putObject(key,data,{contentType='application/octet-stream',configOverride}={}){
   const buffer=Buffer.isBuffer(data)?data:Buffer.from(data||'');
   if(!buffer.length)throw Object.assign(new Error('Private object content is empty'),{code:'PRIVATE_OBJECT_EMPTY'});
-  await signedFetch('PUT',key,{body:buffer,contentType});return normalizeKey(key);
+  await signedFetch('PUT',key,{body:buffer,contentType,configOverride});return normalizeKey(key);
 }
-async function deleteObject(key){try{await signedFetch('DELETE',key);return true}catch(error){if(error.providerStatus===404)return false;throw error}}
-async function getObjectBuffer(key,{maxBytes=6*1024*1024}={}){
-  const url=buildPresignedGetUrl(key),controller=new AbortController(),timer=setTimeout(()=>controller.abort(),TIMEOUT_MS);timer.unref?.();
+async function deleteObject(key,{configOverride}={}){try{await signedFetch('DELETE',key,{configOverride});return true}catch(error){if(error.providerStatus===404)return false;throw error}}
+async function headObject(key,{configOverride}={}){
+  try{
+    const response=await signedFetch('HEAD',key,{configOverride});
+    const size=Number(response.headers.get('content-length')||0);
+    const etag=String(response.headers.get('etag')||'').replace(/^\"|\"$/g,'');
+    return{size:Number.isFinite(size)?size:0,etag,contentType:String(response.headers.get('content-type')||'').split(';')[0].trim().toLowerCase()||null};
+  }catch(error){if(error.providerStatus===404)return null;throw error}
+}
+async function getObjectBuffer(key,{maxBytes=6*1024*1024,configOverride}={}){
+  const url=buildPresignedGetUrl(key,{configOverride}),controller=new AbortController(),timer=setTimeout(()=>controller.abort(),TIMEOUT_MS);timer.unref?.();
   try{
     const response=await fetch(url,{signal:controller.signal});
     if(!response.ok)throw Object.assign(new Error('Private object read failed (HTTP '+response.status+')'),{code:'PRIVATE_OBJECT_STORAGE_READ_FAILED',providerStatus:response.status});
@@ -157,4 +165,4 @@ async function probe(){
   }catch(error){await deleteObject(key).catch(()=>{});throw error}
 }
 
-module.exports={PREFIX,driver,isEnabled,assertWriteStorage,config,normalizeKey,makeReference,parseReference,isReference,putObject,deleteObject,getObjectBuffer,getSignedGetUrl,getMediaGetUrl,buildPresignedGetUrl,authorizationHeaders,probe,enc};
+module.exports={PREFIX,driver,isEnabled,assertWriteStorage,config,normalizeKey,makeReference,parseReference,isReference,putObject,deleteObject,headObject,getObjectBuffer,getSignedGetUrl,getMediaGetUrl,buildPresignedGetUrl,authorizationHeaders,probe,enc};

@@ -5,6 +5,7 @@ const { startLeadPartnerSheetAutoSync } = require('./services/leadPartnerSheetSy
 const { startAdminGoogleSheetAutoSync } = require('./services/adminGoogleSheetSyncScheduler');
 const { startFinancialReconciliationScheduler } = require('./services/financialReconciliationScheduler');
 const { startNotificationScheduler } = require('./services/notificationScheduler');
+const { startPrivateStorageBackupScheduler } = require('./services/privateStorageBackupScheduler');
 const { envFlag } = require('./config/runtimeFlags');
 const workerHeartbeat = require('./services/backgroundWorkerHeartbeatService');
 const operationalMonitoringService = require('./services/operationalMonitoringService');
@@ -14,6 +15,7 @@ let stopAdminAutoSync = () => {};
 let stopHeartbeat = async () => {};
 let stopFinancialReconciliation = async () => {};
 let stopNotifications = async () => {};
+let stopPrivateStorageBackup = async () => {};
 let shuttingDown = false;
 
 async function recordFatalWorkerError(kind,error){
@@ -44,6 +46,7 @@ async function shutdown(signal, exitCode = 0) {
     stopAdminAutoSync();
     await stopFinancialReconciliation();
     await stopNotifications();
+    await stopPrivateStorageBackup();
     await stopHeartbeat();
     await pool.end();
     clearTimeout(forceTimer);
@@ -70,6 +73,7 @@ async function start() {
   stopAdminAutoSync = startAdminGoogleSheetAutoSync({ unref: false, runImmediately: true });
   stopFinancialReconciliation = startFinancialReconciliationScheduler({ unref: false, runImmediately: true });
   stopNotifications = startNotificationScheduler({ unref:false, runImmediately:true });
+  stopPrivateStorageBackup = startPrivateStorageBackupScheduler({ unref:false, runImmediately:true });
   process.once('SIGTERM', () => shutdown('SIGTERM'));
   process.once('SIGINT', () => shutdown('SIGINT'));
   process.once('uncaughtException', error => { console.error('Uncaught exception:', error?.stack || error); void recordFatalWorkerError('uncaught_exception',error).finally(()=>shutdown('uncaughtException', 1)); });
