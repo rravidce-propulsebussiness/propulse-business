@@ -98,13 +98,21 @@ async function consumeSharedLeasedBucket(key, windowMs, chunkSize) {
   return { request_count: count, retry_after: Math.max(1, Math.ceil((lease.expiresAt - Date.now()) / 1000)) };
 }
 
-function rateLimit({ windowMs = 15 * 60 * 1000, max = 100, scope = 'route', shared = true, sharedChunkSize = 1 } = {}) {
+function rateLimit({ windowMs = 15 * 60 * 1000, max = 100, scope = 'route', shared = true, sharedChunkSize = 1, keyGenerator = null } = {}) {
   const safeWindowMs = Math.max(1000, Number(windowMs) || 15 * 60 * 1000);
   const safeMax = Math.max(1, Math.floor(Number(max) || 100));
   const safeSharedChunkSize = Math.min(safeMax, Math.max(1, Math.floor(Number(sharedChunkSize) || 1)));
 
   return async (req, res, next) => {
-    const key = getRouteKey(req, scope);
+    let key = '';
+    if (typeof keyGenerator === 'function') {
+      try {
+        key = String(keyGenerator(req) || '').trim();
+      } catch (error) {
+        console.error('Rate-limit key generation failed:', error.message);
+      }
+    }
+    if (!key) key = getRouteKey(req, scope);
     let bucket;
 
     if (process.env.NODE_ENV === 'production' && shared) {
