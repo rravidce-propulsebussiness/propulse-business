@@ -1,0 +1,1 @@
+function e(e=``){window.dispatchEvent(new CustomEvent(`propulse:open-lead-popup`,{detail:{flowKey:e}}))}export{e as t};
