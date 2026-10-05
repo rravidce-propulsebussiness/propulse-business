@@ -18,7 +18,8 @@ function ResetPassword() {
     e.preventDefault()
     setError('')
     if (!token) return setError('This reset link is missing its token. Please request a new one.')
-    if (password.length < 8) return setError('Password must be at least 8 characters.')
+    const passwordBytes = new TextEncoder().encode(password).length
+    if (password.length < 8 || password.length > 64 || passwordBytes > 72 || !/[A-Za-z]/.test(password) || !/\d/.test(password)) return setError('Password must be 8–64 characters and include at least one letter and one number.')
     if (password !== confirm) return setError('Passwords do not match.')
     try {
       setLoading(true)
@@ -48,11 +49,11 @@ function ResetPassword() {
         <div className="auth-card auth-recovery-card">
           <p className="auth-kicker">SECURE YOUR ACCOUNT</p>
           <h1>Set a new password</h1>
-          <p className="auth-recovery-copy">Choose a new password with at least 8 characters.</p>
+          <p className="auth-recovery-copy">Choose 8–64 characters with at least one letter and one number.</p>
           {error && <div className="auth-error" role="alert">{error}</div>}
           {done && <div className="auth-success" role="status">Password updated. Taking you to sign in…</div>}
           {!done && <form onSubmit={submit}>
-            <label>New password<div className="password-field"><input type={showPassword ? 'text' : 'password'} autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="At least 8 characters" required /><button type="button" onClick={() => setShowPassword((v) => !v)}>{showPassword ? 'Hide' : 'Show'}</button></div></label>
+            <label>New password<div className="password-field"><input type={showPassword ? 'text' : 'password'} autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="8–64 characters, letter + number" required /><button type="button" onClick={() => setShowPassword((v) => !v)}>{showPassword ? 'Hide' : 'Show'}</button></div></label>
             <label>Confirm password<input type={showPassword ? 'text' : 'password'} autoComplete="new-password" value={confirm} onChange={(e) => setConfirm(e.target.value)} placeholder="Repeat your password" required /></label>
             <button className="auth-submit" disabled={loading}>{loading ? 'Updating…' : 'Update password'} <span>→</span></button>
           </form>}
