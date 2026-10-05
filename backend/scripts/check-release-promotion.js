@@ -10,6 +10,7 @@ const hostingerWorkflow=read('../.github/workflows/hostinger-prebuild.yml');
 const hostingerMainWorkflow=read('../.github/workflows/hostinger-main-prebuild.yml');
 const docs=read('../docs/staging-release.md');
 const production=read('../docs/production.md');
+const markerHelper=read('scripts/hostinger-release-marker.js');
 assert(identity.includes('DEPLOY_ENVIRONMENT'),'Release identity must distinguish staging and production');
 assert(identity.includes('GIT_COMMIT_SHA')&&identity.includes('RENDER_GIT_COMMIT'),'Release identity must support common commit metadata');
 assert(identity.includes('hostinger-release.json')&&identity.includes('bakedCommit()'),'Release identity must fall back to baked Hostinger commit metadata');
@@ -38,6 +39,7 @@ assert(hostingerMainWorkflow.includes('Bake production release markers'),'Main H
 assert(hostingerMainWorkflow.includes("frontend/public/release.json"),'Main Hostinger prebuild must publish a frontend release marker');
 assert(hostingerMainWorkflow.includes("backend/hostinger-release.json"),'Main Hostinger prebuild must publish a backend release marker');
 assert(hostingerMainWorkflow.includes("environment:'production'"),'Main Hostinger release marker must identify production');
+assert(markerHelper.includes('ensureFrontendReleaseMarker')&&markerHelper.includes('bakedReleasePath'),'Runtime Hostinger rebuilds must preserve the baked production release marker');
 assert(hostingerMainWorkflow.includes("git add -f frontend/dist backend/hostinger-frontend backend/hostinger-release.json"),'Main Hostinger prebuild must commit both root-wrapper and backend-root frontend bundles with the release marker');
 assert(docs.includes('Never point staging at the production database'),'Staging isolation must be documented');
 assert(docs.includes('required reviewers'),'Production approval must be documented');

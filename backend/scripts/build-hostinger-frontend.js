@@ -1,6 +1,7 @@
 const fs=require('fs');
 const path=require('path');
 const {spawnSync}=require('child_process');
+const {ensureFrontendReleaseMarker}=require('./hostinger-release-marker');
 
 const backendRoot=path.resolve(__dirname,'..');
 const repoRoot=path.resolve(backendRoot,'..');
@@ -30,6 +31,7 @@ if(!fs.existsSync(frontendNodeModules)){
   linked=true;
 }
 try{
+  ensureFrontendReleaseMarker();
   console.log('Building frontend during backend dependency installation.');
   run([viteBin,'build','--config',path.join(frontendRoot,'vite.config.js')],frontendRoot);
   run([path.join(frontendRoot,'scripts','generate-seo-static-pages.mjs')],frontendRoot);

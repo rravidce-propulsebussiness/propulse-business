@@ -1,6 +1,7 @@
 const fs=require('fs');
 const path=require('path');
 const {spawn,spawnSync}=require('child_process');
+const {ensureFrontendReleaseMarker}=require('./backend/scripts/hostinger-release-marker');
 
 const root=__dirname;
 const frontendRoot=path.join(root,'frontend');
@@ -33,6 +34,7 @@ function assertBuildTooling(){
 
 function buildFrontendSync(){
   assertBuildTooling();
+  ensureFrontendReleaseMarker();
   console.log('Building Hostinger frontend.');
   runSync(process.execPath,[viteBin,'build','--config',path.join(frontendRoot,'vite.config.js')],{cwd:frontendRoot});
   runSync(process.execPath,[path.join(frontendRoot,'scripts','generate-seo-static-pages.mjs')],{cwd:frontendRoot});
@@ -44,6 +46,7 @@ async function buildFrontendAsync(){
   if(fs.existsSync(frontendIndex))return;
   if(buildPromise)return buildPromise;
   assertBuildTooling();
+  ensureFrontendReleaseMarker();
   console.log('Hostinger web server is live; building Vite frontend in the background.');
   buildPromise=(async()=>{
     await runAsync(process.execPath,[viteBin,'build','--config',path.join(frontendRoot,'vite.config.js')],{cwd:frontendRoot});

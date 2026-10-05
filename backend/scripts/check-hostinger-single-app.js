@@ -8,6 +8,7 @@ const rootIndex=fs.readFileSync(path.join(root,'index.js'),'utf8');
 const backendPkg=JSON.parse(fs.readFileSync(path.join(root,'backend','package.json'),'utf8'));
 const backendIndex=fs.readFileSync(path.join(root,'backend','index.js'),'utf8');
 const backendServer=fs.readFileSync(path.join(root,'backend','src','server.js'),'utf8');
+const releaseMarkerHelper=fs.readFileSync(path.join(root,'backend','scripts','hostinger-release-marker.js'),'utf8');
 const env=fs.readFileSync(path.join(root,'.env.example'),'utf8');
 
 function assert(condition,message){
@@ -28,6 +29,8 @@ assert(!pkg.scripts?.postinstall,'Hostinger deployment must not rely on npm life
 assert(rootIndex.includes("spawnSync")&&rootIndex.includes("spawn"),'Hostinger index.js supports manual and background frontend builds');
 assert(rootIndex.includes("node_modules','vite','bin','vite.js"),'Hostinger runtime build must use root-installed Vite');
 assert(rootIndex.includes("generate-seo-static-pages.mjs"),'Hostinger runtime build must generate SEO static pages');
+assert(rootIndex.includes('ensureFrontendReleaseMarker()'),'Root Hostinger build must regenerate the frontend release marker before Vite builds');
+assert(releaseMarkerHelper.includes("hostinger-release.json")&&releaseMarkerHelper.includes("frontend','public")&&releaseMarkerHelper.includes("release.json"),'Release marker helper must copy baked deployment identity into frontend/public/release.json');
 assert(rootIndex.includes("require('./hostinger-server')"),'Hostinger index.js must launch the single-app wrapper');
 assert(rootIndex.indexOf("require('./hostinger-server')")<rootIndex.indexOf('void buildFrontendAsync()'),'Hostinger must open the public server before starting the background frontend build');
 assert(!wrapper.includes('Hostinger frontend build is missing. Run npm run build before npm start.'),'Hostinger wrapper must not exit when frontend/dist is initially absent');
@@ -44,6 +47,8 @@ assert(backendPkg.scripts?.['build:hostinger-frontend']==='node scripts/build-ho
 const backendBuildScript=fs.readFileSync(path.join(root,'backend','scripts','build-hostinger-frontend.js'),'utf8');
 assert(backendBuildScript.includes('Frontend build bundled inside backend for Hostinger publish.'),'Hostinger install build bundles frontend inside published backend app');
 assert(backendBuildScript.includes('generate-seo-static-pages.mjs'),'Hostinger install build generates SEO static pages');
+assert(backendBuildScript.includes('ensureFrontendReleaseMarker()'),'Backend-root install build must regenerate the release marker before Vite builds');
+assert(backendIndex.includes('ensureFrontendReleaseMarker()'),'Backend-root runtime rebuild must regenerate the release marker before Vite builds');
 assert(backendBuildScript.includes("const bundledFrontend=path.join(backendRoot,'hostinger-frontend')"),'Hostinger build targets a bundle inside backend');
 assert(backendBuildScript.includes('fs.cpSync(frontendDist,bundledFrontend,{recursive:true})'),'Hostinger build copies Vite output into the published backend root');
 assert(backendBuildScript.includes('fs.unlinkSync(frontendNodeModules)'),'Hostinger build safely unlinks the temporary frontend dependency link');
