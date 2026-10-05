@@ -109,8 +109,20 @@ function getMigrationFiles() {
   return [...bootstrap, ...dated];
 }
 
+function migrationFilename(filePath){
+  return path.relative(__dirname,filePath).replace(/\\/g,'/');
+}
+
+async function preflightPendingFiles(client,files){
+  const ledger=(await client.query("SELECT to_regclass('public.schema_migrations') AS ledger")).rows[0]?.ledger;
+  if(!ledger)return files;
+  const appliedRows=await client.query('SELECT filename FROM schema_migrations');
+  const applied=new Set(appliedRows.rows.map(row=>String(row.filename)));
+  return files.filter(filePath=>!applied.has(migrationFilename(filePath)));
+}
+
 async function applyFile(client, filePath, appliedFilenames = null) {
-  const filename = path.relative(__dirname, filePath).replace(/\\/g, '/');
+  const filename = migrationFilename(filePath);
   if (appliedFilenames?.has(filename)) return false;
   if (!appliedFilenames) {
     const existing = await client.query('SELECT 1 FROM schema_migrations WHERE filename=$1', [filename]);
@@ -148,11 +160,17 @@ async function applyFile(client, filePath, appliedFilenames = null) {
 async function runMigrations() {
   const client = await pool.connect();
   let lockAcquired = false;
+  const files = getMigrationFiles();
   try {
+    const pendingBeforeLock=await preflightPendingFiles(client,files);
+    if(!pendingBeforeLock.length){
+      console.log(`Database migrations already current (0 applied, ${files.length} checked; advisory lock skipped).`);
+      return {applied:0,checked:files.length,lockSkipped:true};
+    }
+
     await client.query('SELECT pg_advisory_lock(hashtext($1))', [MIGRATION_LOCK_KEY]);
     lockAcquired = true;
     await ensureLedger(client);
-    const files = getMigrationFiles();
     const appliedRows = await client.query('SELECT filename FROM schema_migrations');
     const appliedFilenames = new Set(appliedRows.rows.map(row => String(row.filename)));
     let applied = 0;
@@ -160,13 +178,13 @@ async function runMigrations() {
       try {
         if (await applyFile(client, file, appliedFilenames)) applied += 1;
       } catch (error) {
-        const filename = path.relative(__dirname, file).replace(/\\/g, '/');
+        const filename = migrationFilename(file);
         error.message = filename + ': ' + error.message;
         throw error;
       }
     }
     console.log(`Database migrations completed (${applied} applied, ${files.length} checked).`);
-    return { applied, checked: files.length };
+    return { applied, checked: files.length, lockSkipped:false };
   } finally {
     if (lockAcquired) await client.query('SELECT pg_advisory_unlock(hashtext($1))', [MIGRATION_LOCK_KEY]).catch(() => {});
     client.release();
@@ -182,4 +200,4 @@ if (require.main === module) {
     .finally(() => pool.end());
 }
 
-module.exports = { runMigrations, getMigrationFiles, hasTransactionControl, migrationControlSurface, isNoTransactionMigration, splitTopLevelStatements };
+module.exports = { runMigrations, getMigrationFiles, migrationFilename, preflightPendingFiles, hasTransactionControl, migrationControlSurface, isNoTransactionMigration, splitTopLevelStatements };
