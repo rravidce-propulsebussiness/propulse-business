@@ -92,6 +92,7 @@ assert.match(popup,/Tell Us Your Requirement/);
 assert.match(popup,/\/customer-flows\/'\+form\.flowKey\+'\/consultation/);
 assert.match(popup,/consent:true/);
 assert.match(popup,/PIN Code/);
+assert(popup.indexOf('PIN Code')<popup.indexOf('City / Location')&&popup.indexOf('City / Location')<popup.indexOf('I am looking for'),'Global lead popup must start with PIN, then City, then requirement type');
 assert.match(popup,/No\. of Floors/);
 assert.match(popup,/Submit Requirement/);
 assert.match(popup,/Requirement received/);
