@@ -28,6 +28,8 @@ assert(service.includes("'[email]'")&&service.includes("'[phone]'"),'Operational
 assert(!service.includes('req.body'),'HTTP operational capture must never persist request bodies');
 assert(!service.includes('req.query'),'HTTP operational capture must never persist query objects');
 assert(server.includes('operationalMonitoringService.recordHttpRequest'),'Server must persist 5xx and slow-request telemetry');
+assert(service.includes('expectedOperationalTransition')&&service.includes('if(expectedTransition)return null'),'Expected deployment/startup 503 responses must not pollute the operational error queue');
+assert(server.includes("expectedOperationalTransition='backend_starting'")&&server.includes("expectedOperationalTransition='frontend_release_starting'")&&server.includes("expectedOperationalTransition='draining'"),'Server must explicitly mark only expected startup, frontend-release, and draining 503 transitions');
 assert(server.includes('res.locals.operationalError=err'),'Unhandled request errors must flow into operational telemetry');
 assert(server.includes("app.use('/api/observability',observabilityRoutes)"),'Client observability route must be mounted');
 assert(server.includes("recordFatalProcessError('uncaught_exception'"),'Fatal backend exceptions must be captured');

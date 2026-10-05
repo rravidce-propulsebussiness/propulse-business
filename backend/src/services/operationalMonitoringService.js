@@ -129,6 +129,8 @@ function requestRoute(req){
 async function recordHttpRequest({req,res,durationMs,error=null,slowRequestMs=2000}){
   const statusCode=Number(res?.statusCode)||0;
   const slow=Number(durationMs)>=Number(slowRequestMs);
+  const expectedTransition=statusCode===503&&Boolean(res?.locals?.expectedOperationalTransition);
+  if(expectedTransition)return null;
   if(statusCode<500&&!slow)return null;
   const eventType=statusCode>=500?'http_5xx':'slow_request';
   return recordEvent({
