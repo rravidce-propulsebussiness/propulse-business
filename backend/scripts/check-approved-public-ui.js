@@ -86,6 +86,12 @@ assert.match(homeCss,/\.hc-service-grid/);
 assert.match(homeCss,/\.hc-benefit-grid/);
 assert.match(homeCss,/\.hc-step-grid/);
 assert.doesNotMatch(home,/HeroJourneyVideo/);
+assert.match(home,/Buy or sell the right property/);
+assert.doesNotMatch(home,/buy, sell, rent or invest/i);
+assert.match(quote,/Buy or sell property with a structured location/);
+assert.doesNotMatch(quote,/buy, rent, sell or invest/i);
+assert.match(projects,/title:'Apartment for Sale'/);
+assert.doesNotMatch(projects,/Investment Apartment|rental-demand considerations/);
 
 // Shared basic lead intake must remain wired to the public consultation endpoint.
 assert.match(popup,/Tell Us Your Requirement/);
