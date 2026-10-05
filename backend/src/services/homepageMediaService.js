@@ -74,7 +74,8 @@ async function removeStoredObject(value){
 }
 async function storeImage(key,parsed){
   const filename=`${key}-${Date.now()}-${crypto.randomBytes(12).toString('hex')}.${parsed.extension}`;
-  if(s3.isEnabled()){
+  const useObjectStorage=s3.assertWriteStorage();
+  if(useObjectStorage){
     const objectKey=`homepage/${filename}`;
     await s3.putObject(objectKey,parsed.buffer,{contentType:parsed.mime});
     return s3.makeReference(objectKey);
