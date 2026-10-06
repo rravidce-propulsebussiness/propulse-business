@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { publicRequest } from '../utils/auth'
 import './About.css'
 import { openLeadPopup } from '../utils/leadPopup'
+import { PublicFooter, PublicHeader } from '../components/PublicSiteChrome'
 
 const HERO='https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=2200&q=92'
 const STORY='https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=1500&q=90'
@@ -64,14 +65,7 @@ export default function About(){
   function jump(id){document.getElementById(id)?.scrollIntoView({behavior:'smooth',block:'start'})}
 
   return <main className="ab-page">
-    <header className="ab-header">
-      <Link to="/" className="ab-logo"><img src="/brand/propulse-logo.svg" alt="ProPulse"/></Link>
-      <nav><Link to="/">Home</Link><Link to="/packages">Packages</Link><Link to="/projects">Projects</Link><Link to="/how-it-works">How It Works</Link><Link className="active" to="/about">About</Link><Link to="/contact">Contact</Link><Link to="/experts">Find Professionals</Link></nav>
-      <div className="public-header-actions">
-        <Link className="public-quote-button" to="/quote#interiors">Get Free Quote <Icon name="arrow" size={15}/></Link>
-        <Link className="public-professional-btn" to="/professionals">For Professionals</Link>
-      </div>
-    </header>
+    <PublicHeader />
 
     <section className="ab-hero">
       <img src={HERO} alt="Premium modern home"/>
@@ -153,12 +147,6 @@ export default function About(){
       <article><span><Icon name="people"/></span><b>Customer Focus</b><p>Customer needs stay at the centre of every public flow.</p></article>
     </section>
 
-    <footer className="ab-footer">
-      <div className="ab-footer-brand"><img src="/brand/propulse-logo.svg" alt="ProPulse"/><p>Your customer starting point for construction, interiors and real-estate requirements.</p><div>f&nbsp;&nbsp;◎&nbsp;&nbsp;▶&nbsp;&nbsp;in</div></div>
-      <div><b>Quick Links</b><Link to="/">Home</Link><Link to="/quote#construction">Construction</Link><Link to="/quote#interiors">Interiors</Link><Link to="/packages">Packages</Link><Link to="/quote#property">Real Estate</Link><Link to="/projects">Projects</Link></div>
-      <div><b>Our Services</b><Link to="/quote#construction">Home Construction</Link><Link to="/quote#interiors">Interior Design</Link><Link to="/quote#property">Real Estate</Link><Link to="/quote#construction">Construction Quote</Link><Link to="/quote#construction">Free Consultation</Link></div>
-      <div><b>Support</b><Link to="/faq">FAQ</Link><Link to="/contact">Contact Us</Link></div>
-      <div><b>Contact Info</b>{phone&&<span><Icon name="phone" size={13}/>{phone}</span>}{email&&<span>{email}</span>}<span><Icon name="pin" size={13}/>Hyderabad, India</span></div>
-    </footer>
+    <PublicFooter phone={phone} email={email} />
   </main>
 }
