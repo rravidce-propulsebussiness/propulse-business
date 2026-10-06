@@ -32,6 +32,7 @@ assert(wait.includes("'/health/version'")&&wait.includes("'/health/ready'"),'Wai
 assert(wait.includes('cause?.code')&&wait.includes('cause?.hostname')&&wait.includes('errorSummary(error)'),'Deployment waiter must expose network failure causes');
 assert(wait.includes('responseSummary(result)')&&wait.includes("response.headers.get('server')")&&wait.includes("response.headers.get('content-type')"),'Deployment waiter must expose safe edge response metadata');
 assert(wait.includes('forbiddenStreak>=3')&&wait.includes('repeated 403 indicates an edge/security/routing block before Express'),'Deployment waiter must fail fast on repeated edge 403 responses');
+assert(wait.includes("edgeError.code='HOSTINGER_EDGE_FORBIDDEN'")&&wait.includes("if(error?.code==='HOSTINGER_EDGE_FORBIDDEN')throw error"),'Deployment waiter must let intentional edge-block errors escape the polling catch');
 assert(wait.includes("'user-agent':'ProPulse-Deployment-Check/1.0'"),'Deployment waiter must send an identifiable User-Agent');
 assert(smoke.includes('Deployment request')&&smoke.includes('cause?.code')&&smoke.includes('cause?.hostname'),'Deployed smoke must expose network failure causes');
 assert(workflow.includes('name: Release Promotion'),'Release workflow is missing');
