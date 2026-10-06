@@ -52,4 +52,8 @@ assert(ui.includes('Default Industry for blank classification')&&ui.includes('De
 assert(!ui.includes("authRequest('/leads',{method:'POST'"),'Admin Google Sheet UI must not issue per-row lead create requests');
 assert(!ui.includes('localStorage.setItem(STORAGE_KEY'),'Connected Admin sheets must not remain browser-only');
 assert(ui.includes('even when this page is closed'),'Admin UI must communicate backend-owned automatic sync');
+assert(ui.includes("lastCheckedAt:value?.last_checked_at")&&ui.includes("lastSyncedAt:value?.last_synced_at"),'Admin sheet source cards must map both last checked and last changed timestamps');
+assert(ui.includes('Last checked')&&ui.includes('Last changed')&&ui.includes('Last result'),'Admin sheet source cards must show automatic sync activity evidence');
+assert(ui.includes('record.lastSyncCreated')&&ui.includes('record.lastSyncUpdated')&&ui.includes('record.lastSyncUnchanged')&&ui.includes('record.lastSyncFailed'),'Admin sheet source cards must show the latest result counts');
+assert(ui.includes('Sync needs attention'),'Admin sheet source cards must expose connection failure state instead of only showing Connected');
 console.log('Admin Google Sheet server-side sync regression test passed.');
