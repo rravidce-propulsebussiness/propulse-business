@@ -7,8 +7,12 @@ import SheetImportPreview from '../../components/SheetImportPreview';
 const STORAGE_KEY='propulse.admin.googleSheet.sources';
 const legacyKey='propulse.admin.googleSheet.url';
 const clean=v=>String(v??'').trim();
+const fmtActivity=value=>{
+ const date=value?new Date(value):null;
+ return date&&!Number.isNaN(date.getTime())?date.toLocaleString():'Not yet';
+};
 const listData=v=>Array.isArray(v)?v:(Array.isArray(v?.data)?v.data:[]);
-const sourceRecord=value=>({id:Number(value?.id)||null,url:clean(value?.source_url||value?.url),defaults:normalizeImportDefaults(value?.defaults),defaultIndustryId:value?.default_industry_id==null?'':String(value.default_industry_id),defaultIndustryName:clean(value?.default_industry_name),columnMappings:value?.column_mappings&&typeof value.column_mappings==='object'?value.column_mappings:{},lastPreviewSummary:value?.last_preview_summary||null});
+const sourceRecord=value=>({id:Number(value?.id)||null,url:clean(value?.source_url||value?.url),defaults:normalizeImportDefaults(value?.defaults),defaultIndustryId:value?.default_industry_id==null?'':String(value.default_industry_id),defaultIndustryName:clean(value?.default_industry_name),columnMappings:value?.column_mappings&&typeof value.column_mappings==='object'?value.column_mappings:{},lastPreviewSummary:value?.last_preview_summary||null,lastCheckedAt:value?.last_checked_at||null,lastSyncedAt:value?.last_synced_at||null,lastSyncCreated:Number(value?.last_sync_created)||0,lastSyncUpdated:Number(value?.last_sync_updated)||0,lastSyncUnchanged:Number(value?.last_sync_unchanged)||0,lastSyncFailed:Number(value?.last_sync_failed)||0,syncFailureCount:Number(value?.sync_failure_count)||0,lastSyncError:clean(value?.last_sync_error)});
 
 function legacySources(){
  try{
@@ -112,6 +116,12 @@ export default function GoogleSheetAutoSync(){
             <div className="v9-sheet-source-name"><strong>{'Sheet '+(i+1)}</strong><span>Connected</span></div>
             <div className="v9-sheet-source-url" title={record.url}>{record.url}</div>
             <div className="v9-sheet-source-defaults"><span>Defaults</span><strong>{importDefaultsSummary(record.defaults)}</strong></div><div className="v9-sheet-source-defaults"><span>Mappings</span><strong>{Object.values(record.columnMappings||{}).filter(Boolean).length} columns</strong></div>
+            <div className="v9-sheet-source-health">
+              <div><span>Last checked</span><strong>{fmtActivity(record.lastCheckedAt)}</strong></div>
+              <div><span>Last changed</span><strong>{fmtActivity(record.lastSyncedAt)}</strong></div>
+              <div><span>Last result</span><strong>{record.lastSyncCreated} new · {record.lastSyncUpdated} updated · {record.lastSyncUnchanged} unchanged · {record.lastSyncFailed} failed</strong></div>
+            </div>
+            {(record.syncFailureCount>0||record.lastSyncError)&&<div className="v9-sheet-source-warning">Sync needs attention{record.lastSyncError?': '+record.lastSyncError:''}</div>}
 
             <label className="v9-sheet-source-defaults"><span>Default Industry</span><select value={record.defaultIndustryId} disabled={busy||savingDefaultId===record.id} onChange={e=>updateDefaultIndustry(record,e.target.value)}><option value="">None — require sheet classification</option>{industries.map(industry=><option key={industry.id} value={industry.id}>{industry.name}</option>)}</select></label>
           </div>
