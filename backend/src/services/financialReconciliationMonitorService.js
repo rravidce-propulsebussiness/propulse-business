@@ -109,7 +109,7 @@ async function runReconciliation({source='scheduled',skipIfCompletedWithinMinute
       const recent=(await client.query(
         `SELECT id,status,completed_at
            FROM financial_reconciliation_runs
-          WHERE source='scheduled'
+          WHERE source IN ('scheduled','startup')
             AND status IN ('clean','warning','critical')
             AND completed_at>CURRENT_TIMESTAMP-($1 * INTERVAL '1 minute')
           ORDER BY completed_at DESC,id DESC
