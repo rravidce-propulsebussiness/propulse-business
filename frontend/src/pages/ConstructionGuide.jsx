@@ -1,13 +1,10 @@
 import {Link, Navigate, useParams} from 'react-router-dom'
 import {guideBySlug,CONSTRUCTION_GUIDES} from '../seo/constructionGuides'
 import './ConstructionGuide.css'
+import { PublicFooter, PublicHeader } from '../components/PublicSiteChrome'
 
-function Header(){
-  return <header className="guide-header">
-    <Link to="/" className="guide-logo"><img src="/brand/propulse-logo.svg" alt="ProPulse Business"/></Link>
-    <nav><Link to="/">Home</Link><Link to="/hyderabad/construction">Construction</Link><Link to="/packages">Packages</Link><Link to="/projects">Projects</Link><Link to="/experts">Professionals</Link><Link to="/quote">Get Quote</Link></nav>
-  </header>
-}
+function Header(){ return <PublicHeader/> }
+function Footer(){ return <PublicFooter/> }
 
 function GuideHub(){
   const categories=[...new Set(CONSTRUCTION_GUIDES.map(item=>item.category))]
@@ -28,7 +25,7 @@ function GuideHub(){
     </section>
     <section className="guide-local-links"><h2>Popular Hyderabad construction pages</h2><div><Link to="/hyderabad/construction">Construction in Hyderabad</Link><Link to="/hyderabad/construction-cost">Construction cost in Hyderabad</Link><Link to="/hyderabad/construction/uppal">Construction in Uppal</Link><Link to="/hyderabad/construction/kukatpally">Construction in Kukatpally</Link><Link to="/hyderabad/construction/gachibowli">Construction in Gachibowli</Link></div></section>
     <section className="guide-cta"><span>FROM RESEARCH TO PROJECT BRIEF</span><h2>Use the guides to ask better construction questions</h2><p>Then add your real site, scope, package level, budget and timeline so relevant businesses can respond to one consistent requirement.</p><Link to="/quote?package=standard#construction">Start Construction Requirement</Link></section>
-  </main>
+  <Footer/></main>
 }
 
 export default function ConstructionGuide(){
@@ -86,5 +83,5 @@ export default function ConstructionGuide(){
     </section>
 
     <section className="guide-cta"><span>READY FOR A PROJECT-SPECIFIC NEXT STEP?</span><h2>Turn research into one clear project requirement</h2><p>Use the guide to prepare your questions, then share the actual site, scope, budget and timeline before comparing businesses or quotations.</p><Link to={guide.cta}>{guide.ctaLabel}</Link></section>
-  </main>
+  <Footer/></main>
 }
