@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { publicRequest } from '../utils/auth'
 import './Home.css'
+import { PublicFooter, PublicHeader } from '../components/PublicSiteChrome'
 
 const DEFAULT_HERO = 'https://images.unsplash.com/photo-1600585152915-d208bec867a1?auto=format&fit=crop&w=2200&q=92'
 
@@ -113,7 +114,6 @@ function openRequirement(flowKey = '') {
 export default function Home() {
   const [contactData, setContactData] = useState({})
   const [homepageMedia, setHomepageMedia] = useState({ hero_image_url: '' })
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   useEffect(() => {
     window.scrollTo(0, 0)
@@ -131,74 +131,13 @@ export default function Home() {
     return () => { active = false }
   }, [])
 
-  useEffect(() => {
-    const closeOnDesktop = () => {
-      if (window.innerWidth > 980) setMobileMenuOpen(false)
-    }
-    window.addEventListener('resize', closeOnDesktop)
-    return () => window.removeEventListener('resize', closeOnDesktop)
-  }, [])
 
   const phone = contactData.phone || contactData.phone_number || contactData.mobile || ''
   const email = contactData.email || contactData.support_email || ''
   const heroImage = homepageMedia.hero_image_url || DEFAULT_HERO
 
   return <div className="hc-home">
-    <header className="hc-header">
-      <Link className="hc-logo" to="/" aria-label="ProPulse home">
-        <img src="/brand/propulse-logo.svg" alt="ProPulse" />
-      </Link>
-      <nav className="hc-nav" aria-label="Main navigation">
-        <Link className="active" to="/">Home</Link>
-        <Link to="/packages">Packages</Link>
-        <Link to="/projects">Projects</Link>
-        <Link to="/how-it-works">How It Works</Link>
-        <Link to="/about">About</Link>
-        <Link to="/faq">FAQ</Link>
-        <Link to="/contact">Contact</Link>
-        <Link to="/experts">Find Professionals</Link>
-      </nav>
-      <div className="hc-header-actions public-header-actions">
-        <Link className="hc-consult-btn hc-quote-btn" to="/quote#interiors">
-          Get Free Quote <Icon name="arrow" size={15} />
-        </Link>
-        <Link className="public-professional-btn" to="/professionals">For Professionals</Link>
-      </div>
-
-      <button
-        className={`hc-mobile-menu-toggle${mobileMenuOpen ? ' open' : ''}`}
-        type="button"
-        aria-label={mobileMenuOpen ? 'Close navigation' : 'Open navigation'}
-        aria-expanded={mobileMenuOpen}
-        aria-controls="hc-mobile-menu"
-        onClick={() => setMobileMenuOpen(open => !open)}
-      >
-        <span />
-        <span />
-        <span />
-      </button>
-
-      <div id="hc-mobile-menu" className={`hc-mobile-menu${mobileMenuOpen ? ' open' : ''}`}>
-        <nav className="hc-mobile-nav" aria-label="Mobile navigation">
-          <Link className="active" to="/" onClick={() => setMobileMenuOpen(false)}>Home</Link>
-          <Link to="/packages" onClick={() => setMobileMenuOpen(false)}>Packages</Link>
-          <Link to="/projects" onClick={() => setMobileMenuOpen(false)}>Projects</Link>
-          <Link to="/how-it-works" onClick={() => setMobileMenuOpen(false)}>How It Works</Link>
-          <Link to="/about" onClick={() => setMobileMenuOpen(false)}>About</Link>
-          <Link to="/faq" onClick={() => setMobileMenuOpen(false)}>FAQ</Link>
-          <Link to="/contact" onClick={() => setMobileMenuOpen(false)}>Contact</Link>
-          <Link to="/experts" onClick={() => setMobileMenuOpen(false)}>Find Professionals</Link>
-        </nav>
-        <div className="hc-mobile-menu-actions">
-          <Link className="hc-mobile-quote" to="/quote#interiors" onClick={() => setMobileMenuOpen(false)}>
-            Get Free Quote <Icon name="arrow" size={15} />
-          </Link>
-          <Link className="hc-mobile-pro" to="/professionals" onClick={() => setMobileMenuOpen(false)}>
-            For Professionals
-          </Link>
-        </div>
-      </div>
-    </header>
+    <PublicHeader />
 
     <main>
       <section className="hc-hero" id="home">
@@ -343,16 +282,6 @@ export default function Home() {
       </section>
     </main>
 
-    <footer className="hc-footer">
-      <div className="hc-footer-brand">
-        <img src="/brand/propulse-logo.svg" alt="ProPulse" />
-        <p>Your customer starting point for construction, interiors and real-estate requirements.</p>
-        <div className="hc-footer-social"><span>f</span><span>◎</span><span>▶</span><span>in</span></div>
-      </div>
-      <div><b>Quick Links</b><Link to="/">Home</Link><Link to="/hyderabad">Hyderabad</Link><Link to="/quote#construction">Construction</Link><Link to="/quote#interiors">Interiors</Link><Link to="/packages">Packages</Link><Link to="/quote#property">Real Estate</Link><Link to="/projects">Projects</Link><Link to="/faq">FAQ</Link></div>
-      <div><b>Our Services</b><Link to="/quote#construction">Home Construction</Link><Link to="/quote#interiors">Interior Design</Link><Link to="/quote#property">Real Estate</Link><Link to="/hyderabad/construction-cost">Hyderabad Cost Guide</Link><button type="button" onClick={() => openRequirement('')}>Free Consultation</button></div>
-      <div><b>Support</b><Link to="/faq">FAQ</Link><Link to="/contact">Contact Us</Link></div>
-      <div><b>Contact Info</b>{phone&&<a href={'tel:'+String(phone).replace(/\s/g,'')}><Icon name="phone" size={12}/>{phone}</a>}{email&&<a href={'mailto:'+email}>{email}</a>}<span><Icon name="pin" size={12}/>Hyderabad, India</span></div>
-    </footer>
+    <PublicFooter phone={phone} email={email} />
   </div>
 }
