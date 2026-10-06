@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { publicRequest } from '../utils/auth'
 import './Experts.css'
 import { openLeadPopup } from '../utils/leadPopup'
+import { PublicFooter, PublicHeader } from '../components/PublicSiteChrome'
 
 function collection(value){
   if(Array.isArray(value))return value
@@ -81,11 +82,7 @@ export default function Experts(){
   const visibleCities=useMemo(()=>cities.slice().sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''))),[cities])
 
   return <main className="experts-page">
-    <header className="experts-header">
-      <Link to="/" className="experts-logo"><img src="/brand/propulse-logo.svg" alt="ProPulse"/></Link>
-      <nav><Link to="/">Home</Link><Link to="/packages">Packages</Link><Link to="/projects">Projects</Link><Link to="/how-it-works">How It Works</Link><Link to="/about">About</Link><Link to="/contact">Contact</Link><Link className="active" to="/experts">Find Professionals</Link></nav>
-      <div className="experts-header-actions"><Link className="experts-quote" to="/quote#interiors">Get Free Quote <Icon name="arrow" size={15}/></Link><Link className="experts-pro" to="/professionals">For Professionals</Link></div>
-    </header>
+    <PublicHeader />
 
     <section className="experts-directory" id="expert-directory">
       <div className="experts-directory-intro">
@@ -146,6 +143,6 @@ export default function Experts(){
       <div className="expert-modal-actions"><Link to="/quote" onClick={event=>{event.preventDefault();setSelected(null);openLeadPopup('')}}>Start Your Requirement <Icon name="arrow" size={14}/></Link><button type="button" onClick={()=>setSelected(null)}>Continue Browsing</button></div>
     </section></div>}
 
-    <footer className="experts-footer"><div><img src="/brand/propulse-logo.svg" alt="ProPulse"/><p>Helping homeowners compare subscribed professional profiles and start structured project requirements.</p></div><div><b>Homeowners</b><Link to="/">Home</Link><Link to="/experts">Find Professionals</Link><Link to="/projects">Projects</Link><Link to="/packages">Packages</Link></div><div><b>Support</b><Link to="/how-it-works">How It Works</Link><Link to="/contact">Contact</Link></div><div><b>Professionals</b><Link to="/professionals">Professional Home</Link><Link to="/login">Login</Link><Link to="/signup">Sign Up</Link></div></footer>
+    <PublicFooter description="Helping homeowners compare trusted professional profiles and start structured project requirements." />
   </main>
 }
