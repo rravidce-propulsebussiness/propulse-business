@@ -5,6 +5,7 @@ const read=relative=>fs.readFileSync(path.join(root,relative),'utf8');
 const assert=(value,message)=>{if(!value)throw new Error(message)};
 
 const migration=read('src/database/migrations/20260928_operational_events.sql');
+const legacyCleanupMigration=read('src/database/migrations/20261006_resolve_legacy_local_operational_events.sql');
 const service=read('src/services/operationalMonitoringService.js');
 const server=read('src/server.js');
 const worker=read('src/worker.js');
@@ -31,7 +32,13 @@ assert(service.includes("build_commit<>$1"),'Automatic reconciliation must never
 assert(service.includes("environment=$2"),'Automatic reconciliation must never cross deployment environments');
 assert(service.includes("last_seen_at<CURRENT_TIMESTAMP-($3*INTERVAL '1 hour')"),'Automatic reconciliation must require a quiet period');
 assert(service.includes("resolution_note='Auto-resolved after a newer build stayed active without this fingerprint recurring.'"),'Auto-resolved operational events must preserve an explicit resolution reason');
-assert(service.includes("await resolveSupersededBackendHttpEvents().catch"),'Error Monitor reads must reconcile superseded backend HTTP events before counting open issues');
+assert(service.includes('async function resolveLegacyLocalStagingBackendHttpEvents()'),'Operational monitoring must reconcile stale staging/local backend HTTP events');
+assert(service.includes("currentEnvironment!=='production'"),'Legacy staging/local reconciliation must run only from a real production environment');
+assert(service.includes("environment='staging'")&&service.includes("build_commit='local'"),'Legacy reconciliation must be limited to historical staging/local rows');
+assert(service.includes("OPERATIONAL_EVENT_LEGACY_LOCAL_QUIET_HOURS"),'Legacy reconciliation quiet window must be configurable');
+assert(service.includes("resolveSupersededBackendHttpEvents(),")&&service.includes("resolveLegacyLocalStagingBackendHttpEvents()"),'Error Monitor reads must reconcile both superseded production and legacy staging/local backend events before counting open issues');
+assert(legacyCleanupMigration.includes("environment='staging'")&&legacyCleanupMigration.includes("build_commit='local'"),'Legacy cleanup migration must only target staging/local telemetry');
+assert(legacyCleanupMigration.includes("last_seen_at<CURRENT_TIMESTAMP-INTERVAL '24 hours'"),'Legacy cleanup migration must require a 24-hour quiet period');
 assert(service.includes("SECRET_KEY=/(password|token|secret"),'Operational metadata must redact secret-like keys');
 assert(service.includes("'[email]'")&&service.includes("'[phone]'"),'Operational error text must redact common personal identifiers');
 assert(!service.includes('req.body'),'HTTP operational capture must never persist request bodies');

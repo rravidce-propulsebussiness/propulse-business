@@ -175,6 +175,34 @@ function supersededQuietHours(){
   if(!Number.isFinite(parsed))return 3;
   return Math.min(168,Math.max(1,Math.floor(parsed)));
 }
+function legacyLocalQuietHours(){
+  const parsed=Number(process.env.OPERATIONAL_EVENT_LEGACY_LOCAL_QUIET_HOURS);
+  if(!Number.isFinite(parsed))return 24;
+  return Math.min(720,Math.max(6,Math.floor(parsed)));
+}
+async function resolveLegacyLocalStagingBackendHttpEvents(){
+  const currentBuild=buildVersion();
+  const currentEnvironment=releaseIdentity.deploymentEnvironment().slice(0,30);
+  if(!currentBuild||currentBuild==='local'||currentEnvironment!=='production'){
+    return{resolved:0,quietHours:legacyLocalQuietHours(),environment:currentEnvironment};
+  }
+  const quietHours=legacyLocalQuietHours();
+  const result=await pool.query(
+    `UPDATE operational_events
+        SET resolved_at=CURRENT_TIMESTAMP,
+            resolved_by=NULL,
+            resolution_note='Auto-resolved legacy staging/local HTTP event after production remained healthy beyond the quiet window.'
+      WHERE resolved_at IS NULL
+        AND source='backend'
+        AND event_type IN ('http_5xx','slow_request')
+        AND environment='staging'
+        AND build_commit='local'
+        AND last_seen_at<CURRENT_TIMESTAMP-($1*INTERVAL '1 hour')`,
+    [quietHours]
+  );
+  return{resolved:Number(result.rowCount)||0,quietHours,environment:currentEnvironment};
+}
+
 async function resolveSupersededBackendHttpEvents(){
   const currentBuild=buildVersion();
   const currentEnvironment=releaseIdentity.deploymentEnvironment().slice(0,30);
@@ -198,7 +226,10 @@ async function resolveSupersededBackendHttpEvents(){
 }
 
 async function listEvents(query={}){
-  await resolveSupersededBackendHttpEvents().catch(error=>console.error('Operational event reconciliation failed:',error.message));
+  await Promise.all([
+    resolveSupersededBackendHttpEvents(),
+    resolveLegacyLocalStagingBackendHttpEvents()
+  ]).catch(error=>console.error('Operational event reconciliation failed:',error.message));
   const page=Math.max(1,Number.parseInt(query.page,10)||1);
   const limit=Math.min(100,Math.max(10,Number.parseInt(query.limit,10)||30));
   const where=[];
@@ -283,5 +314,5 @@ async function pruneResolved({days=Number(process.env.OPERATIONAL_EVENT_RETENTIO
 
 module.exports={
   sanitizeText,sanitizeStack,sanitizeMetadata,eventFingerprint,recordEvent,recordHttpRequest,
-  recordClientError,listEvents,setStatus,pruneResolved,buildVersion,resolveSupersededBackendHttpEvents
+  recordClientError,listEvents,setStatus,pruneResolved,buildVersion,resolveSupersededBackendHttpEvents,resolveLegacyLocalStagingBackendHttpEvents
 };
