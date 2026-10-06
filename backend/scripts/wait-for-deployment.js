@@ -80,7 +80,11 @@ async function main(){
           const homepage=await getJson('/').catch(()=>null);
           last='Hostinger edge denied public deployment checks: version ['+responseSummary(version)+'], marker ['+responseSummary(marker)+']'
             +(homepage?', homepage ['+responseSummary(homepage)+']':'');
-          if(forbiddenStreak>=3)throw new Error(last+'; repeated 403 indicates an edge/security/routing block before Express');
+          if(forbiddenStreak>=3){
+            const edgeError=new Error(last+'; repeated 403 indicates an edge/security/routing block before Express');
+            edgeError.code='HOSTINGER_EDGE_FORBIDDEN';
+            throw edgeError;
+          }
         }else{
           last='version endpoint ['+responseSummary(version)+'] and release marker ['+responseSummary(marker)+']';
         }
@@ -100,7 +104,10 @@ async function main(){
         }
         last='requested release is visible but readiness returned HTTP '+ready.response.status;
       }
-    }catch(error){last=errorSummary(error)||String(error).slice(0,500)}
+    }catch(error){
+      if(error?.code==='HOSTINGER_EDGE_FORBIDDEN')throw error;
+      last=errorSummary(error)||String(error).slice(0,500);
+    }
     console.log('Waiting for '+expectedEnvironment+' release '+expectedCommit.slice(0,12)+': '+last);
     await sleep(pollSeconds*1000);
   }
