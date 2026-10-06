@@ -206,6 +206,16 @@ async function saveCompanyProofDocuments(userId, documents = []) {
     return { mimeType, originalName, buffer, extension };
   });
 
+  const legacyPending=(await pool.query(
+    "SELECT id,stored_name,mime_type,file_size FROM company_proof_documents WHERE user_id=$1 AND status='pending' AND stored_name NOT LIKE 'private-object-s3:%' ORDER BY id",
+    [userId]
+  )).rows;
+  const unavailableLegacyIds=[];
+  for(const row of legacyPending){
+    const descriptor=await companyProofStorage.descriptor(row.stored_name,{mimeType:row.mime_type,size:row.file_size}).catch(()=>null);
+    if(!descriptor)unavailableLegacyIds.push(Number(row.id));
+  }
+
   const client = await pool.connect();
   const createdFiles = [];
   try {
@@ -233,6 +243,21 @@ async function saveCompanyProofDocuments(userId, documents = []) {
         file_url: `/api/auth/company-proofs/${inserted.id}`,
         status: 'pending',
       });
+    }
+
+    if(unavailableLegacyIds.length){
+      await client.query(
+        `UPDATE company_proof_documents
+            SET status='rejected',
+                reviewed_by=NULL,
+                reviewed_at=CURRENT_TIMESTAMP,
+                review_reason='Original pre-R2 file is unavailable. Replacement uploaded by user.',
+                updated_at=CURRENT_TIMESTAMP
+          WHERE user_id=$1
+            AND status='pending'
+            AND id=ANY($2::int[])`,
+        [userId,unavailableLegacyIds]
+      );
     }
 
     await client.query('COMMIT');
