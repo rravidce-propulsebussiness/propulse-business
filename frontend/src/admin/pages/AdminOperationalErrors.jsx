@@ -18,6 +18,8 @@ export default function AdminOperationalErrors(){
   const[status,setStatus]=useState('open')
   const[severity,setSeverity]=useState('')
   const[source,setSource]=useState('')
+  const[environment,setEnvironment]=useState('')
+  const[effectiveEnvironment,setEffectiveEnvironment]=useState('')
   const[search,setSearch]=useState('')
   const[query,setQuery]=useState('')
   const[page,setPage]=useState(1)
@@ -27,9 +29,10 @@ export default function AdminOperationalErrors(){
     const p=new URLSearchParams({status,page:String(page),limit:'30'})
     if(severity)p.set('severity',severity)
     if(source)p.set('source',source)
+    if(environment)p.set('environment',environment)
     if(query)p.set('search',query)
     return p.toString()
-  },[status,severity,source,query,page])
+  },[status,severity,source,environment,query,page])
 
   const load=useCallback(async({silent=false}={})=>{
     if(!silent)setLoading(true)
@@ -37,6 +40,7 @@ export default function AdminOperationalErrors(){
       const result=await authRequest('/admin/operational-events?'+params)
       setData(Array.isArray(result?.data)?result.data:[])
       setSummary(result?.summary||{})
+      setEffectiveEnvironment(String(result?.environment||''))
       setTotalPages(Math.max(1,Number(result?.totalPages)||1))
       setError('')
     }catch(err){
@@ -108,6 +112,12 @@ export default function AdminOperationalErrors(){
             <option value="frontend">Browser</option>
             <option value="worker">Worker</option>
           </select>
+          <select value={environment} onChange={event=>{setEnvironment(event.target.value);setPage(1)}}>
+            <option value="">Current environment</option>
+            <option value="production">Production</option>
+            <option value="staging">Staging</option>
+            <option value="all">All environments</option>
+          </select>
           <form onSubmit={applySearch}>
             <input value={search} onChange={event=>setSearch(event.target.value)} placeholder="Message, route or request ID"/>
             <button>Search</button>
@@ -117,7 +127,7 @@ export default function AdminOperationalErrors(){
 
       <div className="error-monitor-head">
         <div><span>ACTIVE FINGERPRINTS</span><h2>{loading?'Loading…':data.length+' issue'+(data.length===1?'':'s')+' on this page'}</h2></div>
-        <small>Last signal {fmt(summary.lastSeenAt)}</small>
+        <small>{effectiveEnvironment&&effectiveEnvironment!=='all'?title(effectiveEnvironment)+' · ':''}Last signal {fmt(summary.lastSeenAt)}</small>
       </div>
 
       {data.length===0&&!loading?<div className="error-monitor-empty">
@@ -142,6 +152,7 @@ export default function AdminOperationalErrors(){
               <span>First {fmt(item.firstSeenAt)}</span>
               <span>Last {fmt(item.lastSeenAt)}</span>
               <span>Build {item.buildCommit||'local'}</span>
+              {item.environment&&<span>{title(item.environment)}</span>}
               {item.requestId&&<span>Request <code>{item.requestId}</code></span>}
               {item.userRole&&<span>Role {item.userRole}</span>}
             </div>
