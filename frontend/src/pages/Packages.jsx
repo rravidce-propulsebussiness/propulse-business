@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { CONSTRUCTION_PACKAGE_CATALOG } from '../data/constructionPackageCatalog'
 import { INTERIOR_PACKAGES } from '../data/interiorPackageCatalog'
 import './Packages.css'
+import { PublicFooter, PublicHeader } from '../components/PublicSiteChrome'
 
 const CONSTRUCTION_PACKAGES = [
   {
@@ -225,22 +226,7 @@ export default function Packages() {
   }
 
   return <main className="pkg-page">
-    <header className="pkg-header">
-      <Link className="pkg-logo" to="/"><img src="/brand/propulse-logo.svg" alt="ProPulse" /></Link>
-      <nav>
-        <Link to="/">Home</Link>
-        <Link className="active" to="/packages">Packages</Link>
-        <Link to="/projects">Projects</Link>
-        <Link to="/how-it-works">How It Works</Link>
-        <Link to="/about">About</Link>
-        <Link to="/contact">Contact</Link>
-        <Link to="/experts">Find Professionals</Link>
-      </nav>
-      <div className="pkg-header-actions">
-        <Link className="pkg-header-quote" to="/quote#interiors">Get Free Quote <Icon name="arrow" size={15}/></Link>
-        <Link className="pkg-pro-button" to="/professionals">For Professionals</Link>
-      </div>
-    </header>
+    <PublicHeader />
 
     <section className="pkg-category-nav" aria-label="Package categories">
       <button className={activeCategory === 'construction' ? 'active' : ''} type="button" onClick={() => switchCategory('construction')}>
@@ -271,5 +257,6 @@ export default function Packages() {
       <Icon name="shield" size={17}/>
       <p>Package rates and specifications shown here are brochure references. Final pricing, exact brands, quantities, taxes, exclusions, warranties and scope are confirmed in the project quotation. <Link to="/hyderabad/construction-cost">See the Hyderabad construction cost guide.</Link></p>
     </section>
+    <PublicFooter />
   </main>
 }
