@@ -358,7 +358,7 @@ function startBackgroundJobsOnce(){
   if(runBackgroundJobsInWeb){
     stopLeadPartnerSheetAutoSync=startLeadPartnerSheetAutoSync();
     stopAdminGoogleSheetAutoSync=startAdminGoogleSheetAutoSync();
-    stopFinancialReconciliation=startFinancialReconciliationScheduler({runImmediately:false});
+    stopFinancialReconciliation=startFinancialReconciliationScheduler({runImmediately:true});
     stopNotifications=startNotificationScheduler({runImmediately:false});
     stopPrivateStorageBackup=startPrivateStorageBackupScheduler({runImmediately:true});
     stopDatabaseBackup=startDatabaseBackupScheduler({runImmediately:true});
