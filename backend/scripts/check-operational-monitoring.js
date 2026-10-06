@@ -23,6 +23,14 @@ assert(service.includes("crypto.createHash('sha256')"),'Operational fingerprints
 assert(service.includes("ON CONFLICT(fingerprint) DO UPDATE"),'Operational events must aggregate repeated fingerprints');
 assert(service.includes("occurrence_count=operational_events.occurrence_count+1"),'Repeated operational events must increment occurrence count');
 assert(service.includes("resolved_at=NULL"),'Recurring resolved fingerprints must reopen');
+assert(service.includes('async function resolveSupersededBackendHttpEvents()'),'Operational monitoring must reconcile stale events from superseded builds');
+assert(service.includes("if(!currentBuild||currentBuild==='local')return"),'Operational reconciliation must never auto-resolve against an unknown/local build identity');
+assert(service.includes("source='backend'"),'Automatic reconciliation must be limited to backend events');
+assert(service.includes("event_type IN ('http_5xx','slow_request')"),'Automatic reconciliation must be limited to HTTP failures and slow requests');
+assert(service.includes("build_commit<>$1"),'Automatic reconciliation must never resolve current-build fingerprints');
+assert(service.includes("last_seen_at<CURRENT_TIMESTAMP-($2*INTERVAL '1 hour')"),'Automatic reconciliation must require a quiet period');
+assert(service.includes("resolution_note='Auto-resolved after a newer build stayed active without this fingerprint recurring.'"),'Auto-resolved operational events must preserve an explicit resolution reason');
+assert(service.includes("await resolveSupersededBackendHttpEvents().catch"),'Error Monitor reads must reconcile superseded backend HTTP events before counting open issues');
 assert(service.includes("SECRET_KEY=/(password|token|secret"),'Operational metadata must redact secret-like keys');
 assert(service.includes("'[email]'")&&service.includes("'[phone]'"),'Operational error text must redact common personal identifiers');
 assert(!service.includes('req.body'),'HTTP operational capture must never persist request bodies');
