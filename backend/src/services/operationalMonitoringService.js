@@ -170,11 +170,43 @@ async function recordClientError({payload={},req}){
     }
   });
 }
+function supersededQuietHours(){
+  const parsed=Number(process.env.OPERATIONAL_EVENT_SUPERSEDED_QUIET_HOURS);
+  if(!Number.isFinite(parsed))return 3;
+  return Math.min(168,Math.max(1,Math.floor(parsed)));
+}
+async function resolveSupersededBackendHttpEvents(){
+  const currentBuild=buildVersion();
+  const currentEnvironment=releaseIdentity.deploymentEnvironment().slice(0,30);
+  if(!currentBuild||currentBuild==='local')return{resolved:0,quietHours:supersededQuietHours(),environment:currentEnvironment};
+  const quietHours=supersededQuietHours();
+  const result=await pool.query(
+    `UPDATE operational_events
+        SET resolved_at=CURRENT_TIMESTAMP,
+            resolved_by=NULL,
+            resolution_note='Auto-resolved after a newer build stayed active without this fingerprint recurring.'
+      WHERE resolved_at IS NULL
+        AND source='backend'
+        AND event_type IN ('http_5xx','slow_request')
+        AND environment=$2
+        AND COALESCE(build_commit,'')<>''
+        AND build_commit<>$1
+        AND last_seen_at<CURRENT_TIMESTAMP-($3*INTERVAL '1 hour')`,
+    [currentBuild,currentEnvironment,quietHours]
+  );
+  return{resolved:Number(result.rowCount)||0,quietHours,environment:currentEnvironment};
+}
+
 async function listEvents(query={}){
+  await resolveSupersededBackendHttpEvents().catch(error=>console.error('Operational event reconciliation failed:',error.message));
   const page=Math.max(1,Number.parseInt(query.page,10)||1);
   const limit=Math.min(100,Math.max(10,Number.parseInt(query.limit,10)||30));
   const where=[];
   const params=[];
+  const currentEnvironment=releaseIdentity.deploymentEnvironment().slice(0,30);
+  const requestedEnvironment=String(query.environment||'').trim().slice(0,30);
+  const environment=requestedEnvironment==='all'?'all':requestedEnvironment||currentEnvironment;
+  if(environment!=='all'){params.push(environment);where.push(`environment=${params.length}`)}
   const status=String(query.status||'open').toLowerCase();
   if(status==='open')where.push('resolved_at IS NULL');
   else if(status==='resolved')where.push('resolved_at IS NOT NULL');
@@ -193,6 +225,10 @@ async function listEvents(query={}){
       LIMIT $${params.length-1} OFFSET $${params.length}`,
     params
   )).rows;
+  const summaryParams=[];
+  const summaryWhere=[];
+  if(environment!=='all'){summaryParams.push(environment);summaryWhere.push(`environment=${summaryParams.length}`)}
+  const summaryClause=summaryWhere.length?'WHERE '+summaryWhere.join(' AND '):'';
   const summary=(await pool.query(
     `SELECT
        COUNT(*) FILTER (WHERE resolved_at IS NULL AND severity='error')::int AS open_errors,
@@ -200,7 +236,8 @@ async function listEvents(query={}){
        COUNT(*) FILTER (WHERE resolved_at IS NULL AND source='frontend')::int AS frontend_open,
        COUNT(*) FILTER (WHERE resolved_at IS NULL AND source='backend')::int AS backend_open,
        MAX(last_seen_at) AS last_seen_at
-     FROM operational_events`
+     FROM operational_events ${summaryClause}`,
+    summaryParams
   )).rows[0]||{};
   return{
     data:rows.map(mapRow),
@@ -208,6 +245,7 @@ async function listEvents(query={}){
     limit,
     total:Number(count)||0,
     totalPages:Math.max(1,Math.ceil((Number(count)||0)/limit)),
+    environment,
     summary:{
       openErrors:Number(summary.open_errors)||0,
       openWarnings:Number(summary.open_warnings)||0,
@@ -245,5 +283,5 @@ async function pruneResolved({days=Number(process.env.OPERATIONAL_EVENT_RETENTIO
 
 module.exports={
   sanitizeText,sanitizeStack,sanitizeMetadata,eventFingerprint,recordEvent,recordHttpRequest,
-  recordClientError,listEvents,setStatus,pruneResolved,buildVersion
+  recordClientError,listEvents,setStatus,pruneResolved,buildVersion,resolveSupersededBackendHttpEvents
 };
