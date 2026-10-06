@@ -4,6 +4,7 @@ import PortalContact from './PortalContact'
 import { publicRequest } from '../utils/auth'
 import './Contact.css'
 import { openLeadPopup } from '../utils/leadPopup'
+import { PublicFooter, PublicHeader } from '../components/PublicSiteChrome'
 
 const empty={
   company_name:'ProPulse Business',
@@ -64,22 +65,7 @@ function PublicContact(){
   const email=data.email||data.support_email||''
 
   return <main className="contact-page">
-    <header className="contact-header">
-      <Link className="contact-logo" to="/"><img src="/brand/propulse-logo.svg" alt="ProPulse"/></Link>
-      <nav>
-        <Link to="/">Home</Link>
-        <Link to="/packages">Packages</Link>
-        <Link to="/projects">Projects</Link>
-        <Link to="/how-it-works">How It Works</Link>
-        <Link to="/about">About</Link>
-        <Link className="active" to="/contact">Contact</Link>
-        <Link to="/experts">Find Professionals</Link>
-      </nav>
-      <div className="public-header-actions">
-        <Link className="contact-header-cta" to="/quote#interiors">Get Free Quote <Icon name="arrow" size={15}/></Link>
-        <Link className="public-professional-btn" to="/professionals">For Professionals</Link>
-      </div>
-    </header>
+    <PublicHeader />
 
     <section className="contact-hero">
       <div className="contact-hero-copy">
@@ -177,11 +163,6 @@ function PublicContact(){
       <div><Link to="/packages">View Packages</Link><Link to="/quote#construction" onClick={event=>{event.preventDefault();openLeadPopup('')}}>Get Free Quote <Icon name="arrow" size={14}/></Link></div>
     </section>
 
-    <footer className="contact-public-footer">
-      <div><img src="/brand/propulse-logo.svg" alt="ProPulse"/><p>A homeowner-first starting point for construction, interiors and real estate requirements.</p></div>
-      <div><b>Quick Links</b><Link to="/">Home</Link><Link to="/packages">Packages</Link><Link to="/projects">Projects</Link></div>
-      <div><b>Support</b><Link to="/how-it-works">How It Works</Link><Link to="/about">About</Link><Link to="/contact">Contact</Link></div>
-      <div><b>Contact</b>{data.phone&&<a href={phoneHref}>{data.phone}</a>}{email&&<a href={'mailto:'+email}>{email}</a>}<span>{data.address||'Hyderabad, India'}</span></div>
-    </footer>
+    <PublicFooter phone={data.phone} email={email} address={data.address || 'Hyderabad, India'} />
   </main>
 }
