@@ -53,8 +53,10 @@ function empty(audience){return {audience,...normalize({})}}
 async function get(audience='website'){
   const key=normalizeAudience(audience);
   const result=await pool.query(`SELECT audience,company_name,email,phone,whatsapp,address,business_hours,support_email,careers_email,maps_url,website_url,social_handles,updated_at FROM contact_audience_settings WHERE audience=$1`,[key]);
-  if(!result.rows[0]) return empty(key);
-  return result.rows[0];
+  if(result.rows[0]) return result.rows[0];
+  const legacy=(await pool.query(`SELECT company_name,email,phone,whatsapp,address,business_hours,support_email,careers_email,maps_url,website_url,social_handles,updated_at FROM contact_settings WHERE id=1`)).rows[0];
+  if(legacy)return{audience:key,...legacy};
+  return empty(key);
 }
 async function update(input,audience='website'){
   const key=normalizeAudience(audience);
