@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import RequirementWizard from './RequirementWizard'
 import './Solutions.css'
+import { PublicFooter, PublicHeader } from '../components/PublicSiteChrome'
 
 const FLOWS = {
   construction: {
@@ -62,22 +63,7 @@ export default function Solutions(){
   },[location.hash,location.search,navigate])
 
   return <main className="quote-page">
-    <header className="quote-header">
-      <Link className="quote-logo" to="/"><img src="/brand/propulse-logo.svg" alt="ProPulse"/></Link>
-      <nav>
-        <Link to="/">Home</Link>
-        <Link to="/packages">Packages</Link>
-        <Link to="/projects">Projects</Link>
-        <Link to="/how-it-works">How It Works</Link>
-        <Link to="/about">About</Link>
-        <Link to="/contact">Contact</Link>
-        <Link to="/experts">Find Professionals</Link>
-      </nav>
-      <div className="public-header-actions">
-        <Link className="quote-header-cta" to="/quote#interiors">Get Free Quote <Icon name="arrow" size={15}/></Link>
-        <Link className="public-professional-btn" to="/professionals">For Professionals</Link>
-      </div>
-    </header>
+    <PublicHeader />
 
     {!completed&&<section className="quote-flow-switcher" aria-label="Choose quote type">
       <div className="quote-flow-switcher-inner">
@@ -98,5 +84,6 @@ export default function Solutions(){
     <section className={'quote-flow quote-flow-'+activeKey} key={active.flowKey}>
       <RequirementWizard flowKey={active.flowKey} onCompletionChange={setCompleted}/>
     </section>
+    <PublicFooter />
   </main>
 }
