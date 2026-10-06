@@ -10,6 +10,7 @@ const backendIndex=fs.readFileSync(path.join(root,'backend','index.js'),'utf8');
 const backendServer=fs.readFileSync(path.join(root,'backend','src','server.js'),'utf8');
 const releaseMarkerHelper=fs.readFileSync(path.join(root,'backend','scripts','hostinger-release-marker.js'),'utf8');
 const env=fs.readFileSync(path.join(root,'.env.example'),'utf8');
+const prebuildWorkflow=fs.readFileSync(path.join(root,'.github','workflows','hostinger-main-prebuild.yml'),'utf8');
 
 function assert(condition,message){
   if(!condition){console.error('FAIL: '+message);process.exitCode=1}
@@ -25,6 +26,9 @@ assert(pkg.scripts?.start==='node index.js','Hostinger starts through the defaul
 for(const dependency of ['express','pg','bcryptjs','cors','dotenv','jsonwebtoken','react','react-dom','react-router-dom','vite','@vitejs/plugin-react']){
   assert(pkg.dependencies?.[dependency],'Hostinger root package must install '+dependency);
 }
+assert(pkg.overrides?.['proxy-addr']==='2.0.8','Hostinger root must pin the patched proxy-addr release');
+assert(pkg.overrides?.['source-map-js']==='1.2.2','Hostinger root must pin the patched source-map-js release');
+assert(prebuildWorkflow.includes('npm audit --omit=dev --audit-level=high'),'Hostinger prebuild must block high/critical runtime dependency advisories');
 assert(!pkg.scripts?.postinstall,'Hostinger deployment must not rely on npm lifecycle scripts');
 assert(rootIndex.includes("spawnSync")&&rootIndex.includes("spawn"),'Hostinger index.js supports manual and background frontend builds');
 assert(rootIndex.includes("node_modules','vite','bin','vite.js"),'Hostinger runtime build must use root-installed Vite');
