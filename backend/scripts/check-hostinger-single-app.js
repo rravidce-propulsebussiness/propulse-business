@@ -70,6 +70,7 @@ assert(backendIndex.includes("if(frontendBuilding||fs.existsSync(bundledFrontend
 assert(backendIndex.includes("fs.symlinkSync(backendNodeModules,frontendNodeModules"),'Backend-root Hostinger entry exposes installed dependencies to the frontend build');
 assert(backendServer.includes("app.use(express.static(frontendDist"),'Backend server serves built frontend assets in single-process mode');
 assert(backendServer.includes("Application frontend is starting. Please retry shortly."),'Backend server keeps HTML requests safe while background frontend build runs');
+assert(backendServer.includes("['website','users','professionals','lead_partners','common'].includes(requestedAudience)"),'Degraded contact fallback must preserve the Professional audience during startup');
 assert(wrapper.includes("startsWith('/api/')"),'Hostinger wrapper proxies API traffic');
 assert(wrapper.includes("requestPath==='/robots.txt'"),'Hostinger wrapper proxies robots.txt');
 assert(wrapper.includes("requestPath==='/sitemap.xml'"),'Hostinger wrapper proxies sitemap.xml');
