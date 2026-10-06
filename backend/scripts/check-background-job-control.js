@@ -47,7 +47,9 @@ for(const [name,source,key] of [
   assert(source.includes("jobControl.execute")&&source.includes(key),name+' is not wired to the shared job recorder');
 }
 assert(notifications.includes('membership_expiry_reminders'),'Membership reminder scheduler is not recorded');
-assert(server.includes("startFinancialReconciliationScheduler({runImmediately:false})"),'Web startup must not force financial reconciliation immediately during deploy restarts');
+assert(server.includes("startFinancialReconciliationScheduler({runImmediately:true})"),'Web background mode must trigger financial reconciliation after readiness so deploy restarts cannot starve the daily schedule');
+assert(/startupReady=true;[\s\S]*?startBackgroundJobsOnce\(\);/.test(server),'Web background schedulers must start only after backend dependencies are marked ready');
+assert(financial.includes("skipIfCompletedWithinMinutes:source==='manual'?0:skipMinutes"),'Immediate web reconciliation must retain the recent-run skip window to prevent duplicate daily work');
 assert(server.includes("startNotificationScheduler({runImmediately:false})"),'Web startup must not force notification jobs immediately during deploy restarts');
 assert(worker.includes("startFinancialReconciliationScheduler({ unref: false, runImmediately: true })"),'Dedicated worker may still run financial reconciliation immediately');
 assert(worker.includes("startNotificationScheduler({ unref:false, runImmediately:true })"),'Dedicated worker may still run notification jobs immediately');

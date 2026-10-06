@@ -25,6 +25,8 @@ assert(monitor.includes("financial:scan_failed"),'Failed automated reconciliatio
 assert(scheduler.includes('DEFAULT_INTERVAL_MS=24*60*60*1000'),'Automated reconciliation must default to daily');
 assert(worker.includes('startFinancialReconciliationScheduler')&&worker.includes('await stopFinancialReconciliation()'),'Dedicated worker must start and gracefully stop financial monitoring');
 assert(server.includes('startFinancialReconciliationScheduler')&&server.includes('await stopFinancialReconciliation()'),'Single-process web deployment must also support financial monitoring');
+assert(server.includes("startFinancialReconciliationScheduler({runImmediately:true})"),'Single-process web deployment must trigger reconciliation after readiness so frequent restarts cannot starve the daily schedule');
+assert(scheduler.includes("skipIfCompletedWithinMinutes:source==='manual'?0:skipMinutes"),'Immediate startup reconciliation must retain the recent-run skip window to avoid duplicate daily work');
 assert(controller.includes('getMonitoringSummary'),'Financial Integrity Admin response must include persisted monitoring state');
 assert(health.includes('getHealthSummary'),'System Health must include scheduled financial reconciliation health');
 assert(integrityPage.includes('Automated reconciliation'),'Financial Integrity UI must expose automated run history');
