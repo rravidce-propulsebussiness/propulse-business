@@ -45,7 +45,9 @@ async function legacyUploadHealth(){
   const row=(await pool.query(`
     SELECT
       (SELECT COUNT(*)::int FROM company_proof_documents
-        WHERE COALESCE(stored_name,'')<>'' AND stored_name NOT LIKE 'private-object-s3:%') AS company_proofs,
+        WHERE status<>'rejected'
+          AND COALESCE(stored_name,'')<>''
+          AND stored_name NOT LIKE 'private-object-s3:%') AS company_proofs,
       (
         SELECT
           (CASE WHEN hero_image_url LIKE '/uploads/%' THEN 1 ELSE 0 END)
