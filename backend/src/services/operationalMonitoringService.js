@@ -170,7 +170,33 @@ async function recordClientError({payload={},req}){
     }
   });
 }
+function supersededQuietHours(){
+  const parsed=Number(process.env.OPERATIONAL_EVENT_SUPERSEDED_QUIET_HOURS);
+  if(!Number.isFinite(parsed))return 3;
+  return Math.min(168,Math.max(1,Math.floor(parsed)));
+}
+async function resolveSupersededBackendHttpEvents(){
+  const currentBuild=buildVersion();
+  if(!currentBuild||currentBuild==='local')return{resolved:0,quietHours:supersededQuietHours()};
+  const quietHours=supersededQuietHours();
+  const result=await pool.query(
+    `UPDATE operational_events
+        SET resolved_at=CURRENT_TIMESTAMP,
+            resolved_by=NULL,
+            resolution_note='Auto-resolved after a newer build stayed active without this fingerprint recurring.'
+      WHERE resolved_at IS NULL
+        AND source='backend'
+        AND event_type IN ('http_5xx','slow_request')
+        AND COALESCE(build_commit,'')<>''
+        AND build_commit<>$1
+        AND last_seen_at<CURRENT_TIMESTAMP-($2*INTERVAL '1 hour')`,
+    [currentBuild,quietHours]
+  );
+  return{resolved:Number(result.rowCount)||0,quietHours};
+}
+
 async function listEvents(query={}){
+  await resolveSupersededBackendHttpEvents().catch(error=>console.error('Operational event reconciliation failed:',error.message));
   const page=Math.max(1,Number.parseInt(query.page,10)||1);
   const limit=Math.min(100,Math.max(10,Number.parseInt(query.limit,10)||30));
   const where=[];
@@ -245,5 +271,5 @@ async function pruneResolved({days=Number(process.env.OPERATIONAL_EVENT_RETENTIO
 
 module.exports={
   sanitizeText,sanitizeStack,sanitizeMetadata,eventFingerprint,recordEvent,recordHttpRequest,
-  recordClientError,listEvents,setStatus,pruneResolved,buildVersion
+  recordClientError,listEvents,setStatus,pruneResolved,buildVersion,resolveSupersededBackendHttpEvents
 };
