@@ -13,6 +13,7 @@ const {recordVerification}=require('../../scripts/backup-common');
 
 const DEFAULT_INTERVAL_MS=24*60*60*1000;
 const DEFAULT_RECENT_HOURS=20;
+const DEFAULT_STARTUP_DELAY_MS=7*60*1000;
 const DEFAULT_MAX_BYTES=256*1024*1024;
 let timer=null;
 let startupRetryTimer=null;
@@ -26,6 +27,9 @@ function configuredRecentHours(){
 }
 function configuredMaxBytes(){
   return Math.min(1024*1024*1024,Math.max(16*1024*1024,Number(process.env.DATABASE_BACKUP_MAX_BYTES)||DEFAULT_MAX_BYTES));
+}
+function configuredStartupDelayMs(){
+  return Math.min(60*60*1000,Math.max(2*60*1000,Number(process.env.DATABASE_BACKUP_STARTUP_DELAY_MS)||DEFAULT_STARTUP_DELAY_MS));
 }
 function configuredStartupRetryMs(){
   return Math.min(10*60*1000,Math.max(30*1000,Number(process.env.DATABASE_BACKUP_STARTUP_RETRY_MS)||90*1000));
@@ -214,7 +218,9 @@ function startDatabaseBackupScheduler({unref=true,runImmediately=true}={}){
   };
 
   if(runImmediately){
-    startupRetryTimer=setTimeout(()=>{startupRetryTimer=null;void startupAttempt(1)},30000);
+    const startupDelayMs=configuredStartupDelayMs();
+    console.log(`Database startup backup check deferred for ${Math.round(startupDelayMs/1000)}s to protect post-deploy request latency.`);
+    startupRetryTimer=setTimeout(()=>{startupRetryTimer=null;void startupAttempt(1)},startupDelayMs);
     if(unref)startupRetryTimer.unref?.();
   }
   timer=setInterval(()=>{void runDatabaseBackup({source:'scheduled'}).catch(error=>console.error('Database R2 backup cycle failed:',error.message))},intervalMs);
@@ -227,7 +233,7 @@ function startDatabaseBackupScheduler({unref=true,runImmediately=true}={}){
 }
 
 module.exports={
-  DEFAULT_INTERVAL_MS,DEFAULT_MAX_BYTES,
-  configuredIntervalMs,configuredRecentHours,configuredMaxBytes,configuredStartupRetryMs,configuredStartupRetryAttempts,
+  DEFAULT_INTERVAL_MS,DEFAULT_STARTUP_DELAY_MS,DEFAULT_MAX_BYTES,
+  configuredIntervalMs,configuredRecentHours,configuredMaxBytes,configuredStartupDelayMs,configuredStartupRetryMs,configuredStartupRetryAttempts,
   pgDumpUnavailable,createPortableBackup,runDatabaseBackup,runDatabaseBackupCore,startDatabaseBackupScheduler,verifyRemoteObject
 };
