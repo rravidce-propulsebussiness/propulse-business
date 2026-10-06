@@ -28,7 +28,8 @@ assert(service.includes("if(!currentBuild||currentBuild==='local')return"),'Oper
 assert(service.includes("source='backend'"),'Automatic reconciliation must be limited to backend events');
 assert(service.includes("event_type IN ('http_5xx','slow_request')"),'Automatic reconciliation must be limited to HTTP failures and slow requests');
 assert(service.includes("build_commit<>$1"),'Automatic reconciliation must never resolve current-build fingerprints');
-assert(service.includes("last_seen_at<CURRENT_TIMESTAMP-($2*INTERVAL '1 hour')"),'Automatic reconciliation must require a quiet period');
+assert(service.includes("environment=$2"),'Automatic reconciliation must never cross deployment environments');
+assert(service.includes("last_seen_at<CURRENT_TIMESTAMP-($3*INTERVAL '1 hour')"),'Automatic reconciliation must require a quiet period');
 assert(service.includes("resolution_note='Auto-resolved after a newer build stayed active without this fingerprint recurring.'"),'Auto-resolved operational events must preserve an explicit resolution reason');
 assert(service.includes("await resolveSupersededBackendHttpEvents().catch"),'Error Monitor reads must reconcile superseded backend HTTP events before counting open issues');
 assert(service.includes("SECRET_KEY=/(password|token|secret"),'Operational metadata must redact secret-like keys');
@@ -51,5 +52,10 @@ assert(app.includes('AdminOperationalErrors')&&app.includes('path="/admin/error-
 assert(layout.includes("{to:'/admin/error-monitor',label:'Error Monitor'}"),'Admin System navigation must expose Error Monitor');
 assert(page.includes("authRequest('/admin/operational-events?'+params)"),'Error Monitor must load authenticated operational telemetry');
 assert(page.includes("Request <code>{item.requestId}</code>"),'Error Monitor must expose request IDs for support correlation');
+assert(service.includes("const environment=requestedEnvironment==='all'?'all':requestedEnvironment||currentEnvironment"),'Error Monitor must default to the current deployment environment');
+assert(service.includes("if(environment!=='all'){params.push(environment);where.push"),'Operational event listing must scope rows by environment unless Admin explicitly selects all');
+assert(service.includes("if(environment!=='all'){summaryParams.push(environment);summaryWhere.push"),'Operational event summary counts must use the same environment scope');
+assert(page.includes('<option value="">Current environment</option>')&&page.includes('<option value="production">Production</option>')&&page.includes('<option value="staging">Staging</option>')&&page.includes('<option value="all">All environments</option>'),'Error Monitor must expose an explicit environment filter');
+assert(page.includes("{item.environment&&<span>{title(item.environment)}</span>}"),'Error Monitor rows must show their deployment environment');
 
 console.log('Operational error monitoring regression test passed.');
