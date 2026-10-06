@@ -110,7 +110,7 @@ async function getProfile(userId, client = pool) {
        ORDER BY st.name, c.name`, [profile.id]
     ),
     client.query(
-      `SELECT id, original_name, mime_type, file_size, file_url, status, created_at
+      `SELECT id, original_name, stored_name, mime_type, file_size, file_url, status, created_at, reviewed_at, review_reason
        FROM company_proof_documents
        WHERE user_id = $1
        ORDER BY created_at DESC, id DESC`, [userId]
@@ -132,11 +132,16 @@ async function getProfile(userId, client = pool) {
   ]);
 
   const renderedProofs=await Promise.all(companyProofs.rows.map(async doc=>{
-    if(!doc.file_url||!s3.isReference(doc.file_url))return doc;
-    try{
-      const descriptor=await companyProofStorageService.descriptor(doc.file_url,{mimeType:doc.mime_type,size:doc.file_size});
-      return {...doc,file_url:descriptor?.externalUrl||null};
-    }catch{return {...doc,file_url:null}}
+    const {stored_name,...safe}=doc;
+    const descriptor=stored_name
+      ?await companyProofStorageService.descriptor(stored_name,{mimeType:doc.mime_type,size:doc.file_size}).catch(()=>null)
+      :null;
+    return{
+      ...safe,
+      file_url:descriptor?`/api/auth/company-proofs/${doc.id}`:null,
+      file_available:Boolean(descriptor),
+      storage_backend:s3.isReference(stored_name)?'r2':'legacy_local'
+    };
   }));
   const renderedProjects=await Promise.all(projects.rows.map(async project=>({
     ...project,
