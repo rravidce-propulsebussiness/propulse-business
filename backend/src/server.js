@@ -151,7 +151,7 @@ app.use('/api',(req,res,next)=>{
   });
   if(degradedGet&&req.path==='/contact'){
     const requestedAudience=String(req.query?.audience||'website').trim().toLowerCase();
-    const audience=['website','users','lead_partners','common'].includes(requestedAudience)?requestedAudience:'website';
+    const audience=['website','users','professionals','lead_partners','common'].includes(requestedAudience)?requestedAudience:'website';
     return res.json({audience,company_name:'',email:'',phone:'',whatsapp:'',address:'',business_hours:'',support_email:'',careers_email:'',maps_url:'',website_url:'/',social_handles:[],updated_at:null,degraded:true});
   }
   if(degradedGet&&req.path==='/cities')return res.json({data:[],pagination:{page:1,pageSize:0,total:0,totalPages:0,hasNextPage:false,hasPreviousPage:false},degraded:true});
