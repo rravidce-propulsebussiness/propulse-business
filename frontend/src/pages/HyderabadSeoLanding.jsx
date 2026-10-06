@@ -14,21 +14,14 @@ import {
 } from '../seo/hyderabadSeo'
 import {CONSTRUCTION_PACKAGE_CATALOG} from '../data/constructionPackageCatalog'
 import './HyderabadSeoLanding.css'
+import { PublicFooter, PublicHeader } from '../components/PublicSiteChrome'
 
 function quoteRoute(service){
   return '/quote#'+service.quoteHash
 }
 
-function Header(){
-  return <header className="local-seo-header">
-    <Link className="local-seo-logo" to="/"><img src="/brand/propulse-logo.svg" alt="ProPulse Business"/></Link>
-    <nav>
-      <Link to="/">Home</Link><Link to="/hyderabad">Hyderabad</Link><Link to="/quote">Get Quote</Link>
-      <Link to="/experts">Find Professionals</Link><Link to="/projects">Projects</Link><Link to="/packages">Packages</Link><Link to="/contact">Contact</Link>
-    </nav>
-    <Link className="local-seo-pro" to="/professionals">For Professionals</Link>
-  </header>
-}
+function Header(){ return <PublicHeader/> }
+function Footer(){ return <PublicFooter/> }
 
 function CityHubPage(){
   const services=['construction','interior-designers','real-estate'].map(serviceBySlug)
@@ -69,7 +62,7 @@ function CityHubPage(){
     <section className="local-seo-city-links"><h2>Plan and compare Hyderabad options</h2><div><Link to="/hyderabad/construction-cost">House construction cost in Hyderabad</Link><Link to="/telangana/construction">Construction across Telangana districts</Link><Link to="/andhra-pradesh/construction">Construction across Andhra Pradesh districts</Link>{services.map(service=><Link key={service.slug} to={'/hyderabad/'+service.slug+'/compare-options'}>Compare {service.label} options in Hyderabad</Link>)}</div></section>
 
     <section className="local-seo-cta"><span>HYDERABAD</span><h2>Start with the location and scope you already know</h2><p>A clear requirement helps businesses understand the project before they respond.</p><Link to="/quote">Start Free Requirement</Link></section>
-  </main>
+  <Footer/></main>
 }
 
 function ServicePage({entry,service}){
@@ -138,7 +131,7 @@ function ServicePage({entry,service}){
     <section className="local-seo-city-links"><h2>Explore more Hyderabad planning pages</h2><div>{service.slug==='construction'&&<><Link to="/hyderabad/construction-cost">House construction cost in Hyderabad</Link><Link to="/telangana/construction">Construction across Telangana districts</Link><Link to="/andhra-pradesh/construction">Construction across Andhra Pradesh districts</Link></>}{['construction','interior-designers','real-estate'].map(serviceBySlug).filter(item=>item.slug!==service.slug).map(item=><Link key={item.slug} to={'/hyderabad/'+item.slug}>{item.heading}</Link>)}<Link to={'/hyderabad/'+service.slug+'/compare-options'}>Compare {service.label} options in Hyderabad</Link></div></section>
 
     <section className="local-seo-cta"><span>HYDERABAD</span><h2>Ready to create your {service.label.toLowerCase()} requirement?</h2><p>Start with the details you already know. Add the exact locality so businesses can understand where the requirement is.</p><Link to={quoteRoute(service)}>Start Free Requirement</Link></section>
-  </main>
+  <Footer/></main>
 }
 
 function LocalityPage({entry,service,locality}){
@@ -291,7 +284,7 @@ function LocalityPage({entry,service,locality}){
       <p>Choose a package starting point, add your site and project details, then compare relevant responses against one consistent brief.</p>
       <div><Link to="/quote?package=standard#construction">Get Construction Quote</Link><Link className="secondary-cta" to="/packages#construction">View Packages</Link></div>
     </section>
-  </main>
+  <Footer/></main>
 }
 
 function ConstructionCostGuidePage(){
@@ -351,7 +344,7 @@ function ConstructionCostGuidePage(){
     <section className="local-seo-faq"><div className="local-seo-section-title"><span>FAQ</span><h2>Hyderabad construction cost questions</h2></div><div>{faqs.map(item=><article key={item.q}><h3>{item.q}</h3><p>{item.a}</p></article>)}</div></section>
 
     <section className="local-seo-cta"><span>HYDERABAD</span><h2>Move from an indicative cost to a site-specific construction quote</h2><p>Use the estimator for initial planning, then share your actual site, built-up area, floors and specifications with relevant businesses.</p><Link to={quoteRoute(service)}>Request Construction Quotes</Link></section>
-  </main>
+  <Footer/></main>
 }
 
 function ComparisonPage({entry,service}){
@@ -380,7 +373,7 @@ function ComparisonPage({entry,service}){
     </div></section>
 
     <section className="local-seo-cta"><span>HYDERABAD</span><h2>Compare with your own requirement, not a generic brand ranking</h2><p>Submit the details that matter to you, review actual responses and verify every provider before proceeding.</p><Link to={quoteRoute(service)}>Create Requirement</Link></section>
-  </main>
+  <Footer/></main>
 }
 
 export default function HyderabadSeoLanding(){
