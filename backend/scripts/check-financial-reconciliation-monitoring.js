@@ -19,6 +19,8 @@ assert(migration.includes('CREATE TABLE IF NOT EXISTS admin_operational_alerts')
 assert(migration.includes('CONSTRAINT uq_admin_operational_alert_key UNIQUE(alert_key)'),'Operational alerts must be deduplicated by stable alert key');
 assert(monitor.includes('pg_try_advisory_lock'),'Scheduled reconciliation must use a cross-process advisory lock');
 assert(monitor.includes('skipIfCompletedWithinMinutes'),'Scheduler must avoid duplicate runs after worker/web restarts');
+assert(monitor.includes("WHERE source IN ('scheduled','startup')"),'Automated reconciliation dedupe must include both scheduled and startup runs so repeated deploy restarts cannot trigger duplicate full scans');
+assert(!monitor.includes("WHERE source IN ('scheduled','startup','manual')"),'Manual reconciliation must remain outside the automated dedupe window');
 assert(monitor.includes('getFinancialIntegrity({force:true})'),'Scheduled reconciliation must run the canonical fresh reconciliation engine');
 assert(monitor.includes("status='resolved'")&&monitor.includes("status='active'"),'Financial alerts must automatically activate and resolve');
 assert(monitor.includes("financial:scan_failed"),'Failed automated reconciliation must create a persistent critical Admin alert');
