@@ -7,6 +7,7 @@ const releaseIdentity=require('./releaseIdentityService');
 
 const DEFAULT_INTERVAL_MS=24*60*60*1000;
 const DEFAULT_RECENT_HOURS=20;
+const DEFAULT_STARTUP_DELAY_MS=3*60*1000;
 const MAX_BACKUP_OBJECT_BYTES=64*1024*1024;
 const LOCK_KEY=78134921652731;
 let timer=null;
@@ -15,6 +16,9 @@ let cyclePromise=null;
 
 function configuredIntervalMs(){
   return Math.min(7*24*60*60*1000,Math.max(6*60*60*1000,Number(process.env.PRIVATE_STORAGE_BACKUP_INTERVAL_MS)||DEFAULT_INTERVAL_MS));
+}
+function configuredStartupDelayMs(){
+  return Math.min(30*60*1000,Math.max(60*1000,Number(process.env.PRIVATE_STORAGE_BACKUP_STARTUP_DELAY_MS)||DEFAULT_STARTUP_DELAY_MS));
 }
 function configuredStartupRetryMs(){
   return Math.min(10*60*1000,Math.max(30*1000,Number(process.env.PRIVATE_STORAGE_BACKUP_STARTUP_RETRY_MS)||90*1000));
@@ -271,7 +275,9 @@ function startPrivateStorageBackupScheduler({unref=true,runImmediately=true}={})
   };
 
   if(runImmediately){
-    startupRetryTimer=setTimeout(()=>{startupRetryTimer=null;void startupAttempt(1)},15000);
+    const startupDelayMs=configuredStartupDelayMs();
+    console.log(`Private R2 startup backup check deferred for ${Math.round(startupDelayMs/1000)}s to protect post-deploy request latency.`);
+    startupRetryTimer=setTimeout(()=>{startupRetryTimer=null;void startupAttempt(1)},startupDelayMs);
     if(unref)startupRetryTimer.unref?.();
   }
   timer=setInterval(()=>{void runPrivateStorageBackup({source:'scheduled'}).catch(error=>console.error('Private R2 backup cycle failed:',error.message))},intervalMs);
@@ -284,6 +290,6 @@ function startPrivateStorageBackupScheduler({unref=true,runImmediately=true}={})
 }
 
 module.exports={
-  DEFAULT_INTERVAL_MS,MAX_BACKUP_OBJECT_BYTES,configuredIntervalMs,configuredStartupRetryMs,configuredStartupRetryAttempts,backupConfigOverride,chooseBackupTarget,
+  DEFAULT_INTERVAL_MS,DEFAULT_STARTUP_DELAY_MS,MAX_BACKUP_OBJECT_BYTES,configuredIntervalMs,configuredStartupDelayMs,configuredStartupRetryMs,configuredStartupRetryAttempts,backupConfigOverride,chooseBackupTarget,
   referencedObjects,runPrivateStorageBackup,runPrivateStorageBackupCore,startPrivateStorageBackupScheduler
 };
