@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { publicRequest } from '../utils/auth'
 import './Projects.css'
+import { PublicFooter, PublicHeader } from '../components/PublicSiteChrome'
 
 const PROJECTS = [
   {
@@ -590,14 +591,7 @@ export default function Projects(){
   const email=contactData.email||contactData.support_email||''
 
   return <main className="pj-page">
-    <header className="pj-header">
-      <Link to="/" className="pj-logo"><img src="/brand/propulse-logo.svg" alt="ProPulse"/></Link>
-      <nav><Link to="/">Home</Link><Link to="/packages">Packages</Link><Link className="active" to="/projects">Projects</Link><Link to="/how-it-works">How It Works</Link><Link to="/about">About</Link><Link to="/contact">Contact</Link><Link to="/experts">Find Professionals</Link></nav>
-      <div className="public-header-actions">
-        <Link className="public-quote-button" to="/quote#interiors">Get Free Quote <Icon name="arrow" size={15}/></Link>
-        <Link className="public-professional-btn" to="/professionals">For Professionals</Link>
-      </div>
-    </header>
+    <PublicHeader />
 
     {(recentProjectsLoading||sortedRecentProjects.length>0)&&<section className="pj-video-wrap">
       <div className="pj-video-heading">
@@ -756,12 +750,6 @@ export default function Projects(){
       </section>
     </div>}
 
-    <footer className="pj-footer">
-      <div className="pj-footer-brand"><img src="/brand/propulse-logo.svg" alt="ProPulse"/><p>Your customer starting point for construction, interiors and real-estate requirements.</p><div>f&nbsp;&nbsp;◎&nbsp;&nbsp;▶&nbsp;&nbsp;in</div></div>
-      <div><b>Quick Links</b><Link to="/">Home</Link><Link to="/quote#construction">Construction</Link><Link to="/quote#interiors">Interiors</Link><Link to="/packages">Packages</Link><Link to="/quote#property">Real Estate</Link><Link to="/projects">Projects</Link></div>
-      <div><b>Our Services</b><Link to="/quote#construction">Home Construction</Link><Link to="/quote#interiors">Interior Design</Link><Link to="/quote#property">Real Estate</Link><Link to="/quote#construction">Construction Quote</Link><Link to="/quote#construction">Free Consultation</Link></div>
-      <div><b>Support</b><Link to="/faq">FAQ</Link><Link to="/contact">Contact Us</Link></div>
-      <div><b>Contact Info</b>{phone&&<span><Icon name="phone" size={13}/>{phone}</span>}{email&&<span>{email}</span>}<span><Icon name="pin" size={13}/>Hyderabad, India</span></div>
-    </footer>
+    <PublicFooter phone={phone} email={email} />
   </main>
 }
