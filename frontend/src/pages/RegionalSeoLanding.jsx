@@ -2,14 +2,10 @@ import {Link, Navigate, useParams} from 'react-router-dom'
 import {CONSTRUCTION_PACKAGE_CATALOG} from '../data/constructionPackageCatalog'
 import {districtBySlug,districtPath,stateBySlug} from '../seo/regionalSeo'
 import './RegionalSeoLanding.css'
+import { PublicFooter, PublicHeader } from '../components/PublicSiteChrome'
 
-function Header(){
-  return <header className="regional-header">
-    <Link to="/" className="regional-logo"><img src="/brand/propulse-logo.svg" alt="ProPulse Business"/></Link>
-    <nav><Link to="/">Home</Link><Link to="/hyderabad">Hyderabad</Link><Link to="/packages">Packages</Link><Link to="/projects">Projects</Link><Link to="/experts">Find Professionals</Link><Link to="/quote">Get Quote</Link></nav>
-    <Link className="regional-pro" to="/professionals">For Professionals</Link>
-  </header>
-}
+function Header(){ return <PublicHeader/> }
+function Footer(){ return <PublicFooter/> }
 
 function PackageCards({districtName=''}) {
   const packages=Object.values(CONSTRUCTION_PACKAGE_CATALOG)
@@ -73,7 +69,7 @@ function StateHub({state}){
     </section>
 
     <section className="regional-cta"><span>{state.name.toUpperCase()}</span><h2>Start your construction requirement</h2><p>Choose the closest package starting point, add your district and site details, then compare project-specific responses.</p><Link to="/quote?package=standard#construction">Get Construction Quote</Link></section>
-  </main>
+  <Footer/></main>
 }
 
 function DistrictPage({state,district}){
@@ -154,7 +150,7 @@ function DistrictPage({state,district}){
     </section>
 
     <section className="regional-cta"><span>{district.name.toUpperCase()} · {state.name.toUpperCase()}</span><h2>Start your district-specific construction requirement</h2><p>Add the exact site and project scope, choose a package starting point and compare relevant responses consistently.</p><Link to="/quote?package=standard#construction">Get Construction Quote</Link></section>
-  </main>
+  <Footer/></main>
 }
 
 export default function RegionalSeoLanding(){
