@@ -173,6 +173,10 @@ assert.match(publicChrome,/to="\/experts"/);
 for(const source of [home,projects,about,howItWorks,interiorExact,realEstateExact,wizard]){
   assert.doesNotMatch(source,/\/#contact/);
   assert.doesNotMatch(source,/>Privacy Policy<|>Terms & Conditions</);
+}
+assert.match(publicChrome,/to="\/faq"[^>]*>FAQ<\/Link>/);
+assert.match(publicChrome,/to="\/contact"[^>]*>Contact<\/Link>/);
+for(const source of [interiorExact,realEstateExact,wizard]){
   assert.match(source,/to="\/faq">FAQ<\/Link>/);
   assert.match(source,/to="\/contact">Contact(?: Us)?<\/Link>/);
 }
