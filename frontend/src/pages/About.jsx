@@ -117,8 +117,8 @@ export default function About(){
 
     <section className="ab-stats">
       <article><span><Icon name="home"/></span><div><b>3</b><small>Core Customer Journeys</small></div></article>
-      <article><span><Icon name="people"/></span><div><b>{activeIndustries.length||'Admin'}</b><small>{activeIndustries.length?'Active Industries':'Managed Categories'}</small></div></article>
-      <article><span><Icon name="pin"/></span><div><b>{cities.length||'City + PIN'}</b><small>{cities.length?'Active Cities':'Location-aware Intake'}</small></div></article>
+      <article><span><Icon name="people"/></span><div><b>{activeIndustries.length||'—'}</b><small>Service Categories</small></div></article>
+      <article><span><Icon name="pin"/></span><div><b>{cities.length||'—'}</b><small>Locations</small></div></article>
       <article><span><Icon name="heart"/></span><div><b>Free</b><small>Consultation Start</small></div></article>
     </section>
 
