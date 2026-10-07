@@ -48,14 +48,6 @@ const STEPS = [
   { number: '4', icon: 'home', title: 'Move Forward', text: 'Compare quotations and choose the option you like.' },
 ]
 
-const MATERIAL_BRANDS = [
-  { key: 'tiles', brand: 'Kajaria', label: 'Tiles', image: '/materials/kajaria-tiles.svg' },
-  { key: 'plywood', brand: 'CenturyPly', label: 'Plywood', image: '/materials/centuryply-plywood.svg' },
-  { key: 'laminates', brand: 'Greenlam', label: 'Laminates', image: '/materials/greenlam-laminates.svg' },
-  { key: 'paints', brand: 'Asian Paints', label: 'Paints', image: '/materials/asian-paints.svg' },
-  { key: 'fittings', brand: 'Jaquar', label: 'Fittings', image: '/materials/jaquar-fittings.svg' },
-]
-
 const PROJECTS = [
   {
     title: 'Independent House',
