@@ -372,9 +372,13 @@ export default function InteriorRequirementExact(props) {
               {budget&&<label className="irx-preference-field irx-budget-field">
                 <div className="irx-pref-icon"><Icon name="receipt" size={18}/></div>
                 <div className="irx-pref-copy"><b>Approximate Budget</b><small>{budget.helpText||'Share a rough budget so the right businesses can respond.'}</small></div>
-                {budget.options?.length
-                  ? <select value={answers[budget.questionKey]||''} onChange={e=>setAnswer(budget.questionKey,e.target.value)}><option value="">Select budget range</option>{budget.options.map(option=><option key={option.value} value={option.value}>{option.label}</option>)}</select>
-                  : <div className="irx-budget-input"><span>₹</span><input value={answers[budget.questionKey]||''} onChange={e=>setAnswer(budget.questionKey,e.target.value)} placeholder="Enter approximate budget"/></div>}
+                <select value={answers[budget.questionKey]||''} onChange={e=>setAnswer(budget.questionKey,e.target.value)}>
+                  <option value="">Select budget range</option>
+                  <option value="below_7_lakh">Below ₹7 lakh</option>
+                  <option value="7_10_lakh">₹7–10 lakh</option>
+                  <option value="10_15_lakh">₹10–15 lakh</option>
+                  <option value="above_15_lakh">Above ₹15 lakh</option>
+                </select>
               </label>}
               {timeline&&<div className="irx-preference-field irx-timeline-field irx-premium-timeline">
                 <div className="irx-pref-icon"><Icon name="clock" size={18}/></div>
