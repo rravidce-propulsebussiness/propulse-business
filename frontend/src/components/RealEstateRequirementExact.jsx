@@ -126,10 +126,6 @@ export default function RealEstateRequirementExact(props) {
       </div>
     </section>
 
-    <div className="rex-steps">
-      {[['1','Basic Details','Location and contact','#rex-basic'],['2','Property Search','Intent and property type','#rq-property'],['3','Preferences','Budget, features and timeline','#rq-preferences'],['4','Review & Request','Confirm your requirement','#rq-summary']].map(([n,title,sub,href],i)=><a key={n} href={href} className={i===0?'active':completion>[30,55,80,99][i]?'done':''}><span>{completion>[30,55,80,99][i]?'✓':n}</span><div><b>{title}</b><small>{sub}</small></div>{i<3&&<Icon name="arrow" size={14}/>}</a>)}
-    </div>
-
     <form className="rex-form" onSubmit={submit}>
       <section className="rex-top-grid" id="rex-basic">
         <div className="rex-card">
