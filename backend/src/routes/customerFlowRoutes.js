@@ -27,5 +27,6 @@ router.post('/:key/calculate', publicCalculateLimit, estimatorController.calcula
 router.post('/:key/consultation', publicSubmitLimit, customerFlowController.submitConsultation);
 router.post('/:key/submit', publicSubmitLimit, customerFlowController.submitPublic);
 router.post('/:key/:leadId/attachments', publicSubmitLimit, customerFlowController.uploadReference);
+router.post('/:key/:leadId/quotation-email', publicSubmitLimit, customerFlowController.emailQuotation);
 
 module.exports = router;
