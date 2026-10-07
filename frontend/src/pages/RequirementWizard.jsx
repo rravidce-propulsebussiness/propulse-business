@@ -321,6 +321,12 @@ export default function RequirementWizard({ flowKey, onCompletionChange }) {
 
   const ownPlotQuestion = flowKey === 'build' ? questions.find(question => question.questionKey === 'own_plot') : null
   const propertyQuestions = questions.filter(question => ['project_type', 'property_intent', 'bhk', 'property_status', 'possession_status'].includes(question.questionKey))
+  const propertyTypeQuestion = flowKey === 'build'
+    ? (questions.find(question => question.questionKey === 'project_type') || questions.find(question => question.questionKey === 'property_type'))
+    : null
+  const propertyTypeAnswer = propertyTypeQuestion
+    ? (answers[propertyTypeQuestion.questionKey] ?? answers.project_type ?? answers.property_type)
+    : undefined
   const builtUpQuestion = flowKey === 'build'
     ? (questions.find(question => question.questionKey === 'built_up_area') || {
         id: 'derived-built-up-area',
@@ -499,7 +505,16 @@ export default function RequirementWizard({ flowKey, onCompletionChange }) {
 
   async function submit(event,referenceFiles=[]) {
     event.preventDefault()
-    const missing = questions.find(question => question.isRequired && isEmptyAnswer(answers[question.questionKey]))
+    const missing = questions.find(question => {
+      if (!question.isRequired) return false
+      if (
+        flowKey === 'build'
+        && propertyTypeQuestion
+        && question.questionKey === propertyTypeQuestion.questionKey
+        && !isEmptyAnswer(propertyTypeAnswer)
+      ) return false
+      return isEmptyAnswer(answers[question.questionKey])
+    })
     if (missing) {
       setState(current => ({ ...current, error: `Please complete “${missing.label}”.` }))
       const target = missing.questionKey === 'built_up_area'
