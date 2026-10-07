@@ -5,7 +5,7 @@ import { isEmptyAnswer, isQuestionVisible } from '../components/customerFlowQues
 import InteriorRequirementExact from '../components/InteriorRequirementExact'
 import RealEstateRequirementExact from '../components/RealEstateRequirementExact'
 import QuoteLocationFields from '../components/QuoteLocationFields'
-import { downloadInteriorBrochurePdf, downloadRequirementQuotePdf } from '../utils/requirementQuotePdf'
+import { downloadConstructionBrochurePdf, downloadInteriorBrochurePdf, downloadRequirementQuotePdf } from '../utils/requirementQuotePdf'
 import { calculateRequirementQuotation } from '../utils/customerQuotation'
 import { getInteriorPackage } from '../data/interiorPackageCatalog'
 import './RequirementWizard.css'
@@ -663,6 +663,7 @@ export default function RequirementWizard({ flowKey, onCompletionChange }) {
         {submissionResult?.leadId && <div className="rq-success-reference">Request ID <b>#{submissionResult.leadId}</b></div>}
         <div className="rq-success-actions">
           <button className="rq-download-quote" type="button" onClick={downloadQuoteRequest}>↓ {quotation ? 'Download Detailed Quotation PDF' : 'Download Requirement PDF'}</button>
+          {quotation && <button type="button" onClick={() => downloadConstructionBrochurePdf({quality:answers.quality,requestId:submissionResult?.leadId,customerName:contact.name,city:[selectedCity?.name,selectedCity?.state_name].filter(Boolean).join(', ')})}>↓ Download Selected Package Brochure</button>}
           <Link className="rq-back-home" to="/">Back home</Link>
           <button type="button" onClick={() => window.location.reload()}>{quotation ? 'Create another quotation' : 'Post another requirement'}</button>
         </div>
