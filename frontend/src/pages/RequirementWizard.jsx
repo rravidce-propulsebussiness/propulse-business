@@ -814,10 +814,10 @@ export default function RequirementWizard({ flowKey, onCompletionChange }) {
             </div>
           </section>}
 
-          <section className="rq-section-card" id="rq-additional">
+          {additionalQuestion&&<section className="rq-section-card" id="rq-additional">
             <div className="rq-section-heading"><div><h2>Additional Requirements</h2></div></div>
-            {additionalQuestion ? <PremiumQuestion question={additionalQuestion} value={answers[additionalQuestion.questionKey]} onChange={value => setAnswer(additionalQuestion.questionKey, value)} /> : <div className="rq-empty-note">No additional notes are required for this Admin flow.</div>}
-          </section>
+            <PremiumQuestion question={additionalQuestion} value={answers[additionalQuestion.questionKey]} onChange={value => setAnswer(additionalQuestion.questionKey, value)} />
+          </section>}
         </div>
 
         <aside className="rq-summary-card" id="rq-summary">
@@ -826,18 +826,18 @@ export default function RequirementWizard({ flowKey, onCompletionChange }) {
           <div className="rq-summary-list">
             {summaryRows.map(([label,value]) => <div key={label}><span>{label}</span><b title={value}>{value}</b></div>)}
           </div>
-          <p className="rq-submit-consent">By submitting, you agree that ProPulse may use your project and contact details to process this request and connect you with relevant professionals.</p>
+          <p className="rq-submit-consent">Your details are used to process this request.</p>
           <label className="rq-honeypot" aria-hidden="true">Website<input tabIndex="-1" autoComplete="off" value={website} onChange={event => setWebsite(event.target.value)} /></label>
           {state.error && <div className="rq-error">{state.error}</div>}
           <button className="rq-submit" type="submit" disabled={state.saving}>{state.saving ? 'Submitting…' : (isQuotationFlow && answers.built_up_area ? 'Generate Detailed Quotation' : (isQuotationFlow ? 'Get Free Quote' : (flow.config?.submitLabel || 'Submit Requirement')))} <Icon name="arrow" size={15}/></button>
-          <small className="rq-submit-note">{isQuotationFlow ? 'No OTP required. Pricing is calculated from Admin-configured rates and your submitted project details.' : 'No OTP required. Your request becomes a lead only after successful submission.'}</small>
+
         </aside>
       </div>
     </form>
 
     <section className="rq-expert-strip">
       <img src={theme.expert} alt="" />
-      <div><h2>Need Help? Talk to Our Expert</h2><p>{isQuotationFlow ? 'Need help with built-up area, package or specifications? We can help before you generate the quotation.' : 'Get free consultation and personalized guidance for your requirement.'}</p></div>
+      <div><h2>Need Help?</h2></div>
       <a href={phone ? `tel:${phone.replace(/\s/g,'')}` : '#rq-basic'}><Icon name="phone" size={19}/> {phone || 'Start Free Consultation'}</a>
     </section>
 
