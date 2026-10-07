@@ -90,10 +90,10 @@ function PublicContact(){
     {error&&<div className="contact-alert">{error}</div>}
 
     <section className="contact-service-strip">
-      <article><b>01</b><span>Construction</span><small>Quotation, packages and project requirements.</small></article>
-      <article><b>02</b><span>Interiors</span><small>Design scope, rooms, finishes and requirements.</small></article>
-      <article><b>03</b><span>Real Estate</span><small>Buy and sell property requirements.</small></article>
-      <article><b>04</b><span>Support</span><small>Website, account and general assistance.</small></article>
+      <article><b>01</b><span>Construction</span></article>
+      <article><b>02</b><span>Interiors</span></article>
+      <article><b>03</b><span>Real Estate</span></article>
+      <article><b>04</b><span>Support</span></article>
     </section>
 
     <section className="contact-body">
@@ -102,16 +102,16 @@ function PublicContact(){
           <div className="contact-panel-heading"><span className="contact-kicker">CONTACT CHANNELS</span><h2>Reach the ProPulse Team</h2></div>
           <div className="contact-detail-grid">
             <a className="contact-detail-card" href={email?'mailto:'+email:'#'}>
-              <span className="contact-icon"><Icon name="mail" size={17}/></span><div><small>Email</small><strong>{loading?'Loading…':email||'Not published'}</strong><span>General website enquiries</span></div><b>→</b>
+              <span className="contact-icon"><Icon name="mail" size={17}/></span><div><small>Email</small><strong>{loading?'Loading…':email||'Not published'}</strong></div><b>→</b>
             </a>
             <a className="contact-detail-card" href={data.phone?phoneHref:'#'}>
               <span className="contact-icon"><Icon name="phone" size={17}/></span><div><small>Phone</small><strong>{loading?'Loading…':data.phone||'Not published'}</strong><span>{data.business_hours||'Business hours'}</span></div><b>→</b>
             </a>
             <a className="contact-detail-card" href={whatsapp?'https://wa.me/'+whatsapp:'#'} target={whatsapp?'_blank':undefined} rel={whatsapp?'noreferrer':undefined}>
-              <span className="contact-icon"><Icon name="chat" size={17}/></span><div><small>WhatsApp</small><strong>{loading?'Loading…':data.whatsapp||'Not published'}</strong><span>Quick project questions</span></div><b>→</b>
+              <span className="contact-icon"><Icon name="chat" size={17}/></span><div><small>WhatsApp</small><strong>{loading?'Loading…':data.whatsapp||'Not published'}</strong></div><b>→</b>
             </a>
             <div className="contact-detail-card">
-              <span className="contact-icon"><Icon name="clock" size={17}/></span><div><small>Business Hours</small><strong>{loading?'Loading…':data.business_hours||'Not published'}</strong><span>Support availability</span></div>
+              <span className="contact-icon"><Icon name="clock" size={17}/></span><div><small>Business Hours</small><strong>{loading?'Loading…':data.business_hours||'Not published'}</strong></div>
             </div>
           </div>
         </article>
