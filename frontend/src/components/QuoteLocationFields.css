@@ -23,3 +23,8 @@
 @media(max-width:760px){.quote-location-fields{grid-template-columns:1fr 1fr}.quote-pin-field{grid-column:1/-1}}
 @media(max-width:560px){.quote-location-fields{grid-template-columns:1fr}.quote-pin-field{grid-column:auto}}
 @media(prefers-reduced-motion:reduce){.qlf-status i{animation:none}}
+
+.qlf-city-autocomplete{position:relative}
+.qlf-city-suggestions{position:absolute;z-index:60;left:0;right:0;top:calc(100% + 5px);max-height:220px;overflow:auto;padding:5px;background:#fff;border:1px solid #dce3e8;border-radius:10px;box-shadow:0 14px 34px rgba(20,54,80,.16)}
+.qlf-city-suggestions button{display:block;width:100%;border:0;background:#fff;padding:11px 12px;text-align:left;color:#21445c;font:750 13px/1.25 inherit;border-radius:7px;cursor:pointer}
+.qlf-city-suggestions button:hover,.qlf-city-suggestions button:focus{background:#f3f7fa;outline:none}
