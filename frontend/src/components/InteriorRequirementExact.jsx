@@ -277,7 +277,7 @@ export default function InteriorRequirementExact(props) {
             <label><b>Email <small>(Optional)</small></b><input type="email" value={contact.email} onChange={e=>setContact({...contact,email:e.target.value})} placeholder="Enter your email"/></label>
           </div>
         </div>
-        <aside className="irx-promo"><div className="irx-promo-photo"><img src={PROMO} alt=""/><h3>Transform<br/>Your Space<br/>Your Way</h3></div><div className="irx-promo-stats"><span><b>Guided</b><small>Easy Journey</small></span><span><b>Tailored</b><small>Your Preferences</small></span><span><b>Local</b><small>City-aware Matching</small></span></div></aside>
+        
       </section>
 
       <section className="irx-card" id="irx-property">
