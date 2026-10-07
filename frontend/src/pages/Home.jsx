@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { publicRequest } from '../utils/auth'
 import './Home.css'
 import { PublicFooter, PublicHeader } from '../components/PublicSiteChrome'
+import HeroBlueprintAnimation from '../components/HeroBlueprintAnimation'
 
 const DEFAULT_HERO = 'https://images.unsplash.com/photo-1600585152915-d208bec867a1?auto=format&fit=crop&w=2200&q=92'
 
@@ -141,7 +142,7 @@ export default function Home() {
 
     <main>
       <section className="hc-hero" id="home">
-        <img className="hc-hero-image" src={heroImage} alt="Premium modern home" fetchPriority="high" />
+        <HeroBlueprintAnimation />
         <div className="hc-hero-overlay" />
         <div className="hc-container hc-hero-inner">
           <div className="hc-hero-copy">
@@ -166,39 +167,6 @@ export default function Home() {
               </span>
             </div>
           </div>
-
-          <article className="hc-float-card hc-float-professionals">
-            <div className="hc-float-heading">
-              <span><Icon name="people" size={21}/></span>
-              <div><b>Certified Engineers</b><small>Across major cities</small></div>
-            </div>
-            <div className="hc-pro-avatar-row" aria-hidden="true">
-              <span>AR</span><span>SK</span><span>VM</span><span>RK</span><span>+</span>
-            </div>
-          </article>
-
-          <article className="hc-float-card hc-float-materials">
-            <div className="hc-material-heading">
-              <span><Icon name="layers" size={21}/></span>
-              <div><b>Branded Material Options</b><small>Premium brands for a better home</small></div>
-            </div>
-            <div className="hc-material-brand-grid">
-              {MATERIAL_BRANDS.map(item => (
-                <div className="hc-material-brand" key={item.key}>
-                  <div className="hc-material-thumb">
-                    <img
-                      className="hc-material-product-image"
-                      src={item.image}
-                      alt={`${item.brand} ${item.label}`}
-                      loading="lazy"
-                    />
-                  </div>
-                  <strong>{item.brand}</strong>
-                  <small>{item.label}</small>
-                </div>
-              ))}
-            </div>
-          </article>
         </div>
       </section>
 
