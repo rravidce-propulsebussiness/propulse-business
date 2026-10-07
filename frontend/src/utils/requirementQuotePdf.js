@@ -714,3 +714,12 @@ export async function downloadConstructionBrochurePdf({quality='standard',reques
   if(specs.length>8){const page=createPage(logo,2,selected.name+' Package');pages.push(page);drawSectionHeading(page,'More specifications');drawSpecificationCards(page,specs.slice(8));}
   savePdf(pages,'propulse-construction-'+selected.key+'-brochure-'+(requestId||Date.now())+'.pdf');
 }
+
+export async function createDetailedQuotationPdfDataUrl(options={}){
+  if(!options.quotation)return '';
+  const pages=await detailedQuotationPages(options);
+  const data=buildPdf(pages.map(item=>dataUrlBytes(item.canvas.toDataURL('image/jpeg',0.91))));
+  let binary=''; const step=0x8000;
+  for(let i=0;i<data.length;i+=step)binary+=String.fromCharCode(...data.subarray(i,i+step));
+  return 'data:application/pdf;base64,'+btoa(binary);
+}
