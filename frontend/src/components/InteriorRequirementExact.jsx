@@ -252,10 +252,6 @@ export default function InteriorRequirementExact(props) {
       </div>
     </section>
 
-    <div className="irx-steps">
-      {[['1','Basic Details','Tell us about your space','#irx-basic'],['2','Property Details','Property type and configuration','#irx-property'],['3','Design & Scope','Style and work selection','#irx-style'],['4','Review & Submit','Confirm and connect','#irx-summary']].map(([n,title,sub,href],index) => <a href={href} key={n} className={index===0?'active':completion>[30,55,80,99][index]?'done':''}><span>{completion>[30,55,80,99][index]?'✓':n}</span><div><b>{title}</b><small>{sub}</small></div>{index<3&&<Icon name="arrow" size={14}/>}</a>)}
-    </div>
-
     <form className="irx-form" onSubmit={event=>submit(event,referenceFiles.map(item=>item.file))}>
       <section className="irx-top-grid" id="irx-basic">
         <div className="irx-card irx-basic-card">
