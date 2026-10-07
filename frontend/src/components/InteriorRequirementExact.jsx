@@ -281,7 +281,7 @@ export default function InteriorRequirementExact(props) {
       </section>
 
       <section className="irx-card" id="irx-property">
-        <div className="irx-section-title"><div><h2>Property Details</h2><p>Select the property type and number of bedrooms.</p></div></div>
+        <div className="irx-section-title"><div><h2>Property Details</h2></div></div>
         <div className="irx-property-selectors">
           <label className="irx-property-select-field">
             <div><b>Property Type</b><small>Select the type of property you want to design.</small></div>
@@ -313,7 +313,7 @@ export default function InteriorRequirementExact(props) {
           </section>
 
           <section className="irx-card" id="irx-requirements">
-            <div className="irx-section-title"><div><h2>Interior Requirements</h2><p>Choose your home configuration and whether you want complete interiors or only selected work.</p></div></div>
+            <div className="irx-section-title"><div><h2>Interior Requirements</h2></div></div>
 
             <div className="irx-requirement-grid scope-only">
               {scope&&<div className="irx-scope-field">
