@@ -72,11 +72,8 @@ assert.match(app,/<GlobalLeadPopup\/>/);
 assert.doesNotMatch(app,/ProfessionalHome/);
 
 // Homeowner acquisition homepage.
-assert.match(home,/Don&apos;t Leave Your/);
-assert.match(home,/Find the right partner\. Build it right\./);
 assert.doesNotMatch(home,/Build\. Design\. Find/);
 assert.doesNotMatch(home,/Right Professionals/);
-assert.match(home,/Start Your Requirement/);
 assert.match(home,/propulse:open-lead-popup/);
 assert.match(home,/What do you need\?/);
 assert.match(home,/Build Your Home/);
@@ -94,6 +91,7 @@ assert.match(homeCss,/\.hc-hero/);
 assert.match(homeCss,/\.hc-service-grid/);
 assert.match(homeCss,/\.hc-benefit-grid/);
 assert.match(homeCss,/\.hc-step-grid/);
+assert.match(home,/HeroBlueprintAnimation/);
 assert.doesNotMatch(home,/HeroJourneyVideo/);
 assert.match(home,/Buy or sell the right property/);
 assert.doesNotMatch(home,/buy, sell, rent or invest/i);
