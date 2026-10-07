@@ -365,7 +365,12 @@ export default function RequirementWizard({ flowKey, onCompletionChange }) {
   const completion = requiredTotal ? Math.round(requiredDone / requiredTotal * 100) : 0
 
   function setAnswer(key, value) {
-    setAnswers(current => ({ ...current, [key]: value }))
+    setAnswers(current => {
+      if (flowKey === 'build' && (key === 'project_type' || key === 'property_type')) {
+        return { ...current, project_type: value, property_type: value }
+      }
+      return { ...current, [key]: value }
+    })
     setState(current => ({ ...current, error: '' }))
   }
 
