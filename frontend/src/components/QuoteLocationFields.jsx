@@ -84,13 +84,19 @@ export default function QuoteLocationFields({
     }
   }
 
-  function detectCurrentLocation() {
+  async function detectCurrentLocation() {
+    if (!window.isSecureContext) {
+      onDetectedLocation?.({ error: 'Location requires a secure HTTPS connection.' })
+      return
+    }
     if (!navigator.geolocation) {
       onDetectedLocation?.({ error: 'Current location is not supported by this browser.' })
       return
     }
+
     setLocating(true)
-    navigator.geolocation.getCurrentPosition(
+
+    const locate = () => navigator.geolocation.getCurrentPosition(
       async position => {
         try {
           const data = await publicRequest('/pincodes/reverse-location', {
@@ -102,7 +108,7 @@ export default function QuoteLocationFields({
           })
           onDetectedLocation?.(data)
         } catch (error) {
-          onDetectedLocation?.({ error: error.message || 'Unable to detect current location.' })
+          onDetectedLocation?.({ error: error.message || 'Location was detected, but the address could not be matched. Enter State, City or PIN manually.' })
         } finally {
           setLocating(false)
         }
@@ -110,14 +116,29 @@ export default function QuoteLocationFields({
       error => {
         setLocating(false)
         const message = error.code === error.PERMISSION_DENIED
-          ? 'Location permission was denied. Enter State, City or PIN manually.'
+          ? 'Location access is blocked for this site. Tap the browser site controls, allow Location, then tap “Use my current location” again.'
           : error.code === error.TIMEOUT
-            ? 'Location detection timed out. Enter State, City or PIN manually.'
-            : 'Unable to detect current location. Enter State, City or PIN manually.'
+            ? 'Location detection timed out. Please try again or enter State, City or PIN manually.'
+            : 'Unable to detect current location. Turn on device Location and try again.'
         onDetectedLocation?.({ error: message })
       },
-      { enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 },
     )
+
+    try {
+      if (navigator.permissions?.query) {
+        const permission = await navigator.permissions.query({ name: 'geolocation' })
+        if (permission.state === 'denied') {
+          setLocating(false)
+          onDetectedLocation?.({ error: 'Location access is blocked for this site. Tap the browser site controls, allow Location, then tap “Use my current location” again.' })
+          return
+        }
+      }
+    } catch {
+      // Some mobile browsers do not expose geolocation through Permissions API.
+    }
+
+    locate()
   }
 
   return (
