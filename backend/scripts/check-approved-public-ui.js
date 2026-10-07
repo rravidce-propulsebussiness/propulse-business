@@ -59,7 +59,8 @@ assert.doesNotMatch(projects,/import PublicIcon /);
 // Canonical public routes and shared requirement popup.
 assert.match(app,/path="\/experts" element={<Experts\/>}/);
 assert.match(app,/path="\/quote" element={<Solutions\/>}/);
-assert.match(app,/path="\/professionals" element={<Leads\/>}/);
+assert.match(app,/path="\/professionals" element={<ProfessionalsRoute\/>}/);
+assert.match(app,/function ProfessionalsRoute\(\)[\s\S]*user\?\.role==='admin'[\s\S]*\/admin\/leads[\s\S]*user\?\.role==='lead_partner'[\s\S]*\/lead-partner\/dashboard[\s\S]*<Leads\/>/);
 assert.match(app,/path="\/professional-contact" element={<PortalContact audience="professionals"\/>}/);
 assert.match(contact,/portalAudience==='users'[\s\S]*<Navigate to="\/contact" replace\/>/);
 assert.match(portalContact,/professionals:\{label:'Professional',title:'Professional Support'/);
@@ -85,11 +86,10 @@ assert.match(home,/Why Homeowners Choose ProPulse/);
 assert.match(home,/How It Works/);
 assert.doesNotMatch(home,/WebsiteFaqSection/);
 assert.doesNotMatch(home,/audience="homeowner"/);
-assert.match(home,/to="\/experts">Find Professionals<\/Link>/);
-assert.match(home,/to="\/professionals">For Professionals<\/Link>/);
-assert.match(home,/\/quote#construction/);
-assert.match(home,/\/quote#interiors/);
-assert.match(home,/\/quote#property/);
+assert.match(home,/<PublicHeader \/>/);
+assert.match(home,/openRequirement\(''\)/);
+assert.match(home,/openRequirement\(item\.key\)/);
+assert.match(home,/to="\/packages"/);
 assert.match(homeCss,/\.hc-hero/);
 assert.match(homeCss,/\.hc-service-grid/);
 assert.match(homeCss,/\.hc-benefit-grid/);
@@ -159,12 +159,15 @@ assert.match(packages,/Side-by-Side Comparison/);
 assert.match(packages,/Get Quote/);
 assert.match(packages,/\/quote\?package=/);
 
-// Public marketing pages keep both customer/professional navigation paths.
+// Public marketing pages use the shared site chrome; navigation links live in PublicSiteChrome.
+const publicChrome=read('../frontend/src/components/PublicSiteChrome.jsx');
 for(const source of [home,quote,packages,projects,about,howItWorks,contact]){
-  assert.match(source,/For Professionals/);
-  assert.match(source,/to="\/professionals"/);
-  assert.match(source,/to="\/experts">Find Professionals<\/Link>/);
+  assert.match(source,/PublicHeader/);
+  assert.match(source,/PublicFooter/);
 }
+assert.match(publicChrome,/For Professionals/);
+assert.match(publicChrome,/to="\/professionals"/);
+assert.match(publicChrome,/to="\/experts"/);
 
 for(const source of [home,projects,about,howItWorks,interiorExact,realEstateExact,wizard]){
   assert.doesNotMatch(source,/\/#contact/);
