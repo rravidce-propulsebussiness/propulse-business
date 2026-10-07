@@ -512,3 +512,48 @@
   .quote-flow-switcher button{min-width:126px}
   .quote-flow-switcher button>b{font-size:12px}
 }
+
+
+/* Unified quote section headings — construction, interiors and real estate */
+.quote-flow .rq-section-heading,
+.quote-flow .irx-section-title,
+.quote-flow .rex-section-title,
+.quote-flow .irx-section-title-premium,
+.quote-flow .rex-section-title-premium{
+  display:block!important;
+  width:100%!important;
+  margin-left:auto!important;
+  margin-right:auto!important;
+  text-align:center!important;
+}
+.quote-flow .rq-section-heading>div,
+.quote-flow .irx-section-title>div,
+.quote-flow .rex-section-title>div,
+.quote-flow .irx-section-title-premium>div,
+.quote-flow .rex-section-title-premium>div{
+  width:100%!important;
+  text-align:center!important;
+}
+.quote-flow .rq-section-heading>strong,
+.quote-flow .irx-section-title>span,
+.quote-flow .rex-section-title>span,
+.quote-flow .irx-section-title-premium>span,
+.quote-flow .rex-section-title-premium>span{
+  display:none!important;
+}
+.quote-flow .rq-section-heading h2,
+.quote-flow .irx-section-title h2,
+.quote-flow .rex-section-title h2{
+  margin-left:auto!important;
+  margin-right:auto!important;
+  text-align:center!important;
+}
+.quote-flow .rq-section-heading p,
+.quote-flow .irx-section-title p,
+.quote-flow .rex-section-title p,
+.quote-flow .irx-section-title small,
+.quote-flow .rex-section-title small{
+  margin-left:auto!important;
+  margin-right:auto!important;
+  text-align:center!important;
+}
