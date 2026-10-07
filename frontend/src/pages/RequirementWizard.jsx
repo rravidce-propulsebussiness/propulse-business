@@ -798,7 +798,7 @@ export default function RequirementWizard({ flowKey, onCompletionChange }) {
       <div className="rq-lower-grid">
         <div>
           <section className="rq-section-card" id="rq-preferences">
-            <div className="rq-section-heading"><div><h2>Requirements & Preferences</h2><p>Choose the quality, budget and timing that fit your project.</p></div></div>
+            <div className="rq-section-heading"><div><h2>Requirements & Preferences</h2></div></div>
             <div className="rq-question-stack">
               {[...preferenceQuestions, ...extraQuestions].map(question => <div className="rq-question-block" key={question.id || question.questionKey}>
                 <div className="rq-question-label"><b>{question.label}</b>{question.helpText && <small>{question.helpText}</small>}</div>
@@ -808,14 +808,14 @@ export default function RequirementWizard({ flowKey, onCompletionChange }) {
           </section>
 
           {builtUpQuestion && <section className="rq-section-card rq-built-up-card" id="rq-built-up">
-            <div className="rq-section-heading"><div><h2>Planned total built-up area</h2><p>Auto-calculated from plot area and floors. You can edit this value.</p></div></div>
+            <div className="rq-section-heading"><div><h2>Planned total built-up area</h2></div></div>
             <div className="rq-built-up-field">
               <PremiumQuestion question={builtUpQuestion} value={answers[builtUpQuestion.questionKey]} onChange={value => setAnswer(builtUpQuestion.questionKey, value)} />
             </div>
           </section>}
 
           <section className="rq-section-card" id="rq-additional">
-            <div className="rq-section-heading"><div><h2>Additional Requirements</h2><p>Tell us any important details we should preserve in the lead.</p></div></div>
+            <div className="rq-section-heading"><div><h2>Additional Requirements</h2></div></div>
             {additionalQuestion ? <PremiumQuestion question={additionalQuestion} value={answers[additionalQuestion.questionKey]} onChange={value => setAnswer(additionalQuestion.questionKey, value)} /> : <div className="rq-empty-note">No additional notes are required for this Admin flow.</div>}
           </section>
         </div>
