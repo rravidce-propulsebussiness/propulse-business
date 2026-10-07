@@ -166,7 +166,7 @@ export default function Experts(){
               <h2>{selected.business_name}</h2>
               <p>{selected.public_headline||industryNames.join(' · ')||'Professional services'}</p>
               <div className="expert-profile-badges">
-                <b className={selected.is_verified?'verified':'member'}>{selected.is_verified?'Verified':'Member'}</b>
+                {selected.is_verified&&<b className="verified">Verified</b>}
                 <b>{String(selected.plan_group||'member').toUpperCase()}</b>
                 {selected.years_experience!=null&&<b>{selected.years_experience} years experience</b>}
               </div>
@@ -193,8 +193,6 @@ export default function Experts(){
                 <div className="expert-profile-section-head"><span>PROFILE SNAPSHOT</span><h3>Business highlights</h3></div>
                 <dl className="expert-profile-facts">
                   <div><dt>Experience</dt><dd>{selected.years_experience!=null?selected.years_experience+' years':'Not published'}</dd></div>
-                  <div><dt>Membership</dt><dd>{String(selected.plan_group||'Member').toUpperCase()}</dd></div>
-                  <div><dt>Verification</dt><dd>{selected.is_verified?'Verified by ProPulse':'Subscription active'}</dd></div>
                   <div><dt>Coverage</dt><dd>{locationNames.length?locationNames.slice(0,2).join(' · '):'Service areas configured'}</dd></div>
                 </dl>
               </aside>
