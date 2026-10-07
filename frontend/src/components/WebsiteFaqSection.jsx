@@ -117,7 +117,7 @@ export default function WebsiteFaqSection({variant='home',audience='website'}){
   const faqList=<div className="website-faq-list">
     {loading&&<div className="website-faq-state">Loading FAQs…</div>}
     {!loading&&error&&<div className="website-faq-state error"><strong>FAQs are temporarily unavailable.</strong><button type="button" onClick={load}>Try again</button></div>}
-    {!loading&&!error&&!visible.length&&<div className="website-faq-state"><strong>No FAQs are published here yet.</strong><span>Admin can publish questions from the FAQ manager.</span></div>}
+    {!loading&&!error&&!visible.length&&<div className="website-faq-state"><strong>No FAQs are available yet.</strong></div>}
     {!loading&&!error&&visible.map((item,index)=>{
       const expanded=open===item.id
       const answerId=`website-faq-answer-${item.id}`
@@ -137,8 +137,7 @@ export default function WebsiteFaqSection({variant='home',audience='website'}){
     const compactItems=visible.slice(0,4)
     return <section className="website-faq website-faq-compact" id="faq">
       <div className="website-faq-compact-head">
-        <div><h2>Frequently Asked Questions</h2><p>Quick answers about the ProPulse customer journey.</p></div>
-        <Link to="/faq">View All FAQs <span>→</span></Link>
+        <div><h2>Frequently Asked Questions</h2></div>
       </div>
       <div className="website-faq-compact-grid">
         {loading&&<div className="website-faq-state">Loading FAQs…</div>}
@@ -162,7 +161,7 @@ export default function WebsiteFaqSection({variant='home',audience='website'}){
       <div>
         <span className="website-faq-kicker"><i/> FAQ</span>
         <h2>Questions, <em>clearly answered.</em></h2>
-        <p>Get clear answers about free consultation, project requirements, cost estimators, contact sharing and what happens next.</p>
+        
       </div>
       <Link className="website-faq-more" to="/contact"><span className="website-faq-more-icon">☵</span> Need more help? <b>→</b></Link>
     </div>
