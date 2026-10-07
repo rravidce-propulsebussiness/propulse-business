@@ -71,19 +71,19 @@ function PublicContact(){
       <div className="contact-hero-copy">
         <span className="contact-kicker">CONTACT PROPULSE</span>
         <h1>Questions About Your Home Journey? <em>Talk to Us.</em></h1>
-        <p>Whether you are planning construction, interiors or a property requirement, reach the ProPulse team using the contact details configured by our Admin team.</p>
+        <p>Construction, interiors and property support in one place.</p>
         <div className="contact-hero-actions">
           <Link className="contact-primary" to="/quote#construction" onClick={event=>{event.preventDefault();openLeadPopup('')}}>Get Free Quote <Icon name="arrow" size={15}/></Link>
           {data.phone&&<a className="contact-secondary" href={phoneHref}><Icon name="phone" size={15}/> Call Us</a>}
         </div>
-        <div className="contact-trust"><span>Homeowner focused</span><i/><span>Admin-managed contact details</span><i/><span>Construction · Interiors · Real Estate</span></div>
+        <div className="contact-trust"><span>Homeowner support</span><i/><span>Construction · Interiors · Real Estate</span></div>
       </div>
 
       <aside className="contact-hero-card">
         <span>WE'RE HERE TO HELP</span>
         <strong>{loading?'Loading contact information…':data.business_hours||'Contact our support team during business hours.'}</strong>
-        <small>For project requirements, the fastest starting point is the guided quote page. For support or general questions, use the channels below.</small>
-        <div className="contact-hero-contact"><span>•</span><div><b>{email||'Website support'}</b><small>{data.phone||'Contact details managed from Admin'}</small></div></div>
+        <small>Project planning and customer support.</small>
+        <div className="contact-hero-contact"><span>•</span><div><b>{email||'Website support'}</b><small>{data.phone||'Customer support'}</small></div></div>
       </aside>
     </section>
 
@@ -99,7 +99,7 @@ function PublicContact(){
     <section className="contact-body">
       <div className="contact-main-column">
         <article className="contact-panel">
-          <div className="contact-panel-heading"><span className="contact-kicker">CONTACT CHANNELS</span><h2>Reach the ProPulse Team</h2><p>These details are loaded directly from Admin → Contact & Social → Website.</p></div>
+          <div className="contact-panel-heading"><span className="contact-kicker">CONTACT CHANNELS</span><h2>Reach the ProPulse Team</h2></div>
           <div className="contact-detail-grid">
             <a className="contact-detail-card" href={email?'mailto:'+email:'#'}>
               <span className="contact-icon"><Icon name="mail" size={17}/></span><div><small>Email</small><strong>{loading?'Loading…':email||'Not published'}</strong><span>General website enquiries</span></div><b>→</b>
@@ -143,9 +143,9 @@ function PublicContact(){
         </article>
 
         <article className="contact-panel">
-          <div className="contact-panel-heading"><span className="contact-kicker">SOCIAL CHANNELS</span><h2>Stay Connected</h2><p>Only social links enabled by Admin are shown here.</p></div>
+          <div className="contact-panel-heading"><span className="contact-kicker">SOCIAL CHANNELS</span><h2>Stay Connected</h2></div>
           <div className="contact-social-grid">
-            {socials.length?socials.map(item=><a key={item.id||item.platform} href={item.url} target="_blank" rel="noreferrer"><span>{String(item.platform||'?').slice(0,1).toUpperCase()}</span><div><strong>{item.platform}</strong><small>Open profile ↗</small></div></a>):<div className="contact-empty">No public social channels are currently published.</div>}
+            {socials.length?socials.map(item=><a key={item.id||item.platform} href={item.url} target="_blank" rel="noreferrer"><span>{String(item.platform||'?').slice(0,1).toUpperCase()}</span><div><strong>{item.platform}</strong><small>Open profile ↗</small></div></a>):<div className="contact-empty">No social channels available.</div>}
           </div>
         </article>
 
@@ -159,7 +159,7 @@ function PublicContact(){
     </section>
 
     <section className="contact-bottom-cta">
-      <div><span className="contact-kicker">READY TO START?</span><h2>Tell Us What You Need</h2><p>Choose Construction, Interiors or Real Estate and continue with the guided homeowner flow.</p></div>
+      <div><span className="contact-kicker">READY TO START?</span><h2>Tell Us What You Need</h2></div>
       <div><Link to="/packages">View Packages</Link><Link to="/quote#construction" onClick={event=>{event.preventDefault();openLeadPopup('')}}>Get Free Quote <Icon name="arrow" size={14}/></Link></div>
     </section>
 
