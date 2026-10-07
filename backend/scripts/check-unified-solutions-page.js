@@ -33,9 +33,10 @@ assert.match(css,/\.quote-flow \.rq-premium-hero/);
 assert.match(css,/\.quote-flow \.irx-hero/);
 assert.match(css,/\.quote-flow \.rex-hero/);
 
-assert.match(home,/\/quote#construction/);
-assert.match(home,/\/quote#interiors/);
-assert.match(home,/\/quote#property/);
-assert.match(packages,/\/quote\?package=/);
+assert.match(home,/openRequirement\(''\)/);
+assert.match(home,/openRequirement\(item\.key\)/);
+assert.match(home,/to="\/packages"/);
+assert.match(packages,/navigate\('\/quote\?package='/);
+assert.match(packages,/category === 'construction' \? 'construction' : 'interiors'/);
 
 console.log('Approved unified quote page checks passed.');
