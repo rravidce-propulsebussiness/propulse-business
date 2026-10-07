@@ -737,17 +737,6 @@ export default function RequirementWizard({ flowKey, onCompletionChange }) {
       </div>
     </section>
 
-    <div className="rq-flow-nav">
-      {[
-        ['rq-basic','1','Basic Details','Project & contact essentials'],
-        ['rq-config','2','Project Details','Plot, floors & site access'],
-        ['rq-preferences','3','Preferences','Package, budget & timeline'],
-        ['rq-summary','4',isQuotationFlow ? 'Your Quotation' : 'Review & Submit',isQuotationFlow ? 'Review & download' : 'Confirm and connect'],
-      ].map(([id, number, title, text], index) => <button key={id} onClick={() => jump(id)} className={completion >= [1,35,65,90][index] ? 'done' : index === 0 ? 'active' : ''}>
-        <span>{completion >= [35,65,90,100][index] ? '✓' : number}</span><div><b>{title}</b><small>{text}</small></div>{index < 3 && <i><Icon name="arrow" size={14}/></i>}
-      </button>)}
-    </div>
-
     <form className="rq-premium-form" onSubmit={submit}>
       <section className="rq-form-row basic-row" id="rq-basic">
         <div className="rq-section-card">
