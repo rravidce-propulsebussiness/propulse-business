@@ -35,7 +35,7 @@ export default function QuoteLocationFields({
     const rows = stateId
       ? cities.filter(city => String(city?.state_id || '') === String(stateId))
       : []
-    return rows.sort((a, b) => String(a?.name || '').localeCompare(String(b?.name || '')))
+    return [...rows].sort((a, b) => String(a?.name || '').localeCompare(String(b?.name || '')))
   }, [cities, stateId])
 
   const selectedCity = useMemo(
@@ -153,18 +153,20 @@ export default function QuoteLocationFields({
 
       <label className="quote-city-field">
         <b>{cityLabel}</b>
-        <input
-          list={listId}
-          value={cityText}
-          onChange={event => handleCityChange(event.target.value)}
-          onBlur={handleCityBlur}
-          placeholder={stateId ? 'Type city / location' : 'Select state first'}
+        <select
+          value={cityId}
+          onChange={event => {
+            const value = event.target.value
+            const city = filteredCities.find(item => String(item.id) === String(value))
+            setCityText(city ? String(city.name || '') : '')
+            onCityChange?.(value)
+          }}
           autoComplete="address-level2"
           disabled={!stateId}
-        />
-        <datalist id={listId}>
-          {filteredCities.map(city => <option key={city.id} value={city.name} />)}
-        </datalist>
+        >
+          <option value="">{stateId ? 'Select City / Location' : 'Select state first'}</option>
+          {filteredCities.map(city => <option key={city.id} value={city.id}>{city.name}</option>)}
+        </select>
         {stateId && !cityId && cityText ? <small className="qlf-city-hint">Choose a supported city from the suggestions.</small> : null}
       </label>
 
