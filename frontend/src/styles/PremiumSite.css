@@ -1,0 +1,163 @@
+/* Shared visual language. Route scope keeps marketing layouts out of workspaces. */
+.premium-site {
+  --pp-ink: #102f46;
+  --pp-muted: #5f7382;
+  --pp-line: #dfe6e9;
+  --pp-paper: #faf9f6;
+  --pp-orange: #e65b26;
+  --pp-shadow: 0 12px 36px rgba(16,47,70,.065);
+  width: 100%;
+  min-height: 100svh;
+  font-family: var(--sans);
+}
+.premium-site :is(button,input,select,textarea) { font-family: inherit; }
+.premium-site :is(a,button,input,select,textarea,summary,[tabindex]):focus-visible {
+  outline: 3px solid #c24b1c;
+  outline-offset: 4px;
+}
+.premium-site :is(button,a) { -webkit-tap-highlight-color: transparent; }
+.premium-site button:disabled { cursor: not-allowed; }
+.premium-public :is(.hc-home,.pkg-page,.pj-page,.hiw-page,.experts-page,.contact-page,.ab-page,.local-seo-page,.regional-page,.guide-page,.customer-faq-page) {
+  background-color: var(--pp-paper);
+}
+.premium-public :is(h1,h2,h3) { text-wrap: balance; }
+.premium-public :is(p,li) { text-wrap: pretty; }
+.premium-public :is(section,article,[id]) { scroll-margin-top: 100px; }
+
+/* Quiet, consistent navigation and readable footer. */
+.premium-public .public-site-header { background: rgba(255,255,255,.97); box-shadow: 0 2px 16px rgba(16,47,70,.035); }
+.premium-public .public-site-header__inner { max-width: 1440px; gap: 16px; grid-template-columns: 160px minmax(0,1fr) auto; }
+.premium-public .public-site-nav { gap: clamp(10px,1.3vw,20px); }
+.premium-public .public-site-nav a { font-size: 13px; font-weight: 650; min-height: 44px; }
+.premium-public :is(.public-site-quote,.public-site-pro) { min-height: 44px; font-size: 12px; font-weight: 700; border-radius: 8px; }
+.premium-public .public-site-quote { background: #d94c18; box-shadow: 0 5px 14px rgba(217,76,24,.15); }
+.premium-public .public-site-nav a.active::after { bottom: -14px; }
+.premium-public .public-site-footer { background: #102b3e; }
+.premium-public .public-site-footer__inner { padding-top: 44px; padding-bottom: 36px; gap: 28px; }
+.premium-public .public-site-footer :is(a,span) { font-size: 13px; line-height: 1.7; }
+.premium-public .public-site-footer b { font-size: 12px; letter-spacing: .09em; font-weight: 700; }
+.premium-public .public-site-footer-brand p { font-size: 13px; line-height: 1.8; }
+.premium-public .public-site-footer__bottom :is(a,span) { font-size: 12px; }
+
+/* Compact page introductions leave the first content row within reach. */
+.premium-public .premium-page-intro { box-sizing: border-box; max-width: 1240px; margin: 0 auto; padding: 44px 24px 26px; text-align: center; }
+.premium-public .premium-eyebrow { display: block; color: #ad481f; font-size: 11px; font-weight: 750; letter-spacing: .16em; }
+.premium-public .premium-page-intro h1 { max-width: 900px; margin: 12px auto; color: var(--pp-ink); font-size: clamp(30px,3.5vw,48px); font-weight: 650; line-height: 1.13; letter-spacing: -.045em; }
+.premium-public .premium-page-intro p { max-width: 660px; margin: auto; color: var(--pp-muted); font-size: 15px; line-height: 1.7; }
+
+/* Home: architectural proportions, confident type, less decorative weight. */
+.premium-public .hc-hero h1 { font-weight: 750; line-height: 1.06; letter-spacing: -.05em; }
+.premium-public .hc-hero-image { animation: none; }
+.premium-public .hc-hero-tagline { color: #d7e4ec; line-height: 1.6; }
+.premium-public :is(.hc-btn-primary,.hc-btn-secondary) { border-radius: 8px; font-weight: 700; }
+.premium-public .hc-btn-primary { background: #d94c18; box-shadow: 0 8px 20px rgba(217,76,24,.16); }
+.premium-public .hc-section { padding-top: 64px; padding-bottom: 64px; }
+.premium-public .hc-section-head h2 { font-size: clamp(27px,3vw,40px); font-weight: 700; line-height: 1.15; letter-spacing: -.04em; }
+.premium-public :is(.hc-service-card,.hc-project-grid article,.hc-float-card) { border-radius: 16px; box-shadow: var(--pp-shadow); }
+.premium-public :is(.hc-service-copy p,.hc-benefit-grid p,.hc-step-grid p) { font-size: 14px; line-height: 1.7; }
+.premium-public .hc-benefits { background: #f5f3ee; }
+
+/* Collections and filters. */
+.premium-public :is(.pj-filter-wrap,.pj-grid-wrap,.pkg-premium-section,.experts-directory) { max-width: 1320px; }
+.premium-public :is(.pj-filter-wrap,.pkg-category-nav,.hiw-tabs) { margin-top: 12px; }
+.premium-public :is(.pj-project-card,.pkg-premium-card,.expert-card,.hiw-step-card,.contact-panel,.contact-detail-card) { border-color: var(--pp-line); border-radius: 16px; box-shadow: var(--pp-shadow); }
+.premium-public :is(.pj-project-copy,.pkg-premium-card-body) { padding: 24px; }
+.premium-public :is(.pj-project-copy h3,.pkg-card-heading h3,.expert-card-title h3) { font-size: 21px; line-height: 1.25; font-weight: 700; letter-spacing: -.025em; }
+.premium-public :is(.pj-project-copy p,.pkg-card-description,.expert-description) { font-size: 14px; line-height: 1.7; color: var(--pp-muted); }
+.premium-public :is(.pj-project-meta,.pj-project-copy small,.pj-project-footer-row,.pkg-card-highlights,.expert-location) { font-size: 12px; line-height: 1.6; }
+.premium-public :is(.pj-category-tabs button,.pkg-category-nav button,.hiw-tabs button,.expert-view,.expert-requirement) { min-height: 44px; font-weight: 650; }
+.premium-public .pkg-premium-price strong { font-size: 29px; letter-spacing: -.045em; }
+.premium-public .pkg-card-photo { height: 210px; }
+.premium-public :is(.pkg-category-nav button b,.hiw-tabs button b) { font-size: 14px; font-weight: 700; }
+.premium-public :is(.pkg-category-nav button small,.hiw-tabs button small) { font-size: 12px; line-height: 1.5; }
+.premium-public .pkg-category-nav button em { font-size: 10px; }
+.premium-public .pkg-card-heading { gap: 12px; flex-wrap: wrap; }
+.premium-public .pkg-card-heading>div { min-width: 0; }
+.premium-public .pkg-card-heading h3 { overflow-wrap: anywhere; }
+.premium-public .pkg-card-highlights li { font-size: 13px; line-height: 1.6; }
+.premium-public .pkg-card-highlights { gap: 10px; }
+.premium-public .pkg-premium-actions button { min-height: 44px; font-size: 13px; border-radius: 8px; }
+.premium-public .pkg-full-toggle { min-height: 44px; font-size: 13px; }
+.premium-public .pkg-comparison-table :is(th,td) { padding: 16px; font-size: 13px; line-height: 1.6; }
+.premium-public .experts-directory-intro { margin-bottom: 24px; }
+.premium-public .experts-directory-intro h1 { font-weight: 700; font-size: clamp(32px,3.5vw,46px); letter-spacing: -.045em; }
+.premium-public .experts-filter-bar { border-radius: 12px; box-shadow: none; border-color: var(--pp-line); }
+.premium-public .hiw-step-card { padding: 26px; background: #fff; }
+.premium-public .hiw-step-card h3 { font-size: 20px; font-weight: 700; line-height: 1.3; }
+.premium-public .hiw-step-card p { font-size: 14px; line-height: 1.7; }
+.premium-public .hiw-visual-card { border-radius: 18px; }
+
+/* Professional profiles: readable details, generous controls. */
+.premium-public .expert-profile-tabs button { min-height: 44px; font-size: 13px; font-weight: 650; }
+.premium-public :is(.expert-profile-about>p,.expert-price-card>p,.expert-price-card li,.expert-location-list span) { font-size: 14px; line-height: 1.7; }
+.premium-public :is(.expert-profile-facts dt,.expert-profile-facts dd,.expert-profile-chips b,.expert-service-groups span,.expert-profile-section-head p,.expert-profile-empty p) { font-size: 13px; line-height: 1.6; }
+.premium-public :is(.expert-profile-stats small,.expert-video-card>small,.expert-drawing-list small,.expert-profile-footer>div) { font-size: 12px; line-height: 1.5; }
+.premium-public :is(.expert-price-card>button,.expert-profile-footer>button,.expert-profile-empty>button) { min-height: 44px; font-size: 13px; }
+.premium-public :is(.expert-profile-section-head h3,.expert-price-card h4) { font-size: 20px; }
+.premium-public :is(.expert-video-card>b,.expert-drawing-list b,.expert-profile-empty b) { font-size: 14px; }
+.premium-public .expert-profile-panel { padding: 22px; box-shadow: none; }
+
+/* Contact, editorial and locality pages share readable content rhythm. */
+.premium-public :is(.contact-hero h1,.ab-hero h1,.local-seo-hero h1,.regional-hero h1,.guide-hero h1) { font-weight: 700; line-height: 1.12; letter-spacing: -.045em; }
+.premium-public :is(.contact-hero p,.contact-panel p,.contact-detail-card p,.contact-address-mini>p,.ab-story-copy p,.ab-why-copy p,.ab-values-copy p,.local-seo-hero>p,.regional-hero>p,.guide-hero>p) { font-size: 15px; line-height: 1.8; }
+.premium-public :is(.local-seo-grid article,.locality-package-grid article,.regional-package-grid article,.guide-hub-grid a,.locality-knowledge-grid article) { border-radius: 16px; border-color: var(--pp-line); box-shadow: var(--pp-shadow); }
+.premium-public :is(.guide-article p,.guide-article li) { font-size: 16px; line-height: 1.85; }
+.premium-public :is(.local-seo-hero,.regional-hero,.guide-hero) { padding-top: 48px; padding-bottom: 44px; }
+.premium-public .website-faq-standalone { padding-top: 32px; }
+.premium-public .website-faq-hero { padding: 32px; background: #102f46; box-shadow: none; }
+.premium-public .website-faq-hero h1 { color: #fff; font-weight: 700; line-height: 1.12; }
+.premium-public .website-faq-hero p { font-size: 14px; line-height: 1.7; }
+.premium-public .website-faq-item { box-shadow: none; border-color: var(--pp-line); }
+.premium-public .website-faq-item button { min-height: 56px; font-size: 15px; }
+.premium-public .website-faq-item p { font-size: 14px; line-height: 1.8; }
+
+/* Form surfaces. Existing quote layout owns its grids and completion flow. */
+.premium-public .quote-page { background: #f7f8f8; }
+.premium-public .quote-flow :is(.rq-premium-form,.irx-form,.rex-form) { background: #f7f8f8!important; }
+.premium-public .quote-flow :is(.rq-section-card,.irx-card,.rex-card) { border-radius: 16px!important; box-shadow: var(--pp-shadow)!important; }
+.premium-public .quote-flow :is(input,select,textarea) { font-size: 16px; }
+.premium-public .quote-flow :is(.rq-section-heading h2,.irx-section-title h2,.rex-section-title h2) { font-weight: 700; }
+.premium-public :is(.login-premium,.signup-premium-page,.auth-simple-page) { background: #f6f5f1; }
+.premium-public :is(.login-premium-card,.signup-card-premium,.auth-recovery-card) { border: 1px solid var(--pp-line); border-radius: 20px; box-shadow: 0 20px 60px rgba(16,47,70,.08); }
+.premium-public :is(.login-form-heading h1,.signup-form-heading h1,.auth-recovery-card h1) { font-weight: 700; letter-spacing: -.035em; }
+.premium-public :is(.login-premium,.signup-premium-page,.auth-simple-page) input { font-size: 16px; min-height: 46px; }
+.premium-public :is(.login-premium,.signup-premium-page,.auth-simple-page) input[type=checkbox] { min-height: 0; }
+.premium-public :is(.login-premium-submit,.signup-submit,.auth-submit) { min-height: 48px; border-radius: 8px; font-weight: 700; }
+
+/* Signed-in workspaces keep their established grid and sidebar geometry. */
+.premium-workspace .admin-shell { background: #f4f6f8; }
+.premium-workspace .admin-sidebar { background: #102b3e; box-shadow: 8px 0 28px rgba(16,47,70,.06); }
+.premium-workspace :is(.admin-nav-label,.admin-sidebar-brand small) { font-size: 10px; }
+.premium-workspace :is(.admin-shell,.lead-partner-page) :is(th,td) { line-height: 1.55; }
+
+@media (hover:hover) {
+  .premium-public :is(.pj-project-card,.pkg-premium-card,.expert-card):hover { transform: translateY(-3px); box-shadow: 0 18px 44px rgba(16,47,70,.11); }
+}
+@media (max-width:1180px) {
+  .premium-public .public-site-header__inner { grid-template-columns: 140px minmax(0,1fr) auto; gap: 10px; }
+  .premium-public .public-site-nav { gap: 10px; }
+  .premium-public .public-site-nav a { font-size: 11px; }
+}
+@media (max-width:1020px) {
+  .premium-public .public-site-header__inner { grid-template-columns: minmax(0,1fr) 44px; }
+  .premium-public .public-site-mobile-menu nav a { min-height: 48px; font-size: 14px; font-weight: 650; }
+  .premium-public .public-site-mobile-actions :is(a,button) { min-height: 48px; font-size: 13px; }
+}
+@media (max-width:640px) {
+  .premium-public .premium-page-intro { padding: 30px 20px 18px; }
+  .premium-public .premium-page-intro p { font-size: 14px; }
+  .premium-public .hc-section { padding-top: 40px; padding-bottom: 40px; }
+  .premium-public :is(.pj-project-copy,.pkg-premium-card-body,.hiw-step-card) { padding: 20px; }
+  .premium-public .pkg-card-photo { height: 190px; }
+  .premium-public .public-site-footer__inner { padding: 30px 20px; gap: 24px 16px; }
+  .premium-public .public-site-footer__bottom { padding: 16px 20px; }
+  .premium-public .website-faq-hero { padding: 24px 20px; }
+  .premium-public .expert-profile-panel { padding: 16px; }
+  .premium-public .expert-profile-tabs button { font-size: 12px; }
+  .premium-public :is(.local-seo-hero,.regional-hero,.guide-hero) { padding-top: 30px; padding-bottom: 30px; }
+  .premium-public :is(.contact-hero h1,.ab-hero h1) { font-size: clamp(32px,9vw,44px); }
+  .premium-public :is(input,select,textarea) { max-width: 100%; }
+}
+@media (prefers-reduced-motion:reduce) {
+  .premium-site *, .premium-site *::before, .premium-site *::after { animation: none!important; transition: none!important; scroll-behavior: auto!important; }
+}

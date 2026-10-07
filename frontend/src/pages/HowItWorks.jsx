@@ -102,6 +102,11 @@ export default function HowItWorks(){
 
   return <main className="hiw-page">
     <PublicHeader />
+    <section className="premium-page-intro" aria-labelledby="premium-howitworks-title">
+      <span className="premium-eyebrow">THE PROPULSE JOURNEY</span>
+      <h1 id="premium-howitworks-title">Your vision. A clear way forward.</h1>
+      <p>From your first idea to the right professional, take the next step with confidence.</p>
+    </section>
 
     <section className="hiw-tabs">
       {FLOWS.map(flow=><button key={flow.key} className={active===flow.key?'active':''} onClick={()=>goToFlow(flow.key)}><span><Icon name={flow.key==='construction'?'home':flow.key==='interiors'?'sofa':'building'} size={20}/></span><div><b>{flow.label}</b><small>{flow.subtitle}</small></div></button>)}

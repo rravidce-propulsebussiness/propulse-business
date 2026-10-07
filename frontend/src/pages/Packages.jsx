@@ -227,6 +227,11 @@ export default function Packages() {
 
   return <main className="pkg-page">
     <PublicHeader />
+    <section className="premium-page-intro" aria-labelledby="premium-packages-title">
+      <span className="premium-eyebrow">PACKAGES & SPECIFICATIONS</span>
+      <h1 id="premium-packages-title">A better space starts with a clear plan.</h1>
+      <p>Explore materials, finishes and package options for your project.</p>
+    </section>
 
     <section className="pkg-category-nav" aria-label="Package categories">
       <button className={activeCategory === 'construction' ? 'active' : ''} type="button" onClick={() => switchCategory('construction')}>
