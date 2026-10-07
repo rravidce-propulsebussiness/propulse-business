@@ -1,4 +1,5 @@
 import { INTERIOR_PACKAGES, getInteriorPackage } from '../data/interiorPackageCatalog'
+import { getConstructionPackage } from '../data/constructionPackageCatalog'
 
 const PAGE_WIDTH=1240;
 const PAGE_HEIGHT=1754;
@@ -700,4 +701,16 @@ export async function downloadInteriorBrochurePdf({
   });
 
   savePdf(pages,'propulse-interior-'+selected.key+'-package-brochure-'+(requestId||Date.now())+'.pdf');
+}
+
+
+export async function downloadConstructionBrochurePdf({quality='standard',requestId,customerName='',city=''}={}){
+  const logo=await loadLogo(); const selected=getConstructionPackage(quality); const pages=[];
+  const cover=createPage(logo,1,'Construction Package Brochure'); pages.push(cover);
+  drawHero(cover,selected.name+' Construction Package',money(selected.rate)+'/sq ft reference package rate','PACKAGE BROCHURE');
+  drawMetaGrid(cover,[['Package',selected.name],['Rate',money(selected.rate)+'/sq ft'],['Customer',customerName||'Customer'],['Location',city||'To be confirmed'],['Request ID',requestId?'#'+requestId:'—']]);
+  drawSectionHeading(cover,'Package specifications','Key materials, allowances and inclusions for the selected package.');
+  const specs=Object.entries(selected.specs||{}); drawSpecificationCards(cover,specs.slice(0,8));
+  if(specs.length>8){const page=createPage(logo,2,selected.name+' Package');pages.push(page);drawSectionHeading(page,'More specifications');drawSpecificationCards(page,specs.slice(8));}
+  savePdf(pages,'propulse-construction-'+selected.key+'-brochure-'+(requestId||Date.now())+'.pdf');
 }
