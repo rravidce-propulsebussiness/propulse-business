@@ -29,7 +29,7 @@ function emailProviderError(message,{status=null,code='EMAIL_PROVIDER_FAILED'}={
 }
 function wait(ms){return new Promise(resolve=>setTimeout(resolve,ms))}
 
-async function sendResendEmail({to,subject,html,errorContext='notification'}){
+async function sendResendEmail({to,subject,html,errorContext='notification',attachments=[]}){
   const apiKey=process.env.RESEND_API_KEY;
   const from=process.env.RESEND_FROM_EMAIL;
   if(!apiKey||!from)throw emailProviderError('Email delivery is not configured',{code:'EMAIL_PROVIDER_NOT_CONFIGURED'});
@@ -46,7 +46,7 @@ async function sendResendEmail({to,subject,html,errorContext='notification'}){
           'Content-Type':'application/json',
           Accept:'application/json',
         },
-        body:JSON.stringify({from,to:[to],subject,html}),
+        body:JSON.stringify({from,to:[to],subject,html,...(attachments.length?{attachments}: {})}),
         signal:controller.signal,
       });
 
@@ -133,4 +133,10 @@ function escapeHtml(value) {
 }
 function escapeAttribute(value) { return escapeHtml(value); }
 
-module.exports = { isConfigured,configurationHealth,sendPasswordResetEmail,sendNotificationEmail };
+async function sendCustomerQuotationEmail({to,name,leadId,total,packageName,pdfBase64}){
+  if(!isConfigured())throw new Error('Email delivery is not configured');
+  const base=String(process.env.FRONTEND_URL||process.env.APP_URL||'').trim().replace(/\/$/,'');
+  const projects=base?base+'/projects':'';
+  return sendResendEmail({to,subject:'Your ProPulse construction quotation #'+leadId,errorContext:'quotation',attachments:[{filename:'propulse-quotation-'+leadId+'.pdf',content:pdfBase64}],html:`<!doctype html><html><body style="font-family:Arial,sans-serif;background:#f4f6f9;padding:24px"><div style="max-width:620px;margin:auto;background:#fff;padding:30px;border-radius:16px"><h1 style="color:#0a2d50">Your quotation is ready</h1><p>Hi ${escapeHtml(name||'Customer')}, your ProPulse construction quotation is attached as a PDF.</p><p><b>Request ID:</b> #${escapeHtml(leadId)}<br><b>Package:</b> ${escapeHtml(packageName||'Selected package')}<br><b>Quotation amount:</b> ${escapeHtml(total||'See attached PDF')}</p>${projects?`<p><a href="${escapeAttribute(projects)}" style="display:inline-block;background:#ff5a1f;color:#fff;padding:12px 18px;border-radius:9px;text-decoration:none;font-weight:700">View completed projects</a></p>`:''}<p style="color:#667085">The attached quotation includes package pricing, specifications, payment milestones, exclusions and terms.</p></div></body></html>`});
+}
+module.exports = { isConfigured,configurationHealth,sendPasswordResetEmail,sendNotificationEmail,sendCustomerQuotationEmail };
