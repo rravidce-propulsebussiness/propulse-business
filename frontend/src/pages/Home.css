@@ -1082,8 +1082,24 @@
 }
 
 @media(max-width:410px){
-  .hc-hero,.hc-hero-inner{min-height:680px}
+  .hc-hero,.hc-hero-inner{min-height:0}
   .hc-hero h1{font-size:38px}
   .hc-hero-actions{grid-template-columns:1fr}
   .hc-hero-trust>span{min-height:72px}
+}
+
+/* Mobile compact process cards */
+@media(max-width:620px){
+.hc-hero,.hc-hero-inner{min-height:0}
+.hc-hero-copy{padding-top:34px;padding-bottom:34px}
+.hc-how{padding:36px 0}
+.hc-how .hc-section-head{margin-bottom:18px}
+.hc-step-grid{gap:12px}
+.hc-step-grid article{min-height:0;padding:16px 46px 16px 108px;border-radius:18px;box-shadow:0 10px 28px rgba(8,39,65,.065)}
+.hc-step-number{left:14px;top:50%;width:38px;height:38px;transform:translateY(-50%)}
+.hc-step-icon{left:58px;top:50%;width:38px;height:38px;transform:translateY(-50%)}
+.hc-step-grid h3{margin:0;font-size:15px;line-height:1.25}
+.hc-step-grid p{margin:3px 0 0;font-size:11.5px;line-height:1.45}
+.hc-step-arrow{display:grid!important;right:14px;top:50%;width:28px;height:28px;transform:translateY(-50%)}
+.hc-step-grid article:last-child .hc-step-arrow{display:none!important}
 }
