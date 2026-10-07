@@ -57,7 +57,7 @@ function Chips({ question, value, onChange }) {
 }
 
 export default function RealEstateRequirementExact(props) {
-  const { questions, answers, setAnswer, cities, locationStates, locationStateId, setLocationState, cityId, setCity, locationQuestion, setPincode, onDetectedLocation, pinLookup, contact, setContact, state, submit, contactData, completion } = props
+  const { embedded = false, questions, answers, setAnswer, cities, locationStates, locationStateId, setLocationState, cityId, setCity, locationQuestion, setPincode, onDetectedLocation, pinLookup, contact, setContact, state, submit, contactData, completion } = props
   const byKey = useMemo(() => Object.fromEntries(questions.map(q => [q.questionKey, q])), [questions])
   const intent = byKey.property_intent
   const propertyType = byKey.property_type
@@ -101,11 +101,11 @@ export default function RealEstateRequirementExact(props) {
   ]
 
   return <main className="rq-page rq-premium-page rex-page">
-    <header className="rex-header">
+    {!embedded && <header className="rex-header">
       <Link to="/" className="rex-logo"><img src="/brand/propulse-logo.svg" alt="ProPulse"/></Link>
       <nav><Link to="/">Home</Link><Link to="/quote#construction">Construction</Link><Link to="/quote#interiors">Interiors</Link><Link to="/packages">Packages</Link><Link className="active" to="/quote#property">Real Estate</Link><Link to="/projects">Projects</Link><Link to="/how-it-works">How It Works</Link><Link to="/about">About</Link><Link to="/contact">Contact</Link></nav>
       <a href="#rex-basic" className="rex-header-cta">Get Free Consultation <Icon name="arrow" size={15}/></a>
-    </header>
+    </header>}
 
     <section className="rex-hero">
       <img src={HERO} alt="Premium real estate development"/>
@@ -199,6 +199,6 @@ export default function RealEstateRequirementExact(props) {
       </div>
     </form>
 
-    <footer className="rex-footer"><div><img src="/brand/propulse-logo.svg" alt="ProPulse"/><p>Your trusted starting point for construction, interiors and real estate requirements.</p><div>f&nbsp;&nbsp;◎&nbsp;&nbsp;▶&nbsp;&nbsp;in</div></div><div><b>Quick Links</b><Link to="/">Home</Link><Link to="/quote#construction">Construction</Link><Link to="/quote#interiors">Interiors</Link><Link to="/packages">Packages</Link><Link to="/quote#property">Real Estate</Link><Link to="/projects">Projects</Link></div><div><b>Our Services</b><Link to="/quote#construction">Home Construction</Link><Link to="/quote#interiors">Interior Design</Link><Link to="/quote#property">Real Estate</Link><Link to="/quote#construction">Construction Quote</Link><Link to="/quote#property">Free Consultation</Link></div><div><b>Support</b><Link to="/faq">FAQ</Link><Link to="/contact">Contact Us</Link></div><div><b>Contact Info</b>{phone&&<span><Icon name="phone" size={14}/>{phone}</span>}{email&&<span>{email}</span>}<span><Icon name="pin" size={14}/>Hyderabad, India</span></div></footer>
+    {!embedded && <footer className="rex-footer"><div><img src="/brand/propulse-logo.svg" alt="ProPulse"/><p>Your trusted starting point for construction, interiors and real estate requirements.</p><div>f&nbsp;&nbsp;◎&nbsp;&nbsp;▶&nbsp;&nbsp;in</div></div><div><b>Quick Links</b><Link to="/">Home</Link><Link to="/quote#construction">Construction</Link><Link to="/quote#interiors">Interiors</Link><Link to="/packages">Packages</Link><Link to="/quote#property">Real Estate</Link><Link to="/projects">Projects</Link></div><div><b>Our Services</b><Link to="/quote#construction">Home Construction</Link><Link to="/quote#interiors">Interior Design</Link><Link to="/quote#property">Real Estate</Link><Link to="/quote#construction">Construction Quote</Link><Link to="/quote#property">Free Consultation</Link></div><div><b>Support</b><Link to="/faq">FAQ</Link><Link to="/contact">Contact Us</Link></div><div><b>Contact Info</b>{phone&&<span><Icon name="phone" size={14}/>{phone}</span>}{email&&<span>{email}</span>}<span><Icon name="pin" size={14}/>Hyderabad, India</span></div></footer>}
   </main>
 }

@@ -99,7 +99,7 @@ function Chips({ question, value, onChange }) {
 }
 
 export default function InteriorRequirementExact(props) {
-  const { questions, answers, setAnswer, cities, locationStates, locationStateId, setLocationState, cityId, setCity, locationQuestion, setPincode, onDetectedLocation, pinLookup, contact, setContact, state, submit, contactData, completion } = props
+  const { embedded = false, questions, answers, setAnswer, cities, locationStates, locationStateId, setLocationState, cityId, setCity, locationQuestion, setPincode, onDetectedLocation, pinLookup, contact, setContact, state, submit, contactData, completion } = props
   const fileRef = useRef(null)
   const previewUrlsRef = useRef(new Set())
   const [referenceFiles, setReferenceFiles] = useState([])
@@ -234,11 +234,11 @@ export default function InteriorRequirementExact(props) {
 
 
   return <main className="rq-page rq-premium-page irx-page">
-    <header className="irx-header">
+    {!embedded && <header className="irx-header">
       <Link to="/" className="irx-logo"><img src="/brand/propulse-logo.svg" alt="ProPulse" /></Link>
       <nav><Link to="/">Home</Link><Link to="/quote#construction">Construction</Link><Link className="active" to="/quote#interiors">Interiors</Link><Link to="/packages">Packages</Link><Link to="/quote#property">Real Estate</Link><Link to="/projects">Projects</Link><Link to="/how-it-works">How It Works</Link><Link to="/about">About</Link><Link to="/contact">Contact</Link></nav>
       <a href="#irx-basic" className="irx-header-cta">Get Free Consultation <Icon name="arrow" size={15}/></a>
-    </header>
+    </header>}
 
     <section className="irx-hero">
       <img src={HERO} alt="Premium modern interior" />
@@ -429,6 +429,6 @@ export default function InteriorRequirementExact(props) {
       </div>
     </form>
 
-    <footer className="irx-footer"><div className="irx-footer-brand"><img src="/brand/propulse-logo.svg" alt="ProPulse"/><p>Your trusted starting point for construction, interiors and real estate requirements.</p><div className="irx-social">f&nbsp;&nbsp;◎&nbsp;&nbsp;▶&nbsp;&nbsp;in</div></div><div><b>Quick Links</b><Link to="/">Home</Link><Link to="/quote#construction">Construction</Link><Link to="/quote#interiors">Interiors</Link><Link to="/packages">Packages</Link><Link to="/quote#property">Real Estate</Link><Link to="/projects">Projects</Link></div><div><b>Our Services</b><Link to="/quote#construction">Home Construction</Link><Link to="/quote#interiors">Interior Design</Link><Link to="/quote#property">Real Estate</Link><Link to="/packages#interior">Interior Packages</Link><Link to="/quote#interiors">Free Consultation</Link></div><div><b>Support</b><Link to="/faq">FAQ</Link><Link to="/contact">Contact Us</Link></div><div><b>Contact Info</b>{phone&&<span><Icon name="phone" size={14}/>{phone}</span>}{email&&<span>{email}</span>}<span><Icon name="pin" size={14}/>Hyderabad, India</span></div></footer>
+    {!embedded && <footer className="irx-footer"><div className="irx-footer-brand"><img src="/brand/propulse-logo.svg" alt="ProPulse"/><p>Your trusted starting point for construction, interiors and real estate requirements.</p><div className="irx-social">f&nbsp;&nbsp;◎&nbsp;&nbsp;▶&nbsp;&nbsp;in</div></div><div><b>Quick Links</b><Link to="/">Home</Link><Link to="/quote#construction">Construction</Link><Link to="/quote#interiors">Interiors</Link><Link to="/packages">Packages</Link><Link to="/quote#property">Real Estate</Link><Link to="/projects">Projects</Link></div><div><b>Our Services</b><Link to="/quote#construction">Home Construction</Link><Link to="/quote#interiors">Interior Design</Link><Link to="/quote#property">Real Estate</Link><Link to="/packages#interior">Interior Packages</Link><Link to="/quote#interiors">Free Consultation</Link></div><div><b>Support</b><Link to="/faq">FAQ</Link><Link to="/contact">Contact Us</Link></div><div><b>Contact Info</b>{phone&&<span><Icon name="phone" size={14}/>{phone}</span>}{email&&<span>{email}</span>}<span><Icon name="pin" size={14}/>Hyderabad, India</span></div></footer>}
   </main>
 }
