@@ -35,8 +35,10 @@ export function PublicHeader() {
     const onResize = () => {
       if (window.innerWidth > 1020) setOpen(false)
     }
+    const onKeyDown = event => { if (event.key === 'Escape') setOpen(false) }
+    window.addEventListener('keydown', onKeyDown)
     window.addEventListener('resize', onResize)
-    return () => window.removeEventListener('resize', onResize)
+    return () => { window.removeEventListener('resize', onResize); window.removeEventListener('keydown', onKeyDown) }
   }, [])
 
   return <header className="public-site-header">
@@ -46,7 +48,7 @@ export function PublicHeader() {
       </Link>
 
       <nav className="public-site-nav" aria-label="Main navigation">
-        {NAV_ITEMS.map(item => <Link className={activeLabel === item.label ? 'active' : ''} to={item.to} key={item.to}>{item.label}</Link>)}
+        {NAV_ITEMS.map(item => <Link className={activeLabel === item.label ? 'active' : ''} to={item.to} key={item.to} aria-current={activeLabel === item.label ? 'page' : undefined}>{item.label}</Link>)}
       </nav>
 
       <div className="public-site-actions">
@@ -59,14 +61,15 @@ export function PublicHeader() {
         type="button"
         aria-label={open ? 'Close navigation' : 'Open navigation'}
         aria-expanded={open}
+        aria-controls="public-mobile-navigation"
         onClick={() => setOpen(value => !value)}
       >
         <span/><span/><span/>
       </button>
 
-      <div className={'public-site-mobile-menu' + (open ? ' open' : '')}>
+      <div id="public-mobile-navigation" className={'public-site-mobile-menu' + (open ? ' open' : '')}>
         <nav aria-label="Mobile navigation">
-          {NAV_ITEMS.map(item => <Link className={activeLabel === item.label ? 'active' : ''} to={item.to} key={item.to}>{item.label}</Link>)}
+          {NAV_ITEMS.map(item => <Link className={activeLabel === item.label ? 'active' : ''} to={item.to} key={item.to} aria-current={activeLabel === item.label ? 'page' : undefined}>{item.label}</Link>)}
         </nav>
         <div className="public-site-mobile-actions">
           <Link className="public-site-quote" to="/quote#interiors">Get Free Quote <ArrowIcon/></Link>

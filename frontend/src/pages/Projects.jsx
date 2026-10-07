@@ -617,6 +617,11 @@ export default function Projects(){
 
   return <main className="pj-page">
     <PublicHeader />
+    <section className="premium-page-intro" aria-labelledby="premium-projects-title">
+      <span className="premium-eyebrow">PROJECT GALLERY</span>
+      <h1 id="premium-projects-title">Spaces worth exploring.</h1>
+      <p>Explore construction, interiors and property projects.</p>
+    </section>
 
 
     <section className="pj-filter-wrap">
@@ -633,7 +638,7 @@ export default function Projects(){
 
     <section className="pj-grid-wrap">
       <div className="pj-project-grid">
-        {filtered.slice(0,visible).map(project=><article className="pj-project-card" key={project.id} onClick={()=>openProject(project)}>
+        {filtered.slice(0,visible).map(project=><article className="pj-project-card" key={project.id} role="button" tabIndex={0} aria-label={"View "+project.title} onKeyDown={event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();openProject(project)}}} onClick={()=>openProject(project)}>
           <div className="pj-project-photo">
             <img src={project.image} alt={project.title}/>
             <span className={'pj-badge '+project.category}>{project.categoryLabel}</span>
