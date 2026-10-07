@@ -133,33 +133,8 @@ export default function Home() {
     <PublicHeader />
 
     <main>
-      <section className="hc-hero" id="home">
+      <section className="hc-hero hc-hero-visual-only" id="home">
         <HeroBlueprintAnimation />
-        <div className="hc-hero-overlay" />
-        <div className="hc-container hc-hero-inner">
-          <div className="hc-hero-copy">
-            <h1>Don&apos;t Leave Your<br/>Dream Home<br/><em>to Chance.</em></h1>
-            <p className="hc-hero-tagline">Find the right partner. Build it right.</p>
-            <div className="hc-hero-actions">
-              <button className="hc-btn-primary" type="button" onClick={() => openRequirement('')}>Start Your Requirement <Icon name="arrow" size={15}/></button>
-              <Link className="hc-btn-secondary" to="/packages">View Packages</Link>
-            </div>
-            <div className="hc-hero-trust">
-              <span>
-                <i><Icon name="consult" size={15}/></i>
-                <span><b>Free Consultation</b><small>Expert guidance</small></span>
-              </span>
-              <span>
-                <i><Icon name="people" size={15}/></i>
-                <span><b>Relevant Professionals</b><small>Verified &amp; trusted</small></span>
-              </span>
-              <span>
-                <i><Icon name="shield" size={15}/></i>
-                <span><b>Warranty Options</b><small>Peace of mind</small></span>
-              </span>
-            </div>
-          </div>
-        </div>
       </section>
 
       <section className="hc-section hc-services">
