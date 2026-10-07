@@ -1,1 +1,0 @@
-import{t as e}from"./vendor-CDU44UI-.js";import{t}from"./AdminLeadsV9-B0np7Vfw.js";var n=e();function r(){return(0,n.jsx)(t,{mode:`manage`})}export{r as default};
