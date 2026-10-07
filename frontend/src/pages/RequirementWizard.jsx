@@ -762,10 +762,7 @@ export default function RequirementWizard({ flowKey, onCompletionChange }) {
           </div>
         </div>
 
-        <aside className="rq-vision-card">
-          <div className="rq-vision-image"><img src={theme.promo} alt="" /><div><span>PLAN WITH CLARITY</span><strong>Build with confidence.</strong></div></div>
-          <div className="rq-vision-stats"><span><b>Guided</b><small>Easy Journey</small></span><span><b>Tailored</b><small>Your Preferences</small></span><span><b>Secure</b><small>Protected Details</small></span></div>
-        </aside>
+        
       </section>
 
       <section className="rq-section-card" id="rq-config">
