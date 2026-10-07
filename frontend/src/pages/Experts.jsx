@@ -44,7 +44,7 @@ export default function Experts(){
   const [error,setError]=useState('')
   const [selected,setSelected]=useState(null)
   const [selectedTab,setSelectedTab]=useState('overview')
-  const [selectedLoading,setSelectedLoading]=useState(false)
+  const [selectedLoadingId,setSelectedLoadingId]=useState(null)
 
   useEffect(()=>{
     window.scrollTo(0,0)
@@ -73,12 +73,13 @@ export default function Experts(){
 
   function updateFilter(key,value){setFilters(current=>({...current,[key]:value}));setPagination(current=>({...current,page:1}))}
   async function viewExpert(expert){
+    const expertId=expert.business_profile_id||expert.user_id
     try{
-      setSelectedLoading(true);setError('')
-      const value=await publicRequest('/experts/'+expert.business_profile_id)
+      setSelectedLoadingId(expertId);setError('')
+      const value=await publicRequest('/experts/'+expert.business_profile_id,{timeoutMs:10000})
       setSelected(value)
       setSelectedTab('overview')
-    }catch(err){setError(err.message||'Unable to load business profile.')}finally{setSelectedLoading(false)}
+    }catch(err){setError(err.message||'Unable to load business profile.')}finally{setSelectedLoadingId(current=>current===expertId?null:current)}
   }
 
   const visibleCities=useMemo(()=>cities.slice().sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''))),[cities])
@@ -123,7 +124,7 @@ export default function Experts(){
           <p className="expert-description">{expert.public_summary||'Trusted ProPulse professional offering the listed services and project support.'}</p>
           <div className="expert-proof-stats"><span><b>{expert.project_count||0}</b> Projects</span><span><b>{serviceNames.length||0}</b> Services</span><span><b>{expert.years_experience||'—'}</b> Years</span></div>
           <div className="expert-card-actions">
-            <button type="button" className="expert-view" disabled={selectedLoading} onClick={()=>viewExpert(expert)}>{selectedLoading?'Loading…':'View Profile'}</button>
+            <button type="button" className="expert-view" disabled={selectedLoadingId===(expert.business_profile_id||expert.user_id)} aria-busy={selectedLoadingId===(expert.business_profile_id||expert.user_id)} onClick={()=>viewExpert(expert)}>{selectedLoadingId===(expert.business_profile_id||expert.user_id)?'Loading…':'View Profile'}</button>
             <button type="button" className="expert-requirement" onClick={()=>openLeadPopup('')}>Send Requirement <Icon name="arrow" size={14}/></button>
           </div>
         </article>
