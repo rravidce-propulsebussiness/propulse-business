@@ -99,7 +99,7 @@ export default function Experts(){
 
       {error&&<div className="experts-state error">{error}</div>}
       {loading&&<div className="experts-loading-grid">{Array.from({length:8}).map((_,index)=><i key={index}/>)}</div>}
-      {!loading&&!error&&settings?.directoryEnabled===false&&<div className="experts-state"><Icon name="filter" size={30}/><h3>Professional directory is currently unavailable</h3><p>ProPulse Admin has temporarily disabled public business profiles.</p></div>}
+      {!loading&&!error&&settings?.directoryEnabled===false&&<div className="experts-state"><Icon name="filter" size={30}/><h3>Professional profiles are temporarily unavailable</h3></div>}
       {!loading&&!error&&settings?.directoryEnabled!==false&&experts.length===0&&<div className="experts-state"><Icon name="filter" size={30}/><h3>No subscribed professionals match these filters</h3><p>Try another city, industry or search term.</p></div>}
 
       {!loading&&!error&&experts.length>0&&<div className="experts-grid">{experts.map(expert=>{
@@ -198,18 +198,18 @@ export default function Experts(){
               </aside>
               <article className="expert-profile-panel expert-profile-overview-wide">
                 <div className="expert-profile-section-head"><span>WHAT THEY DO</span><h3>Services at a glance</h3></div>
-                <div className="expert-profile-chips">{serviceNames.length?serviceNames.slice(0,8).map(name=><b key={name}>{name}</b>):<em>No public service list published.</em>}</div>
+                <div className="expert-profile-chips">{serviceNames.length?serviceNames.slice(0,8).map(name=><b key={name}>{name}</b>):<em>No services listed.</em>}</div>
               </article>
             </section>}
 
             {selectedTab==='services'&&<section className="expert-profile-service-layout">
               <article className="expert-profile-panel">
                 <div className="expert-profile-section-head"><span>SERVICES</span><h3>Services & specialisations</h3></div>
-                {services.length?<div className="expert-service-groups">{industryNames.map(industry=><div key={industry}><h4>{industry}</h4><div>{unique(services.filter(item=>item.industryName===industry).map(item=>item.subserviceName||item.serviceName)).map(name=><span key={name}>{name}</span>)}</div></div>)}</div>:<div className="expert-profile-empty"><Icon name="briefcase" size={24}/><b>No public services yet</b><p>No services published yet.</p></div>}
+                {services.length?<div className="expert-service-groups">{industryNames.map(industry=><div key={industry}><h4>{industry}</h4><div>{unique(services.filter(item=>item.industryName===industry).map(item=>item.subserviceName||item.serviceName)).map(name=><span key={name}>{name}</span>)}</div></div>)}</div>:<div className="expert-profile-empty"><Icon name="briefcase" size={24}/><b>No services listed</b></div>}
               </article>
               <article className="expert-profile-panel">
                 <div className="expert-profile-section-head"><span>SERVICE AREAS</span><h3>Where they work</h3></div>
-                {locationNames.length?<div className="expert-location-list">{locationNames.map(name=><span key={name}><Icon name="pin" size={15}/>{name}</span>)}</div>:<div className="expert-profile-empty"><Icon name="pin" size={24}/><b>No public locations yet</b><p>No service areas published yet.</p></div>}
+                {locationNames.length?<div className="expert-location-list">{locationNames.map(name=><span key={name}><Icon name="pin" size={15}/>{name}</span>)}</div>:<div className="expert-profile-empty"><Icon name="pin" size={24}/><b>No service areas listed</b></div>}
               </article>
             </section>}
 
@@ -222,11 +222,11 @@ export default function Experts(){
                 {plan.description&&<p>{plan.description}</p>}
                 {Array.isArray(plan.inclusions)&&plan.inclusions.length>0&&<ul>{plan.inclusions.map((item,index)=><li key={plan.id+'-'+index}><Icon name="check" size={13}/>{item}</li>)}</ul>}
                 <button type="button" onClick={()=>{setSelected(null);openLeadPopup('')}}>Request this package <Icon name="arrow" size={13}/></button>
-              </article>)}</div>:<div className="expert-profile-empty expert-profile-empty-large"><span>₹</span><b>No public pricing published yet</b><p>Send your requirement to receive a quotation based on your project scope.</p><button type="button" onClick={()=>{setSelected(null);openLeadPopup('')}}>Request Quote <Icon name="arrow" size={13}/></button></div>}
+              </article>)}</div>:<div className="expert-profile-empty expert-profile-empty-large"><span>₹</span><b>No pricing published yet</b><p>Send your requirement to receive a quotation based on your project scope.</p><button type="button" onClick={()=>{setSelected(null);openLeadPopup('')}}>Request Quote <Icon name="arrow" size={13}/></button></div>}
             </section>}
 
             {selectedTab==='projects'&&<section>
-              <div className="expert-profile-section-head"><span>COMPLETED PROJECTS</span><h3>Project portfolio</h3><p>Published work shared by this professional.</p></div>
+              <div className="expert-profile-section-head"><span>COMPLETED PROJECTS</span><h3>Project portfolio</h3></div>
               {projects.length?<div className="expert-project-grid expert-project-grid-profile">{projects.map(project=><article key={project.id}>
                 {project.cover_image_url?<div className="expert-project-image"><img src={project.cover_image_url} alt={project.title}/></div>:<div className="expert-project-image expert-project-placeholder"><Icon name="home" size={28}/></div>}
                 <div className="expert-project-body">
