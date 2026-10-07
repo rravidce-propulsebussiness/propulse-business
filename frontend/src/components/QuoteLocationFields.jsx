@@ -125,19 +125,8 @@ export default function QuoteLocationFields({
       { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 },
     )
 
-    try {
-      if (navigator.permissions?.query) {
-        const permission = await navigator.permissions.query({ name: 'geolocation' })
-        if (permission.state === 'denied') {
-          setLocating(false)
-          onDetectedLocation?.({ error: 'Location access is blocked for this site. Tap the browser site controls, allow Location, then tap “Use my current location” again.' })
-          return
-        }
-      }
-    } catch {
-      // Some mobile browsers do not expose geolocation through Permissions API.
-    }
-
+    // Call geolocation directly from the user's tap. This lets the browser show
+    // its native permission prompt whenever permission is still promptable.
     locate()
   }
 
@@ -153,20 +142,26 @@ export default function QuoteLocationFields({
 
       <label className="quote-city-field">
         <b>{cityLabel}</b>
-        <select
-          value={cityId}
+        <input
+          list={listId}
+          value={cityText}
           onChange={event => {
             const value = event.target.value
-            const city = filteredCities.find(item => String(item.id) === String(value))
-            setCityText(city ? String(city.name || '') : '')
-            onCityChange?.(value)
+            setCityText(value)
+            const match = filteredCities.find(item => String(item.name || '').trim().toLowerCase() === value.trim().toLowerCase())
+            onCityChange?.(match ? String(match.id) : '')
           }}
+          onBlur={handleCityBlur}
+          onFocus={event => {
+            if (stateId && !event.currentTarget.value) event.currentTarget.click()
+          }}
+          placeholder={stateId ? 'Type or select City / Location' : 'Select state first'}
           autoComplete="address-level2"
           disabled={!stateId}
-        >
-          <option value="">{stateId ? 'Select City / Location' : 'Select state first'}</option>
-          {filteredCities.map(city => <option key={city.id} value={city.id}>{city.name}</option>)}
-        </select>
+        />
+        <datalist id={listId}>
+          {filteredCities.map(city => <option key={city.id} value={city.name} />)}
+        </datalist>
         {stateId && !cityId && cityText ? <small className="qlf-city-hint">Choose a supported city from the suggestions.</small> : null}
       </label>
 
