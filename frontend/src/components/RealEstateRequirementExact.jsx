@@ -151,7 +151,7 @@ export default function RealEstateRequirementExact(props) {
             <label><b>Email <small>(Optional)</small></b><input type="email" value={contact.email} onChange={e=>setContact({...contact,email:e.target.value})} placeholder="Enter your email"/></label>
           </div>
         </div>
-        <aside className="rex-promo rex-promo-premium"><div><img src={PROMO} alt=""/><div className="rex-promo-overlay"/><span className="rex-promo-kicker">PROPERTY DISCOVERY</span><h3>Find Better.<br/><strong>Choose Smarter.</strong></h3><p>One clear requirement for location, budget and property preference.</p></div><footer><span><b>Guided</b><small>Property Search</small></span><span><b>Relevant</b><small>Local Options</small></span><span><b>Simple</b><small>One Requirement</small></span></footer></aside>
+        
       </section>
 
       <section className="rex-card" id="rq-property">
