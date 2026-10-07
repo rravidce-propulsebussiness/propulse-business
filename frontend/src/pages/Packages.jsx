@@ -200,7 +200,7 @@ export default function Packages() {
     const ref = category === 'construction' ? constructionCompareRef : interiorCompareRef
     return <section className="pkg-comparison-section" ref={ref}>
       <div className="pkg-comparison-heading">
-        <div><span>PACKAGE COMPARISON</span><h3>Side-by-Side Comparison</h3><p>Compare the selected packages before you continue to quotation.</p></div>
+        <div><span>PACKAGE COMPARISON</span><h3>Side-by-Side Comparison</h3></div>
         <button type="button" onClick={() => clearCompare(category)}><Icon name="refresh" size={14}/>Clear Selection</button>
       </div>
       <div className="pkg-comparison-table-wrap">
@@ -220,7 +220,7 @@ export default function Packages() {
   function compareBar(category) {
     const count = selectedKeys(category).length
     return <div className={'pkg-compare-bar ' + (count === 2 ? 'ready' : '')}>
-      <div className="pkg-compare-status"><i><Icon name="scale" size={17}/></i><span><b>{count}/2 packages selected</b><small>{count === 2 ? 'Ready to compare side by side.' : 'Choose any two packages to compare.'}</small></span></div>
+      <div className="pkg-compare-status"><i><Icon name="scale" size={17}/></i><span><b>{count}/2 packages selected</b><small>{count === 2 ? 'Ready to compare.' : 'Select two packages.'}</small></span></div>
       <button type="button" disabled={count !== 2} onClick={() => openComparison(category)}>Compare Packages <Icon name="arrow" size={13}/></button>
     </div>
   }
