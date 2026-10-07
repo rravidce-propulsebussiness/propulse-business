@@ -5,7 +5,7 @@ import { isEmptyAnswer, isQuestionVisible } from '../components/customerFlowQues
 import InteriorRequirementExact from '../components/InteriorRequirementExact'
 import RealEstateRequirementExact from '../components/RealEstateRequirementExact'
 import QuoteLocationFields from '../components/QuoteLocationFields'
-import { downloadConstructionBrochurePdf, downloadInteriorBrochurePdf, downloadRequirementQuotePdf } from '../utils/requirementQuotePdf'
+import { createDetailedQuotationPdfDataUrl, downloadConstructionBrochurePdf, downloadInteriorBrochurePdf, downloadRequirementQuotePdf } from '../utils/requirementQuotePdf'
 import { calculateRequirementQuotation } from '../utils/customerQuotation'
 import { getInteriorPackage } from '../data/interiorPackageCatalog'
 import './RequirementWizard.css'
@@ -571,6 +571,22 @@ export default function RequirementWizard({ flowKey, onCompletionChange }) {
         body: JSON.stringify({ flowToken: flow.flowToken, answers: submitAnswers, contact: { ...contact, phone }, consent: true, submissionKey, website })
       })
       const referenceUpload = await uploadInteriorReferences(referenceFiles,result?.leadId)
+      if (flowKey === 'build' && quotation && contact.email && result?.leadId) {
+        try {
+          const quoteRows = questions.filter(question => question.questionKey !== locationQuestion?.questionKey)
+            .map(question => [question.label.replace(/\\?$/,''), fieldLabel(question, submitAnswers)])
+            .filter(([,value]) => value && value !== '—')
+          const pdfDataUrl = await createDetailedQuotationPdfDataUrl({
+            quotation, flowName: flow?.name || theme.eyebrow, flowKey, leadId: result.leadId,
+            customerName: contact.name, phone, email: contact.email, city: selectedCity?.name || '',
+            pincode: locationQuestion ? fieldLabel(locationQuestion, submitAnswers) : '', rows: quoteRows,
+          })
+          await publicRequest('/customer-flows/' + flowKey + '/' + result.leadId + '/quotation-email', {
+            method:'POST',
+            body:JSON.stringify({ submissionKey, pdfDataUrl, packageName:quotation.project?.constructionPackage, total:quotation.totalText || quotation.minimumText })
+          })
+        } catch (emailError) { console.warn('Quotation email delivery failed:', emailError) }
+      }
       setSubmissionResult({ ...(result || {}), quotation, ...referenceUpload })
       setState({ loading: false, saving: false, error: '', success: true })
       onCompletionChangeRef.current?.(true)
