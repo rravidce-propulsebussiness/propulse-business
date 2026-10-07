@@ -285,6 +285,11 @@ export default function RequirementWizard({ flowKey, onCompletionChange }) {
       if (flowKey === 'build') {
         const qualityByPackage = { standard: 'standard', premium: 'premium', royal: 'luxury' }
         if (qualityByPackage[packageParam]) initialAnswers.quality = qualityByPackage[packageParam]
+        // Older saved/configured construction flows may use property_type while the
+        // current visible card uses project_type. Keep one canonical answer.
+        if (!initialAnswers.project_type && initialAnswers.property_type) {
+          initialAnswers.project_type = initialAnswers.property_type
+        }
       }
       if (flowKey === 'design' && ['standard','premium'].includes(packageParam)) {
         initialAnswers.finish_quality = packageParam
@@ -507,11 +512,11 @@ export default function RequirementWizard({ flowKey, onCompletionChange }) {
     event.preventDefault()
     const missing = questions.find(question => {
       if (!question.isRequired) return false
+      if (flowKey === 'build' && question.questionKey === 'property_type') return false
       if (
         flowKey === 'build'
-        && propertyTypeQuestion
-        && question.questionKey === propertyTypeQuestion.questionKey
-        && !isEmptyAnswer(propertyTypeAnswer)
+        && ['project_type', 'property_type'].includes(question.questionKey)
+        && !isEmptyAnswer(answers.project_type ?? answers.property_type ?? propertyTypeAnswer)
       ) return false
       return isEmptyAnswer(answers[question.questionKey])
     })
