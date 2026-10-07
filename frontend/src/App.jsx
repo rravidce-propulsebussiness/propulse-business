@@ -1,6 +1,5 @@
 import './styles/PremiumSite.css'
 import { lazy, Suspense, useEffect, useState } from 'react';
-import './styles/PublicMarketingHeader.css';
 import './styles/PublicFooterCompact.css';
 import GlobalLeadPopup from './components/GlobalLeadPopup';
 import SoundControl from './components/SoundControl';
