@@ -284,7 +284,7 @@ export default function InteriorRequirementExact(props) {
         <div className="irx-section-title"><div><h2>Property Details</h2></div></div>
         <div className="irx-property-selectors">
           <label className="irx-property-select-field">
-            <div><b>Property Type</b><small>Select the type of property you want to design.</small></div>
+            <div><b>Property Type</b></div>
             <select value={propertyType ? (answers[propertyType.questionKey]||'') : ''} onChange={e=>{
               const value=e.target.value
               if(propertyType) setAnswer(propertyType.questionKey,value)
@@ -296,7 +296,7 @@ export default function InteriorRequirementExact(props) {
           </label>
 
           {showBhk&&<label className="irx-property-select-field">
-            <div><b>Number of Bedrooms (BHK)</b><small>Select 1 BHK, 2 BHK, 3 BHK or more.</small></div>
+            <div><b>Number of Bedrooms (BHK)</b></div>
             <select value={bhk ? (answers[bhk.questionKey]||'') : (answers.bhk||'')} onChange={e=>setAnswer(bhk?.questionKey||'bhk',e.target.value)}>
               <option value="">Select bedrooms</option>
               {bhkOptions.map(option=><option key={option.value} value={option.value}>{option.label}</option>)}
@@ -332,7 +332,7 @@ export default function InteriorRequirementExact(props) {
 
             {scope&&scopeMode==='selected_work'&&<div className="irx-work-selector">
               <div className="irx-work-heading-row">
-                <div className="irx-work-heading"><b>Select the work you need</b><small>Choose any combination. Full Home Interiors keeps these items hidden because they are already included.</small></div>
+                <div className="irx-work-heading"><b>Select the work you need</b></div>
                 <div className="irx-work-actions">
                   <button type="button" onClick={()=>setInteriorWorkValues(workOptions.map(option=>option.value))}>Select All</button>
                   {selectedWorkValues.length>0&&<button type="button" onClick={()=>setInteriorWorkValues([])}>Clear</button>}
@@ -350,7 +350,7 @@ export default function InteriorRequirementExact(props) {
 
             <div className="irx-package-section">
               <div className="irx-package-heading">
-                <div><b>Choose Interior Package</b><small>Package options and specifications are synced with the ProPulse Packages page.</small></div>
+                <div><b>Choose Interior Package</b></div>
                 <Link to="/packages#interior">Compare packages <Icon name="arrow" size={13}/></Link>
               </div>
               <div className="irx-package-grid">
@@ -394,7 +394,7 @@ export default function InteriorRequirementExact(props) {
             {additional&&<div className="irx-notes irx-notes-premium"><div className="irx-notes-label"><b>Project Notes</b><small>Optional</small></div><textarea maxLength={Number(additional.validation?.maxLength||1500)} value={answers[additional.questionKey]||''} onChange={e=>setAnswer(additional.questionKey,e.target.value)} placeholder="E.g. TV wall, pooja unit, storage preference, material choice, lighting idea, smart-home requirement, etc."/><span>{String(answers[additional.questionKey]||'').length}/{Number(additional.validation?.maxLength||1500)}</span></div>}
             <div className="irx-upload irx-upload-premium">
               <div className="irx-upload-head">
-                <div><b>Upload Floor Plan or Reference Images <small>Optional</small></b><p>Add a floor plan, site sketch or inspiration images so businesses can understand the requirement better.</p></div>
+                <div><b>Upload Floor Plan or Reference Images <small>Optional</small></b></div>
                 <span>{referenceFiles.length}/{MAX_REFERENCE_FILES} files</span>
               </div>
               <input ref={fileRef} hidden type="file" accept="image/jpeg,image/png,image/webp,application/pdf" multiple onChange={pickFiles}/>
@@ -413,14 +413,14 @@ export default function InteriorRequirementExact(props) {
                 </article>)}
               </div>}
               {uploadNotice&&<div className="irx-upload-notice">{uploadNotice}</div>}
-              <small className="irx-upload-footnote">You can add up to {MAX_REFERENCE_FILES} files. Multiple selections are supported.</small>
+              
             </div>
           </section>
         </div>
 
         <aside className="irx-side" id="irx-summary">
-          <section className="irx-summary-card"><h3>Your Selection Summary</h3><div>{summary.map(([label,value])=><p key={label}><span>{label}</span><b title={value}>{value}</b></p>)}</div><p className="irx-submit-consent">By submitting, you agree that ProPulse may use your project and contact details to process this request and connect you with relevant professionals.</p>{state.error&&<div className="irx-error">{state.error}</div>}<button type="submit" disabled={state.saving}>{state.saving?'Sending Request…':'Request Quote'} <Icon name="arrow" size={15}/></button><small>No instant price is generated for interiors. A business will confirm the final quote after reviewing your requirement.</small></section>
-          <section className="irx-help"><div className="irx-help-head"><span><Icon name="support"/></span><div><b>Need Help?<br/>Talk to Our Expert</b><small>Get free consultation and personalized guidance for your interior project.</small></div></div><a href={phone?`tel:${phone.replace(/\s/g,'')}`:'#irx-basic'}><Icon name="phone" size={16}/>{phone||'Start Free Consultation'}</a><small>Mon - Sat, 9 AM - 8 PM</small></section>
+          <section className="irx-summary-card"><h3>Your Selection Summary</h3><div>{summary.map(([label,value])=><p key={label}><span>{label}</span><b title={value}>{value}</b></p>)}</div><p className="irx-submit-consent">Your details are used to process this request.</p>{state.error&&<div className="irx-error">{state.error}</div>}<button type="submit" disabled={state.saving}>{state.saving?'Sending Request…':'Request Quote'} <Icon name="arrow" size={15}/></button></section>
+          <section className="irx-help"><div className="irx-help-head"><span><Icon name="support"/></span><div><b>Need Help?</b></div></div><a href={phone?`tel:${phone.replace(/\s/g,'')}`:'#irx-basic'}><Icon name="phone" size={16}/>{phone||'Start Free Consultation'}</a><small>Mon - Sat, 9 AM - 8 PM</small></section>
         </aside>
       </div>
     </form>
