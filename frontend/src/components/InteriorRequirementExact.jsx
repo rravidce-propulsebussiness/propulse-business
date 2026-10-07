@@ -419,7 +419,7 @@ export default function InteriorRequirementExact(props) {
         </div>
 
         <aside className="irx-side" id="irx-summary">
-          <section className="irx-summary-card"><h3>Your Selection Summary</h3><div>{summary.map(([label,value])=><p key={label}><span>{label}</span><b title={value}>{value}</b></p>)}</div><p className="irx-submit-consent">Your details are used to process this request.</p>{state.error&&<div className="irx-error">{state.error}</div>}<button type="submit" disabled={state.saving}>{state.saving?'Sending Request…':'Request Quote'} <Icon name="arrow" size={15}/></button></section>
+          <section className="irx-summary-card"><h3>Your Selection Summary</h3><div>{summary.map(([label,value])=><p key={label}><span>{label}</span><b title={value}>{value}</b></p>)}</div>{state.error&&<div className="irx-error">{state.error}</div>}<button type="submit" disabled={state.saving}>{state.saving?'Sending Request…':'Request Quote'} <Icon name="arrow" size={15}/></button></section>
           <section className="irx-help"><div className="irx-help-head"><span><Icon name="support"/></span><div><b>Need Help?</b></div></div><a href={phone?`tel:${phone.replace(/\s/g,'')}`:'#irx-basic'}><Icon name="phone" size={16}/>{phone||'Start Free Consultation'}</a><small>Mon - Sat, 9 AM - 8 PM</small></section>
         </aside>
       </div>
