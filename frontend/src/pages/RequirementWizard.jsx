@@ -552,9 +552,18 @@ export default function RequirementWizard({ flowKey, onCompletionChange }) {
         ? await calculateRequirementQuotation({ flowKey, answers, publicRequest })
         : null
 
+      const submitAnswers = flowKey === 'build'
+        ? {
+            ...answers,
+            // The construction UI uses project_type, while older backend flow
+            // definitions validate property_type. Submit both keys consistently.
+            project_type: answers.project_type || answers.property_type || '',
+            property_type: answers.project_type || answers.property_type || '',
+          }
+        : answers
       const result = await publicRequest('/customer-flows/' + flowKey + '/submit', {
         method: 'POST',
-        body: JSON.stringify({ flowToken: flow.flowToken, answers, contact: { ...contact, phone }, consent: true, submissionKey, website })
+        body: JSON.stringify({ flowToken: flow.flowToken, answers: submitAnswers, contact: { ...contact, phone }, consent: true, submissionKey, website })
       })
       const referenceUpload = await uploadInteriorReferences(referenceFiles,result?.leadId)
       setSubmissionResult({ ...(result || {}), quotation, ...referenceUpload })
