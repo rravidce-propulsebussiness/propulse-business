@@ -129,7 +129,7 @@ export default function RealEstateRequirementExact(props) {
     <form className="rex-form" onSubmit={submit}>
       <section className="rex-top-grid" id="rex-basic">
         <div className="rex-card">
-          <div className="rex-section-title rex-section-title-premium"><div><small>YOUR SEARCH STARTS HERE</small><h2>Basic Details</h2></div></div>
+          <div className="rex-section-title rex-section-title-premium"><div><h2>Basic Details</h2></div></div>
           <div className="rex-basic-grid">
             <QuoteLocationFields
               states={locationStates}
@@ -155,7 +155,7 @@ export default function RealEstateRequirementExact(props) {
       </section>
 
       <section className="rex-card" id="rq-property">
-        <div className="rex-section-title rex-section-title-premium"><div><small>PROPERTY SEARCH</small><h2>What are you looking for?</h2><p>Choose your intent first, then select the closest property category.</p></div></div>
+        <div className="rex-section-title rex-section-title-premium"><div><h2>What are you looking for?</h2></div></div>
         {intent && <div className="rex-intent rex-intent-premium"><div><b>I want to</b><small>Select your property goal</small></div><Chips question={intent} value={answers[intent.questionKey]} onChange={v=>setAnswer(intent.questionKey,v)}/></div>}
         <div className="rex-property-grid">{propertyCards.map(card=><button type="button" key={card.key} className={cardActive(card)?'active':''} onClick={()=>selectProperty(card)}><div><img src={card.image} alt=""/>{cardActive(card)&&<i>✓</i>}</div><b>{card.title}</b><small>{card.subtitle}</small></button>)}</div>
       </section>
@@ -163,12 +163,12 @@ export default function RealEstateRequirementExact(props) {
       <div className="rex-content-grid">
         <div>
           <section className="rex-card">
-            <div className="rex-section-title rex-section-title-premium"><div><small>BUDGET</small><h2>Your Budget Range</h2><p>Select the closest range so property matches stay relevant.</p></div></div>
+            <div className="rex-section-title rex-section-title-premium"><div><h2>Your Budget Range</h2></div></div>
             <div className="rex-budget">{budgetOptions.map(option=><button type="button" key={option} className={answers[budget?.questionKey]===option?'active':''} onClick={()=>budget&&setAnswer(budget.questionKey,option)}>{option}</button>)}</div>
           </section>
 
           <section className="rex-card" id="rq-preferences">
-            <div className="rex-section-title rex-section-title-premium"><div><small>PREFERENCES</small><h2>Property Preferences</h2><p>Choose the features that matter most. Multiple selections are allowed.</p></div></div>
+            <div className="rex-section-title rex-section-title-premium"><div><h2>Property Preferences</h2></div></div>
             {preferences && <div className="rex-pref-grid">{(preferences.options||[]).map(option=>{const selected=Array.isArray(answers[preferences.questionKey])?answers[preferences.questionKey]:[];const active=selected.includes(option.value);return <button type="button" key={option.value} className={active?'active':''} onClick={()=>setAnswer(preferences.questionKey,active?selected.filter(v=>v!==option.value):[...selected,option.value])}><div><img src={PREF_IMAGES[option.value]||CARD_IMAGES.residential} alt=""/>{active&&<i>✓</i>}</div><b>{option.label}</b></button>})}</div>}
             <div className="rex-subprefs">
               {bhk && <div className="rex-subpref-card"><span className="rex-subpref-icon"><Icon name="home" size={18}/></span><div><b>Home Configuration</b><small>Select the closest BHK requirement.</small><Chips question={bhk} value={answers[bhk.questionKey]} onChange={v=>setAnswer(bhk.questionKey,v)}/></div></div>}
@@ -177,7 +177,7 @@ export default function RealEstateRequirementExact(props) {
           </section>
 
           <section className="rex-card rex-notes-card">
-            <div className="rex-section-title rex-section-title-premium"><div><small>FINAL DETAILS</small><h2>Additional Requirements</h2><p>Add any locality, facing, parking, amenity or property-specific preference.</p></div></div>
+            <div className="rex-section-title rex-section-title-premium"><div><h2>Additional Requirements</h2></div></div>
             {additional&&<div className="rex-notes rex-notes-premium"><div className="rex-notes-label"><b>Requirement Notes</b><small>Optional</small></div><textarea maxLength={Number(additional.validation?.maxLength||1500)} value={answers[additional.questionKey]||''} onChange={e=>setAnswer(additional.questionKey,e.target.value)} placeholder="E.g. preferred locality, gated community, east-facing, parking, nearby school or metro, possession preference, etc."/><span>{String(answers[additional.questionKey]||'').length}/{Number(additional.validation?.maxLength||1500)}</span></div>}
           </section>
         </div>
