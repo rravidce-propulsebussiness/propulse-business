@@ -44,6 +44,15 @@ export default function QuoteLocationFields({
   )
 
   const [cityText, setCityText] = useState('')
+  const [cityFocused, setCityFocused] = useState(false)
+
+  const citySuggestions = useMemo(() => {
+    const query = cityText.trim().toLowerCase()
+    if (query.length < 3) return []
+    return filteredCities
+      .filter(city => String(city?.name || '').toLowerCase().startsWith(query))
+      .slice(0, 8)
+  }, [filteredCities, cityText])
 
   useEffect(() => {
     let active=true
@@ -142,27 +151,36 @@ export default function QuoteLocationFields({
 
       <label className="quote-city-field">
         <b>{cityLabel}</b>
-        <input
-          list={listId}
-          value={cityText}
-          onChange={event => {
-            const value = event.target.value
-            setCityText(value)
-            const match = filteredCities.find(item => String(item.name || '').trim().toLowerCase() === value.trim().toLowerCase())
-            onCityChange?.(match ? String(match.id) : '')
-          }}
-          onBlur={handleCityBlur}
-          onFocus={event => {
-            if (stateId && !event.currentTarget.value) event.currentTarget.click()
-          }}
-          placeholder={stateId ? 'Type or select City / Location' : 'Select state first'}
-          autoComplete="address-level2"
-          disabled={!stateId}
-        />
-        <datalist id={listId}>
-          {filteredCities.map(city => <option key={city.id} value={city.name} />)}
-        </datalist>
-        {stateId && !cityId && cityText ? <small className="qlf-city-hint">Choose a supported city from the suggestions.</small> : null}
+        <div className="qlf-city-autocomplete">
+          <input
+            value={cityText}
+            onChange={event => handleCityChange(event.target.value)}
+            onFocus={() => setCityFocused(true)}
+            onBlur={() => {
+              window.setTimeout(() => {
+                handleCityBlur()
+                setCityFocused(false)
+              }, 120)
+            }}
+            placeholder={stateId ? 'Type City / Location' : 'Select state first'}
+            autoComplete="off"
+            disabled={!stateId}
+          />
+          {cityFocused && citySuggestions.length > 0 ? <div className="qlf-city-suggestions" role="listbox">
+            {citySuggestions.map(city => <button
+              type="button"
+              role="option"
+              key={city.id}
+              onMouseDown={event => event.preventDefault()}
+              onClick={() => {
+                setCityText(String(city.name || ''))
+                onCityChange?.(String(city.id))
+                setCityFocused(false)
+              }}
+            >{city.name}</button>)}
+          </div> : null}
+        </div>
+        {stateId && !cityId && cityText.length >= 3 && citySuggestions.length === 0 ? <small className="qlf-city-hint">No supported city found for this state.</small> : null}
       </label>
 
       <label className="quote-pin-field">
