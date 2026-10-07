@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { publicRequest } from '../utils/auth'
 import './Home.css'
 import { PublicFooter, PublicHeader } from '../components/PublicSiteChrome'
+import HeroBlueprintAnimation from '../components/HeroBlueprintAnimation'
 
 const DEFAULT_HERO = 'https://images.unsplash.com/photo-1600585152915-d208bec867a1?auto=format&fit=crop&w=2200&q=92'
 
@@ -45,14 +46,6 @@ const STEPS = [
   { number: '2', icon: 'layers', title: 'Get Estimated Plan', text: 'Use the estimator to understand an indicative budget range.' },
   { number: '3', icon: 'people', title: 'Connect with Professionals', text: 'Relevant professionals can understand the same structured brief.' },
   { number: '4', icon: 'home', title: 'Move Forward', text: 'Compare quotations and choose the option you like.' },
-]
-
-const MATERIAL_BRANDS = [
-  { key: 'tiles', brand: 'Kajaria', label: 'Tiles', image: '/materials/kajaria-tiles.svg' },
-  { key: 'plywood', brand: 'CenturyPly', label: 'Plywood', image: '/materials/centuryply-plywood.svg' },
-  { key: 'laminates', brand: 'Greenlam', label: 'Laminates', image: '/materials/greenlam-laminates.svg' },
-  { key: 'paints', brand: 'Asian Paints', label: 'Paints', image: '/materials/asian-paints.svg' },
-  { key: 'fittings', brand: 'Jaquar', label: 'Fittings', image: '/materials/jaquar-fittings.svg' },
 ]
 
 const PROJECTS = [
@@ -141,7 +134,7 @@ export default function Home() {
 
     <main>
       <section className="hc-hero" id="home">
-        <img className="hc-hero-image" src={heroImage} alt="Premium modern home" fetchPriority="high" />
+        <HeroBlueprintAnimation />
         <div className="hc-hero-overlay" />
         <div className="hc-container hc-hero-inner">
           <div className="hc-hero-copy">
@@ -166,39 +159,6 @@ export default function Home() {
               </span>
             </div>
           </div>
-
-          <article className="hc-float-card hc-float-professionals">
-            <div className="hc-float-heading">
-              <span><Icon name="people" size={21}/></span>
-              <div><b>Certified Engineers</b><small>Across major cities</small></div>
-            </div>
-            <div className="hc-pro-avatar-row" aria-hidden="true">
-              <span>AR</span><span>SK</span><span>VM</span><span>RK</span><span>+</span>
-            </div>
-          </article>
-
-          <article className="hc-float-card hc-float-materials">
-            <div className="hc-material-heading">
-              <span><Icon name="layers" size={21}/></span>
-              <div><b>Branded Material Options</b><small>Premium brands for a better home</small></div>
-            </div>
-            <div className="hc-material-brand-grid">
-              {MATERIAL_BRANDS.map(item => (
-                <div className="hc-material-brand" key={item.key}>
-                  <div className="hc-material-thumb">
-                    <img
-                      className="hc-material-product-image"
-                      src={item.image}
-                      alt={`${item.brand} ${item.label}`}
-                      loading="lazy"
-                    />
-                  </div>
-                  <strong>{item.brand}</strong>
-                  <small>{item.label}</small>
-                </div>
-              ))}
-            </div>
-          </article>
         </div>
       </section>
 
