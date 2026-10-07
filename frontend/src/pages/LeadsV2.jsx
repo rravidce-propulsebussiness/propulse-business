@@ -398,7 +398,7 @@ export default function LeadsV2() {
     finally { setDirectSubmitting(false) }
   }
 
-  if (user?.role === 'admin') return <main className="lv2-page"><section className="lv2-empty"><span>ADMIN ACCOUNT</span><h1>Lead management is in the Admin Panel.</h1><Link to="/admin/leads">Open Admin Leads →</Link></section></main>
+  if (user?.role === 'admin') return <main className="lv2-page lv2-admin-page"><section className="lv2-admin-redirect"><span>ADMIN ACCOUNT</span><h1>Lead management is in the Admin Panel.</h1><p>Manage lead inventory, pricing, assignments and uploads from the admin workspace.</p><Link to="/admin/leads">Open Admin Leads <b aria-hidden="true">→</b></Link></section></main>
 
   return <div className="lv2-shell">
     <UserHeader />
