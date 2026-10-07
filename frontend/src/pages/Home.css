@@ -1103,3 +1103,10 @@
 .hc-step-arrow{display:grid!important;right:14px;top:50%;width:28px;height:28px;transform:translateY(-50%)}
 .hc-step-grid article:last-child .hc-step-arrow{display:none!important}
 }
+
+
+/* Full-width visual-only plot → home → interior hero */
+.hc-hero.hc-hero-visual-only{min-height:clamp(480px,58vw,700px);background:#041827;border-bottom:1px solid #12334a}
+.hc-hero.hc-hero-visual-only::before{display:none}
+@media(max-width:900px){.hc-hero.hc-hero-visual-only{min-height:540px}}
+@media(max-width:620px){.hc-hero.hc-hero-visual-only{min-height:460px}}
