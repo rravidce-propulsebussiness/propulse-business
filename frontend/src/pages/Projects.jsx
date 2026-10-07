@@ -392,6 +392,7 @@ export default function Projects(){
   const [query,setQuery]=useState('')
   const [visible,setVisible]=useState(12)
   const [selectedProject,setSelectedProject]=useState(null)
+  const [professionalProjects,setProfessionalProjects]=useState([])
 
   useEffect(()=>{
     window.scrollTo(0,0)
@@ -400,14 +401,75 @@ export default function Projects(){
       .catch(()=>{})
   },[])
 
+  function professionalCategory(value){
+    const type=String(value||'').toLowerCase()
+    if(type.includes('interior')||type.includes('design'))return 'design'
+    if(type.includes('real estate')||type.includes('property'))return 'property'
+    return 'construction'
+  }
+
+  function professionalFallbackImage(category){
+    if(category==='design')return 'https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=1200&q=86'
+    if(category==='property')return 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=1200&q=86'
+    return 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=86'
+  }
+
+  function professionalImage(project,category){
+    const cover=String(project?.cover_image_url||'').trim()
+    if(cover)return cover
+    const plan=String(project?.plan_url||'').trim()
+    if(/\.(?:jpg|jpeg|png|webp)(?:$|[?#])/i.test(plan))return plan
+    return professionalFallbackImage(category)
+  }
+
+  useEffect(()=>{
+    let active=true
+    publicRequest('/experts/projects?page=1&pageSize=18')
+      .then(value=>{
+        if(!active)return
+        const rows=Array.isArray(value)?value:Array.isArray(value?.data)?value.data:[]
+        const mapped=[...rows]
+          .sort((a,b)=>new Date(b?.published_at||0).getTime()-new Date(a?.published_at||0).getTime()||Number(b?.project_id||0)-Number(a?.project_id||0))
+          .map(project=>{
+            const category=professionalCategory(project?.project_type)
+            return {
+              id:'professional-'+String(project?.project_id||crypto.randomUUID()),
+              professional:true,
+              category,
+              categoryLabel:category==='design'?'Interiors':category==='property'?'Real Estate':'Construction',
+              title:project?.title||'Completed Project',
+              city:project?.location_text||'',
+              location:project?.location_text||'Service location available in professional profile',
+              propertyType:project?.project_type||'Professional Project',
+              budget:project?.budget||'',
+              area:Number(project?.area||0)||null,
+              style:'Professional',
+              meta:project?.business_name||'Verified Professional',
+              image:professionalImage(project,category),
+              description:project?.description||'Completed project shared by a ProPulse professional.',
+              businessName:project?.business_name||'',
+              isVerified:Boolean(project?.is_verified),
+              publishedAt:project?.published_at||null,
+              videoUrl:project?.video_url||'',
+              planUrl:project?.plan_url||'',
+            }
+          })
+        setProfessionalProjects(mapped)
+      })
+      .catch(()=>{if(active)setProfessionalProjects([])})
+    return()=>{active=false}
+  },[])
+
+  const allProjects=useMemo(()=>[...professionalProjects,...PROJECTS],[professionalProjects])
+
   const filtered=useMemo(()=>{
     const q=query.trim().toLowerCase()
-    return PROJECTS.filter(project=>{
+    return allProjects.filter(project=>{
       if(category!=='all'&&project.category!==category)return false
-      if(q&&!([project.title,project.location,project.categoryLabel,project.propertyType,project.style,project.description].join(' ').toLowerCase().includes(q)))return false
+      if(q&&!([project.title,project.location,project.categoryLabel,project.propertyType,project.style,project.description,project.businessName].join(' ').toLowerCase().includes(q)))return false
       return true
     })
-  },[category,query])
+  },[allProjects,category,query])
 
   useEffect(()=>{
     if(!selectedProject)return undefined
@@ -580,12 +642,13 @@ export default function Projects(){
               <div><h3>{project.title}</h3><small><Icon name="pin" size={12}/>{project.location}</small></div>
             </div>
             <div className="pj-project-meta">
-              <span>{project.meta}</span>
-              <span><Icon name="area" size={12}/>{project.area} sq ft</span>
-              <span>{project.budget}</span>
+              {project.meta&&<span>{project.meta}</span>}
+              {project.area&&<span><Icon name="area" size={12}/>{project.area} sq ft</span>}
+              {project.budget&&<span>{project.budget}</span>}
+              {project.professional&&project.isVerified&&<span><Icon name="shield" size={12}/>Verified professional</span>}
             </div>
             <p>{project.description}</p>
-            <div className="pj-project-footer-row"><span>Inspiration concept</span><b>View Full Details <Icon name="arrow" size={13}/></b></div>
+            <div className="pj-project-footer-row"><span>{project.professional?'Professional project':'Inspiration concept'}</span><b>View Full Details <Icon name="arrow" size={13}/></b></div>
           </div>
         </article>)}
       </div>
