@@ -301,7 +301,7 @@ export default function GlobalLeadPopup(){
       <button className="glp-close" type="button" onClick={closePopup} aria-label="Close">×</button>
       <div className="glp-head">
         <span><Icon name="phone" size={20}/></span>
-        <div><small>FREE REQUIREMENT REQUEST</small><h3>Tell Us Your Requirement</h3><p>Share a few details and we’ll connect your requirement to the right flow.</p></div>
+        <div><small>FREE REQUIREMENT REQUEST</small><h3>Tell Us Your Requirement</h3></div>
       </div>
 
       {submitted?<div className="glp-success">
