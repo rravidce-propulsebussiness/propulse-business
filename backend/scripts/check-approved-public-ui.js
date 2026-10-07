@@ -59,7 +59,8 @@ assert.doesNotMatch(projects,/import PublicIcon /);
 // Canonical public routes and shared requirement popup.
 assert.match(app,/path="\/experts" element={<Experts\/>}/);
 assert.match(app,/path="\/quote" element={<Solutions\/>}/);
-assert.match(app,/path="\/professionals" element={<Leads\/>}/);
+assert.match(app,/path="\/professionals" element={<ProfessionalsRoute\/>}/);
+assert.match(app,/function ProfessionalsRoute\(\)[\s\S]*user\?\.role==='admin'[\s\S]*\/admin\/leads[\s\S]*user\?\.role==='lead_partner'[\s\S]*\/lead-partner\/dashboard[\s\S]*<Leads\/>/);
 assert.match(app,/path="\/professional-contact" element={<PortalContact audience="professionals"\/>}/);
 assert.match(contact,/portalAudience==='users'[\s\S]*<Navigate to="\/contact" replace\/>/);
 assert.match(portalContact,/professionals:\{label:'Professional',title:'Professional Support'/);
@@ -71,11 +72,8 @@ assert.match(app,/<GlobalLeadPopup\/>/);
 assert.doesNotMatch(app,/ProfessionalHome/);
 
 // Homeowner acquisition homepage.
-assert.match(home,/Don&apos;t Leave Your/);
-assert.match(home,/Find the right partner\. Build it right\./);
 assert.doesNotMatch(home,/Build\. Design\. Find/);
 assert.doesNotMatch(home,/Right Professionals/);
-assert.match(home,/Start Your Requirement/);
 assert.match(home,/propulse:open-lead-popup/);
 assert.match(home,/What do you need\?/);
 assert.match(home,/Build Your Home/);
@@ -85,22 +83,23 @@ assert.match(home,/Why Homeowners Choose ProPulse/);
 assert.match(home,/How It Works/);
 assert.doesNotMatch(home,/WebsiteFaqSection/);
 assert.doesNotMatch(home,/audience="homeowner"/);
-assert.match(home,/to="\/experts">Find Professionals<\/Link>/);
-assert.match(home,/to="\/professionals">For Professionals<\/Link>/);
-assert.match(home,/\/quote#construction/);
-assert.match(home,/\/quote#interiors/);
-assert.match(home,/\/quote#property/);
+assert.match(home,/<PublicHeader \/>/);
+assert.match(home,/openRequirement\(''\)/);
+assert.match(home,/openRequirement\(item\.key\)/);
+assert.match(home,/to="\/packages"/);
 assert.match(homeCss,/\.hc-hero/);
 assert.match(homeCss,/\.hc-service-grid/);
 assert.match(homeCss,/\.hc-benefit-grid/);
 assert.match(homeCss,/\.hc-step-grid/);
+assert.match(home,/HeroBlueprintAnimation/);
 assert.doesNotMatch(home,/HeroJourneyVideo/);
 assert.match(home,/Buy or sell the right property/);
 assert.doesNotMatch(home,/buy, sell, rent or invest/i);
 assert.match(quote,/Buy or sell property with a structured location/);
 assert.doesNotMatch(quote,/buy, rent, sell or invest/i);
-assert.match(contact,/Buy and sell property requirements/);
-assert.match(projects,/title:'Apartment for Sale'/);
+assert.match(contact,/Construction, interiors and property support in one place\./);
+assert.match(contact,/Construction · Interiors · Real Estate/);
+assert.match(projects,/buyers and sellers comparing budget, connectivity, condition and resale value/);
 assert.doesNotMatch(projects,/Investment Apartment|rental-demand considerations/);
 
 // Shared basic lead intake must remain wired to the public consultation endpoint.
@@ -159,16 +158,23 @@ assert.match(packages,/Side-by-Side Comparison/);
 assert.match(packages,/Get Quote/);
 assert.match(packages,/\/quote\?package=/);
 
-// Public marketing pages keep both customer/professional navigation paths.
+// Public marketing pages use the shared site chrome; navigation links live in PublicSiteChrome.
+const publicChrome=read('../frontend/src/components/PublicSiteChrome.jsx');
 for(const source of [home,quote,packages,projects,about,howItWorks,contact]){
-  assert.match(source,/For Professionals/);
-  assert.match(source,/to="\/professionals"/);
-  assert.match(source,/to="\/experts">Find Professionals<\/Link>/);
+  assert.match(source,/PublicHeader/);
+  assert.match(source,/PublicFooter/);
 }
+assert.match(publicChrome,/For Professionals/);
+assert.match(publicChrome,/to="\/professionals"/);
+assert.match(publicChrome,/to="\/experts"/);
 
 for(const source of [home,projects,about,howItWorks,interiorExact,realEstateExact,wizard]){
   assert.doesNotMatch(source,/\/#contact/);
   assert.doesNotMatch(source,/>Privacy Policy<|>Terms & Conditions</);
+}
+assert.match(publicChrome,/to="\/faq"[^>]*>FAQ<\/Link>/);
+assert.match(publicChrome,/to="\/contact"[^>]*>Contact<\/Link>/);
+for(const source of [interiorExact,realEstateExact,wizard]){
   assert.match(source,/to="\/faq">FAQ<\/Link>/);
   assert.match(source,/to="\/contact">Contact(?: Us)?<\/Link>/);
 }
@@ -181,7 +187,8 @@ assert.match(experts,/Find trusted construction, interior and real-estate profes
 assert.match(experts,/More Filters/);
 assert.match(experts,/View Profile/);
 assert.match(experts,/Send Requirement/);
-assert.match(experts,/Direct phone and email details are not displayed publicly/);
+assert.match(experts,/Direct phone and email stay private\. Connect through the ProPulse requirement flow\./);
+assert.doesNotMatch(experts,/selected\.phone|selected\.email|expert\.phone|expert\.email/);
 assert.match(experts,/publicRequest\('\/experts\?'/);
 assert.match(expertsCss,/\.experts-grid/);
 assert.match(expertsCss,/\.expert-card/);
@@ -205,7 +212,7 @@ assert.match(wizard,/QuoteLocationFields/);
 assert.match(interiorExact,/QuoteLocationFields/);
 assert.match(realEstateExact,/QuoteLocationFields/);
 assert.match(quoteLocationFields,/Select State/);
-assert.match(quoteLocationFields,/Type city \/ location/);
+assert.match(quoteLocationFields,/Type City \/ Location/);
 assert.match(quoteLocationFields,/state_id/);
 assert.match(quoteLocationFields,/disabled={!stateId}/);
 assert.match(quoteLocationFields,/Use my current location/);
