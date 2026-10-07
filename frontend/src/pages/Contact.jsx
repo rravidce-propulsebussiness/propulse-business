@@ -118,7 +118,7 @@ function PublicContact(){
 
         <article className="contact-panel location-panel">
           <div className="contact-panel-heading contact-location-heading">
-            <div><span className="contact-kicker">LOCATION</span><h2>Office & Address</h2><p>{data.address||'The public office address can be configured from Admin.'}</p></div>
+            <div><span className="contact-kicker">LOCATION</span><h2>Office & Address</h2><p>{data.address||'Hyderabad, India'}</p></div>
             {data.maps_url&&<a className="contact-outline-btn" href={data.maps_url} target="_blank" rel="noreferrer">Open in Maps ↗</a>}
           </div>
           <div className="contact-map">
@@ -133,7 +133,7 @@ function PublicContact(){
         <article className="contact-panel contact-direct">
           <span className="contact-kicker">DIRECT SUPPORT</span>
           <h2>Need assistance?</h2>
-          <p>Choose the channel that best matches what you need. Project quotation requests should start from the guided quote page so your details stay structured.</p>
+          
           <div className="contact-direct-links">
             {data.support_email&&<a href={'mailto:'+data.support_email}><span>SUPPORT</span><strong>{data.support_email}</strong><b>→</b></a>}
             {data.careers_email&&<a href={'mailto:'+data.careers_email}><span>CAREERS</span><strong>{data.careers_email}</strong><b>→</b></a>}
