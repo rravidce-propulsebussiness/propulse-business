@@ -189,7 +189,8 @@ assert.match(experts,/Find trusted construction, interior and real-estate profes
 assert.match(experts,/More Filters/);
 assert.match(experts,/View Profile/);
 assert.match(experts,/Send Requirement/);
-assert.match(experts,/Direct phone and email details are not displayed publicly/);
+assert.match(experts,/Direct phone and email stay private\. Connect through the ProPulse requirement flow\./);
+assert.doesNotMatch(experts,/selected\.phone|selected\.email|expert\.phone|expert\.email/);
 assert.match(experts,/publicRequest\('\/experts\?'/);
 assert.match(expertsCss,/\.experts-grid/);
 assert.match(expertsCss,/\.expert-card/);
