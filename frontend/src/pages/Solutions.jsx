@@ -45,8 +45,8 @@ function Icon({name,size=20}){
 
 function hashKey(hash){
   const key=String(hash||'').replace(/^#/,'').toLowerCase()
-  if(key==='interior'||key==='design')return 'interiors'
-  if(key==='real-estate'||key==='realestate')return 'property'
+  if(key==='interior'||key==='design'||key.startsWith('irx-'))return 'interiors'
+  if(key==='real-estate'||key==='realestate'||key.startsWith('rex-'))return 'property'
   return FLOWS[key]?key:'construction'
 }
 
@@ -82,7 +82,7 @@ export default function Solutions(){
     </section>}
 
     <section className={'quote-flow quote-flow-'+activeKey} key={active.flowKey}>
-      <RequirementWizard flowKey={active.flowKey} onCompletionChange={setCompleted}/>
+      <RequirementWizard flowKey={active.flowKey} embedded onCompletionChange={setCompleted}/>
     </section>
     <PublicFooter />
   </main>

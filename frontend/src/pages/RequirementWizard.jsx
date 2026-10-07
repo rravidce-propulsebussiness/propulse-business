@@ -209,7 +209,7 @@ function PremiumQuestion({ question, value, onChange, visual = 'default' }) {
   return <input className="rq-basic-input" value={value || ''} maxLength={Number(question.validation?.maxLength || 240)} onChange={event => onChange(event.target.value)} placeholder={question.questionType === 'budget' ? 'Example: ₹25–40 lakh' : 'Enter your answer'} />
 }
 
-export default function RequirementWizard({ flowKey, onCompletionChange }) {
+export default function RequirementWizard({ flowKey, onCompletionChange, embedded = false }) {
   const [flow, setFlow] = useState(null)
   const [cities, setCities] = useState([])
   const [contactData, setContactData] = useState({})
@@ -245,7 +245,7 @@ export default function RequirementWizard({ flowKey, onCompletionChange }) {
       if (data?.flowType !== 'requirement') throw new Error('This requirement form is not available.')
       if (!mounted.current) return
 
-      const loadedCities = collection(cityData)
+      const loadedCities = [...new Map(collection(cityData).map(city => [String(city.id), city])).values()]
       setFlow(data)
       setCities(loadedCities)
       setContactData(websiteContact || {})
@@ -309,6 +309,8 @@ export default function RequirementWizard({ flowKey, onCompletionChange }) {
   }, [flowKey])
 
   const questions = useMemo(() => (flow?.questions || [])
+    .map(question => flowKey === 'build' && question.questionKey === 'property_type' && !(flow?.questions || []).some(item => item.questionKey === 'project_type')
+      ? { ...question, questionKey: 'project_type' } : question)
     .filter(question => isQuestionVisible(question, answers))
     .filter(question => !(flowKey === 'build' && ['property_type','construction_scope','basement'].includes(question.questionKey)))
     .filter(question => !(flowKey === 'design' && ['area','rooms','property_status','possession_status','kitchen','wardrobes','false_ceiling','furniture'].includes(question.questionKey))), [flow, answers, flowKey])
@@ -574,7 +576,7 @@ export default function RequirementWizard({ flowKey, onCompletionChange }) {
       if (flowKey === 'build' && quotation && contact.email && result?.leadId) {
         try {
           const quoteRows = questions.filter(question => question.questionKey !== locationQuestion?.questionKey)
-            .map(question => [question.label.replace(/\\?$/,''), fieldLabel(question, submitAnswers)])
+            .map(question => [question.label.replace(/\?$/,''), fieldLabel(question, submitAnswers)])
             .filter(([,value]) => value && value !== '—')
           const pdfDataUrl = await createDetailedQuotationPdfDataUrl({
             quotation, flowName: flow?.name || theme.eyebrow, flowKey, leadId: result.leadId,
@@ -637,7 +639,7 @@ export default function RequirementWizard({ flowKey, onCompletionChange }) {
     if (flowKey === 'design') {
       const interiorPackage = getInteriorPackage(answers.finish_quality)
       return <main className="rq-page rq-premium-page">
-        <header className="rq-premium-header"><Link to="/"><img src="/brand/propulse-logo.svg" alt="ProPulse" /></Link><Link to="/">Back to Home</Link></header>
+        {!embedded && <header className="rq-premium-header"><Link to="/"><img src="/brand/propulse-logo.svg" alt="ProPulse" /></Link><Link to="/">Back to Home</Link></header>}
         <div className="rq-success rq-premium-success rq-interior-success">
           <div className="rq-success-mark">✓</div>
           <span>QUOTE REQUEST RECEIVED</span>
@@ -661,7 +663,7 @@ export default function RequirementWizard({ flowKey, onCompletionChange }) {
       </main>
     }
     return <main className="rq-page rq-premium-page">
-      <header className="rq-premium-header"><Link to="/"><img src="/brand/propulse-logo.svg" alt="ProPulse" /></Link><Link to="/">Back to Home</Link></header>
+      {!embedded && <header className="rq-premium-header"><Link to="/"><img src="/brand/propulse-logo.svg" alt="ProPulse" /></Link><Link to="/">Back to Home</Link></header>}
       <div className="rq-success rq-premium-success">
         <div className="rq-success-mark">✓</div>
         <span>{quotation ? 'QUOTATION GENERATED' : 'REQUEST RECEIVED'}</span>
@@ -693,6 +695,7 @@ export default function RequirementWizard({ flowKey, onCompletionChange }) {
 
   if (flowKey === 'design') {
     return <InteriorRequirementExact
+      embedded={embedded}
       flow={flow}
       questions={questions}
       answers={answers}
@@ -718,6 +721,7 @@ export default function RequirementWizard({ flowKey, onCompletionChange }) {
 
   if (flowKey === 'property') {
     return <RealEstateRequirementExact
+      embedded={embedded}
       flow={flow}
       questions={questions}
       answers={answers}
@@ -750,7 +754,7 @@ export default function RequirementWizard({ flowKey, onCompletionChange }) {
   ]
 
   return <main className="rq-page rq-premium-page">
-    <header className="rq-premium-header">
+    {!embedded && <header className="rq-premium-header">
       <Link to="/"><img src="/brand/propulse-logo.svg" alt="ProPulse" /></Link>
       <nav>
         <Link to="/">Home</Link>
@@ -764,7 +768,7 @@ export default function RequirementWizard({ flowKey, onCompletionChange }) {
         <Link to="/contact">Contact</Link>
       </nav>
       <button onClick={() => jump('rq-basic')}>{isQuotationFlow ? 'Get Free Quotation' : 'Get Free Consultation'} <Icon name="arrow" size={15} /></button>
-    </header>
+    </header>}
 
     <section className="rq-premium-hero">
       <img src={theme.hero} alt="" />
@@ -888,12 +892,12 @@ export default function RequirementWizard({ flowKey, onCompletionChange }) {
       <a href={phone ? `tel:${phone.replace(/\s/g,'')}` : '#rq-basic'}><Icon name="phone" size={19}/> {phone || 'Start Free Consultation'}</a>
     </section>
 
-    <footer className="rq-premium-footer">
+    {!embedded && <footer className="rq-premium-footer">
       <div><img src="/brand/propulse-logo.svg" alt="ProPulse" /><p>Your customer starting point for construction, interiors and real estate requirements.</p></div>
       <div><b>Quick Links</b><Link to="/">Home</Link><Link to="/quote#construction">Construction</Link><Link to="/quote#interiors">Interiors</Link><Link to="/packages">Packages</Link><Link to="/quote#property">Real Estate</Link></div>
       <div><b>Our Services</b><Link to="/construction-estimator">Cost Estimator</Link><Link to="/projects">Projects</Link><Link to="/how-it-works">How It Works</Link></div>
       <div><b>Support</b><Link to="/faq">FAQ</Link><Link to="/contact">Contact Us</Link></div>
       <div><b>Contact</b>{phone && <span>{phone}</span>}{email && <span>{email}</span>}<span>{[flow.industryName, flow.serviceName].filter(Boolean).join(' · ') || flow.name}</span><small>Building Spaces, Elevating Lives.</small></div>
-    </footer>
+    </footer>}
   </main>
 }

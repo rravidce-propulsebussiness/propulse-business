@@ -1,11 +1,11 @@
-import { useEffect, useId, useMemo, useState } from 'react'
+import { useEffect, useId, useMemo, useRef, useState } from 'react'
 import { publicRequest } from '../utils/auth'
 import './QuoteLocationFields.css'
 
-function PinStatus({ status, message }) {
+function PinStatus({ id, status, message }) {
   if (!message) return null
   return (
-    <small id="quote-pin-status" className={'qlf-status ' + (status || '')}>
+    <small id={id} className={'qlf-status ' + (status || '')}>
       {status === 'checking' ? <i /> : null}
       {message}
     </small>
@@ -29,13 +29,16 @@ export default function QuoteLocationFields({
   cityLabel = 'City / Location',
 }) {
   const listId = useId().replace(/:/g, '')
+  const statusId = listId + '-pin-status'
+  const editingCity = useRef(false)
+  const previousState = useRef(stateId)
   const [locating, setLocating] = useState(false)
 
   const filteredCities = useMemo(() => {
     const rows = stateId
       ? cities.filter(city => String(city?.state_id || '') === String(stateId))
       : []
-    return [...rows].sort((a, b) => String(a?.name || '').localeCompare(String(b?.name || '')))
+    return [...new Map(rows.map(city => [String(city.id), city])).values()].sort((a, b) => String(a?.name || '').localeCompare(String(b?.name || '')))
   }, [cities, stateId])
 
   const selectedCity = useMemo(
@@ -59,7 +62,8 @@ export default function QuoteLocationFields({
     queueMicrotask(()=>{
       if(!active)return
       if (selectedCity) setCityText(String(selectedCity.name || ''))
-      else if (!cityId) setCityText('')
+      else if (!editingCity.current || previousState.current !== stateId) setCityText('')
+      previousState.current = stateId
     })
     return()=>{active=false}
   }, [selectedCity, cityId, stateId])
@@ -71,18 +75,21 @@ export default function QuoteLocationFields({
   }
 
   function handleStateChange(value) {
+    editingCity.current = false
     setCityText('')
     onStateChange?.(value)
   }
 
   function handleCityChange(value) {
+    editingCity.current = true
+    setCityFocused(true)
     setCityText(value)
     if (!String(value || '').trim()) {
       onCityChange?.('')
       return
     }
     const matchedCity = resolveCity(value)
-    if (matchedCity) onCityChange?.(String(matchedCity.id))
+    onCityChange?.(matchedCity ? String(matchedCity.id) : '')
   }
 
   function handleCityBlur() {
@@ -193,13 +200,13 @@ export default function QuoteLocationFields({
             autoComplete="postal-code"
             maxLength="6"
             placeholder="Enter 6-digit PIN"
-            aria-describedby="quote-pin-status"
+            aria-describedby={lookupMessage ? statusId : undefined}
           />
           <span className={'qlf-pin-indicator ' + (lookupStatus || '')}>
             {lookupStatus === 'checking' ? '…' : lookupStatus === 'matched' || lookupStatus === 'state' ? '✓' : lookupStatus === 'error' ? '!' : 'PIN'}
           </span>
         </div>
-        <PinStatus status={lookupStatus} message={lookupMessage} />
+        <PinStatus id={statusId} status={lookupStatus} message={lookupMessage} />
       </label>
 
       <button className="qlf-current-location" type="button" onClick={detectCurrentLocation} disabled={locating}>

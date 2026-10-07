@@ -865,8 +865,8 @@
   color:#ff8756;
   box-shadow:inset 0 0 0 1px rgba(255,139,91,.16);
 }
-.hc-hero-trust b{color:#fff;font-size:11.5px}
-.hc-hero-trust small{color:#aebfcb;font-size:10.5px}
+.hc-hero-trust b{color:#fff;font-size:12px}
+.hc-hero-trust small{color:#aebfcb;font-size:12px}
 
 /* Glass proof cards over the image */
 .hc-float-card{
@@ -920,7 +920,7 @@
   box-shadow:inset 0 0 0 1px rgba(255,101,39,.07);
 }
 .hc-service-copy h3{font-size:17px;letter-spacing:-.02em}
-.hc-service-copy b{margin-top:5px;font-size:11px;letter-spacing:.08em;text-transform:uppercase}
+.hc-service-copy b{margin-top:5px;font-size:12px;letter-spacing:.08em;text-transform:uppercase}
 .hc-service-copy p{margin-top:8px;font-size:12.5px;line-height:1.6}
 .hc-service-copy>button{
   width:36px;height:36px;
@@ -948,7 +948,7 @@
 }
 .hc-benefit-grid article>span{width:42px;height:42px}
 .hc-benefit-grid h3{color:#fff;font-size:13.5px}
-.hc-benefit-grid p{color:#b7c8d5;font-size:11.5px;line-height:1.55}
+.hc-benefit-grid p{color:#b7c8d5;font-size:12px;line-height:1.55}
 
 /* Process */
 .hc-how{background:#f3f7fa}
@@ -976,7 +976,7 @@
 .hc-project-grid img{height:230px}
 .hc-project-grid article>div{padding:15px 16px 17px}
 .hc-project-grid h3{font-size:14px}
-.hc-project-grid p{margin-top:7px;font-size:11.5px}
+.hc-project-grid p{margin-top:7px;font-size:12px}
 
 /* Premium bottom CTA */
 .hc-slim-cta{padding:24px 0 28px;background:#fff}
@@ -1066,7 +1066,7 @@
   }
   .hc-hero-trust>span+span{border-top:0;border-left:1px solid rgba(255,255,255,.12)}
   .hc-hero-trust>span>i{width:26px;height:26px;flex-basis:26px}
-  .hc-hero-trust b{white-space:normal;font-size:9.5px;line-height:1.15}
+  .hc-hero-trust b{white-space:normal;font-size:12px;line-height:1.15}
   .hc-hero-trust small{display:none}
   .hc-section-head h2{font-size:28px}
   .hc-service-card{grid-template-columns:1fr}
@@ -1099,7 +1099,7 @@
 .hc-step-number{left:14px;top:50%;width:38px;height:38px;transform:translateY(-50%)}
 .hc-step-icon{left:58px;top:50%;width:38px;height:38px;transform:translateY(-50%)}
 .hc-step-grid h3{margin:0;font-size:15px;line-height:1.25}
-.hc-step-grid p{margin:3px 0 0;font-size:11.5px;line-height:1.45}
+.hc-step-grid p{margin:3px 0 0;font-size:12px;line-height:1.45}
 .hc-step-arrow{display:grid!important;right:14px;top:50%;width:28px;height:28px;transform:translateY(-50%)}
 .hc-step-grid article:last-child .hc-step-arrow{display:none!important}
 }
