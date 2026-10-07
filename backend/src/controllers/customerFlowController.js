@@ -1,6 +1,8 @@
 const customerFlowService = require('../services/customerFlowService');
 const publicLeadIntakeService = require('../services/publicLeadIntakeService');
 const leadReferenceStorageService = require('../services/leadReferenceStorageService');
+const pool = require('../config/database');
+const emailService = require('../services/emailService');
 
 function sendError(res, error, fallback) {
   const status = Number(error?.status) || (
@@ -122,4 +124,15 @@ async function downloadReferenceAdmin(req,res){
   }
 }
 
-module.exports = { listAdmin,getAdmin,create,saveDraft,publish,setStatus,getPublic,submitConsultation,submitPublic,uploadReference,downloadReferenceAdmin };
+async function emailQuotation(req,res){
+  try{
+    const leadId=Number(req.params.leadId); const submissionKey=String(req.body?.submissionKey||'');
+    const row=(await pool.query('SELECT id,customer_name,customer_email,intake_submission_key FROM leads WHERE id=$1',[leadId])).rows[0];
+    if(!row||!row.customer_email||String(row.intake_submission_key||'')!==submissionKey)return res.status(404).json({error:'Quotation request not found'});
+    const match=String(req.body?.pdfDataUrl||'').match(/^data:application\\/pdf;base64,([A-Za-z0-9+/=]+)$/);
+    if(!match||match[1].length>8*1024*1024)return res.status(400).json({error:'Invalid quotation PDF'});
+    await emailService.sendCustomerQuotationEmail({to:row.customer_email,name:row.customer_name,leadId:row.id,total:String(req.body?.total||'').slice(0,80),packageName:String(req.body?.packageName||'').slice(0,120),pdfBase64:match[1]});
+    return res.json({sent:true});
+  }catch(error){console.error('Quotation email failed:',error);return res.status(502).json({error:'Quotation was created, but email delivery failed'});}
+}
+module.exports = { listAdmin,getAdmin,create,saveDraft,publish,setStatus,getPublic,submitConsultation,submitPublic,uploadReference,downloadReferenceAdmin,emailQuotation };
