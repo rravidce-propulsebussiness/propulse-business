@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import UserHeader from '../components/UserHeader'
+import { PublicFooter, PublicHeader } from '../components/PublicSiteChrome'
 import { publicRequest } from '../utils/auth'
 import './UpcomingFeatures.css'
 
@@ -42,22 +42,23 @@ export default function UpcomingFeatures(){
   </article>
 
   return <div className="upf-page">
-    <UserHeader/>
+    <PublicHeader/>
     <main>
       <section className="upf-hero">
         <span className="upf-kicker">PRODUCT ROADMAP</span>
         <h1>Upcoming <em>Features</em></h1>
-        <p>See what is planned, in development and coming next to ProPulse. This roadmap is managed directly by the ProPulse admin team.</p>
+        <p>See what is planned, in development and coming next to ProPulse.</p>
       </section>
 
       {loading?<section className="upf-state">Loading upcoming features…</section>:
         error?<section className="upf-state error"><strong>Upcoming features are temporarily unavailable.</strong><button type="button" onClick={load}>Try again</button></section>:
-        !items.length?<section className="upf-state"><strong>No upcoming features are published yet.</strong><span>Published roadmap items from Admin will appear here automatically.</span></section>:
+        !items.length?<section className="upf-state"><strong>No upcoming features are published yet.</strong></section>:
         <>
           {featured.length>0&&<section className="upf-section"><div className="upf-section-head"><span>FEATURED ROADMAP</span><h2>What we're working on next</h2></div><div className="upf-grid featured-grid">{featured.map(card)}</div></section>}
           <section className="upf-section"><div className="upf-section-head"><span>ROADMAP</span><h2>{featured.length?'More upcoming capabilities':'What is coming next'}</h2></div><div className="upf-grid">{(featured.length?regular:items).map(card)}</div></section>
         </>
       }
     </main>
+    <PublicFooter />
   </div>
 }
