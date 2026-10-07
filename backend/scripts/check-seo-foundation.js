@@ -16,6 +16,7 @@ const guidePage=read('../frontend/src/pages/ConstructionGuide.jsx');
 const faqKnowledge=read('../frontend/src/seo/faqKnowledge.js');
 const websiteFaq=read('../frontend/src/components/WebsiteFaqSection.jsx');
 const userFaq=read('../frontend/src/pages/UserFAQ.jsx');
+const publicChrome=read('../frontend/src/components/PublicSiteChrome.jsx');
 const adminFaq=read('../frontend/src/admin/pages/AdminFaqs.jsx');
 const homeownerFaqMigration=read('../backend/src/database/migrations/20261003_seed_homeowner_search_faqs.sql');
 const homeownerFaqMigrationMore=read('../backend/src/database/migrations/20261003_seed_homeowner_search_faqs_more.sql');
@@ -210,11 +211,10 @@ assert(!home.includes('Explore services across Hyderabad'),'Homepage must not re
 for(const guidePath of ['/guides/best-steel-for-house-construction','/guides/prevent-cracks-in-house','/guides/choose-construction-contractor-hyderabad','/guides/2bhk-interiors-hyderabad','/guides/home-construction-checklist','/guides/waterproofing-precautions-new-house','/guides/best-cement-for-house-construction','/guides/m-sand-vs-river-sand-house-construction','/guides/soil-test-before-house-construction']){
   assert(landing.includes('to="'+guidePath+'"'),'Hyderabad/locality guide link missing '+guidePath);
 }
-assert(home.includes('<Link to="/faq">FAQ</Link>'),'Homeowner homepage must expose FAQ navigation');
-assert(userFaq.includes('PublicFaqHeader'),'Public FAQ page must use a homeowner header when logged out');
-assert(userFaq.includes('to="/faq"'),'Public FAQ header must expose an active FAQ link');
-assert(userFaq.includes('to="/guides"'),'Public FAQ header must link to the guides hub');
-assert(userFaq.includes("loggedIn?<UserHeader/>:<PublicFaqHeader/>"),'Logged-in users must retain the existing user header while public homeowners get the customer FAQ header');
+assert(publicChrome.includes("{ to: '/faq', label: 'FAQ'"),'Shared public navigation must expose FAQ');
+assert(publicChrome.includes("to=\"/faq\""),'Shared public footer must expose FAQ');
+assert(userFaq.includes('<PublicHeader/>')&&userFaq.includes('<PublicFooter/>'),'Public FAQ page must use the shared public site chrome');
+assert(userFaq.includes('audience="homeowner"'),'Public FAQ page must keep the homeowner knowledge audience');
 assert(regionalLanding.includes('to="/guides"'),'Regional construction hubs must link to the guide hub');
 assert(regionalLanding.includes('/guides/best-steel-for-house-construction'),'Regional construction hubs must link to material guides');
 assert(regionalLanding.includes('/guides/home-construction-checklist'),'Regional construction hubs must link to planning guides');
