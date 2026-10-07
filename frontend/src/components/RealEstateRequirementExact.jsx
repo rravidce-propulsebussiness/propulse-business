@@ -156,7 +156,7 @@ export default function RealEstateRequirementExact(props) {
 
       <section className="rex-card" id="rq-property">
         <div className="rex-section-title rex-section-title-premium"><div><h2>What are you looking for?</h2></div></div>
-        {intent && <div className="rex-intent rex-intent-premium"><div><b>I want to</b><small>Select your property goal</small></div><Chips question={intent} value={answers[intent.questionKey]} onChange={v=>setAnswer(intent.questionKey,v)}/></div>}
+        {intent && <div className="rex-intent rex-intent-premium"><div><b>I want to</b></div><Chips question={intent} value={answers[intent.questionKey]} onChange={v=>setAnswer(intent.questionKey,v)}/></div>}
         <div className="rex-property-grid">{propertyCards.map(card=><button type="button" key={card.key} className={cardActive(card)?'active':''} onClick={()=>selectProperty(card)}><div><img src={card.image} alt=""/>{cardActive(card)&&<i>✓</i>}</div><b>{card.title}</b><small>{card.subtitle}</small></button>)}</div>
       </section>
 
@@ -171,8 +171,8 @@ export default function RealEstateRequirementExact(props) {
             <div className="rex-section-title rex-section-title-premium"><div><h2>Property Preferences</h2></div></div>
             {preferences && <div className="rex-pref-grid">{(preferences.options||[]).map(option=>{const selected=Array.isArray(answers[preferences.questionKey])?answers[preferences.questionKey]:[];const active=selected.includes(option.value);return <button type="button" key={option.value} className={active?'active':''} onClick={()=>setAnswer(preferences.questionKey,active?selected.filter(v=>v!==option.value):[...selected,option.value])}><div><img src={PREF_IMAGES[option.value]||CARD_IMAGES.residential} alt=""/>{active&&<i>✓</i>}</div><b>{option.label}</b></button>})}</div>}
             <div className="rex-subprefs">
-              {bhk && <div className="rex-subpref-card"><span className="rex-subpref-icon"><Icon name="home" size={18}/></span><div><b>Home Configuration</b><small>Select the closest BHK requirement.</small><Chips question={bhk} value={answers[bhk.questionKey]} onChange={v=>setAnswer(bhk.questionKey,v)}/></div></div>}
-              {timeline && <div className="rex-subpref-card"><span className="rex-subpref-icon"><Icon name="arrow" size={18}/></span><div><b>When do you want to move forward?</b><small>Choose your expected decision timeline.</small><Chips question={timeline} value={answers[timeline.questionKey]} onChange={v=>setAnswer(timeline.questionKey,v)}/></div></div>}
+              {bhk && <div className="rex-subpref-card"><span className="rex-subpref-icon"><Icon name="home" size={18}/></span><div><b>Home Configuration</b><Chips question={bhk} value={answers[bhk.questionKey]} onChange={v=>setAnswer(bhk.questionKey,v)}/></div></div>}
+              {timeline && <div className="rex-subpref-card"><span className="rex-subpref-icon"><Icon name="arrow" size={18}/></span><div><b>When do you want to move forward?</b><Chips question={timeline} value={answers[timeline.questionKey]} onChange={v=>setAnswer(timeline.questionKey,v)}/></div></div>}
             </div>
           </section>
 
@@ -187,13 +187,13 @@ export default function RealEstateRequirementExact(props) {
             <div className="rex-summary-head"><div><small>YOUR REQUIREMENT</small><h3>Selection Summary</h3></div><span>{Math.min(100,Math.max(0,Math.round(completion||0)))}%</span></div>
             <div className="rex-summary-progress"><i style={{width:`${Math.min(100,Math.max(0,completion||0))}%`}}/></div>
             <div className="rex-summary-rows">{summary.map(([label,value])=><p key={label}><span>{label}</span><b title={value}>{value}</b></p>)}</div>
-            <p className="rex-submit-consent">Submit your requirement to connect with relevant real-estate businesses for your location and preferences.</p>
+            <p className="rex-submit-consent">Your details are used to process this request.</p>
             {state.error&&<div className="rex-error">{state.error}</div>}
             <button type="submit" disabled={state.saving}>{state.saving?'Sending Request…':'Request Property Options'} <Icon name="arrow" size={15}/></button>
-            <small>No OTP required. Your requirement is shared only after submission.</small>
+            
           </section>
 
-          <section className="rex-help rex-help-premium"><div><span><Icon name="support"/></span><div><small>FREE GUIDANCE</small><b>Need help deciding?</b><p>Talk to a real-estate expert about location, property type or budget.</p></div></div><a href={phone?`tel:${phone.replace(/\s/g,'')}`:'#rex-basic'}><Icon name="phone" size={16}/>{phone||'Start Free Consultation'}</a><small>Mon - Sat, 9 AM - 8 PM</small></section>
+          <section className="rex-help rex-help-premium"><div><span><Icon name="support"/></span><div><b>Need help deciding?</b></div></div><a href={phone?`tel:${phone.replace(/\s/g,'')}`:'#rex-basic'}><Icon name="phone" size={16}/>{phone||'Start Free Consultation'}</a><small>Mon - Sat, 9 AM - 8 PM</small></section>
 
           <section className="rex-locations rex-locations-premium"><div className="rex-locations-head"><span><Icon name="pin" size={16}/></span><div><small>POPULAR SEARCH AREAS</small><h4>Available Locations</h4></div></div><div>{cities.slice(0,8).map(city=><button type="button" key={city.id} onClick={()=>{setCity(String(city.id));document.getElementById('rex-basic')?.scrollIntoView({behavior:'smooth'})}}>{city.name}<Icon name="arrow" size={11}/></button>)}</div></section>
         </aside>
