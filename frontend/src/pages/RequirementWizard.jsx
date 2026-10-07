@@ -740,7 +740,7 @@ export default function RequirementWizard({ flowKey, onCompletionChange }) {
     <form className="rq-premium-form" onSubmit={submit}>
       <section className="rq-form-row basic-row" id="rq-basic">
         <div className="rq-section-card">
-          <div className="rq-section-heading"><strong>1.</strong><div><h2>Basic Details</h2><p>Project and contact essentials for a more accurate quotation.</p></div></div>
+          <div className="rq-section-heading"><div><h2>Basic Details</h2></div></div>
           <div className="rq-basic-grid">
             <QuoteLocationFields
               states={locationStates}
@@ -769,7 +769,7 @@ export default function RequirementWizard({ flowKey, onCompletionChange }) {
       </section>
 
       <section className="rq-section-card" id="rq-config">
-        <div className="rq-section-heading"><strong>2.</strong><div><h2>Project Details</h2></div></div>
+        <div className="rq-section-heading"><div><h2>Project Details</h2></div></div>
         <div className="rq-config-grid rq-config-grid-four">
           {ownPlotQuestion && <div className="rq-config-choice">
             <span>{ownPlotQuestion.label}</span>
@@ -786,7 +786,7 @@ export default function RequirementWizard({ flowKey, onCompletionChange }) {
       </section>
 
       <section className="rq-section-card" id="rq-property">
-        <div className="rq-section-heading"><strong>3.</strong><div><h2>Property Type</h2></div></div>
+        <div className="rq-section-heading"><div><h2>Property Type</h2></div></div>
         <div className="rq-question-stack">
           {propertyQuestions.map((question, index) => <div className="rq-question-block" key={question.id || question.questionKey}>
             <div className="rq-question-label">{index === 0 ? null : <>{question.label && <b>{question.label}</b>}{question.helpText && <small>{question.helpText}</small>}</>}</div>
@@ -798,7 +798,7 @@ export default function RequirementWizard({ flowKey, onCompletionChange }) {
       <div className="rq-lower-grid">
         <div>
           <section className="rq-section-card" id="rq-preferences">
-            <div className="rq-section-heading"><strong>4.</strong><div><h2>Requirements & Preferences</h2><p>Choose the quality, budget and timing that fit your project.</p></div></div>
+            <div className="rq-section-heading"><div><h2>Requirements & Preferences</h2><p>Choose the quality, budget and timing that fit your project.</p></div></div>
             <div className="rq-question-stack">
               {[...preferenceQuestions, ...extraQuestions].map(question => <div className="rq-question-block" key={question.id || question.questionKey}>
                 <div className="rq-question-label"><b>{question.label}</b>{question.helpText && <small>{question.helpText}</small>}</div>
@@ -815,7 +815,7 @@ export default function RequirementWizard({ flowKey, onCompletionChange }) {
           </section>}
 
           <section className="rq-section-card" id="rq-additional">
-            <div className="rq-section-heading"><strong>5.</strong><div><h2>Additional Requirements</h2><p>Tell us any important details we should preserve in the lead.</p></div></div>
+            <div className="rq-section-heading"><div><h2>Additional Requirements</h2><p>Tell us any important details we should preserve in the lead.</p></div></div>
             {additionalQuestion ? <PremiumQuestion question={additionalQuestion} value={answers[additionalQuestion.questionKey]} onChange={value => setAnswer(additionalQuestion.questionKey, value)} /> : <div className="rq-empty-note">No additional notes are required for this Admin flow.</div>}
           </section>
         </div>
