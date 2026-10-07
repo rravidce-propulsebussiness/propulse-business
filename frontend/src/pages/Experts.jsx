@@ -133,7 +133,6 @@ export default function Experts(){
       {!loading&&pagination.totalPages>1&&<div className="experts-pagination"><button disabled={!pagination.hasPreviousPage} onClick={()=>setPagination(current=>({...current,page:Math.max(1,current.page-1)}))}>← Previous</button><span>Page {pagination.page} of {pagination.totalPages}</span><button disabled={!pagination.hasNextPage} onClick={()=>setPagination(current=>({...current,page:current.page+1}))}>Next →</button></div>}
     </section>
 
-    <section className="experts-trust-note"><div><Icon name="shield" size={28}/></div><div><h2>Subscription and verification are different signals.</h2><p>The directory can require an active GROW or SCALE membership. A verification badge appears only when company proof has separately been reviewed and approved. Always review scope, quotation, warranty, materials and agreements before choosing a professional.</p></div><Link to="/quote" onClick={event=>{event.preventDefault();openLeadPopup('')}}>Get Free Consultation <Icon name="arrow" size={15}/></Link></section>
 
     {selected&&(()=>{
       const projects=Array.isArray(selected.projects)?selected.projects:[]
@@ -188,7 +187,7 @@ export default function Experts(){
             {selectedTab==='overview'&&<section className="expert-profile-overview">
               <article className="expert-profile-panel expert-profile-about">
                 <div className="expert-profile-section-head"><span>ABOUT</span><h3>About {selected.business_name}</h3></div>
-                <p>{selected.public_summary||'This professional has not published a detailed company introduction yet. You can still review their services, coverage and available project information before sending a requirement.'}</p>
+                <p>{selected.public_summary||'No company introduction published yet.'}</p>
               </article>
               <aside className="expert-profile-panel">
                 <div className="expert-profile-section-head"><span>PROFILE SNAPSHOT</span><h3>Business highlights</h3></div>
@@ -206,11 +205,11 @@ export default function Experts(){
             {selectedTab==='services'&&<section className="expert-profile-service-layout">
               <article className="expert-profile-panel">
                 <div className="expert-profile-section-head"><span>SERVICES</span><h3>Services & specialisations</h3></div>
-                {services.length?<div className="expert-service-groups">{industryNames.map(industry=><div key={industry}><h4>{industry}</h4><div>{unique(services.filter(item=>item.industryName===industry).map(item=>item.subserviceName||item.serviceName)).map(name=><span key={name}>{name}</span>)}</div></div>)}</div>:<div className="expert-profile-empty"><Icon name="briefcase" size={24}/><b>No public services yet</b><p>The business has not published service details.</p></div>}
+                {services.length?<div className="expert-service-groups">{industryNames.map(industry=><div key={industry}><h4>{industry}</h4><div>{unique(services.filter(item=>item.industryName===industry).map(item=>item.subserviceName||item.serviceName)).map(name=><span key={name}>{name}</span>)}</div></div>)}</div>:<div className="expert-profile-empty"><Icon name="briefcase" size={24}/><b>No public services yet</b><p>No services published yet.</p></div>}
               </article>
               <article className="expert-profile-panel">
                 <div className="expert-profile-section-head"><span>SERVICE AREAS</span><h3>Where they work</h3></div>
-                {locationNames.length?<div className="expert-location-list">{locationNames.map(name=><span key={name}><Icon name="pin" size={15}/>{name}</span>)}</div>:<div className="expert-profile-empty"><Icon name="pin" size={24}/><b>No public locations yet</b><p>Service coverage has not been published.</p></div>}
+                {locationNames.length?<div className="expert-location-list">{locationNames.map(name=><span key={name}><Icon name="pin" size={15}/>{name}</span>)}</div>:<div className="expert-profile-empty"><Icon name="pin" size={24}/><b>No public locations yet</b><p>No service areas published yet.</p></div>}
               </article>
             </section>}
 
@@ -237,7 +236,7 @@ export default function Experts(){
                   <div className="expert-project-meta">{project.location_text&&<span>{project.location_text}</span>}{project.area_text&&<span>{project.area_text}</span>}{project.budget_text&&<span>{project.budget_text}</span>}</div>
                   <div className="expert-project-links">{project.video_url&&<a href={project.video_url} target="_blank" rel="noreferrer"><Icon name="play" size={13}/> Watch video</a>}{project.plan_url&&<a href={project.plan_url} target="_blank" rel="noreferrer"><Icon name="file" size={13}/> View plan</a>}</div>
                 </div>
-              </article>)}</div>:<div className="expert-profile-empty expert-profile-empty-large"><Icon name="home" size={28}/><b>No completed projects published yet</b><p>The business can add completed project photos, details, videos and plans from its professional profile.</p></div>}
+              </article>)}</div>:<div className="expert-profile-empty expert-profile-empty-large"><Icon name="home" size={28}/><b>No completed projects published yet</b><p></p></div>}
             </section>}
 
             {selectedTab==='media'&&<section className="expert-media-section">
@@ -246,11 +245,11 @@ export default function Experts(){
                 {videos.length?<div className="expert-video-grid">{videos.map(project=><a href={project.video_url} target="_blank" rel="noreferrer" key={project.id} className="expert-video-card">
                   <div>{project.cover_image_url?<img src={project.cover_image_url} alt={project.title}/>:<span><Icon name="play" size={28}/></span>}<i><Icon name="play" size={18}/></i></div>
                   <b>{project.title}</b><small>{[project.project_type,project.location_text].filter(Boolean).join(' · ')||'Project video'}</small>
-                </a>)}</div>:<div className="expert-profile-empty"><Icon name="play" size={26}/><b>No project videos published</b><p>Published completed-project videos will appear here.</p></div>}
+                </a>)}</div>:<div className="expert-profile-empty"><Icon name="play" size={26}/><b>No project videos published</b><p></p></div>}
               </div>
               <div>
                 <div className="expert-profile-section-head"><span>PLANS & DRAWINGS</span><h3>Project plans</h3></div>
-                {drawings.length?<div className="expert-drawing-list">{drawings.map(project=><a href={project.plan_url} target="_blank" rel="noreferrer" key={project.id}><span><Icon name="file" size={19}/></span><div><b>{project.title}</b><small>{[project.project_type,project.location_text].filter(Boolean).join(' · ')||'Project plan / drawing'}</small></div><strong>Open ↗</strong></a>)}</div>:<div className="expert-profile-empty"><Icon name="file" size={26}/><b>No plans or drawings published</b><p>Published PDF/image project plans will appear here.</p></div>}
+                {drawings.length?<div className="expert-drawing-list">{drawings.map(project=><a href={project.plan_url} target="_blank" rel="noreferrer" key={project.id}><span><Icon name="file" size={19}/></span><div><b>{project.title}</b><small>{[project.project_type,project.location_text].filter(Boolean).join(' · ')||'Project plan / drawing'}</small></div><strong>Open ↗</strong></a>)}</div>:<div className="expert-profile-empty"><Icon name="file" size={26}/><b>No plans or drawings published</b><p></p></div>}
               </div>
             </section>}
           </div>
