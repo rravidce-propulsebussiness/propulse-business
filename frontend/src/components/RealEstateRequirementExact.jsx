@@ -187,7 +187,6 @@ export default function RealEstateRequirementExact(props) {
             <div className="rex-summary-head"><div><small>YOUR REQUIREMENT</small><h3>Selection Summary</h3></div><span>{Math.min(100,Math.max(0,Math.round(completion||0)))}%</span></div>
             <div className="rex-summary-progress"><i style={{width:`${Math.min(100,Math.max(0,completion||0))}%`}}/></div>
             <div className="rex-summary-rows">{summary.map(([label,value])=><p key={label}><span>{label}</span><b title={value}>{value}</b></p>)}</div>
-            <p className="rex-submit-consent">Your details are used to process this request.</p>
             {state.error&&<div className="rex-error">{state.error}</div>}
             <button type="submit" disabled={state.saving}>{state.saving?'Sending Request…':'Request Property Options'} <Icon name="arrow" size={15}/></button>
             
