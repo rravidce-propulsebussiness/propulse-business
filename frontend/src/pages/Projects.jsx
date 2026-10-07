@@ -441,10 +441,10 @@ export default function Projects(){
               city:project?.location_text||'',
               location:project?.location_text||'Service location available in professional profile',
               propertyType:project?.project_type||'Professional Project',
-              budget:project?.budget||'',
-              area:Number(project?.area||0)||null,
-              style:'Professional',
-              meta:project?.business_name||'Verified Professional',
+              budget:project?.budget_text||project?.budget||'Cost available from professional',
+              area:project?.area_text||project?.area||'',
+              style:'Completed',
+              meta:project?.completion_year ? 'Completed '+project.completion_year : (project?.business_name||'Completed Project'),
               image:professionalImage(project,category),
               description:project?.description||'Completed project shared by a ProPulse professional.',
               businessName:project?.business_name||'',
@@ -460,7 +460,10 @@ export default function Projects(){
     return()=>{active=false}
   },[])
 
-  const allProjects=useMemo(()=>[...professionalProjects,...PROJECTS],[professionalProjects])
+  const allProjects=useMemo(()=>[
+    ...professionalProjects,
+    ...PROJECTS.map(project=>({...project,inspiration:true}))
+  ],[professionalProjects])
 
   const filtered=useMemo(()=>{
     const q=query.trim().toLowerCase()
@@ -670,7 +673,7 @@ export default function Projects(){
         <div className="pj-detail-media">
           <img src={selectedProject.image} alt={selectedProject.title}/>
           <span className={'pj-badge '+selectedProject.category}>{selectedProject.categoryLabel}</span>
-          <div className="pj-detail-image-note">Inspiration concept</div>
+          <div className="pj-detail-image-note">{selectedProject.professional?'Completed project':'Inspiration concept'}</div>
         </div>
 
         <div className="pj-detail-content">
@@ -683,19 +686,30 @@ export default function Projects(){
           <div className="pj-detail-stats">
             <article><small>Project Type</small><b>{selectedProject.propertyType}</b></article>
             <article><small>Configuration</small><b>{selectedProject.meta}</b></article>
-            <article><small>Built-up Area</small><b>{selectedProject.area} sq ft</b></article>
-            <article><small>Budget Range</small><b>{selectedProject.budget}</b></article>
-            <article><small>Design Style</small><b>{selectedProject.style}</b></article>
+            <article><small>Built-up Area</small><b>{selectedProject.area ? (String(selectedProject.area).match(/[a-z]/i)?selectedProject.area:selectedProject.area+' sq ft') : 'Ask professional'}</b></article>
+            <article className={selectedProject.professional?'pj-cost-highlight':''}><small>{selectedProject.professional?'Project Cost':'Budget Range'}</small><b>{selectedProject.budget||'Ask professional'}</b></article>
+            <article><small>{selectedProject.professional?'Status':'Design Style'}</small><b>{selectedProject.professional?'Completed':selectedProject.style}</b></article>
             <article><small>Category</small><b>{selectedProject.categoryLabel}</b></article>
           </div>
 
-          <div className="pj-detail-section pj-spec-section">
+          {!selectedProject.professional&&<div className="pj-detail-section pj-spec-section">
             <span>INDICATIVE SPECIFICATION</span>
             <h3>Project details at a glance</h3>
             <div className="pj-spec-grid">
               {projectSpecifications(selectedProject).map(([label,value])=><article key={label}><small>{label}</small><b>{value}</b></article>)}
             </div>
-          </div>
+          </div>}
+          {selectedProject.professional&&<div className="pj-detail-section pj-spec-section">
+            <span>COMPLETED PROJECT</span>
+            <h3>Client-useful project details</h3>
+            <div className="pj-spec-grid">
+              <article><small>Location</small><b>{selectedProject.location||'Available from professional'}</b></article>
+              <article><small>Professional</small><b>{selectedProject.businessName||'ProPulse Professional'}</b></article>
+              <article><small>Completion</small><b>{selectedProject.meta||'Completed'}</b></article>
+              <article><small>Total Project Cost</small><b>{selectedProject.budget||'Available from professional'}</b></article>
+            </div>
+            {selectedProject.planUrl&&<div className="pj-detail-actions"><a className="secondary" href={selectedProject.planUrl} target="_blank" rel="noreferrer">Download Package / Project Specifications</a></div>}
+          </div>}
 
           <div className="pj-detail-section">
             <span>PROJECT OVERVIEW</span>
