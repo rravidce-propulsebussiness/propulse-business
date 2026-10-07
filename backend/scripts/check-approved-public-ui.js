@@ -214,7 +214,7 @@ assert.match(wizard,/QuoteLocationFields/);
 assert.match(interiorExact,/QuoteLocationFields/);
 assert.match(realEstateExact,/QuoteLocationFields/);
 assert.match(quoteLocationFields,/Select State/);
-assert.match(quoteLocationFields,/Type city \/ location/);
+assert.match(quoteLocationFields,/Type City \/ Location/);
 assert.match(quoteLocationFields,/state_id/);
 assert.match(quoteLocationFields,/disabled={!stateId}/);
 assert.match(quoteLocationFields,/Use my current location/);
