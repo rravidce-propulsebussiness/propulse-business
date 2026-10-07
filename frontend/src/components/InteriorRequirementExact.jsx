@@ -255,7 +255,7 @@ export default function InteriorRequirementExact(props) {
     <form className="irx-form" onSubmit={event=>submit(event,referenceFiles.map(item=>item.file))}>
       <section className="irx-top-grid" id="irx-basic">
         <div className="irx-card irx-basic-card">
-          <div className="irx-section-title irx-section-title-premium"><div><small>PROJECT ESSENTIALS</small><h2>Basic Details</h2></div></div>
+          <div className="irx-section-title irx-section-title-premium"><div><h2>Basic Details</h2></div></div>
           <div className="irx-basic-grid">
             <QuoteLocationFields
               states={locationStates}
@@ -308,7 +308,7 @@ export default function InteriorRequirementExact(props) {
       <div className="irx-lower">
         <div>
           <section className="irx-card" id="irx-style">
-            <div className="irx-section-title irx-section-title-premium"><div><small>DESIGN DIRECTION</small><h2>Interior Style Preference</h2><p>Select one or more styles that match the look you want.</p></div></div>
+            <div className="irx-section-title irx-section-title-premium"><div><h2>Interior Style Preference</h2></div></div>
             <div className="irx-style-grid">{(style?.options||[]).map(option=>{const selected=Array.isArray(answers[style.questionKey])?answers[style.questionKey]:[];const active=selected.includes(option.value);return <button type="button" key={option.value} className={active?'active':''} onClick={()=>setAnswer(style.questionKey,active?selected.filter(v=>v!==option.value):[...selected,option.value])}><div><img src={STYLE_IMAGES[option.value]||STYLE_IMAGES.modern} alt=""/>{active&&<i>✓</i>}</div><b>{option.label}</b></button>})}</div>
           </section>
 
@@ -390,7 +390,7 @@ export default function InteriorRequirementExact(props) {
           </section>
 
           <section className="irx-card irx-notes-card" id="irx-notes">
-            <div className="irx-section-title irx-section-title-premium"><div><small>FINAL DETAILS</small><h2>Additional Notes</h2><p>Share anything that will help a designer understand your space and preferences.</p></div></div>
+            <div className="irx-section-title irx-section-title-premium"><div><h2>Additional Notes</h2></div></div>
             {additional&&<div className="irx-notes irx-notes-premium"><div className="irx-notes-label"><b>Project Notes</b><small>Optional</small></div><textarea maxLength={Number(additional.validation?.maxLength||1500)} value={answers[additional.questionKey]||''} onChange={e=>setAnswer(additional.questionKey,e.target.value)} placeholder="E.g. TV wall, pooja unit, storage preference, material choice, lighting idea, smart-home requirement, etc."/><span>{String(answers[additional.questionKey]||'').length}/{Number(additional.validation?.maxLength||1500)}</span></div>}
             <div className="irx-upload irx-upload-premium">
               <div className="irx-upload-head">
