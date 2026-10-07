@@ -826,7 +826,6 @@ export default function RequirementWizard({ flowKey, onCompletionChange }) {
           <div className="rq-summary-list">
             {summaryRows.map(([label,value]) => <div key={label}><span>{label}</span><b title={value}>{value}</b></div>)}
           </div>
-          <p className="rq-submit-consent">Your details are used to process this request.</p>
           <label className="rq-honeypot" aria-hidden="true">Website<input tabIndex="-1" autoComplete="off" value={website} onChange={event => setWebsite(event.target.value)} /></label>
           {state.error && <div className="rq-error">{state.error}</div>}
           <button className="rq-submit" type="submit" disabled={state.saving}>{state.saving ? 'Submitting…' : (isQuotationFlow && answers.built_up_area ? 'Generate Detailed Quotation' : (isQuotationFlow ? 'Get Free Quote' : (flow.config?.submitLabel || 'Submit Requirement')))} <Icon name="arrow" size={15}/></button>
