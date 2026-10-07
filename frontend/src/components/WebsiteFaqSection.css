@@ -341,15 +341,15 @@
 }
 .website-faq-compact-head{
   display:flex;
-  align-items:flex-end;
+  align-items:center;
   justify-content:space-between;
   gap:20px;
-  margin-bottom:15px;
+  margin-bottom:18px;
 }
 .website-faq-compact-head h2{
   margin:0;
   color:#0a3151;
-  font-size:25px;
+  font-size:27px;
   line-height:1.05;
   font-weight:950;
   letter-spacing:-.035em;
