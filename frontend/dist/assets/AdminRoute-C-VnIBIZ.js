@@ -1,0 +1,1 @@
+import{a as e,l as t,o as n,t as r}from"./vendor-CDU44UI-.js";import{C as i,w as a}from"./index-MPbacqkR.js";var o=r();function s(){let r=t(),s=i(),c=a();return s?c?.role===`admin`?(0,o.jsx)(n,{}):(0,o.jsx)(e,{to:`/dashboard`,replace:!0}):(0,o.jsx)(e,{to:`/login`,state:{from:r},replace:!0})}export{s as default};
