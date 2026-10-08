@@ -23,7 +23,10 @@ must('src/services/publicExpertService.js',['image_urls','projectImageService.di
 must('src/server.js',["/api/profile/projects/image","limit:'13mb'"]);
 must('src/routes/profileRoutes.js',["/projects/image","uploadProjectImage"]);
 must('../frontend/src/pages/Profile.jsx',['uploadProjectImages','/profile/projects/image','imageDisplayUrls','profile-gallery-upload']);
-must('../frontend/src/pages/Projects.jsx',['projectPhotos','pj-gallery-thumbnails','selectedProject.video']);
+must('../frontend/src/pages/Projects.jsx',['projectPhotos','projectPath(project)','to={projectPath(project)}']);
+must('../frontend/src/pages/ProjectDetail.jsx',['pjd-thumbnails','pjd-feature-media','project.video','/experts/projects/','pjd-callback-form']);
+must('src/services/publicExpertService.js',['getPublicProject','bpp.id=$1','materializeProjectMedia']);
+must('src/routes/publicExpertRoutes.js',["/projects/:projectId",'projectDetail']);
 
 if(read('../frontend/src/pages/Profile.jsx').includes('scrollToSection('))throw new Error('Profile tabs must switch sections instead of scrolling through all sections');
 must('../frontend/src/pages/Profile.css',['profile-plan-upload','profile-plan-preview','position:static','backdrop-filter:none']);
