@@ -119,6 +119,11 @@ test('professional Requests CRM separates callbacks from Available Leads and fil
   await expect(page.getByText('••••••••23')).toBeVisible()
   await page.getByRole('tab',{name:/Quotation requests/}).click()
   await expect(page.getByRole('heading',{name:'Professional Quote Requests'})).toBeVisible()
+  await expect(page.locator('.prc-summary-card')).toHaveCount(4)
+  await expect(page.locator('.prc-heading')).toHaveCSS('border-radius', /\d+px/)
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await expect(page.locator('.prc-summary-card').first()).toHaveCSS('animation-name', 'none')
+  await expect(page.locator('.prc-hero-orb-one')).toHaveCSS('animation-name', 'none')
 })
 
 test('business login survives reload and cannot access Admin APIs',async({page})=>{
