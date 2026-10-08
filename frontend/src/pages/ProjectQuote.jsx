@@ -67,12 +67,13 @@ export default function ProjectQuote(){
   async function submit(event){
     event.preventDefault()
     if(saving||!project||submitted)return
+    if(!picked){setRequestError('Select a published package from this professional to continue.');return}
     setRequestError('');setSaving(true)
     try{
       const payload={
         name:form.name,phone:form.phone,email:form.email,requirement:form.requirement,
         siteLocation:form.siteLocation,area:form.area,budget:form.budget,
-        preferredPackage:picked?.title||'',consent:form.consent,website:form.website,
+        preferredPackage:picked.title,consent:form.consent,website:form.website,
       }
       const result=await publicRequest('/experts/projects/'+id+'/quote-request',{
         method:'POST',body:JSON.stringify(payload),
@@ -153,12 +154,6 @@ export default function ProjectQuote(){
               <div className="pq-section-header"><span className="pq-section-index">01</span><div><span className="pq-eyebrow">PUBLISHED PROFESSIONAL PRICING</span><h2 id="pq-package-title">Choose your package</h2><p>These are starting rates set in the professional’s ProPulse profile, not the cost of the completed project shown.</p></div></div>
               {pricingMessage&&<p className="pq-note" role="status">{pricingMessage}</p>}
               <div className="pq-package-list" role="radiogroup" aria-label="Preferred professional package">
-                <label className={'pq-package-choice'+(!form.preferredPackage?' selected':'')}>
-                  <input type="radio" name="preferredPackage" value="" checked={!form.preferredPackage} onChange={()=>setField('preferredPackage','')}/>
-                  <span className="pq-choice-mark" aria-hidden="true"/>
-                  <span className="pq-choice-content"><strong>Custom quotation</strong><small>Professional recommends a package after reviewing your requirements.</small></span>
-                  <span className="pq-price-box"><strong>On request</strong><small>Custom scope</small></span>
-                </label>
                 {packages.map(plan=><label key={plan.id||plan.title} className={'pq-package-choice'+(form.preferredPackage===plan.title?' selected':'')}>
                   <input type="radio" name="preferredPackage" value={plan.title} checked={form.preferredPackage===plan.title} onChange={()=>setField('preferredPackage',plan.title)}/>
                   <span className="pq-choice-mark" aria-hidden="true"/>
@@ -189,7 +184,7 @@ export default function ProjectQuote(){
                 <label className="pq-consent"><input type="checkbox" required checked={form.consent} onChange={event=>setField('consent',event.target.checked)}/> I agree that ProPulse may use my details to coordinate this project-specific quotation.</label>
                 <input className="pq-honeypot" tabIndex={-1} aria-hidden="true" autoComplete="off" value={form.website} onChange={event=>setField('website',event.target.value)}/>
                 {requestError&&<p className="pq-error" role="alert">{requestError}</p>}
-                <button className="pq-submit" type="submit" disabled={saving}>{saving?'Sending your request…':'Request Professional Quote →'}</button>
+                <button className="pq-submit" type="submit" disabled={saving||!picked}>{saving?'Sending your request…':'Request Professional Quote →'}</button>
                 <small className="pq-privacy">Your number and email are protected in the professional dashboard. A final price is provided only after reviewing the scope.</small>
               </form>
             </section>
@@ -204,7 +199,7 @@ export default function ProjectQuote(){
                 <div><dt>Type</dt><dd>{project.type}</dd></div>
                 {project.area&&<div><dt>Reference project area</dt><dd>{project.area}</dd></div>}
                 {project.location&&<div><dt>Reference location</dt><dd>{project.location}</dd></div>}
-                <div><dt>Selected package</dt><dd>{picked?.title||'Custom quote'}</dd></div>
+                <div><dt>Selected package</dt><dd>{picked?.title||'Select a package'}</dd></div>
                 <div className="pq-summary-price"><dt>Published starting rate</dt><dd>{picked?rupees(picked.price_from,picked.price_unit):'To be confirmed'}</dd></div>
               </dl>
               {project.cost&&<p className="pq-historic"><strong>Reported past project value:</strong> {project.cost}. This is not your quotation and is not used to calculate your price.</p>}
