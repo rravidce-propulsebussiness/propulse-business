@@ -1,5 +1,6 @@
 const publicExpertService=require('../services/publicExpertService');
 const projectCallbackService=require('../services/projectCallbackService');
+const professionalQuoteService=require('../services/professionalProjectQuoteService');
 
 async function list(req,res){
   try{return res.json(await publicExpertService.listPublicExperts(req.query||{}));}
@@ -35,6 +36,16 @@ async function get(req,res){
   }catch(error){console.error('Get public expert failed:',error);return res.status(500).json({error:'Failed to load business profile'});}
 }
 
+async function requestProjectQuote(req,res){
+  try{return res.status(201).json(await professionalQuoteService.submit(req.params.projectId,req.body||{}));}
+  catch(error){
+    const code=String(error.code||'');
+    const status=code==='PROJECT_NOT_FOUND'?404:code.startsWith('INVALID_')?400:500;
+    if(status===500)console.error('Create project quotation lead failed:',error);
+    return res.status(status).json({error:status===500?'Unable to submit quotation request':error.message});
+  }
+}
+
 async function requestProjectCallback(req,res){
   try{return res.status(201).json(await projectCallbackService.requestCallback(req.params.projectId,req.body||{}))}
   catch(error){
@@ -53,4 +64,4 @@ async function requestProfileCallback(req,res){
     return res.status(status).json({error:status===500?'Unable to submit callback request':error.message});
   }
 }
-module.exports={list,projects,projectDetail,projectVideos,get,requestProjectCallback,requestProfileCallback};
+module.exports={list,projects,projectDetail,projectVideos,get,requestProjectCallback,requestProjectQuote,requestProfileCallback};
