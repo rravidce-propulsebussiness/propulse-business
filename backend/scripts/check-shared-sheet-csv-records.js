@@ -13,6 +13,10 @@ assert.deepEqual(parseCsvRecords(source),[
   ['Ravi, R','9876543210','First line\nSecond "quoted" line','October, Ads'],
   ['Other','9123456789','Regular','Organic']
 ]);
+assert.equal(typeof sheetPreview.parseCsvMatrix,'function',
+  'Existing preview CSV parser export must remain callable');
+assert.deepEqual(sheetPreview.parseCsvMatrix(source),parseCsvRecords(source),
+  'Legacy parser API must use the canonical record scanner');
 const analysis=sheetPreview.analyzeCsv(source,{scope:'admin'});
 assert.equal(analysis.rowCount,2);
 assert.equal(analysis.effectiveMappings.customerName,'Full Name');
