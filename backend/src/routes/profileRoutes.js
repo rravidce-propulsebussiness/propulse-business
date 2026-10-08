@@ -4,6 +4,10 @@ const requireAuth = require('../middleware/authMiddleware');
 
 const router = express.Router();
 router.use(requireAuth);
+router.post('/projects/video/uploads/start', profileController.startProjectVideoUpload);
+router.post('/projects/video/uploads/part-url', profileController.signProjectVideoPart);
+router.post('/projects/video/uploads/finish', profileController.finishProjectVideoUpload);
+router.post('/projects/video/uploads/abort', profileController.abortProjectVideoUpload);
 router.post('/projects/video', profileController.uploadProjectVideo);
 router.post('/projects/plan', profileController.uploadProjectPlan);
 router.post('/projects/image', profileController.uploadProjectImage);
