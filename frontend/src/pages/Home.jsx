@@ -7,10 +7,10 @@ import HeroBlueprintAnimation from '../components/HeroBlueprintAnimation'
 
 const HOME_TRUST_HEADLINES = [
   { lead: 'Branded Materials.', accent: ' Clear Specs.' },
-  { lead: 'Engineer Supervision', accent: ' Options.' },
-  { lead: 'Workmanship Warranty', accent: ' Options.' },
+  { lead: 'Dedicated Engineer', accent: ' for Your Site.' },
+  { lead: 'Expert Supervision.', accent: ' Better Execution.' },
+  { lead: 'Workmanship Warranty.', accent: ' Added Confidence.' },
   { lead: 'Transparent Quotes.', accent: ' Clear Costs.' },
-  { lead: 'Expert Guidance.', accent: ' Better Choices.' },
 ]
 const DEFAULT_HERO = 'https://images.unsplash.com/photo-1600585152915-d208bec867a1?auto=format&fit=crop&w=2200&q=92'
 
@@ -189,7 +189,7 @@ export default function Home() {
                <span className="hc-premium-typewriter-sr" style={{
                  position: 'absolute', width: '1px', height: '1px', overflow: 'hidden',
                  clipPath: 'inset(50%)', whiteSpace: 'nowrap',
-               }}>Compare branded materials, engineer supervision and warranty options, with clear quotations and expert guidance.</span>
+               }}>Branded materials with clear specifications, a dedicated site engineer, expert supervision, workmanship warranty and transparent quotations.</span>
                <span className="hc-premium-typewriter-line" aria-hidden="true" style={{
                  position: 'relative', display: 'block', minHeight: '1.4em',
                }}>
