@@ -335,6 +335,37 @@ async function listRecentProjects({page=1,pageSize=18}={}){
   };
 }
 
+async function getPublicProject(projectId){
+  const id=Number(projectId);
+  if(!Number.isSafeInteger(id)||id<=0)return null;
+  const settings=await expertDirectoryService.getSettings();
+  if(!settings.directoryEnabled||!settings.showProjects)return null;
+  const params=[id];
+  const conditions=['bpp.id=$1','bpp.is_published=TRUE'];
+  addEligibilityConditions(settings,params,conditions);
+  const result=await pool.query(
+    `SELECT bpp.id AS project_id,bpp.title,bpp.project_type,bpp.description,
+      bpp.location_text,bpp.completion_year,bpp.area_text,bpp.budget_text,
+      bpp.cover_image_url,bpp.image_urls,bpp.package_name,
+      ${settings.showVideos?'bpp.video_url':'NULL::text AS video_url'},
+      ${settings.showPlans?'bpp.plan_url':'NULL::text AS plan_url'},
+      COALESCE(bpp.published_at,bpp.video_published_at,bpp.created_at) AS published_at,
+      bp.id AS business_profile_id,bp.business_name,
+      EXISTS(SELECT 1 FROM company_proof_documents cpd WHERE cpd.user_id=u.id AND cpd.status='verified') AS is_verified,
+      mem.plan_group
+     FROM business_profile_projects bpp
+     JOIN business_profiles bp ON bp.id=bpp.business_profile_id
+     JOIN users u ON u.id=bp.user_id
+     LEFT JOIN business_expert_directory_settings beds ON beds.user_id=u.id
+     ${membershipLateral()}
+     WHERE ${conditions.join(' AND ')}
+     LIMIT 1`,
+    params
+  );
+  const projects=await materializeProjectMedia(result.rows);
+  return projects[0]||null;
+}
+
 async function getPublicExpert(expertId){
   const id=Number(expertId);
   if(!Number.isInteger(id)||id<=0)return null;
@@ -368,4 +399,4 @@ async function getPublicExpert(expertId){
   return {...base,services:services.rows,locations:locations.rows,projects:renderedProjects,service_plans:plans.rows,directory_settings:{showProjects:settings.showProjects,showVideos:settings.showVideos,showPlans:settings.showPlans}};
 }
 
-module.exports={listPublicExperts,listRecentProjects,listRecentProjectVideos,getPublicExpert};
+module.exports={listPublicExperts,listRecentProjects,listRecentProjectVideos,getPublicExpert,getPublicProject};
