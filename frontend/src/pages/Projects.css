@@ -41,7 +41,7 @@
 .pj-portfolio-hero .pj-container{max-width:1060px;text-align:center}
 .pj-kicker,.pj-overline{
   display:inline-flex;align-items:center;gap:9px;
-  color:#c35b32;font-size:11px;font-weight:800;letter-spacing:.16em;
+  color:#c35b32;font-size:12px;font-weight:800;letter-spacing:.16em;
 }
 .pj-kicker{color:#f4ac87}
 .pj-kicker>span{height:7px;width:7px;background:#ff9b6b;border-radius:50%;box-shadow:0 0 0 5px rgba(255,155,107,.10)}
@@ -112,7 +112,7 @@
   position:absolute;z-index:2;top:14px;left:14px;
   display:inline-flex;padding:8px 12px;border:1px solid rgba(255,255,255,.18);
   border-radius:999px;background:rgba(9,41,63,.87);color:#fff;
-  font-size:10px;font-weight:800;letter-spacing:.035em;backdrop-filter:blur(8px);
+  font-size:12px;font-weight:800;letter-spacing:.035em;backdrop-filter:blur(8px);
 }
 .pj-photo-cue{position:absolute;z-index:2;right:17px;bottom:17px;display:flex;align-items:center;gap:7px;color:#fff;font-size:12px;font-weight:800}
 .pj-project-copy{padding:22px 22px 19px}
@@ -122,11 +122,11 @@
 .pj-location{display:flex;align-items:center;gap:6px;margin:10px 0 0;color:#6d8292;font-size:12px;line-height:1.45}
 .pj-location svg{flex:0 0 auto;color:#e07b4d}
 .pj-company{display:flex;align-items:center;flex-wrap:wrap;gap:7px;margin:11px 0 0;color:#3a607a;font-size:12px;font-weight:750}
-.pj-company span,.pj-detail-professional span{display:inline-flex;align-items:center;gap:4px;color:#25845d;font-size:10px;font-weight:800}
+.pj-company span,.pj-detail-professional span{display:inline-flex;align-items:center;gap:4px;color:#25845d;font-size:12px;font-weight:800}
 .pj-project-details{display:flex;flex-wrap:wrap;gap:6px;margin-top:13px}
-.pj-project-details span{border-radius:7px;padding:7px 9px;background:#f1f5f7;color:#436175;font-size:11px;font-weight:750}
+.pj-project-details span{border-radius:7px;padding:7px 9px;background:#f1f5f7;color:#436175;font-size:12px;font-weight:750}
 .pj-cost{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-top:14px;padding:12px;border:1px solid #f0d9cc;border-radius:11px;background:#fff8f4}
-.pj-cost small{color:#966e5b;font-size:10px;font-weight:750}
+.pj-cost small{color:#966e5b;font-size:12px;font-weight:750}
 .pj-cost strong{color:#bc4f27;font-size:17px;font-weight:850;letter-spacing:-.025em}
 .pj-view-link{display:flex;align-items:center;gap:7px;padding-top:16px;margin-top:16px;border-top:1px solid #edf1f3;color:#c65a2e;font-size:12px;font-weight:800}
 .pj-view-link svg{transition:transform .2s ease}
@@ -156,13 +156,13 @@
 .pj-idea-card:hover{transform:translateY(-4px)}
 .pj-idea-card>img{height:192px}
 .pj-idea-copy{padding:19px}
-.pj-idea-copy>span{font-size:10px;font-weight:800;letter-spacing:.13em;color:#be633e}
+.pj-idea-copy>span{font-size:12px;font-weight:800;letter-spacing:.13em;color:#be633e}
 .pj-idea-copy h3{margin:8px 0;color:#153650;line-height:1.35;font-size:16px;font-weight:800;letter-spacing:-.03em}
 .pj-idea-copy p{margin:0;color:#728392;line-height:1.6;font-size:12px;min-height:58px}
 .pj-idea-copy a{display:inline-flex;align-items:center;gap:7px;margin-top:13px;color:#bd582e;font-size:12px;font-weight:800}
 .pj-bottom-cta{padding:43px 0;background:linear-gradient(110deg,#0b2942,#123e60);color:#fff}
 .pj-bottom-cta .pj-container{display:flex;align-items:center;justify-content:space-between;gap:30px}
-.pj-bottom-cta span{color:#f8ae80;font-size:10px;font-weight:850;letter-spacing:.12em}
+.pj-bottom-cta span{color:#f8ae80;font-size:12px;font-weight:850;letter-spacing:.12em}
 .pj-bottom-cta h2{margin:8px 0;color:#fff;font-size:clamp(22px,2.2vw,30px);letter-spacing:-.04em}
 .pj-bottom-cta p{margin:0;color:#ced8df;font-size:13px;line-height:1.7}
 .pj-bottom-cta a{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-width:188px;min-height:47px;padding:11px 18px;border-radius:10px;background:#e87540;color:#fff;font-size:13px;font-weight:800}
@@ -190,7 +190,7 @@
 .pj-detail-professional strong{color:#143e5a}
 .pj-facts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:22px}
 .pj-facts>div{display:grid;gap:6px;padding:13px;border:1px solid #e3e9ee;border-radius:12px;background:#f8fafb}
-.pj-facts>div span{font-size:10px;letter-spacing:.04em;color:#8092a1;font-weight:800;text-transform:uppercase}
+.pj-facts>div span{font-size:12px;letter-spacing:.04em;color:#8092a1;font-weight:800;text-transform:uppercase}
 .pj-facts>div strong{color:#153a56;font-size:13px;font-weight:800;overflow-wrap:anywhere}
 .pj-facts .pj-fact-cost{background:#fff4ec;border-color:#f2d6c7}
 .pj-fact-cost strong{color:#be4f23!important;font-size:20px!important}
@@ -198,14 +198,14 @@
 .pj-detail-content h3{margin:0 0 9px;font-size:16px;letter-spacing:-.035em;color:#163954}
 .pj-detail-overview p,.pj-detail-documents p{margin:0;color:#6f8292;font-size:12px;line-height:1.75}
 .pj-detail-buttons{display:flex;flex-wrap:wrap;gap:9px;margin-top:13px}
-.pj-detail-buttons a{display:inline-flex;align-items:center;gap:7px;min-height:40px;padding:9px 12px;border:1px solid #dce5ec;border-radius:9px;background:#fff;color:#224967;font-size:11px;font-weight:800}
+.pj-detail-buttons a{display:inline-flex;align-items:center;gap:7px;min-height:40px;padding:9px 12px;border:1px solid #dce5ec;border-radius:9px;background:#fff;color:#224967;font-size:12px;font-weight:800}
 .pj-detail-buttons a:hover{border-color:#cd815b;color:#b65c35}
 .pj-modal-cta{display:flex;align-items:center;justify-content:space-between;gap:13px;flex-wrap:wrap;margin-top:24px;padding:16px;border:1px solid #efd5c6;border-radius:13px;background:#fff8f3}
 .pj-modal-cta>div{display:grid;gap:4px}
 .pj-modal-cta strong{font-size:13px;color:#153b58}
-.pj-modal-cta span{font-size:11px;color:#89715f}
+.pj-modal-cta span{font-size:12px;color:#89715f}
 .pj-modal-cta a{display:flex;align-items:center;justify-content:center;gap:8px;padding:12px 14px;border-radius:9px;background:#cf6133;color:#fff;font-weight:800;font-size:12px}
-.pj-data-disclaimer{margin:17px 0 0;color:#8697a4;font-size:11px;line-height:1.7}
+.pj-data-disclaimer{margin:17px 0 0;color:#8697a4;font-size:12px;line-height:1.7}
 
 @media(max-width:1080px){
   .pj-project-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
