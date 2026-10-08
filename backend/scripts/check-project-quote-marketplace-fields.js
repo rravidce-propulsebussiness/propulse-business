@@ -48,7 +48,7 @@ assert.equal(splitWithNote.fields['Interior Style'], 'Minimalist');
 assert.equal(splitWithNote.fields.Timeline, '1–3 months');
 assert.ok(!('Additional Requirements' in splitWithNote.fields),
   'Typed notes should appear only in the separate Requirement box');
-const splitWithoutNote = splitProjectQuoteRequirement(requirement.replace(/\\nAdditional requirement:.*$/, ''));
+const splitWithoutNote = splitProjectQuoteRequirement(requirement.split('\\n').filter(line => !line.startsWith('Additional requirement:')).join('\\n'));
 assert.equal(splitWithoutNote.requirement, '',
   'An unfilled additional requirement must remain empty, not mirror form answers');
 assert.equal(splitWithoutNote.fields['Property Type'], 'Villa');
@@ -56,17 +56,16 @@ assert.equal(splitWithoutNote.fields['Property Type'], 'Villa');
 const professionalQuote = fs.readFileSync(path.join(root, 'backend/src/services/professionalProjectQuoteService.js'), 'utf8');
 const professionalCards = fs.readFileSync(path.join(root, 'frontend/src/components/ProfessionalProjectQuotes.jsx'), 'utf8');
 const professionalAccess = fs.readFileSync(path.join(root, 'backend/src/services/professionalRequestAccessService.js'), 'utf8');
-assert.match(professionalQuote, /splitProjectQuoteRequirement\\(row\\.requirement\\)/);
-assert.match(professionalQuote, /requirement_fields:requirementFields/);
-assert.match(professionalCards, /formEntries\\.map\\(/,
+assert.ok(professionalQuote.includes('splitProjectQuoteRequirement(row.requirement)'));
+assert.ok(professionalQuote.includes('requirement_fields:requirementFields'));
+assert.ok(professionalCards.includes('formEntries.map('),
   'Professional quotation should show each submitted wizard field separately');
-assert.match(professionalCards, /String\\(item\\.requirement\\|\\|''\\)\\.trim\\(\\)\\&\\&/,
+assert.ok(professionalCards.includes("String(item.requirement||'').trim()&&"),
   'Professional quotation should show the Requirement box only for customer-entered notes');
-assert.match(professionalCards, /accessStatus==='locked'\\|\\|accessStatus==='pending_payment'/,
+assert.ok(professionalCards.includes("accessStatus==='locked'||accessStatus==='pending_payment'"),
   'Accept and Pay must not be offered for pricing or admin-review requests');
-assert.match(professionalAccess, /pricing_pending/,
+assert.ok(professionalAccess.includes('pricing_pending'),
   'Unavailable quotation prices must be identified for the professional');
-
 
 const oldLead = {
   id: 501,
