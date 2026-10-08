@@ -1,6 +1,7 @@
 const pool=require('../config/database');
 const directory=require('./expertDirectoryService');
 const notifications=require('./notificationService');
+const marketplace=require('./projectMarketplaceLeadService');
 const {normalizeName,normalizePhone,normalizeEmail}=require('./publicContactValidationService');
 
 function bad(message,code='INVALID_PROFESSIONAL_QUOTE'){
@@ -29,7 +30,9 @@ async function submit(projectId,input={}){
   const id=Number(projectId);
   if(!Number.isSafeInteger(id)||id<1)throw bad('Project not found','PROJECT_NOT_FOUND');
   if(input.website)throw bad('Unable to submit quotation request');
-  if(input.consent!==true)throw bad('Please consent to sharing your details for this quotation');
+  if(input.consent!==true||input.marketplaceConsent!==true)throw bad('Please agree to ProPulse sharing your request with this professional and other relevant marketplace professionals');
+  const pincode=String(input.pincode||'').trim();
+  if(!/^\d{6}$/.test(pincode))throw bad('Enter a valid 6-digit project PIN code');
   const name=normalizeName(input.name);
   const phone=normalizePhone(input.phone);
   const email=normalizeEmail(input.email);
@@ -94,9 +97,15 @@ async function submit(projectId,input={}){
        ORDER BY created_at DESC,id DESC LIMIT 1`,
       [id,phone]
     );
-    return {accepted:true,duplicate:true,requestId:prior.rows[0]?.id||null};
+    const requestId=prior.rows[0]?.id||null;
+    if(!requestId)return {accepted:true,duplicate:true};
+    await marketplace.flagPending('quote',requestId,pincode);
+    const market=await marketplace.sync('quote',requestId);
+    return {accepted:true,duplicate:true,requestId,marketplaceLeadId:market.leadId||null,marketplaceStatus:market.status};
   }
   const quoteId=saved.rows[0].id;
+  await marketplace.flagPending('quote',quoteId,pincode);
+  const market=await marketplace.sync('quote',quoteId);
   try{
     await notifications.notifyUser({
       userId:project.owner_id,type:'professional_quote_request',category:'lead',severity:'info',
@@ -115,7 +124,7 @@ async function submit(projectId,input={}){
       dedupeKey:'admin-professional-quote-'+quoteId,
     });
   }catch(error){console.error('Admin quotation notification failed:',error.message)}
-  return {accepted:true,requestId:quoteId};
+  return {accepted:true,requestId:quoteId,marketplaceLeadId:market.leadId||null,marketplaceStatus:market.status};
 }
 async function listForProfessional(userId){
   const id=Number(userId);
