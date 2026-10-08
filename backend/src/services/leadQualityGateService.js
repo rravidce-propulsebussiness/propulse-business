@@ -91,7 +91,7 @@ async function getFeatureRow(leadId,client=pool){
               OR (t.source IN ('public_requirement','public_estimator','homepage_consultation')
                 AND jsonb_typeof(t.custom_fields->'_qualification'->'marketplaceAnswers')='object'
                 AND t.custom_fields->'_qualification'->'marketplaceAnswers'<>'{}'::jsonb)
-              OR (t.source IN ('professional_project_quote','professional_project_callback')
+              OR (t.source IN ('professional_project_quote','professional_project_callback','professional_profile_callback')
                 AND t.custom_fields ? '_project_origin')) AS has_requirement,
             t.industry_id IS NOT NULL AS has_industry,
             (t.service_id IS NOT NULL OR t.subservice_id IS NOT NULL) AS has_service_detail,
