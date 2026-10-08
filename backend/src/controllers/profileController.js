@@ -145,4 +145,21 @@ async function updateProjectQuote(req,res){
   }
 }
 
-module.exports = { getProfile, updateProfile, uploadProjectVideo, startProjectVideoUpload,signProjectVideoPart,finishProjectVideoUpload,abortProjectVideoUpload, uploadProjectPlan, uploadProjectImage, listProjectCallbacks, listBrochures, saveBrochures, listProjectQuotes, updateProjectQuote };
+async function acceptProjectRequest(req,res){
+  if(req.user?.role!=='business')return res.status(403).json({error:'Business account required'});
+  try{
+    const access=require('../services/professionalRequestAccessService');
+    return res.json(await access.accept(req.user.id,req.params.kind,req.params.id));
+  }catch(error){
+    const status=({
+      INVALID_REQUEST_ID:400,INVALID_REQUEST_KIND:400,REQUEST_FORBIDDEN:403,
+      MEMBERSHIP_REQUIRED:403,LEAD_LINK_INVALID:409,LEAD_NOT_READY:409,LEAD_NOT_AVAILABLE:409,
+      CAPACITY_REACHED:409,PAYMENT_PENDING:409,PROFILE_MISMATCH:403,NOT_AVAILABLE:409,
+      INVALID_PRICE:409,PRICING_REQUIRED:409,INSUFFICIENT_BALANCE:402
+    })[error.code]||500;
+    if(status===500)console.error('Professional request acceptance failed',{code:error.code,message:error.message});
+    return res.status(status).json({error:status===500?'Unable to accept request':error.message,code:error.code||'REQUEST_ACCEPT_FAILED'});
+  }
+}
+
+module.exports = { getProfile, updateProfile, uploadProjectVideo, startProjectVideoUpload,signProjectVideoPart,finishProjectVideoUpload,abortProjectVideoUpload, uploadProjectPlan, uploadProjectImage, listProjectCallbacks, listBrochures, saveBrochures, listProjectQuotes, updateProjectQuote, acceptProjectRequest };
