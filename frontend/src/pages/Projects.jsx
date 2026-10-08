@@ -319,7 +319,7 @@ export default function Projects() {
 
         {loading && <div className="pj-loading-inline" role="status" aria-label="Checking for published business projects"><span className="pj-inline-spinner" aria-hidden="true" /></div>}
         <div className="pj-project-grid">
-          {filtered.map((project,index)=><article key={(project.sample?'sample-':'business-')+project.id} className={'pj-project-card'+(index===0&&category==='all'&&!query.trim()?' pj-project-card--featured':'')}>
+          {filtered.map((project,index)=><article key={(project.sample?'sample-':'business-')+project.id} className="pj-project-card">
             <button type="button" className="pj-card-open" onClick={()=>openProject(project)} aria-label={'View '+(project.sample?'sample ':'')+'details for '+project.title}>
               <div className="pj-project-photo">
                 {projectPhotos(project).length?<img src={projectPhotos(project)[0]} loading={index<3?'eager':'lazy'} alt={project.title}/>:<div className="pj-image-placeholder"><Icon name="layers" size={30}/>Project photo not provided</div>}
