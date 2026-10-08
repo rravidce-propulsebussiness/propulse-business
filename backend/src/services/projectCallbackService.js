@@ -23,7 +23,7 @@ async function requestCallback(projectId,input={}){
        FROM business_profile_projects p
        JOIN business_profiles bp ON bp.id=p.business_profile_id
        JOIN users u ON u.id=bp.user_id
-       WHERE p.id=$1 AND p.is_published=TRUE
+       WHERE p.id=$1 AND p.is_published=TRUE AND p.completion_year BETWEEN 1950 AND EXTRACT(YEAR FROM CURRENT_DATE)
        AND u.role='business' AND u.is_active=TRUE AND bp.public_profile_enabled=TRUE
        AND COALESCE(TRIM(bp.business_name),'')<>''
        LIMIT 1`,[id]
