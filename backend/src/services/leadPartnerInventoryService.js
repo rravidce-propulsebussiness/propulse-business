@@ -309,16 +309,22 @@ async function previewCsv({userId,csv}){
 
   const phones=[...new Set(rows.map(row=>clean(row.customerPhone).replace(/\D/g,'')).filter(value=>value.length>=7))];
   const emails=[...new Set(rows.map(row=>clean(row.customerEmail).toLowerCase()).filter(Boolean))];
+  // Preview should warn only about recent leads with the same requirement;
+  // shared family phone/email alone does not make a new project a duplicate.
   const existing=(phones.length||emails.length)?(await pool.query(
     `SELECT regexp_replace(COALESCE(customer_phone,''),'[^0-9]','','g') AS phone_key,
-            LOWER(TRIM(COALESCE(customer_email,''))) AS email_key
+            LOWER(TRIM(COALESCE(customer_email,''))) AS email_key,
+            LOWER(TRIM(COALESCE(requirement,''))) AS requirement_key
        FROM leads
-      WHERE regexp_replace(COALESCE(customer_phone,''),'[^0-9]','','g')=ANY($1::text[])
-         OR LOWER(TRIM(COALESCE(customer_email,'')))=ANY($2::text[])`,
+      WHERE created_at>=CURRENT_TIMESTAMP-INTERVAL '30 days'
+        AND (regexp_replace(COALESCE(customer_phone,''),'[^0-9]','','g')=ANY($1::text[])
+         OR LOWER(TRIM(COALESCE(customer_email,'')))=ANY($2::text[]))`,
     [phones,emails]
   )).rows:[];
-  const existingPhones=new Set(existing.map(row=>row.phone_key).filter(Boolean));
-  const existingEmails=new Set(existing.map(row=>row.email_key).filter(Boolean));
+  const existingPhones=new Set(existing.filter(row=>row.phone_key&&row.requirement_key)
+    .map(row=>`${row.phone_key}\\u0000${row.requirement_key}`));
+  const existingEmails=new Set(existing.filter(row=>row.email_key&&row.requirement_key)
+    .map(row=>`${row.email_key}\\u0000${row.requirement_key}`));
 
   const seen=new Set(),previewRows=[];
   let valid=0,warning=0,invalid=0,duplicates=0;
@@ -327,7 +333,8 @@ async function previewCsv({userId,csv}){
     const phone=clean(row.customerPhone).replace(/\D/g,'');
     const email=clean(row.customerEmail).toLowerCase();
     const rowKey=clean(row.id)||phone||email||`Row ${index+2}`;
-    const duplicateKey=clean(row.id)||phone||email||`${norm(row.customerName)}:${norm(row.requirement)}`;
+    const requirementKey=clean(row.requirement||'Lead requirement not provided').toLowerCase();
+    const duplicateKey=clean(row.id)||JSON.stringify([phone,email,requirementKey,norm(row.industry),norm(row.service),norm(row.subservice),clean(row.pincode),norm(row.customerName)]);
     if(duplicateKey&&seen.has(duplicateKey)){
       duplicates+=1;warning+=1;
       if(previewRows.length<60)previewRows.push({row:index+2,status:'warning',action:'skip',key:rowKey,messages:['Duplicate row in this sheet; the later copy will be skipped']});
@@ -349,7 +356,7 @@ async function previewCsv({userId,csv}){
       const pinState=await previewPinReadOnly(row,cat);
       if(pinState.warning)messages.push(pinState.warning);
       if(!phone&&!email)messages.push('Customer phone and email are both blank');
-      if((phone&&existingPhones.has(phone))||(email&&existingEmails.has(email)))messages.push('A lead with this phone/email already exists; activation may count it as a duplicate');
+      if((phone&&existingPhones.has(`${phone}\\u0000${requirementKey}`))||(email&&existingEmails.has(`${email}\\u0000${requirementKey}`)))messages.push('A lead with this contact and requirement already exists; activation may count it as a duplicate');
       const status=messages.length?'warning':'valid';
       if(status==='warning')warning+=1;else valid+=1;
       if(previewRows.length<60)previewRows.push({row:index+2,status,action:'create',key:rowKey,messages});

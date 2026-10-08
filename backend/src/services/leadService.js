@@ -16,6 +16,7 @@ async function findDuplicateLead({industryId,serviceId,subserviceId,customerPhon
   const email=String(customerEmail||'').trim().toLowerCase();
   const name=String(customerName||'').trim().toLowerCase();
   const req=String(requirement||'').trim().toLowerCase();
+  if(!req||req==='lead requirement not provided')return null;
   const rawPin=String(pincode||'').replace(/\D/g,'');
   const pin=/^\d{6}$/.test(rawPin)?rawPin:'';
   const hours=Math.max(1,Math.min(24*30,Number(windowHours)||24*30));

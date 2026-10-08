@@ -303,11 +303,21 @@ test('active Lead Partner reaches dashboard and separated inventory workspaces',
 })
 
 test('project details supports keyboard navigation and restores focus',async({page})=>{
+  // Projects now come from subscribed professionals, not hard-coded concepts.
+  // Seed this browser test through the public API to keep it deterministic.
+  await page.route('**/api/experts/projects?*',route=>route.fulfill({
+    status:200,contentType:'application/json',
+    body:JSON.stringify({data:[{
+      project_id:'smoke-modern-villa',project_type:'construction',title:'Modern Villa',
+      description:'Completed residential project',business_name:'Sample Engineer'
+    }],pagination:{hasNextPage:false}})
+  }))
   await page.goto('/projects')
-  const card=page.getByRole('button',{name:'View Modern Villa',exact:true})
+  const card=page.getByRole('button',{name:'View details for Modern Villa',exact:true})
+  await expect(card).toBeVisible()
   await card.focus()
   await page.keyboard.press('Enter')
-  const dialog=page.getByRole('dialog',{name:'Modern Villa project details',exact:true})
+  const dialog=page.getByRole('dialog',{name:'Modern Villa details',exact:true})
   const close=dialog.getByRole('button',{name:'Close project details'})
   await expect(close).toBeFocused()
   const last=dialog.locator('a[href],button').last()
