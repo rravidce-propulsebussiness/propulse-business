@@ -14,7 +14,7 @@ must('src/server.js',["/api/profile/projects/video","express.raw","video/quickti
 must('src/server.js',["/api/profile/projects/plan","application/pdf","image/webp","limit:'16mb'"]);
 if(read('src/services/publicExpertService.js').includes('bp.business_details'))throw new Error('Public expert API must not expose private business_details');
 must('src/services/profileService.js',['projects','service_plans','public_headline','public_profile_enabled']);
-must('../frontend/src/pages/Profile.jsx',['Completed Projects','Service Packages','Public profile','Upload video','50 MB','/profile/projects/video','Packages']);
+must('../frontend/src/pages/Profile.jsx',['Completed Projects','Service Packages','Public profile','Upload project video','Cloudflare R2','/profile/projects/video','Packages']);
 must('../frontend/src/pages/Profile.jsx',['activeSection','selectSection','Upload plan / drawing','PDF, JPG, PNG or WebP','/profile/projects/plan']);
 must('src/database/migrations/20261008_project_photo_gallery.sql',['image_urls','jsonb_array_length(image_urls)<=8']);
 must('src/services/projectImageService.js',['MAX_IMAGE_BYTES','image/jpeg','image/png','image/webp','saveProjectImage','managedImageInfo']);
