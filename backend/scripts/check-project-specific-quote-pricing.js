@@ -94,7 +94,7 @@ assert.match(callbackService,/INSERT INTO project_callback_requests/);
 assert.match(callbackService,/admin-project-callback-/);
 assert.match(callbackService,/duplicate:true,requestId/);
 assert.match(detail,/const response=await publicRequest\('\/experts\/projects\/'/);
-assert.match(detail,/Callback lead created successfully/);
+assert.match(detail,/Callback request received/);
 assert.match(adminRoutes,/\/expert-callbacks/);
 assert.match(adminRoutes,/\/professional-quote-leads/);
 console.log('Project-specific quote routing, source pricing and protected professional workflow checks passed.');
