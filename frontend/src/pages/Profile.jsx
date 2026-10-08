@@ -7,7 +7,7 @@ import {playSound} from '../utils/soundEffects'
 
 const emptyService=()=>({industryId:'',serviceId:'',subserviceId:''})
 const emptyLocation=()=>({stateId:'',cityId:''})
-const emptyProject=()=>({title:'',projectType:'',description:'',locationText:'',completionYear:'',areaText:'',budgetText:'',coverImageUrl:'',videoUrl:'',videoDisplayUrl:'',videoPublishedAt:'',planUrl:'',planDisplayUrl:'',isPublished:true})
+const emptyProject=()=>({title:'',projectType:'',description:'',locationText:'',completionYear:'',areaText:'',budgetText:'',coverImageUrl:'',imageUrls:[],imageDisplayUrls:[],videoUrl:'',videoDisplayUrl:'',videoPublishedAt:'',planUrl:'',planDisplayUrl:'',isPublished:true})
 const emptyPlan=()=>({title:'',description:'',priceFrom:'',durationLabel:'',inclusions:'',isPublished:true})
 
 function reasonText(status){
@@ -31,6 +31,8 @@ function mapProject(item){
     areaText:item.area_text||'',
     budgetText:item.budget_text||'',
     coverImageUrl:item.cover_image_url||'',
+    imageUrls:Array.isArray(item.image_urls)?item.image_urls:[],
+    imageDisplayUrls:Array.isArray(item.image_display_urls)?item.image_display_urls:[],
     videoUrl:item.video_url||'',
     videoDisplayUrl:item.video_display_url||item.video_url||'',
     videoPublishedAt:item.video_published_at||'',
@@ -67,6 +69,7 @@ export default function Profile(){
   const [plans,setPlans]=useState([])
   const [directoryStatus,setDirectoryStatus]=useState(null)
   const [videoUploads,setVideoUploads]=useState({})
+  const [imageUploads,setImageUploads]=useState({})
   const [planUploads,setPlanUploads]=useState({})
   const [activeSection,setActiveSection]=useState('business')
   const [loading,setLoading]=useState(true)
@@ -113,6 +116,37 @@ export default function Profile(){
   function updateLocation(index,field,value){setLocationSelections(items=>items.map((x,i)=>i!==index?x:field==='stateId'?{stateId:value,cityId:''}:{...x,cityId:value}));setMessage('')}
   function updateProject(index,field,value){setProjects(items=>items.map((item,i)=>i!==index?item:field==='videoUrl'?{...item,videoUrl:value,videoDisplayUrl:value}:field==='planUrl'?{...item,planUrl:value,planDisplayUrl:value}:{...item,[field]:value}));setMessage('')}
   function updatePlan(index,field,value){setPlans(items=>items.map((item,i)=>i===index?{...item,[field]:value}:item));setMessage('')}
+
+  async function uploadProjectImages(index,files){
+    const photos=Array.from(files||[]);
+    if(!photos.length)return;
+    const current=projects[index]?.imageUrls||[];
+    if(current.length+photos.length>8)return setError('Maximum 8 gallery photos per project.');
+    const types={'jpg':'image/jpeg','jpeg':'image/jpeg','png':'image/png','webp':'image/webp'};
+    if(photos.some(photo=>!['image/jpeg','image/png','image/webp'].includes(photo.type||types[String(photo.name||'').split('.').pop()?.toLowerCase()])||photo.size>12*1024*1024)){
+      return setError('Choose JPG, PNG or WebP photos, up to 12 MB each.');
+    }
+    setImageUploads(v=>({...v,[index]:true}));
+    setError('');setMessage('');
+    try{
+      const results=[];
+      for(const photo of photos){
+        const type=photo.type||types[String(photo.name||'').split('.').pop()?.toLowerCase()];
+        results.push(await authRequest('/profile/projects/image',{
+          method:'POST',headers:{'Content-Type':type},body:photo,timeoutMs:90000,
+        }));
+      }
+      setProjects(items=>items.map((item,i)=>i!==index?item:{
+        ...item,
+        imageUrls:[...(item.imageUrls||[]),...results.map(x=>x.url)].slice(0,8),
+        imageDisplayUrls:[...(item.imageDisplayUrls||[]),...results.map(x=>x.displayUrl||x.url)].slice(0,8),
+      }));
+      playSound('upload');
+      setMessage('Photos uploaded. Save changes to publish them in the Projects gallery.');
+    }catch(error){
+      playSound('warning');setError(error.message||'Photo upload failed.');
+    }finally{setImageUploads(v=>({...v,[index]:false}));}
+  }
 
   async function uploadProjectVideo(index,file){
     if(!file)return
@@ -299,7 +333,22 @@ export default function Profile(){
             <div className="panel-title"><div><span>05</span><h2>Completed projects</h2><p>Add up to 20 real projects. Upload MP4, MOV or WebM videos directly; published videos also appear newest-first on the Projects page.</p></div><button type="button" onClick={()=>setProjects(items=>[...items,emptyProject()])}>+ Add project</button></div>
             <div className="profile-showcase-list">{projects.map((project,index)=><article className="profile-showcase-card" key={project.id||`project-${index}`}>
               <div className="profile-showcase-card-head"><div><span>PROJECT {String(index+1).padStart(2,'0')}</span><h3>{project.title||'Untitled project'}</h3></div><div><label className="profile-inline-check"><input type="checkbox" checked={project.isPublished} onChange={e=>updateProject(index,'isPublished',e.target.checked)}/> Public</label><button type="button" className="row-remove" onClick={()=>setProjects(items=>items.filter((_,i)=>i!==index))}>Remove</button></div></div>
-              <div className="profile-showcase-grid"><label>Project title<input value={project.title} maxLength="180" onChange={e=>updateProject(index,'title',e.target.value)} placeholder="3BHK premium apartment interiors"/></label><label>Project type<input value={project.projectType} maxLength="120" onChange={e=>updateProject(index,'projectType',e.target.value)} placeholder="Interior / Villa / Commercial"/></label><label>Location<input value={project.locationText} maxLength="180" onChange={e=>updateProject(index,'locationText',e.target.value)} placeholder="Hyderabad, Telangana"/></label><label>Completion year<input type="number" min="1950" max="2200" value={project.completionYear} onChange={e=>updateProject(index,'completionYear',e.target.value)}/></label><label>Area<input value={project.areaText} maxLength="120" onChange={e=>updateProject(index,'areaText',e.target.value)} placeholder="2,400 sq ft"/></label><label>Project value / budget<input value={project.budgetText} maxLength="120" onChange={e=>updateProject(index,'budgetText',e.target.value)} placeholder="₹28–32 lakh"/></label><label className="wide">Description<textarea rows="3" value={project.description} maxLength="3000" onChange={e=>updateProject(index,'description',e.target.value)} placeholder="Scope completed, design approach, materials and outcome…"/></label><label className="wide">Cover image URL<input value={project.coverImageUrl} onChange={e=>updateProject(index,'coverImageUrl',e.target.value)} placeholder="https://… image"/></label><div className="profile-video-field"><label>Video URL<input value={project.videoUrl} onChange={e=>updateProject(index,'videoUrl',e.target.value)} placeholder="Upload a video below or paste https://…"/></label><label className={'profile-video-upload '+(videoUploads[index]?'busy':'')}><span>{videoUploads[index]?'Uploading video…':'Upload video'}</span><small>MP4, MOV or WebM · max 50 MB</small><input type="file" accept="video/mp4,video/quicktime,video/webm,.mp4,.mov,.webm" disabled={Boolean(videoUploads[index])} onChange={e=>{const file=e.target.files?.[0];e.target.value='';uploadProjectVideo(index,file)}}/></label>{project.videoUrl&&playableVideo(project.videoDisplayUrl||project.videoUrl)&&<video className="profile-project-video-preview" controls preload="metadata" src={project.videoDisplayUrl||project.videoUrl}/>} {project.videoUrl&&!playableVideo(project.videoDisplayUrl||project.videoUrl)&&<a className="profile-video-link" href={project.videoDisplayUrl||project.videoUrl} target="_blank" rel="noreferrer">Open external video ↗</a>}</div><div className="profile-plan-file-field"><label>Plan / drawing link <small>Optional if hosted elsewhere</small><input value={project.planUrl} onChange={e=>updateProject(index,'planUrl',e.target.value)} placeholder="Upload below or paste https://…"/></label><label className={'profile-plan-upload '+(planUploads[index]?'busy':'')}><span>{planUploads[index]?'Uploading plan…':'Upload plan / drawing'}</span><small>PDF, JPG, PNG or WebP · max 15 MB</small><input type="file" accept="application/pdf,image/jpeg,image/png,image/webp,.pdf,.jpg,.jpeg,.png,.webp" disabled={Boolean(planUploads[index])} onChange={e=>{const file=e.target.files?.[0];e.target.value='';uploadProjectPlan(index,file)}}/></label>{project.planUrl&&planPreviewKind(project.planDisplayUrl||project.planUrl)==='image'&&<img className="profile-plan-preview" src={project.planDisplayUrl||project.planUrl} alt={(project.title||'Project')+' plan / drawing'}/>} {project.planUrl&&planPreviewKind(project.planDisplayUrl||project.planUrl)==='pdf'&&<a className="profile-plan-link" href={project.planDisplayUrl||project.planUrl} target="_blank" rel="noreferrer">View PDF plan ↗</a>} {project.planUrl&&planPreviewKind(project.planDisplayUrl||project.planUrl)==='external'&&<a className="profile-plan-link" href={project.planDisplayUrl||project.planUrl} target="_blank" rel="noreferrer">Open plan / drawing ↗</a>} {project.planUrl&&<button type="button" className="profile-plan-remove" onClick={()=>updateProject(index,'planUrl','')}>Remove plan / drawing</button>}</div></div>
+              <div className="profile-showcase-grid"><label>Project title<input value={project.title} maxLength="180" onChange={e=>updateProject(index,'title',e.target.value)} placeholder="3BHK premium apartment interiors"/></label><label>Project type<input value={project.projectType} maxLength="120" onChange={e=>updateProject(index,'projectType',e.target.value)} placeholder="Interior / Villa / Commercial"/></label><label>Location<input value={project.locationText} maxLength="180" onChange={e=>updateProject(index,'locationText',e.target.value)} placeholder="Hyderabad, Telangana"/></label><label>Completion year<input type="number" min="1950" max="2200" value={project.completionYear} onChange={e=>updateProject(index,'completionYear',e.target.value)}/></label><label>Area<input value={project.areaText} maxLength="120" onChange={e=>updateProject(index,'areaText',e.target.value)} placeholder="2,400 sq ft"/></label><label>Project value / budget<input value={project.budgetText} maxLength="120" onChange={e=>updateProject(index,'budgetText',e.target.value)} placeholder="₹28–32 lakh"/></label><label className="wide">Description<textarea rows="3" value={project.description} maxLength="3000" onChange={e=>updateProject(index,'description',e.target.value)} placeholder="Scope completed, design approach, materials and outcome…"/></label><label className="wide">Cover image URL<input value={project.coverImageUrl} onChange={e=>updateProject(index,'coverImageUrl',e.target.value)} placeholder="https://… image"/></label>
+                <div className="profile-project-gallery-field">
+                  <label className="profile-gallery-upload">
+                    <span>{imageUploads[index]?'Uploading photos…':'Add project gallery photos'}</span>
+                    <small>JPG, PNG or WebP · up to 8 images · 12 MB each</small>
+                    <input type="file" accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp" multiple disabled={Boolean(imageUploads[index])||(project.imageUrls||[]).length>=8} onChange={e=>{const files=e.target.files;e.target.value='';uploadProjectImages(index,files)}}/>
+                  </label>
+                  {(project.imageUrls||[]).length>0&&<div className="profile-gallery-grid">
+                    {project.imageUrls.map((url,photoIndex)=><div className="profile-gallery-photo" key={url+photoIndex}>
+                      <img src={project.imageDisplayUrls?.[photoIndex]||url} alt={'Project gallery '+(photoIndex+1)}/>
+                      <button type="button" onClick={()=>setProjects(items=>items.map((item,i)=>i!==index?item:{...item,imageUrls:item.imageUrls.filter((_,j)=>j!==photoIndex),imageDisplayUrls:(item.imageDisplayUrls||[]).filter((_,j)=>j!==photoIndex)}))} aria-label={'Remove gallery photo '+(photoIndex+1)}>×</button>
+                    </div>)}
+                  </div>}
+                  <small className="profile-gallery-help">Your published photos appear automatically on the public Projects page after you save.</small>
+                </div>
+                <div className="profile-video-field"><label>Video URL<input value={project.videoUrl} onChange={e=>updateProject(index,'videoUrl',e.target.value)} placeholder="Upload a video below or paste https://…"/></label><label className={'profile-video-upload '+(videoUploads[index]?'busy':'')}><span>{videoUploads[index]?'Uploading video…':'Upload video'}</span><small>MP4, MOV or WebM · max 50 MB</small><input type="file" accept="video/mp4,video/quicktime,video/webm,.mp4,.mov,.webm" disabled={Boolean(videoUploads[index])} onChange={e=>{const file=e.target.files?.[0];e.target.value='';uploadProjectVideo(index,file)}}/></label>{project.videoUrl&&playableVideo(project.videoDisplayUrl||project.videoUrl)&&<video className="profile-project-video-preview" controls preload="metadata" src={project.videoDisplayUrl||project.videoUrl}/>} {project.videoUrl&&!playableVideo(project.videoDisplayUrl||project.videoUrl)&&<a className="profile-video-link" href={project.videoDisplayUrl||project.videoUrl} target="_blank" rel="noreferrer">Open external video ↗</a>}</div><div className="profile-plan-file-field"><label>Plan / drawing link <small>Optional if hosted elsewhere</small><input value={project.planUrl} onChange={e=>updateProject(index,'planUrl',e.target.value)} placeholder="Upload below or paste https://…"/></label><label className={'profile-plan-upload '+(planUploads[index]?'busy':'')}><span>{planUploads[index]?'Uploading plan…':'Upload plan / drawing'}</span><small>PDF, JPG, PNG or WebP · max 15 MB</small><input type="file" accept="application/pdf,image/jpeg,image/png,image/webp,.pdf,.jpg,.jpeg,.png,.webp" disabled={Boolean(planUploads[index])} onChange={e=>{const file=e.target.files?.[0];e.target.value='';uploadProjectPlan(index,file)}}/></label>{project.planUrl&&planPreviewKind(project.planDisplayUrl||project.planUrl)==='image'&&<img className="profile-plan-preview" src={project.planDisplayUrl||project.planUrl} alt={(project.title||'Project')+' plan / drawing'}/>} {project.planUrl&&planPreviewKind(project.planDisplayUrl||project.planUrl)==='pdf'&&<a className="profile-plan-link" href={project.planDisplayUrl||project.planUrl} target="_blank" rel="noreferrer">View PDF plan ↗</a>} {project.planUrl&&planPreviewKind(project.planDisplayUrl||project.planUrl)==='external'&&<a className="profile-plan-link" href={project.planDisplayUrl||project.planUrl} target="_blank" rel="noreferrer">Open plan / drawing ↗</a>} {project.planUrl&&<button type="button" className="profile-plan-remove" onClick={()=>updateProject(index,'planUrl','')}>Remove plan / drawing</button>}</div></div>
             </article>)}{!projects.length&&<div className="profile-showcase-empty"><b>No completed projects added yet.</b><span>Add real work to make your public profile stronger.</span></div>}</div>
           </section>
           </>}
