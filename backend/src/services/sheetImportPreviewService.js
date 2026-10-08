@@ -192,6 +192,6 @@ async function consumePreview(previewToken){
 }
 
 module.exports={
-  PREVIEW_TTL_MINUTES,TARGETS,targetsFor,parseCsvMatrix,analyzeCsv,stableJson,
+  PREVIEW_TTL_MINUTES,TARGETS,targetsFor,parseCsvMatrix:parseCsvRecords,analyzeCsv,stableJson,
   createPreview,assertPreview,consumePreview
 };
