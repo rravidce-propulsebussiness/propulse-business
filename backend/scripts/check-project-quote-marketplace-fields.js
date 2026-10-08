@@ -1,6 +1,19 @@
 const assert = require('node:assert/strict');
 const { parseProjectQuoteRequirement } = require('../src/services/projectQuoteRequirementDetails');
 const { maskLead, normalizeLeadRow } = require('../src/services/leadReadService');
+const fs = require('node:fs');
+const path = require('node:path');
+const root = path.resolve(__dirname, '../..');
+const card = fs.readFileSync(path.join(root, 'frontend/src/pages/LeadsV2.jsx'), 'utf8');
+const bridge = fs.readFileSync(path.join(root, 'backend/src/services/projectMarketplaceLeadService.js'), 'utf8');
+assert.match(card, /const isProjectEnquiry = source === 'professional_project_quote'/);
+assert.match(card, /isProjectEnquiry \|\| hasValue\(requirementSummary\)/,
+  'Requirement box must render for project leads even when requirement text is empty');
+assert.match(card, /Customer's additional requirements/);
+assert.doesNotMatch(card, /\['Source',\s*lead\.source\]/,
+  'Internal lead source should not be displayed on the public marketplace card');
+assert.match(bridge, /writtenBrief=kind==='quote'\?sanitize\(answeredFields\['Additional Requirements'\]/,
+  'Submitted free-text brief must be preserved for newly created marketplace leads');
 
 const requirement = [
   'Reference project: 3 BHK Interior',
