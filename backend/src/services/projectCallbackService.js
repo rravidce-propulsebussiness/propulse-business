@@ -88,7 +88,9 @@ async function requestProfileCallback(expertId,input={}){
   const id=Number(expertId);
   if(!Number.isSafeInteger(id)||id<1)throw bad('Professional profile not found','PROFILE_NOT_FOUND');
   if(input.website)throw bad('Unable to submit request');
-  if(input.consent!==true)throw bad('Please confirm that ProPulse may coordinate your callback');
+  if(input.consent!==true)throw bad('Please consent to sharing your contact with the selected professional after they accept the enquiry');
+  const pincode=String(input.pincode||'').trim();
+  if(!/^\d{6}$/.test(pincode))throw bad('Enter a valid 6-digit project PIN code');
   const name=normalizeName(input.name);
   const phone=normalizePhone(input.phone);
   const email=normalizeEmail(input.email);
@@ -117,7 +119,18 @@ async function requestProfileCallback(expertId,input={}){
      ) RETURNING id`,
     [title.slice(0,180),profile.user_id,name,phone,email,message||null]
   );
-  if(!result.rowCount)return {success:true,duplicate:true};
+  if(!result.rowCount){
+    const prior=(await pool.query(`SELECT id FROM project_callback_requests
+      WHERE project_id IS NULL AND business_user_id=$1 AND customer_phone=$2
+        AND created_at>CURRENT_TIMESTAMP-INTERVAL '1 hour'
+      ORDER BY id DESC LIMIT 1`,[profile.user_id,phone])).rows[0];
+    if(!prior)return {success:true,duplicate:true};
+    await marketplace.flagPending('profile',prior.id,pincode);
+    const market=await marketplace.sync('profile',prior.id);
+    return{success:true,duplicate:true,requestId:prior.id,marketplaceLeadId:market.leadId||null,marketplaceStatus:market.status};
+  }
+  await marketplace.flagPending('profile',result.rows[0].id,pincode);
+  const market=await marketplace.sync('profile',result.rows[0].id);
   try{
     await notifications.notifyUser({
       userId:profile.user_id,type:'project_callback_request',category:'lead',severity:'info',
@@ -127,7 +140,7 @@ async function requestProfileCallback(expertId,input={}){
       dedupeKey:`profile-callback-${result.rows[0].id}`,
     });
   }catch(error){console.error('Profile callback notification failed:',error.message);}
-  return {success:true};
+  return {success:true,requestId:result.rows[0].id,marketplaceLeadId:market.leadId||null,marketplaceStatus:market.status};
 }
 function maskedPhone(value){
   const digits=String(value||'').replace(/\D/g,'');
