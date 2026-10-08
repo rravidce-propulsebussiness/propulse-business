@@ -33,15 +33,15 @@ async function requestCallback(projectId,input={}){
   if(!status.eligible)throw bad('Project not available','PROJECT_NOT_FOUND');
   const result=await pool.query(
     `INSERT INTO project_callback_requests
-      (project_id,business_user_id,customer_name,customer_phone,customer_email,message)
-      SELECT $1,$2,$3,$4,$5,$6
+      (project_id,project_title,business_user_id,customer_name,customer_phone,customer_email,message)
+      SELECT $1,$7,$2,$3,$4,$5,$6
       WHERE NOT EXISTS (
         SELECT 1 FROM project_callback_requests
         WHERE project_id=$1 AND customer_phone=$4
         AND created_at>CURRENT_TIMESTAMP-INTERVAL '1 hour'
       )
       RETURNING id`,
-    [id,project.business_user_id,name,phone,email,message||null]
+    [id,project.business_user_id,name,phone,email,message||null,String(project.title||'Project').slice(0,180)]
   );
   if(!result.rowCount)return {success:true,duplicate:true};
   const requestId=result.rows[0].id;
@@ -61,12 +61,10 @@ async function listForProfessional(userId){
   const id=Number(userId);
   if(!Number.isSafeInteger(id)||id<1)return [];
   return (await pool.query(
-    `SELECT r.id,r.project_id,p.title AS project_title,r.customer_name,
+    `SELECT r.id,r.project_id,r.project_title,r.customer_name,
        r.customer_phone,r.customer_email,r.message,r.status,r.created_at
        FROM project_callback_requests r
-       JOIN business_profile_projects p ON p.id=r.project_id
-       JOIN business_profiles bp ON bp.id=p.business_profile_id
-       WHERE r.business_user_id=$1 AND bp.user_id=$1
+       WHERE r.business_user_id=$1
        ORDER BY r.created_at DESC,r.id DESC LIMIT 100`,[id]
   )).rows;
 }
