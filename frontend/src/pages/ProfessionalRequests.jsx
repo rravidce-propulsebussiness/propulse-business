@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import UserHeader from '../components/UserHeader'
+import ProfessionalRequestUnlock from '../components/ProfessionalRequestUnlock'
 import ProfessionalProjectQuotes from '../components/ProfessionalProjectQuotes'
 import { authRequest } from '../utils/auth'
 import './ProfessionalRequests.css'
@@ -221,7 +222,7 @@ export default function ProfessionalRequests() {
                 <div><dt>Email address</dt><dd>{chosen.customer_email || 'Not supplied'}</dd></div>
               </dl>
             </div>
-            <div className="prc-contact-notice"><RequestsIcon name="shield"/><p>ProPulse coordinates introductions and updates callback stages. Customer contact details remain masked until access is authorized by Admin.</p></div>
+            <div className="prc-contact-notice"><RequestsIcon name="shield"/><p>ProPulse coordinates introductions and updates callback stages. Customer contact details unlock after lead payment or acceptance through an active Pro membership.</p></div>
             <div className="prc-detail-actions">
               <Link to="/profile/brochures">Manage brochures <RequestsIcon name="arrow"/></Link>
               <button type="button" disabled={refreshing} onClick={() => load()}>Check for updates</button>
