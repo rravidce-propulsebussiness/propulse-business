@@ -39,3 +39,9 @@
 .completed-project-empty{background:white;border:1px dashed #d4e0e4;border-radius:10px;padding:18px;font-size:13px;line-height:1.65;color:#6c8291}
 @media(max-width:1100px){.completed-project-layout{grid-template-columns:1fr}}
 @media(max-width:650px){.completed-project-field-grid{grid-template-columns:1fr}.completed-project-field-grid label.wide{grid-column:auto}.completed-project-form,.completed-project-list{padding:16px}.completed-project-item{grid-template-columns:52px minmax(0,1fr) auto}.completed-project-item img,.completed-project-no-photo{width:52px;height:52px}.completed-project-admin .expert-admin-panel-head{flex-wrap:wrap}}
+
+.completed-project-photo-upload{margin:3px 0 9px;border:1px dashed #c6d7df;background:#f0f6f8;border-radius:10px;padding:14px}
+.completed-project-photo-upload label{font-size:13px;font-weight:750;color:#294b61}
+.completed-project-photo-upload input[type=file]{font-size:12px;border:0;background:transparent;padding:7px 0}
+.completed-project-photo-upload small{display:block;color:#627e90;font-size:12px;line-height:1.55;margin-top:5px}
+.completed-project-photo-upload img{margin-top:12px;display:block;width:160px;height:100px;border-radius:8px;object-fit:cover}
