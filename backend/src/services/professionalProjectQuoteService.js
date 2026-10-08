@@ -3,7 +3,7 @@ const directory=require('./expertDirectoryService');
 const notifications=require('./notificationService');
 const marketplace=require('./projectMarketplaceLeadService');
 const {normalizeName,normalizePhone,normalizeEmail}=require('./publicContactValidationService');
-const {parseProjectQuoteRequirement}=require('./projectQuoteRequirementDetails');
+const {splitProjectQuoteRequirement}=require('./projectQuoteRequirementDetails');
 
 function bad(message,code='INVALID_PROFESSIONAL_QUOTE'){
   return Object.assign(new Error(message),{code});
@@ -144,11 +144,9 @@ async function listForProfessional(userId){
   return decorated.map(row=>{
     // Each wizard answer is a separate labelled field. The free-text
     // Requirement must never be fabricated from the other form answers.
-    const parsed=parseProjectQuoteRequirement(row.requirement);
-    const written=String(parsed['Additional Requirements']||'').trim();
-    delete parsed['Additional Requirements'];
+    const {fields,written}=(()=>{const result=splitProjectQuoteRequirement(row.requirement);return {fields:result.fields,written:result.requirement}})();
     const requirementFields=Object.fromEntries(
-      Object.entries(parsed).filter(([,value])=>String(value||'').trim())
+      Object.entries(fields).filter(([,value])=>String(value||'').trim())
         .map(([label,value])=>[label,redact(value)])
     );
     return{
