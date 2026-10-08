@@ -94,6 +94,8 @@ async function save(payload,{id=null}={}){
       WHERE u.id=$1 AND u.role='business' LIMIT 1
     `,[userId])).rows[0];
     if(!business)throw inputError('The selected business profile is unavailable','BUSINESS_PROFILE_NOT_FOUND');
+    const count=Number((await pool.query('SELECT COUNT(*)::int AS count FROM business_profile_projects WHERE business_profile_id=$1',[business.id])).rows[0]?.count||0);
+    if(count>=20)throw inputError('This business already has 20 projects. Edit an existing project instead.');
     const item=normalized(payload);
     validateStorageOwnership(userId,item);
     const result=await pool.query(`
