@@ -26,7 +26,7 @@ assert.match(bridge,/pins\.detectPincode\(pin\)/);
 assert.match(bridge,/intakeSubmissionKey:'project_'\+kind\+'_'\+id/);
 assert.match(bridge,/contactConsentVersion:'project-multi-professional-consent-v1'/);
 assert.match(bridge,/accessStrategy:'shared',buyerCapacity:3/);
-assert.match(bridge,/marketplace_sync_status='not_requested'/);
+assert.match(bridge,/marketplace_sync_status==='not_requested'/);
 assert.match(bridge,/await updateLink\(kind,id,\{leadId/);
 assert.match(bridge,/status:'review_required'/);
 assert.match(quote,/marketplace\.sync\('quote'/);
