@@ -135,6 +135,8 @@ export default function Profile(){
   function addPlan(){const item=emptyPlan();setPlans(current=>[...current,item]);setExpandedPlan('draft-'+item._draftKey);setMessage('')}
   function projectKey(item){return item.id?'project-'+item.id:'draft-'+item._draftKey}
   function planKey(item){return item.id?'plan-'+item.id:'draft-'+item._draftKey}
+  function revealProjectError(index,message){setExpandedProject(projectKey(projects[index]));navigate('/profile?tab=projects');setError(message);requestAnimationFrame(()=>document.getElementById('profile-tabs')?.scrollIntoView({block:'start',behavior:'smooth'}))}
+  function revealPlanError(index,message){setExpandedPlan(planKey(plans[index]));navigate('/profile?tab=plans');setError(message);requestAnimationFrame(()=>document.getElementById('profile-tabs')?.scrollIntoView({block:'start',behavior:'smooth'}))}
   function update(field,value){setForm(x=>({...x,[field]:value}));setMessage('')}
   function updateService(index,field,value){setServiceSelections(items=>items.map((x,i)=>i!==index?x:field==='industryId'?{industryId:value,serviceId:'',subserviceId:''}:field==='serviceId'?{...x,serviceId:value,subserviceId:''}:{...x,[field]:value}));setMessage('')}
   function updateLocation(index,field,value){setLocationSelections(items=>items.map((x,i)=>i!==index?x:field==='stateId'?{stateId:value,cityId:''}:{...x,cityId:value}));setMessage('')}
@@ -292,12 +294,18 @@ export default function Profile(){
     if(!form.name.trim()||!form.email.trim()||!form.phone.trim()||!form.businessName.trim()||!form.businessDetails.trim())return setError('Complete all business information before saving.')
     if(!serviceSelections.length||serviceSelections.some(x=>!x.industryId||!x.serviceId))return setError('Complete every service selection.')
     if(!locationSelections.length||locationSelections.some(x=>!x.stateId||!x.cityId))return setError('Complete every location selection.')
-    if(projects.some(item=>!item.title.trim()))return setError('Every completed project needs a title.')
-    if(projects.some(item=>item.isPublished&&!['Construction','Interior Design','Real Estate'].includes(item.projectType)))return setError('Select Construction, Interior Design or Real Estate for every published project before saving.');
-    if(projects.some(item=>item.isPublished&&(!Number.isInteger(Number(item.completionYear))||Number(item.completionYear)<1950||Number(item.completionYear)>new Date().getFullYear())))return setError('To publish a completed project, enter its actual completion year. Uncheck Public to save unfinished work privately.')
-    if(plans.some(item=>!item.title.trim()))return setError('Every service plan needs a title.')
-    if(plans.some(item=>item.isPublished&&!INDUSTRY_OPTIONS.some(option=>option.value===item.industry)))return setError('Choose an industry for every published package.')
-    if(projects.some(item=>item.packageName&&!plans.some(plan=>plan.isPublished&&plan.title===item.packageName&&plan.industry===projectIndustry(item.projectType))))return setError('A project can only link to a published package from the same industry. Review its related package.')
+    const untitledProject=projects.findIndex(item=>!item.title.trim())
+    if(untitledProject>=0)return revealProjectError(untitledProject,'Every completed project needs a title.')
+    const unclassifiedProject=projects.findIndex(item=>item.isPublished&&!['Construction','Interior Design','Real Estate'].includes(item.projectType))
+    if(unclassifiedProject>=0)return revealProjectError(unclassifiedProject,'Select Construction, Interior Design or Real Estate for every published project before saving.')
+    const missingYearProject=projects.findIndex(item=>item.isPublished&&(!Number.isInteger(Number(item.completionYear))||Number(item.completionYear)<1950||Number(item.completionYear)>new Date().getFullYear()))
+    if(missingYearProject>=0)return revealProjectError(missingYearProject,'To publish a completed project, enter its actual completion year. Uncheck Public to save unfinished work privately.')
+    const untitledPlan=plans.findIndex(item=>!item.title.trim())
+    if(untitledPlan>=0)return revealPlanError(untitledPlan,'Every service package needs a name.')
+    const missingIndustryPlan=plans.findIndex(item=>item.isPublished&&!INDUSTRY_OPTIONS.some(option=>option.value===item.industry))
+    if(missingIndustryPlan>=0)return revealPlanError(missingIndustryPlan,'Select an industry for this published package before saving. Existing packages without an industry must be classified.')
+    const mismatchedPackageProject=projects.findIndex(item=>item.packageName&&!plans.some(plan=>plan.isPublished&&plan.title===item.packageName&&plan.industry===projectIndustry(item.projectType)))
+    if(mismatchedPackageProject>=0)return revealProjectError(mismatchedPackageProject,'A project can only link to a published package from the same industry. Review the linked package.')
     try{
       setSaving(true)
       const result=await authRequest('/profile',{method:'PUT',body:JSON.stringify({
@@ -467,7 +475,7 @@ export default function Profile(){
         <aside className="profile-side-column">
           <section className="profile-side-card profile-progress-card"><div className="profile-ring" style={{'--progress':`${completion*3.6}deg`}}><strong>{completion}%</strong></div><div><span className="side-kicker">PROFILE COMPLETION</span><h3>Build a credible profile</h3><p>Services, locations and real project evidence make the public profile more useful.</p></div><ul><li className={completionItems[0]?'done':''}>Personal information</li><li className={completionItems[1]?'done':''}>Business details</li><li className={completionItems[2]?'done':''}>Services</li><li className={completionItems[3]?'done':''}>Lead locations</li><li className={completionItems[4]?'done':''}>Public profile copy</li><li className={completionItems[5]?'done':''}>Completed project</li></ul></section>
           <section className="profile-side-card"><span className="side-icon">✦</span><span className="side-kicker">PUBLIC SHOWCASE</span><h3>What customers can review</h3><div className="coverage-stat"><strong>{projects.filter(x=>x.isPublished).length}</strong><span>Projects</span></div><div className="coverage-stat"><strong>{plans.filter(x=>x.isPublished).length}</strong><span>Packages</span></div><p>Phone and email remain protected on the public directory.</p></section>
-          <section className="profile-side-card profile-membership-card"><span className="side-kicker">EXPERT DIRECTORY</span><h3>{directoryStatus?.membership?`${String(directoryStatus.membership.planGroup||'').toUpperCase()} membership`:'No active eligible plan'}</h3><p>{reasonText(directoryStatus)}</p>{directoryStatus?.eligible&&<Link to="/experts">View directory ↗</Link>}</section>
+          <section className="profile-side-card profile-membership-card"><span className="side-kicker">EXPERT DIRECTORY</span><h3>{directoryStatus?.eligible?'Eligible for Expert Directory':directoryStatus?.membership?`${String(directoryStatus.membership.planGroup||'').toUpperCase()} membership`:'No active eligible plan'}</h3><p>{reasonText(directoryStatus)}</p>{directoryStatus?.eligible&&<Link to="/experts">View directory ↗</Link>}</section>
         </aside>
 
       </form>}
