@@ -4,12 +4,12 @@ const fs=require('node:fs');
 const Module=require('node:module');
 const {parseCsvRecords}=require('../src/utils/csvRecords');
 
-assert.deepEqual(parseCsvRecords('Name,Notes\\r\\n"Ravi, R","Says ""hello""\\nnext line"\\r\\n\\r\\n'),[
-  ['Name','Notes'],['Ravi, R','Says "hello"\\nnext line']
+assert.deepEqual(parseCsvRecords('Name,Notes\r\n"Ravi, R","Says ""hello""\nnext line"\r\n\r\n'),[
+  ['Name','Notes'],['Ravi, R','Says "hello"\nnext line']
 ]);
-assert.deepEqual(parseCsvRecords('  ,  \\n A , B \\n'),[[' A ',' B ']]);
+assert.deepEqual(parseCsvRecords('  ,  \n A , B \n'),[[' A ',' B ']]);
 assert.deepEqual(parseCsvRecords(''),[]);
-assert.deepEqual(parseCsvRecords('First,Second\\n1,2'),[['First','Second'],['1','2']]);
+assert.deepEqual(parseCsvRecords('First,Second\n1,2'),[['First','Second'],['1','2']]);
 
 const originalLoad=Module._load;
 let directBaseCalls=0;
@@ -18,7 +18,7 @@ let importedBy=null;
 let customFieldUpdates=[];
 const sheet={
   spreadsheetId:'sheet_123',gid:'5',
-  csv:'Full Name,Phone Number,Industry,Campaign Name,Notes\\r\\n"Ravi, R",9876543210,Construction,"Ad, Sept","Uses ""branded"" materials"'
+  csv:'Full Name,Phone Number,Industry,Campaign Name,Notes\r\n"Ravi, R",9876543210,Construction,"Ad, Sept","Uses ""branded"" materials"'
 };
 const db={
  async query(sql,params=[]){
