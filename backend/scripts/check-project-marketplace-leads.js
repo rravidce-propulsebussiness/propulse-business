@@ -4,7 +4,7 @@ const path=require('node:path');
 const root=path.resolve(__dirname,'../..');
 const read=p=>fs.readFileSync(path.join(root,p),'utf8');
 
-const migration=read('backend/src/database/migrations/20261008_project_requests_marketplace_leads.sql');
+const migration=read('backend/src/database/migrations/20261008_zzzzz_project_requests_marketplace_leads.sql');
 const bridge=read('backend/src/services/projectMarketplaceLeadService.js');
 const quote=read('backend/src/services/professionalProjectQuoteService.js');
 const callback=read('backend/src/services/projectCallbackService.js');
