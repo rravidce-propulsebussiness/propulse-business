@@ -1,4 +1,5 @@
 const crypto=require('crypto');
+const {parseCsvRecords}=require('../utils/csvRecords');
 const pool=require('../config/database');
 
 const PREVIEW_TTL_MINUTES=30;
@@ -39,22 +40,6 @@ const TARGETS=[
 function targetsFor(scope='admin'){
   return TARGETS.filter(target=>!target.scopes||target.scopes.includes(scope));
 }
-function parseCsvMatrix(text){
-  const rows=[];let row=[],cell='',quoted=false;
-  const input=String(text??'');
-  for(let i=0;i<input.length;i+=1){
-    const c=input[i];
-    if(c==='"'){
-      if(quoted&&input[i+1]==='"'){cell+='"';i+=1}else quoted=!quoted;
-    }else if(c===','&&!quoted){row.push(cell);cell='';}
-    else if((c==='\n'||c==='\r')&&!quoted){
-      if(c==='\r'&&input[i+1]==='\n')i+=1;
-      row.push(cell);if(row.some(value=>clean(value)))rows.push(row);row=[];cell='';
-    }else cell+=c;
-  }
-  row.push(cell);if(row.some(value=>clean(value)))rows.push(row);
-  return rows;
-}
 function uniqueHeaders(rawHeaders){
   const used=new Map();
   return rawHeaders.map((value,index)=>{
@@ -70,7 +55,7 @@ function headerMatchesTarget(header,target){
   return [target.canonical,target.label,...target.aliases].some(alias=>norm(alias)===key);
 }
 function analyzeCsv(csv,{columnMappings={},scope='admin'}={}){
-  const matrix=parseCsvMatrix(csv);
+  const matrix=parseCsvRecords(csv);
   if(!matrix.length)throw new Error('Google Sheet contains no rows');
   const headers=uniqueHeaders(matrix[0]);
   if(!headers.length)throw new Error('Google Sheet contains no columns');
@@ -207,6 +192,6 @@ async function consumePreview(previewToken){
 }
 
 module.exports={
-  PREVIEW_TTL_MINUTES,TARGETS,targetsFor,parseCsvMatrix,analyzeCsv,stableJson,
+  PREVIEW_TTL_MINUTES,TARGETS,targetsFor,parseCsvMatrix:parseCsvRecords,analyzeCsv,stableJson,
   createPreview,assertPreview,consumePreview
 };
