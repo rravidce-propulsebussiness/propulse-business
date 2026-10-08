@@ -1,4 +1,6 @@
 const assert = require('node:assert/strict');
+const { readFileSync } = require('node:fs');
+const { join } = require('node:path');
 const { parseProjectQuoteRequirement } = require('../src/services/projectQuoteRequirementDetails');
 const { maskLead, normalizeLeadRow } = require('../src/services/leadReadService');
 
@@ -49,6 +51,7 @@ const publicLead = maskLead(oldLead);
 assert.equal(publicLead.customer_name, 'Asha Reddy', 'Entered name should not be replaced with Customer');
 assert.equal(publicLead.custom_fields.Bedrooms, '3 BHK', 'Legacy lead answers should be visible as fields');
 assert.equal(publicLead.custom_fields['Interior Scope'], 'End-to-End Interiors');
+assert.equal(publicLead.custom_fields['Additional Requirements'], 'A pooja room and a small study', 'Customer notes should survive masking');
 assert.equal(publicLead.custom_fields.Timeline, '1–3 months');
 assert.equal(publicLead.property_type, 'Villa');
 assert.ok(publicLead.customer_phone !== oldLead.customer_phone);
@@ -58,4 +61,12 @@ assert.ok(!('Site PIN code' in publicLead.custom_fields));
 assert.equal(maskLead({ source: 'homepage_consultation', customer_name: 'Test Homeowner' }).customer_name, 'Customer',
   'Homepage customer privacy must remain unchanged');
 assert.equal(maskLead({ source: 'professional_project_callback', customer_name: 'Asha Reddy' }).customer_name, 'Asha Reddy');
+// Guard the public marketplace detail card: notes remain visible alongside
+// structured quotation answers, without exposing internal lead provenance.
+const leadCard = readFileSync(join(__dirname, '../../frontend/src/pages/LeadsV2.jsx'), 'utf8');
+assert.match(leadCard, /const requirementNote = getCustom\(lead\.custom_fields/);
+assert.match(leadCard, /const requirementText = requirementNote/);
+assert.match(leadCard, /hasValue\(requirementText\) && <p className="lv2-requirement-full"/);
+assert.doesNotMatch(leadCard, /hasStructuredQuote/);
+assert.doesNotMatch(leadCard, /\['Source',/);
 console.log('Professional project quote marketplace details and privacy checks passed.');
