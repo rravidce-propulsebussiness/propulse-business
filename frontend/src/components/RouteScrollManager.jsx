@@ -19,7 +19,12 @@ export default function RouteScrollManager() {
     // Avoid smooth scrolling through the old page on navigation.
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
 
-    if (!hash) return undefined
+    // Reinforce the reset after a lazily loaded route replaces its fallback.
+    const topFrame = window.requestAnimationFrame(() => {
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
+    })
+
+    if (!hash) return () => window.cancelAnimationFrame(topFrame)
 
     // Some routes (e.g. /quote#interiors) use the hash to select a view,
     // while links to a real DOM id should still scroll to that section.
@@ -34,12 +39,18 @@ export default function RouteScrollManager() {
       return true
     }
 
-    if (scrollToAnchor()) return undefined
+    if (scrollToAnchor()) {
+      window.cancelAnimationFrame(topFrame)
+      return undefined
+    }
 
     // Lazy route content may mount after the router location changes.
     // Watch briefly for an explicit anchor, without keeping a permanent observer.
     const observer = new MutationObserver(() => {
-      if (scrollToAnchor()) observer.disconnect()
+      if (scrollToAnchor()) {
+        window.cancelAnimationFrame(topFrame)
+        observer.disconnect()
+      }
     })
     observer.observe(document.getElementById('root') || document.body, {
       childList: true,
@@ -47,6 +58,7 @@ export default function RouteScrollManager() {
     })
     const timer = window.setTimeout(() => observer.disconnect(), 2000)
     return () => {
+      window.cancelAnimationFrame(topFrame)
       observer.disconnect()
       window.clearTimeout(timer)
     }

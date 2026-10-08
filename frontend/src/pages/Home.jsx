@@ -205,10 +205,10 @@ export default function Home() {
                 <span className="hc-hero-cta-label">Start Your Project</span>
                 <span className="hc-hero-cta-arrow" aria-hidden="true">→</span>
               </button>
-              <a className="hc-hero-cta hc-hero-cta-secondary" href="/packages">
+              <Link className="hc-hero-cta hc-hero-cta-secondary" to="/packages">
                 <span className="hc-hero-cta-label">View Packages</span>
                 <span className="hc-hero-cta-arrow" aria-hidden="true">→</span>
-              </a>
+              </Link>
             </div>
             <div className="hc-premium-trust" aria-label="ProPulse benefits">
               <span><Icon name="clipboard" size={22}/>Free Consultation</span>
