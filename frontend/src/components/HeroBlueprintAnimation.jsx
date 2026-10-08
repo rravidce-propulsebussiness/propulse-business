@@ -10,7 +10,7 @@ const stockScenes = {
 
 // Once four optimized images are published to R2, set VITE_HERO_MEDIA_BASE_URL
 // to their verified public base URL. Until then, use the existing photographs.
-const heroMediaBase = (import.meta.env.VITE_HERO_MEDIA_BASE_URL || '').trim().replace(/\\/$/, '')
+const heroMediaBase = (import.meta.env.VITE_HERO_MEDIA_BASE_URL || '').trim().replace(/\/$/, '')
 const sceneSource = (name) => heroMediaBase
   ? `${heroMediaBase}/${name}.webp`
   : stockScenes[name]
