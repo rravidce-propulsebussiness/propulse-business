@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import UserHeader from '../components/UserHeader'
 import ProfessionalProjectQuotes from '../components/ProfessionalProjectQuotes'
 import { authRequest } from '../utils/auth'
@@ -21,7 +21,8 @@ const stageLabel = status => status === 'contacted' ? 'In follow-up' : status ==
 const stageKey = status => status === 'contacted' || status === 'closed' ? status : 'new'
 
 export default function ProfessionalRequests() {
-  const [view, setView] = useState('callbacks')
+  const [searchParams, setSearchParams] = useSearchParams()
+  const view = searchParams.get('tab') === 'quotes' ? 'quotes' : 'callbacks'
   const [requests, setRequests] = useState([])
   const [quotes, setQuotes] = useState([])
   const [plans, setPlans] = useState([])
@@ -134,8 +135,8 @@ export default function ProfessionalRequests() {
       </div>
 
       <div className="prc-sections" role="tablist" aria-label="Request type">
-        <button type="button" role="tab" aria-selected={view === 'callbacks'} className={view === 'callbacks' ? 'selected' : ''} onClick={() => setView('callbacks')}>Callback requests <span>{counts.all}</span></button>
-        <button type="button" role="tab" aria-selected={view === 'quotes'} className={view === 'quotes' ? 'selected' : ''} onClick={() => setView('quotes')}>Quotation requests <span>{quotes.length}</span></button>
+        <button type="button" role="tab" aria-selected={view === 'callbacks'} className={view === 'callbacks' ? 'selected' : ''} onClick={() => setSearchParams({})}>Callback requests <span>{counts.all}</span></button>
+        <button type="button" role="tab" aria-selected={view === 'quotes'} className={view === 'quotes' ? 'selected' : ''} onClick={() => setSearchParams({ tab: 'quotes' })}>Quotation requests <span>{quotes.length}</span></button>
       </div>
 
       {view === 'quotes' ? <section className="prc-quotes" aria-label="Quotation requests">
