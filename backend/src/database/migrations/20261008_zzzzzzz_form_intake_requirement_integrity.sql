@@ -19,7 +19,7 @@ BEGIN
   -- Blank written requirements are valid when the detailed form answers exist.
   -- The unique intake_submission_key prevents repeat clicks; deduplication by
   -- phone alone would incorrectly merge different projects from one customer.
-  IF NEW.source IN ('public_requirement','homepage_consultation','professional_project_quote','professional_project_callback') AND NULLIF(BTRIM(COALESCE(NEW.intake_submission_key,'')),'') IS NOT NULL THEN
+  IF NEW.source IN ('public_requirement','public_estimator','homepage_consultation','professional_project_quote','professional_project_callback') AND NULLIF(BTRIM(COALESCE(NEW.intake_submission_key,'')),'') IS NOT NULL THEN
     RETURN NEW;
   END IF;
 
@@ -113,7 +113,7 @@ DECLARE
 BEGIN
   -- Public intake enrichment may replace an earlier consultation record.
   -- Distinct submissions are identified by intake_submission_key, not phone.
-  IF NEW.source IN ('public_requirement','homepage_consultation','professional_project_quote','professional_project_callback') AND NULLIF(BTRIM(COALESCE(NEW.intake_submission_key,'')),'') IS NOT NULL THEN
+  IF NEW.source IN ('public_requirement','public_estimator','homepage_consultation','professional_project_quote','professional_project_callback') AND NULLIF(BTRIM(COALESCE(NEW.intake_submission_key,'')),'') IS NOT NULL THEN
     RETURN NEW;
   END IF;
 
