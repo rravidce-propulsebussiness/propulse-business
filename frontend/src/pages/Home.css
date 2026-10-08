@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&display=swap');
+
 /* Home page — approved premium mockup
    Keep this file page-specific. Shared header/footer primitives live in
    PublicMarketingHeader.css and PublicFooterCompact.css. */
@@ -557,3 +559,73 @@
 .hc-premium-scene{position:relative;min-height:530px;border-radius:28px;border:1px solid #ffffff30;overflow:hidden;background:#183d70;box-shadow:0 24px 80px #0005}.hc-premium-scene .ag-hero{position:absolute;inset:0}.hc-premium-scene-label{position:absolute;z-index:2;left:22px;top:22px;padding:15px 18px;border-radius:15px;background:#0b1d3ad9;border:1px solid #ffffff3a;color:#fff}.hc-premium-scene-label small{display:block;color:#ff9c70;font-weight:850;letter-spacing:.12em;margin-bottom:6px}.hc-premium-scene-label b{font-size:14px}
 @media(max-width:950px){.hc-premium-hero-inner{grid-template-columns:1fr;gap:38px}.hc-premium-hero{padding:64px 0}.hc-premium-scene{min-height:460px}}
 @media(max-width:620px){.hc-premium-hero{padding:46px 0 52px}.hc-premium-hero h1{font-size:clamp(38px,10vw,54px)}.hc-premium-hero-copy>p{font-size:20px;margin:22px 0 26px}.hc-premium-actions{flex-direction:column;align-items:stretch}.hc-premium-actions button,.hc-premium-actions a{width:100%;min-height:56px}.hc-premium-trust{margin-top:32px}.hc-premium-trust span{padding:17px 9px;font-size:12px}.hc-premium-scene{min-height:390px;border-radius:24px}.hc-premium-scene-label{left:14px;top:14px;padding:11px 13px}.hc-premium-scene-label b{font-size:12px}}
+
+
+/* Rotating reassurance copy: premium Sora type, stable height and compact CTA spacing. */
+.hc-home .hc-premium-hero h1{
+  font-family:'Sora',Inter,ui-sans-serif,system-ui,sans-serif;
+  font-size:clamp(38px,4.45vw,68px);
+  font-weight:800;
+  letter-spacing:-.055em;
+  line-height:1.12;
+}
+.hc-home .hc-premium-hero-copy>p.hc-premium-typewriter{
+  position:relative;
+  max-width:100%;
+  min-height:1.4em;
+  margin:22px 0 26px;
+  font-family:'Sora',Inter,ui-sans-serif,system-ui,sans-serif;
+  font-size:clamp(16px,1.65vw,23px);
+  font-weight:700;
+  letter-spacing:-.035em;
+  line-height:1.4;
+  color:#f1f6ff;
+}
+.hc-premium-typewriter-sr{
+  position:absolute;
+  width:1px;
+  height:1px;
+  margin:-1px;
+  padding:0;
+  border:0;
+  overflow:hidden;
+  clip-path:inset(50%);
+  white-space:nowrap;
+}
+.hc-premium-typewriter-measure{
+  display:block;
+  visibility:hidden;
+}
+.hc-premium-typewriter-line{
+  position:absolute;
+  inset:0;
+  display:block;
+}
+.hc-premium-typewriter-lead{color:#f7f9ff}
+.hc-premium-typewriter-accent{color:#ff9d70}
+.hc-premium-typewriter-caret{
+  display:inline-block;
+  width:2px;
+  height:1.07em;
+  margin-left:3px;
+  background:#ff8c56;
+  vertical-align:-.12em;
+  animation:hcPremiumCaretBlink 1s step-end infinite;
+}
+.hc-home .hc-premium-trust{margin-top:32px}
+@keyframes hcPremiumCaretBlink{
+  0%,49%{opacity:1}
+  50%,100%{opacity:0}
+}
+@media(max-width:620px){
+  .hc-home .hc-premium-hero h1{font-size:clamp(33px,8.4vw,48px)}
+  .hc-home .hc-premium-hero-copy>p.hc-premium-typewriter{
+    font-size:clamp(13px,4vw,17px);
+    margin:18px 0 22px;
+    min-height:1.5em;
+  }
+  .hc-home .hc-premium-trust{margin-top:26px}
+}
+@media(prefers-reduced-motion:reduce){
+  .hc-premium-typewriter-caret{animation:none;opacity:1}
+}
