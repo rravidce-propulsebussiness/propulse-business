@@ -359,7 +359,6 @@ function buildEstimatorLeadPayload(flow, calculation) {
   let propertyType = null;
   let budget = null;
   let explicitRequirement = null;
-  const summaryParts = [];
 
   for (const question of flow.questions || []) {
     if (!isVisible(question, answers) || isEmpty(answers[question.questionKey])) continue;
@@ -367,17 +366,15 @@ function buildEstimatorLeadPayload(flow, calculation) {
     if (!formatted) continue;
     if (question.leadField === 'property_type') propertyType = formatted;
     if (question.leadField === 'budget') budget = formatted;
-    if (question.leadField === 'requirement') explicitRequirement = formatted;
+    if (question.visibility === 'marketplace' && question.questionType === 'text' && question.leadField === 'requirement') explicitRequirement = formatted;
     if (question.visibility === 'marketplace') {
       custom[question.label] = formatted;
       marketplaceAnswers[question.questionKey] = formatted;
-      if (question.questionType !== 'location') summaryParts.push(`${question.label}: ${formatted}`);
     } else if (question.visibility === 'protected') {
       protectedAnswers[question.label] = formatted;
     }
   }
 
-  const estimateText = `Indicative estimate ₹${Number(calculation.result_min).toLocaleString('en-IN')} – ₹${Number(calculation.result_max).toLocaleString('en-IN')}`;
   custom._estimator = {
     calculationId: calculation.public_id,
     flowKey: flow.key,
@@ -398,6 +395,7 @@ function buildEstimatorLeadPayload(flow, calculation) {
     versionNo: flow.versionNo,
     source: 'estimator_quote_request',
     answers,
+    writtenRequirement: explicitRequirement,
   };
   custom._qualification = {
     detailedRequirementCompleted: true,
@@ -409,9 +407,9 @@ function buildEstimatorLeadPayload(flow, calculation) {
   };
   if (Object.keys(protectedAnswers).length) custom._protected_answers = protectedAnswers;
 
-  const summary = summaryParts.join(' · ').slice(0, 3200);
-  const requirement = (explicitRequirement ? `${explicitRequirement} · ${estimateText}` : `${flow.name}: ${summary || 'Customer requested actual quotations'} · ${estimateText}`).slice(0, 4000);
-  return { customFields: custom, propertyType, budget, requirement };
+  // Estimated price and selections are already stored in _estimator and the
+  // individual marketplace form fields, not the free-text Requirement.
+  return { customFields: custom, propertyType, budget, requirement: explicitRequirement || null };
 }
 
 async function convertCalculation({ publicId, contact, consent, submissionKey, website }) {
