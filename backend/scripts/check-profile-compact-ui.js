@@ -10,7 +10,7 @@ const style=read('frontend/src/pages/ProfileCompact.css')
 const routes=read('frontend/src/App.jsx')
 
 assert.match(profile,/activeSection==='brochures'\?<ProfessionalBrochures embedded\/>/)
-assert.match(profile,/onClick=\{addProject\}>\\?\+ Add Project|onClick=\{addProject\}>\+ Add Project/)
+assert.match(profile,/onClick=\{addProject\}>\+ Add Project/)
 assert.match(profile,/onClick=\{addPlan\}>\+ Add Package/)
 assert.match(profile,/expandedProject===projectKey\(project\)/)
 assert.match(profile,/expandedPlan===planKey\(plan\)/)
