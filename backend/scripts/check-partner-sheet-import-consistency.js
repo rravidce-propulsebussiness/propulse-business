@@ -15,30 +15,23 @@ const originalLoad=Module._load;
 let directBaseCalls=0;
 let importedCsv=null;
 let importedBy=null;
-let customFieldUpdates=[];
+let importResult={total:1,created:1,duplicate:0,failed:0,failures:[]};
+let unexpectedDbCalls=0;
 const sheet={
   spreadsheetId:'sheet_123',gid:'5',
-  csv:'Full Name,Phone Number,Industry,Campaign Name,Notes\r\n"Ravi, R",9876543210,Construction,"Ad, Sept","Uses ""branded"" materials"'
+  csv:'Full Name,Phone Number,Industry,Campaign Name,Notes\\r\\n"Ravi, R",9876543210,Construction,"Ad, Sept","Uses ""branded"" materials"'
 };
 const db={
- async query(sql,params=[]){
-  if(sql.includes('FROM leads')&&sql.includes('WHERE created_by=$1')){
-    assert.equal(params[0],21);
-    return{rows:[{id:77,customer_phone:'9876543210',customer_email:'',
-      customer_name:'Ravi, R',requirement:'',custom_fields:{Existing:'keep'}}]};
-  }
-  if(sql.includes('UPDATE leads l')&&sql.includes('FROM jsonb_to_recordset')){
-    customFieldUpdates=JSON.parse(params[1]);
-    return{rows:[]};
-  }
-  throw Error('Unexpected SQL: '+sql.slice(0,100));
+ async query(sql){
+  unexpectedDbCalls++;
+  throw Error('Import must not re-query or update unrelated leads: '+sql.slice(0,100));
  }
 };
 const base={
  importCsv:async ({userId,csv})=>{
   importedBy=userId;
   importedCsv=csv;
-  return{total:1,created:1,duplicate:0,failed:0,failures:[]};
+  return importResult;
  },
  importGoogleSheet:async()=>{directBaseCalls++;throw Error('Legacy import must not be used');}
 };
@@ -69,12 +62,26 @@ Module._load=function(request,parent,isMain){
   assert(importedCsv.includes('Customer Phone')&&importedCsv.includes('Customer Name'),
     'One-off Sheet import must resolve canonical lead field aliases');
   assert(importedCsv.includes('Campaign Name'),'Unmapped campaign column must survive round trip to importer');
-  assert.equal(customFieldUpdates.length,1);
-  assert.equal(customFieldUpdates[0].id,77);
-  assert.equal(customFieldUpdates[0].custom_fields['Campaign Name'],'Ad, Sept');
-  assert.equal(customFieldUpdates[0].custom_fields.Notes,undefined,
-    'Notes is a canonical field rather than custom data');
-  assert.equal(customFieldUpdates[0].custom_fields.Existing,'keep');
+  const records=parseCsvRecords(importedCsv);
+  const mapped=Object.fromEntries(records[0].map((name,i)=>[name,records[1][i]]));
+  assert.equal(mapped['Campaign Name'],'Ad, Sept',
+    'Extra campaign fields must reach base.createLead via the canonical CSV');
+  assert.equal(mapped.Notes,'Uses "branded" materials',
+    'Core Notes must retain quoted content');
+  assert.equal(unexpectedDbCalls,0,
+    'Successful import must not fuzzy-match existing leads to persist custom fields');
+
+  importResult={total:1,created:0,duplicate:1,failed:0,failures:[]};
+  const duplicate=await compat.importCsv({userId:21,csv:sheet.csv});
+  assert.equal(duplicate.duplicate,1);
+  assert.equal(unexpectedDbCalls,0,
+    'Duplicate row must not overwrite existing lead custom fields');
+
+  importResult={total:1,created:0,duplicate:0,failed:1,failures:['invalid PIN']};
+  const failed=await compat.importCsv({userId:21,csv:sheet.csv});
+  assert.equal(failed.failed,1);
+  assert.equal(unexpectedDbCalls,0,
+    'Failed import rows must not modify previously saved leads');
 
   for(const file of ['leadPartnerInventoryService.js','leadPartnerInventoryCompatService.js']){
    const source=fs.readFileSync(path.join(__dirname,'../src/services',file),'utf8');
