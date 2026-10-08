@@ -179,7 +179,7 @@ export default function Projects() {
       <div className="pj-container">
         <div className="pj-completed-heading">
           <div><span className="pj-completed-kicker">REAL WORK · REAL PORTFOLIOS</span><h1>Completed <em>Projects</em></h1><p>Explore professional-published completed construction and interior projects. Browse the work, review details, and request your own project quotation.</p></div>
-          <span className="pj-completed-counter">{professionalProjects.length} <small>Published projects{hasNext?' + more':''}</small></span>
+          <span className="pj-completed-counter">{professionalProjects.length} <small>{hasNext?'Projects loaded · more available':'Published projects'}</small></span>
         </div>
         <div className="pj-toolbar">
           <div className="pj-tabs" role="group" aria-label="Project categories">
@@ -208,13 +208,13 @@ export default function Projects() {
                   {project.packageName&&<div><small>Package</small><b>{project.packageName}</b></div>}
                   {project.businessName&&<div><small>Professional</small><b>{project.businessName}</b></div>}
                 </div>
-                {project.cost&&<div className="pj-cost"><div><small>REPORTED COST / BUDGET</small><strong>{project.cost}</strong></div></div>}
+                {project.cost&&<div className="pj-cost"><div><small>PROFESSIONAL-REPORTED PROJECT BUDGET</small><strong>{project.cost}</strong></div></div>}
                 <span className="pj-single-action">View Completed Project <Icon name="arrow" size={16}/></span>
               </div>
             </Link>
           </article>)}
         </div>
-        {!filtered.length&&!loading&&<div className="pj-empty"><h3>{query||category!=='all'?'No completed projects match your search':'Completed projects are coming soon'}</h3><p>{query||category!=='all'?'Try another category or search term.':'No eligible completed projects have been published yet. Professionals can add their actual finished work through their business profiles.'}</p>{query||category!=='all'?<button type="button" onClick={()=>{setCategory('all');setQuery('')}}>Clear filters</button>:<Link className="pj-empty-link" to="/experts">Explore professionals →</Link>}</div>}
+        {!filtered.length&&!loading&&<div className="pj-empty"><h3>{query||category!=='all'?'No completed projects match your search':'Completed projects are coming soon'}</h3><p>{query||category!=='all'?'Try another category or search term.':'No eligible completed projects have been published yet. Professionals can add their actual finished work through their business profiles.'}</p>{query||category!=='all'?<button type="button" onClick={()=>{setCategory('all');setQuery('')}}>Clear filters</button>:<div className="pj-empty-actions"><Link className="pj-empty-link" to="/experts">Explore professionals →</Link><Link className="pj-empty-link pj-empty-professional" to="/profile?tab=projects">Publish your completed work ↗</Link></div>}</div>}
         {loadError&&<p className="pj-load-error" role="status">{loadError}</p>}
         {hasNext&&<button type="button" className="pj-load-more" disabled={loadingMore} onClick={loadMore}>{loadingMore?'Loading…':'Load More Completed Projects'} <Icon name="arrow" size={15}/></button>}
         <p className="pj-gallery-disclaimer">These projects are published by professionals, with declared completion years. ProPulse does not independently certify every project photo or scope; verify completed work before hiring.</p>
