@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { PublicHeader, PublicFooter } from '../components/PublicSiteChrome'
 import { publicRequest } from '../utils/auth'
+import {formatPublishedPackagePrice} from '../utils/packagePricing'
 import './ProfessionalDetails.css'
 
 const emptyRequest={name:'',phone:'',email:'',message:'',consent:false,website:''}
@@ -112,7 +113,7 @@ export default function ProfessionalDetails(){
 
             <section id="pricing" className="pr-panel">
               <span className="pr-label">PRICING & PACKAGES</span><h2>Published Packages</h2>
-              {plans.length?<div className="pr-plan-grid">{plans.map(plan=><article key={plan.id} className="pr-plan"><span>SERVICE PACKAGE</span><h3>{plan.title}</h3><strong>{money(plan.price_from)||'Request pricing'}</strong>{plan.duration_label&&<small>{plan.duration_label}</small>}{plan.description&&<p>{plan.description}</p>}{Array.isArray(plan.inclusions)&&plan.inclusions.length>0&&<ul>{plan.inclusions.map((item,i)=><li key={i}>{item}</li>)}</ul>}{plan.brochure_url&&<a className="pr-plan-brochure" href={safeUrl(plan.brochure_url)||'#pricing'} target="_blank" rel="noopener noreferrer">View Package Brochure (PDF) ↗</a>}<a href="#callback">Request details →</a></article>)}</div>:<div className="pr-empty">No public packages yet. Request a callback for a personalized quotation.</div>}
+              {plans.length?<div className="pr-plan-grid">{plans.map(plan=><article key={plan.id} className="pr-plan"><span>SERVICE PACKAGE</span><h3>{plan.title}</h3><strong>{formatPublishedPackagePrice(plan.price_from,plan.price_unit)}</strong><small>Published starting rate · confirm unit and final scope with the professional</small>{plan.duration_label&&<small>{plan.duration_label}</small>}{plan.description&&<p>{plan.description}</p>}{Array.isArray(plan.inclusions)&&plan.inclusions.length>0&&<ul>{plan.inclusions.map((item,i)=><li key={i}>{item}</li>)}</ul>}{plan.brochure_url&&<a className="pr-plan-brochure" href={safeUrl(plan.brochure_url)||'#pricing'} target="_blank" rel="noopener noreferrer">View Package Brochure (PDF) ↗</a>}<a href="#callback">Request details →</a></article>)}</div>:<div className="pr-empty">No public packages yet. Request a callback for a personalized quotation.</div>}
             </section>
 
             <section id="media" className="pr-panel">
