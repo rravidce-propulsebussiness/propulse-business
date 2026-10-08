@@ -84,7 +84,7 @@ export default function Profile(){
   const [imageUploads,setImageUploads]=useState({})
   const [planUploads,setPlanUploads]=useState({})
   const [brochureUploads,setBrochureUploads]=useState({})
-  const [activeSection,setActiveSection]=useState(()=>new URLSearchParams(window.location.search).get('tab')==='projects'?'projects':'business')
+  const [activeSection,setActiveSection]=useState(()=>{const tab=new URLSearchParams(window.location.search).get('tab');return ['business','projects','plans'].includes(tab)?tab:'business'})
   const [loading,setLoading]=useState(true)
   const [saving,setSaving]=useState(false)
   const [message,setMessage]=useState('')
