@@ -790,6 +790,7 @@ export default function RequirementWizard({ flowKey, onCompletionChange, embedde
       submit={submit}
       contactData={contactData}
       completion={completion}
+      projectQuote={projectQuote}
     />
   }
 
