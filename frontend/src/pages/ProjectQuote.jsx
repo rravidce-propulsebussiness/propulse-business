@@ -101,8 +101,7 @@ export default function ProjectQuote(){
       <div className="pq-success-actions"><Link to={'/projects/'+projectId}>Back to project</Link><Link to="/projects">View other projects</Link></div>
     </section>:<>
       {pricingMessage&&<div className="pq-project-warning" role="status">{pricingMessage}</div>}
-      <>
-        {flowKey!=='design'&&packages.length>0&&<section className="pq-panel pq-wrap" aria-labelledby="professional-quote-package-title">
+      {flowKey!=='design'&&packages.length>0&&<section className="pq-panel pq-wrap" aria-labelledby="professional-quote-package-title">
           <div className="pq-section-header">
             <div><span className="pq-eyebrow">PUBLISHED PROFESSIONAL PRICING</span>
               <h2 id="professional-quote-package-title">Choose your {quoteIndustryLabel.toLowerCase()} package</h2>
@@ -132,7 +131,6 @@ export default function ProjectQuote(){
             onSubmitted:setSubmitted,
           }}/>
         </section>
-      </>}
     </>}
     <PublicFooter/>
   </main>
