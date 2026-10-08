@@ -65,9 +65,15 @@ const CONSTRUCTION_COMPARE_ROWS = [
   ['Gate allowance', '₹20,000', '₹35,000', '₹45,000 sliding gate'],
 ]
 
-const QUOTE_HEADLINE_LEAD = 'Start Your '
-const QUOTE_HEADLINE_ACCENT = 'Quote Journey'
-const QUOTE_HEADLINE = QUOTE_HEADLINE_LEAD + QUOTE_HEADLINE_ACCENT
+const PACKAGE_HEADLINES = [
+  { lead: 'For Every Choice, ', accent: "There's a Package" },
+  { lead: 'Your Space. Your Style. ', accent: 'Your Package.' },
+  { lead: 'Build or Design, ', accent: 'Find Your Package' },
+]
+const PACKAGE_HEADLINE_MEASURE = PACKAGE_HEADLINES.reduce((longest, item) => {
+  const headline = item.lead + item.accent
+  return headline.length > longest.length ? headline : longest
+}, '')
 
 const INTERIOR_COMPARE_ROWS = [
   ['Best for', 'Practical value interiors', 'Premium full-modular interiors'],
@@ -106,27 +112,42 @@ export default function Packages() {
   const [compareInterior, setCompareInterior] = useState([])
   const [compareOpen, setCompareOpen] = useState({ construction: false, interior: false })
   const [expanded, setExpanded] = useState({})
-  const [typedCount, setTypedCount] = useState(0)
+  const [typewriter, setTypewriter] = useState({ index: 0, length: 0, phase: 'typing' })
+  const activeHeadline = PACKAGE_HEADLINES[typewriter.index]
+  const activeHeadlineText = activeHeadline.lead + activeHeadline.accent
 
   useEffect(() => {
-    // Render the complete headline immediately when a visitor prefers reduced motion.
-    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
-      setTypedCount(QUOTE_HEADLINE.length)
+    const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+    if (reducedMotion) {
+      if (typewriter.phase !== 'static') {
+        setTypewriter({ index: 0, length: PACKAGE_HEADLINES[0].lead.length + PACKAGE_HEADLINES[0].accent.length, phase: 'static' })
+      }
       return
     }
 
-    const interval = window.setInterval(() => {
-      setTypedCount(current => {
-        if (current >= QUOTE_HEADLINE.length) {
-          window.clearInterval(interval)
-          return current
-        }
-        return current + 1
-      })
-    }, 65)
+    const delay = typewriter.phase === 'holding' ? 1900 : typewriter.phase === 'erasing' ? 34 : 65
+    const timeout = window.setTimeout(() => {
+      setTypewriter(current => {
+        const phrase = PACKAGE_HEADLINES[current.index]
+        const total = phrase.lead.length + phrase.accent.length
 
-    return () => window.clearInterval(interval)
-  }, [])
+        if (current.phase === 'typing') {
+          return current.length < total
+            ? { ...current, length: current.length + 1 }
+            : { ...current, phase: 'holding' }
+        }
+        if (current.phase === 'holding') return { ...current, phase: 'erasing' }
+        if (current.phase === 'erasing') {
+          return current.length > 0
+            ? { ...current, length: current.length - 1 }
+            : { index: (current.index + 1) % PACKAGE_HEADLINES.length, length: 0, phase: 'typing' }
+        }
+        return current
+      })
+    }, delay)
+
+    return () => window.clearTimeout(timeout)
+  }, [typewriter])
 
   function switchCategory(category) {
     if (!['construction','interior'].includes(category)) return
@@ -253,11 +274,11 @@ export default function Packages() {
   return <main className="pkg-page">
     <PublicHeader />
     <section className="premium-page-intro pkg-quote-intro" aria-labelledby="premium-packages-title">
-      <h1 id="premium-packages-title" className="pkg-quote-title" aria-label={QUOTE_HEADLINE}>
-        <span className="pkg-quote-measure" aria-hidden="true">{QUOTE_HEADLINE}</span>
+      <h1 id="premium-packages-title" className="pkg-quote-title" aria-label={activeHeadlineText}>
+        <span className="pkg-quote-measure" aria-hidden="true">{PACKAGE_HEADLINE_MEASURE}</span>
         <span className="pkg-quote-typed" aria-hidden="true">
-          <span className="pkg-quote-lead">{QUOTE_HEADLINE_LEAD.slice(0, typedCount)}</span>
-          <span className="pkg-quote-accent">{QUOTE_HEADLINE_ACCENT.slice(0, Math.max(0, typedCount - QUOTE_HEADLINE_LEAD.length))}</span>
+          <span className="pkg-quote-lead">{activeHeadline.lead.slice(0, typewriter.length)}</span>
+          <span className="pkg-quote-accent">{activeHeadline.accent.slice(0, Math.max(0, typewriter.length - activeHeadline.lead.length))}</span>
           <span className="pkg-quote-caret" />
         </span>
       </h1>
