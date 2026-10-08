@@ -1,12 +1,12 @@
 const pool = require('../config/database');
 const walletCouponService = require('./walletCouponService');
 const privateProofStorage = require('./privateProofStorageService');
+const {MAX_PROOF_BYTES:MAX_TOPUP_PROOF_BYTES,assertTopupProof}=require('../utils/paymentProofValidation');
 const notificationService = require('./notificationService');
 const paymentAvailability = require('./paymentAvailabilityService');
-const { decodeBase64Payload, validateDataUrlSignature } = require('../utils/fileValidation');
+
 const { parseMoneyPaise, paiseToMoney } = require('../utils/money');
-const MAX_TOPUP_PROOF_BYTES = 5 * 1024 * 1024;
-function validateTopupProof(proofUrl){ const value=String(proofUrl||'').trim(); if(!value) return; const parsed=decodeBase64Payload(value); if(!parsed || parsed.data.length<=0 || parsed.data.length>MAX_TOPUP_PROOF_BYTES || !validateDataUrlSignature(value,['image/png','image/jpeg','image/webp','application/pdf'])) throw Object.assign(new Error('Top-up proof must be a valid PNG, JPEG, WebP, or PDF file under 5 MB.'),{code:'INVALID_PROOF'}); }
+
 
 async function ensureWallet(client, userId) { const r=await client.query(`INSERT INTO wallets(user_id) VALUES($1) ON CONFLICT(user_id) DO UPDATE SET user_id=EXCLUDED.user_id RETURNING *`,[userId]); return r.rows[0]; }
 function money(value, code='INVALID_AMOUNT') { return paiseToMoney(parseMoneyPaise(value,{code})); }
@@ -14,7 +14,7 @@ function walletPaise(value) { return parseMoneyPaise(value,{allowZero:true}); }
 async function getWallet(userId,{includeTransactions=true}={}) { const client=await pool.connect(); try{await client.query('BEGIN');const w=await ensureWallet(client,userId);if(!includeTransactions){await client.query('COMMIT');return{id:w.id,balance:Number(w.balance)}}const tx=await client.query(`SELECT activity.id,activity.type,activity.amount,activity.balance_after,activity.reference_type,activity.reference_id,activity.payment_id,activity.status,activity.description,activity.created_at,activity.payment_status,activity.activity_type,activity.reference FROM (SELECT wt.id,wt.type,wt.amount,wt.balance_after,wt.reference_type,wt.reference_id,wt.payment_id,wt.status,wt.description,wt.created_at,p.status AS payment_status,'wallet_transaction' AS activity_type,NULL::text AS reference FROM wallet_transactions wt LEFT JOIN payments p ON p.id=wt.payment_id WHERE wt.user_id=$1 UNION ALL SELECT -p.id AS id,'debit' AS type,p.external_amount AS amount,w.balance AS balance_after,p.purchase_type AS reference_type,p.purchase_id AS reference_id,p.id AS payment_id,p.status,p.purchase_type || ' purchase — Direct payment' AS description,p.created_at,p.status AS payment_status,'direct_payment' AS activity_type,p.manual_reference AS reference FROM payments p LEFT JOIN wallets w ON w.user_id=p.user_id WHERE p.user_id=$1 AND COALESCE(p.external_amount,0)>0) activity ORDER BY activity.created_at DESC,activity.id DESC LIMIT 100`,[userId]);await client.query('COMMIT');return{id:w.id,balance:Number(w.balance),transactions:tx.rows.map(x=>({...x,amount:Number(x.amount),balance_after:Number(x.balance_after)}))}}catch(e){await client.query('ROLLBACK');throw e}finally{client.release()} }
 async function createTopup({userId,amount,reference,proofUrl}) {
   const value=money(amount),normalizedReference=reference==null?null:String(reference).trim()||null;
-  validateTopupProof(proofUrl);
+  assertTopupProof(proofUrl);
   if(!normalizedReference)throw Object.assign(new Error('Payment reference / UTR is required'),{code:'REFERENCE_REQUIRED'});
   const client=await pool.connect();
   let storedProof=null;
