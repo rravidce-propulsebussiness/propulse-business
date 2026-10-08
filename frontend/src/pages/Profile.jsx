@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { authRequest, saveSession, getUser } from '../utils/auth'
 import UserHeader from '../components/UserHeader'
+import {PACKAGE_PRICE_UNITS} from '../utils/packagePricing'
 import ProfileBrochureField from '../components/ProfileBrochureField'
 import './Profile.css'
 import {playSound} from '../utils/soundEffects'
@@ -9,7 +10,7 @@ import {playSound} from '../utils/soundEffects'
 const emptyService=()=>({industryId:'',serviceId:'',subserviceId:''})
 const emptyLocation=()=>({stateId:'',cityId:''})
 const emptyProject=()=>({title:'',projectType:'',description:'',locationText:'',completionYear:'',areaText:'',budgetText:'',packageName:'',coverImageUrl:'',imageUrls:[],imageDisplayUrls:[],videoUrl:'',videoDisplayUrl:'',videoPublishedAt:'',planUrl:'',planDisplayUrl:'',brochureUrl:'',brochureDisplayUrl:'',isPublished:true})
-const emptyPlan=()=>({title:'',description:'',priceFrom:'',durationLabel:'',inclusions:'',brochureUrl:'',brochureDisplayUrl:'',isPublished:true})
+const emptyPlan=()=>({title:'',description:'',priceFrom:'',priceUnit:'unspecified',durationLabel:'',inclusions:'',brochureUrl:'',brochureDisplayUrl:'',isPublished:true})
 
 function reasonText(status){
   const reason=status?.reason
@@ -52,6 +53,7 @@ function mapPlan(item){
     title:item.title||'',
     description:item.description||'',
     priceFrom:item.price_from??'',
+    priceUnit:item.price_unit||'unspecified',
     durationLabel:item.duration_label||'',
     inclusions:Array.isArray(item.inclusions)?item.inclusions.join('\n'):'',
     brochureUrl:item.brochure_url||'',
@@ -422,7 +424,7 @@ export default function Profile(){
           {activeSection==='plans'&&<>
           <section className="profile-panel profile-plan-panel" id="profile-plans">
             <div className="panel-title"><div><span>06</span><h2>Service Packages</h2><p>Set prices, scope and inclusions. Attach specifications PDFs for customers to review. Each project has its own separate brochure upload.</p></div><button type="button" onClick={()=>setPlans(items=>[...items,emptyPlan()])}>+ Add plan</button></div>
-            <div className="profile-showcase-list">{plans.map((plan,index)=><article className="profile-showcase-card compact" key={plan.id||`plan-${index}`}><div className="profile-showcase-card-head"><div><span>PLAN {String(index+1).padStart(2,'0')}</span><h3>{plan.title||'Untitled plan'}</h3></div><div><label className="profile-inline-check"><input type="checkbox" checked={plan.isPublished} onChange={e=>updatePlan(index,'isPublished',e.target.checked)}/> Public</label><button type="button" className="row-remove" onClick={()=>setPlans(items=>items.filter((_,i)=>i!==index))}>Remove</button></div></div><div className="profile-showcase-grid"><label>Package name<input value={plan.title} maxLength="160" onChange={e=>updatePlan(index,'title',e.target.value)} placeholder="Premium turnkey interiors"/></label><label>Starting price (₹)<input type="number" min="0" value={plan.priceFrom} onChange={e=>updatePlan(index,'priceFrom',e.target.value)} placeholder="500000"/></label><label>Duration<input value={plan.durationLabel} maxLength="120" onChange={e=>updatePlan(index,'durationLabel',e.target.value)} placeholder="8–10 weeks"/></label><label className="wide">Description<textarea rows="3" value={plan.description} maxLength="2000" onChange={e=>updatePlan(index,'description',e.target.value)} placeholder="Who this plan is for and what customers should expect…"/></label><label className="wide">Package inclusions <small>Add one inclusion per line</small><textarea rows="4" value={plan.inclusions} onChange={e=>updatePlan(index,'inclusions',e.target.value)} placeholder="Design consultation; material selection; execution management"/></label></div>
+            <div className="profile-showcase-list">{plans.map((plan,index)=><article className="profile-showcase-card compact" key={plan.id||`plan-${index}`}><div className="profile-showcase-card-head"><div><span>PLAN {String(index+1).padStart(2,'0')}</span><h3>{plan.title||'Untitled plan'}</h3></div><div><label className="profile-inline-check"><input type="checkbox" checked={plan.isPublished} onChange={e=>updatePlan(index,'isPublished',e.target.checked)}/> Public</label><button type="button" className="row-remove" onClick={()=>setPlans(items=>items.filter((_,i)=>i!==index))}>Remove</button></div></div><div className="profile-showcase-grid"><label>Package name<input value={plan.title} maxLength="160" onChange={e=>updatePlan(index,'title',e.target.value)} placeholder="Premium turnkey interiors"/></label><label>Starting price (₹)<input type="number" min="0" value={plan.priceFrom} onChange={e=>updatePlan(index,'priceFrom',e.target.value)} placeholder="500000"/></label><label>Price unit<select value={plan.priceUnit} onChange={e=>updatePlan(index,'priceUnit',e.target.value)}>{PACKAGE_PRICE_UNITS.map(unit=><option key={unit.value} value={unit.value}>{unit.label}</option>)}</select><small>Important for ₹/sq ft, ₹/sq yd and fixed-price packages.</small></label><label>Duration<input value={plan.durationLabel} maxLength="120" onChange={e=>updatePlan(index,'durationLabel',e.target.value)} placeholder="8–10 weeks"/></label><label className="wide">Description<textarea rows="3" value={plan.description} maxLength="2000" onChange={e=>updatePlan(index,'description',e.target.value)} placeholder="Who this plan is for and what customers should expect…"/></label><label className="wide">Package inclusions <small>Add one inclusion per line</small><textarea rows="4" value={plan.inclusions} onChange={e=>updatePlan(index,'inclusions',e.target.value)} placeholder="Design consultation; material selection; execution management"/></label></div>
               <ProfileBrochureField title="Package brochure / technical specifications" description="Upload your detailed package PDF: plywood grades, laminate and hardware brands, inclusions, exclusions, milestones and warranty terms." url={plan.brochureUrl} displayUrl={plan.brochureDisplayUrl} busy={Boolean(brochureUploads['plan-'+index])} onUpload={file=>uploadBrochure('plan',index,file)} onRemove={()=>updatePlan(index,'brochureUrl','')}/>
             </article>)}{!plans.length&&<div className="profile-showcase-empty"><b>No public service plans added.</b><span>Add packages only if you want customers to compare offerings in Experts.</span></div>}</div>
           </section>
