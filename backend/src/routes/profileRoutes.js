@@ -7,6 +7,7 @@ router.use(requireAuth);
 router.post('/projects/video', profileController.uploadProjectVideo);
 router.post('/projects/plan', profileController.uploadProjectPlan);
 router.post('/projects/image', profileController.uploadProjectImage);
+router.get('/project-callbacks', profileController.listProjectCallbacks);
 router.get('/', profileController.getProfile);
 router.put('/', profileController.updateProfile);
 
