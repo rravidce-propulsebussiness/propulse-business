@@ -24,6 +24,7 @@ function PinIcon({ size = 13 }) {
 export function PublicHeader() {
   const location = useLocation()
   const [open, setOpen] = useState(false)
+  const [scrolled, setScrolled] = useState(false)
   const pathname = location.pathname.replace(/\/+$/, '') || '/'
   const activeLabel = useMemo(() => NAV_ITEMS.find(item => item.match(pathname))?.label || '', [pathname])
 
@@ -41,7 +42,16 @@ export function PublicHeader() {
     return () => { window.removeEventListener('resize', onResize); window.removeEventListener('keydown', onKeyDown) }
   }, [])
 
-  return <header className="public-site-header">
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 12)
+    onScroll()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+
+  return <>
+  <header className={'public-site-header' + (scrolled ? ' is-scrolled' : '')}>
     <div className="public-site-header__inner">
       <Link className="public-site-logo" to="/" aria-label="ProPulse home">
         <img src="/brand/propulse-logo.svg" alt="ProPulse"/>
@@ -78,6 +88,8 @@ export function PublicHeader() {
       </div>
     </div>
   </header>
+  <div className="public-site-header-spacer" aria-hidden="true" />
+  </>
 }
 
 export function PublicFooter({
