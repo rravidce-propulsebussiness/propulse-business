@@ -94,26 +94,6 @@
 
 /* Project interior quotes inherit the exact styles and structure from /quote#interiors. */
 .project-interior-quote{background:#fff}
-.project-interior-quote .pq-project-context{
-  max-width:1420px;margin:0 auto;padding:19px 34px 14px;
-  display:flex;align-items:center;justify-content:space-between;gap:26px;
-  border-bottom:1px solid #e8edf1;background:#fff
-}
-.project-interior-quote .pq-project-context>div{min-width:0}
-.project-interior-quote .pq-project-context span{
-  color:#e4602c;font-size:12px;letter-spacing:.12em;font-weight:900
-}
-.project-interior-quote .pq-project-context h1{
-  margin:5px 0;color:#0c3150;font-family:Sora,Inter,sans-serif;
-  font-size:clamp(23px,2.5vw,34px);line-height:1.2;letter-spacing:-.04em
-}
-.project-interior-quote .pq-project-context p{margin:0;color:#6d8595;font-size:13px;line-height:1.6}
-.project-interior-quote .pq-project-context p strong{color:#1a405b}
-.project-interior-quote .pq-project-context>a{
-  color:#c95524;font-size:12px;font-weight:850;text-decoration:none;white-space:nowrap;
-  padding:12px 15px;border:1px solid #f1cbb6;border-radius:9px;background:#fff9f5
-}
-.project-interior-quote .pq-project-context>a:hover{background:#fff0e6}
 .project-interior-quote .pq-project-warning{
   max-width:1360px;margin:17px auto;padding:15px 20px;
   border:1px solid #edd5c6;border-radius:10px;background:#fff8f2;
@@ -138,9 +118,5 @@
   outline:3px solid #ea773d;outline-offset:2px
 }
 @media(max-width:700px){
-  .project-interior-quote .pq-project-context{
-    padding:15px 17px;flex-direction:column;align-items:flex-start;gap:12px
-  }
-  .project-interior-quote .pq-project-context>a{padding:10px 13px}
   .project-interior-quote .pq-project-warning{margin:14px 12px}
 }

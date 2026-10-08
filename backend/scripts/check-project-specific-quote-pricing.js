@@ -41,6 +41,9 @@ assert.doesNotMatch(profile,/ProfessionalProjectQuotes plans=\{plans\}/);
 assert.match(pricing,/sqft:'\/ sq ft'/);
 assert.match(pricing,/sqyd:'\/ sq yd'/);
 assert.match(app,/path="\/projects\/:projectId\/quote" element=\{<ProjectQuote\/>\}/);
+assert.doesNotMatch(quote,/pq-project-context|Complete the same .* requirements form as ProPulse|← Back to project/);
+assert.match(quote,/quote-flow-|RequirementWizard/);
+
 assert.match(project,/to=\{'\/projects\/'\+projectId\+'\/quote'\}/);
 assert.doesNotMatch(project,/to=\{'\/quote#'\+/);
 assert.match(quote,/validPackages\(profile,item.category\)/);
