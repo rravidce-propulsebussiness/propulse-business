@@ -1,0 +1,9 @@
+.pru-box{padding:16px;margin:14px 0;border:1px solid #dbe5ef;background:#f8fbfe;border-radius:16px;display:grid;gap:12px}
+.pru-info{display:grid;gap:5px}.pru-info span{font-size:10px;letter-spacing:.12em;color:#6e8198;font-weight:800}.pru-info strong{color:#17344f;font-size:16px}.pru-info small{color:#58708b;line-height:1.55}
+.pru-accept{width:100%;background:#103a62;color:white;border:0;padding:13px 18px;border-radius:12px;font-weight:800;cursor:pointer}.pru-accept:disabled{opacity:.55;cursor:not-allowed}
+.pru-unlocked{padding:12px 14px;margin:12px 0;background:#e5f6ea;color:#147044;border-radius:12px;font-weight:800}
+.pru-pending{padding:12px;margin:12px 0;background:#fff9ec;color:#786129;border-radius:12px;font-size:13px}
+.pru-error{color:#bd3434;margin:0;font-size:13px}.pru-message{color:#20603f;font-size:13px;margin:0}
+.pru-manual{display:grid;gap:12px}.pru-manual>b{color:#244969}.pru-manual label{display:grid;gap:5px;color:#334960;font-weight:700}
+.pru-manual input{border:1px solid #d2dfea;border-radius:9px;padding:11px;min-width:0}
+.pru-bank{display:grid;gap:8px}.pru-bank p{background:#fff;border-radius:9px;padding:11px;margin:0;display:grid;gap:4px;font-size:12px;color:#3d5670}.pru-bank p strong{font-size:13px;color:#1d3853}
