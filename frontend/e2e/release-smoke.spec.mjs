@@ -367,7 +367,7 @@ test('sample courtyard offers a PDF guide, a callback request and Get Quote',asy
   const dialog=page.getByRole('dialog',{name:'Request a callback'})
   await expect(dialog).toBeVisible()
   await expect(dialog.getByRole('heading',{name:'Request a Callback'})).toBeVisible()
-  await expect(dialog.getByText(/Project reference: The Courtyard Residence/)).toBeVisible()
+  await expect(dialog.getByRole('textbox',{name:/Additional Information/})).toHaveValue(/Project reference: The Courtyard Residence/)
   await dialog.getByRole('button',{name:'Close'}).click()
 
   await actions.getByRole('link',{name:/Get Quote/}).click()
