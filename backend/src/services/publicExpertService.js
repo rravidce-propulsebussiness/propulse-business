@@ -8,6 +8,7 @@ const brochureService=require('./brochureService');
 async function materializeProjectMedia(rows){
   return Promise.all((rows||[]).map(async row=>({
     ...row,
+    cover_image_url:row.cover_image_url?await projectImageService.displayUrl(row.cover_image_url):row.cover_image_url,
     video_url:row.video_url?await projectVideoService.displayUrl(row.video_url):row.video_url,
     plan_url:row.plan_url?await projectPlanService.displayUrl(row.plan_url):row.plan_url,
     image_urls:await Promise.all((row.image_urls||[]).map(url=>projectImageService.displayUrl(url))),
