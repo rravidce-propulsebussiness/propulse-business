@@ -79,6 +79,7 @@ function normalizePlans(plans){
       priceFrom,
       durationLabel:cleanText(item?.durationLabel,120,'Plan duration'),
       inclusions,
+      brochureUrl:cleanText(item?.brochureUrl,1500,'Package brochure'),
       sortOrder:index,
       isPublished:item?.isPublished!==false,
     };
@@ -131,7 +132,7 @@ async function getProfile(userId, client = pool) {
        ORDER BY sort_order,id`, [profile.id]
     ),
     client.query(
-      `SELECT id,title,description,price_from,duration_label,inclusions,sort_order,is_published
+      `SELECT id,title,description,price_from,duration_label,inclusions,brochure_url,sort_order,is_published
        FROM business_profile_service_plans
        WHERE business_profile_id=$1
        ORDER BY sort_order,id`, [profile.id]
@@ -159,7 +160,7 @@ async function getProfile(userId, client = pool) {
     locations: locations.rows,
     company_proofs: renderedProofs,
     projects: renderedProjects,
-    service_plans: plans.rows,
+    service_plans: await Promise.all(plans.rows.map(async plan=>({...plan,brochure_display_url:plan.brochure_url?await projectPlanService.displayUrl(plan.brochure_url):null}))),
     directory_status: directoryStatus,
   };
 }
@@ -233,6 +234,9 @@ async function updateProfile(userId, payload) {
   }=payload||{};
   const normalizedProjects=normalizeProjects(projects);
   const normalizedPlans=normalizePlans(plans);
+  for(const plan of normalizedPlans){
+    if(plan.brochureUrl&&!projectPlanService.managedPlanInfo(userId,plan.brochureUrl))throw profileError('Upload the package brochure through the secure file picker.');
+  }
   const normalizedHeadline=cleanText(publicHeadline,180,'Public headline');
   const normalizedSummary=cleanText(publicSummary,3000,'Public summary');
   const normalizedYears=yearsExperience==null||yearsExperience===''?null:Number(yearsExperience);
@@ -304,7 +308,7 @@ async function updateProfile(userId, payload) {
     const isManagedImage=url=>{try{return Boolean(projectImageService.managedImageInfo(userId,url))}catch{return false}};
     const currentManagedImageUrls=new Set(projectsForSave.flatMap(item=>item.imageUrls).filter(isManagedImage));
     const removedManagedImageUrls=existingProjects.flatMap(item=>item.image_urls||[]).filter(url=>isManagedImage(url)&&!currentManagedImageUrls.has(url));
-    const currentManagedPlanUrls=new Set(projectsForSave.map(item=>item.planUrl).filter(isManagedPlan));
+    const currentManagedPlanUrls=new Set([...projectsForSave.map(item=>item.planUrl),...normalizedPlans.map(item=>item.brochureUrl)].filter(isManagedPlan));
     const removedManagedPlanUrls=existingProjects.map(item=>item.plan_url).filter(url=>isManagedPlan(url)&&!currentManagedPlanUrls.has(url));
     await client.query('UPDATE business_profile_services SET is_active = FALSE, updated_at = CURRENT_TIMESTAMP WHERE business_profile_id = $1', [profileId]);
     await client.query(`
@@ -345,14 +349,14 @@ async function updateProfile(userId, payload) {
     if(normalizedPlans.length){
       await client.query(`
         INSERT INTO business_profile_service_plans
-          (business_profile_id,title,description,price_from,duration_label,inclusions,sort_order,is_published)
-        SELECT $1,x.title,x.description,x.price_from,x.duration_label,x.inclusions,x.sort_order,x.is_published
+          (business_profile_id,title,description,price_from,duration_label,inclusions,brochure_url,sort_order,is_published)
+        SELECT $1,x.title,x.description,x.price_from,x.duration_label,x.inclusions,x.brochure_url,x.sort_order,x.is_published
         FROM jsonb_to_recordset($2::jsonb) AS x(
-          title text,description text,price_from numeric,duration_label text,inclusions jsonb,sort_order int,is_published boolean
+          title text,description text,price_from numeric,duration_label text,inclusions jsonb,brochure_url text,sort_order int,is_published boolean
         )
       `,[profileId,JSON.stringify(normalizedPlans.map(item=>({
         title:item.title,description:item.description,price_from:item.priceFrom,duration_label:item.durationLabel,
-        inclusions:item.inclusions,sort_order:item.sortOrder,is_published:item.isPublished,
+        inclusions:item.inclusions,brochure_url:item.brochureUrl||null,sort_order:item.sortOrder,is_published:item.isPublished,
       })))]);
     }
 
