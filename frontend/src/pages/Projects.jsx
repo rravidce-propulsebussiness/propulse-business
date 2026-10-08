@@ -306,7 +306,7 @@ export default function Projects() {
                 {projectPhotos(project).length>1&&<div className="pj-card-photo-stack" aria-hidden="true">{projectPhotos(project).slice(1,3).map((photo,i)=><img key={photo+i} src={photo} loading="lazy" alt=""/>)}</div>}
                 {projectPhotos(project).length>1&&<span className="pj-card-photo-count">{projectPhotos(project).length} Photos</span>}
                 {!project.sample&&project.video&&<span className="pj-card-video-badge">Video Available</span>}
-                <span className="pj-category-badge">{project.sample?'COMPLETED PROJECT STYLE · SAMPLE':categoryLabel(project.category)}</span>
+                <span className="pj-category-badge">{project.sample?'COMPLETED STYLE · DEMO':categoryLabel(project.category)}</span>
                 <span className="pj-photo-cue">View Details <Icon name="arrow" size={15}/></span>
               </div>
               <div className="pj-project-copy">
