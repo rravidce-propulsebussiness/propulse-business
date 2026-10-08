@@ -629,3 +629,114 @@
 @media(prefers-reduced-motion:reduce){
   .hc-premium-typewriter-caret{animation:none;opacity:1}
 }
+
+
+/* Home hero CTAs: restrained premium motion without layout shifts. */
+.hc-home .hc-premium-actions .hc-hero-cta{
+  position:relative;
+  isolation:isolate;
+  overflow:hidden;
+  cursor:pointer;
+  transform:translateZ(0);
+  will-change:auto;
+  font-family:'Sora',Inter,ui-sans-serif,system-ui,sans-serif;
+  font-weight:700;
+  letter-spacing:-.025em;
+  transition:transform .25s cubic-bezier(.2,.75,.2,1),
+    border-color .25s ease, background-color .25s ease,
+    box-shadow .25s ease, color .25s ease;
+}
+.hc-home .hc-hero-cta .hc-hero-cta-label,
+.hc-home .hc-hero-cta .hc-hero-cta-arrow{
+  position:relative;
+  z-index:1;
+}
+.hc-home .hc-hero-cta .hc-hero-cta-arrow{
+  display:inline-block;
+  flex:0 0 auto;
+  font-size:1.24em;
+  line-height:1;
+  transition:transform .3s cubic-bezier(.2,.8,.2,1);
+}
+.hc-home .hc-hero-cta::before{
+  content:'';
+  position:absolute;
+  inset:0;
+  border-radius:inherit;
+  pointer-events:none;
+  background:linear-gradient(105deg,transparent 26%,rgba(255,255,255,.22) 46%,transparent 62%);
+  transform:translateX(-160%);
+  animation:hcHeroCtaSheen 7s ease-in-out infinite;
+}
+.hc-home .hc-premium-actions .hc-hero-cta-primary{
+  border:1px solid #ed814f;
+  background:linear-gradient(115deg,#cf4e1e,#ed6b2d);
+  color:#fff;
+  box-shadow:0 12px 26px rgba(223,90,35,.24);
+  animation:hcHeroCtaGlow 5.5s ease-in-out infinite;
+}
+.hc-home .hc-premium-actions .hc-hero-cta-secondary{
+  border:1px solid rgba(202,216,239,.60);
+  background:rgba(255,255,255,.10);
+  color:#fff;
+  box-shadow:0 5px 18px rgba(6,21,47,.13);
+  backdrop-filter:blur(8px);
+}
+.hc-home .hc-hero-cta-secondary::before{
+  animation-delay:2.6s;
+  background:linear-gradient(105deg,transparent 30%,rgba(255,255,255,.11) 47%,transparent 63%);
+}
+.hc-home .hc-hero-cta-primary .hc-hero-cta-arrow{
+  animation:hcHeroArrowNudge 5.5s ease-in-out infinite;
+}
+@keyframes hcHeroCtaGlow{
+  0%,60%,100%{box-shadow:0 12px 26px rgba(223,90,35,.24)}
+  73%{box-shadow:0 12px 32px rgba(248,117,54,.43),0 0 0 5px rgba(255,143,84,.09)}
+}
+@keyframes hcHeroCtaSheen{
+  0%,19%{transform:translateX(-160%)}
+  39%,100%{transform:translateX(160%)}
+}
+@keyframes hcHeroArrowNudge{
+  0%,67%,100%{transform:translateX(0)}
+  75%{transform:translateX(4px)}
+  82%{transform:translateX(0)}
+}
+@media(hover:hover) and (pointer:fine){
+  .hc-home .hc-premium-actions .hc-hero-cta:hover{
+    transform:translateY(-3px);
+  }
+  .hc-home .hc-premium-actions .hc-hero-cta-primary:hover{
+    background:linear-gradient(115deg,#df5b27,#f07739);
+    box-shadow:0 18px 34px rgba(223,90,35,.34);
+    animation-play-state:paused;
+  }
+  .hc-home .hc-premium-actions .hc-hero-cta-secondary:hover{
+    background:rgba(255,255,255,.20);
+    border-color:rgba(255,255,255,.88);
+    box-shadow:0 15px 28px rgba(4,18,45,.2);
+  }
+  .hc-home .hc-hero-cta:hover .hc-hero-cta-arrow{
+    animation:none;
+    transform:translateX(5px);
+  }
+}
+.hc-home .hc-premium-actions .hc-hero-cta:active{
+  transform:translateY(1px) scale(.985);
+}
+.hc-home .hc-premium-actions .hc-hero-cta:focus-visible{
+  outline:3px solid #ffe1bb;
+  outline-offset:4px;
+}
+@media(prefers-reduced-motion:reduce){
+  .hc-home .hc-premium-actions .hc-hero-cta,
+  .hc-home .hc-hero-cta::before,
+  .hc-home .hc-hero-cta .hc-hero-cta-arrow{
+    animation:none!important;
+    transition:none!important;
+  }
+  .hc-home .hc-premium-actions .hc-hero-cta:hover,
+  .hc-home .hc-premium-actions .hc-hero-cta:active{
+    transform:none;
+  }
+}
