@@ -108,7 +108,7 @@ export default function ProfessionalProjectQuotes({plans=[]}){
             <div><label htmlFor={'pqq-price-'+item.id}>Final quoted total (₹)</label><input id={'pqq-price-'+item.id} type="number" min="1" max="9999999999" step="0.01" value={draft.price} onChange={e=>update(item.id,'price',e.target.value)} placeholder="Enter final amount"/></div>
             <div className="pqq-wide"><label htmlFor={'pqq-scope-'+item.id}>Confirmed scope and inclusions</label><textarea id={'pqq-scope-'+item.id} rows={3} maxLength={3000} placeholder="Specify finishes, measured area, materials, exclusions, taxes and unit rates…" value={draft.scope} onChange={e=>update(item.id,'scope',e.target.value)}/></div>
             <div className="pqq-wide"><label htmlFor={'pqq-notes-'+item.id}>Internal notes (optional)</label><textarea id={'pqq-notes-'+item.id} rows={2} maxLength={1500} placeholder="Site visit, questions, follow-up timing…" value={draft.notes} onChange={e=>update(item.id,'notes',e.target.value)}/></div>
-          </div>
+          </div>}
           {item.access?.unlocked&&selected?.priceFrom&&<p className="pqq-warning">Profile starting rate: {formatPublishedPackagePrice(selected.priceFrom,selected.priceUnit)}. Enter your separately calculated final total above; the starting rate is not a completed quotation.</p>}
           {item.access?.unlocked&&<div className="pqq-actions"><button type="button" disabled={saving!==null} onClick={()=>saveRequest(item,'in_review')}>{saving===item.id?'Saving…':'Save Draft'}</button><button className="pqq-primary" type="button" disabled={saving!==null} onClick={()=>saveRequest(item,'quoted')}>Submit Final Quote →</button></div>}
         </article>
