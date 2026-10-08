@@ -1,0 +1,1 @@
+function e(e=``,t={}){let n=t&&typeof t==`object`?t:{};window.dispatchEvent(new CustomEvent(`propulse:open-lead-popup`,{detail:{flowKey:e,intent:n.intent===`callback`?`callback`:`requirement`,projectTitle:String(n.projectTitle||``).slice(0,130),packageName:String(n.packageName||``).slice(0,130)}}))}export{e as t};
