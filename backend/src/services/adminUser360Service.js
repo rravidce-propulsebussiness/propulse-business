@@ -274,7 +274,13 @@ async function setMembershipPlan({userId,planId,adminId,days,reason}){
       const expiry=safeDays!==null?new Date(now.getTime()+safeDays*86400000):new Date(current.expires_at);
       membership=(await client.query(`
         UPDATE memberships
-        SET membership_plan_id=$1,status='active',expires_at=$2,updated_at=CURRENT_TIMESTAMP
+        SET membership_plan_id=$1,status='active',expires_at=$2,
+            -- A plan reassignment must not retain pricing or lead allowances
+            -- saved for the previous plan. Same-plan extensions keep overrides.
+            pricing_rule_id=CASE WHEN membership_plan_id=$1 THEN pricing_rule_id ELSE NULL END,
+            effective_price=CASE WHEN membership_plan_id=$1 THEN effective_price ELSE NULL END,
+            lead_entitlements_snapshot=CASE WHEN membership_plan_id=$1 THEN lead_entitlements_snapshot ELSE NULL END,
+            updated_at=CURRENT_TIMESTAMP
         WHERE id=$3
         RETURNING *
       `,[plan.id,expiry,current.id])).rows[0];
