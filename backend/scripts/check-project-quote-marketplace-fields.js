@@ -6,9 +6,10 @@ const path = require('node:path');
 const root = path.resolve(__dirname, '../..');
 const card = fs.readFileSync(path.join(root, 'frontend/src/pages/LeadsV2.jsx'), 'utf8');
 const bridge = fs.readFileSync(path.join(root, 'backend/src/services/projectMarketplaceLeadService.js'), 'utf8');
-assert.match(card, /const isProjectEnquiry = source === 'professional_project_quote'/);
-assert.match(card, /isProjectEnquiry \|\| hasValue\(requirementSummary\)/,
-  'Requirement box must render for project leads even when requirement text is empty');
+assert.doesNotMatch(card, /Customer requested a project quotation\. Submitted specifications/,
+  'The UI must not generate Requirement text without a form entry');
+assert.match(card, /hasValue\(requirementSummary\) \|\| hasValue\(requirementExtra\)/,
+  'Requirement box must only appear when a written requirement exists');
 assert.match(card, /Customer's additional requirements/);
 assert.doesNotMatch(card, /\['Source',\s*lead\.source\]/,
   'Internal lead source should not be displayed on the public marketplace card');
@@ -64,6 +65,7 @@ assert.equal(publicLead.custom_fields.Bedrooms, '3 BHK', 'Legacy lead answers sh
 assert.equal(publicLead.custom_fields['Interior Scope'], 'End-to-End Interiors');
 assert.equal(publicLead.custom_fields.Timeline, '1–3 months');
 assert.equal(publicLead.property_type, 'Villa');
+assert.equal(publicLead.requirement, '', 'A generated project questionnaire is not a written Requirement');
 assert.ok(publicLead.customer_phone !== oldLead.customer_phone);
 assert.ok(publicLead.customer_email !== oldLead.customer_email);
 assert.ok(!('_project_origin' in publicLead.custom_fields));
@@ -71,4 +73,19 @@ assert.ok(!('Site PIN code' in publicLead.custom_fields));
 assert.equal(maskLead({ source: 'homepage_consultation', customer_name: 'Test Homeowner' }).customer_name, 'Customer',
   'Homepage customer privacy must remain unchanged');
 assert.equal(maskLead({ source: 'professional_project_callback', customer_name: 'Asha Reddy' }).customer_name, 'Asha Reddy');
+const withNote = {
+  ...oldLead,
+  requirement: oldLead.requirement + '\\nAdditional requirement: Add a pooja room'
+};
+assert.equal(maskLead(withNote).requirement, 'Add a pooja room',
+  'Only the written free-text answer belongs inside Requirement');
+const callbackOld = {
+  ...oldLead,
+  source: 'professional_project_callback',
+  requirement: 'Interior Design enquiry from a completed project. Customer requested a callback about their project requirement.',
+};
+assert.equal(maskLead(callbackOld).requirement, '',
+  'Automatically generated callback copy is not a Requirement');
+assert.equal(maskLead({...callbackOld,requirement:'Interior Design enquiry from a completed project. Please call tomorrow'}).requirement,
+  'Please call tomorrow', 'Typed callback messages must remain visible');
 console.log('Professional project quote marketplace details and privacy checks passed.');
