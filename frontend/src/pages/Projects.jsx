@@ -3,9 +3,9 @@ import { Link } from 'react-router-dom'
 import { publicRequest } from '../utils/auth'
 import { PublicFooter, PublicHeader } from '../components/PublicSiteChrome'
 import './Projects.css'
+import {PORTFOLIO_CONCEPTS} from './portfolioConcepts'
 
-// Completed-project cards come exclusively from eligible published business records.
-// Historic illustrative concepts are retired rather than presented as completed work.
+// Professional-completed work is always listed before clearly marked design references.
 const PAGE_SIZE = 48
 const CATEGORIES = [
   { id: 'all', label: 'All Projects' },
@@ -93,7 +93,7 @@ export function Icon({ name, size = 18 }) {
 }
 
 export function projectPath(project){
-  return '/projects/project-'+project.id
+  return '/projects/'+(project.sample?project.id:'project-'+project.id)
 }
 
 export default function Projects() {
@@ -160,10 +160,10 @@ export default function Projects() {
     finally{setLoadingMore(false)}
   }
 
-  // Only eligible completed projects returned from the professional portfolio API.
+  // Real completed client work takes priority; design references remain visually distinct.
   const filtered=useMemo(()=>{
     const term=query.trim().toLowerCase()
-    return professionalProjects.filter(project=>{
+    return [...professionalProjects,...PORTFOLIO_CONCEPTS].filter(project=>{
       if(category!=='all'&&project.category!==category)return false
       if(!term)return true
       return [project.title,project.location,project.businessName||'',project.type,project.description,project.packageName||'']
@@ -178,8 +178,8 @@ export default function Projects() {
     <section className="pj-portfolio-section" aria-label="Projects gallery">
       <div className="pj-container">
         <div className="pj-completed-heading">
-          <div><span className="pj-completed-kicker">REAL WORK · REAL PORTFOLIOS</span><h1>Completed <em>Projects</em></h1><p>Explore professional-published completed construction and interior projects. Browse the work, review details, and request your own project quotation.</p></div>
-          <span className="pj-completed-counter">{professionalProjects.length} <small>Published projects{hasNext?' + more':''}</small></span>
+          <div><span className="pj-completed-kicker">CONSTRUCTION · INTERIORS · DESIGN</span><h1>Our <em>Project Portfolio</em></h1><p>Discover completed projects published by professionals and curated design ideas for your next home or workspace.</p></div>
+          <span className="pj-completed-counter">{professionalProjects.length} <small>Completed work{hasNext?' + more':''}</small><span className="pj-counter-secondary">{PORTFOLIO_CONCEPTS.length} Design ideas</span></span>
         </div>
         <div className="pj-toolbar">
           <div className="pj-tabs" role="group" aria-label="Project categories">
@@ -187,37 +187,38 @@ export default function Projects() {
           </div>
           <label className="pj-search"><Icon name="search"/><span className="pj-sr-only">Search projects</span><input value={query} onChange={event=>setQuery(event.target.value)} placeholder="Search projects or locations"/></label>
         </div>
+        <div className="pj-portfolio-types"><span><i className="pj-dot-completed" aria-hidden="true"/> Completed professional work</span><span><i className="pj-dot-concept" aria-hidden="true"/> Design reference</span></div>
         {loading&&<div className="pj-loading-inline" role="status" aria-label="Checking for published business projects"><span className="pj-inline-spinner" aria-hidden="true"/></div>}
         <div className="pj-project-grid">
-          {filtered.map((project,index)=><article key={'business-'+project.id} className="pj-project-card">
+          {filtered.map((project,index)=><article key={(project.sample?'concept-':'business-')+project.id} className="pj-project-card">
             <Link to={projectPath(project)} className="pj-card-open" aria-label={'View details for '+project.title}>
               <div className="pj-project-photo">
-                {projectPhotos(project).length?<img src={projectPhotos(project)[0]} loading={index<3?'eager':'lazy'} alt={project.title}/>:<div className="pj-image-placeholder"><Icon name="layers" size={30}/>Project photo not provided</div>}
+                {projectPhotos(project).length?<img src={projectPhotos(project)[0]} loading={index<3?'eager':'lazy'} alt={project.sample?project.title+' architectural design reference':project.title}/>:<div className="pj-image-placeholder"><Icon name="layers" size={30}/>Project photo not provided</div>}
                 {projectPhotos(project).length>1&&<span className="pj-card-photo-count">{projectPhotos(project).length} Photos</span>}
                 {project.video&&<span className="pj-card-video-badge">Video Available</span>}
-                {project.verified&&<span className="pj-card-verified">Verified professional</span>}
-                <span className="pj-category-badge">{'COMPLETED · '+categoryLabel(project.category).toUpperCase()}</span>
+                {!project.sample&&project.verified&&<span className="pj-card-verified">Verified professional</span>}
+                <span className="pj-category-badge">{project.sample?'DESIGN REFERENCE':'COMPLETED · '+categoryLabel(project.category).toUpperCase()}</span>
               </div>
               <div className="pj-project-copy">
-                <span className="pj-card-type">{categoryLabel(project.category)}{' · Completed '+project.completionYear}</span>
+                <span className="pj-card-type">{categoryLabel(project.category)}{project.sample?' · Concept design':' · Completed '+project.completionYear}</span>
                 <div className="pj-project-title-row"><h3>{project.title}</h3></div>
                 {project.description&&<p className="pj-card-description">{project.description}</p>}
                 <div className="pj-project-facts">
                   {project.location&&<div><small>Location</small><b>{project.location}</b></div>}
                   {project.area&&<div><small>Area</small><b>{project.area}</b></div>}
-                  {project.packageName&&<div><small>Package</small><b>{project.packageName}</b></div>}
+                  {project.packageName&&<div><small>{project.sample?'Suggested package':'Package'}</small><b>{project.packageName}</b></div>}
                   {project.businessName&&<div><small>Professional</small><b>{project.businessName}</b></div>}
                 </div>
                 {project.cost&&<div className="pj-cost"><div><small>REPORTED COST / BUDGET</small><strong>{project.cost}</strong></div></div>}
-                <span className="pj-single-action">View Completed Project <Icon name="arrow" size={16}/></span>
+                <span className="pj-single-action">{project.sample?'Explore Design':'View Completed Project'} <Icon name="arrow" size={16}/></span>
               </div>
             </Link>
           </article>)}
         </div>
-        {!filtered.length&&!loading&&<div className="pj-empty"><h3>{query||category!=='all'?'No completed projects match your search':'Completed projects are coming soon'}</h3><p>{query||category!=='all'?'Try another category or search term.':'No eligible completed projects have been published yet. Professionals can add their actual finished work through their business profiles.'}</p>{query||category!=='all'?<button type="button" onClick={()=>{setCategory('all');setQuery('')}}>Clear filters</button>:<Link className="pj-empty-link" to="/experts">Explore professionals →</Link>}</div>}
+        {!filtered.length&&!loading&&<div className="pj-empty"><h3>{query||category!=='all'?'No projects match your search':'Projects will appear here soon'}</h3><p>{query||category!=='all'?'Try another category or search term.':'No eligible completed projects have been published yet. Professionals can add their actual finished work through their business profiles.'}</p>{query||category!=='all'?<button type="button" onClick={()=>{setCategory('all');setQuery('')}}>Clear filters</button>:<Link className="pj-empty-link" to="/experts">Explore professionals →</Link>}</div>}
         {loadError&&<p className="pj-load-error" role="status">{loadError}</p>}
         {hasNext&&<button type="button" className="pj-load-more" disabled={loadingMore} onClick={loadMore}>{loadingMore?'Loading…':'Load More Completed Projects'} <Icon name="arrow" size={15}/></button>}
-        <p className="pj-gallery-disclaimer">These projects are published by professionals, with declared completion years. ProPulse does not independently certify every project photo or scope; verify completed work before hiring.</p>
+        <p className="pj-gallery-disclaimer">Design references illustrate style and possible scope; they are not delivered customer projects. Completed projects are submitted by professionals; confirm credentials, photographs and project scope before hiring.</p>
       </div>
     </section>
     <PublicFooter phone={phone} email={email}/>
