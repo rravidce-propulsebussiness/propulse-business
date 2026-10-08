@@ -46,14 +46,11 @@
 .premium-public .premium-page-intro p { max-width: 660px; margin: auto; color: var(--pp-muted); font-size: 15px; line-height: 1.7; }
 
 /* Home: architectural proportions, confident type, less decorative weight. */
-.premium-public .hc-hero h1 { font-weight: 750; line-height: 1.06; letter-spacing: -.05em; }
-.premium-public .hc-hero-image { animation: none; }
-.premium-public .hc-hero-tagline { color: #d7e4ec; line-height: 1.6; }
 .premium-public :is(.hc-btn-primary,.hc-btn-secondary) { border-radius: 8px; font-weight: 700; }
 .premium-public .hc-btn-primary { background: #d94c18; box-shadow: 0 8px 20px rgba(217,76,24,.16); }
 .premium-public .hc-section { padding-top: 64px; padding-bottom: 64px; }
 .premium-public .hc-section-head h2 { font-size: clamp(27px,3vw,40px); font-weight: 700; line-height: 1.15; letter-spacing: -.04em; }
-.premium-public :is(.hc-service-card,.hc-project-grid article,.hc-float-card) { border-radius: 16px; box-shadow: var(--pp-shadow); }
+.premium-public :is(.hc-service-card,.hc-project-grid article) { border-radius: 16px; box-shadow: var(--pp-shadow); }
 .premium-public :is(.hc-service-copy p,.hc-benefit-grid p,.hc-step-grid p) { font-size: 14px; line-height: 1.7; }
 .premium-public .hc-benefits { background: #f5f3ee; }
 
