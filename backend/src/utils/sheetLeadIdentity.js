@@ -23,6 +23,7 @@ function sheetRowIdentity(row){
   const industry=normalized(field(row,['Industry']));
   const service=normalized(field(row,['Service']));
   const subservice=normalized(field(row,['Subservice']));
+  if(!phone&&!email)return 'row:'+JSON.stringify(row);
   const pin=phoneKey(field(row,['Pincode']));
   // Do not collapse separate household requirements with the same contact.
   return JSON.stringify({phone,email,requirement,industry,service,subservice,pin});
