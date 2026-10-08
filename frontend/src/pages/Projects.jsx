@@ -11,6 +11,7 @@ const CONCEPTS = [
     area:'3,250 sq ft',packageName:'Signature Construction',cost:'₹82.0L',completionYear:'2025',
     description:'An airy modern family home with warm materials and thoughtful natural light.',
     image:'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1100&q=85',
+    images:['https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1100&q=83','https://images.unsplash.com/photo-1600585152915-d208bec867a1?auto=format&fit=crop&w=1100&q=83','https://images.unsplash.com/photo-1600047509807-ba8f99d2cdde?auto=format&fit=crop&w=1100&q=83'],
     sampleSpecs:['RCC structural planning','Space and elevation coordination','Flooring and material selection','Electrical and plumbing planning','Exterior finishing schedule'],
   },
   {
@@ -19,6 +20,7 @@ const CONCEPTS = [
     area:'1,580 sq ft',packageName:'Premium Interiors',cost:'₹16.8L',completionYear:'2025',
     description:'Natural oak tones, integrated storage and layered lighting for a comfortable home.',
     image:'https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=1100&q=85',
+    images:['https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=1100&q=83','https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=1100&q=83','https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?auto=format&fit=crop&w=1100&q=83'],
     sampleSpecs:['Modular kitchen design','Wardrobe and TV unit planning','False ceiling with cove lighting','Storage layout','Finish and hardware selection'],
   },
   {
@@ -27,6 +29,7 @@ const CONCEPTS = [
     area:'220 sq ft',packageName:'Modular Kitchen',cost:'₹4.4L',completionYear:'2024',
     description:'A considered kitchen with clean finishes, practical storage and a refined palette.',
     image:'https://images.unsplash.com/photo-1556911220-bff31c812dba?auto=format&fit=crop&w=900&q=85',
+    images:['https://images.unsplash.com/photo-1556911220-bff31c812dba?auto=format&fit=crop&w=1100&q=83','https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=1100&q=83','https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=1100&q=83'],
     sampleSpecs:['Modular cabinet design','Countertop and backsplash selection','Drawer and pantry storage','Task lighting','Appliance provisions'],
   },
   {
@@ -35,6 +38,7 @@ const CONCEPTS = [
     area:'2,940 sq ft',packageName:'Classic Construction',cost:'₹64.0L',completionYear:'2025',
     description:'A spacious duplex concept balancing family living and refined architecture.',
     image:'https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&w=900&q=85',
+    images:['https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&w=1100&q=83','https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1100&q=83','https://images.unsplash.com/photo-1600047509807-ba8f99d2cdde?auto=format&fit=crop&w=1100&q=83'],
     sampleSpecs:['RCC and masonry planning','Interior plaster and flooring','Doors and windows','Staircase and balcony','Waterproofing and painting'],
   },
   {
@@ -43,6 +47,7 @@ const CONCEPTS = [
     area:'1,880 sq ft',packageName:'Elite Interiors',cost:'₹22.5L',completionYear:'2025',
     description:'Subtle textures, elegant finishes and integrated lighting for a calm home.',
     image:'https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?auto=format&fit=crop&w=900&q=85',
+    images:['https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?auto=format&fit=crop&w=1100&q=83','https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?auto=format&fit=crop&w=1100&q=83','https://images.unsplash.com/photo-1600566753051-f0b89df2dd90?auto=format&fit=crop&w=1100&q=83'],
     sampleSpecs:['Fixed furniture layout','Kitchen and utility storage','Veneer-look finish selection','Decorative lighting','Wardrobes and media wall'],
   },
   {
@@ -51,6 +56,7 @@ const CONCEPTS = [
     area:'2,300 sq ft',packageName:'Commercial Fit-Out',cost:'₹31.0L',completionYear:'2024',
     description:'An efficient workspace with inviting collaborative zones and a polished reception.',
     image:'https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=900&q=85',
+    images:['https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=1100&q=83','https://images.unsplash.com/photo-1497366811353-6870744d04b2?auto=format&fit=crop&w=1100&q=83'],
     sampleSpecs:['Reception and waiting area','Workstations and partitions','Meeting room planning','Data and lighting provision','Storage and finish schedule'],
   },
 ]
@@ -105,12 +111,21 @@ function normalizeProject(project, index) {
     businessName: clean(project.business_name),
     verified: project.is_verified === true,
     image: publicMediaUrl(project.cover_image_url),
+    images:Array.isArray(project.image_urls)?project.image_urls.map(publicMediaUrl).filter(Boolean):[],
     document: publicMediaUrl(project.plan_url),
     video: publicMediaUrl(project.video_url),
     publishedAt: clean(project.published_at),
     sample:false,
     packageName: clean(project.package_name || project.package_title),
   }
+}
+
+function projectPhotos(project){
+  return [...new Set([project.image,...(Array.isArray(project.images)?project.images:[])].filter(Boolean))]
+}
+
+function playableProjectVideo(url){
+  return Boolean(url)&&!/(youtube\.com|youtu\.be|vimeo\.com)/i.test(url)
 }
 
 function Icon({ name, size = 18 }) {
@@ -136,6 +151,8 @@ export default function Projects() {
   const [page, setPage] = useState(1)
   const [hasNext, setHasNext] = useState(false)
   const [selectedProject, setSelectedProject] = useState(null)
+  const [galleryIndex,setGalleryIndex] = useState(0)
+  const [showProjectVideo,setShowProjectVideo] = useState(false)
   const dialogRef = useRef(null)
 
   useEffect(() => {
@@ -249,6 +266,14 @@ export default function Projects() {
     }
   }, [selectedProject])
 
+  function openProject(project){
+    setGalleryIndex(0)
+    setShowProjectVideo(false)
+    setSelectedProject(project)
+  }
+  const selectedPhotos=selectedProject?projectPhotos(selectedProject):[]
+  const activePhoto=selectedPhotos[galleryIndex]||selectedPhotos[0]||''
+
   const phone = contactData.phone || contactData.phone_number || contactData.mobile || ''
   const email = contactData.email || contactData.support_email || ''
   const isPdf = value => /\.pdf(?:[?#]|$)/i.test(value)
@@ -268,10 +293,13 @@ export default function Projects() {
         {loading && <div className="pj-loading-inline" role="status" aria-label="Checking for published business projects"><span className="pj-inline-spinner" aria-hidden="true" /></div>}
         <div className="pj-project-grid">
           {filtered.map((project,index)=><article key={(project.sample?'sample-':'business-')+project.id} className={'pj-project-card'+(index===0&&category==='all'&&!query.trim()?' pj-project-card--featured':'')}>
-            <button type="button" className="pj-card-open" onClick={()=>setSelectedProject(project)} aria-label={'View '+(project.sample?'sample ':'')+'details for '+project.title}>
+            <button type="button" className="pj-card-open" onClick={()=>openProject(project)} aria-label={'View '+(project.sample?'sample ':'')+'details for '+project.title}>
               <div className="pj-project-photo">
-                {project.image?<img src={project.image} loading={index<3?'eager':'lazy'} alt={project.title}/>:<div className="pj-image-placeholder"><Icon name="layers" size={30}/>Project photo not provided</div>}
-                <span className="pj-category-badge">{project.sample?'SAMPLE CONCEPT':categoryLabel(project.category)}</span>
+                {projectPhotos(project).length?<img src={projectPhotos(project)[0]} loading={index<3?'eager':'lazy'} alt={project.title}/>:<div className="pj-image-placeholder"><Icon name="layers" size={30}/>Project photo not provided</div>}
+                {projectPhotos(project).length>1&&<div className="pj-card-photo-stack" aria-hidden="true">{projectPhotos(project).slice(1,3).map((photo,i)=><img key={photo+i} src={photo} loading="lazy" alt=""/>)}</div>}
+                {projectPhotos(project).length>1&&<span className="pj-card-photo-count">{projectPhotos(project).length} Photos</span>}
+                {!project.sample&&project.video&&<span className="pj-card-video-badge">Video Available</span>}
+                <span className="pj-category-badge">{project.sample?'COMPLETED PROJECT STYLE · SAMPLE':categoryLabel(project.category)}</span>
                 <span className="pj-photo-cue">View Details <Icon name="arrow" size={15}/></span>
               </div>
               <div className="pj-project-copy">
@@ -301,11 +329,25 @@ export default function Projects() {
       <section className="pj-detail-modal" role="dialog" aria-modal="true" aria-label={selectedProject.title+' details'} ref={dialogRef} tabIndex={-1}>
         <button type="button" className="pj-detail-close" onClick={()=>setSelectedProject(null)} aria-label="Close project details">×</button>
         <div className="pj-detail-media">
-          {selectedProject.image?<img src={selectedProject.image} alt={selectedProject.title}/>:<div className="pj-image-placeholder">Project photo not provided</div>}
-          <span className="pj-category-badge">{selectedProject.sample?'SAMPLE CONCEPT':categoryLabel(selectedProject.category)}</span>
+          <div className="pj-gallery-viewer">
+            {showProjectVideo&&selectedProject.video&&playableProjectVideo(selectedProject.video)
+              ? <video key={selectedProject.video} className="pj-gallery-main-image" controls playsInline preload="metadata" poster={activePhoto||undefined} src={selectedProject.video}/>
+              : activePhoto?<img className="pj-gallery-main-image" src={activePhoto} alt={selectedProject.title+' photo '+(galleryIndex+1)}/>
+              : <div className="pj-image-placeholder">Project photo not provided</div>}
+            <span className="pj-category-badge">{selectedProject.sample?'COMPLETED STYLE · DEMO':categoryLabel(selectedProject.category)}</span>
+            {!showProjectVideo&&selectedPhotos.length>1&&<div className="pj-gallery-arrows">
+              <button type="button" aria-label="Previous project photo" onClick={()=>setGalleryIndex(i=>(i+selectedPhotos.length-1)%selectedPhotos.length)}>‹</button>
+              <span>{galleryIndex+1} / {selectedPhotos.length}</span>
+              <button type="button" aria-label="Next project photo" onClick={()=>setGalleryIndex(i=>(i+1)%selectedPhotos.length)}>›</button>
+            </div>}
+          </div>
+          {(selectedPhotos.length>1||selectedProject.video)&&<div className="pj-gallery-thumbnails">
+            {selectedPhotos.map((photo,i)=><button key={photo+i} type="button" className={!showProjectVideo&&galleryIndex===i?'active':''} onClick={()=>{setGalleryIndex(i);setShowProjectVideo(false)}} aria-label={'Show project photo '+(i+1)} aria-pressed={!showProjectVideo&&galleryIndex===i}><img src={photo} alt=""/></button>)}
+            {selectedProject.video&&<button type="button" className={'pj-gallery-video-thumb'+(showProjectVideo?' active':'')} aria-label="Play project video" aria-pressed={showProjectVideo} onClick={()=>setShowProjectVideo(true)}>▶ <small>Video</small></button>}
+          </div>}
         </div>
         <div className="pj-detail-content">
-          <span className="pj-overline">{selectedProject.sample?'ILLUSTRATIVE PROJECT · NOT COMPLETED WORK':'PROFESSIONAL PROJECT'}</span>
+          <span className="pj-overline">{selectedProject.sample?'COMPLETED PROJECT PRESENTATION · DEMO ONLY':'PROFESSIONAL PROJECT'}</span>
           <h2>{selectedProject.title}</h2>
           {selectedProject.description&&<p className="pj-detail-intro">{selectedProject.description}</p>}
           <div className="pj-facts">
@@ -321,7 +363,7 @@ export default function Projects() {
           <div className="pj-detail-buttons">
             {selectedProject.sample&&<button type="button" onClick={()=>downloadSampleSpecifications(selectedProject)}><Icon name="file" size={17}/> Download Sample Specs</button>}
             {!selectedProject.sample&&selectedProject.document&&<a href={selectedProject.document} target="_blank" rel="noopener noreferrer"><Icon name="file" size={17}/>{isPdf(selectedProject.document)?'Download Project PDF':'View Project Document'}</a>}
-            {!selectedProject.sample&&selectedProject.video&&<a href={selectedProject.video} target="_blank" rel="noopener noreferrer">View Project Video <Icon name="arrow" size={15}/></a>}
+            {!selectedProject.sample&&selectedProject.video&&<a href={selectedProject.video} target="_blank" rel="noopener noreferrer">Open Project Video <Icon name="arrow" size={15}/></a>}
             <Link to="/packages" onClick={()=>setSelectedProject(null)}>View Packages <Icon name="layers" size={16}/></Link>
           </div>
           <div className="pj-modal-cta"><div><strong>Planning something similar?</strong><span>Get a quote for your actual requirements.</span></div><Link to={'/quote#'+similarQuoteHash(selectedProject)} onClick={()=>setSelectedProject(null)}>Get Quote <Icon name="arrow" size={17}/></Link></div>
