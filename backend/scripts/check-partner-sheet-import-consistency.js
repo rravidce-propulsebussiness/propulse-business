@@ -19,7 +19,7 @@ let importResult={total:1,created:1,duplicate:0,failed:0,failures:[]};
 let unexpectedDbCalls=0;
 const sheet={
   spreadsheetId:'sheet_123',gid:'5',
-  csv:'Full Name,Phone Number,Industry,Campaign Name,Notes\\r\\n"Ravi, R",9876543210,Construction,"Ad, Sept","Uses ""branded"" materials"'
+  csv:'Full Name,Phone Number,Industry,Campaign Name,Notes\r\n"Ravi, R",9876543210,Construction,"Ad, Sept","Uses ""branded"" materials"'
 };
 const db={
  async query(sql){
