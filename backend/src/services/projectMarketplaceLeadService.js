@@ -3,6 +3,7 @@ const flows=require('./customerFlowService');
 const pins=require('./pincodeDetectionService');
 const leads=require('./leadService');
 const notifications=require('./notificationService');
+const {parseProjectQuoteRequirement}=require('./projectQuoteRequirementDetails');
 
 const TYPES={
   quote:{table:'professional_project_quote_requests',source:'professional_project_quote'},
@@ -70,17 +71,24 @@ async function sync(kind,id,{notify=true}={}){
     )).rows[0];
     if(previous){await updateLink(kind,id,{leadId:previous.id,status:'duplicate'});return{status:'duplicate',leadId:Number(previous.id)}}
     const details=sanitize(kind==='quote'?record.requirement:record.message);
+    const answeredFields=kind==='quote'?parseProjectQuoteRequirement(record.requirement):{};
+    if(kind==='quote'&&record.area_text&&!answeredFields['Built-up Area']&&!answeredFields['Project Area'])
+      answeredFields['Project Area']=String(record.area_text).slice(0,120);
+    if(kind==='quote'&&record.budget_text&&!answeredFields.Budget)
+      answeredFields.Budget=String(record.budget_text).slice(0,120);
     const requirement=(key==='design'?'Interior Design':key==='property'?'Real Estate':'Construction')+
-      ' enquiry from a completed project. '+
-      (details||'Customer requested a callback about their project requirement.');
+      ' enquiry from a completed project.'+
+      (kind==='callback'?' '+(details||'Customer requested a callback about their project requirement.'):'');
     const fields={
       industryId:flow.industryId,serviceId:flow.serviceId,subserviceId:flow.subserviceId,
       stateId:Number(detected.city.state_id)||null,cityId:Number(detected.city.id),
       customerName:record.customer_name,customerPhone:record.customer_phone,customerEmail:record.customer_email,
-      requirement:requirement.slice(0,3900),budget:kind==='quote'?record.budget_text||null:null,
+      requirement:requirement.slice(0,3900),propertyType:answeredFields['Property Type']||null,
+      budget:kind==='quote'?record.budget_text||answeredFields.Budget||null:null,
       source:type(kind).source,
       notes:'Customer also contacted the selected professional; Admin coordinates contact access.',
       customFields:{
+        ...answeredFields,
         _project_origin:{projectId:Number(record.project_id),professionalUserId:Number(record.business_user_id),
           businessProfileId:Number(record.business_profile_id),requestId:Number(id),type:kind},
         _qualification:{detailedRequirementCompleted:kind==='quote',budgetProvided:Boolean(kind==='quote'&&record.budget_text),

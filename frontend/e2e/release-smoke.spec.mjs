@@ -440,10 +440,11 @@ test('published project retains private project-specific callback flow alongside
   await expect(form).toBeVisible()
   await form.getByPlaceholder('Full name').fill('Example Customer')
   await form.getByPlaceholder('10-digit mobile').fill('9876543210')
+  await form.getByPlaceholder('6-digit project location PIN').fill('500072')
   await form.getByRole('checkbox').check()
   await form.getByRole('button',{name:/Send Callback Request/}).click()
   await expect(dialog.getByRole('status').filter({hasText:/Callback request received/})).toBeVisible()
-  expect(submitted).toMatchObject({name:'Example Customer',phone:'9876543210',consent:true})
+  expect(submitted).toMatchObject({name:'Example Customer',phone:'9876543210',pincode:'500072',consent:true,marketplaceConsent:true})
   await dialog.getByRole('button',{name:'Done'}).click()
   await actions.getByRole('link',{name:/Get Quote/}).click()
   await expect(page).toHaveURL(/\/projects\/project-123\/quote$/)
@@ -507,22 +508,23 @@ test('professional interior quote reuses the exact interiors wizard with no cust
   await expect(page.getByRole('heading',{name:'Basic Details'})).toBeVisible()
   await expect(page.getByRole('heading',{name:'Property Details'})).toBeVisible()
   await expect(page.getByRole('heading',{name:'Interior Requirements'})).toBeVisible()
-  await expect(page.locator('.irx-package-grid>button')).toHaveCount(2)
+  await expect(page.locator('.irx-package-grid>button')).toHaveCount(3)
   await expect(page.locator('.irx-package-grid')).toContainText('₹1,600 / sq ft')
   await expect(page.locator('.irx-package-grid')).toContainText('₹2,400 / sq ft')
-  await expect(page.locator('.irx-package-grid')).not.toContainText('Custom quotation')
+  await expect(page.locator('.irx-package-grid')).toContainText('CUSTOM INTERIOR QUOTE')
   await expect(page.locator('.irx-summary-card')).toContainText('Standard')
   await page.getByPlaceholder('Enter your full name').fill('Example Customer')
   await page.getByPlaceholder('Enter 10-digit number').fill('9876543210')
   await page.locator('#irx-property select').first().selectOption('residential')
   await page.locator('#irx-property select').nth(1).selectOption('3_bhk')
   await page.locator('.irx-scope-cards').getByRole('button',{name:/Full Home Interiors/}).click()
+  await page.locator('.project-marketplace-consent input').check()
   await page.locator('.irx-summary-card button[type=submit]').click()
   await expect(page.getByRole('heading',{name:'Quotation request received'})).toBeVisible()
   await expect(page.getByText('Reference #83')).toBeVisible()
   expect(submitted).toMatchObject({
     name:'Example Customer',phone:'9876543210',
-    consent:true,preferredPackage:'Standard',
+    consent:true,marketplaceConsent:true,preferredPackage:'Standard',
   })
   expect(submitted.requirement).toContain('Reference project: 3 BHK Interior')
   expect(submitted.requirement).toContain('Interior Scope: Full Home Interiors')
@@ -530,7 +532,7 @@ test('professional interior quote reuses the exact interiors wizard with no cust
   expect(submitted).not.toHaveProperty('package_price_from_snapshot')
 })
 
-test('interior project quote requires a published professional package',async({page})=>{
+test('interior project quote offers custom quotation when no package is published',async({page})=>{
   await page.route('**/api/customer-flows/design',route=>route.fulfill({
     status:200,contentType:'application/json',
     body:JSON.stringify({flowType:'requirement',flowToken:'e2e-no-packages',questions:[]}),
@@ -547,9 +549,8 @@ test('interior project quote requires a published professional package',async({p
     body:JSON.stringify({business_name:'Professional 8',service_plans:[]}),
   }))
   await page.goto('/projects/project-124/quote')
-  await expect(page.locator('.irx-package-grid>button')).toHaveCount(0)
-  await expect(page.getByText(/has not published a .* package yet/).first()).toBeVisible()
-  await expect(page.getByRole('heading',{name:'Matching professional package unavailable'})).toBeVisible()
-  await expect(page.locator('.irx-summary-card button[type=submit]')).toHaveCount(0)
-  await expect(page.getByText('Custom quotation',{exact:true})).toHaveCount(0)
+  await expect(page.locator('.irx-package-grid>button')).toHaveCount(1)
+  await expect(page.getByText(/No interior packages are published yet/)).toBeVisible()
+  await expect(page.locator('.irx-package-grid')).toContainText('CUSTOM INTERIOR QUOTE')
+  await expect(page.locator('.irx-summary-card button[type=submit]')).toBeVisible()
 })

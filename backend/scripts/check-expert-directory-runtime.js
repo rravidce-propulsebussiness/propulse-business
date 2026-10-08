@@ -93,7 +93,7 @@ async function main(){
       name:'Directory Runtime Tester',phone:'9876501234',email:'example@example.test',
       requirement:'Interior finishes and kitchen planning for a 3 BHK.',
       siteLocation:'Hyderabad',area:'1650 sq ft',budget:'15 lakh',
-      preferredPackage:'Standard',consent:true,website:'',
+      preferredPackage:'Standard',consent:true,marketplaceConsent:true,pincode:'500072',website:'',
     });
     assert.ok(posted.accepted&&posted.requestId,'Published professional quote must persist');
     const quotes=await professionalQuoteService.listForProfessional(subscribed.userId);
@@ -105,7 +105,7 @@ async function main(){
     assert.ok(!stored.customer_phone.includes('9876501234'),'Direct customer contact must be masked');
     const duplicate=await professionalQuoteService.submit(newerProject.id,{
       name:'Directory Runtime Tester',phone:'9876501234',
-      requirement:'Another finish selection',preferredPackage:'Standard',consent:true,
+      requirement:'Another finish selection',preferredPackage:'Standard',consent:true,marketplaceConsent:true,pincode:'500072',
     });
     assert.strictEqual(duplicate.duplicate,true,'Duplicate requests in one hour must be deduplicated');
 
