@@ -1,5 +1,5 @@
 const assert = require('node:assert/strict');
-const { parseProjectQuoteRequirement } = require('../src/services/projectQuoteRequirementDetails');
+const { parseProjectQuoteRequirement, splitProjectQuoteRequirement } = require('../src/services/projectQuoteRequirementDetails');
 const { maskLead, normalizeLeadRow } = require('../src/services/leadReadService');
 const fs = require('node:fs');
 const path = require('node:path');
@@ -39,6 +39,34 @@ assert.equal(parsed.Budget, '10_15_lakh');
 assert.equal(parsed.Timeline, '1–3 months');
 assert.equal(parsed['Additional Requirements'], 'A pooja room and a small study');
 assert.ok(!Object.keys(parsed).some(x => /pin|professional|reference/i.test(x)));
+
+const splitWithNote = splitProjectQuoteRequirement(requirement);
+assert.equal(splitWithNote.requirement, 'A pooja room and a small study');
+assert.equal(splitWithNote.fields.Bedrooms, '3 BHK');
+assert.equal(splitWithNote.fields['Interior Scope'], 'End-to-End Interiors');
+assert.equal(splitWithNote.fields['Interior Style'], 'Minimalist');
+assert.equal(splitWithNote.fields.Timeline, '1–3 months');
+assert.ok(!('Additional Requirements' in splitWithNote.fields),
+  'Typed notes should appear only in the separate Requirement box');
+const splitWithoutNote = splitProjectQuoteRequirement(requirement.replace(/\\nAdditional requirement:.*$/, ''));
+assert.equal(splitWithoutNote.requirement, '',
+  'An unfilled additional requirement must remain empty, not mirror form answers');
+assert.equal(splitWithoutNote.fields['Property Type'], 'Villa');
+
+const professionalQuote = fs.readFileSync(path.join(root, 'backend/src/services/professionalProjectQuoteService.js'), 'utf8');
+const professionalCards = fs.readFileSync(path.join(root, 'frontend/src/components/ProfessionalProjectQuotes.jsx'), 'utf8');
+const professionalAccess = fs.readFileSync(path.join(root, 'backend/src/services/professionalRequestAccessService.js'), 'utf8');
+assert.match(professionalQuote, /splitProjectQuoteRequirement\\(row\\.requirement\\)/);
+assert.match(professionalQuote, /requirement_fields:requirementFields/);
+assert.match(professionalCards, /formEntries\\.map\\(/,
+  'Professional quotation should show each submitted wizard field separately');
+assert.match(professionalCards, /String\\(item\\.requirement\\|\\|''\\)\\.trim\\(\\)\\&\\&/,
+  'Professional quotation should show the Requirement box only for customer-entered notes');
+assert.match(professionalCards, /accessStatus==='locked'\\|\\|accessStatus==='pending_payment'/,
+  'Accept and Pay must not be offered for pricing or admin-review requests');
+assert.match(professionalAccess, /pricing_pending/,
+  'Unavailable quotation prices must be identified for the professional');
+
 
 const oldLead = {
   id: 501,
