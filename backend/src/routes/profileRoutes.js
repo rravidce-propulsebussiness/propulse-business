@@ -8,6 +8,8 @@ router.post('/projects/video', profileController.uploadProjectVideo);
 router.post('/projects/plan', profileController.uploadProjectPlan);
 router.post('/projects/image', profileController.uploadProjectImage);
 router.get('/project-callbacks', profileController.listProjectCallbacks);
+router.get('/project-quote-requests',profileController.listProjectQuotes);
+router.patch('/project-quote-requests/:quoteId',profileController.updateProjectQuote);
 router.get('/brochures', profileController.listBrochures);
 router.put('/brochures', profileController.saveBrochures);
 router.get('/', profileController.getProfile);
