@@ -86,7 +86,7 @@ async function main(){
     // Exercise the actual SQL INSERT with a business-owned published package:
     // browser mocks cannot catch database schema or INSERT statement failures.
     await pool.query(
-      "INSERT INTO business_profile_service_plans(business_profile_id,title,price_from,price_unit,is_published,sort_order) VALUES($1,$2,1600,'sqft',TRUE,0)",
+      "INSERT INTO business_profile_service_plans(business_profile_id,title,industry,price_from,price_unit,is_published,sort_order) VALUES($1,$2,'construction',1600,'sqft',TRUE,0)",
       [subscribed.profileId,'Standard']
     );
     const posted=await professionalQuoteService.submit(newerProject.id,{
