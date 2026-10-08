@@ -9,24 +9,7 @@ const { getMembershipAccess, getCurrentProMembership } = require('../services/me
 const paymentGatewayService = require('../services/paymentGatewayService');
 const telegramPaymentReviewService = require('../services/telegramPaymentReviewService');
 
-const MAX_PROOF_BYTES = 5 * 1024 * 1024;
-const PROOF_DATA_URL = /^data:(image\/(?:png|jpeg|webp)|application\/pdf);base64,([A-Za-z0-9+/]+={0,2})$/i;
-
-function validatePaymentProof(proofUrl){
-  if(typeof proofUrl !== 'string' || !proofUrl.trim()) return { valid:false, code:'PROOF_REQUIRED', message:'Payment proof is required' };
-  const match = proofUrl.trim().match(PROOF_DATA_URL);
-  if(!match) return { valid:false, code:'INVALID_PROOF', message:'Payment proof must be a PNG, JPEG, WebP, or PDF data file' };
-  const payload = match[2].replace(/\s/g,'');
-  const padding = payload.endsWith('==') ? 2 : payload.endsWith('=') ? 1 : 0;
-  const bytes = Math.floor(payload.length * 3 / 4) - padding;
-  if(bytes <= 0 || bytes > MAX_PROOF_BYTES) return { valid:false, code:'PROOF_TOO_LARGE', message:'Payment proof must be 5 MB or smaller' };
-  let data;
-  try { data = Buffer.from(payload, 'base64'); } catch { return { valid:false, code:'INVALID_PROOF', message:'Payment proof is not valid base64 data' }; }
-  const mime = match[1].toLowerCase();
-  const validSignature = mime==='application/pdf' ? data.subarray(0,5).toString('ascii')==='%PDF-' : mime==='image/png' ? data.subarray(0,8).equals(Buffer.from([137,80,78,71,13,10,26,10])) : mime==='image/jpeg' ? data.subarray(0,3).equals(Buffer.from([255,216,255])) : mime==='image/webp' ? data.subarray(0,4).toString('ascii')==='RIFF' && data.subarray(8,12).toString('ascii')==='WEBP' : false;
-  if(!validSignature) return { valid:false, code:'INVALID_PROOF', message:'Payment proof content does not match its declared file type' };
-  return { valid:true };
-}
+const {MAX_PROOF_BYTES,validatePaymentProof}=require('../utils/paymentProofValidation');
 
 async function checkoutMembership(req,res){try{const result=await paymentService.createMembershipCheckout({userId:req.user.id,membershipPlanId:req.body.membershipPlanId,couponCode:req.body.couponCode});res.status(201).json(result)}catch(error){console.error('Membership checkout failed:',error.message);const status=error.code==='PAYMENT_PENDING'||error.code==='DUPLICATE_COUPON_REDEMPTION'?409:['INVALID_PLAN','PLAN_NOT_FOUND','INVALID_AMOUNT','PRO_REQUIRED','COUPON_NOT_FOUND','COUPON_INACTIVE','COUPON_NOT_STARTED','COUPON_EXPIRED','MIN_ORDER','PURCHASE_NOT_ELIGIBLE','PLAN_NOT_ELIGIBLE','USER_NOT_ELIGIBLE','INDUSTRY_NOT_ELIGIBLE','USAGE_LIMIT','USER_USAGE_LIMIT','INVALID_AMOUNT','COUPON_REDEMPTION_INVALID'].includes(error.code)?400:500;sendError(res,status,error,'Failed to create membership payment',{code:error.code})}}
 async function submitPaymentReference(req,res){
