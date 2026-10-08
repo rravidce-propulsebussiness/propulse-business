@@ -35,8 +35,11 @@ assert(!profile.includes('for (const item of locations)'),'Profile update must n
 
 assert(!sheetCompat.includes('async function persistDetails')&&!sheetCompat.includes('jsonb_to_recordset'),
   'Sheet imports must not run fuzzy post-import updates against existing leads');
-assert(!sheetCompat.includes('FROM leads')&&!sheetCompat.includes('UPDATE leads'),
-  'Sheet compatibility layer must not identify or modify existing leads by contact details');
+const partnerImport=sheetCompat.slice(sheetCompat.indexOf('async function importCsv('),sheetCompat.indexOf('function csvEscape('));
+assert(partnerImport.includes('return base.importCsv('),
+  'Partner Sheet import must delegate lead creation and custom-field persistence to the base importer');
+assert(!partnerImport.includes('pool.query(')&&!partnerImport.includes('UPDATE leads'),
+  'Partner Sheet import must not re-match or modify existing leads after the base import');
 assert(sheetBase.includes('customFields: buildImportedCustomFields(row)')&&sheetBase.includes('leadService.createLead('),
   'Base Sheet importer must attach custom fields directly to each created lead');
 assert(leadService.includes('sanitizeCustomFields(customFields)')&&leadService.includes('INSERT INTO leads'),
