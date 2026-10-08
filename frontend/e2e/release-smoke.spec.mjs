@@ -433,7 +433,7 @@ test('published project retains private project-specific callback flow alongside
   await actions.getByRole('button',{name:/Request a Callback/}).click()
   const dialog=page.getByRole('dialog',{name:'Request a Callback'})
   await expect(dialog).toBeVisible()
-  await expect(page.locator('.pjd-information')).toHaveCount(1)
+  await expect(page.locator('.pjd-information,.pjd-back-row')).toHaveCount(0)
   await expect(page.locator('.pjd-bottom-grid,.pjd-related-grid')).toHaveCount(0)
 
   const form=page.locator('.pjd-callback-form')
