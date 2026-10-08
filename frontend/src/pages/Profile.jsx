@@ -74,7 +74,7 @@ export default function Profile(){
   const [videoUploads,setVideoUploads]=useState({})
   const [imageUploads,setImageUploads]=useState({})
   const [planUploads,setPlanUploads]=useState({})
-  const [activeSection,setActiveSection]=useState('business')
+  const [activeSection,setActiveSection]=useState(()=>new URLSearchParams(window.location.search).get('tab')==='projects'?'projects':'business')
   const [loading,setLoading]=useState(true)
   const [saving,setSaving]=useState(false)
   const [message,setMessage]=useState('')
