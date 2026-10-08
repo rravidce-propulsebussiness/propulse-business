@@ -5,6 +5,18 @@ import './Home.css'
 import { PublicFooter, PublicHeader } from '../components/PublicSiteChrome'
 import HeroBlueprintAnimation from '../components/HeroBlueprintAnimation'
 
+const HOME_TRUST_HEADLINES = [
+  { lead: 'Branded Materials.', accent: ' Clear Specs.' },
+  { lead: 'Engineer Supervision', accent: ' Options.' },
+  { lead: 'Workmanship Warranty', accent: ' Options.' },
+  { lead: 'Transparent Quotes.', accent: ' Clear Costs.' },
+  { lead: 'Expert Guidance.', accent: ' Better Choices.' },
+]
+const HOME_TRUST_HEADLINE_MEASURE = HOME_TRUST_HEADLINES.reduce((longest, item) => {
+  const text = item.lead + item.accent
+  return text.length > longest.length ? text : longest
+}, '')
+
 const DEFAULT_HERO = 'https://images.unsplash.com/photo-1600585152915-d208bec867a1?auto=format&fit=crop&w=2200&q=92'
 
 const SERVICES = [
@@ -107,6 +119,41 @@ function openRequirement(flowKey = '') {
 export default function Home() {
   const [contactData, setContactData] = useState({})
   const [homepageMedia, setHomepageMedia] = useState({ hero_image_url: '' })
+  const [trustTyping, setTrustTyping] = useState({ index: 0, length: 0, phase: 'typing' })
+  const activeTrustHeadline = HOME_TRUST_HEADLINES[trustTyping.index]
+
+  useEffect(() => {
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
+      setTrustTyping({
+        index: 0,
+        length: HOME_TRUST_HEADLINES[0].lead.length + HOME_TRUST_HEADLINES[0].accent.length,
+        phase: 'static',
+      })
+      return
+    }
+
+    const timeout = window.setTimeout(() => {
+      setTrustTyping(current => {
+        const phrase = HOME_TRUST_HEADLINES[current.index]
+        const phraseLength = phrase.lead.length + phrase.accent.length
+
+        if (current.phase === 'typing') {
+          return current.length < phraseLength
+            ? { ...current, length: current.length + 1 }
+            : { ...current, phase: 'holding' }
+        }
+        if (current.phase === 'holding') return { ...current, phase: 'erasing' }
+        if (current.phase === 'erasing') {
+          return current.length > 0
+            ? { ...current, length: current.length - 1 }
+            : { index: (current.index + 1) % HOME_TRUST_HEADLINES.length, length: 0, phase: 'typing' }
+        }
+        return current
+      })
+    }, trustTyping.phase === 'holding' ? 2000 : trustTyping.phase === 'erasing' ? 34 : 65)
+
+    return () => window.clearTimeout(timeout)
+  }, [trustTyping])
 
   useEffect(() => {
     window.scrollTo(0, 0)
@@ -138,7 +185,15 @@ export default function Home() {
           <div className="hc-premium-hero-copy">
             <span className="hc-premium-kicker">BUILDING SPACES, ELEVATING LIVES</span>
             <h1>Don’t Leave Your <em>Dream Home</em> to <strong>Chance.</strong></h1>
-            <p>Find the right partner. Build it right.</p>
+            <p className="hc-premium-typewriter">
+               <span className="hc-premium-typewriter-sr">Compare branded materials, engineer supervision and warranty options, with clear quotations and expert guidance.</span>
+               <span className="hc-premium-typewriter-measure" aria-hidden="true">{HOME_TRUST_HEADLINE_MEASURE}</span>
+               <span className="hc-premium-typewriter-line" aria-hidden="true">
+                 <span className="hc-premium-typewriter-lead">{activeTrustHeadline.lead.slice(0, trustTyping.length)}</span>
+                 <span className="hc-premium-typewriter-accent">{activeTrustHeadline.accent.slice(0, Math.max(0, trustTyping.length - activeTrustHeadline.lead.length))}</span>
+                 <span className="hc-premium-typewriter-caret" />
+               </span>
+             </p>
             <div className="hc-premium-actions">
               <button type="button" onClick={() => openRequirement()}>Start Your Project <span aria-hidden="true">→</span></button>
               <a href="/packages">View Packages</a>
