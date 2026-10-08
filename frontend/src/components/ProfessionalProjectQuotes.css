@@ -44,3 +44,11 @@
 
 .pqq-unlock-toggle{display:block;width:100%;margin:12px 0 4px;border:1px solid #bfd4e5;background:#edf4fb;color:#173c62;border-radius:12px;padding:12px 16px;font-weight:800;cursor:pointer}
 .pqq-unlock-toggle:hover{background:#e4f0fa}
+
+/* Access readiness is distinct from a quotation's type or workflow status. */
+.pqq-access-status{margin:14px 0 8px;padding:12px 14px;border:1px solid #dfebf3;border-radius:11px;background:#f5f9fc;color:#315570;font-size:12px;font-weight:700;line-height:1.65}
+.pqq-access-status.status-review_required,.pqq-access-status.status-pricing_pending{border-color:#efd9c6;background:#fff9f3;color:#92512a}
+.pqq-access-status.status-pending_payment{border-color:#d7e5f5;background:#f3f7fe;color:#28527e}
+.pqq-details>div{min-width:0;align-items:flex-start}
+.pqq-details dd{max-width:65%;white-space:pre-wrap}
+@media(max-width:550px){.pqq-details>div{gap:10px}.pqq-details dt{flex:1 1 42%}.pqq-details dd{flex:1 1 58%;max-width:none}}
