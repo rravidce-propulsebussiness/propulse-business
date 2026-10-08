@@ -6,6 +6,7 @@ import {PACKAGE_PRICE_UNITS,formatPublishedPackagePrice} from '../utils/packageP
 import ProfileBrochureField from '../components/ProfileBrochureField'
 import ProfessionalBrochures from './ProfessionalBrochures'
 import './Profile.css'
+import './ProfileCompact.css'
 import {playSound} from '../utils/soundEffects'
 
 const emptyService=()=>({industryId:'',serviceId:'',subserviceId:''})
