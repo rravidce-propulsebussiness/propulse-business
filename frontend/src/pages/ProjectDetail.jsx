@@ -7,7 +7,6 @@ import './Projects.css'
 import './ProjectDetail.css'
 
 const emptyCallback={name:'',phone:'',email:'',message:'',consent:false,website:''}
-const isPdf=value=>/\.pdf(?:[?#]|$)/i.test(value||'')
 
 export default function ProjectDetail(){
   const {projectId}=useParams()
@@ -228,8 +227,6 @@ export default function ProjectDetail(){
                 </Link>
               </div>
               {packageError&&<p className="pjd-error" role="alert">{packageError}</p>}
-              {(project.brochure||linkedPlan?.brochure_url)&&<a className="pjd-document-link" href={project.brochure||linkedPlan.brochure_url} target="_blank" rel="noopener noreferrer"><Icon name="file" size={15}/>View professional specifications PDF ↗</a>}
-              {project.document&&<a className="pjd-document-link" href={project.document} target="_blank" rel="noopener noreferrer"><Icon name="file" size={15}/>{isPdf(project.document)?'View project drawing / PDF':'View project document'} ↗</a>}
               <div className="pjd-privacy"><span aria-hidden="true">✓</span><span>Customer contact information stays protected. Verify project claims and scope directly before hiring.</span></div>
             </aside>
           </div>
