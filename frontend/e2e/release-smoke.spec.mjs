@@ -111,7 +111,7 @@ test('professional Requests CRM separates callbacks from Available Leads and fil
   await expect(page.locator('.prc-request-item')).toHaveCount(2)
   await page.getByRole('button',{name:/In follow-up/}).click()
   await expect(page.locator('.prc-request-item')).toHaveCount(1)
-  await expect(page.getByText('Second Customer')).toBeVisible()
+  await expect(page.locator('.prc-request-item').getByText('Second Customer')).toBeVisible()
   await page.getByRole('button',{name:/All requests/}).click()
   await page.getByRole('searchbox',{name:'Search callback requests'}).fill('Hyderabad')
   await expect(page.locator('.prc-request-item')).toHaveCount(1)
