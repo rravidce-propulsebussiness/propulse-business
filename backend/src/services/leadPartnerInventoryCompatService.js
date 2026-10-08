@@ -199,6 +199,15 @@ async function importCsv({userId,csv,defaultIndustryId=null}){
   return result;
 }
 
+// Keep the one-time Google Sheet import on the same canonical/custom-field
+// processing path as CSV uploads and connected sheet syncs. It intentionally
+// does not create a persistent sheet connection or require an activation token.
+async function importGoogleSheet({userId,url,defaultIndustryId=null}){
+  const result=await fetchGoogleSheetCsv(url);
+  const imported=await importCsv({userId,csv:result.csv,defaultIndustryId});
+  return{...imported,spreadsheetId:result.spreadsheetId,gid:result.gid};
+}
+
 function csvEscape(v){return `"${clean(v).replace(/"/g,'""')}"`;}
 function toCsv(rows){
   if(!rows.length)return'';
@@ -326,4 +335,4 @@ async function updateSheetDefaultIndustry({userId,connectionId,defaultIndustryId
   return{...row,default_industry_name:industry?.name||null};
 }
 
-module.exports={...base,importCsv,previewGoogleSheet,connectGoogleSheet,syncGoogleSheet,listInventory,getSheetConnections,updateSheetDefaultIndustry};
+module.exports={...base,importCsv,importGoogleSheet,previewGoogleSheet,connectGoogleSheet,syncGoogleSheet,listInventory,getSheetConnections,updateSheetDefaultIndustry};
