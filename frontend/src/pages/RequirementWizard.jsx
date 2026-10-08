@@ -550,7 +550,7 @@ export default function RequirementWizard({ flowKey, onCompletionChange, embedde
 
     if (projectQuote && !(projectQuote.packages || []).some(plan => plan.title === projectQuote.preferredPackage)) {
       setState(current => ({ ...current, error: 'Choose one of this professional’s published packages to continue.' }))
-      jump('irx-requirements')
+      jump(flowKey==='design'?'irx-requirements':'professional-quote-package-title')
       return
     }
 
@@ -564,7 +564,8 @@ export default function RequirementWizard({ flowKey, onCompletionChange, embedde
       setState(current => ({ ...current, saving: true, error: '' }))
 
       if (projectQuote) {
-        // The project-specific flow uses the SAME interior questions and layout,
+        // Use the exact public requirements for each industry, but create only a
+        // project-specific professional quotation request, not a marketplace lead.
         // but submits ONLY to the chosen professional (not the generic lead market).
         const detailRows = questions
           .filter(question => !['finish_quality', locationQuestion?.questionKey].includes(question.questionKey))
@@ -793,6 +794,7 @@ export default function RequirementWizard({ flowKey, onCompletionChange, embedde
   }
 
   const summaryRows = [
+    ...(projectQuote ? [['Professional package',projectQuote.preferredPackage||'—']] : []),
     ['Location', [selectedCity?.name, selectedCity?.state_name].filter(Boolean).join(', ') || '—'],
     ['PIN Code', locationQuestion ? fieldLabel(locationQuestion, answers) : '—'],
     ...propertyQuestions.slice(0, 2).map(q => [q.label.replace(/\?$/,''), fieldLabel(q, answers)]),
@@ -827,7 +829,7 @@ export default function RequirementWizard({ flowKey, onCompletionChange, embedde
       </div>
       <div className="rq-hero-benefits">
         <article><Icon name="chat" /><div><b>Free Consultation</b><small>No obligation</small></div></article>
-        <article><Icon name="receipt" /><div><b>{isQuotationFlow ? 'Detailed Quotation' : 'Transparent Estimates'}</b><small>{isQuotationFlow ? 'Cost + specifications' : 'Compare actual options'}</small></div></article>
+        <article><Icon name="receipt" /><div><b>{projectQuote ? 'Professional Quote' : isQuotationFlow ? 'Detailed Quotation' : 'Transparent Estimates'}</b><small>{projectQuote ? 'Your chosen expert' : isQuotationFlow ? 'Cost + specifications' : 'Compare actual options'}</small></div></article>
         <article><Icon name="shield" /><div><b>Relevant Businesses</b><small>Matched to your brief</small></div></article>
         <article><Icon name="target" /><div><b>End-to-End Journey</b><small>From requirement onward</small></div></article>
       </div>
@@ -921,13 +923,13 @@ export default function RequirementWizard({ flowKey, onCompletionChange, embedde
 
         <aside className="rq-summary-card" id="rq-summary">
           <div className="rq-summary-progress"><span>{isQuotationFlow ? 'Quotation progress' : 'Requirement progress'}</span><b>{completion}%</b><i><em style={{ width: completion + '%' }} /></i></div>
-          <h3>{isQuotationFlow && answers.built_up_area ? 'Quotation Input Summary' : 'Your Selection Summary'}</h3>
+          <h3>{projectQuote?'Your Professional Quote Summary':isQuotationFlow && answers.built_up_area ? 'Quotation Input Summary' : 'Your Selection Summary'}</h3>
           <div className="rq-summary-list">
             {summaryRows.map(([label,value]) => <div key={label}><span>{label}</span><b title={value}>{value}</b></div>)}
           </div>
           <label className="rq-honeypot" aria-hidden="true">Website<input tabIndex="-1" autoComplete="off" value={website} onChange={event => setWebsite(event.target.value)} /></label>
           {state.error && <div className="rq-error">{state.error}</div>}
-          <button className="rq-submit" type="submit" disabled={state.saving}>{state.saving ? 'Submitting…' : (isQuotationFlow && answers.built_up_area ? 'Generate Detailed Quotation' : (isQuotationFlow ? 'Get Free Quote' : (flow.config?.submitLabel || 'Submit Requirement')))} <Icon name="arrow" size={15}/></button>
+          <button className="rq-submit" type="submit" disabled={state.saving}>{state.saving ? 'Submitting…' : projectQuote ? 'Request Professional Quote' : (isQuotationFlow && answers.built_up_area ? 'Generate Detailed Quotation' : (isQuotationFlow ? 'Get Free Quote' : (flow.config?.submitLabel || 'Submit Requirement')))} <Icon name="arrow" size={15}/></button>
 
         </aside>
       </div>
