@@ -42,7 +42,8 @@ assert(intake.includes('detailedFields._intake.writtenRequirement = leadFields.r
 assert(intake.includes("question.questionType === 'text'"));
 assert(reader.includes('writtenLeadRequirement(row,custom)'), 'All API read paths should normalize form-origin leads');
 assert(purchased.includes('writtenLeadRequirement(row,raw_custom_fields)'), 'Purchased lead list must also show real written requirements');
-assert(gate.includes("t.source='public_requirement'"), 'Structured forms should count for quality even without free text');
+assert(gate.includes("t.source IN ('public_requirement','homepage_consultation')"),
+  'Structured public/home consultations should count for quality even without free text');
 assert(migration.includes("NEW.source='public_requirement' AND normalized_requirement=''"),
   'Blank public free text must not collapse separate projects by matching contact');
 const quote = {
