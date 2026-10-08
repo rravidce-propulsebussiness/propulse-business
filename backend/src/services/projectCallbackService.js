@@ -151,13 +151,25 @@ function redactContactText(value){
 async function listForProfessional(userId){
   const id=Number(userId);
   if(!Number.isSafeInteger(id)||id<1)return [];
-  return (await pool.query(
-    `SELECT r.id,r.project_id,r.project_title,r.customer_name,
+  const rows=(await pool.query(
+    `SELECT r.id,r.project_id,r.project_title,r.marketplace_lead_id,r.customer_name,
        r.customer_phone,r.customer_email,r.message,r.status,r.created_at
        FROM project_callback_requests r
        WHERE r.business_user_id=$1
        ORDER BY r.created_at DESC,r.id DESC LIMIT 100`,[id]
-  )).rows.map(row=>({...row,customer_name:redactContactText(row.customer_name),customer_phone:maskedPhone(row.customer_phone),customer_email:maskedEmail(row.customer_email),message:redactContactText(row.message)}));
+  )).rows;
+  const access=require('./professionalRequestAccessService');
+  const projects=rows.filter(row=>row.project_id),profiles=rows.filter(row=>!row.project_id);
+  const decorated=[...await access.attachAccess(id,projects,'callback'),
+    ...await access.attachAccess(id,profiles,'profile')];
+  const byId=new Map(decorated.map(row=>[Number(row.id),row]));
+  return rows.map(original=>{
+    const row=byId.get(Number(original.id))||original;
+    return {...row,customer_name:redactContactText(row.customer_name),
+      customer_phone:row.access?.unlocked?row.customer_phone:maskedPhone(row.customer_phone),
+      customer_email:row.access?.unlocked?row.customer_email:maskedEmail(row.customer_email),
+      message:redactContactText(row.message)};
+  });
 }
 
 async function listForAdmin(){
