@@ -351,7 +351,7 @@ export default function Profile(){
       {error&&<div className="profile-alert error">{error}</div>}
       {message&&<div className="profile-alert success">{message}</div>}
 
-      {activeSection==='brochures'?<ProfessionalBrochures embedded/>:<form onSubmit={save} className="profile-form">
+      {activeSection==='brochures'?<ProfessionalBrochures embedded/>:<form onSubmit={save} className={"profile-form"+(["public","projects","plans"].includes(activeSection)?" profile-form-wide":"")}>
         <div className="profile-main-column">
           {activeSection==='business'&&<>
           <section className="profile-panel profile-information" id="profile-information">
