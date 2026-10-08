@@ -131,6 +131,8 @@ async function finishVideoUpload(userId,{reference,uploadId,parts,mimeType,size}
   if(!stored||stored.size!==bytes||stored.contentType!==mime){
     throw videoError('Video upload verification failed. Check the file size and format, then try again.','VIDEO_UPLOAD_MISMATCH');
   }
+  const firstBytes=await s3.getObjectPrefix(info.key,{bytes:12});
+  if(!validateSignature(firstBytes,mime))throw videoError('Video does not match its selected MP4, MOV or WebM format','INVALID_PROJECT_VIDEO');
   return{url:reference,displayUrl:await displayUrl(reference),mimeType:mime,
     fileSize:stored.size,uploadedAt:info.uploadedAt.toISOString()};
 }
