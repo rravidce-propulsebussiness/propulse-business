@@ -19,6 +19,7 @@ export default function ProfessionalProjectQuotes({plans=[]}){
   const [feedback,setFeedback]=useState('')
   const [saving,setSaving]=useState(null)
   const [version,setVersion]=useState(0)
+  const [activeUnlockId,setActiveUnlockId]=useState(null)
   useEffect(()=>{
     let live=true
     setLoading(true)
@@ -97,7 +98,10 @@ export default function ProfessionalProjectQuotes({plans=[]}){
             {item.budget_text&&<div><dt>Budget indicated</dt><dd>{item.budget_text}</dd></div>}
           </dl>
           <div className="pqq-requirement"><strong>Customer requirement</strong><p>{item.requirement}</p></div>
-          <ProfessionalRequestUnlock kind="quote" item={item} onUnlocked={()=>setVersion(v=>v+1)}/>
+          {!item.access?.unlocked&&<button className="pqq-unlock-toggle" type="button" onClick={()=>setActiveUnlockId(current=>current===item.id?null:item.id)}>
+            {activeUnlockId===item.id?'Hide acceptance options':item.access?.eligibleForFree?'Accept Free · Pro Member':item.access?.price?`Accept & Pay ₹${Number(item.access.price).toLocaleString('en-IN')}`:'View enquiry status'}
+          </button>}
+          {(item.access?.unlocked||activeUnlockId===item.id)&&<ProfessionalRequestUnlock kind="quote" item={item} onUnlocked={()=>{setActiveUnlockId(null);setVersion(v=>v+1)}}/>}
           {item.access?.unlocked&&<div className="pqq-editor">
             <div><label htmlFor={'pqq-package-'+item.id}>Quotation package</label><select id={'pqq-package-'+item.id} value={draft.packageName} onChange={e=>update(item.id,'packageName',e.target.value)}>
               <option value="">Choose package</option>
