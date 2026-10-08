@@ -53,6 +53,20 @@ async function attachAccess(userId,rows,kind){
     const capacity=valid?accessStrategy.effectiveCapacity(lead):0;
     const priceRow=valid?(Array.isArray(lead.pricing?.shares)?lead.pricing.shares:[]).find(p=>Number(p.shares)===capacity):null;
     const price=Number(priceRow?.normal||0);
+    // The quote type is the same for every card; only marketplace readiness
+    // determines whether a professional can accept it. Explain that distinction.
+    const status=unlocked?'unlocked'
+      :!valid?'review_required'
+      :lead.pending?'pending_payment'
+      :lead.status!=='available'?'review_required'
+      :!membership&&!(Number.isFinite(price)&&price>0)?'pricing_pending'
+      :'locked';
+    const statusMessage=status==='unlocked'?'Customer contact is unlocked.'
+      :status==='pending_payment'?'Payment is pending confirmation. Customer contact remains protected.'
+      :status==='pricing_pending'?'Admin has not published a price for this enquiry yet.'
+      :status==='review_required'?'Marketplace verification or lead availability is pending Admin review.'
+      :membership?'Ready to accept free with your active Pro membership.'
+      :'Ready for paid acceptance.';
     return{...row,
       customer_phone:unlocked?row.customer_phone:null,
       customer_email:unlocked?row.customer_email:null,
@@ -61,7 +75,8 @@ async function attachAccess(userId,rows,kind){
         eligibleForFree:Boolean(membership),
         leadId:valid?Number(lead.id):null,
         price:Number.isFinite(price)&&price>0?price:null,
-        status:unlocked?'unlocked':!valid?'review_required':lead.pending?'pending_payment':lead.status==='available'?'locked':'review_required'
+        status,
+        statusMessage
       }
     };
   });
