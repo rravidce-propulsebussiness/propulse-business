@@ -144,9 +144,9 @@ async function listPublicExperts({search='',industryId='',cityId='',verified='',
        COALESCE(beds.is_featured,FALSE) AS is_featured,
        COALESCE(beds.sort_order,0) AS sort_order,
        mem.plan_group,
-       (SELECT COUNT(*)::int FROM business_profile_projects bpp WHERE bpp.business_profile_id=bp.id AND bpp.is_published=TRUE) AS project_count,
+       (SELECT COUNT(*)::int FROM business_profile_projects bpp WHERE bpp.business_profile_id=bp.id AND bpp.is_published=TRUE AND bpp.completion_year BETWEEN 1950 AND EXTRACT(YEAR FROM CURRENT_DATE)) AS project_count,
        (SELECT COUNT(*)::int FROM business_profile_service_plans bspp WHERE bspp.business_profile_id=bp.id AND bspp.is_published=TRUE) AS plan_count,
-       (SELECT bpp.cover_image_url FROM business_profile_projects bpp WHERE bpp.business_profile_id=bp.id AND bpp.is_published=TRUE AND COALESCE(bpp.cover_image_url,'')<>'' ORDER BY bpp.sort_order,bpp.id LIMIT 1) AS cover_image_url,
+       (SELECT bpp.cover_image_url FROM business_profile_projects bpp WHERE bpp.business_profile_id=bp.id AND bpp.is_published=TRUE AND bpp.completion_year BETWEEN 1950 AND EXTRACT(YEAR FROM CURRENT_DATE) AND COALESCE(bpp.cover_image_url,'')<>'' ORDER BY bpp.sort_order,bpp.id LIMIT 1) AS cover_image_url,
        COALESCE((
          SELECT json_agg(json_build_object(
            'industryId',bps.industry_id,'industryName',i.name,
@@ -219,7 +219,7 @@ async function listRecentProjectVideos({page=1,pageSize=12}={}){
   }
   const offset=(currentPage-1)*currentPageSize;
   const params=[];
-  const conditions=["bpp.is_published=TRUE","COALESCE(bpp.video_url,'')<>''"];
+  const conditions=["bpp.is_published=TRUE","bpp.completion_year BETWEEN 1950 AND EXTRACT(YEAR FROM CURRENT_DATE)","COALESCE(bpp.video_url,'')<>''"];
   addEligibilityConditions(settings,params,conditions);
   const where='WHERE '+conditions.join(' AND ');
   const total=Number((await pool.query(
@@ -282,7 +282,7 @@ async function listRecentProjects({page=1,pageSize=18}={}){
   }
   const offset=(currentPage-1)*currentPageSize;
   const params=[];
-  const conditions=["bpp.is_published=TRUE"];
+  const conditions=["bpp.is_published=TRUE","bpp.completion_year BETWEEN 1950 AND EXTRACT(YEAR FROM CURRENT_DATE)"];
   addEligibilityConditions(settings,params,conditions);
   const where='WHERE '+conditions.join(' AND ');
   const total=Number((await pool.query(
@@ -342,7 +342,7 @@ async function getPublicProject(projectId){
   const settings=await expertDirectoryService.getSettings();
   if(!settings.directoryEnabled||!settings.showProjects)return null;
   const params=[id];
-  const conditions=['bpp.id=$1','bpp.is_published=TRUE'];
+  const conditions=['bpp.id=$1','bpp.is_published=TRUE','bpp.completion_year BETWEEN 1950 AND EXTRACT(YEAR FROM CURRENT_DATE)'];
   addEligibilityConditions(settings,params,conditions);
   const result=await pool.query(
     `SELECT bpp.id AS project_id,bpp.title,bpp.project_type,bpp.description,
@@ -393,7 +393,7 @@ async function getPublicExpert(expertId){
   const [services,locations,projects,plans]=await Promise.all([
     pool.query(`SELECT bps.industry_id AS "industryId",i.name AS "industryName",bps.service_id AS "serviceId",s.name AS "serviceName",bps.subservice_id AS "subserviceId",ss.name AS "subserviceName" FROM business_profile_services bps JOIN industries i ON i.id=bps.industry_id JOIN services s ON s.id=bps.service_id LEFT JOIN subservices ss ON ss.id=bps.subservice_id WHERE bps.business_profile_id=$1 AND bps.is_active=TRUE ORDER BY i.name,s.name,ss.name`,[id]),
     pool.query(`SELECT bpl.state_id AS "stateId",st.name AS "stateName",bpl.city_id AS "cityId",c.name AS "cityName",bpl.subcity_id AS "subcityId",sc.name AS "subcityName" FROM business_profile_locations bpl JOIN states st ON st.id=bpl.state_id JOIN cities c ON c.id=bpl.city_id LEFT JOIN subcities sc ON sc.id=bpl.subcity_id WHERE bpl.business_profile_id=$1 AND bpl.is_active=TRUE ORDER BY st.name,c.name`,[id]),
-    settings.showProjects?pool.query(`SELECT id,title,project_type,description,location_text,completion_year,area_text,budget_text,cover_image_url,image_urls,package_name,${settings.showVideos?'video_url':'NULL::text AS video_url'},video_published_at,${settings.showPlans?'plan_url':'NULL::text AS plan_url'},sort_order FROM business_profile_projects WHERE business_profile_id=$1 AND is_published=TRUE ORDER BY sort_order,id`,[id]):Promise.resolve({rows:[]}),
+    settings.showProjects?pool.query(`SELECT id,title,project_type,description,location_text,completion_year,area_text,budget_text,cover_image_url,image_urls,package_name,${settings.showVideos?'video_url':'NULL::text AS video_url'},video_published_at,${settings.showPlans?'plan_url':'NULL::text AS plan_url'},sort_order FROM business_profile_projects WHERE business_profile_id=$1 AND is_published=TRUE AND completion_year BETWEEN 1950 AND EXTRACT(YEAR FROM CURRENT_DATE) ORDER BY sort_order,id`,[id]):Promise.resolve({rows:[]}),
     settings.showPlans?pool.query(`SELECT id,title,description,price_from,duration_label,inclusions,sort_order FROM business_profile_service_plans WHERE business_profile_id=$1 AND is_published=TRUE ORDER BY sort_order,id`,[id]):Promise.resolve({rows:[]}),
   ]);
   const [renderedProjects,brochures]=await Promise.all([materializeProjectMedia(projects.rows),brochureService.listPublic(id)]);
