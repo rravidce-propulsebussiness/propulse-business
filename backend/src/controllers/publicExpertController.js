@@ -44,4 +44,4 @@ async function requestProjectCallback(req,res){
     return res.status(status).json({error:status===500?'Unable to submit callback request':error.message});
   }
 }
-module.exports={list,projects,projectVideos,get,requestProjectCallback};
+module.exports={list,projects,projectDetail,projectVideos,get,requestProjectCallback};
