@@ -1,5 +1,5 @@
-// Low-level CSV record parser shared by lead-partner import entry points.
-// Header aliases and column mapping stay in their respective import services.
+// Shared CSV record parser for Admin, Lead Partner and Google Sheet preview flows.
+// Each importer retains its own header aliases and column-mapping policy.
 function parseCsvRecords(text){
   const source=String(text??'');
   const rows=[];
