@@ -64,4 +64,17 @@ async function uploadProjectPlan(req,res){
   }
 }
 
-module.exports = { getProfile, updateProfile, uploadProjectVideo, uploadProjectPlan };
+async function uploadProjectImage(req,res){
+  try{
+    if(req.user?.role!=='business')return res.status(403).json({error:'Business account required'});
+    const result=await projectImageService.saveProjectImage(req.user.id,req.get('content-type'),req.body);
+    return res.status(201).json(result);
+  }catch(error){
+    const bad=new Set(['INVALID_PROJECT_IMAGE_TYPE','INVALID_PROJECT_IMAGE','PROJECT_IMAGE_TOO_LARGE']);
+    const status=bad.has(error.code)?400:500;
+    if(status===500)console.error('Project gallery photo upload failed:',error);
+    return sendError(res,status,error,'Failed to upload project photo',{code:error.code});
+  }
+}
+
+module.exports = { getProfile, updateProfile, uploadProjectVideo, uploadProjectPlan, uploadProjectImage };
