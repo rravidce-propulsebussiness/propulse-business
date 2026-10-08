@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { publicRequest } from '../utils/auth'
 import './Projects.css'
@@ -392,6 +392,7 @@ export default function Projects(){
   const [query,setQuery]=useState('')
   const [visible,setVisible]=useState(12)
   const [selectedProject,setSelectedProject]=useState(null)
+  const projectDialogRef=useRef(null)
   const [professionalProjects,setProfessionalProjects]=useState([])
 
   useEffect(()=>{
@@ -477,8 +478,32 @@ export default function Projects(){
   useEffect(()=>{
     if(!selectedProject)return undefined
     const previous=document.body.style.overflow
+    const trigger=document.activeElement
+    const dialog=projectDialogRef.current
     document.body.style.overflow='hidden'
-    return()=>{document.body.style.overflow=previous}
+    dialog?.querySelector('button')?.focus()
+    const onKeyDown=event=>{
+      if(event.key==='Escape'){
+        event.preventDefault()
+        setSelectedProject(null)
+      }
+      if(event.key!=='Tab'||!dialog)return
+      const controls=[...dialog.querySelectorAll('a[href],button,input,select,textarea,[tabindex]')]
+        .filter(element=>!element.disabled&&element.tabIndex>=0&&element.getClientRects().length)
+      const first=controls[0]
+      const last=controls[controls.length-1]
+      if(!first){event.preventDefault();dialog.focus();return}
+      if(!dialog.contains(document.activeElement)||(event.shiftKey?document.activeElement===first:document.activeElement===last)){
+        event.preventDefault()
+        ;(event.shiftKey?last:first).focus()
+      }
+    }
+    document.addEventListener('keydown',onKeyDown)
+    return()=>{
+      document.removeEventListener('keydown',onKeyDown)
+      document.body.style.overflow=previous
+      if(trigger?.isConnected)trigger.focus()
+    }
   },[selectedProject])
 
   function openProject(project){
@@ -672,7 +697,7 @@ export default function Projects(){
     </section>
 
     {selectedProject&&<div className="pj-detail-backdrop" role="presentation" onMouseDown={event=>{if(event.target===event.currentTarget)closeProject()}}>
-      <section className="pj-detail-modal" role="dialog" aria-modal="true" aria-label={selectedProject.title+' project details'}>
+      <section ref={projectDialogRef} tabIndex={-1} className="pj-detail-modal" role="dialog" aria-modal="true" aria-label={selectedProject.title+' project details'}>
         <button className="pj-detail-close" type="button" onClick={closeProject} aria-label="Close project details">×</button>
 
         <div className="pj-detail-media">

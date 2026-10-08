@@ -51,7 +51,7 @@ assert.match(wizard,/answers\.built_up_area\]\)/);
 
 
 assert.match(projects,/const previous=document\.body\.style\.overflow/);
-assert.match(projects,/return\(\)=>\{document\.body\.style\.overflow=previous\}/);
+assert.match(projects,/return\(\)=>\{\s*document\.removeEventListener\([^;]+?\)\s*document\.body\.style\.overflow=previous/);
 assert.doesNotMatch(projects,/function openProject\(project\)\{\s*setSelectedProject\(project\)\s*document\.body\.style\.overflow/);
 assert.doesNotMatch(projects,/import \{ openLeadPopup \}/);
 assert.doesNotMatch(projects,/import PublicIcon /);
