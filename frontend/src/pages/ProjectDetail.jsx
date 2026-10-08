@@ -6,7 +6,7 @@ import {normalizeProject,projectPhotos,categoryLabel,playableProjectVideo,Icon} 
 import './Projects.css'
 import './ProjectDetail.css'
 
-const emptyCallback={name:'',phone:'',email:'',message:'',consent:false,website:''}
+const emptyCallback={name:'',phone:'',email:'',pincode:'',message:'',consent:false,website:''}
 
 export default function ProjectDetail(){
   const {projectId}=useParams()
@@ -110,10 +110,10 @@ export default function ProjectDetail(){
     setCallbackFeedback('');setCallbackSending(true)
     try{
       const response=await publicRequest('/experts/projects/'+encodeURIComponent(project.id)+'/callback',{
-        method:'POST',body:JSON.stringify(callbackForm),
+        method:'POST',body:JSON.stringify({...callbackForm,marketplaceConsent:callbackForm.consent}),
       })
       setCallbackSuccess(true)
-      setCallbackFeedback((response.duplicate?'Your recent callback request is already recorded. ':'Callback lead created successfully. ')+(response.requestId?'Reference #'+response.requestId+'. ':'')+'ProPulse will coordinate this enquiry with '+(project.businessName||'the professional')+'.')
+      setCallbackFeedback((response.duplicate?'Your recent callback request is already recorded. ':'Callback request received. ')+(response.requestId?'Reference #'+response.requestId+'. ':'')+(response.marketplaceStatus==='review_required'?'Marketplace publication awaits Admin pricing or location review. ': 'Your enquiry has also been processed for the ProPulse marketplace. ')+'ProPulse will coordinate your request.')
     }catch(err){setCallbackFeedback(err.message||'Unable to send your request. Please try again.')}
     finally{setCallbackSending(false)}
   }
@@ -252,8 +252,9 @@ export default function ProjectDetail(){
               <label>Mobile number<input required type="tel" inputMode="tel" autoComplete="tel" pattern="[0-9+ ()-]{10,18}" placeholder="10-digit mobile" value={callbackForm.phone} onChange={e=>setCallbackForm(v=>({...v,phone:e.target.value}))}/></label>
             </div>
             <label>Email (optional)<input type="email" maxLength={255} autoComplete="email" placeholder="you@example.com" value={callbackForm.email} onChange={e=>setCallbackForm(v=>({...v,email:e.target.value}))}/></label>
+            <label>Project PIN code<input required inputMode="numeric" minLength={6} maxLength={6} pattern="[0-9]{6}" placeholder="6-digit project location PIN" value={callbackForm.pincode} onChange={e=>setCallbackForm(v=>({...v,pincode:e.target.value.replace(/\D/g,'').slice(0,6)}))}/></label>
             <label>Your requirement (optional)<textarea rows={3} maxLength={1000} placeholder="Tell us your locality, project type and questions" value={callbackForm.message} onChange={e=>setCallbackForm(v=>({...v,message:e.target.value}))}/></label>
-            <label className="pjd-consent"><input type="checkbox" required checked={callbackForm.consent} onChange={e=>setCallbackForm(v=>({...v,consent:e.target.checked}))}/> I agree that ProPulse may use my details to coordinate this callback.</label>
+            <label className="pjd-consent"><input type="checkbox" required checked={callbackForm.consent} onChange={e=>setCallbackForm(v=>({...v,consent:e.target.checked}))}/> I agree that ProPulse may coordinate this callback and share my enquiry with other relevant professionals through its marketplace. My contact details remain protected until access is authorized.</label>
             <input className="pjd-trap" tabIndex={-1} autoComplete="off" aria-hidden="true" value={callbackForm.website} onChange={e=>setCallbackForm(v=>({...v,website:e.target.value}))}/>
             {callbackFeedback&&<p className="pjd-error" role="alert">{callbackFeedback}</p>}
             <button type="submit" className="pjd-dialog-submit" disabled={callbackSending}>{callbackSending?'Sending…':'Send Callback Request →'}</button>
