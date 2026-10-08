@@ -69,7 +69,7 @@ export default function ProfessionalProjectQuotes({plans=[]}){
   }
 
   const available=plans.filter(p=>p.isPublished&&p.title)
-  return <section className="pqq-panel profile-panel" aria-labelledby="pqq-heading">
+  return <section className="pqq-panel profile-panel" aria-labelledby="pqq-heading" onKeyDown={event=>{if(event.key==='Enter'&&['INPUT','SELECT'].includes(event.target.tagName))event.preventDefault()}}>
     <div className="panel-title"><div><span>PROJECT QUOTES</span><h2 id="pqq-heading">Professional Quote Requests</h2>
       <p>Customers who asked for a price from your completed project pages. Prepare the final scope and quotation here; ProPulse coordinates delivery and keeps customer contact details masked.</p>
     </div><button type="button" onClick={()=>setVersion(v=>v+1)} disabled={loading}>Refresh Requests</button></div>
@@ -99,7 +99,7 @@ export default function ProfessionalProjectQuotes({plans=[]}){
           <div className="pqq-editor">
             <div><label htmlFor={'pqq-package-'+item.id}>Quotation package</label><select id={'pqq-package-'+item.id} value={draft.packageName} onChange={e=>update(item.id,'packageName',e.target.value)}>
               <option value="">Choose package</option>
-              {draft.packageName&&!available.some(p=>p.title===draft.packageName)&&<option value={draft.packageName}>{draft.packageName} (previous)</option>}
+              {draft.packageName&&draft.packageName!=='Custom Project Quotation'&&!available.some(p=>p.title===draft.packageName)&&<option value={draft.packageName}>{draft.packageName} (previous)</option>}
               {available.map(plan=><option key={plan.id||plan.title} value={plan.title}>{plan.title}</option>)}
               <option value="Custom Project Quotation">Custom Project Quotation</option>
             </select></div>
