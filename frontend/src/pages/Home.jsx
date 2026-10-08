@@ -133,8 +133,27 @@ export default function Home() {
     <PublicHeader />
 
     <main>
-      <section className="hc-hero hc-hero-visual-only" id="home">
-        <HeroBlueprintAnimation />
+      <section className="hc-hero hc-premium-hero" id="home">
+        <div className="hc-container hc-premium-hero-inner">
+          <div className="hc-premium-hero-copy">
+            <span className="hc-premium-kicker">BUILDING SPACES, ELEVATING LIVES</span>
+            <h1>Don’t Leave Your <em>Dream Home</em> to <strong>Chance.</strong></h1>
+            <p>Find the right partner. Build it right.</p>
+            <div className="hc-premium-actions">
+              <button type="button" onClick={() => openRequirement()}>Start Your Project <span aria-hidden="true">→</span></button>
+              <a href="/packages">View Packages</a>
+            </div>
+            <div className="hc-premium-trust" aria-label="ProPulse benefits">
+              <span><Icon name="clipboard" size={22}/>Free Consultation</span>
+              <span><Icon name="layers" size={22}/>Relevant Professionals</span>
+              <span><Icon name="check" size={22}/>Warranty Options</span>
+            </div>
+          </div>
+          <div className="hc-premium-scene">
+            <div className="hc-premium-scene-label"><small>YOUR PROJECT JOURNEY</small><b>Plot → Construction → Home → Interior</b></div>
+            <HeroBlueprintAnimation />
+          </div>
+        </div>
       </section>
 
       <section className="hc-section hc-services">
