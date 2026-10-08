@@ -1,4 +1,5 @@
 const callbackService=require('../services/projectCallbackService');
+const quotes=require('../services/professionalProjectQuoteService');
 
 async function list(req,res){
   try{return res.json({data:await callbackService.listForAdmin()});}
@@ -13,4 +14,8 @@ async function updateStatus(req,res){
     return res.status(status).json({error:status===500?'Unable to update callback status':error.message});
   }
 }
-module.exports={list,updateStatus};
+async function listQuotes(req,res){
+  try{return res.json({data:await quotes.listForAdmin()});}
+  catch(error){console.error('Admin project quote coordination list failed:',error);return res.status(500).json({error:'Unable to load project quote leads'});}
+}
+module.exports={list,updateStatus,listQuotes};
