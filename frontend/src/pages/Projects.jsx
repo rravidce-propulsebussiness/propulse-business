@@ -117,6 +117,7 @@ function normalizeProject(project, index) {
     publishedAt: clean(project.published_at),
     sample:false,
     packageName: clean(project.package_name || project.package_title),
+    businessProfileId:Number(project.business_profile_id)||null,
   }
 }
 
@@ -160,6 +161,12 @@ export default function Projects() {
   const [selectedProject, setSelectedProject] = useState(null)
   const [galleryIndex,setGalleryIndex] = useState(0)
   const [showProjectVideo,setShowProjectVideo] = useState(false)
+  const [linkedPlan,setLinkedPlan]=useState(null)
+  const [callbackOpen,setCallbackOpen]=useState(false)
+  const [callbackForm,setCallbackForm]=useState({name:'',phone:'',email:'',message:'',consent:false,website:''})
+  const [callbackSending,setCallbackSending]=useState(false)
+  const [callbackFeedback,setCallbackFeedback]=useState('')
+  const [callbackSuccess,setCallbackSuccess]=useState(false)
   const dialogRef = useRef(null)
 
   useEffect(() => {
@@ -296,7 +303,66 @@ export default function Projects() {
   function openProject(project){
     setGalleryIndex(0)
     setShowProjectVideo(false)
+    setLinkedPlan(null)
+    setCallbackOpen(false)
+    setCallbackFeedback('')
+    setCallbackSuccess(false)
+    setCallbackForm({name:'',phone:'',email:'',message:'',consent:false,website:''})
     setSelectedProject(project)
+  }
+
+  useEffect(()=>{
+    if(!selectedProject||selectedProject.sample||!selectedProject.businessProfileId||!selectedProject.packageName)return undefined
+    let active=true
+    publicRequest('/experts/'+selectedProject.businessProfileId)
+      .then(data=>{
+        if(!active)return
+        const plans=Array.isArray(data?.service_plans)?data.service_plans:[]
+        const match=plans.find(plan=>String(plan.title||'').trim().toLowerCase()===selectedProject.packageName.trim().toLowerCase())
+        setLinkedPlan(match||null)
+      })
+      .catch(()=>{})
+    return()=>{active=false}
+  },[selectedProject])
+
+  async function submitCallback(event){
+    event.preventDefault()
+    if(!selectedProject||selectedProject.sample||!selectedProject.businessProfileId)return
+    setCallbackFeedback('')
+    setCallbackSending(true)
+    try{
+      await publicRequest('/experts/projects/'+encodeURIComponent(selectedProject.id)+'/callback',{
+        method:'POST',body:JSON.stringify(callbackForm)
+      })
+      setCallbackSuccess(true)
+      setCallbackFeedback('Request sent to '+(selectedProject.businessName||'the project professional')+'. You can expect them to contact you directly.')
+    }catch(error){setCallbackFeedback(error.message||'Unable to submit your callback request.')}
+    finally{setCallbackSending(false)}
+  }
+
+  function downloadPackage(project,plan){
+    const title=plan?.title||project.packageName||'Package'
+    const inclusions=Array.isArray(plan?.inclusions)?plan.inclusions:project.sampleSpecs||[]
+    const lines=[
+      project.sample?'ILLUSTRATIVE SAMPLE PACKAGE — NOT A QUOTATION':'PROFESSIONALLY PUBLISHED PACKAGE DETAILS',
+      title,
+      project.title,
+      project.businessName?'Provided by: '+project.businessName:'',
+      plan?.description||project.description||'',
+      plan?.duration_label?'Estimated duration: '+plan.duration_label:'',
+      plan?.price_from?'Published starting price: ₹'+Number(plan.price_from).toLocaleString('en-IN'):'',
+      '',
+      'Specifications / Inclusions',
+      ...inclusions.map((item,i)=>(i+1)+'. '+String(item)),
+      '',
+      project.sample?'Example specifications only; actual scope and costs will differ.':'Confirm brands, scope, exclusions and pricing directly with the publishing professional.',
+    ].filter(x=>x!==null&&x!==undefined).join('\n')
+    const url=URL.createObjectURL(new Blob([lines],{type:'text/plain;charset=utf-8'}))
+    const anchor=document.createElement('a')
+    anchor.href=url
+    anchor.download=(project.sample?project.id:'project-'+project.id)+'-package-details.txt'
+    anchor.click()
+    window.setTimeout(()=>URL.revokeObjectURL(url),1000)
   }
   const selectedPhotos=selectedProject?projectPhotos(selectedProject):[]
   const activePhoto=selectedPhotos[galleryIndex]||selectedPhotos[0]||''
@@ -323,15 +389,13 @@ export default function Projects() {
             <button type="button" className="pj-card-open" onClick={()=>openProject(project)} aria-label={'View '+(project.sample?'sample ':'')+'details for '+project.title}>
               <div className="pj-project-photo">
                 {projectPhotos(project).length?<img src={projectPhotos(project)[0]} loading={index<3?'eager':'lazy'} alt={project.title}/>:<div className="pj-image-placeholder"><Icon name="layers" size={30}/>Project photo not provided</div>}
-                {projectPhotos(project).length>1&&<div className="pj-card-photo-stack" aria-hidden="true">{projectPhotos(project).slice(1,3).map((photo,i)=><img key={photo+i} src={photo} loading="lazy" alt=""/>)}</div>}
                 {projectPhotos(project).length>1&&<span className="pj-card-photo-count">{projectPhotos(project).length} Photos</span>}
                 {!project.sample&&project.video&&<span className="pj-card-video-badge">Video Available</span>}
                 <span className="pj-category-badge">{project.sample?'COMPLETED STYLE · DEMO':categoryLabel(project.category)}</span>
-                <span className="pj-photo-cue">View Details <Icon name="arrow" size={15}/></span>
               </div>
               <div className="pj-project-copy">
                 <span className="pj-card-type">{categoryLabel(project.category)}{!project.sample&&project.completionYear?' · '+project.completionYear:''}</span>
-                <div className="pj-project-title-row"><h3>{project.title}</h3><Icon name="arrow" size={19}/></div>
+                <div className="pj-project-title-row"><h3>{project.title}</h3></div>
                 {project.description&&<p className="pj-card-description">{project.description}</p>}
                 <div className="pj-project-facts">
                   {project.location&&<div><small>Location</small><b>{project.location}</b></div>}
@@ -339,8 +403,8 @@ export default function Projects() {
                   {project.packageName&&<div><small>{project.sample?'Sample Package':'Package'}</small><b>{project.packageName}</b></div>}
                   {project.businessName&&<div><small>Professional</small><b>{project.businessName}</b></div>}
                 </div>
-                {project.cost&&<div className="pj-cost"><div><small>{project.sample?'ILLUSTRATIVE COST':'REPORTED COST / BUDGET'}</small><strong>{project.cost}</strong></div><span className="pj-card-arrow"><Icon name="arrow" size={18}/></span></div>}
-                {!project.cost&&<span className="pj-view-link">View Project <Icon name="arrow" size={16}/></span>}
+                {project.cost&&<div className="pj-cost"><div><small>{project.sample?'ILLUSTRATIVE COST':'REPORTED COST / BUDGET'}</small><strong>{project.cost}</strong></div></div>}
+                <span className="pj-single-action">View Project <Icon name="arrow" size={16}/></span>
               </div>
             </button>
           </article>)}
