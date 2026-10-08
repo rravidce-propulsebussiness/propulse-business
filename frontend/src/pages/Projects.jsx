@@ -190,7 +190,7 @@ export default function Projects() {
         <div className="pj-portfolio-types"><span><i className="pj-dot-completed" aria-hidden="true"/> Completed professional work</span><span><i className="pj-dot-concept" aria-hidden="true"/> Design reference</span></div>
         {loading&&<div className="pj-loading-inline" role="status" aria-label="Checking for published business projects"><span className="pj-inline-spinner" aria-hidden="true"/></div>}
         <div className="pj-project-grid">
-          {filtered.map((project,index)=><article key={(project.sample?'concept-':'business-')+project.id} className="pj-project-card">
+          {filtered.map((project,index)=><article key={(project.sample?'concept-':'business-')+project.id} className={'pj-project-card'+(project.sample?' pj-project-card--concept':'')}>
             <Link to={projectPath(project)} className="pj-card-open" aria-label={'View details for '+project.title}>
               <div className="pj-project-photo">
                 {projectPhotos(project).length?<img src={projectPhotos(project)[0]} loading={index<3?'eager':'lazy'} alt={project.sample?project.title+' architectural design reference':project.title}/>:<div className="pj-image-placeholder"><Icon name="layers" size={30}/>Project photo not provided</div>}
