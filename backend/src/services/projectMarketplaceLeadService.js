@@ -76,11 +76,10 @@ async function sync(kind,id,{notify=true}={}){
       answeredFields['Project Area']=String(record.area_text).slice(0,120);
     if(kind==='quote'&&record.budget_text&&!answeredFields.Budget)
       answeredFields.Budget=String(record.budget_text).slice(0,120);
-    // Preserve optional customer-written requirements alongside structured wizard answers.
+    // A marketplace Requirement is only the text entered in the form's
+    // optional requirement box. Form answers remain separate custom fields.
     const writtenBrief=kind==='quote'?sanitize(answeredFields['Additional Requirements']||''):'';
-    const requirement=(key==='design'?'Interior Design':key==='property'?'Real Estate':'Construction')+
-      ' enquiry from a completed project.'+
-      (kind==='callback'?' '+(details||'Customer requested a callback about their project requirement.'):writtenBrief?' '+writtenBrief:'');
+    const requirement=kind==='callback'?details:writtenBrief;
     const fields={
       industryId:flow.industryId,serviceId:flow.serviceId,subserviceId:flow.subserviceId,
       stateId:Number(detected.city.state_id)||null,cityId:Number(detected.city.id),
@@ -92,7 +91,8 @@ async function sync(kind,id,{notify=true}={}){
       customFields:{
         ...answeredFields,
         _project_origin:{projectId:Number(record.project_id),professionalUserId:Number(record.business_user_id),
-          businessProfileId:Number(record.business_profile_id),requestId:Number(id),type:kind},
+          businessProfileId:Number(record.business_profile_id),requestId:Number(id),type:kind,
+          writtenRequirement:requirement.slice(0,3900)},
         _qualification:{detailedRequirementCompleted:kind==='quote',budgetProvided:Boolean(kind==='quote'&&record.budget_text),
           projectSizeKnown:Boolean(kind==='quote'&&record.area_text)},
       },
