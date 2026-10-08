@@ -42,7 +42,7 @@ async function submit(projectId,input={}){
   const settings=await directory.getSettings();
   if(!settings.directoryEnabled||!settings.showProjects)throw bad('Project not available','PROJECT_NOT_FOUND');
   const {rows}=await pool.query(
-    `SELECT p.id,p.title,bp.user_id AS owner_id,bp.id AS business_profile_id
+    `SELECT p.id,p.title,p.project_type,bp.user_id AS owner_id,bp.id AS business_profile_id
      FROM business_profile_projects p
      JOIN business_profiles bp ON bp.id=p.business_profile_id
      JOIN users u ON u.id=bp.user_id
@@ -55,6 +55,7 @@ async function submit(projectId,input={}){
   );
   const project=rows[0];
   if(!project)throw bad('Project not found','PROJECT_NOT_FOUND');
+  const industry=/interior|design/i.test(project.project_type)?'design':/property|estate/i.test(project.project_type)?'property':'construction';
   const status=await directory.getUserDirectoryStatus(project.owner_id);
   if(!status.eligible)throw bad('Project not available','PROJECT_NOT_FOUND');
   let selectedPackage=null;
@@ -62,8 +63,8 @@ async function submit(projectId,input={}){
     if(!settings.showPlans)throw bad('Published packages are currently unavailable');
     const packageResult=await pool.query(
       `SELECT title,price_from,price_unit FROM business_profile_service_plans
-       WHERE business_profile_id=$1 AND is_published=TRUE AND LOWER(TRIM(title))=LOWER($2)
-       LIMIT 1`,[project.business_profile_id,preferredPackage]
+       WHERE business_profile_id=$1 AND is_published=TRUE AND LOWER(TRIM(title))=LOWER($2) AND industry=$3
+       LIMIT 1`,[project.business_profile_id,preferredPackage,industry]
     );
     selectedPackage=packageResult.rows[0]||null;
     if(!selectedPackage)throw bad('Choose one of this professional’s published packages to continue');
