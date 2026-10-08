@@ -781,3 +781,5 @@
   .pj-page .pj-completed-counter{display:flex;gap:9px;align-items:center;min-width:0;padding:8px 13px;font-size:19px}
   .pj-page .pj-completed-counter small{font-size:12px}
 }
+
+.pj-page .pj-card-verified{position:absolute;z-index:3;bottom:14px;left:14px;display:inline-flex;align-items:center;padding:8px 11px;border-radius:8px;background:rgba(229,250,238,.97);color:#146544;font-size:12px;font-weight:800;box-shadow:0 6px 14px #103c361c}
