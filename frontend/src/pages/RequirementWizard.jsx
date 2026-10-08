@@ -312,8 +312,10 @@ export default function RequirementWizard({ flowKey, onCompletionChange, embedde
     .map(question => flowKey === 'build' && question.questionKey === 'property_type' && !(flow?.questions || []).some(item => item.questionKey === 'project_type')
       ? { ...question, questionKey: 'project_type' } : question)
     .filter(question => isQuestionVisible(question, answers))
+    // Professional plans replace the catalog quality/package question in every industry.
+    .filter(question => !(projectQuote && ['quality','finish_quality'].includes(question.questionKey)))
     .filter(question => !(flowKey === 'build' && ['property_type','construction_scope','basement'].includes(question.questionKey)))
-    .filter(question => !(flowKey === 'design' && ['area','rooms','property_status','possession_status','kitchen','wardrobes','false_ceiling','furniture'].includes(question.questionKey))), [flow, answers, flowKey])
+    .filter(question => !(flowKey === 'design' && ['area','rooms','property_status','possession_status','kitchen','wardrobes','false_ceiling','furniture'].includes(question.questionKey))), [flow, answers, flowKey, Boolean(projectQuote)])
   const locationQuestion = questions.find(question => question.questionType === 'location')
   const selectedCity = useMemo(() => cities.find(city => String(city.id) === String(cityId)), [cities, cityId])
   const locationStates = useMemo(() => {
