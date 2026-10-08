@@ -17,6 +17,8 @@ const app=read('frontend/src/App.jsx');
 const profile=read('frontend/src/pages/Profile.jsx');
 const profileQuotes=read('frontend/src/components/ProfessionalProjectQuotes.jsx');
 const pricing=read('frontend/src/utils/packagePricing.js');
+const wizard=read('frontend/src/pages/RequirementWizard.jsx');
+const interior=read('frontend/src/components/InteriorRequirementExact.jsx');
 
 assert.match(migrations,/business_profile_service_plans/);
 assert.match(migrations,/package_price_from_snapshot/);
@@ -34,6 +36,16 @@ assert.match(quote,/\/experts\/projects\/'\+id\+'\/quote-request/);
 assert.match(quote,/\/experts\/'\+item\.businessProfileId/);
 assert.match(quote,/preferredPackage:picked\?\.title\|\|''/);
 assert.match(quote,/not your quotation/);
+assert.match(quote,/RequirementWizard.*flowKey="design" embedded projectQuote=/);
+assert.doesNotMatch(quote,/Custom quotation/);
+assert.match(wizard,/projectQuote\.onSubmitted\?\.\(result\)/);
+assert.match(wizard,/projectQuote\.preferredPackage/);
+assert.match(wizard,/projectQuote\.project\.id/);
+assert.match(interior,/projectQuote \? professionalPackages\.map/);
+assert.match(interior,/selectedProfessionalPlan/);
+assert.match(interior,/!projectQuote&&<div className="irx-upload/);
+assert.match(service,/if\(!preferredPackage\)throw bad/);
+
 assert.match(routes,/\/projects\/:projectId\/quote-request/);
 assert.match(controller,/professionalQuoteService\.submit/);
 assert.match(service,/business_profile_service_plans/);
