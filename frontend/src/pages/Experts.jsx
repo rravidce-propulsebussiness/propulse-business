@@ -47,7 +47,6 @@ export default function Experts(){
   const [selectedLoadingId,setSelectedLoadingId]=useState(null)
 
   useEffect(()=>{
-    window.scrollTo(0,0)
     Promise.allSettled([publicRequest('/industries'),publicRequest('/cities')]).then(([industryResult,cityResult])=>{
       if(industryResult.status==='fulfilled')setIndustries(collection(industryResult.value))
       if(cityResult.status==='fulfilled')setCities(collection(cityResult.value))
