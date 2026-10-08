@@ -1,19 +1,21 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { authRequest, saveSession, getUser } from '../utils/auth'
 import UserHeader from '../components/UserHeader'
 import {PACKAGE_PRICE_UNITS} from '../utils/packagePricing'
 import ProfileBrochureField from '../components/ProfileBrochureField'
+import ProfessionalBrochures from './ProfessionalBrochures'
 import './Profile.css'
 import {playSound} from '../utils/soundEffects'
 
 const emptyService=()=>({industryId:'',serviceId:'',subserviceId:''})
 const emptyLocation=()=>({stateId:'',cityId:''})
-const emptyProject=()=>({title:'',projectType:'',description:'',locationText:'',completionYear:'',areaText:'',budgetText:'',packageName:'',coverImageUrl:'',imageUrls:[],imageDisplayUrls:[],videoUrl:'',videoDisplayUrl:'',videoPublishedAt:'',planUrl:'',planDisplayUrl:'',brochureUrl:'',brochureDisplayUrl:'',isPublished:true})
+const draftKey=()=>Math.random().toString(36).slice(2)+Date.now().toString(36)
+const emptyProject=()=>({_draftKey:draftKey(),title:'',projectType:'',description:'',locationText:'',completionYear:'',areaText:'',budgetText:'',packageName:'',coverImageUrl:'',imageUrls:[],imageDisplayUrls:[],videoUrl:'',videoDisplayUrl:'',videoPublishedAt:'',planUrl:'',planDisplayUrl:'',brochureUrl:'',brochureDisplayUrl:'',isPublished:true})
 const canonicalProjectType=value=>/interior|design/i.test(String(value||''))?'Interior Design':/estate|property|plot/i.test(String(value||''))?'Real Estate':/construction|build|villa|commercial|residential/i.test(String(value||''))?'Construction':''
 const projectIndustry=value=>value==='Interior Design'?'design':value==='Real Estate'?'property':value==='Construction'?'construction':''
 const INDUSTRY_OPTIONS=[{value:'construction',label:'Construction'},{value:'design',label:'Interior Design'},{value:'property',label:'Real Estate'}]
-const emptyPlan=()=>({industry:'',title:'',description:'',priceFrom:'',priceUnit:'unspecified',durationLabel:'',inclusions:'',brochureUrl:'',brochureDisplayUrl:'',isPublished:true})
+const emptyPlan=()=>({_draftKey:draftKey(),industry:'',title:'',description:'',priceFrom:'',priceUnit:'unspecified',durationLabel:'',inclusions:'',brochureUrl:'',brochureDisplayUrl:'',isPublished:true})
 
 function reasonText(status){
   const reason=status?.reason
@@ -68,6 +70,7 @@ function mapPlan(item){
 
 export default function Profile(){
   const navigate=useNavigate()
+  const location=useLocation()
   const [form,setForm]=useState({name:'',email:'',phone:'',businessName:'',businessDetails:'',publicHeadline:'',publicSummary:'',yearsExperience:'',publicProfileEnabled:true})
   const [industries,setIndustries]=useState([])
   const [services,setServices]=useState([])
@@ -84,7 +87,10 @@ export default function Profile(){
   const [imageUploads,setImageUploads]=useState({})
   const [planUploads,setPlanUploads]=useState({})
   const [brochureUploads,setBrochureUploads]=useState({})
-  const [activeSection,setActiveSection]=useState(()=>{const tab=new URLSearchParams(window.location.search).get('tab');return ['business','projects','plans'].includes(tab)?tab:'business'})
+  const requestedTab=new URLSearchParams(location.search).get('tab')
+  const activeSection=['business','services','locations','public','projects','brochures','plans'].includes(requestedTab)?requestedTab:'business'
+  const [expandedProject,setExpandedProject]=useState(null)
+  const [expandedPlan,setExpandedPlan]=useState(null)
   const [loading,setLoading]=useState(true)
   const [saving,setSaving]=useState(false)
   const [message,setMessage]=useState('')
@@ -123,7 +129,11 @@ export default function Profile(){
   ]
   const completion=Math.round((completionItems.filter(Boolean).length/completionItems.length)*100)
 
-  function selectSection(section){setActiveSection(section);setMessage('');requestAnimationFrame(()=>document.getElementById('profile-tabs')?.scrollIntoView({behavior:'smooth',block:'start'}))}
+  function selectSection(section){if(activeSection!==section)navigate('/profile?tab='+section);setMessage('');requestAnimationFrame(()=>document.getElementById('profile-tabs')?.scrollIntoView({behavior:'smooth',block:'start'}))}
+  function addProject(){const item=emptyProject();setProjects(current=>[...current,item]);setExpandedProject('draft-'+item._draftKey);setMessage('')}
+  function addPlan(){const item=emptyPlan();setPlans(current=>[...current,item]);setExpandedPlan('draft-'+item._draftKey);setMessage('')}
+  function projectKey(item){return item.id?'project-'+item.id:'draft-'+item._draftKey}
+  function planKey(item){return item.id?'plan-'+item.id:'draft-'+item._draftKey}
   function update(field,value){setForm(x=>({...x,[field]:value}));setMessage('')}
   function updateService(index,field,value){setServiceSelections(items=>items.map((x,i)=>i!==index?x:field==='industryId'?{industryId:value,serviceId:'',subserviceId:''}:field==='serviceId'?{...x,serviceId:value,subserviceId:''}:{...x,[field]:value}));setMessage('')}
   function updateLocation(index,field,value){setLocationSelections(items=>items.map((x,i)=>i!==index?x:field==='stateId'?{stateId:value,cityId:''}:{...x,cityId:value}));setMessage('')}
@@ -303,6 +313,7 @@ export default function Profile(){
         setProjects((savedProfile.projects||[]).map(mapProject));setPlans((savedProfile.service_plans||[]).map(mapPlan));setDirectoryStatus(savedProfile.directory_status||null)
       }
       playSound('success')
+      setExpandedProject(null);setExpandedPlan(null)
       setMessage('Profile saved successfully. Public directory content is up to date.')
     }catch(err){playSound('warning');setError(err.message)}finally{setSaving(false)}
   }
@@ -332,14 +343,15 @@ export default function Profile(){
         <button type="button" className={activeSection==='services'?'active':''} onClick={()=>selectSection('services')}>Services</button>
         <button type="button" className={activeSection==='locations'?'active':''} onClick={()=>selectSection('locations')}>Locations</button>
         <button type="button" className={activeSection==='public'?'active':''} onClick={()=>selectSection('public')}>Public profile</button>
-        <button type="button" className={activeSection==='projects'?'active':''} onClick={()=>selectSection('projects')}>Projects</button><Link className="profile-tab-link" to="/profile/brochures">Company Brochures</Link>
+        <button type="button" className={activeSection==='projects'?'active':''} onClick={()=>selectSection('projects')}>Projects</button>
+        <button type="button" className={activeSection==='brochures'?'active':''} onClick={()=>selectSection('brochures')}>Company Brochures</button>
         <button type="button" className={activeSection==='plans'?'active':''} onClick={()=>selectSection('plans')}>Packages</button>
       </nav>
 
       {error&&<div className="profile-alert error">{error}</div>}
       {message&&<div className="profile-alert success">{message}</div>}
 
-      <form onSubmit={save} className="profile-form">
+      {activeSection==='brochures'?<ProfessionalBrochures embedded/>:<form onSubmit={save} className="profile-form">
         <div className="profile-main-column">
           {activeSection==='business'&&<>
           <section className="profile-panel profile-information" id="profile-information">
@@ -411,6 +423,12 @@ export default function Profile(){
             </article>)}{!plans.length&&<div className="profile-showcase-empty"><b>No public service plans added.</b><span>Add packages only if you want customers to compare offerings in Experts.</span></div>}</div>
           </section>
           </>}
+
+          {activeSection==='business'&&<section className="profile-panel profile-proof-panel">
+            <div className="panel-title"><div><span>07</span><h2>Company proof</h2><p>Verification documents remain private and are reviewed by ProPulse Admin.</p></div></div>
+            {companyProofs.length?<div className="profile-proof-list">{companyProofs.map(doc=><div className="profile-proof-item" key={doc.id||(doc.original_name+'-'+doc.created_at)}><div className="profile-proof-icon">{String(doc.mime_type||'').includes('pdf')?'PDF':'IMG'}</div><div className="profile-proof-info"><strong>{doc.original_name||'Company proof document'}</strong><small>{doc.mime_type||'Document'} · {doc.file_size?(Number(doc.file_size)/1024/1024).toFixed(2)+' MB':''}{doc.status?' · '+String(doc.status).replace(/^./,m=>m.toUpperCase()):''}</small></div>{doc.file_url&&<a className="profile-proof-view" href={doc.file_url} target="_blank" rel="noreferrer">View document ↗</a>}</div>)}</div>:<div className="profile-proof-empty"><strong>No company proof documents found</strong><span>Upload a proof document from signup to complete business verification.</span></div>}
+          </section>}
+          <div className="profile-save"><button type="submit" disabled={saving}>{saving?'Saving…':'Save changes'} <span>→</span></button></div>
         </div>
 
         <aside className="profile-side-column">
@@ -419,14 +437,7 @@ export default function Profile(){
           <section className="profile-side-card profile-membership-card"><span className="side-kicker">EXPERT DIRECTORY</span><h3>{directoryStatus?.membership?`${String(directoryStatus.membership.planGroup||'').toUpperCase()} membership`:'No active eligible plan'}</h3><p>{reasonText(directoryStatus)}</p>{directoryStatus?.eligible&&<Link to="/experts">View directory ↗</Link>}</section>
         </aside>
 
-        {activeSection==='business'&&<>
-        <section className="profile-panel profile-proof-panel">
-          <div className="panel-title"><div><span>07</span><h2>Company proof</h2><p>Verification documents remain private and are reviewed by ProPulse Admin.</p></div></div>
-          {companyProofs.length?<div className="profile-proof-list">{companyProofs.map(doc=><div className="profile-proof-item" key={doc.id||(doc.original_name+'-'+doc.created_at)}><div className="profile-proof-icon">{String(doc.mime_type||'').includes('pdf')?'PDF':'IMG'}</div><div className="profile-proof-info"><strong>{doc.original_name||'Company proof document'}</strong><small>{doc.mime_type||'Document'} · {doc.file_size?(Number(doc.file_size)/1024/1024).toFixed(2)+' MB':''}{doc.status?' · '+String(doc.status).replace(/^./,m=>m.toUpperCase()):''}</small></div>{doc.file_url&&<a className="profile-proof-view" href={doc.file_url} target="_blank" rel="noreferrer">View document ↗</a>}</div>)}</div>:<div className="profile-proof-empty"><strong>No company proof documents found</strong><span>Upload a proof document from signup to complete business verification.</span></div>}
-        </section>
-        </>}
-        <div className="profile-save"><button type="submit" disabled={saving}>{saving?'Saving…':'Save changes'} <span>→</span></button></div>
-      </form>
+      </form>}
     </div>
   </>
 }
