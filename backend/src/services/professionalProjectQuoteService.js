@@ -86,7 +86,16 @@ async function submit(projectId,input={}){
      siteLocation||null,area||null,budget||null,selectedPackage?.title||null,
      selectedPackage?.price_from??null,selectedPackage?.price_unit||null]
   );
-  if(!saved.rowCount)return {accepted:true,duplicate:true};
+  if(!saved.rowCount){
+    const prior=await pool.query(
+      `SELECT id FROM professional_project_quote_requests
+       WHERE project_id=$1 AND customer_phone=$2
+         AND created_at>CURRENT_TIMESTAMP-INTERVAL '1 hour'
+       ORDER BY created_at DESC,id DESC LIMIT 1`,
+      [id,phone]
+    );
+    return {accepted:true,duplicate:true,requestId:prior.rows[0]?.id||null};
+  }
   const quoteId=saved.rows[0].id;
   try{
     await notifications.notifyUser({
