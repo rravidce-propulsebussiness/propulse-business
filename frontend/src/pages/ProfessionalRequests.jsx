@@ -222,7 +222,8 @@ export default function ProfessionalRequests() {
                 <div><dt>Email address</dt><dd>{chosen.customer_email || 'Not supplied'}</dd></div>
               </dl>
             </div>
-            <div className="prc-contact-notice"><RequestsIcon name="shield"/><p>ProPulse coordinates introductions and updates callback stages. Customer contact details unlock after lead payment or acceptance through an active Pro membership.</p></div>
+            <ProfessionalRequestUnlock kind={chosen.project_id?'callback':'profile'} item={chosen} onUnlocked={()=>load()}/>
+            <div className="prc-contact-notice"><RequestsIcon name="shield"/><p>{chosen.access?.unlocked?'Accepted enquiry · customer contact is unlocked.':'Contact stays protected until confirmed payment or an active Pro membership acceptance.'}</p></div>
             <div className="prc-detail-actions">
               <Link to="/profile/brochures">Manage brochures <RequestsIcon name="arrow"/></Link>
               <button type="button" disabled={refreshing} onClick={() => load()}>Check for updates</button>
