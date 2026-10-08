@@ -1,6 +1,7 @@
 import {useEffect,useState} from 'react'
 import {authRequest} from '../utils/auth'
 import {formatPublishedPackagePrice} from '../utils/packagePricing'
+import ProfessionalRequestUnlock from './ProfessionalRequestUnlock'
 import './ProfessionalProjectQuotes.css'
 
 const initialDraft=item=>({
@@ -18,6 +19,7 @@ export default function ProfessionalProjectQuotes({plans=[]}){
   const [feedback,setFeedback]=useState('')
   const [saving,setSaving]=useState(null)
   const [version,setVersion]=useState(0)
+  const [activeUnlockId,setActiveUnlockId]=useState(null)
   useEffect(()=>{
     let live=true
     setLoading(true)
@@ -71,7 +73,7 @@ export default function ProfessionalProjectQuotes({plans=[]}){
   const available=plans.filter(p=>p.isPublished&&p.title)
   return <section className="pqq-panel profile-panel" aria-labelledby="pqq-heading" onKeyDown={event=>{if(event.key==='Enter'&&['INPUT','SELECT'].includes(event.target.tagName))event.preventDefault()}}>
     <div className="panel-title"><div><span>PROJECT QUOTES</span><h2 id="pqq-heading">Professional Quote Requests</h2>
-      <p>Customers who asked for a price from your completed project pages. Prepare the final scope and quotation here; ProPulse coordinates delivery and keeps customer contact details masked.</p>
+      <p>Customers who asked for a price from your completed project pages. Accept an enquiry to unlock the customer’s contact. Pay per lead, or accept free with an active Pro membership.</p>
     </div><button type="button" onClick={()=>setVersion(v=>v+1)} disabled={loading}>Refresh Requests</button></div>
     {error&&<p className="pqq-alert error" role="alert">{error}</p>}
     {feedback&&<p className="pqq-alert success" role="status">{feedback}</p>}
@@ -86,7 +88,7 @@ export default function ProfessionalProjectQuotes({plans=[]}){
           <div className="pqq-private">
             <div><strong>Customer phone</strong><span>{item.customer_phone||'Protected'}</span></div>
             {item.customer_email&&<div><strong>Email</strong><span>{item.customer_email}</span></div>}
-            <p>Contact details are masked; ProPulse coordinates the response.</p>
+            <p>{item.access?.unlocked?'Contact access unlocked for this enquiry.':'Contact details remain locked until payment confirmation or free membership acceptance.'}</p>
           </div>
           <dl className="pqq-details">
             <div><dt>Requested package</dt><dd>{item.preferred_package||'Custom pricing'}</dd></div>
@@ -96,7 +98,11 @@ export default function ProfessionalProjectQuotes({plans=[]}){
             {item.budget_text&&<div><dt>Budget indicated</dt><dd>{item.budget_text}</dd></div>}
           </dl>
           <div className="pqq-requirement"><strong>Customer requirement</strong><p>{item.requirement}</p></div>
-          <div className="pqq-editor">
+          {!item.access?.unlocked&&<button className="pqq-unlock-toggle" type="button" onClick={()=>setActiveUnlockId(current=>current===item.id?null:item.id)}>
+            {activeUnlockId===item.id?'Hide acceptance options':item.access?.eligibleForFree?'Accept Free · Pro Member':item.access?.price?`Accept & Pay ₹${Number(item.access.price).toLocaleString('en-IN')}`:'View enquiry status'}
+          </button>}
+          {(item.access?.unlocked||activeUnlockId===item.id)&&<ProfessionalRequestUnlock kind="quote" item={item} onUnlocked={()=>{setActiveUnlockId(null);setVersion(v=>v+1)}}/>}
+          {item.access?.unlocked&&<div className="pqq-editor">
             <div><label htmlFor={'pqq-package-'+item.id}>Quotation package</label><select id={'pqq-package-'+item.id} value={draft.packageName} onChange={e=>update(item.id,'packageName',e.target.value)}>
               <option value="">Choose package</option>
               {draft.packageName&&draft.packageName!=='Custom Project Quotation'&&!available.some(p=>p.title===draft.packageName)&&<option value={draft.packageName}>{draft.packageName} (previous)</option>}
@@ -106,9 +112,9 @@ export default function ProfessionalProjectQuotes({plans=[]}){
             <div><label htmlFor={'pqq-price-'+item.id}>Final quoted total (₹)</label><input id={'pqq-price-'+item.id} type="number" min="1" max="9999999999" step="0.01" value={draft.price} onChange={e=>update(item.id,'price',e.target.value)} placeholder="Enter final amount"/></div>
             <div className="pqq-wide"><label htmlFor={'pqq-scope-'+item.id}>Confirmed scope and inclusions</label><textarea id={'pqq-scope-'+item.id} rows={3} maxLength={3000} placeholder="Specify finishes, measured area, materials, exclusions, taxes and unit rates…" value={draft.scope} onChange={e=>update(item.id,'scope',e.target.value)}/></div>
             <div className="pqq-wide"><label htmlFor={'pqq-notes-'+item.id}>Internal notes (optional)</label><textarea id={'pqq-notes-'+item.id} rows={2} maxLength={1500} placeholder="Site visit, questions, follow-up timing…" value={draft.notes} onChange={e=>update(item.id,'notes',e.target.value)}/></div>
-          </div>
-          {selected?.priceFrom&&<p className="pqq-warning">Profile starting rate: {formatPublishedPackagePrice(selected.priceFrom,selected.priceUnit)}. Enter your separately calculated final total above; the starting rate is not a completed quotation.</p>}
-          <div className="pqq-actions"><button type="button" disabled={saving!==null} onClick={()=>saveRequest(item,'in_review')}>{saving===item.id?'Saving…':'Save Draft'}</button><button className="pqq-primary" type="button" disabled={saving!==null} onClick={()=>saveRequest(item,'quoted')}>Submit Final Quote →</button></div>
+          </div>}
+          {item.access?.unlocked&&selected?.priceFrom&&<p className="pqq-warning">Profile starting rate: {formatPublishedPackagePrice(selected.priceFrom,selected.priceUnit)}. Enter your separately calculated final total above; the starting rate is not a completed quotation.</p>}
+          {item.access?.unlocked&&<div className="pqq-actions"><button type="button" disabled={saving!==null} onClick={()=>saveRequest(item,'in_review')}>{saving===item.id?'Saving…':'Save Draft'}</button><button className="pqq-primary" type="button" disabled={saving!==null} onClick={()=>saveRequest(item,'quoted')}>Submit Final Quote →</button></div>}
         </article>
       })}</div>}
   </section>

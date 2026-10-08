@@ -51,7 +51,7 @@ function projectWrittenRequirement(row, custom = row?.custom_fields || {}) {
   }
   const source = String(row?.source || '').toLowerCase();
   const raw = clean(row?.requirement);
-  if (source === 'professional_project_callback') {
+  if (source === 'professional_project_callback' || source === 'professional_profile_callback') {
     const message = raw.replace(projectIntro, '').trim();
     return generatedCallback.test(message) ? '' : message;
   }
@@ -86,7 +86,7 @@ function writtenLeadRequirement(row, custom = row?.custom_fields || {}) {
     return written ? clean(written[1]) : '';
   }
   if (source === 'homepage_consultation') return '';
-  if (source === 'professional_project_quote' || source === 'professional_project_callback') {
+  if (source === 'professional_project_quote' || source === 'professional_project_callback' || source === 'professional_profile_callback') {
     return projectWrittenRequirement(row, custom);
   }
   return clean(row?.requirement);

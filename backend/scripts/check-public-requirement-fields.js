@@ -65,8 +65,8 @@ assert.equal(writtenLeadRequirement({source:'manual',requirement:'Need a terrace
 const bridge = read('src/services/projectMarketplaceLeadService.js');
 const homepage = read('src/services/publicLeadIntakeService.js');
 const formMigration = read('src/database/migrations/20261008_zzzzzzz_form_intake_requirement_integrity.sql');
-assert(bridge.includes("const requirement=kind==='callback'?details:writtenBrief"),
-  'Project marketplace must not insert a generated description');
+assert(bridge.includes("const requirement=kind==='quote'?writtenBrief:details"),
+  'Project and professional callback marketplace leads must not insert a generated description');
 assert(homepage.includes('requirement: null,'), 'Home consultation selection summaries must not become requirement');
 assert(formMigration.includes("'professional_project_callback'"),
   'All form-origin leads must rely on intake idempotency');

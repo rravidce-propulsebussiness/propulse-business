@@ -88,7 +88,9 @@ async function requestProfileCallback(expertId,input={}){
   const id=Number(expertId);
   if(!Number.isSafeInteger(id)||id<1)throw bad('Professional profile not found','PROFILE_NOT_FOUND');
   if(input.website)throw bad('Unable to submit request');
-  if(input.consent!==true)throw bad('Please confirm that ProPulse may coordinate your callback');
+  if(input.consent!==true)throw bad('Please consent to sharing your contact with the selected professional after they accept the enquiry');
+  const pincode=String(input.pincode||'').trim();
+  if(!/^\d{6}$/.test(pincode))throw bad('Enter a valid 6-digit project PIN code');
   const name=normalizeName(input.name);
   const phone=normalizePhone(input.phone);
   const email=normalizeEmail(input.email);
@@ -117,7 +119,18 @@ async function requestProfileCallback(expertId,input={}){
      ) RETURNING id`,
     [title.slice(0,180),profile.user_id,name,phone,email,message||null]
   );
-  if(!result.rowCount)return {success:true,duplicate:true};
+  if(!result.rowCount){
+    const prior=(await pool.query(`SELECT id FROM project_callback_requests
+      WHERE project_id IS NULL AND business_user_id=$1 AND customer_phone=$2
+        AND created_at>CURRENT_TIMESTAMP-INTERVAL '1 hour'
+      ORDER BY id DESC LIMIT 1`,[profile.user_id,phone])).rows[0];
+    if(!prior)return {success:true,duplicate:true};
+    await marketplace.flagPending('profile',prior.id,pincode);
+    const market=await marketplace.sync('profile',prior.id);
+    return{success:true,duplicate:true,requestId:prior.id,marketplaceLeadId:market.leadId||null,marketplaceStatus:market.status};
+  }
+  await marketplace.flagPending('profile',result.rows[0].id,pincode);
+  const market=await marketplace.sync('profile',result.rows[0].id);
   try{
     await notifications.notifyUser({
       userId:profile.user_id,type:'project_callback_request',category:'lead',severity:'info',
@@ -127,7 +140,7 @@ async function requestProfileCallback(expertId,input={}){
       dedupeKey:`profile-callback-${result.rows[0].id}`,
     });
   }catch(error){console.error('Profile callback notification failed:',error.message);}
-  return {success:true};
+  return {success:true,requestId:result.rows[0].id,marketplaceLeadId:market.leadId||null,marketplaceStatus:market.status};
 }
 function maskedPhone(value){
   const digits=String(value||'').replace(/\D/g,'');
@@ -151,13 +164,25 @@ function redactContactText(value){
 async function listForProfessional(userId){
   const id=Number(userId);
   if(!Number.isSafeInteger(id)||id<1)return [];
-  return (await pool.query(
-    `SELECT r.id,r.project_id,r.project_title,r.customer_name,
+  const rows=(await pool.query(
+    `SELECT r.id,r.project_id,r.project_title,r.marketplace_lead_id,r.customer_name,
        r.customer_phone,r.customer_email,r.message,r.status,r.created_at
        FROM project_callback_requests r
        WHERE r.business_user_id=$1
        ORDER BY r.created_at DESC,r.id DESC LIMIT 100`,[id]
-  )).rows.map(row=>({...row,customer_name:redactContactText(row.customer_name),customer_phone:maskedPhone(row.customer_phone),customer_email:maskedEmail(row.customer_email),message:redactContactText(row.message)}));
+  )).rows;
+  const access=require('./professionalRequestAccessService');
+  const projects=rows.filter(row=>row.project_id),profiles=rows.filter(row=>!row.project_id);
+  const decorated=[...await access.attachAccess(id,projects,'callback'),
+    ...await access.attachAccess(id,profiles,'profile')];
+  const byId=new Map(decorated.map(row=>[Number(row.id),row]));
+  return rows.map(original=>{
+    const row=byId.get(Number(original.id))||original;
+    return {...row,customer_name:redactContactText(row.customer_name),
+      customer_phone:row.access?.unlocked?row.customer_phone:maskedPhone(row.customer_phone),
+      customer_email:row.access?.unlocked?row.customer_email:maskedEmail(row.customer_email),
+      message:redactContactText(row.message)};
+  });
 }
 
 async function listForAdmin(){
