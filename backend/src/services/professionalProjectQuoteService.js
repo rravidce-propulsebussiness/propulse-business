@@ -138,10 +138,12 @@ async function listForProfessional(userId){
      FROM professional_project_quote_requests
      WHERE business_user_id=$1 ORDER BY created_at DESC,id DESC LIMIT 100`,[id]
   )).rows;
-  return rows.map(row=>({...row,
+  const access=require('./professionalRequestAccessService');
+  const decorated=await access.attachAccess(userId,rows,'quote');
+  return decorated.map(row=>({...row,
     customer_name:redact(row.customer_name),
-    customer_phone:maskPhone(row.customer_phone),
-    customer_email:maskEmail(row.customer_email),
+    customer_phone:row.access?.unlocked?row.customer_phone:maskPhone(row.customer_phone),
+    customer_email:row.access?.unlocked?row.customer_email:maskEmail(row.customer_email),
     requirement:redact(row.requirement),
     site_location:redact(row.site_location),
   }));
@@ -151,6 +153,8 @@ async function updateByProfessional(userId,requestId,input={}){
   if(!Number.isSafeInteger(id)||id<1)throw bad('Quotation request not found','QUOTE_NOT_FOUND');
   const owner=Number(userId);
   if(!Number.isSafeInteger(owner)||owner<1)throw bad('Business account required','QUOTE_FORBIDDEN');
+  if(!await require('./professionalRequestAccessService').isUnlocked(userId,'quote',id))
+    throw bad('Accept this enquiry before preparing or submitting a quotation','ENQUIRY_NOT_ACCEPTED');
   const quoteStatus=String(input.status||'in_review');
   if(!['in_review','quoted','closed'].includes(quoteStatus))throw bad('Invalid quotation status');
   const packageName=text(input.packageName,160,'Selected package');
