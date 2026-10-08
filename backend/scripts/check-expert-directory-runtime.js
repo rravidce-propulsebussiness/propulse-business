@@ -1,6 +1,7 @@
 const assert=require('assert');
 const pool=require('../src/config/database');
 const publicExpertService=require('../src/services/publicExpertService');
+const professionalQuoteService=require('../src/services/professionalProjectQuoteService');
 const expertDirectoryService=require('../src/services/expertDirectoryService');
 
 async function main(){
@@ -81,6 +82,32 @@ async function main(){
     assert.strictEqual(Number(fixtureProjects[0].project_id),newerProject.id,'Newest completed project must appear first');
     assert.strictEqual(Number(fixtureProjects[1].project_id),olderProject.id,'Older completed project must follow newer project');
     assert.strictEqual(fixtureProjects[0].plan_url,'https://cdn.example.test/newer.pdf','Project plan must be available on the Projects feed when enabled');
+
+    // Exercise the actual SQL INSERT with a business-owned published package:
+    // browser mocks cannot catch database schema or INSERT statement failures.
+    await pool.query(
+      "INSERT INTO business_profile_service_plans(business_profile_id,title,price_from,price_unit,is_published,sort_order) VALUES($1,$2,1600,'sqft',TRUE,0)",
+      [subscribed.profileId,'Standard']
+    );
+    const posted=await professionalQuoteService.submit(newerProject.id,{
+      name:'Directory Runtime Tester',phone:'9876501234',email:'example@example.test',
+      requirement:'Interior finishes and kitchen planning for a 3 BHK.',
+      siteLocation:'Hyderabad',area:'1650 sq ft',budget:'15 lakh',
+      preferredPackage:'Standard',consent:true,website:'',
+    });
+    assert.ok(posted.accepted&&posted.requestId,'Published professional quote must persist');
+    const quotes=await professionalQuoteService.listForProfessional(subscribed.userId);
+    const stored=quotes.find(item=>Number(item.id)===Number(posted.requestId));
+    assert.ok(stored,'Professional must receive the quote in their inbox');
+    assert.strictEqual(stored.preferred_package,'Standard');
+    assert.strictEqual(Number(stored.package_price_from_snapshot),1600);
+    assert.strictEqual(stored.package_price_unit_snapshot,'sqft');
+    assert.ok(!stored.customer_phone.includes('9876501234'),'Direct customer contact must be masked');
+    const duplicate=await professionalQuoteService.submit(newerProject.id,{
+      name:'Directory Runtime Tester',phone:'9876501234',
+      requirement:'Another finish selection',preferredPackage:'Standard',consent:true,
+    });
+    assert.strictEqual(duplicate.duplicate,true,'Duplicate requests in one hour must be deduplicated');
 
     await expertDirectoryService.updateBusinessVisibility(null,subscribed.userId,{isHidden:true,isFeatured:false,sortOrder:0});
     list=await publicExpertService.listPublicExperts({search:'Expert Runtime '+stamp,page:1,pageSize:48});

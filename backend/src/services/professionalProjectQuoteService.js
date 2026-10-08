@@ -38,6 +38,7 @@ async function submit(projectId,input={}){
   const area=text(input.area,120,'Project area');
   const budget=text(input.budget,120,'Budget');
   const preferredPackage=text(input.preferredPackage,160,'Preferred package');
+  if(!preferredPackage)throw bad('Choose one of this professional’s published packages to continue');
   const settings=await directory.getSettings();
   if(!settings.directoryEnabled||!settings.showProjects)throw bad('Project not available','PROJECT_NOT_FOUND');
   const {rows}=await pool.query(
@@ -65,17 +66,20 @@ async function submit(projectId,input={}){
        LIMIT 1`,[project.business_profile_id,preferredPackage]
     );
     selectedPackage=packageResult.rows[0]||null;
-    if(!selectedPackage)throw bad('Select a published package or request custom pricing');
+    if(!selectedPackage)throw bad('Choose one of this professional’s published packages to continue');
   }
   const saved=await pool.query(
     `INSERT INTO professional_project_quote_requests
       (project_id,project_title,business_user_id,customer_name,customer_phone,customer_email,
        requirement,site_location,area_text,budget_text,preferred_package,
        package_price_from_snapshot,package_price_unit_snapshot)
-     SELECT $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13
+     SELECT $1::integer,$2::varchar(180),$3::integer,$4::varchar(160),
+            $5::varchar(16),$6::varchar(255),$7::text,$8::varchar(180),
+            $9::varchar(120),$10::varchar(120),$11::varchar(160),
+            $12::numeric(12,2),$13::varchar(24)
      WHERE NOT EXISTS(
        SELECT 1 FROM professional_project_quote_requests
-       WHERE project_id=$1 AND customer_phone=$5
+       WHERE project_id=$1::integer AND customer_phone=$5::varchar(16)
        AND created_at>CURRENT_TIMESTAMP-INTERVAL '1 hour'
      ) RETURNING id`,
     [id,String(project.title).slice(0,180),project.owner_id,name,phone,email||null,requirement,
