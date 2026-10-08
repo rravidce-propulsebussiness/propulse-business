@@ -11,6 +11,7 @@ async function materializeProjectMedia(rows){
     cover_image_url:row.cover_image_url?await projectImageService.displayUrl(row.cover_image_url):row.cover_image_url,
     video_url:row.video_url?await projectVideoService.displayUrl(row.video_url):row.video_url,
     plan_url:row.plan_url?await projectPlanService.displayUrl(row.plan_url):row.plan_url,
+    brochure_url:row.brochure_url?await projectPlanService.displayUrl(row.brochure_url):row.brochure_url,
     image_urls:await Promise.all((row.image_urls||[]).map(url=>projectImageService.displayUrl(url))),
   })));
 }
@@ -308,6 +309,7 @@ async function listRecentProjects({page=1,pageSize=18}={}){
        bpp.cover_image_url,
        bpp.image_urls,
        bpp.package_name,
+       bpp.brochure_url,
        ${settings.showVideos?'bpp.video_url':'NULL::text AS video_url'},
        ${settings.showPlans?'bpp.plan_url':'NULL::text AS plan_url'},
        COALESCE(bpp.published_at,bpp.video_published_at,bpp.created_at) AS published_at,
@@ -348,7 +350,7 @@ async function getPublicProject(projectId){
   const result=await pool.query(
     `SELECT bpp.id AS project_id,bpp.title,bpp.project_type,bpp.description,
       bpp.location_text,bpp.completion_year,bpp.area_text,bpp.budget_text,
-      bpp.cover_image_url,bpp.image_urls,bpp.package_name,
+      bpp.cover_image_url,bpp.image_urls,bpp.package_name,bpp.brochure_url,
       ${settings.showVideos?'bpp.video_url':'NULL::text AS video_url'},
       ${settings.showPlans?'bpp.plan_url':'NULL::text AS plan_url'},
       COALESCE(bpp.published_at,bpp.video_published_at,bpp.created_at) AS published_at,
@@ -394,11 +396,15 @@ async function getPublicExpert(expertId){
   const [services,locations,projects,plans]=await Promise.all([
     pool.query(`SELECT bps.industry_id AS "industryId",i.name AS "industryName",bps.service_id AS "serviceId",s.name AS "serviceName",bps.subservice_id AS "subserviceId",ss.name AS "subserviceName" FROM business_profile_services bps JOIN industries i ON i.id=bps.industry_id JOIN services s ON s.id=bps.service_id LEFT JOIN subservices ss ON ss.id=bps.subservice_id WHERE bps.business_profile_id=$1 AND bps.is_active=TRUE ORDER BY i.name,s.name,ss.name`,[id]),
     pool.query(`SELECT bpl.state_id AS "stateId",st.name AS "stateName",bpl.city_id AS "cityId",c.name AS "cityName",bpl.subcity_id AS "subcityId",sc.name AS "subcityName" FROM business_profile_locations bpl JOIN states st ON st.id=bpl.state_id JOIN cities c ON c.id=bpl.city_id LEFT JOIN subcities sc ON sc.id=bpl.subcity_id WHERE bpl.business_profile_id=$1 AND bpl.is_active=TRUE ORDER BY st.name,c.name`,[id]),
-    settings.showProjects?pool.query(`SELECT id,title,project_type,description,location_text,completion_year,area_text,budget_text,cover_image_url,image_urls,package_name,${settings.showVideos?'video_url':'NULL::text AS video_url'},video_published_at,${settings.showPlans?'plan_url':'NULL::text AS plan_url'},sort_order FROM business_profile_projects WHERE business_profile_id=$1 AND is_published=TRUE AND completion_year BETWEEN 1950 AND EXTRACT(YEAR FROM CURRENT_DATE) ORDER BY sort_order,id`,[id]):Promise.resolve({rows:[]}),
-    settings.showPlans?pool.query(`SELECT id,title,description,price_from,duration_label,inclusions,sort_order FROM business_profile_service_plans WHERE business_profile_id=$1 AND is_published=TRUE ORDER BY sort_order,id`,[id]):Promise.resolve({rows:[]}),
+    settings.showProjects?pool.query(`SELECT id,title,project_type,description,location_text,completion_year,area_text,budget_text,cover_image_url,image_urls,package_name,${settings.showVideos?'video_url':'NULL::text AS video_url'},video_published_at,${settings.showPlans?'plan_url':'NULL::text AS plan_url'},brochure_url,sort_order FROM business_profile_projects WHERE business_profile_id=$1 AND is_published=TRUE AND completion_year BETWEEN 1950 AND EXTRACT(YEAR FROM CURRENT_DATE) ORDER BY sort_order,id`,[id]):Promise.resolve({rows:[]}),
+    settings.showPlans?pool.query(`SELECT id,title,description,price_from,duration_label,inclusions,brochure_url,sort_order FROM business_profile_service_plans WHERE business_profile_id=$1 AND is_published=TRUE ORDER BY sort_order,id`,[id]):Promise.resolve({rows:[]}),
   ]);
-  const [renderedProjects,brochures]=await Promise.all([materializeProjectMedia(projects.rows),brochureService.listPublic(id)]);
-  return {...base,services:services.rows,locations:locations.rows,projects:renderedProjects,brochures,service_plans:plans.rows,directory_settings:{showProjects:settings.showProjects,showVideos:settings.showVideos,showPlans:settings.showPlans}};
+  const [renderedProjects,brochures,renderedPlans]=await Promise.all([
+    materializeProjectMedia(projects.rows),
+    brochureService.listPublic(id),
+    Promise.all(plans.rows.map(async plan=>({...plan,brochure_url:await projectPlanService.displayUrl(plan.brochure_url)}))),
+  ]);
+  return {...base,services:services.rows,locations:locations.rows,projects:renderedProjects,brochures,service_plans:renderedPlans,directory_settings:{showProjects:settings.showProjects,showVideos:settings.showVideos,showPlans:settings.showPlans}};
 }
 
 module.exports={listPublicExperts,listRecentProjects,listRecentProjectVideos,getPublicExpert,getPublicProject};

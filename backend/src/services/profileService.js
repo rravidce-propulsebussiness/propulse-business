@@ -55,6 +55,7 @@ function normalizeProjects(projects){
       })(),
       videoUrl:cleanUrl(item?.videoUrl,'Project video'),
       planUrl:cleanUrl(item?.planUrl,'Project plan'),
+      brochureUrl:cleanUrl(item?.brochureUrl,'Project specifications brochure'),
       sortOrder:index,
       isPublished:item?.isPublished!==false,
     };
@@ -78,6 +79,7 @@ function normalizePlans(plans){
       description:cleanText(item?.description,2000,'Plan description'),
       priceFrom,
       durationLabel:cleanText(item?.durationLabel,120,'Plan duration'),
+      brochureUrl:cleanUrl(item?.brochureUrl,'Package brochure'),
       inclusions,
       sortOrder:index,
       isPublished:item?.isPublished!==false,
@@ -125,13 +127,13 @@ async function getProfile(userId, client = pool) {
     ),
     client.query(
       `SELECT id,title,project_type,description,location_text,completion_year,area_text,budget_text,
-              cover_image_url,image_urls,package_name,video_url,video_published_at,plan_url,published_at,sort_order,is_published
+              cover_image_url,image_urls,package_name,video_url,video_published_at,plan_url,brochure_url,published_at,sort_order,is_published
        FROM business_profile_projects
        WHERE business_profile_id=$1
        ORDER BY sort_order,id`, [profile.id]
     ),
     client.query(
-      `SELECT id,title,description,price_from,duration_label,inclusions,sort_order,is_published
+      `SELECT id,title,description,price_from,duration_label,inclusions,brochure_url,sort_order,is_published
        FROM business_profile_service_plans
        WHERE business_profile_id=$1
        ORDER BY sort_order,id`, [profile.id]
@@ -150,6 +152,7 @@ async function getProfile(userId, client = pool) {
     ...project,
     video_display_url:await projectVideoService.displayUrl(project.video_url),
     plan_display_url:await projectPlanService.displayUrl(project.plan_url),
+    brochure_display_url:await projectPlanService.displayUrl(project.brochure_url),
     image_display_urls:await Promise.all((project.image_urls||[]).map(url=>projectImageService.displayUrl(url))),
   })));
 
@@ -159,7 +162,7 @@ async function getProfile(userId, client = pool) {
     locations: locations.rows,
     company_proofs: renderedProofs,
     projects: renderedProjects,
-    service_plans: plans.rows,
+    service_plans: await Promise.all(plans.rows.map(async plan=>({...plan,brochure_display_url:await projectPlanService.displayUrl(plan.brochure_url)}))),
     directory_status: directoryStatus,
   };
 }
@@ -260,14 +263,22 @@ async function updateProfile(userId, payload) {
 
     const profileId = profile.rows[0].id;
     const existingProjects=(await client.query(
-      'SELECT id,video_url,video_published_at,plan_url,image_urls,published_at FROM business_profile_projects WHERE business_profile_id=$1',
+      'SELECT id,video_url,video_published_at,plan_url,brochure_url,image_urls,published_at FROM business_profile_projects WHERE business_profile_id=$1',
       [profileId]
     )).rows;
     const existingById=new Map(existingProjects.map(item=>[Number(item.id),item]));
+    const existingPlanDocuments=(await client.query('SELECT brochure_url FROM business_profile_service_plans WHERE business_profile_id=$1',[profileId])).rows;
     const requestedIds=normalizedProjects.filter(item=>item.id).map(item=>item.id);
     if(new Set(requestedIds).size!==requestedIds.length||requestedIds.some(id=>!existingById.has(id))){
       throw profileError('Project identifier is invalid for this business');
     }
+    const validateOwnedBrochure=(value,label)=>{
+      // Brochures must be uploaded into the authenticated business storage,
+      // not arbitrary third-party URLs or another company's objects.
+      const owned=projectPlanService.managedPlanInfo(userId,value);
+      if(!owned)throw profileError(label+' must be a PDF or image uploaded in this business account');
+      if(owned.mimeExtension!=='pdf')throw profileError(label+' must be a PDF');
+    };
     const projectsForSave=normalizedProjects.map(item=>{
       let videoPublishedAt=null;
       if(item.videoUrl){
@@ -293,19 +304,34 @@ async function updateProfile(userId, payload) {
         }
         if(s3.isReference(item.planUrl)||item.planUrl.startsWith('/uploads/business-projects/'))projectPlanService.managedPlanInfo(userId,item.planUrl);
       }
+      if(item.brochureUrl)validateOwnedBrochure(item.brochureUrl,'Project brochure');
       const previous=item.id?existingById.get(item.id):null;
       const publishedAt=previous?.published_at||new Date();
       return {...item,videoPublishedAt,publishedAt};
     });
     const isManagedVideo=url=>{try{return Boolean(projectVideoService.managedVideoInfo(userId,url))}catch{return false}};
     const isManagedPlan=url=>{try{return Boolean(projectPlanService.managedPlanInfo(userId,url))}catch{return false}};
+    const preparedPlans=normalizedPlans.map(item=>{
+      if(item.brochureUrl)validateOwnedBrochure(item.brochureUrl,'Package brochure');
+      return item;
+    });
     const currentManagedUrls=new Set(projectsForSave.map(item=>item.videoUrl).filter(isManagedVideo));
     const removedManagedUrls=existingProjects.map(item=>item.video_url).filter(url=>isManagedVideo(url)&&!currentManagedUrls.has(url));
     const isManagedImage=url=>{try{return Boolean(projectImageService.managedImageInfo(userId,url))}catch{return false}};
     const currentManagedImageUrls=new Set(projectsForSave.flatMap(item=>item.imageUrls).filter(isManagedImage));
     const removedManagedImageUrls=existingProjects.flatMap(item=>item.image_urls||[]).filter(url=>isManagedImage(url)&&!currentManagedImageUrls.has(url));
-    const currentManagedPlanUrls=new Set(projectsForSave.map(item=>item.planUrl).filter(isManagedPlan));
-    const removedManagedPlanUrls=existingProjects.map(item=>item.plan_url).filter(url=>isManagedPlan(url)&&!currentManagedPlanUrls.has(url));
+    const currentManagedPlanUrls=new Set([
+      ...projectsForSave.flatMap(item=>[item.planUrl,item.brochureUrl]),
+      ...preparedPlans.map(item=>item.brochureUrl),
+    ].filter(isManagedPlan));
+    // Corporate brochures are managed through their own editor. Never delete a
+    // document still referenced there or by another project/package.
+    const otherBrochures=(await client.query('SELECT file_url FROM business_profile_brochures WHERE business_profile_id=$1',[profileId])).rows;
+    for(const item of otherBrochures)if(isManagedPlan(item.file_url))currentManagedPlanUrls.add(item.file_url);
+    const removedManagedPlanUrls=[
+      ...existingProjects.flatMap(item=>[item.plan_url,item.brochure_url]),
+      ...existingPlanDocuments.map(item=>item.brochure_url),
+    ].filter(url=>isManagedPlan(url)&&!currentManagedPlanUrls.has(url));
     await client.query('UPDATE business_profile_services SET is_active = FALSE, updated_at = CURRENT_TIMESTAMP WHERE business_profile_id = $1', [profileId]);
     await client.query(`
       INSERT INTO business_profile_services (business_profile_id,industry_id,service_id,subservice_id,is_active)
@@ -328,16 +354,16 @@ async function updateProfile(userId, payload) {
     if(projectsForSave.length){
       await client.query(`
         INSERT INTO business_profile_projects
-          (id,business_profile_id,title,project_type,description,location_text,completion_year,area_text,budget_text,cover_image_url,image_urls,package_name,video_url,video_published_at,plan_url,published_at,sort_order,is_published)
-        SELECT COALESCE(x.id,nextval(pg_get_serial_sequence('business_profile_projects','id'))),$1,x.title,x.project_type,x.description,x.location_text,x.completion_year,x.area_text,x.budget_text,x.cover_image_url,x.image_urls,x.package_name,x.video_url,x.video_published_at,x.plan_url,x.published_at,x.sort_order,x.is_published
+          (id,business_profile_id,title,project_type,description,location_text,completion_year,area_text,budget_text,cover_image_url,image_urls,package_name,video_url,video_published_at,plan_url,brochure_url,published_at,sort_order,is_published)
+        SELECT COALESCE(x.id,nextval(pg_get_serial_sequence('business_profile_projects','id'))),$1,x.title,x.project_type,x.description,x.location_text,x.completion_year,x.area_text,x.budget_text,x.cover_image_url,x.image_urls,x.package_name,x.video_url,x.video_published_at,x.plan_url,x.brochure_url,x.published_at,x.sort_order,x.is_published
         FROM jsonb_to_recordset($2::jsonb) AS x(
           id int,title text,project_type text,description text,location_text text,completion_year int,area_text text,budget_text text,
-          cover_image_url text,image_urls jsonb,package_name text,video_url text,video_published_at timestamp,plan_url text,published_at timestamp,sort_order int,is_published boolean
+          cover_image_url text,image_urls jsonb,package_name text,video_url text,video_published_at timestamp,plan_url text,brochure_url text,published_at timestamp,sort_order int,is_published boolean
         )
       `,[profileId,JSON.stringify(projectsForSave.map(item=>({
         id:item.id,title:item.title,project_type:item.projectType,description:item.description,location_text:item.locationText,
         completion_year:item.completionYear,area_text:item.areaText,budget_text:item.budgetText,cover_image_url:item.coverImageUrl,image_urls:item.imageUrls,package_name:item.packageName,
-        video_url:item.videoUrl,video_published_at:item.videoPublishedAt?new Date(item.videoPublishedAt).toISOString():null,plan_url:item.planUrl,published_at:new Date(item.publishedAt).toISOString(),sort_order:item.sortOrder,is_published:item.isPublished,
+        video_url:item.videoUrl,video_published_at:item.videoPublishedAt?new Date(item.videoPublishedAt).toISOString():null,plan_url:item.planUrl,brochure_url:item.brochureUrl,published_at:new Date(item.publishedAt).toISOString(),sort_order:item.sortOrder,is_published:item.isPublished,
       })))]);
     }
 
@@ -345,14 +371,14 @@ async function updateProfile(userId, payload) {
     if(normalizedPlans.length){
       await client.query(`
         INSERT INTO business_profile_service_plans
-          (business_profile_id,title,description,price_from,duration_label,inclusions,sort_order,is_published)
-        SELECT $1,x.title,x.description,x.price_from,x.duration_label,x.inclusions,x.sort_order,x.is_published
+          (business_profile_id,title,description,price_from,duration_label,inclusions,brochure_url,sort_order,is_published)
+        SELECT $1,x.title,x.description,x.price_from,x.duration_label,x.inclusions,x.brochure_url,x.sort_order,x.is_published
         FROM jsonb_to_recordset($2::jsonb) AS x(
-          title text,description text,price_from numeric,duration_label text,inclusions jsonb,sort_order int,is_published boolean
+          title text,description text,price_from numeric,duration_label text,inclusions jsonb,brochure_url text,sort_order int,is_published boolean
         )
       `,[profileId,JSON.stringify(normalizedPlans.map(item=>({
         title:item.title,description:item.description,price_from:item.priceFrom,duration_label:item.durationLabel,
-        inclusions:item.inclusions,sort_order:item.sortOrder,is_published:item.isPublished,
+        inclusions:item.inclusions,brochure_url:item.brochureUrl,sort_order:item.sortOrder,is_published:item.isPublished,
       })))]);
     }
 

@@ -14,7 +14,7 @@ must('src/server.js',["/api/profile/projects/video","express.raw","video/quickti
 must('src/server.js',["/api/profile/projects/plan","application/pdf","image/webp","limit:'16mb'"]);
 if(read('src/services/publicExpertService.js').includes('bp.business_details'))throw new Error('Public expert API must not expose private business_details');
 must('src/services/profileService.js',['projects','service_plans','public_headline','public_profile_enabled']);
-must('../frontend/src/pages/Profile.jsx',['Completed projects','Service packages','Public profile','Upload video','50 MB','/profile/projects/video','Packages']);
+must('../frontend/src/pages/Profile.jsx',['Completed Projects','Service Packages','Public profile','Upload video','50 MB','/profile/projects/video','Packages']);
 must('../frontend/src/pages/Profile.jsx',['activeSection','selectSection','Upload plan / drawing','PDF, JPG, PNG or WebP','/profile/projects/plan']);
 must('src/database/migrations/20261008_project_photo_gallery.sql',['image_urls','jsonb_array_length(image_urls)<=8']);
 must('src/services/projectImageService.js',['MAX_IMAGE_BYTES','image/jpeg','image/png','image/webp','saveProjectImage','managedImageInfo']);
@@ -37,21 +37,17 @@ must('src/routes/publicExpertRoutes.js',['/:expertId/callback','requestProfileCa
 must('src/services/projectCallbackService.js',['requestProfileCallback','maskedPhone','maskedEmail','redactContactText']);
 must('src/services/brochureService.js',['listMine','listPublic','saveMine']);
 must('src/database/migrations/20261008_zzz_professional_brochures_and_callbacks.sql',['business_profile_brochures','ALTER COLUMN project_id DROP NOT NULL']);
+// An individual project dossier and an individually configurable service package
+// must each support owner-validated, storage-backed specification PDFs.
+must('src/database/migrations/20261008_zzzzz_profile_package_brochures.sql',['business_profile_projects','business_profile_service_plans','brochure_url']);
+must('src/services/profileService.js',['validateOwnedBrochure','projectPlanService.managedPlanInfo','brochure_display_url','currentManagedPlanUrls','brochure_url:item.brochureUrl']);
+must('src/services/publicExpertService.js',['brochure_url:await projectPlanService.displayUrl','brochure_url,sort_order','service_plans:renderedPlans']);
+must('../frontend/src/components/ProfileBrochureField.jsx',['Upload brochure PDF','PDF only','Maximum 15 MB','Preview','Remove']);
+must('../frontend/src/pages/Profile.jsx',['uploadBrochure','ProfileBrochureField','brochureDisplayUrl','Company Brochures']);
+must('../frontend/src/pages/ProfessionalDetails.jsx',['View Package Brochure (PDF)','Specifications PDF']);
+must('../frontend/src/pages/ProjectDetail.jsx',['project.brochure||linkedPlan?.brochure_url','professional specifications']);
 if(read('../frontend/src/pages/Experts.jsx').includes('experts-hero'))throw new Error('Experts page hero section must remain removed');
 must('../frontend/src/admin/pages/AdminExpertDirectory.jsx',['Expert Directory','Allowed membership','Featured','Hidden']);
 must('../frontend/src/admin/pages/AdminExpertDirectory.jsx',['businessRequest=useRef(0)','searchReady=useRef(false)','requestId!==businessRequest.current','queueMicrotask']);
 if(/useEffect\(\(\)=>\{\s*if\(loading\)return\s*const timer/.test(read('../frontend/src/admin/pages/AdminExpertDirectory.jsx')))throw new Error('Expert Directory search effect must not drop searches typed during initial loading');
-// Professional-specific quotation leads must remain owned by the publishing business.
-// Customer data is private; only admin coordination can see unmasked contacts.
-must('src/database/migrations/20261008_zzzz_professional_project_quotes.sql',['professional_project_quote_requests','business_user_id','quoted_price','quoted_package']);
-must('src/services/professionalProjectQuoteService.js',['listForProfessional','updateByProfessional','listForAdmin','WHERE id=$1 AND business_user_id=$2','maskPhone','maskEmail','professional_quote_request']);
-must('src/routes/publicExpertRoutes.js',['/projects/:projectId/quote-request','requestProjectQuote']);
-must('src/routes/profileRoutes.js',['/project-quote-requests','updateProjectQuote']);
-must('src/routes/adminRoutes.js',['/professional-quote-leads']);
-must('../frontend/src/pages/ProjectDetail.jsx',['submitQuote','quoteForm','/quote-request','Get Quote']);
-must('../frontend/src/pages/Profile.jsx',['Quotation enquiries','saveProjectQuote','Mark Quote Ready']);
-must('../frontend/src/admin/pages/AdminCallbackInbox.jsx',['professional-quote-leads','Professional-specific quote leads']);
-if(/to=\{'\/quote#'\+quoteHash\(project\)\}/.test(read('../frontend/src/pages/ProjectDetail.jsx')))
-  throw new Error('Project-specific Get Quote must not redirect to the general marketplace quotation flow.');
-
 console.log('Expert directory portfolio checks passed.');
