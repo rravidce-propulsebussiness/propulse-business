@@ -8,7 +8,7 @@ import {playSound} from '../utils/soundEffects'
 const emptyService=()=>({industryId:'',serviceId:'',subserviceId:''})
 const emptyLocation=()=>({stateId:'',cityId:''})
 const emptyProject=()=>({title:'',projectType:'',description:'',locationText:'',completionYear:'',areaText:'',budgetText:'',packageName:'',coverImageUrl:'',imageUrls:[],imageDisplayUrls:[],videoUrl:'',videoDisplayUrl:'',videoPublishedAt:'',planUrl:'',planDisplayUrl:'',isPublished:true})
-const emptyPlan=()=>({title:'',description:'',priceFrom:'',durationLabel:'',inclusions:'',isPublished:true})
+const emptyPlan=()=>({title:'',description:'',priceFrom:'',durationLabel:'',inclusions:'',brochureUrl:'',brochureDisplayUrl:'',isPublished:true})
 
 function reasonText(status){
   const reason=status?.reason
@@ -51,6 +51,8 @@ function mapPlan(item){
     priceFrom:item.price_from??'',
     durationLabel:item.duration_label||'',
     inclusions:Array.isArray(item.inclusions)?item.inclusions.join('\n'):'',
+    brochureUrl:item.brochure_url||'',
+    brochureDisplayUrl:item.brochure_display_url||'',
     isPublished:item.is_published!==false,
   }
 }
@@ -74,7 +76,11 @@ export default function Profile(){
   const [videoUploads,setVideoUploads]=useState({})
   const [imageUploads,setImageUploads]=useState({})
   const [planUploads,setPlanUploads]=useState({})
-  const [activeSection,setActiveSection]=useState(()=>new URLSearchParams(window.location.search).get('tab')==='projects'?'projects':'business')
+  const [packageUploads,setPackageUploads]=useState({})
+  const [activeSection,setActiveSection]=useState(()=>{
+    const section=new URLSearchParams(window.location.search).get('tab')
+    return section==='projects'?'projects':section==='packages'||section==='plans'?'plans':'business'
+  })
   const [loading,setLoading]=useState(true)
   const [saving,setSaving]=useState(false)
   const [message,setMessage]=useState('')
@@ -233,6 +239,32 @@ export default function Profile(){
     }
   }
 
+  async function uploadPackageBrochure(index,file){
+    if(!file)return
+    const extension=String(file.name||'').toLowerCase().split('.').pop()
+    const inferred={pdf:'application/pdf',jpg:'image/jpeg',jpeg:'image/jpeg',png:'image/png',webp:'image/webp'}[extension]
+    const mime=file.type||inferred||''
+    if(!['application/pdf','image/jpeg','image/png','image/webp'].includes(mime)){
+      setError('Package brochures must be PDF, JPG, PNG or WebP files.');return
+    }
+    if(!file.size||file.size>15*1024*1024){
+      setError('Package brochure must be smaller than 15 MB.');return
+    }
+    setPackageUploads(current=>({...current,[index]:true}))
+    setError('');setMessage('')
+    try{
+      const uploaded=await authRequest('/profile/projects/plan',{
+        method:'POST',headers:{'Content-Type':mime},body:file,timeoutMs:90000,
+      })
+      setPlans(current=>current.map((item,i)=>i===index?{
+        ...item,brochureUrl:uploaded.url||'',brochureDisplayUrl:uploaded.displayUrl||uploaded.url||'',
+      }:item))
+      playSound('upload')
+      setMessage('Brochure uploaded. Click Save changes to publish it with this package.')
+    }catch(err){playSound('warning');setError(err.message||'Package brochure upload failed.')}
+    finally{setPackageUploads(current=>({...current,[index]:false}))}
+  }
+
   function planPreviewKind(url){
     const value=String(url||'').toLowerCase()
     if(/\.pdf(?:$|[?#])/.test(value))return 'pdf'
@@ -261,6 +293,7 @@ export default function Profile(){
     if(projects.some(item=>!item.title.trim()))return setError('Every completed project needs a title.')
     if(projects.some(item=>item.isPublished&&(!Number.isInteger(Number(item.completionYear))||Number(item.completionYear)<1950||Number(item.completionYear)>new Date().getFullYear())))return setError('To publish a completed project, enter its actual completion year. Uncheck Public to save unfinished work privately.')
     if(plans.some(item=>!item.title.trim()))return setError('Every service plan needs a title.')
+    if(Object.values(packageUploads).some(Boolean))return setError('Wait for your package brochure to finish uploading.')
     try{
       setSaving(true)
       const result=await authRequest('/profile',{method:'PUT',body:JSON.stringify({
@@ -306,7 +339,8 @@ export default function Profile(){
         <button type="button" className={activeSection==='services'?'active':''} onClick={()=>selectSection('services')}>Services</button>
         <button type="button" className={activeSection==='locations'?'active':''} onClick={()=>selectSection('locations')}>Locations</button>
         <button type="button" className={activeSection==='public'?'active':''} onClick={()=>selectSection('public')}>Public profile</button>
-        <button type="button" className={activeSection==='projects'?'active':''} onClick={()=>selectSection('projects')}>Projects</button><Link to="/profile/brochures">Brochures</Link>
+        <button type="button" className={activeSection==='projects'?'active':''} onClick={()=>selectSection('projects')}>Projects</button>
+        <Link className="profile-tab-link" to="/profile/brochures">Company Brochures</Link>
         <button type="button" className={activeSection==='plans'?'active':''} onClick={()=>selectSection('plans')}>Packages</button>
       </nav>
 
