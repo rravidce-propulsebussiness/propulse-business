@@ -45,6 +45,7 @@ function normalizeProjects(projects){
       completionYear,
       areaText:cleanText(item?.areaText,120,'Project area'),
       budgetText:cleanText(item?.budgetText,120,'Project budget'),
+      packageName:cleanText(item?.packageName,160,'Project package'),
       coverImageUrl:cleanUrl(item?.coverImageUrl,'Project image'),
       imageUrls:(()=>{
         const images=item?.imageUrls||[];
@@ -123,7 +124,7 @@ async function getProfile(userId, client = pool) {
     ),
     client.query(
       `SELECT id,title,project_type,description,location_text,completion_year,area_text,budget_text,
-              cover_image_url,image_urls,video_url,video_published_at,plan_url,published_at,sort_order,is_published
+              cover_image_url,image_urls,package_name,video_url,video_published_at,plan_url,published_at,sort_order,is_published
        FROM business_profile_projects
        WHERE business_profile_id=$1
        ORDER BY sort_order,id`, [profile.id]
@@ -322,15 +323,15 @@ async function updateProfile(userId, payload) {
     if(projectsForSave.length){
       await client.query(`
         INSERT INTO business_profile_projects
-          (business_profile_id,title,project_type,description,location_text,completion_year,area_text,budget_text,cover_image_url,image_urls,video_url,video_published_at,plan_url,published_at,sort_order,is_published)
-        SELECT $1,x.title,x.project_type,x.description,x.location_text,x.completion_year,x.area_text,x.budget_text,x.cover_image_url,x.image_urls,x.video_url,x.video_published_at,x.plan_url,x.published_at,x.sort_order,x.is_published
+          (business_profile_id,title,project_type,description,location_text,completion_year,area_text,budget_text,cover_image_url,image_urls,package_name,video_url,video_published_at,plan_url,published_at,sort_order,is_published)
+        SELECT $1,x.title,x.project_type,x.description,x.location_text,x.completion_year,x.area_text,x.budget_text,x.cover_image_url,x.image_urls,x.package_name,x.video_url,x.video_published_at,x.plan_url,x.published_at,x.sort_order,x.is_published
         FROM jsonb_to_recordset($2::jsonb) AS x(
           title text,project_type text,description text,location_text text,completion_year int,area_text text,budget_text text,
-          cover_image_url text,image_urls jsonb,video_url text,video_published_at timestamp,plan_url text,published_at timestamp,sort_order int,is_published boolean
+          cover_image_url text,image_urls jsonb,package_name text,video_url text,video_published_at timestamp,plan_url text,published_at timestamp,sort_order int,is_published boolean
         )
       `,[profileId,JSON.stringify(projectsForSave.map(item=>({
         title:item.title,project_type:item.projectType,description:item.description,location_text:item.locationText,
-        completion_year:item.completionYear,area_text:item.areaText,budget_text:item.budgetText,cover_image_url:item.coverImageUrl,image_urls:item.imageUrls,
+        completion_year:item.completionYear,area_text:item.areaText,budget_text:item.budgetText,cover_image_url:item.coverImageUrl,image_urls:item.imageUrls,package_name:item.packageName,
         video_url:item.videoUrl,video_published_at:item.videoPublishedAt?new Date(item.videoPublishedAt).toISOString():null,plan_url:item.planUrl,published_at:new Date(item.publishedAt).toISOString(),sort_order:item.sortOrder,is_published:item.isPublished,
       })))]);
     }
