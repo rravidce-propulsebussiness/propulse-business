@@ -194,14 +194,26 @@ export default function ProjectDetail(){
               </dl>
               {project.cost&&<div className="pjd-price"><small>{project.sample?'ILLUSTRATIVE COST · NOT A QUOTATION':'REPORTED PROJECT COST / BUDGET'}</small><strong>{project.cost}</strong></div>}
               <div className="pjd-action-intro"><span>YOUR NEXT STEP</span><strong>Love this space? Bring yours to life.</strong><small>Explore the guide, speak to us, or plan your own quote.</small></div>
-              <div className="pjd-action-stack">
-                {(project.sample||linkedPlan)&&<button type="button" className="pjd-download" onClick={()=>downloadPackage(project,linkedPlan)}><Icon name="file" size={17}/> Download {project.sample?'Example Specifications':'Related Package'}</button>}
-                {!project.sample&&project.document&&<a className="pjd-download" href={project.document} target="_blank" rel="noopener noreferrer"><Icon name="file" size={17}/>{isPdf(project.document)?'Download Project PDF':'View Project Document'}</a>}
-                {project.sample
-                  ?<Link className="pjd-main-cta" to={'/quote#'+similarQuoteHash(project)}>Get Quote for Similar Work <Icon name="arrow" size={17}/></Link>
-                  :<button className="pjd-main-cta" type="button" disabled={callbackSuccess} onClick={()=>document.getElementById('pjd-contact-form')?.scrollIntoView({behavior:'smooth',block:'start'})}>{callbackSuccess?'Callback Requested':'Request a Callback'} <Icon name="arrow" size={17}/></button>}
+              <div className="pjd-action-stack" aria-label="Project next steps">
+                <button type="button" className="pjd-download pjd-action-button" disabled={packageDownloading} onClick={downloadPackage}>
+                  <span className="pjd-cta-symbol"><Icon name="file" size={21}/></span>
+                  <span className="pjd-cta-copy"><strong>{packageDownloading?'Preparing PDF…':'Download Package'}</strong><small>{project.sample?'Illustrative package guide · PDF':'Published information guide · PDF'}</small></span>
+                  <span className="pjd-cta-arrow" aria-hidden="true">↧</span>
+                </button>
+                <button type="button" className="pjd-callback pjd-action-button" onClick={requestCallback}>
+                  <span className="pjd-cta-symbol" aria-hidden="true">☎</span>
+                  <span className="pjd-cta-copy"><strong>{callbackSuccess?'Callback Requested':'Request a Callback'}</strong><small>{project.sample?'Consult with the ProPulse team':'Ask about this project'}</small></span>
+                  <span className="pjd-cta-arrow" aria-hidden="true">↗</span>
+                </button>
+                <Link className="pjd-main-cta pjd-action-button" to={'/quote#'+similarQuoteHash(project)}>
+                  <span className="pjd-cta-symbol" aria-hidden="true">✧</span>
+                  <span className="pjd-cta-copy"><strong>Get Quote</strong><small>Plan a similar space</small></span>
+                  <span className="pjd-cta-arrow" aria-hidden="true">↗</span>
+                </Link>
               </div>
-              {!project.sample&&!linkedPlan&&!project.document&&<p className="pjd-package-note">The professional hasn't published a downloadable package for this project. Request a callback to ask for exact specifications.</p>}
+              {packageError&&<p className="pjd-error" role="alert">{packageError}</p>}
+              {!project.sample&&project.document&&<a className="pjd-document-link" href={project.document} target="_blank" rel="noopener noreferrer"><Icon name="file" size={16}/>{isPdf(project.document)?'View published project PDF':'View published drawing / document'} ↗</a>}
+              <div className="pjd-privacy"><span aria-hidden="true">✓</span><span>{project.sample?'Illustrative reference only. Request your own site-specific quotation.':'Private enquiry through ProPulse. Contact information stays protected.'}</span></div>
             </aside>
           </div>
           <div className="pjd-bottom-grid">
@@ -215,11 +227,11 @@ export default function ProjectDetail(){
               {project.sample&&<p>Sample imagery, locations, costs and package specifications are illustrative and are not claims of completed client work.</p>}
             </section>
             <section className="pjd-contact" id="pjd-contact-form">
-              {project.sample?<><span className="pjd-overline">BUILD SOMETHING SIMILAR</span><h2>Start your own project</h2><p>Tell us what you're planning, and explore matching packages and professionals.</p><Link className="pjd-main-cta" to={'/quote#'+similarQuoteHash(project)}>Get Your Quotation <Icon name="arrow" size={16}/></Link></>:
+              {project.sample?<><span className="pjd-overline">LOVE THIS CONCEPT?</span><h2>Make room for your dream home.</h2><p>Like the details? ProPulse can help you explore a site-specific scope, materials and budget for your own home. This is an inspiration image, not a bookable contractor project.</p><button type="button" className="pjd-main-cta" onClick={requestCallback}><span aria-hidden="true">☎</span> Request a Callback <Icon name="arrow" size={16}/></button><Link className="pjd-contact-outline" to={'/quote#'+similarQuoteHash(project)}>Get Your Custom Quote <Icon name="arrow" size={16}/></Link><p className="pjd-form-assurance">Free consultation · No obligation · Contact details handled by ProPulse</p></>:
               <>
-                <span className="pjd-overline">DIRECT PROFESSIONAL ENQUIRY</span>
+                <span className="pjd-overline">YOUR PROJECT STARTS HERE</span>
                 <h2>Talk to {project.businessName||'this professional'}</h2>
-                <p>Request a callback about this specific project. Your details will be shared with the publishing professional.</p>
+                <p>Request a private callback about this project. ProPulse coordinates the introduction; your phone and email stay protected.</p>
                 {callbackSuccess?<p className="pj-callback-success" role="status">{callbackFeedback}</p>:
                   <form className="pjd-callback-form" onSubmit={submitCallback}>
                     <div className="pjd-field-pair">
@@ -228,7 +240,7 @@ export default function ProjectDetail(){
                     </div>
                     <label>Email (optional)<input type="email" maxLength={255} autoComplete="email" placeholder="you@example.com" value={callbackForm.email} onChange={e=>setCallbackForm(v=>({...v,email:e.target.value}))}/></label>
                     <label>Your requirement (optional)<textarea rows={3} maxLength={1000} placeholder="Tell the professional what you'd like to discuss" value={callbackForm.message} onChange={e=>setCallbackForm(v=>({...v,message:e.target.value}))}/></label>
-                    <label className="pjd-consent"><input type="checkbox" required checked={callbackForm.consent} onChange={e=>setCallbackForm(v=>({...v,consent:e.target.checked}))}/> I agree to share my contact details with this professional for a callback.</label>
+                    <label className="pjd-consent"><input type="checkbox" required checked={callbackForm.consent} onChange={e=>setCallbackForm(v=>({...v,consent:e.target.checked}))}/> I agree that ProPulse may use my details to coordinate this callback.</label>
                     <input className="pjd-trap" tabIndex={-1} autoComplete="off" aria-hidden="true" value={callbackForm.website} onChange={e=>setCallbackForm(v=>({...v,website:e.target.value}))}/>
                     {callbackFeedback&&<p className="pjd-error" role="alert">{callbackFeedback}</p>}
                     <button type="submit" className="pjd-main-cta" disabled={callbackSending}>{callbackSending?'Sending…':'Send Callback Request'} <Icon name="arrow" size={17}/></button>
@@ -236,7 +248,27 @@ export default function ProjectDetail(){
               </>}
             </section>
           </div>
+          <section className="pjd-process" aria-label="From inspiration to construction">
+            <div className="pjd-process-heading"><span className="pjd-overline">DESIGN. PLAN. BUILD.</span><h2>Your next chapter starts here.</h2><p>Use the concept as inspiration, then get a personalized plan for your real project.</p></div>
+            <div className="pjd-process-steps">
+              <article><span>01</span><strong>Explore the design</strong><p>Browse the project gallery and download the guide.</p></article>
+              <article><span>02</span><strong>Discuss your ideas</strong><p>Request a call and share your needs with ProPulse.</p></article>
+              <article><span>03</span><strong>Plan with confidence</strong><p>Request a project-specific scope and estimate.</p></article>
+            </div>
+          </section>
+          {relatedProjects.length>0&&<section className="pjd-related" aria-labelledby="pjd-related-title">
+            <div className="pjd-related-heading"><div><span className="pjd-overline">MORE DESIGN INSPIRATION</span><h2 id="pjd-related-title">Spaces worth exploring.</h2></div><Link to="/projects">View all projects ↗</Link></div>
+            <div className="pjd-related-grid">{relatedProjects.map(item=><Link className="pjd-related-card" key={item.id} to={'/projects/'+item.id}>
+              <img src={item.image} alt={item.title+' inspiration'} loading="lazy"/>
+              <div><small>ILLUSTRATIVE DESIGN</small><strong>{item.title}</strong><span>Explore concept ↗</span></div>
+            </Link>)}</div>
+          </section>}
           <div className="pjd-back-row"><Link to="/projects">← Back to all projects</Link></div>
+          <div className="pjd-mobile-actions" aria-label="Quick project actions">
+            <button type="button" onClick={downloadPackage} disabled={packageDownloading}><Icon name="file" size={17}/><span>{packageDownloading?'Preparing…':'Package'}</span></button>
+            <button type="button" onClick={requestCallback}><span aria-hidden="true">☎</span><span>Callback</span></button>
+            <Link to={'/quote#'+similarQuoteHash(project)}>Get Quote <Icon name="arrow" size={14}/></Link>
+          </div>
         </>}
       </div>
     </section>
