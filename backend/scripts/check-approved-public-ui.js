@@ -59,6 +59,10 @@ assert.match(projects,/to=\{projectPath\(project\)\}/);
 assert.doesNotMatch(projects,/document\.body\.style\.overflow/);
 assert.doesNotMatch(projects,/pj-detail-backdrop/);
 assert.match(projectDetail,/pjd-main-grid/);
+// Keep document downloads consolidated in the primary package action.
+assert.match(projectDetail,/Download Package/);
+assert.match(projectDetail,/downloadPackage/);
+assert.doesNotMatch(projectDetail,/pjd-document-link|View professional specifications PDF|View project document|View project drawing \/ PDF/);
 assert.doesNotMatch(projects,/import \{ openLeadPopup \}/);
 assert.doesNotMatch(projects,/import PublicIcon /);
 
