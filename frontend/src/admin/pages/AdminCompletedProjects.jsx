@@ -27,6 +27,8 @@ export default function AdminCompletedProjects({ businesses=[] }) {
   const [form,setForm]=useState(blank)
   const [editing,setEditing]=useState(null)
   const [busy,setBusy]=useState(false)
+  const [uploading,setUploading]=useState(false)
+  const [photoPreview,setPhotoPreview]=useState('')
   const [loading,setLoading]=useState(true)
   const [error,setError]=useState('')
   const [notice,setNotice]=useState('')
@@ -54,14 +56,47 @@ export default function AdminCompletedProjects({ businesses=[] }) {
   function edit(project) {
     setEditing(project.id)
     setForm(fromRow(project))
+    setPhotoPreview(project.cover_image_display_url||'')
     setError('')
     setNotice('')
   }
   function reset() {
     setEditing(null)
     setForm(blank())
+    setPhotoPreview('')
     setError('')
   }
+  async function uploadPhotos(files) {
+    const list=Array.from(files||[])
+    if(!list.length)return
+    if(!form.businessUserId){setError('Select a business before uploading project photos.');return}
+    const existing=form.imageUrls.split('\n').map(x=>x.trim()).filter(Boolean)
+    if(existing.length+list.length>8){setError('Maximum eight photos per project.');return}
+    if(list.some(photo=>!['image/jpeg','image/png','image/webp'].includes(photo.type)||photo.size>12*1024*1024)){
+      setError('Use JPG, PNG or WebP photos no larger than 12 MB each.')
+      return
+    }
+    setError('')
+    try {
+      setUploading(true)
+      const uploaded=[]
+      for(const photo of list) {
+        const result=await authRequest('/admin/expert-directory/projects/photo/'+encodeURIComponent(form.businessUserId),{
+          method:'POST',headers:{'Content-Type':photo.type},body:photo,timeoutMs:90000,
+        })
+        uploaded.push(result)
+      }
+      setForm(current=>({
+        ...current,
+        imageUrls:[...existing,...uploaded.map(item=>item.url)].join('\n'),
+        coverImageUrl:current.coverImageUrl||uploaded[0]?.url||'',
+      }))
+      if(uploaded[0]?.displayUrl)setPhotoPreview(uploaded[0].displayUrl)
+      setNotice('Real project photos uploaded. Save the project to publish them.')
+    } catch(err) {setError(err.message||'Photo upload failed.')}
+    finally {setUploading(false)}
+  }
+
   async function submit(event) {
     event.preventDefault()
     setError('')
@@ -123,6 +158,18 @@ export default function AdminCompletedProjects({ businesses=[] }) {
           <label className="wide">Completed scope / materials<textarea maxLength={3000} rows={3} value={form.description} onChange={e=>patch('description',e.target.value)} placeholder="What was actually delivered?"/></label>
           <label>Related package (optional)<input maxLength={160} value={form.packageName} onChange={e=>patch('packageName',e.target.value)}/></label>
           <label>Cover photo URL (HTTPS)<input value={form.coverImageUrl} onChange={e=>patch('coverImageUrl',e.target.value)} placeholder="https://…"/></label>
+          <div className="wide completed-project-photo-upload">
+            <label>Upload real completed-project photos · up to 8
+              <input type="file" accept="image/jpeg,image/png,image/webp" multiple
+                disabled={uploading||!form.businessUserId} onChange={event=>{
+                  const photos=Array.from(event.target.files||[])
+                  event.target.value=''
+                  uploadPhotos(photos)
+                }}/>
+            </label>
+            <small>{uploading?'Uploading to private project storage…':'JPG, PNG or WebP · maximum 12 MB each · stored in configured object storage'}</small>
+            {photoPreview&&<img src={photoPreview} alt="Uploaded project cover preview"/>}
+          </div>
           <label className="wide">Real gallery photos · one HTTPS URL per line, maximum 8
             <textarea rows={3} value={form.imageUrls} onChange={e=>patch('imageUrls',e.target.value)} placeholder={'https://…photo-1.jpg\nhttps://…photo-2.jpg'}/>
           </label>
@@ -143,7 +190,7 @@ export default function AdminCompletedProjects({ businesses=[] }) {
         {loading?<p>Loading project records…</p>:
           !projects.length?<div className="completed-project-empty">No genuine completed projects recorded yet. Add the first one using details and photographs supplied by the professional.</div>:
           projects.map(item=><article key={item.id} className="completed-project-item">
-            {item.cover_image_url?<img src={item.cover_image_url} alt="" loading="lazy"/>:<span className="completed-project-no-photo">No photo</span>}
+            {item.cover_image_display_url?<img src={item.cover_image_display_url} alt="" loading="lazy"/>:<span className="completed-project-no-photo">No photo</span>}
             <div>
               <strong>{item.title}</strong>
               <small>{item.business_name} · {item.location_text||'Location not entered'}</small>
