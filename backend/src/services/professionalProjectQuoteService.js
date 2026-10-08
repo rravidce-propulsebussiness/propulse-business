@@ -41,7 +41,7 @@ async function submit(projectId,input={}){
   const settings=await directory.getSettings();
   if(!settings.directoryEnabled||!settings.showProjects)throw bad('Project not available','PROJECT_NOT_FOUND');
   const {rows}=await pool.query(
-    `SELECT p.id,p.title,bp.user_id AS owner_id
+    `SELECT p.id,p.title,bp.user_id AS owner_id,bp.id AS business_profile_id
      FROM business_profile_projects p
      JOIN business_profiles bp ON bp.id=p.business_profile_id
      JOIN users u ON u.id=bp.user_id
@@ -56,18 +56,31 @@ async function submit(projectId,input={}){
   if(!project)throw bad('Project not found','PROJECT_NOT_FOUND');
   const status=await directory.getUserDirectoryStatus(project.owner_id);
   if(!status.eligible)throw bad('Project not available','PROJECT_NOT_FOUND');
+  let selectedPackage=null;
+  if(preferredPackage){
+    if(!settings.showPlans)throw bad('Published packages are currently unavailable');
+    const packageResult=await pool.query(
+      `SELECT title,price_from,price_unit FROM business_profile_service_plans
+       WHERE business_profile_id=$1 AND is_published=TRUE AND LOWER(TRIM(title))=LOWER($2)
+       LIMIT 1`,[project.business_profile_id,preferredPackage]
+    );
+    selectedPackage=packageResult.rows[0]||null;
+    if(!selectedPackage)throw bad('Select a published package or request custom pricing');
+  }
   const saved=await pool.query(
     `INSERT INTO professional_project_quote_requests
       (project_id,project_title,business_user_id,customer_name,customer_phone,customer_email,
-       requirement,site_location,area_text,budget_text,preferred_package)
-     SELECT $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11
+       requirement,site_location,area_text,budget_text,preferred_package,
+       package_price_from_snapshot,package_price_unit_snapshot)
+     SELECT $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13
      WHERE NOT EXISTS(
        SELECT 1 FROM professional_project_quote_requests
        WHERE project_id=$1 AND customer_phone=$5
        AND created_at>CURRENT_TIMESTAMP-INTERVAL '1 hour'
      ) RETURNING id`,
     [id,String(project.title).slice(0,180),project.owner_id,name,phone,email||null,requirement,
-     siteLocation||null,area||null,budget||null,preferredPackage||null]
+     siteLocation||null,area||null,budget||null,selectedPackage?.title||null,
+     selectedPackage?.price_from??null,selectedPackage?.price_unit||null]
   );
   if(!saved.rowCount)return {accepted:true,duplicate:true};
   const quoteId=saved.rows[0].id;
@@ -87,7 +100,8 @@ async function listForProfessional(userId){
   if(!Number.isSafeInteger(id)||id<1)return [];
   const rows=(await pool.query(
     `SELECT id,project_id,project_title,customer_name,customer_phone,customer_email,
-      requirement,site_location,area_text,budget_text,preferred_package,status,
+      requirement,site_location,area_text,budget_text,preferred_package,
+      package_price_from_snapshot,package_price_unit_snapshot,status,
       quoted_package,quoted_price,quoted_scope,professional_notes,quoted_at,created_at
      FROM professional_project_quote_requests
      WHERE business_user_id=$1 ORDER BY created_at DESC,id DESC LIMIT 100`,[id]
@@ -140,7 +154,8 @@ async function listForAdmin(){
   return (await pool.query(
     `SELECT q.id,q.project_id,q.project_title,q.customer_name,q.customer_phone,
       q.customer_email,q.requirement,q.site_location,q.area_text,q.budget_text,
-      q.preferred_package,q.status,q.quoted_package,q.quoted_price,q.quoted_scope,
+      q.preferred_package,q.package_price_from_snapshot,q.package_price_unit_snapshot,
+      q.status,q.quoted_package,q.quoted_price,q.quoted_scope,
       q.professional_notes,q.quoted_at,q.created_at,bp.business_name
      FROM professional_project_quote_requests q
      LEFT JOIN business_profiles bp ON bp.user_id=q.business_user_id
