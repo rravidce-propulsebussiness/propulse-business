@@ -449,18 +449,18 @@ test('published project retains private project-specific callback flow alongside
 
 test('professional interior quote reuses the exact interiors wizard with no custom package',async({page})=>{
   const project={
-    project_id:123,project_type:'3BHK',title:'3 BHK Interior',
+    project_id:123,project_type:'interior',title:'3 BHK Interior',
     description:'Three-bedroom interiors',completion_year:2025,
-    business_name:'SG Homes',business_profile_id:7,
+    business_name:'Example Studio',business_profile_id:7,
     location_text:'Uppal',area_text:'1700',budget_text:'18 Lakhs',
     package_name:'Standard',image_urls:[],
   }
   const professional={
-    business_name:'SG Homes',business_profile_id:7,
+    business_name:'Example Studio',business_profile_id:7,
     service_plans:[
-      {id:2,title:'Standard',description:'Interior execution',price_from:1600,price_unit:'sqft',
+      {id:2,title:'Standard',industry:'design',description:'Interior execution',price_from:1600,price_unit:'sqft',
        duration_label:'8–10 weeks',inclusions:['Branded plywood','Modular kitchen']},
-      {id:3,title:'Premium',description:'Premium interiors',price_from:2400,price_unit:'sqft',
+      {id:3,title:'Premium',industry:'design',description:'Premium interiors',price_from:2400,price_unit:'sqft',
        inclusions:['Premium hardware']},
     ],
   }
@@ -533,7 +533,7 @@ test('interior project quote requires a published professional package',async({p
     status:200,contentType:'application/json',
     body:JSON.stringify({
       project_id:124,title:'Completed Apartment Interior',
-      project_type:'3BHK',completion_year:2025,business_profile_id:8,
+      project_type:'interior',completion_year:2025,business_profile_id:8,
     }),
   }))
   await page.route('**/api/experts/8',route=>route.fulfill({
@@ -542,7 +542,8 @@ test('interior project quote requires a published professional package',async({p
   }))
   await page.goto('/projects/project-124/quote')
   await expect(page.locator('.irx-package-grid>button')).toHaveCount(0)
-  await expect(page.getByText(/has not published any packages/).first()).toBeVisible()
-  await expect(page.locator('.irx-summary-card button[type=submit]')).toBeDisabled()
+  await expect(page.getByText(/has not published a .* package yet/).first()).toBeVisible()
+  await expect(page.getByRole('heading',{name:'Matching professional package unavailable'})).toBeVisible()
+  await expect(page.locator('.irx-summary-card button[type=submit]')).toHaveCount(0)
   await expect(page.getByText('Custom quotation',{exact:true})).toHaveCount(0)
 })
