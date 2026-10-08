@@ -51,7 +51,7 @@ async function requestCallback(projectId,input={}){
       type:'project_callback_request',category:'lead',severity:'info',
       title:'New project callback request',
       message:`A customer requested a callback about "${String(project.title).slice(0,120)}". View their details in your business profile.`,
-      actionUrl:'/profile',relatedType:'project_callback',relatedId:requestId,
+      actionUrl:'/profile?tab=projects',relatedType:'project_callback',relatedId:requestId,
       dedupeKey:`project-callback-${requestId}`,
     });
   }catch(error){console.error('Project callback notification failed:',error.message);}
