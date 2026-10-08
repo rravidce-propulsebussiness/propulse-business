@@ -783,3 +783,8 @@
 }
 
 .pj-page .pj-card-verified{position:absolute;z-index:3;bottom:14px;left:14px;display:inline-flex;align-items:center;padding:8px 11px;border-radius:8px;background:rgba(229,250,238,.97);color:#146544;font-size:12px;font-weight:800;box-shadow:0 6px 14px #103c361c}
+
+/* Completed portfolio: honest empty state and clear publishing entry point. */
+.pj-page .pj-empty-actions{display:flex;justify-content:center;flex-wrap:wrap;gap:10px}
+.pj-page .pj-empty-professional{background:#fff;color:#173a50;border:1px solid #d7e2e7}
+.pj-page .pj-empty-professional:hover{background:#eef3f5;color:#173a50}

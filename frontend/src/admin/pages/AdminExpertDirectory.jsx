@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { authRequest } from '../../utils/auth'
 import AdminCallbackInbox from './AdminCallbackInbox'
+import AdminCompletedProjects from './AdminCompletedProjects'
 import './AdminExpertDirectory.css'
 
 function listData(value){
@@ -131,6 +132,8 @@ export default function AdminExpertDirectory(){
       </div>
       <div className="expert-plan-groups"><div><b>Allowed membership</b><small>Select which paid plans unlock a public business profile.</small></div>{planGroups.map(group=><button key={group} className={allowed.has(group)?'active':''} onClick={()=>togglePlan(group)}>{String(group).toUpperCase()}</button>)}</div>
     </section>
+
+    <AdminCompletedProjects businesses={businesses}/>
 
     <section className="expert-admin-panel businesses">
       <div className="expert-admin-panel-head"><div><span>02</span><h2>Business visibility</h2><p>Feature strong profiles or hide a business without changing its membership.</p></div><div className="expert-admin-page-count"><b>{pagination.total||0}</b><small>businesses</small></div></div>
