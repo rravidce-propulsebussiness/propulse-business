@@ -86,7 +86,7 @@ export default function ProjectQuote(){
   // Reuse the exact /quote#interiors flow for interior projects rather than
   // maintaining a second, simplified requirements form. Professional packages
   // replace catalog packages, and submission remains project-specific.
-  if(!loading&&!loadError&&project?.category==='design'){
+  if(!loading&&!loadError&&project&&(project.category==='design'||/interior|design/i.test(project.title||''))){
     return <main className="quote-page project-interior-quote">
       <PublicHeader/>
       {submitted?<section className="pq-success" role="status">
