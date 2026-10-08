@@ -422,11 +422,60 @@ export default function Profile(){
           </section>
           </>}
 
+
           {activeSection==='plans'&&<>
-          <section className="profile-panel profile-plan-panel" id="profile-plans">
-            <div className="panel-title"><div><span>06</span><h2>Service packages</h2><p>Optional packages customers can review before submitting a requirement. Project drawings and PDFs stay inside each Project.</p></div><button type="button" onClick={()=>setPlans(items=>[...items,emptyPlan()])}>+ Add plan</button></div>
-            <div className="profile-showcase-list">{plans.map((plan,index)=><article className="profile-showcase-card compact" key={plan.id||`plan-${index}`}><div className="profile-showcase-card-head"><div><span>PLAN {String(index+1).padStart(2,'0')}</span><h3>{plan.title||'Untitled plan'}</h3></div><div><label className="profile-inline-check"><input type="checkbox" checked={plan.isPublished} onChange={e=>updatePlan(index,'isPublished',e.target.checked)}/> Public</label><button type="button" className="row-remove" onClick={()=>setPlans(items=>items.filter((_,i)=>i!==index))}>Remove</button></div></div><div className="profile-showcase-grid"><label>Plan title<input value={plan.title} maxLength="160" onChange={e=>updatePlan(index,'title',e.target.value)} placeholder="Premium turnkey interiors"/></label><label>Starting price ₹<input type="number" min="0" value={plan.priceFrom} onChange={e=>updatePlan(index,'priceFrom',e.target.value)} placeholder="500000"/></label><label>Duration<input value={plan.durationLabel} maxLength="120" onChange={e=>updatePlan(index,'durationLabel',e.target.value)} placeholder="8–10 weeks"/></label><label className="wide">Description<textarea rows="3" value={plan.description} maxLength="2000" onChange={e=>updatePlan(index,'description',e.target.value)} placeholder="Who this plan is for and what customers should expect…"/></label><label className="wide">Inclusions <small>One per line</small><textarea rows="4" value={plan.inclusions} onChange={e=>updatePlan(index,'inclusions',e.target.value)} placeholder="Design consultation · Material selection · Execution management"/></label></div></article>)}{!plans.length&&<div className="profile-showcase-empty"><b>No public service plans added.</b><span>Add packages only if you want customers to compare offerings in Experts.</span></div>}</div>
-          </section>
+            <section className="profile-panel profile-plan-panel" id="profile-plans">
+              <div className="panel-title">
+                <div><span>06</span><h2>Service Packages</h2><p>Create clear customer-ready packages, set pricing and attach a brochure to each package.</p></div>
+                <button type="button" onClick={()=>setPlans(items=>[...items,emptyPlan()])} disabled={plans.length>=10}>+ Add Package</button>
+              </div>
+              <div className="profile-plan-overview">
+                <div><strong>{plans.length}</strong><span>Total packages</span></div>
+                <div><strong>{plans.filter(item=>item.isPublished).length}</strong><span>Public packages</span></div>
+                <div><strong>{plans.filter(item=>Boolean(item.brochureUrl)).length}</strong><span>With brochures</span></div>
+                <p>Customers see published packages and can open attached PDF brochures from your professional profile.</p>
+              </div>
+              <div className="profile-showcase-list profile-package-list">
+                {plans.map((plan,index)=>
+                  <article className="profile-showcase-card profile-package-card" key={plan.id||`plan-${index}`}>
+                    <header className="profile-showcase-card-head">
+                      <div><span>PACKAGE {String(index+1).padStart(2,'0')}</span><h3>{plan.title||'New service package'}</h3><p>{plan.brochureUrl?'Brochure attached':'Add a PDF or image brochure to explain your offering.'}</p></div>
+                      <div className="profile-package-head-actions">
+                        <label className="profile-inline-check"><input type="checkbox" checked={plan.isPublished} onChange={e=>updatePlan(index,'isPublished',e.target.checked)}/> Public</label>
+                        <button type="button" className="row-remove" onClick={()=>setPlans(items=>items.filter((_,i)=>i!==index))}>Remove</button>
+                      </div>
+                    </header>
+                    <div className="profile-showcase-grid profile-package-fields">
+                      <label>Package title<input required maxLength="160" value={plan.title} onChange={e=>updatePlan(index,'title',e.target.value)} placeholder="e.g. Premium Turnkey Interiors"/></label>
+                      <label>Starting price (₹)<input type="number" min="0" value={plan.priceFrom} onChange={e=>updatePlan(index,'priceFrom',e.target.value)} placeholder="e.g. 500000"/></label>
+                      <label>Estimated duration<input maxLength="120" value={plan.durationLabel} onChange={e=>updatePlan(index,'durationLabel',e.target.value)} placeholder="e.g. 8–10 weeks"/></label>
+                      <label className="wide">Package description<textarea rows="3" value={plan.description} maxLength="2000" onChange={e=>updatePlan(index,'description',e.target.value)} placeholder="Describe the scope, ideal customer and quality of finish…"/></label>
+                      <label className="wide">What's included <small>Write one item per line</small><textarea rows="4" value={plan.inclusions} onChange={e=>updatePlan(index,'inclusions',e.target.value)} placeholder={'Design consultation\nMaterial selection\nExecution management'}/></label>
+                    </div>
+                    <div className="profile-package-brochure">
+                      <div className="profile-package-document-icon" aria-hidden="true">PDF</div>
+                      <div className="profile-package-document-copy">
+                        <strong>Package Brochure</strong>
+                        <p>Upload a PDF, JPG, PNG or WebP file (max 15 MB). Customers can view or download it from the published package.</p>
+                        {plan.brochureUrl&&<span className="profile-package-file-badge">✓ File attached</span>}
+                      </div>
+                      <div className="profile-package-document-actions">
+                        <label className={'profile-package-upload'+(packageUploads[index]?' is-uploading':'')}>
+                          <span>{packageUploads[index]?'Uploading…':plan.brochureUrl?'Replace file':'Upload Brochure'}</span>
+                          <input type="file" accept="application/pdf,image/jpeg,image/png,image/webp,.pdf,.jpg,.jpeg,.png,.webp" disabled={Boolean(packageUploads[index])||saving} onChange={e=>{const file=e.target.files?.[0];e.target.value='';uploadPackageBrochure(index,file)}}/>
+                        </label>
+                        {plan.brochureUrl&&<div className="profile-package-file-links">
+                          {plan.brochureDisplayUrl&&<a href={plan.brochureDisplayUrl} target="_blank" rel="noopener noreferrer">Preview ↗</a>}
+                          <button type="button" onClick={()=>updatePlan(index,'brochureUrl','')}>Remove file</button>
+                        </div>}
+                      </div>
+                    </div>
+                  </article>
+                )}
+                {!plans.length&&<div className="profile-showcase-empty"><b>No service packages yet.</b><span>Create your first package with pricing, inclusions and a brochure customers can review.</span></div>}
+              </div>
+              <div className="profile-package-footer-note"><strong>Ready to publish?</strong> Click <b>Save changes</b> below after uploading. Files remain private until you publish the package.</div>
+            </section>
           </>}
         </div>
 
