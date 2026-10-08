@@ -75,7 +75,7 @@ assert.equal(maskLead({ source: 'homepage_consultation', customer_name: 'Test Ho
 assert.equal(maskLead({ source: 'professional_project_callback', customer_name: 'Asha Reddy' }).customer_name, 'Asha Reddy');
 const withNote = {
   ...oldLead,
-  requirement: oldLead.requirement + '\\nAdditional requirement: Add a pooja room'
+  requirement: oldLead.requirement + '\nAdditional requirement: Add a pooja room'
 };
 assert.equal(maskLead(withNote).requirement, 'Add a pooja room',
   'Only the written free-text answer belongs inside Requirement');
