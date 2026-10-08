@@ -38,7 +38,6 @@ async function submit(projectId,input={}){
   const area=text(input.area,120,'Project area');
   const budget=text(input.budget,120,'Budget');
   const preferredPackage=text(input.preferredPackage,160,'Preferred package');
-  if(!preferredPackage)throw bad('Choose one of this professional’s published packages to continue');
   const settings=await directory.getSettings();
   if(!settings.directoryEnabled||!settings.showProjects)throw bad('Project not available','PROJECT_NOT_FOUND');
   const {rows}=await pool.query(
@@ -98,6 +97,15 @@ async function submit(projectId,input={}){
       dedupeKey:'professional-quote-'+quoteId,
     });
   }catch(error){console.error('Professional quotation notification failed:',error.message)}
+  try{
+    await notifications.notifyAdmins({
+      type:'professional_quote_request',category:'lead',severity:'info',
+      title:'New professional quotation lead #'+quoteId,
+      message:'A customer requested a '+(selectedPackage?'package':'custom')+' quotation for '+String(project.title).slice(0,100)+'. Review the lead and coordinate protected customer contact access.',
+      actionUrl:'/admin',relatedType:'professional_quote',relatedId:quoteId,
+      dedupeKey:'admin-professional-quote-'+quoteId,
+    });
+  }catch(error){console.error('Admin quotation notification failed:',error.message)}
   return {accepted:true,requestId:quoteId};
 }
 async function listForProfessional(userId){
