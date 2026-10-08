@@ -41,4 +41,17 @@ if(read('../frontend/src/pages/Experts.jsx').includes('experts-hero'))throw new 
 must('../frontend/src/admin/pages/AdminExpertDirectory.jsx',['Expert Directory','Allowed membership','Featured','Hidden']);
 must('../frontend/src/admin/pages/AdminExpertDirectory.jsx',['businessRequest=useRef(0)','searchReady=useRef(false)','requestId!==businessRequest.current','queueMicrotask']);
 if(/useEffect\(\(\)=>\{\s*if\(loading\)return\s*const timer/.test(read('../frontend/src/admin/pages/AdminExpertDirectory.jsx')))throw new Error('Expert Directory search effect must not drop searches typed during initial loading');
+// Professional-specific quotation leads must remain owned by the publishing business.
+// Customer data is private; only admin coordination can see unmasked contacts.
+must('src/database/migrations/20261008_zzzz_professional_project_quotes.sql',['professional_project_quote_requests','business_user_id','quoted_price','quoted_package']);
+must('src/services/professionalProjectQuoteService.js',['listForProfessional','updateByProfessional','listForAdmin','WHERE id=$1 AND business_user_id=$2','maskPhone','maskEmail','professional_quote_request']);
+must('src/routes/publicExpertRoutes.js',['/projects/:projectId/quote-request','requestProjectQuote']);
+must('src/routes/profileRoutes.js',['/project-quote-requests','updateProjectQuote']);
+must('src/routes/adminRoutes.js',['/professional-quote-leads']);
+must('../frontend/src/pages/ProjectDetail.jsx',['submitQuote','quoteForm','/quote-request','Get Quote']);
+must('../frontend/src/pages/Profile.jsx',['Quotation enquiries','saveProjectQuote','Mark Quote Ready']);
+must('../frontend/src/admin/pages/AdminCallbackInbox.jsx',['professional-quote-leads','Professional-specific quote leads']);
+if(/to=\{'\/quote#'\+quoteHash\(project\)\}/.test(read('../frontend/src/pages/ProjectDetail.jsx')))
+  throw new Error('Project-specific Get Quote must not redirect to the general marketplace quotation flow.');
+
 console.log('Expert directory portfolio checks passed.');
