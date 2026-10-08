@@ -110,7 +110,10 @@ assert.match(contact,/Construction · Interiors · Real Estate/);
 // The portfolio must not imply that illustrative stock photos are completed client work.
 assert.match(projects,/const CONCEPTS = \[/);
 assert.doesNotMatch(projects,/const PROJECTS = \[/);
-assert.match(projects,/PROFESSIONAL PORTFOLIO/);
+assert.match(projects,/className="pj-portfolio-section"/);
+assert.doesNotMatch(projects,/pj-portfolio-hero/);
+assert.match(projects,/\.\.\.professionalProjects, \.\.\.CONCEPTS/);
+assert.match(projects,/SAMPLE CONCEPT/);
 assert.match(projects,/professionalProjects/);
 assert.match(projects,/These are not claimed as completed client projects/);
 assert.match(projects,/Project information is supplied by the publishing professional/);
