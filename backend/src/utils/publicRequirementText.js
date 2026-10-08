@@ -40,9 +40,9 @@ function publicWrittenRequirement(row, custom = row?.custom_fields || {}) {
 }
 
 
-const projectIntro = /^(?:Interior Design|Real Estate|Construction) enquiry from a completed project\\.\\s*/i;
-const generatedCallback = /^Customer requested a callback about (?:this|their) project(?: requirement)?\\.?$/i;
-const additionalLabel = /^(?:additional requirements?|additional information|other details|share more details and requirement|written requirement)\\s*:/i;
+const projectIntro = /^(?:Interior Design|Real Estate|Construction) enquiry from a completed project\.\s*/i;
+const generatedCallback = /^Customer requested a callback about (?:this|their) project(?: requirement)?\.?$/i;
+const additionalLabel = /^(?:additional requirements?|additional information|other details|share more details and requirement|written requirement)\s*:/i;
 
 function projectWrittenRequirement(row, custom = row?.custom_fields || {}) {
   const origin = custom?._project_origin || {};
@@ -60,13 +60,13 @@ function projectWrittenRequirement(row, custom = row?.custom_fields || {}) {
   // Historical project quotations stored a full "Label: Value" form in requirement.
   // Recover only a labelled, customer-written additional-requirement answer.
   const formText = raw.replace(projectIntro, '').trim();
-  if (formText.split(/\\r?\\n/).some(line => additionalLabel.test(line.trim()))) {
+  if (formText.split(/\r?\n/).some(line => additionalLabel.test(line.trim()))) {
     return clean(parseProjectQuoteRequirement(formText)['Additional Requirements']);
   }
   // Some older marketplace leads saved the introductory sentence followed by a
   // genuine free-text note instead of a labelled form answer.
-  if (projectIntro.test(raw) && formText && !/\\r?\\n/.test(formText)
-    && !/^[\\w -]{2,70}\\s*:/.test(formText)
+  if (projectIntro.test(raw) && formText && !/\r?\n/.test(formText)
+    && !/^[\w -]{2,70}\s*:/.test(formText)
     && !generatedCallback.test(formText)) return formText;
   return '';
 }
