@@ -5,6 +5,7 @@ const leadQualityGateService = require('./leadQualityGateService');
 const { fetchGoogleSheetCsv } = require('./googleSheetService');
 const { detectPincode } = require('./pincodeDetectionService');
 const cityService = require('./cityService');
+const {parseCsvRecords}=require('../utils/csvRecords');
 
 const clean = v => String(v ?? '').trim();
 const norm = v => clean(v).toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]/g, '');
@@ -25,33 +26,14 @@ const aliases = {
 };
 
 function parseCsv(text) {
-  const rows = []; let row = []; let cell = ''; let quoted = false;
-  for (let i = 0; i < text.length; i += 1) {
-    const c = text[i];
-    if (c === '"') { if (quoted && text[i + 1] === '"') { cell += '"'; i += 1; } else quoted = !quoted; }
-    else if (c === ',' && !quoted) { row.push(cell); cell = ''; }
-    else if ((c === '\n' || c === '\r') && !quoted) { if (c === '\r' && text[i + 1] === '\n') i += 1; row.push(cell); if (row.some(v => clean(v))) rows.push(row); row = []; cell = ''; }
-    else cell += c;
-  }
-  row.push(cell); if (row.some(v => clean(v))) rows.push(row);
-  if (!rows.length) return [];
-  const headers = rows[0].map(h => aliases[norm(h)] || clean(h));
-  return rows.slice(1).map(source => {
-    const row=Object.fromEntries(headers.map((h, i) => [h, clean(source[i])]));
+  const rows=parseCsvRecords(text);
+  if(!rows.length)return[];
+  const headers=rows[0].map(h=>aliases[norm(h)]||clean(h));
+  return rows.slice(1).map(source=>{
+    const row=Object.fromEntries(headers.map((h,i)=>[h,clean(source[i])]));
     if(norm(row.industry)==='intriordesignandhomeinteriors')row.industry='Interior Design & Home Interiors';
     return row;
-  }).filter(r => Object.values(r).some(Boolean));
-}
-
-async function catalogs() {
-  const [industries, services, subservices, states, cities] = await Promise.all([
-    pool.query('SELECT id,name,slug FROM industries WHERE is_active=TRUE'),
-    pool.query('SELECT id,name,slug,industry_id FROM services WHERE is_active=TRUE'),
-    pool.query('SELECT id,name,slug,service_id FROM subservices WHERE is_active=TRUE'),
-    pool.query('SELECT id,name,code FROM states WHERE is_active=TRUE'),
-    pool.query('SELECT id,name,slug,state_id FROM cities WHERE is_active=TRUE'),
-  ]);
-  return { industries: industries.rows, services: services.rows, subservices: subservices.rows, states: states.rows, cities: cities.rows };
+  }).filter(r=>Object.values(r).some(Boolean));
 }
 
 function candidateMatches(items, value) {
