@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { isEmptyAnswer } from './customerFlowQuestionUtils'
 import QuoteLocationFields from './QuoteLocationFields'
 import { INTERIOR_PACKAGES } from '../data/interiorPackageCatalog'
+import { formatPublishedPackagePrice } from '../utils/packagePricing'
 import './InteriorRequirementExact.css'
 
 const STYLE_IMAGES = {
@@ -99,7 +100,7 @@ function Chips({ question, value, onChange }) {
 }
 
 export default function InteriorRequirementExact(props) {
-  const { embedded = false, questions, answers, setAnswer, cities, locationStates, locationStateId, setLocationState, cityId, setCity, locationQuestion, setPincode, onDetectedLocation, pinLookup, contact, setContact, state, submit, contactData, completion } = props
+  const { embedded = false, questions, answers, setAnswer, cities, locationStates, locationStateId, setLocationState, cityId, setCity, locationQuestion, setPincode, onDetectedLocation, pinLookup, contact, setContact, state, submit, contactData, completion, projectQuote = null } = props
   const fileRef = useRef(null)
   const previewUrlsRef = useRef(new Set())
   const [referenceFiles, setReferenceFiles] = useState([])
@@ -115,6 +116,8 @@ export default function InteriorRequirementExact(props) {
     ? String(answers.finish_quality).toLowerCase()
     : ''
   const selectedPackage = INTERIOR_PACKAGES.find(item => item.key === selectedPackageKey) || null
+  const professionalPackages = projectQuote?.packages || []
+  const selectedProfessionalPlan = professionalPackages.find(plan => plan.title === projectQuote?.preferredPackage) || null
   const budget = byKey.budget
   const timeline = byKey.timeline
   const style = byKey.design_style
@@ -191,7 +194,8 @@ export default function InteriorRequirementExact(props) {
     ...(showBhk ? [['Bedrooms', bhk ? answerLabel(bhk, answers[bhk.questionKey]) : (answers.bhk || '—')]] : []),
     ['Interior Scope', scopeMode === 'end_to_end' ? 'Full Home Interiors' : scopeMode === 'selected_work' ? 'Selected Work' : '—'],
     ...(scopeMode === 'selected_work' ? [['Selected Work', selectedWorkLabel]] : []),
-    ['Interior Package', selectedPackage ? selectedPackage.name : '—'],
+    ['Interior Package', projectQuote ? selectedProfessionalPlan?.title || '—' : selectedPackage ? selectedPackage.name : '—'],
+    ...(projectQuote ? [['Starting Rate', selectedProfessionalPlan ? formatPublishedPackagePrice(selectedProfessionalPlan.price_from,selectedProfessionalPlan.price_unit) : '—']] : []),
     ['Budget', answerLabel(budget, budget ? answers[budget.questionKey] : '')],
     ['Timeline', answerLabel(timeline, timeline ? answers[timeline.questionKey] : '')],
     ['Design Style', answerLabel(style, style ? answers[style.questionKey] : '')],
@@ -350,11 +354,21 @@ export default function InteriorRequirementExact(props) {
 
             <div className="irx-package-section">
               <div className="irx-package-heading">
-                <div><b>Choose Interior Package</b></div>
-                <Link to="/packages#interior">Compare packages <Icon name="arrow" size={13}/></Link>
+                <div><b>{projectQuote ? 'Choose a Professional Package' : 'Choose Interior Package'}</b></div>
+                {projectQuote ? <Link to={'/experts/'+projectQuote.project.businessProfileId}>View professional packages <Icon name="arrow" size={13}/></Link> : <Link to="/packages#interior">Compare packages <Icon name="arrow" size={13}/></Link>}
               </div>
+              {projectQuote && professionalPackages.length===0 && <p className="irx-project-package-empty" role="status">This professional has not published any packages. Please request a callback or check back when package pricing is available.</p>}
               <div className="irx-package-grid">
-                {INTERIOR_PACKAGES.map(item=>{
+                {projectQuote ? professionalPackages.map(item=>{
+                  const active=projectQuote.preferredPackage===item.title
+                  return <button type="button" key={item.id||item.title} className={active?'active':''} aria-pressed={active} onClick={()=>projectQuote.setPreferredPackage(item.title)}>
+                    <div className="irx-package-top"><span>PROFESSIONAL PACKAGE</span>{active&&<i>Selected</i>}</div>
+                    <div className="irx-package-name"><b>{item.title}</b><strong>{formatPublishedPackagePrice(item.price_from,item.price_unit)}</strong></div>
+                    {item.description&&<p>{item.description}</p>}
+                    {Array.isArray(item.inclusions)&&item.inclusions.length>0&&<div className="irx-package-highlights">{item.inclusions.slice(0,3).map((detail,index)=><span key={index}>✓ {detail}</span>)}</div>}
+                    <em>{active?'Selected':'Select Package'}</em>
+                  </button>
+                }) : INTERIOR_PACKAGES.map(item=>{
                   const active=selectedPackageKey===item.key
                   return <button type="button" key={item.key} className={active?'active':''} onClick={()=>setAnswer(finishQuality?.questionKey||'finish_quality',item.key)}>
                     <div className="irx-package-top"><span>{item.eyebrow}</span>{item.badge&&<i>{item.badge}</i>}</div>
@@ -365,7 +379,8 @@ export default function InteriorRequirementExact(props) {
                   </button>
                 })}
               </div>
-              <small className="irx-package-note">Package rates are brochure references only. Final interior price depends on measurements, selected work, design, materials and site conditions.</small>
+              <small className="irx-package-note">{projectQuote ? 'Published rates come directly from this professional’s profile. Final project pricing depends on measurements, materials, selections and site conditions.' : 'Package rates are brochure references only. Final interior price depends on measurements, selected work, design, materials and site conditions.'}</small>
+              {projectQuote&&selectedProfessionalPlan?.brochure_url&&<a className="irx-project-brochure" href={selectedProfessionalPlan.brochure_url} target="_blank" rel="noopener noreferrer">Download selected package specifications (PDF) ↗</a>}
             </div>
 
             <div className="irx-preference-grid irx-premium-preferences">
@@ -396,7 +411,7 @@ export default function InteriorRequirementExact(props) {
           <section className="irx-card irx-notes-card" id="irx-notes">
             <div className="irx-section-title irx-section-title-premium"><div><h2>Additional Notes</h2></div></div>
             {additional&&<div className="irx-notes irx-notes-premium"><div className="irx-notes-label"><b>Project Notes</b><small>Optional</small></div><textarea maxLength={Number(additional.validation?.maxLength||1500)} value={answers[additional.questionKey]||''} onChange={e=>setAnswer(additional.questionKey,e.target.value)} placeholder="E.g. TV wall, pooja unit, storage preference, material choice, lighting idea, smart-home requirement, etc."/><span>{String(answers[additional.questionKey]||'').length}/{Number(additional.validation?.maxLength||1500)}</span></div>}
-            <div className="irx-upload irx-upload-premium">
+            {!projectQuote&&<div className="irx-upload irx-upload-premium">
               <div className="irx-upload-head">
                 <div><b>Upload Floor Plan or Reference Images <small>Optional</small></b></div>
                 <span>{referenceFiles.length}/{MAX_REFERENCE_FILES} files</span>
@@ -418,12 +433,12 @@ export default function InteriorRequirementExact(props) {
               </div>}
               {uploadNotice&&<div className="irx-upload-notice">{uploadNotice}</div>}
               
-            </div>
+            </div>}
           </section>
         </div>
 
         <aside className="irx-side" id="irx-summary">
-          <section className="irx-summary-card"><h3>Your Selection Summary</h3><div>{summary.map(([label,value])=><p key={label}><span>{label}</span><b title={value}>{value}</b></p>)}</div>{state.error&&<div className="irx-error">{state.error}</div>}<button type="submit" disabled={state.saving}>{state.saving?'Sending Request…':'Request Quote'} <Icon name="arrow" size={15}/></button></section>
+          <section className="irx-summary-card">{projectQuote&&<p className="irx-project-summary-context">Quote for <strong>{projectQuote.project.title}</strong> by {projectQuote.project.businessName||'the selected professional'}</p>}<h3>Your Selection Summary</h3><div>{summary.map(([label,value])=><p key={label}><span>{label}</span><b title={value}>{value}</b></p>)}</div>{state.error&&<div className="irx-error">{state.error}</div>}<button type="submit" disabled={state.saving||(projectQuote&&!selectedProfessionalPlan)}>{state.saving?'Sending Request…':projectQuote?'Request Professional Quote':'Request Quote'} <Icon name="arrow" size={15}/></button></section>
           <section className="irx-help"><div className="irx-help-head"><span><Icon name="support"/></span><div><b>Need Help?</b></div></div><a href={phone?`tel:${phone.replace(/\s/g,'')}`:'#irx-basic'}><Icon name="phone" size={16}/>{phone||'Start Free Consultation'}</a><small>Mon - Sat, 9 AM - 8 PM</small></section>
         </aside>
       </div>
