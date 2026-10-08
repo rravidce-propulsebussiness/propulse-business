@@ -78,4 +78,13 @@ async function uploadProjectImage(req,res){
   }
 }
 
-module.exports = { getProfile, updateProfile, uploadProjectVideo, uploadProjectPlan, uploadProjectImage };
+async function listProjectCallbacks(req,res){
+  try{
+    if(req.user?.role!=='business')return res.status(403).json({error:'Business account required'});
+    return res.json({data:await projectCallbackService.listForProfessional(req.user.id)});
+  }catch(error){
+    console.error('List project callbacks failed:',error.message);
+    return sendError(res,500,error,'Unable to load callback requests');
+  }
+}
+module.exports = { getProfile, updateProfile, uploadProjectVideo, uploadProjectPlan, uploadProjectImage, listProjectCallbacks };
