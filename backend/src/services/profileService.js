@@ -2,6 +2,7 @@ const pool = require('../config/database');
 const expertDirectoryService = require('./expertDirectoryService');
 const projectVideoService = require('./projectVideoService');
 const projectPlanService = require('./projectPlanService');
+const projectImageService = require('./projectImageService');
 const companyProofStorageService = require('./companyProofStorageService');
 const s3 = require('./s3PrivateObjectStorageService');
 
@@ -45,6 +46,11 @@ function normalizeProjects(projects){
       areaText:cleanText(item?.areaText,120,'Project area'),
       budgetText:cleanText(item?.budgetText,120,'Project budget'),
       coverImageUrl:cleanUrl(item?.coverImageUrl,'Project image'),
+      imageUrls:(()=>{
+        const images=item?.imageUrls||[];
+        if(!Array.isArray(images)||images.length>8)throw profileError('Add at most 8 gallery photos');
+        return [...new Set(images.map(url=>cleanUrl(url,'Gallery photo')).filter(Boolean))];
+      })(),
       videoUrl:cleanUrl(item?.videoUrl,'Project video'),
       planUrl:cleanUrl(item?.planUrl,'Project plan'),
       sortOrder:index,
@@ -117,7 +123,7 @@ async function getProfile(userId, client = pool) {
     ),
     client.query(
       `SELECT id,title,project_type,description,location_text,completion_year,area_text,budget_text,
-              cover_image_url,video_url,video_published_at,plan_url,published_at,sort_order,is_published
+              cover_image_url,image_urls,video_url,video_published_at,plan_url,published_at,sort_order,is_published
        FROM business_profile_projects
        WHERE business_profile_id=$1
        ORDER BY sort_order,id`, [profile.id]
@@ -142,6 +148,7 @@ async function getProfile(userId, client = pool) {
     ...project,
     video_display_url:await projectVideoService.displayUrl(project.video_url),
     plan_display_url:await projectPlanService.displayUrl(project.plan_url),
+    image_display_urls:await Promise.all((project.image_urls||[]).map(url=>projectImageService.displayUrl(url))),
   })));
 
   return {
@@ -251,7 +258,7 @@ async function updateProfile(userId, payload) {
 
     const profileId = profile.rows[0].id;
     const existingProjects=(await client.query(
-      'SELECT id,video_url,video_published_at,plan_url,published_at FROM business_profile_projects WHERE business_profile_id=$1',
+      'SELECT id,video_url,video_published_at,plan_url,image_urls,published_at FROM business_profile_projects WHERE business_profile_id=$1',
       [profileId]
     )).rows;
     const existingById=new Map(existingProjects.map(item=>[Number(item.id),item]));
@@ -270,6 +277,10 @@ async function updateProfile(userId, payload) {
             : new Date();
         }
       }
+      for(const url of item.imageUrls){
+        if(url.startsWith('/uploads/')&&!url.startsWith('/uploads/business-projects/'))throw profileError('Uploaded project photo URL is invalid');
+        if(s3.isReference(url)||url.startsWith('/uploads/business-projects/'))projectImageService.managedImageInfo(userId,url);
+      }
       if(item.planUrl){
         if(item.planUrl.startsWith('/uploads/')&&!item.planUrl.startsWith('/uploads/business-projects/')){
           throw profileError('Uploaded project plan URL is invalid');
@@ -284,6 +295,9 @@ async function updateProfile(userId, payload) {
     const isManagedPlan=url=>{try{return Boolean(projectPlanService.managedPlanInfo(userId,url))}catch{return false}};
     const currentManagedUrls=new Set(projectsForSave.map(item=>item.videoUrl).filter(isManagedVideo));
     const removedManagedUrls=existingProjects.map(item=>item.video_url).filter(url=>isManagedVideo(url)&&!currentManagedUrls.has(url));
+    const isManagedImage=url=>{try{return Boolean(projectImageService.managedImageInfo(userId,url))}catch{return false}};
+    const currentManagedImageUrls=new Set(projectsForSave.flatMap(item=>item.imageUrls).filter(isManagedImage));
+    const removedManagedImageUrls=existingProjects.flatMap(item=>item.image_urls||[]).filter(url=>isManagedImage(url)&&!currentManagedImageUrls.has(url));
     const currentManagedPlanUrls=new Set(projectsForSave.map(item=>item.planUrl).filter(isManagedPlan));
     const removedManagedPlanUrls=existingProjects.map(item=>item.plan_url).filter(url=>isManagedPlan(url)&&!currentManagedPlanUrls.has(url));
     await client.query('UPDATE business_profile_services SET is_active = FALSE, updated_at = CURRENT_TIMESTAMP WHERE business_profile_id = $1', [profileId]);
@@ -308,15 +322,15 @@ async function updateProfile(userId, payload) {
     if(projectsForSave.length){
       await client.query(`
         INSERT INTO business_profile_projects
-          (business_profile_id,title,project_type,description,location_text,completion_year,area_text,budget_text,cover_image_url,video_url,video_published_at,plan_url,published_at,sort_order,is_published)
-        SELECT $1,x.title,x.project_type,x.description,x.location_text,x.completion_year,x.area_text,x.budget_text,x.cover_image_url,x.video_url,x.video_published_at,x.plan_url,x.published_at,x.sort_order,x.is_published
+          (business_profile_id,title,project_type,description,location_text,completion_year,area_text,budget_text,cover_image_url,image_urls,video_url,video_published_at,plan_url,published_at,sort_order,is_published)
+        SELECT $1,x.title,x.project_type,x.description,x.location_text,x.completion_year,x.area_text,x.budget_text,x.cover_image_url,x.image_urls,x.video_url,x.video_published_at,x.plan_url,x.published_at,x.sort_order,x.is_published
         FROM jsonb_to_recordset($2::jsonb) AS x(
           title text,project_type text,description text,location_text text,completion_year int,area_text text,budget_text text,
-          cover_image_url text,video_url text,video_published_at timestamp,plan_url text,published_at timestamp,sort_order int,is_published boolean
+          cover_image_url text,image_urls jsonb,video_url text,video_published_at timestamp,plan_url text,published_at timestamp,sort_order int,is_published boolean
         )
       `,[profileId,JSON.stringify(projectsForSave.map(item=>({
         title:item.title,project_type:item.projectType,description:item.description,location_text:item.locationText,
-        completion_year:item.completionYear,area_text:item.areaText,budget_text:item.budgetText,cover_image_url:item.coverImageUrl,
+        completion_year:item.completionYear,area_text:item.areaText,budget_text:item.budgetText,cover_image_url:item.coverImageUrl,image_urls:item.imageUrls,
         video_url:item.videoUrl,video_published_at:item.videoPublishedAt?new Date(item.videoPublishedAt).toISOString():null,plan_url:item.planUrl,published_at:new Date(item.publishedAt).toISOString(),sort_order:item.sortOrder,is_published:item.isPublished,
       })))]);
     }
@@ -340,6 +354,8 @@ async function updateProfile(userId, payload) {
     await client.query('COMMIT');
     projectVideoService.removeManagedProjectVideos(userId,removedManagedUrls)
       .catch(error=>console.error('Remove unused project video failed:',error?.message||error));
+    projectImageService.removeManagedProjectImages(userId,removedManagedImageUrls)
+      .catch(error=>console.error('Remove unused gallery photos failed:',error?.message||error));
     projectPlanService.removeManagedProjectPlans(userId,removedManagedPlanUrls)
       .catch(error=>console.error('Remove unused project plan failed:',error?.message||error));
     return { user: { ...user.rows[0], profile: result } };
