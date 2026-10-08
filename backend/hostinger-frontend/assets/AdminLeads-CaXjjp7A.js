@@ -1,0 +1,1 @@
+import{t as e}from"./vendor-DC2-Z3ta.js";import{t}from"./AdminLeadsV9-s1m6f2sf.js";var n=e();function r(){return(0,n.jsx)(t,{mode:`manage`})}export{r as default};
