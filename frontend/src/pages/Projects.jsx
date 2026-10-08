@@ -247,27 +247,6 @@ export default function Projects() {
     })
   }, [professionalProjects, category, query])
 
-  function downloadSampleSpecifications(project) {
-    if (!project.sample || !project.sampleSpecs?.length) return
-    const details = [
-      'SAMPLE PROJECT SPECIFICATIONS — ILLUSTRATIVE ONLY',
-      project.title,
-      'Sample package: ' + project.packageName,
-      'Illustrative project area: ' + project.area,
-      'Illustrative cost: ' + project.cost,
-      '',
-      ...project.sampleSpecs.map((item, index) => (index + 1) + '. ' + item),
-      '',
-      'This file describes a sample concept, not an actual completed client project or quotation.',
-    ].join('\n')
-    const url = URL.createObjectURL(new Blob([details], {type:'text/plain;charset=utf-8'}))
-    const anchor = document.createElement('a')
-    anchor.href = url
-    anchor.download = project.id + '-sample-specifications.txt'
-    anchor.click()
-    setTimeout(() => URL.revokeObjectURL(url), 1000)
-  }
-
   useEffect(() => {
     if (!selectedProject) return undefined
     const previous=document.body.style.overflow
@@ -451,13 +430,28 @@ export default function Projects() {
           </div>
           {selectedProject.cost&&<div className="pj-modal-cost"><small>{selectedProject.sample?'EXAMPLE PROJECT COST · NOT A QUOTATION':'REPORTED COST / BUDGET'}</small><strong>{selectedProject.cost}</strong></div>}
           {selectedProject.sample&&selectedProject.sampleSpecs?.length>0&&<div className="pj-specs-section"><h3>Illustrative Package Specifications</h3><ul>{selectedProject.sampleSpecs.map(item=><li key={item}><Icon name="check" size={17}/>{item}</li>)}</ul></div>}
-          <div className="pj-detail-buttons">
-            {selectedProject.sample&&<button type="button" onClick={()=>downloadSampleSpecifications(selectedProject)}><Icon name="file" size={17}/> Download Sample Specs</button>}
-            {!selectedProject.sample&&selectedProject.document&&<a href={selectedProject.document} target="_blank" rel="noopener noreferrer"><Icon name="file" size={17}/>{isPdf(selectedProject.document)?'Download Project PDF':'View Project Document'}</a>}
-            {!selectedProject.sample&&selectedProject.video&&<a href={selectedProject.video} target="_blank" rel="noopener noreferrer">Open Project Video <Icon name="arrow" size={15}/></a>}
-            <Link to="/packages" onClick={()=>setSelectedProject(null)}>View Packages <Icon name="layers" size={16}/></Link>
+          <div className="pj-project-actions">
+            {(selectedProject.sample||linkedPlan)&&<button type="button" className="pj-package-download" onClick={()=>downloadPackage(selectedProject,linkedPlan)}><Icon name="file" size={17}/> Download {selectedProject.sample?'Example Package':'Related Package'}</button>}
+            {!selectedProject.sample&&selectedProject.document&&<a className="pj-project-file" href={selectedProject.document} target="_blank" rel="noopener noreferrer"><Icon name="file" size={17}/>{isPdf(selectedProject.document)?'Project PDF / Drawing':'Project Document'}</a>}
+            {!selectedProject.sample&&<button className="pj-request-callback" type="button" disabled={callbackSuccess} onClick={()=>setCallbackOpen(value=>!value)}>{callbackSuccess?'Request Sent':'Request a Callback'} <Icon name="arrow" size={16}/></button>}
+            {selectedProject.sample&&<Link className="pj-request-callback" to={'/quote#'+similarQuoteHash(selectedProject)} onClick={()=>setSelectedProject(null)}>Get Quote for Similar Work <Icon name="arrow" size={16}/></Link>}
           </div>
-          <div className="pj-modal-cta"><div><strong>Planning something similar?</strong><span>Get a quote for your actual requirements.</span></div><Link to={'/quote#'+similarQuoteHash(selectedProject)} onClick={()=>setSelectedProject(null)}>Get Quote <Icon name="arrow" size={17}/></Link></div>
+          {!selectedProject.sample&&callbackOpen&&<div className="pj-callback-panel">
+            <h3>Request a callback from {selectedProject.businessName||'this professional'}</h3>
+            <p>Your contact details will go only to the professional who published this project.</p>
+            {callbackSuccess?<p className="pj-callback-success" role="status">{callbackFeedback}</p>:
+              <form onSubmit={submitCallback} className="pj-callback-form">
+                <label>Your name<input required maxLength={160} autoComplete="name" value={callbackForm.name} onChange={event=>setCallbackForm(v=>({...v,name:event.target.value}))} placeholder="Full name"/></label>
+                <label>Mobile number<input required type="tel" inputMode="tel" autoComplete="tel" pattern="[0-9+ ()-]{10,18}" value={callbackForm.phone} onChange={event=>setCallbackForm(v=>({...v,phone:event.target.value}))} placeholder="10-digit mobile"/></label>
+                <label>Email (optional)<input type="email" maxLength={255} autoComplete="email" value={callbackForm.email} onChange={event=>setCallbackForm(v=>({...v,email:event.target.value}))} placeholder="you@example.com"/></label>
+                <label className="pj-callback-message">Project requirement (optional)<textarea rows={3} maxLength={1000} value={callbackForm.message} onChange={event=>setCallbackForm(v=>({...v,message:event.target.value}))} placeholder="What would you like to discuss?"/></label>
+                <label className="pj-callback-consent"><input type="checkbox" required checked={callbackForm.consent} onChange={event=>setCallbackForm(v=>({...v,consent:event.target.checked}))}/> I agree to share my contact details with this professional for a callback.</label>
+                <input className="pj-callback-honeypot" tabIndex={-1} autoComplete="off" aria-hidden="true" value={callbackForm.website} onChange={event=>setCallbackForm(v=>({...v,website:event.target.value}))}/>
+                {callbackFeedback&&<p className="pj-callback-error" role="alert">{callbackFeedback}</p>}
+                <button disabled={callbackSending} type="submit">{callbackSending?'Sending…':'Send Callback Request'} <Icon name="arrow" size={16}/></button>
+              </form>}
+          </div>}
+          {!selectedProject.sample&&!linkedPlan&&!selectedProject.document&&<p className="pj-package-note">A downloadable package hasn't been published for this project yet. Request a callback for the exact materials and specifications.</p>}
           <p className="pj-data-disclaimer">{selectedProject.sample?'This is an illustrative sample only. Photos, names, locations, package specifications and price are not verified completed projects.':'Project information is supplied by the publishing professional. Confirm specifications, package and actual cost before proceeding.'}</p>
         </div>
       </section>
