@@ -100,7 +100,7 @@ function Chips({ question, value, onChange }) {
 }
 
 export default function InteriorRequirementExact(props) {
-  const { embedded = false, questions, answers, setAnswer, cities, locationStates, locationStateId, setLocationState, cityId, setCity, locationQuestion, setPincode, onDetectedLocation, pinLookup, contact, setContact, state, submit, contactData, completion, projectQuote = null } = props
+  const { embedded = false, questions, answers, setAnswer, cities, locationStates, locationStateId, setLocationState, cityId, setCity, locationQuestion, setPincode, onDetectedLocation, pinLookup, contact, setContact, state, submit, contactData, completion, projectQuote = null, marketplaceConsent=false, setMarketplaceConsent=()=>{} } = props
   const fileRef = useRef(null)
   const previewUrlsRef = useRef(new Set())
   const [referenceFiles, setReferenceFiles] = useState([])
@@ -438,7 +438,7 @@ export default function InteriorRequirementExact(props) {
         </div>
 
         <aside className="irx-side" id="irx-summary">
-          <section className="irx-summary-card">{projectQuote&&<p className="irx-project-summary-context">Quote for <strong>{projectQuote.project.title}</strong> by {projectQuote.project.businessName||'the selected professional'}</p>}<h3>Your Selection Summary</h3><div>{summary.map(([label,value])=><p key={label}><span>{label}</span><b title={value}>{value}</b></p>)}</div>{state.error&&<div className="irx-error">{state.error}</div>}<button type="submit" disabled={state.saving||(projectQuote&&!selectedProfessionalPlan)}>{state.saving?'Sending Request…':projectQuote?'Request Professional Quote':'Request Quote'} <Icon name="arrow" size={15}/></button></section>
+          <section className="irx-summary-card">{projectQuote&&<p className="irx-project-summary-context">Quote for <strong>{projectQuote.project.title}</strong> by {projectQuote.project.businessName||'the selected professional'}</p>}<h3>Your Selection Summary</h3><div>{summary.map(([label,value])=><p key={label}><span>{label}</span><b title={value}>{value}</b></p>)}</div>{projectQuote&&<label className="project-marketplace-consent"><input type="checkbox" required checked={marketplaceConsent} onChange={e=>setMarketplaceConsent(e.target.checked)}/> I agree that ProPulse may share my enquiry with this professional and other relevant marketplace professionals. Customer contact details remain protected until access is authorized.</label>}{state.error&&<div className="irx-error">{state.error}</div>}<button type="submit" disabled={state.saving}>{state.saving?'Sending Request…':projectQuote?'Request Professional Quote':'Request Quote'} <Icon name="arrow" size={15}/></button></section>
           <section className="irx-help"><div className="irx-help-head"><span><Icon name="support"/></span><div><b>Need Help?</b></div></div><a href={phone?`tel:${phone.replace(/\s/g,'')}`:'#irx-basic'}><Icon name="phone" size={16}/>{phone||'Start Free Consultation'}</a><small>Mon - Sat, 9 AM - 8 PM</small></section>
         </aside>
       </div>
