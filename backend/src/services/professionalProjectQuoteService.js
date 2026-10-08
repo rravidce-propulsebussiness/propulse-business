@@ -132,7 +132,8 @@ async function listForProfessional(userId){
   const rows=(await pool.query(
     `SELECT id,project_id,project_title,customer_name,customer_phone,customer_email,
       requirement,site_location,area_text,budget_text,preferred_package,
-      package_price_from_snapshot,package_price_unit_snapshot,status,
+      package_price_from_snapshot,package_price_unit_snapshot,
+      marketplace_lead_id,marketplace_sync_status,marketplace_sync_error,status,
       quoted_package,quoted_price,quoted_scope,professional_notes,quoted_at,created_at
      FROM professional_project_quote_requests
      WHERE business_user_id=$1 ORDER BY created_at DESC,id DESC LIMIT 100`,[id]
