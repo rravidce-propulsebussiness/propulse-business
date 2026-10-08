@@ -5,6 +5,8 @@ import {publicRequest} from '../utils/auth'
 import {PublicHeader,PublicFooter} from '../components/PublicSiteChrome'
 import {normalizeProject} from './Projects'
 import {formatPublishedPackagePrice} from '../utils/packagePricing'
+import RequirementWizard from './RequirementWizard'
+import './Solutions.css'
 import './ProjectQuote.css'
 
 const blank={name:'',phone:'',email:'',siteLocation:'',area:'',budget:'',requirement:'',preferredPackage:'',consent:false,website:''}
@@ -45,10 +47,10 @@ export default function ProjectQuote(){
             const listed=cleanPlans(profile)
             setPackages(listed)
             const assigned=listed.find(plan=>String(plan.title).trim().toLowerCase()===String(item.packageName||'').trim().toLowerCase())
-            if(assigned)setForm(old=>({...old,preferredPackage:assigned.title}))
-            if(!listed.length)setPricingMessage('This professional has not published package pricing. You can still request a custom quotation.')
+            setForm(old=>({...old,preferredPackage:(assigned||listed[0])?.title||''}))
+            if(!listed.length)setPricingMessage('This professional has not published any service packages yet. Please request a callback from the project page.')
           }catch(error){
-            if(active&&!controller.signal.aborted)setPricingMessage('Published package pricing could not be loaded. You can still request a custom quotation.')
+            if(active&&!controller.signal.aborted)setPricingMessage('Unable to load this professional’s published packages. Please try again later.')
           }
         }
       }catch(error){
@@ -79,6 +81,40 @@ export default function ProjectQuote(){
       window.scrollTo({top:0,behavior:'smooth'})
     }catch(error){setRequestError(error?.message||'Unable to send your quote request. Please try again.')}
     finally{setSaving(false)}
+  }
+
+  // Reuse the exact /quote#interiors flow for interior projects rather than
+  // maintaining a second, simplified requirements form. Professional packages
+  // replace catalog packages, and submission remains project-specific.
+  if(!loading&&!loadError&&project?.category==='design'){
+    return <main className="quote-page project-interior-quote">
+      <PublicHeader/>
+      {submitted?<section className="pq-success" role="status">
+        <span className="pq-success-icon" aria-hidden="true">✓</span>
+        <span className="pq-eyebrow">PROFESSIONAL QUOTATION</span>
+        <h1>{submitted.duplicate?'We already received your request':'Quotation request received'}</h1>
+        <p>Your request for <strong>{project.title}</strong> has been recorded for <strong>{project.businessName||'this professional'}</strong>. ProPulse will coordinate your enquiry while keeping contact details protected.</p>
+        {submitted.requestId&&<strong className="pq-request-id">Reference #{submitted.requestId}</strong>}
+        <div className="pq-success-actions"><Link to={'/projects/'+projectId}>Back to project</Link><Link to="/projects">View other projects</Link></div>
+      </section>:<>
+        <section className="pq-project-context" aria-label="Selected professional project">
+          <div><span>INTERIOR PROJECT · PROFESSIONAL QUOTATION</span>
+            <h1>{project.title}</h1>
+            <p>Pricing and packages from <strong>{project.businessName||'the selected professional'}</strong>. Complete the same interior requirement form as ProPulse, with a quotation specific to this project.</p>
+          </div>
+          <Link to={'/projects/'+projectId}>← Back to project</Link>
+        </section>
+        {pricingMessage&&<div className="pq-project-warning" role="status">{pricingMessage}</div>}
+        <section className="quote-flow quote-flow-interiors">
+          <RequirementWizard key={'project-interior-'+id} flowKey="design" embedded projectQuote={{
+            project,packages,preferredPackage:form.preferredPackage,
+            setPreferredPackage:value=>setField('preferredPackage',value),
+            onSubmitted:setSubmitted,
+          }}/>
+        </section>
+      </>}
+      <PublicFooter/>
+    </main>
   }
 
   return <main className="pq-page">
