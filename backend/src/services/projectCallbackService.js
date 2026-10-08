@@ -1,6 +1,7 @@
 const pool=require('../config/database');
 const expertDirectoryService=require('./expertDirectoryService');
 const notifications=require('./notificationService');
+const marketplace=require('./projectMarketplaceLeadService');
 const {normalizeName,normalizePhone,normalizeEmail}=require('./publicContactValidationService');
 
 function bad(message,code='INVALID_PROJECT_CALLBACK'){
@@ -10,7 +11,9 @@ async function requestCallback(projectId,input={}){
   const id=Number(projectId);
   if(!Number.isSafeInteger(id)||id<1)throw bad('Project not found','PROJECT_NOT_FOUND');
   if(input.website)throw bad('Unable to submit request');
-  if(input.consent!==true)throw bad('Please agree to share your details with this professional');
+  if(input.consent!==true||input.marketplaceConsent!==true)throw bad('Please agree to your request being shared with this professional and other relevant ProPulse professionals');
+  const pincode=String(input.pincode||'').trim();
+  if(!/^\d{6}$/.test(pincode))throw bad('Enter a valid 6-digit project PIN code');
   const name=normalizeName(input.name);
   const phone=normalizePhone(input.phone);
   const email=normalizeEmail(input.email);
@@ -50,9 +53,15 @@ async function requestCallback(projectId,input={}){
          AND created_at>CURRENT_TIMESTAMP-INTERVAL '1 hour'
        ORDER BY created_at DESC,id DESC LIMIT 1`,[id,phone]
     );
-    return {success:true,duplicate:true,requestId:prior.rows[0]?.id||null};
+    const requestId=prior.rows[0]?.id||null;
+    if(!requestId)return {success:true,duplicate:true};
+    await marketplace.flagPending('callback',requestId,pincode);
+    const market=await marketplace.sync('callback',requestId);
+    return {success:true,duplicate:true,requestId,marketplaceLeadId:market.leadId||null,marketplaceStatus:market.status};
   }
   const requestId=result.rows[0].id;
+  await marketplace.flagPending('callback',requestId,pincode);
+  const market=await marketplace.sync('callback',requestId);
   try{
     await notifications.notifyUser({
       userId:project.business_user_id,
@@ -72,7 +81,7 @@ async function requestCallback(projectId,input={}){
       dedupeKey:'admin-project-callback-'+requestId,
     });
   }catch(error){console.error('Admin project callback notification failed:',error.message);}
-  return {success:true,requestId};
+  return {success:true,requestId,marketplaceLeadId:market.leadId||null,marketplaceStatus:market.status};
 }
 
 async function requestProfileCallback(expertId,input={}){
