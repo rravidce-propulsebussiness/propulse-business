@@ -575,13 +575,19 @@ export default function RequirementWizard({ flowKey, onCompletionChange, embedde
           .map(question => [question.label.replace(/\?$/, ''), fieldLabel(question, answers)])
           .filter(([, value]) => value && value !== '—')
           .map(([label, value]) => label + ': ' + value)
+        const constructionBuiltUp = flowKey === 'build' && Number(answers.built_up_area) > 0
+          ? String(answers.built_up_area).trim() + ' sq ft' : ''
+        const areaQuestion = questions.find(question => question.questionKey === 'area')
+        const budgetQuestion = questions.find(question => question.questionKey === 'budget')
+        const sitePincode = locationQuestion ? fieldLabel(locationQuestion, answers) : ''
         const requirement = [
           'Reference project: ' + projectQuote.project.title,
           'Published professional: ' + (projectQuote.project.businessName || 'Selected business'),
+          'Quotation industry: ' + (flowKey === 'build' ? 'Construction' : flowKey === 'design' ? 'Interior Design' : 'Real Estate'),
+          ...(sitePincode && sitePincode !== '—' ? ['Site PIN code: ' + sitePincode] : []),
+          ...(constructionBuiltUp && !questions.some(question => question.questionKey === 'built_up_area') ? ['Planned built-up area: ' + constructionBuiltUp] : []),
           ...detailRows,
         ].join('\n').slice(0, 3000)
-        const areaQuestion = questions.find(question => question.questionKey === 'area')
-        const budgetQuestion = questions.find(question => question.questionKey === 'budget')
         const result = await publicRequest('/experts/projects/' + encodeURIComponent(projectQuote.project.id) + '/quote-request', {
           method: 'POST',
           body: JSON.stringify({
@@ -590,7 +596,7 @@ export default function RequirementWizard({ flowKey, onCompletionChange, embedde
             email: contact.email.trim(),
             requirement,
             siteLocation: [selectedCity?.name, selectedCity?.state_name].filter(Boolean).join(', '),
-            area: areaQuestion ? fieldLabel(areaQuestion, answers).slice(0,120) : '',
+            area: (constructionBuiltUp || (areaQuestion ? fieldLabel(areaQuestion, answers) : '')).slice(0,120),
             budget: budgetQuestion ? fieldLabel(budgetQuestion, answers).slice(0,120) : '',
             preferredPackage: projectQuote.preferredPackage,
             consent: true,
