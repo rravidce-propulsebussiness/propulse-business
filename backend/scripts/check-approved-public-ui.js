@@ -99,7 +99,14 @@ assert.match(quote,/Buy or sell property with a structured location/);
 assert.doesNotMatch(quote,/buy, rent, sell or invest/i);
 assert.match(contact,/Construction, interiors and property support in one place\./);
 assert.match(contact,/Construction · Interiors · Real Estate/);
-assert.match(projects,/buyers and sellers comparing budget, connectivity, condition and resale value/);
+// The portfolio must not imply that illustrative stock photos are completed client work.
+assert.match(projects,/const CONCEPTS = \[/);
+assert.doesNotMatch(projects,/const PROJECTS = \[/);
+assert.match(projects,/PROFESSIONAL PORTFOLIO/);
+assert.match(projects,/professionalProjects/);
+assert.match(projects,/These are not claimed as completed client projects/);
+assert.match(projects,/Project information is supplied by the publishing professional/);
+assert.match(projects,/category === 'property'/);
 assert.doesNotMatch(projects,/Investment Apartment|rental-demand considerations/);
 
 // Shared basic lead intake must remain wired to the public consultation endpoint.
