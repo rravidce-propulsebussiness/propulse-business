@@ -38,6 +38,7 @@ async function submit(projectId,input={}){
   const area=text(input.area,120,'Project area');
   const budget=text(input.budget,120,'Budget');
   const preferredPackage=text(input.preferredPackage,160,'Preferred package');
+  if(!preferredPackage)throw bad('Choose one of this professional’s published packages to continue');
   const settings=await directory.getSettings();
   if(!settings.directoryEnabled||!settings.showProjects)throw bad('Project not available','PROJECT_NOT_FOUND');
   const {rows}=await pool.query(
@@ -65,7 +66,7 @@ async function submit(projectId,input={}){
        LIMIT 1`,[project.business_profile_id,preferredPackage]
     );
     selectedPackage=packageResult.rows[0]||null;
-    if(!selectedPackage)throw bad('Select a published package or request custom pricing');
+    if(!selectedPackage)throw bad('Choose one of this professional’s published packages to continue');
   }
   const saved=await pool.query(
     `INSERT INTO professional_project_quote_requests
