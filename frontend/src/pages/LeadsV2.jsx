@@ -35,6 +35,7 @@ const hasValue = (v) => v !== null && v !== undefined && String(v).trim() !== ''
 const norm = (v) => String(v ?? '').toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]/g, '')
 const label = (k) => String(k).replace(/_/g, ' ').replace(/([a-z])([A-Z])/g, '$1 $2').replace(/\b\w/g, x => x.toUpperCase())
 const leadSourceLabel = (source) => ({ professional_project_quote: 'Professional project quotation', professional_project_callback: 'Project callback request' })[source] || source
+const readableBudget = (value) => String(value || '').replace(/^(\d+)_(\d+)_(lakh|crore)$/i, (_, lower, upper, unit) => `₹${lower}–${upper} ${unit.toLowerCase()}`)
 const isContactKey = (k) => /(phone|mobile|whatsapp|contact|email|mail|tel|telephone|alternate|website|url|social|instagram|facebook|linkedin|address|pincode|zipcode|postal)/i.test(String(k || ''))
 const isPricingField = (k) => /^(normal|pro)\d+(share|shares|buyer|buyers)(price)?$/.test(norm(k)) || ['pricing', 'leadpricing', 'leadprice', 'price'].includes(norm(k))
 const isCanonicalField = (k) => {
@@ -424,7 +425,7 @@ export default function LeadsV2() {
           const workNumbers = getCustom(lead.custom_fields, ['Work Numbers', 'Work Number', 'Number of Works', 'Number of Work', 'No. of Works', 'No of Works', 'Works', 'Quantity', 'Project Quantity'], ['worknumber', 'worknumbers', 'numberofworks', 'noofworks', 'quantity', 'projectquantity'])
           const workPhone = getCustom(lead.custom_fields, ['Work Phone Number', 'Work Phone', 'Office Phone Number', 'Office Phone', 'Business Phone', 'Business Phone Number', 'Alternate Work Phone', 'Alternate Phone'], ['workphone', 'officephone', 'businessphone'])
           const budgetRange = getCustom(lead.custom_fields, ['Budget', 'Budget Range', 'Project Budget', 'Project Budget Range', 'Budget From To', 'Expected Budget'], ['budget'])
-          const budgetDisplay = budgetRange || (hasValue(lead.budget) ? money(lead.budget) : '')
+          const budgetDisplay = budgetRange ? readableBudget(budgetRange) : (hasValue(lead.budget) ? (Number.isFinite(Number(lead.budget)) ? money(lead.budget) : readableBudget(lead.budget)) : '')
           const buyerCapacity = Math.max(1, Math.min(3, Number(lead.effective_buyer_capacity || lead.buyer_capacity) || 3))
           const purchasedBuyers = Math.min(buyerCapacity, Math.max(0, Number(lead.purchased_buyer_count) || 0))
           const fastBasic = String(lead.source || '').toLowerCase() === 'homepage_consultation'
