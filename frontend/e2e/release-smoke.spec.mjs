@@ -356,7 +356,7 @@ test('retired stock-photo concept links return to the completed projects gallery
   }))
   await page.goto('/projects/sample-courtyard')
   await expect(page).toHaveURL(/\/projects\/?$/)
-  await expect(page.getByRole('heading',{name:'Completed Projects'})).toBeVisible()
+  await expect(page.locator('.pj-completed-heading h1')).toHaveText('Completed Projects')
   await expect(page.getByText('The Courtyard Residence')).toHaveCount(0)
   await expect(page.getByRole('heading',{name:'Completed projects are coming soon'})).toBeVisible()
 })
