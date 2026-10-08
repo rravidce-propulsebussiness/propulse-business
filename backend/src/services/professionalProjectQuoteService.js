@@ -3,6 +3,7 @@ const directory=require('./expertDirectoryService');
 const notifications=require('./notificationService');
 const marketplace=require('./projectMarketplaceLeadService');
 const {normalizeName,normalizePhone,normalizeEmail}=require('./publicContactValidationService');
+const {splitProjectQuoteRequirement}=require('./projectQuoteRequirementDetails');
 
 function bad(message,code='INVALID_PROFESSIONAL_QUOTE'){
   return Object.assign(new Error(message),{code});
@@ -140,13 +141,24 @@ async function listForProfessional(userId){
   )).rows;
   const access=require('./professionalRequestAccessService');
   const decorated=await access.attachAccess(userId,rows,'quote');
-  return decorated.map(row=>({...row,
-    customer_name:redact(row.customer_name),
-    customer_phone:row.access?.unlocked?row.customer_phone:maskPhone(row.customer_phone),
-    customer_email:row.access?.unlocked?row.customer_email:maskEmail(row.customer_email),
-    requirement:redact(row.requirement),
-    site_location:redact(row.site_location),
-  }));
+  return decorated.map(row=>{
+    // Each wizard answer is a separate labelled field. The free-text
+    // Requirement must never be fabricated from the other form answers.
+    const {fields,requirement:written}=splitProjectQuoteRequirement(row.requirement);
+    const requirementFields=Object.fromEntries(
+      Object.entries(fields).filter(([,value])=>String(value||'').trim())
+        .map(([label,value])=>[label,redact(value)])
+    );
+    return{
+      ...row,
+      customer_name:redact(row.customer_name),
+      customer_phone:row.access?.unlocked?row.customer_phone:maskPhone(row.customer_phone),
+      customer_email:row.access?.unlocked?row.customer_email:maskEmail(row.customer_email),
+      requirement:written?redact(written):'',
+      requirement_fields:requirementFields,
+      site_location:redact(row.site_location),
+    };
+  });
 }
 async function updateByProfessional(userId,requestId,input={}){
   const id=Number(requestId);

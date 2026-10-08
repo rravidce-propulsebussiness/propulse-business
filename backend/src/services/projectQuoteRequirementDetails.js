@@ -41,4 +41,13 @@ function parseProjectQuoteRequirement(raw) {
   return fields;
 }
 
-module.exports = { parseProjectQuoteRequirement };
+// The optional Requirement field is separate from the user's selected answers.
+// This also makes older saved quotation requests display consistently.
+function splitProjectQuoteRequirement(raw) {
+  const fields = parseProjectQuoteRequirement(raw);
+  const requirement = String(fields['Additional Requirements'] || '').trim();
+  delete fields['Additional Requirements'];
+  return { fields, requirement };
+}
+
+module.exports = { parseProjectQuoteRequirement, splitProjectQuoteRequirement };

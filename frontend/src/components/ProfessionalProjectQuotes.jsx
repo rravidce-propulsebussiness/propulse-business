@@ -82,6 +82,13 @@ export default function ProfessionalProjectQuotes({plans=[]}){
       <div className="pqq-grid">{requests.map(item=>{
         const draft=drafts[item.id]||initialDraft(item)
         const selected=available.find(plan=>plan.title===draft.packageName)
+        const formEntries=Object.entries(item.requirement_fields||{}).filter(([,value])=>String(value||'').trim())
+        const accessStatus=item.access?.status||'review_required'
+        const canAccept=accessStatus==='locked'||accessStatus==='pending_payment'
+        const acceptLabel=accessStatus==='pending_payment'?'Check pending payment'
+          :item.access?.eligibleForFree?'Accept Free · Pro Member'
+          :item.access?.price?`Accept & Pay ₹${Number(item.access.price).toLocaleString('en-IN')}`
+          :'Review enquiry'
         return <article className="pqq-card" key={item.id}>
           <div className="pqq-card-top"><div><span>QUOTATION #{item.id}</span><h3>{item.project_title}</h3></div><span className={'pqq-status status-'+item.status}>{String(item.status||'new').replaceAll('_',' ')}</span></div>
           <p className="pqq-customer">Requested by {item.customer_name} · {item.created_at?new Date(item.created_at).toLocaleString('en-IN'):''}</p>
@@ -96,12 +103,14 @@ export default function ProfessionalProjectQuotes({plans=[]}){
             {item.site_location&&<div><dt>Site location</dt><dd>{item.site_location}</dd></div>}
             {item.area_text&&<div><dt>Customer area</dt><dd>{item.area_text}</dd></div>}
             {item.budget_text&&<div><dt>Budget indicated</dt><dd>{item.budget_text}</dd></div>}
+            {formEntries.map(([label,value])=><div key={label}><dt>{label}</dt><dd>{String(value)}</dd></div>)}
           </dl>
-          <div className="pqq-requirement"><strong>Customer requirement</strong><p>{item.requirement}</p></div>
-          {!item.access?.unlocked&&<button className="pqq-unlock-toggle" type="button" onClick={()=>setActiveUnlockId(current=>current===item.id?null:item.id)}>
-            {activeUnlockId===item.id?'Hide acceptance options':item.access?.eligibleForFree?'Accept Free · Pro Member':item.access?.price?`Accept & Pay ₹${Number(item.access.price).toLocaleString('en-IN')}`:'View enquiry status'}
+          {String(item.requirement||'').trim()&&<div className="pqq-requirement"><strong>Customer requirement</strong><p>{item.requirement}</p></div>}
+          {!item.access?.unlocked&&<p className={`pqq-access-status status-${accessStatus}`} role="status">{item.access?.statusMessage||'This enquiry is being verified.'}</p>}
+          {!item.access?.unlocked&&canAccept&&<button className="pqq-unlock-toggle" type="button" onClick={()=>setActiveUnlockId(current=>current===item.id?null:item.id)}>
+            {activeUnlockId===item.id?'Hide acceptance options':acceptLabel}
           </button>}
-          {(item.access?.unlocked||activeUnlockId===item.id)&&<ProfessionalRequestUnlock kind="quote" item={item} onUnlocked={()=>{setActiveUnlockId(null);setVersion(v=>v+1)}}/>}
+          {(item.access?.unlocked||(canAccept&&activeUnlockId===item.id))&&<ProfessionalRequestUnlock kind="quote" item={item} onUnlocked={()=>{setActiveUnlockId(null);setVersion(v=>v+1)}}/>}
           {item.access?.unlocked&&<div className="pqq-editor">
             <div><label htmlFor={'pqq-package-'+item.id}>Quotation package</label><select id={'pqq-package-'+item.id} value={draft.packageName} onChange={e=>update(item.id,'packageName',e.target.value)}>
               <option value="">Choose package</option>
