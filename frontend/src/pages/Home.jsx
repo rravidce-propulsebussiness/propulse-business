@@ -202,8 +202,14 @@ export default function Home() {
                </span>
              </p>
             <div className="hc-premium-actions">
-              <button type="button" onClick={() => openRequirement()}>Start Your Project <span aria-hidden="true">→</span></button>
-              <a href="/packages">View Packages</a>
+              <button className="hc-hero-cta hc-hero-cta-primary" type="button" onClick={() => openRequirement()}>
+                <span className="hc-hero-cta-label">Start Your Project</span>
+                <span className="hc-hero-cta-arrow" aria-hidden="true">→</span>
+              </button>
+              <a className="hc-hero-cta hc-hero-cta-secondary" href="/packages">
+                <span className="hc-hero-cta-label">View Packages</span>
+                <span className="hc-hero-cta-arrow" aria-hidden="true">→</span>
+              </a>
             </div>
             <div className="hc-premium-trust" aria-label="ProPulse benefits">
               <span><Icon name="clipboard" size={22}/>Free Consultation</span>
