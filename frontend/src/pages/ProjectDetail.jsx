@@ -1,8 +1,10 @@
 import {useEffect,useRef,useState} from 'react'
-import {Link,Navigate,useParams} from 'react-router-dom'
+import {Link,useParams} from 'react-router-dom'
 import {publicRequest} from '../utils/auth'
 import {PublicHeader,PublicFooter} from '../components/PublicSiteChrome'
 import {normalizeProject,projectPhotos,categoryLabel,playableProjectVideo,Icon} from './Projects'
+import {findPortfolioConcept} from './portfolioConcepts'
+import {openLeadPopup} from '../utils/leadPopup'
 import './Projects.css'
 import './ProjectDetail.css'
 
@@ -12,9 +14,9 @@ const isPdf=value=>/\.pdf(?:[?#]|$)/i.test(value||'')
 
 export default function ProjectDetail(){
   const {projectId}=useParams()
-  const archived=/^sample-[a-z0-9-]+$/.test(projectId||'')
+  const concept=findPortfolioConcept(projectId)
   const realId=/^project-([1-9]\d*)$/.exec(projectId||'')?.[1]||''
-  const [project,setProject]=useState(null)
+  const [project,setProject]=useState(concept)
   const [loading,setLoading]=useState(Boolean(realId))
   const [error,setError]=useState('')
   const [photoIndex,setPhotoIndex]=useState(0)
@@ -41,12 +43,12 @@ export default function ProjectDetail(){
 
   useEffect(()=>{
     let active=true
-    setProject(null);setError('');setPhotoIndex(0);setShowVideo(false);setLinkedPlan(null)
+    setProject(concept);setError('');setPhotoIndex(0);setShowVideo(false);setLinkedPlan(null)
     setCallbackOpen(false);setCallbackForm(emptyCallback);setCallbackFeedback('');setCallbackSuccess(false)
     setPackageDownloading(false);setPackageError('')
     setLoading(Boolean(realId))
     if(!realId){
-      if(!archived)setError('This completed project could not be found.')
+      if(!concept)setError('This project could not be found.')
       return()=>{active=false}
     }
     const refresh=async(initial=false)=>{
@@ -64,7 +66,7 @@ export default function ProjectDetail(){
     const timer=window.setInterval(()=>{if(document.visibilityState==='visible')refresh(false)},120000)
     document.addEventListener('visibilitychange',onVisible)
     return()=>{active=false;window.clearInterval(timer);document.removeEventListener('visibilitychange',onVisible)}
-  },[realId,archived])
+  },[realId,projectId])
 
   useEffect(()=>{
     if(!project?.businessProfileId||!project?.packageName)return undefined
@@ -82,7 +84,7 @@ export default function ProjectDetail(){
   useEffect(()=>{
     if(!project)return undefined
     const original=document.title
-    document.title=project.title+' | Completed Projects | ProPulse'
+    document.title=project.title+' | Project Portfolio | ProPulse'
     return()=>{document.title=original}
   },[project?.title])
 
@@ -100,7 +102,7 @@ export default function ProjectDetail(){
   const activePhoto=photos[photoIndex]||photos[0]||''
   const phone=contactData.phone||contactData.phone_number||contactData.mobile||''
   const email=contactData.email||contactData.support_email||''
-  const inclusions=Array.isArray(linkedPlan?.inclusions)?linkedPlan.inclusions.filter(Boolean):[]
+  const inclusions=project?.sample?(project.sampleSpecs||[]):Array.isArray(linkedPlan?.inclusions)?linkedPlan.inclusions.filter(Boolean):[]
 
   function closeCallback(){
     setCallbackOpen(false)
@@ -132,49 +134,54 @@ export default function ProjectDetail(){
     }finally{setPackageDownloading(false)}
   }
 
-  // Old stock-photo concept links are retired, never presented as completed work.
-  if(archived)return <Navigate to="/projects" replace/>
+  function requestCallback(){
+    if(!project)return
+    if(project.sample){
+      const flow=project.category==='design'?'design':project.category==='property'?'property':'build'
+      openLeadPopup(flow,{intent:'callback',projectTitle:project.title,packageName:project.packageName})
+    }else setCallbackOpen(true)
+  }
 
   return <main className="pj-page pjd-page">
     <PublicHeader/>
     <section className="pjd-content">
       <div className="pjd-container">
         <nav className="pjd-breadcrumb" aria-label="Breadcrumb">
-          <Link to="/projects">Completed Projects</Link><span aria-hidden="true">/</span>
+          <Link to="/projects">Project Portfolio</Link><span aria-hidden="true">/</span>
           <span>{project?.title||'Project details'}</span>
         </nav>
 
-        {loading?<div className="pjd-status" role="status"><span className="pj-inline-spinner"/>Loading completed project…</div>:
+        {loading?<div className="pjd-status" role="status"><span className="pj-inline-spinner"/>Loading project…</div>:
         !project?<div className="pjd-status"><h1>Project unavailable</h1><p role="alert">{error}</p><Link to="/projects">← Browse completed projects</Link></div>:
         <>
           <header className="pjd-heading pjd-hero-intro">
             <div>
-              <span className="pjd-overline"><span className="pjd-kicker-dot"/>COMPLETED PROJECT · {categoryLabel(project.category).toUpperCase()}</span>
+              <span className="pjd-overline"><span className="pjd-kicker-dot"/>{project.sample?'DESIGN REFERENCE':'COMPLETED PROJECT'} · {categoryLabel(project.category).toUpperCase()}</span>
               <h1>{project.title}</h1>
               <p>{project.description||'Explore this completed project, review published specifications and connect through ProPulse.'}</p>
               <div className="pjd-hero-micro">
-                <span>Completed {project.completionYear}</span>
+                <span>{project.sample?'Architectural & interior design idea':'Completed '+project.completionYear}</span>
                 {project.location&&<span>{project.location}</span>}
                 {project.businessName&&<span>By {project.businessName}</span>}
               </div>
             </div>
             <div className="pjd-heading-tags">
-              <span className="pjd-published-label">PROFESSIONAL PORTFOLIO</span>
-              {project.verified&&<span className="pjd-verified">Verified professional</span>}
-              <span className="pjd-collection-index">PUBLISHED COMPLETED WORK</span>
+              <span className="pjd-published-label">{project.sample?'DESIGN IDEA':'PROFESSIONAL PORTFOLIO'}</span>
+              {!project.sample&&project.verified&&<span className="pjd-verified">Verified professional</span>}
+              <span className="pjd-collection-index">{project.sample?'STYLE & PLANNING REFERENCE':'PUBLISHED COMPLETED WORK'}</span>
             </div>
           </header>
 
           <div className="pjd-main-grid">
-            <section className="pjd-gallery-block" aria-label="Completed project photos">
+            <section className="pjd-gallery-block" aria-label={project.sample?'Design reference images':'Completed project photos'}>
               <div className="pjd-main-image">
                 {showVideo&&project.video&&playableProjectVideo(project.video)
                   ?<video key={project.video} poster={activePhoto||undefined} src={project.video} controls playsInline preload="metadata" className="pjd-feature-media"/>
-                  :activePhoto?<img className="pjd-feature-media" src={activePhoto} alt={project.title+' completed work photo '+(photoIndex+1)}/>
+                  :activePhoto?<img className="pjd-feature-media" src={activePhoto} alt={project.title+(project.sample?' design reference image ':' completed work photo ')+(photoIndex+1)}/>
                   :<div className="pjd-no-photo"><Icon name="layers" size={34}/><strong>Photos not published yet</strong><span>This professional has not added project images.</span></div>}
                 {activePhoto&&!showVideo&&<div className="pjd-image-caption">
                   <span className="pjd-caption-line"/>
-                  <span>PROJECT GALLERY<small>{String(photoIndex+1).padStart(2,'0')} / {String(photos.length).padStart(2,'0')}</small></span>
+                  <span>{project.sample?'DESIGN IMAGES':'PROJECT GALLERY'}<small>{String(photoIndex+1).padStart(2,'0')} / {String(photos.length).padStart(2,'0')}</small></span>
                 </div>}
                 {photos.length>1&&!showVideo&&<div className="pjd-photo-nav">
                   <button type="button" aria-label="Previous image" onClick={()=>setPhotoIndex(n=>(n+photos.length-1)%photos.length)}>‹</button>
@@ -189,7 +196,7 @@ export default function ProjectDetail(){
                   :<a className="pjd-video-thumb" href={project.video} target="_blank" rel="noopener noreferrer">▶ Video ↗</a>)}
               </div>}
               <div className="pjd-gallery-caption">
-                <span aria-hidden="true">▣</span> Images and project details are supplied by the publishing professional.
+                <span aria-hidden="true">▣</span> {project.sample?'Style-reference photography; not photographs of a ProPulse-delivered project.':'Images and project details are supplied by the publishing professional.'}
               </div>
             </section>
 
@@ -197,7 +204,7 @@ export default function ProjectDetail(){
               <div className="pjd-summary-top"><div className="pjd-summary-icon">⌂</div><div><span>PROJECT OVERVIEW</span><h2>At a glance</h2></div></div>
               <dl className="pjd-fact-grid">
                 <div><dt>Project type</dt><dd>{project.type}</dd></div>
-                <div><dt>Completed</dt><dd>{project.completionYear}</dd></div>
+                <div><dt>Status</dt><dd>{project.sample?'Design reference':'Completed '+project.completionYear}</dd></div>
                 {project.location&&<div><dt>Location</dt><dd>{project.location}</dd></div>}
                 {project.area&&<div><dt>Project area</dt><dd>{project.area}</dd></div>}
                 {project.packageName&&<div><dt>Related package</dt><dd>{project.packageName}</dd></div>}
@@ -208,12 +215,12 @@ export default function ProjectDetail(){
               <div className="pjd-action-stack" aria-label="Project next steps">
                 <button type="button" className="pjd-action-button pjd-download" disabled={packageDownloading} onClick={downloadPackage}>
                   <span className="pjd-cta-symbol"><Icon name="file" size={20}/></span>
-                  <span className="pjd-cta-copy"><strong>{packageDownloading?'Preparing PDF…':'Download Package'}</strong><small>Published project guide · PDF</small></span>
+                  <span className="pjd-cta-copy"><strong>{packageDownloading?'Preparing PDF…':'Download Package'}</strong><small>{project.sample?'Design and scope guide · PDF':'Published project guide · PDF'}</small></span>
                   <span className="pjd-cta-arrow" aria-hidden="true">↧</span>
                 </button>
-                <button ref={callbackTriggerRef} type="button" className="pjd-action-button pjd-callback" onClick={()=>setCallbackOpen(true)}>
+                <button ref={callbackTriggerRef} type="button" className="pjd-action-button pjd-callback" onClick={requestCallback}>
                   <span className="pjd-cta-symbol" aria-hidden="true">☎</span>
-                  <span className="pjd-cta-copy"><strong>{callbackSuccess?'Callback Requested':'Request a Callback'}</strong><small>ProPulse coordinates your enquiry</small></span>
+                  <span className="pjd-cta-copy"><strong>{callbackSuccess?'Callback Requested':'Request a Callback'}</strong><small>{project.sample?'Discuss a similar project with ProPulse':'ProPulse coordinates your enquiry'}</small></span>
                   <span className="pjd-cta-arrow" aria-hidden="true">↗</span>
                 </button>
                 <Link className="pjd-action-button pjd-main-cta" to={'/quote#'+quoteHash(project)}>
@@ -224,19 +231,19 @@ export default function ProjectDetail(){
               </div>
               {packageError&&<p className="pjd-error" role="alert">{packageError}</p>}
               {project.document&&<a className="pjd-document-link" href={project.document} target="_blank" rel="noopener noreferrer"><Icon name="file" size={15}/>{isPdf(project.document)?'View project drawing / PDF':'View project document'} ↗</a>}
-              <div className="pjd-privacy"><span aria-hidden="true">✓</span><span>Customer contact information stays protected. Verify project claims and scope directly before hiring.</span></div>
+              <div className="pjd-privacy"><span aria-hidden="true">✓</span><span>{project.sample?'Concept imagery is for inspiration only. Request real measurements, materials and pricing before proceeding.':'Customer contact information stays protected. Verify project claims and scope directly before hiring.'}</span></div>
             </aside>
           </div>
 
           <section className="pjd-information" aria-labelledby="pjd-spec-title">
             <div className="pjd-spec-intro">
-              <span className="pjd-overline">SCOPE & MATERIALS</span>
-              <h2 id="pjd-spec-title">Project details and specifications</h2>
+              <span className="pjd-overline">{project.sample?'DESIGN & POSSIBLE SCOPE':'SCOPE & MATERIALS'}</span>
+              <h2 id="pjd-spec-title">{project.sample?'Design details and planning ideas':'Project details and specifications'}</h2>
               <p>{project.description||'Published professional project details.'}</p>
-              <p className="pjd-spec-note">These details were supplied by the publishing professional. Confirm material brands, exact scope and costs before proceeding.</p>
+              <p className="pjd-spec-note">{project.sample?'This design is a reference, not completed client work. Materials, floor area and specifications are illustrative; obtain a site-specific quotation.':'These details were supplied by the publishing professional. Confirm material brands, exact scope and costs before proceeding.'}</p>
             </div>
             <div className="pjd-spec-body">
-              <span className="pjd-overline">WHAT'S INCLUDED</span>
+              <span className="pjd-overline">{project.sample?'SUGGESTED SCOPE':'WHAT\'S INCLUDED'}</span>
               {inclusions.length>0?<ul className="pjd-spec-list">{inclusions.map((spec,i)=><li key={i}><Icon name="check" size={18}/>{spec}</li>)}</ul>:
                 <div className="pjd-spec-empty"><strong>Detailed inclusions available on request</strong><p>Ask the professional about finishes, materials, drawings, project duration and pricing when requesting a callback.</p></div>}
               {linkedPlan?.description&&<p className="pjd-plan-description">{linkedPlan.description}</p>}
@@ -253,7 +260,7 @@ export default function ProjectDetail(){
       </div>
     </section>
     <PublicFooter phone={phone} email={email}/>
-    {project&&callbackOpen&&<div className="pjd-dialog-backdrop" role="presentation" onMouseDown={event=>{if(event.target===event.currentTarget)closeCallback()}}>
+    {project&&!project.sample&&callbackOpen&&<div className="pjd-dialog-backdrop" role="presentation" onMouseDown={event=>{if(event.target===event.currentTarget)closeCallback()}}>
       <section ref={dialogRef} tabIndex={-1} className="pjd-dialog" role="dialog" aria-modal="true" aria-labelledby="pjd-dialog-heading">
         <button type="button" className="pjd-dialog-close" onClick={closeCallback} aria-label="Close callback form">×</button>
         <span className="pjd-overline">PRIVATE PROJECT ENQUIRY</span>

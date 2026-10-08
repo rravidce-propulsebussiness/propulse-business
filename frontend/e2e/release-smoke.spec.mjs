@@ -349,16 +349,38 @@ test('project cards open dedicated detail pages using the keyboard',async({page}
 })
 
 
-test('retired stock-photo concept links return to the completed projects gallery',async({page})=>{
+test('portfolio remains populated with six design references before professional uploads',async({page})=>{
   await page.route('**/api/experts/projects?*',route=>route.fulfill({
     status:200,contentType:'application/json',
     body:JSON.stringify({data:[],pagination:{hasNextPage:false}})
   }))
+  await page.goto('/projects')
+  await expect(page.locator('.pj-completed-heading h1')).toHaveText('Our Project Portfolio')
+  await expect(page.locator('.pj-project-card--concept')).toHaveCount(6)
+  await expect(page.getByRole('link',{name:'View details for The Courtyard Residence'})).toBeVisible()
+  await expect(page.locator('.pj-project-card--concept .pj-category-badge').first()).toHaveText('DESIGN REFERENCE')
+  await expect(page.getByText(/Design references illustrate style and possible scope/)).toBeVisible()
+})
+
+test('design-reference portfolio page offers branded PDF, ProPulse callback and quote',async({page})=>{
   await page.goto('/projects/sample-courtyard')
-  await expect(page).toHaveURL(/\/projects\/?$/)
-  await expect(page.locator('.pj-completed-heading h1')).toHaveText('Completed Projects')
-  await expect(page.getByText('The Courtyard Residence')).toHaveCount(0)
-  await expect(page.getByRole('heading',{name:'Completed projects are coming soon'})).toBeVisible()
+  await expect(page.getByRole('heading',{name:'The Courtyard Residence'})).toBeVisible()
+  await expect(page.getByText('DESIGN REFERENCE',{exact:false}).first()).toBeVisible()
+  await expect(page.locator('.pjd-information')).toHaveCount(1)
+  await expect(page.locator('.pjd-bottom-grid,.pjd-related-grid')).toHaveCount(0)
+  const actions=page.locator('.pjd-action-stack')
+  const [download]=await Promise.all([
+    page.waitForEvent('download'),
+    actions.getByRole('button',{name:/Download Package/}).click()
+  ])
+  expect(download.suggestedFilename()).toMatch(/^propulse-sample-courtyard-package-guide\.pdf$/)
+  await actions.getByRole('button',{name:/Request a Callback/}).click()
+  const dialog=page.getByRole('dialog',{name:'Request a callback'})
+  await expect(dialog).toBeVisible()
+  await expect(dialog.locator('textarea')).toHaveValue(/Project reference: The Courtyard Residence/)
+  await dialog.getByRole('button',{name:'Close'}).click()
+  await actions.getByRole('link',{name:/Get Quote/}).click()
+  await expect(page).toHaveURL(/\/quote#construction$/)
 })
 
 test('published project retains private project-specific callback flow alongside Get Quote',async({page})=>{

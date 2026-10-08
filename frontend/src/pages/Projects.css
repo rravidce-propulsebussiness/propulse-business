@@ -783,3 +783,15 @@
 }
 
 .pj-page .pj-card-verified{position:absolute;z-index:3;bottom:14px;left:14px;display:inline-flex;align-items:center;padding:8px 11px;border-radius:8px;background:rgba(229,250,238,.97);color:#146544;font-size:12px;font-weight:800;box-shadow:0 6px 14px #103c361c}
+
+
+/* Mixed project portfolio: completed client work + separately identified design concepts. */
+.pj-page .pj-counter-secondary{display:block;margin-top:5px;color:#ffe1cf;font:650 12px Inter,sans-serif;text-align:center}
+.pj-page .pj-portfolio-types{display:flex;flex-wrap:wrap;align-items:center;gap:10px 22px;margin:-1px 0 22px;color:#46677b;font-size:12px;font-weight:750}
+.pj-page .pj-portfolio-types>span{display:inline-flex;align-items:center;gap:9px}
+.pj-page .pj-portfolio-types i{display:inline-block;width:9px;height:9px;border-radius:50%;box-shadow:0 0 0 3px #e5ebef}
+.pj-page .pj-dot-completed{background:#168b62}
+.pj-page .pj-dot-concept{background:#db6935}
+.pj-page .pj-project-card--concept{background:linear-gradient(180deg,#fff,#fff9f4);border-color:#ecdcca}
+.pj-page .pj-project-card--concept .pj-category-badge{background:#fff4eb;color:#a84c24;box-shadow:0 4px 12px #052d3d20}
+@media(max-width:680px){.pj-page .pj-completed-counter{flex-wrap:wrap}.pj-page .pj-counter-secondary{margin:0 0 0 6px;font-size:12px}}
