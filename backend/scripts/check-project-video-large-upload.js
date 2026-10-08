@@ -3,7 +3,7 @@ const storage=require('../src/services/s3PrivateObjectStorageService');
 const videos=require('../src/services/projectVideoService');
 
 const originals=Object.fromEntries(
-  ['assertWriteStorage','startMultipartUpload','completeMultipartUpload','abortMultipartUpload','headObject','getMediaGetUrl']
+  ['assertWriteStorage','startMultipartUpload','completeMultipartUpload','abortMultipartUpload','headObject','getObjectPrefix','getMediaGetUrl']
     .map(key=>[key,storage[key]])
 );
 const env={};
@@ -48,6 +48,7 @@ Object.assign(process.env,{
   assert.throws(()=>videos.presignVideoPart(32,large.reference,large.uploadId,1));
   assert.throws(()=>videos.presignVideoPart(31,large.reference,large.uploadId,10001));
   storage.headObject=async()=>({size:250*1024*1024,contentType:'video/webm'});
+  storage.getObjectPrefix=async()=>Buffer.concat([Buffer.from([0x1a,0x45,0xdf,0xa3]),Buffer.alloc(8)]);
   const parts=[1,2,3,4].map(partNumber=>({partNumber,etag:'"'+('a'.repeat(32))+'"'}));
   const complete=await videos.finishVideoUpload(31,{
     reference:large.reference,uploadId:large.uploadId,parts,mimeType:'video/webm',size:250*1024*1024,
