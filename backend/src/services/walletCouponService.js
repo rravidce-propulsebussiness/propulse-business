@@ -8,9 +8,8 @@ const paymentAvailability=require('./paymentAvailabilityService');
 
 
 async function createTopupWithCoupon({userId,amount,reference,proofUrl,couponCode}){
-  const value=Number(amount)
+  const value=paiseToMoney(parseMoneyPaise(amount))
   assertTopupProof(proofUrl)
-  if(!Number.isFinite(value)||value<=0)throw Object.assign(new Error('Amount must be greater than zero'),{code:'INVALID_AMOUNT'})
   const normalizedReference=reference==null?null:String(reference).trim()||null
   const code=String(couponCode||'').trim()
   const client=await pool.connect()
@@ -29,7 +28,7 @@ async function createTopupWithCoupon({userId,amount,reference,proofUrl,couponCod
       const payment=(await client.query(`INSERT INTO payments(user_id,amount,payment_method,status,wallet_amount,external_amount,purchase_type,purchase_id,notes,coupon_id,coupon_code,subtotal_amount,discount_amount,paid_at) VALUES($1,0,'manual','paid',0,0,'wallet_topup',$2,$3,$4,$5,$6,$7,CURRENT_TIMESTAMP) RETURNING *`,[userId,topup.id,`Wallet top-up #${topup.id} fully covered by coupon`,coupon.coupon.id,coupon.coupon.code,value,coupon.discountAmount])).rows[0]
       const w=(await client.query(`INSERT INTO wallets(user_id) VALUES($1) ON CONFLICT(user_id) DO UPDATE SET user_id=EXCLUDED.user_id RETURNING *`,[userId])).rows[0]
       const locked=(await client.query(`SELECT id,balance FROM wallets WHERE id=$1 FOR UPDATE`,[w.id])).rows[0]
-      const next=Number((Number(locked.balance||0)+value).toFixed(2))
+      const next=paiseToMoney(parseMoneyPaise(locked.balance||0,{allowZero:true})+parseMoneyPaise(value))
       await client.query(`UPDATE wallets SET balance=$1,updated_at=CURRENT_TIMESTAMP WHERE id=$2`,[next,locked.id])
       const tx=(await client.query(`INSERT INTO wallet_transactions(wallet_id,user_id,type,amount,balance_after,reference_type,reference_id,payment_id,description) VALUES($1,$2,'credit',$3,$4,'wallet_topup',$5,$6,$7) RETURNING *`,[locked.id,userId,value,next,topup.id,payment.id,`Wallet top-up ${topup.id} credited by 100% coupon ${coupon.coupon.code}`])).rows[0]
       await client.query(`UPDATE payments SET wallet_transaction_id=$1,updated_at=CURRENT_TIMESTAMP WHERE id=$2`,[tx.id,payment.id])
@@ -37,7 +36,7 @@ async function createTopupWithCoupon({userId,amount,reference,proofUrl,couponCod
       await couponService.redeemForPayment(client,payment.id)
       const promotionReward=await couponService.applyRewardForPayment(client,payment.id)
       await client.query('COMMIT')
-      return {...topup,payment_id:payment.id,subtotal_amount:value,discount_amount:coupon.discountAmount,payable_amount:0,wallet_credited_amount:value+(promotionReward?.reward_amount||0),promotion_reward:promotionReward||null,auto_approved:true,coupon:{code:coupon.coupon.code,discountAmount:coupon.discountAmount,subtotalAmount:value,finalAmount:0,reward:coupon.reward||null},redemption_id:redemption?.id||null}
+      return {...topup,payment_id:payment.id,subtotal_amount:value,discount_amount:coupon.discountAmount,payable_amount:0,wallet_credited_amount:paiseToMoney(parseMoneyPaise(value)+parseMoneyPaise(promotionReward?.reward_amount||0,{allowZero:true})),promotion_reward:promotionReward||null,auto_approved:true,coupon:{code:coupon.coupon.code,discountAmount:coupon.discountAmount,subtotalAmount:value,finalAmount:0,reward:coupon.reward||null},redemption_id:redemption?.id||null}
     }
     await paymentAvailability.requireOffline(client);
     if(!normalizedReference)throw Object.assign(new Error('Payment reference / UTR is required for a discounted top-up with an amount to pay'),{code:'REFERENCE_REQUIRED'})
