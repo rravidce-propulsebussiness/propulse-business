@@ -47,13 +47,13 @@ assert(migration.includes("NEW.source='public_requirement' AND normalized_requir
   'Blank public free text must not collapse separate projects by matching contact');
 const quote = {
   source: 'professional_project_quote',
-  requirement: 'Interior Design enquiry from a completed project. Quotation industry: Interior Design\\n' +
-    'Site PIN code: 500072\\nNumber of Bedrooms: 3 BHK\\nInterior Style Preference: Minimalist',
+  requirement: 'Interior Design enquiry from a completed project. Quotation industry: Interior Design\n' +
+    'Site PIN code: 500072\nNumber of Bedrooms: 3 BHK\nInterior Style Preference: Minimalist',
   custom_fields: {_project_origin:{projectId:22,requestId:12}},
 };
 assert.equal(writtenLeadRequirement(quote), '',
   'Quoted form answers must not repeat under Requirement');
-assert.equal(writtenLeadRequirement({...quote,requirement:quote.requirement+'\\nAdditional requirement: Include a puja room'}),
+assert.equal(writtenLeadRequirement({...quote,requirement:quote.requirement+'\nAdditional requirement: Include a puja room'}),
   'Include a puja room', 'Typed quote requirements remain visible');
 assert.equal(writtenLeadRequirement({source:'homepage_consultation',requirement:'Commercial · G+3'}),
   '', 'Homepage selections are not handwritten requirement text');
