@@ -33,7 +33,7 @@ const normalizeLeadRow=row=>{
       if(!String(custom[key]??'').trim())custom[key]=value;
   }
   const normalizedWritten=writtenLeadRequirement(row,custom);
-  const formSource=['public_requirement','homepage_consultation','professional_project_quote','professional_project_callback'].includes(String(row.source||'').toLowerCase());
+  const formSource=['public_requirement','public_estimator','homepage_consultation','professional_project_quote','professional_project_callback'].includes(String(row.source||'').toLowerCase());
   const requirement=formSource?normalizedWritten:normalizedWritten||customValue(custom,['Requirement','Requirements','Requirement Details','Share More Details and Requirement','Location And Requirements','Location And Requirements Details'])||customValueContains(custom,['requirement','requirements']);
   const budgetCustom=customValue(custom,['Budget','Budget Range','Project Budget','Project Budget Range','Budget From To','Expected Budget','Approx Budget','Approximate Budget','Investment Budget','Estimated Budget'])||customValueContains(custom,['budget']);
   if(!hasCustomKeyMatching(custom,['budget'])){if(budgetCustom)custom.Budget=budgetCustom;else if(String(row.budget??'').trim())custom.Budget=String(row.budget).trim();}
