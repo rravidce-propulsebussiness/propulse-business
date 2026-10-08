@@ -89,7 +89,7 @@ async function submit(projectId,input={}){
       userId:project.owner_id,type:'professional_quote_request',category:'lead',severity:'info',
       title:'New project-specific quotation lead',
       message:'A customer requested a quotation for '+String(project.title).slice(0,100)+'. Review their scope and prepare your package and pricing.',
-      actionUrl:'/profile?tab=projects',relatedType:'professional_quote',relatedId:quoteId,
+      actionUrl:'/professional-requests',relatedType:'professional_quote',relatedId:quoteId,
       dedupeKey:'professional-quote-'+quoteId,
     });
   }catch(error){console.error('Professional quotation notification failed:',error.message)}
