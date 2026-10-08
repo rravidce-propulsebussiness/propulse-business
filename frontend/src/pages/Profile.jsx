@@ -7,7 +7,7 @@ import {playSound} from '../utils/soundEffects'
 
 const emptyService=()=>({industryId:'',serviceId:'',subserviceId:''})
 const emptyLocation=()=>({stateId:'',cityId:''})
-const emptyProject=()=>({title:'',projectType:'',description:'',locationText:'',completionYear:'',areaText:'',budgetText:'',coverImageUrl:'',imageUrls:[],imageDisplayUrls:[],videoUrl:'',videoDisplayUrl:'',videoPublishedAt:'',planUrl:'',planDisplayUrl:'',isPublished:true})
+const emptyProject=()=>({title:'',projectType:'',description:'',locationText:'',completionYear:'',areaText:'',budgetText:'',packageName:'',coverImageUrl:'',imageUrls:[],imageDisplayUrls:[],videoUrl:'',videoDisplayUrl:'',videoPublishedAt:'',planUrl:'',planDisplayUrl:'',isPublished:true})
 const emptyPlan=()=>({title:'',description:'',priceFrom:'',durationLabel:'',inclusions:'',isPublished:true})
 
 function reasonText(status){
@@ -30,6 +30,7 @@ function mapProject(item){
     completionYear:item.completion_year||'',
     areaText:item.area_text||'',
     budgetText:item.budget_text||'',
+    packageName:item.package_name||'',
     coverImageUrl:item.cover_image_url||'',
     imageUrls:Array.isArray(item.image_urls)?item.image_urls:[],
     imageDisplayUrls:Array.isArray(item.image_display_urls)?item.image_display_urls:[],
@@ -67,6 +68,8 @@ export default function Profile(){
   const [companyProofs,setCompanyProofs]=useState([])
   const [projects,setProjects]=useState([])
   const [plans,setPlans]=useState([])
+  const [projectCallbacks,setProjectCallbacks]=useState([])
+  const [callbacksLoading,setCallbacksLoading]=useState(false)
   const [directoryStatus,setDirectoryStatus]=useState(null)
   const [videoUploads,setVideoUploads]=useState({})
   const [imageUploads,setImageUploads]=useState({})
@@ -98,6 +101,17 @@ export default function Profile(){
     }
     load()
   },[])
+
+  useEffect(()=>{
+    if(activeSection!=='projects')return undefined
+    let active=true
+    setCallbacksLoading(true)
+    authRequest('/profile/project-callbacks')
+      .then(value=>{if(active)setProjectCallbacks(Array.isArray(value?.data)?value.data:[])})
+      .catch(()=>{if(active)setProjectCallbacks([])})
+      .finally(()=>{if(active)setCallbacksLoading(false)})
+    return()=>{active=false}
+  },[activeSection])
 
   const serviceOptions=useMemo(()=>serviceSelections.map(x=>services.filter(s=>String(s.industry_id)===String(x.industryId))),[services,serviceSelections])
   const subserviceOptions=useMemo(()=>serviceSelections.map(x=>subservices.filter(s=>String(s.service_id)===String(x.serviceId))),[subservices,serviceSelections])
@@ -333,7 +347,12 @@ export default function Profile(){
             <div className="panel-title"><div><span>05</span><h2>Completed projects</h2><p>Add up to 20 real projects. Upload MP4, MOV or WebM videos directly; published videos also appear newest-first on the Projects page.</p></div><button type="button" onClick={()=>setProjects(items=>[...items,emptyProject()])}>+ Add project</button></div>
             <div className="profile-showcase-list">{projects.map((project,index)=><article className="profile-showcase-card" key={project.id||`project-${index}`}>
               <div className="profile-showcase-card-head"><div><span>PROJECT {String(index+1).padStart(2,'0')}</span><h3>{project.title||'Untitled project'}</h3></div><div><label className="profile-inline-check"><input type="checkbox" checked={project.isPublished} onChange={e=>updateProject(index,'isPublished',e.target.checked)}/> Public</label><button type="button" className="row-remove" onClick={()=>setProjects(items=>items.filter((_,i)=>i!==index))}>Remove</button></div></div>
-              <div className="profile-showcase-grid"><label>Project title<input value={project.title} maxLength="180" onChange={e=>updateProject(index,'title',e.target.value)} placeholder="3BHK premium apartment interiors"/></label><label>Project type<input value={project.projectType} maxLength="120" onChange={e=>updateProject(index,'projectType',e.target.value)} placeholder="Interior / Villa / Commercial"/></label><label>Location<input value={project.locationText} maxLength="180" onChange={e=>updateProject(index,'locationText',e.target.value)} placeholder="Hyderabad, Telangana"/></label><label>Completion year<input type="number" min="1950" max="2200" value={project.completionYear} onChange={e=>updateProject(index,'completionYear',e.target.value)}/></label><label>Area<input value={project.areaText} maxLength="120" onChange={e=>updateProject(index,'areaText',e.target.value)} placeholder="2,400 sq ft"/></label><label>Project value / budget<input value={project.budgetText} maxLength="120" onChange={e=>updateProject(index,'budgetText',e.target.value)} placeholder="₹28–32 lakh"/></label><label className="wide">Description<textarea rows="3" value={project.description} maxLength="3000" onChange={e=>updateProject(index,'description',e.target.value)} placeholder="Scope completed, design approach, materials and outcome…"/></label><label className="wide">Cover image URL<input value={project.coverImageUrl} onChange={e=>updateProject(index,'coverImageUrl',e.target.value)} placeholder="https://… image"/></label>
+              <div className="profile-showcase-grid"><label>Project title<input value={project.title} maxLength="180" onChange={e=>updateProject(index,'title',e.target.value)} placeholder="3BHK premium apartment interiors"/></label><label>Project type<input value={project.projectType} maxLength="120" onChange={e=>updateProject(index,'projectType',e.target.value)} placeholder="Interior / Villa / Commercial"/></label><label>Location<input value={project.locationText} maxLength="180" onChange={e=>updateProject(index,'locationText',e.target.value)} placeholder="Hyderabad, Telangana"/></label><label>Completion year<input type="number" min="1950" max="2200" value={project.completionYear} onChange={e=>updateProject(index,'completionYear',e.target.value)}/></label><label>Area<input value={project.areaText} maxLength="120" onChange={e=>updateProject(index,'areaText',e.target.value)} placeholder="2,400 sq ft"/></label><label>Project value / budget<input value={project.budgetText} maxLength="120" onChange={e=>updateProject(index,'budgetText',e.target.value)} placeholder="₹28–32 lakh"/></label><label>Related published package
+                  <select value={project.packageName||''} onChange={e=>updateProject(index,'packageName',e.target.value)}>
+                    <option value="">No package linked</option>
+                    {plans.filter(plan=>plan.isPublished&&plan.title).map(plan=><option value={plan.title} key={plan.id||plan.title}>{plan.title}</option>)}
+                  </select>
+                </label><label className="wide">Description<textarea rows="3" value={project.description} maxLength="3000" onChange={e=>updateProject(index,'description',e.target.value)} placeholder="Scope completed, design approach, materials and outcome…"/></label><label className="wide">Cover image URL<input value={project.coverImageUrl} onChange={e=>updateProject(index,'coverImageUrl',e.target.value)} placeholder="https://… image"/></label>
                 <div className="profile-project-gallery-field">
                   <label className="profile-gallery-upload">
                     <span>{imageUploads[index]?'Uploading photos…':'Add project gallery photos'}</span>
@@ -350,6 +369,20 @@ export default function Profile(){
                 </div>
                 <div className="profile-video-field"><label>Video URL<input value={project.videoUrl} onChange={e=>updateProject(index,'videoUrl',e.target.value)} placeholder="Upload a video below or paste https://…"/></label><label className={'profile-video-upload '+(videoUploads[index]?'busy':'')}><span>{videoUploads[index]?'Uploading video…':'Upload video'}</span><small>MP4, MOV or WebM · max 50 MB</small><input type="file" accept="video/mp4,video/quicktime,video/webm,.mp4,.mov,.webm" disabled={Boolean(videoUploads[index])} onChange={e=>{const file=e.target.files?.[0];e.target.value='';uploadProjectVideo(index,file)}}/></label>{project.videoUrl&&playableVideo(project.videoDisplayUrl||project.videoUrl)&&<video className="profile-project-video-preview" controls preload="metadata" src={project.videoDisplayUrl||project.videoUrl}/>} {project.videoUrl&&!playableVideo(project.videoDisplayUrl||project.videoUrl)&&<a className="profile-video-link" href={project.videoDisplayUrl||project.videoUrl} target="_blank" rel="noreferrer">Open external video ↗</a>}</div><div className="profile-plan-file-field"><label>Plan / drawing link <small>Optional if hosted elsewhere</small><input value={project.planUrl} onChange={e=>updateProject(index,'planUrl',e.target.value)} placeholder="Upload below or paste https://…"/></label><label className={'profile-plan-upload '+(planUploads[index]?'busy':'')}><span>{planUploads[index]?'Uploading plan…':'Upload plan / drawing'}</span><small>PDF, JPG, PNG or WebP · max 15 MB</small><input type="file" accept="application/pdf,image/jpeg,image/png,image/webp,.pdf,.jpg,.jpeg,.png,.webp" disabled={Boolean(planUploads[index])} onChange={e=>{const file=e.target.files?.[0];e.target.value='';uploadProjectPlan(index,file)}}/></label>{project.planUrl&&planPreviewKind(project.planDisplayUrl||project.planUrl)==='image'&&<img className="profile-plan-preview" src={project.planDisplayUrl||project.planUrl} alt={(project.title||'Project')+' plan / drawing'}/>} {project.planUrl&&planPreviewKind(project.planDisplayUrl||project.planUrl)==='pdf'&&<a className="profile-plan-link" href={project.planDisplayUrl||project.planUrl} target="_blank" rel="noreferrer">View PDF plan ↗</a>} {project.planUrl&&planPreviewKind(project.planDisplayUrl||project.planUrl)==='external'&&<a className="profile-plan-link" href={project.planDisplayUrl||project.planUrl} target="_blank" rel="noreferrer">Open plan / drawing ↗</a>} {project.planUrl&&<button type="button" className="profile-plan-remove" onClick={()=>updateProject(index,'planUrl','')}>Remove plan / drawing</button>}</div></div>
             </article>)}{!projects.length&&<div className="profile-showcase-empty"><b>No completed projects added yet.</b><span>Add real work to make your public profile stronger.</span></div>}</div>
+          </section>
+          <section className="profile-panel profile-callback-panel" aria-label="Customer project callback requests">
+            <div className="panel-title"><div><span>CALLBACK REQUESTS</span><h2>Project enquiries</h2><p>Private requests from customers who viewed your published project.</p></div></div>
+            {callbacksLoading?<p>Checking new requests…</p>:projectCallbacks.length===0?<p className="profile-callback-empty">No project callbacks yet. Requests appear here when customers submit the form on your project.</p>:
+              <div className="profile-callback-list">
+                {projectCallbacks.map(item=><article className="profile-callback-item" key={item.id}>
+                  <div><span>{item.project_title}</span><h3>{item.customer_name}</h3><small>{new Date(item.created_at).toLocaleString('en-IN')}</small></div>
+                  {item.message&&<p>{item.message}</p>}
+                  <div className="profile-callback-contact">
+                    <a href={'tel:'+item.customer_phone}>Call {item.customer_phone}</a>
+                    {item.customer_email&&<a href={'mailto:'+item.customer_email}>Email customer</a>}
+                  </div>
+                </article>)}
+              </div>}
           </section>
           </>}
 
