@@ -5,6 +5,7 @@ const { validateDataUrlSignature } = require('../src/utils/fileValidation');
 
 const homepage = fs.readFileSync(path.join(__dirname, '../src/services/homepageMediaService.js'), 'utf8');
 const wallet = fs.readFileSync(path.join(__dirname, '../src/services/walletService.js'), 'utf8');
+const paymentProof = fs.readFileSync(path.join(__dirname, '../src/utils/paymentProofValidation.js'), 'utf8');
 const authRoutes = fs.readFileSync(path.join(__dirname, '../src/routes/authRoutes.js'), 'utf8');
 const authService = fs.readFileSync(path.join(__dirname, '../src/services/authService.js'), 'utf8');
 
@@ -22,9 +23,14 @@ assert(homepage.includes('validateDataUrlSignature'), 'homepage: signature valid
 assert(homepage.includes("validateDataUrlSignature(value,['image/jpeg','image/png','image/webp'])"), 'homepage: signature validation is not enforced');
 assert(homepage.includes("crypto.randomBytes(12).toString('hex')"), 'homepage: upload filename is not generated with cryptographic randomness');
 
-assert(wallet.includes('validateDataUrlSignature'), 'wallet proof: signature validator is not imported');
-assert(wallet.includes("['image/png','image/jpeg','image/webp','application/pdf']"), 'wallet proof: approved proof types are not enforced');
-assert(wallet.includes('MAX_TOPUP_PROOF_BYTES'), 'wallet proof: upload size limit is missing');
+assert(wallet.includes('assertTopupProof(proofUrl)')&&wallet.includes("require('../utils/paymentProofValidation')"),
+  'wallet proof: shared upload validator must be enforced before storage');
+assert(paymentProof.includes('validateDataUrlSignature(source,ALLOWED_PROOF_MIMES)'),
+  'wallet proof: shared validator must check file magic bytes');
+assert(paymentProof.includes("['image/png','image/jpeg','image/webp','application/pdf']"),
+  'wallet proof: shared validator must enforce approved proof types');
+assert(paymentProof.includes('MAX_PROOF_BYTES=5*1024*1024')&&wallet.includes('MAX_TOPUP_PROOF_BYTES'),
+  'wallet proof: 5 MB size limit must be enforced');
 
 assert(authRoutes.includes("const companyProofUploadLimit = rateLimit({ windowMs: 15 * 60 * 1000, max: 10 });"), 'company proof upload rate limit is not configured');
 assert(authRoutes.includes("router.post('/company-proofs', requireAuth, companyProofUploadLimit, authController.uploadCompanyProofs);"), 'company proof upload route is missing its dedicated rate limit');
