@@ -1,4 +1,5 @@
 const pool=require('../config/database');
+const {shouldSkipUnchangedSheet}=require('../utils/sheetSyncRetryPolicy');
 const leadService=require('./leadService');
 const {fetchGoogleSheetCsv}=require('./googleSheetService');
 const {resolvePincode}=require('./pincodeService');
@@ -153,14 +154,14 @@ async function previewGoogleSheet({adminId,url,defaults,columnMappings={},defaul
     ...token
   };
 }
-async function syncGoogleSheet({adminId,url,defaults,columnMappings={},previousFingerprint,force=false,sheetResult=null,defaultIndustryId=null}){
+async function syncGoogleSheet({adminId,url,defaults,columnMappings={},previousFingerprint,previousFailed=0,force=false,sheetResult=null,defaultIndustryId=null}){
   const defaultIndustry=await resolveDefaultIndustry(defaultIndustryId);
   const sheet=sheetResult||await fetchGoogleSheetCsv(url);
   const analysis=sheetPreview.analyzeCsv(sheet.csv||'',{columnMappings,scope:'admin'});
   const parsed=parseRows(analysis.mappedCsv);
   if(!parsed.items.length)throw new Error('Google Sheet contains no data rows');
   const fingerprint=analysis.fingerprint;
-  if(!force&&previousFingerprint&&String(previousFingerprint)===fingerprint)return{skipped:true,fingerprint,total:parsed.items.length,updated:0,created:0,unchanged:0,failed:0,failures:[],spreadsheetId:sheet.spreadsheetId,gid:sheet.gid};
+  if(shouldSkipUnchangedSheet({force,previousFingerprint,nextFingerprint:fingerprint,lastFailed:previousFailed}))return{skipped:true,fingerprint,total:parsed.items.length,updated:0,created:0,unchanged:0,failed:0,failures:[],spreadsheetId:sheet.spreadsheetId,gid:sheet.gid};
   const unique=[],seen=new Set();
   for(const original of parsed.items){
     const row=applyDefaultIndustry(applyDefaults(original,defaults),defaultIndustry);
@@ -235,7 +236,7 @@ async function syncConnection({connectionId,adminId,force=false}){
     if(!locked)return{busy:true,sync:{busy:true,skipped:true,reason:'SYNC_IN_PROGRESS'}};
     const connection=await getConnection(id);
     if(!connection){const e=new Error('Active Google Sheet connection not found');e.code='SHEET_CONNECTION_NOT_FOUND';throw e}
-    const synced=await syncGoogleSheet({adminId:adminId||connection.created_by||null,url:connection.source_url,defaults:connection.defaults||{},columnMappings:connection.column_mappings||{},previousFingerprint:connection.fingerprint,force,defaultIndustryId:connection.default_industry_id});
+    const synced=await syncGoogleSheet({adminId:adminId||connection.created_by||null,url:connection.source_url,defaults:connection.defaults||{},columnMappings:connection.column_mappings||{},previousFingerprint:connection.fingerprint,previousFailed:connection.last_sync_failed,force,defaultIndustryId:connection.default_industry_id});
     const saved=synced.skipped
       ?(await pool.query(`UPDATE admin_google_sheet_connections
             SET last_checked_at=CURRENT_TIMESTAMP,
