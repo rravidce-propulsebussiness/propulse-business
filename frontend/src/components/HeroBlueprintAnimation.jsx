@@ -1,55 +1,83 @@
+import { useEffect, useState } from 'react'
 import './HeroBlueprintAnimation.css'
 
-export default function HeroBlueprintAnimation(){
-  return <div className="ag-hero" role="img" aria-label="Animated journey from plot to construction, finished home and interior">
-    <div className="ag-sky"/><div className="ag-sun"/><div className="ag-city"/>
-    <svg className="ag-scene" viewBox="0 0 1600 760" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-      <defs>
-        <linearGradient id="soil" x1="0" y1="0" x2="1" y2="1"><stop stopColor="#8c6042"/><stop offset="1" stopColor="#3d2a25"/></linearGradient>
-        <linearGradient id="grass" x1="0" x2="1"><stop stopColor="#315c3c"/><stop offset=".55" stopColor="#56764c"/><stop offset="1" stopColor="#243f31"/></linearGradient>
-        <linearGradient id="wall" x1="0" x2="1"><stop stopColor="#f2eee7"/><stop offset=".7" stopColor="#c9c6c0"/><stop offset="1" stopColor="#999da0"/></linearGradient>
-        <linearGradient id="wood" x1="0" x2="1"><stop stopColor="#8b5b36"/><stop offset="1" stopColor="#3e281e"/></linearGradient>
-        <linearGradient id="glass" x1="0" y1="0" x2="0" y2="1"><stop stopColor="#153e5a"/><stop offset=".55" stopColor="#09253a"/><stop offset="1" stopColor="#ff9d58"/></linearGradient>
-        <linearGradient id="warm" x1="0" x2="1"><stop stopColor="#ffb36f"/><stop offset="1" stopColor="#ff5f24"/></linearGradient>
-        <filter id="shadow"><feDropShadow dx="0" dy="20" stdDeviation="18" floodColor="#000" floodOpacity=".38"/></filter>
-        <filter id="glow"><feGaussianBlur stdDeviation="8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-      </defs>
-      <path className="ag-land" d="M-50 610 505 350 1660 585 1110 840-60 810Z"/>
-      <path className="ag-road" d="M-80 688 503 410 1660 640 1600 770 514 532-20 790Z"/>
-      <g className="ag-plot">
-        <path className="ag-soil" d="M400 544 706 397 1164 492 836 648Z"/>
-        <path className="ag-boundary" d="M400 544 706 397 1164 492 836 648Z"/>
-        <path className="ag-grid" d="M468 511 903 606M541 477 976 572M616 442 1050 538M690 408 1124 504M505 593 812 448M608 615 915 470M711 637 1018 492"/>
-        <circle className="ag-pin" cx="400" cy="544" r="8"/><circle className="ag-pin" cx="706" cy="397" r="8"/><circle className="ag-pin" cx="1164" cy="492" r="8"/><circle className="ag-pin" cx="836" cy="648" r="8"/>
-      </g>
-      <g className="ag-build">
-        <path className="ag-slab" d="M442 546 716 416 1115 500 825 638Z"/>
-        <g className="ag-columns"><path d="M493 548V375M622 590V330M764 609V360M914 568V383M1055 525V427"/><path d="M493 375 622 316 1055 405 914 470 764 438 622 500ZM622 316 764 347 914 383"/></g>
-        <g className="ag-beams"><path d="M493 375 914 470 1055 405M622 316 1055 405M493 460 914 552 1055 492"/></g>
-      </g>
-      <g className="ag-home" filter="url(#shadow)">
-        <path className="ag-home-side" d="M755 314 1128 402V568L816 682V444Z"/>
-        <path className="ag-home-front" d="M414 469V345L755 208V444L816 682 414 568Z"/>
-        <path className="ag-upper" d="M504 342V246L758 145 1037 212V372L755 466Z"/>
-        <path className="ag-roof" d="M475 247 752 126 1068 202 1038 229 756 162 505 265Z"/>
-        <path className="ag-canopy" d="M392 342 756 194 1084 275 1045 298 756 229 419 365Z"/>
-        <path className="ag-glass g1" d="M542 274 723 203V351L542 420Z"/><path className="ag-glass g2" d="M792 194 993 241V344L792 294Z"/>
-        <path className="ag-glass g3" d="M459 382 612 321V514L459 568Z"/><path className="ag-glass g4" d="M653 306 743 272V556L653 587Z"/>
-        <path className="ag-wood" d="M821 389 1054 443V547L821 630Z"/>
-        <path className="ag-balcony" d="M516 430 763 337 1035 402M516 430V449M1035 402V420"/>
-        <g className="ag-lights"><circle cx="532" cy="253" r="5"/><circle cx="749" cy="170" r="5"/><circle cx="1017" cy="225" r="5"/><circle cx="439" cy="369" r="5"/><circle cx="1060" cy="295" r="5"/></g>
-      </g>
-      <g className="ag-interior" filter="url(#shadow)">
-        <path className="ag-room-wall" d="M320 570V220L780 120V430M780 120 1280 250V585"/>
-        <path className="ag-room-floor" d="M320 570 780 430 1280 585 807 746Z"/>
-        <path className="ag-room-glass" d="M365 273 663 207V419L365 490ZM914 198 1199 272V454L914 374Z"/>
-        <g className="ag-sofa"><path d="M515 551 703 493 893 551 702 616Z"/><path d="M515 551V617L702 684 893 616V551"/><path d="M556 503 704 458 852 502 704 551Z"/></g>
-        <g className="ag-table"><ellipse cx="990" cy="590" rx="105" ry="40"/><path d="M928 594V666M1050 594V650"/></g>
-        <path className="ag-tv" d="M396 365 548 330V440L396 477Z"/>
-        <path className="ag-cabinet" d="M1056 366 1195 402V536L1056 494ZM1102 378V507M1149 390V520"/>
-        <g className="ag-lamps"><path d="M785 141V264M746 264H824"/><ellipse cx="785" cy="278" rx="58" ry="16"/></g>
-      </g>
-    </svg>
-    <div className="ag-flare"/><div className="ag-dust d1"/><div className="ag-dust d2"/><div className="ag-dust d3"/>
-  </div>
+const stages = [
+  ['PLOT', 'Find the right plot'],
+  ['BUILD', 'Build it right'],
+  ['HOME', 'Your dream home'],
+  ['INTERIOR', 'Design your space'],
+]
+
+export default function HeroBlueprintAnimation() {
+  const [stage, setStage] = useState(0)
+  useEffect(() => {
+    const timer = window.setTimeout(() => setStage((stage + 1) % stages.length), stage === 3 ? 5200 : 4000)
+    return () => window.clearTimeout(timer)
+  }, [stage])
+
+  return (
+    <div className="pp-artcol">
+      <div className="pp-art" data-p={stage}>
+        <svg viewBox="0 0 520 440" fill="none" role="img" aria-label="Animated plot, construction, completed house and furnished interior">
+          <defs>
+            <clipPath id="pp-clip"><rect width="520" height="440" rx="24"/></clipPath>
+            <linearGradient id="pp-sky" x1="0" y1="0" x2="0" y2="1"><stop stopColor="#1d437c"/><stop offset="1" stopColor="#0d2547"/></linearGradient>
+            <linearGradient id="pp-window" x1="0" y1="0" x2="0" y2="1"><stop stopColor="#ffe3bd"/><stop offset="1" stopColor="#ffb877"/></linearGradient>
+          </defs>
+          <g clipPath="url(#pp-clip)">
+            <rect width="520" height="440" fill="url(#pp-sky)"/>
+            <g fill="white" opacity=".55"><circle cx="60" cy="60" r="1.5"/><circle cx="200" cy="40" r="1.2"/><circle cx="330" cy="70" r="1.5"/><circle cx="480" cy="40" r="1.2"/></g>
+            <circle className="pp-glow" cx="430" cy="82" r="62" fill="#d2602f" opacity=".22"/><circle cx="430" cy="82" r="26" fill="#f08a5a"/>
+            <g className="pp-cloud" fill="#fff" opacity=".12"><ellipse cx="120" cy="100" rx="50" ry="12"/><ellipse cx="150" cy="92" rx="30" ry="10"/></g>
+            <rect y="360" width="520" height="80" fill="#0f2547"/><path d="M0 360h520" stroke="#2c5088" strokeWidth="2"/>
+            <g className="pp-plot">
+              <path d="M90 300l170-95 170 95-170 92z" fill="#295575" stroke="#68c2dd" strokeWidth="3" strokeDasharray="12 8" className="pp-march"/>
+              <path d="M260 205v187M90 300l340 0" stroke="#68c2dd" strokeDasharray="7 8" opacity=".5"/>
+              <g fill="#f08a5a"><circle cx="90" cy="300" r="7"/><circle cx="260" cy="205" r="7"/><circle cx="430" cy="300" r="7"/><circle cx="260" cy="392" r="7"/></g>
+              <path d="M260 190v-30m-8 8 8-8 8 8" stroke="#f08a5a" strokeWidth="3"/>
+            </g>
+            <g className="pp-build">
+              <path d="M108 352V225h304v127" fill="#173d63" stroke="#75b5d0" strokeWidth="3"/>
+              <g className="pp-columns" stroke="#e3b27c" strokeWidth="12"><path d="M118 350V225M205 350V225M315 350V225M402 350V225"/></g>
+              <g className="pp-beams" stroke="#e3b27c" strokeWidth="10"><path d="M110 230h300M110 285h300M110 350h300"/></g>
+              <g stroke="#6ca6c7" strokeWidth="2"><path d="M118 230l87 55-87 65m87-120-87 55 87 65m110-120 87 55-87 65m87-120-87 55 87 65"/></g>
+              <g className="pp-crane" stroke="#f4b765" strokeWidth="6"><path d="M300 190V65M235 65h190M300 65l-65 40m65-40 80 40M360 65v102" /><path d="M351 167l9 14 9-14" strokeWidth="4"/></g>
+              <g className="pp-hook" stroke="#ffe3bd" strokeWidth="3"><path d="M360 181v18q0 16 13 7"/></g>
+            </g>
+            <g className="pp-facade">
+              <rect x="110" y="215" width="300" height="145" fill="#f3e6d4"/>
+              <rect x="110" y="215" width="95" height="145" fill="#d7c8b4"/>
+              <path d="M205 215v145M310 215v145" stroke="#ad9a82" strokeWidth="4"/>
+              <rect x="138" y="240" width="48" height="65" rx="3" fill="url(#pp-window)"/><path d="M162 240v65" stroke="#7e8d98" strokeWidth="5"/>
+              <rect x="230" y="238" width="56" height="75" rx="3" fill="url(#pp-window)"/><path d="M258 238v75" stroke="#7e8d98" strokeWidth="5"/>
+              <rect x="334" y="240" width="50" height="65" rx="3" fill="url(#pp-window)"/><path d="M359 240v65" stroke="#7e8d98" strokeWidth="5"/>
+              <rect x="234" y="317" width="52" height="43" fill="#825f4d"/><circle cx="277" cy="341" r="3" fill="#f4c58b"/>
+              <path d="M95 360h330" stroke="#e2b888" strokeWidth="8"/>
+            </g>
+            <g className="pp-roof"><path d="M92 218l168-102 168 102z" fill="#d2602f"/><path d="M92 218l168-102 0 17-143 85z" fill="#f08a5a" opacity=".5"/><path d="M92 218h336" stroke="#a94524" strokeWidth="8"/></g>
+            <g className="pp-trees"><path d="M55 360v-45M468 360v-42" stroke="#604630" strokeWidth="8"/><circle cx="55" cy="298" r="28" fill="#2f8f6b"/><circle cx="70" cy="312" r="18" fill="#267a5b"/><circle cx="469" cy="307" r="25" fill="#2f8f6b"/></g>
+            <g className="pp-interior">
+              <rect x="110" y="212" width="300" height="148" fill="#fff0df"/>
+              <rect x="110" y="212" width="300" height="15" fill="#e4c7a5"/>
+              <path d="M110 360h300" stroke="#a87953" strokeWidth="12"/>
+              <rect x="130" y="236" width="70" height="80" rx="3" fill="#d9a875"/><rect x="137" y="243" width="56" height="66" fill="#fff1d8"/><path d="M165 243v66" stroke="#b48b62" strokeWidth="4"/>
+              <g className="pp-furniture"><rect x="210" y="302" width="125" height="42" rx="10" fill="#d2602f"/><rect x="202" y="284" width="140" height="39" rx="12" fill="#f08a5a"/><rect x="215" y="279" width="52" height="26" rx="8" fill="#f9d3b2"/><rect x="280" y="279" width="48" height="26" rx="8" fill="#f9d3b2"/><path d="M225 344v15m102-15v15" stroke="#664634" strokeWidth="7"/></g>
+              <g className="pp-furniture"><rect x="350" y="240" width="44" height="100" rx="4" fill="#aa734e"/><rect x="355" y="245" width="34" height="40" fill="#e8bb8d"/><rect x="355" y="290" width="34" height="44" fill="#e8bb8d"/><circle cx="381" cy="267" r="2" fill="#fff"/><circle cx="381" cy="311" r="2" fill="#fff"/></g>
+              <g className="pp-furniture"><path d="M235 222v28" stroke="#f9d5a1" strokeWidth="3"/><path d="M219 250h32l-8 12h-16z" fill="#f4b765"/><circle cx="235" cy="265" r="26" fill="#ffcf89" opacity=".16"/></g>
+              <g className="pp-furniture"><rect x="132" y="331" width="48" height="10" rx="5" fill="#a77555"/><path d="M155 331v-29" stroke="#5d9167" strokeWidth="4"/><ellipse cx="145" cy="303" rx="13" ry="7" fill="#39996e"/><ellipse cx="166" cy="296" rx="14" ry="8" fill="#2f8f6b"/></g>
+            </g>
+          </g>
+        </svg>
+        <div className="pp-stage-caption" aria-live="polite"><small>STEP {stage + 1} · {stages[stage][0]}</small><b>{stages[stage][1]}</b></div>
+      </div>
+      <div className="pp-stage-tabs" role="tablist" aria-label="Project journey">
+        {stages.map(([name], index) => (
+          <button key={name} type="button" role="tab" aria-selected={stage === index} className={stage === index ? 'is-active' : ''} onClick={() => setStage(index)}>
+            {name === 'BUILD' ? 'Build' : name === 'INTERIOR' ? 'Interior' : name === 'PLOT' ? 'Plot' : 'Home'}
+            <i aria-hidden="true" />
+          </button>
+        ))}
+      </div>
+    </div>
+  )
 }
