@@ -88,7 +88,7 @@ async function getFeatureRow(leadId,client=pool){
             NULLIF(TRIM(COALESCE(t.customer_name,'')),'') IS NOT NULL AS has_name,
             (NULLIF(TRIM(COALESCE(t.customer_phone,'')),'') IS NOT NULL OR NULLIF(TRIM(COALESCE(t.customer_email,'')),'') IS NOT NULL) AS has_contact,
             (NULLIF(TRIM(COALESCE(t.requirement,'')),'') IS NOT NULL
-              OR (t.source IN ('public_requirement','homepage_consultation')
+              OR (t.source IN ('public_requirement','public_estimator','homepage_consultation')
                 AND jsonb_typeof(t.custom_fields->'_qualification'->'marketplaceAnswers')='object'
                 AND t.custom_fields->'_qualification'->'marketplaceAnswers'<>'{}'::jsonb)
               OR (t.source IN ('professional_project_quote','professional_project_callback')
