@@ -568,14 +568,14 @@ export default function RequirementWizard({ flowKey, onCompletionChange, embedde
         // but submits ONLY to the chosen professional (not the generic lead market).
         const detailRows = questions
           .filter(question => !['finish_quality', locationQuestion?.questionKey].includes(question.questionKey))
-          .map(question => [question.label.replace(/\\?$/, ''), fieldLabel(question, answers)])
+          .map(question => [question.label.replace(/\?$/, ''), fieldLabel(question, answers)])
           .filter(([, value]) => value && value !== '—')
           .map(([label, value]) => label + ': ' + value)
         const requirement = [
           'Reference project: ' + projectQuote.project.title,
           'Published professional: ' + (projectQuote.project.businessName || 'Selected business'),
           ...detailRows,
-        ].join('\\n').slice(0, 3000)
+        ].join('\n').slice(0, 3000)
         const areaQuestion = questions.find(question => question.questionKey === 'area')
         const budgetQuestion = questions.find(question => question.questionKey === 'budget')
         const result = await publicRequest('/experts/projects/' + encodeURIComponent(projectQuote.project.id) + '/quote-request', {
