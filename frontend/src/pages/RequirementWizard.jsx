@@ -221,6 +221,7 @@ export default function RequirementWizard({ flowKey, onCompletionChange, embedde
   const autoBuiltUpRef = useRef('')
   const [contact, setContact] = useState(emptyContact)
   const [website, setWebsite] = useState('')
+  const [marketplaceConsent, setMarketplaceConsent] = useState(false)
   const [submissionKey, setSubmissionKey] = useState(makeSubmissionKey)
   const [submissionResult, setSubmissionResult] = useState(null)
   const [state, setState] = useState({ loading: true, saving: false, error: '', success: false })
@@ -557,6 +558,10 @@ export default function RequirementWizard({ flowKey, onCompletionChange, embedde
       return
     }
 
+    if(projectQuote&&!marketplaceConsent){
+      setState(current=>({...current,error:'Please agree to share your request with the selected professional and other relevant ProPulse professionals.'}))
+      return
+    }
     const phone = contact.phone.replace(/\D/g, '')
     if (!contact.name.trim() || !/^[6-9]\d{9}$/.test(phone)) {
       setState(current => ({ ...current, error: 'Enter your name and a valid 10-digit mobile number.' }))
@@ -599,6 +604,8 @@ export default function RequirementWizard({ flowKey, onCompletionChange, embedde
             area: (constructionBuiltUp || (areaQuestion ? fieldLabel(areaQuestion, answers) : '')).slice(0,120),
             budget: budgetQuestion ? fieldLabel(budgetQuestion, answers).slice(0,120) : '',
             preferredPackage: projectQuote.preferredPackage,
+            pincode: locationQuestion ? String(answers[locationQuestion.questionKey]||'') : '',
+            marketplaceConsent,
             consent: true,
             website,
           }),
@@ -773,6 +780,7 @@ export default function RequirementWizard({ flowKey, onCompletionChange, embedde
       contactData={contactData}
       completion={completion}
       projectQuote={projectQuote}
+      marketplaceConsent={marketplaceConsent} setMarketplaceConsent={setMarketplaceConsent}
     />
   }
 
@@ -800,6 +808,7 @@ export default function RequirementWizard({ flowKey, onCompletionChange, embedde
       contactData={contactData}
       completion={completion}
       projectQuote={projectQuote}
+      marketplaceConsent={marketplaceConsent} setMarketplaceConsent={setMarketplaceConsent}
     />
   }
 
@@ -938,6 +947,7 @@ export default function RequirementWizard({ flowKey, onCompletionChange, embedde
             {summaryRows.map(([label,value]) => <div key={label}><span>{label}</span><b title={value}>{value}</b></div>)}
           </div>
           <label className="rq-honeypot" aria-hidden="true">Website<input tabIndex="-1" autoComplete="off" value={website} onChange={event => setWebsite(event.target.value)} /></label>
+          {projectQuote&&<label className="rq-marketplace-consent"><input type="checkbox" required checked={marketplaceConsent} onChange={event=>setMarketplaceConsent(event.target.checked)}/> I agree that ProPulse may share my enquiry with the selected professional and other relevant professionals through its marketplace. Contact details remain protected until access is authorized.</label>}
           {state.error && <div className="rq-error">{state.error}</div>}
           <button className="rq-submit" type="submit" disabled={state.saving}>{state.saving ? 'Submitting…' : projectQuote ? 'Request Professional Quote' : (isQuotationFlow && answers.built_up_area ? 'Generate Detailed Quotation' : (isQuotationFlow ? 'Get Free Quote' : (flow.config?.submitLabel || 'Submit Requirement')))} <Icon name="arrow" size={15}/></button>
 
