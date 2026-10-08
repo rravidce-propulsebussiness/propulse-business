@@ -2,6 +2,7 @@ const profileService = require('../services/profileService');
 const { sendError } = require('../utils/errorResponse');
 const projectVideoService = require('../services/projectVideoService');
 const projectPlanService = require('../services/projectPlanService');
+const projectImageService = require('../services/projectImageService');
 
 async function getProfile(req, res) {
   try {
