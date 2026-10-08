@@ -338,7 +338,7 @@ export default function Profile(){
                   <label className="profile-gallery-upload">
                     <span>{imageUploads[index]?'Uploading photos…':'Add project gallery photos'}</span>
                     <small>JPG, PNG or WebP · up to 8 images · 12 MB each</small>
-                    <input type="file" accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp" multiple disabled={Boolean(imageUploads[index])||(project.imageUrls||[]).length>=8} onChange={e=>{const files=e.target.files;e.target.value='';uploadProjectImages(index,files)}}/>
+                    <input type="file" accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp" multiple disabled={Boolean(imageUploads[index])||(project.imageUrls||[]).length>=8} onChange={e=>{const files=Array.from(e.target.files||[]);e.target.value='';uploadProjectImages(index,files)}}/>
                   </label>
                   {(project.imageUrls||[]).length>0&&<div className="profile-gallery-grid">
                     {project.imageUrls.map((url,photoIndex)=><div className="profile-gallery-photo" key={url+photoIndex}>
