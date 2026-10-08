@@ -1133,3 +1133,9 @@ body:has(.lv2-shell){
     box-sizing:border-box;
   }
 }
+
+/* Keep the project description visible even when the quote has structured answers. */
+.lv2-requirement-full{white-space:pre-line;overflow-wrap:anywhere}
+.lv2-requirement-full p{margin:0;color:#62748b}
+.lv2-requirement-full p+p{margin-top:10px;padding-top:10px;border-top:1px solid #e5ebf2}
+.lv2-requirement-extra{font-weight:600}
