@@ -72,7 +72,7 @@ export default function ProjectDetail(){
       .then(data=>{
         if(!active)return
         const plans=Array.isArray(data?.service_plans)?data.service_plans:[]
-        setLinkedPlan(plans.find(plan=>String(plan.title||'').trim().toLowerCase()===project.packageName.toLowerCase())||null)
+        setLinkedPlan(plans.find(plan=>plan.industry===project.category&&String(plan.title||'').trim().toLowerCase()===project.packageName.toLowerCase())||null)
       })
       .catch(()=>{})
     return()=>{active=false}
