@@ -24,7 +24,7 @@ export default function ProjectQuote(){
   const [saving,setSaving]=useState(false)
   const [requestError,setRequestError]=useState('')
   const [submitted,setSubmitted]=useState(null)
-  
+
   useEffect(()=>{
     if(!id){setLoading(false);setLoadError('This project link is invalid.');return undefined}
     let active=true
