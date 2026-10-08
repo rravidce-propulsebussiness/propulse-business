@@ -45,7 +45,6 @@ export default function ProjectDetail(){
   const [showVideo,setShowVideo]=useState(false)
   const [linkedPlan,setLinkedPlan]=useState(null)
   const [contactData,setContactData]=useState({})
-  const [callbackOpen,setCallbackOpen]=useState(false)
   const [callbackForm,setCallbackForm]=useState(emptyCallback)
   const [callbackSending,setCallbackSending]=useState(false)
   const [callbackFeedback,setCallbackFeedback]=useState('')
@@ -65,7 +64,6 @@ export default function ProjectDetail(){
     setPhotoIndex(0)
     setShowVideo(false)
     setLinkedPlan(null)
-    setCallbackOpen(false)
     setCallbackForm(emptyCallback)
     setCallbackFeedback('')
     setCallbackSuccess(false)
@@ -190,7 +188,7 @@ export default function ProjectDetail(){
                 {!project.sample&&project.document&&<a className="pjd-download" href={project.document} target="_blank" rel="noopener noreferrer"><Icon name="file" size={17}/>{isPdf(project.document)?'Download Project PDF':'View Project Document'}</a>}
                 {project.sample
                   ?<Link className="pjd-main-cta" to={'/quote#'+similarQuoteHash(project)}>Get Quote for Similar Work <Icon name="arrow" size={17}/></Link>
-                  :<button className="pjd-main-cta" type="button" disabled={callbackSuccess} onClick={()=>setCallbackOpen(x=>!x)}>{callbackSuccess?'Callback Requested':'Request a Callback'} <Icon name="arrow" size={17}/></button>}
+                  :<button className="pjd-main-cta" type="button" disabled={callbackSuccess} onClick={()=>document.getElementById('pjd-contact-form')?.scrollIntoView({behavior:'smooth',block:'start'})}>{callbackSuccess?'Callback Requested':'Request a Callback'} <Icon name="arrow" size={17}/></button>}
               </div>
               {!project.sample&&!linkedPlan&&!project.document&&<p className="pjd-package-note">The professional hasn't published a downloadable package for this project. Request a callback to ask for exact specifications.</p>}
             </aside>
@@ -205,7 +203,7 @@ export default function ProjectDetail(){
               {!project.sample&&<p>These details were supplied by the publishing professional. Confirm material brands, exact scope and costs before proceeding.</p>}
               {project.sample&&<p>Sample imagery, locations, costs and package specifications are illustrative and are not claims of completed client work.</p>}
             </section>
-            <section className="pjd-contact">
+            <section className="pjd-contact" id="pjd-contact-form">
               {project.sample?<><span className="pjd-overline">BUILD SOMETHING SIMILAR</span><h2>Start your own project</h2><p>Tell us what you're planning, and explore matching packages and professionals.</p><Link className="pjd-main-cta" to={'/quote#'+similarQuoteHash(project)}>Get Your Quotation <Icon name="arrow" size={16}/></Link></>:
               <>
                 <span className="pjd-overline">DIRECT PROFESSIONAL ENQUIRY</span>
