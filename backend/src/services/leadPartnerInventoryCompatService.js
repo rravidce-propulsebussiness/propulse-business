@@ -2,6 +2,7 @@ const pool = require('../config/database');
 const base = require('./leadPartnerInventoryService');
 const { fetchGoogleSheetCsv } = require('./googleSheetService');
 const sheetPreview = require('./sheetImportPreviewService');
+const {parseCsvRecords}=require('../utils/csvRecords');
 
 const clean = v => String(v ?? '').trim();
 const norm = v => clean(v).toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]/g, '');
@@ -28,16 +29,8 @@ const canonical = new Set([
   'exclusivedelaydays','exclusivedelayhours'
 ]);
 
-function parseCsv(text) {
-  const rows=[]; let row=[]; let cell=''; let quoted=false;
-  for(let i=0;i<text.length;i+=1){
-    const c=text[i];
-    if(c==='"'){ if(quoted&&text[i+1]==='"'){cell+='"';i+=1;} else quoted=!quoted; }
-    else if(c===','&&!quoted){row.push(cell);cell='';}
-    else if((c==='\n'||c==='\r')&&!quoted){if(c==='\r'&&text[i+1]==='\n')i+=1;row.push(cell);if(row.some(v=>clean(v)))rows.push(row);row=[];cell='';}
-    else cell+=c;
-  }
-  row.push(cell); if(row.some(v=>clean(v)))rows.push(row);
+function parseCsv(text){
+  const rows=parseCsvRecords(text);
   if(!rows.length)return[];
   const headers=rows[0].map(clean);
   return rows.slice(1).map(values=>Object.fromEntries(headers.map((h,i)=>[h,clean(values[i])])))
