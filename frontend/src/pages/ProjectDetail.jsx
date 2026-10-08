@@ -2,6 +2,7 @@ import {useEffect,useMemo,useState} from 'react'
 import {Link,useParams} from 'react-router-dom'
 import {publicRequest} from '../utils/auth'
 import {PublicHeader,PublicFooter} from '../components/PublicSiteChrome'
+import {openLeadPopup} from '../utils/leadPopup'
 import {CONCEPTS,normalizeProject,projectPhotos,categoryLabel,playableProjectVideo,Icon} from './Projects'
 import './Projects.css'
 import './ProjectDetail.css'
@@ -9,30 +10,6 @@ import './ProjectDetail.css'
 const emptyCallback={name:'',phone:'',email:'',message:'',consent:false,website:''}
 const similarQuoteHash=project=>project.category==='design'?'interiors':project.category==='property'?'property':'construction'
 const isPdf=value=>/\.pdf(?:[?#]|$)/i.test(value||'')
-
-function downloadPackage(project,plan){
-  const inclusions=Array.isArray(plan?.inclusions)?plan.inclusions:(project.sampleSpecs||[])
-  const lines=[
-    project.sample?'ILLUSTRATIVE SAMPLE PACKAGE — NOT A QUOTATION':'PROFESSIONALLY PUBLISHED PACKAGE DETAILS',
-    plan?.title||project.packageName||'Package',
-    'Project: '+project.title,
-    project.businessName?'Published by: '+project.businessName:'',
-    plan?.description||project.description||'',
-    plan?.duration_label?'Estimated duration: '+plan.duration_label:'',
-    plan?.price_from?'Published starting price: ₹'+Number(plan.price_from).toLocaleString('en-IN'):'',
-    '',
-    'Specifications / Inclusions',
-    ...inclusions.map((item,i)=>(i+1)+'. '+String(item)),
-    '',
-    project.sample?'Example specifications only; actual project scope, materials and cost vary.':'Confirm actual brands, inclusions, exclusions and costs with the publishing professional.',
-  ].join('\n')
-  const url=URL.createObjectURL(new Blob([lines],{type:'text/plain;charset=utf-8'}))
-  const link=document.createElement('a')
-  link.href=url
-  link.download=(project.sample?project.id:'project-'+project.id)+'-package-details.txt'
-  link.click()
-  window.setTimeout(()=>URL.revokeObjectURL(url),1000)
-}
 
 export default function ProjectDetail(){
   const {projectId}=useParams()
@@ -49,6 +26,8 @@ export default function ProjectDetail(){
   const [callbackSending,setCallbackSending]=useState(false)
   const [callbackFeedback,setCallbackFeedback]=useState('')
   const [callbackSuccess,setCallbackSuccess]=useState(false)
+  const [packageDownloading,setPackageDownloading]=useState(false)
+  const [packageError,setPackageError]=useState('')
 
   useEffect(()=>{
     let active=true
@@ -67,6 +46,8 @@ export default function ProjectDetail(){
     setCallbackForm(emptyCallback)
     setCallbackFeedback('')
     setCallbackSuccess(false)
+    setPackageError('')
+    setPackageDownloading(false)
     setLoading(!sample&&Boolean(realId))
     if(sample||!realId){
       if(!sample)setError('That project could not be found or is no longer published.')
@@ -124,10 +105,36 @@ export default function ProjectDetail(){
         method:'POST',body:JSON.stringify(callbackForm),
       })
       setCallbackSuccess(true)
-      setCallbackFeedback('Your callback request has been sent to '+(project.businessName||'this professional')+'.')
+      setCallbackFeedback('Callback request received. ProPulse will coordinate your enquiry with '+(project.businessName||'this professional')+'.')
     }catch(err){setCallbackFeedback(err.message||'Unable to send your request. Please try again.')}
     finally{setCallbackSending(false)}
   }
+
+  async function downloadPackage(){
+    if(!project||packageDownloading)return
+    setPackageDownloading(true);setPackageError('')
+    try{
+      const {downloadProjectPackagePdf}=await import('../utils/requirementQuotePdf')
+      await downloadProjectPackagePdf({project,plan:linkedPlan})
+    }catch(err){
+      setPackageError(err?.message||'Unable to prepare the PDF. Please try again.')
+    }finally{setPackageDownloading(false)}
+  }
+
+  function requestCallback(){
+    if(!project)return
+    if(project.sample){
+      openLeadPopup(similarQuoteHash(project)==='interiors'?'design':similarQuoteHash(project)==='property'?'property':'build',{
+        intent:'callback',
+        projectTitle:project.title,
+        packageName:project.packageName,
+      })
+      return
+    }
+    document.getElementById('pjd-contact-form')?.scrollIntoView({behavior:'smooth',block:'start'})
+  }
+
+  const relatedProjects=CONCEPTS.filter(item=>item.id!==projectId&&item.category===(project?.category||'construction')).slice(0,3)
 
   return <main className="pj-page pjd-page">
     <PublicHeader/>
@@ -140,15 +147,17 @@ export default function ProjectDetail(){
         {loading?<div className="pjd-status" role="status"><span className="pj-inline-spinner"/>Loading project details…</div>:
         !project?<div className="pjd-status"><h1>Project not available</h1><p role="alert">{error}</p><Link to="/projects">← View all projects</Link></div>:
         <>
-          <header className="pjd-heading">
+          <header className="pjd-heading pjd-hero-intro">
             <div>
-              <span className="pjd-overline">{project.sample?'DESIGN INSPIRATION · SAMPLE':categoryLabel(project.category)+' PROJECT'}</span>
+              <span className="pjd-overline"><span className="pjd-kicker-dot"/>{project.sample?'THE DESIGN COLLECTION · INSPIRATION':categoryLabel(project.category).toUpperCase()+' · PROFESSIONAL PORTFOLIO'}</span>
               <h1>{project.title}</h1>
               <p>{project.description||'Explore the project gallery, specifications and published details.'}</p>
+              <div className="pjd-hero-micro"><span>01 / Architecture</span><span>02 / Materiality</span><span>03 / Your next move</span></div>
             </div>
             <div className="pjd-heading-tags">
               {project.sample?<span className="pjd-sample-label">Illustrative project</span>:<span className="pjd-published-label">Professional portfolio</span>}
               {!project.sample&&project.verified&&<span className="pjd-verified">Verified professional</span>}
+              <span className="pjd-collection-index">FEATURED PROJECT GUIDE&nbsp; ↗</span>
             </div>
           </header>
           <div className="pjd-main-grid">
@@ -158,6 +167,7 @@ export default function ProjectDetail(){
                   ?<video key={project.video} poster={activePhoto||undefined} src={project.video} controls playsInline preload="metadata" className="pjd-feature-media"/>
                   :activePhoto?<img className="pjd-feature-media" src={activePhoto} alt={project.title+' image '+(photoIndex+1)}/>
                   :<div className="pjd-no-photo">Photographs for this project are not available yet.</div>}
+                {activePhoto&&!showVideo&&<div className="pjd-image-caption"><span className="pjd-caption-line"/><span>{project.sample?'CURATED VISUAL REFERENCE':'PROJECT PORTFOLIO'}<small>{String(photoIndex+1).padStart(2,'0')} / {String(photos.length).padStart(2,'0')}</small></span></div>}
                 {photos.length>1&&!showVideo&&<div className="pjd-photo-nav">
                   <button type="button" aria-label="Previous image" onClick={()=>setPhotoIndex(n=>(n+photos.length-1)%photos.length)}>‹</button>
                   <span>{photoIndex+1} / {photos.length}</span>
@@ -173,7 +183,7 @@ export default function ProjectDetail(){
               {project.sample&&<p className="pjd-photo-note">Visual references only. These images do not document a verified completed client project.</p>}
             </div>
             <aside className="pjd-summary">
-              <div className="pjd-summary-top"><span>PROJECT OVERVIEW</span><h2>{project.sample?'Concept specifications':'Project information'}</h2></div>
+              <div className="pjd-summary-top"><div className="pjd-summary-icon">⌂</div><div><span>THE PROJECT AT A GLANCE</span><h2>{project.sample?'Your inspiration board':'Project information'}</h2></div></div>
               <dl className="pjd-fact-grid">
                 <div><dt>Project type</dt><dd>{project.type}</dd></div>
                 {project.location&&<div><dt>{project.sample?'Illustrative location':'Location'}</dt><dd>{project.location}</dd></div>}
@@ -183,6 +193,7 @@ export default function ProjectDetail(){
                 {!project.sample&&project.businessName&&<div><dt>Published by</dt><dd>{project.businessName}</dd></div>}
               </dl>
               {project.cost&&<div className="pjd-price"><small>{project.sample?'ILLUSTRATIVE COST · NOT A QUOTATION':'REPORTED PROJECT COST / BUDGET'}</small><strong>{project.cost}</strong></div>}
+              <div className="pjd-action-intro"><span>YOUR NEXT STEP</span><strong>Love this space? Bring yours to life.</strong><small>Explore the guide, speak to us, or plan your own quote.</small></div>
               <div className="pjd-action-stack">
                 {(project.sample||linkedPlan)&&<button type="button" className="pjd-download" onClick={()=>downloadPackage(project,linkedPlan)}><Icon name="file" size={17}/> Download {project.sample?'Example Specifications':'Related Package'}</button>}
                 {!project.sample&&project.document&&<a className="pjd-download" href={project.document} target="_blank" rel="noopener noreferrer"><Icon name="file" size={17}/>{isPdf(project.document)?'Download Project PDF':'View Project Document'}</a>}
