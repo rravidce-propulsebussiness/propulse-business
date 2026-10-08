@@ -150,7 +150,7 @@ export default function Home() {
             </div>
           </div>
           <div className="hc-premium-scene">
-            <div className="hc-premium-scene-label"><small>YOUR PROJECT JOURNEY</small><b>Plot → Construction → Home → Interior</b></div>
+
             <HeroBlueprintAnimation />
           </div>
         </div>
