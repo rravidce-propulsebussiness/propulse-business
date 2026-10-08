@@ -1133,3 +1133,6 @@ body:has(.lv2-shell){
     box-sizing:border-box;
   }
 }
+
+/* Keep multiline project notes legible in the marketplace requirement section. */
+.lv2-requirement-full{white-space:pre-line;overflow-wrap:anywhere;border:1px solid #e2eaf2}
