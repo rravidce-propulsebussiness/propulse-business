@@ -140,7 +140,7 @@ export default function Home() {
             <h1>Don’t Leave Your <em>Dream Home</em> to <strong>Chance.</strong></h1>
             <p>Find the right partner. Build it right.</p>
             <div className="hc-premium-actions">
-              <button type="button" onClick={() => openRequirement()}>Start Your Requirement <span aria-hidden="true">→</span></button>
+              <button type="button" onClick={() => openRequirement()}>Start Your Project <span aria-hidden="true">→</span></button>
               <a href="/packages">View Packages</a>
             </div>
             <div className="hc-premium-trust" aria-label="ProPulse benefits">
