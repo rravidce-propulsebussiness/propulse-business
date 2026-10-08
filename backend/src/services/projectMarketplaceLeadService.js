@@ -76,9 +76,11 @@ async function sync(kind,id,{notify=true}={}){
       answeredFields['Project Area']=String(record.area_text).slice(0,120);
     if(kind==='quote'&&record.budget_text&&!answeredFields.Budget)
       answeredFields.Budget=String(record.budget_text).slice(0,120);
+    // Preserve optional customer-written requirements alongside structured wizard answers.
+    const writtenBrief=kind==='quote'?sanitize(answeredFields['Additional Requirements']||''):'';
     const requirement=(key==='design'?'Interior Design':key==='property'?'Real Estate':'Construction')+
       ' enquiry from a completed project.'+
-      (kind==='callback'?' '+(details||'Customer requested a callback about their project requirement.'):'');
+      (kind==='callback'?' '+(details||'Customer requested a callback about their project requirement.'):writtenBrief?' '+writtenBrief:'');
     const fields={
       industryId:flow.industryId,serviceId:flow.serviceId,subserviceId:flow.subserviceId,
       stateId:Number(detected.city.state_id)||null,cityId:Number(detected.city.id),
