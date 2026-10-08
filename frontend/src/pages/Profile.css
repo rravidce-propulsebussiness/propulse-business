@@ -366,3 +366,31 @@
 .profile-callback-contact{display:flex;flex-wrap:wrap;gap:9px;margin-top:13px}
 .profile-callback-contact a{display:inline-flex;align-items:center;min-height:38px;padding:9px 13px;border-radius:9px;background:#e65b26;color:#fff;font-size:12px;font-weight:800;text-decoration:none}
 .profile-callback-contact a+a{background:#133a55}
+
+
+/* Professional-owned project quote lead workflow */
+.profile-project-quotes{margin-top:22px}
+.profile-project-quote-grid{display:grid;gap:17px}
+.profile-project-quote-card{padding:22px;border-radius:17px;border:1px solid #e1e7ec;background:linear-gradient(140deg,#fff,#fffaf6);box-shadow:0 12px 32px rgba(15,48,71,.055)}
+.profile-quote-heading{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;padding-bottom:16px;border-bottom:1px solid #e8e9e9}
+.profile-quote-heading>div{display:grid;gap:5px;min-width:0}
+.profile-quote-heading>div>span{color:#d95b2b;font-size:12px;font-weight:850;letter-spacing:.07em}
+.profile-quote-heading h3{margin:0;color:#153b57;font-size:19px;line-height:1.35}
+.profile-quote-heading strong{color:#35576a;font-size:14px}
+.profile-quote-heading small{color:#778e9c;font-size:12px}
+.profile-quote-status{padding:7px 12px;border-radius:999px;background:#fff0e7;color:#ba4f23;font-size:12px;font-weight:800;text-transform:capitalize;white-space:nowrap}
+.profile-quote-requirements{padding:16px 0;display:grid;gap:8px}
+.profile-quote-requirements p{margin:0;color:#425d70;font-size:13px;line-height:1.65;overflow-wrap:anywhere}
+.profile-quote-requirements b{color:#1a425e}
+.profile-quote-requirements small{font-size:12px;color:#788b9a}
+.profile-quote-editor{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;padding:17px;border-radius:12px;background:#f4f8fa;border:1px solid #e1e9ee}
+.profile-quote-editor label{display:grid;gap:6px;color:#3b5a6e;font-size:12px;font-weight:750;min-width:0}
+.profile-quote-editor :is(input,textarea){min-width:0;width:100%;min-height:42px;padding:10px 12px;background:#fff;color:#133b58;border:1px solid #d6e2e8;border-radius:9px;font:inherit;font-size:13px}
+.profile-quote-editor :is(input,textarea):focus{outline:2px solid rgba(230,91,38,.25);border-color:#e65b26}
+.profile-quote-editor .quote-wide{grid-column:1/-1}
+.profile-quote-actions{display:flex;flex-wrap:wrap;gap:10px}
+.profile-quote-actions button{min-height:42px;padding:10px 16px;border-radius:9px;background:#fff;border:1px solid #d7e2e9;color:#19415c;font-size:12px;font-weight:800;cursor:pointer}
+.profile-quote-actions button+button{background:#e65b26;color:#fff;border-color:#e65b26}
+.profile-quote-actions button:disabled{opacity:.6;cursor:wait}
+.profile-quote-notice{margin:0;font-size:12px;color:#346d54;font-weight:750}
+@media(max-width:620px){.profile-project-quote-card{padding:15px}.profile-quote-editor{grid-template-columns:1fr;padding:12px}.profile-quote-heading{flex-wrap:wrap}}
