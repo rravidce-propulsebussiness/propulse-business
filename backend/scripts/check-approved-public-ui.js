@@ -51,17 +51,12 @@ assert.match(wizard,/onCompletionChangeRef\.current\?\.\(true\)/);
 assert.match(wizard,/answers\.built_up_area\]\)/);
 
 
-// The source and merge-target versions use different local variable names
-// and cleanup ordering; both must restore scroll, the listener, and focus.
-const projectScrollVar=projects.match(/const\s+(oldOverflow|previous)\s*=\s*document\.body\.style\.overflow/)?.[1];
-assert(projectScrollVar,'Project modal must save the previous body overflow value');
-assert.match(projects,/document\.body\.style\.overflow\s*=\s*'hidden'/);
-assert(projects.includes('document.body.style.overflow')&&projects.includes('document.removeEventListener'),
-  'Project modal must restore scroll and unsubscribe from keyboard handling');
-assert.match(projects,new RegExp('document\\.body\\.style\\.overflow\\s*=\\s*'+projectScrollVar+'\\b'));
-assert.match(projects,/document\.removeEventListener\('keydown',\s*handleKey\)/);
-assert.match(projects,/if\s*\(originalFocus\?\.isConnected\)\s*originalFocus\.focus\(\)/);
-assert.doesNotMatch(projects,/function openProject\(project\)\{\s*setSelectedProject\(project\)\s*document\.body\.style\.overflow/);
+// Project details now live at their own URL; the listing must never lock body scrolling.
+assert.match(app,/path="\/projects\/:projectId" element={<ProjectDetail\/>}/);
+assert.match(projects,/to=\{projectPath\(project\)\}/);
+assert.doesNotMatch(projects,/document\.body\.style\.overflow/);
+assert.doesNotMatch(projects,/pj-detail-backdrop/);
+assert.match(projectDetail,/pjd-main-grid/);
 assert.doesNotMatch(projects,/import \{ openLeadPopup \}/);
 assert.doesNotMatch(projects,/import PublicIcon /);
 
