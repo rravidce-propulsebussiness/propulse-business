@@ -11,11 +11,11 @@ function deriveLeadFields(flow, answers) {
   const result = { propertyType: null, budget: null, requirement: null };
   for (const question of flow.questions) {
     if (!isVisible(question, answers)) continue;
-    if (question.visibility !== 'marketplace' || !question.leadField || isEmpty(answers[question.questionKey])) continue;
+    if (question.visibility !== 'marketplace' || isEmpty(answers[question.questionKey])) continue;
     const formatted = formatPublicAnswer(question, answers[question.questionKey]);
     if (question.leadField === 'property_type') result.propertyType = formatted;
     if (question.leadField === 'budget') result.budget = formatted;
-    if (question.leadField === 'requirement') result.requirement = formatted;
+    if (question.questionType === 'text' && (question.leadField === 'requirement' || question.questionKey === 'additional_requirement')) result.requirement = formatted;
   }
   return result;
 }
@@ -37,17 +37,6 @@ function formatPublicAnswer(question,value) {
     return String(value??'').trim()+' sq yards';
   }
   return formatAnswer(question,value);
-}
-
-function buildSummary(flow, answers) {
-  const parts = [];
-  for (const question of flow.questions) {
-    if (!isVisible(question, answers) || question.visibility !== 'marketplace' || isEmpty(answers[question.questionKey]) || question.questionType === 'location') continue;
-    const formatted = formatPublicAnswer(question, answers[question.questionKey]);
-    if (!formatted) continue;
-    parts.push(`${question.label}: ${formatted}`);
-  }
-  return parts.join(' · ').slice(0, 4000);
 }
 
 function buildCustomFields(flow, answers) {
@@ -411,8 +400,8 @@ async function submitConsultation({
 async function enrichConsultationLead({ existing, flow, safeAnswers, name, phone, email }) {
   const location = await resolveLocation(flow, safeAnswers);
   const leadFields = deriveLeadFields(flow, safeAnswers);
-  const summary = buildSummary(flow, safeAnswers);
   const detailedFields = buildCustomFields(flow, safeAnswers);
+  detailedFields._intake.writtenRequirement = leadFields.requirement;
   const customFields = {
     ...(existing.custom_fields || {}),
     ...detailedFields,
@@ -423,7 +412,7 @@ async function enrichConsultationLead({ existing, flow, safeAnswers, name, phone
       consultationCaptured: true,
     },
   };
-  const requirement = leadFields.requirement || summary || `${flow.name} requirement`;
+  const requirement = leadFields.requirement || null;
   const pricing = await leadService.getConfiguredPricing(flow.industryId, location.cityId, existing.lead_type || 'basic');
 
   const updated = (await pool.query(
@@ -509,9 +498,9 @@ async function submitRequirement({
 
   const location = await resolveLocation(flow, safeAnswers);
   const leadFields = deriveLeadFields(flow, safeAnswers);
-  const summary = buildSummary(flow, safeAnswers);
   const customFields = buildCustomFields(flow, safeAnswers);
-  const requirement = leadFields.requirement || summary || `${flow.name} requirement`;
+  customFields._intake.writtenRequirement = leadFields.requirement;
+  const requirement = leadFields.requirement || null;
 
   try {
     const lead = await leadService.createLead({
