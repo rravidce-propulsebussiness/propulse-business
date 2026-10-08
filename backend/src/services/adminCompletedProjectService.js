@@ -1,4 +1,8 @@
 const pool=require('../config/database');
+const s3=require('./s3PrivateObjectStorageService');
+const imageService=require('./projectImageService');
+const videoService=require('./projectVideoService');
+const planService=require('./projectPlanService');
 
 function inputError(message,code='INVALID_COMPLETED_PROJECT'){
   const error=new Error(message);
@@ -17,7 +21,7 @@ function string(value,label,max=180){
 function mediaUrl(value,label){
   const url=string(value,label,2048);
   if(!url)return '';
-  if(url.startsWith('/uploads/business-projects/'))return url;
+  if(url.startsWith('/uploads/business-projects/')||s3.isReference(url))return url;
   try{
     const parsed=new URL(url);
     if(parsed.protocol==='https:'&&parsed.username===''&&parsed.password==='')return url;
@@ -50,6 +54,20 @@ function normalized(input,current={}){
   }
   return {title,projectType,locationText,areaText,budgetText,description,packageName,completionYear,coverImageUrl:cover,imageUrls,videoUrl,planUrl,isPublished:published};
 }
+function validateStorageOwnership(userId,item){
+  for(const image of [item.coverImageUrl,...item.imageUrls]){
+    if(s3.isReference(image)||image.startsWith('/uploads/business-projects/'))imageService.managedImageInfo(userId,image);
+  }
+  if(s3.isReference(item.videoUrl)||item.videoUrl.startsWith('/uploads/business-projects/'))videoService.managedVideoInfo(userId,item.videoUrl);
+  if(s3.isReference(item.planUrl)||item.planUrl.startsWith('/uploads/business-projects/'))planService.managedPlanInfo(userId,item.planUrl);
+}
+async function uploadPhoto(userId,mime,buffer){
+  const id=integer(userId);
+  if(!id)throw inputError('Select a business before uploading photos');
+  const result=await pool.query(`SELECT bp.id FROM business_profiles bp JOIN users u ON u.id=bp.user_id WHERE u.id=$1 AND u.role='business' LIMIT 1`,[id]);
+  if(!result.rows.length)throw inputError('Business profile not found','BUSINESS_PROFILE_NOT_FOUND');
+  return imageService.saveProjectImage(id,mime,buffer);
+}
 async function list({page=1,pageSize=20}={}){
   const n=Math.max(1,Math.min(100000,integer(page)||1));
   const size=Math.max(1,Math.min(50,integer(pageSize)||20));
@@ -63,7 +81,8 @@ async function list({page=1,pageSize=20}={}){
     JOIN users u ON u.id=bp.user_id
     ORDER BY p.updated_at DESC,p.id DESC LIMIT $1 OFFSET $2
   `,[size,(n-1)*size]);
-  return {data:result.rows,pagination:{page:n,pageSize:size,total,totalPages:Math.ceil(total/size),hasNextPage:n*size<total,hasPreviousPage:n>1}};
+  const data=await Promise.all(result.rows.map(async row=>({...row,cover_image_display_url:row.cover_image_url?await imageService.displayUrl(row.cover_image_url):''})));
+  return {data,pagination:{page:n,pageSize:size,total,totalPages:Math.ceil(total/size),hasNextPage:n*size<total,hasPreviousPage:n>1}};
 }
 async function save(payload,{id=null}={}){
   if(!payload||typeof payload!=='object'||Array.isArray(payload))throw inputError('Invalid project payload');
@@ -76,6 +95,7 @@ async function save(payload,{id=null}={}){
     `,[userId])).rows[0];
     if(!business)throw inputError('The selected business profile is unavailable','BUSINESS_PROFILE_NOT_FOUND');
     const item=normalized(payload);
+    validateStorageOwnership(userId,item);
     const result=await pool.query(`
       INSERT INTO business_profile_projects
       (business_profile_id,title,project_type,description,location_text,completion_year,area_text,
@@ -91,6 +111,9 @@ async function save(payload,{id=null}={}){
   const current=(await pool.query('SELECT * FROM business_profile_projects WHERE id=$1',[projectId])).rows[0];
   if(!current)throw inputError('Project not found','COMPLETED_PROJECT_NOT_FOUND');
   const item=normalized(payload,current);
+  const owner=(await pool.query('SELECT user_id FROM business_profiles WHERE id=$1',[current.business_profile_id])).rows[0];
+  if(!owner)throw inputError('Business profile unavailable','BUSINESS_PROFILE_NOT_FOUND');
+  validateStorageOwnership(owner.user_id,item);
   const result=await pool.query(`
     UPDATE business_profile_projects SET
       title=$2,project_type=$3,description=$4,location_text=$5,completion_year=$6,area_text=$7,
@@ -103,4 +126,4 @@ async function save(payload,{id=null}={}){
     item.budgetText,item.coverImageUrl,JSON.stringify(item.imageUrls),item.packageName,item.videoUrl,item.planUrl,item.isPublished]);
   return result.rows[0];
 }
-module.exports={list,save};
+module.exports={list,save,uploadPhoto};
