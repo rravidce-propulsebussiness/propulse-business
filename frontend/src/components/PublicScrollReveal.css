@@ -1,0 +1,23 @@
+/* Progressive enhancement: content is visible without JS or IntersectionObserver. */
+.premium-public [data-scroll-reveal="pending"]{
+  opacity:0;
+  transform:translate3d(0,26px,0);
+  transition:
+    opacity .62s cubic-bezier(.22,1,.36,1),
+    transform .72s cubic-bezier(.22,1,.36,1);
+}
+.premium-public [data-scroll-reveal="visible"]{
+  opacity:1;
+  transform:translate3d(0,0,0);
+  transition:
+    opacity .62s cubic-bezier(.22,1,.36,1),
+    transform .72s cubic-bezier(.22,1,.36,1);
+}
+/* Skip the effect for accessibility and users with motion sensitivity. */
+@media(prefers-reduced-motion:reduce){
+  .premium-public [data-scroll-reveal]{
+    opacity:1!important;
+    transform:none!important;
+    transition:none!important;
+  }
+}
