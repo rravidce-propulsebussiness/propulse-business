@@ -33,6 +33,7 @@ assert.equal(publicWrittenRequirement({ requirement: generated }, {
 const read = rel => fs.readFileSync(path.join(__dirname, '..', rel), 'utf8');
 const intake = read('src/services/publicLeadIntakeService.js');
 const reader = read('src/services/leadReadService.js');
+const purchased = read('src/services/leadPurchaseService.js');
 const gate = read('src/services/leadQualityGateService.js');
 const migration = read('src/database/migrations/20261008_zzzzzz_public_requirement_text_only.sql');
 assert(!intake.includes('buildSummary(flow, safeAnswers)'), 'Public submissions must not synthesize Requirement from all answers');
@@ -40,6 +41,7 @@ assert(intake.includes('customFields._intake.writtenRequirement = leadFields.req
 assert(intake.includes('detailedFields._intake.writtenRequirement = leadFields.requirement'));
 assert(intake.includes("question.questionType === 'text'"));
 assert(reader.includes('publicWrittenRequirement(row,custom)'), 'All API read paths should normalize old public leads');
+assert(purchased.includes('publicWrittenRequirement(row,raw_custom_fields)'), 'Purchased lead list must also show real written requirements');
 assert(gate.includes("t.source='public_requirement'"), 'Structured forms should count for quality even without free text');
 assert(migration.includes("NEW.source='public_requirement' AND normalized_requirement=''"),
   'Blank public free text must not collapse separate projects by matching contact');
