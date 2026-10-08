@@ -4,6 +4,7 @@ import { authRequest, saveSession, getUser } from '../utils/auth'
 import UserHeader from '../components/UserHeader'
 import {PACKAGE_PRICE_UNITS} from '../utils/packagePricing'
 import ProfileBrochureField from '../components/ProfileBrochureField'
+import ProfessionalProjectQuotes from '../components/ProfessionalProjectQuotes'
 import './Profile.css'
 import {playSound} from '../utils/soundEffects'
 
@@ -419,6 +420,7 @@ export default function Profile(){
                 </article>)}
               </div>}
           </section>
+          <ProfessionalProjectQuotes plans={plans}/>
           </>}
 
           {activeSection==='plans'&&<>
