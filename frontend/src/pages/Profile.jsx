@@ -135,6 +135,8 @@ export default function Profile(){
   function addPlan(){const item=emptyPlan();setPlans(current=>[...current,item]);setExpandedPlan('draft-'+item._draftKey);setMessage('')}
   function projectKey(item){return item.id?'project-'+item.id:'draft-'+item._draftKey}
   function planKey(item){return item.id?'plan-'+item.id:'draft-'+item._draftKey}
+  function revealProjectError(index,message){setExpandedProject(projectKey(projects[index]));navigate('/profile?tab=projects');setError(message);requestAnimationFrame(()=>document.getElementById('profile-tabs')?.scrollIntoView({block:'start',behavior:'smooth'}))}
+  function revealPlanError(index,message){setExpandedPlan(planKey(plans[index]));navigate('/profile?tab=plans');setError(message);requestAnimationFrame(()=>document.getElementById('profile-tabs')?.scrollIntoView({block:'start',behavior:'smooth'}))}
   function update(field,value){setForm(x=>({...x,[field]:value}));setMessage('')}
   function updateService(index,field,value){setServiceSelections(items=>items.map((x,i)=>i!==index?x:field==='industryId'?{industryId:value,serviceId:'',subserviceId:''}:field==='serviceId'?{...x,serviceId:value,subserviceId:''}:{...x,[field]:value}));setMessage('')}
   function updateLocation(index,field,value){setLocationSelections(items=>items.map((x,i)=>i!==index?x:field==='stateId'?{stateId:value,cityId:''}:{...x,cityId:value}));setMessage('')}
@@ -292,12 +294,18 @@ export default function Profile(){
     if(!form.name.trim()||!form.email.trim()||!form.phone.trim()||!form.businessName.trim()||!form.businessDetails.trim())return setError('Complete all business information before saving.')
     if(!serviceSelections.length||serviceSelections.some(x=>!x.industryId||!x.serviceId))return setError('Complete every service selection.')
     if(!locationSelections.length||locationSelections.some(x=>!x.stateId||!x.cityId))return setError('Complete every location selection.')
-    if(projects.some(item=>!item.title.trim()))return setError('Every completed project needs a title.')
-    if(projects.some(item=>item.isPublished&&!['Construction','Interior Design','Real Estate'].includes(item.projectType)))return setError('Select Construction, Interior Design or Real Estate for every published project before saving.');
-    if(projects.some(item=>item.isPublished&&(!Number.isInteger(Number(item.completionYear))||Number(item.completionYear)<1950||Number(item.completionYear)>new Date().getFullYear())))return setError('To publish a completed project, enter its actual completion year. Uncheck Public to save unfinished work privately.')
-    if(plans.some(item=>!item.title.trim()))return setError('Every service plan needs a title.')
-    if(plans.some(item=>item.isPublished&&!INDUSTRY_OPTIONS.some(option=>option.value===item.industry)))return setError('Choose an industry for every published package.')
-    if(projects.some(item=>item.packageName&&!plans.some(plan=>plan.isPublished&&plan.title===item.packageName&&plan.industry===projectIndustry(item.projectType))))return setError('A project can only link to a published package from the same industry. Review its related package.')
+    const untitledProject=projects.findIndex(item=>!item.title.trim())
+    if(untitledProject>=0)return revealProjectError(untitledProject,'Every completed project needs a title.')
+    const unclassifiedProject=projects.findIndex(item=>item.isPublished&&!['Construction','Interior Design','Real Estate'].includes(item.projectType))
+    if(unclassifiedProject>=0)return revealProjectError(unclassifiedProject,'Select Construction, Interior Design or Real Estate for every published project before saving.')
+    const missingYearProject=projects.findIndex(item=>item.isPublished&&(!Number.isInteger(Number(item.completionYear))||Number(item.completionYear)<1950||Number(item.completionYear)>new Date().getFullYear()))
+    if(missingYearProject>=0)return revealProjectError(missingYearProject,'To publish a completed project, enter its actual completion year. Uncheck Public to save unfinished work privately.')
+    const untitledPlan=plans.findIndex(item=>!item.title.trim())
+    if(untitledPlan>=0)return revealPlanError(untitledPlan,'Every service package needs a name.')
+    const missingIndustryPlan=plans.findIndex(item=>item.isPublished&&!INDUSTRY_OPTIONS.some(option=>option.value===item.industry))
+    if(missingIndustryPlan>=0)return revealPlanError(missingIndustryPlan,'Select an industry for this published package before saving. Existing packages without an industry must be classified.')
+    const mismatchedPackageProject=projects.findIndex(item=>item.packageName&&!plans.some(plan=>plan.isPublished&&plan.title===item.packageName&&plan.industry===projectIndustry(item.projectType)))
+    if(mismatchedPackageProject>=0)return revealProjectError(mismatchedPackageProject,'A project can only link to a published package from the same industry. Review the linked package.')
     try{
       setSaving(true)
       const result=await authRequest('/profile',{method:'PUT',body:JSON.stringify({
