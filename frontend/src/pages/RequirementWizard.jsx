@@ -551,7 +551,7 @@ export default function RequirementWizard({ flowKey, onCompletionChange, embedde
       return
     }
 
-    if (projectQuote && !(projectQuote.packages || []).some(plan => plan.title === projectQuote.preferredPackage)) {
+    if (projectQuote && projectQuote.preferredPackage && !(projectQuote.packages || []).some(plan => plan.title === projectQuote.preferredPackage)) {
       setState(current => ({ ...current, error: 'Choose one of this professional’s published packages to continue.' }))
       jump(flowKey==='design'?'irx-requirements':'professional-quote-package-title')
       return
@@ -569,7 +569,7 @@ export default function RequirementWizard({ flowKey, onCompletionChange, embedde
       if (projectQuote) {
         // Use the exact public requirements for each industry, but create only a
         // project-specific professional quotation request, not a marketplace lead.
-        // but submits ONLY to the chosen professional (not the generic lead market).
+        // This is an independently trackable quote lead linked to the professional.
         const detailRows = questions
           .filter(question => !['finish_quality', locationQuestion?.questionKey].includes(question.questionKey))
           .map(question => [question.label.replace(/\?$/, ''), fieldLabel(question, answers)])
