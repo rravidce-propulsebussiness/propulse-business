@@ -65,7 +65,14 @@ assert.equal(publicLead.custom_fields.Bedrooms, '3 BHK', 'Legacy lead answers sh
 assert.equal(publicLead.custom_fields['Interior Scope'], 'End-to-End Interiors');
 assert.equal(publicLead.custom_fields.Timeline, '1–3 months');
 assert.equal(publicLead.property_type, 'Villa');
-assert.equal(publicLead.requirement, '', 'A generated project questionnaire is not a written Requirement');
+assert.equal(publicLead.requirement, 'A pooja room and a small study',
+  'Explicitly entered additional requirement must be shown without the rest of the form');
+const withoutNote = {
+  ...oldLead,
+  requirement: oldLead.requirement.replace(/\\nAdditional requirement:.*$/, '')
+};
+assert.equal(maskLead(withoutNote).requirement, '',
+  'Without an entered requirement, a structured project quotation has no Requirement text');
 assert.ok(publicLead.customer_phone !== oldLead.customer_phone);
 assert.ok(publicLead.customer_email !== oldLead.customer_email);
 assert.ok(!('_project_origin' in publicLead.custom_fields));
