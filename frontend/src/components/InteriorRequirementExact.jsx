@@ -194,8 +194,8 @@ export default function InteriorRequirementExact(props) {
     ...(showBhk ? [['Bedrooms', bhk ? answerLabel(bhk, answers[bhk.questionKey]) : (answers.bhk || '—')]] : []),
     ['Interior Scope', scopeMode === 'end_to_end' ? 'Full Home Interiors' : scopeMode === 'selected_work' ? 'Selected Work' : '—'],
     ...(scopeMode === 'selected_work' ? [['Selected Work', selectedWorkLabel]] : []),
-    ['Interior Package', projectQuote ? selectedProfessionalPlan?.title || '—' : selectedPackage ? selectedPackage.name : '—'],
-    ...(projectQuote ? [['Starting Rate', selectedProfessionalPlan ? formatPublishedPackagePrice(selectedProfessionalPlan.price_from,selectedProfessionalPlan.price_unit) : '—']] : []),
+    ['Interior Package', projectQuote ? selectedProfessionalPlan?.title || 'Custom quotation' : selectedPackage ? selectedPackage.name : '—'],
+    ...(projectQuote ? [['Starting Rate', selectedProfessionalPlan ? formatPublishedPackagePrice(selectedProfessionalPlan.price_from,selectedProfessionalPlan.price_unit) : 'To be quoted']] : []),
     ['Budget', answerLabel(budget, budget ? answers[budget.questionKey] : '')],
     ['Timeline', answerLabel(timeline, timeline ? answers[timeline.questionKey] : '')],
     ['Design Style', answerLabel(style, style ? answers[style.questionKey] : '')],
@@ -357,9 +357,9 @@ export default function InteriorRequirementExact(props) {
                 <div><b>{projectQuote ? 'Choose a Professional Package' : 'Choose Interior Package'}</b></div>
                 {projectQuote ? <Link to={'/experts/'+projectQuote.project.businessProfileId}>View professional packages <Icon name="arrow" size={13}/></Link> : <Link to="/packages#interior">Compare packages <Icon name="arrow" size={13}/></Link>}
               </div>
-              {projectQuote && professionalPackages.length===0 && <p className="irx-project-package-empty" role="status">This professional has not published any packages. Please request a callback or check back when package pricing is available.</p>}
+              {projectQuote && professionalPackages.length===0 && <p className="irx-project-package-empty" role="status">No interior packages are published yet. You can submit your requirements and request a custom quotation.</p>}
               <div className="irx-package-grid">
-                {projectQuote ? professionalPackages.map(item=>{
+                {projectQuote ? <><button type="button" className={!projectQuote.preferredPackage?'active':''} aria-pressed={!projectQuote.preferredPackage} onClick={()=>projectQuote.setPreferredPackage('')}><div className="irx-package-top"><span>CUSTOM INTERIOR QUOTE</span>{!projectQuote.preferredPackage&&<i>Selected</i>}</div><div className="irx-package-name"><b>Discuss your requirements</b><strong>Custom pricing</strong></div><p>Get a project-specific quotation from the selected professional, even if no packages are published.</p><em>{!projectQuote.preferredPackage?'Selected':'Request custom quote'}</em></button>{professionalPackages.map(item=>{
                   const active=projectQuote.preferredPackage===item.title
                   return <button type="button" key={item.id||item.title} className={active?'active':''} aria-pressed={active} onClick={()=>projectQuote.setPreferredPackage(item.title)}>
                     <div className="irx-package-top"><span>PROFESSIONAL PACKAGE</span>{active&&<i>Selected</i>}</div>
@@ -368,7 +368,7 @@ export default function InteriorRequirementExact(props) {
                     {Array.isArray(item.inclusions)&&item.inclusions.length>0&&<div className="irx-package-highlights">{item.inclusions.slice(0,3).map((detail,index)=><span key={index}>✓ {detail}</span>)}</div>}
                     <em>{active?'Selected':'Select Package'}</em>
                   </button>
-                }) : INTERIOR_PACKAGES.map(item=>{
+                })}</> : INTERIOR_PACKAGES.map(item=>{
                   const active=selectedPackageKey===item.key
                   return <button type="button" key={item.key} className={active?'active':''} onClick={()=>setAnswer(finishQuality?.questionKey||'finish_quality',item.key)}>
                     <div className="irx-package-top"><span>{item.eyebrow}</span>{item.badge&&<i>{item.badge}</i>}</div>
