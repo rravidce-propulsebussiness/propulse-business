@@ -1,6 +1,20 @@
 import { useEffect, useState } from 'react'
 import './HeroBlueprintAnimation.css'
 
+const stockScenes = {
+  plot: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1100&q=85',
+  build: 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=1100&q=85',
+  home: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1100&q=85',
+  interior: 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=1100&q=85',
+}
+
+// Once four optimized images are published to R2, set VITE_HERO_MEDIA_BASE_URL
+// to their verified public base URL. Until then, use the existing photographs.
+const heroMediaBase = (import.meta.env.VITE_HERO_MEDIA_BASE_URL || '').trim().replace(/\\/$/, '')
+const sceneSource = (name) => heroMediaBase
+  ? `${heroMediaBase}/${name}.webp`
+  : stockScenes[name]
+
 const stages = [
   ['PLOT', 'Find the right plot'],
   ['BUILD', 'Build it right'],
@@ -19,10 +33,10 @@ export default function HeroBlueprintAnimation() {
     <div className="pp-artcol">
       <div className="pp-art" data-p={stage}>
         <div className="pp-photo-scenes" aria-hidden="true">
-          <div className="pp-photo-scene pp-photo-plot" style={{ backgroundImage: 'url(https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1100&q=85)' }} />
-          <div className="pp-photo-scene pp-photo-build" style={{ backgroundImage: 'url(https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=1100&q=85)' }} />
-          <div className="pp-photo-scene pp-photo-home" style={{ backgroundImage: 'url(https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1100&q=85)' }} />
-          <div className="pp-photo-scene pp-photo-interior" style={{ backgroundImage: 'url(https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=1100&q=85)' }} />
+          <div className="pp-photo-scene pp-photo-plot" style={{ backgroundImage: `url("${sceneSource('plot')}")` }} />
+          <div className="pp-photo-scene pp-photo-build" style={{ backgroundImage: `url("${sceneSource('build')}")` }} />
+          <div className="pp-photo-scene pp-photo-home" style={{ backgroundImage: `url("${sceneSource('home')}")` }} />
+          <div className="pp-photo-scene pp-photo-interior" style={{ backgroundImage: `url("${sceneSource('interior')}")` }} />
           <div className="pp-photo-vignette" />
         </div>
         <svg className="pp-photo-fallback" viewBox="0 0 520 440" fill="none" role="img" aria-label="Animated plot, construction, completed house and furnished interior">
