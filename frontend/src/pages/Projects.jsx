@@ -121,7 +121,14 @@ function normalizeProject(project, index) {
 }
 
 function projectPhotos(project){
-  return [...new Set([project.image,...(Array.isArray(project.images)?project.images:[])].filter(Boolean))]
+  const photos=[project.image,...(Array.isArray(project.images)?project.images:[])].filter(Boolean)
+  const seen=new Set()
+  return photos.filter(photo=>{
+    const key=photo.split('?')[0]
+    if(seen.has(key))return false
+    seen.add(key)
+    return true
+  })
 }
 
 function playableProjectVideo(url){
