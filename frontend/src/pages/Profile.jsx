@@ -85,6 +85,7 @@ export default function Profile(){
   const [plans,setPlans]=useState([])
   const [directoryStatus,setDirectoryStatus]=useState(null)
   const [videoUploads,setVideoUploads]=useState({})
+  const [videoProgress,setVideoProgress]=useState({})
   const [imageUploads,setImageUploads]=useState({})
   const [planUploads,setPlanUploads]=useState({})
   const [brochureUploads,setBrochureUploads]=useState({})
@@ -174,6 +175,24 @@ export default function Profile(){
     }finally{setImageUploads(v=>({...v,[index]:false}));}
   }
 
+  function sendVideoPart(url,blob,{contentType,onProgress,needEtag=false}={}){
+    return new Promise((resolve,reject)=>{
+      const request=new XMLHttpRequest()
+      request.open('PUT',url)
+      if(contentType)request.setRequestHeader('Content-Type',contentType)
+      request.upload.onprogress=event=>{if(event.lengthComputable)onProgress?.(event.loaded)}
+      request.onerror=()=>reject(new Error('Upload connection failed. Check your internet and R2 CORS settings, then retry.'))
+      request.ontimeout=()=>reject(new Error('Video upload timed out. Please retry.'))
+      request.onload=()=>{
+        if(request.status<200||request.status>=300)return reject(new Error('Video storage rejected the upload (HTTP '+request.status+').'))
+        const etag=request.getResponseHeader('ETag')
+        if(needEtag&&!etag)return reject(new Error('R2 must expose the ETag header in its CORS policy to support large video uploads.'))
+        resolve(etag)
+      }
+      request.send(blob)
+    })
+  }
+
   async function uploadProjectVideo(index,file){
     if(!file)return
     const extension=String(file.name||'').toLowerCase().split('.').pop()
@@ -183,25 +202,55 @@ export default function Profile(){
       setError('Only MP4, MOV and WebM project videos are supported.')
       return
     }
-    if(file.size>50*1024*1024){
-      setError('Project videos must be 50 MB or smaller.')
-      return
-    }
+    let session=null
+    setVideoUploads(current=>({...current,[index]:true}))
+    setVideoProgress(current=>({...current,[index]:0}))
+    setError('');setMessage('')
     try{
-      setVideoUploads(current=>({...current,[index]:true}))
-      setError('');setMessage('')
-      const result=await authRequest('/profile/projects/video',{
-        method:'POST',
-        headers:{'Content-Type':mime},
-        body:file,
-        timeoutMs:120000,
+      session=await authRequest('/profile/projects/video/uploads/start',{
+        method:'POST',body:JSON.stringify({mimeType:mime,size:file.size}),timeoutMs:45000,
       })
-      setProjects(items=>items.map((item,i)=>i===index?{...item,videoUrl:result.url||'',videoDisplayUrl:result.displayUrl||result.url||'',videoPublishedAt:result.uploadedAt||''}:item))
+      const updateProgress=bytes=>setVideoProgress(current=>({...current,[index]:Math.min(99,Math.round(100*bytes/file.size))}))
+      let parts=[]
+      if(session.mode==='single'){
+        await sendVideoPart(session.uploadUrl,file,{contentType:mime,onProgress:updateProgress})
+      }else{
+        const chunkSize=session.chunkSize
+        if(!Number.isSafeInteger(chunkSize)||chunkSize<5*1024*1024)throw Error('Invalid R2 upload chunk size.')
+        const total=Math.ceil(file.size/chunkSize)
+        for(let number=1;number<=total;number++){
+          const offset=(number-1)*chunkSize
+          const signed=await authRequest('/profile/projects/video/uploads/part-url',{
+            method:'POST',body:JSON.stringify({reference:session.reference,uploadId:session.uploadId,partNumber:number}),
+            timeoutMs:30000,
+          })
+          const chunk=file.slice(offset,Math.min(file.size,offset+chunkSize))
+          const etag=await sendVideoPart(signed.uploadUrl,chunk,{
+            onProgress:loaded=>updateProgress(offset+loaded),needEtag:true,
+          })
+          parts.push({partNumber:number,etag})
+        }
+      }
+      const result=await authRequest('/profile/projects/video/uploads/finish',{
+        method:'POST',body:JSON.stringify({
+          reference:session.reference,uploadId:session.uploadId||null,
+          parts,mimeType:mime,size:file.size,
+        }),timeoutMs:120000,
+      })
+      setProjects(items=>items.map((item,i)=>i===index?{
+        ...item,videoUrl:result.url||'',videoDisplayUrl:result.displayUrl||result.url||'',videoPublishedAt:result.uploadedAt||'',
+      }:item))
+      setVideoProgress(current=>({...current,[index]:100}))
       playSound('upload')
-      setMessage('Video uploaded. Save changes to publish it on your profile and Projects page.')
+      setMessage('Project video uploaded to cloud storage. Save changes to publish it.')
     }catch(err){
+      if(session?.uploadId){
+        void authRequest('/profile/projects/video/uploads/abort',{
+          method:'POST',body:JSON.stringify({reference:session.reference,uploadId:session.uploadId}),timeoutMs:15000,
+        }).catch(()=>{})
+      }
       playSound('warning')
-      setError(err.message||'Unable to upload project video.')
+      setError(err.message||'Unable to upload project video. Please retry.')
     }finally{
       setVideoUploads(current=>({...current,[index]:false}))
     }
