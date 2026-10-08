@@ -339,3 +339,17 @@
 @media(max-width:800px){
   .profile-save{position:static;bottom:auto;background:transparent;backdrop-filter:none}
 }
+
+
+/* Business-owned multi-photo project portfolio upload */
+.profile-project-gallery-field{grid-column:1/-1;display:grid;gap:12px;padding:14px;border:1px solid #dce5ec;border-radius:13px;background:#f9fbfd}
+.profile-gallery-upload{display:grid;gap:4px;position:relative;padding:14px 16px;border:1px dashed #c78b6a;border-radius:10px;background:#fff8f3;color:#a94f27;cursor:pointer}
+.profile-gallery-upload span{font-size:13px;font-weight:850}
+.profile-gallery-upload small,.profile-gallery-help{font-size:12px;color:#718597}
+.profile-gallery-upload input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer}
+.profile-gallery-upload:focus-within{outline:2px solid #de642f;outline-offset:3px}
+.profile-gallery-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:9px}
+.profile-gallery-photo{position:relative;height:92px;border-radius:9px;overflow:hidden;background:#eaf0f5;border:1px solid #dae4ec}
+.profile-gallery-photo img{width:100%;height:100%;object-fit:cover;display:block}
+.profile-gallery-photo button{position:absolute;top:5px;right:5px;display:grid;place-items:center;width:25px;height:25px;border-radius:50%;border:none;background:rgba(10,29,46,.8);color:#fff;font-size:18px;cursor:pointer}
+.profile-gallery-help{line-height:1.5}
