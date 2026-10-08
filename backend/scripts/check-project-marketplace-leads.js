@@ -1,0 +1,48 @@
+const assert=require('node:assert/strict');
+const fs=require('node:fs');
+const path=require('node:path');
+const root=path.resolve(__dirname,'../..');
+const read=p=>fs.readFileSync(path.join(root,p),'utf8');
+
+const migration=read('backend/src/database/migrations/20261008_project_requests_marketplace_leads.sql');
+const bridge=read('backend/src/services/projectMarketplaceLeadService.js');
+const quote=read('backend/src/services/professionalProjectQuoteService.js');
+const callback=read('backend/src/services/projectCallbackService.js');
+const detail=read('frontend/src/pages/ProjectDetail.jsx');
+const wizard=read('frontend/src/pages/RequirementWizard.jsx');
+const interiors=read('frontend/src/components/InteriorRequirementExact.jsx');
+const property=read('frontend/src/components/RealEstateRequirementExact.jsx');
+const readService=read('backend/src/services/leadReadService.js');
+const adminRoute=read('backend/src/routes/adminRoutes.js');
+const controller=read('backend/src/controllers/adminCallbackController.js');
+
+for(const table of ['professional_project_quote_requests','project_callback_requests'])
+  assert.match(migration,new RegExp('ALTER TABLE '+table));
+for(const column of ['marketplace_lead_id','marketplace_sync_status','marketplace_pincode','marketplace_sync_error'])
+  assert.match(migration,new RegExp(column));
+assert.match(bridge,/leads\.createLead\(fields\)/);
+assert.match(bridge,/flows\.getPublishedFlow\(key\)/);
+assert.match(bridge,/pins\.detectPincode\(pin\)/);
+assert.match(bridge,/intakeSubmissionKey:'project_'\+kind\+'_'\+id/);
+assert.match(bridge,/contactConsentVersion:'project-multi-professional-consent-v1'/);
+assert.match(bridge,/accessStrategy:'shared',buyerCapacity:3/);
+assert.match(bridge,/marketplace_sync_status='not_requested'/);
+assert.match(bridge,/await updateLink\(kind,id,\{leadId/);
+assert.match(bridge,/status:'review_required'/);
+assert.match(quote,/marketplace\.sync\('quote'/);
+assert.match(callback,/marketplace\.sync\('callback'/);
+assert.match(quote,/input\.marketplaceConsent!==true/);
+assert.match(callback,/input\.marketplaceConsent!==true/);
+assert.match(quote,/marketplaceLeadId:market\.leadId/);
+assert.match(callback,/marketplaceLeadId:market\.leadId/);
+assert.match(wizard,/pincode: locationQuestion/);
+assert.match(wizard,/marketplaceConsent,/);
+assert.match(wizard,/rq-marketplace-consent/);
+assert.match(interiors,/project-marketplace-consent/);
+assert.match(property,/project-marketplace-consent/);
+assert.match(detail,/marketplaceConsent:callbackForm\.consent/);
+assert.match(detail,/Project PIN code<input required/);
+assert.match(readService,/professional_project_quote','professional_project_callback/);
+assert.match(adminRoute,/\/project-marketplace\/:kind\/:id\/retry/);
+assert.match(controller,/marketplace\.sync\(kind,id\)/);
+console.log('Project quotation and callback marketplace lead source checks passed.');
