@@ -187,6 +187,26 @@ export default function Projects() {
     return () => { active = false }
   }, [])
 
+  // Refresh the first page quietly so newly published professional images/videos surface.
+  useEffect(()=>{
+    if(page!==1)return undefined
+    let active=true
+    const refresh=async()=>{
+      if(document.visibilityState==='hidden')return
+      try{
+        const value=await publicRequest('/experts/projects?page=1&pageSize='+PAGE_SIZE)
+        if(!active)return
+        const rows=Array.isArray(value)?value:Array.isArray(value?.data)?value.data:[]
+        setProfessionalProjects(rows.map(normalizeProject))
+        setHasNext(Boolean(value?.pagination?.hasNextPage))
+      }catch{/* Keep the existing public gallery visible on transient network failure. */}
+    }
+    const handleFocus=()=>{if(document.visibilityState==='visible')refresh()}
+    const timer=window.setInterval(refresh,120000)
+    document.addEventListener('visibilitychange',handleFocus)
+    return()=>{active=false;window.clearInterval(timer);document.removeEventListener('visibilitychange',handleFocus)}
+  },[page])
+
   async function loadMore() {
     if (loadingMore || !hasNext) return
     setLoadingMore(true)
