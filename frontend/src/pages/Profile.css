@@ -368,29 +368,160 @@
 .profile-callback-contact a+a{background:#133a55}
 
 
-/* Professional-owned project quote lead workflow */
-.profile-project-quotes{margin-top:22px}
-.profile-project-quote-grid{display:grid;gap:17px}
-.profile-project-quote-card{padding:22px;border-radius:17px;border:1px solid #e1e7ec;background:linear-gradient(140deg,#fff,#fffaf6);box-shadow:0 12px 32px rgba(15,48,71,.055)}
-.profile-quote-heading{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;padding-bottom:16px;border-bottom:1px solid #e8e9e9}
-.profile-quote-heading>div{display:grid;gap:5px;min-width:0}
-.profile-quote-heading>div>span{color:#d95b2b;font-size:12px;font-weight:850;letter-spacing:.07em}
-.profile-quote-heading h3{margin:0;color:#153b57;font-size:19px;line-height:1.35}
-.profile-quote-heading strong{color:#35576a;font-size:14px}
-.profile-quote-heading small{color:#778e9c;font-size:12px}
-.profile-quote-status{padding:7px 12px;border-radius:999px;background:#fff0e7;color:#ba4f23;font-size:12px;font-weight:800;text-transform:capitalize;white-space:nowrap}
-.profile-quote-requirements{padding:16px 0;display:grid;gap:8px}
-.profile-quote-requirements p{margin:0;color:#425d70;font-size:13px;line-height:1.65;overflow-wrap:anywhere}
-.profile-quote-requirements b{color:#1a425e}
-.profile-quote-requirements small{font-size:12px;color:#788b9a}
-.profile-quote-editor{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;padding:17px;border-radius:12px;background:#f4f8fa;border:1px solid #e1e9ee}
-.profile-quote-editor label{display:grid;gap:6px;color:#3b5a6e;font-size:12px;font-weight:750;min-width:0}
-.profile-quote-editor :is(input,textarea){min-width:0;width:100%;min-height:42px;padding:10px 12px;background:#fff;color:#133b58;border:1px solid #d6e2e8;border-radius:9px;font:inherit;font-size:13px}
-.profile-quote-editor :is(input,textarea):focus{outline:2px solid rgba(230,91,38,.25);border-color:#e65b26}
-.profile-quote-editor .quote-wide{grid-column:1/-1}
-.profile-quote-actions{display:flex;flex-wrap:wrap;gap:10px}
-.profile-quote-actions button{min-height:42px;padding:10px 16px;border-radius:9px;background:#fff;border:1px solid #d7e2e9;color:#19415c;font-size:12px;font-weight:800;cursor:pointer}
-.profile-quote-actions button+button{background:#e65b26;color:#fff;border-color:#e65b26}
-.profile-quote-actions button:disabled{opacity:.6;cursor:wait}
-.profile-quote-notice{margin:0;font-size:12px;color:#346d54;font-weight:750}
-@media(max-width:620px){.profile-project-quote-card{padding:15px}.profile-quote-editor{grid-template-columns:1fr;padding:12px}.profile-quote-heading{flex-wrap:wrap}}
+/* 2026 premium professional editor — scoped to profile only, retaining ProPulse colors. */
+.profile-page{max-width:1460px;padding:30px clamp(16px,3vw,42px) 76px;color:#103953}
+.profile-hero{
+  padding:27px 34px;
+  min-height:0;
+  border-radius:20px;
+  box-shadow:0 18px 42px rgba(13,41,67,.13);
+}
+.profile-hero-title h1,.profile-hero h1{letter-spacing:-.04em}
+.profile-hero-meta{gap:9px}
+.profile-directory-banner{
+  padding:22px 27px;margin:18px 0 20px;border-radius:17px;
+  box-shadow:0 11px 26px rgba(12,42,66,.05);
+}
+.profile-directory-banner h3{font-size:18px}
+.profile-directory-banner p{font-size:13px}
+.profile-directory-actions a{display:inline-flex;align-items:center;min-height:41px;padding:10px 15px;border-radius:10px}
+.profile-tabs{
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+  margin-bottom:22px;padding:9px 10px;
+  border-radius:16px;border:1px solid #dae5ed;
+  background:#fff;box-shadow:0 12px 30px #102f4710;
+  scroll-margin-top:125px;
+}
+.profile-tabs button,.profile-tabs .profile-tab-link{
+  display:inline-flex;align-items:center;justify-content:center;
+  min-height:42px;padding:10px 17px;
+  border:1px solid transparent;border-radius:10px;
+  background:transparent;color:#4c6980;
+  font:800 13px/1.4 Inter,Arial,sans-serif;
+  text-decoration:none;white-space:nowrap;cursor:pointer;
+}
+.profile-tabs button.active,.profile-tabs button:hover,
+.profile-tabs .profile-tab-link:hover{background:#fff0e7;border-color:#f9d1bd;color:#d45525;text-decoration:none}
+.profile-tabs :is(button,a):focus-visible{outline:3px solid #e5703a;outline-offset:2px}
+.profile-form{grid-template-columns:minmax(0,1fr) minmax(255px,315px);gap:22px}
+.profile-main-column,.profile-side-column,.profile-panel,.profile-showcase-card{min-width:0}
+.profile-panel{padding:30px;border-radius:19px;border-color:#dce7ee;box-shadow:0 16px 35px #15324b0c}
+.profile-side-column{top:115px;gap:17px}
+.profile-side-card{padding:22px;border-radius:17px;box-shadow:0 10px 25px #15324b0d}
+.profile-progress-card{gap:16px}
+.profile-progress-card h3{font-size:17px}
+.profile-progress-card p{font-size:13px}
+.profile-side-card li{font-size:13px}
+.profile-showcase-list{gap:18px}
+.profile-showcase-card,.profile-showcase-card.compact{
+  padding:23px 24px;
+  background:#fff;
+  border:1px solid #dce5ec;
+  border-radius:16px;
+  box-shadow:0 10px 23px rgba(20,48,74,.045);
+}
+.profile-showcase-card-head{
+  align-items:center;margin-bottom:22px;padding-bottom:18px;
+  border-bottom:1px solid #e6edf2;
+}
+.profile-showcase-card-head h3{font-size:20px;line-height:1.35}
+.profile-showcase-card-head>div:last-child{gap:16px}
+.profile-showcase-card-head .row-remove{min-height:34px;padding:6px 10px;border:1px solid #f5d9d4;border-radius:8px}
+.profile-showcase-grid{gap:19px 20px;grid-template-columns:repeat(2,minmax(0,1fr))}
+.profile-showcase-grid label{
+  min-width:0;display:grid;align-content:start;gap:9px;
+  font-size:13px;line-height:1.45;color:#36556e;font-weight:800;
+}
+.profile-showcase-grid :is(input,textarea,select){
+  display:block;width:100%;min-width:0;box-sizing:border-box;
+  border:1px solid #d7e2ea;border-radius:10px;
+  background:#fbfcfd;padding:13px 14px;
+  color:#173950;font:600 14px/1.55 Inter,Arial,sans-serif;
+  box-shadow:inset 0 1px 1px #1f405006;
+}
+.profile-showcase-grid input{min-height:48px}
+.profile-showcase-grid textarea{min-height:115px;resize:vertical}
+.profile-showcase-grid :is(input,textarea,select)::placeholder{
+  color:#92a2af;opacity:1;font-weight:400;
+}
+.profile-showcase-grid :is(input,textarea,select):focus-visible{
+  outline:2px solid rgba(225,99,49,.60);outline-offset:1px;
+  border-color:#e57845;background:#fff;
+}
+.profile-showcase-grid label>small{color:#8298a8;font-size:12px;font-weight:500}
+.profile-brochure-field{
+  margin-top:22px;padding:20px 22px;
+  background:linear-gradient(110deg,#f7fbff,#fff8f4);
+  border:1px solid #dce8f0;border-radius:14px;
+}
+.profile-brochure-head{display:flex;align-items:center;gap:13px}
+.profile-brochure-mark{
+  display:grid;place-items:center;flex:0 0 44px;
+  height:44px;border-radius:12px;
+  background:#fff0e6;color:#d85e28;font-size:25px;
+}
+.profile-brochure-head>div{flex:1;min-width:0}
+.profile-brochure-head strong{display:block;font-size:15px;color:#123a55}
+.profile-brochure-head p{margin:5px 0 0;font-size:13px;color:#6a8294;line-height:1.6}
+.profile-brochure-ready{
+  flex:0 0 auto;border:1px solid #b5e6d0;border-radius:8px;
+  padding:7px 10px;background:#effaf3;color:#15835b;font-size:12px;font-weight:850;
+}
+.profile-brochure-actions{display:flex;gap:12px;align-items:stretch;flex-wrap:wrap;margin-top:15px}
+.profile-brochure-upload{
+  position:relative;display:flex;flex-direction:column;justify-content:center;gap:3px;
+  min-height:65px;min-width:225px;padding:11px 16px;border:1px dashed #e9a17e;
+  border-radius:11px;background:#fff;color:#be552b;cursor:pointer;
+}
+.profile-brochure-upload:hover,.profile-brochure-upload:focus-within{
+  border-color:#df642f;background:#fff3ec;outline-offset:2px;
+}
+.profile-brochure-upload span{font-size:13px;font-weight:850}
+.profile-brochure-upload small{font-size:12px;color:#8798a5;font-weight:500}
+.profile-brochure-upload input{
+  position:absolute;inset:0;width:100%;height:100%;
+  opacity:0;cursor:pointer;
+}
+.profile-brochure-upload.busy{opacity:.65;cursor:wait}
+.profile-brochure-file{
+  display:flex;align-items:center;flex-wrap:wrap;gap:12px;
+  padding:12px 15px;min-height:65px;border:1px solid #d4e6df;
+  border-radius:11px;background:#f5fdf8;
+}
+.profile-brochure-file span{color:#276f55;font-size:13px;font-weight:750}
+.profile-brochure-file a,.profile-brochure-file button{
+  border:0;background:transparent;text-decoration:none;
+  color:#b95325;font:800 13px Inter,Arial,sans-serif;cursor:pointer;
+}
+.profile-brochure-file a:hover{text-decoration:underline}
+.profile-brochure-note{display:block;margin-top:9px;font-size:12px;color:#66859a}
+.profile-plan-panel>.panel-title h2,.profile-project-panel>.panel-title h2{font-size:22px;color:#123a55}
+.profile-plan-panel>.panel-title p,.profile-project-panel>.panel-title p{max-width:675px;line-height:1.65;font-size:13px}
+.profile-plan-panel .panel-title button,.profile-project-panel .panel-title button{
+  min-height:44px;padding:12px 19px;border-radius:10px;
+}
+.profile-save{position:static;bottom:auto;background:transparent}
+.profile-save button{min-height:47px;min-width:205px;font-size:14px}
+@media(max-width:1050px){
+  .profile-form{grid-template-columns:minmax(0,1fr) 255px;gap:16px}
+  .profile-panel{padding:21px}
+  .profile-showcase-card,.profile-showcase-card.compact{padding:18px}
+}
+@media(max-width:980px){
+  .profile-form{grid-template-columns:1fr}
+  .profile-side-column{position:static;display:grid;grid-template-columns:1fr 1fr}
+}
+@media(max-width:700px){
+  .profile-page{padding:18px 12px 56px}
+  .profile-hero{padding:23px 18px}
+  .profile-tabs{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:thin;gap:5px}
+  .profile-tabs button,.profile-tabs .profile-tab-link{flex:0 0 auto;padding:10px 13px}
+  .profile-side-column{grid-template-columns:1fr}
+  .profile-showcase-grid{grid-template-columns:1fr}
+  .profile-showcase-grid label.wide{grid-column:auto}
+  .profile-showcase-card-head{align-items:flex-start}
+  .profile-brochure-field{padding:17px}
+  .profile-brochure-head{align-items:flex-start;flex-wrap:wrap}
+  .profile-brochure-upload,.profile-brochure-file{width:100%}
+  .profile-save button{width:100%}
+}

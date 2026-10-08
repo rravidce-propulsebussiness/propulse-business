@@ -57,6 +57,7 @@ export function normalizeProject(project, index) {
     image: publicMediaUrl(project.cover_image_url),
     images:Array.isArray(project.image_urls)?project.image_urls.map(publicMediaUrl).filter(Boolean):[],
     document: publicMediaUrl(project.plan_url),
+    brochure: publicMediaUrl(project.brochure_url),
     video: publicMediaUrl(project.video_url),
     publishedAt: clean(project.published_at),
     sample:false,

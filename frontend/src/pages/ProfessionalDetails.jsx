@@ -99,7 +99,7 @@ export default function ProfessionalDetails(){
                 {safeUrl(project.cover_image_url)?<img src={safeUrl(project.cover_image_url)} alt={project.title} loading="lazy"/>:<div className="pr-project-fallback">Project showcase</div>}
                 <div className="pr-project-text"><span>{[project.project_type,project.completion_year].filter(Boolean).join(' · ')||'Project'}</span><h3>{project.title}</h3><p>{project.description||'Published professional project.'}</p>
                   <small>{[project.location_text,project.area_text].filter(Boolean).join(' · ')}</small>
-                  <div className="pr-project-links"><Link to={'/projects/project-'+project.id}>View project details →</Link>{safeUrl(project.video_url)&&<a href={safeUrl(project.video_url)} target="_blank" rel="noreferrer">Watch video ↗</a>}{safeUrl(project.plan_url)&&<a href={safeUrl(project.plan_url)} target="_blank" rel="noreferrer">View drawing ↗</a>}</div>
+                  <div className="pr-project-links"><Link to={'/projects/project-'+project.id}>View project details →</Link>{safeUrl(project.video_url)&&<a href={safeUrl(project.video_url)} target="_blank" rel="noreferrer">Watch video ↗</a>}{safeUrl(project.plan_url)&&<a href={safeUrl(project.plan_url)} target="_blank" rel="noreferrer">View drawing ↗</a>}{safeUrl(project.brochure_url)&&<a href={safeUrl(project.brochure_url)} target="_blank" rel="noopener noreferrer">Specifications PDF ↗</a>}</div>
                 </div>
               </article>)}</div>:<div className="pr-empty">No completed projects have been published yet.</div>}
             </section>
@@ -112,7 +112,7 @@ export default function ProfessionalDetails(){
 
             <section id="pricing" className="pr-panel">
               <span className="pr-label">PRICING & PACKAGES</span><h2>Published Packages</h2>
-              {plans.length?<div className="pr-plan-grid">{plans.map(plan=><article key={plan.id} className="pr-plan"><span>SERVICE PACKAGE</span><h3>{plan.title}</h3><strong>{money(plan.price_from)||'Request pricing'}</strong>{plan.duration_label&&<small>{plan.duration_label}</small>}{plan.description&&<p>{plan.description}</p>}{Array.isArray(plan.inclusions)&&plan.inclusions.length>0&&<ul>{plan.inclusions.map((item,i)=><li key={i}>{item}</li>)}</ul>}<a href="#callback">Request details →</a></article>)}</div>:<div className="pr-empty">No public packages yet. Request a callback for a personalized quotation.</div>}
+              {plans.length?<div className="pr-plan-grid">{plans.map(plan=><article key={plan.id} className="pr-plan"><span>SERVICE PACKAGE</span><h3>{plan.title}</h3><strong>{money(plan.price_from)||'Request pricing'}</strong>{plan.duration_label&&<small>{plan.duration_label}</small>}{plan.description&&<p>{plan.description}</p>}{Array.isArray(plan.inclusions)&&plan.inclusions.length>0&&<ul>{plan.inclusions.map((item,i)=><li key={i}>{item}</li>)}</ul>}{plan.brochure_url&&<a className="pr-plan-brochure" href={safeUrl(plan.brochure_url)||'#pricing'} target="_blank" rel="noopener noreferrer">View Package Brochure (PDF) ↗</a>}<a href="#callback">Request details →</a></article>)}</div>:<div className="pr-empty">No public packages yet. Request a callback for a personalized quotation.</div>}
             </section>
 
             <section id="media" className="pr-panel">
