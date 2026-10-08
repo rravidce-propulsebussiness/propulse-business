@@ -84,7 +84,7 @@ export default function ProfessionalRequestUnlock({kind,item,onUnlocked}){
     </button>}
     {checkout&&mode==='offline'&&<div className="pru-manual">
       <b>Pay remaining {rupees(checkout.externalAmount)}</b>
-      {accounts.length>0&&<div className="pru-bank">{accounts.map(account=><p key={account.id||account.upi_id||account.upiId}><strong>{account.label}</strong>
+      {accounts.length>0?<div className="pru-bank">{accounts.map(account=><p key={account.id||account.upi_id||account.upiId}><strong>{account.label}</strong>
         {account.upi_id||account.upiId?<span>UPI: {account.upi_id||account.upiId}</span>:null}
         {account.bank_name||account.bankName?<span>{account.bank_name||account.bankName}</span>:null}
         {account.account_number||account.accountNumber?<span>A/C: {account.account_number||account.accountNumber}</span>:null}
