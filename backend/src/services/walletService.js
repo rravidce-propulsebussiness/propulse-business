@@ -1,7 +1,8 @@
 const pool = require('../config/database');
 const walletCouponService = require('./walletCouponService');
 const privateProofStorage = require('./privateProofStorageService');
-const {MAX_PROOF_BYTES:MAX_TOPUP_PROOF_BYTES,assertTopupProof}=require('../utils/paymentProofValidation');
+const topupSubmission=require('./walletTopupSubmissionService');
+const {assertTopupProof}=require('../utils/paymentProofValidation');
 const notificationService = require('./notificationService');
 const paymentAvailability = require('./paymentAvailabilityService');
 
@@ -13,21 +14,23 @@ function money(value, code='INVALID_AMOUNT') { return paiseToMoney(parseMoneyPai
 function walletPaise(value) { return parseMoneyPaise(value,{allowZero:true}); }
 async function getWallet(userId,{includeTransactions=true}={}) { const client=await pool.connect(); try{await client.query('BEGIN');const w=await ensureWallet(client,userId);if(!includeTransactions){await client.query('COMMIT');return{id:w.id,balance:Number(w.balance)}}const tx=await client.query(`SELECT activity.id,activity.type,activity.amount,activity.balance_after,activity.reference_type,activity.reference_id,activity.payment_id,activity.status,activity.description,activity.created_at,activity.payment_status,activity.activity_type,activity.reference FROM (SELECT wt.id,wt.type,wt.amount,wt.balance_after,wt.reference_type,wt.reference_id,wt.payment_id,wt.status,wt.description,wt.created_at,p.status AS payment_status,'wallet_transaction' AS activity_type,NULL::text AS reference FROM wallet_transactions wt LEFT JOIN payments p ON p.id=wt.payment_id WHERE wt.user_id=$1 UNION ALL SELECT -p.id AS id,'debit' AS type,p.external_amount AS amount,w.balance AS balance_after,p.purchase_type AS reference_type,p.purchase_id AS reference_id,p.id AS payment_id,p.status,p.purchase_type || ' purchase — Direct payment' AS description,p.created_at,p.status AS payment_status,'direct_payment' AS activity_type,p.manual_reference AS reference FROM payments p LEFT JOIN wallets w ON w.user_id=p.user_id WHERE p.user_id=$1 AND COALESCE(p.external_amount,0)>0) activity ORDER BY activity.created_at DESC,activity.id DESC LIMIT 100`,[userId]);await client.query('COMMIT');return{id:w.id,balance:Number(w.balance),transactions:tx.rows.map(x=>({...x,amount:Number(x.amount),balance_after:Number(x.balance_after)}))}}catch(e){await client.query('ROLLBACK');throw e}finally{client.release()} }
 async function createTopup({userId,amount,reference,proofUrl}) {
-  const value=money(amount),normalizedReference=reference==null?null:String(reference).trim()||null;
+  const value=money(amount),normalizedReference=topupSubmission.normalizeReference(reference);
   assertTopupProof(proofUrl);
   if(!normalizedReference)throw Object.assign(new Error('Payment reference / UTR is required'),{code:'REFERENCE_REQUIRED'});
   const client=await pool.connect();
   let storedProof=null;
   try{
     await client.query('BEGIN');await paymentAvailability.requireOffline(client);
-    await client.query('SELECT pg_advisory_xact_lock(hashtext($1))',[`wallet-topup-reference:${normalizedReference.toLowerCase()}`]);
-    storedProof=await privateProofStorage.storeDataUrl(proofUrl,{category:'wallet-topups',maxBytes:MAX_TOPUP_PROOF_BYTES});
-    const r=await client.query(`INSERT INTO wallet_topups(user_id,amount,reference,proof_url) VALUES($1,$2,$3,$4) RETURNING *`,[userId,value,normalizedReference,storedProof||null]);
+    await topupSubmission.lockReference(client,normalizedReference);
+    const inserted=await topupSubmission.insertPendingTopup(client,{
+      userId,amount:value,reference:normalizedReference,proofUrl,category:'wallet-topups'
+    });
+    storedProof=inserted.storedProof;
     await client.query('COMMIT');
-    return r.rows[0];
+    return inserted.topup;
   }catch(e){
     await client.query('ROLLBACK');
-    if(storedProof)await privateProofStorage.removeStoredProof(storedProof).catch(cleanupError=>console.error('Wallet top-up proof cleanup failed:',cleanupError.message));
+    if(storedProof)await topupSubmission.removeStoredProof(storedProof,'Wallet top-up');
     if(e.code==='23505')throw Object.assign(new Error('This payment reference / UTR has already been submitted'),{code:'DUPLICATE_REFERENCE'});
     throw e;
   }finally{client.release()}

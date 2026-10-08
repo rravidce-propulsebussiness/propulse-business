@@ -6,6 +6,7 @@ const { validateDataUrlSignature } = require('../src/utils/fileValidation');
 const homepage = fs.readFileSync(path.join(__dirname, '../src/services/homepageMediaService.js'), 'utf8');
 const wallet = fs.readFileSync(path.join(__dirname, '../src/services/walletService.js'), 'utf8');
 const paymentProof = fs.readFileSync(path.join(__dirname, '../src/utils/paymentProofValidation.js'), 'utf8');
+const topupSubmission = fs.readFileSync(path.join(__dirname, '../src/services/walletTopupSubmissionService.js'), 'utf8');
 const authRoutes = fs.readFileSync(path.join(__dirname, '../src/routes/authRoutes.js'), 'utf8');
 const authService = fs.readFileSync(path.join(__dirname, '../src/services/authService.js'), 'utf8');
 
@@ -29,7 +30,7 @@ assert(paymentProof.includes('validateDataUrlSignature(source,ALLOWED_PROOF_MIME
   'wallet proof: shared validator must check file magic bytes');
 assert(paymentProof.includes("['image/png','image/jpeg','image/webp','application/pdf']"),
   'wallet proof: shared validator must enforce approved proof types');
-assert(paymentProof.includes('MAX_PROOF_BYTES=5*1024*1024')&&wallet.includes('MAX_TOPUP_PROOF_BYTES'),
+assert(paymentProof.includes('MAX_PROOF_BYTES=5*1024*1024')&&topupSubmission.includes('maxBytes:MAX_PROOF_BYTES'),
   'wallet proof: 5 MB size limit must be enforced');
 
 assert(authRoutes.includes("const companyProofUploadLimit = rateLimit({ windowMs: 15 * 60 * 1000, max: 10 });"), 'company proof upload rate limit is not configured');
