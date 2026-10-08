@@ -186,6 +186,18 @@ async function getObjectBuffer(key,{maxBytes=6*1024*1024,configOverride,timeoutM
   }catch(error){if(error?.name==='AbortError')throw Object.assign(new Error('Private object storage read timed out'),{code:'PRIVATE_OBJECT_STORAGE_TIMEOUT'});throw error}
   finally{clearTimeout(timer)}
 }
+async function getObjectPrefix(key,{bytes=12}={}){
+  const length=Math.max(1,Math.min(1024,Math.floor(Number(bytes)||12)));
+  const url=buildPresignedGetUrl(key,{expiresSeconds:60});
+  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),30000);
+  timer.unref?.();
+  try{
+    const response=await fetch(url,{headers:{Range:'bytes=0-'+(length-1)},signal:controller.signal});
+    if(response.status!==206)throw Object.assign(new Error('Private storage did not return a safe partial response'),{code:'PRIVATE_OBJECT_RANGE_REQUIRED'});
+    return await readLimited(response,length);
+  }finally{clearTimeout(timer)}
+}
+
 function makeReference(key){return PREFIX+normalizeKey(key)}
 function parseReference(value){const raw=String(value||'');return raw.startsWith(PREFIX)?normalizeKey(raw.slice(PREFIX.length)):null}
 function isReference(value){try{return Boolean(parseReference(value))}catch{return false}}
@@ -205,4 +217,4 @@ async function probe(){
   }catch(error){await deleteObject(key).catch(()=>{});throw error}
 }
 
-module.exports={PREFIX,driver,isEnabled,assertWriteStorage,config,normalizeKey,makeReference,parseReference,isReference,putObject,deleteObject,headObject,getObjectBuffer,getSignedGetUrl,getMediaGetUrl,buildPresignedGetUrl,buildPresignedUploadUrl,startMultipartUpload,completeMultipartUpload,abortMultipartUpload,authorizationHeaders,probe,enc};
+module.exports={PREFIX,driver,isEnabled,assertWriteStorage,config,normalizeKey,makeReference,parseReference,isReference,putObject,deleteObject,headObject,getObjectBuffer,getObjectPrefix,getSignedGetUrl,getMediaGetUrl,buildPresignedGetUrl,buildPresignedUploadUrl,startMultipartUpload,completeMultipartUpload,abortMultipartUpload,authorizationHeaders,probe,enc};
