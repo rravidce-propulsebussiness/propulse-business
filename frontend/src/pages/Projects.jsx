@@ -1,10 +1,10 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { publicRequest } from '../utils/auth'
 import { PublicFooter, PublicHeader } from '../components/PublicSiteChrome'
 import './Projects.css'
 
-const CONCEPTS = [
+export const CONCEPTS = [
   {
     id:'sample-courtyard',sample:true,category:'construction',type:'Residential Construction',
     title:'The Courtyard Residence',location:'Illustrative location · Hyderabad',
@@ -77,7 +77,7 @@ function categoryOf(value) {
   return 'construction'
 }
 
-function categoryLabel(category) {
+export function categoryLabel(category) {
   return category === 'design' ? 'Interior Design' : category === 'property' ? 'Real Estate' : 'Construction'
 }
 
@@ -96,7 +96,7 @@ function publicMediaUrl(value) {
   }
 }
 
-function normalizeProject(project, index) {
+export function normalizeProject(project, index) {
   const category = categoryOf(project.project_type)
   return {
     id: clean(project.project_id || project.id || ('entry-' + index)),
@@ -121,7 +121,7 @@ function normalizeProject(project, index) {
   }
 }
 
-function projectPhotos(project){
+export function projectPhotos(project){
   const photos=[project.image,...(Array.isArray(project.images)?project.images:[])].filter(Boolean)
   const seen=new Set()
   return photos.filter(photo=>{
@@ -132,11 +132,11 @@ function projectPhotos(project){
   })
 }
 
-function playableProjectVideo(url){
+export function playableProjectVideo(url){
   return Boolean(url)&&!/(youtube\.com|youtu\.be|vimeo\.com)/i.test(url)
 }
 
-function Icon({ name, size = 18 }) {
+export function Icon({ name, size = 18 }) {
   const props = { width: size, height: size, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.8, strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': true }
   if (name === 'pin') return <svg {...props}><path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg>
   if (name === 'arrow') return <svg {...props}><path d="M5 12h14m-5-5 5 5-5 5"/></svg>
@@ -148,53 +148,39 @@ function Icon({ name, size = 18 }) {
   return null
 }
 
+export function projectPath(project){
+  return '/projects/'+(project.sample?project.id:'project-'+project.id)
+}
+
 export default function Projects() {
-  const [professionalProjects, setProfessionalProjects] = useState([])
-  const [category, setCategory] = useState('all')
-  const [query, setQuery] = useState('')
-  const [contactData, setContactData] = useState({})
-  const [loading, setLoading] = useState(true)
-  const [loadingMore, setLoadingMore] = useState(false)
-  const [loadError, setLoadError] = useState('')
-  const [page, setPage] = useState(1)
-  const [hasNext, setHasNext] = useState(false)
-  const [selectedProject, setSelectedProject] = useState(null)
-  const [galleryIndex,setGalleryIndex] = useState(0)
-  const [showProjectVideo,setShowProjectVideo] = useState(false)
-  const [linkedPlan,setLinkedPlan]=useState(null)
-  const [callbackOpen,setCallbackOpen]=useState(false)
-  const [callbackForm,setCallbackForm]=useState({name:'',phone:'',email:'',message:'',consent:false,website:''})
-  const [callbackSending,setCallbackSending]=useState(false)
-  const [callbackFeedback,setCallbackFeedback]=useState('')
-  const [callbackSuccess,setCallbackSuccess]=useState(false)
-  const dialogRef = useRef(null)
+  const [professionalProjects,setProfessionalProjects]=useState([])
+  const [category,setCategory]=useState('all')
+  const [query,setQuery]=useState('')
+  const [contactData,setContactData]=useState({})
+  const [loading,setLoading]=useState(true)
+  const [loadingMore,setLoadingMore]=useState(false)
+  const [loadError,setLoadError]=useState('')
+  const [page,setPage]=useState(1)
+  const [hasNext,setHasNext]=useState(false)
 
-  useEffect(() => {
-    let active = true
-    publicRequest('/contact?audience=website')
-      .then(value => { if (active) setContactData(value || {}) })
-      .catch(() => {})
-    return () => { active = false }
-  }, [])
-
-  useEffect(() => {
-    let active = true
-    setLoading(true)
-    publicRequest('/experts/projects?page=1&pageSize=' + PAGE_SIZE)
-      .then(value => {
-        if (!active) return
-        const rows = Array.isArray(value) ? value : Array.isArray(value?.data) ? value.data : []
+  useEffect(()=>{
+    let active=true
+    publicRequest('/contact?audience=website').then(value=>{if(active)setContactData(value||{})}).catch(()=>{})
+    return()=>{active=false}
+  },[])
+  useEffect(()=>{
+    let active=true
+    publicRequest('/experts/projects?page=1&pageSize='+PAGE_SIZE)
+      .then(value=>{
+        if(!active)return
+        const rows=Array.isArray(value)?value:Array.isArray(value?.data)?value.data:[]
         setProfessionalProjects(rows.map(normalizeProject))
         setHasNext(Boolean(value?.pagination?.hasNextPage))
-        setPage(1)
-        setLoadError('')
-      })
-      .catch(() => { if (active) setLoadError('Projects could not be loaded. Please try again shortly.') })
-      .finally(() => { if (active) setLoading(false) })
-    return () => { active = false }
-  }, [])
-
-  // Refresh the first page quietly so newly published professional images/videos surface.
+        setPage(1);setLoadError('')
+      }).catch(()=>{if(active)setLoadError('Projects could not be loaded. Please try again shortly.')})
+      .finally(()=>{if(active)setLoading(false)})
+    return()=>{active=false}
+  },[])
   useEffect(()=>{
     if(page!==1)return undefined
     let active=true
@@ -206,153 +192,45 @@ export default function Projects() {
         const rows=Array.isArray(value)?value:Array.isArray(value?.data)?value.data:[]
         setProfessionalProjects(rows.map(normalizeProject))
         setHasNext(Boolean(value?.pagination?.hasNextPage))
-      }catch{/* Keep the existing public gallery visible on transient network failure. */}
+      }catch{/* Keep existing portfolio while the network reconnects. */}
     }
-    const handleFocus=()=>{if(document.visibilityState==='visible')refresh()}
+    const onVisible=()=>{if(document.visibilityState==='visible')refresh()}
     const timer=window.setInterval(refresh,120000)
-    document.addEventListener('visibilitychange',handleFocus)
-    return()=>{active=false;window.clearInterval(timer);document.removeEventListener('visibilitychange',handleFocus)}
+    document.addEventListener('visibilitychange',onVisible)
+    return()=>{active=false;window.clearInterval(timer);document.removeEventListener('visibilitychange',onVisible)}
   },[page])
-
-  async function loadMore() {
-    if (loadingMore || !hasNext) return
+  async function loadMore(){
+    if(loadingMore||!hasNext)return
     setLoadingMore(true)
-    try {
-      const next = page + 1
-      const value = await publicRequest('/experts/projects?page=' + next + '&pageSize=' + PAGE_SIZE)
-      const rows = Array.isArray(value) ? value : Array.isArray(value?.data) ? value.data : []
-      setProfessionalProjects(current => {
-        const found = new Set(current.map(project => project.id))
-        return [...current, ...rows.map(normalizeProject).filter(project => !found.has(project.id))]
+    try{
+      const next=page+1
+      const value=await publicRequest('/experts/projects?page='+next+'&pageSize='+PAGE_SIZE)
+      const rows=Array.isArray(value)?value:Array.isArray(value?.data)?value.data:[]
+      setProfessionalProjects(current=>{
+        const found=new Set(current.map(project=>project.id))
+        return [...current,...rows.map(normalizeProject).filter(project=>!found.has(project.id))]
       })
       setHasNext(Boolean(value?.pagination?.hasNextPage))
-      setPage(next)
-      setLoadError('')
-    } catch {
-      setLoadError('More projects could not be loaded. Please try again.')
-    } finally {
-      setLoadingMore(false)
-    }
+      setPage(next);setLoadError('')
+    }catch{setLoadError('More projects could not be loaded. Please try again.')}
+    finally{setLoadingMore(false)}
   }
 
   // Completed project entries from professionals (including Verified professional labels) always lead.
-  // Published business projects always lead; sample concepts appear afterward.
-  const filtered = useMemo(() => {
-    const term = query.trim().toLowerCase()
-    return [...professionalProjects, ...CONCEPTS].filter(project => {
-      if (category !== 'all' && project.category !== category) return false
-      if (!term) return true
-      return [project.title, project.location, project.businessName || '', project.type, project.description, project.packageName || '']
-        .some(value => String(value).toLowerCase().includes(term))
+  const filtered=useMemo(()=>{
+    const term=query.trim().toLowerCase()
+    return [...professionalProjects,...CONCEPTS].filter(project=>{
+      if(category!=='all'&&project.category!==category)return false
+      if(!term)return true
+      return [project.title,project.location,project.businessName||'',project.type,project.description,project.packageName||'']
+        .some(value=>String(value).toLowerCase().includes(term))
     })
-  }, [professionalProjects, category, query])
+  },[professionalProjects,category,query])
 
-  useEffect(() => {
-    if (!selectedProject) return undefined
-    const previous=document.body.style.overflow
-    const originalFocus = document.activeElement
-    document.body.style.overflow = 'hidden'
-    dialogRef.current?.querySelector('button')?.focus()
-    const handleKey = event => {
-      if (event.key === 'Escape') {
-        event.preventDefault()
-        setSelectedProject(null)
-      }
-      if (event.key !== 'Tab') return
-      const elements = [...(dialogRef.current?.querySelectorAll('a[href],button:not([disabled])') || [])]
-        .filter(element => element.getClientRects().length)
-      if (!elements.length) return
-      const first = elements[0], last = elements[elements.length - 1]
-      if (event.shiftKey && document.activeElement === first) {
-        event.preventDefault()
-        last.focus()
-      } else if (!event.shiftKey && document.activeElement === last) {
-        event.preventDefault()
-        first.focus()
-      }
-    }
-    document.addEventListener('keydown', handleKey)
-    return()=>{
-      document.removeEventListener('keydown',handleKey)
-      document.body.style.overflow=previous
-      if (originalFocus?.isConnected) originalFocus.focus()
-    }
-  }, [selectedProject])
-
-  function openProject(project){
-    setGalleryIndex(0)
-    setShowProjectVideo(false)
-    setLinkedPlan(null)
-    setCallbackOpen(false)
-    setCallbackFeedback('')
-    setCallbackSuccess(false)
-    setCallbackForm({name:'',phone:'',email:'',message:'',consent:false,website:''})
-    setSelectedProject(project)
-  }
-
-  useEffect(()=>{
-    if(!selectedProject||selectedProject.sample||!selectedProject.businessProfileId||!selectedProject.packageName)return undefined
-    let active=true
-    publicRequest('/experts/'+selectedProject.businessProfileId)
-      .then(data=>{
-        if(!active)return
-        const plans=Array.isArray(data?.service_plans)?data.service_plans:[]
-        const match=plans.find(plan=>String(plan.title||'').trim().toLowerCase()===selectedProject.packageName.trim().toLowerCase())
-        setLinkedPlan(match||null)
-      })
-      .catch(()=>{})
-    return()=>{active=false}
-  },[selectedProject])
-
-  async function submitCallback(event){
-    event.preventDefault()
-    if(!selectedProject||selectedProject.sample||!selectedProject.businessProfileId)return
-    setCallbackFeedback('')
-    setCallbackSending(true)
-    try{
-      await publicRequest('/experts/projects/'+encodeURIComponent(selectedProject.id)+'/callback',{
-        method:'POST',body:JSON.stringify(callbackForm)
-      })
-      setCallbackSuccess(true)
-      setCallbackFeedback('Request sent to '+(selectedProject.businessName||'the project professional')+'. You can expect them to contact you directly.')
-    }catch(error){setCallbackFeedback(error.message||'Unable to submit your callback request.')}
-    finally{setCallbackSending(false)}
-  }
-
-  function downloadPackage(project,plan){
-    const title=plan?.title||project.packageName||'Package'
-    const inclusions=Array.isArray(plan?.inclusions)?plan.inclusions:project.sampleSpecs||[]
-    const lines=[
-      project.sample?'ILLUSTRATIVE SAMPLE PACKAGE — NOT A QUOTATION':'PROFESSIONALLY PUBLISHED PACKAGE DETAILS',
-      title,
-      project.title,
-      project.businessName?'Provided by: '+project.businessName:'',
-      plan?.description||project.description||'',
-      plan?.duration_label?'Estimated duration: '+plan.duration_label:'',
-      plan?.price_from?'Published starting price: ₹'+Number(plan.price_from).toLocaleString('en-IN'):'',
-      '',
-      'Specifications / Inclusions',
-      ...inclusions.map((item,i)=>(i+1)+'. '+String(item)),
-      '',
-      project.sample?'Example specifications only; actual scope and costs will differ.':'Confirm brands, scope, exclusions and pricing directly with the publishing professional.',
-    ].filter(x=>x!==null&&x!==undefined).join('\n')
-    const url=URL.createObjectURL(new Blob([lines],{type:'text/plain;charset=utf-8'}))
-    const anchor=document.createElement('a')
-    anchor.href=url
-    anchor.download=(project.sample?project.id:'project-'+project.id)+'-package-details.txt'
-    anchor.click()
-    window.setTimeout(()=>URL.revokeObjectURL(url),1000)
-  }
-  const selectedPhotos=selectedProject?projectPhotos(selectedProject):[]
-  const activePhoto=selectedPhotos[galleryIndex]||selectedPhotos[0]||''
-
-  const phone = contactData.phone || contactData.phone_number || contactData.mobile || ''
-  const email = contactData.email || contactData.support_email || ''
-  const isPdf = value => /\.pdf(?:[?#]|$)/i.test(value)
-  const similarQuoteHash = project => project.category === 'design' ? 'interiors' : project.category === 'property' ? 'property' : 'construction'
-
+  const phone=contactData.phone||contactData.phone_number||contactData.mobile||''
+  const email=contactData.email||contactData.support_email||''
   return <main className="pj-page">
-    <PublicHeader />
+    <PublicHeader/>
     <section className="pj-portfolio-section" aria-label="Projects gallery">
       <div className="pj-container">
         <div className="pj-toolbar">
@@ -361,11 +239,10 @@ export default function Projects() {
           </div>
           <label className="pj-search"><Icon name="search"/><span className="pj-sr-only">Search projects</span><input value={query} onChange={event=>setQuery(event.target.value)} placeholder="Search projects or locations"/></label>
         </div>
-
-        {loading && <div className="pj-loading-inline" role="status" aria-label="Checking for published business projects"><span className="pj-inline-spinner" aria-hidden="true" /></div>}
+        {loading&&<div className="pj-loading-inline" role="status" aria-label="Checking for published business projects"><span className="pj-inline-spinner" aria-hidden="true"/></div>}
         <div className="pj-project-grid">
           {filtered.map((project,index)=><article key={(project.sample?'sample-':'business-')+project.id} className="pj-project-card">
-            <button type="button" className="pj-card-open" onClick={()=>openProject(project)} aria-label={'View '+(project.sample?'sample ':'')+'details for '+project.title}>
+            <Link to={projectPath(project)} className="pj-card-open" aria-label={'View '+(project.sample?'sample ':'')+'details for '+project.title}>
               <div className="pj-project-photo">
                 {projectPhotos(project).length?<img src={projectPhotos(project)[0]} loading={index<3?'eager':'lazy'} alt={project.title}/>:<div className="pj-image-placeholder"><Icon name="layers" size={30}/>Project photo not provided</div>}
                 {projectPhotos(project).length>1&&<span className="pj-card-photo-count">{projectPhotos(project).length} Photos</span>}
@@ -385,7 +262,7 @@ export default function Projects() {
                 {project.cost&&<div className="pj-cost"><div><small>{project.sample?'ILLUSTRATIVE COST':'REPORTED COST / BUDGET'}</small><strong>{project.cost}</strong></div></div>}
                 <span className="pj-single-action">View Project <Icon name="arrow" size={16}/></span>
               </div>
-            </button>
+            </Link>
           </article>)}
         </div>
         {!filtered.length&&!loading&&<div className="pj-empty"><h3>No matching projects</h3><button type="button" onClick={()=>{setCategory('all');setQuery('')}}>Clear filters</button></div>}
@@ -394,68 +271,6 @@ export default function Projects() {
         <p className="pj-gallery-disclaimer">Sample concepts are illustrative only — photos, locations, costs, packages and specifications are examples, not completed professional work or quotations. Published business projects appear first automatically.</p>
       </div>
     </section>
-
-    {selectedProject&&<div className="pj-detail-backdrop" role="presentation" onMouseDown={event=>{if(event.target===event.currentTarget)setSelectedProject(null)}}>
-      <section className="pj-detail-modal" role="dialog" aria-modal="true" aria-label={selectedProject.title+' details'} ref={dialogRef} tabIndex={-1}>
-        <button type="button" className="pj-detail-close" onClick={()=>setSelectedProject(null)} aria-label="Close project details">×</button>
-        <div className="pj-detail-media">
-          <div className="pj-gallery-viewer">
-            {showProjectVideo&&selectedProject.video&&playableProjectVideo(selectedProject.video)
-              ? <video key={selectedProject.video} className="pj-gallery-main-image" controls playsInline preload="metadata" poster={activePhoto||undefined} src={selectedProject.video}/>
-              : activePhoto?<img className="pj-gallery-main-image" src={activePhoto} alt={selectedProject.title+' photo '+(galleryIndex+1)}/>
-              : <div className="pj-image-placeholder">Project photo not provided</div>}
-            <span className="pj-category-badge">{selectedProject.sample?'COMPLETED STYLE · DEMO':categoryLabel(selectedProject.category)}</span>
-            {!showProjectVideo&&selectedPhotos.length>1&&<div className="pj-gallery-arrows">
-              <button type="button" aria-label="Previous project photo" onClick={()=>setGalleryIndex(i=>(i+selectedPhotos.length-1)%selectedPhotos.length)}>‹</button>
-              <span>{galleryIndex+1} / {selectedPhotos.length}</span>
-              <button type="button" aria-label="Next project photo" onClick={()=>setGalleryIndex(i=>(i+1)%selectedPhotos.length)}>›</button>
-            </div>}
-          </div>
-          {(selectedPhotos.length>1||selectedProject.video)&&<div className="pj-gallery-thumbnails">
-            {selectedPhotos.map((photo,i)=><button key={photo+i} type="button" className={!showProjectVideo&&galleryIndex===i?'active':''} onClick={()=>{setGalleryIndex(i);setShowProjectVideo(false)}} aria-label={'Show project photo '+(i+1)} aria-pressed={!showProjectVideo&&galleryIndex===i}><img src={photo} alt=""/></button>)}
-            {selectedProject.video&&<button type="button" className={'pj-gallery-video-thumb'+(showProjectVideo?' active':'')} aria-label="Play project video" aria-pressed={showProjectVideo} onClick={()=>setShowProjectVideo(true)}>▶ <small>Video</small></button>}
-          </div>}
-        </div>
-        <div className="pj-detail-content">
-          <span className="pj-overline">{selectedProject.sample?'COMPLETED PROJECT PRESENTATION · DEMO ONLY':'PROFESSIONAL PROJECT'}</span>
-          <h2>{selectedProject.title}</h2>
-          {selectedProject.description&&<p className="pj-detail-intro">{selectedProject.description}</p>}
-          <div className="pj-facts">
-            <div><span>Project type</span><strong>{selectedProject.type}</strong></div>
-            {selectedProject.location&&<div><span>{selectedProject.sample?'Example Location':'Location'}</span><strong>{selectedProject.location}</strong></div>}
-            {selectedProject.area&&<div><span>{selectedProject.sample?'Example Area':'Project Area'}</span><strong>{selectedProject.area}</strong></div>}
-            {selectedProject.packageName&&<div><span>{selectedProject.sample?'Sample Package':'Package'}</span><strong>{selectedProject.packageName}</strong></div>}
-            {!selectedProject.sample&&selectedProject.completionYear&&<div><span>Completed</span><strong>{selectedProject.completionYear}</strong></div>}
-            {!selectedProject.sample&&selectedProject.businessName&&<div><span>Professional</span><strong>{selectedProject.businessName}{selectedProject.verified?' · Verified professional':''}</strong></div>}
-          </div>
-          {selectedProject.cost&&<div className="pj-modal-cost"><small>{selectedProject.sample?'EXAMPLE PROJECT COST · NOT A QUOTATION':'REPORTED COST / BUDGET'}</small><strong>{selectedProject.cost}</strong></div>}
-          {selectedProject.sample&&selectedProject.sampleSpecs?.length>0&&<div className="pj-specs-section"><h3>Illustrative Package Specifications</h3><ul>{selectedProject.sampleSpecs.map(item=><li key={item}><Icon name="check" size={17}/>{item}</li>)}</ul></div>}
-          <div className="pj-project-actions">
-            {(selectedProject.sample||linkedPlan)&&<button type="button" className="pj-package-download" onClick={()=>downloadPackage(selectedProject,linkedPlan)}><Icon name="file" size={17}/> Download {selectedProject.sample?'Example Package':'Related Package'}</button>}
-            {!selectedProject.sample&&selectedProject.document&&<a className="pj-project-file" href={selectedProject.document} target="_blank" rel="noopener noreferrer"><Icon name="file" size={17}/>{isPdf(selectedProject.document)?'Project PDF / Drawing':'Project Document'}</a>}
-            {!selectedProject.sample&&<button className="pj-request-callback" type="button" disabled={callbackSuccess} onClick={()=>setCallbackOpen(value=>!value)}>{callbackSuccess?'Request Sent':'Request a Callback'} <Icon name="arrow" size={16}/></button>}
-            {selectedProject.sample&&<Link className="pj-request-callback" to={'/quote#'+similarQuoteHash(selectedProject)} onClick={()=>setSelectedProject(null)}>Get Quote for Similar Work <Icon name="arrow" size={16}/></Link>}
-          </div>
-          {!selectedProject.sample&&callbackOpen&&<div className="pj-callback-panel">
-            <h3>Request a callback from {selectedProject.businessName||'this professional'}</h3>
-            <p>Your contact details will go only to the professional who published this project.</p>
-            {callbackSuccess?<p className="pj-callback-success" role="status">{callbackFeedback}</p>:
-              <form onSubmit={submitCallback} className="pj-callback-form">
-                <label>Your name<input required maxLength={160} autoComplete="name" value={callbackForm.name} onChange={event=>setCallbackForm(v=>({...v,name:event.target.value}))} placeholder="Full name"/></label>
-                <label>Mobile number<input required type="tel" inputMode="tel" autoComplete="tel" pattern="[0-9+ ()-]{10,18}" value={callbackForm.phone} onChange={event=>setCallbackForm(v=>({...v,phone:event.target.value}))} placeholder="10-digit mobile"/></label>
-                <label>Email (optional)<input type="email" maxLength={255} autoComplete="email" value={callbackForm.email} onChange={event=>setCallbackForm(v=>({...v,email:event.target.value}))} placeholder="you@example.com"/></label>
-                <label className="pj-callback-message">Project requirement (optional)<textarea rows={3} maxLength={1000} value={callbackForm.message} onChange={event=>setCallbackForm(v=>({...v,message:event.target.value}))} placeholder="What would you like to discuss?"/></label>
-                <label className="pj-callback-consent"><input type="checkbox" required checked={callbackForm.consent} onChange={event=>setCallbackForm(v=>({...v,consent:event.target.checked}))}/> I agree to share my contact details with this professional for a callback.</label>
-                <input className="pj-callback-honeypot" tabIndex={-1} autoComplete="off" aria-hidden="true" value={callbackForm.website} onChange={event=>setCallbackForm(v=>({...v,website:event.target.value}))}/>
-                {callbackFeedback&&<p className="pj-callback-error" role="alert">{callbackFeedback}</p>}
-                <button disabled={callbackSending} type="submit">{callbackSending?'Sending…':'Send Callback Request'} <Icon name="arrow" size={16}/></button>
-              </form>}
-          </div>}
-          {!selectedProject.sample&&!linkedPlan&&!selectedProject.document&&<p className="pj-package-note">A downloadable package hasn't been published for this project yet. Request a callback for the exact materials and specifications.</p>}
-          <p className="pj-data-disclaimer">{selectedProject.sample?'This is an illustrative sample only. Photos, names, locations, package specifications and price are not verified completed projects.':'Project information is supplied by the publishing professional. Confirm specifications, package and actual cost before proceeding.'}</p>
-        </div>
-      </section>
-    </div>}
     <PublicFooter phone={phone} email={email}/>
   </main>
 }
