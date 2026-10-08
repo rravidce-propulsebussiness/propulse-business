@@ -85,6 +85,42 @@ test('protected customer route redirects anonymous users to login',async({page})
   await expect(page.getByRole('button',{name:/sign in/i})).toBeVisible()
 })
 
+test('professional Requests CRM separates callbacks from Available Leads and filters stages',async({page})=>{
+  await login(page,accounts.business)
+  await page.route('**/api/profile/project-callbacks',route=>route.fulfill({
+    status:200,contentType:'application/json',
+    body:JSON.stringify({data:[
+      {id:71,project_id:123,project_title:'Hyderabad 3BHK',customer_name:'Test Customer',
+        customer_phone:'••••••••23',customer_email:'t***@e***.com',status:'new',
+        message:'Need a callback to discuss project plans',created_at:'2026-10-08T08:00:00Z'},
+      {id:72,project_id:null,project_title:'Profile enquiry',customer_name:'Second Customer',
+        customer_phone:'••••••••45',status:'contacted',message:'Need an estimate',
+        created_at:'2026-10-07T08:00:00Z'}
+    ]})
+  }))
+  await page.route('**/api/profile/project-quote-requests',route=>route.fulfill({
+    status:200,contentType:'application/json',body:JSON.stringify({data:[]})
+  }))
+  await page.goto('/professionals')
+  await expect(page.getByRole('link',{name:'Requests',exact:true})).toBeVisible()
+  await expect(page.getByRole('heading',{name:'Callback Requests'})).toHaveCount(0)
+  await page.getByRole('link',{name:'Requests',exact:true}).click()
+  await expect(page).toHaveURL(/\/professional-requests$/)
+  await expect(page.getByRole('heading',{name:'Requests Inbox'})).toBeVisible()
+  await expect(page.getByText('Hyderabad 3BHK')).toBeVisible()
+  await expect(page.locator('.prc-request-item')).toHaveCount(2)
+  await page.getByRole('button',{name:/In follow-up/}).click()
+  await expect(page.locator('.prc-request-item')).toHaveCount(1)
+  await expect(page.getByText('Second Customer')).toBeVisible()
+  await page.getByRole('button',{name:/All requests/}).click()
+  await page.getByRole('searchbox',{name:'Search callback requests'}).fill('Hyderabad')
+  await expect(page.locator('.prc-request-item')).toHaveCount(1)
+  await expect(page.getByText('Need a callback to discuss project plans')).toBeVisible()
+  await expect(page.getByText('••••••••23')).toBeVisible()
+  await page.getByRole('tab',{name:/Quotation requests/}).click()
+  await expect(page.getByRole('heading',{name:'Professional Quote Requests'})).toBeVisible()
+})
+
 test('business login survives reload and cannot access Admin APIs',async({page})=>{
   await login(page,accounts.business)
   await expect(page).toHaveURL(/\/professionals(?:\?|$)/)
