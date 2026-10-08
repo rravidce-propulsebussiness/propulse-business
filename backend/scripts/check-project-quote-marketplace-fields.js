@@ -48,7 +48,7 @@ assert.equal(splitWithNote.fields['Interior Style'], 'Minimalist');
 assert.equal(splitWithNote.fields.Timeline, '1–3 months');
 assert.ok(!('Additional Requirements' in splitWithNote.fields),
   'Typed notes should appear only in the separate Requirement box');
-const splitWithoutNote = splitProjectQuoteRequirement(requirement.split('\\n').filter(line => !line.startsWith('Additional requirement:')).join('\\n'));
+const splitWithoutNote = splitProjectQuoteRequirement(requirement.split('\n').filter(line => !line.startsWith('Additional requirement:')).join('\n'));
 assert.equal(splitWithoutNote.requirement, '',
   'An unfilled additional requirement must remain empty, not mirror form answers');
 assert.equal(splitWithoutNote.fields['Property Type'], 'Villa');
