@@ -5,7 +5,7 @@
   min-height:100vh;color:var(--pjd-ink);background:#f8fafb;
 }
 .pjd-page .pjd-content{
-  padding:24px 0 76px;
+  padding:24px 0 48px;
   background:radial-gradient(ellipse at 95% 12%,rgba(228,104,49,.07),transparent 42%),
     linear-gradient(180deg,#f6f8fa 0%,#fff 56%,#f8fafb 100%);
 }
@@ -99,25 +99,6 @@
 .pjd-page .pjd-cta-arrow{display:grid;place-items:center;flex:0 0 28px;width:28px;height:28px;border-radius:8px;background:#0b38550d;font-size:18px}
 .pjd-page .pjd-privacy{display:flex;align-items:flex-start;gap:8px;margin-top:15px;padding-top:13px;border-top:1px solid #e9eff2;font-size:10px;color:#758f9c;line-height:1.55}
 .pjd-page .pjd-privacy span:first-child{flex:0 0 17px;display:grid;place-items:center;width:17px;height:17px;border-radius:50%;color:#17764e;border:1px solid #9bd5b6}
-.pjd-page .pjd-information{
-  display:grid;grid-template-columns:minmax(0,.95fr) minmax(0,1fr);gap:45px;
-  margin-top:22px;padding:36px 40px;border-radius:18px;border:1px solid #e0e8ef;
-  background:#fff;box-shadow:0 14px 37px rgba(13,42,66,.055)
-}
-.pjd-page .pjd-information h2{color:#123a56;font-family:'Sora',Inter,sans-serif;letter-spacing:-.045em;font-size:clamp(24px,2.5vw,35px);line-height:1.24;margin:11px 0 17px}
-.pjd-page .pjd-information p{font-size:13px;line-height:1.75;color:#668396}
-.pjd-page .pjd-spec-note{border-left:3px solid #e77740;padding:10px 0 10px 13px;background:#fffaf7;font-size:12px!important;color:#768d9f!important}
-.pjd-page .pjd-spec-body{padding-left:33px;border-left:1px solid #e6eef2}
-.pjd-page .pjd-spec-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 19px;margin:20px 0 0;padding:0;list-style:none}
-.pjd-page .pjd-spec-list li{display:flex;gap:9px;align-items:flex-start;line-height:1.55;color:#355771;font-size:12px;font-weight:750}
-.pjd-page .pjd-spec-list svg{flex:0 0 auto;color:#e5763b}
-.pjd-page .pjd-spec-empty{padding:21px;border:1px dashed #d3e0e9;border-radius:12px;background:#f8fbfd}
-.pjd-page .pjd-spec-empty strong{color:#214765;font-size:14px}
-.pjd-page .pjd-spec-empty p{margin:9px 0 0}
-.pjd-page .pjd-plan-description{margin-top:23px}
-.pjd-page .pjd-back-row{display:flex;justify-content:center;margin-top:27px}
-.pjd-page .pjd-back-row a{display:inline-flex;align-items:center;justify-content:center;padding:12px 17px;min-height:45px;border:1px solid #d6e4ed;border-radius:10px;background:#fff;color:#18405b;font-weight:850;font-size:12px;text-decoration:none}
-.pjd-page .pjd-back-row a:hover{border-color:#de6831;color:#bc5228}
 .pjd-page .pjd-status{display:grid;place-items:center;gap:13px;padding:65px 15px;min-height:300px;background:#fff;border:1px solid #e1e9ee;border-radius:18px;color:#688395;text-align:center}
 .pjd-page .pjd-status h1{margin:0;font-size:26px;color:#153f59}
 .pjd-page .pjd-status a{color:#cb5c29;font-weight:850}
@@ -154,8 +135,6 @@
   .pjd-page .pjd-feature-media{position:absolute}
   .pjd-page .pjd-summary{min-height:unset}
   .pjd-page .pjd-action-intro{margin-top:19px}
-  .pjd-page .pjd-information{grid-template-columns:1fr;gap:22px;padding:29px}
-  .pjd-page .pjd-spec-body{padding:22px 0 0;border-top:1px solid #e6eef2;border-left:0}
   .pjd-page .pjd-hero-intro{padding:30px}
   .pjd-page .pjd-heading-tags{align-items:flex-start}
 }
@@ -170,19 +149,16 @@
   .pjd-page .pjd-heading-tags{gap:5px}
   .pjd-page .pjd-heading-tags .pjd-collection-index{display:none}
   .pjd-page .pjd-main-image{aspect-ratio:1.1}
-  .pjd-page .pjd-gallery-block,.pjd-page .pjd-summary,.pjd-page .pjd-information{border-radius:13px}
+  .pjd-page .pjd-gallery-block,.pjd-page .pjd-summary{border-radius:13px}
   .pjd-page .pjd-image-caption{left:14px;bottom:16px;font-size:9px}
   .pjd-page .pjd-photo-nav{right:9px;bottom:12px}
   .pjd-page .pjd-photo-nav button{height:29px;width:29px}
   .pjd-page .pjd-thumbnails{padding:10px}
   .pjd-page .pjd-thumbnails button,.pjd-page .pjd-thumbnails a{flex-basis:80px;width:80px;height:58px}
   .pjd-page .pjd-summary{padding:22px 18px}
-  .pjd-page .pjd-information{padding:23px;margin-top:15px}
-  .pjd-page .pjd-spec-list{grid-template-columns:1fr}
   .pjd-page .pjd-dialog-backdrop{padding:11px}
   .pjd-page .pjd-dialog{padding:27px 20px;max-height:94vh;border-radius:15px}
   .pjd-page .pjd-field-pair{grid-template-columns:1fr}
-  .pjd-page .pjd-back-row{margin:27px 0}
   .pjd-page .pjd-mobile-actions{
     position:fixed;bottom:0;left:0;right:0;z-index:45;display:grid;grid-template-columns:1fr 1fr 1.13fr;gap:8px;
     padding:10px max(12px,env(safe-area-inset-left)) calc(10px + env(safe-area-inset-bottom,0px)) max(12px,env(safe-area-inset-right));

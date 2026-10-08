@@ -98,7 +98,6 @@ export default function ProjectDetail(){
   const activePhoto=photos[photoIndex]||photos[0]||''
   const phone=contactData.phone||contactData.phone_number||contactData.mobile||''
   const email=contactData.email||contactData.support_email||''
-  const inclusions=Array.isArray(linkedPlan?.inclusions)?linkedPlan.inclusions.filter(Boolean):[]
 
   function closeCallback(){
     setCallbackOpen(false)
@@ -231,22 +230,6 @@ export default function ProjectDetail(){
             </aside>
           </div>
 
-          <section className="pjd-information" aria-labelledby="pjd-spec-title">
-            <div className="pjd-spec-intro">
-              <span className="pjd-overline">SCOPE & MATERIALS</span>
-              <h2 id="pjd-spec-title">Project details and specifications</h2>
-              <p>{project.description||'Published professional project details.'}</p>
-              <p className="pjd-spec-note">These details were supplied by the publishing professional. Confirm material brands, exact scope and costs before proceeding.</p>
-            </div>
-            <div className="pjd-spec-body">
-              <span className="pjd-overline">WHAT'S INCLUDED</span>
-              {inclusions.length>0?<ul className="pjd-spec-list">{inclusions.map((spec,i)=><li key={i}><Icon name="check" size={18}/>{spec}</li>)}</ul>:
-                <div className="pjd-spec-empty"><strong>Detailed inclusions available on request</strong><p>Ask the professional about finishes, materials, drawings, project duration and pricing when requesting a callback.</p></div>}
-              {linkedPlan?.description&&<p className="pjd-plan-description">{linkedPlan.description}</p>}
-            </div>
-          </section>
-
-          <div className="pjd-back-row"><Link to="/projects">← Back to all projects</Link></div>
           <div className="pjd-mobile-actions" aria-label="Quick project actions">
             <button type="button" onClick={downloadPackage} disabled={packageDownloading}><Icon name="file" size={17}/><span>{packageDownloading?'Preparing…':'Package'}</span></button>
             <button type="button" onClick={()=>setCallbackOpen(true)}><span aria-hidden="true">☎</span><span>Callback</span></button>

@@ -218,8 +218,8 @@ assert(userFaq.includes('audience="homeowner"'),'Public FAQ page must keep the h
 assert(regionalLanding.includes('to="/guides"'),'Regional construction hubs must link to the guide hub');
 assert(regionalLanding.includes('/guides/best-steel-for-house-construction'),'Regional construction hubs must link to material guides');
 assert(regionalLanding.includes('/guides/home-construction-checklist'),'Regional construction hubs must link to planning guides');
-assert(aboutPage.includes('PRIOR OPERATING EXPERIENCE'),'About page must retain generic prior operating experience context');
-assert(aboutPage.includes('hands-on residential construction and interior execution work in Hyderabad'),'About page must describe the prior experience generically');
+assert(aboutPage.includes('Grounded in real-world'),'About page must retain operating experience context');
+assert(aboutPage.includes('hands-on residential construction and interior execution experience in Hyderabad'),'About page must describe the prior experience generically');
 assert(landing.includes('prior hands-on residential construction and interior execution experience in Hyderabad'),'Hyderabad construction hub must retain generic operating experience context');
 assert(buildScript.includes('aboutExperienceContent(route)'),'Static About HTML must include generic operating experience');
 assert(buildScript.includes('constructionExperienceContent(route)'),'Static Hyderabad construction HTML must include generic operating experience context');
