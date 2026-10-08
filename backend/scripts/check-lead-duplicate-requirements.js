@@ -9,7 +9,7 @@ const a={id:101,customer_name:'Ravi',customer_phone:'98765 43210',customer_email
 const b={id:102,customer_name:'Ravi',customer_phone:'98765 43210',customer_email:'r@example.com',
   requirement:'Terrace extension',pincode:'500039',custom_fields:{id:'sheet-A-12'}};
 const maps=candidateMaps([b,a]);
-const row=(requirement,others={})=>({'Phone Number':'9876543210','Customer Email':'r@example.com',
+const row=(requirement,others={})=>({'Customer Phone':'9876543210','Customer Email':'r@example.com',
   Requirement:requirement,Pincode:'500039',...others});
 
 assert.notEqual(sheetRowIdentity(row('New 2BHK interiors')),
