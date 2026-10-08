@@ -50,8 +50,12 @@ assert.match(wizard,/onCompletionChangeRef\.current\?\.\(true\)/);
 assert.match(wizard,/answers\.built_up_area\]\)/);
 
 
-assert.match(projects,/const previous=document\.body\.style\.overflow/);
-assert.match(projects,/return\(\)=>\{\s*document\.removeEventListener\([^;]+?\)\s*document\.body\.style\.overflow=previous/);
+// Modal accessibility: lock body scroll while open, then restore scroll,
+// remove the key handler and return focus on teardown.
+assert.match(projects,/const oldOverflow\s*=\s*document\.body\.style\.overflow/);
+assert.match(projects,/document\.body\.style\.overflow\s*=\s*'hidden'/);
+assert.match(projects,/return\s*\(\)\s*=>\s*\{[\s\S]{0,300}document\.body\.style\.overflow\s*=\s*oldOverflow[\s\S]{0,300}document\.removeEventListener\('keydown',\s*handleKey\)/);
+assert.match(projects,/if\s*\(originalFocus\?\.isConnected\)\s*originalFocus\.focus\(\)/);
 assert.doesNotMatch(projects,/function openProject\(project\)\{\s*setSelectedProject\(project\)\s*document\.body\.style\.overflow/);
 assert.doesNotMatch(projects,/import \{ openLeadPopup \}/);
 assert.doesNotMatch(projects,/import PublicIcon /);
