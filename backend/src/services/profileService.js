@@ -69,6 +69,8 @@ function normalizePlans(plans){
   return plans.map((item,index)=>{
     const rawPrice=item?.priceFrom;
     const priceFrom=rawPrice==null||rawPrice===''?null:Number(rawPrice);
+    const priceUnit=String(item?.priceUnit||'unspecified').trim();
+    if(!['unspecified','project','sqft','sqyd','running_ft','room','unit'].includes(priceUnit))throw profileError('Select a valid package pricing unit');
     if(priceFrom!==null&&(!Number.isFinite(priceFrom)||priceFrom<0||priceFrom>1000000000))throw profileError('Plan starting price is invalid');
     const inclusions=Array.isArray(item?.inclusions)
       ? item.inclusions.map(value=>cleanText(value,160,'Plan inclusion')).filter(Boolean)
@@ -78,6 +80,7 @@ function normalizePlans(plans){
       title:cleanText(item?.title,160,'Plan title',{required:true}),
       description:cleanText(item?.description,2000,'Plan description'),
       priceFrom,
+      priceUnit,
       durationLabel:cleanText(item?.durationLabel,120,'Plan duration'),
       brochureUrl:cleanUrl(item?.brochureUrl,'Package brochure'),
       inclusions,
@@ -133,7 +136,7 @@ async function getProfile(userId, client = pool) {
        ORDER BY sort_order,id`, [profile.id]
     ),
     client.query(
-      `SELECT id,title,description,price_from,duration_label,inclusions,brochure_url,sort_order,is_published
+      `SELECT id,title,description,price_from,price_unit,duration_label,inclusions,brochure_url,sort_order,is_published
        FROM business_profile_service_plans
        WHERE business_profile_id=$1
        ORDER BY sort_order,id`, [profile.id]
@@ -371,13 +374,13 @@ async function updateProfile(userId, payload) {
     if(normalizedPlans.length){
       await client.query(`
         INSERT INTO business_profile_service_plans
-          (business_profile_id,title,description,price_from,duration_label,inclusions,brochure_url,sort_order,is_published)
-        SELECT $1,x.title,x.description,x.price_from,x.duration_label,x.inclusions,x.brochure_url,x.sort_order,x.is_published
+          (business_profile_id,title,description,price_from,price_unit,duration_label,inclusions,brochure_url,sort_order,is_published)
+        SELECT $1,x.title,x.description,x.price_from,x.price_unit,x.duration_label,x.inclusions,x.brochure_url,x.sort_order,x.is_published
         FROM jsonb_to_recordset($2::jsonb) AS x(
-          title text,description text,price_from numeric,duration_label text,inclusions jsonb,brochure_url text,sort_order int,is_published boolean
+          title text,description text,price_from numeric,price_unit text,duration_label text,inclusions jsonb,brochure_url text,sort_order int,is_published boolean
         )
       `,[profileId,JSON.stringify(normalizedPlans.map(item=>({
-        title:item.title,description:item.description,price_from:item.priceFrom,duration_label:item.durationLabel,
+        title:item.title,description:item.description,price_from:item.priceFrom,price_unit:item.priceUnit,duration_label:item.durationLabel,
         inclusions:item.inclusions,brochure_url:item.brochureUrl,sort_order:item.sortOrder,is_published:item.isPublished,
       })))]);
     }
