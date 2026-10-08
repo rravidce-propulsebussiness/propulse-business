@@ -163,7 +163,7 @@ async function listForProfessional(userId){
 async function listForAdmin(){
   return (await pool.query(
     `SELECT r.id,r.project_id,r.project_title,r.customer_name,r.customer_phone,
-       r.customer_email,r.message,r.status,r.created_at,bp.business_name
+       r.customer_email,r.message,r.marketplace_lead_id,r.marketplace_sync_status,r.marketplace_sync_error,r.status,r.created_at,bp.business_name
      FROM project_callback_requests r
      LEFT JOIN business_profiles bp ON bp.user_id=r.business_user_id
      ORDER BY r.created_at DESC,r.id DESC LIMIT 150`
