@@ -1,7 +1,8 @@
 BEGIN;
 CREATE TABLE IF NOT EXISTS project_callback_requests (
   id BIGSERIAL PRIMARY KEY,
-  project_id INTEGER NOT NULL REFERENCES business_profile_projects(id) ON DELETE CASCADE,
+  project_id INTEGER NOT NULL,
+  project_title VARCHAR(180) NOT NULL,
   business_user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   customer_name VARCHAR(160) NOT NULL,
   customer_phone VARCHAR(16) NOT NULL,
