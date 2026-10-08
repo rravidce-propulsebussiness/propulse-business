@@ -136,4 +136,15 @@ async function updateByProfessional(userId,requestId,input={}){
   }
   return result.rows[0];
 }
-module.exports={submit,listForProfessional,updateByProfessional};
+async function listForAdmin(){
+  return (await pool.query(
+    `SELECT q.id,q.project_id,q.project_title,q.customer_name,q.customer_phone,
+      q.customer_email,q.requirement,q.site_location,q.area_text,q.budget_text,
+      q.preferred_package,q.status,q.quoted_package,q.quoted_price,q.quoted_scope,
+      q.professional_notes,q.quoted_at,q.created_at,bp.business_name
+     FROM professional_project_quote_requests q
+     LEFT JOIN business_profiles bp ON bp.user_id=q.business_user_id
+     ORDER BY q.created_at DESC,q.id DESC LIMIT 200`
+  )).rows;
+}
+module.exports={submit,listForProfessional,updateByProfessional,listForAdmin};
