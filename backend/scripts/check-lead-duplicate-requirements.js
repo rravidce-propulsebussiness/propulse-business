@@ -66,7 +66,7 @@ Module._load=function(request,parent,isMain){
     assert.equal(await service.findDuplicateLead({...base,requirement:'Lead requirement not provided'}),null);
     assert.equal(duplicateQueries.length,0,'Blank requirements must not query by contact alone');
     assert.equal(await service.findDuplicateLead({...base,requirement:'A new office renovation'}),null);
-    assert.equal(await service.findDuplicateLead({...base,requirement:'New 2BHK interiors'})?.id,101);
+    assert.equal((await service.findDuplicateLead({...base,requirement:'New 2BHK interiors'}))?.id,101);
     assert(duplicateQueries.every(x=>x.params[6]),
       'Contact-based deduplication must require a nonblank requirement');
   }finally{Module._load=originalLoad;}
