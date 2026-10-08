@@ -402,5 +402,82 @@ test('published project retains private project-specific callback flow alongside
   expect(submitted).toMatchObject({name:'Example Customer',phone:'9876543210',consent:true})
   await dialog.getByRole('button',{name:'Done'}).click()
   await actions.getByRole('link',{name:/Get Quote/}).click()
-  await expect(page).toHaveURL(/\/quote#construction$/)
+  await expect(page).toHaveURL(/\/projects\/project-123\/quote$/)
+})
+
+
+test('project Get Quote uses owner profile package pricing, not the generic ProPulse quote flow',async({page})=>{
+  const project={
+    project_id:123,project_type:'Interior',title:'3 BHK Interior',
+    description:'Completed three-bedroom interiors',completion_year:2025,
+    business_name:'SG Homes',business_profile_id:7,
+    location_text:'Hyderabad',area_text:'1650 sq ft',budget_text:'₹18 lakh',
+    package_name:'Standard',image_urls:[],is_verified:false,
+  }
+  const professional={
+    business_name:'SG Homes',business_profile_id:7,
+    service_plans:[
+      {id:2,title:'Standard',description:'Interior execution',
+       price_from:1600,price_unit:'sqft',duration_label:'8–10 weeks',
+       inclusions:['Branded plywood','Modular kitchen']},
+      {id:3,title:'Premium',price_from:2400,price_unit:'sqft',
+       inclusions:['Premium hardware']},
+    ],
+  }
+  await page.route('**/api/experts/projects/123',route=>route.fulfill({
+    status:200,contentType:'application/json',body:JSON.stringify(project)
+  }))
+  await page.route('**/api/experts/7',route=>route.fulfill({
+    status:200,contentType:'application/json',body:JSON.stringify(professional)
+  }))
+  let submitted=null
+  await page.route('**/api/experts/projects/123/quote-request',async route=>{
+    submitted=route.request().postDataJSON()
+    await route.fulfill({
+      status:201,contentType:'application/json',
+      body:JSON.stringify({accepted:true,requestId:83})
+    })
+  })
+  await page.goto('/projects/project-123')
+  const actions=page.locator('.pjd-action-stack')
+  await actions.getByRole('link',{name:/Get Quote/}).click()
+  await expect(page).toHaveURL(/\/projects\/project-123\/quote$/)
+  await expect(page.getByRole('heading',{name:'Get a quotation for a project like this.'})).toBeVisible()
+  await expect(page.locator('.pq-package-choice').filter({hasText:'Standard'})).toContainText('₹1,600 / sq ft')
+  await expect(page.locator('.pq-package-choice').filter({hasText:'Premium'})).toContainText('₹2,400 / sq ft')
+  await expect(page.locator('.pq-summary-price')).toContainText('₹1,600 / sq ft')
+  await expect(page.locator('.pq-historic')).toContainText('₹18 lakh')
+  await expect(page.locator('.pq-historic')).toContainText('not your quotation')
+
+  await page.getByPlaceholder('Your name').fill('Example Customer')
+  await page.getByPlaceholder('10-digit mobile number').fill('9876543210')
+  await page.getByPlaceholder('e.g. Uppal, Hyderabad').fill('Uppal, Hyderabad')
+  await page.getByPlaceholder('e.g. 1,650 sq ft').fill('1650 sq ft')
+  await page.getByPlaceholder(/Describe your rooms/).fill('Please quote for a 3 BHK interior with branded plywood and modular kitchen.')
+  await page.locator('.pq-consent input[type="checkbox"]').check()
+  await page.getByRole('button',{name:/Request Professional Quote/}).click()
+  await expect(page.getByRole('heading',{name:'Quotation request received'})).toBeVisible()
+  await expect(page.getByText('Reference #83')).toBeVisible()
+  expect(submitted).toMatchObject({
+    name:'Example Customer',phone:'9876543210',consent:true,
+    preferredPackage:'Standard',siteLocation:'Uppal, Hyderabad',
+    area:'1650 sq ft'
+  })
+  expect(submitted).not.toHaveProperty('quoted_price')
+  expect(submitted).not.toHaveProperty('package_price_from_snapshot')
+})
+
+test('project quote supports custom pricing when professional has not published packages',async({page})=>{
+  await page.route('**/api/experts/projects/124',route=>route.fulfill({
+    status:200,contentType:'application/json',
+    body:JSON.stringify({project_id:124,title:'Completed Apartment',project_type:'interior',completion_year:2025,business_profile_id:8})
+  }))
+  await page.route('**/api/experts/8',route=>route.fulfill({
+    status:200,contentType:'application/json',
+    body:JSON.stringify({business_name:'Professional 8',service_plans:[]})
+  }))
+  await page.goto('/projects/project-124/quote')
+  await expect(page.locator('.pq-package-choice')).toHaveCount(1)
+  await expect(page.getByText(/has not published package pricing/)).toBeVisible()
+  await expect(page.getByRole('button',{name:/Request Professional Quote/})).toBeVisible()
 })
