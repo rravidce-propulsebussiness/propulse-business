@@ -29,7 +29,11 @@ async function findDuplicateLead({industryId,serviceId,subserviceId,customerPhon
 }
 async function createLead({industryId,serviceId,subserviceId,stateId,cityId,customerName,customerPhone,customerEmail,requirement,propertyType,budget,source,notes,customFields,pricing,pricingSource,leadType='basic',isExclusive=false,exclusiveDelayDays,exclusiveDelayHours,pincode,zipcode,buyerCapacity,accessStrategy,releaseToTwoAfterHours,releaseToThreeAfterHours,createdBy,leadPartnerId=null,investorUserId=null,qualityGateContext='admin',deferQualityGate=false,contactConsentAt=null,contactConsentVersion=null,intakeSubmissionKey=null}){
   if(!industryId)throw new Error('Industry is required');
-  const duplicate=await findDuplicateLead({industryId,serviceId,subserviceId,customerPhone,customerEmail,customerName,requirement,pincode:pincode||zipcode});
+  // Public form submissions have unique intake keys. Matching phone/name/text
+  // must not collapse a second, separately submitted project into the first.
+  const formSubmission=Boolean(intakeSubmissionKey)&&
+    ['public_requirement','homepage_consultation','professional_project_quote','professional_project_callback'].includes(source);
+  const duplicate=formSubmission?null:await findDuplicateLead({industryId,serviceId,subserviceId,customerPhone,customerEmail,customerName,requirement,pincode:pincode||zipcode});
   if(duplicate){
     const error=new Error(`Duplicate lead: a recent matching requirement already exists${duplicate.customer_name?` (${duplicate.customer_name})`:''}.`);
     error.code='DUPLICATE_LEAD';error.leadId=duplicate.id;throw error;
