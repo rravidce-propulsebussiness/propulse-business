@@ -8,11 +8,6 @@ import './ProfessionalDetails.css'
 const emptyRequest={name:'',phone:'',email:'',message:'',consent:false,website:''}
 const unique=values=>[...new Set(values.filter(Boolean))]
 function initials(name){return String(name||'Professional').split(/\s+/).filter(Boolean).slice(0,2).map(part=>part[0]?.toUpperCase()).join('')||'P'}
-function money(value){
-  if(value==null||value==='')return ''
-  const number=Number(value)
-  return Number.isFinite(number)?new Intl.NumberFormat('en-IN',{style:'currency',currency:'INR',maximumFractionDigits:0}).format(number):''
-}
 function safeUrl(value){
   if(typeof value!=='string')return ''
   try{
