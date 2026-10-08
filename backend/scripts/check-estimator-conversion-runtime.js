@@ -111,7 +111,8 @@ async function main(){
   assert.equal(lead.contact_consent_version,'estimator-quote-contact-v1');
   assert.equal(lead.custom_fields?._estimator?.calculationId,publicId);
   assert.equal(lead.custom_fields?._estimator?.minimum,100000);
-  assert.match(String(lead.requirement),/Indicative estimate/);
+  assert.equal(lead.requirement,null,'Estimator submissions without a typed requirement must keep Requirement empty');
+  assert.equal(lead.custom_fields?._intake?.writtenRequirement,null);
 
   const linked=(await pool.query(
     'SELECT lead_id,converted_at FROM estimator_calculations WHERE public_id=$1',

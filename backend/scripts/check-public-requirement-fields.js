@@ -1,7 +1,7 @@
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
-const { publicWrittenRequirement, legacyStructuredSummary } = require('../src/utils/publicRequirementText');
+const { publicWrittenRequirement, legacyStructuredSummary, writtenLeadRequirement } = require('../src/utils/publicRequirementText');
 
 const structured = {
   'What are you planning?': 'Commercial',
@@ -40,9 +40,34 @@ assert(!intake.includes('buildSummary(flow, safeAnswers)'), 'Public submissions 
 assert(intake.includes('customFields._intake.writtenRequirement = leadFields.requirement'));
 assert(intake.includes('detailedFields._intake.writtenRequirement = leadFields.requirement'));
 assert(intake.includes("question.questionType === 'text'"));
-assert(reader.includes('publicWrittenRequirement(row,custom)'), 'All API read paths should normalize old public leads');
-assert(purchased.includes('publicWrittenRequirement(row,raw_custom_fields)'), 'Purchased lead list must also show real written requirements');
-assert(gate.includes("t.source='public_requirement'"), 'Structured forms should count for quality even without free text');
+assert(reader.includes('writtenLeadRequirement(row,custom)'), 'All API read paths should normalize form-origin leads');
+assert(purchased.includes('writtenLeadRequirement(row,raw_custom_fields)'), 'Purchased lead list must also show real written requirements');
+assert(gate.includes("t.source IN ('public_requirement','public_estimator','homepage_consultation')"),
+  'Structured public/home consultations should count for quality even without free text');
 assert(migration.includes("NEW.source='public_requirement' AND normalized_requirement=''"),
   'Blank public free text must not collapse separate projects by matching contact');
+const quote = {
+  source: 'professional_project_quote',
+  requirement: 'Interior Design enquiry from a completed project. Quotation industry: Interior Design\n' +
+    'Site PIN code: 500072\nNumber of Bedrooms: 3 BHK\nInterior Style Preference: Minimalist',
+  custom_fields: {_project_origin:{projectId:22,requestId:12}},
+};
+assert.equal(writtenLeadRequirement(quote), '',
+  'Quoted form answers must not repeat under Requirement');
+assert.equal(writtenLeadRequirement({...quote,requirement:quote.requirement+'\nAdditional requirement: Include a puja room'}),
+  'Include a puja room', 'Typed quote requirements remain visible');
+assert.equal(writtenLeadRequirement({source:'homepage_consultation',requirement:'Commercial · G+3'}),
+  '', 'Homepage selections are not handwritten requirement text');
+assert.equal(writtenLeadRequirement({source:'professional_project_callback',requirement:'Interior Design enquiry from a completed project.'}),
+  '', 'A callback request without a typed message has no written requirement');
+assert.equal(writtenLeadRequirement({source:'manual',requirement:'Need a terrace extension'}),
+  'Need a terrace extension', 'Manual leads keep their explicitly entered requirements');
+const bridge = read('src/services/projectMarketplaceLeadService.js');
+const homepage = read('src/services/publicLeadIntakeService.js');
+const formMigration = read('src/database/migrations/20261008_zzzzzzz_form_intake_requirement_integrity.sql');
+assert(bridge.includes("const requirement=kind==='callback'?details:writtenBrief"),
+  'Project marketplace must not insert a generated description');
+assert(homepage.includes('requirement: null,'), 'Home consultation selection summaries must not become requirement');
+assert(formMigration.includes("'professional_project_callback'"),
+  'All form-origin leads must rely on intake idempotency');
 console.log('Public requirement separation and historical display regression tests passed.');

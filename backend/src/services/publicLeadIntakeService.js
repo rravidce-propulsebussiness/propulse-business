@@ -235,7 +235,6 @@ async function resolveConsultationLocation(cityId, pincode) {
 function consultationLeadData(flow, details) {
   const marketplace = {};
   const protectedAnswers = {};
-  const summary = [];
   let propertyType = null;
   let budget = null;
 
@@ -243,17 +242,17 @@ function consultationLeadData(flow, details) {
     marketplace.project_type = CONSULTATION_LABELS.projectType[details.projectType];
     marketplace.floors = constructionFloorLabel(details.floors);
     if (details.plotArea !== null) marketplace.plot_area = `${details.plotArea} sq yards`;
-    summary.push(marketplace.project_type, marketplace.floors);
-    if (details.plotArea !== null) summary.push(`Plot ${details.plotArea} sq yards`);
+
+
     propertyType = ['commercial','commercial_building'].includes(details.projectType) ? 'Commercial' : 'Residential';
   } else if (flow.key === 'design') {
     propertyType = CONSULTATION_LABELS.propertyType[details.propertyType];
     marketplace.property_type = propertyType;
     if (details.bhk) marketplace.bhk = CONSULTATION_LABELS.bhk[details.bhk];
     if (details.area !== null) marketplace.area = `${details.area} sq ft`;
-    summary.push(propertyType);
-    if (details.bhk) summary.push(marketplace.bhk);
-    if (details.area !== null) summary.push(`${details.area} sq ft`);
+
+
+
   } else if (flow.key === 'property') {
     propertyType = CONSULTATION_LABELS.propertyType[details.propertyType];
     marketplace.property_intent = CONSULTATION_LABELS.propertyIntent[details.propertyIntent];
@@ -262,8 +261,8 @@ function consultationLeadData(flow, details) {
       marketplace.budget = details.budget;
       budget = details.budget;
     }
-    summary.push(marketplace.property_intent, propertyType);
-    if (details.budget) summary.push(`Budget ${details.budget}`);
+
+
   }
 
   if (details.additional) protectedAnswers['Additional information'] = details.additional;
@@ -273,7 +272,7 @@ function consultationLeadData(flow, details) {
     protectedAnswers,
     propertyType,
     budget,
-    requirement: summary.filter(Boolean).join(' · ').slice(0, 4000) || `${flow.name} requirement`,
+    requirement: null,
   };
 }
 
