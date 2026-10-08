@@ -77,7 +77,7 @@ function authorizationHeaders(method,url,{body=Buffer.alloc(0),contentType,now=n
   if(cfg.sessionToken)headers['x-amz-security-token']=cfg.sessionToken;
   if(contentType)headers['content-type']=contentType;
   const c=canonicalHeaders(headers);
-  const request=[method.toUpperCase(),canonicalPath(url.pathname),'',c.canonical,c.signed,payloadHash].join('\n');
+  const request=[method.toUpperCase(),canonicalPath(url.pathname),canonicalQuery(Object.fromEntries(url.searchParams)),c.canonical,c.signed,payloadHash].join('\n');
   const scope=[t.dateStamp,cfg.region,SERVICE,'aws4_request'].join('/');
   const stringToSign=[ALGORITHM,t.amzDate,scope,sha(request)].join('\n');
   const signature=hmac(signingKey(cfg.secretAccessKey,t.dateStamp,cfg.region),stringToSign,'hex');
@@ -95,6 +95,43 @@ function buildPresignedGetUrl(key,{expiresSeconds,now=new Date(),configOverride}
   const signature=hmac(signingKey(cfg.secretAccessKey,t.dateStamp,cfg.region),stringToSign,'hex');
   return url.origin+url.pathname+'?'+query+'&X-Amz-Signature='+signature;
 }
+
+function buildPresignedUploadUrl(key,{query={},contentType,expiresSeconds=900,now=new Date(),configOverride}={}){
+  const cfg=config(configOverride||{}),url=objectUrl(key,cfg),t=timestamp(now);
+  const expires=Math.min(3600,Math.max(60,Number(expiresSeconds)||900));
+  const scope=[t.dateStamp,cfg.region,SERVICE,'aws4_request'].join('/');
+  const hdr=canonicalHeaders(contentType?{'content-type':contentType,host:url.host}:{host:url.host});
+  const params={...query,'X-Amz-Algorithm':ALGORITHM,'X-Amz-Credential':cfg.accessKeyId+'/'+scope,
+    'X-Amz-Date':t.amzDate,'X-Amz-Expires':String(expires),'X-Amz-SignedHeaders':hdr.signed};
+  if(cfg.sessionToken)params['X-Amz-Security-Token']=cfg.sessionToken;
+  const canonical=['PUT',canonicalPath(url.pathname),canonicalQuery(params),hdr.canonical,hdr.signed,'UNSIGNED-PAYLOAD'].join('\n');
+  const signature=hmac(signingKey(cfg.secretAccessKey,t.dateStamp,cfg.region),[ALGORITHM,t.amzDate,scope,sha(canonical)].join('\n'),'hex');
+  return url.origin+url.pathname+'?'+canonicalQuery(params)+'&X-Amz-Signature='+signature;
+}
+async function startMultipartUpload(key,contentType){
+  const response=await signedFetch('POST',key,{query:{uploads:''},contentType,timeoutMs:30000});
+  const result=await response.text();
+  const uploadId=/<UploadId>([^<]+)<\/UploadId>/.exec(result)?.[1]?.replace(/&amp;/g,'&');
+  if(!uploadId)throw Object.assign(new Error('R2 did not return a multipart upload identifier'),{code:'MULTIPART_START_FAILED'});
+  return uploadId;
+}
+async function completeMultipartUpload(key,uploadId,parts){
+  if(!Array.isArray(parts)||parts.length===0||parts.length>10000)throw Error('Invalid multipart upload manifest');
+  const xml='<?xml version="1.0" encoding="UTF-8"?><CompleteMultipartUpload>'+
+    parts.map(({partNumber,etag})=>{
+      const clean=String(etag||'').replace(/^"|"$/g,'');
+      if(!Number.isInteger(partNumber)||partNumber<1||partNumber>10000||!/^[a-fA-F0-9]{32}$/.test(clean))throw Error('Invalid multipart part');
+      return '<Part><PartNumber>'+partNumber+'</PartNumber><ETag>"'+clean+'"</ETag></Part>';
+    }).join('')+'</CompleteMultipartUpload>';
+  const response=await signedFetch('POST',key,{query:{uploadId},contentType:'application/xml',body:Buffer.from(xml),timeoutMs:120000});
+  const result=await response.text();
+  if(/<Error>/.test(result))throw Object.assign(new Error('R2 could not complete video upload'),{code:'MULTIPART_COMPLETE_FAILED'});
+  return true;
+}
+async function abortMultipartUpload(key,uploadId){
+  return signedFetch('DELETE',key,{query:{uploadId},timeoutMs:30000});
+}
+
 async function readLimited(response,maxBytes){
   const declared=Number(response.headers.get('content-length')||0);
   if(declared>maxBytes)throw Object.assign(new Error('Private object exceeds the allowed size'),{code:'PRIVATE_OBJECT_TOO_LARGE'});
@@ -109,8 +146,9 @@ async function readLimited(response,maxBytes){
     }
   }finally{reader.releaseLock()}
 }
-async function signedFetch(method,key,{body=Buffer.alloc(0),contentType,configOverride,timeoutMs=TIMEOUT_MS}={}){
+async function signedFetch(method,key,{body=Buffer.alloc(0),contentType,configOverride,timeoutMs=TIMEOUT_MS,query}={}){
   const cfg=config(configOverride||{}),url=objectUrl(key,cfg),payload=Buffer.isBuffer(body)?body:Buffer.from(body||'');
+  if(query)url.search=canonicalQuery(query);
   const safeTimeout=Math.min(120000,Math.max(1000,Number(timeoutMs)||TIMEOUT_MS));
   const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),safeTimeout);timer.unref?.();
   try{
@@ -167,4 +205,4 @@ async function probe(){
   }catch(error){await deleteObject(key).catch(()=>{});throw error}
 }
 
-module.exports={PREFIX,driver,isEnabled,assertWriteStorage,config,normalizeKey,makeReference,parseReference,isReference,putObject,deleteObject,headObject,getObjectBuffer,getSignedGetUrl,getMediaGetUrl,buildPresignedGetUrl,authorizationHeaders,probe,enc};
+module.exports={PREFIX,driver,isEnabled,assertWriteStorage,config,normalizeKey,makeReference,parseReference,isReference,putObject,deleteObject,headObject,getObjectBuffer,getSignedGetUrl,getMediaGetUrl,buildPresignedGetUrl,buildPresignedUploadUrl,startMultipartUpload,completeMultipartUpload,abortMultipartUpload,authorizationHeaders,probe,enc};
