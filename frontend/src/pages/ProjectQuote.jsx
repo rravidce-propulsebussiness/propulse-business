@@ -98,6 +98,7 @@ export default function ProjectQuote(){
       <h1>{submitted.duplicate?'We already received your request':'Quotation request received'}</h1>
       <p>Your {quoteIndustryLabel.toLowerCase()} enquiry about <strong>{project.title}</strong> has been recorded for <strong>{project.businessName||'the selected professional'}</strong>. ProPulse coordinates your enquiry and protects your contact details.</p>
       {submitted.requestId&&<strong className="pq-request-id">Reference #{submitted.requestId}</strong>}
+      {submitted.marketplaceStatus==='review_required'?<p role="status">Your enquiry reached the selected professional. Marketplace listing is awaiting admin review.</p>:submitted.marketplaceLeadId?<p role="status">Also registered in the ProPulse professional marketplace for matching experts.</p>:null}
       <div className="pq-success-actions"><Link to={'/projects/'+projectId}>Back to project</Link><Link to="/projects">View other projects</Link></div>
     </section>:<>
       {pricingMessage&&<div className="pq-project-warning" role="status">{pricingMessage}</div>}
