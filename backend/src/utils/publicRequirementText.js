@@ -74,6 +74,17 @@ function projectWrittenRequirement(row, custom = row?.custom_fields || {}) {
 function writtenLeadRequirement(row, custom = row?.custom_fields || {}) {
   const source = String(row?.source || '').toLowerCase();
   if (source === 'public_requirement') return publicWrittenRequirement(row, custom);
+  if (source === 'public_estimator') {
+    if (Object.prototype.hasOwnProperty.call(custom?._intake || {}, 'writtenRequirement')) {
+      return clean(custom._intake.writtenRequirement);
+    }
+    // Old estimator conversions composed a price + questionnaire summary.
+    // Only recover explicitly entered marketplace-visible text answers.
+    const keys = new Set(['requirement','requirements','additionalrequirement','additionalrequirements','sharemoredetailsandrequirement']);
+    const written = Object.entries(custom || {}).find(([key,value]) =>
+      keys.has(String(key).toLowerCase().replace(/[^a-z0-9]/g,'')) && clean(value));
+    return written ? clean(written[1]) : '';
+  }
   if (source === 'homepage_consultation') return '';
   if (source === 'professional_project_quote' || source === 'professional_project_callback') {
     return projectWrittenRequirement(row, custom);
