@@ -1,5 +1,6 @@
 const pool=require('../config/database');const accessService=require('./leadAccessStrategyService');
 const {parseProjectQuoteRequirement}=require('./projectQuoteRequirementDetails');
+const {publicWrittenRequirement}=require('../utils/publicRequirementText');
 
 const leadSelect=`SELECT l.*,i.name AS industry_name,s.name AS service_name,ss.name AS subservice_name,st.name AS state_name,c.name AS city_name,iu.name AS investor_name,iu.email AS investor_email,lp.user_id AS lead_partner_user_id,lp.status AS lead_partner_status,lpu.name AS lead_partner_name,lpu.email AS lead_partner_email,CASE WHEN l.is_exclusive THEN (l.created_at + make_interval(days => l.exclusive_delay_days)) ELSE NULL END AS exclusive_available_at,lead_effective_buyer_capacity(l.access_strategy,l.buyer_capacity,l.release_to_two_after_hours,l.release_to_three_after_hours,l.created_at,l.access_capacity_locked) AS effective_buyer_capacity,(SELECT COUNT(DISTINCT acquired.user_id)::int FROM (SELECT lp2.user_id FROM lead_purchases lp2 WHERE lp2.lead_id=l.id AND lp2.status='paid' UNION SELECT ec.user_id FROM lead_entitlement_claims ec WHERE ec.lead_id=l.id AND (ec.expires_at IS NULL OR ec.expires_at>=CURRENT_TIMESTAMP)) acquired) AS purchased_buyer_count,(SELECT COUNT(DISTINCT occupied.user_id)::int FROM (SELECT lp3.user_id FROM lead_purchases lp3 LEFT JOIN payments p3 ON p3.id=lp3.payment_id WHERE lp3.lead_id=l.id AND (lp3.status='paid' OR (lp3.status='pending_payment' AND p3.status='pending')) UNION SELECT ec2.user_id FROM lead_entitlement_claims ec2 WHERE ec2.lead_id=l.id AND (ec2.expires_at IS NULL OR ec2.expires_at>=CURRENT_TIMESTAMP)) occupied) AS occupied_buyer_count FROM leads l LEFT JOIN industries i ON i.id=l.industry_id LEFT JOIN services s ON s.id=l.service_id LEFT JOIN subservices ss ON ss.id=l.subservice_id LEFT JOIN states st ON st.id=l.state_id LEFT JOIN cities c ON c.id=l.city_id LEFT JOIN users iu ON iu.id=l.investor_user_id LEFT JOIN lead_partners lp ON lp.id=l.lead_partner_id LEFT JOIN users lpu ON lpu.id=lp.user_id`;
 
@@ -31,7 +32,9 @@ const normalizeLeadRow=row=>{
     for(const[key,value]of Object.entries(recovered))
       if(!String(custom[key]??'').trim())custom[key]=value;
   }
-  const requirement=String(row.requirement??'').trim()||customValue(custom,['Requirement','Requirements','Requirement Details','Share More Details and Requirement','Location And Requirements','Location And Requirements Details'])||customValueContains(custom,['requirement','requirements']);
+  const requirement=String(row.source||'').toLowerCase()==='public_requirement'
+    ? publicWrittenRequirement(row,custom)
+    : String(row.requirement??'').trim()||customValue(custom,['Requirement','Requirements','Requirement Details','Share More Details and Requirement','Location And Requirements','Location And Requirements Details'])||customValueContains(custom,['requirement','requirements']);
   const budgetCustom=customValue(custom,['Budget','Budget Range','Project Budget','Project Budget Range','Budget From To','Expected Budget','Approx Budget','Approximate Budget','Investment Budget','Estimated Budget'])||customValueContains(custom,['budget']);
   if(!hasCustomKeyMatching(custom,['budget'])){if(budgetCustom)custom.Budget=budgetCustom;else if(String(row.budget??'').trim())custom.Budget=String(row.budget).trim();}
   const normalizedBudget=String(row.budget??'').trim()||budgetCustom;
