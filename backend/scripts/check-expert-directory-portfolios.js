@@ -16,6 +16,15 @@ if(read('src/services/publicExpertService.js').includes('bp.business_details'))t
 must('src/services/profileService.js',['projects','service_plans','public_headline','public_profile_enabled']);
 must('../frontend/src/pages/Profile.jsx',['Completed projects','Service packages','Public profile','Upload video','50 MB','/profile/projects/video','Packages']);
 must('../frontend/src/pages/Profile.jsx',['activeSection','selectSection','Upload plan / drawing','PDF, JPG, PNG or WebP','/profile/projects/plan']);
+must('src/database/migrations/20261008_project_photo_gallery.sql',['image_urls','jsonb_array_length(image_urls)<=8']);
+must('src/services/projectImageService.js',['MAX_IMAGE_BYTES','image/jpeg','image/png','image/webp','saveProjectImage','managedImageInfo']);
+must('src/services/profileService.js',['imageUrls','image_urls','image_display_urls','removeManagedProjectImages']);
+must('src/services/publicExpertService.js',['image_urls','projectImageService.displayUrl']);
+must('src/server.js',["/api/profile/projects/image","limit:'13mb'"]);
+must('src/routes/profileRoutes.js',["/projects/image","uploadProjectImage"]);
+must('../frontend/src/pages/Profile.jsx',['uploadProjectImages','/profile/projects/image','imageDisplayUrls','profile-gallery-upload']);
+must('../frontend/src/pages/Projects.jsx',['projectPhotos','pj-gallery-thumbnails','selectedProject.video']);
+
 if(read('../frontend/src/pages/Profile.jsx').includes('scrollToSection('))throw new Error('Profile tabs must switch sections instead of scrolling through all sections');
 must('../frontend/src/pages/Profile.css',['profile-plan-upload','profile-plan-preview','position:static','backdrop-filter:none']);
 must('../frontend/src/pages/Projects.jsx',['/experts/projects','published_at','professionalProjects','Completed project','Verified professional']);
