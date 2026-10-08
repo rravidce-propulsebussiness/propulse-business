@@ -107,7 +107,7 @@ function Icon({ name, size = 18 }) {
 }
 
 export default function Projects() {
-  const [projects, setProjects] = useState([])
+  const [professionalProjects, setProfessionalProjects] = useState([])
   const [category, setCategory] = useState('all')
   const [query, setQuery] = useState('')
   const [contactData, setContactData] = useState({})
@@ -134,7 +134,7 @@ export default function Projects() {
       .then(value => {
         if (!active) return
         const rows = Array.isArray(value) ? value : Array.isArray(value?.data) ? value.data : []
-        setProjects(rows.map(normalizeProject))
+        setProfessionalProjects(rows.map(normalizeProject))
         setHasNext(Boolean(value?.pagination?.hasNextPage))
         setPage(1)
         setLoadError('')
@@ -151,7 +151,7 @@ export default function Projects() {
       const next = page + 1
       const value = await publicRequest('/experts/projects?page=' + next + '&pageSize=' + PAGE_SIZE)
       const rows = Array.isArray(value) ? value : Array.isArray(value?.data) ? value.data : []
-      setProjects(current => {
+      setProfessionalProjects(current => {
         const found = new Set(current.map(project => project.id))
         return [...current, ...rows.map(normalizeProject).filter(project => !found.has(project.id))]
       })
@@ -167,17 +167,17 @@ export default function Projects() {
 
   const filtered = useMemo(() => {
     const term = query.trim().toLowerCase()
-    return projects.filter(project => {
+    return professionalProjects.filter(project => {
       if (category !== 'all' && project.category !== category) return false
       if (!term) return true
       return [project.title, project.location, project.businessName, project.type, project.description]
         .some(value => value.toLowerCase().includes(term))
     })
-  }, [projects, category, query])
+  }, [professionalProjects, category, query])
 
   useEffect(() => {
     if (!selectedProject) return undefined
-    const oldOverflow = document.body.style.overflow
+    const previous=document.body.style.overflow
     const originalFocus = document.activeElement
     document.body.style.overflow = 'hidden'
     dialogRef.current?.querySelector('button')?.focus()
@@ -200,9 +200,9 @@ export default function Projects() {
       }
     }
     document.addEventListener('keydown', handleKey)
-    return () => {
-      document.body.style.overflow = oldOverflow
-      document.removeEventListener('keydown', handleKey)
+    return()=>{
+      document.removeEventListener('keydown',handleKey)
+      document.body.style.overflow=previous
       if (originalFocus?.isConnected) originalFocus.focus()
     }
   }, [selectedProject])
@@ -256,9 +256,9 @@ export default function Projects() {
               <div className="pj-project-copy">
                 <div className="pj-project-title-row"><h3>{project.title}</h3><Icon name="arrow" size={19}/></div>
                 {project.location && <p className="pj-location"><Icon name="pin" size={15}/>{project.location}</p>}
-                {project.businessName && <p className="pj-company">{project.businessName}{project.verified && <span title="Verified professional"><Icon name="check" size={12}/> Verified</span>}</p>}
+                {project.businessName && <p className="pj-company">{project.businessName}{project.verified && <span title="Verified professional"><Icon name="check" size={12}/> Verified professional</span>}</p>}
                 <div className="pj-project-details">
-                  {project.completionYear && <span>Completed {project.completionYear}</span>}
+                  {project.completionYear && <span>Completed project · {project.completionYear}</span>}
                   {project.area && <span>{project.area}</span>}
                 </div>
                 {project.cost && <div className="pj-cost"><small>Reported cost / budget</small><strong>{project.cost}</strong></div>}
@@ -270,10 +270,10 @@ export default function Projects() {
 
         {!loading && filtered.length === 0 && <div className="pj-empty">
           <div className="pj-empty-symbol"><Icon name="layers" size={29}/></div>
-          <h3>{loadError ? 'Unable to load projects right now' : projects.length ? 'No matching projects yet' : 'Professional projects are coming soon'}</h3>
-          <p>{loadError || (projects.length ? 'Try another category or search term to discover more work.' : 'This portfolio will feature published projects from professionals. We only display actual submissions, not placeholder completed work.')}</p>
+          <h3>{loadError ? 'Unable to load projects right now' : professionalProjects.length ? 'No matching projects yet' : 'Professional projects are coming soon'}</h3>
+          <p>{loadError || (professionalProjects.length ? 'Try another category or search term to discover more work.' : 'This portfolio will feature published projects from professionals. We only display actual submissions, not placeholder completed work.')}</p>
           <div className="pj-empty-actions">
-            {projects.length > 0 && <button type="button" onClick={() => { setCategory('all'); setQuery('') }}>Clear Filters</button>}
+            {professionalProjects.length > 0 && <button type="button" onClick={() => { setCategory('all'); setQuery('') }}>Clear Filters</button>}
             <Link to="/experts">Find a Professional <Icon name="arrow" size={15}/></Link>
           </div>
         </div>}
@@ -312,7 +312,7 @@ export default function Projects() {
           <span className="pj-overline">PROFESSIONAL PROJECT</span>
           <h2>{selectedProject.title}</h2>
           {selectedProject.location && <p className="pj-detail-location"><Icon name="pin" size={16}/>{selectedProject.location}</p>}
-          {selectedProject.businessName && <p className="pj-detail-professional">Shared by <strong>{selectedProject.businessName}</strong>{selectedProject.verified && <span><Icon name="check" size={12}/> Verified</span>}</p>}
+          {selectedProject.businessName && <p className="pj-detail-professional">Shared by <strong>{selectedProject.businessName}</strong>{selectedProject.verified && <span><Icon name="check" size={12}/> Verified professional</span>}</p>}
           <div className="pj-facts">
             <div><span>Project type</span><strong>{selectedProject.type}</strong></div>
             {selectedProject.area && <div><span>Project area</span><strong>{selectedProject.area}</strong></div>}
