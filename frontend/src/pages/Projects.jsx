@@ -208,7 +208,7 @@ export default function Projects() {
       ...project.sampleSpecs.map((item, index) => (index + 1) + '. ' + item),
       '',
       'This file describes a sample concept, not an actual completed client project or quotation.',
-    ].join('\\n')
+    ].join('\n')
     const url = URL.createObjectURL(new Blob([details], {type:'text/plain;charset=utf-8'}))
     const anchor = document.createElement('a')
     anchor.href = url
@@ -265,7 +265,7 @@ export default function Projects() {
           <label className="pj-search"><Icon name="search"/><span className="pj-sr-only">Search projects</span><input value={query} onChange={event=>setQuery(event.target.value)} placeholder="Search projects or locations"/></label>
         </div>
 
-        {loading && <div className="pj-loading-inline" role="status">Checking for published business projects…</div>}
+        {loading && <div className="pj-loading-inline" role="status" aria-label="Checking for published business projects"><span className="pj-inline-spinner" aria-hidden="true" /></div>}
         <div className="pj-project-grid">
           {filtered.map((project,index)=><article key={(project.sample?'sample-':'business-')+project.id} className={'pj-project-card'+(index===0&&category==='all'&&!query.trim()?' pj-project-card--featured':'')}>
             <button type="button" className="pj-card-open" onClick={()=>setSelectedProject(project)} aria-label={'View '+(project.sample?'sample ':'')+'details for '+project.title}>
