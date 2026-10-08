@@ -6,7 +6,7 @@
 .pp-stage-caption small{display:block;color:#f08a5a;font-size:12px;font-weight:800;letter-spacing:.12em}
 .pp-stage-caption b{display:block;font-size:16px;letter-spacing:-.02em;margin-top:3px}
 .pp-stage-tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:18px}
-.pp-stage-tabs button{position:relative;overflow:hidden;cursor:pointer;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.18);border-radius:12px;padding:12px 4px;color:#c9d6ea;font:700 13px inherit;transition:background .3s,border-color .3s,color .3s}
+.pp-stage-tabs button{position:relative;overflow:hidden;cursor:pointer;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.18);border-radius:12px;padding:12px 4px;color:#c9d6ea;font-size:13px;font-weight:700;font-family:inherit;transition:background .3s,border-color .3s,color .3s}
 .pp-stage-tabs button.is-active{background:rgba(210,96,47,.2);border-color:#d2602f;color:#fff}
 .pp-stage-tabs button:focus-visible{outline:3px solid #f08a5a;outline-offset:3px}
 .pp-stage-tabs button i{position:absolute;bottom:0;left:0;height:3px;background:#f08a5a;width:0}
