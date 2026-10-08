@@ -57,7 +57,7 @@ function Chips({ question, value, onChange }) {
 }
 
 export default function RealEstateRequirementExact(props) {
-  const { embedded = false, questions, answers, setAnswer, cities, locationStates, locationStateId, setLocationState, cityId, setCity, locationQuestion, setPincode, onDetectedLocation, pinLookup, contact, setContact, state, submit, contactData, completion, projectQuote = null } = props
+  const { embedded = false, questions, answers, setAnswer, cities, locationStates, locationStateId, setLocationState, cityId, setCity, locationQuestion, setPincode, onDetectedLocation, pinLookup, contact, setContact, state, submit, contactData, completion, projectQuote = null, marketplaceConsent=false, setMarketplaceConsent=()=>{} } = props
   const byKey = useMemo(() => Object.fromEntries(questions.map(q => [q.questionKey, q])), [questions])
   const intent = byKey.property_intent
   const propertyType = byKey.property_type
@@ -188,7 +188,7 @@ export default function RealEstateRequirementExact(props) {
             <div className="rex-summary-head"><div><small>YOUR REQUIREMENT</small><h3>Selection Summary</h3></div><span>{Math.min(100,Math.max(0,Math.round(completion||0)))}%</span></div>
             <div className="rex-summary-progress"><i style={{width:`${Math.min(100,Math.max(0,completion||0))}%`}}/></div>
             <div className="rex-summary-rows">{summary.map(([label,value])=><p key={label}><span>{label}</span><b title={value}>{value}</b></p>)}</div>
-            {state.error&&<div className="rex-error">{state.error}</div>}
+            {projectQuote&&<label className="project-marketplace-consent"><input type="checkbox" required checked={marketplaceConsent} onChange={e=>setMarketplaceConsent(e.target.checked)}/> I agree that ProPulse may share my enquiry with this professional and other relevant marketplace professionals. Customer contact details remain protected until access is authorized.</label>}{state.error&&<div className="rex-error">{state.error}</div>}
             <button type="submit" disabled={state.saving}>{state.saving?'Sending Request…':projectQuote?'Request Professional Quote':'Request Property Options'} <Icon name="arrow" size={15}/></button>
             
           </section>
