@@ -12,11 +12,6 @@ const HOME_TRUST_HEADLINES = [
   { lead: 'Transparent Quotes.', accent: ' Clear Costs.' },
   { lead: 'Expert Guidance.', accent: ' Better Choices.' },
 ]
-const HOME_TRUST_HEADLINE_MEASURE = HOME_TRUST_HEADLINES.reduce((longest, item) => {
-  const text = item.lead + item.accent
-  return text.length > longest.length ? text : longest
-}, '')
-
 const DEFAULT_HERO = 'https://images.unsplash.com/photo-1600585152915-d208bec867a1?auto=format&fit=crop&w=2200&q=92'
 
 const SERVICES = [
@@ -185,13 +180,25 @@ export default function Home() {
           <div className="hc-premium-hero-copy">
             <span className="hc-premium-kicker">BUILDING SPACES, ELEVATING LIVES</span>
             <h1>Don’t Leave Your <em>Dream Home</em> to <strong>Chance.</strong></h1>
-            <p className="hc-premium-typewriter">
-               <span className="hc-premium-typewriter-sr">Compare branded materials, engineer supervision and warranty options, with clear quotations and expert guidance.</span>
-               <span className="hc-premium-typewriter-measure" aria-hidden="true">{HOME_TRUST_HEADLINE_MEASURE}</span>
-               <span className="hc-premium-typewriter-line" aria-hidden="true">
-                 <span className="hc-premium-typewriter-lead">{activeTrustHeadline.lead.slice(0, trustTyping.length)}</span>
-                 <span className="hc-premium-typewriter-accent">{activeTrustHeadline.accent.slice(0, Math.max(0, trustTyping.length - activeTrustHeadline.lead.length))}</span>
-                 <span className="hc-premium-typewriter-caret" />
+            <p className="hc-premium-typewriter" style={{
+               position: 'relative', minHeight: '1.4em', margin: '22px 0 26px',
+               fontFamily: "'Sora', Inter, ui-sans-serif, sans-serif",
+               fontSize: 'clamp(14px,2.4vw,23px)', fontWeight: 700,
+               letterSpacing: '-.035em', lineHeight: 1.4,
+             }}>
+               <span className="hc-premium-typewriter-sr" style={{
+                 position: 'absolute', width: '1px', height: '1px', overflow: 'hidden',
+                 clipPath: 'inset(50%)', whiteSpace: 'nowrap',
+               }}>Compare branded materials, engineer supervision and warranty options, with clear quotations and expert guidance.</span>
+               <span className="hc-premium-typewriter-line" aria-hidden="true" style={{
+                 position: 'relative', display: 'block', minHeight: '1.4em',
+               }}>
+                 <span className="hc-premium-typewriter-lead" style={{ color: '#f7f9ff' }}>{activeTrustHeadline.lead.slice(0, trustTyping.length)}</span>
+                 <span className="hc-premium-typewriter-accent" style={{ color: '#ff9d70' }}>{activeTrustHeadline.accent.slice(0, Math.max(0, trustTyping.length - activeTrustHeadline.lead.length))}</span>
+                 <span className="hc-premium-typewriter-caret" style={{
+                   display: 'inline-block', width: '2px', height: '1.07em',
+                   marginLeft: '3px', background: '#ff8c56', verticalAlign: '-.12em',
+                 }} />
                </span>
              </p>
             <div className="hc-premium-actions">
