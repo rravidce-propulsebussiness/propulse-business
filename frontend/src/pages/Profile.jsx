@@ -70,6 +70,11 @@ export default function Profile(){
   const [plans,setPlans]=useState([])
   const [projectCallbacks,setProjectCallbacks]=useState([])
   const [callbacksLoading,setCallbacksLoading]=useState(false)
+  const [quoteLeads,setQuoteLeads]=useState([])
+  const [quotesLoading,setQuotesLoading]=useState(false)
+  const [quoteDrafts,setQuoteDrafts]=useState({})
+  const [quoteSaving,setQuoteSaving]=useState({})
+  const [quoteNotices,setQuoteNotices]=useState({})
   const [directoryStatus,setDirectoryStatus]=useState(null)
   const [videoUploads,setVideoUploads]=useState({})
   const [imageUploads,setImageUploads]=useState({})
@@ -112,6 +117,47 @@ export default function Profile(){
       .finally(()=>{if(active)setCallbacksLoading(false)})
     return()=>{active=false}
   },[activeSection])
+
+  useEffect(()=>{
+    if(activeSection!=='projects')return undefined
+    let active=true
+    setQuotesLoading(true)
+    authRequest('/profile/project-quote-requests')
+      .then(value=>{
+        if(!active)return
+        const rows=Array.isArray(value?.data)?value.data:[]
+        setQuoteLeads(rows)
+        setQuoteDrafts(Object.fromEntries(rows.map(row=>[row.id,{
+          packageName:row.quoted_package||row.preferred_package||'',
+          price:row.quoted_price==null?'':String(row.quoted_price),
+          scope:row.quoted_scope||'',
+          notes:row.professional_notes||'',
+        }])))
+      })
+      .catch(()=>{if(active)setQuoteLeads([])})
+      .finally(()=>{if(active)setQuotesLoading(false)})
+    return()=>{active=false}
+  },[activeSection])
+
+  function editQuote(id,key,value){
+    setQuoteDrafts(current=>({...current,[id]:{...current[id],[key]:value}}))
+    setQuoteNotices(current=>({...current,[id]:''}))
+  }
+  async function saveProjectQuote(id,status){
+    const draft=quoteDrafts[id]||{}
+    setQuoteSaving(current=>({...current,[id]:true}))
+    setQuoteNotices(current=>({...current,[id]:''}))
+    try{
+      const updated=await authRequest('/profile/project-quote-requests/'+id,{
+        method:'PATCH',
+        body:JSON.stringify({...draft,status}),
+      })
+      setQuoteLeads(items=>items.map(item=>item.id===id?{...item,...updated}:item))
+      setQuoteNotices(current=>({...current,[id]:status==='quoted'?'Quotation saved and marked ready for ProPulse coordination.':'Quotation draft saved.'}))
+    }catch(err){
+      setQuoteNotices(current=>({...current,[id]:err.message||'Could not save quotation.'}))
+    }finally{setQuoteSaving(current=>({...current,[id]:false}))}
+  }
 
   const serviceOptions=useMemo(()=>serviceSelections.map(x=>services.filter(s=>String(s.industry_id)===String(x.industryId))),[services,serviceSelections])
   const subserviceOptions=useMemo(()=>serviceSelections.map(x=>subservices.filter(s=>String(s.service_id)===String(x.serviceId))),[subservices,serviceSelections])
@@ -370,6 +416,48 @@ export default function Profile(){
                 </div>
                 <div className="profile-video-field"><label>Video URL<input value={project.videoUrl} onChange={e=>updateProject(index,'videoUrl',e.target.value)} placeholder="Upload a video below or paste https://…"/></label><label className={'profile-video-upload '+(videoUploads[index]?'busy':'')}><span>{videoUploads[index]?'Uploading video…':'Upload video'}</span><small>MP4, MOV or WebM · max 50 MB</small><input type="file" accept="video/mp4,video/quicktime,video/webm,.mp4,.mov,.webm" disabled={Boolean(videoUploads[index])} onChange={e=>{const file=e.target.files?.[0];e.target.value='';uploadProjectVideo(index,file)}}/></label>{project.videoUrl&&playableVideo(project.videoDisplayUrl||project.videoUrl)&&<video className="profile-project-video-preview" controls preload="metadata" src={project.videoDisplayUrl||project.videoUrl}/>} {project.videoUrl&&!playableVideo(project.videoDisplayUrl||project.videoUrl)&&<a className="profile-video-link" href={project.videoDisplayUrl||project.videoUrl} target="_blank" rel="noreferrer">Open external video ↗</a>}</div><div className="profile-plan-file-field"><label>Plan / drawing link <small>Optional if hosted elsewhere</small><input value={project.planUrl} onChange={e=>updateProject(index,'planUrl',e.target.value)} placeholder="Upload below or paste https://…"/></label><label className={'profile-plan-upload '+(planUploads[index]?'busy':'')}><span>{planUploads[index]?'Uploading plan…':'Upload plan / drawing'}</span><small>PDF, JPG, PNG or WebP · max 15 MB</small><input type="file" accept="application/pdf,image/jpeg,image/png,image/webp,.pdf,.jpg,.jpeg,.png,.webp" disabled={Boolean(planUploads[index])} onChange={e=>{const file=e.target.files?.[0];e.target.value='';uploadProjectPlan(index,file)}}/></label>{project.planUrl&&planPreviewKind(project.planDisplayUrl||project.planUrl)==='image'&&<img className="profile-plan-preview" src={project.planDisplayUrl||project.planUrl} alt={(project.title||'Project')+' plan / drawing'}/>} {project.planUrl&&planPreviewKind(project.planDisplayUrl||project.planUrl)==='pdf'&&<a className="profile-plan-link" href={project.planDisplayUrl||project.planUrl} target="_blank" rel="noreferrer">View PDF plan ↗</a>} {project.planUrl&&planPreviewKind(project.planDisplayUrl||project.planUrl)==='external'&&<a className="profile-plan-link" href={project.planDisplayUrl||project.planUrl} target="_blank" rel="noreferrer">Open plan / drawing ↗</a>} {project.planUrl&&<button type="button" className="profile-plan-remove" onClick={()=>updateProject(index,'planUrl','')}>Remove plan / drawing</button>}</div></div>
             </article>)}{!projects.length&&<div className="profile-showcase-empty"><b>No completed projects added yet.</b><span>Add real work to make your public profile stronger.</span></div>}</div>
+          </section>
+          <section className="profile-panel profile-project-quotes" aria-label="Professional-specific quotation leads">
+            <div className="panel-title"><div><span>NEW PROJECT LEADS</span><h2>Quotation enquiries</h2><p>Homeowners requesting a quote from your completed projects appear here. Only you set the plan, scope and project pricing.</p></div></div>
+            {quotesLoading?<p>Loading quotation leads…</p>:quoteLeads.length===0?
+              <p className="profile-callback-empty">No project-specific quote leads yet. Customers can send their requirements using Get Quote on your published projects.</p>:
+              <div className="profile-project-quote-grid">
+                {quoteLeads.map(item=><article className="profile-project-quote-card" key={item.id}>
+                  <div className="profile-quote-heading">
+                    <div><span>LEAD #{item.id} · {item.status.replaceAll('_',' ').toUpperCase()}</span><h3>{item.project_title}</h3><strong>{item.customer_name}</strong><small>{new Date(item.created_at).toLocaleString('en-IN')}</small></div>
+                    <span className="profile-quote-status">{item.status.replaceAll('_',' ')}</span>
+                  </div>
+                  <div className="profile-quote-requirements">
+                    {item.site_location&&<p><b>Site location:</b> {item.site_location}</p>}
+                    {item.area_text&&<p><b>Area:</b> {item.area_text}</p>}
+                    {item.budget_text&&<p><b>Customer budget:</b> {item.budget_text}</p>}
+                    {item.preferred_package&&<p><b>Requested package:</b> {item.preferred_package}</p>}
+                    <p><b>Requirements:</b> {item.requirement}</p>
+                    <p><b>Contact:</b> {item.customer_phone||'Protected'}{item.customer_email?' · '+item.customer_email:''}</p>
+                    <small>Customer contacts remain masked. ProPulse coordinates the connection.</small>
+                  </div>
+                  <div className="profile-quote-editor">
+                    <label>Package for this customer
+                      <input list={'quote-plans-'+item.id} maxLength={160} placeholder="Choose or write a custom package" value={quoteDrafts[item.id]?.packageName||''} onChange={e=>editQuote(item.id,'packageName',e.target.value)}/>
+                      <datalist id={'quote-plans-'+item.id}>{plans.filter(p=>p.isPublished&&p.title).map(p=><option key={p.id||p.title} value={p.title}/>)}</datalist>
+                    </label>
+                    <label>Your estimated price (₹)
+                      <input type="number" min="1" max="9999999999" step="1" placeholder="Professional sets price" value={quoteDrafts[item.id]?.price||''} onChange={e=>editQuote(item.id,'price',e.target.value)}/>
+                    </label>
+                    <label className="quote-wide">Proposed scope and inclusions
+                      <textarea maxLength={3000} rows={3} placeholder="Describe the work and specifications included" value={quoteDrafts[item.id]?.scope||''} onChange={e=>editQuote(item.id,'scope',e.target.value)}/>
+                    </label>
+                    <label className="quote-wide">Internal notes (optional)
+                      <textarea maxLength={1500} rows={2} value={quoteDrafts[item.id]?.notes||''} onChange={e=>editQuote(item.id,'notes',e.target.value)}/>
+                    </label>
+                    {quoteNotices[item.id]&&<p className="quote-wide profile-quote-notice" role="status">{quoteNotices[item.id]}</p>}
+                    <div className="profile-quote-actions quote-wide">
+                      <button type="button" disabled={quoteSaving[item.id]} onClick={()=>saveProjectQuote(item.id,'in_review')}>Save Draft</button>
+                      <button type="button" disabled={quoteSaving[item.id]} onClick={()=>saveProjectQuote(item.id,'quoted')}>Mark Quote Ready</button>
+                    </div>
+                  </div>
+                </article>)}
+              </div>}
           </section>
           <section className="profile-panel profile-callback-panel" aria-label="Customer project callback requests">
             <div className="panel-title"><div><span>CALLBACK REQUESTS</span><h2>Project enquiries</h2><p>Private requests from customers who viewed your published project.</p></div></div>
