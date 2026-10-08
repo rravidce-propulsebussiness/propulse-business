@@ -141,7 +141,7 @@ export default function Home() {
             <p>Find the right partner. Build it right.</p>
             <div className="hc-premium-actions">
               <button type="button" onClick={() => openRequirement()}>Start Your Requirement <span aria-hidden="true">→</span></button>
-              <a href="/quote#construction">View Packages</a>
+              <a href="/packages">View Packages</a>
             </div>
             <div className="hc-premium-trust" aria-label="ProPulse benefits">
               <span><Icon name="clipboard" size={22}/>Free Consultation</span>
