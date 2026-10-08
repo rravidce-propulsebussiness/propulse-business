@@ -4,6 +4,7 @@ const projectVideoService = require('../services/projectVideoService');
 const projectPlanService = require('../services/projectPlanService');
 const projectImageService = require('../services/projectImageService');
 const projectCallbackService = require('../services/projectCallbackService');
+const brochureService=require('../services/brochureService');
 
 async function getProfile(req, res) {
   try {
@@ -87,4 +88,20 @@ async function listProjectCallbacks(req,res){
     return sendError(res,500,error,'Unable to load callback requests');
   }
 }
-module.exports = { getProfile, updateProfile, uploadProjectVideo, uploadProjectPlan, uploadProjectImage, listProjectCallbacks };
+async function listBrochures(req,res){
+  try{
+    if(req.user?.role!=='business')return res.status(403).json({error:'Business account required'});
+    return res.json({data:await brochureService.listMine(req.user.id)});
+  }catch(error){console.error('List brochures failed:',error.message);return res.status(500).json({error:'Unable to load brochures'});}
+}
+async function saveBrochures(req,res){
+  try{
+    if(req.user?.role!=='business')return res.status(403).json({error:'Business account required'});
+    return res.json({data:await brochureService.saveMine(req.user.id,req.body?.brochures)});
+  }catch(error){
+    const status=error.code==='INVALID_BROCHURE'||error.code==='PROJECT_PLAN_OWNERSHIP'?400:500;
+    if(status===500)console.error('Save brochures failed:',error.message);
+    return res.status(status).json({error:status===500?'Unable to save brochures':error.message});
+  }
+}
+module.exports = { getProfile, updateProfile, uploadProjectVideo, uploadProjectPlan, uploadProjectImage, listProjectCallbacks, listBrochures, saveBrochures };

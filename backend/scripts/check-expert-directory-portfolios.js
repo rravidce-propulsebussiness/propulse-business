@@ -31,7 +31,12 @@ must('src/routes/publicExpertRoutes.js',["/projects/:projectId",'projectDetail']
 if(read('../frontend/src/pages/Profile.jsx').includes('scrollToSection('))throw new Error('Profile tabs must switch sections instead of scrolling through all sections');
 must('../frontend/src/pages/Profile.css',['profile-plan-upload','profile-plan-preview','position:static','backdrop-filter:none']);
 must('../frontend/src/pages/Projects.jsx',['/experts/projects','published_at','professionalProjects','Completed project','Verified professional']);
-must('../frontend/src/pages/Experts.jsx',['TRUSTED PROFESSIONALS','Expert</span> <em>Engineers</em>','COMPLETED PROJECTS','PRICING & PACKAGES','Published service plans','Send Requirement']);
+must('../frontend/src/pages/Experts.jsx',['TRUSTED PROFESSIONALS','Expert</span> <em>Engineers</em>','View Full Profile','Request Callback']);
+must('../frontend/src/pages/ProfessionalDetails.jsx',['Completed Projects','Brochures','Published Packages','Request a Callback','/experts/']);
+must('src/routes/publicExpertRoutes.js',['/:expertId/callback','requestProfileCallback']);
+must('src/services/projectCallbackService.js',['requestProfileCallback','maskedPhone','maskedEmail','redactContactText']);
+must('src/services/brochureService.js',['listMine','listPublic','saveMine']);
+must('src/database/migrations/20261008_zzz_professional_brochures_and_callbacks.sql',['business_profile_brochures','ALTER COLUMN project_id DROP NOT NULL']);
 if(read('../frontend/src/pages/Experts.jsx').includes('experts-hero'))throw new Error('Experts page hero section must remain removed');
 must('../frontend/src/admin/pages/AdminExpertDirectory.jsx',['Expert Directory','Allowed membership','Featured','Hidden']);
 must('../frontend/src/admin/pages/AdminExpertDirectory.jsx',['businessRequest=useRef(0)','searchReady=useRef(false)','requestId!==businessRequest.current','queueMicrotask']);

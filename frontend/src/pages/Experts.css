@@ -495,3 +495,7 @@
   .expert-profile-footer{align-items:stretch;flex-direction:column;padding:10px 12px max(12px,env(safe-area-inset-bottom))}
   .expert-profile-footer>button{justify-content:center}
 }
+
+/* Profile cards are now accessible links to dedicated public pages. */
+.expert-card-actions a{text-decoration:none;text-align:center}
+.expert-card-actions a:focus-visible{outline:3px solid #ff8a58;outline-offset:3px}

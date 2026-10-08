@@ -305,7 +305,7 @@ export default function Profile(){
         <button type="button" className={activeSection==='services'?'active':''} onClick={()=>selectSection('services')}>Services</button>
         <button type="button" className={activeSection==='locations'?'active':''} onClick={()=>selectSection('locations')}>Locations</button>
         <button type="button" className={activeSection==='public'?'active':''} onClick={()=>selectSection('public')}>Public profile</button>
-        <button type="button" className={activeSection==='projects'?'active':''} onClick={()=>selectSection('projects')}>Projects</button>
+        <button type="button" className={activeSection==='projects'?'active':''} onClick={()=>selectSection('projects')}>Projects</button><Link to="/profile/brochures">Brochures</Link>
         <button type="button" className={activeSection==='plans'?'active':''} onClick={()=>selectSection('plans')}>Packages</button>
       </nav>
 
@@ -378,8 +378,9 @@ export default function Profile(){
                   <div><span>{item.project_title}</span><h3>{item.customer_name}</h3><small>{new Date(item.created_at).toLocaleString('en-IN')}</small></div>
                   {item.message&&<p>{item.message}</p>}
                   <div className="profile-callback-contact">
-                    <a href={'tel:'+item.customer_phone}>Call {item.customer_phone}</a>
-                    {item.customer_email&&<a href={'mailto:'+item.customer_email}>Email customer</a>}
+                    <span>Mobile: {item.customer_phone||'Protected'}</span>
+                    {item.customer_email&&<span>Email: {item.customer_email}</span>}
+                    <small>Contact details are masked. ProPulse coordinates introductions.</small>
                   </div>
                 </article>)}
               </div>}

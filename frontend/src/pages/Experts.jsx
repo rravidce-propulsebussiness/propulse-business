@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { publicRequest } from '../utils/auth'
 import './Experts.css'
-import { openLeadPopup } from '../utils/leadPopup'
 import { PublicFooter, PublicHeader } from '../components/PublicSiteChrome'
 
 function collection(value){
@@ -31,7 +30,6 @@ function Icon({name,size=20}){
 
 function initials(name){return String(name||'Business').split(/\s+/).filter(Boolean).slice(0,2).map(part=>part[0]?.toUpperCase()).join('')||'B'}
 function unique(values){return [...new Set(values.filter(Boolean))]}
-function money(value){if(value==null||value==='')return null;const n=Number(value);return Number.isFinite(n)?new Intl.NumberFormat('en-IN',{style:'currency',currency:'INR',maximumFractionDigits:0}).format(n):null}
 
 export default function Experts(){
   const [experts,setExperts]=useState([])
@@ -42,9 +40,6 @@ export default function Experts(){
   const [filters,setFilters]=useState({search:'',industryId:'',cityId:'',verified:false})
   const [loading,setLoading]=useState(true)
   const [error,setError]=useState('')
-  const [selected,setSelected]=useState(null)
-  const [selectedTab,setSelectedTab]=useState('overview')
-  const [selectedLoadingId,setSelectedLoadingId]=useState(null)
 
   useEffect(()=>{
     Promise.allSettled([publicRequest('/industries'),publicRequest('/cities')]).then(([industryResult,cityResult])=>{
@@ -71,16 +66,6 @@ export default function Experts(){
   },[filters,pagination.page])
 
   function updateFilter(key,value){setFilters(current=>({...current,[key]:value}));setPagination(current=>({...current,page:1}))}
-  async function viewExpert(expert){
-    const expertId=expert.business_profile_id||expert.user_id
-    try{
-      setSelectedLoadingId(expertId);setError('')
-      const value=await publicRequest('/experts/'+expert.business_profile_id,{timeoutMs:10000})
-      setSelected(value)
-      setSelectedTab('overview')
-    }catch(err){setError(err.message||'Unable to load business profile.')}finally{setSelectedLoadingId(current=>current===expertId?null:current)}
-  }
-
   const visibleCities=useMemo(()=>cities.slice().sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''))),[cities])
 
   return <main className="experts-page">
@@ -123,8 +108,8 @@ export default function Experts(){
           <p className="expert-description">{expert.public_summary||'Trusted ProPulse professional offering the listed services and project support.'}</p>
           <div className="expert-proof-stats"><span><b>{expert.project_count||0}</b> Projects</span><span><b>{serviceNames.length||0}</b> Services</span><span><b>{expert.years_experience||'—'}</b> Years</span></div>
           <div className="expert-card-actions">
-            <button type="button" className="expert-view" disabled={selectedLoadingId===(expert.business_profile_id||expert.user_id)} aria-busy={selectedLoadingId===(expert.business_profile_id||expert.user_id)} onClick={()=>viewExpert(expert)}>{selectedLoadingId===(expert.business_profile_id||expert.user_id)?'Loading…':'View Profile'}</button>
-            <button type="button" className="expert-requirement" onClick={()=>openLeadPopup('')}>Send Requirement <Icon name="arrow" size={14}/></button>
+            <Link className="expert-view" to={'/experts/'+expert.business_profile_id}>View Full Profile</Link>
+            <Link className="expert-requirement" to={'/experts/'+expert.business_profile_id+'#callback'}>Request Callback <Icon name="arrow" size={14}/></Link>
           </div>
         </article>
       })}</div>}
@@ -132,134 +117,6 @@ export default function Experts(){
       {!loading&&pagination.totalPages>1&&<div className="experts-pagination"><button disabled={!pagination.hasPreviousPage} onClick={()=>setPagination(current=>({...current,page:Math.max(1,current.page-1)}))}>← Previous</button><span>Page {pagination.page} of {pagination.totalPages}</span><button disabled={!pagination.hasNextPage} onClick={()=>setPagination(current=>({...current,page:current.page+1}))}>Next →</button></div>}
     </section>
 
-
-    {selected&&(()=>{
-      const projects=Array.isArray(selected.projects)?selected.projects:[]
-      const plans=Array.isArray(selected.service_plans)?selected.service_plans:[]
-      const services=Array.isArray(selected.services)?selected.services:[]
-      const locations=Array.isArray(selected.locations)?selected.locations:[]
-      const serviceNames=unique(services.map(item=>item.subserviceName||item.serviceName))
-      const industryNames=unique(services.map(item=>item.industryName))
-      const locationNames=unique(locations.map(item=>[item.subcityName,item.cityName,item.stateName].filter(Boolean).join(', ')))
-      const videos=projects.filter(project=>project.video_url).slice().sort((a,b)=>{
-        const aDate=new Date(a.video_published_at||0).getTime()||0
-        const bDate=new Date(b.video_published_at||0).getTime()||0
-        return bDate-aDate||Number(b.id||0)-Number(a.id||0)
-      })
-      const drawings=projects.filter(project=>project.plan_url)
-      const tabs=[
-        ['overview','Overview'],
-        ['services','Services'],
-        ['pricing','Pricing'],
-        ['projects','Projects'],
-        ['media','Videos & Plans'],
-      ]
-      return <div className="expert-modal-backdrop" onMouseDown={event=>{if(event.target===event.currentTarget)setSelected(null)}}>
-        <section className="expert-profile-shell" role="dialog" aria-modal="true" aria-label={selected.business_name}>
-          <button className="expert-modal-close" type="button" onClick={()=>setSelected(null)} aria-label="Close profile">×</button>
-
-          <header className="expert-profile-hero">
-            <div className="expert-profile-avatar">{initials(selected.business_name)}</div>
-            <div className="expert-profile-hero-copy">
-              <span className="expert-profile-eyebrow">{selected.is_verified?'VERIFIED PROFESSIONAL':'SUBSCRIBED PROFESSIONAL'}</span>
-              <h2>{selected.business_name}</h2>
-              <p>{selected.public_headline||industryNames.join(' · ')||'Professional services'}</p>
-              <div className="expert-profile-badges">
-                {selected.is_verified&&<b className="verified">Verified</b>}
-                <b>{String(selected.plan_group||'member').toUpperCase()}</b>
-                {selected.years_experience!=null&&<b>{selected.years_experience} years experience</b>}
-              </div>
-            </div>
-            <div className="expert-profile-stats">
-              <span><b>{projects.length}</b><small>Projects</small></span>
-              <span><b>{serviceNames.length}</b><small>Services</small></span>
-              <span><b>{plans.length}</b><small>Packages</small></span>
-              <span><b>{videos.length}</b><small>Videos</small></span>
-            </div>
-          </header>
-
-          <nav className="expert-profile-tabs" aria-label="Business profile sections">
-            {tabs.map(([key,label])=><button type="button" className={selectedTab===key?'active':''} onClick={()=>setSelectedTab(key)} key={key}>{label}</button>)}
-          </nav>
-
-          <div className="expert-profile-content">
-            {selectedTab==='overview'&&<section className="expert-profile-overview">
-              <article className="expert-profile-panel expert-profile-about">
-                <div className="expert-profile-section-head"><span>ABOUT</span><h3>About {selected.business_name}</h3></div>
-                <p>{selected.public_summary||'No company introduction published yet.'}</p>
-              </article>
-              <aside className="expert-profile-panel">
-                <div className="expert-profile-section-head"><span>PROFILE SNAPSHOT</span><h3>Business highlights</h3></div>
-                <dl className="expert-profile-facts">
-                  <div><dt>Experience</dt><dd>{selected.years_experience!=null?selected.years_experience+' years':'Not published'}</dd></div>
-                  <div><dt>Coverage</dt><dd>{locationNames.length?locationNames.slice(0,2).join(' · '):'Service areas configured'}</dd></div>
-                </dl>
-              </aside>
-              <article className="expert-profile-panel expert-profile-overview-wide">
-                <div className="expert-profile-section-head"><span>WHAT THEY DO</span><h3>Services at a glance</h3></div>
-                <div className="expert-profile-chips">{serviceNames.length?serviceNames.slice(0,8).map(name=><b key={name}>{name}</b>):<em>No services listed.</em>}</div>
-              </article>
-            </section>}
-
-            {selectedTab==='services'&&<section className="expert-profile-service-layout">
-              <article className="expert-profile-panel">
-                <div className="expert-profile-section-head"><span>SERVICES</span><h3>Services & specialisations</h3></div>
-                {services.length?<div className="expert-service-groups">{industryNames.map(industry=><div key={industry}><h4>{industry}</h4><div>{unique(services.filter(item=>item.industryName===industry).map(item=>item.subserviceName||item.serviceName)).map(name=><span key={name}>{name}</span>)}</div></div>)}</div>:<div className="expert-profile-empty"><Icon name="briefcase" size={24}/><b>No services listed</b></div>}
-              </article>
-              <article className="expert-profile-panel">
-                <div className="expert-profile-section-head"><span>SERVICE AREAS</span><h3>Where they work</h3></div>
-                {locationNames.length?<div className="expert-location-list">{locationNames.map(name=><span key={name}><Icon name="pin" size={15}/>{name}</span>)}</div>:<div className="expert-profile-empty"><Icon name="pin" size={24}/><b>No service areas listed</b></div>}
-              </article>
-            </section>}
-
-            {selectedTab==='pricing'&&<section>
-              <div className="expert-profile-section-head"><span>PRICING & PACKAGES</span><h3>Published service plans</h3><p>Pricing below is business-published starting pricing. Final quotation can vary by scope, materials and site conditions.</p></div>
-              {plans.length?<div className="expert-pricing-grid">{plans.map(plan=><article key={plan.id} className="expert-price-card">
-                <span>PACKAGE</span><h4>{plan.title}</h4>
-                <div className="expert-price">{money(plan.price_from)?<><small>Starting from</small><strong>{money(plan.price_from)}</strong></>:<><small>Pricing</small><strong>Ask for quote</strong></>}</div>
-                {plan.duration_label&&<div className="expert-duration">{plan.duration_label}</div>}
-                {plan.description&&<p>{plan.description}</p>}
-                {Array.isArray(plan.inclusions)&&plan.inclusions.length>0&&<ul>{plan.inclusions.map((item,index)=><li key={plan.id+'-'+index}><Icon name="check" size={13}/>{item}</li>)}</ul>}
-                <button type="button" onClick={()=>{setSelected(null);openLeadPopup('')}}>Request this package <Icon name="arrow" size={13}/></button>
-              </article>)}</div>:<div className="expert-profile-empty expert-profile-empty-large"><span>₹</span><b>No pricing published yet</b><p>Send your requirement to receive a quotation based on your project scope.</p><button type="button" onClick={()=>{setSelected(null);openLeadPopup('')}}>Request Quote <Icon name="arrow" size={13}/></button></div>}
-            </section>}
-
-            {selectedTab==='projects'&&<section>
-              <div className="expert-profile-section-head"><span>COMPLETED PROJECTS</span><h3>Project portfolio</h3></div>
-              {projects.length?<div className="expert-project-grid expert-project-grid-profile">{projects.map(project=><article key={project.id}>
-                {project.cover_image_url?<div className="expert-project-image"><img src={project.cover_image_url} alt={project.title}/></div>:<div className="expert-project-image expert-project-placeholder"><Icon name="home" size={28}/></div>}
-                <div className="expert-project-body">
-                  <div className="expert-project-kicker">{[project.project_type,project.completion_year].filter(Boolean).join(' · ')||'Completed project'}</div>
-                  <h4>{project.title}</h4>
-                  {project.description&&<p>{project.description}</p>}
-                  <div className="expert-project-meta">{project.location_text&&<span>{project.location_text}</span>}{project.area_text&&<span>{project.area_text}</span>}{project.budget_text&&<span>{project.budget_text}</span>}</div>
-                  <div className="expert-project-links">{project.video_url&&<a href={project.video_url} target="_blank" rel="noreferrer"><Icon name="play" size={13}/> Watch video</a>}{project.plan_url&&<a href={project.plan_url} target="_blank" rel="noreferrer"><Icon name="file" size={13}/> View plan</a>}</div>
-                </div>
-              </article>)}</div>:<div className="expert-profile-empty expert-profile-empty-large"><Icon name="home" size={28}/><b>No completed projects published yet</b><p></p></div>}
-            </section>}
-
-            {selectedTab==='media'&&<section className="expert-media-section">
-              <div>
-                <div className="expert-profile-section-head"><span>PROJECT VIDEOS</span><h3>Completed work videos</h3><p>Most recently published videos are shown first.</p></div>
-                {videos.length?<div className="expert-video-grid">{videos.map(project=><a href={project.video_url} target="_blank" rel="noreferrer" key={project.id} className="expert-video-card">
-                  <div>{project.cover_image_url?<img src={project.cover_image_url} alt={project.title}/>:<span><Icon name="play" size={28}/></span>}<i><Icon name="play" size={18}/></i></div>
-                  <b>{project.title}</b><small>{[project.project_type,project.location_text].filter(Boolean).join(' · ')||'Project video'}</small>
-                </a>)}</div>:<div className="expert-profile-empty"><Icon name="play" size={26}/><b>No project videos published</b><p></p></div>}
-              </div>
-              <div>
-                <div className="expert-profile-section-head"><span>PLANS & DRAWINGS</span><h3>Project plans</h3></div>
-                {drawings.length?<div className="expert-drawing-list">{drawings.map(project=><a href={project.plan_url} target="_blank" rel="noreferrer" key={project.id}><span><Icon name="file" size={19}/></span><div><b>{project.title}</b><small>{[project.project_type,project.location_text].filter(Boolean).join(' · ')||'Project plan / drawing'}</small></div><strong>Open ↗</strong></a>)}</div>:<div className="expert-profile-empty"><Icon name="file" size={26}/><b>No plans or drawings published</b><p></p></div>}
-              </div>
-            </section>}
-          </div>
-
-          <footer className="expert-profile-footer">
-            <div><Icon name="shield" size={18}/><span>Direct phone and email stay private. Connect through the ProPulse requirement flow.</span></div>
-            <button type="button" onClick={()=>{setSelected(null);openLeadPopup('')}}>Send Requirement <Icon name="arrow" size={14}/></button>
-          </footer>
-        </section>
-      </div>
-    })()}
 
     <PublicFooter description="Helping homeowners compare trusted professional profiles and start structured project requirements." />
   </main>
