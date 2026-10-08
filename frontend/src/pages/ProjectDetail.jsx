@@ -109,11 +109,11 @@ export default function ProjectDetail(){
     if(!project?.businessProfileId||callbackSending)return
     setCallbackFeedback('');setCallbackSending(true)
     try{
-      await publicRequest('/experts/projects/'+encodeURIComponent(project.id)+'/callback',{
+      const response=await publicRequest('/experts/projects/'+encodeURIComponent(project.id)+'/callback',{
         method:'POST',body:JSON.stringify(callbackForm),
       })
       setCallbackSuccess(true)
-      setCallbackFeedback('Callback request received. ProPulse will coordinate this enquiry with '+(project.businessName||'the professional')+'.')
+      setCallbackFeedback((response.duplicate?'Your recent callback request is already recorded. ':'Callback lead created successfully. ')+(response.requestId?'Reference #'+response.requestId+'. ':'')+'ProPulse will coordinate this enquiry with '+(project.businessName||'the professional')+'.')
     }catch(err){setCallbackFeedback(err.message||'Unable to send your request. Please try again.')}
     finally{setCallbackSending(false)}
   }
@@ -221,7 +221,7 @@ export default function ProjectDetail(){
                 </button>
                 <Link className="pjd-action-button pjd-main-cta" to={'/projects/'+projectId+'/quote'}>
                   <span className="pjd-cta-symbol" aria-hidden="true">✧</span>
-                  <span className="pjd-cta-copy"><strong>Get Quote</strong><small>View this professional’s package pricing</small></span>
+                  <span className="pjd-cta-copy"><strong>Get Quote</strong><small>Submit requirements to this professional</small></span>
                   <span className="pjd-cta-arrow" aria-hidden="true">↗</span>
                 </Link>
               </div>
@@ -245,7 +245,7 @@ export default function ProjectDetail(){
         <span className="pjd-overline">PRIVATE PROJECT ENQUIRY</span>
         <h2 id="pjd-dialog-heading">Request a Callback</h2>
         <p>Ask about <strong>{project.title}</strong>. ProPulse coordinates your callback; the professional sees masked contact details.</p>
-        {callbackSuccess?<div className="pj-callback-success" role="status"><strong>Callback request received</strong><p>{callbackFeedback}</p><button type="button" className="pjd-dialog-done" onClick={closeCallback}>Done</button></div>:
+        {callbackSuccess?<div className="pj-callback-success" role="status"><strong>Callback lead received</strong><p>{callbackFeedback}</p><button type="button" className="pjd-dialog-done" onClick={closeCallback}>Done</button></div>:
           <form className="pjd-callback-form" onSubmit={submitCallback}>
             <div className="pjd-field-pair">
               <label>Your name<input required maxLength={160} autoComplete="name" placeholder="Full name" value={callbackForm.name} onChange={e=>setCallbackForm(v=>({...v,name:e.target.value}))}/></label>
