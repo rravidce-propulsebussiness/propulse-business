@@ -11,6 +11,17 @@ async function projects(req,res){
   catch(error){console.error('List recent projects failed:',error);return res.status(500).json({error:'Failed to load recent projects'});}
 }
 
+async function projectDetail(req,res){
+  try{
+    const project=await publicExpertService.getPublicProject(req.params.projectId);
+    if(!project)return res.status(404).json({error:'Project not found'});
+    return res.json(project);
+  }catch(error){
+    console.error('Get public project failed:',error);
+    return res.status(500).json({error:'Unable to load project'});
+  }
+}
+
 async function projectVideos(req,res){
   try{return res.json(await publicExpertService.listRecentProjectVideos(req.query||{}));}
   catch(error){console.error('List recent project videos failed:',error);return res.status(500).json({error:'Failed to load recent project videos'});}
