@@ -557,24 +557,34 @@ async function updateUserProfile(userId,{ name,email,phone,businessName,business
     if((await client.query('SELECT id FROM users WHERE LOWER(email)=$1 AND id<>$2',[normalizedEmail,userId])).rowCount){const e=new Error('An account with this email already exists');e.code='EMAIL_EXISTS';throw e;}
     const updatedUser=(await client.query('UPDATE users SET name=$1,email=$2,updated_at=CURRENT_TIMESTAMP WHERE id=$3 RETURNING id,name,email,role,is_active,created_at',[cleanName,normalizedEmail,userId])).rows[0];
     if(['business','lead_partner'].includes(user.role)){
-      const hasConfiguration=Array.isArray(services)||Array.isArray(locations);
-      if(hasConfiguration)await validateSelections(client,services,locations);
+      const hasConfiguration=services!==undefined||locations!==undefined;
+      if(hasConfiguration&&(!Array.isArray(services)||!Array.isArray(locations))){
+        const error=new Error('Services and locations must both be provided when changing business coverage');
+        error.code='INVALID_PROFILE_SELECTION';
+        throw error;
+      }
+      const validatedSelections=hasConfiguration?await validateSelections(client,services,locations):null;
       const profile=(await client.query('SELECT id FROM business_profiles WHERE user_id=$1 FOR UPDATE',[userId])).rows[0];
+      // PATCH semantics: omitted fields preserve existing values; an explicitly
+      // supplied empty string clears that field.
+      const profilePhone=String(phone===undefined?(beforeProfile?.phone??''):(phone??'')).trim();
+      const profileBusinessName=String(businessName===undefined?(beforeProfile?.business_name??''):(businessName??'')).trim();
+      const profileBusinessDetails=String(businessDetails===undefined?(beforeProfile?.business_details??''):(businessDetails??'')).trim();
       if(!profile){
-        if(String(phone??'').trim()||String(businessName??'').trim()||String(businessDetails??'').trim()||hasConfiguration){
-          const created=(await client.query('INSERT INTO business_profiles(user_id,phone,business_name,business_details) VALUES($1,$2,$3,$4) RETURNING id',[userId,String(phone??'').trim(),String(businessName??'').trim(),String(businessDetails??'').trim()])).rows[0];
+        if(profilePhone||profileBusinessName||profileBusinessDetails||hasConfiguration){
+          const created=(await client.query('INSERT INTO business_profiles(user_id,phone,business_name,business_details) VALUES($1,$2,$3,$4) RETURNING id',[userId,profilePhone,profileBusinessName,profileBusinessDetails])).rows[0];
           if(hasConfiguration){
-            for(const item of services)await client.query(`INSERT INTO business_profile_services (business_profile_id,industry_id,service_id,subservice_id,is_active) VALUES($1,$2,$3,$4,TRUE) ON CONFLICT (business_profile_id,industry_id,service_id,subservice_id) DO UPDATE SET is_active=TRUE,updated_at=CURRENT_TIMESTAMP`,[created.id,item.industryId,item.serviceId,item.subserviceId||null]);
-            for(const item of locations)await client.query(`INSERT INTO business_profile_locations (business_profile_id,state_id,city_id,subcity_id,pincode,is_active) VALUES($1,$2,$3,$4,$5,TRUE) ON CONFLICT (business_profile_id,state_id,city_id) DO UPDATE SET subcity_id=EXCLUDED.subcity_id,pincode=EXCLUDED.pincode,is_active=TRUE,updated_at=CURRENT_TIMESTAMP`,[created.id,item.stateId,item.cityId,item.subcityId||null,item.pincode||null]);
+            for(const item of validatedSelections.services)await client.query(`INSERT INTO business_profile_services (business_profile_id,industry_id,service_id,subservice_id,is_active) VALUES($1,$2,$3,$4,TRUE) ON CONFLICT (business_profile_id,industry_id,service_id,subservice_id) DO UPDATE SET is_active=TRUE,updated_at=CURRENT_TIMESTAMP`,[created.id,item.industryId,item.serviceId,item.subserviceId||null]);
+            for(const item of validatedSelections.locations)await client.query(`INSERT INTO business_profile_locations (business_profile_id,state_id,city_id,subcity_id,pincode,is_active) VALUES($1,$2,$3,$4,$5,TRUE) ON CONFLICT (business_profile_id,state_id,city_id) DO UPDATE SET subcity_id=EXCLUDED.subcity_id,pincode=EXCLUDED.pincode,is_active=TRUE,updated_at=CURRENT_TIMESTAMP`,[created.id,item.stateId,item.cityId,item.subcityId||null,item.pincode||null]);
           }
         }
       }else{
-        await client.query('UPDATE business_profiles SET phone=$1,business_name=$2,business_details=$3,updated_at=CURRENT_TIMESTAMP WHERE id=$4',[String(phone??'').trim(),String(businessName??'').trim(),String(businessDetails??'').trim(),profile.id]);
+        await client.query('UPDATE business_profiles SET phone=$1,business_name=$2,business_details=$3,updated_at=CURRENT_TIMESTAMP WHERE id=$4',[profilePhone,profileBusinessName,profileBusinessDetails,profile.id]);
         if(hasConfiguration){
           await client.query('UPDATE business_profile_services SET is_active=FALSE,updated_at=CURRENT_TIMESTAMP WHERE business_profile_id=$1',[profile.id]);
-          for(const item of services)await client.query(`INSERT INTO business_profile_services (business_profile_id,industry_id,service_id,subservice_id,is_active) VALUES($1,$2,$3,$4,TRUE) ON CONFLICT (business_profile_id,industry_id,service_id,subservice_id) DO UPDATE SET is_active=TRUE,updated_at=CURRENT_TIMESTAMP`,[profile.id,item.industryId,item.serviceId,item.subserviceId||null]);
+          for(const item of validatedSelections.services)await client.query(`INSERT INTO business_profile_services (business_profile_id,industry_id,service_id,subservice_id,is_active) VALUES($1,$2,$3,$4,TRUE) ON CONFLICT (business_profile_id,industry_id,service_id,subservice_id) DO UPDATE SET is_active=TRUE,updated_at=CURRENT_TIMESTAMP`,[profile.id,item.industryId,item.serviceId,item.subserviceId||null]);
           await client.query('UPDATE business_profile_locations SET is_active=FALSE,updated_at=CURRENT_TIMESTAMP WHERE business_profile_id=$1',[profile.id]);
-          for(const item of locations)await client.query(`INSERT INTO business_profile_locations (business_profile_id,state_id,city_id,subcity_id,pincode,is_active) VALUES($1,$2,$3,$4,$5,TRUE) ON CONFLICT (business_profile_id,state_id,city_id) DO UPDATE SET subcity_id=EXCLUDED.subcity_id,pincode=EXCLUDED.pincode,is_active=TRUE,updated_at=CURRENT_TIMESTAMP`,[profile.id,item.stateId,item.cityId,item.subcityId||null,item.pincode||null]);
+          for(const item of validatedSelections.locations)await client.query(`INSERT INTO business_profile_locations (business_profile_id,state_id,city_id,subcity_id,pincode,is_active) VALUES($1,$2,$3,$4,$5,TRUE) ON CONFLICT (business_profile_id,state_id,city_id) DO UPDATE SET subcity_id=EXCLUDED.subcity_id,pincode=EXCLUDED.pincode,is_active=TRUE,updated_at=CURRENT_TIMESTAMP`,[profile.id,item.stateId,item.cityId,item.subcityId||null,item.pincode||null]);
         }
       }
     }
