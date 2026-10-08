@@ -723,3 +723,69 @@ export async function createDetailedQuotationPdfDataUrl(options={}){
   for(let i=0;i<data.length;i+=step)binary+=String.fromCharCode(...data.subarray(i,i+step));
   return 'data:application/pdf;base64,'+btoa(binary);
 }
+
+
+/**
+ * Shareable project information guide. All content is sourced from the visible
+ * project card/published plan. Sample projects remain explicitly illustrative.
+ * Uses the existing in-browser, dependency-free PDF writer.
+ */
+export async function downloadProjectPackagePdf({project,plan=null}={}){
+  if(!project||!project.title)throw new Error('Project information is unavailable');
+  const sample=project.sample===true;
+  const title=sample?'Illustrative Package Guide':'Project & Package Guide';
+  const inclusions=(Array.isArray(plan?.inclusions)&&plan.inclusions.length?plan.inclusions:Array.isArray(project.sampleSpecs)?project.sampleSpecs:[])
+    .map(item=>String(item||'').trim()).filter(Boolean).slice(0,24);
+  const logo=await loadLogo();
+  const pages=[];
+  const cover=createPage(logo,1,title);
+  pages.push(cover);
+  drawHero(cover,project.title,project.description||'Project overview and package reference',sample?'DESIGN INSPIRATION · EXAMPLE ONLY':'PROFESSIONAL PROJECT GUIDE');
+  const meta=[
+    ['Category',project.type||'Project'],
+    ['Location',project.location||'Not published'],
+    ['Area',project.area||'Not published'],
+    ['Package',plan?.title||project.packageName||'Request personalized pricing'],
+  ];
+  if(project.cost)meta.push([sample?'Illustrative budget':'Reported project budget',String(project.cost)]);
+  if(!sample&&project.businessName)meta.push(['Published by',project.businessName]);
+  drawMetaGrid(cover,meta);
+  drawSectionHeading(cover,'About this project');
+  drawBullets(cover,[
+    project.description||'Explore the published project information.',
+    sample?'This is an illustrative design concept, not a documented completed project.':'Details are provided by the publishing professional and should be independently confirmed.',
+  ]);
+  if(inclusions.length){
+    if(cover.y>1110){
+      const page=createPage(logo,pages.length+1,title);pages.push(page);
+      drawSectionHeading(page,'Example scope & inclusions');
+      drawBullets(page,inclusions);
+    }else{
+      drawSectionHeading(cover,'Scope & inclusions');
+      drawBullets(cover,inclusions);
+    }
+  }else{
+    drawSectionHeading(cover,'Package specifications');
+    drawBullets(cover,['A detailed package specification has not been published for this project.','Request a customized quotation to discuss materials, scope, timelines and pricing.']);
+  }
+  const notePage=pages[pages.length-1];
+  if(notePage.y>1450){
+    const next=createPage(logo,pages.length+1,title);pages.push(next);
+  }
+  const finalPage=pages[pages.length-1];
+  finalPage.y=Math.max(finalPage.y+25,finalPage===cover?1370:650);
+  finalPage.ctx.fillStyle='#fff4ed';
+  roundedRect(finalPage.ctx,MARGIN,finalPage.y,CONTENT_WIDTH,182,14);finalPage.ctx.fill();
+  finalPage.ctx.fillStyle='#a64e2b';
+  finalPage.ctx.font='800 19px Arial, sans-serif';
+  finalPage.ctx.fillText('IMPORTANT · PLEASE READ',MARGIN+24,finalPage.y+38);
+  finalPage.ctx.fillStyle='#526b82';
+  finalPage.ctx.font='500 17px Arial, sans-serif';
+  const disclaimer=sample
+    ?'This is an illustrative inspiration guide, not an actual project package, contract, price commitment or completed client portfolio. Images, location, area, scope and budget are examples only. Ask ProPulse for a site-specific quotation.'
+    :'This guide summarizes available published information; it is not a binding quotation or contract. The professional must confirm materials, measurements, availability, inclusions, exclusions, taxes and final costs.';
+  wrap(finalPage.ctx,disclaimer,CONTENT_WIDTH-48).slice(0,5)
+    .forEach((line,index)=>finalPage.ctx.fillText(line,MARGIN+24,finalPage.y+74+index*22));
+  const slug=String(project.id||project.title).toLowerCase().replace(/[^a-z0-9-]+/g,'-').slice(0,65)||'project';
+  savePdf(pages,'propulse-'+slug+'-package-guide.pdf');
+}

@@ -80,6 +80,7 @@ export default function GlobalLeadPopup(){
   const navigate=useNavigate()
   const eligible=!EXCLUDED_PREFIXES.some(prefix=>location.pathname.startsWith(prefix))
   const [open,setOpen]=useState(false)
+  const [intent,setIntent]=useState('requirement')
   const [cycle,setCycle]=useState(0)
   const [cities,setCities]=useState([])
   const [loadingCities,setLoadingCities]=useState(false)
@@ -139,12 +140,15 @@ export default function GlobalLeadPopup(){
       const packageNote=detail.packageName
         ? (nextFlow==='design'?'Interior package preference: ':'Package preference: ')+detail.packageName
         : ''
+      const callbackNote=detail.intent==='callback'?'Please arrange a callback about this inspiration project. ':''
+      const projectNote=detail.projectTitle?'Project reference: '+detail.projectTitle+'. ':''
+      setIntent(detail.intent==='callback'?'callback':'requirement')
       setForm(current=>({
         ...EMPTY,
         flowKey:hasFlow?nextFlow:current.flowKey,
         name:current.name,
         phone:current.phone,
-        additional:packageNote,
+        additional:(callbackNote+projectNote+packageNote).slice(0,850),
       }))
       setCitySearch('')
       setDetected(null)
@@ -297,16 +301,16 @@ export default function GlobalLeadPopup(){
   if(!eligible||!open)return null
 
   return <div className="glp-backdrop" role="presentation" onMouseDown={event=>{if(event.target===event.currentTarget)closePopup()}}>
-    <aside className="glp-modal" role="dialog" aria-modal="true" aria-label="Tell us your requirement">
+    <aside className="glp-modal" role="dialog" aria-modal="true" aria-label={intent==='callback'?'Request a callback':'Tell us your requirement'}>
       <button className="glp-close" type="button" onClick={closePopup} aria-label="Close">×</button>
       <div className="glp-head">
         <span><Icon name="phone" size={20}/></span>
-        <div><small>FREE REQUIREMENT REQUEST</small><h3>Tell Us Your Requirement</h3></div>
+        <div><small>{intent==='callback'?'FREE PROJECT CALLBACK':'FREE REQUIREMENT REQUEST'}</small><h3>{intent==='callback'?'Request a Callback':'Tell Us Your Requirement'}</h3></div>
       </div>
 
       {submitted?<div className="glp-success">
         <span><Icon name="check" size={28}/></span>
-        <h4>Requirement received</h4>
+        <h4>{intent==='callback'?'Callback requested':'Requirement received'}</h4>
         <p>Thanks {submitted.name}. Your request has been saved{submitted.leadId?<> as <b>#L-{String(submitted.leadId).padStart(6,'0')}</b></>:null}.</p>
         <button type="button" className="glp-primary" onClick={continueDetailed}>Continue to Detailed Requirement <Icon name="arrow" size={15}/></button>
         <button type="button" className="glp-secondary" onClick={closePopup}>Done</button>
@@ -345,7 +349,7 @@ export default function GlobalLeadPopup(){
         <label className="glp-full"><span>Additional Information <small>Optional</small></span><textarea value={form.additional} onChange={event=>setForm({...form,additional:event.target.value})} placeholder="Locality, rooms, materials, parking, preferred package or anything important…"/></label>
         <input className="glp-honeypot" tabIndex="-1" autoComplete="off" value={form.website} onChange={event=>setForm({...form,website:event.target.value})}/>
         {error&&<div className="glp-error">{error}</div>}
-        <button className="glp-primary" type="submit" disabled={saving}>{saving?'Submitting…':'Submit Requirement'} <Icon name="arrow" size={15}/></button>
+        <button className="glp-primary" type="submit" disabled={saving}>{saving?'Submitting…':intent==='callback'?'Request Callback':'Submit Requirement'} <Icon name="arrow" size={15}/></button>
       </form>}
     </aside>
   </div>
