@@ -57,9 +57,9 @@ export default function ProjectQuote(){
           const matching=validPackages(profile,item.category)
           setPackages(matching)
           const linked=matching.find(plan=>plan.title.trim().toLowerCase()===item.packageName.trim().toLowerCase())
-          setPreferredPackage((linked||matching[0])?.title||'')
+          setPreferredPackage(linked?.title||'')
           if(!matching.length){
-            setPricingMessage('This professional has not published a '+categoryLabel(item.category)+' package yet. Ask the professional to select the correct industry and publish a package.')
+            setPricingMessage('No '+categoryLabel(item.category).toLowerCase()+' packages are published yet. You can still submit your requirements and request a custom quotation from this professional.')
           }
         }catch(error){
           if(active&&!controller.signal.aborted)setPricingMessage('Unable to load this professional’s packages. Please try again later.')
@@ -101,19 +101,16 @@ export default function ProjectQuote(){
       <div className="pq-success-actions"><Link to={'/projects/'+projectId}>Back to project</Link><Link to="/projects">View other projects</Link></div>
     </section>:<>
       {pricingMessage&&<div className="pq-project-warning" role="status">{pricingMessage}</div>}
-      {!packages.length?<section className="pq-status pq-wrap">
-        <h2>Matching professional package unavailable</h2>
-        <p>To request a quote, the professional must publish a package classified as {quoteIndustryLabel}. An interior or real estate package cannot be used for a construction quotation.</p>
-        <Link to={'/projects/'+projectId}>Return to project details →</Link>
-      </section>:<>
-        {flowKey!=='design'&&<section className="pq-panel pq-wrap" aria-labelledby="professional-quote-package-title">
+      <>
+        {flowKey!=='design'&&packages.length>0&&<section className="pq-panel pq-wrap" aria-labelledby="professional-quote-package-title">
           <div className="pq-section-header">
             <div><span className="pq-eyebrow">PUBLISHED PROFESSIONAL PRICING</span>
               <h2 id="professional-quote-package-title">Choose your {quoteIndustryLabel.toLowerCase()} package</h2>
-              <p>These are this professional’s starting rates, not the reported cost of the completed project.</p>
+              <p>Choose a published package, or let the professional propose a custom quote after reviewing your requirements.</p>
             </div>
           </div>
           <div className="pq-package-list" role="radiogroup" aria-label="Preferred professional package">
+            <label className={'pq-package-choice'+(!preferredPackage?' selected':'')}><input type="radio" name="preferredProfessionalPackage" value="" checked={!preferredPackage} onChange={()=>setPreferredPackage('')}/><span className="pq-choice-mark" aria-hidden="true"/><span className="pq-choice-content"><strong>Custom quotation</strong><small className="pq-package-description">Share your project details. The professional will prepare a quote after reviewing your requirements.</small></span></label>
             {packages.map(plan=><label key={plan.id||plan.title} className={'pq-package-choice'+(preferredPackage===plan.title?' selected':'')}>
               <input type="radio" name="preferredProfessionalPackage" value={plan.title} checked={preferredPackage===plan.title} onChange={()=>setPreferredPackage(plan.title)}/>
               <span className="pq-choice-mark" aria-hidden="true"/>
