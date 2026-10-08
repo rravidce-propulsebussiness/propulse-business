@@ -45,7 +45,7 @@ must('src/services/publicExpertService.js',['brochure_url:await projectPlanServi
 must('../frontend/src/components/ProfileBrochureField.jsx',['Upload brochure PDF','PDF only','Maximum 15 MB','Preview','Remove']);
 must('../frontend/src/pages/Profile.jsx',['uploadBrochure','ProfileBrochureField','brochureDisplayUrl','Company Brochures']);
 must('../frontend/src/pages/ProfessionalDetails.jsx',['View Package Brochure (PDF)','Specifications PDF']);
-must('../frontend/src/pages/ProjectDetail.jsx',['project.brochure||linkedPlan?.brochure_url','professional specifications']);
+must('../frontend/src/pages/ProjectDetail.jsx',['project.brochure||linkedPlan?.brochure_url','Download Package','downloadPackage']);
 if(read('../frontend/src/pages/Experts.jsx').includes('experts-hero'))throw new Error('Experts page hero section must remain removed');
 must('../frontend/src/admin/pages/AdminExpertDirectory.jsx',['Expert Directory','Allowed membership','Featured','Hidden']);
 must('../frontend/src/admin/pages/AdminExpertDirectory.jsx',['businessRequest=useRef(0)','searchReady=useRef(false)','requestId!==businessRequest.current','queueMicrotask']);
