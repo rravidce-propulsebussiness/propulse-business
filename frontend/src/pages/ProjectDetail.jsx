@@ -7,7 +7,6 @@ import './Projects.css'
 import './ProjectDetail.css'
 
 const emptyCallback={name:'',phone:'',email:'',message:'',consent:false,website:''}
-const quoteHash=project=>project.category==='design'?'interiors':project.category==='property'?'property':'construction'
 const isPdf=value=>/\.pdf(?:[?#]|$)/i.test(value||'')
 
 export default function ProjectDetail(){
@@ -222,9 +221,9 @@ export default function ProjectDetail(){
                   <span className="pjd-cta-copy"><strong>{callbackSuccess?'Callback Requested':'Request a Callback'}</strong><small>ProPulse coordinates your enquiry</small></span>
                   <span className="pjd-cta-arrow" aria-hidden="true">↗</span>
                 </button>
-                <Link className="pjd-action-button pjd-main-cta" to={'/quote#'+quoteHash(project)}>
+                <Link className="pjd-action-button pjd-main-cta" to={'/projects/'+projectId+'/quote'}>
                   <span className="pjd-cta-symbol" aria-hidden="true">✧</span>
-                  <span className="pjd-cta-copy"><strong>Get Quote</strong><small>Request a personalized estimate</small></span>
+                  <span className="pjd-cta-copy"><strong>Get Quote</strong><small>View this professional’s package pricing</small></span>
                   <span className="pjd-cta-arrow" aria-hidden="true">↗</span>
                 </Link>
               </div>
@@ -254,7 +253,7 @@ export default function ProjectDetail(){
           <div className="pjd-mobile-actions" aria-label="Quick project actions">
             <button type="button" onClick={downloadPackage} disabled={packageDownloading}><Icon name="file" size={17}/><span>{packageDownloading?'Preparing…':'Package'}</span></button>
             <button type="button" onClick={()=>setCallbackOpen(true)}><span aria-hidden="true">☎</span><span>Callback</span></button>
-            <Link to={'/quote#'+quoteHash(project)}>Get Quote <Icon name="arrow" size={14}/></Link>
+            <Link to={'/projects/'+projectId+'/quote'}>Get Quote <Icon name="arrow" size={14}/></Link>
           </div>
         </>}
       </div>
