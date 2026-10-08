@@ -153,53 +153,21 @@
 }
 .hc-service-copy>button:hover{transform:translateX(2px);background:#ffdfcf}
 
-/* Benefits */
-.hc-benefits{
-  border-top:1px solid #f2e8e2;
-  border-bottom:1px solid #f2e8e2;
-  background:linear-gradient(180deg,#fffaf7,#fff7f2);
-}
-.hc-benefit-grid{
-  display:grid;
-  grid-template-columns:repeat(4,minmax(0,1fr));
-  gap:12px;
-}
-.hc-benefit-grid article{
-  min-height:105px;
-  display:grid;
-  grid-template-columns:40px minmax(0,1fr);
-  gap:11px;
-  align-items:start;
-  padding:15px;
-  border:1px solid #e6e9ec;
-  border-radius:12px;
-  background:#fff;
-  box-shadow:0 10px 24px rgba(8,39,65,.04);
-}
-.hc-benefit-grid article>span{
-  width:38px;
-  height:38px;
-  display:grid;
-  place-items:center;
-  border-radius:50%;
-}
-.tone-1{background:#fff0e8;color:#ef5a22}
+/* Benefits — single source of truth, matched to supplied premium reference */
+.hc-benefits{border:0;background:#f4f6fa}
+.hc-benefit-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px}
+.hc-benefit-grid article{min-height:170px;display:grid;grid-template-columns:64px minmax(0,1fr);gap:22px;align-items:start;padding:34px 30px;border:1px solid #e3e8f0;border-radius:28px;background:#fff;box-shadow:0 15px 38px rgba(20,48,92,.055)}
+.hc-benefit-grid article>span{width:64px;height:64px;display:grid;place-items:center;border-radius:50%;flex-shrink:0}
+.hc-benefit-grid article>span svg{width:29px;height:29px}
+.hc-benefit-grid h3{margin:0;color:#14305c;font-size:22px;line-height:1.25;font-weight:800}
+.hc-benefit-grid p{margin:12px 0 0;color:#5d6b80;font-size:17px;line-height:1.65}
+.hc-benefits .hc-section-head h2{color:#14305c;font-size:clamp(32px,4.4vw,52px);line-height:1.13}
+.tone-1{background:#fbe9e0;color:#d2602f}
 .tone-2{background:#eaf2ff;color:#2367c9}
 .tone-3{background:#f1eaff;color:#6940b9}
 .tone-4{background:#e7f8ef;color:#19885a}
-.hc-benefit-grid h3{
-  margin:0;
-  color:#173957;
-  font-size:12px;
-  line-height:1.35;
-  font-weight:900;
-}
-.hc-benefit-grid p{
-  margin:6px 0 0;
-  color:#7b8c99;
-  font-size:12px;
-  line-height:1.45;
-}
+@media(max-width:900px){.hc-benefit-grid{grid-template-columns:1fr}}
+@media(max-width:620px){.hc-benefits{padding:62px 0}.hc-benefit-grid{gap:20px}.hc-benefit-grid article{min-height:160px;grid-template-columns:60px minmax(0,1fr);gap:18px;padding:28px 24px;border-radius:26px}.hc-benefit-grid article>span{width:60px;height:60px}.hc-benefit-grid h3{font-size:19px}.hc-benefit-grid p{font-size:16px;margin-top:12px}.hc-benefits .hc-section-head{margin-bottom:32px}}
 
 /* How it works */
 .hc-how{background:#fbfcfd}
