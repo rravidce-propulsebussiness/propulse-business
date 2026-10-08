@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import UserHeader from '../components/UserHeader'
 import { authRequest } from '../utils/auth'
 import './ProfessionalWorkspace.css'
+import './ProfileCompact.css'
 
 const draftKey=()=>Math.random().toString(36).slice(2)+Date.now().toString(36)
 const emptyBrochure=()=>({_draftKey:draftKey(),title:'',description:'',fileUrl:'',displayUrl:'',isPublished:true})
