@@ -20,7 +20,7 @@ function parseProjectQuoteRequirement(raw) {
   const fields = {};
   const extra = [];
   for (const line of String(raw || '').split(/\r?\n/)) {
-    const text = line.trim();
+    const text = line.trim().replace(/^(?:Interior Design|Real Estate|Construction) enquiry from a completed project\.\s*/i, '');
     if (!text) continue;
     const pos = text.indexOf(':');
     if (pos <= 0 || pos > 110) {
