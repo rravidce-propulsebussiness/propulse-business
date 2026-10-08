@@ -40,3 +40,14 @@
 @keyframes pp-hook{50%{transform:rotate(6deg)}}
 @media(max-width:620px){.pp-stage-caption{top:12px;left:12px;padding:8px 10px}.pp-stage-caption small{font-size:11px}.pp-stage-caption b{font-size:14px}.pp-stage-tabs{gap:6px;margin-top:12px}.pp-stage-tabs button{font-size:12px;padding:11px 2px}}
 @media(prefers-reduced-motion:reduce){.pp-artcol *, .pp-artcol *::before,.pp-artcol *::after{animation:none!important;transition:none!important}}
+
+/* Photographic scenes preserve the existing ProPulse navy/orange design system.
+   The original SVG stays beneath as a graceful offline/image-error fallback. */
+.pp-art{background:#0b1d3a}
+.pp-photo-fallback{position:absolute;inset:0;z-index:0}
+.pp-photo-scenes{position:absolute;inset:0;z-index:1;pointer-events:none}
+.pp-photo-scene{position:absolute;inset:0;background-position:center;background-size:cover;background-repeat:no-repeat;opacity:0;transform:scale(1.065);transition:opacity 1.15s ease,transform 6s ease;will-change:opacity}
+[data-p="0"] .pp-photo-plot,[data-p="1"] .pp-photo-build,[data-p="2"] .pp-photo-home,[data-p="3"] .pp-photo-interior{opacity:1;transform:scale(1)}
+.pp-photo-vignette{position:absolute;inset:0;background:linear-gradient(180deg,rgba(11,29,58,.28),transparent 32%,transparent 56%,rgba(11,29,58,.65)),linear-gradient(90deg,rgba(11,29,58,.18),transparent 65%);pointer-events:none}
+.pp-stage-caption{z-index:3;background:rgba(11,29,58,.83);border-color:rgba(255,255,255,.28)}
+@media(prefers-reduced-motion:reduce){.pp-photo-scene{transition:none;transform:none!important}}

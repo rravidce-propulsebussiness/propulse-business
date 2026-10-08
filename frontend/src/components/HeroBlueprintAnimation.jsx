@@ -18,7 +18,14 @@ export default function HeroBlueprintAnimation() {
   return (
     <div className="pp-artcol">
       <div className="pp-art" data-p={stage}>
-        <svg viewBox="0 0 520 440" fill="none" role="img" aria-label="Animated plot, construction, completed house and furnished interior">
+        <div className="pp-photo-scenes" aria-hidden="true">
+          <div className="pp-photo-scene pp-photo-plot" style={{ backgroundImage: 'url(https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1100&q=85)' }} />
+          <div className="pp-photo-scene pp-photo-build" style={{ backgroundImage: 'url(https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=1100&q=85)' }} />
+          <div className="pp-photo-scene pp-photo-home" style={{ backgroundImage: 'url(https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1100&q=85)' }} />
+          <div className="pp-photo-scene pp-photo-interior" style={{ backgroundImage: 'url(https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=1100&q=85)' }} />
+          <div className="pp-photo-vignette" />
+        </div>
+        <svg className="pp-photo-fallback" viewBox="0 0 520 440" fill="none" role="img" aria-label="Animated plot, construction, completed house and furnished interior">
           <defs>
             <clipPath id="pp-clip"><rect width="520" height="440" rx="24"/></clipPath>
             <linearGradient id="pp-sky" x1="0" y1="0" x2="0" y2="1"><stop stopColor="#1d437c"/><stop offset="1" stopColor="#0d2547"/></linearGradient>
