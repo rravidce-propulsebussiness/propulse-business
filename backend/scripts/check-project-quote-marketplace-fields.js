@@ -69,7 +69,7 @@ assert.equal(publicLead.requirement, 'A pooja room and a small study',
   'Explicitly entered additional requirement must be shown without the rest of the form');
 const withoutNote = {
   ...oldLead,
-  requirement: oldLead.requirement.replace(/\\nAdditional requirement:.*$/, '')
+  requirement: oldLead.requirement.replace(/\nAdditional requirement:.*$/, '')
 };
 assert.equal(maskLead(withoutNote).requirement, '',
   'Without an entered requirement, a structured project quotation has no Requirement text');
