@@ -144,7 +144,7 @@ async function listForProfessional(userId){
   return decorated.map(row=>{
     // Each wizard answer is a separate labelled field. The free-text
     // Requirement must never be fabricated from the other form answers.
-    const {fields,written}=(()=>{const result=splitProjectQuoteRequirement(row.requirement);return {fields:result.fields,written:result.requirement}})();
+    const {fields,requirement:written}=splitProjectQuoteRequirement(row.requirement);
     const requirementFields=Object.fromEntries(
       Object.entries(fields).filter(([,value])=>String(value||'').trim())
         .map(([label,value])=>[label,redact(value)])
