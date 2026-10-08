@@ -24,7 +24,7 @@ assert(inventory.includes('const settings=await partnerPricing.getSettings()'),'
 assert(inventory.includes('failureSummary:summarizeFailures(failures)'),'Lead Partner import must return categorized failure diagnostics');
 assert(inventory.includes("if (error.code === 'DUPLICATE_LEAD')")&&inventory.includes('duplicateSamples.push(detail)'),'Duplicate rows must be counted separately from genuine failures');
 assert(inventory.includes('failures.push(detail)'),'Only genuine import errors must populate the failure list');
-assert(inventory.includes('last_sync_failure_summary:summarizeFailures'),'Stored sheet connections must expose failure-category summaries');
+assert(compat.includes('last_sync_failure_summary:base.summarizeFailures'),'Stored sheet connections must expose failure-category summaries through the active compatibility service');
 assert(scheduler.includes('failureSummary='),'Worker logs must include failure category counts');
 assert(scheduler.includes('Google Sheet row failures:'),'Worker logs must include sample row-level failures');
 assert(scheduler.includes('Google Sheet duplicate samples:'),'Worker logs may show duplicates separately without polluting failure diagnostics');

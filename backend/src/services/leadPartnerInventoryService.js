@@ -2,7 +2,7 @@ const pool = require('../config/database');
 const leadService = require('./leadService');
 const partnerPricing = require('./leadPartnerPricingService');
 const leadQualityGateService = require('./leadQualityGateService');
-const { fetchGoogleSheetCsv } = require('./googleSheetService');
+
 const { detectPincode } = require('./pincodeDetectionService');
 const cityService = require('./cityService');
 const {parseCsvRecords}=require('../utils/csvRecords');
@@ -427,63 +427,8 @@ async function importCsv({ userId, csv }) {
   return { total: rows.length, created, quarantined, duplicate, failed, failures, duplicateSamples, failureSummary:summarizeFailures(failures) };
 }
 
-async function importGoogleSheet({ userId, url }) {
-  const result = await fetchGoogleSheetCsv(url);
-  const imported = await importCsv({ userId, csv: result.csv });
-  return { ...imported, spreadsheetId: result.spreadsheetId, gid: result.gid };
-}
-
-async function getSheetConnections({ userId }) {
-  const rows=(await pool.query(
-    `SELECT id,spreadsheet_id,gid,source_url,status,last_synced_at,last_sync_created,last_sync_duplicate,last_sync_failed,last_sync_failures,created_at,updated_at
-       FROM lead_partner_sheet_connections
-      WHERE user_id=$1
-      ORDER BY updated_at DESC,id DESC`,
-    [userId]
-  )).rows;
-  return rows.map(row=>({...row,last_sync_failure_summary:summarizeFailures(Array.isArray(row.last_sync_failures)?row.last_sync_failures:[])}));
-}
-
-async function connectGoogleSheet({ userId, url }) {
-  const result = await fetchGoogleSheetCsv(url);
-  const imported = await importCsv({ userId, csv: result.csv });
-  const saved = (await pool.query(
-    `INSERT INTO lead_partner_sheet_connections(
-       user_id,spreadsheet_id,gid,source_url,last_synced_at,last_sync_created,last_sync_duplicate,last_sync_failed,last_sync_failures
-     ) VALUES($1,$2,$3,$4,CURRENT_TIMESTAMP,$5,$6,$7,$8::jsonb)
-     ON CONFLICT(user_id,spreadsheet_id,gid) DO UPDATE SET
-       source_url=EXCLUDED.source_url,
-       status='active',
-       last_synced_at=EXCLUDED.last_synced_at,
-       last_sync_created=EXCLUDED.last_sync_created,
-       last_sync_duplicate=EXCLUDED.last_sync_duplicate,
-       last_sync_failed=EXCLUDED.last_sync_failed,
-       last_sync_failures=EXCLUDED.last_sync_failures,
-       updated_at=CURRENT_TIMESTAMP
-     RETURNING *`,
-    [userId, result.spreadsheetId, result.gid || '0', url, imported.created, imported.duplicate, imported.failed, JSON.stringify(imported.failures)]
-  )).rows[0];
-  return { connection: saved, import: imported };
-}
-
-async function syncGoogleSheet({ userId, connectionId }) {
-  const connection = (await pool.query(
-    `SELECT * FROM lead_partner_sheet_connections WHERE id=$1 AND user_id=$2 AND status='active'`,
-    [connectionId, userId]
-  )).rows[0];
-  if (!connection) { const error = new Error('Active Google Sheet connection not found'); error.code = 'SHEET_CONNECTION_NOT_FOUND'; throw error; }
-  const result = await fetchGoogleSheetCsv(connection.source_url);
-  if (result.spreadsheetId !== connection.spreadsheet_id || String(result.gid || '0') !== String(connection.gid || '0')) throw new Error('Google Sheet URL no longer matches the connected sheet');
-  const imported = await importCsv({ userId, csv: result.csv });
-  const saved = (await pool.query(
-    `UPDATE lead_partner_sheet_connections
-        SET last_synced_at=CURRENT_TIMESTAMP,last_sync_created=$1,last_sync_duplicate=$2,last_sync_failed=$3,last_sync_failures=$4::jsonb,updated_at=CURRENT_TIMESTAMP
-      WHERE id=$5 AND user_id=$6
-      RETURNING *`,
-    [imported.created, imported.duplicate, imported.failed, JSON.stringify(imported.failures), connectionId, userId]
-  )).rows[0];
-  return { connection: saved, import: imported };
-}
+// Google Sheets connection and import flows live in leadPartnerInventoryCompatService.
+// Keep base CSV validation, persistence, and disconnect/listing primitives only.
 
 async function disableSheetConnection({ userId, connectionId }) {
   const result = await pool.query(
@@ -568,4 +513,4 @@ async function listInventory({ userId, status = 'all', search = '', industryId =
   };
 }
 
-module.exports = { importCsv, previewCsv, importGoogleSheet, getSheetConnections, connectGoogleSheet, syncGoogleSheet, disableSheetConnection, listInventory, summarizeFailures };
+module.exports = { importCsv, previewCsv, disableSheetConnection, listInventory, summarizeFailures };
