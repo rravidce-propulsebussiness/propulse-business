@@ -100,15 +100,6 @@ export default function ProjectQuote(){
       {submitted.requestId&&<strong className="pq-request-id">Reference #{submitted.requestId}</strong>}
       <div className="pq-success-actions"><Link to={'/projects/'+projectId}>Back to project</Link><Link to="/projects">View other projects</Link></div>
     </section>:<>
-      <section className="pq-project-context" aria-label="Selected professional project">
-        <div>
-          <span>{quoteIndustryLabel.toUpperCase()} · PROFESSIONAL QUOTATION</span>
-          <h1>{project.title}</h1>
-          <p>Complete the same {quoteIndustryLabel.toLowerCase()} requirements form as ProPulse. Your request will be sent for a quotation from <strong>{project.businessName||'the selected professional'}</strong>, using that professional’s published package pricing.</p>
-        </div>
-        <Link to={'/projects/'+projectId}>← Back to project</Link>
-      </section>
-
       {pricingMessage&&<div className="pq-project-warning" role="status">{pricingMessage}</div>}
       {!packages.length?<section className="pq-status pq-wrap">
         <h2>Matching professional package unavailable</h2>
