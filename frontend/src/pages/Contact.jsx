@@ -1,168 +1,141 @@
-import { useEffect, useMemo, useState } from 'react'
-import { Link, Navigate, useSearchParams } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { Navigate, useSearchParams } from 'react-router-dom'
 import PortalContact from './PortalContact'
 import { publicRequest } from '../utils/auth'
-import './Contact.css'
 import { openLeadPopup } from '../utils/leadPopup'
 import { PublicFooter, PublicHeader } from '../components/PublicSiteChrome'
+import './Contact.css'
 
-const empty={
-  company_name:'ProPulse Business',
-  email:'',
-  phone:'',
-  whatsapp:'',
-  address:'',
-  business_hours:'',
-  support_email:'',
-  careers_email:'',
-  maps_url:'',
-  website_url:'/',
-  social_handles:[],
+const EMPTY_CONTACT = {
+  company_name: 'ProPulse',
+  email: '',
+  support_email: '',
+  phone: '',
+  whatsapp: '',
+  address: '',
+  business_hours: '',
+  maps_url: '',
+  social_handles: [],
 }
 
-function Icon({name,size=19}){
-  const p={width:size,height:size,viewBox:'0 0 24 24',fill:'none',stroke:'currentColor',strokeWidth:'1.8',strokeLinecap:'round',strokeLinejoin:'round','aria-hidden':true}
-  if(name==='arrow')return <svg {...p}><path d="M5 12h14M14 7l5 5-5 5"/></svg>
-  if(name==='phone')return <svg {...p}><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 2 .7 2.9a2 2 0 0 1-.5 2.1L8 10a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.5c1 .3 1.9.6 2.9.7a2 2 0 0 1 1.7 2Z"/></svg>
-  if(name==='mail')return <svg {...p}><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
-  if(name==='pin')return <svg {...p}><path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg>
-  if(name==='clock')return <svg {...p}><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
-  if(name==='chat')return <svg {...p}><path d="M21 15a4 4 0 0 1-4 4H8l-5 3 1.6-5A7 7 0 0 1 3 12V8a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4Z"/></svg>
-  if(name==='home')return <svg {...p}><path d="m3 11 9-8 9 8"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/></svg>
-  if(name==='sofa')return <svg {...p}><path d="M5 11V8a3 3 0 0 1 3-3h8a3 3 0 0 1 3 3v3"/><path d="M4 10a2 2 0 0 0-2 2v5h20v-5a2 2 0 0 0-2-2"/></svg>
-  if(name==='building')return <svg {...p}><path d="M4 21V4h10v17"/><path d="M14 8h6v13"/><path d="M7 8h3M7 12h3M7 16h3M17 12h1M17 16h1"/></svg>
-  if(name==='shield')return <svg {...p}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="m9 12 2 2 4-4"/></svg>
-  return null
+function ContactIcon({ type }) {
+  const common = {
+    width: 23, height: 23, viewBox: '0 0 24 24', fill: 'none',
+    stroke: 'currentColor', strokeWidth: 1.7,
+    strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': true,
+  }
+  if (type === 'mail') return <svg {...common}><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
+  if (type === 'phone') return <svg {...common}><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 2 .7 2.9a2 2 0 0 0-.5 2.1L8 10a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.5c1 .3 1.9.6 2.9.7a2 2 0 0 1 1.7 2Z"/></svg>
+  if (type === 'chat') return <svg {...common}><path d="M21 15a4 4 0 0 1-4 4H8l-5 3 1.6-5A7 7 0 0 1 3 12V8a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4Z"/></svg>
+  if (type === 'pin') return <svg {...common}><path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg>
+  return <svg {...common}><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
 }
 
+function ContactCard({ icon, title, detail, href, action, external = false }) {
+  return <a
+    className="contact-method"
+    href={href}
+    target={external ? '_blank' : undefined}
+    rel={external ? 'noopener noreferrer' : undefined}
+  >
+    <span className="contact-method-icon"><ContactIcon type={icon}/></span>
+    <h2>{title}</h2>
+    <p>{detail}</p>
+    <span className="contact-method-action">{action} <span aria-hidden="true">↗</span></span>
+  </a>
+}
 
-export default function Contact(){
-  const [searchParams]=useSearchParams()
-  const portalAudience=searchParams.get('audience')
-  if(portalAudience==='lead_partners') return <PortalContact audience={portalAudience}/>
-  if(portalAudience==='users') return <Navigate to="/contact" replace/>
+export default function Contact() {
+  const [searchParams] = useSearchParams()
+  const portalAudience = searchParams.get('audience')
+  if (portalAudience === 'lead_partners') return <PortalContact audience={portalAudience}/>
+  if (portalAudience === 'users') return <Navigate to="/contact" replace/>
   return <PublicContact/>
 }
 
-function PublicContact(){
-  const [data,setData]=useState(empty)
-  const [loading,setLoading]=useState(true)
-  const [error,setError]=useState('')
+function PublicContact() {
+  const [data, setData] = useState(EMPTY_CONTACT)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(false)
 
-  useEffect(()=>{
-    let active=true
-    window.scrollTo(0,0)
+  useEffect(() => {
+    let active = true
     publicRequest('/contact?audience=website')
-      .then(value=>{if(active)setData({...empty,...(value||{}),social_handles:Array.isArray(value?.social_handles)?value.social_handles:[]})})
-      .catch(err=>{if(active)setError(err.message||'Unable to load contact details.')})
-      .finally(()=>{if(active)setLoading(false)})
-    return()=>{active=false}
-  },[])
+      .then(value => {
+        if (active) setData({
+          ...EMPTY_CONTACT,
+          ...(value || {}),
+          social_handles: Array.isArray(value?.social_handles) ? value.social_handles : [],
+        })
+      })
+      .catch(() => { if (active) setError(true) })
+      .finally(() => { if (active) setLoading(false) })
+    return () => { active = false }
+  }, [])
 
-  const socials=useMemo(()=>data.social_handles.filter(item=>item?.enabled&&item?.url),[data.social_handles])
-  const whatsapp=String(data.whatsapp||'').replace(/\D/g,'')
-  const phoneHref=data.phone?'tel:'+String(data.phone).replace(/\s/g,''):'#'
-  const email=data.email||data.support_email||''
+  const email = String(data.email || data.support_email || '').trim()
+  const phone = String(data.phone || '').trim()
+  const whatsapp = String(data.whatsapp || '').replace(/\D/g, '')
+  const mapsUrl = /^https?:\/\//i.test(String(data.maps_url || '')) ? data.maps_url : ''
+  const socials = data.social_handles.filter(item => item?.enabled && /^https?:\/\//i.test(String(item?.url || '')))
+  const hasContact = Boolean(email || phone || whatsapp)
+  const hasOffice = Boolean(data.address || data.business_hours || mapsUrl)
 
   return <main className="contact-page">
-    <PublicHeader />
+    <PublicHeader/>
 
-    <section className="contact-hero">
-      <div className="contact-hero-copy">
-        <span className="contact-kicker">CONTACT PROPULSE</span>
-        <h1>Questions About Your Home Journey? <em>Talk to Us.</em></h1>
-        <p>Construction, interiors and property support in one place.</p>
-        <div className="contact-hero-actions">
-          <Link className="contact-primary" to="/quote#construction" onClick={event=>{event.preventDefault();openLeadPopup('')}}>Get Free Quote <Icon name="arrow" size={15}/></Link>
-          {data.phone&&<a className="contact-secondary" href={phoneHref}><Icon name="phone" size={15}/> Call Us</a>}
-        </div>
-        <div className="contact-trust"><span>Homeowner support</span><i/><span>Construction · Interiors · Real Estate</span></div>
-      </div>
+    <div className="contact-simple">
+      <header className="contact-intro">
+        <span className="contact-eyebrow">CONTACT US</span>
+        <h1>We’re here to help.</h1>
+        <p>Questions about construction, interiors or real estate? Reach our team directly.</p>
+      </header>
 
-      <aside className="contact-hero-card">
-        <span>WE'RE HERE TO HELP</span>
-        <strong>{loading?'Loading contact information…':data.business_hours||'Contact our support team during business hours.'}</strong>
-        <small>Project planning and customer support.</small>
-        <div className="contact-hero-contact"><span>•</span><div><b>{email||'Website support'}</b><small>{data.phone||'Customer support'}</small></div></div>
-      </aside>
-    </section>
+      {loading ? <p className="contact-status" role="status">Loading contact details…</p> : <>
+        {error && <p className="contact-status contact-error" role="alert">
+          Contact details are temporarily unavailable. Please try again later.
+        </p>}
 
-    {error&&<div className="contact-alert">{error}</div>}
+        {hasContact ? <section className="contact-methods" aria-label="Ways to contact us">
+          {phone && <ContactCard icon="phone" title="Call us" detail={phone}
+            href={'tel:' + phone.replace(/[^+\d]/g, '')} action="Call now"/>}
+          {whatsapp && <ContactCard icon="chat" title="WhatsApp" detail={data.whatsapp || ('+' + whatsapp)}
+            href={'https://wa.me/' + whatsapp} action="Start a chat" external/>}
+          {email && <ContactCard icon="mail" title="Email us" detail={email}
+            href={'mailto:' + email} action="Send an email"/>}
+        </section> : !error && <p className="contact-status">
+          Direct contact details will be available here soon.
+        </p>}
 
-    <section className="contact-service-strip">
-      <article><b>01</b><span>Construction</span></article>
-      <article><b>02</b><span>Interiors</span></article>
-      <article><b>03</b><span>Real Estate</span></article>
-      <article><b>04</b><span>Support</span></article>
-    </section>
-
-    <section className="contact-body">
-      <div className="contact-main-column">
-        <article className="contact-panel">
-          <div className="contact-panel-heading"><span className="contact-kicker">CONTACT CHANNELS</span><h2>Reach the ProPulse Team</h2></div>
-          <div className="contact-detail-grid">
-            <a className="contact-detail-card" href={email?'mailto:'+email:'#'}>
-              <span className="contact-icon"><Icon name="mail" size={17}/></span><div><small>Email</small><strong>{loading?'Loading…':email||'Not published'}</strong></div><b>→</b>
-            </a>
-            <a className="contact-detail-card" href={data.phone?phoneHref:'#'}>
-              <span className="contact-icon"><Icon name="phone" size={17}/></span><div><small>Phone</small><strong>{loading?'Loading…':data.phone||'Not published'}</strong><span>{data.business_hours||'Business hours'}</span></div><b>→</b>
-            </a>
-            <a className="contact-detail-card" href={whatsapp?'https://wa.me/'+whatsapp:'#'} target={whatsapp?'_blank':undefined} rel={whatsapp?'noreferrer':undefined}>
-              <span className="contact-icon"><Icon name="chat" size={17}/></span><div><small>WhatsApp</small><strong>{loading?'Loading…':data.whatsapp||'Not published'}</strong></div><b>→</b>
-            </a>
-            <div className="contact-detail-card">
-              <span className="contact-icon"><Icon name="clock" size={17}/></span><div><small>Business Hours</small><strong>{loading?'Loading…':data.business_hours||'Not published'}</strong></div>
+        {(hasOffice || socials.length > 0) && <section className="contact-more" aria-label="Additional contact details">
+          {hasOffice && <div className="contact-office">
+            <span className="contact-method-icon"><ContactIcon type={data.address ? 'pin' : 'clock'}/></span>
+            <div>
+              <h2>{data.address ? 'Office' : 'Business hours'}</h2>
+              {data.address && <p>{data.address}</p>}
+              {data.business_hours && <p className="contact-hours">{data.business_hours}</p>}
+              {mapsUrl && <a href={mapsUrl} target="_blank" rel="noopener noreferrer">Get directions <span aria-hidden="true">↗</span></a>}
             </div>
-          </div>
-        </article>
+          </div>}
+          {socials.length > 0 && <div className="contact-social">
+            <h2>Find us online</h2>
+            <div>{socials.map(item => <a key={item.id || item.platform || item.url}
+              href={item.url} target="_blank" rel="noopener noreferrer">
+              {item.platform || 'Social profile'} <span aria-hidden="true">↗</span>
+            </a>)}</div>
+          </div>}
+        </section>}
+      </>}
 
-        <article className="contact-panel location-panel">
-          <div className="contact-panel-heading contact-location-heading">
-            <div><span className="contact-kicker">LOCATION</span><h2>Office & Address</h2><p>{data.address||'Hyderabad, India'}</p></div>
-            {data.maps_url&&<a className="contact-outline-btn" href={data.maps_url} target="_blank" rel="noreferrer">Open in Maps ↗</a>}
-          </div>
-          <div className="contact-map">
-            <div className="contact-map-grid"/>
-            <div className="contact-map-pin"><span>●</span></div>
-            <div className="contact-map-caption"><b>{data.company_name||'ProPulse Business'}</b><span>{data.address||'Address not published'}</span></div>
-          </div>
-        </article>
-      </div>
+      <section className="contact-quote">
+        <div>
+          <h2>Planning a project?</h2>
+          <p>Share your requirements and get started.</p>
+        </div>
+        <button type="button" onClick={() => openLeadPopup('')}>Get Free Quote <span aria-hidden="true">→</span></button>
+      </section>
+    </div>
 
-      <aside className="contact-side-column">
-        <article className="contact-panel contact-direct">
-          <span className="contact-kicker">DIRECT SUPPORT</span>
-          <h2>Need assistance?</h2>
-          
-          <div className="contact-direct-links">
-            {data.support_email&&<a href={'mailto:'+data.support_email}><span>SUPPORT</span><strong>{data.support_email}</strong><b>→</b></a>}
-            {data.careers_email&&<a href={'mailto:'+data.careers_email}><span>CAREERS</span><strong>{data.careers_email}</strong><b>→</b></a>}
-            {data.phone&&<a href={phoneHref}><span>PHONE</span><strong>{data.phone}</strong><b>→</b></a>}
-          </div>
-          <Link className="contact-dark-cta" to="/quote#construction">Start a Project Quote <Icon name="arrow" size={15}/></Link>
-        </article>
-
-        <article className="contact-panel">
-          <div className="contact-panel-heading"><span className="contact-kicker">SOCIAL CHANNELS</span><h2>Stay Connected</h2></div>
-          <div className="contact-social-grid">
-            {socials.length?socials.map(item=><a key={item.id||item.platform} href={item.url} target="_blank" rel="noreferrer"><span>{String(item.platform||'?').slice(0,1).toUpperCase()}</span><div><strong>{item.platform}</strong><small>Open profile ↗</small></div></a>):<div className="contact-empty">No social channels available.</div>}
-          </div>
-        </article>
-
-        <article className="contact-panel contact-address-mini">
-          <span className="contact-kicker">OFFICE</span>
-          <strong>{data.company_name||'ProPulse Business'}</strong>
-          <p>{data.address||'Public address has not been configured yet.'}</p>
-          {data.maps_url&&<a href={data.maps_url} target="_blank" rel="noreferrer">View location ↗</a>}
-        </article>
-      </aside>
-    </section>
-
-    <section className="contact-bottom-cta">
-      <div><span className="contact-kicker">READY TO START?</span><h2>Tell Us What You Need</h2></div>
-      <div><Link to="/packages">View Packages</Link><Link to="/quote#construction" onClick={event=>{event.preventDefault();openLeadPopup('')}}>Get Free Quote <Icon name="arrow" size={14}/></Link></div>
-    </section>
-
-    <PublicFooter phone={data.phone} email={email} address={data.address || 'Hyderabad, India'} />
+    <PublicFooter phone={phone} email={email} address={data.address || 'Hyderabad, India'}/>
   </main>
 }

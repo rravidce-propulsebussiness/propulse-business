@@ -302,35 +302,48 @@ test('active Lead Partner reaches dashboard and separated inventory workspaces',
   expect(status).toBe(403)
 })
 
-test('project details supports keyboard navigation and restores focus',async({page})=>{
-  // Projects now come from subscribed professionals, not hard-coded concepts.
-  // Seed this browser test through the public API to keep it deterministic.
+test('contact page shows direct channels without duplicated marketing panels',async({page})=>{
+  await page.route('**/api/contact?audience=website',route=>route.fulfill({
+    status:200,contentType:'application/json',
+    body:JSON.stringify({
+      email:'hello@example.com',
+      phone:'+91 98765 43210',
+      whatsapp:'+91 98765 43210',
+      address:'Hyderabad, Telangana',
+      business_hours:'Mon–Sat, 9 AM–6 PM',
+      social_handles:[]
+    })
+  }))
+  await page.goto('/contact')
+  await expect(page.getByRole('heading',{name:'We’re here to help.'})).toBeVisible()
+  await expect(page.locator('.contact-methods a[href="tel:+919876543210"]')).toBeVisible()
+  await expect(page.locator('.contact-methods a[href="mailto:hello@example.com"]')).toBeVisible()
+  await expect(page.locator('.contact-methods a[href="https://wa.me/919876543210"]')).toBeVisible()
+  await expect(page.locator('.contact-service-strip,.contact-map,.contact-direct-links')).toHaveCount(0)
+  await expect(page.getByRole('button',{name:/Get Free Quote/})).toBeVisible()
+})
+
+test('project cards open dedicated detail pages using the keyboard',async({page})=>{
+  const project={
+    project_id:123,project_type:'construction',title:'Modern Villa',
+    description:'Completed residential project',business_name:'Sample Engineer'
+  }
   await page.route('**/api/experts/projects?*',route=>route.fulfill({
     status:200,contentType:'application/json',
-    body:JSON.stringify({data:[{
-      project_id:'smoke-modern-villa',project_type:'construction',title:'Modern Villa',
-      description:'Completed residential project',business_name:'Sample Engineer'
-    }],pagination:{hasNextPage:false}})
+    body:JSON.stringify({data:[project],pagination:{hasNextPage:false}})
+  }))
+  await page.route('**/api/experts/projects/123',route=>route.fulfill({
+    status:200,contentType:'application/json',
+    body:JSON.stringify(project)
   }))
   await page.goto('/projects')
-  const card=page.getByRole('button',{name:'View details for Modern Villa',exact:true})
+  const card=page.getByRole('link',{name:'View details for Modern Villa',exact:true})
   await expect(card).toBeVisible()
   await card.focus()
   await page.keyboard.press('Enter')
-  const dialog=page.getByRole('dialog',{name:'Modern Villa details',exact:true})
-  const close=dialog.getByRole('button',{name:'Close project details'})
-  await expect(close).toBeFocused()
-  const last=dialog.locator('a[href],button').last()
-  await page.keyboard.press('Shift+Tab')
-  await expect(last).toBeFocused()
-  await page.keyboard.press('Tab')
-  await expect(close).toBeFocused()
-  await page.keyboard.press('Escape')
-  await expect(dialog).toHaveCount(0)
-  await expect(card).toBeFocused()
-  await page.keyboard.press('Space')
-  await expect(close).toBeFocused()
-  await close.click()
-  await expect(dialog).toHaveCount(0)
-  await expect(card).toBeFocused()
+  await expect(page).toHaveURL(/\/projects\/project-123$/)
+  await expect(page.getByRole('heading',{name:'Modern Villa',exact:true})).toBeVisible()
+  await page.getByRole('link',{name:'Back to all projects'}).click()
+  await expect(page).toHaveURL(/\/projects\/?$/)
+  await expect(card).toBeVisible()
 })
