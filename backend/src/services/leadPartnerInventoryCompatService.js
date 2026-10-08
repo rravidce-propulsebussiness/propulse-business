@@ -34,7 +34,7 @@ function buildCanonicalRows(rows){
     const requirement=first(raw,['Requirement','Requirements','Requirement Details','Give More Details','Give More Details and Requirement','Update']);
     const pincode=first(raw,['Pincode','Pin Code','PIN Code','Zipcode','Zip Code','Postal Code','ZIP']);
     const property=first(raw,['Property Type','Property','Interior Type','FALT SIZE']);
-    const source=first(raw,['Source','Campaign Name']);
+    const source=first(raw,['Source','Lead Source','Platform']);
     const notes=first(raw,['Notes','Remarks']);
     if(industry)out.Industry=industry;
     if(service)out.Service=service;
