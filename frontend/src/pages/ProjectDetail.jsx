@@ -7,6 +7,7 @@ import './Projects.css'
 import './ProjectDetail.css'
 
 const emptyCallback={name:'',phone:'',email:'',message:'',consent:false,website:''}
+const emptyQuote={name:'',phone:'',email:'',siteLocation:'',area:'',budget:'',preferredPackage:'',requirement:'',consent:false,website:''}
 const quoteHash=project=>project.category==='design'?'interiors':project.category==='property'?'property':'construction'
 const isPdf=value=>/\.pdf(?:[?#]|$)/i.test(value||'')
 
@@ -26,10 +27,16 @@ export default function ProjectDetail(){
   const [callbackSending,setCallbackSending]=useState(false)
   const [callbackFeedback,setCallbackFeedback]=useState('')
   const [callbackSuccess,setCallbackSuccess]=useState(false)
+  const [quoteOpen,setQuoteOpen]=useState(false)
+  const [quoteForm,setQuoteForm]=useState(emptyQuote)
+  const [quoteSending,setQuoteSending]=useState(false)
+  const [quoteFeedback,setQuoteFeedback]=useState('')
+  const [quoteSuccess,setQuoteSuccess]=useState(false)
   const [packageDownloading,setPackageDownloading]=useState(false)
   const [packageError,setPackageError]=useState('')
   const dialogRef=useRef(null)
   const callbackTriggerRef=useRef(null)
+  const quoteTriggerRef=useRef(null)
 
   useEffect(()=>{
     let active=true
@@ -43,6 +50,7 @@ export default function ProjectDetail(){
     let active=true
     setProject(null);setError('');setPhotoIndex(0);setShowVideo(false);setLinkedPlan(null)
     setCallbackOpen(false);setCallbackForm(emptyCallback);setCallbackFeedback('');setCallbackSuccess(false)
+    setQuoteOpen(false);setQuoteForm(emptyQuote);setQuoteFeedback('');setQuoteSuccess(false)
     setPackageDownloading(false);setPackageError('')
     setLoading(Boolean(realId))
     if(!realId){
@@ -87,14 +95,14 @@ export default function ProjectDetail(){
   },[project?.title])
 
   useEffect(()=>{
-    if(!callbackOpen)return undefined
+    if(!callbackOpen&&!quoteOpen)return undefined
     const previous=document.body.style.overflow
     document.body.style.overflow='hidden'
     dialogRef.current?.focus()
-    const onEscape=event=>{if(event.key==='Escape')setCallbackOpen(false)}
+    const onEscape=event=>{if(event.key==='Escape'){setCallbackOpen(false);setQuoteOpen(false)}}
     window.addEventListener('keydown',onEscape)
     return()=>{document.body.style.overflow=previous;window.removeEventListener('keydown',onEscape)}
-  },[callbackOpen])
+  },[callbackOpen,quoteOpen])
 
   const photos=project?projectPhotos(project):[]
   const activePhoto=photos[photoIndex]||photos[0]||''
@@ -102,6 +110,21 @@ export default function ProjectDetail(){
   const email=contactData.email||contactData.support_email||''
   const inclusions=Array.isArray(linkedPlan?.inclusions)?linkedPlan.inclusions.filter(Boolean):[]
 
+  function closeQuote(){setQuoteOpen(false);quoteTriggerRef.current?.focus()}
+  function openQuote(){setCallbackOpen(false);setQuoteFeedback('');setQuoteOpen(true)}
+  async function submitQuote(event){
+    event.preventDefault()
+    if(!project?.businessProfileId||quoteSending)return
+    setQuoteSending(true);setQuoteFeedback('')
+    try{
+      await publicRequest('/experts/projects/'+encodeURIComponent(project.id)+'/quote-request',{
+        method:'POST',body:JSON.stringify(quoteForm),
+      })
+      setQuoteSuccess(true)
+      setQuoteFeedback('Your requirements have been sent to '+(project.businessName||'this professional')+' as a private lead. The professional will prepare the plan and pricing; ProPulse will coordinate the follow-up.')
+    }catch(error){setQuoteFeedback(error.message||'Unable to send your quotation request. Please try again.')}
+    finally{setQuoteSending(false)}
+  }
   function closeCallback(){
     setCallbackOpen(false)
     callbackTriggerRef.current?.focus()
@@ -216,11 +239,11 @@ export default function ProjectDetail(){
                   <span className="pjd-cta-copy"><strong>{callbackSuccess?'Callback Requested':'Request a Callback'}</strong><small>ProPulse coordinates your enquiry</small></span>
                   <span className="pjd-cta-arrow" aria-hidden="true">↗</span>
                 </button>
-                <Link className="pjd-action-button pjd-main-cta" to={'/quote#'+quoteHash(project)}>
+                <button ref={quoteTriggerRef} type="button" className="pjd-action-button pjd-main-cta" onClick={openQuote}>
                   <span className="pjd-cta-symbol" aria-hidden="true">✧</span>
-                  <span className="pjd-cta-copy"><strong>Get Quote</strong><small>Request a personalized estimate</small></span>
+                  <span className="pjd-cta-copy"><strong>Get Quote</strong><small>Quote by {project.businessName||'this professional'}</small></span>
                   <span className="pjd-cta-arrow" aria-hidden="true">↗</span>
-                </Link>
+                </button>
               </div>
               {packageError&&<p className="pjd-error" role="alert">{packageError}</p>}
               {project.document&&<a className="pjd-document-link" href={project.document} target="_blank" rel="noopener noreferrer"><Icon name="file" size={15}/>{isPdf(project.document)?'View project drawing / PDF':'View project document'} ↗</a>}
@@ -247,12 +270,47 @@ export default function ProjectDetail(){
           <div className="pjd-mobile-actions" aria-label="Quick project actions">
             <button type="button" onClick={downloadPackage} disabled={packageDownloading}><Icon name="file" size={17}/><span>{packageDownloading?'Preparing…':'Package'}</span></button>
             <button type="button" onClick={()=>setCallbackOpen(true)}><span aria-hidden="true">☎</span><span>Callback</span></button>
-            <Link to={'/quote#'+quoteHash(project)}>Get Quote <Icon name="arrow" size={14}/></Link>
+            <button type="button" onClick={openQuote}>Get Quote <Icon name="arrow" size={14}/></button>
           </div>
         </>}
       </div>
     </section>
     <PublicFooter phone={phone} email={email}/>
+    {project&&quoteOpen&&<div className="pjd-dialog-backdrop" role="presentation" onMouseDown={event=>{if(event.target===event.currentTarget)closeQuote()}}>
+      <section ref={dialogRef} tabIndex={-1} className="pjd-dialog pjd-quote-dialog" role="dialog" aria-modal="true" aria-labelledby="pjd-quote-heading">
+        <button type="button" className="pjd-dialog-close" onClick={closeQuote} aria-label="Close quotation request">×</button>
+        <span className="pjd-overline">QUOTE FROM THIS PROFESSIONAL</span>
+        <h2 id="pjd-quote-heading">Get a quote from {project.businessName||'this professional'}</h2>
+        <p>Share your requirements for <strong>{project.title}</strong>. This business prepares the package and price, while ProPulse coordinates your enquiry.</p>
+        {quoteSuccess?<div className="pj-callback-success" role="status"><strong>Quotation requested</strong><p>{quoteFeedback}</p><button type="button" className="pjd-dialog-done" onClick={closeQuote}>Done</button></div>:
+          <form className="pjd-callback-form pjd-quote-form" onSubmit={submitQuote}>
+            <div className="pjd-field-pair">
+              <label>Full name<input required maxLength={160} autoComplete="name" value={quoteForm.name} onChange={e=>setQuoteForm(v=>({...v,name:e.target.value}))}/></label>
+              <label>Mobile number<input required type="tel" inputMode="tel" pattern="[0-9+ ()-]{10,18}" autoComplete="tel" value={quoteForm.phone} onChange={e=>setQuoteForm(v=>({...v,phone:e.target.value}))}/></label>
+            </div>
+            <div className="pjd-field-pair">
+              <label>Site location<input required maxLength={180} placeholder="City, locality" value={quoteForm.siteLocation} onChange={e=>setQuoteForm(v=>({...v,siteLocation:e.target.value}))}/></label>
+              <label>Approximate area<input maxLength={120} placeholder="e.g. 1500 sq ft" value={quoteForm.area} onChange={e=>setQuoteForm(v=>({...v,area:e.target.value}))}/></label>
+            </div>
+            <div className="pjd-field-pair">
+              <label>Budget<input maxLength={120} placeholder="e.g. ₹10–15 lakh" value={quoteForm.budget} onChange={e=>setQuoteForm(v=>({...v,budget:e.target.value}))}/></label>
+              <label>Preferred package
+                <select value={quoteForm.preferredPackage} onChange={e=>setQuoteForm(v=>({...v,preferredPackage:e.target.value}))}>
+                  <option value="">Let the professional recommend</option>
+                  {linkedPlan?.title&&<option value={linkedPlan.title}>{linkedPlan.title}</option>}
+                  {project.packageName&&project.packageName!==linkedPlan?.title&&<option value={project.packageName}>{project.packageName}</option>}
+                </select>
+              </label>
+            </div>
+            <label>Email (optional)<input type="email" maxLength={255} autoComplete="email" value={quoteForm.email} onChange={e=>setQuoteForm(v=>({...v,email:e.target.value}))}/></label>
+            <label>Project requirements<textarea required rows={4} maxLength={3000} placeholder="Rooms, finishes, timeline, materials and scope you want quoted" value={quoteForm.requirement} onChange={e=>setQuoteForm(v=>({...v,requirement:e.target.value}))}/></label>
+            <label className="pjd-consent"><input type="checkbox" required checked={quoteForm.consent} onChange={e=>setQuoteForm(v=>({...v,consent:e.target.checked}))}/> I agree that ProPulse may share my details and requirements with this professional for a quotation.</label>
+            <input className="pjd-trap" tabIndex={-1} autoComplete="off" aria-hidden="true" value={quoteForm.website} onChange={e=>setQuoteForm(v=>({...v,website:e.target.value}))}/>
+            {quoteFeedback&&<p className="pjd-error" role="alert">{quoteFeedback}</p>}
+            <button className="pjd-dialog-submit" type="submit" disabled={quoteSending}>{quoteSending?'Submitting…':'Send Quote Request →'}</button>
+          </form>}
+      </section>
+    </div>}
     {project&&callbackOpen&&<div className="pjd-dialog-backdrop" role="presentation" onMouseDown={event=>{if(event.target===event.currentTarget)closeCallback()}}>
       <section ref={dialogRef} tabIndex={-1} className="pjd-dialog" role="dialog" aria-modal="true" aria-labelledby="pjd-dialog-heading">
         <button type="button" className="pjd-dialog-close" onClick={closeCallback} aria-label="Close callback form">×</button>
