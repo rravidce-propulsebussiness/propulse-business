@@ -54,6 +54,30 @@ async function uploadProjectVideo(req,res){
   }
 }
 
+
+async function projectVideoUploadAction(req,res,operation){
+  if(req.user?.role!=='business')return res.status(403).json({error:'Business account required'});
+  try{
+    const data=req.body||{};
+    const service=projectVideoService;
+    const result=operation==='start'?await service.prepareVideoUpload(req.user.id,data.mimeType,data.size)
+      :operation==='part'?service.presignVideoPart(req.user.id,data.reference,data.uploadId,data.partNumber)
+      :operation==='finish'?await service.finishVideoUpload(req.user.id,data)
+      :await service.abortVideoUpload(req.user.id,data);
+    return res.status(operation==='start'?201:200).json(result);
+  }catch(error){
+    const invalid=['INVALID_PROJECT_VIDEO','INVALID_PROJECT_VIDEO_TYPE','INVALID_PROJECT_VIDEO_URL',
+      'PROJECT_VIDEO_OWNERSHIP','PROJECT_VIDEO_TOO_LARGE','VIDEO_UPLOAD_MISMATCH'];
+    const status=invalid.includes(error.code)||/^Invalid /.test(error.message)?400:503;
+    if(status===503)console.error('Direct video upload operation failed:',operation,error.message);
+    return sendError(res,status,error,'Unable to process video upload',{code:error.code});
+  }
+}
+const startProjectVideoUpload=(req,res)=>projectVideoUploadAction(req,res,'start');
+const signProjectVideoPart=(req,res)=>projectVideoUploadAction(req,res,'part');
+const finishProjectVideoUpload=(req,res)=>projectVideoUploadAction(req,res,'finish');
+const abortProjectVideoUpload=(req,res)=>projectVideoUploadAction(req,res,'abort');
+
 async function uploadProjectPlan(req,res){
   try{
     if(req.user?.role!=='business')return res.status(403).json({error:'Business account required'});
@@ -121,4 +145,4 @@ async function updateProjectQuote(req,res){
   }
 }
 
-module.exports = { getProfile, updateProfile, uploadProjectVideo, uploadProjectPlan, uploadProjectImage, listProjectCallbacks, listBrochures, saveBrochures, listProjectQuotes, updateProjectQuote };
+module.exports = { getProfile, updateProfile, uploadProjectVideo, startProjectVideoUpload,signProjectVideoPart,finishProjectVideoUpload,abortProjectVideoUpload, uploadProjectPlan, uploadProjectImage, listProjectCallbacks, listBrochures, saveBrochures, listProjectQuotes, updateProjectQuote };
