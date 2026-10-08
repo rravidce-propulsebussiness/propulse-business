@@ -199,3 +199,15 @@
   .pjd-page .pjd-mobile-actions button:disabled{opacity:.6;cursor:wait}
 }
 @media(prefers-reduced-motion:reduce){.pjd-page .pjd-action-button{transition:none}.pjd-page .pjd-action-button:hover{transform:none}}
+
+
+/* Project-specific quotation request: professional chooses final package and price. */
+.pjd-page .pjd-quote-dialog{max-height:min(90dvh,800px);overflow-y:auto;overscroll-behavior:contain}
+.pjd-page .pjd-quote-dialog h2{max-width:90%;font-size:clamp(21px,2.5vw,28px)}
+.pjd-page .pjd-quote-dialog>p{line-height:1.7}
+.pjd-page .pjd-quote-form{display:grid;gap:13px}
+.pjd-page .pjd-quote-form label{display:grid;gap:6px;min-width:0}
+.pjd-page .pjd-quote-form select{width:100%;min-height:43px;padding:10px 12px;border:1px solid #dce3e8;border-radius:8px;background:#fff;color:#1c3c54;font:inherit;font-size:13px}
+.pjd-page .pjd-quote-form select:focus-visible{outline:2px solid #e65b26;outline-offset:1px}
+.pjd-page .pjd-quote-form .pjd-field-pair{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+@media(max-width:620px){.pjd-page .pjd-quote-form .pjd-field-pair{grid-template-columns:1fr}.pjd-page .pjd-quote-dialog{max-height:92dvh}}
