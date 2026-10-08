@@ -1,4 +1,5 @@
 const pool = require('../config/database');
+const {shouldSkipUnchangedSheet}=require('../utils/sheetSyncRetryPolicy');
 const base = require('./leadPartnerInventoryService');
 const { fetchGoogleSheetCsv } = require('./googleSheetService');
 const sheetPreview = require('./sheetImportPreviewService');
@@ -281,7 +282,7 @@ async function syncGoogleSheet({userId,connectionId,force=false}){
     const result=await fetchGoogleSheetCsv(connection.source_url);
     if(result.spreadsheetId!==connection.spreadsheet_id||String(result.gid||'0')!==String(connection.gid||'0'))throw new Error('Google Sheet URL no longer matches the connected sheet');
     const analysis=sheetPreview.analyzeCsv(result.csv||'',{columnMappings:connection.column_mappings||{},scope:'lead_partner'});
-    if(!force&&connection.fingerprint&&String(connection.fingerprint)===String(analysis.fingerprint)){
+    if(shouldSkipUnchangedSheet({force,previousFingerprint:connection.fingerprint,nextFingerprint:analysis.fingerprint,lastFailed:connection.last_sync_failed})){
       const saved=(await pool.query(
         `UPDATE lead_partner_sheet_connections
             SET last_synced_at=CURRENT_TIMESTAMP,
