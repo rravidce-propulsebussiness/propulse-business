@@ -24,4 +24,13 @@ async function get(req,res){
   }catch(error){console.error('Get public expert failed:',error);return res.status(500).json({error:'Failed to load business profile'});}
 }
 
-module.exports={list,projects,projectVideos,get};
+async function requestProjectCallback(req,res){
+  try{return res.status(201).json(await projectCallbackService.requestCallback(req.params.projectId,req.body||{}))}
+  catch(error){
+    const code=String(error.code||'');
+    const status=code==='PROJECT_NOT_FOUND'?404:code.startsWith('INVALID_')?400:500;
+    if(status===500)console.error('Submit project callback failed:',error.message);
+    return res.status(status).json({error:status===500?'Unable to submit callback request':error.message});
+  }
+}
+module.exports={list,projects,projectVideos,get,requestProjectCallback};
