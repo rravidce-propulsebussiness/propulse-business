@@ -1,5 +1,6 @@
 const callbackService=require('../services/projectCallbackService');
 const quotes=require('../services/professionalProjectQuoteService');
+const marketplace=require('../services/projectMarketplaceLeadService');
 
 async function list(req,res){
   try{return res.json({data:await callbackService.listForAdmin()});}
@@ -18,4 +19,18 @@ async function listQuotes(req,res){
   try{return res.json({data:await quotes.listForAdmin()});}
   catch(error){console.error('Admin project quote coordination list failed:',error);return res.status(500).json({error:'Unable to load project quote leads'});}
 }
-module.exports={list,updateStatus,listQuotes};
+async function retryMarketplace(req,res){
+  const kind=String(req.params.kind||'');
+  if(!['quote','callback'].includes(kind))return res.status(400).json({error:'Invalid project request type'});
+  const id=Number(req.params.id);
+  if(!Number.isSafeInteger(id)||id<1)return res.status(400).json({error:'Invalid request reference'});
+  try{
+    const result=await marketplace.sync(kind,id);
+    return res.json(result);
+  }catch(error){
+    if(error.code==='PROJECT_REQUEST_NOT_FOUND')return res.status(404).json({error:error.message});
+    console.error('Admin marketplace lead retry failed:',error.message);
+    return res.status(500).json({error:'Unable to retry marketplace lead creation'});
+  }
+}
+module.exports={list,updateStatus,listQuotes,retryMarketplace};
