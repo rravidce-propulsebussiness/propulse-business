@@ -126,6 +126,17 @@ assert.match(projects,/to=\{projectPath\(project\)\}/);
 assert.doesNotMatch(projects,/pj-detail-backdrop/);
 assert.match(projectDetail,/pjd-main-grid/);
 assert.match(projectDetail,/pjd-callback-form/);
+
+assert.match(projectDetail,/Download Package/);
+assert.match(projectDetail,/Request a Callback/);
+assert.match(projectDetail,/Get Quote/);
+assert.match(projectDetail,/downloadProjectPackagePdf/);
+assert.match(projectDetail,/openLeadPopup/);
+assert.match(projectDetail,/pjd-mobile-actions/);
+assert.doesNotMatch(projectDetail,/package-details\\.txt/);
+assert.match(read('../frontend/src/utils/requirementQuotePdf.js'),/export async function downloadProjectPackagePdf/);
+assert.match(read('../frontend/src/components/GlobalLeadPopup.jsx'),/intent==='callback'/);
+
 assert.match(app,/path="\/projects\/:projectId" element={<ProjectDetail\/>}/);
 assert.doesNotMatch(projects,/Investment Apartment|rental-demand considerations/);
 
