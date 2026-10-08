@@ -349,35 +349,22 @@ test('project cards open dedicated detail pages using the keyboard',async({page}
 })
 
 
-test('sample courtyard offers a PDF guide, a callback request and Get Quote',async({page})=>{
+test('retired stock-photo concept links return to the completed projects gallery',async({page})=>{
+  await page.route('**/api/experts/projects?*',route=>route.fulfill({
+    status:200,contentType:'application/json',
+    body:JSON.stringify({data:[],pagination:{hasNextPage:false}})
+  }))
   await page.goto('/projects/sample-courtyard')
-  await expect(page.getByRole('heading',{name:'The Courtyard Residence'})).toBeVisible()
-  await expect(page.getByText('Illustrative project',{exact:true})).toBeVisible()
-
-  const actions=page.locator('.pjd-action-stack')
-  const downloadButton=actions.getByRole('button',{name:/Download Package/})
-  await expect(downloadButton).toBeVisible()
-  await expect(actions.getByRole('button',{name:/Request a Callback/})).toBeVisible()
-  await expect(actions.getByRole('link',{name:/Get Quote/})).toBeVisible()
-
-  const [download]=await Promise.all([page.waitForEvent('download'),downloadButton.click()])
-  expect(download.suggestedFilename()).toMatch(/^propulse-sample-courtyard-package-guide\.pdf$/)
-
-  await actions.getByRole('button',{name:/Request a Callback/}).click()
-  const dialog=page.getByRole('dialog',{name:'Request a callback'})
-  await expect(dialog).toBeVisible()
-  await expect(dialog.getByRole('heading',{name:'Request a Callback'})).toBeVisible()
-  await expect(dialog.getByRole('textbox',{name:/Additional Information/})).toHaveValue(/Project reference: The Courtyard Residence/)
-  await dialog.getByRole('button',{name:'Close'}).click()
-
-  await actions.getByRole('link',{name:/Get Quote/}).click()
-  await expect(page).toHaveURL(/\/quote#construction$/)
+  await expect(page).toHaveURL(/\/projects\/?$/)
+  await expect(page.locator('.pj-completed-heading h1')).toHaveText('Completed Projects')
+  await expect(page.getByText('The Courtyard Residence')).toHaveCount(0)
+  await expect(page.getByRole('heading',{name:'Completed projects are coming soon'})).toBeVisible()
 })
 
 test('published project retains private project-specific callback flow alongside Get Quote',async({page})=>{
   const project={
     project_id:123,project_type:'construction',title:'Modern Villa',
-    description:'Completed residential project',business_name:'Sample Engineer',
+    description:'Completed residential project',completion_year:2024,business_name:'Sample Engineer',
     business_profile_id:7,location_text:'Hyderabad',
     image_urls:[],is_verified:true,
   }
@@ -394,7 +381,16 @@ test('published project retains private project-specific callback flow alongside
   const actions=page.locator('.pjd-action-stack')
   await expect(actions.getByRole('button',{name:/Download Package/})).toBeVisible()
   await expect(actions.getByRole('link',{name:/Get Quote/})).toBeVisible()
+  const [download]=await Promise.all([
+    page.waitForEvent('download'),
+    actions.getByRole('button',{name:/Download Package/}).click()
+  ])
+  expect(download.suggestedFilename()).toMatch(/^propulse-123-package-guide\.pdf$/)
   await actions.getByRole('button',{name:/Request a Callback/}).click()
+  const dialog=page.getByRole('dialog',{name:'Request a Callback'})
+  await expect(dialog).toBeVisible()
+  await expect(page.locator('.pjd-information')).toHaveCount(1)
+  await expect(page.locator('.pjd-bottom-grid,.pjd-related-grid')).toHaveCount(0)
 
   const form=page.locator('.pjd-callback-form')
   await expect(form).toBeVisible()
@@ -402,6 +398,9 @@ test('published project retains private project-specific callback flow alongside
   await form.getByPlaceholder('10-digit mobile').fill('9876543210')
   await form.getByRole('checkbox').check()
   await form.getByRole('button',{name:/Send Callback Request/}).click()
-  await expect(page.getByRole('status').filter({hasText:/Callback request received/})).toBeVisible()
+  await expect(dialog.getByRole('status').filter({hasText:/Callback request received/})).toBeVisible()
   expect(submitted).toMatchObject({name:'Example Customer',phone:'9876543210',consent:true})
+  await dialog.getByRole('button',{name:'Done'}).click()
+  await actions.getByRole('link',{name:/Get Quote/}).click()
+  await expect(page).toHaveURL(/\/quote#construction$/)
 })

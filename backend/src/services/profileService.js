@@ -36,6 +36,7 @@ function normalizeProjects(projects){
   return projects.map((item,index)=>{
     const completionYear=item?.completionYear==null||item.completionYear===''?null:Number(item.completionYear);
     if(completionYear!==null&&(!Number.isInteger(completionYear)||completionYear<1950||completionYear>2200))throw profileError('Project completion year is invalid');
+    if(item?.isPublished!==false&&(completionYear===null||completionYear>new Date().getFullYear()))throw profileError('Published completed projects must include a valid past or current completion year. Save incomplete work as a private draft.');
     return {
       id:Number.isInteger(Number(item?.id))&&Number(item.id)>0?Number(item.id):null,
       title:cleanText(item?.title,180,'Project title',{required:true}),

@@ -62,16 +62,22 @@ async function main(){
     assert.strictEqual(detail.membership_expires_at,undefined,'Membership expiry must remain private');
 
     const olderProject=(await pool.query(
-      "INSERT INTO business_profile_projects(business_profile_id,title,cover_image_url,published_at,is_published,sort_order) VALUES($1,$2,$3,CURRENT_TIMESTAMP-INTERVAL '2 days',TRUE,0) RETURNING id",
+      "INSERT INTO business_profile_projects(business_profile_id,title,cover_image_url,completion_year,published_at,is_published,sort_order) VALUES($1,$2,$3,EXTRACT(YEAR FROM CURRENT_DATE)::int,CURRENT_TIMESTAMP-INTERVAL '2 days',TRUE,0) RETURNING id",
       [subscribed.profileId,'Older runtime project','https://cdn.example.test/older.jpg']
     )).rows[0];
     const newerProject=(await pool.query(
-      "INSERT INTO business_profile_projects(business_profile_id,title,plan_url,published_at,is_published,sort_order) VALUES($1,$2,$3,CURRENT_TIMESTAMP-INTERVAL '1 hour',TRUE,1) RETURNING id",
+      "INSERT INTO business_profile_projects(business_profile_id,title,plan_url,completion_year,published_at,is_published,sort_order) VALUES($1,$2,$3,EXTRACT(YEAR FROM CURRENT_DATE)::int,CURRENT_TIMESTAMP-INTERVAL '1 hour',TRUE,1) RETURNING id",
       [subscribed.profileId,'Newer runtime project','https://cdn.example.test/newer.pdf']
+    )).rows[0];
+    const incomplete=(await pool.query(
+      "INSERT INTO business_profile_projects(business_profile_id,title,published_at,is_published,sort_order) VALUES($1,$2,CURRENT_TIMESTAMP,TRUE,2) RETURNING id",
+      [subscribed.profileId,'In-progress fixture (no completion year)']
     )).rows[0];
     let projects=await publicExpertService.listRecentProjects({page:1,pageSize:12});
     const fixtureProjects=projects.data.filter(item=>[olderProject.id,newerProject.id].includes(Number(item.project_id)));
     assert.strictEqual(fixtureProjects.length,2,'Eligible published projects must appear on Projects feed even without video');
+    assert.ok(!projects.data.some(item=>Number(item.project_id)===incomplete.id),'Projects without a completion year must not be represented as completed');
+    assert.strictEqual(await publicExpertService.getPublicProject(incomplete.id),null,'Unfinished direct project details must not be public');
     assert.strictEqual(Number(fixtureProjects[0].project_id),newerProject.id,'Newest completed project must appear first');
     assert.strictEqual(Number(fixtureProjects[1].project_id),olderProject.id,'Older completed project must follow newer project');
     assert.strictEqual(fixtureProjects[0].plan_url,'https://cdn.example.test/newer.pdf','Project plan must be available on the Projects feed when enabled');
