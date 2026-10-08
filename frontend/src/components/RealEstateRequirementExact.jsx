@@ -57,7 +57,7 @@ function Chips({ question, value, onChange }) {
 }
 
 export default function RealEstateRequirementExact(props) {
-  const { embedded = false, questions, answers, setAnswer, cities, locationStates, locationStateId, setLocationState, cityId, setCity, locationQuestion, setPincode, onDetectedLocation, pinLookup, contact, setContact, state, submit, contactData, completion } = props
+  const { embedded = false, questions, answers, setAnswer, cities, locationStates, locationStateId, setLocationState, cityId, setCity, locationQuestion, setPincode, onDetectedLocation, pinLookup, contact, setContact, state, submit, contactData, completion, projectQuote = null } = props
   const byKey = useMemo(() => Object.fromEntries(questions.map(q => [q.questionKey, q])), [questions])
   const intent = byKey.property_intent
   const propertyType = byKey.property_type
@@ -88,6 +88,7 @@ export default function RealEstateRequirementExact(props) {
   }
 
   const summary = [
+    ...(projectQuote ? [['Professional Package',projectQuote.preferredPackage||'—']] : []),
     ['City / Location', [
       cities.find(c => String(c.id) === String(cityId))?.name,
       locationStates.find(s => String(s.id) === String(locationStateId))?.name,
@@ -188,7 +189,7 @@ export default function RealEstateRequirementExact(props) {
             <div className="rex-summary-progress"><i style={{width:`${Math.min(100,Math.max(0,completion||0))}%`}}/></div>
             <div className="rex-summary-rows">{summary.map(([label,value])=><p key={label}><span>{label}</span><b title={value}>{value}</b></p>)}</div>
             {state.error&&<div className="rex-error">{state.error}</div>}
-            <button type="submit" disabled={state.saving}>{state.saving?'Sending Request…':'Request Property Options'} <Icon name="arrow" size={15}/></button>
+            <button type="submit" disabled={state.saving}>{state.saving?'Sending Request…':projectQuote?'Request Professional Quote':'Request Property Options'} <Icon name="arrow" size={15}/></button>
             
           </section>
 
