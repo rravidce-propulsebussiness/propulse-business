@@ -43,7 +43,15 @@ async function requestCallback(projectId,input={}){
       RETURNING id`,
     [id,project.business_user_id,name,phone,email,message||null,String(project.title||'Project').slice(0,180)]
   );
-  if(!result.rowCount)return {success:true,duplicate:true};
+  if(!result.rowCount){
+    const prior=await pool.query(
+      `SELECT id FROM project_callback_requests
+       WHERE project_id=$1 AND customer_phone=$2
+         AND created_at>CURRENT_TIMESTAMP-INTERVAL '1 hour'
+       ORDER BY created_at DESC,id DESC LIMIT 1`,[id,phone]
+    );
+    return {success:true,duplicate:true,requestId:prior.rows[0]?.id||null};
+  }
   const requestId=result.rows[0].id;
   try{
     await notifications.notifyUser({
@@ -55,7 +63,16 @@ async function requestCallback(projectId,input={}){
       dedupeKey:`project-callback-${requestId}`,
     });
   }catch(error){console.error('Project callback notification failed:',error.message);}
-  return {success:true};
+  try{
+    await notifications.notifyAdmins({
+      type:'project_callback_request',category:'lead',severity:'info',
+      title:'New project callback lead #'+requestId,
+      message:'A customer requested a callback for '+String(project.title).slice(0,110)+'. Coordinate the enquiry and manage customer contact access.',
+      actionUrl:'/admin',relatedType:'project_callback',relatedId:requestId,
+      dedupeKey:'admin-project-callback-'+requestId,
+    });
+  }catch(error){console.error('Admin project callback notification failed:',error.message);}
+  return {success:true,requestId};
 }
 
 async function requestProfileCallback(expertId,input={}){
