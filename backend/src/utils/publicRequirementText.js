@@ -1,5 +1,6 @@
 // Public requirement leads store form answers as individual fields.
 // Only an explicitly written, marketplace-visible note belongs in Requirement.
+const { parseProjectQuoteRequirement } = require('../services/projectQuoteRequirementDetails');
 const clean = value => typeof value === 'string' ? value.trim() : '';
 
 function legacyStructuredSummary(value, custom) {
@@ -38,4 +39,46 @@ function publicWrittenRequirement(row, custom = row?.custom_fields || {}) {
   return legacyStructuredSummary(raw, custom) ? '' : raw;
 }
 
-module.exports = { publicWrittenRequirement, legacyStructuredSummary };
+
+const projectIntro = /^(?:Interior Design|Real Estate|Construction) enquiry from a completed project\\.\\s*/i;
+const generatedCallback = /^Customer requested a callback about (?:this|their) project(?: requirement)?\\.?$/i;
+const additionalLabel = /^(?:additional requirements?|additional information|other details|share more details and requirement|written requirement)\\s*:/i;
+
+function projectWrittenRequirement(row, custom = row?.custom_fields || {}) {
+  const origin = custom?._project_origin || {};
+  if (Object.prototype.hasOwnProperty.call(origin, 'writtenRequirement')) {
+    return clean(origin.writtenRequirement);
+  }
+  const source = String(row?.source || '').toLowerCase();
+  const raw = clean(row?.requirement);
+  if (source === 'professional_project_callback') {
+    const message = raw.replace(projectIntro, '').trim();
+    return generatedCallback.test(message) ? '' : message;
+  }
+  if (source !== 'professional_project_quote') return raw;
+
+  // Historical project quotations stored a full "Label: Value" form in requirement.
+  // Recover only a labelled, customer-written additional-requirement answer.
+  const formText = raw.replace(projectIntro, '').trim();
+  if (formText.split(/\\r?\\n/).some(line => additionalLabel.test(line.trim()))) {
+    return clean(parseProjectQuoteRequirement(formText)['Additional Requirements']);
+  }
+  // Some older marketplace leads saved the introductory sentence followed by a
+  // genuine free-text note instead of a labelled form answer.
+  if (projectIntro.test(raw) && formText && !/\\r?\\n/.test(formText)
+    && !/^[\\w -]{2,70}\\s*:/.test(formText)
+    && !generatedCallback.test(formText)) return formText;
+  return '';
+}
+
+function writtenLeadRequirement(row, custom = row?.custom_fields || {}) {
+  const source = String(row?.source || '').toLowerCase();
+  if (source === 'public_requirement') return publicWrittenRequirement(row, custom);
+  if (source === 'homepage_consultation') return '';
+  if (source === 'professional_project_quote' || source === 'professional_project_callback') {
+    return projectWrittenRequirement(row, custom);
+  }
+  return clean(row?.requirement);
+}
+
+module.exports = { publicWrittenRequirement, legacyStructuredSummary, projectWrittenRequirement, writtenLeadRequirement };
