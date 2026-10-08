@@ -151,7 +151,6 @@ export default function Home() {
   }, [trustTyping])
 
   useEffect(() => {
-    window.scrollTo(0, 0)
     let active = true
     Promise.allSettled([
       publicRequest('/contact?audience=website'),
