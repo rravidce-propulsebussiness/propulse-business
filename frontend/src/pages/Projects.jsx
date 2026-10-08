@@ -6,40 +6,57 @@ import './Projects.css'
 
 const CONCEPTS = [
   {
-    id: 'home-exteriors',
-    category: 'construction',
-    title: 'Contemporary Home Exteriors',
-    description: 'Clean elevations, natural light and thoughtfully planned spaces.',
-    image: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=900&q=85',
-    link: '/packages#construction',
+    id:'sample-courtyard',sample:true,category:'construction',type:'Residential Construction',
+    title:'The Courtyard Residence',location:'Illustrative location · Hyderabad',
+    area:'3,250 sq ft',packageName:'Signature Construction',cost:'₹82.0L',completionYear:'2025',
+    description:'An airy modern family home with warm materials and thoughtful natural light.',
+    image:'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1100&q=85',
+    sampleSpecs:['RCC structural planning','Space and elevation coordination','Flooring and material selection','Electrical and plumbing planning','Exterior finishing schedule'],
   },
   {
-    id: 'living-spaces',
-    category: 'design',
-    title: 'Warm Contemporary Interiors',
-    description: 'Layered lighting, inviting finishes and timeless living areas.',
-    image: 'https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=900&q=85',
-    link: '/packages#interior',
+    id:'sample-warm-home',sample:true,category:'design',type:'Residential Interiors',
+    title:'The Warm Minimal Home',location:'Illustrative location · Hyderabad',
+    area:'1,580 sq ft',packageName:'Premium Interiors',cost:'₹16.8L',completionYear:'2025',
+    description:'Natural oak tones, integrated storage and layered lighting for a comfortable home.',
+    image:'https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=1100&q=85',
+    sampleSpecs:['Modular kitchen design','Wardrobe and TV unit planning','False ceiling with cove lighting','Storage layout','Finish and hardware selection'],
   },
   {
-    id: 'modular-kitchens',
-    category: 'design',
-    title: 'Modular Kitchen Ideas',
-    description: 'Smart storage, durable materials and everyday convenience.',
-    image: 'https://images.unsplash.com/photo-1556911220-bff31c812dba?auto=format&fit=crop&w=900&q=85',
-    link: '/packages#interior',
+    id:'sample-kitchen',sample:true,category:'design',type:'Interior Design',
+    title:'A Kitchen Made for Living',location:'Illustrative location · Hyderabad',
+    area:'220 sq ft',packageName:'Modular Kitchen',cost:'₹4.4L',completionYear:'2024',
+    description:'A considered kitchen with clean finishes, practical storage and a refined palette.',
+    image:'https://images.unsplash.com/photo-1556911220-bff31c812dba?auto=format&fit=crop&w=900&q=85',
+    sampleSpecs:['Modular cabinet design','Countertop and backsplash selection','Drawer and pantry storage','Task lighting','Appliance provisions'],
   },
   {
-    id: 'villa-interiors',
-    category: 'design',
-    title: 'Refined Villa Interiors',
-    description: 'Elegant details, comfortable layouts and coordinated finishes.',
-    image: 'https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?auto=format&fit=crop&w=900&q=85',
-    link: '/packages#interior',
+    id:'sample-duplex',sample:true,category:'construction',type:'Residential Construction',
+    title:'The Contemporary Duplex',location:'Illustrative location · Hyderabad',
+    area:'2,940 sq ft',packageName:'Classic Construction',cost:'₹64.0L',completionYear:'2025',
+    description:'A spacious duplex concept balancing family living and refined architecture.',
+    image:'https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&w=900&q=85',
+    sampleSpecs:['RCC and masonry planning','Interior plaster and flooring','Doors and windows','Staircase and balcony','Waterproofing and painting'],
+  },
+  {
+    id:'sample-villa',sample:true,category:'design',type:'Residential Interiors',
+    title:'Quiet Luxury Living',location:'Illustrative location · Hyderabad',
+    area:'1,880 sq ft',packageName:'Elite Interiors',cost:'₹22.5L',completionYear:'2025',
+    description:'Subtle textures, elegant finishes and integrated lighting for a calm home.',
+    image:'https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?auto=format&fit=crop&w=900&q=85',
+    sampleSpecs:['Fixed furniture layout','Kitchen and utility storage','Veneer-look finish selection','Decorative lighting','Wardrobes and media wall'],
+  },
+  {
+    id:'sample-workspace',sample:true,category:'design',type:'Commercial Interiors',
+    title:'The Modern Workspace',location:'Illustrative location · Hyderabad',
+    area:'2,300 sq ft',packageName:'Commercial Fit-Out',cost:'₹31.0L',completionYear:'2024',
+    description:'An efficient workspace with inviting collaborative zones and a polished reception.',
+    image:'https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=900&q=85',
+    sampleSpecs:['Reception and waiting area','Workstations and partitions','Meeting room planning','Data and lighting provision','Storage and finish schedule'],
   },
 ]
 
-const PAGE_SIZE = 18
+// These are not claimed as completed client projects; all sample costs and specifications are illustrative.
+const PAGE_SIZE = 48
 const CATEGORIES = [
   { id: 'all', label: 'All Projects' },
   { id: 'construction', label: 'Construction' },
@@ -91,6 +108,8 @@ function normalizeProject(project, index) {
     document: publicMediaUrl(project.plan_url),
     video: publicMediaUrl(project.video_url),
     publishedAt: clean(project.published_at),
+    sample:false,
+    packageName: clean(project.package_name || project.package_title),
   }
 }
 
@@ -165,15 +184,38 @@ export default function Projects() {
     }
   }
 
+  // Completed project entries from professionals (including Verified professional labels) always lead.
+  // Published business projects always lead; sample concepts appear afterward.
   const filtered = useMemo(() => {
     const term = query.trim().toLowerCase()
-    return professionalProjects.filter(project => {
+    return [...professionalProjects, ...CONCEPTS].filter(project => {
       if (category !== 'all' && project.category !== category) return false
       if (!term) return true
-      return [project.title, project.location, project.businessName, project.type, project.description]
-        .some(value => value.toLowerCase().includes(term))
+      return [project.title, project.location, project.businessName || '', project.type, project.description, project.packageName || '']
+        .some(value => String(value).toLowerCase().includes(term))
     })
   }, [professionalProjects, category, query])
+
+  function downloadSampleSpecifications(project) {
+    if (!project.sample || !project.sampleSpecs?.length) return
+    const details = [
+      'SAMPLE PROJECT SPECIFICATIONS — ILLUSTRATIVE ONLY',
+      project.title,
+      'Sample package: ' + project.packageName,
+      'Illustrative project area: ' + project.area,
+      'Illustrative cost: ' + project.cost,
+      '',
+      ...project.sampleSpecs.map((item, index) => (index + 1) + '. ' + item),
+      '',
+      'This file describes a sample concept, not an actual completed client project or quotation.',
+    ].join('\\n')
+    const url = URL.createObjectURL(new Blob([details], {type:'text/plain;charset=utf-8'}))
+    const anchor = document.createElement('a')
+    anchor.href = url
+    anchor.download = project.id + '-sample-specifications.txt'
+    anchor.click()
+    setTimeout(() => URL.revokeObjectURL(url), 1000)
+  }
 
   useEffect(() => {
     if (!selectedProject) return undefined
@@ -214,127 +256,79 @@ export default function Projects() {
 
   return <main className="pj-page">
     <PublicHeader />
-
-    <section className="pj-portfolio-hero" aria-labelledby="pj-page-heading">
+    <section className="pj-portfolio-section" aria-label="Projects gallery">
       <div className="pj-container">
-        <span className="pj-kicker"><span /> THE PROJECT EDIT</span>
-        <h1 id="pj-page-heading">Real spaces. <em>Beautiful possibilities.</em></h1>
-        <p>Browse work shared by professionals, discover inspiring spaces and find the right direction for your own project.</p>
-        <div className="pj-hero-actions">
-          <a href="#completed-projects" className="pj-hero-primary">Explore Projects <Icon name="arrow" size={17}/></a>
-          <Link to="/quote#construction" className="pj-hero-secondary">Get Your Quote <Icon name="arrow" size={17}/></Link>
-        </div>
-      </div>
-    </section>
-
-    <section className="pj-portfolio-section" id="completed-projects" aria-labelledby="pj-completed-heading">
-      <div className="pj-container">
-        <div className="pj-section-heading">
-          <div>
-            <span className="pj-overline">PROFESSIONAL PORTFOLIO</span>
-            <h2 id="pj-completed-heading">Projects by professionals</h2>
-            <p>Published work with real project details, shown as provided by the professional.</p>
-          </div>
-        </div>
-
         <div className="pj-toolbar">
           <div className="pj-tabs" role="group" aria-label="Project categories">
-            {CATEGORIES.map(item => <button type="button" key={item.id} className={category === item.id ? 'active' : ''} aria-pressed={category === item.id} onClick={() => setCategory(item.id)}>{item.label}</button>)}
+            {CATEGORIES.map(item=><button key={item.id} type="button" className={category===item.id?'active':''} aria-pressed={category===item.id} onClick={()=>setCategory(item.id)}>{item.label}</button>)}
           </div>
-          <label className="pj-search"><Icon name="search"/><span className="pj-sr-only">Search projects</span><input value={query} onChange={event => setQuery(event.target.value)} placeholder="Search by project or location"/></label>
+          <label className="pj-search"><Icon name="search"/><span className="pj-sr-only">Search projects</span><input value={query} onChange={event=>setQuery(event.target.value)} placeholder="Search projects or locations"/></label>
         </div>
 
-        {loading ? <div className="pj-loading" role="status"><span className="pj-loading-shimmer" /><span className="pj-loading-shimmer" /><span className="pj-loading-shimmer" /></div> : null}
-        {!loading && filtered.length > 0 && <div className="pj-project-grid">
-          {filtered.map(project => <article key={project.id} className="pj-project-card">
-            <button type="button" className="pj-card-open" onClick={() => setSelectedProject(project)} aria-label={'View details for ' + project.title}>
+        {loading && <div className="pj-loading-inline" role="status">Checking for published business projects…</div>}
+        <div className="pj-project-grid">
+          {filtered.map((project,index)=><article key={(project.sample?'sample-':'business-')+project.id} className={'pj-project-card'+(index===0&&category==='all'&&!query.trim()?' pj-project-card--featured':'')}>
+            <button type="button" className="pj-card-open" onClick={()=>setSelectedProject(project)} aria-label={'View '+(project.sample?'sample ':'')+'details for '+project.title}>
               <div className="pj-project-photo">
-                {project.image ? <img src={project.image} loading="lazy" alt={project.title}/> : <div className="pj-image-placeholder"><Icon name="layers" size={32}/><span>Project imagery coming soon</span></div>}
-                <span className="pj-category-badge">{categoryLabel(project.category)}</span>
-                <span className="pj-photo-cue">View Project <Icon name="arrow" size={15}/></span>
+                {project.image?<img src={project.image} loading={index<3?'eager':'lazy'} alt={project.title}/>:<div className="pj-image-placeholder"><Icon name="layers" size={30}/>Project photo not provided</div>}
+                <span className="pj-category-badge">{project.sample?'SAMPLE CONCEPT':categoryLabel(project.category)}</span>
+                <span className="pj-photo-cue">View Details <Icon name="arrow" size={15}/></span>
               </div>
               <div className="pj-project-copy">
+                <span className="pj-card-type">{categoryLabel(project.category)}{!project.sample&&project.completionYear?' · '+project.completionYear:''}</span>
                 <div className="pj-project-title-row"><h3>{project.title}</h3><Icon name="arrow" size={19}/></div>
-                {project.location && <p className="pj-location"><Icon name="pin" size={15}/>{project.location}</p>}
-                {project.businessName && <p className="pj-company">{project.businessName}{project.verified && <span title="Verified professional"><Icon name="check" size={12}/> Verified professional</span>}</p>}
-                <div className="pj-project-details">
-                  {project.completionYear && <span>Completed project · {project.completionYear}</span>}
-                  {project.area && <span>{project.area}</span>}
+                {project.description&&<p className="pj-card-description">{project.description}</p>}
+                <div className="pj-project-facts">
+                  {project.location&&<div><small>Location</small><b>{project.location}</b></div>}
+                  {project.area&&<div><small>Area</small><b>{project.area}</b></div>}
+                  {project.packageName&&<div><small>{project.sample?'Sample Package':'Package'}</small><b>{project.packageName}</b></div>}
+                  {project.businessName&&<div><small>Professional</small><b>{project.businessName}</b></div>}
                 </div>
-                {project.cost && <div className="pj-cost"><small>Reported cost / budget</small><strong>{project.cost}</strong></div>}
-                <span className="pj-view-link">Explore Details <Icon name="arrow" size={15}/></span>
+                {project.cost&&<div className="pj-cost"><div><small>{project.sample?'ILLUSTRATIVE COST':'REPORTED COST / BUDGET'}</small><strong>{project.cost}</strong></div><span className="pj-card-arrow"><Icon name="arrow" size={18}/></span></div>}
+                {!project.cost&&<span className="pj-view-link">View Project <Icon name="arrow" size={16}/></span>}
               </div>
             </button>
           </article>)}
-        </div>}
-
-        {!loading && filtered.length === 0 && <div className="pj-empty">
-          <div className="pj-empty-symbol"><Icon name="layers" size={29}/></div>
-          <h3>{loadError ? 'Unable to load projects right now' : professionalProjects.length ? 'No matching projects yet' : 'Professional projects are coming soon'}</h3>
-          <p>{loadError || (professionalProjects.length ? 'Try another category or search term to discover more work.' : 'This portfolio will feature published projects from professionals. We only display actual submissions, not placeholder completed work.')}</p>
-          <div className="pj-empty-actions">
-            {professionalProjects.length > 0 && <button type="button" onClick={() => { setCategory('all'); setQuery('') }}>Clear Filters</button>}
-            <Link to="/experts">Find a Professional <Icon name="arrow" size={15}/></Link>
-          </div>
-        </div>}
-        {!loading && loadError && filtered.length > 0 && <p className="pj-load-error" role="status">{loadError}</p>}
-        {!loading && hasNext && <button className="pj-load-more" type="button" onClick={loadMore} disabled={loadingMore}>{loadingMore ? 'Loading more projects…' : 'View More Projects'} <Icon name="arrow" size={16}/></button>}
+        </div>
+        {!filtered.length&&!loading&&<div className="pj-empty"><h3>No matching projects</h3><button type="button" onClick={()=>{setCategory('all');setQuery('')}}>Clear filters</button></div>}
+        {loadError&&<p className="pj-load-error" role="status">{loadError} Sample projects remain available below.</p>}
+        {hasNext&&<button type="button" className="pj-load-more" disabled={loadingMore} onClick={loadMore}>{loadingMore?'Loading…':'Load More Business Projects'} <Icon name="arrow" size={15}/></button>}
+        <p className="pj-gallery-disclaimer">Sample concepts are illustrative only — photos, locations, costs, packages and specifications are examples, not completed professional work or quotations. Published business projects appear first automatically.</p>
       </div>
     </section>
 
-    <section className="pj-ideas-section" aria-labelledby="pj-ideas-heading">
-      <div className="pj-container">
-        <div className="pj-section-heading pj-ideas-heading">
-          <div><span className="pj-overline">DESIGN INSPIRATION</span><h2 id="pj-ideas-heading">Ideas for your next space</h2><p>Illustrative concepts to help you picture what is possible. These are not claimed as completed client projects.</p></div>
-          <Link to="/packages">Explore Packages <Icon name="arrow" size={16}/></Link>
-        </div>
-        <div className="pj-ideas-grid">
-          {CONCEPTS.map(concept => <article className="pj-idea-card" key={concept.id}>
-            <img src={concept.image} alt={concept.title} loading="lazy"/>
-            <div className="pj-idea-copy"><span>{concept.category === 'design' ? 'INTERIOR CONCEPT' : 'CONSTRUCTION CONCEPT'}</span><h3>{concept.title}</h3><p>{concept.description}</p><Link to={concept.link}>Explore Packages <Icon name="arrow" size={15}/></Link></div>
-          </article>)}
-        </div>
-      </div>
-    </section>
-
-    <section className="pj-bottom-cta">
-      <div className="pj-container"><div><span>YOUR NEXT PROJECT STARTS HERE</span><h2>Bring your vision to life.</h2><p>Share your requirements and discover suitable packages and professionals.</p></div><Link to="/quote#construction">Start Your Project <Icon name="arrow" size={18}/></Link></div>
-    </section>
-
-    {selectedProject && <div className="pj-detail-backdrop" role="presentation" onMouseDown={event => { if (event.target === event.currentTarget) setSelectedProject(null) }}>
-      <section className="pj-detail-modal" role="dialog" aria-modal="true" aria-label={selectedProject.title + ' details'} ref={dialogRef} tabIndex={-1}>
-        <button className="pj-detail-close" type="button" onClick={() => setSelectedProject(null)} aria-label="Close project details">×</button>
+    {selectedProject&&<div className="pj-detail-backdrop" role="presentation" onMouseDown={event=>{if(event.target===event.currentTarget)setSelectedProject(null)}}>
+      <section className="pj-detail-modal" role="dialog" aria-modal="true" aria-label={selectedProject.title+' details'} ref={dialogRef} tabIndex={-1}>
+        <button type="button" className="pj-detail-close" onClick={()=>setSelectedProject(null)} aria-label="Close project details">×</button>
         <div className="pj-detail-media">
-          {selectedProject.image ? <img src={selectedProject.image} alt={selectedProject.title}/> : <div className="pj-image-placeholder"><Icon name="layers" size={40}/>Project photo not supplied</div>}
-          <span className="pj-category-badge">{categoryLabel(selectedProject.category)}</span>
+          {selectedProject.image?<img src={selectedProject.image} alt={selectedProject.title}/>:<div className="pj-image-placeholder">Project photo not provided</div>}
+          <span className="pj-category-badge">{selectedProject.sample?'SAMPLE CONCEPT':categoryLabel(selectedProject.category)}</span>
         </div>
         <div className="pj-detail-content">
-          <span className="pj-overline">PROFESSIONAL PROJECT</span>
+          <span className="pj-overline">{selectedProject.sample?'ILLUSTRATIVE PROJECT · NOT COMPLETED WORK':'PROFESSIONAL PROJECT'}</span>
           <h2>{selectedProject.title}</h2>
-          {selectedProject.location && <p className="pj-detail-location"><Icon name="pin" size={16}/>{selectedProject.location}</p>}
-          {selectedProject.businessName && <p className="pj-detail-professional">Shared by <strong>{selectedProject.businessName}</strong>{selectedProject.verified && <span><Icon name="check" size={12}/> Verified professional</span>}</p>}
+          {selectedProject.description&&<p className="pj-detail-intro">{selectedProject.description}</p>}
           <div className="pj-facts">
             <div><span>Project type</span><strong>{selectedProject.type}</strong></div>
-            {selectedProject.area && <div><span>Project area</span><strong>{selectedProject.area}</strong></div>}
-            {selectedProject.completionYear && <div><span>Completion</span><strong>{selectedProject.completionYear}</strong></div>}
-            {selectedProject.cost && <div className="pj-fact-cost"><span>Reported project cost / budget</span><strong>{selectedProject.cost}</strong></div>}
+            {selectedProject.location&&<div><span>{selectedProject.sample?'Example Location':'Location'}</span><strong>{selectedProject.location}</strong></div>}
+            {selectedProject.area&&<div><span>{selectedProject.sample?'Example Area':'Project Area'}</span><strong>{selectedProject.area}</strong></div>}
+            {selectedProject.packageName&&<div><span>{selectedProject.sample?'Sample Package':'Package'}</span><strong>{selectedProject.packageName}</strong></div>}
+            {!selectedProject.sample&&selectedProject.completionYear&&<div><span>Completed</span><strong>{selectedProject.completionYear}</strong></div>}
+            {!selectedProject.sample&&selectedProject.businessName&&<div><span>Professional</span><strong>{selectedProject.businessName}{selectedProject.verified?' · Verified professional':''}</strong></div>}
           </div>
-          {selectedProject.description && <div className="pj-detail-overview"><h3>About the project</h3><p>{selectedProject.description}</p></div>}
-          <div className="pj-detail-documents">
-            <h3>Project information</h3>
-            <p>Packages, material specifications and final costs may vary by project. Contact a professional to confirm what is included.</p>
-            <div className="pj-detail-buttons">
-              {selectedProject.document && <a href={selectedProject.document} target="_blank" rel="noopener noreferrer"><Icon name="file" size={17}/>{isPdf(selectedProject.document) ? 'Open / Download Project PDF' : 'View Project Document'}</a>}
-              {selectedProject.video && <a href={selectedProject.video} target="_blank" rel="noopener noreferrer"><Icon name="arrow" size={17}/> View Project Video</a>}
-              <Link to="/packages" onClick={() => setSelectedProject(null)}><Icon name="layers" size={17}/> Compare Packages</Link>
-            </div>
+          {selectedProject.cost&&<div className="pj-modal-cost"><small>{selectedProject.sample?'EXAMPLE PROJECT COST · NOT A QUOTATION':'REPORTED COST / BUDGET'}</small><strong>{selectedProject.cost}</strong></div>}
+          {selectedProject.sample&&selectedProject.sampleSpecs?.length>0&&<div className="pj-specs-section"><h3>Illustrative Package Specifications</h3><ul>{selectedProject.sampleSpecs.map(item=><li key={item}><Icon name="check" size={17}/>{item}</li>)}</ul></div>}
+          <div className="pj-detail-buttons">
+            {selectedProject.sample&&<button type="button" onClick={()=>downloadSampleSpecifications(selectedProject)}><Icon name="file" size={17}/> Download Sample Specs</button>}
+            {!selectedProject.sample&&selectedProject.document&&<a href={selectedProject.document} target="_blank" rel="noopener noreferrer"><Icon name="file" size={17}/>{isPdf(selectedProject.document)?'Download Project PDF':'View Project Document'}</a>}
+            {!selectedProject.sample&&selectedProject.video&&<a href={selectedProject.video} target="_blank" rel="noopener noreferrer">View Project Video <Icon name="arrow" size={15}/></a>}
+            <Link to="/packages" onClick={()=>setSelectedProject(null)}>View Packages <Icon name="layers" size={16}/></Link>
           </div>
-          <div className="pj-modal-cta"><div><strong>Planning something similar?</strong><span>Get a quotation tailored to your site and scope.</span></div><Link to={'/quote#' + similarQuoteHash(selectedProject)} onClick={() => setSelectedProject(null)}>Get Quote <Icon name="arrow" size={17}/></Link></div>
-          <p className="pj-data-disclaimer">Project information is supplied by the publishing professional. Confirm scope, specifications and final pricing before proceeding.</p>
+          <div className="pj-modal-cta"><div><strong>Planning something similar?</strong><span>Get a quote for your actual requirements.</span></div><Link to={'/quote#'+similarQuoteHash(selectedProject)} onClick={()=>setSelectedProject(null)}>Get Quote <Icon name="arrow" size={17}/></Link></div>
+          <p className="pj-data-disclaimer">{selectedProject.sample?'This is an illustrative sample only. Photos, names, locations, package specifications and price are not verified completed projects.':'Project information is supplied by the publishing professional. Confirm specifications, package and actual cost before proceeding.'}</p>
         </div>
       </section>
     </div>}
-
     <PublicFooter phone={phone} email={email}/>
   </main>
 }
