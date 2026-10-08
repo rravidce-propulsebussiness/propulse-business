@@ -7,6 +7,8 @@ const auth=read('src/services/authService.js');
 const coupon=read('src/services/couponService.js');
 const profile=read('src/services/profileService.js');
 const sheetCompat=read('src/services/leadPartnerInventoryCompatService.js');
+const sheetBase=read('src/services/leadPartnerInventoryService.js');
+const leadService=read('src/services/leadService.js');
 const grantService=read('src/services/leadEntitlementGrantService.js');
 
 assert(auth.includes('WITH requested AS')&&auth.includes('UNNEST($1::int[],$2::int[],$3::int[])'),'Signup service validation must be set-based');
@@ -31,10 +33,17 @@ assert(profile.includes('INSERT INTO business_profile_locations')&&profile.inclu
 assert(!profile.includes('for (const item of services)'),'Profile update must not query once per service selection');
 assert(!profile.includes('for (const item of locations)'),'Profile update must not query once per location selection');
 
-const persistDetails=sheetCompat.slice(sheetCompat.indexOf('async function persistDetails'),sheetCompat.indexOf('async function importCsv'));
-assert(persistDetails.includes('=ANY($2::text[])')&&persistDetails.includes('=ANY($3::text[])'),'Sheet custom-field persistence must batch candidate lead matching');
-assert(persistDetails.includes('jsonb_to_recordset($2::jsonb)'),'Sheet custom-field persistence must batch custom-field updates');
-assert(!persistDetails.includes('ORDER BY l.id DESC LIMIT 1'),'Sheet custom-field persistence must not query once per imported row');
+assert(!sheetCompat.includes('async function persistDetails')&&!sheetCompat.includes('jsonb_to_recordset'),
+  'Sheet imports must not run fuzzy post-import updates against existing leads');
+const partnerImport=sheetCompat.slice(sheetCompat.indexOf('async function importCsv('),sheetCompat.indexOf('function csvEscape('));
+assert(partnerImport.includes('return base.importCsv('),
+  'Partner Sheet import must delegate lead creation and custom-field persistence to the base importer');
+assert(!partnerImport.includes('pool.query(')&&!partnerImport.includes('UPDATE leads'),
+  'Partner Sheet import must not re-match or modify existing leads after the base import');
+assert(sheetBase.includes('customFields: buildImportedCustomFields(row)')&&sheetBase.includes('leadService.createLead('),
+  'Base Sheet importer must attach custom fields directly to each created lead');
+assert(leadService.includes('sanitizeCustomFields(customFields)')&&leadService.includes('INSERT INTO leads'),
+  'Lead creation must persist custom fields atomically with the new lead');
 
 const campaignSync=grantService.slice(grantService.indexOf('async function syncBusinessCampaign'),grantService.indexOf('async function createBusinessCampaign'));
 assert(campaignSync.includes('jsonb_to_recordset($1::jsonb)'),'Business entitlement campaign sync must batch recipient updates/inserts');

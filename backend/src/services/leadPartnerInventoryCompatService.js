@@ -8,28 +8,6 @@ const {parseCsvRecords}=require('../utils/csvRecords');
 const clean = v => String(v ?? '').trim();
 const norm = v => clean(v).toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]/g, '');
 
-// Fields that become first-class lead columns. Every other non-empty Google
-// Sheet column is retained in custom_fields so Admin can render it dynamically.
-const canonical = new Set([
-  'id','leadid','lead_id','externalid','external_id',
-  'industry','industryname','industrytype','industrycategory','category',
-  'service','servicename','servicetype','servicecategory',
-  'subservice','subservicename',
-  'state','statename','city','cityname',
-  'pincode','pincode','pin','zipcode','postalcode','postal',
-  'customername','name','customer','fullname','full_name',
-  'customerphone','phone','mobile','phonenumber','phone_number',
-  'customeremail','email',
-  'requirement','requirements','requirementdetails',
-  'propertytype','property','interiortype',
-  'budget','source','notes',
-  'buyercapacity','buyercapacitylimit','maxbuyers','capacity',
-  'leadtype','exclusive','isexclusive',
-  'investor','investorname','investoremail',
-  'pricing','leadpricing','leadprice','price',
-  'exclusivedelaydays','exclusivedelayhours'
-]);
-
 function parseCsv(text){
   const rows=parseCsvRecords(text);
   if(!rows.length)return[];
@@ -73,19 +51,6 @@ function buildCanonicalRows(rows){
   });
 }
 
-function buildCustomFields(raw){
-  const fields={};
-  for(const [key,value] of Object.entries(raw)){
-    if(!clean(value))continue;
-    if(canonical.has(norm(key)))continue;
-    fields[key]=value;
-  }
-  return fields;
-}
-
-function normalizedPhone(value){return clean(value).replace(/\D/g,'')}
-function normalizedText(value){return clean(value).toLowerCase()}
-
 async function resolveDefaultIndustry(defaultIndustryId){
   if(defaultIndustryId===undefined||defaultIndustryId===null||defaultIndustryId==='')return null;
   const id=Number(defaultIndustryId);
@@ -102,102 +67,15 @@ function applyDefaultIndustry(rows,industry){
   });
 }
 
-async function persistDetails({userId,rows}){
-  const normalized=buildCanonicalRows(rows);
-  if(!normalized.length)return;
-
-  const descriptors=normalized.map(raw=>{
-    const phone=first(raw,['Customer Phone']);
-    const email=first(raw,['Customer Email']);
-    const name=first(raw,['Customer Name']);
-    const requirement=first(raw,['Requirement']);
-    return{
-      raw,
-      phone,
-      phoneKey:normalizedPhone(phone),
-      emailKey:normalizedText(email),
-      name,
-      nameKey:normalizedText(name),
-      requirementKey:normalizedText(requirement)
-    };
-  });
-
-  const phones=[...new Set(descriptors.map(x=>x.phoneKey).filter(Boolean))];
-  const emails=[...new Set(descriptors.map(x=>x.emailKey).filter(Boolean))];
-  const names=[...new Set(descriptors.map(x=>x.nameKey).filter(Boolean))];
-  const requirements=[...new Set(descriptors.map(x=>x.requirementKey).filter(Boolean))];
-
-  const candidates=(await pool.query(`
-    SELECT id,customer_phone,customer_email,customer_name,requirement,custom_fields
-    FROM leads
-    WHERE created_by=$1
-      AND (
-        regexp_replace(COALESCE(customer_phone,''),'[^0-9]','','g')=ANY($2::text[])
-        OR LOWER(TRIM(COALESCE(customer_email,'')))=ANY($3::text[])
-        OR (
-          LOWER(TRIM(COALESCE(customer_name,'')))=ANY($4::text[])
-          AND LOWER(TRIM(COALESCE(requirement,'')))=ANY($5::text[])
-        )
-      )
-    ORDER BY id DESC
-  `,[userId,phones,emails,names,requirements])).rows;
-
-  const byPhone=new Map();
-  const byPhoneAndExactName=new Map();
-  const byEmail=new Map();
-  const byNameRequirement=new Map();
-
-  for(const lead of candidates){
-    const phoneKey=normalizedPhone(lead.customer_phone);
-    const emailKey=normalizedText(lead.customer_email);
-    const nameKey=normalizedText(lead.customer_name);
-    const requirementKey=normalizedText(lead.requirement);
-    if(phoneKey&&!byPhone.has(phoneKey))byPhone.set(phoneKey,lead);
-    if(phoneKey&&!byPhoneAndExactName.has(`${phoneKey}\u0000${String(lead.customer_name||'')}`)){
-      byPhoneAndExactName.set(`${phoneKey}\u0000${String(lead.customer_name||'')}`,lead);
-    }
-    if(emailKey&&!byEmail.has(emailKey))byEmail.set(emailKey,lead);
-    if(nameKey&&requirementKey&&!byNameRequirement.has(`${nameKey}\u0000${requirementKey}`)){
-      byNameRequirement.set(`${nameKey}\u0000${requirementKey}`,lead);
-    }
-  }
-
-  const mergedByLead=new Map();
-  for(const descriptor of descriptors){
-    let lead=null;
-    if(descriptor.phoneKey){
-      lead=descriptor.name
-        ?byPhoneAndExactName.get(`${descriptor.phoneKey}\u0000${descriptor.name}`)||null
-        :byPhone.get(descriptor.phoneKey)||null;
-    }
-    if(!lead&&descriptor.emailKey)lead=byEmail.get(descriptor.emailKey)||null;
-    if(!lead&&descriptor.nameKey&&descriptor.requirementKey){
-      lead=byNameRequirement.get(`${descriptor.nameKey}\u0000${descriptor.requirementKey}`)||null;
-    }
-    if(!lead)continue;
-
-    const current=mergedByLead.get(Number(lead.id))
-      ||(lead.custom_fields&&typeof lead.custom_fields==='object'&&!Array.isArray(lead.custom_fields)?lead.custom_fields:{});
-    mergedByLead.set(Number(lead.id),{...current,...buildCustomFields(descriptor.raw)});
-  }
-
-  if(!mergedByLead.size)return;
-  const payload=[...mergedByLead.entries()].map(([id,custom_fields])=>({id,custom_fields}));
-  await pool.query(`
-    UPDATE leads l
-    SET custom_fields=u.custom_fields,updated_at=CURRENT_TIMESTAMP
-    FROM jsonb_to_recordset($2::jsonb) AS u(id int,custom_fields jsonb)
-    WHERE l.created_by=$1 AND l.id=u.id
-  `,[userId,JSON.stringify(payload)]);
-}
-
+// The base importer attaches extra Sheet columns to the exact newly-created
+// lead through createLead({customFields}). Do not re-match imported rows by
+// phone/email after import: duplicates and failed rows must never modify an
+// unrelated existing lead's custom_fields.
 async function importCsv({userId,csv,defaultIndustryId=null}){
   const rows=parseCsv(csv);
   const defaultIndustry=await resolveDefaultIndustry(defaultIndustryId);
   const prepared=applyDefaultIndustry(buildCanonicalRows(rows),defaultIndustry);
-  const result=await base.importCsv({userId,csv:toCsv(prepared)});
-  if(rows.length)await persistDetails({userId,rows});
-  return result;
+  return base.importCsv({userId,csv:toCsv(prepared)});
 }
 
 // Keep the one-time Google Sheet import on the same canonical/custom-field
