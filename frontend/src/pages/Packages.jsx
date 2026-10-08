@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { CONSTRUCTION_PACKAGE_CATALOG } from '../data/constructionPackageCatalog'
 import { INTERIOR_PACKAGES } from '../data/interiorPackageCatalog'
@@ -65,6 +65,10 @@ const CONSTRUCTION_COMPARE_ROWS = [
   ['Gate allowance', '₹20,000', '₹35,000', '₹45,000 sliding gate'],
 ]
 
+const QUOTE_HEADLINE_LEAD = 'Start Your '
+const QUOTE_HEADLINE_ACCENT = 'Quote Journey'
+const QUOTE_HEADLINE = QUOTE_HEADLINE_LEAD + QUOTE_HEADLINE_ACCENT
+
 const INTERIOR_COMPARE_ROWS = [
   ['Best for', 'Practical value interiors', 'Premium full-modular interiors'],
   ['Wood', 'Gurjan BWP', 'Greenply / Century Ply 710'],
@@ -102,6 +106,27 @@ export default function Packages() {
   const [compareInterior, setCompareInterior] = useState([])
   const [compareOpen, setCompareOpen] = useState({ construction: false, interior: false })
   const [expanded, setExpanded] = useState({})
+  const [typedCount, setTypedCount] = useState(0)
+
+  useEffect(() => {
+    // Render the complete headline immediately when a visitor prefers reduced motion.
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
+      setTypedCount(QUOTE_HEADLINE.length)
+      return
+    }
+
+    const interval = window.setInterval(() => {
+      setTypedCount(current => {
+        if (current >= QUOTE_HEADLINE.length) {
+          window.clearInterval(interval)
+          return current
+        }
+        return current + 1
+      })
+    }, 65)
+
+    return () => window.clearInterval(interval)
+  }, [])
 
   function switchCategory(category) {
     if (!['construction','interior'].includes(category)) return
@@ -227,10 +252,15 @@ export default function Packages() {
 
   return <main className="pkg-page">
     <PublicHeader />
-    <section className="premium-page-intro" aria-labelledby="premium-packages-title">
-      <span className="premium-eyebrow">PACKAGES & SPECIFICATIONS</span>
-      <h1 id="premium-packages-title">A better space starts with a clear plan.</h1>
-      <p>Explore materials, finishes and package options for your project.</p>
+    <section className="premium-page-intro pkg-quote-intro" aria-labelledby="premium-packages-title">
+      <h1 id="premium-packages-title" className="pkg-quote-title" aria-label={QUOTE_HEADLINE}>
+        <span className="pkg-quote-measure" aria-hidden="true">{QUOTE_HEADLINE}</span>
+        <span className="pkg-quote-typed" aria-hidden="true">
+          <span className="pkg-quote-lead">{QUOTE_HEADLINE_LEAD.slice(0, typedCount)}</span>
+          <span className="pkg-quote-accent">{QUOTE_HEADLINE_ACCENT.slice(0, Math.max(0, typedCount - QUOTE_HEADLINE_LEAD.length))}</span>
+          <span className="pkg-quote-caret" />
+        </span>
+      </h1>
     </section>
 
     <section className="pkg-category-nav" aria-label="Package categories">
