@@ -209,7 +209,7 @@ function PremiumQuestion({ question, value, onChange, visual = 'default' }) {
   return <input className="rq-basic-input" value={value || ''} maxLength={Number(question.validation?.maxLength || 240)} onChange={event => onChange(event.target.value)} placeholder={question.questionType === 'budget' ? 'Example: ₹25–40 lakh' : 'Enter your answer'} />
 }
 
-export default function RequirementWizard({ flowKey, onCompletionChange, embedded = false }) {
+export default function RequirementWizard({ flowKey, onCompletionChange, embedded = false, projectQuote = null }) {
   const [flow, setFlow] = useState(null)
   const [cities, setCities] = useState([])
   const [contactData, setContactData] = useState({})
@@ -519,6 +519,8 @@ export default function RequirementWizard({ flowKey, onCompletionChange, embedde
     event.preventDefault()
     const missing = questions.find(question => {
       if (!question.isRequired) return false
+      // A professional's service plans replace the catalog's Standard/Premium selector.
+      if (projectQuote && question.questionKey === 'finish_quality') return false
       if (flowKey === 'build' && question.questionKey === 'property_type') return false
       if (
         flowKey === 'build'
@@ -546,6 +548,12 @@ export default function RequirementWizard({ flowKey, onCompletionChange, embedde
       return
     }
 
+    if (projectQuote && !(projectQuote.packages || []).some(plan => plan.title === projectQuote.preferredPackage)) {
+      setState(current => ({ ...current, error: 'Choose one of this professional’s published packages to continue.' }))
+      jump('irx-requirements')
+      return
+    }
+
     const phone = contact.phone.replace(/\D/g, '')
     if (!contact.name.trim() || !/^[6-9]\d{9}$/.test(phone)) {
       setState(current => ({ ...current, error: 'Enter your name and a valid 10-digit mobile number.' }))
@@ -554,6 +562,44 @@ export default function RequirementWizard({ flowKey, onCompletionChange, embedde
     }
     try {
       setState(current => ({ ...current, saving: true, error: '' }))
+
+      if (projectQuote) {
+        // The project-specific flow uses the SAME interior questions and layout,
+        // but submits ONLY to the chosen professional (not the generic lead market).
+        const detailRows = questions
+          .filter(question => !['finish_quality', locationQuestion?.questionKey].includes(question.questionKey))
+          .map(question => [question.label.replace(/\\?$/, ''), fieldLabel(question, answers)])
+          .filter(([, value]) => value && value !== '—')
+          .map(([label, value]) => label + ': ' + value)
+        const requirement = [
+          'Reference project: ' + projectQuote.project.title,
+          'Published professional: ' + (projectQuote.project.businessName || 'Selected business'),
+          ...detailRows,
+        ].join('\\n').slice(0, 3000)
+        const areaQuestion = questions.find(question => question.questionKey === 'area')
+        const budgetQuestion = questions.find(question => question.questionKey === 'budget')
+        const result = await publicRequest('/experts/projects/' + encodeURIComponent(projectQuote.project.id) + '/quote-request', {
+          method: 'POST',
+          body: JSON.stringify({
+            name: contact.name.trim(),
+            phone,
+            email: contact.email.trim(),
+            requirement,
+            siteLocation: [selectedCity?.name, selectedCity?.state_name].filter(Boolean).join(', '),
+            area: areaQuestion ? fieldLabel(areaQuestion, answers).slice(0,120) : '',
+            budget: budgetQuestion ? fieldLabel(budgetQuestion, answers).slice(0,120) : '',
+            preferredPackage: projectQuote.preferredPackage,
+            consent: true,
+            website,
+          }),
+        })
+        setSubmissionResult(result)
+        setState({ loading: false, saving: false, error: '', success: true })
+        projectQuote.onSubmitted?.(result)
+        onCompletionChangeRef.current?.(true)
+        window.scrollTo({ top: 0, behavior: 'smooth' })
+        return
+      }
 
       const quotation = isQuotationFlow && answers.built_up_area
         ? await calculateRequirementQuotation({ flowKey, answers, publicRequest })
@@ -716,6 +762,7 @@ export default function RequirementWizard({ flowKey, onCompletionChange, embedde
       submit={submit}
       contactData={contactData}
       completion={completion}
+      projectQuote={projectQuote}
     />
   }
 
