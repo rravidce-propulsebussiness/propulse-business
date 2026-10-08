@@ -4,6 +4,7 @@ const projectVideoService = require('../services/projectVideoService');
 const projectPlanService = require('../services/projectPlanService');
 const projectImageService = require('../services/projectImageService');
 const projectCallbackService = require('../services/projectCallbackService');
+const professionalQuoteService=require('../services/professionalProjectQuoteService');
 const brochureService=require('../services/brochureService');
 
 async function getProfile(req, res) {
@@ -104,4 +105,20 @@ async function saveBrochures(req,res){
     return res.status(status).json({error:status===500?'Unable to save brochures':error.message});
   }
 }
-module.exports = { getProfile, updateProfile, uploadProjectVideo, uploadProjectPlan, uploadProjectImage, listProjectCallbacks, listBrochures, saveBrochures };
+async function listProjectQuotes(req,res){
+  if(req.user?.role!=='business')return res.status(403).json({error:'Business account required'});
+  try{return res.json({data:await professionalQuoteService.listForProfessional(req.user.id)});}
+  catch(error){console.error('List professional quote leads failed:',error);return res.status(500).json({error:'Unable to load quotation leads'});}
+}
+async function updateProjectQuote(req,res){
+  if(req.user?.role!=='business')return res.status(403).json({error:'Business account required'});
+  try{return res.json(await professionalQuoteService.updateByProfessional(req.user.id,req.params.quoteId,req.body||{}));}
+  catch(error){
+    const code=String(error.code||'');
+    const status=code==='QUOTE_NOT_FOUND'?404:code==='QUOTE_FORBIDDEN'?403:code.startsWith('INVALID_')?400:500;
+    if(status===500)console.error('Update quotation lead failed:',error);
+    return res.status(status).json({error:status===500?'Unable to update quotation':error.message});
+  }
+}
+
+module.exports = { getProfile, updateProfile, uploadProjectVideo, uploadProjectPlan, uploadProjectImage, listProjectCallbacks, listBrochures, saveBrochures, listProjectQuotes, updateProjectQuote };
