@@ -8,6 +8,7 @@ const {parseProjectQuoteRequirement}=require('./projectQuoteRequirementDetails')
 const TYPES={
   quote:{table:'professional_project_quote_requests',source:'professional_project_quote'},
   callback:{table:'project_callback_requests',source:'professional_project_callback'},
+  profile:{table:'project_callback_requests',source:'professional_profile_callback'},
 };
 function type(kind){
   if(!TYPES[kind])throw Object.assign(new Error('Invalid project request type'),{code:'INVALID_PROJECT_REQUEST'});
@@ -29,6 +30,22 @@ function sanitize(value){
     .slice(0,2900);
 }
 async function getRequest(kind,id){
+  if(kind==='profile'){
+    // Profile enquiries are private to the selected professional: never publish
+    // them into the general lead marketplace or infer a project from a profile.
+    const result=await pool.query(`
+      SELECT r.*,bp.id AS business_profile_id,COALESCE(i.name,'') AS project_type
+      FROM project_callback_requests r
+      JOIN business_profiles bp ON bp.user_id=r.business_user_id
+      LEFT JOIN LATERAL (
+        SELECT bps.industry_id FROM business_profile_services bps
+        WHERE bps.business_profile_id=bp.id AND bps.is_active=TRUE
+        ORDER BY bps.id LIMIT 1
+      ) assigned ON TRUE
+      LEFT JOIN industries i ON i.id=assigned.industry_id
+      WHERE r.id=$1 AND r.project_id IS NULL`,[Number(id)]);
+    return result.rows[0]||null;
+  }
   const result=await pool.query(
     'SELECT r.*,p.project_type,p.business_profile_id FROM '+type(kind).table+
     ' r JOIN business_profile_projects p ON p.id=r.project_id'+
@@ -62,14 +79,6 @@ async function sync(kind,id,{notify=true}={}){
     const detected=await pins.detectPincode(pin);
     if(!detected?.city?.id||['NEEDS_MAPPING','NO_MATCH'].includes(detected.status))
       throw Object.assign(new Error('Project PIN code requires city mapping'),{code:'PIN_CITY_MAPPING_REQUIRED'});
-    const previous=(await pool.query(
-      "SELECT id FROM leads WHERE source IN ('professional_project_quote','professional_project_callback')"+
-      " AND custom_fields->'_project_origin'->>'projectId'=$1"+
-      " AND regexp_replace(COALESCE(customer_phone,''),'[^0-9]','','g')=regexp_replace($2,'[^0-9]','','g')"+
-      " AND created_at>CURRENT_TIMESTAMP-INTERVAL '1 hour' ORDER BY created_at DESC,id DESC LIMIT 1",
-      [String(record.project_id),record.customer_phone]
-    )).rows[0];
-    if(previous){await updateLink(kind,id,{leadId:previous.id,status:'duplicate'});return{status:'duplicate',leadId:Number(previous.id)}}
     const details=sanitize(kind==='quote'?record.requirement:record.message);
     const answeredFields=kind==='quote'?parseProjectQuoteRequirement(record.requirement):{};
     if(kind==='quote'&&record.area_text&&!answeredFields['Built-up Area']&&!answeredFields['Project Area'])
@@ -79,7 +88,7 @@ async function sync(kind,id,{notify=true}={}){
     // A marketplace Requirement is only the text entered in the form's
     // optional requirement box. Form answers remain separate custom fields.
     const writtenBrief=kind==='quote'?sanitize(answeredFields['Additional Requirements']||''):'';
-    const requirement=kind==='callback'?details:writtenBrief;
+    const requirement=kind==='quote'?writtenBrief:details;
     const fields={
       industryId:flow.industryId,serviceId:flow.serviceId,subserviceId:flow.subserviceId,
       stateId:Number(detected.city.state_id)||null,cityId:Number(detected.city.id),
@@ -87,19 +96,19 @@ async function sync(kind,id,{notify=true}={}){
       requirement:requirement.slice(0,3900),propertyType:answeredFields['Property Type']||null,
       budget:kind==='quote'?record.budget_text||answeredFields.Budget||null:null,
       source:type(kind).source,
-      notes:'Customer also contacted the selected professional; Admin coordinates contact access.',
+      notes:'Customer contacted the selected professional. Contact access requires an accepted lead.',
       customFields:{
         ...answeredFields,
-        _project_origin:{projectId:Number(record.project_id),professionalUserId:Number(record.business_user_id),
+        _project_origin:{projectId:record.project_id?Number(record.project_id):null,professionalUserId:Number(record.business_user_id),
           businessProfileId:Number(record.business_profile_id),requestId:Number(id),type:kind,
           writtenRequirement:requirement.slice(0,3900)},
         _qualification:{detailedRequirementCompleted:kind==='quote',budgetProvided:Boolean(kind==='quote'&&record.budget_text),
           projectSizeKnown:Boolean(kind==='quote'&&record.area_text)},
       },
-      pincode:pin,leadType:'basic',accessStrategy:'shared',buyerCapacity:3,
-      contactConsentAt:new Date(),contactConsentVersion:'project-multi-professional-consent-v1',
+      pincode:pin,leadType:'basic',accessStrategy:kind==='profile'?'permanent_single':'shared',buyerCapacity:kind==='profile'?1:3,
+      contactConsentAt:new Date(),contactConsentVersion:kind==='profile'?'profile-selected-professional-consent-v1':'project-multi-professional-consent-v1',
       intakeSubmissionKey:'project_'+kind+'_'+id,
-      qualityGateContext:kind==='quote'?'project_quote':'project_callback',createdBy:null,
+      qualityGateContext:kind==='quote'?'project_quote':kind==='profile'?'profile_callback':'project_callback',createdBy:null,
     };
     let leadId,leadStatus='quarantined',duplicate=false;
     try{
