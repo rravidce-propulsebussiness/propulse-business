@@ -347,3 +347,61 @@ test('project cards open dedicated detail pages using the keyboard',async({page}
   await expect(page).toHaveURL(/\/projects\/?$/)
   await expect(card).toBeVisible()
 })
+
+
+test('sample courtyard offers a PDF guide, a callback request and Get Quote',async({page})=>{
+  await page.goto('/projects/sample-courtyard')
+  await expect(page.getByRole('heading',{name:'The Courtyard Residence'})).toBeVisible()
+  await expect(page.getByText('Illustrative project',{exact:true})).toBeVisible()
+
+  const actions=page.locator('.pjd-action-stack')
+  const downloadButton=actions.getByRole('button',{name:/Download Package/})
+  await expect(downloadButton).toBeVisible()
+  await expect(actions.getByRole('button',{name:/Request a Callback/})).toBeVisible()
+  await expect(actions.getByRole('link',{name:/Get Quote/})).toBeVisible()
+
+  const [download]=await Promise.all([page.waitForEvent('download'),downloadButton.click()])
+  expect(download.suggestedFilename()).toMatch(/^propulse-sample-courtyard-package-guide\.pdf$/)
+
+  await actions.getByRole('button',{name:/Request a Callback/}).click()
+  const dialog=page.getByRole('dialog',{name:'Request a callback'})
+  await expect(dialog).toBeVisible()
+  await expect(dialog.getByRole('heading',{name:'Request a Callback'})).toBeVisible()
+  await expect(dialog.getByText(/Project reference: The Courtyard Residence/)).toBeVisible()
+  await dialog.getByRole('button',{name:'Close'}).click()
+
+  await actions.getByRole('link',{name:/Get Quote/}).click()
+  await expect(page).toHaveURL(/\/quote#construction$/)
+})
+
+test('published project retains private project-specific callback flow alongside Get Quote',async({page})=>{
+  const project={
+    project_id:123,project_type:'construction',title:'Modern Villa',
+    description:'Completed residential project',business_name:'Sample Engineer',
+    business_profile_id:7,location_text:'Hyderabad',
+    image_urls:[],is_verified:true,
+  }
+  await page.route('**/api/experts/projects/123',route=>route.fulfill({
+    status:200,contentType:'application/json',body:JSON.stringify(project)
+  }))
+  let submitted=null
+  await page.route('**/api/experts/projects/123/callback',async route=>{
+    submitted=route.request().postDataJSON()
+    await route.fulfill({status:201,contentType:'application/json',body:JSON.stringify({success:true})})
+  })
+  await page.goto('/projects/project-123')
+  await expect(page.getByRole('heading',{name:'Modern Villa'})).toBeVisible()
+  const actions=page.locator('.pjd-action-stack')
+  await expect(actions.getByRole('button',{name:/Download Package/})).toBeVisible()
+  await expect(actions.getByRole('link',{name:/Get Quote/})).toBeVisible()
+  await actions.getByRole('button',{name:/Request a Callback/}).click()
+
+  const form=page.locator('.pjd-callback-form')
+  await expect(form).toBeVisible()
+  await form.getByPlaceholder('Full name').fill('Example Customer')
+  await form.getByPlaceholder('10-digit mobile').fill('9876543210')
+  await form.getByRole('checkbox').check()
+  await form.getByRole('button',{name:/Send Callback Request/}).click()
+  await expect(page.getByRole('status').filter({hasText:/Callback request received/})).toBeVisible()
+  expect(submitted).toMatchObject({name:'Example Customer',phone:'9876543210',consent:true})
+})
