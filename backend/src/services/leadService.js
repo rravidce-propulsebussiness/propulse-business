@@ -32,7 +32,7 @@ async function createLead({industryId,serviceId,subserviceId,stateId,cityId,cust
   // Public form submissions have unique intake keys. Matching phone/name/text
   // must not collapse a second, separately submitted project into the first.
   const formSubmission=Boolean(intakeSubmissionKey)&&
-    ['public_requirement','homepage_consultation','professional_project_quote','professional_project_callback'].includes(source);
+    ['public_requirement','public_estimator','homepage_consultation','professional_project_quote','professional_project_callback'].includes(source);
   const duplicate=formSubmission?null:await findDuplicateLead({industryId,serviceId,subserviceId,customerPhone,customerEmail,customerName,requirement,pincode:pincode||zipcode});
   if(duplicate){
     const error=new Error(`Duplicate lead: a recent matching requirement already exists${duplicate.customer_name?` (${duplicate.customer_name})`:''}.`);
