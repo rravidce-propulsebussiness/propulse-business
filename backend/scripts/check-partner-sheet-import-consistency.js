@@ -68,6 +68,28 @@ Module._load=function(request,parent,isMain){
     'Extra campaign fields must reach base.createLead via the canonical CSV');
   assert.equal(mapped.Notes,'Uses "branded" materials',
     'Core Notes must retain quoted content');
+  assert.equal(Object.prototype.hasOwnProperty.call(mapped,'Source'),false,
+    'Campaign Name must not be silently mapped to the 80-character Source column');
+
+  const longCampaign='Campaign '+('long-name-'.repeat(18));
+  await compat.importCsv({userId:21,csv:[
+    'Phone Number,Campaign Name,Platform',
+    ['9876543210',longCampaign,'instagram'].join(',')
+  ].join(String.fromCharCode(10))});
+  const platformRows=parseCsvRecords(importedCsv);
+  const platformFields=Object.fromEntries(platformRows[0].map((name,i)=>[name,platformRows[1][i]]));
+  assert.equal(platformFields.Source,'instagram','Platform may explicitly supply a short Source value');
+  assert.equal(platformFields['Campaign Name'],longCampaign,
+    'Long campaign metadata must remain an extra field without truncation');
+
+  await compat.importCsv({userId:21,csv:[
+    'Phone Number,Campaign Name',
+    ['9876543210',longCampaign].join(',')
+  ].join(String.fromCharCode(10))});
+  const rawRows=parseCsvRecords(importedCsv);
+  assert.equal(rawRows[0].includes('Source'),false,'Campaign-only Sheets must not synthesize Source');
+
+
   assert.equal(unexpectedDbCalls,0,
     'Successful import must not fuzzy-match existing leads to persist custom fields');
 
