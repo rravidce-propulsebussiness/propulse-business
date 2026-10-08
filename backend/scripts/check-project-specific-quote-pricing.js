@@ -34,7 +34,7 @@ assert.match(project,/to=\{'\/projects\/'\+projectId\+'\/quote'\}/);
 assert.doesNotMatch(project,/to=\{'\/quote#'\+/);
 assert.match(quote,/\/experts\/projects\/'\+id\+'\/quote-request/);
 assert.match(quote,/\/experts\/'\+item\.businessProfileId/);
-assert.match(quote,/preferredPackage:picked\?\.title\|\|''/);
+assert.match(quote,/preferredPackage:picked\.title/);
 assert.match(quote,/not your quotation/);
 assert.match(quote,/RequirementWizard.*flowKey="design" embedded projectQuote=/);
 assert.doesNotMatch(quote,/Custom quotation/);
