@@ -4,7 +4,6 @@ import { authRequest, saveSession, getUser } from '../utils/auth'
 import UserHeader from '../components/UserHeader'
 import {PACKAGE_PRICE_UNITS} from '../utils/packagePricing'
 import ProfileBrochureField from '../components/ProfileBrochureField'
-import ProfessionalProjectQuotes from '../components/ProfessionalProjectQuotes'
 import './Profile.css'
 import {playSound} from '../utils/soundEffects'
 
@@ -76,8 +75,6 @@ export default function Profile(){
   const [companyProofs,setCompanyProofs]=useState([])
   const [projects,setProjects]=useState([])
   const [plans,setPlans]=useState([])
-  const [projectCallbacks,setProjectCallbacks]=useState([])
-  const [callbacksLoading,setCallbacksLoading]=useState(false)
   const [directoryStatus,setDirectoryStatus]=useState(null)
   const [videoUploads,setVideoUploads]=useState({})
   const [imageUploads,setImageUploads]=useState({})
@@ -110,17 +107,6 @@ export default function Profile(){
     }
     load()
   },[])
-
-  useEffect(()=>{
-    if(activeSection!=='projects')return undefined
-    let active=true
-    setCallbacksLoading(true)
-    authRequest('/profile/project-callbacks')
-      .then(value=>{if(active)setProjectCallbacks(Array.isArray(value?.data)?value.data:[])})
-      .catch(()=>{if(active)setProjectCallbacks([])})
-      .finally(()=>{if(active)setCallbacksLoading(false)})
-    return()=>{active=false}
-  },[activeSection])
 
   const serviceOptions=useMemo(()=>serviceSelections.map(x=>services.filter(s=>String(s.industry_id)===String(x.industryId))),[services,serviceSelections])
   const subserviceOptions=useMemo(()=>serviceSelections.map(x=>subservices.filter(s=>String(s.service_id)===String(x.serviceId))),[subservices,serviceSelections])
@@ -405,22 +391,9 @@ export default function Profile(){
               <ProfileBrochureField title="Project specifications / brochure" description="Upload the project scope, materials, brands, finishes or handover dossier as a PDF. Customers will see it on the public project page." url={project.brochureUrl} displayUrl={project.brochureDisplayUrl} busy={Boolean(brochureUploads['project-'+index])} onUpload={file=>uploadBrochure('project',index,file)} onRemove={()=>updateProject(index,'brochureUrl','')}/>
             </article>)}{!projects.length&&<div className="profile-showcase-empty"><b>No completed projects added yet.</b><span>Add real work to make your public profile stronger.</span></div>}</div>
           </section>
-          <section className="profile-panel profile-callback-panel" aria-label="Customer project callback requests">
-            <div className="panel-title"><div><span>CALLBACK REQUESTS</span><h2>Project enquiries</h2><p>Private requests from customers who viewed your published project.</p></div></div>
-            {callbacksLoading?<p>Checking new requests…</p>:projectCallbacks.length===0?<p className="profile-callback-empty">No project callbacks yet. Requests appear here when customers submit the form on your project.</p>:
-              <div className="profile-callback-list">
-                {projectCallbacks.map(item=><article className="profile-callback-item" key={item.id}>
-                  <div><span>{item.project_title}</span><h3>{item.customer_name}</h3><small>{new Date(item.created_at).toLocaleString('en-IN')}</small></div>
-                  {item.message&&<p>{item.message}</p>}
-                  <div className="profile-callback-contact">
-                    <span>Mobile: {item.customer_phone||'Protected'}</span>
-                    {item.customer_email&&<span>Email: {item.customer_email}</span>}
-                    <small>Contact details are masked. ProPulse coordinates introductions.</small>
-                  </div>
-                </article>)}
-              </div>}
+          <section className="profile-panel profile-callback-panel" aria-label="Open customer requests CRM">
+            <div className="panel-title"><div><span>REQUESTS CRM</span><h2>Customer enquiries</h2><p>Profile callbacks, project requests and quotations now live in the dedicated Requests workspace.</p></div><Link to="/professional-requests">Open Requests →</Link></div>
           </section>
-          <ProfessionalProjectQuotes plans={plans}/>
           </>}
 
           {activeSection==='plans'&&<>

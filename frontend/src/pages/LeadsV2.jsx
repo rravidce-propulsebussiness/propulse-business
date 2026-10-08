@@ -3,7 +3,6 @@ import { useEffect, useMemo, useState } from 'react'
 import { authRequest, publicRequest, getToken, getUser } from '../utils/auth'
 import { claimLead, getLead, listLeads, purchaseLead } from '../api/leads'
 import UserHeader from '../components/UserHeader'
-import ProfessionalCallbacks from '../components/ProfessionalCallbacks'
 import PaymentProofPicker from '../components/PaymentProofPicker'
 import PaymentMethodSelector from '../components/PaymentMethodSelector'
 import { loadPaymentOptions, runRazorpayCheckout } from '../utils/paymentGateway'
@@ -405,7 +404,6 @@ export default function LeadsV2() {
     <UserHeader />
     <main className="lv2-page">
       <section className="lv2-market-head"><div className="lv2-title-block"><span></span><div><h1>{title}</h1><p>All available leads are shown by default.</p></div></div><div className="lv2-controls"><div className="lv2-search"><span>⌕</span><input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by industry, service, location..." aria-label="Search leads"/><b>⌕</b></div><div className="lv2-guest-filters"><select value={industryFilter} onChange={e => { setIndustryFilter(e.target.value); setCityFilter('') }} aria-label="Filter by industry"><option value="">All Industries</option>{filterOptions.industries.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}</select><select value={cityFilter} onChange={e => setCityFilter(e.target.value)} aria-label="Filter by city"><option value="">All Cities</option>{filterOptions.cities.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}</select></div></div></section>
-      {logged && user?.role==='business' && <ProfessionalCallbacks/>}
       {error && <div className="lv2-error">{error}</div>}{notice && <div className="lv2-error">{notice}</div>}
       {loading ? <div className="lv2-empty"><span>PROPULSE MARKETPLACE</span><strong>Loading opportunities...</strong></div> : marketplaceUnavailable ? <div className="lv2-empty"><span>PROPULSE MARKETPLACE</span><strong>Marketplace temporarily unavailable</strong><p>We are reconnecting to the service. Please try again shortly.</p></div> : !visibleLeads.length ? <div className="lv2-empty"><span>PROPULSE MARKETPLACE</span><strong>No matching leads</strong><p>Try another search or filter.</p></div> : <div className="lv2-grid">
         {visibleLeads.map(lead => {

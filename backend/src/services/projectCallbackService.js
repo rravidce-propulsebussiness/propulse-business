@@ -50,8 +50,8 @@ async function requestCallback(projectId,input={}){
       userId:project.business_user_id,
       type:'project_callback_request',category:'lead',severity:'info',
       title:'New project callback request',
-      message:`A customer requested a callback about "${String(project.title).slice(0,120)}". View their details in your business profile.`,
-      actionUrl:'/profile?tab=projects',relatedType:'project_callback',relatedId:requestId,
+      message:`A customer requested a callback about "${String(project.title).slice(0,120)}". View the protected request in your Requests workspace.`,
+      actionUrl:'/professional-requests',relatedType:'project_callback',relatedId:requestId,
       dedupeKey:`project-callback-${requestId}`,
     });
   }catch(error){console.error('Project callback notification failed:',error.message);}
@@ -96,8 +96,8 @@ async function requestProfileCallback(expertId,input={}){
     await notifications.notifyUser({
       userId:profile.user_id,type:'project_callback_request',category:'lead',severity:'info',
       title:'New professional profile callback',
-      message:'A customer requested a callback through your public profile. View the protected request in Professionals.',
-      actionUrl:'/professionals',relatedType:'project_callback',relatedId:result.rows[0].id,
+      message:'A customer requested a callback through your public profile. View the protected request in your Requests workspace.',
+      actionUrl:'/professional-requests',relatedType:'project_callback',relatedId:result.rows[0].id,
       dedupeKey:`profile-callback-${result.rows[0].id}`,
     });
   }catch(error){console.error('Profile callback notification failed:',error.message);}

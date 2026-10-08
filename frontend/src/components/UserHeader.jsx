@@ -12,7 +12,7 @@ export default function UserHeader() {
   const active=p=>{
     const [pathname,query]=p.split('?')
     if(location.pathname!==pathname) return ''
-    if(!query) return location.search ? '' : ' active'
+    if(!query) return pathname==='/professional-requests' || !location.search ? ' active' : ''
     const params=new URLSearchParams(query)
     const current=new URLSearchParams(location.search)
     return [...params.entries()].every(([k,v])=>current.get(k)===v)?' active':''
@@ -42,6 +42,7 @@ export default function UserHeader() {
     <nav className={"user-header-nav" + (open ? " open" : "")}>
       <Link className={active("/professionals")} to="/professionals" onClick={()=>setOpen(false)}>Home</Link>
       <Link className={active("/purchased-leads")} to="/purchased-leads" onClick={()=>setOpen(false)}>Purchased Leads</Link>
+      {user?.role==='business' && <Link className={active("/professional-requests")} to="/professional-requests" onClick={()=>setOpen(false)}>Requests</Link>}
       <Link className={active("/wallet")} to="/wallet" onClick={()=>setOpen(false)}>Wallet</Link>
       <Link className={active("/membership")} to="/membership" onClick={()=>setOpen(false)}>Membership</Link>
       {isPro && <Link className={active("/investment")} to="/investment" onClick={()=>setOpen(false)}>Investor</Link>}
