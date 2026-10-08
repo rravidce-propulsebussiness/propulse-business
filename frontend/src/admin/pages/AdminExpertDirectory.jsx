@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { authRequest } from '../../utils/auth'
+import AdminCallbackInbox from './AdminCallbackInbox'
 import './AdminExpertDirectory.css'
 
 function listData(value){
@@ -107,6 +108,8 @@ export default function AdminExpertDirectory(){
 
     {error&&<div className="expert-admin-alert error">{error}</div>}
     {message&&<div className="expert-admin-alert success">{message}</div>}
+
+    <AdminCallbackInbox/>
 
     <section className="expert-admin-stats">
       <article><span>Active businesses</span><strong>{stats.active_businesses||0}</strong><small>Business accounts</small></article>

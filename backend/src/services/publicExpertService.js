@@ -3,6 +3,7 @@ const expertDirectoryService=require('./expertDirectoryService');
 const projectVideoService=require('./projectVideoService');
 const projectPlanService=require('./projectPlanService');
 const projectImageService=require('./projectImageService');
+const brochureService=require('./brochureService');
 
 async function materializeProjectMedia(rows){
   return Promise.all((rows||[]).map(async row=>({
@@ -395,8 +396,8 @@ async function getPublicExpert(expertId){
     settings.showProjects?pool.query(`SELECT id,title,project_type,description,location_text,completion_year,area_text,budget_text,cover_image_url,image_urls,package_name,${settings.showVideos?'video_url':'NULL::text AS video_url'},video_published_at,${settings.showPlans?'plan_url':'NULL::text AS plan_url'},sort_order FROM business_profile_projects WHERE business_profile_id=$1 AND is_published=TRUE ORDER BY sort_order,id`,[id]):Promise.resolve({rows:[]}),
     settings.showPlans?pool.query(`SELECT id,title,description,price_from,duration_label,inclusions,sort_order FROM business_profile_service_plans WHERE business_profile_id=$1 AND is_published=TRUE ORDER BY sort_order,id`,[id]):Promise.resolve({rows:[]}),
   ]);
-  const renderedProjects=await materializeProjectMedia(projects.rows);
-  return {...base,services:services.rows,locations:locations.rows,projects:renderedProjects,service_plans:plans.rows,directory_settings:{showProjects:settings.showProjects,showVideos:settings.showVideos,showPlans:settings.showPlans}};
+  const [renderedProjects,brochures]=await Promise.all([materializeProjectMedia(projects.rows),brochureService.listPublic(id)]);
+  return {...base,services:services.rows,locations:locations.rows,projects:renderedProjects,brochures,service_plans:plans.rows,directory_settings:{showProjects:settings.showProjects,showVideos:settings.showVideos,showPlans:settings.showPlans}};
 }
 
 module.exports={listPublicExperts,listRecentProjects,listRecentProjectVideos,getPublicExpert,getPublicProject};
