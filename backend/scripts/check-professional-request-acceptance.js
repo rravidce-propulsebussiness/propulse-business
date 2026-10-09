@@ -51,7 +51,7 @@ assert.match(adminLayout,/\/admin\/professional-enquiries/,'Admin menu must expo
 assert.match(app,/path="\/admin\/professional-enquiries"/,'Admin professional requests must have a route');
 assert.match(adminInbox,/Recheck quality/,'Admin must be able to recheck quarantined lead quality');
 assert.match(adminInbox,/Release after review/,'Manual quality override must require Admin review');
-assert.match(adminInbox,/Retry lead creation/,'Admin can retry an unlinked professional enquiry');
+assert.match(adminInbox,/Create marketplace lead \/ Retry/,'Admin can retry an unlinked professional enquiry');
 assert.match(adminInbox,/link_verified/,'Admin must not release an unrelated lead');
 assert.match(adminInbox,/quality-gate\/.*override/,'Manual Admin release must use the audited lead quality endpoint');
 assert.match(adminInbox,/lead_pricing/,'Admin displays existing configured lead pricing');
@@ -61,6 +61,16 @@ assert.match(legacyService,/consentConfirmed!==true/,'Admin must attest explicit
 assert.match(legacyService,/note.length<12/,'Legacy authorization requires a meaningful review note');
 assert.match(legacyService,/audit\.record\(client/,'Legacy consent attestation must be audited');
 assert.match(adminRoutes,/authorize-legacy/,'Legacy consent authorization must have an Admin-only endpoint');
-assert.match(adminInbox,/Verify & create paid lead/,'Admin must have a consent-based legacy quotation recovery form');
+assert.match(adminInbox,/Create Marketplace Lead/,'Admin must have a consent-based legacy quotation recovery form');
 assert.match(adminInbox,/marketplace_sync_status==='not_requested'/,'Legacy quote may not use blind retry');
+const testQuoteDelete=read('backend/src/services/professionalProjectQuoteService.js');
+assert.match(testQuoteDelete,/async function deleteUnlinkedTestQuote/,'Admin must have guarded test quotation deletion');
+assert.match(testQuoteDelete,/existing.marketplace_lead_id/,'Test deletion must not remove linked marketplace leads');
+assert.match(testQuoteDelete,/existing.status!=='new'/,'Already processed quotes must be protected');
+assert.match(testQuoteDelete,/quoted_at IS NULL AND quoted_price IS NULL/,'Quoted requests must not be deleted');
+assert.match(testQuoteDelete,/lead.test_quote_deleted/,'Test deletion must be recorded in audit log');
+assert.match(adminRoutes,/professional-quote-leads\/:id\/delete-test/,'Test deletion must be available through an Admin-only route');
+assert.match(adminInbox,/Delete test quotation/,'Admin can delete a protected unlinked test record');
+assert.match(adminInbox,/evidence.trim\(\).length<12/,'Legacy lead creation must clearly require a consent note');
+assert.match(quote,/marketplace\.sync\('quote'/,'New quotations must create the marketplace lead as part of intake');
 console.log('Professional request paid and free membership acceptance regression checks passed.');
