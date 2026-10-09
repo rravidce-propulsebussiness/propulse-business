@@ -21,7 +21,7 @@ async function listQuotes(req,res){
 }
 async function retryMarketplace(req,res){
   const kind=String(req.params.kind||'');
-  if(!['quote','callback'].includes(kind))return res.status(400).json({error:'Invalid project request type'});
+  if(!['quote','callback','profile'].includes(kind))return res.status(400).json({error:'Invalid professional enquiry type'});
   const id=Number(req.params.id);
   if(!Number.isSafeInteger(id)||id<1)return res.status(400).json({error:'Invalid request reference'});
   try{
@@ -33,4 +33,23 @@ async function retryMarketplace(req,res){
     return res.status(500).json({error:'Unable to retry marketplace lead creation'});
   }
 }
-module.exports={list,updateStatus,listQuotes,retryMarketplace};
+async function authorizeLegacyMarketplace(req,res){
+  const kind=String(req.params.kind||'');
+  const id=Number(req.params.id);
+  if(!['quote','callback'].includes(kind)||!Number.isSafeInteger(id)||id<1)
+    return res.status(400).json({error:'Invalid legacy project enquiry'});
+  try{
+    return res.json(await marketplace.authorizeLegacy(kind,id,{
+      pincode:req.body?.pincode,
+      consentConfirmed:req.body?.consentConfirmed,
+      evidence:req.body?.evidence,
+      adminId:req.user?.id
+    }));
+  }catch(error){
+    const codes={INVALID_LEGACY_AUTHORIZATION:400,INVALID_REQUEST_KIND:400,PROJECT_REQUEST_NOT_FOUND:404,LEGACY_ENQUIRY_ALREADY_PROCESSED:409};
+    if(codes[error.code])return res.status(codes[error.code]).json({error:error.message,code:error.code});
+    console.error('Admin legacy marketplace authorization failed:',error.message);
+    return res.status(500).json({error:'Unable to authorize legacy marketplace lead'});
+  }
+}
+module.exports={list,updateStatus,listQuotes,retryMarketplace,authorizeLegacyMarketplace};

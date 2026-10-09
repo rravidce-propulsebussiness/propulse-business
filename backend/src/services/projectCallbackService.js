@@ -188,9 +188,17 @@ async function listForProfessional(userId){
 async function listForAdmin(){
   return (await pool.query(
     `SELECT r.id,r.project_id,r.project_title,r.customer_name,r.customer_phone,
-       r.customer_email,r.message,r.marketplace_lead_id,r.marketplace_sync_status,r.marketplace_sync_error,r.status,r.created_at,bp.business_name
+       r.customer_email,r.message,r.marketplace_lead_id,r.marketplace_sync_status,r.marketplace_sync_error,r.status,r.created_at,bp.business_name,
+       r.business_user_id,l.status AS lead_status,l.quality_gate_status,l.quality_gate_reasons,l.pricing AS lead_pricing,
+       lead_effective_buyer_capacity(l.access_strategy,l.buyer_capacity,l.release_to_two_after_hours,
+         l.release_to_three_after_hours,l.created_at,l.access_capacity_locked) AS lead_capacity,
+       (l.source=CASE WHEN r.project_id IS NULL THEN 'professional_profile_callback' ELSE 'professional_project_callback' END
+         AND l.custom_fields->'_project_origin'->>'type'=CASE WHEN r.project_id IS NULL THEN 'profile' ELSE 'callback' END
+         AND l.custom_fields->'_project_origin'->>'requestId'=r.id::text
+         AND l.custom_fields->'_project_origin'->>'professionalUserId'=r.business_user_id::text) AS link_verified
      FROM project_callback_requests r
      LEFT JOIN business_profiles bp ON bp.user_id=r.business_user_id
+     LEFT JOIN leads l ON l.id=r.marketplace_lead_id
      ORDER BY r.created_at DESC,r.id DESC LIMIT 150`
   )).rows;
 }

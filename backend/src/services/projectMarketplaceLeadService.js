@@ -3,6 +3,7 @@ const flows=require('./customerFlowService');
 const pins=require('./pincodeDetectionService');
 const leads=require('./leadService');
 const notifications=require('./notificationService');
+const audit=require('./criticalActionAuditService');
 const {parseProjectQuoteRequirement}=require('./projectQuoteRequirementDetails');
 
 const TYPES={
@@ -136,4 +137,46 @@ async function sync(kind,id,{notify=true}={}){
     return{status:'review_required',reason:error.code||'MARKETPLACE_SYNC_FAILED'};
   }
 }
-module.exports={sync,flagPending,industry,sanitize};
+
+/**
+ * Older enquiries predate the explicit marketplace-sharing consent and PIN
+ * collection. Never sell these records just because an Admin pressed Retry.
+ * After contacting the homeowner, an Admin must attest their confirmation,
+ * provide the verified PIN, and record evidence for the audit trail.
+ */
+async function authorizeLegacy(kind,requestId,{pincode,consentConfirmed,evidence,adminId}={}){
+  if(!['quote','callback'].includes(kind))
+    throw Object.assign(new Error('Legacy authorization is supported for project quotes and callbacks only'),{code:'INVALID_REQUEST_KIND'});
+  const id=Number(requestId),actor=Number(adminId),pin=String(pincode||'').trim(),note=String(evidence||'').trim();
+  if(!Number.isSafeInteger(id)||id<1||!Number.isSafeInteger(actor)||actor<1)
+    throw Object.assign(new Error('Invalid Admin or request reference'),{code:'INVALID_LEGACY_AUTHORIZATION'});
+  if(!/^\d{6}$/.test(pin)||consentConfirmed!==true||note.length<12||note.length>1000)
+    throw Object.assign(new Error('Confirm the homeowner\'s permission, a verified 6-digit PIN and a review note (12–1000 characters)'),{code:'INVALID_LEGACY_AUTHORIZATION'});
+  const conf=type(kind),client=await pool.connect();
+  try{
+    await client.query('BEGIN');
+    const original=(await client.query(
+      'SELECT id,marketplace_sync_status,marketplace_lead_id FROM '+conf.table+' WHERE id=$1 FOR UPDATE',[id]
+    )).rows[0];
+    if(!original)throw Object.assign(new Error('Project enquiry not found'),{code:'PROJECT_REQUEST_NOT_FOUND'});
+    if(original.marketplace_sync_status!=='not_requested'||original.marketplace_lead_id)
+      throw Object.assign(new Error('This enquiry is already in marketplace processing or is linked to a lead'),{code:'LEGACY_ENQUIRY_ALREADY_PROCESSED'});
+    await client.query(
+      'UPDATE '+conf.table+" SET marketplace_pincode=$2,marketplace_sync_status='pending',marketplace_sync_error=NULL WHERE id=$1",
+      [id,pin]
+    );
+    await audit.record(client,{
+      actorId:actor,category:'lead',action:'lead.legacy_marketplace_consent_verified',
+      entityType:conf.table,entityId:id,
+      beforeData:{marketplaceSyncStatus:'not_requested'},
+      afterData:{marketplaceSyncStatus:'pending',customerConsentConfirmed:true},
+      reason:note,metadata:{requestKind:kind,verifiedPincode:pin,homeownerConsentConfirmed:true},
+      source:'admin_professional_enquiries'
+    });
+    await client.query('COMMIT');
+  }catch(error){await client.query('ROLLBACK').catch(()=>{});throw error}
+  finally{client.release()}
+  return sync(kind,id);
+}
+
+module.exports={sync,flagPending,authorizeLegacy,industry,sanitize};
