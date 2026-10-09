@@ -8,6 +8,7 @@ const rootIndex=fs.readFileSync(path.join(root,'index.js'),'utf8');
 const backendPkg=JSON.parse(fs.readFileSync(path.join(root,'backend','package.json'),'utf8'));
 const backendIndex=fs.readFileSync(path.join(root,'backend','index.js'),'utf8');
 const backendServer=fs.readFileSync(path.join(root,'backend','src','server.js'),'utf8');
+const {shouldBypassCorsForPublicAssets}=require('../src/config/httpCorsPolicy');
 const releaseMarkerHelper=fs.readFileSync(path.join(root,'backend','scripts','hostinger-release-marker.js'),'utf8');
 const env=fs.readFileSync(path.join(root,'.env.example'),'utf8');
 const prebuildWorkflow=fs.readFileSync(path.join(root,'.github','workflows','hostinger-main-prebuild.yml'),'utf8');
@@ -69,6 +70,18 @@ assert(backendIndex.includes("Hostinger single-process app is live; building fro
 assert(backendIndex.includes("if(frontendBuilding||fs.existsSync(bundledFrontendIndex)||fs.existsSync(frontendIndex))return;"),'Backend-root Hostinger skips redundant runtime frontend builds when deploy output already exists');
 assert(backendIndex.includes("fs.symlinkSync(backendNodeModules,frontendNodeModules"),'Backend-root Hostinger entry exposes installed dependencies to the frontend build');
 assert(backendServer.includes("app.use(express.static(frontendDist"),'Backend server serves built frontend assets in single-process mode');
+
+// Hashed frontend files must load even if the API CORS allowlist is temporarily
+// configured for an older domain. The credentialed API policy remains strict.
+assert(backendServer.includes('shouldBypassCorsForPublicAssets(req,serveFrontendFromBackend)'),'Backend routes public frontend assets around credentialed API CORS checks');
+assert(shouldBypassCorsForPublicAssets({method:'GET',path:'/assets/index-CjPgePGs.js'},true),'Browser module script GET bypasses API CORS checks');
+assert(shouldBypassCorsForPublicAssets({method:'GET',path:'/assets/index-zb-3FiDA.css'},true),'Browser stylesheet GET bypasses API CORS checks');
+assert(shouldBypassCorsForPublicAssets({method:'HEAD',path:'/assets/vendor-H3TRobK0.js'},true),'Static asset HEAD bypasses API CORS checks');
+assert(!shouldBypassCorsForPublicAssets({method:'GET',path:'/api/auth/session'},true),'API session calls retain strict CORS checks');
+assert(!shouldBypassCorsForPublicAssets({method:'POST',path:'/assets/index-CjPgePGs.js'},true),'Non-read asset requests retain strict CORS checks');
+assert(!shouldBypassCorsForPublicAssets({method:'GET',path:'/uploads/private-proofs/example'},true),'Upload paths retain strict CORS checks');
+assert(!shouldBypassCorsForPublicAssets({method:'GET',path:'/assets/index-CjPgePGs.js'},false),'Backend-only deployments retain strict CORS checks');
+
 assert(backendServer.includes("Application frontend is starting. Please retry shortly."),'Backend server keeps HTML requests safe while background frontend build runs');
 assert(backendServer.includes("['website','users','professionals','lead_partners','common'].includes(requestedAudience)"),'Degraded contact fallback must preserve the Professional audience during startup');
 assert(wrapper.includes("startsWith('/api/')"),'Hostinger wrapper proxies API traffic');
