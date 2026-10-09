@@ -247,7 +247,7 @@ export default function ProjectDetail(){
         <h2 id="pjd-dialog-heading">Request a Callback</h2>
         <p>Ask about <strong>{project.title}</strong>. ProPulse coordinates your callback; the professional sees masked contact details.</p>
         {callbackSuccess?<div className="pj-callback-success" role="status"><strong>Callback lead received</strong><p>{callbackFeedback}</p><button type="button" className="pjd-dialog-done" onClick={closeCallback}>Done</button></div>:
-          <ProfessionalCallbackRequirementForm value={callbackForm} onChange={setCallbackForm} onSubmit={submitCallback} busy={callbackSending} error={callbackFeedback} submitLabel="Send Callback Request"/>}
+          <div className="pjd-callback-form"><ProfessionalCallbackRequirementForm value={callbackForm} onChange={setCallbackForm} onSubmit={submitCallback} busy={callbackSending} error={callbackFeedback} submitLabel="Send Callback Request"/></div>}
       </section>
     </div>}
   </main>
