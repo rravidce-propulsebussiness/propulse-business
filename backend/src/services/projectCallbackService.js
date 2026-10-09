@@ -7,6 +7,46 @@ const {normalizeName,normalizePhone,normalizeEmail}=require('./publicContactVali
 function bad(message,code='INVALID_PROJECT_CALLBACK'){
   return Object.assign(new Error(message),{code});
 }
+const QUICK_FLOW_LABELS={build:'Home Construction',design:'Interior Design',property:'Real Estate'};
+function callbackRequirementFields(input={}){
+  const flow=String(input.flowKey||'').trim();
+  if(!flow)return{}; // Old clients remain supported.
+  if(!Object.hasOwn(QUICK_FLOW_LABELS,flow))throw bad('Choose a valid requirement category');
+  const val=(key,max=120)=>String(input[key]||'').trim().slice(0,max);
+  const fields={_flow_key:flow,'I am looking for':QUICK_FLOW_LABELS[flow]};
+  if(input.cityName)fields['City / Location']=val('cityName');
+  if(flow==='build'){
+    if(!['residential','commercial','renovation','extension'].includes(input.projectType)||!['1','2','3','4'].includes(String(input.floors)))
+      throw bad('Choose a valid construction project type and number of floors');
+    fields['Project Type']=val('projectType');
+    fields['No. of Floors']={'1':'Ground Floor','2':'G+1','3':'G+2','4':'G+3 and above'}[String(input.floors)];
+    if(input.plotArea){
+      const area=Number(input.plotArea);
+      if(!Number.isFinite(area)||area<10||area>100000000)throw bad('Enter a valid plot area');
+      fields['Plot Area']=String(area)+' sq yards';
+    }
+  }else if(flow==='design'){
+    if(!['apartment','villa','independent_house','office','commercial_space'].includes(input.propertyType))
+      throw bad('Choose a valid interior property type');
+    fields['Property Type']=val('propertyType');
+    if(input.bhk&&!['office','commercial_space'].includes(input.propertyType)){
+      if(!['1bhk','2bhk','3bhk','4bhk','5plus'].includes(input.bhk))throw bad('Choose a valid BHK');
+      fields['BHK']=val('bhk');
+    }
+  }else{
+    if(!['buy','sell'].includes(input.propertyIntent)||!['apartment','villa','independent_house','commercial','plot'].includes(input.propertyType))
+      throw bad('Choose a valid real estate intention and property type');
+    fields['I want to']=val('propertyIntent');
+    fields['Property Type']=val('propertyType');
+    if(input.budget){
+      if(!['Under ₹20 Lakhs','₹20 - 50 Lakhs','₹50 Lakhs - 1 Crore','₹1 - 2 Crore','Above ₹2 Crore'].includes(input.budget))
+        throw bad('Choose a valid budget');
+      fields['Budget']=val('budget');
+    }
+  }
+  return fields;
+}
+
 async function requestCallback(projectId,input={}){
   const id=Number(projectId);
   if(!Number.isSafeInteger(id)||id<1)throw bad('Project not found','PROJECT_NOT_FOUND');
@@ -19,6 +59,7 @@ async function requestCallback(projectId,input={}){
   const email=normalizeEmail(input.email);
   const message=String(input.message||'').trim();
   if(message.length>1000)throw bad('Please shorten your message to 1000 characters');
+  const requirementFields=callbackRequirementFields(input);
   const settings=await expertDirectoryService.getSettings();
   if(!settings.directoryEnabled||!settings.showProjects)throw bad('Project not available','PROJECT_NOT_FOUND');
   const project=(await pool.query(
@@ -36,15 +77,15 @@ async function requestCallback(projectId,input={}){
   if(!status.eligible)throw bad('Project not available','PROJECT_NOT_FOUND');
   const result=await pool.query(
     `INSERT INTO project_callback_requests
-      (project_id,project_title,business_user_id,customer_name,customer_phone,customer_email,message)
-      SELECT $1,$7,$2,$3,$4,$5,$6
+      (project_id,project_title,business_user_id,customer_name,customer_phone,customer_email,message,requirement_fields)
+      SELECT $1,$7,$2,$3,$4,$5,$6,$8::jsonb
       WHERE NOT EXISTS (
         SELECT 1 FROM project_callback_requests
         WHERE project_id=$1 AND customer_phone=$4
         AND created_at>CURRENT_TIMESTAMP-INTERVAL '1 hour'
       )
       RETURNING id`,
-    [id,project.business_user_id,name,phone,email,message||null,String(project.title||'Project').slice(0,180)]
+    [id,project.business_user_id,name,phone,email,message||null,String(project.title||'Project').slice(0,180),JSON.stringify(requirementFields)]
   );
   if(!result.rowCount){
     const prior=await pool.query(
@@ -96,6 +137,7 @@ async function requestProfileCallback(expertId,input={}){
   const email=normalizeEmail(input.email);
   const message=String(input.message||'').trim();
   if(message.length>1000)throw bad('Please shorten your message to 1000 characters');
+  const requirementFields=callbackRequirementFields(input);
   const settings=await expertDirectoryService.getSettings();
   if(!settings.directoryEnabled)throw bad('Professional profile not found','PROFILE_NOT_FOUND');
   const profile=(await pool.query(
@@ -110,14 +152,14 @@ async function requestProfileCallback(expertId,input={}){
   const title=`Profile enquiry: ${String(profile.business_name).slice(0,155)}`;
   const result=await pool.query(
     `INSERT INTO project_callback_requests
-      (project_id,project_title,business_user_id,customer_name,customer_phone,customer_email,message)
-     SELECT NULL,$1,$2,$3,$4,$5,$6
+      (project_id,project_title,business_user_id,customer_name,customer_phone,customer_email,message,requirement_fields)
+     SELECT NULL,$1,$2,$3,$4,$5,$6,$7::jsonb
      WHERE NOT EXISTS (
        SELECT 1 FROM project_callback_requests
        WHERE project_id IS NULL AND business_user_id=$2 AND customer_phone=$4
          AND created_at>CURRENT_TIMESTAMP-INTERVAL '1 hour'
      ) RETURNING id`,
-    [title.slice(0,180),profile.user_id,name,phone,email,message||null]
+    [title.slice(0,180),profile.user_id,name,phone,email,message||null,JSON.stringify(requirementFields)]
   );
   if(!result.rowCount){
     const prior=(await pool.query(`SELECT id FROM project_callback_requests
@@ -166,7 +208,7 @@ async function listForProfessional(userId){
   if(!Number.isSafeInteger(id)||id<1)return [];
   const rows=(await pool.query(
     `SELECT r.id,r.project_id,r.project_title,r.marketplace_lead_id,r.customer_name,
-       r.customer_phone,r.customer_email,r.message,r.status,r.created_at
+       r.customer_phone,r.customer_email,r.message,r.requirement_fields,r.status,r.created_at
        FROM project_callback_requests r
        WHERE r.business_user_id=$1
        ORDER BY r.created_at DESC,r.id DESC LIMIT 100`,[id]
@@ -188,7 +230,7 @@ async function listForProfessional(userId){
 async function listForAdmin(){
   return (await pool.query(
     `SELECT r.id,r.project_id,r.project_title,r.customer_name,r.customer_phone,
-       r.customer_email,r.message,r.marketplace_lead_id,r.marketplace_sync_status,r.marketplace_sync_error,r.status,r.created_at,bp.business_name,
+       r.customer_email,r.message,r.requirement_fields,r.marketplace_lead_id,r.marketplace_sync_status,r.marketplace_sync_error,r.status,r.created_at,bp.business_name,
        r.business_user_id,l.status AS lead_status,l.quality_gate_status,l.quality_gate_reasons,l.pricing AS lead_pricing,
        lead_effective_buyer_capacity(l.access_strategy,l.buyer_capacity,l.release_to_two_after_hours,
          l.release_to_three_after_hours,l.created_at,l.access_capacity_locked) AS lead_capacity,
