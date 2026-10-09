@@ -208,7 +208,7 @@ async function listForProfessional(userId){
   if(!Number.isSafeInteger(id)||id<1)return [];
   const rows=(await pool.query(
     `SELECT r.id,r.project_id,r.project_title,r.marketplace_lead_id,r.customer_name,
-       r.customer_phone,r.customer_email,r.message,r.requirement_fields,r.status,r.created_at
+       r.customer_phone,r.customer_email,r.message,r.requirement_fields,r.access_mode,r.status,r.created_at
        FROM project_callback_requests r
        WHERE r.business_user_id=$1
        ORDER BY r.created_at DESC,r.id DESC LIMIT 100`,[id]
@@ -230,7 +230,7 @@ async function listForProfessional(userId){
 async function listForAdmin(){
   return (await pool.query(
     `SELECT r.id,r.project_id,r.project_title,r.customer_name,r.customer_phone,
-       r.customer_email,r.message,r.requirement_fields,r.marketplace_lead_id,r.marketplace_sync_status,r.marketplace_sync_error,r.status,r.created_at,bp.business_name,
+       r.customer_email,r.message,r.requirement_fields,r.marketplace_lead_id,r.marketplace_sync_status,r.marketplace_sync_error,r.access_mode,r.status,r.created_at,bp.business_name,
        r.business_user_id,l.status AS lead_status,l.quality_gate_status,l.quality_gate_reasons,l.pricing AS lead_pricing,
        lead_effective_buyer_capacity(l.access_strategy,l.buyer_capacity,l.release_to_two_after_hours,
          l.release_to_three_after_hours,l.created_at,l.access_capacity_locked) AS lead_capacity,
