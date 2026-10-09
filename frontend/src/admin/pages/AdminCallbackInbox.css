@@ -36,3 +36,10 @@
 .admin-enquiry-legacy .admin-enquiry-consent input{margin-top:3px}
 .admin-enquiry-legacy button{padding:10px;border:0;border-radius:9px;background:#103a59;color:#fff;font-weight:800;cursor:pointer}
 .admin-enquiry-legacy button:disabled{opacity:.5;cursor:not-allowed}
+
+/* Clear actions for direct marketplace creation and safe test cleanup. */
+.admin-enquiry-legacy>small{font-size:11px;line-height:1.5;color:#5d7180}
+.admin-enquiry-validity{font-size:11px;color:#a84a23;font-weight:650}
+.admin-enquiry-validity.ready{color:#187047}
+.admin-enquiry-actions .admin-review-delete{background:#fff1f0;border-color:#efb3b0;color:#9e2924}
+.admin-enquiry-actions .admin-review-delete:hover{background:#ffe4e1}
