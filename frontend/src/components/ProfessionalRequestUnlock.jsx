@@ -20,7 +20,7 @@ export default function ProfessionalRequestUnlock({kind,item,onUnlocked}){
   const [error,setError]=useState('')
   const [message,setMessage]=useState('')
   useEffect(()=>{
-    if(access.unlocked||access.eligibleForFree)return
+    if(access.unlocked||access.eligibleForFree||access.canPay===false)return
     let live=true
     Promise.allSettled([loadPaymentOptions(),authRequest('/payment-receiving-details')])
       .then(([settings,receivers])=>{
@@ -39,6 +39,7 @@ export default function ProfessionalRequestUnlock({kind,item,onUnlocked}){
   },[access.unlocked,access.eligibleForFree])
   if(access.unlocked)return <div className="pru-unlocked">✓ Accepted · Customer contact unlocked</div>
   if(!access.leadId||access.status==='review_required')return <div className="pru-pending">Lead pricing or verification is pending. Contact access will be offered when the enquiry is approved.</div>
+  if(access.status==='members_only')return <div className="pru-pending">Only professionals with an active Pro membership can accept this enquiry. Please activate a membership to continue.</div>
   async function accept(){
     if(busy)return
     if(!access.eligibleForFree&&!mode)return setError('Choose an available payment method to continue.')
@@ -73,14 +74,14 @@ export default function ProfessionalRequestUnlock({kind,item,onUnlocked}){
   }
   return <div className="pru-box">
     <div className="pru-info"><span>CONTACT ACCESS</span>
-      <strong>{access.eligibleForFree?'Included with Pro membership':access.price?rupees(access.price)+' · One-time lead acceptance':'Pricing unavailable'}</strong>
+      <strong>{access.eligibleForFree?(access.accessMode==='free'?'Free enquiry':'Included with Pro membership'):access.price?rupees(access.price)+' · One-time lead acceptance':'Pricing unavailable'}</strong>
       <small>{access.eligibleForFree?'Accept this assigned request free of charge.':'The full number and email unlock only after confirmed payment.'}</small>
     </div>
     {!access.eligibleForFree&&access.price&&<PaymentMethodSelector options={options} value={mode} onChange={setMode} disabled={busy} compact/>}
     {error&&<p className="pru-error" role="alert">{error}</p>}
     {message&&<p className="pru-message" role="status">{message}</p>}
     {!checkout&&<button className="pru-accept" type="button" disabled={busy||(!access.eligibleForFree&&!access.price)} onClick={accept}>
-      {busy?'Processing…':access.eligibleForFree?'Accept Free · Membership':access.status==='pending_payment'?'Resume lead payment':`Accept & Pay ${rupees(access.price)}`}
+      {busy?'Processing…':access.eligibleForFree?(access.accessMode==='free'?'Accept Free':'Accept Free · Membership'):access.status==='pending_payment'?'Resume lead payment':`Accept & Pay ${rupees(access.price)}`}
     </button>}
     {checkout&&mode==='offline'&&<div className="pru-manual">
       <b>Pay remaining {rupees(checkout.externalAmount)}</b>
