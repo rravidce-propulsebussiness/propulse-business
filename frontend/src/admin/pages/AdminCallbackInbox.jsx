@@ -138,7 +138,7 @@ export default function AdminCallbackInbox(){
     {loading?<div className="admin-callback-empty">Loading requests…</div>:rows.length===0?<div className="admin-callback-empty">No professional callback requests yet.</div>:
       <div className="admin-callback-list">{rows.map(item=><article key={item.id} className="admin-callback-row">
         <div><span>{item.project_id?'PROJECT':'PROFILE'} · {item.business_name||'Professional'}</span><h3>{item.customer_name}</h3><p>{item.project_title}</p><small>{new Date(item.created_at).toLocaleString('en-IN')}</small></div>
-        <div className="admin-callback-contact"><a href={'tel:'+item.customer_phone}>Call {item.customer_phone}</a>{item.customer_email&&<a href={'mailto:'+item.customer_email}>{item.customer_email}</a>}{item.message&&<p>{item.message}</p>}</div>
+        <div className="admin-callback-contact"><a href={'tel:'+item.customer_phone}>Call {item.customer_phone}</a>{item.customer_email&&<a href={'mailto:'+item.customer_email}>{item.customer_email}</a>}{Object.entries(item.requirement_fields||{}).filter(([key,value])=>!key.startsWith('_')&&String(value||'').trim()).map(([key,value])=><p key={key}><b>{key}:</b> {String(value)}</p>)}{item.message&&<p><b>Additional Information:</b> {item.message}</p>}</div>
         <div><label>Status<select value={item.status||'new'} disabled={saving==='callback-'+item.id} onChange={e=>update(item.id,e.target.value)}><option value="new">New</option><option value="contacted">Contacted</option><option value="closed">Closed</option></select></label>
         <EnquiryReview item={item} kind={item.project_id?'callback':'profile'} onAction={review} saving={saving}/></div>
       </article>)}</div>}
