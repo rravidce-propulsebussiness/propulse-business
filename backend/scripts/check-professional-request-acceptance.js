@@ -75,4 +75,27 @@ assert.match(adminRoutes,/professional-quote-leads\/:id\/delete-test/,'Test dele
 assert.match(adminInbox,/Delete test quotation/,'Admin can delete a protected unlinked test record');
 assert.match(adminInbox,/evidence.trim\(\).length<12/,'Legacy lead creation must clearly require a consent note');
 assert.match(quote,/marketplace\.sync\('quote'/,'New quotations must create the marketplace lead as part of intake');
+const sharedCallback=read('frontend/src/components/ProfessionalCallbackRequirementForm.jsx');
+const projectDetail=read('frontend/src/pages/ProjectDetail.jsx');
+const callbackInbox=read('frontend/src/pages/ProfessionalRequests.jsx');
+const adminCallback=read('frontend/src/admin/pages/AdminCallbackInbox.jsx');
+const callbackMigration=read('backend/src/database/migrations/20261009_zzzz_professional_callback_form_fields.sql');
+const bridge=read('backend/src/services/projectMarketplaceLeadService.js');
+assert.match(profile,/ProfessionalCallbackRequirementForm/,'Selected professional must use quick requirement form');
+assert.match(projectDetail,/ProfessionalCallbackRequirementForm/,'Project callback must share the same form');
+assert.match(sharedCallback,/PIN Code/);
+assert.match(sharedCallback,/City \/ Location/);
+assert.match(sharedCallback,/I am looking for/);
+assert.match(sharedCallback,/Your Name/);
+assert.match(sharedCallback,/Mobile Number/);
+assert.match(sharedCallback,/Additional Information/);
+assert.match(sharedCallback,/value\.consent/,'Contact sharing must still require explicit consent');
+assert.match(callbackMigration,/requirement_fields JSONB/);
+assert.match(callback,/callbackRequirementFields\(input\)/);
+assert.match(callback,/JSON\.stringify\(requirementFields\)/);
+assert.match(bridge,/record\.requirement_fields/,'Structured callback selections must reach marketplace custom fields');
+assert.match(bridge,/const requirement=kind==='quote'\?writtenBrief:details/,'Additional note must remain the only callback free-text requirement');
+assert.match(callbackInbox,/chosen\.requirement_fields/,'Professionals must see each selected field');
+assert.match(adminCallback,/item\.requirement_fields/,'Admin must see each selected field');
+
 console.log('Professional request paid and free membership acceptance regression checks passed.');
