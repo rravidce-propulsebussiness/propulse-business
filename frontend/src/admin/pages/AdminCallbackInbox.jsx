@@ -9,6 +9,7 @@ function EnquiryReview({item,kind,onAction,saving}){
   const [evidence,setEvidence]=useState('')
   const leadId=Number(item.marketplace_lead_id)||null
   const legacy=!leadId&&item.marketplace_sync_status==='not_requested'
+  const canDeleteTest=kind==='quote'&&!leadId&&item.status==='new'&&!item.quoted_at&&item.quoted_price==null
   const valid=Boolean(leadId&&item.link_verified)
   const status=String(item.lead_status||'')
   const prices=Array.isArray(item.lead_pricing?.shares)?item.lead_pricing.shares:[]
@@ -26,12 +27,16 @@ function EnquiryReview({item,kind,onAction,saving}){
     {valid&&gateReasons.length>0&&status==='quarantined'&&<div className="admin-enquiry-reasons">{gateReasons.map((reason,index)=><p key={index}>{reason.message||reason.code||String(reason)}</p>)}</div>}
     {legacy&&kind!=='profile'&&<form className="admin-enquiry-legacy" onSubmit={event=>{event.preventDefault();onAction('authorize',kind,item,{pincode,consentConfirmed,evidence:evidence.trim()})}}>
       <label>Verified customer PIN code<input inputMode="numeric" pattern="[0-9]{6}" maxLength={6} placeholder="6-digit PIN" value={pincode} onChange={event=>setPincode(event.target.value.replace(/\D/g,'').slice(0,6))} required/></label>
-      <label>Evidence of homeowner confirmation<textarea rows={2} maxLength={1000} minLength={12} placeholder="When and how did the homeowner confirm that this request may be shared with marketplace professionals?" value={evidence} onChange={event=>setEvidence(event.target.value)} required/></label>
+      <label>Homeowner consent record<textarea rows={2} maxLength={1000} minLength={12} placeholder="Example: Customer confirmed sharing during a call on [date]." value={evidence} onChange={event=>setEvidence(event.target.value)} required/>
+        <small className={evidence.trim().length>=12?'admin-enquiry-validity ready':'admin-enquiry-validity'}>{evidence.trim().length}/12 minimum characters · Record how you obtained the customer's permission</small>
+      </label>
       <label className="admin-enquiry-consent"><input type="checkbox" checked={consentConfirmed} onChange={event=>setConsentConfirmed(event.target.checked)}/> I personally confirmed the homeowner agrees to marketplace sharing and paid professional access.</label>
-      <button type="submit" disabled={working||!/^[0-9]{6}$/.test(pincode)||!consentConfirmed||evidence.trim().length<12}>{working?'Creating lead…':'Verify & create paid lead'}</button>
+      <button type="submit" disabled={working||!/^[0-9]{6}$/.test(pincode)||!consentConfirmed||evidence.trim().length<12}>{working?'Creating lead…':'Create Marketplace Lead'}</button>
+      <small>Created directly from this quotation with the configured Lead Pricing and normal paid acceptance. No customer number is released until payment or an eligible membership acceptance.</small>
     </form>}
     <div className="admin-enquiry-actions">
-      {!leadId&&!legacy&&<button type="button" disabled={working} onClick={()=>onAction('retry',kind,item)}>{working?'Checking…':'Retry lead creation'}</button>}
+      {!leadId&&!legacy&&<button type="button" disabled={working} onClick={()=>onAction('retry',kind,item)}>{working?'Creating…':'Create marketplace lead / Retry'}</button>}
+      {canDeleteTest&&<button type="button" className="admin-review-delete" disabled={working} onClick={()=>onAction('delete',kind,item)}>{working?'Working…':'Delete test quotation'}</button>}
       {valid&&status==='quarantined'&&<>
         <button type="button" disabled={working} onClick={()=>onAction('recheck',kind,item)}>{working?'Checking…':'Recheck quality'}</button>
         <button type="button" className="admin-review-override" disabled={working} onClick={()=>onAction('release',kind,item)}>Release after review</button>
@@ -83,13 +88,20 @@ export default function AdminCallbackInbox(){
     setSaving(token);setError('');setFeedback('')
     try{
       let result
-      if(action==='retry')result=await authRequest('/admin/project-marketplace/'+kind+'/'+item.id+'/retry',{method:'POST'})
+      if(action==='delete'){
+        const typed=window.prompt('Permanently delete this unlinked test quotation? Type its request number ('+item.id+') to confirm. The customer enquiry will disappear from Admin and the professional account.')
+        if(typed===null)return
+        if(typed.trim()!==String(item.id))throw new Error('Deletion cancelled: quotation number did not match.')
+        if(!window.confirm('Permanently delete quotation #'+item.id+'? This cannot be undone.'))return
+        result=await authRequest('/admin/professional-quote-leads/'+item.id+'/delete-test',{method:'POST',body:JSON.stringify({confirmationId:item.id})})
+      }
+      else if(action==='retry')result=await authRequest('/admin/project-marketplace/'+kind+'/'+item.id+'/retry',{method:'POST'})
       else if(action==='authorize')result=await authRequest('/admin/project-marketplace/'+kind+'/'+item.id+'/authorize-legacy',{method:'POST',body:JSON.stringify(details)})
       else result=await authRequest('/leads/'+item.marketplace_lead_id+'/quality-gate/'+(action==='release'?'override':'recheck'),{
         method:'POST',body:JSON.stringify(action==='release'?{note:note.trim()}:{})
       })
       if((action==='retry'||action==='authorize')&&result.status==='review_required')setFeedback('Request #'+item.id+' still needs review: '+(result.reason||'check lead pricing or PIN mapping')+'.')
-      else setFeedback(action==='authorize'?'Legacy request #'+item.id+' consent verified and marketplace lead creation checked. Verify the resulting status before selling contact access.':action==='retry'?'Marketplace sync checked for request #'+item.id+'.':action==='release'?'Lead #'+item.marketplace_lead_id+' released. The professional can now accept through the normal payment flow.':'Lead #'+item.marketplace_lead_id+' quality rechecked.')
+      else setFeedback(action==='delete'?'Test quotation #'+item.id+' deleted. Any separate, already-paid marketplace leads were not touched.':action==='authorize'?'Marketplace creation checked for request #'+item.id+'. Verify the resulting quality status before taking payment.':action==='retry'?'Marketplace sync checked for request #'+item.id+'.':action==='release'?'Lead #'+item.marketplace_lead_id+' released. The professional can now accept through the normal payment flow.':'Lead #'+item.marketplace_lead_id+' quality rechecked.')
       setLoading(true);setReload(value=>value+1)
     }catch(err){setError(err.message||'Unable to review professional enquiry.')}
     finally{setSaving(null)}

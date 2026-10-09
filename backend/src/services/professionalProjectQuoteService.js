@@ -198,6 +198,38 @@ async function updateByProfessional(userId,requestId,input={}){
   }
   return result.rows[0];
 }
+// Admin-only cleanup for unlinked test enquiries. Never delete an assigned,
+// paid, or quoted request, and always record the action in the audit ledger.
+async function deleteUnlinkedTestQuote({requestId,adminId,confirmationId}={}){
+  const id=Number(requestId),actor=Number(adminId);
+  if(!Number.isSafeInteger(id)||id<1||!Number.isSafeInteger(actor)||actor<1||Number(confirmationId)!==id)
+    throw bad('Confirm the quotation reference before deleting the test enquiry','INVALID_TEST_QUOTE_DELETE');
+  const client=await pool.connect();
+  try{
+    await client.query('BEGIN');
+    const existing=(await client.query(
+      'SELECT id,project_id,project_title,status,marketplace_lead_id,marketplace_sync_status,quoted_at,quoted_price FROM professional_project_quote_requests WHERE id=$1 FOR UPDATE',
+      [id]
+    )).rows[0];
+    if(!existing)throw bad('Quotation not found','QUOTE_NOT_FOUND');
+    if(existing.marketplace_lead_id||existing.quoted_at||existing.quoted_price!=null||existing.status!=='new')
+      throw bad('Only unlinked, unquoted new enquiries can be deleted. This quotation has marketplace or professional activity.','QUOTE_DELETE_FORBIDDEN');
+    const deleted=(await client.query(
+      'DELETE FROM professional_project_quote_requests WHERE id=$1 AND marketplace_lead_id IS NULL AND status=\'new\' AND quoted_at IS NULL AND quoted_price IS NULL RETURNING id',
+      [id]
+    )).rows[0];
+    if(!deleted)throw bad('Quotation is no longer eligible for deletion','QUOTE_DELETE_FORBIDDEN');
+    await require('./criticalActionAuditService').record(client,{
+      actorId:actor,category:'lead',action:'lead.test_quote_deleted',
+      entityType:'professional_project_quote_requests',entityId:id,
+      beforeData:{requestId:id,projectId:existing.project_id,projectTitle:existing.project_title,marketplaceSyncStatus:existing.marketplace_sync_status},
+      afterData:null,reason:'Admin explicitly deleted an unlinked test quotation',source:'admin_professional_enquiries'
+    });
+    await client.query('COMMIT');
+    return{deleted:true,requestId:id};
+  }catch(error){await client.query('ROLLBACK').catch(()=>{});throw error}
+  finally{client.release()}
+}
 async function listForAdmin(){
   return (await pool.query(
     `SELECT q.id,q.project_id,q.project_title,q.customer_name,q.customer_phone,
@@ -219,4 +251,4 @@ async function listForAdmin(){
      ORDER BY q.created_at DESC,q.id DESC LIMIT 200`
   )).rows;
 }
-module.exports={submit,listForProfessional,updateByProfessional,listForAdmin};
+module.exports={submit,listForProfessional,updateByProfessional,listForAdmin,deleteUnlinkedTestQuote};
