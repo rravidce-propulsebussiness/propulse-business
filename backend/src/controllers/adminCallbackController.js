@@ -21,7 +21,7 @@ async function listQuotes(req,res){
 }
 async function retryMarketplace(req,res){
   const kind=String(req.params.kind||'');
-  if(!['quote','callback'].includes(kind))return res.status(400).json({error:'Invalid project request type'});
+  if(!['quote','callback','profile'].includes(kind))return res.status(400).json({error:'Invalid professional enquiry type'});
   const id=Number(req.params.id);
   if(!Number.isSafeInteger(id)||id<1)return res.status(400).json({error:'Invalid request reference'});
   try{
