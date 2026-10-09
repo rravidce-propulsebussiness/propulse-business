@@ -122,6 +122,6 @@ assert.match(adminInbox,/Save access rule/,'Admin must display an explicit save 
 assert.match(access,/policy.eligibleForFree/,'Assigned acceptance must enforce configured free access');
 assert.match(access,/policy.canPay/,'Assigned payment must enforce the configured paid rule');
 assert.match(purchase,/PROFESSIONAL_ACCESS_RESTRICTED/,'Generic checkout must not bypass members-only or free rules');
-assert.match(read('backend/src/services/leadEntitlementService.js'),/Professional enquiries can only be claimed by the selected professional/,'Generic entitlement route must not bypass assigned acceptance');
+assert.match(read('backend/src/services/leadEntitlementService.js'),/owner\|\|mode!=='member_free_nonmember_paid'/,'Generic entitlement claims must respect explicit access rules without breaking shared marketplace benefits');
 assert.match(unlock,/access.status==='members_only'/,'Nonmembers cannot proceed to checkout on restricted cards');
 console.log('Professional request paid and free membership acceptance regression checks passed.');
