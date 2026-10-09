@@ -8,6 +8,8 @@ async function getMarketplacePage({industryId,serviceId,subserviceId,stateId,cit
  if(serviceId)add(serviceId,'l.service_id=?');if(subserviceId)add(subserviceId,'l.subservice_id=?');if(stateId)add(stateId,'l.state_id=?');if(cityId)add(cityId,'l.city_id=?');
  // Profile callbacks are private enquiries assigned only to the chosen business.
  conditions.push("l.source <> 'professional_profile_callback'");
+ // Free and members-only enquiries are reserved for the chosen professional's inbox.
+ conditions.push("(l.custom_fields->>'_professional_access_mode' IS NULL OR l.custom_fields->>'_professional_access_mode' NOT IN ('free','members_only'))");
  const q=String(search||'').trim().toLowerCase();if(q){values.push(`%${q}%`);const p=`$${values.length}`;conditions.push(`(LOWER(COALESCE(i.name,'')) LIKE ${p} OR LOWER(COALESCE(s.name,'')) LIKE ${p} OR LOWER(COALESCE(ss.name,'')) LIKE ${p} OR LOWER(COALESCE(c.name,'')) LIKE ${p} OR LOWER(COALESCE(st.name,'')) LIKE ${p} OR LOWER(COALESCE(l.requirement,'')) LIKE ${p})`)}
  if(role!=='admin'&&userId){
    values.push(userId);const p=`$${values.length}`;
