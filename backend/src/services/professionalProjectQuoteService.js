@@ -134,7 +134,7 @@ async function listForProfessional(userId){
     `SELECT id,project_id,project_title,customer_name,customer_phone,customer_email,
       requirement,site_location,area_text,budget_text,preferred_package,
       package_price_from_snapshot,package_price_unit_snapshot,
-      marketplace_lead_id,marketplace_sync_status,marketplace_sync_error,status,
+      marketplace_lead_id,marketplace_sync_status,marketplace_sync_error,access_mode,status,
       quoted_package,quoted_price,quoted_scope,professional_notes,quoted_at,created_at
      FROM professional_project_quote_requests
      WHERE business_user_id=$1 ORDER BY created_at DESC,id DESC LIMIT 100`,[id]
@@ -237,8 +237,10 @@ async function listForAdmin(){
       q.preferred_package,q.package_price_from_snapshot,q.package_price_unit_snapshot,
       q.status,q.quoted_package,q.quoted_price,q.quoted_scope,
       q.professional_notes,q.quoted_at,q.created_at,bp.business_name,
-      q.business_user_id,q.marketplace_lead_id,q.marketplace_sync_status,q.marketplace_sync_error,
+      q.business_user_id,q.marketplace_lead_id,q.marketplace_sync_status,q.marketplace_sync_error,q.access_mode,
       l.status AS lead_status,l.quality_gate_status,l.quality_gate_reasons,l.pricing AS lead_pricing,
+      (EXISTS(SELECT 1 FROM lead_purchases lp WHERE lp.lead_id=l.id)
+       OR EXISTS(SELECT 1 FROM lead_entitlement_claims ec WHERE ec.lead_id=l.id)) AS access_mode_locked,
       lead_effective_buyer_capacity(l.access_strategy,l.buyer_capacity,l.release_to_two_after_hours,
         l.release_to_three_after_hours,l.created_at,l.access_capacity_locked) AS lead_capacity,
       (l.source='professional_project_quote'

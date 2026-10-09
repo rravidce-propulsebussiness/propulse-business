@@ -1,6 +1,7 @@
 const pool=require('../config/database');
 const accessStrategy=require('./leadAccessStrategyService');
 const purchaseService=require('./leadPurchaseCouponService');
+const policy=require('./professionalRequestPolicy');
 
 const TYPES={
   quote:{table:'professional_project_quote_requests',project:'IS NOT NULL',source:'professional_project_quote'},
@@ -16,14 +17,7 @@ const recordMatches=(lead,kind,requestId,userId)=>lead?.source===details(kind).s
   String(lead.custom_fields?._project_origin?.type)===kind&&
   ownerId(lead.custom_fields?._project_origin)===Number(userId);
 
-async function activeMembership(userId,client=pool){
-  return (await client.query(`
-    SELECT m.id FROM memberships m JOIN membership_plans mp ON mp.id=m.membership_plan_id
-    WHERE m.user_id=$1 AND m.status='active' AND m.starts_at<=CURRENT_TIMESTAMP
-      AND m.expires_at>CURRENT_TIMESTAMP AND mp.is_active=TRUE
-      AND LOWER(REPLACE(COALESCE(mp.plan_type,''),'-','_'))='pro'
-    ORDER BY m.expires_at DESC LIMIT 1`,[userId])).rows[0]||null;
-}
+const activeMembership=(userId,client=pool)=>policy.proMembership(userId,client);
 
 async function accessMap(userId,rows){
   const ids=[...new Set(rows.map(row=>Number(row.marketplace_lead_id)).filter(v=>Number.isSafeInteger(v)&&v>0))];
@@ -52,27 +46,34 @@ async function attachAccess(userId,rows,kind){
     const unlocked=Boolean(valid&&(lead.paid||lead.claimed));
     const capacity=valid?accessStrategy.effectiveCapacity(lead):0;
     const priceRow=valid?(Array.isArray(lead.pricing?.shares)?lead.pricing.shares:[]).find(p=>Number(p.shares)===capacity):null;
-    const price=Number(priceRow?.normal||0);
+    const mode=policy.normalizeMode(row.access_mode);
+    const free=policy.eligibleForFree(mode,Boolean(membership));
+    const mayPay=policy.canPay(mode,Boolean(membership));
+    const price=Number(priceRow?.[membership?'pro':'normal']||0);
     // The quote type is the same for every card; only marketplace readiness
     // determines whether a professional can accept it. Explain that distinction.
     const status=unlocked?'unlocked'
       :!valid?'review_required'
       :lead.pending?'pending_payment'
       :lead.status!=='available'?'review_required'
-      :!membership&&!(Number.isFinite(price)&&price>0)?'pricing_pending'
+      :!free&&!mayPay?'members_only'
+      :mayPay&&!(Number.isFinite(price)&&price>0)?'pricing_pending'
       :'locked';
     const statusMessage=status==='unlocked'?'Customer contact is unlocked.'
       :status==='pending_payment'?'Payment is pending confirmation. Customer contact remains protected.'
       :status==='pricing_pending'?'Admin has not published a price for this enquiry yet.'
       :status==='review_required'?'Marketplace verification or lead availability is pending Admin review.'
-      :membership?'Ready to accept free with your active Pro membership.'
+      :status==='members_only'?'Only professionals with an active Pro membership may accept this enquiry.'
+      :free?(mode==='free'?'This enquiry is free to accept.':'Ready to accept free with your active Pro membership.')
       :'Ready for paid acceptance.';
     return{...row,
       customer_phone:unlocked?row.customer_phone:null,
       customer_email:unlocked?row.customer_email:null,
       access:{
         unlocked,
-        eligibleForFree:Boolean(membership),
+        eligibleForFree:free,
+        canPay:mayPay,
+        accessMode:mode,
         leadId:valid?Number(lead.id):null,
         price:Number.isFinite(price)&&price>0?price:null,
         status,
@@ -85,14 +86,14 @@ async function attachAccess(userId,rows,kind){
 async function findAssigned(userId,kind,requestId){
   const conf=details(kind),requestIdValue=id(requestId);
   const result=await pool.query(`
-    SELECT r.id,r.business_user_id,r.marketplace_lead_id,l.source,l.status,l.custom_fields
+    SELECT r.id,r.business_user_id,r.marketplace_lead_id,r.access_mode,l.source,l.status,l.custom_fields
     FROM ${conf.table} r LEFT JOIN leads l ON l.id=r.marketplace_lead_id
     WHERE r.id=$1 AND r.business_user_id=$2 AND r.project_id ${conf.project}
     LIMIT 1`,[requestIdValue,userId]);
   const row=result.rows[0];if(!row)fail('This enquiry is not assigned to your professional account','REQUEST_FORBIDDEN');
   if(!row.marketplace_lead_id)fail('Enquiry pricing is being verified. Please try after review.','LEAD_NOT_READY');
   if(!recordMatches(row,kind,requestIdValue,userId))fail('The linked enquiry needs Admin review','LEAD_LINK_INVALID');
-  return Number(row.marketplace_lead_id);
+  return {leadId:Number(row.marketplace_lead_id),mode:policy.normalizeMode(row.access_mode)};
 }
 
 async function isUnlocked(userId,kind,requestId){
@@ -122,7 +123,9 @@ async function claimAssigned(userId,leadId,kind,requestId){
     if(already){await client.query('COMMIT');return{status:'unlocked',leadId};}
     if(lead.status!=='available')fail('Enquiry is not available for acceptance','LEAD_NOT_AVAILABLE');
     const member=await activeMembership(userId,client);
-    if(!member)fail('An active Pro membership is required for free acceptance','MEMBERSHIP_REQUIRED');
+    const mode=policy.fromLead(lead);
+    if(!policy.eligibleForFree(mode,Boolean(member)))
+      fail('This enquiry is not eligible for free acceptance','FREE_ACCESS_NOT_ALLOWED');
     const pending=(await client.query(`SELECT 1 FROM lead_purchases lp JOIN payments p ON p.id=lp.payment_id
       WHERE lp.lead_id=$1 AND lp.user_id=$2 AND lp.status='pending_payment' AND p.status='pending' LIMIT 1`,[leadId,userId])).rows[0];
     if(pending)fail('A payment is already pending; complete it or contact support','PAYMENT_PENDING');
@@ -136,20 +139,23 @@ async function claimAssigned(userId,leadId,kind,requestId){
       ) a`,[leadId])).rows[0]?.total||0);
     if(occupied>=capacity)fail('All available lead slots have been taken','CAPACITY_REACHED');
     await client.query(`INSERT INTO lead_entitlement_claims(user_id,lead_id,membership_id,entitlement_type,expires_at)
-      VALUES($1,$2,$3,'professional_request',NULL) ON CONFLICT(user_id,lead_id) DO NOTHING`,[userId,leadId,member.id]);
+      VALUES($1,$2,$3,'professional_request',NULL) ON CONFLICT(user_id,lead_id) DO NOTHING`,[userId,leadId,member?.id||null]);
     await accessStrategy.lockCapacity(client,leadId,capacity);
     await accessStrategy.closeIfFull(client,leadId);
     await client.query('COMMIT');
-    return{status:'unlocked',leadId,method:'membership'};
+    return{status:'unlocked',leadId,method:mode==='free'?'free':'membership'};
   }catch(error){await client.query('ROLLBACK').catch(()=>{});throw error}
   finally{client.release();}
 }
 
 async function accept(userId,kind,requestId){
   if(!Number.isSafeInteger(Number(userId))||Number(userId)<1)fail('Business sign-in required','REQUEST_FORBIDDEN');
-  const leadId=await findAssigned(userId,kind,requestId);
+  const {leadId,mode}=await findAssigned(userId,kind,requestId);
   if(await isUnlocked(userId,kind,requestId))return{status:'unlocked',leadId};
-  if(await activeMembership(userId))return claimAssigned(userId,leadId,kind,id(requestId));
+  const member=await activeMembership(userId);
+  if(policy.eligibleForFree(mode,Boolean(member)))return claimAssigned(userId,leadId,kind,id(requestId));
+  if(!policy.canPay(mode,Boolean(member)))
+    fail('This enquiry can only be accepted with an active Pro membership','MEMBERSHIP_REQUIRED');
   const purchase=await purchaseService.purchaseLead({userId,leadId,useWallet:true});
   if(purchase.status==='paid'||purchase.alreadyPurchased)return{status:'unlocked',leadId,method:'payment'};
   return{status:'pending_payment',leadId,payment:purchase.payment,

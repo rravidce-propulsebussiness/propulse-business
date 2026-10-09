@@ -43,3 +43,10 @@
 .admin-enquiry-validity.ready{color:#187047}
 .admin-enquiry-actions .admin-review-delete{background:#fff1f0;border-color:#efb3b0;color:#9e2924}
 .admin-enquiry-actions .admin-review-delete:hover{background:#ffe4e1}
+
+.admin-enquiry-mode{display:grid;gap:8px;padding:12px;border:1px solid #cedfe9;border-radius:11px;background:#f7fafc}
+.admin-enquiry-mode label{font-size:12px;font-weight:850;color:#163b57}
+.admin-enquiry-mode select{width:100%;min-height:40px;padding:8px;border:1px solid #ccdbe6;border-radius:9px;background:#fff;color:#173c59;font-size:12px;font-weight:700}
+.admin-enquiry-mode button{padding:9px 12px;border:0;border-radius:8px;background:#123d5d;color:#fff;font-size:12px;font-weight:850;cursor:pointer}
+.admin-enquiry-mode button:disabled{cursor:not-allowed;opacity:.48}
+.admin-enquiry-mode small{font-size:11px;line-height:1.5;color:#60798b}

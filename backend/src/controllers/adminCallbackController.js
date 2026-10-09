@@ -64,4 +64,16 @@ async function deleteUnlinkedTestQuote(req,res){
     return res.status(500).json({error:'Unable to delete test quotation'});
   }
 }
-module.exports={list,updateStatus,listQuotes,retryMarketplace,authorizeLegacyMarketplace,deleteUnlinkedTestQuote};
+async function setAccessMode(req,res){
+  try{
+    return res.json(await require('../services/professionalRequestModeAdminService').updateMode({
+      kind:req.params.kind,requestId:req.params.id,accessMode:req.body?.accessMode,adminId:req.user?.id
+    }));
+  }catch(e){
+    const codes={INVALID_ACCESS_REQUEST:400,INVALID_ACCESS_MODE:400,ACCESS_REQUEST_NOT_FOUND:404,ACCESS_LINK_INVALID:409,ACCESS_MODE_LOCKED:409};
+    if(codes[e.code])return res.status(codes[e.code]).json({error:e.message,code:e.code});
+    console.error('Professional access mode save failed:',e.message);
+    return res.status(500).json({error:'Unable to save enquiry access mode'});
+  }
+}
+module.exports={list,updateStatus,listQuotes,retryMarketplace,authorizeLegacyMarketplace,deleteUnlinkedTestQuote,setAccessMode};
