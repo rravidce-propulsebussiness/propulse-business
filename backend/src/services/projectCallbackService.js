@@ -232,6 +232,8 @@ async function listForAdmin(){
     `SELECT r.id,r.project_id,r.project_title,r.customer_name,r.customer_phone,
        r.customer_email,r.message,r.requirement_fields,r.marketplace_lead_id,r.marketplace_sync_status,r.marketplace_sync_error,r.access_mode,r.status,r.created_at,bp.business_name,
        r.business_user_id,l.status AS lead_status,l.quality_gate_status,l.quality_gate_reasons,l.pricing AS lead_pricing,
+       (EXISTS(SELECT 1 FROM lead_purchases lp WHERE lp.lead_id=l.id)
+        OR EXISTS(SELECT 1 FROM lead_entitlement_claims ec WHERE ec.lead_id=l.id)) AS access_mode_locked,
        lead_effective_buyer_capacity(l.access_strategy,l.buyer_capacity,l.release_to_two_after_hours,
          l.release_to_three_after_hours,l.created_at,l.access_capacity_locked) AS lead_capacity,
        (l.source=CASE WHEN r.project_id IS NULL THEN 'professional_profile_callback' ELSE 'professional_project_callback' END
