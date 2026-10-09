@@ -4,6 +4,7 @@ const pins=require('./pincodeDetectionService');
 const leads=require('./leadService');
 const notifications=require('./notificationService');
 const audit=require('./criticalActionAuditService');
+const professionalPolicy=require('./professionalRequestPolicy');
 const {parseProjectQuoteRequirement}=require('./projectQuoteRequirementDetails');
 
 const TYPES={
@@ -104,6 +105,7 @@ async function sync(kind,id,{notify=true}={}){
       notes:'Customer contacted the selected professional. Contact access requires an accepted lead.',
       customFields:{
         ...answeredFields,
+        _professional_access_mode:professionalPolicy.normalizeMode(record.access_mode),
         _project_origin:{projectId:record.project_id?Number(record.project_id):null,professionalUserId:Number(record.business_user_id),
           businessProfileId:Number(record.business_profile_id),requestId:Number(id),type:kind,
           writtenRequirement:requirement.slice(0,3900)},
