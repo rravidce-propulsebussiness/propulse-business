@@ -86,7 +86,7 @@ async function attachAccess(userId,rows,kind){
 async function findAssigned(userId,kind,requestId){
   const conf=details(kind),requestIdValue=id(requestId);
   const result=await pool.query(`
-    SELECT r.id,r.business_user_id,r.marketplace_lead_id,l.source,l.status,l.custom_fields
+    SELECT r.id,r.business_user_id,r.marketplace_lead_id,r.access_mode,l.source,l.status,l.custom_fields
     FROM ${conf.table} r LEFT JOIN leads l ON l.id=r.marketplace_lead_id
     WHERE r.id=$1 AND r.business_user_id=$2 AND r.project_id ${conf.project}
     LIMIT 1`,[requestIdValue,userId]);
@@ -139,11 +139,11 @@ async function claimAssigned(userId,leadId,kind,requestId){
       ) a`,[leadId])).rows[0]?.total||0);
     if(occupied>=capacity)fail('All available lead slots have been taken','CAPACITY_REACHED');
     await client.query(`INSERT INTO lead_entitlement_claims(user_id,lead_id,membership_id,entitlement_type,expires_at)
-      VALUES($1,$2,$3,'professional_request',NULL) ON CONFLICT(user_id,lead_id) DO NOTHING`,[userId,leadId,member.id]);
+      VALUES($1,$2,$3,'professional_request',NULL) ON CONFLICT(user_id,lead_id) DO NOTHING`,[userId,leadId,member?.id||null]);
     await accessStrategy.lockCapacity(client,leadId,capacity);
     await accessStrategy.closeIfFull(client,leadId);
     await client.query('COMMIT');
-    return{status:'unlocked',leadId,method:'membership'};
+    return{status:'unlocked',leadId,method:mode==='free'?'free':'membership'};
   }catch(error){await client.query('ROLLBACK').catch(()=>{});throw error}
   finally{client.release();}
 }
