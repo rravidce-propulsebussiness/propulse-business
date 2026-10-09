@@ -48,6 +48,7 @@ const rateLimit=require('./middleware/rateLimitMiddleware');
 const {getApiGlobalRateLimitConfig}=require('./config/apiRateLimitConfig');
 const csrfProtection=require('./middleware/csrfMiddleware');
 const {getConfiguredOrigins}=require('./config/httpOrigins');
+const {shouldBypassCorsForPublicAssets}=require('./config/httpCorsPolicy');
 const {envFlag}=require('./config/runtimeFlags');
 const {uploadRoot,checkUploadStorage,ensureUploadStorage}=require('./config/uploadStorage');
 const workerHeartbeat=require('./services/backgroundWorkerHeartbeatService');
@@ -118,7 +119,13 @@ app.use((req,res,next)=>{
   });
   next();
 });
-app.use(cors({origin(origin,callback){if(!origin||configuredOrigins.includes(origin))return callback(null,true);return callback(new Error('CORS origin not allowed'));},credentials:true}));
+const protectedCors=cors({origin(origin,callback){if(!origin||configuredOrigins.includes(origin))return callback(null,true);return callback(new Error('CORS origin not allowed'));},credentials:true});
+app.use((req,res,next)=>{
+  // Hashed JS/CSS are public. Keep strict origin validation for API requests,
+  // payments, uploads and every other path.
+  if(shouldBypassCorsForPublicAssets(req,serveFrontendFromBackend))return next();
+  return protectedCors(req,res,next);
+});
 app.use((req,res,next)=>{res.setHeader('X-Content-Type-Options','nosniff');res.setHeader('X-Frame-Options','DENY');res.setHeader('Referrer-Policy','strict-origin-when-cross-origin');res.setHeader('Permissions-Policy','camera=(),microphone=(),geolocation=()');if(!backendOnlyPath(req.path))res.setHeader('Cross-Origin-Opener-Policy','same-origin-allow-popups');if(backendOnlyPath(req.path))res.setHeader('Content-Security-Policy',"default-src 'none'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'; form-action 'none'");if(isProduction)res.setHeader('Strict-Transport-Security','max-age=31536000; includeSubDomains');next();});
 app.get('/favicon.ico',(req,res)=>res.redirect(308,'/favicon.svg'));
 app.use('/',seoRoutes);
