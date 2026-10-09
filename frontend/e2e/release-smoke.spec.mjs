@@ -415,6 +415,12 @@ test('published project retains private project-specific callback flow alongside
   await page.route('**/api/experts/projects/123',route=>route.fulfill({
     status:200,contentType:'application/json',body:JSON.stringify(project)
   }))
+  await page.route('**/api/cities',route=>route.fulfill({
+    status:200,contentType:'application/json',body:JSON.stringify([{id:24,name:'Hyderabad',state_name:'Telangana'}])
+  }))
+  await page.route('**/api/pincodes/location/500072',route=>route.fulfill({
+    status:200,contentType:'application/json',body:JSON.stringify({cityId:24,cityName:'Hyderabad',stateName:'Telangana'})
+  }))
   let submitted=null
   await page.route('**/api/experts/projects/123/callback',async route=>{
     submitted=route.request().postDataJSON()
@@ -438,13 +444,18 @@ test('published project retains private project-specific callback flow alongside
 
   const form=page.locator('.pjd-callback-form')
   await expect(form).toBeVisible()
-  await form.getByPlaceholder('Full name').fill('Example Customer')
+  await expect(form.getByPlaceholder('Type city name')).toBeEnabled()
+  await form.getByPlaceholder('6-digit PIN').fill('500072')
+  await expect(form.getByPlaceholder('Type city name')).toHaveValue('Hyderabad · Telangana')
+  await form.getByRole('combobox',{name:'I am looking for'}).selectOption('build')
+  await form.getByRole('combobox',{name:'Project Type'}).selectOption('residential')
+  await form.getByRole('combobox',{name:'No. of Floors'}).selectOption('1')
+  await form.getByPlaceholder('Enter your name').fill('Example Customer')
   await form.getByPlaceholder('10-digit mobile').fill('9876543210')
-  await form.getByPlaceholder('6-digit project location PIN').fill('500072')
   await form.getByRole('checkbox').check()
   await form.getByRole('button',{name:/Send Callback Request/}).click()
   await expect(dialog.getByRole('status').filter({hasText:/Callback request received/})).toBeVisible()
-  expect(submitted).toMatchObject({name:'Example Customer',phone:'9876543210',pincode:'500072',consent:true,marketplaceConsent:true})
+  expect(submitted).toMatchObject({name:'Example Customer',phone:'9876543210',pincode:'500072',flowKey:'build',projectType:'residential',floors:'1',consent:true,marketplaceConsent:true})
   await dialog.getByRole('button',{name:'Done'}).click()
   await actions.getByRole('link',{name:/Get Quote/}).click()
   await expect(page).toHaveURL(/\/projects\/project-123\/quote$/)

@@ -4,9 +4,10 @@ import {publicRequest} from '../utils/auth'
 import {PublicHeader,PublicFooter} from '../components/PublicSiteChrome'
 import {normalizeProject,projectPhotos,categoryLabel,playableProjectVideo,Icon} from './Projects'
 import './Projects.css'
+import ProfessionalCallbackRequirementForm, {emptyProfessionalCallback} from '../components/ProfessionalCallbackRequirementForm'
 import './ProjectDetail.css'
 
-const emptyCallback={name:'',phone:'',email:'',pincode:'',message:'',consent:false,website:''}
+const emptyCallback=emptyProfessionalCallback
 
 export default function ProjectDetail(){
   const {projectId}=useParams()
@@ -246,19 +247,7 @@ export default function ProjectDetail(){
         <h2 id="pjd-dialog-heading">Request a Callback</h2>
         <p>Ask about <strong>{project.title}</strong>. ProPulse coordinates your callback; the professional sees masked contact details.</p>
         {callbackSuccess?<div className="pj-callback-success" role="status"><strong>Callback lead received</strong><p>{callbackFeedback}</p><button type="button" className="pjd-dialog-done" onClick={closeCallback}>Done</button></div>:
-          <form className="pjd-callback-form" onSubmit={submitCallback}>
-            <div className="pjd-field-pair">
-              <label>Your name<input required maxLength={160} autoComplete="name" placeholder="Full name" value={callbackForm.name} onChange={e=>setCallbackForm(v=>({...v,name:e.target.value}))}/></label>
-              <label>Mobile number<input required type="tel" inputMode="tel" autoComplete="tel" pattern="[0-9+ ()-]{10,18}" placeholder="10-digit mobile" value={callbackForm.phone} onChange={e=>setCallbackForm(v=>({...v,phone:e.target.value}))}/></label>
-            </div>
-            <label>Email (optional)<input type="email" maxLength={255} autoComplete="email" placeholder="you@example.com" value={callbackForm.email} onChange={e=>setCallbackForm(v=>({...v,email:e.target.value}))}/></label>
-            <label>Project PIN code<input required inputMode="numeric" minLength={6} maxLength={6} pattern="[0-9]{6}" placeholder="6-digit project location PIN" value={callbackForm.pincode} onChange={e=>setCallbackForm(v=>({...v,pincode:e.target.value.replace(/\D/g,'').slice(0,6)}))}/></label>
-            <label>Your requirement (optional)<textarea rows={3} maxLength={1000} placeholder="Tell us your locality, project type and questions" value={callbackForm.message} onChange={e=>setCallbackForm(v=>({...v,message:e.target.value}))}/></label>
-            <label className="pjd-consent"><input type="checkbox" required checked={callbackForm.consent} onChange={e=>setCallbackForm(v=>({...v,consent:e.target.checked}))}/> I agree that ProPulse may coordinate this callback and share my enquiry with other relevant professionals through its marketplace. My contact details remain protected until access is authorized.</label>
-            <input className="pjd-trap" tabIndex={-1} autoComplete="off" aria-hidden="true" value={callbackForm.website} onChange={e=>setCallbackForm(v=>({...v,website:e.target.value}))}/>
-            {callbackFeedback&&<p className="pjd-error" role="alert">{callbackFeedback}</p>}
-            <button type="submit" className="pjd-dialog-submit" disabled={callbackSending}>{callbackSending?'Sending…':'Send Callback Request →'}</button>
-          </form>}
+          <div className="pjd-callback-form"><ProfessionalCallbackRequirementForm value={callbackForm} onChange={setCallbackForm} onSubmit={submitCallback} busy={callbackSending} error={callbackFeedback} submitLabel="Send Callback Request"/></div>}
       </section>
     </div>}
   </main>

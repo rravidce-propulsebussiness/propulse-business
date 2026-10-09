@@ -3,9 +3,9 @@ import { Link, useParams } from 'react-router-dom'
 import { PublicHeader, PublicFooter } from '../components/PublicSiteChrome'
 import { publicRequest } from '../utils/auth'
 import {formatPublishedPackagePrice} from '../utils/packagePricing'
+import ProfessionalCallbackRequirementForm, {emptyProfessionalCallback} from '../components/ProfessionalCallbackRequirementForm'
 import './ProfessionalDetails.css'
 
-const emptyRequest={name:'',phone:'',email:'',pincode:'',message:'',consent:false,website:''}
 const unique=values=>[...new Set(values.filter(Boolean))]
 function initials(name){return String(name||'Professional').split(/\s+/).filter(Boolean).slice(0,2).map(part=>part[0]?.toUpperCase()).join('')||'P'}
 function safeUrl(value){
@@ -21,7 +21,7 @@ export default function ProfessionalDetails(){
   const [profile,setProfile]=useState(null)
   const [loading,setLoading]=useState(true)
   const [error,setError]=useState('')
-  const [request,setRequest]=useState(emptyRequest)
+  const [request,setRequest]=useState(emptyProfessionalCallback)
   const [sending,setSending]=useState(false)
   const [sent,setSent]=useState(false)
   const [requestError,setRequestError]=useState('')
@@ -122,17 +122,7 @@ export default function ProfessionalDetails(){
               <span className="pr-label">CONTACT THROUGH PROPULSE</span><h2>Request a Callback</h2>
               <p>Send your requirement to {profile.business_name}. Your contact details remain protected until this professional accepts the enquiry.</p>
               {sent?<div className="pr-success" role="status"><strong>Callback request received.</strong><p>Your enquiry has been recorded. ProPulse will help coordinate the next steps.</p></div>:
-              <form onSubmit={sendCallback} className="pr-form">
-                <label>Full name<input required maxLength={160} autoComplete="name" value={request.name} onChange={e=>setRequest(v=>({...v,name:e.target.value}))} placeholder="Your name"/></label>
-                <label>Mobile number<input required type="tel" inputMode="tel" pattern="[0-9+ ()-]{10,18}" autoComplete="tel" value={request.phone} onChange={e=>setRequest(v=>({...v,phone:e.target.value}))} placeholder="Your contact number"/></label>
-                <label>Email (optional)<input type="email" maxLength={255} autoComplete="email" value={request.email} onChange={e=>setRequest(v=>({...v,email:e.target.value}))} placeholder="you@example.com"/></label>
-                <label>Project PIN code<input required inputMode="numeric" pattern="[0-9]{6}" minLength={6} maxLength={6} value={request.pincode} onChange={e=>setRequest(v=>({...v,pincode:e.target.value.replace(/\D/g,'').slice(0,6)}))} placeholder="6-digit project PIN"/></label>
-                <label className="pr-wide">What are you planning?<textarea rows={4} maxLength={1000} value={request.message} onChange={e=>setRequest(v=>({...v,message:e.target.value}))} placeholder="Project type, locality, budget or preferred callback time"/></label>
-                <label className="pr-consent"><input type="checkbox" required checked={request.consent} onChange={e=>setRequest(v=>({...v,consent:e.target.checked}))}/> I agree that ProPulse may share my contact with this selected professional after they accept the enquiry. My contact details stay locked until then.</label>
-                <input className="pr-honeypot" aria-hidden="true" tabIndex={-1} autoComplete="off" value={request.website} onChange={e=>setRequest(v=>({...v,website:e.target.value}))}/>
-                {requestError&&<p className="pr-error pr-wide" role="alert">{requestError}</p>}
-                <button type="submit" disabled={sending}>{sending?'Sending…':'Send Callback Request →'}</button>
-              </form>}
+              <ProfessionalCallbackRequirementForm value={request} onChange={setRequest} onSubmit={sendCallback} busy={sending} error={requestError} submitLabel="Send Callback Request"/>}
             </section>
           </div>
           <aside className="pr-side">
