@@ -73,7 +73,10 @@ async function sync(kind,id,{notify=true}={}){
   if(record.marketplace_sync_status==='not_requested')return{status:'not_requested'};
   if(record.marketplace_lead_id)return{status:record.marketplace_sync_status,leadId:Number(record.marketplace_lead_id),duplicate:true};
   try{
-    const key=industry(record.project_type);
+    // The quick callback form explicitly captures the service being requested.
+    // Older requests still use the published project/professional industry.
+    const requestedFlow=String(record.requirement_fields?._flow_key||'');
+    const key=['build','design','property'].includes(requestedFlow)?requestedFlow:industry(record.project_type);
     const flow=await flows.getPublishedFlow(key);
     const pin=String(record.marketplace_pincode||'');
     if(!/^\d{6}$/.test(pin))throw Object.assign(new Error('Project PIN code is missing'),{code:'PIN_REQUIRED'});
@@ -81,7 +84,8 @@ async function sync(kind,id,{notify=true}={}){
     if(!detected?.city?.id||['NEEDS_MAPPING','NO_MATCH'].includes(detected.status))
       throw Object.assign(new Error('Project PIN code requires city mapping'),{code:'PIN_CITY_MAPPING_REQUIRED'});
     const details=sanitize(kind==='quote'?record.requirement:record.message);
-    const answeredFields=kind==='quote'?parseProjectQuoteRequirement(record.requirement):{};
+    const answeredFields=kind==='quote'?parseProjectQuoteRequirement(record.requirement):
+      (record.requirement_fields&&typeof record.requirement_fields==='object'&&!Array.isArray(record.requirement_fields)?record.requirement_fields:{});
     if(kind==='quote'&&record.area_text&&!answeredFields['Built-up Area']&&!answeredFields['Project Area'])
       answeredFields['Project Area']=String(record.area_text).slice(0,120);
     if(kind==='quote'&&record.budget_text&&!answeredFields.Budget)
