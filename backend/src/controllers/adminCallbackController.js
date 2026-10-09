@@ -52,4 +52,16 @@ async function authorizeLegacyMarketplace(req,res){
     return res.status(500).json({error:'Unable to authorize legacy marketplace lead'});
   }
 }
-module.exports={list,updateStatus,listQuotes,retryMarketplace,authorizeLegacyMarketplace};
+async function deleteUnlinkedTestQuote(req,res){
+  try{
+    return res.json(await quotes.deleteUnlinkedTestQuote({
+      requestId:req.params.id,adminId:req.user?.id,confirmationId:req.body?.confirmationId
+    }));
+  }catch(error){
+    const codes={INVALID_TEST_QUOTE_DELETE:400,QUOTE_NOT_FOUND:404,QUOTE_DELETE_FORBIDDEN:409};
+    if(codes[error.code])return res.status(codes[error.code]).json({error:error.message,code:error.code});
+    console.error('Admin test quotation deletion failed:',error.message);
+    return res.status(500).json({error:'Unable to delete test quotation'});
+  }
+}
+module.exports={list,updateStatus,listQuotes,retryMarketplace,authorizeLegacyMarketplace,deleteUnlinkedTestQuote};
