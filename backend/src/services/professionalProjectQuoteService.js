@@ -204,9 +204,18 @@ async function listForAdmin(){
       q.customer_email,q.requirement,q.site_location,q.area_text,q.budget_text,
       q.preferred_package,q.package_price_from_snapshot,q.package_price_unit_snapshot,
       q.status,q.quoted_package,q.quoted_price,q.quoted_scope,
-      q.professional_notes,q.quoted_at,q.created_at,bp.business_name
+      q.professional_notes,q.quoted_at,q.created_at,bp.business_name,
+      q.business_user_id,q.marketplace_lead_id,q.marketplace_sync_status,q.marketplace_sync_error,
+      l.status AS lead_status,l.quality_gate_status,l.quality_gate_reasons,l.pricing AS lead_pricing,
+      lead_effective_buyer_capacity(l.access_strategy,l.buyer_capacity,l.release_to_two_after_hours,
+        l.release_to_three_after_hours,l.created_at,l.access_capacity_locked) AS lead_capacity,
+      (l.source='professional_project_quote'
+        AND l.custom_fields->'_project_origin'->>'type'='quote'
+        AND l.custom_fields->'_project_origin'->>'requestId'=q.id::text
+        AND l.custom_fields->'_project_origin'->>'professionalUserId'=q.business_user_id::text) AS link_verified
      FROM professional_project_quote_requests q
      LEFT JOIN business_profiles bp ON bp.user_id=q.business_user_id
+     LEFT JOIN leads l ON l.id=q.marketplace_lead_id
      ORDER BY q.created_at DESC,q.id DESC LIMIT 200`
   )).rows;
 }
