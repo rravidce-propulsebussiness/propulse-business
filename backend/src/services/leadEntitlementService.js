@@ -342,8 +342,8 @@ async function claimLead(userId,leadId){
     `,[leadId]);
     const lead=leadResult.rows[0];
     if(!lead)fail('Lead not found','LEAD_NOT_FOUND');
-    if(lead.source==='professional_profile_callback')
-      fail('Private profile enquiries can only be accepted from your professional inbox','REQUEST_FORBIDDEN');
+    if(lead.custom_fields?._project_origin&&/^professional_/.test(String(lead.source||'')))
+      fail('Professional enquiries can only be claimed by the selected professional from Requests','REQUEST_FORBIDDEN');
     if(lead.status!=='available')fail('Lead is not available','LEAD_UNAVAILABLE');
 
     const existing=await client.query(`SELECT id FROM lead_entitlement_claims WHERE user_id=$1 AND lead_id=$2 FOR UPDATE`,[userId,leadId]);
