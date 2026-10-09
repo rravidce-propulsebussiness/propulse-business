@@ -239,6 +239,8 @@ async function listForAdmin(){
       q.professional_notes,q.quoted_at,q.created_at,bp.business_name,
       q.business_user_id,q.marketplace_lead_id,q.marketplace_sync_status,q.marketplace_sync_error,q.access_mode,
       l.status AS lead_status,l.quality_gate_status,l.quality_gate_reasons,l.pricing AS lead_pricing,
+      (EXISTS(SELECT 1 FROM lead_purchases lp WHERE lp.lead_id=l.id)
+       OR EXISTS(SELECT 1 FROM lead_entitlement_claims ec WHERE ec.lead_id=l.id)) AS access_mode_locked,
       lead_effective_buyer_capacity(l.access_strategy,l.buyer_capacity,l.release_to_two_after_hours,
         l.release_to_three_after_hours,l.created_at,l.access_capacity_locked) AS lead_capacity,
       (l.source='professional_project_quote'
