@@ -33,7 +33,9 @@ assert.match(quote,/ENQUIRY_NOT_ACCEPTED/,'Submitting a quote before accepting m
 assert.match(callback,/access\.attachAccess\(id,profiles,'profile'\)/);
 assert.match(purchase,/PROFILE_REQUEST_FORBIDDEN/,'Private profile leads cannot be purchased by strangers');
 assert.match(marketplace,/l\.source <> 'professional_profile_callback'/,'Private callback leads must not enter global discovery');
-assert.match(profile,/Project PIN code<input required/,'Profile callback must have a verifiable PIN code');
+const callbackForm=read('frontend/src/components/ProfessionalCallbackRequirementForm.jsx');
+assert.match(profile,/ProfessionalCallbackRequirementForm/,'Profile callback must reuse the unified requirement form');
+assert.match(callbackForm,/pattern="\[0-9\]\{6\}"/,'Profile callback must have a verifiable PIN code');
 assert.match(inbox,/ProfessionalRequestUnlock kind=\{chosen.project_id\?'callback':'profile'\}/);
 assert.match(quoteUi,/ProfessionalRequestUnlock kind="quote"/);
 assert.match(unlock,/runRazorpayCheckout/);
