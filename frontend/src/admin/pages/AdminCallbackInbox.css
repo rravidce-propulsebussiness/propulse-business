@@ -11,3 +11,20 @@
 .admin-quote-proposal{padding:14px;border:1px solid #ebd9ce;background:#fff9f5;border-radius:11px;display:grid;gap:7px;min-width:0}
 .admin-quote-proposal>span{font-size:12px;font-weight:850;color:#d55a26;text-transform:capitalize}
 .admin-quote-proposal>strong{font-size:12px;color:#1e7654}
+
+/* One consolidated Admin review queue for all professional enquiries. */
+.admin-callback-section{margin:0;background:transparent;border:0;padding:0}
+.admin-callback-row{grid-template-columns:minmax(180px,1fr) minmax(230px,1.2fr) minmax(230px,1fr);align-items:start}
+.admin-enquiry-review{display:grid;gap:8px;margin-top:8px;padding:12px;border:1px solid #dbe5ee;border-radius:12px;background:#fff}
+.admin-enquiry-review>strong{font-size:12px;color:#183e5b}
+.admin-enquiry-review>p{margin:0;font-size:12px;line-height:1.55}
+.admin-enquiry-warning{color:#a84a23!important}
+.admin-enquiry-ready{color:#176747!important;font-weight:750}
+.admin-enquiry-reasons{padding:8px 10px;border-radius:8px;background:#fff2e9;border:1px solid #f1dbca}
+.admin-enquiry-reasons p{margin:3px 0;font-size:12px;color:#8a492a}
+.admin-enquiry-actions{display:flex;flex-wrap:wrap;gap:6px}
+.admin-enquiry-actions button,.admin-enquiry-actions a{display:inline-flex;align-items:center;justify-content:center;border:1px solid #cbd9e5;border-radius:8px;background:#f5f9fc;color:#174366;font-size:11px;font-weight:800;padding:8px 10px;cursor:pointer;text-decoration:none}
+.admin-enquiry-actions button:disabled{cursor:wait;opacity:.55}
+.admin-enquiry-actions .admin-review-override{color:#91471e;background:#fff4eb;border-color:#e9ccb8}
+.admin-callback-feedback{padding:12px 14px;border-radius:10px;background:#edf8f2;border:1px solid #c8e9d7;color:#176747;font-size:13px}
+@media(max-width:1050px){.admin-callback-row{grid-template-columns:1fr}}
