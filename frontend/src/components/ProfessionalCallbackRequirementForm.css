@@ -1,0 +1,35 @@
+/* Shared quick-requirement treatment for selected-professional callbacks. */
+.pcf-form{display:grid;gap:13px;width:100%;min-width:0}
+.pcf-form *{box-sizing:border-box}
+.pcf-form label{display:flex;flex-direction:column;gap:7px;min-width:0;color:#173e5e;font-weight:850;font-size:13px}
+.pcf-form label>span{color:#133a59;font-size:13px;font-weight:850}
+.pcf-form label>span small{font-size:10px;color:#8596a4;font-weight:650}
+.pcf-two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.pcf-form input:not([type=checkbox]),.pcf-form textarea,.pcf-form select,.pcf-phone,.pcf-unit{display:block;width:100%;min-width:0;border:1px solid #d7e1e9;border-radius:11px;background:#fff;color:#1b415d;font:inherit;font-size:14px;box-shadow:0 5px 14px #08274106}
+.pcf-form input:not([type=checkbox]),.pcf-form select{height:49px;padding:0 14px}
+.pcf-form textarea{min-height:100px;max-height:220px;padding:14px;resize:vertical;line-height:1.5}
+.pcf-form :is(input,textarea)::placeholder{color:#95a3ae}
+.pcf-form :is(input,select,textarea):focus-visible,.pcf-phone:focus-within,.pcf-unit:focus-within{outline:0;border-color:#eb7b48;box-shadow:0 0 0 3px #ef64251a}
+.pcf-phone{display:grid;grid-template-columns:62px minmax(0,1fr);overflow:hidden;align-items:center}
+.pcf-unit{display:grid;grid-template-columns:minmax(0,1fr) 85px;overflow:hidden;align-items:center}
+.pcf-phone i,.pcf-unit i{display:grid;place-items:center;height:100%;font-size:13px;font-style:normal;font-weight:900;color:#18415e;background:#f5f8fa}
+.pcf-phone i{border-right:1px solid #e1e8ef}
+.pcf-unit i{border-left:1px solid #e1e8ef;font-size:11px}
+.pcf-form .pcf-phone input,.pcf-form .pcf-unit input{border:0;outline:0;border-radius:0;background:transparent;box-shadow:none;height:47px}
+.pcf-options{padding:13px;border:1px solid #e5ebef;border-radius:13px;background:#f8fafc}
+.pcf-detected{padding:9px 11px;margin:0!important;border-radius:9px;background:#f1faf5;border:1px solid #d0ead9;color:#247348!important;font-size:12px!important}
+.pcf-consent{display:flex!important;flex-direction:row!important;align-items:flex-start;gap:11px!important;line-height:1.5}
+.pcf-form .pcf-consent input{width:17px!important;height:17px!important;flex:0 0 17px;accent-color:#e85c25;margin:3px 0}
+.pcf-form .pcf-consent>span{font-size:12px;color:#667f90;font-weight:550}
+.pcf-honeypot{position:absolute!important;left:-9999px!important;width:1px!important;height:1px!important;opacity:0!important;pointer-events:none}
+.pcf-error{margin:0!important;padding:11px 13px;border:1px solid #f0d0c2;border-radius:9px;color:#a64220!important;background:#fff3ee;font-size:12px!important;font-weight:750}
+.pcf-form .pcf-submit{width:100%;min-height:52px;display:flex;align-items:center;justify-content:center;border:0;border-radius:12px;padding:15px 20px;background:linear-gradient(110deg,#ff642c,#eb541d);color:#fff;font:inherit;font-weight:900;font-size:14px;cursor:pointer;box-shadow:0 10px 20px #ef5a2230}
+.pcf-form .pcf-submit:hover:not(:disabled){filter:brightness(.97)}
+.pcf-form .pcf-submit:disabled{opacity:.6;cursor:wait}
+@media(max-width:600px){
+  .pcf-two{grid-template-columns:1fr;gap:12px}
+  .pcf-form{gap:13px}
+  .pcf-form label,.pcf-form label>span{font-size:13px}
+  .pcf-form input:not([type=checkbox]),.pcf-form select{height:49px}
+  .pcf-form .pcf-submit{min-height:52px}
+}
