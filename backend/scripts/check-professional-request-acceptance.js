@@ -55,4 +55,12 @@ assert.match(adminInbox,/Retry lead creation/,'Admin can retry an unlinked profe
 assert.match(adminInbox,/link_verified/,'Admin must not release an unrelated lead');
 assert.match(adminInbox,/quality-gate\/.*override/,'Manual Admin release must use the audited lead quality endpoint');
 assert.match(adminInbox,/lead_pricing/,'Admin displays existing configured lead pricing');
+const legacyService=read('backend/src/services/projectMarketplaceLeadService.js');
+assert.match(legacyService,/marketplace_sync_status!=='not_requested'/,'Only legacy enquiries may be authorized by Admin');
+assert.match(legacyService,/consentConfirmed!==true/,'Admin must attest explicit homeowner consent');
+assert.match(legacyService,/note.length<12/,'Legacy authorization requires a meaningful review note');
+assert.match(legacyService,/audit\.record\(client/,'Legacy consent attestation must be audited');
+assert.match(adminRoutes,/authorize-legacy/,'Legacy consent authorization must have an Admin-only endpoint');
+assert.match(adminInbox,/Verify & create paid lead/,'Admin must have a consent-based legacy quotation recovery form');
+assert.match(adminInbox,/marketplace_sync_status==='not_requested'/,'Legacy quote may not use blind retry');
 console.log('Professional request paid and free membership acceptance regression checks passed.');
