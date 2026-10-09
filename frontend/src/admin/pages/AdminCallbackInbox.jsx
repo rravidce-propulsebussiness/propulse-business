@@ -7,6 +7,7 @@ function EnquiryReview({item,kind,onAction,saving}){
   const [pincode,setPincode]=useState('')
   const [consentConfirmed,setConsentConfirmed]=useState(false)
   const [evidence,setEvidence]=useState('')
+  const [selectedMode,setSelectedMode]=useState(item.access_mode||'member_free_nonmember_paid')
   const leadId=Number(item.marketplace_lead_id)||null
   const legacy=!leadId&&item.marketplace_sync_status==='not_requested'
   const canDeleteTest=kind==='quote'&&!leadId&&item.status==='new'&&!item.quoted_at&&item.quoted_price==null
@@ -16,14 +17,30 @@ function EnquiryReview({item,kind,onAction,saving}){
   const price=Number(prices.find(tier=>Number(tier.shares)===Number(item.lead_capacity))?.normal||0)
   const gateReasons=Array.isArray(item.quality_gate_reasons)?item.quality_gate_reasons:[]
   const working=saving===kind+'-'+item.id
+  const mode=item.access_mode||'member_free_nonmember_paid'
+  const modes=[
+    ['free','Free · No payment'],
+    ['paid','Paid · Including members'],
+    ['member_free_nonmember_paid','Members free · Others pay'],
+    ['members_only','Only active members · Free']
+  ]
   return <div className="admin-enquiry-review">
     <strong>Marketplace &amp; payment review</strong>
     <p>Request #{item.id} · {leadId?'Lead #'+leadId:'No marketplace lead yet'}</p>
     {!leadId?<p className="admin-enquiry-warning">{legacy?'Legacy request: customer marketplace consent and PIN were not collected. Contact the homeowner before enabling paid access.': 'Lead creation pending. '+(item.marketplace_sync_error||'Check PIN mapping and Lead Pricing, then retry.')}</p>
       :!valid?<p className="admin-enquiry-warning">Linked lead ownership or origin does not match this request. Do not release it; investigate the incorrect link.</p>
       :status==='quarantined'?<p className="admin-enquiry-warning">Quality review required · {item.quality_gate_status||'quarantined'}</p>
-      :status==='available'?<p className="admin-enquiry-ready">{price>0?'Ready for Accept & Pay ₹'+price.toLocaleString('en-IN')+' (or free with eligible Pro membership).':'Lead available, but pricing must be configured.'}</p>
+      :status==='available'?<p className="admin-enquiry-ready">{mode==='free'?'Ready for free acceptance.':mode==='members_only'?'Reserved for active Pro members (free).':price>0?(mode==='paid'?'Paid acceptance for all professionals.':'Active Pro members free; non-members pay.')+' Current normal lead price ₹'+price.toLocaleString('en-IN')+'.':'Lead available, but paid acceptance requires configured pricing.'}</p>
       :<p className="admin-enquiry-warning">Lead status: {status||'unavailable'}. Acceptance is currently blocked.</p>}
+    <div className="admin-enquiry-mode">
+      <label htmlFor={'mode-'+kind+'-'+item.id}>Who can accept this enquiry?</label>
+      <select id={'mode-'+kind+'-'+item.id} value={selectedMode} onChange={event=>setSelectedMode(event.target.value)} disabled={working||item.access_mode_locked}>
+        {modes.map(([value,label])=><option key={value} value={value}>{label}</option>)}
+      </select>
+      <button type="button" disabled={working||item.access_mode_locked||selectedMode===mode} onClick={()=>onAction('mode',kind,item,{accessMode:selectedMode})}>{working?'Saving…':'Save access rule'}</button>
+      {item.access_mode_locked&&<small>Access rule locked: this lead has a purchase, pending payment or acceptance claim.</small>}
+      {!item.access_mode_locked&&<small>Applies to the selected professional; customer contact stays protected until acceptance.</small>}
+    </div>
     {valid&&gateReasons.length>0&&status==='quarantined'&&<div className="admin-enquiry-reasons">{gateReasons.map((reason,index)=><p key={index}>{reason.message||reason.code||String(reason)}</p>)}</div>}
     {legacy&&kind!=='profile'&&<form className="admin-enquiry-legacy" onSubmit={event=>{event.preventDefault();onAction('authorize',kind,item,{pincode,consentConfirmed,evidence:evidence.trim()})}}>
       <label>Verified customer PIN code<input inputMode="numeric" pattern="[0-9]{6}" maxLength={6} placeholder="6-digit PIN" value={pincode} onChange={event=>setPincode(event.target.value.replace(/\D/g,'').slice(0,6))} required/></label>
@@ -88,7 +105,9 @@ export default function AdminCallbackInbox(){
     setSaving(token);setError('');setFeedback('')
     try{
       let result
-      if(action==='delete'){
+      if(action==='mode'){
+        result=await authRequest('/admin/project-marketplace/'+kind+'/'+item.id+'/access-mode',{method:'PATCH',body:JSON.stringify(details)})
+      }else if(action==='delete'){
         const typed=window.prompt('Permanently delete this unlinked test quotation? Type its request number ('+item.id+') to confirm. The customer enquiry will disappear from Admin and the professional account.')
         if(typed===null)return
         if(typed.trim()!==String(item.id))throw new Error('Deletion cancelled: quotation number did not match.')
@@ -101,7 +120,7 @@ export default function AdminCallbackInbox(){
         method:'POST',body:JSON.stringify(action==='release'?{note:note.trim()}:{})
       })
       if((action==='retry'||action==='authorize')&&result.status==='review_required')setFeedback('Request #'+item.id+' still needs review: '+(result.reason||'check lead pricing or PIN mapping')+'.')
-      else setFeedback(action==='delete'?'Test quotation #'+item.id+' deleted. Any separate, already-paid marketplace leads were not touched.':action==='authorize'?'Marketplace creation checked for request #'+item.id+'. Verify the resulting quality status before taking payment.':action==='retry'?'Marketplace sync checked for request #'+item.id+'.':action==='release'?'Lead #'+item.marketplace_lead_id+' released. The professional can now accept through the normal payment flow.':'Lead #'+item.marketplace_lead_id+' quality rechecked.')
+      else setFeedback(action==='mode'?'Access rule saved for '+kind+' #'+item.id+'.':action==='delete'?'Test quotation #'+item.id+' deleted. Any separate, already-paid marketplace leads were not touched.':action==='authorize'?'Marketplace creation checked for request #'+item.id+'. Verify the resulting quality status before taking payment.':action==='retry'?'Marketplace sync checked for request #'+item.id+'.':action==='release'?'Lead #'+item.marketplace_lead_id+' released. The professional can now accept through the normal payment flow.':'Lead #'+item.marketplace_lead_id+' quality rechecked.')
       setLoading(true);setReload(value=>value+1)
     }catch(err){setError(err.message||'Unable to review professional enquiry.')}
     finally{setSaving(null)}
