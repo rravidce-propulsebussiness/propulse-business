@@ -211,10 +211,14 @@ export default function ProfessionalRequests() {
               <h3>{chosen.project_id ? chosen.project_title : 'Your professional profile'}</h3>
               {chosen.project_id && <Link to={'/projects/project-' + chosen.project_id}>View published project ↗</Link>}
             </div>
-            <div className="prc-detail-section">
-              <span className="prc-detail-label">Customer requirement</span>
-              <p className="prc-message">{chosen.message || 'The customer requested a callback without additional notes.'}</p>
-            </div>
+            {Object.entries(chosen.requirement_fields||{}).filter(([key,value])=>!key.startsWith('_')&&String(value||'').trim()).length>0&&<div className="prc-detail-section">
+              <span className="prc-detail-label">Form requirements</span>
+              <dl className="prc-contact-grid">{Object.entries(chosen.requirement_fields||{}).filter(([key,value])=>!key.startsWith('_')&&String(value||'').trim()).map(([key,value])=><div key={key}><dt>{key}</dt><dd>{String(value)}</dd></div>)}</dl>
+            </div>}
+            {String(chosen.message||'').trim()&&<div className="prc-detail-section">
+              <span className="prc-detail-label">Additional Information</span>
+              <p className="prc-message">{chosen.message}</p>
+            </div>}
             <div className="prc-detail-section">
               <span className="prc-detail-label">Protected contact</span>
               <dl className="prc-contact-grid">
