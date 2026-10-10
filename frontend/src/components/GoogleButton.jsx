@@ -26,7 +26,7 @@ function GoogleButton({ onCredential, disabled = false }) {
 
     async function mount() {
       try {
-        const { clientId, origin } = assertGoogleConfiguration()
+        const { clientId, origin } = await assertGoogleConfiguration()
         const googleId = await loadGoogleIdentityServices()
         if (cancelled || !containerRef.current) return
 
@@ -72,10 +72,6 @@ function GoogleButton({ onCredential, disabled = false }) {
       cancelled = true
     }
   }, [disabled])
-
-  if (!import.meta.env.VITE_GOOGLE_CLIENT_ID) {
-    return <div className="google-unconfigured">Continue with Google is not configured.</div>
-  }
 
   return (
     <div className="google-button-wrap">
