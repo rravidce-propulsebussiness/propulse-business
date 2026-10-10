@@ -51,10 +51,10 @@ export const CORE_PUBLIC_SEO_ROUTES=[
   },
   {
     path:'/about',
-    title:'About ProPulse | Construction, Interiors & Real Estate',
-    description:'Learn about ProPulse, its Hyderabad construction and interiors operating background, and how the platform helps customers create clearer requirements.',
-    heading:'About ProPulse Business',
-    summary:'ProPulse is a customer starting point for structured construction, interiors and real-estate requirements.',
+    title:'Our Story & Vision | Why We Started ProPulse',
+    description:'Discover why ProPulse was founded after experience leading two companies: to make business easier for professionals and raise quality standards in construction and interiors.',
+    heading:'Why we started ProPulse',
+    summary:'Our founding story, the challenges faced by homeowners and professionals, and our vision for easier business and quality-led execution.',
   },
   {
     path:'/contact',
