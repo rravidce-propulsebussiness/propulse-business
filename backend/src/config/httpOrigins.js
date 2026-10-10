@@ -11,8 +11,8 @@ function parseOrigin(raw) {
   return url.origin;
 }
 
-function getConfiguredOrigins({ isProduction = process.env.NODE_ENV === 'production' } = {}) {
-  const values = String(process.env.CORS_ORIGIN || '')
+function getConfiguredOrigins({ isProduction = process.env.NODE_ENV === 'production', env = process.env } = {}) {
+  const values = String(env.CORS_ORIGIN || '')
     .split(',')
     .map(value => value.trim())
     .filter(Boolean);
@@ -22,7 +22,23 @@ function getConfiguredOrigins({ isProduction = process.env.NODE_ENV === 'product
     return ['http://localhost:5173'];
   }
 
-  return [...new Set(values.map(parseOrigin).filter(Boolean))];
+  const origins = values.map(parseOrigin).filter(Boolean);
+
+  // PUBLIC_APP_URL is an explicitly configured, trusted application address.
+  // Hostinger deployments can move domains while retaining a stale CORS_ORIGIN.
+  // Accept only the canonical HTTPS origin for that hostname, never a request's
+  // untrusted Host or X-Forwarded-Host header.
+  if (isProduction && String(env.PUBLIC_APP_URL || '').trim()) {
+    const publicUrl = new URL(String(env.PUBLIC_APP_URL).trim());
+    if (['https:', 'http:'].includes(publicUrl.protocol)
+        && !publicUrl.username && !publicUrl.password
+        && publicUrl.pathname === '/' && !publicUrl.search && !publicUrl.hash
+        && !['localhost', '127.0.0.1', '[::1]'].includes(publicUrl.hostname)) {
+      origins.push('https://' + publicUrl.host);
+    }
+  }
+
+  return [...new Set(origins)];
 }
 
 module.exports = { getConfiguredOrigins, parseOrigin };
