@@ -1,8 +1,32 @@
 const GIS_SRC = 'https://accounts.google.com/gsi/client'
 const GIS_PROMISE_KEY = '__propulse_gis_loader__'
 
-export function getGoogleClientId() {
-  return String(import.meta.env.VITE_GOOGLE_CLIENT_ID || '').trim()
+// The Client ID is public, but is resolved at runtime because Hostinger can serve
+// a GitHub-prebuilt frontend whose build environment has no Google variables.
+export async function getGoogleClientId() {
+  let response
+  try {
+    response = await fetch('/api/auth/google/config', {
+      method: 'GET',
+      credentials: 'include',
+      cache: 'no-store',
+      headers: { Accept: 'application/json' },
+    })
+  } catch {
+    throw new Error('Could not reach Google sign-in configuration. Check the website API.')
+  }
+  if (response.status === 403) {
+    throw new Error('Google sign-in is blocked by the website origin policy. Check CORS_ORIGIN on Hostinger.')
+  }
+  if (!response.ok) {
+    throw new Error('Google sign-in configuration is temporarily unavailable. Please try again.')
+  }
+  const config = await response.json().catch(() => ({}))
+  const clientId = String(config.clientId || '').trim()
+  if (!clientId) {
+    throw new Error('Google Sign-In is not configured on the server. Set GOOGLE_CLIENT_ID in Hostinger.')
+  }
+  return clientId
 }
 
 export function getBrowserOrigin() {
@@ -52,10 +76,9 @@ export function loadGoogleIdentityServices() {
   return window[GIS_PROMISE_KEY]
 }
 
-export function assertGoogleConfiguration() {
-  const clientId = getGoogleClientId()
+export async function assertGoogleConfiguration() {
   const origin = getBrowserOrigin()
-  if (!clientId) throw new Error('Google Sign-In is not configured: VITE_GOOGLE_CLIENT_ID is missing.')
   if (!origin) throw new Error('Google Sign-In requires a browser origin.')
+  const clientId = await getGoogleClientId()
   return { clientId, origin }
 }
