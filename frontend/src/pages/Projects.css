@@ -340,11 +340,6 @@
 }
 @keyframes pjLoadingSpin{to{transform:rotate(360deg)}}
 .pj-page .pj-load-error{color:#b64e27}
-.pj-page .pj-gallery-disclaimer{
-  margin:25px auto 0;padding:13px 16px;max-width:1200px;
-  border-left:3px solid #e65b26;background:#fff5f0;
-  font-size:12px;line-height:1.6;color:#7c6659;
-}
 .pj-page .pj-load-more{background:#e65b26}
 .pj-page .pj-empty{padding:28px 20px}
 .pj-page .pj-empty button{margin-top:15px;padding:10px 17px;border:1px solid #e65b26;background:#fff;color:#d65a27;border-radius:8px;font-weight:800;cursor:pointer}

@@ -215,7 +215,6 @@ export default function Projects() {
         {!filtered.length&&!loading&&<div className="pj-empty"><h3>{query||category!=='all'?'No completed projects match your search':'Completed projects are coming soon'}</h3><p>{query||category!=='all'?'Try another category or search term.':'No eligible completed projects have been published yet. Professionals can add their actual finished work through their business profiles.'}</p>{query||category!=='all'?<button type="button" onClick={()=>{setCategory('all');setQuery('')}}>Clear filters</button>:<div className="pj-empty-actions"><Link className="pj-empty-link" to="/experts">Explore professionals →</Link><Link className="pj-empty-link pj-empty-professional" to="/profile?tab=projects">Publish your completed work ↗</Link></div>}</div>}
         {loadError&&<p className="pj-load-error" role="status">{loadError}</p>}
         {hasNext&&<button type="button" className="pj-load-more" disabled={loadingMore} onClick={loadMore}>{loadingMore?'Loading…':'Load More Completed Projects'} <Icon name="arrow" size={15}/></button>}
-        <p className="pj-gallery-disclaimer">These projects are published by professionals, with declared completion years. ProPulse does not independently certify every project photo or scope; verify completed work before hiring.</p>
       </div>
     </section>
     <PublicFooter phone={phone} email={email}/>
