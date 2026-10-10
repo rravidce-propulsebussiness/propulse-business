@@ -18,6 +18,12 @@ const EMPTY_CONTACT = {
   social_handles: [],
 }
 
+const CONTACT_MESSAGES = [
+  'Call us anytime.',
+  'Chat with our team.',
+  'Let’s discuss your project.',
+]
+
 function ContactIcon({ type }) {
   const common = {
     width: 23, height: 23, viewBox: '0 0 24 24', fill: 'none',
@@ -57,6 +63,35 @@ function PublicContact() {
   const [data, setData] = useState(EMPTY_CONTACT)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
+  const [typing, setTyping] = useState({ index: 0, length: 0, phase: 'typing' })
+  const activeMessage = CONTACT_MESSAGES[typing.index]
+
+  useEffect(() => {
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
+      if (typing.phase !== 'static') {
+        setTyping({ index: 0, length: CONTACT_MESSAGES[0].length, phase: 'static' })
+      }
+      return undefined
+    }
+    const timeout = window.setTimeout(() => {
+      setTyping(current => {
+        const messageLength = CONTACT_MESSAGES[current.index].length
+        if (current.phase === 'typing') {
+          return current.length < messageLength
+            ? { ...current, length: current.length + 1 }
+            : { ...current, phase: 'holding' }
+        }
+        if (current.phase === 'holding') return { ...current, phase: 'erasing' }
+        if (current.phase === 'erasing') {
+          return current.length > 0
+            ? { ...current, length: current.length - 1 }
+            : { index: (current.index + 1) % CONTACT_MESSAGES.length, length: 0, phase: 'typing' }
+        }
+        return current
+      })
+    }, typing.phase === 'holding' ? 2000 : typing.phase === 'erasing' ? 34 : 65)
+    return () => window.clearTimeout(timeout)
+  }, [typing])
 
   useEffect(() => {
     let active = true
@@ -86,9 +121,15 @@ function PublicContact() {
 
     <div className="contact-simple">
       <header className="contact-intro">
-        <span className="contact-eyebrow">CONTACT US</span>
-        <h1>We’re here to help.</h1>
-        <p>Questions about construction, interiors or real estate? Reach our team directly.</p>
+        <h1>Happy to help you <span role="img" aria-label="smiling face">😊</span></h1>
+        <p className="contact-typewriter">
+          <span className="contact-typewriter-accessible">Call us, chat with our team, or discuss your project with us.</span>
+          <span className="contact-typewriter-measure" aria-hidden="true">Let’s discuss your project.</span>
+          <span className="contact-typewriter-active" aria-hidden="true">
+            <span className="contact-typewriter-text">{activeMessage.slice(0, typing.length)}</span>
+            <span className="contact-typewriter-caret" />
+          </span>
+        </p>
       </header>
 
       {loading ? <p className="contact-status" role="status">Loading contact details…</p> : <>

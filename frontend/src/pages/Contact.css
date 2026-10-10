@@ -8,30 +8,52 @@
   margin: 0 auto;
   padding: clamp(48px, 7vw, 86px) 24px 76px;
 }
-.contact-intro {
-  max-width: 650px;
-  margin: 0 auto 42px;
-  text-align: center;
-}
-.contact-eyebrow {
-  color: #db5829;
-  font-size: 12px;
-  letter-spacing: .15em;
-  font-weight: 800;
-}
+.contact-intro { max-width: 650px; margin: 0 auto 36px; text-align: center; }
 .contact-intro h1 {
-  margin: 13px 0 12px;
-  font-size: clamp(36px, 5vw, 56px);
-  line-height: 1.12;
+  margin: 0 0 16px;
+  font-size: clamp(34px, 4.8vw, 54px);
+  font-weight: 800;
+  line-height: 1.18;
   letter-spacing: -.045em;
   color: #102f46;
 }
-.contact-intro p {
+.contact-intro h1 span[role="img"] { display: inline-block; font-size: .8em; vertical-align: .045em; }
+.contact-intro .contact-typewriter {
+  position: relative;
   margin: 0 auto;
-  max-width: 570px;
-  color: #627482;
-  font-size: 16px;
-  line-height: 1.7;
+  max-width: 100%;
+  color: #dc5b2b;
+  font-family: 'Sora', Inter, ui-sans-serif, system-ui, sans-serif;
+  font-size: clamp(17px, 2.3vw, 23px);
+  font-weight: 750;
+  line-height: 1.5;
+  letter-spacing: -.025em;
+}
+.contact-typewriter-accessible {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.contact-typewriter-measure { display: block; visibility: hidden; pointer-events: none; }
+.contact-typewriter-active { position: absolute; inset: 0; display: block; white-space: nowrap; }
+.contact-typewriter-caret {
+  display: inline-block;
+  width: 2px;
+  height: 1.05em;
+  margin-left: 3px;
+  background: #e65b26;
+  vertical-align: -.13em;
+  animation: contactCaretBlink 1s step-end infinite;
+}
+@keyframes contactCaretBlink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
 }
 .contact-methods {
   display: grid;
@@ -186,6 +208,8 @@
   .contact-method h2 { margin-top: 16px; }
   .contact-simple { padding: 44px 18px 52px; }
   .contact-intro { margin-bottom: 30px; }
+  .contact-intro h1 { font-size: clamp(30px, 8.2vw, 42px); }
+  .contact-intro .contact-typewriter { font-size: clamp(15px, 4.2vw, 19px); }
   .contact-quote { align-items: stretch; flex-direction: column; padding: 24px; }
   .contact-quote button { justify-content: center; }
   .contact-more { padding: 22px; gap: 26px; }
@@ -193,4 +217,5 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .contact-method, .contact-quote button { transition: none; }
+  .contact-typewriter-caret { animation: none; opacity: 0; }
 }
