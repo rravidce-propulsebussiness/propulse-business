@@ -34,6 +34,12 @@ router.post('/signup', authWriteLimit, authController.signup);
 router.post('/company-proofs', requireAuth, companyProofUploadLimit, authController.uploadCompanyProofs);
 router.get('/company-proofs/:documentId', requireAuth, authController.downloadCompanyProof);
 router.post('/login', authWriteLimit, authController.login);
+// This is a public OAuth *client identifier*, not a secret. The frontend may be
+// prebuilt on GitHub without access to Hostinger runtime environment variables.
+router.get('/google/config', (req, res) => {
+  res.setHeader('Cache-Control', 'no-store');
+  return res.json({ clientId: String(process.env.GOOGLE_CLIENT_ID || '').trim() || null });
+});
 router.post('/google', authWriteLimit, authController.googleLogin);
 router.post('/forgot-password', forgotPasswordLimit, authController.forgotPassword);
 router.post('/reset-password', resetPasswordLimit, authController.resetPassword);
