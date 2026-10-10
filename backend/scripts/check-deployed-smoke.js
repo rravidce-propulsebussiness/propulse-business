@@ -147,7 +147,7 @@ async function main() {
   const googleConfig = await request('/api/auth/google/config', { headers: { origin: appOrigin } });
   assert.equal(googleConfig.status, 200, 'Public Google configuration must not fail with CORS');
   const googleConfigBody = await googleConfig.json();
-  assert.match(String(googleConfigBody.clientId || ''), /\\.apps\\.googleusercontent\\.com$/, 'Hostinger must expose a configured Google OAuth web client ID');
+  assert.match(String(googleConfigBody.clientId || ''), /\.apps\.googleusercontent\.com$/, 'Hostinger must expose a configured Google OAuth web client ID');
 
   const soundSettings = await request('/api/sound-settings', { headers: { origin: appOrigin } });
   assert.equal(soundSettings.status, 200, 'Public sound settings must return 200');
