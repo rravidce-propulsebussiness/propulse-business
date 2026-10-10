@@ -121,12 +121,21 @@ const FLOWS = [
   }
 ]
 
+const JOURNEY_HEADLINES = [
+  { lead: 'From Design', accent: ' to Handover' },
+  { lead: 'From Dream', accent: ' to Possession' },
+  { lead: 'From Blueprint', accent: ' to Reality' },
+  { lead: 'From Vision', accent: ' to Your New Home' },
+]
+
 export default function HowItWorks() {
   const [active, setActive] = useState(() => {
     const hash = typeof window === 'undefined' ? '' : window.location.hash.slice(1)
     return FLOWS.some(flow => flow.key === hash) ? hash : 'construction'
   })
   const [contact, setContact] = useState({})
+  const [typing, setTyping] = useState({ index: 0, length: 0, phase: 'typing' })
+  const headline = JOURNEY_HEADLINES[typing.index]
 
   useEffect(() => {
     let mounted = true
@@ -143,6 +152,38 @@ export default function HowItWorks() {
       window.removeEventListener('hashchange', syncFromHash)
     }
   }, [])
+
+
+  // Use the same type/hold/erase rhythm as the homepage, without layout shifts.
+  useEffect(() => {
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
+      if (typing.phase !== 'static') {
+        setTyping({
+          index: 0,
+          length: JOURNEY_HEADLINES[0].lead.length + JOURNEY_HEADLINES[0].accent.length,
+          phase: 'static',
+        })
+      }
+      return undefined
+    }
+    const timer = window.setTimeout(() => {
+      setTyping(current => {
+        const phrase = JOURNEY_HEADLINES[current.index]
+        const total = phrase.lead.length + phrase.accent.length
+        if (current.phase === 'typing') {
+          return current.length < total ? { ...current, length: current.length + 1 } : { ...current, phase: 'holding' }
+        }
+        if (current.phase === 'holding') return { ...current, phase: 'erasing' }
+        if (current.phase === 'erasing') {
+          return current.length > 0
+            ? { ...current, length: current.length - 1 }
+            : { index: (current.index + 1) % JOURNEY_HEADLINES.length, length: 0, phase: 'typing' }
+        }
+        return current
+      })
+    }, typing.phase === 'holding' ? 2200 : typing.phase === 'erasing' ? 34 : 65)
+    return () => window.clearTimeout(timer)
+  }, [typing])
 
   const current = FLOWS.find(flow => flow.key === active) || FLOWS[0]
   const phone = contact.phone || contact.phone_number || contact.mobile || ''
@@ -167,9 +208,15 @@ export default function HowItWorks() {
     <PublicHeader />
     <div className="hiw-main">
       <header className="hiw-intro">
-        <span className="hiw-eyebrow">HOW IT WORKS</span>
-        <h1>Simple steps. Clear journey.</h1>
-        <p>From filling your requirement form to choosing a professional and completing your project. See what happens at each stage.</p>
+        <h1 className="hiw-typewriter">
+          <span className="hiw-typewriter-a11y">From Design to Handover. From Dream to Possession. From Blueprint to Reality.</span>
+          <span className="hiw-typewriter-measure" aria-hidden="true">From Vision to Your New Home</span>
+          <span className="hiw-typewriter-active" aria-hidden="true">
+            <span className="hiw-typewriter-lead">{headline.lead.slice(0, typing.length)}</span>
+            <span className="hiw-typewriter-accent">{headline.accent.slice(0, Math.max(0, typing.length - headline.lead.length))}</span>
+            <span className="hiw-typewriter-caret" />
+          </span>
+        </h1>
       </header>
 
       <section className="hiw-content" aria-label="Explore service journeys">
