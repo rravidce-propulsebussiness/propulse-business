@@ -1,0 +1,1 @@
+import{t as e}from"./vendor-CnqnmYWm.js";import{t}from"./AdminLeadsV9-BATrVsmD.js";var n=e();function r(){return(0,n.jsx)(t,{mode:`manage`})}export{r as default};
