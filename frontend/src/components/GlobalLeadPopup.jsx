@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
+import { createPortal } from 'react-dom'
 import { publicRequest } from '../utils/auth'
 import './GlobalLeadPopup.css'
 
@@ -93,6 +94,8 @@ export default function GlobalLeadPopup(){
   const [submitted,setSubmitted]=useState(null)
   const [submissionKey,setSubmissionKey]=useState(makeSubmissionKey)
   const pinSeq=useRef(0)
+  const dialogRef=useRef(null)
+  const closeButtonRef=useRef(null)
 
   const cityList=useMemo(()=>[...cities].sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''))),[cities])
   function cityLabel(city){
@@ -163,13 +166,26 @@ export default function GlobalLeadPopup(){
 
   useEffect(()=>{
     if(!open)return undefined
-    const previous=document.body.style.overflow
+    const previousOverflow=document.body.style.overflow
+    const previouslyFocused=document.activeElement
     document.body.style.overflow='hidden'
-    const onKey=event=>{if(event.key==='Escape')closePopup()}
+    closeButtonRef.current?.focus({preventScroll:true})
+    const onKey=event=>{
+      if(event.key==='Escape'){event.preventDefault();closePopup();return}
+      if(event.key!=='Tab')return
+      const elements=Array.from(dialogRef.current?.querySelectorAll(
+        'button:not([disabled]), a[href], input:not([disabled]):not([tabindex="-1"]), select:not([disabled]), textarea:not([disabled])'
+      )||[]).filter(element=>element.tabIndex>=0&&element.getClientRects().length>0)
+      if(!elements.length)return
+      const first=elements[0],last=elements[elements.length-1]
+      if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus()}
+      else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus()}
+    }
     window.addEventListener('keydown',onKey)
     return()=>{
-      document.body.style.overflow=previous
+      document.body.style.overflow=previousOverflow
       window.removeEventListener('keydown',onKey)
+      if(previouslyFocused?.isConnected)previouslyFocused.focus?.({preventScroll:true})
     }
   },[open,closePopup])
   function setFlow(flowKey){
@@ -300,12 +316,12 @@ export default function GlobalLeadPopup(){
 
   if(!eligible||!open)return null
 
-  return <div className="glp-backdrop" role="presentation" onMouseDown={event=>{if(event.target===event.currentTarget)closePopup()}}>
-    <aside className="glp-modal" role="dialog" aria-modal="true" aria-label={intent==='callback'?'Request a callback':'Tell us your requirement'}>
-      <button className="glp-close" type="button" onClick={closePopup} aria-label="Close">×</button>
+  return createPortal(<div className="glp-backdrop" data-no-scroll-reveal role="presentation" onMouseDown={event=>{if(event.target===event.currentTarget)closePopup()}}>
+    <aside ref={dialogRef} className="glp-modal" role="dialog" aria-modal="true" aria-labelledby="glp-title">
+      <button ref={closeButtonRef} className="glp-close" type="button" onClick={closePopup} aria-label="Close requirement form">×</button>
       <div className="glp-head">
         <span><Icon name="phone" size={20}/></span>
-        <div><small>{intent==='callback'?'FREE PROJECT CALLBACK':'FREE REQUIREMENT REQUEST'}</small><h3>{intent==='callback'?'Request a Callback':'Tell Us Your Requirement'}</h3></div>
+        <div><small>{intent==='callback'?'FREE PROJECT CALLBACK':'FREE REQUIREMENT REQUEST'}</small><h3 id="glp-title">{intent==='callback'?'Request a Callback':'Tell Us Your Requirement'}</h3></div>
       </div>
 
       {submitted?<div className="glp-success">
@@ -315,7 +331,8 @@ export default function GlobalLeadPopup(){
         <button type="button" className="glp-primary" onClick={continueDetailed}>Continue to Detailed Requirement <Icon name="arrow" size={15}/></button>
         <button type="button" className="glp-secondary" onClick={closePopup}>Done</button>
       </div>:<form onSubmit={submit}>
-        <div className="glp-two">
+        <div className="glp-fields">
+          <div className="glp-two">
           <label><span>PIN Code {pinBusy?<small>Detecting…</small>:null}</span><input inputMode="numeric" maxLength="6" value={form.pincode} onChange={event=>lookupPin(event.target.value)} placeholder="6-digit PIN"/></label>
           <label><span>City / Location</span><input list="glp-city-list" value={citySearch} onChange={event=>changeCity(event.target.value)} onBlur={event=>{const match=exactCity(event.target.value);if(match){setCitySearch(cityLabel(match));setForm(current=>({...current,cityId:String(match.id)}))}}} placeholder={loadingCities?'Loading cities…':'Type city name'} disabled={loadingCities}/><datalist id="glp-city-list">{cityList.map(city=><option key={city.id} value={cityLabel(city)}/>)}</datalist></label>
         </div>
@@ -348,9 +365,12 @@ export default function GlobalLeadPopup(){
 
         <label className="glp-full"><span>Additional Information <small>Optional</small></span><textarea value={form.additional} onChange={event=>setForm({...form,additional:event.target.value})} placeholder="Locality, rooms, materials, parking, preferred package or anything important…"/></label>
         <input className="glp-honeypot" tabIndex="-1" autoComplete="off" value={form.website} onChange={event=>setForm({...form,website:event.target.value})}/>
-        {error&&<div className="glp-error">{error}</div>}
-        <button className="glp-primary" type="submit" disabled={saving}>{saving?'Submitting…':intent==='callback'?'Request Callback':'Submit Requirement'} <Icon name="arrow" size={15}/></button>
+        </div>
+        <div className="glp-form-actions">
+          {error&&<div className="glp-error" role="alert">{error}</div>}
+          <button className="glp-primary" type="submit" disabled={saving}>{saving?'Submitting…':intent==='callback'?'Request Callback':'Submit Requirement'} <Icon name="arrow" size={15}/></button>
+        </div>
       </form>}
     </aside>
-  </div>
+  </div>,document.body)
 }

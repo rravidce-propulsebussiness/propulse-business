@@ -312,3 +312,131 @@
 @media(prefers-reduced-motion:reduce){
   .glp-backdrop *{transition:none!important;animation:none!important}
 }
+
+/* Isolated mobile lead form: keep the header/actions fixed, scroll only the fields.
+   The dialog is portalled to body so page transforms/overflow cannot clip it. */
+.glp-backdrop,.glp-backdrop *{box-sizing:border-box}
+.glp-modal{display:flex;flex-direction:column;min-width:0}
+.glp-modal form{display:flex;flex-direction:column;gap:0;min-height:0}
+.glp-fields{display:grid;align-content:start;gap:10px;min-width:0}
+.glp-form-actions{display:grid;gap:9px;margin-top:10px}
+.glp-modal input,.glp-modal select,.glp-modal textarea{min-width:0}
+.glp-modal .glp-phone,.glp-modal .glp-unit{min-width:0}
+.glp-modal label>span{font-size:12px}
+.glp-modal label>span small{font-size:11px}
+.glp-modal input,.glp-modal select{font-size:14px}
+.glp-modal textarea{font-size:14px}
+
+@media(max-width:760px){
+  .glp-backdrop{
+    position:fixed;inset:0;z-index:50000;
+    display:block;overflow:hidden;padding:0;
+    width:100%;height:100%;height:100dvh;
+    background:rgba(6,24,41,.68);
+  }
+  .glp-modal{
+    position:absolute;inset:0;
+    width:100%;min-width:0;max-width:100%;
+    height:100%;max-height:none;
+    margin:0;padding:0;overflow:hidden;
+    border:0;border-radius:0;
+    box-shadow:none;
+    background:#fff;
+  }
+  .glp-head{
+    flex:0 0 auto;
+    display:grid;grid-template-columns:40px minmax(0,1fr);
+    align-items:center;gap:12px;
+    padding:15px 58px 15px 16px;margin:0;
+    min-height:77px;border-bottom:1px solid #e7edf0;
+    background:#fff;
+  }
+  .glp-head>span{width:40px;height:40px;border-radius:12px}
+  .glp-head small{font-size:10px;letter-spacing:.10em;margin-bottom:3px}
+  .glp-head h3{font-size:19px;line-height:1.23;letter-spacing:-.025em}
+  .glp-close{
+    position:absolute;z-index:5;
+    top:16px;right:15px;
+    width:42px;height:42px;
+    border-radius:12px;
+    font-size:26px;
+  }
+  .glp-modal form{
+    flex:1 1 auto;min-height:0;
+    display:flex;flex-direction:column;
+    gap:0;overflow:hidden;
+  }
+  .glp-fields{
+    flex:1 1 auto;min-height:0;
+    overflow-y:auto;overflow-x:hidden;
+    overscroll-behavior:contain;
+    -webkit-overflow-scrolling:touch;
+    padding:16px 16px 22px;
+    display:grid;grid-template-columns:minmax(0,1fr);
+    align-content:start;gap:15px;
+  }
+  .glp-two,.glp-detail{
+    display:grid;grid-template-columns:minmax(0,1fr);
+    gap:15px;
+    min-width:0;
+  }
+  .glp-detail{
+    padding:13px;
+    gap:13px;
+    border-radius:12px;
+  }
+  .glp-full,.glp-two label{gap:6px;min-width:0}
+  .glp-modal label>span{
+    font-size:13px;font-weight:750;
+    letter-spacing:0;line-height:1.4;
+  }
+  .glp-modal label>span small{font-size:12px}
+  .glp-modal input,.glp-modal select{
+    height:49px;min-height:49px;
+    padding:0 13px;
+    font-size:16px;font-weight:550;
+    border-radius:10px;
+  }
+  .glp-modal textarea{
+    min-height:85px;max-height:180px;
+    padding:12px 13px;
+    font-size:16px;line-height:1.45;
+    border-radius:10px;
+  }
+  .glp-phone{grid-template-columns:52px minmax(0,1fr);border-radius:10px}
+  .glp-phone i{font-size:14px}
+  .glp-unit{grid-template-columns:minmax(0,1fr) 82px}
+  .glp-unit i{font-size:12px}
+  .glp-form-actions{
+    flex:0 0 auto;position:relative;
+    display:grid;gap:8px;margin:0;
+    padding:11px 16px max(13px,env(safe-area-inset-bottom));
+    border-top:1px solid #e4ebef;
+    background:#fff;
+    box-shadow:0 -6px 22px rgba(17,47,71,.06);
+  }
+  .glp-primary{
+    min-height:51px;height:auto;
+    border-radius:11px;
+    font-size:15px;font-weight:800;
+    box-shadow:0 5px 13px rgba(239,90,34,.15);
+  }
+  .glp-error{
+    padding:9px 12px;
+    font-size:12px;line-height:1.45;
+  }
+  .glp-success{
+    flex:1 1 auto;min-height:0;
+    align-content:center;
+    overflow-y:auto;
+    padding:26px 20px max(24px,env(safe-area-inset-bottom));
+  }
+  .glp-success p{font-size:14px}
+  .glp-success .glp-secondary{min-height:48px;font-size:14px}
+}
+@media(max-width:360px){
+  .glp-head{padding-left:13px;padding-right:56px}
+  .glp-head h3{font-size:17px}
+  .glp-fields{padding-left:13px;padding-right:13px}
+  .glp-form-actions{padding-left:13px;padding-right:13px}
+}
