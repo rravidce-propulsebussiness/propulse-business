@@ -17,4 +17,32 @@ assert.match(button, /await assertGoogleConfiguration\(\)/, 'Google button must 
 assert.doesNotMatch(button, /import\.meta\.env\.VITE_GOOGLE_CLIENT_ID/, 'Button must not depend on build-time Vite credentials');
 assert.match(workflow, /VITE_PUBLIC_SITE_URL: https:\/\/propulsetechnologies\.online/, 'Prebuilt frontend must use the correct public domain');
 assert.doesNotMatch(workflow, /sghomesinterior\.in/, 'Production workflow must not use the former domain');
+const { getConfiguredOrigins } = require('../src/config/httpOrigins');
+assert.deepEqual(
+  getConfiguredOrigins({
+    isProduction: true,
+    env: {
+      CORS_ORIGIN: 'https://former.example',
+      PUBLIC_APP_URL: 'http://propulsetechnologies.online',
+    },
+  }),
+  ['https://former.example', 'https://propulsetechnologies.online'],
+  'Production allows only the configured canonical HTTPS website when the CORS setting is stale'
+);
+assert.deepEqual(
+  getConfiguredOrigins({
+    isProduction: true,
+    env: {
+      CORS_ORIGIN: 'https://propulsetechnologies.online',
+      PUBLIC_APP_URL: 'https://propulsetechnologies.online',
+    },
+  }),
+  ['https://propulsetechnologies.online'],
+  'Matching canonical origins do not appear twice'
+);
+assert(!getConfiguredOrigins({
+  isProduction: true,
+  env: { CORS_ORIGIN: 'https://former.example', PUBLIC_APP_URL: 'https://propulsetechnologies.online' },
+}).includes('https://untrusted.example'), 'Unknown origins must remain blocked');
+
 console.log('Google login runtime configuration regression check passed.');
