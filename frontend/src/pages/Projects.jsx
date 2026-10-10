@@ -178,10 +178,7 @@ export default function Projects() {
     <PublicHeader/>
     <section className="pj-portfolio-section" aria-label="Projects gallery">
       <div className="pj-container">
-        <div className="pj-completed-heading">
-          <div><span className="pj-completed-kicker">REAL WORK · REAL PORTFOLIOS</span><h1>Completed <em>Projects</em></h1><p>Explore professional-published completed construction and interior projects. Browse the work, review details, and request your own project quotation.</p></div>
-          <span className="pj-completed-counter">{professionalProjects.length} <small>{hasNext?'Projects loaded · more available':'Published projects'}</small></span>
-        </div>
+        <h1 className="pj-sr-only">Projects</h1>
         <div className="pj-toolbar">
           <div className="pj-tabs" role="group" aria-label="Project categories">
             {CATEGORIES.map(item=><button key={item.id} type="button" className={category===item.id?'active':''} aria-pressed={category===item.id} onClick={()=>setCategory(item.id)}>{item.label}</button>)}
