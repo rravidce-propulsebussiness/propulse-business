@@ -144,6 +144,11 @@ async function main() {
   assert.equal(sessionBody.authenticated, false, 'Anonymous deployed smoke must remain unauthenticated');
   assert.equal(sessionBody.user, null, 'Anonymous deployed smoke must not expose a user');
 
+  const googleConfig = await request('/api/auth/google/config', { headers: { origin: appOrigin } });
+  assert.equal(googleConfig.status, 200, 'Public Google configuration must not fail with CORS');
+  const googleConfigBody = await googleConfig.json();
+  assert.match(String(googleConfigBody.clientId || ''), /\\.apps\\.googleusercontent\\.com$/, 'Hostinger must expose a configured Google OAuth web client ID');
+
   const soundSettings = await request('/api/sound-settings', { headers: { origin: appOrigin } });
   assert.equal(soundSettings.status, 200, 'Public sound settings must return 200');
   const soundSettingsBody = await soundSettings.json();
