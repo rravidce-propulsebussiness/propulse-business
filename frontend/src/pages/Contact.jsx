@@ -8,10 +8,10 @@ import './Contact.css'
 
 const EMPTY_CONTACT = {
   company_name: 'ProPulse',
-  email: '',
-  support_email: '',
-  phone: '',
-  whatsapp: '',
+  email: 'info@propulsetechnologies.online',
+  support_email: 'info@propulsetechnologies.online',
+  phone: '+91 9000360812',
+  whatsapp: '+91 9000360812',
   address: '',
   business_hours: '',
   maps_url: '',

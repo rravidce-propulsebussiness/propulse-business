@@ -21,13 +21,13 @@ INSERT INTO contact_settings (
 SELECT
   1,
   'ProPulse Business Private Limited',
-  'info@propulse.com',
-  '+91 98765 43210',
-  '+91 98765 43210',
+  'info@propulsetechnologies.online',
+  '+91 9000360812',
+  '+91 9000360812',
   'Hitech City, Hyderabad, Telangana - 500081, India',
   'Mon - Sat, 9:00 AM - 6:00 PM',
-  'support@propulse.com',
-  'careers@propulse.com',
+  'info@propulsetechnologies.online',
+  'info@propulsetechnologies.online',
   'https://maps.google.com/?q=Hitech+City,+Hyderabad',
   '/',
   '[{"id":"facebook","platform":"Facebook","url":"","enabled":true},{"id":"instagram","platform":"Instagram","url":"","enabled":true},{"id":"linkedin","platform":"LinkedIn","url":"","enabled":true},{"id":"youtube","platform":"YouTube","url":"","enabled":true}]'::jsonb

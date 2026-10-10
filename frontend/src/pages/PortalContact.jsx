@@ -11,7 +11,7 @@ const audienceCopy={
   professionals:{label:'Professional',title:'Professional Support',sub:'Connect with ProPulse for leads, business account support, wallet, memberships, verification and marketplace assistance.'},
   users:{label:'Customer',title:'Customer Support',sub:'Connect with ProPulse for homeowner account and project support.'}
 };
-const empty={company_name:'',email:'',phone:'',whatsapp:'',address:'',business_hours:'',support_email:'',careers_email:'',maps_url:'',social_handles:[]};
+const empty={company_name:'',email:'info@propulsetechnologies.online',phone:'+91 9000360812',whatsapp:'+91 9000360812',address:'',business_hours:'',support_email:'info@propulsetechnologies.online',careers_email:'info@propulsetechnologies.online',maps_url:'',social_handles:[]};
 
 export default function PortalContact({audience='lead_partners'}){
   const copy=audienceCopy[audience]||audienceCopy.lead_partners;

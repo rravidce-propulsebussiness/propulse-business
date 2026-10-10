@@ -98,7 +98,9 @@ export function PublicFooter({
   address = 'Hyderabad, India',
   description = 'A homeowner-first starting point for construction, interiors and real-estate requirements.',
 }) {
-  const phoneHref = phone ? 'tel:' + String(phone).replace(/[^+\d]/g, '') : ''
+  const displayPhone = phone || '+91 9000360812'
+  const displayEmail = email || 'info@propulsetechnologies.online'
+  const phoneHref = 'tel:' + String(displayPhone).replace(/[^+\d]/g, '')
 
   return <footer className="public-site-footer">
     <div className="public-site-footer__inner">
@@ -129,8 +131,8 @@ export function PublicFooter({
       </div>
       <div>
         <b>Contact</b>
-        {phone && <a href={phoneHref}>{phone}</a>}
-        {email && <a href={'mailto:' + email}>{email}</a>}
+        <a href={phoneHref}>{displayPhone}</a>
+        <a href={'mailto:' + displayEmail}>{displayEmail}</a>
         <span><PinIcon/>{address}</span>
       </div>
     </div>
