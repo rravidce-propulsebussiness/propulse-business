@@ -29,8 +29,9 @@ function getConfiguredOrigins({ isProduction = process.env.NODE_ENV === 'product
   // Accept only the canonical HTTPS origin for that hostname, never a request's
   // untrusted Host or X-Forwarded-Host header.
   if (isProduction && String(env.PUBLIC_APP_URL || '').trim()) {
-    const publicUrl = new URL(String(env.PUBLIC_APP_URL).trim());
-    if (['https:', 'http:'].includes(publicUrl.protocol)
+    let publicUrl;
+    try { publicUrl = new URL(String(env.PUBLIC_APP_URL).trim()); } catch { publicUrl = null; }
+    if (publicUrl && ['https:', 'http:'].includes(publicUrl.protocol)
         && !publicUrl.username && !publicUrl.password
         && publicUrl.pathname === '/' && !publicUrl.search && !publicUrl.hash
         && !['localhost', '127.0.0.1', '[::1]'].includes(publicUrl.hostname)) {
