@@ -37,10 +37,12 @@ jobs:
           cat frontend/public/release.json
           cat backend/hostinger-release.json
 
+      # Google Client ID is loaded from the Hostinger backend at runtime.
+      # Do not require build-time credentials in GitHub Actions.
       - name: Build frontend
         env:
           VITE_API_URL: /api
-          VITE_PUBLIC_SITE_URL: https://sghomesinterior.in
+          VITE_PUBLIC_SITE_URL: https://propulsetechnologies.online
         run: npm run build
 
       - name: Refresh single backend deploy bundle
@@ -80,7 +82,7 @@ jobs:
       - name: Wait for Hostinger production deployment
         working-directory: backend
         env:
-          DEPLOY_BASE_URL: https://sghomesinterior.in
+          DEPLOY_BASE_URL: https://propulsetechnologies.online
           DEPLOY_EXPECTED_COMMIT: ${{ github.sha }}
           DEPLOY_EXPECTED_ENVIRONMENT: production
           DEPLOY_WAIT_SECONDS: '900'
@@ -90,8 +92,8 @@ jobs:
       - name: Run Hostinger production smoke
         working-directory: backend
         env:
-          DEPLOY_BASE_URL: https://sghomesinterior.in
-          DEPLOY_APP_ORIGIN: https://sghomesinterior.in
+          DEPLOY_BASE_URL: https://propulsetechnologies.online
+          DEPLOY_APP_ORIGIN: https://propulsetechnologies.online
           DEPLOY_EXPECTED_COMMIT: ${{ github.sha }}
           DEPLOY_EXPECTED_ENVIRONMENT: production
         run: node scripts/check-deployed-smoke.js
