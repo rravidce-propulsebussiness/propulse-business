@@ -1,53 +1,143 @@
 import { useEffect, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { publicRequest } from '../utils/auth'
 import './HowItWorks.css'
 import { PublicFooter, PublicHeader } from '../components/PublicSiteChrome'
 
-const FLOWS=[
+const FLOWS = [
   {
-    key:'construction',
-    label:'Construction',
-    subtitle:'Build Your Dream Home',
-    route:'/quote#construction',
-    image:'https://images.unsplash.com/photo-1600585152915-d208bec867a1?auto=format&fit=crop&w=1200&q=88',
-    imageTitle:'From Plan to Your Dream Home',
-    imageText:'Start with a structured requirement and move forward with clarity.',
-    steps:[
-      ['clipboard','Share Your Requirement','Tell us about your plot, budget and preferences.'],
-      ['calculator','Get Estimated Plan','Use the estimator to understand an indicative budget range.'],
-      ['people','Connect with Businesses','Relevant businesses can understand the same structured brief.'],
-      ['home','Start Construction','Compare real quotations and move forward with the option you choose.'],
+    key: 'construction',
+    label: 'Construction',
+    subtitle: 'Plot to completed home',
+    kicker: 'BUILD WITH A CLEAR PLAN',
+    title: 'From your plot to your keys.',
+    description: 'Understand the steps behind a home construction project, from sharing your requirement and choosing a package to drawings, site execution and final handover.',
+    image: 'https://images.unsplash.com/photo-1600585152915-d208bec867a1?auto=format&fit=crop&w=1400&q=85',
+    route: '/quote#construction',
+    action: 'Share Construction Requirement',
+    secondary: { label: 'Compare Construction Packages', route: '/packages' },
+    reminder: 'Confirm the plot details, design scope, material brands, stage-wise payments, inspection responsibilities and warranty terms with your selected builder before work starts.',
+    phases: [
+      {
+        tag: 'DISCOVER & COMPARE',
+        title: 'First, make the right choices.',
+        intro: 'Start with your needs, then compare packages and real professional work.',
+        steps: [
+          { icon: 'clipboard', title: 'Fill your requirement form', text: 'Share location, plot size, built-up area, floors, budget, timeline and other construction needs.', check: 'A clear brief for relevant professionals' },
+          { icon: 'calculator', title: 'Explore & compare packages', text: 'Review available construction packages, inclusions, material specifications and indicative rates.', check: 'Know what each package includes' },
+          { icon: 'home', title: 'Review plans & completed work', text: 'Explore layouts, designs and published projects. Shortlist approaches that suit your plot and lifestyle.', check: 'Discuss a preferred plan and style' },
+        ],
+      },
+      {
+        tag: 'DESIGN & APPROVE',
+        title: 'Agree on the details before work.',
+        intro: 'Your chosen professional helps turn an initial idea into an executable scope.',
+        steps: [
+          { icon: 'people', title: 'Consultation & site assessment', text: 'Connect with businesses and arrange a site review, measurements and feasibility discussion as needed.', check: 'Validate site conditions and requirements' },
+          { icon: 'receipt', title: 'Quotation, drawings & contract', text: 'Review architectural and structural drawings, detailed scope, material brands, exclusions, budget and payment milestones.', check: 'Approve the final quote and agreement' },
+          { icon: 'shield', title: 'Approvals & site preparation', text: 'Confirm applicable permits, engineering assessments, soil testing, schedule and site preparation with appointed experts.', check: 'Clear pre-construction requirements' },
+        ],
+      },
+      {
+        tag: 'EXECUTE & HAND OVER',
+        title: 'Watch the project take shape.',
+        intro: 'Execution and inspections follow the agreed scope and project milestones.',
+        steps: [
+          { icon: 'building', title: 'Construction execution', text: 'The selected contractor carries out foundation, structure, masonry, electrical, plumbing, waterproofing and finishes as contracted.', check: 'Review milestone progress with the contractor' },
+          { icon: 'check', title: 'Quality checks & final inspection', text: 'Have responsible professionals inspect critical stages, workmanship, curing, waterproofing and outstanding defects.', check: 'Close the agreed inspection and snag list' },
+          { icon: 'handshake', title: 'Home handover & aftercare', text: 'Walk through the finished home and collect agreed keys, drawings, manuals, certificates and warranty information.', check: 'Complete documented handover' },
+        ],
+      },
     ],
   },
   {
-    key:'interiors',
-    label:'Interiors',
-    subtitle:'Design Beautiful Spaces',
-    route:'/quote#interiors',
-    image:'https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=1200&q=88',
-    imageTitle:'Turn Your Space into Something Special',
-    imageText:'Define rooms, style, scope and preferences before requesting responses.',
-    steps:[
-      ['sofa','Share Your Space Details','Tell us about the property, rooms, area and preferred scope.'],
-      ['spark','Get Design Options','Describe the styles, finishes and budget you are considering.'],
-      ['people','Meet Interior Businesses','Relevant interior businesses can respond to the same brief.'],
-      ['chair','Get It Done','Compare quotations and choose how you want to proceed.'],
+    key: 'interiors',
+    label: 'Interiors',
+    subtitle: 'Empty space to finished home',
+    kicker: 'DESIGN YOUR EVERYDAY',
+    title: 'From your ideas to a finished space.',
+    description: 'See how an interior project moves from a room-by-room brief and package selection through layouts, 3D designs, production, installation and handover.',
+    image: 'https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=1400&q=85',
+    route: '/quote#interiors',
+    action: 'Share Interior Requirement',
+    secondary: { label: 'Compare Interior Packages', route: '/packages' },
+    reminder: 'Ask the selected designer to confirm final measurements, plywood and laminate brands, hardware, finishes, 3D design approval, delivery milestones and after-sales terms.',
+    phases: [
+      {
+        tag: 'DISCOVER & COMPARE',
+        title: 'Begin with how you want to live.',
+        intro: 'Capture your room requirements, preferred style and budget.',
+        steps: [
+          { icon: 'clipboard', title: 'Fill your interior requirement', text: 'Choose BHK, rooms, location, budget, style and the work needed for kitchens, wardrobes, furniture and finishes.', check: 'Room-wise needs recorded' },
+          { icon: 'calculator', title: 'Select & compare packages', text: 'Explore interior package options, specifications, materials, finishes and what is included or excluded.', check: 'Shortlist a suitable package and budget' },
+          { icon: 'spark', title: 'Explore plans & 3D concepts', text: 'Discuss space plans, reference designs, mood boards and visualisations with the professional you select.', check: 'Agree on a design direction' },
+        ],
+      },
+      {
+        tag: 'DESIGN & APPROVE',
+        title: 'Finalise before manufacturing.',
+        intro: 'Turn the chosen design into approved drawings, materials and costs.',
+        steps: [
+          { icon: 'people', title: 'Site visit & measurements', text: 'The selected team checks site dimensions, electrical points, plumbing, doors, windows and execution feasibility.', check: 'Site-validated measurements' },
+          { icon: 'receipt', title: 'Final drawings & quotation', text: 'Review 2D/3D designs, material brands, hardware, line-item costs, revisions and the proposed execution schedule.', check: 'Approve drawings, scope and payment stages' },
+          { icon: 'shield', title: 'Materials & design sign-off', text: 'Confirm plywood, laminates, colours, finishes, fixtures and samples before ordering or fabrication begins.', check: 'Sign off the final material list' },
+        ],
+      },
+      {
+        tag: 'PRODUCE & HAND OVER',
+        title: 'Bring every detail to life.',
+        intro: 'Production, on-site work and quality control complete the space.',
+        steps: [
+          { icon: 'chair', title: 'Production & installation', text: 'As contracted, the team coordinates modular fabrication, civil and electrical work, delivery and on-site installation.', check: 'Track installation milestones' },
+          { icon: 'check', title: 'Finish checks & snag closure', text: 'Inspect alignment, edges, shutters, hardware, lighting, finishes and function; record and resolve agreed snags.', check: 'Walk through the finished rooms' },
+          { icon: 'handshake', title: 'Final handover & support', text: 'Confirm the completed scope and collect care instructions, invoices and applicable product or workmanship warranties.', check: 'Receive the agreed handover documents' },
+        ],
+      },
     ],
   },
   {
-    key:'realestate',
-    label:'Real Estate',
-    subtitle:'Buy, Sell or Invest',
-    route:'/quote#property',
-    image:'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=1200&q=88',
-    imageTitle:'Better Decisions Start with Clear Requirements',
-    imageText:'Define property type, location, budget and preferences in one place.',
-    steps:[
-      ['search','Tell Us What You Need','Choose the location, property type, budget and intent.'],
-      ['building','Get Relevant Options','Your brief helps narrow responses to what actually matches.'],
-      ['people','Connect with Businesses','Talk to relevant real-estate businesses using the same requirement.'],
-      ['handshake','Finalize & Proceed','Review the actual details and choose your own next step.'],
+    key: 'realestate',
+    label: 'Real Estate',
+    subtitle: 'Property search to possession',
+    kicker: 'MAKE AN INFORMED MOVE',
+    title: 'From property search to possession.',
+    description: 'A practical property journey for buyers, sellers and investors: defining requirements, exploring options, site visits, independent checks, agreement, registration and possession.',
+    image: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=1400&q=85',
+    route: '/quote#property',
+    action: 'Share Property Requirement',
+    secondary: { label: 'Explore Professionals', route: '/experts' },
+    reminder: 'Before paying or signing, independently verify ownership, title chain, encumbrances, applicable RERA registration, permissions, total costs and contract terms with qualified advisers.',
+    phases: [
+      {
+        tag: 'EXPLORE & SHORTLIST',
+        title: 'Know what you are looking for.',
+        intro: 'Define your needs and compare suitable opportunities.',
+        steps: [
+          { icon: 'clipboard', title: 'Share your property requirement', text: 'Tell us whether you want to buy, sell or invest, along with location, property type, area, budget and preferences.', check: 'A clear property brief' },
+          { icon: 'search', title: 'Explore relevant options', text: 'Discuss suitable property leads and available options with relevant real-estate professionals.', check: 'A shortlist that fits your priorities' },
+          { icon: 'building', title: 'Compare locations & properties', text: 'Consider neighbourhood, access, layout, amenities, price, ongoing costs and future requirements.', check: 'Prioritise the best-fit choices' },
+        ],
+      },
+      {
+        tag: 'VISIT & VERIFY',
+        title: 'Check before you commit.',
+        intro: 'Compare on the ground and independently review important documents.',
+        steps: [
+          { icon: 'pin', title: 'Site visits & discussions', text: 'Arrange viewings with the relevant business and inspect condition, measurements, surroundings and suitability.', check: 'Visit and compare shortlisted options' },
+          { icon: 'shield', title: 'Legal & project due diligence', text: 'Ask an independent lawyer or qualified expert to check ownership, title, encumbrances, approvals and RERA details when applicable.', check: 'Verify documents before committing funds' },
+          { icon: 'receipt', title: 'Offer, costs & agreement', text: 'Negotiate price and terms, review taxes, fees, financing, payment conditions and the draft agreement.', check: 'Understand and approve the transaction terms' },
+        ],
+      },
+      {
+        tag: 'CLOSE & TAKE POSSESSION',
+        title: 'Complete the transaction confidently.',
+        intro: 'Finish the legal transfer and document the property handover.',
+        steps: [
+          { icon: 'handshake', title: 'Payments & registration', text: 'Follow the agreed payment schedule and complete applicable sale-deed registration or other formalities with authorised parties.', check: 'Collect registered transaction documents' },
+          { icon: 'check', title: 'Possession & inspection', text: 'Inspect the property and agreed fixtures, record outstanding items and confirm keys, access and possession conditions.', check: 'Document the possession handover' },
+          { icon: 'home', title: 'Post-handover essentials', text: 'Arrange relevant utility transfers, association records, mutation or tax updates and safekeeping of original documents.', check: 'Complete the ownership or move-in checklist' },
+        ],
+      },
     ],
   },
 ]
@@ -76,63 +166,164 @@ function Icon({name,size=20}){
 }
 
 
-export default function HowItWorks(){
-  const navigate=useNavigate()
-  const [active,setActive]=useState(()=>{
-    const hash=typeof window!=='undefined'?window.location.hash.replace('#',''):''
-    return FLOWS.some(flow=>flow.key===hash)?hash:'construction'
+export default function HowItWorks() {
+  const [active, setActive] = useState(() => {
+    const hash = typeof window === 'undefined' ? '' : window.location.hash.slice(1)
+    return FLOWS.some(flow => flow.key === hash) ? hash : 'construction'
   })
-  const [contactData,setContactData]=useState({})
+  const [contactData, setContactData] = useState({})
 
-  useEffect(()=>{
-    window.scrollTo(0,0)
+  useEffect(() => {
+    let alive = true
     publicRequest('/contact?audience=website')
-      .then(value=>setContactData(value||{}))
-      .catch(()=>setContactData({}))
-  },[])
+      .then(value => { if (alive) setContactData(value || {}) })
+      .catch(() => { if (alive) setContactData({}) })
+    const syncHash = () => {
+      const hash = window.location.hash.slice(1)
+      if (FLOWS.some(flow => flow.key === hash)) setActive(hash)
+    }
+    window.addEventListener('hashchange', syncHash)
+    return () => { alive = false; window.removeEventListener('hashchange', syncHash) }
+  }, [])
 
-  function goToFlow(key){
+  function selectFlow(key) {
     setActive(key)
-    if(typeof window!=='undefined')window.history.replaceState({},'',`/how-it-works#${key}`)
+    if (typeof window !== 'undefined') {
+      window.history.replaceState(window.history.state, '', '/how-it-works#' + key)
+    }
   }
 
-  const activeFlow=FLOWS.find(flow=>flow.key===active)||FLOWS[0]
-  const phone=contactData.phone||contactData.phone_number||contactData.mobile||''
-  const email=contactData.email||contactData.support_email||''
+  function onTabKeyDown(event, index) {
+    const { key } = event
+    if (!['ArrowRight', 'ArrowLeft', 'Home', 'End'].includes(key)) return
+    event.preventDefault()
+    const next = key === 'Home' ? 0 : key === 'End' ? FLOWS.length - 1
+      : (index + (key === 'ArrowRight' ? 1 : -1) + FLOWS.length) % FLOWS.length
+    selectFlow(FLOWS[next].key)
+    document.getElementById('hiw-tab-' + FLOWS[next].key)?.focus()
+  }
+
+  const flow = FLOWS.find(item => item.key === active) || FLOWS[0]
+  const phone = contactData.phone || contactData.phone_number || contactData.mobile || ''
+  const email = contactData.email || contactData.support_email || ''
 
   return <main className="hiw-page">
     <PublicHeader />
-    <section className="premium-page-intro" aria-labelledby="premium-howitworks-title">
-      <span className="premium-eyebrow">THE PROPULSE JOURNEY</span>
-      <h1 id="premium-howitworks-title">Your vision. A clear way forward.</h1>
-      <p>From your first idea to the right professional, take the next step with confidence.</p>
-    </section>
 
-    <section className="hiw-tabs">
-      {FLOWS.map(flow=><button key={flow.key} className={active===flow.key?'active':''} onClick={()=>goToFlow(flow.key)}><span><Icon name={flow.key==='construction'?'home':flow.key==='interiors'?'sofa':'building'} size={20}/></span><div><b>{flow.label}</b><small>{flow.subtitle}</small></div></button>)}
-    </section>
-
-    <section className="hiw-flow-list">
-      <article className="hiw-flow hiw-flow-active" id="hiw-active-flow" key={activeFlow.key}>
-        <div className="hiw-flow-layout">
-          <div className="hiw-step-grid">
-            {activeFlow.steps.map(([icon,title,text],stepIndex)=><div className="hiw-step-card" key={title}>
-              <span><Icon name={icon} size={23}/></span><h3>{title}</h3><p>{text}</p>
-              {stepIndex<activeFlow.steps.length-1&&<i><Icon name="arrow" size={15}/></i>}
-            </div>)}
+    <header className="hiw-hero">
+      <div className="hiw-shell hiw-hero-inner">
+        <div className="hiw-hero-copy">
+          <span className="hiw-eyebrow"><span className="hiw-eyebrow-mark" /> HOW PROPULSE WORKS</span>
+          <h1>From first idea to <em>final handover.</em></h1>
+          <p>Every successful project starts with the right questions. See the full journey for construction, interiors or real estate—from your requirement form to planning, approvals, delivery and the last checklist.</p>
+          <div className="hiw-hero-actions">
+            <Link className="hiw-btn hiw-btn-primary" to={flow.route}>Start Your Requirement <Icon name="arrow" size={18}/></Link>
+            <a className="hiw-btn hiw-btn-ghost" href="#hiw-choose">Explore the steps <Icon name="arrow" size={17}/></a>
           </div>
-          <button className="hiw-visual-card" onClick={()=>navigate(activeFlow.route)}>
-            <img src={activeFlow.image} alt={activeFlow.imageTitle}/><div><b>{activeFlow.imageTitle}</b><small>{activeFlow.imageText}</small></div><span><Icon name="arrow" size={15}/></span>
-          </button>
         </div>
-      </article>
+        <div className="hiw-hero-art" aria-hidden="true">
+          <div className="hiw-hero-art-back" />
+          <div className="hiw-hero-image"><img src={flow.image} alt="" /></div>
+          <div className="hiw-hero-float hiw-hero-float-top"><span><Icon name="clipboard" size={17}/></span> A clear starting brief</div>
+          <div className="hiw-hero-float hiw-hero-float-bottom"><span><Icon name="check" size={17}/></span> A confident next step</div>
+        </div>
+      </div>
+    </header>
+
+    <section className="hiw-choose hiw-shell" id="hiw-choose" aria-labelledby="hiw-choose-title">
+      <div className="hiw-section-lead">
+        <div>
+          <span className="hiw-overline">THREE SERVICES · THREE CLEAR JOURNEYS</span>
+          <h2 id="hiw-choose-title">What are you planning?</h2>
+        </div>
+        <p>Select your service to explore each stage in order.</p>
+      </div>
+      <div className="hiw-tabs" role="tablist" aria-label="Select a project journey">
+        {FLOWS.map((item, index) => <button
+          key={item.key}
+          id={'hiw-tab-' + item.key}
+          type="button"
+          role="tab"
+          aria-selected={active === item.key}
+          aria-controls="hiw-process-panel"
+          tabIndex={active === item.key ? 0 : -1}
+          className={'hiw-tab' + (active === item.key ? ' is-active' : '')}
+          onClick={() => selectFlow(item.key)}
+          onKeyDown={event => onTabKeyDown(event, index)}
+        >
+          <span className="hiw-tab-icon"><Icon name={item.key === 'construction' ? 'home' : item.key === 'interiors' ? 'sofa' : 'building'} size={23}/></span>
+          <span className="hiw-tab-label"><strong>{item.label}</strong><small>{item.subtitle}</small></span>
+          <span className="hiw-tab-arrow"><Icon name="arrow" size={16}/></span>
+        </button>)}
+      </div>
     </section>
 
-    <section className="hiw-trust-strip">
-      <article><span><Icon name="chat"/></span><div><b>FREE CONSULTATION</b><small>No obligation</small></div></article>
-      <article><span><Icon name="receipt"/></span><div><b>TRANSPARENT ESTIMATES</b><small>Compare actual options</small></div></article>
-      <article><span><Icon name="people"/></span><div><b>RELEVANT BUSINESSES</b><small>Matched by category & location</small></div></article>
-      <article><span><Icon name="support"/></span><div><b>END-TO-END JOURNEY</b><small>From planning to next step</small></div></article>
+    <section className="hiw-journey hiw-shell" id="hiw-process-panel" role="tabpanel" aria-labelledby={'hiw-tab-' + active} tabIndex={0} key={active}>
+      <div className="hiw-journey-head">
+        <div className="hiw-journey-head-copy">
+          <span className="hiw-overline">{flow.kicker}</span>
+          <h2>{flow.title}</h2>
+          <p>{flow.description}</p>
+          <div className="hiw-journey-facts">
+            <span><Icon name="clipboard" size={17}/> 9 clear steps</span>
+            <span><Icon name="shield" size={17}/> Decisions & checkpoints</span>
+            <span><Icon name="handshake" size={17}/> Handover guidance</span>
+          </div>
+        </div>
+        <div className="hiw-journey-photo"><img src={flow.image} alt="" loading="lazy"/><div className="hiw-photo-caption"><span>YOUR JOURNEY</span><strong>Explore. Decide. Complete.</strong></div></div>
+      </div>
+      <div className="hiw-stage-index" aria-label="Journey stages">
+        {flow.phases.map((phase, i) => <a href={'#hiw-stage-' + (i + 1)} key={phase.tag}>
+          <span>{String(i + 1).padStart(2, '0')}</span><strong>{phase.tag}</strong><Icon name="arrow" size={15}/>
+        </a>)}
+      </div>
+
+      <div className="hiw-phases">
+        {flow.phases.map((phase, i) => <section className="hiw-phase" id={'hiw-stage-' + (i + 1)} key={phase.tag}>
+          <div className="hiw-phase-heading">
+            <span className="hiw-phase-number">{String(i + 1).padStart(2, '0')}</span>
+            <div>
+              <span className="hiw-overline">{phase.tag}</span>
+              <h3>{phase.title}</h3>
+              <p>{phase.intro}</p>
+            </div>
+          </div>
+          <div className="hiw-step-grid">
+            {phase.steps.map((step, j) => <article className="hiw-step-card" key={step.title}>
+              <div className="hiw-step-card-top">
+                <span className="hiw-step-number">STEP {String(i * 3 + j + 1).padStart(2, '0')}</span>
+                <span className="hiw-step-icon"><Icon name={step.icon} size={22}/></span>
+              </div>
+              <h4>{step.title}</h4>
+              <p>{step.text}</p>
+              <div className="hiw-step-check"><Icon name="check" size={16}/><span>{step.check}</span></div>
+            </article>)}
+          </div>
+        </section>)}
+      </div>
+    </section>
+
+    <section className="hiw-next hiw-shell">
+      <div className="hiw-next-main">
+        <span className="hiw-overline">READY FOR YOUR FIRST STEP?</span>
+        <h2>Start with a requirement. Move forward with clarity.</h2>
+        <p>Describe what you need, review your options and choose the right professionals for your project.</p>
+        <div className="hiw-next-actions">
+          <Link className="hiw-btn hiw-btn-primary" to={flow.route}>{flow.action} <Icon name="arrow" size={18}/></Link>
+          <Link className="hiw-btn hiw-btn-outline" to={flow.secondary.route}>{flow.secondary.label}</Link>
+          <Link className="hiw-next-simple" to="/projects">Explore Completed Projects <Icon name="arrow" size={16}/></Link>
+        </div>
+      </div>
+      <aside className="hiw-next-aside">
+        <span className="hiw-next-aside-icon"><Icon name="shield" size={22}/></span>
+        <h3>Before you proceed</h3>
+        <p>{flow.reminder}</p>
+      </aside>
+    </section>
+
+    <section className="hiw-platform-note hiw-shell">
+      <Icon name="support" size={20}/>
+      <p><strong>How ProPulse fits in:</strong> ProPulse helps you share requirements, explore published packages and projects, and connect with relevant businesses. Designs, quotes, execution, inspections, legal checks and handover are managed by the professionals you engage under their agreed scope; services and deliverables vary by project.</p>
     </section>
 
     <PublicFooter phone={phone} email={email} />

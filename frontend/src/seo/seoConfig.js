@@ -45,9 +45,9 @@ export const CORE_PUBLIC_SEO_ROUTES=[
   {
     path:'/how-it-works',
     title:'How ProPulse Works | Construction, Interiors & Property',
-    description:'See how ProPulse helps customers structure construction, interior and real-estate requirements, compare responses and connect with relevant businesses.',
-    heading:'How ProPulse works',
-    summary:'Start with your requirement, add the right project details, review relevant responses and choose your own next step.',
+    description:'Explore each step of a construction, interior or real-estate project, from requirement forms, packages and designs through approvals, execution, inspections and handover.',
+    heading:'From first idea to final handover',
+    summary:'Understand the nine stages of construction, interiors and real estate, and what to check with your chosen professionals before proceeding.',
   },
   {
     path:'/about',
