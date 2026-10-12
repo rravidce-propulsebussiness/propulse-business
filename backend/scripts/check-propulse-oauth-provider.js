@@ -112,6 +112,10 @@ async function main() {
     const consent=await response.text();
     assert.match(consent,/Approve and continue/);
     assert.match(response.headers.get('content-security-policy'),/frame-ancestors 'none'/);
+    assert.equal(response.headers.get('referrer-policy'),'strict-origin',
+      'OAuth consent GET must let browser form POST use the canonical Origin, not null');
+    assert.equal(response.headers.get('cache-control'),'no-store',
+      'OAuth approval page must never be cached');
     const approval=consent.match(/name="approval" value="([^"]+)"/)?.[1];
     assert.ok(approval);
     const authorize=(nonce, extra={})=>fetch(base+'/api/oauth/authorize',{
