@@ -144,7 +144,7 @@ async function signup({ name, email, password, phone, businessName, businessDeta
     if (existing.rows.length) throw Object.assign(new Error('An account with this email already exists'), { code: 'EMAIL_EXISTS' });
     const validatedSelections = await validateBusinessSelections(client, services, locations);
     const passwordHash = await bcrypt.hash(passwordValue, 12);
-    const user = (await client.query(`INSERT INTO users (name,email,password_hash,role) VALUES ($1,$2,$3,$4) RETURNING id,name,email,role,auth_version`, [signupName, normalizedEmail, passwordHash, signupRole])).rows[0];
+    const user = (await client.query(`INSERT INTO users (name,email,password_hash,role,email_verified_at) VALUES ($1,$2,$3,$4,$5) RETURNING id,name,email,role,auth_version`, [signupName, normalizedEmail, passwordHash, signupRole, googleCredential ? new Date() : null])).rows[0];
     if (signupRole === 'lead_partner') {
       await client.query(`INSERT INTO lead_partners (user_id,status) VALUES ($1,'pending') ON CONFLICT (user_id) DO NOTHING`, [user.id]);
     }
@@ -306,6 +306,7 @@ async function googleLogin({ idToken }) {
     if (!user) {
       throw Object.assign(new Error('No Propulse account exists for this Google email. Please create an account first.'), { code: 'GOOGLE_ACCOUNT_NOT_FOUND' });
     }
+    await client.query('UPDATE users SET email_verified_at=COALESCE(email_verified_at,CURRENT_TIMESTAMP) WHERE id=$1', [user.id]);
     await client.query('COMMIT');
     return { user: await getPublicAuthenticatedUser(user), token: signToken(user) };
   } catch (error) {
@@ -357,7 +358,7 @@ async function resetPassword({ token, password }) {
     const row = result.rows[0];
     if (!row) throw Object.assign(new Error('This password reset link is invalid or has expired'), { code: 'INVALID_RESET_TOKEN' });
     const passwordHash = await bcrypt.hash(password, 12);
-    await client.query(`UPDATE users SET password_hash=$1,auth_version=auth_version+1,updated_at=CURRENT_TIMESTAMP WHERE id=$2`, [passwordHash, row.user_id]);
+    await client.query(`UPDATE users SET password_hash=$1,auth_version=auth_version+1,email_verified_at=COALESCE(email_verified_at,CURRENT_TIMESTAMP),updated_at=CURRENT_TIMESTAMP WHERE id=$2`, [passwordHash, row.user_id]);
     await client.query(`UPDATE password_reset_tokens SET used_at=CURRENT_TIMESTAMP WHERE user_id=$1`, [row.user_id]);
     await client.query('COMMIT');
     return { user: await publicUser({ id: row.user_id, name: row.name, email: row.email, role: row.role }, await getBusinessProfile(row.user_id)) };
