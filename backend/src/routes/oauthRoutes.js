@@ -134,7 +134,15 @@ async function authorize(req,res) {
       '<a href="/api/auth/email-verification">Send me a verification email</a></main></html>',
     );
 
-    if(req.method!=='POST') return res.status(200).type('html').send(consentPage(params,record));
+    if(req.method!=='POST') {
+      // The OAuth consent page contains a same-origin HTML form POST. Keeping
+      // Referrer-Policy: no-referrer here makes Chrome send Origin: null on
+      // navigation-mode form submissions, which our strict CORS layer rejects.
+      // strict-origin sends only the HTTPS site origin (never URL/query values)
+      // and does not permit HTTPS referrers to downgrade to insecure HTTP.
+      res.setHeader('Referrer-Policy','strict-origin');
+      return res.status(200).type('html').send(consentPage(params,record));
+    }
 
     const approval=String(req.body?.approval||'');
     const [issued,signature,extra]=approval.split('.');
