@@ -210,7 +210,7 @@ async function processEmailDeliveries({limit=25}={}){
       const minutes=attempts<=1?5:attempts===2?15:attempts===3?60:360;
       await pool.query(
         `UPDATE notification_deliveries
-            SET status=$1,next_attempt_at=CASE WHEN $1='retry' THEN CURRENT_TIMESTAMP+($2*INTERVAL '1 minute') ELSE NULL END,
+            SET status=$1::varchar(16),next_attempt_at=CASE WHEN $1::varchar(16)='retry' THEN CURRENT_TIMESTAMP+($2::integer*INTERVAL '1 minute') ELSE NULL END,
                 last_error=$3,updated_at=CURRENT_TIMESTAMP
           WHERE id=$4`,
         [terminal?'failed':'retry',minutes,String(error?.message||'Email delivery failed').slice(0,500),delivery.id]
