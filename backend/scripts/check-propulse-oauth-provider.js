@@ -113,7 +113,7 @@ async function main() {
     assert.match(consent,/Approve and continue/);
     const consentCsp=response.headers.get('content-security-policy') || '';
     assert.match(consentCsp,/frame-ancestors 'none'/);
-    const permittedFormSources=consentCsp.match(/form-action ([^;]+);/)?.[1]?.split(/\\s+/) || [];
+    const permittedFormSources=consentCsp.match(/form-action ([^;]+);/)?.[1]?.split(/\s+/) || [];
     assert.deepEqual(permittedFormSources,[
       "'self'",
       'https://propulsetechnologies.online',
