@@ -87,6 +87,19 @@ async function main() {
     assert.equal(response.status,303,'anonymous must redirect to ProPulse login');
     assert.match(response.headers.get('location'),/^\/login\?returnTo=/);
     response=await fetch(endpoint,{headers:{cookie:'propulse_auth=valid'},redirect:'manual'});
+    assert.equal(response.status,200,'OAuth requires visible identity consent');
+    const consent=await response.text();
+    assert.match(consent,/Approve and continue/);
+    assert.match(response.headers.get('content-security-policy'),/frame-ancestors 'none'/);
+    const approval=consent.match(/name="approval" value="([^"]+)"/)?.[1];
+    assert.ok(approval);
+    const authorize=(nonce, extra={})=>fetch(base+'/api/oauth/authorize',{
+      method:'POST',headers:{'content-type':'application/x-www-form-urlencoded',cookie:'propulse_auth=valid'},
+      body:new URLSearchParams({...Object.fromEntries(params),approval:nonce,...extra}),redirect:'manual',
+    });
+    let rejected=await authorize('forged-consent');
+    assert.equal(rejected.status,403,'unauthorized consent must fail');
+    response=await authorize(approval);
     assert.equal(response.status,303);
     const redirect=new URL(response.headers.get('location'));
     assert.equal(redirect.origin,'https://testproject.supabase.co');
@@ -115,6 +128,10 @@ async function main() {
     assert.equal(response.status,401,'auth-version changes revoke tokens');
     version=0;
     response=await fetch(endpoint,{headers:{cookie:'propulse_auth=valid'},redirect:'manual'});
+    assert.equal(response.status,200);
+    const secondApproval=(await response.text()).match(/name="approval" value="([^"]+)"/)?.[1];
+    assert.ok(secondApproval);
+    response=await authorize(secondApproval);
     const secondCode=new URL(response.headers.get('location')).searchParams.get('code');
     response=await request(secondCode,'wrong-'+verifier);
     assert.equal(response.status,400,'PKCE mismatch must fail');
