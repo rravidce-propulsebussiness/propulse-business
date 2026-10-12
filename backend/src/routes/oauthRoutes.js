@@ -103,19 +103,16 @@ function consentPage(params, principal) {
 async function authorize(req,res) {
   noStore(res);
   res.setHeader('X-Frame-Options','DENY');
-  // Chromium enforces form-action on redirects after the consent POST:
-  // ProPulse -> configured Supabase OAuth callback -> Business OS callback.
-  // Only list trusted, server-configured destinations; never use req.query.
-  const trustedSupabaseOrigin = enabled() ? new URL(redirectUri()).origin : null;
-  const consentFormOrigins = [
-    "'self'",
-    'https://propulsetechnologies.online',
-    trustedSupabaseOrigin,
-    'https://sghomesinterior.in',
-  ].filter(Boolean).join(' ');
+  // Chromium enforces form-action across the whole OAuth POST redirect
+  // chain, including Supabase's failure redirect destinations. Its violation
+  // message misleadingly names the original same-origin POST endpoint even
+  // when the browser blocked a later redirect. Do not set form-action on
+  // this one trusted, script-free, server-rendered consent document.
+  // All other CSP controls remain active. The POST is protected separately
+  // by strict CORS/Origin and CSRF checks, a HMAC-signed consent token, PKCE,
+  // verified user identity, and an exact callback URL.
   res.setHeader('Content-Security-Policy',
-    "default-src 'none'; frame-ancestors 'none'; form-action " + consentFormOrigins +
-    "; style-src 'unsafe-inline'");
+    "default-src 'none'; frame-ancestors 'none'; base-uri 'none'; object-src 'none'; style-src 'unsafe-inline'");
   const { params, reason }=authorizeValidation(req.method==='POST'?req.body:req.query);
   if (!params) {
     // Safe diagnostics for Hostinger runtime logs, and useful to users seeing a 400.
