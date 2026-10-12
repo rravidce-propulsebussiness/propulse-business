@@ -52,20 +52,60 @@ function cookieUser(req) {
   try { return authService.verifyToken(decodeURIComponent(found.slice('propulse_auth='.length))); }
   catch { return null; }
 }
-router.get('/authorize', rateLimit({windowMs:60000,max:40}), async (req,res) => {
+function consentSignature(params, principal, issued) {
+  const payload = JSON.stringify([params.client_id,params.redirect_uri,params.state,
+    params.code_challenge,params.code_challenge_method,params.scope,String(principal.id),
+    String(principal.auth_version),issued]);
+  return crypto.createHmac('sha256',clientSecret()).update(payload).digest('hex');
+}
+function escapeHtml(value) {
+  return String(value).replace(/[&<>"']/g, ch => ({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;',
+  })[ch]);
+}
+function consentPage(params, principal) {
+  const issued=String(Date.now());
+  const signature=consentSignature(params,principal,issued);
+  const fields=Object.entries(params).map(([key,value]) =>
+    '<input type="hidden" name="'+escapeHtml(key)+'" value="'+escapeHtml(value)+'">',
+  ).join('');
+  const approval='<input type="hidden" name="approval" value="'+issued+'.'+signature+'">';
+  return '<!doctype html><html lang="en"><head><meta charset="utf-8">' +
+    '<meta name="viewport" content="width=device-width,initial-scale=1">' +
+    '<title>Connect ProPulse to Business OS</title></head>' +
+    '<body style="margin:0;background:#f1f5ff;color:#14213f;font:16px system-ui">' +
+    '<main style="max-width:500px;margin:10vh auto;padding:35px;border-radius:16px;background:#fff;' +
+    'box-shadow:0 20px 50px #13234220">' +
+    '<h1 style="font-size:27px">Continue to ProPulse Business OS?</h1>' +
+    '<p>Share your verified ProPulse email and display name to sign in. ' +
+    'This does not grant Business OS company permissions.</p>' +
+    '<p style="padding:12px;background:#edf4ff;border-radius:8px">' +
+    escapeHtml(principal.email)+'</p>' +
+    '<form method="post" action="/api/oauth/authorize">' + fields + approval +
+    '<button type="submit" style="width:100%;padding:14px;border:0;border-radius:8px;' +
+    'color:#fff;background:#176def;font-weight:700;cursor:pointer">' +
+    'Approve and continue</button></form>' +
+    '<p><a href="https://sghomesinterior.in/login">Cancel</a></p></main></body></html>';
+}
+async function authorize(req,res) {
   noStore(res);
-  const params = validatedAuthorizeParams(req.query);
+  res.setHeader('X-Frame-Options','DENY');
+  res.setHeader('Content-Security-Policy',
+    "default-src 'none'; frame-ancestors 'none'; form-action 'self'; style-src 'unsafe-inline'");
+  const params=validatedAuthorizeParams(req.method==='POST'?req.body:req.query);
   if (!params) return oauthError(res,400,'invalid_request');
-  const principal = cookieUser(req);
+  const principal=cookieUser(req);
   if (!principal) {
-    const returnTo = '/api/oauth/authorize?' + new URLSearchParams(params).toString();
-    return res.redirect(303, '/login?returnTo=' + encodeURIComponent(returnTo));
+    if (req.method==='POST') return oauthError(res,401,'login_required');
+    const returnTo='/api/oauth/authorize?'+new URLSearchParams(params).toString();
+    return res.redirect(303,'/login?returnTo='+encodeURIComponent(returnTo));
   }
   try {
-    const record = (await pool.query(
-      'SELECT id,email,name,auth_version,email_verified_at FROM users WHERE id=$1 AND is_active=TRUE', [principal.id],
+    const record=(await pool.query(
+      'SELECT id,email,name,auth_version,email_verified_at FROM users WHERE id=$1 AND is_active=TRUE',
+      [principal.id],
     )).rows[0];
-    if (!record || Number(record.auth_version || 0) !== Number(principal.auth_version || 0))
+    if (!record || Number(record.auth_version||0)!==Number(principal.auth_version||0))
       return oauthError(res,401,'login_required');
     if (!record.email_verified_at) return res.status(403).type('html').send(
       '<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">' +
@@ -74,22 +114,38 @@ router.get('/authorize', rateLimit({windowMs:60000,max:40}), async (req,res) => 
       'through the password reset link or sign in with a verified Google account.</p>' +
       '<a href="/forgot-password">Verify via password reset</a></main></html>',
     );
-    const code = random();
+
+    if(req.method!=='POST') return res.status(200).type('html').send(consentPage(params,record));
+
+    const approval=String(req.body?.approval||'');
+    const [issued,signature,extra]=approval.split('.');
+    const timestamp=Number(issued);
+    if (extra!==undefined || !/^\d{13}$/.test(issued||'') ||
+        !/^[0-9a-f]{64}$/.test(signature||'') ||
+        !Number.isSafeInteger(timestamp) || timestamp>Date.now()+30000 ||
+        Date.now()-timestamp>5*60*1000 ||
+        !secureEquals(signature,consentSignature(params,record,issued))) {
+      return oauthError(res,403,'access_denied');
+    }
+    const code=random();
     await pool.query(
       'INSERT INTO propulse_oauth_authorization_codes ' +
       '(code_hash,user_id,client_id,redirect_uri,code_challenge,auth_version,expires_at) ' +
       "VALUES ($1,$2,$3,$4,$5,$6,CURRENT_TIMESTAMP + INTERVAL '3 minutes')",
       [hash(code),record.id,params.client_id,params.redirect_uri,params.code_challenge,record.auth_version],
     );
-    const dest = new URL(params.redirect_uri);
+    const dest=new URL(params.redirect_uri);
     dest.searchParams.set('code',code);
     dest.searchParams.set('state',params.state);
     return res.redirect(303,dest.toString());
-  } catch (e) {
+  } catch(e) {
     console.error('ProPulse OAuth authorize failed:',e.message);
     return oauthError(res,503,'temporarily_unavailable');
   }
-});
+}
+router.get('/authorize',rateLimit({windowMs:60000,max:40}),authorize);
+router.post('/authorize',express.urlencoded({extended:false,limit:'8kb'}),
+  rateLimit({windowMs:60000,max:20}),authorize);
 router.post('/token', express.urlencoded({extended:false,limit:'8kb'}), rateLimit({windowMs:60000,max:40}), async (req,res) => {
   noStore(res);
   if (!enabled()) return oauthError(res,503,'temporarily_unavailable');
