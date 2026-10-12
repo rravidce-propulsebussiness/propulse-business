@@ -111,7 +111,18 @@ async function main() {
     assert.equal(response.status,200,'OAuth requires visible identity consent');
     const consent=await response.text();
     assert.match(consent,/Approve and continue/);
-    assert.match(response.headers.get('content-security-policy'),/frame-ancestors 'none'/);
+    const consentCsp=response.headers.get('content-security-policy') || '';
+    assert.match(consentCsp,/frame-ancestors 'none'/);
+    const permittedFormSources=consentCsp.match(/form-action ([^;]+);/)?.[1]?.split(/\\s+/) || [];
+    assert.deepEqual(permittedFormSources,[
+      "'self'",
+      'https://propulsetechnologies.online',
+      'https://testproject.supabase.co',
+      'https://sghomesinterior.in',
+    ],'Chrome consent redirects must allow only ProPulse, configured Supabase callback, and Business OS');
+    assert(!consentCsp.includes('*') && !consentCsp.includes('unsafe-forms') &&
+      !permittedFormSources.includes('https://evil.example'),
+      'OAuth consent must not allow wildcard or unrelated form destinations');
     assert.equal(response.headers.get('referrer-policy'),'strict-origin',
       'OAuth consent GET must let browser form POST use the canonical Origin, not null');
     assert.equal(response.headers.get('cache-control'),'no-store',
