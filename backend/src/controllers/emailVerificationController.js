@@ -99,8 +99,10 @@ async function showConfirm(req, res) {
 
 async function confirm(req, res) {
   const token = String(req.body?.token || '');
-  if (!validToken(token)) return res.status(400) &&
-    document(res,'Invalid verification link','Request a new verification email from ProPulse.');
+  if (!validToken(token)) {
+    res.status(400);
+    return document(res,'Invalid verification link','Request a new verification email from ProPulse.');
+  }
   try {
     // Single statement ensures one-time, expiring tokens and correct email,
     // account state and session version are checked together.
@@ -115,15 +117,17 @@ async function confirm(req, res) {
       ' AND u.auth_version=c.auth_version RETURNING u.id',
       [hash(token)],
     );
-    if (!result.rows.length) return res.status(400) &&
-      document(res,'Link expired or already used',
+    if (!result.rows.length) {
+      res.status(400);
+      return document(res,'Link expired or already used',
         'Your verification link is invalid or expired. Sign in to ProPulse to request another.');
+    }
     return document(res,'Your email is verified',
       'Your email was verified successfully. You can return to Business OS and select Continue with ProPulse.');
   } catch (e) {
     console.error('Email verification confirmation failed:',e.code || e.message);
-    return res.status(503) &&
-      document(res,'Try again later','Email verification is temporarily unavailable.');
+    res.status(503);
+    return document(res,'Try again later','Email verification is temporarily unavailable.');
   }
 }
 
