@@ -113,16 +113,13 @@ async function main() {
     assert.match(consent,/Approve and continue/);
     const consentCsp=response.headers.get('content-security-policy') || '';
     assert.match(consentCsp,/frame-ancestors 'none'/);
-    const permittedFormSources=consentCsp.match(/form-action ([^;]+);/)?.[1]?.split(/\s+/) || [];
-    assert.deepEqual(permittedFormSources,[
-      "'self'",
-      'https://propulsetechnologies.online',
-      'https://testproject.supabase.co',
-      'https://sghomesinterior.in',
-    ],'Chrome consent redirects must allow only ProPulse, configured Supabase callback, and Business OS');
-    assert(!consentCsp.includes('*') && !consentCsp.includes('unsafe-forms') &&
-      !permittedFormSources.includes('https://evil.example'),
-      'OAuth consent must not allow wildcard or unrelated form destinations');
+    assert.match(consentCsp,/default-src 'none'/);
+    assert.match(consentCsp,/base-uri 'none'/);
+    assert.match(consentCsp,/object-src 'none'/);
+    assert(!/\bform-action\b/.test(consentCsp),
+      'Consent CSP must not block browser navigation through Supabase callback redirect chain');
+    assert(!consentCsp.includes('unsafe-eval') && !consentCsp.includes('unsafe-forms'),
+      'OAuth consent must not loosen script execution or allow unsafe forms');
     assert.equal(response.headers.get('referrer-policy'),'strict-origin',
       'OAuth consent GET must let browser form POST use the canonical Origin, not null');
     assert.equal(response.headers.get('cache-control'),'no-store',
