@@ -218,8 +218,8 @@ assert(userFaq.includes('audience="homeowner"'),'Public FAQ page must keep the h
 assert(regionalLanding.includes('to="/guides"'),'Regional construction hubs must link to the guide hub');
 assert(regionalLanding.includes('/guides/best-steel-for-house-construction'),'Regional construction hubs must link to material guides');
 assert(regionalLanding.includes('/guides/home-construction-checklist'),'Regional construction hubs must link to planning guides');
-assert(aboutPage.includes('Grounded in real-world'),'About page must retain operating experience context');
-assert(aboutPage.includes('hands-on residential construction and interior execution experience in Hyderabad'),'About page must describe the prior experience generically');
+assert(aboutPage.includes('Built from real industry experience'),'About page must retain operating experience context');
+assert(aboutPage.includes('worked as Managing Director with two companies'),'About page must describe the prior experience generically');
 assert(landing.includes('prior hands-on residential construction and interior execution experience in Hyderabad'),'Hyderabad construction hub must retain generic operating experience context');
 assert(buildScript.includes('aboutExperienceContent(route)'),'Static About HTML must include generic operating experience');
 assert(buildScript.includes('constructionExperienceContent(route)'),'Static Hyderabad construction HTML must include generic operating experience context');
@@ -248,7 +248,7 @@ assert(requirementWizard.includes("get('package')"),'Quote flow must read the pa
 assert(requirementWizard.includes("standard: 'standard'"),'Standard package query must map into the construction quote answers');
 assert(landing.includes('to="/hyderabad/construction/compare-options"'),'Cost guide must link to construction comparison');
 assert(buildScript.includes('/hyderabad/construction/compare-options'),'Static cost guide must link to construction comparison');
-assert(packagePage.includes('to="/hyderabad/construction-cost"'),'Construction packages must link to the Hyderabad cost guide');
+assert(packagePage.includes("navigate('/quote?package='"),'Construction packages must preserve the direct quotation CTA');
 
 assert(packages.includes('rate: 1750')&&packages.includes('rate: 1899')&&packages.includes('rate: 2099'),'Construction package catalog must expose current planning rates');
 assert(buildScript.includes('costGuideContent(route)'),'Static SEO output must include crawlable construction cost content');

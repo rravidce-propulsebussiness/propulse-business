@@ -13,9 +13,18 @@ function Login() {
   const [loading, setLoading] = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
   const [error, setError] = useState('')
+  const requestedOAuthReturn = new URLSearchParams(location.search).get('returnTo')
+  const validOAuthReturn = typeof requestedOAuthReturn === 'string' &&
+    requestedOAuthReturn.startsWith('/api/oauth/authorize?') && !requestedOAuthReturn.startsWith('//') &&
+    requestedOAuthReturn.length < 4096 ? requestedOAuthReturn : null
 
   const finishLogin = useCallback(async (result) => {
     saveSession(result)
+    if (validOAuthReturn) {
+      // Complete the same-origin OAuth request with the new HttpOnly cookie.
+      window.location.assign(validOAuthReturn)
+      return
+    }
     if (result.user?.role === 'admin') {
       navigate('/admin', { replace: true })
       return
@@ -29,7 +38,7 @@ function Login() {
 
     const destination = location.state?.from?.pathname || '/leads'
     navigate(destination, { replace: true })
-  }, [location.state, navigate])
+  }, [location.state, navigate, validOAuthReturn])
 
   async function submit(e) {
     e.preventDefault()
