@@ -43,6 +43,8 @@ assert(service.includes('if(email&&row.inserted)'),'Duplicate events must not en
 assert(service.includes("row.email_enabled===false")&&service.includes("'Email notifications disabled'"),'Email worker must re-check the current user preference before delivery');
 assert(service.includes("status='processing' AND d.updated_at<CURRENT_TIMESTAMP-INTERVAL '10 minutes'"),'Stale email claims must be recoverable');
 assert(service.includes('attempts>=5')&&service.includes("terminal?'failed':'retry'"),'Email delivery retries must have a terminal bound');
+assert(service.includes("status=$1::varchar(16),next_attempt_at=CASE WHEN $1::varchar(16)='retry'"),'Email delivery retry SQL must type the reused status parameter consistently to avoid PostgreSQL 42P08');
+assert(service.includes("$2::integer*INTERVAL '1 minute'"),'Email retry backoff must be explicitly numeric for PostgreSQL');
 assert(service.includes("dedupeKey:`membership-expiry:"),'Membership expiry reminders must deduplicate');
 const safe=notifications.sanitizeMetadata({manual_reference:'RAW-UTR',proof_url:'private-key',password:'secret',safe:'ok'});
 assert(safe.manual_reference==='[redacted]'&&safe.proof_url==='[redacted]'&&safe.password==='[redacted]'&&safe.safe==='ok','Notification metadata must redact sensitive fields');
