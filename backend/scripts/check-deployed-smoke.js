@@ -65,7 +65,8 @@ async function main() {
   const versionMatches = expectedCommit ? commitMatches(versionBody.commit, expectedCommit) : false;
   const markerMatches = expectedCommit ? commitMatches(releaseBody.commit, expectedCommit) : false;
   if (expectedCommit) {
-    assert(versionMatches || markerMatches, `Neither backend commit ${versionBody.commit} nor frontend marker ${releaseBody.commit} matches expected ${expectedCommit}`);
+    assert(versionMatches, `Backend commit ${versionBody.commit} does not match expected ${expectedCommit}; do not accept a new frontend marker with an old backend`);
+    assert(markerMatches, `Frontend marker ${releaseBody.commit} does not match expected ${expectedCommit}`);
   }
 
   const effectiveEnvironment = String(versionBody.environment || releaseBody.environment || '').toLowerCase();
@@ -144,6 +145,32 @@ async function main() {
   assert.equal(sessionBody.authenticated, false, 'Anonymous deployed smoke must remain unauthenticated');
   assert.equal(sessionBody.user, null, 'Anonymous deployed smoke must not expose a user');
 
+  // Deployment gate for Business OS federation: the verified ProPulse consent
+  // page submits a SAME-ORIGIN POST. This previously returned HTTP 403 when a
+  // stale Hostinger CORS allowlist blocked the request before OAuth validation.
+  // Do not submit a real client ID, cookie, approval, or authorization code.
+  const consentProbe = await request('/api/oauth/authorize', {
+    method: 'POST',
+    headers: {
+      origin: appOrigin,
+      accept: 'application/json',
+      'content-type': 'application/x-www-form-urlencoded',
+    },
+    body: 'client_id=deployment-origin-probe',
+  });
+  assert.equal(
+    consentProbe.headers.get('access-control-allow-origin'), appOrigin,
+    'ProPulse OAuth consent origin rejected by Hostinger CORS: check deployed commit and canonical site origin',
+  );
+  assert.equal(
+    consentProbe.status, 400,
+    'OAuth consent probe must reach OAuth validation and return 400 invalid_request (not 403 Origin not allowed)',
+  );
+  const consentProbeBody = await consentProbe.json();
+  assert.equal(consentProbeBody.error, 'invalid_request', 'Unauthenticated, invalid OAuth probe must fail closed');
+  assert(['client_id_mismatch', 'provider_not_ready'].includes(consentProbeBody.reason),
+    'OAuth diagnostic reason must identify a rejected dummy client or a disabled provider');
+
   const googleConfig = await request('/api/auth/google/config', { headers: { origin: appOrigin } });
   assert.equal(googleConfig.status, 200, 'Public Google configuration must not fail with CORS');
   const googleConfigBody = await googleConfig.json();
@@ -189,7 +216,7 @@ async function main() {
   assert.equal(missing.status, 404);
 
   const effectiveCommit = versionMatches ? versionBody.commit : releaseBody.commit;
-  console.log(`Deployed smoke test passed: ${effectiveEnvironment} ${String(effectiveCommit).slice(0,12)}; HTTPS health, readiness, release identity, public pages/assets/SEO files, public session/sound/Experts APIs, security headers, CORS, auth boundary and 404 behavior.`);
+  console.log(`Deployed smoke test passed: ${effectiveEnvironment} ${String(effectiveCommit).slice(0,12)}; HTTPS health, readiness, release identity, public pages/assets/SEO files, public session/sound/Experts APIs, security headers, OAuth consent POST origin, CORS, auth boundary and 404 behavior.`);
 }
 
 main().catch(error => {
