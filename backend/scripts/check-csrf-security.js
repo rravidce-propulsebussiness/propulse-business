@@ -11,7 +11,8 @@ function run(req){
 
 process.env.CORS_ORIGIN='http://localhost:5173,https://app.propulse.example';
 assert.equal(parseOrigin('https://app.propulse.example/'),'https://app.propulse.example','origin parser must normalize a trailing slash');
-assert.deepEqual(getConfiguredOrigins({isProduction:true}),['http://localhost:5173','https://app.propulse.example'],'CORS and CSRF must share normalized origins');
+assert.deepEqual(getConfiguredOrigins({isProduction:true}),['http://localhost:5173','https://app.propulse.example','https://propulsetechnologies.online'],'Production CORS and CSRF must trust the exact ProPulse app origin, even if Hostinger CORS_ORIGIN is stale');
+assert.deepEqual(getConfiguredOrigins({isProduction:false}),['http://localhost:5173','https://app.propulse.example'],'Non-production must not automatically trust the production site');
 assert.throws(()=>parseOrigin('https://app.propulse.example/path'),/origins only/,'origin parser must reject paths');
 
 let result=run({method:'GET',headers:{cookie:'propulse_auth=token'}});
@@ -24,11 +25,20 @@ assert.equal(result.response.body.error,'CSRF validation failed');
 result=run({method:'POST',headers:{cookie:'propulse_auth=token',origin:'http://localhost:5173'}});
 assert.equal(result.nextCalled,true,'allowed configured origin must pass');
 
+result=run({method:'POST',headers:{cookie:'propulse_auth=token',origin:'https://propulsetechnologies.online'}});
+assert.equal(result.nextCalled,true,'Exact production ProPulse OAuth consent origin must pass CSRF');
+
 result=run({method:'POST',headers:{cookie:'propulse_auth=token',origin:'https://evil.example'}});
 assert.equal(result.response.statusCode,403,'untrusted origin must be rejected');
 
 result=run({method:'POST',headers:{cookie:'propulse_auth=token',referer:'http://localhost:5173/account'}});
 assert.equal(result.nextCalled,true,'allowed Referer origin must pass when Origin is absent');
+
+result=run({method:'POST',headers:{cookie:'propulse_auth=token',referer:'https://propulsetechnologies.online/api/oauth/authorize'}});
+assert.equal(result.nextCalled,true,'ProPulse consent forms must pass with an exact-origin Referer');
+
+result=run({method:'POST',headers:{cookie:'propulse_auth=token',origin:'https://propulsetechnologies.online.evil.example'}});
+assert.equal(result.response.statusCode,403,'Lookalike subdomains must not pass CSRF');
 
 result=run({method:'POST',headers:{cookie:'propulse_auth=token',referer:'https://evil.example/account'}});
 assert.equal(result.response.statusCode,403,'untrusted Referer origin must be rejected');
