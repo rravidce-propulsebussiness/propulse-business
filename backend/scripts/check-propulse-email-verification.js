@@ -78,7 +78,7 @@ async function test() {
     assert.equal(user.email_verified_at,null,'mail scanner GET must never mark verified');
     response=await fetch(base+'/api/auth/email-verification/confirm',{method:'POST',
       headers:{'content-type':'application/x-www-form-urlencoded'},
-      body:new URLSearchParams({token:token.slice(0,-1)+'_'})});
+      body:new URLSearchParams({token:token.slice(0,-1)+(token.endsWith('A')?'B':'A')})});
     assert.equal(response.status,400);
     assert.equal(user.email_verified_at,null);
     response=await fetch(base+'/api/auth/email-verification/confirm',{method:'POST',
