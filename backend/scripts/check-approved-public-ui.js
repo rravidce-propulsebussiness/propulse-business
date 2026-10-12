@@ -116,7 +116,8 @@ assert.match(contact,/openLeadPopup\(''\)/);
 assert.doesNotMatch(contact,/contact-service-strip|contact-map-grid|contact-direct-links/);
 // The portfolio must not imply that illustrative stock photos are completed client work.
 assert.doesNotMatch(projects,/CONCEPTS|sample-courtyard|COMPLETED STYLE · DEMO/);
-assert.match(projects,/Completed <em>Projects<\/em>/);
+assert.match(projects,/<h1 className="pj-sr-only">Projects<\/h1>/);
+assert.match(projects,/View Completed Project/);
 assert.match(projects,/professionalProjects\.filter\(project=>/);
 assert.match(projects,/className="pj-portfolio-section"/);
 assert.match(projects,/Declared completion years|declared completion years|declared completion/);
