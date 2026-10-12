@@ -9,6 +9,7 @@ function run(req){
   return {response,nextCalled};
 }
 
+process.env.NODE_ENV='production';
 process.env.CORS_ORIGIN='http://localhost:5173,https://app.propulse.example';
 assert.equal(parseOrigin('https://app.propulse.example/'),'https://app.propulse.example','origin parser must normalize a trailing slash');
 assert.deepEqual(getConfiguredOrigins({isProduction:true}),['http://localhost:5173','https://app.propulse.example','https://propulsetechnologies.online'],'Production CORS and CSRF must trust the exact ProPulse app origin, even if Hostinger CORS_ORIGIN is stale');
