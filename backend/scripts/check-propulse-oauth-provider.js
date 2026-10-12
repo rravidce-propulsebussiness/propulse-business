@@ -116,7 +116,7 @@ async function main() {
     assert.match(consentCsp,/default-src 'none'/);
     assert.match(consentCsp,/base-uri 'none'/);
     assert.match(consentCsp,/object-src 'none'/);
-    assert(!/\\bform-action\\b/.test(consentCsp),
+    assert(!/\bform-action\b/.test(consentCsp),
       'Consent CSP must not block browser navigation through Supabase callback redirect chain');
     assert(!consentCsp.includes('unsafe-eval') && !consentCsp.includes('unsafe-forms'),
       'OAuth consent must not loosen script execution or allow unsafe forms');
