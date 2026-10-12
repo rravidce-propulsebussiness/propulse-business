@@ -7,6 +7,7 @@ The legacy ProPulse platform at `https://propulsetechnologies.online` remains it
 - This application serves OAuth 2.0 authorization-code + **mandatory PKCE S256** through `/api/oauth/authorize`, `/api/oauth/token` and `/api/oauth/userinfo`.
 - Only a **single confidential client**, `PROPULSE_OAUTH_CLIENT_ID`, can authorize. The callback URL must match `PROPULSE_OAUTH_REDIRECT_URI` **exactly**, which must be a Supabase Auth HTTPS callback.
 - `PROPULSE_OAUTH_CLIENT_SECRET` is server-side only, never set as a `VITE_*` or `NEXT_PUBLIC_*` variable. It must be random and at least 32 characters.
+- An already signed-in account sees an explicit identity-sharing approval screen. The same-origin form POST is protected by a short-lived HMAC consent nonce and frame-blocking CSP; a third-party GET alone cannot approve a session.
 - Codes expire in three minutes, are stored as SHA-256 hashes, are consumed once in PostgreSQL using `DELETE ... RETURNING`, and are bound to a client, callback, auth version, and PKCE challenge.
 - Scoped bearer tokens expire in five minutes; only `openid email profile` user information is exposed. Neither ProPulse JWTs nor roles are sent to Business OS.
 - Only users with **independently verified email ownership** can issue codes. Legacy ProPulse password signup is **not** proof of email ownership. A completed password-reset email link or a Google-authenticated session verifies email and records `users.email_verified_at`. Existing passwords are never shared.
