@@ -65,7 +65,8 @@ async function main() {
   const versionMatches = expectedCommit ? commitMatches(versionBody.commit, expectedCommit) : false;
   const markerMatches = expectedCommit ? commitMatches(releaseBody.commit, expectedCommit) : false;
   if (expectedCommit) {
-    assert(versionMatches || markerMatches, `Neither backend commit ${versionBody.commit} nor frontend marker ${releaseBody.commit} matches expected ${expectedCommit}`);
+    assert(versionMatches, `Backend commit ${versionBody.commit} does not match expected ${expectedCommit}; do not accept a new frontend marker with an old backend`);
+    assert(markerMatches, `Frontend marker ${releaseBody.commit} does not match expected ${expectedCommit}`);
   }
 
   const effectiveEnvironment = String(versionBody.environment || releaseBody.environment || '').toLowerCase();
