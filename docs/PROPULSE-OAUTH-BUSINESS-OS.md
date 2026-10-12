@@ -10,7 +10,7 @@ The legacy ProPulse platform at `https://propulsetechnologies.online` remains it
 - An already signed-in account sees an explicit identity-sharing approval screen. The same-origin form POST is protected by a short-lived HMAC consent nonce and frame-blocking CSP; a third-party GET alone cannot approve a session.
 - Codes expire in three minutes, are stored as SHA-256 hashes, are consumed once in PostgreSQL using `DELETE ... RETURNING`, and are bound to a client, callback, auth version, and PKCE challenge.
 - Scoped bearer tokens expire in five minutes; only `openid email profile` user information is exposed. Neither ProPulse JWTs nor roles are sent to Business OS.
-- Only users with **independently verified email ownership** can issue codes. Legacy ProPulse password signup is **not** proof of email ownership. A completed password-reset email link or a Google-authenticated session verifies email and records `users.email_verified_at`. Existing passwords are never shared.
+- Only users with **independently verified email ownership** can issue codes. Legacy ProPulse password signup is **not** proof of email ownership. Use the dedicated email-verification flow or a verified Google sign-in to establish email ownership and record `users.email_verified_at`. Existing passwords are never shared.
 - Existing ProPulse login and Google login remain intact. If already logged in, authorization proceeds using the HttpOnly cookie. If not, the user is sent to the existing `/login` and returned to the validated **same-origin** `/api/oauth/authorize` request.
 
 ## Deployment setup
@@ -38,6 +38,12 @@ PROPULSE_OAUTH_REDIRECT_URI=https://wqkjzuqiarjyoimrzalk.supabase.co/auth/v1/cal
 
 Free-plan Supabase projects support up to three custom OAuth/OIDC providers. This does not require enterprise SAML.
 
+## Existing-account email verification
+
+The migration deliberately leaves existing account verification flags unset. A ProPulse user can log in on the original site, open `https://propulsetechnologies.online/api/auth/email-verification` and request a secure email link. The link expires in 30 minutes, its secret is stored only as a hash, and the confirmation requires an explicit button click (not a simple mail-scanner GET). The confirmation is single-use and invalidated when the account's email or auth version changes.
+
+This requires Resend to be configured on the original ProPulse backend; failed email delivery does not mark an account verified. Users can verify without changing their password, and no company memberships are created.
+
 ## Deployment acceptance
 
 - Unconfigured provider: fail closed; no unverified email identity can be issued.
@@ -45,7 +51,7 @@ Free-plan Supabase projects support up to three custom OAuth/OIDC providers. Thi
 - Valid login with verified email: exact callback, state returned unchanged, PKCE S256 and code issued.
 - Wrong client ID/secret, callback, PKCE verifier or reused/expired code: denied.
 - Revoked/deactivated ProPulse user cannot exchange a code or access UserInfo.
-- Google login and successfully completed password-reset verification enable the legacy user for ProPulse OAuth. Raw signup/login password alone does **not**.
+- Google login or successful dedicated email verification enables the legacy user for ProPulse OAuth. Raw signup/login password alone does **not**.
 - Business OS does **not** grant new company memberships from provider email or OAuth claims.
 
 **Production safety:** never switch these toggles on until an end-to-end test with a disposable real ProPulse user succeeds. Do not apply new migrations or set credentials by guessing values. No production database rows should be automatically backfilled as email-verified.
