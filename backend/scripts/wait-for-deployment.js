@@ -68,9 +68,11 @@ async function main(){
       const markerCommit=String(marker.body?.commit||'');
       const versionEnvironment=String(version.body?.environment||'').toLowerCase();
       const markerEnvironment=String(marker.body?.environment||'').toLowerCase();
-      const matchedCommit=commitMatches(versionCommit,expectedCommit)
-        ? versionCommit
-        : (commitMatches(markerCommit,expectedCommit)?markerCommit:'');
+      // Both independently served backend and frontend release identities must
+      // match. A new static marker alone does not prove that the OAuth backend
+      // handling consent POSTs was actually updated by Hostinger.
+      const backendMatches=version.response.status===200 && commitMatches(versionCommit,expectedCommit);
+      const frontendMatches=marker.response.status===200 && commitMatches(markerCommit,expectedCommit);
       const actualEnvironment=versionEnvironment||markerEnvironment;
 
       if(version.response.status!==200&&marker.response.status!==200){
@@ -88,7 +90,7 @@ async function main(){
         }else{
           last='version endpoint ['+responseSummary(version)+'] and release marker ['+responseSummary(marker)+']';
         }
-      }else if(!matchedCommit){
+      }else if(!backendMatches||!frontendMatches){
         forbiddenStreak=0;
         last='backend commit is '+(versionCommit||'unknown')+', frontend marker is '+(markerCommit||'unknown')+', waiting for '+expectedCommit.slice(0,12);
       }else if(actualEnvironment&&actualEnvironment!==expectedEnvironment){
@@ -98,8 +100,7 @@ async function main(){
         forbiddenStreak=0;
         const ready=await getJson('/health/ready');
         if(ready.response.status===200&&ready.body?.status==='ok'){
-          const source=commitMatches(versionCommit,expectedCommit)?'backend version':'frontend release marker';
-          console.log('Deployment ready via '+source+': '+expectedEnvironment+' '+matchedCommit.slice(0,12));
+          console.log('Deployment ready: matching backend and frontend '+expectedEnvironment+' '+versionCommit.slice(0,12));
           return;
         }
         last='requested release is visible but readiness returned HTTP '+ready.response.status;
