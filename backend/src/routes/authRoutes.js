@@ -1,6 +1,7 @@
 const crypto = require('crypto');
 const express = require('express');
 const authController = require('../controllers/authController');
+const emailVerificationController = require('../controllers/emailVerificationController');
 const requireAuth = require('../middleware/authMiddleware');
 const rateLimit = require('../middleware/rateLimitMiddleware');
 
@@ -41,6 +42,16 @@ router.get('/google/config', (req, res) => {
   return res.json({ clientId: String(process.env.GOOGLE_CLIENT_ID || '').trim() || null });
 });
 router.post('/google', authWriteLimit, authController.googleLogin);
+// Email ownership verification is independent of password resets.
+router.get('/email-verification', requireAuth, emailVerificationController.showRequest);
+router.post('/email-verification/request', requireAuth,
+  rateLimit({windowMs:60*60*1000,max:3,keyGenerator:req=>'verified-email:'+String(req.user.id)}),
+  emailVerificationController.request);
+router.get('/email-verification/confirm', emailVerificationController.showConfirm);
+router.post('/email-verification/confirm',
+  express.urlencoded({extended:false,limit:'4kb'}),
+  rateLimit({windowMs:15*60*1000,max:20}),
+  emailVerificationController.confirm);
 router.post('/forgot-password', forgotPasswordLimit, authController.forgotPassword);
 router.post('/reset-password', resetPasswordLimit, authController.resetPassword);
 router.post('/logout', authController.logout);

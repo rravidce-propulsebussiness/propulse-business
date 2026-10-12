@@ -92,6 +92,16 @@ async function sendPasswordResetEmail({ to, name, resetUrl }) {
   });
 }
 
+async function sendEmailVerificationEmail({to,name,verificationUrl}) {
+  if (!isConfigured()) throw new Error('Email verification delivery is not configured');
+  return sendResendEmail({
+    to,
+    subject: 'Verify your ProPulse email for Business OS',
+    errorContext: 'verification',
+    html: `<!doctype html><html lang="en"><body style="margin:0;background:#f4f7fc;font-family:Arial,sans-serif;color:#152342"><main style="max-width:550px;margin:40px auto;padding:30px;background:white;border:1px solid #e2e9f4;border-radius:16px"><p style="font-size:12px;font-weight:800;color:#1558ca">PROPULSE BUSINESS</p><h1 style="font-size:25px">Verify your email</h1><p style="line-height:1.65">Hi ${escapeHtml(name || 'there')}, confirm ownership of this email to securely sign in to Business OS using your existing ProPulse account.</p><p>This confirmation does not change your password or grant Business OS company access.</p><p style="margin:26px 0"><a href="${escapeAttribute(verificationUrl)}" style="display:inline-block;padding:14px 21px;border-radius:10px;background:#146cf4;color:white;text-decoration:none;font-weight:700">Verify email</a></p><p style="font-size:12px;color:#73829a;line-height:1.65">The verification link expires after 30 minutes. If you did not request this, ignore this email.</p></main></body></html>`,
+  });
+}
+
 async function sendNotificationEmail({to,name,title,message,actionUrl,severity='info',category='system'}){
   if(!isConfigured())throw new Error('Email delivery is not configured');
   const base=String(process.env.FRONTEND_URL||process.env.APP_URL||'').trim().replace(/\/$/,'');
@@ -139,4 +149,4 @@ async function sendCustomerQuotationEmail({to,name,leadId,total,packageName,pdfB
   const projects=base?base+'/projects':'';
   return sendResendEmail({to,subject:'Your ProPulse construction quotation #'+leadId,errorContext:'quotation',attachments:[{filename:'propulse-quotation-'+leadId+'.pdf',content:pdfBase64}],html:`<!doctype html><html><body style="font-family:Arial,sans-serif;background:#f4f6f9;padding:24px"><div style="max-width:620px;margin:auto;background:#fff;padding:30px;border-radius:16px"><h1 style="color:#0a2d50">Your quotation is ready</h1><p>Hi ${escapeHtml(name||'Customer')}, your ProPulse construction quotation is attached as a PDF.</p><p><b>Request ID:</b> #${escapeHtml(leadId)}<br><b>Package:</b> ${escapeHtml(packageName||'Selected package')}<br><b>Quotation amount:</b> ${escapeHtml(total||'See attached PDF')}</p>${projects?`<p><a href="${escapeAttribute(projects)}" style="display:inline-block;background:#ff5a1f;color:#fff;padding:12px 18px;border-radius:9px;text-decoration:none;font-weight:700">View completed projects</a></p>`:''}<p style="color:#667085">The attached quotation includes package pricing, specifications, payment milestones, exclusions and terms.</p></div></body></html>`});
 }
-module.exports = { isConfigured,configurationHealth,sendPasswordResetEmail,sendNotificationEmail,sendCustomerQuotationEmail };
+module.exports = { isConfigured,configurationHealth,sendPasswordResetEmail,sendEmailVerificationEmail,sendNotificationEmail,sendCustomerQuotationEmail };
