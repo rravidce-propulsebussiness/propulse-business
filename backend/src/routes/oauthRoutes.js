@@ -111,8 +111,8 @@ async function authorize(req,res) {
       '<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">' +
       '<title>Verify ProPulse email</title><main style="max-width:550px;margin:12vh auto;padding:32px;font-family:system-ui">' +
       '<h1>Verify your email first</h1><p>To protect your Business OS account, prove ownership of your ProPulse email ' +
-      'through the password reset link or sign in with a verified Google account.</p>' +
-      '<a href="/forgot-password">Verify via password reset</a></main></html>',
+      'using our dedicated verification link, or sign in with a verified Google account.</p>' +
+      '<a href="/api/auth/email-verification">Send me a verification email</a></main></html>',
     );
 
     if(req.method!=='POST') return res.status(200).type('html').send(consentPage(params,record));
