@@ -86,6 +86,27 @@ async function main() {
     let response=await fetch(endpoint,{redirect:'manual'});
     assert.equal(response.status,303,'anonymous must redirect to ProPulse login');
     assert.match(response.headers.get('location'),/^\/login\?returnTo=/);
+    // Supabase adds redirect_to and uses UUID-style state. Neither should break PKCE.
+    const supabaseParams=new URLSearchParams(params);
+    supabaseParams.set('state','eecd9272-08eb-4b73-bf90-eb2b41d596d0');
+    supabaseParams.set('redirect_to','https://sghomesinterior.in/auth/callback');
+    response=await fetch(base+'/api/oauth/authorize?'+supabaseParams,{redirect:'manual'});
+    assert.equal(response.status,303,'Supabase formatted authorization must be accepted');
+    const wrongClient=new URLSearchParams(supabaseParams);
+    wrongClient.set('client_id','another-client-id');
+    response=await fetch(base+'/api/oauth/authorize?'+wrongClient,{redirect:'manual'});
+    assert.equal(response.status,400);
+    assert.deepEqual(await response.json(),{error:'invalid_request',reason:'client_id_mismatch'});
+    assert.match(response.headers.get('cache-control'),/no-store/);
+    const wrongCallback=new URLSearchParams(supabaseParams);
+    wrongCallback.set('redirect_uri','https://wrong.supabase.co/auth/v1/callback');
+    response=await fetch(base+'/api/oauth/authorize?'+wrongCallback,{redirect:'manual'});
+    assert.equal(response.status,400);
+    assert.deepEqual(await response.json(),{error:'invalid_request',reason:'redirect_uri_mismatch'});
+    process.env.PROPULSE_OAUTH_ENABLED='false';
+    response=await fetch(base+'/api/oauth/authorize?'+supabaseParams,{redirect:'manual'});
+    assert.deepEqual(await response.json(),{error:'invalid_request',reason:'provider_not_ready'});
+    process.env.PROPULSE_OAUTH_ENABLED='true';
     response=await fetch(endpoint,{headers:{cookie:'propulse_auth=valid'},redirect:'manual'});
     assert.equal(response.status,200,'OAuth requires visible identity consent');
     const consent=await response.text();

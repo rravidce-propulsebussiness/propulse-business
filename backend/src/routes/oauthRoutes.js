@@ -34,17 +34,30 @@ function secureEquals(actual, expected) {
   if (typeof actual !== 'string' || !expected) return false;
   return crypto.timingSafeEqual(Buffer.from(hash(actual), 'hex'), Buffer.from(hash(expected), 'hex'));
 }
-function validatedAuthorizeParams(params) {
-  if (!enabled()) return null;
+// Return only fixed, non-sensitive reason codes. Never include client secrets,
+// configured callback values, session cookies, tokens or raw request data.
+function authorizeValidation(params) {
+  if (!enabled()) return { params: null, reason: 'provider_not_ready' };
   const q = Object.fromEntries(
     ['client_id','redirect_uri','response_type','state','code_challenge','code_challenge_method','scope']
       .map(key => [key, String(params[key] || '')]),
   );
-  if (q.client_id !== clientId() || q.redirect_uri !== redirectUri()) return null;
-  if (q.response_type !== 'code' || q.code_challenge_method !== 'S256' || !validChallenge(q.code_challenge)) return null;
-  if (!/^[A-Za-z0-9_.~+/-]{16,2048}$/.test(q.state)) return null;
-  if (q.scope.length > 200 || q.scope.split(' ').some(s => s && !['openid','profile','email'].includes(s))) return null;
-  return q;
+  if (q.client_id !== clientId()) return { params: null, reason: 'client_id_mismatch' };
+  if (q.redirect_uri !== redirectUri()) return { params: null, reason: 'redirect_uri_mismatch' };
+  if (q.response_type !== 'code') return { params: null, reason: 'unsupported_response_type' };
+  if (q.code_challenge_method !== 'S256' || !validChallenge(q.code_challenge)) {
+    return { params: null, reason: 'invalid_pkce_challenge' };
+  }
+  if (!/^[A-Za-z0-9_.~+/-]{16,2048}$/.test(q.state)) {
+    return { params: null, reason: 'invalid_state' };
+  }
+  if (q.scope.length > 200 || q.scope.split(' ').some(s => s && !['openid','profile','email'].includes(s))) {
+    return { params: null, reason: 'invalid_scope' };
+  }
+  return { params: q, reason: null };
+}
+function validatedAuthorizeParams(params) {
+  return authorizeValidation(params).params;
 }
 function cookieUser(req) {
   const found = String(req.headers.cookie || '').split(';').map(s => s.trim()).find(s => s.startsWith('propulse_auth='));
@@ -92,8 +105,14 @@ async function authorize(req,res) {
   res.setHeader('X-Frame-Options','DENY');
   res.setHeader('Content-Security-Policy',
     "default-src 'none'; frame-ancestors 'none'; form-action 'self'; style-src 'unsafe-inline'");
-  const params=validatedAuthorizeParams(req.method==='POST'?req.body:req.query);
-  if (!params) return oauthError(res,400,'invalid_request');
+  const { params, reason }=authorizeValidation(req.method==='POST'?req.body:req.query);
+  if (!params) {
+    // Safe diagnostics for Hostinger runtime logs, and useful to users seeing a 400.
+    // The provider_not_ready reason deliberately does not expose which secret/flag is missing.
+    console.warn('ProPulse OAuth authorize rejected:',reason);
+    noStore(res);
+    return res.status(400).json({error:'invalid_request',reason});
+  }
   const principal=cookieUser(req);
   if (!principal) {
     if (req.method==='POST') return oauthError(res,401,'login_required');
