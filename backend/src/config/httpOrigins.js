@@ -24,6 +24,13 @@ function getConfiguredOrigins({ isProduction = process.env.NODE_ENV === 'product
 
   const origins = values.map(parseOrigin).filter(Boolean);
 
+  // The production ProPulse domain hosts its own credentialed login pages and
+  // OAuth consent form. Hostinger can retain a previous CORS_ORIGIN and an
+  // unset/stale PUBLIC_APP_URL after a domain move; rejecting this exact origin
+  // breaks same-origin POST /api/oauth/authorize before CSRF/PKCE validation.
+  // Do not trust request Host/Origin headers dynamically or allow arbitrary sites.
+  if (isProduction) origins.push('https://propulsetechnologies.online');
+
   // PUBLIC_APP_URL is an explicitly configured, trusted application address.
   // Hostinger deployments can move domains while retaining a stale CORS_ORIGIN.
   // Accept only the canonical HTTPS origin for that hostname, never a request's
