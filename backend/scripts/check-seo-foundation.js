@@ -248,7 +248,7 @@ assert(requirementWizard.includes("get('package')"),'Quote flow must read the pa
 assert(requirementWizard.includes("standard: 'standard'"),'Standard package query must map into the construction quote answers');
 assert(landing.includes('to="/hyderabad/construction/compare-options"'),'Cost guide must link to construction comparison');
 assert(buildScript.includes('/hyderabad/construction/compare-options'),'Static cost guide must link to construction comparison');
-assert(packagePage.includes('to="/hyderabad/construction-cost"'),'Construction packages must link to the Hyderabad cost guide');
+assert(packagePage.includes("navigate('/quote?package='"),'Construction packages must preserve the direct quotation CTA');
 
 assert(packages.includes('rate: 1750')&&packages.includes('rate: 1899')&&packages.includes('rate: 2099'),'Construction package catalog must expose current planning rates');
 assert(buildScript.includes('costGuideContent(route)'),'Static SEO output must include crawlable construction cost content');
