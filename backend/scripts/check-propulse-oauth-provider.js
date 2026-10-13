@@ -41,6 +41,15 @@ const pool = {
       tokens.set(p[0],{user_id:p[1],client_id:p[2],auth_version:p[3],expires_at:Date.now()+300000});
       return {rows:[]};
     }
+    if (sql.includes('FROM business_profiles WHERE user_id=$1')) {
+      return {rows:[{id:99,business_name:'Sample Interiors',business_details:'Interior design and execution',phone:'9000000000'}]};
+    }
+    if (sql.includes('FROM business_profile_services bps')) {
+      return {rows:[{industry_name:'Interior Design',service_name:'Modular Kitchens'}]};
+    }
+    if (sql.includes('FROM business_profile_locations bpl')) {
+      return {rows:[{city:'Hyderabad',state:'Telangana'}]};
+    }
     if (sql.includes('FROM propulse_oauth_access_tokens t')) {
       const token=tokens.get(p[0]);
       return {rows:token && token.client_id===p[1] && token.auth_version===version && active && verified && token.expires_at>Date.now() ? [user]:[]};
@@ -155,6 +164,10 @@ async function main() {
     assert.equal(identity.email,'verified@example.test');
     assert.equal(identity.email_verified,true);
     assert.equal(identity.sub,'propulse:5');
+    assert.equal(identity.company.name,'Sample Interiors');
+    assert.equal(identity.company.phone,'9000000000');
+    assert.equal(identity.company.services[0].industry,'Interior Design');
+    assert.equal(identity.company.locations[0].city,'Hyderabad');
     assert.ok(!identity.role,'legacy role must never leak to business identity');
     version=1;
     response=await fetch(base+'/api/oauth/userinfo',{headers:{authorization:'Bearer '+token}});

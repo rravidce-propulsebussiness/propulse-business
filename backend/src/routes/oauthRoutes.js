@@ -90,8 +90,9 @@ function consentPage(params, principal) {
     '<main style="max-width:500px;margin:10vh auto;padding:35px;border-radius:16px;background:#fff;' +
     'box-shadow:0 20px 50px #13234220">' +
     '<h1 style="font-size:27px">Continue to ProPulse Business OS?</h1>' +
-    '<p>Share your verified ProPulse email and display name to sign in. ' +
-    'This does not grant Business OS company permissions.</p>' +
+    '<p>Share your verified email, name, and registered business details ' +
+    '(company name, phone, services and locations) with Business OS. ' +
+    'It will create or update your own workspace.</p>' +
     '<p style="padding:12px;background:#edf4ff;border-radius:8px">' +
     escapeHtml(principal.email)+'</p>' +
     '<form method="post" action="/api/oauth/authorize">' + fields + approval +
@@ -246,6 +247,47 @@ router.get('/userinfo', rateLimit({windowMs:60000,max:80}), async(req,res)=>{
       [hash(token),clientId()],
     )).rows[0];
     if (!user) return oauthError(res,401,'invalid_token');
+    // Read only the company profile belonging to this short-lived,
+    // verified ProPulse identity. User IDs supplied by callers are ignored.
+    const business=(await pool.query(
+      'SELECT id, business_name, business_details, phone FROM business_profiles WHERE user_id=$1',
+      [user.id],
+    )).rows[0];
+    let company=null;
+    if (business && String(business.business_name||'').trim()) {
+      const [services,locations]=await Promise.all([
+        pool.query(
+          'SELECT DISTINCT i.name AS industry_name, s.name AS service_name ' +
+          'FROM business_profile_services bps ' +
+          'JOIN industries i ON i.id=bps.industry_id ' +
+          'JOIN services s ON s.id=bps.service_id ' +
+          'WHERE bps.business_profile_id=$1 AND bps.is_active=TRUE ' +
+          'ORDER BY i.name, s.name LIMIT 30', [business.id],
+        ),
+        pool.query(
+          'SELECT DISTINCT c.name AS city, st.name AS state ' +
+          'FROM business_profile_locations bpl ' +
+          'JOIN cities c ON c.id=bpl.city_id ' +
+          'JOIN states st ON st.id=bpl.state_id ' +
+          'WHERE bpl.business_profile_id=$1 AND bpl.is_active=TRUE ' +
+          'ORDER BY st.name, c.name LIMIT 30', [business.id],
+        ),
+      ]);
+      company={
+        source_id:String(business.id),
+        name:String(business.business_name).trim().slice(0,200),
+        description:String(business.business_details||'').trim().slice(0,2000),
+        phone:String(business.phone||'').trim().slice(0,40),
+        services:services.rows.map(row=>({
+          industry:String(row.industry_name||'').slice(0,100),
+          service:String(row.service_name||'').slice(0,100),
+        })),
+        locations:locations.rows.map(row=>({
+          city:String(row.city||'').slice(0,100),
+          state:String(row.state||'').slice(0,100),
+        })),
+      };
+    }
     return res.json({
       sub:'propulse:'+String(user.id),
       id:'propulse:'+String(user.id),
@@ -253,6 +295,7 @@ router.get('/userinfo', rateLimit({windowMs:60000,max:80}), async(req,res)=>{
       email_verified:true,
       name:user.name,
       preferred_username:user.name,
+      company,
     });
   } catch(e) {
     console.error('ProPulse OAuth userinfo failed:',e.message);
