@@ -20,7 +20,7 @@ let active = true;
 let version = 0;
 const codes = new Map();
 const tokens = new Map();
-const user = { id: 5, email: 'verified@example.test', name: 'Verified Account' };
+const user = { id: 5, email: 'verified@example.test', name: 'Verified Account', role: 'business' };
 const pool = {
   async query(sql, p) {
     if (sql.includes('SELECT id,email,name,auth_version,email_verified_at')) {
@@ -169,6 +169,10 @@ async function main() {
     assert.equal(identity.company.services[0].industry,'Interior Design');
     assert.equal(identity.company.locations[0].city,'Hyderabad');
     assert.ok(!identity.role,'legacy role must never leak to business identity');
+    user.role='user';
+    response=await fetch(base+'/api/oauth/userinfo',{headers:{authorization:'Bearer '+token}});
+    assert.equal((await response.json()).company,null,'ordinary ProPulse users cannot supply a business profile');
+    user.role='business';
     version=1;
     response=await fetch(base+'/api/oauth/userinfo',{headers:{authorization:'Bearer '+token}});
     assert.equal(response.status,401,'auth-version changes revoke tokens');
