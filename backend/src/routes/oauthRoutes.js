@@ -240,7 +240,7 @@ router.get('/userinfo', rateLimit({windowMs:60000,max:80}), async(req,res)=>{
   if (!enabled() || !validToken(token)) return oauthError(res,401,'invalid_token');
   try {
     const user=(await pool.query(
-      'SELECT u.id,u.name,u.email FROM propulse_oauth_access_tokens t ' +
+      'SELECT u.id,u.name,u.email,u.role FROM propulse_oauth_access_tokens t ' +
       'INNER JOIN users u ON u.id=t.user_id WHERE t.token_hash=$1 AND t.client_id=$2 ' +
       'AND t.expires_at>CURRENT_TIMESTAMP AND u.is_active=TRUE ' +
       'AND u.email_verified_at IS NOT NULL AND u.auth_version=t.auth_version',
@@ -254,7 +254,7 @@ router.get('/userinfo', rateLimit({windowMs:60000,max:80}), async(req,res)=>{
       [user.id],
     )).rows[0];
     let company=null;
-    if (business && String(business.business_name||'').trim()) {
+    if (user.role==='business' && business && String(business.business_name||'').trim()) {
       const [services,locations]=await Promise.all([
         pool.query(
           'SELECT DISTINCT i.name AS industry_name, s.name AS service_name ' +
