@@ -1,0 +1,1 @@
+import{t as e}from"./vendor-BFKDo_P7.js";import{t}from"./AdminLeadsV9-4_CiIQqi.js";var n=e();function r(){return(0,n.jsx)(t,{mode:`manage`})}export{r as default};
