@@ -3,6 +3,7 @@ const crypto = require('node:crypto');
 const pool = require('../config/database');
 const authService = require('../services/authService');
 const { getPurchases } = require('../services/leadPurchaseCouponService');
+const { businessOsPaidPurchases } = require('../services/businessOsPurchasedLeads');
 const rateLimit = require('../middleware/rateLimitMiddleware');
 const router = express.Router();
 const fingerprint = (value) => crypto.createHash('sha256').update(value).digest('hex');
@@ -109,9 +110,7 @@ router.get('/leads',rateLimit({windowMs:60000,max:90}),async(req,res)=>{
     if(!userId)return res.status(401).json({error:'invalid_token'});
     // getPurchases also includes complimentary membership/entitlement claims.
     // Only a confirmed paid lead purchase can be delivered to Business OS.
-    const records=(await getPurchases(userId)).filter(row=>
-      row.purchase_status==='paid' && row.access_id!=null && row.payment_id!=null
-    );
+    const records=businessOsPaidPurchases(await getPurchases(userId));
     const page=Number(req.query.page||'1');
     if(!Number.isInteger(page)||page<1||page>10000)
       return res.status(400).json({error:'invalid_page'});
