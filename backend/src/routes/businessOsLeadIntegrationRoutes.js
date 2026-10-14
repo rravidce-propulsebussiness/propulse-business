@@ -47,7 +47,7 @@ router.get('/link/code', rateLimit({windowMs:60000,max:8}), async(req,res) => {
       '<p>Signed in as '+escapeHtml(principal.email||'ProPulse user')+'.</p>'+
       '<p>Copy this one-time code into <strong>Business OS → CRM Leads → Connect ProPulse</strong>. '+
       'It expires in 5 minutes and can only be used once. It grants read-only access '+
-      'to your purchased or active entitlement leads, not your marketplace account.</p>'+
+      'to your paid purchased leads, not complimentary leads or your marketplace account.</p>'+
       '<div style="overflow-wrap:anywhere;font:600 19px monospace;background:#eaf2ff;padding:18px;border-radius:10px">'+
       escapeHtml(code)+'</div>'+
       '<p style="color:#66768c">Different email addresses are supported. Keep this code private.</p>'+
@@ -107,9 +107,11 @@ router.get('/leads',rateLimit({windowMs:60000,max:90}),async(req,res)=>{
   try {
     const userId=await grantUser(req);
     if(!userId)return res.status(401).json({error:'invalid_token'});
-    // getPurchases is the same purchase + active entitlement gate as
-    // /api/leads/purchased. Never return public marketplace contacts.
-    const records=await getPurchases(userId);
+    // getPurchases also includes complimentary membership/entitlement claims.
+    // Only a confirmed paid lead purchase can be delivered to Business OS.
+    const records=(await getPurchases(userId)).filter(row=>
+      row.purchase_status==='paid' && row.access_id!=null && row.payment_id!=null
+    );
     const page=Number(req.query.page||'1');
     if(!Number.isInteger(page)||page<1||page>10000)
       return res.status(400).json({error:'invalid_page'});
@@ -126,7 +128,10 @@ router.get('/leads',rateLimit({windowMs:60000,max:90}),async(req,res)=>{
         city:row.city_name||'',
         budget:row.budget||'',
         source:row.source||'propulse',
-        access_type:row.pricing_tier||'',
+        access_type:'purchased',
+        purchase_status:'paid',
+        purchase_id:Number(row.access_id),
+        purchase_payment_id:Number(row.payment_id),
       }))
     });
   }catch(e) {
