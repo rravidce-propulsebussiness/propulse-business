@@ -107,6 +107,20 @@ router.get('/robots.txt',(req,res)=>{
   res.type('text/plain');
   res.setHeader('Cache-Control','public, max-age=3600');
   res.send([
+    'User-agent: OAI-SearchBot',
+    'Allow: /',
+    'Disallow: /admin/',
+    'Disallow: /profile',
+    'Disallow: /wallet',
+    'Disallow: /membership',
+    'Disallow: /notifications',
+    'Disallow: /purchased-leads',
+    'Disallow: /my-leads',
+    'Disallow: /investment/',
+    'Disallow: /lead-partner/',
+    'Disallow: /requirements/',
+    'Disallow: /estimate/',
+    '',
     'User-agent: *',
     'Allow: /',
     'Disallow: /admin/',
