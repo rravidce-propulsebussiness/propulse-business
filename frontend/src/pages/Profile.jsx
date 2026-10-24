@@ -72,11 +72,11 @@ function mapPlan(item){
 
 function ProfileBusinessFields({form,update,overview=false}){
   return <div className={overview?'profile-overview-fields profile-overview-fields-editable':'profile-grid'}>
-    <label>Business name <span aria-hidden="true">*</span><input value={form.businessName} onChange={e=>update('businessName',e.target.value)} required placeholder="Your registered business name"/></label>
-    <label>Email address <span aria-hidden="true">*</span><input type="email" value={form.email} onChange={e=>update('email',e.target.value)} required autoComplete="email"/></label>
-    <label>Contact person <span aria-hidden="true">*</span><input value={form.name} onChange={e=>update('name',e.target.value)} required autoComplete="name"/></label>
-    <label>Phone number <span aria-hidden="true">*</span><input value={form.phone} onChange={e=>update('phone',e.target.value)} required autoComplete="tel"/></label>
-    <label className="wide">About your business <span aria-hidden="true">*</span><textarea rows={overview?3:4} value={form.businessDetails} onChange={e=>update('businessDetails',e.target.value)} required placeholder="Share what your team does and how you deliver projects"/></label>
+    <label><span>Business Name <b aria-hidden="true">*</b></span><input value={form.businessName} onChange={e=>update('businessName',e.target.value)} required placeholder="Your registered business name"/></label>
+    <label><span>Email Address <b aria-hidden="true">*</b></span><input type="email" value={form.email} onChange={e=>update('email',e.target.value)} required autoComplete="email"/></label>
+    <label><span>Contact Person <b aria-hidden="true">*</b></span><input value={form.name} onChange={e=>update('name',e.target.value)} required autoComplete="name"/></label>
+    <label><span>Phone Number <b aria-hidden="true">*</b></span><input value={form.phone} onChange={e=>update('phone',e.target.value)} required autoComplete="tel"/></label>
+    <label className="wide"><span>About Your Business <b aria-hidden="true">*</b></span><textarea rows={overview?3:4} value={form.businessDetails} onChange={e=>update('businessDetails',e.target.value)} required placeholder="Share what your team does and how you deliver projects"/></label>
   </div>
 }
 
@@ -466,6 +466,9 @@ export default function Profile(){
             </div>
           </section>
 
+          {error&&<div className="profile-alert error" role="alert">{error}</div>}
+          {message&&<div className="profile-alert success" role="status">{message}</div>}
+
           {activeSection==='overview'&&<div className="profile-overview-layout">
             <div className="profile-overview-main">
               <form id="business-profile-form" className="profile-overview-card profile-overview-business" onSubmit={save}>
@@ -515,8 +518,7 @@ export default function Profile(){
             <div className="profile-directory-actions">{directoryStatus?.membership&&<b>{String(directoryStatus.membership.planGroup||'').toUpperCase()} member</b>}{directoryEligible&&publicProfileId&&<Link to={'/experts/'+publicProfileId}>View Public Profile ↗</Link>}</div>
           </section>}
 
-      {error&&<div className="profile-alert error">{error}</div>}
-      {message&&<div className="profile-alert success">{message}</div>}
+
 
       {activeSection==='overview'?null:activeSection==='brochures'?<ProfessionalBrochures embedded/>:<form id="business-profile-form" onSubmit={save} className="profile-form profile-form-wide">
         <div className="profile-main-column">
