@@ -1904,3 +1904,9 @@
 
 .users-success.user-360-success{margin:12px 18px 0;padding:11px 13px;border:1px solid #b7e4ca;border-radius:10px;background:#eefaf3;color:#17653d;font-size:13px;font-weight:700}
 .user-360-quick-actions button:disabled{opacity:.55;cursor:not-allowed}
+
+
+/* Single entrypoint to the existing administrator launch cleanup workflow. */
+.users-launch-cleanup-link{display:inline-flex;align-items:center;justify-content:center;min-height:38px;padding:10px 15px;border:1px solid #ebbdab;border-radius:10px;background:#fff6f1;color:#b44721;font-size:11px;font-weight:850;text-decoration:none;white-space:nowrap;}
+.users-launch-cleanup-link:hover{background:#ffede4;color:#a43b17;}
+.users-launch-cleanup-link:focus-visible{outline:3px solid #f59c6f;outline-offset:3px;}
