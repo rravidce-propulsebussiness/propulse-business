@@ -236,4 +236,33 @@ async function resetTestData(req,res){
   }
 }
 
-module.exports = { getDashboardStats, getSystemHealth, getPerformance, getFinancialIntegrity, getRiskCenter, reviewRiskEvent, getAuditTimeline, getBackgroundJobs, getOperationalEvents, reviewOperationalEvent, retryBackgroundJob, getUsers, getUser360, setUserMembershipPlan, createAdmin, sendUserPasswordReset, setUserStatus, setUserRole, updateUserProfile, getCompanyProofs, verifyCompanyProof, rejectCompanyProof, getTestResetPreview, resetTestData };
+
+async function getLaunchCleanupPreview(req,res){
+  try{return res.json(await adminTestResetService.launchPreview())}
+  catch(error){
+    console.error('Launch cleanup preview failed:',error.message);
+    return res.status(500).json({error:'Failed to inspect launch cleanup safety'});
+  }
+}
+async function runLaunchCleanup(req,res){
+  try{
+    return res.json(await adminTestResetService.launchCleanup({
+      confirmation:req.body?.confirmation,
+      acknowledged:req.body?.acknowledged,
+      expected:req.body?.expected,
+      adminId:req.user?.id
+    }));
+  }catch(error){
+    const codes={
+      LAUNCH_CONFIRMATION_REQUIRED:400,
+      LAUNCH_PREVIEW_STALE:409,
+      LAUNCH_ADMIN_REQUIRED:403,
+      LAUNCH_FINANCIAL_RECORDS:409,
+      LAUNCH_VERIFICATION_FAILED:409
+    };
+    if(codes[error.code])return res.status(codes[error.code]).json({error:error.message,code:error.code});
+    console.error('Production launch cleanup failed:',error.message);
+    return res.status(500).json({error:'Launch cleanup failed. No changes were committed.'});
+  }
+}
+module.exports = { getDashboardStats, getSystemHealth, getPerformance, getFinancialIntegrity, getRiskCenter, reviewRiskEvent, getAuditTimeline, getBackgroundJobs, getOperationalEvents, reviewOperationalEvent, retryBackgroundJob, getUsers, getUser360, setUserMembershipPlan, createAdmin, sendUserPasswordReset, setUserStatus, setUserRole, updateUserProfile, getCompanyProofs, verifyCompanyProof, rejectCompanyProof, getTestResetPreview, resetTestData, getLaunchCleanupPreview, runLaunchCleanup };
