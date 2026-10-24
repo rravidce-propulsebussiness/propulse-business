@@ -86,7 +86,7 @@ function safeOrigin(req){
   const requestHosts=[req.get('host'),req.get('x-forwarded-host')];
   if(requestHosts.some(value=>{
     const hostname=String(value||'').split(',')[0].trim();
-    return /^(?:www\\.)?propulsetechnologies\\.online(?::(?:80|443))?$/i.test(hostname);
+    return /^(?:www\.)?propulsetechnologies\.online(?::(?:80|443))?$/i.test(hostname);
   }))return PRODUCTION_SITE_ORIGIN;
 
   const configured=String(process.env.PUBLIC_APP_URL||process.env.FRONTEND_URL||'').trim();
