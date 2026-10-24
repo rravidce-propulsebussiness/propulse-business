@@ -60,6 +60,8 @@ jobs:
         run: npm run test:lead-partner-pricing
       - name: Investor FAQ layout
         run: npm run test:investor-faq-layout
+      - name: Premium profile workspace no-duplicate regression
+        run: node scripts/check-profile-workspace.mjs
       - name: Build
         run: npm run build
       - name: Google GIS regression checks
