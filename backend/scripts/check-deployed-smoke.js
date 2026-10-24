@@ -134,7 +134,7 @@ async function main() {
   const expectedSitemap='Sitemap: '+base.origin+'/sitemap.xml';
   assert(robotsBody.includes(expectedSitemap),
     'robots.txt must advertise the production sitemap '+expectedSitemap+
-    '; received sitemap lines: '+(robotsBody.split(/\\r?\\n/).filter(line=>line.startsWith('Sitemap: ')).join(', ')||'none'));
+    '; received sitemap lines: '+(robotsBody.split(/\r?\n/).filter(line=>line.startsWith('Sitemap: ')).join(', ')||'none'));
   assert(robotsBody.includes('Disallow: /admin/'), 'robots.txt must keep Admin private');
 
   const sitemap = await request('/sitemap.xml');
