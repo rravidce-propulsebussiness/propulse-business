@@ -125,10 +125,16 @@ async function main() {
   assert.equal(logo.status, 200, 'Public ProPulse logo must return 200');
   assert.match(String(logo.headers.get('content-type') || ''), /image\/svg\+xml|svg/i, 'Public ProPulse logo must have an SVG content type');
 
-  const robots = await request('/robots.txt');
+  // Avoid stale Hostinger/CDN robots.txt cache during a just-completed release.
+  // The route content stays canonical at /robots.txt without this cache-bust.
+  const robotsQuery = expectedCommit ? '?release=' + encodeURIComponent(expectedCommit.slice(0, 12)) : '';
+  const robots = await request('/robots.txt' + robotsQuery, { headers: { 'cache-control': 'no-cache' } });
   assert.equal(robots.status, 200, 'robots.txt must return 200');
   const robotsBody = await robots.text();
-  assert(robotsBody.includes('Sitemap: '+base.origin+'/sitemap.xml'), 'robots.txt must advertise the production sitemap');
+  const expectedSitemap='Sitemap: '+base.origin+'/sitemap.xml';
+  assert(robotsBody.includes(expectedSitemap),
+    'robots.txt must advertise the production sitemap '+expectedSitemap+
+    '; received sitemap lines: '+(robotsBody.split(/\r?\n/).filter(line=>line.startsWith('Sitemap: ')).join(', ')||'none'));
   assert(robotsBody.includes('Disallow: /admin/'), 'robots.txt must keep Admin private');
 
   const sitemap = await request('/sitemap.xml');
