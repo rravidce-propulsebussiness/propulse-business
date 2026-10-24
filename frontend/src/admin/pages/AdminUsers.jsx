@@ -261,6 +261,7 @@ export default function AdminUsers() {
       </div>
       <div className="users-hero-actions">
         <div className="users-hero-count"><span>Directory</span><strong>{Number(userPagination?.total ?? users.length).toLocaleString('en-IN')}</strong><small>accounts</small></div>
+        <a className="users-launch-cleanup-link" href="/admin/test-reset#launch-cleanup">Launch Cleanup</a>
         <button className="admin-primary-btn users-create-admin" onClick={() => setShowCreate(true)}>＋ Create Admin</button>
       </div>
     </section>
