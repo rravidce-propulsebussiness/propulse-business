@@ -22,14 +22,14 @@ async function updateProfile(req, res) {
   try {
     const {
       name,email,phone,businessName,businessDetails,services,locations,
-      publicHeadline,publicSummary,yearsExperience,publicProfileEnabled,projects,plans,
+      yearsExperience,publicProfileEnabled,projects,plans,
     } = req.body;
     if (!name?.trim() || !email?.trim() || !phone?.trim() || !businessName?.trim() || !businessDetails?.trim()) {
       return res.status(400).json({ error: 'Complete all business details' });
     }
     const result = await profileService.updateProfile(req.user.id, {
       name,email,phone,businessName,businessDetails,services,locations,
-      publicHeadline,publicSummary,yearsExperience,publicProfileEnabled,projects,plans,
+      yearsExperience,publicProfileEnabled,projects,plans,
     });
     return res.json(result);
   } catch (error) {

@@ -76,14 +76,19 @@ function ProfileBusinessFields({form,update,overview=false}){
     <label><span>Email Address <b aria-hidden="true">*</b></span><input type="email" value={form.email} onChange={e=>update('email',e.target.value)} required autoComplete="email"/></label>
     <label><span>Contact Person <b aria-hidden="true">*</b></span><input value={form.name} onChange={e=>update('name',e.target.value)} required autoComplete="name"/></label>
     <label><span>Phone Number <b aria-hidden="true">*</b></span><input value={form.phone} onChange={e=>update('phone',e.target.value)} required autoComplete="tel"/></label>
-    <label className="wide"><span>About Your Business <b aria-hidden="true">*</b></span><textarea rows={overview?3:4} value={form.businessDetails} onChange={e=>update('businessDetails',e.target.value)} required placeholder="Share what your team does and how you deliver projects"/></label>
+    <label className="wide"><span>About Your Business <b aria-hidden="true">*</b></span><textarea rows={overview?4:5} value={form.businessDetails} onChange={e=>update('businessDetails',e.target.value)} required placeholder="Describe your work and approach; this text also appears publicly when you publish your listing."/></label>
+    <label><span>Years of Experience <small>(optional)</small></span><input type="number" min="0" max="100" value={form.yearsExperience} onChange={e=>update('yearsExperience',e.target.value)} placeholder="e.g. 8"/></label>
+    <div id="profile-unified-publish" className="profile-unified-publish wide">
+      <div><strong>Public expert listing</strong><p>Your Business Name is the public headline. About Your Business is the public summary. Both update automatically when you save.</p></div>
+      <label className="profile-unified-visibility"><input type="checkbox" checked={form.publicProfileEnabled} onChange={e=>update('publicProfileEnabled',e.target.checked)}/><span>Publish when eligible</span></label>
+    </div>
   </div>
 }
 
 export default function Profile(){
   const navigate=useNavigate()
   const location=useLocation()
-  const [form,setForm]=useState({name:'',email:'',phone:'',businessName:'',businessDetails:'',publicHeadline:'',publicSummary:'',yearsExperience:'',publicProfileEnabled:true})
+  const [form,setForm]=useState({name:'',email:'',phone:'',businessName:'',businessDetails:'',yearsExperience:'',publicProfileEnabled:true})
   const [industries,setIndustries]=useState([])
   const [services,setServices]=useState([])
   const [subservices,setSubservices]=useState([])
@@ -102,7 +107,8 @@ export default function Profile(){
   const [planUploads,setPlanUploads]=useState({})
   const [brochureUploads,setBrochureUploads]=useState({})
   const requestedTab=new URLSearchParams(location.search).get('tab')
-  const activeSection=['overview','business','services','locations','public','projects','brochures','plans'].includes(requestedTab)?requestedTab:'overview'
+  // Legacy ?tab=business or ?tab=public links open the single profile editor.
+  const activeSection=['services','locations','projects','brochures','plans','proofs'].includes(requestedTab)?requestedTab:'overview'
   const [expandedProject,setExpandedProject]=useState(null)
   const [expandedPlan,setExpandedPlan]=useState(null)
   const [loading,setLoading]=useState(true)
@@ -118,7 +124,7 @@ export default function Profile(){
         ])
         setForm({
           name:getUser()?.name||'',email:getUser()?.email||'',phone:profile.phone||'',businessName:profile.business_name||'',businessDetails:profile.business_details||'',
-          publicHeadline:profile.public_headline||'',publicSummary:profile.public_summary||'',yearsExperience:profile.years_experience??'',publicProfileEnabled:profile.public_profile_enabled!==false,
+          yearsExperience:profile.years_experience??'',publicProfileEnabled:profile.public_profile_enabled!==false,
         })
         setIndustries(industryData);setServices(serviceData);setSubservices(subserviceData);setStates(stateData);setCities(cityData)
         setServiceSelections((profile.services||[]).map(x=>({industryId:String(x.industry_id),serviceId:String(x.service_id),subserviceId:x.subservice_id?String(x.subservice_id):''})))
@@ -140,7 +146,7 @@ export default function Profile(){
   const completionItems=[
     Boolean(form.name&&form.email&&form.phone),Boolean(form.businessName&&form.businessDetails),
     serviceSelections.length>0&&serviceSelections.every(x=>x.industryId&&x.serviceId),locationSelections.length>0&&locationSelections.every(x=>x.stateId&&x.cityId),
-    Boolean(form.publicHeadline&&form.publicSummary),projects.length>0,
+    projects.length>0,
   ]
   const completion=Math.round((completionItems.filter(Boolean).length/completionItems.length)*100)
 
@@ -156,15 +162,19 @@ export default function Profile(){
   const sectionGroup=section=>section==='services'||section==='locations'?'services':section==='plans'||section==='brochures'?'plans':section
   const activeGroup=sectionGroup(activeSection)
   const checklist=[
-    {label:'Contact information',done:completionItems[0],section:'business'},
-    {label:'Business details',done:completionItems[1],section:'business'},
+    {label:'Contact information',done:completionItems[0],section:'overview'},
+    {label:'Business and public details',done:completionItems[1],section:'overview'},
     {label:'Services offered',done:completionItems[2],section:'services'},
     {label:'Service locations',done:completionItems[3],section:'locations'},
-    {label:'Public profile details',done:completionItems[4],section:'public'},
-    {label:'At least one completed project',done:completionItems[5],section:'projects'},
+    {label:'Completed projects',done:completionItems[4],section:'projects'},
   ]
 
-  function selectSection(section){if(activeSection!==section)navigate('/profile?tab='+section);setMessage('');requestAnimationFrame(()=>document.getElementById('profile-workspace-content')?.scrollIntoView({behavior:'smooth',block:'start'}))}
+  function selectSection(section){
+    const next=['business','public'].includes(section)?'overview':section
+    if(activeSection!==next)navigate('/profile?tab='+next)
+    setMessage('')
+    requestAnimationFrame(()=>document.getElementById('profile-workspace-content')?.scrollIntoView({behavior:'smooth',block:'start'}))
+  }
   function addProject(){const item=emptyProject();setProjects(current=>[...current,item]);setExpandedProject('draft-'+item._draftKey);setMessage('')}
   function addPlan(){const item=emptyPlan();setPlans(current=>[...current,item]);setExpandedPlan('draft-'+item._draftKey);setMessage('')}
   function projectKey(item){return item.id?'project-'+item.id:'draft-'+item._draftKey}
@@ -405,7 +415,7 @@ export default function Profile(){
       }
       playSound('success')
       setExpandedProject(null);setExpandedPlan(null)
-      setMessage('Profile saved successfully. Public directory content is up to date.')
+      setMessage('Business and public listing saved together.')
     }catch(err){playSound('warning');setError(err.message)}finally{setSaving(false)}
   }
 
@@ -417,8 +427,7 @@ export default function Profile(){
       <div className="profile-workspace-layout">
         <aside className="profile-workspace-sidebar" aria-label="Business profile navigation">
           <nav className="profile-workspace-nav" id="profile-tabs" aria-label="Profile sections">
-            <button type="button" className={activeGroup==='overview'?'active':''} aria-current={activeGroup==='overview'?'page':undefined} onClick={()=>selectSection('overview')}><span aria-hidden="true">⌂</span> Overview</button>
-            <button type="button" className={activeGroup==='business'?'active':''} onClick={()=>selectSection('business')}><span aria-hidden="true">▤</span> Business Details</button>
+            <button type="button" className={activeGroup==='overview'?'active':''} aria-current={activeGroup==='overview'?'page':undefined} onClick={()=>selectSection('overview')}><span aria-hidden="true">⌂</span> Business Profile</button>
             <button type="button" className={activeGroup==='services'?'active':''} onClick={()=>selectSection('services')}><span aria-hidden="true">⌖</span> Services &amp; Locations</button>
             {activeGroup==='services'&&<div className="profile-workspace-subnav">
               <button type="button" className={activeSection==='services'?'active':''} onClick={()=>selectSection('services')}>Services</button>
@@ -430,19 +439,19 @@ export default function Profile(){
               <button type="button" className={activeSection==='plans'?'active':''} onClick={()=>selectSection('plans')}>Packages</button>
               <button type="button" className={activeSection==='brochures'?'active':''} onClick={()=>selectSection('brochures')}>Company Brochures</button>
             </div>}
-            <button type="button" className={activeGroup==='public'?'active':''} onClick={()=>selectSection('public')}><span aria-hidden="true">◎</span> Public Visibility</button>
+            <button type="button" className={activeGroup==='proofs'?'active':''} onClick={()=>selectSection('proofs')}><span aria-hidden="true">▣</span> Verification Documents</button>
           </nav>
           <div className="profile-workspace-help">
             <span aria-hidden="true">▧</span>
             <strong>Build your professional profile</strong>
             <p>Help homeowners discover your services, projects and packages.</p>
-            <button type="button" onClick={()=>selectSection('public')}>Manage visibility →</button>
+            <button type="button" onClick={()=>selectSection('overview')}>Manage public listing →</button>
           </div>
         </aside>
 
         <main className="profile-workspace-main" id="profile-workspace-content">
           <header className="profile-workspace-heading">
-            <div><span className="profile-workspace-overline">BUSINESS ACCOUNT</span><h1>Business Profile</h1><p>Manage your business information, services, projects and public profile.</p></div>
+            <div><span className="profile-workspace-overline">BUSINESS ACCOUNT</span><h1>Business Profile</h1><p>One business profile supplies the details in your public expert listing.</p></div>
             <div className="profile-workspace-actions">
               {directoryEligible&&publicProfileId&&<Link to={'/experts/'+publicProfileId} className="profile-workspace-preview">◉ Preview Public Profile</Link>}
               {activeSection!=='brochures'&&<button type="submit" form="business-profile-form" className="profile-workspace-save" disabled={saving}>{saving?'Saving…':'▣ Save Changes'}</button>}
@@ -472,7 +481,7 @@ export default function Profile(){
           {activeSection==='overview'&&<div className="profile-overview-layout">
             <div className="profile-overview-main">
               <form id="business-profile-form" className="profile-overview-card profile-overview-business" onSubmit={save}>
-                <div className="profile-overview-card-heading"><div><span className="profile-overview-icon" aria-hidden="true">▤</span><div><h2>Business Information</h2><p>Update your contact and business details</p></div></div><button type="button" onClick={()=>selectSection('business')}>Expanded editor ↗</button></div>
+                <div className="profile-overview-card-heading"><div><span className="profile-overview-icon" aria-hidden="true">▤</span><div><h2>Business &amp; Public Information</h2><p>One editor for business details and your expert listing</p></div></div></div>
                 <ProfileBusinessFields form={form} update={update} overview/>
               </form>
               <div className="profile-overview-cards">
@@ -507,28 +516,14 @@ export default function Profile(){
                 <div className="profile-overview-card-heading"><div><span className="profile-overview-icon" aria-hidden="true">◎</span><div><h2>Public Profile Status</h2><p>Expert directory visibility</p></div></div></div>
                 <div className={directoryEligible?'profile-visibility-badge eligible':'profile-visibility-badge'}>{directoryEligible?'✓ Eligible for directory':'Setup or approval required'}</div>
                 <p>{reasonText(directoryStatus)}</p>
-                <button type="button" className="profile-overview-manage" onClick={()=>selectSection('public')}>Manage Public Visibility →</button>
+                <button type="button" className="profile-overview-manage" onClick={()=>document.getElementById('profile-unified-publish')?.scrollIntoView({behavior:'smooth',block:'center'})}>Change listing visibility ↑</button>
               </section>
               <section className="profile-overview-card profile-overview-tip"><span aria-hidden="true">✦</span><h2>Make a great first impression</h2><p>Real project photos, clear services and accurate package details help homeowners evaluate your business.</p></section>
             </aside>
           </div>}
 
-          {activeSection==='public'&&<section className={`profile-directory-banner ${directoryEligible?'eligible':'attention'}`}>
-            <div><span>PUBLIC DIRECTORY STATUS</span><h3>{directoryEligible?'Your business can appear in Experts':'Check your directory eligibility'}</h3><p>{reasonText(directoryStatus)}</p></div>
-            <div className="profile-directory-actions">{directoryStatus?.membership&&<b>{String(directoryStatus.membership.planGroup||'').toUpperCase()} member</b>}{directoryEligible&&publicProfileId&&<Link to={'/experts/'+publicProfileId}>View Public Profile ↗</Link>}</div>
-          </section>}
-
-
-
       {activeSection==='overview'?null:activeSection==='brochures'?<ProfessionalBrochures embedded/>:<form id="business-profile-form" onSubmit={save} className="profile-form profile-form-wide">
         <div className="profile-main-column">
-          {activeSection==='business'&&<>
-          <section className="profile-panel profile-information" id="profile-information">
-            <div className="panel-title"><div><span>01</span><h2>Business information</h2><p>Private account and core business details.</p></div></div>
-            <ProfileBusinessFields form={form} update={update}/>
-          </section>
-          </>}
-
           {activeSection==='services'&&<>
           <section className="profile-panel" id="profile-services">
             <div className="panel-title"><div><span>02</span><h2>Services you provide</h2><p>These services drive lead matching and appear on your public profile.</p></div><button type="button" onClick={()=>setServiceSelections(x=>[...x,emptyService()])}>+ Add service</button></div>
@@ -540,13 +535,6 @@ export default function Profile(){
           <section className="profile-panel" id="profile-locations">
             <div className="panel-title"><div><span>03</span><h2>Locations you serve</h2><p>Customers can see the cities you cover, but not your private contact information.</p></div><button type="button" onClick={()=>setLocationSelections(x=>[...x,emptyLocation()])}>+ Add location</button></div>
             <div className="profile-list">{locationSelections.map((x,i)=><div className="profile-row location-row" key={`l-${i}`}><div className="row-number">{String(i+1).padStart(2,'0')}</div><label>State / UT<select value={x.stateId} onChange={e=>updateLocation(i,'stateId',e.target.value)} required><option value="">Select state / UT</option>{states.map(v=><option key={v.id} value={v.id}>{v.name}</option>)}</select></label><label>City<select value={x.cityId} onChange={e=>updateLocation(i,'cityId',e.target.value)} disabled={!x.stateId} required><option value="">Select city</option>{(cityOptions[i]||[]).map(v=><option key={v.id} value={v.id}>{v.name}</option>)}</select></label><button type="button" className="row-remove" onClick={()=>setLocationSelections(items=>items.filter((_,n)=>n!==i))}>Remove</button></div>)}</div>
-          </section>
-          </>}
-
-          {activeSection==='public'&&<>
-          <section className="profile-panel profile-public-panel" id="profile-public">
-            <div className="panel-title"><div><span>04</span><h2>Public profile</h2><p>This copy is shown to homeowners in Find Professionals.</p></div><label className="profile-public-toggle"><input type="checkbox" checked={form.publicProfileEnabled} onChange={e=>update('publicProfileEnabled',e.target.checked)}/><span>Publish when eligible</span></label></div>
-            <div className="profile-grid"><label className="wide">Public headline<input maxLength="180" value={form.publicHeadline} onChange={e=>update('publicHeadline',e.target.value)} placeholder="Turnkey home construction with transparent project execution"/></label><label>Years of experience<input type="number" min="0" max="100" value={form.yearsExperience} onChange={e=>update('yearsExperience',e.target.value)} placeholder="e.g. 8"/></label><label className="wide">Public summary<textarea rows="5" maxLength="3000" value={form.publicSummary} onChange={e=>update('publicSummary',e.target.value)} placeholder="Describe your strengths, process, project types, materials, team and customer experience…"/></label></div>
           </section>
           </>}
 
@@ -625,7 +613,7 @@ export default function Profile(){
           </section>
           </>}
 
-          {activeSection==='business'&&<section className="profile-panel profile-proof-panel">
+          {activeSection==='proofs'&&<section className="profile-panel profile-proof-panel">
             <div className="panel-title"><div><span>07</span><h2>Company proof</h2><p>Verification documents remain private and are reviewed by ProPulse Admin.</p></div></div>
             {companyProofs.length?<div className="profile-proof-list">{companyProofs.map(doc=><div className="profile-proof-item" key={doc.id||(doc.original_name+'-'+doc.created_at)}><div className="profile-proof-icon">{String(doc.mime_type||'').includes('pdf')?'PDF':'IMG'}</div><div className="profile-proof-info"><strong>{doc.original_name||'Company proof document'}</strong><small>{doc.mime_type||'Document'} · {doc.file_size?(Number(doc.file_size)/1024/1024).toFixed(2)+' MB':''}{doc.status?' · '+String(doc.status).replace(/^./,m=>m.toUpperCase()):''}</small></div>{doc.file_url&&<a className="profile-proof-view" href={doc.file_url} target="_blank" rel="noreferrer">View document ↗</a>}</div>)}</div>:<div className="profile-proof-empty"><strong>No company proof documents found</strong><span>Upload a proof document from signup to complete business verification.</span></div>}
           </section>}
