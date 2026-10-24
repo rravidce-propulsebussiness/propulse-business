@@ -224,3 +224,32 @@
 @media(prefers-reduced-motion:reduce){
  .profile-workspace-root *, .profile-workspace-root *::before, .profile-workspace-root *::after{transition:none!important;animation:none!important;scroll-behavior:auto!important}
 }
+
+
+/* The overview uses the same Business form field component as the details tab:
+   only one is mounted at a time, and both submit through the existing profile API. */
+.profile-workspace-root .profile-overview-fields-editable{
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px;
+}
+.profile-workspace-root .profile-overview-fields-editable>label{
+  display:flex;flex-direction:column;justify-content:flex-start;min-width:0;
+  gap:7px;color:#42526a;font-size:11px;font-weight:790;
+}
+.profile-workspace-root .profile-overview-fields-editable>label.wide{grid-column:1/-1}
+.profile-workspace-root .profile-overview-fields-editable>label>span{display:inline;color:#ef6c21}
+.profile-workspace-root .profile-overview-fields-editable input,
+.profile-workspace-root .profile-overview-fields-editable textarea{
+  display:block;width:100%;min-width:0;min-height:45px;
+  padding:11px 12px;background:#fff;border:1px solid #e2e4e8;border-radius:9px;
+  color:#29374d;font:inherit;font-size:12px;font-weight:580;line-height:1.5;
+  resize:vertical;box-shadow:none;outline:none;transition:border-color .18s,box-shadow .18s;
+}
+.profile-workspace-root .profile-overview-fields-editable textarea{min-height:88px}
+.profile-workspace-root .profile-overview-fields-editable input:focus,
+.profile-workspace-root .profile-overview-fields-editable textarea:focus{
+  border-color:#ff9a5c;box-shadow:0 0 0 3px #ffeadb;
+}
+@media(max-width:750px){
+  .profile-workspace-root .profile-overview-fields-editable{grid-template-columns:1fr}
+  .profile-workspace-root .profile-overview-fields-editable>label.wide{grid-column:auto}
+}
