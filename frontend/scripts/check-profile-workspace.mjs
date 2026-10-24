@@ -23,7 +23,7 @@ assert(profile.includes('form="business-profile-form"'), 'The primary Save Chang
 assert(profile.includes("authRequest('/profile',{method:'PUT'"),'Saving must use the existing profile API')
 assert(profile.includes('getElementById(\'profile-workspace-content\')'),'Editor validation must scroll to the visible content area')
 assert(profile.includes('publicProfileId&&<Link to={\'/experts/\'+publicProfileId}'), 'Public preview must open the specific eligible business profile')
-for(const marker of ['uploadProjectImages','uploadProjectVideo','uploadBrochure','uploadPlan','updateService','updateLocation','updatePlan','updateProject']) {
+for(const marker of ['uploadProjectImages','uploadProjectVideo','uploadBrochure','uploadProjectPlan','updateService','updateLocation','updatePlan','updateProject']) {
   assert(profile.includes(marker),`Existing edit/upload feature ${marker} must remain available`)
 }
 for(const marker of ['.profile-workspace-layout','.profile-overview-card','.profile-overview-fields-editable','@media(max-width:750px)','prefers-reduced-motion']) {
