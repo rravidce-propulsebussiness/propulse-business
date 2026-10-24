@@ -2,6 +2,7 @@ import { useCallback, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { authRequest, saveSession } from '../utils/auth'
 import GoogleButton from '../components/GoogleButton'
+import { getOAuthReturnPath, getLoginHomeHref } from '../utils/oauthLoginNavigation'
 import './Login.css'
 
 function Login() {
@@ -13,10 +14,9 @@ function Login() {
   const [loading, setLoading] = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
   const [error, setError] = useState('')
-  const requestedOAuthReturn = new URLSearchParams(location.search).get('returnTo')
-  const validOAuthReturn = typeof requestedOAuthReturn === 'string' &&
-    requestedOAuthReturn.startsWith('/api/oauth/authorize?') && !requestedOAuthReturn.startsWith('//') &&
-    requestedOAuthReturn.length < 4096 ? requestedOAuthReturn : null
+  const validOAuthReturn = getOAuthReturnPath(location.search)
+  const homeHref = getLoginHomeHref(location.search)
+  const businessOsConnection = Boolean(validOAuthReturn)
 
   const finishLogin = useCallback(async (result) => {
     saveSession(result)
@@ -74,8 +74,8 @@ function Login() {
   return (
     <div className="auth-page login-premium">
       <header className="login-topbar">
-        <Link className="login-topbar-brand" to="/" aria-label="Propulse Business home"><img src="/brand/propulse-logo.png" alt="Propulse Business Technologies Private Limited" /></Link>
-        <Link className="login-back-home" to="/"><span>←</span> Back to Home</Link>
+        <a className="login-topbar-brand" href={homeHref} aria-label={businessOsConnection ? 'Business OS home' : 'ProPulse Business home'}><img src="/brand/propulse-logo.png" alt="Propulse Business Technologies Private Limited" /></a>
+        <a className="login-back-home" href={homeHref}><span>←</span> {businessOsConnection ? 'Back to Business OS' : 'Back to Home'}</a>
       </header>
       <main className="auth-card-wrap login-premium-card-wrap">
         <div className="auth-card login-premium-card">
