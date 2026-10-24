@@ -11,6 +11,7 @@ const auth = read('src/utils/auth.js')
 const app = read('src/App.jsx')
 const signup = read('src/pages/Signup.jsx')
 const login = read('src/pages/Login.jsx')
+const loginStyles = read('src/pages/Login.css')
 
 assert(auth.includes("apiRequest('/auth/session', {}, false)"), 'Initial session bootstrap must verify the HttpOnly cookie through anonymous-safe /auth/session')
 assert(auth.includes("export const getToken = () => (sessionKnown && currentUser ? 'cookie-session' : null)"), 'Route token state must depend on verified in-memory session state')
@@ -36,5 +37,14 @@ assert(getOAuthReturnPath('?returnTo=%2Fapi%2Foauth%2Fauthorizex%3Fclient_id%3Df
 assert(login.includes('href={homeHref}'), 'Both login header home links must use the origin-aware href')
 assert(login.includes("businessOsConnection ? 'Back to Business OS' : 'Back to Home'"), 'OAuth login should identify the destination clearly')
 assert(login.includes('window.location.assign(validOAuthReturn)'), 'Successful ProPulse sign-in must still complete the OAuth authorization flow')
+
+
+assert(loginStyles.includes('.auth-page.login-premium') && loginStyles.includes('display:flex;') && loginStyles.includes('flex-direction:column;'), 'Login must override the shared two-column auth grid')
+assert(loginStyles.includes('.auth-card-wrap.login-premium-card-wrap') && loginStyles.includes('place-items:center;'), 'Login page must center its only sign-in card')
+assert(loginStyles.includes('@media (max-width:600px)') && loginStyles.includes('prefers-reduced-motion'), 'Login must remain responsive and honor reduced-motion preferences')
+assert(login.includes('auth-card login-premium-card') && login.includes('GoogleButton onCredential={handleGoogle}'), 'Redesigned login must preserve the native Google identity widget')
+assert(login.includes("authRequest('/auth/login'") && login.includes('type="submit"'), 'Redesigned login must preserve email/password login')
+assert(login.includes('to="/forgot-password"') && login.includes('to="/signup"'), 'Redesigned login must preserve recovery and account creation')
+assert(!login.includes('login-premium-card-wrap">\n        <div className="auth-card'), 'The centered design must retain decorative site context without a duplicate form')
 
 console.log('Authoritative auth bootstrap regression test passed.')
