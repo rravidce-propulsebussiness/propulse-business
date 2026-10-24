@@ -126,6 +126,8 @@ app.use((req,res,next)=>{
   res.setHeader('X-Content-Type-Options','nosniff');
   res.setHeader('X-Frame-Options','DENY');
   res.setHeader('Referrer-Policy','strict-origin-when-cross-origin');
+  // Keep Google popup postMessage working when the fallback legacy launcher is used.
+  if(!backendRoute(req.path)&&['GET','HEAD'].includes(req.method))res.setHeader('Cross-Origin-Opener-Policy','same-origin-allow-popups');
   res.setHeader('Permissions-Policy','camera=(), microphone=(), geolocation=()');
   if(isProduction)res.setHeader('Strict-Transport-Security','max-age=31536000; includeSubDomains');
   if(/^\/(admin|login|signup|forgot-password|reset-password|profile|wallet|membership|notifications|purchased-leads|my-leads|investment|lead-partner|requirements|estimate|professional-contact|professionals|upcoming-features)(\/|$)/.test(req.path)){
