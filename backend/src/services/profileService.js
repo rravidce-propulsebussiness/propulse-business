@@ -241,12 +241,17 @@ async function validateSelections(client, services, locations) {
 async function updateProfile(userId, payload) {
   const {
     name,email,phone,businessName,businessDetails,services,locations,
-    publicHeadline,publicSummary,yearsExperience,publicProfileEnabled,projects,plans,
+    yearsExperience,publicProfileEnabled,projects,plans,
   }=payload||{};
   const normalizedProjects=normalizeProjects(projects);
   const normalizedPlans=normalizePlans(plans);
-  const normalizedHeadline=cleanText(publicHeadline,180,'Public headline');
-  const normalizedSummary=cleanText(publicSummary,3000,'Public summary');
+  // Single source of truth: users only edit their core business details.
+  // Mirror them into the already-public columns when they save. Keeping the
+  // columns lets existing Expert Directory and search clients work unchanged.
+  // Ignore legacy publicHeadline/publicSummary submitted by older clients,
+  // otherwise an old form could silently revive an inconsistent second copy.
+  const normalizedHeadline=cleanText(String(businessName||'').trim().slice(0,180),180,'Business name',{required:true});
+  const normalizedSummary=cleanText(String(businessDetails||'').trim().slice(0,3000),3000,'About your business',{required:true});
   const normalizedYears=yearsExperience==null||yearsExperience===''?null:Number(yearsExperience);
   if(normalizedYears!==null&&(!Number.isInteger(normalizedYears)||normalizedYears<0||normalizedYears>100))throw profileError('Years of experience must be between 0 and 100');
 
