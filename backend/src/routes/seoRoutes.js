@@ -77,7 +77,18 @@ const PUBLIC_PATHS=[
   '/hyderabad/real-estate/compare-options',
 ];
 
+const PRODUCTION_SITE_ORIGIN='https://propulsetechnologies.online';
 function safeOrigin(req){
+  // Requests addressed to the production ProPulse site must have canonical
+  // robots/sitemap URLs even when OAuth or SPA environment settings point to
+  // another origin. In particular, never advertise the Business OS domain.
+  // Keep non-production hosts configurable for staging and local development.
+  const requestHosts=[req.get('host'),req.get('x-forwarded-host')];
+  if(requestHosts.some(value=>{
+    const hostname=String(value||'').split(',')[0].trim();
+    return /^(?:www\\.)?propulsetechnologies\\.online(?::(?:80|443))?$/i.test(hostname);
+  }))return PRODUCTION_SITE_ORIGIN;
+
   const configured=String(process.env.PUBLIC_APP_URL||process.env.FRONTEND_URL||'').trim();
   if(configured){
     try{
@@ -154,4 +165,5 @@ router.get('/sitemap.xml',(req,res)=>{
   res.send(body);
 });
 
+router.resolveSeoOrigin=safeOrigin;
 module.exports=router;
