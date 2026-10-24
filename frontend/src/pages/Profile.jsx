@@ -157,8 +157,8 @@ export default function Profile(){
   function addPlan(){const item=emptyPlan();setPlans(current=>[...current,item]);setExpandedPlan('draft-'+item._draftKey);setMessage('')}
   function projectKey(item){return item.id?'project-'+item.id:'draft-'+item._draftKey}
   function planKey(item){return item.id?'plan-'+item.id:'draft-'+item._draftKey}
-  function revealProjectError(index,message){setExpandedProject(projectKey(projects[index]));navigate('/profile?tab=projects');setError(message);requestAnimationFrame(()=>document.getElementById('profile-tabs')?.scrollIntoView({block:'start',behavior:'smooth'}))}
-  function revealPlanError(index,message){setExpandedPlan(planKey(plans[index]));navigate('/profile?tab=plans');setError(message);requestAnimationFrame(()=>document.getElementById('profile-tabs')?.scrollIntoView({block:'start',behavior:'smooth'}))}
+  function revealProjectError(index,message){setExpandedProject(projectKey(projects[index]));navigate('/profile?tab=projects');setError(message);requestAnimationFrame(()=>document.getElementById('profile-workspace-content')?.scrollIntoView({block:'start',behavior:'smooth'}))}
+  function revealPlanError(index,message){setExpandedPlan(planKey(plans[index]));navigate('/profile?tab=plans');setError(message);requestAnimationFrame(()=>document.getElementById('profile-workspace-content')?.scrollIntoView({block:'start',behavior:'smooth'}))}
   function update(field,value){setForm(x=>({...x,[field]:value}));setMessage('')}
   function updateService(index,field,value){setServiceSelections(items=>items.map((x,i)=>i!==index?x:field==='industryId'?{industryId:value,serviceId:'',subserviceId:''}:field==='serviceId'?{...x,serviceId:value,subserviceId:''}:{...x,[field]:value}));setMessage('')}
   function updateLocation(index,field,value){setLocationSelections(items=>items.map((x,i)=>i!==index?x:field==='stateId'?{stateId:value,cityId:''}:{...x,cityId:value}));setMessage('')}
