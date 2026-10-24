@@ -31,6 +31,34 @@ const dockerfile=read('../frontend/Dockerfile');
 const compose=read('../deploy/compose.yml');
 const server=read('src/server.js');
 const seoRoutes=read('src/routes/seoRoutes.js');
+
+// Production canonical domain must take priority over mismatched OAuth/frontend
+// environment settings, but staging URLs must continue to work independently.
+const seoRouter=require('../src/routes/seoRoutes');
+const requestFor=(headers,protocol='https')=>({
+  protocol,
+  get(name){return headers[name.toLowerCase()]||'';}
+});
+const oldPublicAppUrl=process.env.PUBLIC_APP_URL;
+const oldFrontendUrl=process.env.FRONTEND_URL;
+try{
+  process.env.PUBLIC_APP_URL='https://sghomesinterior.in';
+  process.env.FRONTEND_URL='https://sghomesinterior.in';
+  assert(seoRouter.resolveSeoOrigin(requestFor({host:'propulsetechnologies.online'}))==='https://propulsetechnologies.online',
+    'Production robots/sitemap cannot advertise the Business OS domain');
+  assert(seoRouter.resolveSeoOrigin(requestFor({host:'127.0.0.1:8080','x-forwarded-host':'propulsetechnologies.online'}))==='https://propulsetechnologies.online',
+    'Canonical SEO origin must survive Hostinger reverse proxy headers');
+  assert(seoRouter.resolveSeoOrigin(requestFor({host:'www.propulsetechnologies.online'}))==='https://propulsetechnologies.online',
+    'WWW production requests must advertise the canonical HTTPS domain');
+  assert(seoRouter.resolveSeoOrigin(requestFor({host:'preview.example.net'}))==='https://sghomesinterior.in',
+    'Non-production staging hostname must retain configured origin behavior');
+}finally{
+  if(oldPublicAppUrl===undefined)delete process.env.PUBLIC_APP_URL;
+  else process.env.PUBLIC_APP_URL=oldPublicAppUrl;
+  if(oldFrontendUrl===undefined)delete process.env.FRONTEND_URL;
+  else process.env.FRONTEND_URL=oldFrontendUrl;
+}
+
 const packagePage=read('../frontend/src/pages/Packages.jsx');
 const requirementWizard=read('../frontend/src/pages/RequirementWizard.jsx');
 const projectPage=read('../frontend/src/pages/Projects.jsx');
