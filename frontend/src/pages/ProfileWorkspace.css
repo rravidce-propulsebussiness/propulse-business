@@ -255,3 +255,32 @@
   .profile-workspace-root .profile-overview-fields-editable{grid-template-columns:1fr}
   .profile-workspace-root .profile-overview-fields-editable>label.wide{grid-column:auto}
 }
+
+
+/* Business name and description are the one public-facing source. */
+.profile-workspace-root .profile-unified-publish.wide{
+  grid-column:1/-1;
+  display:flex;align-items:center;justify-content:space-between;gap:18px;
+  padding:15px 16px;border-radius:11px;border:1px solid #f5d9c5;
+  background:linear-gradient(120deg,#fff9f4,#fff0e5);
+}
+.profile-workspace-root .profile-unified-publish>div{min-width:0;flex:1}
+.profile-workspace-root .profile-unified-publish strong{
+  display:block;font-size:13px;font-weight:840;color:#293c4e;line-height:1.4;
+}
+.profile-workspace-root .profile-unified-publish p{
+  margin:5px 0 0;color:#826d60;font-size:11px;line-height:1.6;
+}
+.profile-workspace-root .profile-unified-visibility{
+  display:flex;align-items:center;gap:8px;flex:0 0 auto;
+  font-size:11px;font-weight:790;line-height:1.4;color:#88532d;cursor:pointer;
+}
+.profile-workspace-root .profile-unified-visibility input{
+  width:18px;height:18px;flex:0 0 18px;accent-color:#ef7529;
+}
+.profile-workspace-root .profile-overview-fields-editable>label>span small{
+  font-size:10px;color:#8e98a3;font-weight:590;
+}
+@media(max-width:620px){
+  .profile-workspace-root .profile-unified-publish.wide{align-items:flex-start;flex-direction:column;gap:13px;padding:13px}
+}
