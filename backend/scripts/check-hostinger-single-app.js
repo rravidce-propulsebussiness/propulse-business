@@ -22,7 +22,7 @@ assert(pkg.engines?.node==='24.x','Hostinger wrapper pins Node 24.x');
 assert(pkg.scripts?.build==='node index.js --build-only','Manual Hostinger build uses the same runtime-build path');
 assert(rootIndex.includes("const frontendDist=path.join(frontendRoot,'dist')"),'Hostinger runtime build targets frontend/dist');
 assert(rootIndex.includes("buildFrontendAsync()"),'Hostinger entry builds the frontend asynchronously after server startup');
-assert(rootIndex.includes("if(fs.existsSync(frontendIndex))return;"),'Hostinger root runtime skips rebuilding an already generated frontend');
+assert(rootIndex.includes("if(prebuiltFrontendReady())return;"),'Hostinger root runtime skips building whenever either prebuilt frontend is present');
 assert(pkg.scripts?.start==='node index.js','Hostinger starts through the default index.js entrypoint');
 for(const dependency of ['express','pg','bcryptjs','cors','dotenv','jsonwebtoken','react','react-dom','react-router-dom','vite','@vitejs/plugin-react']){
   assert(pkg.dependencies?.[dependency],'Hostinger root package must install '+dependency);
@@ -36,12 +36,15 @@ assert(rootIndex.includes("node_modules','vite','bin','vite.js"),'Hostinger runt
 assert(rootIndex.includes("generate-seo-static-pages.mjs"),'Hostinger runtime build must generate SEO static pages');
 assert(rootIndex.includes('ensureFrontendReleaseMarker()'),'Root Hostinger build must regenerate the frontend release marker before Vite builds');
 assert(releaseMarkerHelper.includes("hostinger-release.json")&&releaseMarkerHelper.includes("frontend','public")&&releaseMarkerHelper.includes("release.json"),'Release marker helper must copy baked deployment identity into frontend/public/release.json');
-assert(rootIndex.includes("require('./hostinger-server')"),'Hostinger index.js must launch the single-app wrapper');
-assert(rootIndex.indexOf("require('./hostinger-server')")<rootIndex.indexOf('void buildFrontendAsync()'),'Hostinger must open the public server before starting the background frontend build');
+assert(rootIndex.includes("require('./backend/src/server')"),'Hostinger root runs the real Express API directly without a child process');
+assert(rootIndex.includes("process.env.SERVE_FRONTEND_FROM_BACKEND='true'"),'Hostinger root enables direct same-process static and API serving');
+assert(rootIndex.includes('HOSTINGER_LEGACY_PROXY_MODE'),'Hostinger root retains an explicit emergency rollback to the legacy proxy');
+assert(rootIndex.includes("const prebuiltFrontendReady=()=>fs.existsSync(frontendIndex)||fs.existsSync(bundledFrontendIndex)"),'Hostinger uses prebuilt assets without Vite compilation on normal starts');
+assert(rootIndex.indexOf("require('./backend/src/server')")<rootIndex.indexOf('void buildFrontendAsync()'),'Hostinger must start API listening before any emergency runtime frontend build');
 assert(!wrapper.includes('Hostinger frontend build is missing. Run npm run build before npm start.'),'Hostinger wrapper must not exit when frontend/dist is initially absent');
 assert(wrapper.includes("return res.status(200).send("),'Hostinger returns HTTP 200 while the frontend build is still starting');
 assert(wrapper.includes("X-App-Starting"),'Hostinger marks temporary startup responses');
-assert(wrapper.includes("scheduleBackendRestart"),'Hostinger wrapper supervises and restarts the backend child process');
+assert(wrapper.includes("scheduleBackendRestart"),'Legacy wrapper remains available for explicit emergency rollback only');
 assert(wrapper.includes("backend?.kill('SIGTERM')"),'Hostinger wrapper stops the backend child during shutdown');
 assert(wrapper.includes("if(req.path==='/health/live')"),'Hostinger liveness remains available while backend restarts');
 assert(pkg.dependencies?.express,'Hostinger root package declares Express for framework detection');
@@ -110,7 +113,9 @@ for(const source of [wrapper,backendServer]){
 }
 assert(wrapper.includes("X-Robots-Tag"),'Hostinger wrapper noindexes private frontend routes');
 assert(wrapper.includes("RUN_BACKGROUND_JOBS_IN_WEB:process.env.RUN_BACKGROUND_JOBS_IN_WEB||'true'"),'Hostinger staging defaults background jobs into the web backend');
-assert(wrapper.includes("SERVE_FRONTEND_FROM_BACKEND:'false'"),'Hostinger wrapper keeps backend behind the internal proxy');
+assert(wrapper.includes("SERVE_FRONTEND_FROM_BACKEND:'false'"),'Legacy wrapper keeps backend behind its internal proxy');
+assert(wrapper.includes("Cross-Origin-Opener-Policy",'same-origin-allow-popups'),'Legacy fallback enables Google popup compatibility');
+assert(backendServer.includes("Cross-Origin-Opener-Policy','same-origin-allow-popups"),'Primary single-process site enables Google popup compatibility');
 for(const key of ['PUBLIC_APP_URL','FRONTEND_URL','CORS_ORIGIN','DB_HOST','DB_NAME','DB_USER','DB_PASSWORD','JWT_SECRET','VITE_PUBLIC_SITE_URL']){
   assert(env.includes(key+'='),'Hostinger env template includes '+key);
 }
