@@ -70,6 +70,16 @@ function mapPlan(item){
   }
 }
 
+function ProfileBusinessFields({form,update,overview=false}){
+  return <div className={overview?'profile-overview-fields profile-overview-fields-editable':'profile-grid'}>
+    <label>Business name <span aria-hidden="true">*</span><input value={form.businessName} onChange={e=>update('businessName',e.target.value)} required placeholder="Your registered business name"/></label>
+    <label>Email address <span aria-hidden="true">*</span><input type="email" value={form.email} onChange={e=>update('email',e.target.value)} required autoComplete="email"/></label>
+    <label>Contact person <span aria-hidden="true">*</span><input value={form.name} onChange={e=>update('name',e.target.value)} required autoComplete="name"/></label>
+    <label>Phone number <span aria-hidden="true">*</span><input value={form.phone} onChange={e=>update('phone',e.target.value)} required autoComplete="tel"/></label>
+    <label className="wide">About your business <span aria-hidden="true">*</span><textarea rows={overview?3:4} value={form.businessDetails} onChange={e=>update('businessDetails',e.target.value)} required placeholder="Share what your team does and how you deliver projects"/></label>
+  </div>
+}
+
 export default function Profile(){
   const navigate=useNavigate()
   const location=useLocation()
@@ -435,9 +445,7 @@ export default function Profile(){
             <div><span className="profile-workspace-overline">BUSINESS ACCOUNT</span><h1>Business Profile</h1><p>Manage your business information, services, projects and public profile.</p></div>
             <div className="profile-workspace-actions">
               {directoryEligible&&publicProfileId&&<Link to={'/experts/'+publicProfileId} className="profile-workspace-preview">◉ Preview Public Profile</Link>}
-              {activeSection==='overview'
-                ?<button type="button" className="profile-workspace-save" onClick={()=>selectSection('business')}>Edit Business Details ↗</button>
-                :activeSection!=='brochures'&&<button type="submit" form="business-profile-form" className="profile-workspace-save" disabled={saving}>{saving?'Saving…':'▣ Save Changes'}</button>}
+              {activeSection!=='brochures'&&<button type="submit" form="business-profile-form" className="profile-workspace-save" disabled={saving}>{saving?'Saving…':'▣ Save Changes'}</button>}
             </div>
           </header>
           <section className="profile-hero" aria-label="Business profile summary">
@@ -460,16 +468,10 @@ export default function Profile(){
 
           {activeSection==='overview'&&<div className="profile-overview-layout">
             <div className="profile-overview-main">
-              <section className="profile-overview-card profile-overview-business">
-                <div className="profile-overview-card-heading"><div><span className="profile-overview-icon" aria-hidden="true">▤</span><div><h2>Business Information</h2><p>Basic details about your business</p></div></div><button type="button" onClick={()=>selectSection('business')}>✎ Edit</button></div>
-                <div className="profile-overview-fields">
-                  <div><span>Business Name</span><strong>{form.businessName||'Not provided'}</strong></div>
-                  <div><span>Email Address</span><strong>{form.email||'Not provided'}</strong></div>
-                  <div><span>Contact Person</span><strong>{form.name||'Not provided'}</strong></div>
-                  <div><span>Phone Number</span><strong>{form.phone||'Not provided'}</strong></div>
-                  <div className="wide"><span>About Your Business</span><p>{form.businessDetails||'Tell customers about your expertise and process.'}</p></div>
-                </div>
-              </section>
+              <form id="business-profile-form" className="profile-overview-card profile-overview-business" onSubmit={save}>
+                <div className="profile-overview-card-heading"><div><span className="profile-overview-icon" aria-hidden="true">▤</span><div><h2>Business Information</h2><p>Update your contact and business details</p></div></div><button type="button" onClick={()=>selectSection('business')}>Expanded editor ↗</button></div>
+                <ProfileBusinessFields form={form} update={update} overview/>
+              </form>
               <div className="profile-overview-cards">
                 <section className="profile-overview-card">
                   <div className="profile-overview-card-heading"><div><span className="profile-overview-icon" aria-hidden="true">⌖</span><div><h2>Services &amp; Locations</h2><p>What you do and where you work</p></div></div></div>
@@ -521,7 +523,7 @@ export default function Profile(){
           {activeSection==='business'&&<>
           <section className="profile-panel profile-information" id="profile-information">
             <div className="panel-title"><div><span>01</span><h2>Business information</h2><p>Private account and core business details.</p></div></div>
-            <div className="profile-grid"><label>Full name<input value={form.name} onChange={e=>update('name',e.target.value)} required/></label><label>Email<input type="email" value={form.email} onChange={e=>update('email',e.target.value)} required/></label><label>Phone<input value={form.phone} onChange={e=>update('phone',e.target.value)} required/></label><label>Business name<input value={form.businessName} onChange={e=>update('businessName',e.target.value)} required/></label><label className="wide">Business details<textarea rows="4" value={form.businessDetails} onChange={e=>update('businessDetails',e.target.value)} required/></label></div>
+            <ProfileBusinessFields form={form} update={update}/>
           </section>
           </>}
 
