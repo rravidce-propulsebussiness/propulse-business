@@ -114,4 +114,144 @@ async function reset({confirmation,adminId}={}){
   }finally{client.release()}
 }
 
-module.exports={RESET_TABLES,preview,reset};
+
+/**
+ * One-time production launch cleanup. Deliberately separate from reset():
+ * leave platform settings and every administrator in place. It may be run
+ * in production only by an authenticated administrator with an exact typed
+ * confirmation, a current count snapshot, and no financial obligations.
+ */
+const criticalActionAudit=require('./criticalActionAuditService');
+const LAUNCH_CONFIRMATION='DELETE NON-ADMIN USERS AND LEADS';
+
+async function launchPreview(db=pool){
+  const result=await db.query(`
+    SELECT
+      (SELECT COUNT(*)::int FROM users WHERE role='admin') AS admins,
+      (SELECT COUNT(*)::int FROM users WHERE role='admin' AND is_active=TRUE) AS active_admins,
+      (SELECT COUNT(*)::int FROM users WHERE role<>'admin') AS non_admin_users,
+      (SELECT COUNT(*)::int FROM leads) AS leads,
+      (SELECT COUNT(*)::int FROM payments) AS payments,
+      (SELECT COUNT(*)::int FROM payments WHERE status<>'rejected') AS unsafe_payments,
+      (SELECT COUNT(*)::int FROM lead_purchases) AS purchases,
+      (SELECT COUNT(*)::int FROM lead_purchases WHERE status<>'cancelled') AS unsafe_purchases,
+      (SELECT COUNT(*)::int FROM wallets w JOIN users u ON u.id=w.user_id
+        WHERE u.role<>'admin' AND w.balance<>0) AS funded_wallets,
+      (SELECT COUNT(*)::int FROM investments) +
+      (SELECT COUNT(*)::int FROM investment_transactions) +
+      (SELECT COUNT(*)::int FROM investment_cycles) +
+      (SELECT COUNT(*)::int FROM investor_payout_requests) +
+      (SELECT COUNT(*)::int FROM investment_revenue_allocations) +
+      (SELECT COUNT(*)::int FROM lead_partner_payout_requests) +
+      (SELECT COUNT(*)::int FROM lead_partner_earning_adjustments) +
+      (SELECT COUNT(*)::int FROM lead_partner_earnings) AS financial_dependencies,
+      (SELECT COUNT(*)::int FROM admin_google_sheet_connections WHERE status='active') AS active_sheets
+  `);
+  const row=result.rows[0]||{};
+  const counts=Object.fromEntries(Object.entries(row).map(([key,value])=>[key,Number(value)||0]));
+  const blockedReasons=[];
+  if(counts.active_admins<1) blockedReasons.push('No active administrator would remain.');
+  if(counts.unsafe_payments>0) blockedReasons.push('Non-rejected payments exist; financial records must be reviewed.');
+  if(counts.unsafe_purchases>0) blockedReasons.push('Non-cancelled lead purchases exist.');
+  if(counts.funded_wallets>0) blockedReasons.push('Non-admin wallet balances are not zero.');
+  if(counts.financial_dependencies>0) blockedReasons.push('Investment, earnings, or payout records still exist.');
+  return{
+    counts,
+    allowed:blockedReasons.length===0,
+    blockedReasons,
+    confirmation:LAUNCH_CONFIRMATION,
+    preserved:['Every administrator account','Product configuration and pricing','Industry, service and location catalogs','Website content and media','Admin Google Sheet connection settings (sync disabled)'],
+    warning:'Permanent account and lead deletion. Existing Business OS accounts connected through deleted ProPulse identities may need to be linked again. This action does not delete remote media files or backup copies.'
+  };
+}
+
+function launchError(message,code){
+  return Object.assign(new Error(message),{code});
+}
+
+async function launchCleanup({confirmation,acknowledged,expected,adminId}={}){
+  if(confirmation!==LAUNCH_CONFIRMATION || acknowledged!==true){
+    throw launchError('Enter the exact launch cleanup confirmation and acknowledge the irreversible deletion.','LAUNCH_CONFIRMATION_REQUIRED');
+  }
+  if(!adminId || !expected || !['non_admin_users','leads','payments','purchases'].every(key=>
+    Number.isSafeInteger(expected[key]) && expected[key]>=0)){
+    throw launchError('Reload the cleanup preview before proceeding.','LAUNCH_PREVIEW_STALE');
+  }
+
+  const client=await pool.connect();
+  try{
+    await client.query('BEGIN');
+    await client.query("SET LOCAL lock_timeout='8s'");
+    await client.query('SELECT pg_advisory_xact_lock($1)',[9062601]);
+    // Hold a stable snapshot of the affected identities and sources. In-flight
+    // signups or imports may not enter between preview re-check and deletion.
+    await client.query(
+      'LOCK TABLE users, leads, payments, lead_purchases, admin_google_sheet_connections IN SHARE ROW EXCLUSIVE MODE'
+    );
+    const admin=(await client.query(
+      "SELECT id FROM users WHERE id=$1 AND role='admin' AND is_active=TRUE",
+      [adminId]
+    )).rows[0];
+    if(!admin)throw launchError('Only an active administrator can run launch cleanup.','LAUNCH_ADMIN_REQUIRED');
+
+    const before=await launchPreview(client);
+    if(!before.allowed)throw launchError('Cleanup blocked: '+before.blockedReasons.join(' '),'LAUNCH_FINANCIAL_RECORDS');
+    for(const key of ['non_admin_users','leads','payments','purchases']){
+      if(before.counts[key]!==expected[key]){
+        throw launchError('Account or lead totals have changed. Reload the preview and review them again.','LAUNCH_PREVIEW_STALE');
+      }
+    }
+
+    // Disable previously connected automatic imports, without deleting the
+    // connection settings; otherwise removed leads immediately reappear.
+    const disabled=await client.query(
+      "UPDATE admin_google_sheet_connections SET status='disabled' WHERE status='active'"
+    );
+    // All remaining purchase/payment rows have passed the above safety checks:
+    // cancelled purchases and rejected payments, not paid financial records.
+    const purchases=await client.query('DELETE FROM lead_purchases');
+    const payments=await client.query(
+      "DELETE FROM payments WHERE user_id IN (SELECT id FROM users WHERE role<>'admin')"
+    );
+    if(payments.rowCount!==before.counts.payments){
+      throw launchError('Unaccounted payment ownership; launch cleanup aborted.','LAUNCH_FINANCIAL_RECORDS');
+    }
+    const leads=await client.query('DELETE FROM leads');
+    const users=await client.query("DELETE FROM users WHERE role<>'admin'");
+    if(users.rowCount!==before.counts.non_admin_users ||
+       leads.rowCount!==before.counts.leads ||
+       purchases.rowCount!==before.counts.purchases){
+      throw launchError('Cleanup totals did not match the preview; transaction rolled back.','LAUNCH_PREVIEW_STALE');
+    }
+
+    const after=await launchPreview(client);
+    if(after.counts.non_admin_users!==0 || after.counts.leads!==0 ||
+       after.counts.payments!==0 || after.counts.purchases!==0 ||
+       after.counts.admins!==before.counts.admins ||
+       after.counts.active_admins!==before.counts.active_admins ||
+       after.counts.active_sheets!==0){
+      throw launchError('Post-cleanup verification failed; changes have been rolled back.','LAUNCH_VERIFICATION_FAILED');
+    }
+    await criticalActionAudit.record(client,{
+      actorId:adminId,category:'system',action:'admin.launch_cleanup',
+      entityType:'platform',entityId:'launch',
+      beforeData:before.counts,afterData:after.counts,
+      reason:'Administrator-confirmed production launch cleanup',
+      metadata:{usersDeleted:users.rowCount,leadsDeleted:leads.rowCount,
+        paymentsDeleted:payments.rowCount,purchasesDeleted:purchases.rowCount,
+        sheetConnectionsDisabled:disabled.rowCount},
+      source:'admin.launch_cleanup'
+    });
+    await client.query('COMMIT');
+    return {ok:true,deleted:{users:users.rowCount,leads:leads.rowCount,
+      payments:payments.rowCount,purchases:purchases.rowCount},
+      disabledSheetConnections:disabled.rowCount,after,at:new Date().toISOString()};
+  }catch(error){
+    await client.query('ROLLBACK').catch(()=>{});
+    throw error;
+  }finally{
+    client.release();
+  }
+}
+
+module.exports={RESET_TABLES,preview,reset,launchPreview,launchCleanup,LAUNCH_CONFIRMATION};
