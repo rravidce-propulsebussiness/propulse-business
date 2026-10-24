@@ -629,7 +629,7 @@ export default function Profile(){
             <div className="panel-title"><div><span>07</span><h2>Company proof</h2><p>Verification documents remain private and are reviewed by ProPulse Admin.</p></div></div>
             {companyProofs.length?<div className="profile-proof-list">{companyProofs.map(doc=><div className="profile-proof-item" key={doc.id||(doc.original_name+'-'+doc.created_at)}><div className="profile-proof-icon">{String(doc.mime_type||'').includes('pdf')?'PDF':'IMG'}</div><div className="profile-proof-info"><strong>{doc.original_name||'Company proof document'}</strong><small>{doc.mime_type||'Document'} · {doc.file_size?(Number(doc.file_size)/1024/1024).toFixed(2)+' MB':''}{doc.status?' · '+String(doc.status).replace(/^./,m=>m.toUpperCase()):''}</small></div>{doc.file_url&&<a className="profile-proof-view" href={doc.file_url} target="_blank" rel="noreferrer">View document ↗</a>}</div>)}</div>:<div className="profile-proof-empty"><strong>No company proof documents found</strong><span>Upload a proof document from signup to complete business verification.</span></div>}
           </section>}
-          
+
         </div>
 
 
