@@ -7,6 +7,8 @@ const root=__dirname;
 const frontendRoot=path.join(root,'frontend');
 const frontendDist=path.join(frontendRoot,'dist');
 const frontendIndex=path.join(frontendDist,'index.html');
+const bundledFrontendIndex=path.join(root,'backend','hostinger-frontend','index.html');
+const prebuiltFrontendReady=()=>fs.existsSync(frontendIndex)||fs.existsSync(bundledFrontendIndex);
 const viteBin=path.join(root,'node_modules','vite','bin','vite.js');
 let buildPromise=null;
 
@@ -43,7 +45,7 @@ function buildFrontendSync(){
 }
 
 async function buildFrontendAsync(){
-  if(fs.existsSync(frontendIndex))return;
+  if(prebuiltFrontendReady())return;
   if(buildPromise)return buildPromise;
   assertBuildTooling();
   ensureFrontendReleaseMarker();
@@ -62,15 +64,40 @@ if(process.argv.includes('--build-only')){
   process.exit(0);
 }
 
-// Open Hostinger's public port immediately. Managed hosting validates that the
-// Express process starts successfully; the frontend can finish building after
-// the server is already accepting health/API requests.
-require('./hostinger-server');
+// Use the existing Express app as Hostinger's *one* managed Node process.
+// The previous launcher spawned a second Node process for the backend, and
+// both an extra process and on-host Vite compiles can exhaust shared hosting
+// process/RAM limits, causing 503 responses for APIs AND static CSS files.
+// CI already bakes backend/hostinger-frontend before GitHub deployment.
+const legacyProxyMode=String(process.env.HOSTINGER_LEGACY_PROXY_MODE||'').trim().toLowerCase()==='true';
+process.env.NODE_ENV=process.env.NODE_ENV||'production';
+process.env.RUN_BACKGROUND_JOBS_IN_WEB=process.env.RUN_BACKGROUND_JOBS_IN_WEB||'true';
+process.env.REQUIRE_BACKGROUND_WORKER=process.env.REQUIRE_BACKGROUND_WORKER||'false';
 
-void buildFrontendAsync().catch(error=>{
-  console.error('Hostinger background frontend build failed:',error?.stack||error);
-  const retry=setTimeout(()=>{
-    void buildFrontendAsync().catch(nextError=>console.error('Hostinger frontend build retry failed:',nextError?.stack||nextError));
-  },30000);
-  retry.unref?.();
-});
+if(legacyProxyMode){
+  console.warn('Hostinger legacy proxy mode enabled explicitly (emergency rollback).');
+  require('./hostinger-server');
+}else{
+  process.env.SERVE_FRONTEND_FROM_BACKEND='true';
+  try{
+    require('./backend/src/server');
+    console.log('Hostinger single-process Express app started; serving built frontend and APIs directly.');
+  }catch(error){
+    // The old launcher remains a temporary rollback for a synchronous module
+    // startup failure. It is never started alongside a healthy backend.
+    console.error('Hostinger single-process startup failed; reverting to legacy proxy:',error?.stack||error);
+    require('./hostinger-server');
+  }
+}
+
+// Only compile at runtime when neither prebuilt frontend exists. In standard
+// GitHub deployments this never starts a Vite subprocess on Hostinger.
+if(!prebuiltFrontendReady()){
+  void buildFrontendAsync().catch(error=>{
+    console.error('Hostinger emergency frontend build failed:',error?.stack||error);
+    const retry=setTimeout(()=>{
+      void buildFrontendAsync().catch(nextError=>console.error('Hostinger frontend build retry failed:',nextError?.stack||nextError));
+    },30000);
+    retry.unref?.();
+  });
+}
