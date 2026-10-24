@@ -85,6 +85,7 @@ export default function Profile(){
   const [projects,setProjects]=useState([])
   const [plans,setPlans]=useState([])
   const [directoryStatus,setDirectoryStatus]=useState(null)
+  const [publicProfileId,setPublicProfileId]=useState(null)
   const [videoUploads,setVideoUploads]=useState({})
   const [videoProgress,setVideoProgress]=useState({})
   const [imageUploads,setImageUploads]=useState({})
@@ -116,6 +117,7 @@ export default function Profile(){
         setProjects((profile.projects||[]).map(mapProject))
         setPlans((profile.service_plans||[]).map(mapPlan))
         setDirectoryStatus(profile.directory_status||null)
+        setPublicProfileId(profile.id||null)
       }catch(err){setError(err.message)}finally{setLoading(false)}
     }
     load()
@@ -144,12 +146,12 @@ export default function Profile(){
   const sectionGroup=section=>section==='services'||section==='locations'?'services':section==='plans'||section==='brochures'?'plans':section
   const activeGroup=sectionGroup(activeSection)
   const checklist=[
-    {label:'Business information',done:completionItems[0]&&completionItems[1],section:'business'},
+    {label:'Contact information',done:completionItems[0],section:'business'},
+    {label:'Business details',done:completionItems[1],section:'business'},
     {label:'Services offered',done:completionItems[2],section:'services'},
     {label:'Service locations',done:completionItems[3],section:'locations'},
     {label:'Public profile details',done:completionItems[4],section:'public'},
     {label:'At least one completed project',done:completionItems[5],section:'projects'},
-    {label:'Brochure or package',done:plans.length>0,section:'plans'},
   ]
 
   function selectSection(section){if(activeSection!==section)navigate('/profile?tab='+section);setMessage('');requestAnimationFrame(()=>document.getElementById('profile-workspace-content')?.scrollIntoView({behavior:'smooth',block:'start'}))}
@@ -432,7 +434,7 @@ export default function Profile(){
           <header className="profile-workspace-heading">
             <div><span className="profile-workspace-overline">BUSINESS ACCOUNT</span><h1>Business Profile</h1><p>Manage your business information, services, projects and public profile.</p></div>
             <div className="profile-workspace-actions">
-              {directoryEligible&&<Link to="/experts" className="profile-workspace-preview">◉ Preview Public Profile</Link>}
+              {directoryEligible&&publicProfileId&&<Link to={'/experts/'+publicProfileId} className="profile-workspace-preview">◉ Preview Public Profile</Link>}
               {activeSection==='overview'
                 ?<button type="button" className="profile-workspace-save" onClick={()=>selectSection('business')}>Edit Business Details ↗</button>
                 :activeSection!=='brochures'&&<button type="submit" form="business-profile-form" className="profile-workspace-save" disabled={saving}>{saving?'Saving…':'▣ Save Changes'}</button>}
@@ -508,7 +510,7 @@ export default function Profile(){
 
           {activeSection==='public'&&<section className={`profile-directory-banner ${directoryEligible?'eligible':'attention'}`}>
             <div><span>PUBLIC DIRECTORY STATUS</span><h3>{directoryEligible?'Your business can appear in Experts':'Check your directory eligibility'}</h3><p>{reasonText(directoryStatus)}</p></div>
-            <div className="profile-directory-actions">{directoryStatus?.membership&&<b>{String(directoryStatus.membership.planGroup||'').toUpperCase()} member</b>}{directoryEligible&&<Link to="/experts">View Experts ↗</Link>}</div>
+            <div className="profile-directory-actions">{directoryStatus?.membership&&<b>{String(directoryStatus.membership.planGroup||'').toUpperCase()} member</b>}{directoryEligible&&publicProfileId&&<Link to={'/experts/'+publicProfileId}>View Public Profile ↗</Link>}</div>
           </section>}
 
       {error&&<div className="profile-alert error">{error}</div>}
