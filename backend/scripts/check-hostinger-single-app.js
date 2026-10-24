@@ -114,7 +114,7 @@ for(const source of [wrapper,backendServer]){
 assert(wrapper.includes("X-Robots-Tag"),'Hostinger wrapper noindexes private frontend routes');
 assert(wrapper.includes("RUN_BACKGROUND_JOBS_IN_WEB:process.env.RUN_BACKGROUND_JOBS_IN_WEB||'true'"),'Hostinger staging defaults background jobs into the web backend');
 assert(wrapper.includes("SERVE_FRONTEND_FROM_BACKEND:'false'"),'Legacy wrapper keeps backend behind its internal proxy');
-assert(wrapper.includes("Cross-Origin-Opener-Policy",'same-origin-allow-popups'),'Legacy fallback enables Google popup compatibility');
+assert(wrapper.includes("res.setHeader('Cross-Origin-Opener-Policy','same-origin-allow-popups')"),'Legacy fallback enables Google popup compatibility');
 assert(backendServer.includes("Cross-Origin-Opener-Policy','same-origin-allow-popups"),'Primary single-process site enables Google popup compatibility');
 for(const key of ['PUBLIC_APP_URL','FRONTEND_URL','CORS_ORIGIN','DB_HOST','DB_NAME','DB_USER','DB_PASSWORD','JWT_SECRET','VITE_PUBLIC_SITE_URL']){
   assert(env.includes(key+'='),'Hostinger env template includes '+key);
