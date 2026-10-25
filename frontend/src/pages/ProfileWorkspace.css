@@ -284,3 +284,42 @@
 @media(max-width:620px){
   .profile-workspace-root .profile-unified-publish.wide{align-items:flex-start;flex-direction:column;gap:13px;padding:13px}
 }
+
+
+/* Mobile profile containment: keep the document within the phone viewport.
+   Only the profile navigation scrolls sideways; the entire page must not. */
+.profile-page.profile-workspace-root{
+  min-width:0;
+  max-width:100%;
+  overflow-x:clip;
+}
+.profile-workspace-root .profile-workspace-layout,
+.profile-workspace-root .profile-workspace-main,
+.profile-workspace-root .profile-workspace-heading,
+.profile-workspace-root .profile-workspace-sidebar,
+.profile-workspace-root .profile-main-column,
+.profile-workspace-root .profile-form,
+.profile-workspace-root .profile-panel {
+  min-width:0;
+  max-width:100%;
+}
+.profile-workspace-root .profile-workspace-nav{
+  min-width:0;
+  max-width:100%;
+}
+.profile-workspace-root .profile-workspace-heading h1,
+.profile-workspace-root .profile-workspace-heading p{overflow-wrap:anywhere}
+.profile-workspace-root .profile-row,
+.profile-workspace-root .profile-list{min-width:0;max-width:100%}
+.profile-workspace-root .profile-row select{min-width:0;max-width:100%}
+.profile-workspace-root #profile-locations{scroll-margin-top:90px}
+@media(max-width:750px){
+  .profile-page.profile-workspace-root{width:100%;padding-inline:12px}
+  .profile-workspace-root .profile-workspace-layout{width:100%}
+  .profile-workspace-root .profile-workspace-nav{width:100%;overscroll-behavior-inline:contain}
+  .profile-workspace-root .profile-workspace-heading{width:100%}
+  .profile-workspace-root .profile-workspace-heading>div:first-child{min-width:0;width:100%}
+  .profile-workspace-root .profile-workspace-actions{min-width:0}
+  .profile-workspace-root .profile-workspace-actions > *{min-width:0;white-space:normal;text-align:center}
+  .profile-workspace-root .profile-panel{overflow-wrap:anywhere}
+}
