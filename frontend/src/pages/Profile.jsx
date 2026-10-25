@@ -108,7 +108,7 @@ export default function Profile(){
   const [brochureUploads,setBrochureUploads]=useState({})
   const requestedTab=new URLSearchParams(location.search).get('tab')
   // Legacy ?tab=business or ?tab=public links open the single profile editor.
-  const activeSection=['services','locations','projects','brochures','plans','proofs'].includes(requestedTab)?requestedTab:'overview'
+  const activeSection=requestedTab==='locations'?'services':['services','projects','brochures','plans','proofs'].includes(requestedTab)?requestedTab:'overview'
   const [expandedProject,setExpandedProject]=useState(null)
   const [expandedPlan,setExpandedPlan]=useState(null)
   const [loading,setLoading]=useState(true)
@@ -159,7 +159,7 @@ export default function Profile(){
     return cities.find(item=>String(item.id)===String(selection.cityId))?.name
   }).filter(Boolean))]
   const directoryEligible=Boolean(directoryStatus?.eligible)
-  const sectionGroup=section=>section==='services'||section==='locations'?'services':section==='plans'||section==='brochures'?'plans':section
+  const sectionGroup=section=>section==='plans'||section==='brochures'?'plans':section
   const activeGroup=sectionGroup(activeSection)
   const checklist=[
     {label:'Contact information',done:completionItems[0],section:'overview'},
@@ -170,7 +170,7 @@ export default function Profile(){
   ]
 
   function selectSection(section){
-    const next=['business','public'].includes(section)?'overview':section
+    const next=['business','public'].includes(section)?'overview':section==='locations'?'services':section
     if(activeSection!==next)navigate('/profile?tab='+next)
     setMessage('')
     requestAnimationFrame(()=>document.getElementById('profile-workspace-content')?.scrollIntoView({behavior:'smooth',block:'start'}))
@@ -429,10 +429,6 @@ export default function Profile(){
           <nav className="profile-workspace-nav" id="profile-tabs" aria-label="Profile sections">
             <button type="button" className={activeGroup==='overview'?'active':''} aria-current={activeGroup==='overview'?'page':undefined} onClick={()=>selectSection('overview')}><span aria-hidden="true">⌂</span> Business Profile</button>
             <button type="button" className={activeGroup==='services'?'active':''} onClick={()=>selectSection('services')}><span aria-hidden="true">⌖</span> Services &amp; Locations</button>
-            {activeGroup==='services'&&<div className="profile-workspace-subnav">
-              <button type="button" className={activeSection==='services'?'active':''} onClick={()=>selectSection('services')}>Services</button>
-              <button type="button" className={activeSection==='locations'?'active':''} onClick={()=>selectSection('locations')}>Locations</button>
-            </div>}
             <button type="button" className={activeGroup==='projects'?'active':''} onClick={()=>selectSection('projects')}><span aria-hidden="true">▧</span> Projects &amp; Media</button>
             <button type="button" className={activeGroup==='plans'?'active':''} onClick={()=>selectSection('plans')}><span aria-hidden="true">▤</span> Packages &amp; Brochures</button>
             {activeGroup==='plans'&&<div className="profile-workspace-subnav">
@@ -529,9 +525,7 @@ export default function Profile(){
             <div className="panel-title"><div><span>02</span><h2>Services you provide</h2><p>These services drive lead matching and appear on your public profile.</p></div><button type="button" onClick={()=>setServiceSelections(x=>[...x,emptyService()])}>+ Add service</button></div>
             <div className="profile-list">{serviceSelections.map((x,i)=><div className="profile-row" key={`s-${i}`}><div className="row-number">{String(i+1).padStart(2,'0')}</div><label>Industry<select value={x.industryId} onChange={e=>updateService(i,'industryId',e.target.value)} required><option value="">Select industry</option>{industries.map(v=><option key={v.id} value={v.id}>{v.name}</option>)}</select></label><label>Service<select value={x.serviceId} onChange={e=>updateService(i,'serviceId',e.target.value)} disabled={!x.industryId} required><option value="">Select service</option>{(serviceOptions[i]||[]).map(v=><option key={v.id} value={v.id}>{v.name}</option>)}</select></label><label>Subservice <small>Optional · blank means all</small><select value={x.subserviceId} onChange={e=>updateService(i,'subserviceId',e.target.value)} disabled={!x.serviceId}><option value="">All related</option>{(subserviceOptions[i]||[]).map(v=><option key={v.id} value={v.id}>{v.name}</option>)}</select></label><button type="button" className="add-all-services" onClick={()=>addAllServicesForIndustry(i)} disabled={!x.industryId}>Add all services</button><button type="button" className="row-remove" onClick={()=>setServiceSelections(items=>items.filter((_,n)=>n!==i))}>Remove</button></div>)}</div>
           </section>
-          </>}
 
-          {activeSection==='locations'&&<>
           <section className="profile-panel" id="profile-locations">
             <div className="panel-title"><div><span>03</span><h2>Locations you serve</h2><p>Customers can see the cities you cover, but not your private contact information.</p></div><button type="button" onClick={()=>setLocationSelections(x=>[...x,emptyLocation()])}>+ Add location</button></div>
             <div className="profile-list">{locationSelections.map((x,i)=><div className="profile-row location-row" key={`l-${i}`}><div className="row-number">{String(i+1).padStart(2,'0')}</div><label>State / UT<select value={x.stateId} onChange={e=>updateLocation(i,'stateId',e.target.value)} required><option value="">Select state / UT</option>{states.map(v=><option key={v.id} value={v.id}>{v.name}</option>)}</select></label><label>City<select value={x.cityId} onChange={e=>updateLocation(i,'cityId',e.target.value)} disabled={!x.stateId} required><option value="">Select city</option>{(cityOptions[i]||[]).map(v=><option key={v.id} value={v.id}>{v.name}</option>)}</select></label><button type="button" className="row-remove" onClick={()=>setLocationSelections(items=>items.filter((_,n)=>n!==i))}>Remove</button></div>)}</div>
@@ -582,9 +576,6 @@ export default function Profile(){
               <ProfileBrochureField title="Project specifications / brochure" description="Upload the project scope, materials, brands, finishes or handover dossier as a PDF. Customers will see it on the public project page." url={project.brochureUrl} displayUrl={project.brochureDisplayUrl} busy={Boolean(brochureUploads['project-'+index])} onUpload={file=>uploadBrochure('project',index,file)} onRemove={()=>updateProject(index,'brochureUrl','')}/>
               </div>}
             </article>})}{!projects.length&&<div className="profile-showcase-empty"><b>No completed projects added yet.</b><span>Add real work to make your public profile stronger.</span></div>}</div>
-          </section>
-          <section className="profile-panel profile-callback-panel" aria-label="Open customer requests CRM">
-            <div className="panel-title"><div><span>REQUESTS CRM</span><h2>Customer enquiries</h2><p>Profile callbacks, project requests and quotations now live in the dedicated Requests workspace.</p></div><Link to="/professional-requests">Open Requests →</Link></div>
           </section>
           </>}
 
