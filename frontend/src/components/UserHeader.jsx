@@ -27,6 +27,7 @@ export default function UserHeader({ variant } = {}) {
   }
 
   if(!loggedIn) return <><header className="user-header public-leads-header">
+    <button type="button" className="user-menu-toggle" aria-label={open?"Close navigation":"Open navigation"} aria-expanded={open} aria-controls="user-header-site-nav" onClick={()=>setOpen(v=>!v)}>☰</button>
     <Link className="user-header-brand" to="/professionals" onClick={()=>setOpen(false)}><img src="/brand/propulse-logo.png" alt="Propulse Business"/></Link>
     <nav id="user-header-site-nav" aria-label="Professional navigation" className={`user-header-nav${open?' open':''}`}>
       <Link to="/professionals">Home</Link>
@@ -40,13 +41,12 @@ export default function UserHeader({ variant } = {}) {
     <div className="user-header-right public-leads-actions">
       <Link className="public-login-button" to="/login">Login</Link>
       <Link className="public-signup-button" to="/signup">Sign up</Link>
-      <button type="button" className="user-menu-toggle" aria-label={open?"Close navigation":"Open navigation"} aria-expanded={open} aria-controls="user-header-site-nav" onClick={()=>setOpen(v=>!v)}>☰</button>
     </div>
   </header><div className="user-header-spacer" aria-hidden="true"/></>
 
   if(user?.role==='admin') return null
   const displayName=businessName||'Your Business'; const avatarLetter=displayName.trim().charAt(0).toUpperCase()||'B'
-  return <><header className={"user-header"+(variant==='profile'?' profile-site-header':'')}><Link className="user-header-brand" to="/professionals" onClick={()=>setOpen(false)}><img src="/brand/propulse-logo.png" alt="Propulse Business"/></Link>
+  return <><header className={"user-header"+(variant==='profile'?' profile-site-header':'')}><button type="button" className="user-menu-toggle" aria-label={open?"Close navigation":"Open navigation"} aria-expanded={open} aria-controls="user-header-site-nav" onClick={()=>setOpen(v=>!v)}>☰</button><Link className="user-header-brand" to="/professionals" onClick={()=>setOpen(false)}><img src="/brand/propulse-logo.png" alt="Propulse Business"/></Link>
     <nav id="user-header-site-nav" aria-label="Professional navigation" className={"user-header-nav" + (open ? " open" : "")}>
       <Link className={active("/professionals")} to="/professionals" onClick={()=>setOpen(false)}>Home</Link>
       <Link className={active("/purchased-leads")} to="/purchased-leads" onClick={()=>setOpen(false)}>Purchased Leads</Link>
@@ -59,6 +59,6 @@ export default function UserHeader({ variant } = {}) {
       <Link className={active("/professional-faq")} to="/professional-faq" onClick={()=>setOpen(false)}>FAQ</Link>
       <button type="button" className="user-header-mobile-logout" onClick={logout}>Logout</button>
     </nav>
-    <div className="user-header-right"><NotificationBell/><Link className="user-profile-pill" to="/profile" aria-label="Open business profile"><span className="user-avatar">{avatarLetter}</span><span className="user-profile-name">{displayName}</span></Link><button type="button" className="user-logout" onClick={logout}>Logout</button><button type="button" className="user-menu-toggle" aria-label={open?"Close navigation":"Open navigation"} aria-expanded={open} aria-controls="user-header-site-nav" onClick={()=>setOpen(v=>!v)}>☰</button></div>
+    <div className="user-header-right"><NotificationBell/><Link className="user-profile-pill" to="/profile" aria-label="Open business profile"><span className="user-avatar">{avatarLetter}</span><span className="user-profile-name">{displayName}</span></Link><button type="button" className="user-logout" onClick={logout}>Logout</button></div>
   </header><div className="user-header-spacer" aria-hidden="true"/></>
 }
