@@ -27,7 +27,12 @@ assert(roadmap.includes('professional?<UserHeader/>:<PublicHeader/>'),'Professio
 assert(roadmap.includes('professional?<footer')&&roadmap.includes('<PublicFooter />'),'Separate footers must remain in place')
 assert(admin.includes("audience==='professional'")&&admin.includes("audience==='homeowner'"),'Admin must select between two audiences')
 assert(admin.includes('value={form.audience}'),'Admin roadmap form must save the chosen audience')
-assert(backend.includes("if(normalized){values.push(normalized);conditions.push('audience=$'+values.length)}"),'Public roadmap must be SQL-filtered rather than sent across audiences')
+assert(backend.includes("conditions.push('audience=
+assert(backend.includes("audience:audienceFrom(input.audience)"),'Roadmap writes must validate audience')
+assert(controller.includes("req.query?.audience||'homeowner'"),'Unspecified public audience defaults to homeowners')
+assert(migration.includes("DEFAULT 'professional'")&&migration.includes("('homeowner','professional')"),'Existing business roadmaps should stay professional during migration')
+console.log('Professional and homeowner FAQ/roadmap separation regression passed.')
++values.length)") && backend.includes("' WHERE '") && backend.includes('values\n  )'), 'Public roadmap must be SQL-filtered rather than sent across audiences')
 assert(backend.includes("audience:audienceFrom(input.audience)"),'Roadmap writes must validate audience')
 assert(controller.includes("req.query?.audience||'homeowner'"),'Unspecified public audience defaults to homeowners')
 assert(migration.includes("DEFAULT 'professional'")&&migration.includes("('homeowner','professional')"),'Existing business roadmaps should stay professional during migration')
