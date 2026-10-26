@@ -30,7 +30,7 @@ check(count('id="profile-services"')===1&&count('id="profile-locations"')===1,'E
 check(profile.includes('setEditServices(v=>!v)')&&profile.includes('setEditLocations(v=>!v)'),'Inline Edit must expand existing service and location controls')
 check(profile.includes('setEditLocations(false)')&&profile.includes('setEditServices(false)'),'Only one editable service/location form should have the save form id')
 check(count('id="business-profile-form"')>=4,'Existing forms must retain the shared primary save target')
-check(profile.includes('form="business-profile-form"'),'Bottom action bar must submit the active form')
+check(profile.includes("getElementById('business-profile-form')"),'Bottom Save must find the mounted editor and submit it when available')
 check(profile.includes('disabled={saving||!hasUnsavedChanges}'),'Sticky save should only be unavailable when unchanged or saving')
 check(profile.includes('onClick={submitCurrentChanges}'),'Bottom Save must handle unmounted accordion editors')
 check(profile.includes('else void save({preventDefault(){}})'),'Collapsed editors must save via existing API without a mounted form')
