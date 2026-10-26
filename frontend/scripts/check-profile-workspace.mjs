@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import {readFileSync} from 'node:fs'
 import {fileURLToPath} from 'node:url'
 import {dirname,resolve} from 'node:path'
+import {ALL_SERVICES_VALUE,selectAllIndustryServices} from '../src/utils/profileServiceSelection.js'
 
 const root=resolve(dirname(fileURLToPath(import.meta.url)),'..')
 const read=path=>readFileSync(resolve(root,path),'utf8')
@@ -56,4 +57,35 @@ for(const style of ['.profile-accordion-root','.profile-accordion-card.is-open',
 }
 check(!styles.includes('.profile-workspace-layout'),'Old duplicate sidebar layout styles must be replaced')
 check(!styles.includes('background:#092b61'),'Do not reintroduce the old navy profile banner')
+
+// Native Android picker must expose the bulk selection inside Service, not as
+// a separate out-of-context action below the service rows.
+check(profile.includes('value={ALL_SERVICES_VALUE}>✓ All services'), 'Service picker must offer All services on mobile')
+check(profile.includes('e.target.value===ALL_SERVICES_VALUE?addAllServicesForIndustry(i)'), 'All services option must trigger bulk selection')
+check(profile.includes('selectAllIndustryServices(items,services,index)'), 'Picker must use safe normalized multirow selection')
+check(!profile.includes('className="add-all-services"'), 'Do not display a duplicate Add all services button')
+check(ALL_SERVICES_VALUE==='__all_services__', 'The special picker value must never be stored as a service ID')
+const catalog=[
+  {id:11,industry_id:2,name:'Advertising'},
+  {id:12,industry_id:2,name:'Digital Marketing'},
+  {id:13,industry_id:3,name:'Construction'}
+]
+const blank=[{industryId:'2',serviceId:'',subserviceId:''}]
+const all=selectAllIndustryServices(blank,catalog,0)
+assert.deepEqual(all,[
+  {industryId:'2',serviceId:'11',subserviceId:''},
+  {industryId:'2',serviceId:'12',subserviceId:''}
+],'Selecting All must fill the blank row and add missing services without an unsavable placeholder')
+assert.deepEqual(selectAllIndustryServices(all,catalog,0),all,'Repeated All must be idempotent')
+assert.deepEqual(selectAllIndustryServices([all[0],{industryId:'2',serviceId:'',subserviceId:''}],catalog,1),all,
+  'Already selected service must not be duplicated; empty row must be reused')
+assert.deepEqual(selectAllIndustryServices([...all,{industryId:'2',serviceId:'',subserviceId:''}],catalog,2),all,
+  'Already complete industries must not leave an invalid empty service row')
+assert.deepEqual(selectAllIndustryServices([{industryId:'3',serviceId:'',subserviceId:''}],catalog,0),[
+  {industryId:'3',serviceId:'13',subserviceId:''}
+],'Bulk selection must respect the selected industry')
+assert.deepEqual(selectAllIndustryServices([{industryId:'7',serviceId:'',subserviceId:''}],catalog,0),[
+  {industryId:'7',serviceId:'',subserviceId:''}
+],'No matching catalog entries should preserve current values until an error is shown')
+
 console.log('Premium accordion profile, single menu, sticky Save/Preview and no-duplicate regressions passed.')
