@@ -570,7 +570,7 @@ export default function Profile(){
                   <div><h3><ProfileIcon name="services" size={18}/> Services Offered</h3><p>Manage services individually. Only the one you edit will expand.</p></div>
                   <button type="button" className="profile-service-add-button" onClick={addService}>+ Add Service</button>
                 </div>
-                <div className="profile-service-compact-list">
+                <div className="profile-service-compact-list" id="profile-services">
                   {serviceSelections.map((item,index)=>{
                     const open=activeServiceIndex===index
                     const service=services.find(entry=>String(entry.id)===String(item.serviceId))
