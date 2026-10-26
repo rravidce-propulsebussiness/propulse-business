@@ -18,6 +18,9 @@ const nav=[
 export default function LeadPartnerSidebar({user,onSignOut}){
   const location=useLocation();
   const [unread,setUnread]=useState(0);
+  const [menuOpen,setMenuOpen]=useState(false);
+  useEffect(()=>{setMenuOpen(false)},[location.pathname]);
+  useEffect(()=>{const onKeyDown=event=>{if(event.key==='Escape')setMenuOpen(false)};const onResize=()=>{if(window.innerWidth>850)setMenuOpen(false)};window.addEventListener('keydown',onKeyDown);window.addEventListener('resize',onResize);return()=>{window.removeEventListener('keydown',onKeyDown);window.removeEventListener('resize',onResize)}},[]);
   useEffect(()=>{let active=true;const refresh=()=>authRequest('/notifications/unread-count').then(r=>{if(active)setUnread(Number(r?.unread||0))}).catch(()=>{});refresh();const timer=setInterval(refresh,60000);const onRefresh=()=>refresh();window.addEventListener('propulse-notifications-refresh',onRefresh);return()=>{active=false;clearInterval(timer);window.removeEventListener('propulse-notifications-refresh',onRefresh)}},[]);
   const initials=(user?.name||'Lead Partner').split(' ').filter(Boolean).slice(0,2).map(x=>x[0]).join('').toUpperCase()||'LP';
   const active=item=>{
@@ -25,17 +28,18 @@ export default function LeadPartnerSidebar({user,onSignOut}){
     return item.exact?location.pathname===item.to:location.pathname.startsWith(item.to);
   };
 
-  return <aside className="lead-partner-sidebar">
+  return <aside className={`lead-partner-sidebar${menuOpen?" menu-open":""}`}>
     <div className="lead-partner-brand-row">
       <Link className="lead-partner-brand" to="/lead-partner/dashboard" aria-label="ProPulse Lead Partner dashboard">
         <span className="lead-partner-brand-mark">P</span>
         <span className="lead-partner-brand-copy"><b>PRO<span>PULSE</span></b><small>LEAD PARTNER</small></span>
       </Link>
+      <button type="button" className="lead-partner-menu-toggle" aria-label={menuOpen?"Close navigation":"Open navigation"} aria-expanded={menuOpen} aria-controls="lead-partner-navigation" onClick={()=>setMenuOpen(value=>!value)}>☰</button>
     </div>
 
     <div className="lead-partner-nav-label">WORKSPACE</div>
-    <nav className="lead-partner-nav" aria-label="Lead Partner navigation">
-      {nav.map(item=><Link key={item.to} className={active(item)?'active':''} to={item.to}>
+    <nav id="lead-partner-navigation" className="lead-partner-nav" aria-label="Lead Partner navigation">
+      {nav.map(item=><Link key={item.to} className={active(item)?'active':''} to={item.to} onClick={()=>setMenuOpen(false)}>
         <span className="lead-partner-nav-icon">{item.icon}</span>
         <span>{item.label}</span>{item.notifications&&unread>0&&<b className="lead-partner-notification-count">{unread>99?'99+':unread}</b>}
       </Link>)}
