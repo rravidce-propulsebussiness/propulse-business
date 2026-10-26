@@ -139,7 +139,8 @@ export default function Profile(){
   const [packageView,setPackageView]=useState(()=>requestedTab==='brochures'?'brochures':'plans')
   // Index of the ONE service form currently being edited. Saved services stay collapsed.
   const [activeServiceIndex,setActiveServiceIndex]=useState(null)
-  const [editLocations,setEditLocations]=useState(false)
+  // Index of the one location being edited. Saved locations stay collapsed.
+  const [activeLocationIndex,setActiveLocationIndex]=useState(null)
   useEffect(()=>{
     if(requestedTab){
       setOpenProfileCard(mapProfileTab(requestedTab))
@@ -247,14 +248,38 @@ export default function Profile(){
       setActiveServiceIndex(serviceSelections.length)
       setServiceSelections(items=>[...items,emptyService()])
     }
-    setEditLocations(false);setError('');setMessage('')
+    setActiveLocationIndex(null);setError('');setMessage('')
   }
   function removeService(index){
     setServiceSelections(items=>items.filter((_,i)=>i!==index))
     setActiveServiceIndex(current=>current===null?null:current===index?null:current>index?current-1:current)
     setError('');setMessage('Service removed from this profile. Tap Save Changes to apply.')
   }
-  function updateLocation(index,field,value){setLocationSelections(items=>items.map((x,i)=>i!==index?x:field==='stateId'?{stateId:value,cityId:''}:{...x,cityId:value}));setMessage('')}
+  function updateLocation(index,field,value){
+    const row=locationSelections[index]
+    if(field==='cityId'&&value&&locationSelections.some((item,i)=>
+      i!==index&&String(item.stateId)===String(row?.stateId)&&String(item.cityId)===String(value))){
+      setError('This location is already listed. Edit the existing location instead.')
+      return
+    }
+    setLocationSelections(items=>items.map((x,i)=>i!==index?x:
+      field==='stateId'?{stateId:value,cityId:''}:{...x,cityId:value}))
+    setError('');setMessage('')
+  }
+  function addLocation(){
+    const incomplete=locationSelections.findIndex(item=>!item.stateId||!item.cityId)
+    if(incomplete>=0)setActiveLocationIndex(incomplete)
+    else{
+      setActiveLocationIndex(locationSelections.length)
+      setLocationSelections(items=>[...items,emptyLocation()])
+    }
+    setActiveServiceIndex(null);setError('');setMessage('')
+  }
+  function removeLocation(index){
+    setLocationSelections(items=>items.filter((_,i)=>i!==index))
+    setActiveLocationIndex(current=>current===null?null:current===index?null:current>index?current-1:current)
+    setError('');setMessage('Location removed from this profile. Tap Save Changes to apply.')
+  }
   function updateProject(index,field,value){setProjects(items=>items.map((item,i)=>i!==index?item:field==='projectType'?{...item,projectType:value,packageName:''}:field==='videoUrl'?{...item,videoUrl:value,videoDisplayUrl:value}:field==='planUrl'?{...item,planUrl:value,planDisplayUrl:value}:field==='brochureUrl'?{...item,brochureUrl:value,brochureDisplayUrl:value}:{...item,[field]:value}));setMessage('')}
   function updatePlan(index,field,value){setPlans(items=>items.map((item,i)=>i===index?field==='brochureUrl'?{...item,brochureUrl:value,brochureDisplayUrl:value}:{...item,[field]:value}:item));setMessage('')}
 
@@ -460,10 +485,16 @@ export default function Profile(){
           setServiceSelections(items=>[...items,emptyService()])
           setActiveServiceIndex(0)
         }
-        setEditLocations(false)
+        setActiveLocationIndex(null)
       }else{
+        const incomplete=locationSelections.findIndex(item=>!item.stateId||!item.cityId)
+        if(incomplete>=0)setActiveLocationIndex(incomplete)
+        else if(locationSelections.length)setActiveLocationIndex(0)
+        else{
+          setLocationSelections(items=>[...items,emptyLocation()])
+          setActiveLocationIndex(0)
+        }
         setActiveServiceIndex(null)
-        setEditLocations(true)
       }
     }
     openCard(card)
@@ -515,7 +546,7 @@ export default function Profile(){
       setSavedSnapshot(profileFingerprint(form,serviceSelections,locationSelections,updatedProjects,updatedPlans))
       playSound('success')
       setExpandedProject(null);setExpandedPlan(null)
-      setActiveServiceIndex(null);setEditLocations(false)
+      setActiveServiceIndex(null);setActiveLocationIndex(null)
       setMessage('Business and public listing saved together. Your services are now shown in the saved list.')
     }catch(err){playSound('warning');setError(err.message)}finally{setSaving(false)}
   }
@@ -585,7 +616,7 @@ export default function Profile(){
                           <small>{industry?.name||'Select industry'}{subservice?' · '+subservice.name:''}</small>
                         </div>
                         <div className="profile-service-item-actions">
-                          <button type="button" className="profile-service-edit-button" aria-label={(open?'Close editor for ':'Edit ')+(service?.name||'new service')} aria-expanded={open} onClick={()=>{setActiveServiceIndex(open?null:index);setEditLocations(false);setError('')}}><ProfileIcon name="edit" size={16}/>{open?'Close':'Edit'}</button>
+                          <button type="button" className="profile-service-edit-button" aria-label={(open?'Close editor for ':'Edit ')+(service?.name||'new service')} aria-expanded={open} onClick={()=>{setActiveServiceIndex(open?null:index);setActiveLocationIndex(null);setError('')}}><ProfileIcon name="edit" size={16}/>{open?'Close':'Edit'}</button>
                           <button type="button" className="profile-service-delete-button" aria-label={'Delete '+(service?.name||'new service')} onClick={()=>removeService(index)}>Delete</button>
                         </div>
                       </div>
@@ -615,16 +646,47 @@ export default function Profile(){
                   })}
                   {!serviceSelections.length&&<p className="profile-service-empty">No services added. Use Add Service to select your industry and service.</p>}
                 </div>
-                <div className="profile-accordion-field-head"><h3><ProfileIcon name="pin" size={18}/> Service Locations</h3><button type="button" onClick={()=>{setEditLocations(v=>!v);setActiveServiceIndex(null)}}><ProfileIcon name="edit" size={17}/>{editLocations?'Close editor':'Edit'}</button></div>
-                <div className="profile-accordion-pills">{locationNames.map(name=><span key={name}>{name}</span>)}{!locationNames.length&&<em>No locations added</em>}
-                  <button type="button" className="profile-accordion-add" onClick={()=>{setEditLocations(true);setActiveServiceIndex(null);setLocationSelections(old=>[...old,emptyLocation()])}}>+ Add Location</button>
+
+                <div className="profile-accordion-field-head profile-service-list-heading profile-location-list-heading">
+                  <div><h3><ProfileIcon name="pin" size={18}/> Service Locations</h3><p>Saved cities stay visible. Edit or remove one location at a time.</p></div>
+                  <button type="button" className="profile-service-add-button" onClick={addLocation}>+ Add Location</button>
                 </div>
-                {editLocations&&<form id="business-profile-form" onSubmit={save} className="profile-accordion-form profile-accordion-subeditor">
-                  <section className="profile-panel" id="profile-locations">
-            <div className="panel-title"><div><span>03</span><h2>Locations you serve</h2><p>Customers can see the cities you cover, but not your private contact information.</p></div><button type="button" onClick={()=>setLocationSelections(x=>[...x,emptyLocation()])}>+ Add location</button></div>
-            <div className="profile-list">{locationSelections.map((x,i)=><div className="profile-row location-row" key={`l-${i}`}><div className="row-number">{String(i+1).padStart(2,'0')}</div><label>State / UT<select value={x.stateId} onChange={e=>updateLocation(i,'stateId',e.target.value)} required><option value="">Select state / UT</option>{states.map(v=><option key={v.id} value={v.id}>{v.name}</option>)}</select></label><label>City<select value={x.cityId} onChange={e=>updateLocation(i,'cityId',e.target.value)} disabled={!x.stateId} required><option value="">Select city</option>{(cityOptions[i]||[]).map(v=><option key={v.id} value={v.id}>{v.name}</option>)}</select></label><button type="button" className="row-remove" onClick={()=>setLocationSelections(items=>items.filter((_,n)=>n!==i))}>Remove</button></div>)}</div>
-          </section>
-                </form>}
+                <div className="profile-service-compact-list profile-location-compact-list" id="profile-locations">
+                  {locationSelections.map((item,index)=>{
+                    const open=activeLocationIndex===index
+                    const city=cities.find(entry=>String(entry.id)===String(item.cityId))
+                    const state=states.find(entry=>String(entry.id)===String(item.stateId))
+                    return <div className={'profile-service-compact-item profile-location-compact-item'+(open?' is-editing':'')} key={index}>
+                      <div className="profile-service-compact-heading">
+                        <span className="profile-service-item-icon"><ProfileIcon name="pin" size={18}/></span>
+                        <div className="profile-service-item-summary">
+                          <strong>{city?.name||'New location'}</strong>
+                          <small>{state?.name||'Select state / UT'}</small>
+                        </div>
+                        <div className="profile-service-item-actions">
+                          <button type="button" className="profile-service-edit-button" aria-label={(open?'Close editor for ':'Edit ')+(city?.name||'new location')} aria-expanded={open} aria-controls={'profile-location-editor-'+index} onClick={()=>{setActiveLocationIndex(open?null:index);setActiveServiceIndex(null);setError('')}}><ProfileIcon name="edit" size={16}/>{open?'Close':'Edit'}</button>
+                          <button type="button" className="profile-service-delete-button" aria-label={'Delete '+(city?.name||'new location')} onClick={()=>removeLocation(index)}>Delete</button>
+                        </div>
+                      </div>
+                      {open&&<form id="business-profile-form" onSubmit={save} className="profile-accordion-form profile-service-inline-form profile-location-inline-form">
+                        <label>State / UT
+                          <select value={item.stateId} onChange={event=>updateLocation(index,'stateId',event.target.value)} required>
+                            <option value="">Select state / UT</option>
+                            {states.map(entry=><option key={entry.id} value={entry.id}>{entry.name}</option>)}
+                          </select>
+                        </label>
+                        <label>City
+                          <select value={item.cityId} onChange={event=>updateLocation(index,'cityId',event.target.value)} disabled={!item.stateId} required>
+                            <option value="">Select city</option>
+                            {(cityOptions[index]||[]).map(entry=><option key={entry.id} value={entry.id}>{entry.name}</option>)}
+                          </select>
+                        </label>
+                        <p className="profile-service-save-hint">Tap Save Changes below to update your service locations.</p>
+                      </form>}
+                    </div>
+                  })}
+                  {!locationSelections.length&&<p className="profile-service-empty">No service locations yet. Add a location to help customers find you.</p>}
+                </div>
               </div>}
               {card.id==='projects'&&<form id="business-profile-form" onSubmit={save} className="profile-accordion-form profile-accordion-editor"><section className="profile-panel profile-project-panel" id="profile-projects">
             <div className="panel-title"><div><span>05</span><h2>Completed Projects</h2><p>Add completed work, photos and a project-specific brochure with materials and specifications. Keep unfinished work private.</p></div><button type="button" onClick={addProject}>+ Add Project</button></div>
