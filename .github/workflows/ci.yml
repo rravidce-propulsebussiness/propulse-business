@@ -64,6 +64,8 @@ jobs:
         run: node scripts/check-profile-workspace.mjs
       - name: Scroll preservation regression
         run: npm run test:scroll-preservation
+      - name: Professional vs homeowner portal navigation regression
+        run: node scripts/check-audience-navigation.mjs
       - name: Build
         run: npm run build
       - name: Google GIS regression checks
