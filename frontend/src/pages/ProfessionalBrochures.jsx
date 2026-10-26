@@ -101,10 +101,9 @@ export default function ProfessionalBrochures({embedded=false,onEditStateChange}
   const content=<>
     <div className="pw-heading profile-company-heading">
       <div>
-        {!embedded&&<Link to="/profile?tab=brochures">← Business Profile</Link>}
-        <span>PROFESSIONAL PORTFOLIO</span>
-        <h1>Company Brochures</h1>
-        <p>Publish your company profile, material catalogues and service guides. Project and package specifications remain attached to their own records.</p>
+        {embedded?<><h2>Company Brochures</h2><p>Your saved brochures stay collapsed until you choose Edit.</p></>:
+          <><Link to="/profile?tab=brochures">← Business Profile</Link><span>PROFESSIONAL PORTFOLIO</span>
+            <h1>Company Brochures</h1><p>Publish company catalogues and service guides. Project and package specifications stay with their own records.</p></>}
       </div>
       <button type="button" className="profile-entry-add" onClick={addBrochure} disabled={docs.length>=8||busy||loading}>+ Add Brochure</button>
     </div>
