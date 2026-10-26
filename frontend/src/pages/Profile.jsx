@@ -207,7 +207,7 @@ export default function Profile(){
   const currentSnapshot=profileFingerprint(form,serviceSelections,locationSelections,projects,plans)
   const hasUnsavedChanges=savedSnapshot!==null&&currentSnapshot!==savedSnapshot
   const brochureView=openProfileCard==='packages'&&packageView==='brochures'
-  const brochureNeedsSave=brochureView&&brochureState.ready&&brochureState.dirty
+  const brochureNeedsSave=brochureState.ready&&brochureState.dirty
   const needsSave=hasUnsavedChanges||brochureNeedsSave
   const saveBusy=saving||(brochureView&&(brochureState.busy||brochureState.uploading))
 
@@ -514,9 +514,14 @@ export default function Profile(){
       const saved=await save({preventDefault(){}})
       if(!saved)return
     }
-    if(brochureView&&brochureNeedsSave){
-      const brochureForm=document.getElementById('profile-brochures-form')
-      if(brochureForm?.requestSubmit)brochureForm.requestSubmit()
+    if(brochureNeedsSave){
+      // Keep the brochure editor mounted while switching profile sections.
+      // Reveal it before submitting so validation feedback remains visible.
+      setOpenProfileCard('packages')
+      setPackageView('brochures')
+      requestAnimationFrame(()=>{
+        document.getElementById('profile-brochures-form')?.requestSubmit()
+      })
     }
   }
   async function save(e){
@@ -598,6 +603,7 @@ export default function Profile(){
       <div className="profile-accordion-list">
         {cardEntries.map(card=>{
           const expanded=openProfileCard===card.id
+          const preserveBrochureDraft=card.id==='packages'&&brochureNeedsSave
           return <section className={'profile-accordion-card'+(expanded?' is-open':'')} key={card.id} id={'profile-card-'+card.id}>
             <button type="button" className="profile-accordion-trigger" aria-expanded={expanded} aria-controls={'profile-card-body-'+card.id} onClick={()=>toggleCard(card.id)}>
               <span className="profile-accordion-icon"><ProfileIcon name={card.icon} size={23}/></span>
@@ -605,7 +611,7 @@ export default function Profile(){
               <span className={'profile-accordion-count'+(card.id==='business'&&completionItems[0]&&completionItems[1]?' is-complete':'')}>{card.badge}</span>
               <ProfileIcon name="chevron" size={21}/>
             </button>
-            {expanded&&<div id={'profile-card-body-'+card.id} className="profile-accordion-body">
+            {(expanded||preserveBrochureDraft)&&<div id={'profile-card-body-'+card.id} className="profile-accordion-body" hidden={!expanded}>
               {card.id==='business'&&<form id="business-profile-form" className="profile-accordion-form" onSubmit={save}>
                 <ProfileBusinessFields form={form} update={update} overview/>
               </form>}
@@ -749,7 +755,7 @@ export default function Profile(){
                   <button type="button" className={packageView==='plans'?'selected':''} onClick={()=>setPackageView('plans')}>Packages</button>
                   <button type="button" className={packageView==='brochures'?'selected':''} onClick={()=>setPackageView('brochures')}>Company Brochures</button>
                 </div>
-                {packageView==='plans'?<form id="business-profile-form" className="profile-accordion-form profile-accordion-editor" onSubmit={save}><section className="profile-panel profile-plan-panel" id="profile-plans">
+                <div className="profile-package-pane" hidden={packageView!=='plans'}><form id="business-profile-form" className="profile-accordion-form profile-accordion-editor" onSubmit={save}><section className="profile-panel profile-plan-panel" id="profile-plans">
             <div className="panel-title"><div><span>06</span><h2>Service Packages</h2><p>Set prices, scope and inclusions. Attach specifications PDFs for customers to review. Each project has its own separate brochure upload.</p></div><button type="button" onClick={addPlan}>+ Add Package</button></div>
             <div className="profile-showcase-list">{plans.map((plan,index)=>{const isExpanded=expandedPlan===planKey(plan);return <article className={"profile-showcase-card compact profile-entry-card"+(isExpanded?" is-expanded":"")} key={planKey(plan)}><div className="profile-showcase-card-head profile-entry-head">
                 <div className="profile-entry-overview">
@@ -770,7 +776,10 @@ export default function Profile(){
               <ProfileBrochureField title="Package brochure / technical specifications" description="Upload your detailed package PDF: plywood grades, laminate and hardware brands, inclusions, exclusions, milestones and warranty terms." url={plan.brochureUrl} displayUrl={plan.brochureDisplayUrl} busy={Boolean(brochureUploads['plan-'+index])} onUpload={file=>uploadBrochure('plan',index,file)} onRemove={()=>updatePlan(index,'brochureUrl','')}/>
               </div>}
             </article>})}{!plans.length&&<div className="profile-showcase-empty"><b>No public service plans added.</b><span>Add packages only if you want customers to compare offerings in Experts.</span></div>}</div>
-          </section></form>:<ProfessionalBrochures embedded onEditStateChange={setBrochureState}/>}
+          </section></form></div>
+                <div className="profile-package-pane" hidden={packageView!=='brochures'}>
+                  <ProfessionalBrochures embedded onEditStateChange={setBrochureState}/>
+                </div>
               </div>}
               {card.id==='proofs'&&<div className="profile-accordion-editor"><section className="profile-panel profile-proof-panel">
             <div className="panel-title"><div><span>07</span><h2>Company proof</h2><p>Verification documents remain private and are reviewed by ProPulse Admin.</p></div></div>
