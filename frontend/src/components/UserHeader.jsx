@@ -32,7 +32,7 @@ export default function UserHeader({ variant } = {}) {
     <div className="user-header-right public-leads-actions">
       <Link className="public-login-button" to="/login">Login</Link>
       <Link className="public-signup-button" to="/signup">Sign up</Link>
-      <button className="user-menu-toggle" aria-label="Open navigation" onClick={()=>setOpen(v=>!v)}>☰</button>
+      <button type="button" className="user-menu-toggle" aria-label="Open navigation" onClick={()=>setOpen(v=>!v)}>☰</button>
     </div>
   </header><div className="user-header-spacer" aria-hidden="true"/></>
 
@@ -49,8 +49,8 @@ export default function UserHeader({ variant } = {}) {
       {!location.pathname.startsWith("/investment") && <Link className={active("/professional-contact")} to="/professional-contact" onClick={()=>setOpen(false)}>Contact</Link>}
       <Link className={active("/upcoming-features")} to="/upcoming-features" onClick={()=>setOpen(false)}>Upcoming Features</Link>
       <Link className={active("/faq")} to="/faq" onClick={()=>setOpen(false)}>FAQ</Link>
-      <button className="user-header-mobile-logout" onClick={logout}>Logout</button>
+      <button type="button" className="user-header-mobile-logout" onClick={logout}>Logout</button>
     </nav>
-    <div className="user-header-right"><NotificationBell/><Link className="user-profile-pill" to="/profile" aria-label="Open business profile"><span className="user-avatar">{avatarLetter}</span><span className="user-profile-name">{displayName}</span></Link><button className="user-logout" onClick={logout}>Logout</button><button className="user-menu-toggle" aria-label={open?"Close navigation":"Open navigation"} aria-expanded={open} aria-controls="user-header-site-nav" onClick={()=>setOpen(v=>!v)}>☰</button></div>
+    <div className="user-header-right"><NotificationBell/><Link className="user-profile-pill" to="/profile" aria-label="Open business profile"><span className="user-avatar">{avatarLetter}</span><span className="user-profile-name">{displayName}</span></Link><button type="button" className="user-logout" onClick={logout}>Logout</button><button type="button" className="user-menu-toggle" aria-label={open?"Close navigation":"Open navigation"} aria-expanded={open} aria-controls="user-header-site-nav" onClick={()=>setOpen(v=>!v)}>☰</button></div>
   </header><div className="user-header-spacer" aria-hidden="true"/></>
 }
