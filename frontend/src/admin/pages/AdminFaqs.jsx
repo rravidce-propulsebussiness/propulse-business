@@ -5,7 +5,7 @@ import './AdminFaqs.css';
 const categories=[['general','General'],['consultation','Consultation'],['construction','Construction'],['interiors','Interiors'],['property','Real Estate'],['privacy','Privacy'],['leads','Leads'],['payments','Payments'],['withdrawals','Withdrawals'],['account','Account'],['reports','Reports']];
 const audiences=[
   ['homeowner','Homeowner FAQs','Shown on the searchable public Construction, Interiors and Real Estate FAQ centre.'],
-  ['website','Professional / Business FAQs','Shown on the public Professionals FAQ and logged-in business FAQ experience.'],
+  ['professional','Professional / Business FAQs','Shown on the public Professionals FAQ and logged-in business FAQ experience.'],
   ['investor','Investor FAQs','Shown on the Investor FAQ page.'],
   ['lead_partner','Lead Partner FAQs','Shown in the Lead Partner portal.']
 ];
@@ -85,7 +85,7 @@ export default function AdminFaqs(){
     </section>
 
     <section className="admin-faq-audience-tabs" aria-label="FAQ audience">
-      {audiences.map(([key,title,description])=><button type="button" key={key} className={audience===key?'active':''} onClick={()=>switchAudience(key)}><span>{key==='homeowner'?'⌂':key==='website'?'◎':key==='investor'?'₹':'◆'}</span><div><strong>{title}</strong><small>{description}</small></div></button>)}
+      {audiences.map(([key,title,description])=><button type="button" key={key} className={audience===key?'active':''} onClick={()=>switchAudience(key)}><span>{key==='homeowner'?'⌂':key==='professional'?'◎':key==='investor'?'₹':'◆'}</span><div><strong>{title}</strong><small>{description}</small></div></button>)}
     </section>
 
     {error&&<div className="admin-faq-alert error">{error}</div>}
