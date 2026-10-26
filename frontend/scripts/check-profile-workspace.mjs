@@ -28,8 +28,8 @@ check(count('profile-public-panel')===0,'Business and Public Profile must remain
 check(count('<ProfileBusinessFields form={form} update={update} overview/>')===1,'Use one business/public field editor')
 check(count('<ProfessionalBrochures embedded/>')===1,'Keep existing brochure editing/upload exactly once')
 check(count('id="profile-services"')===1&&count('id="profile-locations"')===1,'Each service and location editor must exist exactly once')
-check(profile.includes('setEditServices(v=>!v)')&&profile.includes('setEditLocations(v=>!v)'),'Inline Edit must expand existing service and location controls')
-check(profile.includes('setEditLocations(false)')&&profile.includes('setEditServices(false)'),'Only one editable service/location form should have the save form id')
+check(profile.includes('setActiveServiceIndex(open?null:index)')&&profile.includes('setEditLocations(v=>!v)'),'Only the selected service or location opens for editing')
+check(profile.includes('setEditLocations(false)')&&profile.includes('setActiveServiceIndex(null)'),'Service and Location forms must not mount simultaneously')
 check(count('id="business-profile-form"')>=4,'Existing forms must retain the shared primary save target')
 check(profile.includes("getElementById('business-profile-form')"),'Bottom Save must find the mounted editor and submit it when available')
 check(profile.includes('disabled={saving||!hasUnsavedChanges}'),'Sticky save should only be unavailable when unchanged or saving')
@@ -61,7 +61,7 @@ check(!styles.includes('background:#092b61'),'Do not reintroduce the old navy pr
 // Native Android picker must expose the bulk selection inside Service, not as
 // a separate out-of-context action below the service rows.
 check(profile.includes('value={ALL_SERVICES_VALUE}>✓ All services'), 'Service picker must offer All services on mobile')
-check(profile.includes('e.target.value===ALL_SERVICES_VALUE?addAllServicesForIndustry(i)'), 'All services option must trigger bulk selection')
+check(profile.includes('event.target.value===ALL_SERVICES_VALUE?addAllServicesForIndustry(index)'), 'All services option must trigger bulk selection')
 check(profile.includes('selectAllIndustryServices(items,services,index)'), 'Picker must use safe normalized multirow selection')
 check(!profile.includes('className="add-all-services"'), 'Do not display a duplicate Add all services button')
 check(ALL_SERVICES_VALUE==='__all_services__', 'The special picker value must never be stored as a service ID')
@@ -88,4 +88,19 @@ assert.deepEqual(selectAllIndustryServices([{industryId:'7',serviceId:'',subserv
   {industryId:'7',serviceId:'',subserviceId:''}
 ],'No matching catalog entries should preserve current values until an error is shown')
 
+
+check(profile.includes('const [activeServiceIndex,setActiveServiceIndex]=useState(null)'), 'Only one service editor is allowed')
+check(profile.includes("const open=activeServiceIndex===index"), 'Each service item has one expandable editor')
+check(profile.includes('serviceSelections.map((item,index)=>'), 'All existing services must be shown in compact rows')
+check(profile.includes('profile-service-compact-item'), 'Existing service cards must be visible while editing one entry')
+check(profile.includes('profile-service-edit-button')&&profile.includes('profile-service-delete-button'), 'Every service must be editable or removable')
+check(profile.includes('profile-service-inline-form'), 'Add Service must open only one inline form')
+check(profile.includes('function addService()')&&profile.includes('setActiveServiceIndex(serviceSelections.length)'), 'Adding a service opens only its new row')
+check(profile.includes('const incomplete=serviceSelections.findIndex'), 'An existing blank draft must be reused rather than duplicated')
+check(profile.includes('setActiveServiceIndex(current=>current===null?null:current===index?null:current>index?current-1:current)'), 'Deleting a service must preserve the editing index for remaining rows')
+check(!profile.includes('setEditServices('), 'Remove obsolete show-all service editor state')
+check(profile.includes('setActiveServiceIndex(null);setEditLocations(false)'), 'Successful Save must collapse expanded service and location forms')
+check(!profile.includes('Services you provide'), 'Do not display duplicate legacy service editor heading')
+check(profile.includes("String(item.serviceId)===String(value)"), 'Prevent adding existing industry services twice')
+check(styles.includes('.profile-service-compact-item')&&styles.includes('.profile-service-inline-form'), 'Compact rows and one mobile inline editor must be styled')
 console.log('Premium accordion profile, single menu, sticky Save/Preview and no-duplicate regressions passed.')

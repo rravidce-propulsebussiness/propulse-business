@@ -322,3 +322,100 @@ body:has(.profile-accordion-root) .support-chat-panel {
   body:has(.profile-accordion-root) .sound-control {bottom:99px}
   body:has(.profile-accordion-root) .support-chat-panel {height:min(530px,calc(100dvh - 195px))}
 }
+
+
+/* Compact service manager: saved rows stay readable; only one edit form opens.
+   Scoped to the existing Business Profile accordion, not a second page. */
+.profile-accordion-root .profile-service-list-heading {align-items:center; margin-bottom:13px}
+.profile-accordion-root .profile-service-list-heading>div {min-width:0}
+.profile-accordion-root .profile-service-list-heading h3 {font-size:14px;line-height:1.4}
+.profile-accordion-root .profile-service-list-heading p {
+  margin:5px 0 0;color:#83909c;font-size:11px;line-height:1.5;
+}
+.profile-accordion-root .profile-service-add-button {
+  flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;
+  padding:10px 13px!important;border:1px solid #f7c5a2!important;
+  border-radius:11px!important;background:#fff4eb!important;
+  color:#df5f1b!important;font-size:12px!important;font-weight:800!important;
+}
+.profile-accordion-root .profile-service-add-button:hover {background:#ffe8d7!important}
+.profile-accordion-root .profile-service-compact-list {display:grid;gap:10px;min-width:0;margin-bottom:20px}
+.profile-accordion-root .profile-service-compact-item {
+  min-width:0;border:1px solid #ece7e4;border-radius:13px;background:#fff;
+  overflow:hidden;transition:border-color .2s,background .2s;
+}
+.profile-accordion-root .profile-service-compact-item.is-editing {
+  border-color:#f4b68d;background:#fffcfa;box-shadow:0 7px 18px #db946013;
+}
+.profile-accordion-root .profile-service-compact-heading {
+  display:flex;align-items:center;gap:10px;min-width:0;min-height:63px;padding:11px 13px;
+}
+.profile-accordion-root .profile-service-item-icon {
+  flex:0 0 38px;display:grid;place-items:center;width:38px;height:38px;
+  background:#fff0e4;border-radius:11px;color:#eb742b;
+}
+.profile-accordion-root .profile-service-item-summary {display:grid;gap:4px;flex:1;min-width:0}
+.profile-accordion-root .profile-service-item-summary strong {
+  color:#25394f;font-size:12px;font-weight:820;line-height:1.4;overflow-wrap:anywhere;
+}
+.profile-accordion-root .profile-service-item-summary small {
+  color:#85909b;font-size:10px;line-height:1.4;overflow-wrap:anywhere;
+}
+.profile-accordion-root .profile-service-item-actions {
+  display:flex;align-items:center;gap:5px;flex:0 0 auto;
+}
+.profile-accordion-root .profile-service-item-actions>button {
+  display:inline-flex;align-items:center;justify-content:center;gap:5px;
+  min-height:36px;padding:7px 10px;border-radius:9px;
+  font-size:11px;font-weight:790;cursor:pointer;
+}
+.profile-accordion-root .profile-service-edit-button {
+  border:1px solid #f5d4c0;background:#fff6ef;color:#dd6420;
+}
+.profile-accordion-root .profile-service-delete-button {
+  border:1px solid transparent;background:transparent;color:#ae5b53;
+}
+.profile-accordion-root .profile-service-edit-button:hover {background:#ffeadc}
+.profile-accordion-root .profile-service-delete-button:hover {border-color:#f2c9c5;background:#fff3f1;color:#ba4038}
+.profile-accordion-root .profile-service-inline-form {
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;
+  margin:0 13px 14px;padding:16px;
+  background:#fff8f3;border:1px solid #f2dcc9;border-radius:11px;animation:pa-panel-in .23s ease both;
+}
+.profile-accordion-root .profile-service-inline-form>label {
+  display:grid;align-content:start;gap:8px;min-width:0;
+  color:#364d64;font-size:12px;line-height:1.4;font-weight:790;
+}
+.profile-accordion-root .profile-service-inline-form>label small {display:block;font-size:10px;color:#8b9099;font-weight:550}
+.profile-accordion-root .profile-service-inline-form select {
+  min-width:0;width:100%;min-height:47px;padding:10px 11px;
+  border:1px solid #e8e0da;border-radius:10px;background:white;
+  color:#34475b;font:inherit;font-size:12px;outline:none;
+}
+.profile-accordion-root .profile-service-inline-form select:focus {
+  border-color:#f49a65;box-shadow:0 0 0 3px #ffe8d6;
+}
+.profile-accordion-root .profile-service-inline-form select:disabled {opacity:.63;cursor:not-allowed}
+.profile-accordion-root .profile-service-save-hint {
+  margin:0;align-self:center;font-size:10px;line-height:1.55;color:#976f57;
+}
+.profile-accordion-root .profile-service-empty {
+  margin:0;padding:20px;text-align:center;color:#798591;font-size:12px;
+  border:1px dashed #eccfbb;border-radius:11px;background:#fffbf8;
+}
+@media(max-width:760px){
+  .profile-accordion-root .profile-service-list-heading {gap:8px;align-items:center}
+  .profile-accordion-root .profile-service-list-heading p {font-size:10px}
+  .profile-accordion-root .profile-service-add-button {font-size:11px!important;padding:9px 11px!important}
+  .profile-accordion-root .profile-service-compact-heading {padding:10px;gap:8px}
+  .profile-accordion-root .profile-service-item-icon {flex-basis:32px;width:32px;height:32px}
+  .profile-accordion-root .profile-service-item-actions>button {font-size:10px;padding:6px;min-height:34px}
+  .profile-accordion-root .profile-service-inline-form {grid-template-columns:1fr;gap:12px;padding:13px;margin:0 10px 10px}
+}
+@media(max-width:390px){
+  .profile-accordion-root .profile-service-list-heading {flex-wrap:wrap}
+  .profile-accordion-root .profile-service-add-button {margin-left:auto}
+  .profile-accordion-root .profile-service-item-icon {display:none}
+  .profile-accordion-root .profile-service-compact-heading {flex-wrap:wrap}
+  .profile-accordion-root .profile-service-item-actions {margin-left:auto}
+}
