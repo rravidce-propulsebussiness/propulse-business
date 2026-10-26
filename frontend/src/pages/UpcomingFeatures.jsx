@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { PublicFooter, PublicHeader } from '../components/PublicSiteChrome'
 import UserHeader from '../components/UserHeader'
@@ -13,7 +13,7 @@ export default function UpcomingFeatures({audience='homeowner'}){
   const [loading,setLoading]=useState(true)
   const [error,setError]=useState('')
 
-  async function load(){
+  const load=useCallback(async()=>{
     try{
       setLoading(true)
       setError('')
@@ -25,9 +25,9 @@ export default function UpcomingFeatures({audience='homeowner'}){
     }finally{
       setLoading(false)
     }
-  }
+  },[audience])
 
-  useEffect(()=>{window.scrollTo(0,0);let active=true;queueMicrotask(()=>{if(active)load()});return()=>{active=false}},[])
+  useEffect(()=>{window.scrollTo(0,0);let active=true;queueMicrotask(()=>{if(active)load()});return()=>{active=false}},[load])
 
   const featured=useMemo(()=>items.filter(item=>item.highlighted),[items])
   const regular=useMemo(()=>items.filter(item=>!item.highlighted),[items])
