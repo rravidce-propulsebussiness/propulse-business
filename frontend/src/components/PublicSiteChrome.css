@@ -198,14 +198,15 @@
   .public-site-header,.public-site-header *,.public-site-footer *{transition:none!important}
 }
 
-/* Anchor the homeowner navigation panel to the menu button on the right. */
+/* Left-side mobile navigation with the logo immediately beside the trigger. */
 @media(max-width:1020px){
+  .public-site-header__inner{grid-template-columns:44px minmax(0,1fr)}
+  .public-site-menu-toggle{justify-self:start}
   .public-site-mobile-menu{
-    left:auto;right:12px;width:min(360px,calc(100vw - 24px));max-width:calc(100vw - 24px);
-    box-sizing:border-box;overscroll-behavior:contain;
-    transform-origin:top right;
+    left:12px;right:auto;width:min(360px,calc(100vw - 24px));max-width:calc(100vw - 24px);
+    box-sizing:border-box;overscroll-behavior:contain;transform-origin:top left;
   }
 }
 @media(max-width:640px){
-  .public-site-mobile-menu{right:8px;width:min(360px,calc(100vw - 16px));max-width:calc(100vw - 16px)}
+  .public-site-mobile-menu{left:8px;width:min(360px,calc(100vw - 16px));max-width:calc(100vw - 16px)}
 }

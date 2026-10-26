@@ -53,6 +53,17 @@ export function PublicHeader() {
   return <>
   <header className={'public-site-header' + (scrolled ? ' is-scrolled' : '')}>
     <div className="public-site-header__inner">
+      <button
+        className={'public-site-menu-toggle' + (open ? ' open' : '')}
+        type="button"
+        aria-label={open ? 'Close navigation' : 'Open navigation'}
+        aria-expanded={open}
+        aria-controls="public-mobile-navigation"
+        onClick={() => setOpen(value => !value)}
+      >
+        <span/><span/><span/>
+      </button>
+
       <Link className="public-site-logo" to="/" aria-label="ProPulse home">
         <img src="/brand/propulse-logo.svg" alt="ProPulse"/>
       </Link>
@@ -66,16 +77,6 @@ export function PublicHeader() {
         <Link className="public-site-pro" to="/professionals">For Professionals</Link>
       </div>
 
-      <button
-        className={'public-site-menu-toggle' + (open ? ' open' : '')}
-        type="button"
-        aria-label={open ? 'Close navigation' : 'Open navigation'}
-        aria-expanded={open}
-        aria-controls="public-mobile-navigation"
-        onClick={() => setOpen(value => !value)}
-      >
-        <span/><span/><span/>
-      </button>
 
       <div id="public-mobile-navigation" className={'public-site-mobile-menu' + (open ? ' open' : '')}>
         <nav aria-label="Mobile navigation">

@@ -30,11 +30,11 @@ export default function LeadPartnerSidebar({user,onSignOut}){
 
   return <aside className={`lead-partner-sidebar${menuOpen?" menu-open":""}`}>
     <div className="lead-partner-brand-row">
+      <button type="button" className="lead-partner-menu-toggle" aria-label={menuOpen?"Close navigation":"Open navigation"} aria-expanded={menuOpen} aria-controls="lead-partner-navigation" onClick={()=>setMenuOpen(value=>!value)}>☰</button>
       <Link className="lead-partner-brand" to="/lead-partner/dashboard" aria-label="ProPulse Lead Partner dashboard">
         <span className="lead-partner-brand-mark">P</span>
         <span className="lead-partner-brand-copy"><b>PRO<span>PULSE</span></b><small>LEAD PARTNER</small></span>
       </Link>
-      <button type="button" className="lead-partner-menu-toggle" aria-label={menuOpen?"Close navigation":"Open navigation"} aria-expanded={menuOpen} aria-controls="lead-partner-navigation" onClick={()=>setMenuOpen(value=>!value)}>☰</button>
     </div>
 
     <div className="lead-partner-nav-label">WORKSPACE</div>
