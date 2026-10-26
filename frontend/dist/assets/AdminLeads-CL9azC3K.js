@@ -1,1 +1,0 @@
-import{t as e}from"./vendor-08inPAVO.js";import{t}from"./AdminLeadsV9-OalXsaeq.js";var n=e();function r(){return(0,n.jsx)(t,{mode:`manage`})}export{r as default};
