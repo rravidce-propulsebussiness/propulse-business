@@ -515,7 +515,8 @@ export default function Profile(){
       setSavedSnapshot(profileFingerprint(form,serviceSelections,locationSelections,updatedProjects,updatedPlans))
       playSound('success')
       setExpandedProject(null);setExpandedPlan(null)
-      setMessage('Business and public listing saved together.')
+      setActiveServiceIndex(null);setEditLocations(false)
+      setMessage('Business and public listing saved together. Your services are now shown in the saved list.')
     }catch(err){playSound('warning');setError(err.message)}finally{setSaving(false)}
   }
 
