@@ -198,6 +198,7 @@ export default function AdminLayout(){
     <div className="admin-main">
       <header className="admin-topbar">
         <div className="admin-topbar-left">
+          <button type="button" className="admin-mobile-menu" aria-label={mobileNavOpen?"Close navigation":"Open navigation"} aria-expanded={mobileNavOpen} aria-controls="admin-navigation" onClick={()=>setMobileNavOpen(value=>!value)}>☰</button>
           <div className="admin-breadcrumb">
             {breadcrumb.map((part,index)=><span className={index===breadcrumb.length-1?'current':''} key={`${part}-${index}`}>{index>0&&<b>/</b>}{part}</span>)}
           </div>
@@ -210,7 +211,6 @@ export default function AdminLayout(){
             <span>{initials||'A'}</span>
             <div><b>{user?.name||'Admin'}</b><small>Administrator</small></div>
           </div>
-          <button type="button" className="admin-mobile-menu" aria-label={mobileNavOpen?"Close navigation":"Open navigation"} aria-expanded={mobileNavOpen} aria-controls="admin-navigation" onClick={()=>setMobileNavOpen(value=>!value)}>☰</button>
         </div>
       </header>
       <div className="admin-content"><Outlet/></div>
