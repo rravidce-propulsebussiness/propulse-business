@@ -90,16 +90,6 @@ export default function InvestorHeader() {
 
   return (
     <header className="investor-header">
-      <button
-        type="button"
-        className="investor-menu"
-        aria-label={open ? "Close investor navigation" : "Open investor navigation"}
-        aria-expanded={open}
-        aria-controls="investor-header-navigation"
-        onClick={() => setOpen(value => !value)}
-      >
-        ☰
-      </button>
 
       <Link
         className="investor-header-brand"
@@ -138,6 +128,16 @@ export default function InvestorHeader() {
         <button className="investor-logout" onClick={logout}>
           Logout
         </button>
+      <button
+        type="button"
+        className="investor-menu"
+        aria-label={open ? "Close investor navigation" : "Open investor navigation"}
+        aria-expanded={open}
+        aria-controls="investor-header-navigation"
+        onClick={() => setOpen(value => !value)}
+      >
+        ☰
+      </button>
       </div>
     </header>
   )
