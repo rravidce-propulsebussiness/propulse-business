@@ -13,6 +13,12 @@ const wallet = read('src/pages/WalletV2.css')
 const membership = read('src/pages/Membership.css')
 const profile = read('src/pages/Profile.css')
 const payout = read('src/pages/PayoutAccount.css')
+const publicHeader = read('src/components/PublicSiteChrome.css')
+const investorHeader = read('src/components/InvestorHeader.css')
+const adminLayout = read('src/admin/components/AdminLayout.jsx')
+const adminStyles = read('src/admin/components/AdminLayout.css')
+const leadPartnerNav = read('src/components/LeadPartnerSidebar.jsx')
+const leadPartnerStyles = read('src/pages/LeadPartnerShared.css')
 
 assert(/\.user-header\{[^}]*position:fixed/.test(header), 'UserHeader must remain fixed while the page scrolls')
 assert(header.includes('top:0;left:0;right:0;width:100%'), 'Fixed UserHeader must stay pinned across the viewport')
@@ -27,5 +33,14 @@ assert(!payout.includes('padding:110px 24px') && !payout.includes('padding:90px 
 for (const [name, css] of [['Leads', leads], ['Wallet', wallet], ['Membership', membership]]) {
   assert(css.includes('var(--propulse-overlay-z,2000)'), `${name} dialogs must layer above the fixed user header`)
 }
+
+assert(header.includes('left:auto;right:12px;width:min(340px'), 'Professional mobile navigation must open from the right')
+assert(header.includes('.user-logout{display:none}') && header.includes('.user-header-mobile-logout{display:block'), 'Mobile logout must live in the navigation rather than duplicate the header')
+assert(publicHeader.includes('left:auto;right:12px;width:min(360px'), 'Homeowner mobile navigation must open on the right')
+assert(investorHeader.includes('left:auto;right:10px;top:calc(100% + 6px)'), 'Investor mobile navigation must open on the right')
+assert(adminLayout.includes('className="admin-topbar-right"') && adminLayout.indexOf('className="admin-mobile-menu"') > adminLayout.indexOf('className="admin-topbar-right"'), 'Admin menu button belongs in the topbar right actions')
+assert(adminStyles.includes('inset:0 0 0 auto'), 'Admin mobile menu must be anchored to the right side')
+assert(leadPartnerNav.includes('aria-expanded={menuOpen}') && leadPartnerNav.includes('lead-partner-menu-toggle'), 'Lead Partner mobile menu must be toggleable')
+assert(leadPartnerStyles.includes('.lead-partner-sidebar:not(.menu-open) .lead-partner-nav{display:none!important}'), 'Lead Partner mobile navigation must remain hidden until opened')
 
 console.log('User header layout regression test passed.')

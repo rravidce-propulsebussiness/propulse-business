@@ -81,6 +81,7 @@ export default function AdminLayout(){
   const user=getUser()
   const current=useMemo(()=>findCurrent(location.pathname),[location.pathname])
   const [openGroup,setOpenGroup]=useState(current.group?.key||null)
+  const [mobileNavOpen,setMobileNavOpen]=useState(false)
   const [systemStatus,setSystemStatus]=useState('checking')
   const initials=(user?.name||'Admin').split(' ').filter(Boolean).slice(0,2).map(x=>x[0]).join('').toUpperCase()
 
@@ -89,7 +90,7 @@ export default function AdminLayout(){
     queueMicrotask(()=>{
       if(!active)return
       if(current.group)setOpenGroup(current.group.key)
-      document.body.classList.remove('admin-nav-open')
+      setMobileNavOpen(false)
     })
     return()=>{active=false}
   },[current.group,location.pathname])
@@ -112,6 +113,19 @@ export default function AdminLayout(){
     return()=>{active=false;clearInterval(timer);window.removeEventListener('propulse:system-health',onHealth)}
   },[])
 
+  useEffect(()=>{
+    document.body.classList.toggle('admin-nav-open',mobileNavOpen)
+    return()=>document.body.classList.remove('admin-nav-open')
+  },[mobileNavOpen])
+
+  useEffect(()=>{
+    const onKeyDown=event=>{if(event.key==='Escape')setMobileNavOpen(false)}
+    const onResize=()=>{if(window.innerWidth>850)setMobileNavOpen(false)}
+    window.addEventListener('keydown',onKeyDown)
+    window.addEventListener('resize',onResize)
+    return()=>{window.removeEventListener('keydown',onKeyDown);window.removeEventListener('resize',onResize)}
+  },[])
+
   async function logout(){
     await clearSession()
     navigate('/login',{replace:true})
@@ -122,7 +136,7 @@ export default function AdminLayout(){
   }
 
   function closeMobileNav(){
-    document.body.classList.remove('admin-nav-open')
+    setMobileNavOpen(false)
   }
 
   const breadcrumb=current.group
@@ -130,7 +144,8 @@ export default function AdminLayout(){
     : ['Admin',current.item.label]
 
   return <div className="admin-shell">
-    <aside className="admin-sidebar">
+    {mobileNavOpen&&<button type="button" className="admin-menu-backdrop" aria-label="Close navigation" onClick={closeMobileNav}/>}
+    <aside id="admin-navigation" className="admin-sidebar">
       <div className="admin-sidebar-brand-row">
         <Link className="admin-sidebar-brand" to="/admin" aria-label="Propulse Admin home" onClick={closeMobileNav}>
           <span className="admin-sidebar-mark">P</span>
@@ -183,7 +198,6 @@ export default function AdminLayout(){
     <div className="admin-main">
       <header className="admin-topbar">
         <div className="admin-topbar-left">
-          <button className="admin-mobile-menu" aria-label="Open navigation" onClick={()=>document.body.classList.toggle('admin-nav-open')}>☰</button>
           <div className="admin-breadcrumb">
             {breadcrumb.map((part,index)=><span className={index===breadcrumb.length-1?'current':''} key={`${part}-${index}`}>{index>0&&<b>/</b>}{part}</span>)}
           </div>
@@ -196,6 +210,7 @@ export default function AdminLayout(){
             <span>{initials||'A'}</span>
             <div><b>{user?.name||'Admin'}</b><small>Administrator</small></div>
           </div>
+          <button type="button" className="admin-mobile-menu" aria-label={mobileNavOpen?"Close navigation":"Open navigation"} aria-expanded={mobileNavOpen} aria-controls="admin-navigation" onClick={()=>setMobileNavOpen(value=>!value)}>☰</button>
         </div>
       </header>
       <div className="admin-content"><Outlet/></div>

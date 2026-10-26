@@ -8,6 +8,14 @@ export default function UserHeader({ variant } = {}) {
   const navigate = useNavigate(); const location = useLocation(); const user = getUser(); const token = getToken(); const loggedIn = Boolean(token && user)
   const [open,setOpen]=useState(false); const [businessName,setBusinessName]=useState(user?.business_name||user?.businessName||''); const [isPro,setIsPro]=useState(false)
   useEffect(()=>{if(!loggedIn||user?.role==='admin')return;let active=true;authRequest('/auth/me').then(account=>{if(!active)return;const name=account?.profile?.business_name||account?.business_name;if(name)setBusinessName(name);setIsPro(user?.role!=='lead_partner'&&Boolean(account?.is_pro_member))}).catch(()=>{if(active)setIsPro(false)});return()=>{active=false}},[loggedIn,user?.role])
+  useEffect(()=>{setOpen(false)},[location.pathname,location.search])
+  useEffect(()=>{
+    const onKeyDown=event=>{if(event.key==='Escape')setOpen(false)}
+    const onResize=()=>{if(window.innerWidth>1150)setOpen(false)}
+    window.addEventListener('keydown',onKeyDown)
+    window.addEventListener('resize',onResize)
+    return()=>{window.removeEventListener('keydown',onKeyDown);window.removeEventListener('resize',onResize)}
+  },[])
   async function logout(){await clearSession();setOpen(false);navigate('/')}
   const active=p=>{
     const [pathname,query]=p.split('?')
@@ -20,7 +28,7 @@ export default function UserHeader({ variant } = {}) {
 
   if(!loggedIn) return <><header className="user-header public-leads-header">
     <Link className="user-header-brand" to="/professionals" onClick={()=>setOpen(false)}><img src="/brand/propulse-logo.png" alt="Propulse Business"/></Link>
-    <nav className={`user-header-nav${open?' open':''}`}>
+    <nav id="user-header-site-nav" aria-label="Professional navigation" className={`user-header-nav${open?' open':''}`}>
       <Link to="/professionals">Home</Link>
       <Link to="/professional-upcoming-features" onClick={()=>setOpen(false)}>Upcoming Features</Link>
       <Link to="/professional-faq" onClick={()=>setOpen(false)}>FAQ</Link>
@@ -32,14 +40,14 @@ export default function UserHeader({ variant } = {}) {
     <div className="user-header-right public-leads-actions">
       <Link className="public-login-button" to="/login">Login</Link>
       <Link className="public-signup-button" to="/signup">Sign up</Link>
-      <button type="button" className="user-menu-toggle" aria-label="Open navigation" onClick={()=>setOpen(v=>!v)}>☰</button>
+      <button type="button" className="user-menu-toggle" aria-label={open?"Close navigation":"Open navigation"} aria-expanded={open} aria-controls="user-header-site-nav" onClick={()=>setOpen(v=>!v)}>☰</button>
     </div>
   </header><div className="user-header-spacer" aria-hidden="true"/></>
 
   if(user?.role==='admin') return null
   const displayName=businessName||'Your Business'; const avatarLetter=displayName.trim().charAt(0).toUpperCase()||'B'
   return <><header className={"user-header"+(variant==='profile'?' profile-site-header':'')}><Link className="user-header-brand" to="/professionals" onClick={()=>setOpen(false)}><img src="/brand/propulse-logo.png" alt="Propulse Business"/></Link>
-    <nav id="user-header-site-nav" className={"user-header-nav" + (open ? " open" : "")}>
+    <nav id="user-header-site-nav" aria-label="Professional navigation" className={"user-header-nav" + (open ? " open" : "")}>
       <Link className={active("/professionals")} to="/professionals" onClick={()=>setOpen(false)}>Home</Link>
       <Link className={active("/purchased-leads")} to="/purchased-leads" onClick={()=>setOpen(false)}>Purchased Leads</Link>
       {user?.role==='business' && <Link className={active("/professional-requests")} to="/professional-requests" onClick={()=>setOpen(false)}>Requests</Link>}
