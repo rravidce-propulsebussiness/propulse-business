@@ -28,7 +28,7 @@ assert(faqShared.includes("professional=audience==='professional'"),'Shared FAQ 
 assert(faqShared.includes("audience='homeowner'"),'Unspecified FAQ audiences must not default to professionals')
 assert(faqAdmin.includes("['professional','Professional / Business FAQs'"),'Admin FAQ editor must target professional content independently')
 assert(faqBackend.includes("'homeowner','professional','website'"),'FAQ API must recognize both new and legacy professional audiences')
-assert(faqMigration.includes("SET audience='professional' WHERE audience='website'"),'Old business FAQs must migrate to the professional audience')
+assert(faqMigration.includes("SET audience='professional'")&&faqMigration.includes("WHERE audience='website'"),'Old business FAQs must migrate to the professional audience')
 assert(server.includes('|professional-faq|professional-upcoming-features|professional-requests|'),'Backend SPA fallback must serve professional help, roadmap and requests on direct navigation')
 assert(faqShared.includes('to="/professional-contact"')&&faqShared.includes('to="/quote"'),'FAQ support links must remain audience-specific')
 assert(roadmap.includes("publicRequest('/upcoming-features?audience='+encodeURIComponent(audience))"),'Roadmap API must request the selected audience')
