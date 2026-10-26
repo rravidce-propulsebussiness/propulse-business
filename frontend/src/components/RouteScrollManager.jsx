@@ -1,54 +1,88 @@
-import { useLayoutEffect } from 'react'
-import { useLocation } from 'react-router-dom'
+import { useLayoutEffect, useRef } from 'react'
+import { useLocation, useNavigationType } from 'react-router-dom'
+import { chooseScrollPosition } from '../utils/scrollRestoration'
+
+const readPosition = () => ({ top: window.scrollY, left: window.scrollX })
+const moveTo = ({ top, left }) => {
+  window.scrollTo({ top, left, behavior: 'instant' })
+}
 
 /**
- * React Router reuses the document between pages, so reset window scroll on
- * each navigation. Only actual element anchors (not view-selection hashes)
- * should override the top-of-page behavior.
+ * Preserve viewport position for in-page actions (tabs, filters and search),
+ * reset only for real page changes, and restore positions on Back/Forward.
+ * Hashes that point to real DOM anchors still take priority.
  */
 export default function RouteScrollManager() {
   const { pathname, search, hash, key } = useLocation()
+  const navigationType = useNavigationType()
+  const activeRoute = useRef(null)
+  const scrollPositions = useRef(new Map())
 
   useLayoutEffect(() => {
-    const previous = window.history.scrollRestoration
+    const oldRestoration = window.history.scrollRestoration
     window.history.scrollRestoration = 'manual'
-    return () => { window.history.scrollRestoration = previous }
+
+    const rememberPosition = () => {
+      const active = activeRoute.current
+      if (!active) return
+      const positions = scrollPositions.current
+      positions.set(active.key, readPosition())
+      // Cap the history cache for long-running mobile browser sessions.
+      if (positions.size > 120) positions.delete(positions.keys().next().value)
+    }
+    window.addEventListener('scroll', rememberPosition, { passive: true })
+    return () => {
+      window.removeEventListener('scroll', rememberPosition)
+      window.history.scrollRestoration = oldRestoration
+    }
   }, [])
 
   useLayoutEffect(() => {
-    // Avoid smooth scrolling through the old page on navigation.
-    window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
-
-    // Reinforce the reset after a lazily loaded route replaces its fallback.
-    const topFrame = window.requestAnimationFrame(() => {
-      window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
+    const previousRoute = activeRoute.current
+    const nextRoute = { pathname, search, hash, key }
+    const storedPosition = scrollPositions.current.get(key)
+    const previousPosition = previousRoute
+      ? (scrollPositions.current.get(previousRoute.key) || readPosition())
+      : readPosition()
+    const restoreFromHistory = navigationType === 'POP' && Boolean(storedPosition)
+    const targetPosition = chooseScrollPosition({
+      previousRoute, nextRoute, navigationType, storedPosition, previousPosition,
     })
 
-    if (!hash) return () => window.cancelAnimationFrame(topFrame)
+    // Switch the tracking key before programmatic scroll events can fire.
+    activeRoute.current = nextRoute
 
-    // Some routes (e.g. /quote#interiors) use the hash to select a view,
-    // while links to a real DOM id should still scroll to that section.
-    let id = hash.slice(1)
-    try { id = decodeURIComponent(id) } catch { /* Keep the literal id. */ }
-    if (!id) return undefined
+    // A hash can also be a tab identifier (e.g. /quote#interiors).
+    // Scroll only when it is a changed hash pointing at an actual element.
+    const newAnchor = Boolean(hash && (hash !== previousRoute?.hash || pathname !== previousRoute?.pathname))
+    let anchorId = hash.slice(1)
+    try { anchorId = decodeURIComponent(anchorId) } catch { /* Use the raw hash. */ }
 
-    const scrollToAnchor = () => {
-      const element = document.getElementById(id)
+    const moveToAnchor = () => {
+      if (!newAnchor || restoreFromHistory || !anchorId) return false
+      const element = document.getElementById(anchorId)
       if (!element) return false
       element.scrollIntoView({ block: 'start', behavior: 'instant' })
       return true
     }
 
-    if (scrollToAnchor()) {
-      window.cancelAnimationFrame(topFrame)
-      return undefined
+    if (moveToAnchor()) return undefined
+    moveTo(targetPosition)
+
+    // A new route or selected tab may mount in the following frame.
+    // Reapply the intended position without resetting in-page controls.
+    const frame = window.requestAnimationFrame(() => {
+      if (!moveToAnchor()) moveTo(targetPosition)
+    })
+
+    if (!newAnchor || restoreFromHistory || !anchorId) {
+      return () => window.cancelAnimationFrame(frame)
     }
 
-    // Lazy route content may mount after the router location changes.
-    // Watch briefly for an explicit anchor, without keeping a permanent observer.
+    // Lazy-loaded sections can contain the requested DOM anchor.
     const observer = new MutationObserver(() => {
-      if (scrollToAnchor()) {
-        window.cancelAnimationFrame(topFrame)
+      if (moveToAnchor()) {
+        window.cancelAnimationFrame(frame)
         observer.disconnect()
       }
     })
@@ -56,13 +90,13 @@ export default function RouteScrollManager() {
       childList: true,
       subtree: true,
     })
-    const timer = window.setTimeout(() => observer.disconnect(), 2000)
+    const timeout = window.setTimeout(() => observer.disconnect(), 2000)
     return () => {
-      window.cancelAnimationFrame(topFrame)
+      window.cancelAnimationFrame(frame)
+      window.clearTimeout(timeout)
       observer.disconnect()
-      window.clearTimeout(timer)
     }
-  }, [pathname, search, hash, key])
+  }, [pathname, search, hash, key, navigationType])
 
   return null
 }
