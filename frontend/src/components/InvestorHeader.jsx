@@ -52,6 +52,15 @@ export default function InvestorHeader() {
     }
   }, [user?.role, investorRoute])
 
+  useEffect(()=>{setOpen(false)},[location.pathname,location.search])
+  useEffect(()=>{
+    const onKeyDown=event=>{if(event.key==='Escape')setOpen(false)}
+    const onResize=()=>{if(window.innerWidth>760)setOpen(false)}
+    window.addEventListener('keydown',onKeyDown)
+    window.addEventListener('resize',onResize)
+    return()=>{window.removeEventListener('keydown',onKeyDown);window.removeEventListener('resize',onResize)}
+  },[])
+
   const logout = () => {
     clearSession()
     setOpen(false)
@@ -89,7 +98,7 @@ export default function InvestorHeader() {
         <img src="/brand/propulse-logo.png" alt="Propulse Business" />
       </Link>
 
-      <nav className={`investor-header-nav${open ? ' open' : ''}`}>
+      <nav id="investor-header-navigation" aria-label="Investor navigation" className={`investor-header-nav${open ? ' open' : ''}`}>
         {nav.map(item => (
           <Link
             key={item.to}
@@ -119,8 +128,11 @@ export default function InvestorHeader() {
           Logout
         </button>
         <button
+          type="button"
           className="investor-menu"
-          aria-label="Open investor navigation"
+          aria-label={open ? "Close investor navigation" : "Open investor navigation"}
+          aria-expanded={open}
+          aria-controls="investor-header-navigation"
           onClick={() => setOpen(value => !value)}
         >
           ☰
