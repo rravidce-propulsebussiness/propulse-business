@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { PublicFooter, PublicHeader } from '../components/PublicSiteChrome'
 import UserHeader from '../components/UserHeader'
 import { publicRequest } from '../utils/auth'
@@ -61,6 +62,6 @@ export default function UpcomingFeatures({audience='homeowner'}){
         </>
       }
     </main>
-    {professional?<footer className="upf-professional-footer"><span>ProPulse for Professionals</span><div><a href="/professional-faq">Professional FAQ</a><a href="/professional-contact">Professional Support</a></div></footer>:<PublicFooter />}
+    {professional?<footer className="upf-professional-footer"><span>ProPulse for Professionals</span><div><Link to="/professional-faq">Professional FAQ</Link><Link to="/professional-contact">Professional Support</Link></div></footer>:<PublicFooter />}
   </div>
 }
