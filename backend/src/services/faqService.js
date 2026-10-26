@@ -1,7 +1,7 @@
 const pool=require('../config/database');
 
 const CATEGORIES=['general','consultation','construction','interiors','property','privacy','leads','payments','withdrawals','account','reports'];
-const AUDIENCES=['homeowner','website','investor','lead_partner'];
+const AUDIENCES=['homeowner','professional','website','investor','lead_partner'];
 
 function normalizeId(value){
   const id=Number(value);
@@ -11,7 +11,7 @@ function normalizeId(value){
 function normalizeAudience(value='lead_partner'){
   const audience=String(value||'lead_partner').trim().toLowerCase();
   if(!AUDIENCES.includes(audience)){const e=new Error('Invalid FAQ audience');e.code='INVALID_AUDIENCE';throw e}
-  return audience;
+  return audience==='website'?'professional':audience;
 }
 function normalizeInput(body={}){
   const audience=normalizeAudience(body.audience);
@@ -27,7 +27,8 @@ function normalizeInput(body={}){
 async function list(audience='lead_partner',includeInactive=false){
   const normalizedAudience=normalizeAudience(audience);
   const params=[normalizedAudience];
-  const where=['audience=$1'];
+  // Include legacy website records until the professional FAQ migration is applied.
+  const where=[normalizedAudience==='professional'?"audience IN ($1,'website')":'audience=$1'];
   if(!includeInactive) where.push('is_active=TRUE');
   const result=await pool.query(
     `SELECT id,audience,category,question,answer,sort_order,is_active,created_at,updated_at
