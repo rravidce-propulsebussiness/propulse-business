@@ -9,3 +9,21 @@
   .user-header-right{margin-left:auto}
   .user-header-nav a{padding:11px 12px}
 }
+
+/* The same right-hand mobile menu is used on every professional page. */
+@media(max-width:1150px){
+  .user-header .user-header-nav{
+    left:auto;right:12px;width:min(340px,calc(100vw - 24px));max-width:calc(100vw - 24px);
+    box-sizing:border-box;max-height:calc(100dvh - var(--propulse-user-header-height) - 16px);
+    overflow-y:auto;overscroll-behavior:contain;z-index:2;
+  }
+  .user-header-right{margin-left:auto;justify-content:flex-end}
+  .user-menu-toggle{flex:0 0 auto;order:10}
+}
+@media(max-width:760px){
+  .user-header .user-header-nav{right:10px;max-height:calc(100dvh - var(--propulse-user-header-height-mobile) - 16px)}
+  .user-header-mobile-logout{display:block;width:100%;text-align:left;padding:12px}
+  .user-logout{display:none}
+  .user-header-brand{min-width:0}
+  .user-header-right{min-width:0}
+}
