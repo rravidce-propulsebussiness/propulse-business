@@ -1,0 +1,9 @@
+.professional-faq-page{min-height:100vh;background:linear-gradient(130deg,#fffaf6,#fffefd 55%,#fff2e7);color:#25394b}
+.professional-faq-page .website-faq-standalone{width:min(1310px,calc(100% - 44px));margin:0 auto}
+.professional-faq-page .website-faq-hero{border:1px solid #ffe1cf;background:linear-gradient(115deg,#fff,#fff1e5)}
+.professional-faq-page .website-faq-eyebrow{color:#f06720}
+.professional-faq-page .website-faq-hero h1 em{color:#f06720}
+.professional-faq-page .website-faq-side-card.primary{background:linear-gradient(135deg,#ff7b2e,#f16519);border:0}
+.professional-faq-page .website-faq-side-card.primary,.professional-faq-page .website-faq-side-card.primary h3{color:#fff}
+.professional-faq-page .website-faq-filters button.active{background:#f66b21;border-color:#f66b21;color:#fff}
+@media(max-width:700px){.professional-faq-page .website-faq-standalone{width:calc(100% - 24px)}}
