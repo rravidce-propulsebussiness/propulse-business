@@ -37,6 +37,13 @@ function RequestsIcon({ name, className = '' }) {
 export default function ProfessionalRequests() {
   const [searchParams, setSearchParams] = useSearchParams()
   const view = searchParams.get('tab') === 'quotes' ? 'quotes' : 'callbacks'
+  const switchView = nextView => {
+    const nextParams = new URLSearchParams(searchParams)
+    if (nextView === 'quotes') nextParams.set('tab', 'quotes')
+    else nextParams.delete('tab')
+    // Tab selection is an in-page action, not a fresh page navigation.
+    setSearchParams(nextParams, { replace: true, preventScrollReset: true })
+  }
   const [requests, setRequests] = useState([])
   const [quotes, setQuotes] = useState([])
   const [plans, setPlans] = useState([])
@@ -167,8 +174,8 @@ export default function ProfessionalRequests() {
       </div>
 
       <div className="prc-sections" role="tablist" aria-label="Request type">
-        <button type="button" role="tab" aria-selected={view === 'callbacks'} className={view === 'callbacks' ? 'selected' : ''} onClick={() => setSearchParams({})}><RequestsIcon name="callback"/> Callback requests <span>{counts.all}</span></button>
-        <button type="button" role="tab" aria-selected={view === 'quotes'} className={view === 'quotes' ? 'selected' : ''} onClick={() => setSearchParams({ tab: 'quotes' })}><RequestsIcon name="quote"/> Quotation requests <span>{quotes.length}</span></button>
+        <button type="button" role="tab" aria-selected={view === 'callbacks'} className={view === 'callbacks' ? 'selected' : ''} onClick={() => switchView('callbacks')}><RequestsIcon name="callback"/> Callback requests <span>{counts.all}</span></button>
+        <button type="button" role="tab" aria-selected={view === 'quotes'} className={view === 'quotes' ? 'selected' : ''} onClick={() => switchView('quotes')}><RequestsIcon name="quote"/> Quotation requests <span>{quotes.length}</span></button>
       </div>
 
       {view === 'quotes' ? <section className="prc-quotes" aria-label="Quotation requests">
