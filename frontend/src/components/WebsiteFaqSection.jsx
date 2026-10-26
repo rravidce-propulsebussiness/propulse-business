@@ -52,6 +52,7 @@ function FaqIcon({category}){
 
 export default function WebsiteFaqSection({variant='home',audience='website'}){
   const standalone=variant==='page'
+  const professional=audience==='website'
   const compactHome=variant==='home-compact'
   const [searchParams,setSearchParams]=useSearchParams()
   const [faqs,setFaqs]=useState([])
@@ -184,8 +185,8 @@ export default function WebsiteFaqSection({variant='home',audience='website'}){
   return <main className="website-faq website-faq-standalone">
     <section className="website-faq-hero">
       <div className="website-faq-hero-copy">
-        <span className="website-faq-eyebrow"><i/> CUSTOMER HELP CENTRE</span>
-        <h1>Search construction, interiors & <em>property answers.</em></h1>
+        <span className="website-faq-eyebrow"><i/> {professional?'PROFESSIONAL HELP CENTRE':'CUSTOMER HELP CENTRE'}</span>
+        <h1>{professional?<>Answers for <em>business professionals.</em></>:<>Search construction, interiors &amp; <em>property answers.</em></>}</h1>
         
         </div>
       <div className="website-faq-hero-mark" aria-hidden="true"><b>?</b><span>PROPULSE GUIDE</span></div>
@@ -205,8 +206,13 @@ export default function WebsiteFaqSection({variant='home',audience='website'}){
         {faqList}
       </div>
       <aside className="website-faq-side">
-        <div className="website-faq-side-card primary"><span>NEED PROJECT HELP?</span><h3>Start a project requirement.</h3><Link to="/quote">Start Requirement <b>→</b></Link></div>
-        <div className="website-faq-side-card"><span>QUICK ACCESS</span><Link to="/guides">Construction Guides <b>↗</b></Link><Link to="/packages">Packages <b>↗</b></Link><Link to="/experts">Find Professionals <b>↗</b></Link></div>
+        {professional?<>
+          <div className="website-faq-side-card primary"><span>PROFESSIONAL SUPPORT</span><h3>Need help with leads or your account?</h3><Link to="/professional-contact">Contact Professional Support <b>→</b></Link></div>
+          <div className="website-faq-side-card"><span>YOUR WORKSPACE</span><Link to="/professionals">Available Leads <b>↗</b></Link><Link to="/membership">Memberships <b>↗</b></Link><Link to="/professional-upcoming-features">Upcoming Features <b>↗</b></Link></div>
+        </>:<>
+          <div className="website-faq-side-card primary"><span>NEED PROJECT HELP?</span><h3>Start a project requirement.</h3><Link to="/quote">Start Requirement <b>→</b></Link></div>
+          <div className="website-faq-side-card"><span>QUICK ACCESS</span><Link to="/guides">Construction Guides <b>↗</b></Link><Link to="/packages">Packages <b>↗</b></Link><Link to="/experts">Find Professionals <b>↗</b></Link></div>
+        </>}
       </aside>
     </section>
   </main>
