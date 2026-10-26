@@ -22,10 +22,10 @@ export default function UserHeader({ variant } = {}) {
     <Link className="user-header-brand" to="/professionals" onClick={()=>setOpen(false)}><img src="/brand/propulse-logo.png" alt="Propulse Business"/></Link>
     <nav className={`user-header-nav${open?' open':''}`}>
       <Link to="/professionals">Home</Link>
-      <Link to="/upcoming-features" onClick={()=>setOpen(false)}>Upcoming Features</Link>
-      <Link to="/faq" onClick={()=>setOpen(false)}>FAQ</Link>
+      <Link to="/professional-upcoming-features" onClick={()=>setOpen(false)}>Upcoming Features</Link>
+      <Link to="/professional-faq" onClick={()=>setOpen(false)}>FAQ</Link>
       <Link to="/professional-contact" onClick={()=>setOpen(false)}>Contact</Link>
-      {!['/professionals','/faq','/upcoming-features','/professional-contact'].includes(location.pathname) && <Link className="leads-active" to="/professionals" onClick={()=>setOpen(false)}>Explore Leads</Link>}
+      {!['/professionals','/professional-faq','/professional-upcoming-features','/professional-contact'].includes(location.pathname) && <Link className="leads-active" to="/professionals" onClick={()=>setOpen(false)}>Explore Leads</Link>}
       <Link className="public-nav-auth" to="/login" onClick={()=>setOpen(false)}>Login</Link>
       <Link className="public-nav-auth" to="/signup" onClick={()=>setOpen(false)}>Sign up</Link>
     </nav>
@@ -47,8 +47,8 @@ export default function UserHeader({ variant } = {}) {
       <Link className={active("/membership")} to="/membership" onClick={()=>setOpen(false)}>Membership</Link>
       {isPro && <Link className={active("/investment")} to="/investment" onClick={()=>setOpen(false)}>Investor</Link>}
       {!location.pathname.startsWith("/investment") && <Link className={active("/professional-contact")} to="/professional-contact" onClick={()=>setOpen(false)}>Contact</Link>}
-      <Link className={active("/upcoming-features")} to="/upcoming-features" onClick={()=>setOpen(false)}>Upcoming Features</Link>
-      <Link className={active("/faq")} to="/faq" onClick={()=>setOpen(false)}>FAQ</Link>
+      <Link className={active("/professional-upcoming-features")} to="/professional-upcoming-features" onClick={()=>setOpen(false)}>Upcoming Features</Link>
+      <Link className={active("/professional-faq")} to="/professional-faq" onClick={()=>setOpen(false)}>FAQ</Link>
       <button type="button" className="user-header-mobile-logout" onClick={logout}>Logout</button>
     </nav>
     <div className="user-header-right"><NotificationBell/><Link className="user-profile-pill" to="/profile" aria-label="Open business profile"><span className="user-avatar">{avatarLetter}</span><span className="user-profile-name">{displayName}</span></Link><button type="button" className="user-logout" onClick={logout}>Logout</button><button type="button" className="user-menu-toggle" aria-label={open?"Close navigation":"Open navigation"} aria-expanded={open} aria-controls="user-header-site-nav" onClick={()=>setOpen(v=>!v)}>☰</button></div>
