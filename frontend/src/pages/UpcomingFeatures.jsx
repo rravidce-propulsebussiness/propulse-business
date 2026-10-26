@@ -1,20 +1,23 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { PublicFooter, PublicHeader } from '../components/PublicSiteChrome'
+import UserHeader from '../components/UserHeader'
 import { publicRequest } from '../utils/auth'
 import './UpcomingFeatures.css'
 
 const statusClass=value=>String(value||'planned').toLowerCase().replace(/[^a-z0-9]+/g,'-')
 
-export default function UpcomingFeatures(){
+export default function UpcomingFeatures({audience='homeowner'}){
+  const professional=audience==='professional'
   const [items,setItems]=useState([])
   const [loading,setLoading]=useState(true)
   const [error,setError]=useState('')
 
-  async function load(){
+  const load=useCallback(async()=>{
     try{
       setLoading(true)
       setError('')
-      const data=await publicRequest('/upcoming-features')
+      const data=await publicRequest('/upcoming-features?audience='+encodeURIComponent(audience))
       setItems(Array.isArray(data)?data.filter(item=>item?.is_active!==false):[])
     }catch(e){
       setItems([])
@@ -22,9 +25,9 @@ export default function UpcomingFeatures(){
     }finally{
       setLoading(false)
     }
-  }
+  },[audience])
 
-  useEffect(()=>{window.scrollTo(0,0);let active=true;queueMicrotask(()=>{if(active)load()});return()=>{active=false}},[])
+  useEffect(()=>{window.scrollTo(0,0);let active=true;queueMicrotask(()=>{if(active)load()});return()=>{active=false}},[load])
 
   const featured=useMemo(()=>items.filter(item=>item.highlighted),[items])
   const regular=useMemo(()=>items.filter(item=>!item.highlighted),[items])
@@ -41,13 +44,13 @@ export default function UpcomingFeatures(){
     <div className="upf-timeline"><span>Timeline</span><b>{item.timeline||'Coming soon'}</b></div>
   </article>
 
-  return <div className="upf-page">
-    <PublicHeader/>
+  return <div className={professional?"upf-page upf-professional-page":"upf-page"}>
+    {professional?<UserHeader/>:<PublicHeader/>}
     <main>
       <section className="upf-hero">
-        <span className="upf-kicker">PRODUCT ROADMAP</span>
+        <span className="upf-kicker">{professional?'PROFESSIONAL / PRODUCT ROADMAP':'HOMEOWNER / PRODUCT ROADMAP'}</span>
         <h1>Upcoming <em>Features</em></h1>
-        <p>See what is planned, in development and coming next to ProPulse.</p>
+        <p>{professional?'Discover upcoming tools for leads, CRM, business automation, payments and professional workflows.':'See what is planned for homeowners exploring construction, interiors and real estate.'}</p>
       </section>
 
       {loading?<section className="upf-state">Loading upcoming features…</section>:
@@ -59,6 +62,6 @@ export default function UpcomingFeatures(){
         </>
       }
     </main>
-    <PublicFooter />
+    {professional?<footer className="upf-professional-footer"><span>ProPulse for Professionals</span><div><Link to="/professional-faq">Professional FAQ</Link><Link to="/professional-contact">Professional Support</Link></div></footer>:<PublicFooter />}
   </div>
 }
