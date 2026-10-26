@@ -137,7 +137,8 @@ export default function Profile(){
   const mapProfileTab=tab=>tab==='locations'?'services':tab==='brochures'?'packages':tab==='plans'?'packages':tab==='proofs'?'proofs':tab==='projects'?'projects':tab==='services'?'services':'business'
   const [openProfileCard,setOpenProfileCard]=useState(()=>requestedTab?mapProfileTab(requestedTab):'')
   const [packageView,setPackageView]=useState(()=>requestedTab==='brochures'?'brochures':'plans')
-  const [editServices,setEditServices]=useState(false)
+  // Index of the ONE service form currently being edited. Saved services stay collapsed.
+  const [activeServiceIndex,setActiveServiceIndex]=useState(null)
   const [editLocations,setEditLocations]=useState(false)
   useEffect(()=>{
     if(requestedTab){
@@ -227,7 +228,32 @@ export default function Profile(){
   function revealProjectError(index,message){setExpandedProject(projectKey(projects[index]));openCard('projects');setError(message);requestAnimationFrame(()=>document.getElementById('profile-workspace-content')?.scrollIntoView({block:'start',behavior:'smooth'}))}
   function revealPlanError(index,message){setExpandedPlan(planKey(plans[index]));openCard('packages','plans');setError(message);requestAnimationFrame(()=>document.getElementById('profile-workspace-content')?.scrollIntoView({block:'start',behavior:'smooth'}))}
   function update(field,value){setForm(x=>({...x,[field]:value}));setMessage('')}
-  function updateService(index,field,value){setServiceSelections(items=>items.map((x,i)=>i!==index?x:field==='industryId'?{industryId:value,serviceId:'',subserviceId:''}:field==='serviceId'?{...x,serviceId:value,subserviceId:''}:{...x,[field]:value}));setMessage('')}
+  function updateService(index,field,value){
+    if(field==='serviceId'&&value&&serviceSelections.some((item,i)=>
+      i!==index&&String(item.industryId)===String(serviceSelections[index]?.industryId)&&
+      String(item.serviceId)===String(value))){
+      setError('This service is already listed. Use Edit on the existing service instead.')
+      return
+    }
+    setServiceSelections(items=>items.map((x,i)=>i!==index?x:
+      field==='industryId'?{industryId:value,serviceId:'',subserviceId:''}:
+      field==='serviceId'?{...x,serviceId:value,subserviceId:''}:{...x,[field]:value}))
+    setError('');setMessage('')
+  }
+  function addService(){
+    const incomplete=serviceSelections.findIndex(item=>!item.industryId||!item.serviceId)
+    if(incomplete>=0){setActiveServiceIndex(incomplete)}
+    else{
+      setActiveServiceIndex(serviceSelections.length)
+      setServiceSelections(items=>[...items,emptyService()])
+    }
+    setEditLocations(false);setError('');setMessage('')
+  }
+  function removeService(index){
+    setServiceSelections(items=>items.filter((_,i)=>i!==index))
+    setActiveServiceIndex(current=>current===null?null:current===index?null:current>index?current-1:current)
+    setError('');setMessage('Service removed from this profile. Tap Save Changes to apply.')
+  }
   function updateLocation(index,field,value){setLocationSelections(items=>items.map((x,i)=>i!==index?x:field==='stateId'?{stateId:value,cityId:''}:{...x,cityId:value}));setMessage('')}
   function updateProject(index,field,value){setProjects(items=>items.map((item,i)=>i!==index?item:field==='projectType'?{...item,projectType:value,packageName:''}:field==='videoUrl'?{...item,videoUrl:value,videoDisplayUrl:value}:field==='planUrl'?{...item,planUrl:value,planDisplayUrl:value}:field==='brochureUrl'?{...item,brochureUrl:value,brochureDisplayUrl:value}:{...item,[field]:value}));setMessage('')}
   function updatePlan(index,field,value){setPlans(items=>items.map((item,i)=>i===index?field==='brochureUrl'?{...item,brochureUrl:value,brochureDisplayUrl:value}:{...item,[field]:value}:item));setMessage('')}
@@ -426,8 +452,19 @@ export default function Profile(){
   // Validation errors open the exact existing editor, not a new management page.
   function showEditorError(card,message,subsection){
     if(card==='services'){
-      setEditServices(subsection==='services')
-      setEditLocations(subsection==='locations')
+      if(subsection==='services'){
+        const incomplete=serviceSelections.findIndex(item=>!item.industryId||!item.serviceId)
+        if(incomplete>=0)setActiveServiceIndex(incomplete)
+        else if(serviceSelections.length)setActiveServiceIndex(0)
+        else{
+          setServiceSelections(items=>[...items,emptyService()])
+          setActiveServiceIndex(0)
+        }
+        setEditLocations(false)
+      }else{
+        setActiveServiceIndex(null)
+        setEditLocations(true)
+      }
     }
     openCard(card)
     setError(message)
@@ -529,19 +566,57 @@ export default function Profile(){
                 <ProfileBusinessFields form={form} update={update} overview/>
               </form>}
               {card.id==='services'&&<div className="profile-accordion-service-block">
-                <div className="profile-accordion-field-head"><h3><ProfileIcon name="services" size={18}/> Services Offered</h3><button type="button" onClick={()=>{setEditServices(v=>!v);setEditLocations(false)}}><ProfileIcon name="edit" size={17}/>{editServices?'Close editor':'Edit'}</button></div>
-                <div className="profile-accordion-pills">{serviceNames.map(name=><span key={name}>{name}</span>)}{!serviceNames.length&&<em>No services added</em>}
-                  <button type="button" className="profile-accordion-add" onClick={()=>{setEditServices(true);setEditLocations(false);setServiceSelections(old=>[...old,emptyService()])}}>+ Add Service</button>
+                <div className="profile-accordion-field-head profile-service-list-heading">
+                  <div><h3><ProfileIcon name="services" size={18}/> Services Offered</h3><p>Manage services individually. Only the one you edit will expand.</p></div>
+                  <button type="button" className="profile-service-add-button" onClick={addService}>+ Add Service</button>
                 </div>
-                {editServices&&<form id="business-profile-form" onSubmit={save} className="profile-accordion-form profile-accordion-subeditor">
-                  <section className="profile-panel" id="profile-services">
-            <div className="panel-title"><div><span>02</span><h2>Services you provide</h2><p>These services drive lead matching and appear on your public profile.</p></div><button type="button" onClick={()=>setServiceSelections(x=>[...x,emptyService()])}>+ Add service</button></div>
-            <div className="profile-list">{serviceSelections.map((x,i)=><div className="profile-row" key={`s-${i}`}><div className="row-number">{String(i+1).padStart(2,'0')}</div><label>Industry<select value={x.industryId} onChange={e=>updateService(i,'industryId',e.target.value)} required><option value="">Select industry</option>{industries.map(v=><option key={v.id} value={v.id}>{v.name}</option>)}</select></label><label>Service<select value={x.serviceId} onChange={e=>e.target.value===ALL_SERVICES_VALUE?addAllServicesForIndustry(i):updateService(i,'serviceId',e.target.value)} disabled={!x.industryId} required><option value="">Select service</option>{(serviceOptions[i]||[]).length>0&&<option value={ALL_SERVICES_VALUE}>✓ All services ({(serviceOptions[i]||[]).length})</option>}{(serviceOptions[i]||[]).map(v=><option key={v.id} value={v.id}>{v.name}</option>)}</select></label><label>Subservice <small>Optional · blank means all</small><select value={x.subserviceId} onChange={e=>updateService(i,'subserviceId',e.target.value)} disabled={!x.serviceId}><option value="">All related</option>{(subserviceOptions[i]||[]).map(v=><option key={v.id} value={v.id}>{v.name}</option>)}</select></label><button type="button" className="row-remove" onClick={()=>setServiceSelections(items=>items.filter((_,n)=>n!==i))}>Remove</button></div>)}</div>
-          </section>
-                </form>}
-                <div className="profile-accordion-field-head"><h3><ProfileIcon name="pin" size={18}/> Service Locations</h3><button type="button" onClick={()=>{setEditLocations(v=>!v);setEditServices(false)}}><ProfileIcon name="edit" size={17}/>{editLocations?'Close editor':'Edit'}</button></div>
+                <div className="profile-service-compact-list">
+                  {serviceSelections.map((item,index)=>{
+                    const open=activeServiceIndex===index
+                    const service=services.find(entry=>String(entry.id)===String(item.serviceId))
+                    const industry=industries.find(entry=>String(entry.id)===String(item.industryId))
+                    const subservice=subservices.find(entry=>String(entry.id)===String(item.subserviceId))
+                    return <div className={'profile-service-compact-item'+(open?' is-editing':'')} key={index}>
+                      <div className="profile-service-compact-heading">
+                        <span className="profile-service-item-icon"><ProfileIcon name="services" size={18}/></span>
+                        <div className="profile-service-item-summary">
+                          <strong>{service?.name||'New service'}</strong>
+                          <small>{industry?.name||'Select industry'}{subservice?' · '+subservice.name:''}</small>
+                        </div>
+                        <div className="profile-service-item-actions">
+                          <button type="button" className="profile-service-edit-button" aria-label={(open?'Close editor for ':'Edit ')+(service?.name||'new service')} aria-expanded={open} onClick={()=>{setActiveServiceIndex(open?null:index);setEditLocations(false);setError('')}}><ProfileIcon name="edit" size={16}/>{open?'Close':'Edit'}</button>
+                          <button type="button" className="profile-service-delete-button" aria-label={'Delete '+(service?.name||'new service')} onClick={()=>removeService(index)}>Delete</button>
+                        </div>
+                      </div>
+                      {open&&<form id="business-profile-form" onSubmit={save} className="profile-accordion-form profile-service-inline-form">
+                        <label>Industry
+                          <select value={item.industryId} onChange={event=>updateService(index,'industryId',event.target.value)} required>
+                            <option value="">Select industry</option>
+                            {industries.map(entry=><option key={entry.id} value={entry.id}>{entry.name}</option>)}
+                          </select>
+                        </label>
+                        <label>Service
+                          <select value={item.serviceId} onChange={event=>event.target.value===ALL_SERVICES_VALUE?addAllServicesForIndustry(index):updateService(index,'serviceId',event.target.value)} disabled={!item.industryId} required>
+                            <option value="">Select service</option>
+                            {(serviceOptions[index]||[]).length>0&&<option value={ALL_SERVICES_VALUE}>✓ All services ({(serviceOptions[index]||[]).length})</option>}
+                            {(serviceOptions[index]||[]).map(entry=><option key={entry.id} value={entry.id}>{entry.name}</option>)}
+                          </select>
+                        </label>
+                        <label>Subservice <small>Optional · leave blank for all related services</small>
+                          <select value={item.subserviceId} onChange={event=>updateService(index,'subserviceId',event.target.value)} disabled={!item.serviceId}>
+                            <option value="">All related</option>
+                            {(subserviceOptions[index]||[]).map(entry=><option key={entry.id} value={entry.id}>{entry.name}</option>)}
+                          </select>
+                        </label>
+                        <p className="profile-service-save-hint">Changes are applied when you tap Save Changes below.</p>
+                      </form>}
+                    </div>
+                  })}
+                  {!serviceSelections.length&&<p className="profile-service-empty">No services added. Use Add Service to select your industry and service.</p>}
+                </div>
+                <div className="profile-accordion-field-head"><h3><ProfileIcon name="pin" size={18}/> Service Locations</h3><button type="button" onClick={()=>{setEditLocations(v=>!v);setActiveServiceIndex(null)}}><ProfileIcon name="edit" size={17}/>{editLocations?'Close editor':'Edit'}</button></div>
                 <div className="profile-accordion-pills">{locationNames.map(name=><span key={name}>{name}</span>)}{!locationNames.length&&<em>No locations added</em>}
-                  <button type="button" className="profile-accordion-add" onClick={()=>{setEditLocations(true);setEditServices(false);setLocationSelections(old=>[...old,emptyLocation()])}}>+ Add Location</button>
+                  <button type="button" className="profile-accordion-add" onClick={()=>{setEditLocations(true);setActiveServiceIndex(null);setLocationSelections(old=>[...old,emptyLocation()])}}>+ Add Location</button>
                 </div>
                 {editLocations&&<form id="business-profile-form" onSubmit={save} className="profile-accordion-form profile-accordion-subeditor">
                   <section className="profile-panel" id="profile-locations">
