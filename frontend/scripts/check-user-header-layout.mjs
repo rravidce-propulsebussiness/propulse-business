@@ -34,13 +34,16 @@ for (const [name, css] of [['Leads', leads], ['Wallet', wallet], ['Membership', 
   assert(css.includes('var(--propulse-overlay-z,2000)'), `${name} dialogs must layer above the fixed user header`)
 }
 
-assert(header.includes('left:auto;right:12px;width:min(340px'), 'Professional mobile navigation must open from the right')
+assert(header.includes('left:12px;right:auto;width:min(340px'), 'Professional mobile navigation must open from the left')
 assert(header.includes('.user-logout{display:none}') && header.includes('.user-header-mobile-logout{display:block'), 'Mobile logout must live in the navigation rather than duplicate the header')
-assert(publicHeader.includes('left:auto;right:12px;width:min(360px'), 'Homeowner mobile navigation must open on the right')
-assert(investorHeader.includes('left:auto;right:10px;top:calc(100% + 6px)'), 'Investor mobile navigation must open on the right')
-assert(adminLayout.includes('className="admin-topbar-right"') && adminLayout.indexOf('className="admin-mobile-menu"') > adminLayout.indexOf('className="admin-topbar-right"'), 'Admin menu button belongs in the topbar right actions')
-assert(adminStyles.includes('inset:0 0 0 auto'), 'Admin mobile menu must be anchored to the right side')
+assert(publicHeader.includes('left:12px;right:auto;width:min(360px'), 'Homeowner mobile navigation must open on the left')
+assert(investorHeader.includes('left:10px;right:auto;top:calc(100% + 6px)'), 'Investor mobile navigation must open on the left')
+assert(adminLayout.includes('className="admin-topbar-right"') && adminLayout.indexOf('className="admin-mobile-menu"') < adminLayout.indexOf('className="admin-topbar-right"'), 'Admin menu button belongs in the topbar left actions')
+assert(adminStyles.includes('inset:0 auto 0 0'), 'Admin mobile menu must be anchored to the left side')
 assert(leadPartnerNav.includes('aria-expanded={menuOpen}') && leadPartnerNav.includes('lead-partner-menu-toggle'), 'Lead Partner mobile menu must be toggleable')
 assert(leadPartnerStyles.includes('.lead-partner-sidebar:not(.menu-open) .lead-partner-nav{display:none!important}'), 'Lead Partner mobile navigation must remain hidden until opened')
+
+assert(headerJsx.indexOf('className="user-menu-toggle"') < headerJsx.indexOf('className="user-header-brand"'), 'Professional menu button must appear before the logo')
+assert(leadPartnerNav.indexOf('className="lead-partner-menu-toggle"') < leadPartnerNav.indexOf('className="lead-partner-brand"'), 'Lead Partner menu button must appear before the logo')
 
 console.log('User header layout regression test passed.')
