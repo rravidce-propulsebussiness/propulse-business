@@ -99,6 +99,7 @@ check(profile.includes('function addService()')&&profile.includes('setActiveServ
 check(profile.includes('const incomplete=serviceSelections.findIndex'), 'An existing blank draft must be reused rather than duplicated')
 check(profile.includes('setActiveServiceIndex(current=>current===null?null:current===index?null:current>index?current-1:current)'), 'Deleting a service must preserve the editing index for remaining rows')
 check(!profile.includes('setEditServices('), 'Remove obsolete show-all service editor state')
+check(profile.includes('setActiveServiceIndex(null);setEditLocations(false)'), 'Successful Save must collapse expanded service and location forms')
 check(!profile.includes('Services you provide'), 'Do not display duplicate legacy service editor heading')
 check(profile.includes("String(item.serviceId)===String(value)"), 'Prevent adding existing industry services twice')
 check(styles.includes('.profile-service-compact-item')&&styles.includes('.profile-service-inline-form'), 'Compact rows and one mobile inline editor must be styled')
