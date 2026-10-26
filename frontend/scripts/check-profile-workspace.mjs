@@ -3,6 +3,7 @@ import {readFileSync} from 'node:fs'
 import {fileURLToPath} from 'node:url'
 import {dirname,resolve} from 'node:path'
 import {ALL_SERVICES_VALUE,selectAllIndustryServices} from '../src/utils/profileServiceSelection.js'
+import {createDefaultProfilePackages,resolveProfilePackages,getPreferredPackageIndustry} from '../src/utils/profilePackageTemplates.js'
 
 const root=resolve(dirname(fileURLToPath(import.meta.url)),'..')
 const read=path=>readFileSync(resolve(root,path),'utf8')
@@ -120,13 +121,15 @@ check(profile.includes("String(item.cityId)===String(value)"), 'Prevent duplicat
 check(!profile.includes('setEditLocations('), 'Remove old expand-every-location editor')
 check(!profile.includes('Locations you serve'), 'Do not leave the original stacked locations panel')
 check(!profile.includes('className="row-remove" onClick={()=>setLocationSelections'), 'Only one location Delete action should exist')
-check(profile.includes("profile-entry-delete"), 'Project and package Delete must be visible without expanding')
-check(profile.split('className="profile-entry-delete"').length-1===2,'Exactly one visible Delete for each project and each package')
+check(profile.includes("profile-entry-delete"), 'Project Delete must remain available')
+check(profile.split('className="profile-entry-delete"').length-1===1,'Only project Delete is permitted; the three package slots are permanent')
+check(!profile.includes('+ Add Package')&&!profile.includes('Delete package '),'No package add/remove controls')
 check(!profile.includes('Remove package</button>')&&!profile.includes('Remove project</button>'), 'No duplicate nested remove controls')
 check(brochures.includes('className="profile-entry-delete"'), 'Saved brochures also need visible Delete')
 check(!brochures.includes('Remove brochure</button>'), 'Do not duplicate brochure Delete in the editor')
 check(brochures.includes('setExpanded(editorKey(doc))'), 'Adding a brochure opens only the new brochure editor')
-check(profile.includes("setExpandedProject('draft-'+item._draftKey)")&&profile.includes("setExpandedPlan('draft-'+item._draftKey)"), 'Project and package additions must only expand the new record')
+check(profile.includes("setExpandedProject('draft-'+item._draftKey)"), 'Adding a project must expand only the new record')
+check(!profile.includes('function addPlan()'), 'Package management must not grow beyond the three editable tiers')
 check(compactStyles.includes('.profile-entry-actions .profile-entry-delete'), 'Shared compact Delete styling is required for mobile')
 check(profile.includes('companyProofs.map(doc=>'), 'Preserve the existing private, admin-reviewed verification document list')
 
@@ -154,4 +157,16 @@ check(brochures.includes('setExpanded(editedIndex>=0&&savedDocs[editedIndex]?edi
 check(styles.includes('.profile-accordion-root [hidden]{display:none!important}'), 'Inactive package panes must truly be hidden without unmounting')
 check(styles.includes('.profile-accordion-root .profile-company-brochures.profile-panel'), 'Embedded brochures must match the existing premium accordion styling')
 
-console.log('Premium accordion profile, single menu, sticky Save/Preview and no-duplicate regressions passed.')
+const defaultPackages=createDefaultProfilePackages('construction')
+check(defaultPackages.length===3,'There must be exactly three starter packages')
+assert.deepEqual(defaultPackages.map(plan=>plan.title),['Standard','Premium','Royal'])
+assert.deepEqual(defaultPackages.map(plan=>plan.priceFrom),[1750,1899,2099])
+check(defaultPackages.every(plan=>plan.priceUnit==='sqft'&&plan.inclusions.includes('Steel:')),'Starter packages must inherit current construction specifications')
+const customised={...defaultPackages[1],id:42,priceFrom:1950,description:'Our updated package',brochureUrl:'https://example.com/package.pdf'}
+const merged=resolveProfilePackages([customised],'construction')
+check(merged.length===3&&merged[1].priceFrom===1950&&merged[1].id===42&&merged[1].brochureUrl===customised.brochureUrl,'Saved price, description and brochure must survive tier reconciliation')
+assert.deepEqual(createDefaultProfilePackages('design').map(plan=>plan.isPublished),[false,false,false])
+check(getPreferredPackageIndustry([{industryId:'2'}],[{id:2,name:'Interior Design'}])==='design','Do not prepublish construction prices for interior businesses')
+check(profile.includes('resolveProfilePackages(originalPlans')&&profile.includes('getPreferredPackageIndustry(loadedServices,industryData)'),'Profile must load fixed editable tiers from existing plans')
+check(profile.includes('originalPlans))'),'Unsaved starter templates must not be reported as already saved')
+console.log('Premium accordion profile, three editable package tiers, sticky Save/Preview and no-duplicate regressions passed.')

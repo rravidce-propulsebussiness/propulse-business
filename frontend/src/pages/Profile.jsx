@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { authRequest, saveSession, getUser } from '../utils/auth'
 import UserHeader from '../components/UserHeader'
 import {PACKAGE_PRICE_UNITS,formatPublishedPackagePrice} from '../utils/packagePricing'
+import { PROFILE_PACKAGE_TIERS, getPreferredPackageIndustry, resolveProfilePackages } from '../utils/profilePackageTemplates'
 import { ALL_SERVICES_VALUE, selectAllIndustryServices } from '../utils/profileServiceSelection'
 import ProfileBrochureField from '../components/ProfileBrochureField'
 import ProfessionalBrochures from './ProfessionalBrochures'
@@ -21,7 +22,6 @@ const emptyProject=()=>({_draftKey:draftKey(),title:'',projectType:'',descriptio
 const canonicalProjectType=value=>/interior|design/i.test(String(value||''))?'Interior Design':/estate|property|plot/i.test(String(value||''))?'Real Estate':/construction|build|villa|commercial|residential/i.test(String(value||''))?'Construction':''
 const projectIndustry=value=>value==='Interior Design'?'design':value==='Real Estate'?'property':value==='Construction'?'construction':''
 const INDUSTRY_OPTIONS=[{value:'construction',label:'Construction'},{value:'design',label:'Interior Design'},{value:'property',label:'Real Estate'}]
-const emptyPlan=()=>({_draftKey:draftKey(),industry:'',title:'',description:'',priceFrom:'',priceUnit:'unspecified',durationLabel:'',inclusions:'',brochureUrl:'',brochureDisplayUrl:'',isPublished:true})
 
 
 function mapProject(item){
@@ -169,7 +169,8 @@ export default function Profile(){
         const loadedServices=(profile.services||[]).map(x=>({industryId:String(x.industry_id),serviceId:String(x.service_id),subserviceId:x.subservice_id?String(x.subservice_id):''}))
         const loadedLocations=(profile.locations||[]).map(x=>({stateId:String(x.state_id),cityId:String(x.city_id)}))
         const loadedProjects=(profile.projects||[]).map(mapProject)
-        const loadedPlans=(profile.service_plans||[]).map(mapPlan)
+        const originalPlans=(profile.service_plans||[]).map(mapPlan)
+        const loadedPlans=resolveProfilePackages(originalPlans,getPreferredPackageIndustry(loadedServices,industryData))
         setForm(loadedForm)
         setIndustries(industryData);setServices(serviceData);setSubservices(subserviceData);setStates(stateData);setCities(cityData)
         setServiceSelections(loadedServices)
@@ -177,7 +178,8 @@ export default function Profile(){
         setCompanyProofs(Array.isArray(profile.company_proofs)?profile.company_proofs:[])
         setProjects(loadedProjects)
         setPlans(loadedPlans)
-        setSavedSnapshot(profileFingerprint(loadedForm,loadedServices,loadedLocations,loadedProjects,loadedPlans))
+        // New starter slots remain unsaved until the business explicitly taps Save.
+        setSavedSnapshot(profileFingerprint(loadedForm,loadedServices,loadedLocations,loadedProjects,originalPlans))
         setDirectoryStatus(profile.directory_status||null)
         setPublicProfileId(profile.id||null)
       }catch(err){setError(err.message)}finally{setLoading(false)}
@@ -227,7 +229,6 @@ export default function Profile(){
     else openCard(card)
   }
   function addProject(){const item=emptyProject();setProjects(current=>[...current,item]);setExpandedProject('draft-'+item._draftKey);setMessage('')}
-  function addPlan(){const item=emptyPlan();setPlans(current=>[...current,item]);setExpandedPlan('draft-'+item._draftKey);setMessage('')}
   function projectKey(item){return item.id?'project-'+item.id:'draft-'+item._draftKey}
   function planKey(item){return item.id?'plan-'+item.id:'draft-'+item._draftKey}
   function revealProjectError(index,message){setExpandedProject(projectKey(projects[index]));openCard('projects');setError(message)}
@@ -762,26 +763,26 @@ export default function Profile(){
                   <button type="button" className={packageView==='brochures'?'selected':''} onClick={()=>setPackageView('brochures')}>Company Brochures</button>
                 </div>
                 <div className="profile-package-pane" hidden={packageView!=='plans'}><form id="business-profile-form" className="profile-accordion-form profile-accordion-editor" onSubmit={save}><section className="profile-panel profile-plan-panel" id="profile-plans">
-            <div className="panel-title"><div><span>06</span><h2>Service Packages</h2><p>Set prices, scope and inclusions. Attach specifications PDFs for customers to review. Each project has its own separate brochure upload.</p></div><button type="button" onClick={addPlan}>+ Add Package</button></div>
+            <div className="panel-title"><div><span>06</span><h2>Service Packages</h2><p>Your three familiar packages: Standard, Premium and Royal. Edit prices, inclusions and brochures for each; no additional package setup needed.</p></div></div>
             <div className="profile-showcase-list">{plans.map((plan,index)=>{const isExpanded=expandedPlan===planKey(plan);return <article className={"profile-showcase-card compact profile-entry-card"+(isExpanded?" is-expanded":"")} key={planKey(plan)}><div className="profile-showcase-card-head profile-entry-head">
                 <div className="profile-entry-overview">
                   <div className="profile-entry-thumbnail profile-entry-plan-icon" aria-hidden="true">₹</div>
                   <div className="profile-entry-summary">
-                    <span>PACKAGE {String(index+1).padStart(2,'0')} · {INDUSTRY_OPTIONS.find(option=>option.value===plan.industry)?.label||'Choose industry'}</span>
+                    <span>{PROFILE_PACKAGE_TIERS[index]?.name||'Package'} · {INDUSTRY_OPTIONS.find(option=>option.value===plan.industry)?.label||'Choose industry'}</span>
                     <h3>{plan.title||'New package'}</h3>
                     <p>{plan.priceFrom!==''?formatPublishedPackagePrice(plan.priceFrom,plan.priceUnit):'Starting price not set'}{plan.durationLabel?' · '+plan.durationLabel:''}{plan.brochureUrl?' · Brochure attached':''}</p>
                   </div>
                 </div>
                 <div className="profile-entry-actions">
                   <span className={'profile-entry-status '+(plan.isPublished?'published':'draft')}>{plan.isPublished?'Public':'Private draft'}</span>
-                  <button type="button" className="profile-entry-edit" aria-expanded={isExpanded} aria-controls={'package-editor-'+index} onClick={()=>setExpandedPlan(isExpanded?null:planKey(plan))}>{isExpanded?'Close editor':'Edit package'} <span aria-hidden="true">{isExpanded?'−':'＋'}</span></button><button type="button" className="profile-entry-delete" aria-label={'Delete package '+(plan.title||'new package')} onClick={()=>{setPlans(items=>items.filter((_,i)=>i!==index));setExpandedPlan(null);setMessage('Package removed from this profile. Tap Save Changes to apply.')}}>Delete</button>
+                  <button type="button" className="profile-entry-edit" aria-expanded={isExpanded} aria-controls={'package-editor-'+index} onClick={()=>setExpandedPlan(isExpanded?null:planKey(plan))}>{isExpanded?'Close editor':'Edit package'} <span aria-hidden="true">{isExpanded?'−':'＋'}</span></button>
                 </div>
               </div>
               {isExpanded&&<div className="profile-entry-body" id={'package-editor-'+index}>
                 <div className="profile-entry-controls"><label className="profile-inline-check"><input type="checkbox" checked={plan.isPublished} onChange={e=>updatePlan(index,'isPublished',e.target.checked)}/> Publish this package</label></div><div className="profile-showcase-grid"><label>Industry <select value={plan.industry||''} onChange={e=>updatePlan(index,'industry',e.target.value)} required={plan.isPublished}><option value="">Select industry</option>{INDUSTRY_OPTIONS.map(option=><option key={option.value} value={option.value}>{option.label}</option>)}</select><small>Packages only appear in quotations for projects in this industry.</small></label><label>Package name<input value={plan.title} maxLength="160" onChange={e=>updatePlan(index,'title',e.target.value)} placeholder="Premium turnkey interiors"/></label><label>Starting price (₹)<input type="number" min="0" value={plan.priceFrom} onChange={e=>updatePlan(index,'priceFrom',e.target.value)} placeholder="500000"/></label><label>Price unit<select value={plan.priceUnit} onChange={e=>updatePlan(index,'priceUnit',e.target.value)}>{PACKAGE_PRICE_UNITS.map(unit=><option key={unit.value} value={unit.value}>{unit.label}</option>)}</select><small>Important for ₹/sq ft, ₹/sq yd and fixed-price packages.</small></label><label>Duration<input value={plan.durationLabel} maxLength="120" onChange={e=>updatePlan(index,'durationLabel',e.target.value)} placeholder="8–10 weeks"/></label><label className="wide">Description<textarea rows="3" value={plan.description} maxLength="2000" onChange={e=>updatePlan(index,'description',e.target.value)} placeholder="Who this plan is for and what customers should expect…"/></label><label className="wide">Package inclusions <small>Add one inclusion per line</small><textarea rows="4" value={plan.inclusions} onChange={e=>updatePlan(index,'inclusions',e.target.value)} placeholder="Design consultation; material selection; execution management"/></label></div>
               <ProfileBrochureField title="Package brochure / technical specifications" description="Upload your detailed package PDF: plywood grades, laminate and hardware brands, inclusions, exclusions, milestones and warranty terms." url={plan.brochureUrl} displayUrl={plan.brochureDisplayUrl} busy={Boolean(brochureUploads['plan-'+index])} onUpload={file=>uploadBrochure('plan',index,file)} onRemove={()=>updatePlan(index,'brochureUrl','')}/>
               </div>}
-            </article>})}{!plans.length&&<div className="profile-showcase-empty"><b>No public service plans added.</b><span>Add packages only if you want customers to compare offerings in Experts.</span></div>}</div>
+            </article>})}</div>
           </section></form></div>
                 <div className="profile-package-pane" hidden={packageView!=='brochures'}>
                   <ProfessionalBrochures embedded onEditStateChange={setBrochureState}/>
