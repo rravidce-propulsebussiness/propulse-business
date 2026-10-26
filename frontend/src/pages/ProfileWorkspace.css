@@ -217,7 +217,13 @@ body:has(.profile-accordion-root) {
   border:1px solid #f36b17;box-shadow:0 8px 18px #ea732640;
 }
 .profile-accordion-savebar .profile-accordion-save:hover:not(:disabled){background:#dc4f0b}
-.profile-accordion-savebar button:disabled {opacity:.51;cursor:not-allowed;box-shadow:none}
+.profile-accordion-savebar button:disabled {cursor:not-allowed;box-shadow:none}
+.profile-accordion-savebar .profile-accordion-save.is-saved{
+  background:#f3f7f5;color:#39845c;border-color:#d9e9df;box-shadow:none;
+  opacity:1;
+}
+.profile-accordion-savebar .profile-accordion-save:disabled:not(.is-saved){opacity:.55}
+.profile-accordion-root .profile-accordion-card {scroll-margin-top:95px}
 .profile-accordion-root .profile-alert {border-radius:11px;padding:12px 14px}
 @keyframes pa-roof-glow {0%,100%{opacity:.3;transform:translateY(0)}50%{opacity:1;transform:translateY(-3px)}}
 @keyframes pa-panel-in {from{opacity:.4;transform:translateY(-5px)}to{opacity:1;transform:translateY(0)}}

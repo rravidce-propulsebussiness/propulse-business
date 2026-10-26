@@ -12,6 +12,9 @@ import {playSound} from '../utils/soundEffects'
 
 const emptyService=()=>({industryId:'',serviceId:'',subserviceId:''})
 const emptyLocation=()=>({stateId:'',cityId:''})
+// Compare current editable values to the last successfully loaded/saved state.
+// Keeps the bottom Save action usable even after an accordion editor is closed.
+const profileFingerprint=(form,services,locations,projects,plans)=>JSON.stringify({form,services,locations,projects,plans})
 const draftKey=()=>Math.random().toString(36).slice(2)+Date.now().toString(36)
 const emptyProject=()=>({_draftKey:draftKey(),title:'',projectType:'',description:'',locationText:'',completionYear:'',areaText:'',budgetText:'',packageName:'',coverImageUrl:'',imageUrls:[],imageDisplayUrls:[],videoUrl:'',videoDisplayUrl:'',videoPublishedAt:'',planUrl:'',planDisplayUrl:'',brochureUrl:'',brochureDisplayUrl:'',isPublished:true})
 const canonicalProjectType=value=>/interior|design/i.test(String(value||''))?'Interior Design':/estate|property|plot/i.test(String(value||''))?'Real Estate':/construction|build|villa|commercial|residential/i.test(String(value||''))?'Construction':''
@@ -131,7 +134,7 @@ export default function Profile(){
   // One accordion is open at a time. Old profile deep links open their
   // corresponding card; the top site menu stays the only navigation.
   const mapProfileTab=tab=>tab==='locations'?'services':tab==='brochures'?'packages':tab==='plans'?'packages':tab==='proofs'?'proofs':tab==='projects'?'projects':tab==='services'?'services':'business'
-  const [openProfileCard,setOpenProfileCard]=useState(()=>requestedTab?mapProfileTab(requestedTab):'services')
+  const [openProfileCard,setOpenProfileCard]=useState(()=>requestedTab?mapProfileTab(requestedTab):'')
   const [packageView,setPackageView]=useState(()=>requestedTab==='brochures'?'brochures':'plans')
   const [editServices,setEditServices]=useState(false)
   const [editLocations,setEditLocations]=useState(false)
@@ -147,6 +150,7 @@ export default function Profile(){
   const [saving,setSaving]=useState(false)
   const [message,setMessage]=useState('')
   const [error,setError]=useState('')
+  const [savedSnapshot,setSavedSnapshot]=useState(null)
 
   useEffect(()=>{
     async function load(){
@@ -154,16 +158,22 @@ export default function Profile(){
         const [profile,industryData,serviceData,subserviceData,stateData,cityData]=await Promise.all([
           authRequest('/profile'),authRequest('/industries'),authRequest('/services'),authRequest('/subservices'),authRequest('/states'),authRequest('/cities'),
         ])
-        setForm({
+        const loadedForm={
           name:getUser()?.name||'',email:getUser()?.email||'',phone:profile.phone||'',businessName:profile.business_name||'',businessDetails:profile.business_details||'',
           yearsExperience:profile.years_experience??'',publicProfileEnabled:profile.public_profile_enabled!==false,
-        })
+        }
+        const loadedServices=(profile.services||[]).map(x=>({industryId:String(x.industry_id),serviceId:String(x.service_id),subserviceId:x.subservice_id?String(x.subservice_id):''}))
+        const loadedLocations=(profile.locations||[]).map(x=>({stateId:String(x.state_id),cityId:String(x.city_id)}))
+        const loadedProjects=(profile.projects||[]).map(mapProject)
+        const loadedPlans=(profile.service_plans||[]).map(mapPlan)
+        setForm(loadedForm)
         setIndustries(industryData);setServices(serviceData);setSubservices(subserviceData);setStates(stateData);setCities(cityData)
-        setServiceSelections((profile.services||[]).map(x=>({industryId:String(x.industry_id),serviceId:String(x.service_id),subserviceId:x.subservice_id?String(x.subservice_id):''})))
-        setLocationSelections((profile.locations||[]).map(x=>({stateId:String(x.state_id),cityId:String(x.city_id)})))
+        setServiceSelections(loadedServices)
+        setLocationSelections(loadedLocations)
         setCompanyProofs(Array.isArray(profile.company_proofs)?profile.company_proofs:[])
-        setProjects((profile.projects||[]).map(mapProject))
-        setPlans((profile.service_plans||[]).map(mapPlan))
+        setProjects(loadedProjects)
+        setPlans(loadedPlans)
+        setSavedSnapshot(profileFingerprint(loadedForm,loadedServices,loadedLocations,loadedProjects,loadedPlans))
         setDirectoryStatus(profile.directory_status||null)
         setPublicProfileId(profile.id||null)
       }catch(err){setError(err.message)}finally{setLoading(false)}
@@ -190,6 +200,9 @@ export default function Profile(){
     return cities.find(item=>String(item.id)===String(selection.cityId))?.name
   }).filter(Boolean))]
   const directoryEligible=Boolean(directoryStatus?.eligible)
+  const currentSnapshot=profileFingerprint(form,serviceSelections,locationSelections,projects,plans)
+  const hasUnsavedChanges=savedSnapshot!==null&&currentSnapshot!==savedSnapshot
+
 
 
   function openCard(card,mode){
@@ -412,11 +425,28 @@ export default function Profile(){
     setMessage('All available services for this industry were added.');setError('')
   }
 
+  // Validation errors open the exact existing editor, not a new management page.
+  function showEditorError(card,message,subsection){
+    if(card==='services'){
+      setEditServices(subsection==='services')
+      setEditLocations(subsection==='locations')
+    }
+    openCard(card)
+    setError(message)
+    setMessage('')
+    requestAnimationFrame(()=>document.getElementById('profile-card-'+card)?.scrollIntoView({behavior:'smooth',block:'start'}))
+  }
+  function submitCurrentChanges(){
+    if(saving||!hasUnsavedChanges)return
+    const mountedForm=document.getElementById('business-profile-form')
+    if(mountedForm&&typeof mountedForm.requestSubmit==='function')mountedForm.requestSubmit()
+    else void save({preventDefault(){}})
+  }
   async function save(e){
     e.preventDefault();setError('');setMessage('')
-    if(!form.name.trim()||!form.email.trim()||!form.phone.trim()||!form.businessName.trim()||!form.businessDetails.trim())return setError('Complete all business information before saving.')
-    if(!serviceSelections.length||serviceSelections.some(x=>!x.industryId||!x.serviceId))return setError('Complete every service selection.')
-    if(!locationSelections.length||locationSelections.some(x=>!x.stateId||!x.cityId))return setError('Complete every location selection.')
+    if(!form.name.trim()||!form.email.trim()||!form.phone.trim()||!form.businessName.trim()||!form.businessDetails.trim())return showEditorError('business','Complete all business information before saving.')
+    if(!serviceSelections.length||serviceSelections.some(x=>!x.industryId||!x.serviceId))return showEditorError('services','Complete every service selection.','services')
+    if(!locationSelections.length||locationSelections.some(x=>!x.stateId||!x.cityId))return showEditorError('services','Complete every location selection.','locations')
     const untitledProject=projects.findIndex(item=>!item.title.trim())
     if(untitledProject>=0)return revealProjectError(untitledProject,'Every completed project needs a title.')
     const unclassifiedProject=projects.findIndex(item=>item.isPublished&&!['Construction','Interior Design','Real Estate'].includes(item.projectType))
@@ -441,9 +471,13 @@ export default function Profile(){
       })})
       saveSession({user:result.user})
       const savedProfile=result.user?.profile
+      const updatedProjects=savedProfile?(savedProfile.projects||[]).map(mapProject):projects
+      const updatedPlans=savedProfile?(savedProfile.service_plans||[]).map(mapPlan):plans
       if(savedProfile){
-        setProjects((savedProfile.projects||[]).map(mapProject));setPlans((savedProfile.service_plans||[]).map(mapPlan));setDirectoryStatus(savedProfile.directory_status||null)
+        setProjects(updatedProjects);setPlans(updatedPlans);setDirectoryStatus(savedProfile.directory_status||null)
       }
+      // Server reconciliation can assign new IDs; baseline must include them.
+      setSavedSnapshot(profileFingerprint(form,serviceSelections,locationSelections,updatedProjects,updatedPlans))
       playSound('success')
       setExpandedProject(null);setExpandedPlan(null)
       setMessage('Business and public listing saved together.')
@@ -452,7 +486,6 @@ export default function Profile(){
 
 
   if(loading)return <><UserHeader variant="profile"/><div className="profile-page profile-accordion-root"><div className="profile-loading">Loading your business profile…</div></div></>
-  const editableCard=openProfileCard==='business'||openProfileCard==='projects'||(openProfileCard==='services'&&(editServices||editLocations))||(openProfileCard==='packages'&&packageView==='plans')
   const cardEntries=[
     {id:'business',title:'Business & Public Profile',description:'Business details, contact information and public visibility',icon:'business',badge:completionItems[0]&&completionItems[1]?'Complete':'Add details'},
     {id:'services',title:'Services & Locations',description:'What you do and where you work',icon:'services',badge:serviceNames.length+' Services · '+locationNames.length+' Locations'},
@@ -605,8 +638,8 @@ export default function Profile(){
       {directoryEligible&&publicProfileId
         ?<Link className="profile-accordion-preview" to={'/experts/'+publicProfileId}><ProfileIcon name="eye" size={21}/> Preview Public Profile</Link>
         :<button type="button" className="profile-accordion-preview" disabled title="Complete your directory eligibility to preview your listing"><ProfileIcon name="eye" size={21}/> Preview Public Profile</button>}
-      <button type="submit" className="profile-accordion-save" form="business-profile-form" disabled={saving||!editableCard}>
-        <ProfileIcon name="save" size={21}/>{saving?'Saving…':'Save Changes'}
+      <button type="button" className={'profile-accordion-save'+(hasUnsavedChanges?' has-changes':' is-saved')} disabled={saving||!hasUnsavedChanges} onClick={submitCurrentChanges}>
+        <ProfileIcon name={hasUnsavedChanges?'save':'check'} size={21}/>{saving?'Saving…':hasUnsavedChanges?'Save Changes':'All Saved'}
       </button>
     </div>
   </>
