@@ -11,8 +11,11 @@ function normalize(item){
   return {id:item.id,title:item.title||'',description:item.description||'',fileUrl:item.stored_url||'',displayUrl:item.file_url||'',isPublished:item.is_published!==false}
 }
 const editorKey=item=>item.id?'brochure-'+item.id:'draft-'+item._draftKey
+const savableBrochures=items=>items.map(item=>({
+  title:item.title,description:item.description,fileUrl:item.fileUrl,isPublished:item.isPublished
+}))
 
-export default function ProfessionalBrochures({embedded=false}){
+export default function ProfessionalBrochures({embedded=false,onEditStateChange}){
   const [docs,setDocs]=useState([])
   const [loading,setLoading]=useState(true)
   const [busy,setBusy]=useState(false)
@@ -20,10 +23,25 @@ export default function ProfessionalBrochures({embedded=false}){
   const [expanded,setExpanded]=useState(null)
   const [error,setError]=useState('')
   const [success,setSuccess]=useState('')
+  const [savedSnapshot,setSavedSnapshot]=useState(null)
+  const draftSnapshot=JSON.stringify(savableBrochures(docs))
+  const hasUnsavedChanges=savedSnapshot!==null&&draftSnapshot!==savedSnapshot
+
+  // The embedded profile uses its ONE fixed Save bar; the standalone
+  // brochure page still has its own submit button.
+  useEffect(()=>{
+    onEditStateChange?.({ready:!loading,dirty:hasUnsavedChanges,busy,uploading:uploading!==-1})
+  },[onEditStateChange,loading,hasUnsavedChanges,busy,uploading])
 
   useEffect(()=>{
     let live=true
-    authRequest('/profile/brochures').then(r=>{if(live)setDocs((r.data||[]).map(normalize))})
+    authRequest('/profile/brochures').then(r=>{
+      if(live){
+        const loaded=(r.data||[]).map(normalize)
+        setDocs(loaded)
+        setSavedSnapshot(JSON.stringify(savableBrochures(loaded)))
+      }
+    })
       .catch(e=>{if(live)setError(e.message||'Unable to load your brochures')})
       .finally(()=>{if(live)setLoading(false)})
     return()=>{live=false}
@@ -69,8 +87,12 @@ export default function ProfessionalBrochures({embedded=false}){
           title:doc.title,description:doc.description,fileUrl:doc.fileUrl,isPublished:doc.isPublished,
         }))}),
       })
-      setDocs((response.data||[]).map(normalize))
-      setExpanded(null)
+      const savedDocs=(response.data||[]).map(normalize)
+      const editedIndex=docs.findIndex(doc=>editorKey(doc)===expanded)
+      setDocs(savedDocs)
+      setSavedSnapshot(JSON.stringify(savableBrochures(savedDocs)))
+      // Avoid collapsing a long editor after Save, which jumps the viewport.
+      setExpanded(editedIndex>=0&&savedDocs[editedIndex]?editorKey(savedDocs[editedIndex]):null)
       setSuccess('Company brochures saved. Published files will appear on your public professional page.')
     }catch(e){setError(e.message||'Unable to save brochures')}
     finally{setBusy(false)}
@@ -89,7 +111,7 @@ export default function ProfessionalBrochures({embedded=false}){
     {error&&<p className="pw-error" role="alert">{error}</p>}
     {success&&<p className="pw-success" role="status">{success}</p>}
     {loading?<div className="pw-card">Loading company brochures…</div>:
-    <form className="pw-brochure-list" onSubmit={save}>
+    <form id={embedded?'profile-brochures-form':undefined} className="pw-brochure-list" onSubmit={save}>
       {docs.map((doc,index)=>{
         const isExpanded=expanded===editorKey(doc)
         return <article className={'pw-card pw-brochure profile-entry-card'+(isExpanded?' is-expanded':'')} key={editorKey(doc)}>
@@ -104,7 +126,7 @@ export default function ProfessionalBrochures({embedded=false}){
             </div>
             <div className="profile-entry-actions">
               <span className={'profile-entry-status '+(doc.isPublished?'published':'draft')}>{doc.isPublished?'Public':'Private draft'}</span>
-              <button type="button" className="profile-entry-edit" aria-expanded={isExpanded} aria-controls={'company-brochure-editor-'+index} onClick={()=>setExpanded(isExpanded?null:editorKey(doc))}>{isExpanded?'Close editor':'Edit brochure'} <span aria-hidden="true">{isExpanded?'−':'＋'}</span></button><button type="button" className="profile-entry-delete" aria-label={'Delete brochure '+(doc.title||'new brochure')} onClick={()=>{setDocs(current=>current.filter((_,i)=>i!==index));setExpanded(null);setSuccess('Brochure removed from this list. Tap Save Brochures to apply.')}}>Delete</button>
+              <button type="button" className="profile-entry-edit" aria-expanded={isExpanded} aria-controls={'company-brochure-editor-'+index} onClick={()=>setExpanded(isExpanded?null:editorKey(doc))}>{isExpanded?'Close editor':'Edit brochure'} <span aria-hidden="true">{isExpanded?'−':'＋'}</span></button><button type="button" className="profile-entry-delete" aria-label={'Delete brochure '+(doc.title||'new brochure')} onClick={()=>{setDocs(current=>current.filter((_,i)=>i!==index));setExpanded(null);setSuccess('Brochure removed from this list. Tap Save Changes below to apply.')}}>Delete</button>
             </div>
           </div>
           {isExpanded&&<div className="profile-entry-body pw-brochure-fields" id={'company-brochure-editor-'+index}>
@@ -127,9 +149,11 @@ export default function ProfessionalBrochures({embedded=false}){
       {docs.length===0&&<div className="pw-card pw-empty profile-entry-empty">
         <strong>No company brochures yet</strong>
         <p>Add your company catalogue or services brochure to help customers understand your business.</p>
-        <button type="button" className="profile-entry-add" onClick={addBrochure}>+ Add First Brochure</button>
       </div>}
-      <div className="profile-save pw-profile-save"><span>Maximum 8 brochures · PDF/JPG/PNG/WebP · 15 MB each</span><button type="submit" disabled={busy||uploading!==-1}>{busy?'Saving…':'Save Brochures'} <span aria-hidden="true">→</span></button></div>
+      <div className="profile-brochure-guidance">
+        <span>Maximum 8 brochures · PDF/JPG/PNG/WebP · 15 MB each</span>
+        {!embedded&&<button type="submit" disabled={busy||uploading!==-1}>{busy?'Saving…':'Save Brochures'} <span aria-hidden="true">→</span></button>}
+      </div>
     </form>}
   </>
   return embedded
