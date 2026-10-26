@@ -493,12 +493,13 @@
 .admin-top-status.degraded{border-color:#edc8c3;background:#fff5f3;color:#a64b40}
 .admin-top-status.degraded i{background:#df5a48;box-shadow:0 0 0 4px rgba(223,90,72,.12)}
 
-/* Mobile navigation is opened from, and slides in on, the right. */
+/* Mobile menu control and drawer stay on the left, account actions on the right. */
 @media(max-width:850px){
   .admin-sidebar{
-    inset:0 0 0 auto;border-right:0;border-left:1px solid rgba(151,184,224,.12);
-    box-shadow:-14px 0 38px rgba(3,19,36,.3);
+    inset:0 auto 0 0;border-left:0;border-right:1px solid rgba(151,184,224,.12);
+    box-shadow:14px 0 38px rgba(3,19,36,.3);
   }
+  .admin-topbar-left{min-width:0}
   .admin-topbar-right{margin-left:auto;justify-content:flex-end;min-width:0}
-  .admin-mobile-menu{flex:0 0 auto;order:10}
+  .admin-mobile-menu{flex:0 0 auto;order:-1}
 }
