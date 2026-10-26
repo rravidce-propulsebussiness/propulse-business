@@ -19,15 +19,6 @@ const projectIndustry=value=>value==='Interior Design'?'design':value==='Real Es
 const INDUSTRY_OPTIONS=[{value:'construction',label:'Construction'},{value:'design',label:'Interior Design'},{value:'property',label:'Real Estate'}]
 const emptyPlan=()=>({_draftKey:draftKey(),industry:'',title:'',description:'',priceFrom:'',priceUnit:'unspecified',durationLabel:'',inclusions:'',brochureUrl:'',brochureDisplayUrl:'',isPublished:true})
 
-function reasonText(status){
-  const reason=status?.reason
-  if(status?.eligible)return 'Your business is eligible to appear in Find Professionals.'
-  if(reason==='membership_required')return 'An active eligible membership is required before this profile can appear publicly.'
-  if(reason==='verification_required')return 'Admin currently requires verified businesses for the public directory.'
-  if(reason==='directory_disabled')return 'The public Expert Directory is currently disabled by Admin.'
-  if(reason==='profile_hidden')return 'This public profile is currently hidden or disabled.'
-  return 'Complete your public business profile to become eligible for the Expert Directory.'
-}
 
 function mapProject(item){
   return {
@@ -135,7 +126,6 @@ export default function Profile(){
   const [brochureUploads,setBrochureUploads]=useState({})
   const requestedTab=new URLSearchParams(location.search).get('tab')
   // Legacy ?tab=business or ?tab=public links open the single profile editor.
-  const activeSection=requestedTab==='locations'?'services':['services','projects','brochures','plans','proofs'].includes(requestedTab)?requestedTab:'overview'
   const [expandedProject,setExpandedProject]=useState(null)
   const [expandedPlan,setExpandedPlan]=useState(null)
   // One accordion is open at a time. Old profile deep links open their
@@ -184,7 +174,6 @@ export default function Profile(){
   const serviceOptions=useMemo(()=>serviceSelections.map(x=>services.filter(s=>String(s.industry_id)===String(x.industryId))),[services,serviceSelections])
   const subserviceOptions=useMemo(()=>serviceSelections.map(x=>subservices.filter(s=>String(s.service_id)===String(x.serviceId))),[subservices,serviceSelections])
   const cityOptions=useMemo(()=>locationSelections.map(x=>cities.filter(c=>String(c.state_id)===String(x.stateId))),[cities,locationSelections])
-  const initials=(form.businessName||form.name||'P').trim().split(/\s+/).slice(0,2).map(part=>part[0]).join('').toUpperCase()||'P'
   const completionItems=[
     Boolean(form.name&&form.email&&form.phone),Boolean(form.businessName&&form.businessDetails),
     serviceSelections.length>0&&serviceSelections.every(x=>x.industryId&&x.serviceId),locationSelections.length>0&&locationSelections.every(x=>x.stateId&&x.cityId),
@@ -201,15 +190,6 @@ export default function Profile(){
     return cities.find(item=>String(item.id)===String(selection.cityId))?.name
   }).filter(Boolean))]
   const directoryEligible=Boolean(directoryStatus?.eligible)
-  const sectionGroup=section=>section==='plans'||section==='brochures'?'plans':section
-  const activeGroup=sectionGroup(activeSection)
-  const checklist=[
-    {label:'Contact information',done:completionItems[0],section:'overview'},
-    {label:'Business and public details',done:completionItems[1],section:'overview'},
-    {label:'Services offered',done:completionItems[2],section:'services'},
-    {label:'Service locations',done:completionItems[3],section:'locations'},
-    {label:'Completed projects',done:completionItems[4],section:'projects'},
-  ]
 
 
   function openCard(card,mode){
@@ -217,7 +197,7 @@ export default function Profile(){
     if(mode)setPackageView(mode)
     setOpenProfileCard(target)
     setMessage('')
-    const tab=target==='business'?'overview':target==='packages'?(mode||packageView==='brochures'?'brochures':'plans'):target
+    const tab=target==='business'?'overview':target==='packages'?(mode||packageView):target
     if(location.search!=='?tab='+tab)navigate('/profile?tab='+tab)
   }
   function toggleCard(card){
@@ -226,7 +206,6 @@ export default function Profile(){
       navigate('/profile')
     }else openCard(card)
   }
-  function selectSection(section){openCard(section,section==='brochures'?'brochures':section==='plans'?'plans':undefined)}
   function addProject(){const item=emptyProject();setProjects(current=>[...current,item]);setExpandedProject('draft-'+item._draftKey);setMessage('')}
   function addPlan(){const item=emptyPlan();setPlans(current=>[...current,item]);setExpandedPlan('draft-'+item._draftKey);setMessage('')}
   function projectKey(item){return item.id?'project-'+item.id:'draft-'+item._draftKey}
