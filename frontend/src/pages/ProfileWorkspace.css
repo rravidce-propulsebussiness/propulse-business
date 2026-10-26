@@ -301,3 +301,18 @@ body:has(.profile-accordion-root) {
     animation:none!important;transition:none!important;scroll-behavior:auto!important;
   }
 }
+
+
+/* Existing global support/sound controls float above, not on top of, Save. */
+body:has(.profile-accordion-root) .support-chat,
+body:has(.profile-accordion-root) .sound-control {
+  bottom:106px;
+}
+body:has(.profile-accordion-root) .support-chat-panel {
+  height:min(570px,calc(100dvh - 215px));
+}
+@media(max-width:760px){
+  body:has(.profile-accordion-root) .support-chat,
+  body:has(.profile-accordion-root) .sound-control {bottom:99px}
+  body:has(.profile-accordion-root) .support-chat-panel {height:min(530px,calc(100dvh - 195px))}
+}
