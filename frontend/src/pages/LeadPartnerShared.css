@@ -72,3 +72,19 @@
   #root .lp-content,#root .pricing-content,#root .partner-content,#root .withdrawals-content,#root .reports-content,#root .account-content,#root .faq-content{padding:14px 10px 28px!important}
 }
 #root .lead-partner-notification-count{margin-left:auto;min-width:17px;height:17px;padding:0 4px;display:grid;place-items:center;border-radius:999px;background:#ef5a28;color:#fff;font-size:6px;font-weight:950;box-sizing:border-box}
+
+/* Lead Partner: no always-visible mobile link grid; menu toggle stays on the right. */
+#root .lead-partner-menu-toggle{display:none}
+@media(max-width:850px){
+  #root .lead-partner-menu-toggle{
+    display:grid;place-items:center;flex:0 0 40px;width:40px;height:40px;margin-left:auto;
+    padding:0;border:1px solid rgba(255,255,255,.2);border-radius:10px;
+    background:rgba(255,255,255,.08);color:#fff;font-size:19px;cursor:pointer;
+  }
+  #root .lead-partner-brand-row{padding-bottom:0!important}
+  #root .lead-partner-sidebar:not(.menu-open) .lead-partner-nav-label,
+  #root .lead-partner-sidebar:not(.menu-open) .lead-partner-nav{display:none!important}
+  #root .lead-partner-sidebar.menu-open .lead-partner-nav-label{display:block!important;margin-top:16px}
+  #root .lead-partner-sidebar.menu-open .lead-partner-nav{display:grid!important;margin-top:4px!important}
+  #root .lead-partner-sidebar{padding:12px 14px!important}
+}
