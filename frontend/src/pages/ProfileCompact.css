@@ -234,3 +234,28 @@
   .profile-page .profile-project-media-grid{grid-template-columns:1fr}
   .profile-page .profile-project-media-grid .profile-media-card{padding:15px}
 }
+
+
+/* One set of compact Edit/Delete controls for saved projects, packages and
+   brochures. The original per-item editor remains the only editor. */
+.profile-page .profile-entry-actions .profile-entry-delete,
+.profile-company-brochures .profile-entry-actions .profile-entry-delete{
+  display:inline-flex;justify-content:center;align-items:center;
+  padding:10px 12px;min-height:40px;border:1px solid #efcfca;
+  border-radius:9px;background:#fff8f6;color:#b15046;
+  font-size:12px;font-weight:800;cursor:pointer;white-space:nowrap;
+}
+.profile-page .profile-entry-actions .profile-entry-delete:hover,
+.profile-company-brochures .profile-entry-actions .profile-entry-delete:hover{
+  color:#a52d25;background:#ffefec;border-color:#e6aea8;
+}
+@media(max-width:620px){
+  .profile-page .profile-entry-actions .profile-entry-edit,
+  .profile-company-brochures .profile-entry-actions .profile-entry-edit{
+    flex:1 1 120px;min-width:0;
+  }
+  .profile-page .profile-entry-actions .profile-entry-delete,
+  .profile-company-brochures .profile-entry-actions .profile-entry-delete{
+    flex:0 0 auto;min-width:72px;padding:10px;
+  }
+}
