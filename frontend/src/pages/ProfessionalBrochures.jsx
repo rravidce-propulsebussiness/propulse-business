@@ -110,7 +110,7 @@ export default function ProfessionalBrochures({embedded=false}){
           {isExpanded&&<div className="profile-entry-body pw-brochure-fields" id={'company-brochure-editor-'+index}>
             <div className="profile-entry-controls">
               <label className="pw-publish"><input type="checkbox" checked={doc.isPublished} onChange={e=>change(index,'isPublished',e.target.checked)}/> Publish publicly</label>
-              
+
             </div>
             <label>Document title<input required maxLength={160} value={doc.title} onChange={e=>change(index,'title',e.target.value)} placeholder="Company profile / premium materials brochure"/></label>
             <label>Description (optional)<textarea rows={2} maxLength={500} value={doc.description} onChange={e=>change(index,'description',e.target.value)} placeholder="What customers can learn about your company"/></label>
