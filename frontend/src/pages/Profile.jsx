@@ -137,6 +137,7 @@ export default function Profile(){
   const mapProfileTab=tab=>tab==='locations'?'services':tab==='brochures'?'packages':tab==='plans'?'packages':tab==='proofs'?'proofs':tab==='projects'?'projects':tab==='services'?'services':'business'
   const [openProfileCard,setOpenProfileCard]=useState(()=>requestedTab?mapProfileTab(requestedTab):'')
   const [packageView,setPackageView]=useState(()=>requestedTab==='brochures'?'brochures':'plans')
+  const [brochureState,setBrochureState]=useState({ready:false,dirty:false,busy:false,uploading:false})
   // Index of the ONE service form currently being edited. Saved services stay collapsed.
   const [activeServiceIndex,setActiveServiceIndex]=useState(null)
   // Index of the one location being edited. Saved locations stay collapsed.
@@ -205,22 +206,25 @@ export default function Profile(){
   const directoryEligible=Boolean(directoryStatus?.eligible)
   const currentSnapshot=profileFingerprint(form,serviceSelections,locationSelections,projects,plans)
   const hasUnsavedChanges=savedSnapshot!==null&&currentSnapshot!==savedSnapshot
+  const brochureView=openProfileCard==='packages'&&packageView==='brochures'
+  const brochureNeedsSave=brochureState.ready&&brochureState.dirty
+  const needsSave=hasUnsavedChanges||brochureNeedsSave
+  const saveBusy=saving||(brochureView&&(brochureState.busy||brochureState.uploading))
 
 
 
+  // Accordions are in-page controls. Route navigation on each tap caused
+  // mobile browsers to jump to the document top and lose the editing position.
+  // Incoming /profile?tab=... links still work through the requestedTab effect.
   function openCard(card,mode){
     const target=card==='overview'?'business':card==='locations'?'services':card==='brochures'?'packages':card==='plans'?'packages':card
     if(mode)setPackageView(mode)
     setOpenProfileCard(target)
     setMessage('')
-    const tab=target==='business'?'overview':target==='packages'?(mode||packageView):target
-    if(location.search!=='?tab='+tab)navigate('/profile?tab='+tab)
   }
   function toggleCard(card){
-    if(openProfileCard===card){
-      setOpenProfileCard('')
-      navigate('/profile')
-    }else openCard(card)
+    if(openProfileCard===card)setOpenProfileCard('')
+    else openCard(card)
   }
   function addProject(){const item=emptyProject();setProjects(current=>[...current,item]);setExpandedProject('draft-'+item._draftKey);setMessage('')}
   function addPlan(){const item=emptyPlan();setPlans(current=>[...current,item]);setExpandedPlan('draft-'+item._draftKey);setMessage('')}
@@ -502,11 +506,23 @@ export default function Profile(){
     setMessage('')
     requestAnimationFrame(()=>document.getElementById('profile-card-'+card)?.scrollIntoView({behavior:'smooth',block:'start'}))
   }
-  function submitCurrentChanges(){
-    if(saving||!hasUnsavedChanges)return
-    const mountedForm=document.getElementById('business-profile-form')
-    if(mountedForm&&typeof mountedForm.requestSubmit==='function')mountedForm.requestSubmit()
-    else void save({preventDefault(){}})
+  async function submitCurrentChanges(){
+    if(saveBusy||!needsSave||!savedSnapshot)return
+    // Existing profile data and company brochures have separate API endpoints,
+    // but share this ONE fixed action. Save both when both drafts have changes.
+    if(hasUnsavedChanges){
+      const saved=await save({preventDefault(){}})
+      if(!saved)return
+    }
+    if(brochureNeedsSave){
+      // Keep the brochure editor mounted while switching profile sections.
+      // Reveal it before submitting so validation feedback remains visible.
+      setOpenProfileCard('packages')
+      setPackageView('brochures')
+      requestAnimationFrame(()=>{
+        document.getElementById('profile-brochures-form')?.requestSubmit()
+      })
+    }
   }
   async function save(e){
     e.preventDefault();setError('');setMessage('')
@@ -548,7 +564,8 @@ export default function Profile(){
       setExpandedProject(null);setExpandedPlan(null)
       setActiveServiceIndex(null);setActiveLocationIndex(null)
       setMessage('Business and public listing saved together. Your services are now shown in the saved list.')
-    }catch(err){playSound('warning');setError(err.message)}finally{setSaving(false)}
+      return true
+    }catch(err){playSound('warning');setError(err.message);return false}finally{setSaving(false)}
   }
 
 
@@ -586,6 +603,7 @@ export default function Profile(){
       <div className="profile-accordion-list">
         {cardEntries.map(card=>{
           const expanded=openProfileCard===card.id
+          const preserveBrochureDraft=card.id==='packages'&&brochureNeedsSave
           return <section className={'profile-accordion-card'+(expanded?' is-open':'')} key={card.id} id={'profile-card-'+card.id}>
             <button type="button" className="profile-accordion-trigger" aria-expanded={expanded} aria-controls={'profile-card-body-'+card.id} onClick={()=>toggleCard(card.id)}>
               <span className="profile-accordion-icon"><ProfileIcon name={card.icon} size={23}/></span>
@@ -593,7 +611,7 @@ export default function Profile(){
               <span className={'profile-accordion-count'+(card.id==='business'&&completionItems[0]&&completionItems[1]?' is-complete':'')}>{card.badge}</span>
               <ProfileIcon name="chevron" size={21}/>
             </button>
-            {expanded&&<div id={'profile-card-body-'+card.id} className="profile-accordion-body">
+            {(expanded||preserveBrochureDraft)&&<div id={'profile-card-body-'+card.id} className="profile-accordion-body" hidden={!expanded}>
               {card.id==='business'&&<form id="business-profile-form" className="profile-accordion-form" onSubmit={save}>
                 <ProfileBusinessFields form={form} update={update} overview/>
               </form>}
@@ -734,10 +752,10 @@ export default function Profile(){
           </section></form>}
               {card.id==='packages'&&<div className="profile-accordion-packages">
                 <div className="profile-accordion-segmented" role="group" aria-label="Package management">
-                  <button type="button" className={packageView==='plans'?'selected':''} onClick={()=>{setPackageView('plans');navigate('/profile?tab=plans')}}>Packages</button>
-                  <button type="button" className={packageView==='brochures'?'selected':''} onClick={()=>{setPackageView('brochures');navigate('/profile?tab=brochures')}}>Company Brochures</button>
+                  <button type="button" className={packageView==='plans'?'selected':''} onClick={()=>setPackageView('plans')}>Packages</button>
+                  <button type="button" className={packageView==='brochures'?'selected':''} onClick={()=>setPackageView('brochures')}>Company Brochures</button>
                 </div>
-                {packageView==='plans'?<form id="business-profile-form" className="profile-accordion-form profile-accordion-editor" onSubmit={save}><section className="profile-panel profile-plan-panel" id="profile-plans">
+                <div className="profile-package-pane" hidden={packageView!=='plans'}><form id="business-profile-form" className="profile-accordion-form profile-accordion-editor" onSubmit={save}><section className="profile-panel profile-plan-panel" id="profile-plans">
             <div className="panel-title"><div><span>06</span><h2>Service Packages</h2><p>Set prices, scope and inclusions. Attach specifications PDFs for customers to review. Each project has its own separate brochure upload.</p></div><button type="button" onClick={addPlan}>+ Add Package</button></div>
             <div className="profile-showcase-list">{plans.map((plan,index)=>{const isExpanded=expandedPlan===planKey(plan);return <article className={"profile-showcase-card compact profile-entry-card"+(isExpanded?" is-expanded":"")} key={planKey(plan)}><div className="profile-showcase-card-head profile-entry-head">
                 <div className="profile-entry-overview">
@@ -758,7 +776,10 @@ export default function Profile(){
               <ProfileBrochureField title="Package brochure / technical specifications" description="Upload your detailed package PDF: plywood grades, laminate and hardware brands, inclusions, exclusions, milestones and warranty terms." url={plan.brochureUrl} displayUrl={plan.brochureDisplayUrl} busy={Boolean(brochureUploads['plan-'+index])} onUpload={file=>uploadBrochure('plan',index,file)} onRemove={()=>updatePlan(index,'brochureUrl','')}/>
               </div>}
             </article>})}{!plans.length&&<div className="profile-showcase-empty"><b>No public service plans added.</b><span>Add packages only if you want customers to compare offerings in Experts.</span></div>}</div>
-          </section></form>:<ProfessionalBrochures embedded/>}
+          </section></form></div>
+                <div className="profile-package-pane" hidden={packageView!=='brochures'}>
+                  <ProfessionalBrochures embedded onEditStateChange={setBrochureState}/>
+                </div>
               </div>}
               {card.id==='proofs'&&<div className="profile-accordion-editor"><section className="profile-panel profile-proof-panel">
             <div className="panel-title"><div><span>07</span><h2>Company proof</h2><p>Verification documents remain private and are reviewed by ProPulse Admin.</p></div></div>
@@ -774,8 +795,8 @@ export default function Profile(){
       {directoryEligible&&publicProfileId
         ?<Link className="profile-accordion-preview" to={'/experts/'+publicProfileId}><ProfileIcon name="eye" size={21}/> Preview Public Profile</Link>
         :<button type="button" className="profile-accordion-preview" disabled title="Complete your directory eligibility to preview your listing"><ProfileIcon name="eye" size={21}/> Preview Public Profile</button>}
-      <button type="button" className={'profile-accordion-save'+(hasUnsavedChanges?' has-changes':' is-saved')} disabled={saving||!hasUnsavedChanges} onClick={submitCurrentChanges}>
-        <ProfileIcon name={hasUnsavedChanges?'save':'check'} size={21}/>{saving?'Saving…':hasUnsavedChanges?'Save Changes':'All Saved'}
+      <button type="button" className={'profile-accordion-save'+(needsSave?' has-changes':' is-saved')} disabled={saveBusy||!needsSave||(brochureView&&!brochureState.ready)} onClick={submitCurrentChanges}>
+        <ProfileIcon name={needsSave?'save':'check'} size={21}/>{saveBusy?'Saving…':brochureView&&!brochureState.ready?'Loading…':needsSave?'Save Changes':'All Saved'}
       </button>
     </div>
   </>
