@@ -419,3 +419,73 @@ body:has(.profile-accordion-root) .support-chat-panel {
   .profile-accordion-root .profile-service-compact-heading {flex-wrap:wrap}
   .profile-accordion-root .profile-service-item-actions {margin-left:auto}
 }
+
+
+/* One consistent mobile editor and sticky Save/Preview; no nested Save button. */
+.profile-accordion-root [hidden]{display:none!important}
+.profile-accordion-root .profile-company-brochures.profile-panel{
+  margin:0;padding:0;border:0;box-shadow:none;border-radius:0;background:transparent;
+}
+.profile-accordion-root .profile-company-brochures .profile-company-heading{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  margin:0 0 15px;
+}
+.profile-accordion-root .profile-company-brochures .profile-company-heading>div{min-width:0;flex:1}
+.profile-accordion-root .profile-company-brochures .profile-company-heading h2{
+  font-size:16px;line-height:1.4;letter-spacing:-.035em;color:#20364e;font-weight:840;margin:0 0 5px;
+}
+.profile-accordion-root .profile-company-brochures .profile-company-heading p{
+  font-size:11px;line-height:1.5;color:#7f8894;margin:0;
+}
+.profile-accordion-root .profile-company-brochures .profile-company-heading>button{
+  flex:0 0 auto;width:auto;min-height:42px;padding:10px 14px;
+  background:linear-gradient(105deg,#ff812c,#ef5911);
+  border:1px solid #f47321;border-radius:11px;
+  color:white;font-size:12px;font-weight:810;box-shadow:0 7px 17px #e972241f;
+}
+.profile-accordion-root .profile-company-brochures .pw-brochure-list{
+  display:grid;gap:12px;min-width:0;
+}
+.profile-accordion-root .profile-company-brochures .pw-card.pw-brochure{
+  background:#fff;border:1px solid #efe4dc;border-radius:13px;
+  padding:14px;box-shadow:0 4px 14px #a4764b0e;
+}
+.profile-accordion-root .profile-company-brochures .pw-card.pw-brochure.is-expanded{border-color:#f6b484}
+.profile-accordion-root .profile-company-brochures .pw-brochure-fields input:not([type=checkbox]):not([type=file]),
+.profile-accordion-root .profile-company-brochures .pw-brochure-fields textarea{
+  border-color:#eae2dc;background:white;color:#2b3c50;
+}
+.profile-accordion-root .profile-company-brochures .profile-entry-delete{
+  border:1px solid #f4dedb!important;border-radius:8px;
+  color:#a94c45;background:#fffafa;
+  padding:9px 12px;font-size:11px;font-weight:730;
+}
+.profile-accordion-root .profile-company-brochures .profile-entry-delete:hover{background:#fff0ed}
+.profile-accordion-root .profile-company-brochures .pw-empty.profile-entry-empty{
+  border:1px dashed #f2d4bf;border-radius:13px;
+  padding:25px 16px;background:#fffaf6;text-align:center;
+}
+.profile-accordion-root .profile-brochure-guidance{
+  display:flex;align-items:center;gap:12px;justify-content:space-between;
+  color:#8a8a8e;font-size:11px;line-height:1.6;
+  padding:12px 0 2px;margin:0;
+}
+.profile-accordion-root .profile-brochure-guidance>button{display:none}
+.profile-company-standalone .profile-brochure-guidance{
+  display:flex;justify-content:space-between;align-items:center;gap:14px;
+  color:#65778a;font-size:12px;
+}
+.profile-company-standalone .profile-brochure-guidance>button{
+  border:0;border-radius:10px;padding:12px 17px;background:#f45e21;color:#fff;font-weight:820;cursor:pointer;
+}
+/* Keep the active accordion stable rather than scrolling the whole page
+   whenever a tab switches or nested content expands. */
+.profile-accordion-root .profile-accordion-card{overflow-anchor:none}
+@media(max-width:760px){
+  .profile-accordion-root .profile-company-brochures .profile-company-heading{
+    align-items:stretch;flex-direction:column;gap:12px;
+  }
+  .profile-accordion-root .profile-company-brochures .profile-company-heading>button{width:100%}
+  .profile-accordion-root .profile-brochure-guidance{flex-wrap:wrap;padding-bottom:15px}
+  .profile-accordion-root .profile-company-brochures .pw-card.pw-brochure{padding:11px}
+}
