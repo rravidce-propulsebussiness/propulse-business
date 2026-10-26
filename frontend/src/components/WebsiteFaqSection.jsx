@@ -50,9 +50,9 @@ function FaqIcon({category}){
   return <svg {...common}><path d="M12 3 4 7v10l8 4 8-4V7l-8-4Z"/><path d="M8 12h8M12 8v8"/></svg>
 }
 
-export default function WebsiteFaqSection({variant='home',audience='website'}){
+export default function WebsiteFaqSection({variant='home',audience='homeowner'}){
   const standalone=variant==='page'
-  const professional=audience==='website'
+  const professional=audience==='professional'
   const compactHome=variant==='home-compact'
   const [searchParams,setSearchParams]=useSearchParams()
   const [faqs,setFaqs]=useState([])
