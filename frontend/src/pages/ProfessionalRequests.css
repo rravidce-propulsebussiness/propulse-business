@@ -310,3 +310,8 @@
     animation:none!important;transition:none!important;scroll-behavior:auto!important;
   }
 }
+
+/* A tab with no requests must not shorten the document so far that Android
+   Chrome is forced to move the tab strip upward when switching views. */
+.prc-quotes{min-height:calc(100dvh - 145px)}
+.prc-quotes .pqq-panel{min-height:calc(100dvh - 165px)}

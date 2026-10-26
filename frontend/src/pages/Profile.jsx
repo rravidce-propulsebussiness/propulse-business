@@ -230,8 +230,8 @@ export default function Profile(){
   function addPlan(){const item=emptyPlan();setPlans(current=>[...current,item]);setExpandedPlan('draft-'+item._draftKey);setMessage('')}
   function projectKey(item){return item.id?'project-'+item.id:'draft-'+item._draftKey}
   function planKey(item){return item.id?'plan-'+item.id:'draft-'+item._draftKey}
-  function revealProjectError(index,message){setExpandedProject(projectKey(projects[index]));openCard('projects');setError(message);requestAnimationFrame(()=>document.getElementById('profile-workspace-content')?.scrollIntoView({block:'start',behavior:'smooth'}))}
-  function revealPlanError(index,message){setExpandedPlan(planKey(plans[index]));openCard('packages','plans');setError(message);requestAnimationFrame(()=>document.getElementById('profile-workspace-content')?.scrollIntoView({block:'start',behavior:'smooth'}))}
+  function revealProjectError(index,message){setExpandedProject(projectKey(projects[index]));openCard('projects');setError(message)}
+  function revealPlanError(index,message){setExpandedPlan(planKey(plans[index]));openCard('packages','plans');setError(message)}
   function update(field,value){setForm(x=>({...x,[field]:value}));setMessage('')}
   function updateService(index,field,value){
     if(field==='serviceId'&&value&&serviceSelections.some((item,i)=>
@@ -504,7 +504,6 @@ export default function Profile(){
     openCard(card)
     setError(message)
     setMessage('')
-    requestAnimationFrame(()=>document.getElementById('profile-card-'+card)?.scrollIntoView({behavior:'smooth',block:'start'}))
   }
   async function submitCurrentChanges(){
     if(saveBusy||!needsSave||!savedSnapshot)return
@@ -561,8 +560,17 @@ export default function Profile(){
       // Server reconciliation can assign new IDs; baseline must include them.
       setSavedSnapshot(profileFingerprint(form,serviceSelections,locationSelections,updatedProjects,updatedPlans))
       playSound('success')
-      setExpandedProject(null);setExpandedPlan(null)
-      setActiveServiceIndex(null);setActiveLocationIndex(null)
+      // Keep the currently open editors open after Save, even when the server
+      // assigns new IDs to newly created projects or packages. Closing them
+      // changes the page height and makes mobile users lose their position.
+      setExpandedProject(current=>{
+        const index=projects.findIndex(item=>projectKey(item)===current)
+        return index>=0&&updatedProjects[index]?projectKey(updatedProjects[index]):current
+      })
+      setExpandedPlan(current=>{
+        const index=plans.findIndex(item=>planKey(item)===current)
+        return index>=0&&updatedPlans[index]?planKey(updatedPlans[index]):current
+      })
       setMessage('Business and public listing saved together. Your services are now shown in the saved list.')
       return true
     }catch(err){playSound('warning');setError(err.message);return false}finally{setSaving(false)}
@@ -597,8 +605,6 @@ export default function Profile(){
         <div className="profile-progress-tip"><ProfileIcon name="sparkle" size={21}/><b>{completion===100?'Ready to shine!':'Looking good!'}</b><p>{completion===100?'Keep your portfolio updated.':'Add a few more details to stand out.'}</p></div>
       </section>
 
-      {error&&<div className="profile-alert error" role="alert">{error}</div>}
-      {message&&<div className="profile-alert success" role="status">{message}</div>}
 
       <div className="profile-accordion-list">
         {cardEntries.map(card=>{
@@ -792,6 +798,7 @@ export default function Profile(){
       <div className="profile-accordion-advice"><ProfileIcon name="sparkle" size={22}/><p>Keep your profile updated to get more visibility and customer enquiries.</p></div>
     </main>
     <div className="profile-accordion-savebar" role="region" aria-label="Profile actions">
+      {(error||message)&&<div className={'profile-save-feedback '+(error?'error':'success')} role={error?'alert':'status'}>{error||message}</div>}
       {directoryEligible&&publicProfileId
         ?<Link className="profile-accordion-preview" to={'/experts/'+publicProfileId}><ProfileIcon name="eye" size={21}/> Preview Public Profile</Link>
         :<button type="button" className="profile-accordion-preview" disabled title="Complete your directory eligibility to preview your listing"><ProfileIcon name="eye" size={21}/> Preview Public Profile</button>}

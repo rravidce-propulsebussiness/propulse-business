@@ -62,6 +62,8 @@ jobs:
         run: npm run test:investor-faq-layout
       - name: Premium profile workspace no-duplicate regression
         run: node scripts/check-profile-workspace.mjs
+      - name: Scroll preservation regression
+        run: npm run test:scroll-preservation
       - name: Build
         run: npm run build
       - name: Google GIS regression checks
