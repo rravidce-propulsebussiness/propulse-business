@@ -19,15 +19,6 @@ const projectIndustry=value=>value==='Interior Design'?'design':value==='Real Es
 const INDUSTRY_OPTIONS=[{value:'construction',label:'Construction'},{value:'design',label:'Interior Design'},{value:'property',label:'Real Estate'}]
 const emptyPlan=()=>({_draftKey:draftKey(),industry:'',title:'',description:'',priceFrom:'',priceUnit:'unspecified',durationLabel:'',inclusions:'',brochureUrl:'',brochureDisplayUrl:'',isPublished:true})
 
-function reasonText(status){
-  const reason=status?.reason
-  if(status?.eligible)return 'Your business is eligible to appear in Find Professionals.'
-  if(reason==='membership_required')return 'An active eligible membership is required before this profile can appear publicly.'
-  if(reason==='verification_required')return 'Admin currently requires verified businesses for the public directory.'
-  if(reason==='directory_disabled')return 'The public Expert Directory is currently disabled by Admin.'
-  if(reason==='profile_hidden')return 'This public profile is currently hidden or disabled.'
-  return 'Complete your public business profile to become eligible for the Expert Directory.'
-}
 
 function mapProject(item){
   return {
@@ -85,6 +76,33 @@ function ProfileBusinessFields({form,update,overview=false}){
   </div>
 }
 
+
+const PROFILE_ICONS={
+  business:'M4 21V8l8-5 8 5v13M4 21h16M8 11h8M8 15h8M11 21v-3h2v3',
+  services:'M12 3v18M3 12h18M12 7a5 5 0 1 1 0 10 5 5 0 0 1 0-10Z',
+  projects:'M4 4h16v16H4zM7 17l4-5 3 3 2-2 3 4M8 9h.01',
+  packages:'M7 3h8l4 4v14H7zM15 3v5h4M10 12h6M10 16h6',
+  proofs:'M12 2 4 6v6c0 5 3 8 8 10 5-2 8-5 8-10V6l-8-4zM8 12l3 3 5-6',
+  check:'M5 12l4 4L19 6',
+  chevron:'M6 9l6 6 6-6',
+  eye:'M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12zm10 3a3 3 0 1 0 0-6 3 3 0 0 0 0 6',
+  save:'M4 3h14l3 3v15H4zM8 3v7h9V3M8 21v-8h9v8',
+  edit:'M15 5l4 4M4 20l4-1 11-11a2.8 2.8 0 0 0-4-4L4 15z',
+  pin:'M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 1 1 16 0ZM12 10h.01',
+  sparkle:'M12 2l2 7 7 3-7 2-2 8-3-8-7-2 7-3z',
+}
+function ProfileIcon({name,size=21}){
+  return <svg aria-hidden="true" focusable="false" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d={PROFILE_ICONS[name]||PROFILE_ICONS.business}/></svg>
+}
+function ProfileRoofline(){
+  return <svg className="profile-roofline" viewBox="0 0 230 98" fill="none" aria-hidden="true" focusable="false">
+    <path d="M5 91h221" stroke="#ecc5a3" strokeWidth="2"/>
+    <path d="M40 91V43l48-31 50 31v48M34 44 88 8l56 36M54 53h22v23H54zM96 53h26v23H96zM81 91V64h17v27" stroke="#e7a16d" strokeWidth="2.3" strokeLinejoin="round" fill="#fff5e9"/>
+    <path d="M143 91V52l29-18 32 18v39M143 70h61M171 34v57M150 56h14v13h-14zM180 56h14v13h-14z" stroke="#f5b888" strokeWidth="2" fill="#fff0df"/>
+    <path className="profile-roofline-spark" d="m190 10 5 13 13 4-13 4-5 13-4-13-12-4 12-4z" stroke="#fa8b38" fill="#ffe2c7"/>
+  </svg>
+}
+
 export default function Profile(){
   const navigate=useNavigate()
   const location=useLocation()
@@ -108,9 +126,23 @@ export default function Profile(){
   const [brochureUploads,setBrochureUploads]=useState({})
   const requestedTab=new URLSearchParams(location.search).get('tab')
   // Legacy ?tab=business or ?tab=public links open the single profile editor.
-  const activeSection=requestedTab==='locations'?'services':['services','projects','brochures','plans','proofs'].includes(requestedTab)?requestedTab:'overview'
   const [expandedProject,setExpandedProject]=useState(null)
   const [expandedPlan,setExpandedPlan]=useState(null)
+  // One accordion is open at a time. Old profile deep links open their
+  // corresponding card; the top site menu stays the only navigation.
+  const mapProfileTab=tab=>tab==='locations'?'services':tab==='brochures'?'packages':tab==='plans'?'packages':tab==='proofs'?'proofs':tab==='projects'?'projects':tab==='services'?'services':'business'
+  const [openProfileCard,setOpenProfileCard]=useState(()=>requestedTab?mapProfileTab(requestedTab):'services')
+  const [packageView,setPackageView]=useState(()=>requestedTab==='brochures'?'brochures':'plans')
+  const [editServices,setEditServices]=useState(false)
+  const [editLocations,setEditLocations]=useState(false)
+  useEffect(()=>{
+    if(requestedTab){
+      setOpenProfileCard(mapProfileTab(requestedTab))
+      if(requestedTab==='brochures')setPackageView('brochures')
+      else if(requestedTab==='plans')setPackageView('plans')
+    }
+  },[requestedTab])
+
   const [loading,setLoading]=useState(true)
   const [saving,setSaving]=useState(false)
   const [message,setMessage]=useState('')
@@ -142,7 +174,6 @@ export default function Profile(){
   const serviceOptions=useMemo(()=>serviceSelections.map(x=>services.filter(s=>String(s.industry_id)===String(x.industryId))),[services,serviceSelections])
   const subserviceOptions=useMemo(()=>serviceSelections.map(x=>subservices.filter(s=>String(s.service_id)===String(x.serviceId))),[subservices,serviceSelections])
   const cityOptions=useMemo(()=>locationSelections.map(x=>cities.filter(c=>String(c.state_id)===String(x.stateId))),[cities,locationSelections])
-  const initials=(form.businessName||form.name||'P').trim().split(/\s+/).slice(0,2).map(part=>part[0]).join('').toUpperCase()||'P'
   const completionItems=[
     Boolean(form.name&&form.email&&form.phone),Boolean(form.businessName&&form.businessDetails),
     serviceSelections.length>0&&serviceSelections.every(x=>x.industryId&&x.serviceId),locationSelections.length>0&&locationSelections.every(x=>x.stateId&&x.cityId),
@@ -159,28 +190,28 @@ export default function Profile(){
     return cities.find(item=>String(item.id)===String(selection.cityId))?.name
   }).filter(Boolean))]
   const directoryEligible=Boolean(directoryStatus?.eligible)
-  const sectionGroup=section=>section==='plans'||section==='brochures'?'plans':section
-  const activeGroup=sectionGroup(activeSection)
-  const checklist=[
-    {label:'Contact information',done:completionItems[0],section:'overview'},
-    {label:'Business and public details',done:completionItems[1],section:'overview'},
-    {label:'Services offered',done:completionItems[2],section:'services'},
-    {label:'Service locations',done:completionItems[3],section:'locations'},
-    {label:'Completed projects',done:completionItems[4],section:'projects'},
-  ]
 
-  function selectSection(section){
-    const next=['business','public'].includes(section)?'overview':section==='locations'?'services':section
-    if(activeSection!==next)navigate('/profile?tab='+next)
+
+  function openCard(card,mode){
+    const target=card==='overview'?'business':card==='locations'?'services':card==='brochures'?'packages':card==='plans'?'packages':card
+    if(mode)setPackageView(mode)
+    setOpenProfileCard(target)
     setMessage('')
-    requestAnimationFrame(()=>document.getElementById('profile-workspace-content')?.scrollIntoView({behavior:'smooth',block:'start'}))
+    const tab=target==='business'?'overview':target==='packages'?(mode||packageView):target
+    if(location.search!=='?tab='+tab)navigate('/profile?tab='+tab)
+  }
+  function toggleCard(card){
+    if(openProfileCard===card){
+      setOpenProfileCard('')
+      navigate('/profile')
+    }else openCard(card)
   }
   function addProject(){const item=emptyProject();setProjects(current=>[...current,item]);setExpandedProject('draft-'+item._draftKey);setMessage('')}
   function addPlan(){const item=emptyPlan();setPlans(current=>[...current,item]);setExpandedPlan('draft-'+item._draftKey);setMessage('')}
   function projectKey(item){return item.id?'project-'+item.id:'draft-'+item._draftKey}
   function planKey(item){return item.id?'plan-'+item.id:'draft-'+item._draftKey}
-  function revealProjectError(index,message){setExpandedProject(projectKey(projects[index]));navigate('/profile?tab=projects');setError(message);requestAnimationFrame(()=>document.getElementById('profile-workspace-content')?.scrollIntoView({block:'start',behavior:'smooth'}))}
-  function revealPlanError(index,message){setExpandedPlan(planKey(plans[index]));navigate('/profile?tab=plans');setError(message);requestAnimationFrame(()=>document.getElementById('profile-workspace-content')?.scrollIntoView({block:'start',behavior:'smooth'}))}
+  function revealProjectError(index,message){setExpandedProject(projectKey(projects[index]));openCard('projects');setError(message);requestAnimationFrame(()=>document.getElementById('profile-workspace-content')?.scrollIntoView({block:'start',behavior:'smooth'}))}
+  function revealPlanError(index,message){setExpandedPlan(planKey(plans[index]));openCard('packages','plans');setError(message);requestAnimationFrame(()=>document.getElementById('profile-workspace-content')?.scrollIntoView({block:'start',behavior:'smooth'}))}
   function update(field,value){setForm(x=>({...x,[field]:value}));setMessage('')}
   function updateService(index,field,value){setServiceSelections(items=>items.map((x,i)=>i!==index?x:field==='industryId'?{industryId:value,serviceId:'',subserviceId:''}:field==='serviceId'?{...x,serviceId:value,subserviceId:''}:{...x,[field]:value}));setMessage('')}
   function updateLocation(index,field,value){setLocationSelections(items=>items.map((x,i)=>i!==index?x:field==='stateId'?{stateId:value,cityId:''}:{...x,cityId:value}));setMessage('')}
@@ -419,121 +450,76 @@ export default function Profile(){
     }catch(err){playSound('warning');setError(err.message)}finally{setSaving(false)}
   }
 
-  if(loading)return <><UserHeader/><div className="profile-page"><div className="profile-loading">Loading your business profile…</div></div></>
 
+  if(loading)return <><UserHeader variant="profile"/><div className="profile-page profile-accordion-root"><div className="profile-loading">Loading your business profile…</div></div></>
+  const editableCard=openProfileCard==='business'||openProfileCard==='projects'||(openProfileCard==='services'&&(editServices||editLocations))||(openProfileCard==='packages'&&packageView==='plans')
+  const cardEntries=[
+    {id:'business',title:'Business & Public Profile',description:'Business details, contact information and public visibility',icon:'business',badge:completionItems[0]&&completionItems[1]?'Complete':'Add details'},
+    {id:'services',title:'Services & Locations',description:'What you do and where you work',icon:'services',badge:serviceNames.length+' Services · '+locationNames.length+' Locations'},
+    {id:'projects',title:'Projects & Media',description:'Showcase your work with photos, videos and plans',icon:'projects',badge:projects.length+' Items'},
+    {id:'packages',title:'Packages & Brochures',description:'Show your pricing and specifications',icon:'packages',badge:plans.length+' Packages'},
+    {id:'proofs',title:'Verification Documents',description:'Private company verification and legal documents',icon:'proofs',badge:companyProofs.length+' Documents'}
+  ]
   return <>
-    <UserHeader/>
-    <div className="profile-page profile-workspace-root">
-      <div className="profile-workspace-layout">
-        <aside className="profile-workspace-sidebar" aria-label="Business profile navigation">
-          <nav className="profile-workspace-nav" id="profile-tabs" aria-label="Profile sections">
-            <button type="button" className={activeGroup==='overview'?'active':''} aria-current={activeGroup==='overview'?'page':undefined} onClick={()=>selectSection('overview')}><span aria-hidden="true">⌂</span> Business Profile</button>
-            <button type="button" className={activeGroup==='services'?'active':''} onClick={()=>selectSection('services')}><span aria-hidden="true">⌖</span> Services &amp; Locations</button>
-            <button type="button" className={activeGroup==='projects'?'active':''} onClick={()=>selectSection('projects')}><span aria-hidden="true">▧</span> Projects &amp; Media</button>
-            <button type="button" className={activeGroup==='plans'?'active':''} onClick={()=>selectSection('plans')}><span aria-hidden="true">▤</span> Packages &amp; Brochures</button>
-            {activeGroup==='plans'&&<div className="profile-workspace-subnav">
-              <button type="button" className={activeSection==='plans'?'active':''} onClick={()=>selectSection('plans')}>Packages</button>
-              <button type="button" className={activeSection==='brochures'?'active':''} onClick={()=>selectSection('brochures')}>Company Brochures</button>
-            </div>}
-            <button type="button" className={activeGroup==='proofs'?'active':''} onClick={()=>selectSection('proofs')}><span aria-hidden="true">▣</span> Verification Documents</button>
-          </nav>
-          <div className="profile-workspace-help">
-            <span aria-hidden="true">▧</span>
-            <strong>Build your professional profile</strong>
-            <p>Help homeowners discover your services, projects and packages.</p>
-            <button type="button" onClick={()=>selectSection('overview')}>Manage public listing →</button>
-          </div>
-        </aside>
+    <UserHeader variant="profile"/>
+    <main className="profile-page profile-accordion-root" id="profile-workspace-content">
+      <header className="profile-accordion-intro">
+        <div className="profile-intro-copy">
+          <span className="profile-accordion-overline">PROFESSIONAL WORKSPACE</span>
+          <h1>Business Profile</h1>
+          <p>Edit once, publish everywhere.</p>
+        </div>
+        <ProfileRoofline/>
+      </header>
+      <section className="profile-accordion-progress" aria-label="Profile completion">
+        <div className="profile-progress-circle" role="progressbar" aria-label="Profile completion" aria-valuenow={completion} aria-valuemin="0" aria-valuemax="100">
+          <svg viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="40" stroke="#ffe4d1" strokeWidth="10" fill="none"/><circle className="profile-progress-ring" cx="50" cy="50" r="40" stroke="#ff701b" strokeWidth="10" strokeLinecap="round" strokeDasharray={`${2*Math.PI*40}`} strokeDashoffset={`${2*Math.PI*40*(1-completion/100)}`} transform="rotate(-90 50 50)" fill="none"/></svg>
+          <strong>{completion}%</strong>
+        </div>
+        <div className="profile-progress-copy"><h2>Profile Completion</h2><p>{completedSections} of {completionItems.length} core steps complete</p></div>
+        <div className="profile-progress-tip"><ProfileIcon name="sparkle" size={21}/><b>{completion===100?'Ready to shine!':'Looking good!'}</b><p>{completion===100?'Keep your portfolio updated.':'Add a few more details to stand out.'}</p></div>
+      </section>
 
-        <main className="profile-workspace-main" id="profile-workspace-content">
-          <header className="profile-workspace-heading">
-            <div><span className="profile-workspace-overline">BUSINESS ACCOUNT</span><h1>Business Profile</h1><p>One business profile supplies the details in your public expert listing.</p></div>
-            <div className="profile-workspace-actions">
-              {directoryEligible&&publicProfileId&&<Link to={'/experts/'+publicProfileId} className="profile-workspace-preview">◉ Preview Public Profile</Link>}
-              {activeSection!=='brochures'&&<button type="submit" form="business-profile-form" className="profile-workspace-save" disabled={saving}>{saving?'Saving…':'▣ Save Changes'}</button>}
-            </div>
-          </header>
-          <section className="profile-hero" aria-label="Business profile summary">
-            <div className="profile-avatar" aria-hidden="true">{initials}</div>
-            <div className="profile-hero-main">
-              <h2>{form.businessName||form.name||'Your business'}</h2>
-              <p>{serviceNames.length?serviceNames.join(' · '):'Add the services your business offers'}</p>
-              <div className="profile-hero-meta">
-                <span>⌖ {locationNames.slice(0,2).join(', ')||'Add service locations'}</span>
-                {form.yearsExperience!==''&&<span>▦ {form.yearsExperience} years of experience</span>}
-                {directoryEligible&&<span className="profile-status-eligible">✓ Directory eligible</span>}
-              </div>
-            </div>
-            <div className="profile-completion-mini">
-              <strong>Profile <em>{completion}%</em> complete</strong>
-              <div role="progressbar" aria-label="Profile completeness" aria-valuenow={completion} aria-valuemin="0" aria-valuemax="100"><i style={{width:`${completion}%`}}/></div>
-              <span>{completedSections} of {completionItems.length} core steps complete</span>
-            </div>
-          </section>
+      {error&&<div className="profile-alert error" role="alert">{error}</div>}
+      {message&&<div className="profile-alert success" role="status">{message}</div>}
 
-          {error&&<div className="profile-alert error" role="alert">{error}</div>}
-          {message&&<div className="profile-alert success" role="status">{message}</div>}
-
-          {activeSection==='overview'&&<div className="profile-overview-layout">
-            <div className="profile-overview-main">
-              <form id="business-profile-form" className="profile-overview-card profile-overview-business" onSubmit={save}>
-                <div className="profile-overview-card-heading"><div><span className="profile-overview-icon" aria-hidden="true">▤</span><div><h2>Business &amp; Public Information</h2><p>One editor for business details and your expert listing</p></div></div></div>
+      <div className="profile-accordion-list">
+        {cardEntries.map(card=>{
+          const expanded=openProfileCard===card.id
+          return <section className={'profile-accordion-card'+(expanded?' is-open':'')} key={card.id} id={'profile-card-'+card.id}>
+            <button type="button" className="profile-accordion-trigger" aria-expanded={expanded} aria-controls={'profile-card-body-'+card.id} onClick={()=>toggleCard(card.id)}>
+              <span className="profile-accordion-icon"><ProfileIcon name={card.icon} size={23}/></span>
+              <span className="profile-accordion-title"><strong>{card.title}</strong><small>{card.description}</small></span>
+              <span className={'profile-accordion-count'+(card.id==='business'&&completionItems[0]&&completionItems[1]?' is-complete':'')}>{card.badge}</span>
+              <ProfileIcon name="chevron" size={21}/>
+            </button>
+            {expanded&&<div id={'profile-card-body-'+card.id} className="profile-accordion-body">
+              {card.id==='business'&&<form id="business-profile-form" className="profile-accordion-form" onSubmit={save}>
                 <ProfileBusinessFields form={form} update={update} overview/>
-              </form>
-              <div className="profile-overview-cards">
-                <section className="profile-overview-card">
-                  <div className="profile-overview-card-heading"><div><span className="profile-overview-icon" aria-hidden="true">⌖</span><div><h2>Services &amp; Locations</h2><p>What you do and where you work</p></div></div></div>
-                  <h3>Services Offered</h3>
-                  <div className="profile-overview-pills">{serviceNames.length?serviceNames.slice(0,6).map(v=><span key={v}>{v}</span>):<small>No services added</small>}</div>
-                  <h3>Service Locations</h3>
-                  <div className="profile-overview-pills">{locationNames.length?locationNames.slice(0,6).map(v=><span key={v}>{v}</span>):<small>No locations added</small>}</div>
-                  <button className="profile-overview-manage" type="button" onClick={()=>selectSection('services')}>Manage Services &amp; Locations →</button>
-                </section>
-                <section className="profile-overview-card">
-                  <div className="profile-overview-card-heading"><div><span className="profile-overview-icon" aria-hidden="true">▧</span><div><h2>Completed Projects</h2><p>Showcase your best work</p></div></div></div>
-                  <div className="profile-overview-gallery">{projects.slice(0,3).map((item,i)=><div key={item.id||item._draftKey||i}>{(item.imageDisplayUrls?.[0]||item.coverImageUrl)?<img src={item.imageDisplayUrls?.[0]||item.coverImageUrl} alt={item.title||'Project cover'} loading="lazy"/>:<span aria-hidden="true">▧</span>}</div>)}{!projects.length&&<div className="profile-overview-empty">Add your first project</div>}</div>
-                  <div className="profile-overview-stats"><span><strong>{projects.length}</strong> Projects</span><span><strong>{projects.filter(v=>v.videoUrl).length}</strong> Videos</span><span><strong>{projects.filter(v=>v.planUrl).length}</strong> Plans</span></div>
-                  <button className="profile-overview-manage" type="button" onClick={()=>selectSection('projects')}>Manage Projects →</button>
-                </section>
-                <section className="profile-overview-card">
-                  <div className="profile-overview-card-heading"><div><span className="profile-overview-icon" aria-hidden="true">▤</span><div><h2>Packages &amp; Brochures</h2><p>Show your pricing and specifications</p></div></div></div>
-                  <div className="profile-overview-package-list">{plans.slice(0,2).map((item,i)=><div key={item.id||item._draftKey||i}><span aria-hidden="true">₹</span><div><strong>{item.title||'Untitled package'}</strong><small>{item.priceFrom!==''?formatPublishedPackagePrice(item.priceFrom,item.priceUnit):'Pricing not added'}</small></div></div>)}{!plans.length&&<p>No packages added yet.</p>}</div>
-                  <button className="profile-overview-manage" type="button" onClick={()=>selectSection('plans')}>Manage Packages →</button>
-                  <button className="profile-overview-secondary-link" type="button" onClick={()=>selectSection('brochures')}>Manage Company Brochures</button>
-                </section>
-              </div>
-            </div>
-            <aside className="profile-overview-rail">
-              <section className="profile-overview-card profile-overview-checklist">
-                <div className="profile-overview-card-heading"><div><span className="profile-overview-icon" aria-hidden="true">☑</span><div><h2>Profile Checklist</h2><p>Finish the essentials first</p></div></div></div>
-                {checklist.map(item=><button type="button" key={item.label} onClick={()=>selectSection(item.section)}><span className={item.done?'done':'incomplete'} aria-hidden="true">{item.done?'✓':'○'}</span>{item.label}</button>)}
-              </section>
-              <section className="profile-overview-card profile-overview-visibility">
-                <div className="profile-overview-card-heading"><div><span className="profile-overview-icon" aria-hidden="true">◎</span><div><h2>Public Profile Status</h2><p>Expert directory visibility</p></div></div></div>
-                <div className={directoryEligible?'profile-visibility-badge eligible':'profile-visibility-badge'}>{directoryEligible?'✓ Eligible for directory':'Setup or approval required'}</div>
-                <p>{reasonText(directoryStatus)}</p>
-                <button type="button" className="profile-overview-manage" onClick={()=>document.getElementById('profile-unified-publish')?.scrollIntoView({behavior:'smooth',block:'center'})}>Change listing visibility ↑</button>
-              </section>
-              <section className="profile-overview-card profile-overview-tip"><span aria-hidden="true">✦</span><h2>Make a great first impression</h2><p>Real project photos, clear services and accurate package details help homeowners evaluate your business.</p></section>
-            </aside>
-          </div>}
-
-      {activeSection==='overview'?null:activeSection==='brochures'?<ProfessionalBrochures embedded/>:<form id="business-profile-form" onSubmit={save} className="profile-form profile-form-wide">
-        <div className="profile-main-column">
-          {activeSection==='services'&&<>
-          <section className="profile-panel" id="profile-services">
+              </form>}
+              {card.id==='services'&&<div className="profile-accordion-service-block">
+                <div className="profile-accordion-field-head"><h3><ProfileIcon name="services" size={18}/> Services Offered</h3><button type="button" onClick={()=>{setEditServices(v=>!v);setEditLocations(false)}}><ProfileIcon name="edit" size={17}/>{editServices?'Close editor':'Edit'}</button></div>
+                <div className="profile-accordion-pills">{serviceNames.map(name=><span key={name}>{name}</span>)}{!serviceNames.length&&<em>No services added</em>}
+                  <button type="button" className="profile-accordion-add" onClick={()=>{setEditServices(true);setEditLocations(false);setServiceSelections(old=>[...old,emptyService()])}}>+ Add Service</button>
+                </div>
+                {editServices&&<form id="business-profile-form" onSubmit={save} className="profile-accordion-form profile-accordion-subeditor">
+                  <section className="profile-panel" id="profile-services">
             <div className="panel-title"><div><span>02</span><h2>Services you provide</h2><p>These services drive lead matching and appear on your public profile.</p></div><button type="button" onClick={()=>setServiceSelections(x=>[...x,emptyService()])}>+ Add service</button></div>
             <div className="profile-list">{serviceSelections.map((x,i)=><div className="profile-row" key={`s-${i}`}><div className="row-number">{String(i+1).padStart(2,'0')}</div><label>Industry<select value={x.industryId} onChange={e=>updateService(i,'industryId',e.target.value)} required><option value="">Select industry</option>{industries.map(v=><option key={v.id} value={v.id}>{v.name}</option>)}</select></label><label>Service<select value={x.serviceId} onChange={e=>updateService(i,'serviceId',e.target.value)} disabled={!x.industryId} required><option value="">Select service</option>{(serviceOptions[i]||[]).map(v=><option key={v.id} value={v.id}>{v.name}</option>)}</select></label><label>Subservice <small>Optional · blank means all</small><select value={x.subserviceId} onChange={e=>updateService(i,'subserviceId',e.target.value)} disabled={!x.serviceId}><option value="">All related</option>{(subserviceOptions[i]||[]).map(v=><option key={v.id} value={v.id}>{v.name}</option>)}</select></label><button type="button" className="add-all-services" onClick={()=>addAllServicesForIndustry(i)} disabled={!x.industryId}>Add all services</button><button type="button" className="row-remove" onClick={()=>setServiceSelections(items=>items.filter((_,n)=>n!==i))}>Remove</button></div>)}</div>
           </section>
-
-          <section className="profile-panel" id="profile-locations">
+                </form>}
+                <div className="profile-accordion-field-head"><h3><ProfileIcon name="pin" size={18}/> Service Locations</h3><button type="button" onClick={()=>{setEditLocations(v=>!v);setEditServices(false)}}><ProfileIcon name="edit" size={17}/>{editLocations?'Close editor':'Edit'}</button></div>
+                <div className="profile-accordion-pills">{locationNames.map(name=><span key={name}>{name}</span>)}{!locationNames.length&&<em>No locations added</em>}
+                  <button type="button" className="profile-accordion-add" onClick={()=>{setEditLocations(true);setEditServices(false);setLocationSelections(old=>[...old,emptyLocation()])}}>+ Add Location</button>
+                </div>
+                {editLocations&&<form id="business-profile-form" onSubmit={save} className="profile-accordion-form profile-accordion-subeditor">
+                  <section className="profile-panel" id="profile-locations">
             <div className="panel-title"><div><span>03</span><h2>Locations you serve</h2><p>Customers can see the cities you cover, but not your private contact information.</p></div><button type="button" onClick={()=>setLocationSelections(x=>[...x,emptyLocation()])}>+ Add location</button></div>
             <div className="profile-list">{locationSelections.map((x,i)=><div className="profile-row location-row" key={`l-${i}`}><div className="row-number">{String(i+1).padStart(2,'0')}</div><label>State / UT<select value={x.stateId} onChange={e=>updateLocation(i,'stateId',e.target.value)} required><option value="">Select state / UT</option>{states.map(v=><option key={v.id} value={v.id}>{v.name}</option>)}</select></label><label>City<select value={x.cityId} onChange={e=>updateLocation(i,'cityId',e.target.value)} disabled={!x.stateId} required><option value="">Select city</option>{(cityOptions[i]||[]).map(v=><option key={v.id} value={v.id}>{v.name}</option>)}</select></label><button type="button" className="row-remove" onClick={()=>setLocationSelections(items=>items.filter((_,n)=>n!==i))}>Remove</button></div>)}</div>
           </section>
-          </>}
-
-          {activeSection==='projects'&&<>
-          <section className="profile-panel profile-project-panel" id="profile-projects">
+                </form>}
+              </div>}
+              {card.id==='projects'&&<form id="business-profile-form" onSubmit={save} className="profile-accordion-form profile-accordion-editor"><section className="profile-panel profile-project-panel" id="profile-projects">
             <div className="panel-title"><div><span>05</span><h2>Completed Projects</h2><p>Add completed work, photos and a project-specific brochure with materials and specifications. Keep unfinished work private.</p></div><button type="button" onClick={addProject}>+ Add Project</button></div>
             <div className="profile-showcase-list">{projects.map((project,index)=>{const isExpanded=expandedProject===projectKey(project);return <article className={"profile-showcase-card profile-entry-card"+(isExpanded?" is-expanded":"")} key={projectKey(project)}>
               <div className="profile-showcase-card-head profile-entry-head">
@@ -576,11 +562,13 @@ export default function Profile(){
               <ProfileBrochureField title="Project specifications / brochure" description="Upload the project scope, materials, brands, finishes or handover dossier as a PDF. Customers will see it on the public project page." url={project.brochureUrl} displayUrl={project.brochureDisplayUrl} busy={Boolean(brochureUploads['project-'+index])} onUpload={file=>uploadBrochure('project',index,file)} onRemove={()=>updateProject(index,'brochureUrl','')}/>
               </div>}
             </article>})}{!projects.length&&<div className="profile-showcase-empty"><b>No completed projects added yet.</b><span>Add real work to make your public profile stronger.</span></div>}</div>
-          </section>
-          </>}
-
-          {activeSection==='plans'&&<>
-          <section className="profile-panel profile-plan-panel" id="profile-plans">
+          </section></form>}
+              {card.id==='packages'&&<div className="profile-accordion-packages">
+                <div className="profile-accordion-segmented" role="group" aria-label="Package management">
+                  <button type="button" className={packageView==='plans'?'selected':''} onClick={()=>{setPackageView('plans');navigate('/profile?tab=plans')}}>Packages</button>
+                  <button type="button" className={packageView==='brochures'?'selected':''} onClick={()=>{setPackageView('brochures');navigate('/profile?tab=brochures')}}>Company Brochures</button>
+                </div>
+                {packageView==='plans'?<form id="business-profile-form" className="profile-accordion-form profile-accordion-editor" onSubmit={save}><section className="profile-panel profile-plan-panel" id="profile-plans">
             <div className="panel-title"><div><span>06</span><h2>Service Packages</h2><p>Set prices, scope and inclusions. Attach specifications PDFs for customers to review. Each project has its own separate brochure upload.</p></div><button type="button" onClick={addPlan}>+ Add Package</button></div>
             <div className="profile-showcase-list">{plans.map((plan,index)=>{const isExpanded=expandedPlan===planKey(plan);return <article className={"profile-showcase-card compact profile-entry-card"+(isExpanded?" is-expanded":"")} key={planKey(plan)}><div className="profile-showcase-card-head profile-entry-head">
                 <div className="profile-entry-overview">
@@ -601,21 +589,25 @@ export default function Profile(){
               <ProfileBrochureField title="Package brochure / technical specifications" description="Upload your detailed package PDF: plywood grades, laminate and hardware brands, inclusions, exclusions, milestones and warranty terms." url={plan.brochureUrl} displayUrl={plan.brochureDisplayUrl} busy={Boolean(brochureUploads['plan-'+index])} onUpload={file=>uploadBrochure('plan',index,file)} onRemove={()=>updatePlan(index,'brochureUrl','')}/>
               </div>}
             </article>})}{!plans.length&&<div className="profile-showcase-empty"><b>No public service plans added.</b><span>Add packages only if you want customers to compare offerings in Experts.</span></div>}</div>
-          </section>
-          </>}
-
-          {activeSection==='proofs'&&<section className="profile-panel profile-proof-panel">
+          </section></form>:<ProfessionalBrochures embedded/>}
+              </div>}
+              {card.id==='proofs'&&<div className="profile-accordion-editor"><section className="profile-panel profile-proof-panel">
             <div className="panel-title"><div><span>07</span><h2>Company proof</h2><p>Verification documents remain private and are reviewed by ProPulse Admin.</p></div></div>
             {companyProofs.length?<div className="profile-proof-list">{companyProofs.map(doc=><div className="profile-proof-item" key={doc.id||(doc.original_name+'-'+doc.created_at)}><div className="profile-proof-icon">{String(doc.mime_type||'').includes('pdf')?'PDF':'IMG'}</div><div className="profile-proof-info"><strong>{doc.original_name||'Company proof document'}</strong><small>{doc.mime_type||'Document'} · {doc.file_size?(Number(doc.file_size)/1024/1024).toFixed(2)+' MB':''}{doc.status?' · '+String(doc.status).replace(/^./,m=>m.toUpperCase()):''}</small></div>{doc.file_url&&<a className="profile-proof-view" href={doc.file_url} target="_blank" rel="noreferrer">View document ↗</a>}</div>)}</div>:<div className="profile-proof-empty"><strong>No company proof documents found</strong><span>Upload a proof document from signup to complete business verification.</span></div>}
-          </section>}
-
-        </div>
-
-
-
-      </form>}
-        </main>
+          </section></div>}
+            </div>}
+          </section>
+        })}
       </div>
+      <div className="profile-accordion-advice"><ProfileIcon name="sparkle" size={22}/><p>Keep your profile updated to get more visibility and customer enquiries.</p></div>
+    </main>
+    <div className="profile-accordion-savebar" role="region" aria-label="Profile actions">
+      {directoryEligible&&publicProfileId
+        ?<Link className="profile-accordion-preview" to={'/experts/'+publicProfileId}><ProfileIcon name="eye" size={21}/> Preview Public Profile</Link>
+        :<button type="button" className="profile-accordion-preview" disabled title="Complete your directory eligibility to preview your listing"><ProfileIcon name="eye" size={21}/> Preview Public Profile</button>}
+      <button type="submit" className="profile-accordion-save" form="business-profile-form" disabled={saving||!editableCard}>
+        <ProfileIcon name="save" size={21}/>{saving?'Saving…':'Save Changes'}
+      </button>
     </div>
   </>
 }
