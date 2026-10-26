@@ -478,9 +478,8 @@ body:has(.profile-accordion-root) .support-chat-panel {
 .profile-company-standalone .profile-brochure-guidance>button{
   border:0;border-radius:10px;padding:12px 17px;background:#f45e21;color:#fff;font-weight:820;cursor:pointer;
 }
-/* Keep the active accordion stable rather than scrolling the whole page
-   whenever a tab switches or nested content expands. */
-.profile-accordion-root .profile-accordion-card{overflow-anchor:none}
+/* Let the browser keep the tapped control in view when accordions resize. */
+.profile-accordion-root .profile-accordion-card{overflow-anchor:auto}
 @media(max-width:760px){
   .profile-accordion-root .profile-company-brochures .profile-company-heading{
     align-items:stretch;flex-direction:column;gap:12px;
@@ -488,4 +487,18 @@ body:has(.profile-accordion-root) .support-chat-panel {
   .profile-accordion-root .profile-company-brochures .profile-company-heading>button{width:100%}
   .profile-accordion-root .profile-brochure-guidance{flex-wrap:wrap;padding-bottom:15px}
   .profile-accordion-root .profile-company-brochures .pw-card.pw-brochure{padding:11px}
+}
+
+/* Validation and save messages belong beside the persistent save action,
+   so saving never forces the user to scroll to a message at the page top. */
+.profile-accordion-savebar .profile-save-feedback{
+  grid-column:1/-1;margin:0;padding:9px 12px;border-radius:10px;
+  font-size:12px;font-weight:700;line-height:1.4;
+  max-height:68px;overflow-y:auto;overflow-wrap:anywhere;
+}
+.profile-accordion-savebar .profile-save-feedback.error{
+  background:#fff1eb;color:#9c3118;border:1px solid #f6cbb8;
+}
+.profile-accordion-savebar .profile-save-feedback.success{
+  background:#edf8f0;color:#267348;border:1px solid #cde8d6;
 }
