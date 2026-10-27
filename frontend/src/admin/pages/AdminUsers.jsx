@@ -1,3 +1,4 @@
+import BootLoader from '../../components/BootLoader'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { authRequest, getUser } from '../../utils/auth';
 import './AdminUsers.css';
@@ -301,7 +302,7 @@ export default function AdminUsers() {
 
       {error && !selected && !showCreate && <div className="users-error">{error}</div>}
 
-      {loading ? <div className="empty-users premium-empty-users"><span className="users-loading-ring"/><strong>Loading accounts…</strong></div> : !users.length ? <div className="empty-users premium-empty-users"><div className="empty-users-icon">⌕</div><strong>No users found</strong><small>Try clearing or changing the filters.</small>{hasFilters && <button type="button" onClick={clearFilters}>Clear filters</button>}</div> : <div className="users-card-grid">
+      {loading ? <BootLoader contained message="Loading accounts" /> : !users.length ? <div className="empty-users premium-empty-users"><div className="empty-users-icon">⌕</div><strong>No users found</strong><small>Try clearing or changing the filters.</small>{hasFilters && <button type="button" onClick={clearFilters}>Clear filters</button>}</div> : <div className="users-card-grid">
         {users.map(u => {
           const initials=(u.name||u.business_name||'?').trim().split(/\s+/).slice(0,2).map(part=>part.charAt(0).toUpperCase()).join('')||'?';
           const scopeCount=Number(u.service_count||0)+Number(u.location_count||0);
@@ -377,7 +378,7 @@ export default function AdminUsers() {
         {error && <div className="users-error user-360-error">{error}</div>}
         {notice && <div className="users-success user-360-success" role="status">{notice}</div>}
 
-        {user360Loading ? <div className="user-360-loading"><span className="users-loading-ring"/><strong>Loading account workspace…</strong></div> : <>
+        {user360Loading ? <BootLoader contained compact message="Loading account workspace" /> : <>
           <div className="user-360-snapshot">
             <div><span>Membership</span><strong>{currentMembership?.plan_group?String(currentMembership.plan_group).toUpperCase():'No plan'}</strong><small>{currentMembership?.expires_at ? ('Expires ' + dateOnly(currentMembership.expires_at)) : 'No active membership'}</small></div>
             <div><span>Wallet</span><strong>{money(userSnapshot.walletBalance)}</strong><small>{Number(wallet360?.pagination?.recharges?.total??wallet360?.recharges?.length??0)} recharge records</small></div>
