@@ -1,7 +1,13 @@
 import './BootLoader.css'
 
-export default function BootLoader({message='Loading your workspace'}) {
-  return <div className="propulse-route-loading" role="status" aria-live="polite">
+/**
+ * One canonical ProPulse loader for route changes and asynchronous page content.
+ * contained keeps the current navigation visible; compact works in small panels.
+ * Never add a minimum delay -- it disappears as soon as data is ready.
+ */
+export default function BootLoader({message='',contained=false,compact=false}) {
+  const className='propulse-route-loading'+(contained?' is-contained':'')+(compact?' is-compact':'')
+  return <div className={className} role="status" aria-live="polite" aria-label="Loading ProPulse">
     <div className="propulse-route-loader">
       <svg viewBox="0 0 100 100" fill="none" aria-hidden="true">
         <circle cx="50" cy="50" r="38" stroke="#dee9f0" strokeWidth="4"/>
@@ -10,7 +16,8 @@ export default function BootLoader({message='Loading your workspace'}) {
           stroke="#225875" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round"/>
       </svg>
       <strong>ProPulse</strong>
-      <span>{message}</span>
+      <span className="propulse-loader-tagline">Get your next project</span>
+      {message&&<span className="propulse-loader-detail">{message}</span>}
     </div>
   </div>
 }
