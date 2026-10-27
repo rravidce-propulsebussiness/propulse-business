@@ -116,6 +116,16 @@ function validateBenefitScope(benefitType,purchaseTypes){
   if(benefitType==='lead_bonus'&&purchaseTypes.some(type=>!['membership','lead'].includes(type)))
     fail('Bonus lead credits may be awarded only after membership or lead purchases','INVALID_REWARD_SCOPE');
 }
+function promotionVerificationScope(value){
+  const scope=String(value??'any');
+  if(!['any','verified','unverified'].includes(scope))fail('Choose a valid company verification status','INVALID_COUPON');
+  return scope;
+}
+function promotionAccountAge(value){
+  const age=Number(value??0);
+  if(!Number.isInteger(age)||age<0||age>365)fail('Registration age must be between 0 and 365 days','INVALID_COUPON');
+  return age;
+}
 function membershipAudiencesFrom(input,fallback=['all']){
   const allowed=['all','grow','scale','non_member'];
   const value=Array.isArray(input)?input:fallback;
@@ -177,6 +187,8 @@ async function createCoupon(input,adminId){
   const purchaseTypes=purchaseTypesFrom(input.purchase_types);
   validateBenefitScope(benefit.benefitType,purchaseTypes);
   const membershipAudiences=membershipAudiencesFrom(input.membership_audiences);
+  const verificationScope=promotionVerificationScope(input.verification_scope);
+  const accountAge=promotionAccountAge(input.registration_max_age_days);
   const userIds=ids(input.user_ids);
   const industryIds=ids(input.industry_ids);
   const planIds=purchaseTypes.includes('membership')?ids(input.membership_plan_ids):[];
@@ -191,9 +203,9 @@ async function createCoupon(input,adminId){
         usage_limit,per_user_limit,starts_at,expires_at,is_active,created_by,
         purchase_types,membership_plan_ids,benefit_type,reward_value_type,reward_value,
         bonus_lead_type,bonus_lead_quantity,bonus_valid_days,is_public_offer,
-        bonus_premium_quantity,membership_audiences
+        bonus_premium_quantity,membership_audiences,verification_scope,registration_max_age_days
       )
-      VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13::jsonb,$14::jsonb,$15,$16,$17,$18,$19,$20,$21,$22,$23::jsonb)
+      VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13::jsonb,$14::jsonb,$15,$16,$17,$18,$19,$20,$21,$22,$23::jsonb,$24,$25)
       RETURNING *
     `,[
       code,input.description||null,benefit.discountType,benefit.discountValue,max,min,usage,perUser,
@@ -201,7 +213,7 @@ async function createCoupon(input,adminId){
       JSON.stringify(purchaseTypes),JSON.stringify(planIds),benefit.benefitType,
       benefit.rewardValueType,benefit.rewardValue,benefit.bonusLeadType,
       benefit.bonusLeadQuantity,benefit.bonusValidDays,input.is_public_offer===true,
-      benefit.bonusPremiumQuantity,JSON.stringify(membershipAudiences)
+      benefit.bonusPremiumQuantity,JSON.stringify(membershipAudiences),verificationScope,accountAge
     ])).rows[0];
     if(userIds.length)await client.query('INSERT INTO coupon_users(coupon_id,user_id) SELECT $1,x FROM UNNEST($2::int[]) AS x ON CONFLICT DO NOTHING',[row.id,userIds]);
     if(industryIds.length)await client.query('INSERT INTO coupon_industries(coupon_id,industry_id) SELECT $1,x FROM UNNEST($2::int[]) AS x ON CONFLICT DO NOTHING',[row.id,industryIds]);
@@ -230,6 +242,8 @@ async function updateCoupon(id,input){
   const purchaseTypes=purchaseTypesFrom(input.purchase_types,jsonArray(existing.purchase_types));
   validateBenefitScope(benefit.benefitType,purchaseTypes);
   const membershipAudiences=membershipAudiencesFrom(input.membership_audiences,jsonArray(existing.membership_audiences));
+  const verificationScope=promotionVerificationScope(input.verification_scope??existing.verification_scope);
+  const accountAge=promotionAccountAge(input.registration_max_age_days??existing.registration_max_age_days);
   const userIds=ids(input.user_ids);
   const industryIds=ids(input.industry_ids);
   const rawPlanIds=input.membership_plan_ids===undefined?jsonArray(existing.membership_plan_ids):input.membership_plan_ids;
@@ -249,7 +263,7 @@ async function updateCoupon(id,input){
           is_active=$11,purchase_types=$12::jsonb,membership_plan_ids=$13::jsonb,
           benefit_type=$14,reward_value_type=$15,reward_value=$16,bonus_lead_type=$17,
           bonus_lead_quantity=$18,bonus_valid_days=$19,is_public_offer=$20,
-          bonus_premium_quantity=$22,membership_audiences=$23::jsonb,
+          bonus_premium_quantity=$22,membership_audiences=$23::jsonb,verification_scope=$24,registration_max_age_days=$25,
           updated_at=CURRENT_TIMESTAMP
       WHERE id=$21
     `,[
@@ -260,7 +274,7 @@ async function updateCoupon(id,input){
       benefit.rewardValueType,benefit.rewardValue,benefit.bonusLeadType,
       benefit.bonusLeadQuantity,benefit.bonusValidDays,
       input.is_public_offer===undefined?Boolean(existing.is_public_offer):Boolean(input.is_public_offer),
-      id,benefit.bonusPremiumQuantity,JSON.stringify(membershipAudiences)
+      id,benefit.bonusPremiumQuantity,JSON.stringify(membershipAudiences),verificationScope,accountAge
     ]);
     if(input.user_ids!==undefined){
       await client.query('DELETE FROM coupon_users WHERE coupon_id=$1',[id]);
@@ -302,6 +316,23 @@ async function deleteCoupon(id){
 }
 
 async function audienceEligible(db,coupon,userId,{industryId=null}={}){
+  const verification=promotionVerificationScope(coupon.verification_scope);
+  const accountAge=promotionAccountAge(coupon.registration_max_age_days);
+  if(verification!=='any'||accountAge>0){
+    const eligible=(await db.query(`
+      SELECT 1 FROM users u WHERE u.id=$1
+        AND ($2='any' OR ($2='verified' AND EXISTS(
+          SELECT 1 FROM company_proof_documents proof
+          WHERE proof.user_id=u.id AND proof.status='verified'
+        )) OR ($2='unverified' AND NOT EXISTS(
+          SELECT 1 FROM company_proof_documents proof
+          WHERE proof.user_id=u.id AND proof.status='verified'
+        )))
+        AND ($3::int=0 OR (u.created_at<=CURRENT_TIMESTAMP
+          AND u.created_at>=CURRENT_TIMESTAMP-($3::int * INTERVAL '1 day')))
+    `,[userId,verification,accountAge])).rowCount;
+    if(!eligible)return false;
+  }
   const segments=membershipAudiencesFrom(jsonArray(coupon.membership_audiences).length
     ?jsonArray(coupon.membership_audiences):['all']);
   if(!segments.includes('all')){
@@ -412,6 +443,14 @@ async function getPublicOffersForUser({userId,purchaseType,subtotal=null,members
           COALESCE((SELECT audience FROM current_membership),'non_member')
       )
       AND c.is_active=TRUE
+      AND (c.verification_scope='any'
+        OR (c.verification_scope='verified' AND EXISTS(
+          SELECT 1 FROM company_proof_documents doc WHERE doc.user_id=$1 AND doc.status='verified'))
+        OR (c.verification_scope='unverified' AND NOT EXISTS(
+          SELECT 1 FROM company_proof_documents doc WHERE doc.user_id=$1 AND doc.status='verified')))
+      AND (c.registration_max_age_days=0 OR EXISTS(
+        SELECT 1 FROM users u WHERE u.id=$1 AND u.created_at<=CURRENT_TIMESTAMP
+          AND u.created_at>=CURRENT_TIMESTAMP-(c.registration_max_age_days*INTERVAL '1 day')))
       AND (c.starts_at IS NULL OR c.starts_at<=CURRENT_TIMESTAMP)
       AND (c.expires_at IS NULL OR c.expires_at>CURRENT_TIMESTAMP)
       AND (
@@ -470,6 +509,8 @@ async function getPublicOffersForUser({userId,purchaseType,subtotal=null,members
       bonus_lead_type:coupon.bonus_lead_type||'shared',
       bonus_lead_quantity:Number(coupon.bonus_lead_quantity||0),
       bonus_premium_quantity:Number(coupon.bonus_premium_quantity||0),
+      verification_scope:coupon.verification_scope||'any',
+      registration_max_age_days:Number(coupon.registration_max_age_days||0),
       bonus_valid_days:Number(coupon.bonus_valid_days||0),
       starts_at:coupon.starts_at,
       expires_at:coupon.expires_at,
