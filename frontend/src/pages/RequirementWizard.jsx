@@ -572,9 +572,9 @@ export default function RequirementWizard({ flowKey, onCompletionChange, embedde
       setState(current => ({ ...current, saving: true, error: '' }))
 
       if (projectQuote) {
-        // Use the exact public requirements for each industry, but create only a
-        // project-specific professional quotation request, not a marketplace lead.
-        // This is an independently trackable quote lead linked to the professional.
+        // Capture a professional-specific quotation request. The backend also
+        // creates or links a marketplace lead with protected customer contact;
+        // the chosen professional sets the final project quotation separately.
         const detailRows = questions
           .filter(question => !['finish_quality', locationQuestion?.questionKey].includes(question.questionKey))
           .map(question => [question.label.replace(/\?$/, ''), fieldLabel(question, answers)])
