@@ -1,4 +1,5 @@
 import { CONSTRUCTION_PACKAGE_CATALOG } from '../data/constructionPackageCatalog.js'
+import { INTERIOR_PACKAGE_CATALOG } from '../data/interiorPackageCatalog.js'
 
 // The public construction package catalogue remains the single source of
 // default pricing/specifications. Each business may customise its own copy.
@@ -16,50 +17,43 @@ export function getPreferredPackageIndustry(selectedServices=[],industries=[]){
   return 'construction'
 }
 
+// The same per-company approach as Business OS: independent editable copies,
+// separate construction and interior tiers, explicitly enabled by each owner.
+// Public catalogue pricing is only a suggested starting value, never published automatically.
 export function createDefaultProfilePackages(industry='construction'){
-  const construction=industry==='construction'
+  const construction=industry==='construction';
   return PROFILE_PACKAGE_TIERS.map(tier=>{
-    const details=CONSTRUCTION_PACKAGE_CATALOG[tier.key]
+    const details=construction?CONSTRUCTION_PACKAGE_CATALOG[tier.key]:INTERIOR_PACKAGE_CATALOG[tier.key];
     return {
-      _draftKey:'default-'+tier.key,
+      _draftKey:'default-'+industry+'-'+tier.key,
       industry,
       title:tier.name,
-      description:construction?tier.description:'',
-      priceFrom:construction?details.rate:'',
-      priceUnit:construction?'sqft':'unspecified',
+      description:details?.description||tier.description,
+      priceFrom:details?.rate??details?.price??'',
+      priceUnit:details?'sqft':'unspecified',
       durationLabel:'',
-      inclusions:construction?Object.entries(details.specs).map(([name,value])=>name+': '+value).join('\n'):'',
+      inclusions:details?.specs?Object.entries(details.specs).map(([name,value])=>name+': '+value).join('\n'):'',
       brochureUrl:'',
       brochureDisplayUrl:'',
-      // Unconfigured non-construction plans must never be published with
-      // made-up pricing or specifications.
-      isPublished:construction,
-    }
-  })
+      isPublished:false,
+    };
+  });
 }
 
-// Show exactly the three familiar slots. Match saved packages by tier name
-// before falling back to their saved order; this preserves previous edits,
-// documents and industry choices even when the package title was changed.
+// Maintain all saved plans, including renamed packages and documents, without
+// silently changing their industry, price, or publication status.
 export function resolveProfilePackages(savedPlans=[],industry='construction'){
-  const templates=createDefaultProfilePackages(industry)
-  const used=new Set()
-  const slots=PROFILE_PACKAGE_TIERS.map(tier=>{
-    const index=savedPlans.findIndex((plan,i)=>!used.has(i)&&(
-      new RegExp('^'+tier.name+'(?:\\b|$)','i').test(String(plan.title||'').trim())||
-      (tier.key==='royal'&&/^luxury(?:\\b|$)/i.test(String(plan.title||'').trim()))
-    ))
-    if(index<0)return null
-    used.add(index)
-    return savedPlans[index]
-  })
-  return slots.map((saved,index)=>{
-    if(saved)return {...saved,industry:saved.industry||industry}
-    const other=savedPlans.findIndex((_,i)=>!used.has(i))
-    if(other>=0){
-      used.add(other)
-      return {...savedPlans[other],industry:savedPlans[other].industry||industry}
+  const result=[...savedPlans.map(plan=>({...plan}))];
+  for(const group of ['construction','design']){
+    const existing=result.filter(item=>item.industry===group);
+    const originals=createDefaultProfilePackages(group);
+    for(const template of originals){
+      if(!existing.some(item=>new RegExp('^'+template.title+'(?:\\\\b|$)','i').test(String(item.title||'').trim())||
+        (template.title==='Royal'&&/^luxury(?:\\\\b|$)/i.test(String(item.title||'').trim())))){
+        result.push(template);
+      }
     }
-    return templates[index]
-  })
+  }
+  // An unclassified old plan remains editable, but is never silently enabled.
+  return result;
 }
