@@ -46,7 +46,7 @@ assert.match(property,/project-marketplace-consent/);
 assert.match(detail,/marketplaceConsent:callbackForm\.consent/);
 assert.match(read('frontend/src/pages/ProfessionalDetails.jsx'),/marketplaceConsent:request\.consent/);
 assert.match(bridge,/profile-multi-professional-consent-v1/);
-assert.match(callback,/marketplaceConsent!==true/);
+assert.match(callback,/input.marketplaceConsent===true/,'Only explicit profile broad-sharing consent may open global marketplace visibility');
 assert.match(detail,/ProfessionalCallbackRequirementForm/,'Project callbacks must use the shared quick requirement form');
 assert.match(read('frontend/src/components/ProfessionalCallbackRequirementForm.jsx'),/pattern="\[0-9\]\{6\}"/);
 assert.match(readService,/const hideCustomerName=\['public_requirement','homepage_consultation','public_estimator'\]/);
