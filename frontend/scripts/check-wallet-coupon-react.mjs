@@ -27,7 +27,7 @@ assert(css.includes('/* Mobile wallet top-up: keep the dialog and payment detail
 assert(css.includes('box-sizing:border-box!important')&&css.includes('max-height:calc(100dvh - 20px)!important'), 'Mobile wallet modal must account for padding and viewport height')
 assert(css.includes('.wallet-add-modal .wallet-receiving-grid{\n    grid-template-columns:minmax(0,1fr)!important;'), 'Mobile receiving account details must stack in one column')
 
-const supportZ=Number(supportCss.match(/\\.support-chat\\{[^}]*z-index:(\\d+)/)?.[1]||0)
-const walletModalZ=Number(css.match(/\\.wallet-modal-backdrop\\{z-index:(\\d+)!important\\}/)?.[1]||0)
+const supportZ=Number(supportCss.split('.support-chat{')[1]?.split('z-index:')[1]?.split(';')[0]||0)
+const walletModalZ=Number(css.split('.wallet-modal-backdrop{z-index:')[1]?.split('!important')[0]||0)
 assert(supportZ>0&&walletModalZ>supportZ, 'Wallet top-up dialog must overlay the floating support button on mobile')
 console.log('React wallet coupon regression checks passed.')
