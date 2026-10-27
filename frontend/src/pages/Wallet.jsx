@@ -315,10 +315,10 @@ export default function Wallet(){
       </>}
     </main>
 
-    {showAdd&&<div className="wallet-modal-backdrop" onClick={closeAdd}><section className="wallet-detail-modal wallet-add-modal" onClick={e=>e.stopPropagation()}>
+    {showAdd&&<div className="wallet-modal-backdrop" onClick={closeAdd}><section className="wallet-detail-modal wallet-add-modal" role="dialog" aria-modal="true" aria-labelledby="wallet-add-title" onClick={e=>e.stopPropagation()}>
       <button className="wallet-modal-close" onClick={closeAdd}>×</button>
       <span className="wallet-modal-kicker">ADD BALANCE</span>
-      <h2>Fund your Propulse wallet</h2>
+      <h2 id="wallet-add-title">Fund your Propulse wallet</h2>
       <p className="wallet-modal-subtitle">Choose an available payment method. Online payments credit automatically after verification; manual payments use UTR review.</p>
 
       <section className="wallet-public-offers">
@@ -335,10 +335,11 @@ export default function Wallet(){
         </div>
       </section>
 
-      {!fullyDiscounted&&<PaymentMethodSelector options={paymentOptions} value={paymentMode} onChange={setPaymentMode} disabled={submitting}/>}\n      {paymentMode==='offline'&&receiving.length>0?<div className="wallet-receiving-list">{receiving.map(x=><div className="wallet-receiving-card" key={x.id}><div className="wallet-receiving-head"><b>{x.label}</b><span>{x.method_type==='both'?'UPI + BANK':x.method_type.toUpperCase()}</span></div><div className="wallet-receiving-grid">{x.account_name&&<div><small>ACCOUNT NAME</small><strong>{x.account_name}</strong></div>}{x.upi_id&&<div><small>UPI ID</small><strong>{x.upi_id}</strong></div>}{x.bank_name&&<div><small>BANK</small><strong>{x.bank_name}</strong></div>}{x.account_number&&<div><small>ACCOUNT NUMBER</small><strong>{x.account_number}</strong></div>}{x.ifsc_code&&<div><small>IFSC</small><strong>{x.ifsc_code}</strong></div>}{x.branch_name&&<div><small>BRANCH</small><strong>{x.branch_name}</strong></div>}</div>{x.qr_code&&<img className="wallet-receiving-qr" src={x.qr_code} alt="Payment QR code"/>}{x.instructions&&<p>{x.instructions}</p>}</div>)}</div>:paymentMode==='offline'?<div className="wallet-method"><b>UPI / BANK TRANSFER</b><span>Payment details are not configured yet. Please contact Propulse support.</span></div>:null}
+      {!fullyDiscounted&&<PaymentMethodSelector options={paymentOptions} value={paymentMode} onChange={setPaymentMode} disabled={submitting}/>}
+      {paymentMode==='offline'&&receiving.length>0?<div className="wallet-receiving-list">{receiving.map(x=><div className="wallet-receiving-card" key={x.id}><div className="wallet-receiving-head"><b>{x.label}</b><span>{x.method_type==='both'?'UPI + BANK':x.method_type.toUpperCase()}</span></div><div className="wallet-receiving-grid">{x.account_name&&<div><small>ACCOUNT NAME</small><strong>{x.account_name}</strong></div>}{x.upi_id&&<div><small>UPI ID</small><strong>{x.upi_id}</strong></div>}{x.bank_name&&<div><small>BANK</small><strong>{x.bank_name}</strong></div>}{x.account_number&&<div><small>ACCOUNT NUMBER</small><strong>{x.account_number}</strong></div>}{x.ifsc_code&&<div><small>IFSC</small><strong>{x.ifsc_code}</strong></div>}{x.branch_name&&<div><small>BRANCH</small><strong>{x.branch_name}</strong></div>}</div>{x.qr_code&&<img className="wallet-receiving-qr" src={x.qr_code} alt="Payment QR code"/>}{x.instructions&&<p>{x.instructions}</p>}</div>)}</div>:paymentMode==='offline'?<div className="wallet-method"><b>UPI / BANK TRANSFER</b><span>Payment details are not configured yet. Please contact Propulse support.</span></div>:null}
 
       <form onSubmit={submit}>
-        <label>Amount<input type="number" min="1" step="0.01" value={amount} onChange={e=>{setAmount(e.target.value);resetAppliedCoupon()}} placeholder="e.g. 1000" autoFocus/></label>
+        <label>Amount<input type="number" min="1" step="0.01" value={amount} onChange={e=>{setAmount(e.target.value);resetAppliedCoupon()}} placeholder="e.g. 1000"/></label>
         <label className="wallet-coupon-field"><span>Promotion / coupon code <small>Optional</small></span><div className="wallet-coupon-input-row"><input type="text" maxLength={50} autoComplete="off" value={couponCode} onChange={e=>{setCouponCode(e.target.value.toUpperCase());resetAppliedCoupon()}} placeholder="Enter offer code"/><button type="button" className="wallet-coupon-apply" disabled={couponChecking} onClick={()=>applyCoupon()}>{couponChecking?'Checking…':'Apply'}</button></div><small>Public offers can be selected above. Private codes can still be entered here.</small>{couponStatus.text&&<span className={`wallet-coupon-status ${couponStatus.type}`} aria-live="polite">{couponStatus.text}</span>}</label>
 
         <div className="wallet-coupon-summary">
