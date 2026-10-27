@@ -299,6 +299,10 @@
 @media(max-width:600px){.wallet-public-offers-head{align-items:flex-start;flex-direction:column}.wallet-public-offer-card{grid-template-columns:auto minmax(0,1fr)}.wallet-public-offer-card>strong{grid-column:2}.wallet-coupon-input-row{grid-template-columns:1fr}.wallet-coupon-apply{height:40px}.wallet-coupon-summary{grid-template-columns:1fr}.wallet-coupon-summary .wallet-coupon-pay-row,.wallet-coupon-summary>small{grid-column:auto}}
 
 
+/* Wallet dialogs must sit above floating support chat (z-index: 3850),
+   otherwise the chat launcher covers top-up fields and submit controls. */
+.wallet-modal-backdrop{z-index:4000!important}
+
 /* Mobile wallet top-up: keep the dialog and payment details within the visual viewport. */
 .wallet-modal-backdrop{
   box-sizing:border-box;
