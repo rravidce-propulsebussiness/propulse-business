@@ -1,3 +1,4 @@
+import BootLoader from '../../components/BootLoader'
 import { useEffect, useMemo, useState } from 'react'
 import { apiRequest } from '../../utils/api'
 import { getToken } from '../../utils/auth'
@@ -227,7 +228,7 @@ export default function AdminPaymentDetails(){
         <div className="receiving-panel-meta"><span>{stats.total} configured</span><span>{stats.active} visible</span></div>
       </div>
 
-      {loading?<div className="apd-empty premium-apd-empty"><span className="receiving-loading-ring"/><strong>Loading payment accounts…</strong></div>
+      {loading?<BootLoader contained message="Loading payment accounts" />
         :!items.length?<div className="apd-empty premium-apd-empty"><div className="receiving-empty-icon">₹</div><strong>No receiving account configured</strong><small>Add a UPI ID, bank account, or both so customers know where to pay.</small><button type="button" onClick={add}>＋ Add first account</button></div>
         :<div className="apd-list premium-receiving-grid">
           {items.map((item,index)=><article className={`apd-card premium-receiving-card ${item.is_active?'active':'inactive'}`} key={item.id}>
