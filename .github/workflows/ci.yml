@@ -106,7 +106,10 @@ jobs:
     timeout-minutes: 15
     services:
       postgres:
-        image: postgres:16
+        # Backup tools on ubuntu-latest currently create PG18 custom archives.
+        # Keep restore smoke on the matching major; the investment job below
+        # independently exercises PostgreSQL 16.
+        image: postgres:18
         env:
           POSTGRES_DB: ci_smoke
           POSTGRES_USER: ci_smoke
@@ -364,6 +367,10 @@ jobs:
           DB_PASSWORD: ci_smoke
         timeout-minutes: 2
         run: npm run test:background-jobs-runtime
+      - name: Verify backup client tool versions
+        run: |
+          pg_dump --version
+          pg_restore --version
       - name: Verify database backup restore drill
         env:
           DB_HOST: 127.0.0.1

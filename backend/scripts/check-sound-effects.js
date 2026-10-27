@@ -22,11 +22,11 @@ must('src/server.js',["/api/sound-settings","soundSettingsRoutes"]);
 must('../frontend/src/utils/soundEffects.js',[
   'AudioContext','propulse_sound_enabled','propulse_sound_volume','playSound','interactionReady','schedulePattern','ctx.resume()','notification','upload','success','warning'
 ]);
-must('../frontend/src/components/SoundControl.jsx',['Website sound','Personal volume','Test sound','playSound','setSoundEnabled','setSoundVolume']);
 must('../frontend/src/admin/pages/AdminSoundEffects.jsx',[
   'Master sound effects','Button & link click','Upload complete','Notifications','Default volume'
 ]);
-must('../frontend/src/App.jsx',["/admin/sound-effects","<SoundControl/>"]);
+must('../frontend/src/App.jsx',["/admin/sound-effects","<GlobalWidgets/>"]);
+if(read('../frontend/src/App.jsx').includes('<SoundControl/>'))throw new Error('Floating SoundControl must remain removed from the public site');
 must('../frontend/src/admin/components/AdminLayout.jsx',["/admin/sound-effects","Sound Effects"]);
 must('../frontend/src/components/NotificationBell.jsx',["playSound('notification')"]);
 must('../frontend/src/pages/Profile.jsx',["playSound('upload')","playSound('success')","playSound('warning')"]);
