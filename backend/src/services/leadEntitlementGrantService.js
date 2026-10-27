@@ -618,11 +618,15 @@ async function campaignAudienceUserIds(client,campaign){
   }
   if(Number(campaign.min_completed_projects)>0){
     const min=bind(Number(campaign.min_completed_projects));
+    const windowDays=bind(Number(campaign.project_registration_window_days||0));
     conditions.push(`(SELECT COUNT(DISTINCT p.id)
       FROM business_profile_projects p
       JOIN business_profiles bp5 ON bp5.id=p.business_profile_id
       WHERE bp5.user_id=u.id AND p.is_published=TRUE
-        AND p.completion_year IS NOT NULL)>=${min}`);
+        AND p.completion_year IS NOT NULL
+        AND (${windowDays}::int=0 OR (p.created_at>=u.created_at
+          AND p.created_at<=u.created_at+(${windowDays}::int * INTERVAL '1 day')))
+      )>=${min}`);
   }
   if(campaign.audience_scope==='specific_users'){
     conditions.push(`EXISTS(
