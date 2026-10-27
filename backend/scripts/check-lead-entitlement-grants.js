@@ -127,15 +127,16 @@ assert(adminController.includes('INVALID_ENTITLEMENT_ACCESS:400'),'Invalid acces
 
 assert(app.includes('/admin/leads/entitlements'),'Admin Lead Entitlements page route must exist');
 assert(layout.includes("{to:'/admin/leads/entitlements',label:'Lead Entitlements'}"),'Lead Entitlements must appear inside Leads navigation');
-assert(page.includes('＋ Registration rule')&&page.includes('＋ Business entitlement'),'Admin UI must expose separate compact rule and entitlement create actions');
+assert(page.includes('＋ Create Reward')&&page.includes('unifiedRewardOpen'),'One create action must support both registration and conditional rewards');
+assert(!page.includes('＋ Registration rule')&&!page.includes('＋ Business entitlement'),'Duplicated reward-create buttons must remain removed');
 assert(page.includes('verificationScope')&&page.includes('Verified + Non-verified')&&page.includes('Non-verified only'),'Admin UI must expose verification targeting');
 assert(page.includes('All industries')&&page.includes('All states')&&page.includes('All cities'),'Admin UI must expose industry and location targeting');
 assert(page.includes('entitlement-card-grid'),'Recent entitlements must use flexible cards instead of the wide table');
-assert(page.includes("audienceScope:'all'")&&page.includes('All business users')&&page.includes('Specific business users'),'Business entitlement UI must support all or selected businesses');
+assert(page.includes("audienceScope:'all'")&&page.includes('All qualifying businesses')&&page.includes('Specific businesses'),'Unified reward UI must support all or selected businesses');
 assert(page.includes('businessCampaigns')&&page.includes("kind:'campaign'"),'Business entitlement campaigns must appear as recent cards');
 assert(page.includes('openEditCampaign(item)')&&page.includes('deleteCampaign(item)'),'Business entitlement cards must support edit and delete');
 assert(page.includes('campaign.userIds.includes'),'Specific-business targeting must support multi-select');
-assert(page.includes('Verified + Non-verified')&&page.includes('Verified only')&&page.includes('Non-verified only'),'Business entitlement UI must support verification filters');
+assert(page.includes('Verified + Non-verified')&&page.includes('Verified only (admin approved)')&&page.includes('Non-verified only'),'Reward UI must preserve company verification filters');
 assert(page.includes('Single Buyer')&&page.includes('Shared')&&page.includes('Auto Release'),'Admin UI must expose all buyer-access strategy toggles');
 assert(page.includes('Exclusive Early Access'),'Admin UI must expose Exclusive Early Access override');
 assert(page.includes('Claimed access'),'Admin UI must expose claimed-access duration');
