@@ -195,6 +195,29 @@ export default function AdminLeadEntitlements(){
     return()=>{active=false;clearTimeout(timer)}
   },[businessSearch,campaignEditorOpen,campaign.audienceScope])
 
+  function openCreateReward(){
+    openCreateRule()
+  }
+
+  function changeRewardType(type){
+    // Existing rewards keep their persisted grant type so edits cannot
+    // silently change one ledger into another.
+    if(editingRule||editingCampaign)return
+    if(type==='registration'){
+      setCampaignEditorOpen(false)
+      setRuleEditorOpen(true)
+    }else{
+      setRuleEditorOpen(false)
+      setCampaignEditorOpen(true)
+    }
+    setError('')
+  }
+
+  function closeRewardEditor(){
+    closeRuleEditor()
+    closeCampaignEditor()
+  }
+
   function openCreateRule(){
     setEditingRule(null)
     setRule(defaultRule())
@@ -416,6 +439,13 @@ export default function AdminLeadEntitlements(){
     return cities.filter(item=>Number(item.state_id)===Number(campaign.stateId))
   },[cities,campaign.stateId])
 
+  const unifiedRewardOpen=ruleEditorOpen||campaignEditorOpen
+  const registrationReward=ruleEditorOpen
+  const currentReward=registrationReward?rule:campaign
+  const setCurrentReward=registrationReward?setRule:setCampaign
+  const currentCities=registrationReward?ruleCities:campaignCities
+  const editingReward=registrationReward?editingRule:editingCampaign
+
   const recentItems=useMemo(()=>{
     const ruleItems=registrationRules.map(item=>({...item,kind:'rule',sort_at:item.updated_at||item.created_at}))
     const campaignItems=businessCampaigns.map(item=>({...item,kind:'campaign',sort_at:item.updated_at||item.created_at}))
@@ -436,8 +466,7 @@ export default function AdminLeadEntitlements(){
     </section>
 
     <section className="entitlement-summary-grid">
-      <SummaryCard label="Registration rules" value={summary.registration_rules} note="New-user targeting" tone="green"/>
-      <SummaryCard label="Business entitlements" value={summary.business_campaigns} note="Audience campaigns" tone="orange"/>
+      <SummaryCard label="Configured rewards" value={Number(summary.registration_rules||0)+Number(summary.business_campaigns||0)} note="Registration and conditional bonuses" tone="green"/>
       <SummaryCard label="Active grants" value={summary.active_grants} note="Currently usable" tone="blue"/>
       <SummaryCard label="Basic granted" value={summary.shared_granted} note="Basic allowance"/>
       <SummaryCard label="Premium granted" value={summary.premium_granted} note="Premium allowance" tone="purple"/>
@@ -448,8 +477,8 @@ export default function AdminLeadEntitlements(){
     {message&&<div className="entitlement-alert success">{message}</div>}
 
     <section className="entitlement-action-bar">
-      <button className="entitlement-action secondary" type="button" onClick={openCreateRule}>＋ Registration rule</button>
-      <button className="entitlement-action primary" type="button" onClick={openCreateCampaign}>＋ Business entitlement</button>
+      <span className="entitlement-action-description">One reward workflow · registration, verification, completed projects, Basic / Premium credits and configurable expiry</span>
+      <button className="entitlement-action primary" type="button" onClick={openCreateReward}>＋ Create Reward</button>
     </section>
 
     <section className="entitlement-panel history entitlement-history-clean">
@@ -465,7 +494,7 @@ export default function AdminLeadEntitlements(){
             const access=accessLabels(item)
             return <article className="entitlement-history-card rule-history-card" key={`rule-${item.id}`}>
               <div className="entitlement-history-card-head">
-                <div><span className="history-type rule">Registration rule</span><h3>{item.name}</h3></div>
+                <div><span className="history-type rule">Registration reward</span><h3>{item.name}</h3></div>
                 <span className={`grant-status ${item.is_active?'active':'disabled'}`}>{item.is_active?'Active':'Disabled'}</span>
               </div>
               <div className="entitlement-target-tags">{targets.map(label=><span key={label}>{label}</span>)}</div>
@@ -496,7 +525,7 @@ export default function AdminLeadEntitlements(){
             const access=accessLabels(item)
             return <article className="entitlement-history-card campaign-history-card" key={`campaign-${item.id}`}>
               <div className="entitlement-history-card-head">
-                <div><span className="history-type campaign">Business entitlement</span><h3>{item.name}</h3></div>
+                <div><span className="history-type campaign">Conditional reward</span><h3>{item.name}</h3></div>
                 <span className="grant-status active">{Number(item.active_recipient_count||0)} active</span>
               </div>
               <div className="entitlement-target-tags">{targets.map(label=><span key={label}>{label}</span>)}</div>
@@ -545,85 +574,144 @@ export default function AdminLeadEntitlements(){
       </div>}
     </section>
 
-    {ruleEditorOpen&&<div className="entitlement-modal-backdrop" onMouseDown={e=>{if(e.target===e.currentTarget)closeRuleEditor()}}>
-      <section className="entitlement-modal entitlement-rule-modal" role="dialog" aria-modal="true" aria-label={editingRule?'Edit registration rule':'Create registration rule'}>
-        <div className="entitlement-modal-head">
-          <div><span>REGISTRATION RULE</span><h2>{editingRule?'Edit rule':'Create rule'}</h2></div>
-          <button type="button" onClick={closeRuleEditor}>×</button>
-        </div>
-        <div className="entitlement-modal-body">
-          <div className="entitlement-form-grid rule-grid">
-            <label className="rule-name-field">Rule name<input value={rule.name} maxLength="120" onChange={e=>setRule(v=>({...v,name:e.target.value}))} placeholder="Example: Hyderabad verified interiors"/></label>
-            <label>Status<select value={rule.isActive?'active':'disabled'} onChange={e=>setRule(v=>({...v,isActive:e.target.value==='active'}))}><option value="active">Active</option><option value="disabled">Disabled</option></select></label>
-            <label>Verification<select value={rule.verificationScope} onChange={e=>setRule(v=>({...v,verificationScope:e.target.value}))}><option value="any">Verified + Non-verified</option><option value="verified">Verified only</option><option value="unverified">Non-verified only</option></select></label>
-            <label>Industry<select value={rule.industryId} onChange={e=>setRule(v=>({...v,industryId:e.target.value}))}><option value="">All industries</option>{industries.map(item=><option value={item.id} key={item.id}>{item.name}</option>)}</select></label>
-            <label>State<select value={rule.stateId} onChange={e=>setRule(v=>({...v,stateId:e.target.value,cityId:cities.some(city=>Number(city.id)===Number(v.cityId)&&Number(city.state_id)===Number(e.target.value))?v.cityId:''}))}><option value="">All states</option>{states.map(item=><option value={item.id} key={item.id}>{item.name}</option>)}</select></label>
-            <label>City<select value={rule.cityId} onChange={e=>setRule(v=>({...v,cityId:e.target.value}))}><option value="">All cities</option>{ruleCities.map(item=><option value={item.id} key={item.id}>{item.name}</option>)}</select></label>
-            <label>Registration window<div className="entitlement-input-suffix"><input type="number" min="1" max="365" value={rule.windowDays} onChange={e=>setRule(v=>({...v,windowDays:clamp(e.target.value,1,365)}))}/><span>days</span></div></label>
-            <label>Basic leads<input type="number" min="0" max="1000" value={rule.sharedQuantity} onChange={e=>setRule(v=>({...v,sharedQuantity:clamp(e.target.value,0,1000)}))}/></label>
-            <label>Premium leads<input type="number" min="0" max="1000" value={rule.premiumQuantity} onChange={e=>setRule(v=>({...v,premiumQuantity:clamp(e.target.value,0,1000)}))}/></label>
-            <label>Claimed access<div className="entitlement-input-suffix"><input type="number" min="0" max="3650" value={rule.claimExpiryDays} onChange={e=>setRule(v=>({...v,claimExpiryDays:clamp(e.target.value,0,3650)}))}/><span>{Number(rule.claimExpiryDays)===0?'Lifetime':'days'}</span></div></label>
-          </div>
-          <div className="entitlement-dynamic-preview" role="status" aria-live="polite">
-            <strong>Registration reward preview — configurable</strong>
-            <span>
-              {Number(rule.sharedQuantity)||0} Basic + {Number(rule.premiumQuantity)||0} Premium free lead credits.
-              Eligible {rule.verificationScope==='verified'?'verified companies':rule.verificationScope==='unverified'?'unverified companies':'businesses'} have {rule.windowDays} day{Number(rule.windowDays)===1?'':'s'} from registration to claim them.
-            </span>
-            <small>Claimed lead access: {Number(rule.claimExpiryDays)>0?`${rule.claimExpiryDays} days`:'lifetime'}. You can change the window, lead counts, verification and access rules above.</small>
-          </div>
-          <AccessRules value={rule} onChange={setRule}/>
-          <div className="rule-priority-note">If multiple registration rules match, the most specific rule wins.</div>
-        </div>
-        <div className="entitlement-modal-actions">
-          {editingRule&&<button className="danger" type="button" onClick={()=>deleteRule(editingRule)} disabled={saving===`rule-delete-${editingRule.id}`}>Delete</button>}
-          <span/>
-          <button className="secondary" type="button" onClick={closeRuleEditor}>Cancel</button>
-          <button className="primary" type="button" onClick={saveRule} disabled={saving==='rule-create'||String(saving).startsWith('rule-update-')}>{saving?'Saving…':editingRule?'Save changes':'Create rule'}</button>
-        </div>
-      </section>
-    </div>}
 
-    {campaignEditorOpen&&<div className="entitlement-modal-backdrop" onMouseDown={e=>{if(e.target===e.currentTarget)closeCampaignEditor()}}>
-      <section className="entitlement-modal entitlement-rule-modal entitlement-campaign-modal" role="dialog" aria-modal="true" aria-label={editingCampaign?'Edit business entitlement':'Create business entitlement'}>
+    {unifiedRewardOpen&&<div className="entitlement-modal-backdrop" onMouseDown={e=>{if(e.target===e.currentTarget)closeRewardEditor()}}>
+      <section className="entitlement-modal entitlement-rule-modal entitlement-campaign-modal entitlement-unified-modal"
+        role="dialog" aria-modal="true" aria-label={editingReward?'Edit lead reward':'Create lead reward'}>
         <div className="entitlement-modal-head">
-          <div><span>BUSINESS ENTITLEMENT</span><h2>{editingCampaign?'Edit entitlement':'Create business entitlement'}</h2></div>
-          <button type="button" onClick={closeCampaignEditor}>×</button>
+          <div><span>LEAD REWARDS / CONFIGURATION</span><h2>{editingReward?'Edit reward':'Create lead reward'}</h2>
+            <p>Configure who qualifies, when they qualify, how many leads they receive and when access expires.</p></div>
+          <button type="button" onClick={closeRewardEditor} aria-label="Close reward editor">×</button>
         </div>
         <div className="entitlement-modal-body">
+          <div className="entitlement-unified-trigger">
+            <strong>When should free leads be awarded?</strong>
+            <div className="entitlement-trigger-choices" role="group" aria-label="Reward qualification type">
+              <button type="button" className={registrationReward?'selected':''}
+                aria-pressed={registrationReward} disabled={Boolean(editingReward)}
+                onClick={()=>changeRewardType('registration')}>
+                <strong>New registration</strong>
+                <small>Issue credits within a configured signup window, without requiring a completed project</small>
+              </button>
+              <button type="button" className={!registrationReward?'selected':''}
+                aria-pressed={!registrationReward} disabled={Boolean(editingReward)}
+                onClick={()=>changeRewardType('campaign')}>
+                <strong>Meet eligibility conditions</strong>
+                <small>Require verification, completed projects, selected businesses or another condition</small>
+              </button>
+            </div>
+            {editingReward&&<small>Existing reward types are locked to protect previously issued credits. You can edit all eligibility settings for this type.</small>}
+          </div>
+
           <div className="entitlement-form-grid rule-grid">
-            <label className="rule-name-field">Name<input value={campaign.name} maxLength="120" onChange={e=>setCampaign(v=>({...v,name:e.target.value}))} placeholder="Example: Hyderabad interiors bonus"/></label>
-            <label>Audience<select value={campaign.audienceScope} onChange={e=>{
-              const value=e.target.value
-              setCampaign(v=>({...v,audienceScope:value,userIds:value==='all'?[]:v.userIds}))
-              if(value==='all')setSelectedBusinesses([])
-            }}><option value="all">All business users</option><option value="specific_users">Specific business users</option></select></label>
-            <label>Verification<select value={campaign.verificationScope} onChange={e=>setCampaign(v=>({...v,verificationScope:e.target.value}))}><option value="any">Verified + Non-verified</option><option value="verified">Verified only</option><option value="unverified">Non-verified only</option></select></label>
-            <label>Completed projects required
-              <input type="number" min="0" max="20" step="1"
-                value={campaign.minCompletedProjects}
-                onChange={e=>setCampaign(v=>{const count=clamp(e.target.value,0,20);return {...v,minCompletedProjects:count,projectRegistrationWindowDays:count===0?0:v.projectRegistrationWindowDays}})}/>
-              <small>0 = none. 1 = at least one published completed project with required details.</small>
+            <label className="rule-name-field">Reward name
+              <input value={currentReward.name} maxLength="120" onChange={e=>setCurrentReward(v=>({...v,name:e.target.value}))}
+                placeholder="Example: Two free leads for new verified companies"/>
             </label>
-            {Number(campaign.minCompletedProjects)>0&&<label>Upload within days of registration
-              <input type="number" min="0" max="365" step="1"
-                value={campaign.projectRegistrationWindowDays}
-                onChange={e=>setCampaign(v=>({...v,projectRegistrationWindowDays:clamp(e.target.value,0,365)}))}/>
-              <small>Set any deadline from 1 to 365 days; 0 means no signup deadline. The original project upload date must qualify, even if approval finishes later.</small>
-            </label>}
-            <label>Industry<select value={campaign.industryId} onChange={e=>setCampaign(v=>({...v,industryId:e.target.value}))}><option value="">All industries</option>{industries.map(item=><option value={item.id} key={item.id}>{item.name}</option>)}</select></label>
-            <label>State<select value={campaign.stateId} onChange={e=>setCampaign(v=>({...v,stateId:e.target.value,cityId:cities.some(city=>Number(city.id)===Number(v.cityId)&&Number(city.state_id)===Number(e.target.value))?v.cityId:''}))}><option value="">All states</option>{states.map(item=><option value={item.id} key={item.id}>{item.name}</option>)}</select></label>
-            <label>City<select value={campaign.cityId} onChange={e=>setCampaign(v=>({...v,cityId:e.target.value}))}><option value="">All cities</option>{campaignCities.map(item=><option value={item.id} key={item.id}>{item.name}</option>)}</select></label>
-            <label>Basic leads<input type="number" min="0" max="1000" value={campaign.sharedQuantity} onChange={e=>setCampaign(v=>({...v,sharedQuantity:clamp(e.target.value,0,1000)}))}/></label>
-            <label>Premium leads<input type="number" min="0" max="1000" value={campaign.premiumQuantity} onChange={e=>setCampaign(v=>({...v,premiumQuantity:clamp(e.target.value,0,1000)}))}/></label>
-            <label>Grant valid for<div className="entitlement-input-suffix"><input type="number" min="0" max="3650" value={campaign.validDays} onChange={e=>setCampaign(v=>({...v,validDays:clamp(e.target.value,0,3650)}))}/><span>{Number(campaign.validDays)===0?'No expiry':'days'}</span></div></label>
-            <label>Claimed access<div className="entitlement-input-suffix"><input type="number" min="0" max="3650" value={campaign.claimExpiryDays} onChange={e=>setCampaign(v=>({...v,claimExpiryDays:clamp(e.target.value,0,3650)}))}/><span>{Number(campaign.claimExpiryDays)===0?'Lifetime':'days'}</span></div></label>
-            <label className="notes campaign-notes">Admin note<textarea rows="2" value={campaign.notes} maxLength="1000" onChange={e=>setCampaign(v=>({...v,notes:e.target.value}))} placeholder="Optional note"/></label>
+            {registrationReward
+              ? <label>Status<select value={rule.isActive?'active':'disabled'}
+                    onChange={e=>setRule(v=>({...v,isActive:e.target.value==='active'}))}>
+                  <option value="active">Active</option><option value="disabled">Disabled</option>
+                </select></label>
+              : <label>Recipients<select value={campaign.audienceScope} onChange={e=>{
+                  const value=e.target.value
+                  setCampaign(v=>({...v,audienceScope:value,userIds:value==='all'?[]:v.userIds}))
+                  if(value==='all')setSelectedBusinesses([])
+                }}>
+                  <option value="all">All qualifying businesses</option>
+                  <option value="specific_users">Specific businesses</option>
+                </select></label>}
+            <label>Company verification
+              <select value={currentReward.verificationScope}
+                onChange={e=>setCurrentReward(v=>({...v,verificationScope:e.target.value}))}>
+                <option value="any">Verified and non-verified</option>
+                <option value="verified">Verified only (admin approved)</option>
+                <option value="unverified">Non-verified only</option>
+              </select>
+            </label>
+            <label>Industry<select value={currentReward.industryId}
+              onChange={e=>setCurrentReward(v=>({...v,industryId:e.target.value}))}>
+                <option value="">All industries</option>{industries.map(item=><option value={item.id} key={item.id}>{item.name}</option>)}
+              </select></label>
+            <label>State<select value={currentReward.stateId}
+              onChange={e=>setCurrentReward(v=>({...v,stateId:e.target.value,
+                cityId:cities.some(city=>Number(city.id)===Number(v.cityId)&&Number(city.state_id)===Number(e.target.value))?v.cityId:''}))}>
+                <option value="">All states</option>{states.map(item=><option value={item.id} key={item.id}>{item.name}</option>)}
+              </select></label>
+            <label>City<select value={currentReward.cityId}
+              onChange={e=>setCurrentReward(v=>({...v,cityId:e.target.value}))}>
+                <option value="">All cities</option>{currentCities.map(item=><option value={item.id} key={item.id}>{item.name}</option>)}
+              </select></label>
           </div>
 
-          {campaign.audienceScope==='specific_users'&&<div className="campaign-user-picker">
+          <div className="entitlement-unified-group">
+            <div className="entitlement-unified-group-head">
+              <strong>Qualification &amp; time limits</strong>
+              <small>All periods are editable. A value of 0 means no deadline where available.</small>
+            </div>
+            <div className="entitlement-form-grid rule-grid">
+              {registrationReward ? <label>Registration window
+                <div className="entitlement-input-suffix">
+                  <input type="number" min="1" max="365" value={rule.windowDays}
+                    onChange={e=>setRule(v=>({...v,windowDays:clamp(e.target.value,1,365)}))}/>
+                  <span>days</span>
+                </div>
+                <small>Eligible businesses receive credits until this many days after signup. Their unclaimed credits expire at the end of this window.</small>
+              </label> : <>
+                <label>Completed projects required
+                  <input type="number" min="0" max="20" step="1" value={campaign.minCompletedProjects}
+                    onChange={e=>setCampaign(v=>{const count=clamp(e.target.value,0,20);return {...v,minCompletedProjects:count,
+                      projectRegistrationWindowDays:count===0?0:v.projectRegistrationWindowDays}})}/>
+                  <small>0 = no project requirement; 1+ = published completed projects.</small>
+                </label>
+                {Number(campaign.minCompletedProjects)>0&&<label>Project upload after signup
+                  <div className="entitlement-input-suffix">
+                    <input type="number" min="0" max="365" step="1" value={campaign.projectRegistrationWindowDays}
+                      onChange={e=>setCampaign(v=>({...v,projectRegistrationWindowDays:clamp(e.target.value,0,365)}))}/>
+                    <span>days</span>
+                  </div>
+                  <small>Example: 15 means uploaded within the first 15 days. 0 = any upload date. Approval can finish later.</small>
+                </label>}
+                <label>Free credit validity
+                  <div className="entitlement-input-suffix">
+                    <input type="number" min="0" max="3650" value={campaign.validDays}
+                      onChange={e=>setCampaign(v=>({...v,validDays:clamp(e.target.value,0,3650)}))}/>
+                    <span>{Number(campaign.validDays)===0?'No expiry':'days'}</span>
+                  </div>
+                  <small>Days after the company qualifies for the reward. Setting 0 disables automatic expiry.</small>
+                </label>
+              </>}
+            </div>
+          </div>
+
+          <div className="entitlement-unified-group">
+            <div className="entitlement-unified-group-head"><strong>Free leads &amp; claim access</strong>
+              <small>Choose Basic and Premium credits independently.</small></div>
+            <div className="entitlement-form-grid rule-grid">
+              <label>Basic lead credits<input type="number" min="0" max="1000"
+                value={currentReward.sharedQuantity} onChange={e=>setCurrentReward(v=>({...v,sharedQuantity:clamp(e.target.value,0,1000)}))}/></label>
+              <label>Premium lead credits<input type="number" min="0" max="1000"
+                value={currentReward.premiumQuantity} onChange={e=>setCurrentReward(v=>({...v,premiumQuantity:clamp(e.target.value,0,1000)}))}/></label>
+              <label>Access after a lead is claimed
+                <div className="entitlement-input-suffix">
+                  <input type="number" min="0" max="3650" value={currentReward.claimExpiryDays}
+                    onChange={e=>setCurrentReward(v=>({...v,claimExpiryDays:clamp(e.target.value,0,3650)}))}/>
+                  <span>{Number(currentReward.claimExpiryDays)===0?'Lifetime':'days'}</span>
+                </div>
+              </label>
+              {!registrationReward&&<label className="notes campaign-notes">Admin note
+                <textarea rows="2" value={campaign.notes} maxLength="1000"
+                  onChange={e=>setCampaign(v=>({...v,notes:e.target.value}))} placeholder="Optional note"/>
+              </label>}
+            </div>
+          </div>
+
+          {!registrationReward&&campaign.audienceScope==='specific_users'&&<div className="campaign-user-picker">
             <label>Specific businesses<input value={businessSearch} onChange={e=>setBusinessSearch(e.target.value)} placeholder="Search business, user or email…"/></label>
-            {selectedBusinesses.length>0&&<div className="campaign-selected-users">{selectedBusinesses.map(user=><button type="button" key={user.id} onClick={()=>toggleCampaignBusiness(user)}><span>{user.business_name||user.name}</span><b>×</b></button>)}</div>}
+            {selectedBusinesses.length>0&&<div className="campaign-selected-users">
+              {selectedBusinesses.map(user=><button type="button" key={user.id} onClick={()=>toggleCampaignBusiness(user)}>
+                <span>{user.business_name||user.name}</span><b>×</b></button>)}
+            </div>}
             <div className="campaign-user-results">
               {businessResults.map(item=>{
                 const selected=campaign.userIds.includes(Number(item.id))
@@ -636,41 +724,38 @@ export default function AdminLeadEntitlements(){
             </div>
           </div>}
 
-          {Number(campaign.minCompletedProjects)>0&&<p className="rule-priority-note">
-            Company verification is independent of uploading a project. Select “Verified only” when both admin verification and qualifying completed project uploads are mandatory.
+          {!registrationReward&&Number(campaign.minCompletedProjects)>0&&<p className="rule-priority-note">
+            Project uploads do not verify a company. Select "Verified only" above if admin approval must also be required.
           </p>}
           <div className="entitlement-dynamic-preview" role="status" aria-live="polite">
-            <strong>Reward rule preview — all values editable above</strong>
-            <span>
-              {campaign.verificationScope==='verified'?'Verified companies':campaign.verificationScope==='unverified'?'Unverified companies':'Any verified or unverified company'}
-              {Number(campaign.minCompletedProjects)>0
-                ?` with at least ${campaign.minCompletedProjects} published completed project${Number(campaign.minCompletedProjects)===1?'':'s'}`
-                :' with no completed-project requirement'}
-              {Number(campaign.minCompletedProjects)>0&&Number(campaign.projectRegistrationWindowDays)>0
-                ?` uploaded within ${campaign.projectRegistrationWindowDays} day${Number(campaign.projectRegistrationWindowDays)===1?'':'s'} of signup`
-                :''}.
-            </span>
-            <span>
-              Reward: {Number(campaign.sharedQuantity)||0} Basic + {Number(campaign.premiumQuantity)||0} Premium lead credits.
-              {Number(campaign.validDays)>0
-                ?` Credits expire ${campaign.validDays} day${Number(campaign.validDays)===1?'':'s'} after the award is issued.`
-                :' Awarded credits have no automatic expiry.'}
-              {Number(campaign.claimExpiryDays)>0
-                ?` Purchased/accessed leads remain available for ${campaign.claimExpiryDays} day${Number(campaign.claimExpiryDays)===1?'':'s'} after claim.`
-                :' Claimed lead access does not automatically expire.'}
-            </span>
-            {Number(campaign.projectRegistrationWindowDays)>0&&<small>
-              Signup-window campaigns apply to businesses registered after the campaign begins. A qualified company receives this award once; changing a campaign does not restart previously issued credit expiry.
-            </small>}
+            <strong>Reward preview</strong>
+            <span>{Number(currentReward.sharedQuantity)||0} Basic + {Number(currentReward.premiumQuantity)||0} Premium leads
+              for {currentReward.verificationScope==='verified'?'verified businesses':currentReward.verificationScope==='unverified'?'non-verified businesses':'eligible businesses'}.</span>
+            {registrationReward
+              ? <small>Valid until {rule.windowDays} day(s) after registration. Claimed leads:
+                  {Number(rule.claimExpiryDays)>0?' '+rule.claimExpiryDays+' day(s)':' lifetime'}.</small>
+              : <small>{Number(campaign.minCompletedProjects)>0
+                  ?'At least '+campaign.minCompletedProjects+' completed project(s)'+
+                    (Number(campaign.projectRegistrationWindowDays)>0?' uploaded within '+campaign.projectRegistrationWindowDays+' days of signup':'')
+                  :'No project prerequisite'}. Credit validity: {Number(campaign.validDays)>0?campaign.validDays+' days':'no expiry'}.
+                </small>}
           </div>
-          <AccessRules value={campaign} onChange={setCampaign}/>
-          <div className="rule-priority-note">Saving applies this entitlement to the current matching business users. Editing re-syncs the recipient set safely.</div>
+          <AccessRules value={currentReward} onChange={setCurrentReward}/>
+          <div className="rule-priority-note">
+            {registrationReward
+              ?'If multiple registration rewards qualify, the most specific one wins. Saving a registration rule does not give the same business two new-business grants.'
+              :'Save to award current eligible recipients. For a completed-project reward, new businesses can qualify later; each qualifying business is awarded only once.'}
+          </div>
         </div>
         <div className="entitlement-modal-actions">
-          {editingCampaign&&<button className="danger" type="button" onClick={()=>deleteCampaign(editingCampaign)} disabled={saving===`campaign-delete-${editingCampaign.id}`}>Delete</button>}
+          {editingReward&&<button className="danger" type="button"
+            onClick={()=>registrationReward?deleteRule(editingRule):deleteCampaign(editingCampaign)}
+            disabled={Boolean(saving)}>Delete</button>}
           <span/>
-          <button className="secondary" type="button" onClick={closeCampaignEditor}>Cancel</button>
-          <button className="primary" type="button" onClick={saveCampaign} disabled={saving==='campaign-create'||String(saving).startsWith('campaign-update-')}>{saving?'Saving…':editingCampaign?'Save changes':'Create entitlement'}</button>
+          <button className="secondary" type="button" onClick={closeRewardEditor}>Cancel</button>
+          <button className="primary" type="button"
+            onClick={registrationReward?saveRule:saveCampaign}
+            disabled={Boolean(saving)}>{saving?'Saving…':editingReward?'Save reward':'Create reward'}</button>
         </div>
       </section>
     </div>}
