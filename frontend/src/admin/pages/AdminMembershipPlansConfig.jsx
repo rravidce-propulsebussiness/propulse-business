@@ -1,3 +1,4 @@
+import BootLoader from '../../components/BootLoader'
 import { useEffect, useMemo, useState } from 'react'
 import { apiRequest } from '../../utils/api'
 import './AdminMembershipPlansConfig.css'
@@ -704,7 +705,7 @@ export default function AdminMembershipPlansConfig(){
         <div><span>BASE PACKAGES</span><h2>Membership packages</h2></div>
         <small>Base price · billing cycles · lead allowance · features</small>
       </div>
-      {loading?<div className="membership-empty">Loading memberships…</div>:<div className="membership-package-grid">
+      {loading?<BootLoader contained message="Loading memberships" />:<div className="membership-package-grid">
         <PackageCard groupKey="grow" groupPlans={growPlans} pricingRules={pricingRules} onOpenPackage={openPackage}/>
         <PackageCard groupKey="scale" groupPlans={scalePlans} pricingRules={pricingRules} onOpenPackage={openPackage}/>
       </div>}
