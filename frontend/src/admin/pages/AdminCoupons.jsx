@@ -379,7 +379,7 @@ export default function AdminCoupons(){
     <section className="coupon-reward-navigation">
       <div>
         <strong>Free leads for new or verified companies</strong>
-        <small>Set first-week registration credits, Basic / Premium allowances, and verified completed-project rewards through your existing Lead Entitlements rules.</small>
+        <small>Set any lead quantity, signup deadline, required completed projects, verification condition, and reward expiry through the existing Lead Entitlements rules.</small>
       </div>
       <button type="button" onClick={()=>navigate('/admin/leads/entitlements')}>
         Configure free lead rules →
@@ -591,10 +591,10 @@ export default function AdminCoupons(){
             </div>
             <div className="coupon-free-lead-shortcuts">
               <div><strong>Free leads without a purchase?</strong>
-                <small>Registration and completed-project bonuses are issued as lead entitlements, not checkout coupons. Use the existing rewards editor to prevent duplicate credits.</small></div>
+                <small>These use the existing Lead Entitlements rules. All values are editable: Basic/Premium quantities, required project count, signup deadline, verification and credit validity.</small></div>
               <div className="coupon-free-shortcut-buttons">
-                <button type="button" onClick={()=>navigate('/admin/leads/entitlements?create=registration')}>New registration reward</button>
-                <button type="button" className="primary" onClick={()=>navigate('/admin/leads/entitlements?create=project-welcome')}>2 leads · project in 15 days</button>
+                <button type="button" onClick={()=>navigate('/admin/leads/entitlements?create=registration')}>Configure signup reward</button>
+                <button type="button" className="primary" onClick={()=>navigate('/admin/leads/entitlements?create=project-welcome')}>Configure project upload reward</button>
               </div>
             </div>
             <div className="coupon-audience-grid">
