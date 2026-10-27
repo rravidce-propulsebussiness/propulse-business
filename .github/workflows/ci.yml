@@ -91,6 +91,8 @@ jobs:
         run: npm ci
       - name: Professional enquiry company totals regression
         run: node scripts/check-professional-enquiry-company-summary.js
+      - name: Unified four-funnel marketplace intake regression
+        run: node scripts/check-unified-marketplace-intakes.js
       - name: Syntax check
         run: npm test
       - name: Audit runtime dependencies
