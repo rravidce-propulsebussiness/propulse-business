@@ -1,3 +1,4 @@
+import BootLoader from '../../components/BootLoader'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { authRequest } from '../../utils/auth'
@@ -155,7 +156,7 @@ export default function AdminLeadPartners(){
       </div>
 
       {loading
-        ?<div className="alp-state">Loading partner accounts…</div>
+        ?<BootLoader contained message="Loading partner accounts" />
         :!data.partners?.length
           ?<div className="alp-state">No Lead Partners match this view.</div>
           :<div className="alp-table-wrap">
@@ -225,7 +226,7 @@ export default function AdminLeadPartners(){
         </header>
 
         {detailLoading
-          ?<div className="alp-state drawer-state">Loading partner account…</div>
+          ?<BootLoader contained compact message="Loading partner account" />
           :detail&&<>
             <section className="alp-detail-kpis">
               <article><span>LEAD SALES</span><strong>{money(detail.grossSales)}</strong><small>Valid gross sales</small></article>
