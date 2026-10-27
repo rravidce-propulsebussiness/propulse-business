@@ -89,6 +89,8 @@ jobs:
           cache-dependency-path: backend/package-lock.json
       - name: Install dependencies
         run: npm ci
+      - name: Professional enquiry company totals regression
+        run: node scripts/check-professional-enquiry-company-summary.js
       - name: Syntax check
         run: npm test
       - name: Audit runtime dependencies
