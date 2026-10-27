@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { authRequest } from '../../utils/auth'
 import './AdminCallbackInbox.css'
 
@@ -104,14 +104,14 @@ export default function AdminCallbackInbox(){
       item.customer_phone,item.customer_email,item.id,
     ].some(value=>String(value??'').toLowerCase().includes(needle))
   }
-  const visibleQuotes=useMemo(()=>quoteRows.filter(matches),[quoteRows,selectedCompany,search])
-  const visibleCallbacks=useMemo(()=>rows.filter(matches),[rows,selectedCompany,search])
-  const totals=useMemo(()=>companySummary.reduce((total,item)=>({
+  const visibleQuotes=quoteRows.filter(matches)
+  const visibleCallbacks=rows.filter(matches)
+  const totals=companySummary.reduce((total,item)=>({
     received:total.received+Number(item.total_requests||0),
     quotes:total.quotes+Number(item.quote_requests||0),
     callbacks:total.callbacks+Number(item.project_callbacks||0)+Number(item.profile_callbacks||0),
     linked:total.linked+Number(item.linked_marketplace_leads||0),
-  }),{received:0,quotes:0,callbacks:0,linked:0}),[companySummary])
+  }),{received:0,quotes:0,callbacks:0,linked:0})
   const selectedCompanyName=selectedCompany==='all'?'All companies':
     companySummary.find(item=>String(item.company_id)===selectedCompany)?.business_name||'Selected company'
   async function update(id,status){
