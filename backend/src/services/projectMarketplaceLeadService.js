@@ -33,8 +33,8 @@ function sanitize(value){
 }
 async function getRequest(kind,id){
   if(kind==='profile'){
-    // Profile enquiries are private to the selected professional: never publish
-    // them into the general lead marketplace or infer a project from a profile.
+    // Profile enquiries belong to the selected professional. New requests
+    // with broad-sharing consent may join discovery; historic requests remain private.
     const result=await pool.query(`
       SELECT r.*,bp.id AS business_profile_id,COALESCE(i.name,'') AS project_type
       FROM project_callback_requests r
@@ -95,6 +95,7 @@ async function sync(kind,id,{notify=true}={}){
     // optional requirement box. Form answers remain separate custom fields.
     const writtenBrief=kind==='quote'?sanitize(answeredFields['Additional Requirements']||''):'';
     const requirement=kind==='quote'?writtenBrief:details;
+    const profileShared=kind==='profile'&&record.requirement_fields?._marketplace_sharing===true;
     const fields={
       industryId:flow.industryId,serviceId:flow.serviceId,subserviceId:flow.subserviceId,
       stateId:Number(detected.city.state_id)||null,cityId:Number(detected.city.id),
@@ -108,12 +109,12 @@ async function sync(kind,id,{notify=true}={}){
         _professional_access_mode:professionalPolicy.normalizeMode(record.access_mode),
         _project_origin:{projectId:record.project_id?Number(record.project_id):null,professionalUserId:Number(record.business_user_id),
           businessProfileId:Number(record.business_profile_id),requestId:Number(id),type:kind,
-          writtenRequirement:requirement.slice(0,3900)},
+          marketplaceSharing:profileShared,writtenRequirement:requirement.slice(0,3900)},
         _qualification:{detailedRequirementCompleted:kind==='quote',budgetProvided:Boolean(kind==='quote'&&record.budget_text),
           projectSizeKnown:Boolean(kind==='quote'&&record.area_text)},
       },
-      pincode:pin,leadType:'basic',accessStrategy:kind==='profile'?'permanent_single':'shared',buyerCapacity:kind==='profile'?1:3,
-      contactConsentAt:new Date(),contactConsentVersion:kind==='profile'?'profile-selected-professional-consent-v1':'project-multi-professional-consent-v1',
+      pincode:pin,leadType:'basic',accessStrategy:kind==='profile'&&!profileShared?'permanent_single':'shared',buyerCapacity:kind==='profile'&&!profileShared?1:3,
+      contactConsentAt:new Date(),contactConsentVersion:kind==='profile'?(profileShared?'profile-multi-professional-consent-v1':'profile-selected-professional-consent-v1'):'project-multi-professional-consent-v1',
       intakeSubmissionKey:'project_'+kind+'_'+id,
       qualityGateContext:kind==='quote'?'project_quote':kind==='profile'?'profile_callback':'project_callback',createdBy:null,
     };
