@@ -482,7 +482,8 @@ jobs:
       - frontend
       - backend
       - backend-startup
-    runs-on: ubuntu-latest
+    # Playwright 1.55 Chromium does not support the ubuntu-latest (26.04) image.
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     services:
       postgres:

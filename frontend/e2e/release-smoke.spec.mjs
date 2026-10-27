@@ -10,7 +10,7 @@ const accounts={
 async function login(page,email){
   await page.goto('/login')
   await page.getByLabel('Email address').fill(email)
-  await page.getByLabel('Password').fill(PASSWORD)
+  await page.getByLabel('Password', { exact: true }).fill(PASSWORD)
   const loginResponse=page.waitForResponse(response=>
     response.url().includes('/api/auth/login')&&response.request().method()==='POST'
   )

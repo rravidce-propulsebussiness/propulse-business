@@ -52,4 +52,40 @@ async function isProMember(userId, client = pool) {
   return (await getMembershipAccess(userId, client)).isPro;
 }
 
-module.exports = { getMembershipAccess, getCurrentProMembership, isProMember };
+/**
+ * Short-lived OAuth UserInfo is the only source of this Business OS membership
+ * assertion. Read actual paid membership rows, not profile roles or frontend data.
+ * Scale takes precedence if both active tiers overlap.
+ */
+async function getBusinessOsMembership(userId, client = pool) {
+  if (!userId) return { tier: 'none', expires_at: null };
+  const result = await client.query(`
+    SELECT LOWER(COALESCE(p.plan_group,'')) AS tier, m.expires_at
+    FROM memberships m
+    JOIN membership_plans p ON p.id=m.membership_plan_id
+    WHERE m.user_id=$1
+      AND m.status='active'
+      AND m.starts_at<=CURRENT_TIMESTAMP
+      AND m.expires_at>CURRENT_TIMESTAMP
+      AND p.is_active=TRUE
+      AND LOWER(REPLACE(COALESCE(p.plan_type,''),'-','_'))='pro'
+      AND LOWER(COALESCE(p.plan_group,'')) IN ('grow','growth','scale')
+    ORDER BY CASE WHEN LOWER(p.plan_group)='scale' THEN 0 ELSE 1 END,
+             m.expires_at DESC
+    LIMIT 1
+  `, [userId]);
+  const row = result.rows[0];
+  if (!row) return { tier: 'none', expires_at: null };
+  const date = new Date(row.expires_at);
+  if (!Number.isFinite(date.getTime()) || date.getTime() <= Date.now())
+    return { tier: 'none', expires_at: null };
+  return {
+    tier: row.tier === 'scale' ? 'scale' : 'growth',
+    expires_at: date.toISOString(),
+  };
+}
+
+module.exports = {
+  getMembershipAccess, getCurrentProMembership, isProMember,
+  getBusinessOsMembership,
+};
