@@ -1,0 +1,34 @@
+const assert=require('node:assert/strict');
+const fs=require('node:fs');
+const path=require('node:path');
+
+const root=path.resolve(__dirname,'..');
+const source=p=>fs.readFileSync(path.join(root,p),'utf8');
+const sql=source('src/services/professionalEnquirySummaryService.js');
+const routes=source('src/routes/adminRoutes.js');
+const controller=source('src/controllers/adminCallbackController.js');
+const ui=source('../frontend/src/admin/pages/AdminCallbackInbox.jsx');
+
+assert.match(routes,/router\.use\(requireAuth,requireAdmin\)/,'Stats endpoint must remain admin-only');
+assert.match(routes,/get\('\/professional-enquiries\/company-summary',adminCallbackController\.listCompanySummary\)/);
+assert.match(controller,/summary\.listCompanySummary\(\)/);
+assert.match(sql,/FROM professional_project_quote_requests q/);
+assert.match(sql,/FROM project_callback_requests r/);
+assert.match(sql,/GROUP BY r\.business_user_id/);
+assert.match(sql,/COUNT\(\*\) FILTER \(WHERE r\.kind='quote'\)/);
+assert.match(sql,/COUNT\(\*\) FILTER \(WHERE r\.kind='profile'\)/);
+assert.match(sql,/COUNT\(\*\) FILTER \(WHERE r\.kind='callback'\)/);
+assert.match(sql,/COUNT\(DISTINCT r\.marketplace_lead_id\) FILTER \(WHERE r\.verified_lead\)/);
+assert.match(sql,/l\.custom_fields->'_project_origin'->>'professionalUserId'=r\.business_user_id::text/);
+assert.doesNotMatch(sql,/\bLIMIT\s+\d+\b/i,'All-time company summary must not be truncated');
+assert.match(ui,/\/admin\/professional-enquiries\/company-summary/);
+assert.match(ui,/Requests received by company/);
+assert.match(ui,/All-time totals from submitted requests/);
+assert.match(ui,/Quote requests/);
+assert.match(ui,/Project callbacks/);
+assert.match(ui,/Profile callbacks/);
+assert.match(ui,/Linked leads/);
+assert.match(ui,/selectedCompany/);
+assert.match(ui,/<EnquiryReview item=\{item\}/,'Existing review controls must be reused, not duplicated');
+assert.match(ui,/<details className="admin-enquiry-review-details">/);
+console.log('Professional enquiry company totals and secured lead-link semantics passed');
