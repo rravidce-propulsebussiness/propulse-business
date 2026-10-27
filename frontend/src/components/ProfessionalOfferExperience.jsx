@@ -40,7 +40,6 @@ export default function ProfessionalOfferExperience(){
   const [offers,setOffers]=useState([])
   const [popup,setPopup]=useState(null)
   const [panel,setPanel]=useState(false)
-  const [loading,setLoading]=useState(false)
   const prompted=useRef(false)
   const openedPopupIds=useRef(new Set())
   const userId=user?.id
@@ -52,6 +51,7 @@ export default function ProfessionalOfferExperience(){
       const list=Array.isArray(response?.offers)?response.offers:[]
       setOffers(list)
       if(manualOpen){
+        setPopup(null)
         setPanel(true)
       }else if(!prompted.current){
         const next=list.find(o=>o.show_popup&&!openedPopupIds.current.has(o.id))
@@ -91,7 +91,7 @@ export default function ProfessionalOfferExperience(){
   if(!enabled)return null
   const banner=offers.find(item=>item.display_mode!=='popup')
   return <>
-    {banner&&<div className="po-dashboard-banner" role="complementary" aria-label="Professional offer">
+    {banner&&(!popup||popup.id!==banner.id)&&<div className="po-dashboard-banner" role="complementary" aria-label="Professional offer">
       <span className="po-banner-symbol" aria-hidden="true">✦</span>
       <div><strong>{banner.title}</strong><span>{banner.description}</span></div>
       <button type="button" onClick={()=>go(banner)}>{banner.cta_label} <span aria-hidden="true">→</span></button>
@@ -108,7 +108,7 @@ export default function ProfessionalOfferExperience(){
         <div className="po-drawer-header"><div><small>YOUR PROPULSE BENEFITS</small>
           <h2>Offers & announcements</h2><p>Offers available to your professional account.</p></div>
           <button type="button" onClick={closePanel} aria-label="Close offers">×</button></div>
-        {loading?<p>Loading offers…</p>:offers.length?offers.map(offer=><OfferCard key={offer.id} offer={offer} onGo={go}/>)
+        {offers.length?offers.map(offer=><OfferCard key={offer.id} offer={offer} onGo={go}/>)
           :<div className="po-drawer-empty">No active offers for your account right now.</div>}
       </section>
     </div>,document.body)}
