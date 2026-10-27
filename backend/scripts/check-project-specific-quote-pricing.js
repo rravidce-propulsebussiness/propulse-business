@@ -40,7 +40,7 @@ assert.match(publicService,/price_from,price_unit,duration_label/);
 assert.match(profile,/PACKAGE_PRICE_UNITS/);
 assert.match(requestsPage,/ProfessionalProjectQuotes plans=\{plans\}/);
 assert.match(app,/path="\/professional-requests"/);
-assert.match(userHeader,/to="\\/professional-requests"/);
+assert.match(userHeader,/to="\/professional-requests"/);
 assert.doesNotMatch(profile,/ProfessionalProjectQuotes plans=\{plans\}/);
 assert.match(pricing,/sqft:'\/ sq ft'/);
 assert.match(pricing,/sqyd:'\/ sq yd'/);
