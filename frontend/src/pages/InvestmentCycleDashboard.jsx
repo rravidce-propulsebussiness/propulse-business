@@ -1,3 +1,4 @@
+import BootLoader from '../components/BootLoader'
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { authRequest } from '../utils/auth'
@@ -67,7 +68,7 @@ export default function InvestmentCycleDashboard() {
     return { minimum: mins.length ? Math.min(...mins) : 1, maximum: maxs.length ? Math.max(...maxs) : undefined }
   }, [rules])
 
-  if (loading) return <section className="cycle-dashboard-loading">Loading investment dashboard…</section>
+  if (loading) return <BootLoader contained message="Loading investment dashboard" />
 
   const active = Boolean(cycle), auto = active ? Boolean(cycle.auto_invest) : Boolean(autoInvestChoice)
   const actual = active ? rows.filter(r => r?.parent_investment_id == null).reduce((s, r) => s + Number(r?.amount || 0), 0) : 0
