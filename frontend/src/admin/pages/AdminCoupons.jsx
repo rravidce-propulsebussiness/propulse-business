@@ -370,6 +370,16 @@ export default function AdminCoupons(){
       </div>
     </section>
 
+    <section className="coupon-reward-navigation">
+      <div>
+        <strong>Free leads for new or verified companies</strong>
+        <small>Set first-week registration credits, Basic / Premium allowances, and verified completed-project rewards through your existing Lead Entitlements rules.</small>
+      </div>
+      <button type="button" onClick={()=>navigate('/admin/leads/entitlements')}>
+        Configure free lead rules →
+      </button>
+    </section>
+
     <section className="coupon-kpi-grid">
       <article><div className="coupon-kpi-icon">%</div><div><span>Total coupons</span><strong>{stats.total}</strong><small>Configured campaigns</small></div></article>
       <article className="active"><div className="coupon-kpi-icon">✓</div><div><span>Active now</span><strong>{stats.active}</strong><small>Currently redeemable</small></div></article>
