@@ -18,7 +18,7 @@ assert(wallet.includes('fullyDiscounted'), 'Wallet must preserve zero-payment co
 assert(css.includes('.wallet-public-offers{')&&css.includes('.wallet-coupon-summary{'), 'Wallet coupon styles must live in the wallet stylesheet')
 
 
-assert(!wallet.includes(String.raw`disabled={submitting}/>}\\n      {paymentMode`), 'Wallet must not render a literal backslash-n between payment method and receiving details')
+assert(!wallet.includes(String.raw`disabled={submitting}/>}\n      {paymentMode`), 'Wallet must not render a literal backslash-n between payment method and receiving details')
 assert(!wallet.includes('placeholder="e.g. 1000" autoFocus'), 'Top-up modal must not automatically scroll down to the amount field when opened')
 assert(wallet.includes('aria-labelledby="wallet-add-title"'), 'Top-up modal needs an accessible title')
 assert(!app.includes('<SoundControl/>')&&!app.includes("import SoundControl"), 'The floating sound icon must not mount sitewide')
