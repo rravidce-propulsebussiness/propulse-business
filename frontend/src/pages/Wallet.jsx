@@ -350,7 +350,30 @@ export default function Wallet(){
         </div>
 
         {!fullyDiscounted&&paymentMode==='offline'&&<label>Payment reference / UTR<input value={reference} onChange={e=>setReference(e.target.value)} placeholder="Enter transaction ID / UTR"/></label>}
-        {!fullyDiscounted&&paymentMode==='offline'&&<label>Payment proof <small>Optional, max 5 MB</small><input id="wallet-proof" type="file" accept="image/*,.pdf" onChange={e=>setProof(e.target.files?.[0]||null)}/></label>}
+        {!fullyDiscounted&&paymentMode==='offline'&&<div className="wallet-proof-field">
+          <div className="wallet-proof-heading" id="wallet-proof-help">
+            <strong>Payment proof</strong>
+            <small>Optional · JPG, PNG or PDF · Max 5 MB</small>
+          </div>
+          <input id="wallet-proof" className="wallet-proof-input" type="file"
+            accept="image/jpeg,image/png,application/pdf"
+            aria-label="Payment proof (optional)"
+            aria-describedby="wallet-proof-help"
+            disabled={submitting}
+            onChange={e=>setProof(e.target.files?.[0]||null)}/>
+          <label className="wallet-proof-upload" htmlFor="wallet-proof">
+            <span aria-hidden="true" className="wallet-proof-upload-icon">＋</span>
+            {proof?'Change File':'Choose File'}
+          </label>
+          {proof&&<div className="wallet-proof-selected" role="status">
+            <span title={proof.name}>{proof.name} · {(proof.size/1024/1024).toFixed(2)} MB</span>
+            <button type="button" disabled={submitting} onClick={()=>{
+              setProof(null)
+              const input=document.getElementById('wallet-proof')
+              if(input)input.value=''
+            }}>Remove</button>
+          </div>}
+        </div>}
         <button className="wallet-primary" disabled={submitting||(!fullyDiscounted&&!paymentMode)}>{submitting?'Processing…':fullyDiscounted?'Add to wallet for ₹0':paymentMode==='online'?`Pay ${money(payable)} Online`:'Submit balance request'} <span>→</span></button>
       </form>
     </section></div>}
