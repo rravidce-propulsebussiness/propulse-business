@@ -5,6 +5,7 @@ import { lazy, Suspense, useEffect, useState } from 'react';
 import './styles/PublicFooterCompact.css';
 import GlobalLeadPopup from './components/GlobalLeadPopup';
 import SupportChatWidget from './components/SupportChatWidget';
+import SoundControl from './components/SoundControl';
 import SeoManager from './components/SeoManager';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
@@ -23,7 +24,7 @@ function InvestorSectionWithHeader({type}){return <><InvestorHeader/>{type==='pa
 function RequirementFlowRoute(){const {flowKey}=useParams();return <RequirementWizard flowKey={flowKey}/>}
 function LegacySolutionRedirect({hash}){const location=useLocation();const targetHash=hash?'#'+hash:(location.hash||'#construction');return <Navigate to={'/quote'+location.search+targetHash} replace/>}
 
-function GlobalWidgets(){const location=useLocation();const pathname=location.pathname.replace(/\/+$/,'')||'/';if(MINIMAL_AUTH_ROUTES.has(pathname))return null;return <><GlobalLeadPopup/><SupportChatWidget/></>}
+function GlobalWidgets(){const location=useLocation();const pathname=location.pathname.replace(/\/+$/,'')||'/';if(MINIMAL_AUTH_ROUTES.has(pathname))return null;return <><GlobalLeadPopup/><SupportChatWidget/><SoundControl/></>}
 function ContactRoute(){const location=useLocation();const audience=new URLSearchParams(location.search).get('audience');if(audience==='lead_partners')return <Navigate to="/lead-partner/contact" replace/>;return <Contact/>}
 function ProfessionalsRoute(){const user=getUser();if(user?.role==='admin')return <Navigate to="/admin/leads" replace/>;if(user?.role==='lead_partner')return <Navigate to="/lead-partner/dashboard" replace/>;return <Leads/>}
 function SiteAppearance({children}){
