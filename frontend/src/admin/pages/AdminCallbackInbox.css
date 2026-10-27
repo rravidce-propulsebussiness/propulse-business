@@ -50,3 +50,152 @@
 .admin-enquiry-mode button{padding:9px 12px;border:0;border-radius:8px;background:#123d5d;color:#fff;font-size:12px;font-weight:850;cursor:pointer}
 .admin-enquiry-mode button:disabled{cursor:not-allowed;opacity:.48}
 .admin-enquiry-mode small{font-size:11px;line-height:1.5;color:#60798b}
+
+
+/* Unified professional enquiries: company-level intelligence on the existing page. */
+.admin-enquiry-workspace {display:grid;gap:15px;min-width:0;color:#143456;}
+.admin-enquiry-workspace .admin-enquiry-hero {
+  margin:0;padding:20px 23px;gap:18px;
+  border:1px solid #e1e7f0;border-radius:20px;
+  background:linear-gradient(116deg,#fff 25%,#f2f7fd 74%,#fff4ec);
+  box-shadow:0 9px 25px rgba(12,42,84,.04);
+}
+.admin-enquiry-workspace .admin-enquiry-hero span {color:#fa5c1b;}
+.admin-enquiry-workspace .admin-enquiry-hero h2 {
+  font-size:clamp(21px,2.1vw,29px);line-height:1.15;letter-spacing:-.04em;
+  color:#0d2d55;margin:7px 0;
+}
+.admin-enquiry-workspace .admin-enquiry-hero button {background:white;min-height:40px;white-space:nowrap;}
+.admin-enquiry-workspace .admin-enquiry-hero button:disabled {opacity:.5;cursor:wait;}
+.admin-enquiry-metrics {display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;}
+.admin-enquiry-metric {
+  min-width:0;display:grid;gap:6px;align-content:center;
+  padding:16px 17px;background:#fff;border:1px solid #e1e8f1;border-radius:17px;
+  box-shadow:0 5px 17px #0e2a5008;
+}
+.admin-enquiry-metric small {font-size:11px;font-weight:850;color:#526a81;}
+.admin-enquiry-metric strong {font-size:clamp(21px,2vw,30px);font-weight:900;color:#0c315c;letter-spacing:-.045em;line-height:1.1;}
+.admin-enquiry-metric span {font-size:11px;color:#8293a2;line-height:1.45;}
+.admin-enquiry-companies,.admin-enquiry-inbox {
+  display:grid;gap:14px;min-width:0;
+  padding:18px;background:white;border:1px solid #e0e8f0;border-radius:19px;
+  box-shadow:0 6px 25px #102b4909;
+}
+.admin-enquiry-section-head {
+  display:flex;align-items:start;justify-content:space-between;gap:14px;
+}
+.admin-enquiry-section-head h3 {font-size:17px;line-height:1.2;letter-spacing:-.02em;margin:0;color:#102f51;}
+.admin-enquiry-section-head p {font-size:11px;line-height:1.5;color:#697e92;margin:7px 0 0;max-width:800px;}
+.admin-enquiry-section-head>span {
+  flex-shrink:0;padding:7px 10px;font-size:11px;font-weight:800;
+  color:#234968;background:#f0f5fa;border-radius:10px;
+}
+.admin-enquiry-company-scroll {
+  width:100%;min-width:0;overflow-x:auto;border:1px solid #e6edf4;border-radius:12px;
+}
+.admin-enquiry-company-table {width:100%;min-width:860px;border-collapse:collapse;font-size:12px;text-align:left;}
+.admin-enquiry-company-table thead {background:#f7f9fc;}
+.admin-enquiry-company-table th {
+  padding:13px 12px;border-bottom:1px solid #e4ebf3;
+  color:#6a7b8e;font-size:10px;font-weight:800;white-space:nowrap;
+}
+.admin-enquiry-company-table td {border-bottom:1px solid #edf0f6;padding:12px;color:#375674;}
+.admin-enquiry-company-table tr:last-child td {border-bottom:0;}
+.admin-enquiry-company-table tbody tr:hover {background:#fafcff;}
+.admin-enquiry-company-table tbody tr.selected {background:#fff4ec;}
+.admin-enquiry-company-table td strong {display:block;color:#153550;font-weight:850;}
+.admin-enquiry-company-table td small {display:block;margin-top:4px;font-size:10px;color:#8796a4;}
+.admin-enquiry-company-table td button {
+  cursor:pointer;white-space:nowrap;font-size:11px;font-weight:850;
+  padding:8px 11px;border:1px solid #ffbda4;background:#fff7f1;
+  color:#d45324;border-radius:9px;
+}
+.admin-enquiry-company-table td button:hover {background:#ffebdf;}
+.admin-enquiry-linked {
+  display:inline-flex;align-items:center;justify-content:center;
+  min-width:26px;border-radius:7px;padding:4px 7px;
+  font-weight:800;color:#187c58;background:#e9f7ef;
+}
+.admin-enquiry-tabs {display:flex;align-items:center;gap:7px;flex-wrap:wrap;border-bottom:1px solid #e8edf3;padding-bottom:10px;}
+.admin-enquiry-tabs button {
+  display:inline-flex;align-items:center;gap:8px;
+  cursor:pointer;border:1px solid transparent;background:transparent;
+  padding:10px 13px;border-radius:10px;color:#4b647e;
+  font-weight:800;font-size:12px;
+}
+.admin-enquiry-tabs button.active {color:#fff;background:#ff641d;box-shadow:0 6px 15px #f15c2224;}
+.admin-enquiry-tabs button:not(.active):hover {background:#f3f6fb;}
+.admin-enquiry-tabs button span {
+  padding:2px 7px;border-radius:7px;background:#edf1f5;color:#47617c;font-size:10px;
+}
+.admin-enquiry-tabs button.active span {background:#ffffff36;color:#fff;}
+.admin-enquiry-filters {display:grid;grid-template-columns:minmax(220px,1fr) minmax(180px,300px) auto;align-items:end;gap:10px;}
+.admin-enquiry-filters label {display:grid;gap:6px;min-width:0;font-size:11px;font-weight:850;color:#5c7085;}
+.admin-enquiry-filters :is(input,select) {
+  width:100%;box-sizing:border-box;border-radius:11px;min-height:42px;
+  border:1px solid #dce5ef;background:#fff;padding:10px 12px;
+  outline:none;font:inherit;font-size:12px;color:#153753;
+}
+.admin-enquiry-filters :is(input,select):focus-visible {border-color:#ee784d;box-shadow:0 0 0 3px #f475271e;}
+.admin-enquiry-reset {
+  min-height:42px;white-space:nowrap;border:1px solid #e2e8f1;
+  padding:0 12px;border-radius:10px;background:#f8fafc;
+  color:#32608c;font-weight:800;font-size:11px;cursor:pointer;
+}
+.admin-enquiry-kind {display:grid;gap:10px;min-width:0;}
+.admin-enquiry-kind+.admin-enquiry-kind {border-top:1px solid #e8eef5;padding-top:18px;}
+.admin-enquiry-kind-heading {display:flex;align-items:center;justify-content:space-between;gap:10px;}
+.admin-enquiry-kind-heading h4 {font-size:14px;margin:0;color:#1b4263;}
+.admin-enquiry-kind-heading span {font-size:11px;color:#788c9e;font-weight:700;}
+.admin-enquiry-workspace .admin-callback-row {
+  gap:12px;align-items:start;
+  grid-template-columns:minmax(175px,1fr) minmax(220px,1.3fr) minmax(225px,1fr);
+  background:#fbfcfe;border:1px solid #e7ecf3;padding:15px;border-radius:13px;
+}
+.admin-enquiry-workspace .admin-callback-row h3 {margin:6px 0;font-size:14px;}
+.admin-enquiry-workspace .admin-callback-contact {gap:5px;}
+.admin-enquiry-workspace .admin-callback-contact p {line-height:1.45;}
+.admin-enquiry-workspace .admin-quote-proposal {
+  border:0;padding:0;background:transparent;gap:8px;
+}
+.admin-enquiry-review-details {margin-top:9px;border:1px solid #dfe7f1;border-radius:10px;background:#fff;min-width:0;}
+.admin-enquiry-review-details summary {
+  cursor:pointer;list-style:none;padding:12px;font-weight:800;color:#244e72;
+  display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:12px;
+}
+.admin-enquiry-review-details summary::-webkit-details-marker {display:none;}
+.admin-enquiry-review-details summary:after {content:'+';font-size:18px;color:#eb6026;}
+.admin-enquiry-review-details[open] summary:after {content:'−';}
+.admin-enquiry-review-details[open] summary {border-bottom:1px solid #e9eff5;}
+.admin-enquiry-review-details .admin-enquiry-review {border:0;margin:0;border-radius:0 0 10px 10px;}
+.admin-enquiry-status-linked,.admin-enquiry-status-pending {
+  display:block;padding:7px 9px;border-radius:8px;
+  font-size:11px;line-height:1.45;font-weight:750;
+}
+.admin-enquiry-status-linked {background:#eaf7f0;color:#16744f;}
+.admin-enquiry-status-pending {background:#fff3e7;color:#a55f30;}
+@media(max-width:1150px) {
+  .admin-enquiry-metrics {grid-template-columns:repeat(2,minmax(0,1fr));}
+  .admin-enquiry-workspace .admin-callback-row {grid-template-columns:repeat(2,minmax(0,1fr));}
+  .admin-enquiry-workspace .admin-callback-row >:last-child {grid-column:1/-1;}
+}
+@media(max-width:750px) {
+  .admin-enquiry-workspace .admin-enquiry-hero {padding:18px;flex-direction:column;align-items:stretch;}
+  .admin-enquiry-workspace .admin-enquiry-hero button {align-self:flex-start;}
+  .admin-enquiry-companies,.admin-enquiry-inbox {padding:12px;border-radius:14px;}
+  .admin-enquiry-workspace .admin-callback-row {grid-template-columns:1fr;}
+  .admin-enquiry-workspace .admin-callback-row >:last-child {grid-column:auto;}
+  .admin-enquiry-filters {grid-template-columns:1fr;}
+  .admin-enquiry-metrics {gap:8px;}
+  .admin-enquiry-metric {padding:12px;}
+  .admin-enquiry-section-head {flex-direction:column;align-items:start;}
+}
+@media(prefers-reduced-motion:no-preference) {
+  .admin-enquiry-metric,.admin-enquiry-companies,.admin-enquiry-inbox {
+    animation:adminEnquiryEnter .28s ease-out both;
+  }
+  @keyframes adminEnquiryEnter {
+    from{opacity:.55;transform:translateY(7px);}
+    to{opacity:1;transform:translateY(0);}
+  }
+}

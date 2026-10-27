@@ -1,6 +1,7 @@
 const callbackService=require('../services/projectCallbackService');
 const quotes=require('../services/professionalProjectQuoteService');
 const marketplace=require('../services/projectMarketplaceLeadService');
+const summary=require('../services/professionalEnquirySummaryService');
 
 async function list(req,res){
   try{return res.json({data:await callbackService.listForAdmin()});}
@@ -13,6 +14,13 @@ async function updateStatus(req,res){
     const status=code==='PROFILE_NOT_FOUND'?404:code.startsWith('INVALID_')?400:500;
     if(status===500)console.error('Admin callback status update failed:',error.message);
     return res.status(status).json({error:status===500?'Unable to update callback status':error.message});
+  }
+}
+async function listCompanySummary(req,res){
+  try { return res.json({data:await summary.listCompanySummary()}); }
+  catch(error){
+    console.error('Admin company enquiry totals failed:',error.message);
+    return res.status(500).json({error:'Unable to load company enquiry totals'});
   }
 }
 async function listQuotes(req,res){
@@ -76,4 +84,4 @@ async function setAccessMode(req,res){
     return res.status(500).json({error:'Unable to save enquiry access mode'});
   }
 }
-module.exports={list,updateStatus,listQuotes,retryMarketplace,authorizeLegacyMarketplace,deleteUnlinkedTestQuote,setAccessMode};
+module.exports={list,updateStatus,listQuotes,listCompanySummary,retryMarketplace,authorizeLegacyMarketplace,deleteUnlinkedTestQuote,setAccessMode};
