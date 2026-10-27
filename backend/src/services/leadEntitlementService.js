@@ -349,7 +349,8 @@ async function claimLead(userId,leadId){
       // Preserve existing marketplace membership entitlements for other
       // professionals on the default shared lead mode. Explicitly restricted
       // modes (and the chosen professional's private path) use Requests only.
-      if(owner||mode!=='member_free_nonmember_paid')
+      const privateProfile=lead.source==='professional_profile_callback'&&!(lead.custom_fields?._project_origin?.marketplaceSharing===true&&lead.access_strategy==='shared');
+      if(owner||mode!=='member_free_nonmember_paid'||privateProfile)
         fail('This enquiry must be accepted through the selected professional Requests inbox','REQUEST_FORBIDDEN');
     }
     if(lead.status!=='available')fail('Lead is not available','LEAD_UNAVAILABLE');
