@@ -1,3 +1,4 @@
+import BootLoader from '../../components/BootLoader'
 import {useCallback,useEffect,useMemo,useState} from 'react';
 import {useSearchParams} from 'react-router-dom';
 import {authRequest} from '../../utils/auth';
@@ -194,7 +195,7 @@ export default function AdminLeadPartnerPayouts(){
         <button type="button" className="refresh" onClick={()=>load(page)} disabled={loading}>↻ Refresh</button>
       </div>
 
-      {loading?<div className="alpp-state"><div className="alpp-spinner"/>Loading payout ledger…</div>:!visibleRows.length?<div className="alpp-empty"><div>₹</div><h3>No payouts in this view</h3><p>{status==='pending'?'There are no partner withdrawal requests waiting for transfer.':'Try another status or clear the search.'}</p></div>:<div className="alpp-table-wrap">
+      {loading?<BootLoader contained message="Loading payout ledger" />:!visibleRows.length?<div className="alpp-empty"><div>₹</div><h3>No payouts in this view</h3><p>{status==='pending'?'There are no partner withdrawal requests waiting for transfer.':'Try another status or clear the search.'}</p></div>:<div className="alpp-table-wrap">
         <table className="alpp-table">
           <thead><tr><th>PAYOUT</th><th>PARTNER</th><th>AMOUNT</th><th>SOURCE</th><th>METHOD</th><th>REQUESTED</th><th>STATUS</th><th>TRANSFER REF</th><th>ACTION</th></tr></thead>
           <tbody>{visibleRows.map(r=><tr key={r.id} className={r.status==='pending'?'pending-row':''}>
@@ -232,7 +233,7 @@ export default function AdminLeadPartnerPayouts(){
         <header><div><span>DIRECT PARTNER TRANSFER</span><h2>Transfer available earnings</h2><p>This creates and settles a payout in the existing ledger in one operation.</p></div><button onClick={closeDirect} disabled={!!busy}>×</button></header>
         <div className="alpp-modal-body">
           <label className="alpp-field"><span>Lead Partner</span><select value={directPartnerId} onChange={e=>chooseDirectPartner(e.target.value)}><option value="">Select partner</option>{partners.map(p=><option key={p.id} value={p.id}>{p.user_name||p.business_name||`Partner #${p.id}`} · {p.user_email} · Available {money(p.available_earnings)}</option>)}</select></label>
-          {directLoading?<div className="alpp-inline-loading">Loading partner balance and payout account…</div>:selectedDirectPartner&&<>
+          {directLoading?<BootLoader contained compact message="Loading partner payout account" />:selectedDirectPartner&&<>
             <div className="alpp-direct-summary"><article><span>AVAILABLE NOW</span><strong>{money(directDetails?.availableEarnings??selectedDirectPartner.available_earnings)}</strong><small>Excludes amounts reserved by pending requests</small></article><article><span>PENDING REQUESTS</span><strong>{money(directDetails?.pendingTransfer??selectedDirectPartner.pending_transfer)}</strong><small>{selectedDirectPartner.pending_payout_count||0} request{Number(selectedDirectPartner.pending_payout_count||0)===1?'':'s'}</small></article></div>
             <PayoutAccount snapshot={directDetails?.partner?.payout_method==='upi'?{method:'upi',upi_id:directDetails?.partner?.upi_id}:directDetails?.partner?.payout_method==='bank'?{method:'bank',account_holder_name:directDetails?.partner?.account_holder_name,account_number:directDetails?.partner?.account_number,ifsc_code:directDetails?.partner?.ifsc_code,bank_name:directDetails?.partner?.bank_name}:null}/>
             <label className="alpp-field"><span>Transfer amount</span><div className="alpp-money-input"><b>₹</b><input type="number" min="0.01" step="0.01" max={Number((directDetails?.availableEarnings??selectedDirectPartner.available_earnings)||0)} value={directAmount} onChange={e=>setDirectAmount(e.target.value)} placeholder="0.00"/></div><small>Maximum available: {money(directDetails?.availableEarnings??selectedDirectPartner.available_earnings)}</small></label>
