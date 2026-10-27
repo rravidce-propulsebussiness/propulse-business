@@ -25,3 +25,25 @@
 @media(max-width:1000px){.pr-layout{grid-template-columns:1fr}.pr-side{position:static;grid-row:1}.pr-cover{align-items:flex-start}.pr-cover-actions{min-width:195px}}
 @media(max-width:700px){.pr-details-main{padding:20px 14px 48px}.pr-cover{padding:27px 20px;flex-direction:column;border-radius:18px}.pr-ident{align-items:flex-start;gap:14px}.pr-avatar{width:58px;height:58px;flex-basis:58px;font-size:18px;border-radius:13px}.pr-cover h1{font-size:28px}.pr-cover-actions{width:100%}.pr-panel{padding:20px}.pr-side-card{padding:20px}.pr-project-grid,.pr-plan-grid{grid-template-columns:1fr}.pr-stats{gap:22px}.pr-sticky-nav a{padding:10px 12px}}
 @media(prefers-reduced-motion:reduce){.pr-details *{scroll-behavior:auto!important}}
+
+
+.pr-all-professionals{display:inline-flex;align-items:center;margin-bottom:18px;padding:10px 15px;background:#fff;border:1px solid #dce6ed;border-radius:10px;font-size:13px;font-weight:850;color:#244d6d;text-decoration:none}
+.pr-all-professionals:hover{color:#e45a22;border-color:#eeb191}
+.pr-enquiry-switch{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:19px 0}
+.pr-enquiry-switch button{background:#f7fafc;color:#53718a;border:1px solid #dfe8ef;border-radius:10px;padding:13px 10px;font-size:13px;font-weight:850;cursor:pointer}
+.pr-enquiry-switch button.active{background:#fff2e9;border-color:#f29362;color:#d95116}
+.pr-callback-panel .pcf-package-quote{display:grid;gap:12px;border:1px solid #ebdfd5;background:#fffcf9;border-radius:12px;padding:16px;margin:14px 0}
+.pr-callback-panel .pcf-package-quote>strong{color:#193d57}
+.pr-callback-panel .pcf-package-quote>p{margin:0;font-size:12px;color:#718798}
+.pr-callback-panel .pcf-package-options{display:grid;gap:8px}
+.pr-callback-panel .pcf-package-options label{display:flex;align-items:center;gap:10px;border:1px solid #e2e8f0;border-radius:11px;background:#fff;padding:11px 12px;cursor:pointer}
+.pr-callback-panel .pcf-package-options label.chosen{border-color:#ff8f53;background:#fff7f0}
+.pr-callback-panel .pcf-package-options label input{accent-color:#e75e22}
+.pr-callback-panel .pcf-package-options label span{flex:1;min-width:0}
+.pr-callback-panel .pcf-package-options label span b{display:block;color:#173852}
+.pr-callback-panel .pcf-package-options label span small{color:#7f91a2;display:block;line-height:1.4}
+.pr-callback-panel .pcf-package-options label>strong{color:#cf5522;white-space:nowrap;font-size:12px}
+.pr-callback-panel .pcf-price-preview{background:#eaf7ef;border-radius:9px;padding:12px!important;display:grid;gap:4px;margin:0!important}
+.pr-callback-panel .pcf-price-preview b{color:#146e4c}
+.pr-callback-panel .pcf-price-preview small{color:#4a7664}
+@media(max-width:600px){.pr-enquiry-switch{grid-template-columns:1fr}.pr-callback-panel .pcf-package-options label{flex-wrap:wrap}}
