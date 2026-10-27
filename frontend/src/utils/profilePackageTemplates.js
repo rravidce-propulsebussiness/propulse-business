@@ -43,17 +43,19 @@ export function createDefaultProfilePackages(industry='construction'){
 // Maintain all saved plans, including renamed packages and documents, without
 // silently changing their industry, price, or publication status.
 export function resolveProfilePackages(savedPlans=[],industry='construction'){
-  const result=[...savedPlans.map(plan=>({...plan}))];
+  const result=savedPlans.map(plan=>({...plan}));
   for(const group of ['construction','design']){
     const existing=result.filter(item=>item.industry===group);
-    const originals=createDefaultProfilePackages(group);
-    for(const template of originals){
-      if(!existing.some(item=>new RegExp('^'+template.title+'(?:\\\\b|$)','i').test(String(item.title||'').trim())||
-        (template.title==='Royal'&&/^luxury(?:\\\\b|$)/i.test(String(item.title||'').trim())))){
-        result.push(template);
-      }
+    for(const template of createDefaultProfilePackages(group)){
+      if(existing.length>=3)break;
+      const matched=existing.some(item=>{
+        const name=String(item.title||'').trim().toLowerCase();
+        const tier=template.title.toLowerCase();
+        return name===tier||name.startsWith(tier+' ')||
+          (tier==='royal'&&(name==='luxury'||name.startsWith('luxury ')));
+      });
+      if(!matched){result.push(template);existing.push(template);}
     }
   }
-  // An unclassified old plan remains editable, but is never silently enabled.
   return result;
 }
