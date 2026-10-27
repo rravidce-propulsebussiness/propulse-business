@@ -25,8 +25,13 @@ function rewardFor(coupon,subtotal){
   if(type==='lead_bonus'){
     return{
       type:'lead_bonus',
-      leadType:String(coupon.bonus_lead_type||'shared')==='premium'?'premium':'shared',
-      quantity:Math.max(0,Number(coupon.bonus_lead_quantity||0)),
+      leadType:String(coupon.bonus_lead_type||'shared'),
+      quantity:Math.max(0,Number(coupon.bonus_lead_quantity||0))+
+        (coupon.bonus_lead_type==='both'?Math.max(0,Number(coupon.bonus_premium_quantity||0)):0),
+      sharedQuantity:coupon.bonus_lead_type==='premium'?0:Math.max(0,Number(coupon.bonus_lead_quantity||0)),
+      premiumQuantity:coupon.bonus_lead_type==='premium'
+        ?Math.max(0,Number(coupon.bonus_lead_quantity||0))
+        :coupon.bonus_lead_type==='both'?Math.max(0,Number(coupon.bonus_premium_quantity||0)):0,
       validDays:Math.max(0,Number(coupon.bonus_valid_days||0))
     };
   }
@@ -48,8 +53,10 @@ function benefitSummary(coupon,subtotal=null){
   }
   if(type==='lead_bonus'){
     const quantity=Math.max(0,Number(coupon.bonus_lead_quantity||0));
-    const leadType=String(coupon.bonus_lead_type||'shared')==='premium'?'Premium':'Basic';
-    return{type,title:`Get ${quantity} bonus ${leadType} lead${quantity===1?'':'s'}`,quantity,leadType,validDays:Number(coupon.bonus_valid_days||0)};
+    const leadType=String(coupon.bonus_lead_type||'shared')==='premium'?'Premium':coupon.bonus_lead_type==='both'?'Basic + Premium':'Basic';
+    return{type,title:coupon.bonus_lead_type==='both'
+      ?`Get ${quantity} Basic and ${Number(coupon.bonus_premium_quantity||0)} Premium lead credits`
+      :`Get ${quantity} bonus ${leadType} lead${quantity===1?'':'s'}`,quantity,leadType,validDays:Number(coupon.bonus_valid_days||0)};
   }
   return{
     type:'discount',
@@ -103,6 +110,20 @@ function purchaseTypesFrom(value,fallback=['membership','lead']){
   if(!types.length)fail('Select at least one purchase type','INVALID_COUPON');
   return types;
 }
+function validateBenefitScope(benefitType,purchaseTypes){
+  if(benefitType==='wallet_bonus'&&(purchaseTypes.length!==1||purchaseTypes[0]!=='wallet_topup'))
+    fail('Bonus wallet balance is available only when adding money to the wallet','INVALID_REWARD_SCOPE');
+  if(benefitType==='lead_bonus'&&purchaseTypes.some(type=>!['membership','lead'].includes(type)))
+    fail('Bonus lead credits may be awarded only after membership or lead purchases','INVALID_REWARD_SCOPE');
+}
+function membershipAudiencesFrom(input,fallback=['all']){
+  const allowed=['all','grow','scale','non_member'];
+  const value=Array.isArray(input)?input:fallback;
+  const selected=[...new Set(value.map(String))];
+  if(!selected.length||selected.some(group=>!allowed.includes(group))||(selected.includes('all')&&selected.length>1))
+    fail('Choose All, or one or more of GROW, SCALE and Non-members','INVALID_COUPON');
+  return selected;
+}
 function benefitFrom(input,existing=null){
   const benefitType=['discount','wallet_bonus','lead_bonus'].includes(input?.benefit_type)
     ?input.benefit_type
@@ -123,16 +144,20 @@ function benefitFrom(input,existing=null){
   if(benefitType==='wallet_bonus'&&(!Number.isFinite(rewardValue)||rewardValue<=0||(rewardValueType==='percent'&&rewardValue>1000))){
     fail('Invalid wallet bonus value','INVALID_COUPON');
   }
-  const bonusLeadType=String(input?.bonus_lead_type??existing?.bonus_lead_type??'shared')==='premium'?'premium':'shared';
+  const requestedLeadType=String(input?.bonus_lead_type??existing?.bonus_lead_type??'shared');
+  const bonusLeadType=['premium','both'].includes(requestedLeadType)?requestedLeadType:'shared';
   const rawQuantity=input?.bonus_lead_quantity===undefined?Number(existing?.bonus_lead_quantity||0):Number(input.bonus_lead_quantity);
   const bonusLeadQuantity=benefitType==='lead_bonus'?Math.round(rawQuantity):0;
-  if(benefitType==='lead_bonus'&&(!Number.isInteger(bonusLeadQuantity)||bonusLeadQuantity<1||bonusLeadQuantity>1000)){
-    fail('Bonus lead quantity must be between 1 and 1000','INVALID_COUPON');
+  const rawPremium=input?.bonus_premium_quantity===undefined?Number(existing?.bonus_premium_quantity||0):Number(input.bonus_premium_quantity);
+  const bonusPremiumQuantity=benefitType==='lead_bonus'&&bonusLeadType==='both'?rawPremium:0;
+  if(benefitType==='lead_bonus'&&(!Number.isInteger(rawQuantity)||bonusLeadQuantity<1||bonusLeadQuantity>1000||
+    (bonusLeadType==='both'&&(!Number.isInteger(bonusPremiumQuantity)||bonusPremiumQuantity<1||bonusPremiumQuantity>1000)))){
+    fail('Configure 1–1000 Basic and/or Premium lead credits','INVALID_COUPON');
   }
   const rawValidDays=input?.bonus_valid_days===undefined?Number(existing?.bonus_valid_days??30):Number(input.bonus_valid_days);
   const bonusValidDays=Math.round(rawValidDays);
   if(!Number.isInteger(bonusValidDays)||bonusValidDays<0||bonusValidDays>3650)fail('Bonus lead validity must be between 0 and 3650 days','INVALID_COUPON');
-  return{benefitType,discountType,discountValue,rewardValueType,rewardValue,bonusLeadType,bonusLeadQuantity,bonusValidDays};
+  return{benefitType,discountType,discountValue,rewardValueType,rewardValue,bonusLeadType,bonusLeadQuantity,bonusPremiumQuantity,bonusValidDays};
 }
 async function validateMembershipPlanIds(client,planIds=[]){
   if(!planIds.length)return;
@@ -150,6 +175,8 @@ async function createCoupon(input,adminId){
   const usage=optionalPositive(input.usage_limit,'usage limit',{integer:true});
   const perUser=optionalPositive(input.per_user_limit,'per-user limit',{integer:true});
   const purchaseTypes=purchaseTypesFrom(input.purchase_types);
+  validateBenefitScope(benefit.benefitType,purchaseTypes);
+  const membershipAudiences=membershipAudiencesFrom(input.membership_audiences);
   const userIds=ids(input.user_ids);
   const industryIds=ids(input.industry_ids);
   const planIds=purchaseTypes.includes('membership')?ids(input.membership_plan_ids):[];
@@ -163,16 +190,18 @@ async function createCoupon(input,adminId){
         code,description,discount_type,discount_value,max_discount,min_order_amount,
         usage_limit,per_user_limit,starts_at,expires_at,is_active,created_by,
         purchase_types,membership_plan_ids,benefit_type,reward_value_type,reward_value,
-        bonus_lead_type,bonus_lead_quantity,bonus_valid_days,is_public_offer
+        bonus_lead_type,bonus_lead_quantity,bonus_valid_days,is_public_offer,
+        bonus_premium_quantity,membership_audiences
       )
-      VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13::jsonb,$14::jsonb,$15,$16,$17,$18,$19,$20,$21)
+      VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13::jsonb,$14::jsonb,$15,$16,$17,$18,$19,$20,$21,$22,$23::jsonb)
       RETURNING *
     `,[
       code,input.description||null,benefit.discountType,benefit.discountValue,max,min,usage,perUser,
       window.startsAt,window.expiresAt,input.is_active!==false,adminId,
       JSON.stringify(purchaseTypes),JSON.stringify(planIds),benefit.benefitType,
       benefit.rewardValueType,benefit.rewardValue,benefit.bonusLeadType,
-      benefit.bonusLeadQuantity,benefit.bonusValidDays,input.is_public_offer===true
+      benefit.bonusLeadQuantity,benefit.bonusValidDays,input.is_public_offer===true,
+      benefit.bonusPremiumQuantity,JSON.stringify(membershipAudiences)
     ])).rows[0];
     if(userIds.length)await client.query('INSERT INTO coupon_users(coupon_id,user_id) SELECT $1,x FROM UNNEST($2::int[]) AS x ON CONFLICT DO NOTHING',[row.id,userIds]);
     if(industryIds.length)await client.query('INSERT INTO coupon_industries(coupon_id,industry_id) SELECT $1,x FROM UNNEST($2::int[]) AS x ON CONFLICT DO NOTHING',[row.id,industryIds]);
@@ -199,6 +228,8 @@ async function updateCoupon(id,input){
   const usage=input.usage_limit===undefined?existing.usage_limit:optionalPositive(input.usage_limit,'usage limit',{integer:true});
   const perUser=input.per_user_limit===undefined?existing.per_user_limit:optionalPositive(input.per_user_limit,'per-user limit',{integer:true});
   const purchaseTypes=purchaseTypesFrom(input.purchase_types,jsonArray(existing.purchase_types));
+  validateBenefitScope(benefit.benefitType,purchaseTypes);
+  const membershipAudiences=membershipAudiencesFrom(input.membership_audiences,jsonArray(existing.membership_audiences));
   const userIds=ids(input.user_ids);
   const industryIds=ids(input.industry_ids);
   const rawPlanIds=input.membership_plan_ids===undefined?jsonArray(existing.membership_plan_ids):input.membership_plan_ids;
@@ -218,6 +249,7 @@ async function updateCoupon(id,input){
           is_active=$11,purchase_types=$12::jsonb,membership_plan_ids=$13::jsonb,
           benefit_type=$14,reward_value_type=$15,reward_value=$16,bonus_lead_type=$17,
           bonus_lead_quantity=$18,bonus_valid_days=$19,is_public_offer=$20,
+          bonus_premium_quantity=$22,membership_audiences=$23::jsonb,
           updated_at=CURRENT_TIMESTAMP
       WHERE id=$21
     `,[
@@ -228,7 +260,7 @@ async function updateCoupon(id,input){
       benefit.rewardValueType,benefit.rewardValue,benefit.bonusLeadType,
       benefit.bonusLeadQuantity,benefit.bonusValidDays,
       input.is_public_offer===undefined?Boolean(existing.is_public_offer):Boolean(input.is_public_offer),
-      id
+      id,benefit.bonusPremiumQuantity,JSON.stringify(membershipAudiences)
     ]);
     if(input.user_ids!==undefined){
       await client.query('DELETE FROM coupon_users WHERE coupon_id=$1',[id]);
@@ -270,6 +302,19 @@ async function deleteCoupon(id){
 }
 
 async function audienceEligible(db,coupon,userId,{industryId=null}={}){
+  const segments=membershipAudiencesFrom(jsonArray(coupon.membership_audiences).length
+    ?jsonArray(coupon.membership_audiences):['all']);
+  if(!segments.includes('all')){
+    const member=(await db.query(`
+      SELECT CASE WHEN LOWER(COALESCE(mp.plan_group,''))='scale' THEN 'scale' ELSE 'grow' END AS audience
+      FROM memberships m JOIN membership_plans mp ON mp.id=m.membership_plan_id
+      WHERE m.user_id=$1 AND m.status='active'
+        AND m.starts_at<=CURRENT_TIMESTAMP AND m.expires_at>CURRENT_TIMESTAMP
+        AND LOWER(REPLACE(COALESCE(mp.plan_type,''),'-','_'))='pro'
+      ORDER BY m.expires_at DESC LIMIT 1
+    `,[userId])).rows[0];
+    if(!segments.includes(member?.audience||'non_member'))return false;
+  }
   const targetUserCount=(await db.query('SELECT COUNT(*)::int count FROM coupon_users WHERE coupon_id=$1',[coupon.id])).rows[0].count;
   if(Number(targetUserCount)>0){
     const targetUser=(await db.query('SELECT 1 FROM coupon_users WHERE coupon_id=$1 AND user_id=$2',[coupon.id,userId])).rowCount;
@@ -320,6 +365,7 @@ async function validateForUser({client=pool,userId,code,subtotal,purchaseType,in
   if(coupon.expires_at&&new Date(coupon.expires_at)<=now)fail('This coupon has expired','COUPON_EXPIRED');
   if(Number(coupon.min_order_amount)>amount)fail(`Minimum order amount is ₹${Number(coupon.min_order_amount).toFixed(2)}`,'MIN_ORDER');
   const purchaseTypes=jsonArray(coupon.purchase_types);
+  validateBenefitScope(coupon.benefit_type,purchaseTypes);
   if(purchaseType&&!purchaseTypes.includes(purchaseType))fail('This offer does not apply to this purchase','PURCHASE_NOT_ELIGIBLE');
   const planIds=jsonArray(coupon.membership_plan_ids).map(Number);
   if(membershipPlanId&&planIds.length&&!planIds.includes(Number(membershipPlanId)))fail('This offer does not apply to this membership plan','PLAN_NOT_ELIGIBLE');
@@ -346,9 +392,25 @@ async function getPublicOffersForUser({userId,purchaseType,subtotal=null,members
   if(!['membership','lead','wallet_topup'].includes(purchaseType))return[];
   const normalizedIndustryId=industryId==null||industryId===''?null:Number(industryId);
   const rows=(await pool.query(`
+    WITH current_membership AS (
+      SELECT CASE WHEN LOWER(COALESCE(mp.plan_group,''))='scale' THEN 'scale' ELSE 'grow' END AS audience
+      FROM memberships m
+      JOIN membership_plans mp ON mp.id=m.membership_plan_id
+      WHERE m.user_id=$1
+        AND m.status='active'
+        AND m.starts_at<=CURRENT_TIMESTAMP
+        AND m.expires_at>CURRENT_TIMESTAMP
+        AND LOWER(REPLACE(COALESCE(mp.plan_type,''),'-','_'))='pro'
+      ORDER BY m.expires_at DESC LIMIT 1
+    )
     SELECT c.*
     FROM coupons c
     WHERE c.is_public_offer=TRUE
+      AND (
+        COALESCE(c.membership_audiences,'["all"]'::jsonb) ? 'all'
+        OR COALESCE(c.membership_audiences,'["all"]'::jsonb) ?
+          COALESCE((SELECT audience FROM current_membership),'non_member')
+      )
       AND c.is_active=TRUE
       AND (c.starts_at IS NULL OR c.starts_at<=CURRENT_TIMESTAMP)
       AND (c.expires_at IS NULL OR c.expires_at>CURRENT_TIMESTAMP)
@@ -388,6 +450,9 @@ async function getPublicOffersForUser({userId,purchaseType,subtotal=null,members
   for(const coupon of rows){
     const purchaseTypes=jsonArray(coupon.purchase_types);
     if(!purchaseTypes.includes(purchaseType))continue;
+    // Older mixed-scope rewards are never advertised when the current strict
+    // benefit-to-purchase rules would reject them at checkout.
+    try{validateBenefitScope(coupon.benefit_type,purchaseTypes)}catch{continue}
     const planIds=jsonArray(coupon.membership_plan_ids).map(Number);
     if(membershipPlanId&&planIds.length&&!planIds.includes(Number(membershipPlanId)))continue;
     const previewBase=amount!=null&&Number.isFinite(amount)?amount:Number(coupon.min_order_amount||0);
@@ -404,6 +469,7 @@ async function getPublicOffersForUser({userId,purchaseType,subtotal=null,members
       reward_value:Number(coupon.reward_value||0),
       bonus_lead_type:coupon.bonus_lead_type||'shared',
       bonus_lead_quantity:Number(coupon.bonus_lead_quantity||0),
+      bonus_premium_quantity:Number(coupon.bonus_premium_quantity||0),
       bonus_valid_days:Number(coupon.bonus_valid_days||0),
       starts_at:coupon.starts_at,
       expires_at:coupon.expires_at,
@@ -485,8 +551,8 @@ async function applyRewardForPayment(client,paymentId){
   }
 
   const expiresAt=reward.validDays>0?new Date(Date.now()+reward.validDays*86400000):null;
-  const shared=reward.leadType==='shared'?reward.quantity:0;
-  const premium=reward.leadType==='premium'?reward.quantity:0;
+  const shared=reward.sharedQuantity;
+  const premium=reward.premiumQuantity;
   const grant=(await client.query(`
     INSERT INTO lead_entitlement_grants(
       user_id,source,shared_quantity,premium_quantity,starts_at,expires_at,
@@ -496,7 +562,7 @@ async function applyRewardForPayment(client,paymentId){
     RETURNING *
   `,[
     row.user_id,shared,premium,expiresAt,
-    `Promotion ${row.code}: ${reward.quantity} bonus ${reward.leadType==='premium'?'Premium':'Basic'} lead credit${reward.quantity===1?'':'s'}`
+    `Promotion ${row.code}: ${shared} Basic + ${premium} Premium lead credits`
   ])).rows[0];
   return(await client.query('UPDATE coupon_rewards SET lead_grant_id=$1 WHERE id=$2 RETURNING *',[grant.id,inserted.id])).rows[0];
 }

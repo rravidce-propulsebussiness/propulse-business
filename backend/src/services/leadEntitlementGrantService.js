@@ -164,12 +164,67 @@ async function ensureNewBusinessGrant(userId,client=pool){
   `,[business.id])).rows[0]||null;
 }
 
+/** Late qualification: a verified business may publish its first completed project
+ * after the admin created the campaign. Grant once through the existing unique
+ * (campaign_id,user_id) index, never through a separate credit ledger.
+ */
+async function ensureProjectQualifiedCampaignGrants(userId,client=pool){
+  const campaigns=(await client.query(`
+    SELECT bc.* FROM lead_entitlement_business_campaigns bc
+    WHERE bc.min_completed_projects>0
+      AND NOT EXISTS(SELECT 1 FROM lead_entitlement_grants g
+        WHERE g.user_id=$1 AND g.campaign_id=bc.id)
+    ORDER BY bc.id
+  `,[userId])).rows;
+  if(!campaigns.length)return;
+  const business=await getBusinessContext(userId,client);
+  if(!business||business.role!=='business'||business.is_active!==true)return;
+  const projectCount=Number((await client.query(`
+    SELECT COUNT(DISTINCT p.id)::int AS count
+    FROM business_profile_projects p
+    JOIN business_profiles bp ON bp.id=p.business_profile_id
+    WHERE bp.user_id=$1 AND p.is_published=TRUE
+      AND p.completion_year IS NOT NULL
+  `,[userId])).rows[0]?.count||0);
+  for(const campaign of campaigns){
+    if(projectCount<Number(campaign.min_completed_projects))continue;
+    if(campaign.verification_scope==='verified'&&!business.is_verified)continue;
+    if(campaign.verification_scope==='unverified'&&business.is_verified)continue;
+    if(campaign.industry_id&&!business.industry_ids.includes(Number(campaign.industry_id)))continue;
+    if(campaign.state_id&&!business.state_ids.includes(Number(campaign.state_id)))continue;
+    if(campaign.city_id&&!business.city_ids.includes(Number(campaign.city_id)))continue;
+    if(campaign.audience_scope==='specific_users'){
+      const assigned=(await client.query(
+        'SELECT 1 FROM lead_entitlement_business_campaign_users WHERE campaign_id=$1 AND user_id=$2',
+        [campaign.id,userId])).rowCount;
+      if(!assigned)continue;
+    }
+    await client.query(`
+      INSERT INTO lead_entitlement_grants(
+        user_id,source,campaign_id,shared_quantity,premium_quantity,
+        starts_at,expires_at,claim_expiry_days,allow_single,allow_shared,
+        allow_auto_release,allow_exclusive,created_by,notes
+      ) VALUES(
+        $1,'campaign',$2,$3,$4,CURRENT_TIMESTAMP,
+        CASE WHEN $5::int>0 THEN CURRENT_TIMESTAMP+($5::int*INTERVAL '1 day') ELSE NULL END,
+        $6,$7,$8,$9,$10,$11,$12
+      ) ON CONFLICT DO NOTHING
+    `,[userId,campaign.id,campaign.shared_quantity,campaign.premium_quantity,
+      campaign.valid_days,campaign.claim_expiry_days,campaign.allow_single,
+      campaign.allow_shared,campaign.allow_auto_release,campaign.allow_exclusive,
+      campaign.created_by,campaign.notes||'Verified completed-project reward']);
+  }
+}
+
 function allowanceFor(grant,type){
   return type==='premium'?number(grant.premium_quantity):number(grant.shared_quantity);
 }
 
 async function getActiveGrants(userId,client=pool,{ensureWelcome=true,forUpdate=false}={}){
-  if(ensureWelcome)await ensureNewBusinessGrant(userId,client);
+  if(ensureWelcome){
+    await ensureNewBusinessGrant(userId,client);
+    await ensureProjectQualifiedCampaignGrants(userId,client);
+  }
 
   if(forUpdate){
     await client.query(`
@@ -473,6 +528,7 @@ function normalizeBusinessCampaign(input){
     name:String(input?.name||'').trim().slice(0,120),
     audienceScope,
     verificationScope,
+    minCompletedProjects:int(input?.minCompletedProjects,0,20,0),
     userIds,
     industryId:int(input?.industryId,1,2147483647,0)||null,
     stateId:int(input?.stateId,1,2147483647,0)||null,
@@ -551,6 +607,14 @@ async function campaignAudienceUserIds(client,campaign){
       WHERE bp4.user_id=u.id AND bpl2.is_active=TRUE AND bpl2.city_id=${p}
     )`);
   }
+  if(Number(campaign.min_completed_projects)>0){
+    const min=bind(Number(campaign.min_completed_projects));
+    conditions.push(`(SELECT COUNT(DISTINCT p.id)
+      FROM business_profile_projects p
+      JOIN business_profiles bp5 ON bp5.id=p.business_profile_id
+      WHERE bp5.user_id=u.id AND p.is_published=TRUE
+        AND p.completion_year IS NOT NULL)>=${min}`);
+  }
   if(campaign.audience_scope==='specific_users'){
     conditions.push(`EXISTS(
       SELECT 1 FROM lead_entitlement_business_campaign_users cu
@@ -590,7 +654,10 @@ async function syncBusinessCampaign(client,campaignId){
   for(const row of existing){
     if(targetSet.has(Number(row.user_id)))continue;
     const claims=number(row.used_shared)+number(row.used_premium);
-    if(claims===0)deleteIds.push(Number(row.id));
+    // A published-project reward is a once-per-company achievement.
+    // Keep its grant row (even if unused) as the unique audit identity:
+    // deleting it would allow the same business to receive a second award.
+    if(claims===0&&Number(campaign.min_completed_projects||0)===0)deleteIds.push(Number(row.id));
     else if(!row.revoked_at)revokeIds.push(Number(row.id));
   }
   if(deleteIds.length)await client.query('DELETE FROM lead_entitlement_grants WHERE id=ANY($1::int[])',[deleteIds]);
@@ -606,10 +673,18 @@ async function syncBusinessCampaign(client,campaignId){
     if(campaign.shared_quantity<usedShared||campaign.premium_quantity<usedPremium){
       fail('Campaign allowance cannot be lower than credits already used by a recipient','CAMPAIGN_ALLOWANCE_BELOW_USAGE');
     }
-    const startsAt=row?.revoked_at?syncNow:(row?.starts_at?new Date(row.starts_at):syncNow);
-    const expiresAt=Number(campaign.valid_days)>0
-      ?new Date(startsAt.getTime()+Number(campaign.valid_days)*86400000)
-      :null;
+    // An achievement-based reward is issued ONCE per company. An admin edit,
+    // temporary verification loss, or a re-published project must not restart
+    // the original award window. Regular campaigns keep editable timing.
+    const oneTimeProjectReward=Number(campaign.min_completed_projects||0)>0;
+    const startsAt=oneTimeProjectReward&&row?.starts_at
+      ?new Date(row.starts_at)
+      :row?.revoked_at?syncNow:(row?.starts_at?new Date(row.starts_at):syncNow);
+    const expiresAt=oneTimeProjectReward&&row
+      ?(row.expires_at?new Date(row.expires_at):null)
+      :Number(campaign.valid_days)>0
+        ?new Date(startsAt.getTime()+Number(campaign.valid_days)*86400000)
+        :null;
     const timing={starts_at:startsAt.toISOString(),expires_at:expiresAt?expiresAt.toISOString():null};
     if(row)updatePayload.push({id:Number(row.id),...timing});
     else insertPayload.push({user_id:userId,...timing});
@@ -671,18 +746,18 @@ async function createBusinessCampaign(input,adminId){
     const inserted=(await client.query(`
       INSERT INTO lead_entitlement_business_campaigns(
         name,audience_scope,verification_scope,industry_id,state_id,city_id,
-        shared_quantity,premium_quantity,valid_days,claim_expiry_days,
+        shared_quantity,premium_quantity,valid_days,claim_expiry_days,min_completed_projects,
         allow_single,allow_shared,allow_auto_release,allow_exclusive,
         notes,created_by,updated_by
       )
-      VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$16)
+      VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$17,$11,$12,$13,$14,$15,$16,$16)
       RETURNING *
     `,[
       campaign.name,campaign.audienceScope,campaign.verificationScope,
       campaign.industryId,campaign.stateId,campaign.cityId,
       campaign.sharedQuantity,campaign.premiumQuantity,campaign.validDays,campaign.claimExpiryDays,
       campaign.allowSingle,campaign.allowShared,campaign.allowAutoRelease,campaign.allowExclusive,
-      campaign.notes||null,adminId||null
+      campaign.notes||null,adminId||null,campaign.minCompletedProjects
     ])).rows[0];
     await replaceCampaignUsers(client,inserted.id,campaign.audienceScope==='specific_users'?campaign.userIds:[]);
     const sync=await syncBusinessCampaign(client,inserted.id);
@@ -707,6 +782,7 @@ async function updateBusinessCampaign(campaignId,input,adminId){
       name:input?.name??existing.name,
       audienceScope:input?.audienceScope??existing.audience_scope,
       verificationScope:input?.verificationScope??existing.verification_scope,
+      minCompletedProjects:input?.minCompletedProjects??existing.min_completed_projects,
       userIds:input?.userIds??selected,
       industryId:input?.industryId===undefined?existing.industry_id:input.industryId,
       stateId:input?.stateId===undefined?existing.state_id:input.stateId,
@@ -727,7 +803,7 @@ async function updateBusinessCampaign(campaignId,input,adminId){
       SET name=$2,audience_scope=$3,verification_scope=$4,industry_id=$5,state_id=$6,city_id=$7,
           shared_quantity=$8,premium_quantity=$9,valid_days=$10,claim_expiry_days=$11,
           allow_single=$12,allow_shared=$13,allow_auto_release=$14,allow_exclusive=$15,
-          notes=$16,updated_by=$17,updated_at=CURRENT_TIMESTAMP
+          notes=$16,updated_by=$17,min_completed_projects=$18,updated_at=CURRENT_TIMESTAMP
       WHERE id=$1
       RETURNING *
     `,[
@@ -735,7 +811,7 @@ async function updateBusinessCampaign(campaignId,input,adminId){
       campaign.industryId,campaign.stateId,campaign.cityId,
       campaign.sharedQuantity,campaign.premiumQuantity,campaign.validDays,campaign.claimExpiryDays,
       campaign.allowSingle,campaign.allowShared,campaign.allowAutoRelease,campaign.allowExclusive,
-      campaign.notes||null,adminId||null
+      campaign.notes||null,adminId||null,campaign.minCompletedProjects
     ])).rows[0];
     await replaceCampaignUsers(client,id,campaign.audienceScope==='specific_users'?campaign.userIds:[]);
     const sync=await syncBusinessCampaign(client,id);

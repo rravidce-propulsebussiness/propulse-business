@@ -11,7 +11,6 @@ const loginCss=read('frontend/src/pages/Login.css');
 const signupCss=read('frontend/src/pages/Signup.css');
 const app=read('frontend/src/App.jsx');
 const soundEffects=read('frontend/src/utils/soundEffects.js');
-const soundControl=read('frontend/src/components/SoundControl.jsx');
 const resetPassword=read('frontend/src/pages/ResetPassword.jsx');
 
 assert.match(login,/login-topbar/);
@@ -36,8 +35,7 @@ assert(!app.includes("return <><GlobalWidgets/></>"),'GlobalWidgets must not rec
 assert(app.includes('<Route path="/professional-contact" element={<PortalContact audience="professionals"/>}/>'),'Auth layout changes must preserve the dedicated Professional contact audience');
 assert(soundEffects.includes("const authPath=/^\\/(login|signup|forgot-password|reset-password)\\/?$/.test(window.location.pathname)"));
 assert(soundEffects.includes("if(!authPath)refreshSoundSettings()"));
-assert(soundControl.includes("refreshSoundSettings")&&soundControl.includes("useEffect(()=>{void refreshSoundSettings()},[])"));
-assert(!app.includes('<SoundControl/>'), 'Do not mount an unwanted floating sound control sitewide');
+assert(!app.includes('<SoundControl/>'),'The intentionally removed floating Sound Control must not be remounted');
 assert(resetPassword.includes("password.length > 64")&&resetPassword.includes("passwordBytes > 72"));
 assert(resetPassword.includes("!/[A-Za-z]/.test(password)")&&resetPassword.includes("!/\\d/.test(password)"));
 assert(resetPassword.includes("8–64 characters and include at least one letter and one number."));

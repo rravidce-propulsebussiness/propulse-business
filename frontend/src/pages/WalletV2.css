@@ -26,6 +26,9 @@
 .wallet-add-modal:before{
   content:'';
   display:block;
+  position:sticky;
+  top:-28px;
+  z-index:4;
   height:5px;
   margin:-28px -28px 22px;
   border-radius:24px 24px 0 0;
@@ -156,6 +159,7 @@
   grid-template-columns:1fr 1fr!important;
   gap:12px!important;
   padding-top:2px;
+  padding-bottom:max(12px,env(safe-area-inset-bottom));
 }
 .wallet-add-modal form label{
   min-width:0;
@@ -230,60 +234,69 @@
 .wallet-add-modal .wallet-modal-subtitle{
   display:none!important;
 }
-.wallet-add-modal form label:has(input[type="file"]){
-  position:relative;
-  align-content:start;
+/* Real proof picker with separate label, help text and upload control.
+   No overlaid pseudo-elements, so mobile text cannot collide with the button. */
+.wallet-add-modal .wallet-proof-field{
+  display:grid;grid-template-columns:minmax(0,1fr);gap:9px;
+  min-width:0;max-width:100%;align-content:start;
 }
-.wallet-add-modal form input[type="file"]{
-  position:absolute;
-  width:1px!important;
-  height:1px!important;
-  padding:0!important;
-  margin:-1px!important;
-  overflow:hidden!important;
-  clip:rect(0,0,0,0)!important;
-  white-space:nowrap!important;
-  border:0!important;
+.wallet-add-modal .wallet-proof-heading{
+  display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 9px;
+  color:#173b70;
 }
-.wallet-add-modal form label:has(input[type="file"]):after{
-  content:'Choose File';
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  width:max-content;
-  min-width:145px;
-  height:40px;
-  box-sizing:border-box;
-  margin-top:0;
-  padding:0 18px;
-  border-radius:10px;
+.wallet-add-modal .wallet-proof-heading strong{
+  font-size:12px;font-weight:900;line-height:1.4;
+}
+.wallet-add-modal .wallet-proof-heading small{
+  color:#8393a8;font-size:11px;font-weight:650;line-height:1.45;
+}
+.wallet-add-modal .wallet-proof-input{
+  position:absolute!important;
+  width:1px!important;height:1px!important;
+  overflow:hidden!important;padding:0!important;margin:-1px!important;
+  border:0!important;clip-path:inset(50%);
+}
+.wallet-add-modal form .wallet-proof-upload{
+  box-sizing:border-box;display:flex!important;
+  align-items:center;justify-content:center;gap:8px;
+  width:100%;min-height:44px;padding:10px 14px;
+  border-radius:10px;border:1px solid #1762c8;
   background:linear-gradient(135deg,#1765dc,#0b4fa8);
-  color:#fff;
-  font-size:12px;
-  font-weight:950;
-  letter-spacing:.01em;
-  box-shadow:0 8px 18px rgba(23,101,220,.18);
-  cursor:pointer;
-  transition:transform .15s ease,box-shadow .15s ease,filter .15s ease;
+  color:#fff!important;font-size:12px!important;font-weight:900!important;
+  text-align:center;cursor:pointer;white-space:normal;
+  box-shadow:0 7px 17px rgba(23,101,220,.14);
+  transition:background .15s ease,transform .15s ease,box-shadow .15s ease;
 }
-.wallet-add-modal form label:has(input[type="file"]):hover:after{
+.wallet-add-modal .wallet-proof-upload:hover{
+  background:linear-gradient(135deg,#1556bd,#0a408e);
   transform:translateY(-1px);
-  box-shadow:0 11px 22px rgba(23,101,220,.24);
-  filter:brightness(1.04);
 }
-.wallet-add-modal form label:has(input[type="file"]):before{
-  content:'📎';
-  position:absolute;
-  pointer-events:none;
-  margin-left:13px;
-  margin-top:20px;
-  z-index:2;
-  font-size:14px;
+.wallet-add-modal .wallet-proof-field:focus-within .wallet-proof-upload{
+  outline:3px solid #ff9e5c;outline-offset:2px;
 }
-@media(max-width:700px){
-  .wallet-add-modal form label:has(input[type="file"]):after{
-    width:100%;
-  }
+.wallet-add-modal .wallet-proof-upload-icon{
+  display:inline-grid;place-items:center;
+  width:19px;height:19px;font-size:18px;font-weight:600;
+}
+.wallet-add-modal .wallet-proof-selected{
+  display:flex;gap:8px;align-items:center;justify-content:space-between;
+  flex-wrap:wrap;min-width:0;padding:9px 10px;
+  border:1px solid #cde2d9;border-radius:9px;background:#f4fbf7;
+}
+.wallet-add-modal .wallet-proof-selected span{
+  flex:1 1 120px;min-width:0;overflow-wrap:anywhere;
+  color:#246a52;font-size:11px;font-weight:750;
+}
+.wallet-add-modal .wallet-proof-selected button{
+  flex:0 0 auto;border:1px solid #dfc8c3;border-radius:7px;
+  padding:6px 10px;background:#fff;color:#ab4d3b;
+  font-size:11px;font-weight:850;cursor:pointer;
+}
+.wallet-add-modal .wallet-proof-selected button:disabled{
+  opacity:.55;cursor:not-allowed;
+}
+@media (prefers-reduced-motion:reduce){
+  .wallet-add-modal .wallet-proof-upload{transition:none;transform:none}
 }
 
 .wallet-history-more{display:flex;justify-content:center;padding:16px 20px;border-top:1px solid #edf1f6;background:#fbfdff}.wallet-history-more button{min-width:190px;height:38px;padding:0 16px;border:1px solid #c9d9ed;border-radius:9px;background:#fff;color:#123a78;font-size:12px;font-weight:900;cursor:pointer}.wallet-history-more button:hover{background:#f1f7ff}.wallet-history-more button:disabled{opacity:.55;cursor:not-allowed}
@@ -338,7 +351,7 @@
     max-height:calc(100dvh - 20px)!important;
     padding:16px!important;
   }
-  .wallet-add-modal:before{margin:-16px -16px 16px}
+  .wallet-add-modal:before{top:-16px;margin:-16px -16px 16px}
   .wallet-add-modal .wallet-receiving-card{
     grid-template-columns:minmax(0,1fr)!important;
     grid-template-areas:"head" "details" "qr" "note";
@@ -358,5 +371,5 @@
 }
 @media(max-width:390px){
   .wallet-detail-modal.wallet-add-modal{padding:14px!important}
-  .wallet-add-modal:before{margin:-14px -14px 16px}
+  .wallet-add-modal:before{top:-14px;margin:-14px -14px 16px}
 }

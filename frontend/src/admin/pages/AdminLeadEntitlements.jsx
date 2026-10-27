@@ -29,6 +29,7 @@ const defaultCampaign=()=>({
   name:'',
   audienceScope:'all',
   verificationScope:'any',
+  minCompletedProjects:0,
   userIds:[],
   industryId:'',
   stateId:'',
@@ -253,6 +254,7 @@ export default function AdminLeadEntitlements(){
       name:item.name||'',
       audienceScope:item.audience_scope||'all',
       verificationScope:item.verification_scope||'any',
+      minCompletedProjects:Number(item.min_completed_projects||0),
       userIds:users.map(user=>Number(user.id)),
       industryId:item.industry_id||'',
       stateId:item.state_id||'',
@@ -459,7 +461,9 @@ export default function AdminLeadEntitlements(){
             const audience=item.audience_scope==='specific_users'
               ?`${Number(item.selected_user_count||0)} selected businesses`
               :'All businesses'
-            const targets=[audience,verificationLabel(item.verification_scope),item.industry_name||'All industries',locationLabel(item)]
+            const targets=[audience,verificationLabel(item.verification_scope),
+              Number(item.min_completed_projects)>0?`${item.min_completed_projects}+ published completed projects`:'No project condition',
+              item.industry_name||'All industries',locationLabel(item)]
             const access=accessLabels(item)
             return <article className="entitlement-history-card campaign-history-card" key={`campaign-${item.id}`}>
               <div className="entitlement-history-card-head">
@@ -558,6 +562,12 @@ export default function AdminLeadEntitlements(){
               if(value==='all')setSelectedBusinesses([])
             }}><option value="all">All business users</option><option value="specific_users">Specific business users</option></select></label>
             <label>Verification<select value={campaign.verificationScope} onChange={e=>setCampaign(v=>({...v,verificationScope:e.target.value}))}><option value="any">Verified + Non-verified</option><option value="verified">Verified only</option><option value="unverified">Non-verified only</option></select></label>
+            <label>Completed projects required
+              <input type="number" min="0" max="20" step="1"
+                value={campaign.minCompletedProjects}
+                onChange={e=>setCampaign(v=>({...v,minCompletedProjects:clamp(e.target.value,0,20)}))}/>
+              <small>0 = none. 1 = at least one published completed project with required details.</small>
+            </label>
             <label>Industry<select value={campaign.industryId} onChange={e=>setCampaign(v=>({...v,industryId:e.target.value}))}><option value="">All industries</option>{industries.map(item=><option value={item.id} key={item.id}>{item.name}</option>)}</select></label>
             <label>State<select value={campaign.stateId} onChange={e=>setCampaign(v=>({...v,stateId:e.target.value,cityId:cities.some(city=>Number(city.id)===Number(v.cityId)&&Number(city.state_id)===Number(e.target.value))?v.cityId:''}))}><option value="">All states</option>{states.map(item=><option value={item.id} key={item.id}>{item.name}</option>)}</select></label>
             <label>City<select value={campaign.cityId} onChange={e=>setCampaign(v=>({...v,cityId:e.target.value}))}><option value="">All cities</option>{campaignCities.map(item=><option value={item.id} key={item.id}>{item.name}</option>)}</select></label>
@@ -583,6 +593,9 @@ export default function AdminLeadEntitlements(){
             </div>
           </div>}
 
+          {campaign.minCompletedProjects>0&&<p className="rule-priority-note">
+            A project upload alone does not verify a company. Select “Verified only” to require admin-approved company proof AND a published completed project. The credit is granted once, when both conditions are met.
+          </p>}
           <AccessRules value={campaign} onChange={setCampaign}/>
           <div className="rule-priority-note">Saving applies this entitlement to the current matching business users. Editing re-syncs the recipient set safely.</div>
         </div>

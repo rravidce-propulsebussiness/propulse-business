@@ -20,6 +20,8 @@ const emptyCoupon=()=>({
   reward_value:'',
   bonus_lead_type:'shared',
   bonus_lead_quantity:1,
+  bonus_premium_quantity:1,
+  membership_audiences:['all'],
   bonus_valid_days:30,
   is_public_offer:false,
   min_order_amount:'',
@@ -75,7 +77,9 @@ const benefitLabel=item=>{
   }
   if(type==='lead_bonus'){
     const qty=Number(item.bonus_lead_quantity||0)
-    return `+${qty} ${String(item.bonus_lead_type||'shared')==='premium'?'Premium':'Basic'} lead${qty===1?'':'s'}`
+    return item.bonus_lead_type==='both'
+      ?`+${qty} Basic and ${Number(item.bonus_premium_quantity||0)} Premium lead credits`
+      :`+${qty} ${String(item.bonus_lead_type||'shared')==='premium'?'Premium':'Basic'} lead${qty===1?'':'s'}`
   }
   return item.discount_type==='percent'?`${Number(item.discount_value||0)}% discount`:`${money(item.discount_value)} discount`
 }
@@ -241,6 +245,8 @@ export default function AdminCoupons(){
         expires_at:toLocalInput(detail.expires_at),
         purchase_types:purchaseTypes.filter(type=>PURCHASE_TYPES.some(item=>item.key===type)),
         membership_plan_ids:planIds.map(Number),
+        membership_audiences:Array.isArray(detail.membership_audiences)
+          ?detail.membership_audiences:['all'],
         user_ids:(detail.users||[]).map(user=>Number(user.id)),
         industry_ids:(detail.industries||[]).map(industry=>Number(industry.id))
       })
@@ -282,6 +288,10 @@ export default function AdminCoupons(){
     event.preventDefault()
     if(saving)return
     if(!form.purchase_types.length)return setError('Choose at least one purchase type.')
+    if(form.benefit_type==='wallet_bonus'&&(form.purchase_types.length!==1||form.purchase_types[0]!=='wallet_topup'))
+      return setError('Wallet bonus campaigns can target only wallet top-ups.')
+    if(form.benefit_type==='lead_bonus'&&form.purchase_types.includes('wallet_topup'))
+      return setError('Lead bonus campaigns can target only lead purchases and memberships.')
     if(validityMode!=='always'&&form.starts_at&&form.expires_at&&new Date(form.expires_at)<=new Date(form.starts_at))return setError('Coupon end time must be after its start time.')
     try{
       setSaving(true)
@@ -293,6 +303,8 @@ export default function AdminCoupons(){
         max_discount:form.benefit_type==='discount'&&form.max_discount!==''?Number(form.max_discount):null,
         reward_value:form.benefit_type==='wallet_bonus'?Number(form.reward_value):0,
         bonus_lead_quantity:form.benefit_type==='lead_bonus'?Number(form.bonus_lead_quantity):0,
+        bonus_premium_quantity:form.benefit_type==='lead_bonus'&&form.bonus_lead_type==='both'
+          ?Number(form.bonus_premium_quantity):0,
         bonus_valid_days:Number(form.bonus_valid_days||0),
         min_order_amount:Number(form.min_order_amount||0),
         usage_limit:form.usage_limit===''?null:Number(form.usage_limit),
@@ -356,6 +368,16 @@ export default function AdminCoupons(){
         <div className="coupon-hero-live"><i/><div><strong>{stats.active}</strong><span>active now</span></div></div>
         <button type="button" onClick={openCreate}>＋ Create coupon</button>
       </div>
+    </section>
+
+    <section className="coupon-reward-navigation">
+      <div>
+        <strong>Free leads for new or verified companies</strong>
+        <small>Set first-week registration credits, Basic / Premium allowances, and verified completed-project rewards through your existing Lead Entitlements rules.</small>
+      </div>
+      <button type="button" onClick={()=>navigate('/admin/leads/entitlements')}>
+        Configure free lead rules →
+      </button>
     </section>
 
     <section className="coupon-kpi-grid">
@@ -456,9 +478,9 @@ export default function AdminCoupons(){
           <section className="coupon-editor-section">
             <div className="coupon-editor-title"><span>01</span><div><strong>Campaign benefit</strong><small>Choose what the customer receives after a successful purchase</small></div></div>
             <div className="coupon-benefit-picker">
-              <button type="button" className={form.benefit_type==='discount'?'selected':''} onClick={()=>setForm(current=>({...current,benefit_type:'discount'}))}><span>%</span><div><strong>Checkout discount</strong><small>Reduce the amount the customer pays</small></div></button>
-              <button type="button" className={form.benefit_type==='wallet_bonus'?'selected':''} onClick={()=>setForm(current=>({...current,benefit_type:'wallet_bonus'}))}><span>₹+</span><div><strong>Bonus wallet balance</strong><small>Example: add ₹5,000 and receive ₹6,000</small></div></button>
-              <button type="button" className={form.benefit_type==='lead_bonus'?'selected':''} onClick={()=>setForm(current=>({...current,benefit_type:'lead_bonus'}))}><span>◈+</span><div><strong>Bonus lead credit</strong><small>Example: buy a lead and get another lead credit</small></div></button>
+              <button type="button" className={form.benefit_type==='discount'?'selected':''} onClick={()=>setForm(current=>({...current,benefit_type:'discount',purchase_types:['membership','lead']}))}><span>%</span><div><strong>Checkout discount</strong><small>Reduce the amount the customer pays</small></div></button>
+              <button type="button" className={form.benefit_type==='wallet_bonus'?'selected':''} onClick={()=>setForm(current=>({...current,benefit_type:'wallet_bonus',purchase_types:['wallet_topup'],membership_plan_ids:[]}))}><span>₹+</span><div><strong>Bonus wallet balance</strong><small>Example: add ₹5,000 and receive ₹6,000</small></div></button>
+              <button type="button" className={form.benefit_type==='lead_bonus'?'selected':''} onClick={()=>setForm(current=>({...current,benefit_type:'lead_bonus',purchase_types:['membership','lead']}))}><span>◈+</span><div><strong>Bonus lead credit</strong><small>Example: buy a lead and get another lead credit</small></div></button>
             </div>
             <div className="coupon-form-grid coupon-benefit-fields">
               <label>Campaign code<input required maxLength="50" value={form.code} onChange={e=>setForm(current=>({...current,code:e.target.value.toUpperCase()}))} placeholder="WELCOME20"/></label>
@@ -472,8 +494,9 @@ export default function AdminCoupons(){
                 <label>{form.reward_value_type==='percent'?'Extra balance %':'Bonus balance ₹'}<input required type="number" min="0.01" step="0.01" value={form.reward_value} onChange={e=>setForm(current=>({...current,reward_value:e.target.value}))}/></label>
               </>}
               {form.benefit_type==='lead_bonus'&&<>
-                <label>Bonus lead type<select value={form.bonus_lead_type} onChange={e=>setForm(current=>({...current,bonus_lead_type:e.target.value}))}><option value="shared">Basic lead</option><option value="premium">Premium lead</option></select></label>
-                <label>Bonus lead quantity<input required type="number" min="1" max="1000" step="1" value={form.bonus_lead_quantity} onChange={e=>setForm(current=>({...current,bonus_lead_quantity:e.target.value}))}/></label>
+                <label>Bonus lead type<select value={form.bonus_lead_type} onChange={e=>setForm(current=>({...current,bonus_lead_type:e.target.value}))}><option value="shared">Basic only</option><option value="premium">Premium only</option><option value="both">Basic + Premium</option></select></label>
+                <label>{form.bonus_lead_type==='premium'?'Premium':'Basic'} lead credits<input required type="number" min="1" max="1000" step="1" value={form.bonus_lead_quantity} onChange={e=>setForm(current=>({...current,bonus_lead_quantity:e.target.value}))}/></label>
+                {form.bonus_lead_type==='both'&&<label>Premium lead credits<input required type="number" min="1" max="1000" step="1" value={form.bonus_premium_quantity} onChange={e=>setForm(current=>({...current,bonus_premium_quantity:e.target.value}))}/></label>}
                 <label>Bonus valid for days<input type="number" min="0" max="3650" step="1" value={form.bonus_valid_days} onChange={e=>setForm(current=>({...current,bonus_valid_days:e.target.value}))}/><small>0 = no expiry for the bonus lead credit.</small></label>
               </>}
               <label>Minimum purchase ₹<input type="number" min="0" step="0.01" value={form.min_order_amount??''} onChange={e=>setForm(current=>({...current,min_order_amount:e.target.value}))} placeholder={form.benefit_type==='wallet_bonus'?'5000':'0'}/></label>
@@ -485,13 +508,30 @@ export default function AdminCoupons(){
           <section className="coupon-editor-section">
             <div className="coupon-editor-title"><span>02</span><div><strong>Purchase scope</strong><small>Choose Membership-only, Lead-only, Wallet-only, All purchases or any combination</small></div></div>
             <div className="coupon-scope-shortcuts">
-              <button type="button" className={form.purchase_types.length===PURCHASE_TYPES.length?'active':''} onClick={()=>setForm(current=>({...current,purchase_types:PURCHASE_TYPES.map(item=>item.key)}))}>All purchases</button>
-              <button type="button" className={form.purchase_types.length===1&&form.purchase_types[0]==='membership'?'active':''} onClick={()=>setForm(current=>({...current,purchase_types:['membership']}))}>Membership only</button>
-              <button type="button" className={form.purchase_types.length===1&&form.purchase_types[0]==='lead'?'active':''} onClick={()=>setForm(current=>({...current,purchase_types:['lead']}))}>Lead only</button>
-              <button type="button" className={form.purchase_types.length===1&&form.purchase_types[0]==='wallet_topup'?'active':''} onClick={()=>setForm(current=>({...current,purchase_types:['wallet_topup']}))}>Wallet only</button>
+              {form.benefit_type==='wallet_bonus'
+                ? <span>Wallet bonus can be redeemed only when adding wallet balance.</span>
+                : <>
+                  {form.benefit_type==='discount'&&<button type="button" className={form.purchase_types.length===PURCHASE_TYPES.length?'active':''}
+                    onClick={()=>setForm(current=>({...current,purchase_types:PURCHASE_TYPES.map(item=>item.key)}))}>All checkouts</button>}
+                  <button type="button" className={form.purchase_types.length===1&&form.purchase_types[0]==='membership'?'active':''}
+                    onClick={()=>setForm(current=>({...current,purchase_types:['membership']}))}>Membership only</button>
+                  <button type="button" className={form.purchase_types.length===1&&form.purchase_types[0]==='lead'?'active':''}
+                    onClick={()=>setForm(current=>({...current,purchase_types:['lead'],membership_plan_ids:[]}))}>Lead only</button>
+                  {form.benefit_type==='discount'&&<button type="button" className={form.purchase_types.length===1&&form.purchase_types[0]==='wallet_topup'?'active':''}
+                    onClick={()=>setForm(current=>({...current,purchase_types:['wallet_topup'],membership_plan_ids:[]}))}>Wallet only</button>}
+                </>}
             </div>
             <div className="coupon-purchase-types">
-              {PURCHASE_TYPES.map(item=><button type="button" key={item.key} className={form.purchase_types.includes(item.key)?'selected':''} onClick={()=>toggle('purchase_types',item.key)}><span>{item.key==='membership'?'★':item.key==='lead'?'◈':'₹'}</span><div><strong>{item.label}</strong><small>{item.note}</small></div><b>{form.purchase_types.includes(item.key)?'✓':'+'}</b></button>)}
+              {PURCHASE_TYPES.filter(item=>form.benefit_type==='wallet_bonus'
+                ?item.key==='wallet_topup'
+                :form.benefit_type==='lead_bonus'?item.key!=='wallet_topup':true
+              ).map(item=><button type="button" key={item.key} className={form.purchase_types.includes(item.key)?'selected':''}
+                disabled={form.benefit_type==='wallet_bonus'}
+                onClick={()=>toggle('purchase_types',item.key)}>
+                <span>{item.key==='membership'?'★':item.key==='lead'?'◈':'₹'}</span>
+                <div><strong>{item.label}</strong><small>{item.note}</small></div>
+                <b>{form.purchase_types.includes(item.key)?'✓':'+'}</b>
+              </button>)}
             </div>
 
             {form.purchase_types.includes('membership')&&<div className="coupon-membership-scope">
@@ -503,7 +543,27 @@ export default function AdminCoupons(){
           </section>
 
           <section className="coupon-editor-section">
-            <div className="coupon-editor-title"><span>03</span><div><strong>Audience</strong><small>Optional targeting. Empty selections mean everyone / every industry.</small></div></div>
+            <div className="coupon-editor-title"><span>03</span><div><strong>Audience</strong><small>Choose member tiers, non-members, specific companies or industries.</small></div></div>
+            <div className="coupon-member-audience">
+              <strong>Eligible professional membership</strong>
+              <div className="coupon-purchase-types">
+                {[
+                  ['all','All businesses'],
+                  ['grow','GROW members'],
+                  ['scale','SCALE members'],
+                  ['non_member','Non-members']
+                ].map(([key,label])=><button type="button" key={key}
+                  className={(form.membership_audiences||['all']).includes(key)?'selected':''}
+                  aria-pressed={(form.membership_audiences||['all']).includes(key)}
+                  onClick={()=>setForm(current=>{
+                    if(key==='all')return {...current,membership_audiences:['all']}
+                    const existing=(current.membership_audiences||['all']).filter(item=>item!=='all')
+                    const next=existing.includes(key)?existing.filter(item=>item!==key):[...existing,key]
+                    return {...current,membership_audiences:next.length?next:['all']}
+                  })}>{label}</button>)}
+              </div>
+              <small>This checks the business's current active GROW/SCALE membership. Non-member means no active professional plan. Membership checkout plan cycles remain a separate filter above.</small>
+            </div>
             <div className="coupon-audience-grid">
               <div className="coupon-picker">
                 <div className="coupon-picker-head"><div><strong>Specific business users</strong><small>{form.user_ids.length?`${form.user_ids.length} selected`:'All users'}</small></div></div>

@@ -89,6 +89,8 @@ jobs:
           cache-dependency-path: backend/package-lock.json
       - name: Install dependencies
         run: npm ci
+      - name: Promotion audiences and verified-project rewards regression
+        run: node scripts/check-promotion-audiences-and-project-rewards.js
       - name: Professional enquiry company totals regression
         run: node scripts/check-professional-enquiry-company-summary.js
       - name: Unified four-funnel marketplace intake regression
@@ -104,7 +106,10 @@ jobs:
     timeout-minutes: 15
     services:
       postgres:
-        image: postgres:17
+        # Backup tools on ubuntu-latest currently create PG18 custom archives.
+        # Keep restore smoke on the matching major; the investment job below
+        # independently exercises PostgreSQL 16.
+        image: postgres:18
         env:
           POSTGRES_DB: ci_smoke
           POSTGRES_USER: ci_smoke
@@ -362,6 +367,10 @@ jobs:
           DB_PASSWORD: ci_smoke
         timeout-minutes: 2
         run: npm run test:background-jobs-runtime
+      - name: Verify backup client tool versions
+        run: |
+          pg_dump --version
+          pg_restore --version
       - name: Verify database backup restore drill
         env:
           DB_HOST: 127.0.0.1
