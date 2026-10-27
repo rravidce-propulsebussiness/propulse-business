@@ -35,7 +35,7 @@ assert.match(purchase,/PROFILE_REQUEST_FORBIDDEN/,'Private profile leads cannot 
 assert.match(marketplace,/marketplaceSharing'='true'/,'Only explicitly consented profile callbacks may enter global discovery');
 assert.match(marketplace,/profile-multi-professional-consent-v1/,'Historic profile requests must remain excluded from discovery');
 assert.match(purchase,/lead\.contact_consent_version==='profile-multi-professional-consent-v1'/,'Private profile leads must remain guarded at purchase');
-assert.match(callback,/input\.marketplaceConsent!==true/,'New profile requests must require explicit marketplace sharing consent');
+assert.match(callback,/_marketplace_sharing:input\.marketplaceConsent===true/,'Only explicit new-form opt-in may publish profile callbacks');
 const callbackForm=read('frontend/src/components/ProfessionalCallbackRequirementForm.jsx');
 assert.match(profile,/ProfessionalCallbackRequirementForm/,'Profile callback must reuse the unified requirement form');
 assert.match(callbackForm,/pattern="\[0-9\]\{6\}"/,'Profile callback must have a verifiable PIN code');
