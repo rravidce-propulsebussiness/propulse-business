@@ -1,3 +1,4 @@
+import BootLoader from '../../components/BootLoader'
 import { useEffect, useMemo, useState } from 'react'
 import { authRequest } from '../../utils/auth'
 import './AdminLeadEntitlements.css'
@@ -489,7 +490,7 @@ export default function AdminLeadEntitlements(){
         <small>{recentItems.length} shown</small>
       </div>
 
-      {loading?<div className="entitlement-empty">Loading…</div>:!recentItems.length?<div className="entitlement-empty">No rules or entitlements yet.</div>:<div className="entitlement-card-grid">
+      {loading?<BootLoader contained message="Loading lead rewards" />:!recentItems.length?<div className="entitlement-empty">No rules or entitlements yet.</div>:<div className="entitlement-card-grid">
         {recentItems.map(item=>{
           if(item.kind==='rule'){
             const targets=[verificationLabel(item.verification_scope),item.industry_name||'All industries',locationLabel(item)]
