@@ -129,7 +129,7 @@ async function requestProfileCallback(expertId,input={}){
   const id=Number(expertId);
   if(!Number.isSafeInteger(id)||id<1)throw bad('Professional profile not found','PROFILE_NOT_FOUND');
   if(input.website)throw bad('Unable to submit request');
-  if(input.consent!==true||input.marketplaceConsent!==true)throw bad('Please agree to share your requirement with the selected professional and other relevant ProPulse marketplace professionals');
+  if(input.consent!==true)throw bad('Please consent to the selected professional receiving your request after acceptance');
   const pincode=String(input.pincode||'').trim();
   if(!/^\d{6}$/.test(pincode))throw bad('Enter a valid 6-digit project PIN code');
   const name=normalizeName(input.name);
@@ -137,7 +137,7 @@ async function requestProfileCallback(expertId,input={}){
   const email=normalizeEmail(input.email);
   const message=String(input.message||'').trim();
   if(message.length>1000)throw bad('Please shorten your message to 1000 characters');
-  const requirementFields={...callbackRequirementFields(input),_marketplace_sharing:true};
+  const requirementFields={...callbackRequirementFields(input),_marketplace_sharing:input.marketplaceConsent===true};
   const settings=await expertDirectoryService.getSettings();
   if(!settings.directoryEnabled)throw bad('Professional profile not found','PROFILE_NOT_FOUND');
   const profile=(await pool.query(
