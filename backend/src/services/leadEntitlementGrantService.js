@@ -739,7 +739,7 @@ async function createBusinessCampaign(input,adminId){
         allow_single,allow_shared,allow_auto_release,allow_exclusive,
         notes,created_by,updated_by
       )
-      VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$18,$11,$12,$13,$14,$15,$16,$16)
+      VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$17,$11,$12,$13,$14,$15,$16,$16)
       RETURNING *
     `,[
       campaign.name,campaign.audienceScope,campaign.verificationScope,
