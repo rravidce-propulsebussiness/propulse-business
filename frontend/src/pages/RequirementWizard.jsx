@@ -705,20 +705,20 @@ export default function RequirementWizard({ flowKey, onCompletionChange, embedde
         {!embedded && <header className="rq-premium-header"><Link to="/"><img src="/brand/propulse-logo.svg" alt="ProPulse" /></Link><Link to="/">Back to Home</Link></header>}
         <div className="rq-success rq-premium-success rq-interior-success">
           <div className="rq-success-mark">✓</div>
-          <span>QUOTE REQUEST RECEIVED</span>
-          <h1>Your interior quote request is submitted.</h1>
-          <p>We saved your project requirements and package preference. Final pricing is confirmed only after the selected work, measurements, design, materials and site conditions are reviewed.</p>
+          <span>INTERIOR REQUIREMENT RECEIVED</span>
+          <h1>Your interior requirement is submitted.</h1>
+          <p>We saved your interior requirements. Download your structured request PDF. To receive a company-priced estimate, select a professional and an enabled published package; the final price requires review.</p>
           <div className="rq-interior-package-result">
             <small>SELECTED INTERIOR PACKAGE</small>
             <div><strong>{interiorPackage.name}</strong><b>₹{interiorPackage.price.toLocaleString('en-IN')}<em>/sq ft reference</em></b></div>
             <p>{interiorPackage.description}</p>
-            <span>This is a package reference, not an instant project quotation.</span>
+            <span>This is a ProPulse reference package, not a selected professional's price. The downloadable PDF records your requirements.</span>
           </div>
           {submissionResult?.leadId && <div className="rq-success-reference">Request ID <b>#{submissionResult.leadId}</b></div>}
           {submissionResult?.referenceFilesUploaded>0&&<div className="rq-reference-upload-status">✓ {submissionResult.referenceFilesUploaded} floor plan / reference file{submissionResult.referenceFilesUploaded===1?'':'s'} attached to this request.</div>}
           {submissionResult?.referenceFilesFailed>0&&<div className="rq-reference-upload-status warning">Request saved, but {submissionResult.referenceFilesFailed} reference file{submissionResult.referenceFilesFailed===1?'':'s'} could not be uploaded.</div>}
           <div className="rq-success-actions">
-            <button className="rq-download-quote" type="button" onClick={downloadInteriorBrochure}>↓ Download Interior Package Brochure</button>
+            <button className="rq-download-quote" type="button" onClick={downloadQuoteRequest}>↓ Download Interior Requirement PDF</button>
             <Link className="rq-back-home" to="/">Back home</Link>
             <button type="button" onClick={() => window.location.reload()}>Request another quote</button>
           </div>
