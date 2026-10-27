@@ -136,7 +136,7 @@ assert(adminCoupons.includes('Existing coupons'),'Existing coupons must remain b
 assert(adminCoupons.includes('coupon-card-grid')&&adminCoupons.includes('coupon-premium-card'),'Existing coupons must remain editable premium cards');
 assert(adminCoupons.includes('Membership')&&adminCoupons.includes('Lead purchase')&&adminCoupons.includes('Wallet top-up'),'Coupon purchase scope must keep Membership, Leads and Wallet top-ups');
 assert(!adminCoupons.includes('booster'),'Unsupported legacy booster coupon scope must stay removed from Admin');
-assert(adminCoupons.includes('membership_plan_ids')&&adminCoupons.includes('Membership cycles'),'Admin Coupons must expose the existing membership-cycle targeting capability');
+assert(adminCoupons.includes('membership_plan_ids')&&adminCoupons.includes('Advanced: restrict billing cycles')&&adminCoupons.includes('<details className="coupon-membership-scope">'),'Membership cycle targeting must remain available in a collapsed advanced section without duplicate GROW/SCALE selectors');
 assert(adminCoupons.includes('Specific business users')&&adminCoupons.includes('Industries'),'Coupon audience targeting must support selected businesses and industries');
 assert(adminCoupons.includes('Today')&&adminCoupons.includes('This week')&&adminCoupons.includes('Custom'),'Coupons must retain quick validity presets');
 assert(adminCoupons.includes('Total usage limit')&&adminCoupons.includes('Per-user limit'),'Coupon usage controls must remain');
