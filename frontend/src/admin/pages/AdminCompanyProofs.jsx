@@ -1,3 +1,4 @@
+import BootLoader from '../../components/BootLoader'
 import { useCallback, useEffect, useState } from 'react';
 import { API_BASE_URL } from '../../utils/api';
 import { authRequest } from '../../utils/auth';
@@ -101,7 +102,7 @@ export default function AdminCompanyProofs() {
       {error && <div className="company-proofs-error">{error}</div>}
 
       <div className="company-proofs-panel">
-        {loading ? <div className="company-proofs-empty">Loading company proofs…</div> : !documents.length ? (
+        {loading ? <BootLoader contained message="Loading company proofs" /> : !documents.length ? (
           <div className="company-proofs-empty">No {status} company proof documents.</div>
         ) : (
           <div className="company-proofs-list">
