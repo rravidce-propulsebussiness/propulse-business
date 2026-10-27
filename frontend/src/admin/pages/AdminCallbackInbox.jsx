@@ -170,7 +170,7 @@ export default function AdminCallbackInbox(){
         ['Total requests',totals.received,'All enquiry types'],
         ['Quote requests',totals.quotes,'Professional project quotations'],
         ['Callbacks',totals.callbacks,'Projects + public profiles'],
-        ['Linked leads',totals.linked,'Verified marketplace links'],
+        ['Linked leads',totals.linked,'Shared or private, origin verified'],
       ].map(([label,value,description])=><div className="admin-enquiry-metric" key={label}>
         <small>{label}</small><strong>{loading?'—':companyError?'—':Number(value).toLocaleString('en-IN')}</strong>
         <span>{description}</span>
@@ -180,7 +180,7 @@ export default function AdminCallbackInbox(){
     <section className="admin-enquiry-companies" aria-label="Company enquiry summary">
       <div className="admin-enquiry-section-head"><div>
         <h3>Requests received by company</h3>
-        <p>All-time totals from submitted requests, not just the recent inbox. A verified lead is counted only when its request and professional ownership match.</p>
+        <p>All-time totals from submitted requests, not just the recent inbox. Verified links include private profile leads; they are not all available in the public marketplace.</p>
       </div><span>{companySummary.length} companies</span></div>
       {loading?<p className="admin-callback-empty">Loading company totals…</p>
         :companySummary.length===0?<p className="admin-callback-empty">{companyError?'Could not load company totals.':'No company enquiries received yet.'}</p>
@@ -272,7 +272,7 @@ export default function AdminCallbackInbox(){
               <option value="new">New</option><option value="contacted">Contacted</option><option value="closed">Closed</option>
             </select></label>
             <strong className={item.marketplace_lead_id&&item.link_verified?'admin-enquiry-status-linked':'admin-enquiry-status-pending'}>
-              {item.marketplace_lead_id&&item.link_verified?'Marketplace lead #'+item.marketplace_lead_id:'Marketplace link pending / review'}
+              {item.marketplace_lead_id&&item.link_verified?(item.project_id?'Marketplace lead #':'Private profile lead #')+item.marketplace_lead_id:'Lead creation pending / review'}
             </strong>
             <details className="admin-enquiry-review-details"><summary>Marketplace &amp; payment review</summary>
               <EnquiryReview item={item} kind={item.project_id?'callback':'profile'} onAction={review} saving={saving}/>
