@@ -22,6 +22,8 @@ const emptyCoupon=()=>({
   bonus_lead_quantity:1,
   bonus_premium_quantity:1,
   membership_audiences:['all'],
+  verification_scope:'any',
+  registration_max_age_days:0,
   bonus_valid_days:30,
   is_public_offer:false,
   min_order_amount:'',
@@ -247,6 +249,8 @@ export default function AdminCoupons(){
         membership_plan_ids:planIds.map(Number),
         membership_audiences:Array.isArray(detail.membership_audiences)
           ?detail.membership_audiences:['all'],
+        verification_scope:detail.verification_scope||'any',
+        registration_max_age_days:Number(detail.registration_max_age_days||0),
         user_ids:(detail.users||[]).map(user=>Number(user.id)),
         industry_ids:(detail.industries||[]).map(industry=>Number(industry.id))
       })
@@ -288,6 +292,8 @@ export default function AdminCoupons(){
     event.preventDefault()
     if(saving)return
     if(!form.purchase_types.length)return setError('Choose at least one purchase type.')
+    if(!Number.isInteger(Number(form.registration_max_age_days))||Number(form.registration_max_age_days)<0||Number(form.registration_max_age_days)>365)
+      return setError('Choose a registration window between 0 and 365 days.')
     if(form.benefit_type==='wallet_bonus'&&(form.purchase_types.length!==1||form.purchase_types[0]!=='wallet_topup'))
       return setError('Wallet bonus campaigns can target only wallet top-ups.')
     if(form.benefit_type==='lead_bonus'&&form.purchase_types.includes('wallet_topup'))
@@ -373,7 +379,7 @@ export default function AdminCoupons(){
     <section className="coupon-reward-navigation">
       <div>
         <strong>Free leads for new or verified companies</strong>
-        <small>Set first-week registration credits, Basic / Premium allowances, and verified completed-project rewards through your existing Lead Entitlements rules.</small>
+        <small>Set any lead quantity, signup deadline, required completed projects, verification condition, and reward expiry through the existing Lead Entitlements rules.</small>
       </div>
       <button type="button" onClick={()=>navigate('/admin/leads/entitlements')}>
         Configure free lead rules →
@@ -447,6 +453,9 @@ export default function AdminCoupons(){
                 <span>{Number(item.target_user_count)>0?`${item.target_user_count} selected users`:'All users'}</span>
                 <span>{Number(item.target_industry_count)>0?`${item.target_industry_count} industries`:'All industries'}</span>
                 {planIds.length>0&&<span>{planIds.length} membership cycles</span>}
+                {item.verification_scope==='verified'&&<span>Verified only</span>}
+                {item.verification_scope==='unverified'&&<span>Not yet verified</span>}
+                {Number(item.registration_max_age_days)>0&&<span>Registered in last {item.registration_max_age_days} days</span>}
               </div>
 
               <div className="coupon-card-detail-grid">
@@ -534,12 +543,13 @@ export default function AdminCoupons(){
               </button>)}
             </div>
 
-            {form.purchase_types.includes('membership')&&<div className="coupon-membership-scope">
-              <div className="coupon-subhead"><div><strong>Membership cycles</strong><small>Leave everything unselected to allow all GROW & SCALE billing cycles.</small></div>{form.membership_plan_ids.length>0&&<button type="button" onClick={()=>setForm(current=>({...current,membership_plan_ids:[]}))}>Clear</button>}</div>
+            {form.purchase_types.includes('membership')&&<details className="coupon-membership-scope">
+              <summary className="coupon-subhead"><div><strong>Advanced: restrict billing cycles</strong><small>Optional. Your GROW/SCALE audience is selected once below. Open only to restrict particular plan durations.</small></div>{form.membership_plan_ids.length>0&&<span>{form.membership_plan_ids.length} selected</span>}</summary>
               <div className="coupon-plan-groups">
                 {['grow','scale'].map(group=><div key={group}><span>{group.toUpperCase()}</span><div>{plansByGroup[group].map(plan=><label key={plan.id} className={form.membership_plan_ids.includes(Number(plan.id))?'selected':''}><input type="checkbox" checked={form.membership_plan_ids.includes(Number(plan.id))} onChange={()=>toggle('membership_plan_ids',Number(plan.id))}/><strong>{plan.billing_period||`${plan.billing_months} month`}</strong><small>{money(plan.price)}</small></label>)}</div></div>)}
               </div>
-            </div>}
+              {form.membership_plan_ids.length>0&&<button type="button" className="coupon-advanced-clear" onClick={()=>setForm(current=>({...current,membership_plan_ids:[]}))}>Clear billing-cycle restrictions</button>}
+            </details>}
           </section>
 
           <section className="coupon-editor-section">
@@ -562,7 +572,30 @@ export default function AdminCoupons(){
                     return {...current,membership_audiences:next.length?next:['all']}
                   })}>{label}</button>)}
               </div>
-              <small>This checks the business's current active GROW/SCALE membership. Non-member means no active professional plan. Membership checkout plan cycles remain a separate filter above.</small>
+              <small>Choose an account segment once. These rules apply to the business redeeming this purchase promotion.</small>
+            </div>
+            <div className="coupon-eligibility-grid">
+              <label>Company verification
+                <select value={form.verification_scope||'any'} onChange={e=>setForm(v=>({...v,verification_scope:e.target.value}))}>
+                  <option value="any">Verified and unverified</option>
+                  <option value="verified">Verified companies only</option>
+                  <option value="unverified">Not yet verified</option>
+                </select>
+              </label>
+              <label>New registrations (optional)
+                <span className="coupon-eligibility-input"><input type="number" min="0" max="365"
+                  value={form.registration_max_age_days||0}
+                  onChange={e=>setForm(v=>({...v,registration_max_age_days:Number(e.target.value)}))}/> days since signup</span>
+                <small>0 = all account ages. A positive number limits this checkout offer to recently registered businesses.</small>
+              </label>
+            </div>
+            <div className="coupon-free-lead-shortcuts">
+              <div><strong>Free leads without a purchase?</strong>
+                <small>These use the existing Lead Entitlements rules. All values are editable: Basic/Premium quantities, required project count, signup deadline, verification and credit validity.</small></div>
+              <div className="coupon-free-shortcut-buttons">
+                <button type="button" onClick={()=>navigate('/admin/leads/entitlements?create=registration')}>Configure signup reward</button>
+                <button type="button" className="primary" onClick={()=>navigate('/admin/leads/entitlements?create=project-welcome')}>Configure project upload reward</button>
+              </div>
             </div>
             <div className="coupon-audience-grid">
               <div className="coupon-picker">

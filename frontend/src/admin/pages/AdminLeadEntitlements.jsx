@@ -30,6 +30,7 @@ const defaultCampaign=()=>({
   audienceScope:'all',
   verificationScope:'any',
   minCompletedProjects:0,
+  projectRegistrationWindowDays:0,
   userIds:[],
   industryId:'',
   stateId:'',
@@ -140,6 +141,31 @@ export default function AdminLeadEntitlements(){
   }
 
   useEffect(()=>{let active=true;queueMicrotask(()=>{if(active)load()});return()=>{active=false}},[])
+
+  // These shortcuts open the existing rule/editor, not another reward system.
+  useEffect(()=>{
+    const qs=new URLSearchParams(window.location.search)
+    const mode=qs.get('create')
+    if(mode==='project-welcome'){
+      const credits=Math.max(1,Math.min(1000,Number(qs.get('basic'))||2))
+      setEditingCampaign(null)
+      setCampaign({...defaultCampaign(),
+        // Example starting values only. All counts, windows and verification
+        // conditions remain editable in the same existing campaign modal.
+        name:'Completed project welcome reward',
+        minCompletedProjects:1,projectRegistrationWindowDays:15,
+        sharedQuantity:credits,premiumQuantity:0,validDays:7,
+        verificationScope:'verified'
+      })
+      setCampaignEditorOpen(true)
+    }else if(mode==='registration'){
+      setEditingRule(null)
+      setRule({...defaultRule(),name:'New business registration reward',
+        sharedQuantity:2,premiumQuantity:0,windowDays:7,isActive:false})
+      setRuleEditorOpen(true)
+    }
+  },[])
+
 
   useEffect(()=>{
     let active=true
@@ -255,6 +281,7 @@ export default function AdminLeadEntitlements(){
       audienceScope:item.audience_scope||'all',
       verificationScope:item.verification_scope||'any',
       minCompletedProjects:Number(item.min_completed_projects||0),
+      projectRegistrationWindowDays:Number(item.project_registration_window_days||0),
       userIds:users.map(user=>Number(user.id)),
       industryId:item.industry_id||'',
       stateId:item.state_id||'',
@@ -294,6 +321,7 @@ export default function AdminLeadEntitlements(){
 
   async function saveCampaign(){
     if(!campaign.name.trim())return setError('Give this business entitlement a name.')
+    if(campaign.projectRegistrationWindowDays>0&&campaign.minCompletedProjects<=0)return setError('Select at least one completed project when using a signup deadline.')
     if(campaign.audienceScope==='specific_users'&&!campaign.userIds.length)return setError('Choose at least one business.')
     if(!hasBuyerAccess(campaign))return setError('Enable at least one buyer-access type.')
     if(Number(campaign.sharedQuantity)<=0&&Number(campaign.premiumQuantity)<=0)return setError('Set at least one Basic or Premium lead.')
@@ -463,6 +491,7 @@ export default function AdminLeadEntitlements(){
               :'All businesses'
             const targets=[audience,verificationLabel(item.verification_scope),
               Number(item.min_completed_projects)>0?`${item.min_completed_projects}+ published completed projects`:'No project condition',
+              Number(item.project_registration_window_days)>0?`Uploaded within ${item.project_registration_window_days} days of signup`:'Any upload date',
               item.industry_name||'All industries',locationLabel(item)]
             const access=accessLabels(item)
             return <article className="entitlement-history-card campaign-history-card" key={`campaign-${item.id}`}>
@@ -535,6 +564,14 @@ export default function AdminLeadEntitlements(){
             <label>Premium leads<input type="number" min="0" max="1000" value={rule.premiumQuantity} onChange={e=>setRule(v=>({...v,premiumQuantity:clamp(e.target.value,0,1000)}))}/></label>
             <label>Claimed access<div className="entitlement-input-suffix"><input type="number" min="0" max="3650" value={rule.claimExpiryDays} onChange={e=>setRule(v=>({...v,claimExpiryDays:clamp(e.target.value,0,3650)}))}/><span>{Number(rule.claimExpiryDays)===0?'Lifetime':'days'}</span></div></label>
           </div>
+          <div className="entitlement-dynamic-preview" role="status" aria-live="polite">
+            <strong>Registration reward preview — configurable</strong>
+            <span>
+              {Number(rule.sharedQuantity)||0} Basic + {Number(rule.premiumQuantity)||0} Premium free lead credits.
+              Eligible {rule.verificationScope==='verified'?'verified companies':rule.verificationScope==='unverified'?'unverified companies':'businesses'} have {rule.windowDays} day{Number(rule.windowDays)===1?'':'s'} from registration to claim them.
+            </span>
+            <small>Claimed lead access: {Number(rule.claimExpiryDays)>0?`${rule.claimExpiryDays} days`:'lifetime'}. You can change the window, lead counts, verification and access rules above.</small>
+          </div>
           <AccessRules value={rule} onChange={setRule}/>
           <div className="rule-priority-note">If multiple registration rules match, the most specific rule wins.</div>
         </div>
@@ -565,9 +602,15 @@ export default function AdminLeadEntitlements(){
             <label>Completed projects required
               <input type="number" min="0" max="20" step="1"
                 value={campaign.minCompletedProjects}
-                onChange={e=>setCampaign(v=>({...v,minCompletedProjects:clamp(e.target.value,0,20)}))}/>
+                onChange={e=>setCampaign(v=>{const count=clamp(e.target.value,0,20);return {...v,minCompletedProjects:count,projectRegistrationWindowDays:count===0?0:v.projectRegistrationWindowDays}})}/>
               <small>0 = none. 1 = at least one published completed project with required details.</small>
             </label>
+            {Number(campaign.minCompletedProjects)>0&&<label>Upload within days of registration
+              <input type="number" min="0" max="365" step="1"
+                value={campaign.projectRegistrationWindowDays}
+                onChange={e=>setCampaign(v=>({...v,projectRegistrationWindowDays:clamp(e.target.value,0,365)}))}/>
+              <small>Set any deadline from 1 to 365 days; 0 means no signup deadline. The original project upload date must qualify, even if approval finishes later.</small>
+            </label>}
             <label>Industry<select value={campaign.industryId} onChange={e=>setCampaign(v=>({...v,industryId:e.target.value}))}><option value="">All industries</option>{industries.map(item=><option value={item.id} key={item.id}>{item.name}</option>)}</select></label>
             <label>State<select value={campaign.stateId} onChange={e=>setCampaign(v=>({...v,stateId:e.target.value,cityId:cities.some(city=>Number(city.id)===Number(v.cityId)&&Number(city.state_id)===Number(e.target.value))?v.cityId:''}))}><option value="">All states</option>{states.map(item=><option value={item.id} key={item.id}>{item.name}</option>)}</select></label>
             <label>City<select value={campaign.cityId} onChange={e=>setCampaign(v=>({...v,cityId:e.target.value}))}><option value="">All cities</option>{campaignCities.map(item=><option value={item.id} key={item.id}>{item.name}</option>)}</select></label>
@@ -593,9 +636,33 @@ export default function AdminLeadEntitlements(){
             </div>
           </div>}
 
-          {campaign.minCompletedProjects>0&&<p className="rule-priority-note">
-            A project upload alone does not verify a company. Select “Verified only” to require admin-approved company proof AND a published completed project. The credit is granted once, when both conditions are met.
+          {Number(campaign.minCompletedProjects)>0&&<p className="rule-priority-note">
+            Company verification is independent of uploading a project. Select “Verified only” when both admin verification and qualifying completed project uploads are mandatory.
           </p>}
+          <div className="entitlement-dynamic-preview" role="status" aria-live="polite">
+            <strong>Reward rule preview — all values editable above</strong>
+            <span>
+              {campaign.verificationScope==='verified'?'Verified companies':campaign.verificationScope==='unverified'?'Unverified companies':'Any verified or unverified company'}
+              {Number(campaign.minCompletedProjects)>0
+                ?` with at least ${campaign.minCompletedProjects} published completed project${Number(campaign.minCompletedProjects)===1?'':'s'}`
+                :' with no completed-project requirement'}
+              {Number(campaign.minCompletedProjects)>0&&Number(campaign.projectRegistrationWindowDays)>0
+                ?` uploaded within ${campaign.projectRegistrationWindowDays} day${Number(campaign.projectRegistrationWindowDays)===1?'':'s'} of signup`
+                :''}.
+            </span>
+            <span>
+              Reward: {Number(campaign.sharedQuantity)||0} Basic + {Number(campaign.premiumQuantity)||0} Premium lead credits.
+              {Number(campaign.validDays)>0
+                ?` Credits expire ${campaign.validDays} day${Number(campaign.validDays)===1?'':'s'} after the award is issued.`
+                :' Awarded credits have no automatic expiry.'}
+              {Number(campaign.claimExpiryDays)>0
+                ?` Purchased/accessed leads remain available for ${campaign.claimExpiryDays} day${Number(campaign.claimExpiryDays)===1?'':'s'} after claim.`
+                :' Claimed lead access does not automatically expire.'}
+            </span>
+            {Number(campaign.projectRegistrationWindowDays)>0&&<small>
+              Signup-window campaigns apply to businesses registered after the campaign begins. A qualified company receives this award once; changing a campaign does not restart previously issued credit expiry.
+            </small>}
+          </div>
           <AccessRules value={campaign} onChange={setCampaign}/>
           <div className="rule-priority-note">Saving applies this entitlement to the current matching business users. Editing re-syncs the recipient set safely.</div>
         </div>

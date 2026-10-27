@@ -91,6 +91,8 @@ jobs:
         run: npm ci
       - name: Promotion audiences and verified-project rewards regression
         run: node scripts/check-promotion-audiences-and-project-rewards.js
+      - name: Newly registered completed-project reward eligibility
+        run: node scripts/check-new-registration-project-rewards.js
       - name: Professional enquiry company totals regression
         run: node scripts/check-professional-enquiry-company-summary.js
       - name: Unified four-funnel marketplace intake regression
