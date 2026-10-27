@@ -1,3 +1,4 @@
+import BootLoader from '../../components/BootLoader'
 import {useCallback,useEffect,useMemo,useRef,useState} from 'react';
 import {authRequest} from '../../utils/auth';
 import './AdminAuditTimeline.css';
@@ -92,7 +93,7 @@ export default function AdminAuditTimeline(){
 
     <section className="audit-list">
       <div className="audit-list-head"><div><span>IMMUTABLE HISTORY</span><h2>{data.total||0} matching action{Number(data.total||0)===1?'':'s'}</h2></div><small>Sensitive credentials, proof files, raw UTRs and full bank details are automatically redacted from snapshots.</small></div>
-      {loading?<div className="audit-empty">Loading critical actions…</div>:!(data.items||[]).length?<div className="audit-empty">No audit records match the current filters.</div>:(data.items||[]).map(item=><article className={'audit-event '+item.category} key={item.id}>
+      {loading?<BootLoader contained message="Loading critical actions" />:!(data.items||[]).length?<div className="audit-empty">No audit records match the current filters.</div>:(data.items||[]).map(item=><article className={'audit-event '+item.category} key={item.id}>
         <div className="audit-main">
           <div className="audit-badges"><b>{CATEGORY_LABELS[item.category]||item.category}</b><span>{ACTION_LABELS[item.action]||item.action.replace(/[._]/g,' ')}</span></div>
           <h3>{ACTION_LABELS[item.action]||item.action.replace(/[._]/g,' ')}</h3>

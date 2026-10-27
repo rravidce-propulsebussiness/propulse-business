@@ -1,3 +1,4 @@
+import BootLoader from '../../components/BootLoader'
 import { useEffect, useMemo, useState } from 'react';
 import { apiRequest } from '../../utils/api';
 import './AdminContactSocial.css';
@@ -51,7 +52,7 @@ export default function AdminContactSocial(){
   const hiddenCount=useMemo(()=>form.social_handles.filter(s=>!s.enabled).length,[form.social_handles]);
   const current= AUDIENCES.find(x=>x.key===audience);
   const contactChannels=[form.email,form.phone,form.whatsapp,form.support_email].filter(Boolean).length;
-  if(loading&&!form.company_name&&!loaded[audience]) return <main className="admin-contact-page"><div className="admin-contact-empty admin-contact-loading"><div className="admin-contact-spinner"/>Loading contact settings…</div></main>;
+  if(loading&&!form.company_name&&!loaded[audience]) return <main className="admin-contact-page"><BootLoader contained message="Loading contact settings" /></main>;
 
   return <main className="admin-contact-page">
     <section className="admin-contact-hero">

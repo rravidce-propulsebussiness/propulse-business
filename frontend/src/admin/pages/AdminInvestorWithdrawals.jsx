@@ -1,3 +1,4 @@
+import BootLoader from '../../components/BootLoader'
 import { useCallback, useEffect, useState } from 'react'
 import './AdminInvestorWithdrawals.css'
 import useAdminRequest from '../hooks/useAdminRequest'
@@ -254,7 +255,7 @@ export default function AdminInvestorWithdrawals() {
         <span className="admin-withdrawals-auto-refresh">Auto-refreshes every 60 seconds</span>
       </div>
 
-      {loading ? <div className="admin-withdrawals-empty"><div className="withdrawal-loader" />Loading withdrawal ledger…</div> :
+      {loading ? <BootLoader contained message="Loading withdrawal ledger" /> :
       visibleRequests.length === 0 ? <div className="admin-withdrawals-empty"><div className="empty-withdrawal-icon">₹</div><strong>No {status === 'all' ? '' : `${status} `}withdrawal requests</strong><span>New investor withdrawal requests will appear here automatically.</span></div> :
       <div className="admin-withdrawals-table-wrap">
         <table className="admin-withdrawals-table">

@@ -1,3 +1,4 @@
+import BootLoader from '../../components/BootLoader'
 import {useEffect,useState} from 'react'
 import {apiRequest} from '../../utils/api'
 import './AdminProfessionalOffers.css'
@@ -147,7 +148,7 @@ export default function AdminProfessionalOffers(){
         <h2>Published and draft offers</h2><p>View reach, clicks, schedules and targeting without separate tracking software.</p></div>
         <button type="button" className="pro-offer-secondary" onClick={load} disabled={loading}>Refresh</button>
       </div>
-      {loading?<p className="pro-offer-empty">Loading campaigns…</p>:
+      {loading?<BootLoader contained message="Loading campaigns" />:
         items.length===0?<p className="pro-offer-empty">No campaigns yet. Create a welcome offer above, then enable it to start showing.</p>:
         <div className="pro-offer-card-grid">{items.map(item=><article className="pro-offer-admin-card" key={item.id}>
           <div className="pro-offer-admin-card-top"><span className={item.is_active?'on':'off'}>{item.is_active?'Enabled':'Draft / paused'}</span>

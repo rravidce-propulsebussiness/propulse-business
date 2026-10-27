@@ -1,3 +1,4 @@
+import BootLoader from '../components/BootLoader'
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import UserHeader from '../components/UserHeader'
@@ -109,7 +110,7 @@ export default function ProfessionalBrochures({embedded=false,onEditStateChange}
     </div>
     {error&&<p className="pw-error" role="alert">{error}</p>}
     {success&&<p className="pw-success" role="status">{success}</p>}
-    {loading?<div className="pw-card">Loading company brochures…</div>:
+    {loading?<BootLoader contained message="Loading company brochures" />:
     <form id={embedded?'profile-brochures-form':undefined} className="pw-brochure-list" onSubmit={save}>
       {docs.map((doc,index)=>{
         const isExpanded=expanded===editorKey(doc)

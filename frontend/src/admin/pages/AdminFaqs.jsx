@@ -1,3 +1,4 @@
+import BootLoader from '../../components/BootLoader'
 import { useEffect, useState } from 'react';
 import { apiRequest } from '../../utils/api';
 import './AdminFaqs.css';
@@ -121,7 +122,7 @@ export default function AdminFaqs(){
         <div><span className="admin-faq-kicker">FAQ LIBRARY</span><h2>{audienceMeta[1]}</h2><p>Edit content, change category, reorder, publish or unpublish any question.</p></div>
         <div className="admin-faq-list-tools"><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search FAQs…"/><button type="button" onClick={()=>load(audience)}>↻ Refresh</button></div>
       </div>
-      {loading?<div className="admin-faq-empty">Loading FAQs…</div>:!filtered.length?<div className="admin-faq-empty">No FAQs found.</div>:<div className="admin-faq-table-wrap"><table className="admin-faq-table"><thead><tr><th>QUESTION</th><th>CATEGORY</th><th>STATUS</th><th>ORDER</th><th>ACTION</th></tr></thead><tbody>{filtered.map(row=><tr key={row.id}><td><b>{row.question}</b><small>{row.answer.length>120?row.answer.slice(0,120)+'…':row.answer}</small></td><td><span className="admin-faq-category-pill">{(categories.find(x=>x[0]===row.category)||[])[1]||row.category}</span></td><td><span className={row.is_active?'admin-faq-status published':'admin-faq-status draft'}>{row.is_active?'Published':'Draft'}</span></td><td>{row.sort_order}</td><td><button onClick={()=>edit(row)}>Edit</button><button className="danger" onClick={()=>remove(row.id)}>Delete</button></td></tr>)}</tbody></table></div>}
+      {loading?<BootLoader contained message="Loading FAQs" />:!filtered.length?<div className="admin-faq-empty">No FAQs found.</div>:<div className="admin-faq-table-wrap"><table className="admin-faq-table"><thead><tr><th>QUESTION</th><th>CATEGORY</th><th>STATUS</th><th>ORDER</th><th>ACTION</th></tr></thead><tbody>{filtered.map(row=><tr key={row.id}><td><b>{row.question}</b><small>{row.answer.length>120?row.answer.slice(0,120)+'…':row.answer}</small></td><td><span className="admin-faq-category-pill">{(categories.find(x=>x[0]===row.category)||[])[1]||row.category}</span></td><td><span className={row.is_active?'admin-faq-status published':'admin-faq-status draft'}>{row.is_active?'Published':'Draft'}</span></td><td>{row.sort_order}</td><td><button onClick={()=>edit(row)}>Edit</button><button className="danger" onClick={()=>remove(row.id)}>Delete</button></td></tr>)}</tbody></table></div>}
     </section>
   </main>
 }

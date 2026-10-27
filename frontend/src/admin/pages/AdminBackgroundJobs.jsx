@@ -1,3 +1,4 @@
+import BootLoader from '../../components/BootLoader'
 import {useCallback,useEffect,useMemo,useState} from 'react'
 import {authRequest} from '../../utils/auth'
 import './AdminBackgroundJobs.css'
@@ -116,6 +117,7 @@ export default function AdminBackgroundJobs(){
     }
   },[data])
 
+  if(loading&&!data)return <main className="admin-background-jobs"><BootLoader contained message="Loading background jobs" /></main>
   return <main className="admin-background-jobs">
     <section className="background-jobs-hero">
       <div><span>SYSTEM / AUTOMATION</span><h1>Background jobs</h1><p>Operational history and controlled retries for worker-driven jobs. Manual retries use the same production code path and a database lock.</p></div>

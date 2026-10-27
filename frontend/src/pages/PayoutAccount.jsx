@@ -1,3 +1,4 @@
+import BootLoader from '../components/BootLoader'
 import { useEffect, useState } from 'react'
 import { authRequest } from '../utils/auth'
 import UserHeader from '../components/UserHeader'
@@ -23,7 +24,7 @@ export default function PayoutAccount(){
     }catch(e){setError(e.message||'Unable to save payout account')}finally{setSaving(false)}
   }
 
-  if(loading)return <><UserHeader/><main className="payout-account-page"><div className="payout-account-shell">Loading payout account…</div></main></>
+  if(loading)return <><UserHeader/><main className="payout-account-page"><div className="payout-account-shell"><BootLoader contained message="Loading payout account" /></div></main></>
   return <><UserHeader/><main className="payout-account-page"><div className="payout-account-shell">
     <header className="payout-account-head"><div><span>PAYOUT ACCOUNT</span><h1>Where should we send your earnings?</h1><p>Add a bank account or UPI ID before requesting an earnings withdrawal.</p></div></header>
     {message&&<div className="payout-account-alert success">{message}</div>}{error&&<div className="payout-account-alert error">{error}</div>}

@@ -1,3 +1,4 @@
+import BootLoader from '../components/BootLoader'
 import { useEffect, useMemo, useState } from 'react'
 import UserHeader from '../components/UserHeader'
 import { authRequest, getToken, getUser, saveSession } from '../utils/auth'
@@ -307,7 +308,7 @@ export default function Membership() {
       {submitted && <div className="membership-success">{checkout?.requiresExternalPayment ? 'Wallet amount was applied and the remaining direct payment was submitted for verification.' : 'Payment completed from your wallet and membership access is active.'}</div>}
       {error && <div className="membership-error">{error}</div>}
 
-      {loading ? <div className="membership-state">Loading membership options…</div> : <>
+      {loading ? <BootLoader contained message="Loading membership options" /> : <>
         <section className="membership-plans membership-plans-two">
           {[{ key: 'grow', label: 'GROW', plans: growPlans, selected: selectedGrowPlan, benefits: growBenefits, copy: 'Best Lead Pricing + Exclusive Leads + Investment Unlocked', action: 'Choose GROW' },
             { key: 'scale', label: 'SCALE', plans: scalePlans, selected: selectedScalePlan, benefits: scaleBenefits, copy: 'Everything in GROW + Website + SEO + Maintenance', action: 'Upgrade to SCALE' }].map((level) => {

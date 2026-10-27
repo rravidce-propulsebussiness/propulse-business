@@ -1,3 +1,4 @@
+import BootLoader from '../components/BootLoader'
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { authRequest, saveSession, getUser } from '../utils/auth'
@@ -578,7 +579,7 @@ export default function Profile(){
   }
 
 
-  if(loading)return <><UserHeader variant="profile"/><div className="profile-page profile-accordion-root"><div className="profile-loading">Loading your business profile…</div></div></>
+  if(loading)return <><UserHeader variant="profile"/><div className="profile-page profile-accordion-root"><BootLoader contained message="Loading business profile" /></div></>
   const cardEntries=[
     {id:'business',title:'Business & Public Profile',description:'Business details, contact information and public visibility',icon:'business',badge:completionItems[0]&&completionItems[1]?'Complete':'Add details'},
     {id:'services',title:'Services & Locations',description:'What you do and where you work',icon:'services',badge:serviceNames.length+' Services · '+locationNames.length+' Locations'},

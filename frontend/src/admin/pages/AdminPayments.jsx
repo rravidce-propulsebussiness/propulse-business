@@ -1,3 +1,4 @@
+import BootLoader from '../../components/BootLoader'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { openApiBlob } from '../../utils/api'
 import './AdminPayments.css'
@@ -360,7 +361,7 @@ export default function AdminPayments() {
       </div>
 
       <div className="payment-approval-list">
-        {loading ? <div className="payments-empty-state"><span className="payment-loading-ring"/><strong>Loading approval queue…</strong></div>
+        {loading ? <BootLoader contained message="Loading approval queue" />
           : activeItems.length === 0 ? <div className="payments-empty-state"><div className="payments-empty-icon">✓</div><strong>No matching requests</strong><small>This approval queue is clear for the selected filter.</small></div>
           : approvalType === 'wallet'
             ? activeItems.map(item => <TopupCard topup={item} key={item.id}/>)

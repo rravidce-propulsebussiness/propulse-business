@@ -1,3 +1,4 @@
+import BootLoader from '../../components/BootLoader'
 import {useEffect,useMemo,useState} from 'react'
 import {authRequest} from '../../utils/auth'
 import {playSound,refreshSoundSettings} from '../../utils/soundEffects'
@@ -51,7 +52,7 @@ export default function AdminSoundEffects(){
     }finally{setSaving(false)}
   }
 
-  if(loading)return <div className="admin-sound-page"><div className="admin-sound-loading">Loading sound settings…</div></div>
+  if(loading)return <div className="admin-sound-page"><BootLoader contained message="Loading sound settings" /></div>
 
   return <div className="admin-sound-page">
     <section className="admin-sound-hero">

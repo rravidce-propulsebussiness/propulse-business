@@ -1,3 +1,4 @@
+import BootLoader from '../components/BootLoader'
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { publicRequest } from '../utils/auth'
@@ -82,7 +83,7 @@ export default function Experts(){
       <div className="experts-filter-bar"><label className="experts-search"><Icon name="search" size={18}/><input value={filters.search} onChange={event=>updateFilter('search',event.target.value)} placeholder="Search by name, service, or location..."/></label><label><Icon name="briefcase" size={17}/><select value={filters.industryId} onChange={event=>updateFilter('industryId',event.target.value)}><option value="">All categories</option>{industries.map(item=><option value={item.id} key={item.id}>{item.name}</option>)}</select></label><label><Icon name="pin" size={17}/><select value={filters.cityId} onChange={event=>updateFilter('cityId',event.target.value)}><option value="">All cities</option>{visibleCities.map(item=><option value={item.id} key={item.id}>{item.name}{item.state_name?' · '+item.state_name:''}</option>)}</select></label><button className={filters.verified?'active':''} type="button" onClick={()=>updateFilter('verified',!filters.verified)}><Icon name="filter" size={17}/>{filters.verified?'Verified only':'More Filters'}</button></div>
 
       {error&&<div className="experts-state error">{error}</div>}
-      {loading&&<div className="experts-loading-grid">{Array.from({length:8}).map((_,index)=><i key={index}/>)}</div>}
+      {loading&&<BootLoader contained message="Loading professionals" />}
       {!loading&&!error&&settings?.directoryEnabled===false&&<div className="experts-state"><Icon name="filter" size={30}/><h3>Professional profiles are temporarily unavailable</h3></div>}
       {!loading&&!error&&settings?.directoryEnabled!==false&&experts.length===0&&<div className="experts-state"><Icon name="filter" size={30}/><h3>No subscribed professionals match these filters</h3><p>Try another city, industry or search term.</p></div>}
 

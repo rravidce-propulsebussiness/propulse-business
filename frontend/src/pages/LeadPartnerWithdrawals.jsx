@@ -1,3 +1,4 @@
+import BootLoader from '../components/BootLoader'
 import { useCallback, useEffect, useState } from 'react';
 import LeadPartnerSidebar from '../components/LeadPartnerSidebar';
 import { Link, useNavigate } from 'react-router-dom';
@@ -92,7 +93,7 @@ export default function LeadPartnerWithdrawals() {
           )}
 
           {loading ? (
-            <section className="withdrawals-card"><div className="withdrawals-empty">Loading earnings…</div></section>
+            <section className="withdrawals-card"><BootLoader contained message="Loading earnings" /></section>
           ) : (
             <>
               <section className="withdrawals-summary">

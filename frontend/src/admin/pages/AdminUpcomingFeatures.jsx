@@ -1,3 +1,4 @@
+import BootLoader from '../../components/BootLoader'
 import { useEffect, useState } from 'react'
 import { apiRequest } from '../../utils/api'
 import './AdminUpcomingFeatures.css'
@@ -46,6 +47,6 @@ export default function AdminUpcomingFeatures(){
         <button className="auf-save" disabled={saving}>{saving?'Saving…':editId?'Save changes':'Create feature'} <span>→</span></button>
       </form>
     </section>
-    <section className="auf-list"><div className="auf-list-head"><div><span>ROADMAP LIBRARY</span><h2>Feature catalogue</h2><p>Edit, publish, highlight or remove roadmap items.</p></div><b>{visibleItems.length} items</b></div>{loading?<div className="auf-empty">Loading roadmap…</div>:!visibleItems.length?<div className="auf-empty">No roadmap items for this audience yet.</div>:visibleItems.map(item=><article className="auf-item" key={item.id}><div className="auf-item-icon">{item.icon||'✦'}</div><div className="auf-item-copy"><div><span>{item.category}</span><b className={item.highlighted?'highlight':''}>{item.highlighted?'Featured':''}</b></div><h3>{item.name}</h3><p>{item.short_description}</p><small>{item.status} · {item.timeline}</small></div><div className="auf-item-actions"><b className={item.is_active?'published':'hidden'}>{item.is_active?'Published':'Hidden'}</b><button onClick={()=>edit(item)}>Edit</button><button className="danger" onClick={()=>remove(item)}>Delete</button></div></article>)}</section>
+    <section className="auf-list"><div className="auf-list-head"><div><span>ROADMAP LIBRARY</span><h2>Feature catalogue</h2><p>Edit, publish, highlight or remove roadmap items.</p></div><b>{visibleItems.length} items</b></div>{loading?<BootLoader contained message="Loading roadmap" />:!visibleItems.length?<div className="auf-empty">No roadmap items for this audience yet.</div>:visibleItems.map(item=><article className="auf-item" key={item.id}><div className="auf-item-icon">{item.icon||'✦'}</div><div className="auf-item-copy"><div><span>{item.category}</span><b className={item.highlighted?'highlight':''}>{item.highlighted?'Featured':''}</b></div><h3>{item.name}</h3><p>{item.short_description}</p><small>{item.status} · {item.timeline}</small></div><div className="auf-item-actions"><b className={item.is_active?'published':'hidden'}>{item.is_active?'Published':'Hidden'}</b><button onClick={()=>edit(item)}>Edit</button><button className="danger" onClick={()=>remove(item)}>Delete</button></div></article>)}</section>
   </main>
 }

@@ -1,3 +1,4 @@
+import BootLoader from '../../components/BootLoader'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { authRequest } from '../../utils/auth'
 import AdminCompletedProjects from './AdminCompletedProjects'
@@ -98,7 +99,7 @@ export default function AdminExpertDirectory(){
 
   const eligibleCount=useMemo(()=>businesses.filter(item=>item.eligible_by_rule).length,[businesses])
 
-  if(loading)return <main className="expert-admin"><div className="expert-admin-loading">Loading Expert Directory configuration…</div></main>
+  if(loading)return <main className="expert-admin"><BootLoader contained message="Loading expert directory" /></main>
 
   return <main className="expert-admin">
     <section className="expert-admin-hero">

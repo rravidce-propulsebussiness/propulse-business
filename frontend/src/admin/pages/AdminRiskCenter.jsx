@@ -1,3 +1,4 @@
+import BootLoader from '../../components/BootLoader'
 import {useCallback,useEffect,useMemo,useRef,useState} from 'react';
 import {authRequest} from '../../utils/auth';
 import './AdminRiskCenter.css';
@@ -93,7 +94,7 @@ export default function AdminRiskCenter(){
 
     <section className="risk-list">
       <div className="risk-list-head"><div><span>RISK EVENTS</span><h2>{data.total||0} matching event{Number(data.total||0)===1?'':'s'}</h2></div><small>Signals are indicators for review, not automatic accusations or account freezes.</small></div>
-      {loading?<div className="risk-empty">Loading risk signals…</div>:!ordered.length?<div className="risk-empty">No risk events match the current filters.</div>:ordered.map(event=><article className={'risk-event '+event.severity} key={event.id}>
+      {loading?<BootLoader contained message="Loading risk signals" />:!ordered.length?<div className="risk-empty">No risk events match the current filters.</div>:ordered.map(event=><article className={'risk-event '+event.severity} key={event.id}>
         <div className="risk-event-primary">
           <div className="risk-badges"><b className={'severity '+event.severity}>{event.severity}</b><b className={'state '+event.status}>{event.status}</b><span>{EVENT_LABELS[event.event_type]||event.event_type}</span></div>
           <h3>{event.title}</h3>
