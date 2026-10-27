@@ -1,3 +1,4 @@
+import BootLoader from '../components/BootLoader'
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { PublicHeader, PublicFooter } from '../components/PublicSiteChrome'
@@ -57,7 +58,7 @@ export default function ProfessionalDetails(){
     <PublicHeader/>
     <main className="pr-details-main">
       <div className="pr-breadcrumb"><Link to="/experts">← All professionals</Link><span>/</span><span>{profile?.business_name||'Professional profile'}</span></div>
-      {loading&&<div className="pr-state" role="status">Loading professional details…</div>}
+      {loading&&<BootLoader contained message="Loading professional details" />}
       {!loading&&error&&<div className="pr-state" role="alert"><h1>Profile unavailable</h1><p>{error}</p><Link to="/experts">Browse professionals →</Link></div>}
       {!loading&&profile&&<>
         <header className="pr-cover">
