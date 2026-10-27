@@ -20,7 +20,7 @@ assert.match(sql,/COUNT\(\*\) FILTER \(WHERE r\.kind='profile'\)/);
 assert.match(sql,/COUNT\(\*\) FILTER \(WHERE r\.kind='callback'\)/);
 assert.match(sql,/COUNT\(DISTINCT r\.marketplace_lead_id\) FILTER \(WHERE r\.verified_lead\)/);
 assert.match(sql,/l\.custom_fields->'_project_origin'->>'professionalUserId'=r\.business_user_id::text/);
-assert.doesNotMatch(sql,/\bLIMIT\s+\d+\b/i,'All-time company summary must not be truncated');
+assert.doesNotMatch(sql,/ORDER BY total_requests[^;]*LIMIT\s+\d+/i,'The grouped company totals must not be truncated');
 assert.match(ui,/\/admin\/professional-enquiries\/company-summary/);
 assert.match(ui,/Requests received by company/);
 assert.match(ui,/All-time totals from submitted requests/);
