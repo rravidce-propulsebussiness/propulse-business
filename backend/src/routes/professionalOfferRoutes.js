@@ -90,7 +90,8 @@ const eligibleSql=`
         ORDER BY m.expires_at DESC LIMIT 1),'non_member') AS tier
     FROM users u WHERE u.id=$1 AND u.role='business' AND u.is_active=TRUE
   )
-  SELECT o.*,v.first_seen_at,v.last_seen_at,v.seen_count,v.dismissed_at,v.click_count
+  SELECT o.*,v.first_seen_at,v.last_seen_at,v.seen_count,v.dismissed_at,v.click_count,
+    (v.offer_id IS NULL OR (o.popup_frequency='daily' AND v.last_seen_at::date<CURRENT_DATE)) AS popup_pending
   FROM professional_offer_campaigns o CROSS JOIN profile p
   LEFT JOIN professional_offer_views v ON v.offer_id=o.id AND v.user_id=p.id
   WHERE o.is_active=TRUE
@@ -116,8 +117,7 @@ router.get('/',requireBusiness,async(req,res)=>{
       id:o.id,title:o.title,description:o.description,eyebrow:o.eyebrow,
       cta_label:o.cta_label,cta_path:o.cta_path,image_url:o.image_url,
       display_mode:o.display_mode,expires_at:o.expires_at,popup_frequency:o.popup_frequency,
-      show_popup:o.display_mode!=='banner' && (!o.last_seen_at ||
-        (o.popup_frequency==='daily' && new Date(o.last_seen_at).toDateString()!==new Date().toDateString()))
+      show_popup:o.display_mode!=='banner' && o.popup_pending===true
     }));
     return res.json({offers});
   }catch(e){return errorResponse(res,e)}
