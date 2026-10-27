@@ -28,6 +28,7 @@ const defaultRule=()=>({
 const defaultCampaign=()=>({
   name:'',
   audienceScope:'all',
+  registrationScope:'any',
   verificationScope:'any',
   minCompletedProjects:0,
   projectRegistrationWindowDays:0,
@@ -155,7 +156,7 @@ export default function AdminLeadEntitlements(){
         name:'Completed project welcome reward',
         minCompletedProjects:1,projectRegistrationWindowDays:15,
         sharedQuantity:credits,premiumQuantity:0,validDays:7,
-        verificationScope:'verified'
+        verificationScope:'verified',registrationScope:'new_registration'
       })
       setCampaignEditorOpen(true)
     }else if(mode==='registration'){
@@ -302,6 +303,7 @@ export default function AdminLeadEntitlements(){
     setCampaign({
       name:item.name||'',
       audienceScope:item.audience_scope||'all',
+      registrationScope:item.registration_scope||'any',
       verificationScope:item.verification_scope||'any',
       minCompletedProjects:Number(item.min_completed_projects||0),
       projectRegistrationWindowDays:Number(item.project_registration_window_days||0),
@@ -518,7 +520,7 @@ export default function AdminLeadEntitlements(){
             const audience=item.audience_scope==='specific_users'
               ?`${Number(item.selected_user_count||0)} selected businesses`
               :'All businesses'
-            const targets=[audience,verificationLabel(item.verification_scope),
+            const targets=[audience,item.registration_scope==='new_registration'?'New registrations only':'Any registration date',verificationLabel(item.verification_scope),
               Number(item.min_completed_projects)>0?`${item.min_completed_projects}+ published completed projects`:'No project condition',
               Number(item.project_registration_window_days)>0?`Uploaded within ${item.project_registration_window_days} days of signup`:'Any upload date',
               item.industry_name||'All industries',locationLabel(item)]
@@ -621,6 +623,15 @@ export default function AdminLeadEntitlements(){
                   <option value="all">All qualifying businesses</option>
                   <option value="specific_users">Specific businesses</option>
                 </select></label>}
+            {!registrationReward&&<label>Registration eligibility
+              <select value={campaign.registrationScope} onChange={e=>setCampaign(v=>({...v,registrationScope:e.target.value}))}>
+                <option value="any">Anyone (existing and new businesses)</option>
+                <option value="new_registration">New registrations only</option>
+              </select>
+              <small>{campaign.registrationScope==='new_registration'
+                ?'Only companies that sign up after this reward is created qualify. You can also require verification and project uploads below.'
+                :'Existing and future businesses can qualify when they meet the conditions below.'}</small>
+            </label>}
             <label>Company verification
               <select value={currentReward.verificationScope}
                 onChange={e=>setCurrentReward(v=>({...v,verificationScope:e.target.value}))}>
@@ -734,7 +745,8 @@ export default function AdminLeadEntitlements(){
             {registrationReward
               ? <small>Valid until {rule.windowDays} day(s) after registration. Claimed leads:
                   {Number(rule.claimExpiryDays)>0?' '+rule.claimExpiryDays+' day(s)':' lifetime'}.</small>
-              : <small>{Number(campaign.minCompletedProjects)>0
+              : <small>{campaign.registrationScope==='new_registration'?'New registrations only. ':'Existing and new registrations. '}
+                {Number(campaign.minCompletedProjects)>0
                   ?'At least '+campaign.minCompletedProjects+' completed project(s)'+
                     (Number(campaign.projectRegistrationWindowDays)>0?' uploaded within '+campaign.projectRegistrationWindowDays+' days of signup':'')
                   :'No project prerequisite'}. Credit validity: {Number(campaign.validDays)>0?campaign.validDays+' days':'no expiry'}.
@@ -744,7 +756,7 @@ export default function AdminLeadEntitlements(){
           <div className="rule-priority-note">
             {registrationReward
               ?'If multiple registration rewards qualify, the most specific one wins. Saving a registration rule does not give the same business two new-business grants.'
-              :'Save to award current eligible recipients. For a completed-project reward, new businesses can qualify later; each qualifying business is awarded only once.'}
+              :'Save to award current eligible recipients. Future signups are checked automatically. For a completed-project reward, businesses can qualify after uploading and approval; each qualifying business is awarded only once.'}
           </div>
         </div>
         <div className="entitlement-modal-actions">

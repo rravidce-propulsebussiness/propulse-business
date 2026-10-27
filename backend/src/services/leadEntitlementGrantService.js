@@ -168,20 +168,27 @@ async function ensureNewBusinessGrant(userId,client=pool){
  * after the admin created the campaign. Grant once through the existing unique
  * (campaign_id,user_id) index, never through a separate credit ledger.
  */
-function qualifiesProjectSignupWindow(uploaded,registered,campaignCreated,days){
+function qualifiesProjectSignupWindow(uploaded,registered,campaignCreated,days,registrationScope='new_registration'){
   if(!days)return true;
   const uploadAt=new Date(uploaded).getTime();
   const signupAt=new Date(registered).getTime();
   const launchedAt=new Date(campaignCreated).getTime();
   return [uploadAt,signupAt,launchedAt].every(Number.isFinite)
-    &&signupAt>=launchedAt &&uploadAt>=signupAt
+    &&(registrationScope!=='new_registration'||signupAt>=launchedAt) &&uploadAt>=signupAt
     &&uploadAt<=signupAt+Number(days)*86400000;
+}
+
+function qualifiesCampaignSignup(campaign,registered){
+  if(campaign.registration_scope!=='new_registration')return true;
+  const signupAt=new Date(registered).getTime();
+  const launchedAt=new Date(campaign.created_at).getTime();
+  return Number.isFinite(signupAt)&&Number.isFinite(launchedAt)&&signupAt>=launchedAt;
 }
 
 async function ensureProjectQualifiedCampaignGrants(userId,client=pool){
   const campaigns=(await client.query(`
     SELECT bc.* FROM lead_entitlement_business_campaigns bc
-    WHERE bc.min_completed_projects>0
+    WHERE (bc.min_completed_projects>0 OR bc.registration_scope IN ('any','new_registration'))
       AND NOT EXISTS(SELECT 1 FROM lead_entitlement_grants g
         WHERE g.user_id=$1 AND g.campaign_id=bc.id)
     ORDER BY bc.id
@@ -190,16 +197,18 @@ async function ensureProjectQualifiedCampaignGrants(userId,client=pool){
   const business=await getBusinessContext(userId,client);
   if(!business||business.role!=='business'||business.is_active!==true)return;
   // Only the initial project upload time counts, not later publication/review.
-  const projects=(await client.query(`
-    SELECT p.created_at FROM business_profile_projects p
-    JOIN business_profiles bp ON bp.id=p.business_profile_id
-    WHERE bp.user_id=$1 AND p.is_published=TRUE AND p.completion_year IS NOT NULL
-  `,[userId])).rows;
-  const registeredAt=new Date(business.created_at).getTime();
+  const projects=campaigns.some(c=>Number(c.min_completed_projects)>0)
+    ?(await client.query(`
+      SELECT p.created_at FROM business_profile_projects p
+      JOIN business_profiles bp ON bp.id=p.business_profile_id
+      WHERE bp.user_id=$1 AND p.is_published=TRUE AND p.completion_year IS NOT NULL
+    `,[userId])).rows
+    :[];
   for(const campaign of campaigns){
+    if(!qualifiesCampaignSignup(campaign,business.created_at))continue;
     const days=Number(campaign.project_registration_window_days||0);
     const eligible=projects.filter(project=>qualifiesProjectSignupWindow(
-      project.created_at,business.created_at,campaign.created_at,days)).length;
+      project.created_at,business.created_at,campaign.created_at,days,campaign.registration_scope)).length;
     if(eligible<Number(campaign.min_completed_projects))continue;
     if(campaign.verification_scope==='verified'&&!business.is_verified)continue;
     if(campaign.verification_scope==='unverified'&&business.is_verified)continue;
@@ -532,6 +541,9 @@ function normalizeBusinessCampaign(input){
   const audienceScope=['all','specific_users'].includes(String(input?.audienceScope||'').toLowerCase())
     ?String(input.audienceScope).toLowerCase()
     :'all';
+  const registrationScope=['any','new_registration'].includes(String(input?.registrationScope||'').toLowerCase())
+    ?String(input.registrationScope).toLowerCase()
+    :'any';
   const verificationScope=['any','verified','unverified'].includes(String(input?.verificationScope||'').toLowerCase())
     ?String(input.verificationScope).toLowerCase()
     :'any';
@@ -540,6 +552,7 @@ function normalizeBusinessCampaign(input){
   const normalized={
     name:String(input?.name||'').trim().slice(0,120),
     audienceScope,
+    registrationScope,
     verificationScope,
     minCompletedProjects:int(input?.minCompletedProjects,0,20,0),
     projectRegistrationWindowDays:int(input?.projectRegistrationWindowDays,0,365,0),
@@ -593,6 +606,10 @@ async function campaignAudienceUserIds(client,campaign){
   const bind=value=>{values.push(value);return '$'+values.length};
   const conditions=["u.role='business'","u.is_active=TRUE"];
 
+  if(campaign.registration_scope==='new_registration'){
+    const start=bind(campaign.created_at);
+    conditions.push(`u.created_at>=${start}::timestamp`);
+  }
   if(campaign.verification_scope==='verified'){
     conditions.push("EXISTS(SELECT 1 FROM company_proof_documents cpd WHERE cpd.user_id=u.id AND cpd.status='verified')");
   }else if(campaign.verification_scope==='unverified'){
@@ -625,10 +642,6 @@ async function campaignAudienceUserIds(client,campaign){
   if(Number(campaign.min_completed_projects)>0){
     const min=bind(Number(campaign.min_completed_projects));
     const windowDays=bind(Number(campaign.project_registration_window_days||0));
-    if(Number(campaign.project_registration_window_days||0)>0){
-      const start=bind(campaign.created_at);
-      conditions.push(`u.created_at>=${start}::timestamp`);
-    }
     conditions.push(`(SELECT COUNT(DISTINCT p.id)
       FROM business_profile_projects p
       JOIN business_profiles bp5 ON bp5.id=p.business_profile_id
@@ -771,16 +784,17 @@ async function createBusinessCampaign(input,adminId){
         name,audience_scope,verification_scope,industry_id,state_id,city_id,
         shared_quantity,premium_quantity,valid_days,claim_expiry_days,min_completed_projects,project_registration_window_days,
         allow_single,allow_shared,allow_auto_release,allow_exclusive,
-        notes,created_by,updated_by
+        notes,created_by,updated_by,registration_scope
       )
-      VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$17,$18,$11,$12,$13,$14,$15,$16,$16)
+      VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$17,$18,$11,$12,$13,$14,$15,$16,$16,$19)
       RETURNING *
     `,[
       campaign.name,campaign.audienceScope,campaign.verificationScope,
       campaign.industryId,campaign.stateId,campaign.cityId,
       campaign.sharedQuantity,campaign.premiumQuantity,campaign.validDays,campaign.claimExpiryDays,
       campaign.allowSingle,campaign.allowShared,campaign.allowAutoRelease,campaign.allowExclusive,
-      campaign.notes||null,adminId||null,campaign.minCompletedProjects,campaign.projectRegistrationWindowDays
+      campaign.notes||null,adminId||null,campaign.minCompletedProjects,campaign.projectRegistrationWindowDays,
+      campaign.registrationScope
     ])).rows[0];
     await replaceCampaignUsers(client,inserted.id,campaign.audienceScope==='specific_users'?campaign.userIds:[]);
     const sync=await syncBusinessCampaign(client,inserted.id);
@@ -804,6 +818,7 @@ async function updateBusinessCampaign(campaignId,input,adminId){
     const campaign=await validateBusinessCampaign(normalizeBusinessCampaign({
       name:input?.name??existing.name,
       audienceScope:input?.audienceScope??existing.audience_scope,
+      registrationScope:input?.registrationScope??existing.registration_scope,
       verificationScope:input?.verificationScope??existing.verification_scope,
       minCompletedProjects:input?.minCompletedProjects??existing.min_completed_projects,
       projectRegistrationWindowDays:input?.projectRegistrationWindowDays??existing.project_registration_window_days,
@@ -827,7 +842,7 @@ async function updateBusinessCampaign(campaignId,input,adminId){
       SET name=$2,audience_scope=$3,verification_scope=$4,industry_id=$5,state_id=$6,city_id=$7,
           shared_quantity=$8,premium_quantity=$9,valid_days=$10,claim_expiry_days=$11,
           allow_single=$12,allow_shared=$13,allow_auto_release=$14,allow_exclusive=$15,
-          notes=$16,updated_by=$17,min_completed_projects=$18,project_registration_window_days=$19,updated_at=CURRENT_TIMESTAMP
+          notes=$16,updated_by=$17,min_completed_projects=$18,project_registration_window_days=$19,registration_scope=$20,updated_at=CURRENT_TIMESTAMP
       WHERE id=$1
       RETURNING *
     `,[
@@ -835,7 +850,8 @@ async function updateBusinessCampaign(campaignId,input,adminId){
       campaign.industryId,campaign.stateId,campaign.cityId,
       campaign.sharedQuantity,campaign.premiumQuantity,campaign.validDays,campaign.claimExpiryDays,
       campaign.allowSingle,campaign.allowShared,campaign.allowAutoRelease,campaign.allowExclusive,
-      campaign.notes||null,adminId||null,campaign.minCompletedProjects,campaign.projectRegistrationWindowDays
+      campaign.notes||null,adminId||null,campaign.minCompletedProjects,campaign.projectRegistrationWindowDays,
+      campaign.registrationScope
     ])).rows[0];
     await replaceCampaignUsers(client,id,campaign.audienceScope==='specific_users'?campaign.userIds:[]);
     const sync=await syncBusinessCampaign(client,id);
@@ -1072,5 +1088,5 @@ module.exports={
   listBusinesses,listBusinessCampaigns,createBusinessCampaign,updateBusinessCampaign,deleteBusinessCampaign,
   createManualGrant,updateGrant,deleteGrant,
   getAdminOverview,remainingFor,grantAllowsLead,
-  qualifiesProjectSignupWindow
+  qualifiesProjectSignupWindow,qualifiesCampaignSignup
 };
