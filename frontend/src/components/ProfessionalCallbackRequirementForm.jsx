@@ -15,7 +15,7 @@ const digits=value=>String(value||'').replace(/\D/g,'')
 const normal=value=>String(value||'').trim().toLowerCase()
 
 /** Same quick requirement fields for a selected professional and a project callback. */
-export default function ProfessionalCallbackRequirementForm({value,onChange,onSubmit,busy=false,error='',submitLabel='Send Callback Request'}){
+export default function ProfessionalCallbackRequirementForm({value,onChange,onSubmit,busy=false,error='',submitLabel='Send Callback Request',quoteOptions=null}){
   const [cities,setCities]=useState([])
   const [loadingCities,setLoadingCities]=useState(true)
   const [citySearch,setCitySearch]=useState(value.cityName||'')
@@ -103,6 +103,32 @@ export default function ProfessionalCallbackRequirementForm({value,onChange,onSu
       <label><span>Property Type</span><select required value={value.propertyType} onChange={e=>update({propertyType:e.target.value})}><option value="">Select property</option><option value="apartment">Apartment</option><option value="villa">Villa</option><option value="independent_house">Independent House</option><option value="commercial">Commercial</option><option value="plot">Plot / Land</option></select></label>
       <label><span>Budget <small>Optional</small></span><select value={value.budget} onChange={e=>update({budget:e.target.value})}><option value="">Select budget</option>{['Under ₹20 Lakhs','₹20 - 50 Lakhs','₹50 Lakhs - 1 Crore','₹1 - 2 Crore','Above ₹2 Crore'].map(item=><option key={item} value={item}>{item}</option>)}</select></label>
     </div>}
+    {quoteOptions&&<section className="pcf-package-quote" aria-label="Published professional package estimate">
+      <strong>Select an enabled company package</strong>
+      <p>Price and specifications are supplied by this professional. A final quote is confirmed after reviewing your site or interior measurements.</p>
+      {quoteOptions.plans.length?<>
+        <div className="pcf-package-options">
+          {quoteOptions.plans.map(plan=><label key={plan.id} className={String(quoteOptions.packageId)===String(plan.id)?'chosen':''}>
+            <input type="radio" name="professional-package" required
+              checked={String(quoteOptions.packageId)===String(plan.id)}
+              onChange={()=>quoteOptions.setPackageId(String(plan.id))}/>
+            <span><b>{plan.title}</b><small>{plan.description||'Published company package'}</small></span>
+            <strong>{quoteOptions.formatPrice(plan)}</strong>
+          </label>)}
+        </div>
+        <label><span>{quoteOptions.quantityLabel}</span>
+          <input type="number" min={quoteOptions.priceUnit==='project'?'1':'0.01'}
+            max="1000000" step={quoteOptions.priceUnit==='project'?'1':'any'}
+            required value={quoteOptions.quantity}
+            onChange={event=>quoteOptions.setQuantity(event.target.value)}
+            placeholder={quoteOptions.priceUnit==='sqft'?'Enter total chargeable sq ft':'Enter chargeable quantity'}/>
+        </label>
+        {quoteOptions.estimate&&<p className="pcf-price-preview" role="status">
+          <b>Estimated package cost: {quoteOptions.estimate}</b>
+          <small>Indicative amount only. Final GST, scope, measurements and additions are confirmed by the professional.</small>
+        </p>}
+      </>:<p className="pcf-package-empty">This professional has not enabled a priced package for the selected service. You can request a callback instead.</p>}
+    </section>}
     <div className="pcf-two">
       <label><span>Your Name</span><input required maxLength={160} autoComplete="name" placeholder="Enter your name" value={value.name} onChange={e=>update({name:e.target.value})}/></label>
       <label><span>Mobile Number</span><div className="pcf-phone"><i>+91</i><input required inputMode="tel" autoComplete="tel-national" placeholder="10-digit mobile" minLength={10} maxLength={10} pattern="[6-9][0-9]{9}" value={value.phone} onChange={e=>update({phone:digits(e.target.value).slice(0,10)})}/></div></label>
