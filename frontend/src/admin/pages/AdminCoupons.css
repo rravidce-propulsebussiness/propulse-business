@@ -1414,3 +1414,76 @@
     grid-template-columns:repeat(2,minmax(0,1fr));
   }
 }
+
+/* Eligibility is one surface: GROW/SCALE audience, verification, signup age. */
+.premium-coupons-page .coupon-membership-scope{
+  border:1px solid #e1e8f0;border-radius:12px;
+  padding:10px 14px;background:#f9fbfe;margin-top:12px;
+}
+.premium-coupons-page .coupon-membership-scope>summary{
+  display:flex;align-items:center;justify-content:space-between;
+  gap:10px;cursor:pointer;list-style:none;
+}
+.premium-coupons-page .coupon-membership-scope>summary::-webkit-details-marker{display:none}
+.premium-coupons-page .coupon-membership-scope>summary:after{
+  content:'▾';color:#60738b;font-size:15px;
+}
+.premium-coupons-page .coupon-membership-scope[open]>summary:after{content:'▴'}
+.premium-coupons-page .coupon-membership-scope .coupon-plan-groups{margin-top:12px}
+.premium-coupons-page .coupon-advanced-clear{
+  padding:7px 11px;border:1px solid #dce5ef;border-radius:8px;
+  color:#365d83;background:white;cursor:pointer;font-size:12px;font-weight:750;margin-top:10px;
+}
+.premium-coupons-page .coupon-eligibility-grid{
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:12px;margin:13px 0;padding:14px;border-radius:12px;
+  background:#f8fbff;border:1px solid #e2eaf4;
+}
+.premium-coupons-page .coupon-eligibility-grid>label{
+  display:grid;gap:7px;font-weight:800;color:#25415e;font-size:12px;min-width:0;
+}
+.premium-coupons-page .coupon-eligibility-grid select,
+.premium-coupons-page .coupon-eligibility-grid input{
+  min-height:43px;max-width:100%;width:100%;box-sizing:border-box;
+  padding:10px;border:1px solid #d5dfec;border-radius:9px;
+  color:#18395b;background:#fff;font-size:13px;
+}
+.premium-coupons-page .coupon-eligibility-grid small{
+  font-size:11px;font-weight:500;color:#73869b;line-height:1.5;
+}
+.premium-coupons-page .coupon-eligibility-input{
+  display:flex;gap:10px;align-items:center;font-size:11px;
+  font-weight:650;color:#617793;
+}
+.premium-coupons-page .coupon-eligibility-input input{max-width:100px}
+.premium-coupons-page .coupon-free-lead-shortcuts{
+  display:flex;gap:14px;align-items:center;justify-content:space-between;
+  flex-wrap:wrap;padding:15px;border:1px solid #ffd1b5;
+  border-radius:12px;background:linear-gradient(110deg,#fff7f1,#fff);
+  margin-bottom:15px;
+}
+.premium-coupons-page .coupon-free-lead-shortcuts>div:first-child{
+  min-width:190px;flex:1 1 250px;display:grid;gap:5px;
+}
+.premium-coupons-page .coupon-free-lead-shortcuts strong{
+  color:#a84917;font-size:13px;
+}
+.premium-coupons-page .coupon-free-lead-shortcuts small{
+  font-size:11px;line-height:1.5;color:#806d61;
+}
+.premium-coupons-page .coupon-free-shortcut-buttons{
+  display:flex;flex-wrap:wrap;gap:8px;
+}
+.premium-coupons-page .coupon-free-shortcut-buttons button{
+  min-height:38px;white-space:normal;font-weight:800;font-size:12px;
+  padding:9px 11px;border:1px solid #ffc0a1;border-radius:9px;
+  cursor:pointer;color:#b8541a;background:#fff;
+}
+.premium-coupons-page .coupon-free-shortcut-buttons button.primary{
+  background:#fa6321;border-color:#fa6321;color:#fff;
+}
+@media(max-width:760px){
+ .premium-coupons-page .coupon-eligibility-grid{grid-template-columns:1fr;padding:11px}
+ .premium-coupons-page .coupon-free-shortcut-buttons{width:100%}
+ .premium-coupons-page .coupon-free-shortcut-buttons button{flex:1 1 150px}
+}
