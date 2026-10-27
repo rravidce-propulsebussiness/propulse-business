@@ -7,6 +7,7 @@ const express = require('express');
 const crypto = require('crypto');
 const pool = require('../config/database');
 const authService = require('../services/authService');
+const { getCurrentProMembership } = require('../services/membershipAccessService');
 const rateLimit = require('../middleware/rateLimitMiddleware');
 const router = express.Router();
 
@@ -288,7 +289,15 @@ router.get('/userinfo', rateLimit({windowMs:60000,max:80}), async(req,res)=>{
         })),
       };
     }
+    // Entitlement evidence comes from active, unexpired ProPulse membership rows,
+    // never a browser-supplied plan name or a legacy user role.
+    const membership = company ? await getCurrentProMembership(user.id) : null;
+    const businessOsAccess = membership ? {
+      tier: membership.plan_group === 'scale' ? 'scale' : 'growth',
+      expires_at: new Date(membership.expires_at).toISOString(),
+    } : { tier: 'none', expires_at: null };
     return res.json({
+      business_os_access: businessOsAccess,
       sub:'propulse:'+String(user.id),
       id:'propulse:'+String(user.id),
       email:user.email,
