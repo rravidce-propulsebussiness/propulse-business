@@ -392,9 +392,25 @@ async function getPublicOffersForUser({userId,purchaseType,subtotal=null,members
   if(!['membership','lead','wallet_topup'].includes(purchaseType))return[];
   const normalizedIndustryId=industryId==null||industryId===''?null:Number(industryId);
   const rows=(await pool.query(`
+    WITH current_membership AS (
+      SELECT CASE WHEN LOWER(COALESCE(mp.plan_group,''))='scale' THEN 'scale' ELSE 'grow' END AS audience
+      FROM memberships m
+      JOIN membership_plans mp ON mp.id=m.membership_plan_id
+      WHERE m.user_id=$1
+        AND m.status='active'
+        AND m.starts_at<=CURRENT_TIMESTAMP
+        AND m.expires_at>CURRENT_TIMESTAMP
+        AND LOWER(REPLACE(COALESCE(mp.plan_type,''),'-','_'))='pro'
+      ORDER BY m.expires_at DESC LIMIT 1
+    )
     SELECT c.*
     FROM coupons c
     WHERE c.is_public_offer=TRUE
+      AND (
+        COALESCE(c.membership_audiences,'["all"]'::jsonb) ? 'all'
+        OR COALESCE(c.membership_audiences,'["all"]'::jsonb) ?
+          COALESCE((SELECT audience FROM current_membership),'non_member')
+      )
       AND c.is_active=TRUE
       AND (c.starts_at IS NULL OR c.starts_at<=CURRENT_TIMESTAMP)
       AND (c.expires_at IS NULL OR c.expires_at>CURRENT_TIMESTAMP)
@@ -437,7 +453,6 @@ async function getPublicOffersForUser({userId,purchaseType,subtotal=null,members
     // Older mixed-scope rewards are never advertised when the current strict
     // benefit-to-purchase rules would reject them at checkout.
     try{validateBenefitScope(coupon.benefit_type,purchaseTypes)}catch{continue}
-    if(!(await audienceEligible(pool,coupon,userId,{industryId:normalizedIndustryId})))continue;
     const planIds=jsonArray(coupon.membership_plan_ids).map(Number);
     if(membershipPlanId&&planIds.length&&!planIds.includes(Number(membershipPlanId)))continue;
     const previewBase=amount!=null&&Number.isFinite(amount)?amount:Number(coupon.min_order_amount||0);
