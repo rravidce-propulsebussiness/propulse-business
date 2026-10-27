@@ -336,7 +336,7 @@ async function claimLead(userId,leadId){
       SELECT id,lead_type,is_exclusive,created_at,exclusive_delay_days,status,
              industry_id,service_id,subservice_id,state_id,city_id,
              customer_name,customer_phone,customer_email,requirement,property_type,
-             budget,source,notes,custom_fields,buyer_capacity,access_strategy,
+             budget,source,notes,custom_fields,buyer_capacity,access_strategy,contact_consent_version,
              release_to_two_after_hours,release_to_three_after_hours,access_capacity_locked
       FROM leads WHERE id=$1 FOR UPDATE
     `,[leadId]);
@@ -349,7 +349,8 @@ async function claimLead(userId,leadId){
       // Preserve existing marketplace membership entitlements for other
       // professionals on the default shared lead mode. Explicitly restricted
       // modes (and the chosen professional's private path) use Requests only.
-      if(owner||mode!=='member_free_nonmember_paid')
+      const privateProfile=lead.source==='professional_profile_callback'&&!(lead.custom_fields?._project_origin?.marketplaceSharing===true&&lead.access_strategy==='shared'&&lead.contact_consent_version==='profile-multi-professional-consent-v1');
+      if(owner||mode!=='member_free_nonmember_paid'||privateProfile)
         fail('This enquiry must be accepted through the selected professional Requests inbox','REQUEST_FORBIDDEN');
     }
     if(lead.status!=='available')fail('Lead is not available','LEAD_UNAVAILABLE');

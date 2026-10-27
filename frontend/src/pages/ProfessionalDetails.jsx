@@ -48,7 +48,7 @@ export default function ProfessionalDetails(){
     if(sending||sent)return
     setSending(true);setRequestError('')
     try{
-      await publicRequest('/experts/'+encodeURIComponent(expertId)+'/callback',{method:'POST',body:JSON.stringify(request)})
+      await publicRequest('/experts/'+encodeURIComponent(expertId)+'/callback',{method:'POST',body:JSON.stringify({...request,marketplaceConsent:request.consent})})
       setSent(true)
     }catch(err){setRequestError(err.message||'Unable to submit request. Please try again.')}
     finally{setSending(false)}
@@ -120,7 +120,7 @@ export default function ProfessionalDetails(){
 
             <section id="callback" className="pr-panel pr-callback-panel">
               <span className="pr-label">CONTACT THROUGH PROPULSE</span><h2>Request a Callback</h2>
-              <p>Send your requirement to {profile.business_name}. Your contact details remain protected until this professional accepts the enquiry.</p>
+              <p>Send your requirement to {profile.business_name}. This request may also be offered to other relevant ProPulse professionals. Contact access stays protected until accepted or purchased.</p>
               {sent?<div className="pr-success" role="status"><strong>Callback request received.</strong><p>Your enquiry has been recorded. ProPulse will help coordinate the next steps.</p></div>:
               <ProfessionalCallbackRequirementForm value={request} onChange={setRequest} onSubmit={sendCallback} busy={sending} error={requestError} submitLabel="Send Callback Request"/>}
             </section>

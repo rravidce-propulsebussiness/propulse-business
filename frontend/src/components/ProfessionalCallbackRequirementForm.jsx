@@ -77,7 +77,7 @@ export default function ProfessionalCallbackRequirementForm({value,onChange,onSu
     if(value.flowKey==='property'&&(!value.propertyIntent||!value.propertyType))return setLocalError('Choose your property intent and type.')
     if(String(value.name||'').trim().length<2)return setLocalError('Enter your name.')
     if(!/^[6-9]\d{9}$/.test(digits(value.phone)))return setLocalError('Enter a valid 10-digit mobile number.')
-    if(!value.consent)return setLocalError('Confirm sharing your enquiry with the selected professional.')
+    if(!value.consent)return setLocalError('Confirm marketplace sharing of your enquiry.')
     onSubmit(event)
   }
 
@@ -108,7 +108,7 @@ export default function ProfessionalCallbackRequirementForm({value,onChange,onSu
       <label><span>Mobile Number</span><div className="pcf-phone"><i>+91</i><input required inputMode="tel" autoComplete="tel-national" placeholder="10-digit mobile" minLength={10} maxLength={10} pattern="[6-9][0-9]{9}" value={value.phone} onChange={e=>update({phone:digits(e.target.value).slice(0,10)})}/></div></label>
     </div>
     <label><span>Additional Information <small>Optional</small></span><textarea rows={3} maxLength={1000} value={value.message} onChange={e=>update({message:e.target.value})} placeholder="Locality, rooms, materials, parking, preferred package or anything important…"/></label>
-    <label className="pcf-consent"><input type="checkbox" required checked={value.consent} onChange={e=>update({consent:e.target.checked})}/><span>I agree that ProPulse may share this request with the selected professional after acceptance. My contact details stay protected until payment or eligible membership acceptance.</span></label>
+    <label className="pcf-consent"><input type="checkbox" required checked={value.consent} onChange={e=>update({consent:e.target.checked})}/><span>I agree that ProPulse may send this request to the selected professional and offer it to other relevant professionals through its marketplace. Contact details remain protected until an eligible professional accepts or purchases access.</span></label>
     <input className="pcf-honeypot" tabIndex={-1} aria-hidden="true" autoComplete="off" value={value.website} onChange={e=>update({website:e.target.value})}/>
     {(error||localError)&&<p className="pcf-error" role="alert">{error||localError}</p>}
     <button className="pcf-submit" type="submit" disabled={busy||pinBusy}>{busy?'Sending…':submitLabel}<span aria-hidden="true"> →</span></button>
