@@ -434,6 +434,9 @@ async function getPublicOffersForUser({userId,purchaseType,subtotal=null,members
   for(const coupon of rows){
     const purchaseTypes=jsonArray(coupon.purchase_types);
     if(!purchaseTypes.includes(purchaseType))continue;
+    // Older mixed-scope rewards are never advertised when the current strict
+    // benefit-to-purchase rules would reject them at checkout.
+    try{validateBenefitScope(coupon.benefit_type,purchaseTypes)}catch{continue}
     if(!(await audienceEligible(pool,coupon,userId,{industryId:normalizedIndustryId})))continue;
     const planIds=jsonArray(coupon.membership_plan_ids).map(Number);
     if(membershipPlanId&&planIds.length&&!planIds.includes(Number(membershipPlanId)))continue;
