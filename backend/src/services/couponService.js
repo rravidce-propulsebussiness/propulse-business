@@ -302,6 +302,19 @@ async function deleteCoupon(id){
 }
 
 async function audienceEligible(db,coupon,userId,{industryId=null}={}){
+  const segments=membershipAudiencesFrom(jsonArray(coupon.membership_audiences).length
+    ?jsonArray(coupon.membership_audiences):['all']);
+  if(!segments.includes('all')){
+    const member=(await db.query(`
+      SELECT CASE WHEN LOWER(COALESCE(mp.plan_group,''))='scale' THEN 'scale' ELSE 'grow' END AS audience
+      FROM memberships m JOIN membership_plans mp ON mp.id=m.membership_plan_id
+      WHERE m.user_id=$1 AND m.status='active'
+        AND m.starts_at<=CURRENT_TIMESTAMP AND m.expires_at>CURRENT_TIMESTAMP
+        AND LOWER(REPLACE(COALESCE(mp.plan_type,''),'-','_'))='pro'
+      ORDER BY m.expires_at DESC LIMIT 1
+    `,[userId])).rows[0];
+    if(!segments.includes(member?.audience||'non_member'))return false;
+  }
   const targetUserCount=(await db.query('SELECT COUNT(*)::int count FROM coupon_users WHERE coupon_id=$1',[coupon.id])).rows[0].count;
   if(Number(targetUserCount)>0){
     const targetUser=(await db.query('SELECT 1 FROM coupon_users WHERE coupon_id=$1 AND user_id=$2',[coupon.id,userId])).rowCount;
@@ -421,6 +434,7 @@ async function getPublicOffersForUser({userId,purchaseType,subtotal=null,members
   for(const coupon of rows){
     const purchaseTypes=jsonArray(coupon.purchase_types);
     if(!purchaseTypes.includes(purchaseType))continue;
+    if(!(await audienceEligible(pool,coupon,userId,{industryId:normalizedIndustryId})))continue;
     const planIds=jsonArray(coupon.membership_plan_ids).map(Number);
     if(membershipPlanId&&planIds.length&&!planIds.includes(Number(membershipPlanId)))continue;
     const previewBase=amount!=null&&Number.isFinite(amount)?amount:Number(coupon.min_order_amount||0);
@@ -437,6 +451,7 @@ async function getPublicOffersForUser({userId,purchaseType,subtotal=null,members
       reward_value:Number(coupon.reward_value||0),
       bonus_lead_type:coupon.bonus_lead_type||'shared',
       bonus_lead_quantity:Number(coupon.bonus_lead_quantity||0),
+      bonus_premium_quantity:Number(coupon.bonus_premium_quantity||0),
       bonus_valid_days:Number(coupon.bonus_valid_days||0),
       starts_at:coupon.starts_at,
       expires_at:coupon.expires_at,
