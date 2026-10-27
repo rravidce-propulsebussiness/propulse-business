@@ -1,3 +1,4 @@
+import BootLoader from '../../components/BootLoader'
 import {useCallback,useEffect,useState} from 'react'
 import {authRequest} from '../../utils/auth'
 import './AdminPerformanceCenter.css'
@@ -16,6 +17,7 @@ export default function AdminPerformanceCenter(){
   useEffect(()=>{let active=true;queueMicrotask(()=>{if(active)load()});return()=>{active=false}},[load])
   useEffect(()=>{if(!auto)return;const t=setInterval(()=>load({silent:true}),30000);return()=>clearInterval(t)},[auto,load])
   const db=data?.database||{},activity=data?.activity||{},pool=data?.pool||{},slow=data?.slowApis||{},indexes=data?.indexes||{},statements=data?.statements||{}
+  if(loading&&!data)return <main className="admin-performance"><BootLoader contained message="Loading performance metrics" /></main>
   return <main className="admin-performance">
     <section className="perf-hero">
       <div><span>SYSTEM / PERFORMANCE</span><h1>Database & API performance</h1><p>Operational visibility for PostgreSQL pressure, long transactions, table growth, index usage and slow API routes. This page is read-only.</p></div>
