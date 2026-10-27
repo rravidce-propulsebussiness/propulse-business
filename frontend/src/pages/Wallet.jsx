@@ -1,3 +1,4 @@
+import BootLoader from '../components/BootLoader'
 import { useEffect, useMemo, useState } from 'react'
 import UserHeader from '../components/UserHeader'
 import MembershipPayments from '../components/MembershipPayments'
@@ -293,7 +294,7 @@ export default function Wallet(){
     <main className="wallet-main">
       {error&&<div className="wallet-alert error">{error}</div>}
       {message&&<div className="wallet-alert success">{message}</div>}
-      {loading?<div className="wallet-state">Loading wallet…</div>:<>
+      {loading?<BootLoader contained message="Loading wallet" />:<>
         <section className="wallet-summary-grid">
           <article className="wallet-summary-card balance"><div className="wallet-summary-icon">▣</div><div><small>AVAILABLE BALANCE</small><strong>{money(wallet?.balance)}</strong></div></article>
           <article className="wallet-summary-card add"><div className="wallet-summary-icon">+</div><div><small>ADD BALANCE</small><strong>Fund your wallet</strong><p>Top up your wallet to buy leads.</p><button className="wallet-add-button" onClick={()=>setShowAdd(true)}>Add Balance</button></div></article>
