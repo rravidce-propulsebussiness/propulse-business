@@ -89,10 +89,10 @@ jobs:
           cache-dependency-path: backend/package-lock.json
       - name: Install dependencies
         run: npm ci
-      - name: Audit runtime dependencies
-        run: npm audit --omit=dev --audit-level=high
       - name: Syntax check
         run: npm test
+      - name: Audit runtime dependencies
+        run: npm audit --omit=dev --audit-level=high
 
   backend-startup:
     name: Backend startup and database smoke test
