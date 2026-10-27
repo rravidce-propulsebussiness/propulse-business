@@ -35,7 +35,11 @@ async function listPublic(id){
   const rows=(await pool.query(
     'SELECT id,title,description,file_url FROM business_profile_brochures WHERE business_profile_id=$1 AND is_published=TRUE ORDER BY sort_order,id LIMIT 8',[id]
   )).rows;
-  return decorate(rows);
+  const privacy=require('./publicProfessionalMediaPrivacyService');
+  const approved=await privacy.approvedUrls(id,rows.map(item=>item.file_url));
+  return decorate(rows.filter(item=>approved.has(item.file_url)).map(item=>({
+    ...item,description:privacy.safePublicText(item.description),
+  })));
 }
 async function saveMine(userId,items){
   const docs=normalize(items,userId);
