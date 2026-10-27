@@ -1325,3 +1325,141 @@
 @media(max-width:700px){
   .admin-lead-entitlements .entitlement-dynamic-preview{padding:12px;gap:7px}
 }
+
+
+/* One consistent editor for registration and qualifying-company free lead rewards. */
+.admin-lead-entitlements .entitlement-summary-grid {
+  grid-template-columns:repeat(5,minmax(0,1fr));
+}
+.admin-lead-entitlements .entitlement-action-bar {
+  display:flex;align-items:center;justify-content:space-between;
+  flex-wrap:wrap;gap:12px;
+}
+.admin-lead-entitlements .entitlement-action-description {
+  flex:1;min-width:240px;font-size:12px;line-height:1.5;
+  color:#657a93;font-weight:650;
+}
+.admin-lead-entitlements .entitlement-unified-modal {
+  max-width:920px;
+  width:calc(100vw - 32px);
+}
+.admin-lead-entitlements .entitlement-unified-modal .entitlement-modal-head p {
+  font-size:12px;line-height:1.5;color:#74849a;margin:6px 0 0;
+  max-width:640px;
+}
+.admin-lead-entitlements .entitlement-unified-modal .entitlement-modal-body {
+  display:grid;gap:16px;
+}
+.admin-lead-entitlements .entitlement-unified-trigger {
+  background:linear-gradient(115deg,#f6faff,#fff9f5);
+  border:1px solid #dfe8f1;border-radius:15px;
+  padding:15px;display:grid;gap:11px;
+}
+.admin-lead-entitlements .entitlement-unified-trigger > strong {
+  font-size:14px;font-weight:850;color:#163454;
+}
+.admin-lead-entitlements .entitlement-unified-trigger > small {
+  font-size:11px;line-height:1.5;color:#74849a;
+}
+.admin-lead-entitlements .entitlement-trigger-choices {
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px;min-width:0;
+}
+.admin-lead-entitlements .entitlement-trigger-choices > button {
+  min-width:0;display:grid;gap:6px;align-content:start;
+  padding:13px 14px;border:1px solid #dfe8f2;
+  border-radius:12px;text-align:left;background:#fff;
+  cursor:pointer;color:#22415f;
+  transition:border-color .16s ease, background .16s ease;
+}
+.admin-lead-entitlements .entitlement-trigger-choices > button.selected {
+  border:2px solid #f56e31;background:#fff4ed;padding:12px 13px;
+}
+.admin-lead-entitlements .entitlement-trigger-choices > button > strong {
+  font-size:13px;color:#143456;font-weight:850;
+}
+.admin-lead-entitlements .entitlement-trigger-choices > button > small {
+  font-size:11px;line-height:1.5;color:#708399;
+}
+.admin-lead-entitlements .entitlement-trigger-choices > button:disabled {
+  cursor:not-allowed;opacity:.7;
+}
+.admin-lead-entitlements .entitlement-unified-group {
+  border:1px solid #e6edf3;border-radius:14px;padding:15px;
+  display:grid;gap:12px;
+}
+.admin-lead-entitlements .entitlement-unified-group-head {
+  display:flex;align-items:baseline;justify-content:space-between;
+  flex-wrap:wrap;gap:8px;
+}
+.admin-lead-entitlements .entitlement-unified-group-head strong {
+  font-size:13px;font-weight:850;color:#153657;
+}
+.admin-lead-entitlements .entitlement-unified-group-head small {
+  font-size:11px;line-height:1.4;color:#7b8b9f;
+}
+.admin-lead-entitlements .entitlement-unified-modal .entitlement-form-grid {
+  gap:13px;
+}
+.admin-lead-entitlements .entitlement-unified-modal .entitlement-form-grid label {
+  font-size:12px;line-height:1.4;color:#4a627e;
+  font-weight:800;display:grid;gap:7px;min-width:0;
+}
+.admin-lead-entitlements .entitlement-unified-modal .entitlement-form-grid label > small {
+  font-size:10px;font-weight:500;color:#7b8ea3;line-height:1.5;
+}
+.admin-lead-entitlements .entitlement-unified-modal .entitlement-form-grid :is(input,select,textarea) {
+  font-size:12px;min-height:42px;border-radius:9px;
+  padding:9px 11px;min-width:0;box-sizing:border-box;
+}
+.admin-lead-entitlements .entitlement-unified-modal .entitlement-input-suffix input {
+  border:0;border-radius:0;min-height:40px;
+}
+.admin-lead-entitlements .entitlement-unified-modal .entitlement-input-suffix span {
+  font-size:11px;
+}
+.admin-lead-entitlements .entitlement-unified-modal .entitlement-form-grid textarea {
+  min-height:70px;
+}
+.admin-lead-entitlements .entitlement-unified-modal .entitlement-dynamic-preview {
+  font-size:12px;line-height:1.5;
+}
+.admin-lead-entitlements .entitlement-unified-modal .entitlement-modal-actions button {
+  font-size:12px;min-height:40px;
+}
+@media (max-width:1250px) {
+  .admin-lead-entitlements .entitlement-summary-grid{
+    grid-template-columns:repeat(3,minmax(0,1fr));
+  }
+}
+@media (max-width:720px) {
+  .admin-lead-entitlements .entitlement-summary-grid {
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+  .admin-lead-entitlements .entitlement-trigger-choices {
+    grid-template-columns:1fr;
+  }
+  .admin-lead-entitlements .entitlement-unified-modal {
+    width:calc(100vw - 16px);
+  }
+  .admin-lead-entitlements .entitlement-unified-group,
+  .admin-lead-entitlements .entitlement-unified-trigger {
+    padding:11px;
+  }
+  .admin-lead-entitlements .entitlement-unified-group-head {
+    display:grid;gap:4px;
+  }
+  .admin-lead-entitlements .entitlement-unified-modal .entitlement-form-grid.rule-grid {
+    grid-template-columns:1fr;
+  }
+}
+@media (max-width:460px) {
+  .admin-lead-entitlements .entitlement-summary-grid {
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+}
+@media(prefers-reduced-motion:reduce) {
+  .admin-lead-entitlements .entitlement-trigger-choices > button {
+    transition:none;
+  }
+}

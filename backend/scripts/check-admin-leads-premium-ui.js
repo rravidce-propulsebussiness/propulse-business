@@ -70,11 +70,12 @@ assert(sheetSync.includes('Import precedence'),'Google Sheets precedence guidanc
 
 assert(entitlements.includes('LEAD OPERATIONS / ACCESS CONTROL'),'Lead Entitlements premium hero must remain');
 assert(entitlements.includes('entitlement-policy-status'),'Lead Entitlements active-rule status must remain');
-assert(entitlements.includes('＋ Registration rule'),'Registration rules must support repeated creation');
-assert(entitlements.includes('＋ Business entitlement'),'Manual business entitlements must support repeated creation');
+assert(entitlements.includes('＋ Create Reward'),'One Create Reward action must support registration and conditional rewards');
+assert(entitlements.includes('changeRewardType')&&entitlements.includes('unifiedRewardOpen'),'Reward qualification types must share one editor');
+assert(!entitlements.includes('＋ Registration rule')&&!entitlements.includes('＋ Business entitlement'),'Duplicate reward-create actions must remain removed');
 assert(entitlements.includes('registrationRules'),'Multiple registration rules must remain in the Admin workflow');
 assert(entitlements.includes('businessCampaigns'),'Multiple business entitlement campaigns must remain in the Admin workflow');
-assert(entitlements.includes('All business users')&&entitlements.includes('Specific business users'),'Business entitlement audience selection must remain');
+assert(entitlements.includes('All qualifying businesses')&&entitlements.includes('Specific businesses'),'Conditional reward audience selection must remain');
 assert(entitlements.includes('campaign.userIds.includes'),'Specific-business multi-select must remain');
 assert(entitlements.includes('openEditCampaign(item)')&&entitlements.includes('deleteCampaign(item)'),'Business entitlement campaign cards must retain edit/delete actions');
 assert(entitlements.includes('recentItems'),'Registration rules and grants must share the recent card feed');

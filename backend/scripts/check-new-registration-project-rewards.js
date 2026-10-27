@@ -45,7 +45,7 @@ assert.match(entitlementUi,/Uploaded within \$\{item.project_registration_window
 assert.match(entitlementUi,/verificationScope:'verified'/,'Project reward defaults to verified companies');
 assert.match(entitlementUi,/campaign.projectRegistrationWindowDays/,'Project signup days must use editable state');
 assert.match(entitlementUi,/campaign.validDays/,'Award validity days must use editable state');
-assert.match(entitlementUi,/campaign.claimExpiryDays/,'Claim expiry days must use editable state');
+assert.match(entitlementUi,/currentReward.claimExpiryDays/,'The unified editor must allow claim expiry changes for registration and project rewards');
 assert.match(entitlementUi,/campaign.minCompletedProjects/,'Required completed project count must be editable');
 assert.match(entitlementUi,/campaign.sharedQuantity/,'Basic lead quantities must be editable');
 assert.match(entitlementUi,/campaign.premiumQuantity/,'Premium lead quantities must be editable');
