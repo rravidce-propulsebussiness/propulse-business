@@ -1,3 +1,4 @@
+import BootLoader from '../../components/BootLoader'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { authRequest } from '../../utils/auth'
 import './AdminLeadReports.css'
@@ -146,7 +147,7 @@ export default function AdminLeadReports(){
         </label>
       </div>
 
-      {loading?<div className="lead-report-loading"><span/><span/><span/></div>:!rows.length?
+      {loading?<BootLoader contained message="Loading lead reports" />:!rows.length?
         <div className="lead-report-empty">
           <div className="lead-report-empty-art">
             <span className="paper back"/>
