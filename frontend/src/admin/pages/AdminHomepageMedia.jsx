@@ -1,3 +1,4 @@
+import BootLoader from '../../components/BootLoader'
 import { useEffect, useRef, useState } from 'react'
 import { apiRequest } from '../../utils/api'
 import './AdminHomepageMedia.css'
@@ -82,7 +83,7 @@ export default function AdminHomepageMedia(){
     finally{setBusy('')}
   }
 
-  if(loading)return <main className="admin-home-media-page"><div className="admin-home-media-loading"><div className="admin-home-media-spinner"/>Loading homepage media…</div></main>
+  if(loading)return <main className="admin-home-media-page"><BootLoader contained message="Loading homepage media" /></main>
 
   const customCount=(settings.hero_image_url?1:0)+slots.filter(slot=>slot.key!=='hero'&&settings.category_images?.[slot.key]).length
   const defaultCount=slots.length-customCount
