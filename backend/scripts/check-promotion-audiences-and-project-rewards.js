@@ -33,6 +33,9 @@ assert.match(grants,/p.is_published=TRUE/);
 assert.match(grants,/cpd.status='verified'/);
 assert.match(grants,/ON CONFLICT DO NOTHING/);
 assert.match(grants,/ensureProjectQualifiedCampaignGrants\(userId,client\)/);
+assert.match(grants,/const oneTimeProjectReward=Number\(campaign.min_completed_projects\|\|0\)>0/,'Only completed-project campaigns use one-time award timing');
+assert.match(grants,/oneTimeProjectReward&&row\?\.starts_at/,'Existing project rewards must preserve their original start');
+assert.match(grants,/oneTimeProjectReward&&row\s*\?\s*\(row.expires_at\?new Date\(row.expires_at\):null\)/,'Existing project rewards must preserve original expiry even after revocation');
 assert.match(grants,/VALUES\(\$1,\$2,\$3,\$4,\$5,\$6,\$7,\$8,\$9,\$10,\$17,\$11,\$12,\$13,\$14,\$15,\$16,\$16\)/,
   'Campaign insert must use 17th SQL parameter for completed project threshold');
 assert.match(grants,/min_completed_projects=\$18/,

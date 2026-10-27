@@ -673,10 +673,18 @@ async function syncBusinessCampaign(client,campaignId){
     if(campaign.shared_quantity<usedShared||campaign.premium_quantity<usedPremium){
       fail('Campaign allowance cannot be lower than credits already used by a recipient','CAMPAIGN_ALLOWANCE_BELOW_USAGE');
     }
-    const startsAt=row?.revoked_at?syncNow:(row?.starts_at?new Date(row.starts_at):syncNow);
-    const expiresAt=Number(campaign.valid_days)>0
-      ?new Date(startsAt.getTime()+Number(campaign.valid_days)*86400000)
-      :null;
+    // An achievement-based reward is issued ONCE per company. An admin edit,
+    // temporary verification loss, or a re-published project must not restart
+    // the original award window. Regular campaigns keep editable timing.
+    const oneTimeProjectReward=Number(campaign.min_completed_projects||0)>0;
+    const startsAt=oneTimeProjectReward&&row?.starts_at
+      ?new Date(row.starts_at)
+      :row?.revoked_at?syncNow:(row?.starts_at?new Date(row.starts_at):syncNow);
+    const expiresAt=oneTimeProjectReward&&row
+      ?(row.expires_at?new Date(row.expires_at):null)
+      :Number(campaign.valid_days)>0
+        ?new Date(startsAt.getTime()+Number(campaign.valid_days)*86400000)
+        :null;
     const timing={starts_at:startsAt.toISOString(),expires_at:expiresAt?expiresAt.toISOString():null};
     if(row)updatePayload.push({id:Number(row.id),...timing});
     else insertPayload.push({user_id:userId,...timing});
