@@ -31,6 +31,10 @@ assert.match(grants,/p.is_published=TRUE/);
 assert.match(grants,/cpd.status='verified'/);
 assert.match(grants,/ON CONFLICT DO NOTHING/);
 assert.match(grants,/ensureProjectQualifiedCampaignGrants\(userId,client\)/);
+assert.match(grants,/VALUES\(\$1,\$2,\$3,\$4,\$5,\$6,\$7,\$8,\$9,\$10,\$17,\$11,\$12,\$13,\$14,\$15,\$16,\$16\)/,
+  'Campaign insert must use 17th SQL parameter for completed project threshold');
+assert.match(grants,/min_completed_projects=\$18/,
+  'Campaign update must use 18th SQL parameter for completed project threshold');
 const service=require('../src/services/couponService');
 const example={benefit_type:'lead_bonus',bonus_lead_type:'both',bonus_lead_quantity:1,bonus_premium_quantity:2,bonus_valid_days:7};
 assert.match(service.benefitSummary(example).title,/1 Basic and 2 Premium/);
