@@ -1,0 +1,54 @@
+const assert=require('node:assert/strict');
+const fs=require('node:fs');
+const path=require('node:path');
+const root=path.resolve(__dirname,'../..');
+const read=p=>fs.readFileSync(path.join(root,p),'utf8');
+const migration=read('backend/src/database/migrations/20261027_zzzz_professional_offer_campaigns.sql');
+const routes=read('backend/src/routes/professionalOfferRoutes.js');
+const server=read('backend/src/server.js');
+const admin=read('frontend/src/admin/pages/AdminProfessionalOffers.jsx');
+const widget=read('frontend/src/components/ProfessionalOfferExperience.jsx');
+const leads=read('frontend/src/pages/LeadsV2.jsx');
+const header=read('frontend/src/components/UserHeader.jsx');
+const app=read('frontend/src/App.jsx');
+const index=read('frontend/index.html');
+const loader=read('frontend/src/components/BootLoader.jsx');
+
+assert.match(migration,/CREATE TABLE IF NOT EXISTS professional_offer_campaigns/);
+assert.match(migration,/CREATE TABLE IF NOT EXISTS professional_offer_views/);
+assert.match(migration,/PRIMARY KEY \(offer_id,user_id\)/,
+  'One persistent impression row per user and campaign, across browser sessions');
+assert.match(migration,/DEFAULT FALSE/,'No promotion is published automatically');
+assert.match(migration,/CHECK \(audience IN \('all','new_registration','verified','unverified','non_member','grow','scale'\)\)/);
+assert.match(routes,/router\.use\(auth\)/,'All campaign APIs require authentication');
+assert.match(routes,/req\.user\?\.role!=='business'/,'Customer or guest must never receive professional offers');
+assert.match(routes,/req\.user\?\.role!=='admin'/,'Only administrators edit campaigns');
+assert.match(routes,/p\.created_at>=o\.created_at/,'New registration audience excludes older accounts');
+assert.match(routes,/o\.registration_window_days=0 OR p\.created_at>=CURRENT_TIMESTAMP/,
+  'Signup age limit enforced server side');
+assert.match(routes,/company_proof_documents/,'Verification is admin-approved');
+assert.match(routes,/memberships m JOIN membership_plans mp/,'Member tier is evaluated from active memberships');
+assert.match(routes,/professional_offer_views\.last_seen_at::date<CURRENT_DATE/,'Daily impressions remain idempotent');
+assert.match(routes,/ON CONFLICT\(offer_id,user_id\)/,'Repeated popup view does not create duplicate rows');
+assert.match(routes,/safePath\(body\.cta_path\)/,'CTA paths validated server side');
+assert.match(routes,/if\(!offer\)fail\('Offer is no longer available',404\)/,'Stale impressions are not accepted');
+assert.match(server,/app\.use\('\/api\/professional-offers',professionalOfferRoutes\)/);
+assert.match(admin,/Once per professional \/ campaign/,'Admin can publish a one-time popup');
+assert.match(admin,/At most once per day/);
+assert.match(admin,/New registrations only/);
+assert.match(admin,/Published \/ enabled/);
+assert.match(widget,/authRequest\('\/professional-offers'/,'Offers fetched once on professional workspace');
+assert.match(widget,/\.id\+'\/seen'/,'Popup view recorded');
+assert.match(widget,/\.id\+'\/dismiss'/,'Dismissal recorded');
+assert.match(widget,/\.id\+'\/click'/,'Click count recorded');
+assert.match(widget,/onClick=\{\(\)=>dismiss\(popup\)\}/,'Popup is dismissible');
+assert.match(leads,/<ProfessionalOfferExperience \/>/,'Popup and banner only mount on professional marketplace');
+assert.match(header,/professionals\?offers=1/,'Professional can reopen offers on demand');
+assert.match(app,/<BootLoader message="Checking your session"\/>/);
+assert.match(app,/fallback=\{<BootLoader\/>\}/,'Route fallback uses styled SVG');
+assert.match(index,/id="propulse-boot-screen"/);
+assert(index.indexOf('id="propulse-boot-screen"')<index.indexOf('id="root"'),
+  'First-paint loader exists before the React application');
+assert.match(index,/prefers-reduced-motion:reduce/,'No forced animation for reduced-motion users');
+assert.match(loader,/viewBox="0 0 100 100"/);
+console.log('Professional offers eligibility, impressions, admin controls and anti-FOUC SVG boot loader passed.');
