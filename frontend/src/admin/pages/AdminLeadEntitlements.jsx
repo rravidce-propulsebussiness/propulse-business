@@ -153,7 +153,7 @@ export default function AdminLeadEntitlements(){
         name:'Completed project welcome reward',
         minCompletedProjects:1,projectRegistrationWindowDays:15,
         sharedQuantity:credits,premiumQuantity:0,validDays:7,
-        verificationScope:'any'
+        verificationScope:'verified'
       })
       setCampaignEditorOpen(true)
     }else if(mode==='registration'){
