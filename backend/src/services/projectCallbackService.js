@@ -149,7 +149,38 @@ async function requestProfileCallback(expertId,input={}){
   if(!profile)throw bad('Professional profile not found','PROFILE_NOT_FOUND');
   const eligibility=await expertDirectoryService.getUserDirectoryStatus(profile.user_id);
   if(!eligibility.eligible)throw bad('Professional profile not found','PROFILE_NOT_FOUND');
-  const title=`Profile enquiry: ${String(profile.business_name).slice(0,155)}`;
+  const quotePurpose=input.requestPurpose==='quote';
+  let quoteSnapshot=null;
+  if(quotePurpose){
+    const packageId=Number(input.packageId);
+    const quantity=Number(input.quantity);
+    if(!Number.isSafeInteger(packageId)||packageId<=0)throw bad('Select a published company package');
+    if(!Number.isFinite(quantity)||quantity<=0||quantity>1000000)throw bad('Enter a valid quantity or chargeable area');
+    if(!['build','design'].includes(input.flowKey))throw bad('Choose construction or interior for a package estimate');
+    const plan=(await pool.query(`
+      SELECT id,title,industry,price_from,price_unit,description,inclusions
+      FROM business_profile_service_plans
+      WHERE id=$1 AND business_profile_id=$2 AND is_published=TRUE
+      LIMIT 1`,[packageId,id])).rows[0];
+    if(!plan||plan.industry!==(input.flowKey==='build'?'construction':'design'))
+      throw bad('Select an enabled package for this professional and service');
+    const unit=String(plan.price_unit||'');
+    if(!['sqft','sqyd','room','running_ft','unit','project'].includes(unit)
+       ||!Number.isFinite(Number(plan.price_from))||Number(plan.price_from)<=0)
+      throw bad('This package has no calculable rate. Request a callback for a custom quotation.');
+    if(unit==='project'&&quantity!==1)throw bad('Fixed-price project package quantity must be one');
+    const total=Math.round(Number(plan.price_from)*quantity*100)/100;
+    if(!Number.isFinite(total)||total<=0||total>1e10)throw bad('Estimate exceeds the supported range');
+    quoteSnapshot={
+      packageId:plan.id,packageName:plan.title,industry:plan.industry,
+      unit,quantity,rate:Number(plan.price_from),total,
+      specifications:Array.isArray(plan.inclusions)?plan.inclusions.slice(0,20):[],
+      priceType:'indicative_package_estimate',
+    };
+    requirementFields._request_purpose='quote';
+    requirementFields._package_estimate=quoteSnapshot;
+  }
+  const title=`${quotePurpose?'Profile quotation':'Profile enquiry'}: ${String(profile.business_name).slice(0,155)}`;
   const result=await pool.query(
     `INSERT INTO project_callback_requests
       (project_id,project_title,business_user_id,customer_name,customer_phone,customer_email,message,requirement_fields)
@@ -176,13 +207,13 @@ async function requestProfileCallback(expertId,input={}){
   try{
     await notifications.notifyUser({
       userId:profile.user_id,type:'project_callback_request',category:'lead',severity:'info',
-      title:'New professional profile callback',
-      message:'A customer requested a callback through your public profile. View the protected request in your Requests workspace.',
+      title:quotePurpose?'New professional package quotation request':'New professional profile callback',
+      message:quotePurpose?'A customer requested an estimated package quotation through your public profile. Review their requirement and confirm the final price in Requests.':'A customer requested a callback through your public profile. View the protected request in your Requests workspace.',
       actionUrl:'/professional-requests',relatedType:'project_callback',relatedId:result.rows[0].id,
       dedupeKey:`profile-callback-${result.rows[0].id}`,
     });
   }catch(error){console.error('Profile callback notification failed:',error.message);}
-  return {success:true,requestId:result.rows[0].id,marketplaceLeadId:market.leadId||null,marketplaceStatus:market.status};
+  return {success:true,requestId:result.rows[0].id,marketplaceLeadId:market.leadId||null,marketplaceStatus:market.status,estimate:quoteSnapshot};
 }
 function maskedPhone(value){
   const digits=String(value||'').replace(/\D/g,'');
