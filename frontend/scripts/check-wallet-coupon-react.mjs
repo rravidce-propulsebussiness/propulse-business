@@ -27,6 +27,19 @@ assert(css.includes('/* Mobile wallet top-up: keep the dialog and payment detail
 assert(css.includes('box-sizing:border-box!important')&&css.includes('max-height:calc(100dvh - 20px)!important'), 'Mobile wallet modal must account for padding and viewport height')
 assert(css.includes('.wallet-add-modal .wallet-receiving-grid{\n    grid-template-columns:minmax(0,1fr)!important;'), 'Mobile receiving account details must stack in one column')
 
+// Payment proof must use a real, accessible label rather than pseudo-elements
+// positioned over the optional note (which broke on narrow Android screens).
+assert(wallet.includes('className="wallet-proof-field"'), 'Top-up upload must use a standalone field')
+assert(wallet.includes('className="wallet-proof-heading"'), 'Proof label and optional note need their own row')
+assert(wallet.includes('className="wallet-proof-upload" htmlFor="wallet-proof"'), 'Upload trigger must be a real label associated with the file input')
+assert(wallet.includes("proof?'Change File':'Choose File'"), 'Upload trigger must reflect a selected attachment')
+assert(wallet.includes('className="wallet-proof-selected"'), 'Selected filename must be shown before payment submission')
+assert(wallet.includes('setProof(null)') && wallet.includes("if(input)input.value=''"), 'Remove must clear both React state and the native input')
+assert(css.includes('.wallet-add-modal .wallet-proof-field{') && css.includes('.wallet-add-modal .wallet-proof-heading{'), 'Proof heading must have non-overlapping CSS')
+assert(css.includes('.wallet-add-modal form .wallet-proof-upload{'), 'Real upload trigger needs a visible standalone button')
+assert(!css.includes(':has(input[type="file"])'), 'Legacy pseudo-element overlay must not be used')
+assert(css.includes('position:sticky;') && css.includes('background:linear-gradient(90deg,#ff5a22,#ff8a4c,#1765dc);'), 'Preserve the premium gradient accent while scrolling')
+
 const supportZ=Number(supportCss.split('.support-chat{')[1]?.split('z-index:')[1]?.split(';')[0]||0)
 const walletModalZ=Number(css.split('.wallet-modal-backdrop{z-index:')[1]?.split('!important')[0]||0)
 assert(supportZ>0&&walletModalZ>supportZ, 'Wallet top-up dialog must overlay the floating support button on mobile')
