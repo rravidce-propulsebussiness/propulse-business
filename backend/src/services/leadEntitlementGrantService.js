@@ -654,7 +654,10 @@ async function syncBusinessCampaign(client,campaignId){
   for(const row of existing){
     if(targetSet.has(Number(row.user_id)))continue;
     const claims=number(row.used_shared)+number(row.used_premium);
-    if(claims===0)deleteIds.push(Number(row.id));
+    // A published-project reward is a once-per-company achievement.
+    // Keep its grant row (even if unused) as the unique audit identity:
+    // deleting it would allow the same business to receive a second award.
+    if(claims===0&&Number(campaign.min_completed_projects||0)===0)deleteIds.push(Number(row.id));
     else if(!row.revoked_at)revokeIds.push(Number(row.id));
   }
   if(deleteIds.length)await client.query('DELETE FROM lead_entitlement_grants WHERE id=ANY($1::int[])',[deleteIds]);
