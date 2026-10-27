@@ -24,6 +24,35 @@ export default function AdminExpertDirectory(){
   const [saving,setSaving]=useState('')
   const [error,setError]=useState('')
   const [message,setMessage]=useState('')
+  const [mediaItems,setMediaItems]=useState([])
+  const [mediaConsent,setMediaConsent]=useState({})
+  const [mediaLoading,setMediaLoading]=useState(false)
+  const [mediaSaving,setMediaSaving]=useState('')
+  async function refreshMedia(){
+    setMediaLoading(true)
+    try{
+      const result=await authRequest('/admin/expert-directory/media-review')
+      setMediaItems(listData(result))
+    }catch(err){setError(err.message||'Unable to load professional media review queue')}
+    finally{setMediaLoading(false)}
+  }
+  async function reviewMedia(item,approved){
+    const key=item.business_profile_id+':'+item.asset_url
+    if(approved&&!mediaConsent[key])return setError('Inspect the full file and confirm no visible, embedded or spoken professional contact details.')
+    setMediaSaving(key);setError('')
+    try{
+      await authRequest('/admin/expert-directory/media-review',{
+        method:'PATCH',body:JSON.stringify({
+          businessProfileId:item.business_profile_id,assetUrl:item.asset_url,
+          approved,privacyReviewed:approved&&mediaConsent[key]===true,
+        }),
+      })
+      setMessage(approved?'Public asset approved after privacy review.':'Public access to this asset revoked.')
+      await refreshMedia()
+    }catch(err){setError(err.message||'Could not save media review')}
+    finally{setMediaSaving('')}
+  }
+
   const businessRequest=useRef(0)
   const searchReady=useRef(false)
 
@@ -133,6 +162,34 @@ export default function AdminExpertDirectory(){
     </section>
 
     <AdminCompletedProjects businesses={businesses}/>
+    <section className="expert-admin-panel expert-media-review">
+      <div className="expert-admin-panel-head">
+        <div><span>MEDIA PRIVACY</span><h2>Public attachment approval</h2>
+          <p>Files may expose a business phone, email, website, social handle, WhatsApp QR code, or spoken contact details. All files are hidden from the public directory until you inspect their contents and approve a sanitized version. ProPulse contact details belong in generated estimates instead.</p>
+        </div>
+        <button type="button" onClick={refreshMedia} disabled={mediaLoading}>{mediaLoading?'Loading…':'Review uploads'}</button>
+      </div>
+      {!mediaItems.length?<p className="expert-media-empty">Select “Review uploads” to see media awaiting approval.</p>:<div className="expert-media-list">
+        {mediaItems.map(item=>{
+          const key=item.business_profile_id+':'+item.asset_url
+          return <article key={key} className="expert-media-item">
+            <div><strong>{item.business_name}</strong><small>{item.item_title} · {item.media_kind}</small>
+              <span className={item.approved?'approved':'pending'}>{item.approved?'Approved':'Private · needs review'}</span>
+            </div>
+            <div>
+              {item.preview_url?<a href={item.preview_url} target="_blank" rel="noopener noreferrer">Inspect original file ↗</a>:<span>Preview unavailable — keep private</span>}
+              <label><input type="checkbox" checked={Boolean(mediaConsent[key])}
+                onChange={e=>setMediaConsent(all=>({...all,[key]:e.target.checked}))}/>
+                I checked visible, embedded, QR, written and spoken contact details; the file is sanitized.
+              </label>
+            </div>
+            <button type="button" disabled={mediaSaving===key||(!item.approved&&(!item.preview_url||!mediaConsent[key]))}
+              onClick={()=>reviewMedia(item,!item.approved)}>{mediaSaving===key?'Saving…':item.approved?'Revoke approval':'Approve public file'}</button>
+          </article>
+        })}
+      </div>}
+    </section>
+
 
     <section className="expert-admin-panel businesses">
       <div className="expert-admin-panel-head"><div><span>02</span><h2>Business visibility</h2><p>Feature strong profiles or hide a business without changing its membership.</p></div><div className="expert-admin-page-count"><b>{pagination.total||0}</b><small>businesses</small></div></div>
