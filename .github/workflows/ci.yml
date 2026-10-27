@@ -93,6 +93,8 @@ jobs:
         run: node scripts/check-promotion-audiences-and-project-rewards.js
       - name: Newly registered completed-project reward eligibility
         run: node scripts/check-new-registration-project-rewards.js
+      - name: Professional offers and SVG boot splash regression
+        run: node scripts/check-professional-offers.js
       - name: Unified configurable lead reward editor regression
         run: node scripts/check-unified-lead-reward-editor.js
       - name: Professional enquiry company totals regression
