@@ -5,9 +5,8 @@ import { isEmptyAnswer, isQuestionVisible } from '../components/customerFlowQues
 import InteriorRequirementExact from '../components/InteriorRequirementExact'
 import RealEstateRequirementExact from '../components/RealEstateRequirementExact'
 import QuoteLocationFields from '../components/QuoteLocationFields'
-import { createDetailedQuotationPdfDataUrl, downloadConstructionBrochurePdf, downloadInteriorBrochurePdf, downloadRequirementQuotePdf } from '../utils/requirementQuotePdf'
+import { createDetailedQuotationPdfDataUrl, downloadConstructionBrochurePdf, downloadRequirementQuotePdf } from '../utils/requirementQuotePdf'
 import { calculateRequirementQuotation } from '../utils/customerQuotation'
-import { getInteriorPackage } from '../data/interiorPackageCatalog'
 import './RequirementWizard.css'
 
 const CONSTRUCTION_FLOORS = [
@@ -682,17 +681,6 @@ export default function RequirementWizard({ flowKey, onCompletionChange, embedde
     })
   }
 
-  async function downloadInteriorBrochure() {
-    const packageKey = ['standard','premium'].includes(String(answers.finish_quality || '').toLowerCase())
-      ? String(answers.finish_quality).toLowerCase()
-      : 'standard'
-    await downloadInteriorBrochurePdf({
-      packageKey,
-      requestId: submissionResult?.leadId,
-      customerName: contact.name,
-      city: [selectedCity?.name, selectedCity?.state_name].filter(Boolean).join(', '),
-    })
-  }
 
   if (state.loading) return <main className="rq-page"><div className="rq-shell rq-status">Loading your requirement form…</div></main>
   if (!flow) return <main className="rq-page"><div className="rq-shell rq-status error">{state.error || 'This requirement form is unavailable.'}<Link to="/">Back home</Link></div></main>
@@ -700,7 +688,6 @@ export default function RequirementWizard({ flowKey, onCompletionChange, embedde
   if (state.success) {
     const quotation = submissionResult?.quotation
     if (flowKey === 'design') {
-      const interiorPackage = getInteriorPackage(answers.finish_quality)
       return <main className="rq-page rq-premium-page">
         {!embedded && <header className="rq-premium-header"><Link to="/"><img src="/brand/propulse-logo.svg" alt="ProPulse" /></Link><Link to="/">Back to Home</Link></header>}
         <div className="rq-success rq-premium-success rq-interior-success">
@@ -709,10 +696,9 @@ export default function RequirementWizard({ flowKey, onCompletionChange, embedde
           <h1>Your interior requirement is submitted.</h1>
           <p>We saved your interior requirements. Download your structured request PDF. To receive a company-priced estimate, select a professional and an enabled published package; the final price requires review.</p>
           <div className="rq-interior-package-result">
-            <small>SELECTED INTERIOR PACKAGE</small>
-            <div><strong>{interiorPackage.name}</strong><b>₹{interiorPackage.price.toLocaleString('en-IN')}<em>/sq ft reference</em></b></div>
-            <p>{interiorPackage.description}</p>
-            <span>This is a ProPulse reference package, not a selected professional's price. The downloadable PDF records your requirements.</span>
+            <strong>Professional pricing is available after company selection.</strong>
+            <p>We will not display a fabricated contractor rate for a general enquiry. Choose a professional's enabled interior package to receive an instant indicative quotation PDF based on that company's pricing.</p>
+            <Link to="/experts">Browse Professionals →</Link>
           </div>
           {submissionResult?.leadId && <div className="rq-success-reference">Request ID <b>#{submissionResult.leadId}</b></div>}
           {submissionResult?.referenceFilesUploaded>0&&<div className="rq-reference-upload-status">✓ {submissionResult.referenceFilesUploaded} floor plan / reference file{submissionResult.referenceFilesUploaded===1?'':'s'} attached to this request.</div>}
