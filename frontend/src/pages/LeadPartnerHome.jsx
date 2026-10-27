@@ -1,3 +1,4 @@
+import BootLoader from '../components/BootLoader'
 import { useEffect, useMemo, useState } from 'react'
 import LeadPartnerSidebar from '../components/LeadPartnerSidebar'
 import { Link, useNavigate } from 'react-router-dom'
@@ -109,6 +110,7 @@ export default function LeadPartnerHome(){
     navigate('/login',{replace:true})
   }
 
+  if(loading&&!data)return <div className="lp-shell"><LeadPartnerSidebar user={user} onSignOut={signOut}/><main className="lp-main"><BootLoader contained message="Loading partner dashboard" /></main></div>
   return <div className="lp-shell">
     <LeadPartnerSidebar user={user} onSignOut={signOut}/>
 
