@@ -7,6 +7,7 @@ const express = require('express');
 const crypto = require('crypto');
 const pool = require('../config/database');
 const authService = require('../services/authService');
+const { getBusinessOsMembership } = require('../services/membershipAccessService');
 const rateLimit = require('../middleware/rateLimitMiddleware');
 const router = express.Router();
 
@@ -90,7 +91,7 @@ function consentPage(params, principal) {
     '<main style="max-width:500px;margin:10vh auto;padding:35px;border-radius:16px;background:#fff;' +
     'box-shadow:0 20px 50px #13234220">' +
     '<h1 style="font-size:27px">Continue to ProPulse Business OS?</h1>' +
-    '<p>Share your verified email, name, and registered business details ' +
+    '<p>Share your verified email, name, active membership tier and registered business details ' +
     '(company name, phone, services and locations) with Business OS. ' +
     'It will create or update your own workspace.</p>' +
     '<p style="padding:12px;background:#edf4ff;border-radius:8px">' +
@@ -288,6 +289,9 @@ router.get('/userinfo', rateLimit({windowMs:60000,max:80}), async(req,res)=>{
         })),
       };
     }
+    // Membership is resolved server-side for the verified OAuth subject.
+    // It is not derived from user.role or user-controlled profile metadata.
+    const membership = company ? await getBusinessOsMembership(user.id, pool) : null;
     return res.json({
       sub:'propulse:'+String(user.id),
       id:'propulse:'+String(user.id),
@@ -296,6 +300,7 @@ router.get('/userinfo', rateLimit({windowMs:60000,max:80}), async(req,res)=>{
       name:user.name,
       preferred_username:user.name,
       company,
+      membership,
     });
   } catch(e) {
     console.error('ProPulse OAuth userinfo failed:',e.message);
