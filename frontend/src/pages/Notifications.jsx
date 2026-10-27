@@ -1,3 +1,4 @@
+import BootLoader from '../components/BootLoader'
 import {useCallback,useEffect,useState} from 'react';
 import {useNavigate} from 'react-router-dom';
 import {authRequest,clearSession,getUser} from '../utils/auth';
@@ -52,7 +53,7 @@ function NotificationContent(){
     <section className="notifications-summary"><article><span>Unread</span><strong>{data.unread||0}</strong><small>Needs your attention</small></article><article><span>Matching</span><strong>{data.total||0}</strong><small>Current filters</small></article><article><span>Email</span><strong>{prefs.email_enabled?'ON':'OFF'}</strong><small>Transactional delivery</small></article></section>
     <section className="notifications-toolbar"><div className="notifications-categories">{Object.entries(CATEGORY_LABELS).map(([key,label])=><button key={key} className={category===key?'active':''} onClick={()=>{setCategory(key);setPage(1)}}>{label}</button>)}</div><label className="notifications-unread-toggle"><input type="checkbox" checked={unreadOnly} onChange={e=>setUnreadOnly(e.target.checked)}/> Unread only</label></section>
     <section className="notifications-list">
-      {loading?<div className="notifications-empty">Loading notifications…</div>:!(data.items||[]).length?<div className="notifications-empty">No notifications match these filters.</div>:(data.items||[]).map(item=><article key={item.id} className={'notification-row '+item.severity+' '+(item.read_at?'read':'unread')} onClick={()=>openItem(item)}>
+      {loading?<BootLoader contained message="Loading notifications" />:!(data.items||[]).length?<div className="notifications-empty">No notifications match these filters.</div>:(data.items||[]).map(item=><article key={item.id} className={'notification-row '+item.severity+' '+(item.read_at?'read':'unread')} onClick={()=>openItem(item)}>
         <i/><div className="notification-row-main"><div className="notification-row-top"><strong>{item.title}</strong><span>{fmt(item.created_at)}</span></div><p>{item.message}</p><div className="notification-row-meta"><b>{CATEGORY_LABELS[item.category]||item.category}</b>{!item.read_at&&<em>NEW</em>}{item.action_url&&<span>Open →</span>}</div></div>
       </article>)}
     </section>
