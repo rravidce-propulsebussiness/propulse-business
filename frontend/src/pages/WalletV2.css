@@ -297,3 +297,62 @@
 .wallet-coupon-field{display:flex;flex-direction:column;gap:6px}.wallet-coupon-field>span:first-child{font-size:12px;font-weight:800;color:#173b70}.wallet-coupon-field>span:first-child small{font-weight:500;color:#7b8ba0}.wallet-coupon-input-row{display:grid;grid-template-columns:1fr auto;gap:8px}.wallet-coupon-field input{height:42px;box-sizing:border-box;border:1px solid #d6e0eb;border-radius:9px;padding:0 11px;color:#173b70;font-size:12px;font-weight:800;text-transform:uppercase;outline:0}.wallet-coupon-apply{border:0;border-radius:9px;background:#173b70;color:#fff;padding:0 18px;font-size:12px;font-weight:900;cursor:pointer}.wallet-coupon-apply:disabled{opacity:.6;cursor:not-allowed}.wallet-coupon-field>small{font-size:12px;color:#7b8ba0;line-height:1.4}.wallet-coupon-status{font-size:12px;font-weight:800;line-height:1.4;color:#71849e}.wallet-coupon-status.success{color:#14805a}.wallet-coupon-status.error{color:#b52e24}
 .wallet-coupon-summary{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:2px 0 4px;padding:12px;border:1px solid #dce5ef;border-radius:10px;background:#f8fbff}.wallet-coupon-summary>div{padding:8px 9px;border-radius:8px;background:#fff;border:1px solid #e4eaf1}.wallet-coupon-summary span{display:block;color:#71849e;font-size:12px;font-weight:900;letter-spacing:.06em;text-transform:uppercase}.wallet-coupon-summary strong{display:block;margin-top:4px;color:#173b70;font-size:14px}.wallet-coupon-summary .wallet-coupon-pay-row{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;padding:11px 12px;border:1px solid #ffd2c3;background:#fff7f3}.wallet-coupon-summary .wallet-coupon-pay-row span{color:#a34b2d;font-size:12px}.wallet-coupon-summary .wallet-coupon-pay{color:#f15a24;font-size:21px}.wallet-coupon-summary>small{grid-column:1/-1;color:#71849e;font-size:12px;line-height:1.4}
 @media(max-width:600px){.wallet-public-offers-head{align-items:flex-start;flex-direction:column}.wallet-public-offer-card{grid-template-columns:auto minmax(0,1fr)}.wallet-public-offer-card>strong{grid-column:2}.wallet-coupon-input-row{grid-template-columns:1fr}.wallet-coupon-apply{height:40px}.wallet-coupon-summary{grid-template-columns:1fr}.wallet-coupon-summary .wallet-coupon-pay-row,.wallet-coupon-summary>small{grid-column:auto}}
+
+
+/* Mobile wallet top-up: keep the dialog and payment details within the visual viewport. */
+.wallet-modal-backdrop{
+  box-sizing:border-box;
+  max-width:100vw;
+  grid-template-columns:minmax(0,1fr);
+  overflow-x:hidden;
+}
+.wallet-detail-modal.wallet-add-modal{
+  box-sizing:border-box!important;
+  min-width:0;
+  max-width:min(820px,100%)!important;
+  justify-self:center;
+  overscroll-behavior:contain;
+}
+.wallet-add-modal :is(
+  .wallet-public-offers,.wallet-public-offer-list,.payment-method-selector,
+  .payment-method-selector-grid,.wallet-receiving-list,.wallet-receiving-card,
+  .wallet-receiving-grid,.wallet-coupon-field,.wallet-coupon-input-row,.wallet-coupon-summary
+){
+  min-width:0;
+  max-width:100%;
+  box-sizing:border-box;
+}
+.wallet-add-modal .wallet-receiving-head{min-width:0;flex-wrap:wrap}
+.wallet-add-modal .wallet-receiving-grid strong{overflow-wrap:anywhere;word-break:break-word}
+.wallet-add-modal form label,
+.wallet-add-modal form input{min-width:0;max-width:100%;box-sizing:border-box}
+@media(max-width:700px){
+  .wallet-modal-backdrop{padding:10px!important}
+  .wallet-detail-modal.wallet-add-modal{
+    width:100%!important;
+    max-width:100%!important;
+    max-height:calc(100dvh - 20px)!important;
+    padding:16px!important;
+  }
+  .wallet-add-modal:before{margin:-16px -16px 16px}
+  .wallet-add-modal .wallet-receiving-card{
+    grid-template-columns:minmax(0,1fr)!important;
+    grid-template-areas:"head" "details" "qr" "note";
+  }
+  .wallet-add-modal .wallet-receiving-grid{
+    grid-template-columns:minmax(0,1fr)!important;
+  }
+  .wallet-add-modal .payment-method-selector-grid>button{
+    min-width:0;box-sizing:border-box;flex-wrap:wrap;
+  }
+  .wallet-add-modal .payment-method-selector-grid>button>div{
+    flex:1 1 150px;min-width:0;
+  }
+  .wallet-add-modal .payment-method-selector-grid>button.coming-soon b{
+    position:static;margin-left:auto;flex-shrink:0;white-space:nowrap;
+  }
+}
+@media(max-width:390px){
+  .wallet-detail-modal.wallet-add-modal{padding:14px!important}
+  .wallet-add-modal:before{margin:-14px -14px 16px}
+}
