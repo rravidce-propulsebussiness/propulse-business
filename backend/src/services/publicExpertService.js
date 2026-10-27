@@ -4,16 +4,10 @@ const projectVideoService=require('./projectVideoService');
 const projectPlanService=require('./projectPlanService');
 const projectImageService=require('./projectImageService');
 const brochureService=require('./brochureService');
+const privacy=require('./publicProfessionalMediaPrivacyService');
 
 async function materializeProjectMedia(rows){
-  return Promise.all((rows||[]).map(async row=>({
-    ...row,
-    cover_image_url:row.cover_image_url?await projectImageService.displayUrl(row.cover_image_url):row.cover_image_url,
-    video_url:row.video_url?await projectVideoService.displayUrl(row.video_url):row.video_url,
-    plan_url:row.plan_url?await projectPlanService.displayUrl(row.plan_url):row.plan_url,
-    brochure_url:row.brochure_url?await projectPlanService.displayUrl(row.brochure_url):row.brochure_url,
-    image_urls:await Promise.all((row.image_urls||[]).map(url=>projectImageService.displayUrl(url))),
-  })));
+  return Promise.all((rows||[]).map(row=>privacy.project(row)));
 }
 
 function toPositiveInt(value,fallback,max=100){
@@ -189,7 +183,7 @@ async function listPublicExperts({search='',industryId='',cityId='',verified='',
     ...row,
     project_count:settings.showProjects?Number(row.project_count||0):0,
     plan_count:settings.showPlans?Number(row.plan_count||0):0,
-    cover_image_url:settings.showProjects?row.cover_image_url:null,
+    cover_image_url:null, // Directory cover disabled until individual media privacy approval
   }));
 
   return {
@@ -396,13 +390,16 @@ async function getPublicExpert(expertId){
   const [services,locations,projects,plans]=await Promise.all([
     pool.query(`SELECT bps.industry_id AS "industryId",i.name AS "industryName",bps.service_id AS "serviceId",s.name AS "serviceName",bps.subservice_id AS "subserviceId",ss.name AS "subserviceName" FROM business_profile_services bps JOIN industries i ON i.id=bps.industry_id JOIN services s ON s.id=bps.service_id LEFT JOIN subservices ss ON ss.id=bps.subservice_id WHERE bps.business_profile_id=$1 AND bps.is_active=TRUE ORDER BY i.name,s.name,ss.name`,[id]),
     pool.query(`SELECT bpl.state_id AS "stateId",st.name AS "stateName",bpl.city_id AS "cityId",c.name AS "cityName",bpl.subcity_id AS "subcityId",sc.name AS "subcityName" FROM business_profile_locations bpl JOIN states st ON st.id=bpl.state_id JOIN cities c ON c.id=bpl.city_id LEFT JOIN subcities sc ON sc.id=bpl.subcity_id WHERE bpl.business_profile_id=$1 AND bpl.is_active=TRUE ORDER BY st.name,c.name`,[id]),
-    settings.showProjects?pool.query(`SELECT id,title,project_type,description,location_text,completion_year,area_text,budget_text,cover_image_url,image_urls,package_name,${settings.showVideos?'video_url':'NULL::text AS video_url'},video_published_at,${settings.showPlans?'plan_url':'NULL::text AS plan_url'},brochure_url,sort_order FROM business_profile_projects WHERE business_profile_id=$1 AND is_published=TRUE AND completion_year BETWEEN 1950 AND EXTRACT(YEAR FROM CURRENT_DATE) ORDER BY sort_order,id`,[id]):Promise.resolve({rows:[]}),
+    settings.showProjects?pool.query(`SELECT id,title,project_type,description,location_text,completion_year,area_text,budget_text,business_profile_id,cover_image_url,image_urls,package_name,${settings.showVideos?'video_url':'NULL::text AS video_url'},video_published_at,${settings.showPlans?'plan_url':'NULL::text AS plan_url'},brochure_url,sort_order FROM business_profile_projects WHERE business_profile_id=$1 AND is_published=TRUE AND completion_year BETWEEN 1950 AND EXTRACT(YEAR FROM CURRENT_DATE) ORDER BY sort_order,id`,[id]):Promise.resolve({rows:[]}),
     settings.showPlans?pool.query(`SELECT id,title,industry,description,price_from,price_unit,duration_label,inclusions,brochure_url,sort_order FROM business_profile_service_plans WHERE business_profile_id=$1 AND is_published=TRUE ORDER BY sort_order,id`,[id]):Promise.resolve({rows:[]}),
   ]);
   const [renderedProjects,brochures,renderedPlans]=await Promise.all([
     materializeProjectMedia(projects.rows),
     brochureService.listPublic(id),
-    Promise.all(plans.rows.map(async plan=>({...plan,brochure_url:await projectPlanService.displayUrl(plan.brochure_url)}))),
+    Promise.all(plans.rows.map(async plan=>({...plan,
+      description:privacy.safePublicText(plan.description),
+      brochure_url:await privacy.brochure(id,plan.brochure_url),
+    }))),
   ]);
   return {...base,services:services.rows,locations:locations.rows,projects:renderedProjects,brochures,service_plans:renderedPlans,directory_settings:{showProjects:settings.showProjects,showVideos:settings.showVideos,showPlans:settings.showPlans}};
 }
