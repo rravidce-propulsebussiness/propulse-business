@@ -1307,3 +1307,21 @@
     grid-column:auto;
   }
 }
+
+/* Live, read-only summary of the fully configurable rule being edited. */
+.admin-lead-entitlements .entitlement-dynamic-preview{
+  display:grid;gap:8px;
+  padding:13px 15px;margin:12px 0;
+  background:#f8fbff;border:1px solid #dbe7f4;
+  border-left:3px solid #f36c25;border-radius:12px;
+  color:#36516b;font-size:12px;line-height:1.65;
+}
+.admin-lead-entitlements .entitlement-dynamic-preview strong{
+  color:#173b63;font-weight:850;font-size:12px;
+}
+.admin-lead-entitlements .entitlement-dynamic-preview small{
+  font-size:11px;line-height:1.6;color:#718397;
+}
+@media(max-width:700px){
+  .admin-lead-entitlements .entitlement-dynamic-preview{padding:12px;gap:7px}
+}
