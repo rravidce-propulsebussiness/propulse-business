@@ -789,3 +789,53 @@ export async function downloadProjectPackagePdf({project,plan=null}={}){
   const slug=String(project.id||project.title).toLowerCase().replace(/[^a-z0-9-]+/g,'-').slice(0,65)||'project';
   savePdf(pages,'propulse-'+slug+'-package-guide.pdf');
 }
+
+
+/** Instant, non-binding estimate from an enabled PROFESSIONAL package.
+ * No business phone/email/WhatsApp link is ever copied into the public PDF.
+ * Published customer-facing specifications are included as text, never
+ * by embedding uploaded third-party brochures that might leak contact info.
+ */
+export async function downloadProfessionalPackageEstimatePdf({
+  companyName='',estimate,customerName='',city='',pincode='',requestId='',propulseContact={},
+}={}){
+  if(!estimate||!Number.isFinite(Number(estimate.total))||Number(estimate.total)<=0)
+    throw new Error('This package has no calculated estimate');
+  const logo=await loadLogo();
+  const pages=[];
+  let page=createPage(logo,1,'Professional Package Estimate');pages.push(page);
+  drawHero(page,'Your Package Estimate',
+    'Indicative construction or interior pricing from the selected professional published package.',
+    'PROPULSE · ESTIMATE');
+  const amount='₹'+Number(estimate.total).toLocaleString('en-IN',{maximumFractionDigits:2});
+  const rate='₹'+Number(estimate.rate).toLocaleString('en-IN',{maximumFractionDigits:2});
+  drawMetaGrid(page,[
+    ['Request',requestId?'#'+requestId:'New request'],
+    ['Prepared',new Date().toLocaleDateString('en-IN')],
+    ['Professional',companyName||'Selected professional'],
+    ['Service',estimate.industry==='design'?'Interior Design':'Construction'],
+    ['Package',estimate.packageName],
+    ['Customer',customerName||'—'],
+    ['Project location',[city,pincode].filter(Boolean).join(', ')||'—'],
+  ]);
+  drawSectionHeading(page,'Indicative package price');
+  drawKeyValueRows(page,[
+    ['Published rate',rate+' / '+(estimate.unit==='sqft'?'sq ft':estimate.unit==='sqyd'?'sq yd':estimate.unit==='room'?'room':estimate.unit==='running_ft'?'running ft':estimate.unit==='unit'?'item':'project')],
+    ['Estimated quantity',String(estimate.quantity)],
+    ['Estimated total',amount],
+  ]);
+  drawSectionHeading(page,'Published package specifications');
+  const specs=Array.isArray(estimate.specifications)?estimate.specifications
+    .map(item=>String(item||'').trim()).filter(Boolean).slice(0,20):[];
+  drawBullets(page,specs.length?specs:['The professional has not published detailed specifications for this package.']);
+  if(page.y>1160){page=createPage(logo,2,'Estimate notes');pages.push(page);}
+  drawSectionHeading(page,'Important terms');
+  drawBullets(page,[
+    'This is an automatically calculated indicative estimate, NOT the professional final accepted quotation or a contract.',
+    'Final price, GST, drawings, area verification, materials, exclusions, timelines and scope must be confirmed by the professional.',
+    'For support and further communication, use ProPulse; the professional private contact details are intentionally not displayed.',
+  ]);
+  const contact=[propulseContact?.phone||propulseContact?.phone_number,propulseContact?.email||propulseContact?.support_email].filter(Boolean);
+  if(contact.length)drawMetaGrid(page,[['ProPulse support',contact.join(' · ')]]);
+  savePdf(pages,'propulse-professional-estimate-'+(requestId||Date.now())+'.pdf');
+}
