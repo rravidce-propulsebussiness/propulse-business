@@ -1,3 +1,4 @@
+import BootLoader from '../../components/BootLoader'
 import {useCallback,useEffect,useMemo,useState} from 'react'
 import {Link} from 'react-router-dom'
 import {authRequest} from '../../utils/auth'
@@ -129,6 +130,7 @@ export default function AdminSystemHealth(){
     return `${pool.busy||0} busy · ${pool.idle||0} idle · ${pool.total||0} open · max ${pool.max||0}`
   },[data,pool.busy,pool.idle,pool.max,pool.total,pool.waiting])
 
+  if(loading&&!data)return <main className="admin-system-health"><BootLoader contained message="Checking system health" /></main>
   return <main className="admin-system-health">
     <section className="system-health-hero">
       <div>
