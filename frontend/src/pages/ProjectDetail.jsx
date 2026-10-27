@@ -1,3 +1,4 @@
+import BootLoader from '../components/BootLoader'
 import {useEffect,useRef,useState} from 'react'
 import {Link,Navigate,useParams} from 'react-router-dom'
 import {publicRequest} from '../utils/auth'
@@ -148,7 +149,7 @@ export default function ProjectDetail(){
           <span>{project?.title||'Project details'}</span>
         </nav>
 
-        {loading?<div className="pjd-status" role="status"><span className="pj-inline-spinner"/>Loading completed project…</div>:
+        {loading?<BootLoader contained message="Loading completed project" />:
         !project?<div className="pjd-status"><h1>Project unavailable</h1><p role="alert">{error}</p><Link to="/projects">← Browse completed projects</Link></div>:
         <>
           <header className="pjd-heading pjd-hero-intro">
