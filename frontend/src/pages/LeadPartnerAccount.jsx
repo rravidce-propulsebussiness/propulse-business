@@ -1,3 +1,4 @@
+import BootLoader from '../components/BootLoader'
 import { useCallback, useEffect, useState } from 'react';
 import LeadPartnerSidebar from '../components/LeadPartnerSidebar';
 import { Link, useNavigate } from 'react-router-dom';
@@ -129,7 +130,7 @@ export default function LeadPartnerAccount(){
           <div className="account-left-column">
             <article className="account-card current-card">
               <div className="account-card-head"><div><h2>Current payout account</h2></div><span className={account?(verified?'account-status verified':'account-status active'):'account-status idle'}>● {statusText}</span></div>
-              {loading?<div className="account-loading">Loading payout configuration…</div>:account?
+              {loading?<BootLoader contained message="Loading payout configuration" />:account?
                 <div className="account-current-box">
                   <div className="account-bank-symbol">{account.method==='upi'?'@':'▥'}</div>
                   <div className="account-current-primary"><strong>{account.method==='upi'?'UPI account':account.bank_name||'Bank account'}</strong><span>{account.method==='upi'?account.upi_id:maskAccount(account.account_number_masked)}</span><small>{account.method==='upi'?'UPI payout destination':account.account_holder_name||'Account holder'}</small></div>
@@ -171,7 +172,7 @@ export default function LeadPartnerAccount(){
             <div><span>Recovery outstanding</span><strong className="recovery-balance">{transactionsLoading && !transactions.length ? '—' : money(transactionFunds.recovery_outstanding)}</strong><small>Recovered from future eligible earnings</small></div>
           </div>
           {transactionError&&<div className="account-message error">{transactionError}</div>}
-          {transactionsLoading&&!transactions.length?<div className="account-loading">Loading transaction history…</div>:!transactions.length?<div className="account-empty-state"><span>◷</span><div><strong>No transactions yet</strong><small>Your earnings and withdrawal activity will appear here as transactions are created.</small></div></div>:
+          {transactionsLoading&&!transactions.length?<BootLoader contained compact message="Loading transaction history" />:!transactions.length?<div className="account-empty-state"><span>◷</span><div><strong>No transactions yet</strong><small>Your earnings and withdrawal activity will appear here as transactions are created.</small></div></div>:
           <div className="account-table-wrap"><table className="account-table"><thead><tr><th>DATE</th><th>TYPE</th><th>DESCRIPTION</th><th>STATUS</th><th>ADDITION / DEDUCTION</th><th>BALANCE</th><th>REFERENCE</th></tr></thead><tbody>
             {transactions.map(tx=><tr key={tx.id}><td>{dateTime(tx.created_at)}</td><td><span className={`account-tx-type ${tx.type}`}>{tx.type==='earning'?'Earning':tx.type==='reversal'?'Refund / Reversal':'Withdrawal'}</span></td><td><b>{tx.description}</b>{tx.lead_id&&<small>Lead #{tx.lead_id}</small>}{tx.reason&&<small>Reason: {tx.reason}</small>}</td><td><span className={`account-tx-status ${tx.status}`}>{tx.status==='reversed'?'Invalidated / Refunded':tx.status}</span></td><td><strong className={tx.direction==='credit'?'credit':tx.direction==='debit'?'debit':'neutral'}>{tx.direction==='credit'?'+':tx.direction==='debit'?'−':'•'}{money(tx.amount)}</strong></td><td><strong className="row-balance">{money(tx.balance_after)}</strong></td><td>{tx.transfer_reference||tx.rejection_reason||'—'}</td></tr>)}
           </tbody></table></div>}
@@ -181,7 +182,7 @@ export default function LeadPartnerAccount(){
             <article className="account-card">
               <div className="account-card-head"><div><h2>Account information</h2><p>Your authenticated ProPulse account details.</p></div></div>
               {settingsError&&<div className="account-message error">{settingsError}</div>}
-              {settingsLoading?<div className="account-loading">Loading account settings…</div>:<div className="settings-list">
+              {settingsLoading?<BootLoader contained compact message="Loading account settings" />:<div className="settings-list">
                 <div><span>Full name</span><strong>{me?.name||user?.name||'—'}</strong></div>
                 <div><span>Email address</span><strong>{me?.email||user?.email||'—'}</strong></div>
                 <div><span>Account role</span><strong>{String(me?.role||user?.role||'lead_partner').replace(/_/g,' ')}</strong></div>
