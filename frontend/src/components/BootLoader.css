@@ -1,0 +1,10 @@
+.propulse-route-loading{min-height:100vh;display:grid;place-items:center;background:#f7f9fc;color:#234967;font:600 14px system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+.propulse-route-loader{display:flex;align-items:center;flex-direction:column;text-align:center;gap:11px}
+.propulse-route-loader svg{width:96px;height:96px;overflow:visible}
+.propulse-route-loader strong{font-size:17px;letter-spacing:.025em;color:#234967}
+.propulse-route-loader>span{color:#728596;font-size:12px;font-weight:400}
+.propulse-route-loader .propulse-boot-stroke{stroke-dasharray:154;stroke-dashoffset:154;animation:propulse-route-draw 1.9s ease-in-out infinite}
+.propulse-route-loader .propulse-boot-orbit{transform-origin:50px 50px;animation:propulse-route-spin 3.2s linear infinite}
+@keyframes propulse-route-draw{0%{stroke-dashoffset:154;opacity:.35}50%,80%{stroke-dashoffset:0;opacity:1}100%{stroke-dashoffset:-154;opacity:.35}}
+@keyframes propulse-route-spin{to{transform:rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){.propulse-route-loader .propulse-boot-stroke,.propulse-route-loader .propulse-boot-orbit{animation:none;stroke-dashoffset:0}}
