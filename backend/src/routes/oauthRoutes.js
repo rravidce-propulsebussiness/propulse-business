@@ -92,7 +92,8 @@ function consentPage(params, principal) {
     'box-shadow:0 20px 50px #13234220">' +
     '<h1 style="font-size:27px">Continue to ProPulse Business OS?</h1>' +
     '<p>Share your verified email, name, and registered business details ' +
-    '(company name, phone, services and locations) with Business OS. ' +
+    '(company name, phone, services and locations), and your active Growth/Scale ' +
+    'membership tier and expiry with Business OS. ' +
     'It will create or update your own workspace.</p>' +
     '<p style="padding:12px;background:#edf4ff;border-radius:8px">' +
     escapeHtml(principal.email)+'</p>' +
