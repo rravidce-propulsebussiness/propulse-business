@@ -40,6 +40,8 @@ export default function ProfessionalOfferExperience(){
   const [offers,setOffers]=useState([])
   const [popup,setPopup]=useState(null)
   const [panel,setPanel]=useState(false)
+  const [offerError,setOfferError]=useState('')
+  const panelCloseRef=useRef(null)
   const prompted=useRef(false)
   const openedPopupIds=useRef(new Set())
   const userId=user?.id
@@ -47,10 +49,12 @@ export default function ProfessionalOfferExperience(){
     if(!enabled)return undefined
     let active=true
     authRequest('/professional-offers').then(response=>{
+      setOfferError('')
       if(!active)return
       const list=Array.isArray(response?.offers)?response.offers:[]
       setOffers(list)
       if(manualOpen){
+        prompted.current=true
         setPopup(null)
         setPanel(true)
       }else if(!prompted.current){
@@ -58,7 +62,7 @@ export default function ProfessionalOfferExperience(){
         prompted.current=true
         if(next){openedPopupIds.current.add(next.id);setPopup(next)}
       }
-    }).catch(()=>{if(active)setOffers([])})
+    }).catch(()=>{if(active){setOffers([]);setOfferError('Offers are temporarily unavailable. Please try again.');if(manualOpen){prompted.current=true;setPopup(null);setPanel(true)}}})
     return()=>{active=false}
   },[enabled,userId,manualOpen])
   useEffect(()=>{
@@ -74,11 +78,19 @@ export default function ProfessionalOfferExperience(){
   },[popup?.id])
   useEffect(()=>{
     if(!panel)return undefined
+    const previousFocus=document.activeElement
+    const frame=requestAnimationFrame(()=>panelCloseRef.current?.focus())
     const onEscape=e=>{if(e.key==='Escape')closePanel()}
     window.addEventListener('keydown',onEscape)
-    return()=>window.removeEventListener('keydown',onEscape)
+    return()=>{cancelAnimationFrame(frame);window.removeEventListener('keydown',onEscape);previousFocus?.focus?.()}
   },[panel])
-  function closePanel(){setPanel(false);if(manualOpen)navigate('/professionals',{replace:true})}
+  useEffect(()=>{
+    if(!panel&&!popup)return undefined
+    const previous=document.body.style.overflow
+    document.body.style.overflow='hidden'
+    return()=>{document.body.style.overflow=previous}
+  },[panel,popup])
+  function closePanel(){setPanel(false);if(manualOpen)navigate('/professionals',{replace:true,preventScrollReset:true})}
   function dismiss(item){
     setPopup(null)
     authRequest('/professional-offers/'+item.id+'/dismiss',{method:'POST'}).catch(()=>{})
@@ -103,13 +115,25 @@ export default function ProfessionalOfferExperience(){
         <OfferCard offer={popup} large onGo={go} onDismiss={dismiss}/>
       </section>
     </div>,document.body)}
-    {panel&&createPortal(<div className="po-modal-backdrop" onMouseDown={e=>{if(e.target===e.currentTarget)closePanel()}}>
-      <section className="po-offer-drawer" role="dialog" aria-modal="true" aria-label="Offers and announcements">
-        <div className="po-drawer-header"><div><small>YOUR PROPULSE BENEFITS</small>
-          <h2>Offers & announcements</h2><p>Offers available to your professional account.</p></div>
-          <button type="button" onClick={closePanel} aria-label="Close offers">×</button></div>
-        {offers.length?offers.map(offer=><OfferCard key={offer.id} offer={offer} onGo={go}/>)
-          :<div className="po-drawer-empty">No active offers for your account right now.</div>}
+    {panel&&createPortal(<div className="po-modal-backdrop po-panel-backdrop" onMouseDown={e=>{if(e.target===e.currentTarget)closePanel()}}>
+      <section className={'po-offer-drawer'+(offers.length===0?' is-empty':'')} role="dialog" aria-modal="true" aria-labelledby="po-offer-panel-title">
+        <div className="po-drawer-header">
+          <div><small>YOUR PROPULSE BENEFITS</small>
+            <h2 id="po-offer-panel-title">Offers & announcements</h2>
+            <p>Exclusive opportunities for your professional account.</p>
+          </div>
+          <button ref={panelCloseRef} type="button" onClick={closePanel} aria-label="Close offers and return to dashboard">×</button>
+        </div>
+        {offerError?<div className="po-drawer-empty" role="status"><div className="po-empty-symbol" aria-hidden="true">!</div>
+            <strong>Unable to load offers</strong><p>{offerError}</p>
+            <button type="button" onClick={closePanel}>Back to dashboard</button>
+          </div>:offers.length?<div className="po-drawer-list">{offers.map(offer=><OfferCard key={offer.id} offer={offer} onGo={go}/>)}</div>
+          :<div className="po-drawer-empty" role="status">
+            <div className="po-empty-symbol" aria-hidden="true">✦</div>
+            <strong>You're all caught up!</strong>
+            <p>No active offers for your account right now. New promotions will appear here when available.</p>
+            <button type="button" onClick={closePanel}>Back to dashboard</button>
+          </div>}
       </section>
     </div>,document.body)}
   </>
