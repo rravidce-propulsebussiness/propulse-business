@@ -453,6 +453,9 @@ export default function AdminCoupons(){
                 <span>{Number(item.target_user_count)>0?`${item.target_user_count} selected users`:'All users'}</span>
                 <span>{Number(item.target_industry_count)>0?`${item.target_industry_count} industries`:'All industries'}</span>
                 {planIds.length>0&&<span>{planIds.length} membership cycles</span>}
+                {item.verification_scope==='verified'&&<span>Verified only</span>}
+                {item.verification_scope==='unverified'&&<span>Not yet verified</span>}
+                {Number(item.registration_max_age_days)>0&&<span>Registered in last {item.registration_max_age_days} days</span>}
               </div>
 
               <div className="coupon-card-detail-grid">
