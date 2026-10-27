@@ -1,3 +1,4 @@
+import BootLoader from '../../components/BootLoader'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { apiRequest } from '../../utils/api'
@@ -425,7 +426,7 @@ export default function AdminCoupons(){
         </select>
       </div>
 
-      {loading?<div className="coupon-empty premium"><span className="coupon-loading-ring"/><strong>Loading coupons…</strong></div>
+      {loading?<BootLoader contained message="Loading coupons" />
         :!filtered.length?<div className="coupon-empty premium"><div className="coupon-empty-icon">%</div><strong>No coupons match these filters</strong><small>Create a new coupon or change the filters above.</small><button type="button" onClick={openCreate}>＋ Create coupon</button></div>
         :<div className="coupon-card-grid">
           {filtered.map(item=>{
