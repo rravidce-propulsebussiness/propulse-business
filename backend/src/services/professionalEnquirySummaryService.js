@@ -43,8 +43,8 @@ async function listCompanySummary(){
       COUNT(*) FILTER (WHERE r.kind='profile')::int AS profile_callbacks,
       COUNT(*) FILTER (WHERE r.status='new')::int AS new_requests,
       COUNT(*) FILTER (WHERE r.kind='quote' AND r.status='quoted')::int AS quotes_prepared,
-      COUNT(*) FILTER (WHERE r.verified_lead)::int AS linked_marketplace_leads,
-      COUNT(*) FILTER (WHERE r.available_lead)::int AS available_marketplace_leads,
+      COUNT(DISTINCT r.marketplace_lead_id) FILTER (WHERE r.verified_lead)::int AS linked_marketplace_leads,
+      COUNT(DISTINCT r.marketplace_lead_id) FILTER (WHERE r.available_lead)::int AS available_marketplace_leads,
       COUNT(*) FILTER (WHERE NOT r.verified_lead)::int AS not_linked_requests,
       COUNT(*) FILTER (WHERE r.created_at >= NOW()-INTERVAL '30 days')::int AS requests_last_30_days,
       MAX(r.created_at) AS last_request_at
