@@ -1,3 +1,4 @@
+import BootLoader from '../../components/BootLoader'
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { apiRequest } from '../../utils/api'
@@ -140,6 +141,7 @@ export default function AdminDashboard(){
     actions.pendingInvestorWithdrawals
   ].reduce((sum,value)=>sum+Number(value||0),0),[actions])
 
+  if(loading&&!stats)return <main className="admin-dashboard"><BootLoader contained message="Loading overview" /></main>
   return <main className="admin-dashboard">
     <section className="admin-dashboard-hero">
       <div>
