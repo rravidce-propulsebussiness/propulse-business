@@ -32,3 +32,6 @@
 .user-offers-shortcut{display:inline-flex;align-items:center;gap:5px;justify-content:center;padding:9px 12px;border-radius:999px;border:1px solid #e7d4bb;background:#fff6ea;color:#8b552c;text-decoration:none;font-size:12px;font-weight:800;white-space:nowrap;transition:background .15s}
 .user-offers-shortcut:hover{background:#ffeacc}
 @media(max-width:720px){.user-offers-shortcut{padding:8px 9px;font-size:12px}}
+
+.user-header-nav .user-mobile-offers-link{display:none}
+@media(max-width:1150px){.user-header-nav .user-mobile-offers-link{display:block}.user-offers-shortcut{display:none}}
