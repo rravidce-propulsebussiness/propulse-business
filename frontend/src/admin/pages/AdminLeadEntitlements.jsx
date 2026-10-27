@@ -602,7 +602,7 @@ export default function AdminLeadEntitlements(){
             <label>Completed projects required
               <input type="number" min="0" max="20" step="1"
                 value={campaign.minCompletedProjects}
-                onChange={e=>setCampaign(v=>({...v,minCompletedProjects:clamp(e.target.value,0,20)}))}/>
+                onChange={e=>setCampaign(v=>{const count=clamp(e.target.value,0,20);return {...v,minCompletedProjects:count,projectRegistrationWindowDays:count===0?0:v.projectRegistrationWindowDays}})}/>
               <small>0 = none. 1 = at least one published completed project with required details.</small>
             </label>
             {Number(campaign.minCompletedProjects)>0&&<label>Upload within days of registration
