@@ -459,9 +459,9 @@ export default function AdminLeadEntitlements(){
         <span>LEAD OPERATIONS / ACCESS CONTROL</span>
         <h1>Lead Entitlements</h1>
       </div>
-      <div className={`entitlement-policy-status ${Number(summary.active_registration_rules||0)>0?'enabled':'disabled'}`}>
+      <div className={`entitlement-policy-status ${Number(summary.active_registration_rules||0)+Number(summary.business_campaigns||0)>0?'enabled':'disabled'}`}>
         <span className="entitlement-policy-icon"><i/></span>
-        <div><strong>{Number(summary.active_registration_rules||0)} registration rule{Number(summary.active_registration_rules||0)===1?'':'s'}</strong></div>
+        <div><strong>{Number(summary.registration_rules||0)+Number(summary.business_campaigns||0)} reward polic{Number(summary.registration_rules||0)+Number(summary.business_campaigns||0)===1?'y':'ies'}</strong></div>
       </div>
     </section>
 
