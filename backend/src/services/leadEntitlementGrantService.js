@@ -168,6 +168,16 @@ async function ensureNewBusinessGrant(userId,client=pool){
  * after the admin created the campaign. Grant once through the existing unique
  * (campaign_id,user_id) index, never through a separate credit ledger.
  */
+function qualifiesProjectSignupWindow(uploaded,registered,campaignCreated,days){
+  if(!days)return true;
+  const uploadAt=new Date(uploaded).getTime();
+  const signupAt=new Date(registered).getTime();
+  const launchedAt=new Date(campaignCreated).getTime();
+  return [uploadAt,signupAt,launchedAt].every(Number.isFinite)
+    &&signupAt>=launchedAt &&uploadAt>=signupAt
+    &&uploadAt<=signupAt+Number(days)*86400000;
+}
+
 async function ensureProjectQualifiedCampaignGrants(userId,client=pool){
   const campaigns=(await client.query(`
     SELECT bc.* FROM lead_entitlement_business_campaigns bc
@@ -188,12 +198,8 @@ async function ensureProjectQualifiedCampaignGrants(userId,client=pool){
   const registeredAt=new Date(business.created_at).getTime();
   for(const campaign of campaigns){
     const days=Number(campaign.project_registration_window_days||0);
-    const eligible=projects.filter(project=>{
-      if(!days)return true;
-      const uploadedAt=new Date(project.created_at).getTime();
-      return Number.isFinite(registeredAt)&&Number.isFinite(uploadedAt)
-        &&uploadedAt>=registeredAt&&uploadedAt<=registeredAt+days*86400000;
-    }).length;
+    const eligible=projects.filter(project=>qualifiesProjectSignupWindow(
+      project.created_at,business.created_at,campaign.created_at,days)).length;
     if(eligible<Number(campaign.min_completed_projects))continue;
     if(campaign.verification_scope==='verified'&&!business.is_verified)continue;
     if(campaign.verification_scope==='unverified'&&business.is_verified)continue;
@@ -619,6 +625,10 @@ async function campaignAudienceUserIds(client,campaign){
   if(Number(campaign.min_completed_projects)>0){
     const min=bind(Number(campaign.min_completed_projects));
     const windowDays=bind(Number(campaign.project_registration_window_days||0));
+    if(Number(campaign.project_registration_window_days||0)>0){
+      const start=bind(campaign.created_at);
+      conditions.push(`u.created_at>=${start}::timestamp`);
+    }
     conditions.push(`(SELECT COUNT(DISTINCT p.id)
       FROM business_profile_projects p
       JOIN business_profiles bp5 ON bp5.id=p.business_profile_id
@@ -1061,5 +1071,6 @@ module.exports={
   createRegistrationRule,updateRegistrationRule,deleteRegistrationRule,
   listBusinesses,listBusinessCampaigns,createBusinessCampaign,updateBusinessCampaign,deleteBusinessCampaign,
   createManualGrant,updateGrant,deleteGrant,
-  getAdminOverview,remainingFor,grantAllowsLead
+  getAdminOverview,remainingFor,grantAllowsLead,
+  qualifiesProjectSignupWindow
 };
