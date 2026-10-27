@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { authRequest, publicRequest, getToken, getUser } from '../utils/auth'
 import { claimLead, getLead, listLeads, purchaseLead } from '../api/leads'
 import UserHeader from '../components/UserHeader'
+import ProfessionalOfferExperience from '../components/ProfessionalOfferExperience'
 import PaymentProofPicker from '../components/PaymentProofPicker'
 import PaymentMethodSelector from '../components/PaymentMethodSelector'
 import { loadPaymentOptions, runRazorpayCheckout } from '../utils/paymentGateway'
@@ -403,6 +404,7 @@ export default function LeadsV2() {
 
   return <div className="lv2-shell">
     <UserHeader />
+    <ProfessionalOfferExperience />
     <main className="lv2-page">
       <section className="lv2-market-head"><div className="lv2-title-block"><span></span><div><h1>{title}</h1><p>All available leads are shown by default.</p></div></div><div className="lv2-controls"><div className="lv2-search"><span>⌕</span><input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by industry, service, location..." aria-label="Search leads"/><b>⌕</b></div><div className="lv2-guest-filters"><select value={industryFilter} onChange={e => { setIndustryFilter(e.target.value); setCityFilter('') }} aria-label="Filter by industry"><option value="">All Industries</option>{filterOptions.industries.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}</select><select value={cityFilter} onChange={e => setCityFilter(e.target.value)} aria-label="Filter by city"><option value="">All Cities</option>{filterOptions.cities.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}</select></div></div></section>
       {error && <div className="lv2-error">{error}</div>}{notice && <div className="lv2-error">{notice}</div>}
