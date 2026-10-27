@@ -53,12 +53,13 @@ export default function UserHeader({ variant } = {}) {
       {user?.role==='business' && <Link className={active("/professional-requests")} to="/professional-requests" onClick={()=>setOpen(false)}>Requests</Link>}
       <Link className={active("/wallet")} to="/wallet" onClick={()=>setOpen(false)}>Wallet</Link>
       <Link className={active("/membership")} to="/membership" onClick={()=>setOpen(false)}>Membership</Link>
+      {user?.role==='business'&&<Link to="/professionals?offers=1" onClick={()=>setOpen(false)}>Offers</Link>}
       {isPro && <Link className={active("/investment")} to="/investment" onClick={()=>setOpen(false)}>Investor</Link>}
       {!location.pathname.startsWith("/investment") && <Link className={active("/professional-contact")} to="/professional-contact" onClick={()=>setOpen(false)}>Contact</Link>}
       <Link className={active("/professional-upcoming-features")} to="/professional-upcoming-features" onClick={()=>setOpen(false)}>Upcoming Features</Link>
       <Link className={active("/professional-faq")} to="/professional-faq" onClick={()=>setOpen(false)}>FAQ</Link>
       <button type="button" className="user-header-mobile-logout" onClick={logout}>Logout</button>
     </nav>
-    <div className="user-header-right"><NotificationBell/><Link className="user-profile-pill" to="/profile" aria-label="Open business profile"><span className="user-avatar">{avatarLetter}</span><span className="user-profile-name">{displayName}</span></Link><button type="button" className="user-logout" onClick={logout}>Logout</button><button type="button" className="user-menu-toggle" aria-label={open?"Close navigation":"Open navigation"} aria-expanded={open} aria-controls="user-header-site-nav" onClick={()=>setOpen(v=>!v)}>☰</button></div>
+    <div className="user-header-right">{user?.role==='business'&&<Link className="user-offers-shortcut" to="/professionals?offers=1" aria-label="View professional offers">✦ Offers</Link>}<NotificationBell/><Link className="user-profile-pill" to="/profile" aria-label="Open business profile"><span className="user-avatar">{avatarLetter}</span><span className="user-profile-name">{displayName}</span></Link><button type="button" className="user-logout" onClick={logout}>Logout</button><button type="button" className="user-menu-toggle" aria-label={open?"Close navigation":"Open navigation"} aria-expanded={open} aria-controls="user-header-site-nav" onClick={()=>setOpen(v=>!v)}>☰</button></div>
   </header><div className="user-header-spacer" aria-hidden="true"/></>
 }
