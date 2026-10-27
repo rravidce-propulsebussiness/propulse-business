@@ -27,7 +27,7 @@ const pages=[
   'admin/pages/AdminLeadEntitlements.jsx','admin/pages/AdminLeadReports.jsx',
   'admin/pages/AdminLeadPartners.jsx','admin/pages/AdminLeadPartnerPayouts.jsx',
   'admin/pages/AdminInvestorWithdrawals.jsx','admin/pages/AdminMembershipPlansConfig.jsx',
-  'admin/pages/AdminSoundEffects.jsx','admin/pages/AdminFaqs.jsx',
+  'admin/pages/AdminSoundEffects.jsx','admin/pages/AdminFaqs.jsx','admin/pages/AdminUpcomingFeatures.jsx',
   'admin/pages/AdminRiskCenter.jsx','admin/pages/AdminAuditTimeline.jsx',
   'admin/pages/AdminHomepageMedia.jsx','admin/pages/AdminExpertDirectory.jsx',
   'admin/components/AdminPaymentDetails.jsx','admin/pages/AdminContactSocial.jsx',
