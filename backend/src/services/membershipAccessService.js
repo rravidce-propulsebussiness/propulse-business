@@ -40,6 +40,7 @@ async function getCurrentProMembership(userId, client = pool) {
       AND m.starts_at<=CURRENT_TIMESTAMP
       AND m.expires_at>CURRENT_TIMESTAMP
       AND LOWER(REPLACE(COALESCE(p.plan_type,''),'-','_'))='pro'
+      AND p.is_active=TRUE
     ORDER BY m.expires_at DESC
     LIMIT 1
   `, [userId]);
