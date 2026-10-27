@@ -1,3 +1,4 @@
+import BootLoader from '../components/BootLoader'
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import UserHeader from '../components/UserHeader'
@@ -197,7 +198,7 @@ export default function ProfessionalRequests() {
           </div>
           {error && <div className="prc-alert" role="alert">{error}</div>}
           <div className="prc-request-list" aria-busy={loading}>
-            {loading ? <div className="prc-loading-rows" role="status" aria-label="Loading customer requests"><span className="prc-visually-hidden">Loading customer requests…</span>{[0, 1, 2].map(index => <div key={index} className="prc-loading-row" aria-hidden="true"><i/><span><b/><b/></span><em/></div>)}</div> :
+            {loading ? <BootLoader contained compact message="Loading customer requests" /> :
               shown.length === 0 ? <div className="prc-empty">
                 <strong>{counts.all ? 'No requests match these filters' : 'No callback requests yet'}</strong>
                 <p>{counts.all ? 'Try a different search or stage.' : 'When a customer requests a callback from your profile or project, it will appear here.'}</p>
