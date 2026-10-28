@@ -3,6 +3,15 @@ const pool=require('../config/database');
 function fail(message,code){throw Object.assign(new Error(message),{code});}
 const number=(value,fallback=0)=>Number.isFinite(Number(value))?Number(value):fallback;
 const int=(value,min,max,fallback)=>Math.min(max,Math.max(min,Math.trunc(number(value,fallback))));
+// A blank option in the admin form means ALL industries/states/cities.
+// Never clamp an unselected ID to 1; it turns an unrestricted reward into
+// an accidental filter or a 400 when catalog row #1 doesn't exist.
+function optionalTargetId(value,field,code){
+  if(value===null||value===undefined||String(value).trim()===''||value===0||value==='0')return null;
+  const id=Number(value);
+  if(!Number.isInteger(id)||id<1||id>2147483647)fail('Choose a valid '+field,code);
+  return id;
+}
 const bool=(value,fallback=false)=>{
   if(value===undefined||value===null)return fallback;
   if(typeof value==='string')return ['true','1','yes','on'].includes(value.trim().toLowerCase());
@@ -354,9 +363,9 @@ function normalizeRegistrationRule(input){
     name:String(input?.name||'').trim().slice(0,120),
     isActive:bool(input?.isActive,true),
     verificationScope,
-    industryId:int(input?.industryId,1,2147483647,0)||null,
-    stateId:int(input?.stateId,1,2147483647,0)||null,
-    cityId:int(input?.cityId,1,2147483647,0)||null,
+    industryId:optionalTargetId(input?.industryId,'industry','INVALID_ENTITLEMENT_RULE'),
+    stateId:optionalTargetId(input?.stateId,'state','INVALID_ENTITLEMENT_RULE'),
+    cityId:optionalTargetId(input?.cityId,'city','INVALID_ENTITLEMENT_RULE'),
     windowDays:int(input?.windowDays,1,365,7),
     sharedQuantity:int(input?.sharedQuantity,0,1000,0),
     premiumQuantity:int(input?.premiumQuantity,0,1000,0),
@@ -575,9 +584,9 @@ function normalizeBusinessCampaign(input){
     // Project uploads and all other conditions share the same signup window.
     projectRegistrationWindowDays:minCompletedProjects>0?registrationEligibilityDays:0,
     userIds,
-    industryId:int(input?.industryId,1,2147483647,0)||null,
-    stateId:int(input?.stateId,1,2147483647,0)||null,
-    cityId:int(input?.cityId,1,2147483647,0)||null,
+    industryId:optionalTargetId(input?.industryId,'industry','INVALID_BUSINESS_CAMPAIGN'),
+    stateId:optionalTargetId(input?.stateId,'state','INVALID_BUSINESS_CAMPAIGN'),
+    cityId:optionalTargetId(input?.cityId,'city','INVALID_BUSINESS_CAMPAIGN'),
     sharedQuantity:int(input?.sharedQuantity,0,1000,0),
     premiumQuantity:int(input?.premiumQuantity,0,1000,0),
     validDays:int(input?.validDays,0,3650,30),
