@@ -259,3 +259,11 @@
     flex:0 0 auto;min-width:72px;padding:10px;
   }
 }
+
+
+/* Keep optional supporting documents hidden until requested. The structured
+   work/material editor is the default source of package quote details. */
+.profile-optional-brochure{margin-top:13px;padding:12px 14px;border:1px solid #eed9ce;border-radius:14px;background:#fffaf7;min-width:0}
+.profile-optional-brochure summary{cursor:pointer;color:#a74d27;font-weight:800;line-height:1.5;font-size:.91rem}
+.profile-optional-brochure>p{margin:10px 0 14px;color:#647585;font-size:.83rem;line-height:1.55}
+.profile-optional-brochure .profile-media-card{max-width:100%}
