@@ -222,7 +222,7 @@ async function ensureProjectQualifiedCampaignGrants(userId,client=pool){
   // Only the initial project upload time counts, not later publication/review.
   const projects=campaigns.some(c=>Number(c.min_completed_projects)>0)
     ?(await client.query(`
-      SELECT p.created_at FROM business_profile_projects p
+      SELECT p.created_at,p.video_published_at FROM business_profile_projects p
       JOIN business_profiles bp ON bp.id=p.business_profile_id
       WHERE bp.user_id=$1 AND p.is_published=TRUE AND p.completion_year IS NOT NULL
          AND NULLIF(BTRIM(p.video_url),'') IS NOT NULL
@@ -233,10 +233,13 @@ async function ensureProjectQualifiedCampaignGrants(userId,client=pool){
     :[];
   for(const campaign of campaigns){
     if(!qualifiesCampaignSignup(campaign,business.created_at))continue;
-    if(!qualifiesCampaignRegistrationAge(campaign,business.created_at))continue;
+    // The upload deadline is enforced on project/video timestamps, not the review date.
+    if(Number(campaign.min_completed_projects||0)===0&&!qualifiesCampaignRegistrationAge(campaign,business.created_at))continue;
     const days=Number(campaign.project_registration_window_days||0);
     const eligible=projects.filter(project=>qualifiesProjectSignupWindow(
-      project.created_at,business.created_at,campaign.created_at,days,campaign.registration_scope)).length;
+      project.created_at,business.created_at,campaign.created_at,days,campaign.registration_scope)
+      &&project.video_published_at&&qualifiesProjectSignupWindow(
+        project.video_published_at,business.created_at,campaign.created_at,days,campaign.registration_scope)).length;
     if(eligible<Number(campaign.min_completed_projects))continue;
     if(campaign.verification_scope==='verified'&&!business.is_verified)continue;
     if(campaign.verification_scope==='unverified'&&business.is_verified)continue;
@@ -643,7 +646,7 @@ async function campaignAudienceUserIds(client,campaign){
     conditions.push(`u.created_at>=${start}::timestamp`);
   }
   const maxRegistrationAge=Number(campaign.registration_eligibility_days||0);
-  if(maxRegistrationAge>0){
+  if(maxRegistrationAge>0&&Number(campaign.min_completed_projects||0)===0){
     const days=bind(maxRegistrationAge);
     const campaignId=bind(Number(campaign.id));
     // Already awarded companies keep their credits while the credit validity
@@ -699,8 +702,11 @@ async function campaignAudienceUserIds(client,campaign){
         AND p.video_reward_status='approved'
         AND p.video_reward_fingerprint IS NOT NULL
         AND p.video_reward_approved_url=p.video_url
+        AND p.video_published_at IS NOT NULL
         AND (${windowDays}::int=0 OR (p.created_at>=u.created_at
-          AND p.created_at<=u.created_at+(${windowDays}::int * INTERVAL '1 day')))
+          AND p.created_at<=u.created_at+(${windowDays}::int * INTERVAL '1 day')
+          AND p.video_published_at>=u.created_at
+          AND p.video_published_at<=u.created_at+(${windowDays}::int * INTERVAL '1 day')))
       )>=${min}`);
   }
   if(campaign.audience_scope==='specific_users'){
