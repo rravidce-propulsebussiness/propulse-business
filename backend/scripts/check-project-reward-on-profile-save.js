@@ -17,7 +17,9 @@ assert.match(rewards,/p\.is_published=TRUE AND p\.completion_year IS NOT NULL/,
   'Only a published completed project counts for the reward');
 const target=rewards.slice(rewards.indexOf('async function ensureProjectQualifiedCampaignGrants'),rewards.indexOf('function allowanceFor('));
 assert.ok(target.length>0);
-assert.doesNotMatch(target,/p\.video_url|p\.cover_image_url|p\.image_urls/,
-  'Video, cover photo and gallery media are not required to earn this reward');
+assert.match(target,/p\.video_reward_status='approved'/,'Completed project rewards now require video approval');
+assert.match(target,/p\.video_reward_approved_url=p\.video_url/,'A replaced video must be reviewed again');
+assert.doesNotMatch(target,/p\.cover_image_url|p\.image_urls/,
+  'Cover photo and gallery images remain optional for project rewards');
 assert.match(target,/ON CONFLICT DO NOTHING/,'Repeated saves do not duplicate the reward');
 console.log('Completed project reward issues on Save once; video is optional; original upload time remains stable');
