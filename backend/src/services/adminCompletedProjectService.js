@@ -68,10 +68,17 @@ async function uploadPhoto(userId,mime,buffer){
   if(!result.rows.length)throw inputError('Business profile not found','BUSINESS_PROFILE_NOT_FOUND');
   return imageService.saveProjectImage(id,mime,buffer);
 }
-async function list({page=1,pageSize=20}={}){
+async function list({page=1,pageSize=20,businessUserId=null}={}){
   const n=Math.max(1,Math.min(100000,integer(page)||1));
   const size=Math.max(1,Math.min(50,integer(pageSize)||20));
-  const total=Number((await pool.query('SELECT COUNT(*)::int AS count FROM business_profile_projects')).rows[0]?.count||0);
+  const userId=businessUserId===null||businessUserId===''?null:integer(businessUserId);
+  if(businessUserId!==null&&businessUserId!==''&&!userId)throw inputError('Invalid business filter');
+  const where=userId?'WHERE u.id=$3':'';
+  const total=Number((await pool.query(`
+    SELECT COUNT(*)::int AS count FROM business_profile_projects p
+    JOIN business_profiles bp ON bp.id=p.business_profile_id
+    JOIN users u ON u.id=bp.user_id
+    ${userId?'WHERE u.id=$1':''}`,userId?[userId]:[])).rows[0]?.count||0);
   const result=await pool.query(`
     SELECT p.id,p.title,p.project_type,p.description,p.location_text,p.completion_year,p.area_text,
       p.budget_text,p.cover_image_url,p.image_urls,p.package_name,p.video_url,p.plan_url,
@@ -79,8 +86,9 @@ async function list({page=1,pageSize=20}={}){
     FROM business_profile_projects p
     JOIN business_profiles bp ON bp.id=p.business_profile_id
     JOIN users u ON u.id=bp.user_id
+    ${where}
     ORDER BY p.updated_at DESC,p.id DESC LIMIT $1 OFFSET $2
-  `,[size,(n-1)*size]);
+  `,userId?[size,(n-1)*size,userId]:[size,(n-1)*size]);
   const data=await Promise.all(result.rows.map(async row=>({...row,cover_image_display_url:row.cover_image_url?await imageService.displayUrl(row.cover_image_url):'',video_display_url:row.video_url?await videoService.displayUrl(row.video_url):''})));
   return {data,pagination:{page:n,pageSize:size,total,totalPages:Math.ceil(total/size),hasNextPage:n*size<total,hasPreviousPage:n>1}};
 }
