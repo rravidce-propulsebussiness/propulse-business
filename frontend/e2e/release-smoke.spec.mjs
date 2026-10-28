@@ -10,7 +10,7 @@ const accounts={
 async function login(page,email){
   await page.goto('/login')
   await page.getByLabel('Email address').fill(email)
-  await page.getByLabel('Password').fill(PASSWORD)
+  await page.locator('#propulse-login-password').fill(PASSWORD)
   const loginResponse=page.waitForResponse(response=>
     response.url().includes('/api/auth/login')&&response.request().method()==='POST'
   )
@@ -522,7 +522,7 @@ test('professional interior quote reuses the exact interiors wizard with no cust
     submitted=route.request().postDataJSON()
     await route.fulfill({
       status:201,contentType:'application/json',
-      body:JSON.stringify({accepted:true,requestId:83}),
+      body:JSON.stringify({accepted:true,requestId:83,quotePackage:professional.service_plans[0]}),
     })
   })
   await page.goto('/projects/project-123/quote')
@@ -544,9 +544,12 @@ test('professional interior quote reuses the exact interiors wizard with no cust
   await page.locator('#irx-property select').first().selectOption('residential')
   await page.locator('#irx-property select').nth(1).selectOption('3_bhk')
   await page.locator('.irx-scope-cards').getByRole('button',{name:/Full Home Interiors/}).click()
+  await page.getByRole('spinbutton',{name:'Chargeable interior work area in square feet'}).fill('1200')
   await page.locator('.project-marketplace-consent input').check()
   await page.locator('.irx-summary-card button[type=submit]').click()
-  await expect(page.getByRole('heading',{name:'Quotation request received'})).toBeVisible()
+  await expect(page.getByRole('heading',{name:'Your package quotation is ready'})).toBeVisible()
+  await expect(page.locator('.pq-quote-result')).toContainText('₹19,20,000')
+  await expect(page.getByRole('button',{name:'↓ Download Detailed Quotation PDF'})).toBeVisible()
   await expect(page.getByText('Reference #83')).toBeVisible()
   expect(submitted).toMatchObject({
     name:'Example Customer',phone:'9876543210',
