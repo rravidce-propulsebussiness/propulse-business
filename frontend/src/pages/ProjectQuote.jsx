@@ -4,6 +4,7 @@ import {publicRequest} from '../utils/auth'
 import {PublicHeader,PublicFooter} from '../components/PublicSiteChrome'
 import {categoryLabel,normalizeProject} from './Projects'
 import {formatPublishedPackagePrice} from '../utils/packagePricing'
+import {downloadProfessionalPackageQuotePdf} from '../utils/requirementQuotePdf'
 import RequirementWizard from './RequirementWizard'
 import './Solutions.css'
 import './ProjectQuote.css'
@@ -23,6 +24,7 @@ export default function ProjectQuote(){
   const [loadError,setLoadError]=useState('')
   const [pricingMessage,setPricingMessage]=useState('')
   const [submitted,setSubmitted]=useState(null)
+  const [pdfError,setPdfError]=useState('')
 
   useEffect(()=>{
     if(!id){
@@ -95,8 +97,16 @@ export default function ProjectQuote(){
     submitted?<section className="pq-success" role="status">
       <span className="pq-success-icon" aria-hidden="true">✓</span>
       <span className="pq-eyebrow">PROFESSIONAL QUOTATION</span>
-      <h1>{submitted.duplicate?'We already received your request':'Quotation request received'}</h1>
+      <h1>{submitted.quotation?'Your package quotation is ready':submitted.duplicate?'We already received your request':'Quotation request received'}</h1>
       <p>Your {quoteIndustryLabel.toLowerCase()} enquiry about <strong>{project.title}</strong> has been recorded for <strong>{project.businessName||'the selected professional'}</strong>. ProPulse coordinates your enquiry and protects your contact details.</p>
+      {submitted.quotation&&<div className="pq-quote-result">
+        <span>INDICATIVE PACKAGE QUOTATION</span>
+        <strong>{submitted.quotation.amountText}</strong>
+        <p>{submitted.quotation.packageName} · {submitted.quotation.quantity.toLocaleString('en-IN',{maximumFractionDigits:2})} {submitted.quotation.unitLabel} × ₹{submitted.quotation.rate.toLocaleString('en-IN')}</p>
+        <p>Based on this professional’s published package specifications. Confirm actual measurements, scope, extra works and taxes before contracting.</p>
+        <button type="button" onClick={()=>downloadProfessionalPackageQuotePdf({quotation:submitted.quotation,customerName:submitted.customerName,city:submitted.city,phone:submitted.phone,email:submitted.email}).catch(error=>setPdfError(error.message||'Unable to download quotation'))}>↓ Download Detailed Quotation PDF</button>
+        {pdfError&&<p role="alert">{pdfError}</p>}
+      </div>}
       {submitted.requestId&&<strong className="pq-request-id">Reference #{submitted.requestId}</strong>}
       {submitted.marketplaceStatus==='review_required'?<p role="status">Your enquiry reached the selected professional. Marketplace listing is awaiting admin review.</p>:submitted.marketplaceLeadId?<p role="status">Also registered in the ProPulse professional marketplace for matching experts.</p>:null}
       <div className="pq-success-actions"><Link to={'/projects/'+projectId}>Back to project</Link><Link to="/projects">View other projects</Link></div>
@@ -117,6 +127,7 @@ export default function ProjectQuote(){
               <span className="pq-choice-content">
                 <strong>{plan.title}</strong>
                 {plan.description&&<small className="pq-package-description">{plan.description}</small>}
+                {Array.isArray(plan.spec_sections)&&plan.spec_sections.length>0&&<small className="pq-package-description">{plan.spec_sections.length} itemized material / work specifications · brands, grades and allowances</small>}
                 {Array.isArray(plan.inclusions)&&plan.inclusions.length>0&&<span className="pq-inclusions">{plan.inclusions.slice(0,3).map((detail,index)=><small key={index}>✓ {detail}</small>)}</span>}
                 {plan.brochure_url&&<a className="pq-document" href={plan.brochure_url} target="_blank" rel="noopener noreferrer" onClick={event=>event.stopPropagation()}>View package specifications ↗</a>}
               </span>
