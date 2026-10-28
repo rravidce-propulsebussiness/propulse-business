@@ -301,8 +301,10 @@ export default function Profile(){
       if(i!==index)return item
       if(field==='brochureUrl')return {...item,brochureUrl:value,brochureDisplayUrl:value}
       // Never overwrite existing business specifications on an industry change.
-      if(field==='industry'&&String(item._draftKey||'').startsWith('default-'))
-        return {...item,industry:value,priceUnit:value==='property'?'project':'sqft',specSections:editableStarterSpecifications(value),isPublished:false}
+      if(field==='industry'&&String(item._draftKey||'').startsWith('default-')){
+        const isPristine=JSON.stringify(item.specSections||[])===JSON.stringify(editableStarterSpecifications(item.industry))
+        return {...item,industry:value,priceUnit:value==='property'?'project':'sqft',specSections:isPristine?editableStarterSpecifications(value):item.specSections,isPublished:false}
+      }
       return {...item,[field]:value}
     }))
     setMessage('')
