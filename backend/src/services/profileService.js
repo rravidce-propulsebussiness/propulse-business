@@ -90,6 +90,7 @@ function normalizePlans(plans){
     if(item?.isPublished!==false&&!industry)throw profileError('Select Construction, Interior Design or Real Estate before publishing a package');
     if(!['unspecified','project','sqft','sqyd','running_ft','room','unit'].includes(priceUnit))throw profileError('Select a valid package pricing unit');
     if(priceFrom!==null&&(!Number.isFinite(priceFrom)||priceFrom<0||priceFrom>1000000000))throw profileError('Plan starting price is invalid');
+    if(item?.isPublished!==false&&(priceFrom===null||priceFrom<=0||priceUnit==='unspecified'))throw profileError('Set your own positive package rate and measurement unit before publishing a package');
     const inclusions=Array.isArray(item?.inclusions)
       ? item.inclusions.map(value=>cleanText(value,160,'Plan inclusion')).filter(Boolean)
       : String(item?.inclusions||'').split('\n').map(value=>cleanText(value,160,'Plan inclusion')).filter(Boolean);
