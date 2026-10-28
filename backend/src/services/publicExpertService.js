@@ -144,6 +144,7 @@ async function listPublicExperts({search='',industryId='',cityId='',verified='',
        bp.years_experience,
        EXISTS(SELECT 1 FROM company_proof_documents cpd WHERE cpd.user_id=u.id AND cpd.status='verified') AS is_verified,
        COALESCE(beds.is_featured,FALSE) AS is_featured,
+        COALESCE(beds.is_official,FALSE) AS is_official,
        COALESCE(beds.sort_order,0) AS sort_order,
        mem.plan_group,
        (SELECT COUNT(*)::int FROM business_profile_projects bpp WHERE bpp.business_profile_id=bp.id AND bpp.is_published=TRUE AND bpp.completion_year BETWEEN 1950 AND EXTRACT(YEAR FROM CURRENT_DATE)) AS project_count,
@@ -387,6 +388,7 @@ async function getPublicExpert(expertId){
             bp.public_headline,COALESCE(NULLIF(bp.public_summary,''),'') AS public_summary,bp.years_experience,
             EXISTS(SELECT 1 FROM company_proof_documents cpd WHERE cpd.user_id=u.id AND cpd.status='verified') AS is_verified,
             COALESCE(beds.is_featured,FALSE) AS is_featured,
+        COALESCE(beds.is_official,FALSE) AS is_official,
             mem.plan_group
      FROM users u
      JOIN business_profiles bp ON bp.user_id=u.id
