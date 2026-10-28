@@ -134,6 +134,7 @@ app.use((req,res,next)=>{
   // Keep every other upload, private resource and API response non-frameable.
   const publicPlanPdf=(req.method==='GET'||req.method==='HEAD')
     &&/^\/uploads\/business-projects\/\d+-plan-\d{13}-[a-f0-9]{24}\.pdf$/.test(req.path);
+  res.setHeader('X-ProPulse-Entry','express-backend');
   res.setHeader('X-Content-Type-Options','nosniff');
   if(publicPlanPdf)res.setHeader('X-Frame-Options','SAMEORIGIN');
   else res.setHeader('X-Frame-Options','DENY');

@@ -94,14 +94,15 @@ async function main() {
     '/projects',
     '/packages',
     '/login',
+    '/profile',
     '/forgot-password',
     '/hyderabad/construction',
   ];
   let homepageHtml = '';
   for (const path of publicPages) {
     const response = await request(path, { headers: { accept: 'text/html' } });
-    assert.equal(response.status, 200, `Public page ${path} must return 200`);
-    assert.match(String(response.headers.get('content-type') || ''), /text\/html/i, `Public page ${path} must return HTML`);
+    assert.equal(response.status, 200, `Frontend page ${path} must return 200 (actual ${response.status}; server=${response.headers.get('server')||'unknown'}; ProPulse entry=${response.headers.get('x-propulse-entry')||'absent — likely host/CDN block'}); deployment must not pass while routes are forbidden`);
+    assert.match(String(response.headers.get('content-type') || ''), /text\/html/i, `Frontend page ${path} must return HTML`);
     const html = await response.text();
     assert(html.length > 200, `Public page ${path} must return rendered application HTML`);
     assert(!/Application (?:is starting|frontend is starting)|Application is recovering/i.test(html), `Public page ${path} must not return a startup shell`);
@@ -115,6 +116,10 @@ async function main() {
   assert.match(String(mainScript.headers.get('content-type') || ''), /(javascript|ecmascript)/i, 'Homepage JavaScript asset must have a JavaScript content type');
   const mainScriptBody = await mainScript.text();
   assert(mainScriptBody.length > 100, 'Homepage JavaScript asset must not be empty');
+
+  const browserFavicon = await request('/favicon.ico');
+  assert.equal(browserFavicon.status, 308, 'Browser favicon.ico must redirect to the existing favicon.svg, not return 403/404');
+  assert.equal(browserFavicon.headers.get('location'), '/favicon.svg', 'Browser favicon must redirect to the public SVG');
 
   const favicon = await request('/favicon.svg');
   assert.equal(favicon.status, 200, 'Favicon must return 200');

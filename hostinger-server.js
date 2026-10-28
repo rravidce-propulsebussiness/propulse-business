@@ -123,6 +123,7 @@ function proxyToBackend(req,res){
 
 app.disable('x-powered-by');
 app.use((req,res,next)=>{
+  res.setHeader('X-ProPulse-Entry','hostinger-wrapper');
   res.setHeader('X-Content-Type-Options','nosniff');
   res.setHeader('X-Frame-Options','DENY');
   res.setHeader('Referrer-Policy','strict-origin-when-cross-origin');
@@ -183,6 +184,10 @@ for(const [from,to] of [
 }
 
 app.use((req,res,next)=>backendRoute(req.path)?proxyToBackend(req,res):next());
+
+// Browsers request /favicon.ico even though the app ships a favicon.svg.
+// Give it a deterministic public redirect instead of relying on webroot fallback.
+app.get('/favicon.ico',(req,res)=>res.redirect(308,'/favicon.svg'));
 
 app.use(serveExactPrerenderedHtml(frontendDist));
 
