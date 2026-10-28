@@ -42,7 +42,15 @@ assert.equal(service.qualifiesProjectSignupWindow('2026-10-16','2026-10-01','202
 assert.equal(service.qualifiesProjectSignupWindow('2026-11-12','2026-10-27','2026-10-27',15,'new_registration'),false,
   'A project uploaded after the window cannot earn credits');
 assert.match(editor,/Registration eligibility/,'Conditional editor exposes registration filter');
-assert.match(editor,/Signup eligibility window/,'Conditional editor exposes the editable age limit');
+assert.equal((editor.match(/<label>Registration window/g)||[]).length,2,
+  'Each reward type has its own Registration window field');
+const timeLimitSection=editor.slice(editor.indexOf('Qualification &amp; time limits'));
+assert.match(timeLimitSection,/Registration window[\s\S]*?value=\{rule.windowDays\}/,
+  'New-registration window still uses the registration rule');
+assert.match(timeLimitSection,/Registration window[\s\S]*?value=\{campaign.registrationEligibilityDays\}/,
+  'Conditional reward window uses its separate campaign eligibility setting');
+assert.match(editor,/registrationEligibilityDays:clamp\(e.target.value,0,365\)/,
+  'Conditional signup-age window remains configurable independently of registration reward');
 assert.match(editor,/registrationEligibilityDays:clamp\(e.target.value,0,365\)/,'Signup age window stays editable');
 assert.match(editor,/registrationEligibilityDays:Number\(item.registration_eligibility_days\|\|0\)/,'Editing a reward restores the saved age window');
 assert.match(editor,/Anyone \(existing and new businesses\)/);
