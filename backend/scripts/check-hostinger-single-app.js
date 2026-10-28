@@ -73,6 +73,12 @@ assert(backendIndex.includes("Hostinger single-process app is live; building fro
 assert(backendIndex.includes("if(frontendBuilding||fs.existsSync(bundledFrontendIndex)||fs.existsSync(frontendIndex))return;"),'Backend-root Hostinger skips redundant runtime frontend builds when deploy output already exists');
 assert(backendIndex.includes("fs.symlinkSync(backendNodeModules,frontendNodeModules"),'Backend-root Hostinger entry exposes installed dependencies to the frontend build');
 assert(backendServer.includes("app.use(express.static(frontendDist"),'Backend server serves built frontend assets in single-process mode');
+assert(backendServer.includes("X-ProPulse-Entry"),'Active backend identifies responses so external 403 blocking can be diagnosed');
+assert(backendServer.includes("app.get('/favicon.ico'"),'Active backend redirects browser favicon request to SVG');
+assert(backendServer.includes("profile|wallet|membership"),'Backend recognizes profile as a public GET route to the private React UI');
+assert(wrapper.includes("X-ProPulse-Entry"),'Legacy Hostinger wrapper also identifies application responses');
+assert(wrapper.includes("app.get('/favicon.ico'"),'Legacy wrapper redirects missing browser favicon.ico');
+
 
 // Hashed frontend files must load even if the API CORS allowlist is temporarily
 // configured for an older domain. The credentialed API policy remains strict.
