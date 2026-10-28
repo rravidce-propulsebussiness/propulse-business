@@ -805,12 +805,38 @@ export async function downloadProfessionalPackageQuotePdf({quotation,customerNam
     pages.push(page);
     return page;
   };
+  // Package descriptions and inclusions are owner-editable. Split long text
+  // across pages instead of allowing it to cover the footer or disappear.
+  const paginatedBullets=(title,heading,subheading,items)=>{
+    let page=next(title);
+    drawSectionHeading(page,heading,subheading);
+    for(const item of items){
+      page.ctx.font='500 17px Arial, sans-serif';
+      let lines=wrap(page.ctx,item,985);
+      let height=Math.max(32,lines.length*23)+7;
+      if(page.y+height>1630){
+        page=next(title);
+        drawSectionHeading(page,heading+' (continued)');
+        page.ctx.font='500 17px Arial, sans-serif';
+        lines=wrap(page.ctx,item,985);
+        height=Math.max(32,lines.length*23)+7;
+      }
+      page.ctx.fillStyle='#ff5a1f';
+      page.ctx.beginPath();
+      page.ctx.arc(MARGIN+8,page.y+12,4,0,Math.PI*2);
+      page.ctx.fill();
+      page.ctx.fillStyle='#526b82';
+      lines.forEach((line,index)=>page.ctx.fillText(line,MARGIN+24,page.y+18+index*23));
+      page.y+=height;
+    }
+    return page;
+  };
   const first=next('Package Quotation');
   drawHero(first,'Your package quotation',quotation.projectTitle||quotation.packageName,'INDICATIVE PROFESSIONAL QUOTATION');
   drawMetaGrid(first,[
     ['Reference',quotation.referenceId?'PP-'+quotation.referenceId:'Instant estimate'],
     ['Quotation Date',shortDate(quotation.generatedAt)],
-    ['Valid Until',shortDate(quotation.validUntil)],
+    ['Status','Indicative only — confirm pricing'],
     ['Professional',quotation.professionalName],
     ['Customer',customerName||'Customer'],
     ['Location',city||'To be confirmed'],
@@ -823,16 +849,12 @@ export async function downloadProfessionalPackageQuotePdf({quotation,customerNam
     ['Quantity',quotation.priceUnit==='project'?'1 project':Number(quotation.quantity).toLocaleString('en-IN',{maximumFractionDigits:2})+' '+quotation.unitLabel],
     ['Indicative Total',quotation.amountText],
   ]);
-  const details=next('Scope and specifications');
-  drawSectionHeading(details,'Package scope','Owner-published description and inclusions.');
-  drawBullets(details,[
-    quotation.description||'The package scope and details are set by the publishing professional.',
-    ...(quotation.inclusions||[]).slice(0,12),
-  ]);
-  if(quotation.duration){
-    details.y=Math.min(1450,details.y+14);
-    drawKeyValueRows(details,[['Indicative Duration',quotation.duration]]);
-  }
+  paginatedBullets('Scope and specifications','Package scope',
+    'Owner-published works, descriptions and inclusions.',
+    [quotation.description||'Confirm the exact work scope with ProPulse',
+      ...(quotation.inclusions||[]).slice(0,20),
+      ...(quotation.duration?['Indicative duration: '+quotation.duration]:[])]
+  );
   const specifications=Array.isArray(quotation.specifications)?quotation.specifications:[];
   const treatment={included:'Included in package',allowance:'Included allowance',extra:'Chargeable extra — not in total',excluded:'Excluded from package'};
   const unitNames={none:'as specified',sqft:'per sq ft',running_ft:'per running ft',piece:'per piece',bathroom:'per bathroom',door:'per door',point:'per point',kg:'per kg',bag:'per bag',lumpsum:'lump sum'};
@@ -849,20 +871,41 @@ export async function downloadProfessionalPackageQuotePdf({quotation,customerNam
     drawSectionHeading(page,'Specification detail','Confirm the complete work schedule and materials before contracting.');
     drawBullets(page,['No itemized specification rows have been published. Ask ProPulse for written confirmation of scope, brands and excluded works.']);
   }else{
-    for(let offset=0;offset<rows.length;offset+=7){
-      const page=next('Package Specifications');
-      drawSectionHeading(page,quotation.packageName+' specifications',offset?'Continued specification schedule.':'Published materials, finishes, inclusions and exclusions.');
-      drawSpecificationCards(page,rows.slice(offset,offset+7));
+    let page=next('Package Specifications');
+    drawSectionHeading(page,quotation.packageName+' specifications','Published materials, finishes, inclusions and exclusions.');
+    for(const [label,value] of rows){
+      page.ctx.font='500 17px Arial, sans-serif';
+      let valueLines=wrap(page.ctx,value,725);
+      page.ctx.font='800 17px Arial, sans-serif';
+      let labelLines=wrap(page.ctx,label,240);
+      let height=Math.max(82,35+Math.max(valueLines.length,labelLines.length)*23);
+      if(page.y+height>1630){
+        page=next('Package Specifications');
+        drawSectionHeading(page,quotation.packageName+' specifications (continued)');
+        page.ctx.font='500 17px Arial, sans-serif';
+        valueLines=wrap(page.ctx,value,725);
+        page.ctx.font='800 17px Arial, sans-serif';
+        labelLines=wrap(page.ctx,label,240);
+        height=Math.max(82,35+Math.max(valueLines.length,labelLines.length)*23);
+      }
+      page.ctx.fillStyle='#fff7f2';
+      roundedRect(page.ctx,MARGIN,page.y,CONTENT_WIDTH,height,10);
+      page.ctx.fill();
+      page.ctx.fillStyle='#0a2d50';
+      page.ctx.font='800 17px Arial, sans-serif';
+      labelLines.forEach((line,index)=>page.ctx.fillText(line,MARGIN+16,page.y+29+index*23));
+      page.ctx.fillStyle='#526b82';
+      page.ctx.font='500 17px Arial, sans-serif';
+      valueLines.forEach((line,index)=>page.ctx.fillText(line,MARGIN+288,page.y+29+index*23));
+      page.y+=height+10;
     }
   }
-  const terms=next('Commercial notes');
-  drawSectionHeading(terms,'Important notes','The final negotiated commercial quotation may differ.');
-  drawBullets(terms,[
+  paginatedBullets('Commercial notes','Important notes','The final negotiated quotation may differ.',[
     quotation.disclaimer,
-    'Illustrative total = published package rate × stated quantity. It excludes any rows marked chargeable extra, taxes not explicitly included, and works not listed as included.',
-    'Allowances are part of the published package scope and must not be added to the total again without written agreement.',
-    'Package validity is indicative; confirm current rates, payment milestones, applicable GST and agreement terms with ProPulse before making a payment.',
-    'Professional contact information is protected. Communicate and coordinate through ProPulse.',
+    'Indicative total equals published package rate multiplied by measured quantity. It excludes chargeable extras, taxes not included and works outside the written scope.',
+    'Allowances are part of the package and must not be charged again unless specifically agreed in writing.',
+    'Confirm payment milestones, applicable GST, design variations and final prices with ProPulse before payment.',
+    'Professional private contact information is protected. Communicate and coordinate through ProPulse.',
   ]);
   const slug=String(quotation.referenceId||Date.now()).replace(/[^0-9a-z-]/gi,'');
   savePdf(pages,'propulse-professional-package-quotation-'+slug+'.pdf');
