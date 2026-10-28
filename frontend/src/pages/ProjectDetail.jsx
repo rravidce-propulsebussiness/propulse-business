@@ -235,7 +235,7 @@ export default function ProjectDetail(){
                 {project.location&&<div><dt>Location</dt><dd>{project.location}</dd></div>}
                 {project.area&&<div><dt>Project area</dt><dd>{project.area}</dd></div>}
                 {project.packageName&&<div><dt>Related package</dt><dd>{project.packageName}</dd></div>}
-                {project.businessName&&<div><dt>Published by</dt><dd>{project.businessName}</dd></div>}
+                {project.businessName&&<div><dt>Published by</dt><dd>{project.businessName}{project.official&&<span className="pjd-official-badge">♛ Official ProPulse</span>}</dd></div>}
               </dl>
               {project.cost&&<div className="pjd-price"><small>REPORTED PROJECT COST / BUDGET</small><strong>{project.cost}</strong></div>}
               <div className="pjd-action-intro"><span>INTERESTED IN A PROJECT LIKE THIS?</span><strong>Take the next step.</strong><small>Choose one of the three options below.</small></div>

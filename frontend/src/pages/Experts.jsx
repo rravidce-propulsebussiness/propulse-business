@@ -96,8 +96,8 @@ export default function Experts(){
         return <article className={`expert-card ${expert.is_featured?'featured':''}`} key={expert.business_profile_id||expert.user_id}>
           <div className={`expert-card-cover ${expert.cover_image_url?'has-image':'fallback'}`}>
             {expert.cover_image_url?<img src={expert.cover_image_url} alt={`${expert.business_name} project`}/>:<div className="expert-cover-placeholder"><Icon name="home" size={38}/><span>Project showcase</span></div>}
-            <span className={expert.is_verified?'verified-badge':'subscribed-badge'}>{expert.is_verified?<><Icon name="check" size={13}/> Verified</>:<><Icon name="check" size={13}/> Subscribed</>}</span>
-            {expert.is_featured&&<span className="featured-badge"><Icon name="star" size={12}/> Featured</span>}
+            <span className={expert.is_official?'official-badge':expert.is_verified?'verified-badge':'subscribed-badge'}>{expert.is_official?<><Icon name="star" size={13}/> Official ProPulse</>:expert.is_verified?<><Icon name="check" size={13}/> Verified</>:<><Icon name="check" size={13}/> Listed professional</>}</span>
+            {expert.is_featured&&!expert.is_official&&<span className="featured-badge"><Icon name="star" size={12}/> Featured</span>}
           </div>
           <div className="expert-card-identity">
             <div className="expert-avatar">{initials(expert.business_name)}</div>
