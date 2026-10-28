@@ -45,3 +45,14 @@
 .completed-project-photo-upload input[type=file]{font-size:12px;border:0;background:transparent;padding:7px 0}
 .completed-project-photo-upload small{display:block;color:#627e90;font-size:12px;line-height:1.55;margin-top:5px}
 .completed-project-photo-upload img{margin-top:12px;display:block;width:160px;height:100px;border-radius:8px;object-fit:cover}
+
+.project-admin-review-actions{display:flex;flex-direction:column;gap:9px;min-width:155px;max-width:250px}
+.project-admin-video-review{display:grid;gap:8px;padding:10px;border:1px solid #f0d9c6;border-radius:10px;background:#fffaf6}
+.project-admin-video-review>strong{font-size:12px;color:#9c4218}
+.project-admin-video-review>video{max-width:100%;width:210px;max-height:145px;object-fit:contain;border-radius:7px;background:#102532}
+.project-admin-video-review label{display:grid;gap:4px;font-size:12px}
+.project-admin-video-review label input{min-width:0;width:100%;padding:7px;border:1px solid #e3d1c4;border-radius:6px}
+.project-admin-review-buttons{display:flex;gap:7px;flex-wrap:wrap}
+.project-admin-review-buttons button{flex:1;border:1px solid #d59e7d;border-radius:7px;padding:7px;background:white;color:#a44319;font-size:12px;cursor:pointer}
+.project-admin-review-buttons button:disabled{opacity:.5;cursor:default}
+@media(max-width:650px){.project-admin-review-actions{max-width:100%}.completed-project-item{grid-template-columns:52px minmax(0,1fr)}.project-admin-review-actions{grid-column:2}.project-admin-video-review>video{width:100%}}
