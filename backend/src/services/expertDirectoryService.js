@@ -89,6 +89,7 @@ async function getUserDirectoryStatus(userId,client=pool){
        mem.expires_at,
        COALESCE(beds.is_hidden,FALSE) AS is_hidden,
        COALESCE(beds.is_featured,FALSE) AS is_featured,
+       COALESCE(beds.is_official,FALSE) AS is_official,
        COALESCE(beds.sort_order,0) AS sort_order
      FROM users u
      LEFT JOIN business_profiles bp ON bp.user_id=u.id
@@ -161,7 +162,14 @@ async function getOverview(){
        )::int AS featured_businesses,
        COUNT(*) FILTER (
          WHERE u.role='business' AND COALESCE(beds.is_hidden,FALSE)=TRUE
-       )::int AS hidden_businesses
+       )::int AS hidden_businesses,
+       (SELECT COUNT(*)::int FROM business_profile_projects p
+         JOIN business_profiles bpv ON bpv.id=p.business_profile_id
+         JOIN users uv ON uv.id=bpv.user_id WHERE uv.role='business' AND p.is_published=TRUE AND NULLIF(TRIM(p.video_url),'') IS NOT NULL) AS video_projects,
+       (SELECT COUNT(*)::int FROM business_profile_projects p
+         WHERE p.is_published=TRUE AND p.completion_year IS NOT NULL
+           AND NULLIF(TRIM(p.video_url),'') IS NOT NULL
+           AND p.video_reward_status='pending') AS pending_video_reviews
      FROM users u
      LEFT JOIN business_expert_directory_settings beds ON beds.user_id=u.id`
   )).rows[0]||{};
@@ -191,13 +199,20 @@ async function listBusinesses({search='',page=1,pageSize=50}={}){
   const result=await pool.query(
     `SELECT
        u.id,u.name,u.email,u.is_active,u.created_at,
-       bp.business_name,bp.public_headline,bp.public_profile_enabled,
+       bp.business_name,bp.id AS business_profile_id,bp.public_headline,bp.public_summary,bp.public_profile_enabled,
        EXISTS(SELECT 1 FROM company_proof_documents cpd WHERE cpd.user_id=u.id AND cpd.status='verified') AS is_verified,
        mem.plan_group,mem.plan_name,mem.expires_at,
        COALESCE(beds.is_hidden,FALSE) AS is_hidden,
        COALESCE(beds.is_featured,FALSE) AS is_featured,
+       COALESCE(beds.is_official,FALSE) AS is_official,
        COALESCE(beds.sort_order,0) AS sort_order,
        (SELECT COUNT(*)::int FROM business_profile_projects bpp WHERE bpp.business_profile_id=bp.id AND bpp.is_published=TRUE) AS project_count,
+       (SELECT COUNT(*)::int FROM business_profile_projects bpp WHERE bpp.business_profile_id=bp.id AND bpp.is_published=TRUE AND NULLIF(TRIM(bpp.video_url),'') IS NOT NULL) AS video_count,
+       (SELECT COUNT(*)::int FROM business_profile_projects bpp WHERE bpp.business_profile_id=bp.id AND bpp.is_published=TRUE AND bpp.video_reward_status='pending' AND NULLIF(TRIM(bpp.video_url),'') IS NOT NULL) AS pending_video_count,
+       (SELECT bpp.cover_image_url FROM business_profile_projects bpp WHERE bpp.business_profile_id=bp.id AND bpp.is_published=TRUE AND NULLIF(TRIM(bpp.cover_image_url),'') IS NOT NULL ORDER BY bpp.updated_at DESC LIMIT 1) AS cover_image_url,
+       (SELECT STRING_AGG(DISTINCT c.name,', ' ORDER BY c.name)
+         FROM business_profile_locations bpl JOIN cities c ON c.id=bpl.city_id
+         WHERE bpl.business_profile_id=bp.id AND bpl.is_active=TRUE) AS city_names,
        (SELECT COUNT(*)::int FROM business_profile_service_plans bspp WHERE bspp.business_profile_id=bp.id AND bspp.is_published=TRUE) AS plan_count
      FROM users u
      LEFT JOIN business_profiles bp ON bp.user_id=u.id
