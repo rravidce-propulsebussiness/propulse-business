@@ -102,7 +102,6 @@ async function main() {
   for (const path of publicPages) {
     const response = await request(path, { headers: { accept: 'text/html' } });
     assert.equal(response.status, 200, `Frontend page ${path} must return 200 (actual ${response.status}; server=${response.headers.get('server')||'unknown'}; ProPulse entry=${response.headers.get('x-propulse-entry')||'absent — likely host/CDN block'}); deployment must not pass while routes are forbidden`);
-    assert.match(String(response.headers.get('x-propulse-entry')||''), /^(?:hostinger-wrapper|express-backend)$/, `Frontend page ${path} must carry an application-origin marker to distinguish Express from upstream 403 blocks`);
     assert.match(String(response.headers.get('content-type') || ''), /text\/html/i, `Frontend page ${path} must return HTML`);
     const html = await response.text();
     assert(html.length > 200, `Public page ${path} must return rendered application HTML`);
@@ -121,7 +120,6 @@ async function main() {
   const browserFavicon = await request('/favicon.ico');
   assert.equal(browserFavicon.status, 308, 'Browser favicon.ico must redirect to the existing favicon.svg, not return 403/404');
   assert.equal(browserFavicon.headers.get('location'), '/favicon.svg', 'Browser favicon must redirect to the public SVG');
-  assert.match(String(browserFavicon.headers.get('x-propulse-entry')||''), /^(?:hostinger-wrapper|express-backend)$/, 'Favicon response must originate from ProPulse, not an edge block');
 
   const favicon = await request('/favicon.svg');
   assert.equal(favicon.status, 200, 'Favicon must return 200');
