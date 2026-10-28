@@ -65,7 +65,7 @@ async function submit(projectId,input={}){
   if(preferredPackage){
     if(!settings.showPlans)throw bad('Published packages are currently unavailable');
     const packageResult=await pool.query(
-      `SELECT title,price_from,price_unit FROM business_profile_service_plans
+      `SELECT title,industry,description,price_from,price_unit,duration_label,inclusions,spec_sections FROM business_profile_service_plans
        WHERE business_profile_id=$1 AND is_published=TRUE AND LOWER(TRIM(title))=LOWER($2) AND industry=$3
        LIMIT 1`,[project.business_profile_id,preferredPackage,industry]
     );
@@ -76,11 +76,11 @@ async function submit(projectId,input={}){
     `INSERT INTO professional_project_quote_requests
       (project_id,project_title,business_user_id,customer_name,customer_phone,customer_email,
        requirement,site_location,area_text,budget_text,preferred_package,
-       package_price_from_snapshot,package_price_unit_snapshot)
+       package_price_from_snapshot,package_price_unit_snapshot,package_spec_sections_snapshot)
      SELECT $1::integer,$2::varchar(180),$3::integer,$4::varchar(160),
             $5::varchar(16),$6::varchar(255),$7::text,$8::varchar(180),
             $9::varchar(120),$10::varchar(120),$11::varchar(160),
-            $12::numeric(12,2),$13::varchar(24)
+            $12::numeric(12,2),$13::varchar(24),$14::jsonb
      WHERE NOT EXISTS(
        SELECT 1 FROM professional_project_quote_requests
        WHERE project_id=$1::integer AND customer_phone=$5::varchar(16)
@@ -88,7 +88,7 @@ async function submit(projectId,input={}){
      ) RETURNING id`,
     [id,String(project.title).slice(0,180),project.owner_id,name,phone,email||null,requirement,
      siteLocation||null,area||null,budget||null,selectedPackage?.title||null,
-     selectedPackage?.price_from??null,selectedPackage?.price_unit||null]
+     selectedPackage?.price_from??null,selectedPackage?.price_unit||null,JSON.stringify(selectedPackage?.spec_sections||[])]
   );
   if(!saved.rowCount){
     const prior=await pool.query(
@@ -102,7 +102,7 @@ async function submit(projectId,input={}){
     if(!requestId)return {accepted:true,duplicate:true};
     await marketplace.flagPending('quote',requestId,pincode);
     const market=await marketplace.sync('quote',requestId);
-    return {accepted:true,duplicate:true,requestId,marketplaceLeadId:market.leadId||null,marketplaceStatus:market.status};
+    return {accepted:true,duplicate:true,requestId,marketplaceLeadId:market.leadId||null,marketplaceStatus:market.status,quotePackage:selectedPackage};
   }
   const quoteId=saved.rows[0].id;
   await marketplace.flagPending('quote',quoteId,pincode);
@@ -125,7 +125,7 @@ async function submit(projectId,input={}){
       dedupeKey:'admin-professional-quote-'+quoteId,
     });
   }catch(error){console.error('Admin quotation notification failed:',error.message)}
-  return {accepted:true,requestId:quoteId,marketplaceLeadId:market.leadId||null,marketplaceStatus:market.status};
+  return {accepted:true,requestId:quoteId,marketplaceLeadId:market.leadId||null,marketplaceStatus:market.status,quotePackage:selectedPackage};
 }
 async function listForProfessional(userId){
   const id=Number(userId);
