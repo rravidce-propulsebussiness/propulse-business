@@ -177,3 +177,5 @@
 .pjd-page .pjd-quote-form select:focus-visible{outline:2px solid #e65b26;outline-offset:1px}
 .pjd-page .pjd-quote-form .pjd-field-pair{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
 @media(max-width:620px){.pjd-page .pjd-quote-form .pjd-field-pair{grid-template-columns:1fr}.pjd-page .pjd-quote-dialog{max-height:92dvh}}
+
+.pjd-official-badge{display:inline-flex;margin:5px 0 0;padding:4px 8px;border-radius:99px;background:#fff0bd;color:#9d4f09;font-size:10px;font-weight:850;white-space:nowrap}
