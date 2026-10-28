@@ -21,6 +21,8 @@ async function exercise(values){
       ...values
     },null);
     assert.ok(created.id>0,'Create should save a campaign');
+    for(const column of ['industry_id','state_id','city_id'])
+      assert.equal(created[column],null,'Unselected '+column+' must remain NULL, not catalog ID 1');
     assert.ok(Number.isInteger(created.recipientCount)&&created.recipientCount>=0,
       'Campaign creation is allowed even when nobody currently qualifies');
     assert.equal(Number(created.registration_eligibility_days),values.registrationEligibilityDays||7);
@@ -30,6 +32,8 @@ async function exercise(values){
     const changed=await grants.updateBusinessCampaign(created.id,{
       registrationEligibilityDays:8,validDays:14
     },null);
+    for(const column of ['industry_id','state_id','city_id'])
+      assert.equal(changed[column],null,'Editing must preserve unrestricted '+column);
     assert.equal(Number(changed.registration_eligibility_days),8,
       'Admin can edit registration window');
     assert.equal(Number(changed.project_registration_window_days),
@@ -44,5 +48,18 @@ async function exercise(values){
   await exercise({registrationEligibilityDays:7});
   await exercise({registrationEligibilityDays:15,verificationScope:'verified',minCompletedProjects:1,sharedQuantity:2,validDays:7});
   await exercise({registrationEligibilityDays:30,registrationScope:'any',minCompletedProjects:0,premiumQuantity:1});
-  console.log('Lead reward campaigns create and edit successfully, including zero-recipient verified-project rewards.');
+  let registrationRule=null;
+  try{
+    registrationRule=await grants.createRegistrationRule({
+      name:'CI unrestricted signup reward',isActive:false,windowDays:7,
+      verificationScope:'any',industryId:'',stateId:'',cityId:'',
+      sharedQuantity:1,premiumQuantity:0,
+      allowSingle:true,allowShared:true,allowAutoRelease:true,allowExclusive:false
+    },null);
+    for(const column of ['industry_id','state_id','city_id'])
+      assert.equal(registrationRule[column],null,'Unrestricted signup rule must not target row #1 of '+column);
+  }finally{
+    if(registrationRule?.id)await grants.deleteRegistrationRule(registrationRule.id);
+  }
+  console.log('Campaign and registration reward creation preserves ALL industries/states/cities as NULL.');
 })().catch(error=>{console.error(error);process.exitCode=1}).finally(()=>pool.end());
